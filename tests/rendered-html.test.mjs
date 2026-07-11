@@ -13,17 +13,17 @@ async function render() {
   );
 }
 
-test("server-renders Ashfall Outpost Ver.2.2", async () => {
+test("server-renders Ashfall Outpost Early Access 0.3.0", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>ASHFALL OUTPOST Ver\.2\.2/);
+  assert.match(html, /<title>ASHFALL OUTPOST — Early Access 0\.3\.0/);
   assert.match(html, /aria-label="ASHFALL OUTPOST game"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /BEGIN OPERATION/);
   assert.match(html, /AIRSTRIKE/);
-  assert.match(html, /VER 2\.2 · SHADE RAIDER ADDED/);
+  assert.match(html, /EARLY ACCESS BUILD 0\.3\.0 · ORIGINAL BGM/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 
@@ -57,11 +57,14 @@ test("ships the upgraded battlefield and combat systems", async () => {
   assert.match(game, /ELITE ENEMY — SHADE/);
   assert.match(game, /BOSS — TAKUYA \/ IRON JUDGE/);
   assert.match(game, /supportCooldown/);
+  assert.match(game, /const startMusic/);
+  assert.match(game, /const bassLine/);
+  assert.match(game, /BGMと効果音をミュート/);
   assert.match(game, /abomination/);
   assert.match(game, /spitter/);
   assert.match(game, /damageTexts/);
   assert.match(game, /corpses/);
   assert.match(game, /comboTime/);
   assert.match(css, /orientation:portrait/);
-  assert.match(layout, /ASHFALL OUTPOST Ver\.2\.2/);
+  assert.match(layout, /ASHFALL OUTPOST — Early Access 0\.3\.0/);
 });

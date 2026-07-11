@@ -227,6 +227,7 @@ export function AshfallGame() {
   const nestSpriteRef = useRef<HTMLImageElement | null>(null);
   const gameRef = useRef<Game>(initialGame());
   const audioRef = useRef<AudioContext | null>(null);
+  const musicRef = useRef<{ gain: GainNode; timer: number; step: number } | null>(null);
   const lastHudRef = useRef(0);
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -253,12 +254,17 @@ export function AshfallGame() {
     nest.onload = () => { nestSpriteRef.current = nest; };
   }, []);
 
+  const ensureAudio = useCallback(() => {
+    const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!audioRef.current) audioRef.current = new AudioCtx();
+    if (audioRef.current.state === "suspended") void audioRef.current.resume();
+    return audioRef.current;
+  }, []);
+
   const tone = useCallback((freq: number, duration = 0.06, type: OscillatorType = "square") => {
     if (muted) return;
     try {
-      const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!audioRef.current) audioRef.current = new AudioCtx();
-      const a = audioRef.current;
+      const a = ensureAudio();
       const o = a.createOscillator();
       const gain = a.createGain();
       o.type = type; o.frequency.value = freq;
@@ -266,7 +272,60 @@ export function AshfallGame() {
       gain.gain.exponentialRampToValueAtTime(0.001, a.currentTime + duration);
       o.connect(gain); gain.connect(a.destination); o.start(); o.stop(a.currentTime + duration);
     } catch { /* Audio is optional. */ }
-  }, [muted]);
+  }, [ensureAudio, muted]);
+
+  const stopMusic = useCallback(() => {
+    const music = musicRef.current;
+    if (!music) return;
+    window.clearInterval(music.timer);
+    const a = audioRef.current;
+    if (a) {
+      music.gain.gain.cancelScheduledValues(a.currentTime);
+      music.gain.gain.setTargetAtTime(.0001, a.currentTime, .045);
+    }
+    window.setTimeout(() => { try { music.gain.disconnect(); } catch { /* Already disconnected. */ } }, 240);
+    musicRef.current = null;
+  }, []);
+
+  const startMusic = useCallback(() => {
+    if (musicRef.current) return;
+    try {
+      const a = ensureAudio();
+      const master = a.createGain();
+      master.gain.setValueAtTime(.05, a.currentTime);
+      master.connect(a.destination);
+      const music = { gain: master, timer: 0, step: 0 };
+      musicRef.current = music;
+      const bassLine = [55, 55, 65.41, 55, 49, 49, 43.65, 49, 55, 55, 73.42, 65.41, 49, 43.65, 49, 41.2];
+      const pulse = () => {
+        if (musicRef.current !== music) return;
+        const t = a.currentTime + .015;
+        const step = music.step % bassLine.length;
+        const bass = a.createOscillator();
+        const bassGain = a.createGain();
+        bass.type = "sawtooth"; bass.frequency.setValueAtTime(bassLine[step], t);
+        bassGain.gain.setValueAtTime(.0001, t); bassGain.gain.exponentialRampToValueAtTime(.21, t + .018); bassGain.gain.exponentialRampToValueAtTime(.0001, t + .29);
+        bass.connect(bassGain); bassGain.connect(master); bass.start(t); bass.stop(t + .31);
+        if (step % 4 === 0) {
+          const drone = a.createOscillator(); const droneGain = a.createGain();
+          drone.type = "triangle"; drone.frequency.setValueAtTime(bassLine[step] * 2, t);
+          droneGain.gain.setValueAtTime(.0001, t); droneGain.gain.exponentialRampToValueAtTime(.065, t + .08); droneGain.gain.exponentialRampToValueAtTime(.0001, t + 1.25);
+          drone.connect(droneGain); droneGain.connect(master); drone.start(t); drone.stop(t + 1.28);
+        }
+        if (step % 2 === 0) {
+          const beat = a.createOscillator(); const beatGain = a.createGain();
+          beat.type = "sine"; beat.frequency.setValueAtTime(step % 4 === 0 ? 70 : 105, t); beat.frequency.exponentialRampToValueAtTime(38, t + .09);
+          beatGain.gain.setValueAtTime(.15, t); beatGain.gain.exponentialRampToValueAtTime(.0001, t + .11);
+          beat.connect(beatGain); beatGain.connect(master); beat.start(t); beat.stop(t + .12);
+        }
+        music.step++;
+      };
+      pulse();
+      music.timer = window.setInterval(pulse, 360);
+    } catch { /* Music is optional when Web Audio is unavailable. */ }
+  }, [ensureAudio]);
+
+  useEffect(() => () => stopMusic(), [stopMusic]);
 
   const spawnHuman = useCallback((kind: string) => {
     const g = gameRef.current;
@@ -313,15 +372,26 @@ export function AshfallGame() {
     fresh.running = true;
     gameRef.current = fresh;
     setStarted(true); setPaused(false); setEnd(null);
+    stopMusic();
+    if (!muted) startMusic();
     tone(180, 0.12); setTimeout(() => tone(260, 0.12), 90);
-  }, [tone]);
+  }, [muted, startMusic, stopMusic, tone]);
 
   const togglePause = useCallback(() => {
     const g = gameRef.current;
     if (!g.running || g.over) return;
     g.paused = !g.paused;
     setPaused(g.paused);
-  }, []);
+    if (g.paused) stopMusic();
+    else if (!muted) startMusic();
+  }, [muted, startMusic, stopMusic]);
+
+  const toggleMute = useCallback(() => {
+    const next = !muted;
+    setMuted(next);
+    if (next) stopMusic();
+    else if (started && !paused && !end) startMusic();
+  }, [end, muted, paused, startMusic, started, stopMusic]);
 
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -468,6 +538,7 @@ export function AshfallGame() {
         if (g.baseHp <= 0 || g.nestHp <= 0) {
           g.over = true; g.won = g.nestHp <= 0; g.shake = 18;
           setEnd(g.won ? "win" : "lose");
+          stopMusic();
           tone(g.won ? 380 : 70, 0.65, g.won ? "square" : "sawtooth");
         }
       }
@@ -488,7 +559,7 @@ export function AshfallGame() {
     };
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
-  }, [tone]);
+  }, [stopMusic, tone]);
 
   const healthPct = Math.max(0, hud.baseHp / 400 * 100);
   const nestPct = Math.max(0, hud.nestHp / 620 * 100);
@@ -500,10 +571,10 @@ export function AshfallGame() {
         <canvas ref={canvasRef} width={W} height={H} className="battlefield" aria-label="Wasteland battlefield" />
 
         <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>VER 2.2 SHADE RAID</em></small></div></div>
+          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>EARLY ACCESS 0.3.0</em></small></div></div>
           <div className="wave-block"><small>WAVE</small><strong>{String(hud.wave).padStart(2, "0")}</strong></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
-          <button className="icon-btn" onClick={() => setMuted(v => !v)} aria-label={muted ? "音を出す" : "ミュート"}>{muted ? "×" : "♪"}</button>
+          <button className="icon-btn" onClick={toggleMute} aria-label={muted ? "BGMと効果音を出す" : "BGMと効果音をミュート"}>{muted ? "×" : "♪"}</button>
         </div>
 
         <div className="health-hud crawler-health">
@@ -549,7 +620,7 @@ export function AshfallGame() {
         {!started && (
           <div className="start-screen">
             <div className="start-panel">
-              <p className="eyebrow">{"/// VER 2.2 · SHADE RAIDER ADDED"}</p>
+              <p className="eyebrow">{"/// EARLY ACCESS BUILD 0.3.0 · ORIGINAL BGM"}</p>
               <h1>ASHFALL<br /><span>OUTPOST</span></h1>
               <p className="mission">The crawler is out of fuel. Hold the line, rally survivors, and burn the infected nest before the horde breaks through.</p>
               <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>TAP TO DEPLOY</small></button>
