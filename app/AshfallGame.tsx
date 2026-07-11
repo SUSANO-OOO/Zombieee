@@ -242,7 +242,7 @@ export function AshfallGame() {
       scout: "/scout-sprites-v2.png", ranger: "/ranger-sprites-v1.png", brute: "/breaker-sprites-v2.png",
       brawler: "/brawler-sprites-v1.png", gunner: "/gunner-sprites-v1.png", medic: "/medic-sprites-v1.png",
       infected: "/infected-sprites-v1.png", crusher: "/crusher-sprites-v1.png", spitter: "/spitter-sprites-v1.png",
-      takuya: "/takuya-boss-sprites-v1.png",
+      takuya: "/takuya-boss-sprites-v2.png",
     };
     Object.entries(paths).forEach(([key, src]) => {
       const sprite = new Image(); sprite.src = src;

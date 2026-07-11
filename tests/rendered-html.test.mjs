@@ -44,14 +44,14 @@ test("ships the upgraded battlefield and combat systems", async () => {
   await access(new URL("../public/crusher-sprites-v1.png", import.meta.url));
   await access(new URL("../public/spitter-sprites-v1.png", import.meta.url));
   await access(new URL("../public/infected-nest-v1.png", import.meta.url));
-  await access(new URL("../public/takuya-boss-sprites-v1.png", import.meta.url));
+  await access(new URL("../public/takuya-boss-sprites-v2.png", import.meta.url));
   assert.match(game, /battlefield-v2\.png/);
   assert.match(game, /ranger-sprites-v1\.png/);
   assert.match(game, /brawler-sprites-v1\.png/);
   assert.match(game, /gunner-sprites-v1\.png/);
   assert.match(game, /medic-sprites-v1\.png/);
   assert.match(game, /infected-nest-v1\.png/);
-  assert.match(game, /takuya-boss-sprites-v1\.png/);
+  assert.match(game, /takuya-boss-sprites-v2\.png/);
   assert.match(game, /BOSS — TAKUYA \/ IRON JUDGE/);
   assert.match(game, /supportCooldown/);
   assert.match(game, /abomination/);
