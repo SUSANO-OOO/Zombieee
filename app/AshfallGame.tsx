@@ -9,6 +9,7 @@ import {
   RAGE_MAX,
   SUPPORT_DEFS,
   UNIT_CARDS,
+  WORLD_GEOMETRY,
   advanceCommand,
   autonomousTargetScore,
   canDeploy,
@@ -27,16 +28,18 @@ import {
 
 const W = 960;
 const H = 540;
-const BASE_X = 126;
-const NEST_X = 836;
-const MUSTER_X = 148;
-const MUSTER_Y = LANE_Y[1];
 
 type Lane = 0 | 1 | 2;
 type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic";
 type SupportKind = "barrel" | "medkit" | "molotov" | "airstrike";
 type MusicMode = "normal" | "danger" | "boss";
 type SelectedAction = `support:${SupportKind}` | null;
+
+const BASE_X = WORLD_GEOMETRY.baseX;
+const NEST_X = WORLD_GEOMETRY.nestX;
+const MUSTER_X = WORLD_GEOMETRY.musterX;
+const MUSTER_Y = WORLD_GEOMETRY.musterY;
+const MUSTER_LANE = laneForY(MUSTER_Y, 2, 0) as Lane;
 
 type UnitCard = {
   kind: UnitKind;
@@ -335,7 +338,7 @@ function damageEnemiesInRadius(g: Game, x: number, y: number, radius: number, da
 
 function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: SpriteMap) {
   const enemySheet = f.kind === "takuya" ? "takuya" : f.kind === "shade" ? "shade" : f.kind === "crusher" || f.kind === "abomination" ? "crusher" : f.kind === "spitter" ? "spitter" : "infected";
-  const sprite = sprites[f.side === "human" ? f.kind : enemySheet];
+  const sprite = sprites[f.side === "human" ? f.kind : enemySheet] ?? (f.side === "zombie" ? sprites.infected : undefined);
   if (!sprite?.complete || !sprite.naturalWidth) return;
   const frameWidth = sprite.naturalWidth / 6;
   const frame = f.flash > 0 ? 5 : f.attack > .09 ? 4 : f.attack > 0 ? 3 : 1 + (Math.floor(f.step * (f.kind === "runner" ? 8 : 5)) % 2);
@@ -349,6 +352,11 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   const size = sizes[f.kind] ?? { w: 58, h: 96 };
   const bob = Math.abs(Math.sin(f.step * 7)) * 1.1;
   ctx.save();
+  if (f.side === "human" && f.spawnGrace > 0) {
+    ctx.beginPath();
+    ctx.rect(WORLD_GEOMETRY.crawler.exitX - 2, 0, W - WORLD_GEOMETRY.crawler.exitX + 2, H);
+    ctx.clip();
+  }
   ctx.fillStyle = "rgba(0,0,0,.42)";
   ctx.beginPath();
   ctx.ellipse(f.x, f.y + 8, size.w * .27, 4.5, 0, 0, Math.PI * 2);
@@ -397,44 +405,88 @@ function drawSupport(ctx: CanvasRenderingContext2D, support: FieldSupport, time:
   ctx.restore();
 }
 
+function drawCrawler(ctx: CanvasRenderingContext2D, g: Game, sprites: SpriteMap) {
+  const crawlerSprite = sprites.crawler;
+  const crawler = WORLD_GEOMETRY.crawler;
+  const deploymentGlow = g.fighters.reduce((glow, fighter) => fighter.side === "human" ? Math.max(glow, fighter.spawnGrace) : glow, 0);
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,.48)";
+  ctx.beginPath();
+  ctx.ellipse(crawler.x + crawler.width * .5, crawler.y + crawler.height * .92, crawler.width * .45, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  if (g.baseHp <= 260) {
+    for (let i = 0; i < 4; i++) {
+      const smokeY = crawler.y + 26 - ((g.time * 18 + i * 13) % 48);
+      ctx.globalAlpha = .12 + i * .035;
+      ctx.fillStyle = "#1b1c1b";
+      ctx.beginPath();
+      ctx.arc(crawler.x + crawler.width * .46 + Math.sin(g.time * 2 + i) * 7, smokeY, 9 + i * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+  if (crawlerSprite?.complete && crawlerSprite.naturalWidth) {
+    ctx.globalAlpha = .92 + Math.max(0, g.baseHp / 520) * .08;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(crawlerSprite, crawler.x, crawler.y, crawler.width, crawler.height);
+  } else {
+    ctx.fillStyle = "#5d3329";
+    ctx.fillRect(crawler.x + 18, crawler.y + 45, crawler.width - 36, crawler.height - 50);
+  }
+  if (deploymentGlow > 0) {
+    ctx.globalAlpha = Math.min(.92, .38 + deploymentGlow * .58);
+    ctx.fillStyle = "#14120f";
+    ctx.fillRect(crawler.exitX - 21, MUSTER_Y - 79, 22, 76);
+    const glow = ctx.createRadialGradient(crawler.exitX - 3, MUSTER_Y - 34, 2, crawler.exitX - 3, MUSTER_Y - 34, 42);
+    glow.addColorStop(0, `rgba(255,205,112,${Math.min(.48, deploymentGlow * .56)})`);
+    glow.addColorStop(1, "rgba(221,103,47,0)");
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = glow;
+    ctx.fillRect(crawler.exitX - 45, MUSTER_Y - 86, 90, 92);
+    ctx.fillStyle = `rgba(242,178,82,${Math.min(.72, deploymentGlow * .76)})`;
+    ctx.fillRect(crawler.exitX - 5, MUSTER_Y - 69, 4, 66);
+  }
+  ctx.restore();
+}
+
+function drawCrawlerExitFrame(ctx: CanvasRenderingContext2D, g: Game) {
+  const deploymentGlow = g.fighters.reduce((glow, fighter) => fighter.side === "human" ? Math.max(glow, fighter.spawnGrace) : glow, 0);
+  if (deploymentGlow <= 0) return;
+  const exitX = WORLD_GEOMETRY.crawler.exitX;
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, .35 + deploymentGlow);
+  ctx.fillStyle = "#281d16";
+  ctx.fillRect(exitX - 2, MUSTER_Y - 80, 4, 78);
+  ctx.fillStyle = "rgba(242,178,82,.72)";
+  ctx.fillRect(exitX, MUSTER_Y - 69, 2, 66);
+  ctx.restore();
+}
+
 function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImageElement | null, sprites: SpriteMap, nestSprite: HTMLImageElement | null) {
   const sx = g.shake > 0 ? (Math.random() - .5) * g.shake : 0;
   const sy = g.shake > 0 ? (Math.random() - .5) * g.shake : 0;
   ctx.save();
-  ctx.translate(sx, sy);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.restore();
   if (background?.complete) {
+    ctx.save();
     ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(background, -10, -10, W + 20, H + 20);
-  } else {
-    const sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, "#4d241b"); sky.addColorStop(1, "#191716");
-    ctx.fillStyle = sky; ctx.fillRect(-10, -10, W + 20, H + 20);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(background, 0, 0, W, H);
+    ctx.restore();
   }
+  ctx.save();
+  ctx.translate(sx, sy);
   const grade = ctx.createLinearGradient(0, 0, W, 0);
   grade.addColorStop(0, "rgba(23,28,31,.18)"); grade.addColorStop(.55, "rgba(15,13,12,.04)"); grade.addColorStop(1, "rgba(58,18,12,.2)");
   ctx.fillStyle = grade; ctx.fillRect(0, 0, W, H);
 
   // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.
-  const crawlerSprite = sprites.crawler;
-  ctx.save();
-  ctx.fillStyle = "rgba(0,0,0,.46)";
-  ctx.beginPath(); ctx.ellipse(70, 405, 91, 12, 0, 0, Math.PI * 2); ctx.fill();
-  if (crawlerSprite?.complete && crawlerSprite.naturalWidth) {
-    ctx.globalAlpha = .92 + Math.max(0, g.baseHp / 520) * .08;
-    ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(crawlerSprite, -30, 287, 198, 124);
-  } else {
-    ctx.fillStyle = "#5d3329"; ctx.fillRect(-10, 326, 148, 70);
-  }
-  if (g.baseHp <= 260) {
-    for (let i = 0; i < 4; i++) {
-      const smokeY = 299 - ((g.time * 18 + i * 13) % 48);
-      ctx.globalAlpha = .12 + i * .035;
-      ctx.fillStyle = "#1b1c1b";
-      ctx.beginPath(); ctx.arc(72 + Math.sin(g.time * 2 + i) * 7, smokeY, 9 + i * 2, 0, Math.PI * 2); ctx.fill();
-    }
-  }
-  ctx.restore();
+
+  // The Crawler stays behind combatants; only its doorway masks a unit during deployment.
+  drawCrawler(ctx, g, sprites);
 
   // The infected nest is a world object, not a lane-selector widget.
   if (nestSprite?.complete) {
@@ -474,6 +526,8 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
     ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
     ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), 4);
   }
+
+  drawCrawlerExitFrame(ctx, g);
 
   for (const shot of g.shots) {
     const p = 1 - shot.life / .12;
@@ -534,6 +588,8 @@ export function AshfallGame() {
   const [bgmMuted, setBgmMuted] = useState(false);
   const [sfxMuted, setSfxMuted] = useState(false);
   const [musicActive, setMusicActive] = useState(false);
+  const [assetsReady, setAssetsReady] = useState(false);
+  const [assetError, setAssetError] = useState(false);
   const [selectedAction, setSelectedAction] = useState<SelectedAction>(null);
   const [hud, setHud] = useState<Hud>({
     energy: 55, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520, nestHp: 620,
@@ -549,17 +605,68 @@ export function AshfallGame() {
   }, []);
 
   useEffect(() => {
-    const image = new Image(); image.src = "/battlefield-v2.png"; image.onload = () => { backgroundRef.current = image; };
-    const paths: Record<string, string> = {
+    let cancelled = false;
+    const loadImage = (src: string, onReady: (image: HTMLImageElement) => void) => new Promise<void>((resolve, reject) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.onload = () => {
+        const finish = () => {
+          if (!image.naturalWidth) { reject(new Error(`Image unavailable: ${src}`)); return; }
+          if (!cancelled) onReady(image);
+          resolve();
+        };
+        if (typeof image.decode === "function") void image.decode().catch(() => undefined).finally(finish);
+        else finish();
+      };
+      image.onerror = () => reject(new Error(`Image unavailable: ${src}`));
+      image.src = src;
+    });
+    const criticalPaths: Record<string, string> = {
       scout: "/scout-sprites-v2.png", ranger: "/ranger-sprites-v1.png", brute: "/breaker-sprites-v2.png",
       brawler: "/brawler-sprites-v1.png", gunner: "/gunner-sprites-v1.png", medic: "/medic-sprites-v1.png",
-      infected: "/infected-sprites-v1.png", crusher: "/crusher-sprites-v1.png", spitter: "/spitter-sprites-v1.png",
-      takuya: "/takuya-boss-sprites-v2.png", shade: "/shade-raider-sprites-v1.png", crawler: "/crawler-bus-v1.png",
+      infected: "/infected-sprites-v1.png", crawler: "/crawler-bus-v1.png",
     };
-    Object.entries(paths).forEach(([key, src]) => {
-      const sprite = new Image(); sprite.src = src; sprite.onload = () => { spriteRefs.current[key] = sprite; };
-    });
-    const nest = new Image(); nest.src = "/infected-nest-v1.png"; nest.onload = () => { nestSpriteRef.current = nest; };
+    const criticalJobs = [
+      loadImage("/battlefield-v4.png", (image) => { backgroundRef.current = image; }),
+      loadImage("/infected-nest-v1.png", (image) => { nestSpriteRef.current = image; }),
+      ...Object.entries(criticalPaths).map(([key, src]) => loadImage(src, (image) => { spriteRefs.current[key] = image; })),
+    ];
+    void Promise.all(criticalJobs).then(() => {
+      if (cancelled) return;
+      setAssetsReady(true);
+      const laterPaths: Record<string, string> = {
+        crusher: "/crusher-sprites-v1.png", spitter: "/spitter-sprites-v1.png",
+        takuya: "/takuya-boss-sprites-v2.png", shade: "/shade-raider-sprites-v1.png",
+      };
+      for (const [key, src] of Object.entries(laterPaths)) {
+        void loadImage(src, (image) => { spriteRefs.current[key] = image; }).catch(() => undefined);
+      }
+    }).catch(() => { if (!cancelled) setAssetError(true); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    const configureCanvas = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const pixelWidth = Math.max(1, Math.round(rect.width * dpr));
+      const pixelHeight = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+        canvas.width = pixelWidth;
+        canvas.height = pixelHeight;
+      }
+      canvas.dataset.dpr = String(dpr);
+      const ctx = canvas.getContext("2d");
+      ctx?.setTransform(pixelWidth / W, 0, 0, pixelHeight / H, 0, 0);
+    };
+    configureCanvas();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(configureCanvas);
+    if (canvasRef.current) observer?.observe(canvasRef.current);
+    window.addEventListener("resize", configureCanvas);
+    return () => { observer?.disconnect(); window.removeEventListener("resize", configureCanvas); };
   }, []);
 
   const ensureAudio = useCallback(() => {
@@ -720,10 +827,10 @@ export function AshfallGame() {
     const id = g.nextId++;
     const laneSpeed = kind === "scout" ? 78 : kind === "brawler" ? 68 : kind === "brute" ? 42 : kind === "gunner" ? 54 : 60;
     g.fighters.push({
-      id, side: "human", kind, lane: 1, anchorLane: null, x: MUSTER_X, y: MUSTER_Y, hp: card.hp, maxHp: card.hp,
+      id, side: "human", kind, lane: MUSTER_LANE, anchorLane: null, x: MUSTER_X, y: MUSTER_Y, hp: card.hp, maxHp: card.hp,
       speed: card.speed, damage: card.damage, range: card.range, cooldown: 0, supportCooldown: 0,
       attackEvery: card.attackEvery, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: id % 3,
-      targetId: null, retargetIn: 0, bodyRadius: bodyRadiusFor(kind), laneSpeed, spawnGrace: .24,
+      targetId: null, retargetIn: 0, bodyRadius: bodyRadiusFor(kind), laneSpeed, spawnGrace: .95,
     });
     addParticles(g, MUSTER_X, MUSTER_Y, "#d0b48b", 7);
     g.banner = `${card.name} // CRAWLER DEPLOYED`;
@@ -745,7 +852,7 @@ export function AshfallGame() {
     g.rage -= def.cost;
     if (kind === "airstrike") g.strikeCooldown = 8;
     const life = kind === "barrel" ? 12 : kind === "medkit" ? 8 : kind === "molotov" ? 6 : .85;
-    g.supports.push({ id: g.nextId++, kind, lane, x: Math.max(230, Math.min(790, x)), y: laneY(lane), life, tick: 0, triggered: false });
+    g.supports.push({ id: g.nextId++, kind, lane, x: Math.max(WORLD_GEOMETRY.supportMinX, Math.min(WORLD_GEOMETRY.supportMaxX, x)), y: laneY(lane), life, tick: 0, triggered: false });
     g.banner = `${def.name} // ${LANE_NAMES[lane]} LANE`;
     g.bannerTime = 1;
     tone(kind === "airstrike" ? 68 : 160, kind === "airstrike" ? .35 : .08, kind === "airstrike" ? "sawtooth" : "square");
@@ -819,7 +926,8 @@ export function AshfallGame() {
       const ctx = canvas?.getContext("2d");
       const g = gameRef.current;
       if (!ctx) { frame = requestAnimationFrame(loop); return; }
-      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       const dt = Math.min(.033, g.last ? (now - g.last) / 1000 : 0);
       g.last = now;
 
@@ -1204,7 +1312,7 @@ export function AshfallGame() {
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""}`} aria-label="Three-lane wasteland battlefield" onPointerDown={handleBattlefieldPointer} />
 
         <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>EARLY ACCESS 0.3.1</em></small></div></div>
+          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>EARLY ACCESS 0.3.2</em></small></div></div>
           <div className="phase-block"><small>PHASE {hud.phase}</small><strong>{phaseName}</strong><em>W{String(hud.wave).padStart(2, "0")}</em></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} onClick={toggleBgm} aria-label={bgmMuted ? "BGMを再生" : "BGMをミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>BGM</small></button>
@@ -1258,10 +1366,10 @@ export function AshfallGame() {
 
         {!started && (
           <div className="start-screen"><div className="start-panel">
-            <p className="eyebrow">{"/// EARLY ACCESS BUILD 0.3.1 · SIEGE PRESSURE · BATTLE REPORT"}</p>
+            <p className="eyebrow">{"/// EARLY ACCESS BUILD 0.3.2 · ROUTE REBUILD · MOBILE CLARITY"}</p>
             <h1>ASHFALL<br /><span>OUTPOST</span></h1>
             <p className="mission">Deploy from the Crawler. Survivors intercept threats across three natural routes while the infected drive on your headquarters.</p>
-            <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>TAP A UNIT CARD · AUTO-DEPLOY</small></button>
+            <button className="start-btn" disabled={!assetsReady && !assetError} onClick={assetError ? () => window.location.reload() : startGame}><span>{assetError ? "RETRY ASSET LOAD" : assetsReady ? "BEGIN OPERATION" : "PREPARING ASSETS"}</span><small>{assetError ? "TAP TO RELOAD" : assetsReady ? "TAP A UNIT CARD · AUTO-DEPLOY" : "CRAWLER SYSTEM CHECK"}</small></button>
             <p className="controls">1–6 DEPLOY · Z/X/C/Q SUPPORT · P PAUSE</p>
           </div></div>
         )}

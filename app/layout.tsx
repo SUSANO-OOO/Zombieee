@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ASHFALL OUTPOST — Early Access 0.3.1",
+  title: "ASHFALL OUTPOST — Early Access 0.3.2",
   description:
-    "Early Access 0.3.1 — defend the Crawler with six specialized survivors through an escalating three-route siege.",
+    "Early Access 0.3.2 — defend the Crawler with six specialized survivors across a rebuilt three-route battlefield.",
   openGraph: {
     title: "ASHFALL OUTPOST",
     description: "Hold the line in an original wasteland defense game.",
@@ -24,6 +24,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ja">
+      <head>
+        <link rel="preload" as="image" href="/battlefield-v4.png" fetchPriority="high" />
+        <link rel="preload" as="image" href="/crawler-bus-v1.png" fetchPriority="high" />
+      </head>
       <body>{children}</body>
     </html>
   );

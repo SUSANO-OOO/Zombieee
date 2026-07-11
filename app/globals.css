@@ -6,9 +6,9 @@ html, body { width:100%; height:100%; overflow:hidden; margin:0; background:#090
 body { color:#f4e4c8; font-family:"Arial Narrow","Roboto Condensed",Impact,sans-serif; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
 button { font:inherit; }
 button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
-.game-shell { width:100vw; height:100dvh; display:grid; place-items:center; overflow:hidden; background:radial-gradient(circle at 50% 35%,#30302c,#0c1012 68%); }
-.game-frame { position:relative; width:min(100vw,177.78vh); aspect-ratio:16/9; overflow:hidden; background:#17232c; box-shadow:0 0 90px #000; isolation:isolate; }
-.game-frame::after { content:""; position:absolute; inset:0; pointer-events:none; z-index:20; background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0,rgba(255,255,255,.025) 1px,transparent 1px,transparent 3px),radial-gradient(circle,transparent 55%,rgba(0,0,0,.42)); mix-blend-mode:overlay; }
+.game-shell { width:100vw; height:100dvh; display:grid; place-items:center; overflow:hidden; background:radial-gradient(ellipse at 50% 45%,#28231f,#080b0d 72%); }
+.game-frame { position:relative; width:min(100vw,177.78vh); aspect-ratio:16/9; overflow:hidden; background:#171412 url('/battlefield-v4.png') center/cover no-repeat; box-shadow:0 0 90px #000; isolation:isolate; }
+.game-frame::after { content:""; position:absolute; inset:0; pointer-events:none; z-index:20; background:radial-gradient(ellipse at center,transparent 66%,rgba(0,0,0,.3)); }
 .battlefield { position:absolute; inset:0; width:100%; height:100%; image-rendering:auto; }
 .battlefield.targeting { cursor:crosshair; }
 .top-hud { position:absolute; z-index:4; top:0; left:0; right:0; height:10%; min-height:47px; display:flex; align-items:center; padding:1% 2%; gap:1%; background:linear-gradient(180deg,rgba(12,14,15,.92),rgba(12,14,15,.25),transparent); }
@@ -99,6 +99,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .start-panel h1 { margin:0; color:#e7d2ad; font:900 clamp(33px,6.7vw,88px)/.75 Impact,sans-serif; letter-spacing:.015em; text-shadow:5px 5px 0 #1c1b1a; }.start-panel h1 span { color:var(--rust); }
 .mission { max-width:430px; margin:6% 0; color:#b7aa95; font:600 clamp(8px,1vw,14px)/1.4 monospace; }
 .start-btn,.pause-screen button,.end-screen button { border:0; border-left:5px solid #f0bb65; padding:12px 26px; background:linear-gradient(90deg,#c75b35,#8d3829); color:#fff0d4; cursor:pointer; text-align:left; clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%); box-shadow:0 7px 22px rgba(0,0,0,.3); }
+.start-btn:disabled { cursor:wait; filter:saturate(.45) brightness(.68); }
 .start-btn span,.start-btn small { display:block; }.start-btn span { font:900 clamp(11px,1.5vw,20px) Impact,sans-serif; letter-spacing:.08em; }.start-btn small { margin-top:3px; color:#f5caa7; font:700 7px monospace; letter-spacing:.17em; }.start-btn:active,.pause-screen button:active,.end-screen button:active { transform:translateY(2px); }
 .controls { color:#776f63; font:700 clamp(5px,.55vw,8px) monospace; letter-spacing:.12em; }
 .pause-screen,.end-screen { background:rgba(8,10,11,.82); backdrop-filter:blur(3px); text-align:center; }.pause-screen > div,.end-screen > div { width:min(580px,76%); padding:3.2%; border:1px solid rgba(231,210,173,.25); background:rgba(25,25,23,.94); box-shadow:0 20px 80px #000; }.pause-screen small,.end-screen p { color:#c16d48; font:700 10px monospace; letter-spacing:.2em; }.pause-screen h2,.end-screen h2 { margin:7px 0 14px; font:900 clamp(28px,4.6vw,58px)/1 Impact,sans-serif; letter-spacing:.05em; }.pause-screen button,.end-screen button { display:block; margin:15px auto 0; }.end-screen.win h2 { color:#e7bc64; }.end-screen.lose h2 { color:#c1593b; }
@@ -106,11 +107,6 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .rotate-notice { display:none; position:fixed; inset:0; z-index:50; place-items:center; align-content:center; gap:12px; text-align:center; background:radial-gradient(circle,#273039,#090c0e 70%); color:#ead7b6; }.rotate-notice span { font-size:54px; color:var(--rust); animation:rotate-phone 1.8s ease-in-out infinite; }.rotate-notice b { font-size:18px; }.rotate-notice small { color:#908777; font:600 11px monospace; }
 @keyframes spin { to { transform:rotate(360deg); } } @keyframes audio-pulse { 50% { opacity:.35; transform:scale(.75); } } @keyframes rotate-phone { 50% { transform:rotate(90deg); } } @keyframes combo-pop { from { transform:scale(1.8); opacity:.2; } to { transform:scale(1); opacity:1; } } @keyframes boss-intro { from { transform:translate(-50%,-18px) scaleX(.72); opacity:0; } to { transform:translateX(-50%) scaleX(1); opacity:1; } } @keyframes crawler-hit { 35% { transform:translateX(3px); filter:brightness(1.45); } } @keyframes threat-in { from { transform:translateX(-12px); opacity:0; } }
 @media (orientation:portrait) and (max-width:800px) { .rotate-notice { display:grid; } }
-@media (orientation:landscape) and (min-aspect-ratio:19/10) {
-  .game-shell { background:linear-gradient(90deg,rgba(7,10,11,.72),rgba(7,10,11,.08) 24%,rgba(7,10,11,.08) 76%,rgba(7,10,11,.72)),url('/battlefield-v2.png') center/cover; }
-  .game-frame { width:100vw; height:100dvh; aspect-ratio:auto; background:url('/battlefield-v2.png') center/cover; box-shadow:none; }
-  .battlefield { inset:0 auto 0 50%; width:auto; height:100%; transform:translateX(-50%); -webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent); mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent); }
-}
 @media (max-height:430px) {
   .top-hud { min-height:38px; padding:.65% 1.4%; gap:.7%; }
   .brand-block { gap:6px; }.brand-mark { width:30px; height:30px; font-size:18px; }.brand-block small em { display:none; }

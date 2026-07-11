@@ -2,9 +2,22 @@ export const COMMAND_MAX = 100;
 export const COMMAND_REGEN = 3.5;
 export const RAGE_MAX = 100;
 
-// Three invisible routing bands keep movement readable without drawing lane UI.
-export const LANE_Y = [250, 305, 360];
+// Three invisible routing bands follow the open roadway bands in battlefield-v4.
+export const LANE_Y = [212, 282, 352];
 export const LANE_NAMES = ["TOP", "MID", "LOW"];
+
+// One geometry source keeps combat hit points, art placement, and deployment aligned.
+export const WORLD_GEOMETRY = Object.freeze({
+  baseX: 188,
+  nestX: 836,
+  musterX: 124,
+  musterY: LANE_Y[2],
+  crawler: Object.freeze({ x: -12, y: 219, width: 230, height: 144, exitX: 128 }),
+  supportMinX: 230,
+  supportMaxX: 790,
+  threatNearX: 362,
+  threatStartX: 482,
+});
 
 export const UNIT_CARDS = [
   { kind: "scout", name: "SCOUT", cost: 25, key: "1", desc: "INTERCEPT", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 },
@@ -76,7 +89,7 @@ export function laneForY(y, current = 1, hysteresis = 5) {
 export function autonomousTargetScore({ distance, claims, capacity = 1, enemyX, isCurrent = false }) {
   const claimsFromOthers = Math.max(0, claims - (isCurrent ? 1 : 0));
   const excessClaims = Math.max(0, claimsFromOthers - capacity + 1);
-  const crawlerThreat = enemyX < 300 ? 180 : enemyX < 420 ? 55 : 0;
+  const crawlerThreat = enemyX < WORLD_GEOMETRY.threatNearX ? 180 : enemyX < WORLD_GEOMETRY.threatStartX ? 55 : 0;
   return distance + excessClaims * 82 - crawlerThreat;
 }
 
@@ -108,5 +121,5 @@ export function humanAttackMultiplier(attackerKind, targetKind) {
 
 export function crawlerThreatLevel(nearestEnemyX) {
   if (!Number.isFinite(nearestEnemyX)) return 0;
-  return Math.max(0, Math.min(1, (420 - nearestEnemyX) / 280));
+  return Math.max(0, Math.min(1, (WORLD_GEOMETRY.threatStartX - nearestEnemyX) / 280));
 }

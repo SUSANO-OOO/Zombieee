@@ -11,6 +11,7 @@ import {
   RAGE_MAX,
   SUPPORT_DEFS,
   UNIT_CARDS,
+  WORLD_GEOMETRY,
   advanceCommand,
   autonomousTargetScore,
   canDeploy,
@@ -37,23 +38,23 @@ async function render() {
   );
 }
 
-test("server-renders Ashfall Outpost Early Access 0.3.1", async () => {
+test("server-renders Ashfall Outpost Early Access 0.3.2", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>ASHFALL OUTPOST — Early Access 0\.3\.1/);
+  assert.match(html, /<title>ASHFALL OUTPOST — Early Access 0\.3\.2/);
   assert.match(html, /aria-label="ASHFALL OUTPOST game"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /aria-label="Three-lane wasteland battlefield"/);
-  assert.match(html, /BEGIN OPERATION/);
+  assert.match(html, /PREPARING ASSETS/);
   assert.match(html, /AIRSTRIKE/);
   assert.match(html, /COMMAND/);
   assert.match(html, /RAGE/);
-  assert.match(html, /AUTO-DEPLOY/);
+  assert.match(html, /CRAWLER SYSTEM CHECK/);
   assert.match(html, />BGM</);
   assert.match(html, />SFX</);
-  assert.match(html, /EARLY ACCESS BUILD 0\.3\.1 · SIEGE PRESSURE · BATTLE REPORT/);
+  assert.match(html, /EARLY ACCESS BUILD 0\.3\.2 · ROUTE REBUILD · MOBILE CLARITY/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 
@@ -64,7 +65,7 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
   ]);
-  await access(new URL("../public/battlefield-v2.png", import.meta.url));
+  await access(new URL("../public/battlefield-v4.png", import.meta.url));
   await access(new URL("../public/ranger-sprites-v1.png", import.meta.url));
   await access(new URL("../public/brawler-sprites-v1.png", import.meta.url));
   await access(new URL("../public/scout-sprites-v2.png", import.meta.url));
@@ -78,7 +79,7 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   await access(new URL("../public/takuya-boss-sprites-v2.png", import.meta.url));
   await access(new URL("../public/shade-raider-sprites-v1.png", import.meta.url));
   await access(new URL("../public/crawler-bus-v1.png", import.meta.url));
-  assert.match(game, /battlefield-v2\.png/);
+  assert.match(game, /battlefield-v4\.png/);
   assert.match(game, /ranger-sprites-v1\.png/);
   assert.match(game, /brawler-sprites-v1\.png/);
   assert.match(game, /gunner-sprites-v1\.png/);
@@ -109,7 +110,20 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(rules, /AIRSTRIKE/);
 
   assert.match(game, /supportCooldown/);
-  assert.match(game, /const MUSTER_X = 148/);
+  assert.match(game, /const MUSTER_X = WORLD_GEOMETRY\.musterX/);
+  assert.match(game, /const MUSTER_LANE = laneForY\(MUSTER_Y, 2, 0\)/);
+  assert.match(game, /spawnGrace: \.95/);
+  assert.match(game, /drawCrawler\(ctx, g, sprites\)/);
+  assert.match(game, /window\.devicePixelRatio/);
+  assert.match(game, /ctx\?\.setTransform\(pixelWidth \/ W/);
+  assert.match(game, /new ResizeObserver\(configureCanvas\)/);
+  assert.match(game, /setAssetError\(true\)/);
+  assert.match(game, /RETRY ASSET LOAD/);
+  assert.match(game, /sprites\.infected/);
+  assert.match(css, /battlefield-v4\.png/);
+  assert.doesNotMatch(css, /mask-image/);
+  assert.doesNotMatch(css, /repeating-linear-gradient\(0deg/);
+  assert.doesNotMatch(css, /battlefield-v2\.png/);
   assert.match(game, /anchorLane: Lane \| null/);
   assert.match(game, /targetId: number \| null/);
   assert.match(game, /laneForY/);
@@ -170,7 +184,7 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(game, /data-playing=\{musicActive\}/);
   assert.match(game, /BGMをミュート/);
   assert.match(game, /効果音をミュート/);
-  assert.match(game, /SIEGE PRESSURE/);
+  assert.match(game, /ROUTE REBUILD/);
   assert.match(game, /abomination/);
   assert.match(game, /spitter/);
   assert.match(game, /damageTexts/);
@@ -178,7 +192,8 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(game, /comboTime/);
   assert.match(game, /if \(f\.hp <= 0\) continue/);
   assert.match(css, /orientation:portrait/);
-  assert.match(layout, /ASHFALL OUTPOST — Early Access 0\.3\.1/);
+  assert.match(layout, /ASHFALL OUTPOST — Early Access 0\.3\.2/);
+  assert.match(layout, /rel="preload" as="image" href="\/battlefield-v4\.png"/);
   assert.match(css, /crawler-health\.critical/);
   assert.match(css, /crawler-alert/);
   assert.match(css, /battle-report/);
@@ -201,12 +216,25 @@ test("applies the COMMAND economy and deployment gates at their boundaries", () 
   assert.equal(canDeploy({ ...ready, cooldown: 0.01 }), false);
 
   assert.deepEqual(LANE_NAMES, ["TOP", "MID", "LOW"]);
-  assert.equal(LANE_Y.length, 3);
+  assert.deepEqual(LANE_Y, [212, 282, 352]);
   assert.equal(new Set(LANE_Y).size, 3);
   assert.equal(laneForY(LANE_Y[0], 1), 0);
-  assert.equal(laneForY(275, 1), 1);
-  assert.equal(laneForY(270, 1), 0);
+  assert.equal(laneForY(250, 1), 1);
+  assert.equal(laneForY(240, 1), 0);
   assert.equal(laneForY(LANE_Y[2], 1), 2);
+  assert.deepEqual(WORLD_GEOMETRY, {
+    baseX: 188,
+    nestX: 836,
+    musterX: 124,
+    musterY: 352,
+    crawler: { x: -12, y: 219, width: 230, height: 144, exitX: 128 },
+    supportMinX: 230,
+    supportMaxX: 790,
+    threatNearX: 362,
+    threatStartX: 482,
+  });
+  assert.ok(WORLD_GEOMETRY.musterX < WORLD_GEOMETRY.crawler.exitX);
+  assert.ok(WORLD_GEOMETRY.crawler.exitX < WORLD_GEOMETRY.supportMinX);
   assert.deepEqual(UNIT_CARDS.map(({ kind, deployCooldown }) => [kind, deployCooldown]), [
     ["scout", 8],
     ["ranger", 11],
@@ -222,7 +250,7 @@ test("scores autonomous targets without collapsing every unit onto one enemy", (
   assert.equal(autonomousTargetScore({ distance: 300, claims: 1, capacity: 1, enemyX: 700 }), 382);
   assert.equal(autonomousTargetScore({ distance: 300, claims: 1, capacity: 1, enemyX: 700, isCurrent: true }), 300);
   assert.equal(autonomousTargetScore({ distance: 300, claims: 1, capacity: 2, enemyX: 700 }), 300);
-  assert.equal(autonomousTargetScore({ distance: 300, claims: 0, capacity: 1, enemyX: 250 }), 120);
+  assert.equal(autonomousTargetScore({ distance: 300, claims: 0, capacity: 1, enemyX: 350 }), 120);
 });
 
 test("distributes enemy interceptors without sending them backward", () => {
@@ -259,9 +287,9 @@ test("keeps survivor roles focused and threat feedback bounded", () => {
   assert.equal(humanAttackMultiplier("gunner", "takuya"), 1);
   assert.equal(humanAttackMultiplier("brawler", "crusher"), 1);
   assert.equal(crawlerThreatLevel(Infinity), 0);
-  assert.equal(crawlerThreatLevel(420), 0);
-  assert.equal(crawlerThreatLevel(280), .5);
-  assert.equal(crawlerThreatLevel(140), 1);
+  assert.equal(crawlerThreatLevel(482), 0);
+  assert.equal(crawlerThreatLevel(342), .5);
+  assert.equal(crawlerThreatLevel(202), 1);
   assert.equal(crawlerThreatLevel(0), 1);
 });
 
