@@ -12,12 +12,16 @@ import {
   advanceCommand,
   autonomousTargetScore,
   canDeploy,
+  crawlerSiegeDamage,
+  crawlerThreatLevel,
+  humanAttackMultiplier,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
   laneForY,
   objectiveFor,
   phaseAt,
   rageReward,
+  roleTargetBias,
   scrapReward,
 } from "./gameRules.js";
 
@@ -140,6 +144,11 @@ type Game = {
   flashOverlay: number;
   combo: number;
   comboTime: number;
+  maxCombo: number;
+  unitsLost: number;
+  crawlerHitFlash: number;
+  crawlerHitSfxCooldown: number;
+  criticalAnnounced: boolean;
 };
 
 type Hud = {
@@ -156,8 +165,21 @@ type Hud = {
   combo: number;
   bossHp: number;
   bossMax: number;
+  crawlerHitFlash: number;
+  threat: number;
   objective: string;
   deployCooldowns: Record<UnitKind, number>;
+};
+
+type BattleResult = {
+  won: boolean;
+  time: number;
+  wave: number;
+  kills: number;
+  scrap: number;
+  baseHp: number;
+  maxCombo: number;
+  unitsLost: number;
 };
 
 type SpriteMap = Record<string, HTMLImageElement>;
@@ -207,7 +229,17 @@ const initialGame = (): Game => ({
   flashOverlay: 0,
   combo: 0,
   comboTime: 0,
+  maxCombo: 0,
+  unitsLost: 0,
+  crawlerHitFlash: 0,
+  crawlerHitSfxCooldown: 0,
+  criticalAnnounced: false,
 });
+
+function formatMissionTime(seconds: number) {
+  const whole = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+}
 
 function addParticles(g: Game, x: number, y: number, color: string, count = 8) {
   for (let i = 0; i < count; i++) {
@@ -465,6 +497,23 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
     ctx.fillStyle = `rgba(255,193,106,${Math.min(.48, g.flashOverlay)})`; ctx.fillRect(0, 0, W, H);
   }
   ctx.restore();
+
+  const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 ? Math.min(nearest, fighter.x) : nearest, Infinity);
+  const threat = crawlerThreatLevel(nearestEnemyX);
+  if (threat > 0 || g.crawlerHitFlash > 0) {
+    ctx.save();
+    const danger = ctx.createLinearGradient(0, 0, W * .38, 0);
+    danger.addColorStop(0, `rgba(155,31,22,${.08 + threat * .2})`);
+    danger.addColorStop(1, "rgba(155,31,22,0)");
+    ctx.fillStyle = danger; ctx.fillRect(0, 0, W * .38, H);
+    if (g.crawlerHitFlash > 0) {
+      const hitGlow = ctx.createRadialGradient(112, 345, 6, 112, 345, 118);
+      hitGlow.addColorStop(0, `rgba(255,126,69,${Math.min(.5, g.crawlerHitFlash * 2.8)})`);
+      hitGlow.addColorStop(1, "rgba(178,35,22,0)");
+      ctx.fillStyle = hitGlow; ctx.fillRect(0, 220, 250, 220);
+    }
+    ctx.restore();
+  }
 }
 
 export function AshfallGame() {
@@ -489,9 +538,10 @@ export function AshfallGame() {
   const [hud, setHud] = useState<Hud>({
     energy: 55, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520, nestHp: 620,
     nestUnlocked: false, strike: 0, combo: 0, bossHp: 0, bossMax: 0,
+    crawlerHitFlash: 0, threat: 0,
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(),
   });
-  const [end, setEnd] = useState<"win" | "lose" | null>(null);
+  const [end, setEnd] = useState<BattleResult | null>(null);
 
   const chooseAction = useCallback((action: SelectedAction) => {
     selectedActionRef.current = action;
@@ -518,14 +568,14 @@ export function AshfallGame() {
     return audioRef.current;
   }, []);
 
-  const tone = useCallback((freq: number, duration = .06, type: OscillatorType = "square") => {
+  const tone = useCallback((freq: number, duration = .06, type: OscillatorType = "square", volume = .055) => {
     if (sfxMuted) return;
     try {
       const audio = ensureAudio();
       if (audio.state !== "running") void audio.resume().catch(() => undefined);
       const oscillator = audio.createOscillator(); const gain = audio.createGain();
       oscillator.type = type; oscillator.frequency.value = freq;
-      gain.gain.setValueAtTime(.055, audio.currentTime);
+      gain.gain.setValueAtTime(volume, audio.currentTime);
       gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + duration);
       oscillator.connect(gain); gain.connect(audio.destination); oscillator.start(); oscillator.stop(audio.currentTime + duration);
     } catch { /* Audio remains optional. */ }
@@ -725,7 +775,7 @@ export function AshfallGame() {
     const fresh = initialGame(); fresh.running = true; gameRef.current = fresh;
     desiredMusicModeRef.current = "normal";
     setStarted(true); setPaused(false); setEnd(null); chooseAction(null);
-    setHud({ energy: 55, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520, nestHp: 620, nestUnlocked: false, strike: 0, combo: 0, bossHp: 0, bossMax: 0, objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns() });
+    setHud({ energy: 55, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520, nestHp: 620, nestUnlocked: false, strike: 0, combo: 0, bossHp: 0, bossMax: 0, crawlerHitFlash: 0, threat: 0, objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns() });
     stopMusic(); stopJingle(); if (!bgmMuted) startMusic();
     tone(180, .12); window.setTimeout(() => tone(260, .12), 90);
   }, [bgmMuted, chooseAction, startMusic, stopJingle, stopMusic, tone]);
@@ -780,6 +830,8 @@ export function AshfallGame() {
         g.bannerTime = Math.max(0, g.bannerTime - dt);
         g.shake = Math.max(0, g.shake - dt * 38);
         g.flashOverlay = Math.max(0, g.flashOverlay - dt * 2.2);
+        g.crawlerHitFlash = Math.max(0, g.crawlerHitFlash - dt);
+        g.crawlerHitSfxCooldown = Math.max(0, g.crawlerHitSfxCooldown - dt);
         g.comboTime = Math.max(0, g.comboTime - dt);
         if (g.comboTime <= 0) g.combo = 0;
         for (const card of cards) g.deployCooldowns[card.kind] = Math.max(0, g.deployCooldowns[card.kind] - dt);
@@ -870,7 +922,7 @@ export function AshfallGame() {
               .filter((enemy) => fighterDistance(f, enemy) <= 48)
               .sort((a, b) => fighterDistance(f, a) - fighterDistance(f, b))[0];
             const targetCapacity = (enemy: Fighter) => enemy.kind === "takuya" ? 6 : enemy.kind === "abomination" ? 3 : enemy.kind === "crusher" || enemy.kind === "shade" ? 2 : 1;
-            const targetScore = (enemy: Fighter) => autonomousTargetScore({ distance: fighterDistance(f, enemy), claims: targetClaims.get(enemy.id) ?? 0, capacity: targetCapacity(enemy), enemyX: enemy.x, isCurrent: f.targetId === enemy.id });
+            const targetScore = (enemy: Fighter) => autonomousTargetScore({ distance: fighterDistance(f, enemy), claims: targetClaims.get(enemy.id) ?? 0, capacity: targetCapacity(enemy), enemyX: enemy.x, isCurrent: f.targetId === enemy.id }) + roleTargetBias(f.kind, enemy.kind);
             const best = enemies.reduce<Fighter | undefined>((choice, enemy) => !choice || targetScore(enemy) < targetScore(choice) ? enemy : choice, undefined);
             if (contact) target = contact;
             else if (locked?.side === "zombie" && locked.hp > 0) {
@@ -892,7 +944,7 @@ export function AshfallGame() {
               .sort((a, b) => fighterDistance(f, a) - fighterDistance(f, b))[0];
             const routeY = LANE_Y[f.anchorLane ?? f.lane];
             const lookAhead = Math.max(105, f.range + 36);
-            const defenderCapacity = (human: Fighter) => human.kind === "brute" || human.kind === "brawler" ? 3 : human.kind === "scout" || human.kind === "medic" ? 1 : 2;
+            const defenderCapacity = (human: Fighter) => human.kind === "brute" ? 3 : human.kind === "scout" || human.kind === "medic" ? 1 : 2;
             const routeBlockers = crawlerInRange ? [] : humans.filter((human) => isCrawlerRouteBlocker({
               enemyX: f.x, defenderX: human.x, defenderY: human.y, routeY, lookAhead,
             }));
@@ -941,10 +993,11 @@ export function AshfallGame() {
           if (target && distance <= f.range + target.bodyRadius) {
             if (f.cooldown <= 0) {
               const enragedTakuya = f.kind === "takuya" && f.hp / f.maxHp <= .5;
-              target.hp -= f.damage; target.flash = .12;
+              const attackDamage = f.side === "human" ? f.damage * humanAttackMultiplier(f.kind, target.kind) : f.damage;
+              target.hp -= attackDamage; target.flash = .12;
               target.knock = f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" ? 9 : 3;
               f.attack = .18; f.cooldown = enragedTakuya ? .9 : f.attackEvery;
-              g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(f.damage), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
+              g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(attackDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
               g.shake = Math.max(g.shake, f.kind === "takuya" ? 11 : f.kind === "brute" || f.kind === "abomination" ? 7 : 2.5);
               if (f.kind === "takuya") {
                 for (const splash of g.fighters) {
@@ -967,9 +1020,25 @@ export function AshfallGame() {
               if (f.side === "human") {
                 if (g.nestUnlocked) g.nestHp -= f.damage;
               } else {
-                g.baseHp -= f.damage;
+                const beforeHit = g.baseHp;
+                const siegeDamage = crawlerSiegeDamage(f.damage, g.phase);
+                g.baseHp = Math.max(0, g.baseHp - siegeDamage);
+                g.crawlerHitFlash = .18;
+                g.shake = Math.max(g.shake, 6);
+                if (beforeHit === 520) { g.banner = "BREACH — CRAWLER UNDER ATTACK"; g.bannerTime = 1.4; }
+                if (g.crawlerHitSfxCooldown <= 0 && g.baseHp > 0) {
+                  g.crawlerHitSfxCooldown = .28;
+                  tone(96, .06, "sawtooth", .028);
+                  addParticles(g, BASE_X + 5, f.y - 10, "#d76a45", 5);
+                  g.damageTexts.push({ x: BASE_X + 12, y: f.y - 36, value: `CRAWLER -${siegeDamage}`, life: .7, color: "#ff7658" });
+                }
+                if (!g.criticalAnnounced && beforeHit > 130 && g.baseHp <= 130 && g.baseHp > 0) {
+                  g.criticalAnnounced = true; g.banner = "CRAWLER CRITICAL"; g.bannerTime = 1.6; g.flashOverlay = Math.max(g.flashOverlay, .12);
+                  g.crawlerHitSfxCooldown = Math.max(g.crawlerHitSfxCooldown, .5); tone(76, .18, "sawtooth", .035);
+                }
               }
-              f.attack = .18; f.cooldown = f.attackEvery; g.shake = Math.max(g.shake, 4);
+              const enragedSiege = f.kind === "takuya" && f.hp / f.maxHp <= .5;
+              f.attack = .18; f.cooldown = enragedSiege ? 1 : f.attackEvery; g.shake = Math.max(g.shake, 4);
             }
           } else if (target && f.side === "human") {
             const humanLimit = g.phase === 1 ? 520 : g.phase === 2 || !g.nestUnlocked ? 730 : NEST_X;
@@ -1038,12 +1107,13 @@ export function AshfallGame() {
           g.corpses.push({ x: fighter.x, y: fighter.y, lane: fighter.lane, side: fighter.side, kind: fighter.kind, life: fighter.side === "human" ? 6 : 5, variant: fighter.variant, reviveIn: fighter.side === "human" ? 3.2 : null, prevented: false });
           if (fighter.side === "zombie") {
             g.kills++; g.combo++; g.comboTime = 2.3;
+            g.maxCombo = Math.max(g.maxCombo, g.combo);
             g.scrap += scrapReward(fighter.kind);
             g.rage = Math.min(RAGE_MAX, g.rage + rageReward(fighter.kind));
             if (fighter.kind === "takuya") {
               g.nestUnlocked = true; g.banner = "TAKUYA DOWN — NEST EXPOSED"; g.bannerTime = 3.4; g.shake = 15; g.flashOverlay = .3;
             }
-          }
+          } else g.unitsLost++;
         }
         g.fighters = g.fighters.filter((fighter) => fighter.hp > 0);
 
@@ -1090,7 +1160,9 @@ export function AshfallGame() {
           g.over = true;
           // A simultaneous collapse is a loss: protecting the crawler always remains mandatory.
           g.won = g.baseHp > 0 && g.nestHp <= 0;
-          g.shake = 18; setEnd(g.won ? "win" : "lose"); chooseAction(null);
+          g.shake = 18;
+          setEnd({ won: g.won, time: g.time, wave: g.wave, kills: g.kills, scrap: g.scrap, baseHp: Math.max(0, g.baseHp), maxCombo: g.maxCombo, unitsLost: g.unitsLost });
+          chooseAction(null);
           stopMusic(); playEndJingle(g.won);
         }
       }
@@ -1105,10 +1177,12 @@ export function AshfallGame() {
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
         const boss = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
+        const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 ? Math.min(nearest, fighter.x) : nearest, Infinity);
         setHud({
           energy: Math.floor(g.energy), rage: Math.floor(g.rage), scrap: g.scrap, kills: g.kills,
           wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp), nestHp: Math.max(0, g.nestHp), nestUnlocked: g.nestUnlocked,
           strike: Math.ceil(g.strikeCooldown), combo: g.combo, bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
+          crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
           objective: objectiveFor(g.phase, g.nestUnlocked), deployCooldowns: { ...g.deployCooldowns },
         });
       }
@@ -1130,16 +1204,17 @@ export function AshfallGame() {
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""}`} aria-label="Three-lane wasteland battlefield" onPointerDown={handleBattlefieldPointer} />
 
         <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>EARLY ACCESS 0.3.0</em></small></div></div>
+          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>EARLY ACCESS 0.3.1</em></small></div></div>
           <div className="phase-block"><small>PHASE {hud.phase}</small><strong>{phaseName}</strong><em>W{String(hud.wave).padStart(2, "0")}</em></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} onClick={toggleBgm} aria-label={bgmMuted ? "BGMを再生" : "BGMをミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>BGM</small></button>
           <button className="icon-btn audio-btn" onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "FX"}</b><small>SFX</small></button>
         </div>
 
-        <div className="health-hud crawler-health"><div><span>CRAWLER</span><b>{Math.ceil(hud.baseHp)} / 520</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
+        <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>CRAWLER</span><b>{Math.ceil(hud.baseHp)} / 520</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
         <div className={`health-hud nest-health ${hud.nestUnlocked ? "unlocked" : "locked"}`}><div><span>INFECTED NEST</span><b>{hud.nestUnlocked ? `${Math.ceil(hud.nestHp)} / 620` : "SEALED"}</b></div><i><em style={{ width: `${nestPct}%` }} /></i></div>
         {hud.bossMax > 0 && <div className="boss-hud"><div><span>BOSS // TAKUYA</span><b>IRON JUDGE</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
+        {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""}`}><b>CRAWLER THREAT</b><span>{hud.threat > .82 ? "IMMINENT" : "APPROACHING"}</span></div>}
 
         {selectedAction && started && !paused && !end && (
           <div className="placement-hint"><b>{selectedName} SELECTED</b><span>TAP A TARGET POSITION</span><small>ESC TO CANCEL</small></div>
@@ -1183,7 +1258,7 @@ export function AshfallGame() {
 
         {!started && (
           <div className="start-screen"><div className="start-panel">
-            <p className="eyebrow">{"/// EARLY ACCESS BUILD 0.3.0 · THREE-LANE WARFARE · DYNAMIC BGM"}</p>
+            <p className="eyebrow">{"/// EARLY ACCESS BUILD 0.3.1 · SIEGE PRESSURE · BATTLE REPORT"}</p>
             <h1>ASHFALL<br /><span>OUTPOST</span></h1>
             <p className="mission">Deploy from the Crawler. Survivors intercept threats across three natural routes while the infected drive on your headquarters.</p>
             <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>TAP A UNIT CARD · AUTO-DEPLOY</small></button>
@@ -1192,7 +1267,19 @@ export function AshfallGame() {
         )}
 
         {paused && started && !end && <div className="pause-screen"><div><small>OPERATION SUSPENDED</small><h2>PAUSED</h2><button onClick={togglePause}>RESUME</button></div></div>}
-        {end && <div className={`end-screen ${end}`}><div><p>{end === "win" ? "SECTOR SECURED" : "CRAWLER LOST"}</p><h2>{end === "win" ? "OUTPOST HELD" : "THE LINE BROKE"}</h2><span>{hud.kills} infected eliminated · {hud.scrap} scrap recovered</span><button onClick={startGame}>RUN IT AGAIN</button></div></div>}
+        {end && <div className={`end-screen ${end.won ? "win" : "lose"}`}><div className="end-panel">
+          <p>{end.won ? "SECTOR SECURED" : "CRAWLER LOST"}</p><h2>{end.won ? "OUTPOST HELD" : "THE LINE BROKE"}</h2>
+          <div className="battle-report" aria-label="Operation battle report">
+            <span><small>TIME</small><b>{formatMissionTime(end.time)}</b></span>
+            <span><small>WAVE</small><b>{String(end.wave).padStart(2, "0")}</b></span>
+            <span><small>KILLS</small><b>{end.kills}</b></span>
+            <span><small>SCRAP</small><b>{end.scrap}</b></span>
+            <span><small>CRAWLER</small><b>{Math.round(end.baseHp / 520 * 100)}%</b></span>
+            <span><small>LOSSES</small><b>{end.unitsLost}</b></span>
+          </div>
+          <div className="report-footer"><span>BEST COMBO ×{end.maxCombo}</span><span>{end.won ? "MISSION COMPLETE" : "RECALIBRATE AND RETRY"}</span></div>
+          <button onClick={startGame}>RUN IT AGAIN</button>
+        </div></div>}
       </section>
       <div className="rotate-notice"><span>↻</span><b>スマホを横向きにしてください</b><small>この作戦は横画面に最適化されています</small></div>
     </main>

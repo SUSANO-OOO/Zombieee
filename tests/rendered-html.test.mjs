@@ -14,12 +14,16 @@ import {
   advanceCommand,
   autonomousTargetScore,
   canDeploy,
+  crawlerSiegeDamage,
+  crawlerThreatLevel,
+  humanAttackMultiplier,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
   laneForY,
   objectiveFor,
   phaseAt,
   rageReward,
+  roleTargetBias,
 } from "../app/gameRules.js";
 
 async function render() {
@@ -33,12 +37,12 @@ async function render() {
   );
 }
 
-test("server-renders Ashfall Outpost Early Access 0.3.0", async () => {
+test("server-renders Ashfall Outpost Early Access 0.3.1", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>ASHFALL OUTPOST — Early Access 0\.3\.0/);
+  assert.match(html, /<title>ASHFALL OUTPOST — Early Access 0\.3\.1/);
   assert.match(html, /aria-label="ASHFALL OUTPOST game"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /aria-label="Three-lane wasteland battlefield"/);
@@ -49,7 +53,7 @@ test("server-renders Ashfall Outpost Early Access 0.3.0", async () => {
   assert.match(html, /AUTO-DEPLOY/);
   assert.match(html, />BGM</);
   assert.match(html, />SFX</);
-  assert.match(html, /EARLY ACCESS BUILD 0\.3\.0 · THREE-LANE WARFARE · DYNAMIC BGM/);
+  assert.match(html, /EARLY ACCESS BUILD 0\.3\.1 · SIEGE PRESSURE · BATTLE REPORT/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 
@@ -129,6 +133,16 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(game, /Queue separation keeps the lead attacker fixed/);
   assert.match(game, /zombieTargetFloor/);
   assert.match(game, /CRAWLER DEPLOYED/);
+  assert.match(game, /crawlerSiegeDamage/);
+  assert.match(game, /CRAWLER CRITICAL/);
+  assert.match(game, /crawlerHitSfxCooldown/);
+  assert.match(game, /crawlerThreatLevel/);
+  assert.match(game, /Operation battle report/);
+  assert.match(game, /formatMissionTime/);
+  assert.match(game, /unitsLost/);
+  assert.match(game, /maxCombo/);
+  assert.match(game, /humanAttackMultiplier/);
+  assert.match(game, /roleTargetBias/);
   assert.match(game, /onClick=\{\(\) => deployHuman\(card\.kind\)\}/);
   assert.doesNotMatch(game, /TAP TOP \/ MID \/ LOW LANE/);
   assert.doesNotMatch(game, /event\.key\.toLowerCase\(\) === "a"/);
@@ -156,7 +170,7 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(game, /data-playing=\{musicActive\}/);
   assert.match(game, /BGMをミュート/);
   assert.match(game, /効果音をミュート/);
-  assert.match(game, /DYNAMIC BGM/);
+  assert.match(game, /SIEGE PRESSURE/);
   assert.match(game, /abomination/);
   assert.match(game, /spitter/);
   assert.match(game, /damageTexts/);
@@ -164,7 +178,10 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(game, /comboTime/);
   assert.match(game, /if \(f\.hp <= 0\) continue/);
   assert.match(css, /orientation:portrait/);
-  assert.match(layout, /ASHFALL OUTPOST — Early Access 0\.3\.0/);
+  assert.match(layout, /ASHFALL OUTPOST — Early Access 0\.3\.1/);
+  assert.match(css, /crawler-health\.critical/);
+  assert.match(css, /crawler-alert/);
+  assert.match(css, /battle-report/);
 });
 
 test("applies the COMMAND economy and deployment gates at their boundaries", () => {
@@ -225,12 +242,35 @@ test("only treats defenders on the active Crawler route as blockers", () => {
   assert.equal(isCrawlerRouteBlocker({ ...base, defenderY: LANE_Y[0] + 31 }), false);
 });
 
+test("escalates Crawler siege damage by phase without changing unit damage", () => {
+  assert.equal(crawlerSiegeDamage(15, 1), 11);
+  assert.equal(crawlerSiegeDamage(15, 2), 14);
+  assert.equal(crawlerSiegeDamage(15, 3), 15);
+  assert.equal(crawlerSiegeDamage(58, 1), 41);
+  assert.equal(crawlerSiegeDamage(58, 2), 53);
+  assert.equal(crawlerSiegeDamage(58, 3), 58);
+});
+
+test("keeps survivor roles focused and threat feedback bounded", () => {
+  assert.equal(roleTargetBias("ranger", "spitter"), -42);
+  assert.equal(roleTargetBias("ranger", "walker"), 0);
+  assert.equal(roleTargetBias("gunner", "crusher"), -34);
+  assert.equal(humanAttackMultiplier("gunner", "crusher"), 1.3);
+  assert.equal(humanAttackMultiplier("gunner", "takuya"), 1);
+  assert.equal(humanAttackMultiplier("brawler", "crusher"), 1);
+  assert.equal(crawlerThreatLevel(Infinity), 0);
+  assert.equal(crawlerThreatLevel(420), 0);
+  assert.equal(crawlerThreatLevel(280), .5);
+  assert.equal(crawlerThreatLevel(140), 1);
+  assert.equal(crawlerThreatLevel(0), 1);
+});
+
 test("returns the intended phases, objectives, RAGE rewards, and support costs", () => {
   assert.equal(phaseAt(0), 1);
   assert.equal(phaseAt(59.999), 1);
   assert.equal(phaseAt(60), 2);
-  assert.equal(phaseAt(137.999), 2);
-  assert.equal(phaseAt(138), 3);
+  assert.equal(phaseAt(147.999), 2);
+  assert.equal(phaseAt(148), 3);
 
   assert.equal(objectiveFor(1, false), "HOLD ALL THREE LANES");
   assert.equal(objectiveFor(2, false), "PUSH TO THE CHECKPOINT");
@@ -249,9 +289,9 @@ test("returns the intended phases, objectives, RAGE rewards, and support costs",
   ]);
 });
 
-test("defines a unique ordered mission timeline with TAKUYA at 138 seconds", () => {
+test("defines a unique ordered mission timeline with TAKUYA at 148 seconds", () => {
   const eventTimes = MISSION_EVENTS.map(({ at }) => at);
-  assert.deepEqual(eventTimes, [0, 20, 42, 60, 80, 103, 123, 132, 138, 158, 178, 210]);
+  assert.deepEqual(eventTimes, [0, 20, 42, 60, 80, 103, 123, 142, 148, 168, 188, 220]);
   assert.equal(new Set(eventTimes).size, MISSION_EVENTS.length);
   assert.equal(new Set(MISSION_EVENTS.map(({ at, label }) => `${at}:${label}`)).size, MISSION_EVENTS.length);
   assert.ok(eventTimes.every((at, index) => index === 0 || at > eventTimes[index - 1]));
@@ -259,12 +299,13 @@ test("defines a unique ordered mission timeline with TAKUYA at 138 seconds", () 
 
   const takuyaEvents = MISSION_EVENTS.filter(({ units }) => units.some(([kind]) => kind === "takuya"));
   assert.equal(takuyaEvents.length, 1);
-  assert.equal(takuyaEvents[0].at, 138);
+  assert.equal(takuyaEvents[0].at, 148);
   assert.equal(takuyaEvents[0].wave, 8);
+  assert.deepEqual(new Set(takuyaEvents[0].units.map(([kind]) => kind)), new Set(["walker", "spitter", "takuya", "runner", "crusher"]));
   assert.deepEqual(takuyaEvents[0].units.find(([kind]) => kind === "takuya"), ["takuya", 1]);
 
-  const warning = MISSION_EVENTS.find(({ at }) => at === 132);
+  const warning = MISSION_EVENTS.find(({ at }) => at === 142);
   assert.deepEqual(warning?.units, []);
-  const enrage = MISSION_EVENTS.find(({ at }) => at === 178);
+  const enrage = MISSION_EVENTS.find(({ at }) => at === 188);
   assert.equal(enrage?.bossOnly, true);
 });
