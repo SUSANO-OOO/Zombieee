@@ -64,3 +64,24 @@ export function objectiveFor(phase, nestUnlocked) {
   if (phase === 2) return "PUSH TO THE CHECKPOINT";
   return nestUnlocked ? "DESTROY THE INFECTED NEST" : "ELIMINATE TAKUYA";
 }
+
+export function laneForY(y, current = 1, hysteresis = 5) {
+  let candidate = 0;
+  if (Math.abs(y - LANE_Y[1]) < Math.abs(y - LANE_Y[candidate])) candidate = 1;
+  if (Math.abs(y - LANE_Y[2]) < Math.abs(y - LANE_Y[candidate])) candidate = 2;
+  if (candidate === current) return current;
+  return Math.abs(y - LANE_Y[candidate]) + hysteresis < Math.abs(y - LANE_Y[current]) ? candidate : current;
+}
+
+export function autonomousTargetScore({ distance, claims, capacity = 1, enemyX, isCurrent = false }) {
+  const claimsFromOthers = Math.max(0, claims - (isCurrent ? 1 : 0));
+  const excessClaims = Math.max(0, claimsFromOthers - capacity + 1);
+  const crawlerThreat = enemyX < 300 ? 180 : enemyX < 420 ? 55 : 0;
+  return distance + excessClaims * 82 - crawlerThreat;
+}
+
+export function interceptorTargetScore({ distance, claims, capacity = 1, isCurrent = false, rearward = 0 }) {
+  const claimsFromOthers = Math.max(0, claims - (isCurrent ? 1 : 0));
+  const excessClaims = Math.max(0, claimsFromOthers - capacity + 1);
+  return distance + Math.max(0, rearward) * 2 + excessClaims * 96;
+}

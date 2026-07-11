@@ -12,7 +12,10 @@ import {
   SUPPORT_DEFS,
   UNIT_CARDS,
   advanceCommand,
+  autonomousTargetScore,
   canDeploy,
+  interceptorTargetScore,
+  laneForY,
   objectiveFor,
   phaseAt,
   rageReward,
@@ -42,6 +45,9 @@ test("server-renders Ashfall Outpost Early Access 0.3.0", async () => {
   assert.match(html, /AIRSTRIKE/);
   assert.match(html, /COMMAND/);
   assert.match(html, /RAGE/);
+  assert.match(html, /AUTO-DEPLOY/);
+  assert.match(html, />BGM</);
+  assert.match(html, />SFX</);
   assert.match(html, /EARLY ACCESS BUILD 0\.3\.0 · THREE-LANE WARFARE · DYNAMIC BGM/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
@@ -77,7 +83,7 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(rules, /ELITE ENEMY — SHADE/);
   assert.match(rules, /BOSS — TAKUYA \/ IRON JUDGE/);
 
-  assert.match(game, /Three actual combat lanes/);
+  assert.match(game, /Three combat corridors used by adaptive routing/);
   assert.match(game, /aria-label="Three-lane wasteland battlefield"/);
   assert.match(game, /advanceCommand\(g\.energy, dt\)/);
   assert.match(game, /canDeploy/);
@@ -85,7 +91,7 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(game, /<span>COMMAND<\/span>/);
   assert.match(game, /<span>RAGE<\/span>/);
   assert.match(game, /deploySupport/);
-  assert.match(game, /damageEnemiesInLane/);
+  assert.match(game, /damageEnemiesInRadius/);
   assert.match(game, /supportDefs\.map/);
   assert.match(rules, /IRON BARREL/);
   assert.match(rules, /MEDKIT/);
@@ -93,6 +99,26 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(rules, /AIRSTRIKE/);
 
   assert.match(game, /supportCooldown/);
+  assert.match(game, /const MUSTER_X = 148/);
+  assert.match(game, /anchorLane: Lane \| null/);
+  assert.match(game, /targetId: number \| null/);
+  assert.match(game, /laneForY/);
+  assert.match(game, /autonomousTargetScore/);
+  assert.match(game, /targetClaims/);
+  assert.match(game, /fighterDistance\(f, target\)/);
+  assert.match(game, /enemyLaneSpeedFor/);
+  assert.match(game, /validInterceptors/);
+  assert.match(game, /interceptorClaims/);
+  assert.match(game, /interceptorTargetScore/);
+  assert.match(game, /f\.anchorLane = routes\.reduce/);
+  assert.match(game, /never step away from the CRAWLER or phase through a target/);
+  assert.match(game, /Math\.max\(target\.x, f\.x \+ dx \/ distance \* step\)/);
+  assert.match(game, /Queue separation keeps the lead attacker fixed/);
+  assert.match(game, /zombieTargetFloor/);
+  assert.match(game, /MUSTER DEPLOYED/);
+  assert.match(game, /onClick=\{\(\) => deployHuman\(card\.kind\)\}/);
+  assert.doesNotMatch(game, /TAP TOP \/ MID \/ LOW LANE/);
+  assert.doesNotMatch(game, /event\.key\.toLowerCase\(\) === "a"/);
   assert.match(game, /reviveIn/);
   assert.match(game, /medicNearby/);
   assert.match(game, /kind: "turned"/);
@@ -111,7 +137,12 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(game, /playEndJingle/);
   assert.match(game, /const stopJingle/);
   assert.match(game, /scheduled < 2/);
-  assert.match(game, /BGMと効果音をミュート/);
+  assert.match(game, /master\.gain\.setValueAtTime\(\.16/);
+  assert.match(game, /const melody = \[220/);
+  assert.match(game, /musicStartTokenRef/);
+  assert.match(game, /data-playing=\{musicActive\}/);
+  assert.match(game, /BGMをミュート/);
+  assert.match(game, /効果音をミュート/);
   assert.match(game, /DYNAMIC BGM/);
   assert.match(game, /abomination/);
   assert.match(game, /spitter/);
@@ -142,6 +173,10 @@ test("applies the COMMAND economy and deployment gates at their boundaries", () 
   assert.deepEqual(LANE_NAMES, ["TOP", "MID", "LOW"]);
   assert.equal(LANE_Y.length, 3);
   assert.equal(new Set(LANE_Y).size, 3);
+  assert.equal(laneForY(LANE_Y[0], 1), 0);
+  assert.equal(laneForY(275, 1), 1);
+  assert.equal(laneForY(270, 1), 0);
+  assert.equal(laneForY(LANE_Y[2], 1), 2);
   assert.deepEqual(UNIT_CARDS.map(({ kind, deployCooldown }) => [kind, deployCooldown]), [
     ["scout", 8],
     ["ranger", 11],
@@ -150,6 +185,22 @@ test("applies the COMMAND economy and deployment gates at their boundaries", () 
     ["gunner", 15],
     ["medic", 20],
   ]);
+});
+
+test("scores autonomous targets without collapsing every unit onto one enemy", () => {
+  assert.equal(autonomousTargetScore({ distance: 300, claims: 0, capacity: 1, enemyX: 700 }), 300);
+  assert.equal(autonomousTargetScore({ distance: 300, claims: 1, capacity: 1, enemyX: 700 }), 382);
+  assert.equal(autonomousTargetScore({ distance: 300, claims: 1, capacity: 1, enemyX: 700, isCurrent: true }), 300);
+  assert.equal(autonomousTargetScore({ distance: 300, claims: 1, capacity: 2, enemyX: 700 }), 300);
+  assert.equal(autonomousTargetScore({ distance: 300, claims: 0, capacity: 1, enemyX: 250 }), 120);
+});
+
+test("distributes enemy interceptors without sending them backward", () => {
+  assert.equal(interceptorTargetScore({ distance: 120, claims: 0, capacity: 1 }), 120);
+  assert.equal(interceptorTargetScore({ distance: 120, claims: 1, capacity: 1 }), 216);
+  assert.equal(interceptorTargetScore({ distance: 120, claims: 1, capacity: 1, isCurrent: true }), 120);
+  assert.equal(interceptorTargetScore({ distance: 120, claims: 2, capacity: 2 }), 216);
+  assert.equal(interceptorTargetScore({ distance: 120, claims: 0, capacity: 1, rearward: 12 }), 144);
 });
 
 test("returns the intended phases, objectives, RAGE rewards, and support costs", () => {

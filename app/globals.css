@@ -24,6 +24,10 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .phase-block em { padding:0 8px; color:#c7b89d; font-size:9px; font-weight:800; letter-spacing:.08em; }
 .icon-btn { width:38px; height:38px; border:1px solid rgba(235,205,161,.28); background:rgba(18,20,20,.72); color:#d7c6a9; cursor:pointer; }
 .icon-btn:active { transform:scale(.94); }
+.audio-btn { position:relative; width:46px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
+.audio-btn b { font:900 12px/1 monospace; }.audio-btn small { color:#8e8373; font:700 6px/1 monospace; letter-spacing:.08em; }
+.audio-btn.playing { border-color:rgba(226,163,66,.65); color:#f1c267; box-shadow:inset 0 0 12px rgba(226,163,66,.13); }
+.audio-btn.playing::after { content:""; position:absolute; top:3px; right:3px; width:4px; height:4px; border-radius:50%; background:#e9ad4c; box-shadow:0 0 6px #e9ad4c; animation:audio-pulse 1.2s ease-in-out infinite; }
 .health-hud { position:absolute; z-index:4; top:12%; width:25%; }
 .crawler-health { left:2%; }.nest-health { right:2%; text-align:right; }
 .health-hud div { display:flex; justify-content:space-between; gap:10px; font:700 clamp(7px,.75vw,11px) monospace; letter-spacing:.1em; text-shadow:0 1px 2px #000; }
@@ -94,7 +98,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .controls { color:#776f63; font:700 clamp(5px,.55vw,8px) monospace; letter-spacing:.12em; }
 .pause-screen,.end-screen { background:rgba(8,10,11,.82); backdrop-filter:blur(3px); text-align:center; }.pause-screen div,.end-screen div { width:min(520px,70%); padding:5%; border:1px solid rgba(231,210,173,.25); background:rgba(25,25,23,.92); box-shadow:0 20px 80px #000; }.pause-screen small,.end-screen p { color:#c16d48; font:700 10px monospace; letter-spacing:.2em; }.pause-screen h2,.end-screen h2 { margin:8px 0 20px; font:900 clamp(30px,5vw,64px)/1 Impact,sans-serif; letter-spacing:.05em; }.pause-screen button,.end-screen button { display:block; margin:18px auto 0; }.end-screen span { color:#aea18d; font:700 10px monospace; }.end-screen.win h2 { color:#e7bc64; }.end-screen.lose h2 { color:#c1593b; }
 .rotate-notice { display:none; position:fixed; inset:0; z-index:50; place-items:center; align-content:center; gap:12px; text-align:center; background:radial-gradient(circle,#273039,#090c0e 70%); color:#ead7b6; }.rotate-notice span { font-size:54px; color:var(--rust); animation:rotate-phone 1.8s ease-in-out infinite; }.rotate-notice b { font-size:18px; }.rotate-notice small { color:#908777; font:600 11px monospace; }
-@keyframes spin { to { transform:rotate(360deg); } } @keyframes rotate-phone { 50% { transform:rotate(90deg); } } @keyframes combo-pop { from { transform:scale(1.8); opacity:.2; } to { transform:scale(1); opacity:1; } } @keyframes boss-intro { from { transform:translate(-50%,-18px) scaleX(.72); opacity:0; } to { transform:translateX(-50%) scaleX(1); opacity:1; } }
+@keyframes spin { to { transform:rotate(360deg); } } @keyframes audio-pulse { 50% { opacity:.35; transform:scale(.75); } } @keyframes rotate-phone { 50% { transform:rotate(90deg); } } @keyframes combo-pop { from { transform:scale(1.8); opacity:.2; } to { transform:scale(1); opacity:1; } } @keyframes boss-intro { from { transform:translate(-50%,-18px) scaleX(.72); opacity:0; } to { transform:translateX(-50%) scaleX(1); opacity:1; } }
 @media (orientation:portrait) and (max-width:800px) { .rotate-notice { display:grid; } }
 @media (orientation:landscape) and (min-aspect-ratio:19/10) {
   .game-shell { background:linear-gradient(90deg,rgba(7,10,11,.72),rgba(7,10,11,.08) 24%,rgba(7,10,11,.08) 76%,rgba(7,10,11,.72)),url('/battlefield-v2.png') center/cover; }
@@ -104,7 +108,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 @media (max-height:430px) {
   .top-hud { min-height:38px; padding:.65% 1.4%; gap:.7%; }
   .brand-block { gap:6px; }.brand-mark { width:30px; height:30px; font-size:18px; }.brand-block small em { display:none; }
-  .phase-block,.icon-btn { height:31px; }.icon-btn { width:31px; }
+  .phase-block,.icon-btn { height:31px; }.icon-btn { width:31px; }.audio-btn { width:37px; }.audio-btn b { font-size:10px; }.audio-btn small { font-size:5px; }
   .phase-block small { padding:0 5px; font-size:6px; }.phase-block strong { padding:0 7px; font-size:11px; }.phase-block em { padding:0 5px; font-size:7px; }
   .bottom-hud { height:25%; min-height:76px; gap:.55%; padding:.62% .8%; }
   .resource-stack { flex-basis:13.5%; gap:3px; padding-right:.55%; }

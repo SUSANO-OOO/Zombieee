@@ -10,7 +10,10 @@ import {
   SUPPORT_DEFS,
   UNIT_CARDS,
   advanceCommand,
+  autonomousTargetScore,
   canDeploy,
+  interceptorTargetScore,
+  laneForY,
   objectiveFor,
   phaseAt,
   rageReward,
@@ -21,12 +24,14 @@ const W = 960;
 const H = 540;
 const BASE_X = 126;
 const NEST_X = 836;
+const MUSTER_X = 148;
+const MUSTER_Y = LANE_Y[1];
 
 type Lane = 0 | 1 | 2;
 type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic";
 type SupportKind = "barrel" | "medkit" | "molotov" | "airstrike";
 type MusicMode = "normal" | "danger" | "boss";
-type SelectedAction = `unit:${UnitKind}` | `support:${SupportKind}` | null;
+type SelectedAction = `support:${SupportKind}` | null;
 
 type UnitCard = {
   kind: UnitKind;
@@ -54,6 +59,7 @@ type Fighter = {
   side: "human" | "zombie";
   kind: string;
   lane: Lane;
+  anchorLane: Lane | null;
   x: number;
   y: number;
   hp: number;
@@ -69,6 +75,11 @@ type Fighter = {
   attack: number;
   knock: number;
   variant: number;
+  targetId: number | null;
+  retargetIn: number;
+  bodyRadius: number;
+  laneSpeed: number;
+  spawnGrace: number;
 };
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number };
@@ -215,6 +226,29 @@ function laneY(lane: Lane, id = 0) {
   return LANE_Y[lane] + ((id % 3) - 1) * 3;
 }
 
+function fighterDistance(a: Pick<Fighter, "x" | "y">, b: Pick<Fighter, "x" | "y">) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function effectDistance(a: { x: number; y: number }, b: { x: number; y: number }) {
+  return Math.hypot(a.x - b.x, (a.y - b.y) * 2);
+}
+
+function bodyRadiusFor(kind: string) {
+  if (kind === "takuya" || kind === "abomination") return 20;
+  if (kind === "crusher" || kind === "brute") return 16;
+  return 11;
+}
+
+function enemyLaneSpeedFor(kind: string) {
+  if (kind === "runner" || kind === "shade") return 64;
+  if (kind === "spitter") return 42;
+  if (kind === "walker" || kind === "turned") return 38;
+  if (kind === "takuya") return 32;
+  if (kind === "crusher") return 24;
+  return 18;
+}
+
 function enemyStats(kind: string, wave: number) {
   if (kind === "takuya") return { hp: 1200, speed: 9, damage: 58, range: 38, attackEvery: 1.15 };
   if (kind === "shade") return { hp: 220, speed: 29, damage: 23, range: 27, attackEvery: .62 };
@@ -234,6 +268,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0) {
     side: "zombie",
     kind,
     lane,
+    anchorLane: lane,
     x: kind === "turned" ? 0 : Math.min(842, 786 + order * 18),
     y: laneY(lane, id),
     maxHp: data.hp,
@@ -245,13 +280,18 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0) {
     attack: 0,
     knock: 0,
     variant: id % 3,
+    targetId: null,
+    retargetIn: 0,
+    bodyRadius: bodyRadiusFor(kind),
+    laneSpeed: enemyLaneSpeedFor(kind),
+    spawnGrace: 0,
   });
   return g.fighters[g.fighters.length - 1];
 }
 
-function damageEnemiesInLane(g: Game, lane: Lane, x: number, radius: number, damage: number, color: string, knock = 8) {
+function damageEnemiesInRadius(g: Game, x: number, y: number, radius: number, damage: number, color: string, knock = 8) {
   for (const f of g.fighters) {
-    if (f.side !== "zombie" || f.lane !== lane || Math.abs(f.x - x) > radius || f.hp <= 0) continue;
+    if (f.side !== "zombie" || effectDistance(f, { x, y }) > radius || f.hp <= 0) continue;
     f.hp -= damage;
     f.flash = .18;
     f.knock = Math.max(f.knock, knock);
@@ -341,7 +381,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
   grade.addColorStop(0, "rgba(23,28,31,.18)"); grade.addColorStop(.55, "rgba(15,13,12,.04)"); grade.addColorStop(1, "rgba(58,18,12,.2)");
   ctx.fillStyle = grade; ctx.fillRect(0, 0, W, H);
 
-  // Three actual combat lanes, with independent gates and targeting.
+  // Three combat corridors used by adaptive routing and support targeting.
   for (let lane = 0; lane < 3; lane++) {
     const y = LANE_Y[lane];
     ctx.fillStyle = lane % 2 ? "rgba(18,20,19,.10)" : "rgba(211,166,101,.045)";
@@ -367,6 +407,14 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
   ctx.fillStyle = "#78918c"; ctx.fillRect(63, 344, 34, 19);
   ctx.fillStyle = "#171a1b"; ctx.beginPath(); ctx.arc(45, 397, 17, 0, Math.PI * 2); ctx.arc(91, 397, 17, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = "#73726a"; ctx.beginPath(); ctx.arc(45, 397, 7, 0, Math.PI * 2); ctx.arc(91, 397, 7, 0, Math.PI * 2); ctx.fill();
+
+  // All survivor units enter through this single muster beacon, then choose their own route.
+  const musterPulse = 18 + Math.sin(g.time * 5) * 3;
+  ctx.strokeStyle = "rgba(236,181,78,.72)"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(MUSTER_X, MUSTER_Y, musterPulse, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = "rgba(226,163,66,.22)"; ctx.beginPath(); ctx.arc(MUSTER_X, MUSTER_Y, 11, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#f0c46d"; ctx.beginPath(); ctx.moveTo(MUSTER_X, MUSTER_Y - 7); ctx.lineTo(MUSTER_X + 7, MUSTER_Y); ctx.lineTo(MUSTER_X, MUSTER_Y + 7); ctx.lineTo(MUSTER_X - 7, MUSTER_Y); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "rgba(239,211,166,.68)"; ctx.font = "bold 8px monospace"; ctx.fillText("MUSTER", MUSTER_X + 23, MUSTER_Y + 3);
 
   // Infected nest and its three approach nodes.
   if (nestSprite?.complete) {
@@ -447,11 +495,14 @@ export function AshfallGame() {
   const musicRef = useRef<MusicRuntime | null>(null);
   const jingleRef = useRef<JingleRuntime | null>(null);
   const desiredMusicModeRef = useRef<MusicMode>("normal");
+  const musicStartTokenRef = useRef(0);
   const lastHudRef = useRef(0);
   const selectedActionRef = useRef<SelectedAction>(null);
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const [bgmMuted, setBgmMuted] = useState(false);
+  const [sfxMuted, setSfxMuted] = useState(false);
+  const [musicActive, setMusicActive] = useState(false);
   const [selectedAction, setSelectedAction] = useState<SelectedAction>(null);
   const [hud, setHud] = useState<Hud>({
     energy: 55, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520, nestHp: 620,
@@ -482,21 +533,21 @@ export function AshfallGame() {
   const ensureAudio = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!audioRef.current || audioRef.current.state === "closed") audioRef.current = new AudioCtx();
-    if (audioRef.current.state === "suspended") void audioRef.current.resume();
     return audioRef.current;
   }, []);
 
   const tone = useCallback((freq: number, duration = .06, type: OscillatorType = "square") => {
-    if (muted) return;
+    if (sfxMuted) return;
     try {
       const audio = ensureAudio();
+      if (audio.state !== "running") void audio.resume().catch(() => undefined);
       const oscillator = audio.createOscillator(); const gain = audio.createGain();
       oscillator.type = type; oscillator.frequency.value = freq;
       gain.gain.setValueAtTime(.055, audio.currentTime);
       gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + duration);
       oscillator.connect(gain); gain.connect(audio.destination); oscillator.start(); oscillator.stop(audio.currentTime + duration);
     } catch { /* Audio remains optional. */ }
-  }, [ensureAudio, muted]);
+  }, [ensureAudio, sfxMuted]);
 
   const syncMusicMode = useCallback((mode: MusicMode) => {
     desiredMusicModeRef.current = mode;
@@ -513,6 +564,8 @@ export function AshfallGame() {
   }, []);
 
   const stopMusic = useCallback(() => {
+    musicStartTokenRef.current++;
+    setMusicActive(false);
     const music = musicRef.current;
     if (!music) return;
     window.clearInterval(music.timer);
@@ -537,17 +590,23 @@ export function AshfallGame() {
 
   const startMusic = useCallback(() => {
     if (musicRef.current) return;
+    const token = ++musicStartTokenRef.current;
+    let audio: AudioContext;
+    try { audio = ensureAudio(); } catch { setMusicActive(false); return; }
+    if (audio.state !== "running") void audio.resume().catch(() => undefined);
+    if (token !== musicStartTokenRef.current || musicRef.current) return;
     try {
-      const audio = ensureAudio();
       const master = audio.createGain(); const normalBus = audio.createGain(); const dangerBus = audio.createGain(); const bossBus = audio.createGain();
-      master.gain.setValueAtTime(.047, audio.currentTime); normalBus.gain.value = 1;
+      master.gain.setValueAtTime(.16, audio.currentTime); normalBus.gain.value = 1;
       const mode = desiredMusicModeRef.current;
       dangerBus.gain.value = mode === "normal" ? .0001 : mode === "danger" ? 1 : .55;
       bossBus.gain.value = mode === "boss" ? 1 : .0001;
       normalBus.connect(master); dangerBus.connect(master); bossBus.connect(master); master.connect(audio.destination);
       const music: MusicRuntime = { master, normalBus, dangerBus, bossBus, timer: 0, step: 0, nextStepAt: audio.currentTime + .04, mode };
       musicRef.current = music;
+      setMusicActive(true);
       const bassLine = [55, 55, 65.41, 55, 49, 49, 43.65, 49, 55, 55, 73.42, 65.41, 49, 43.65, 49, 41.2];
+      const melody = [220, 0, 246.94, 0, 293.66, 0, 261.63, 0, 220, 0, 329.63, 0, 293.66, 0, 196, 0];
       const voice = (frequency: number, at: number, duration: number, volume: number, type: OscillatorType, bus: GainNode, endFrequency?: number) => {
         const oscillator = audio.createOscillator(); const gain = audio.createGain();
         oscillator.type = type; oscillator.frequency.setValueAtTime(frequency, at);
@@ -557,13 +616,14 @@ export function AshfallGame() {
       };
       const scheduleStep = (at: number, stepNumber: number) => {
         const step = stepNumber % bassLine.length;
-        voice(bassLine[step], at, .19, .18, "sawtooth", normalBus);
-        if (step % 4 === 0) voice(bassLine[step] * 2, at, .82, .05, "triangle", normalBus);
-        if (step % 2 === 0) voice(step % 4 === 0 ? 72 : 108, at, .1, .14, "sine", normalBus, 38);
-        if (step % 2 === 1) voice(185 + (step % 4) * 34, at, .055, .085, "square", dangerBus);
-        if (step % 4 === 2) voice(92, at, .13, .12, "sine", dangerBus, 42);
-        voice(step % 2 ? 46 : 58, at, .075, step % 2 ? .07 : .13, "sawtooth", bossBus, 31);
-        if (step % 4 === 0) voice(bassLine[step] / 2, at, .75, .085, "square", bossBus);
+        voice(bassLine[step] * 2, at, .19, .16, "sawtooth", normalBus);
+        if (step % 4 === 0) voice(bassLine[step] * 4, at, .82, .045, "triangle", normalBus);
+        if (melody[step]) voice(melody[step], at, .17, .052, "triangle", normalBus);
+        if (step % 2 === 0) voice(step % 4 === 0 ? 145 : 190, at, .09, .12, "sine", normalBus, 56);
+        if (step % 2 === 1) voice(330 + (step % 4) * 48, at, .055, .075, "square", dangerBus);
+        if (step % 4 === 2) voice(184, at, .13, .1, "sine", dangerBus, 68);
+        voice(step % 2 ? 92 : 116, at, .075, step % 2 ? .065 : .11, "sawtooth", bossBus, 62);
+        if (step % 4 === 0) voice(bassLine[step] * 2, at, .75, .075, "square", bossBus);
       };
       const scheduler = () => {
         if (musicRef.current !== music || audio.state === "closed") return;
@@ -577,11 +637,11 @@ export function AshfallGame() {
       };
       scheduler();
       music.timer = window.setInterval(scheduler, 50);
-    } catch { /* Web Audio may be unavailable. */ }
+    } catch { musicRef.current = null; setMusicActive(false); }
   }, [ensureAudio]);
 
   const playEndJingle = useCallback((won: boolean) => {
-    if (muted) return;
+    if (sfxMuted) return;
     try {
       const audio = ensureAudio();
       stopJingle();
@@ -607,7 +667,7 @@ export function AshfallGame() {
         }
       });
     } catch { /* Jingle is optional. */ }
-  }, [ensureAudio, muted, stopJingle]);
+  }, [ensureAudio, sfxMuted, stopJingle]);
 
   useEffect(() => () => {
     stopMusic();
@@ -616,7 +676,7 @@ export function AshfallGame() {
     if (audio && audio.state !== "closed") void audio.close();
   }, [stopJingle, stopMusic]);
 
-  const deployHuman = useCallback((kind: UnitKind, lane: Lane) => {
+  const deployHuman = useCallback((kind: UnitKind) => {
     const g = gameRef.current;
     const card = cards.find((item) => item.kind === kind);
     if (!card || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
@@ -626,13 +686,15 @@ export function AshfallGame() {
     g.energy -= card.cost;
     g.deployCooldowns[kind] = card.deployCooldown;
     const id = g.nextId++;
+    const laneSpeed = kind === "scout" ? 78 : kind === "brawler" ? 68 : kind === "brute" ? 42 : kind === "gunner" ? 54 : 60;
     g.fighters.push({
-      id, side: "human", kind, lane, x: 148, y: laneY(lane, id), hp: card.hp, maxHp: card.hp,
+      id, side: "human", kind, lane: 1, anchorLane: null, x: MUSTER_X, y: MUSTER_Y, hp: card.hp, maxHp: card.hp,
       speed: card.speed, damage: card.damage, range: card.range, cooldown: 0, supportCooldown: 0,
       attackEvery: card.attackEvery, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: id % 3,
+      targetId: null, retargetIn: 0, bodyRadius: bodyRadiusFor(kind), laneSpeed, spawnGrace: .24,
     });
-    addParticles(g, 150, laneY(lane), "#d0b48b", 6);
-    g.banner = `${card.name} // ${LANE_NAMES[lane]} LANE`;
+    addParticles(g, MUSTER_X, MUSTER_Y, "#d0b48b", 7);
+    g.banner = `${card.name} // MUSTER DEPLOYED`;
     g.bannerTime = .8;
     tone(kind === "brute" ? 110 : 220, .07);
     return true;
@@ -661,10 +723,10 @@ export function AshfallGame() {
   const executeSelected = useCallback((lane: Lane, x: number) => {
     const action = selectedActionRef.current;
     if (!action) return;
-    const [group, kind] = action.split(":") as ["unit" | "support", UnitKind | SupportKind];
-    const succeeded = group === "unit" ? deployHuman(kind as UnitKind, lane) : deploySupport(kind as SupportKind, lane, x);
+    const [, kind] = action.split(":") as ["support", SupportKind];
+    const succeeded = deploySupport(kind, lane, x);
     if (succeeded) chooseAction(null);
-  }, [chooseAction, deployHuman, deploySupport]);
+  }, [chooseAction, deploySupport]);
 
   const handleBattlefieldPointer = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!selectedActionRef.current) return;
@@ -682,31 +744,33 @@ export function AshfallGame() {
     desiredMusicModeRef.current = "normal";
     setStarted(true); setPaused(false); setEnd(null); chooseAction(null);
     setHud({ energy: 55, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520, nestHp: 620, nestUnlocked: false, strike: 0, combo: 0, bossHp: 0, bossMax: 0, objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns() });
-    stopMusic(); stopJingle(); if (!muted) startMusic();
+    stopMusic(); stopJingle(); if (!bgmMuted) startMusic();
     tone(180, .12); window.setTimeout(() => tone(260, .12), 90);
-  }, [chooseAction, muted, startMusic, stopJingle, stopMusic, tone]);
+  }, [bgmMuted, chooseAction, startMusic, stopJingle, stopMusic, tone]);
 
   const togglePause = useCallback(() => {
     const g = gameRef.current;
     if (!g.running || g.over) return;
     g.paused = !g.paused; setPaused(g.paused);
-    if (g.paused) stopMusic(); else if (!muted) startMusic();
-  }, [muted, startMusic, stopMusic]);
+    if (g.paused) stopMusic(); else if (!bgmMuted) startMusic();
+  }, [bgmMuted, startMusic, stopMusic]);
 
-  const toggleMute = useCallback(() => {
-    const next = !muted; setMuted(next);
-    if (next) { stopMusic(); stopJingle(); } else if (started && !paused && !end) startMusic();
-  }, [end, muted, paused, startMusic, started, stopJingle, stopMusic]);
+  const toggleBgm = useCallback(() => {
+    const next = !bgmMuted; setBgmMuted(next);
+    if (next) stopMusic(); else if (started && !paused && !end) startMusic();
+  }, [bgmMuted, end, paused, startMusic, started, stopMusic]);
+
+  const toggleSfx = useCallback(() => {
+    const next = !sfxMuted; setSfxMuted(next);
+    if (next) stopJingle();
+  }, [sfxMuted, stopJingle]);
 
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       const card = cards.find((item) => item.key === event.key);
-      if (card) chooseAction(`unit:${card.kind}`);
+      if (card) deployHuman(card.kind);
       const support = supportDefs.find((item) => item.key.toLowerCase() === event.key.toLowerCase());
       if (support) chooseAction(`support:${support.kind}`);
-      if (event.key.toLowerCase() === "a") executeSelected(0, 520);
-      if (event.key.toLowerCase() === "s") executeSelected(1, 520);
-      if (event.key.toLowerCase() === "d") executeSelected(2, 520);
       if (event.key === "Escape") {
         if (selectedActionRef.current) chooseAction(null); else togglePause();
       }
@@ -714,7 +778,7 @@ export function AshfallGame() {
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [chooseAction, executeSelected, togglePause]);
+  }, [chooseAction, deployHuman, togglePause]);
 
   useEffect(() => {
     let frame = 0;
@@ -759,39 +823,53 @@ export function AshfallGame() {
         for (const support of g.supports) {
           support.life -= dt; support.tick -= dt;
           if (support.kind === "barrel") {
-            const contact = g.fighters.some((fighter) => fighter.side === "zombie" && fighter.lane === support.lane && fighter.hp > 0 && Math.abs(fighter.x - support.x) <= 35);
+            const contact = g.fighters.some((fighter) => fighter.side === "zombie" && fighter.hp > 0 && effectDistance(fighter, support) <= 35);
             if (contact) {
-              damageEnemiesInLane(g, support.lane, support.x, 92, 105, "#ffbd59", 15);
+              damageEnemiesInRadius(g, support.x, support.y, 92, 105, "#ffbd59", 15);
               addParticles(g, support.x, support.y - 10, "#f26a35", 24); g.shake = 13; g.flashOverlay = .25; support.life = -1;
               tone(64, .24, "sawtooth");
             }
           } else if (support.kind === "medkit" && support.tick <= 0) {
             support.tick = .5;
             for (const fighter of g.fighters) {
-              if (fighter.side !== "human" || fighter.lane !== support.lane || fighter.hp <= 0 || Math.abs(fighter.x - support.x) > 95) continue;
+              if (fighter.side !== "human" || fighter.hp <= 0 || effectDistance(fighter, support) > 95) continue;
               const healed = Math.min(4, fighter.maxHp - fighter.hp);
               if (healed > 0) { fighter.hp += healed; g.damageTexts.push({ x: fighter.x, y: fighter.y - 55, value: `+${healed}`, life: .55, color: "#83e0a2" }); }
             }
           } else if (support.kind === "molotov" && support.tick <= 0) {
-            support.tick = .4; damageEnemiesInLane(g, support.lane, support.x, 85, 7.2, "#ff8b45", 1);
+            support.tick = .4; damageEnemiesInRadius(g, support.x, support.y, 85, 7.2, "#ff8b45", 1);
             addParticles(g, support.x + (Math.random() - .5) * 70, support.y - 5, "#ee6436", 2);
           } else if (support.kind === "airstrike" && support.life <= .12 && !support.triggered) {
             support.triggered = true;
-            damageEnemiesInLane(g, support.lane, support.x, 140, 150, "#ffe17a", 22);
+            damageEnemiesInRadius(g, support.x, support.y, 140, 150, "#ffe17a", 22);
             addParticles(g, support.x, support.y - 12, "#f28d46", 34); g.shake = 20; g.flashOverlay = .48; support.life = -.2;
             tone(52, .45, "sawtooth");
           }
         }
         g.supports = g.supports.filter((support) => support.life > 0);
 
+        const fighterById = new Map(g.fighters.filter((fighter) => fighter.hp > 0).map((fighter) => [fighter.id, fighter]));
+        const targetClaims = new Map<number, number>();
+        const interceptorClaims = new Map<number, number>();
+        for (const fighter of g.fighters) {
+          if (fighter.hp <= 0 || fighter.targetId === null) continue;
+          const claimed = fighterById.get(fighter.targetId);
+          if (fighter.side === "human" && claimed?.side === "zombie" && claimed.hp > 0) {
+            targetClaims.set(claimed.id, (targetClaims.get(claimed.id) ?? 0) + 1);
+          } else if (fighter.side === "zombie" && claimed?.side === "human" && claimed.hp > 0) {
+            interceptorClaims.set(claimed.id, (interceptorClaims.get(claimed.id) ?? 0) + 1);
+          }
+        }
+
         for (const f of g.fighters) {
           if (f.hp <= 0) continue;
-          f.cooldown -= dt; f.supportCooldown -= dt; f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.step += dt;
+          f.cooldown -= dt; f.supportCooldown -= dt; f.retargetIn = Math.max(0, f.retargetIn - dt); f.spawnGrace = Math.max(0, f.spawnGrace - dt);
+          f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.step += dt;
           if (Math.abs(f.knock) > .1) { f.x += (f.side === "human" ? -1 : 1) * f.knock * dt * 6; f.knock *= .9; }
 
           if (f.kind === "medic" && f.supportCooldown <= 0) {
             const wounded = g.fighters
-              .filter((other) => other.side === "human" && other.lane === f.lane && other.id !== f.id && other.hp > 0 && other.hp < other.maxHp && Math.abs(other.x - f.x) <= 108)
+              .filter((other) => other.side === "human" && other.id !== f.id && other.hp > 0 && other.hp < other.maxHp && fighterDistance(other, f) <= 108)
               .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
             if (wounded) {
               const healed = Math.min(16, wounded.maxHp - wounded.hp);
@@ -803,13 +881,80 @@ export function AshfallGame() {
 
           let target: Fighter | undefined;
           let distance = Infinity;
-          for (const enemy of g.fighters) {
-            if (enemy.side === f.side || enemy.lane !== f.lane || enemy.hp <= 0) continue;
-            const candidate = Math.abs(enemy.x - f.x);
-            if (candidate < distance) { distance = candidate; target = enemy; }
+          if (f.side === "human") {
+            const enemies = g.fighters.filter((enemy) => enemy.side === "zombie" && enemy.hp > 0);
+            const locked = f.targetId === null ? undefined : fighterById.get(f.targetId);
+            const contact = enemies
+              .filter((enemy) => fighterDistance(f, enemy) <= 48)
+              .sort((a, b) => fighterDistance(f, a) - fighterDistance(f, b))[0];
+            const targetCapacity = (enemy: Fighter) => enemy.kind === "takuya" ? 6 : enemy.kind === "abomination" ? 3 : enemy.kind === "crusher" || enemy.kind === "shade" ? 2 : 1;
+            const targetScore = (enemy: Fighter) => autonomousTargetScore({ distance: fighterDistance(f, enemy), claims: targetClaims.get(enemy.id) ?? 0, capacity: targetCapacity(enemy), enemyX: enemy.x, isCurrent: f.targetId === enemy.id });
+            const best = enemies.reduce<Fighter | undefined>((choice, enemy) => !choice || targetScore(enemy) < targetScore(choice) ? enemy : choice, undefined);
+            if (contact) target = contact;
+            else if (locked?.side === "zombie" && locked.hp > 0) {
+              target = locked;
+              if (f.retargetIn <= 0 && best && best.id !== locked.id && targetScore(best) + 34 < targetScore(locked)) target = best;
+            } else target = best;
+            if (f.retargetIn <= 0 || target?.id !== f.targetId) f.retargetIn = .34 + (f.variant % 3) * .05;
+            if (target?.id !== f.targetId) {
+              if (f.targetId !== null) targetClaims.set(f.targetId, Math.max(0, (targetClaims.get(f.targetId) ?? 1) - 1));
+              if (target) targetClaims.set(target.id, (targetClaims.get(target.id) ?? 0) + 1);
+              f.targetId = target?.id ?? null;
+            }
+          } else {
+            const humans = g.fighters.filter((human) => human.side === "human" && human.hp > 0);
+            const locked = f.targetId === null ? undefined : fighterById.get(f.targetId);
+            const contact = humans
+              .filter((human) => fighterDistance(f, human) <= f.range + human.bodyRadius + 4)
+              .sort((a, b) => fighterDistance(f, a) - fighterDistance(f, b))[0];
+            const validInterceptors = humans.filter((human) => {
+              const alreadyEngaged = fighterDistance(f, human) <= f.range + human.bodyRadius + 4;
+              return (human.x <= f.x || alreadyEngaged) && f.x - human.x <= 280;
+            });
+            const defenderCapacity = (human: Fighter) => human.kind === "brute" || human.kind === "brawler" ? 3 : human.kind === "scout" || human.kind === "medic" ? 1 : 2;
+            const interceptorScore = (human: Fighter) => interceptorTargetScore({
+              distance: fighterDistance(f, human),
+              claims: interceptorClaims.get(human.id) ?? 0,
+              capacity: defenderCapacity(human),
+              isCurrent: f.targetId === human.id,
+              rearward: human.x - f.x,
+            });
+            const bestInterceptor = validInterceptors.reduce<Fighter | undefined>((choice, human) => {
+              return !choice || interceptorScore(human) < interceptorScore(choice) ? human : choice;
+            }, undefined);
+            const lockedValid = locked?.side === "human" && locked.hp > 0
+              && (locked.x <= f.x || fighterDistance(f, locked) <= f.range + locked.bodyRadius + 4)
+              && f.x - locked.x <= 310;
+            target = contact ?? (lockedValid && f.retargetIn > 0 ? locked : bestInterceptor);
+            if (f.retargetIn <= 0 || target?.id !== f.targetId) {
+              if (target) {
+                f.anchorLane = laneForY(target.y, f.lane, 0) as Lane;
+              } else {
+                const routes: Lane[] = [0, 1, 2];
+                f.anchorLane = routes.reduce((bestLane, lane) => {
+                  const routeScore = (candidate: Lane) => {
+                    const defense = humans
+                      .filter((human) => human.x < f.x && Math.abs(human.y - LANE_Y[candidate]) <= 34)
+                      .reduce((sum, human) => sum + human.hp * .08 + human.damage * 1.2, 0);
+                    const congestion = g.fighters.filter((enemy) => enemy.side === "zombie" && enemy.hp > 0 && enemy.anchorLane === candidate).length * 7;
+                    const switchCost = Math.abs(f.y - LANE_Y[candidate]) * .34;
+                    return defense + congestion + switchCost + ((f.id * 7 + candidate * 13) % 11);
+                  };
+                  return routeScore(lane) < routeScore(bestLane) ? lane : bestLane;
+                }, f.anchorLane ?? f.lane);
+              }
+              f.retargetIn = .52 + (f.variant % 3) * .08;
+            }
+            if (target?.id !== f.targetId) {
+              if (f.targetId !== null) interceptorClaims.set(f.targetId, Math.max(0, (interceptorClaims.get(f.targetId) ?? 1) - 1));
+              if (target) interceptorClaims.set(target.id, (interceptorClaims.get(target.id) ?? 0) + 1);
+            }
+            f.targetId = target?.id ?? null;
           }
+          distance = target ? fighterDistance(f, target) : Infinity;
+          const zombieTargetFloor = f.side === "zombie" && target && target.x <= f.x ? target.x : null;
           const baseDistance = f.side === "human" ? NEST_X - f.x : f.x - BASE_X;
-          if (target && distance <= f.range) {
+          if (target && distance <= f.range + target.bodyRadius) {
             if (f.cooldown <= 0) {
               const enragedTakuya = f.kind === "takuya" && f.hp / f.maxHp <= .5;
               target.hp -= f.damage; target.flash = .12;
@@ -819,7 +964,7 @@ export function AshfallGame() {
               g.shake = Math.max(g.shake, f.kind === "takuya" ? 11 : f.kind === "brute" || f.kind === "abomination" ? 7 : 2.5);
               if (f.kind === "takuya") {
                 for (const splash of g.fighters) {
-                  if (splash.side === "human" && splash.lane === f.lane && splash.id !== target.id && splash.hp > 0 && Math.abs(splash.x - target.x) < 58) {
+                  if (splash.side === "human" && splash.id !== target.id && splash.hp > 0 && fighterDistance(splash, target) < 58) {
                     splash.hp -= 22; splash.flash = .12; splash.knock = 6;
                     g.damageTexts.push({ x: splash.x, y: splash.y - 46, value: "22", life: .65, color: "#e98a72" });
                   }
@@ -833,7 +978,7 @@ export function AshfallGame() {
                 addParticles(g, target.x, target.y - 18, target.kind === "takuya" || target.kind === "shade" ? "#b98a62" : target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
               }
             }
-          } else if (baseDistance <= f.range + 10) {
+          } else if (!target && baseDistance <= f.range + 10) {
             if (f.cooldown <= 0) {
               if (f.side === "human") {
                 if (g.nestUnlocked) g.nestHp -= f.damage;
@@ -842,13 +987,66 @@ export function AshfallGame() {
               }
               f.attack = .18; f.cooldown = f.attackEvery; g.shake = Math.max(g.shake, 4);
             }
+          } else if (target && f.side === "human") {
+            const humanLimit = g.phase === 1 ? 520 : g.phase === 2 || !g.nestUnlocked ? 730 : NEST_X;
+            const dx = target.x - f.x; const dy = target.y - f.y;
+            const stoppingDistance = Math.max(18, f.range + target.bodyRadius * .55);
+            if (Math.abs(dx) > stoppingDistance) {
+              const nextX = f.x + Math.sign(dx) * Math.min(Math.abs(dx), f.speed * dt);
+              f.x = Math.max(MUSTER_X - 8, Math.min(humanLimit, nextX));
+            }
+            if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
+            f.y = Math.max(LANE_Y[0], Math.min(LANE_Y[2], f.y));
+            f.lane = laneForY(f.y, f.lane) as Lane;
+          } else if (target && f.side === "zombie") {
+            // Infected adapt their lane and intercept defenders, but never step away from the CRAWLER or phase through a target.
+            const burning = g.supports.some((support) => support.kind === "molotov" && effectDistance(f, support) <= 85);
+            const dx = target.x - f.x;
+            const dy = target.y - f.y;
+            const stoppingDistance = Math.max(18, f.range + target.bodyRadius * .55);
+            const travel = Math.max(0, distance - stoppingDistance);
+            const step = Math.min(travel, f.speed * dt * (burning ? .8 : 1));
+            if (dx < 0 && distance > .1) f.x = Math.max(target.x, f.x + dx / distance * step);
+            if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
+            f.y = Math.max(LANE_Y[0], Math.min(LANE_Y[2], f.y));
+            f.lane = laneForY(f.y, f.lane) as Lane;
           } else {
             const humanLimit = g.phase === 1 ? 520 : g.phase === 2 || !g.nestUnlocked ? 730 : NEST_X;
             const heldAtLine = f.side === "human" && f.x >= humanLimit;
             if (!heldAtLine) {
-              const burning = f.side === "zombie" && g.supports.some((support) => support.kind === "molotov" && support.lane === f.lane && Math.abs(support.x - f.x) <= 85);
+              const burning = f.side === "zombie" && g.supports.some((support) => support.kind === "molotov" && effectDistance(f, support) <= 85);
               f.x += (f.side === "human" ? 1 : -1) * f.speed * dt * (burning ? .8 : 1);
             }
+            if (f.side === "zombie" && f.anchorLane !== null) {
+              const dy = LANE_Y[f.anchorLane] - f.y;
+              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
+              f.y = Math.max(LANE_Y[0], Math.min(LANE_Y[2], f.y));
+              f.lane = laneForY(f.y, f.lane) as Lane;
+            }
+          }
+
+          if (f.side === "human" || f.side === "zombie") {
+            for (const other of g.fighters) {
+              if (other.side !== f.side || other.id >= f.id || other.hp <= 0) continue;
+              const dx = f.x - other.x; const dy = f.y - other.y; const separation = f.bodyRadius + other.bodyRadius;
+              const gap = Math.hypot(dx, dy);
+              if (gap >= separation || gap > 26) continue;
+              const ux = gap > .1 ? dx / gap : (f.id % 2 ? 1 : -1) * .35;
+              const uy = gap > .1 ? dy / gap : (f.id % 2 ? 1 : -1);
+              const push = Math.min(2.2, (separation - gap) * (f.spawnGrace > 0 ? .2 : .08));
+              if (f.side === "human") {
+                f.x += ux * push; f.y += uy * push;
+              } else {
+                // Queue separation keeps the lead attacker fixed: followers fan out or yield away from the CRAWLER.
+                const canFanOut = (uy < 0 && f.y > LANE_Y[0] + 3) || (uy > 0 && f.y < LANE_Y[2] - 3);
+                if (canFanOut) f.y += uy * push * 1.25;
+                else if (f.x >= other.x) f.x += push * .45;
+              }
+            }
+            if (f.side === "human") f.x = Math.max(MUSTER_X - 8, f.x);
+            else if (zombieTargetFloor !== null) f.x = Math.max(zombieTargetFloor, f.x);
+            f.y = Math.max(LANE_Y[0], Math.min(LANE_Y[2], f.y));
+            f.lane = laneForY(f.y, f.lane) as Lane;
           }
         }
 
@@ -871,7 +1069,7 @@ export function AshfallGame() {
         for (const corpse of g.corpses) {
           corpse.life -= dt;
           if (corpse.reviveIn === null) continue;
-          const medicNearby = g.fighters.some((fighter) => fighter.side === "human" && fighter.kind === "medic" && fighter.lane === corpse.lane && fighter.hp > 0 && Math.abs(fighter.x - corpse.x) <= 110);
+          const medicNearby = g.fighters.some((fighter) => fighter.side === "human" && fighter.kind === "medic" && fighter.hp > 0 && fighterDistance(fighter, corpse) <= 110);
           if (medicNearby) {
             corpse.reviveIn = null; corpse.prevented = true;
             g.damageTexts.push({ x: corpse.x, y: corpse.y - 34, value: "INFECTION STOPPED", life: 1.15, color: "#7de2a0" });
@@ -880,7 +1078,13 @@ export function AshfallGame() {
             corpse.reviveIn -= dt;
             if (corpse.reviveIn <= 0) {
               const data = enemyStats("turned", g.wave); const id = g.nextId++;
-              revived.push({ id, side: "zombie", kind: "turned", lane: corpse.lane, x: corpse.x, y: laneY(corpse.lane, id), hp: data.hp, maxHp: data.hp, speed: data.speed, damage: data.damage, range: data.range, cooldown: .4, supportCooldown: 0, attackEvery: data.attackEvery, flash: 0, step: 0, attack: 0, knock: 0, variant: corpse.variant });
+              revived.push({
+                id, side: "zombie", kind: "turned", lane: corpse.lane, anchorLane: corpse.lane,
+                x: corpse.x, y: corpse.y, hp: data.hp, maxHp: data.hp, speed: data.speed, damage: data.damage,
+                range: data.range, cooldown: .4, supportCooldown: 0, attackEvery: data.attackEvery,
+                flash: 0, step: 0, attack: 0, knock: 0, variant: corpse.variant,
+                targetId: null, retargetIn: 0, bodyRadius: bodyRadiusFor("turned"), laneSpeed: enemyLaneSpeedFor("turned"), spawnGrace: 0,
+              });
               corpse.life = -1; corpse.reviveIn = null;
               g.banner = `SURVIVOR TURNED // ${LANE_NAMES[corpse.lane]}`; g.bannerTime = 1.4;
               addParticles(g, corpse.x, corpse.y - 20, "#90a965", 14); tone(72, .22, "sawtooth");
@@ -936,11 +1140,7 @@ export function AshfallGame() {
   const nestPct = Math.max(0, hud.nestHp / 620 * 100);
   const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
   const phaseName = hud.phase === 1 ? "HOLD" : hud.phase === 2 ? "PUSH" : "ASSAULT";
-  const selectedName = selectedAction
-    ? selectedAction.startsWith("unit:")
-      ? cards.find((card) => `unit:${card.kind}` === selectedAction)?.name
-      : supportDefs.find((support) => `support:${support.kind}` === selectedAction)?.name
-    : null;
+  const selectedName = selectedAction ? supportDefs.find((support) => `support:${support.kind}` === selectedAction)?.name : null;
 
   return (
     <main className="game-shell">
@@ -951,7 +1151,8 @@ export function AshfallGame() {
           <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>EARLY ACCESS 0.3.0</em></small></div></div>
           <div className="phase-block"><small>PHASE {hud.phase}</small><strong>{phaseName}</strong><em>W{String(hud.wave).padStart(2, "0")}</em></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
-          <button className="icon-btn" onClick={toggleMute} aria-label={muted ? "BGMと効果音を出す" : "BGMと効果音をミュート"}>{muted ? "×" : "♪"}</button>
+          <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} onClick={toggleBgm} aria-label={bgmMuted ? "BGMを再生" : "BGMをミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>BGM</small></button>
+          <button className="icon-btn audio-btn" onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "FX"}</b><small>SFX</small></button>
         </div>
 
         <div className="health-hud crawler-health"><div><span>CRAWLER</span><b>{Math.ceil(hud.baseHp)} / 520</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
@@ -959,7 +1160,7 @@ export function AshfallGame() {
         {hud.bossMax > 0 && <div className="boss-hud"><div><span>BOSS // TAKUYA</span><b>IRON JUDGE</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
 
         {selectedAction && started && !paused && !end && (
-          <div className="placement-hint"><b>{selectedName} SELECTED</b><span>{selectedAction.startsWith("unit:") ? "TAP TOP / MID / LOW LANE" : "TAP A TARGET POSITION"}</span><small>ESC TO CANCEL</small></div>
+          <div className="placement-hint"><b>{selectedName} SELECTED</b><span>TAP A TARGET POSITION</span><small>ESC TO CANCEL</small></div>
         )}
 
         <div className="bottom-hud">
@@ -972,9 +1173,8 @@ export function AshfallGame() {
             <div className="unit-cards" aria-label="Survivor units">
               {cards.map((card) => {
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
-                const selected = selectedAction === `unit:${card.kind}`;
                 return (
-                  <button key={card.kind} className={`unit-card ${selected ? "selected" : ""}`} data-kind={card.kind} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || !!end} onClick={() => chooseAction(selected ? null : `unit:${card.kind}`)}>
+                  <button key={card.kind} className="unit-card" data-kind={card.kind} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || !!end} onClick={() => deployHuman(card.kind)}>
                     <span className="keycap">{card.key}</span><span className="portrait"><i /></span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
                     {cooldown > 0 && <span className="cooldown-mask"><b>{cooldown}</b><small>SEC</small></span>}
@@ -1003,9 +1203,9 @@ export function AshfallGame() {
           <div className="start-screen"><div className="start-panel">
             <p className="eyebrow">{"/// EARLY ACCESS BUILD 0.3.0 · THREE-LANE WARFARE · DYNAMIC BGM"}</p>
             <h1>ASHFALL<br /><span>OUTPOST</span></h1>
-            <p className="mission">Command three battle lanes. Hold the crawler, push the checkpoint, defeat TAKUYA, then burn the infected nest.</p>
-            <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>SELECT A UNIT · TAP A LANE</small></button>
-            <p className="controls">1–6 UNITS · Z/X/C/Q SUPPORT · A/S/D LANES · P PAUSE</p>
+            <p className="mission">Deploy from one muster point. Survivors hunt threats across all three lanes while the infected adapt their route toward the crawler.</p>
+            <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>TAP A UNIT CARD · AUTO-DEPLOY</small></button>
+            <p className="controls">1–6 DEPLOY · Z/X/C/Q SUPPORT · P PAUSE</p>
           </div></div>
         )}
 
