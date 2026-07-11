@@ -21,6 +21,9 @@ type Fighter = {
   attackEvery: number;
   flash: number;
   step: number;
+  attack: number;
+  knock: number;
+  variant: number;
 };
 
 type Particle = {
@@ -34,6 +37,8 @@ type Particle = {
 };
 
 type Shot = { x: number; y: number; tx: number; ty: number; life: number; side: string };
+type DamageText = { x: number; y: number; value: string; life: number; color: string };
+type Corpse = { x: number; y: number; side: "human" | "zombie"; kind: string; life: number; variant: number };
 
 type Game = {
   running: boolean;
@@ -52,11 +57,16 @@ type Game = {
   fighters: Fighter[];
   particles: Particle[];
   shots: Shot[];
+  damageTexts: DamageText[];
+  corpses: Corpse[];
   nextId: number;
   shake: number;
   strikeCooldown: number;
   banner: string;
   bannerTime: number;
+  flashOverlay: number;
+  combo: number;
+  comboTime: number;
 };
 
 const cards = [
@@ -82,11 +92,16 @@ const initialGame = (): Game => ({
   fighters: [],
   particles: [],
   shots: [],
+  damageTexts: [],
+  corpses: [],
   nextId: 1,
   shake: 0,
   strikeCooldown: 0,
   banner: "WAVE 1 INCOMING",
   bannerTime: 2.4,
+  flashOverlay: 0,
+  combo: 0,
+  comboTime: 0,
 });
 
 function addParticles(g: Game, x: number, y: number, color: string, count = 8) {
@@ -108,168 +123,102 @@ function pixelRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
 }
 
-function drawHuman(ctx: CanvasRenderingContext2D, f: Fighter, t: number) {
-  const bob = Math.sin(f.step * 7) * 2;
+function drawHuman(ctx: CanvasRenderingContext2D, f: Fighter) {
+  const stride = Math.sin(f.step * 8);
+  const bob = Math.abs(stride) * -1.6;
+  const recoil = f.attack > 0 ? -3 : 0;
+  const brute = f.kind === "brute";
+  const ranger = f.kind === "ranger";
   ctx.save();
   ctx.translate(Math.round(f.x), Math.round(f.y + bob));
-  if (f.flash > 0) ctx.globalAlpha = 0.55;
-  const body = f.kind === "brute" ? "#d9903d" : f.kind === "ranger" ? "#7ca879" : "#d8c3a4";
-  const scale = f.kind === "brute" ? 1.17 : 1;
-  ctx.scale(scale, scale);
-  pixelRect(ctx, -7, -38, 14, 12, "#c59a72");
-  pixelRect(ctx, -8, -41, 17, 5, f.kind === "ranger" ? "#6e3f2d" : "#383230");
-  pixelRect(ctx, -9, -26, 18, 22, body);
-  pixelRect(ctx, -7, -4, 6, 15, "#393d3b");
-  pixelRect(ctx, 3, -4, 6, 15, "#2b302f");
-  pixelRect(ctx, -11, -24, 5, 16, "#c59a72");
-  pixelRect(ctx, 7, -24, 5, 16, "#c59a72");
-  if (f.kind === "ranger") {
-    pixelRect(ctx, 8, -23, 24, 5, "#292829");
-    pixelRect(ctx, 25, -20, 8, 2, "#a36d34");
-  } else if (f.kind === "brute") {
-    pixelRect(ctx, 7, -26, 8, 24, "#5d6360");
-    pixelRect(ctx, 13, -28, 5, 29, "#b8aaa0");
+  ctx.scale(brute ? 1.22 : 1, brute ? 1.22 : 1);
+  ctx.fillStyle = "rgba(0,0,0,.38)";
+  ctx.beginPath(); ctx.ellipse(0, 10, brute ? 18 : 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+  if (f.flash > 0) { ctx.shadowColor = "#fff3c4"; ctx.shadowBlur = 12; }
+  const skin = f.variant % 2 ? "#9c6649" : "#c99268";
+  const coat = brute ? "#8b4b2d" : ranger ? "#536b55" : "#8f7756";
+  // articulated legs
+  ctx.save(); ctx.translate(-4, -3); ctx.rotate(stride * .18); pixelRect(ctx, -3, 0, 6, 15, "#282c2d"); pixelRect(ctx, -5, 12, 9, 4, "#171a1c"); ctx.restore();
+  ctx.save(); ctx.translate(5, -3); ctx.rotate(-stride * .18); pixelRect(ctx, -3, 0, 6, 15, "#363a39"); pixelRect(ctx, -4, 12, 9, 4, "#171a1c"); ctx.restore();
+  pixelRect(ctx, -10, -27, 20, 25, coat);
+  pixelRect(ctx, -12, -25, 3, 18, brute ? "#b7743c" : "#493f35");
+  pixelRect(ctx, 9, -25, 3, 18, "#343331");
+  pixelRect(ctx, -8, -39, 16, 12, skin);
+  pixelRect(ctx, -9, -42, 18, 6, ranger ? "#493c31" : "#252829");
+  pixelRect(ctx, 2, -35, 3, 2, "#16191a");
+  pixelRect(ctx, -9, -22, 5, 10, brute ? "#6a3528" : "#4d473e");
+  pixelRect(ctx, -11, -26, 4, 4, "#b8a170");
+  if (ranger) {
+    ctx.save(); ctx.translate(recoil, 0); pixelRect(ctx, 5, -22, 30, 5, "#171a1a"); pixelRect(ctx, 14, -18, 9, 3, "#61452f"); pixelRect(ctx, 31, -21, 8, 2, "#4b4f4b"); ctx.restore();
+    if (f.attack > .08) { ctx.fillStyle = "#fff2a3"; ctx.beginPath(); ctx.moveTo(39, -24); ctx.lineTo(51, -19); ctx.lineTo(39, -16); ctx.fill(); ctx.fillStyle = "#e96b33"; ctx.fillRect(39, -22, 7, 4); }
+  } else if (brute) {
+    ctx.save(); ctx.translate(7, -20); ctx.rotate(f.attack > 0 ? -.65 : -.15); pixelRect(ctx, 0, -3, 7, 29, "#565b58"); pixelRect(ctx, -4, 18, 17, 9, "#aeb0a4"); pixelRect(ctx, -1, 20, 11, 3, "#d5b868"); ctx.restore();
+    pixelRect(ctx, -13, -31, 5, 19, "#6a3528");
   } else {
-    pixelRect(ctx, 7, -22, 15, 6, "#836145");
+    ctx.save(); ctx.translate(5, -21); ctx.rotate(f.attack > 0 ? .42 : -.05); pixelRect(ctx, 0, -3, 18, 5, "#322b27"); pixelRect(ctx, 13, -5, 7, 8, "#9a6b37"); ctx.restore();
   }
-  pixelRect(ctx, 0, -34, 3, 2, "#17191a");
   ctx.restore();
 }
 
 function drawZombie(ctx: CanvasRenderingContext2D, f: Fighter) {
-  const bob = Math.sin(f.step * 6) * 2;
-  ctx.save();
-  ctx.translate(Math.round(f.x), Math.round(f.y + bob));
-  if (f.flash > 0) ctx.globalAlpha = 0.5;
-  const big = f.kind === "crusher";
-  const scale = big ? 1.35 : f.kind === "runner" ? 0.88 : 1;
-  ctx.scale(scale, scale);
-  pixelRect(ctx, -8, -38, 16, 13, big ? "#71855d" : "#88a36d");
-  pixelRect(ctx, -7, -25, 15, 22, big ? "#4b3433" : "#514a42");
-  pixelRect(ctx, -8, -3, 6, 15, "#333333");
-  pixelRect(ctx, 3, -3, 7, 15, "#282a28");
-  pixelRect(ctx, -15, -23, 9, 5, "#779463");
-  pixelRect(ctx, 7, -21, 13, 5, "#779463");
-  pixelRect(ctx, -5, -34, 3, 3, "#ff6b2d");
-  pixelRect(ctx, 3, -34, 3, 3, "#ff6b2d");
-  pixelRect(ctx, -2, -28, 7, 2, "#281c1b");
+  const stride = Math.sin(f.step * (f.kind === "runner" ? 11 : 6));
+  const big = f.kind === "crusher" || f.kind === "abomination";
+  const spitter = f.kind === "spitter";
+  const scale = f.kind === "abomination" ? 1.72 : f.kind === "crusher" ? 1.38 : f.kind === "runner" ? .88 : 1;
+  ctx.save(); ctx.translate(Math.round(f.x), Math.round(f.y - Math.abs(stride) * 1.2)); ctx.scale(-scale, scale);
+  ctx.fillStyle = "rgba(0,0,0,.42)"; ctx.beginPath(); ctx.ellipse(0, 10, big ? 18 : 13, 5, 0, 0, Math.PI * 2); ctx.fill();
+  if (f.flash > 0) { ctx.globalCompositeOperation = "screen"; ctx.shadowColor = "#f5f0c0"; ctx.shadowBlur = 15; }
+  const skin = f.kind === "abomination" ? "#75543f" : spitter ? "#758d57" : f.variant % 2 ? "#839760" : "#71865b";
+  ctx.save(); ctx.translate(-4,-2); ctx.rotate(stride*.2); pixelRect(ctx,-3,0,6,15,"#262827"); pixelRect(ctx,-5,12,9,4,"#171918"); ctx.restore();
+  ctx.save(); ctx.translate(5,-2); ctx.rotate(-stride*.2); pixelRect(ctx,-3,0,6,15,"#34312d"); pixelRect(ctx,-4,12,9,4,"#171918"); ctx.restore();
+  pixelRect(ctx,-10,-27,20,26,big?"#47312d":spitter?"#454b37":"#48413a");
+  pixelRect(ctx,-8,-40,16,13,skin); pixelRect(ctx,-9,-42,11,4,"#302925");
+  pixelRect(ctx,-5,-36,3,3,"#ff5a29"); pixelRect(ctx,3,-36,3,3,"#ff5a29"); pixelRect(ctx,-2,-29,8,2,"#261916");
+  ctx.save(); ctx.translate(-9,-23); ctx.rotate(.38 + stride*.08); pixelRect(ctx,-15,-2,17,5,skin); ctx.restore();
+  ctx.save(); ctx.translate(9,-22); ctx.rotate(f.attack>0?-.6:-.16); pixelRect(ctx,0,-2,18,5,skin); ctx.restore();
+  if (spitter) { pixelRect(ctx,-13,-24,6,17,"#829d45"); ctx.fillStyle="rgba(146,205,51,.55)"; ctx.beginPath(); ctx.arc(-11,-17,7,0,Math.PI*2); ctx.fill(); }
+  if (f.kind === "abomination") { pixelRect(ctx,-16,-29,7,22,"#5a382f"); pixelRect(ctx,9,-29,8,23,"#5a382f"); pixelRect(ctx,-13,-45,5,13,"#9b704a"); pixelRect(ctx,9,-45,5,13,"#9b704a"); }
   ctx.restore();
 }
 
-function drawWorld(ctx: CanvasRenderingContext2D, g: Game) {
+function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImageElement | null) {
   const sx = g.shake > 0 ? (Math.random() - 0.5) * g.shake : 0;
   const sy = g.shake > 0 ? (Math.random() - 0.5) * g.shake : 0;
   ctx.save();
   ctx.translate(sx, sy);
 
-  const sky = ctx.createLinearGradient(0, 0, 0, GROUND);
-  sky.addColorStop(0, "#17232c");
-  sky.addColorStop(0.52, "#54463e");
-  sky.addColorStop(1, "#b66b3f");
-  ctx.fillStyle = sky;
-  ctx.fillRect(-10, -10, W + 20, H + 20);
-
-  ctx.fillStyle = "rgba(232,129,71,.18)";
-  ctx.beginPath();
-  ctx.arc(745, 112, 55, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#d79b65";
-  ctx.beginPath();
-  ctx.arc(745, 112, 34, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#253037";
-  ctx.beginPath();
-  ctx.moveTo(0, 278);
-  ctx.lineTo(90, 225);
-  ctx.lineTo(170, 262);
-  ctx.lineTo(280, 199);
-  ctx.lineTo(372, 270);
-  ctx.lineTo(470, 220);
-  ctx.lineTo(570, 278);
-  ctx.lineTo(690, 212);
-  ctx.lineTo(790, 268);
-  ctx.lineTo(890, 218);
-  ctx.lineTo(960, 244);
-  ctx.lineTo(960, 400);
-  ctx.lineTo(0, 400);
-  ctx.fill();
-
-  ctx.fillStyle = "#30363a";
-  for (let i = 0; i < 11; i++) {
-    const x = 45 + i * 93;
-    const bh = 35 + ((i * 37) % 62);
-    ctx.fillRect(x, 305 - bh, 52, bh);
-    ctx.fillStyle = "#20272b";
-    ctx.fillRect(x + 11, 315 - bh, 8, 10);
-    ctx.fillRect(x + 31, 325 - bh, 7, 8);
-    ctx.fillStyle = "#30363a";
-  }
-  ctx.strokeStyle = "#27292a";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(610, 305);
-  ctx.lineTo(630, 235);
-  ctx.lineTo(655, 305);
-  ctx.moveTo(616, 275);
-  ctx.lineTo(649, 275);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(32,35,35,.8)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(628, 240);
-  ctx.lineTo(850, 260);
-  ctx.stroke();
-
-  ctx.fillStyle = "#4b4136";
-  ctx.fillRect(0, GROUND, W, H - GROUND);
-  ctx.fillStyle = "#665545";
-  ctx.fillRect(0, GROUND, W, 9);
-  ctx.fillStyle = "#342f2a";
-  for (let i = 0; i < 28; i++) {
-    const x = (i * 97 + 33) % W;
-    const y = GROUND + 15 + ((i * 43) % 115);
-    ctx.fillRect(x, y, 9 + (i % 3) * 6, 3);
-  }
-  ctx.fillStyle = "rgba(151,96,62,.28)";
-  ctx.fillRect(0, 430, W, 110);
+  if (background?.complete) ctx.drawImage(background, -10, -10, W + 20, H + 20);
+  else { const sky=ctx.createLinearGradient(0,0,0,H); sky.addColorStop(0,"#4d241b"); sky.addColorStop(1,"#191716"); ctx.fillStyle=sky; ctx.fillRect(-10,-10,W+20,H+20); }
+  const grade=ctx.createLinearGradient(0,0,W,0); grade.addColorStop(0,"rgba(23,28,31,.2)"); grade.addColorStop(.55,"rgba(15,13,12,.05)"); grade.addColorStop(1,"rgba(58,18,12,.18)"); ctx.fillStyle=grade; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="rgba(24,18,14,.2)"; ctx.fillRect(0,GROUND+8,W,H-GROUND);
 
   // Survivor crawler / base
-  ctx.fillStyle = "#25292a";
-  ctx.fillRect(25, 326, 130, 70);
-  ctx.fillStyle = "#a35b31";
-  ctx.fillRect(38, 337, 102, 48);
-  ctx.fillStyle = "#50392f";
-  ctx.fillRect(44, 343, 36, 22);
-  ctx.fillStyle = "#88a29a";
-  ctx.fillRect(87, 344, 38, 20);
+  ctx.fillStyle = "#171b1c"; ctx.fillRect(19, 319, 142, 78);
+  ctx.fillStyle = "#8c442c"; ctx.fillRect(30, 329, 116, 57);
+  ctx.fillStyle = "#4d3029"; ctx.fillRect(37, 337, 40, 25);
+  ctx.fillStyle = "#78918c"; ctx.fillRect(87, 336, 42, 22);
+  ctx.fillStyle = "#222626"; ctx.fillRect(21,315,84,7); ctx.fillRect(95,303,8,18); ctx.fillRect(105,308,31,5);
+  ctx.fillStyle = "#c27a3e"; ctx.fillRect(31, 363, 115, 5); ctx.fillStyle="#49261f"; ctx.fillRect(70,329,4,56);
   ctx.fillStyle = "#171a1b";
   ctx.beginPath(); ctx.arc(55, 397, 20, 0, Math.PI * 2); ctx.arc(126, 397, 20, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = "#73726a";
   ctx.beginPath(); ctx.arc(55, 397, 9, 0, Math.PI * 2); ctx.arc(126, 397, 9, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = "#d8a746";
   ctx.fillRect(145, 347, 8, 16);
-  ctx.fillStyle = "#34393a";
-  ctx.fillRect(28, 318, 75, 9);
-  ctx.fillStyle = "#8b8d83";
-  ctx.fillRect(91, 305, 7, 14);
+  ctx.fillStyle="#1b1e1f"; ctx.fillRect(9,349,20,38); ctx.fillStyle="#70736d"; ctx.fillRect(12,353,14,5);
 
   // Infected nest
-  ctx.fillStyle = "#201c1c";
-  ctx.fillRect(866, 315, 90, 80);
-  ctx.fillStyle = "#493333";
-  ctx.fillRect(878, 333, 66, 62);
-  ctx.fillStyle = "#702e25";
-  ctx.beginPath(); ctx.arc(911, 364, 24 + Math.sin(g.time * 3) * 2, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#ff5b2f";
-  ctx.beginPath(); ctx.arc(911, 364, 9, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "rgba(255,91,47,.18)";
-  ctx.beginPath(); ctx.arc(911, 364, 35, 0, Math.PI * 2); ctx.fill();
+  const pulse=1+Math.sin(g.time*3)*.06; ctx.save(); ctx.translate(911,366); ctx.scale(pulse,pulse);
+  ctx.fillStyle="#1b1516"; ctx.beginPath(); ctx.arc(0,0,49,0,Math.PI*2); ctx.fill();
+  for(let i=0;i<10;i++){ctx.rotate(.63); ctx.fillStyle=i%2?"#55251f":"#3d2b25"; ctx.fillRect(12,-5,49,10);}
+  ctx.fillStyle="#74291f"; ctx.beginPath();ctx.arc(0,0,30,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#e54a25";ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();ctx.fillStyle="#ffd05a";ctx.beginPath();ctx.arc(-3,-3,4,0,Math.PI*2);ctx.fill();ctx.restore();
 
-  for (const f of g.fighters) {
-    if (f.side === "human") drawHuman(ctx, f, g.time);
+  for (const corpse of g.corpses) { ctx.save(); ctx.globalAlpha=Math.min(.62,corpse.life/2); ctx.translate(corpse.x,corpse.y+7); ctx.scale(1,.45); ctx.fillStyle=corpse.side==="zombie"?"#4e5a3e":"#5d392f"; ctx.beginPath();ctx.ellipse(0,0,corpse.kind==="abomination"?25:15,7,0,0,Math.PI*2);ctx.fill();ctx.restore(); }
+  for (const f of [...g.fighters].sort((a,b)=>a.y-b.y)) {
+    if (f.side === "human") drawHuman(ctx, f);
     else drawZombie(ctx, f);
-    const barW = f.kind === "crusher" || f.kind === "brute" ? 34 : 27;
+    const barW = f.kind === "crusher" || f.kind === "brute" ? 38 : f.kind === "abomination" ? 52 : 28;
     ctx.fillStyle = "rgba(0,0,0,.55)";
     ctx.fillRect(f.x - barW / 2, f.y - 52, barW, 4);
     ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
@@ -281,15 +230,18 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game) {
     const x = s.x + (s.tx - s.x) * p;
     const y = s.y + (s.ty - s.y) * p;
     ctx.strokeStyle = s.side === "human" ? "#ffe078" : "#e76747";
-    ctx.lineWidth = 2;
+    ctx.shadowColor=ctx.strokeStyle; ctx.shadowBlur=7; ctx.lineWidth = s.side === "human" ? 2.5 : 4;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 15, y); ctx.stroke();
   }
+  ctx.shadowBlur=0;
   for (const p of g.particles) {
     ctx.globalAlpha = Math.max(0, p.life * 1.6);
     ctx.fillStyle = p.color;
     ctx.fillRect(p.x, p.y, p.size, p.size);
   }
   ctx.globalAlpha = 1;
+  for (const d of g.damageTexts) { ctx.globalAlpha=Math.min(1,d.life*2); ctx.fillStyle=d.color; ctx.font="bold 15px monospace"; ctx.textAlign="center"; ctx.shadowColor="#000";ctx.shadowBlur=3;ctx.fillText(d.value,d.x,d.y); }
+  ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.textAlign="left";
 
   ctx.fillStyle = "rgba(25,18,17,.1)";
   for (let i = 0; i < 18; i++) {
@@ -297,19 +249,27 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game) {
     const y = 45 + ((i * 53) % 270);
     ctx.fillRect(x, y, 2, 2);
   }
+  if(g.flashOverlay>0){ctx.fillStyle=`rgba(255,193,106,${Math.min(.48,g.flashOverlay)})`;ctx.fillRect(0,0,W,H);}
   ctx.restore();
 }
 
 export function AshfallGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const backgroundRef = useRef<HTMLImageElement | null>(null);
   const gameRef = useRef<Game>(initialGame());
   const audioRef = useRef<AudioContext | null>(null);
   const lastHudRef = useRef(0);
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [hud, setHud] = useState({ energy: 55, scrap: 0, kills: 0, wave: 1, baseHp: 320, nestHp: 420, strike: 0 });
+  const [hud, setHud] = useState({ energy: 55, scrap: 0, kills: 0, wave: 1, baseHp: 320, nestHp: 420, strike: 0, combo: 0 });
   const [end, setEnd] = useState<"win" | "lose" | null>(null);
+
+  useEffect(() => {
+    const image = new Image();
+    image.src = "/battlefield-v2.png";
+    image.onload = () => { backgroundRef.current = image; };
+  }, []);
 
   const tone = useCallback((freq: number, duration = 0.06, type: OscillatorType = "square") => {
     if (muted) return;
@@ -336,7 +296,7 @@ export function AshfallGame() {
       : { cost: 25, hp: 80, speed: 27, damage: 13, range: 28, attackEvery: 0.62 };
     if (g.energy < data.cost) { tone(110, 0.1, "sawtooth"); return; }
     g.energy -= data.cost;
-    g.fighters.push({ id: g.nextId++, side: "human", kind, x: 145, y: GROUND - 4, maxHp: data.hp, ...data, cooldown: 0, flash: 0, step: 0 });
+    g.fighters.push({ id: g.nextId++, side: "human", kind, x: 145, y: GROUND - 7 + Math.random() * 10, maxHp: data.hp, ...data, cooldown: 0, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: g.nextId % 3 });
     addParticles(g, 150, 370, "#d0b48b", 5);
     tone(kind === "brute" ? 110 : 220, 0.07);
   }, [tone]);
@@ -346,10 +306,13 @@ export function AshfallGame() {
     if (!g.running || g.paused || g.over || g.strikeCooldown > 0) return;
     g.strikeCooldown = 20;
     g.shake = 16;
+    g.flashOverlay = .48;
     for (const f of g.fighters) {
       if (f.side === "zombie" && f.x > 440) {
         f.hp -= 95;
         f.flash = 0.22;
+        f.knock = 12;
+        g.damageTexts.push({ x: f.x, y: f.y - 48, value: "95", life: .8, color: "#ffd36a" });
         addParticles(g, f.x, f.y - 20, "#f28d46", 15);
       }
     }
@@ -403,30 +366,35 @@ export function AshfallGame() {
         g.strikeCooldown = Math.max(0, g.strikeCooldown - dt);
         g.bannerTime = Math.max(0, g.bannerTime - dt);
         g.shake = Math.max(0, g.shake - dt * 38);
+        g.flashOverlay = Math.max(0, g.flashOverlay - dt * 2.2);
+        g.comboTime = Math.max(0, g.comboTime - dt);
+        if (g.comboTime <= 0) g.combo = 0;
 
         if (g.nextWave <= 0) {
           g.wave++;
           g.nextWave = Math.max(8, 16 - g.wave * 0.7);
           g.banner = `WAVE ${g.wave} — ${g.wave >= 5 ? "NIGHTMARE" : "INCOMING"}`;
           g.bannerTime = 2;
-          const count = Math.min(7, 2 + g.wave);
+          const count = Math.min(8, 2 + g.wave);
           for (let i = 0; i < count; i++) {
-            const kind = g.wave >= 3 && i === count - 1 ? "crusher" : Math.random() < 0.38 ? "runner" : "walker";
-            const hp = kind === "crusher" ? 190 : kind === "runner" ? 50 : 82 + g.wave * 6;
-            g.fighters.push({ id: g.nextId++, side: "zombie", kind, x: 850 + i * 23, y: GROUND - 4, hp, maxHp: hp, speed: kind === "runner" ? 34 : kind === "crusher" ? 11 : 18, damage: kind === "crusher" ? 34 : 14, range: 25, cooldown: i * 0.2, attackEvery: kind === "runner" ? 0.72 : 1.1, flash: 0, step: 0 });
+            const kind = g.wave % 4 === 0 && i === count - 1 ? "abomination" : g.wave >= 3 && i === count - 2 ? "crusher" : g.wave >= 2 && i === 1 ? "spitter" : Math.random() < 0.38 ? "runner" : "walker";
+            const hp = kind === "abomination" ? 420 : kind === "crusher" ? 190 : kind === "runner" ? 50 : kind === "spitter" ? 66 : 82 + g.wave * 6;
+            g.fighters.push({ id: g.nextId++, side: "zombie", kind, x: 845 + i * 24, y: GROUND - 7 + Math.random() * 12, hp, maxHp: hp, speed: kind === "runner" ? 34 : kind === "crusher" ? 11 : kind === "abomination" ? 8 : kind === "spitter" ? 14 : 18, damage: kind === "abomination" ? 48 : kind === "crusher" ? 34 : kind === "spitter" ? 12 : 14, range: kind === "spitter" ? 120 : 25, cooldown: i * 0.2, attackEvery: kind === "runner" ? 0.72 : kind === "spitter" ? 1.55 : 1.1, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: i % 3 });
           }
+          if (g.wave % 4 === 0) { g.banner = `WAVE ${g.wave} — ABOMINATION`; g.bannerTime = 2.7; }
           tone(82, 0.25, "sawtooth");
         }
 
         if (g.time < 0.1 && g.fighters.length === 0) {
           for (let i = 0; i < 3; i++) {
             const hp = 76;
-            g.fighters.push({ id: g.nextId++, side: "zombie", kind: i === 2 ? "runner" : "walker", x: 710 + i * 55, y: GROUND - 4, hp, maxHp: hp, speed: i === 2 ? 33 : 18, damage: 13, range: 25, cooldown: i * .35, attackEvery: .9, flash: 0, step: 0 });
+            g.fighters.push({ id: g.nextId++, side: "zombie", kind: i === 2 ? "runner" : "walker", x: 710 + i * 55, y: GROUND - 7 + i * 4, hp, maxHp: hp, speed: i === 2 ? 33 : 18, damage: 13, range: 25, cooldown: i * .35, attackEvery: .9, flash: 0, step: i, attack: 0, knock: 0, variant: i });
           }
         }
 
         for (const f of g.fighters) {
-          f.cooldown -= dt; f.flash = Math.max(0, f.flash - dt); f.step += dt;
+          f.cooldown -= dt; f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.step += dt;
+          if (Math.abs(f.knock) > .1) { f.x += (f.side === "human" ? -1 : 1) * f.knock * dt * 6; f.knock *= .9; }
           const enemies = g.fighters.filter(o => o.side !== f.side && o.hp > 0);
           let target: Fighter | undefined;
           let dist = Infinity;
@@ -439,10 +407,14 @@ export function AshfallGame() {
             if (f.cooldown <= 0) {
               target.hp -= f.damage;
               target.flash = 0.12;
+              target.knock = f.kind === "brute" || f.kind === "abomination" ? 9 : 3;
+              f.attack = .18;
               f.cooldown = f.attackEvery;
-              if (f.kind === "ranger") {
+              g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(f.damage), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
+              g.shake = Math.max(g.shake, f.kind === "brute" || f.kind === "abomination" ? 7 : 2.5);
+              if (f.kind === "ranger" || f.kind === "spitter") {
                 g.shots.push({ x: f.x + 14, y: f.y - 22, tx: target.x, ty: target.y - 20, life: 0.12, side: f.side });
-                tone(310 + Math.random() * 50, 0.035);
+                if (f.side === "human") tone(310 + Math.random() * 50, 0.035);
               } else {
                 addParticles(g, target.x, target.y - 18, target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
               }
@@ -451,6 +423,7 @@ export function AshfallGame() {
             if (f.cooldown <= 0) {
               if (f.side === "human") g.nestHp -= f.damage;
               else g.baseHp -= f.damage;
+              f.attack = .18;
               f.cooldown = f.attackEvery;
               g.shake = Math.max(g.shake, 4);
             }
@@ -462,11 +435,16 @@ export function AshfallGame() {
         const dead = g.fighters.filter(f => f.hp <= 0);
         for (const f of dead) {
           addParticles(g, f.x, f.y - 15, f.side === "zombie" ? "#7e965e" : "#b0614e", 11);
-          if (f.side === "zombie") { g.kills++; g.scrap += f.kind === "crusher" ? 18 : 6; g.energy = Math.min(100, g.energy + 4); }
+          g.corpses.push({ x: f.x, y: f.y, side: f.side, kind: f.kind, life: 5, variant: f.variant });
+          if (f.side === "zombie") { g.kills++; g.combo++; g.comboTime = 2.3; g.scrap += f.kind === "abomination" ? 40 : f.kind === "crusher" ? 18 : 6; g.energy = Math.min(100, g.energy + 4); }
         }
         g.fighters = g.fighters.filter(f => f.hp > 0);
         for (const p of g.particles) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 180 * dt; }
         g.particles = g.particles.filter(p => p.life > 0);
+        for (const d of g.damageTexts) { d.life -= dt; d.y -= dt * 23; }
+        g.damageTexts = g.damageTexts.filter(d => d.life > 0);
+        for (const c of g.corpses) c.life -= dt;
+        g.corpses = g.corpses.filter(c => c.life > 0);
         for (const s of g.shots) s.life -= dt;
         g.shots = g.shots.filter(s => s.life > 0);
 
@@ -477,7 +455,7 @@ export function AshfallGame() {
         }
       }
 
-      drawWorld(ctx, g);
+      drawWorld(ctx, g, backgroundRef.current);
       if (g.bannerTime > 0 && g.running) {
         ctx.fillStyle = "rgba(15,14,14,.76)"; ctx.fillRect(315, 76, 330, 54);
         ctx.strokeStyle = "#d79647"; ctx.strokeRect(315.5, 76.5, 329, 53);
@@ -486,7 +464,7 @@ export function AshfallGame() {
       }
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
-        setHud({ energy: Math.floor(g.energy), scrap: g.scrap, kills: g.kills, wave: g.wave, baseHp: Math.max(0, g.baseHp), nestHp: Math.max(0, g.nestHp), strike: Math.ceil(g.strikeCooldown) });
+        setHud({ energy: Math.floor(g.energy), scrap: g.scrap, kills: g.kills, wave: g.wave, baseHp: Math.max(0, g.baseHp), nestHp: Math.max(0, g.nestHp), strike: Math.ceil(g.strikeCooldown), combo: g.combo });
       }
       frame = requestAnimationFrame(loop);
     };
@@ -503,7 +481,7 @@ export function AshfallGame() {
         <canvas ref={canvasRef} width={W} height={H} className="battlefield" aria-label="Wasteland battlefield" />
 
         <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07</small></div></div>
+          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>VER 1.1</em></small></div></div>
           <div className="wave-block"><small>WAVE</small><strong>{String(hud.wave).padStart(2, "0")}</strong></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           <button className="icon-btn" onClick={() => setMuted(v => !v)} aria-label={muted ? "音を出す" : "ミュート"}>{muted ? "×" : "♪"}</button>
@@ -541,12 +519,12 @@ export function AshfallGame() {
           </button>
         </div>
 
-        <div className="stats-strip"><span>☠ {hud.kills} KILLS</span><span>▰ {hud.scrap} SCRAP</span><span className="objective">OBJECTIVE: DESTROY THE NEST</span></div>
+        <div className="stats-strip"><span>☠ {hud.kills} KILLS</span><span>▰ {hud.scrap} SCRAP</span>{hud.combo > 1 && <span className="combo">×{hud.combo} COMBO</span>}<span className="objective">OBJECTIVE: DESTROY THE NEST</span></div>
 
         {!started && (
           <div className="start-screen">
             <div className="start-panel">
-              <p className="eyebrow">/// DISTRESS SIGNAL ACQUIRED</p>
+              <p className="eyebrow">/// VER 1.1 · VISUAL COMBAT UPDATE</p>
               <h1>ASHFALL<br /><span>OUTPOST</span></h1>
               <p className="mission">The crawler is out of fuel. Hold the line, rally survivors, and burn the infected nest before the horde breaks through.</p>
               <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>TAP TO DEPLOY</small></button>

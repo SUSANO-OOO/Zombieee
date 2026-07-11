@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ASHFALL OUTPOST — Wasteland Defense",
+  title: "ASHFALL OUTPOST Ver.1.1 — Wasteland Defense",
   description:
     "Command survivors, defend the crawler, and break through the infected wasteland.",
   openGraph: {
