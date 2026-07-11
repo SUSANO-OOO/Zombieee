@@ -73,6 +73,7 @@ const cards = [
   { kind: "scout", name: "SCOUT", cost: 25, key: "1", desc: "FAST" },
   { kind: "ranger", name: "RANGER", cost: 45, key: "2", desc: "RANGED" },
   { kind: "brute", name: "BREAKER", cost: 70, key: "3", desc: "ARMORED" },
+  { kind: "brawler", name: "BRAWLER", cost: 55, key: "4", desc: "FIGHTER" },
 ];
 
 const initialGame = (): Game => ({
@@ -123,16 +124,18 @@ function pixelRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
 }
 
-function drawHuman(ctx: CanvasRenderingContext2D, f: Fighter, rangerSprite: HTMLImageElement | null) {
-  if (f.kind === "ranger" && rangerSprite?.complete) {
-    const frameWidth = rangerSprite.naturalWidth / 6;
+function drawHuman(ctx: CanvasRenderingContext2D, f: Fighter, rangerSprite: HTMLImageElement | null, brawlerSprite: HTMLImageElement | null) {
+  const illustratedSprite = f.kind === "ranger" ? rangerSprite : f.kind === "brawler" ? brawlerSprite : null;
+  if (illustratedSprite?.complete) {
+    const frameWidth = illustratedSprite.naturalWidth / 6;
     const frame = f.flash > 0 ? 5 : f.attack > .09 ? 4 : f.attack > 0 ? 3 : 1 + (Math.floor(f.step * 5) % 2);
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,.42)";
     ctx.beginPath(); ctx.ellipse(f.x, f.y + 10, 17, 5, 0, 0, Math.PI * 2); ctx.fill();
     ctx.imageSmoothingEnabled = true;
     if (f.flash > 0) { ctx.globalAlpha = .72; ctx.shadowColor = "#fff2b0"; ctx.shadowBlur = 14; }
-    ctx.drawImage(rangerSprite, frame * frameWidth, 0, frameWidth, rangerSprite.naturalHeight, f.x - 32, f.y - 80, 64, 108);
+    const size = f.kind === "brawler" ? { x: 34, y: 79, w: 68, h: 106 } : { x: 32, y: 80, w: 64, h: 108 };
+    ctx.drawImage(illustratedSprite, frame * frameWidth, 0, frameWidth, illustratedSprite.naturalHeight, f.x - size.x, f.y - size.y, size.w, size.h);
     ctx.restore();
     return;
   }
@@ -193,7 +196,7 @@ function drawZombie(ctx: CanvasRenderingContext2D, f: Fighter) {
   ctx.restore();
 }
 
-function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImageElement | null, rangerSprite: HTMLImageElement | null) {
+function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImageElement | null, rangerSprite: HTMLImageElement | null, brawlerSprite: HTMLImageElement | null) {
   const sx = g.shake > 0 ? (Math.random() - 0.5) * g.shake : 0;
   const sy = g.shake > 0 ? (Math.random() - 0.5) * g.shake : 0;
   ctx.save();
@@ -228,7 +231,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
 
   for (const corpse of g.corpses) { ctx.save(); ctx.globalAlpha=Math.min(.62,corpse.life/2); ctx.translate(corpse.x,corpse.y+7); ctx.scale(1,.45); ctx.fillStyle=corpse.side==="zombie"?"#4e5a3e":"#5d392f"; ctx.beginPath();ctx.ellipse(0,0,corpse.kind==="abomination"?25:15,7,0,0,Math.PI*2);ctx.fill();ctx.restore(); }
   for (const f of [...g.fighters].sort((a,b)=>a.y-b.y)) {
-    if (f.side === "human") drawHuman(ctx, f, rangerSprite);
+    if (f.side === "human") drawHuman(ctx, f, rangerSprite, brawlerSprite);
     else drawZombie(ctx, f);
     const barW = f.kind === "crusher" || f.kind === "brute" ? 38 : f.kind === "abomination" ? 52 : 28;
     ctx.fillStyle = "rgba(0,0,0,.55)";
@@ -269,6 +272,7 @@ export function AshfallGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const backgroundRef = useRef<HTMLImageElement | null>(null);
   const rangerSpriteRef = useRef<HTMLImageElement | null>(null);
+  const brawlerSpriteRef = useRef<HTMLImageElement | null>(null);
   const gameRef = useRef<Game>(initialGame());
   const audioRef = useRef<AudioContext | null>(null);
   const lastHudRef = useRef(0);
@@ -285,6 +289,9 @@ export function AshfallGame() {
     const ranger = new Image();
     ranger.src = "/ranger-sprites-v1.png";
     ranger.onload = () => { rangerSpriteRef.current = ranger; };
+    const brawler = new Image();
+    brawler.src = "/brawler-sprites-v1.png";
+    brawler.onload = () => { brawlerSpriteRef.current = brawler; };
   }, []);
 
   const tone = useCallback((freq: number, duration = 0.06, type: OscillatorType = "square") => {
@@ -307,6 +314,8 @@ export function AshfallGame() {
     if (!g.running || g.paused || g.over) return;
     const data = kind === "ranger"
       ? { cost: 45, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: 0.82 }
+      : kind === "brawler"
+      ? { cost: 55, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: 0.72 }
       : kind === "brute"
       ? { cost: 70, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 }
       : { cost: 25, hp: 80, speed: 27, damage: 13, range: 28, attackEvery: 0.62 };
@@ -357,6 +366,7 @@ export function AshfallGame() {
       if (e.key === "1") spawnHuman("scout");
       if (e.key === "2") spawnHuman("ranger");
       if (e.key === "3") spawnHuman("brute");
+      if (e.key === "4") spawnHuman("brawler");
       if (e.key.toLowerCase() === "q") airStrike();
       if (e.key === "Escape" || e.key.toLowerCase() === "p") togglePause();
     };
@@ -471,7 +481,7 @@ export function AshfallGame() {
         }
       }
 
-      drawWorld(ctx, g, backgroundRef.current, rangerSpriteRef.current);
+      drawWorld(ctx, g, backgroundRef.current, rangerSpriteRef.current, brawlerSpriteRef.current);
       if (g.bannerTime > 0 && g.running) {
         ctx.fillStyle = "rgba(15,14,14,.76)"; ctx.fillRect(315, 76, 330, 54);
         ctx.strokeStyle = "#d79647"; ctx.strokeRect(315.5, 76.5, 329, 53);
@@ -497,7 +507,7 @@ export function AshfallGame() {
         <canvas ref={canvasRef} width={W} height={H} className="battlefield" aria-label="Wasteland battlefield" />
 
         <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>VER 1.2 PREVIEW</em></small></div></div>
+          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>VER 1.3 PREVIEW</em></small></div></div>
           <div className="wave-block"><small>WAVE</small><strong>{String(hud.wave).padStart(2, "0")}</strong></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           <button className="icon-btn" onClick={() => setMuted(v => !v)} aria-label={muted ? "音を出す" : "ミュート"}>{muted ? "×" : "♪"}</button>
@@ -540,11 +550,11 @@ export function AshfallGame() {
         {!started && (
           <div className="start-screen">
             <div className="start-panel">
-              <p className="eyebrow">/// VER 1.2 PREVIEW · RANGER SPRITE TEST</p>
+              <p className="eyebrow">/// VER 1.3 PREVIEW · BRAWLER JOINED</p>
               <h1>ASHFALL<br /><span>OUTPOST</span></h1>
               <p className="mission">The crawler is out of fuel. Hold the line, rally survivors, and burn the infected nest before the horde breaks through.</p>
               <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>TAP TO DEPLOY</small></button>
-              <p className="controls">1–3 DEPLOY · Q AIRSTRIKE · P PAUSE</p>
+              <p className="controls">1–4 DEPLOY · Q AIRSTRIKE · P PAUSE</p>
             </div>
           </div>
         )}

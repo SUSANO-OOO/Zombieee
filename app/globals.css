@@ -41,8 +41,10 @@ button { font:inherit; }
 .portrait i { position:absolute; left:40%; top:25%; width:22%; height:65%; background:#352e29; transform:rotate(-8deg); }
 [data-kind="ranger"] .portrait { left:0; width:50%; height:100%; background-image:url('/ranger-sprites-v1.png'); background-repeat:no-repeat; background-size:600% 100%; background-position:0 center; filter:drop-shadow(3px 2px 0 rgba(0,0,0,.45)); }
 [data-kind="ranger"] .portrait i { display:none; }
+[data-kind="brawler"] .portrait { left:0; width:50%; height:100%; background-image:url('/brawler-sprites-v1.png'); background-repeat:no-repeat; background-size:600% 100%; background-position:0 center; filter:drop-shadow(3px 2px 0 rgba(0,0,0,.45)); }
+[data-kind="brawler"] .portrait i { display:none; }
 [data-kind="brute"] .portrait { transform:scale(1.2); transform-origin:bottom; filter:saturate(.7); }
-.card-copy { position:absolute; top:18%; left:46%; right:3%; }.card-copy b { display:block; font-size:clamp(8px,1vw,14px); letter-spacing:.04em; white-space:nowrap; }.card-copy small { color:#9f927d; font:700 clamp(5px,.52vw,8px) monospace; letter-spacing:.1em; }
+.card-copy { position:absolute; top:18%; left:46%; right:3%; }.card-copy b { display:block; font-size:clamp(7px,.88vw,13px); letter-spacing:.025em; white-space:nowrap; }.card-copy small { color:#9f927d; font:700 clamp(5px,.48vw,8px) monospace; letter-spacing:.08em; }
 .cost { position:absolute; right:5%; bottom:7%; color:#f2c666; font:900 clamp(10px,1.15vw,16px) monospace; }
 .strike-btn { width:18%; height:68%; display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid #a94c33; background:linear-gradient(135deg,#6f2f28,#341d1c); color:#f3c3a4; cursor:pointer; clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px); }
 .strike-btn:active { transform:scale(.97); }.strike-btn:disabled { filter:grayscale(.8) brightness(.55); cursor:not-allowed; }.strike-rings { font-size:clamp(20px,3vw,40px); color:#e66b42; }.strike-btn b,.strike-btn small { display:block; text-align:left; }.strike-btn b { font-size:clamp(8px,1.1vw,15px); }.strike-btn small { color:#c08369; font:700 clamp(5px,.55vw,8px) monospace; letter-spacing:.1em; }.strike-btn.cooldown .strike-rings { animation:spin 2s linear infinite; }
