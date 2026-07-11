@@ -85,3 +85,8 @@ export function interceptorTargetScore({ distance, claims, capacity = 1, isCurre
   const excessClaims = Math.max(0, claimsFromOthers - capacity + 1);
   return distance + Math.max(0, rearward) * 2 + excessClaims * 96;
 }
+
+export function isCrawlerRouteBlocker({ enemyX, defenderX, defenderY, routeY, lookAhead = 105, corridor = 30 }) {
+  const lead = enemyX - defenderX;
+  return lead >= 0 && lead <= lookAhead && Math.abs(defenderY - routeY) <= corridor;
+}

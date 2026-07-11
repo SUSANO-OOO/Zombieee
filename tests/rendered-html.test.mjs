@@ -15,6 +15,7 @@ import {
   autonomousTargetScore,
   canDeploy,
   interceptorTargetScore,
+  isCrawlerRouteBlocker,
   laneForY,
   objectiveFor,
   phaseAt,
@@ -72,6 +73,7 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   await access(new URL("../public/infected-nest-v1.png", import.meta.url));
   await access(new URL("../public/takuya-boss-sprites-v2.png", import.meta.url));
   await access(new URL("../public/shade-raider-sprites-v1.png", import.meta.url));
+  await access(new URL("../public/crawler-bus-v1.png", import.meta.url));
   assert.match(game, /battlefield-v2\.png/);
   assert.match(game, /ranger-sprites-v1\.png/);
   assert.match(game, /brawler-sprites-v1\.png/);
@@ -80,10 +82,14 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(game, /infected-nest-v1\.png/);
   assert.match(game, /takuya-boss-sprites-v2\.png/);
   assert.match(game, /shade-raider-sprites-v1\.png/);
+  assert.match(game, /crawler-bus-v1\.png/);
   assert.match(rules, /ELITE ENEMY — SHADE/);
   assert.match(rules, /BOSS — TAKUYA \/ IRON JUDGE/);
 
-  assert.match(game, /Three combat corridors used by adaptive routing/);
+  assert.match(game, /no lane-map overlay is drawn over the battlefield/);
+  assert.doesNotMatch(game, /fillText\(`0\$\{lane \+ 1\}/);
+  assert.doesNotMatch(game, /fillText\("MUSTER"/);
+  assert.doesNotMatch(game, /ctx\.arc\(BASE_X, y, 16/);
   assert.match(game, /aria-label="Three-lane wasteland battlefield"/);
   assert.match(game, /advanceCommand\(g\.energy, dt\)/);
   assert.match(game, /canDeploy/);
@@ -107,15 +113,22 @@ test("ships the upgraded three-lane battlefield and combat systems", async () =>
   assert.match(game, /targetClaims/);
   assert.match(game, /fighterDistance\(f, target\)/);
   assert.match(game, /enemyLaneSpeedFor/);
-  assert.match(game, /validInterceptors/);
+  assert.match(game, /routeBlockers/);
+  assert.match(game, /availableBlockers/);
+  assert.match(game, /isCrawlerRouteBlocker/);
+  assert.match(game, /claimsFromOthers < defenderCapacity\(human\)/);
+  assert.match(game, /const crawlerInRange = f\.x - BASE_X <= f\.range \+ 10/);
+  assert.match(game, /physicalContact = crawlerInRange \? undefined/);
+  assert.match(game, /!target && f\.x > 520/);
+  assert.doesNotMatch(game, /f\.anchorLane = laneForY\(target\.y/);
   assert.match(game, /interceptorClaims/);
   assert.match(game, /interceptorTargetScore/);
   assert.match(game, /f\.anchorLane = routes\.reduce/);
-  assert.match(game, /never step away from the CRAWLER or phase through a target/);
-  assert.match(game, /Math\.max\(target\.x, f\.x \+ dx \/ distance \* step\)/);
+  assert.match(game, /The CRAWLER remains the objective/);
+  assert.match(game, /zombieTargetFloor === null \? proposedX/);
   assert.match(game, /Queue separation keeps the lead attacker fixed/);
   assert.match(game, /zombieTargetFloor/);
-  assert.match(game, /MUSTER DEPLOYED/);
+  assert.match(game, /CRAWLER DEPLOYED/);
   assert.match(game, /onClick=\{\(\) => deployHuman\(card\.kind\)\}/);
   assert.doesNotMatch(game, /TAP TOP \/ MID \/ LOW LANE/);
   assert.doesNotMatch(game, /event\.key\.toLowerCase\(\) === "a"/);
@@ -201,6 +214,15 @@ test("distributes enemy interceptors without sending them backward", () => {
   assert.equal(interceptorTargetScore({ distance: 120, claims: 1, capacity: 1, isCurrent: true }), 120);
   assert.equal(interceptorTargetScore({ distance: 120, claims: 2, capacity: 2 }), 216);
   assert.equal(interceptorTargetScore({ distance: 120, claims: 0, capacity: 1, rearward: 12 }), 144);
+});
+
+test("only treats defenders on the active Crawler route as blockers", () => {
+  const base = { enemyX: 700, defenderX: 620, routeY: LANE_Y[0] };
+  assert.equal(isCrawlerRouteBlocker({ ...base, defenderY: LANE_Y[0] }), true);
+  assert.equal(isCrawlerRouteBlocker({ ...base, defenderY: LANE_Y[2] }), false);
+  assert.equal(isCrawlerRouteBlocker({ ...base, defenderX: 590, defenderY: LANE_Y[0] }), false);
+  assert.equal(isCrawlerRouteBlocker({ ...base, defenderX: 710, defenderY: LANE_Y[0] }), false);
+  assert.equal(isCrawlerRouteBlocker({ ...base, defenderY: LANE_Y[0] + 31 }), false);
 });
 
 test("returns the intended phases, objectives, RAGE rewards, and support costs", () => {

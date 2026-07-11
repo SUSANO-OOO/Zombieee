@@ -13,6 +13,7 @@ import {
   autonomousTargetScore,
   canDeploy,
   interceptorTargetScore,
+  isCrawlerRouteBlocker,
   laneForY,
   objectiveFor,
   phaseAt,
@@ -381,53 +382,34 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
   grade.addColorStop(0, "rgba(23,28,31,.18)"); grade.addColorStop(.55, "rgba(15,13,12,.04)"); grade.addColorStop(1, "rgba(58,18,12,.2)");
   ctx.fillStyle = grade; ctx.fillRect(0, 0, W, H);
 
-  // Three combat corridors used by adaptive routing and support targeting.
-  for (let lane = 0; lane < 3; lane++) {
-    const y = LANE_Y[lane];
-    ctx.fillStyle = lane % 2 ? "rgba(18,20,19,.10)" : "rgba(211,166,101,.045)";
-    ctx.fillRect(118, y - 26, 732, 52);
-    ctx.strokeStyle = lane === 1 ? "rgba(231,176,93,.24)" : "rgba(220,202,170,.16)";
-    ctx.lineWidth = 1; ctx.setLineDash([10, 10]);
-    ctx.beginPath(); ctx.moveTo(126, y + 15); ctx.lineTo(840, y + 15); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = "rgba(238,211,169,.44)"; ctx.font = "bold 9px monospace";
-    ctx.fillText(`0${lane + 1} ${LANE_NAMES[lane]}`, 144, y - 17);
+  // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.
+  const crawlerSprite = sprites.crawler;
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,.46)";
+  ctx.beginPath(); ctx.ellipse(70, 405, 91, 12, 0, 0, Math.PI * 2); ctx.fill();
+  if (crawlerSprite?.complete && crawlerSprite.naturalWidth) {
+    ctx.globalAlpha = .92 + Math.max(0, g.baseHp / 520) * .08;
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(crawlerSprite, -30, 287, 198, 124);
+  } else {
+    ctx.fillStyle = "#5d3329"; ctx.fillRect(-10, 326, 148, 70);
   }
-
-  // Crawler and a three-gate perimeter on the survivor side.
-  ctx.fillStyle = "rgba(16,18,18,.76)"; ctx.fillRect(103, 244, 25, 166);
-  ctx.fillStyle = "#a85235"; ctx.fillRect(120, 250, 7, 155);
-  for (const y of LANE_Y) {
-    ctx.fillStyle = "#1b2020"; ctx.beginPath(); ctx.arc(BASE_X, y, 16, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = "#b9693d"; ctx.lineWidth = 3; ctx.stroke();
-    ctx.fillStyle = "#e6b957"; ctx.fillRect(BASE_X - 4, y - 4, 8, 8);
+  if (g.baseHp <= 260) {
+    for (let i = 0; i < 4; i++) {
+      const smokeY = 299 - ((g.time * 18 + i * 13) % 48);
+      ctx.globalAlpha = .12 + i * .035;
+      ctx.fillStyle = "#1b1c1b";
+      ctx.beginPath(); ctx.arc(72 + Math.sin(g.time * 2 + i) * 7, smokeY, 9 + i * 2, 0, Math.PI * 2); ctx.fill();
+    }
   }
-  ctx.fillStyle = "#171b1c"; ctx.fillRect(18, 331, 95, 64);
-  ctx.fillStyle = "#8c442c"; ctx.fillRect(28, 339, 79, 46);
-  ctx.fillStyle = "#78918c"; ctx.fillRect(63, 344, 34, 19);
-  ctx.fillStyle = "#171a1b"; ctx.beginPath(); ctx.arc(45, 397, 17, 0, Math.PI * 2); ctx.arc(91, 397, 17, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#73726a"; ctx.beginPath(); ctx.arc(45, 397, 7, 0, Math.PI * 2); ctx.arc(91, 397, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 
-  // All survivor units enter through this single muster beacon, then choose their own route.
-  const musterPulse = 18 + Math.sin(g.time * 5) * 3;
-  ctx.strokeStyle = "rgba(236,181,78,.72)"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(MUSTER_X, MUSTER_Y, musterPulse, 0, Math.PI * 2); ctx.stroke();
-  ctx.fillStyle = "rgba(226,163,66,.22)"; ctx.beginPath(); ctx.arc(MUSTER_X, MUSTER_Y, 11, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#f0c46d"; ctx.beginPath(); ctx.moveTo(MUSTER_X, MUSTER_Y - 7); ctx.lineTo(MUSTER_X + 7, MUSTER_Y); ctx.lineTo(MUSTER_X, MUSTER_Y + 7); ctx.lineTo(MUSTER_X - 7, MUSTER_Y); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = "rgba(239,211,166,.68)"; ctx.font = "bold 8px monospace"; ctx.fillText("MUSTER", MUSTER_X + 23, MUSTER_Y + 3);
-
-  // Infected nest and its three approach nodes.
+  // The infected nest is a world object, not a lane-selector widget.
   if (nestSprite?.complete) {
     const pulse = 1 + Math.sin(g.time * 3) * .018;
     ctx.save(); ctx.translate(892, 328); ctx.scale(pulse, pulse);
     ctx.shadowColor = "rgba(235,78,38,.55)"; ctx.shadowBlur = 12 + Math.sin(g.time * 4) * 4;
     ctx.drawImage(nestSprite, -86, -86, 165, 165); ctx.restore();
-  }
-  ctx.strokeStyle = "rgba(184,63,42,.72)"; ctx.lineWidth = 6;
-  for (const y of LANE_Y) {
-    ctx.beginPath(); ctx.moveTo(846, y); ctx.lineTo(875, 328); ctx.stroke();
-    ctx.fillStyle = "#57251f"; ctx.beginPath(); ctx.arc(NEST_X, y, 15, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = "#c34e36"; ctx.lineWidth = 2; ctx.stroke();
   }
   if (!g.nestUnlocked) {
     ctx.fillStyle = "rgba(8,12,13,.7)"; ctx.fillRect(801, 233, 82, 22);
@@ -522,7 +504,7 @@ export function AshfallGame() {
       scout: "/scout-sprites-v2.png", ranger: "/ranger-sprites-v1.png", brute: "/breaker-sprites-v2.png",
       brawler: "/brawler-sprites-v1.png", gunner: "/gunner-sprites-v1.png", medic: "/medic-sprites-v1.png",
       infected: "/infected-sprites-v1.png", crusher: "/crusher-sprites-v1.png", spitter: "/spitter-sprites-v1.png",
-      takuya: "/takuya-boss-sprites-v2.png", shade: "/shade-raider-sprites-v1.png",
+      takuya: "/takuya-boss-sprites-v2.png", shade: "/shade-raider-sprites-v1.png", crawler: "/crawler-bus-v1.png",
     };
     Object.entries(paths).forEach(([key, src]) => {
       const sprite = new Image(); sprite.src = src; sprite.onload = () => { spriteRefs.current[key] = sprite; };
@@ -694,7 +676,7 @@ export function AshfallGame() {
       targetId: null, retargetIn: 0, bodyRadius: bodyRadiusFor(kind), laneSpeed, spawnGrace: .24,
     });
     addParticles(g, MUSTER_X, MUSTER_Y, "#d0b48b", 7);
-    g.banner = `${card.name} // MUSTER DEPLOYED`;
+    g.banner = `${card.name} // CRAWLER DEPLOYED`;
     g.bannerTime = .8;
     tone(kind === "brute" ? 110 : 220, .07);
     return true;
@@ -904,14 +886,20 @@ export function AshfallGame() {
           } else {
             const humans = g.fighters.filter((human) => human.side === "human" && human.hp > 0);
             const locked = f.targetId === null ? undefined : fighterById.get(f.targetId);
-            const contact = humans
+            const crawlerInRange = f.x - BASE_X <= f.range + 10;
+            const physicalContact = crawlerInRange ? undefined : humans
               .filter((human) => fighterDistance(f, human) <= f.range + human.bodyRadius + 4)
               .sort((a, b) => fighterDistance(f, a) - fighterDistance(f, b))[0];
-            const validInterceptors = humans.filter((human) => {
-              const alreadyEngaged = fighterDistance(f, human) <= f.range + human.bodyRadius + 4;
-              return (human.x <= f.x || alreadyEngaged) && f.x - human.x <= 280;
-            });
+            const routeY = LANE_Y[f.anchorLane ?? f.lane];
+            const lookAhead = Math.max(105, f.range + 36);
             const defenderCapacity = (human: Fighter) => human.kind === "brute" || human.kind === "brawler" ? 3 : human.kind === "scout" || human.kind === "medic" ? 1 : 2;
+            const routeBlockers = crawlerInRange ? [] : humans.filter((human) => isCrawlerRouteBlocker({
+              enemyX: f.x, defenderX: human.x, defenderY: human.y, routeY, lookAhead,
+            }));
+            const availableBlockers = routeBlockers.filter((human) => {
+              const claimsFromOthers = Math.max(0, (interceptorClaims.get(human.id) ?? 0) - (f.targetId === human.id ? 1 : 0));
+              return claimsFromOthers < defenderCapacity(human);
+            });
             const interceptorScore = (human: Fighter) => interceptorTargetScore({
               distance: fighterDistance(f, human),
               claims: interceptorClaims.get(human.id) ?? 0,
@@ -919,17 +907,13 @@ export function AshfallGame() {
               isCurrent: f.targetId === human.id,
               rearward: human.x - f.x,
             });
-            const bestInterceptor = validInterceptors.reduce<Fighter | undefined>((choice, human) => {
+            const bestInterceptor = availableBlockers.reduce<Fighter | undefined>((choice, human) => {
               return !choice || interceptorScore(human) < interceptorScore(choice) ? human : choice;
             }, undefined);
-            const lockedValid = locked?.side === "human" && locked.hp > 0
-              && (locked.x <= f.x || fighterDistance(f, locked) <= f.range + locked.bodyRadius + 4)
-              && f.x - locked.x <= 310;
-            target = contact ?? (lockedValid && f.retargetIn > 0 ? locked : bestInterceptor);
+            const lockedValid = locked?.side === "human" && locked.hp > 0 && availableBlockers.some((human) => human.id === locked.id);
+            target = physicalContact ?? (lockedValid && f.retargetIn > 0 ? locked : bestInterceptor);
             if (f.retargetIn <= 0 || target?.id !== f.targetId) {
-              if (target) {
-                f.anchorLane = laneForY(target.y, f.lane, 0) as Lane;
-              } else {
+              if (!target && f.x > 520) {
                 const routes: Lane[] = [0, 1, 2];
                 f.anchorLane = routes.reduce((bestLane, lane) => {
                   const routeScore = (candidate: Lane) => {
@@ -999,14 +983,12 @@ export function AshfallGame() {
             f.y = Math.max(LANE_Y[0], Math.min(LANE_Y[2], f.y));
             f.lane = laneForY(f.y, f.lane) as Lane;
           } else if (target && f.side === "zombie") {
-            // Infected adapt their lane and intercept defenders, but never step away from the CRAWLER or phase through a target.
+            // The CRAWLER remains the objective: enemies advance on their route and only stop for a physical blocker.
             const burning = g.supports.some((support) => support.kind === "molotov" && effectDistance(f, support) <= 85);
-            const dx = target.x - f.x;
-            const dy = target.y - f.y;
-            const stoppingDistance = Math.max(18, f.range + target.bodyRadius * .55);
-            const travel = Math.max(0, distance - stoppingDistance);
-            const step = Math.min(travel, f.speed * dt * (burning ? .8 : 1));
-            if (dx < 0 && distance > .1) f.x = Math.max(target.x, f.x + dx / distance * step);
+            const proposedX = f.x - f.speed * dt * (burning ? .8 : 1);
+            f.x = zombieTargetFloor === null ? proposedX : Math.max(zombieTargetFloor, proposedX);
+            const routeY = LANE_Y[f.anchorLane ?? f.lane];
+            const dy = routeY - f.y;
             if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
             f.y = Math.max(LANE_Y[0], Math.min(LANE_Y[2], f.y));
             f.lane = laneForY(f.y, f.lane) as Lane;
@@ -1203,7 +1185,7 @@ export function AshfallGame() {
           <div className="start-screen"><div className="start-panel">
             <p className="eyebrow">{"/// EARLY ACCESS BUILD 0.3.0 · THREE-LANE WARFARE · DYNAMIC BGM"}</p>
             <h1>ASHFALL<br /><span>OUTPOST</span></h1>
-            <p className="mission">Deploy from one muster point. Survivors hunt threats across all three lanes while the infected adapt their route toward the crawler.</p>
+            <p className="mission">Deploy from the Crawler. Survivors intercept threats across three natural routes while the infected drive on your headquarters.</p>
             <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>TAP A UNIT CARD · AUTO-DEPLOY</small></button>
             <p className="controls">1–6 DEPLOY · Z/X/C/Q SUPPORT · P PAUSE</p>
           </div></div>
