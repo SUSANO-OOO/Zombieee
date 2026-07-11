@@ -1,15 +1,59 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  COMMAND_MAX,
+  LANE_NAMES,
+  LANE_Y,
+  MISSION_EVENTS,
+  RAGE_MAX,
+  SUPPORT_DEFS,
+  UNIT_CARDS,
+  advanceCommand,
+  canDeploy,
+  objectiveFor,
+  phaseAt,
+  rageReward,
+  scrapReward,
+} from "./gameRules.js";
 
 const W = 960;
 const H = 540;
-const GROUND = 390;
+const BASE_X = 126;
+const NEST_X = 836;
+
+type Lane = 0 | 1 | 2;
+type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic";
+type SupportKind = "barrel" | "medkit" | "molotov" | "airstrike";
+type MusicMode = "normal" | "danger" | "boss";
+type SelectedAction = `unit:${UnitKind}` | `support:${SupportKind}` | null;
+
+type UnitCard = {
+  kind: UnitKind;
+  name: string;
+  cost: number;
+  key: string;
+  desc: string;
+  deployCooldown: number;
+  hp: number;
+  speed: number;
+  damage: number;
+  range: number;
+  attackEvery: number;
+};
+
+type SupportDef = { kind: SupportKind; name: string; cost: number; key: string; desc: string };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: [string, Lane][] };
+
+const cards = UNIT_CARDS as UnitCard[];
+const supportDefs = SUPPORT_DEFS as SupportDef[];
+const missionEvents = MISSION_EVENTS as MissionEvent[];
 
 type Fighter = {
   id: number;
   side: "human" | "zombie";
   kind: string;
+  lane: Lane;
   x: number;
   y: number;
   hp: number;
@@ -27,19 +71,30 @@ type Fighter = {
   variant: number;
 };
 
-type Particle = {
+type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number };
+type Shot = { x: number; y: number; tx: number; ty: number; life: number; side: "human" | "zombie" };
+type DamageText = { x: number; y: number; value: string; life: number; color: string };
+type Corpse = {
   x: number;
   y: number;
-  vx: number;
-  vy: number;
+  lane: Lane;
+  side: "human" | "zombie";
+  kind: string;
   life: number;
-  color: string;
-  size: number;
+  variant: number;
+  reviveIn: number | null;
+  prevented: boolean;
 };
-
-type Shot = { x: number; y: number; tx: number; ty: number; life: number; side: string };
-type DamageText = { x: number; y: number; value: string; life: number; color: string };
-type Corpse = { x: number; y: number; side: "human" | "zombie"; kind: string; life: number; variant: number };
+type FieldSupport = {
+  id: number;
+  kind: SupportKind;
+  lane: Lane;
+  x: number;
+  y: number;
+  life: number;
+  tick: number;
+  triggered: boolean;
+};
 
 type Game = {
   running: boolean;
@@ -49,17 +104,22 @@ type Game = {
   time: number;
   last: number;
   energy: number;
+  rage: number;
   scrap: number;
   kills: number;
   wave: number;
-  nextWave: number;
+  phase: 1 | 2 | 3;
+  eventIndex: number;
   baseHp: number;
   nestHp: number;
+  nestUnlocked: boolean;
   fighters: Fighter[];
   particles: Particle[];
   shots: Shot[];
   damageTexts: DamageText[];
   corpses: Corpse[];
+  supports: FieldSupport[];
+  deployCooldowns: Record<UnitKind, number>;
   nextId: number;
   shake: number;
   strikeCooldown: number;
@@ -70,14 +130,38 @@ type Game = {
   comboTime: number;
 };
 
-const cards = [
-  { kind: "scout", name: "SCOUT", cost: 25, key: "1", desc: "FAST" },
-  { kind: "ranger", name: "RANGER", cost: 45, key: "2", desc: "RANGED" },
-  { kind: "brute", name: "BREAKER", cost: 70, key: "3", desc: "ARMORED" },
-  { kind: "brawler", name: "BRAWLER", cost: 55, key: "4", desc: "FIGHTER" },
-  { kind: "gunner", name: "GUNNER", cost: 60, key: "5", desc: "BURST" },
-  { kind: "medic", name: "MEDIC", cost: 50, key: "6", desc: "SUPPORT" },
-];
+type Hud = {
+  energy: number;
+  rage: number;
+  scrap: number;
+  kills: number;
+  wave: number;
+  phase: 1 | 2 | 3;
+  baseHp: number;
+  nestHp: number;
+  nestUnlocked: boolean;
+  strike: number;
+  combo: number;
+  bossHp: number;
+  bossMax: number;
+  objective: string;
+  deployCooldowns: Record<UnitKind, number>;
+};
+
+type SpriteMap = Record<string, HTMLImageElement>;
+type MusicRuntime = {
+  master: GainNode;
+  normalBus: GainNode;
+  dangerBus: GainNode;
+  bossBus: GainNode;
+  timer: number;
+  step: number;
+  nextStepAt: number;
+  mode: MusicMode;
+};
+type JingleRuntime = { gain: GainNode; oscillators: OscillatorNode[] };
+
+const emptyCooldowns = () => Object.fromEntries(cards.map((card) => [card.kind, 0])) as Record<UnitKind, number>;
 
 const initialGame = (): Game => ({
   running: false,
@@ -87,22 +171,27 @@ const initialGame = (): Game => ({
   time: 0,
   last: 0,
   energy: 55,
+  rage: 0,
   scrap: 0,
   kills: 0,
   wave: 1,
-  nextWave: 15,
-  baseHp: 400,
+  phase: 1,
+  eventIndex: 0,
+  baseHp: 520,
   nestHp: 620,
+  nestUnlocked: false,
   fighters: [],
   particles: [],
   shots: [],
   damageTexts: [],
   corpses: [],
+  supports: [],
+  deployCooldowns: emptyCooldowns(),
   nextId: 1,
   shake: 0,
   strikeCooldown: 0,
-  banner: "WAVE 1 INCOMING",
-  bannerTime: 2.4,
+  banner: "PHASE I — HOLD THE LINE",
+  bannerTime: 2.7,
   flashOverlay: 0,
   combo: 0,
   comboTime: 0,
@@ -113,16 +202,63 @@ function addParticles(g: Game, x: number, y: number, color: string, count = 8) {
     g.particles.push({
       x,
       y,
-      vx: (Math.random() - 0.5) * 120,
+      vx: (Math.random() - .5) * 120,
       vy: -Math.random() * 110 - 20,
-      life: 0.4 + Math.random() * 0.5,
+      life: .4 + Math.random() * .5,
       color,
       size: 2 + Math.random() * 4,
     });
   }
 }
 
-type SpriteMap = Record<string, HTMLImageElement>;
+function laneY(lane: Lane, id = 0) {
+  return LANE_Y[lane] + ((id % 3) - 1) * 3;
+}
+
+function enemyStats(kind: string, wave: number) {
+  if (kind === "takuya") return { hp: 1200, speed: 9, damage: 58, range: 38, attackEvery: 1.15 };
+  if (kind === "shade") return { hp: 220, speed: 29, damage: 23, range: 27, attackEvery: .62 };
+  if (kind === "abomination") return { hp: 480, speed: 8, damage: 50, range: 28, attackEvery: 1.18 };
+  if (kind === "crusher") return { hp: 210 + wave * 5, speed: 11, damage: 35, range: 27, attackEvery: 1.18 };
+  if (kind === "spitter") return { hp: 72 + wave * 3, speed: 14, damage: 13, range: 122, attackEvery: 1.5 };
+  if (kind === "runner") return { hp: 52 + wave * 2, speed: 34, damage: 14, range: 25, attackEvery: .72 };
+  if (kind === "turned") return { hp: 95, speed: 18, damage: 18, range: 25, attackEvery: .88 };
+  return { hp: 86 + wave * 5, speed: 18, damage: 15, range: 25, attackEvery: 1.02 };
+}
+
+function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0) {
+  const data = enemyStats(kind, g.wave);
+  const id = g.nextId++;
+  g.fighters.push({
+    id,
+    side: "zombie",
+    kind,
+    lane,
+    x: kind === "turned" ? 0 : Math.min(842, 786 + order * 18),
+    y: laneY(lane, id),
+    maxHp: data.hp,
+    ...data,
+    cooldown: order * .18,
+    supportCooldown: 0,
+    flash: 0,
+    step: Math.random() * 4,
+    attack: 0,
+    knock: 0,
+    variant: id % 3,
+  });
+  return g.fighters[g.fighters.length - 1];
+}
+
+function damageEnemiesInLane(g: Game, lane: Lane, x: number, radius: number, damage: number, color: string, knock = 8) {
+  for (const f of g.fighters) {
+    if (f.side !== "zombie" || f.lane !== lane || Math.abs(f.x - x) > radius || f.hp <= 0) continue;
+    f.hp -= damage;
+    f.flash = .18;
+    f.knock = Math.max(f.knock, knock);
+    g.damageTexts.push({ x: f.x, y: f.y - 48, value: String(Math.round(damage)), life: .75, color });
+    addParticles(g, f.x, f.y - 18, color, damage > 100 ? 12 : 4);
+  }
+}
 
 function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: SpriteMap) {
   const enemySheet = f.kind === "takuya" ? "takuya" : f.kind === "shade" ? "shade" : f.kind === "crusher" || f.kind === "abomination" ? "crusher" : f.kind === "spitter" ? "spitter" : "infected";
@@ -131,92 +267,173 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   const frameWidth = sprite.naturalWidth / 6;
   const frame = f.flash > 0 ? 5 : f.attack > .09 ? 4 : f.attack > 0 ? 3 : 1 + (Math.floor(f.step * (f.kind === "runner" ? 8 : 5)) % 2);
   const sizes: Record<string, { w: number; h: number }> = {
-    scout: { w: 64, h: 108 }, ranger: { w: 64, h: 108 }, brute: { w: 82, h: 120 },
-    brawler: { w: 70, h: 108 }, gunner: { w: 66, h: 108 }, medic: { w: 66, h: 108 },
-    walker: { w: 64, h: 106 }, runner: { w: 58, h: 98 }, shade: { w: 70, h: 108 }, spitter: { w: 68, h: 110 },
-    crusher: { w: 91, h: 124 }, abomination: { w: 116, h: 148 }, takuya: { w: 106, h: 142 },
+    scout: { w: 58, h: 98 }, ranger: { w: 58, h: 98 }, brute: { w: 72, h: 108 },
+    brawler: { w: 62, h: 99 }, gunner: { w: 60, h: 100 }, medic: { w: 60, h: 100 },
+    walker: { w: 58, h: 96 }, runner: { w: 53, h: 90 }, turned: { w: 58, h: 96 },
+    shade: { w: 64, h: 101 }, spitter: { w: 62, h: 101 }, crusher: { w: 80, h: 112 },
+    abomination: { w: 101, h: 132 }, takuya: { w: 94, h: 128 },
   };
-  const size = sizes[f.kind] ?? { w: 64, h: 106 };
-  const bob = Math.abs(Math.sin(f.step * 7)) * 1.2;
+  const size = sizes[f.kind] ?? { w: 58, h: 96 };
+  const bob = Math.abs(Math.sin(f.step * 7)) * 1.1;
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,.42)";
-  ctx.beginPath(); ctx.ellipse(f.x, f.y + 10, size.w * .27, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(f.x, f.y + 8, size.w * .27, 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.imageSmoothingEnabled = true;
-  if (f.flash > 0) { ctx.globalAlpha = .7; ctx.shadowColor = "#fff1ad"; ctx.shadowBlur = 16; }
-  ctx.drawImage(sprite, frame * frameWidth, 0, frameWidth, sprite.naturalHeight, f.x - size.w / 2, f.y - size.h + 27 - bob, size.w, size.h);
+  if (f.flash > 0) {
+    ctx.globalAlpha = .7;
+    ctx.shadowColor = "#fff1ad";
+    ctx.shadowBlur = 16;
+  }
+  ctx.drawImage(sprite, frame * frameWidth, 0, frameWidth, sprite.naturalHeight, f.x - size.w / 2, f.y - size.h + 24 - bob, size.w, size.h);
+  ctx.restore();
+}
+
+function drawSupport(ctx: CanvasRenderingContext2D, support: FieldSupport, time: number) {
+  ctx.save();
+  ctx.translate(support.x, support.y);
+  if (support.kind === "barrel") {
+    ctx.fillStyle = "rgba(0,0,0,.35)";
+    ctx.beginPath(); ctx.ellipse(0, 6, 17, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#783e2c"; ctx.fillRect(-12, -24, 24, 30);
+    ctx.fillStyle = "#c17642"; ctx.fillRect(-13, -20, 26, 4); ctx.fillRect(-13, -2, 26, 4);
+    ctx.fillStyle = "#e7b94e"; ctx.font = "bold 15px monospace"; ctx.textAlign = "center"; ctx.fillText("!", 0, -7);
+  } else if (support.kind === "medkit") {
+    ctx.strokeStyle = "rgba(105,226,155,.45)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, 42 + Math.sin(time * 5) * 3, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = "#d9d0b5"; ctx.fillRect(-14, -18, 28, 23);
+    ctx.fillStyle = "#3fa56f"; ctx.fillRect(-3, -14, 6, 15); ctx.fillRect(-8, -9, 16, 6);
+  } else if (support.kind === "molotov") {
+    const glow = ctx.createRadialGradient(0, 0, 3, 0, 0, 55);
+    glow.addColorStop(0, "rgba(255,207,76,.65)"); glow.addColorStop(.35, "rgba(230,83,35,.42)"); glow.addColorStop(1, "rgba(120,24,13,0)");
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.ellipse(0, 0, 70, 24, 0, 0, Math.PI * 2); ctx.fill();
+    for (let i = 0; i < 5; i++) {
+      const fx = (i - 2) * 15 + Math.sin(time * 8 + i) * 4;
+      const fy = -8 - Math.abs(Math.sin(time * 6 + i * 2)) * 18;
+      ctx.fillStyle = i % 2 ? "#ffb33f" : "#e64e29";
+      ctx.beginPath(); ctx.arc(fx, fy, 5 + (i % 3), 0, Math.PI * 2); ctx.fill();
+    }
+  } else {
+    const radius = 34 + Math.sin(time * 12) * 4;
+    ctx.strokeStyle = support.life < .3 ? "#fff0a2" : "#e3573c";
+    ctx.lineWidth = 3; ctx.setLineDash([7, 5]);
+    ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(-45, 0); ctx.lineTo(45, 0); ctx.moveTo(0, -24); ctx.lineTo(0, 24); ctx.stroke();
+  }
   ctx.restore();
 }
 
 function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImageElement | null, sprites: SpriteMap, nestSprite: HTMLImageElement | null) {
-  const sx = g.shake > 0 ? (Math.random() - 0.5) * g.shake : 0;
-  const sy = g.shake > 0 ? (Math.random() - 0.5) * g.shake : 0;
+  const sx = g.shake > 0 ? (Math.random() - .5) * g.shake : 0;
+  const sy = g.shake > 0 ? (Math.random() - .5) * g.shake : 0;
   ctx.save();
   ctx.translate(sx, sy);
+  if (background?.complete) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(background, -10, -10, W + 20, H + 20);
+  } else {
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, "#4d241b"); sky.addColorStop(1, "#191716");
+    ctx.fillStyle = sky; ctx.fillRect(-10, -10, W + 20, H + 20);
+  }
+  const grade = ctx.createLinearGradient(0, 0, W, 0);
+  grade.addColorStop(0, "rgba(23,28,31,.18)"); grade.addColorStop(.55, "rgba(15,13,12,.04)"); grade.addColorStop(1, "rgba(58,18,12,.2)");
+  ctx.fillStyle = grade; ctx.fillRect(0, 0, W, H);
 
-  if (background?.complete) { ctx.imageSmoothingEnabled = true; ctx.drawImage(background, -10, -10, W + 20, H + 20); ctx.imageSmoothingEnabled = false; }
-  else { const sky=ctx.createLinearGradient(0,0,0,H); sky.addColorStop(0,"#4d241b"); sky.addColorStop(1,"#191716"); ctx.fillStyle=sky; ctx.fillRect(-10,-10,W+20,H+20); }
-  const grade=ctx.createLinearGradient(0,0,W,0); grade.addColorStop(0,"rgba(23,28,31,.2)"); grade.addColorStop(.55,"rgba(15,13,12,.05)"); grade.addColorStop(1,"rgba(58,18,12,.18)"); ctx.fillStyle=grade; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle="rgba(24,18,14,.2)"; ctx.fillRect(0,GROUND+8,W,H-GROUND);
-
-  // Survivor crawler / base
-  ctx.fillStyle = "#171b1c"; ctx.fillRect(19, 319, 142, 78);
-  ctx.fillStyle = "#8c442c"; ctx.fillRect(30, 329, 116, 57);
-  ctx.fillStyle = "#4d3029"; ctx.fillRect(37, 337, 40, 25);
-  ctx.fillStyle = "#78918c"; ctx.fillRect(87, 336, 42, 22);
-  ctx.fillStyle = "#222626"; ctx.fillRect(21,315,84,7); ctx.fillRect(95,303,8,18); ctx.fillRect(105,308,31,5);
-  ctx.fillStyle = "#c27a3e"; ctx.fillRect(31, 363, 115, 5); ctx.fillStyle="#49261f"; ctx.fillRect(70,329,4,56);
-  ctx.fillStyle = "#171a1b";
-  ctx.beginPath(); ctx.arc(55, 397, 20, 0, Math.PI * 2); ctx.arc(126, 397, 20, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#73726a";
-  ctx.beginPath(); ctx.arc(55, 397, 9, 0, Math.PI * 2); ctx.arc(126, 397, 9, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#d8a746";
-  ctx.fillRect(145, 347, 8, 16);
-  ctx.fillStyle="#1b1e1f"; ctx.fillRect(9,349,20,38); ctx.fillStyle="#70736d"; ctx.fillRect(12,353,14,5);
-
-  // Detailed infected checkpoint / nest artwork with a subtle living pulse.
-  if (nestSprite?.complete) {
-    const pulse = 1 + Math.sin(g.time * 3) * .018;
-    ctx.save(); ctx.translate(891, 327); ctx.scale(pulse, pulse);
-    ctx.shadowColor = "rgba(235,78,38,.55)"; ctx.shadowBlur = 12 + Math.sin(g.time * 4) * 4;
-    ctx.drawImage(nestSprite, -86, -82, 165, 165); ctx.restore();
+  // Three actual combat lanes, with independent gates and targeting.
+  for (let lane = 0; lane < 3; lane++) {
+    const y = LANE_Y[lane];
+    ctx.fillStyle = lane % 2 ? "rgba(18,20,19,.10)" : "rgba(211,166,101,.045)";
+    ctx.fillRect(118, y - 26, 732, 52);
+    ctx.strokeStyle = lane === 1 ? "rgba(231,176,93,.24)" : "rgba(220,202,170,.16)";
+    ctx.lineWidth = 1; ctx.setLineDash([10, 10]);
+    ctx.beginPath(); ctx.moveTo(126, y + 15); ctx.lineTo(840, y + 15); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(238,211,169,.44)"; ctx.font = "bold 9px monospace";
+    ctx.fillText(`0${lane + 1} ${LANE_NAMES[lane]}`, 144, y - 17);
   }
 
-  for (const corpse of g.corpses) { ctx.save(); ctx.globalAlpha=Math.min(.62,corpse.life/2); ctx.translate(corpse.x,corpse.y+7); ctx.scale(1,.45); ctx.fillStyle=corpse.kind==="takuya"||corpse.kind==="shade"?"#292d31":corpse.side==="zombie"?"#4e5a3e":"#5d392f"; ctx.beginPath();ctx.ellipse(0,0,corpse.kind==="abomination"||corpse.kind==="takuya"?25:15,7,0,0,Math.PI*2);ctx.fill();ctx.restore(); }
-  for (const f of [...g.fighters].sort((a,b)=>a.y-b.y)) {
+  // Crawler and a three-gate perimeter on the survivor side.
+  ctx.fillStyle = "rgba(16,18,18,.76)"; ctx.fillRect(103, 244, 25, 166);
+  ctx.fillStyle = "#a85235"; ctx.fillRect(120, 250, 7, 155);
+  for (const y of LANE_Y) {
+    ctx.fillStyle = "#1b2020"; ctx.beginPath(); ctx.arc(BASE_X, y, 16, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#b9693d"; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = "#e6b957"; ctx.fillRect(BASE_X - 4, y - 4, 8, 8);
+  }
+  ctx.fillStyle = "#171b1c"; ctx.fillRect(18, 331, 95, 64);
+  ctx.fillStyle = "#8c442c"; ctx.fillRect(28, 339, 79, 46);
+  ctx.fillStyle = "#78918c"; ctx.fillRect(63, 344, 34, 19);
+  ctx.fillStyle = "#171a1b"; ctx.beginPath(); ctx.arc(45, 397, 17, 0, Math.PI * 2); ctx.arc(91, 397, 17, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#73726a"; ctx.beginPath(); ctx.arc(45, 397, 7, 0, Math.PI * 2); ctx.arc(91, 397, 7, 0, Math.PI * 2); ctx.fill();
+
+  // Infected nest and its three approach nodes.
+  if (nestSprite?.complete) {
+    const pulse = 1 + Math.sin(g.time * 3) * .018;
+    ctx.save(); ctx.translate(892, 328); ctx.scale(pulse, pulse);
+    ctx.shadowColor = "rgba(235,78,38,.55)"; ctx.shadowBlur = 12 + Math.sin(g.time * 4) * 4;
+    ctx.drawImage(nestSprite, -86, -86, 165, 165); ctx.restore();
+  }
+  ctx.strokeStyle = "rgba(184,63,42,.72)"; ctx.lineWidth = 6;
+  for (const y of LANE_Y) {
+    ctx.beginPath(); ctx.moveTo(846, y); ctx.lineTo(875, 328); ctx.stroke();
+    ctx.fillStyle = "#57251f"; ctx.beginPath(); ctx.arc(NEST_X, y, 15, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#c34e36"; ctx.lineWidth = 2; ctx.stroke();
+  }
+  if (!g.nestUnlocked) {
+    ctx.fillStyle = "rgba(8,12,13,.7)"; ctx.fillRect(801, 233, 82, 22);
+    ctx.strokeStyle = "#6f8791"; ctx.strokeRect(801.5, 233.5, 81, 21);
+    ctx.fillStyle = "#a6bdc3"; ctx.font = "bold 9px monospace"; ctx.textAlign = "center"; ctx.fillText("NEST SEALED", 842, 248); ctx.textAlign = "left";
+  }
+
+  for (const support of [...g.supports].sort((a, b) => a.y - b.y)) drawSupport(ctx, support, g.time);
+
+  for (const corpse of g.corpses) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(.65, corpse.life / 2);
+    ctx.translate(corpse.x, corpse.y + 7); ctx.scale(1, .45);
+    ctx.fillStyle = corpse.kind === "takuya" || corpse.kind === "shade" ? "#292d31" : corpse.side === "zombie" ? "#4e5a3e" : "#5d392f";
+    ctx.beginPath(); ctx.ellipse(0, 0, corpse.kind === "abomination" || corpse.kind === "takuya" ? 25 : 15, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    if (corpse.reviveIn !== null) {
+      ctx.strokeStyle = `rgba(225,67,46,${.45 + Math.sin(g.time * 10) * .25})`;
+      ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(corpse.x, corpse.y - 8, 18, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = "#ff8a66"; ctx.font = "bold 10px monospace"; ctx.textAlign = "center";
+      ctx.fillText(`TURN ${Math.max(1, Math.ceil(corpse.reviveIn))}`, corpse.x, corpse.y - 31); ctx.textAlign = "left";
+    }
+  }
+
+  for (const f of [...g.fighters].sort((a, b) => a.y - b.y || a.x - b.x)) {
     drawSpriteFighter(ctx, f, sprites);
     const barW = f.kind === "takuya" ? 52 : f.kind === "crusher" || f.kind === "brute" ? 38 : f.kind === "abomination" ? 52 : 28;
-    const barY = f.y - (f.kind === "takuya" ? 120 : f.kind === "abomination" ? 126 : f.kind === "crusher" || f.kind === "brute" ? 101 : 86);
-    ctx.fillStyle = "rgba(0,0,0,.55)";
-    ctx.fillRect(f.x - barW / 2, barY, barW, 4);
+    const height = f.kind === "takuya" ? 111 : f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "brute" ? 94 : 80;
+    const barY = f.y - height;
+    ctx.fillStyle = "rgba(0,0,0,.58)"; ctx.fillRect(f.x - barW / 2, barY, barW, 4);
     ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
     ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), 4);
   }
 
-  for (const s of g.shots) {
-    const p = 1 - s.life / 0.12;
-    const x = s.x + (s.tx - s.x) * p;
-    const y = s.y + (s.ty - s.y) * p;
-    ctx.strokeStyle = s.side === "human" ? "#ffe078" : "#e76747";
-    ctx.shadowColor=ctx.strokeStyle; ctx.shadowBlur=7; ctx.lineWidth = s.side === "human" ? 2.5 : 4;
-    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 15, y); ctx.stroke();
+  for (const shot of g.shots) {
+    const p = 1 - shot.life / .12;
+    const x = shot.x + (shot.tx - shot.x) * p;
+    const y = shot.y + (shot.ty - shot.y) * p;
+    ctx.strokeStyle = shot.side === "human" ? "#ffe078" : "#e76747";
+    ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 7; ctx.lineWidth = shot.side === "human" ? 2.5 : 4;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (shot.side === "human" ? -15 : 15), y); ctx.stroke();
   }
-  ctx.shadowBlur=0;
+  ctx.shadowBlur = 0;
   for (const p of g.particles) {
-    ctx.globalAlpha = Math.max(0, p.life * 1.6);
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, p.size, p.size);
+    ctx.globalAlpha = Math.max(0, p.life * 1.6); ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
   }
   ctx.globalAlpha = 1;
-  for (const d of g.damageTexts) { ctx.globalAlpha=Math.min(1,d.life*2); ctx.fillStyle=d.color; ctx.font="bold 15px monospace"; ctx.textAlign="center"; ctx.shadowColor="#000";ctx.shadowBlur=3;ctx.fillText(d.value,d.x,d.y); }
-  ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.textAlign="left";
-
-  ctx.fillStyle = "rgba(25,18,17,.1)";
-  for (let i = 0; i < 18; i++) {
-    const x = (i * 67 + g.time * (4 + (i % 3) * 2)) % W;
-    const y = 45 + ((i * 53) % 270);
-    ctx.fillRect(x, y, 2, 2);
+  for (const d of g.damageTexts) {
+    ctx.globalAlpha = Math.min(1, d.life * 2); ctx.fillStyle = d.color; ctx.font = "bold 14px monospace"; ctx.textAlign = "center";
+    ctx.shadowColor = "#000"; ctx.shadowBlur = 3; ctx.fillText(d.value, d.x, d.y);
   }
-  if(g.flashOverlay>0){ctx.fillStyle=`rgba(255,193,106,${Math.min(.48,g.flashOverlay)})`;ctx.fillRect(0,0,W,H);}
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left";
+  if (g.flashOverlay > 0) {
+    ctx.fillStyle = `rgba(255,193,106,${Math.min(.48, g.flashOverlay)})`; ctx.fillRect(0, 0, W, H);
+  }
   ctx.restore();
 }
 
@@ -227,186 +444,277 @@ export function AshfallGame() {
   const nestSpriteRef = useRef<HTMLImageElement | null>(null);
   const gameRef = useRef<Game>(initialGame());
   const audioRef = useRef<AudioContext | null>(null);
-  const musicRef = useRef<{ gain: GainNode; timer: number; step: number } | null>(null);
+  const musicRef = useRef<MusicRuntime | null>(null);
+  const jingleRef = useRef<JingleRuntime | null>(null);
+  const desiredMusicModeRef = useRef<MusicMode>("normal");
   const lastHudRef = useRef(0);
+  const selectedActionRef = useRef<SelectedAction>(null);
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [hud, setHud] = useState({ energy: 55, scrap: 0, kills: 0, wave: 1, baseHp: 400, nestHp: 620, strike: 0, combo: 0, bossHp: 0, bossMax: 0 });
+  const [selectedAction, setSelectedAction] = useState<SelectedAction>(null);
+  const [hud, setHud] = useState<Hud>({
+    energy: 55, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520, nestHp: 620,
+    nestUnlocked: false, strike: 0, combo: 0, bossHp: 0, bossMax: 0,
+    objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(),
+  });
   const [end, setEnd] = useState<"win" | "lose" | null>(null);
 
+  const chooseAction = useCallback((action: SelectedAction) => {
+    selectedActionRef.current = action;
+    setSelectedAction(action);
+  }, []);
+
   useEffect(() => {
-    const image = new Image();
-    image.src = "/battlefield-v2.png";
-    image.onload = () => { backgroundRef.current = image; };
+    const image = new Image(); image.src = "/battlefield-v2.png"; image.onload = () => { backgroundRef.current = image; };
     const paths: Record<string, string> = {
       scout: "/scout-sprites-v2.png", ranger: "/ranger-sprites-v1.png", brute: "/breaker-sprites-v2.png",
       brawler: "/brawler-sprites-v1.png", gunner: "/gunner-sprites-v1.png", medic: "/medic-sprites-v1.png",
       infected: "/infected-sprites-v1.png", crusher: "/crusher-sprites-v1.png", spitter: "/spitter-sprites-v1.png",
-      takuya: "/takuya-boss-sprites-v2.png",
-      shade: "/shade-raider-sprites-v1.png",
+      takuya: "/takuya-boss-sprites-v2.png", shade: "/shade-raider-sprites-v1.png",
     };
     Object.entries(paths).forEach(([key, src]) => {
-      const sprite = new Image(); sprite.src = src;
-      sprite.onload = () => { spriteRefs.current[key] = sprite; };
+      const sprite = new Image(); sprite.src = src; sprite.onload = () => { spriteRefs.current[key] = sprite; };
     });
-    const nest = new Image(); nest.src = "/infected-nest-v1.png";
-    nest.onload = () => { nestSpriteRef.current = nest; };
+    const nest = new Image(); nest.src = "/infected-nest-v1.png"; nest.onload = () => { nestSpriteRef.current = nest; };
   }, []);
 
   const ensureAudio = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!audioRef.current) audioRef.current = new AudioCtx();
+    if (!audioRef.current || audioRef.current.state === "closed") audioRef.current = new AudioCtx();
     if (audioRef.current.state === "suspended") void audioRef.current.resume();
     return audioRef.current;
   }, []);
 
-  const tone = useCallback((freq: number, duration = 0.06, type: OscillatorType = "square") => {
+  const tone = useCallback((freq: number, duration = .06, type: OscillatorType = "square") => {
     if (muted) return;
     try {
-      const a = ensureAudio();
-      const o = a.createOscillator();
-      const gain = a.createGain();
-      o.type = type; o.frequency.value = freq;
-      gain.gain.setValueAtTime(0.055, a.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, a.currentTime + duration);
-      o.connect(gain); gain.connect(a.destination); o.start(); o.stop(a.currentTime + duration);
-    } catch { /* Audio is optional. */ }
+      const audio = ensureAudio();
+      const oscillator = audio.createOscillator(); const gain = audio.createGain();
+      oscillator.type = type; oscillator.frequency.value = freq;
+      gain.gain.setValueAtTime(.055, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + duration);
+      oscillator.connect(gain); gain.connect(audio.destination); oscillator.start(); oscillator.stop(audio.currentTime + duration);
+    } catch { /* Audio remains optional. */ }
   }, [ensureAudio, muted]);
+
+  const syncMusicMode = useCallback((mode: MusicMode) => {
+    desiredMusicModeRef.current = mode;
+    const music = musicRef.current;
+    const audio = audioRef.current;
+    if (!music || !audio || music.mode === mode) return;
+    music.mode = mode;
+    const danger = mode === "normal" ? .0001 : mode === "danger" ? 1 : .55;
+    const boss = mode === "boss" ? 1 : .0001;
+    for (const [bus, value] of [[music.dangerBus, danger], [music.bossBus, boss]] as [GainNode, number][]) {
+      bus.gain.cancelScheduledValues(audio.currentTime);
+      bus.gain.setTargetAtTime(value, audio.currentTime, .16);
+    }
+  }, []);
 
   const stopMusic = useCallback(() => {
     const music = musicRef.current;
     if (!music) return;
     window.clearInterval(music.timer);
-    const a = audioRef.current;
-    if (a) {
-      music.gain.gain.cancelScheduledValues(a.currentTime);
-      music.gain.gain.setTargetAtTime(.0001, a.currentTime, .045);
+    const audio = audioRef.current;
+    if (audio && audio.state !== "closed") {
+      music.master.gain.cancelScheduledValues(audio.currentTime);
+      music.master.gain.setTargetAtTime(.0001, audio.currentTime, .055);
     }
-    window.setTimeout(() => { try { music.gain.disconnect(); } catch { /* Already disconnected. */ } }, 240);
+    window.setTimeout(() => { try { music.master.disconnect(); } catch { /* Already disconnected. */ } }, 320);
     musicRef.current = null;
+  }, []);
+
+  const stopJingle = useCallback(() => {
+    const jingle = jingleRef.current;
+    if (!jingle) return;
+    for (const oscillator of jingle.oscillators) {
+      try { oscillator.stop(); } catch { /* The note may already have ended. */ }
+    }
+    try { jingle.gain.disconnect(); } catch { /* Already disconnected. */ }
+    jingleRef.current = null;
   }, []);
 
   const startMusic = useCallback(() => {
     if (musicRef.current) return;
     try {
-      const a = ensureAudio();
-      const master = a.createGain();
-      master.gain.setValueAtTime(.05, a.currentTime);
-      master.connect(a.destination);
-      const music = { gain: master, timer: 0, step: 0 };
+      const audio = ensureAudio();
+      const master = audio.createGain(); const normalBus = audio.createGain(); const dangerBus = audio.createGain(); const bossBus = audio.createGain();
+      master.gain.setValueAtTime(.047, audio.currentTime); normalBus.gain.value = 1;
+      const mode = desiredMusicModeRef.current;
+      dangerBus.gain.value = mode === "normal" ? .0001 : mode === "danger" ? 1 : .55;
+      bossBus.gain.value = mode === "boss" ? 1 : .0001;
+      normalBus.connect(master); dangerBus.connect(master); bossBus.connect(master); master.connect(audio.destination);
+      const music: MusicRuntime = { master, normalBus, dangerBus, bossBus, timer: 0, step: 0, nextStepAt: audio.currentTime + .04, mode };
       musicRef.current = music;
       const bassLine = [55, 55, 65.41, 55, 49, 49, 43.65, 49, 55, 55, 73.42, 65.41, 49, 43.65, 49, 41.2];
-      const pulse = () => {
-        if (musicRef.current !== music) return;
-        const t = a.currentTime + .015;
-        const step = music.step % bassLine.length;
-        const bass = a.createOscillator();
-        const bassGain = a.createGain();
-        bass.type = "sawtooth"; bass.frequency.setValueAtTime(bassLine[step], t);
-        bassGain.gain.setValueAtTime(.0001, t); bassGain.gain.exponentialRampToValueAtTime(.21, t + .018); bassGain.gain.exponentialRampToValueAtTime(.0001, t + .29);
-        bass.connect(bassGain); bassGain.connect(master); bass.start(t); bass.stop(t + .31);
-        if (step % 4 === 0) {
-          const drone = a.createOscillator(); const droneGain = a.createGain();
-          drone.type = "triangle"; drone.frequency.setValueAtTime(bassLine[step] * 2, t);
-          droneGain.gain.setValueAtTime(.0001, t); droneGain.gain.exponentialRampToValueAtTime(.065, t + .08); droneGain.gain.exponentialRampToValueAtTime(.0001, t + 1.25);
-          drone.connect(droneGain); droneGain.connect(master); drone.start(t); drone.stop(t + 1.28);
-        }
-        if (step % 2 === 0) {
-          const beat = a.createOscillator(); const beatGain = a.createGain();
-          beat.type = "sine"; beat.frequency.setValueAtTime(step % 4 === 0 ? 70 : 105, t); beat.frequency.exponentialRampToValueAtTime(38, t + .09);
-          beatGain.gain.setValueAtTime(.15, t); beatGain.gain.exponentialRampToValueAtTime(.0001, t + .11);
-          beat.connect(beatGain); beatGain.connect(master); beat.start(t); beat.stop(t + .12);
-        }
-        music.step++;
+      const voice = (frequency: number, at: number, duration: number, volume: number, type: OscillatorType, bus: GainNode, endFrequency?: number) => {
+        const oscillator = audio.createOscillator(); const gain = audio.createGain();
+        oscillator.type = type; oscillator.frequency.setValueAtTime(frequency, at);
+        if (endFrequency) oscillator.frequency.exponentialRampToValueAtTime(endFrequency, at + duration * .72);
+        gain.gain.setValueAtTime(.0001, at); gain.gain.exponentialRampToValueAtTime(volume, at + .012); gain.gain.exponentialRampToValueAtTime(.0001, at + duration);
+        oscillator.connect(gain); gain.connect(bus); oscillator.start(at); oscillator.stop(at + duration + .02);
       };
-      pulse();
-      music.timer = window.setInterval(pulse, 360);
-    } catch { /* Music is optional when Web Audio is unavailable. */ }
+      const scheduleStep = (at: number, stepNumber: number) => {
+        const step = stepNumber % bassLine.length;
+        voice(bassLine[step], at, .19, .18, "sawtooth", normalBus);
+        if (step % 4 === 0) voice(bassLine[step] * 2, at, .82, .05, "triangle", normalBus);
+        if (step % 2 === 0) voice(step % 4 === 0 ? 72 : 108, at, .1, .14, "sine", normalBus, 38);
+        if (step % 2 === 1) voice(185 + (step % 4) * 34, at, .055, .085, "square", dangerBus);
+        if (step % 4 === 2) voice(92, at, .13, .12, "sine", dangerBus, 42);
+        voice(step % 2 ? 46 : 58, at, .075, step % 2 ? .07 : .13, "sawtooth", bossBus, 31);
+        if (step % 4 === 0) voice(bassLine[step] / 2, at, .75, .085, "square", bossBus);
+      };
+      const scheduler = () => {
+        if (musicRef.current !== music || audio.state === "closed") return;
+        if (music.nextStepAt < audio.currentTime - .02) music.nextStepAt = audio.currentTime + .05;
+        let scheduled = 0;
+        while (music.nextStepAt < audio.currentTime + .12 && scheduled < 2) {
+          scheduleStep(music.nextStepAt, music.step++);
+          music.nextStepAt += .24;
+          scheduled++;
+        }
+      };
+      scheduler();
+      music.timer = window.setInterval(scheduler, 50);
+    } catch { /* Web Audio may be unavailable. */ }
   }, [ensureAudio]);
 
-  useEffect(() => () => stopMusic(), [stopMusic]);
+  const playEndJingle = useCallback((won: boolean) => {
+    if (muted) return;
+    try {
+      const audio = ensureAudio();
+      stopJingle();
+      const master = audio.createGain();
+      master.gain.setValueAtTime(1, audio.currentTime);
+      master.connect(audio.destination);
+      const runtime: JingleRuntime = { gain: master, oscillators: [] };
+      jingleRef.current = runtime;
+      const notes = won ? [220, 293.66, 369.99, 440] : [164.81, 138.59, 110, 73.42];
+      notes.forEach((frequency, index) => {
+        const at = audio.currentTime + .08 + index * .14;
+        const oscillator = audio.createOscillator(); const gain = audio.createGain();
+        oscillator.type = won ? "square" : "sawtooth"; oscillator.frequency.setValueAtTime(frequency, at);
+        gain.gain.setValueAtTime(.0001, at); gain.gain.exponentialRampToValueAtTime(.07, at + .02); gain.gain.exponentialRampToValueAtTime(.0001, at + .22);
+        oscillator.connect(gain); gain.connect(master); oscillator.start(at); oscillator.stop(at + .24);
+        runtime.oscillators.push(oscillator);
+        if (index === notes.length - 1) {
+          oscillator.onended = () => {
+            if (jingleRef.current !== runtime) return;
+            try { master.disconnect(); } catch { /* Already disconnected. */ }
+            jingleRef.current = null;
+          };
+        }
+      });
+    } catch { /* Jingle is optional. */ }
+  }, [ensureAudio, muted, stopJingle]);
 
-  const spawnHuman = useCallback((kind: string) => {
-    const g = gameRef.current;
-    if (!g.running || g.paused || g.over) return;
-    const data = kind === "ranger"
-      ? { cost: 45, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: 0.82 }
-      : kind === "gunner"
-      ? { cost: 60, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 }
-      : kind === "medic"
-      ? { cost: 50, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: 0.96 }
-      : kind === "brawler"
-      ? { cost: 55, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: 0.72 }
-      : kind === "brute"
-      ? { cost: 70, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 }
-      : { cost: 25, hp: 80, speed: 27, damage: 13, range: 28, attackEvery: 0.62 };
-    if (g.energy < data.cost) { tone(110, 0.1, "sawtooth"); return; }
-    g.energy -= data.cost;
-    g.fighters.push({ id: g.nextId++, side: "human", kind, x: 145, y: GROUND - 7 + Math.random() * 10, maxHp: data.hp, ...data, cooldown: 0, supportCooldown: 0, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: g.nextId % 3 });
-    addParticles(g, 150, 370, "#d0b48b", 5);
-    tone(kind === "brute" ? 110 : 220, 0.07);
-  }, [tone]);
+  useEffect(() => () => {
+    stopMusic();
+    stopJingle();
+    const audio = audioRef.current;
+    if (audio && audio.state !== "closed") void audio.close();
+  }, [stopJingle, stopMusic]);
 
-  const airStrike = useCallback(() => {
+  const deployHuman = useCallback((kind: UnitKind, lane: Lane) => {
     const g = gameRef.current;
-    if (!g.running || g.paused || g.over || g.strikeCooldown > 0) return;
-    g.strikeCooldown = 20;
-    g.shake = 16;
-    g.flashOverlay = .48;
-    g.fighters = g.fighters.map((f) => {
-      if (f.side === "zombie" && f.x > 440) {
-        g.damageTexts.push({ x: f.x, y: f.y - 48, value: "95", life: .8, color: "#ffd36a" });
-        addParticles(g, f.x, f.y - 20, "#f28d46", 15);
-        return { ...f, hp: f.hp - 95, flash: .22, knock: 12 };
-      }
-      return f;
+    const card = cards.find((item) => item.kind === kind);
+    if (!card || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
+      tone(105, .1, "sawtooth");
+      return false;
+    }
+    g.energy -= card.cost;
+    g.deployCooldowns[kind] = card.deployCooldown;
+    const id = g.nextId++;
+    g.fighters.push({
+      id, side: "human", kind, lane, x: 148, y: laneY(lane, id), hp: card.hp, maxHp: card.hp,
+      speed: card.speed, damage: card.damage, range: card.range, cooldown: 0, supportCooldown: 0,
+      attackEvery: card.attackEvery, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: id % 3,
     });
-    g.banner = "FIRE MISSION";
-    g.bannerTime = 1.2;
-    tone(68, 0.45, "sawtooth");
+    addParticles(g, 150, laneY(lane), "#d0b48b", 6);
+    g.banner = `${card.name} // ${LANE_NAMES[lane]} LANE`;
+    g.bannerTime = .8;
+    tone(kind === "brute" ? 110 : 220, .07);
+    return true;
   }, [tone]);
+
+  const deploySupport = useCallback((kind: SupportKind, lane: Lane, x: number) => {
+    const g = gameRef.current;
+    const def = supportDefs.find((item) => item.kind === kind);
+    if (!def || !g.running || g.paused || g.over || g.rage < def.cost || (kind === "airstrike" && g.strikeCooldown > 0)) {
+      tone(105, .1, "sawtooth");
+      return false;
+    }
+    if (kind === "barrel" && g.supports.some((support) => support.kind === "barrel" && support.lane === lane)) {
+      g.banner = "ONE BARREL PER LANE"; g.bannerTime = .9; tone(105, .1, "sawtooth"); return false;
+    }
+    g.rage -= def.cost;
+    if (kind === "airstrike") g.strikeCooldown = 8;
+    const life = kind === "barrel" ? 12 : kind === "medkit" ? 8 : kind === "molotov" ? 6 : .85;
+    g.supports.push({ id: g.nextId++, kind, lane, x: Math.max(230, Math.min(790, x)), y: laneY(lane), life, tick: 0, triggered: false });
+    g.banner = `${def.name} // ${LANE_NAMES[lane]} LANE`;
+    g.bannerTime = 1;
+    tone(kind === "airstrike" ? 68 : 160, kind === "airstrike" ? .35 : .08, kind === "airstrike" ? "sawtooth" : "square");
+    return true;
+  }, [tone]);
+
+  const executeSelected = useCallback((lane: Lane, x: number) => {
+    const action = selectedActionRef.current;
+    if (!action) return;
+    const [group, kind] = action.split(":") as ["unit" | "support", UnitKind | SupportKind];
+    const succeeded = group === "unit" ? deployHuman(kind as UnitKind, lane) : deploySupport(kind as SupportKind, lane, x);
+    if (succeeded) chooseAction(null);
+  }, [chooseAction, deployHuman, deploySupport]);
+
+  const handleBattlefieldPointer = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!selectedActionRef.current) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * W / rect.width;
+    const y = (event.clientY - rect.top) * H / rect.height;
+    let lane: Lane = 0;
+    if (Math.abs(y - LANE_Y[1]) < Math.abs(y - LANE_Y[lane])) lane = 1;
+    if (Math.abs(y - LANE_Y[2]) < Math.abs(y - LANE_Y[lane])) lane = 2;
+    executeSelected(lane, x);
+  }, [executeSelected]);
 
   const startGame = useCallback(() => {
-    const fresh = initialGame();
-    fresh.running = true;
-    gameRef.current = fresh;
-    setStarted(true); setPaused(false); setEnd(null);
-    stopMusic();
-    if (!muted) startMusic();
-    tone(180, 0.12); setTimeout(() => tone(260, 0.12), 90);
-  }, [muted, startMusic, stopMusic, tone]);
+    const fresh = initialGame(); fresh.running = true; gameRef.current = fresh;
+    desiredMusicModeRef.current = "normal";
+    setStarted(true); setPaused(false); setEnd(null); chooseAction(null);
+    setHud({ energy: 55, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520, nestHp: 620, nestUnlocked: false, strike: 0, combo: 0, bossHp: 0, bossMax: 0, objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns() });
+    stopMusic(); stopJingle(); if (!muted) startMusic();
+    tone(180, .12); window.setTimeout(() => tone(260, .12), 90);
+  }, [chooseAction, muted, startMusic, stopJingle, stopMusic, tone]);
 
   const togglePause = useCallback(() => {
     const g = gameRef.current;
     if (!g.running || g.over) return;
-    g.paused = !g.paused;
-    setPaused(g.paused);
-    if (g.paused) stopMusic();
-    else if (!muted) startMusic();
+    g.paused = !g.paused; setPaused(g.paused);
+    if (g.paused) stopMusic(); else if (!muted) startMusic();
   }, [muted, startMusic, stopMusic]);
 
   const toggleMute = useCallback(() => {
-    const next = !muted;
-    setMuted(next);
-    if (next) stopMusic();
-    else if (started && !paused && !end) startMusic();
-  }, [end, muted, paused, startMusic, started, stopMusic]);
+    const next = !muted; setMuted(next);
+    if (next) { stopMusic(); stopJingle(); } else if (started && !paused && !end) startMusic();
+  }, [end, muted, paused, startMusic, started, stopJingle, stopMusic]);
 
   useEffect(() => {
-    const key = (e: KeyboardEvent) => {
-      if (e.key === "1") spawnHuman("scout");
-      if (e.key === "2") spawnHuman("ranger");
-      if (e.key === "3") spawnHuman("brute");
-      if (e.key === "4") spawnHuman("brawler");
-      if (e.key === "5") spawnHuman("gunner");
-      if (e.key === "6") spawnHuman("medic");
-      if (e.key.toLowerCase() === "q") airStrike();
-      if (e.key === "Escape" || e.key.toLowerCase() === "p") togglePause();
+    const key = (event: KeyboardEvent) => {
+      const card = cards.find((item) => item.key === event.key);
+      if (card) chooseAction(`unit:${card.kind}`);
+      const support = supportDefs.find((item) => item.key.toLowerCase() === event.key.toLowerCase());
+      if (support) chooseAction(`support:${support.kind}`);
+      if (event.key.toLowerCase() === "a") executeSelected(0, 520);
+      if (event.key.toLowerCase() === "s") executeSelected(1, 520);
+      if (event.key.toLowerCase() === "d") executeSelected(2, 520);
+      if (event.key === "Escape") {
+        if (selectedActionRef.current) chooseAction(null); else togglePause();
+      }
+      if (event.key.toLowerCase() === "p") togglePause();
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [spawnHuman, airStrike, togglePause]);
+  }, [chooseAction, executeSelected, togglePause]);
 
   useEffect(() => {
     let frame = 0;
@@ -416,226 +724,293 @@ export function AshfallGame() {
       const g = gameRef.current;
       if (!ctx) { frame = requestAnimationFrame(loop); return; }
       ctx.imageSmoothingEnabled = false;
-      const dt = Math.min(0.033, g.last ? (now - g.last) / 1000 : 0);
+      const dt = Math.min(.033, g.last ? (now - g.last) / 1000 : 0);
       g.last = now;
 
       if (g.running && !g.paused && !g.over) {
         g.time += dt;
-        g.energy = Math.min(100, g.energy + dt * 7.2);
-        g.nextWave -= dt;
+        g.energy = advanceCommand(g.energy, dt);
         g.strikeCooldown = Math.max(0, g.strikeCooldown - dt);
         g.bannerTime = Math.max(0, g.bannerTime - dt);
         g.shake = Math.max(0, g.shake - dt * 38);
         g.flashOverlay = Math.max(0, g.flashOverlay - dt * 2.2);
         g.comboTime = Math.max(0, g.comboTime - dt);
         if (g.comboTime <= 0) g.combo = 0;
+        for (const card of cards) g.deployCooldowns[card.kind] = Math.max(0, g.deployCooldowns[card.kind] - dt);
 
-        if (g.nextWave <= 0) {
-          g.wave++;
-          g.nextWave = Math.max(8, 16 - g.wave * 0.7);
-          g.banner = `WAVE ${g.wave} — ${g.wave >= 5 ? "NIGHTMARE" : "INCOMING"}`;
-          g.bannerTime = 2;
-          const count = Math.min(8, 2 + g.wave);
-          for (let i = 0; i < count; i++) {
-            const kind = g.wave === 3 && i === count - 1 ? "takuya" : g.wave >= 2 && i === 0 ? "shade" : g.wave % 4 === 0 && i === count - 1 ? "abomination" : g.wave >= 3 && i === count - 2 ? "crusher" : g.wave >= 2 && i === 1 ? "spitter" : Math.random() < 0.38 ? "runner" : "walker";
-            const hp = kind === "takuya" ? 520 : kind === "shade" ? 112 + g.wave * 4 : kind === "abomination" ? 420 : kind === "crusher" ? 190 : kind === "runner" ? 50 : kind === "spitter" ? 66 : 82 + g.wave * 6;
-            const speed = kind === "runner" ? 34 : kind === "shade" ? 31 : kind === "takuya" ? 12 : kind === "crusher" ? 11 : kind === "abomination" ? 8 : kind === "spitter" ? 14 : 18;
-            const damage = kind === "takuya" ? 54 : kind === "shade" ? 22 : kind === "abomination" ? 48 : kind === "crusher" ? 34 : kind === "spitter" ? 12 : 14;
-            const range = kind === "spitter" ? 120 : kind === "takuya" ? 36 : 25;
-            const attackEvery = kind === "shade" ? .58 : kind === "runner" ? .72 : kind === "spitter" ? 1.55 : kind === "takuya" ? 1.2 : 1.1;
-            g.fighters.push({ id: g.nextId++, side: "zombie", kind, x: 845 + i * 24, y: GROUND - 7 + Math.random() * 12, hp, maxHp: hp, speed, damage, range, cooldown: i * 0.2, supportCooldown: 0, attackEvery, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: i % 3 });
-          }
-          if (g.wave === 3) { g.banner = "BOSS — TAKUYA / IRON JUDGE"; g.bannerTime = 3.1; g.shake = 12; g.flashOverlay = .22; }
-          else if (g.wave === 2) { g.banner = "ELITE ENEMY — SHADE"; g.bannerTime = 2.5; }
-          else if (g.wave % 4 === 0) { g.banner = `WAVE ${g.wave} — ABOMINATION`; g.bannerTime = 2.7; }
-          tone(82, 0.25, "sawtooth");
+        const nextPhase = phaseAt(g.time) as Game["phase"];
+        if (nextPhase !== g.phase) {
+          g.phase = nextPhase;
+          g.banner = nextPhase === 2 ? "PHASE II — PUSH THE CHECKPOINT" : "PHASE III — IRON JUDGE";
+          g.bannerTime = 3; g.shake = 9; g.flashOverlay = .15;
         }
 
-        if (g.time < 0.1 && g.fighters.length === 0) {
-          for (let i = 0; i < 3; i++) {
-            const hp = 76;
-            g.fighters.push({ id: g.nextId++, side: "zombie", kind: i === 2 ? "runner" : "walker", x: 710 + i * 55, y: GROUND - 7 + i * 4, hp, maxHp: hp, speed: i === 2 ? 33 : 18, damage: 13, range: 25, cooldown: i * .35, supportCooldown: 0, attackEvery: .9, flash: 0, step: i, attack: 0, knock: 0, variant: i });
+        while (g.eventIndex < missionEvents.length && g.time >= missionEvents[g.eventIndex].at) {
+          const mission = missionEvents[g.eventIndex++];
+          const bossAlive = g.fighters.some((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
+          if (mission.bossOnly && !bossAlive) continue;
+          g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
+          if (mission.label.includes("WARNING")) { g.shake = 8; g.flashOverlay = .12; }
+          mission.units.forEach(([kind, lane], index) => spawnEnemy(g, kind, lane, index % 3));
+          if (mission.units.length) tone(mission.label.includes("TAKUYA") ? 58 : 82, mission.label.includes("TAKUYA") ? .45 : .24, "sawtooth");
+        }
+
+        // Field support simulation stays separate from fighters so targeting remains predictable.
+        for (const support of g.supports) {
+          support.life -= dt; support.tick -= dt;
+          if (support.kind === "barrel") {
+            const contact = g.fighters.some((fighter) => fighter.side === "zombie" && fighter.lane === support.lane && fighter.hp > 0 && Math.abs(fighter.x - support.x) <= 35);
+            if (contact) {
+              damageEnemiesInLane(g, support.lane, support.x, 92, 105, "#ffbd59", 15);
+              addParticles(g, support.x, support.y - 10, "#f26a35", 24); g.shake = 13; g.flashOverlay = .25; support.life = -1;
+              tone(64, .24, "sawtooth");
+            }
+          } else if (support.kind === "medkit" && support.tick <= 0) {
+            support.tick = .5;
+            for (const fighter of g.fighters) {
+              if (fighter.side !== "human" || fighter.lane !== support.lane || fighter.hp <= 0 || Math.abs(fighter.x - support.x) > 95) continue;
+              const healed = Math.min(4, fighter.maxHp - fighter.hp);
+              if (healed > 0) { fighter.hp += healed; g.damageTexts.push({ x: fighter.x, y: fighter.y - 55, value: `+${healed}`, life: .55, color: "#83e0a2" }); }
+            }
+          } else if (support.kind === "molotov" && support.tick <= 0) {
+            support.tick = .4; damageEnemiesInLane(g, support.lane, support.x, 85, 7.2, "#ff8b45", 1);
+            addParticles(g, support.x + (Math.random() - .5) * 70, support.y - 5, "#ee6436", 2);
+          } else if (support.kind === "airstrike" && support.life <= .12 && !support.triggered) {
+            support.triggered = true;
+            damageEnemiesInLane(g, support.lane, support.x, 140, 150, "#ffe17a", 22);
+            addParticles(g, support.x, support.y - 12, "#f28d46", 34); g.shake = 20; g.flashOverlay = .48; support.life = -.2;
+            tone(52, .45, "sawtooth");
           }
         }
+        g.supports = g.supports.filter((support) => support.life > 0);
 
         for (const f of g.fighters) {
+          if (f.hp <= 0) continue;
           f.cooldown -= dt; f.supportCooldown -= dt; f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.step += dt;
           if (Math.abs(f.knock) > .1) { f.x += (f.side === "human" ? -1 : 1) * f.knock * dt * 6; f.knock *= .9; }
+
           if (f.kind === "medic" && f.supportCooldown <= 0) {
             const wounded = g.fighters
-              .filter(o => o.side === "human" && o.id !== f.id && o.hp > 0 && o.hp < o.maxHp && Math.abs(o.x - f.x) <= 105)
+              .filter((other) => other.side === "human" && other.lane === f.lane && other.id !== f.id && other.hp > 0 && other.hp < other.maxHp && Math.abs(other.x - f.x) <= 108)
               .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
             if (wounded) {
               const healed = Math.min(16, wounded.maxHp - wounded.hp);
               wounded.hp += healed; f.supportCooldown = 1.55;
-              g.damageTexts.push({ x: wounded.x, y: wounded.y - 74, value: `+${Math.ceil(healed)}`, life: .8, color: "#83e0a2" });
+              g.damageTexts.push({ x: wounded.x, y: wounded.y - 70, value: `+${Math.ceil(healed)}`, life: .8, color: "#83e0a2" });
               addParticles(g, wounded.x, wounded.y - 30, "#69d993", 7);
             }
           }
-          const enemies = g.fighters.filter(o => o.side !== f.side && o.hp > 0);
+
           let target: Fighter | undefined;
-          let dist = Infinity;
-          for (const e of enemies) {
-            const d = Math.abs(e.x - f.x);
-            if (d < dist) { dist = d; target = e; }
+          let distance = Infinity;
+          for (const enemy of g.fighters) {
+            if (enemy.side === f.side || enemy.lane !== f.lane || enemy.hp <= 0) continue;
+            const candidate = Math.abs(enemy.x - f.x);
+            if (candidate < distance) { distance = candidate; target = enemy; }
           }
-          const baseDistance = f.side === "human" ? 880 - f.x : f.x - 125;
-          if (target && dist <= f.range) {
+          const baseDistance = f.side === "human" ? NEST_X - f.x : f.x - BASE_X;
+          if (target && distance <= f.range) {
             if (f.cooldown <= 0) {
-              target.hp -= f.damage;
-              target.flash = 0.12;
+              const enragedTakuya = f.kind === "takuya" && f.hp / f.maxHp <= .5;
+              target.hp -= f.damage; target.flash = .12;
               target.knock = f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" ? 9 : 3;
-              f.attack = .18;
-              f.cooldown = f.attackEvery;
+              f.attack = .18; f.cooldown = enragedTakuya ? .9 : f.attackEvery;
               g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(f.damage), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
               g.shake = Math.max(g.shake, f.kind === "takuya" ? 11 : f.kind === "brute" || f.kind === "abomination" ? 7 : 2.5);
               if (f.kind === "takuya") {
                 for (const splash of g.fighters) {
-                  if (splash.side === "human" && splash.id !== target.id && splash.hp > 0 && Math.abs(splash.x - target.x) < 58) {
+                  if (splash.side === "human" && splash.lane === f.lane && splash.id !== target.id && splash.hp > 0 && Math.abs(splash.x - target.x) < 58) {
                     splash.hp -= 22; splash.flash = .12; splash.knock = 6;
                     g.damageTexts.push({ x: splash.x, y: splash.y - 46, value: "22", life: .65, color: "#e98a72" });
                   }
                 }
-                addParticles(g, target.x, target.y + 2, "#b78656", 13);
-                tone(64, .16, "sawtooth");
+                addParticles(g, target.x, target.y + 2, "#b78656", 13); tone(64, .16, "sawtooth");
               }
-              if (f.kind === "ranger" || f.kind === "gunner" || f.kind === "medic" || f.kind === "spitter") {
-                g.shots.push({ x: f.x + (f.side === "human" ? 14 : -14), y: f.y - 32, tx: target.x, ty: target.y - 28, life: 0.12, side: f.side });
-                if (f.side === "human") tone(310 + Math.random() * 50, 0.035);
+              if (["ranger", "gunner", "medic", "spitter"].includes(f.kind)) {
+                g.shots.push({ x: f.x + (f.side === "human" ? 14 : -14), y: f.y - 32, tx: target.x, ty: target.y - 28, life: .12, side: f.side });
+                if (f.side === "human") tone(310 + Math.random() * 50, .035);
               } else {
                 addParticles(g, target.x, target.y - 18, target.kind === "takuya" || target.kind === "shade" ? "#b98a62" : target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
               }
             }
           } else if (baseDistance <= f.range + 10) {
             if (f.cooldown <= 0) {
-              if (f.side === "human") g.nestHp -= f.damage;
-              else g.baseHp -= f.damage;
-              f.attack = .18;
-              f.cooldown = f.attackEvery;
-              g.shake = Math.max(g.shake, 4);
+              if (f.side === "human") {
+                if (g.nestUnlocked) g.nestHp -= f.damage;
+              } else {
+                g.baseHp -= f.damage;
+              }
+              f.attack = .18; f.cooldown = f.attackEvery; g.shake = Math.max(g.shake, 4);
             }
           } else {
-            f.x += (f.side === "human" ? 1 : -1) * f.speed * dt;
+            const humanLimit = g.phase === 1 ? 520 : g.phase === 2 || !g.nestUnlocked ? 730 : NEST_X;
+            const heldAtLine = f.side === "human" && f.x >= humanLimit;
+            if (!heldAtLine) {
+              const burning = f.side === "zombie" && g.supports.some((support) => support.kind === "molotov" && support.lane === f.lane && Math.abs(support.x - f.x) <= 85);
+              f.x += (f.side === "human" ? 1 : -1) * f.speed * dt * (burning ? .8 : 1);
+            }
           }
         }
 
-        const dead = g.fighters.filter(f => f.hp <= 0);
-        for (const f of dead) {
-          addParticles(g, f.x, f.y - 15, f.kind === "takuya" || f.kind === "shade" ? "#c08d62" : f.side === "zombie" ? "#7e965e" : "#b0614e", f.kind === "takuya" ? 18 : 11);
-          g.corpses.push({ x: f.x, y: f.y, side: f.side, kind: f.kind, life: 5, variant: f.variant });
-          if (f.side === "zombie") { g.kills++; g.combo++; g.comboTime = 2.3; g.scrap += f.kind === "takuya" ? 80 : f.kind === "shade" ? 14 : f.kind === "abomination" ? 40 : f.kind === "crusher" ? 18 : 6; g.energy = Math.min(100, g.energy + (f.kind === "takuya" ? 18 : f.kind === "shade" ? 7 : 4)); }
+        const dead = g.fighters.filter((fighter) => fighter.hp <= 0);
+        for (const fighter of dead) {
+          addParticles(g, fighter.x, fighter.y - 15, fighter.kind === "takuya" || fighter.kind === "shade" ? "#c08d62" : fighter.side === "zombie" ? "#7e965e" : "#b0614e", fighter.kind === "takuya" ? 20 : 11);
+          g.corpses.push({ x: fighter.x, y: fighter.y, lane: fighter.lane, side: fighter.side, kind: fighter.kind, life: fighter.side === "human" ? 6 : 5, variant: fighter.variant, reviveIn: fighter.side === "human" ? 3.2 : null, prevented: false });
+          if (fighter.side === "zombie") {
+            g.kills++; g.combo++; g.comboTime = 2.3;
+            g.scrap += scrapReward(fighter.kind);
+            g.rage = Math.min(RAGE_MAX, g.rage + rageReward(fighter.kind));
+            if (fighter.kind === "takuya") {
+              g.nestUnlocked = true; g.banner = "TAKUYA DOWN — NEST EXPOSED"; g.bannerTime = 3.4; g.shake = 15; g.flashOverlay = .3;
+            }
+          }
         }
-        g.fighters = g.fighters.filter(f => f.hp > 0);
+        g.fighters = g.fighters.filter((fighter) => fighter.hp > 0);
+
+        const revived: Fighter[] = [];
+        for (const corpse of g.corpses) {
+          corpse.life -= dt;
+          if (corpse.reviveIn === null) continue;
+          const medicNearby = g.fighters.some((fighter) => fighter.side === "human" && fighter.kind === "medic" && fighter.lane === corpse.lane && fighter.hp > 0 && Math.abs(fighter.x - corpse.x) <= 110);
+          if (medicNearby) {
+            corpse.reviveIn = null; corpse.prevented = true;
+            g.damageTexts.push({ x: corpse.x, y: corpse.y - 34, value: "INFECTION STOPPED", life: 1.15, color: "#7de2a0" });
+            addParticles(g, corpse.x, corpse.y - 15, "#69d993", 9);
+          } else {
+            corpse.reviveIn -= dt;
+            if (corpse.reviveIn <= 0) {
+              const data = enemyStats("turned", g.wave); const id = g.nextId++;
+              revived.push({ id, side: "zombie", kind: "turned", lane: corpse.lane, x: corpse.x, y: laneY(corpse.lane, id), hp: data.hp, maxHp: data.hp, speed: data.speed, damage: data.damage, range: data.range, cooldown: .4, supportCooldown: 0, attackEvery: data.attackEvery, flash: 0, step: 0, attack: 0, knock: 0, variant: corpse.variant });
+              corpse.life = -1; corpse.reviveIn = null;
+              g.banner = `SURVIVOR TURNED // ${LANE_NAMES[corpse.lane]}`; g.bannerTime = 1.4;
+              addParticles(g, corpse.x, corpse.y - 20, "#90a965", 14); tone(72, .22, "sawtooth");
+            }
+          }
+        }
+        if (revived.length) g.fighters.push(...revived);
+        g.corpses = g.corpses.filter((corpse) => corpse.life > 0);
+
         for (const p of g.particles) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 180 * dt; }
-        g.particles = g.particles.filter(p => p.life > 0);
+        g.particles = g.particles.filter((p) => p.life > 0);
         for (const d of g.damageTexts) { d.life -= dt; d.y -= dt * 23; }
-        g.damageTexts = g.damageTexts.filter(d => d.life > 0);
-        for (const c of g.corpses) c.life -= dt;
-        g.corpses = g.corpses.filter(c => c.life > 0);
-        for (const s of g.shots) s.life -= dt;
-        g.shots = g.shots.filter(s => s.life > 0);
+        g.damageTexts = g.damageTexts.filter((d) => d.life > 0);
+        for (const shot of g.shots) shot.life -= dt;
+        g.shots = g.shots.filter((shot) => shot.life > 0);
+
+        const bossAlive = g.fighters.some((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
+        syncMusicMode(bossAlive ? "boss" : g.phase >= 2 || g.baseHp <= 260 ? "danger" : "normal");
 
         if (g.baseHp <= 0 || g.nestHp <= 0) {
-          g.over = true; g.won = g.nestHp <= 0; g.shake = 18;
-          setEnd(g.won ? "win" : "lose");
-          stopMusic();
-          tone(g.won ? 380 : 70, 0.65, g.won ? "square" : "sawtooth");
+          g.over = true;
+          // A simultaneous collapse is a loss: protecting the crawler always remains mandatory.
+          g.won = g.baseHp > 0 && g.nestHp <= 0;
+          g.shake = 18; setEnd(g.won ? "win" : "lose"); chooseAction(null);
+          stopMusic(); playEndJingle(g.won);
         }
       }
 
       drawWorld(ctx, g, backgroundRef.current, spriteRefs.current, nestSpriteRef.current);
       if (g.bannerTime > 0 && g.running) {
-        ctx.fillStyle = "rgba(15,14,14,.76)"; ctx.fillRect(315, 76, 330, 54);
-        ctx.strokeStyle = "#d79647"; ctx.strokeRect(315.5, 76.5, 329, 53);
-        ctx.fillStyle = "#f0d2a3"; ctx.font = "bold 22px monospace"; ctx.textAlign = "center";
-        ctx.fillText(g.banner, W / 2, 110); ctx.textAlign = "left";
+        ctx.fillStyle = "rgba(15,14,14,.8)"; ctx.fillRect(302, 70, 356, 54);
+        ctx.strokeStyle = "#d79647"; ctx.strokeRect(302.5, 70.5, 355, 53);
+        ctx.fillStyle = "#f0d2a3"; ctx.font = "bold 19px monospace"; ctx.textAlign = "center";
+        ctx.fillText(g.banner, W / 2, 104); ctx.textAlign = "left";
       }
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
-        const boss = g.fighters.find(f => f.kind === "takuya" && f.hp > 0);
-        setHud({ energy: Math.floor(g.energy), scrap: g.scrap, kills: g.kills, wave: g.wave, baseHp: Math.max(0, g.baseHp), nestHp: Math.max(0, g.nestHp), strike: Math.ceil(g.strikeCooldown), combo: g.combo, bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0 });
+        const boss = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
+        setHud({
+          energy: Math.floor(g.energy), rage: Math.floor(g.rage), scrap: g.scrap, kills: g.kills,
+          wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp), nestHp: Math.max(0, g.nestHp), nestUnlocked: g.nestUnlocked,
+          strike: Math.ceil(g.strikeCooldown), combo: g.combo, bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
+          objective: objectiveFor(g.phase, g.nestUnlocked), deployCooldowns: { ...g.deployCooldowns },
+        });
       }
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
-  }, [stopMusic, tone]);
+  }, [chooseAction, playEndJingle, stopMusic, syncMusicMode, tone]);
 
-  const healthPct = Math.max(0, hud.baseHp / 400 * 100);
+  const healthPct = Math.max(0, hud.baseHp / 520 * 100);
   const nestPct = Math.max(0, hud.nestHp / 620 * 100);
   const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
+  const phaseName = hud.phase === 1 ? "HOLD" : hud.phase === 2 ? "PUSH" : "ASSAULT";
+  const selectedName = selectedAction
+    ? selectedAction.startsWith("unit:")
+      ? cards.find((card) => `unit:${card.kind}` === selectedAction)?.name
+      : supportDefs.find((support) => `support:${support.kind}` === selectedAction)?.name
+    : null;
 
   return (
     <main className="game-shell">
       <section className="game-frame" aria-label="ASHFALL OUTPOST game">
-        <canvas ref={canvasRef} width={W} height={H} className="battlefield" aria-label="Wasteland battlefield" />
+        <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""}`} aria-label="Three-lane wasteland battlefield" onPointerDown={handleBattlefieldPointer} />
 
         <div className="top-hud">
           <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>EARLY ACCESS 0.3.0</em></small></div></div>
-          <div className="wave-block"><small>WAVE</small><strong>{String(hud.wave).padStart(2, "0")}</strong></div>
+          <div className="phase-block"><small>PHASE {hud.phase}</small><strong>{phaseName}</strong><em>W{String(hud.wave).padStart(2, "0")}</em></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           <button className="icon-btn" onClick={toggleMute} aria-label={muted ? "BGMと効果音を出す" : "BGMと効果音をミュート"}>{muted ? "×" : "♪"}</button>
         </div>
 
-        <div className="health-hud crawler-health">
-          <div><span>CRAWLER</span><b>{Math.ceil(hud.baseHp)} / 400</b></div>
-          <i><em style={{ width: `${healthPct}%` }} /></i>
-        </div>
-        <div className="health-hud nest-health">
-          <div><span>INFECTED NEST</span><b>{Math.ceil(hud.nestHp)} / 620</b></div>
-          <i><em style={{ width: `${nestPct}%` }} /></i>
-        </div>
-        {hud.bossMax > 0 && (
-          <div className="boss-hud">
-            <div><span>BOSS // TAKUYA</span><b>IRON JUDGE</b></div>
-            <i><em style={{ width: `${bossPct}%` }} /></i>
-          </div>
+        <div className="health-hud crawler-health"><div><span>CRAWLER</span><b>{Math.ceil(hud.baseHp)} / 520</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
+        <div className={`health-hud nest-health ${hud.nestUnlocked ? "unlocked" : "locked"}`}><div><span>INFECTED NEST</span><b>{hud.nestUnlocked ? `${Math.ceil(hud.nestHp)} / 620` : "SEALED"}</b></div><i><em style={{ width: `${nestPct}%` }} /></i></div>
+        {hud.bossMax > 0 && <div className="boss-hud"><div><span>BOSS // TAKUYA</span><b>IRON JUDGE</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
+
+        {selectedAction && started && !paused && !end && (
+          <div className="placement-hint"><b>{selectedName} SELECTED</b><span>{selectedAction.startsWith("unit:") ? "TAP TOP / MID / LOW LANE" : "TAP A TARGET POSITION"}</span><small>ESC TO CANCEL</small></div>
         )}
 
         <div className="bottom-hud">
-          <div className="resource-panel">
-            <div className="energy-icon">⚡</div>
-            <div className="energy-copy"><span>COMMAND</span><strong>{hud.energy}</strong><small>/100</small></div>
-            <div className="energy-track"><i style={{ width: `${hud.energy}%` }} /></div>
+          <div className="resource-stack">
+            <div className="resource command"><span>COMMAND</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy}%` }} /></i></div>
+            <div className="resource rage"><span>RAGE</span><strong>{hud.rage}</strong><small>/{RAGE_MAX}</small><i><em style={{ width: `${hud.rage}%` }} /></i></div>
           </div>
 
-          <div className="unit-cards" aria-label="Survivor units">
-            {cards.map((card) => (
-              <button key={card.kind} className="unit-card" data-kind={card.kind} disabled={!started || paused || hud.energy < card.cost || !!end} onClick={() => spawnHuman(card.kind)}>
-                <span className="keycap">{card.key}</span>
-                <span className="portrait"><i /></span>
-                <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span>
-                <span className="cost">⚡{card.cost}</span>
-              </button>
-            ))}
-          </div>
-
-          <button className={`strike-btn ${hud.strike ? "cooldown" : ""}`} onClick={airStrike} disabled={!started || paused || !!end || hud.strike > 0}>
-            <span className="strike-rings">⌖</span><span><b>{hud.strike ? `${hud.strike}s` : "AIRSTRIKE"}</b><small>{hud.strike ? "RECHARGING" : "Q · READY"}</small></span>
-          </button>
-        </div>
-
-        <div className="stats-strip"><span>☠ {hud.kills} KILLS</span><span>▰ {hud.scrap} SCRAP</span>{hud.combo > 1 && <span className="combo">×{hud.combo} COMBO</span>}<span className="objective">OBJECTIVE: DESTROY THE NEST</span></div>
-
-        {!started && (
-          <div className="start-screen">
-            <div className="start-panel">
-              <p className="eyebrow">{"/// EARLY ACCESS BUILD 0.3.0 · ORIGINAL BGM"}</p>
-              <h1>ASHFALL<br /><span>OUTPOST</span></h1>
-              <p className="mission">The crawler is out of fuel. Hold the line, rally survivors, and burn the infected nest before the horde breaks through.</p>
-              <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>TAP TO DEPLOY</small></button>
-              <p className="controls">1–6 DEPLOY · Q AIRSTRIKE · P PAUSE</p>
+          <div className="combat-deck">
+            <div className="unit-cards" aria-label="Survivor units">
+              {cards.map((card) => {
+                const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
+                const selected = selectedAction === `unit:${card.kind}`;
+                return (
+                  <button key={card.kind} className={`unit-card ${selected ? "selected" : ""}`} data-kind={card.kind} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || !!end} onClick={() => chooseAction(selected ? null : `unit:${card.kind}`)}>
+                    <span className="keycap">{card.key}</span><span className="portrait"><i /></span>
+                    <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
+                    {cooldown > 0 && <span className="cooldown-mask"><b>{cooldown}</b><small>SEC</small></span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="support-row" aria-label="Rage field support">
+              <span className="support-label">FIELD<br />SUPPORT</span>
+              {supportDefs.map((support) => {
+                const selected = selectedAction === `support:${support.kind}`;
+                const cooling = support.kind === "airstrike" && hud.strike > 0;
+                return (
+                  <button key={support.kind} className={`support-btn ${support.kind} ${selected ? "selected" : ""}`} disabled={!started || paused || hud.rage < support.cost || cooling || !!end} onClick={() => chooseAction(selected ? null : `support:${support.kind}`)}>
+                    <span className="support-key">{support.key}</span><b>{cooling ? `${hud.strike}s` : support.name}</b><small>{cooling ? "RELOADING" : support.desc}</small><em>◆{support.cost}</em>
+                  </button>
+                );
+              })}
             </div>
           </div>
+        </div>
+
+        <div className="stats-strip"><span>☠ {hud.kills} KILLS</span><span>▰ {hud.scrap} SCRAP</span>{hud.combo > 1 && <span className="combo">×{hud.combo} COMBO</span>}<span className="objective">OBJECTIVE: {hud.objective}</span></div>
+
+        {!started && (
+          <div className="start-screen"><div className="start-panel">
+            <p className="eyebrow">{"/// EARLY ACCESS BUILD 0.3.0 · THREE-LANE WARFARE · DYNAMIC BGM"}</p>
+            <h1>ASHFALL<br /><span>OUTPOST</span></h1>
+            <p className="mission">Command three battle lanes. Hold the crawler, push the checkpoint, defeat TAKUYA, then burn the infected nest.</p>
+            <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>SELECT A UNIT · TAP A LANE</small></button>
+            <p className="controls">1–6 UNITS · Z/X/C/Q SUPPORT · A/S/D LANES · P PAUSE</p>
+          </div></div>
         )}
 
-        {paused && started && !end && (
-          <div className="pause-screen"><div><small>OPERATION SUSPENDED</small><h2>PAUSED</h2><button onClick={togglePause}>RESUME</button></div></div>
-        )}
-
-        {end && (
-          <div className={`end-screen ${end}`}><div><p>{end === "win" ? "SECTOR SECURED" : "CRAWLER LOST"}</p><h2>{end === "win" ? "OUTPOST HELD" : "THE LINE BROKE"}</h2><span>{hud.kills} infected eliminated · {hud.scrap} scrap recovered</span><button onClick={startGame}>RUN IT AGAIN</button></div></div>
-        )}
+        {paused && started && !end && <div className="pause-screen"><div><small>OPERATION SUSPENDED</small><h2>PAUSED</h2><button onClick={togglePause}>RESUME</button></div></div>}
+        {end && <div className={`end-screen ${end}`}><div><p>{end === "win" ? "SECTOR SECURED" : "CRAWLER LOST"}</p><h2>{end === "win" ? "OUTPOST HELD" : "THE LINE BROKE"}</h2><span>{hud.kills} infected eliminated · {hud.scrap} scrap recovered</span><button onClick={startGame}>RUN IT AGAIN</button></div></div>}
       </section>
       <div className="rotate-notice"><span>↻</span><b>スマホを横向きにしてください</b><small>この作戦は横画面に最適化されています</small></div>
     </main>
