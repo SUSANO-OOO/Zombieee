@@ -13,17 +13,17 @@ async function render() {
   );
 }
 
-test("server-renders Ashfall Outpost Ver.2.0", async () => {
+test("server-renders Ashfall Outpost Ver.2.1", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>ASHFALL OUTPOST Ver\.2\.0/);
+  assert.match(html, /<title>ASHFALL OUTPOST Ver\.2\.1/);
   assert.match(html, /aria-label="ASHFALL OUTPOST game"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /BEGIN OPERATION/);
   assert.match(html, /AIRSTRIKE/);
-  assert.match(html, /VER 2\.0 · FULL ROSTER \/ INFECTED REDESIGN/);
+  assert.match(html, /VER 2\.1 · TAKUYA BOSS ENCOUNTER/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 
@@ -44,12 +44,15 @@ test("ships the upgraded battlefield and combat systems", async () => {
   await access(new URL("../public/crusher-sprites-v1.png", import.meta.url));
   await access(new URL("../public/spitter-sprites-v1.png", import.meta.url));
   await access(new URL("../public/infected-nest-v1.png", import.meta.url));
+  await access(new URL("../public/takuya-boss-sprites-v1.png", import.meta.url));
   assert.match(game, /battlefield-v2\.png/);
   assert.match(game, /ranger-sprites-v1\.png/);
   assert.match(game, /brawler-sprites-v1\.png/);
   assert.match(game, /gunner-sprites-v1\.png/);
   assert.match(game, /medic-sprites-v1\.png/);
   assert.match(game, /infected-nest-v1\.png/);
+  assert.match(game, /takuya-boss-sprites-v1\.png/);
+  assert.match(game, /BOSS — TAKUYA \/ IRON JUDGE/);
   assert.match(game, /supportCooldown/);
   assert.match(game, /abomination/);
   assert.match(game, /spitter/);
@@ -57,5 +60,5 @@ test("ships the upgraded battlefield and combat systems", async () => {
   assert.match(game, /corpses/);
   assert.match(game, /comboTime/);
   assert.match(css, /orientation:portrait/);
-  assert.match(layout, /ASHFALL OUTPOST Ver\.2\.0/);
+  assert.match(layout, /ASHFALL OUTPOST Ver\.2\.1/);
 });

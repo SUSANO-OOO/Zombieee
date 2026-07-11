@@ -125,7 +125,7 @@ function addParticles(g: Game, x: number, y: number, color: string, count = 8) {
 type SpriteMap = Record<string, HTMLImageElement>;
 
 function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: SpriteMap) {
-  const enemySheet = f.kind === "crusher" || f.kind === "abomination" ? "crusher" : f.kind === "spitter" ? "spitter" : "infected";
+  const enemySheet = f.kind === "takuya" ? "takuya" : f.kind === "crusher" || f.kind === "abomination" ? "crusher" : f.kind === "spitter" ? "spitter" : "infected";
   const sprite = sprites[f.side === "human" ? f.kind : enemySheet];
   if (!sprite?.complete || !sprite.naturalWidth) return;
   const frameWidth = sprite.naturalWidth / 6;
@@ -134,7 +134,7 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     scout: { w: 64, h: 108 }, ranger: { w: 64, h: 108 }, brute: { w: 82, h: 120 },
     brawler: { w: 70, h: 108 }, gunner: { w: 66, h: 108 }, medic: { w: 66, h: 108 },
     walker: { w: 64, h: 106 }, runner: { w: 58, h: 98 }, spitter: { w: 68, h: 110 },
-    crusher: { w: 91, h: 124 }, abomination: { w: 116, h: 148 },
+    crusher: { w: 91, h: 124 }, abomination: { w: 116, h: 148 }, takuya: { w: 106, h: 142 },
   };
   const size = sizes[f.kind] ?? { w: 64, h: 106 };
   const bob = Math.abs(Math.sin(f.step * 7)) * 1.2;
@@ -181,11 +181,11 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
     ctx.drawImage(nestSprite, -86, -82, 165, 165); ctx.restore();
   }
 
-  for (const corpse of g.corpses) { ctx.save(); ctx.globalAlpha=Math.min(.62,corpse.life/2); ctx.translate(corpse.x,corpse.y+7); ctx.scale(1,.45); ctx.fillStyle=corpse.side==="zombie"?"#4e5a3e":"#5d392f"; ctx.beginPath();ctx.ellipse(0,0,corpse.kind==="abomination"?25:15,7,0,0,Math.PI*2);ctx.fill();ctx.restore(); }
+  for (const corpse of g.corpses) { ctx.save(); ctx.globalAlpha=Math.min(.62,corpse.life/2); ctx.translate(corpse.x,corpse.y+7); ctx.scale(1,.45); ctx.fillStyle=corpse.kind==="takuya"?"#292d31":corpse.side==="zombie"?"#4e5a3e":"#5d392f"; ctx.beginPath();ctx.ellipse(0,0,corpse.kind==="abomination"||corpse.kind==="takuya"?25:15,7,0,0,Math.PI*2);ctx.fill();ctx.restore(); }
   for (const f of [...g.fighters].sort((a,b)=>a.y-b.y)) {
     drawSpriteFighter(ctx, f, sprites);
-    const barW = f.kind === "crusher" || f.kind === "brute" ? 38 : f.kind === "abomination" ? 52 : 28;
-    const barY = f.y - (f.kind === "abomination" ? 126 : f.kind === "crusher" || f.kind === "brute" ? 101 : 86);
+    const barW = f.kind === "takuya" ? 52 : f.kind === "crusher" || f.kind === "brute" ? 38 : f.kind === "abomination" ? 52 : 28;
+    const barY = f.y - (f.kind === "takuya" ? 120 : f.kind === "abomination" ? 126 : f.kind === "crusher" || f.kind === "brute" ? 101 : 86);
     ctx.fillStyle = "rgba(0,0,0,.55)";
     ctx.fillRect(f.x - barW / 2, barY, barW, 4);
     ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
@@ -231,7 +231,7 @@ export function AshfallGame() {
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [hud, setHud] = useState({ energy: 55, scrap: 0, kills: 0, wave: 1, baseHp: 400, nestHp: 620, strike: 0, combo: 0 });
+  const [hud, setHud] = useState({ energy: 55, scrap: 0, kills: 0, wave: 1, baseHp: 400, nestHp: 620, strike: 0, combo: 0, bossHp: 0, bossMax: 0 });
   const [end, setEnd] = useState<"win" | "lose" | null>(null);
 
   useEffect(() => {
@@ -242,6 +242,7 @@ export function AshfallGame() {
       scout: "/scout-sprites-v2.png", ranger: "/ranger-sprites-v1.png", brute: "/breaker-sprites-v2.png",
       brawler: "/brawler-sprites-v1.png", gunner: "/gunner-sprites-v1.png", medic: "/medic-sprites-v1.png",
       infected: "/infected-sprites-v1.png", crusher: "/crusher-sprites-v1.png", spitter: "/spitter-sprites-v1.png",
+      takuya: "/takuya-boss-sprites-v1.png",
     };
     Object.entries(paths).forEach(([key, src]) => {
       const sprite = new Image(); sprite.src = src;
@@ -365,11 +366,16 @@ export function AshfallGame() {
           g.bannerTime = 2;
           const count = Math.min(8, 2 + g.wave);
           for (let i = 0; i < count; i++) {
-            const kind = g.wave % 4 === 0 && i === count - 1 ? "abomination" : g.wave >= 3 && i === count - 2 ? "crusher" : g.wave >= 2 && i === 1 ? "spitter" : Math.random() < 0.38 ? "runner" : "walker";
-            const hp = kind === "abomination" ? 420 : kind === "crusher" ? 190 : kind === "runner" ? 50 : kind === "spitter" ? 66 : 82 + g.wave * 6;
-            g.fighters.push({ id: g.nextId++, side: "zombie", kind, x: 845 + i * 24, y: GROUND - 7 + Math.random() * 12, hp, maxHp: hp, speed: kind === "runner" ? 34 : kind === "crusher" ? 11 : kind === "abomination" ? 8 : kind === "spitter" ? 14 : 18, damage: kind === "abomination" ? 48 : kind === "crusher" ? 34 : kind === "spitter" ? 12 : 14, range: kind === "spitter" ? 120 : 25, cooldown: i * 0.2, supportCooldown: 0, attackEvery: kind === "runner" ? 0.72 : kind === "spitter" ? 1.55 : 1.1, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: i % 3 });
+            const kind = g.wave === 3 && i === count - 1 ? "takuya" : g.wave % 4 === 0 && i === count - 1 ? "abomination" : g.wave >= 3 && i === count - 2 ? "crusher" : g.wave >= 2 && i === 1 ? "spitter" : Math.random() < 0.38 ? "runner" : "walker";
+            const hp = kind === "takuya" ? 520 : kind === "abomination" ? 420 : kind === "crusher" ? 190 : kind === "runner" ? 50 : kind === "spitter" ? 66 : 82 + g.wave * 6;
+            const speed = kind === "runner" ? 34 : kind === "takuya" ? 12 : kind === "crusher" ? 11 : kind === "abomination" ? 8 : kind === "spitter" ? 14 : 18;
+            const damage = kind === "takuya" ? 54 : kind === "abomination" ? 48 : kind === "crusher" ? 34 : kind === "spitter" ? 12 : 14;
+            const range = kind === "spitter" ? 120 : kind === "takuya" ? 36 : 25;
+            const attackEvery = kind === "runner" ? .72 : kind === "spitter" ? 1.55 : kind === "takuya" ? 1.2 : 1.1;
+            g.fighters.push({ id: g.nextId++, side: "zombie", kind, x: 845 + i * 24, y: GROUND - 7 + Math.random() * 12, hp, maxHp: hp, speed, damage, range, cooldown: i * 0.2, supportCooldown: 0, attackEvery, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: i % 3 });
           }
-          if (g.wave % 4 === 0) { g.banner = `WAVE ${g.wave} — ABOMINATION`; g.bannerTime = 2.7; }
+          if (g.wave === 3) { g.banner = "BOSS — TAKUYA / IRON JUDGE"; g.bannerTime = 3.1; g.shake = 12; g.flashOverlay = .22; }
+          else if (g.wave % 4 === 0) { g.banner = `WAVE ${g.wave} — ABOMINATION`; g.bannerTime = 2.7; }
           tone(82, 0.25, "sawtooth");
         }
 
@@ -406,16 +412,26 @@ export function AshfallGame() {
             if (f.cooldown <= 0) {
               target.hp -= f.damage;
               target.flash = 0.12;
-              target.knock = f.kind === "brute" || f.kind === "abomination" ? 9 : 3;
+              target.knock = f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" ? 9 : 3;
               f.attack = .18;
               f.cooldown = f.attackEvery;
               g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(f.damage), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
-              g.shake = Math.max(g.shake, f.kind === "brute" || f.kind === "abomination" ? 7 : 2.5);
+              g.shake = Math.max(g.shake, f.kind === "takuya" ? 11 : f.kind === "brute" || f.kind === "abomination" ? 7 : 2.5);
+              if (f.kind === "takuya") {
+                for (const splash of g.fighters) {
+                  if (splash.side === "human" && splash.id !== target.id && splash.hp > 0 && Math.abs(splash.x - target.x) < 58) {
+                    splash.hp -= 22; splash.flash = .12; splash.knock = 6;
+                    g.damageTexts.push({ x: splash.x, y: splash.y - 46, value: "22", life: .65, color: "#e98a72" });
+                  }
+                }
+                addParticles(g, target.x, target.y + 2, "#b78656", 13);
+                tone(64, .16, "sawtooth");
+              }
               if (f.kind === "ranger" || f.kind === "gunner" || f.kind === "medic" || f.kind === "spitter") {
                 g.shots.push({ x: f.x + (f.side === "human" ? 14 : -14), y: f.y - 32, tx: target.x, ty: target.y - 28, life: 0.12, side: f.side });
                 if (f.side === "human") tone(310 + Math.random() * 50, 0.035);
               } else {
-                addParticles(g, target.x, target.y - 18, target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
+                addParticles(g, target.x, target.y - 18, target.kind === "takuya" ? "#b98a62" : target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
               }
             }
           } else if (baseDistance <= f.range + 10) {
@@ -433,9 +449,9 @@ export function AshfallGame() {
 
         const dead = g.fighters.filter(f => f.hp <= 0);
         for (const f of dead) {
-          addParticles(g, f.x, f.y - 15, f.side === "zombie" ? "#7e965e" : "#b0614e", 11);
+          addParticles(g, f.x, f.y - 15, f.kind === "takuya" ? "#c08d62" : f.side === "zombie" ? "#7e965e" : "#b0614e", f.kind === "takuya" ? 18 : 11);
           g.corpses.push({ x: f.x, y: f.y, side: f.side, kind: f.kind, life: 5, variant: f.variant });
-          if (f.side === "zombie") { g.kills++; g.combo++; g.comboTime = 2.3; g.scrap += f.kind === "abomination" ? 40 : f.kind === "crusher" ? 18 : 6; g.energy = Math.min(100, g.energy + 4); }
+          if (f.side === "zombie") { g.kills++; g.combo++; g.comboTime = 2.3; g.scrap += f.kind === "takuya" ? 80 : f.kind === "abomination" ? 40 : f.kind === "crusher" ? 18 : 6; g.energy = Math.min(100, g.energy + (f.kind === "takuya" ? 18 : 4)); }
         }
         g.fighters = g.fighters.filter(f => f.hp > 0);
         for (const p of g.particles) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 180 * dt; }
@@ -463,7 +479,8 @@ export function AshfallGame() {
       }
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
-        setHud({ energy: Math.floor(g.energy), scrap: g.scrap, kills: g.kills, wave: g.wave, baseHp: Math.max(0, g.baseHp), nestHp: Math.max(0, g.nestHp), strike: Math.ceil(g.strikeCooldown), combo: g.combo });
+        const boss = g.fighters.find(f => f.kind === "takuya" && f.hp > 0);
+        setHud({ energy: Math.floor(g.energy), scrap: g.scrap, kills: g.kills, wave: g.wave, baseHp: Math.max(0, g.baseHp), nestHp: Math.max(0, g.nestHp), strike: Math.ceil(g.strikeCooldown), combo: g.combo, bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0 });
       }
       frame = requestAnimationFrame(loop);
     };
@@ -473,6 +490,7 @@ export function AshfallGame() {
 
   const healthPct = Math.max(0, hud.baseHp / 400 * 100);
   const nestPct = Math.max(0, hud.nestHp / 620 * 100);
+  const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
 
   return (
     <main className="game-shell">
@@ -480,7 +498,7 @@ export function AshfallGame() {
         <canvas ref={canvasRef} width={W} height={H} className="battlefield" aria-label="Wasteland battlefield" />
 
         <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>VER 2.0 ART UPDATE</em></small></div></div>
+          <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>VER 2.1 TAKUYA</em></small></div></div>
           <div className="wave-block"><small>WAVE</small><strong>{String(hud.wave).padStart(2, "0")}</strong></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           <button className="icon-btn" onClick={() => setMuted(v => !v)} aria-label={muted ? "音を出す" : "ミュート"}>{muted ? "×" : "♪"}</button>
@@ -494,6 +512,12 @@ export function AshfallGame() {
           <div><span>INFECTED NEST</span><b>{Math.ceil(hud.nestHp)} / 620</b></div>
           <i><em style={{ width: `${nestPct}%` }} /></i>
         </div>
+        {hud.bossMax > 0 && (
+          <div className="boss-hud">
+            <div><span>BOSS // TAKUYA</span><b>IRON JUDGE</b></div>
+            <i><em style={{ width: `${bossPct}%` }} /></i>
+          </div>
+        )}
 
         <div className="bottom-hud">
           <div className="resource-panel">
@@ -523,7 +547,7 @@ export function AshfallGame() {
         {!started && (
           <div className="start-screen">
             <div className="start-panel">
-              <p className="eyebrow">{"/// VER 2.0 · FULL ROSTER / INFECTED REDESIGN"}</p>
+              <p className="eyebrow">{"/// VER 2.1 · TAKUYA BOSS ENCOUNTER"}</p>
               <h1>ASHFALL<br /><span>OUTPOST</span></h1>
               <p className="mission">The crawler is out of fuel. Hold the line, rally survivors, and burn the infected nest before the horde breaks through.</p>
               <button className="start-btn" onClick={startGame}><span>BEGIN OPERATION</span><small>TAP TO DEPLOY</small></button>
