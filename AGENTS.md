@@ -23,7 +23,7 @@
 
 Issue内の案やCodexの提案は、プロデューサーが明示的に承認するまでは正式仕様ではない。
 
-GitHub `main`の現在のHEADはGitHubまたはGitで都度確認し、文書へ「最新SHA」として複製しない。
+GitHub `main`の現在のHEADは、GitHub API／GitHub画面または`git ls-remote origin refs/heads/main`でリモートrefを直接確認する。`origin/main`を使う場合は、先に`git fetch origin`などで更新済みであることを確認する。更新していない`origin/main`を現在のGitHub `main`として扱わず、文書へ「最新SHA」として複製しない。
 
 ## 3. 役割、実行場所と決定権
 
@@ -47,6 +47,8 @@ Codex Cloudは必須担当ではなく、独立した意思決定主体でもな
 4. pushまたはPR作成
 5. `main`反映
 6. ChatGPT Sites公開
+
+pushとPR作成は同じ承認区分に属する別操作である。pushの承認はPR作成を含まず、PR作成の承認はpushを含まない。両方を行う場合は両方の明示承認を必要とし、Issueまたは明示承認で指定された操作だけを実行する。
 
 依頼された工程だけを実行し、完了後は差分、検証結果、未確認事項、次に必要な承認を報告する。
 
