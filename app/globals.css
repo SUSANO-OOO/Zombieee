@@ -11,6 +11,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .game-frame::after { content:""; position:absolute; inset:0; pointer-events:none; z-index:20; background:radial-gradient(ellipse at center,transparent 66%,rgba(0,0,0,.3)); }
 .battlefield { position:absolute; inset:0; width:100%; height:100%; image-rendering:auto; }
 .battlefield.targeting { cursor:crosshair; }
+.qa-badge { position:absolute; z-index:14; right:1.5%; bottom:29%; padding:4px 7px; border:1px solid rgba(103,199,207,.55); border-left:3px solid #67c7cf; background:rgba(8,18,21,.82); color:#9ce1e5; font:800 clamp(5px,.55vw,8px)/1 monospace; letter-spacing:.09em; pointer-events:none; }
 .top-hud { position:absolute; z-index:4; top:0; left:0; right:0; height:10%; min-height:47px; display:flex; align-items:center; padding:1% 2%; gap:1%; background:linear-gradient(180deg,rgba(12,14,15,.92),rgba(12,14,15,.25),transparent); }
 .brand-block { display:flex; align-items:center; gap:9px; margin-right:auto; letter-spacing:.08em; }
 .brand-mark { display:grid; place-items:center; width:38px; height:38px; border:2px solid var(--rust); color:var(--rust); font-size:24px; font-weight:900; transform:skew(-7deg); }

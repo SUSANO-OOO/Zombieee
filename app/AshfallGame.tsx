@@ -375,6 +375,41 @@ function spawnHuman(g: Game, kind: UnitKind) {
   return card;
 }
 
+function prepareEndgameQa(g: Game) {
+  g.time = 148;
+  g.phase = 3;
+  g.wave = 8;
+  g.eventIndex = missionEvents.length;
+  g.baseHp = 500;
+  g.barricadeHp = 240;
+  g.energy = COMMAND_MAX;
+  g.tactic = "assault";
+
+  const lineup: [UnitKind, Lane, number][] = [
+    ["brute", 0, 730],
+    ["gunner", 1, 690],
+    ["brawler", 2, 730],
+  ];
+  for (const [kind, lane, x] of lineup) {
+    spawnHuman(g, kind);
+    const fighter = g.fighters[g.fighters.length - 1];
+    fighter.lane = lane;
+    fighter.x = x;
+    fighter.y = laneY(lane, fighter.id);
+    fighter.cooldown = 2.2;
+    fighter.spawnGrace = 0;
+  }
+
+  const takuya = spawnEnemy(g, "takuya", 1);
+  takuya.hp = 35;
+  takuya.x = 720;
+  takuya.y = laneY(1, takuya.id);
+  takuya.cooldown = 4;
+  takuya.abilityCooldown = 99;
+  g.banner = "QA ENDGAME // TAKUYA ACTIVE";
+  g.bannerTime = 2.2;
+}
+
 function damageEnemiesInRadius(g: Game, x: number, y: number, radius: number, damage: number, color: string, knock = 8) {
   for (const f of g.fighters) {
     if (f.side !== "zombie" || effectDistance(f, { x, y }) > radius || f.hp <= 0) continue;
@@ -703,6 +738,7 @@ export function AshfallGame() {
   const [musicActive, setMusicActive] = useState(false);
   const [assetsReady, setAssetsReady] = useState(false);
   const [assetError, setAssetError] = useState(false);
+  const [qaEndgame, setQaEndgame] = useState(false);
   const [selectedAction, setSelectedAction] = useState<SelectedAction>(null);
   const [hud, setHud] = useState<Hud>({
     energy: 70, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520,
@@ -712,6 +748,14 @@ export function AshfallGame() {
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(),
   });
   const [end, setEnd] = useState<BattleResult | null>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const localHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      setQaEndgame(localHost && new URLSearchParams(window.location.search).get("qa") === "endgame");
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const chooseAction = useCallback((action: SelectedAction) => {
     selectedActionRef.current = action;
@@ -987,16 +1031,23 @@ export function AshfallGame() {
   }, [executeSelected]);
 
   const startGame = useCallback(() => {
-    const fresh = initialGame(); fresh.running = true; gameRef.current = fresh;
+    const fresh = initialGame();
+    fresh.running = true;
+    if (qaEndgame) prepareEndgameQa(fresh);
+    gameRef.current = fresh;
+    const boss = fresh.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
     desiredMusicModeRef.current = "normal";
     setStarted(true); setPaused(false); setEnd(null); chooseAction(null);
-    setHud({ energy: 70, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520,
-      barricadeHp: BARRICADE_MAX_HP, barricadeVulnerable: false, barricadeHitFlash: 0,
-      tactic: "balanced", deployQueue: 0, strike: 0, combo: 0, bossHp: 0, bossMax: 0,
-      crawlerHitFlash: 0, threat: 0, objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns() });
+    setHud({ energy: Math.floor(fresh.energy), rage: Math.floor(fresh.rage), scrap: fresh.scrap, kills: fresh.kills,
+      wave: fresh.wave, phase: fresh.phase, baseHp: fresh.baseHp,
+      barricadeHp: fresh.barricadeHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
+      tactic: fresh.tactic, deployQueue: fresh.deployQueue.length, strike: 0, combo: 0,
+      bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
+      crawlerHitFlash: 0, threat: 0, objective: objectiveFor(fresh.phase, fresh.barricadeVulnerable),
+      deployCooldowns: { ...fresh.deployCooldowns } });
     stopMusic(); stopJingle(); if (!bgmMuted) startMusic();
     tone(180, .12); window.setTimeout(() => tone(260, .12), 90);
-  }, [bgmMuted, chooseAction, startMusic, stopJingle, stopMusic, tone]);
+  }, [bgmMuted, chooseAction, qaEndgame, startMusic, stopJingle, stopMusic, tone]);
 
   const togglePause = useCallback(() => {
     const g = gameRef.current;
@@ -1524,6 +1575,7 @@ export function AshfallGame() {
     <main className="game-shell">
       <section className="game-frame" aria-label="ASHFALL OUTPOST game">
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""}`} aria-label="Three-lane wasteland battlefield" onPointerDown={handleBattlefieldPointer} />
+        {qaEndgame && <div className="qa-badge" role="status">LOCAL QA // ENDGAME</div>}
 
         <div className="top-hud">
           <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>EARLY ACCESS 0.4.0</em></small></div></div>
