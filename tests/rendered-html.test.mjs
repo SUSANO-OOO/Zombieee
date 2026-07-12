@@ -38,6 +38,7 @@ import {
   phaseAt,
   rageReward,
   resolveContainerPlacement,
+  resolveContainerLanding,
   resolveFieldSupportPlacement,
   roleTargetBias,
   selectBlockingContainer,
@@ -331,12 +332,12 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
     ["airstrike", 60],
   ]);
   assert.deepEqual(UNIT_CARDS.map(({ kind, desc }) => [kind, desc]), [
-    ["scout", "MARK / INTERCEPT"],
-    ["ranger", "ANTI-SPITTER"],
-    ["brute", "TANK / BREACH"],
-    ["brawler", "FINISHER"],
-    ["gunner", "ANTI-HEAVY"],
-    ["medic", "HEAL / PURGE"],
+    ["scout", "高速敵を迎撃・マーク"],
+    ["ranger", "毒吐きを優先狙撃"],
+    ["brute", "前線を支え鉄柵を粉砕"],
+    ["brawler", "瀕死の敵を仕留める"],
+    ["gunner", "大型敵へ重火力"],
+    ["medic", "周囲の味方を回復"],
   ]);
 });
 
@@ -353,7 +354,7 @@ test("validates, damages, and releases the battlefield container without changin
     { lane: 0, x: 300, y: LANE_Y[0], phase: "active" },
     { lane: 2, x: 600, y: LANE_Y[2], phase: "dropping" },
   ] }).reason, "設置上限は2個です");
-  assert.equal(containerPlacementCheck({ ...base, fighters: [{ x: 450, y: LANE_Y[1], hp: 10 }] }).reason, "ユニットに近すぎます");
+  assert.deepEqual(containerPlacementCheck({ ...base, fighters: [{ x: 450, y: LANE_Y[1], hp: 10 }] }), { ok: true, reason: "配置できます" });
 
   const placed = resolveContainerPlacement(base);
   assert.equal(placed.ok, true);
@@ -361,6 +362,24 @@ test("validates, damages, and releases the battlefield container without changin
   assert.equal(placed.objects.length, 1);
   assert.equal(placed.objects[0].id, 40);
   assert.equal(placed.objects[0].phase, "dropping");
+  assert.equal(placed.objects[0].landingTriggered, false);
+
+  const landing = resolveContainerLanding({
+    lane: 1, x: 440,
+    fighters: [
+      { id: 1, side: "zombie", x: 450, y: LANE_Y[1], hp: 100 },
+      { id: 2, side: "human", x: 430, y: LANE_Y[1], hp: 100 },
+      { id: 3, side: "zombie", x: 700, y: LANE_Y[1], hp: 100 },
+    ],
+  });
+  assert.deepEqual(landing.hits, [
+    { id: 1, side: "zombie", damage: CONTAINER_DEF.enemyLandingDamage },
+    { id: 2, side: "human", damage: CONTAINER_DEF.allyLandingDamage },
+  ]);
+  assert.equal(landing.fighters[0].hp, 100 - CONTAINER_DEF.enemyLandingDamage);
+  assert.equal(landing.fighters[1].hp, 100 - CONTAINER_DEF.allyLandingDamage);
+  assert.equal(landing.fighters[2].hp, 100);
+  assert.ok(CONTAINER_DEF.enemyLandingDamage > CONTAINER_DEF.allyLandingDamage);
 
   const invalid = resolveContainerPlacement({ ...base, x: CONTAINER_DEF.minX - 1 });
   assert.equal(invalid.ok, false);
@@ -417,6 +436,14 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /!target && !objectTarget && f\.x > 520/);
   assert.match(game, /objectTarget \? Math\.abs\(f\.x - objectTarget\.x\)/);
   assert.match(game, /applyContainerDamage\(objectTarget, f\.damage\)/);
+  assert.match(game, /resolveContainerLanding\(\{/);
+  assert.match(game, /object\.landingTriggered = true; object\.phase = "impact"/);
+  assert.match(game, /索敵マーク/);
+  assert.match(game, /対・毒吐き/);
+  assert.match(game, /前線保持/);
+  assert.match(game, /フィニッシュ/);
+  assert.match(game, /重装破砕/);
+  assert.match(game, /value: "救護"/);
   assert.match(game, /advanceZombieX\(\{/);
   assert.match(game, /防護コンテナ破壊/);
   assert.match(game, /drawPlacementIndicator/);

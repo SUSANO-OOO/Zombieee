@@ -33,6 +33,7 @@ import {
   phaseAt,
   rageReward,
   resolveContainerPlacement,
+  resolveContainerLanding,
   resolveFieldSupportPlacement,
   roleTargetBias,
   scrapReward,
@@ -136,7 +137,7 @@ type FieldSupport = {
   tick: number;
   triggered: boolean;
 };
-type BattlefieldObjectPhase = "dropping" | "active" | "destroying" | "expired";
+type BattlefieldObjectPhase = "dropping" | "impact" | "active" | "destroying" | "expired";
 type BattlefieldObject = {
   id: number;
   kind: SupplyKind;
@@ -150,6 +151,7 @@ type BattlefieldObject = {
   blocksEnemies: boolean;
   targetable: boolean;
   hitFlash: number;
+  landingTriggered: boolean;
 };
 type PlacementIndicator = { lane: Lane; x: number; y: number; valid: boolean; reason: string };
 
@@ -525,23 +527,30 @@ function drawSupport(ctx: CanvasRenderingContext2D, support: FieldSupport, time:
 function drawContainer(ctx: CanvasRenderingContext2D, object: BattlefieldObject) {
   const dropOffset = object.phase === "dropping" ? Math.max(0, object.phaseTime / .45) * 86 : 0;
   const destroyRatio = object.phase === "destroying" ? Math.max(0, object.phaseTime / .42) : 1;
+  const hpRatio = Math.max(0, object.hp / object.maxHp);
   const drawY = object.y - dropOffset;
   ctx.save();
   ctx.globalAlpha = object.phase === "destroying" ? destroyRatio : 1;
   ctx.fillStyle = "rgba(0,0,0,.42)";
   ctx.beginPath(); ctx.ellipse(object.x, object.y + 8, 35 + dropOffset * .08, 7, 0, 0, Math.PI * 2); ctx.fill();
   ctx.translate(object.x, drawY);
-  if (object.phase === "destroying") ctx.scale(.78 + destroyRatio * .22, .58 + destroyRatio * .42);
+  if (object.phase === "destroying") { ctx.translate(0, (1 - destroyRatio) * 14); ctx.rotate((1 - destroyRatio) * -.18); ctx.scale(.78 + destroyRatio * .22, .58 + destroyRatio * .42); }
   if (object.hitFlash > 0) { ctx.shadowColor = "#fff0a4"; ctx.shadowBlur = 14; }
-  ctx.fillStyle = "#263b3d"; ctx.fillRect(-33, -38, 66, 43);
-  ctx.fillStyle = "#3f5f5f"; ctx.fillRect(-29, -34, 58, 35);
-  ctx.strokeStyle = "#8da49b"; ctx.lineWidth = 2; ctx.strokeRect(-29, -34, 58, 35);
-  ctx.strokeStyle = "#1d2d2e"; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-25, -31); ctx.lineTo(25, -2); ctx.moveTo(25, -31); ctx.lineTo(-25, -2); ctx.stroke();
-  ctx.fillStyle = "#d19b4d"; ctx.fillRect(-32, -21, 64, 7);
-  ctx.fillStyle = "#172324"; ctx.font = "900 11px monospace"; ctx.textAlign = "center"; ctx.fillText("CRAWLER", 0, -11);
+  ctx.fillStyle = "#182729"; ctx.beginPath(); ctx.moveTo(-39,-31); ctx.lineTo(-29,-44); ctx.lineTo(29,-44); ctx.lineTo(39,-31); ctx.lineTo(36,5); ctx.lineTo(-36,5); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = hpRatio <= .3 ? "#57342d" : hpRatio <= .62 ? "#355052" : "#466a67";
+  ctx.beginPath(); ctx.moveTo(-31,-35); ctx.lineTo(-23,-40); ctx.lineTo(23,-40); ctx.lineTo(31,-35); ctx.lineTo(29,0); ctx.lineTo(-29,0); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "#9aad9f"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = "#223536"; ctx.fillRect(-23,-34,46,28); ctx.strokeStyle = "#172526"; ctx.strokeRect(-23,-34,46,28);
+  ctx.strokeStyle = "#78908a"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-19,-30); ctx.lineTo(19,-10); ctx.moveTo(19,-30); ctx.lineTo(-19,-10); ctx.stroke();
+  for (const side of [-1,1]) { ctx.fillStyle="#172324"; ctx.fillRect(side * 31 - 3,-28,6,28); ctx.fillStyle="#b7a66d"; ctx.fillRect(side * 31 - 3,-29,6,5); }
+  ctx.fillStyle = "#d6a34c"; ctx.fillRect(-29,-23,58,6);
+  ctx.fillStyle = "#152223"; ctx.font = "900 9px monospace"; ctx.textAlign = "center"; ctx.fillText("ASHFALL // 05", 0, -14);
+  for (const x of [-25,25]) for (const y of [-35,-5]) { ctx.fillStyle="#c2b899"; ctx.beginPath(); ctx.arc(x,y,1.7,0,Math.PI*2); ctx.fill(); }
+  if (hpRatio <= .62) { ctx.strokeStyle = hpRatio <= .3 ? "#e76c4e" : "#172526"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(8,-39); ctx.lineTo(2,-27); ctx.lineTo(11,-20); ctx.lineTo(5,-7); ctx.stroke(); }
+  if (object.phase === "dropping") { ctx.strokeStyle="rgba(205,222,202,.55)"; ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(-27,-48); ctx.lineTo(-42,-82); ctx.moveTo(27,-48); ctx.lineTo(42,-82); ctx.stroke(); ctx.setLineDash([]); }
+  if (object.phase === "impact") { const pulse=1-object.phaseTime/.26; ctx.strokeStyle=`rgba(255,190,85,${1-pulse})`; ctx.lineWidth=5-3*pulse; ctx.beginPath(); ctx.ellipse(0,7,42+pulse*62,12+pulse*24,0,0,Math.PI*2); ctx.stroke(); }
   ctx.shadowBlur = 0;
-  if (object.phase === "active") {
+  if (object.phase === "active" || object.phase === "impact") {
     ctx.fillStyle = "rgba(0,0,0,.68)"; ctx.fillRect(-32, -48, 64, 6);
     ctx.fillStyle = object.hp / object.maxHp <= .3 ? "#ef6448" : "#70c59d";
     ctx.fillRect(-31, -47, 62 * Math.max(0, object.hp / object.maxHp), 4);
@@ -1314,11 +1323,23 @@ export function AshfallGame() {
           object.hitFlash = Math.max(0, object.hitFlash - dt);
           if (object.phase === "dropping") {
             object.phaseTime = Math.max(0, object.phaseTime - dt);
-            if (object.phaseTime <= 0) {
-              object.phase = "active";
-              addParticles(g, object.x, object.y + 4, "#b49a71", 12);
-              g.shake = Math.max(g.shake, 5);
+            if (object.phaseTime <= 0 && !object.landingTriggered) {
+              const landing = resolveContainerLanding({ fighters: g.fighters, lane: object.lane, x: object.x });
+              const byId = new Map(landing.fighters.map((fighter: Fighter) => [fighter.id, fighter]));
+              for (const fighter of g.fighters) {
+                const landed = byId.get(fighter.id); if (landed) { fighter.hp = landed.hp; fighter.flash = .2; fighter.knock = Math.max(fighter.knock, 10); }
+              }
+              for (const hit of landing.hits) {
+                const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
+                if (fighter) g.damageTexts.push({ x: fighter.x, y: fighter.y - 56, value: `着地 -${hit.damage}`, life: .9, color: hit.side === "zombie" ? "#ffd06b" : "#ff8a70" });
+              }
+              object.landingTriggered = true; object.phase = "impact"; object.phaseTime = .26;
+              addParticles(g, object.x, object.y + 4, "#d7aa63", 26);
+              g.shake = Math.max(g.shake, 13); g.flashOverlay = Math.max(g.flashOverlay, .12); tone(58, .22, "sawtooth");
             }
+          } else if (object.phase === "impact") {
+            object.phaseTime = Math.max(0, object.phaseTime - dt);
+            if (object.phaseTime <= 0) object.phase = "active";
           } else if (object.phase === "destroying") {
             object.phaseTime = Math.max(0, object.phaseTime - dt);
             if (object.phaseTime <= 0) object.phase = "expired";
@@ -1385,6 +1406,8 @@ export function AshfallGame() {
               const healed = Math.min(16, wounded.maxHp - wounded.hp);
               wounded.hp += healed; f.supportCooldown = 1.55;
               g.damageTexts.push({ x: wounded.x, y: wounded.y - 70, value: `+${Math.ceil(healed)}`, life: .8, color: "#83e0a2" });
+              g.damageTexts.push({ x: f.x, y: f.y - 64, value: "救護", life: .7, color: "#9bf0ba" });
+              g.shots.push({ x: f.x + 8, y: f.y - 34, tx: wounded.x, ty: wounded.y - 28, life: .12, side: "human" });
               addParticles(g, wounded.x, wounded.y - 30, "#69d993", 7);
             }
           }
@@ -1521,6 +1544,10 @@ export function AshfallGame() {
               target.knock = f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" ? 9 : 3;
               f.attack = .18; f.cooldown = enragedTakuya ? .9 : f.attackEvery;
               g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(attackDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
+              if (f.side === "human" && f.abilityCooldown <= 0) {
+                const roleCue = f.kind === "scout" ? "索敵マーク" : f.kind === "ranger" && target.kind === "spitter" ? "対・毒吐き" : f.kind === "brute" ? "前線保持" : f.kind === "brawler" && target.hp / target.maxHp <= .35 ? "フィニッシュ" : f.kind === "gunner" && ["crusher", "abomination"].includes(target.kind) ? "重装破砕" : null;
+                if (roleCue) { g.damageTexts.push({ x: f.x, y: f.y - 66, value: roleCue, life: .75, color: "#ffe078" }); f.abilityCooldown = 1.8; }
+              }
               g.shake = Math.max(g.shake, f.kind === "takuya" ? 11 : f.kind === "brute" || f.kind === "abomination" ? 7 : 2.5);
               if (f.kind === "takuya") {
                 for (const splash of g.fighters) {
@@ -1807,7 +1834,7 @@ export function AshfallGame() {
                 onClick={() => chooseAction(selectedAction === "supply:container" ? null : "supply:container")}
                 aria-label={`防護コンテナ ${CONTAINER_DEF.cost}スクラップ`}
               >
-                <span className="support-key">V</span><b>防護コンテナ</b><small>敵の進行を阻止</small><em>▰{CONTAINER_DEF.cost}</em>
+                <span className="support-key">V</span><b>防護コンテナ</b><small>着地衝撃＋進路封鎖</small><em>▰{CONTAINER_DEF.cost}</em>
               </button>
               {supportDefs.map((support) => {
                 const selected = selectedAction === `support:${support.kind}`;

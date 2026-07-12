@@ -15,7 +15,9 @@ export const CONTAINER_DEF = Object.freeze({
   maxActive: 2,
   maxPerLane: 1,
   objectClearance: FIELD_OBJECT_CLEARANCE,
-  fighterClearance: 42,
+  landingRadius: 92,
+  enemyLandingDamage: 72,
+  allyLandingDamage: 22,
 });
 
 // Three invisible routing bands follow the open roadway bands in battlefield-v4.
@@ -36,12 +38,12 @@ export const WORLD_GEOMETRY = Object.freeze({
 });
 
 export const UNIT_CARDS = [
-  { kind: "scout", name: "SCOUT", cost: 25, key: "1", desc: "MARK / INTERCEPT", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 },
-  { kind: "ranger", name: "RANGER", cost: 45, key: "2", desc: "ANTI-SPITTER", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 },
-  { kind: "brute", name: "BREAKER", cost: 70, key: "3", desc: "TANK / BREACH", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 },
-  { kind: "brawler", name: "BRAWLER", cost: 55, key: "4", desc: "FINISHER", deployCooldown: 13, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: .72 },
-  { kind: "gunner", name: "GUNNER", cost: 60, key: "5", desc: "ANTI-HEAVY", deployCooldown: 15, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 },
-  { kind: "medic", name: "MEDIC", cost: 50, key: "6", desc: "HEAL / PURGE", deployCooldown: 20, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: .96 },
+  { kind: "scout", name: "SCOUT", cost: 25, key: "1", desc: "高速敵を迎撃・マーク", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 },
+  { kind: "ranger", name: "RANGER", cost: 45, key: "2", desc: "毒吐きを優先狙撃", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 },
+  { kind: "brute", name: "BREAKER", cost: 70, key: "3", desc: "前線を支え鉄柵を粉砕", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 },
+  { kind: "brawler", name: "BRAWLER", cost: 55, key: "4", desc: "瀕死の敵を仕留める", deployCooldown: 13, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: .72 },
+  { kind: "gunner", name: "GUNNER", cost: 60, key: "5", desc: "大型敵へ重火力", deployCooldown: 15, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 },
+  { kind: "medic", name: "MEDIC", cost: 50, key: "6", desc: "周囲の味方を回復", deployCooldown: 20, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: .96 },
 ];
 
 export const SUPPORT_DEFS = [
@@ -92,7 +94,7 @@ function overlapsFieldObject(lane, x, object) {
   return Math.hypot(object.x - x, (object.y - LANE_Y[lane]) * 2) < FIELD_OBJECT_CLEARANCE;
 }
 
-export function containerPlacementCheck({ running, paused, over, scrap, lane, x, objects = [], fighters = [], supports = [] }) {
+export function containerPlacementCheck({ running, paused, over, scrap, lane, x, objects = [], supports = [] }) {
   if (!running) return { ok: false, reason: "作戦開始後に配置できます" };
   if (paused) return { ok: false, reason: "一時停止中は配置できません" };
   if (over) return { ok: false, reason: "作戦終了後は配置できません" };
@@ -109,9 +111,6 @@ export function containerPlacementCheck({ running, paused, over, scrap, lane, x,
   }
   if (supports.some((support) => support.life > 0 && overlapsFieldObject(lane, x, support))) {
     return { ok: false, reason: "既存支援物資に近すぎます" };
-  }
-  if (fighters.some((fighter) => fighter.hp > 0 && Math.hypot(fighter.x - x, (fighter.y - LANE_Y[lane]) * 2) < CONTAINER_DEF.fighterClearance)) {
-    return { ok: false, reason: "ユニットに近すぎます" };
   }
   return { ok: true, reason: "配置できます" };
 }
@@ -135,6 +134,7 @@ export function resolveContainerPlacement(input) {
     blocksEnemies: true,
     targetable: true,
     hitFlash: 0,
+    landingTriggered: false,
   };
   return {
     ...check,
@@ -142,6 +142,17 @@ export function resolveContainerPlacement(input) {
     objects: [...objects, object],
     nextId: nextId + 1,
   };
+}
+
+export function resolveContainerLanding({ fighters = [], lane, x }) {
+  const hits = [];
+  const fightersAfterLanding = fighters.map((fighter) => {
+    if (fighter.hp <= 0 || Math.hypot(fighter.x - x, (fighter.y - LANE_Y[lane]) * 2) > CONTAINER_DEF.landingRadius) return fighter;
+    const damage = fighter.side === "zombie" ? CONTAINER_DEF.enemyLandingDamage : CONTAINER_DEF.allyLandingDamage;
+    hits.push({ id: fighter.id, side: fighter.side, damage });
+    return { ...fighter, hp: Math.max(0, fighter.hp - damage) };
+  });
+  return { fighters: fightersAfterLanding, hits };
 }
 
 export function resolveFieldSupportPlacement({ running, paused, over, rage, cost, kind, lane, x, strikeCooldown = 0, supports = [], containers = [] }) {
