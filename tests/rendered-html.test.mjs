@@ -6,6 +6,8 @@ import {
   BARRICADE_MAX_HP,
   COMMAND_MAX,
   COMMAND_REGEN,
+  CONTAINER_DEF,
+  FIELD_OBJECT_CLEARANCE,
   LANE_NAMES,
   LANE_Y,
   MISSION_EVENTS,
@@ -15,14 +17,19 @@ import {
   TACTIC_MODES,
   UNIT_CARDS,
   WORLD_GEOMETRY,
+  advanceZombieX,
   advanceCommand,
   advanceLimitFor,
+  applyContainerDamage,
   autonomousTargetScore,
   barricadeState,
   battleOutcome,
   canDeploy,
+  containerBlocksEnemy,
+  containerPlacementCheck,
   crawlerSiegeDamage,
   crawlerThreatLevel,
+  damageContainer,
   humanAttackMultiplier,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
@@ -30,7 +37,10 @@ import {
   objectiveFor,
   phaseAt,
   rageReward,
+  resolveContainerPlacement,
+  resolveFieldSupportPlacement,
   roleTargetBias,
+  selectBlockingContainer,
   structureDamageMultiplier,
   tacticTargetBias,
 } from "../app/gameRules.js";
@@ -328,6 +338,89 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
     ["gunner", "ANTI-HEAVY"],
     ["medic", "HEAL / PURGE"],
   ]);
+});
+
+test("validates, damages, and releases the battlefield container without changing Crawler priority", async () => {
+  const base = { running: true, paused: false, over: false, scrap: CONTAINER_DEF.cost, lane: 1, x: 440, objects: [], fighters: [], supports: [], nextId: 40 };
+  assert.equal(CONTAINER_DEF.objectClearance, FIELD_OBJECT_CLEARANCE);
+  assert.deepEqual(containerPlacementCheck(base), { ok: true, reason: "配置できます" });
+  assert.equal(containerPlacementCheck({ ...base, running: false }).ok, false);
+  assert.equal(containerPlacementCheck({ ...base, paused: true }).reason, "一時停止中は配置できません");
+  assert.equal(containerPlacementCheck({ ...base, scrap: CONTAINER_DEF.cost - 1 }).reason, "スクラップが不足しています");
+  assert.equal(containerPlacementCheck({ ...base, x: CONTAINER_DEF.minX - 1 }).reason, "配置可能範囲外です");
+  assert.equal(containerPlacementCheck({ ...base, objects: [{ lane: 1, x: 500, y: LANE_Y[1], phase: "active" }] }).reason, "このレーンには設置済みです");
+  assert.equal(containerPlacementCheck({ ...base, objects: [
+    { lane: 0, x: 300, y: LANE_Y[0], phase: "active" },
+    { lane: 2, x: 600, y: LANE_Y[2], phase: "dropping" },
+  ] }).reason, "設置上限は2個です");
+  assert.equal(containerPlacementCheck({ ...base, fighters: [{ x: 450, y: LANE_Y[1], hp: 10 }] }).reason, "ユニットに近すぎます");
+
+  const placed = resolveContainerPlacement(base);
+  assert.equal(placed.ok, true);
+  assert.equal(placed.scrap, 0);
+  assert.equal(placed.objects.length, 1);
+  assert.equal(placed.objects[0].id, 40);
+  assert.equal(placed.objects[0].phase, "dropping");
+
+  const invalid = resolveContainerPlacement({ ...base, x: CONTAINER_DEF.minX - 1 });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.scrap, CONTAINER_DEF.cost);
+  assert.equal(invalid.objects.length, 0);
+
+  const activeSupport = { id: 7, kind: "medkit", lane: 1, x: 440, y: LANE_Y[1], life: 5 };
+  const containerOnSupport = resolveContainerPlacement({ ...base, supports: [activeSupport] });
+  assert.equal(containerOnSupport.ok, false);
+  assert.equal(containerOnSupport.reason, "既存支援物資に近すぎます");
+  assert.equal(containerOnSupport.scrap, CONTAINER_DEF.cost);
+  assert.equal(containerOnSupport.objects.length, 0);
+
+  const activeContainer = { ...placed.objects[0], phase: "active" };
+  const supportOnContainer = resolveFieldSupportPlacement({
+    running: true, paused: false, over: false, rage: 30, cost: 20, kind: "barrel", lane: 1, x: 440,
+    supports: [], containers: [activeContainer],
+  });
+  assert.equal(supportOnContainer.ok, false);
+  assert.equal(supportOnContainer.reason, "防護コンテナに近すぎます");
+  assert.equal(supportOnContainer.rage, 30);
+
+  assert.deepEqual(damageContainer(CONTAINER_DEF.maxHp, 35), { hp: CONTAINER_DEF.maxHp - 35, phase: "active" });
+  assert.deepEqual(damageContainer(20, 35), { hp: 0, phase: "destroying" });
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), true);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 0, containerX: 440, containerLane: 1, phase: "active" }), false);
+  assert.equal(containerBlocksEnemy({ enemyX: 400, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), false);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "destroying" }), false);
+
+  const rearContainer = { ...activeContainer, id: 41, x: 360 };
+  const blocking = selectBlockingContainer({ enemyX: 600, enemyLane: 1, objects: [rearContainer, activeContainer] });
+  assert.equal(blocking.id, activeContainer.id);
+
+  const destroyed = applyContainerDamage({ ...activeContainer, hp: 20 }, 35);
+  assert.equal(destroyed.hp, 0);
+  assert.equal(destroyed.phase, "destroying");
+  assert.equal(destroyed.blocksEnemies, false);
+  assert.equal(destroyed.targetable, false);
+  assert.equal(selectBlockingContainer({ enemyX: 600, enemyLane: 1, objects: [destroyed] }), undefined);
+  assert.equal(advanceZombieX({ enemyX: 600, speed: 20, seconds: 1 }), 580);
+  assert.equal(battleOutcome(0, 0), "lost");
+
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  assert.match(game, /battlefieldObjects: BattlefieldObject\[\]/);
+  assert.match(game, /targetObjectId: number \| null/);
+  assert.match(game, /resolveContainerPlacement\(\{/);
+  assert.match(game, /resolveFieldSupportPlacement\(\{/);
+  assert.match(game, /supports: g\.supports, containers: g\.battlefieldObjects/);
+  assert.match(game, /if \(placeContainer\(lane, x\)\) chooseAction\(null\)/);
+  assert.match(game, /if \(succeeded\) chooseAction\(null\)/);
+  assert.match(game, /const routeLane = f\.lane/);
+  assert.match(game, /selectBlockingContainer\(\{/);
+  assert.match(game, /physicalContact \?\? \(blockingContainer \? undefined/);
+  assert.match(game, /!target && !objectTarget && f\.x > 520/);
+  assert.match(game, /objectTarget \? Math\.abs\(f\.x - objectTarget\.x\)/);
+  assert.match(game, /applyContainerDamage\(objectTarget, f\.damage\)/);
+  assert.match(game, /advanceZombieX\(\{/);
+  assert.match(game, /防護コンテナ破壊/);
+  assert.match(game, /drawPlacementIndicator/);
+  assert.match(game, /CONTAINER_DEF\.cost/);
 });
 
 test("defines an ordered mission timeline after the five-second preparation window", () => {
