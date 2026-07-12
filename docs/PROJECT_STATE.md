@@ -7,7 +7,9 @@ Updated: 2026-07-12
 - Public version: Early Access 0.4.0
 - Public URL: https://ashfall-outpost-defense.paopao9.chatgpt.site/
 - Baseline commit: `a68b731 Ship Early Access 0.4.0 iron barricade breach`
+- Latest backup commit: `3836ff3 Add project handoff documentation`
 - Deployment remote: ChatGPT Sites remote named `sites`
+- Private backup: https://github.com/SUSANO-OOO/Zombieee (`origin/main`)
 
 ## Product direction
 
@@ -33,7 +35,7 @@ ASHFALL OUTPOST is intended to grow beyond the current mission. Future additions
 - Full endgame transition verified: TAKUYA defeat, barricade exposure, shared barricade damage, victory, and retry
 - Public build and normal localhost flow are unaffected by the local QA mode
 
-## Local development additions awaiting a backup commit
+## Backed-up development additions
 
 - Local-only `?qa=endgame` endgame QA mode
 - Small local QA badge
@@ -41,6 +43,8 @@ ASHFALL OUTPOST is intended to grow beyond the current mission. Future additions
 - Lint exclusions for generated and archived build output
 
 The QA mode is enabled only on `localhost` or `127.0.0.1` with `?qa=endgame`. It exercises normal TAKUYA death, barricade damage, and victory logic rather than directly setting the win state.
+
+These additions are committed and pushed to the private GitHub backup. The public Sites release remains unchanged at 0.4.0.
 
 ## Pending development task
 
