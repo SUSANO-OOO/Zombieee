@@ -1,98 +1,59 @@
-# vinext-starter
+# ASHFALL OUTPOST
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+ASHFALL OUTPOSTは、CRAWLERを守りながら生存者部隊を指揮し、3レーンの戦場を押し返して敵陣の鉄柵を破壊するリアルタイムのCanvas防衛ゲームです。
 
-## Prerequisites
+主対象はスマートフォン横画面で、PC横画面も正式対応です。ゲーム世界は960×540を基準とし、PC横画面とスマートフォン相当844×390を基本確認対象とします。詳細な製品仕様と検証原則は、下記の文書マップを参照してください。
+
+## 文書マップ
+
+| 文書 | 役割 |
+|---|---|
+| [AGENTS.md](AGENTS.md) | Codexが毎回守る情報源、役割、承認工程、Local/Cloud分担、検証原則 |
+| [docs/CHATGPT_HANDOFF.md](docs/CHATGPT_HANDOFF.md) | 作品意図、長期構想、承認済みゲーム仕様 |
+| [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | 現在の公開版、公開基準、検証記録、未完了作業、復元時の照合事項 |
+| GitHub Issue | 個別タスクの議論、比較、報告、プロデューサー判断 |
+
+変動する公開URL、版、コミット、検証結果はREADMEへ複製せず、[PROJECT_STATE.md](docs/PROJECT_STATE.md)で確認します。
+
+## 前提環境
 
 - Node.js `>=22.13.0`
+- npm
 
-## Quick Start
+## セットアップ
 
 ```bash
 npm install
-npm run dev
-npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+WindowsでPowerShellの実行ポリシーにより`npm`が使えない場合は、`npm.cmd`を使用します。
 
-## Included Shape
+## 開発・確認コマンド
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+| 目的 | 通常 | Windowsで`npm.cmd`を使う場合 |
+|---|---|---|
+| 開発サーバー | `npm run dev` | `npm.cmd run dev` |
+| 本番ビルド | `npm run build` | `npm.cmd run build` |
+| 自動テスト | `npm test` | `npm.cmd test` |
+| Lint | `npm run lint` | `npm.cmd run lint` |
 
-## Workspace Auth Headers
+`npm test`は本番ビルド後にNodeのテストを実行します。データベーススキーマを変更する承認済みタスクでは、必要に応じて`npm run db:generate`を使用します。
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+## 主要構成
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+- `app/AshfallGame.tsx`：ゲーム本体、描画、入力、戦闘ループ、HUD
+- `app/gameRules.js`：数値定義、作戦、勝敗、レーン、標的選択などの純粋ロジック
+- `app/globals.css`：画面レイアウト、スマートフォン横画面、HUD
+- `tests/rendered-html.test.mjs`：ルール、主要仕様、サーバーレンダリングの自動テスト
+- `public/`：背景、キャラクター、敵、CRAWLER、鉄柵などの画像
+- `scripts/run-vinext.mjs`：OS共通のvinext起動ラッパー
+- `.openai/hosting.json`：ChatGPT Sitesプロジェクト設定
 
-Treat the full name as optional and fall back to email when it is absent:
+## 開発コードと公開版
 
-```tsx
-import { headers } from "next/headers";
+- 正式な開発コードは、プロデューサーが承認したGitHub `main`上のコミットです。
+- 作業中のローカルまたはCloudの差分は、承認されるまでは候補状態です。
+- ChatGPT Sitesの公開版は、実際に稼働している内容と公開基準コミットで管理します。
+- GitHubへのpushとChatGPT Sitesへの公開は別工程です。
 
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
-```
-
-## Optional Dispatch-Owned ChatGPT Sign-In
-
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
-
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+各工程は自動的に次へ進めず、[AGENTS.md](AGENTS.md)の承認ルールに従います。現在の公開・検証状態は[PROJECT_STATE.md](docs/PROJECT_STATE.md)を確認してください。

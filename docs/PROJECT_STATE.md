@@ -1,62 +1,107 @@
-# ASHFALL OUTPOST — Project State
+# ASHFALL OUTPOST — プロジェクト状態
 
-Updated: 2026-07-12
+更新日：2026-07-12
 
-## Current release
+## 1. この文書の読み方
 
-- Public version: Early Access 0.4.0
-- Public URL: https://ashfall-outpost-defense.paopao9.chatgpt.site/
-- Baseline commit: `a68b731 Ship Early Access 0.4.0 iron barricade breach`
-- Latest backup commit: `3836ff3 Add project handoff documentation`
-- Deployment remote: ChatGPT Sites remote named `sites`
-- Private backup: https://github.com/SUSANO-OOO/Zombieee (`origin/main`)
+この文書は、公開版、開発状態、検証記録、未完了作業、別PC復元時の照合事項など、変動する事実だけを管理する。
 
-## Product direction
+- 恒久的な運用規則：[AGENTS.md](../AGENTS.md)
+- 作品意図と承認済みゲーム仕様：[CHATGPT_HANDOFF.md](CHATGPT_HANDOFF.md)
+- セットアップと実行コマンド：[README.md](../README.md)
+- 個別タスクの議論・判断・報告：対応するGitHub Issue
 
-ASHFALL OUTPOST is intended to grow beyond the current mission. Future additions may include playable characters, monsters, bosses, stages, story, progression, new game modes, high-density enemy waves, and other ideas not yet specified. Stability is the current foundation, not a reason to postpone expansion indefinitely.
+GitHub `main`の現在のHEADはリモートrefで都度確認する。更新していないローカルの`origin/main`を現在のGitHub `main`として扱わず、この文書にも「最新main SHA」を固定値として記録しない。
 
-## Current gameplay baseline
+## 2. 現在の公開状態
 
-- Mobile landscape support
-- Free movement across three roadway lanes
-- Allies deploy from the CRAWLER through a three-slot bay
-- Enemies advance toward the CRAWLER and intercept physical blockers
-- Defend, balanced, and assault tactical modes
-- TAKUYA boss encounter
-- A shared-HP barricade spanning all three lanes becomes vulnerable after TAKUYA falls
-- Barricade destruction wins; CRAWLER destruction loses
+- 公開版：Early Access 0.4.0
+- 公開URL：https://ashfall-outpost-defense.paopao9.chatgpt.site/
+- 公開版基準コミット：`a68b731 Ship Early Access 0.4.0 iron barricade breach`
+- 公開用リモート：ChatGPT Sitesの`sites`
+- 正式開発リポジトリ：非公開GitHub `SUSANO-OOO/Zombieee`
+- 正式開発ブランチ：GitHub `main`
 
-## Verified state
+GitHubへのpushとChatGPT Sitesへの公開は別工程である。GitHub `main`へ反映された変更が自動的に公開版へ反映されるわけではない。
 
-- Production build succeeds
-- `npm.cmd test`: 12 passing tests
-- `npm.cmd run lint`: succeeds
-- PC landscape and 844x390 mobile-equivalent playtests completed
-- Full endgame transition verified: TAKUYA defeat, barricade exposure, shared barricade damage, victory, and retry
-- Public build and normal localhost flow are unaffected by the local QA mode
+## 3. 正式開発ブランチの確認方法
 
-## Backed-up development additions
+正式な開発コードは、プロデューサーが承認したGitHub `main`上のコミットである。現在のGitHub `main`が作業基準となる場合は、次のいずれかでリモートrefを確認してから基準コミットを確定する。
 
-- Local-only `?qa=endgame` endgame QA mode
-- Small local QA badge
-- Cross-platform vinext runner for Windows-compatible npm scripts
-- Lint exclusions for generated and archived build output
+- GitHub APIまたはGitHub画面で`main`を確認する。
+- `git ls-remote origin refs/heads/main`でリモートrefを直接確認する。
+- `origin/main`を使う場合は、先に`git fetch origin`などで更新済みであることを確認する。
 
-The QA mode is enabled only on `localhost` or `127.0.0.1` with `?qa=endgame`. It exercises normal TAKUYA death, barricade damage, and victory logic rather than directly setting the win state.
+更新していない`origin/main`は過去の状態である可能性があるため、現在のGitHub `main`の証拠にはしない。リモートrefとは別に、ローカルの現在ブランチとHEAD、作業ツリーの未コミット・未追跡変更、対応Issueが指定する基準コミットまたはrefも確認する。
 
-These additions are committed and pushed to the private GitHub backup. The public Sites release remains unchanged at 0.4.0.
+文書更新のたびにmainのSHAを追記する運用は行わない。
 
-## Pending development task
+## 4. 現在の開発状態
 
-The QA location gate has been verified in a real browser but does not yet have dedicated unit tests. A future small task may extract the gate into a pure helper and test localhost, 127.0.0.1, missing query, wrong query, and public-domain cases.
+公開版0.4.0以後の開発基盤として、次の内容がGitHub `main`へ保存されている。これらは公開用Sitesへ再公開されていない。
 
-## Recovery notes
+- ローカル限定の`?qa=endgame`終盤QAモード
+- ローカルQAバッジ
+- Windowsを含むOS共通のvinext起動ラッパー
+- 生成物とアーカイブ出力を対象外にするLint設定
+- 復元と引き継ぎに使うプロジェクト文書
 
-After cloning the backup repository on a new computer:
+QAモードは、ホストが`localhost`または`127.0.0.1`で、URLクエリが`?qa=endgame`の場合だけ有効になる。TAKUYAが低HPで生存する終盤状態から、通常の死亡処理、鉄柵ダメージ、勝敗判定を通して検証する。公開ドメインでは有効にならない設計である。
 
-1. Install a supported Node.js version (`>=22.13.0`).
-2. Run `npm install`.
-3. Run `npm.cmd test` and `npm.cmd run lint` on Windows.
-4. Reconnect the ChatGPT Sites project before deploying.
+## 5. 検証記録
 
-Generated folders such as `node_modules`, `dist`, `work`, and `outputs` are intentionally not source backups and can be recreated or transferred separately when needed.
+以下は既存の検証記録であり、今回の運用文書編集では再実行していない。
+
+- 検証日：2026-07-12
+- 検証したコード基準：`ab3350e Add local endgame QA and stabilize tooling`
+- 環境：ローカルWindows、実ブラウザ、PC横画面、スマートフォン相当844×390
+- `npm.cmd test`：12件成功、失敗0件
+- `npm.cmd run lint`：成功、エラー0件
+- vinext本番ビルド：成功
+- PC横画面：確認済み
+- スマートフォン相当844×390：確認済み
+- 公開版：確認済み
+- ブラウザ警告・例外：0件
+
+実ブラウザで確認した主な範囲：
+
+- 開始画面、画像読み込み、5秒準備カウント
+- 出撃キュー、3レーン戦闘、作戦切替、支援物資
+- 一時停止・再開、BGM、SFX
+- CRAWLERへの敵攻撃、TAKUYA戦、敗北とリトライ
+- TAKUYA撃破後の鉄柵解放、共通HP、鉄柵破壊による勝利
+- 勝利画面、勝利後リトライ
+- 844×390でのUI欠けなし
+- 公開ドメインで`?qa=endgame`が有効にならないこと
+
+この記録は、現在のGitHub `main`全体を毎回再検証したという意味ではない。新しい変更の検証結果は、対応Issueとこの文書の更新条件に従って記録する。
+
+## 6. 未完了作業
+
+- QAモードの有効条件には、専用の自動テストがまだない。
+- 将来の小規模タスク候補として、条件判定を純粋関数へ分離し、localhost、127.0.0.1、クエリなし、公開ドメイン、異なるqa値を確認する案がある。
+- 0.5.0で採用する新しい体験・機能は未決定。比較と採否はGitHub Issueで管理する。
+
+未完了作業の詳細、採否、優先順位はIssueで管理し、未承認の案を確定事項として扱わない。
+
+## 7. 別PC復元時の照合事項
+
+1. 非公開GitHubリポジトリを取得する。
+2. [README.md](../README.md)の前提環境、セットアップ、確認コマンドに従う。
+3. 「正式開発ブランチの確認方法」に従ってGitHub `main`のリモートrefを確認し、ローカルの追跡状態と照合する。
+4. この文書の公開版、公開基準コミット、検証記録、未完了作業を確認する。
+5. Sites公開が必要になった場合は、ChatGPT Sitesプロジェクトを再接続する。接続や公開はプロデューサーの別承認後に行う。
+
+`node_modules`、`dist`、`work`、`outputs`などの生成フォルダは正式なソースバックアップではなく、必要に応じて再生成または別途移行する。
+
+## 8. 更新条件
+
+次の場合に、プロデューサーの承認を得てこの文書を更新する。
+
+- 公開版、公開URL、公開基準コミットが変わった
+- 検証を行い、対象コミット、環境、範囲、結果を正式記録する
+- GitHub `main`上の開発状態の要約が変わった
+- 未完了作業の追加、完了、優先順位変更が承認された
+- 別PC復元やSites再接続の条件が変わった
+
+コミット前、push前、公開前に、まだ完了していない工程を完了済みとして書かない。現在のmain HEADを追うためだけの文書更新は行わない。
