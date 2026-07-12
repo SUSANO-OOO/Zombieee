@@ -4,6 +4,7 @@ export const RAGE_MAX = 100;
 export const BARRICADE_MAX_HP = 1000;
 export const PREP_SECONDS = 5;
 export const TACTIC_MODES = ["defend", "balanced", "assault"];
+export const FIELD_OBJECT_CLEARANCE = 72;
 export const CONTAINER_DEF = Object.freeze({
   kind: "container",
   name: "防護コンテナ",
@@ -13,7 +14,7 @@ export const CONTAINER_DEF = Object.freeze({
   maxX: 720,
   maxActive: 2,
   maxPerLane: 1,
-  objectClearance: 72,
+  objectClearance: FIELD_OBJECT_CLEARANCE,
   fighterClearance: 42,
 });
 
@@ -87,7 +88,11 @@ export function scrapReward(kind) {
   return ({ walker: 6, runner: 7, spitter: 10, crusher: 18, shade: 24, abomination: 40, takuya: 80, turned: 9 })[kind] ?? 6;
 }
 
-export function containerPlacementCheck({ running, paused, over, scrap, lane, x, objects = [], fighters = [] }) {
+function overlapsFieldObject(lane, x, object) {
+  return Math.hypot(object.x - x, (object.y - LANE_Y[lane]) * 2) < FIELD_OBJECT_CLEARANCE;
+}
+
+export function containerPlacementCheck({ running, paused, over, scrap, lane, x, objects = [], fighters = [], supports = [] }) {
   if (!running) return { ok: false, reason: "作戦開始後に配置できます" };
   if (paused) return { ok: false, reason: "一時停止中は配置できません" };
   if (over) return { ok: false, reason: "作戦終了後は配置できません" };
@@ -99,8 +104,11 @@ export function containerPlacementCheck({ running, paused, over, scrap, lane, x,
   const present = objects.filter((object) => object.phase !== "expired");
   if (present.length >= CONTAINER_DEF.maxActive) return { ok: false, reason: "設置上限は2個です" };
   if (present.some((object) => object.lane === lane)) return { ok: false, reason: "このレーンには設置済みです" };
-  if (present.some((object) => Math.hypot(object.x - x, (object.y - LANE_Y[lane]) * 2) < CONTAINER_DEF.objectClearance)) {
+  if (present.some((object) => overlapsFieldObject(lane, x, object))) {
     return { ok: false, reason: "既存物資に近すぎます" };
+  }
+  if (supports.some((support) => support.life > 0 && overlapsFieldObject(lane, x, support))) {
+    return { ok: false, reason: "既存支援物資に近すぎます" };
   }
   if (fighters.some((fighter) => fighter.hp > 0 && Math.hypot(fighter.x - x, (fighter.y - LANE_Y[lane]) * 2) < CONTAINER_DEF.fighterClearance)) {
     return { ok: false, reason: "ユニットに近すぎます" };
@@ -108,13 +116,88 @@ export function containerPlacementCheck({ running, paused, over, scrap, lane, x,
   return { ok: true, reason: "配置できます" };
 }
 
+export function resolveContainerPlacement(input) {
+  const objects = input.objects ?? [];
+  const nextId = input.nextId ?? 0;
+  const check = containerPlacementCheck(input);
+  if (!check.ok) return { ...check, scrap: input.scrap, objects, nextId };
+
+  const object = {
+    id: nextId,
+    kind: "container",
+    lane: input.lane,
+    x: input.x,
+    y: LANE_Y[input.lane],
+    phase: "dropping",
+    phaseTime: .45,
+    hp: CONTAINER_DEF.maxHp,
+    maxHp: CONTAINER_DEF.maxHp,
+    blocksEnemies: true,
+    targetable: true,
+    hitFlash: 0,
+  };
+  return {
+    ...check,
+    scrap: input.scrap - CONTAINER_DEF.cost,
+    objects: [...objects, object],
+    nextId: nextId + 1,
+  };
+}
+
+export function resolveFieldSupportPlacement({ running, paused, over, rage, cost, kind, lane, x, strikeCooldown = 0, supports = [], containers = [] }) {
+  if (!running) return { ok: false, reason: "作戦開始後に配置できます", rage, x };
+  if (paused) return { ok: false, reason: "一時停止中は配置できません", rage, x };
+  if (over) return { ok: false, reason: "作戦終了後は配置できません", rage, x };
+  if (rage < cost) return { ok: false, reason: "レイジが不足しています", rage, x };
+  if (kind === "airstrike" && strikeCooldown > 0) return { ok: false, reason: "航空支援は再装填中です", rage, x };
+  if (kind === "barrel" && supports.some((support) => support.kind === "barrel" && support.lane === lane)) {
+    return { ok: false, reason: "このレーンにはドラム設置済みです", rage, x };
+  }
+
+  const placedX = Math.max(WORLD_GEOMETRY.supportMinX, Math.min(WORLD_GEOMETRY.supportMaxX, x));
+  if (containers.some((container) => container.phase !== "expired" && overlapsFieldObject(lane, placedX, container))) {
+    return { ok: false, reason: "防護コンテナに近すぎます", rage, x: placedX };
+  }
+  return { ok: true, reason: "配置できます", rage: rage - cost, x: placedX };
+}
+
 export function damageContainer(hp, damage) {
   const nextHp = Math.max(0, hp - Math.max(0, damage));
   return { hp: nextHp, phase: nextHp <= 0 ? "destroying" : "active" };
 }
 
+export function applyContainerDamage(container, damage) {
+  const result = damageContainer(container.hp, damage);
+  return {
+    ...container,
+    hp: result.hp,
+    phase: result.phase,
+    phaseTime: result.phase === "destroying" ? .42 : container.phaseTime,
+    blocksEnemies: result.phase === "active",
+    targetable: result.phase === "active",
+  };
+}
+
 export function containerBlocksEnemy({ enemyX, enemyLane, containerX, containerLane, phase }) {
   return phase === "active" && enemyLane === containerLane && containerX > WORLD_GEOMETRY.baseX && containerX < enemyX;
+}
+
+export function selectBlockingContainer({ enemyX, enemyLane, objects = [] }) {
+  return objects.reduce((nearest, object) => {
+    if (!object.blocksEnemies || !object.targetable || !containerBlocksEnemy({
+      enemyX,
+      enemyLane,
+      containerX: object.x,
+      containerLane: object.lane,
+      phase: object.phase,
+    })) return nearest;
+    return !nearest || object.x > nearest.x ? object : nearest;
+  }, undefined);
+}
+
+export function advanceZombieX({ enemyX, speed, seconds, burning = false, targetFloor = null }) {
+  const proposedX = enemyX - speed * seconds * (burning ? .8 : 1);
+  return targetFloor === null ? proposedX : Math.max(targetFloor, proposedX);
 }
 
 export function objectiveFor(phase, barricadeVulnerable) {
