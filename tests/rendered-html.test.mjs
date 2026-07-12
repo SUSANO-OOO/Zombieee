@@ -6,6 +6,7 @@ import {
   BARRICADE_MAX_HP,
   COMMAND_MAX,
   COMMAND_REGEN,
+  CONTAINER_DEF,
   LANE_NAMES,
   LANE_Y,
   MISSION_EVENTS,
@@ -21,8 +22,11 @@ import {
   barricadeState,
   battleOutcome,
   canDeploy,
+  containerBlocksEnemy,
+  containerPlacementCheck,
   crawlerSiegeDamage,
   crawlerThreatLevel,
+  damageContainer,
   humanAttackMultiplier,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
@@ -328,6 +332,40 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
     ["gunner", "ANTI-HEAVY"],
     ["medic", "HEAL / PURGE"],
   ]);
+});
+
+test("validates, damages, and releases the battlefield container without changing Crawler priority", async () => {
+  const base = { running: true, paused: false, over: false, scrap: CONTAINER_DEF.cost, lane: 1, x: 440, objects: [], fighters: [] };
+  assert.deepEqual(containerPlacementCheck(base), { ok: true, reason: "配置できます" });
+  assert.equal(containerPlacementCheck({ ...base, running: false }).ok, false);
+  assert.equal(containerPlacementCheck({ ...base, paused: true }).reason, "一時停止中は配置できません");
+  assert.equal(containerPlacementCheck({ ...base, scrap: CONTAINER_DEF.cost - 1 }).reason, "スクラップが不足しています");
+  assert.equal(containerPlacementCheck({ ...base, x: CONTAINER_DEF.minX - 1 }).reason, "配置可能範囲外です");
+  assert.equal(containerPlacementCheck({ ...base, objects: [{ lane: 1, x: 500, y: LANE_Y[1], phase: "active" }] }).reason, "このレーンには設置済みです");
+  assert.equal(containerPlacementCheck({ ...base, objects: [
+    { lane: 0, x: 300, y: LANE_Y[0], phase: "active" },
+    { lane: 2, x: 600, y: LANE_Y[2], phase: "dropping" },
+  ] }).reason, "設置上限は2個です");
+  assert.equal(containerPlacementCheck({ ...base, fighters: [{ x: 450, y: LANE_Y[1], hp: 10 }] }).reason, "ユニットに近すぎます");
+
+  assert.deepEqual(damageContainer(CONTAINER_DEF.maxHp, 35), { hp: CONTAINER_DEF.maxHp - 35, phase: "active" });
+  assert.deepEqual(damageContainer(20, 35), { hp: 0, phase: "destroying" });
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), true);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 0, containerX: 440, containerLane: 1, phase: "active" }), false);
+  assert.equal(containerBlocksEnemy({ enemyX: 400, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), false);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "destroying" }), false);
+
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  assert.match(game, /battlefieldObjects: BattlefieldObject\[\]/);
+  assert.match(game, /targetObjectId: number \| null/);
+  assert.match(game, /kind: "container", lane, x, y: LANE_Y\[lane\]/);
+  assert.match(game, /const routeLane = f\.lane/);
+  assert.match(game, /physicalContact \?\? \(blockingContainer \? undefined/);
+  assert.match(game, /!target && !objectTarget && f\.x > 520/);
+  assert.match(game, /objectTarget \? Math\.abs\(f\.x - objectTarget\.x\)/);
+  assert.match(game, /防護コンテナ破壊/);
+  assert.match(game, /drawPlacementIndicator/);
+  assert.match(game, /CONTAINER_DEF\.cost/);
 });
 
 test("defines an ordered mission timeline after the five-second preparation window", () => {

@@ -4,6 +4,18 @@ export const RAGE_MAX = 100;
 export const BARRICADE_MAX_HP = 1000;
 export const PREP_SECONDS = 5;
 export const TACTIC_MODES = ["defend", "balanced", "assault"];
+export const CONTAINER_DEF = Object.freeze({
+  kind: "container",
+  name: "防護コンテナ",
+  cost: 50,
+  maxHp: 260,
+  minX: 260,
+  maxX: 720,
+  maxActive: 2,
+  maxPerLane: 1,
+  objectClearance: 72,
+  fighterClearance: 42,
+});
 
 // Three invisible routing bands follow the open roadway bands in battlefield-v4.
 export const LANE_Y = [212, 282, 352];
@@ -73,6 +85,36 @@ export function rageReward(kind) {
 
 export function scrapReward(kind) {
   return ({ walker: 6, runner: 7, spitter: 10, crusher: 18, shade: 24, abomination: 40, takuya: 80, turned: 9 })[kind] ?? 6;
+}
+
+export function containerPlacementCheck({ running, paused, over, scrap, lane, x, objects = [], fighters = [] }) {
+  if (!running) return { ok: false, reason: "作戦開始後に配置できます" };
+  if (paused) return { ok: false, reason: "一時停止中は配置できません" };
+  if (over) return { ok: false, reason: "作戦終了後は配置できません" };
+  if (scrap < CONTAINER_DEF.cost) return { ok: false, reason: "スクラップが不足しています" };
+  if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_Y.length || x < CONTAINER_DEF.minX || x > CONTAINER_DEF.maxX) {
+    return { ok: false, reason: "配置可能範囲外です" };
+  }
+
+  const present = objects.filter((object) => object.phase !== "expired");
+  if (present.length >= CONTAINER_DEF.maxActive) return { ok: false, reason: "設置上限は2個です" };
+  if (present.some((object) => object.lane === lane)) return { ok: false, reason: "このレーンには設置済みです" };
+  if (present.some((object) => Math.hypot(object.x - x, (object.y - LANE_Y[lane]) * 2) < CONTAINER_DEF.objectClearance)) {
+    return { ok: false, reason: "既存物資に近すぎます" };
+  }
+  if (fighters.some((fighter) => fighter.hp > 0 && Math.hypot(fighter.x - x, (fighter.y - LANE_Y[lane]) * 2) < CONTAINER_DEF.fighterClearance)) {
+    return { ok: false, reason: "ユニットに近すぎます" };
+  }
+  return { ok: true, reason: "配置できます" };
+}
+
+export function damageContainer(hp, damage) {
+  const nextHp = Math.max(0, hp - Math.max(0, damage));
+  return { hp: nextHp, phase: nextHp <= 0 ? "destroying" : "active" };
+}
+
+export function containerBlocksEnemy({ enemyX, enemyLane, containerX, containerLane, phase }) {
+  return phase === "active" && enemyLane === containerLane && containerX > WORLD_GEOMETRY.baseX && containerX < enemyX;
 }
 
 export function objectiveFor(phase, barricadeVulnerable) {
