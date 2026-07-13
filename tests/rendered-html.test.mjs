@@ -3,49 +3,96 @@ import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
+  AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
+  BATTLEFIELD_SUPPLY_DEFS,
+  CAMERA_SHAKE_EVENTS,
   COMMAND_MAX,
   COMMAND_REGEN,
   CONTAINER_DEF,
+  CRAWLER_BARRAGE_DEF,
+  ENEMY_BASE_COLLAPSE_SECONDS,
   FIELD_OBJECT_CLEARANCE,
   LANE_NAMES,
   LANE_Y,
   MISSION_EVENTS,
   PREP_SECONDS,
   RAGE_MAX,
+  RENDER_ARRAY_LIMITS,
+  SUPPORT_GAUGE_MAX,
   SUPPORT_DEFS,
   TACTIC_MODES,
   UNIT_CARDS,
   WORLD_GEOMETRY,
+  advanceAreaEffects,
+  advanceBattlefieldSupply,
+  advanceCameraShakeRuntime,
+  advanceCrawlerAbilityRuntime,
+  advanceEmergencySupportRuntime,
+  advanceEnemyBaseCollapse,
   advanceZombieX,
   advanceCommand,
   advanceLimitFor,
+  applyBattlefieldSupplyDamage,
   applyContainerDamage,
+  airstrikeObserverPose,
   autonomousTargetScore,
   barricadeState,
   battleOutcome,
+  battlefieldSupplyPlacementCheck,
+  cameraShakeAmplitude,
   canDeploy,
+  capRenderArray,
   containerBlocksEnemy,
   containerPlacementCheck,
+  createCameraShakeRuntime,
+  createCrawlerAbilityRuntime,
+  createEmergencySupportRuntime,
   crawlerSiegeDamage,
   crawlerThreatLevel,
   damageContainer,
+  enemyCanTargetBattlefieldSupply,
+  enemyBaseVisualState,
   humanAttackMultiplier,
   isBrawlerFinisher,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
+  keyboardInputGate,
   laneForY,
   objectiveFor,
   phaseAt,
   rageReward,
+  requestAirstrike,
+  requestCrawlerBarrage,
+  requestDrumDetonation,
+  retainActiveAreaEffects,
+  resolveAirstrikeImpact,
+  resolveBattlefieldSupplyLanding,
+  resolveBattlefieldSupplyPlacement,
   resolveContainerPlacement,
   resolveContainerLanding,
+  resolveCrawlerBarrage,
+  resolveDrumDetonation,
   resolveFieldSupportPlacement,
+  roleEffectForAction,
   roleTargetBias,
+  selectAreaEffectsForRender,
   selectBlockingContainer,
   structureDamageMultiplier,
+  supportGaugeReward,
   tacticTargetBias,
+  triggerCameraShake,
 } from "../app/gameRules.js";
+import {
+  APPROVED_BATTLE_BARK_LINES,
+  BATTLE_BARK_CONFIG,
+  LOCAL_QA_BATTLE_BARK_LINES,
+  advanceBattleBarkRuntime,
+  battleBarkPassesProbability,
+  createBattleBarkRuntime,
+  queueBattleBark,
+} from "../app/battleBarks.js";
+import { LOCAL_QA_MODES, resolveLocalQaMode } from "../app/localQa.js";
 
 async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -62,29 +109,33 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders Ashfall Outpost Early Access 0.4.0", async () => {
+test("server-renders the Ashfall Outpost Early Access 0.5.0 boss-stage loadout", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>ASHFALL OUTPOST — Early Access 0\.4\.0/);
+  assert.match(html, /<title>ASHFALL OUTPOST — Early Access 0\.5\.0/);
   assert.match(html, /aria-label="ASHFALL OUTPOST game"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /aria-label="Three-lane wasteland battlefield"/);
-  assert.match(html, /EARLY ACCESS BUILD 0\.4\.0 · TACTICAL COMMAND · IRON BREACH/);
-  assert.match(html, /Deploy during the five-second window/);
-  assert.match(html, /bring down TAKUYA/);
-  assert.match(html, /break the iron barricade sealing all three routes/);
-  assert.match(html, /TACTIC/);
-  assert.match(html, /IRON BARRICADE/);
-  assert.match(html, /PREPARING ASSETS/);
+  assert.match(html, /BOSS STAGE LOADOUT · EARLY ACCESS 0\.5\.0/);
+  assert.match(html, /6名の役割と戦場物資/);
+  assert.match(html, /戦場物資を1つ選択/);
+  assert.match(html, /戦術投下ポッド/);
+  assert.match(html, /爆薬ドラム/);
+  assert.match(html, /救急物資/);
+  assert.match(html, /緊急航空支援/);
+  assert.match(html, /CRAWLER一斉掃射/);
+  assert.match(html, />方針</);
+  assert.match(html, /TAKUYA/);
+  assert.match(html, /アセット準備中/);
   assert.match(html, /CRAWLER SYSTEM CHECK/);
   assert.match(html, />BGM</);
   assert.match(html, />SFX</);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 
-test("ships the three-route barricade objective and its dedicated artwork", async () => {
+test("ships the three-route infected checkpoint, mobile fortress, and dedicated battlefield-supply artwork", async () => {
   const [game, rules, css, layout] = await Promise.all([
     readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/gameRules.js", import.meta.url), "utf8"),
@@ -94,8 +145,8 @@ test("ships the three-route barricade objective and its dedicated artwork", asyn
 
   await Promise.all([
     access(new URL("../public/battlefield-v4.png", import.meta.url)),
-    access(new URL("../public/iron-barricade-v1.png", import.meta.url)),
-    access(new URL("../public/crawler-bus-v1.png", import.meta.url)),
+    access(new URL("../public/infected-checkpoint-v1.png", import.meta.url)),
+    access(new URL("../public/crawler-fortress-v1.png", import.meta.url)),
     access(new URL("../public/takuya-boss-sprites-v2.png", import.meta.url)),
     access(new URL("../public/ranger-sprites-v1.png", import.meta.url)),
     access(new URL("../public/brawler-sprites-v1.png", import.meta.url)),
@@ -103,29 +154,33 @@ test("ships the three-route barricade objective and its dedicated artwork", asyn
     access(new URL("../public/breaker-sprites-v2.png", import.meta.url)),
     access(new URL("../public/gunner-sprites-v1.png", import.meta.url)),
     access(new URL("../public/medic-sprites-v1.png", import.meta.url)),
-    access(new URL("../public/protective-container-v1.png", import.meta.url)),
+    access(new URL("../public/tactical-drop-pod-v1.png", import.meta.url)),
+    access(new URL("../public/explosive-drum-v1.png", import.meta.url)),
+    access(new URL("../public/medical-supply-station-v1.png", import.meta.url)),
   ]);
 
-  assert.match(game, /loadImage\("\/iron-barricade-v1\.png"/);
-  assert.match(game, /container: "\/protective-container-v1\.png"/);
-  assert.match(game, /drawContainer\(ctx, renderable\.object, sprites\.container\)/);
-  assert.match(game, /ctx\.drawImage\(containerSprite/);
-  assert.match(game, /function drawBarricade/);
-  assert.match(game, /A single shared-HP barricade physically closes all three routes/);
+  assert.match(game, /loadImage\("\/infected-checkpoint-v1\.png"/);
+  assert.match(game, /crawler: "\/crawler-fortress-v1\.png"/);
+  assert.match(game, /pod: "\/tactical-drop-pod-v1\.png"/);
+  assert.match(game, /drum: "\/explosive-drum-v1\.png"/);
+  assert.match(game, /medical: "\/medical-supply-station-v1\.png"/);
+  assert.match(game, /drawBattlefieldSupply\(ctx, renderable\.object, sprites\)/);
+  assert.match(game, /function drawEnemyBase/);
+  assert.match(game, /infected checkpoint closes all three routes/);
   assert.match(game, /barricadeHp: number/);
   assert.match(game, /barricadeHp: BARRICADE_MAX_HP/);
   assert.match(game, /g\.barricadeHp = Math\.max\(0, g\.barricadeHp - structureDamage\)/);
   assert.match(game, /const outcome = battleOutcome\(g\.baseHp, g\.barricadeHp\)/);
-  assert.match(game, /TAKUYA DOWN — BARRICADE EXPOSED/);
-  assert.match(game, /IRON BARRICADE \/\/ BUCKLING/);
-  assert.match(game, /IRON BARRICADE \/\/ BREACH IMMINENT/);
-  assert.match(game, /BARRICADE BREACHED/);
-  assert.match(rules, /LAST CHANCE — BREAK THE BARRICADE/);
+  assert.match(game, /TAKUYA DOWN — ENEMY BASE EXPOSED/);
+  assert.match(game, /感染拠点 \/\/ 損傷/);
+  assert.match(game, /感染拠点 \/\/ 大破/);
+  assert.match(game, /感染拠点を制圧/);
+  assert.match(rules, /最終機会 — 感染拠点を破壊/);
   assert.match(css, /\.barrier-health/);
   assert.match(css, /\.barrier-health\.vulnerable/);
   assert.match(css, /\.barrier-health\.hit/);
-  assert.match(layout, /ASHFALL OUTPOST — Early Access 0\.4\.0/);
-  assert.match(layout, /rel="preload" as="image" href="\/iron-barricade-v1\.png"/);
+  assert.match(layout, /ASHFALL OUTPOST — Early Access 0\.5\.0/);
+  assert.match(layout, /rel="preload" as="image" href="\/infected-checkpoint-v1\.png"/);
 });
 
 test("keeps the battlefield visually clean while routing freely across three roadway bands", async () => {
@@ -168,12 +223,12 @@ test("provides a five-second preparation window, a three-slot bay, and selectabl
   assert.match(game, /g\.deployQueue\.length >= 3/);
   assert.match(game, /CRAWLER BAY FULL \/\/ 3/);
   assert.match(game, /g\.deployQueue\.shift\(\)/);
-  assert.match(game, /BAY \{hud\.deployQueue\}\/3/);
+  assert.match(game, /格納庫 \{hud\.deployQueue\}\/3/);
   assert.match(game, /const setTactic/);
   assert.match(game, /const cycleTactic/);
-  assert.match(game, /TACTIC \/\/ \$\{tactic\.toUpperCase\(\)\}/);
-  assert.match(game, /event\.key\.toLowerCase\(\) === "r"/);
-  assert.match(game, /aria-label=\{`作戦方針を切り替え（現在：\$\{hud\.tactic\}）`\}/);
+  assert.match(game, /作戦方針 \/\//);
+  assert.match(game, /normalizedKey === "r"/);
+  assert.match(game, /aria-label=\{`作戦方針を切り替え（現在：\$\{tacticName\}）`\}/);
   assert.match(game, /advanceLimitFor\(g\.tactic, g\.phase, g\.barricadeVulnerable\)/);
   assert.match(game, /tacticTargetBias\(g\.tactic, enemy\.x\)/);
   assert.match(css, /\.tactic-cycle\.defend/);
@@ -183,6 +238,7 @@ test("provides a five-second preparation window, a three-slot bay, and selectabl
 test("applies the COMMAND economy, deployment gates, and shared world geometry", () => {
   assert.equal(COMMAND_MAX, 100);
   assert.equal(COMMAND_REGEN, 3.5);
+  assert.equal(SUPPORT_GAUGE_MAX, 100);
   assert.equal(RAGE_MAX, 100);
   assert.equal(BARRICADE_MAX_HP, 1000);
   assert.equal(advanceCommand(55, 10), 90);
@@ -206,10 +262,23 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
   assert.equal(laneForY(LANE_Y[2], 1), 2);
   assert.deepEqual(WORLD_GEOMETRY, {
     baseX: 188,
-    musterX: 124,
+    musterX: 187,
     musterY: 352,
-    crawler: { x: -12, y: 219, width: 230, height: 144, exitX: 128 },
-    barricade: { drawX: 790, drawY: 104, width: 168, height: 306, attackX: 800, enemySpawnMinX: 746, enemySpawnMaxX: 778 },
+    crawler: {
+      x: -70, y: 170, width: 310, height: 210, exitX: 205,
+      commandDeckX: 88, commandDeckY: 186, weaponX: 132, weaponY: 224,
+      damageX: 112, damageY: 250,
+    },
+    enemyBase: {
+      drawX: 788, drawY: 88, width: 184, height: 340,
+      attackX: 800, enemySpawnMinX: 744, enemySpawnMaxX: 776,
+      gateX: 818, gateY: 282,
+    },
+    barricade: {
+      drawX: 788, drawY: 88, width: 184, height: 340,
+      attackX: 800, enemySpawnMinX: 744, enemySpawnMaxX: 776,
+      gateX: 818, gateY: 282,
+    },
     supportMinX: 230,
     supportMaxX: 760,
     threatNearX: 362,
@@ -218,6 +287,7 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
   assert.ok(WORLD_GEOMETRY.barricade.drawY < LANE_Y[0]);
   assert.ok(WORLD_GEOMETRY.barricade.drawY + WORLD_GEOMETRY.barricade.height > LANE_Y[2]);
   assert.ok(WORLD_GEOMETRY.barricade.enemySpawnMaxX < WORLD_GEOMETRY.barricade.drawX);
+  assert.equal(WORLD_GEOMETRY.enemyBase, WORLD_GEOMETRY.barricade);
   assert.ok(WORLD_GEOMETRY.musterX < WORLD_GEOMETRY.crawler.exitX);
   assert.ok(WORLD_GEOMETRY.crawler.exitX < WORLD_GEOMETRY.supportMinX);
 });
@@ -268,6 +338,21 @@ test("applies role focus, marking, finishing, and structure-breach multipliers",
   assert.equal(structureDamageMultiplier("medic", "balanced"), .7);
   assertClose(structureDamageMultiplier("brute", "assault"), 1.68);
   assertClose(structureDamageMultiplier("brute", "defend"), 1.35);
+
+  assert.equal(roleEffectForAction({ unitKind: "scout", targetKind: "runner", targetAlreadyMarked: false }), "scout");
+  assert.equal(roleEffectForAction({ unitKind: "scout", targetKind: "runner", targetAlreadyMarked: true }), null);
+  assert.equal(roleEffectForAction({ unitKind: "ranger", targetKind: "spitter" }), "ranger");
+  assert.equal(roleEffectForAction({ unitKind: "ranger", targetKind: "walker" }), null);
+  assert.equal(roleEffectForAction({ unitKind: "brute", targetKind: "walker", holdingFrontline: true }), "brute");
+  assert.equal(roleEffectForAction({ unitKind: "brute", targetKind: "walker", holdingFrontline: false }), null);
+  assert.equal(roleEffectForAction({ unitKind: "brute", action: "structure" }), "brute");
+  assert.equal(roleEffectForAction({ unitKind: "brawler", targetKind: "walker", targetHpRatio: .35 }), "brawler");
+  assert.equal(roleEffectForAction({ unitKind: "brawler", targetKind: "walker", targetHpRatio: .351 }), null);
+  assert.equal(roleEffectForAction({ unitKind: "gunner", targetKind: "crusher" }), "gunner");
+  assert.equal(roleEffectForAction({ unitKind: "gunner", targetKind: "abomination" }), "gunner");
+  assert.equal(roleEffectForAction({ unitKind: "gunner", targetKind: "walker" }), null);
+  assert.equal(roleEffectForAction({ unitKind: "medic", action: "heal" }), "medic");
+  assert.equal(roleEffectForAction({ unitKind: "medic", action: "attack", targetKind: "walker" }), null);
 });
 
 test("tracks one barricade condition and resolves the battle from either structure", () => {
@@ -280,10 +365,30 @@ test("tracks one barricade condition and resolves the battle from either structu
   assert.equal(barricadeState(0), "BREACHED");
   assert.equal(barricadeState(-1), "BREACHED");
 
+  assert.deepEqual(enemyBaseVisualState({ hp: 1000 }), { phase: "healthy", damageLevel: 0, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 999 }), { phase: "light", damageLevel: 1, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 701 }), { phase: "light", damageLevel: 1, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 700 }), { phase: "heavy", damageLevel: 2, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 351 }), { phase: "heavy", damageLevel: 2, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 350 }), { phase: "critical", damageLevel: 3, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 1 }), { phase: "critical", damageLevel: 3, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 0 }), { phase: "collapsing", damageLevel: 4, collapseProgress: 0 });
+  const collapsingBase = enemyBaseVisualState({ hp: 0, elapsed: ENEMY_BASE_COLLAPSE_SECONDS / 2 });
+  assert.equal(collapsingBase.phase, "collapsing");
+  assert.equal(collapsingBase.damageLevel, 4);
+  assertClose(collapsingBase.collapseProgress, .5);
+  assert.deepEqual(enemyBaseVisualState({ hp: 0, elapsed: ENEMY_BASE_COLLAPSE_SECONDS }), { phase: "collapsed", damageLevel: 4, collapseProgress: 1 });
+  assert.deepEqual(enemyBaseVisualState({ hp: -1, elapsed: 99 }), { phase: "collapsed", damageLevel: 4, collapseProgress: 1 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 1100 }), { phase: "healthy", damageLevel: 0, collapseProgress: 0 });
+
   assert.equal(battleOutcome(100, BARRICADE_MAX_HP), null);
   assert.equal(battleOutcome(0, 500), "lost");
   assert.equal(battleOutcome(100, 0), "won");
   assert.equal(battleOutcome(0, 0), "lost");
+
+  assert.deepEqual(advanceEnemyBaseCollapse({ barricadeHp: 100, elapsed: .4, seconds: .2 }), { active: false, elapsed: 0, complete: false });
+  assert.deepEqual(advanceEnemyBaseCollapse({ barricadeHp: 0, elapsed: 0, seconds: .4 }), { active: true, elapsed: .4, complete: false });
+  assert.deepEqual(advanceEnemyBaseCollapse({ barricadeHp: 0, elapsed: .8, seconds: .4 }), { active: true, elapsed: 1.05, complete: true });
 });
 
 test("scores autonomous targets without collapsing every unit onto one enemy", () => {
@@ -316,10 +421,10 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.equal(phaseAt(147.999), 2);
   assert.equal(phaseAt(148), 3);
 
-  assert.equal(objectiveFor(1, false), "HOLD THE THREE ROUTES");
-  assert.equal(objectiveFor(2, false), "PUSH TO THE IRON LINE");
-  assert.equal(objectiveFor(3, false), "ELIMINATE TAKUYA");
-  assert.equal(objectiveFor(3, true), "BREACH THE ENEMY BARRICADE");
+  assert.equal(objectiveFor(1, false), "3レーンを防衛");
+  assert.equal(objectiveFor(2, false), "感染拠点へ前進");
+  assert.equal(objectiveFor(3, false), "TAKUYAを撃破");
+  assert.equal(objectiveFor(3, true), "感染拠点を破壊");
 
   assert.equal(crawlerSiegeDamage(15, 1), 11);
   assert.equal(crawlerSiegeDamage(15, 2), 14);
@@ -329,10 +434,19 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.equal(crawlerThreatLevel(342), .5);
   assert.equal(crawlerThreatLevel(202), 1);
 
+  const gaugeRewards = { walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20, takuya: 25, turned: 7 };
   assert.deepEqual(
-    Object.fromEntries(["walker", "runner", "spitter", "crusher", "shade", "abomination", "takuya", "turned"].map((kind) => [kind, rageReward(kind)])),
-    { walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20, takuya: 25, turned: 7 },
+    Object.fromEntries(Object.keys(gaugeRewards).map((kind) => [kind, supportGaugeReward(kind)])),
+    gaugeRewards,
   );
+  assert.equal(rageReward("crusher"), supportGaugeReward("crusher"));
+  assert.deepEqual(Object.values(BATTLEFIELD_SUPPLY_DEFS).map(({ kind, cost }) => [kind, cost]), [
+    ["pod", 50],
+    ["drum", 40],
+    ["medical", 35],
+  ]);
+  assert.equal("maxActive" in BATTLEFIELD_SUPPLY_DEFS.pod, false);
+  assert.equal("maxPerLane" in BATTLEFIELD_SUPPLY_DEFS.pod, false);
   assert.deepEqual(SUPPORT_DEFS.map(({ kind, cost }) => [kind, cost]), [
     ["barrel", 20],
     ["medkit", 25],
@@ -342,11 +456,269 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.deepEqual(UNIT_CARDS.map(({ kind, desc }) => [kind, desc]), [
     ["scout", "高速敵を迎撃・マーク"],
     ["ranger", "毒吐きを優先狙撃"],
-    ["brute", "前線を支え鉄柵を粉砕"],
+    ["brute", "前線を支え感染拠点を粉砕"],
     ["brawler", "瀕死の敵を仕留める"],
     ["gunner", "大型敵へ重火力"],
     ["medic", "周囲の味方を回復"],
   ]);
+});
+
+test("models all three battlefield supplies without fixed pod count or lane caps", () => {
+  const base = {
+    running: true, paused: false, over: false, scrap: 100,
+    supplyKind: "pod", lane: 1, x: 440, supplies: [], areaEffects: [],
+    nextId: 10, nextAreaEffectId: 30,
+  };
+  assert.deepEqual(battlefieldSupplyPlacementCheck(base), { ok: true, reason: "配置できます" });
+  assert.equal(battlefieldSupplyPlacementCheck({ ...base, running: false }).ok, false);
+  assert.equal(battlefieldSupplyPlacementCheck({ ...base, scrap: 49 }).reason, "スクラップが不足しています");
+  assert.equal(battlefieldSupplyPlacementCheck({ ...base, x: 259 }).reason, "配置可能範囲外です");
+  assert.equal(battlefieldSupplyPlacementCheck({ ...base, forbiddenZones: [{ lane: 1, minX: 420, maxX: 460 }] }).reason, "進行上の禁止領域です");
+
+  const podPlacement = resolveBattlefieldSupplyPlacement(base);
+  assert.equal(podPlacement.ok, true);
+  assert.equal(podPlacement.scrap, 50);
+  assert.equal(podPlacement.supplies[0].kind, "pod");
+  assert.equal(podPlacement.supplies[0].phase, "dropping");
+  assert.equal(podPlacement.nextId, 11);
+  assert.deepEqual(battlefieldSupplyPlacementCheck({ ...base, supplies: [podPlacement.supplies[0]], x: 500 }), { ok: false, reason: "既存物資に近すぎます" });
+  assert.deepEqual(battlefieldSupplyPlacementCheck({ ...base, supplies: [podPlacement.supplies[0]], x: 700 }), { ok: true, reason: "配置できます" });
+  assert.deepEqual(battlefieldSupplyPlacementCheck({ ...base, supplies: [
+    { ...podPlacement.supplies[0], lane: 0, x: 300, y: LANE_Y[0] },
+    { ...podPlacement.supplies[0], id: 11, lane: 2, x: 600, y: LANE_Y[2] },
+  ] }), { ok: true, reason: "配置できます" });
+
+  const readyToLand = advanceBattlefieldSupply(podPlacement.supplies[0], BATTLEFIELD_SUPPLY_DEFS.pod.dropSeconds);
+  assert.equal(podPlacement.supplies[0].targetable, false);
+  assert.equal(podPlacement.supplies[0].blocksEnemies, false);
+  assert.equal(resolveBattlefieldSupplyLanding({ supply: podPlacement.supplies[0], fighters: [] }).triggered, false);
+  assert.equal(readyToLand.readyToLand, true);
+  const landing = resolveBattlefieldSupplyLanding({
+    supply: readyToLand,
+    fighters: [
+      { id: 1, side: "zombie", lane: 1, x: 450, y: LANE_Y[1], hp: 100, maxHp: 100 },
+      { id: 2, side: "human", lane: 1, x: 430, y: LANE_Y[1], hp: 100, maxHp: 100 },
+      { id: 3, side: "zombie", lane: 1, x: 700, y: LANE_Y[1], hp: 100, maxHp: 100 },
+    ],
+  });
+  assert.equal(landing.triggered, true);
+  assert.equal(landing.supply.targetable, true);
+  assert.equal(landing.supply.blocksEnemies, true);
+  assert.deepEqual(landing.hits.map(({ side, damage }) => [side, damage]), [["zombie", 72], ["human", 22]]);
+  assert.equal(resolveBattlefieldSupplyLanding({ supply: landing.supply, fighters: landing.fighters }).triggered, false);
+  const activePod = advanceBattlefieldSupply(landing.supply, BATTLEFIELD_SUPPLY_DEFS.pod.impactSeconds);
+  assert.equal(activePod.phase, "active");
+  const destroyedPod = applyBattlefieldSupplyDamage(activePod, activePod.hp + 1);
+  assert.equal(destroyedPod.supply.phase, "destroying");
+  assert.equal(advanceBattlefieldSupply(destroyedPod.supply, BATTLEFIELD_SUPPLY_DEFS.pod.destroySeconds).phase, "expired");
+
+  const drumPlacement = resolveBattlefieldSupplyPlacement({ ...base, supplyKind: "drum", scrap: 100, nextId: 20 });
+  const manual = requestDrumDetonation(drumPlacement.supplies[0]);
+  assert.equal(manual.ok, true);
+  const explosion = resolveDrumDetonation({
+    supply: manual.supply,
+    fighters: [
+      { id: 4, side: "zombie", lane: 1, x: 450, y: LANE_Y[1], hp: 150, maxHp: 150 },
+      { id: 5, side: "human", lane: 1, x: 450, y: LANE_Y[1], hp: 100, maxHp: 100 },
+    ],
+    nextAreaEffectId: 40,
+  });
+  assert.equal(explosion.triggered, true);
+  assert.deepEqual(explosion.hits, [{ id: 4, damage: BATTLEFIELD_SUPPLY_DEFS.drum.blastDamage }]);
+  assert.equal(explosion.areaEffects[0].kind, "burn");
+  assert.equal(explosion.nextAreaEffectId, 41);
+  assert.equal(resolveDrumDetonation({ supply: explosion.supply }).triggered, false);
+  const burned = advanceAreaEffects({ areaEffects: explosion.areaEffects, fighters: explosion.fighters, seconds: 1 });
+  assert.equal(burned.fighters[0].hp, 150 - BATTLEFIELD_SUPPLY_DEFS.drum.blastDamage - BATTLEFIELD_SUPPLY_DEFS.drum.burnDamagePerSecond);
+  assert.equal(burned.fighters[1].hp, 100);
+  assert.equal(burned.fighters[0].slowMultiplier, BATTLEFIELD_SUPPLY_DEFS.drum.slowMultiplier);
+  assert.equal(advanceAreaEffects({ areaEffects: explosion.areaEffects, fighters: [], seconds: BATTLEFIELD_SUPPLY_DEFS.drum.burnSeconds }).areaEffects[0].phase, "expired");
+
+  const destroyedDrum = applyBattlefieldSupplyDamage(drumPlacement.supplies[0], 999);
+  assert.equal(destroyedDrum.detonationRequested, true);
+  assert.equal(destroyedDrum.supply.phase, "detonating");
+  assert.equal(destroyedDrum.supply.detonationReason, "destroyed");
+
+  const medicalPlacement = resolveBattlefieldSupplyPlacement({ ...base, supplyKind: "medical", scrap: 100, nextId: 50, nextAreaEffectId: 60 });
+  assert.equal(medicalPlacement.areaEffects[0].kind, "healing");
+  const healed = advanceAreaEffects({
+    areaEffects: medicalPlacement.areaEffects,
+    activeSupplyIds: [50],
+    seconds: 1,
+    fighters: [
+      { id: 6, side: "human", lane: 1, x: 440, y: LANE_Y[1], hp: 50, maxHp: 100 },
+      { id: 7, side: "zombie", lane: 1, x: 440, y: LANE_Y[1], hp: 50, maxHp: 100 },
+    ],
+  });
+  assert.equal(healed.fighters[0].hp, 68);
+  assert.equal(healed.fighters[1].hp, 50);
+  assert.equal(advanceBattlefieldSupply(medicalPlacement.supplies[0], BATTLEFIELD_SUPPLY_DEFS.medical.effectSeconds).phase, "expired");
+  const missingSource = advanceAreaEffects({ areaEffects: medicalPlacement.areaEffects, activeSupplyIds: [], fighters: healed.fighters, seconds: 1 });
+  assert.equal(missingSource.areaEffects[0].phase, "expired");
+  assert.equal(missingSource.changes.length, 0);
+
+  const manyEffects = Array.from({ length: 32 }, (_, index) => ({
+    id: 100 + index,
+    kind: index % 2 === 0 ? "burn" : "healing",
+    sourceSupplyId: 500 + index,
+    lane: 1,
+    x: 440,
+    y: LANE_Y[1],
+    radius: 100,
+    amountPerSecond: 1,
+    remaining: 3,
+    phase: "active",
+    slowMultiplier: .8,
+  }));
+  const manyEffectStep = advanceAreaEffects({
+    areaEffects: manyEffects,
+    seconds: 1,
+    fighters: [
+      { id: 80, side: "zombie", lane: 1, x: 440, y: LANE_Y[1], hp: 100, maxHp: 100 },
+      { id: 81, side: "human", lane: 1, x: 440, y: LANE_Y[1], hp: 50, maxHp: 100 },
+    ],
+  });
+  assert.equal(manyEffectStep.areaEffects.length, 32);
+  assert.ok(manyEffectStep.areaEffects.every((effect) => effect.phase === "active"));
+  assert.equal(manyEffectStep.changes.length, 32);
+  assert.equal(manyEffectStep.fighters[0].hp, 84);
+  assert.equal(manyEffectStep.fighters[1].hp, 66);
+  const retained = retainActiveAreaEffects([...manyEffectStep.areaEffects, { ...manyEffectStep.areaEffects[0], id: 999, phase: "expired" }]);
+  assert.equal(retained.length, 32);
+  const visibleEffects = selectAreaEffectsForRender(retained);
+  assert.equal(visibleEffects.length, RENDER_ARRAY_LIMITS.areaEffectVisuals);
+  assert.equal(retained.length, 32);
+
+  const leftBurn = advanceAreaEffects({ areaEffects: burned.areaEffects, fighters: burned.fighters.map((fighter) => ({ ...fighter, x: 900 })), seconds: 1 });
+  assert.equal(leftBurn.fighters[0].burning, false);
+  assert.equal(leftBurn.fighters[0].slowMultiplier, 1);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyLane: 1, attackRange: 20 }), true);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 600, enemyLane: 1, attackRange: 20 }), false);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 480, enemyLane: 1, attackRange: 20 }), true);
+});
+
+test("models airstrike request and one-at-a-time emergency-support transitions", () => {
+  const idle = createEmergencySupportRuntime();
+  assert.deepEqual(idle, { phase: "idle", phaseTime: 0, targetX: null, targetLane: null, impactTriggered: false });
+  const insufficient = requestAirstrike({ running: true, paused: false, over: false, supportGauge: AIRSTRIKE_DEF.gaugeCost - 1, lane: 1, x: 500, runtime: idle });
+  assert.equal(insufficient.ok, false);
+  assert.equal(insufficient.supportGauge, AIRSTRIKE_DEF.gaugeCost - 1);
+
+  const requested = requestAirstrike({ running: true, paused: false, over: false, supportGauge: 100, lane: 1, x: 999, runtime: idle });
+  assert.equal(requested.ok, true);
+  assert.equal(requested.supportGauge, 40);
+  assert.equal(requested.runtime.phase, "radio");
+  assert.equal(requested.runtime.targetX, AIRSTRIKE_DEF.maxX);
+  assert.equal(requestAirstrike({ running: true, paused: false, over: false, supportGauge: 100, lane: 1, x: 500, runtime: requested.runtime }).ok, false);
+  assert.deepEqual(airstrikeObserverPose(idle), { visible: false, rise: 0, action: "idle" });
+  assertClose(airstrikeObserverPose({ ...requested.runtime, phaseTime: AIRSTRIKE_DEF.radioSeconds / 2 }).rise, .5);
+
+  const targeting = advanceEmergencySupportRuntime(requested.runtime, AIRSTRIKE_DEF.radioSeconds);
+  assert.equal(targeting.runtime.phase, "targeting");
+  assert.deepEqual(targeting.events, ["targeting"]);
+  assert.deepEqual(airstrikeObserverPose(targeting.runtime), { visible: true, rise: 1, action: "targeting" });
+  const inbound = advanceEmergencySupportRuntime(targeting.runtime, AIRSTRIKE_DEF.targetingSeconds);
+  assert.equal(inbound.runtime.phase, "inbound");
+  assert.deepEqual(inbound.events, ["inbound"]);
+  assert.deepEqual(airstrikeObserverPose(inbound.runtime), { visible: true, rise: 1, action: "inbound" });
+  const impact = advanceEmergencySupportRuntime(inbound.runtime, AIRSTRIKE_DEF.inboundSeconds);
+  assert.equal(impact.runtime.phase, "impact");
+  assert.deepEqual(impact.events, ["impact"]);
+  assert.deepEqual(airstrikeObserverPose(impact.runtime), { visible: true, rise: 1, action: "impact" });
+  const largeDeltaImpact = advanceEmergencySupportRuntime(requested.runtime, 99);
+  assert.equal(largeDeltaImpact.runtime.phase, "impact");
+  assert.deepEqual(largeDeltaImpact.events, ["targeting", "inbound", "impact"]);
+  const resolved = resolveAirstrikeImpact({
+    runtime: impact.runtime,
+    fighters: [
+      { id: 1, side: "zombie", lane: 1, x: AIRSTRIKE_DEF.maxX, y: LANE_Y[1], hp: 200 },
+      { id: 2, side: "human", lane: 1, x: AIRSTRIKE_DEF.maxX, y: LANE_Y[1], hp: 200 },
+      { id: 3, side: "zombie", lane: 0, x: 300, y: LANE_Y[0], hp: 200 },
+    ],
+  });
+  assert.equal(resolved.triggered, true);
+  assert.deepEqual(resolved.hits, [{ id: 1, damage: AIRSTRIKE_DEF.damage }]);
+  assert.equal(resolveAirstrikeImpact({ runtime: resolved.runtime, fighters: resolved.fighters }).triggered, false);
+  const returning = advanceEmergencySupportRuntime(resolved.runtime, AIRSTRIKE_DEF.impactSeconds);
+  assert.equal(returning.runtime.phase, "returning");
+  assert.deepEqual(returning.events, ["returning"]);
+  assertClose(airstrikeObserverPose({ ...returning.runtime, phaseTime: AIRSTRIKE_DEF.returnSeconds / 2 }).rise, .5);
+  const complete = advanceEmergencySupportRuntime(returning.runtime, AIRSTRIKE_DEF.returnSeconds);
+  assert.equal(complete.runtime.phase, "idle");
+  assert.deepEqual(complete.events, ["complete"]);
+  assert.deepEqual(airstrikeObserverPose(complete.runtime), { visible: false, rise: 0, action: "idle" });
+});
+
+test("models the independently charged all-lane Crawler barrage with boss mitigation", () => {
+  const half = createCrawlerAbilityRuntime();
+  assert.equal(half.phase, "cooldown");
+  assert.equal(half.charge, .5);
+  assert.equal(half.cooldownRemaining, CRAWLER_BARRAGE_DEF.cooldownSeconds / 2);
+  const ready = advanceCrawlerAbilityRuntime(half, CRAWLER_BARRAGE_DEF.cooldownSeconds / 2);
+  assert.equal(ready.runtime.phase, "ready");
+  assert.deepEqual(ready.events, ["ready"]);
+  const requested = requestCrawlerBarrage({ running: true, paused: false, over: false, runtime: ready.runtime });
+  assert.equal(requested.ok, true);
+  assert.equal(requested.runtime.phase, "deploying");
+  const firing = advanceCrawlerAbilityRuntime(requested.runtime, CRAWLER_BARRAGE_DEF.deploySeconds);
+  assert.equal(firing.runtime.phase, "firing");
+  assert.deepEqual(firing.events, ["fire"]);
+  const largeDeltaFiring = advanceCrawlerAbilityRuntime(requested.runtime, 99);
+  assert.equal(largeDeltaFiring.runtime.phase, "firing");
+  assert.deepEqual(largeDeltaFiring.events, ["fire"]);
+
+  const barrage = resolveCrawlerBarrage({
+    runtime: firing.runtime,
+    fighters: [
+      { id: 1, side: "zombie", kind: "walker", lane: 0, hp: 100 },
+      { id: 2, side: "zombie", kind: "takuya", lane: 1, hp: 200 },
+      { id: 3, side: "zombie", kind: "crusher", lane: 2, hp: 100 },
+      { id: 4, side: "human", kind: "scout", lane: 1, hp: 100 },
+    ],
+  });
+  assert.equal(barrage.triggered, true);
+  assert.deepEqual(barrage.hits.map(({ lane }) => lane), [0, 1, 2]);
+  assert.equal(barrage.hits[0].damage, CRAWLER_BARRAGE_DEF.damage);
+  assert.equal(barrage.hits[1].damage, Math.round(CRAWLER_BARRAGE_DEF.damage * CRAWLER_BARRAGE_DEF.bossDamageMultiplier));
+  assert.equal(barrage.fighters[3].hp, 100);
+  assert.equal(resolveCrawlerBarrage({ runtime: barrage.runtime, fighters: barrage.fighters }).triggered, false);
+
+  const recovering = advanceCrawlerAbilityRuntime(barrage.runtime, CRAWLER_BARRAGE_DEF.fireSeconds);
+  assert.equal(recovering.runtime.phase, "recovering");
+  const cooldown = advanceCrawlerAbilityRuntime(recovering.runtime, CRAWLER_BARRAGE_DEF.recoverSeconds);
+  assert.equal(cooldown.runtime.phase, "cooldown");
+  assert.equal(cooldown.runtime.charge, 0);
+  assert.deepEqual(cooldown.events, ["cooldown"]);
+});
+
+test("caps transient render arrays and limits camera shake to major events", () => {
+  assert.deepEqual(RENDER_ARRAY_LIMITS, { particles: 420, shots: 180, damageTexts: 140, areaEffectVisuals: 24, battleBarks: 2 });
+  assert.deepEqual(capRenderArray([1, 2, 3, 4], 2), [3, 4]);
+  assert.deepEqual(capRenderArray([1, 2, 3], 0), []);
+  assert.deepEqual(capRenderArray([1, 2, 3], "battleBarks"), [2, 3]);
+  assert.deepEqual(Object.keys(CAMERA_SHAKE_EVENTS), ["podLanding", "airstrikeImpact", "crawlerBarrage", "takuyaEntrance", "takuyaHeavy", "takuyaDefeat", "enemyBaseCollapse"]);
+  assert.equal("normalAttack" in CAMERA_SHAKE_EVENTS, false);
+  assert.ok(Object.values(CAMERA_SHAKE_EVENTS).every(({ strength, seconds }) => strength >= 0 && seconds > 0));
+  const startedShake = triggerCameraShake(createCameraShakeRuntime(), CAMERA_SHAKE_EVENTS.takuyaHeavy);
+  assert.equal(cameraShakeAmplitude(startedShake), CAMERA_SHAKE_EVENTS.takuyaHeavy.strength);
+  const halfShake = advanceCameraShakeRuntime(startedShake, CAMERA_SHAKE_EVENTS.takuyaHeavy.seconds / 2);
+  assertClose(cameraShakeAmplitude(halfShake), CAMERA_SHAKE_EVENTS.takuyaHeavy.strength / 2);
+  assert.equal(cameraShakeAmplitude(advanceCameraShakeRuntime(halfShake, CAMERA_SHAKE_EVENTS.takuyaHeavy.seconds / 2)), 0);
+  assert.equal(cameraShakeAmplitude(triggerCameraShake(createCameraShakeRuntime(), { strength: 0, seconds: .2 })), 0);
+  const collapseAfterPod = triggerCameraShake(triggerCameraShake(createCameraShakeRuntime(), CAMERA_SHAKE_EVENTS.podLanding), CAMERA_SHAKE_EVENTS.enemyBaseCollapse);
+  assert.equal(collapseAfterPod.duration, CAMERA_SHAKE_EVENTS.enemyBaseCollapse.seconds);
+  assert.equal(collapseAfterPod.strength, CAMERA_SHAKE_EVENTS.enemyBaseCollapse.strength);
+  const defeatAfterHeavy = triggerCameraShake(triggerCameraShake(createCameraShakeRuntime(), CAMERA_SHAKE_EVENTS.takuyaHeavy), CAMERA_SHAKE_EVENTS.takuyaDefeat);
+  assert.equal(defeatAfterHeavy.duration, CAMERA_SHAKE_EVENTS.takuyaDefeat.seconds);
+  assert.equal(defeatAfterHeavy.strength, CAMERA_SHAKE_EVENTS.takuyaDefeat.strength);
+
+  assert.equal(keyboardInputGate({ running: true, paused: false, over: false, key: "1" }), "active");
+  assert.equal(keyboardInputGate({ running: true, paused: true, over: false, key: "1" }), "ignore");
+  assert.equal(keyboardInputGate({ running: true, paused: true, over: false, key: "p" }), "toggle-pause");
+  assert.equal(keyboardInputGate({ running: true, paused: true, over: false, key: "Escape" }), "toggle-pause");
+  assert.equal(keyboardInputGate({ running: true, paused: false, over: true, key: "1" }), "ignore");
+  assert.equal(keyboardInputGate({ running: true, paused: false, over: false, key: "1", repeat: true }), "ignore");
+  assert.equal(keyboardInputGate({ running: false, paused: false, over: false, key: "1" }), "ignore");
 });
 
 test("validates, damages, and releases the battlefield container without changing Crawler priority", async () => {
@@ -357,11 +729,12 @@ test("validates, damages, and releases the battlefield container without changin
   assert.equal(containerPlacementCheck({ ...base, paused: true }).reason, "一時停止中は配置できません");
   assert.equal(containerPlacementCheck({ ...base, scrap: CONTAINER_DEF.cost - 1 }).reason, "スクラップが不足しています");
   assert.equal(containerPlacementCheck({ ...base, x: CONTAINER_DEF.minX - 1 }).reason, "配置可能範囲外です");
-  assert.equal(containerPlacementCheck({ ...base, objects: [{ lane: 1, x: 500, y: LANE_Y[1], phase: "active" }] }).reason, "このレーンには設置済みです");
-  assert.equal(containerPlacementCheck({ ...base, objects: [
+  assert.equal(containerPlacementCheck({ ...base, objects: [{ lane: 1, x: 500, y: LANE_Y[1], phase: "active" }] }).reason, "既存物資に近すぎます");
+  assert.deepEqual(containerPlacementCheck({ ...base, objects: [
     { lane: 0, x: 300, y: LANE_Y[0], phase: "active" },
     { lane: 2, x: 600, y: LANE_Y[2], phase: "dropping" },
-  ] }).reason, "設置上限は2個です");
+  ] }), { ok: true, reason: "配置できます" });
+  assert.deepEqual(containerPlacementCheck({ ...base, objects: [{ lane: 1, x: 700, y: LANE_Y[1], phase: "active" }] }), { ok: true, reason: "配置できます" });
   assert.deepEqual(containerPlacementCheck({ ...base, fighters: [{ x: 450, y: LANE_Y[1], hp: 10 }] }), { ok: true, reason: "配置できます" });
 
   const placed = resolveContainerPlacement(base);
@@ -397,7 +770,7 @@ test("validates, damages, and releases the battlefield container without changin
   const activeSupport = { id: 7, kind: "medkit", lane: 1, x: 440, y: LANE_Y[1], life: 5 };
   const containerOnSupport = resolveContainerPlacement({ ...base, supports: [activeSupport] });
   assert.equal(containerOnSupport.ok, false);
-  assert.equal(containerOnSupport.reason, "既存支援物資に近すぎます");
+  assert.equal(containerOnSupport.reason, "既存物資に近すぎます");
   assert.equal(containerOnSupport.scrap, CONTAINER_DEF.cost);
   assert.equal(containerOnSupport.objects.length, 0);
 
@@ -413,6 +786,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.deepEqual(damageContainer(CONTAINER_DEF.maxHp, 35), { hp: CONTAINER_DEF.maxHp - 35, phase: "active" });
   assert.deepEqual(damageContainer(20, 35), { hp: 0, phase: "destroying" });
   assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), true);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "impact" }), true);
   assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 0, containerX: 440, containerLane: 1, phase: "active" }), false);
   assert.equal(containerBlocksEnemy({ enemyX: 400, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), false);
   assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "destroying" }), false);
@@ -433,19 +807,20 @@ test("validates, damages, and releases the battlefield container without changin
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   assert.match(game, /battlefieldObjects: BattlefieldObject\[\]/);
   assert.match(game, /targetObjectId: number \| null/);
-  assert.match(game, /resolveContainerPlacement\(\{/);
-  assert.match(game, /resolveFieldSupportPlacement\(\{/);
-  assert.match(game, /supports: g\.supports, containers: g\.battlefieldObjects/);
-  assert.match(game, /if \(placeContainer\(lane, x\)\) chooseAction\(null\)/);
-  assert.match(game, /if \(succeeded\) chooseAction\(null\)/);
+  assert.match(game, /resolveBattlefieldSupplyPlacement\(\{/);
+  assert.match(game, /requestAirstrike\(\{/);
+  assert.match(game, /requestCrawlerBarrage\(\{/);
+  assert.match(game, /placeBattlefieldSupply\(kind, lane, x\)/);
+  assert.match(game, /if \(deployAirstrike\(lane, x\)\) chooseAction\(null\)/);
   assert.match(game, /const routeLane = f\.lane/);
   assert.match(game, /selectBlockingContainer\(\{/);
-  assert.match(game, /physicalContact \?\? \(blockingContainer \? undefined/);
+  assert.match(game, /physicalContact \?\? \(blockingSupply \? undefined/);
   assert.match(game, /!target && !objectTarget && f\.x > 520/);
   assert.match(game, /objectTarget \? Math\.abs\(f\.x - objectTarget\.x\)/);
-  assert.match(game, /applyContainerDamage\(objectTarget, f\.damage\)/);
-  assert.match(game, /resolveContainerLanding\(\{/);
-  assert.match(game, /object\.landingTriggered = true; object\.phase = "impact"/);
+  assert.match(game, /applyBattlefieldSupplyDamage\(objectTarget, f\.damage\)/);
+  assert.match(game, /resolveBattlefieldSupplyLanding\(\{/);
+  assert.match(game, /resolveDrumDetonation\(\{/);
+  assert.match(game, /advanceAreaEffects\(\{/);
   assert.match(game, /索敵マーク/);
   assert.match(game, /対・毒吐き/);
   assert.match(game, /前線保持/);
@@ -455,16 +830,172 @@ test("validates, damages, and releases the battlefield container without changin
   for (const effect of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) {
     assert.match(game, new RegExp(`shot\\.effect === "${effect}"|effect: "${effect}"`));
   }
-  assert.match(game, /effect: f\.kind, emphasized/);
-  assert.match(game, /const brawlerFinishApplied = f\.side === "human" && isBrawlerFinisher\(f\.kind, targetHpRatio\)/);
-  assert.match(game, /brawlerFinishApplied \? "フィニッシュ"/);
+  assert.doesNotMatch(game, /effect: f\.kind as RoleEffect/);
+  assert.match(game, /roleEffectForAction\(\{[\s\S]*targetAlreadyMarked: target\.marked > 0[\s\S]*holdingFrontline: f\.kind === "brute" && target\.targetId === f\.id/);
+  assert.match(game, /effect: roleEffect \?\? undefined, emphasized, style: ranged \? "projectile" : "melee"/);
+  assert.match(game, /roleEffect === "brawler" \? "フィニッシュ"/);
+  assert.match(game, /action: "structure"[\s\S]*playCue\("role-brute"\)/);
+  assert.match(game, /action: "heal"[\s\S]*playCue\("role-medic"\)/);
+  assert.doesNotMatch(game, /g\.areaEffects = capRenderArray/);
+  assert.match(game, /g\.areaEffects = retainActiveAreaEffects\(areaStep\.areaEffects\)/);
+  assert.match(game, /selectAreaEffectsForRender\(g\.areaEffects\)/);
+  assert.match(game, /function drawAirstrikeObserver/);
+  assert.match(game, /pose\.action === "radio"[\s\S]*pose\.action === "targeting"[\s\S]*pose\.action === "inbound" \|\| pose\.action === "impact"/);
+  const enemyBaseDraw = game.slice(game.indexOf("function drawEnemyBase"), game.indexOf("function drawEmergencySupport"));
+  assert.match(enemyBaseDraw, /enemyBaseVisualState\(\{ hp: g\.barricadeHp, elapsed: g\.enemyBaseCollapse \}\)/);
+  assert.match(enemyBaseDraw, /ctx\.rect\(barrier\.drawX \+ 2, barrier\.drawY \+ 2, barrier\.width - 4, barrier\.height - 4\);[\s\S]*ctx\.clip\(\)/);
+  assert.doesNotMatch(enemyBaseDraw, /fillRect\(-34, -54, 68, 108\)|strokeRect\(-34, -54, 68, 108\)/);
+  assert.doesNotMatch(enemyBaseDraw, /fillRect\(-13, -15, 28, 31\)|strokeRect\(-13, -15, 28, 31\)/);
+  assert.doesNotMatch(enemyBaseDraw, /LANE_Y/);
+  assert.match(enemyBaseDraw, /breached[\s\S]*ENEMY BASE DESTROYED/);
+  assert.match(game, /const enemyBaseDestroyed = g\.barricadeHp <= 0[\s\S]*g\.resultPresented = !enemyBaseDestroyed/);
+  assert.match(game, /advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*setEnd\(\{ won: g\.won/);
+  assert.match(game, /const combatLocked = !!end \|\| hud\.baseHp <= 0 \|\| hud\.barricadeHp <= 0/);
+  assert.match(game, /const chooseActionWithCue[\s\S]*if \(!g\.running \|\| g\.paused \|\| g\.over\) return/);
   assert.match(game, /function prepareRolesQa/);
-  assert.match(game, /qaRoles \? prepareRolesQa\(fresh\) : else|if \(qaRoles\) prepareRolesQa\(fresh\)/);
-  assert.match(game, /qa === "roles"/);
+  assert.match(game, /prepareQaMode\(fresh, qaMode\)/);
+  assert.match(game, /resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)/);
   assert.match(game, /advanceZombieX\(\{/);
-  assert.match(game, /防護コンテナ破壊/);
+  assert.match(game, /supplyDefs\[objectTarget\.kind\]\.name}破壊/);
   assert.match(game, /drawPlacementIndicator/);
-  assert.match(game, /CONTAINER_DEF\.cost/);
+  assert.match(game, /supplyDefs\[selectedSupply\]\.cost/);
+});
+
+test("models replaceable battle dialogue with QA-only copy, expiry, cooldowns, duplicate prevention, and priority", () => {
+  assert.deepEqual(APPROVED_BATTLE_BARK_LINES, []);
+  assert.equal(BATTLE_BARK_CONFIG.maxVisible, 2);
+  assert.equal(LOCAL_QA_BATTLE_BARK_LINES.length, 10);
+  assert.ok(LOCAL_QA_BATTLE_BARK_LINES.every((line) => line.probability === 1 && line.weight === 1 && line.tone === "qa"));
+  assert.equal(battleBarkPassesProbability(.5, .49), true);
+  assert.equal(battleBarkPassesProbability(.5, .5), false);
+  const initial = createBattleBarkRuntime();
+  const normal = queueBattleBark({ runtime: initial, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 1 } });
+  assert.equal(normal.shown, false);
+  assert.equal(normal.reason, "no-approved-line");
+
+  const scout = queueBattleBark({ runtime: initial, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 1 }, qa: true });
+  assert.equal(scout.shown, true);
+  assert.equal(scout.bark.text, "QA // SCOUT ROLE CUE");
+  const duplicate = queueBattleBark({ runtime: scout.runtime, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 1 }, qa: true });
+  assert.equal(duplicate.reason, "duplicate-active");
+  const globalBlocked = queueBattleBark({ runtime: scout.runtime, event: { trigger: "role-cue", speakerKind: "ranger", speakerId: 2 }, qa: true });
+  assert.equal(globalBlocked.reason, "global-cooldown");
+  assert.deepEqual(globalBlocked.runtime, scout.runtime);
+
+  const afterActive = advanceBattleBarkRuntime(scout.runtime, 2.3);
+  assert.equal(afterActive.active.length, 0);
+  const speakerBlocked = queueBattleBark({ runtime: afterActive, event: { trigger: "role-cue", speakerKind: "ranger", speakerId: 1 }, qa: true });
+  assert.equal(speakerBlocked.reason, "speaker-cooldown");
+  const lineBlocked = queueBattleBark({ runtime: afterActive, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 99 }, qa: true });
+  assert.equal(lineBlocked.reason, "line-cooldown");
+
+  const afterGlobal = advanceBattleBarkRuntime(scout.runtime, BATTLE_BARK_CONFIG.globalCooldown);
+  const ranger = queueBattleBark({ runtime: afterGlobal, event: { trigger: "role-cue", speakerKind: "ranger", speakerId: 2 }, qa: true });
+  assert.equal(ranger.runtime.active.length, 2);
+  const critical = queueBattleBark({ runtime: ranger.runtime, event: { trigger: "crawler-critical", speakerKind: "crawler", speakerId: "crawler" }, qa: true });
+  assert.equal(critical.shown, true);
+  assert.equal(critical.runtime.active.length, 2);
+  assert.ok(critical.runtime.active.some((bark) => bark.lineId === "qa-crawler-critical"));
+  assert.ok(critical.runtime.active.every((bark) => bark.lineId !== "qa-role-scout"));
+  const majorPair = queueBattleBark({ runtime: critical.runtime, event: { trigger: "takuya-down", speakerKind: "crawler", speakerId: "tactical" }, qa: true });
+  assert.equal(majorPair.shown, true);
+  const afterMajorGlobal = advanceBattleBarkRuntime(majorPair.runtime, BATTLE_BARK_CONFIG.globalCooldown);
+  const lowerPriority = queueBattleBark({ runtime: afterMajorGlobal, event: { trigger: "role-cue", speakerKind: "medic", speakerId: 6 }, qa: true });
+  assert.equal(lowerPriority.reason, "lower-priority");
+  assert.deepEqual(lowerPriority.runtime, afterMajorGlobal);
+  assert.equal(advanceBattleBarkRuntime(critical.runtime, 10).active.length, 0);
+});
+
+test("exposes localhost-only QA routes and wires every deterministic boss-stage scenario", async () => {
+  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress"]);
+  for (const mode of LOCAL_QA_MODES) {
+    assert.equal(resolveLocalQaMode("localhost", `?qa=${mode}`), mode);
+    assert.equal(resolveLocalQaMode("127.0.0.1", `?qa=${mode}`), mode);
+  }
+  assert.equal(resolveLocalQaMode("ashfall.example", "?qa=endgame"), null);
+  assert.equal(resolveLocalQaMode("localhost.example", "?qa=roles"), null);
+  assert.equal(resolveLocalQaMode("localhost", "?qa=unknown"), null);
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(game, /qaMode === "roles" \|\| qaMode === "dialogue"\) prepareRolesQa\(g\)/);
+  assert.match(game, /qaMode === "endgame"\) prepareEndgameQa\(g\)/);
+  assert.match(game, /qaMode === "supplies"\) prepareSuppliesQa\(g\)/);
+  assert.match(game, /qaMode === "airstrike"\) prepareAirstrikeQa\(g\)/);
+  assert.match(game, /qaMode === "crawler"\) prepareCrawlerQa\(g\)/);
+  assert.match(game, /qaMode === "stress"\) prepareStressQa\(g\)/);
+  assert.match(game, /if \(qaMode === "dialogue"\)[\s\S]*emitBattleBark\(g, "role-cue"/);
+  assert.match(game, /placeQaSupply\(g, "pod", 0, 430\)/);
+  assert.match(game, /placeQaSupply\(g, "drum", 1, 535\)/);
+  assert.match(game, /placeQaSupply\(g, "medical", 2, 640\)/);
+  assert.match(game, /g\.supportGauge = SUPPORT_GAUGE_MAX/);
+  assert.match(game, /for \(const lane of \[0, 1, 2\] as Lane\[\]\)[\s\S]*index < 3/);
+  assert.match(game, /g\.crawlerAbility = createCrawlerAbilityRuntime\(1\)/);
+  assert.match(game, /function prepareStressQa[\s\S]*index < 5[\s\S]*index < 8[\s\S]*index < 18/);
+  assert.match(game, /g\.supportGauge = 0/);
+  assert.match(game, /takuya\.hp = 420/);
+  assert.match(game, /takuya\.abilityCooldown = 0/);
+  assert.match(game, /g\.barricadeHp = 760/);
+  assert.match(game, /g\.phase = 3/);
+  assert.match(game, /g\.wave = 8/);
+  for (const kind of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) assert.match(game, new RegExp(`\\["${kind}",`));
+  assert.match(game, /aria-live="polite" aria-label="戦闘台詞"/);
+  assert.match(css, /\.battle-barks \{ position:absolute; z-index:16; top:32%; left:2%;/);
+  assert.match(css, /\.start-screen,\.pause-screen,\.end-screen \{ position:absolute; z-index:15;/);
+  assert.match(css, /\.game-frame:has\(\.start-screen\) \.qa-badge \{ top:4%; left:50%; right:auto; bottom:auto; transform:translateX\(-100%\); \}/);
+  assert.match(css, /\.game-frame:has\(\.pause-screen\) \.battle-barks \{ display:none; \}/);
+  assert.match(css, /\.game-frame:has\(\.end-screen\) \.battle-barks \{ top:4%; left:2%; \}/);
+  assert.match(css, /\.game-frame:has\(\.pause-screen\) \.qa-badge,\.game-frame:has\(\.end-screen\) \.qa-badge/);
+  assert.match(css, /\.pause-screen button,\.end-screen button \{ min-height:44px; \}/);
+  assert.match(css, /\.qa-badge \{ bottom:35%; \}\.battle-barks \{ top:32%;/);
+});
+
+test("keeps BGM and procedural SFX lifecycle bounded across pause, mute, retry, and loadout return", async () => {
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  assert.match(game, /type SfxCategory = "ui" \| "combat" \| "ambient" \| "major"/);
+  assert.match(game, /const MAX_SFX_VOICES = 10/);
+  assert.match(game, /const SFX_CUES = \{/);
+  assert.match(game, /"airstrike-impact"[\s\S]*priority: 100[\s\S]*duck:/);
+  assert.match(game, /"crawler-barrage"[\s\S]*priority: 95[\s\S]*duck:/);
+  assert.match(game, /"takuya-slam"[\s\S]*priority: 95[\s\S]*duck:/);
+  assert.match(game, /runtime\.active\.size >= MAX_SFX_VOICES/);
+  assert.match(game, /victim\.priority >= cue\.priority/);
+  assert.match(game, /gain\.connect\(runtime\.buses\[cue\.category\]\)/);
+  assert.match(game, /music\.master\.gain\.setTargetAtTime\(MUSIC_MASTER_GAIN \* level/);
+  assert.match(game, /master\.connect\(ensureSfxRuntime\(audio\)\.buses\.ui\)/);
+  assert.match(game, /const stopSfx = useCallback/);
+  assert.match(game, /window\.clearTimeout\(startCueTimerRef\.current\)/);
+  assert.match(game, /window\.clearInterval\(music\.timer\)/);
+  assert.match(game, /runtime\.active\.clear\(\)/);
+  assert.match(game, /runtime\.lastPlayedAt\.clear\(\)/);
+  assert.match(game, /for \(const bus of Object\.values\(runtime\.buses\)\)/);
+  assert.match(game, /sfxMutedRef\.current = next/);
+  assert.match(game, /if \(g\.paused\) \{[\s\S]*g\.battleBarks = createBattleBarkRuntime\(\)[\s\S]*stopMusic\(\); stopJingle\(\); stopSfx\(\);/);
+  assert.match(game, /stopMusic\(\); stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
+  assert.match(game, /const returnToLoadout = useCallback/);
+  assert.match(game, /data-muted=\{bgmMuted\}/);
+  assert.match(game, /data-muted=\{sfxMuted\}/);
+  assert.match(game, /同じ装備で再戦/);
+  assert.match(game, /ロードアウトへ戻る/);
+  for (const cue of [
+    "ui-confirm", "ui-cancel", "pod-descent", "pod-hit", "pod-destroy", "burn-start", "medical-heal",
+    "airstrike-targeting", "airstrike-inbound", "airstrike-return", "melee-hit", "role-scout", "role-ranger",
+    "role-brute", "role-brawler", "role-gunner", "role-medic", "takuya-down", "base-damaged", "base-critical",
+    "base-collapse", "victory", "defeat", "retry",
+  ]) assert.match(game, new RegExp(`(?:"${cue}"|${cue}): \\{[^}]*cooldown: \\.?\\d+`));
+  assert.match(game, /if \(kind === "pod"\) playCue\("pod-descent"\)/);
+  assert.match(game, /airstrikeStep\.events\.includes\("targeting"\)[\s\S]*playCue\("airstrike-targeting"\)/);
+  assert.match(game, /areaStep\.changes\.some\(\(change\) => change\.kind === "healing"\)[\s\S]*playCue\("medical-heal"\)/);
+  assert.match(game, /if \(roleEffect\) playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
+  assert.match(game, /fighter\.kind === "takuya"[\s\S]*playCue\("takuya-down"\)/);
+  assert.match(game, /const retrying = gameRef\.current\.over[\s\S]*if \(retrying\) playCue\("retry"\)/);
+  assert.match(game, /keyboardInputGate\(\{ running: g\.running, paused: g\.paused, over: g\.over, key: event\.key, repeat: event\.repeat \}\)/);
+  assert.match(game, /if \(inputGate === "ignore"\) return/);
+  assert.doesNotMatch(game, /if \(f\.kind === "takuya"\) g\.shake/);
+  assert.match(game, /CAMERA_SHAKE_EVENTS\.takuyaEntrance/);
+  assert.match(game, /CAMERA_SHAKE_EVENTS\.takuyaHeavy/);
+  assert.match(game, /CAMERA_SHAKE_EVENTS\.takuyaDefeat/);
+  assert.doesNotMatch(game, /\btone\(/);
+  assert.doesNotMatch(game, /["'][^"']+\.(?:mp3|ogg|wav|m4a)["']/i);
 });
 
 test("defines an ordered mission timeline after the five-second preparation window", () => {
@@ -486,5 +1017,5 @@ test("defines an ordered mission timeline after the five-second preparation wind
   assert.deepEqual(warning?.units, []);
   const enrage = MISSION_EVENTS.find(({ at }) => at === 188);
   assert.equal(enrage?.bossOnly, true);
-  assert.equal(MISSION_EVENTS.at(-1)?.label, "LAST CHANCE — BREAK THE BARRICADE");
+  assert.equal(MISSION_EVENTS.at(-1)?.label, "最終機会 — 感染拠点を破壊");
 });
