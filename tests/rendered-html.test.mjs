@@ -31,6 +31,7 @@ import {
   crawlerThreatLevel,
   damageContainer,
   humanAttackMultiplier,
+  isBrawlerFinisher,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
   laneForY,
@@ -38,6 +39,7 @@ import {
   phaseAt,
   rageReward,
   resolveContainerPlacement,
+  resolveContainerLanding,
   resolveFieldSupportPlacement,
   roleTargetBias,
   selectBlockingContainer,
@@ -101,9 +103,13 @@ test("ships the three-route barricade objective and its dedicated artwork", asyn
     access(new URL("../public/breaker-sprites-v2.png", import.meta.url)),
     access(new URL("../public/gunner-sprites-v1.png", import.meta.url)),
     access(new URL("../public/medic-sprites-v1.png", import.meta.url)),
+    access(new URL("../public/protective-container-v1.png", import.meta.url)),
   ]);
 
   assert.match(game, /loadImage\("\/iron-barricade-v1\.png"/);
+  assert.match(game, /container: "\/protective-container-v1\.png"/);
+  assert.match(game, /drawContainer\(ctx, renderable\.object, sprites\.container\)/);
+  assert.match(game, /ctx\.drawImage\(containerSprite/);
   assert.match(game, /function drawBarricade/);
   assert.match(game, /A single shared-HP barricade physically closes all three routes/);
   assert.match(game, /barricadeHp: number/);
@@ -246,6 +252,9 @@ test("applies role focus, marking, finishing, and structure-breach multipliers",
   assert.equal(roleTargetBias("gunner", "abomination"), -34);
 
   assert.equal(humanAttackMultiplier("gunner", "crusher"), 1.3);
+  assert.equal(isBrawlerFinisher("brawler", .351), false);
+  assert.equal(isBrawlerFinisher("brawler", .35), true);
+  assert.equal(isBrawlerFinisher("scout", .2), false);
   assert.equal(humanAttackMultiplier("brawler", "walker", .351), 1);
   assert.equal(humanAttackMultiplier("brawler", "walker", .35), 1.35);
   assert.equal(humanAttackMultiplier("scout", "runner", 1, true), 1.15);
@@ -331,12 +340,12 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
     ["airstrike", 60],
   ]);
   assert.deepEqual(UNIT_CARDS.map(({ kind, desc }) => [kind, desc]), [
-    ["scout", "MARK / INTERCEPT"],
-    ["ranger", "ANTI-SPITTER"],
-    ["brute", "TANK / BREACH"],
-    ["brawler", "FINISHER"],
-    ["gunner", "ANTI-HEAVY"],
-    ["medic", "HEAL / PURGE"],
+    ["scout", "高速敵を迎撃・マーク"],
+    ["ranger", "毒吐きを優先狙撃"],
+    ["brute", "前線を支え鉄柵を粉砕"],
+    ["brawler", "瀕死の敵を仕留める"],
+    ["gunner", "大型敵へ重火力"],
+    ["medic", "周囲の味方を回復"],
   ]);
 });
 
@@ -353,7 +362,7 @@ test("validates, damages, and releases the battlefield container without changin
     { lane: 0, x: 300, y: LANE_Y[0], phase: "active" },
     { lane: 2, x: 600, y: LANE_Y[2], phase: "dropping" },
   ] }).reason, "設置上限は2個です");
-  assert.equal(containerPlacementCheck({ ...base, fighters: [{ x: 450, y: LANE_Y[1], hp: 10 }] }).reason, "ユニットに近すぎます");
+  assert.deepEqual(containerPlacementCheck({ ...base, fighters: [{ x: 450, y: LANE_Y[1], hp: 10 }] }), { ok: true, reason: "配置できます" });
 
   const placed = resolveContainerPlacement(base);
   assert.equal(placed.ok, true);
@@ -361,6 +370,24 @@ test("validates, damages, and releases the battlefield container without changin
   assert.equal(placed.objects.length, 1);
   assert.equal(placed.objects[0].id, 40);
   assert.equal(placed.objects[0].phase, "dropping");
+  assert.equal(placed.objects[0].landingTriggered, false);
+
+  const landing = resolveContainerLanding({
+    lane: 1, x: 440,
+    fighters: [
+      { id: 1, side: "zombie", x: 450, y: LANE_Y[1], hp: 100 },
+      { id: 2, side: "human", x: 430, y: LANE_Y[1], hp: 100 },
+      { id: 3, side: "zombie", x: 700, y: LANE_Y[1], hp: 100 },
+    ],
+  });
+  assert.deepEqual(landing.hits, [
+    { id: 1, side: "zombie", damage: CONTAINER_DEF.enemyLandingDamage },
+    { id: 2, side: "human", damage: CONTAINER_DEF.allyLandingDamage },
+  ]);
+  assert.equal(landing.fighters[0].hp, 100 - CONTAINER_DEF.enemyLandingDamage);
+  assert.equal(landing.fighters[1].hp, 100 - CONTAINER_DEF.allyLandingDamage);
+  assert.equal(landing.fighters[2].hp, 100);
+  assert.ok(CONTAINER_DEF.enemyLandingDamage > CONTAINER_DEF.allyLandingDamage);
 
   const invalid = resolveContainerPlacement({ ...base, x: CONTAINER_DEF.minX - 1 });
   assert.equal(invalid.ok, false);
@@ -417,6 +444,23 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /!target && !objectTarget && f\.x > 520/);
   assert.match(game, /objectTarget \? Math\.abs\(f\.x - objectTarget\.x\)/);
   assert.match(game, /applyContainerDamage\(objectTarget, f\.damage\)/);
+  assert.match(game, /resolveContainerLanding\(\{/);
+  assert.match(game, /object\.landingTriggered = true; object\.phase = "impact"/);
+  assert.match(game, /索敵マーク/);
+  assert.match(game, /対・毒吐き/);
+  assert.match(game, /前線保持/);
+  assert.match(game, /フィニッシュ/);
+  assert.match(game, /重装破砕/);
+  assert.match(game, /value: "救護"/);
+  for (const effect of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) {
+    assert.match(game, new RegExp(`shot\\.effect === "${effect}"|effect: "${effect}"`));
+  }
+  assert.match(game, /effect: f\.kind, emphasized/);
+  assert.match(game, /const brawlerFinishApplied = f\.side === "human" && isBrawlerFinisher\(f\.kind, targetHpRatio\)/);
+  assert.match(game, /brawlerFinishApplied \? "フィニッシュ"/);
+  assert.match(game, /function prepareRolesQa/);
+  assert.match(game, /qaRoles \? prepareRolesQa\(fresh\) : else|if \(qaRoles\) prepareRolesQa\(fresh\)/);
+  assert.match(game, /qa === "roles"/);
   assert.match(game, /advanceZombieX\(\{/);
   assert.match(game, /防護コンテナ破壊/);
   assert.match(game, /drawPlacementIndicator/);

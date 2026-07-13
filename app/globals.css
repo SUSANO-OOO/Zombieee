@@ -79,7 +79,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 [data-kind="brawler"] .portrait { background-image:url('/brawler-sprites-v1.png'); }
 [data-kind="gunner"] .portrait { background-image:url('/gunner-sprites-v1.png'); }
 [data-kind="medic"] .portrait { background-image:url('/medic-sprites-v1.png'); }
-.card-copy { position:absolute; z-index:3; top:15%; left:44%; right:2%; }.card-copy b { display:block; font-size:clamp(6px,.78vw,12px); letter-spacing:.015em; white-space:nowrap; }.card-copy small { color:#9f927d; font:700 clamp(5px,.44vw,7px) monospace; letter-spacing:.06em; }
+.card-copy { position:absolute; z-index:3; top:12%; left:44%; right:2%; }.card-copy b { display:block; font-size:clamp(6px,.78vw,12px); letter-spacing:.015em; white-space:nowrap; }.card-copy small { display:block; margin-top:2px; color:#c7b894; font:700 clamp(5px,.44vw,7px)/1.12 sans-serif; letter-spacing:0; }
 .cost { position:absolute; z-index:3; right:5%; bottom:6%; color:#f2c666; font:900 clamp(9px,1.05vw,15px) monospace; }
 .cooldown-mask { position:absolute; z-index:6; inset:0; display:grid; place-content:center; justify-items:center; pointer-events:none; background:linear-gradient(135deg,rgba(5,7,8,.88),rgba(18,20,19,.72)); color:#eee0c7; text-shadow:0 2px 3px #000; }
 .cooldown-mask b { font:900 clamp(15px,2vw,27px)/.85 monospace; }.cooldown-mask small { margin-top:2px; color:#aa9a82; font:700 clamp(5px,.45vw,7px) monospace; letter-spacing:.13em; }
@@ -122,7 +122,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
   .resource-stack { flex-basis:13.5%; gap:3px; padding-right:.55%; }
   .resource { padding:3px 4px 7px 6px; border-left-width:2px; }.resource > span { font-size:5px; letter-spacing:.07em; }.resource strong { margin-top:1px; font-size:clamp(13px,2.7vw,19px); }.resource small { font-size:6px; }.resource > i { left:5px; right:4px; bottom:3px; height:2px; }
   .combat-deck { grid-template-rows:minmax(0,1fr) minmax(40px,38%); gap:3px; }.unit-cards { gap:2px; }.unit-card { height:100%; }.keycap { top:2px; left:3px; padding:1px 3px; font-size:6px; }.portrait { width:50%; }
-  .card-copy { top:12%; left:45%; }.card-copy small { display:none; }.cost { right:4%; bottom:4%; font-size:clamp(7px,1.55vw,10px); }.cooldown-mask b { font-size:clamp(12px,2.8vw,18px); }.cooldown-mask small { display:none; }
+  .card-copy { top:8%; left:45%; }.card-copy small { display:block; margin-top:1px; font-size:clamp(4px,.76vw,6px); line-height:1.05; }.cost { right:4%; bottom:4%; font-size:clamp(7px,1.55vw,10px); }.cooldown-mask b { font-size:clamp(12px,2.8vw,18px); }.cooldown-mask small { display:none; }
   .support-row { grid-template-columns:minmax(34px,.36fr) repeat(5,minmax(0,1fr)); gap:2px; }.support-label { font-size:5px; letter-spacing:.03em; }
   .support-btn { padding:2px 29px 2px 20px; border-left-width:2px; }.support-btn b { font-size:clamp(6px,1.08vw,8px); }.support-btn small { display:none; }.support-key { left:4px; width:12px; height:13px; font-size:6px; }.support-btn em { right:4px; font-size:clamp(6px,1vw,8px); }
   .placement-hint { top:24%; width:55%; min-height:24px; gap:6px; padding:3px 8px; }.placement-hint small { display:none; }
