@@ -1,40 +1,105 @@
 export const COMMAND_MAX = 100;
 export const COMMAND_REGEN = 3.5;
-export const RAGE_MAX = 100;
+export const SUPPORT_GAUGE_MAX = 100;
+// Compatibility aliases keep the current UI operational while the integration
+// commit moves player-facing wording from rage to support gauge.
+export const RAGE_MAX = SUPPORT_GAUGE_MAX;
 export const BARRICADE_MAX_HP = 1000;
 export const PREP_SECONDS = 5;
 export const TACTIC_MODES = ["defend", "balanced", "assault"];
 export const FIELD_OBJECT_CLEARANCE = 72;
-export const CONTAINER_DEF = Object.freeze({
-  kind: "container",
-  name: "防護コンテナ",
-  cost: 50,
-  maxHp: 260,
-  minX: 260,
-  maxX: 720,
-  maxActive: 2,
-  maxPerLane: 1,
-  objectClearance: FIELD_OBJECT_CLEARANCE,
-  landingRadius: 92,
-  enemyLandingDamage: 72,
-  allyLandingDamage: 22,
-});
 
 // Three invisible routing bands follow the open roadway bands in battlefield-v4.
 export const LANE_Y = [212, 282, 352];
 export const LANE_NAMES = ["TOP", "MID", "LOW"];
 
 // One geometry source keeps combat hit points, art placement, and deployment aligned.
+const CRAWLER_GEOMETRY = Object.freeze({
+  x: -70, y: 170, width: 310, height: 210, exitX: 150,
+  commandDeckX: 88, commandDeckY: 186,
+  weaponX: 132, weaponY: 224,
+  damageX: 112, damageY: 250,
+});
+const ENEMY_BASE_GEOMETRY = Object.freeze({
+  drawX: 788, drawY: 88, width: 184, height: 340,
+  attackX: 800, enemySpawnMinX: 744, enemySpawnMaxX: 776,
+  gateX: 818, gateY: LANE_Y[1],
+});
 export const WORLD_GEOMETRY = Object.freeze({
   baseX: 188,
-  musterX: 124,
+  musterX: 132,
   musterY: LANE_Y[2],
-  crawler: Object.freeze({ x: -12, y: 219, width: 230, height: 144, exitX: 128 }),
-  barricade: Object.freeze({ drawX: 790, drawY: 104, width: 168, height: 306, attackX: 800, enemySpawnMinX: 746, enemySpawnMaxX: 778 }),
+  crawler: CRAWLER_GEOMETRY,
+  enemyBase: ENEMY_BASE_GEOMETRY,
+  // The old name remains until the rendering commit adopts enemyBase.
+  barricade: ENEMY_BASE_GEOMETRY,
   supportMinX: 230,
   supportMaxX: 760,
   threatNearX: 362,
   threatStartX: 482,
+});
+
+export const BATTLEFIELD_SUPPLY_DEFS = Object.freeze({
+  pod: Object.freeze({
+    kind: "pod", name: "戦術投下ポッド", key: "V", cost: 50,
+    maxHp: 260, minX: 260, maxX: 720, placementClearance: FIELD_OBJECT_CLEARANCE,
+    dropSeconds: .45, impactSeconds: .26, destroySeconds: .42,
+    landingRadius: 92, enemyLandingDamage: 72, allyLandingDamage: 22,
+    blocksEnemies: true,
+  }),
+  drum: Object.freeze({
+    kind: "drum", name: "爆薬ドラム", key: "B", cost: 40,
+    maxHp: 90, minX: 250, maxX: 730, placementClearance: 64,
+    blastRadius: 112, blastDamage: 118,
+    burnRadius: 88, burnDamagePerSecond: 15, burnSeconds: 4.5, slowMultiplier: .8,
+    destroySeconds: .36, blocksEnemies: false,
+  }),
+  medical: Object.freeze({
+    kind: "medical", name: "救急物資", key: "M", cost: 35,
+    maxHp: 72, minX: 250, maxX: 730, placementClearance: 58,
+    healRadius: 104, healPerSecond: 18, effectSeconds: 8,
+    destroySeconds: .3, blocksEnemies: false,
+  }),
+});
+
+// Compatibility shape for the current container integration. It deliberately
+// omits maxActive/maxPerLane: the tactical pod is naturally constrained by
+// scrap, range, forbidden geometry, durability, and spacing.
+export const CONTAINER_DEF = Object.freeze({
+  ...BATTLEFIELD_SUPPLY_DEFS.pod,
+  kind: "container",
+  name: "防護コンテナ",
+  objectClearance: BATTLEFIELD_SUPPLY_DEFS.pod.placementClearance,
+});
+
+export const AIRSTRIKE_DEF = Object.freeze({
+  kind: "airstrike", gaugeCost: 60,
+  minX: WORLD_GEOMETRY.supportMinX, maxX: WORLD_GEOMETRY.supportMaxX,
+  radius: 132, damage: 145,
+  radioSeconds: .55, targetingSeconds: .45, inboundSeconds: .75,
+  impactSeconds: .12, returnSeconds: .65,
+});
+
+export const CRAWLER_BARRAGE_DEF = Object.freeze({
+  kind: "crawler-barrage", lanes: Object.freeze([0, 1, 2]),
+  cooldownSeconds: 36, initialCharge: .5,
+  deploySeconds: .55, fireSeconds: .65, recoverSeconds: .75,
+  damage: 52, bossDamageMultiplier: .55,
+});
+
+export const RENDER_ARRAY_LIMITS = Object.freeze({
+  particles: 420,
+  shots: 180,
+  damageTexts: 140,
+  battleBarks: 2,
+});
+
+export const CAMERA_SHAKE_EVENTS = Object.freeze({
+  podLanding: Object.freeze({ strength: 13, seconds: .18 }),
+  airstrikeImpact: Object.freeze({ strength: 10, seconds: .16 }),
+  crawlerBarrage: Object.freeze({ strength: 8, seconds: .22 }),
+  takuyaHeavy: Object.freeze({ strength: 11, seconds: .2 }),
+  enemyBaseCollapse: Object.freeze({ strength: 12, seconds: .28 }),
 });
 
 export const UNIT_CARDS = [
@@ -82,12 +147,262 @@ export function canDeploy({ running, paused, over, command, cost, cooldown }) {
   return Boolean(running && !paused && !over && command >= cost && cooldown <= 0);
 }
 
-export function rageReward(kind) {
+export function supportGaugeReward(kind) {
   return ({ walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20, takuya: 25, turned: 7 })[kind] ?? 4;
 }
 
+export const rageReward = supportGaugeReward;
+
 export function scrapReward(kind) {
   return ({ walker: 6, runner: 7, spitter: 10, crusher: 18, shade: 24, abomination: 40, takuya: 80, turned: 9 })[kind] ?? 6;
+}
+
+export function capRenderArray(items, kindOrLimit) {
+  const limit = typeof kindOrLimit === "number" ? kindOrLimit : RENDER_ARRAY_LIMITS[kindOrLimit];
+  if (!Number.isFinite(limit) || limit < 0) return [...items];
+  const integerLimit = Math.floor(limit);
+  return integerLimit === 0 ? [] : items.slice(-integerLimit);
+}
+
+function battlefieldSupplyDef(kind) {
+  return kind === "container" ? BATTLEFIELD_SUPPLY_DEFS.pod : BATTLEFIELD_SUPPLY_DEFS[kind];
+}
+
+function worldYFor(object) {
+  return Number.isFinite(object.y) ? object.y : LANE_Y[object.lane];
+}
+
+function battlefieldDistance(lane, x, object) {
+  return Math.hypot(object.x - x, (worldYFor(object) - LANE_Y[lane]) * 2);
+}
+
+function supplyStillPresent(supply) {
+  return supply.phase !== "expired" && supply.phase !== "destroying" && supply.life !== 0;
+}
+
+export function battlefieldSupplyPlacementCheck({
+  running, paused, over, scrap, kind, supplyKind, lane, x,
+  supplies = [], objects = [], supports = [], forbiddenZones = [],
+}) {
+  const selectedKind = supplyKind ?? kind;
+  const def = battlefieldSupplyDef(selectedKind);
+  if (!def) return { ok: false, reason: "未対応の戦場物資です" };
+  if (!running) return { ok: false, reason: "作戦開始後に配置できます" };
+  if (paused) return { ok: false, reason: "一時停止中は配置できません" };
+  if (over) return { ok: false, reason: "作戦終了後は配置できません" };
+  if (scrap < def.cost) return { ok: false, reason: "スクラップが不足しています" };
+  if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_Y.length || !Number.isFinite(x) || x < def.minX || x > def.maxX) {
+    return { ok: false, reason: "配置可能範囲外です" };
+  }
+  if (forbiddenZones.some((zone) => {
+    if (Number.isInteger(zone.lane) && zone.lane !== lane) return false;
+    return x >= zone.minX && x <= zone.maxX;
+  })) return { ok: false, reason: "進行上の禁止領域です" };
+
+  const occupied = [...supplies, ...objects, ...supports].filter(supplyStillPresent);
+  if (occupied.some((existing) => {
+    const existingDef = battlefieldSupplyDef(existing.kind);
+    const clearance = Math.max(def.placementClearance, existingDef?.placementClearance ?? FIELD_OBJECT_CLEARANCE);
+    return battlefieldDistance(lane, x, existing) < clearance;
+  })) return { ok: false, reason: "既存物資に近すぎます" };
+
+  return { ok: true, reason: "配置できます" };
+}
+
+function createMedicalAreaEffect(supply, id) {
+  const def = BATTLEFIELD_SUPPLY_DEFS.medical;
+  return {
+    id,
+    kind: "healing",
+    sourceSupplyId: supply.id,
+    lane: supply.lane,
+    x: supply.x,
+    y: supply.y,
+    radius: def.healRadius,
+    amountPerSecond: def.healPerSecond,
+    remaining: def.effectSeconds,
+    phase: "active",
+  };
+}
+
+export function resolveBattlefieldSupplyPlacement(input) {
+  const supplies = input.supplies ?? [];
+  const areaEffects = input.areaEffects ?? [];
+  const nextId = input.nextId ?? 0;
+  const nextAreaEffectId = input.nextAreaEffectId ?? 0;
+  const kind = input.supplyKind ?? input.kind;
+  const def = battlefieldSupplyDef(kind);
+  const check = battlefieldSupplyPlacementCheck({ ...input, kind });
+  if (!check.ok) return { ...check, scrap: input.scrap, supplies, areaEffects, nextId, nextAreaEffectId };
+
+  const supply = {
+    id: nextId,
+    kind,
+    lane: input.lane,
+    x: input.x,
+    y: LANE_Y[input.lane],
+    phase: kind === "pod" ? "dropping" : "active",
+    phaseTime: kind === "pod" ? def.dropSeconds : 0,
+    remaining: kind === "medical" ? def.effectSeconds : null,
+    hp: def.maxHp,
+    maxHp: def.maxHp,
+    blocksEnemies: def.blocksEnemies,
+    targetable: true,
+    landingTriggered: kind !== "pod",
+    detonationTriggered: false,
+  };
+  const medicalEffect = kind === "medical" ? createMedicalAreaEffect(supply, nextAreaEffectId) : null;
+  return {
+    ...check,
+    scrap: input.scrap - def.cost,
+    supplies: [...supplies, supply],
+    areaEffects: medicalEffect ? [...areaEffects, medicalEffect] : areaEffects,
+    nextId: nextId + 1,
+    nextAreaEffectId: nextAreaEffectId + (medicalEffect ? 1 : 0),
+  };
+}
+
+export function resolveBattlefieldSupplyLanding({ supply, fighters = [] }) {
+  const def = battlefieldSupplyDef(supply?.kind);
+  if (!supply || supply.kind !== "pod" || supply.landingTriggered || supply.phase !== "dropping") {
+    return { triggered: false, supply, fighters, hits: [] };
+  }
+  const hits = [];
+  const nextFighters = fighters.map((fighter) => {
+    const y = worldYFor(fighter);
+    if (fighter.hp <= 0 || Math.hypot(fighter.x - supply.x, (y - supply.y) * 2) > def.landingRadius) return fighter;
+    const damage = fighter.side === "zombie" ? def.enemyLandingDamage : def.allyLandingDamage;
+    hits.push({ id: fighter.id, side: fighter.side, damage });
+    return { ...fighter, hp: Math.max(0, fighter.hp - damage) };
+  });
+  return {
+    triggered: true,
+    supply: { ...supply, phase: "impact", phaseTime: def.impactSeconds, landingTriggered: true },
+    fighters: nextFighters,
+    hits,
+  };
+}
+
+export function advanceBattlefieldSupply(supply, seconds) {
+  const elapsed = Math.max(0, seconds);
+  const def = battlefieldSupplyDef(supply.kind);
+  if (!def || elapsed === 0 || supply.phase === "expired") return supply;
+  if (supply.phase === "dropping") {
+    const phaseTime = Math.max(0, supply.phaseTime - elapsed);
+    return { ...supply, phaseTime, readyToLand: phaseTime === 0 };
+  }
+  if (supply.phase === "impact") {
+    const phaseTime = Math.max(0, supply.phaseTime - elapsed);
+    return phaseTime === 0 ? { ...supply, phase: "active", phaseTime: 0 } : { ...supply, phaseTime };
+  }
+  if (supply.phase === "destroying") {
+    const phaseTime = Math.max(0, supply.phaseTime - elapsed);
+    return phaseTime === 0 ? { ...supply, phase: "expired", phaseTime: 0 } : { ...supply, phaseTime };
+  }
+  if (supply.kind === "medical" && supply.phase === "active") {
+    const remaining = Math.max(0, supply.remaining - elapsed);
+    return remaining === 0
+      ? { ...supply, remaining, phase: "expired", targetable: false }
+      : { ...supply, remaining };
+  }
+  return supply;
+}
+
+export function applyBattlefieldSupplyDamage(supply, damage) {
+  const def = battlefieldSupplyDef(supply.kind);
+  if (!def || !supply.targetable || supply.phase === "expired" || supply.phase === "destroying") {
+    return { supply, detonationRequested: false };
+  }
+  const hp = Math.max(0, supply.hp - Math.max(0, damage));
+  if (hp > 0) return { supply: { ...supply, hp }, detonationRequested: false };
+  if (supply.kind === "drum") {
+    return {
+      supply: { ...supply, hp: 0, phase: "detonating", targetable: false, detonationReason: "destroyed" },
+      detonationRequested: true,
+    };
+  }
+  return {
+    supply: { ...supply, hp: 0, phase: "destroying", phaseTime: def.destroySeconds, blocksEnemies: false, targetable: false },
+    detonationRequested: false,
+  };
+}
+
+export function requestDrumDetonation(supply, reason = "manual") {
+  if (!supply || supply.kind !== "drum") return { ok: false, reason: "爆薬ドラムではありません", supply };
+  if (supply.detonationTriggered || supply.phase === "destroying" || supply.phase === "expired") {
+    return { ok: false, reason: "起爆済みです", supply };
+  }
+  if (supply.phase === "detonating") return { ok: true, reason: "起爆します", supply };
+  if (supply.phase !== "active") return { ok: false, reason: "まだ起爆できません", supply };
+  return { ok: true, reason: "起爆します", supply: { ...supply, phase: "detonating", targetable: false, detonationReason: reason } };
+}
+
+export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [], nextAreaEffectId = 0 }) {
+  const def = BATTLEFIELD_SUPPLY_DEFS.drum;
+  if (!supply || supply.kind !== "drum" || supply.phase !== "detonating" || supply.detonationTriggered) {
+    return { triggered: false, supply, fighters, hits: [], areaEffects, nextAreaEffectId };
+  }
+  const hits = [];
+  const nextFighters = fighters.map((fighter) => {
+    const y = worldYFor(fighter);
+    if (fighter.side !== "zombie" || fighter.hp <= 0 || Math.hypot(fighter.x - supply.x, (y - supply.y) * 2) > def.blastRadius) return fighter;
+    hits.push({ id: fighter.id, damage: def.blastDamage });
+    return { ...fighter, hp: Math.max(0, fighter.hp - def.blastDamage) };
+  });
+  const burn = {
+    id: nextAreaEffectId,
+    kind: "burn",
+    sourceSupplyId: supply.id,
+    lane: supply.lane,
+    x: supply.x,
+    y: supply.y,
+    radius: def.burnRadius,
+    amountPerSecond: def.burnDamagePerSecond,
+    slowMultiplier: def.slowMultiplier,
+    remaining: def.burnSeconds,
+    phase: "active",
+  };
+  return {
+    triggered: true,
+    supply: { ...supply, hp: 0, phase: "destroying", phaseTime: def.destroySeconds, detonationTriggered: true, blocksEnemies: false, targetable: false },
+    fighters: nextFighters,
+    hits,
+    areaEffects: [...areaEffects, burn],
+    nextAreaEffectId: nextAreaEffectId + 1,
+  };
+}
+
+export function advanceAreaEffects({ areaEffects = [], fighters = [], seconds, activeSupplyIds }) {
+  const elapsed = Math.max(0, seconds);
+  const activeSources = activeSupplyIds === undefined ? null : new Set(activeSupplyIds);
+  let nextFighters = fighters.map((fighter) => ({ ...fighter }));
+  const changes = [];
+  const nextEffects = areaEffects.map((effect) => {
+    if (effect.phase === "expired") return effect;
+    const sourceMissing = effect.kind === "healing" && activeSources && !activeSources.has(effect.sourceSupplyId);
+    const activeSeconds = sourceMissing ? 0 : Math.min(elapsed, Math.max(0, effect.remaining));
+    if (activeSeconds > 0) {
+      nextFighters = nextFighters.map((fighter) => {
+        const y = worldYFor(fighter);
+        if (fighter.hp <= 0 || Math.hypot(fighter.x - effect.x, (y - effect.y) * 2) > effect.radius) return fighter;
+        if (effect.kind === "burn" && fighter.side === "zombie") {
+          const amount = effect.amountPerSecond * activeSeconds;
+          changes.push({ id: fighter.id, kind: "damage", amount });
+          return { ...fighter, hp: Math.max(0, fighter.hp - amount), burning: true, slowMultiplier: effect.slowMultiplier };
+        }
+        if (effect.kind === "healing" && fighter.side === "human") {
+          const amount = Math.min(effect.amountPerSecond * activeSeconds, Math.max(0, fighter.maxHp - fighter.hp));
+          if (amount <= 0) return fighter;
+          changes.push({ id: fighter.id, kind: "healing", amount });
+          return { ...fighter, hp: fighter.hp + amount };
+        }
+        return fighter;
+      });
+    }
+    const remaining = sourceMissing ? 0 : Math.max(0, effect.remaining - elapsed);
+    return { ...effect, remaining, phase: remaining === 0 ? "expired" : "active" };
+  });
+  return { areaEffects: nextEffects, fighters: nextFighters, changes };
 }
 
 function overlapsFieldObject(lane, x, object) {
@@ -95,24 +410,11 @@ function overlapsFieldObject(lane, x, object) {
 }
 
 export function containerPlacementCheck({ running, paused, over, scrap, lane, x, objects = [], supports = [] }) {
-  if (!running) return { ok: false, reason: "作戦開始後に配置できます" };
-  if (paused) return { ok: false, reason: "一時停止中は配置できません" };
-  if (over) return { ok: false, reason: "作戦終了後は配置できません" };
-  if (scrap < CONTAINER_DEF.cost) return { ok: false, reason: "スクラップが不足しています" };
-  if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_Y.length || x < CONTAINER_DEF.minX || x > CONTAINER_DEF.maxX) {
-    return { ok: false, reason: "配置可能範囲外です" };
-  }
-
-  const present = objects.filter((object) => object.phase !== "expired");
-  if (present.length >= CONTAINER_DEF.maxActive) return { ok: false, reason: "設置上限は2個です" };
-  if (present.some((object) => object.lane === lane)) return { ok: false, reason: "このレーンには設置済みです" };
-  if (present.some((object) => overlapsFieldObject(lane, x, object))) {
-    return { ok: false, reason: "既存物資に近すぎます" };
-  }
-  if (supports.some((support) => support.life > 0 && overlapsFieldObject(lane, x, support))) {
-    return { ok: false, reason: "既存支援物資に近すぎます" };
-  }
-  return { ok: true, reason: "配置できます" };
+  return battlefieldSupplyPlacementCheck({
+    running, paused, over, scrap, supplyKind: "pod", lane, x,
+    supplies: objects,
+    supports,
+  });
 }
 
 export function resolveContainerPlacement(input) {
@@ -145,14 +447,14 @@ export function resolveContainerPlacement(input) {
 }
 
 export function resolveContainerLanding({ fighters = [], lane, x }) {
-  const hits = [];
-  const fightersAfterLanding = fighters.map((fighter) => {
-    if (fighter.hp <= 0 || Math.hypot(fighter.x - x, (fighter.y - LANE_Y[lane]) * 2) > CONTAINER_DEF.landingRadius) return fighter;
-    const damage = fighter.side === "zombie" ? CONTAINER_DEF.enemyLandingDamage : CONTAINER_DEF.allyLandingDamage;
-    hits.push({ id: fighter.id, side: fighter.side, damage });
-    return { ...fighter, hp: Math.max(0, fighter.hp - damage) };
+  const result = resolveBattlefieldSupplyLanding({
+    supply: {
+      id: -1, kind: "pod", lane, x, y: LANE_Y[lane],
+      phase: "dropping", phaseTime: 0, landingTriggered: false,
+    },
+    fighters,
   });
-  return { fighters: fightersAfterLanding, hits };
+  return { fighters: result.fighters, hits: result.hits };
 }
 
 export function resolveFieldSupportPlacement({ running, paused, over, rage, cost, kind, lane, x, strikeCooldown = 0, supports = [], containers = [] }) {
@@ -170,6 +472,134 @@ export function resolveFieldSupportPlacement({ running, paused, over, rage, cost
     return { ok: false, reason: "防護コンテナに近すぎます", rage, x: placedX };
   }
   return { ok: true, reason: "配置できます", rage: rage - cost, x: placedX };
+}
+
+export function createEmergencySupportRuntime() {
+  return { phase: "idle", phaseTime: 0, targetX: null, targetLane: null, impactTriggered: false };
+}
+
+export function requestAirstrike({ running, paused, over, supportGauge, lane, x, runtime = createEmergencySupportRuntime() }) {
+  if (!running) return { ok: false, reason: "作戦開始後に要請できます", supportGauge, runtime };
+  if (paused) return { ok: false, reason: "一時停止中は要請できません", supportGauge, runtime };
+  if (over) return { ok: false, reason: "作戦終了後は要請できません", supportGauge, runtime };
+  if (runtime.phase !== "idle") return { ok: false, reason: "航空支援を実行中です", supportGauge, runtime };
+  if (supportGauge < AIRSTRIKE_DEF.gaugeCost) return { ok: false, reason: "支援ゲージが不足しています", supportGauge, runtime };
+  if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_Y.length || !Number.isFinite(x)) {
+    return { ok: false, reason: "目標地点が無効です", supportGauge, runtime };
+  }
+  const targetX = Math.max(AIRSTRIKE_DEF.minX, Math.min(AIRSTRIKE_DEF.maxX, x));
+  return {
+    ok: true,
+    reason: "航空支援を要請しました",
+    supportGauge: supportGauge - AIRSTRIKE_DEF.gaugeCost,
+    runtime: {
+      phase: "radio",
+      phaseTime: AIRSTRIKE_DEF.radioSeconds,
+      targetX,
+      targetLane: lane,
+      impactTriggered: false,
+    },
+  };
+}
+
+function nextAirstrikePhase(runtime) {
+  if (runtime.phase === "radio") return { ...runtime, phase: "targeting", phaseTime: AIRSTRIKE_DEF.targetingSeconds };
+  if (runtime.phase === "targeting") return { ...runtime, phase: "inbound", phaseTime: AIRSTRIKE_DEF.inboundSeconds };
+  if (runtime.phase === "inbound") return { ...runtime, phase: "impact", phaseTime: AIRSTRIKE_DEF.impactSeconds, impactTriggered: false };
+  if (runtime.phase === "impact") return { ...runtime, phase: "returning", phaseTime: AIRSTRIKE_DEF.returnSeconds };
+  return createEmergencySupportRuntime();
+}
+
+export function advanceEmergencySupportRuntime(runtime, seconds) {
+  let next = { ...runtime };
+  let remaining = Math.max(0, seconds);
+  const events = [];
+  while (next.phase !== "idle" && remaining >= next.phaseTime) {
+    remaining -= next.phaseTime;
+    next = nextAirstrikePhase(next);
+    if (next.phase === "impact") events.push("impact");
+    if (next.phase === "idle") events.push("complete");
+  }
+  if (next.phase !== "idle" && remaining > 0) next.phaseTime = Math.max(0, next.phaseTime - remaining);
+  return { runtime: next, events };
+}
+
+export function resolveAirstrikeImpact({ runtime, fighters = [] }) {
+  if (runtime.phase !== "impact" || runtime.impactTriggered) return { triggered: false, runtime, fighters, hits: [] };
+  const targetY = LANE_Y[runtime.targetLane];
+  const hits = [];
+  const nextFighters = fighters.map((fighter) => {
+    const y = worldYFor(fighter);
+    if (fighter.side !== "zombie" || fighter.hp <= 0 || Math.hypot(fighter.x - runtime.targetX, (y - targetY) * 2) > AIRSTRIKE_DEF.radius) return fighter;
+    hits.push({ id: fighter.id, damage: AIRSTRIKE_DEF.damage });
+    return { ...fighter, hp: Math.max(0, fighter.hp - AIRSTRIKE_DEF.damage) };
+  });
+  return { triggered: true, runtime: { ...runtime, impactTriggered: true }, fighters: nextFighters, hits };
+}
+
+export function createCrawlerAbilityRuntime(initialCharge = CRAWLER_BARRAGE_DEF.initialCharge) {
+  const charge = Math.max(0, Math.min(1, initialCharge));
+  const cooldownRemaining = CRAWLER_BARRAGE_DEF.cooldownSeconds * (1 - charge);
+  return cooldownRemaining === 0
+    ? { phase: "ready", phaseTime: 0, cooldownRemaining: 0, charge: 1, damageTriggered: false }
+    : { phase: "cooldown", phaseTime: cooldownRemaining, cooldownRemaining, charge, damageTriggered: false };
+}
+
+export function requestCrawlerBarrage({ running, paused, over, runtime }) {
+  if (!running) return { ok: false, reason: "作戦開始後に使用できます", runtime };
+  if (paused) return { ok: false, reason: "一時停止中は使用できません", runtime };
+  if (over) return { ok: false, reason: "作戦終了後は使用できません", runtime };
+  if (runtime.phase !== "ready") return { ok: false, reason: "一斉掃射は再装填中です", runtime };
+  return {
+    ok: true,
+    reason: "火器を展開します",
+    runtime: { ...runtime, phase: "deploying", phaseTime: CRAWLER_BARRAGE_DEF.deploySeconds, charge: 0, damageTriggered: false },
+  };
+}
+
+function nextCrawlerAbilityPhase(runtime) {
+  if (runtime.phase === "deploying") return { ...runtime, phase: "firing", phaseTime: CRAWLER_BARRAGE_DEF.fireSeconds, damageTriggered: false };
+  if (runtime.phase === "firing") return { ...runtime, phase: "recovering", phaseTime: CRAWLER_BARRAGE_DEF.recoverSeconds };
+  if (runtime.phase === "recovering") return createCrawlerAbilityRuntime(0);
+  return runtime;
+}
+
+export function advanceCrawlerAbilityRuntime(runtime, seconds) {
+  let next = { ...runtime };
+  let remaining = Math.max(0, seconds);
+  const events = [];
+  if (next.phase === "cooldown") {
+    const consumed = Math.min(remaining, next.cooldownRemaining);
+    const cooldownRemaining = Math.max(0, next.cooldownRemaining - consumed);
+    remaining -= consumed;
+    next = cooldownRemaining === 0
+      ? createCrawlerAbilityRuntime(1)
+      : { ...next, phaseTime: cooldownRemaining, cooldownRemaining, charge: 1 - cooldownRemaining / CRAWLER_BARRAGE_DEF.cooldownSeconds };
+    if (next.phase === "ready") events.push("ready");
+  }
+  while (["deploying", "firing", "recovering"].includes(next.phase) && remaining >= next.phaseTime) {
+    remaining -= next.phaseTime;
+    next = nextCrawlerAbilityPhase(next);
+    if (next.phase === "firing") events.push("fire");
+    if (next.phase === "cooldown") events.push("cooldown");
+  }
+  if (["deploying", "firing", "recovering"].includes(next.phase) && remaining > 0) {
+    next.phaseTime = Math.max(0, next.phaseTime - remaining);
+  }
+  return { runtime: next, events };
+}
+
+export function resolveCrawlerBarrage({ runtime, fighters = [] }) {
+  if (runtime.phase !== "firing" || runtime.damageTriggered) return { triggered: false, runtime, fighters, hits: [] };
+  const hits = [];
+  const nextFighters = fighters.map((fighter) => {
+    if (fighter.side !== "zombie" || fighter.hp <= 0 || !CRAWLER_BARRAGE_DEF.lanes.includes(fighter.lane)) return fighter;
+    const boss = fighter.kind === "takuya" || fighter.boss === true;
+    const damage = Math.round(CRAWLER_BARRAGE_DEF.damage * (boss ? CRAWLER_BARRAGE_DEF.bossDamageMultiplier : 1));
+    hits.push({ id: fighter.id, lane: fighter.lane, damage, boss });
+    return { ...fighter, hp: Math.max(0, fighter.hp - damage) };
+  });
+  return { triggered: true, runtime: { ...runtime, damageTriggered: true }, fighters: nextFighters, hits };
 }
 
 export function damageContainer(hp, damage) {

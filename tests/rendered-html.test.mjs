@@ -3,30 +3,45 @@ import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
+  AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
+  BATTLEFIELD_SUPPLY_DEFS,
+  CAMERA_SHAKE_EVENTS,
   COMMAND_MAX,
   COMMAND_REGEN,
   CONTAINER_DEF,
+  CRAWLER_BARRAGE_DEF,
   FIELD_OBJECT_CLEARANCE,
   LANE_NAMES,
   LANE_Y,
   MISSION_EVENTS,
   PREP_SECONDS,
   RAGE_MAX,
+  RENDER_ARRAY_LIMITS,
+  SUPPORT_GAUGE_MAX,
   SUPPORT_DEFS,
   TACTIC_MODES,
   UNIT_CARDS,
   WORLD_GEOMETRY,
+  advanceAreaEffects,
+  advanceBattlefieldSupply,
+  advanceCrawlerAbilityRuntime,
+  advanceEmergencySupportRuntime,
   advanceZombieX,
   advanceCommand,
   advanceLimitFor,
+  applyBattlefieldSupplyDamage,
   applyContainerDamage,
   autonomousTargetScore,
   barricadeState,
   battleOutcome,
+  battlefieldSupplyPlacementCheck,
   canDeploy,
+  capRenderArray,
   containerBlocksEnemy,
   containerPlacementCheck,
+  createCrawlerAbilityRuntime,
+  createEmergencySupportRuntime,
   crawlerSiegeDamage,
   crawlerThreatLevel,
   damageContainer,
@@ -38,12 +53,21 @@ import {
   objectiveFor,
   phaseAt,
   rageReward,
+  requestAirstrike,
+  requestCrawlerBarrage,
+  requestDrumDetonation,
+  resolveAirstrikeImpact,
+  resolveBattlefieldSupplyLanding,
+  resolveBattlefieldSupplyPlacement,
   resolveContainerPlacement,
   resolveContainerLanding,
+  resolveCrawlerBarrage,
+  resolveDrumDetonation,
   resolveFieldSupportPlacement,
   roleTargetBias,
   selectBlockingContainer,
   structureDamageMultiplier,
+  supportGaugeReward,
   tacticTargetBias,
 } from "../app/gameRules.js";
 
@@ -183,6 +207,7 @@ test("provides a five-second preparation window, a three-slot bay, and selectabl
 test("applies the COMMAND economy, deployment gates, and shared world geometry", () => {
   assert.equal(COMMAND_MAX, 100);
   assert.equal(COMMAND_REGEN, 3.5);
+  assert.equal(SUPPORT_GAUGE_MAX, 100);
   assert.equal(RAGE_MAX, 100);
   assert.equal(BARRICADE_MAX_HP, 1000);
   assert.equal(advanceCommand(55, 10), 90);
@@ -206,10 +231,23 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
   assert.equal(laneForY(LANE_Y[2], 1), 2);
   assert.deepEqual(WORLD_GEOMETRY, {
     baseX: 188,
-    musterX: 124,
+    musterX: 132,
     musterY: 352,
-    crawler: { x: -12, y: 219, width: 230, height: 144, exitX: 128 },
-    barricade: { drawX: 790, drawY: 104, width: 168, height: 306, attackX: 800, enemySpawnMinX: 746, enemySpawnMaxX: 778 },
+    crawler: {
+      x: -70, y: 170, width: 310, height: 210, exitX: 150,
+      commandDeckX: 88, commandDeckY: 186, weaponX: 132, weaponY: 224,
+      damageX: 112, damageY: 250,
+    },
+    enemyBase: {
+      drawX: 788, drawY: 88, width: 184, height: 340,
+      attackX: 800, enemySpawnMinX: 744, enemySpawnMaxX: 776,
+      gateX: 818, gateY: 282,
+    },
+    barricade: {
+      drawX: 788, drawY: 88, width: 184, height: 340,
+      attackX: 800, enemySpawnMinX: 744, enemySpawnMaxX: 776,
+      gateX: 818, gateY: 282,
+    },
     supportMinX: 230,
     supportMaxX: 760,
     threatNearX: 362,
@@ -218,6 +256,7 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
   assert.ok(WORLD_GEOMETRY.barricade.drawY < LANE_Y[0]);
   assert.ok(WORLD_GEOMETRY.barricade.drawY + WORLD_GEOMETRY.barricade.height > LANE_Y[2]);
   assert.ok(WORLD_GEOMETRY.barricade.enemySpawnMaxX < WORLD_GEOMETRY.barricade.drawX);
+  assert.equal(WORLD_GEOMETRY.enemyBase, WORLD_GEOMETRY.barricade);
   assert.ok(WORLD_GEOMETRY.musterX < WORLD_GEOMETRY.crawler.exitX);
   assert.ok(WORLD_GEOMETRY.crawler.exitX < WORLD_GEOMETRY.supportMinX);
 });
@@ -329,10 +368,19 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.equal(crawlerThreatLevel(342), .5);
   assert.equal(crawlerThreatLevel(202), 1);
 
+  const gaugeRewards = { walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20, takuya: 25, turned: 7 };
   assert.deepEqual(
-    Object.fromEntries(["walker", "runner", "spitter", "crusher", "shade", "abomination", "takuya", "turned"].map((kind) => [kind, rageReward(kind)])),
-    { walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20, takuya: 25, turned: 7 },
+    Object.fromEntries(Object.keys(gaugeRewards).map((kind) => [kind, supportGaugeReward(kind)])),
+    gaugeRewards,
   );
+  assert.equal(rageReward("crusher"), supportGaugeReward("crusher"));
+  assert.deepEqual(Object.values(BATTLEFIELD_SUPPLY_DEFS).map(({ kind, cost }) => [kind, cost]), [
+    ["pod", 50],
+    ["drum", 40],
+    ["medical", 35],
+  ]);
+  assert.equal("maxActive" in BATTLEFIELD_SUPPLY_DEFS.pod, false);
+  assert.equal("maxPerLane" in BATTLEFIELD_SUPPLY_DEFS.pod, false);
   assert.deepEqual(SUPPORT_DEFS.map(({ kind, cost }) => [kind, cost]), [
     ["barrel", 20],
     ["medkit", 25],
@@ -349,6 +397,184 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   ]);
 });
 
+test("models all three battlefield supplies without fixed pod count or lane caps", () => {
+  const base = {
+    running: true, paused: false, over: false, scrap: 100,
+    supplyKind: "pod", lane: 1, x: 440, supplies: [], areaEffects: [],
+    nextId: 10, nextAreaEffectId: 30,
+  };
+  assert.deepEqual(battlefieldSupplyPlacementCheck(base), { ok: true, reason: "配置できます" });
+  assert.equal(battlefieldSupplyPlacementCheck({ ...base, running: false }).ok, false);
+  assert.equal(battlefieldSupplyPlacementCheck({ ...base, scrap: 49 }).reason, "スクラップが不足しています");
+  assert.equal(battlefieldSupplyPlacementCheck({ ...base, x: 259 }).reason, "配置可能範囲外です");
+  assert.equal(battlefieldSupplyPlacementCheck({ ...base, forbiddenZones: [{ lane: 1, minX: 420, maxX: 460 }] }).reason, "進行上の禁止領域です");
+
+  const podPlacement = resolveBattlefieldSupplyPlacement(base);
+  assert.equal(podPlacement.ok, true);
+  assert.equal(podPlacement.scrap, 50);
+  assert.equal(podPlacement.supplies[0].kind, "pod");
+  assert.equal(podPlacement.supplies[0].phase, "dropping");
+  assert.equal(podPlacement.nextId, 11);
+  assert.deepEqual(battlefieldSupplyPlacementCheck({ ...base, supplies: [podPlacement.supplies[0]], x: 500 }), { ok: false, reason: "既存物資に近すぎます" });
+  assert.deepEqual(battlefieldSupplyPlacementCheck({ ...base, supplies: [podPlacement.supplies[0]], x: 700 }), { ok: true, reason: "配置できます" });
+  assert.deepEqual(battlefieldSupplyPlacementCheck({ ...base, supplies: [
+    { ...podPlacement.supplies[0], lane: 0, x: 300, y: LANE_Y[0] },
+    { ...podPlacement.supplies[0], id: 11, lane: 2, x: 600, y: LANE_Y[2] },
+  ] }), { ok: true, reason: "配置できます" });
+
+  const readyToLand = advanceBattlefieldSupply(podPlacement.supplies[0], BATTLEFIELD_SUPPLY_DEFS.pod.dropSeconds);
+  assert.equal(readyToLand.readyToLand, true);
+  const landing = resolveBattlefieldSupplyLanding({
+    supply: readyToLand,
+    fighters: [
+      { id: 1, side: "zombie", lane: 1, x: 450, y: LANE_Y[1], hp: 100, maxHp: 100 },
+      { id: 2, side: "human", lane: 1, x: 430, y: LANE_Y[1], hp: 100, maxHp: 100 },
+      { id: 3, side: "zombie", lane: 1, x: 700, y: LANE_Y[1], hp: 100, maxHp: 100 },
+    ],
+  });
+  assert.equal(landing.triggered, true);
+  assert.deepEqual(landing.hits.map(({ side, damage }) => [side, damage]), [["zombie", 72], ["human", 22]]);
+  assert.equal(resolveBattlefieldSupplyLanding({ supply: landing.supply, fighters: landing.fighters }).triggered, false);
+  const activePod = advanceBattlefieldSupply(landing.supply, BATTLEFIELD_SUPPLY_DEFS.pod.impactSeconds);
+  assert.equal(activePod.phase, "active");
+  const destroyedPod = applyBattlefieldSupplyDamage(activePod, activePod.hp + 1);
+  assert.equal(destroyedPod.supply.phase, "destroying");
+  assert.equal(advanceBattlefieldSupply(destroyedPod.supply, BATTLEFIELD_SUPPLY_DEFS.pod.destroySeconds).phase, "expired");
+
+  const drumPlacement = resolveBattlefieldSupplyPlacement({ ...base, supplyKind: "drum", scrap: 100, nextId: 20 });
+  const manual = requestDrumDetonation(drumPlacement.supplies[0]);
+  assert.equal(manual.ok, true);
+  const explosion = resolveDrumDetonation({
+    supply: manual.supply,
+    fighters: [
+      { id: 4, side: "zombie", lane: 1, x: 450, y: LANE_Y[1], hp: 150, maxHp: 150 },
+      { id: 5, side: "human", lane: 1, x: 450, y: LANE_Y[1], hp: 100, maxHp: 100 },
+    ],
+    nextAreaEffectId: 40,
+  });
+  assert.equal(explosion.triggered, true);
+  assert.deepEqual(explosion.hits, [{ id: 4, damage: BATTLEFIELD_SUPPLY_DEFS.drum.blastDamage }]);
+  assert.equal(explosion.areaEffects[0].kind, "burn");
+  assert.equal(explosion.nextAreaEffectId, 41);
+  assert.equal(resolveDrumDetonation({ supply: explosion.supply }).triggered, false);
+  const burned = advanceAreaEffects({ areaEffects: explosion.areaEffects, fighters: explosion.fighters, seconds: 1 });
+  assert.equal(burned.fighters[0].hp, 150 - BATTLEFIELD_SUPPLY_DEFS.drum.blastDamage - BATTLEFIELD_SUPPLY_DEFS.drum.burnDamagePerSecond);
+  assert.equal(burned.fighters[1].hp, 100);
+  assert.equal(burned.fighters[0].slowMultiplier, BATTLEFIELD_SUPPLY_DEFS.drum.slowMultiplier);
+  assert.equal(advanceAreaEffects({ areaEffects: explosion.areaEffects, fighters: [], seconds: BATTLEFIELD_SUPPLY_DEFS.drum.burnSeconds }).areaEffects[0].phase, "expired");
+
+  const destroyedDrum = applyBattlefieldSupplyDamage(drumPlacement.supplies[0], 999);
+  assert.equal(destroyedDrum.detonationRequested, true);
+  assert.equal(destroyedDrum.supply.phase, "detonating");
+  assert.equal(destroyedDrum.supply.detonationReason, "destroyed");
+
+  const medicalPlacement = resolveBattlefieldSupplyPlacement({ ...base, supplyKind: "medical", scrap: 100, nextId: 50, nextAreaEffectId: 60 });
+  assert.equal(medicalPlacement.areaEffects[0].kind, "healing");
+  const healed = advanceAreaEffects({
+    areaEffects: medicalPlacement.areaEffects,
+    activeSupplyIds: [50],
+    seconds: 1,
+    fighters: [
+      { id: 6, side: "human", lane: 1, x: 440, y: LANE_Y[1], hp: 50, maxHp: 100 },
+      { id: 7, side: "zombie", lane: 1, x: 440, y: LANE_Y[1], hp: 50, maxHp: 100 },
+    ],
+  });
+  assert.equal(healed.fighters[0].hp, 68);
+  assert.equal(healed.fighters[1].hp, 50);
+  assert.equal(advanceBattlefieldSupply(medicalPlacement.supplies[0], BATTLEFIELD_SUPPLY_DEFS.medical.effectSeconds).phase, "expired");
+  const missingSource = advanceAreaEffects({ areaEffects: medicalPlacement.areaEffects, activeSupplyIds: [], fighters: healed.fighters, seconds: 1 });
+  assert.equal(missingSource.areaEffects[0].phase, "expired");
+  assert.equal(missingSource.changes.length, 0);
+});
+
+test("models airstrike request and one-at-a-time emergency-support transitions", () => {
+  const idle = createEmergencySupportRuntime();
+  assert.deepEqual(idle, { phase: "idle", phaseTime: 0, targetX: null, targetLane: null, impactTriggered: false });
+  const insufficient = requestAirstrike({ running: true, paused: false, over: false, supportGauge: AIRSTRIKE_DEF.gaugeCost - 1, lane: 1, x: 500, runtime: idle });
+  assert.equal(insufficient.ok, false);
+  assert.equal(insufficient.supportGauge, AIRSTRIKE_DEF.gaugeCost - 1);
+
+  const requested = requestAirstrike({ running: true, paused: false, over: false, supportGauge: 100, lane: 1, x: 999, runtime: idle });
+  assert.equal(requested.ok, true);
+  assert.equal(requested.supportGauge, 40);
+  assert.equal(requested.runtime.phase, "radio");
+  assert.equal(requested.runtime.targetX, AIRSTRIKE_DEF.maxX);
+  assert.equal(requestAirstrike({ running: true, paused: false, over: false, supportGauge: 100, lane: 1, x: 500, runtime: requested.runtime }).ok, false);
+
+  const targeting = advanceEmergencySupportRuntime(requested.runtime, AIRSTRIKE_DEF.radioSeconds);
+  assert.equal(targeting.runtime.phase, "targeting");
+  const inbound = advanceEmergencySupportRuntime(targeting.runtime, AIRSTRIKE_DEF.targetingSeconds);
+  assert.equal(inbound.runtime.phase, "inbound");
+  const impact = advanceEmergencySupportRuntime(inbound.runtime, AIRSTRIKE_DEF.inboundSeconds);
+  assert.equal(impact.runtime.phase, "impact");
+  assert.deepEqual(impact.events, ["impact"]);
+  const resolved = resolveAirstrikeImpact({
+    runtime: impact.runtime,
+    fighters: [
+      { id: 1, side: "zombie", lane: 1, x: AIRSTRIKE_DEF.maxX, y: LANE_Y[1], hp: 200 },
+      { id: 2, side: "human", lane: 1, x: AIRSTRIKE_DEF.maxX, y: LANE_Y[1], hp: 200 },
+      { id: 3, side: "zombie", lane: 0, x: 300, y: LANE_Y[0], hp: 200 },
+    ],
+  });
+  assert.equal(resolved.triggered, true);
+  assert.deepEqual(resolved.hits, [{ id: 1, damage: AIRSTRIKE_DEF.damage }]);
+  assert.equal(resolveAirstrikeImpact({ runtime: resolved.runtime, fighters: resolved.fighters }).triggered, false);
+  const returning = advanceEmergencySupportRuntime(resolved.runtime, AIRSTRIKE_DEF.impactSeconds);
+  assert.equal(returning.runtime.phase, "returning");
+  const complete = advanceEmergencySupportRuntime(returning.runtime, AIRSTRIKE_DEF.returnSeconds);
+  assert.equal(complete.runtime.phase, "idle");
+  assert.deepEqual(complete.events, ["complete"]);
+});
+
+test("models the independently charged all-lane Crawler barrage with boss mitigation", () => {
+  const half = createCrawlerAbilityRuntime();
+  assert.equal(half.phase, "cooldown");
+  assert.equal(half.charge, .5);
+  assert.equal(half.cooldownRemaining, CRAWLER_BARRAGE_DEF.cooldownSeconds / 2);
+  const ready = advanceCrawlerAbilityRuntime(half, CRAWLER_BARRAGE_DEF.cooldownSeconds / 2);
+  assert.equal(ready.runtime.phase, "ready");
+  assert.deepEqual(ready.events, ["ready"]);
+  const requested = requestCrawlerBarrage({ running: true, paused: false, over: false, runtime: ready.runtime });
+  assert.equal(requested.ok, true);
+  assert.equal(requested.runtime.phase, "deploying");
+  const firing = advanceCrawlerAbilityRuntime(requested.runtime, CRAWLER_BARRAGE_DEF.deploySeconds);
+  assert.equal(firing.runtime.phase, "firing");
+  assert.deepEqual(firing.events, ["fire"]);
+
+  const barrage = resolveCrawlerBarrage({
+    runtime: firing.runtime,
+    fighters: [
+      { id: 1, side: "zombie", kind: "walker", lane: 0, hp: 100 },
+      { id: 2, side: "zombie", kind: "takuya", lane: 1, hp: 200 },
+      { id: 3, side: "zombie", kind: "crusher", lane: 2, hp: 100 },
+      { id: 4, side: "human", kind: "scout", lane: 1, hp: 100 },
+    ],
+  });
+  assert.equal(barrage.triggered, true);
+  assert.deepEqual(barrage.hits.map(({ lane }) => lane), [0, 1, 2]);
+  assert.equal(barrage.hits[0].damage, CRAWLER_BARRAGE_DEF.damage);
+  assert.equal(barrage.hits[1].damage, Math.round(CRAWLER_BARRAGE_DEF.damage * CRAWLER_BARRAGE_DEF.bossDamageMultiplier));
+  assert.equal(barrage.fighters[3].hp, 100);
+  assert.equal(resolveCrawlerBarrage({ runtime: barrage.runtime, fighters: barrage.fighters }).triggered, false);
+
+  const recovering = advanceCrawlerAbilityRuntime(barrage.runtime, CRAWLER_BARRAGE_DEF.fireSeconds);
+  assert.equal(recovering.runtime.phase, "recovering");
+  const cooldown = advanceCrawlerAbilityRuntime(recovering.runtime, CRAWLER_BARRAGE_DEF.recoverSeconds);
+  assert.equal(cooldown.runtime.phase, "cooldown");
+  assert.equal(cooldown.runtime.charge, 0);
+  assert.deepEqual(cooldown.events, ["cooldown"]);
+});
+
+test("caps transient render arrays and limits camera shake to major events", () => {
+  assert.deepEqual(RENDER_ARRAY_LIMITS, { particles: 420, shots: 180, damageTexts: 140, battleBarks: 2 });
+  assert.deepEqual(capRenderArray([1, 2, 3, 4], 2), [3, 4]);
+  assert.deepEqual(capRenderArray([1, 2, 3], 0), []);
+  assert.deepEqual(capRenderArray([1, 2, 3], "battleBarks"), [2, 3]);
+  assert.deepEqual(Object.keys(CAMERA_SHAKE_EVENTS), ["podLanding", "airstrikeImpact", "crawlerBarrage", "takuyaHeavy", "enemyBaseCollapse"]);
+  assert.equal("normalAttack" in CAMERA_SHAKE_EVENTS, false);
+  assert.ok(Object.values(CAMERA_SHAKE_EVENTS).every(({ strength, seconds }) => strength >= 0 && seconds > 0));
+});
+
 test("validates, damages, and releases the battlefield container without changing Crawler priority", async () => {
   const base = { running: true, paused: false, over: false, scrap: CONTAINER_DEF.cost, lane: 1, x: 440, objects: [], fighters: [], supports: [], nextId: 40 };
   assert.equal(CONTAINER_DEF.objectClearance, FIELD_OBJECT_CLEARANCE);
@@ -357,11 +583,12 @@ test("validates, damages, and releases the battlefield container without changin
   assert.equal(containerPlacementCheck({ ...base, paused: true }).reason, "一時停止中は配置できません");
   assert.equal(containerPlacementCheck({ ...base, scrap: CONTAINER_DEF.cost - 1 }).reason, "スクラップが不足しています");
   assert.equal(containerPlacementCheck({ ...base, x: CONTAINER_DEF.minX - 1 }).reason, "配置可能範囲外です");
-  assert.equal(containerPlacementCheck({ ...base, objects: [{ lane: 1, x: 500, y: LANE_Y[1], phase: "active" }] }).reason, "このレーンには設置済みです");
-  assert.equal(containerPlacementCheck({ ...base, objects: [
+  assert.equal(containerPlacementCheck({ ...base, objects: [{ lane: 1, x: 500, y: LANE_Y[1], phase: "active" }] }).reason, "既存物資に近すぎます");
+  assert.deepEqual(containerPlacementCheck({ ...base, objects: [
     { lane: 0, x: 300, y: LANE_Y[0], phase: "active" },
     { lane: 2, x: 600, y: LANE_Y[2], phase: "dropping" },
-  ] }).reason, "設置上限は2個です");
+  ] }), { ok: true, reason: "配置できます" });
+  assert.deepEqual(containerPlacementCheck({ ...base, objects: [{ lane: 1, x: 700, y: LANE_Y[1], phase: "active" }] }), { ok: true, reason: "配置できます" });
   assert.deepEqual(containerPlacementCheck({ ...base, fighters: [{ x: 450, y: LANE_Y[1], hp: 10 }] }), { ok: true, reason: "配置できます" });
 
   const placed = resolveContainerPlacement(base);
@@ -397,7 +624,7 @@ test("validates, damages, and releases the battlefield container without changin
   const activeSupport = { id: 7, kind: "medkit", lane: 1, x: 440, y: LANE_Y[1], life: 5 };
   const containerOnSupport = resolveContainerPlacement({ ...base, supports: [activeSupport] });
   assert.equal(containerOnSupport.ok, false);
-  assert.equal(containerOnSupport.reason, "既存支援物資に近すぎます");
+  assert.equal(containerOnSupport.reason, "既存物資に近すぎます");
   assert.equal(containerOnSupport.scrap, CONTAINER_DEF.cost);
   assert.equal(containerOnSupport.objects.length, 0);
 
