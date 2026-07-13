@@ -31,6 +31,7 @@ import {
   crawlerThreatLevel,
   damageContainer,
   humanAttackMultiplier,
+  isBrawlerFinisher,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
   laneForY,
@@ -102,9 +103,13 @@ test("ships the three-route barricade objective and its dedicated artwork", asyn
     access(new URL("../public/breaker-sprites-v2.png", import.meta.url)),
     access(new URL("../public/gunner-sprites-v1.png", import.meta.url)),
     access(new URL("../public/medic-sprites-v1.png", import.meta.url)),
+    access(new URL("../public/protective-container-v1.png", import.meta.url)),
   ]);
 
   assert.match(game, /loadImage\("\/iron-barricade-v1\.png"/);
+  assert.match(game, /container: "\/protective-container-v1\.png"/);
+  assert.match(game, /drawContainer\(ctx, renderable\.object, sprites\.container\)/);
+  assert.match(game, /ctx\.drawImage\(containerSprite/);
   assert.match(game, /function drawBarricade/);
   assert.match(game, /A single shared-HP barricade physically closes all three routes/);
   assert.match(game, /barricadeHp: number/);
@@ -247,6 +252,9 @@ test("applies role focus, marking, finishing, and structure-breach multipliers",
   assert.equal(roleTargetBias("gunner", "abomination"), -34);
 
   assert.equal(humanAttackMultiplier("gunner", "crusher"), 1.3);
+  assert.equal(isBrawlerFinisher("brawler", .351), false);
+  assert.equal(isBrawlerFinisher("brawler", .35), true);
+  assert.equal(isBrawlerFinisher("scout", .2), false);
   assert.equal(humanAttackMultiplier("brawler", "walker", .351), 1);
   assert.equal(humanAttackMultiplier("brawler", "walker", .35), 1.35);
   assert.equal(humanAttackMultiplier("scout", "runner", 1, true), 1.15);
@@ -444,6 +452,15 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /フィニッシュ/);
   assert.match(game, /重装破砕/);
   assert.match(game, /value: "救護"/);
+  for (const effect of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) {
+    assert.match(game, new RegExp(`shot\\.effect === "${effect}"|effect: "${effect}"`));
+  }
+  assert.match(game, /effect: f\.kind, emphasized/);
+  assert.match(game, /const brawlerFinishApplied = f\.side === "human" && isBrawlerFinisher\(f\.kind, targetHpRatio\)/);
+  assert.match(game, /brawlerFinishApplied \? "フィニッシュ"/);
+  assert.match(game, /function prepareRolesQa/);
+  assert.match(game, /qaRoles \? prepareRolesQa\(fresh\) : else|if \(qaRoles\) prepareRolesQa\(fresh\)/);
+  assert.match(game, /qa === "roles"/);
   assert.match(game, /advanceZombieX\(\{/);
   assert.match(game, /防護コンテナ破壊/);
   assert.match(game, /drawPlacementIndicator/);

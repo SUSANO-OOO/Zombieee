@@ -28,6 +28,7 @@ import {
   humanAttackMultiplier,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
+  isBrawlerFinisher,
   laneForY,
   objectiveFor,
   phaseAt,
@@ -114,7 +115,8 @@ type Fighter = {
 };
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number };
-type Shot = { x: number; y: number; tx: number; ty: number; life: number; side: "human" | "zombie" };
+type RoleEffect = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic";
+type Shot = { x: number; y: number; tx: number; ty: number; life: number; side: "human" | "zombie"; effect?: RoleEffect; emphasized?: boolean; duration?: number };
 type DamageText = { x: number; y: number; value: string; life: number; color: string };
 type Corpse = {
   x: number;
@@ -444,6 +446,42 @@ function prepareEndgameQa(g: Game) {
 
 }
 
+function prepareRolesQa(g: Game) {
+  g.time = 60;
+  g.phase = 2;
+  g.wave = 4;
+  g.eventIndex = missionEvents.length;
+  g.baseHp = 520;
+  g.barricadeHp = BARRICADE_MAX_HP;
+  g.energy = COMMAND_MAX;
+  g.scrap = 100;
+  g.tactic = "balanced";
+
+  const lineup: [UnitKind, Lane, number][] = [
+    ["scout", 0, 400], ["ranger", 1, 400], ["brute", 2, 500],
+    ["brawler", 0, 610], ["gunner", 1, 630], ["medic", 2, 580],
+  ];
+  for (const [kind, lane, x] of lineup) {
+    spawnHuman(g, kind);
+    const fighter = g.fighters[g.fighters.length - 1];
+    fighter.lane = lane; fighter.x = x; fighter.y = laneY(lane, fighter.id);
+    fighter.cooldown = 0; fighter.spawnGrace = 0;
+    if (kind === "brute") fighter.hp -= 40;
+  }
+
+  const scenarios: [EnemyKind, Lane, number, number?][] = [
+    ["runner", 0, 450], ["walker", 0, 640, .3], ["spitter", 1, 535],
+    ["crusher", 1, 720], ["walker", 2, 535],
+  ];
+  for (const [kind, lane, x, hpRatio] of scenarios) {
+    const fighter = spawnEnemy(g, kind, lane);
+    fighter.x = x; fighter.y = laneY(lane, fighter.id); fighter.cooldown = 1.2;
+    if (hpRatio) fighter.hp = fighter.maxHp * hpRatio;
+  }
+  g.banner = "QA ROLES // SIX UNIT LIVE FIRE";
+  g.bannerTime = 2.2;
+}
+
 function damageEnemiesInRadius(g: Game, x: number, y: number, radius: number, damage: number, color: string, knock = 8) {
   for (const f of g.fighters) {
     if (f.side !== "zombie" || effectDistance(f, { x, y }) > radius || f.hp <= 0) continue;
@@ -524,7 +562,7 @@ function drawSupport(ctx: CanvasRenderingContext2D, support: FieldSupport, time:
   ctx.restore();
 }
 
-function drawContainer(ctx: CanvasRenderingContext2D, object: BattlefieldObject) {
+function drawContainer(ctx: CanvasRenderingContext2D, object: BattlefieldObject, containerSprite?: HTMLImageElement) {
   const dropOffset = object.phase === "dropping" ? Math.max(0, object.phaseTime / .45) * 86 : 0;
   const destroyRatio = object.phase === "destroying" ? Math.max(0, object.phaseTime / .42) : 1;
   const hpRatio = Math.max(0, object.hp / object.maxHp);
@@ -536,16 +574,14 @@ function drawContainer(ctx: CanvasRenderingContext2D, object: BattlefieldObject)
   ctx.translate(object.x, drawY);
   if (object.phase === "destroying") { ctx.translate(0, (1 - destroyRatio) * 14); ctx.rotate((1 - destroyRatio) * -.18); ctx.scale(.78 + destroyRatio * .22, .58 + destroyRatio * .42); }
   if (object.hitFlash > 0) { ctx.shadowColor = "#fff0a4"; ctx.shadowBlur = 14; }
-  ctx.fillStyle = "#182729"; ctx.beginPath(); ctx.moveTo(-39,-31); ctx.lineTo(-29,-44); ctx.lineTo(29,-44); ctx.lineTo(39,-31); ctx.lineTo(36,5); ctx.lineTo(-36,5); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = hpRatio <= .3 ? "#57342d" : hpRatio <= .62 ? "#355052" : "#466a67";
-  ctx.beginPath(); ctx.moveTo(-31,-35); ctx.lineTo(-23,-40); ctx.lineTo(23,-40); ctx.lineTo(31,-35); ctx.lineTo(29,0); ctx.lineTo(-29,0); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = "#9aad9f"; ctx.lineWidth = 2; ctx.stroke();
-  ctx.fillStyle = "#223536"; ctx.fillRect(-23,-34,46,28); ctx.strokeStyle = "#172526"; ctx.strokeRect(-23,-34,46,28);
-  ctx.strokeStyle = "#78908a"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-19,-30); ctx.lineTo(19,-10); ctx.moveTo(19,-30); ctx.lineTo(-19,-10); ctx.stroke();
-  for (const side of [-1,1]) { ctx.fillStyle="#172324"; ctx.fillRect(side * 31 - 3,-28,6,28); ctx.fillStyle="#b7a66d"; ctx.fillRect(side * 31 - 3,-29,6,5); }
-  ctx.fillStyle = "#d6a34c"; ctx.fillRect(-29,-23,58,6);
-  ctx.fillStyle = "#152223"; ctx.font = "900 9px monospace"; ctx.textAlign = "center"; ctx.fillText("ASHFALL // 05", 0, -14);
-  for (const x of [-25,25]) for (const y of [-35,-5]) { ctx.fillStyle="#c2b899"; ctx.beginPath(); ctx.arc(x,y,1.7,0,Math.PI*2); ctx.fill(); }
+  if (containerSprite?.complete && containerSprite.naturalWidth) {
+    ctx.filter = hpRatio <= .3 ? "saturate(.5) brightness(.66) sepia(.16)" : hpRatio <= .62 ? "saturate(.72) brightness(.82)" : "none";
+    ctx.drawImage(containerSprite, -52, -54, 104, 69);
+    ctx.filter = "none";
+  } else {
+    ctx.fillStyle = "#344b48";
+    ctx.beginPath(); ctx.moveTo(-39,-31); ctx.lineTo(-29,-44); ctx.lineTo(29,-44); ctx.lineTo(39,-31); ctx.lineTo(36,5); ctx.lineTo(-36,5); ctx.closePath(); ctx.fill();
+  }
   if (hpRatio <= .62) { ctx.strokeStyle = hpRatio <= .3 ? "#e76c4e" : "#172526"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(8,-39); ctx.lineTo(2,-27); ctx.lineTo(11,-20); ctx.lineTo(5,-7); ctx.stroke(); }
   if (object.phase === "dropping") { ctx.strokeStyle="rgba(205,222,202,.55)"; ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(-27,-48); ctx.lineTo(-42,-82); ctx.moveTo(27,-48); ctx.lineTo(42,-82); ctx.stroke(); ctx.setLineDash([]); }
   if (object.phase === "impact") { const pulse=1-object.phaseTime/.26; ctx.strokeStyle=`rgba(255,190,85,${1-pulse})`; ctx.lineWidth=5-3*pulse; ctx.beginPath(); ctx.ellipse(0,7,42+pulse*62,12+pulse*24,0,0,Math.PI*2); ctx.stroke(); }
@@ -737,7 +773,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
     ...g.battlefieldObjects.filter((object) => object.phase !== "expired").map((object) => ({ type: "object" as const, x: object.x, y: object.y, object })),
   ].sort((a, b) => a.y - b.y || a.x - b.x);
   for (const renderable of renderables) {
-    if (renderable.type === "object") { drawContainer(ctx, renderable.object); continue; }
+    if (renderable.type === "object") { drawContainer(ctx, renderable.object, sprites.container); continue; }
     const f = renderable.fighter;
     if (f.kind === "takuya" && f.abilityWindup > 0) {
       const slamRadius = f.hp / f.maxHp <= .5 ? 145 : 118;
@@ -769,9 +805,39 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
   drawCrawlerExitFrame(ctx, g);
 
   for (const shot of g.shots) {
-    const p = 1 - shot.life / .12;
+    const duration = shot.duration ?? .12;
+    const p = 1 - shot.life / duration;
     const x = shot.x + (shot.tx - shot.x) * p;
     const y = shot.y + (shot.ty - shot.y) * p;
+    if (shot.effect) {
+      const strength = Math.max(.2, Math.min(1, shot.life / duration));
+      ctx.save(); ctx.globalAlpha = strength;
+      if (shot.effect === "scout") {
+        ctx.strokeStyle = "#ffe26e"; ctx.lineWidth = 2; ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.arc(shot.tx, shot.ty, 13 + (1 - strength) * 7, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+        for (const [dx, dy] of [[-1,-1],[1,-1],[-1,1],[1,1]]) { ctx.beginPath(); ctx.moveTo(shot.tx + dx * 17, shot.ty + dy * 8); ctx.lineTo(shot.tx + dx * 9, shot.ty + dy * 8); ctx.stroke(); }
+      } else if (shot.effect === "ranger") {
+        ctx.strokeStyle = "#b7efff"; ctx.shadowColor = "#67c8ff"; ctx.shadowBlur = 8; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(shot.x, shot.y); ctx.lineTo(x, y); ctx.stroke();
+        ctx.beginPath(); ctx.arc(shot.tx, shot.ty, 6, 0, Math.PI * 2); ctx.stroke();
+      } else if (shot.effect === "brute") {
+        ctx.strokeStyle = "#ff9d45"; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(shot.tx, shot.ty + 12, 11 + (1 - strength) * 18, 5 + (1 - strength) * 7, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = "#d8b36c"; for (const dx of [-12, -4, 5, 13]) ctx.fillRect(shot.tx + dx, shot.ty + 4 - Math.abs(dx) * .2, 3, 8);
+      } else if (shot.effect === "brawler") {
+        const reach = shot.emphasized ? 20 : 13; ctx.strokeStyle = shot.emphasized ? "#fff18a" : "#f08a57"; ctx.lineWidth = shot.emphasized ? 5 : 3;
+        ctx.beginPath(); ctx.moveTo(shot.tx - reach, shot.ty - reach * .45); ctx.lineTo(shot.tx + reach, shot.ty + reach * .45); ctx.moveTo(shot.tx + reach * .7, shot.ty - reach * .65); ctx.lineTo(shot.tx - reach * .7, shot.ty + reach * .65); ctx.stroke();
+      } else if (shot.effect === "gunner") {
+        ctx.strokeStyle = shot.emphasized ? "#ffd067" : "#e8b354"; ctx.shadowColor = "#ff9e35"; ctx.shadowBlur = 10; ctx.lineWidth = shot.emphasized ? 5 : 3;
+        ctx.beginPath(); ctx.moveTo(shot.x, shot.y - 2); ctx.lineTo(x, y - 2); ctx.moveTo(shot.x, shot.y + 2); ctx.lineTo(x, y + 2); ctx.stroke();
+        ctx.strokeRect(shot.tx - 10, shot.ty - 10, 20, 20);
+      } else {
+        ctx.strokeStyle = "#79efac"; ctx.shadowColor = "#58d98f"; ctx.shadowBlur = 9; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(shot.x, shot.y); ctx.quadraticCurveTo((shot.x + shot.tx) / 2, Math.min(shot.y, shot.ty) - 13, shot.tx, shot.ty); ctx.stroke();
+        ctx.beginPath(); ctx.arc(shot.tx, shot.ty, 9 + (1 - strength) * 5, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = "#b8ffd0"; ctx.fillRect(shot.tx - 2, shot.ty - 8, 4, 16); ctx.fillRect(shot.tx - 8, shot.ty - 2, 16, 4);
+      }
+      ctx.restore();
+      continue;
+    }
     ctx.strokeStyle = shot.side === "human" ? "#ffe078" : "#e76747";
     ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 7; ctx.lineWidth = shot.side === "human" ? 2.5 : 4;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (shot.side === "human" ? -15 : 15), y); ctx.stroke();
@@ -830,6 +896,7 @@ export function AshfallGame() {
   const [assetsReady, setAssetsReady] = useState(false);
   const [assetError, setAssetError] = useState(false);
   const [qaEndgame, setQaEndgame] = useState(false);
+  const [qaRoles, setQaRoles] = useState(false);
   const [selectedAction, setSelectedAction] = useState<SelectedAction>(null);
   const [hud, setHud] = useState<Hud>({
     energy: 70, rage: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 520,
@@ -843,7 +910,9 @@ export function AshfallGame() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const localHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      setQaEndgame(localHost && new URLSearchParams(window.location.search).get("qa") === "endgame");
+      const qa = localHost ? new URLSearchParams(window.location.search).get("qa") : null;
+      setQaEndgame(qa === "endgame");
+      setQaRoles(qa === "roles");
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -874,7 +943,7 @@ export function AshfallGame() {
     const criticalPaths: Record<string, string> = {
       scout: "/scout-sprites-v2.png", ranger: "/ranger-sprites-v1.png", brute: "/breaker-sprites-v2.png",
       brawler: "/brawler-sprites-v1.png", gunner: "/gunner-sprites-v1.png", medic: "/medic-sprites-v1.png",
-      infected: "/infected-sprites-v1.png", crawler: "/crawler-bus-v1.png",
+      infected: "/infected-sprites-v1.png", crawler: "/crawler-bus-v1.png", container: "/protective-container-v1.png",
     };
     const criticalJobs = [
       loadImage("/battlefield-v4.png", (image) => { backgroundRef.current = image; }),
@@ -1168,7 +1237,7 @@ export function AshfallGame() {
   const startGame = useCallback(() => {
     const fresh = initialGame();
     fresh.running = true;
-    if (qaEndgame) prepareEndgameQa(fresh);
+    if (qaRoles) prepareRolesQa(fresh); else if (qaEndgame) prepareEndgameQa(fresh);
     gameRef.current = fresh;
     const boss = fresh.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
     desiredMusicModeRef.current = "normal";
@@ -1182,7 +1251,7 @@ export function AshfallGame() {
       deployCooldowns: { ...fresh.deployCooldowns } });
     stopMusic(); stopJingle(); if (!bgmMuted) startMusic();
     tone(180, .12); window.setTimeout(() => tone(260, .12), 90);
-  }, [bgmMuted, chooseAction, qaEndgame, startMusic, stopJingle, stopMusic, tone]);
+  }, [bgmMuted, chooseAction, qaEndgame, qaRoles, startMusic, stopJingle, stopMusic, tone]);
 
   const togglePause = useCallback(() => {
     const g = gameRef.current;
@@ -1407,7 +1476,7 @@ export function AshfallGame() {
               wounded.hp += healed; f.supportCooldown = 1.55;
               g.damageTexts.push({ x: wounded.x, y: wounded.y - 70, value: `+${Math.ceil(healed)}`, life: .8, color: "#83e0a2" });
               g.damageTexts.push({ x: f.x, y: f.y - 64, value: "救護", life: .7, color: "#9bf0ba" });
-              g.shots.push({ x: f.x + 8, y: f.y - 34, tx: wounded.x, ty: wounded.y - 28, life: .12, side: "human" });
+              g.shots.push({ x: f.x + 8, y: f.y - 34, tx: wounded.x, ty: wounded.y - 28, life: .32, duration: .32, side: "human", effect: "medic" });
               addParticles(g, wounded.x, wounded.y - 30, "#69d993", 7);
             }
           }
@@ -1538,14 +1607,16 @@ export function AshfallGame() {
           } else if (target && distance <= f.range + target.bodyRadius) {
             if (f.cooldown <= 0) {
               const enragedTakuya = f.kind === "takuya" && f.hp / f.maxHp <= .5;
-              const attackDamage = f.side === "human" ? f.damage * humanAttackMultiplier(f.kind, target.kind, target.hp / target.maxHp, target.marked > 0) : f.damage;
+              const targetHpRatio = target.hp / target.maxHp;
+              const brawlerFinishApplied = f.side === "human" && isBrawlerFinisher(f.kind, targetHpRatio);
+              const attackDamage = f.side === "human" ? f.damage * humanAttackMultiplier(f.kind, target.kind, targetHpRatio, target.marked > 0) : f.damage;
               target.hp -= attackDamage; target.flash = .12;
               if (f.kind === "scout" && target.side === "zombie") target.marked = Math.max(target.marked, 3.2);
               target.knock = f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" ? 9 : 3;
               f.attack = .18; f.cooldown = enragedTakuya ? .9 : f.attackEvery;
               g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(attackDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
               if (f.side === "human" && f.abilityCooldown <= 0) {
-                const roleCue = f.kind === "scout" ? "索敵マーク" : f.kind === "ranger" && target.kind === "spitter" ? "対・毒吐き" : f.kind === "brute" ? "前線保持" : f.kind === "brawler" && target.hp / target.maxHp <= .35 ? "フィニッシュ" : f.kind === "gunner" && ["crusher", "abomination"].includes(target.kind) ? "重装破砕" : null;
+                const roleCue = f.kind === "scout" ? "索敵マーク" : f.kind === "ranger" && target.kind === "spitter" ? "対・毒吐き" : f.kind === "brute" ? "前線保持" : brawlerFinishApplied ? "フィニッシュ" : f.kind === "gunner" && ["crusher", "abomination"].includes(target.kind) ? "重装破砕" : null;
                 if (roleCue) { g.damageTexts.push({ x: f.x, y: f.y - 66, value: roleCue, life: .75, color: "#ffe078" }); f.abilityCooldown = 1.8; }
               }
               g.shake = Math.max(g.shake, f.kind === "takuya" ? 11 : f.kind === "brute" || f.kind === "abomination" ? 7 : 2.5);
@@ -1558,9 +1629,12 @@ export function AshfallGame() {
                 }
                 addParticles(g, target.x, target.y + 2, "#b78656", 13); tone(64, .16, "sawtooth");
               }
-              if (["ranger", "gunner", "medic", "spitter"].includes(f.kind)) {
-                g.shots.push({ x: f.x + (f.side === "human" ? 14 : -14), y: f.y - 32, tx: target.x, ty: target.y - 28, life: .12, side: f.side });
-                if (f.side === "human") tone(310 + Math.random() * 50, .035);
+              if (f.side === "human") {
+                const emphasized = brawlerFinishApplied || (f.kind === "gunner" && ["crusher", "abomination"].includes(target.kind));
+                g.shots.push({ x: f.x + 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", effect: f.kind, emphasized });
+                if (["ranger", "gunner", "medic"].includes(f.kind)) tone(310 + Math.random() * 50, .035);
+              } else if (f.kind === "spitter") {
+                g.shots.push({ x: f.x - 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .12, side: "zombie" });
               } else {
                 addParticles(g, target.x, target.y - 18, target.kind === "takuya" || target.kind === "shade" ? "#b98a62" : target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
               }
@@ -1785,7 +1859,7 @@ export function AshfallGame() {
     <main className="game-shell">
       <section className="game-frame" aria-label="ASHFALL OUTPOST game">
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""}`} aria-label="Three-lane wasteland battlefield" onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointer} />
-        {qaEndgame && <div className="qa-badge" role="status">LOCAL QA // ENDGAME</div>}
+        {(qaEndgame || qaRoles) && <div className="qa-badge" role="status">LOCAL QA // {qaRoles ? "ROLES" : "ENDGAME"}</div>}
 
         <div className="top-hud">
           <div className="brand-block"><span className="brand-mark">A</span><div><b>ASHFALL</b><small>OUTPOST // 07 <em>EARLY ACCESS 0.4.0</em></small></div></div>

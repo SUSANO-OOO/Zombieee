@@ -289,9 +289,13 @@ export function roleTargetBias(attackerKind, targetKind) {
   return 0;
 }
 
+export function isBrawlerFinisher(attackerKind, targetHpRatio = 1) {
+  return attackerKind === "brawler" && targetHpRatio <= .35;
+}
+
 export function humanAttackMultiplier(attackerKind, targetKind, targetHpRatio = 1, marked = false) {
   let multiplier = attackerKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination") ? 1.3 : 1;
-  if (attackerKind === "brawler" && targetHpRatio <= .35) multiplier *= 1.35;
+  if (isBrawlerFinisher(attackerKind, targetHpRatio)) multiplier *= 1.35;
   if (marked) multiplier *= 1.15;
   return multiplier;
 }
