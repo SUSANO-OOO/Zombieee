@@ -25,21 +25,26 @@ import {
   WORLD_GEOMETRY,
   advanceAreaEffects,
   advanceBattlefieldSupply,
+  advanceCameraShakeRuntime,
   advanceCrawlerAbilityRuntime,
   advanceEmergencySupportRuntime,
+  advanceEnemyBaseCollapse,
   advanceZombieX,
   advanceCommand,
   advanceLimitFor,
   applyBattlefieldSupplyDamage,
   applyContainerDamage,
+  airstrikeObserverPose,
   autonomousTargetScore,
   barricadeState,
   battleOutcome,
   battlefieldSupplyPlacementCheck,
+  cameraShakeAmplitude,
   canDeploy,
   capRenderArray,
   containerBlocksEnemy,
   containerPlacementCheck,
+  createCameraShakeRuntime,
   createCrawlerAbilityRuntime,
   createEmergencySupportRuntime,
   crawlerSiegeDamage,
@@ -50,6 +55,7 @@ import {
   isBrawlerFinisher,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
+  keyboardInputGate,
   laneForY,
   objectiveFor,
   phaseAt,
@@ -57,6 +63,7 @@ import {
   requestAirstrike,
   requestCrawlerBarrage,
   requestDrumDetonation,
+  retainActiveAreaEffects,
   resolveAirstrikeImpact,
   resolveBattlefieldSupplyLanding,
   resolveBattlefieldSupplyPlacement,
@@ -65,11 +72,14 @@ import {
   resolveCrawlerBarrage,
   resolveDrumDetonation,
   resolveFieldSupportPlacement,
+  roleEffectForAction,
   roleTargetBias,
+  selectAreaEffectsForRender,
   selectBlockingContainer,
   structureDamageMultiplier,
   supportGaugeReward,
   tacticTargetBias,
+  triggerCameraShake,
 } from "../app/gameRules.js";
 import {
   APPROVED_BATTLE_BARK_LINES,
@@ -215,7 +225,7 @@ test("provides a five-second preparation window, a three-slot bay, and selectabl
   assert.match(game, /const setTactic/);
   assert.match(game, /const cycleTactic/);
   assert.match(game, /作戦方針 \/\//);
-  assert.match(game, /event\.key\.toLowerCase\(\) === "r"/);
+  assert.match(game, /normalizedKey === "r"/);
   assert.match(game, /aria-label=\{`作戦方針を切り替え（現在：\$\{tacticName\}）`\}/);
   assert.match(game, /advanceLimitFor\(g\.tactic, g\.phase, g\.barricadeVulnerable\)/);
   assert.match(game, /tacticTargetBias\(g\.tactic, enemy\.x\)/);
@@ -326,6 +336,21 @@ test("applies role focus, marking, finishing, and structure-breach multipliers",
   assert.equal(structureDamageMultiplier("medic", "balanced"), .7);
   assertClose(structureDamageMultiplier("brute", "assault"), 1.68);
   assertClose(structureDamageMultiplier("brute", "defend"), 1.35);
+
+  assert.equal(roleEffectForAction({ unitKind: "scout", targetKind: "runner", targetAlreadyMarked: false }), "scout");
+  assert.equal(roleEffectForAction({ unitKind: "scout", targetKind: "runner", targetAlreadyMarked: true }), null);
+  assert.equal(roleEffectForAction({ unitKind: "ranger", targetKind: "spitter" }), "ranger");
+  assert.equal(roleEffectForAction({ unitKind: "ranger", targetKind: "walker" }), null);
+  assert.equal(roleEffectForAction({ unitKind: "brute", targetKind: "walker", holdingFrontline: true }), "brute");
+  assert.equal(roleEffectForAction({ unitKind: "brute", targetKind: "walker", holdingFrontline: false }), null);
+  assert.equal(roleEffectForAction({ unitKind: "brute", action: "structure" }), "brute");
+  assert.equal(roleEffectForAction({ unitKind: "brawler", targetKind: "walker", targetHpRatio: .35 }), "brawler");
+  assert.equal(roleEffectForAction({ unitKind: "brawler", targetKind: "walker", targetHpRatio: .351 }), null);
+  assert.equal(roleEffectForAction({ unitKind: "gunner", targetKind: "crusher" }), "gunner");
+  assert.equal(roleEffectForAction({ unitKind: "gunner", targetKind: "abomination" }), "gunner");
+  assert.equal(roleEffectForAction({ unitKind: "gunner", targetKind: "walker" }), null);
+  assert.equal(roleEffectForAction({ unitKind: "medic", action: "heal" }), "medic");
+  assert.equal(roleEffectForAction({ unitKind: "medic", action: "attack", targetKind: "walker" }), null);
 });
 
 test("tracks one barricade condition and resolves the battle from either structure", () => {
@@ -342,6 +367,10 @@ test("tracks one barricade condition and resolves the battle from either structu
   assert.equal(battleOutcome(0, 500), "lost");
   assert.equal(battleOutcome(100, 0), "won");
   assert.equal(battleOutcome(0, 0), "lost");
+
+  assert.deepEqual(advanceEnemyBaseCollapse({ barricadeHp: 100, elapsed: .4, seconds: .2 }), { active: false, elapsed: 0, complete: false });
+  assert.deepEqual(advanceEnemyBaseCollapse({ barricadeHp: 0, elapsed: 0, seconds: .4 }), { active: true, elapsed: .4, complete: false });
+  assert.deepEqual(advanceEnemyBaseCollapse({ barricadeHp: 0, elapsed: .8, seconds: .4 }), { active: true, elapsed: 1.05, complete: true });
 });
 
 test("scores autonomous targets without collapsing every unit onto one enemy", () => {
@@ -510,6 +539,38 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   assert.equal(missingSource.areaEffects[0].phase, "expired");
   assert.equal(missingSource.changes.length, 0);
 
+  const manyEffects = Array.from({ length: 32 }, (_, index) => ({
+    id: 100 + index,
+    kind: index % 2 === 0 ? "burn" : "healing",
+    sourceSupplyId: 500 + index,
+    lane: 1,
+    x: 440,
+    y: LANE_Y[1],
+    radius: 100,
+    amountPerSecond: 1,
+    remaining: 3,
+    phase: "active",
+    slowMultiplier: .8,
+  }));
+  const manyEffectStep = advanceAreaEffects({
+    areaEffects: manyEffects,
+    seconds: 1,
+    fighters: [
+      { id: 80, side: "zombie", lane: 1, x: 440, y: LANE_Y[1], hp: 100, maxHp: 100 },
+      { id: 81, side: "human", lane: 1, x: 440, y: LANE_Y[1], hp: 50, maxHp: 100 },
+    ],
+  });
+  assert.equal(manyEffectStep.areaEffects.length, 32);
+  assert.ok(manyEffectStep.areaEffects.every((effect) => effect.phase === "active"));
+  assert.equal(manyEffectStep.changes.length, 32);
+  assert.equal(manyEffectStep.fighters[0].hp, 84);
+  assert.equal(manyEffectStep.fighters[1].hp, 66);
+  const retained = retainActiveAreaEffects([...manyEffectStep.areaEffects, { ...manyEffectStep.areaEffects[0], id: 999, phase: "expired" }]);
+  assert.equal(retained.length, 32);
+  const visibleEffects = selectAreaEffectsForRender(retained);
+  assert.equal(visibleEffects.length, RENDER_ARRAY_LIMITS.areaEffectVisuals);
+  assert.equal(retained.length, 32);
+
   const leftBurn = advanceAreaEffects({ areaEffects: burned.areaEffects, fighters: burned.fighters.map((fighter) => ({ ...fighter, x: 900 })), seconds: 1 });
   assert.equal(leftBurn.fighters[0].burning, false);
   assert.equal(leftBurn.fighters[0].slowMultiplier, 1);
@@ -531,17 +592,24 @@ test("models airstrike request and one-at-a-time emergency-support transitions",
   assert.equal(requested.runtime.phase, "radio");
   assert.equal(requested.runtime.targetX, AIRSTRIKE_DEF.maxX);
   assert.equal(requestAirstrike({ running: true, paused: false, over: false, supportGauge: 100, lane: 1, x: 500, runtime: requested.runtime }).ok, false);
+  assert.deepEqual(airstrikeObserverPose(idle), { visible: false, rise: 0, action: "idle" });
+  assertClose(airstrikeObserverPose({ ...requested.runtime, phaseTime: AIRSTRIKE_DEF.radioSeconds / 2 }).rise, .5);
 
   const targeting = advanceEmergencySupportRuntime(requested.runtime, AIRSTRIKE_DEF.radioSeconds);
   assert.equal(targeting.runtime.phase, "targeting");
+  assert.deepEqual(targeting.events, ["targeting"]);
+  assert.deepEqual(airstrikeObserverPose(targeting.runtime), { visible: true, rise: 1, action: "targeting" });
   const inbound = advanceEmergencySupportRuntime(targeting.runtime, AIRSTRIKE_DEF.targetingSeconds);
   assert.equal(inbound.runtime.phase, "inbound");
+  assert.deepEqual(inbound.events, ["inbound"]);
+  assert.deepEqual(airstrikeObserverPose(inbound.runtime), { visible: true, rise: 1, action: "inbound" });
   const impact = advanceEmergencySupportRuntime(inbound.runtime, AIRSTRIKE_DEF.inboundSeconds);
   assert.equal(impact.runtime.phase, "impact");
   assert.deepEqual(impact.events, ["impact"]);
+  assert.deepEqual(airstrikeObserverPose(impact.runtime), { visible: true, rise: 1, action: "impact" });
   const largeDeltaImpact = advanceEmergencySupportRuntime(requested.runtime, 99);
   assert.equal(largeDeltaImpact.runtime.phase, "impact");
-  assert.deepEqual(largeDeltaImpact.events, ["impact"]);
+  assert.deepEqual(largeDeltaImpact.events, ["targeting", "inbound", "impact"]);
   const resolved = resolveAirstrikeImpact({
     runtime: impact.runtime,
     fighters: [
@@ -555,9 +623,12 @@ test("models airstrike request and one-at-a-time emergency-support transitions",
   assert.equal(resolveAirstrikeImpact({ runtime: resolved.runtime, fighters: resolved.fighters }).triggered, false);
   const returning = advanceEmergencySupportRuntime(resolved.runtime, AIRSTRIKE_DEF.impactSeconds);
   assert.equal(returning.runtime.phase, "returning");
+  assert.deepEqual(returning.events, ["returning"]);
+  assertClose(airstrikeObserverPose({ ...returning.runtime, phaseTime: AIRSTRIKE_DEF.returnSeconds / 2 }).rise, .5);
   const complete = advanceEmergencySupportRuntime(returning.runtime, AIRSTRIKE_DEF.returnSeconds);
   assert.equal(complete.runtime.phase, "idle");
   assert.deepEqual(complete.events, ["complete"]);
+  assert.deepEqual(airstrikeObserverPose(complete.runtime), { visible: false, rise: 0, action: "idle" });
 });
 
 test("models the independently charged all-lane Crawler barrage with boss mitigation", () => {
@@ -603,13 +674,33 @@ test("models the independently charged all-lane Crawler barrage with boss mitiga
 });
 
 test("caps transient render arrays and limits camera shake to major events", () => {
-  assert.deepEqual(RENDER_ARRAY_LIMITS, { particles: 420, shots: 180, damageTexts: 140, areaEffects: 24, battleBarks: 2 });
+  assert.deepEqual(RENDER_ARRAY_LIMITS, { particles: 420, shots: 180, damageTexts: 140, areaEffectVisuals: 24, battleBarks: 2 });
   assert.deepEqual(capRenderArray([1, 2, 3, 4], 2), [3, 4]);
   assert.deepEqual(capRenderArray([1, 2, 3], 0), []);
   assert.deepEqual(capRenderArray([1, 2, 3], "battleBarks"), [2, 3]);
-  assert.deepEqual(Object.keys(CAMERA_SHAKE_EVENTS), ["podLanding", "airstrikeImpact", "crawlerBarrage", "takuyaHeavy", "enemyBaseCollapse"]);
+  assert.deepEqual(Object.keys(CAMERA_SHAKE_EVENTS), ["podLanding", "airstrikeImpact", "crawlerBarrage", "takuyaEntrance", "takuyaHeavy", "takuyaDefeat", "enemyBaseCollapse"]);
   assert.equal("normalAttack" in CAMERA_SHAKE_EVENTS, false);
   assert.ok(Object.values(CAMERA_SHAKE_EVENTS).every(({ strength, seconds }) => strength >= 0 && seconds > 0));
+  const startedShake = triggerCameraShake(createCameraShakeRuntime(), CAMERA_SHAKE_EVENTS.takuyaHeavy);
+  assert.equal(cameraShakeAmplitude(startedShake), CAMERA_SHAKE_EVENTS.takuyaHeavy.strength);
+  const halfShake = advanceCameraShakeRuntime(startedShake, CAMERA_SHAKE_EVENTS.takuyaHeavy.seconds / 2);
+  assertClose(cameraShakeAmplitude(halfShake), CAMERA_SHAKE_EVENTS.takuyaHeavy.strength / 2);
+  assert.equal(cameraShakeAmplitude(advanceCameraShakeRuntime(halfShake, CAMERA_SHAKE_EVENTS.takuyaHeavy.seconds / 2)), 0);
+  assert.equal(cameraShakeAmplitude(triggerCameraShake(createCameraShakeRuntime(), { strength: 0, seconds: .2 })), 0);
+  const collapseAfterPod = triggerCameraShake(triggerCameraShake(createCameraShakeRuntime(), CAMERA_SHAKE_EVENTS.podLanding), CAMERA_SHAKE_EVENTS.enemyBaseCollapse);
+  assert.equal(collapseAfterPod.duration, CAMERA_SHAKE_EVENTS.enemyBaseCollapse.seconds);
+  assert.equal(collapseAfterPod.strength, CAMERA_SHAKE_EVENTS.enemyBaseCollapse.strength);
+  const defeatAfterHeavy = triggerCameraShake(triggerCameraShake(createCameraShakeRuntime(), CAMERA_SHAKE_EVENTS.takuyaHeavy), CAMERA_SHAKE_EVENTS.takuyaDefeat);
+  assert.equal(defeatAfterHeavy.duration, CAMERA_SHAKE_EVENTS.takuyaDefeat.seconds);
+  assert.equal(defeatAfterHeavy.strength, CAMERA_SHAKE_EVENTS.takuyaDefeat.strength);
+
+  assert.equal(keyboardInputGate({ running: true, paused: false, over: false, key: "1" }), "active");
+  assert.equal(keyboardInputGate({ running: true, paused: true, over: false, key: "1" }), "ignore");
+  assert.equal(keyboardInputGate({ running: true, paused: true, over: false, key: "p" }), "toggle-pause");
+  assert.equal(keyboardInputGate({ running: true, paused: true, over: false, key: "Escape" }), "toggle-pause");
+  assert.equal(keyboardInputGate({ running: true, paused: false, over: true, key: "1" }), "ignore");
+  assert.equal(keyboardInputGate({ running: true, paused: false, over: false, key: "1", repeat: true }), "ignore");
+  assert.equal(keyboardInputGate({ running: false, paused: false, over: false, key: "1" }), "ignore");
 });
 
 test("validates, damages, and releases the battlefield container without changing Crawler priority", async () => {
@@ -721,9 +812,23 @@ test("validates, damages, and releases the battlefield container without changin
   for (const effect of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) {
     assert.match(game, new RegExp(`shot\\.effect === "${effect}"|effect: "${effect}"`));
   }
-  assert.match(game, /effect: f\.kind as RoleEffect, emphasized/);
-  assert.match(game, /const brawlerFinishApplied = f\.side === "human" && isBrawlerFinisher\(f\.kind, targetHpRatio\)/);
-  assert.match(game, /brawlerFinishApplied \? "フィニッシュ"/);
+  assert.doesNotMatch(game, /effect: f\.kind as RoleEffect/);
+  assert.match(game, /roleEffectForAction\(\{[\s\S]*targetAlreadyMarked: target\.marked > 0[\s\S]*holdingFrontline: f\.kind === "brute" && target\.targetId === f\.id/);
+  assert.match(game, /effect: roleEffect \?\? undefined, emphasized, style: ranged \? "projectile" : "melee"/);
+  assert.match(game, /roleEffect === "brawler" \? "フィニッシュ"/);
+  assert.match(game, /action: "structure"[\s\S]*playCue\("role-brute"\)/);
+  assert.match(game, /action: "heal"[\s\S]*playCue\("role-medic"\)/);
+  assert.doesNotMatch(game, /g\.areaEffects = capRenderArray/);
+  assert.match(game, /g\.areaEffects = retainActiveAreaEffects\(areaStep\.areaEffects\)/);
+  assert.match(game, /selectAreaEffectsForRender\(g\.areaEffects\)/);
+  assert.match(game, /function drawAirstrikeObserver/);
+  assert.match(game, /pose\.action === "radio"[\s\S]*pose\.action === "targeting"[\s\S]*pose\.action === "inbound" \|\| pose\.action === "impact"/);
+  assert.match(game, /const state = barricadeState\(g\.barricadeHp\)/);
+  assert.match(game, /state === "BREACHED"[\s\S]*ENEMY BASE DESTROYED/);
+  assert.match(game, /const enemyBaseDestroyed = g\.barricadeHp <= 0[\s\S]*g\.resultPresented = !enemyBaseDestroyed/);
+  assert.match(game, /advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*setEnd\(\{ won: g\.won/);
+  assert.match(game, /const combatLocked = !!end \|\| hud\.baseHp <= 0 \|\| hud\.barricadeHp <= 0/);
+  assert.match(game, /const chooseActionWithCue[\s\S]*if \(!g\.running \|\| g\.paused \|\| g\.over\) return/);
   assert.match(game, /function prepareRolesQa/);
   assert.match(game, /prepareQaMode\(fresh, qaMode\)/);
   assert.match(game, /resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)/);
@@ -804,7 +909,9 @@ test("exposes localhost-only QA routes and wires every deterministic boss-stage 
   assert.match(game, /g\.crawlerAbility = createCrawlerAbilityRuntime\(1\)/);
   assert.match(game, /function prepareStressQa[\s\S]*index < 5[\s\S]*index < 8[\s\S]*index < 18/);
   assert.match(game, /g\.supportGauge = 0/);
-  assert.match(game, /takuya\.hp = 35/);
+  assert.match(game, /takuya\.hp = 420/);
+  assert.match(game, /takuya\.abilityCooldown = 0/);
+  assert.match(game, /g\.barricadeHp = 760/);
   assert.match(game, /g\.phase = 3/);
   assert.match(game, /g\.wave = 8/);
   for (const kind of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) assert.match(game, new RegExp(`\\["${kind}",`));
@@ -840,12 +947,30 @@ test("keeps BGM and procedural SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /for \(const bus of Object\.values\(runtime\.buses\)\)/);
   assert.match(game, /sfxMutedRef\.current = next/);
   assert.match(game, /if \(g\.paused\) \{[\s\S]*g\.battleBarks = createBattleBarkRuntime\(\)[\s\S]*stopMusic\(\); stopJingle\(\); stopSfx\(\);/);
-  assert.match(game, /stopMusic\(\); stopSfx\(\); playEndJingle\(g\.won\)/);
+  assert.match(game, /stopMusic\(\); stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
   assert.match(game, /const returnToLoadout = useCallback/);
   assert.match(game, /data-muted=\{bgmMuted\}/);
   assert.match(game, /data-muted=\{sfxMuted\}/);
   assert.match(game, /同じ装備で再戦/);
   assert.match(game, /ロードアウトへ戻る/);
+  for (const cue of [
+    "ui-confirm", "ui-cancel", "pod-descent", "pod-hit", "pod-destroy", "burn-start", "medical-heal",
+    "airstrike-targeting", "airstrike-inbound", "airstrike-return", "melee-hit", "role-scout", "role-ranger",
+    "role-brute", "role-brawler", "role-gunner", "role-medic", "takuya-down", "base-damaged", "base-critical",
+    "base-collapse", "victory", "defeat", "retry",
+  ]) assert.match(game, new RegExp(`(?:"${cue}"|${cue}): \\{[^}]*cooldown: \\.?\\d+`));
+  assert.match(game, /if \(kind === "pod"\) playCue\("pod-descent"\)/);
+  assert.match(game, /airstrikeStep\.events\.includes\("targeting"\)[\s\S]*playCue\("airstrike-targeting"\)/);
+  assert.match(game, /areaStep\.changes\.some\(\(change\) => change\.kind === "healing"\)[\s\S]*playCue\("medical-heal"\)/);
+  assert.match(game, /if \(roleEffect\) playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
+  assert.match(game, /fighter\.kind === "takuya"[\s\S]*playCue\("takuya-down"\)/);
+  assert.match(game, /const retrying = gameRef\.current\.over[\s\S]*if \(retrying\) playCue\("retry"\)/);
+  assert.match(game, /keyboardInputGate\(\{ running: g\.running, paused: g\.paused, over: g\.over, key: event\.key, repeat: event\.repeat \}\)/);
+  assert.match(game, /if \(inputGate === "ignore"\) return/);
+  assert.doesNotMatch(game, /if \(f\.kind === "takuya"\) g\.shake/);
+  assert.match(game, /CAMERA_SHAKE_EVENTS\.takuyaEntrance/);
+  assert.match(game, /CAMERA_SHAKE_EVENTS\.takuyaHeavy/);
+  assert.match(game, /CAMERA_SHAKE_EVENTS\.takuyaDefeat/);
   assert.doesNotMatch(game, /\btone\(/);
   assert.doesNotMatch(game, /["'][^"']+\.(?:mp3|ogg|wav|m4a)["']/i);
 });

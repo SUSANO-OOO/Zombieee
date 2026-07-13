@@ -20,18 +20,23 @@ import {
   WORLD_GEOMETRY,
   advanceAreaEffects,
   advanceBattlefieldSupply,
+  advanceCameraShakeRuntime,
   advanceCrawlerAbilityRuntime,
   advanceEmergencySupportRuntime,
+  advanceEnemyBaseCollapse,
   advanceZombieX,
   advanceLimitFor,
   advanceCommand,
   applyBattlefieldSupplyDamage,
+  airstrikeObserverPose,
   autonomousTargetScore,
   barricadeState,
   battlefieldSupplyPlacementCheck,
   battleOutcome,
+  cameraShakeAmplitude,
   canDeploy,
   capRenderArray,
+  createCameraShakeRuntime,
   createCrawlerAbilityRuntime,
   createEmergencySupportRuntime,
   crawlerSiegeDamage,
@@ -40,28 +45,33 @@ import {
   humanAttackMultiplier,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
-  isBrawlerFinisher,
+  keyboardInputGate,
   laneForY,
   objectiveFor,
   phaseAt,
   requestAirstrike,
   requestCrawlerBarrage,
   requestDrumDetonation,
+  retainActiveAreaEffects,
   resolveAirstrikeImpact,
   resolveBattlefieldSupplyLanding,
   resolveBattlefieldSupplyPlacement,
   resolveCrawlerBarrage,
   resolveDrumDetonation,
+  roleEffectForAction,
   roleTargetBias,
   scrapReward,
   selectBlockingContainer,
+  selectAreaEffectsForRender,
   structureDamageMultiplier,
   supportGaugeReward,
   tacticTargetBias,
+  triggerCameraShake,
 } from "./gameRules.js";
 
 const W = 960;
 const H = 540;
+const ENEMY_BASE_COLLAPSE_SECONDS = 1.05;
 
 type Lane = 0 | 1 | 2;
 type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic";
@@ -138,7 +148,7 @@ type Fighter = {
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number };
 type RoleEffect = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic";
-type Shot = { x: number; y: number; tx: number; ty: number; life: number; side: "human" | "zombie"; effect?: RoleEffect; emphasized?: boolean; duration?: number };
+type Shot = { x: number; y: number; tx: number; ty: number; life: number; side: "human" | "zombie"; effect?: RoleEffect; emphasized?: boolean; duration?: number; style?: "projectile" | "melee" };
 type DamageText = { x: number; y: number; value: string; life: number; color: string };
 type Corpse = {
   x: number;
@@ -228,7 +238,9 @@ type Game = {
   deployTimer: number;
   tactic: TacticMode;
   nextId: number;
-  shake: number;
+  shake: ReturnType<typeof createCameraShakeRuntime>;
+  enemyBaseCollapse: number;
+  resultPresented: boolean;
   banner: string;
   bannerTime: number;
   flashOverlay: number;
@@ -309,10 +321,20 @@ const MUSIC_MASTER_GAIN = .16;
 const SFX_CUES = {
   denied: { category: "ui", frequency: 105, duration: .1, type: "sawtooth", volume: .055, cooldown: .08, priority: 10 },
   queue: { category: "ui", frequency: 170, duration: .05, type: "square", volume: .055, cooldown: .04, priority: 15 },
+  "ui-confirm": { category: "ui", frequency: 240, duration: .05, type: "square", volume: .045, cooldown: .06, priority: 15 },
+  "ui-cancel": { category: "ui", frequency: 125, duration: .06, type: "square", volume: .04, cooldown: .08, priority: 15 },
   "supply-pod": { category: "ui", frequency: 118, duration: .11, type: "square", volume: .055, cooldown: .08, priority: 20 },
   "supply-drum": { category: "ui", frequency: 92, duration: .11, type: "square", volume: .055, cooldown: .08, priority: 20 },
   "supply-medical": { category: "ui", frequency: 210, duration: .11, type: "square", volume: .055, cooldown: .08, priority: 20 },
+  "pod-descent": { category: "ambient", frequency: 86, duration: .26, type: "sawtooth", volume: .035, cooldown: .25, priority: 25 },
+  "pod-hit": { category: "combat", frequency: 88, duration: .06, type: "square", volume: .03, cooldown: .08, priority: 20 },
+  "pod-destroy": { category: "major", frequency: 61, duration: .22, type: "sawtooth", volume: .05, cooldown: .3, priority: 72 },
+  "burn-start": { category: "ambient", frequency: 148, duration: .18, type: "sawtooth", volume: .035, cooldown: .32, priority: 28 },
+  "medical-heal": { category: "ambient", frequency: 286, duration: .09, type: "sine", volume: .035, cooldown: .4, priority: 24 },
   "airstrike-request": { category: "ui", frequency: 68, duration: .24, type: "sawtooth", volume: .055, cooldown: .2, priority: 40 },
+  "airstrike-targeting": { category: "ambient", frequency: 392, duration: .11, type: "square", volume: .04, cooldown: .3, priority: 45 },
+  "airstrike-inbound": { category: "major", frequency: 72, duration: .3, type: "sawtooth", volume: .045, cooldown: .4, priority: 70, duck: { level: .55, seconds: .35 } },
+  "airstrike-return": { category: "ui", frequency: 205, duration: .1, type: "triangle", volume: .035, cooldown: .25, priority: 30 },
   "crawler-request": { category: "ui", frequency: 82, duration: .16, type: "sawtooth", volume: .055, cooldown: .2, priority: 40 },
   "drum-request": { category: "ui", frequency: 112, duration: .08, type: "square", volume: .055, cooldown: .12, priority: 30 },
   "start-low": { category: "ui", frequency: 180, duration: .12, type: "square", volume: .055, cooldown: .2, priority: 45 },
@@ -329,14 +351,28 @@ const SFX_CUES = {
   "pod-impact": { category: "major", frequency: 58, duration: .22, type: "sawtooth", volume: .055, cooldown: .3, priority: 85, duck: { level: .35, seconds: .4 } },
   "drum-blast": { category: "major", frequency: 64, duration: .24, type: "sawtooth", volume: .055, cooldown: .35, priority: 90, duck: { level: .3, seconds: .5 } },
   "takuya-slam": { category: "major", frequency: 54, duration: .3, type: "sawtooth", volume: .055, cooldown: .4, priority: 95, duck: { level: .25, seconds: .55 } },
+  "takuya-down": { category: "major", frequency: 49, duration: .4, type: "sawtooth", volume: .055, cooldown: .6, priority: 100, duck: { level: .22, seconds: .6 } },
   "object-destroy": { category: "combat", frequency: 72, duration: .18, type: "sawtooth", volume: .055, cooldown: .15, priority: 60 },
   "object-hit": { category: "combat", frequency: 94, duration: .045, type: "square", volume: .022, cooldown: .06, priority: 10 },
   "takuya-hit": { category: "combat", frequency: 64, duration: .16, type: "sawtooth", volume: .055, cooldown: .12, priority: 65 },
   "ranged-shot": { category: "combat", frequency: 330, duration: .035, type: "square", volume: .055, cooldown: .04, priority: 10 },
+  "melee-hit": { category: "combat", frequency: 102, duration: .045, type: "square", volume: .03, cooldown: .05, priority: 12 },
+  "role-scout": { category: "combat", frequency: 420, duration: .08, type: "square", volume: .04, cooldown: .45, priority: 35 },
+  "role-ranger": { category: "combat", frequency: 510, duration: .09, type: "triangle", volume: .04, cooldown: .5, priority: 38 },
+  "role-brute": { category: "combat", frequency: 82, duration: .12, type: "sawtooth", volume: .045, cooldown: .55, priority: 42 },
+  "role-brawler": { category: "combat", frequency: 176, duration: .1, type: "square", volume: .045, cooldown: .5, priority: 40 },
+  "role-gunner": { category: "combat", frequency: 128, duration: .13, type: "sawtooth", volume: .045, cooldown: .55, priority: 44 },
+  "role-medic": { category: "ambient", frequency: 340, duration: .12, type: "sine", volume: .04, cooldown: .6, priority: 38 },
   "structure-heavy": { category: "combat", frequency: 78, duration: .055, type: "square", volume: .024, cooldown: .04, priority: 30 },
   "structure-light": { category: "combat", frequency: 132, duration: .055, type: "square", volume: .024, cooldown: .04, priority: 25 },
   "crawler-hit": { category: "combat", frequency: 96, duration: .06, type: "sawtooth", volume: .028, cooldown: .22, priority: 40 },
   "crawler-critical": { category: "major", frequency: 76, duration: .18, type: "sawtooth", volume: .035, cooldown: .6, priority: 100, duck: { level: .2, seconds: .7 } },
+  "base-damaged": { category: "major", frequency: 112, duration: .18, type: "sawtooth", volume: .045, cooldown: .8, priority: 72 },
+  "base-critical": { category: "major", frequency: 76, duration: .26, type: "sawtooth", volume: .05, cooldown: .8, priority: 88, duck: { level: .45, seconds: .4 } },
+  "base-collapse": { category: "major", frequency: 46, duration: .48, type: "sawtooth", volume: .055, cooldown: 1, priority: 100, duck: { level: .2, seconds: .7 } },
+  victory: { category: "major", frequency: 330, duration: .16, type: "square", volume: .04, cooldown: .8, priority: 95 },
+  defeat: { category: "major", frequency: 73, duration: .22, type: "sawtooth", volume: .04, cooldown: .8, priority: 95 },
+  retry: { category: "ui", frequency: 275, duration: .1, type: "triangle", volume: .04, cooldown: .35, priority: 45 },
   turned: { category: "combat", frequency: 72, duration: .22, type: "sawtooth", volume: .055, cooldown: .25, priority: 70 },
 } as const satisfies Record<string, SfxCueDef>;
 type SfxCueId = keyof typeof SFX_CUES;
@@ -389,7 +425,9 @@ const initialGame = (selectedSupply: SupplyKind = "pod"): Game => ({
   deployTimer: 0,
   tactic: "balanced",
   nextId: 1,
-  shake: 0,
+  shake: createCameraShakeRuntime(),
+  enemyBaseCollapse: 0,
+  resultPresented: false,
   banner: `DEPLOYMENT WINDOW // ${PREP_SECONDS}`,
   bannerTime: .2,
   flashOverlay: 0,
@@ -524,7 +562,7 @@ function prepareEndgameQa(g: Game) {
   g.wave = 8;
   g.eventIndex = missionEvents.length;
   g.baseHp = 500;
-  g.barricadeHp = 240;
+  g.barricadeHp = 760;
   g.energy = COMMAND_MAX;
   g.tactic = "assault";
 
@@ -544,11 +582,11 @@ function prepareEndgameQa(g: Game) {
   }
 
   const takuya = spawnEnemy(g, "takuya", 1);
-  takuya.hp = 35;
+  takuya.hp = 420;
   takuya.x = 720;
   takuya.y = laneY(1, takuya.id);
-  takuya.cooldown = 4;
-  takuya.abilityCooldown = 99;
+  takuya.cooldown = .5;
+  takuya.abilityCooldown = 0;
   g.banner = "QA ENDGAME // TAKUYA ACTIVE";
   g.bannerTime = 2.2;
 
@@ -586,6 +624,9 @@ function prepareRolesQa(g: Game) {
     fighter.x = x; fighter.y = laneY(lane, fighter.id); fighter.cooldown = 1.2;
     if (hpRatio) fighter.hp = fighter.maxHp * hpRatio;
   }
+  const breaker = g.fighters.find((fighter) => fighter.side === "human" && fighter.kind === "brute");
+  const heldEnemy = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === "walker" && fighter.lane === 2);
+  if (breaker && heldEnemy) heldEnemy.targetId = breaker.id;
   g.banner = "QA ROLES // SIX UNIT LIVE FIRE";
   g.bannerTime = 2.2;
 }
@@ -811,6 +852,42 @@ function drawPlacementIndicator(ctx: CanvasRenderingContext2D, indicator: Placem
   ctx.restore();
 }
 
+function drawAirstrikeObserver(ctx: CanvasRenderingContext2D, g: Game) {
+  const pose = airstrikeObserverPose(g.airstrike);
+  if (!pose.visible) return;
+  const crawler = WORLD_GEOMETRY.crawler;
+  const x = crawler.commandDeckX + 4;
+  const deckY = crawler.commandDeckY - 4;
+  const y = deckY - pose.rise * 20;
+  ctx.save();
+  ctx.globalAlpha = .45 + pose.rise * .55;
+  // 0.5.0 provisional canvas silhouette: this is an operational cue, not approved character art.
+  ctx.fillStyle = "#2b3130";
+  ctx.fillRect(x - 6, y + 3, 12, 17);
+  ctx.fillStyle = "#d1bd95";
+  ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#171b1b"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x + 4, y - 2); ctx.lineTo(x + 10, y + 2); ctx.stroke();
+
+  if (pose.action === "radio") {
+    const pulse = 8 + Math.sin(g.time * 18) * 2;
+    ctx.strokeStyle = "rgba(255,193,88,.9)"; ctx.lineWidth = 2;
+    for (const radius of [pulse, pulse + 7]) {
+      ctx.beginPath(); ctx.arc(x + 11, y + 1, radius, -.7, .7); ctx.stroke();
+    }
+  } else if (pose.action === "targeting") {
+    ctx.strokeStyle = "#ffd36a"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x + 16, y - 2, 8, 0, Math.PI * 2); ctx.moveTo(x + 16, y - 14); ctx.lineTo(x + 16, y + 10); ctx.moveTo(x + 4, y - 2); ctx.lineTo(x + 28, y - 2); ctx.stroke();
+  } else if (pose.action === "inbound" || pose.action === "impact") {
+    const signal = pose.action === "impact" ? 1 : .55 + Math.sin(g.time * 15) * .35;
+    ctx.fillStyle = `rgba(255,112,54,${signal})`;
+    ctx.beginPath(); ctx.arc(x + 13, y - 10, pose.action === "impact" ? 7 : 5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#e7d8ad"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x + 4, y + 7); ctx.lineTo(x + 12, y - 8); ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawCrawler(ctx: CanvasRenderingContext2D, g: Game, sprites: SpriteMap) {
   const crawlerSprite = sprites.crawler;
   const crawler = WORLD_GEOMETRY.crawler;
@@ -847,8 +924,9 @@ function drawCrawler(ctx: CanvasRenderingContext2D, g: Game, sprites: SpriteMap)
   ctx.fillRect(crawler.commandDeckX - 13, crawler.commandDeckY - 20, 26, 18);
   ctx.fillStyle = g.airstrike.phase === "idle" ? "#5b8274" : "#ffb95d";
   ctx.fillRect(crawler.commandDeckX - 8, crawler.commandDeckY - 16, 5, 4);
-  ctx.fillStyle = "#d7c7a0";
-  ctx.beginPath(); ctx.arc(crawler.commandDeckX + 5, crawler.commandDeckY - 12, 4, 0, Math.PI * 2); ctx.fill();
+  drawAirstrikeObserver(ctx, g);
+  ctx.fillStyle = "#161b1b";
+  ctx.fillRect(crawler.commandDeckX - 10, crawler.commandDeckY - 6, 22, 5);
   ctx.fillStyle = "#252d2d"; ctx.fillRect(crawler.weaponX - 20, crawler.weaponY - 12 - weaponLift, 40, 8);
   ctx.fillStyle = "#85704f"; ctx.fillRect(crawler.weaponX + 11, crawler.weaponY - 10 - weaponLift, 34, 4);
   if (g.crawlerAbility.phase === "firing") {
@@ -888,24 +966,35 @@ function drawCrawlerExitFrame(ctx: CanvasRenderingContext2D, g: Game) {
 function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: HTMLImageElement | null) {
   const barrier = WORLD_GEOMETRY.enemyBase;
   const ratio = Math.max(0, g.barricadeHp / BARRICADE_MAX_HP);
+  const state = barricadeState(g.barricadeHp);
+  const damageLevel = state === "INTACT" ? 0 : state === "BUCKLING" ? 1 : state === "BREACH IMMINENT" ? 2 : 3;
+  const collapse = state === "BREACHED" ? Math.min(1, g.enemyBaseCollapse / ENEMY_BASE_COLLAPSE_SECONDS) : 0;
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,.42)";
   ctx.beginPath();
   ctx.ellipse(barrier.drawX + barrier.width * .55, barrier.drawY + barrier.height - 5, barrier.width * .5, 12, 0, 0, Math.PI * 2);
   ctx.fill();
-  if (enemyBaseSprite?.complete && enemyBaseSprite.naturalWidth) {
+  if (enemyBaseSprite?.complete && enemyBaseSprite.naturalWidth && collapse < 1) {
+    ctx.save();
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    if (g.barricadeHitFlash > 0) {
+    if (state !== "BREACHED" && g.barricadeHitFlash > 0) {
       ctx.shadowColor = "rgba(255,144,65,.9)";
       ctx.shadowBlur = 12 + g.barricadeHitFlash * 24;
     }
-    ctx.globalAlpha = .94 + ratio * .06;
+    if (state === "BREACHED") {
+      ctx.translate(barrier.drawX + barrier.width * .48, barrier.drawY + barrier.height * .78);
+      ctx.rotate(-collapse * .12);
+      ctx.translate(-(barrier.drawX + barrier.width * .48), -(barrier.drawY + barrier.height * .78));
+      ctx.translate(collapse * 18, collapse * collapse * 76);
+    }
+    ctx.globalAlpha = state === "BREACHED" ? Math.max(0, 1 - collapse * 1.2) : .94 + ratio * .06;
     ctx.drawImage(enemyBaseSprite, barrier.drawX, barrier.drawY, barrier.width, barrier.height);
+    ctx.restore();
   }
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
-  if (!g.barricadeVulnerable) {
+  if (!g.barricadeVulnerable && state !== "BREACHED") {
     const shield = ctx.createLinearGradient(barrier.drawX, 0, barrier.drawX + 36, 0);
     shield.addColorStop(0, "rgba(103,198,220,.28)");
     shield.addColorStop(1, "rgba(103,198,220,0)");
@@ -918,18 +1007,94 @@ function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: 
     ctx.lineTo(barrier.drawX + 3, barrier.drawY + barrier.height - 12);
     ctx.stroke();
   }
-  if (ratio <= .7) {
-    const damageLevel = ratio <= .35 ? 2 : 1;
-    for (let i = 0; i < 2 + damageLevel; i++) {
-      const y = LANE_Y[i % 3] - 22 - ((g.time * (12 + i * 2) + i * 19) % 38);
-      ctx.globalAlpha = .12 + damageLevel * .04;
-      ctx.fillStyle = "#191716";
-      ctx.beginPath();
-      ctx.arc(barrier.drawX + 34 + (i % 2) * 22, y, 8 + i * 2, 0, Math.PI * 2);
-      ctx.fill();
+
+  if (state !== "BREACHED") {
+    const plateX = barrier.drawX + 30;
+    const plateY = barrier.drawY + 62;
+    for (let i = 0; i < 3; i++) {
+      if (damageLevel >= 2 && i === 1) continue;
+      ctx.save();
+      ctx.translate(plateX + i * 35, plateY + i * 48);
+      if (damageLevel >= 1 && i === 2) ctx.rotate(.13);
+      if (damageLevel >= 2 && i === 0) ctx.rotate(-.18);
+      ctx.fillStyle = damageLevel === 0 ? "rgba(91,115,104,.78)" : damageLevel === 1 ? "rgba(116,90,67,.86)" : "rgba(89,65,54,.9)";
+      ctx.strokeStyle = damageLevel === 0 ? "#9fc0a9" : "#e08552";
+      ctx.lineWidth = 3;
+      ctx.fillRect(-13, -15, 28, 31); ctx.strokeRect(-13, -15, 28, 31);
+      ctx.restore();
+    }
+
+    const lights = [[barrier.drawX + 43, barrier.drawY + 40], [barrier.drawX + 92, barrier.drawY + 51], [barrier.drawX + 133, barrier.drawY + 78]];
+    for (let i = 0; i < lights.length; i++) {
+      const [x, y] = lights[i];
+      const working = damageLevel === 0 || (damageLevel === 1 && i === 0);
+      ctx.fillStyle = working ? `rgba(255,202,91,${.72 + Math.sin(g.time * 8 + i) * .18})` : i === 0 && damageLevel === 2 ? "#db4f35" : "#292625";
+      ctx.beginPath(); ctx.arc(x, y, working ? 6 : 5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    ctx.save();
+    ctx.translate(barrier.drawX + 79, barrier.drawY + 205);
+    if (damageLevel === 1) ctx.rotate(.035);
+    if (damageLevel >= 2) ctx.rotate(.11);
+    ctx.fillStyle = damageLevel < 2 ? "rgba(38,43,42,.72)" : "rgba(31,25,24,.9)";
+    ctx.strokeStyle = damageLevel < 2 ? "#65766e" : "#c85c3d";
+    ctx.lineWidth = 4;
+    ctx.fillRect(-34, -54, 68, 108); ctx.strokeRect(-34, -54, 68, 108);
+    if (damageLevel >= 2) { ctx.beginPath(); ctx.moveTo(0, -54); ctx.lineTo(-9, 54); ctx.stroke(); }
+    ctx.restore();
+
+    if (damageLevel >= 1) {
+      ctx.strokeStyle = damageLevel === 1 ? "#f19a5b" : "#ff7148";
+      ctx.lineWidth = damageLevel === 1 ? 3 : 5;
+      for (const [x, y] of [[barrier.drawX + 54, barrier.drawY + 104], [barrier.drawX + 118, barrier.drawY + 142]]) {
+        ctx.beginPath(); ctx.moveTo(x - 12, y - 20); ctx.lineTo(x, y - 4); ctx.lineTo(x - 7, y + 10); ctx.lineTo(x + 11, y + 27); ctx.stroke();
+      }
+      ctx.strokeStyle = "#665848"; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(barrier.drawX + 142, barrier.drawY + 92); ctx.lineTo(barrier.drawX + 151 - damageLevel * 7, barrier.drawY + 238); ctx.stroke();
+    }
+
+    if (damageLevel >= 1) {
+      for (let i = 0; i < 2 + damageLevel; i++) {
+        const y = LANE_Y[i % 3] - 22 - ((g.time * (12 + i * 2) + i * 19) % 38);
+        ctx.globalAlpha = .1 + damageLevel * .08;
+        ctx.fillStyle = "#191716";
+        ctx.beginPath();
+        ctx.arc(barrier.drawX + 34 + (i % 2) * 34, y, 9 + i * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
-  if (g.barricadeHitFlash > 0) {
+
+  if (state === "BREACHED") {
+    const groundY = barrier.drawY + barrier.height - 8;
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "#302723";
+    for (let i = 0; i < 9; i++) {
+      const spread = (i - 4) * 19;
+      const fall = Math.min(1, collapse * 1.7);
+      ctx.save();
+      ctx.translate(barrier.drawX + barrier.width * .52 + spread * fall, groundY - (1 - fall) * (30 + (i % 3) * 24));
+      ctx.rotate((i - 4) * .13 * fall);
+      ctx.fillRect(-11, -7, 22 + (i % 2) * 8, 14 + (i % 3) * 4);
+      ctx.restore();
+    }
+    const dust = Math.sin(Math.min(1, collapse) * Math.PI);
+    ctx.globalAlpha = .18 + dust * .34;
+    ctx.fillStyle = "#9c7a5c";
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.ellipse(barrier.drawX + 30 + i * 32, groundY - dust * (18 + i * 3), 24 + dust * 20, 10 + dust * 13, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    if (collapse >= .82) {
+      ctx.fillStyle = "#d36b42"; ctx.font = "900 14px monospace"; ctx.textAlign = "center";
+      ctx.fillText("ENEMY BASE DESTROYED", barrier.drawX + barrier.width / 2, barrier.drawY + barrier.height - 42);
+      ctx.textAlign = "left";
+    }
+  }
+
+  if (state !== "BREACHED" && g.barricadeHitFlash > 0) {
     const glow = ctx.createRadialGradient(barrier.drawX + 10, g.barricadeHitY - 18, 4, barrier.drawX + 10, g.barricadeHitY - 18, 52);
     glow.addColorStop(0, `rgba(255,213,108,${Math.min(.75, g.barricadeHitFlash * 3)})`);
     glow.addColorStop(1, "rgba(218,67,32,0)");
@@ -986,8 +1151,9 @@ function drawCrawlerBarrage(ctx: CanvasRenderingContext2D, g: Game) {
 }
 
 function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImageElement | null, sprites: SpriteMap, enemyBaseSprite: HTMLImageElement | null) {
-  const sx = g.shake > 0 ? (Math.random() - .5) * g.shake : 0;
-  const sy = g.shake > 0 ? (Math.random() - .5) * g.shake : 0;
+  const shakeAmplitude = cameraShakeAmplitude(g.shake);
+  const sx = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
+  const sy = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -1013,7 +1179,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
   // A single shared-HP infected checkpoint closes all three routes.
   drawEnemyBase(ctx, g, enemyBaseSprite);
 
-  for (const effect of g.areaEffects) drawAreaEffect(ctx, effect, g.time);
+  for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time);
   drawEmergencySupport(ctx, g);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
@@ -1094,7 +1260,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
         ctx.strokeStyle = shot.emphasized ? "#ffd067" : "#e8b354"; ctx.shadowColor = "#ff9e35"; ctx.shadowBlur = 10; ctx.lineWidth = shot.emphasized ? 5 : 3;
         ctx.beginPath(); ctx.moveTo(shot.x, shot.y - 2); ctx.lineTo(x, y - 2); ctx.moveTo(shot.x, shot.y + 2); ctx.lineTo(x, y + 2); ctx.stroke();
         ctx.strokeRect(shot.tx - 10, shot.ty - 10, 20, 20);
-      } else {
+      } else if (shot.effect === "medic") {
         ctx.strokeStyle = "#79efac"; ctx.shadowColor = "#58d98f"; ctx.shadowBlur = 9; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(shot.x, shot.y); ctx.quadraticCurveTo((shot.x + shot.tx) / 2, Math.min(shot.y, shot.ty) - 13, shot.tx, shot.ty); ctx.stroke();
         ctx.beginPath(); ctx.arc(shot.tx, shot.ty, 9 + (1 - strength) * 5, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = "#b8ffd0"; ctx.fillRect(shot.tx - 2, shot.ty - 8, 4, 16); ctx.fillRect(shot.tx - 8, shot.ty - 2, 16, 4);
@@ -1103,8 +1269,16 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
       continue;
     }
     ctx.strokeStyle = shot.side === "human" ? "#ffe078" : "#e76747";
-    ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 7; ctx.lineWidth = shot.side === "human" ? 2.5 : 4;
-    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (shot.side === "human" ? -15 : 15), y); ctx.stroke();
+    ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 7;
+    if (shot.style === "melee") {
+      const strength = Math.max(.15, Math.min(1, shot.life / duration));
+      ctx.globalAlpha = strength; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(shot.tx, shot.ty, 5 + (1 - strength) * 5, -.8, 1.2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.lineWidth = shot.side === "human" ? 2.5 : 4;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (shot.side === "human" ? -15 : 15), y); ctx.stroke();
+    }
   }
   ctx.shadowBlur = 0;
   for (const p of g.particles) {
@@ -1331,6 +1505,14 @@ export function AshfallGame() {
     } catch { return false; }
   }, [duckMusic, ensureAudio, ensureSfxRuntime]);
 
+  const chooseActionWithCue = useCallback((action: SelectedAction) => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over) return;
+    if (selectedActionRef.current === action) return;
+    chooseAction(action);
+    playCue(action ? "ui-confirm" : "ui-cancel");
+  }, [chooseAction, playCue]);
+
   const stopSfx = useCallback(() => {
     if (startCueTimerRef.current !== null) {
       window.clearTimeout(startCueTimerRef.current);
@@ -1483,6 +1665,7 @@ export function AshfallGame() {
 
   const deployHuman = useCallback((kind: UnitKind) => {
     const g = gameRef.current;
+    if (!g.running || g.paused || g.over) return false;
     const card = cards.find((item) => item.kind === kind);
     if (!card || g.deployQueue.length >= 3 || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
       playCue("denied");
@@ -1501,6 +1684,7 @@ export function AshfallGame() {
 
   const placeBattlefieldSupply = useCallback((kind: SupplyKind, lane: Lane, x: number) => {
     const g = gameRef.current;
+    if (!g.running || g.paused || g.over) return false;
     const result = resolveBattlefieldSupplyPlacement({
       running: g.running, paused: g.paused, over: g.over, scrap: g.scrap, supplyKind: kind, lane, x,
       supplies: g.battlefieldObjects, objects: [], supports: [], areaEffects: g.areaEffects,
@@ -1522,11 +1706,13 @@ export function AshfallGame() {
     g.nextAreaEffectId = result.nextAreaEffectId;
     g.banner = `${supplyDefs[kind].name}配置 // ${LANE_NAMES_JA[lane]}レーン`;
     g.bannerTime = 1.2; playCue(kind === "pod" ? "supply-pod" : kind === "drum" ? "supply-drum" : "supply-medical");
+    if (kind === "pod") playCue("pod-descent");
     return true;
   }, [playCue]);
 
   const deployAirstrike = useCallback((lane: Lane, x: number) => {
     const g = gameRef.current;
+    if (!g.running || g.paused || g.over) return false;
     const result = requestAirstrike({
       running: g.running, paused: g.paused, over: g.over, supportGauge: g.supportGauge,
       lane, x, runtime: g.airstrike,
@@ -1543,6 +1729,7 @@ export function AshfallGame() {
 
   const triggerCrawlerBarrage = useCallback(() => {
     const g = gameRef.current;
+    if (!g.running || g.paused || g.over) return false;
     const result = requestCrawlerBarrage({ running: g.running, paused: g.paused, over: g.over, runtime: g.crawlerAbility });
     if (!result.ok) { g.banner = result.reason; g.bannerTime = 1; playCue("denied"); return false; }
     g.crawlerAbility = result.runtime as CrawlerRuntime;
@@ -1552,6 +1739,7 @@ export function AshfallGame() {
 
   const triggerDrumAt = useCallback((lane: Lane, x: number) => {
     const g = gameRef.current;
+    if (!g.running || g.paused || g.over) return false;
     const drum = g.battlefieldObjects
       .filter((supply) => supply.kind === "drum" && supply.lane === lane && supply.phase === "active" && Math.abs(supply.x - x) <= 44)
       .sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
@@ -1601,12 +1789,15 @@ export function AshfallGame() {
 
   const handleBattlefieldPointer = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     event.preventDefault();
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over) return;
     const { x, lane } = pointerWorldPosition(event);
     if (!selectedActionRef.current) { triggerDrumAt(lane, x); return; }
     executeSelected(lane, x);
   }, [executeSelected, pointerWorldPosition, triggerDrumAt]);
 
   const startGame = useCallback(() => {
+    const retrying = gameRef.current.over;
     const fresh = initialGame(selectedSupply);
     fresh.running = true;
     prepareQaMode(fresh, qaMode);
@@ -1623,8 +1814,11 @@ export function AshfallGame() {
       crawlerHitFlash: 0, threat: 0, objective: objectiveFor(fresh.phase, fresh.barricadeVulnerable),
       deployCooldowns: { ...fresh.deployCooldowns }, battleBarks: [...fresh.battleBarks.active] });
     stopMusic(); stopJingle(); stopSfx(); if (!bgmMuted) startMusic();
-    playCue("start-low");
-    startCueTimerRef.current = window.setTimeout(() => { startCueTimerRef.current = null; playCue("start-high"); }, 90);
+    if (retrying) playCue("retry");
+    else {
+      playCue("start-low");
+      startCueTimerRef.current = window.setTimeout(() => { startCueTimerRef.current = null; playCue("start-high"); }, 90);
+    }
   }, [bgmMuted, chooseAction, playCue, qaMode, selectedSupply, startMusic, stopJingle, stopMusic, stopSfx]);
 
   const returnToLoadout = useCallback(() => {
@@ -1684,24 +1878,31 @@ export function AshfallGame() {
 
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
+      const g = gameRef.current;
+      const inputGate = keyboardInputGate({ running: g.running, paused: g.paused, over: g.over, key: event.key, repeat: event.repeat });
+      if (inputGate === "ignore") return;
+      if (inputGate === "toggle-pause") { togglePause(); return; }
+      const normalizedKey = event.key.toLowerCase();
       const card = cards.find((item) => item.key === event.key);
-      if (card) deployHuman(card.kind);
+      if (card) { deployHuman(card.kind); return; }
       const supply = supplyDefs[selectedSupply];
-      if (event.key.toLowerCase() === supply.key.toLowerCase()) {
+      if (normalizedKey === supply.key.toLowerCase()) {
         const action = `supply:${selectedSupply}` as SelectedAction;
-        chooseAction(selectedActionRef.current === action ? null : action);
+        chooseActionWithCue(selectedActionRef.current === action ? null : action);
+        return;
       }
-      if (event.key.toLowerCase() === "q") chooseAction(selectedActionRef.current === "airstrike" ? null : "airstrike");
-      if (event.key.toLowerCase() === "g") triggerCrawlerBarrage();
+      if (normalizedKey === "q") { chooseActionWithCue(selectedActionRef.current === "airstrike" ? null : "airstrike"); return; }
+      if (normalizedKey === "g") { triggerCrawlerBarrage(); return; }
       if (event.key === "Escape") {
-        if (selectedActionRef.current) chooseAction(null); else togglePause();
+        if (selectedActionRef.current) chooseActionWithCue(null); else togglePause();
+        return;
       }
-      if (event.key.toLowerCase() === "p") togglePause();
-      if (event.key.toLowerCase() === "r") cycleTactic();
+      if (normalizedKey === "p") { togglePause(); return; }
+      if (normalizedKey === "r") cycleTactic();
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [chooseAction, cycleTactic, deployHuman, selectedSupply, togglePause, triggerCrawlerBarrage]);
+  }, [chooseActionWithCue, cycleTactic, deployHuman, selectedSupply, togglePause, triggerCrawlerBarrage]);
 
   useEffect(() => {
     let frame = 0;
@@ -1714,7 +1915,7 @@ export function AshfallGame() {
       ctx.imageSmoothingQuality = "high";
       const dt = Math.min(.033, g.last ? (now - g.last) / 1000 : 0);
       g.last = now;
-      g.shake = Math.max(0, g.shake - dt * 38);
+      g.shake = advanceCameraShakeRuntime(g.shake, dt);
       if (g.running && !g.paused) g.battleBarks = advanceBattleBarkRuntime(g.battleBarks, dt) as BattleBarkRuntime;
 
       if (g.running && !g.paused && !g.over) {
@@ -1756,11 +1957,17 @@ export function AshfallGame() {
           g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
           if (mission.label.includes("WARNING")) g.flashOverlay = .12;
           mission.units.forEach(([kind, lane], index) => spawnEnemy(g, kind, lane, index % 3));
-          if (mission.units.length) playCue(mission.label.includes("TAKUYA") ? "boss-warning" : "wave-contact");
+          if (mission.units.length) {
+            const includesTakuya = mission.units.some(([kind]) => kind === "takuya");
+            playCue(includesTakuya ? "boss-warning" : "wave-contact");
+            if (includesTakuya) g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
+          }
         }
 
         const airstrikeStep = advanceEmergencySupportRuntime(g.airstrike, dt);
         g.airstrike = airstrikeStep.runtime as AirstrikeRuntime;
+        if (airstrikeStep.events.includes("targeting")) playCue("airstrike-targeting");
+        if (airstrikeStep.events.includes("inbound")) playCue("airstrike-inbound");
         if (airstrikeStep.events.includes("impact")) {
           const impact = resolveAirstrikeImpact({ runtime: g.airstrike, fighters: g.fighters });
           g.airstrike = impact.runtime as AirstrikeRuntime;
@@ -1770,8 +1977,9 @@ export function AshfallGame() {
             if (fighter) { fighter.flash = .2; fighter.knock = Math.max(fighter.knock, 18); addDamageText(g, { x: fighter.x, y: fighter.y - 54, value: `航空 -${hit.damage}`, life: .85, color: "#fff0a0" }); }
           }
           addParticles(g, g.airstrike.targetX ?? W / 2, LANE_Y[g.airstrike.targetLane ?? 1], "#f28d46", 34);
-          g.shake = CAMERA_SHAKE_EVENTS.airstrikeImpact.strength; g.flashOverlay = .4; playCue("airstrike-impact");
+          g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact); g.flashOverlay = .4; playCue("airstrike-impact");
         }
+        if (airstrikeStep.events.includes("returning")) playCue("airstrike-return");
         if (airstrikeStep.events.includes("complete")) { g.banner = "航空支援帰投"; g.bannerTime = .75; }
 
         const crawlerStep = advanceCrawlerAbilityRuntime(g.crawlerAbility, dt);
@@ -1785,7 +1993,7 @@ export function AshfallGame() {
             if (fighter) { fighter.flash = .16; addDamageText(g, { x: fighter.x, y: fighter.y - 48, value: `掃射 -${hit.damage}`, life: .75, color: "#ffd36d" }); }
           }
           for (const lane of [0, 1, 2] as Lane[]) addParticles(g, 560, LANE_Y[lane] - 12, "#e8b354", 8);
-          g.shake = CAMERA_SHAKE_EVENTS.crawlerBarrage.strength; g.flashOverlay = .14; playCue("crawler-barrage");
+          g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.crawlerBarrage); g.flashOverlay = .14; playCue("crawler-barrage");
         }
 
         for (const object of g.battlefieldObjects) {
@@ -1800,7 +2008,7 @@ export function AshfallGame() {
               if (fighter) { fighter.flash = .2; fighter.knock = Math.max(fighter.knock, 10); addDamageText(g, { x: fighter.x, y: fighter.y - 56, value: `着地 -${hit.damage}`, life: .9, color: hit.side === "zombie" ? "#ffd06b" : "#ff8a70" }); }
             }
             addParticles(g, object.x, object.y + 4, "#d7aa63", 26);
-            g.shake = CAMERA_SHAKE_EVENTS.podLanding.strength; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("pod-impact");
+            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.podLanding); g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("pod-impact");
           }
           if (object.kind === "drum" && object.phase === "detonating" && !object.detonationTriggered) {
             const detonation = resolveDrumDetonation({ supply: object, fighters: g.fighters, areaEffects: g.areaEffects, nextAreaEffectId: g.nextAreaEffectId });
@@ -1812,14 +2020,15 @@ export function AshfallGame() {
               const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
               if (fighter) { fighter.flash = .18; fighter.knock = Math.max(fighter.knock, 13); addDamageText(g, { x: fighter.x, y: fighter.y - 52, value: `爆発 -${hit.damage}`, life: .82, color: "#ffbd59" }); }
             }
-            addParticles(g, object.x, object.y - 8, "#f26a35", 28); g.flashOverlay = Math.max(g.flashOverlay, .23); playCue("drum-blast");
+            addParticles(g, object.x, object.y - 8, "#f26a35", 28); g.flashOverlay = Math.max(g.flashOverlay, .23); playCue("drum-blast"); playCue("burn-start");
           }
         }
         g.battlefieldObjects = g.battlefieldObjects.filter((object) => object.phase !== "expired");
         const activeMedicalIds = g.battlefieldObjects.filter((object) => object.kind === "medical" && object.phase === "active" && object.hp > 0).map((object) => object.id);
         const areaStep = advanceAreaEffects({ areaEffects: g.areaEffects, fighters: g.fighters, seconds: dt, activeSupplyIds: activeMedicalIds });
-        g.areaEffects = capRenderArray((areaStep.areaEffects as AreaEffect[]).filter((effect) => effect.phase !== "expired"), "areaEffects") as AreaEffect[];
+        g.areaEffects = retainActiveAreaEffects(areaStep.areaEffects) as AreaEffect[];
         g.fighters = areaStep.fighters as Fighter[];
+        if (areaStep.changes.some((change) => change.kind === "healing")) playCue("medical-heal");
 
         const fighterById = new Map(g.fighters.filter((fighter) => fighter.hp > 0).map((fighter) => [fighter.id, fighter]));
         const targetClaims = new Map<number, number>();
@@ -1858,7 +2067,7 @@ export function AshfallGame() {
                   g.damageTexts.push({ x: victim.x, y: victim.y - 48, value: String(damage), life: .8, color: "#ff7658" });
                 }
                 addParticles(g, f.x, f.y - 4, "#e7653d", 28);
-                g.shake = CAMERA_SHAKE_EVENTS.takuyaHeavy.strength; g.flashOverlay = Math.max(g.flashOverlay, .22);
+                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy); g.flashOverlay = Math.max(g.flashOverlay, .22);
                 g.banner = enraged ? "TAKUYA // 激昂・鉄槌強襲" : "TAKUYA // 鉄槌強襲";
                 g.bannerTime = 1.15; playCue("takuya-slam");
               }
@@ -1878,11 +2087,13 @@ export function AshfallGame() {
               .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
             if (wounded) {
               const healed = Math.min(16, wounded.maxHp - wounded.hp);
+              const roleEffect = roleEffectForAction({ unitKind: f.kind, action: "heal" }) as RoleEffect | null;
               wounded.hp += healed; f.supportCooldown = 1.55;
               g.damageTexts.push({ x: wounded.x, y: wounded.y - 70, value: `+${Math.ceil(healed)}`, life: .8, color: "#83e0a2" });
               g.damageTexts.push({ x: f.x, y: f.y - 64, value: "救護", life: .7, color: "#9bf0ba" });
-              g.shots.push({ x: f.x + 8, y: f.y - 34, tx: wounded.x, ty: wounded.y - 28, life: .32, duration: .32, side: "human", effect: "medic" });
+              g.shots.push({ x: f.x + 8, y: f.y - 34, tx: wounded.x, ty: wounded.y - 28, life: .32, duration: .32, side: "human", effect: roleEffect ?? undefined });
               addParticles(g, wounded.x, wounded.y - 30, "#69d993", 7);
+              if (roleEffect) playCue("role-medic");
               emitBattleBark(g, "role-cue", f.kind, f.id);
             }
           }
@@ -2004,8 +2215,8 @@ export function AshfallGame() {
                 } else if (result.supply.phase === "destroying") {
                   f.targetObjectId = null;
                   g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // ${LANE_NAMES_JA[objectTarget.lane]}レーン`; g.bannerTime = 1.25;
-                  addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18); playCue("object-destroy");
-                } else playCue("object-hit");
+                  addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18); playCue(objectTarget.kind === "pod" ? "pod-destroy" : "object-destroy");
+                } else playCue(objectTarget.kind === "pod" ? "pod-hit" : "object-hit");
               }
             } else {
               const stopX = objectTarget.x + stoppingDistance;
@@ -2020,18 +2231,24 @@ export function AshfallGame() {
             if (f.cooldown <= 0) {
               const enragedTakuya = f.kind === "takuya" && f.hp / f.maxHp <= .5;
               const targetHpRatio = target.hp / target.maxHp;
-              const brawlerFinishApplied = f.side === "human" && isBrawlerFinisher(f.kind, targetHpRatio);
+              const roleEffect = f.side === "human" ? roleEffectForAction({
+                unitKind: f.kind,
+                action: "attack",
+                targetKind: target.kind,
+                targetHpRatio,
+                targetAlreadyMarked: target.marked > 0,
+                holdingFrontline: f.kind === "brute" && target.targetId === f.id,
+              }) as RoleEffect | null : null;
               const attackDamage = f.side === "human" ? f.damage * humanAttackMultiplier(f.kind, target.kind, targetHpRatio, target.marked > 0) : f.damage;
               target.hp -= attackDamage; target.flash = .12;
               if (f.kind === "scout" && target.side === "zombie") target.marked = Math.max(target.marked, 3.2);
               target.knock = f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" ? 9 : 3;
               f.attack = .18; f.cooldown = enragedTakuya ? .9 : f.attackEvery;
               g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(attackDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
-              if (f.side === "human" && f.abilityCooldown <= 0) {
-                const roleCue = f.kind === "scout" ? "索敵マーク" : f.kind === "ranger" && target.kind === "spitter" ? "対・毒吐き" : f.kind === "brute" ? "前線保持" : brawlerFinishApplied ? "フィニッシュ" : f.kind === "gunner" && ["crusher", "abomination"].includes(target.kind) ? "重装破砕" : null;
+              if (roleEffect && f.abilityCooldown <= 0) {
+                const roleCue = roleEffect === "scout" ? "索敵マーク" : roleEffect === "ranger" ? "対・毒吐き" : roleEffect === "brute" ? "前線保持" : roleEffect === "brawler" ? "フィニッシュ" : roleEffect === "gunner" ? "重装破砕" : null;
                 if (roleCue) { g.damageTexts.push({ x: f.x, y: f.y - 66, value: roleCue, life: .75, color: "#ffe078" }); f.abilityCooldown = 1.8; emitBattleBark(g, "role-cue", f.kind, f.id); }
               }
-              if (f.kind === "takuya") g.shake = CAMERA_SHAKE_EVENTS.takuyaHeavy.strength;
               if (f.kind === "takuya") {
                 for (const splash of g.fighters) {
                   if (splash.side === "human" && splash.id !== target.id && splash.hp > 0 && fighterDistance(splash, target) < 58) {
@@ -2042,19 +2259,25 @@ export function AshfallGame() {
                 addParticles(g, target.x, target.y + 2, "#b78656", 13); playCue("takuya-hit");
               }
               if (f.side === "human") {
-                const emphasized = brawlerFinishApplied || (f.kind === "gunner" && ["crusher", "abomination"].includes(target.kind));
-                g.shots.push({ x: f.x + 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", effect: f.kind as RoleEffect, emphasized });
+                const emphasized = roleEffect === "brawler" || roleEffect === "gunner";
+                const ranged = ["ranger", "gunner", "medic"].includes(f.kind);
+                g.shots.push({ x: f.x + 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee" });
+                if (roleEffect) playCue(`role-${roleEffect}` as SfxCueId);
                 if (["ranger", "gunner", "medic"].includes(f.kind)) playCue("ranged-shot", { frequency: 310 + Math.random() * 50 });
+                else playCue("melee-hit");
               } else if (f.kind === "spitter") {
                 g.shots.push({ x: f.x - 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .12, side: "zombie" });
+                playCue("ranged-shot", { frequency: 205 });
               } else {
                 addParticles(g, target.x, target.y - 18, target.kind === "takuya" || target.kind === "shade" ? "#b98a62" : target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
+                if (f.kind !== "takuya") playCue("melee-hit");
               }
             }
           } else if (!target && baseDistance <= f.range + 10) {
             if (f.cooldown <= 0) {
               if (f.side === "human") {
                 const beforeHit = g.barricadeHp;
+                const roleEffect = roleEffectForAction({ unitKind: f.kind, action: "structure" }) as RoleEffect | null;
                 const structureDamage = f.damage * structureDamageMultiplier(f.kind, g.tactic);
                 g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
                 g.barricadeHitFlash = .2;
@@ -2064,11 +2287,15 @@ export function AshfallGame() {
                 if (["ranger", "gunner", "medic"].includes(f.kind)) {
                   g.shots.push({ x: f.x + 14, y: f.y - 32, tx: WORLD_GEOMETRY.barricade.drawX + 8, ty: f.y - 24, life: .12, side: "human" });
                 }
+                if (roleEffect) {
+                  g.shots.push({ x: f.x + 14, y: f.y - 32, tx: WORLD_GEOMETRY.barricade.drawX + 8, ty: f.y - 24, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: "melee" });
+                  playCue("role-brute");
+                }
                 if (!g.barricadeBucklingAnnounced && beforeHit > BARRICADE_MAX_HP * .7 && g.barricadeHp <= BARRICADE_MAX_HP * .7) {
-                  g.barricadeBucklingAnnounced = true; g.banner = "感染拠点 // 損傷"; g.bannerTime = 1.5;
+                  g.barricadeBucklingAnnounced = true; g.banner = "感染拠点 // 損傷"; g.bannerTime = 1.5; playCue("base-damaged");
                 }
                 if (!g.barricadeCriticalAnnounced && beforeHit > BARRICADE_MAX_HP * .35 && g.barricadeHp <= BARRICADE_MAX_HP * .35) {
-                  g.barricadeCriticalAnnounced = true; g.banner = "感染拠点 // 大破"; g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12);
+                  g.barricadeCriticalAnnounced = true; g.banner = "感染拠点 // 大破"; g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("base-critical");
                 }
                 playCue(f.kind === "brute" ? "structure-heavy" : "structure-light");
               } else {
@@ -2171,6 +2398,8 @@ export function AshfallGame() {
             g.supportGauge = Math.min(SUPPORT_GAUGE_MAX, g.supportGauge + supportGaugeReward(fighter.kind));
             if (fighter.kind === "takuya") {
               g.barricadeVulnerable = true; g.banner = "TAKUYA DOWN — ENEMY BASE EXPOSED"; g.bannerTime = 3.4; g.flashOverlay = .3;
+              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaDefeat);
+              playCue("takuya-down");
               if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
             }
           } else g.unitsLost++;
@@ -2224,12 +2453,27 @@ export function AshfallGame() {
         if (outcome) {
           // A simultaneous collapse is a loss: protecting the crawler always remains mandatory.
           g.won = outcome === "won";
-          g.shake = g.won ? CAMERA_SHAKE_EVENTS.enemyBaseCollapse.strength : 0;
+          const enemyBaseDestroyed = g.barricadeHp <= 0;
+          g.shake = enemyBaseDestroyed ? triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse) : createCameraShakeRuntime();
+          g.enemyBaseCollapse = 0;
           if (g.won) emitBattleBark(g, "victory", "crawler", "tactical");
           g.over = true;
-          setEnd({ won: g.won, time: g.time, wave: g.wave, kills: g.kills, scrap: g.scrap, baseHp: Math.max(0, g.baseHp), maxCombo: g.maxCombo, unitsLost: g.unitsLost });
+          g.resultPresented = !enemyBaseDestroyed;
+          if (!enemyBaseDestroyed) setEnd({ won: g.won, time: g.time, wave: g.wave, kills: g.kills, scrap: g.scrap, baseHp: Math.max(0, g.baseHp), maxCombo: g.maxCombo, unitsLost: g.unitsLost });
           chooseAction(null);
-          stopMusic(); stopSfx(); playEndJingle(g.won);
+          stopMusic(); stopSfx();
+          if (enemyBaseDestroyed) playCue("base-collapse");
+          playCue(g.won ? "victory" : "defeat");
+          playEndJingle(g.won);
+        }
+      }
+
+      if (g.over && !g.resultPresented) {
+        const collapseStep = advanceEnemyBaseCollapse({ barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt, duration: ENEMY_BASE_COLLAPSE_SECONDS });
+        g.enemyBaseCollapse = collapseStep.elapsed;
+        if (collapseStep.complete) {
+          g.resultPresented = true;
+          setEnd({ won: g.won, time: g.time, wave: g.wave, kills: g.kills, scrap: g.scrap, baseHp: Math.max(0, g.baseHp), maxCombo: g.maxCombo, unitsLost: g.unitsLost });
         }
       }
 
@@ -2270,6 +2514,7 @@ export function AshfallGame() {
   const selectedName = selectedAction?.startsWith("supply:")
     ? supplyDefs[selectedAction.slice("supply:".length) as SupplyKind].name
     : selectedAction === "airstrike" ? "緊急航空支援" : null;
+  const combatLocked = !!end || hud.baseHp <= 0 || hud.barricadeHp <= 0;
 
   return (
     <main className="game-shell">
@@ -2305,7 +2550,7 @@ export function AshfallGame() {
               {cards.map((card) => {
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
                 return (
-                  <button key={card.kind} className="unit-card" data-kind={card.kind} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || !!end} onClick={() => deployHuman(card.kind)}>
+                  <button key={card.kind} className="unit-card" data-kind={card.kind} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)}>
                     <span className="keycap">{card.key}</span><span className="portrait"><i /></span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
                     {cooldown > 0 && <span className="cooldown-mask"><b>{cooldown}</b><small>SEC</small></span>}
@@ -2317,16 +2562,16 @@ export function AshfallGame() {
               <span className="support-label">物資<br />支援</span>
               <button
                 className={`support-btn ${selectedSupply} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
-                disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || !!end}
-                onClick={() => chooseAction(selectedAction === `supply:${selectedSupply}` ? null : `supply:${selectedSupply}`)}
+                disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || combatLocked}
+                onClick={() => chooseActionWithCue(selectedAction === `supply:${selectedSupply}` ? null : `supply:${selectedSupply}`)}
                 aria-label={`${supplyDefs[selectedSupply].name} ${supplyDefs[selectedSupply].cost}スクラップ`}
               >
                 <span className="support-key">{supplyDefs[selectedSupply].key}</span><b>{supplyDefs[selectedSupply].name}</b><small>{selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復"}</small><em>▰{supplyDefs[selectedSupply].cost}</em>
               </button>
-              <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || !!end} onClick={() => chooseAction(selectedAction === "airstrike" ? null : "airstrike")}>
+              <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")}>
                 <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"}</b><small>通信・照準・飛来・着弾・帰投</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
               </button>
-              <button className="support-btn barrage" disabled={!started || paused || hud.crawlerPhase !== "ready" || !!end} onClick={triggerCrawlerBarrage}>
+              <button className="support-btn barrage" disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked} onClick={triggerCrawlerBarrage}>
                 <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "CRAWLER一斉掃射" : `再装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>全3レーン固定火器</small><em>⌁</em>
               </button>
             </div>

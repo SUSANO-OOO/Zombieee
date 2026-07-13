@@ -140,7 +140,7 @@ export const RENDER_ARRAY_LIMITS = Object.freeze({
   particles: 420,
   shots: 180,
   damageTexts: 140,
-  areaEffects: 24,
+  areaEffectVisuals: 24,
   battleBarks: 2,
 });
 
@@ -148,7 +148,9 @@ export const CAMERA_SHAKE_EVENTS = Object.freeze({
   podLanding: Object.freeze({ strength: 13, seconds: .18 }),
   airstrikeImpact: Object.freeze({ strength: 10, seconds: .16 }),
   crawlerBarrage: Object.freeze({ strength: 8, seconds: .22 }),
+  takuyaEntrance: Object.freeze({ strength: 7, seconds: .18 }),
   takuyaHeavy: Object.freeze({ strength: 11, seconds: .2 }),
+  takuyaDefeat: Object.freeze({ strength: 9, seconds: .24 }),
   enemyBaseCollapse: Object.freeze({ strength: 12, seconds: .28 }),
 });
 
@@ -212,6 +214,41 @@ export function capRenderArray(items, kindOrLimit) {
   if (!Number.isFinite(limit) || limit < 0) return [...items];
   const integerLimit = Math.floor(limit);
   return integerLimit === 0 ? [] : items.slice(-integerLimit);
+}
+
+export function retainActiveAreaEffects(areaEffects = []) {
+  return areaEffects.filter((effect) => effect.phase !== "expired");
+}
+
+export function selectAreaEffectsForRender(areaEffects = []) {
+  return capRenderArray(areaEffects, "areaEffectVisuals");
+}
+
+export function createCameraShakeRuntime() {
+  return { strength: 0, remaining: 0, duration: 0 };
+}
+
+export function triggerCameraShake(runtime, event) {
+  if (!event || event.strength <= 0 || event.seconds <= 0) return runtime ? { ...runtime } : createCameraShakeRuntime();
+  return { strength: event.strength, remaining: event.seconds, duration: event.seconds };
+}
+
+export function advanceCameraShakeRuntime(runtime, seconds) {
+  if (!runtime || runtime.remaining <= 0 || runtime.duration <= 0) return createCameraShakeRuntime();
+  const remaining = Math.max(0, runtime.remaining - Math.max(0, seconds));
+  return remaining === 0 ? createCameraShakeRuntime() : { ...runtime, remaining };
+}
+
+export function cameraShakeAmplitude(runtime) {
+  if (!runtime || runtime.remaining <= 0 || runtime.duration <= 0) return 0;
+  return runtime.strength * Math.min(1, runtime.remaining / runtime.duration);
+}
+
+export function advanceEnemyBaseCollapse({ barricadeHp, elapsed = 0, seconds = 0, duration = 1.05 }) {
+  if (barricadeHp > 0) return { active: false, elapsed: 0, complete: false };
+  const safeDuration = Math.max(0, duration);
+  const nextElapsed = Math.min(safeDuration, Math.max(0, elapsed) + Math.max(0, seconds));
+  return { active: true, elapsed: nextElapsed, complete: nextElapsed >= safeDuration };
 }
 
 function battlefieldSupplyDef(kind) {
@@ -580,6 +617,18 @@ function nextAirstrikePhase(runtime) {
   return createEmergencySupportRuntime();
 }
 
+export function airstrikeObserverPose(runtime) {
+  if (!runtime || runtime.phase === "idle") return { visible: false, rise: 0, action: "idle" };
+  let rise = 1;
+  if (runtime.phase === "radio") rise = 1 - runtime.phaseTime / AIRSTRIKE_DEF.radioSeconds;
+  else if (runtime.phase === "returning") rise = runtime.phaseTime / AIRSTRIKE_DEF.returnSeconds;
+  return {
+    visible: rise > 0,
+    rise: Math.max(0, Math.min(1, rise)),
+    action: runtime.phase,
+  };
+}
+
 export function advanceEmergencySupportRuntime(runtime, seconds) {
   let next = { ...runtime };
   let remaining = Math.max(0, seconds);
@@ -587,12 +636,15 @@ export function advanceEmergencySupportRuntime(runtime, seconds) {
   while (next.phase !== "idle" && remaining >= next.phaseTime) {
     remaining -= next.phaseTime;
     next = nextAirstrikePhase(next);
+    if (next.phase === "targeting") events.push("targeting");
+    if (next.phase === "inbound") events.push("inbound");
     if (next.phase === "impact") {
       events.push("impact");
       // Preserve the one-shot resolution window even when a background tab
       // resumes with a large elapsed delta.
       remaining = 0;
     }
+    if (next.phase === "returning") events.push("returning");
     if (next.phase === "idle") events.push("complete");
   }
   if (next.phase !== "idle" && remaining > 0) next.phaseTime = Math.max(0, next.phaseTime - remaining);
@@ -808,6 +860,32 @@ export function roleTargetBias(attackerKind, targetKind) {
   if (attackerKind === "ranger" && targetKind === "spitter") return -42;
   if (attackerKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination")) return -34;
   return 0;
+}
+
+export function roleEffectForAction({
+  unitKind,
+  action = "attack",
+  targetKind,
+  targetHpRatio = 1,
+  targetAlreadyMarked = false,
+  holdingFrontline = false,
+}) {
+  if (unitKind === "medic") return action === "heal" ? "medic" : null;
+  if (action === "structure") return unitKind === "brute" ? "brute" : null;
+  if (action !== "attack") return null;
+  if (unitKind === "scout") return targetAlreadyMarked ? null : "scout";
+  if (unitKind === "ranger") return targetKind === "spitter" ? "ranger" : null;
+  if (unitKind === "brute") return holdingFrontline ? "brute" : null;
+  if (isBrawlerFinisher(unitKind, targetHpRatio)) return "brawler";
+  if (unitKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination")) return "gunner";
+  return null;
+}
+
+export function keyboardInputGate({ running, paused, over, key, repeat = false }) {
+  if (repeat || !running || over) return "ignore";
+  const normalized = String(key ?? "").toLowerCase();
+  if (paused) return normalized === "p" || normalized === "escape" ? "toggle-pause" : "ignore";
+  return "active";
 }
 
 export function isBrawlerFinisher(attackerKind, targetHpRatio = 1) {
