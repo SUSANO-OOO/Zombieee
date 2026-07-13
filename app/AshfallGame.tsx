@@ -9,6 +9,7 @@ import {
   BATTLEFIELD_SUPPLY_DEFS,
   CAMERA_SHAKE_EVENTS,
   COMMAND_MAX,
+  ENEMY_BASE_COLLAPSE_SECONDS,
   LANE_NAMES,
   LANE_Y,
   MISSION_EVENTS,
@@ -42,6 +43,7 @@ import {
   crawlerSiegeDamage,
   crawlerThreatLevel,
   enemyCanTargetBattlefieldSupply,
+  enemyBaseVisualState,
   humanAttackMultiplier,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
@@ -71,7 +73,6 @@ import {
 
 const W = 960;
 const H = 540;
-const ENEMY_BASE_COLLAPSE_SECONDS = 1.05;
 
 type Lane = 0 | 1 | 2;
 type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic";
@@ -966,9 +967,10 @@ function drawCrawlerExitFrame(ctx: CanvasRenderingContext2D, g: Game) {
 function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: HTMLImageElement | null) {
   const barrier = WORLD_GEOMETRY.enemyBase;
   const ratio = Math.max(0, g.barricadeHp / BARRICADE_MAX_HP);
-  const state = barricadeState(g.barricadeHp);
-  const damageLevel = state === "INTACT" ? 0 : state === "BUCKLING" ? 1 : state === "BREACH IMMINENT" ? 2 : 3;
-  const collapse = state === "BREACHED" ? Math.min(1, g.enemyBaseCollapse / ENEMY_BASE_COLLAPSE_SECONDS) : 0;
+  const visualState = enemyBaseVisualState({ hp: g.barricadeHp, elapsed: g.enemyBaseCollapse });
+  const damageLevel = visualState.damageLevel;
+  const collapse = visualState.collapseProgress;
+  const breached = visualState.phase === "collapsing" || visualState.phase === "collapsed";
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,.42)";
   ctx.beginPath();
@@ -978,23 +980,23 @@ function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: 
     ctx.save();
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    if (state !== "BREACHED" && g.barricadeHitFlash > 0) {
+    if (!breached && g.barricadeHitFlash > 0) {
       ctx.shadowColor = "rgba(255,144,65,.9)";
       ctx.shadowBlur = 12 + g.barricadeHitFlash * 24;
     }
-    if (state === "BREACHED") {
+    if (breached) {
       ctx.translate(barrier.drawX + barrier.width * .48, barrier.drawY + barrier.height * .78);
       ctx.rotate(-collapse * .12);
       ctx.translate(-(barrier.drawX + barrier.width * .48), -(barrier.drawY + barrier.height * .78));
       ctx.translate(collapse * 18, collapse * collapse * 76);
     }
-    ctx.globalAlpha = state === "BREACHED" ? Math.max(0, 1 - collapse * 1.2) : .94 + ratio * .06;
+    ctx.globalAlpha = breached ? Math.max(0, 1 - collapse * 1.2) : .94 + ratio * .06;
     ctx.drawImage(enemyBaseSprite, barrier.drawX, barrier.drawY, barrier.width, barrier.height);
     ctx.restore();
   }
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
-  if (!g.barricadeVulnerable && state !== "BREACHED") {
+  if (!g.barricadeVulnerable && !breached) {
     const shield = ctx.createLinearGradient(barrier.drawX, 0, barrier.drawX + 36, 0);
     shield.addColorStop(0, "rgba(103,198,220,.28)");
     shield.addColorStop(1, "rgba(103,198,220,0)");
@@ -1008,64 +1010,73 @@ function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: 
     ctx.stroke();
   }
 
-  if (state !== "BREACHED") {
-    const plateX = barrier.drawX + 30;
-    const plateY = barrier.drawY + 62;
-    for (let i = 0; i < 3; i++) {
-      if (damageLevel >= 2 && i === 1) continue;
-      ctx.save();
-      ctx.translate(plateX + i * 35, plateY + i * 48);
-      if (damageLevel >= 1 && i === 2) ctx.rotate(.13);
-      if (damageLevel >= 2 && i === 0) ctx.rotate(-.18);
-      ctx.fillStyle = damageLevel === 0 ? "rgba(91,115,104,.78)" : damageLevel === 1 ? "rgba(116,90,67,.86)" : "rgba(89,65,54,.9)";
-      ctx.strokeStyle = damageLevel === 0 ? "#9fc0a9" : "#e08552";
-      ctx.lineWidth = 3;
-      ctx.fillRect(-13, -15, 28, 31); ctx.strokeRect(-13, -15, 28, 31);
-      ctx.restore();
-    }
-
+  if (!breached) {
     const lights = [[barrier.drawX + 43, barrier.drawY + 40], [barrier.drawX + 92, barrier.drawY + 51], [barrier.drawX + 133, barrier.drawY + 78]];
     for (let i = 0; i < lights.length; i++) {
       const [x, y] = lights[i];
-      const working = damageLevel === 0 || (damageLevel === 1 && i === 0);
-      ctx.fillStyle = working ? `rgba(255,202,91,${.72 + Math.sin(g.time * 8 + i) * .18})` : i === 0 && damageLevel === 2 ? "#db4f35" : "#292625";
+      const working = damageLevel === 0 || (damageLevel === 1 && i < 2) || (damageLevel === 2 && i === 0);
+      ctx.fillStyle = working ? `rgba(255,202,91,${.72 + Math.sin(g.time * 8 + i) * .18})` : i === 0 && damageLevel === 3 ? "#db4f35" : "#292625";
       ctx.beginPath(); ctx.arc(x, y, working ? 6 : 5, 0, Math.PI * 2); ctx.fill();
     }
 
-    ctx.save();
-    ctx.translate(barrier.drawX + 79, barrier.drawY + 205);
-    if (damageLevel === 1) ctx.rotate(.035);
-    if (damageLevel >= 2) ctx.rotate(.11);
-    ctx.fillStyle = damageLevel < 2 ? "rgba(38,43,42,.72)" : "rgba(31,25,24,.9)";
-    ctx.strokeStyle = damageLevel < 2 ? "#65766e" : "#c85c3d";
-    ctx.lineWidth = 4;
-    ctx.fillRect(-34, -54, 68, 108); ctx.strokeRect(-34, -54, 68, 108);
-    if (damageLevel >= 2) { ctx.beginPath(); ctx.moveTo(0, -54); ctx.lineTo(-9, 54); ctx.stroke(); }
-    ctx.restore();
-
     if (damageLevel >= 1) {
-      ctx.strokeStyle = damageLevel === 1 ? "#f19a5b" : "#ff7148";
-      ctx.lineWidth = damageLevel === 1 ? 3 : 5;
-      for (const [x, y] of [[barrier.drawX + 54, barrier.drawY + 104], [barrier.drawX + 118, barrier.drawY + 142]]) {
-        ctx.beginPath(); ctx.moveTo(x - 12, y - 20); ctx.lineTo(x, y - 4); ctx.lineTo(x - 7, y + 10); ctx.lineTo(x + 11, y + 27); ctx.stroke();
+      const x = (value: number) => barrier.drawX + barrier.width * value;
+      const y = (value: number) => barrier.drawY + barrier.height * value;
+      const crackPaths = [
+        [[.29, .26], [.34, .3], [.31, .34], [.37, .38]],
+        [[.63, .37], [.58, .42], [.62, .47], [.57, .52]],
+        [[.46, .56], [.51, .61], [.47, .67], [.54, .72]],
+      ];
+      const visibleCracks = damageLevel === 1 ? 1 : damageLevel === 2 ? 2 : 3;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(barrier.drawX + 2, barrier.drawY + 2, barrier.width - 4, barrier.height - 4);
+      ctx.clip();
+      ctx.strokeStyle = damageLevel === 1 ? "rgba(100,67,49,.58)" : damageLevel === 2 ? "rgba(126,70,47,.76)" : "rgba(151,63,42,.84)";
+      ctx.lineWidth = damageLevel === 1 ? 1.25 : damageLevel === 2 ? 1.6 : 1.9;
+      for (const path of crackPaths.slice(0, visibleCracks)) {
+        ctx.beginPath();
+        path.forEach(([px, py], index) => index === 0 ? ctx.moveTo(x(px), y(py)) : ctx.lineTo(x(px), y(py)));
+        ctx.stroke();
       }
-      ctx.strokeStyle = "#665848"; ctx.lineWidth = 5;
-      ctx.beginPath(); ctx.moveTo(barrier.drawX + 142, barrier.drawY + 92); ctx.lineTo(barrier.drawX + 151 - damageLevel * 7, barrier.drawY + 238); ctx.stroke();
-    }
 
-    if (damageLevel >= 1) {
-      for (let i = 0; i < 2 + damageLevel; i++) {
-        const y = LANE_Y[i % 3] - 22 - ((g.time * (12 + i * 2) + i * 19) % 38);
-        ctx.globalAlpha = .1 + damageLevel * .08;
+      if (damageLevel >= 2) {
+        ctx.strokeStyle = damageLevel === 2 ? "rgba(96,82,68,.72)" : "rgba(119,71,52,.8)";
+        ctx.lineWidth = damageLevel === 2 ? 1.5 : 1.8;
+        ctx.beginPath();
+        ctx.moveTo(x(.19), y(.48)); ctx.lineTo(x(.34), y(.5)); ctx.lineTo(x(.39), y(.55));
+        ctx.moveTo(x(.61), y(.63)); ctx.lineTo(x(.72), y(.6)); ctx.lineTo(x(.77), y(.66));
+        ctx.stroke();
+      }
+
+      if (damageLevel >= 3) {
+        const fragments = [
+          [[.31, .46], [.39, .44], [.41, .5], [.34, .53]],
+          [[.58, .63], [.67, .65], [.63, .71], [.55, .68]],
+        ];
+        ctx.fillStyle = "rgba(39,31,28,.72)";
+        for (const fragment of fragments) {
+          ctx.beginPath();
+          fragment.forEach(([px, py], index) => index === 0 ? ctx.moveTo(x(px), y(py)) : ctx.lineTo(x(px), y(py)));
+          ctx.closePath(); ctx.fill();
+        }
+      }
+
+      const smokeAnchors = [[.28, .28], [.63, .43], [.42, .61], [.7, .24]];
+      for (let i = 0; i < damageLevel + 1; i++) {
+        const [smokeX, smokeY] = smokeAnchors[i];
+        const rise = (g.time * (7 + i * 1.5) + i * 9) % 16;
+        ctx.globalAlpha = .07 + damageLevel * .055;
         ctx.fillStyle = "#191716";
         ctx.beginPath();
-        ctx.arc(barrier.drawX + 34 + (i % 2) * 34, y, 9 + i * 3, 0, Math.PI * 2);
+        ctx.arc(x(smokeX), y(smokeY) - rise, 5 + damageLevel * 1.4 + i, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.restore();
     }
   }
 
-  if (state === "BREACHED") {
+  if (breached) {
     const groundY = barrier.drawY + barrier.height - 8;
     ctx.globalAlpha = 1;
     ctx.fillStyle = "#302723";
@@ -1075,7 +1086,15 @@ function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: 
       ctx.save();
       ctx.translate(barrier.drawX + barrier.width * .52 + spread * fall, groundY - (1 - fall) * (30 + (i % 3) * 24));
       ctx.rotate((i - 4) * .13 * fall);
-      ctx.fillRect(-11, -7, 22 + (i % 2) * 8, 14 + (i % 3) * 4);
+      const debrisWidth = 22 + (i % 2) * 8;
+      const debrisHeight = 14 + (i % 3) * 4;
+      ctx.beginPath();
+      ctx.moveTo(-11, -7);
+      ctx.lineTo(debrisWidth - 11, -debrisHeight * .34);
+      ctx.lineTo(debrisWidth * .42, debrisHeight - 7);
+      ctx.lineTo(-debrisWidth * .45, debrisHeight * .28);
+      ctx.closePath();
+      ctx.fill();
       ctx.restore();
     }
     const dust = Math.sin(Math.min(1, collapse) * Math.PI);
@@ -1094,7 +1113,7 @@ function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: 
     }
   }
 
-  if (state !== "BREACHED" && g.barricadeHitFlash > 0) {
+  if (!breached && g.barricadeHitFlash > 0) {
     const glow = ctx.createRadialGradient(barrier.drawX + 10, g.barricadeHitY - 18, 4, barrier.drawX + 10, g.barricadeHitY - 18, 52);
     glow.addColorStop(0, `rgba(255,213,108,${Math.min(.75, g.barricadeHitFlash * 3)})`);
     glow.addColorStop(1, "rgba(218,67,32,0)");

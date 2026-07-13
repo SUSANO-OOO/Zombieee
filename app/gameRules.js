@@ -5,6 +5,7 @@ export const SUPPORT_GAUGE_MAX = 100;
 // commit moves player-facing wording from rage to support gauge.
 export const RAGE_MAX = SUPPORT_GAUGE_MAX;
 export const BARRICADE_MAX_HP = 1000;
+export const ENEMY_BASE_COLLAPSE_SECONDS = 1.05;
 export const PREP_SECONDS = 5;
 export const TACTIC_MODES = ["defend", "balanced", "assault"];
 export const FIELD_OBJECT_CLEARANCE = 72;
@@ -244,7 +245,7 @@ export function cameraShakeAmplitude(runtime) {
   return runtime.strength * Math.min(1, runtime.remaining / runtime.duration);
 }
 
-export function advanceEnemyBaseCollapse({ barricadeHp, elapsed = 0, seconds = 0, duration = 1.05 }) {
+export function advanceEnemyBaseCollapse({ barricadeHp, elapsed = 0, seconds = 0, duration = ENEMY_BASE_COLLAPSE_SECONDS }) {
   if (barricadeHp > 0) return { active: false, elapsed: 0, complete: false };
   const safeDuration = Math.max(0, duration);
   const nextElapsed = Math.min(safeDuration, Math.max(0, elapsed) + Math.max(0, seconds));
@@ -816,6 +817,30 @@ export function barricadeState(hp) {
   if (ratio <= .35) return "BREACH IMMINENT";
   if (ratio <= .7) return "BUCKLING";
   return "INTACT";
+}
+
+export function enemyBaseVisualState({
+  hp,
+  elapsed = 0,
+  maxHp = BARRICADE_MAX_HP,
+  duration = ENEMY_BASE_COLLAPSE_SECONDS,
+}) {
+  const safeMaxHp = Math.max(1, maxHp);
+  const safeHp = Math.max(0, Math.min(safeMaxHp, hp));
+  if (safeHp <= 0) {
+    const safeDuration = Math.max(0, duration);
+    const collapseProgress = safeDuration === 0 ? 1 : Math.min(1, Math.max(0, elapsed) / safeDuration);
+    return {
+      phase: collapseProgress >= 1 ? "collapsed" : "collapsing",
+      damageLevel: 4,
+      collapseProgress,
+    };
+  }
+  const ratio = safeHp / safeMaxHp;
+  if (ratio >= 1) return { phase: "healthy", damageLevel: 0, collapseProgress: 0 };
+  if (ratio > .7) return { phase: "light", damageLevel: 1, collapseProgress: 0 };
+  if (ratio > .35) return { phase: "heavy", damageLevel: 2, collapseProgress: 0 };
+  return { phase: "critical", damageLevel: 3, collapseProgress: 0 };
 }
 
 export function battleOutcome(baseHp, barricadeHp) {

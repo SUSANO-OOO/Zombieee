@@ -11,6 +11,7 @@ import {
   COMMAND_REGEN,
   CONTAINER_DEF,
   CRAWLER_BARRAGE_DEF,
+  ENEMY_BASE_COLLAPSE_SECONDS,
   FIELD_OBJECT_CLEARANCE,
   LANE_NAMES,
   LANE_Y,
@@ -51,6 +52,7 @@ import {
   crawlerThreatLevel,
   damageContainer,
   enemyCanTargetBattlefieldSupply,
+  enemyBaseVisualState,
   humanAttackMultiplier,
   isBrawlerFinisher,
   interceptorTargetScore,
@@ -362,6 +364,22 @@ test("tracks one barricade condition and resolves the battle from either structu
   assert.equal(barricadeState(1), "BREACH IMMINENT");
   assert.equal(barricadeState(0), "BREACHED");
   assert.equal(barricadeState(-1), "BREACHED");
+
+  assert.deepEqual(enemyBaseVisualState({ hp: 1000 }), { phase: "healthy", damageLevel: 0, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 999 }), { phase: "light", damageLevel: 1, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 701 }), { phase: "light", damageLevel: 1, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 700 }), { phase: "heavy", damageLevel: 2, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 351 }), { phase: "heavy", damageLevel: 2, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 350 }), { phase: "critical", damageLevel: 3, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 1 }), { phase: "critical", damageLevel: 3, collapseProgress: 0 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 0 }), { phase: "collapsing", damageLevel: 4, collapseProgress: 0 });
+  const collapsingBase = enemyBaseVisualState({ hp: 0, elapsed: ENEMY_BASE_COLLAPSE_SECONDS / 2 });
+  assert.equal(collapsingBase.phase, "collapsing");
+  assert.equal(collapsingBase.damageLevel, 4);
+  assertClose(collapsingBase.collapseProgress, .5);
+  assert.deepEqual(enemyBaseVisualState({ hp: 0, elapsed: ENEMY_BASE_COLLAPSE_SECONDS }), { phase: "collapsed", damageLevel: 4, collapseProgress: 1 });
+  assert.deepEqual(enemyBaseVisualState({ hp: -1, elapsed: 99 }), { phase: "collapsed", damageLevel: 4, collapseProgress: 1 });
+  assert.deepEqual(enemyBaseVisualState({ hp: 1100 }), { phase: "healthy", damageLevel: 0, collapseProgress: 0 });
 
   assert.equal(battleOutcome(100, BARRICADE_MAX_HP), null);
   assert.equal(battleOutcome(0, 500), "lost");
@@ -823,8 +841,13 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /selectAreaEffectsForRender\(g\.areaEffects\)/);
   assert.match(game, /function drawAirstrikeObserver/);
   assert.match(game, /pose\.action === "radio"[\s\S]*pose\.action === "targeting"[\s\S]*pose\.action === "inbound" \|\| pose\.action === "impact"/);
-  assert.match(game, /const state = barricadeState\(g\.barricadeHp\)/);
-  assert.match(game, /state === "BREACHED"[\s\S]*ENEMY BASE DESTROYED/);
+  const enemyBaseDraw = game.slice(game.indexOf("function drawEnemyBase"), game.indexOf("function drawEmergencySupport"));
+  assert.match(enemyBaseDraw, /enemyBaseVisualState\(\{ hp: g\.barricadeHp, elapsed: g\.enemyBaseCollapse \}\)/);
+  assert.match(enemyBaseDraw, /ctx\.rect\(barrier\.drawX \+ 2, barrier\.drawY \+ 2, barrier\.width - 4, barrier\.height - 4\);[\s\S]*ctx\.clip\(\)/);
+  assert.doesNotMatch(enemyBaseDraw, /fillRect\(-34, -54, 68, 108\)|strokeRect\(-34, -54, 68, 108\)/);
+  assert.doesNotMatch(enemyBaseDraw, /fillRect\(-13, -15, 28, 31\)|strokeRect\(-13, -15, 28, 31\)/);
+  assert.doesNotMatch(enemyBaseDraw, /LANE_Y/);
+  assert.match(enemyBaseDraw, /breached[\s\S]*ENEMY BASE DESTROYED/);
   assert.match(game, /const enemyBaseDestroyed = g\.barricadeHp <= 0[\s\S]*g\.resultPresented = !enemyBaseDestroyed/);
   assert.match(game, /advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*setEnd\(\{ won: g\.won/);
   assert.match(game, /const combatLocked = !!end \|\| hud\.baseHp <= 0 \|\| hud\.barricadeHp <= 0/);
