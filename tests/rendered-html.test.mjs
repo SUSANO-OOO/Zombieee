@@ -45,6 +45,7 @@ import {
   crawlerSiegeDamage,
   crawlerThreatLevel,
   damageContainer,
+  enemyCanTargetBattlefieldSupply,
   humanAttackMultiplier,
   isBrawlerFinisher,
   interceptorTargetScore,
@@ -86,29 +87,33 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders Ashfall Outpost Early Access 0.4.0", async () => {
+test("server-renders the Ashfall Outpost Early Access 0.5.0 boss-stage loadout", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>ASHFALL OUTPOST — Early Access 0\.4\.0/);
+  assert.match(html, /<title>ASHFALL OUTPOST — Early Access 0\.5\.0/);
   assert.match(html, /aria-label="ASHFALL OUTPOST game"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /aria-label="Three-lane wasteland battlefield"/);
-  assert.match(html, /EARLY ACCESS BUILD 0\.4\.0 · TACTICAL COMMAND · IRON BREACH/);
-  assert.match(html, /Deploy during the five-second window/);
-  assert.match(html, /bring down TAKUYA/);
-  assert.match(html, /break the iron barricade sealing all three routes/);
+  assert.match(html, /BOSS STAGE LOADOUT · EARLY ACCESS 0\.5\.0/);
+  assert.match(html, /6名の役割と戦場物資/);
+  assert.match(html, /戦場物資を1つ選択/);
+  assert.match(html, /戦術投下ポッド/);
+  assert.match(html, /爆薬ドラム/);
+  assert.match(html, /救急物資/);
+  assert.match(html, /緊急航空支援/);
+  assert.match(html, /CRAWLER一斉掃射/);
   assert.match(html, /TACTIC/);
-  assert.match(html, /IRON BARRICADE/);
-  assert.match(html, /PREPARING ASSETS/);
+  assert.match(html, /TAKUYA/);
+  assert.match(html, /アセット準備中/);
   assert.match(html, /CRAWLER SYSTEM CHECK/);
   assert.match(html, />BGM</);
   assert.match(html, />SFX</);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 
-test("ships the three-route barricade objective and its dedicated artwork", async () => {
+test("ships the three-route infected checkpoint, mobile fortress, and dedicated battlefield-supply artwork", async () => {
   const [game, rules, css, layout] = await Promise.all([
     readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/gameRules.js", import.meta.url), "utf8"),
@@ -118,8 +123,8 @@ test("ships the three-route barricade objective and its dedicated artwork", asyn
 
   await Promise.all([
     access(new URL("../public/battlefield-v4.png", import.meta.url)),
-    access(new URL("../public/iron-barricade-v1.png", import.meta.url)),
-    access(new URL("../public/crawler-bus-v1.png", import.meta.url)),
+    access(new URL("../public/infected-checkpoint-v1.png", import.meta.url)),
+    access(new URL("../public/crawler-fortress-v1.png", import.meta.url)),
     access(new URL("../public/takuya-boss-sprites-v2.png", import.meta.url)),
     access(new URL("../public/ranger-sprites-v1.png", import.meta.url)),
     access(new URL("../public/brawler-sprites-v1.png", import.meta.url)),
@@ -127,20 +132,24 @@ test("ships the three-route barricade objective and its dedicated artwork", asyn
     access(new URL("../public/breaker-sprites-v2.png", import.meta.url)),
     access(new URL("../public/gunner-sprites-v1.png", import.meta.url)),
     access(new URL("../public/medic-sprites-v1.png", import.meta.url)),
-    access(new URL("../public/protective-container-v1.png", import.meta.url)),
+    access(new URL("../public/tactical-drop-pod-v1.png", import.meta.url)),
+    access(new URL("../public/explosive-drum-v1.png", import.meta.url)),
+    access(new URL("../public/medical-supply-station-v1.png", import.meta.url)),
   ]);
 
-  assert.match(game, /loadImage\("\/iron-barricade-v1\.png"/);
-  assert.match(game, /container: "\/protective-container-v1\.png"/);
-  assert.match(game, /drawContainer\(ctx, renderable\.object, sprites\.container\)/);
-  assert.match(game, /ctx\.drawImage\(containerSprite/);
-  assert.match(game, /function drawBarricade/);
-  assert.match(game, /A single shared-HP barricade physically closes all three routes/);
+  assert.match(game, /loadImage\("\/infected-checkpoint-v1\.png"/);
+  assert.match(game, /crawler: "\/crawler-fortress-v1\.png"/);
+  assert.match(game, /pod: "\/tactical-drop-pod-v1\.png"/);
+  assert.match(game, /drum: "\/explosive-drum-v1\.png"/);
+  assert.match(game, /medical: "\/medical-supply-station-v1\.png"/);
+  assert.match(game, /drawBattlefieldSupply\(ctx, renderable\.object, sprites\)/);
+  assert.match(game, /function drawEnemyBase/);
+  assert.match(game, /infected checkpoint closes all three routes/);
   assert.match(game, /barricadeHp: number/);
   assert.match(game, /barricadeHp: BARRICADE_MAX_HP/);
   assert.match(game, /g\.barricadeHp = Math\.max\(0, g\.barricadeHp - structureDamage\)/);
   assert.match(game, /const outcome = battleOutcome\(g\.baseHp, g\.barricadeHp\)/);
-  assert.match(game, /TAKUYA DOWN — BARRICADE EXPOSED/);
+  assert.match(game, /TAKUYA DOWN — ENEMY BASE EXPOSED/);
   assert.match(game, /IRON BARRICADE \/\/ BUCKLING/);
   assert.match(game, /IRON BARRICADE \/\/ BREACH IMMINENT/);
   assert.match(game, /BARRICADE BREACHED/);
@@ -148,8 +157,8 @@ test("ships the three-route barricade objective and its dedicated artwork", asyn
   assert.match(css, /\.barrier-health/);
   assert.match(css, /\.barrier-health\.vulnerable/);
   assert.match(css, /\.barrier-health\.hit/);
-  assert.match(layout, /ASHFALL OUTPOST — Early Access 0\.4\.0/);
-  assert.match(layout, /rel="preload" as="image" href="\/iron-barricade-v1\.png"/);
+  assert.match(layout, /ASHFALL OUTPOST — Early Access 0\.5\.0/);
+  assert.match(layout, /rel="preload" as="image" href="\/infected-checkpoint-v1\.png"/);
 });
 
 test("keeps the battlefield visually clean while routing freely across three roadway bands", async () => {
@@ -231,10 +240,10 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
   assert.equal(laneForY(LANE_Y[2], 1), 2);
   assert.deepEqual(WORLD_GEOMETRY, {
     baseX: 188,
-    musterX: 132,
+    musterX: 187,
     musterY: 352,
     crawler: {
-      x: -70, y: 170, width: 310, height: 210, exitX: 150,
+      x: -70, y: 170, width: 310, height: 210, exitX: 205,
       commandDeckX: 88, commandDeckY: 186, weaponX: 132, weaponY: 224,
       damageX: 112, damageY: 250,
     },
@@ -423,6 +432,9 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   ] }), { ok: true, reason: "配置できます" });
 
   const readyToLand = advanceBattlefieldSupply(podPlacement.supplies[0], BATTLEFIELD_SUPPLY_DEFS.pod.dropSeconds);
+  assert.equal(podPlacement.supplies[0].targetable, false);
+  assert.equal(podPlacement.supplies[0].blocksEnemies, false);
+  assert.equal(resolveBattlefieldSupplyLanding({ supply: podPlacement.supplies[0], fighters: [] }).triggered, false);
   assert.equal(readyToLand.readyToLand, true);
   const landing = resolveBattlefieldSupplyLanding({
     supply: readyToLand,
@@ -433,6 +445,8 @@ test("models all three battlefield supplies without fixed pod count or lane caps
     ],
   });
   assert.equal(landing.triggered, true);
+  assert.equal(landing.supply.targetable, true);
+  assert.equal(landing.supply.blocksEnemies, true);
   assert.deepEqual(landing.hits.map(({ side, damage }) => [side, damage]), [["zombie", 72], ["human", 22]]);
   assert.equal(resolveBattlefieldSupplyLanding({ supply: landing.supply, fighters: landing.fighters }).triggered, false);
   const activePod = advanceBattlefieldSupply(landing.supply, BATTLEFIELD_SUPPLY_DEFS.pod.impactSeconds);
@@ -485,6 +499,13 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   const missingSource = advanceAreaEffects({ areaEffects: medicalPlacement.areaEffects, activeSupplyIds: [], fighters: healed.fighters, seconds: 1 });
   assert.equal(missingSource.areaEffects[0].phase, "expired");
   assert.equal(missingSource.changes.length, 0);
+
+  const leftBurn = advanceAreaEffects({ areaEffects: burned.areaEffects, fighters: burned.fighters.map((fighter) => ({ ...fighter, x: 900 })), seconds: 1 });
+  assert.equal(leftBurn.fighters[0].burning, false);
+  assert.equal(leftBurn.fighters[0].slowMultiplier, 1);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyLane: 1, attackRange: 20 }), true);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 600, enemyLane: 1, attackRange: 20 }), false);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 480, enemyLane: 1, attackRange: 20 }), true);
 });
 
 test("models airstrike request and one-at-a-time emergency-support transitions", () => {
@@ -508,6 +529,9 @@ test("models airstrike request and one-at-a-time emergency-support transitions",
   const impact = advanceEmergencySupportRuntime(inbound.runtime, AIRSTRIKE_DEF.inboundSeconds);
   assert.equal(impact.runtime.phase, "impact");
   assert.deepEqual(impact.events, ["impact"]);
+  const largeDeltaImpact = advanceEmergencySupportRuntime(requested.runtime, 99);
+  assert.equal(largeDeltaImpact.runtime.phase, "impact");
+  assert.deepEqual(largeDeltaImpact.events, ["impact"]);
   const resolved = resolveAirstrikeImpact({
     runtime: impact.runtime,
     fighters: [
@@ -540,6 +564,9 @@ test("models the independently charged all-lane Crawler barrage with boss mitiga
   const firing = advanceCrawlerAbilityRuntime(requested.runtime, CRAWLER_BARRAGE_DEF.deploySeconds);
   assert.equal(firing.runtime.phase, "firing");
   assert.deepEqual(firing.events, ["fire"]);
+  const largeDeltaFiring = advanceCrawlerAbilityRuntime(requested.runtime, 99);
+  assert.equal(largeDeltaFiring.runtime.phase, "firing");
+  assert.deepEqual(largeDeltaFiring.events, ["fire"]);
 
   const barrage = resolveCrawlerBarrage({
     runtime: firing.runtime,
@@ -566,7 +593,7 @@ test("models the independently charged all-lane Crawler barrage with boss mitiga
 });
 
 test("caps transient render arrays and limits camera shake to major events", () => {
-  assert.deepEqual(RENDER_ARRAY_LIMITS, { particles: 420, shots: 180, damageTexts: 140, battleBarks: 2 });
+  assert.deepEqual(RENDER_ARRAY_LIMITS, { particles: 420, shots: 180, damageTexts: 140, areaEffects: 24, battleBarks: 2 });
   assert.deepEqual(capRenderArray([1, 2, 3, 4], 2), [3, 4]);
   assert.deepEqual(capRenderArray([1, 2, 3], 0), []);
   assert.deepEqual(capRenderArray([1, 2, 3], "battleBarks"), [2, 3]);
@@ -640,6 +667,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.deepEqual(damageContainer(CONTAINER_DEF.maxHp, 35), { hp: CONTAINER_DEF.maxHp - 35, phase: "active" });
   assert.deepEqual(damageContainer(20, 35), { hp: 0, phase: "destroying" });
   assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), true);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "impact" }), true);
   assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 0, containerX: 440, containerLane: 1, phase: "active" }), false);
   assert.equal(containerBlocksEnemy({ enemyX: 400, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), false);
   assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "destroying" }), false);
@@ -660,19 +688,20 @@ test("validates, damages, and releases the battlefield container without changin
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   assert.match(game, /battlefieldObjects: BattlefieldObject\[\]/);
   assert.match(game, /targetObjectId: number \| null/);
-  assert.match(game, /resolveContainerPlacement\(\{/);
-  assert.match(game, /resolveFieldSupportPlacement\(\{/);
-  assert.match(game, /supports: g\.supports, containers: g\.battlefieldObjects/);
-  assert.match(game, /if \(placeContainer\(lane, x\)\) chooseAction\(null\)/);
-  assert.match(game, /if \(succeeded\) chooseAction\(null\)/);
+  assert.match(game, /resolveBattlefieldSupplyPlacement\(\{/);
+  assert.match(game, /requestAirstrike\(\{/);
+  assert.match(game, /requestCrawlerBarrage\(\{/);
+  assert.match(game, /placeBattlefieldSupply\(kind, lane, x\)/);
+  assert.match(game, /if \(deployAirstrike\(lane, x\)\) chooseAction\(null\)/);
   assert.match(game, /const routeLane = f\.lane/);
   assert.match(game, /selectBlockingContainer\(\{/);
-  assert.match(game, /physicalContact \?\? \(blockingContainer \? undefined/);
+  assert.match(game, /physicalContact \?\? \(blockingSupply \? undefined/);
   assert.match(game, /!target && !objectTarget && f\.x > 520/);
   assert.match(game, /objectTarget \? Math\.abs\(f\.x - objectTarget\.x\)/);
-  assert.match(game, /applyContainerDamage\(objectTarget, f\.damage\)/);
-  assert.match(game, /resolveContainerLanding\(\{/);
-  assert.match(game, /object\.landingTriggered = true; object\.phase = "impact"/);
+  assert.match(game, /applyBattlefieldSupplyDamage\(objectTarget, f\.damage\)/);
+  assert.match(game, /resolveBattlefieldSupplyLanding\(\{/);
+  assert.match(game, /resolveDrumDetonation\(\{/);
+  assert.match(game, /advanceAreaEffects\(\{/);
   assert.match(game, /索敵マーク/);
   assert.match(game, /対・毒吐き/);
   assert.match(game, /前線保持/);
@@ -689,9 +718,9 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /qaRoles \? prepareRolesQa\(fresh\) : else|if \(qaRoles\) prepareRolesQa\(fresh\)/);
   assert.match(game, /qa === "roles"/);
   assert.match(game, /advanceZombieX\(\{/);
-  assert.match(game, /防護コンテナ破壊/);
+  assert.match(game, /supplyDefs\[objectTarget\.kind\]\.name}破壊/);
   assert.match(game, /drawPlacementIndicator/);
-  assert.match(game, /CONTAINER_DEF\.cost/);
+  assert.match(game, /supplyDefs\[selectedSupply\]\.cost/);
 });
 
 test("defines an ordered mission timeline after the five-second preparation window", () => {

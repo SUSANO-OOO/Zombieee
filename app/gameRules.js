@@ -15,7 +15,7 @@ export const LANE_NAMES = ["TOP", "MID", "LOW"];
 
 // One geometry source keeps combat hit points, art placement, and deployment aligned.
 const CRAWLER_GEOMETRY = Object.freeze({
-  x: -70, y: 170, width: 310, height: 210, exitX: 150,
+  x: -70, y: 170, width: 310, height: 210, exitX: 205,
   commandDeckX: 88, commandDeckY: 186,
   weaponX: 132, weaponY: 224,
   damageX: 112, damageY: 250,
@@ -27,7 +27,7 @@ const ENEMY_BASE_GEOMETRY = Object.freeze({
 });
 export const WORLD_GEOMETRY = Object.freeze({
   baseX: 188,
-  musterX: 132,
+  musterX: 187,
   musterY: LANE_Y[2],
   crawler: CRAWLER_GEOMETRY,
   enemyBase: ENEMY_BASE_GEOMETRY,
@@ -91,6 +91,7 @@ export const RENDER_ARRAY_LIMITS = Object.freeze({
   particles: 420,
   shots: 180,
   damageTexts: 140,
+  areaEffects: 24,
   battleBarks: 2,
 });
 
@@ -177,7 +178,7 @@ function battlefieldDistance(lane, x, object) {
 }
 
 function supplyStillPresent(supply) {
-  return supply.phase !== "expired" && supply.phase !== "destroying" && supply.life !== 0;
+  return supply.phase !== "expired" && supply.phase !== "destroying" && (!Number.isFinite(supply.life) || supply.life > 0);
 }
 
 export function battlefieldSupplyPlacementCheck({
@@ -246,8 +247,8 @@ export function resolveBattlefieldSupplyPlacement(input) {
     remaining: kind === "medical" ? def.effectSeconds : null,
     hp: def.maxHp,
     maxHp: def.maxHp,
-    blocksEnemies: def.blocksEnemies,
-    targetable: true,
+    blocksEnemies: kind === "pod" ? false : def.blocksEnemies,
+    targetable: kind !== "pod",
     landingTriggered: kind !== "pod",
     detonationTriggered: false,
   };
@@ -264,7 +265,7 @@ export function resolveBattlefieldSupplyPlacement(input) {
 
 export function resolveBattlefieldSupplyLanding({ supply, fighters = [] }) {
   const def = battlefieldSupplyDef(supply?.kind);
-  if (!supply || supply.kind !== "pod" || supply.landingTriggered || supply.phase !== "dropping") {
+  if (!supply || supply.kind !== "pod" || supply.landingTriggered || supply.phase !== "dropping" || (!supply.readyToLand && supply.phaseTime > 0)) {
     return { triggered: false, supply, fighters, hits: [] };
   }
   const hits = [];
@@ -277,7 +278,7 @@ export function resolveBattlefieldSupplyLanding({ supply, fighters = [] }) {
   });
   return {
     triggered: true,
-    supply: { ...supply, phase: "impact", phaseTime: def.impactSeconds, landingTriggered: true },
+    supply: { ...supply, phase: "impact", phaseTime: def.impactSeconds, readyToLand: false, landingTriggered: true, blocksEnemies: true, targetable: true },
     fighters: nextFighters,
     hits,
   };
@@ -375,7 +376,7 @@ export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [],
 export function advanceAreaEffects({ areaEffects = [], fighters = [], seconds, activeSupplyIds }) {
   const elapsed = Math.max(0, seconds);
   const activeSources = activeSupplyIds === undefined ? null : new Set(activeSupplyIds);
-  let nextFighters = fighters.map((fighter) => ({ ...fighter }));
+  let nextFighters = fighters.map((fighter) => ({ ...fighter, burning: false, slowMultiplier: 1 }));
   const changes = [];
   const nextEffects = areaEffects.map((effect) => {
     if (effect.phase === "expired") return effect;
@@ -517,7 +518,12 @@ export function advanceEmergencySupportRuntime(runtime, seconds) {
   while (next.phase !== "idle" && remaining >= next.phaseTime) {
     remaining -= next.phaseTime;
     next = nextAirstrikePhase(next);
-    if (next.phase === "impact") events.push("impact");
+    if (next.phase === "impact") {
+      events.push("impact");
+      // Preserve the one-shot resolution window even when a background tab
+      // resumes with a large elapsed delta.
+      remaining = 0;
+    }
     if (next.phase === "idle") events.push("complete");
   }
   if (next.phase !== "idle" && remaining > 0) next.phaseTime = Math.max(0, next.phaseTime - remaining);
@@ -580,7 +586,11 @@ export function advanceCrawlerAbilityRuntime(runtime, seconds) {
   while (["deploying", "firing", "recovering"].includes(next.phase) && remaining >= next.phaseTime) {
     remaining -= next.phaseTime;
     next = nextCrawlerAbilityPhase(next);
-    if (next.phase === "firing") events.push("fire");
+    if (next.phase === "firing") {
+      events.push("fire");
+      // Keep firing observable until resolveCrawlerBarrage consumes it.
+      remaining = 0;
+    }
     if (next.phase === "cooldown") events.push("cooldown");
   }
   if (["deploying", "firing", "recovering"].includes(next.phase) && remaining > 0) {
@@ -602,6 +612,13 @@ export function resolveCrawlerBarrage({ runtime, fighters = [] }) {
   return { triggered: true, runtime: { ...runtime, damageTriggered: true }, fighters: nextFighters, hits };
 }
 
+export function enemyCanTargetBattlefieldSupply({ supply, enemyX, enemyLane, attackRange = 0, contactPadding = 30 }) {
+  if (!supply || !supply.targetable || !["active", "impact"].includes(supply.phase) || supply.hp <= 0) return false;
+  if (supply.lane !== enemyLane) return false;
+  if (supply.blocksEnemies) return supply.x < enemyX;
+  return Math.abs(enemyX - supply.x) <= Math.max(0, attackRange) + Math.max(0, contactPadding);
+}
+
 export function damageContainer(hp, damage) {
   const nextHp = Math.max(0, hp - Math.max(0, damage));
   return { hp: nextHp, phase: nextHp <= 0 ? "destroying" : "active" };
@@ -620,7 +637,7 @@ export function applyContainerDamage(container, damage) {
 }
 
 export function containerBlocksEnemy({ enemyX, enemyLane, containerX, containerLane, phase }) {
-  return phase === "active" && enemyLane === containerLane && containerX > WORLD_GEOMETRY.baseX && containerX < enemyX;
+  return (phase === "impact" || phase === "active") && enemyLane === containerLane && containerX > WORLD_GEOMETRY.baseX && containerX < enemyX;
 }
 
 export function selectBlockingContainer({ enemyX, enemyLane, objects = [] }) {

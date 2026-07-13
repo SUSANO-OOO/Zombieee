@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ASHFALL OUTPOST — Early Access 0.4.0",
+  title: "ASHFALL OUTPOST — Early Access 0.5.0",
   description:
-    "Early Access 0.4.0 — command six specialized survivors, defeat TAKUYA, and breach the iron barricade across three routes.",
+    "Early Access 0.5.0 — command six specialized survivors, defeat TAKUYA, and breach the infected checkpoint across three routes.",
   openGraph: {
     title: "ASHFALL OUTPOST",
     description: "Hold the line in an original wasteland defense game.",
@@ -26,8 +26,8 @@ export default function RootLayout({
     <html lang="ja">
       <head>
         <link rel="preload" as="image" href="/battlefield-v4.png" fetchPriority="high" />
-        <link rel="preload" as="image" href="/crawler-bus-v1.png" fetchPriority="high" />
-        <link rel="preload" as="image" href="/iron-barricade-v1.png" fetchPriority="high" />
+        <link rel="preload" as="image" href="/crawler-fortress-v1.png" fetchPriority="high" />
+        <link rel="preload" as="image" href="/infected-checkpoint-v1.png" fetchPriority="high" />
       </head>
       <body>{children}</body>
     </html>
