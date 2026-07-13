@@ -9,6 +9,55 @@ export const PREP_SECONDS = 5;
 export const TACTIC_MODES = ["defend", "balanced", "assault"];
 export const FIELD_OBJECT_CLEARANCE = 72;
 
+/**
+ * @typedef {{
+ *   id: number,
+ *   side: "human" | "zombie",
+ *   kind: string,
+ *   lane: number,
+ *   x: number,
+ *   y: number,
+ *   hp: number,
+ *   maxHp: number,
+ *   boss?: boolean,
+ *   burning?: boolean,
+ *   slowMultiplier?: number,
+ * }} RuleFighter
+ * @typedef {{
+ *   id: number,
+ *   kind: string,
+ *   lane: number,
+ *   x: number,
+ *   y: number,
+ *   phase: string,
+ *   phaseTime: number,
+ *   hp: number,
+ *   maxHp: number,
+ *   blocksEnemies: boolean,
+ *   targetable: boolean,
+ *   landingTriggered?: boolean,
+ *   detonationTriggered?: boolean,
+ *   readyToLand?: boolean,
+ *   remaining?: number | null,
+ *   life?: number,
+ *   hitFlash?: number,
+ * }} RuleSupply
+ * @typedef {{
+ *   id: number,
+ *   kind: "burn" | "healing",
+ *   sourceSupplyId: number,
+ *   lane: number,
+ *   x: number,
+ *   y: number,
+ *   radius: number,
+ *   amountPerSecond: number,
+ *   remaining: number,
+ *   phase: "active" | "expired",
+ *   slowMultiplier?: number,
+ * }} RuleAreaEffect
+ * @typedef {{minX: number, maxX: number, lane?: number}} ForbiddenZone
+ */
+
 // Three invisible routing bands follow the open roadway bands in battlefield-v4.
 export const LANE_Y = [212, 282, 352];
 export const LANE_NAMES = ["TOP", "MID", "LOW"];
@@ -106,7 +155,7 @@ export const CAMERA_SHAKE_EVENTS = Object.freeze({
 export const UNIT_CARDS = [
   { kind: "scout", name: "SCOUT", cost: 25, key: "1", desc: "高速敵を迎撃・マーク", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 },
   { kind: "ranger", name: "RANGER", cost: 45, key: "2", desc: "毒吐きを優先狙撃", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 },
-  { kind: "brute", name: "BREAKER", cost: 70, key: "3", desc: "前線を支え鉄柵を粉砕", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 },
+  { kind: "brute", name: "BREAKER", cost: 70, key: "3", desc: "前線を支え感染拠点を粉砕", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 },
   { kind: "brawler", name: "BRAWLER", cost: 55, key: "4", desc: "瀕死の敵を仕留める", deployCooldown: 13, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: .72 },
   { kind: "gunner", name: "GUNNER", cost: 60, key: "5", desc: "大型敵へ重火力", deployCooldown: 15, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 },
   { kind: "medic", name: "MEDIC", cost: 50, key: "6", desc: "周囲の味方を回復", deployCooldown: 20, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: .96 },
@@ -120,18 +169,18 @@ export const SUPPORT_DEFS = [
 ];
 
 export const MISSION_EVENTS = [
-  { at: 5, wave: 1, label: "WAVE 1 — CONTACT", units: [["walker", 0], ["walker", 1], ["walker", 2]] },
-  { at: 20, wave: 2, label: "WAVE 2 — SPLIT ATTACK", units: [["walker", 0], ["runner", 0], ["spitter", 1], ["walker", 1], ["walker", 2]] },
-  { at: 42, wave: 3, label: "WAVE 3 — PRESSURE", units: [["runner", 0], ["walker", 0], ["runner", 1], ["walker", 1], ["runner", 2], ["walker", 2]] },
-  { at: 60, wave: 4, label: "ELITE ENEMY — SHADE", units: [["shade", 0], ["runner", 0], ["walker", 1], ["spitter", 1], ["runner", 2]] },
-  { at: 80, wave: 5, label: "WAVE 5 — BREAKERS", units: [["crusher", 0], ["walker", 0], ["spitter", 1], ["runner", 1], ["crusher", 2], ["walker", 2]] },
-  { at: 103, wave: 6, label: "WAVE 6 — NO SAFE LANE", units: [["runner", 0], ["spitter", 0], ["walker", 1], ["crusher", 1], ["runner", 2], ["spitter", 2]] },
-  { at: 123, wave: 7, label: "FINAL LINE — HOLD", units: [["crusher", 0], ["runner", 0], ["abomination", 1], ["walker", 1], ["crusher", 2], ["runner", 2]] },
-  { at: 142, wave: 7, label: "WARNING — MASSIVE SIGNATURE", units: [] },
+  { at: 5, wave: 1, label: "WAVE 1 — 接敵", units: [["walker", 0], ["walker", 1], ["walker", 2]] },
+  { at: 20, wave: 2, label: "WAVE 2 — 分散攻撃", units: [["walker", 0], ["runner", 0], ["spitter", 1], ["walker", 1], ["walker", 2]] },
+  { at: 42, wave: 3, label: "WAVE 3 — 圧力上昇", units: [["runner", 0], ["walker", 0], ["runner", 1], ["walker", 1], ["runner", 2], ["walker", 2]] },
+  { at: 60, wave: 4, label: "精鋭出現 — SHADE", units: [["shade", 0], ["runner", 0], ["walker", 1], ["spitter", 1], ["runner", 2]] },
+  { at: 80, wave: 5, label: "WAVE 5 — 重装感染体", units: [["crusher", 0], ["walker", 0], ["spitter", 1], ["runner", 1], ["crusher", 2], ["walker", 2]] },
+  { at: 103, wave: 6, label: "WAVE 6 — 全レーン警戒", units: [["runner", 0], ["spitter", 0], ["walker", 1], ["crusher", 1], ["runner", 2], ["spitter", 2]] },
+  { at: 123, wave: 7, label: "最終防衛線 — 維持", units: [["crusher", 0], ["runner", 0], ["abomination", 1], ["walker", 1], ["crusher", 2], ["runner", 2]] },
+  { at: 142, wave: 7, label: "WARNING — 巨大反応", units: [] },
   { at: 148, wave: 8, label: "BOSS — TAKUYA / IRON JUDGE", units: [["walker", 0], ["spitter", 0], ["takuya", 1], ["runner", 1], ["crusher", 2]] },
-  { at: 168, wave: 9, label: "INFECTED REINFORCEMENTS", units: [["runner", 0], ["spitter", 1], ["runner", 2]] },
-  { at: 188, wave: 10, label: "TAKUYA — ENRAGED", bossOnly: true, units: [["crusher", 0], ["runner", 1], ["crusher", 2]] },
-  { at: 220, wave: 11, label: "LAST CHANCE — BREAK THE BARRICADE", units: [["runner", 0], ["spitter", 0], ["runner", 1], ["crusher", 1], ["runner", 2], ["spitter", 2]] },
+  { at: 168, wave: 9, label: "感染体増援", units: [["runner", 0], ["spitter", 1], ["runner", 2]] },
+  { at: 188, wave: 10, label: "TAKUYA — 激昂", bossOnly: true, units: [["crusher", 0], ["runner", 1], ["crusher", 2]] },
+  { at: 220, wave: 11, label: "最終機会 — 感染拠点を破壊", units: [["runner", 0], ["spitter", 0], ["runner", 1], ["crusher", 1], ["runner", 2], ["spitter", 2]] },
 ];
 
 export function phaseAt(time) {
@@ -181,6 +230,14 @@ function supplyStillPresent(supply) {
   return supply.phase !== "expired" && supply.phase !== "destroying" && (!Number.isFinite(supply.life) || supply.life > 0);
 }
 
+/**
+ * @param {{
+ *   running: boolean, paused: boolean, over: boolean, scrap: number,
+ *   kind?: string, supplyKind?: string, lane: number, x: number,
+ *   supplies?: RuleSupply[], objects?: RuleSupply[], supports?: RuleSupply[],
+ *   forbiddenZones?: ForbiddenZone[],
+ * }} input
+ */
 export function battlefieldSupplyPlacementCheck({
   running, paused, over, scrap, kind, supplyKind, lane, x,
   supplies = [], objects = [], supports = [], forbiddenZones = [],
@@ -226,6 +283,15 @@ function createMedicalAreaEffect(supply, id) {
   };
 }
 
+/**
+ * @param {{
+ *   running: boolean, paused: boolean, over: boolean, scrap: number,
+ *   kind?: string, supplyKind?: string, lane: number, x: number,
+ *   supplies?: RuleSupply[], objects?: RuleSupply[], supports?: RuleSupply[],
+ *   areaEffects?: RuleAreaEffect[], forbiddenZones?: ForbiddenZone[],
+ *   nextId?: number, nextAreaEffectId?: number,
+ * }} input
+ */
 export function resolveBattlefieldSupplyPlacement(input) {
   const supplies = input.supplies ?? [];
   const areaEffects = input.areaEffects ?? [];
@@ -263,6 +329,7 @@ export function resolveBattlefieldSupplyPlacement(input) {
   };
 }
 
+/** @param {{supply: RuleSupply, fighters?: RuleFighter[]}} input */
 export function resolveBattlefieldSupplyLanding({ supply, fighters = [] }) {
   const def = battlefieldSupplyDef(supply?.kind);
   if (!supply || supply.kind !== "pod" || supply.landingTriggered || supply.phase !== "dropping" || (!supply.readyToLand && supply.phaseTime > 0)) {
@@ -338,6 +405,7 @@ export function requestDrumDetonation(supply, reason = "manual") {
   return { ok: true, reason: "起爆します", supply: { ...supply, phase: "detonating", targetable: false, detonationReason: reason } };
 }
 
+/** @param {{supply: RuleSupply, fighters?: RuleFighter[], areaEffects?: RuleAreaEffect[], nextAreaEffectId?: number}} input */
 export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [], nextAreaEffectId = 0 }) {
   const def = BATTLEFIELD_SUPPLY_DEFS.drum;
   if (!supply || supply.kind !== "drum" || supply.phase !== "detonating" || supply.detonationTriggered) {
@@ -373,6 +441,7 @@ export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [],
   };
 }
 
+/** @param {{areaEffects?: RuleAreaEffect[], fighters?: RuleFighter[], seconds: number, activeSupplyIds?: number[]}} input */
 export function advanceAreaEffects({ areaEffects = [], fighters = [], seconds, activeSupplyIds }) {
   const elapsed = Math.max(0, seconds);
   const activeSources = activeSupplyIds === undefined ? null : new Set(activeSupplyIds);
@@ -530,6 +599,7 @@ export function advanceEmergencySupportRuntime(runtime, seconds) {
   return { runtime: next, events };
 }
 
+/** @param {{runtime: ReturnType<typeof createEmergencySupportRuntime>, fighters?: RuleFighter[]}} input */
 export function resolveAirstrikeImpact({ runtime, fighters = [] }) {
   if (runtime.phase !== "impact" || runtime.impactTriggered) return { triggered: false, runtime, fighters, hits: [] };
   const targetY = LANE_Y[runtime.targetLane];
@@ -543,6 +613,7 @@ export function resolveAirstrikeImpact({ runtime, fighters = [] }) {
   return { triggered: true, runtime: { ...runtime, impactTriggered: true }, fighters: nextFighters, hits };
 }
 
+/** @param {number} [initialCharge] */
 export function createCrawlerAbilityRuntime(initialCharge = CRAWLER_BARRAGE_DEF.initialCharge) {
   const charge = Math.max(0, Math.min(1, initialCharge));
   const cooldownRemaining = CRAWLER_BARRAGE_DEF.cooldownSeconds * (1 - charge);
@@ -599,6 +670,7 @@ export function advanceCrawlerAbilityRuntime(runtime, seconds) {
   return { runtime: next, events };
 }
 
+/** @param {{runtime: ReturnType<typeof createCrawlerAbilityRuntime>, fighters?: RuleFighter[]}} input */
 export function resolveCrawlerBarrage({ runtime, fighters = [] }) {
   if (runtime.phase !== "firing" || runtime.damageTriggered) return { triggered: false, runtime, fighters, hits: [] };
   const hits = [];
@@ -640,6 +712,7 @@ export function containerBlocksEnemy({ enemyX, enemyLane, containerX, containerL
   return (phase === "impact" || phase === "active") && enemyLane === containerLane && containerX > WORLD_GEOMETRY.baseX && containerX < enemyX;
 }
 
+/** @param {{enemyX: number, enemyLane: number, objects?: RuleSupply[]}} input */
 export function selectBlockingContainer({ enemyX, enemyLane, objects = [] }) {
   return objects.reduce((nearest, object) => {
     if (!object.blocksEnemies || !object.targetable || !containerBlocksEnemy({
@@ -653,15 +726,16 @@ export function selectBlockingContainer({ enemyX, enemyLane, objects = [] }) {
   }, undefined);
 }
 
+/** @param {{enemyX: number, speed: number, seconds: number, burning?: boolean, targetFloor?: number | null}} input */
 export function advanceZombieX({ enemyX, speed, seconds, burning = false, targetFloor = null }) {
   const proposedX = enemyX - speed * seconds * (burning ? .8 : 1);
   return targetFloor === null ? proposedX : Math.max(targetFloor, proposedX);
 }
 
 export function objectiveFor(phase, barricadeVulnerable) {
-  if (phase === 1) return "HOLD THE THREE ROUTES";
-  if (phase === 2) return "PUSH TO THE IRON LINE";
-  return barricadeVulnerable ? "BREACH THE ENEMY BARRICADE" : "ELIMINATE TAKUYA";
+  if (phase === 1) return "3レーンを防衛";
+  if (phase === 2) return "感染拠点へ前進";
+  return barricadeVulnerable ? "感染拠点を破壊" : "TAKUYAを撃破";
 }
 
 export function advanceLimitFor(tactic, phase, barricadeVulnerable) {

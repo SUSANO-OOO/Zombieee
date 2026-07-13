@@ -71,6 +71,16 @@ import {
   supportGaugeReward,
   tacticTargetBias,
 } from "../app/gameRules.js";
+import {
+  APPROVED_BATTLE_BARK_LINES,
+  BATTLE_BARK_CONFIG,
+  LOCAL_QA_BATTLE_BARK_LINES,
+  advanceBattleBarkRuntime,
+  battleBarkPassesProbability,
+  createBattleBarkRuntime,
+  queueBattleBark,
+} from "../app/battleBarks.js";
+import { LOCAL_QA_MODES, resolveLocalQaMode } from "../app/localQa.js";
 
 async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -104,7 +114,7 @@ test("server-renders the Ashfall Outpost Early Access 0.5.0 boss-stage loadout",
   assert.match(html, /救急物資/);
   assert.match(html, /緊急航空支援/);
   assert.match(html, /CRAWLER一斉掃射/);
-  assert.match(html, /TACTIC/);
+  assert.match(html, />方針</);
   assert.match(html, /TAKUYA/);
   assert.match(html, /アセット準備中/);
   assert.match(html, /CRAWLER SYSTEM CHECK/);
@@ -150,10 +160,10 @@ test("ships the three-route infected checkpoint, mobile fortress, and dedicated 
   assert.match(game, /g\.barricadeHp = Math\.max\(0, g\.barricadeHp - structureDamage\)/);
   assert.match(game, /const outcome = battleOutcome\(g\.baseHp, g\.barricadeHp\)/);
   assert.match(game, /TAKUYA DOWN — ENEMY BASE EXPOSED/);
-  assert.match(game, /IRON BARRICADE \/\/ BUCKLING/);
-  assert.match(game, /IRON BARRICADE \/\/ BREACH IMMINENT/);
-  assert.match(game, /BARRICADE BREACHED/);
-  assert.match(rules, /LAST CHANCE — BREAK THE BARRICADE/);
+  assert.match(game, /感染拠点 \/\/ 損傷/);
+  assert.match(game, /感染拠点 \/\/ 大破/);
+  assert.match(game, /感染拠点を制圧/);
+  assert.match(rules, /最終機会 — 感染拠点を破壊/);
   assert.match(css, /\.barrier-health/);
   assert.match(css, /\.barrier-health\.vulnerable/);
   assert.match(css, /\.barrier-health\.hit/);
@@ -201,12 +211,12 @@ test("provides a five-second preparation window, a three-slot bay, and selectabl
   assert.match(game, /g\.deployQueue\.length >= 3/);
   assert.match(game, /CRAWLER BAY FULL \/\/ 3/);
   assert.match(game, /g\.deployQueue\.shift\(\)/);
-  assert.match(game, /BAY \{hud\.deployQueue\}\/3/);
+  assert.match(game, /格納庫 \{hud\.deployQueue\}\/3/);
   assert.match(game, /const setTactic/);
   assert.match(game, /const cycleTactic/);
-  assert.match(game, /TACTIC \/\/ \$\{tactic\.toUpperCase\(\)\}/);
+  assert.match(game, /作戦方針 \/\//);
   assert.match(game, /event\.key\.toLowerCase\(\) === "r"/);
-  assert.match(game, /aria-label=\{`作戦方針を切り替え（現在：\$\{hud\.tactic\}）`\}/);
+  assert.match(game, /aria-label=\{`作戦方針を切り替え（現在：\$\{tacticName\}）`\}/);
   assert.match(game, /advanceLimitFor\(g\.tactic, g\.phase, g\.barricadeVulnerable\)/);
   assert.match(game, /tacticTargetBias\(g\.tactic, enemy\.x\)/);
   assert.match(css, /\.tactic-cycle\.defend/);
@@ -364,10 +374,10 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.equal(phaseAt(147.999), 2);
   assert.equal(phaseAt(148), 3);
 
-  assert.equal(objectiveFor(1, false), "HOLD THE THREE ROUTES");
-  assert.equal(objectiveFor(2, false), "PUSH TO THE IRON LINE");
-  assert.equal(objectiveFor(3, false), "ELIMINATE TAKUYA");
-  assert.equal(objectiveFor(3, true), "BREACH THE ENEMY BARRICADE");
+  assert.equal(objectiveFor(1, false), "3レーンを防衛");
+  assert.equal(objectiveFor(2, false), "感染拠点へ前進");
+  assert.equal(objectiveFor(3, false), "TAKUYAを撃破");
+  assert.equal(objectiveFor(3, true), "感染拠点を破壊");
 
   assert.equal(crawlerSiegeDamage(15, 1), 11);
   assert.equal(crawlerSiegeDamage(15, 2), 14);
@@ -399,7 +409,7 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.deepEqual(UNIT_CARDS.map(({ kind, desc }) => [kind, desc]), [
     ["scout", "高速敵を迎撃・マーク"],
     ["ranger", "毒吐きを優先狙撃"],
-    ["brute", "前線を支え鉄柵を粉砕"],
+    ["brute", "前線を支え感染拠点を粉砕"],
     ["brawler", "瀕死の敵を仕留める"],
     ["gunner", "大型敵へ重火力"],
     ["medic", "周囲の味方を回復"],
@@ -711,16 +721,133 @@ test("validates, damages, and releases the battlefield container without changin
   for (const effect of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) {
     assert.match(game, new RegExp(`shot\\.effect === "${effect}"|effect: "${effect}"`));
   }
-  assert.match(game, /effect: f\.kind, emphasized/);
+  assert.match(game, /effect: f\.kind as RoleEffect, emphasized/);
   assert.match(game, /const brawlerFinishApplied = f\.side === "human" && isBrawlerFinisher\(f\.kind, targetHpRatio\)/);
   assert.match(game, /brawlerFinishApplied \? "フィニッシュ"/);
   assert.match(game, /function prepareRolesQa/);
-  assert.match(game, /qaRoles \? prepareRolesQa\(fresh\) : else|if \(qaRoles\) prepareRolesQa\(fresh\)/);
-  assert.match(game, /qa === "roles"/);
+  assert.match(game, /prepareQaMode\(fresh, qaMode\)/);
+  assert.match(game, /resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)/);
   assert.match(game, /advanceZombieX\(\{/);
   assert.match(game, /supplyDefs\[objectTarget\.kind\]\.name}破壊/);
   assert.match(game, /drawPlacementIndicator/);
   assert.match(game, /supplyDefs\[selectedSupply\]\.cost/);
+});
+
+test("models replaceable battle dialogue with QA-only copy, expiry, cooldowns, duplicate prevention, and priority", () => {
+  assert.deepEqual(APPROVED_BATTLE_BARK_LINES, []);
+  assert.equal(BATTLE_BARK_CONFIG.maxVisible, 2);
+  assert.equal(LOCAL_QA_BATTLE_BARK_LINES.length, 10);
+  assert.ok(LOCAL_QA_BATTLE_BARK_LINES.every((line) => line.probability === 1 && line.weight === 1 && line.tone === "qa"));
+  assert.equal(battleBarkPassesProbability(.5, .49), true);
+  assert.equal(battleBarkPassesProbability(.5, .5), false);
+  const initial = createBattleBarkRuntime();
+  const normal = queueBattleBark({ runtime: initial, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 1 } });
+  assert.equal(normal.shown, false);
+  assert.equal(normal.reason, "no-approved-line");
+
+  const scout = queueBattleBark({ runtime: initial, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 1 }, qa: true });
+  assert.equal(scout.shown, true);
+  assert.equal(scout.bark.text, "QA // SCOUT ROLE CUE");
+  const duplicate = queueBattleBark({ runtime: scout.runtime, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 1 }, qa: true });
+  assert.equal(duplicate.reason, "duplicate-active");
+  const globalBlocked = queueBattleBark({ runtime: scout.runtime, event: { trigger: "role-cue", speakerKind: "ranger", speakerId: 2 }, qa: true });
+  assert.equal(globalBlocked.reason, "global-cooldown");
+  assert.deepEqual(globalBlocked.runtime, scout.runtime);
+
+  const afterActive = advanceBattleBarkRuntime(scout.runtime, 2.3);
+  assert.equal(afterActive.active.length, 0);
+  const speakerBlocked = queueBattleBark({ runtime: afterActive, event: { trigger: "role-cue", speakerKind: "ranger", speakerId: 1 }, qa: true });
+  assert.equal(speakerBlocked.reason, "speaker-cooldown");
+  const lineBlocked = queueBattleBark({ runtime: afterActive, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 99 }, qa: true });
+  assert.equal(lineBlocked.reason, "line-cooldown");
+
+  const afterGlobal = advanceBattleBarkRuntime(scout.runtime, BATTLE_BARK_CONFIG.globalCooldown);
+  const ranger = queueBattleBark({ runtime: afterGlobal, event: { trigger: "role-cue", speakerKind: "ranger", speakerId: 2 }, qa: true });
+  assert.equal(ranger.runtime.active.length, 2);
+  const critical = queueBattleBark({ runtime: ranger.runtime, event: { trigger: "crawler-critical", speakerKind: "crawler", speakerId: "crawler" }, qa: true });
+  assert.equal(critical.shown, true);
+  assert.equal(critical.runtime.active.length, 2);
+  assert.ok(critical.runtime.active.some((bark) => bark.lineId === "qa-crawler-critical"));
+  assert.ok(critical.runtime.active.every((bark) => bark.lineId !== "qa-role-scout"));
+  const majorPair = queueBattleBark({ runtime: critical.runtime, event: { trigger: "takuya-down", speakerKind: "crawler", speakerId: "tactical" }, qa: true });
+  assert.equal(majorPair.shown, true);
+  const afterMajorGlobal = advanceBattleBarkRuntime(majorPair.runtime, BATTLE_BARK_CONFIG.globalCooldown);
+  const lowerPriority = queueBattleBark({ runtime: afterMajorGlobal, event: { trigger: "role-cue", speakerKind: "medic", speakerId: 6 }, qa: true });
+  assert.equal(lowerPriority.reason, "lower-priority");
+  assert.deepEqual(lowerPriority.runtime, afterMajorGlobal);
+  assert.equal(advanceBattleBarkRuntime(critical.runtime, 10).active.length, 0);
+});
+
+test("exposes localhost-only QA routes and wires every deterministic boss-stage scenario", async () => {
+  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress"]);
+  for (const mode of LOCAL_QA_MODES) {
+    assert.equal(resolveLocalQaMode("localhost", `?qa=${mode}`), mode);
+    assert.equal(resolveLocalQaMode("127.0.0.1", `?qa=${mode}`), mode);
+  }
+  assert.equal(resolveLocalQaMode("ashfall.example", "?qa=endgame"), null);
+  assert.equal(resolveLocalQaMode("localhost.example", "?qa=roles"), null);
+  assert.equal(resolveLocalQaMode("localhost", "?qa=unknown"), null);
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(game, /qaMode === "roles" \|\| qaMode === "dialogue"\) prepareRolesQa\(g\)/);
+  assert.match(game, /qaMode === "endgame"\) prepareEndgameQa\(g\)/);
+  assert.match(game, /qaMode === "supplies"\) prepareSuppliesQa\(g\)/);
+  assert.match(game, /qaMode === "airstrike"\) prepareAirstrikeQa\(g\)/);
+  assert.match(game, /qaMode === "crawler"\) prepareCrawlerQa\(g\)/);
+  assert.match(game, /qaMode === "stress"\) prepareStressQa\(g\)/);
+  assert.match(game, /if \(qaMode === "dialogue"\)[\s\S]*emitBattleBark\(g, "role-cue"/);
+  assert.match(game, /placeQaSupply\(g, "pod", 0, 430\)/);
+  assert.match(game, /placeQaSupply\(g, "drum", 1, 535\)/);
+  assert.match(game, /placeQaSupply\(g, "medical", 2, 640\)/);
+  assert.match(game, /g\.supportGauge = SUPPORT_GAUGE_MAX/);
+  assert.match(game, /for \(const lane of \[0, 1, 2\] as Lane\[\]\)[\s\S]*index < 3/);
+  assert.match(game, /g\.crawlerAbility = createCrawlerAbilityRuntime\(1\)/);
+  assert.match(game, /function prepareStressQa[\s\S]*index < 5[\s\S]*index < 8[\s\S]*index < 18/);
+  assert.match(game, /g\.supportGauge = 0/);
+  assert.match(game, /takuya\.hp = 35/);
+  assert.match(game, /g\.phase = 3/);
+  assert.match(game, /g\.wave = 8/);
+  for (const kind of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) assert.match(game, new RegExp(`\\["${kind}",`));
+  assert.match(game, /aria-live="polite" aria-label="戦闘台詞"/);
+  assert.match(css, /\.battle-barks \{ position:absolute; z-index:16; top:32%; left:2%;/);
+  assert.match(css, /\.start-screen,\.pause-screen,\.end-screen \{ position:absolute; z-index:15;/);
+  assert.match(css, /\.game-frame:has\(\.start-screen\) \.qa-badge \{ top:4%; left:50%; right:auto; bottom:auto; transform:translateX\(-100%\); \}/);
+  assert.match(css, /\.game-frame:has\(\.pause-screen\) \.battle-barks \{ display:none; \}/);
+  assert.match(css, /\.game-frame:has\(\.end-screen\) \.battle-barks \{ top:4%; left:2%; \}/);
+  assert.match(css, /\.game-frame:has\(\.pause-screen\) \.qa-badge,\.game-frame:has\(\.end-screen\) \.qa-badge/);
+  assert.match(css, /\.pause-screen button,\.end-screen button \{ min-height:44px; \}/);
+  assert.match(css, /\.qa-badge \{ bottom:35%; \}\.battle-barks \{ top:32%;/);
+});
+
+test("keeps BGM and procedural SFX lifecycle bounded across pause, mute, retry, and loadout return", async () => {
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  assert.match(game, /type SfxCategory = "ui" \| "combat" \| "ambient" \| "major"/);
+  assert.match(game, /const MAX_SFX_VOICES = 10/);
+  assert.match(game, /const SFX_CUES = \{/);
+  assert.match(game, /"airstrike-impact"[\s\S]*priority: 100[\s\S]*duck:/);
+  assert.match(game, /"crawler-barrage"[\s\S]*priority: 95[\s\S]*duck:/);
+  assert.match(game, /"takuya-slam"[\s\S]*priority: 95[\s\S]*duck:/);
+  assert.match(game, /runtime\.active\.size >= MAX_SFX_VOICES/);
+  assert.match(game, /victim\.priority >= cue\.priority/);
+  assert.match(game, /gain\.connect\(runtime\.buses\[cue\.category\]\)/);
+  assert.match(game, /music\.master\.gain\.setTargetAtTime\(MUSIC_MASTER_GAIN \* level/);
+  assert.match(game, /master\.connect\(ensureSfxRuntime\(audio\)\.buses\.ui\)/);
+  assert.match(game, /const stopSfx = useCallback/);
+  assert.match(game, /window\.clearTimeout\(startCueTimerRef\.current\)/);
+  assert.match(game, /window\.clearInterval\(music\.timer\)/);
+  assert.match(game, /runtime\.active\.clear\(\)/);
+  assert.match(game, /runtime\.lastPlayedAt\.clear\(\)/);
+  assert.match(game, /for \(const bus of Object\.values\(runtime\.buses\)\)/);
+  assert.match(game, /sfxMutedRef\.current = next/);
+  assert.match(game, /if \(g\.paused\) \{[\s\S]*g\.battleBarks = createBattleBarkRuntime\(\)[\s\S]*stopMusic\(\); stopJingle\(\); stopSfx\(\);/);
+  assert.match(game, /stopMusic\(\); stopSfx\(\); playEndJingle\(g\.won\)/);
+  assert.match(game, /const returnToLoadout = useCallback/);
+  assert.match(game, /data-muted=\{bgmMuted\}/);
+  assert.match(game, /data-muted=\{sfxMuted\}/);
+  assert.match(game, /同じ装備で再戦/);
+  assert.match(game, /ロードアウトへ戻る/);
+  assert.doesNotMatch(game, /\btone\(/);
+  assert.doesNotMatch(game, /["'][^"']+\.(?:mp3|ogg|wav|m4a)["']/i);
 });
 
 test("defines an ordered mission timeline after the five-second preparation window", () => {
@@ -742,5 +869,5 @@ test("defines an ordered mission timeline after the five-second preparation wind
   assert.deepEqual(warning?.units, []);
   const enrage = MISSION_EVENTS.find(({ at }) => at === 188);
   assert.equal(enrage?.bossOnly, true);
-  assert.equal(MISSION_EVENTS.at(-1)?.label, "LAST CHANCE — BREAK THE BARRICADE");
+  assert.equal(MISSION_EVENTS.at(-1)?.label, "最終機会 — 感染拠点を破壊");
 });
