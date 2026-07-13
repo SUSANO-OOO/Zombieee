@@ -186,6 +186,85 @@ export const MISSION_EVENTS = [
   { at: 220, wave: 11, label: "最終機会 — 感染拠点を破壊", units: [["runner", 0], ["spitter", 0], ["runner", 1], ["crusher", 1], ["runner", 2], ["spitter", 2]] },
 ];
 
+export const ENEMY_GATE_SPAWN = Object.freeze({
+  revealX: WORLD_GEOMETRY.enemyBase.drawX + 18,
+  interiorX: Object.freeze([836, 850, 862, 842, 856]),
+  laneOffsets: Object.freeze([
+    Object.freeze([-15, 5, 16, -5, 11]),
+    Object.freeze([12, -11, 3, 17, -3]),
+    Object.freeze([-12, 15, -2, 8, -17]),
+  ]),
+});
+
+function enemySpawnClass(kind) {
+  if (kind === "takuya") return "boss";
+  if (kind === "crusher" || kind === "abomination") return "heavy";
+  return "normal";
+}
+
+export function enemySpawnInterval({ kind, lane = 1, order = 0 }) {
+  const base = kind === "takuya" ? .92
+    : kind === "abomination" ? .78
+      : kind === "crusher" ? .64
+        : kind === "spitter" || kind === "shade" ? .5
+          : kind === "runner" ? .34
+            : .42;
+  return Number((base + ((lane * 2 + order) % 3) * .035).toFixed(3));
+}
+
+export function enemyGateSpawnPosition({ kind, lane, order = 0, wave = 1 }) {
+  const slot = (wave * 2 + order * 3 + lane) % ENEMY_GATE_SPAWN.interiorX.length;
+  const spawnClass = enemySpawnClass(kind);
+  const clearance = spawnClass === "boss" ? 49 : spawnClass === "heavy" ? 43 : 31;
+  const entrySpeed = kind === "takuya" ? 29
+    : kind === "abomination" ? 32
+      : kind === "crusher" ? 36
+        : kind === "spitter" || kind === "shade" ? 46
+          : kind === "runner" ? 62
+            : 52;
+  return Object.freeze({
+    x: ENEMY_GATE_SPAWN.interiorX[slot],
+    y: LANE_Y[lane] + ENEMY_GATE_SPAWN.laneOffsets[lane][slot],
+    combatReadyX: ENEMY_GATE_SPAWN.revealX - clearance,
+    entrySpeed,
+    slot,
+  });
+}
+
+export function createEnemySpawnRuntime() {
+  return { pending: [], cooldown: 0, nextEntryId: 1 };
+}
+
+export function enqueueEnemyWave(runtime, { units = [], wave = 1 }) {
+  let nextEntryId = runtime.nextEntryId;
+  const startsIdle = runtime.pending.length === 0 && runtime.cooldown <= 0;
+  const added = units.map(([kind, lane], order) => ({
+    entryId: nextEntryId++,
+    kind,
+    lane,
+    wave,
+    order,
+    delay: startsIdle && order === 0 ? 0 : enemySpawnInterval({ kind, lane, order }),
+    ...enemyGateSpawnPosition({ kind, lane, order, wave }),
+  }));
+  return {
+    ...runtime,
+    pending: [...runtime.pending, ...added],
+    nextEntryId,
+  };
+}
+
+export function advanceEnemySpawnRuntime(runtime, seconds, paused = false) {
+  if (paused || seconds <= 0 || runtime.pending.length === 0) return { runtime, spawned: [] };
+  const cooldown = Math.max(0, runtime.cooldown - seconds);
+  if (cooldown > 0) return { runtime: { ...runtime, cooldown }, spawned: [] };
+  const [spawned, ...pending] = runtime.pending;
+  return {
+    runtime: { ...runtime, pending, cooldown: pending[0]?.delay ?? 0 },
+    spawned: [spawned],
+  };
+}
+
 export function phaseAt(time) {
   if (time < 60) return 1;
   if (time < 148) return 2;
@@ -376,7 +455,7 @@ export function resolveBattlefieldSupplyLanding({ supply, fighters = [] }) {
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
     const y = worldYFor(fighter);
-    if (fighter.hp <= 0 || Math.hypot(fighter.x - supply.x, (y - supply.y) * 2) > def.landingRadius) return fighter;
+    if (fighter.hp <= 0 || fighter.combatReady === false || Math.hypot(fighter.x - supply.x, (y - supply.y) * 2) > def.landingRadius) return fighter;
     const damage = fighter.side === "zombie" ? def.enemyLandingDamage : def.allyLandingDamage;
     hits.push({ id: fighter.id, side: fighter.side, damage });
     return { ...fighter, hp: Math.max(0, fighter.hp - damage) };
@@ -452,7 +531,7 @@ export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [],
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
     const y = worldYFor(fighter);
-    if (fighter.side !== "zombie" || fighter.hp <= 0 || Math.hypot(fighter.x - supply.x, (y - supply.y) * 2) > def.blastRadius) return fighter;
+    if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.combatReady === false || Math.hypot(fighter.x - supply.x, (y - supply.y) * 2) > def.blastRadius) return fighter;
     hits.push({ id: fighter.id, damage: def.blastDamage });
     return { ...fighter, hp: Math.max(0, fighter.hp - def.blastDamage) };
   });
@@ -492,7 +571,7 @@ export function advanceAreaEffects({ areaEffects = [], fighters = [], seconds, a
     if (activeSeconds > 0) {
       nextFighters = nextFighters.map((fighter) => {
         const y = worldYFor(fighter);
-        if (fighter.hp <= 0 || Math.hypot(fighter.x - effect.x, (y - effect.y) * 2) > effect.radius) return fighter;
+        if (fighter.hp <= 0 || fighter.combatReady === false || Math.hypot(fighter.x - effect.x, (y - effect.y) * 2) > effect.radius) return fighter;
         if (effect.kind === "burn" && fighter.side === "zombie") {
           const amount = effect.amountPerSecond * activeSeconds;
           changes.push({ id: fighter.id, kind: "damage", amount });
@@ -659,7 +738,7 @@ export function resolveAirstrikeImpact({ runtime, fighters = [] }) {
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
     const y = worldYFor(fighter);
-    if (fighter.side !== "zombie" || fighter.hp <= 0 || Math.hypot(fighter.x - runtime.targetX, (y - targetY) * 2) > AIRSTRIKE_DEF.radius) return fighter;
+    if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.combatReady === false || Math.hypot(fighter.x - runtime.targetX, (y - targetY) * 2) > AIRSTRIKE_DEF.radius) return fighter;
     hits.push({ id: fighter.id, damage: AIRSTRIKE_DEF.damage });
     return { ...fighter, hp: Math.max(0, fighter.hp - AIRSTRIKE_DEF.damage) };
   });
@@ -728,7 +807,7 @@ export function resolveCrawlerBarrage({ runtime, fighters = [] }) {
   if (runtime.phase !== "firing" || runtime.damageTriggered) return { triggered: false, runtime, fighters, hits: [] };
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
-    if (fighter.side !== "zombie" || fighter.hp <= 0 || !CRAWLER_BARRAGE_DEF.lanes.includes(fighter.lane)) return fighter;
+    if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.combatReady === false || !CRAWLER_BARRAGE_DEF.lanes.includes(fighter.lane)) return fighter;
     const boss = fighter.kind === "takuya" || fighter.boss === true;
     const damage = Math.round(CRAWLER_BARRAGE_DEF.damage * (boss ? CRAWLER_BARRAGE_DEF.bossDamageMultiplier : 1));
     hits.push({ id: fighter.id, lane: fighter.lane, damage, boss });

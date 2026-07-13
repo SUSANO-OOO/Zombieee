@@ -9,6 +9,7 @@ import {
   BATTLEFIELD_SUPPLY_DEFS,
   CAMERA_SHAKE_EVENTS,
   COMMAND_MAX,
+  ENEMY_GATE_SPAWN,
   ENEMY_BASE_COLLAPSE_SECONDS,
   LANE_NAMES,
   LANE_Y,
@@ -25,6 +26,7 @@ import {
   advanceCrawlerAbilityRuntime,
   advanceEmergencySupportRuntime,
   advanceEnemyBaseCollapse,
+  advanceEnemySpawnRuntime,
   advanceZombieX,
   advanceLimitFor,
   advanceCommand,
@@ -40,10 +42,12 @@ import {
   createCameraShakeRuntime,
   createCrawlerAbilityRuntime,
   createEmergencySupportRuntime,
+  createEnemySpawnRuntime,
   crawlerSiegeDamage,
   crawlerThreatLevel,
   enemyCanTargetBattlefieldSupply,
   enemyBaseVisualState,
+  enqueueEnemyWave,
   humanAttackMultiplier,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
@@ -105,6 +109,11 @@ type UnitCard = {
 };
 
 type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: [string, Lane][] };
+type EnemySpawnEntry = {
+  entryId: number; kind: string; lane: Lane; wave: number; order: number; delay: number;
+  x: number; y: number; combatReadyX: number; entrySpeed: number; slot: number;
+};
+type EnemySpawnRuntime = { pending: EnemySpawnEntry[]; cooldown: number; nextEntryId: number };
 
 const cards = UNIT_CARDS as UnitCard[];
 const missionEvents = MISSION_EVENTS as MissionEvent[];
@@ -140,6 +149,10 @@ type Fighter = {
   bodyRadius: number;
   laneSpeed: number;
   spawnGrace: number;
+  combatReady: boolean;
+  gateEntering: boolean;
+  gateEntrySpeed: number;
+  combatReadyX: number;
   marked: number;
   abilityCooldown: number;
   abilityWindup: number;
@@ -215,6 +228,7 @@ type Game = {
   wave: number;
   phase: 1 | 2 | 3;
   eventIndex: number;
+  enemySpawn: EnemySpawnRuntime;
   baseHp: number;
   barricadeHp: number;
   barricadeVulnerable: boolean;
@@ -402,6 +416,7 @@ const initialGame = (selectedSupply: SupplyKind = "pod"): Game => ({
   wave: 1,
   phase: 1,
   eventIndex: 0,
+  enemySpawn: createEnemySpawnRuntime() as EnemySpawnRuntime,
   baseHp: 520,
   barricadeHp: BARRICADE_MAX_HP,
   barricadeVulnerable: false,
@@ -506,17 +521,18 @@ function enemyStats(kind: string, wave: number) {
   return { hp: 86 + wave * 5, speed: 18, damage: 15, range: 25, attackEvery: 1.02 };
 }
 
-function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0) {
+function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: EnemySpawnEntry | null = null) {
   const data = enemyStats(kind, g.wave);
   const id = g.nextId++;
+  const gateEntering = kind !== "turned" && gateEntry !== null;
   g.fighters.push({
     id,
     side: "zombie",
     kind,
     lane,
     anchorLane: lane,
-    x: kind === "turned" ? 0 : Math.min(WORLD_GEOMETRY.barricade.enemySpawnMaxX, WORLD_GEOMETRY.barricade.enemySpawnMinX + order * 16),
-    y: laneY(lane, id),
+    x: gateEntering ? gateEntry.x : kind === "turned" ? 0 : Math.min(WORLD_GEOMETRY.barricade.enemySpawnMaxX, WORLD_GEOMETRY.barricade.enemySpawnMinX + order * 16),
+    y: gateEntering ? gateEntry.y : laneY(lane, id),
     maxHp: data.hp,
     ...data,
     cooldown: order * .18,
@@ -532,6 +548,10 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0) {
     bodyRadius: bodyRadiusFor(kind),
     laneSpeed: enemyLaneSpeedFor(kind),
     spawnGrace: 0,
+    combatReady: !gateEntering,
+    gateEntering,
+    gateEntrySpeed: gateEntry?.entrySpeed ?? 0,
+    combatReadyX: gateEntry?.combatReadyX ?? 0,
     marked: 0,
     abilityCooldown: kind === "takuya" ? 4.2 : 0,
     abilityWindup: 0,
@@ -549,6 +569,7 @@ function spawnHuman(g: Game, kind: UnitKind) {
     speed: card.speed, damage: card.damage, range: card.range, cooldown: 0, supportCooldown: 0,
     attackEvery: card.attackEvery, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: id % 3,
     targetId: null, targetObjectId: null, retargetIn: 0, bodyRadius: bodyRadiusFor(kind), laneSpeed, spawnGrace: .95,
+    combatReady: true, gateEntering: false, gateEntrySpeed: 0, combatReadyX: 0,
     marked: 0, abilityCooldown: 0, abilityWindup: 0,
   });
   addParticles(g, MUSTER_X, MUSTER_Y, "#d0b48b", 7);
@@ -744,6 +765,10 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   if (f.side === "human" && f.spawnGrace > 0) {
     ctx.beginPath();
     ctx.rect(WORLD_GEOMETRY.crawler.exitX - 2, 0, W - WORLD_GEOMETRY.crawler.exitX + 2, H);
+    ctx.clip();
+  } else if (f.side === "zombie" && f.gateEntering) {
+    ctx.beginPath();
+    ctx.rect(0, 0, ENEMY_GATE_SPAWN.revealX, H);
     ctx.clip();
   }
   ctx.fillStyle = "rgba(0,0,0,.42)";
@@ -1223,7 +1248,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
   for (const renderable of renderables) {
     if (renderable.type === "object") { drawBattlefieldSupply(ctx, renderable.object, sprites); continue; }
     const f = renderable.fighter;
-    if (f.kind === "takuya" && f.abilityWindup > 0) {
+    if (f.combatReady && f.kind === "takuya" && f.abilityWindup > 0) {
       const slamRadius = f.hp / f.maxHp <= .5 ? 145 : 118;
       const pulse = slamRadius + Math.sin(g.time * 18) * 4;
       ctx.strokeStyle = `rgba(255,94,56,${.55 + Math.sin(g.time * 14) * .18})`;
@@ -1233,6 +1258,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
       ctx.stroke();
     }
     drawSpriteFighter(ctx, f, sprites);
+    if (!f.combatReady) continue;
     const barW = f.kind === "takuya" ? 52 : f.kind === "crusher" || f.kind === "brute" ? 38 : f.kind === "abomination" ? 52 : 28;
     const height = f.kind === "takuya" ? 111 : f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "brute" ? 94 : 80;
     const barY = f.y - height;
@@ -1975,13 +2001,17 @@ export function AshfallGame() {
           if (mission.bossOnly && !bossAlive) continue;
           g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
           if (mission.label.includes("WARNING")) g.flashOverlay = .12;
-          mission.units.forEach(([kind, lane], index) => spawnEnemy(g, kind, lane, index % 3));
+          g.enemySpawn = enqueueEnemyWave(g.enemySpawn, { units: mission.units, wave: mission.wave }) as EnemySpawnRuntime;
           if (mission.units.length) {
             const includesTakuya = mission.units.some(([kind]) => kind === "takuya");
             playCue(includesTakuya ? "boss-warning" : "wave-contact");
             if (includesTakuya) g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
           }
         }
+
+        const enemySpawnStep = advanceEnemySpawnRuntime(g.enemySpawn, dt, g.paused);
+        g.enemySpawn = enemySpawnStep.runtime as EnemySpawnRuntime;
+        for (const entry of enemySpawnStep.spawned as EnemySpawnEntry[]) spawnEnemy(g, entry.kind, entry.lane, entry.order, entry);
 
         const airstrikeStep = advanceEmergencySupportRuntime(g.airstrike, dt);
         g.airstrike = airstrikeStep.runtime as AirstrikeRuntime;
@@ -2049,11 +2079,11 @@ export function AshfallGame() {
         g.fighters = areaStep.fighters as Fighter[];
         if (areaStep.changes.some((change) => change.kind === "healing")) playCue("medical-heal");
 
-        const fighterById = new Map(g.fighters.filter((fighter) => fighter.hp > 0).map((fighter) => [fighter.id, fighter]));
+        const fighterById = new Map(g.fighters.filter((fighter) => fighter.hp > 0 && fighter.combatReady).map((fighter) => [fighter.id, fighter]));
         const targetClaims = new Map<number, number>();
         const interceptorClaims = new Map<number, number>();
         for (const fighter of g.fighters) {
-          if (fighter.hp <= 0 || fighter.targetId === null) continue;
+          if (fighter.hp <= 0 || !fighter.combatReady || fighter.targetId === null) continue;
           const claimed = fighterById.get(fighter.targetId);
           if (fighter.side === "human" && claimed?.side === "zombie" && claimed.hp > 0) {
             targetClaims.set(claimed.id, (targetClaims.get(claimed.id) ?? 0) + 1);
@@ -2068,6 +2098,22 @@ export function AshfallGame() {
           f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.marked = Math.max(0, f.marked - dt); f.step += dt;
           f.abilityCooldown = Math.max(0, f.abilityCooldown - dt);
           if (Math.abs(f.knock) > .1) { f.x += (f.side === "human" ? -1 : 1) * f.knock * dt * 6; f.knock *= .9; }
+
+          if (f.gateEntering) {
+            f.targetId = null;
+            f.targetObjectId = null;
+            f.x = Math.max(f.combatReadyX, f.x - f.gateEntrySpeed * dt);
+            const routeY = LANE_Y[f.anchorLane ?? f.lane];
+            const dy = routeY - f.y;
+            if (Math.abs(dy) > 1) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * .58 * dt);
+            if (f.x <= f.combatReadyX + .01) {
+              f.x = f.combatReadyX;
+              f.gateEntering = false;
+              f.combatReady = true;
+              f.cooldown = Math.max(f.cooldown, .18);
+            }
+            continue;
+          }
 
           if (f.kind === "takuya") {
             let abilityFrame = false;
@@ -2122,7 +2168,7 @@ export function AshfallGame() {
           let distance = Infinity;
           if (f.side === "human") {
             f.targetObjectId = null;
-            const enemies = g.fighters.filter((enemy) => enemy.side === "zombie" && enemy.hp > 0);
+            const enemies = g.fighters.filter((enemy) => enemy.side === "zombie" && enemy.hp > 0 && enemy.combatReady);
             const locked = f.targetId === null ? undefined : fighterById.get(f.targetId);
             const contact = enemies
               .filter((enemy) => fighterDistance(f, enemy) <= 48)
@@ -2184,7 +2230,7 @@ export function AshfallGame() {
                     const defense = humans
                       .filter((human) => human.x < f.x && Math.abs(human.y - LANE_Y[candidate]) <= 34)
                       .reduce((sum, human) => sum + human.hp * .08 + human.damage * 1.2, 0);
-                    const congestion = g.fighters.filter((enemy) => enemy.side === "zombie" && enemy.hp > 0 && enemy.anchorLane === candidate).length * 7;
+                    const congestion = g.fighters.filter((enemy) => enemy.side === "zombie" && enemy.hp > 0 && enemy.combatReady && enemy.anchorLane === candidate).length * 7;
                     const switchCost = Math.abs(f.y - LANE_Y[candidate]) * .34;
                     return defense + congestion + switchCost + ((f.id * 7 + candidate * 13) % 11);
                   };
@@ -2383,7 +2429,7 @@ export function AshfallGame() {
 
           if (f.side === "human" || f.side === "zombie") {
             for (const other of g.fighters) {
-              if (other.side !== f.side || other.id >= f.id || other.hp <= 0) continue;
+              if (other.side !== f.side || other.id >= f.id || other.hp <= 0 || !other.combatReady) continue;
               const dx = f.x - other.x; const dy = f.y - other.y; const separation = f.bodyRadius + other.bodyRadius;
               const gap = Math.hypot(dx, dy);
               if (gap >= separation || gap > 26) continue;
@@ -2444,6 +2490,7 @@ export function AshfallGame() {
                 range: data.range, cooldown: .4, supportCooldown: 0, attackEvery: data.attackEvery,
                 flash: 0, step: 0, attack: 0, knock: 0, variant: corpse.variant,
                 targetId: null, targetObjectId: null, retargetIn: 0, bodyRadius: bodyRadiusFor("turned"), laneSpeed: enemyLaneSpeedFor("turned"), spawnGrace: 0,
+                combatReady: true, gateEntering: false, gateEntrySpeed: 0, combatReadyX: 0,
                 marked: 0, abilityCooldown: 0, abilityWindup: 0,
               });
               corpse.life = -1; corpse.reviveIn = null;
@@ -2465,8 +2512,9 @@ export function AshfallGame() {
         g.shots = capRenderArray(g.shots, "shots") as Shot[];
         g.damageTexts = capRenderArray(g.damageTexts, "damageTexts") as DamageText[];
 
-        const bossAlive = g.fighters.some((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
-        syncMusicMode(bossAlive ? "boss" : g.phase >= 2 || g.baseHp <= 260 ? "danger" : "normal");
+        const bossActiveOrIncoming = g.fighters.some((fighter) => fighter.kind === "takuya" && fighter.hp > 0)
+          || g.enemySpawn.pending.some((entry) => entry.kind === "takuya");
+        syncMusicMode(bossActiveOrIncoming ? "boss" : g.phase >= 2 || g.baseHp <= 260 ? "danger" : "normal");
 
         const outcome = battleOutcome(g.baseHp, g.barricadeHp);
         if (outcome) {
@@ -2505,8 +2553,8 @@ export function AshfallGame() {
       }
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
-        const boss = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
-        const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 ? Math.min(nearest, fighter.x) : nearest, Infinity);
+        const boss = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0 && fighter.combatReady);
+        const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);
         setHud({
           energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
           wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp),

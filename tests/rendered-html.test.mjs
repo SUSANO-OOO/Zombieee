@@ -11,6 +11,7 @@ import {
   COMMAND_REGEN,
   CONTAINER_DEF,
   CRAWLER_BARRAGE_DEF,
+  ENEMY_GATE_SPAWN,
   ENEMY_BASE_COLLAPSE_SECONDS,
   FIELD_OBJECT_CLEARANCE,
   LANE_NAMES,
@@ -30,6 +31,7 @@ import {
   advanceCrawlerAbilityRuntime,
   advanceEmergencySupportRuntime,
   advanceEnemyBaseCollapse,
+  advanceEnemySpawnRuntime,
   advanceZombieX,
   advanceCommand,
   advanceLimitFor,
@@ -48,11 +50,15 @@ import {
   createCameraShakeRuntime,
   createCrawlerAbilityRuntime,
   createEmergencySupportRuntime,
+  createEnemySpawnRuntime,
   crawlerSiegeDamage,
   crawlerThreatLevel,
   damageContainer,
   enemyCanTargetBattlefieldSupply,
   enemyBaseVisualState,
+  enemyGateSpawnPosition,
+  enemySpawnInterval,
+  enqueueEnemyWave,
   humanAttackMultiplier,
   isBrawlerFinisher,
   interceptorTargetScore,
@@ -996,6 +1002,105 @@ test("keeps BGM and procedural SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /CAMERA_SHAKE_EVENTS\.takuyaDefeat/);
   assert.doesNotMatch(game, /\btone\(/);
   assert.doesNotMatch(game, /["'][^"']+\.(?:mp3|ogg|wav|m4a)["']/i);
+});
+
+test("queues each wave into staggered multi-height enemy gate entries", () => {
+  const wave = MISSION_EVENTS.find(({ wave: value }) => value === 8);
+  const initial = createEnemySpawnRuntime();
+  const queued = enqueueEnemyWave(initial, wave);
+
+  assert.equal(initial.pending.length, 0);
+  assert.equal(queued.pending.length, wave.units.length);
+  assert.deepEqual(queued.pending.map(({ kind, lane }) => [kind, lane]), wave.units);
+  assert.equal(queued.pending[0].delay, 0);
+  assert.ok(queued.pending.slice(1).every(({ delay }) => delay > 0));
+  assert.equal(new Set(queued.pending.map(({ x, y }) => `${x}:${y}`)).size, wave.units.length);
+  assert.ok(queued.pending.every(({ x }) => ENEMY_GATE_SPAWN.interiorX.includes(x)));
+  assert.ok(queued.pending.every(({ lane, y }) => Math.abs(y - LANE_Y[lane]) <= 17));
+  assert.ok(enemySpawnInterval({ kind: "crusher", lane: 0, order: 1 }) > enemySpawnInterval({ kind: "runner", lane: 0, order: 1 }));
+  assert.ok(enemySpawnInterval({ kind: "takuya", lane: 1, order: 2 }) > enemySpawnInterval({ kind: "crusher", lane: 1, order: 2 }));
+
+  const upperA = enemyGateSpawnPosition({ kind: "walker", lane: 0, order: 0, wave: 3 });
+  const upperB = enemyGateSpawnPosition({ kind: "runner", lane: 0, order: 1, wave: 3 });
+  assert.notDeepEqual([upperA.x, upperA.y], [upperB.x, upperB.y]);
+
+  const firstFrame = advanceEnemySpawnRuntime(queued, 1 / 60);
+  assert.equal(firstFrame.spawned.length, 1);
+  assert.equal(firstFrame.runtime.pending.length, wave.units.length - 1);
+  const sameFrame = advanceEnemySpawnRuntime(firstFrame.runtime, 0);
+  assert.equal(sameFrame.spawned.length, 0);
+  assert.deepEqual(sameFrame.runtime, firstFrame.runtime);
+
+  const paused = advanceEnemySpawnRuntime(firstFrame.runtime, 30, true);
+  assert.equal(paused.spawned.length, 0);
+  assert.deepEqual(paused.runtime, firstFrame.runtime);
+
+  const spawned = [...firstFrame.spawned];
+  let runtime = firstFrame.runtime;
+  while (runtime.pending.length) {
+    const step = advanceEnemySpawnRuntime(runtime, 30);
+    assert.ok(step.spawned.length <= 1);
+    spawned.push(...step.spawned);
+    runtime = step.runtime;
+  }
+  assert.equal(spawned.length, wave.units.length);
+  assert.equal(new Set(spawned.map(({ entryId }) => entryId)).size, wave.units.length);
+  assert.deepEqual(spawned.map(({ kind, lane }) => [kind, lane]), wave.units);
+  assert.deepEqual(createEnemySpawnRuntime(), { pending: [], cooldown: 0, nextEntryId: 1 });
+});
+
+test("keeps gate-entering enemies immune until combat-ready", () => {
+  const hiddenEnemy = { id: 91, side: "zombie", kind: "walker", lane: 1, x: 520, y: LANE_Y[1], hp: 100, maxHp: 100, combatReady: false };
+  const readyEnemy = { ...hiddenEnemy, id: 92, combatReady: true };
+  const airstrike = resolveAirstrikeImpact({
+    runtime: { ...createEmergencySupportRuntime(), phase: "impact", targetX: 520, targetLane: 1, impactTriggered: false },
+    fighters: [hiddenEnemy, readyEnemy],
+  });
+  assert.equal(airstrike.fighters[0].hp, 100);
+  assert.equal(airstrike.fighters[1].hp, 0);
+  assert.deepEqual(airstrike.hits.map(({ id }) => id), [92]);
+
+  const barrage = resolveCrawlerBarrage({
+    runtime: { ...createCrawlerAbilityRuntime(1), phase: "firing", damageTriggered: false },
+    fighters: [hiddenEnemy, readyEnemy],
+  });
+  assert.equal(barrage.fighters[0].hp, 100);
+  assert.ok(barrage.fighters[1].hp < 100);
+
+  const landing = resolveBattlefieldSupplyLanding({
+    supply: {
+      id: 70, kind: "pod", lane: 1, x: 520, y: LANE_Y[1], phase: "dropping", phaseTime: 0,
+      hp: 260, maxHp: 260, blocksEnemies: false, targetable: false, landingTriggered: false, readyToLand: true,
+    },
+    fighters: [hiddenEnemy, readyEnemy],
+  });
+  assert.equal(landing.fighters[0].hp, 100);
+  assert.ok(landing.fighters[1].hp < 100);
+
+  const burning = advanceAreaEffects({
+    areaEffects: [{ id: 3, kind: "burn", sourceSupplyId: 70, lane: 1, x: 520, y: LANE_Y[1], radius: 80, amountPerSecond: 15, remaining: 2, phase: "active", slowMultiplier: .8 }],
+    fighters: [hiddenEnemy, readyEnemy],
+    seconds: 1,
+  });
+  assert.equal(burning.fighters[0].hp, 100);
+  assert.equal(burning.fighters[1].hp, 85);
+});
+
+test("integrates the enemy gate queue without changing direct QA or turned placement", async () => {
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  assert.match(game, /enemySpawn: createEnemySpawnRuntime\(\)/);
+  assert.match(game, /enqueueEnemyWave\(g\.enemySpawn, \{ units: mission\.units, wave: mission\.wave \}\)/);
+  assert.doesNotMatch(game, /mission\.units\.forEach\(\(\[kind, lane\]/);
+  assert.match(game, /advanceEnemySpawnRuntime\(g\.enemySpawn, dt, g\.paused\)/);
+  assert.match(game, /if \(f\.gateEntering\)[\s\S]*f\.combatReady = true;[\s\S]*continue;/);
+  assert.match(game, /fighterById = new Map\(g\.fighters\.filter\(\(fighter\) => fighter\.hp > 0 && fighter\.combatReady\)/);
+  assert.match(game, /enemy\.side === "zombie" && enemy\.hp > 0 && enemy\.combatReady/);
+  assert.match(game, /other\.hp <= 0 \|\| !other\.combatReady/);
+  assert.match(game, /kind !== "turned" && gateEntry !== null/);
+  assert.match(game, /combatReady: true, gateEntering: false/);
+  assert.match(game, /ctx\.rect\(0, 0, ENEMY_GATE_SPAWN\.revealX, H\);[\s\S]*ctx\.clip\(\)/);
+  assert.match(game, /includesTakuya[\s\S]*playCue\(includesTakuya \? "boss-warning" : "wave-contact"\)[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance/);
+  assert.match(game, /bossActiveOrIncoming[\s\S]*g\.enemySpawn\.pending\.some\(\(entry\) => entry\.kind === "takuya"\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);
 });
 
 test("defines an ordered mission timeline after the five-second preparation window", () => {
