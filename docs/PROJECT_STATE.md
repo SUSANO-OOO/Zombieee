@@ -4,273 +4,126 @@
 
 ## 1. この文書の読み方
 
-この文書は、公開版、開発状態、検証記録、未完了作業、現在の停止地点、別PC復元時の照合事項など、変動する事実だけを管理する。
+この文書は、公開版、正式リリース、開発状態、検証記録、未完了作業、現在の停止地点、復元時の照合事項など、変動する事実だけを管理する。
 
 - 恒久的な運用規則：[AGENTS.md](../AGENTS.md)
 - 作品意図と承認済みゲーム仕様：[CHATGPT_HANDOFF.md](CHATGPT_HANDOFF.md)
 - 実装順と依存関係：[PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md)
+- リリース・バックアップ・復元手順：[RELEASE_BACKUP_RECOVERY.md](RELEASE_BACKUP_RECOVERY.md)
 - セットアップと実行コマンド：[README.md](../README.md)
 - 個別タスクの議論・判断・報告：対応するGitHub Issue
 
-GitHub `main`の現在のHEADはリモートrefで都度確認する。更新していないローカルの`origin/main`を現在のGitHub `main`として扱わず、この文書にも「最新main SHA」を固定値として追記し続けない。
+GitHub `main`の現在のHEADはリモートrefで都度確認する。この文書に記録するSHAは、正式リリース、公開、検証、個別工程などを復元するための固定基準であり、変動する`main`の最新値を追記し続けるためのものではない。
 
-公開基準コミット、検証対象コミット、PRやIssueの状態は、その時点の状態を復元するために必要な範囲で記録する。
+## 2. 0.5.0正式リリースと公開状態
 
-## 2. 現在の公開状態
-
+- 0.5.0正式製品受入：完了
+- 0.5.0固定復元基準SHA：`466cec62230e774ee4f25d31988906400412e228`
+- GitHub `main`：2026-07-14の運用ミッション開始時に上記SHAと一致
+- annotated tag：`v0.5.0`
+- tagのdereference先：上記SHA
+- GitHub Release：[v0.5.0](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v0.5.0)
+- Release状態：公開済み、非Draft、非prerelease、targetは上記SHA
 - 公開URL：https://ashfall-outpost-defense.paopao9.chatgpt.site/
-- ChatGPT Sitesバージョン：19
-- Sites状態：success
-- Sites v19公開対象コミット：`242682fd4dcfe1bfe8d9ba3a1f23330012e42d70`
-- 公開内容：Issue #19の試遊用0.5.0開発候補
-- 復元用Sitesバージョン：17
-- 復元用公開基準コミット：`9a8815c47f5ef7a9df0b77cfb6ea1f07b637354a`
-- 正式な0.5.0製品受入：未完了
-- 正式開発リポジトリ：非公開GitHub `SUSANO-OOO/Zombieee`
-- 正式開発ブランチ：GitHub `main`
+- Sites project状態：active
+- ChatGPT Sites version：20
+- Sites v20のsource commit：上記SHA
+- Issue #19：completed・closed
+- PR #21：merged・closed
+- PR #22：merged・closed
 
-Sites公開処理自体は成功している。ただし、公開成功と製品受入完了は別であり、現在の公開内容を0.5.0完成版とは扱わない。
+GitHubへのpush、`main`へのマージ、GitHub Release、ChatGPT Sites公開は別の状態である。正式受入では、各状態と同じ固定復元基準SHAを照合済みである。
 
-GitHubへのpushとChatGPT Sitesへの公開は別工程である。GitHub `main`へ反映された変更が自動的に公開版へ反映されるわけではない。
+## 3. 0.5.0ローカルbundle
 
-## 3. 正式開発ブランチの確認方法
+- パス：`C:\Users\okait\Documents\Codex\2026-07-11\Zombieee-v0.5.0-466cec62230e.bundle`
+- サイズ：26,922,356 bytes
+- SHA-256：`fbbf5af79180353391336fe5bbf09ee99cab0e056ce1846a5e8476580704161f`
+- `git bundle verify`：成功
+- verify結果：complete history、bundle is okay
+- `v0.5.0`：bundle内に存在し、dereference先は0.5.0固定復元基準SHA
+- `refs/remotes/origin/main`：bundle内で0.5.0固定復元基準SHA
 
-現在のGitHub `main`が作業基準となる場合は、次のいずれかでリモートrefを確認してから基準コミットを確定する。
+このbundleは復元可能だが、ref監査で次の不整合を確認した。
 
-- GitHub APIまたはGitHub画面で`main`を確認する
-- `git ls-remote origin refs/heads/main`でリモートrefを直接確認する
-- `origin/main`を使う場合は、先に`git fetch origin`などで更新済みであることを確認する
+- bundle内`refs/heads/main`：`56caa295f87d3d62cf3220e168a0f0476c2e76ee`
+- bundle内`HEAD`：`b8a1a19acfcafab17c3949121672357a98f950a4`
+- どちらも0.5.0固定復元基準SHAの祖先だが、clone後の暗黙の`main`または`HEAD`を0.5.0基準として使用できない
 
-更新していない`origin/main`は現在のGitHub `main`の証拠にはしない。リモートrefとは別に、ローカルの現在ブランチ、HEAD、作業ツリー、未追跡ファイル、stage済み差分、対応Issueも確認する。
+一時ディレクトリへの実地cloneでは、`fix/0.5.0-enemy-gate-spawn`が`HEAD`として選択され、ローカル`main`は作成されず、`origin/main`は`56caa295f87d3d62cf3220e168a0f0476c2e76ee`になった。一方、`v0.5.0^{commit}`から作成した回収用branchは0.5.0固定復元基準SHAと一致した。検証用cloneは照合後に削除し、リポジトリへ残していない。
 
-## 4. 現在のGitHub状態
+復元時は、まずSHA-256、`git bundle verify`、`git bundle list-heads`を確認し、`v0.5.0^{commit}`とexact SHAを0.5.0基準にする。新しい復元先でtagから回収用branchを明示作成し、既存checkoutやGitHubを上書きしない。詳細は[RELEASE_BACKUP_RECOVERY.md](RELEASE_BACKUP_RECOVERY.md)に従う。
 
-### PR #21
+このbundleはリポジトリ外にあるが同一PC上のローカル復元スナップショットである。オフデバイスの独立バックアップへの複製は未確認であり、GitHub Release assetにもbundleは存在しない。
 
-- URL：https://github.com/SUSANO-OOO/Zombieee/pull/21
-- 状態：open・未マージ
-- base：`main`
-- head：`feat/0.5.0-boss-stage-complete`
-- PRの最新head SHAはGitHubのPRメタデータを正とし、レビュー・マージ直前に確認する。
-- 現在工程：独立レビュー
+## 4. 現在の開発工程
 
-### Issue #19
+- 対応Issue：[Issue #26](https://github.com/SUSANO-OOO/Zombieee/issues/26)
+- 作業ブランチ：`ops/codex-autonomous-workflow`
+- 基準：0.5.0固定復元基準SHA
+- 現在工程：Codex自走開発・CI・リリース・バックアップ運用基盤のDraft PR
+- 停止地点：Draft PR未マージ
+- GitHub `main`：変更しない
+- `v0.5.0`とGitHub Release：変更しない
+- Sites v20：変更しない
+- branch protection／ruleset：この工程では変更しない
+- ゲームコード、画像、ゲーム仕様テスト：変更しない
 
-- URL：https://github.com/SUSANO-OOO/Zombieee/issues/19
-- 状態：open
-- GitHub `main`：`36547ac8282d652cf89717246f74dbcee0bc74fb`のまま
+CI候補はworkflow名`CI`、job表示名`Verify`、required status check候補`CI / Verify`である。実際のcontext名はDraft PRのActions runで確認してから保護設定候補として確定する。
 
-### PR #15
+## 5. GitHub保護・merge設定の監査結果
 
-- URL：https://github.com/SUSANO-OOO/Zombieee/pull/15
-- タイトル：`[0.5.0] 防護コンテナ着地体験とユニット役割可視化`
-- 状態：merged・closed
-- head：`feat/0.5.0-experience-quality`
-- head SHA：`7e6fa9b7234a643db164b75cdda7735ac809df1c`
-- merge commit：`9a8815c47f5ef7a9df0b77cfb6ea1f07b637354a`
-- headブランチ：未削除
+2026-07-14の読み取り監査結果：
 
-### Issue #14
+- `main`：`protected: false`
+- legacy branch protection rule：0件
+- required pull request、required status checks、conversation resolution、stale approval dismissal、admin enforcement：未設定
+- direct push、force push、branch deletionを保護設定で禁止する構成：未設定
+- repository管理権限：確認済み
+- repository ruleset一覧：権限不足ではなく、非公開リポジトリの現在プラン制約によりAPIが403。休止中rulesetの有無は確認不能
+- `main`に適用中の保護：なし
+- merge commit、squash merge、rebase merge：すべて有効
+- auto merge：無効
+- update branch：無効
+- merge後の自動branch削除：無効
 
-- URL：https://github.com/SUSANO-OOO/Zombieee/issues/14
-- 状態：open
-- 公開成功後も製品受入が未完了のため、完了扱いにしない
+保護設定は変更していない。マージ後の推奨候補と、単独アカウント運用でapproval必須化すると自己ロックする注意点は[RELEASE_BACKUP_RECOVERY.md](RELEASE_BACKUP_RECOVERY.md)に記録する。
 
-### Issue #11
+## 6. 未実装・後続Issue
 
-- URL：https://github.com/SUSANO-OOO/Zombieee/issues/11
-- 状態：completed・closed
-- 完了済みの0.5.0統合設計の技術根拠として参照する
+- [Issue #23](https://github.com/SUSANO-OOO/Zombieee/issues/23) Combat Polish：open・未実装
+- [Issue #24](https://github.com/SUSANO-OOO/Zombieee/issues/24) Audio：open・未実装
+- [Issue #25](https://github.com/SUSANO-OOO/Zombieee/issues/25) Branding「西新世紀末202X」：open・未実装
+- ゲーム名称変更：未実装
+- 戦闘品質の後続改善：未実装
+- 正式BGM・正式SE素材と端末聴感QA：未実装
 
-### Issue #16
+0.5.0までの履歴と公開表示では、ゲーム名をASHFALL OUTPOSTとして維持する。
 
-- URL：https://github.com/SUSANO-OOO/Zombieee/issues/16
-- 状態：completed・closed
-- 0.5.0〜1.0.0ロードマップと現行状態の文書正式化を管理する
-- 作業ブランチ：`docs/product-roadmap-v1`
+## 7. 検証記録の扱い
 
-## 5. Sitesバージョン17の再確認結果
+0.5.0の実装、PC横画面、844×390、タッチ相当、ゲーム進行、音声制御、console、性能、Sites公開、最終受入の詳細はIssue #19、PR #21、PR #22、Release v0.5.0の記録を参照する。
 
-2026-07-13、時間経過後の読み取り専用確認で次を確認した。
+現在の運用基盤工程は文書・CI中心であり、ゲームコード、画像、ゲーム仕様テストを変更しない。ローカル検証、Actions結果、独立レビューはIssue #26と対応するDraft PRへ記録し、ゲームプレイ確認を行っていない場合は未実施と明記する。
 
-- Sitesバージョン17：success
-- private deployment：succeeded
-- 通常deployment：succeeded
-- 公開基準コミット：指定SHAと一致
-- 既存公開URL：新版
-- GitHub `main`：指定SHAと一致
-- Issue #14：open
-- 再公開、別バージョン、別URL、編集、commit、push、Issue変更、ブランチ削除：未実施
+## 8. 別PC復元時の照合事項
 
-報告コメント：
+1. [RELEASE_BACKUP_RECOVERY.md](RELEASE_BACKUP_RECOVERY.md)の手順でGitHubまたは検証済みbundleから新規cloneする。
+2. 0.5.0固定復元基準SHA、`v0.5.0^{commit}`、必要branchを照合する。
+3. [README.md](../README.md)に従い`npm ci`、Lint、testを行う。
+4. この文書のRelease、Sites v20、公開URL、未実装Issueを確認する。
+5. Sitesの再公開、GitHubへのpush、refの修正は復元確認と分離し、必要な明示承認後に行う。
 
-https://github.com/SUSANO-OOO/Zombieee/issues/14#issuecomment-4953784334
+`node_modules`、`dist`、`work`、`outputs`などの生成フォルダは正式なソースバックアップではなく、必要に応じて再生成する。
 
-## 6. 現在の開発・QA状態
+## 9. 更新条件
 
-GitHub `main`には次が存在する。
+次の場合に、対象ファイルを含む実装ミッションまたはリリース承認の範囲内でこの文書を更新する。
 
-- 3レーン戦闘
-- 6種類の味方ユニット
-- TAKUYAボス戦と敵拠点破壊
-- 防護投下物
-- 既存4支援行動
-- ローカル限定の`?qa=endgame`終盤QAモード
-- ローカル限定の`?qa=roles`6ユニット役割QAモード
-- Windowsを含むOS共通のvinext起動ラッパー
-- 復元と引き継ぎに使うプロジェクト文書
-
-QAモードは、ホストが`localhost`または`127.0.0.1`の場合だけ有効とし、公開ドメインでは有効にしない。
-
-### Issue #19候補（PR #21）
-
-Issue #19では、GitHub `main`の`36547ac8282d652cf89717246f74dbcee0bc74fb`を基準に、作業ブランチ`feat/0.5.0-boss-stage-complete`で0.5.0ボスステージ完成候補を作成した。独立レビューで判明した8件の必須事項と、試遊で判明した敵拠点段階破損表示の修正を同じブランチへ反映し、通常push済みである。ゲーム実装完成候補コミットは`242682fd4dcfe1bfe8d9ba3a1f23330012e42d70`であり、PR #21とIssue #19はopen、GitHub `main`は基準SHAのまま未反映である。Sites v19はこのコミットを公開対象として試遊用に公開済みで、現在工程はPR #21の独立レビューである。
-
-Issue #19候補には次を含む。
-
-- 3レーンを覆う感染拠点と、大型装輪移動拠点としてのCRAWLER
-- 戦術投下ポッド、爆薬ドラム、救急物資から1つを選ぶ戦闘前ロードアウト
-- スクラップで配置する3種の戦場物資、支援ゲージで要請する緊急航空支援、独立再装填のCRAWLER全レーン一斉掃射
-- 敗北・勝利後の同一ロードアウト再戦と、ロードアウトへ戻る導線
-- 通常・危機・ボスで変化するWeb Audio合成BGM、効果音、ミュート、一時停止・再戦時の停止／再開管理
-- 差し替え可能な戦闘台詞データと、発生条件、表示時間、全体・話者・同一台詞クールタイム、重複防止、優先順位、最大2件表示のランタイム
-- 承認済み通常台詞レジストリは空。機能確認用の仮文言はローカル`?qa=dialogue`などのQA経路だけで使用
-- `?qa=endgame`、`roles`、`supplies`、`airstrike`、`crawler`、`loadout`、`dialogue`、`stress`のローカル限定QA経路
-- CRAWLER、感染拠点、戦術投下ポッド、爆薬ドラム、救急物資の専用画像。外部素材は採用せず、リポジトリ用に生成したオリジナル画像だけを使用
-- 航空支援担当者を含む今回のCanvas表現は0.5.0の暫定表現であり、正式なキャラクターデザインやアート方向として承認済みではない
-
-指定された実装区画、独立レビュー修正、敵拠点段階破損表示修正を含む候補である。ゲーム実装完成候補コミットは`242682fd4dcfe1bfe8d9ba3a1f23330012e42d70`で、Sites v19公開対象コミットも同SHAである。検証結果、未確認事項、最終Git状態はIssue #19の各完了報告を正式記録とする。
-
-## 7. 検証記録
-
-PR #15およびIssue #14の報告上、次が成功している。
-
-- テスト13/13
-- Lint
-- 本番ビルド
-- PC横画面
-- スマートフォン相当844×390
-- 専用画像読み込み
-- console warning／error 0件
-
-PR #15・Issue #14のSites v17確認では、公開URL上で6ユニットカード、防護投下物説明、専用画像リソース、配置操作などを確認した。一方、敵・味方別着地ダメージと全6種類の専用戦闘キューを個別に完全捕捉する確認は未完了だった。
-
-文書更新工程ではゲームテスト、Lint、ビルド、ブラウザ確認を再実行しない。
-
-Issue #19候補のレビュー修正では、対象テスト6/6、全テスト20/20、Lint、本番ビルド、`git diff --check`が成功した。開発サーバーの実ブラウザでPC横画面1280×720と844×390、タッチ相当配置、pause中・敗北／勝利結果画面での連打no-op、再戦後の入力復帰、全6ユニットの通常攻撃と役割成立時の表示差、複数AreaEffect、敵拠点の損傷・大破・HP0崩壊、航空支援担当者の出現・予備動作・着弾同期・帰投、TAKUYAの通常攻撃と重要イベントの振動差、BGM・SEの開始・停止・独立ミュート・再戦・連打抑制を確認し、console warning／errorは0件だった。
-
-Sites v19の試遊公開後には、公開URL上でPC 1280×720、844×390、タッチ相当操作、音声開始、BGM・SEミュート、再戦導線、画像読み込み、console warning／errorを確認した。正式アート方向、正式BGM、正式SEは未承認・未完成であり、実スピーカー・イヤホンでの製品受入確認は保留のままである。この結果をGitHub `main`へ反映済み、または正式な0.5.0製品受入完了とは扱わない。
-
-## 8. Issue #19開始時点のGitHub `main`・旧公開版の製品受入で判明した未完了事項
-
-以下はIssue #19開始時点のGitHub `main`・旧公開版Sites v17に対する記録である。Issue #19候補で対応した項目は作業ブランチへ通常pushし、PR #21を作成し、Sites v19へ試遊公開済みだが、GitHub `main`には未反映で、正式な0.5.0製品受入も未完了である。
-
-Issue #19候補では、3種戦術物資、固定航空支援、CRAWLER全レーン一斉掃射、CRAWLER・敵拠点の新アート、簡易ロードアウト、戦闘台詞基盤、音声制御、再戦導線までを実装した。作業ブランチは通常push済み、PR #21はopen、Sites v19では試遊公開済みだが、GitHub `main`には未反映である。
-
-### 戦術投下物
-
-- 現行グラフィックが、意図した円筒形投下物ではなく要塞・建築物のように見える
-- 正式方向は、大型ドラム缶を基礎形状とした円筒形装甲投下ポッド
-- 敵・味方地点への投下可否と、敵・味方別着地ダメージの視覚的確認が不十分
-- 現行コードには全体2個・各レーン1個の固定設置上限がある
-- 製品方針ではプレイヤー向け固定上限を廃止し、スクラップ、空間、禁止領域、経路、耐久で制御する方向
-
-### 6ユニット
-
-- MEDICの回復演出が敵へ向かっているように見える
-- BRAWLERなどの演出が何を示すか分かりにくい
-- 通常攻撃、役割特性、将来のアクティブスキルの区別が不足
-- 公開URL上で全6種類の専用戦闘キューを個別に完全確認できていない
-- 現行クラス・カテゴリ名は暫定であり、将来変更する
-
-### CRAWLERと敵拠点
-
-- 現在のバス型CRAWLERは最終デザインではない
-- 位置が下寄りに見え、戦場全体の構図に違和感がある
-- 0.5.0では大型装輪移動拠点へ正式化する方針
-- 現在の敵バリケードは正式な敵拠点表現として弱い
-- 0.5.0では段階破損を持つ廃工業検問ゲート型へ正式化する方針
-
-### 戦術システム
-
-- 爆薬ドラム、炎上、救急物資、固定航空支援、CRAWLER全レーン一斉掃射は未実装または正式化前
-- 指揮力、スクラップ、支援ゲージの役割整理が必要
-- 戦闘前の簡易ロードアウトと、敗北後の再戦・ロードアウト変更導線が未実装
-
-## 9. 文書正式化状態
-
-2026-07-13、Issue #16で製品仕様とロードマップを次の5文書へ整理し、PR #17のmerge commit `88cf6141a27daf577874f7d2b3ae34c75c128864`でGitHub `main`へ反映した。
-
-- `README.md`
-- `AGENTS.md`
-- `docs/CHATGPT_HANDOFF.md`
-- 新規`docs/PRODUCT_ROADMAP.md`
-- `docs/PROJECT_STATE.md`
-
-文書作業ではゲームコード、CSS、テスト、画像、設定、Sitesを変更していない。以後は各文書の所有範囲に従い、変動する状態だけをこの文書へ記録する。
-
-## 10. 現在の停止地点
-
-- Sitesバージョン19試遊公開：成功
-- 復元用Sitesバージョン17：保持
-- Issue #14製品受入：未完了
-- Issue #14：open
-- Issue #11：completed・closed
-- Issue #16：completed・closed
-- Issue #19：open
-- Issue #19基準：GitHub `main`の`36547ac8282d652cf89717246f74dbcee0bc74fb`
-- Issue #19作業ブランチ：`feat/0.5.0-boss-stage-complete`を通常push済み
-- ゲーム実装完成候補コミット：`242682fd4dcfe1bfe8d9ba3a1f23330012e42d70`
-- Sites v19公開対象コミット：`242682fd4dcfe1bfe8d9ba3a1f23330012e42d70`
-- PR #21：open・未マージ
-- GitHub `main`：`36547ac8282d652cf89717246f74dbcee0bc74fb`のまま未反映
-- 現在の工程：PR #21の独立レビュー
-- 製品受入上の保留：正式アート方向、正式BGM、正式SEは未承認・未完成。実スピーカー・イヤホンを使った実音量・可聴性確認も未完了
-- 次工程：PR #21の独立レビュー完了後、プロデューサーの別の明示承認を待つ
-- GitHub push：実施済み
-- PR作成：PR #21として実施済み
-- Sites公開：バージョン19として実施済み
-- `main`反映：未実施・未承認
-
-各工程は独立して扱う。次の明示承認なしにPR #21のマージ、`main`反映、Issueクローズ、ブランチ削除へ進まない。
-
-## 11. Issue #19候補の監査・検証
-
-Issue #19では、既存の3レーン進行とCRAWLER防衛を維持したまま、次を確認・実装した。
-
-1. CRAWLER、敵拠点、レーン、出撃口、HUDの座標依存と描画範囲
-2. 3種戦術物資で共通化した配置、耐久、破壊、範囲効果処理
-3. 固定個数上限を使わず、スクラップ、設置空間、禁止領域で制御する配置条件
-4. 指揮力、スクラップ、支援ゲージの用途分離
-5. 固定航空支援とCRAWLER全レーン一斉掃射の役割分離
-6. 6ユニットの役割演出と、通常攻撃・役割特性の判別
-7. 差し替え可能な戦闘台詞データ、発生条件、表示時間、確率、優先順位、全体・話者・個別クールタイム、重複防止
-8. localhost限定の機能別QA経路と高負荷同時QA経路
-9. BGM・SEの開始、停止、独立ミュート、再戦、ロードアウト復帰、同時発音上限、優先度、主要イベント時のBGMダッキング
-10. PC横画面、844×390、タッチ相当操作、console warning／error、大量ユニット・大量設置物の表示・操作
-
-外部音源は採用せず、現在の音声はWeb Audioによる安全な仮実装である。正式な高品質音源のライセンス確認・採用と実出力機器での聴感確認は、製品受入前の保留事項として残す。
-
-## 12. 別PC復元時の照合事項
-
-1. 非公開GitHubリポジトリを取得する
-2. [README.md](../README.md)の前提環境、セットアップ、確認コマンドに従う
-3. GitHub `main`のリモートrefを確認し、ローカル追跡状態と照合する
-4. この文書の公開版、公開基準コミット、検証記録、未完了作業、停止地点を確認する
-5. [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md)で次の製品工程を確認する
-6. Sites公開が必要な場合は、プロデューサーの別承認後に行う
-
-`node_modules`、`dist`、`work`、`outputs`などの生成フォルダは正式なソースバックアップではなく、必要に応じて再生成または別途移行する。
-
-## 13. 更新条件
-
-次の場合に、プロデューサーの承認を得てこの文書を更新する。
-
-- 公開版、公開URL、公開基準コミットが変わった
-- 検証を行い、対象コミット、環境、範囲、結果を正式記録する
-- GitHub `main`上の開発状態の要約が変わった
+- 正式リリース、tag、Release、Sites version、公開基準が変わった
+- 検証対象、環境、範囲、結果を正式記録する必要がある
 - 未完了作業の追加、完了、優先順位変更が承認された
 - 現在の停止地点と次工程が変わった
-- 別PC復元やSites再接続の条件が変わった
+- bundle、オフデバイス保存、復元条件が変わった
 
-コミット前、push前、公開前に、まだ完了していない工程を完了済みとして書かない。現在の`main` HEADを追うためだけの文書更新は行わない。
+コミット前、push前、公開前に、まだ完了していない工程を完了済みとして書かない。現在の`main` HEADを追うためだけの更新は行わない。
