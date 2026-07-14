@@ -13,21 +13,21 @@
 - workflow名：`CI`
 - job ID：`verify`
 - job表示名：`Verify`
-- required status check候補：`CI / Verify`
+- required status check候補：`Verify`（workflow：`CI`、app：GitHub Actions）
 - トリガー：`main`向け`pull_request`、対象作業ブランチへの`push`、`workflow_dispatch`
 - 実行：差分のwhitespace確認、`npm ci`、`npm run lint`、`npm test`
 - `npm test`が本番ビルドを含むため、別の`npm run build`は実行しない
 - 現在のコードでは独立typecheckが成功しないため、CIへ追加しない
 - 権限：`contents: read`のみ。secrets、Sites公開、GitHubへの書き込みは行わない
 
-required status checkへ登録する名前は、Draft PRの実runで表示されたcontextと完全一致することを確認する。推測した名前を先に登録しない。
+required status checkへ登録するcontextは、Draft PRの実runをChecks APIで確認し、`CheckRun.name`と完全一致させる。workflow名を推測でprefixへ加えない。
 
 ### 2.2 Draft PRマージ後の保護設定候補
 
 branch protectionまたはrepository rulesetを変更する場合は、専用の明示承認を得たうえで次を候補とする。
 
 - `main`への変更はpull request必須
-- 実測済みの`CI / Verify`をrequired status checkにし、最新baseとの一致を必須にする
+- 実測済みの`Verify`（GitHub Actions）をrequired status checkにし、最新baseとの一致を必須にする
 - unresolved conversationがある場合はマージ禁止
 - force pushとbranch deletionを禁止
 - 管理者にも適用し、通常のbypassを設けない
