@@ -72,6 +72,11 @@ test("campaign defines three stable, ordered, data-driven stages", () => {
     assert.equal(Array.isArray(stage.nextUnlocks.unitIds), true);
     assert.equal(Array.isArray(stage.nextUnlocks.mapSignalIds), true);
   }
+  assert.deepEqual(CAMPAIGN_STAGES.map((stage) => stage.theme.backgroundId), [
+    "background-nishijin-shopping-street-v1",
+    "background-sawara-ward-office-v1",
+    "background-nishijin-defense-line-v1",
+  ]);
 });
 
 test("each stage has a unique multi-layer visual signature", () => {
@@ -140,6 +145,38 @@ test("six combat units and the non-combat guide use Japanese player-facing data"
   assert.equal(CAMPAIGN_GUIDE.displayName, "水城 奈々");
   assert.equal(CAMPAIGN_GUIDE.roleName, "通信・地図・情報分析");
   assert.equal(CAMPAIGN_GUIDE.combatant, false);
+});
+
+test("all six units expose Japanese role, weapon, range, target, deployment, and audited sprite metadata", () => {
+  const expected = {
+    brawler: ["パイセン", "格闘家", "拳", "素手", "連続打撃", "近距離", "前線の感染者", "先頭で敵を押し返す", "/brawler-sprites-v1.png"],
+    scout: ["橘 迅", "遊撃手", "速", "バール", "高速接近・打撃", "近距離", "走行型・影走り", "敵の薄い経路へ素早く投入", "/scout-sprites-v2.png"],
+    ranger: ["黒木 凛", "射撃手", "狙", "自動小銃", "遠距離精密射撃", "遠距離", "吐瀉型・大型", "後列から危険個体を狙う", "/ranger-sprites-v1.png"],
+    medic: ["白石 直人", "衛生兵", "救", "自動小銃・救急バッグ", "援護射撃・味方治療", "中距離", "負傷した味方", "味方の後方へ配備", "/medic-sprites-v1.png"],
+    brute: ["大庭 豪", "破砕兵", "砕", "大型ハンマー", "重打撃", "近距離", "重装型・感染拠点", "前線の要所へ配備", "/breaker-sprites-v2.png"],
+    gunner: ["真壁 玲奈", "制圧射手", "制", "自動小銃", "制圧連射", "中～遠距離", "大型・密集群", "火線を通せる後列へ配備", "/gunner-sprites-v1.png"],
+  };
+
+  for (const unit of CAMPAIGN_UNITS) {
+    assert.deepEqual([
+      unit.displayName,
+      unit.roleName,
+      unit.roleIcon,
+      unit.weaponName,
+      unit.attackMode,
+      unit.rangeBand,
+      unit.primaryTarget,
+      unit.deploymentHint,
+      unit.spritePath,
+    ], expected[unit.combatKind]);
+    assert.match(unit.appearanceAudit.presentation, /表現/);
+    assert.ok(unit.appearanceAudit.weaponMatch.length > 0);
+    assert.match(unit.appearanceAudit.result, /整合/);
+    assert.doesNotMatch(Object.values(unit).filter((value) => typeof value === "string").join(" "), /暫定|SCOUT|RANGER|BREAKER|BRAWLER|GUNNER|MEDIC/);
+  }
+
+  assert.equal(CAMPAIGN_UNIT_BY_ID.brawler.weaponName, "素手");
+  assert.equal(CAMPAIGN_UNIT_BY_ID.brawler.spritePath, "/brawler-sprites-v1.png");
 });
 
 test("star calculation honors exact HP-ratio boundaries and victory only", () => {

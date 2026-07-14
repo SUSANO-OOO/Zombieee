@@ -112,7 +112,7 @@ export const WORLD_GEOMETRY = Object.freeze({
 
 export const BATTLEFIELD_SUPPLY_DEFS = Object.freeze({
   pod: Object.freeze({
-    kind: "pod", name: "戦術投下ポッド", key: "V", cost: 50,
+    kind: "pod", name: "防護投下ポッド", key: "V", cost: 50,
     maxHp: 260, minX: 260, maxX: 720, placementClearance: FIELD_OBJECT_CLEARANCE,
     dropSeconds: .45, impactSeconds: .26, destroySeconds: .42,
     landingRadius: 92, enemyLandingDamage: 72, allyLandingDamage: 22,
@@ -126,7 +126,7 @@ export const BATTLEFIELD_SUPPLY_DEFS = Object.freeze({
     destroySeconds: .36, blocksEnemies: false,
   }),
   medical: Object.freeze({
-    kind: "medical", name: "救急物資", key: "M", cost: 35,
+    kind: "medical", name: "簡易救護所", key: "M", cost: 35,
     maxHp: 72, minX: 250, maxX: 730, placementClearance: 58,
     healRadius: 104, healPerSecond: 18, effectSeconds: 8,
     destroySeconds: .3, blocksEnemies: false,
@@ -186,10 +186,10 @@ export const UNIT_CARDS = [
 ];
 
 export const SUPPORT_DEFS = [
-  { kind: "barrel", name: "IRON BARREL", cost: 20, key: "Z", desc: "PROXIMITY BLAST" },
-  { kind: "medkit", name: "MEDKIT", cost: 25, key: "X", desc: "HEALING ZONE" },
-  { kind: "molotov", name: "MOLOTOV", cost: 35, key: "C", desc: "BURN + SLOW" },
-  { kind: "airstrike", name: "AIRSTRIKE", cost: 60, key: "Q", desc: "HEAVY STRIKE" },
+  { kind: "barrel", name: "爆薬ドラム", cost: 20, key: "Z", desc: "近接起爆" },
+  { kind: "medkit", name: "簡易救護所", cost: 25, key: "X", desc: "範囲回復" },
+  { kind: "molotov", name: "火炎瓶", cost: 35, key: "C", desc: "燃焼・減速" },
+  { kind: "airstrike", name: "緊急航空支援", cost: 60, key: "Q", desc: "広域攻撃" },
 ];
 
 // Compatibility export for older combat helpers. The authoritative TAKUYA

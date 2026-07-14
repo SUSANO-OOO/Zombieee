@@ -1,6 +1,6 @@
 # 0.6.0 ローカルQA記録
 
-検証日：2026-07-14
+検証日：2026-07-14〜2026-07-15（production visual / audio統合後の最終再検証を含む）
 対象：`feat/0.6.0-early-access-foundation`（基準 `d7b7cbe1adc42b53e2e286e7654eaab3d196a83c`）
 方法：ビルド済み成果物を `127.0.0.1` で配信し、ローカル実ブラウザでPC横画面とiPhone横画面相当を操作した。iPhone側は左右44px・下21pxのSafe Areaを付与し、Safari UI縮小後の844×390とSafari UI表示中相当の844×340を別々に検証した。
 
@@ -28,7 +28,7 @@
 - 通常導線で `タイトル → 導入イベント → エリアマップ → ステージ詳細 → 編成 → 戦闘前イベント → 戦闘 → リザルト` を実際に操作した。
 - エリアマップで西新商店街の星条件、未解放の早良区役所・西新防衛線、通信途絶・調査中などの将来地点が日本語で表示され、封鎖中の地点を選択できないことを確認した。
 - 西新商店街、早良区役所、西新防衛線・TAKUYAを準備状態だけでなく戦闘開始後まで表示し、3レーンの出撃、標的選択、目的表示が各ステージ定義に追従することを確認した。
-- 全6ユニットを複数の実戦画面に分けて実クリックし、出撃を確認した。下部操作は戦術投下ポッド、緊急航空支援、移動拠点一斉掃射を実クリックした。編成では戦術投下ポッド、爆薬ドラム、救急物資の3種を選択できた。
+- 全6ユニットを複数の実戦画面に分けて実クリックし、出撃を確認した。下部操作は防護投下ポッド、緊急航空支援、移動拠点一斉掃射を実クリックした。編成では防護投下ポッド、爆薬ドラム、簡易救護所の3種を選択できた。
 - TAKUYA用QAでボスHUD、`TAKUYA撃破`の目的、戦闘中のボス表示を確認した。
 - 負荷確認用QAで複数ユニット・敵・戦場物を同時表示し、844×390のゲームルート、3レーン、9個の主要操作が画面内に維持され、操作不能・ページoverflow・ブラウザ停止がないことを確認した。物理端末上の性能・発熱は未確認である。
 - PC 1280×720で詳細HUD、全下部操作、キーボードの `R` による作戦方針切替、`P` による一時停止、画面ボタンによる再開を確認した。
@@ -70,7 +70,7 @@
 ## 7. 主要表示の日本語監査
 
 - 通常のプレイヤー向け主要画面で、内部識別子 `CRAWLER`、`SCOUT`、`RANGER`、`BREAKER`、`BRAWLER`、`GUNNER`、`MEDIC`を役割表示として露出させず、`移動拠点`、`遊撃手`、`射撃手`、`破砕兵`、`格闘家`、`制圧射手`、`衛生兵`へ整理した。
-- 支援・物資は `戦術投下ポッド`、`爆薬ドラム`、`救急物資`、`緊急航空支援`、`移動拠点一斉掃射`を使用した。
+- 支援・物資は `防護投下ポッド`、`爆薬ドラム`、`簡易救護所`、`緊急航空支援`、`移動拠点一斉掃射`を使用した。
 - 目的、警告、ステージ詳細、星条件、作戦成功/失敗、通常報酬、初回星到達報酬、解放演出を日本語で確認した。対象の英語内部識別子は通常のプレイヤー表示から除去し、stable ID、コード、テスト、localhost QA診断へ限定した。`HP`と固有名`TAKUYA`は定着表記として維持した。
 
 ## 8. 6ユニットのスプライト整合監査
@@ -86,12 +86,45 @@
 
 ## 9. console・自動検証
 
-- 844×390負荷確認、844×340、回転復帰後、PC 1280×720、タイトル/セーブ、マップ、編成、解放リザルト、ライフサイクル、TAKUYAの操作中にconsoleを監視し、最終warning / errorは0件だった。
-- `npm.cmd test`（本番ビルド＋全テスト）：82件成功
+- production統合後の新規タブで、844×390、844×340、回転復帰後、PC 1280×720、タイトル/セーブ、マップ、編成、解放リザルト、3戦場、ライフサイクル、TAKUYAの操作中にconsoleを監視し、warning / errorは0件だった。
+- `npm.cmd test`（本番ビルド＋全テスト）：117件成功 / 117件
 - `npm.cmd run lint`：成功
 - `git diff --check`：成功
 
-## 10. 証拠画像
+## 10. production visual / audio統合後の最終再検証
+
+- viewport metaは `width=device-width, viewport-fit=cover, initial-scale=1`。844×390とSafari UI表示中相当844×340の双方で、ゲームルート・フレーム・Canvasは `left=0 / right=844`、左右余白0px、中心ずれ0px、縦横overflow 0だった。
+- 844×390は全6ユニットが高さ47px・右端793px・下端304px、全3支援が高さ44px・右端793px・下端351px。844×340はユニット下端254px、支援下端301pxで、左右44px・下21pxのSafe Area内に全操作域が収まった。
+- 390×844では回転案内が全面表示され、844×340復帰直後に案内が消え、ルート・フレーム・Canvasが844×340へ再配置された。独立再検証での復帰は244ms、同一環境の再測定では24msで、いずれもoverflow 0だった。
+- PC 1280×720はルート・フレーム・Canvasが全面一致し、中心ずれ・overflow 0、全主要ボタンの最右端1267.2px・最下端684.2pxでPC表示の回帰はなかった。
+- 実クリックで橘 迅を出撃させ、指揮100→75を確認した。防護投下ポッドを下レーンへ指定し、スクラップ282→232を確認した。6ユニットと3支援の全ボタンが画面内・有効状態で、localhost QAの全解放は `通常セーブ非反映` と明示された。
+- 通常URLでは初期4人だけが選択可能で、大庭 豪と真壁 玲奈はdisabledかつ「西新商店街クリアで解放」「早良区役所クリアで解放」を表示した。セーブ後タイトルは「物語を続ける」と別操作の「最初から始める」を表示した。
+- title、作戦室、案内役、3戦場のproduction WebP 6点を実HTTP取得し、6/6がstatus 200・`image/webp`。西新商店街、早良区役所、西新防衛線は別ファイル・別ランドマーク・別照明で目視識別できた。
+- production audioは109論理asset（BGM 9 / SFX 100）、218 source（MP3 109 + OGG 109）、asset/pool合計150 cue、10 scene。全218 sourceを実HTTP GETし、218/218がstatus 200、content-typeは`audio/mpeg` 109件と`audio/ogg` 109件、合計20,546,301 bytes、404・空ファイル0件だった。
+- 独立ブラウザ再検証でAudioContextは`running`、mixerは`unlocked`、stage3 scene、`cacheFailed=0`、`warnings=0`。localhost限定QA bridgeから全asset/pool/sceneを列挙し、個別再生・scene切替・停止へ到達できることを確認した。scene競合、重複loop、cooldown、polyphony、fallback、停止後リークは自動テストで固定した。
+- 物理iPhone Safariの内蔵スピーカー／イヤホンによる聴感、長時間性能、発熱、実機Safari UIそのものは未確認であり、このローカル実ブラウザQAで代替しない。
+
+## 11. 証拠画像
+
+### production統合後（2026-07-15）
+
+- [セーブなしproductionタイトル](../qa-evidence/0.6.0-production/iphone-844x390-title-production.jpg)
+- [セーブありproductionタイトル](../qa-evidence/0.6.0-production/iphone-844x390-title-save-production.jpg)
+- [水城奈々の専用案内役画像を使う導入](../qa-evidence/0.6.0-production/iphone-844x390-intro-guide-production.jpg)
+- [production作戦地図](../qa-evidence/0.6.0-production/iphone-844x390-map-production.jpg)
+- [通常初期4人・未解放2人](../qa-evidence/0.6.0-production/iphone-844x390-formation-initial-locks-production.jpg)
+- [844×340の編成・全操作域](../qa-evidence/0.6.0-production/iphone-844x340-formation-production.jpg)
+- [第1ステージ3星・報酬・ユニット／区域解放](../qa-evidence/0.6.0-production/iphone-844x390-result-unlock-production.jpg)
+- [西新商店街production戦場](../qa-evidence/0.6.0-production/iphone-844x390-stage1-production.jpg)
+- [早良区役所production戦場](../qa-evidence/0.6.0-production/iphone-844x390-stage2-production.jpg)
+- [西新防衛線・TAKUYA production戦場](../qa-evidence/0.6.0-production/iphone-844x390-stage3-production.jpg)
+- [Safari UI表示中相当844×340・全下部操作](../qa-evidence/0.6.0-production/iphone-844x340-stage3-safari-ui-production.jpg)
+- [縦390×844の回転案内](../qa-evidence/0.6.0-production/iphone-390x844-rotate-production.jpg)
+- [844×340へ回転復帰直後](../qa-evidence/0.6.0-production/iphone-844x340-after-rotation-production.jpg)
+- [非数値の感染予兆・炎・灰化](../qa-evidence/0.6.0-production/iphone-844x390-lifecycle-production.jpg)
+- [PC 1280×720 production戦場](../qa-evidence/0.6.0-production/pc-1280x720-stage3-production.jpg)
+
+### 基盤実装時の補助証拠（2026-07-14）
 
 - [セーブなしタイトル](../qa-evidence/0.6.0/iphone-844x390-title-no-save.jpg)
 - [セーブありタイトル](../qa-evidence/0.6.0/iphone-844x390-title-save-present.jpg)

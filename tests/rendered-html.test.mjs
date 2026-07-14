@@ -94,6 +94,7 @@ import {
 import {
   APPROVED_BATTLE_BARK_LINES,
   BATTLE_BARK_CONFIG,
+  BATTLE_BARK_TRIGGER_IDS,
   LOCAL_QA_BATTLE_BARK_LINES,
   advanceBattleBarkRuntime,
   battleBarkPassesProbability,
@@ -132,7 +133,7 @@ test("server-renders the 0.6.0 campaign title as the formal entry point", async 
   assert.match(html, /aria-label="西新世紀末物語 ゲーム"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /class="battlefield  inactive" aria-label="3レーン戦場" aria-hidden="true"/);
-  assert.match(html, /class="campaign-overlay title-screen-v060" aria-label="西新世紀末物語 タイトル画面"/);
+  assert.match(html, /class="campaign-overlay title-screen-v060"[^>]*title-key-visual-v1\.webp[^>]*aria-label="西新世紀末物語 タイトル画面"/);
   assert.match(html, /<small>にしじんせいきまつものがたり<\/small>/);
   assert.match(html, /<h1><span>西新<\/span><b>世紀末物語<\/b><\/h1>/);
   assert.match(html, /<p>アーリーアクセス版<\/p>/);
@@ -159,11 +160,12 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
 
   assert.match(campaign, /INITIAL_UNIT_IDS = deepFreeze\(CAMPAIGN_UNITS\.filter\(\(unit\) => unit\.unlock\.type === "initial"\)/);
   assert.match(game, /permittedFormation = qaAllUnlocked[\s\S]*formationKinds\.filter\(\(kind\) => isUnitUnlocked\(campaignSave, kind\)\)/);
-  assert.match(screens, /unit\.unlocked \? unit\.description : unit\.unlockHint/);
+  assert.match(screens, /unit\.unlocked \? `\$\{unit\.weaponName\}・\$\{unit\.rangeBand\}・\$\{unit\.primaryTarget\}` : unit\.unlockHint/);
   assert.match(screens, /unit\.unlocked \? selected \? "選択中" : "待機" : "未解放"/);
   assert.match(screens, /className="result-unlocks"[\s\S]*新たな戦力を解放/);
   assert.match(game, /newlyUnlockedUnitIds\.map/);
   assert.match(game, /newlyUnlockedStageIds\.map/);
+  assert.match(game, /resolveStageResult\(campaignSave,[\s\S]*if \(!localQaResult\) \{[\s\S]*localStorage\.setItem\("nishijin-campaign-v1", serializeCampaignSave\(resolved\.save\)\)[\s\S]*setCampaignSave\(resolved\.save as CampaignSave\)/);
 
   assert.match(game, /if \(resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)[\s\S]*resolveLocalQaScenario\(window\.location\.hostname, window\.location\.search\)\) return;/);
   assert.match(game, /unlocked: Boolean\(qaMode \|\| qaScenario\) \|\| isUnitUnlocked/);
@@ -302,7 +304,7 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /resolveAirstrikeImpact\(\{ runtime: g\.airstrike, fighters: g\.fighters, laneCenters: activeLaneCenters \}\)/);
   assert.match(game, /canvas\.dataset\.laneLayout = nextLaneCenters === LANE_Y \? "standard" : "compact-landscape"/);
   assert.match(game, /\(event\.clientX - rect\.left - transform\.offsetX\) \/ transform\.scale/);
-  assert.match(css, /battlefield-v4\.png/);
+  assert.match(css, /battle-nishijin-shopping-street-v1\.webp/);
   for (const edge of ["top", "right", "bottom", "left"]) {
     assert.match(css, new RegExp(`--app-viewport-safe-${edge}:env\\(safe-area-inset-${edge},0px\\)`));
   }
@@ -1047,8 +1049,22 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /supplyDefs\[selectedSupply\]\.cost/);
 });
 
-test("models replaceable battle dialogue with QA-only copy, expiry, cooldowns, duplicate prevention, and priority", () => {
-  assert.deepEqual(APPROVED_BATTLE_BARK_LINES, []);
+test("models state-linked production radio with rotating variants, QA isolation, expiry, cooldowns, and priority", () => {
+  const requiredTriggers = Object.values(BATTLE_BARK_TRIGGER_IDS);
+  assert.ok(APPROVED_BATTLE_BARK_LINES.length >= 50);
+  assert.equal(new Set(APPROVED_BATTLE_BARK_LINES.map(({ id }) => id)).size, APPROVED_BATTLE_BARK_LINES.length);
+  for (const trigger of requiredTriggers) {
+    const lines = APPROVED_BATTLE_BARK_LINES.filter((line) => line.trigger === trigger);
+    assert.ok(lines.length >= 2, `${trigger} has nonrepeating variants`);
+  }
+  for (const speakerKind of ["brawler", "scout", "ranger", "medic", "brute", "gunner"]) {
+    assert.ok(APPROVED_BATTLE_BARK_LINES.filter((line) => line.trigger === "role-cue" && line.speakerKind === speakerKind).length >= 3);
+  }
+  assert.ok(APPROVED_BATTLE_BARK_LINES.every((line) => line.probability === 1 && line.weight === 1 && line.tone === "radio"));
+  assert.ok(APPROVED_BATTLE_BARK_LINES.every((line) => Array.from(line.text).length <= 24));
+  assert.ok(APPROVED_BATTLE_BARK_LINES.every((line) => !line.text.includes("QA //")));
+  const infectionWarnings = APPROVED_BATTLE_BARK_LINES.filter(({ trigger }) => trigger === "infection-warning");
+  assert.ok(infectionWarnings.every(({ text }) => !/[0-9０-９]|秒|分|カウント|タイマー|進捗/.test(text)));
   assert.equal(BATTLE_BARK_CONFIG.maxVisible, 2);
   assert.equal(LOCAL_QA_BATTLE_BARK_LINES.length, 10);
   assert.ok(LOCAL_QA_BATTLE_BARK_LINES.every((line) => line.probability === 1 && line.weight === 1 && line.tone === "qa"));
@@ -1056,8 +1072,22 @@ test("models replaceable battle dialogue with QA-only copy, expiry, cooldowns, d
   assert.equal(battleBarkPassesProbability(.5, .5), false);
   const initial = createBattleBarkRuntime();
   const normal = queueBattleBark({ runtime: initial, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 1 } });
-  assert.equal(normal.shown, false);
-  assert.equal(normal.reason, "no-approved-line");
+  assert.equal(normal.shown, true);
+  assert.equal(normal.bark.speaker, "橘 迅");
+  assert.equal(normal.bark.speakerKind, "scout");
+  const normalDuplicate = queueBattleBark({ runtime: normal.runtime, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 1 } });
+  assert.equal(normalDuplicate.reason, "duplicate-active");
+  const rotated = queueBattleBark({
+    runtime: advanceBattleBarkRuntime(normal.runtime, BATTLE_BARK_CONFIG.speakerCooldown),
+    event: { trigger: "role-cue", speakerKind: "scout", speakerId: 1 },
+  });
+  assert.equal(rotated.shown, true);
+  assert.notEqual(rotated.bark.lineId, normal.bark.lineId);
+
+  const normalCritical = queueBattleBark({ runtime: initial, event: { trigger: "crawler-critical", speakerKind: "crawler", speakerId: "crawler" } });
+  assert.equal(normalCritical.shown, true);
+  assert.equal(normalCritical.bark.speaker, "水城 奈々");
+  assert.equal(normalCritical.bark.speakerKind, "guide");
 
   const scout = queueBattleBark({ runtime: initial, event: { trigger: "role-cue", speakerKind: "scout", speakerId: 1 }, qa: true });
   assert.equal(scout.shown, true);

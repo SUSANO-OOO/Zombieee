@@ -37,7 +37,9 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
-        <link rel="preload" as="image" href="/battlefield-v4.png" fetchPriority="high" />
+        <link rel="preload" as="image" href="/art/v060/title-key-visual-v1.webp" fetchPriority="high" />
+        <link rel="preload" as="image" href="/art/v060/mizuki-nana-portrait-v1.webp" />
+        <link rel="preload" as="image" href="/art/v060/battle-nishijin-shopping-street-v1.webp" fetchPriority="high" />
         <link rel="preload" as="image" href="/crawler-fortress-v1.png" fetchPriority="high" />
         <link rel="preload" as="image" href="/infected-checkpoint-v1.png" fetchPriority="high" />
       </head>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
+import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "./productionVisuals.js";
 import { getStoryEvent, storyEventLog } from "./storyEvents.js";
 
 export type CampaignScreen = "title" | "event" | "map" | "loadout" | "battle" | "result";
@@ -27,9 +28,19 @@ export type UnitScreenView = {
   name: string;
   role: string;
   description: string;
+  roleIcon: string;
+  weaponName: string;
+  attackMode: string;
+  rangeBand: string;
+  primaryTarget: string;
+  deploymentHint: string;
   unlocked: boolean;
   unlockHint: string;
 };
+
+function artStyle(path: string) {
+  return { "--campaign-art": `url('${path}')` } as CSSProperties;
+}
 
 export type SupplyScreenView = {
   kind: string;
@@ -86,6 +97,8 @@ type Props = {
 };
 
 const portraitArt: Record<string, string> = {
+  guide: PRODUCTION_VISUALS.guide,
+  radio: PRODUCTION_VISUALS.guide,
   scout: "/scout-sprites-v2.png",
   ranger: "/ranger-sprites-v1.png",
   brute: "/breaker-sprites-v2.png",
@@ -104,7 +117,7 @@ function formatTime(seconds: number) {
 }
 
 function TitleScreen({ hasCampaignSave, onBegin, onRestartCampaign }: Pick<Props, "hasCampaignSave" | "onBegin" | "onRestartCampaign">) {
-  return <div className="campaign-overlay title-screen-v060" aria-label="西新世紀末物語 タイトル画面">
+  return <div className="campaign-overlay title-screen-v060" style={artStyle(PRODUCTION_VISUALS.title)} aria-label="西新世紀末物語 タイトル画面">
     <div className="title-atmosphere" aria-hidden="true"><i /><i /><i /><i /></div>
     <div className="title-logo" aria-label="西新世紀末物語">
       <small>にしじんせいきまつものがたり</small>
@@ -128,9 +141,10 @@ function StoryScreen({ eventId, onEventComplete }: Pick<Props, "eventId" | "onEv
   if (!event || !line) return <div className="campaign-overlay event-screen"><button className="campaign-primary" onClick={onEventComplete}>地図へ進む</button></div>;
   const art = portraitArt[line.portrait] ?? "";
   const advance = () => index + 1 < event.lines.length ? setIndex((value) => value + 1) : onEventComplete();
-  return <div className={`campaign-overlay event-screen event-${event.background} effect-${line.effect ?? "none"}`} aria-label="会話イベント">
+  const backgroundArt = STORY_BACKGROUND_VISUALS[event.background as keyof typeof STORY_BACKGROUND_VISUALS] ?? PRODUCTION_VISUALS.command;
+  return <div className={`campaign-overlay event-screen event-${event.background} effect-${line.effect ?? "none"}`} style={artStyle(backgroundArt)} aria-label="会話イベント">
     <div className="event-vignette" />
-    <div className={`event-portrait ${line.side} ${line.portrait === "guide" ? "guide" : ""}`} data-expression={line.expression} style={art ? { backgroundImage: `url('${art}')` } : undefined} aria-hidden="true" />
+    <div className={`event-portrait ${line.side} ${line.portrait === "guide" ? "guide" : line.portrait === "radio" ? "radio" : ""}`} data-expression={line.expression} style={art ? { backgroundImage: `url('${art}')` } : undefined} aria-hidden="true" />
     <div className="event-controls"><button onClick={() => setLogOpen((value) => !value)}>会話ログ</button><button onClick={onEventComplete}>スキップ</button></div>
     {logOpen && <section className="event-log" aria-label="会話ログ"><header><b>会話ログ</b><button onClick={() => setLogOpen(false)}>閉じる</button></header>{log.map((entry: { id: string; speaker: string; text: string }) => <p key={entry.id}><b>{entry.speaker}</b><span>{entry.text}</span></p>)}</section>}
     <button className="dialogue-box" onClick={advance} aria-label="セリフを送る">
@@ -143,7 +157,7 @@ function StoryScreen({ eventId, onEventComplete }: Pick<Props, "eventId" | "onEv
 
 function AreaMapScreen({ stages, selectedStage, supplyCurrency, onSelectStage, onOpenLoadout, onResetSave }: Pick<Props, "stages" | "selectedStage" | "supplyCurrency" | "onSelectStage" | "onOpenLoadout" | "onResetSave">) {
   const prologueComplete = stages.every((stage) => stage.completed);
-  return <div className="campaign-overlay map-screen" aria-label="エリアマップ">
+  return <div className="campaign-overlay map-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="エリアマップ">
     <header className="campaign-header"><div><small>序章</small><h1>新たな世界の始まり</h1></div><div className="map-resource"><small>補給物資</small><b>{supplyCurrency}</b></div></header>
     <div className="map-layout">
       <section className="nishijin-map" aria-label="西新・早良区・百道浜 エリアマップ">
@@ -166,6 +180,7 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, onSelectStage, o
         ><span>{index + 1}</span><b>{stage.displayName}</b><em>{stage.unlocked ? stars(stage.bestStars) : "封鎖"}</em></button>)}
       </section>
       <aside className="stage-detail" aria-label="選択中のステージ詳細">
+        <div className="stage-preview" style={artStyle(stageVisualFor(selectedStage.id))} role="img" aria-label={`${selectedStage.displayName}の作戦区域`} />
         <header><small>{selectedStage.missionLabel}</small><h2>{selectedStage.displayName}</h2><p>{selectedStage.threat}</p></header>
         <dl><div><dt>目的</dt><dd>{selectedStage.objective}</dd></div><div><dt>過去最高星</dt><dd className="star-text">{stars(selectedStage.bestStars)}</dd></div><div><dt>基本報酬</dt><dd>{selectedStage.baseReward} 補給物資</dd></div><div><dt>次の未取得星報酬</dt><dd>{selectedStage.nextStarReward ? `${selectedStage.nextStarReward} 補給物資` : "取得済み"}</dd></div></dl>
         <div className="star-criteria"><b>星判定</b>{selectedStage.starCriteria.map((criterion) => <span key={criterion}>{criterion}</span>)}</div>
@@ -177,13 +192,13 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, onSelectStage, o
 }
 
 function LoadoutScreen({ selectedStage, units, formationKinds, supplies, selectedSupply, assetsReady, assetError, onReturnToMap, onToggleFormation, onSelectSupply, onStartBattle, onReloadAssets }: Pick<Props, "selectedStage" | "units" | "formationKinds" | "supplies" | "selectedSupply" | "assetsReady" | "assetError" | "onReturnToMap" | "onToggleFormation" | "onSelectSupply" | "onStartBattle" | "onReloadAssets">) {
-  return <div className="campaign-overlay formation-screen" aria-label="出撃編成">
+  return <div className="campaign-overlay formation-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="出撃編成">
     <header className="campaign-header"><button className="campaign-back" onClick={onReturnToMap}>← 地図へ</button><div><small>出撃編成</small><h1>{selectedStage.displayName}</h1></div><p>{selectedStage.objective}</p></header>
     <div className="formation-layout">
       <section className="formation-units" aria-label="使用ユニットを選択"><h2>出撃可能ユニット <small>{formationKinds.length}名選択中</small></h2><div>{units.map((unit) => {
         const selected = formationKinds.includes(unit.kind);
-        return <button key={unit.id} data-kind={unit.kind} data-selected={selected} disabled={!unit.unlocked} onClick={() => onToggleFormation(unit.kind)} aria-pressed={selected}>
-          <span className="formation-portrait" /><span><b>{unit.name}</b><em>{unit.role}</em><small>{unit.unlocked ? unit.description : unit.unlockHint}</small></span><i>{unit.unlocked ? selected ? "選択中" : "待機" : "未解放"}</i>
+        return <button key={unit.id} data-kind={unit.kind} data-selected={selected} disabled={!unit.unlocked} onClick={() => onToggleFormation(unit.kind)} aria-pressed={selected} aria-label={`${unit.name}、${unit.role}、${unit.weaponName}、${unit.deploymentHint}`} title={`${unit.attackMode} / ${unit.primaryTarget} / ${unit.deploymentHint}`}>
+          <span className="formation-portrait" /><span><b>{unit.name}</b><em><i>{unit.roleIcon}</i>{unit.role}</em><small>{unit.unlocked ? `${unit.weaponName}・${unit.rangeBand}・${unit.primaryTarget}` : unit.unlockHint}</small></span><i>{unit.unlocked ? selected ? "選択中" : "待機" : "未解放"}</i>
         </button>;
       })}</div></section>
       <section className="formation-support" aria-label="戦場物資を選択"><h2>戦場物資</h2>{supplies.map((supply) => <button key={supply.kind} data-supply={supply.kind} data-selected={selectedSupply === supply.kind} onClick={() => onSelectSupply(supply.kind)} aria-pressed={selectedSupply === supply.kind}><b>{supply.name}</b><small>{supply.description}</small><em>▰{supply.cost}</em></button>)}<div className="formation-note"><b>固定支援</b><span>緊急航空支援 / 移動拠点一斉掃射</span></div></section>
@@ -194,7 +209,7 @@ function LoadoutScreen({ selectedStage, units, formationKinds, supplies, selecte
 
 function ResultScreen({ selectedStage, result, onRetry, onContinueResult }: Pick<Props, "selectedStage" | "result" | "onRetry" | "onContinueResult">) {
   if (!result) return null;
-  return <div className={`campaign-overlay result-screen ${result.won ? "win" : "lose"}`} aria-label="作戦結果">
+  return <div className={`campaign-overlay result-screen ${result.won ? "win" : "lose"}`} style={artStyle(stageVisualFor(selectedStage.id))} aria-label="作戦結果">
     <section className="result-panel">
       <header><small>{selectedStage.displayName}</small><h1>{result.won ? "作戦成功" : "戦線崩壊"}</h1><div className="result-stars" aria-label={`今回の星 ${result.currentStars}`}>{stars(result.currentStars)}</div></header>
       <div className="result-records"><span><small>今回の星</small><b>{stars(result.currentStars)}</b></span><span><small>過去最高星</small><b>{stars(result.previousBestStars)}</b></span><span data-highlight={result.newBest}><small>最高記録更新</small><b>{result.newBest ? "更新" : "維持"}</b></span></div>
