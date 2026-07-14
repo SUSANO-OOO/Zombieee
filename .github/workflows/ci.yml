@@ -5,8 +5,8 @@ on:
     branches:
       - main
   push:
-    branches:
-      - ops/codex-autonomous-workflow
+    branches-ignore:
+      - main
   workflow_dispatch:
 
 permissions:
