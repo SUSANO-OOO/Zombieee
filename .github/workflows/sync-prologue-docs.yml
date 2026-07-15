@@ -1,0 +1,146 @@
+name: Sync prologue instruction documents
+
+on:
+  push:
+    branches:
+      - feat/0.6.0-early-access-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Replace obsolete scenario instructions
+        shell: bash
+        run: |
+          git pull --ff-only origin "$GITHUB_REF_NAME"
+          python - <<'PY'
+          from pathlib import Path
+
+          implementation = Path("docs/CODEX_IMPLEMENTATION_MISSION_0.6.0_FINAL.md")
+          text = implementation.read_text(encoding="utf-8")
+          start = text.index("## 2. 実装範囲")
+          end = text.index("## 3. キャラクター")
+          section = '''## 2. 実装範囲
+
+`docs/SCENARIO_0.6.0_COMPLETE.md`の開始から最終暗転までをすべて実装する。
+
+- タイトル前の早良区役所救難信号と不自然な反復
+- 移動拠点の作戦前会話
+- 西新商店街の戦闘前会話
+- 西新商店街の全戦闘中通信
+- 西新商店街の戦闘後会話、生存者三名の救出、クレイジーキングと大庭豪の加入
+- 早良区役所の戦闘前会話
+- 早良区役所の全戦闘中通信
+- 早良区役所の戦闘後会話、救援車両撤収、瓦礫下負傷者の救助、三名の加入
+- 西新防衛線の戦闘前会話
+- 西新防衛線の全戦闘中通信
+- 人間の声をまねる感染体とTAKUYAの各戦闘段階
+- TAKUYA撃破後の感染拠点攻略と偽救難音声の停止
+- 西新・早良区間の主要避難経路確保
+- 百道浜から届く新しい生の救難信号
+- パイセンによる無線応答、百道浜への進路変更、最終暗転、`序章　完`
+- 全キャラクターの戦闘中ランダム台詞
+
+旧名、登録名、過去の撃破班、現行人物と一致する古い記録、未来からの警告、周回数、時間ループを示す追加演出は実装しない。感染原因とTAKUYAの名称由来も0.6.0では確定しない。
+
+会話を戦闘前後だけに置かず、指定された戦闘条件・敵種・ボス状態・感染拠点露出・戦闘結果へ接続する。
+
+'''
+          implementation.write_text(text[:start] + section + text[end:], encoding="utf-8", newline="\n")
+
+          rework = Path("docs/CODEX_REWORK_MISSION_0.6.0.md")
+          text = rework.read_text(encoding="utf-8")
+          start = text.index("## 3. シナリオ設計")
+          end = text.index("## 4. 会話画面")
+          section = '''## 3. シナリオ設計
+
+物語、人物像、台詞、場面順、加入理由、終幕は`docs/SCENARIO_0.6.0_COMPLETE.md`だけを正本とする。`app/storyEvents.js`と戦闘中通信は同書へ一致させ、Codexが場当たり的に台詞や伏線を追加しない。
+
+### 序章の因果関係
+
+1. 早良区役所から最初の生の救難信号が届き、その後に同じ音声が不自然に反復する。
+2. 区役所へ向かう唯一の現実的な経路として西新商店街を突破する。
+3. 商店街で薬局屋上の大人二名と子ども一名を救い、クレイジーキングと大庭豪が行動と本人の意思から同行する。
+4. 早良区役所で避難民と救援車両を守り、瓦礫下の負傷者を救助する判断の衝突を描く。
+5. 無人の西新防衛線から区役所と同じ声が流れているため、次の犠牲者を止める目的で防衛線へ向かう。
+6. 人間の声をまねる感染体、TAKUYA、奥の感染拠点を順に排除し、偽の救難音声を停止する。
+7. 西新・早良区間の主要避難経路を確保した直後、百道浜から新しい生の救難信号が届く。
+8. パイセンが自分から応答し、一行が百道浜へ向かうところで序章を終える。
+
+### 追加禁止
+
+- 現在の人物名や呼び名を古い記録へ残す設定
+- 旧名や登録名による人物証明
+- 現行部隊が以前に全滅していたと断定する設定
+- TAKUYAの過去撃破記録や名称由来の独自説明
+- 未来の人物から届く警告
+- 周回回数、時間ループ、同じ出来事の反復を確定する表示
+- 感染原因の独自確定
+
+環境、音、敵の動き、放棄された装備は世界の被害を示すために使えるが、上記の廃止設定を復活させる証拠として使わない。
+
+### 台詞原則
+
+- 台詞は相手への質問、反応、制止、判断、依頼として発生させる。
+- 質問には答えを返し、格好いい別台詞へ逃げない。
+- 同じ情報を複数人が順番に説明しない。
+- 遮り、聞き返し、沈黙、言い直し、判断の衝突を自然に使う。
+- 全員を同じ軍人口調や常に正しい人物へ均一化しない。
+- 一台詞は原則一〜二文とし、戦闘中はさらに短くする。
+- パイセン、クマバーソン、ババヤガの口調と固定台詞は正本を厳守する。
+- クマバーソンの博多弁を語尾の乱用にしない。
+- ババヤガの意味不明発言は文法を崩さず、本気の場面では冗談を止める。
+- クレイジーキングは罠、燃料管理、戦闘判断から人物像を見せる。
+- 不明な無線に人物画像を使用しない。
+
+'''
+          rework.write_text(text[:start] + section + text[end:], encoding="utf-8", newline="\n")
+
+          for path in (implementation, rework):
+              text = path.read_text(encoding="utf-8")
+              cleaned = "\n".join(line.rstrip(" \t\r") for line in text.split("\n"))
+              if not cleaned.endswith("\n"):
+                  cleaned += "\n"
+              path.write_text(cleaned, encoding="utf-8", newline="\n")
+
+          combined = implementation.read_text(encoding="utf-8") + rework.read_text(encoding="utf-8")
+          obsolete = [
+              "九名の過去記録",
+              "未来の水城奈々の警告",
+              "再生回数 8",
+              "TAKUYAは以前も撃破されている",
+              "過去の撃破班記録に現行班と一致する名前",
+          ]
+          found = [phrase for phrase in obsolete if phrase in combined]
+          if found:
+              raise SystemExit(f"obsolete scenario instructions remain: {found}")
+          PY
+
+      - name: Verify focused changes
+        shell: bash
+        run: |
+          git diff --check
+          node --check app/storyEvents.js
+          node --test tests/story-events.test.mjs
+
+      - name: Commit synchronized instructions
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/CODEX_IMPLEMENTATION_MISSION_0.6.0_FINAL.md docs/CODEX_REWORK_MISSION_0.6.0.md
+          git commit -m "docs: align Codex instructions with prologue v5"
+          git push origin HEAD:"$GITHUB_REF_NAME"
