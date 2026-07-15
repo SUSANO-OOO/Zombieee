@@ -27,7 +27,7 @@ export const STORY_EVENTS = Object.freeze({
     { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "区役所へ抜ける道は商店街だけです。" },
     { speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "steady", text: "医療品を積み直します。選別が必要になる。" },
     { speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "ready", text: "今なら、まだ間に合うかもしれない。" },
-    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "steady", text: "進路を西新商店街へ。救助作戦を開始します。", effect: "fade" },
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "steady", text: "移動拠点を接続。西新商店街へ向かいます。", effect: "fade" },
   ]),
   "stage-nishijin-pre": event("stage-nishijin-pre", "shopping-street", [
     { speaker: "橘 迅", role: "遊撃手", side: "left", portrait: "scout", expression: "alert", text: "動くな。" },
