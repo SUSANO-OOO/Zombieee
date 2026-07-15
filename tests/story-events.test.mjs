@@ -33,7 +33,7 @@ test("defines the complete cinematic prologue event set", () => {
 
   const intro = STORY_EVENTS.intro.lines.map(({ speaker, text }) => `${speaker}:${text}`).join("\n");
   assert.match(intro, /早良区役所/);
-  assert.match(intro, /最初の送信は生/);
+  assert.match(intro, /最初だけは録音じゃない/);
   assert.match(intro, /商店街/);
 
   const nishijinPre = STORY_EVENTS["stage-nishijin-pre"].lines.map(({ speaker, text }) => `${speaker}:${text}`).join("\n");
@@ -82,7 +82,7 @@ test("story copy preserves distinct human voices", () => {
   const joinFor = (speaker) => allLines.filter((line) => line.speaker === speaker).map(({ text }) => text).join("\n");
 
   assert.match(joinFor("パイセン"), /いるんすよね|間に合う|今から行きます/);
-  assert.match(joinFor("水城 奈々"), /最初の送信は生|経路|生の通信/);
+  assert.match(joinFor("水城 奈々"), /録音じゃない|道は開きました|生の通信/);
   assert.match(joinFor("白石 直人"), /頭は動かさない|結果が出たから/);
   assert.match(joinFor("クマバーソン"), /たい|ばい|と？/);
   assert.match(joinFor("ババヤガ"), /机が泳いでる|家庭です/);
