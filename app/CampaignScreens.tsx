@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type CSSProperties } from "react";
 import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "./productionVisuals.js";
-import { getStoryEvent, storyEventLog } from "./storyEvents.js";
+import { PROLOGUE_SYNOPSIS, getStoryEvent, storyEventLog } from "./storyEvents.js";
 
 export type CampaignScreen = "title" | "event" | "map" | "loadout" | "battle" | "result";
 
@@ -125,6 +125,7 @@ function TitleScreen({ hasCampaignSave, onBegin, onRestartCampaign }: Pick<Props
       <p>アーリーアクセス版</p>
     </div>
     <p className="title-copy">三本の道。途切れた通信。まだ終わっていない街。</p>
+    <section className="title-synopsis" aria-label="序章のあらすじ"><b>序章のあらすじ</b><p>{PROLOGUE_SYNOPSIS.short}</p></section>
     <div className="title-actions">
       <button className="campaign-primary title-start" onClick={onBegin}><span>{hasCampaignSave ? "物語を続ける" : "物語を始める"}</span><small>{hasCampaignSave ? "保存した進行から再開" : "序章　新たな世界の始まり"}</small></button>
       {hasCampaignSave && <button className="campaign-secondary title-restart" onClick={onRestartCampaign}>最初から始める</button>}
