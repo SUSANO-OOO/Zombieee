@@ -267,15 +267,29 @@ Each MP3 below is a compatibility encoding of the paired final OGG in the comple
 
 ### 音源ビルド検証
 
-- 論理音源数: **109**（BGM 9、SFX 100）。最終ファイル数: **218**（OGG 109 + MP3 109）
-- OGG合計: **12,248,156 bytes** (11.68 MiB)。MP3合計: **8,298,145 bytes** (7.91 MiB)。全形式合計: **20,546,301 bytes** (19.60 MiB)
+- 論理音源数: **135**（BGM 9、SFX 126）。最終ファイル数: **270**（OGG 135 + MP3 135）
+- OGG合計: **12,458,505 bytes**。MP3合計: **8,484,851 bytes**。全形式合計: **20,943,356 bytes**
 - 初期ロード候補（title + UI 5種）は先頭sourceのMP3で **1,136,109 bytes** (1.08 MiB)
-- 全109 OGGをlibsndfileで先頭から末尾までデコードし、frame count、44.1 kHz、channel count、finite sample、ピーク超過を検査した。decode error 0、非有限値 0、フレーム不一致 0、PCM clipping 0。
-- 全109 MP3をFFprobe 8.1.2で検査し、codec=`mp3`、44.1 kHz、paired OGGとのchannel一致、長さ差0.08秒以内を確認した。失敗0件、最大長さ差0.023038秒。manifestは各論理音源についてMP3を先頭、OGGを代替sourceとして列挙する。
+- 第三者source由来の既存109 OGGはlibsndfileで先頭から末尾までデコードし、frame count、44.1 kHz、channel count、finite sample、ピーク超過を検査した。decode error 0、非有限値 0、フレーム不一致 0、PCM clipping 0。
+- 同じ既存109 MP3はFFprobe 8.1.2でcodec=`mp3`、44.1 kHz、paired OGGとのchannel一致、長さ差0.08秒以内を確認した。失敗0件、最大長さ差0.023038秒。
+- 新規三名の26論理cueは後述のproject-original WAVから専用MP3/OGGへ個別encodeした。自動テストは全135 MP3の連続frameと全135 OGGのVorbis identification/comment/setup packet、終端page、granuleを解析する。実ブラウザQAでは270/270 sourceを`decodeAudioData`へ通す。manifestは各論理音源についてMP3を先頭、OGGを代替sourceとして列挙する。
 - 実銃音は Tabasco の本人録音と明記された target-shooting source から単発区間を切り出した。元ページ自身が録音機器の限界と環境ノイズを開示しているため、ゲーム内では短いモノラル transient として使用する。
 - 人間音声は nonverbal の攻撃・被弾・死亡ノイズだけを選定した。英語台詞ファイルは採用していない。女性音声は既存スプライトに合わせ mature/tomboy Type 3 を採用した。
 - enemy は walker / runner / spitter / crusher / shade / abomination / turned / TAKUYA ごとに attack / hurt / death を各2種用意し、速度・ピッチ（shade と TAKUYA は短い echo も追加）で識別性を補強した。
 - title / intro / radio static / corpse burn の抜粋ループは、終端を先頭へ重ねる circular seam crossfade をファイル内に焼き込み、HTML/Web Audio の単純 loop でも無音ディップを作らない。map / 3 battle / boss は配布者の loop source 境界を保持した。
+
+### 新規三名のproject-original音源（第三者配布物ではない）
+
+新規三名の26 cueは`scripts/build-v060-audio.py`による決定的合成で制作した。録音物や既存キャラクターの音をsampleせず、数式波形、固定seed noise、filter、envelopeだけを使う。WAV master 26点（合計1,208,602 bytes）を`reference/audio/generated-masters-v1/`へ保存し、各masterからiPhone Safari第一候補のMP3とOGG fallbackを一対一でencodeした。チェーンソー、フライパン、消音拳銃、reload、特殊個体排除、三名それぞれの非言語deploy/attack/hurt/deathはすべて独立ファイルであり、既存の銃声・force field・金属打撃へのaliasは使用しない。
+
+| 項目 | 記録 |
+|---|---|
+| 作者・生成元 | 本プロジェクトによる決定的audio synthesis。第三者配布ページ・外部URLなし |
+| ライセンス | 第三者素材ではないため外部ライセンスなし。repositoryの製品素材として管理 |
+| 商用・改変・repo再配布 | project-original assetとして可 |
+| 加工 | 44.1 kHz mono PCM masterをpeak normalizeし、FFmpeg `libmp3lame` 96 kbps MP3 / `libvorbis` quality 4 OGGへencode |
+| cue・SHA-256台帳 | `reference/audio/generated-audio-provenance-v1.json`（26 master + 52 finalのpathとSHA-256） |
+| 再生成 | `scripts/build-v060-audio.py --ffmpeg <path>` |
 
 ## プロジェクト生成画像（第三者配布物ではない）
 
@@ -288,13 +302,123 @@ Each MP3 below is a compatibility encoding of the paired final OGG in the comple
 | `public/art/v060/battle-nishijin-shopping-street-v1.webp` | プロジェクト指示による OpenAI image generation output / OpenAI | 公開元画像URLなし（本タスクで新規生成）<br>[OpenAI Terms of Use](https://openai.com/policies/terms-of-use/) の Output ownership 条項。CC0ではない | 適用法・Terms・Usage Policiesの範囲で商用: 可 / 改変: 可 / 製品・repo再配布: 可と判定 | 必須帰属の定めなし。生成由来を本台帳で任意表示 | 2026-07-15 | `EBF06A6C88B82BF66BD3656DF53BA7EE173E61EB6A9FDDFF234869781C557B12` | 1600×900、WebP quality 82へresize/encode。第三者source指定なし。文字・ロゴ・実在人物を目視監査 |
 | `public/art/v060/battle-sawara-ward-office-v1.webp` | プロジェクト指示による OpenAI image generation output / OpenAI | 公開元画像URLなし（本タスクで新規生成）<br>[OpenAI Terms of Use](https://openai.com/policies/terms-of-use/) の Output ownership 条項。CC0ではない | 適用法・Terms・Usage Policiesの範囲で商用: 可 / 改変: 可 / 製品・repo再配布: 可と判定 | 必須帰属の定めなし。生成由来を本台帳で任意表示 | 2026-07-15 | `6E170FE465BAC7E4C8B6BD7FC7604AB27D18839F90991B162C924A83D86AB9D8` | 1600×900、WebP quality 82へresize/encode。第三者source指定なし。文字・ロゴ・実在人物を目視監査 |
 | `public/art/v060/battle-nishijin-defense-line-v1.webp` | プロジェクト指示による OpenAI image generation output / OpenAI | 公開元画像URLなし（本タスクで新規生成）<br>[OpenAI Terms of Use](https://openai.com/policies/terms-of-use/) の Output ownership 条項。CC0ではない | 適用法・Terms・Usage Policiesの範囲で商用: 可 / 改変: 可 / 製品・repo再配布: 可と判定 | 必須帰属の定めなし。生成由来を本台帳で任意表示 | 2026-07-15 | `4BD351304B064F86A3B8C651433E3ABA6560564DF315BEEEA9C8678967948A89` | 1600×900、WebP quality 82へresize/encode。第三者source指定なし。文字・ロゴ・実在人物を目視監査 |
-| `public/art/v060/mizuki-nana-portrait-v1.webp` | プロジェクト指示による OpenAI image generation output / OpenAI | 公開元画像URLなし（本タスクで新規生成）<br>[OpenAI Terms of Use](https://openai.com/policies/terms-of-use/) の Output ownership 条項。CC0ではない | 適用法・Terms・Usage Policiesの範囲で商用: 可 / 改変: 可 / 製品・repo再配布: 可と判定 | 必須帰属の定めなし。生成由来を本台帳で任意表示 | 2026-07-15 | `34F4489644E055A0DCF3F23600962D87922D3BA12CC37EAC92B4FCA619AA2367` | 水城奈々の通信分析官専用立ち絵。生成時のcheckerboardを採用せず、画像編集で暗い通信室背景へ完全置換。高さ1400px、WebP quality 84へresize/encode。文字・ロゴ・標章・実在人物を目視監査 |
+| `reference/characters/legacy-masters/mizuki-nana-portrait-v1.webp` | プロジェクト指示による OpenAI image generation output / OpenAI | 公開元画像URLなし（本タスクで新規生成）<br>[OpenAI Terms of Use](https://openai.com/policies/terms-of-use/) の Output ownership 条項。CC0ではない | 適用法・Terms・Usage Policiesの範囲で商用: 可 / 改変: 可 / 製品・repo再配布: 可と判定 | 必須帰属の定めなし。生成由来を本台帳で任意表示 | 2026-07-15 | `34F4489644E055A0DCF3F23600962D87922D3BA12CC37EAC92B4FCA619AA2367` | 水城奈々v2専用portraitの本人参照master。公開assetから除外し、生成由来・文字・ロゴ・標章・実在人物を目視監査 |
 
 ### 生成画像の採用監査
 
 - 6点とも最終 WebP を目視確認し、可読テキスト、ロゴ、実在人物の明示的肖像、既知キャラクターの指定を採用要素に含めていない。
 - command-room 初稿に見えた赤十字様の標章は、採用前の画像編集で中立な琥珀色パッチへ置換した。最終ハッシュは編集後 WebP のもの。
 - 生成物は類似性が生じ得るため「完全な独自性」や第三者権利不存在を保証する表現はしない。製品採用前の人手レビュー記録として本表を維持する。
+
+## プロデューサー提供キャラクター原本（第三者サイト取得ではない）
+
+次の3点は本ミッションの添付としてプロデューサーから明示的に提供され、0.6.0用キャラクター制作への使用を指示された原本である。外部配布ページや第三者ライセンスを推測せず、許可根拠を「本ミッションでの提供・使用指示」に限定して記録する。原本bytesは`producer-masters-v2`へ無変更コピーし、buildは原本を上書きしない。
+
+| Character | Versioned master | 実寸 | SHA-256 | 許可・加工記録 |
+|---|---|---:|---|---|
+| クレイジーキング / `crazy-king` | `reference/characters/producer-masters-v2/crazy-king-producer-master-v2.png` | 2172×724 RGB PNG | `0a4329786e31f6a10d646e3145eaed188ff434cedcb58a346ae8efa29161c789` | プロデューサー提供。0.6.0制作参照、加工、製品/repo収録を本ミッション範囲で許可されたものとして使用。市松模様はRGBへ焼き込み済み |
+| クマバーソン / `kumaverson` | `reference/characters/producer-masters-v2/kumaverson-producer-master-v2.png` | 1672×941 RGB PNG | `1ea53c1c22cc811a6163246b88b749d7aeed69eff636ec60ec5f6d2228d70e68` | 同上 |
+| ババヤガ / `babayaga` | `reference/characters/producer-masters-v2/babayaga-producer-master-v2.png` | 2172×724 RGB PNG | `13b40c78d1de2d4b2cd83ce252745bdc91b5b5cc27c2ab4f4e90f63da265b143` | 同上 |
+
+## 0.6.0キャラクター・stage object生成source
+
+以下はOpenAI image generationを使用し、平坦なchroma-key背景上へ新規生成した版管理working sourceである。第三者配布サイトから取得していない。人物sourceは上表のproducer masterを外見・装備参照に、stage object sourceは同じ台帳に記録済みのproduction backgroundを画風・光源・透視参照に使用した。公開元画像URLはなく、権利判断は前節「プロジェクト生成画像」と同じOpenAI TermsのOutput条項およびproducer提供許可を根拠とする。
+
+| Source ID / working path | SHA-256 | 生成prompt要旨 / 参照 |
+|---|---|---|
+| `char-crazy-king-right-v1`<br>`reference/characters/generated-working-v1/crazy-king-atlas-right-chroma-v1.png` | `4b865093bed89c516c91999a3fbefc5a70aa2c28bc98f34f3ca0429cb1ed0860` | producer masterの人物・衣装・チェーンソーを維持した右向き2×4 atlas。`idle, walk-a, walk-b, attack-a / attack-b, hit, death, empty`。flat magenta、文字・ロゴなし |
+| `char-kumaverson-right-v1`<br>`reference/characters/generated-working-v1/kumaverson-atlas-right-chroma-v1.png` | `93c5abfb8fd85f3d85e248cea84003691141fcc1e9814254550d8fac3fabda60` | producer masterの白Tシャツ、黒パンツ、フライパンを維持した同じ7状態右向きatlas。flat magenta、文字・ロゴなし |
+| `char-babayaga-right-v1`<br>`reference/characters/generated-working-v1/babayaga-atlas-right-chroma-v1.png` | `471aeed8e96eb2fe3ef4c40ebd99372839c2faef9317bded00ef55a52ef3a615` | producer masterの白シャツ、ネクタイ、ホルスター、サプレッサー拳銃を維持した同じ7状態右向きatlas |
+| `char-babayaga-left-v1`<br>`reference/characters/generated-working-v1/babayaga-atlas-left-chroma-v1.png` | `2be1652598c7261184426e50a6ebfb2a38499621cb68c26bb6eaf37e75446248` | 銃・ホルスターの不自然なmirrorを避けるため別描画した同じ7状態左向きatlas |
+| `radio-terminal-v1`<br>`reference/characters/generated-working-v1/radio-terminal-chroma-v1.png` | `137f46486df98d8a7410be4b660f21375f6044e6791d15cfa9b92e43552996fc` | 人物なしの損傷したfield radio通信端末。amber waveform、antenna、speaker、knob、cable。文字・ロゴ・人物なし |
+| `portrait-brawler-v2`<br>`reference/characters/generated-working-v2/portraits/brawler-portrait-chroma-v2.png` | `39410577ce4e0fef95cad4408a0d07d5bf9163b617e0a14dd2a26bcaeeaf781b` | パイセン本人のspriteだけを外見参照にした専用腰上portrait。flat magenta、文字・ロゴなし |
+| `portrait-scout-v2`<br>`reference/characters/generated-working-v2/portraits/scout-portrait-chroma-v2.png` | `5e45c977c69717c202bb60f3c500141be3c6716eb2b69c846591d7cc08e3132e` | 橘迅本人のspriteだけを外見参照にした専用腰上portrait。パイセンを含む他人物画像は参照していない |
+| `portrait-ranger-v2`<br>`reference/characters/generated-working-v2/portraits/ranger-portrait-chroma-v2.png` | `beb1d50192528459ddb776d9112c038466c2c5458401b9eaf3e36f03c4e93cd6` | 黒木凛本人のspriteだけを外見参照にした専用腰上portrait。他人物画像は参照していない |
+| `portrait-medic-v2`<br>`reference/characters/generated-working-v2/portraits/medic-portrait-chroma-v2.png` | `178e8ba40361c5aed020ecfc86e6c0e874eb3f3819587725bc7f9712ab767f34` | 白石直人本人のspriteだけを外見参照にした専用腰上portrait。他人物画像は参照していない |
+| `portrait-brute-v2`<br>`reference/characters/generated-working-v2/portraits/brute-portrait-chroma-v2.png` | `e19dbb3b6465ae16134a24052ec0362b84e99024f393555af1b269aa10c2014c` | 大庭豪本人のspriteだけを外見参照にした専用腰上portrait。他人物画像は参照していない |
+| `portrait-gunner-v2`<br>`reference/characters/generated-working-v2/portraits/gunner-portrait-chroma-v2.png` | `8e806ac46168601b476854cfae6a353ce566cfc3827dc61f7d7fe604cc17a093` | 真壁玲奈本人のspriteだけを外見参照にした専用腰上portrait。他人物画像は参照していない |
+| `portrait-crazy-king-v2`<br>`reference/characters/generated-working-v2/portraits/crazy-king-portrait-chroma-v2.png` | `ef627dffb3054d1e223566a4afa32eff6302995f207c12aeefe2331a1285c4c6` | クレイジーキングproducer masterだけを外見参照にした専用腰上portrait。他人物画像は参照していない |
+| `portrait-kumaverson-v2`<br>`reference/characters/generated-working-v2/portraits/kumaverson-portrait-chroma-v2.png` | `08fd5799d04323c47c81b45dc04096c2cbbc5e94d3151cc57d69a25840248dd6` | クマバーソンproducer masterだけを外見参照にした専用腰上portrait。他人物画像は参照していない |
+| `portrait-babayaga-v2`<br>`reference/characters/generated-working-v2/portraits/babayaga-portrait-chroma-v2.png` | `166d8f968a1eff73acb331557744276879626966a4797782c886ea462a1cb22b` | ババヤガproducer masterだけを外見参照にした専用腰上portrait。他人物画像は参照していない |
+| `portrait-guide-v2`<br>`reference/characters/generated-working-v2/portraits/guide-portrait-chroma-v2.png` | `4b956fa1fc70ed52706ad401ce432741f2d9c68f29a3bced0ede142a92f65b26` | 水城奈々本人の既存portraitだけを外見参照にした専用腰上portrait。他人物画像は参照していない |
+| `nishijin-objects-v1`<br>`reference/stage-objects/generated-working-v1/nishijin-shopping-street-objects-chroma-v1.png` | `8ef7c4cc862e5d6c766ba274a5c1a7e399780082758ac9f21bb3b4e74f0a49af` | 西新商店街backgroundの画風参照。wire trap正常/作動後、看板正常/落下、fire shutter閉/開、感染nodeの7点 |
+| `sawara-objects-v1`<br>`reference/stage-objects/generated-working-v1/sawara-ward-office-objects-chroma-v1.png` | `8d42517821418cea867be7e726bd224089b45b53dec0e4d92f94f81bc5f1e38f` | 早良区役所backgroundの画風参照。救援van閉塞/出発可、瓦礫閉塞/除去、射撃窓、弁当物資箱閉/開の7点 |
+| `defense-objects-v1`<br>`reference/stage-objects/generated-working-v1/nishijin-defense-line-objects-chroma-v1.png` | `3a60f457a897099e185be1515a8f28823478ce7b4233e3967057927a61bed59c` | 西新防衛線backgroundの画風参照。通信送信機正常/損傷、spawn marker、感染nest休眠/露出/損傷/破壊の7点 |
+| `nishijin-static-dressing-v2`<br>`reference/stage-objects/generated-working-v2/nishijin-static-dressing-chroma-v2.png` | `aee09b01b119c21fc4dad5f82500425fd95052e933d962a24a027530676ed304` | 西新backgroundだけを画風参照。薬局、屋上外階段、商品棚、箱、かご、散乱品、血痕を一体化したstage専用cluster |
+| `sawara-static-dressing-v2`<br>`reference/stage-objects/generated-working-v2/sawara-static-dressing-chroma-v2.png` | `0773f251d0e45955608eb7593b52dd5445ee2f8c201f6c6712c5b58db7bfb15b` | 早良backgroundだけを画風参照。救護机、椅子、担架、搬送台車、掲示板、医療箱、水、弁当箱、土のう、コーンのstage専用cluster。車両は背景・別overlayと二重化しない |
+| `defense-static-dressing-v2`<br>`reference/stage-objects/generated-working-v2/defense-static-dressing-chroma-v2.png` | `a291dcb20c1a92dbde377716bd50cf9472dd9b05cbea2be8934eb3c87bec778a` | 防衛線backgroundだけを画風参照。隔離標識、監視camera、警備・軍用放棄装備、土のう、鉄柵、封鎖gate、対車両障害物のstage専用cluster |
+| `nishijin-infection-destroyed-v2`<br>`reference/stage-objects/generated-working-v2/nishijin-infection-node-destroyed-chroma-v2.png` | `9645ed84735685d81d082d94fb3ad0996082f5a7eae6873bf9168ff13af51082` | 西新感染node activeだけを参照し、発光coreが破裂・崩落した専用破壊後stateとして編集 |
+
+### 透明化・切り出し加工
+
+- OpenAI image generationのsourceはflat magenta RGBで出力した。`remove_chroma_key.py --auto-key border --soft-matte --transparent-threshold 12 --opaque-threshold 220 --despill`でRGBA matteを作成した。
+- `scripts/build-v060-assets.py`がRGBA sourceから人物7状態×左右2行のatlas、人物portrait、radio、25点のstage overlayを非破壊生成する。`reference/`、`public/brawler-sprites-v1.png`、既存legacy sheetを出力先にしない。
+- stage atlasのセル境界を目視監査し、隣接van、瓦礫、看板、spawn markerの混入を除く明示crop boxをbuild scriptへ固定した。
+- すべてのfinal PNG overlayと新規battle atlasはdecoded alphaを検査し、各cell/画像外周へ最低12pxの完全透明gutterを確保した。
+
+## 0.6.0生成・派生画像のfinal inventory
+
+### Battle atlas
+
+| Final path | Source ID | Final SHA-256 | 加工 |
+|---|---|---|---|
+| `public/art/v060/characters/crazy-king-battle-v1.png` | `char-crazy-king-right-v1` | `8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f` | 3360×896 RGBA、480×448セル、右行＋mirror左行、7状態 |
+| `public/art/v060/characters/kumaverson-battle-v1.png` | `char-kumaverson-right-v1` | `b1fcca003c5635543b29ca9ca3e0b4f5a0b81a906a03ce22d2d6aa58ee49a346` | 同上 |
+| `public/art/v060/characters/babayaga-battle-v1.png` | `char-babayaga-right-v1` + `char-babayaga-left-v1` | `0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08` | 3360×896 RGBA、左右別描画、7状態 |
+
+### Independent portrait
+
+人物10名は、戦闘sheetの切り出しや共通人物参照を使わず、各キャラクター本人の資料だけから個別生成した専用腰上portraitである。特にパイセンの顔立ちを他人物へ流用しないことを生成条件とし、他人物をstyle/reference imageへ混ぜていない。radioだけは人物を含まない通信端末sourceから派生する。
+
+| Final path | Source | Final SHA-256 |
+|---|---|---|
+| `public/art/v060/characters/portraits/brawler-portrait-v2.webp` | `portrait-brawler-v2` | `9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010` |
+| `public/art/v060/characters/portraits/scout-portrait-v2.webp` | `portrait-scout-v2` | `e519cfd50c7b9ff14aa7b32206e3a956aebd9f7b0df9d9472139638894779572` |
+| `public/art/v060/characters/portraits/ranger-portrait-v2.webp` | `portrait-ranger-v2` | `b53d68c0f0c0fe3a8b94f52a021fe32f93a8348b0b6015684b51e20f0df33693` |
+| `public/art/v060/characters/portraits/medic-portrait-v2.webp` | `portrait-medic-v2` | `e3eaf7eb827a5edfe277ad42b6d1d88fccc5d3b503c9a60f487da8d429837b70` |
+| `public/art/v060/characters/portraits/brute-portrait-v2.webp` | `portrait-brute-v2` | `a8092cb45810683cc0546bd411e621facf53f79719bd668e50a5442dac86df04` |
+| `public/art/v060/characters/portraits/gunner-portrait-v2.webp` | `portrait-gunner-v2` | `122a3f06ecdc75d12711408dd5285ea3bf025f363dbd9d9d5aa710966fd4c708` |
+| `public/art/v060/characters/portraits/crazy-king-portrait-v2.webp` | `portrait-crazy-king-v2` | `9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5` |
+| `public/art/v060/characters/portraits/kumaverson-portrait-v2.webp` | `portrait-kumaverson-v2` | `7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787` |
+| `public/art/v060/characters/portraits/babayaga-portrait-v2.webp` | `portrait-babayaga-v2` | `fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f` |
+| `public/art/v060/characters/portraits/guide-portrait-v2.webp` | `portrait-guide-v2` | `68e97447fdeb8c28e82174e08e1058aa43286b3e084160df30a29c19ca3092ea` |
+| `public/art/v060/characters/portraits/radio-terminal-portrait-v1.webp` | `radio-terminal-v1` | `2d20e92b7876004b1690f3380c0cc297579152acb6ca7a7b951b5df8ba2b2f4d` |
+
+### Stage overlay
+
+| Final path | Source ID | Final SHA-256 |
+|---|---|---|
+| `public/art/v060/stage-objects/nishijin-wire-trap-intact-v1.png` | `nishijin-objects-v1` | `aa161313c9cf55ac05b64a24be7d2317f4cc5b97d82ff5ee025510dfa72b67b4` |
+| `public/art/v060/stage-objects/nishijin-wire-trap-sprung-v1.png` | `nishijin-objects-v1` | `a15e8c564eb00ebb0a35995f8177c9ebc3e8c49093af1240e93a6ed7bfd2add7` |
+| `public/art/v060/stage-objects/nishijin-sign-intact-v1.png` | `nishijin-objects-v1` | `45c6180616e27ed06a8b7075031933a027703633f34c6fcdb0c325767ed421b9` |
+| `public/art/v060/stage-objects/nishijin-sign-fallen-v1.png` | `nishijin-objects-v1` | `efaf2a22b16048b634f5c44564bbe3b7219e735d8a3eefa6e6d685194e939c0a` |
+| `public/art/v060/stage-objects/nishijin-fire-shutter-closed-v1.png` | `nishijin-objects-v1` | `3110add057907d0b9e6339f051615651afad0674c6e1e06a3bfe53cf78e62c16` |
+| `public/art/v060/stage-objects/nishijin-fire-shutter-open-v1.png` | `nishijin-objects-v1` | `39c9a199e055aa6a9486b1dc23c71a35dc9bea6c5d2136f5ef1836e2ba374718` |
+| `public/art/v060/stage-objects/nishijin-infection-node-active-v1.png` | `nishijin-objects-v1` | `299d07325d1945d1a62b8c7a31da1e6500d310a1f9ac8624a0df66ece71a5ad7` |
+| `public/art/v060/stage-objects/nishijin-infection-node-destroyed-v1.png` | `nishijin-infection-destroyed-v2` | `ccace0c524c892cd0dbc342261cb5c6485d9a2e4d21305aad0c983f6a4b3d815` |
+| `public/art/v060/stage-objects/nishijin-static-dressing-v1.png` | `nishijin-static-dressing-v2` | `d277726f8aefe8f100eae4873623a01a36d1e9c66e3a406e6fcdfb24fc675692` |
+| `public/art/v060/stage-objects/sawara-rescue-van-blocked-v1.png` | `sawara-objects-v1` | `ac0d001cde7e027aa1ac0afd28c9e4d20b78bee3ae5884af6e68d68d83cbc024` |
+| `public/art/v060/stage-objects/sawara-rescue-van-ready-v1.png` | `sawara-objects-v1` | `0dc0b9d795dcde37bff8bc515beb097ff0d477c02708596682fd8054f62c7777` |
+| `public/art/v060/stage-objects/sawara-rubble-blocking-v1.png` | `sawara-objects-v1` | `d85ecf3dadbf91a306d7a97b84d371be1124891ab9665c595854587d8c703943` |
+| `public/art/v060/stage-objects/sawara-rubble-cleared-v1.png` | `sawara-objects-v1` | `d49c6c60869d6a9c28c5fd90b753bc4f7f9325f1f38bbe2803ac2a5f598247bf` |
+| `public/art/v060/stage-objects/sawara-shooting-window-lit-v1.png` | `sawara-objects-v1` | `560e226748f9fb4079b4a178b838005347276e6627612642e6fca6e6fb6358cf` |
+| `public/art/v060/stage-objects/sawara-lunch-crate-sealed-v1.png` | `sawara-objects-v1` | `707fd92a82166ff2112ae79e1e4a14f8d74734735430daffdea29bac021d1ed2` |
+| `public/art/v060/stage-objects/sawara-lunch-crate-open-v1.png` | `sawara-objects-v1` | `3ca89348e6c5a61e754ed36c628fd175dc858f79c68b599a72bcf8e435d5c79e` |
+| `public/art/v060/stage-objects/sawara-static-dressing-v1.png` | `sawara-static-dressing-v2` | `ea232de83c6c4d93ee023cbfdc85ca5d186f51c15762a225c46941a765f7fc5b` |
+| `public/art/v060/stage-objects/defense-transmitter-active-v1.png` | `defense-objects-v1` | `a83c1185cb2c80cf0f568f5299134cd37f4f38b6c7dbc0775299bc06e5988309` |
+| `public/art/v060/stage-objects/defense-transmitter-damaged-v1.png` | `defense-objects-v1` | `50b341ec09f6faefe4c6ca3c419cc60c1891730450e624f122bb4264abde4f43` |
+| `public/art/v060/stage-objects/defense-spawn-marker-v1.png` | `defense-objects-v1` | `3f43d466bebf23ced0d7b471353083ce6cf9c3bfa5939565a67428d758e48c5f` |
+| `public/art/v060/stage-objects/defense-infection-nest-dormant-v1.png` | `defense-objects-v1` | `550755a0b1957f3e3f237737c0bea002334c463ce751f03caa96d51e2c003e9a` |
+| `public/art/v060/stage-objects/defense-infection-nest-exposed-v1.png` | `defense-objects-v1` | `3998739040c50370cf8b309ef03ec620e62aa65f90869ae1a32e98fb9f150e19` |
+| `public/art/v060/stage-objects/defense-infection-nest-damaged-v1.png` | `defense-objects-v1` | `59bbf0466d1511ecca49debbef3198d8e705e7d4a00ee5289cd6e3a9575dae59` |
+| `public/art/v060/stage-objects/defense-infection-nest-destroyed-v1.png` | `defense-objects-v1` | `726217866dafb7ef16266b187236e075987c2ff5916db79c6bdc093328860768` |
+| `public/art/v060/stage-objects/defense-static-dressing-v1.png` | `defense-static-dressing-v2` | `4a4312a0997fd6009098325440f7c1c225df20d51cbeb9ebe25f55446663a75c` |
+
+### 権利・採用上の注意
+
+- 本節は生成物やproducer提供物をCC0へ変更する宣言ではない。適用法、OpenAI Terms/Usage Policies、producerの提供許可、既存project assetの権利範囲内で使用する。
+- 生成物は類似性が生じ得るため、完全な独自性や第三者権利不存在を保証しない。文字、ロゴ、標章、既知キャラクター指定、実在人物の明示的肖像をpromptから除き、finalを人手監査した。
+- 人物10名の参照隔離、参照/source/final SHAは`reference/characters/portrait-provenance-v2.json`へ固定した。これは権利保証ではなく、キャラクター間の参照混入を防ぐ制作監査記録である。
 
 ## 任意クレジット（表示用）
 
