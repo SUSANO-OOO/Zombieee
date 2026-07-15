@@ -1,151 +1,168 @@
-# 0.6.0 ローカルQA記録
+# 0.6.0 アーリーアクセス版 ローカルQA記録
 
-検証日：2026-07-14〜2026-07-15（production visual / audio統合後の最終再検証を含む）
-対象：`feat/0.6.0-early-access-foundation`（基準 `d7b7cbe1adc42b53e2e286e7654eaab3d196a83c`）
-方法：ビルド済み成果物を `127.0.0.1` で配信し、ローカル実ブラウザでPC横画面とiPhone横画面相当を操作した。iPhone側は左右44px・下21pxのSafe Areaを付与し、Safari UI縮小後の844×390とSafari UI表示中相当の844×340を別々に検証した。
+検証日：2026-07-14〜2026-07-15
 
-> これはローカル実ブラウザによる受入前QAであり、物理iPhone上のSafariによる最終受入を代替しない。公開前の実機確認は引き続き必要である。
+対象：`feat/0.6.0-early-access-foundation` のDraft PR #30最終候補
 
-## 1. iPhone横画面の画角・Safe Area
+方法：本番ビルドを `127.0.0.1` で配信し、ローカル実ブラウザでPC横画面、iPhone横画面相当、縦横回転、全アセットの実decodeを確認した。本記録を含む正確なcommit SHAはDraft PR #30のheadを正とする。
 
-| 条件 | ゲームルート | 左右余白 | 中心ずれ | 縦方向 | 下部操作 |
-|---|---|---:|---:|---|---|
-| 844×390、Safari UI縮小後 | `left=0, right=844, top=0, bottom=390` | 左0px / 右0px | 0px | 縦横scroll 0 | ユニット下端304px、支援下端351px |
-| 844×340、Safari UI表示中相当 | `left=0, right=844, top=0, bottom=340` | 左0px / 右0px | 0px | 縦横scroll 0 | ユニット下端254px、支援下端301px |
-| 回転 390×844 → 844×340 | 縦画面で回転案内、横復帰後 `844×340` | 左0px / 右0px | 0px | 横復帰後scroll 0 | 実測59msで再配置・回転案内非表示 |
-| PC 1280×720 | `left=0, right=1280, top=0, bottom=720` | 左0px / 右0px | 0px | 縦横scroll 0 | 最右操作端1267px、PC HUDを維持 |
+> 本記録はローカル実ブラウザによる受入前QAである。物理iPhone Safari、本体スピーカー、イヤホン、長時間性能、発熱、公開URL上の第三者試遊は未確認であり、ローカルQAで代替済みとは扱わない。
 
-- 844×390では全6ユニットボタンが高さ47px・右端793px以内、支援ボタンが高さ44px・右端793px・下端351px以内だった。844×340でも全6ユニットは高さ47px・右端793px・下端254px、支援は高さ44px・右端793px・下端301pxで、左右44px・下21pxのSafe Area内に収まった。上部の主要ボタンも両高さで44pxを確保した。
-- 844×340で `visualViewport.width=844` / `height=340` / `offsetLeft=0` / `offsetTop=0` を読み、ゲームルートへ同じ寸法を反映した。`100vh` 固定値は使用していない。
-- `window.resize`、`orientationchange`、`visualViewport.resize`、`visualViewport.scroll` の各経路で再計算する。
-- 960×540 Canvasは横幅を使い切るcover配置のまま中央を維持する。844×340ではscale `0.879167`、縦offset約 `-67.38px` となるため、レーンだけを論理Y座標 `[188, 233, 278]` へ再構成した。画面上の各レーン中心は約98px / 138px / 177px、HUD上端は約201pxで、3レーンすべての敵・味方をHUD上に表示できた。Canvasキャラクターは追加縮小せず、HUD文字は短い横画面用に再構成し、主要操作の44px以上の高さを維持した。
-- 844×390と844×340の短い横画面への切替時は、既存ユニット、死体、戦場物、効果、出撃待ちを新レーンへ再配置する。PCと縦画面では標準レーンを維持する。
-- 縦390×844では回転案内だけを表示し、844×340へ戻した直後に短い横画面用レーンとHUDへ復帰した。
-- 独立レビューで、新規配置する物資と航空支援の判定だけが標準レーン座標を使う不整合を検出した。新規ポッド、爆薬ドラム、救急範囲、航空支援へ現在のレーン中心を渡すよう修正し、3レーンすべての配置・着地・爆発・燃焼・回復・着弾を自動テストした。実ブラウザでも844×340の下レーンへポッドを配置し、標準レーンへのresize後に844×340へ戻しても戦列とHUDの間へ正しく復帰することを確認した。
+## 1. 最終判定
 
-## 2. 画面遷移・操作・戦闘
-
-- 通常導線で `タイトル → 導入イベント → エリアマップ → ステージ詳細 → 編成 → 戦闘前イベント → 戦闘 → リザルト` を実際に操作した。
-- エリアマップで西新商店街の星条件、未解放の早良区役所・西新防衛線、通信途絶・調査中などの将来地点が日本語で表示され、封鎖中の地点を選択できないことを確認した。
-- 西新商店街、早良区役所、西新防衛線・TAKUYAを準備状態だけでなく戦闘開始後まで表示し、3レーンの出撃、標的選択、目的表示が各ステージ定義に追従することを確認した。
-- 全6ユニットを複数の実戦画面に分けて実クリックし、出撃を確認した。下部操作は防護投下ポッド、緊急航空支援、移動拠点一斉掃射を実クリックした。編成では防護投下ポッド、爆薬ドラム、簡易救護所の3種を選択できた。
-- TAKUYA用QAでボスHUD、`TAKUYA撃破`の目的、戦闘中のボス表示を確認した。
-- 負荷確認用QAで複数ユニット・敵・戦場物を同時表示し、844×390のゲームルート、3レーン、9個の主要操作が画面内に維持され、操作不能・ページoverflow・ブラウザ停止がないことを確認した。物理端末上の性能・発熱は未確認である。
-- PC 1280×720で詳細HUD、全下部操作、キーボードの `R` による作戦方針切替、`P` による一時停止、画面ボタンによる再開を確認した。
-
-## 3. セーブ・タイトル・解放・QA分離
-
-- セーブなしは「物語を始める」だけを表示し、通常開始後の再読込で「物語を続ける」と別操作の「最初から始める」を表示した。
-- 「最初から始める」と地図の「セーブデータを初期化」はどちらもconfirmを表示した。キャンセル時に既存セーブと現在画面が維持され、通常の開始・続行では既存進行を初期化しない。
-- 通常プレイ初期状態はパイセン、橘 迅、黒木 凛、白石 直人の4人だけが選択可能だった。大庭 豪は「西新商店街クリアで解放」、真壁 玲奈は「早良区役所クリアで解放」と表示され、両カードは `disabled=true` で編成・出撃できなかった。
-- 第1ステージ3星リザルトで「新たな戦力を解放」と「大庭 豪（破砕兵）」「早良区役所」を表示した。
-- localhost限定QAの全解放では、タイトル・マップ・編成・戦闘・リザルトを含む全キャンペーン画面へ `LOCAL QA // ... // 通常セーブ非反映` を表示し、通常セーブ書き込みをスキップした。
-- QA解放リザルトの後に通常URLを再読込すると、QA表示なし・補給物資0・第2/第3ステージ未解放へ戻り、QA結果が通常プレイへ混入しないことを確認した。既知の過去QA誤保存はクリア履歴から修復する自動テストも固定した。
-
-## 4. 星・報酬・一度だけのクリア処理
-
-- 星評価はプレイヤー側の移動拠点 `baseHp / baseMaxHp` のみを使用する。リザルトとマップの星条件も「移動拠点HP」に統一した。
-- 作戦目的を達成しても移動拠点HPが1%未満なら星0・作戦失敗とし、1%ちょうどで星1・解放対象になる境界を自動テストした。
-- 敵側感染拠点HP、敵拠点HP、`barricadeHp` の変化が星数へ影響しないことを自動テストで固定した。
-- 各戦闘開始時に一意の `resultId` を発行し、セーブの処理済み受領IDに登録する。同じ `resultId` の再処理は `applied=false` になり、星更新、通常報酬、初回星報酬、ユニット・ステージ解放、ローカル保存を繰り返さない。
-- 同一IDの連打、シリアライズ後の再読込、200戦超の後に過去IDを再送、異なるIDの正常な再戦、ID欠落時の拒否を自動テストした。リザルト側も同じ終了結果を二重確定しないガードを持つ。
-- 第1ステージ3星QAでは通常報酬150、初回星到達報酬150、合計300と、解放演出が同じリザルトに一度だけ表示された。
-
-## 5. 3ステージの視覚的差別化
-
-| ステージ | 識別要素 |
+| ゲート | 結果 |
 |---|---|
-| 西新商店街 | 商店ファサード、暖色照明、配送車、倒れた自転車、焼け跡、破損看板 |
-| 早良区役所 | 行政建物群、救急車、救援テント、コーン・土嚢、白い投光器、回転灯 |
-| 西新防衛線・TAKUYA | 感染煙霧、赤い逆光、有刺鉄線、工業防護物、着弾痕、小火災 |
+| 本番ビルド | 成功 |
+| 自動テスト | 200件成功 / 200件、失敗・skip・todo 0 |
+| ESLint | 成功 |
+| production HTTP | manifest 326パスとビルド済みJS/CSSがstatus 200、非空、期待MIME |
+| ブラウザ実decode | audio 270/270、portrait 11/11、production image 16/16、失敗 `[]` |
+| ブラウザconsole | warning / error 0件 |
+| 独立read-onlyレビュー | High 0 / Medium 0 |
 
-844×390と844×340の両方で3ステージの戦闘中画面を確認した。同一背景の色替えではなく、背景、前景、ランドマーク、環境物、照明、戦闘跡の複数カテゴリが異なり、画面だけで場所を識別できた。
+## 2. 画面サイズ・Safe Area・操作領域
 
-## 6. 死体の感染予兆と焼却
+| 条件 | ルート | overflow | 主な確認 |
+|---|---|---:|---|
+| 844×390 + 左右44px / 下21px Safe Area | 844×390 | 0 | 9名編成、戦闘、会話、地図、結果、pause |
+| 844×340 + 左右44px / 下21px Safe Area | 844×340 | 0 | 9名編成、戦闘HUD、横スクロール、全操作到達 |
+| 390×844 → 844×340 | 縦では回転案内、横復帰後844×340 | 0 | 回転後も戦闘状態と再配置を維持 |
+| PC 1280×720 | 1280×720 | 0 | キーボード、詳細HUD、9名、全支援操作 |
 
-- 味方死体は内部タイマーだけを維持し、戦闘画面に秒数、数字カウントダウン、円形タイマー、進捗バーを表示しない。
-- 専用ライフサイクルQAで、痙攣、倒れ姿勢の変化、皮膚色、発光する目、煙、炎、灰化、感染後の汎用ゾンビの起き上がりを確認した。
-- DOM監査で感染に紐づく秒・数字・進捗表示は0件だった。ソーステストでは死体描画ブロック内の `infectionRemaining`、`fillText`、`strokeRect`、`setLineDash` を禁止した。
+- 844×390と844×340の戦闘ユニットカードは9件すべてDOM上に存在し、横スクロールで全員へ到達できた。各カードの実測高さは両条件とも45pxで、44px以上を満たした。
+- 編成画面は3×3で9名を表示し、名前、武器、射程、主対象、配置意図、選択状態、未解放状態を保持した。844×390と844×340で左右余白0、中心ずれ0、overflow 0、主要ボタン44px以上だった。
+- 960×540 Canvasは画面中央を維持し、短い横画面では3レーン、戦場物、支援、死体、効果、出撃待ちを現在のレーン中心へ再配置した。
+- 390×844では回転案内だけを全面表示し、横画面へ戻すと戦闘を維持したまま案内を消した。
+- PCでは既存キー1〜6を維持し、新規三名を7〜9へ割り当てた。画面操作だけでも全員を出撃できる。
 
-## 7. 主要表示の日本語監査
+## 3. 九名、解放、セーブ
 
-- 通常のプレイヤー向け主要画面で、内部識別子 `CRAWLER`、`SCOUT`、`RANGER`、`BREAKER`、`BRAWLER`、`GUNNER`、`MEDIC`を役割表示として露出させず、`移動拠点`、`遊撃手`、`射撃手`、`破砕兵`、`格闘家`、`制圧射手`、`衛生兵`へ整理した。
-- 支援・物資は `防護投下ポッド`、`爆薬ドラム`、`簡易救護所`、`緊急航空支援`、`移動拠点一斉掃射`を使用した。
-- 目的、警告、ステージ詳細、星条件、作戦成功/失敗、通常報酬、初回星到達報酬、解放演出を日本語で確認した。対象の英語内部識別子は通常のプレイヤー表示から除去し、stable ID、コード、テスト、localhost QA診断へ限定した。`HP`と固有名`TAKUYA`は定着表記として維持した。
+実装対象は次の9名で、stable ID、編成、出撃、AI、攻撃、死亡、感染、焼却、音響、結果、セーブを同じIDで接続した。
 
-## 8. 6ユニットのスプライト整合監査
+| 解放時点 | ユニット |
+|---|---|
+| 初期 | パイセン、橘 迅、黒木 凛、白石 直人 |
+| 西新商店街クリア後 | 大庭 豪、クレイジーキング |
+| 早良区役所クリア後 | 真壁 玲奈、クマバーソン、ババヤガ |
 
-| unit kind | 表示名 | 役割 | 使用スプライト | 外見との整合確認 |
-|---|---|---|---|---|
-| `brawler` | パイセン | 格闘家 | `public/brawler-sprites-v1.png` | 男性的な運動体型、Tシャツ・ショーツ・スニーカー、素手。役割と一致。名前・外見・素手・画像は変更なし |
-| `scout` | 橘 迅 | 遊撃手 | `public/scout-sprites-v2.png` | 男性的、フィールドジャケット、赤いスカーフ、バール。軽装・高速迎撃と一致 |
-| `ranger` | 黒木 凛 | 射撃手 | `public/ranger-sprites-v1.png` | 女性的、帽子・緑系の野戦服・背嚢・自動小銃。名前と遠距離射撃役割に一致 |
-| `brute` | 大庭 豪 | 破砕兵 | `public/breaker-sprites-v2.png` | 男性的な巨躯、坊主頭・髭・重装甲・両手槌。前線維持・拠点破砕と一致 |
-| `gunner` | 真壁 玲奈 | 制圧射手 | `public/gunner-sprites-v1.png` | 女性的、ポニーテール・ベスト・弾帯・自動小銃。大型感染者の制圧役割と一致 |
-| `medic` | 白石 直人 | 衛生兵 | `public/medic-sprites-v1.png` | 男性的、白い野戦上着・白い十字の救護腕章・医療バッグ・自動小銃。旧名の性別表現矛盾を解消。人物名は正式アート完成まで暫定 |
+- schema 2からversion 3へidempotent migrationし、開始状態、処理済み結果ID、クリア、星、星報酬、補給物資、解放、最終選択、BGM/SFX、音量、reduced motion、既読event、既読自動skipを保持した。
+- localhost限定QAは `通常セーブ非反映` を表示し、全解放結果を通常セーブへ書き込まない。
+- 初対面・加入は初回だけ、retryは失敗後の分岐、clear後のreplayは別作戦として分離した。
+- 各戦闘で新しい `resultId` を発行し、同一結果の報酬・星・解放・保存を二重適用しない。敗北と撤退では星・報酬・解放をcommitしない。
 
-## 9. console・自動検証
+## 4. 顔・会話用ポートレートの流用防止
 
-- production統合後の新規タブで、844×390、844×340、回転復帰後、PC 1280×720、タイトル/セーブ、マップ、編成、解放リザルト、3戦場、ライフサイクル、TAKUYAの操作中にconsoleを監視し、warning / errorは0件だった。
-- `npm.cmd test`（本番ビルド＋全テスト）：117件成功 / 117件
-- `npm.cmd run lint`：成功
-- `git diff --check`：成功
+- 人物10名（戦闘員9名と水城奈々）は、それぞれ別path・別bytesの512×640専用v2 WebPを使用する。会話用画像は戦闘sprite sheetを参照しない。
+- パイセン以外の9名は、パイセンのreference pathを参照しない。各人物の独立reference、生成source、最終WebPとSHA-256を `reference/characters/portrait-provenance-v2.json` へ固定した。
+- 旧v1人物portraitはproduction出荷物から除去した。10人物の最終hashはすべて異なる。
+- 不明な無線、感染体の声、TAKUYAの声、章表示は、人物の顔ではなく独立した無線端末portraitを使用する。無線端末は水城奈々portraitとも別path・別bytesである。
+- 全39 story eventの全行でportrait keyがproduction画像へ解決することを自動テストした。`stage-takuya-mimic-child` は実ブラウザでも `TAKUYAの声` と無線端末画像の組み合わせを確認した。
+- 3×3編成画面と会話画面を目視し、パイセンの顔を別人物の会話画像へ流用していないことを確認した。
 
-## 10. production visual / audio統合後の最終再検証
+## 5. 新規三名の戦闘実装
 
-- viewport metaは `width=device-width, viewport-fit=cover, initial-scale=1`。844×390とSafari UI表示中相当844×340の双方で、ゲームルート・フレーム・Canvasは `left=0 / right=844`、左右余白0px、中心ずれ0px、縦横overflow 0だった。
-- 844×390は全6ユニットが高さ47px・右端793px・下端304px、全3支援が高さ44px・右端793px・下端351px。844×340はユニット下端254px、支援下端301pxで、左右44px・下21pxのSafe Area内に全操作域が収まった。
-- 390×844では回転案内が全面表示され、844×340復帰直後に案内が消え、ルート・フレーム・Canvasが844×340へ再配置された。独立再検証での復帰は244ms、同一環境の再測定では24msで、いずれもoverflow 0だった。
-- PC 1280×720はルート・フレーム・Canvasが全面一致し、中心ずれ・overflow 0、全主要ボタンの最右端1267.2px・最下端684.2pxでPC表示の回帰はなかった。
-- 実クリックで橘 迅を出撃させ、指揮100→75を確認した。防護投下ポッドを下レーンへ指定し、スクラップ282→232を確認した。6ユニットと3支援の全ボタンが画面内・有効状態で、localhost QAの全解放は `通常セーブ非反映` と明示された。
-- 通常URLでは初期4人だけが選択可能で、大庭 豪と真壁 玲奈はdisabledかつ「西新商店街クリアで解放」「早良区役所クリアで解放」を表示した。セーブ後タイトルは「物語を続ける」と別操作の「最初から始める」を表示した。
-- title、作戦室、案内役、3戦場のproduction WebP 6点を実HTTP取得し、6/6がstatus 200・`image/webp`。西新商店街、早良区役所、西新防衛線は別ファイル・別ランドマーク・別照明で目視識別できた。
-- production audioは109論理asset（BGM 9 / SFX 100）、218 source（MP3 109 + OGG 109）、asset/pool合計150 cue、10 scene。全218 sourceを実HTTP GETし、218/218がstatus 200、content-typeは`audio/mpeg` 109件と`audio/ogg` 109件、合計20,546,301 bytes、404・空ファイル0件だった。
-- 独立ブラウザ再検証でAudioContextは`running`、mixerは`unlocked`、stage3 scene、`cacheFailed=0`、`warnings=0`。localhost限定QA bridgeから全asset/pool/sceneを列挙し、個別再生・scene切替・停止へ到達できることを確認した。scene競合、重複loop、cooldown、polyphony、fallback、停止後リークは自動テストで固定した。
-- 物理iPhone Safariの内蔵スピーカー／イヤホンによる聴感、長時間性能、発熱、実機Safari UIそのものは未確認であり、このローカル実ブラウザQAで代替しない。
+| stable ID | 役割・武器 | 実装した固有効果 |
+|---|---|---|
+| `crazy-king` | 狂戦士・チェーンソー | 密集範囲攻撃、bleed、軽い押し込み |
+| `kumaverson` | 前衛打撃・フライパン | 強いknockback、上限付きstun、前線維持 |
+| `babayaga` | 精密射撃・サプレッサー拳銃 | 特殊個体優先、分析mark、射線が通る隣接レーン射撃 |
 
-## 11. 証拠画像
+- HP、速度、攻撃力、射程、攻撃間隔、出撃cost、cooldown、target priorityはconfig化し、既存六名の単純上位互換にしていない。
+- ババヤガは隣接レーン候補にも実際のline-of-sight判定を使う。遮蔽物越しの候補を保持して停止せず、目標へ前進する。
+- 専用lifecycle QAでクレイジーキングの固有死亡姿、クマバーソンの感染予兆、ババヤガのburning→ashを同時確認した。三名とも死亡後に別人物の姿へ置換しない。
 
-### production統合後（2026-07-15）
+## 6. 戦闘sprite監査
 
-- [セーブなしproductionタイトル](../qa-evidence/0.6.0-production/iphone-844x390-title-production.jpg)
-- [セーブありproductionタイトル](../qa-evidence/0.6.0-production/iphone-844x390-title-save-production.jpg)
-- [水城奈々の専用案内役画像を使う導入](../qa-evidence/0.6.0-production/iphone-844x390-intro-guide-production.jpg)
-- [production作戦地図](../qa-evidence/0.6.0-production/iphone-844x390-map-production.jpg)
-- [通常初期4人・未解放2人](../qa-evidence/0.6.0-production/iphone-844x390-formation-initial-locks-production.jpg)
-- [844×340の編成・全操作域](../qa-evidence/0.6.0-production/iphone-844x340-formation-production.jpg)
-- [第1ステージ3星・報酬・ユニット／区域解放](../qa-evidence/0.6.0-production/iphone-844x390-result-unlock-production.jpg)
-- [西新商店街production戦場](../qa-evidence/0.6.0-production/iphone-844x390-stage1-production.jpg)
-- [早良区役所production戦場](../qa-evidence/0.6.0-production/iphone-844x390-stage2-production.jpg)
-- [西新防衛線・TAKUYA production戦場](../qa-evidence/0.6.0-production/iphone-844x390-stage3-production.jpg)
-- [Safari UI表示中相当844×340・全下部操作](../qa-evidence/0.6.0-production/iphone-844x340-stage3-safari-ui-production.jpg)
-- [縦390×844の回転案内](../qa-evidence/0.6.0-production/iphone-390x844-rotate-production.jpg)
-- [844×340へ回転復帰直後](../qa-evidence/0.6.0-production/iphone-844x340-after-rotation-production.jpg)
-- [非数値の感染予兆・炎・灰化](../qa-evidence/0.6.0-production/iphone-844x390-lifecycle-production.jpg)
-- [PC 1280×720 production戦場](../qa-evidence/0.6.0-production/pc-1280x720-stage3-production.jpg)
+- runtime対象は17 kinds（旧味方6、敵8、新規三名）×7 states×2 directions = 238方向別frame keyである。
+- 旧素材11 sheetは原本を変更せず、各source rectangleを実測したうえで、16px透明perimeterを持つ11個のlossless派生atlasへ再梱包した。画素、表示scale、center anchor、baselineを保持する。
+- 新規三名は各3360×896の専用production atlasを使用し、7状態×左右を持つ。武器、死亡姿、透明ガター、縦横比、原寸、2倍、実戦表示を確認した。
+- 全frameで範囲内、content rect、透明perimeter、隣接frame混入なしを自動検査した。Canvas補間を有効にした実戦表示でもbleedを確認していない。
+- パイセン原本 `public/brawler-sprites-v1.png` は変更せず、SHA-256 `c2c8e5fa2241a4841c80ca817afe6efedcb235d0bccafabcad931776a8b7d3c4` を保持した。runtimeは原本を直接切り出さず、lossless派生atlasを使用する。
 
-### 基盤実装時の補助証拠（2026-07-14）
+## 7. 序章、skip、敗北・retry・replay
 
-- [セーブなしタイトル](../qa-evidence/0.6.0/iphone-844x390-title-no-save.jpg)
-- [セーブありタイトル](../qa-evidence/0.6.0/iphone-844x390-title-save-present.jpg)
-- [導入イベント](../qa-evidence/0.6.0/iphone-844x390-event-intro.jpg)
-- [通常初期マップと封鎖地点](../qa-evidence/0.6.0/iphone-844x390-map-initial.jpg)
-- [通常初期4人・未解放2人](../qa-evidence/0.6.0/iphone-844x390-formation-initial-locks.jpg)
-- [第1ステージクリアのユニット/作戦区域解放](../qa-evidence/0.6.0/iphone-844x390-result-stage1-unlock.jpg)
-- [QA結果を通常URLへ持ち込まない再読込](../qa-evidence/0.6.0/iphone-844x390-map-after-qa-isolation.jpg)
-- [844×390 西新商店街](../qa-evidence/0.6.0/iphone-844x390-stage1-battle.jpg)
-- [844×390 早良区役所](../qa-evidence/0.6.0/iphone-844x390-stage2-battle.jpg)
-- [844×390 西新防衛線・TAKUYA](../qa-evidence/0.6.0/iphone-844x390-stage3-battle.jpg)
-- [844×340 西新商店街](../qa-evidence/0.6.0/iphone-844x340-stage1-safari-ui.jpg)
-- [844×340 早良区役所](../qa-evidence/0.6.0/iphone-844x340-stage2-safari-ui.jpg)
-- [844×340 西新防衛線・TAKUYA](../qa-evidence/0.6.0/iphone-844x340-stage3-safari-ui.jpg)
-- [844×340 下レーン物資配置と全操作域](../qa-evidence/0.6.0/iphone-844x340-controls-operable.jpg)
-- [844×340 下レーン航空支援](../qa-evidence/0.6.0/iphone-844x340-support-lane-alignment.jpg)
-- [標準レーン往復後の下レーン物資再配置](../qa-evidence/0.6.0/iphone-844x340-support-after-reflow.jpg)
-- [縦画面の回転案内](../qa-evidence/0.6.0/iphone-390x844-rotate-notice.jpg)
-- [横画面回転直後の再配置](../qa-evidence/0.6.0/iphone-844x340-after-rotation.jpg)
-- [感染予兆・炎・灰化](../qa-evidence/0.6.0/iphone-844x390-death-lifecycle.jpg)
-- [感染後の汎用ゾンビ起き上がり](../qa-evidence/0.6.0/iphone-844x390-generic-zombie-rise.jpg)
-- [TAKUYA終盤](../qa-evidence/0.6.0/iphone-844x390-takuya-endgame.jpg)
-- [844×390負荷確認](../qa-evidence/0.6.0/iphone-844x390-stress.jpg)
-- [PC 1280×720戦闘](../qa-evidence/0.6.0/pc-1280x720-stage1-battle.jpg)
+- `prologue-v5` の必須36 eventとreplay 3 event、計39 eventを実装し、通常flowからすべて到達できる。
+- 正本の固定会話222行とending title card 3枚を削除・要約・言い換えせず保持した。
+- runner / spitter初出現、偽救難音声、感染拠点露出、救援車両、防衛節目、TAKUYA登場・HP段階・子どもの声・撃破・残存拠点、移動拠点危険、勝敗へeventを接続した。pause、回転、再描画、連打で重複発火しない。
+- 会話ログ、確認付き手動skip、既読eventだけの自動skipを実装した。通常完了、手動skip、既読自動skipは同じcompletion reducerを通り、戦闘開始、加入、星、報酬、解放、保存結果が一致する。
+- 通常敗北、TAKUYA撃破後敗北、retry、clear後replay、勝利後通信を分離した。早良区役所の180秒防衛も成功・敗北の両経路を検査した。
+
+## 8. 一時停止と結果
+
+- pauseから `作戦を再開`、`ステージを最初からやり直す`、`編成画面へ戻る`、`エリアマップへ撤退`、音量設定へ到達できる。
+- restart、編成へ戻る、撤退は確認dialogを表示し、報酬・星・解放を受領しないことを明記する。
+- 編成へ戻る場合は選択ステージ、編成、物資を保持する。restart / retryは新しいsessionとresult IDを使う。
+- 遷移時はBGM、環境音、燃焼loop、チェーンソーloop、voice、pending timer、未完了audio/event予約、戦闘local stateを破棄する。
+- 3星勝利と0星敗北を実ブラウザで確認し、表示とcampaign commitを分離した。
+
+## 9. ステージ固有production素材
+
+| ステージ | 背景 | 動的overlay |
+|---|---:|---:|
+| 西新商店街 | 1600×900 WebP | 9 |
+| 早良区役所 | 1600×900 WebP | 8 |
+| 西新防衛線・TAKUYA | 1600×900 WebP | 8 |
+
+- 25個のstage overlayをproduction inventoryへ登録した。罠、救援導線、無線設備、感染拠点などのmutable slotは状態別画像と12px透明ガターを持つ。
+- 配送車、自転車、店舗、救援車両、テント、医療物資、防壁、有刺鉄線、通信設備、感染組織などを背景統合、専用overlay、不可視判定のいずれかへ分類した。対応表は `docs/STAGE_OBJECT_AUDIT_0.6.0.md` に記録した。
+- 三ステージは別背景・別overlay inventoryを使い、場所固有のランドマーク、照明、戦闘跡で目視識別できる。仮図形を削除しただけの項目はない。
+
+## 10. production visual / audio
+
+### Visual
+
+- production visualはunique 56ファイル（WebP 16、PNG 40）。
+- WebP 16点は人物・無線11、title、command、3 stageである。16/16をSharpで実decodeし、ブラウザの `Image.decode()` でも16/16を確認した。
+- 人物・無線11点はブラウザの独立portrait decodeでも11/11を確認した。
+
+### Audio
+
+- 135論理asset（BGM 9 / SFX 126）、41 variation pool、176 cue ID、10 scene、270 source（MP3 135 + OGG 135）。aliasは0件。
+- 新規三名は26個の専用cueと、専用生成master、専用MP3/OGG finalを持つ。外部sampleを使用していない。
+- 全270 sourceはrepository-local、非空で、MP3 frameまたはcomplete OGG Vorbis pageを構造検査した。合計20,943,356 bytes。
+- 本番ブラウザの実 `AudioContext.decodeAudioData()` で270/270をdecodeし、失敗 `[]` を確認した。
+- 最初のpointerでcontext作成・resume・scene再生へつなぎ、touch重複抑止、`suspended` / `interrupted`、`pageshow`、`visibilitychange`、手動音声有効化、cancel済み予約の復活防止を自動テストした。
+
+## 11. 自動検証と独立レビュー
+
+- `npm.cmd test`：本番ビルド成功、200件成功 / 200件、fail / cancelled / skipped / todo 0。
+- `npm.cmd run lint`：成功。
+- `git diff --check`：成功。
+- production HTTP test：audio 270 + visual 56 = 326 manifest pathとビルド済みJS/CSSを取得し、status 200、非空、拡張子に対応するMIMEを確認した。
+- 独立read-onlyレビューは最新修正後にHigh 0 / Medium 0。対象はportrait分離、WebP/audio実decode、sprite gutter、Babayaga射線、lifecycle、44pxカード、story portrait解決を含む。
+
+## 12. 最新の証拠画像
+
+保存先：`qa-evidence/0.6.0-early-access-final/`
+
+- [タイトル](../qa-evidence/0.6.0-early-access-final/iphone-844x390-title-final.png)
+- [9名編成 844×390](../qa-evidence/0.6.0-early-access-final/iphone-844x390-formation-nine-final.png)
+- [9名編成 844×340](../qa-evidence/0.6.0-early-access-final/iphone-844x340-formation-nine-final.png)
+- [導入会話](../qa-evidence/0.6.0-early-access-final/iphone-844x390-story-opening-final.png)
+- [会話skip確認](../qa-evidence/0.6.0-early-access-final/iphone-844x390-story-skip-confirm-final.png)
+- [TAKUYAの声と非人物無線端末](../qa-evidence/0.6.0-early-access-final/iphone-844x390-story-takuya-radio-final.png)
+- [エリアマップ](../qa-evidence/0.6.0-early-access-final/iphone-844x390-campaign-map-final.png)
+- [西新商店街](../qa-evidence/0.6.0-early-access-final/iphone-844x390-stage1-nishijin-final.png)
+- [早良区役所](../qa-evidence/0.6.0-early-access-final/iphone-844x390-stage2-sawara-defense-final.png)
+- [西新防衛線・TAKUYA / 9名戦闘](../qa-evidence/0.6.0-early-access-final/iphone-844x390-battle-nine-roles-final.png)
+- [PC 1280×720 / 9名戦闘](../qa-evidence/0.6.0-early-access-final/pc-1280x720-battle-nine-roles-final.png)
+- [pause menu](../qa-evidence/0.6.0-early-access-final/iphone-844x390-pause-menu-final.png)
+- [3星勝利](../qa-evidence/0.6.0-early-access-final/iphone-844x390-result-three-stars-final.png)
+- [敗北](../qa-evidence/0.6.0-early-access-final/iphone-844x390-result-defeat-final.png)
+- [9名の戦闘中台詞](../qa-evidence/0.6.0-early-access-final/iphone-844x390-battle-barks-nine-final.png)
+- [44固定台詞audit](../qa-evidence/0.6.0-early-access-final/iphone-844x390-bark-audit-final.png)
+- [238 frame sprite audit](../qa-evidence/0.6.0-early-access-final/iphone-844x390-sprite-audit-final.png)
+- [ババヤガ死亡pose 原寸](../qa-evidence/0.6.0-early-access-final/iphone-844x390-babayaga-death-original-final.png)
+- [ババヤガ死亡pose 2倍](../qa-evidence/0.6.0-early-access-final/iphone-844x390-babayaga-death-2x-final.png)
+- [ババヤガ死亡pose 実戦](../qa-evidence/0.6.0-early-access-final/iphone-844x390-babayaga-death-battle-final.png)
+- [spitter攻撃pose 実戦](../qa-evidence/0.6.0-early-access-final/iphone-844x390-spitter-attack-battle-final.png)
+- [新規三名の死亡・感染・焼却](../qa-evidence/0.6.0-early-access-final/iphone-844x390-lifecycle-death-infection-cremation-final.png)
+- [縦画面の回転案内](../qa-evidence/0.6.0-early-access-final/iphone-390x844-rotate-notice-final.png)
+
+## 13. 未確認・次の承認工程
+
+- 物理iPhone Safariでのtap、Safe Area、Safari UI、画面ロック復帰。
+- 本体スピーカーとイヤホンによるBGM、効果音、voice、loop停止の聴感。
+- 長時間プレイ時の性能、発熱、電池消費。
+- Draft PR #30のCI `Verify`。最終push後に確認する。
+- 公開URL上の第三者試遊。現実装ミッションではReady化、merge、Sites公開が禁止されているため、固定したPR/base/head SHAとmerge方式を含む別のリリース承認後に実施する。
