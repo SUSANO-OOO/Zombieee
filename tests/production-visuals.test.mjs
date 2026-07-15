@@ -13,7 +13,7 @@ test("production visual manifest uses dedicated title, command, guide, and three
   assert.equal(new Set(paths).size, paths.length);
   const hashes = [];
   for (const path of paths) {
-    assert.match(path, /^\/art\/v060\/[a-z0-9-]+\.webp$/);
+    assert.match(path, /^\/art\/v060\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.webp$/);
     const bytes = await readFile(repoAsset(path));
     assert.equal(bytes.subarray(0, 4).toString("ascii"), "RIFF");
     assert.equal(bytes.subarray(8, 12).toString("ascii"), "WEBP");

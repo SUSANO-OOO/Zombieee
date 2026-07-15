@@ -86,6 +86,34 @@ test("ranged targeting prioritizes its lane and gates adjacent lanes by role, ra
   assert.equal(selectCombatTarget({ attacker: medic, candidates: [adjacent], hasLineOfSight: true }), null, "role must allow adjacent fire");
 });
 
+test("Babayaga can acquire and fire at an unobstructed adjacent-lane special target", () => {
+  const attacker = fighter({
+    kind: "babayaga",
+    lane: 0,
+    y: COMBAT_GEOMETRY.laneY[0],
+    x: 300,
+    range: 158,
+    damage: 31,
+  });
+  const adjacentSpecial = fighter({
+    id: 2,
+    side: "zombie",
+    kind: "spitter",
+    lane: 1,
+    y: COMBAT_GEOMETRY.laneY[1],
+    x: 320,
+  });
+  assert.equal(canNormalAttackTarget({ attacker, target: adjacentSpecial, hasLineOfSight: true }), true);
+  const transaction = createAttackTransaction({
+    attacker,
+    candidates: [adjacentSpecial],
+    hasLineOfSight: true,
+  });
+  assert.equal(transaction?.targetId, adjacentSpecial.id);
+  assert.equal(transaction?.damage.amount, attacker.damage);
+  assert.equal(createAttackTransaction({ attacker, candidates: [adjacentSpecial], hasLineOfSight: false }), null);
+});
+
 test("adjacent-lane fire uses a real unobstructed segment", () => {
   const attacker = fighter({ kind: "ranger", lane: 0, y: COMBAT_GEOMETRY.laneY[0], range: 160 });
   const target = fighter({ id: 2, side: "zombie", lane: 1, x: 380, y: COMBAT_GEOMETRY.laneY[1] });
@@ -202,6 +230,26 @@ test("runs the 12-second ally infection warnings and generic-zombie rise lock wi
   assert.equal(locked.canAct, false);
   const ready = advanceAllyLifecycle(locked, ALLY_DEATH_CONFIG.riseLockSeconds / 2);
   assert.equal(ready.canAct, true);
+});
+
+test("all three newcomers preserve authored death identity through infection and cremation", () => {
+  for (const [index, kind] of ["crazy-king", "kumaverson", "babayaga"].entries()) {
+    const alive = createAllyLifecycle({ id: 160 + index, kind, inheritedKind: kind, lane: index, x: 440 + index * 40, y: COMBAT_GEOMETRY.laneY[index] });
+    const corpse = advanceAllyLifecycle(beginAllyDeath(alive), .7);
+    assert.equal(corpse.state, "ally-corpse", `${kind} authored death pose`);
+    assert.equal(corpse.kind, kind);
+
+    const warning = advanceAllyLifecycle(beginAllyDeath(alive), 7.2);
+    assert.equal(warning.state, "infection-warning", `${kind} infection warning`);
+    assert.equal(warning.inheritedKind, kind);
+
+    const fireAreas = [{ kind: "burn", phase: "active", remaining: 3, x: alive.x, y: alive.y, radius: 80 }];
+    const burning = igniteAllyCorpsesInFire({ lifecycles: [corpse], fireAreas }).lifecycles[0];
+    assert.equal(burning.state, "burning", `${kind} cremation starts`);
+    const ash = advanceAllyLifecycle(burning, ALLY_DEATH_CONFIG.burningSeconds);
+    assert.equal(ash.state, "ash", `${kind} cremation completes`);
+    assert.equal(ash.infectionPrevented, true);
+  }
 });
 
 test("fire-area contact immediately cancels infection and burns an ally corpse to ash in about two seconds", () => {

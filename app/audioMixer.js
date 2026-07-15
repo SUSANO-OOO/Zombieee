@@ -11,6 +11,56 @@ const DEFAULT_CATEGORY_VOLUMES = Object.freeze({
   support: 0.9,
 });
 
+export const AUDIO_MIXER_STATES = Object.freeze({
+  LOCKED: "locked",
+  UNLOCKING: "unlocking",
+  RUNNING: "running",
+  RECOVERY_NEEDED: "recovery-needed",
+  FAILED: "failed",
+  DISPOSED: "disposed",
+});
+
+export function createAudioRequestGate() {
+  let generation = 0;
+  return Object.freeze({
+    capture: () => generation,
+    cancelPending: () => {
+      generation += 1;
+      return generation;
+    },
+    isCurrent: (requestGeneration) => requestGeneration === generation,
+  });
+}
+
+export async function runGuardedAudioRequest({
+  gate,
+  unlock,
+  play,
+  fallback = null,
+  isMuted = () => false,
+} = {}) {
+  if (!gate || typeof gate.capture !== "function" || typeof gate.isCurrent !== "function") {
+    throw new TypeError("A valid audio request gate is required");
+  }
+  if (typeof unlock !== "function" || typeof play !== "function") {
+    throw new TypeError("Audio request unlock and play callbacks are required");
+  }
+  const requestGeneration = gate.capture();
+  const isCurrent = () => gate.isCurrent(requestGeneration) && !isMuted();
+  const guardedFallback = (...args) => {
+    if (isCurrent() && typeof fallback === "function") return fallback(...args);
+    return null;
+  };
+  try {
+    const unlocked = await unlock();
+    if (!isCurrent()) return null;
+    if (!unlocked) return guardedFallback();
+    return await play(guardedFallback);
+  } catch (error) {
+    return guardedFallback(error);
+  }
+}
+
 const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, Number.isFinite(value) ? value : minimum));
 
 function defaultContextFactory() {
@@ -57,6 +107,8 @@ export class AudioMixer {
     maxWarningsTotal = 12,
     maxWarningsPerKey = 1,
     closeContextOnDispose = true,
+    gestureDedupeMs = 750,
+    clock = Date.now,
   } = {}) {
     this.manifest = createAudioManifest(manifest ?? {});
     this.contextFactory = contextFactory;
@@ -67,6 +119,8 @@ export class AudioMixer {
     this.maxWarningsTotal = Math.max(0, Math.floor(maxWarningsTotal));
     this.maxWarningsPerKey = Math.max(0, Math.floor(maxWarningsPerKey));
     this.closeContextOnDispose = closeContextOnDispose;
+    this.gestureDedupeMs = Math.max(0, Number.isFinite(gestureDedupeMs) ? gestureDedupeMs : 750);
+    this.clock = typeof clock === "function" ? clock : Date.now;
 
     this.context = null;
     this.master = null;
@@ -75,18 +129,33 @@ export class AudioMixer {
     this.musicDuck = null;
     this.disposed = false;
     this.unlockCleanup = null;
+    this.unlockTarget = null;
+    this.lifecycleCleanup = null;
+    this.contextStateCleanup = null;
     this.unlockPromise = null;
+    this.lastGestureAt = -Infinity;
+    this.lastGestureFamily = null;
+    this.statusListeners = new Set();
+    this.audioStatus = Object.freeze({
+      state: AUDIO_MIXER_STATES.LOCKED,
+      contextState: null,
+      needsGesture: false,
+      reason: "initial",
+      error: null,
+    });
     this.assetCache = new Map();
     this.activeVoices = new Map();
     this.lastPlayedAt = new Map();
     this.poolState = new Map();
     this.pendingDedupe = new Map();
+    this.instanceGenerations = new Map();
     this.categoryGenerations = Object.fromEntries(AUDIO_CATEGORIES.map((category) => [category, 0]));
     this.warningCounts = new Map();
     this.warningTotal = 0;
     this.voiceSequence = 0;
     this.sceneTransitionToken = 0;
     this.pendingScene = null;
+    this.desiredScene = null;
     this.sceneState = { sceneId: null, bgm: null, ambience: [] };
     this.persistentDuckLevel = 1;
     this.categoryVolumes = { ...DEFAULT_CATEGORY_VOLUMES };
@@ -105,13 +174,58 @@ export class AudioMixer {
     return Boolean(this.context && this.context.state === "running");
   }
 
-  attachUnlock(target = globalThis.window) {
-    if (this.disposed || !target?.addEventListener) return () => undefined;
-    this.unlockCleanup?.();
+  getAudioStatus() {
+    return this.audioStatus;
+  }
+
+  subscribeStatus(listener, { emitCurrent = true } = {}) {
+    if (typeof listener !== "function") return () => undefined;
+    this.statusListeners.add(listener);
+    if (emitCurrent) {
+      try { listener(this.audioStatus); } catch { /* Status observers are optional. */ }
+    }
+    return () => this.statusListeners.delete(listener);
+  }
+
+  #setAudioStatus(state, { reason = null, error = null, needsGesture = false } = {}) {
+    const next = Object.freeze({
+      state,
+      contextState: this.context?.state ?? null,
+      needsGesture: Boolean(needsGesture),
+      reason,
+      error: error instanceof Error ? error.message : error ? String(error) : null,
+    });
+    const previous = this.audioStatus;
+    if (previous.state === next.state
+      && previous.contextState === next.contextState
+      && previous.needsGesture === next.needsGesture
+      && previous.reason === next.reason
+      && previous.error === next.error) return;
+    this.audioStatus = next;
+    for (const listener of [...this.statusListeners]) {
+      try { listener(next); } catch { /* Status observers must not break audio. */ }
+    }
+  }
+
+  #isDuplicateGesture(event) {
+    const family = event?.type?.startsWith("pointer") ? "pointer" : event?.type?.startsWith("touch") ? "touch" : null;
+    if (!family) return false;
+    const at = Number(this.clock());
+    const duplicate = this.lastGestureFamily && this.lastGestureFamily !== family && at - this.lastGestureAt <= this.gestureDedupeMs;
+    if (!duplicate) {
+      this.lastGestureFamily = family;
+      this.lastGestureAt = at;
+    }
+    return Boolean(duplicate);
+  }
+
+  #installUnlockListeners() {
+    const target = this.unlockTarget;
+    if (this.disposed || this.unlockCleanup || !target?.addEventListener) return;
     let active = true;
-    const listener = () => {
-      if (!active) return;
-      void this.unlock();
+    const listener = (event) => {
+      if (!active || this.#isDuplicateGesture(event)) return;
+      void this.unlock({ reason: `gesture:${String(event?.type ?? "unknown")}` });
     };
     const eventNames = ["pointerdown", "touchend", "keydown"];
     for (const eventName of eventNames) target.addEventListener(eventName, listener, { capture: true, passive: true });
@@ -122,34 +236,175 @@ export class AudioMixer {
       if (this.unlockCleanup === cleanup) this.unlockCleanup = null;
     };
     this.unlockCleanup = cleanup;
+  }
+
+  attachUnlock(target = globalThis.window) {
+    if (this.disposed || !target?.addEventListener) return () => undefined;
+    this.unlockCleanup?.();
+    this.unlockTarget = target;
+    this.#installUnlockListeners();
+    const documentTarget = target?.document ?? (target === globalThis.window ? globalThis.document : null);
+    if (documentTarget?.addEventListener) this.attachLifecycle({ windowTarget: target, documentTarget });
+    let detached = false;
+    return () => {
+      if (detached) return;
+      detached = true;
+      if (this.unlockTarget !== target) return;
+      this.unlockCleanup?.();
+      this.unlockTarget = null;
+      this.lifecycleCleanup?.();
+    };
+  }
+
+  attachLifecycle({ windowTarget = globalThis.window, documentTarget = globalThis.document } = {}) {
+    if (this.disposed) return () => undefined;
+    this.lifecycleCleanup?.();
+    let active = true;
+    const recover = (reason) => {
+      if (!active || this.disposed) return;
+      void this.recoverAudio({ reason });
+    };
+    const onPageShow = () => recover("pageshow");
+    const onVisibilityChange = () => {
+      if (!documentTarget || documentTarget.visibilityState === undefined || documentTarget.visibilityState === "visible") {
+        recover("visibilitychange");
+      }
+    };
+    windowTarget?.addEventListener?.("pageshow", onPageShow, { capture: true, passive: true });
+    documentTarget?.addEventListener?.("visibilitychange", onVisibilityChange, { capture: true, passive: true });
+    const cleanup = () => {
+      if (!active) return;
+      active = false;
+      windowTarget?.removeEventListener?.("pageshow", onPageShow, { capture: true });
+      documentTarget?.removeEventListener?.("visibilitychange", onVisibilityChange, { capture: true });
+      if (this.lifecycleCleanup === cleanup) this.lifecycleCleanup = null;
+    };
+    this.lifecycleCleanup = cleanup;
     return cleanup;
   }
 
-  async unlock() {
+  #attachContextStateListener(context) {
+    this.contextStateCleanup?.();
+    const listener = () => this.#handleContextStateChange(context);
+    if (typeof context?.addEventListener === "function") {
+      context.addEventListener("statechange", listener);
+      const cleanup = () => {
+        context.removeEventListener?.("statechange", listener);
+        if (this.contextStateCleanup === cleanup) this.contextStateCleanup = null;
+      };
+      this.contextStateCleanup = cleanup;
+      return;
+    }
+    if (context && "onstatechange" in context) {
+      const previous = context.onstatechange;
+      context.onstatechange = listener;
+      const cleanup = () => {
+        if (context.onstatechange === listener) context.onstatechange = previous ?? null;
+        if (this.contextStateCleanup === cleanup) this.contextStateCleanup = null;
+      };
+      this.contextStateCleanup = cleanup;
+    }
+  }
+
+  #handleContextStateChange(context) {
+    if (this.disposed || context !== this.context) return;
+    if (context.state === "running") {
+      this.#setAudioStatus(AUDIO_MIXER_STATES.RUNNING, { reason: "context-statechange" });
+      return;
+    }
+    if (["suspended", "interrupted", "closed"].includes(context.state)) {
+      this.#setAudioStatus(AUDIO_MIXER_STATES.RECOVERY_NEEDED, {
+        reason: `context-${context.state}`,
+        needsGesture: true,
+      });
+      this.#installUnlockListeners();
+      void this.recoverAudio({ reason: `context-${context.state}` });
+    }
+  }
+
+  #releaseContextGraph() {
+    this.sceneTransitionToken += 1;
+    for (const category of AUDIO_CATEGORIES) this.categoryGenerations[category] += 1;
+    for (const voice of [...this.activeVoices.values()]) this.#cleanupVoice(voice);
+    this.pendingDedupe.clear();
+    this.lastPlayedAt.clear();
+    this.sceneState = { sceneId: null, bgm: null, ambience: [] };
+    for (const bus of Object.values(this.buses)) safeDisconnect(bus);
+    safeDisconnect(this.musicDuck);
+    safeDisconnect(this.master);
+    safeDisconnect(this.limiter);
+    this.buses = {};
+    this.musicDuck = null;
+    this.master = null;
+    this.limiter = null;
+    this.contextStateCleanup?.();
+    this.context = null;
+  }
+
+  #createContextAndGraph() {
+    if (this.context || this.master) this.#releaseContextGraph();
+    const context = this.contextFactory();
+    this.context = context;
+    this.#attachContextStateListener(context);
+    this.#createGraph();
+    if (this.desiredScene && !this.pendingScene) this.pendingScene = this.desiredScene;
+    return context;
+  }
+
+  async unlock({ reason = "unlock" } = {}) {
     if (this.disposed) return false;
     if (this.unlockPromise) return this.unlockPromise;
-    this.unlockPromise = (async () => {
+    this.#setAudioStatus(AUDIO_MIXER_STATES.UNLOCKING, { reason });
+    let settleUnlock;
+    const task = new Promise((resolve) => { settleUnlock = resolve; });
+    this.unlockPromise = task;
+    void (async () => {
       try {
         if (!this.context || this.context.state === "closed") {
-          this.context = this.contextFactory();
-          this.#createGraph();
+          this.#createContextAndGraph();
         }
         if (this.context.state !== "running" && typeof this.context.resume === "function") await this.context.resume();
         if (this.context.state !== "running") throw new Error(`AudioContext remained ${String(this.context.state)}`);
         this.unlockCleanup?.();
+        this.#setAudioStatus(AUDIO_MIXER_STATES.RUNNING, { reason });
         await Promise.all([...this.assetCache.keys()].map((assetId) => this.#decodeAsset(assetId)));
         const pendingScene = this.pendingScene;
         this.pendingScene = null;
         if (pendingScene) await this.setScene(pendingScene.sceneId, pendingScene.options);
         return true;
       } catch (error) {
+        this.#setAudioStatus(AUDIO_MIXER_STATES.FAILED, { reason, error, needsGesture: true });
+        this.#installUnlockListeners();
         this.#warn("audio-context-unlock", "Audio could not be unlocked; gameplay will continue silently.", error);
         return false;
-      } finally {
-        this.unlockPromise = null;
       }
-    })();
-    return this.unlockPromise;
+    })().then((result) => {
+      if (this.unlockPromise === task) this.unlockPromise = null;
+      settleUnlock(result);
+    }, () => {
+      if (this.unlockPromise === task) this.unlockPromise = null;
+      settleUnlock(false);
+    });
+    return task;
+  }
+
+  enableAudio() {
+    return this.unlock({ reason: "manual-enable" });
+  }
+
+  async recoverAudio({ reason = "manual-recovery" } = {}) {
+    if (this.disposed) return false;
+    if (!this.context) {
+      this.#setAudioStatus(AUDIO_MIXER_STATES.LOCKED, { reason });
+      this.#installUnlockListeners();
+      return false;
+    }
+    if (this.context.state === "running") {
+      this.#setAudioStatus(AUDIO_MIXER_STATES.RUNNING, { reason });
+      return true;
+    }
+    this.#setAudioStatus(AUDIO_MIXER_STATES.RECOVERY_NEEDED, { reason, needsGesture: true });
+    return this.unlock({ reason });
   }
 
   #createGraph() {
@@ -227,8 +482,10 @@ export class AudioMixer {
   #expandCueIds(cueIds) {
     const expanded = new Set();
     for (const cueId of cueIds) {
-      const asset = this.manifest.assetById[cueId];
-      const pool = this.manifest.poolById[cueId];
+      const alias = this.manifest.aliasById[cueId];
+      const targetId = alias?.targetId ?? cueId;
+      const asset = this.manifest.assetById[targetId];
+      const pool = this.manifest.poolById[targetId];
       if (asset) expanded.add(asset.id);
       else if (pool) pool.assetIds.forEach((assetId) => expanded.add(assetId));
       else this.#warn(`unknown-cue:${String(cueId)}`, `Unknown audio cue ${String(cueId)} was ignored.`);
@@ -390,9 +647,11 @@ export class AudioMixer {
   }
 
   #resolveCue(cueId) {
-    const direct = this.manifest.assetById[cueId];
-    if (direct) return { cueId, asset: direct, pool: null };
-    const pool = this.manifest.poolById[cueId];
+    const alias = this.manifest.aliasById[cueId] ?? null;
+    const targetId = alias?.targetId ?? cueId;
+    const direct = this.manifest.assetById[targetId];
+    if (direct) return { cueId, asset: direct, pool: null, alias };
+    const pool = this.manifest.poolById[targetId];
     if (!pool) {
       this.#warn(`unknown-cue:${String(cueId)}`, `Unknown audio cue ${String(cueId)} was ignored.`);
       return null;
@@ -413,7 +672,7 @@ export class AudioMixer {
     }
     state.lastAssetId = assetId;
     this.poolState.set(pool.id, state);
-    return { cueId, asset: this.manifest.assetById[assetId], pool };
+    return { cueId, asset: this.manifest.assetById[assetId], pool, alias };
   }
 
   #findVoice(predicate) {
@@ -487,11 +746,11 @@ export class AudioMixer {
   }
 
   #createVoice(resolved, buffer, options) {
-    const { cueId, asset, pool } = resolved;
+    const { cueId, asset, pool, alias } = resolved;
     const context = this.context;
-    const priority = clamp(options.priority ?? pool?.priority ?? asset.priority, 0, 1000);
-    const instanceKey = options.instanceKey ?? cueId;
-    const maxInstances = Math.max(1, Math.floor(options.maxInstances ?? pool?.maxInstances ?? asset.maxInstances));
+    const priority = clamp(options.priority ?? alias?.priority ?? pool?.priority ?? asset.priority, 0, 1000);
+    const instanceKey = options.instanceKey ?? alias?.instanceKey ?? cueId;
+    const maxInstances = Math.max(1, Math.floor(options.maxInstances ?? alias?.maxInstances ?? pool?.maxInstances ?? asset.maxInstances));
     if (!this.#reserveVoiceSlot({ priority, instanceKey, maxInstances })) return null;
     const source = context.createBufferSource();
     const gain = context.createGain();
@@ -500,7 +759,7 @@ export class AudioMixer {
     const volume = clamp(asset.gain * (Number.isFinite(options.volume) ? options.volume : 1), 0, 2);
     const fadeInSeconds = Math.max(0, options.fadeInMs ?? 0) / 1000;
     source.buffer = buffer;
-    source.loop = options.loop ?? asset.loop;
+    source.loop = options.loop ?? alias?.loop ?? asset.loop;
     if (source.playbackRate && Number.isFinite(options.playbackRate)) source.playbackRate.value = clamp(options.playbackRate, 0.5, 2);
     if (fadeInSeconds > 0) {
       setParamValue(gain.gain, 0.0001, now);
@@ -557,12 +816,16 @@ export class AudioMixer {
 
   async #playCue(cueId, options) {
     if (this.disposed || !this.unlocked) return null;
-    const direct = this.manifest.assetById[cueId];
-    const pool = this.manifest.poolById[cueId];
+    const alias = this.manifest.aliasById[cueId] ?? null;
+    const targetId = alias?.targetId ?? cueId;
+    const direct = this.manifest.assetById[targetId];
+    const pool = this.manifest.poolById[targetId];
     const pooledCooldown = pool
       ? Math.max(0, ...pool.assetIds.map((assetId) => this.manifest.assetById[assetId].cooldownMs))
       : 0;
-    const cooldownMs = Math.max(0, options.cooldownMs ?? pool?.cooldownMs ?? direct?.cooldownMs ?? pooledCooldown);
+    const cooldownMs = Math.max(0, options.cooldownMs ?? alias?.cooldownMs ?? pool?.cooldownMs ?? direct?.cooldownMs ?? pooledCooldown);
+    const instanceKey = options.instanceKey ?? alias?.instanceKey ?? cueId;
+    const instanceGeneration = this.instanceGenerations.get(instanceKey) ?? 0;
     const nowMs = this.context.currentTime * 1000;
     const reservation = Symbol(cueId);
     const last = this.lastPlayedAt.get(cueId);
@@ -575,15 +838,20 @@ export class AudioMixer {
     }
     const categoryGeneration = this.categoryGenerations[resolved.asset.category];
     const buffer = await this.#decodeAsset(resolved.asset.id);
-    if (!buffer || this.disposed || !this.unlocked || this.categoryGenerations[resolved.asset.category] !== categoryGeneration) {
+    if (!buffer
+      || this.disposed
+      || !this.unlocked
+      || this.categoryGenerations[resolved.asset.category] !== categoryGeneration
+      || (this.instanceGenerations.get(instanceKey) ?? 0) !== instanceGeneration) {
       // Only an actual source load/decode failure authorizes a caller's
       // synthesized fallback. Cooldown, polyphony, disposal, and category
       // cancellation remain intentionally silent.
       const sourceFailed = this.assetCache.get(resolved.asset.id)?.status === "failed";
       if (!buffer
-        && !this.disposed
-        && this.unlocked
-        && this.categoryGenerations[resolved.asset.category] === categoryGeneration
+         && !this.disposed
+         && this.unlocked
+         && this.categoryGenerations[resolved.asset.category] === categoryGeneration
+        && (this.instanceGenerations.get(instanceKey) ?? 0) === instanceGeneration
         && sourceFailed
         && typeof options.onLoadFailure === "function") {
         try { options.onLoadFailure(resolved.asset.id); } catch { /* Fallbacks are optional. */ }
@@ -626,6 +894,7 @@ export class AudioMixer {
       this.#warn(`unknown-scene:${String(sceneId)}`, `Unknown audio scene ${String(sceneId)} was ignored.`);
       return null;
     }
+    this.desiredScene = { sceneId, options: { ...options } };
     if (!this.unlocked) {
       this.pendingScene = { sceneId, options: { ...options } };
       await this.preloadScene(sceneId, { includeOptional: false });
@@ -684,6 +953,7 @@ export class AudioMixer {
   async stopScene({ fadeMs = 250 } = {}) {
     this.sceneTransitionToken += 1;
     this.pendingScene = null;
+    this.desiredScene = null;
     const previous = this.sceneState;
     this.sceneState = { sceneId: null, bgm: null, ambience: [] };
     previous.bgm?.stop(fadeMs);
@@ -733,8 +1003,26 @@ export class AudioMixer {
     if (!category || category === "bgm" || category === "ambience") {
       this.sceneTransitionToken += 1;
       this.pendingScene = null;
+      this.desiredScene = null;
       this.sceneState = { sceneId: null, bgm: null, ambience: [] };
     }
+  }
+
+  stopInstance(instanceKey, { fadeMs = 0 } = {}) {
+    if (typeof instanceKey !== "string" || instanceKey.length === 0) return 0;
+    this.instanceGenerations.set(instanceKey, (this.instanceGenerations.get(instanceKey) ?? 0) + 1);
+    let stopped = 0;
+    for (const voice of [...this.activeVoices.values()]) {
+      if (voice.instanceKey !== instanceKey) continue;
+      stopped += 1;
+      this.#stopVoice(voice, fadeMs);
+    }
+    return stopped;
+  }
+
+  stopInstances(instanceKeys, options = {}) {
+    const keys = [...new Set(Array.isArray(instanceKeys) ? instanceKeys : [])];
+    return keys.reduce((total, instanceKey) => total + this.stopInstance(instanceKey, options), 0);
   }
 
   getDiagnostics() {
@@ -746,6 +1034,9 @@ export class AudioMixer {
       disposed: this.disposed,
       activeVoices: this.activeVoices.size,
       sceneId: this.sceneState.sceneId,
+      desiredSceneId: this.desiredScene?.sceneId ?? null,
+      audioState: this.audioStatus.state,
+      needsGesture: this.audioStatus.needsGesture,
       cache,
       warningTotal: this.warningTotal,
     };
@@ -756,7 +1047,11 @@ export class AudioMixer {
     this.disposed = true;
     this.sceneTransitionToken += 1;
     this.pendingScene = null;
+    this.desiredScene = null;
     this.unlockCleanup?.();
+    this.unlockTarget = null;
+    this.lifecycleCleanup?.();
+    this.contextStateCleanup?.();
     this.stopAll();
     for (const bus of Object.values(this.buses)) safeDisconnect(bus);
     safeDisconnect(this.musicDuck);
@@ -771,6 +1066,7 @@ export class AudioMixer {
     this.lastPlayedAt.clear();
     this.poolState.clear();
     this.pendingDedupe.clear();
+    this.instanceGenerations.clear();
     if (context && context.state !== "closed" && this.closeContextOnDispose && typeof context.close === "function") {
       try {
         await context.close();
@@ -779,6 +1075,8 @@ export class AudioMixer {
       }
     }
     this.context = null;
+    this.#setAudioStatus(AUDIO_MIXER_STATES.DISPOSED, { reason: "dispose" });
+    this.statusListeners.clear();
   }
 }
 

@@ -1,7 +1,7 @@
 export const PRODUCTION_VISUALS = Object.freeze({
   title: "/art/v060/title-key-visual-v1.webp",
   command: "/art/v060/campaign-operations-room-v1.webp",
-  guide: "/art/v060/mizuki-nana-portrait-v1.webp",
+  guide: "/art/v060/characters/portraits/guide-portrait-v2.webp",
   stages: Object.freeze({
     "stage-nishijin-shopping-street": "/art/v060/battle-nishijin-shopping-street-v1.webp",
     "stage-sawara-ward-office": "/art/v060/battle-sawara-ward-office-v1.webp",

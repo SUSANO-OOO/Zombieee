@@ -1,103 +1,123 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
+import {
+  PROLOGUE_SYNOPSIS,
+  REPLAY_STORY_EVENT_IDS,
+  REQUIRED_STORY_EVENT_IDS,
+  STORY_EVENTS,
+  STORY_EVENT_IDS,
+  STORY_SCRIPT_VERSION,
+  getStoryEvent,
+  storyEventLog,
+} from "../app/storyEvents.js";
+import { PORTRAIT_ART } from "../app/spriteManifest.js";
 
-import { PROLOGUE_SYNOPSIS, STORY_EVENTS, getStoryEvent, storyEventLog } from "../app/storyEvents.js";
+function between(source, start, end) {
+  const startIndex = source.indexOf(start);
+  const endIndex = source.indexOf(end, startIndex + start.length);
+  assert.ok(startIndex >= 0 && endIndex > startIndex, `canonical section ${start} exists`);
+  return source.slice(startIndex + start.length, endIndex);
+}
 
-test("defines the complete cinematic prologue event set", () => {
-  assert.deepEqual(Object.keys(STORY_EVENTS), [
-    "intro",
-    "stage-nishijin-pre",
-    "stage-nishijin-post",
-    "stage-sawara-pre",
-    "stage-sawara-post",
-    "stage-takuya-pre",
-    "stage-takuya-post",
+function extractCanonicalDialogue(source) {
+  const lines = source.split(/\r?\n/);
+  const dialogue = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const match = lines[index].match(/^\*\*(.+)\*\*$/);
+    if (!match) continue;
+    const text = lines.slice(index + 1).find((line) => line.trim().length > 0);
+    if (text?.startsWith("「") && text.endsWith("」")) dialogue.push([match[1], text.slice(1, -1)]);
+  }
+  return dialogue;
+}
+
+function eventDialogue(eventIds) {
+  return eventIds.flatMap((eventId) => STORY_EVENTS[eventId].lines.map(({ speaker, text }) => [speaker, text]));
+}
+
+test("prologue-v5 exposes the 36 required events and three replay events", () => {
+  assert.equal(STORY_SCRIPT_VERSION, "prologue-v5");
+  assert.equal(REQUIRED_STORY_EVENT_IDS.length, 36);
+  assert.equal(REPLAY_STORY_EVENT_IDS.length, 3);
+  assert.equal(STORY_EVENT_IDS.length, 39);
+  assert.equal(new Set(STORY_EVENT_IDS).size, 39);
+  assert.deepEqual(new Set(Object.keys(STORY_EVENTS)), new Set(STORY_EVENT_IDS));
+  assert.deepEqual(REPLAY_STORY_EVENT_IDS, [
+    "stage-nishijin-replay",
+    "stage-sawara-replay",
+    "stage-takuya-replay",
   ]);
+});
 
-  assert.match(PROLOGUE_SYNOPSIS.short, /早良区役所.*防衛線/);
-  assert.match(PROLOGUE_SYNOPSIS.long, /TAKUYA/);
+test("the required event IDs exactly match the canonical implementation list", async () => {
+  const canonical = await readFile(new URL("../docs/SCENARIO_0.6.0_COMPLETE.md", import.meta.url), "utf8");
+  const eventStructure = between(canonical, "# 6. Codex実装用イベント構造", "# 7. 実装上の禁止事項");
+  const canonicalEventIds = [...eventStructure.matchAll(/^- `([^`]+)`$/gm)].map((match) => match[1]);
+  assert.deepEqual(REQUIRED_STORY_EVENT_IDS, canonicalEventIds);
+});
 
+test("all 222 fixed spoken lines match the canonical markdown without deletion or paraphrase", async () => {
+  const canonical = await readFile(new URL("../docs/SCENARIO_0.6.0_COMPLETE.md", import.meta.url), "utf8");
+  const completeScript = extractCanonicalDialogue(between(canonical, "# 3. 完全脚本", "# 4. 再プレイ時の会話"));
+  const replayScript = extractCanonicalDialogue(between(canonical, "# 4. 再プレイ時の会話", "# 5. 戦闘中ランダム台詞"));
+  const implementedScript = eventDialogue(REQUIRED_STORY_EVENT_IDS.filter((eventId) => eventId !== "prologue-ending"));
+  const implementedReplay = eventDialogue(REPLAY_STORY_EVENT_IDS);
+
+  assert.equal(completeScript.length, 215);
+  assert.equal(replayScript.length, 7);
+  assert.deepEqual(implementedScript, completeScript);
+  assert.deepEqual(implementedReplay, replayScript);
+});
+
+test("ending event preserves the three canonical title cards", () => {
+  assert.deepEqual(STORY_EVENTS["prologue-ending"].lines.map(({ speaker, text }) => [speaker, text]), [
+    ["システム", "西新・早良区間　主要避難経路を確保"],
+    ["システム", "次の目的地　百道浜"],
+    ["システム", "序章　完"],
+  ]);
+});
+
+test("every event is immutable and supplies complete presentation metadata", () => {
   for (const [eventId, storyEvent] of Object.entries(STORY_EVENTS)) {
-    assert.ok(storyEvent.background);
-    assert.ok(storyEvent.lines.length >= 10 && storyEvent.lines.length <= 14, `${eventId} has a complete but bounded scene`);
+    assert.equal(storyEvent.id, eventId);
+    assert.equal(storyEvent.scriptVersion, STORY_SCRIPT_VERSION);
+    assert.ok(storyEvent.background.length > 0);
+    assert.ok(storyEvent.lines.length > 0);
+    assert.equal(Object.isFrozen(storyEvent), true);
+    assert.equal(Object.isFrozen(storyEvent.lines), true);
     for (const line of storyEvent.lines) {
-      assert.ok(line.speaker);
-      assert.ok(line.role);
-      assert.ok(line.text);
-      assert.ok(Array.from(line.text).length <= 32, `${eventId} keeps dialogue landscape-mobile readable: ${line.text}`);
+      assert.ok(line.speaker.length > 0);
+      assert.ok(line.role.length > 0);
       assert.ok(["left", "right"].includes(line.side));
-      assert.ok(line.portrait);
-      assert.ok(line.expression);
+      assert.ok(line.portrait.length > 0);
+      assert.ok(PORTRAIT_ART[line.portrait], `${eventId}/${line.speaker} resolves a production portrait`);
+      assert.ok(line.expression.length > 0);
+      assert.ok(line.text.length > 0);
+      assert.equal(Object.isFrozen(line), true);
     }
   }
-
-  const intro = STORY_EVENTS.intro.lines.map(({ speaker, text }) => `${speaker}:${text}`).join("\n");
-  assert.match(intro, /早良区役所/);
-  assert.match(intro, /最初だけは録音じゃない/);
-  assert.match(intro, /商店街/);
-
-  const nishijinPre = STORY_EVENTS["stage-nishijin-pre"].lines.map(({ speaker, text }) => `${speaker}:${text}`).join("\n");
-  assert.match(nishijinPre, /クレイジーキング/);
-  assert.match(nishijinPre, /大人二人、子ども一人/);
-
-  const nishijinPost = STORY_EVENTS["stage-nishijin-post"].lines.map(({ speaker, text }) => `${speaker}:${text}`).join("\n");
-  assert.match(nishijinPost, /大庭 豪/);
-  assert.match(nishijinPost, /区役所/);
-
-  const sawara = [
-    ...STORY_EVENTS["stage-sawara-pre"].lines,
-    ...STORY_EVENTS["stage-sawara-post"].lines,
-  ].map(({ speaker, text }) => `${speaker}:${text}`).join("\n");
-  assert.match(sawara, /クマバーソン/);
-  assert.match(sawara, /ババヤガ/);
-  assert.match(sawara, /真壁 玲奈/);
-  assert.match(sawara, /同じ声/);
-
-  const takuya = [
-    ...STORY_EVENTS["stage-takuya-pre"].lines,
-    ...STORY_EVENTS["stage-takuya-post"].lines,
-  ].map(({ speaker, text }) => `${speaker}:${text}`).join("\n");
-  assert.match(takuya, /人間じゃない/);
-  assert.match(takuya, /百道浜/);
-  assert.match(takuya, /こちら移動拠点/);
-  assert.doesNotMatch(takuya, /識別名|記録に残|名前があるなら/);
 });
 
-test("uses dedicated guide and anonymized radio treatments", async () => {
-  const screens = await import("node:fs/promises").then(({ readFile }) => readFile(new URL("../app/CampaignScreens.tsx", import.meta.url), "utf8"));
-  const css = await import("node:fs/promises").then(({ readFile }) => readFile(new URL("../app/campaign.css", import.meta.url), "utf8"));
-  assert.match(screens, /guide: PRODUCTION_VISUALS\.guide/);
-  assert.match(screens, /radio: PRODUCTION_VISUALS\.guide/);
-  assert.match(css, /\.event-portrait\.guide,\.event-portrait\.radio/);
-
-  const unknownLines = Object.values(STORY_EVENTS)
-    .flatMap((storyEvent) => storyEvent.lines)
-    .filter((line) => /不明.*無線/.test(line.speaker));
-  assert.equal(unknownLines.length > 0, true);
-  assert.equal(unknownLines.every((line) => line.portrait === "radio"), true);
-});
-
-test("story copy preserves distinct human voices", () => {
+test("fixed character, mystery-signal, and sequel facts remain present", () => {
   const allLines = Object.values(STORY_EVENTS).flatMap(({ lines }) => lines);
-  const joinFor = (speaker) => allLines.filter((line) => line.speaker === speaker).map(({ text }) => text).join("\n");
-
-  assert.match(joinFor("パイセン"), /いるんすよね|間に合う|今から行きます/);
-  assert.match(joinFor("水城 奈々"), /録音じゃない|道は開きました|生の通信/);
-  assert.match(joinFor("白石 直人"), /頭は動かさない|結果が出たから/);
-  assert.match(joinFor("クマバーソン"), /たい|ばい|と？/);
-  assert.match(joinFor("ババヤガ"), /机が泳いでる|家庭です/);
-  assert.match(joinFor("真壁 玲奈"), /足りません|責任です/);
-  assert.doesNotMatch(allLines.map(({ text }) => text).join("\n"), /(?:死体|感染).{0,12}\d+\s*(?:秒|分)/);
+  const allText = allLines.map(({ text }) => text).join("\n");
+  assert.match(PROLOGUE_SYNOPSIS.short, /救難信号/);
+  assert.match(allText, /大人二人、子ども一人/);
+  assert.match(allText, /燃料がもったいない/);
+  assert.match(allText, /牛乳は低脂肪/);
+  assert.match(allText, /弁当食うていけや/);
+  assert.match(allText, /今のところ、生の通信/);
+  assert.match(allText, /百道浜/);
+  assert.doesNotMatch(allText, /旧名|登録名|ブギーマン/);
 });
 
-test("returns bounded conversation log entries without mutating event data", () => {
+test("lookup, legacy intro alias, and progressive logs remain safe", () => {
   assert.equal(getStoryEvent("missing"), null);
-  assert.equal(storyEventLog("intro", 0).length, 1);
-  assert.equal(storyEventLog("intro", 1).length, 2);
-  assert.equal(storyEventLog("intro").length, STORY_EVENTS.intro.lines.length);
-  assert.equal(storyEventLog("missing").length, 0);
-  assert.equal(Object.isFrozen(PROLOGUE_SYNOPSIS), true);
-  assert.equal(Object.isFrozen(STORY_EVENTS.intro), true);
-  assert.equal(Object.isFrozen(STORY_EVENTS.intro.lines), true);
-  assert.equal(Object.isFrozen(STORY_EVENTS.intro.lines[0]), true);
+  assert.equal(getStoryEvent("intro"), STORY_EVENTS["prologue-opening"]);
+  assert.equal(storyEventLog("prologue-opening", 0).length, 1);
+  assert.equal(storyEventLog("prologue-opening", 1).length, 2);
+  assert.equal(storyEventLog("prologue-opening").length, STORY_EVENTS["prologue-opening"].lines.length);
+  assert.equal(storyEventLog("intro")[0].id, "prologue-opening:0");
+  assert.deepEqual(storyEventLog("missing"), []);
 });

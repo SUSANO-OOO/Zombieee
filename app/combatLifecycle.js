@@ -55,6 +55,9 @@ export const COMBAT_ROLE_RULES = freeze({
   gunner: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
   medic: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
   spitter: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
+  "crazy-king": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  kumaverson: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  babayaga: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
 });
 
 const NON_TARGETABLE_STATES = new Set([

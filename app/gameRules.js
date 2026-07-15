@@ -11,6 +11,40 @@ export const ENEMY_BASE_COLLAPSE_SECONDS = 1.05;
 export const PREP_SECONDS = 5;
 export const TACTIC_MODES = ["defend", "balanced", "assault"];
 export const FIELD_OBJECT_CLEARANCE = 72;
+export const CONVOY_CAPACITY = 24;
+const INCOMPLETE_CONVOY_PROGRESS = 1 - Number.EPSILON;
+
+/**
+ * Advances the Sawara evacuation as durable gameplay state. Progress depends
+ * on deployed escort strength and Crawler condition; elapsed battle time is
+ * only the integration step, not the source of truth.
+ */
+export function advanceConvoyEvacuation({
+  progress = 0,
+  civiliansEvacuated = 0,
+  dt = 0,
+  humanCount = 0,
+  baseHp = 0,
+  baseMaxHp = 1,
+  missionComplete = false,
+} = {}) {
+  const current = Math.max(0, Math.min(1, Number(progress) || 0));
+  const step = Math.max(0, Number(dt) || 0);
+  const escortReadiness = Math.max(0, Math.min(1, (Number(humanCount) || 0) / 4));
+  const baseSafety = Math.max(0, Math.min(1, (Number(baseHp) || 0) / Math.max(1, Number(baseMaxHp) || 1)));
+  const operationalRate = ((0.45 + escortReadiness * 0.55) * (0.7 + baseSafety * 0.3)) / 150;
+  const incompleteProgress = Math.min(current, INCOMPLETE_CONVOY_PROGRESS);
+  const nextProgress = missionComplete
+    ? 1
+    : Math.max(incompleteProgress, Math.min(INCOMPLETE_CONVOY_PROGRESS, incompleteProgress + step * operationalRate));
+  return Object.freeze({
+    progress: nextProgress,
+    civiliansEvacuated: Math.max(
+      Math.max(0, Math.trunc(Number(civiliansEvacuated) || 0)),
+      Math.min(CONVOY_CAPACITY, Math.floor(nextProgress * CONVOY_CAPACITY)),
+    ),
+  });
+}
 
 /**
  * @typedef {{
@@ -176,14 +210,32 @@ export const CAMERA_SHAKE_EVENTS = Object.freeze({
   enemyBaseCollapse: Object.freeze({ strength: 12, seconds: .28 }),
 });
 
-export const UNIT_CARDS = [
-  { kind: "scout", name: "橘 迅", cost: 25, key: "1", desc: "遊撃手・高速迎撃", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 },
-  { kind: "ranger", name: "黒木 凛", cost: 45, key: "2", desc: "射撃手・遠距離射撃", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 },
-  { kind: "brute", name: "大庭 豪", cost: 70, key: "3", desc: "破砕兵・前線維持", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 },
-  { kind: "brawler", name: "パイセン", cost: 55, key: "4", desc: "格闘家・素手近接", deployCooldown: 13, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: .72 },
-  { kind: "gunner", name: "真壁 玲奈", cost: 60, key: "5", desc: "制圧射手・大型制圧", deployCooldown: 15, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 },
-  { kind: "medic", name: "白石 直人", cost: 50, key: "6", desc: "衛生兵・回復支援", deployCooldown: 20, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: .96 },
-];
+// PROVISIONAL BALANCE (0.6.0 early access). Keep combat tuning here so the
+// producer can adjust the three newcomers without changing battle logic. The
+// original 1-6 keyboard order is a compatibility contract; newcomers use 7-9.
+export const UNIT_CARDS = Object.freeze([
+  Object.freeze({ kind: "scout", name: "橘 迅", cost: 25, key: "1", desc: "遊撃手・高速迎撃", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 }),
+  Object.freeze({ kind: "ranger", name: "黒木 凛", cost: 45, key: "2", desc: "射撃手・遠距離射撃", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 }),
+  Object.freeze({ kind: "brute", name: "大庭 豪", cost: 70, key: "3", desc: "破砕兵・前線維持", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 }),
+  Object.freeze({ kind: "brawler", name: "パイセン", cost: 55, key: "4", desc: "格闘家・素手近接", deployCooldown: 13, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: .72 }),
+  Object.freeze({ kind: "gunner", name: "真壁 玲奈", cost: 60, key: "5", desc: "制圧射手・大型制圧", deployCooldown: 15, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 }),
+  Object.freeze({ kind: "medic", name: "白石 直人", cost: 50, key: "6", desc: "衛生兵・回復支援", deployCooldown: 20, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: .96 }),
+  Object.freeze({ kind: "crazy-king", name: "クレイジーキング", cost: 65, key: "7", desc: "狂戦士・密集殲滅", deployCooldown: 17, hp: 124, speed: 20, damage: 20, range: 34, attackEvery: .82 }),
+  Object.freeze({ kind: "kumaverson", name: "クマバーソン", cost: 62, key: "8", desc: "前衛打撃・足止め", deployCooldown: 17, hp: 152, speed: 17, damage: 27, range: 31, attackEvery: 1.02 }),
+  Object.freeze({ kind: "babayaga", name: "ババヤガ", cost: 58, key: "9", desc: "精密射撃・特殊排除", deployCooldown: 16, hp: 76, speed: 19, damage: 31, range: 158, attackEvery: 1.04 }),
+]);
+
+export const UNIT_BY_ID = Object.freeze(Object.fromEntries(UNIT_CARDS.map((card) => [card.kind, card])));
+
+export const UNIT_SPECIALS = Object.freeze({
+  "crazy-king": Object.freeze({ radius: 66, secondaryMultiplier: .46, bleedDamage: 8, bleedSeconds: 2.4, push: 7 }),
+  kumaverson: Object.freeze({ push: 18, stunSeconds: .72, heavyStunSeconds: .38 }),
+  babayaga: Object.freeze({ specialMultiplier: 1.34, analysisMarkSeconds: 3.2, markMultiplier: 1.15 }),
+});
+
+export function unitSpecialFor(kind) {
+  return UNIT_SPECIALS[kind] ?? null;
+}
 
 export const SUPPORT_DEFS = [
   { kind: "barrel", name: "爆薬ドラム", cost: 20, key: "Z", desc: "近接起爆" },
@@ -916,7 +968,7 @@ export function tacticTargetBias(tactic, enemyX) {
 }
 
 export function structureDamageMultiplier(kind, tactic = "balanced") {
-  const role = ({ brute: 1.5, brawler: 1.2, gunner: 1.1, medic: .7 })[kind] ?? 1;
+  const role = ({ brute: 1.5, brawler: 1.2, gunner: 1.1, medic: .7, "crazy-king": 1.05, kumaverson: 1.08, babayaga: .9 })[kind] ?? 1;
   const posture = tactic === "assault" ? 1.12 : tactic === "defend" ? .9 : 1;
   return role * posture;
 }
@@ -990,10 +1042,25 @@ export function crawlerSiegeDamage(damage, phase) {
   return Math.max(1, Math.ceil(damage * multiplier));
 }
 
+export const BABAYAGA_PRIORITY_TARGET_KINDS = Object.freeze([
+  "spitter",
+  "shade",
+  "crusher",
+  "abomination",
+  "takuya",
+]);
+
+export function isBabayagaPriorityTarget(targetKind) {
+  return BABAYAGA_PRIORITY_TARGET_KINDS.includes(targetKind);
+}
+
 export function roleTargetBias(attackerKind, targetKind) {
   if (attackerKind === "scout" && (targetKind === "runner" || targetKind === "shade")) return -34;
   if (attackerKind === "ranger" && targetKind === "spitter") return -42;
   if (attackerKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination")) return -34;
+  if (attackerKind === "crazy-king" && (targetKind === "walker" || targetKind === "runner" || targetKind === "turned")) return -24;
+  if (attackerKind === "kumaverson" && (targetKind === "runner" || targetKind === "crusher")) return -28;
+  if (attackerKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) return -48;
   return 0;
 }
 
@@ -1013,6 +1080,9 @@ export function roleEffectForAction({
   if (unitKind === "brute") return holdingFrontline ? "brute" : null;
   if (isBrawlerFinisher(unitKind, targetHpRatio)) return "brawler";
   if (unitKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination")) return "gunner";
+  if (unitKind === "crazy-king") return "crazy-king";
+  if (unitKind === "kumaverson") return "kumaverson";
+  if (unitKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) return "babayaga";
   return null;
 }
 
@@ -1029,9 +1099,112 @@ export function isBrawlerFinisher(attackerKind, targetHpRatio = 1) {
 
 export function humanAttackMultiplier(attackerKind, targetKind, targetHpRatio = 1, marked = false) {
   let multiplier = attackerKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination") ? 1.3 : 1;
+  if (attackerKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) {
+    multiplier *= UNIT_SPECIALS.babayaga.specialMultiplier;
+  }
   if (isBrawlerFinisher(attackerKind, targetHpRatio)) multiplier *= 1.35;
   if (marked) multiplier *= 1.15;
   return multiplier;
+}
+
+/**
+ * Returns the deterministic secondary combat payload for the newcomer roles.
+ * Applying the payload remains the battle runtime's responsibility.
+ */
+export function newcomerAttackPayload({ unitKind, targetKind, nearbyTargetIds = [], targetIsHeavy = false }) {
+  if (unitKind === "crazy-king") {
+    const special = UNIT_SPECIALS[unitKind];
+    return Object.freeze({
+      effect: unitKind,
+      radius: special.radius,
+      secondaryTargetIds: Object.freeze([...new Set(nearbyTargetIds)]),
+      secondaryMultiplier: special.secondaryMultiplier,
+      damageOverTime: Object.freeze({ damage: special.bleedDamage, seconds: special.bleedSeconds }),
+      push: special.push,
+      stunSeconds: 0,
+      markSeconds: 0,
+    });
+  }
+  if (unitKind === "kumaverson") {
+    const special = UNIT_SPECIALS[unitKind];
+    return Object.freeze({
+      effect: unitKind,
+      radius: 0,
+      secondaryTargetIds: Object.freeze([]),
+      secondaryMultiplier: 0,
+      damageOverTime: null,
+      push: special.push,
+      stunSeconds: targetIsHeavy ? special.heavyStunSeconds : special.stunSeconds,
+      markSeconds: 0,
+    });
+  }
+  if (unitKind === "babayaga") {
+    const special = UNIT_SPECIALS[unitKind];
+    const specialTarget = isBabayagaPriorityTarget(targetKind);
+    return Object.freeze({
+      effect: specialTarget ? unitKind : null,
+      radius: 0,
+      secondaryTargetIds: Object.freeze([]),
+      secondaryMultiplier: 0,
+      damageOverTime: null,
+      push: 0,
+      stunSeconds: 0,
+      markSeconds: specialTarget ? special.analysisMarkSeconds : 0,
+    });
+  }
+  return Object.freeze({ effect: null, radius: 0, secondaryTargetIds: Object.freeze([]), secondaryMultiplier: 0, damageOverTime: null, push: 0, stunSeconds: 0, markSeconds: 0 });
+}
+
+export function resolveNewcomerAttackEffects({
+  unitKind,
+  target,
+  nearbyTargets = [],
+  attackDamage = 0,
+  targetIsHeavy = false,
+} = {}) {
+  if (!target || target.id === undefined) throw new TypeError("A primary target is required");
+  const eligibleSecondaries = new Map(
+    (Array.isArray(nearbyTargets) ? nearbyTargets : [])
+      .filter((candidate) => candidate && candidate.id !== undefined && candidate.id !== target.id)
+      .map((candidate) => [candidate.id, candidate]),
+  );
+  const payload = newcomerAttackPayload({
+    unitKind,
+    targetKind: target.kind,
+    targetIsHeavy,
+    nearbyTargetIds: [...eligibleSecondaries.keys()],
+  });
+  const applyPrimaryStatus = (entity) => ({
+    ...entity,
+    bleedRemaining: payload.damageOverTime
+      ? Math.max(Number(entity.bleedRemaining) || 0, payload.damageOverTime.seconds)
+      : Number(entity.bleedRemaining) || 0,
+    bleedDamagePerSecond: payload.damageOverTime
+      ? Math.max(Number(entity.bleedDamagePerSecond) || 0, payload.damageOverTime.damage)
+      : Number(entity.bleedDamagePerSecond) || 0,
+    knock: Math.max(Number(entity.knock) || 0, payload.push),
+    stunned: Math.max(Number(entity.stunned) || 0, payload.stunSeconds),
+    marked: Math.max(Number(entity.marked) || 0, payload.markSeconds),
+  });
+  const secondaryDamage = Math.max(0, Number(attackDamage) || 0) * payload.secondaryMultiplier;
+  const secondaryTargets = payload.secondaryTargetIds
+    .map((id) => eligibleSecondaries.get(id))
+    .filter(Boolean)
+    .map((entity) => ({
+      ...applyPrimaryStatus(entity),
+      hp: (Number(entity.hp) || 0) - secondaryDamage,
+      flash: Math.max(Number(entity.flash) || 0, 0.1),
+    }));
+  return Object.freeze({
+    payload,
+    target: Object.freeze(applyPrimaryStatus(target)),
+    secondaryTargets: Object.freeze(secondaryTargets.map((entity) => Object.freeze(entity))),
+    secondaryDamage,
+  });
+}
+
+export function advanceAttackCooldown(cooldown, dt) {
+  return Math.max(0, (Number(cooldown) || 0) - Math.max(0, Number(dt) || 0));
 }
 
 export function crawlerThreatLevel(nearestEnemyX) {

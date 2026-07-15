@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "./productionVisuals.js";
+import { PORTRAIT_ART } from "./spriteManifest.js";
 import { PROLOGUE_SYNOPSIS, getStoryEvent, storyEventLog } from "./storyEvents.js";
 
 export type CampaignScreen = "title" | "event" | "map" | "loadout" | "battle" | "result";
@@ -81,9 +82,12 @@ type Props = {
   assetsReady: boolean;
   assetError: boolean;
   hasCampaignSave: boolean;
+  readStoryEventIds: readonly string[];
+  autoSkipReadStory: boolean;
   onBegin: () => void;
   onRestartCampaign: () => void;
   onEventComplete: () => void;
+  onSetAutoSkipReadStory: (enabled: boolean) => void;
   onSelectStage: (stageId: string) => void;
   onOpenLoadout: () => void;
   onReturnToMap: () => void;
@@ -96,16 +100,7 @@ type Props = {
   onReloadAssets: () => void;
 };
 
-const portraitArt: Record<string, string> = {
-  guide: PRODUCTION_VISUALS.guide,
-  radio: PRODUCTION_VISUALS.guide,
-  scout: "/scout-sprites-v2.png",
-  ranger: "/ranger-sprites-v1.png",
-  brute: "/breaker-sprites-v2.png",
-  brawler: "/brawler-sprites-v1.png",
-  gunner: "/gunner-sprites-v1.png",
-  medic: "/medic-sprites-v1.png",
-};
+const portraitArt = PORTRAIT_ART as Record<string, string>;
 
 function stars(value: number) {
   return `${"★".repeat(Math.max(0, Math.min(3, value)))}${"☆".repeat(Math.max(0, 3 - value))}`;
@@ -133,26 +128,54 @@ function TitleScreen({ hasCampaignSave, onBegin, onRestartCampaign }: Pick<Props
   </div>;
 }
 
-function StoryScreen({ eventId, onEventComplete }: Pick<Props, "eventId" | "onEventComplete">) {
+function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, onEventComplete, onSetAutoSkipReadStory }: Pick<Props, "eventId" | "readStoryEventIds" | "autoSkipReadStory" | "onEventComplete" | "onSetAutoSkipReadStory">) {
   const [index, setIndex] = useState(0);
   const [logOpen, setLogOpen] = useState(false);
+  const [skipOpen, setSkipOpen] = useState(false);
+  const completedRef = useRef(false);
   const event = eventId ? getStoryEvent(eventId) : null;
   const line = event?.lines[index] ?? null;
   const log = useMemo(() => eventId ? storyEventLog(eventId, index) : [], [eventId, index]);
-  if (!event || !line) return <div className="campaign-overlay event-screen"><button className="campaign-primary" onClick={onEventComplete}>地図へ進む</button></div>;
+  const contextLine = useMemo(() => {
+    if (!event || !line) return null;
+    const candidates = [
+      ...event.lines.slice(0, index).reverse(),
+      ...event.lines.slice(index + 1),
+    ];
+    return candidates.find((candidate) => (
+      candidate.portrait !== line.portrait
+      && candidate.side !== line.side
+      && Boolean(portraitArt[candidate.portrait])
+    )) ?? null;
+  }, [event, index, line]);
+  const completeOnce = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    onEventComplete();
+  }, [onEventComplete]);
+  const eventRead = Boolean(eventId && readStoryEventIds.includes(eventId));
+  useEffect(() => {
+    if (!eventId || !eventRead || !autoSkipReadStory || completedRef.current) return;
+    const timer = window.setTimeout(completeOnce, 0);
+    return () => window.clearTimeout(timer);
+  }, [autoSkipReadStory, completeOnce, eventId, eventRead]);
+  if (!event || !line) return <div className="campaign-overlay event-screen"><button className="campaign-primary" onClick={completeOnce}>地図へ進む</button></div>;
   const art = portraitArt[line.portrait] ?? "";
-  const advance = () => index + 1 < event.lines.length ? setIndex((value) => value + 1) : onEventComplete();
+  const contextArt = contextLine ? portraitArt[contextLine.portrait] ?? "" : "";
+  const advance = () => index + 1 < event.lines.length ? setIndex((value) => value + 1) : completeOnce();
   const backgroundArt = STORY_BACKGROUND_VISUALS[event.background as keyof typeof STORY_BACKGROUND_VISUALS] ?? PRODUCTION_VISUALS.command;
   return <div className={`campaign-overlay event-screen event-${event.background} effect-${line.effect ?? "none"}`} style={artStyle(backgroundArt)} aria-label="会話イベント">
     <div className="event-vignette" />
-    <div className={`event-portrait ${line.side} ${line.portrait === "guide" ? "guide" : line.portrait === "radio" ? "radio" : ""}`} data-expression={line.expression} style={art ? { backgroundImage: `url('${art}')` } : undefined} aria-hidden="true" />
-    <div className="event-controls"><button onClick={() => setLogOpen((value) => !value)}>会話ログ</button><button onClick={onEventComplete}>スキップ</button></div>
+    {contextLine && contextArt && <div className={`event-portrait inactive ${contextLine.side} ${contextLine.portrait === "guide" ? "guide" : contextLine.portrait === "radio" ? "radio" : ""}`} style={{ backgroundImage: `url('${contextArt}')` }} aria-hidden="true" />}
+    <div className={`event-portrait active ${line.side} ${line.portrait === "guide" ? "guide" : line.portrait === "radio" ? "radio" : ""}`} data-expression={line.expression} style={art ? { backgroundImage: `url('${art}')` } : undefined} aria-hidden="true" />
+    <div className="event-controls"><button onClick={() => setLogOpen((value) => !value)}>会話ログ</button><button onClick={() => setSkipOpen(true)}>スキップ</button></div>
     {logOpen && <section className="event-log" aria-label="会話ログ"><header><b>会話ログ</b><button onClick={() => setLogOpen(false)}>閉じる</button></header>{log.map((entry: { id: string; speaker: string; text: string }) => <p key={entry.id}><b>{entry.speaker}</b><span>{entry.text}</span></p>)}</section>}
     <button className="dialogue-box" onClick={advance} aria-label="セリフを送る">
       <span className="dialogue-name"><b>{line.speaker}</b><small>{line.role}</small></span>
       <span className="dialogue-text">{line.text}</span>
       <em>{index + 1 < event.lines.length ? "次へ" : "完了"} ▾</em>
     </button>
+    {skipOpen && <div className="story-skip-confirm" role="alertdialog" aria-modal="true" aria-label="会話をスキップ"><section><h2>会話をスキップしますか？</h2><p>進行・加入・報酬・解放の結果は変わりません。</p><button onClick={completeOnce}>この会話だけスキップ</button><button onClick={() => { onSetAutoSkipReadStory(true); completeOnce(); }}>既読会話を今後自動スキップ</button><button className="cancel" onClick={() => setSkipOpen(false)}>キャンセル</button></section></div>}
   </div>;
 }
 
@@ -196,10 +219,10 @@ function LoadoutScreen({ selectedStage, units, formationKinds, supplies, selecte
   return <div className="campaign-overlay formation-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="出撃編成">
     <header className="campaign-header"><button className="campaign-back" onClick={onReturnToMap}>← 地図へ</button><div><small>出撃編成</small><h1>{selectedStage.displayName}</h1></div><p>{selectedStage.objective}</p></header>
     <div className="formation-layout">
-      <section className="formation-units" aria-label="使用ユニットを選択"><h2>出撃可能ユニット <small>{formationKinds.length}名選択中</small></h2><div>{units.map((unit) => {
+      <section className="formation-units" aria-label="使用ユニットを選択"><h2>出撃可能ユニット <small>{formationKinds.length}/{units.length}名選択中・上限{units.length}名</small></h2><div>{units.map((unit) => {
         const selected = formationKinds.includes(unit.kind);
-        return <button key={unit.id} data-kind={unit.kind} data-selected={selected} disabled={!unit.unlocked} onClick={() => onToggleFormation(unit.kind)} aria-pressed={selected} aria-label={`${unit.name}、${unit.role}、${unit.weaponName}、${unit.deploymentHint}`} title={`${unit.attackMode} / ${unit.primaryTarget} / ${unit.deploymentHint}`}>
-          <span className="formation-portrait" /><span><b>{unit.name}</b><em><i>{unit.roleIcon}</i>{unit.role}</em><small>{unit.unlocked ? `${unit.weaponName}・${unit.rangeBand}・${unit.primaryTarget}` : unit.unlockHint}</small></span><i>{unit.unlocked ? selected ? "選択中" : "待機" : "未解放"}</i>
+        return <button key={unit.id} data-kind={unit.kind} data-selected={selected} disabled={!unit.unlocked} onClick={() => onToggleFormation(unit.kind)} aria-pressed={selected} aria-label={`${unit.name}、${unit.role}、${unit.weaponName}、${unit.deploymentHint}`} title={`${unit.attackMode} / ${unit.primaryTarget} / ${unit.deploymentHint}`} style={{ "--formation-art": `url('${portraitArt[unit.kind]}')` } as CSSProperties}>
+          <span className="formation-portrait" /><span><b>{unit.name}</b><em><i>{unit.roleIcon}</i>{unit.role}</em><small className="unit-combat">{unit.unlocked ? `${unit.weaponName}・${unit.rangeBand}・${unit.primaryTarget}` : unit.unlockHint}</small>{unit.unlocked && <small className="unit-intent">配置：{unit.deploymentHint}</small>}</span><i>{unit.unlocked ? selected ? "選択中" : "待機" : "未解放"}</i>
         </button>;
       })}</div></section>
       <section className="formation-support" aria-label="戦場物資を選択"><h2>戦場物資</h2>{supplies.map((supply) => <button key={supply.kind} data-supply={supply.kind} data-selected={selectedSupply === supply.kind} onClick={() => onSelectSupply(supply.kind)} aria-pressed={selectedSupply === supply.kind}><b>{supply.name}</b><small>{supply.description}</small><em>▰{supply.cost}</em></button>)}<div className="formation-note"><b>固定支援</b><span>緊急航空支援 / 移動拠点一斉掃射</span></div></section>
@@ -225,7 +248,7 @@ function ResultScreen({ selectedStage, result, onRetry, onContinueResult }: Pick
 export function CampaignScreens(props: Props) {
   if (props.screen === "battle") return null;
   if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} />;
-  if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} onEventComplete={props.onEventComplete} />;
+  if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} onEventComplete={props.onEventComplete} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />;
   if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} onSelectStage={props.onSelectStage} onOpenLoadout={props.onOpenLoadout} onResetSave={props.onResetSave} />;
   if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationKinds={props.formationKinds} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} onReturnToMap={props.onReturnToMap} onToggleFormation={props.onToggleFormation} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
   return <ResultScreen selectedStage={props.selectedStage} result={props.result} onRetry={props.onRetry} onContinueResult={props.onContinueResult} />;

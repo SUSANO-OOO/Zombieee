@@ -1,3 +1,5 @@
+import { STORY_SCRIPT_VERSION } from "./storyEvents.js";
+
 /**
  * Pure, data-driven campaign progression for the 0.6.0 early-access foundation.
  *
@@ -74,6 +76,9 @@ export const CAMPAIGN_UNIT_IDS = deepFreeze({
   KUROKI_RIN: "ranger",
   SHIRAISHI_NAOTO: "medic",
   OBA_GO: "brute",
+  CRAZY_KING: "crazy-king",
+  KUMAVERSON: "kumaverson",
+  BABAYAGA: "babayaga",
   MAKABE_REINA: "gunner",
 });
 
@@ -142,7 +147,7 @@ export const CAMPAIGN_STAGES = deepFreeze([
     postBattleEventId: "stage-nishijin-post",
     nextUnlocks: {
       stageIds: [CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE],
-      unitIds: [CAMPAIGN_UNIT_IDS.OBA_GO],
+      unitIds: [CAMPAIGN_UNIT_IDS.OBA_GO, CAMPAIGN_UNIT_IDS.CRAZY_KING],
       mapSignalIds: [],
     },
   },
@@ -179,7 +184,7 @@ export const CAMPAIGN_STAGES = deepFreeze([
     postBattleEventId: "stage-sawara-post",
     nextUnlocks: {
       stageIds: [CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE],
-      unitIds: [CAMPAIGN_UNIT_IDS.MAKABE_REINA],
+      unitIds: [CAMPAIGN_UNIT_IDS.KUMAVERSON, CAMPAIGN_UNIT_IDS.BABAYAGA, CAMPAIGN_UNIT_IDS.MAKABE_REINA],
       mapSignalIds: [],
     },
   },
@@ -342,6 +347,66 @@ export const CAMPAIGN_UNITS = deepFreeze([
     unlock: { type: "stage-clear", stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET },
   },
   {
+    id: CAMPAIGN_UNIT_IDS.CRAZY_KING,
+    combatKind: "crazy-king",
+    displayName: "クレイジーキング",
+    roleName: "狂戦士",
+    roleIcon: "鋸",
+    weaponName: "チェーンソー",
+    attackMode: "範囲斬撃・押し返し",
+    rangeBand: "近距離",
+    primaryTarget: "密集群・感染拠点",
+    deploymentHint: "密集した前線へ投入",
+    description: "チェーンソーで密集群を切り開き、感染拠点へ圧力をかける",
+    spritePath: "/art/v060/characters/crazy-king-battle-v1.png",
+    appearanceAudit: {
+      presentation: "黄色い筒状頭部、緑のパーカー、赤いブーツの表現",
+      weaponMatch: "血痕の付いたチェーンソーと狂戦士役が一致",
+      result: "正本の表示名・外見・武器・役割と整合",
+    },
+    unlock: { type: "stage-clear", stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET },
+  },
+  {
+    id: CAMPAIGN_UNIT_IDS.KUMAVERSON,
+    combatKind: "kumaverson",
+    displayName: "クマバーソン",
+    roleName: "前衛打撃",
+    roleIcon: "鍋",
+    weaponName: "フライパン",
+    attackMode: "打撃・足止め",
+    rangeBand: "近距離",
+    primaryTarget: "重装型・前線の感染者",
+    deploymentHint: "前線へ投入して敵を足止め",
+    description: "フライパンの強打で前線を支え、敵の進行を止める",
+    spritePath: "/art/v060/characters/kumaverson-battle-v1.png",
+    appearanceAudit: {
+      presentation: "黒髪、汚れた白いTシャツ、黒いパンツの男性的表現",
+      weaponMatch: "フライパンと前衛打撃・足止め役が一致",
+      result: "正本の表示名・外見・武器・役割と整合",
+    },
+    unlock: { type: "stage-clear", stageId: CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE },
+  },
+  {
+    id: CAMPAIGN_UNIT_IDS.BABAYAGA,
+    combatKind: "babayaga",
+    displayName: "ババヤガ",
+    roleName: "精密射手",
+    roleIcon: "精",
+    weaponName: "サプレッサー付き拳銃",
+    attackMode: "精密射撃・特殊個体排除",
+    rangeBand: "中～遠距離",
+    primaryTarget: "特殊個体・危険個体",
+    deploymentHint: "危険個体を狙える後列へ配備",
+    description: "精密射撃と分析で特殊個体を優先排除する",
+    spritePath: "/art/v060/characters/babayaga-battle-v1.png",
+    appearanceAudit: {
+      presentation: "黒髪、白いワイシャツ、ネクタイ、ショルダーホルスターの男性的表現",
+      weaponMatch: "サプレッサー付き拳銃と精密射撃役が一致",
+      result: "正本の表示名・外見・武器・役割と整合",
+    },
+    unlock: { type: "stage-clear", stageId: CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE },
+  },
+  {
     id: CAMPAIGN_UNIT_IDS.MAKABE_REINA,
     combatKind: "gunner",
     displayName: "真壁 玲奈",
@@ -436,7 +501,7 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 
 export const calculateBattleRewards = calculateStageRewards;
 
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 2;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 3;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
 
 export const DEFAULT_CAMPAIGN_SETTINGS = deepFreeze({
@@ -451,6 +516,9 @@ export function createDefaultCampaignSave() {
   return {
     schemaVersion: CAMPAIGN_SAVE_SCHEMA_VERSION,
     campaignStarted: false,
+    storyScriptVersion: STORY_SCRIPT_VERSION,
+    readStoryEventIds: [],
+    autoSkipReadStory: false,
     processedResultIds: [],
     completedStageIds: [],
     bestStarsByStage: {},
@@ -505,20 +573,33 @@ function normalizeSettings(value) {
 
 function deriveUnlocks(completedStageIds, explicitStageIds = [], explicitUnitIds = []) {
   const completed = new Set(completedStageIds);
-  const knownStageIds = new Set(CAMPAIGN_STAGES.map((stage) => stage.id));
-  const knownUnitIds = new Set(CAMPAIGN_UNITS.map((unit) => unit.id));
-  // Known 0.6.0 unlocks are always derived from completed stages. This repairs
-  // old/local-QA saves that accidentally persisted all-unlock flags. Unknown
-  // future IDs are preserved so a later schema can still migrate them.
-  const stages = new Set([INITIAL_STAGE_ID, ...explicitStageIds.filter((id) => !knownStageIds.has(id)), ...completedStageIds]);
-  const units = new Set([...INITIAL_UNIT_IDS, ...explicitUnitIds.filter((id) => !knownUnitIds.has(id))]);
+  const knownStageOrder = CAMPAIGN_STAGES.map((stage) => stage.id);
+  const knownUnitOrder = CAMPAIGN_UNITS.map((unit) => unit.id);
+  const knownStageIds = new Set(knownStageOrder);
+  const knownUnitIds = new Set(knownUnitOrder);
+  // A historical localhost QA save persisted exactly every current stage/unit
+  // while recording no clears. Repair only that unambiguous shape. Legitimate
+  // explicit unlocks and unknown future IDs remain durable migration data.
+  const qaAllUnlockLeak = completedStageIds.length === 0
+    && knownStageOrder.every((id) => explicitStageIds.includes(id))
+    && knownUnitOrder.every((id) => explicitUnitIds.includes(id));
+  const stages = new Set([INITIAL_STAGE_ID, ...(qaAllUnlockLeak ? [] : explicitStageIds), ...completedStageIds]);
+  const units = new Set([...INITIAL_UNIT_IDS, ...(qaAllUnlockLeak ? [] : explicitUnitIds)]);
   for (const stageId of completed) {
     const stage = CAMPAIGN_STAGE_BY_ID[stageId];
     if (!stage) continue;
     for (const unlockedStageId of stage.nextUnlocks.stageIds) stages.add(unlockedStageId);
     for (const unlockedUnitId of stage.nextUnlocks.unitIds) units.add(unlockedUnitId);
   }
-  return { unlockedStageIds: [...stages], unlockedUnitIds: [...units] };
+  const unlockedStageIds = [
+    ...knownStageOrder.filter((id) => stages.has(id)),
+    ...[...stages].filter((id) => !knownStageIds.has(id)),
+  ];
+  const unlockedUnitIds = [
+    ...knownUnitOrder.filter((id) => units.has(id)),
+    ...[...units].filter((id) => !knownUnitIds.has(id)),
+  ];
+  return { unlockedStageIds, unlockedUnitIds };
 }
 
 /**
@@ -571,10 +652,29 @@ export function migrateCampaignSave(rawSave) {
   // IDs are opaque receipts. Keep the full ledger so no old result can become
   // payable again after enough later battles.
   const processedResultIds = uniqueStrings(firstDefined(source, ["processedResultIds", "appliedResultIds"], []));
+  const sourceStoryScriptVersion = typeof source.storyScriptVersion === "string"
+    ? source.storyScriptVersion.trim()
+    : "";
+  const storedReadStoryEventIds = uniqueStrings(firstDefined(
+    source,
+    ["readStoryEventIds", "readEventIds", "seenStoryEventIds"],
+    [],
+  ));
+  const readStoryEventIds = sourceStoryScriptVersion && sourceStoryScriptVersion !== STORY_SCRIPT_VERSION
+    ? []
+    : storedReadStoryEventIds;
+  const autoSkipCandidate = firstDefined(
+    source,
+    ["autoSkipReadStory", "autoSkipReadEvents"],
+    isRecord(rawSettings) ? rawSettings.autoSkipReadStory : false,
+  );
 
   return {
     schemaVersion: CAMPAIGN_SAVE_SCHEMA_VERSION,
     campaignStarted,
+    storyScriptVersion: STORY_SCRIPT_VERSION,
+    readStoryEventIds,
+    autoSkipReadStory: typeof autoSkipCandidate === "boolean" ? autoSkipCandidate : false,
     processedResultIds,
     completedStageIds,
     bestStarsByStage,
@@ -601,6 +701,25 @@ export function deserializeCampaignSave(serialized) {
   } catch {
     return createDefaultCampaignSave();
   }
+}
+
+export function markStoryEventRead(save, eventId) {
+  const current = migrateCampaignSave(save);
+  const normalizedEventId = typeof eventId === "string" ? eventId.trim() : "";
+  if (!normalizedEventId || current.readStoryEventIds.includes(normalizedEventId)) return current;
+  return migrateCampaignSave({
+    ...current,
+    readStoryEventIds: [...current.readStoryEventIds, normalizedEventId],
+  });
+}
+
+export function updateStoryPlaybackSettings(save, changes = {}) {
+  const current = migrateCampaignSave(save);
+  if (!isRecord(changes) || typeof changes.autoSkipReadStory !== "boolean") return current;
+  return migrateCampaignSave({
+    ...current,
+    autoSkipReadStory: changes.autoSkipReadStory,
+  });
 }
 
 function normalizeStageResultInput(stageIdOrResult, maybeResult) {

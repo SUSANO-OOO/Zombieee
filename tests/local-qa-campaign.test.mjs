@@ -16,7 +16,7 @@ const STAGE_2 = CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE;
 const STAGE_3 = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
 
 test("local battle QA modes remain host-gated and include lifecycle evidence", () => {
-  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle"]);
+  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
   for (const mode of LOCAL_QA_MODES) {
     assert.equal(resolveLocalQaMode("localhost", `?qa=${mode}`), mode);
     assert.equal(resolveLocalQaMode("127.0.0.1", `?qa=${mode}`), mode);
@@ -89,6 +89,22 @@ test("defense QA selects the fixed 180-second defense stage", () => {
   assert.equal(resolveLocalQaScenario("localhost", "?qa=defense&stars=3"), null);
 });
 
+test("story QA opens every canonical event only on an exact local host", async () => {
+  const { STORY_EVENT_IDS } = await import("../app/storyEvents.js");
+  for (const eventId of STORY_EVENT_IDS) {
+    assert.deepEqual(resolveLocalQaScenario("localhost", `?qa=story&event=${eventId}`), {
+      mode: "story",
+      screen: "event",
+      stageId: STAGE_1,
+      stars: 0,
+      eventId,
+    });
+  }
+  assert.equal(resolveLocalQaScenario("localhost", "?qa=story&event=missing"), null);
+  assert.equal(resolveLocalQaScenario("example.com", `?qa=story&event=${STORY_EVENT_IDS[0]}`), null);
+  assert.equal(resolveLocalQaScenario("localhost", `?qa=story&event=${STORY_EVENT_IDS[0]}&screen=event`), null);
+});
+
 test("campaign QA is unavailable away from the exact local host allowlist", () => {
   for (const hostname of ["example.com", "localhost.example", "0.0.0.0", "::1", "LOCALHOST", ""]) {
     assert.equal(resolveLocalQaScenario(hostname, "?qa=flow&screen=map&stage=1&stars=3"), null);
@@ -110,6 +126,8 @@ test("invalid, ambiguous, and unknown campaign QA parameters are rejected", () =
     "?qa=flow&screen=map&screen=result",
     "?qa=flow&screen=map&stage=1&stage=2",
     "?qa=flow&screen=map&stars=1&stars=2",
+    "?qa=flow&screen=map&event=prologue-opening",
+    "?qa=story&event=prologue-opening&event=prologue-ending",
   ]) {
     assert.equal(resolveLocalQaScenario("localhost", search), null, search);
   }

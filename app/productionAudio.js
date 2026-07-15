@@ -55,6 +55,43 @@ const HUMAN_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
 const ENEMY_KINDS = Object.freeze(["walker", "runner", "spitter", "crusher", "shade", "abomination", "turned", "takuya"]);
 const ENEMY_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
 
+const NEW_UNIT_AUDIO_CUES = Object.freeze([
+  { id: "weapon-chainsaw-start", category: "weapons", cooldownMs: 180, maxInstances: 1, gain: 0.82, priority: 72 },
+  {
+    id: "weapon-chainsaw-idle-loop",
+    category: "weapons",
+    loop: true,
+    cooldownMs: 0,
+    maxInstances: 1,
+    gain: 0.52,
+    priority: 58,
+  },
+  { id: "weapon-chainsaw-attack", category: "weapons", cooldownMs: 80, maxInstances: 2, gain: 0.82, priority: 72 },
+  { id: "weapon-chainsaw-flesh-hit", category: "melee", cooldownMs: 70, maxInstances: 4, gain: 0.78, priority: 68 },
+  { id: "weapon-chainsaw-hard-hit", category: "melee", cooldownMs: 100, maxInstances: 3, gain: 0.84, priority: 72 },
+  { id: "weapon-chainsaw-stop", category: "weapons", cooldownMs: 180, maxInstances: 1, gain: 0.72, priority: 66 },
+  { id: "weapon-pan-swing", category: "melee", cooldownMs: 90, maxInstances: 3, gain: 0.70, priority: 62 },
+  { id: "weapon-pan-hit", category: "melee", cooldownMs: 90, maxInstances: 4, gain: 0.82, priority: 68 },
+  { id: "weapon-pan-heavy-hit", category: "melee", cooldownMs: 140, maxInstances: 3, gain: 0.88, priority: 74 },
+  { id: "weapon-pan-stun", category: "melee", cooldownMs: 220, maxInstances: 2, gain: 0.76, priority: 78 },
+  { id: "weapon-suppressed-pistol", category: "weapons", cooldownMs: 90, maxInstances: 4, gain: 0.72, priority: 70 },
+  { id: "weapon-suppressed-hit", category: "weapons", cooldownMs: 70, maxInstances: 4, gain: 0.66, priority: 64 },
+  { id: "weapon-suppressed-reload", category: "weapons", cooldownMs: 280, maxInstances: 1, gain: 0.62, priority: 60 },
+  { id: "weapon-special-kill", category: "weapons", cooldownMs: 500, maxInstances: 1, gain: 0.76, priority: 82 },
+  { id: "voice-crazy-king-deploy", category: "humanVoices", cooldownMs: 500, maxInstances: 1, gain: 0.78, priority: 70 },
+  { id: "voice-crazy-king-attack", category: "humanVoices", cooldownMs: 220, maxInstances: 2, gain: 0.78, priority: 68 },
+  { id: "voice-crazy-king-hurt", category: "humanVoices", cooldownMs: 300, maxInstances: 2, gain: 0.82, priority: 76 },
+  { id: "voice-crazy-king-death", category: "humanVoices", cooldownMs: 1000, maxInstances: 1, gain: 0.86, priority: 88 },
+  { id: "voice-kumaverson-deploy", category: "humanVoices", cooldownMs: 500, maxInstances: 1, gain: 0.76, priority: 70 },
+  { id: "voice-kumaverson-attack", category: "humanVoices", cooldownMs: 220, maxInstances: 2, gain: 0.76, priority: 68 },
+  { id: "voice-kumaverson-hurt", category: "humanVoices", cooldownMs: 300, maxInstances: 2, gain: 0.80, priority: 76 },
+  { id: "voice-kumaverson-death", category: "humanVoices", cooldownMs: 1000, maxInstances: 1, gain: 0.84, priority: 88 },
+  { id: "voice-babayaga-deploy", category: "humanVoices", cooldownMs: 500, maxInstances: 1, gain: 0.70, priority: 70 },
+  { id: "voice-babayaga-attack", category: "humanVoices", cooldownMs: 220, maxInstances: 2, gain: 0.70, priority: 68 },
+  { id: "voice-babayaga-hurt", category: "humanVoices", cooldownMs: 300, maxInstances: 2, gain: 0.74, priority: 76 },
+  { id: "voice-babayaga-death", category: "humanVoices", cooldownMs: 1000, maxInstances: 1, gain: 0.78, priority: 88 },
+]);
+
 function sourceFor(folder, name) {
   // MP3 is first because it is supported by older iPhone Safari versions;
   // Vorbis OGG remains the higher-efficiency alternate for modern browsers.
@@ -169,6 +206,7 @@ const assets = [
   ...weaponAssets,
   ...humanVoiceAssets,
   ...enemyVoiceAssets,
+  ...NEW_UNIT_AUDIO_CUES.map(({ id, category, ...options }) => sfxAsset(id, category, options)),
 ];
 
 const pools = [...weaponPools, ...humanVoicePools, ...enemyVoicePools];
@@ -179,6 +217,7 @@ const COMBAT_PRELOAD = Object.freeze([
   ...LIFECYCLE_CUES,
   "radio-open",
   "radio-close",
+  ...NEW_UNIT_AUDIO_CUES.map(({ id }) => id),
 ]);
 
 const scenes = [
@@ -194,7 +233,13 @@ const scenes = [
   { id: "defeat", bgm: "music-defeat", preload: ["ui-confirm", "ui-cancel"], crossfadeMs: 320 },
 ];
 
-export const PRODUCTION_AUDIO_MANIFEST = createAudioManifest({ version: 1, assets, pools, scenes });
+export const PRODUCTION_AUDIO_MANIFEST = createAudioManifest({
+  version: 1,
+  assets,
+  pools,
+  aliases: [],
+  scenes,
+});
 
 export const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({
   TITLE: "title",
@@ -222,6 +267,9 @@ const UNIT_WEAPON_CUES = Object.freeze({
   brawler: "weapon-unarmed",
   gunner: "weapon-gunner",
   medic: "weapon-rifle",
+  "crazy-king": "weapon-chainsaw-attack",
+  kumaverson: "weapon-pan-swing",
+  babayaga: "weapon-suppressed-pistol",
 });
 
 const UNIT_VOICE_PROFILES = Object.freeze({
@@ -231,6 +279,72 @@ const UNIT_VOICE_PROFILES = Object.freeze({
   brawler: "male-heavy",
   gunner: "female",
   medic: "male-light",
+  "crazy-king": "male-heavy",
+  kumaverson: "male-heavy",
+  babayaga: "male-light",
+});
+
+const newUnitContract = ({ weapon, voiceProfile, weaponEvents, voicePrefix }) => Object.freeze({
+  weapon,
+  voiceProfile,
+  weaponEvents: Object.freeze({ ...weaponEvents }),
+  voiceEvents: Object.freeze({
+    deploy: `voice-${voicePrefix}-deploy`,
+    attack: `voice-${voicePrefix}-attack`,
+    hurt: `voice-${voicePrefix}-hurt`,
+    death: `voice-${voicePrefix}-death`,
+  }),
+});
+
+export const UNIT_AUDIO_CUE_CONTRACTS = Object.freeze({
+  "crazy-king": newUnitContract({
+    weapon: "weapon-chainsaw-attack",
+    voiceProfile: "male-heavy",
+    voicePrefix: "crazy-king",
+    weaponEvents: {
+      start: "weapon-chainsaw-start",
+      idleLoop: "weapon-chainsaw-idle-loop",
+      attack: "weapon-chainsaw-attack",
+      fleshHit: "weapon-chainsaw-flesh-hit",
+      hardHit: "weapon-chainsaw-hard-hit",
+      stop: "weapon-chainsaw-stop",
+    },
+  }),
+  kumaverson: newUnitContract({
+    weapon: "weapon-pan-swing",
+    voiceProfile: "male-heavy",
+    voicePrefix: "kumaverson",
+    weaponEvents: {
+      swing: "weapon-pan-swing",
+      hit: "weapon-pan-hit",
+      heavyHit: "weapon-pan-heavy-hit",
+      stun: "weapon-pan-stun",
+    },
+  }),
+  babayaga: newUnitContract({
+    weapon: "weapon-suppressed-pistol",
+    voiceProfile: "male-light",
+    voicePrefix: "babayaga",
+    weaponEvents: {
+      shot: "weapon-suppressed-pistol",
+      hit: "weapon-suppressed-hit",
+      reload: "weapon-suppressed-reload",
+      specialKill: "weapon-special-kill",
+    },
+  }),
+});
+
+export const BATTLE_AUDIO_LOOP_CONTRACTS = Object.freeze({
+  corpseBurn: Object.freeze({
+    cueId: "corpse-burn-loop",
+    category: "support",
+    instanceKey: "corpse-burn-loop",
+  }),
+  crazyKingChainsaw: Object.freeze({
+    cueId: "weapon-chainsaw-idle-loop",
+    category: "weapons",
+    instanceKey: "chainsaw-idle-loop",
+  }),
 });
 
 function ownValue(record, key) {
@@ -242,8 +356,26 @@ export function weaponCueForUnit(kind) {
 }
 
 export function humanVoiceCueForUnit(kind, event) {
+  const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];
+  if (contractCue) return contractCue;
   const profile = ownValue(UNIT_VOICE_PROFILES, kind);
   return profile && HUMAN_VOICE_EVENTS.includes(event) ? `human-${profile}-${event}` : null;
+}
+
+export function unitAudioCueFor(kind, group, event) {
+  const contract = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind);
+  if (!contract) return null;
+  if (group === "weapon") return ownValue(contract.weaponEvents, event);
+  if (group === "voice") return ownValue(contract.voiceEvents, event);
+  return null;
+}
+
+export function stopBattleAudioLoops(mixer, { fadeMs = 0 } = {}) {
+  if (!mixer?.stopInstances) return 0;
+  return mixer.stopInstances(
+    Object.values(BATTLE_AUDIO_LOOP_CONTRACTS).map((contract) => contract.instanceKey),
+    { fadeMs },
+  );
 }
 
 export function enemyVoiceCue(kind, event) {
@@ -323,6 +455,9 @@ export const LEGACY_SFX_CUE_MAP = Object.freeze({
   "role-brawler": "weapon-unarmed",
   "role-gunner": "weapon-gunner",
   "role-medic": "support-heal",
+  "role-crazy-king": "weapon-chainsaw-attack",
+  "role-kumaverson": "weapon-pan-hit",
+  "role-babayaga": "weapon-suppressed-pistol",
   "structure-heavy": "weapon-hammer",
   "structure-light": "weapon-melee-impact",
   "crawler-hit": "weapon-melee-impact",

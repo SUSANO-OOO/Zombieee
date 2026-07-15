@@ -66,6 +66,21 @@ export const BATTLE_BARK_TRIGGER_IDS = Object.freeze({
   DEFEAT: "defeat",
 });
 
+export const RANDOM_BATTLE_BARK_TRIGGER_IDS = Object.freeze({
+  DEPLOY: "deploy",
+  CONTACT: "contact",
+  SELF_INJURED: "self-injured",
+  ALLY_INJURED: "ally-injured",
+  ALLY_DANGER: "ally-danger",
+  ENEMY_BASE_ATTACK: "enemy-base-attack",
+  FAST_ENEMY: "fast-enemy",
+  HEAVY_ENEMY: "heavy-enemy",
+  GROUPED_ENEMIES: "grouped-enemies",
+  SPECIAL_ENEMY: "special-enemy",
+  SERIOUS: "serious",
+  VICTORY_NEAR: "victory-near",
+});
+
 function approvedLine({ duration = 1.7, cooldown = 12, ...line }) {
   return Object.freeze({
     duration,
@@ -78,11 +93,72 @@ function approvedLine({ duration = 1.7, cooldown = 12, ...line }) {
 }
 
 /**
+ * The 44 situational lines in SCENARIO_0.6.0_COMPLETE.md section 5. They are
+ * separate from deterministic story communications and only match the exact
+ * unit and situation supplied by the battle runtime.
+ */
+export const CANONICAL_RANDOM_BATTLE_BARK_LINES = /** @type {readonly BattleBarkLine[]} */ (Object.freeze([
+  approvedLine({ id: "random-brawler-deploy", trigger: "deploy", speakerKind: "brawler", voiceKind: "brawler", speaker: "パイセン", text: "行くっす", priority: 24 }),
+  approvedLine({ id: "random-brawler-contact", trigger: "contact", speakerKind: "brawler", voiceKind: "brawler", speaker: "パイセン", text: "多いな……やるしかない", priority: 36 }),
+  approvedLine({ id: "random-brawler-self-injured", trigger: "self-injured", speakerKind: "brawler", voiceKind: "brawler", speaker: "パイセン", text: "痛っ。まだ動ける", priority: 72 }),
+  approvedLine({ id: "random-brawler-ally-danger", trigger: "ally-danger", speakerKind: "brawler", voiceKind: "brawler", speaker: "パイセン", text: "そっち行った！", priority: 82 }),
+  approvedLine({ id: "random-brawler-enemy-base-attack", trigger: "enemy-base-attack", speakerKind: "brawler", voiceKind: "brawler", speaker: "パイセン", text: "ここ壊せば止まるんすよね", priority: 58 }),
+
+  approvedLine({ id: "random-ranger-deploy", trigger: "deploy", speakerKind: "ranger", voiceKind: "ranger", speaker: "黒木 凛", text: "後ろから見ます", priority: 25 }),
+  approvedLine({ id: "random-ranger-contact", trigger: "contact", speakerKind: "ranger", voiceKind: "ranger", speaker: "黒木 凛", text: "右に二体", priority: 38 }),
+  approvedLine({ id: "random-ranger-fast-enemy", trigger: "fast-enemy", speakerKind: "ranger", voiceKind: "ranger", speaker: "黒木 凛", text: "速いのが来る", priority: 66 }),
+  approvedLine({ id: "random-ranger-ally-danger", trigger: "ally-danger", speakerKind: "ranger", voiceKind: "ranger", speaker: "黒木 凛", text: "前に出すぎ", priority: 82 }),
+  approvedLine({ id: "random-ranger-enemy-base-attack", trigger: "enemy-base-attack", speakerKind: "ranger", voiceKind: "ranger", speaker: "黒木 凛", text: "射線、通った", priority: 58 }),
+
+  approvedLine({ id: "random-scout-deploy", trigger: "deploy", speakerKind: "scout", voiceKind: "scout", speaker: "橘 迅", text: "先を見る", priority: 23 }),
+  approvedLine({ id: "random-scout-contact", trigger: "contact", speakerKind: "scout", voiceKind: "scout", speaker: "橘 迅", text: "上、行く", priority: 36 }),
+  approvedLine({ id: "random-scout-self-injured", trigger: "self-injured", speakerKind: "scout", voiceKind: "scout", speaker: "橘 迅", text: "まだ走れる", priority: 72 }),
+  approvedLine({ id: "random-scout-fast-enemy", trigger: "fast-enemy", speakerKind: "scout", voiceKind: "scout", speaker: "橘 迅", text: "そいつは俺が止める", priority: 66 }),
+  approvedLine({ id: "random-scout-victory-near", trigger: "victory-near", speakerKind: "scout", voiceKind: "scout", speaker: "橘 迅", text: "あと少し", priority: 56 }),
+
+  approvedLine({ id: "random-medic-deploy", trigger: "deploy", speakerKind: "medic", voiceKind: "medic", speaker: "白石 直人", text: "怪我したら呼んで", priority: 26 }),
+  approvedLine({ id: "random-medic-ally-injured", trigger: "ally-injured", speakerKind: "medic", voiceKind: "medic", speaker: "白石 直人", text: "下がって。傷を見ます", priority: 76 }),
+  approvedLine({ id: "random-medic-ally-danger", trigger: "ally-danger", speakerKind: "medic", voiceKind: "medic", speaker: "白石 直人", text: "その人を先に！", priority: 84 }),
+  approvedLine({ id: "random-medic-enemy-base-attack", trigger: "enemy-base-attack", speakerKind: "medic", voiceKind: "medic", speaker: "白石 直人", text: "周りを見て。無理しないで", priority: 58 }),
+
+  approvedLine({ id: "random-brute-deploy", trigger: "deploy", speakerKind: "brute", voiceKind: "brute", speaker: "大庭 豪", text: "前へ行く", priority: 25 }),
+  approvedLine({ id: "random-brute-contact", trigger: "contact", speakerKind: "brute", voiceKind: "brute", speaker: "大庭 豪", text: "中央にいる", priority: 37 }),
+  approvedLine({ id: "random-brute-heavy-enemy", trigger: "heavy-enemy", speakerKind: "brute", voiceKind: "brute", speaker: "大庭 豪", text: "俺が止める", priority: 68 }),
+  approvedLine({ id: "random-brute-self-injured", trigger: "self-injured", speakerKind: "brute", voiceKind: "brute", speaker: "大庭 豪", text: "まだ持てる", priority: 72 }),
+  approvedLine({ id: "random-brute-enemy-base-attack", trigger: "enemy-base-attack", speakerKind: "brute", voiceKind: "brute", speaker: "大庭 豪", text: "ここを壊す", priority: 58 }),
+
+  approvedLine({ id: "random-gunner-deploy", trigger: "deploy", speakerKind: "gunner", voiceKind: "gunner", speaker: "真壁 玲奈", text: "火線を作ります", priority: 27 }),
+  approvedLine({ id: "random-gunner-contact", trigger: "contact", speakerKind: "gunner", voiceKind: "gunner", speaker: "真壁 玲奈", text: "中央を撃ちます", priority: 39 }),
+  approvedLine({ id: "random-gunner-ally-danger", trigger: "ally-danger", speakerKind: "gunner", voiceKind: "gunner", speaker: "真壁 玲奈", text: "伏せて！", priority: 85 }),
+  approvedLine({ id: "random-gunner-enemy-base-attack", trigger: "enemy-base-attack", speakerKind: "gunner", voiceKind: "gunner", speaker: "真壁 玲奈", text: "撃ち続けます", priority: 59 }),
+
+  approvedLine({ id: "random-crazy-king-deploy", trigger: "deploy", speakerKind: "crazy-king", voiceKind: "crazy-king", speaker: "クレイジーキング", text: "燃料よし", priority: 28 }),
+  approvedLine({ id: "random-crazy-king-contact", trigger: "contact", speakerKind: "crazy-king", voiceKind: "crazy-king", speaker: "クレイジーキング", text: "まとめて来たな", priority: 40 }),
+  approvedLine({ id: "random-crazy-king-self-injured", trigger: "self-injured", speakerKind: "crazy-king", voiceKind: "crazy-king", speaker: "クレイジーキング", text: "まだ切れてない", priority: 73 }),
+  approvedLine({ id: "random-crazy-king-grouped-enemies", trigger: "grouped-enemies", speakerKind: "crazy-king", voiceKind: "crazy-king", speaker: "クレイジーキング", text: "寄せろ。切る", priority: 69 }),
+  approvedLine({ id: "random-crazy-king-enemy-base-attack", trigger: "enemy-base-attack", speakerKind: "crazy-king", voiceKind: "crazy-king", speaker: "クレイジーキング", text: "中心を出せ", priority: 60 }),
+
+  approvedLine({ id: "random-kumaverson-deploy", trigger: "deploy", speakerKind: "kumaverson", voiceKind: "kumaverson", speaker: "クマバーソン", text: "行くぞ！", priority: 28 }),
+  approvedLine({ id: "random-kumaverson-contact", trigger: "contact", speakerKind: "kumaverson", voiceKind: "kumaverson", speaker: "クマバーソン", text: "並ばんね！ 一人ずつたい！", priority: 40 }),
+  approvedLine({ id: "random-kumaverson-self-injured", trigger: "self-injured", speakerKind: "kumaverson", voiceKind: "kumaverson", speaker: "クマバーソン", text: "痛っ。まだ立てる！", priority: 73 }),
+  approvedLine({ id: "random-kumaverson-ally-danger", trigger: "ally-danger", speakerKind: "kumaverson", voiceKind: "kumaverson", speaker: "クマバーソン", text: "下がりんしゃい！", priority: 84 }),
+  approvedLine({ id: "random-kumaverson-victory-near", trigger: "victory-near", speakerKind: "kumaverson", voiceKind: "kumaverson", speaker: "クマバーソン", text: "あと少したい！", priority: 57 }),
+
+  approvedLine({ id: "random-babayaga-deploy", trigger: "deploy", speakerKind: "babayaga", voiceKind: "babayaga", speaker: "ババヤガ", text: "早く終わらせる", priority: 29 }),
+  approvedLine({ id: "random-babayaga-contact", trigger: "contact", speakerKind: "babayaga", voiceKind: "babayaga", speaker: "ババヤガ", text: "左二体。今日は静かな洗濯機です", priority: 41 }),
+  approvedLine({ id: "random-babayaga-self-injured", trigger: "self-injured", speakerKind: "babayaga", voiceKind: "babayaga", speaker: "ババヤガ", text: "問題ない", priority: 74 }),
+  approvedLine({ id: "random-babayaga-special-enemy", trigger: "special-enemy", speakerKind: "babayaga", voiceKind: "babayaga", speaker: "ババヤガ", text: "危険個体。先に落とす", priority: 78 }),
+  approvedLine({ id: "random-babayaga-serious", trigger: "serious", speakerKind: "babayaga", voiceKind: "babayaga", speaker: "ババヤガ", text: "射線を空けろ", priority: 90 }),
+  approvedLine({ id: "random-babayaga-victory-near", trigger: "victory-near", speakerKind: "babayaga", voiceKind: "babayaga", speaker: "ババヤガ", text: "終わらせる。帰るぞ", priority: 58 }),
+]));
+
+/**
  * Short, state-linked radio lines for normal play. Repeated triggers rotate to
  * another variant because each line has an independent cooldown. Corpse
  * infection warnings are intentionally diegetic and never expose timer data.
  */
 export const APPROVED_BATTLE_BARK_LINES = /** @type {readonly BattleBarkLine[]} */ (Object.freeze([
+  ...CANONICAL_RANDOM_BATTLE_BARK_LINES,
   approvedLine({ id: "role-brawler-01", trigger: "role-cue", speakerKind: "brawler", voiceKind: "brawler", speaker: "パイセン", text: "前、行くっす！", priority: 24 }),
   approvedLine({ id: "role-brawler-02", trigger: "role-cue", speakerKind: "brawler", voiceKind: "brawler", speaker: "パイセン", text: "まだ動けるっす。", priority: 24 }),
   approvedLine({ id: "role-brawler-03", trigger: "role-cue", speakerKind: "brawler", voiceKind: "brawler", speaker: "パイセン", text: "近いのは俺が止める！", priority: 24 }),
@@ -143,7 +219,7 @@ export const APPROVED_BATTLE_BARK_LINES = /** @type {readonly BattleBarkLine[]} 
 
 // These diagnostic labels are only selected by localhost-only QA routes.
 export const LOCAL_QA_BATTLE_BARK_LINES = /** @type {readonly BattleBarkLine[]} */ (Object.freeze([
-  ...["scout", "ranger", "brute", "brawler", "gunner", "medic"].map((speakerKind, index) => Object.freeze({
+  ...["scout", "ranger", "brute", "brawler", "gunner", "medic", "crazy-king", "kumaverson", "babayaga"].map((speakerKind, index) => Object.freeze({
     id: `qa-role-${speakerKind}`,
     trigger: "role-cue",
     speakerKind,
@@ -195,6 +271,15 @@ function lineMatches(line, event) {
   return line.trigger === event.trigger && (!line.speakerKind || line.speakerKind === event.speakerKind);
 }
 
+/**
+ * Cooldowns follow the stable character/voice key, never a transient fighter
+ * instance number. Redeploying the same character therefore cannot bypass the
+ * speaker cooldown.
+ */
+export function battleBarkSpeakerKey(line, event) {
+  return String(line.speakerKind ?? line.voiceKind ?? event.speakerKind ?? event.speakerId ?? line.speaker);
+}
+
 export function battleBarkPassesProbability(probability = BATTLE_BARK_CONFIG.defaultProbability, roll = Math.random()) {
   const chance = Math.max(0, Math.min(1, Number(probability) || 0));
   const normalizedRoll = Math.max(0, Math.min(1, Number(roll) || 0));
@@ -212,7 +297,7 @@ export function queueBattleBark({ runtime, event, qa = false, random = Math.rand
 
   let reason = "lower-priority";
   for (const line of candidates) {
-    const speakerId = String(event.speakerId ?? event.speakerKind ?? line.speaker);
+    const speakerId = battleBarkSpeakerKey(line, event);
     const duplicateActive = runtime.active.some((bark) => bark.lineId === line.id || (bark.speakerId === speakerId && bark.trigger === event.trigger));
     if (duplicateActive) { reason = "duplicate-active"; continue; }
     if ((runtime.lineReadyAt[line.id] ?? 0) > runtime.clock) { reason = "line-cooldown"; continue; }

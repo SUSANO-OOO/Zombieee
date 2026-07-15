@@ -24,12 +24,14 @@ import {
   deserializeCampaignSave,
   isStageUnlocked,
   isUnitUnlocked,
+  markStoryEventRead,
   markCampaignStarted,
   migrateCampaignSave,
   resolveStageResult,
   selectCampaignStage,
   serializeCampaignSave,
   updateCampaignSettings,
+  updateStoryPlaybackSettings,
 } from "../app/campaign.js";
 
 const STAGE_1 = CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET;
@@ -100,13 +102,17 @@ test("stage objectives, prerequisites, defense duration, boss, and future signal
   assert.equal(shoppingStreet.objective, "感染拠点を破壊");
   assert.deepEqual(shoppingStreet.prerequisiteStageIds, []);
   assert.deepEqual(shoppingStreet.nextUnlocks.stageIds, [STAGE_2]);
-  assert.deepEqual(shoppingStreet.nextUnlocks.unitIds, [CAMPAIGN_UNIT_IDS.OBA_GO]);
+  assert.deepEqual(shoppingStreet.nextUnlocks.unitIds, [CAMPAIGN_UNIT_IDS.OBA_GO, CAMPAIGN_UNIT_IDS.CRAZY_KING]);
 
   assert.equal(wardOffice.missionType, "timed-defense");
   assert.equal(wardOffice.objectiveConfig.durationSeconds, 180);
   assert.deepEqual(wardOffice.prerequisiteStageIds, [STAGE_1]);
   assert.deepEqual(wardOffice.nextUnlocks.stageIds, [STAGE_3]);
-  assert.deepEqual(wardOffice.nextUnlocks.unitIds, [CAMPAIGN_UNIT_IDS.MAKABE_REINA]);
+  assert.deepEqual(wardOffice.nextUnlocks.unitIds, [
+    CAMPAIGN_UNIT_IDS.KUMAVERSON,
+    CAMPAIGN_UNIT_IDS.BABAYAGA,
+    CAMPAIGN_UNIT_IDS.MAKABE_REINA,
+  ]);
 
   assert.equal(defenseLine.boss.id, "boss-takuya");
   assert.equal(defenseLine.boss.displayName, "TAKUYA");
@@ -118,9 +124,9 @@ test("stage objectives, prerequisites, defense duration, boss, and future signal
   assert.equal(defenseLine.waves.find(({ waveNumber }) => waveNumber === 8).units.some(([kind]) => kind === "takuya"), true);
 });
 
-test("six combat units and the non-combat guide use Japanese player-facing data", () => {
-  assert.equal(CAMPAIGN_UNITS.length, 6);
-  assert.equal(CAMPAIGN_CHARACTERS.length, 7);
+test("nine stable combat units and the non-combat guide use Japanese player-facing data", () => {
+  assert.equal(CAMPAIGN_UNITS.length, 9);
+  assert.equal(CAMPAIGN_CHARACTERS.length, 10);
   assert.deepEqual(INITIAL_UNIT_IDS, [
     CAMPAIGN_UNIT_IDS.PAISEN,
     CAMPAIGN_UNIT_IDS.TACHIBANA_JIN,
@@ -135,25 +141,34 @@ test("six combat units and the non-combat guide use Japanese player-facing data"
       ["黒木 凛", "射撃手"],
       ["白石 直人", "衛生兵"],
       ["大庭 豪", "破砕兵"],
+      ["クレイジーキング", "狂戦士"],
+      ["クマバーソン", "前衛打撃"],
+      ["ババヤガ", "精密射手"],
       ["真壁 玲奈", "制圧射手"],
     ],
   );
   assert.equal(CAMPAIGN_UNIT_BY_ID.brawler.displayName, "パイセン");
   assert.equal(CAMPAIGN_UNIT_BY_ID.brawler.roleName, "格闘家");
   assert.deepEqual(CAMPAIGN_UNIT_BY_ID.brute.unlock, { type: "stage-clear", stageId: STAGE_1 });
+  assert.deepEqual(CAMPAIGN_UNIT_BY_ID["crazy-king"].unlock, { type: "stage-clear", stageId: STAGE_1 });
+  assert.deepEqual(CAMPAIGN_UNIT_BY_ID.kumaverson.unlock, { type: "stage-clear", stageId: STAGE_2 });
+  assert.deepEqual(CAMPAIGN_UNIT_BY_ID.babayaga.unlock, { type: "stage-clear", stageId: STAGE_2 });
   assert.deepEqual(CAMPAIGN_UNIT_BY_ID.gunner.unlock, { type: "stage-clear", stageId: STAGE_2 });
   assert.equal(CAMPAIGN_GUIDE.displayName, "水城 奈々");
   assert.equal(CAMPAIGN_GUIDE.roleName, "通信・地図・情報分析");
   assert.equal(CAMPAIGN_GUIDE.combatant, false);
 });
 
-test("all six units expose Japanese role, weapon, range, target, deployment, and audited sprite metadata", () => {
+test("all nine units expose Japanese role, weapon, range, target, deployment, and audited sprite metadata", () => {
   const expected = {
     brawler: ["パイセン", "格闘家", "拳", "素手", "連続打撃", "近距離", "前線の感染者", "先頭で敵を押し返す", "/brawler-sprites-v1.png"],
     scout: ["橘 迅", "遊撃手", "速", "バール", "高速接近・打撃", "近距離", "走行型・影走り", "敵の薄い経路へ素早く投入", "/scout-sprites-v2.png"],
     ranger: ["黒木 凛", "射撃手", "狙", "自動小銃", "遠距離精密射撃", "遠距離", "吐瀉型・大型", "後列から危険個体を狙う", "/ranger-sprites-v1.png"],
     medic: ["白石 直人", "衛生兵", "救", "自動小銃・救急バッグ", "援護射撃・味方治療", "中距離", "負傷した味方", "味方の後方へ配備", "/medic-sprites-v1.png"],
     brute: ["大庭 豪", "破砕兵", "砕", "大型ハンマー", "重打撃", "近距離", "重装型・感染拠点", "前線の要所へ配備", "/breaker-sprites-v2.png"],
+    "crazy-king": ["クレイジーキング", "狂戦士", "鋸", "チェーンソー", "範囲斬撃・押し返し", "近距離", "密集群・感染拠点", "密集した前線へ投入", "/art/v060/characters/crazy-king-battle-v1.png"],
+    kumaverson: ["クマバーソン", "前衛打撃", "鍋", "フライパン", "打撃・足止め", "近距離", "重装型・前線の感染者", "前線へ投入して敵を足止め", "/art/v060/characters/kumaverson-battle-v1.png"],
+    babayaga: ["ババヤガ", "精密射手", "精", "サプレッサー付き拳銃", "精密射撃・特殊個体排除", "中～遠距離", "特殊個体・危険個体", "危険個体を狙える後列へ配備", "/art/v060/characters/babayaga-battle-v1.png"],
     gunner: ["真壁 玲奈", "制圧射手", "制", "自動小銃", "制圧連射", "中～遠距離", "大型・密集群", "火線を通せる後列へ配備", "/gunner-sprites-v1.png"],
   };
 
@@ -302,15 +317,21 @@ test("stage clears unlock the next stage and the specified units in order", () =
   assert.deepEqual(initial.unlockedStageIds, [STAGE_1]);
   assert.equal(isStageUnlocked(initial, STAGE_2), false);
   assert.equal(isUnitUnlocked(initial, CAMPAIGN_UNIT_IDS.OBA_GO), false);
+  assert.equal(isUnitUnlocked(initial, CAMPAIGN_UNIT_IDS.CRAZY_KING), false);
 
   const afterStage1 = applyStageResult(initial, STAGE_1, { resultId: "unlock-stage-1", won: true, baseHp: 70, baseMaxHp: 100 });
   assert.equal(isStageUnlocked(afterStage1, STAGE_2), true);
   assert.equal(isStageUnlocked(afterStage1, STAGE_3), false);
   assert.equal(isUnitUnlocked(afterStage1, CAMPAIGN_UNIT_IDS.OBA_GO), true);
+  assert.equal(isUnitUnlocked(afterStage1, CAMPAIGN_UNIT_IDS.CRAZY_KING), true);
+  assert.equal(isUnitUnlocked(afterStage1, CAMPAIGN_UNIT_IDS.KUMAVERSON), false);
+  assert.equal(isUnitUnlocked(afterStage1, CAMPAIGN_UNIT_IDS.BABAYAGA), false);
   assert.equal(isUnitUnlocked(afterStage1, CAMPAIGN_UNIT_IDS.MAKABE_REINA), false);
 
   const afterStage2 = applyStageResult(afterStage1, STAGE_2, { resultId: "unlock-stage-2", won: true, baseHp: 1, baseMaxHp: 100 });
   assert.equal(isStageUnlocked(afterStage2, STAGE_3), true);
+  assert.equal(isUnitUnlocked(afterStage2, CAMPAIGN_UNIT_IDS.KUMAVERSON), true);
+  assert.equal(isUnitUnlocked(afterStage2, CAMPAIGN_UNIT_IDS.BABAYAGA), true);
   assert.equal(isUnitUnlocked(afterStage2, CAMPAIGN_UNIT_IDS.MAKABE_REINA), true);
   assert.deepEqual(afterStage2.completedStageIds, [STAGE_1, STAGE_2]);
 });
@@ -318,6 +339,9 @@ test("stage clears unlock the next stage and the specified units in order", () =
 test("default save is versioned and contains initial progression, selection, and settings", () => {
   const save = createDefaultCampaignSave();
   assert.equal(save.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
+  assert.equal(save.storyScriptVersion, "prologue-v5");
+  assert.deepEqual(save.readStoryEventIds, []);
+  assert.equal(save.autoSkipReadStory, false);
   assert.equal(save.campaignStarted, false);
   assert.deepEqual(save.processedResultIds, []);
   assert.deepEqual(save.completedStageIds, []);
@@ -358,6 +382,10 @@ test("migration accepts schema-less and v0 aliases, derives unlocks, and tolerat
   assert.equal(migrated.supplies, 345);
   assert.equal(migrated.unlockedStageIds.includes(STAGE_2), true);
   assert.equal(migrated.unlockedUnitIds.includes(CAMPAIGN_UNIT_IDS.OBA_GO), true);
+  assert.equal(migrated.unlockedUnitIds.includes(CAMPAIGN_UNIT_IDS.CRAZY_KING), true);
+  assert.equal(migrated.storyScriptVersion, "prologue-v5");
+  assert.deepEqual(migrated.readStoryEventIds, []);
+  assert.equal(migrated.autoSkipReadStory, false);
   assert.equal(migrated.lastSelectedStageId, STAGE_2);
   assert.deepEqual(migrated.settings, {
     bgmEnabled: false,
@@ -412,6 +440,46 @@ test("schema v1 saves are treated as existing campaigns even before a clear", ()
   assert.equal(migrated.campaignStarted, true);
 });
 
+test("schema v2 to v3 migration is idempotent and preserves progress, receipts, settings, and story preferences", () => {
+  const schema2 = {
+    schemaVersion: 2,
+    campaignStarted: true,
+    processedResultIds: ["old-result-a", "old-result-b"],
+    completedStageIds: [STAGE_1, STAGE_2],
+    bestStarsByStage: { [STAGE_1]: 3, [STAGE_2]: 2 },
+    claimedStarRewardsByStage: { [STAGE_1]: [1, 2, 3], [STAGE_2]: [1, 2] },
+    supplies: 987,
+    unlockedStageIds: [STAGE_1, STAGE_2, STAGE_3],
+    unlockedUnitIds: [...INITIAL_UNIT_IDS, CAMPAIGN_UNIT_IDS.OBA_GO, CAMPAIGN_UNIT_IDS.MAKABE_REINA],
+    lastSelectedStageId: STAGE_3,
+    settings: { bgmEnabled: false, sfxEnabled: true, bgmVolume: 0.2, sfxVolume: 0.6, reducedMotion: true },
+    readStoryEventIds: ["prologue-opening", "stage-nishijin-pre", "prologue-opening"],
+    autoSkipReadStory: true,
+  };
+  const migrated = migrateCampaignSave(schema2);
+
+  assert.equal(migrated.schemaVersion, 3);
+  assert.equal(migrated.storyScriptVersion, "prologue-v5");
+  assert.deepEqual(migrated.processedResultIds, schema2.processedResultIds);
+  assert.deepEqual(migrated.completedStageIds, schema2.completedStageIds);
+  assert.deepEqual(migrated.bestStarsByStage, schema2.bestStarsByStage);
+  assert.deepEqual(migrated.claimedStarRewardsByStage, schema2.claimedStarRewardsByStage);
+  assert.equal(migrated.supplies, schema2.supplies);
+  assert.equal(migrated.lastSelectedStageId, schema2.lastSelectedStageId);
+  assert.deepEqual(migrated.settings, schema2.settings);
+  assert.deepEqual(migrated.readStoryEventIds, ["prologue-opening", "stage-nishijin-pre"]);
+  assert.equal(migrated.autoSkipReadStory, true);
+  assert.deepEqual(migrated.unlockedUnitIds, [
+    ...INITIAL_UNIT_IDS,
+    CAMPAIGN_UNIT_IDS.OBA_GO,
+    CAMPAIGN_UNIT_IDS.CRAZY_KING,
+    CAMPAIGN_UNIT_IDS.KUMAVERSON,
+    CAMPAIGN_UNIT_IDS.BABAYAGA,
+    CAMPAIGN_UNIT_IDS.MAKABE_REINA,
+  ]);
+  assert.deepEqual(migrateCampaignSave(migrated), migrated);
+});
+
 test("migration repairs accidentally persisted QA all-unlock flags", () => {
   const repaired = migrateCampaignSave({
     schemaVersion: 2,
@@ -422,6 +490,40 @@ test("migration repairs accidentally persisted QA all-unlock flags", () => {
   });
   assert.deepEqual(repaired.unlockedStageIds, [STAGE_1]);
   assert.deepEqual(repaired.unlockedUnitIds, INITIAL_UNIT_IDS);
+});
+
+test("migration preserves legitimate explicit unlocks that are independent of clear history", () => {
+  const migrated = migrateCampaignSave({
+    schemaVersion: 2,
+    campaignStarted: true,
+    completedStageIds: [],
+    unlockedStageIds: [STAGE_1, STAGE_2, "future-stage"],
+    unlockedUnitIds: [...INITIAL_UNIT_IDS, CAMPAIGN_UNIT_IDS.OBA_GO, "future-unit"],
+  });
+  assert.deepEqual(migrated.unlockedStageIds, [STAGE_1, STAGE_2, "future-stage"]);
+  assert.deepEqual(migrated.unlockedUnitIds, [...INITIAL_UNIT_IDS, CAMPAIGN_UNIT_IDS.OBA_GO, "future-unit"]);
+});
+
+test("explicitly versioned story receipts reset only when the script version changes", () => {
+  const oldVersion = migrateCampaignSave({
+    schemaVersion: 3,
+    storyScriptVersion: "prologue-v4",
+    readStoryEventIds: ["prologue-opening", "stage-nishijin-pre"],
+  });
+  assert.deepEqual(oldVersion.readStoryEventIds, []);
+
+  const currentVersion = migrateCampaignSave({
+    schemaVersion: 3,
+    storyScriptVersion: "prologue-v5",
+    readStoryEventIds: ["prologue-opening"],
+  });
+  assert.deepEqual(currentVersion.readStoryEventIds, ["prologue-opening"]);
+
+  const legacyWithoutVersion = migrateCampaignSave({
+    schemaVersion: 2,
+    readStoryEventIds: ["prologue-opening"],
+  });
+  assert.deepEqual(legacyWithoutVersion.readStoryEventIds, ["prologue-opening"]);
 });
 
 test("absent and corrupted saves fall back safely", () => {
@@ -446,6 +548,26 @@ test("serialization round-trips stars, rewards, unlocks, selection, and settings
   assert.equal(restored.lastSelectedStageId, STAGE_2);
   assert.equal(restored.settings.bgmEnabled, false);
   assert.equal(restored.settings.sfxVolume, 0.25);
+});
+
+test("read tracking and read-only auto-skip preferences update without erasing campaign progress", () => {
+  const progressed = applyStageResult(createDefaultCampaignSave(), STAGE_1, {
+    resultId: "story-setting-progress",
+    won: true,
+    baseHp: 90,
+    baseMaxHp: 100,
+  });
+  const readOnce = markStoryEventRead(progressed, "stage-nishijin-post");
+  const readTwice = markStoryEventRead(readOnce, "stage-nishijin-post");
+  const enabled = updateStoryPlaybackSettings(readTwice, { autoSkipReadStory: true });
+
+  assert.deepEqual(readOnce.readStoryEventIds, ["stage-nishijin-post"]);
+  assert.deepEqual(readTwice.readStoryEventIds, readOnce.readStoryEventIds);
+  assert.equal(enabled.autoSkipReadStory, true);
+  assert.equal(enabled.storyScriptVersion, "prologue-v5");
+  assert.equal(enabled.supplies, progressed.supplies);
+  assert.deepEqual(enabled.processedResultIds, progressed.processedResultIds);
+  assert.deepEqual(enabled.completedStageIds, progressed.completedStageIds);
 });
 
 test("starting a story is explicit and never erases existing progress", () => {
@@ -474,7 +596,7 @@ test("the same result receipt applies rewards, stars, and unlocks exactly once",
   assert.equal(first.result.applied, true);
   assert.equal(first.result.alreadyProcessed, false);
   assert.deepEqual(first.result.newlyUnlockedStageIds, [STAGE_2]);
-  assert.deepEqual(first.result.newlyUnlockedUnitIds, [CAMPAIGN_UNIT_IDS.OBA_GO]);
+  assert.deepEqual(first.result.newlyUnlockedUnitIds, [CAMPAIGN_UNIT_IDS.OBA_GO, CAMPAIGN_UNIT_IDS.CRAZY_KING]);
   assert.equal(first.result.totalReward > 0, true);
   assert.deepEqual(first.save.processedResultIds, [input.resultId]);
 

@@ -90,6 +90,25 @@ function validatePool(pool, index, errors) {
   }
 }
 
+function validateAlias(alias, index, errors) {
+  const prefix = `aliases[${index}]`;
+  if (!isRecord(alias)) {
+    errors.push(`${prefix} must be an object`);
+    return;
+  }
+  if (typeof alias.id !== "string" || alias.id.length === 0) errors.push(`${prefix}.id must be a non-empty string`);
+  if (typeof alias.targetId !== "string" || alias.targetId.length === 0) errors.push(`${prefix}.targetId must be a non-empty string`);
+  if (alias.loop !== undefined && typeof alias.loop !== "boolean") errors.push(`${prefix}.loop must be boolean`);
+  if (alias.instanceKey !== undefined && (typeof alias.instanceKey !== "string" || alias.instanceKey.length === 0)) {
+    errors.push(`${prefix}.instanceKey must be a non-empty string when present`);
+  }
+  if (alias.priority !== undefined && !isFiniteInRange(alias.priority, 0, 1000)) errors.push(`${prefix}.priority must be between 0 and 1000`);
+  if (alias.cooldownMs !== undefined && !isFiniteInRange(alias.cooldownMs, 0, 60000)) errors.push(`${prefix}.cooldownMs must be between 0 and 60000`);
+  if (alias.maxInstances !== undefined && (!Number.isInteger(alias.maxInstances) || alias.maxInstances < 1 || alias.maxInstances > 64)) {
+    errors.push(`${prefix}.maxInstances must be an integer between 1 and 64`);
+  }
+}
+
 function validateScene(scene, index, errors) {
   const prefix = `scenes[${index}]`;
   if (!isRecord(scene)) {
@@ -123,21 +142,33 @@ export function validateAudioManifest(candidate) {
   if (!isRecord(candidate)) return ["manifest must be an object"];
   const assets = Array.isArray(candidate.assets) ? candidate.assets : [];
   const pools = Array.isArray(candidate.pools) ? candidate.pools : [];
+  const aliases = Array.isArray(candidate.aliases) ? candidate.aliases : [];
   const scenes = Array.isArray(candidate.scenes) ? candidate.scenes : [];
   if (candidate.assets !== undefined && !Array.isArray(candidate.assets)) errors.push("assets must be an array");
   if (candidate.pools !== undefined && !Array.isArray(candidate.pools)) errors.push("pools must be an array");
+  if (candidate.aliases !== undefined && !Array.isArray(candidate.aliases)) errors.push("aliases must be an array");
   if (candidate.scenes !== undefined && !Array.isArray(candidate.scenes)) errors.push("scenes must be an array");
   assets.forEach((asset, index) => validateAsset(asset, index, errors));
   pools.forEach((pool, index) => validatePool(pool, index, errors));
+  aliases.forEach((alias, index) => validateAlias(alias, index, errors));
   scenes.forEach((scene, index) => validateScene(scene, index, errors));
   assertUniqueIds(assets, "assets", errors);
   assertUniqueIds(pools, "pools", errors);
+  assertUniqueIds(aliases, "aliases", errors);
   assertUniqueIds(scenes, "scenes", errors);
 
   const assetById = new Map(assets.filter(isRecord).map((asset) => [asset.id, asset]));
   const poolById = new Map(pools.filter(isRecord).map((pool) => [pool.id, pool]));
+  const aliasById = new Map(aliases.filter(isRecord).map((alias) => [alias.id, alias]));
   for (const cueId of poolById.keys()) {
     if (assetById.has(cueId)) errors.push(`cue id ${String(cueId)} is shared by an asset and a pool`);
+  }
+  for (const alias of aliases) {
+    if (!isRecord(alias) || typeof alias.id !== "string") continue;
+    if (assetById.has(alias.id) || poolById.has(alias.id)) errors.push(`cue id ${String(alias.id)} is shared by an alias and an asset or pool`);
+    if (!assetById.has(alias.targetId) && !poolById.has(alias.targetId)) {
+      errors.push(`alias ${String(alias.id)} references unknown asset or pool ${String(alias.targetId)}`);
+    }
   }
   for (const pool of pools) {
     if (!isRecord(pool) || !Array.isArray(pool.assetIds)) continue;
@@ -147,7 +178,12 @@ export function validateAudioManifest(candidate) {
       else if (asset.category !== pool.category) errors.push(`pool ${String(pool.id)} mixes ${String(pool.category)} with ${String(asset.category)}`);
     }
   }
-  const cueIds = new Set([...assetById.keys(), ...poolById.keys()]);
+  const cueIds = new Set([...assetById.keys(), ...poolById.keys(), ...aliasById.keys()]);
+  const cueFor = (cueId) => {
+    const alias = aliasById.get(cueId);
+    const targetId = alias?.targetId ?? cueId;
+    return assetById.get(targetId) ?? poolById.get(targetId);
+  };
   for (const scene of scenes) {
     if (!isRecord(scene)) continue;
     const references = [scene.bgm, ...(scene.ambience ?? []), ...(scene.preload ?? [])].filter(Boolean);
@@ -155,11 +191,11 @@ export function validateAudioManifest(candidate) {
       if (!cueIds.has(reference)) errors.push(`scene ${String(scene.id)} references unknown cue ${String(reference)}`);
     }
     if (scene.bgm) {
-      const cue = assetById.get(scene.bgm) ?? poolById.get(scene.bgm);
+      const cue = cueFor(scene.bgm);
       if (cue && cue.category !== "bgm") errors.push(`scene ${String(scene.id)} bgm cue must use the bgm category`);
     }
     for (const ambienceId of scene.ambience ?? []) {
-      const cue = assetById.get(ambienceId) ?? poolById.get(ambienceId);
+      const cue = cueFor(ambienceId);
       if (cue && cue.category !== "ambience") errors.push(`scene ${String(scene.id)} ambience cue must use the ambience category`);
     }
   }
@@ -196,6 +232,20 @@ export function createAudioManifest(candidate = {}) {
     strategy: pool.strategy ?? "shuffle",
     avoidImmediateRepeat: pool.avoidImmediateRepeat ?? true,
   }));
+  const baseCueById = new Map([
+    ...assets.map((asset) => [asset.id, asset]),
+    ...pools.map((pool) => [pool.id, pool]),
+  ]);
+  const aliases = (candidate.aliases ?? []).map((alias) => ({
+    id: alias.id,
+    targetId: alias.targetId,
+    category: baseCueById.get(alias.targetId)?.category,
+    ...(alias.loop !== undefined ? { loop: alias.loop } : {}),
+    ...(alias.instanceKey !== undefined ? { instanceKey: alias.instanceKey } : {}),
+    ...(alias.priority !== undefined ? { priority: alias.priority } : {}),
+    ...(alias.cooldownMs !== undefined ? { cooldownMs: alias.cooldownMs } : {}),
+    ...(alias.maxInstances !== undefined ? { maxInstances: alias.maxInstances } : {}),
+  }));
   const scenes = (candidate.scenes ?? []).map((scene) => ({
     ...scene,
     ambience: [...(scene.ambience ?? [])],
@@ -206,9 +256,11 @@ export function createAudioManifest(candidate = {}) {
     version: Number.isInteger(candidate.version) && candidate.version > 0 ? candidate.version : 1,
     assets,
     pools,
+    aliases,
     scenes,
     assetById: Object.fromEntries(assets.map((asset) => [asset.id, asset])),
     poolById: Object.fromEntries(pools.map((pool) => [pool.id, pool])),
+    aliasById: Object.fromEntries(aliases.map((alias) => [alias.id, alias])),
     sceneById: Object.fromEntries(scenes.map((scene) => [scene.id, scene])),
   });
 }
