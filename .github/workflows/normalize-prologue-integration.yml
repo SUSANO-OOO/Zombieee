@@ -1,0 +1,71 @@
+name: Normalize prologue integration
+
+on:
+  push:
+    branches:
+      - feat/0.6.0-early-access-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Normalize approved prologue files
+        shell: bash
+        run: |
+          git pull --ff-only origin "$GITHUB_REF_NAME"
+          python - <<'PY'
+          from pathlib import Path
+
+          paths = [
+              Path("app/storyEvents.js"),
+              Path("tests/story-events.test.mjs"),
+              Path("docs/SCENARIO_0.6.0_COMPLETE.md"),
+              Path("docs/CHARACTER_REFERENCE_0.6.0.md"),
+              Path("docs/CODEX_IMPLEMENTATION_MISSION_0.6.0_FINAL.md"),
+              Path("docs/CODEX_REWORK_MISSION_0.6.0.md"),
+          ]
+
+          for path in paths:
+              text = path.read_text(encoding="utf-8")
+              cleaned = "\n".join(line.rstrip(" \t\r") for line in text.split("\n"))
+              if not cleaned.endswith("\n"):
+                  cleaned += "\n"
+              path.write_text(cleaned, encoding="utf-8", newline="\n")
+
+          story = Path("app/storyEvents.js")
+          text = story.read_text(encoding="utf-8")
+          old = 'text: "進路を西新商店街へ。救助作戦を開始します。"'
+          new = 'text: "移動拠点を接続。西新商店街へ向かいます。"'
+          if old not in text and new not in text:
+              raise SystemExit("expected intro line was not found")
+          story.write_text(text.replace(old, new), encoding="utf-8", newline="\n")
+          PY
+
+      - name: Verify focused changes
+        shell: bash
+        run: |
+          git diff --check
+          node --check app/storyEvents.js
+          node --test tests/story-events.test.mjs
+
+      - name: Commit normalized integration
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/storyEvents.js tests/story-events.test.mjs docs/SCENARIO_0.6.0_COMPLETE.md docs/CHARACTER_REFERENCE_0.6.0.md docs/CODEX_IMPLEMENTATION_MISSION_0.6.0_FINAL.md docs/CODEX_REWORK_MISSION_0.6.0.md
+          git commit -m "fix: normalize prologue integration"
+          git push origin HEAD:"$GITHUB_REF_NAME"
