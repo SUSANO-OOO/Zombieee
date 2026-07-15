@@ -1,95 +1,124 @@
+export const PROLOGUE_SYNOPSIS = Object.freeze({
+  short: "早良区役所の救難信号を追い、封鎖された西新を突破する。だが同じ声が、誰もいない防衛線からも流れていた。",
+  long: "感染拡大で孤立した西新・早良区。パイセンたちは商店街と区役所で生存者を救い、声を餌に人を誘う感染群と巨大変異個体TAKUYAを止めるため、西新防衛線へ向かう。",
+});
+
+function dialogue({ speaker, role, side, portrait, expression, text, effect }) {
+  return Object.freeze({ speaker, role, side, portrait, expression, text, ...(effect ? { effect } : {}) });
+}
+
+function event(id, background, lines) {
+  return Object.freeze({ id, background, lines: Object.freeze(lines.map(dialogue)) });
+}
+
 /**
- * Production dialogue for the 0.6.0 prologue. Each beat is deliberately short
- * enough for the landscape-mobile dialogue box while preserving a complete
- * dramatic arc when replayed through the conversation log.
+ * Production dialogue for the 0.6.0 prologue.
+ * The copy follows docs/SCENARIO_0.6.0_COMPLETE.md prologue-v5.
  */
 export const STORY_EVENTS = Object.freeze({
-  intro: Object.freeze({
-    id: "intro",
-    background: "nishijin-night",
-    lines: Object.freeze([
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "……聞こえますか。こちら移動拠点。応答を。", effect: "fade" }),
-      Object.freeze({ speaker: "黒木 凛", role: "射撃手", side: "left", portrait: "ranger", expression: "focused", text: "黒木です。西新一帯、通信断。煙が三本上がっています。" }),
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "steady", text: "生体反応を確認。商店街の奥、まだ誰かがいます。" }),
-      Object.freeze({ speaker: "橘 迅", role: "遊撃手", side: "left", portrait: "scout", expression: "alert", text: "上の通路は塞がれた。手信号で行く。静かすぎるな。" }),
-      Object.freeze({ speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "steady", text: "反応が弱い。急がないと、救える命まで消えます。" }),
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "進路は三つ。商店街、区役所、それから西の防衛線。" }),
-      Object.freeze({ speaker: "不明な無線", role: "断続通信", side: "left", portrait: "radio", expression: "alert", text: "……たすけ……シャッターの……向こう……", effect: "shake" }),
-      Object.freeze({ speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "ready", text: "聞こえたなら、行く理由は十分だ。扉を開けろ。" }),
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "steady", text: "移動拠点を接続。救助作戦を開始します。", effect: "fade" }),
-    ]),
-  }),
-  "stage-nishijin-pre": Object.freeze({
-    id: "stage-nishijin-pre",
-    background: "shopping-street",
-    lines: Object.freeze([
-      Object.freeze({ speaker: "黒木 凛", role: "射撃手", side: "left", portrait: "ranger", expression: "focused", text: "アーケード奥で着弾音。感染拠点が脈打ってる。" }),
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "接近路は三本。中央に密集、両端から高速反応。" }),
-      Object.freeze({ speaker: "橘 迅", role: "遊撃手", side: "left", portrait: "scout", expression: "ready", text: "上側は俺が走る。速い奴だけ先に借りるぞ。" }),
-      Object.freeze({ speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "steady", text: "閉じた店内から咳。生存者です。火線を外して。" }),
-      Object.freeze({ speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "ready", text: "迅は上、凛は奥。白石は俺の背中から離れるな。" }),
-      Object.freeze({ speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "ready", text: "中央は俺が開ける。生きてる声まで拳を通すぞ。", effect: "shake" }),
-    ]),
-  }),
-  "stage-nishijin-post": Object.freeze({
-    id: "stage-nishijin-post",
-    background: "shopping-street",
-    lines: Object.freeze([
-      Object.freeze({ speaker: "黒木 凛", role: "射撃手", side: "left", portrait: "ranger", expression: "focused", text: "感染拠点、沈黙。シャッターの向こうに呼吸音。" }),
-      Object.freeze({ speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "alert", text: "返事があります。でも、扉が歪んで開かない。" }),
-      Object.freeze({ speaker: "大庭 豪", role: "破砕兵", side: "left", portrait: "brute", expression: "grin", text: "そこを退け。扉なら、叩けば道になる。", effect: "shake" }),
-      Object.freeze({ speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "ready", text: "いい音だ。名前を聞く前に、もう一枚頼む。" }),
-      Object.freeze({ speaker: "大庭 豪", role: "破砕兵", side: "left", portrait: "brute", expression: "grin", text: "大庭だ。壊す先を示せ。次は一緒に行く。", effect: "fade" }),
-    ]),
-  }),
-  "stage-sawara-pre": Object.freeze({
-    id: "stage-sawara-pre",
-    background: "ward-office",
-    lines: Object.freeze([
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "早良区役所前。救援車両が瓦礫で止まっています。" }),
-      Object.freeze({ speaker: "白石 直人", role: "衛生兵", side: "left", portrait: "medic", expression: "steady", text: "先に重傷者を乗せる。歩ける人は壁際へ。" }),
-      Object.freeze({ speaker: "大庭 豪", role: "破砕兵", side: "right", portrait: "brute", expression: "ready", text: "瓦礫は俺がどける。前から来る奴も同じだ。" }),
-      Object.freeze({ speaker: "黒木 凛", role: "射撃手", side: "left", portrait: "ranger", expression: "focused", text: "庁舎屋上に吐瀉型。撃たれる前に落とします。" }),
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "全経路から接近。撤収車両が動くまで死守を。" }),
-      Object.freeze({ speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "ready", text: "三本とも通さない。帰る席は全員分ある。", effect: "shake" }),
-    ]),
-  }),
-  "stage-sawara-post": Object.freeze({
-    id: "stage-sawara-post",
-    background: "ward-office",
-    lines: Object.freeze([
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "relieved", text: "救援車両、離脱。追跡反応がまだ残っています。" }),
-      Object.freeze({ speaker: "真壁 玲奈", role: "制圧射手", side: "left", portrait: "gunner", expression: "calm", text: "追わせない。火線を引くから、車両はそのまま。" }),
-      Object.freeze({ speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "steady", text: "負傷者は全員乗った。失った人は、ここに残る。" }),
-      Object.freeze({ speaker: "真壁 玲奈", role: "制圧射手", side: "left", portrait: "gunner", expression: "calm", text: "弾はある。次の戦線にも、この火線を持っていく。" }),
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "uneasy", text: "西の防衛線に巨大反応。周囲の無線が消えました。", effect: "fade" }),
-    ]),
-  }),
-  "stage-takuya-pre": Object.freeze({
-    id: "stage-takuya-pre",
-    background: "defense-line",
-    lines: Object.freeze([
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "uneasy", text: "西新防衛線。味方の発砲も、救難信号もありません。" }),
-      Object.freeze({ speaker: "不明な無線", role: "途絶直前の記録", side: "left", portrait: "radio", expression: "alert", text: "……TAKUYA……来る……壁が、もたな……", effect: "shake" }),
-      Object.freeze({ speaker: "橘 迅", role: "遊撃手", side: "left", portrait: "scout", expression: "focused", text: "冗談を言う空気じゃないな。足音が地面から来る。" }),
-      Object.freeze({ speaker: "黒木 凛", role: "射撃手", side: "right", portrait: "ranger", expression: "focused", text: "取り巻きを剥がして頭を上げさせる。順番を崩さないで。" }),
-      Object.freeze({ speaker: "真壁 玲奈", role: "制圧射手", side: "left", portrait: "gunner", expression: "calm", text: "大型は私が縫い止める。火線の前へ出ないで。" }),
-      Object.freeze({ speaker: "大庭 豪", role: "破砕兵", side: "right", portrait: "brute", expression: "ready", text: "中央は俺が持つ。倒れた壁も、立て直す。" }),
-      Object.freeze({ speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "ready", text: "名前があるなら倒せる。西新を返してもらうぞ。", effect: "shake" }),
-    ]),
-  }),
-  "stage-takuya-post": Object.freeze({
-    id: "stage-takuya-post",
-    background: "defense-line",
-    lines: Object.freeze([
-      Object.freeze({ speaker: "黒木 凛", role: "射撃手", side: "left", portrait: "ranger", expression: "focused", text: "TAKUYA、停止。……防衛線から足音が消えた。", effect: "shake" }),
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "steady", text: "巨大反応の消失を確認。感染拠点も沈黙しました。" }),
-      Object.freeze({ speaker: "白石 直人", role: "衛生兵", side: "left", portrait: "medic", expression: "steady", text: "生存者を確認します。呼吸のある人から運んで。" }),
-      Object.freeze({ speaker: "橘 迅", role: "遊撃手", side: "right", portrait: "scout", expression: "relieved", text: "静かだな。今だけは、この街の音を聞ける。" }),
-      Object.freeze({ speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "待って。百道浜、福岡タワー方面から信号です。", effect: "fade" }),
-      Object.freeze({ speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "ready", text: "返事をしろ。助けを待つ声に、次は遅れない。" }),
-    ]),
-  }),
+  intro: event("intro", "nishijin-night", [
+    { speaker: "不明な女性の無線", role: "早良区役所", side: "left", portrait: "radio", expression: "alert", text: "こちら早良区役所。怪我人がいます。応答を。", effect: "fade" },
+    { speaker: "不明な女性の無線", role: "反復通信", side: "left", portrait: "radio", expression: "alert", text: "……怪我人がいます。応答を。", effect: "shake" },
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "uneasy", text: "同じ部分が重なっています。" },
+    { speaker: "黒木 凛", role: "射撃手", side: "left", portrait: "ranger", expression: "focused", text: "録音？" },
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "steady", text: "途中からは。最初の送信は生です。" },
+    { speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "uneasy", text: "じゃあ、まだ誰かいるんすよね。" },
+    { speaker: "橘 迅", role: "遊撃手", side: "left", portrait: "scout", expression: "focused", text: "道は？" },
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "区役所へ抜ける道は商店街だけです。" },
+    { speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "steady", text: "医療品を積み直します。選別が必要になる。" },
+    { speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "ready", text: "今なら、まだ間に合うかもしれない。" },
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "steady", text: "進路を西新商店街へ。救助作戦を開始します。", effect: "fade" },
+  ]),
+  "stage-nishijin-pre": event("stage-nishijin-pre", "shopping-street", [
+    { speaker: "橘 迅", role: "遊撃手", side: "left", portrait: "scout", expression: "alert", text: "動くな。" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "uneasy", text: "え？" },
+    { speaker: "不明な男", role: "商店街の生存者", side: "left", portrait: "crazy-king", expression: "focused", text: "左足の前。細い線がある。" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "uneasy", text: "これ、踏んだら？" },
+    { speaker: "不明な男", role: "商店街の生存者", side: "left", portrait: "crazy-king", expression: "steady", text: "看板が落ちる。お前なら、たぶん死ぬ。" },
+    { speaker: "黒木 凛", role: "射撃手", side: "right", portrait: "ranger", expression: "focused", text: "姿を見せて。" },
+    { speaker: "クレイジーキング", role: "狂戦士", side: "left", portrait: "crazy-king", expression: "ready", text: "止めた。燃料が減る。" },
+    { speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "steady", text: "薬局の屋上に三人いますね。" },
+    { speaker: "クレイジーキング", role: "狂戦士", side: "left", portrait: "crazy-king", expression: "focused", text: "大人二人、子ども一人。階段を巣が塞いだ。" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "uneasy", text: "一人で守ってたんすか。" },
+    { speaker: "クレイジーキング", role: "狂戦士", side: "left", portrait: "crazy-king", expression: "steady", text: "中で扉を押さえてる奴がいる。" },
+    { speaker: "橘 迅", role: "遊撃手", side: "right", portrait: "scout", expression: "focused", text: "呼び方は？" },
+    { speaker: "クレイジーキング", role: "狂戦士", side: "left", portrait: "crazy-king", expression: "ready", text: "キングでいい。中央を壊せば階段が開く。" },
+    { speaker: "黒木 凛", role: "射撃手", side: "right", portrait: "ranger", expression: "alert", text: "話は終わり。来る。", effect: "shake" },
+  ]),
+  "stage-nishijin-post": event("stage-nishijin-post", "shopping-street", [
+    { speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "relieved", text: "三人とも歩けます。子どもも大丈夫。" },
+    { speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "relieved", text: "よかった……。" },
+    { speaker: "大庭 豪", role: "商店街の生存者", side: "left", portrait: "brute", expression: "strained", text: "悪い。二人、手を貸してくれ。" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "uneasy", text: "重っ……これ、ずっと一人で？" },
+    { speaker: "大庭 豪", role: "商店街の生存者", side: "left", portrait: "brute", expression: "steady", text: "屋上へ上がる道を残したかった。" },
+    { speaker: "クレイジーキング", role: "狂戦士", side: "right", portrait: "crazy-king", expression: "steady", text: "こいつが離したら、階段ごと塞がってた。" },
+    { speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "focused", text: "肩を傷めています。もう押さえなくていい。" },
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "区役所の信号は続いています。経路は開通。" },
+    { speaker: "大庭 豪", role: "破砕兵", side: "left", portrait: "brute", expression: "ready", text: "怪我人がいるなら行く。瓦礫はどける。" },
+    { speaker: "クレイジーキング", role: "狂戦士", side: "left", portrait: "crazy-king", expression: "ready", text: "俺も行く。あの声が、まだ流れてる。" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "ready", text: "分かった。区役所へ急ぎましょう。", effect: "fade" },
+  ]),
+  "stage-sawara-pre": event("stage-sawara-pre", "ward-office", [
+    { speaker: "クマバーソン", role: "弁当屋", side: "left", portrait: "kumaverson", expression: "alert", text: "歩ける人は南口！ 子どもと怪我人が先たい！" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "alert", text: "その人、こっちへ。白石さん！" },
+    { speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "focused", text: "寝かせて。頭は動かさないで。" },
+    { speaker: "クマバーソン", role: "弁当屋", side: "left", portrait: "kumaverson", expression: "steady", text: "あんたら、救難信号ば聞いて来たと？" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "steady", text: "はい。車が動かないって。" },
+    { speaker: "クマバーソン", role: "弁当屋", side: "left", portrait: "kumaverson", expression: "alert", text: "その車たい。瓦礫が噛んどる。" },
+    { speaker: "ババヤガ", role: "上階の射手", side: "right", portrait: "babayaga", expression: "focused", text: "クマ、北窓。今日は机が泳いでる。" },
+    { speaker: "クマバーソン", role: "弁当屋", side: "left", portrait: "kumaverson", expression: "alert", text: "意味分からんけど北やな！" },
+    { speaker: "橘 迅", role: "遊撃手", side: "right", portrait: "scout", expression: "focused", text: "上の射手、味方か？" },
+    { speaker: "クマバーソン", role: "弁当屋", side: "left", portrait: "kumaverson", expression: "steady", text: "友達たい。だいぶ変やけど。" },
+    { speaker: "ババヤガ", role: "精密射手", side: "right", portrait: "babayaga", expression: "steady", text: "聞こえています。" },
+    { speaker: "真壁 玲奈", role: "撤収指揮", side: "left", portrait: "gunner", expression: "focused", text: "救援車両が動くまで三分。中央を空けて。" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "uneasy", text: "三分で全員乗れます？" },
+    { speaker: "真壁 玲奈", role: "撤収指揮", side: "left", portrait: "gunner", expression: "steady", text: "足りません。でも車両はそれ以上もちません。", effect: "shake" },
+  ]),
+  "stage-sawara-post": event("stage-sawara-post", "ward-office", [
+    { speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "relieved", text: "瓦礫の下の人も乗りました。呼吸があります。" },
+    { speaker: "真壁 玲奈", role: "撤収指揮", side: "left", portrait: "gunner", expression: "uneasy", text: "……十秒、待って正解でした。" },
+    { speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "steady", text: "結果が出たから言えることです。" },
+    { speaker: "ババヤガ", role: "精密射手", side: "left", portrait: "babayaga", expression: "steady", text: "もしもし。無事です。牛乳は低脂肪。" },
+    { speaker: "クマバーソン", role: "弁当屋", side: "right", portrait: "kumaverson", expression: "uneasy", text: "ほんとにそれだけ？" },
+    { speaker: "ババヤガ", role: "精密射手", side: "left", portrait: "babayaga", expression: "steady", text: "それだけで済むのが家庭です。" },
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "uneasy", text: "防衛線から、区役所と同じ声が出ています。" },
+    { speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "focused", text: "区役所の人は、もう全員出たんすよね。" },
+    { speaker: "真壁 玲奈", role: "制圧射手", side: "right", portrait: "gunner", expression: "steady", text: "はい。あそこに救助を待つ人はいません。" },
+    { speaker: "黒木 凛", role: "射撃手", side: "left", portrait: "ranger", expression: "focused", text: "なら、誰かを呼び寄せてる。" },
+    { speaker: "クマバーソン", role: "前衛打撃", side: "right", portrait: "kumaverson", expression: "ready", text: "放っといたら、また誰か来るばい。" },
+    { speaker: "ババヤガ", role: "精密射手", side: "left", portrait: "babayaga", expression: "ready", text: "クマが行くなら俺も行く。" },
+    { speaker: "真壁 玲奈", role: "制圧射手", side: "right", portrait: "gunner", expression: "ready", text: "防衛線は私の責任です。案内します。", effect: "fade" },
+  ]),
+  "stage-takuya-pre": event("stage-takuya-pre", "defense-line", [
+    { speaker: "黒木 凛", role: "射撃手", side: "left", portrait: "ranger", expression: "focused", text: "壁の向きが逆。" },
+    { speaker: "橘 迅", role: "遊撃手", side: "right", portrait: "scout", expression: "focused", text: "外から守るためじゃないな。" },
+    { speaker: "真壁 玲奈", role: "制圧射手", side: "left", portrait: "gunner", expression: "uneasy", text: "感染した隊員を、街へ出さないためです。" },
+    { speaker: "不明な女性の無線", role: "反復通信", side: "right", portrait: "radio", expression: "alert", text: "こちら早良区役所。怪我人がいます。", effect: "shake" },
+    { speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "focused", text: "同じ声です。" },
+    { speaker: "ババヤガ", role: "精密射手", side: "left", portrait: "babayaga", expression: "focused", text: "息継ぎがない。人間じゃない。" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "uneasy", text: "……あいつが喋ってる。" },
+    { speaker: "クレイジーキング", role: "狂戦士", side: "left", portrait: "crazy-king", expression: "focused", text: "喋ってない。腹の奥で鳴らしてる。" },
+    { speaker: "真壁 玲奈", role: "制圧射手", side: "left", portrait: "gunner", expression: "uneasy", text: "退却命令が遅れました。ここに残った人は――" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "steady", text: "今は止めましょう。話は戻ってから聞きます。" },
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "地下に巨大反応。上がってきます。" },
+    { speaker: "真壁 玲奈", role: "制圧射手", side: "left", portrait: "gunner", expression: "ready", text: "配置について。来ます。", effect: "shake" },
+  ]),
+  "stage-takuya-post": event("stage-takuya-post", "defense-line", [
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "relieved", text: "防衛線の感染反応、消失しました。" },
+    { speaker: "黒木 凛", role: "射撃手", side: "left", portrait: "ranger", expression: "relieved", text: "……静かになった。" },
+    { speaker: "白石 直人", role: "衛生兵", side: "right", portrait: "medic", expression: "steady", text: "これで、あの声に呼ばれる人はいません。" },
+    { speaker: "真壁 玲奈", role: "制圧射手", side: "left", portrait: "gunner", expression: "uneasy", text: "遅くなりました。" },
+    { speaker: "大庭 豪", role: "破砕兵", side: "right", portrait: "brute", expression: "steady", text: "帰ったら話せばいい。" },
+    { speaker: "クマバーソン", role: "前衛打撃", side: "left", portrait: "kumaverson", expression: "steady", text: "おい、腹減っとんのか？" },
+    { speaker: "パイセン", role: "格闘家", side: "right", portrait: "brawler", expression: "relieved", text: "減ってます。めちゃくちゃ。" },
+    { speaker: "クマバーソン", role: "前衛打撃", side: "left", portrait: "kumaverson", expression: "grin", text: "とりあえず、うちの弁当食うていけや！" },
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "alert", text: "待って。百道浜方面から新しい信号です。" },
+    { speaker: "不明な無線", role: "百道浜避難所", side: "left", portrait: "radio", expression: "alert", text: "海側から感染体が来ています。聞こえますか。" },
+    { speaker: "橘 迅", role: "遊撃手", side: "left", portrait: "scout", expression: "focused", text: "また反復か？" },
+    { speaker: "水城 奈々", role: "通信・地図・情報分析", side: "right", portrait: "guide", expression: "steady", text: "違います。今のところ、生の通信です。" },
+    { speaker: "パイセン", role: "格闘家", side: "left", portrait: "brawler", expression: "ready", text: "こちら移動拠点。聞こえています。今から行きます。" },
+    { speaker: "不明な無線", role: "百道浜避難所", side: "right", portrait: "radio", expression: "relieved", text: "……よかった。待っています。", effect: "fade" },
+  ]),
 });
 
 export function getStoryEvent(eventId) {
@@ -97,9 +126,9 @@ export function getStoryEvent(eventId) {
 }
 
 export function storyEventLog(eventId, throughIndex = Number.POSITIVE_INFINITY) {
-  const event = getStoryEvent(eventId);
-  if (!event) return [];
-  return event.lines.slice(0, Math.max(0, throughIndex + 1)).map((line, index) => ({
+  const selectedEvent = getStoryEvent(eventId);
+  if (!selectedEvent) return [];
+  return selectedEvent.lines.slice(0, Math.max(0, throughIndex + 1)).map((line, index) => ({
     id: `${eventId}:${index}`,
     speaker: line.speaker,
     role: line.role,
