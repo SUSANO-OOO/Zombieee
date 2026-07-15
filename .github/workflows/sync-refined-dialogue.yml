@@ -1,0 +1,59 @@
+name: Sync refined dialogue
+
+on:
+  push:
+    branches:
+      - feat/0.6.0-early-access-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Sync refined lines into the scenario source
+        shell: bash
+        run: |
+          git pull --ff-only origin "$GITHUB_REF_NAME"
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("docs/SCENARIO_0.6.0_COMPLETE.md")
+          text = path.read_text(encoding="utf-8")
+          replacements = {
+              "「途中からは。最初の送信は生です」": "「途中からです。最初だけは録音じゃない」",
+              "「医療品を積み直します。現地で選別が必要になる」": "「医療品を積み直します。足りないかもしれない」",
+              "「止めた。燃料が減る」": "「チェーンソーは止めた。燃料がもったいない」",
+              "「呼び方は？」": "「あんた、名前は？」",
+              "「区役所の信号はまだ続いています。経路は開きました」": "「区役所の信号はまだ続いています。道は開きました」",
+              "「怪我人がいるなら行く。瓦礫はどける」": "「怪我人がいるなら行く。瓦礫は俺がどける」",
+              "「地下に巨大反応。上がってきます」": "「地下に大きな反応。上がってきます」",
+              "「防衛線の感染反応、消失しました」": "「防衛線の感染反応、消えました」",
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+          text = "\n".join(line.rstrip(" \t\r") for line in text.split("\n"))
+          if not text.endswith("\n"):
+              text += "\n"
+          path.write_text(text, encoding="utf-8", newline="\n")
+          PY
+          git diff --check
+          node --check app/storyEvents.js
+          node --test tests/story-events.test.mjs
+      - name: Commit scenario synchronization
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/SCENARIO_0.6.0_COMPLETE.md
+          git commit -m "docs: sync refined prologue dialogue"
+          git push origin HEAD:"$GITHUB_REF_NAME"
