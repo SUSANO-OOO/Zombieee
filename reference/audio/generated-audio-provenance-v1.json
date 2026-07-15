@@ -1,0 +1,528 @@
+{
+  "version": 1,
+  "generator": "scripts/build-v060-audio.py",
+  "sampleRate": 44100,
+  "policy": "Every newcomer cue has a dedicated project-original WAV master and dedicated MP3/OGG finals.",
+  "cues": [
+    {
+      "id": "voice-babayaga-attack",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-babayaga-attack.wav",
+        "sha256": "3b70fe0951e6c420d771344d0c91777b5611115e6ff415a383d80e1b15386006"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-babayaga-attack.mp3",
+          "sha256": "0041d586f56deeef4dd2d13c69e3befb56f37d6d3eb171bcdf7522e6b0edad4b",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-babayaga-attack.ogg",
+          "sha256": "05a5f143fb6d852ead6ac7944775ca703f6ec0af19b6efdae7b025e2479e2c24",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-babayaga-death",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-babayaga-death.wav",
+        "sha256": "d8b3530b2cc50ed92bfcf976c817a1e3807bc2c8af3fecea17648bef1cfa051d"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-babayaga-death.mp3",
+          "sha256": "4e034f2f8b60da4a5da729a3c36e706cc03fa14a46c77ffa5874454de49152fd",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-babayaga-death.ogg",
+          "sha256": "40082f02655a4134d47da4283aaf64338329db4ac9a3d99b2aa63da9bd04ff3c",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-babayaga-deploy",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-babayaga-deploy.wav",
+        "sha256": "d918cf3615d0865d9f47c894baebec8aff260a249885a692696afd4f619445ab"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-babayaga-deploy.mp3",
+          "sha256": "93a93b586d6756beaf3cafad230967b72f68b88e88eb818ec6ce8886be23430f",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-babayaga-deploy.ogg",
+          "sha256": "7a07aeac21f6d44ab08abe1ac070fd2e11edfbb9c86836fb582f2bea748360f0",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-babayaga-hurt",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-babayaga-hurt.wav",
+        "sha256": "2d6d9566431c76fe12d7792912923eaf4f2797f04c1d006c507148d7e138d5ae"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-babayaga-hurt.mp3",
+          "sha256": "efeed4f7ea8850bb7daeef835a218f51abd8b04ec7ed43840e0e5f1adcb51311",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-babayaga-hurt.ogg",
+          "sha256": "828deadaf532da170731a52d3cdd73c78e68e895ea6e20dd6cabf17c30c3bacb",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-crazy-king-attack",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-crazy-king-attack.wav",
+        "sha256": "2bb6ce174e4d3ec5f5980f2e83a6f9212efb7b6e674a4abcca1c6af1066c2def"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-crazy-king-attack.mp3",
+          "sha256": "ef85a81fedf02b3a81400fd1f8edd5ac8d2322e111916e0176c8119b8e0ab0ee",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-crazy-king-attack.ogg",
+          "sha256": "fe4d73bdeabefbef25d69ea33df0a0fe044393cf0d7498dfa56aa8ac42edc880",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-crazy-king-death",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-crazy-king-death.wav",
+        "sha256": "15e2b476f61ed58bd08e8bcfc89a2c5333bc4f68faab3c6f95f26b0def90e127"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-crazy-king-death.mp3",
+          "sha256": "637fe076fd79d67bbaaf1d69eae8ae978c32aedb6b5ecc4d34502b3b18c1bd40",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-crazy-king-death.ogg",
+          "sha256": "9b26985289a7470a8fe1d8cf77c51d5570e11cd5f3463cf01440176a130ed365",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-crazy-king-deploy",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-crazy-king-deploy.wav",
+        "sha256": "51eef5ff98737486abf787b9eb30f14a09f777fa30af6d89e06b97f2a7b9e10a"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-crazy-king-deploy.mp3",
+          "sha256": "396acb354d0c155597d69dd8f1109ec5670ad209264ae4cf389baec0c1ca3ee1",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-crazy-king-deploy.ogg",
+          "sha256": "342c5249c1b30333427d7ab36ec569d664d5af2d28881da1beb377ad3640e808",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-crazy-king-hurt",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-crazy-king-hurt.wav",
+        "sha256": "63e6b7020fae841e3ff0f1f0c035c1edb8203902a7cbbff316fb07155fa151fe"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-crazy-king-hurt.mp3",
+          "sha256": "5d4eb4c329f83d0e264b42b4e1b5ccefe4c11544cf6db51a9725c72143f8c317",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-crazy-king-hurt.ogg",
+          "sha256": "0acac5a1d4d47ce12426c6166350886539adc0e60046f57a83a550d6be3ca19c",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-kumaverson-attack",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-kumaverson-attack.wav",
+        "sha256": "ec5c714a5b133f52e28b610da871d70d6504e99f956d176c606d46ba41cd0cc8"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-kumaverson-attack.mp3",
+          "sha256": "3efcc28ad6d09da9f8408ddfb229fe1cf9e4e1d3620800f9a0f042d82a6f999f",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-kumaverson-attack.ogg",
+          "sha256": "608e9767fdbae26773dd6016cc692c02229e0aed7f6f20bfab54c599ab73e108",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-kumaverson-death",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-kumaverson-death.wav",
+        "sha256": "3d04f1a7543f2bed02c3c20ece24cad90c09192cacc631acff7d9435b5b55f37"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-kumaverson-death.mp3",
+          "sha256": "51efea4f39bc91e78d2bb53f3d434f528bd09cd809eefe0c058f7406777c21ad",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-kumaverson-death.ogg",
+          "sha256": "eec0ab7f0d5659aa3bcee8853d9386505536a5271e5c0801bbfb86c18e8c7f8c",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-kumaverson-deploy",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-kumaverson-deploy.wav",
+        "sha256": "022eacdadc55fe7b89e0bab1e18ca01224714a0f93cd97309ada17b0abe634bf"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-kumaverson-deploy.mp3",
+          "sha256": "5eb521cd03c5fe18cc1774f0b6e9159216fff1f120bf83a84203947cf31663f4",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-kumaverson-deploy.ogg",
+          "sha256": "5b35fa7112f1bd5c91a54b90d293d302ba2babc14b933fae77add5c38e7b4a42",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "voice-kumaverson-hurt",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/voice-kumaverson-hurt.wav",
+        "sha256": "080fb62c5ef1053bdd74e0c677c142a586333a2dd2e26bbceca8f51799179f37"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/voice-kumaverson-hurt.mp3",
+          "sha256": "50e221f71c36773ed5421823b1e7cdb81abfdbfd3a7281537d12c953c0790de7",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/voice-kumaverson-hurt.ogg",
+          "sha256": "d6ea9306de7982d8d548a75a35f2b01b328ed6d5bdfa1e2cd79acf1cf565ceed",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-chainsaw-attack",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-chainsaw-attack.wav",
+        "sha256": "602a7a0c11bf27fa8925819ebfec967a06f0f16566294248c07cafb61e375e13"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-attack.mp3",
+          "sha256": "1f8da1d73be14d37b84a8a54d281c0db9c4c68a28f709044688c90717b0eb97f",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-attack.ogg",
+          "sha256": "17c81afa36dbed5b9113330788f1cf77133737b4717aa07fd236c20d22ef6c80",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-chainsaw-flesh-hit",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-chainsaw-flesh-hit.wav",
+        "sha256": "55e1afbdc58a0b417647c1aa64d3db8331353283e936274996b1a6958850ad5d"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-flesh-hit.mp3",
+          "sha256": "92ced3bf6803e316f71b41be34d052921e887719e8899adb0b38a1d1b5e89906",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-flesh-hit.ogg",
+          "sha256": "e4770cecc7d9fcf97beb63177a30483ee3fee3b5f31e4131eb5864231104abb8",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-chainsaw-hard-hit",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-chainsaw-hard-hit.wav",
+        "sha256": "cf2b0752d9dbad1f6ae10b1d703b03a7cd1a809f3ac0fb258f023a6747786355"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-hard-hit.mp3",
+          "sha256": "08fade7241eed45a4384f5d8d4398159c626d1e6de7123f6be06bb68f71f79e4",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-hard-hit.ogg",
+          "sha256": "44e227e16a2d850ea58a038cbf3de41efb8dfedacc4919c8dbbdd7cf298369ba",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-chainsaw-idle-loop",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-chainsaw-idle-loop.wav",
+        "sha256": "78445ce7a44f310fb187b926e2d0ec3ac83d5da7144eaed0edb479a05ad1ac9b"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-idle-loop.mp3",
+          "sha256": "b0968a8f674cb864782e35f874e93dcd0b23fa2177ef01dddc38ffdf5cf407a5",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-idle-loop.ogg",
+          "sha256": "9cf34cf01595467a2bcba4a306e5bc0e98c5b1c313f6077ec06ea89d8ddd11cd",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-chainsaw-start",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-chainsaw-start.wav",
+        "sha256": "0339ef5cc9ba29831274705eda2d4762793034594c789bef81f0f2ba6be9fe9e"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-start.mp3",
+          "sha256": "fcb37aace882865f8bd6a386fa98538a0b20f01410c7fbf03606d3ebe6cc5722",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-start.ogg",
+          "sha256": "1acfc413c6d81dd29c6fa342480bf86b5e238becc56cf924238405868f20b039",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-chainsaw-stop",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-chainsaw-stop.wav",
+        "sha256": "caaf5e7ecc9c26648c0bab3b50dd058a6efe51c11f4644a6fa75a7b499df5f57"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-stop.mp3",
+          "sha256": "fcea4705d3fbeae4ae39928457403c307cdbf26f43980157a1eaf29d95395ac7",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-chainsaw-stop.ogg",
+          "sha256": "dcc991b19ebaf37bd3baf2fb380dbecde5421e429587e0e2bfcdb6aef31ff539",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-pan-heavy-hit",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-pan-heavy-hit.wav",
+        "sha256": "42fe7471e1d44b75b6685bf62fbc36db2720de0043b57004a242732e04a90186"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-pan-heavy-hit.mp3",
+          "sha256": "39d67fe97b77506918dff61535d5119138dbec0ced826eb2da852faa77fd6941",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-pan-heavy-hit.ogg",
+          "sha256": "dab8cb5a8baf66038cde4cb8c955308a0b0df1f9d41cac7ab8e2991c4814301d",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-pan-hit",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-pan-hit.wav",
+        "sha256": "7958913e4f239af6ea1d1818bbfacb86132df14a7bdefa85dcd08dbe88696e89"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-pan-hit.mp3",
+          "sha256": "1abb61531fb752ec350b26957533271da5249701763562292453117baa0db9fe",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-pan-hit.ogg",
+          "sha256": "f1d816eef23bd2622a82d728e0ddeebc0b8ad18bfe75aabfc647fa2c8814aadb",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-pan-stun",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-pan-stun.wav",
+        "sha256": "bb69979b3a1c55856cd227089e4fe7364d05f7a20ddda81ef1d8b10dfec7b6f4"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-pan-stun.mp3",
+          "sha256": "05a06fb0d88960626d79b4a2c347ebe1ddb20d05e07db1054c424be0fbf663bb",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-pan-stun.ogg",
+          "sha256": "e33743ea7be5442e0bbde8c1acabe66c089900ac107b2dd55bb9059d08534861",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-pan-swing",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-pan-swing.wav",
+        "sha256": "564169204bc500a2e9e76ec76fd5961a58c03e3027dc97f276c505563bbec210"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-pan-swing.mp3",
+          "sha256": "20a0e5b74d05772bf9feb7b2b4068338c597aba2e84452f3eba90220b3c1cbed",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-pan-swing.ogg",
+          "sha256": "bbd3150b6040c308939838b3f1bc48c3fee432a235709f8278be0232723524f1",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-special-kill",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-special-kill.wav",
+        "sha256": "1baed556b4c2bb72ef6b7f656415913fb8f74be67bbd31c98ea1ca074678009e"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-special-kill.mp3",
+          "sha256": "d4dbe60d5897f105046da9b61c69e3132f2651640580bd1dccf950dc2445f2e0",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-special-kill.ogg",
+          "sha256": "3c9a16f97e0faf065cf154b8298551e4147f03e656eb72fff6ee6f46dad1596e",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-suppressed-hit",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-suppressed-hit.wav",
+        "sha256": "17648cfe696224d10e0cb8806795bea8ad9d3095da8f289068b43e73298cbf67"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-suppressed-hit.mp3",
+          "sha256": "437834ac17290bfa7fa82f9360aa601f99d403123dbc3c1cf8ad319dd3438c28",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-suppressed-hit.ogg",
+          "sha256": "69c3adf7ec79e1cf07f9f3cf1a5ae6c18822a8bfe75e86a2b7738ed4c679e901",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-suppressed-pistol",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-suppressed-pistol.wav",
+        "sha256": "dd4a8f319a51cdf9d45ffac3a187c24305ecd0fa88b2bc5605d5a0c15dd452d9"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-suppressed-pistol.mp3",
+          "sha256": "ea47b216562fcfe2e743181f07e1f7854fce64d974235e86ac966525307965da",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-suppressed-pistol.ogg",
+          "sha256": "3651d16711dcca0c247aa37dd29d50f9ba8adb0024766cf6588fe3f577fcbeaa",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-suppressed-reload",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/generated-masters-v1/weapon-suppressed-reload.wav",
+        "sha256": "36a2af1f66faf40c339bc2c5957d25c0c0ee0ce3be87a1deac61f4e0cd5c7e07"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v060/sfx/weapon-suppressed-reload.mp3",
+          "sha256": "b71a49dfe2746e746dd7ddc8b190151b4829c547d68debfe78ced3a2d7445cc9",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v060/sfx/weapon-suppressed-reload.ogg",
+          "sha256": "b5ff9891b094150ff10ec239f0b83c3513b2b437d5d4678969d7d03d870aad70",
+          "type": "audio/ogg"
+        }
+      ]
+    }
+  ]
+}

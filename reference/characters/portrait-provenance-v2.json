@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "policyId": "portrait-reference-isolation-v2",
+  "policy": "Each portrait was generated in a separate request with exactly one character-specific reference. No other character reference, including brawler/Paisen, was supplied.",
+  "promptSummary": "Dedicated waist-up character portrait, gritty semi-realistic Japanese graphic-novel rendering, consistent warm rim light, flat chroma-magenta background, preserve only the named character identity and equipment, no text, logo, frame, or other person.",
+  "entries": [
+    {
+      "kind": "brawler",
+      "generationRecordPrefix": "exec-3358894e",
+      "referencePath": "public/brawler-sprites-v1.png",
+      "referenceSha256": "c2c8e5fa2241a4841c80ca817afe6efedcb235d0bccafabcad931776a8b7d3c4",
+      "sourcePath": "reference/characters/generated-working-v2/portraits/brawler-portrait-chroma-v2.png",
+      "sourceSha256": "39410577ce4e0fef95cad4408a0d07d5bf9163b617e0a14dd2a26bcaeeaf781b",
+      "finalPath": "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+      "finalSha256": "9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010"
+    },
+    {
+      "kind": "scout",
+      "generationRecordPrefix": "exec-58af1761",
+      "referencePath": "public/scout-sprites-v2.png",
+      "referenceSha256": "ddfeae58a473d1497202ed9371e6668c6e00ba9ae85ebcb9179cd150ddd60cd4",
+      "sourcePath": "reference/characters/generated-working-v2/portraits/scout-portrait-chroma-v2.png",
+      "sourceSha256": "5e45c977c69717c202bb60f3c500141be3c6716eb2b69c846591d7cc08e3132e",
+      "finalPath": "public/art/v060/characters/portraits/scout-portrait-v2.webp",
+      "finalSha256": "e519cfd50c7b9ff14aa7b32206e3a956aebd9f7b0df9d9472139638894779572"
+    },
+    {
+      "kind": "ranger",
+      "generationRecordPrefix": "exec-196f9317",
+      "referencePath": "public/ranger-sprites-v1.png",
+      "referenceSha256": "fb8ba4f4264e18614d4553358b9f5ea7c53cc508691c8e122fbbd347614c0640",
+      "sourcePath": "reference/characters/generated-working-v2/portraits/ranger-portrait-chroma-v2.png",
+      "sourceSha256": "beb1d50192528459ddb776d9112c038466c2c5458401b9eaf3e36f03c4e93cd6",
+      "finalPath": "public/art/v060/characters/portraits/ranger-portrait-v2.webp",
+      "finalSha256": "b53d68c0f0c0fe3a8b94f52a021fe32f93a8348b0b6015684b51e20f0df33693"
+    },
+    {
+      "kind": "medic",
+      "generationRecordPrefix": "exec-bfff386a",
+      "referencePath": "public/medic-sprites-v1.png",
+      "referenceSha256": "f403797beba5c0eecea2f13804aef760d051d595b757113264900d1134c3b6a1",
+      "sourcePath": "reference/characters/generated-working-v2/portraits/medic-portrait-chroma-v2.png",
+      "sourceSha256": "178e8ba40361c5aed020ecfc86e6c0e874eb3f3819587725bc7f9712ab767f34",
+      "finalPath": "public/art/v060/characters/portraits/medic-portrait-v2.webp",
+      "finalSha256": "e3eaf7eb827a5edfe277ad42b6d1d88fccc5d3b503c9a60f487da8d429837b70"
+    },
+    {
+      "kind": "brute",
+      "generationRecordPrefix": "exec-062f9d61",
+      "referencePath": "public/breaker-sprites-v2.png",
+      "referenceSha256": "e697e72e7cf0e7695428488008ba7de272b658f1fc1d4f661d3c63712bf33d2e",
+      "sourcePath": "reference/characters/generated-working-v2/portraits/brute-portrait-chroma-v2.png",
+      "sourceSha256": "e19dbb3b6465ae16134a24052ec0362b84e99024f393555af1b269aa10c2014c",
+      "finalPath": "public/art/v060/characters/portraits/brute-portrait-v2.webp",
+      "finalSha256": "a8092cb45810683cc0546bd411e621facf53f79719bd668e50a5442dac86df04"
+    },
+    {
+      "kind": "gunner",
+      "generationRecordPrefix": "exec-e2d2f695",
+      "referencePath": "public/gunner-sprites-v1.png",
+      "referenceSha256": "d409f215af83892b732fd2b485dbf957c9587fb4e0862d9c5d206bf45b9a8cee",
+      "sourcePath": "reference/characters/generated-working-v2/portraits/gunner-portrait-chroma-v2.png",
+      "sourceSha256": "8e806ac46168601b476854cfae6a353ce566cfc3827dc61f7d7fe604cc17a093",
+      "finalPath": "public/art/v060/characters/portraits/gunner-portrait-v2.webp",
+      "finalSha256": "122a3f06ecdc75d12711408dd5285ea3bf025f363dbd9d9d5aa710966fd4c708"
+    },
+    {
+      "kind": "crazy-king",
+      "generationRecordPrefix": "exec-7d06f8b5",
+      "referencePath": "reference/characters/producer-masters-v2/crazy-king-producer-master-v2.png",
+      "referenceSha256": "0a4329786e31f6a10d646e3145eaed188ff434cedcb58a346ae8efa29161c789",
+      "sourcePath": "reference/characters/generated-working-v2/portraits/crazy-king-portrait-chroma-v2.png",
+      "sourceSha256": "ef627dffb3054d1e223566a4afa32eff6302995f207c12aeefe2331a1285c4c6",
+      "finalPath": "public/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+      "finalSha256": "9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5"
+    },
+    {
+      "kind": "kumaverson",
+      "generationRecordPrefix": "exec-c1a5dc11",
+      "referencePath": "reference/characters/producer-masters-v2/kumaverson-producer-master-v2.png",
+      "referenceSha256": "1ea53c1c22cc811a6163246b88b749d7aeed69eff636ec60ec5f6d2228d70e68",
+      "sourcePath": "reference/characters/generated-working-v2/portraits/kumaverson-portrait-chroma-v2.png",
+      "sourceSha256": "08fd5799d04323c47c81b45dc04096c2cbbc5e94d3151cc57d69a25840248dd6",
+      "finalPath": "public/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+      "finalSha256": "7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787"
+    },
+    {
+      "kind": "babayaga",
+      "generationRecordPrefix": "exec-768d6636",
+      "referencePath": "reference/characters/producer-masters-v2/babayaga-producer-master-v2.png",
+      "referenceSha256": "13b40c78d1de2d4b2cd83ce252745bdc91b5b5cc27c2ab4f4e90f63da265b143",
+      "sourcePath": "reference/characters/generated-working-v2/portraits/babayaga-portrait-chroma-v2.png",
+      "sourceSha256": "166d8f968a1eff73acb331557744276879626966a4797782c886ea462a1cb22b",
+      "finalPath": "public/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+      "finalSha256": "fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f"
+    },
+    {
+      "kind": "guide",
+      "generationRecordPrefix": "exec-8929e0a8",
+      "referencePath": "reference/characters/legacy-masters/mizuki-nana-portrait-v1.webp",
+      "referenceSha256": "34f4489644e055a0dcf3f23600962d87922d3ba12cc37eac92b4fca619aa2367",
+      "sourcePath": "reference/characters/generated-working-v2/portraits/guide-portrait-chroma-v2.png",
+      "sourceSha256": "4b956fa1fc70ed52706ad401ce432741f2d9c68f29a3bced0ede142a92f65b26",
+      "finalPath": "public/art/v060/characters/portraits/guide-portrait-v2.webp",
+      "finalSha256": "68e97447fdeb8c28e82174e08e1058aa43286b3e084160df30a29c19ca3092ea"
+    }
+  ]
+}

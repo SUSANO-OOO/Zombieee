@@ -1,3 +1,5 @@
+import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "./campaign.js";
+
 export const COMMAND_MAX = 100;
 export const COMMAND_REGEN = 3.5;
 export const SUPPORT_GAUGE_MAX = 100;
@@ -9,6 +11,40 @@ export const ENEMY_BASE_COLLAPSE_SECONDS = 1.05;
 export const PREP_SECONDS = 5;
 export const TACTIC_MODES = ["defend", "balanced", "assault"];
 export const FIELD_OBJECT_CLEARANCE = 72;
+export const CONVOY_CAPACITY = 24;
+const INCOMPLETE_CONVOY_PROGRESS = 1 - Number.EPSILON;
+
+/**
+ * Advances the Sawara evacuation as durable gameplay state. Progress depends
+ * on deployed escort strength and Crawler condition; elapsed battle time is
+ * only the integration step, not the source of truth.
+ */
+export function advanceConvoyEvacuation({
+  progress = 0,
+  civiliansEvacuated = 0,
+  dt = 0,
+  humanCount = 0,
+  baseHp = 0,
+  baseMaxHp = 1,
+  missionComplete = false,
+} = {}) {
+  const current = Math.max(0, Math.min(1, Number(progress) || 0));
+  const step = Math.max(0, Number(dt) || 0);
+  const escortReadiness = Math.max(0, Math.min(1, (Number(humanCount) || 0) / 4));
+  const baseSafety = Math.max(0, Math.min(1, (Number(baseHp) || 0) / Math.max(1, Number(baseMaxHp) || 1)));
+  const operationalRate = ((0.45 + escortReadiness * 0.55) * (0.7 + baseSafety * 0.3)) / 150;
+  const incompleteProgress = Math.min(current, INCOMPLETE_CONVOY_PROGRESS);
+  const nextProgress = missionComplete
+    ? 1
+    : Math.max(incompleteProgress, Math.min(INCOMPLETE_CONVOY_PROGRESS, incompleteProgress + step * operationalRate));
+  return Object.freeze({
+    progress: nextProgress,
+    civiliansEvacuated: Math.max(
+      Math.max(0, Math.trunc(Number(civiliansEvacuated) || 0)),
+      Math.min(CONVOY_CAPACITY, Math.floor(nextProgress * CONVOY_CAPACITY)),
+    ),
+  });
+}
 
 /**
  * @typedef {{
@@ -61,37 +97,56 @@ export const FIELD_OBJECT_CLEARANCE = 72;
 
 // Three invisible routing bands follow the open roadway bands in battlefield-v4.
 export const LANE_Y = [212, 282, 352];
+export const MOBILE_LANDSCAPE_LANE_Y = Object.freeze([188, 233, 278]);
 export const LANE_NAMES = ["TOP", "MID", "LOW"];
+export const GROUND_EFFECT_VERTICAL_RATIO = .34;
+
+export function laneCentersForViewport(width, height) {
+  const compactLandscape = Number.isFinite(width) && Number.isFinite(height)
+    && width > height
+    && height <= 430
+    && width / Math.max(1, height) > 16 / 9;
+  return compactLandscape ? MOBILE_LANDSCAPE_LANE_Y : LANE_Y;
+}
+
+export function pointInGroundEffectEllipse(effect, point) {
+  const radius = Math.max(0, Number.isFinite(effect?.radius) ? effect.radius : 0);
+  if (radius <= 0) return false;
+  const dx = (Number.isFinite(point?.x) ? point.x : 0) - (Number.isFinite(effect?.x) ? effect.x : 0);
+  const dy = (Number.isFinite(point?.y) ? point.y : 0) - (Number.isFinite(effect?.y) ? effect.y : 0);
+  return (dx * dx) / (radius * radius)
+    + (dy * dy) / ((radius * GROUND_EFFECT_VERTICAL_RATIO) ** 2) <= 1;
+}
 
 // One geometry source keeps combat hit points, art placement, and deployment aligned.
 const CRAWLER_GEOMETRY = Object.freeze({
-  x: -70, y: 170, width: 310, height: 210, exitX: 205,
-  commandDeckX: 88, commandDeckY: 186,
-  weaponX: 132, weaponY: 224,
-  damageX: 112, damageY: 250,
+  x: -112, y: 170, width: 310, height: 210, exitX: 214,
+  commandDeckX: 64, commandDeckY: 186,
+  weaponX: 108, weaponY: 224,
+  damageX: 88, damageY: 250,
 });
 const ENEMY_BASE_GEOMETRY = Object.freeze({
-  drawX: 788, drawY: 88, width: 184, height: 340,
-  attackX: 800, enemySpawnMinX: 744, enemySpawnMaxX: 776,
-  gateX: 818, gateY: LANE_Y[1],
+  drawX: 850, drawY: 88, width: 184, height: 340,
+  attackX: 875, enemySpawnMinX: 805, enemySpawnMaxX: 833,
+  gateX: 880, gateY: LANE_Y[1],
 });
 export const WORLD_GEOMETRY = Object.freeze({
-  baseX: 188,
-  musterX: 187,
+  baseX: 110,
+  musterX: 205,
   musterY: LANE_Y[2],
   crawler: CRAWLER_GEOMETRY,
   enemyBase: ENEMY_BASE_GEOMETRY,
   // The old name remains until the rendering commit adopts enemyBase.
   barricade: ENEMY_BASE_GEOMETRY,
   supportMinX: 230,
-  supportMaxX: 760,
-  threatNearX: 362,
-  threatStartX: 482,
+  supportMaxX: 805,
+  threatNearX: 310,
+  threatStartX: 455,
 });
 
 export const BATTLEFIELD_SUPPLY_DEFS = Object.freeze({
   pod: Object.freeze({
-    kind: "pod", name: "戦術投下ポッド", key: "V", cost: 50,
+    kind: "pod", name: "防護投下ポッド", key: "V", cost: 50,
     maxHp: 260, minX: 260, maxX: 720, placementClearance: FIELD_OBJECT_CLEARANCE,
     dropSeconds: .45, impactSeconds: .26, destroySeconds: .42,
     landingRadius: 92, enemyLandingDamage: 72, allyLandingDamage: 22,
@@ -105,7 +160,7 @@ export const BATTLEFIELD_SUPPLY_DEFS = Object.freeze({
     destroySeconds: .36, blocksEnemies: false,
   }),
   medical: Object.freeze({
-    kind: "medical", name: "救急物資", key: "M", cost: 35,
+    kind: "medical", name: "簡易救護所", key: "M", cost: 35,
     maxHp: 72, minX: 250, maxX: 730, placementClearance: 58,
     healRadius: 104, healPerSecond: 18, effectSeconds: 8,
     destroySeconds: .3, blocksEnemies: false,
@@ -155,36 +210,51 @@ export const CAMERA_SHAKE_EVENTS = Object.freeze({
   enemyBaseCollapse: Object.freeze({ strength: 12, seconds: .28 }),
 });
 
-export const UNIT_CARDS = [
-  { kind: "scout", name: "SCOUT", cost: 25, key: "1", desc: "高速敵を迎撃・マーク", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 },
-  { kind: "ranger", name: "RANGER", cost: 45, key: "2", desc: "毒吐きを優先狙撃", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 },
-  { kind: "brute", name: "BREAKER", cost: 70, key: "3", desc: "前線を支え感染拠点を粉砕", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 },
-  { kind: "brawler", name: "BRAWLER", cost: 55, key: "4", desc: "瀕死の敵を仕留める", deployCooldown: 13, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: .72 },
-  { kind: "gunner", name: "GUNNER", cost: 60, key: "5", desc: "大型敵へ重火力", deployCooldown: 15, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 },
-  { kind: "medic", name: "MEDIC", cost: 50, key: "6", desc: "周囲の味方を回復", deployCooldown: 20, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: .96 },
-];
+// PROVISIONAL BALANCE (0.6.0 early access). Keep combat tuning here so the
+// producer can adjust the three newcomers without changing battle logic. The
+// original 1-6 keyboard order is a compatibility contract; newcomers use 7-9.
+export const UNIT_CARDS = Object.freeze([
+  Object.freeze({ kind: "scout", name: "橘 迅", cost: 25, key: "1", desc: "遊撃手・高速迎撃", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 }),
+  Object.freeze({ kind: "ranger", name: "黒木 凛", cost: 45, key: "2", desc: "射撃手・遠距離射撃", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 }),
+  Object.freeze({ kind: "brute", name: "大庭 豪", cost: 70, key: "3", desc: "破砕兵・前線維持", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 }),
+  Object.freeze({ kind: "brawler", name: "パイセン", cost: 55, key: "4", desc: "格闘家・素手近接", deployCooldown: 13, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: .72 }),
+  Object.freeze({ kind: "gunner", name: "真壁 玲奈", cost: 60, key: "5", desc: "制圧射手・大型制圧", deployCooldown: 15, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 }),
+  Object.freeze({ kind: "medic", name: "白石 直人", cost: 50, key: "6", desc: "衛生兵・回復支援", deployCooldown: 20, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: .96 }),
+  Object.freeze({ kind: "crazy-king", name: "クレイジーキング", cost: 65, key: "7", desc: "狂戦士・密集殲滅", deployCooldown: 17, hp: 124, speed: 20, damage: 20, range: 34, attackEvery: .82 }),
+  Object.freeze({ kind: "kumaverson", name: "クマバーソン", cost: 62, key: "8", desc: "前衛打撃・足止め", deployCooldown: 17, hp: 152, speed: 17, damage: 27, range: 31, attackEvery: 1.02 }),
+  Object.freeze({ kind: "babayaga", name: "ババヤガ", cost: 58, key: "9", desc: "精密射撃・特殊排除", deployCooldown: 16, hp: 76, speed: 19, damage: 31, range: 158, attackEvery: 1.04 }),
+]);
+
+export const UNIT_BY_ID = Object.freeze(Object.fromEntries(UNIT_CARDS.map((card) => [card.kind, card])));
+
+export const UNIT_SPECIALS = Object.freeze({
+  "crazy-king": Object.freeze({ radius: 66, secondaryMultiplier: .46, bleedDamage: 8, bleedSeconds: 2.4, push: 7 }),
+  kumaverson: Object.freeze({ push: 18, stunSeconds: .72, heavyStunSeconds: .38 }),
+  babayaga: Object.freeze({ specialMultiplier: 1.34, analysisMarkSeconds: 3.2, markMultiplier: 1.15 }),
+});
+
+export function unitSpecialFor(kind) {
+  return UNIT_SPECIALS[kind] ?? null;
+}
 
 export const SUPPORT_DEFS = [
-  { kind: "barrel", name: "IRON BARREL", cost: 20, key: "Z", desc: "PROXIMITY BLAST" },
-  { kind: "medkit", name: "MEDKIT", cost: 25, key: "X", desc: "HEALING ZONE" },
-  { kind: "molotov", name: "MOLOTOV", cost: 35, key: "C", desc: "BURN + SLOW" },
-  { kind: "airstrike", name: "AIRSTRIKE", cost: 60, key: "Q", desc: "HEAVY STRIKE" },
+  { kind: "barrel", name: "爆薬ドラム", cost: 20, key: "Z", desc: "近接起爆" },
+  { kind: "medkit", name: "簡易救護所", cost: 25, key: "X", desc: "範囲回復" },
+  { kind: "molotov", name: "火炎瓶", cost: 35, key: "C", desc: "燃焼・減速" },
+  { kind: "airstrike", name: "緊急航空支援", cost: 60, key: "Q", desc: "広域攻撃" },
 ];
 
-export const MISSION_EVENTS = [
-  { at: 5, wave: 1, label: "WAVE 1 — 接敵", units: [["walker", 0], ["walker", 1], ["walker", 2]] },
-  { at: 20, wave: 2, label: "WAVE 2 — 分散攻撃", units: [["walker", 0], ["runner", 0], ["spitter", 1], ["walker", 1], ["walker", 2]] },
-  { at: 42, wave: 3, label: "WAVE 3 — 圧力上昇", units: [["runner", 0], ["walker", 0], ["runner", 1], ["walker", 1], ["runner", 2], ["walker", 2]] },
-  { at: 60, wave: 4, label: "精鋭出現 — SHADE", units: [["shade", 0], ["runner", 0], ["walker", 1], ["spitter", 1], ["runner", 2]] },
-  { at: 80, wave: 5, label: "WAVE 5 — 重装感染体", units: [["crusher", 0], ["walker", 0], ["spitter", 1], ["runner", 1], ["crusher", 2], ["walker", 2]] },
-  { at: 103, wave: 6, label: "WAVE 6 — 全レーン警戒", units: [["runner", 0], ["spitter", 0], ["walker", 1], ["crusher", 1], ["runner", 2], ["spitter", 2]] },
-  { at: 123, wave: 7, label: "最終防衛線 — 維持", units: [["crusher", 0], ["runner", 0], ["abomination", 1], ["walker", 1], ["crusher", 2], ["runner", 2]] },
-  { at: 142, wave: 7, label: "WARNING — 巨大反応", units: [] },
-  { at: 148, wave: 8, label: "BOSS — TAKUYA / IRON JUDGE", units: [["walker", 0], ["spitter", 0], ["takuya", 1], ["runner", 1], ["crusher", 2]] },
-  { at: 168, wave: 9, label: "感染体増援", units: [["runner", 0], ["spitter", 1], ["runner", 2]] },
-  { at: 188, wave: 10, label: "TAKUYA — 激昂", bossOnly: true, units: [["crusher", 0], ["runner", 1], ["crusher", 2]] },
-  { at: 220, wave: 11, label: "最終機会 — 感染拠点を破壊", units: [["runner", 0], ["spitter", 0], ["runner", 1], ["crusher", 1], ["runner", 2], ["spitter", 2]] },
-];
+// Compatibility export for older combat helpers. The authoritative TAKUYA
+// sequence now lives in the stable campaign stage data and is projected here.
+export const MISSION_EVENTS = Object.freeze(
+  CAMPAIGN_STAGE_BY_ID[CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE].waves.map((wave, index) => Object.freeze({
+    at: PREP_SECONDS + wave.atSeconds,
+    wave: wave.waveNumber ?? index + 1,
+    label: wave.label,
+    ...(wave.bossOnly === true ? { bossOnly: true } : {}),
+    units: Object.freeze(wave.units.map((unit) => Object.freeze([...unit]))),
+  })),
+);
 
 export const ENEMY_GATE_SPAWN = Object.freeze({
   revealX: WORLD_GEOMETRY.enemyBase.drawX + 18,
@@ -339,8 +409,21 @@ function worldYFor(object) {
   return Number.isFinite(object.y) ? object.y : LANE_Y[object.lane];
 }
 
-function battlefieldDistance(lane, x, object) {
-  return Math.hypot(object.x - x, (worldYFor(object) - LANE_Y[lane]) * 2);
+function lanePitch(laneCenters = LANE_Y) {
+  const pitches = laneCenters.slice(1)
+    .map((center, index) => Math.abs(center - laneCenters[index]))
+    .filter((pitch) => Number.isFinite(pitch) && pitch > 0);
+  return pitches.length > 0 ? Math.min(...pitches) : LANE_Y[1] - LANE_Y[0];
+}
+
+function battlefieldEffectDistance(origin, point, laneCenters = LANE_Y) {
+  const standardPitch = LANE_Y[1] - LANE_Y[0];
+  const verticalScale = 2 * standardPitch / lanePitch(laneCenters);
+  return Math.hypot(point.x - origin.x, (worldYFor(point) - origin.y) * verticalScale);
+}
+
+function battlefieldDistance(lane, x, object, laneCenters = LANE_Y) {
+  return Math.hypot(object.x - x, (worldYFor(object) - laneCenters[lane]) * 2);
 }
 
 function supplyStillPresent(supply) {
@@ -352,12 +435,12 @@ function supplyStillPresent(supply) {
  *   running: boolean, paused: boolean, over: boolean, scrap: number,
  *   kind?: string, supplyKind?: string, lane: number, x: number,
  *   supplies?: RuleSupply[], objects?: RuleSupply[], supports?: RuleSupply[],
- *   forbiddenZones?: ForbiddenZone[],
+ *   forbiddenZones?: ForbiddenZone[], laneCenters?: readonly number[],
  * }} input
  */
 export function battlefieldSupplyPlacementCheck({
   running, paused, over, scrap, kind, supplyKind, lane, x,
-  supplies = [], objects = [], supports = [], forbiddenZones = [],
+  supplies = [], objects = [], supports = [], forbiddenZones = [], laneCenters = LANE_Y,
 }) {
   const selectedKind = supplyKind ?? kind;
   const def = battlefieldSupplyDef(selectedKind);
@@ -378,7 +461,7 @@ export function battlefieldSupplyPlacementCheck({
   if (occupied.some((existing) => {
     const existingDef = battlefieldSupplyDef(existing.kind);
     const clearance = Math.max(def.placementClearance, existingDef?.placementClearance ?? FIELD_OBJECT_CLEARANCE);
-    return battlefieldDistance(lane, x, existing) < clearance;
+    return battlefieldDistance(lane, x, existing, laneCenters) < clearance;
   })) return { ok: false, reason: "既存物資に近すぎます" };
 
   return { ok: true, reason: "配置できます" };
@@ -405,7 +488,7 @@ function createMedicalAreaEffect(supply, id) {
  *   running: boolean, paused: boolean, over: boolean, scrap: number,
  *   kind?: string, supplyKind?: string, lane: number, x: number,
  *   supplies?: RuleSupply[], objects?: RuleSupply[], supports?: RuleSupply[],
- *   areaEffects?: RuleAreaEffect[], forbiddenZones?: ForbiddenZone[],
+ *   areaEffects?: RuleAreaEffect[], forbiddenZones?: ForbiddenZone[], laneCenters?: readonly number[],
  *   nextId?: number, nextAreaEffectId?: number,
  * }} input
  */
@@ -424,7 +507,7 @@ export function resolveBattlefieldSupplyPlacement(input) {
     kind,
     lane: input.lane,
     x: input.x,
-    y: LANE_Y[input.lane],
+    y: (input.laneCenters ?? LANE_Y)[input.lane],
     phase: kind === "pod" ? "dropping" : "active",
     phaseTime: kind === "pod" ? def.dropSeconds : 0,
     remaining: kind === "medical" ? def.effectSeconds : null,
@@ -446,8 +529,8 @@ export function resolveBattlefieldSupplyPlacement(input) {
   };
 }
 
-/** @param {{supply: RuleSupply, fighters?: RuleFighter[]}} input */
-export function resolveBattlefieldSupplyLanding({ supply, fighters = [] }) {
+/** @param {{supply: RuleSupply, fighters?: RuleFighter[], laneCenters?: readonly number[]}} input */
+export function resolveBattlefieldSupplyLanding({ supply, fighters = [], laneCenters = LANE_Y }) {
   const def = battlefieldSupplyDef(supply?.kind);
   if (!supply || supply.kind !== "pod" || supply.landingTriggered || supply.phase !== "dropping" || (!supply.readyToLand && supply.phaseTime > 0)) {
     return { triggered: false, supply, fighters, hits: [] };
@@ -455,7 +538,7 @@ export function resolveBattlefieldSupplyLanding({ supply, fighters = [] }) {
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
     const y = worldYFor(fighter);
-    if (fighter.hp <= 0 || fighter.combatReady === false || Math.hypot(fighter.x - supply.x, (y - supply.y) * 2) > def.landingRadius) return fighter;
+    if (fighter.hp <= 0 || fighter.combatReady === false || battlefieldEffectDistance(supply, { ...fighter, y }, laneCenters) > def.landingRadius) return fighter;
     const damage = fighter.side === "zombie" ? def.enemyLandingDamage : def.allyLandingDamage;
     hits.push({ id: fighter.id, side: fighter.side, damage });
     return { ...fighter, hp: Math.max(0, fighter.hp - damage) };
@@ -522,8 +605,8 @@ export function requestDrumDetonation(supply, reason = "manual") {
   return { ok: true, reason: "起爆します", supply: { ...supply, phase: "detonating", targetable: false, detonationReason: reason } };
 }
 
-/** @param {{supply: RuleSupply, fighters?: RuleFighter[], areaEffects?: RuleAreaEffect[], nextAreaEffectId?: number}} input */
-export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [], nextAreaEffectId = 0 }) {
+/** @param {{supply: RuleSupply, fighters?: RuleFighter[], areaEffects?: RuleAreaEffect[], nextAreaEffectId?: number, laneCenters?: readonly number[]}} input */
+export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [], nextAreaEffectId = 0, laneCenters = LANE_Y }) {
   const def = BATTLEFIELD_SUPPLY_DEFS.drum;
   if (!supply || supply.kind !== "drum" || supply.phase !== "detonating" || supply.detonationTriggered) {
     return { triggered: false, supply, fighters, hits: [], areaEffects, nextAreaEffectId };
@@ -531,7 +614,7 @@ export function resolveDrumDetonation({ supply, fighters = [], areaEffects = [],
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
     const y = worldYFor(fighter);
-    if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.combatReady === false || Math.hypot(fighter.x - supply.x, (y - supply.y) * 2) > def.blastRadius) return fighter;
+    if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.combatReady === false || battlefieldEffectDistance(supply, { ...fighter, y }, laneCenters) > def.blastRadius) return fighter;
     hits.push({ id: fighter.id, damage: def.blastDamage });
     return { ...fighter, hp: Math.max(0, fighter.hp - def.blastDamage) };
   });
@@ -571,7 +654,7 @@ export function advanceAreaEffects({ areaEffects = [], fighters = [], seconds, a
     if (activeSeconds > 0) {
       nextFighters = nextFighters.map((fighter) => {
         const y = worldYFor(fighter);
-        if (fighter.hp <= 0 || fighter.combatReady === false || Math.hypot(fighter.x - effect.x, (y - effect.y) * 2) > effect.radius) return fighter;
+        if (fighter.hp <= 0 || fighter.combatReady === false || !pointInGroundEffectEllipse(effect, { x: fighter.x, y })) return fighter;
         if (effect.kind === "burn" && fighter.side === "zombie") {
           const amount = effect.amountPerSecond * activeSeconds;
           changes.push({ id: fighter.id, kind: "damage", amount });
@@ -731,14 +814,14 @@ export function advanceEmergencySupportRuntime(runtime, seconds) {
   return { runtime: next, events };
 }
 
-/** @param {{runtime: ReturnType<typeof createEmergencySupportRuntime>, fighters?: RuleFighter[]}} input */
-export function resolveAirstrikeImpact({ runtime, fighters = [] }) {
+/** @param {{runtime: ReturnType<typeof createEmergencySupportRuntime>, fighters?: RuleFighter[], laneCenters?: readonly number[]}} input */
+export function resolveAirstrikeImpact({ runtime, fighters = [], laneCenters = LANE_Y }) {
   if (runtime.phase !== "impact" || runtime.impactTriggered) return { triggered: false, runtime, fighters, hits: [] };
-  const targetY = LANE_Y[runtime.targetLane];
+  const targetY = laneCenters[runtime.targetLane];
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
     const y = worldYFor(fighter);
-    if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.combatReady === false || Math.hypot(fighter.x - runtime.targetX, (y - targetY) * 2) > AIRSTRIKE_DEF.radius) return fighter;
+    if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.combatReady === false || battlefieldEffectDistance({ x: runtime.targetX, y: targetY }, { ...fighter, y }, laneCenters) > AIRSTRIKE_DEF.radius) return fighter;
     hits.push({ id: fighter.id, damage: AIRSTRIKE_DEF.damage });
     return { ...fighter, hp: Math.max(0, fighter.hp - AIRSTRIKE_DEF.damage) };
   });
@@ -873,7 +956,7 @@ export function objectiveFor(phase, barricadeVulnerable) {
 export function advanceLimitFor(tactic, phase, barricadeVulnerable) {
   // Once TAKUYA falls, every posture must be able to reach the shared objective.
   if (phase >= 3 && barricadeVulnerable) return WORLD_GEOMETRY.barricade.attackX;
-  const baseLimit = phase === 1 ? 520 : 730;
+  const baseLimit = phase === 1 ? 550 : 800;
   const adjustment = tactic === "defend" ? -40 : tactic === "assault" ? 40 : 0;
   return Math.max(300, Math.min(WORLD_GEOMETRY.barricade.attackX, baseLimit + adjustment));
 }
@@ -885,7 +968,7 @@ export function tacticTargetBias(tactic, enemyX) {
 }
 
 export function structureDamageMultiplier(kind, tactic = "balanced") {
-  const role = ({ brute: 1.5, brawler: 1.2, gunner: 1.1, medic: .7 })[kind] ?? 1;
+  const role = ({ brute: 1.5, brawler: 1.2, gunner: 1.1, medic: .7, "crazy-king": 1.05, kumaverson: 1.08, babayaga: .9 })[kind] ?? 1;
   const posture = tactic === "assault" ? 1.12 : tactic === "defend" ? .9 : 1;
   return role * posture;
 }
@@ -959,10 +1042,25 @@ export function crawlerSiegeDamage(damage, phase) {
   return Math.max(1, Math.ceil(damage * multiplier));
 }
 
+export const BABAYAGA_PRIORITY_TARGET_KINDS = Object.freeze([
+  "spitter",
+  "shade",
+  "crusher",
+  "abomination",
+  "takuya",
+]);
+
+export function isBabayagaPriorityTarget(targetKind) {
+  return BABAYAGA_PRIORITY_TARGET_KINDS.includes(targetKind);
+}
+
 export function roleTargetBias(attackerKind, targetKind) {
   if (attackerKind === "scout" && (targetKind === "runner" || targetKind === "shade")) return -34;
   if (attackerKind === "ranger" && targetKind === "spitter") return -42;
   if (attackerKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination")) return -34;
+  if (attackerKind === "crazy-king" && (targetKind === "walker" || targetKind === "runner" || targetKind === "turned")) return -24;
+  if (attackerKind === "kumaverson" && (targetKind === "runner" || targetKind === "crusher")) return -28;
+  if (attackerKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) return -48;
   return 0;
 }
 
@@ -982,6 +1080,9 @@ export function roleEffectForAction({
   if (unitKind === "brute") return holdingFrontline ? "brute" : null;
   if (isBrawlerFinisher(unitKind, targetHpRatio)) return "brawler";
   if (unitKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination")) return "gunner";
+  if (unitKind === "crazy-king") return "crazy-king";
+  if (unitKind === "kumaverson") return "kumaverson";
+  if (unitKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) return "babayaga";
   return null;
 }
 
@@ -998,9 +1099,112 @@ export function isBrawlerFinisher(attackerKind, targetHpRatio = 1) {
 
 export function humanAttackMultiplier(attackerKind, targetKind, targetHpRatio = 1, marked = false) {
   let multiplier = attackerKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination") ? 1.3 : 1;
+  if (attackerKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) {
+    multiplier *= UNIT_SPECIALS.babayaga.specialMultiplier;
+  }
   if (isBrawlerFinisher(attackerKind, targetHpRatio)) multiplier *= 1.35;
   if (marked) multiplier *= 1.15;
   return multiplier;
+}
+
+/**
+ * Returns the deterministic secondary combat payload for the newcomer roles.
+ * Applying the payload remains the battle runtime's responsibility.
+ */
+export function newcomerAttackPayload({ unitKind, targetKind, nearbyTargetIds = [], targetIsHeavy = false }) {
+  if (unitKind === "crazy-king") {
+    const special = UNIT_SPECIALS[unitKind];
+    return Object.freeze({
+      effect: unitKind,
+      radius: special.radius,
+      secondaryTargetIds: Object.freeze([...new Set(nearbyTargetIds)]),
+      secondaryMultiplier: special.secondaryMultiplier,
+      damageOverTime: Object.freeze({ damage: special.bleedDamage, seconds: special.bleedSeconds }),
+      push: special.push,
+      stunSeconds: 0,
+      markSeconds: 0,
+    });
+  }
+  if (unitKind === "kumaverson") {
+    const special = UNIT_SPECIALS[unitKind];
+    return Object.freeze({
+      effect: unitKind,
+      radius: 0,
+      secondaryTargetIds: Object.freeze([]),
+      secondaryMultiplier: 0,
+      damageOverTime: null,
+      push: special.push,
+      stunSeconds: targetIsHeavy ? special.heavyStunSeconds : special.stunSeconds,
+      markSeconds: 0,
+    });
+  }
+  if (unitKind === "babayaga") {
+    const special = UNIT_SPECIALS[unitKind];
+    const specialTarget = isBabayagaPriorityTarget(targetKind);
+    return Object.freeze({
+      effect: specialTarget ? unitKind : null,
+      radius: 0,
+      secondaryTargetIds: Object.freeze([]),
+      secondaryMultiplier: 0,
+      damageOverTime: null,
+      push: 0,
+      stunSeconds: 0,
+      markSeconds: specialTarget ? special.analysisMarkSeconds : 0,
+    });
+  }
+  return Object.freeze({ effect: null, radius: 0, secondaryTargetIds: Object.freeze([]), secondaryMultiplier: 0, damageOverTime: null, push: 0, stunSeconds: 0, markSeconds: 0 });
+}
+
+export function resolveNewcomerAttackEffects({
+  unitKind,
+  target,
+  nearbyTargets = [],
+  attackDamage = 0,
+  targetIsHeavy = false,
+} = {}) {
+  if (!target || target.id === undefined) throw new TypeError("A primary target is required");
+  const eligibleSecondaries = new Map(
+    (Array.isArray(nearbyTargets) ? nearbyTargets : [])
+      .filter((candidate) => candidate && candidate.id !== undefined && candidate.id !== target.id)
+      .map((candidate) => [candidate.id, candidate]),
+  );
+  const payload = newcomerAttackPayload({
+    unitKind,
+    targetKind: target.kind,
+    targetIsHeavy,
+    nearbyTargetIds: [...eligibleSecondaries.keys()],
+  });
+  const applyPrimaryStatus = (entity) => ({
+    ...entity,
+    bleedRemaining: payload.damageOverTime
+      ? Math.max(Number(entity.bleedRemaining) || 0, payload.damageOverTime.seconds)
+      : Number(entity.bleedRemaining) || 0,
+    bleedDamagePerSecond: payload.damageOverTime
+      ? Math.max(Number(entity.bleedDamagePerSecond) || 0, payload.damageOverTime.damage)
+      : Number(entity.bleedDamagePerSecond) || 0,
+    knock: Math.max(Number(entity.knock) || 0, payload.push),
+    stunned: Math.max(Number(entity.stunned) || 0, payload.stunSeconds),
+    marked: Math.max(Number(entity.marked) || 0, payload.markSeconds),
+  });
+  const secondaryDamage = Math.max(0, Number(attackDamage) || 0) * payload.secondaryMultiplier;
+  const secondaryTargets = payload.secondaryTargetIds
+    .map((id) => eligibleSecondaries.get(id))
+    .filter(Boolean)
+    .map((entity) => ({
+      ...applyPrimaryStatus(entity),
+      hp: (Number(entity.hp) || 0) - secondaryDamage,
+      flash: Math.max(Number(entity.flash) || 0, 0.1),
+    }));
+  return Object.freeze({
+    payload,
+    target: Object.freeze(applyPrimaryStatus(target)),
+    secondaryTargets: Object.freeze(secondaryTargets.map((entity) => Object.freeze(entity))),
+    secondaryDamage,
+  });
+}
+
+export function advanceAttackCooldown(cooldown, dt) {
+  return Math.max(0, (Number(cooldown) || 0) - Math.max(0, Number(dt) || 0));
 }
 
 export function crawlerThreatLevel(nearestEnemyX) {
