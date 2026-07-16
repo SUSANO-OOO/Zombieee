@@ -89,6 +89,9 @@ export function battleOutcomeFor(definition, state) {
     if (state.time < definition.defenseEndAt) return null;
     return hasClearHp ? "won" : "lost";
   }
+  if (definition.bossUnlocksEnemyBase
+    && Number(state.barricadeHp) <= 0
+    && (state.bossDefeated !== true || state.barricadeVulnerable !== true)) return null;
   const assaultOutcome = battleOutcome(state.baseHp, state.barricadeHp);
   return assaultOutcome === "won" && !hasClearHp ? "lost" : assaultOutcome;
 }

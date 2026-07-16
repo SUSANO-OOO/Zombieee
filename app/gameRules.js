@@ -97,7 +97,7 @@ export function advanceConvoyEvacuation({
 
 // Three invisible routing bands follow the open roadway bands in battlefield-v4.
 export const LANE_Y = [212, 282, 352];
-export const MOBILE_LANDSCAPE_LANE_Y = Object.freeze([188, 233, 278]);
+export const MOBILE_LANDSCAPE_LANE_Y = Object.freeze([168, 225, 282]);
 export const LANE_NAMES = ["TOP", "MID", "LOW"];
 export const GROUND_EFFECT_VERTICAL_RATIO = .34;
 
@@ -107,6 +107,32 @@ export function laneCentersForViewport(width, height) {
     && height <= 430
     && width / Math.max(1, height) > 16 / 9;
   return compactLandscape ? MOBILE_LANDSCAPE_LANE_Y : LANE_Y;
+}
+
+/**
+ * Maps a pointer in the rendered, cover-scaled canvas back into the fixed
+ * 960x540 battle world. Keeping this calculation pure makes safe-area and
+ * rotation regressions testable without a browser event object.
+ */
+export function canvasPointerToWorld({
+  clientX,
+  clientY,
+  rect,
+  transform,
+  worldWidth = 960,
+  worldHeight = 540,
+} = {}) {
+  const left = Number.isFinite(rect?.left) ? rect.left : 0;
+  const top = Number.isFinite(rect?.top) ? rect.top : 0;
+  const scale = Number.isFinite(transform?.scale) && transform.scale > 0 ? transform.scale : 1;
+  const offsetX = Number.isFinite(transform?.offsetX) ? transform.offsetX : 0;
+  const offsetY = Number.isFinite(transform?.offsetY) ? transform.offsetY : 0;
+  const x = ((Number(clientX) || 0) - left - offsetX) / scale;
+  const y = ((Number(clientY) || 0) - top - offsetY) / scale;
+  return Object.freeze({
+    x: Math.max(0, Math.min(worldWidth, x)),
+    y: Math.max(0, Math.min(worldHeight, y)),
+  });
 }
 
 export function pointInGroundEffectEllipse(effect, point) {
@@ -126,7 +152,7 @@ const CRAWLER_GEOMETRY = Object.freeze({
   damageX: 88, damageY: 250,
 });
 const ENEMY_BASE_GEOMETRY = Object.freeze({
-  drawX: 850, drawY: 88, width: 184, height: 340,
+  drawX: 770, drawY: 88, width: 190, height: 340,
   attackX: 875, enemySpawnMinX: 805, enemySpawnMaxX: 833,
   gateX: 880, gateY: LANE_Y[1],
 });
@@ -147,25 +173,52 @@ export const WORLD_GEOMETRY = Object.freeze({
 export const BATTLEFIELD_SUPPLY_DEFS = Object.freeze({
   pod: Object.freeze({
     kind: "pod", name: "防護投下ポッド", key: "V", cost: 50,
-    maxHp: 260, minX: 260, maxX: 720, placementClearance: FIELD_OBJECT_CLEARANCE,
+    maxHp: 260, minX: 235, maxX: 805, placementClearance: FIELD_OBJECT_CLEARANCE,
     dropSeconds: .45, impactSeconds: .26, destroySeconds: .42,
     landingRadius: 92, enemyLandingDamage: 72, allyLandingDamage: 22,
     blocksEnemies: true,
   }),
   drum: Object.freeze({
     kind: "drum", name: "爆薬ドラム", key: "B", cost: 40,
-    maxHp: 90, minX: 250, maxX: 730, placementClearance: 64,
+    maxHp: 90, minX: 235, maxX: 805, placementClearance: 64,
     blastRadius: 112, blastDamage: 118,
     burnRadius: 88, burnDamagePerSecond: 15, burnSeconds: 4.5, slowMultiplier: .8,
     destroySeconds: .36, blocksEnemies: false,
   }),
   medical: Object.freeze({
     kind: "medical", name: "簡易救護所", key: "M", cost: 35,
-    maxHp: 72, minX: 250, maxX: 730, placementClearance: 58,
+    maxHp: 72, minX: 235, maxX: 805, placementClearance: 58,
     healRadius: 104, healPerSecond: 18, effectSeconds: 8,
     destroySeconds: .3, blocksEnemies: false,
   }),
 });
+
+export function enemyBaseTargetPoint(lane, laneCenters = LANE_Y) {
+  const normalizedLane = Number.isInteger(lane) && lane >= 0 && lane <= 2 ? lane : 1;
+  return Object.freeze({
+    x: WORLD_GEOMETRY.enemyBase.attackX,
+    y: (laneCenters[normalizedLane] ?? LANE_Y[normalizedLane]) - 24,
+  });
+}
+
+export function bossPhaseForHp(hp, maxHp) {
+  const ratio = Math.max(0, Number(hp) || 0) / Math.max(1, Number(maxHp) || 1);
+  if (ratio <= .25) return Object.freeze({ phase: 3, label: "最終段階" });
+  if (ratio <= .75) return Object.freeze({ phase: 2, label: "第2段階" });
+  return Object.freeze({ phase: 1, label: "第1段階" });
+}
+
+export function battlefieldPlacementForbiddenZones(stageZones = []) {
+  const normalizedStageZones = Array.isArray(stageZones)
+    ? stageZones.filter((zone) => Number.isFinite(zone?.minX) && Number.isFinite(zone?.maxX))
+    : [];
+  return Object.freeze([
+    // Protect the Crawler doorway itself, while allowing useful placements in
+    // the rear and close to an enemy objective.
+    Object.freeze({ minX: 0, maxX: WORLD_GEOMETRY.crawler.exitX + 18 }),
+    ...normalizedStageZones.map((zone) => Object.freeze({ ...zone })),
+  ]);
+}
 
 // Compatibility shape for the current container integration. It deliberately
 // omits maxActive/maxPerLane: the tactical pod is naturally constrained by
@@ -748,16 +801,24 @@ export function createEmergencySupportRuntime() {
   return { phase: "idle", phaseTime: 0, targetX: null, targetLane: null, impactTriggered: false };
 }
 
-export function requestAirstrike({ running, paused, over, supportGauge, lane, x, runtime = createEmergencySupportRuntime() }) {
-  if (!running) return { ok: false, reason: "作戦開始後に要請できます", supportGauge, runtime };
-  if (paused) return { ok: false, reason: "一時停止中は要請できません", supportGauge, runtime };
-  if (over) return { ok: false, reason: "作戦終了後は要請できません", supportGauge, runtime };
-  if (runtime.phase !== "idle") return { ok: false, reason: "航空支援を実行中です", supportGauge, runtime };
-  if (supportGauge < AIRSTRIKE_DEF.gaugeCost) return { ok: false, reason: "支援ゲージが不足しています", supportGauge, runtime };
+export function airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, runtime = createEmergencySupportRuntime() }) {
+  if (!running) return { ok: false, reason: "作戦開始後に要請できます" };
+  if (paused) return { ok: false, reason: "一時停止中は要請できません" };
+  if (over) return { ok: false, reason: "作戦終了後は要請できません" };
+  if (runtime.phase !== "idle") return { ok: false, reason: "航空支援を実行中です" };
+  if (supportGauge < AIRSTRIKE_DEF.gaugeCost) return { ok: false, reason: "支援ゲージが不足しています" };
   if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_Y.length || !Number.isFinite(x)) {
-    return { ok: false, reason: "目標地点が無効です", supportGauge, runtime };
+    return { ok: false, reason: "目標地点が無効です" };
   }
-  const targetX = Math.max(AIRSTRIKE_DEF.minX, Math.min(AIRSTRIKE_DEF.maxX, x));
+  if (x < AIRSTRIKE_DEF.minX || x > AIRSTRIKE_DEF.maxX) {
+    return { ok: false, reason: "航空支援の有効範囲外です" };
+  }
+  return { ok: true, reason: "航空支援目標", targetX: x };
+}
+
+export function requestAirstrike({ running, paused, over, supportGauge, lane, x, runtime = createEmergencySupportRuntime() }) {
+  const check = airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, runtime });
+  if (!check.ok) return { ...check, supportGauge, runtime };
   return {
     ok: true,
     reason: "航空支援を要請しました",
@@ -765,7 +826,7 @@ export function requestAirstrike({ running, paused, over, supportGauge, lane, x,
     runtime: {
       phase: "radio",
       phaseTime: AIRSTRIKE_DEF.radioSeconds,
-      targetX,
+      targetX: check.targetX,
       targetLane: lane,
       impactTriggered: false,
     },

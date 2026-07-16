@@ -147,9 +147,20 @@ test("Y movement reaches assignments in standard and 844x390 lane layouts", () =
     laneSpeed: 45,
     seconds: 1,
   });
-  assert.equal(compact.y, MOBILE_LANDSCAPE_LANE_Y[1]);
+  assert.equal(compact.y, 237);
   assert.equal(compact.lane, 1);
-  assert.equal(compact.reached, true);
+  assert.equal(compact.reached, false);
+  const compactSettled = advanceTowardLane({
+    y: compact.y,
+    currentLane: compact.lane,
+    destinationLane: 1,
+    laneCenters: MOBILE_LANDSCAPE_LANE_Y,
+    laneSpeed: 45,
+    seconds: 1,
+  });
+  assert.equal(compactSettled.y, MOBILE_LANDSCAPE_LANE_Y[1]);
+  assert.equal(compactSettled.lane, 1);
+  assert.equal(compactSettled.reached, true);
 });
 
 test("physical lane hysteresis absorbs Y-boundary jitter", () => {

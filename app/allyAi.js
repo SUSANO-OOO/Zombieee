@@ -2,6 +2,8 @@ export const ALLY_AI_INTENTS = Object.freeze({
   HOLD_POSITION: "hold-position",
   HOLD_DEFENSE: "hold-defense",
   RETURN_TO_DEFENSE: "return-to-defense",
+  ADVANCE_DEFENSE_LINE: "advance-defense-line",
+  HOLD_DEFENSE_LINE: "hold-defense-line",
   INTERCEPT_ENEMY: "intercept-enemy",
   HOLD_RANGE: "hold-range",
   ADVANCE_OBJECTIVE: "advance-objective",
@@ -185,6 +187,7 @@ export function decideAllyIntent({
   enemies = [],
   objective = null,
   defenseAnchor = null,
+  forwardAnchor = null,
   assignedLane,
   claims = {},
   previousIntent = null,
@@ -203,6 +206,7 @@ export function decideAllyIntent({
   const objectiveActive = Number.isFinite(objectiveX) && objective?.active !== false;
   const deploymentLane = assignedLaneFor(unit, assignedLane);
   const anchor = defenseAnchorFor(defenseAnchor, deploymentLane, unitX);
+  const forward = defenseAnchorFor(forwardAnchor, deploymentLane, anchor);
   const normalizedClaimLimit = Math.max(1, Math.floor(nonNegative(maxPursuersPerEnemy, 2)));
 
   // TAKUYA's defeat is a hard phase boundary: stale enemy locks are released and
@@ -248,11 +252,11 @@ export function decideAllyIntent({
 
   if (missionType === "timed-defense") {
     return resultForDestination({
-      intent: ALLY_AI_INTENTS.RETURN_TO_DEFENSE,
-      reachedIntent: ALLY_AI_INTENTS.HOLD_DEFENSE,
-      reason: "defense-anchor",
+      intent: forward > anchor ? ALLY_AI_INTENTS.ADVANCE_DEFENSE_LINE : ALLY_AI_INTENTS.RETURN_TO_DEFENSE,
+      reachedIntent: forward > anchor ? ALLY_AI_INTENTS.HOLD_DEFENSE_LINE : ALLY_AI_INTENTS.HOLD_DEFENSE,
+      reason: forward > anchor ? "front-clear" : "defense-anchor",
       unitX,
-      desiredX: anchor,
+      desiredX: forward,
       previousIntent,
       deadband,
       assignedLane: deploymentLane,

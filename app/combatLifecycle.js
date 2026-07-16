@@ -10,8 +10,8 @@ const EFFECTIVE_COMBAT_DISTANCE = WORLD_GEOMETRY.enemyBase.attackX - WORLD_GEOME
  *
  * The objective contact points are 25% farther apart than the 0.5.0 baseline,
  * while deployment remains inside the objectives so a wider field does not
- * turn into dead walking time. Rendering may place the supplied base bounds
- * partly outside the 960px canvas without scaling fighters down.
+ * turn into dead walking time. The Crawler may remain partly outside the left
+ * edge, while the enemy objective stays fully visible inside the 960px canvas.
  */
 export const COMBAT_GEOMETRY = freeze({
   canvasWidth: 960,

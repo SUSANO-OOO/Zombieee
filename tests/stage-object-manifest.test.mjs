@@ -69,7 +69,7 @@ test("stageObjectsFor returns one default per mutable slot and exact requested s
   assert.throws(() => stageObjectsFor("missing-stage"), RangeError);
 });
 
-test("required mutable production slots exist for traps, rescue flow, radio entry, and infection-nest phases", () => {
+test("required mutable production slots preserve the runtime gate and align objective overlays to its shared target", () => {
   const slotsFor = (stageId) => new Set(STAGE_OBJECT_MANIFEST[stageId].objects.map((entry) => entry.slot));
   assert.deepEqual(slotsFor("stage-nishijin-shopping-street"), new Set(["static-dressing", "wire-trap", "arcade-sign", "fire-shutter", "infection-node"]));
   assert.deepEqual(slotsFor("stage-sawara-ward-office"), new Set(["static-dressing", "rescue-van", "rubble", "upper-window", "lunch-crate"]));
@@ -77,10 +77,18 @@ test("required mutable production slots exist for traps, rescue flow, radio entr
 
   const baseOverlays = stageObjectStageIds.flatMap((stageId) => STAGE_OBJECT_MANIFEST[stageId].objects)
     .filter((entry) => entry.replacesRuntimeSprite === "/infected-checkpoint-v1.png");
-  assert.equal(baseOverlays.length, 6);
-  for (const overlay of baseOverlays) {
+  assert.equal(baseOverlays.length, 0, "the runtime checkpoint remains visible behind objective-state overlays");
+
+  const objectiveOverlays = stageObjectStageIds.flatMap((stageId) => STAGE_OBJECT_MANIFEST[stageId].objects)
+    .filter((entry) => entry.slot === "infection-node" || entry.slot === "infection-nest");
+  assert.equal(objectiveOverlays.length, 6);
+  for (const overlay of objectiveOverlays) {
     assert.equal(overlay.placement.x, 850);
     assert.equal(overlay.interactionX, 875);
+    assert.equal(overlay.replacesRuntimeSprite, null);
+    const halfWidth = overlay.placement.width / 2;
+    assert.ok(overlay.interactionX >= overlay.placement.x - halfWidth && overlay.interactionX <= overlay.placement.x + halfWidth, `${overlay.id} target remains inside its graphic`);
+    if (overlay.collision) assert.deepEqual(overlay.collision.lanes, [0, 1, 2], `${overlay.id} protects every physical route`);
   }
 });
 
@@ -142,13 +150,14 @@ test("stage objects declare rear, objective, or foreground depth intent", () => 
   }
 });
 
-test("every visible collision declares the physical lane excluded from supply placement", () => {
+test("every visible collision declares exactly the physical lanes excluded from supply placement", () => {
   const collidable = stageObjectStageIds
     .flatMap((stageId) => STAGE_OBJECT_MANIFEST[stageId].objects)
     .filter((object) => object.collision);
   assert.ok(collidable.length > 0);
   for (const object of collidable) {
-    assert.deepEqual(object.collision.lanes, [2], `${object.id} collision lane`);
+    const expectedLanes = object.interactionX === 875 ? [0, 1, 2] : [2];
+    assert.deepEqual(object.collision.lanes, expectedLanes, `${object.id} collision lanes`);
     assert.ok(object.collision.width > 0, `${object.id} collision width`);
     assert.ok(object.collision.height > 0, `${object.id} collision height`);
   }

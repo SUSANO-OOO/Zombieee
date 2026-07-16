@@ -36,6 +36,66 @@ test("timed defense returns to its lane anchor and never advances into an empty 
   assert.ok(Math.abs(unit.x - 310) <= 8);
 });
 
+test("Stage 2 advances to a forward line, falls back for a threat, resumes, and settles without jitter", () => {
+  const defenseAnchor = { 0: 305, 1: 325, 2: 345 };
+  const forwardAnchor = { 0: 540, 1: 555, 2: 570 };
+  const unit = { id: "mobile-defender", x: 325, lane: 1, assignedLane: 1, range: 42, ranged: false };
+
+  const advancing = decideAllyIntent({
+    missionType: "timed-defense",
+    unit,
+    enemies: [],
+    defenseAnchor,
+    forwardAnchor,
+  });
+  assert.equal(advancing.intent, ALLY_AI_INTENTS.ADVANCE_DEFENSE_LINE);
+  assert.equal(advancing.reason, "front-clear");
+  assert.equal(advancing.desiredX, 555);
+  assert.equal(advancing.moveDirection, 1);
+
+  const retreating = decideAllyIntent({
+    missionType: "timed-defense",
+    unit: { ...unit, x: 540 },
+    enemies: [{ id: "breach-runner", x: 360, lane: 1, hp: 100 }],
+    defenseAnchor,
+    forwardAnchor,
+    previousIntent: advancing,
+  });
+  assert.equal(retreating.intent, ALLY_AI_INTENTS.INTERCEPT_ENEMY);
+  assert.equal(retreating.targetId, "breach-runner");
+  assert.equal(retreating.desiredX, 384);
+  assert.equal(retreating.moveDirection, -1);
+
+  const resuming = decideAllyIntent({
+    missionType: "timed-defense",
+    unit: { ...unit, x: 410 },
+    enemies: [],
+    defenseAnchor,
+    forwardAnchor,
+    previousIntent: retreating,
+  });
+  assert.equal(resuming.intent, ALLY_AI_INTENTS.ADVANCE_DEFENSE_LINE);
+  assert.equal(resuming.targetId, null);
+  assert.equal(resuming.releaseTarget, true);
+  assert.equal(resuming.desiredX, 555);
+  assert.equal(resuming.moveDirection, 1);
+
+  const settled = decideAllyIntent({
+    missionType: "timed-defense",
+    unit: { ...unit, x: 551 },
+    enemies: [],
+    defenseAnchor,
+    forwardAnchor,
+    previousIntent: resuming,
+    deadband: 8,
+  });
+  assert.equal(settled.intent, ALLY_AI_INTENTS.HOLD_DEFENSE_LINE);
+  assert.equal(settled.desiredX, 555);
+  assert.equal(settled.destinationX, 551);
+  assert.equal(settled.moveDirection, 0);
+  assert.equal(settled.deadbandHeld, true);
+});
+
 test("an assault melee unit advances monotonically to contact when no enemies exist", () => {
   let unit = { id: "melee", x: 100, lane: 1, range: 42, ranged: false, contactRange: 24 };
   let previousIntent = null;

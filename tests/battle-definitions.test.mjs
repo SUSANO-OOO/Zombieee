@@ -37,3 +37,31 @@ test("stage 2 survives a full 180 seconds after deployment and does not target s
   assert.equal(battleOutcomeFor(definition, { baseHp: 9, baseMaxHp: 1000, barricadeHp: 0, time: definition.defenseEndAt }), "lost");
   assert.match(objectiveForBattle(definition, { time: PREP_SECONDS, phase: 1, barricadeVulnerable: false }), /180秒/);
 });
+
+test("stage 3 cannot report victory until TAKUYA is defeated and the infection base is vulnerable", () => {
+  const definition = createBattleDefinition(CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE);
+  const destroyedBase = { baseHp: definition.baseMaxHp, barricadeHp: 0, time: 200 };
+
+  assert.equal(battleOutcomeFor(definition, destroyedBase), null);
+  assert.equal(battleOutcomeFor(definition, {
+    ...destroyedBase,
+    bossDefeated: false,
+    barricadeVulnerable: true,
+  }), null);
+  assert.equal(battleOutcomeFor(definition, {
+    ...destroyedBase,
+    bossDefeated: true,
+    barricadeVulnerable: false,
+  }), null);
+  assert.equal(battleOutcomeFor(definition, {
+    ...destroyedBase,
+    bossDefeated: true,
+    barricadeVulnerable: true,
+  }), "won");
+  assert.equal(battleOutcomeFor(definition, {
+    ...destroyedBase,
+    baseHp: 0,
+    bossDefeated: true,
+    barricadeVulnerable: true,
+  }), "lost");
+});
