@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - qa/pr31-source-export-20260716
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
