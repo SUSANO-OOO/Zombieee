@@ -6,6 +6,7 @@ import {
   advanceTowardLane,
   chooseCommittedEnemyLane,
   chooseHumanDeploymentLane,
+  humanLaneTransitioning,
   laneForCenters,
   planHumanLaneAssignments,
 } from "../app/lanePlanner.js";
@@ -161,6 +162,27 @@ test("Y movement reaches assignments in standard and 844x390 lane layouts", () =
   assert.equal(compactSettled.y, MOBILE_LANDSCAPE_LANE_Y[1]);
   assert.equal(compactSettled.lane, 1);
   assert.equal(compactSettled.reached, true);
+});
+
+test("same-lane collision drift does not masquerade as a lane transfer", () => {
+  assert.equal(humanLaneTransitioning({
+    currentLane: 1,
+    assignedLane: 1,
+    y: LANE_Y[1] + 7,
+    laneCenters: LANE_Y,
+  }), false);
+  assert.equal(humanLaneTransitioning({
+    currentLane: 1,
+    assignedLane: 1,
+    y: LANE_Y[1] + 15,
+    laneCenters: LANE_Y,
+  }), false);
+  assert.equal(humanLaneTransitioning({
+    currentLane: 2,
+    assignedLane: 1,
+    y: LANE_Y[1] + 15,
+    laneCenters: LANE_Y,
+  }), true);
 });
 
 test("physical lane hysteresis absorbs Y-boundary jitter", () => {

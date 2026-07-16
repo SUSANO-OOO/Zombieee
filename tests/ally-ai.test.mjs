@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { ALLY_AI_INTENTS, decideAllyIntent, destinationWithinRange } from "../app/allyAi.js";
+import { createBattleDefinition } from "../app/battleDefinitions.js";
+import { CAMPAIGN_STAGES } from "../app/campaign.js";
+import { UNIT_CARDS, WORLD_GEOMETRY, humanCombatMinX } from "../app/gameRules.js";
 
 function advance(unit, intent, speed = 40) {
   if (intent.moveDirection === 0) return { ...unit };
@@ -166,6 +169,58 @@ test("melee allies ignore adjacent-lane pseudo-contact while ranged allies may a
   assert.equal(ranged.intent, ALLY_AI_INTENTS.HOLD_RANGE);
 });
 
+test("a medic cannot lock an adjacent-lane target that its real attack transaction rejects", () => {
+  const intent = decideAllyIntent({
+    missionType: "timed-defense",
+    unit: {
+      id: "medic",
+      x: 300,
+      lane: 0,
+      assignedLane: 0,
+      range: 118,
+      ranged: true,
+      allowAdjacentLaneTargets: false,
+    },
+    enemies: [{ id: "adjacent", x: 330, lane: 1, hp: 100, priority: 80 }],
+    defenseAnchor: { 0: 315, 1: 335, 2: 315 },
+    forwardAnchor: { 0: 540, 1: 555, 2: 540 },
+    hasLineOfSight: true,
+  });
+
+  assert.equal(intent.targetId, null);
+  assert.equal(intent.intent, ALLY_AI_INTENTS.ADVANCE_DEFENSE_LINE);
+});
+
+test("adjacent-lane ranged pursuit stops inside the real two-dimensional attack radius", () => {
+  const target = {
+    id: "adjacent-runner",
+    x: 500,
+    lane: 1,
+    hp: 100,
+    bodyRadius: 11,
+    verticalDistance: 70,
+  };
+  const intent = decideAllyIntent({
+    missionType: "assault",
+    unit: {
+      id: "gunner",
+      x: 300,
+      lane: 0,
+      assignedLane: 0,
+      range: 92,
+      ranged: true,
+      allowAdjacentLaneTargets: true,
+    },
+    enemies: [target],
+    objective: { x: 875, active: true },
+    hasLineOfSight: true,
+  });
+
+  assert.equal(intent.targetId, target.id);
+  assert.ok(Math.hypot(target.x - intent.desiredX, target.verticalDistance) <= 92 + target.bodyRadius);
+  assert.equal(intent.moveDirection, 1);
+});
+
 test("ranged allies reject an occluded adjacent-lane target and keep advancing", () => {
   const adjacentEnemy = { id: "occluded", x: 320, lane: 1, hp: 100, priority: 80 };
   const blocked = decideAllyIntent({
@@ -222,6 +277,101 @@ test("claim limits keep surplus allies on the objective instead of pulling every
   assert.equal(full.reason, "objective-after-claim-limit");
 });
 
+test("a CRAWLER breach threat outranks a retained distant target", () => {
+  const intent = decideAllyIntent({
+    missionType: "assault",
+    unit: { id: "defender", x: 520, lane: 1, assignedLane: 1, range: 30, ranged: false },
+    enemies: [
+      { id: "retained", x: 720, lane: 1, hp: 100, priority: 80 },
+      { id: "breach", x: 145, lane: 1, hp: 100, threatensBase: true, priority: -80 },
+    ],
+    objective: { x: 875, active: true },
+    previousIntent: { targetId: "retained", destinationX: 690, desiredX: 690, moveDirection: 1 },
+    localThreatRadius: 120,
+  });
+
+  assert.equal(intent.targetId, "breach");
+  assert.equal(intent.reason, "crawler-under-attack");
+  assert.equal(intent.moveDirection, -1);
+});
+
+test("a CRAWLER breach threat outranks an unrelated local contact", () => {
+  const intent = decideAllyIntent({
+    missionType: "assault",
+    unit: { id: "defender", x: 520, lane: 1, assignedLane: 1, range: 30, ranged: false },
+    enemies: [
+      { id: "local", x: 500, lane: 1, hp: 100 },
+      { id: "breach", x: 145, lane: 1, hp: 100, threatensBase: true },
+    ],
+    objective: { x: 875, active: true },
+    localThreatRadius: 120,
+  });
+
+  assert.equal(intent.targetId, "breach");
+  assert.equal(intent.reason, "crawler-under-attack");
+  assert.equal(intent.moveDirection, -1);
+});
+
+test("the closest CRAWLER threat outranks another enemy inside the broad danger zone", () => {
+  const intent = decideAllyIntent({
+    missionType: "assault",
+    unit: { id: "defender", x: 520, lane: 1, assignedLane: 1, range: 30, ranged: false },
+    enemies: [
+      { id: "danger-zone", x: 300, lane: 1, hp: 100, threatensBase: true, baseThreatDistance: 190 },
+      { id: "siege", x: 145, lane: 1, hp: 100, threatensBase: true, baseThreatDistance: 35 },
+    ],
+    objective: { x: 875, active: true },
+    localThreatRadius: 120,
+  });
+
+  assert.equal(intent.targetId, "siege");
+  assert.equal(intent.reason, "crawler-under-attack");
+});
+
+test("all campaign stages and melee allies reach a CRAWLER attacker instead of sticking at the muster line", () => {
+  const enemy = {
+    id: "breach-walker",
+    x: WORLD_GEOMETRY.baseX + 25 + 10,
+    lane: 1,
+    hp: 100,
+    bodyRadius: 11,
+    threatensBase: true,
+  };
+
+  const meleeCards = UNIT_CARDS.filter((card) => card.range <= 64);
+  for (const stage of CAMPAIGN_STAGES) for (const card of meleeCards) {
+    const definition = createBattleDefinition(stage.id);
+    let unit = { id: `${card.kind}-${stage.id}`, x: 520, lane: 1, assignedLane: 1, range: card.range, ranged: false };
+    let previousIntent = null;
+
+    for (let tick = 0; tick < 120; tick += 1) {
+      const intent = decideAllyIntent({
+        missionType: definition.missionType,
+        unit,
+        enemies: [enemy],
+        objective: definition.missionType === "timed-defense" ? null : { x: 875, active: true },
+        defenseAnchor: { 0: 315, 1: 335, 2: 315 },
+        forwardAnchor: { 0: 540, 1: 555, 2: 540 },
+        previousIntent,
+      });
+      const remaining = intent.destinationX - unit.x;
+      const nextX = unit.x + Math.sign(remaining) * Math.min(Math.abs(remaining), card.speed * .25);
+      const minX = humanCombatMinX({
+        desiredX: intent.destinationX,
+        hasEnemyTarget: intent.targetId === enemy.id,
+      });
+      unit = { ...unit, x: Math.max(minX, nextX) };
+      previousIntent = intent;
+      if (Math.abs(unit.x - enemy.x) <= unit.range + enemy.bodyRadius) break;
+    }
+
+    assert.ok(
+      Math.abs(unit.x - enemy.x) <= unit.range + enemy.bodyRadius,
+      `${stage.id}/${card.kind} stopped at x=${unit.x} before reaching the CRAWLER attacker`,
+    );
+  }
+});
+
 test("TAKUYA defeat releases stale targets and forces a fresh infection-base objective decision", () => {
   const intent = decideAllyIntent({
     missionType: "boss-assault",
@@ -236,6 +386,24 @@ test("TAKUYA defeat releases stale targets and forces a fresh infection-base obj
   assert.equal(intent.targetId, null);
   assert.equal(intent.releaseTarget, true);
   assert.equal(intent.reassess, true);
+});
+
+test("TAKUYA defeat never makes the squad ignore a live CRAWLER breach", () => {
+  const intent = decideAllyIntent({
+    missionType: "boss-assault",
+    unit: { id: "ally", x: 520, lane: 1, assignedLane: 1, range: 30, ranged: false },
+    enemies: [
+      { id: "late-reinforcement", x: 145, lane: 1, hp: 100, threatensBase: true },
+      { id: "remote-straggler", x: 650, lane: 1, hp: 100 },
+    ],
+    objective: { x: 875, active: true },
+    previousIntent: { targetId: "remote-straggler", destinationX: 620, desiredX: 620, moveDirection: 1 },
+    takuyaDefeated: true,
+  });
+
+  assert.equal(intent.targetId, "late-reinforcement");
+  assert.equal(intent.reason, "crawler-under-attack");
+  assert.equal(intent.moveDirection, -1);
 });
 
 test("deadband absorbs small target jitter instead of reversing direction every tick", () => {
@@ -308,6 +476,25 @@ test("an in-progress lane reassignment releases the old-lane target until the as
   assert.equal(intent.releaseTarget, true);
   assert.equal(intent.intent, ALLY_AI_INTENTS.RETURN_TO_DEFENSE);
   assert.equal(intent.destinationLane, 0);
+});
+
+test("a lane transfer still pursues an urgent CRAWLER threat in its destination lane", () => {
+  const intent = decideAllyIntent({
+    missionType: "boss-assault",
+    unit: { id: "transfer", x: 420, lane: 2, assignedLane: 0, range: 30, ranged: false },
+    enemies: [
+      { id: "old-lane", x: 430, lane: 2, hp: 100 },
+      { id: "top-breach", x: 160, lane: 0, hp: 100, threatensBase: true },
+    ],
+    objective: { x: 875, active: true },
+    previousIntent: { targetId: "old-lane", destinationX: 420, moveDirection: 0 },
+    laneTransitioning: true,
+  });
+
+  assert.equal(intent.targetId, "top-breach");
+  assert.equal(intent.reason, "crawler-under-attack");
+  assert.equal(intent.destinationLane, 0);
+  assert.equal(intent.moveDirection, -1);
 });
 
 test("a visible adjacent target temporarily owns destination lane, then loss returns the assignment", () => {

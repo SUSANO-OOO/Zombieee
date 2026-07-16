@@ -1011,6 +1011,19 @@ export function advanceZombieX({ enemyX, speed, seconds, burning = false, target
   return targetFloor === null ? proposedX : Math.max(targetFloor, proposedX);
 }
 
+/**
+ * Keeps normal movement outside the CRAWLER while allowing a defender that is
+ * already pursuing a breach attacker to step into the doorway far enough to
+ * make real melee contact. The target-derived destination remains the primary
+ * limit, so this never drags an idle unit behind its normal muster line.
+ */
+export function humanCombatMinX({ desiredX = null, hasEnemyTarget = false } = {}) {
+  const musterFloor = WORLD_GEOMETRY.musterX - 8;
+  if (!hasEnemyTarget || !Number.isFinite(desiredX)) return musterFloor;
+  const doorwayFloor = WORLD_GEOMETRY.crawler.exitX - 56;
+  return Math.max(doorwayFloor, Math.min(musterFloor, desiredX));
+}
+
 export function objectiveFor(phase, barricadeVulnerable) {
   if (phase === 1) return "3レーンを防衛";
   if (phase === 2) return "感染拠点へ前進";

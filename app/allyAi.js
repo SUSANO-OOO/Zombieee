@@ -49,13 +49,21 @@ export function destinationWithinRange({
   rangePadding = 10,
   ranged,
   meleeThreshold = 64,
+  targetRadius = 0,
+  verticalDistance = 0,
 } = {}) {
   const origin = finite(fromX);
   const target = finite(targetX, origin);
   const range = nonNegative(attackRange);
   const contact = nonNegative(contactRange, 24);
   const isRanged = typeof ranged === "boolean" ? ranged : range > meleeThreshold;
-  const standOff = isRanged ? Math.max(contact, range - nonNegative(rangePadding, 10)) : contact;
+  const padding = nonNegative(rangePadding, 10);
+  const bufferedReach = Math.max(contact, range + nonNegative(targetRadius) - padding);
+  const vertical = nonNegative(verticalDistance);
+  const rangedStandOff = vertical > 0
+    ? Math.sqrt(Math.max(0, bufferedReach * bufferedReach - vertical * vertical))
+    : Math.max(contact, range - padding);
+  const standOff = isRanged ? rangedStandOff : contact;
   if (Math.abs(target - origin) <= standOff) return origin;
   const direction = Math.sign(target - origin) || 1;
   return target - direction * standOff;
@@ -135,16 +143,21 @@ function selectEnemy({
 }) {
   const candidates = [];
   for (const enemy of liveEnemies(enemies)) {
+    const threatensBase = enemy.threatensBase === true;
     const sameLane = laneMatches(unit.lane, enemy.lane);
     const laneDistance = Number.isInteger(unit.lane) && Number.isInteger(enemy.lane)
       ? Math.abs(unit.lane - enemy.lane)
       : 0;
     const adjacentLaneVisible = unit.ranged === true
+      && unit.allowAdjacentLaneTargets !== false
       && laneDistance === 1
       && (typeof hasLineOfSight === "function"
         ? hasLineOfSight(unit, enemy) === true
         : hasLineOfSight === true);
-    const laneEligible = sameLane || adjacentLaneVisible;
+    const assignedLaneThreat = threatensBase
+      && validLane(unit.assignedLane)
+      && unit.assignedLane === enemy.lane;
+    const laneEligible = sameLane || adjacentLaneVisible || assignedLaneThreat;
     if (!laneEligible) continue;
     const distance = Math.abs(enemy.x - unit.x);
     const contact = unit.ranged !== true
@@ -168,10 +181,16 @@ function selectEnemy({
       distance,
       claimed,
       isPrevious,
+      threatensBase,
+      baseThreatDistance: nonNegative(enemy.baseThreatDistance, enemy.x),
       priority: finite(enemy.priorityScore ?? enemy.priority),
     });
   }
-  candidates.sort((left, right) => Number(right.contact) - Number(left.contact)
+  candidates.sort((left, right) => Number(right.threatensBase) - Number(left.threatensBase)
+    || (left.threatensBase && right.threatensBase
+      ? left.baseThreatDistance - right.baseThreatDistance
+      : 0)
+    || Number(right.contact) - Number(left.contact)
     || Number(right.local) - Number(left.local)
     || Number(right.isPrevious) - Number(left.isPrevious)
     || right.priority - left.priority
@@ -210,11 +229,14 @@ export function decideAllyIntent({
   const normalizedClaimLimit = Math.max(1, Math.floor(nonNegative(maxPursuersPerEnemy, 2)));
 
   // TAKUYA's defeat is a hard phase boundary: stale enemy locks are released and
-  // every ally reevaluates the now-vulnerable infection base as its objective.
+  // every ally reevaluates the now-vulnerable infection base as its objective,
+  // except for an enemy that is actively breaching the CRAWLER.
   const forceObjective = Boolean(takuyaDefeated && objectiveActive);
-  const selected = forceObjective || laneTransitioning ? null : selectEnemy({
-    enemies,
-    unit: { ...unit, x: unitX },
+  const urgentEnemies = liveEnemies(enemies).filter((enemy) => enemy.threatensBase === true);
+  const candidateEnemies = forceObjective || laneTransitioning ? urgentEnemies : enemies;
+  const selected = selectEnemy({
+    enemies: candidateEnemies,
+    unit: { ...unit, x: unitX, assignedLane: deploymentLane },
     missionType,
     claims,
     previousIntent,
@@ -226,6 +248,9 @@ export function decideAllyIntent({
   });
 
   if (selected) {
+    const crossLane = validLane(unit.lane)
+      && validLane(selected.enemy.lane)
+      && unit.lane !== selected.enemy.lane;
     const desiredX = destinationWithinRange({
       fromX: unitX,
       targetX: selected.enemy.x,
@@ -233,11 +258,19 @@ export function decideAllyIntent({
       contactRange: unit.contactRange ?? contactRange,
       rangePadding,
       ranged: unit.ranged,
+      targetRadius: crossLane ? selected.enemy.bodyRadius : 0,
+      verticalDistance: crossLane ? selected.enemy.verticalDistance : 0,
     });
     return resultForDestination({
       intent: ALLY_AI_INTENTS.INTERCEPT_ENEMY,
       reachedIntent: ALLY_AI_INTENTS.HOLD_RANGE,
-      reason: selected.local ? "local-threat" : selected.isPrevious ? "retain-target" : "claim-available",
+      reason: selected.threatensBase
+        ? "crawler-under-attack"
+        : selected.local
+          ? "local-threat"
+          : selected.isPrevious
+            ? "retain-target"
+            : "claim-available",
       unitX,
       desiredX,
       previousIntent,

@@ -12,6 +12,7 @@ import {
   advanceTowardLane,
   chooseCommittedEnemyLane,
   chooseHumanDeploymentLane,
+  humanLaneTransitioning,
   planHumanLaneAssignments,
 } from "./lanePlanner.js";
 import { createAudioMixer, createAudioRequestGate, runGuardedAudioRequest } from "./audioMixer.js";
@@ -51,6 +52,7 @@ import {
 } from "./storyFlow.js";
 import { battleOutcomeFor, createBattleDefinition, objectiveForBattle, phaseBannerForBattle, phaseForBattle } from "./battleDefinitions.js";
 import {
+  COMBAT_ROLE_RULES,
   advanceAllyLifecycle,
   advanceEnemyLifecycle,
   beginAllyDeath,
@@ -131,6 +133,7 @@ import {
   enemyBaseVisualState,
   enqueueEnemyWave,
   humanAttackMultiplier,
+  humanCombatMinX,
   interceptorTargetScore,
   isBabayagaPriorityTarget,
   isCrawlerRouteBlocker,
@@ -4105,8 +4108,12 @@ export function AshfallGame() {
             }
           }
 
-          const returningToAssignedLane = f.side === "human"
-            && Math.abs(f.y - activeLaneCenters[f.anchorLane ?? f.lane]) > 4;
+          const returningToAssignedLane = f.side === "human" && humanLaneTransitioning({
+            currentLane: f.lane,
+            assignedLane: f.anchorLane ?? f.lane,
+            y: f.y,
+            laneCenters: activeLaneCenters,
+          });
           if (f.kind === "medic" && !returningToAssignedLane) {
             const livingAllies = g.fighters.filter((ally) => ally.side === "human" && ally.hp > 0);
             const assignedPeers = livingAllies.filter((ally) => ally.anchorLane === f.anchorLane);
@@ -4133,7 +4140,7 @@ export function AshfallGame() {
             const enemies = g.fighters.filter((enemy) => enemy.side === "zombie" && enemy.hp > 0 && enemy.combatReady);
             const assignedLane = f.anchorLane ?? f.lane;
             const stagingForAssignedLane = f.x <= MUSTER_X + 12 && returningToAssignedLane;
-            const tacticalEnemies = returningToAssignedLane ? [] : enemies;
+            const tacticalEnemies = enemies;
             const takuyaAlive = enemies.some((enemy) => enemy.kind === "takuya");
             const objectiveX = g.definition.missionType === "timed-defense"
               ? null
@@ -4143,9 +4150,27 @@ export function AshfallGame() {
             const defenseFrontX = g.tactic === "defend" ? 470 : g.tactic === "assault" ? 635 : 555;
             allyIntent = decideAllyIntent({
               missionType: g.definition.missionType,
-              unit: { id: f.id, x: f.x, lane: f.lane, assignedLane, range: f.range, ranged: f.range > 64 },
+              unit: {
+                id: f.id,
+                x: f.x,
+                lane: f.lane,
+                assignedLane,
+                range: f.range,
+                ranged: f.range > 64,
+                allowAdjacentLaneTargets: COMBAT_ROLE_RULES[f.kind]?.allowAdjacentLaneTargets === true,
+              },
               assignedLane,
-              enemies: tacticalEnemies.map((enemy) => ({ id: enemy.id, x: enemy.x, lane: enemy.lane, hp: enemy.hp, priority: -roleTargetBias(f.kind, enemy.kind) - tacticTargetBias(g.tactic, enemy.x) })),
+              enemies: tacticalEnemies.map((enemy) => ({
+                id: enemy.id,
+                x: enemy.x,
+                lane: enemy.lane,
+                hp: enemy.hp,
+                bodyRadius: enemy.bodyRadius,
+                verticalDistance: Math.abs(f.y - enemy.y),
+                threatensBase: enemy.x <= WORLD_GEOMETRY.threatNearX,
+                baseThreatDistance: Math.max(0, enemy.x - BASE_X),
+                priority: -roleTargetBias(f.kind, enemy.kind) - tacticTargetBias(g.tactic, enemy.x),
+              })),
               objective: objectiveX === null ? null : { x: objectiveX, active: true },
               defenseAnchor: { 0: BASE_X + 205, 1: BASE_X + 225, 2: BASE_X + 205 },
               forwardAnchor: { 0: defenseFrontX - 15, 1: defenseFrontX, 2: defenseFrontX - 15 },
@@ -4164,8 +4189,9 @@ export function AshfallGame() {
                 }) : false;
               },
             });
-            if (stagingForAssignedLane) allyIntent = { ...allyIntent, destinationX: MUSTER_X, desiredX: MUSTER_X, moveDirection: 0 };
-            f.aiDestinationX = stagingForAssignedLane ? MUSTER_X : allyIntent.destinationX;
+            const holdAtMuster = stagingForAssignedLane && allyIntent.reason !== "crawler-under-attack";
+            if (holdAtMuster) allyIntent = { ...allyIntent, destinationX: MUSTER_X, desiredX: MUSTER_X, moveDirection: 0 };
+            f.aiDestinationX = holdAtMuster ? MUSTER_X : allyIntent.destinationX;
             f.aiMoveDirection = allyIntent.moveDirection;
             target = tacticalEnemies.find((enemy) => enemy.id === allyIntent?.targetId);
             if (f.retargetIn <= 0 || target?.id !== f.targetId) f.retargetIn = .34 + (f.variant % 3) * .05;
@@ -4268,6 +4294,7 @@ export function AshfallGame() {
           }
           if (
             f.side === "human" && g.barricadeVulnerable && target &&
+            allyIntent?.reason !== "crawler-under-attack" &&
             BARRICADE_X - f.x <= Math.max(110, f.range + 20) &&
             distance > Math.max(84, f.range + 36)
           ) {
@@ -4278,6 +4305,10 @@ export function AshfallGame() {
             distance = Infinity;
           }
           const objectDistance = objectTarget ? Math.abs(f.x - objectTarget.x) : Infinity;
+          const humanMinX = humanCombatMinX({
+            desiredX: allyIntent?.destinationX,
+            hasEnemyTarget: f.side === "human" && Boolean(target),
+          });
           const zombieTargetX = f.side === "zombie" ? (target?.x ?? objectTarget?.x) : undefined;
           const zombieTargetFloor = zombieTargetX !== undefined && zombieTargetX <= f.x ? zombieTargetX : null;
           const enemyBaseTarget = enemyBaseTargetPoint(f.lane, activeLaneCenters);
@@ -4512,7 +4543,7 @@ export function AshfallGame() {
             const desiredX = allyIntent?.destinationX ?? (target.x - Math.sign(dx || 1) * stoppingDistance);
             if (Math.abs(desiredX - f.x) > 2) {
               f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), f.speed * dt * moveMultiplier);
-              f.x = Math.max(MUSTER_X - 8, Math.min(BARRICADE_X, f.x));
+              f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
             }
             const destinationLane = (f.range > 64
               ? f.anchorLane ?? f.lane
@@ -4543,7 +4574,7 @@ export function AshfallGame() {
               const moveMultiplier = g.tactic === "assault" ? 1.12 : g.tactic === "defend" ? .92 : 1;
               if (Math.abs(desiredX - f.x) > 2) {
                 f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), f.speed * dt * moveMultiplier);
-                f.x = Math.max(MUSTER_X - 8, Math.min(BARRICADE_X, f.x));
+                f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
               }
               const laneStep = advanceTowardLane({
                 y: f.y,
@@ -4586,7 +4617,7 @@ export function AshfallGame() {
                 else if (f.x >= other.x) f.x += push * .45;
               }
             }
-            if (f.side === "human") f.x = Math.max(MUSTER_X - 8, f.x);
+            if (f.side === "human") f.x = Math.max(humanMinX, f.x);
             else if (zombieTargetFloor !== null) f.x = Math.max(zombieTargetFloor, f.x);
             f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
             f.lane = activeLaneForY(f.y, f.lane);

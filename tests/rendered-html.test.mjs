@@ -66,6 +66,7 @@ import {
   enemySpawnInterval,
   enqueueEnemyWave,
   humanAttackMultiplier,
+  humanCombatMinX,
   isBrawlerFinisher,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
@@ -1127,6 +1128,11 @@ test("validates, damages, and releases the battlefield container without changin
   assert.equal(advanceZombieX({ enemyX: 600, speed: 20, seconds: 1 }), 580);
   assert.equal(battleOutcome(0, 0), "lost");
 
+  const normalHumanFloor = humanCombatMinX();
+  const breachPursuitFloor = humanCombatMinX({ desiredX: 169, hasEnemyTarget: true });
+  assert.ok(breachPursuitFloor < normalHumanFloor);
+  assert.ok(breachPursuitFloor <= 169);
+
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   assert.match(game, /battlefieldObjects: BattlefieldObject\[\]/);
   assert.match(game, /targetObjectId: number \| null/);
@@ -1140,6 +1146,10 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /physicalContact \?\? \(blockingSupply \? undefined/);
   assert.match(game, /chooseCommittedEnemyLane\(\{[\s\S]*hasTarget: Boolean\(target\)[\s\S]*hasObjectTarget: Boolean\(objectTarget\)[\s\S]*inContact: Boolean\(physicalContact\)/);
   assert.match(game, /advanceZombieX\(\{ enemyX: f\.x,[\s\S]*targetFloor: zombieTargetFloor \}\)/);
+  assert.match(game, /const humanMinX = humanCombatMinX\(\{/);
+  assert.ok((game.match(/Math\.max\(humanMinX,/g) ?? []).length >= 3);
+  assert.doesNotMatch(game, /Math\.max\(MUSTER_X - 8,/);
+  assert.match(game, /allyIntent\?\.reason !== "crawler-under-attack"[\s\S]*BARRICADE_X - f\.x/);
   assert.match(game, /objectTarget \? Math\.abs\(f\.x - objectTarget\.x\)/);
   assert.match(game, /applyBattlefieldSupplyDamage\(objectTarget, f\.damage\)/);
   assert.match(game, /resolveBattlefieldSupplyLanding\(\{/);
