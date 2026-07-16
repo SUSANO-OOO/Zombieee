@@ -85,7 +85,7 @@ try {
 
     await page.screenshot({ path: path.join(evidenceDir, `github-pages-title-${viewport.width}x${viewport.height}.png`), fullPage: true });
     await page.getByRole("button", { name: "物語を始める", exact: true }).click();
-    await page.locator(".event-screen, .campaign-map-screen").first().waitFor({ state: "visible", timeout: 30_000 });
+    await page.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 30_000 });
 
     const unexpectedWarnings = diagnostics.warnings.filter((warning) => !warning.includes("was preloaded using link preload but not used"));
     if (diagnostics.consoleErrors.length || diagnostics.pageErrors.length || diagnostics.requestFailures.length || unexpectedWarnings.length) {
