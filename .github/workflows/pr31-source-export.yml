@@ -1,0 +1,34 @@
+name: PR31 Source Export
+
+on:
+  push:
+    branches:
+      - qa/pr31-source-export-20260716
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout PR head snapshot
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Archive source snapshot
+        shell: bash
+        run: |
+          tar --exclude=.git --exclude=node_modules --exclude=pr31-source.tgz -czf pr31-source.tgz .
+          sha256sum pr31-source.tgz | tee pr31-source.sha256
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr31-source-cc4eb3a6
+          path: |
+            pr31-source.tgz
+            pr31-source.sha256
+          if-no-files-found: error
+          retention-days: 1
