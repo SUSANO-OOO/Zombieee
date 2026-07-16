@@ -1,132 +1,83 @@
-name: PR31 Source Export and Release QA
+name: PR31 Merge Release Package
 
 on:
   push:
     branches:
       - qa/pr31-source-export-20260716
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read
 
 jobs:
-  export:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout PR head snapshot
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-          fetch-depth: 1
-      - name: Archive source snapshot
-        shell: bash
-        run: |
-          tar --exclude=.git --exclude=node_modules -czf "$RUNNER_TEMP/pr31-source.tgz" .
-          sha256sum "$RUNNER_TEMP/pr31-source.tgz" | tee "$RUNNER_TEMP/pr31-source.sha256"
-      - name: Upload source snapshot
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr31-source-cc4eb3a6
-          path: |
-            ${{ runner.temp }}/pr31-source.tgz
-            ${{ runner.temp }}/pr31-source.sha256
-          if-no-files-found: error
-          retention-days: 1
-
-  release-qa:
+  package-release:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - name: Checkout QA branch
+      - name: Checkout exact merged release SHA
         uses: actions/checkout@v4
         with:
+          ref: aa655937abbeca529d6b2fc1d50b2a17bb630f4f
           persist-credentials: false
           fetch-depth: 1
+      - name: Verify release source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "aa655937abbeca529d6b2fc1d50b2a17bb630f4f"
+          test "$(git status --porcelain)" = ""
+          printf '%s\n' "$actual" > "$RUNNER_TEMP/release-source-sha.txt"
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 22.13.0
           cache: npm
-      - name: Install application dependencies
+      - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-      - name: Install isolated Playwright runtime
-        run: |
-          npm install --no-save --package-lock=false playwright@1.56.1
-          npx playwright install --with-deps chromium
-      - name: Build production application
+      - name: Build exact merged release
         run: npm run build
-      - name: Start production server
+      - name: Verify and package conventional Sites artifact
         shell: bash
         run: |
-          mkdir -p qa-output
-          PORT=3001 npm start > qa-output/server.log 2>&1 &
-          echo $! > qa-output/server.pid
-          for attempt in {1..60}; do
-            if curl -fsS http://127.0.0.1:3001/ >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          cat qa-output/server.log
-          exit 1
-      - name: Run Stage 2 and latest-screen browser QA
-        env:
-          QA_BASE_URL: http://127.0.0.1:3001
-          QA_OUT_DIR: qa-output
-        shell: bash
-        run: |
-          set +e
-          node qa/pr31-release-qa.mjs
-          qa_exit=$?
-          set -e
-          if [ "$qa_exit" -eq 0 ]; then
-            exit 0
-          fi
+          set -euo pipefail
+          test -d dist/client
+          test -f dist/server/index.js
+          test -f dist/.openai/hosting.json
           node --input-type=module <<'NODE'
           import fs from "node:fs";
-          const summary = JSON.parse(fs.readFileSync("qa-output/summary.json", "utf8"));
-          const knownPreloadWarning = "guide-portrait-v2.webp was preloaded using link preload but not used";
-          const warnings = summary.diagnostics?.warnings ?? [];
-          const errors = summary.diagnostics?.errors ?? [];
-          const unexpectedWarnings = warnings.filter((warning) => !warning.includes(knownPreloadWarning));
-          const s = summary.scenarios ?? {};
-          const exactViewport = (scenario, width, height) => scenario?.overflow?.innerWidth === width
-            && scenario?.overflow?.innerHeight === height
-            && scenario?.overflow?.documentWidth === width
-            && scenario?.overflow?.documentHeight === height
-            && scenario?.overflow?.bodyWidth === width
-            && scenario?.overflow?.bodyHeight === height;
-          const checks = [
-            ["no browser errors", errors.length === 0],
-            ["only known QA preload warnings", unexpectedWarnings.length === 0],
-            ["Stage 2 PC visual and audio", s.stage2VisualPc?.audioState === "success" && exactViewport(s.stage2VisualPc, 1280, 720)],
-            ["Stage 2 mobile visual and audio", s.stage2VisualMobile?.audioState === "success" && exactViewport(s.stage2VisualMobile, 844, 390)],
-            ["Ooba PC portrait", s.oobaPc?.speaker === "大庭豪" && s.oobaPc?.backgroundImage?.includes("brute-portrait-v2.webp") && exactViewport(s.oobaPc, 1280, 720)],
-            ["Ooba mobile portrait", s.oobaMobile?.speaker === "大庭豪" && s.oobaMobile?.backgroundImage?.includes("brute-portrait-v2.webp") && exactViewport(s.oobaMobile, 844, 390)],
-            ["balanced victory", s.balancedVictory?.tacticLabel?.includes("現在：均衡") && s.balancedVictory?.resultText?.includes("作戦成功") && s.balancedVictory?.actions?.deployments > 0],
-            ["no-action defeat", s.noActionDefeat?.resultText?.includes("戦線崩壊") && s.noActionDefeat?.actions?.deployments === 0 && s.noActionDefeat?.actions?.supports === 0],
-          ];
-          const failed = checks.filter(([, passed]) => !passed).map(([name]) => name);
-          if (failed.length) {
-            console.error(JSON.stringify({ failed, errors, unexpectedWarnings }, null, 2));
-            process.exit(1);
+          const hosting = JSON.parse(fs.readFileSync("dist/.openai/hosting.json", "utf8"));
+          if (hosting.project_id !== "appgprj_6a520bfa47cc8191ae9de457455ecd42") {
+            throw new Error(`Unexpected Sites project_id: ${hosting.project_id}`);
           }
-          console.log(JSON.stringify({
-            accepted: true,
-            note: "Known Chromium warning from the localhost QA shortcut's intentionally unused global guide portrait preload was recorded and excluded from failure.",
-            warningCount: warnings.length,
-            balancedResult: s.balancedVictory.resultText,
-            defeatResult: s.noActionDefeat.resultText,
-          }, null, 2));
+          if (hosting.d1 !== null || hosting.r2 !== null) {
+            throw new Error("Unexpected Sites binding configuration");
+          }
           NODE
-      - name: Upload QA evidence
-        if: always()
+          archive="$RUNNER_TEMP/sites-release-aa655937.tgz"
+          tar -czf "$archive" dist/client dist/server dist/.openai
+          tar -tzf "$archive" > "$RUNNER_TEMP/sites-release-aa655937.contents.txt"
+          if grep -Ev '^(dist/client(/|$)|dist/server(/|$)|dist/\.openai(/|$))' "$RUNNER_TEMP/sites-release-aa655937.contents.txt" | grep -q .; then
+            echo "Unexpected path in release archive" >&2
+            exit 1
+          fi
+          sha256sum "$archive" | tee "$RUNNER_TEMP/sites-release-aa655937.sha256"
+          {
+            echo "release_sha=aa655937abbeca529d6b2fc1d50b2a17bb630f4f"
+            echo "project_id=appgprj_6a520bfa47cc8191ae9de457455ecd42"
+            echo "archive_bytes=$(stat -c %s "$archive")"
+            echo "archive_entries=$(wc -l < "$RUNNER_TEMP/sites-release-aa655937.contents.txt")"
+            echo "client_files=$(find dist/client -type f | wc -l)"
+            echo "server_files=$(find dist/server -type f | wc -l)"
+          } | tee "$RUNNER_TEMP/sites-release-aa655937.manifest.txt"
+      - name: Upload exact Sites release package
         uses: actions/upload-artifact@v4
         with:
-          name: pr31-release-qa-evidence
-          path: qa-output
-          if-no-files-found: warn
+          name: sites-release-aa655937
+          path: |
+            ${{ runner.temp }}/sites-release-aa655937.tgz
+            ${{ runner.temp }}/sites-release-aa655937.sha256
+            ${{ runner.temp }}/sites-release-aa655937.contents.txt
+            ${{ runner.temp }}/sites-release-aa655937.manifest.txt
+            ${{ runner.temp }}/release-source-sha.txt
+          if-no-files-found: error
           retention-days: 3
