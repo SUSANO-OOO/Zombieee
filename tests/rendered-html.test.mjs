@@ -165,7 +165,7 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(screens, /className="result-unlocks"[\s\S]*新たな戦力を解放/);
   assert.match(game, /newlyUnlockedUnitIds\.map/);
   assert.match(game, /newlyUnlockedStageIds\.map/);
-  assert.match(game, /resolveStageResult\(campaignSave,[\s\S]*if \(!localQaResult\) \{[\s\S]*localStorage\.setItem\("nishijin-campaign-v1", serializeCampaignSave\(resolved\.save\)\)[\s\S]*setCampaignSave\(resolved\.save as CampaignSave\)/);
+  assert.match(game, /resolveStageResult\(campaignSave,[\s\S]*if \(!localQaResult\) \{[\s\S]*writeCampaignSave\(campaignStorageFor\(window\), "nishijin-campaign-v1", serializeCampaignSave\(resolved\.save\)\)[\s\S]*setCampaignSave\(resolved\.save as CampaignSave\)/);
 
   assert.match(game, /if \(resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)[\s\S]*resolveLocalQaScenario\(window\.location\.hostname, window\.location\.search\)\) return;/);
   assert.match(game, /unlocked: Boolean\(qaMode \|\| qaScenario\) \|\| isUnitUnlocked/);
@@ -207,6 +207,8 @@ test("draws three unmistakably different stage environments", async () => {
   assert.match(game, /STAGE_OBJECT_MANIFEST, stageObjectsFor/);
   assert.match(game, /function drawStageObjectOverlays[\s\S]*ctx\.drawImage/);
   assert.match(game, /trapSprung[\s\S]*evac-ready[\s\S]*nest-destroyed/);
+  assert.match(game, /compact && g\.definition\.stageId === CAMPAIGN_STAGE_IDS\.SAWARA_WARD_OFFICE[\s\S]*naturalHeight \* \.24[\s\S]*ctx\.drawImage/);
+  assert.match(game, /else if \(g\.definition\.stageId === CAMPAIGN_STAGE_IDS\.SAWARA_WARD_OFFICE\)[\s\S]*naturalHeight \* \.2[\s\S]*ctx\.drawImage/);
   assert.match(objectManifest, /stage-nishijin-shopping-street[\s\S]*wire-trap[\s\S]*fire-shutter/);
   assert.match(objectManifest, /stage-sawara-ward-office[\s\S]*rescue-van[\s\S]*upper-window[\s\S]*lunch-crate/);
   assert.match(objectManifest, /stage-nishijin-defense-line-takuya[\s\S]*transmitter[\s\S]*spawn-marker[\s\S]*infection-nest/);
@@ -1012,7 +1014,8 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /const routeLane = f\.lane/);
   assert.match(game, /selectBlockingContainer\(\{/);
   assert.match(game, /physicalContact \?\? \(blockingSupply \? undefined/);
-  assert.match(game, /!target && !objectTarget && f\.x > 520/);
+  assert.match(game, /chooseCommittedEnemyLane\(\{[\s\S]*hasTarget: Boolean\(target\)[\s\S]*hasObjectTarget: Boolean\(objectTarget\)[\s\S]*inContact: Boolean\(physicalContact\)/);
+  assert.match(game, /advanceZombieX\(\{ enemyX: f\.x,[\s\S]*targetFloor: zombieTargetFloor \}\)/);
   assert.match(game, /objectTarget \? Math\.abs\(f\.x - objectTarget\.x\)/);
   assert.match(game, /applyBattlefieldSupplyDamage\(objectTarget, f\.damage\)/);
   assert.match(game, /resolveBattlefieldSupplyLanding\(\{/);
@@ -1182,21 +1185,20 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.qa-badge \{ bottom:35%; \}\.battle-barks \{ top:32%;/);
 });
 
-test("keeps BGM and procedural SFX lifecycle bounded across pause, mute, retry, and map return", async () => {
+test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, and map return", async () => {
   const [game, screens] = await Promise.all([
     readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/CampaignScreens.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(game, /type SfxCategory = "ui" \| "combat" \| "ambient" \| "major"/);
-  assert.match(game, /const MAX_SFX_VOICES = 10/);
   assert.match(game, /const SFX_CUES = \{/);
   assert.match(game, /"airstrike-impact"[\s\S]*priority: 100[\s\S]*duck:/);
   assert.match(game, /"crawler-barrage"[\s\S]*priority: 95[\s\S]*duck:/);
   assert.match(game, /"takuya-slam"[\s\S]*priority: 95[\s\S]*duck:/);
-  assert.match(game, /runtime\.active\.size >= MAX_SFX_VOICES/);
-  assert.match(game, /victim\.priority >= cue\.priority/);
-  assert.match(game, /gain\.connect\(runtime\.buses\[cue\.category\]\)/);
-  assert.match(game, /music\.master\.gain\.setTargetAtTime\(MUSIC_MASTER_GAIN \* level/);
+  assert.match(game, /const fallback = \(\) => productionMixer\.playTestTone\(/);
+  assert.match(game, /maxInstances: cue\.category === "major" \? 2 : 5/);
+  assert.match(game, /duck: cue\.duck \?/);
+  assert.match(game, /onLoadFailure: guardedFallback/);
   assert.match(game, /master\.connect\(ensureSfxRuntime\(audio\)\.buses\.ui\)/);
   assert.match(game, /const stopSfx = useCallback/);
   assert.match(game, /window\.clearTimeout\(startCueTimerRef\.current\)/);
@@ -1204,6 +1206,7 @@ test("keeps BGM and procedural SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /runtime\.active\.clear\(\)/);
   assert.match(game, /runtime\.lastPlayedAt\.clear\(\)/);
   assert.match(game, /for \(const bus of Object\.values\(runtime\.buses\)\)/);
+  assert.match(game, /productionMixer\.stopAll\(\{ category, fadeMs: 35 \}\)/);
   assert.match(game, /sfxMutedRef\.current = next/);
   assert.match(game, /if \(g\.paused\) \{[\s\S]*g\.battleBarks = createBattleBarkRuntime\(\)[\s\S]*stopMusic\(\); stopJingle\(\); stopSfx\(\);/);
   assert.match(game, /stopMusic\(\); stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
@@ -1341,6 +1344,8 @@ test("integrates attack identity, corpse phases, infection, cremation, and gener
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
 
   assert.match(game, /supportCohesion as unknown as[\s\S]*needsRegroup[\s\S]*f\.targetId = null;[\s\S]*continue;/);
+  assert.match(game, /const assignedPeers = livingAllies\.filter[\s\S]*assignedPeers\.length > 1[\s\S]*allies: assignedPeers/);
+  assert.doesNotMatch(game, /assignedPeers\.length > 1 \? assignedPeers : livingAllies/);
   assert.match(game, /createAttackTransaction as unknown as[\s\S]*candidates: g\.fighters\.filter\(\(candidate\) => candidate\.side !== f\.side && candidate\.hp > 0 && candidate\.combatReady\)[\s\S]*f\.targetId = transaction\?\.targetId/);
   assert.match(game, /fighter\.side === "zombie"[\s\S]*beginEnemyDeath\(createEnemyLifecycle[\s\S]*beginAllyDeath\(createAllyLifecycle/);
   assert.doesNotMatch(game, /reviveIn/);

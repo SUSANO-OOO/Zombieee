@@ -440,7 +440,7 @@ test("schema v1 saves are treated as existing campaigns even before a clear", ()
   assert.equal(migrated.campaignStarted, true);
 });
 
-test("schema v2 to v3 migration is idempotent and preserves progress, receipts, settings, and story preferences", () => {
+test("schema v2 to v4 migration is idempotent and preserves progress, receipts, non-silent settings, and story preferences", () => {
   const schema2 = {
     schemaVersion: 2,
     campaignStarted: true,
@@ -458,7 +458,7 @@ test("schema v2 to v3 migration is idempotent and preserves progress, receipts, 
   };
   const migrated = migrateCampaignSave(schema2);
 
-  assert.equal(migrated.schemaVersion, 3);
+  assert.equal(migrated.schemaVersion, 4);
   assert.equal(migrated.storyScriptVersion, "prologue-v5");
   assert.deepEqual(migrated.processedResultIds, schema2.processedResultIds);
   assert.deepEqual(migrated.completedStageIds, schema2.completedStageIds);
@@ -478,6 +478,32 @@ test("schema v2 to v3 migration is idempotent and preserves progress, receipts, 
     CAMPAIGN_UNIT_IDS.MAKABE_REINA,
   ]);
   assert.deepEqual(migrateCampaignSave(migrated), migrated);
+});
+
+test("schema v3 migrates a fully silent legacy audio configuration once, while v4 preserves explicit mute", () => {
+  const legacySilent = migrateCampaignSave({
+    schemaVersion: 3,
+    settings: { bgmEnabled: false, sfxEnabled: false, bgmVolume: 0, sfxVolume: 0 },
+  });
+  assert.deepEqual(legacySilent.settings, {
+    bgmEnabled: true,
+    sfxEnabled: true,
+    bgmVolume: 0.75,
+    sfxVolume: 0.8,
+    reducedMotion: false,
+  });
+
+  const currentSilent = migrateCampaignSave({
+    schemaVersion: 4,
+    settings: { bgmEnabled: false, sfxEnabled: false, bgmVolume: 0, sfxVolume: 0 },
+  });
+  assert.deepEqual(currentSilent.settings, {
+    bgmEnabled: false,
+    sfxEnabled: false,
+    bgmVolume: 0,
+    sfxVolume: 0,
+    reducedMotion: false,
+  });
 });
 
 test("migration repairs accidentally persisted QA all-unlock flags", () => {

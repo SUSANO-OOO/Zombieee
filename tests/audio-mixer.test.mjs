@@ -95,6 +95,19 @@ class FakeBufferSource extends FakeNode {
   }
 }
 
+class FakeOscillator extends FakeNode {
+  constructor(context) {
+    super();
+    this.context = context;
+    this.frequency = new FakeParam(440);
+    this.type = "sine";
+    this.onended = null;
+  }
+
+  start(at) { this.startAt = at; }
+  stop(at) { this.stopAt = at; }
+}
+
 class FakeAudioContext {
   constructor() {
     this.state = "suspended";
@@ -103,6 +116,7 @@ class FakeAudioContext {
     this.gains = [];
     this.panners = [];
     this.sources = [];
+    this.oscillators = [];
     this.compressors = [];
     this.resumeCount = 0;
     this.closeCount = 0;
@@ -131,6 +145,12 @@ class FakeAudioContext {
   createBufferSource() {
     const node = new FakeBufferSource(this);
     this.sources.push(node);
+    return node;
+  }
+
+  createOscillator() {
+    const node = new FakeOscillator(this);
+    this.oscillators.push(node);
     return node;
   }
 
@@ -398,6 +418,213 @@ test("scene transitions crossfade once, dialogue and major cues duck music, and 
   assert.equal(mixer.getDiagnostics().activeVoices, 0);
 });
 
+test("a fading scene voice never satisfies dedupe when the same scene restarts", async () => {
+  const context = new FakeAudioContext();
+  const { fetcher } = makeFetcher();
+  const manifest = createAudioManifest({
+    assets: [{ id: "restart-bgm", category: "bgm", sources: [{ src: "/audio/restart-bgm.ogg" }], loop: true }],
+    scenes: [{ id: "restart", bgm: "restart-bgm", crossfadeMs: 200 }],
+  });
+  const mixer = createAudioMixer({ manifest, contextFactory: () => context, fetcher });
+  await mixer.unlock();
+  await mixer.setScene("restart");
+  const firstSource = context.sources[0];
+
+  await mixer.stopScene({ fadeMs: 200 });
+  await mixer.setScene("restart");
+  const replacementSource = context.sources[1];
+
+  assert.equal(context.sources.length, 2);
+  assert.equal(firstSource.stopAt, context.currentTime + 0.21);
+  assert.equal(replacementSource.stopAt, null);
+  assert.equal(mixer.getSceneState().bgmAssetId, "restart-bgm");
+  firstSource.end();
+  assert.equal(mixer.getDiagnostics().activeVoices, 1);
+  assert.equal(mixer.getSceneState().bgmAssetId, "restart-bgm");
+  await mixer.dispose();
+});
+
+test("optional scene preload cannot delay unlock or the first critical BGM source", async () => {
+  const context = new FakeAudioContext();
+  const manifest = createAudioManifest({
+    assets: [
+      { id: "critical-bgm", category: "bgm", sources: [{ src: "/audio/critical-bgm.ogg" }], loop: true },
+      { id: "optional-sfx", category: "ui", sources: [{ src: "/audio/optional-sfx.ogg" }] },
+    ],
+    scenes: [{ id: "priority", bgm: "critical-bgm", preload: ["optional-sfx"] }],
+  });
+  let announceOptional;
+  const optionalStarted = new Promise((resolve) => { announceOptional = resolve; });
+  let releaseOptional;
+  const fetcher = async (path) => {
+    if (path === "/audio/optional-sfx.ogg") {
+      announceOptional();
+      return new Promise((resolve) => {
+        releaseOptional = () => resolve({
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => new Uint8Array([2]).buffer,
+        });
+      });
+    }
+    return { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([1]).buffer };
+  };
+  const mixer = createAudioMixer({ manifest, contextFactory: () => context, fetcher, maxPreloadConcurrency: 2 });
+  const completePreload = mixer.preloadScene("priority");
+  await optionalStarted;
+  await mixer.setScene("priority");
+  let unlockResult;
+  const unlocking = mixer.unlock().then((result) => { unlockResult = result; });
+  try {
+    await flushAsyncWork();
+    assert.equal(unlockResult, true);
+    assert.equal(mixer.getSceneState().bgmAssetId, "critical-bgm");
+    assert.equal(context.sources.length, 1);
+  } finally {
+    releaseOptional?.();
+    await Promise.all([unlocking, completePreload]);
+    await mixer.dispose();
+  }
+
+});
+
+test("preload queue enforces one global concurrency limit", async () => {
+  const assetIds = Array.from({ length: 7 }, (_, index) => `preload-${index}`);
+  const manifest = createAudioManifest({
+    assets: assetIds.map((id) => ({ id, category: "ui", sources: [{ src: `/audio/${id}.ogg` }] })),
+  });
+  let activeFetches = 0;
+  let maximumActiveFetches = 0;
+  const fetcher = async () => {
+    activeFetches += 1;
+    maximumActiveFetches = Math.max(maximumActiveFetches, activeFetches);
+    await new Promise((resolve) => setImmediate(resolve));
+    activeFetches -= 1;
+    return { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([1]).buffer };
+  };
+  const mixer = createAudioMixer({ manifest, fetcher, maxPreloadConcurrency: 2 });
+  const result = await mixer.preloadAssets(assetIds);
+
+  assert.deepEqual(result, { loaded: assetIds, failed: [] });
+  assert.equal(maximumActiveFetches, 2);
+  assert.equal(mixer.getDiagnostics().maxPreloadConcurrency, 2);
+  assert.equal(mixer.getDiagnostics().activePreloads, 0);
+  assert.equal(mixer.getDiagnostics().queuedPreloads, 0);
+  await mixer.dispose();
+});
+
+test("critical preload work overtakes queued background assets", async () => {
+  const assetIds = ["blocker", "background-a", "background-b", "critical"];
+  const manifest = createAudioManifest({
+    assets: assetIds.map((id) => ({ id, category: "ui", sources: [{ src: `/audio/${id}.ogg` }] })),
+  });
+  const starts = [];
+  let announceBlocker;
+  const blockerStarted = new Promise((resolve) => { announceBlocker = resolve; });
+  let releaseBlocker;
+  const fetcher = async (path) => {
+    const id = path.slice("/audio/".length, -".ogg".length);
+    starts.push(id);
+    if (id === "blocker") {
+      announceBlocker();
+      await new Promise((resolve) => { releaseBlocker = resolve; });
+    }
+    return { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([1]).buffer };
+  };
+  const mixer = createAudioMixer({ manifest, fetcher, maxPreloadConcurrency: 1 });
+  const background = mixer.preloadAssets(["blocker", "background-a", "background-b"], { priority: "background" });
+  await blockerStarted;
+  const critical = mixer.preloadAssets(["critical"], { priority: "critical" });
+  releaseBlocker();
+  await Promise.all([background, critical]);
+
+  assert.deepEqual(starts, ["blocker", "critical", "background-a", "background-b"]);
+  await mixer.dispose();
+});
+
+test("dispose settles active and queued preloads without waiting for the network", async () => {
+  const assetIds = ["slow-a", "slow-b"];
+  const manifest = createAudioManifest({
+    assets: assetIds.map((id) => ({ id, category: "ui", sources: [{ src: `/audio/${id}.ogg` }] })),
+  });
+  let announceFetch;
+  const fetchStarted = new Promise((resolve) => { announceFetch = resolve; });
+  let releaseFetch;
+  const fetcher = async () => {
+    announceFetch();
+    return new Promise((resolve) => {
+      releaseFetch = () => resolve({ ok: true, status: 200, arrayBuffer: async () => new Uint8Array([1]).buffer });
+    });
+  };
+  const mixer = createAudioMixer({ manifest, fetcher, maxPreloadConcurrency: 1 });
+  const pending = mixer.preloadAssets(assetIds);
+  await fetchStarted;
+
+  await mixer.dispose();
+  assert.deepEqual(await pending, { loaded: [], failed: assetIds });
+  assert.equal(mixer.getDiagnostics().activePreloads, 0);
+  assert.equal(mixer.getDiagnostics().queuedPreloads, 0);
+  releaseFetch();
+  await flushAsyncWork();
+});
+
+test("failed assets remain silent until an explicit retry succeeds", async () => {
+  const context = new FakeAudioContext();
+  const manifest = createAudioManifest({
+    assets: [{ id: "retryable", category: "ui", sources: [{ src: "/audio/retryable.ogg" }] }],
+  });
+  let available = false;
+  let requests = 0;
+  const fetcher = async () => {
+    requests += 1;
+    if (!available) return { ok: false, status: 503, arrayBuffer: async () => new ArrayBuffer(0) };
+    return { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([7]).buffer };
+  };
+  const mixer = createAudioMixer({ manifest, contextFactory: () => context, fetcher, logger: { warn() {} } });
+  await mixer.unlock();
+  assert.equal(await mixer.play("retryable"), null);
+  assert.equal(mixer.getDiagnostics().cache.failed, 1);
+
+  available = true;
+  assert.deepEqual(await mixer.retryFailedAssets("retryable"), { loaded: ["retryable"], failed: [] });
+  assert.ok(await mixer.play("retryable"));
+  assert.equal(requests, 2);
+  assert.equal(mixer.getDiagnostics().cache.ready, 1);
+  await mixer.dispose();
+});
+
+test("a partially running scene starts its recovered BGM after explicit retry without duplicating ambience", async () => {
+  const context = new FakeAudioContext();
+  const manifest = createAudioManifest({
+    assets: [
+      { id: "retry-bgm", category: "bgm", sources: [{ src: "/audio/retry-bgm.ogg" }], loop: true },
+      { id: "steady-ambience", category: "ambience", sources: [{ src: "/audio/steady-ambience.ogg" }], loop: true },
+    ],
+    scenes: [{ id: "recoverable", bgm: "retry-bgm", ambience: ["steady-ambience"] }],
+  });
+  let bgmAvailable = false;
+  const fetcher = async (path) => {
+    if (path === "/audio/retry-bgm.ogg" && !bgmAvailable) {
+      return { ok: false, status: 503, arrayBuffer: async () => new ArrayBuffer(0) };
+    }
+    return { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([3]).buffer };
+  };
+  const mixer = createAudioMixer({ manifest, contextFactory: () => context, fetcher, logger: { warn() {} } });
+  await mixer.unlock();
+  await mixer.setScene("recoverable");
+  assert.equal(mixer.getSceneState().bgmAssetId, null);
+  assert.deepEqual(mixer.getSceneState().ambienceAssetIds, ["steady-ambience"]);
+
+  bgmAvailable = true;
+  assert.deepEqual(await mixer.retryFailedAssets(["retry-bgm"]), { loaded: ["retry-bgm"], failed: [] });
+  await mixer.setScene("recoverable");
+  assert.equal(mixer.getSceneState().bgmAssetId, "retry-bgm");
+  assert.deepEqual(mixer.getSceneState().ambienceAssetIds, ["steady-ambience"]);
+  assert.equal(mixer.getDiagnostics().activeVoices, 2);
+  assert.equal(context.sources.length, 2);
+  await mixer.dispose();
+});
+
 test("different scenes sharing one BGM preserve the existing loop without self-crossfading", async () => {
   const context = new FakeAudioContext();
   const { fetcher } = makeFetcher();
@@ -529,11 +756,13 @@ test("load and decode failures stay silent, cache the failure, and emit only bou
   const context = new FakeAudioContext();
   const network = makeFetcher({ fail: new Set(["/audio/broken.ogg", "/audio/broken.mp3"]) });
   const warnings = [];
+  const assetFailures = [];
   const mixer = createAudioMixer({
     manifest,
     contextFactory: () => context,
     fetcher: network.fetcher,
     logger: { warn: (...args) => warnings.push(args) },
+    onAssetFailure: (failure) => assetFailures.push(failure),
     maxWarningsTotal: 2,
     maxWarningsPerKey: 1,
   });
@@ -550,9 +779,36 @@ test("load and decode failures stay silent, cache the failure, and emit only bou
   assert.equal(warnings.length, 2);
   assert.equal(mixer.getDiagnostics().warningTotal, 2);
   assert.equal(mixer.getDiagnostics().cache.failed, 1);
+  assert.deepEqual(assetFailures, [{ assetId: "broken", phase: "load", error: "HTTP 404" }]);
   assert.ok(await mixer.play("healthy", { onLoadFailure: () => { healthyFallbacks += 1; } }));
   assert.equal(await mixer.play("healthy", { onLoadFailure: () => { healthyFallbacks += 1; } }), null);
   assert.equal(healthyFallbacks, 0);
+  await mixer.dispose();
+});
+
+test("failed source retries are explicit and recover after the source becomes valid", async () => {
+  const manifest = createAudioManifest({
+    assets: [{ id: "retry", category: "ui", sources: [{ src: "/audio/retry.ogg" }] }],
+  });
+  const failedPaths = new Set(["/audio/retry.ogg"]);
+  const network = makeFetcher({ fail: failedPaths });
+  const failures = [];
+  const context = new FakeAudioContext();
+  const mixer = createAudioMixer({
+    manifest,
+    contextFactory: () => context,
+    fetcher: network.fetcher,
+    logger: null,
+    onAssetFailure: (failure) => failures.push(failure),
+  });
+  assert.equal(await mixer.unlock(), true);
+  assert.equal(await mixer.play("retry"), null);
+  assert.equal(mixer.getDiagnostics().cache.failed, 1);
+  assert.equal(failures.length, 1);
+  failedPaths.clear();
+  assert.equal(await mixer.retryFailedAudio(), true);
+  assert.equal(mixer.getDiagnostics().cache.failed, 0);
+  assert.ok(await mixer.play("retry"));
   await mixer.dispose();
 });
 

@@ -153,7 +153,7 @@ function frameRecord({ path, sheetWidth, sheetHeight, source, visible, nativeDir
   });
 }
 
-function legacyManifestEntry(auditKey, nativeDirection) {
+function legacyManifestEntry(auditKey, nativeDirection, { battleScale = 1 } = {}) {
   const audit = LEGACY_SHEET_AUDIT[auditKey];
   const path = `/art/v060/characters/legacy/${auditKey}-battle-gutter-v1.png`;
   const sourceCellWidths = audit.edges.slice(1).map((edge, index) => edge - audit.edges[index]);
@@ -212,6 +212,9 @@ function legacyManifestEntry(auditKey, nativeDirection) {
       cellWidths: Object.freeze(sourceCellWidths),
     }),
     battleContentHeight: null,
+    // A uniform per-character multiplier preserves authored pose proportions,
+    // transparent gutters, and the measured foot baseline across every state.
+    battleScale,
     nativeDirection,
     states: SPRITE_STATES,
     directions: SPRITE_DIRECTIONS,
@@ -258,7 +261,7 @@ export const SPRITE_MANIFEST = Object.freeze({
   scout: legacyManifestEntry("scout", "right"),
   ranger: legacyManifestEntry("ranger", "right"),
   medic: legacyManifestEntry("medic", "right"),
-  brute: legacyManifestEntry("brute", "right"),
+  brute: legacyManifestEntry("brute", "right", { battleScale: 1.12 }),
   gunner: legacyManifestEntry("gunner", "right"),
   walker: legacyManifestEntry("infected", "left"),
   runner: legacyManifestEntry("infected", "left"),
@@ -322,7 +325,7 @@ export function fitSpriteBattleDisplaySize(kind, frame, maximum = {}) {
     if (![sourceWidth, sourceHeight, maxWidth, maxHeight].every((value) => Number.isFinite(value) && value > 0)) {
       throw new TypeError("A positive source frame and display box are required");
     }
-    const scale = Math.min(maxWidth / authoredWidth, maxHeight / authoredHeight);
+    const scale = Math.min(maxWidth / authoredWidth, maxHeight / authoredHeight) * entry.battleScale;
     return Object.freeze({ w: sourceWidth * scale, h: sourceHeight * scale });
   }
   if (!Number.isFinite(entry.battleContentHeight)) return fitSpriteDisplaySize(frame, maximum);

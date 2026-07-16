@@ -28,6 +28,17 @@ function laneMatches(unitLane, targetLane) {
   return unitLane === undefined || targetLane === undefined || unitLane === targetLane;
 }
 
+function validLane(value) {
+  return Number.isInteger(value) && value >= 0 && value <= 2;
+}
+
+function assignedLaneFor(unit, assignedLane) {
+  for (const candidate of [assignedLane, unit?.assignedLane, unit?.anchorLane, unit?.lane]) {
+    if (validLane(candidate)) return candidate;
+  }
+  return 1;
+}
+
 export function destinationWithinRange({
   fromX,
   targetX,
@@ -75,6 +86,8 @@ function resultForDestination({
   previousIntent,
   deadband,
   target = null,
+  assignedLane,
+  destinationLane = assignedLane,
   claimGranted = false,
   takuyaDefeated = false,
 }) {
@@ -87,6 +100,8 @@ function resultForDestination({
     targetId,
     destinationX: movement.destinationX,
     desiredX: movement.desiredX,
+    assignedLane,
+    destinationLane: validLane(destinationLane) ? destinationLane : assignedLane,
     moveDirection: movement.moveDirection,
     reached: movement.reached,
     deadbandHeld: movement.deadbandHeld,
@@ -137,7 +152,7 @@ function selectEnemy({
     const claimed = claimCount(claims, enemy.id);
     const isPrevious = previousIntent?.targetId === enemy.id;
     const claimAvailable = local || isPrevious || claimed < maxPursuersPerEnemy;
-    const threateningDefense = sameLane
+    const threateningDefense = laneEligible
       && Math.min(distance, Math.abs(enemy.x - defenseAnchor)) <= defenseLeash;
     const eligible = missionType === "timed-defense"
       ? threateningDefense && claimAvailable
@@ -170,8 +185,10 @@ export function decideAllyIntent({
   enemies = [],
   objective = null,
   defenseAnchor = null,
+  assignedLane,
   claims = {},
   previousIntent = null,
+  laneTransitioning = false,
   takuyaDefeated = false,
   maxPursuersPerEnemy = 2,
   localThreatRadius = 150,
@@ -184,13 +201,14 @@ export function decideAllyIntent({
   const unitX = finite(unit.x);
   const objectiveX = Number.isFinite(objective) ? objective : finite(objective?.x, NaN);
   const objectiveActive = Number.isFinite(objectiveX) && objective?.active !== false;
-  const anchor = defenseAnchorFor(defenseAnchor, unit.lane, unitX);
+  const deploymentLane = assignedLaneFor(unit, assignedLane);
+  const anchor = defenseAnchorFor(defenseAnchor, deploymentLane, unitX);
   const normalizedClaimLimit = Math.max(1, Math.floor(nonNegative(maxPursuersPerEnemy, 2)));
 
   // TAKUYA's defeat is a hard phase boundary: stale enemy locks are released and
   // every ally reevaluates the now-vulnerable infection base as its objective.
   const forceObjective = Boolean(takuyaDefeated && objectiveActive);
-  const selected = forceObjective ? null : selectEnemy({
+  const selected = forceObjective || laneTransitioning ? null : selectEnemy({
     enemies,
     unit: { ...unit, x: unitX },
     missionType,
@@ -221,6 +239,8 @@ export function decideAllyIntent({
       previousIntent,
       deadband,
       target: selected.enemy,
+      assignedLane: deploymentLane,
+      destinationLane: validLane(selected.enemy.lane) ? selected.enemy.lane : deploymentLane,
       claimGranted: !selected.local && !selected.isPrevious,
       takuyaDefeated,
     });
@@ -235,6 +255,8 @@ export function decideAllyIntent({
       desiredX: anchor,
       previousIntent,
       deadband,
+      assignedLane: deploymentLane,
+      destinationLane: deploymentLane,
       takuyaDefeated,
     });
   }
@@ -261,6 +283,8 @@ export function decideAllyIntent({
       desiredX,
       previousIntent,
       deadband,
+      assignedLane: deploymentLane,
+      destinationLane: deploymentLane,
       takuyaDefeated,
     });
   }
@@ -271,6 +295,8 @@ export function decideAllyIntent({
     targetId: null,
     destinationX: unitX,
     desiredX: unitX,
+    assignedLane: deploymentLane,
+    destinationLane: deploymentLane,
     moveDirection: 0,
     reached: true,
     deadbandHeld: true,

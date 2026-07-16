@@ -203,7 +203,7 @@ test("legacy derived padding preserves authored battle scale, center anchor, and
       const frame = entry.frames[state].right;
       const maximum = { w: 72, h: 104 };
       const fitted = fitSpriteBattleDisplaySize(kind, frame, maximum);
-      const scale = Math.min(maximum.w / frame.authoredCell.w, maximum.h / frame.authoredCell.h);
+      const scale = Math.min(maximum.w / frame.authoredCell.w, maximum.h / frame.authoredCell.h) * entry.battleScale;
       assert.ok(Math.abs(fitted.w / frame.sourceRect.w - scale) < 1e-12);
       const authoredCenterAfterTransform = -fitted.w * frame.anchorX
         + (frame.authoredCell.x + frame.authoredCell.w / 2) * scale;
@@ -213,6 +213,43 @@ test("legacy derived padding preserves authored battle scale, center anchor, and
       assert.ok(Math.abs(baselineAfterTransform) < 1e-9, `${entry.sourceSheet.path}/${state} baseline`);
     }
   }
+});
+
+test("Ooba uses one uniform battle scale correction without changing crop, anchor, or baseline", () => {
+  assert.equal(SPRITE_MANIFEST.brute.battleScale, 1.12);
+  for (const [kind, entry] of Object.entries(SPRITE_MANIFEST).filter(([, { sourceSheet }]) => sourceSheet)) {
+    if (kind !== "brute") assert.equal(entry.battleScale, 1, `${kind} keeps authored battle scale`);
+  }
+
+  const maximum = { w: 72, h: 104 };
+  const bruteFrame = spriteFrameFor("brute", "idle", "right");
+  const brawlerFrame = spriteFrameFor("brawler", "idle", "right");
+  const bruteSize = fitSpriteBattleDisplaySize("brute", bruteFrame, maximum);
+  const brawlerSize = fitSpriteBattleDisplaySize("brawler", brawlerFrame, maximum);
+  const visibleSize = (frame, fitted) => ({
+    w: fitted.w * frame.contentRect.w / frame.sourceRect.w,
+    h: fitted.h * frame.contentRect.h / frame.sourceRect.h,
+  });
+  const bruteVisible = visibleSize(bruteFrame, bruteSize);
+  const brawlerVisible = visibleSize(brawlerFrame, brawlerSize);
+  assert.ok(bruteVisible.w > brawlerVisible.w * 1.15, "Ooba keeps the broader authored silhouette");
+  assert.ok(bruteVisible.h > brawlerVisible.h * 1.05, "Ooba reads taller than the brawler in battle");
+
+  for (const state of SPRITE_STATES) {
+    const frame = spriteFrameFor("brute", state, "right");
+    const fitted = fitSpriteBattleDisplaySize("brute", frame, maximum);
+    const scale = fitted.h / frame.sourceRect.h;
+    const localContentBottom = frame.contentRect.y + frame.contentRect.h - frame.sourceRect.y;
+    const baseline = -fitted.h * frame.anchorY + localContentBottom * scale;
+    assert.ok(Math.abs(baseline) < 1e-9, `${state} baseline`);
+  }
+});
+
+test("Ooba's short opaque portrait is compensated only in the event portrait layer", async () => {
+  const css = await readFile(new URL("../app/campaign.css", import.meta.url), "utf8");
+  const selector = /\.event-portrait\[style\*="brute-portrait-v2\.webp"\]\s*\{[^}]*background-size:auto 142%;[^}]*background-position:center bottom;[^}]*\}/g;
+  assert.equal(css.match(selector)?.length, 1);
+  assert.doesNotMatch(css, /\.formation-portrait\[style\*="brute-portrait-v2\.webp"\]/);
 });
 
 test("all ten people use independent portrait files and radio remains a separate non-person asset", async () => {
