@@ -209,3 +209,79 @@ test("a lost previous target is released and the ally resumes its objective", ()
   assert.equal(intent.releaseTarget, true);
   assert.equal(intent.reason, "objective-no-enemy");
 });
+
+test("Stage 1 assault advances on X while returning to the assigned lane", () => {
+  const intent = decideAllyIntent({
+    missionType: "assault",
+    unit: { id: "assault-lower-spawn", x: 100, lane: 2, assignedLane: 0, range: 42, ranged: false },
+    objective: { x: 900, active: true },
+  });
+  assert.equal(intent.intent, ALLY_AI_INTENTS.ADVANCE_OBJECTIVE);
+  assert.equal(intent.moveDirection, 1);
+  assert.equal(intent.assignedLane, 0);
+  assert.equal(intent.destinationLane, 0);
+});
+
+test("Stage 2 defense uses the assigned lane's X anchor and returns to that lane", () => {
+  const intent = decideAllyIntent({
+    missionType: "timed-defense",
+    unit: { id: "defender", x: 520, lane: 2, assignedLane: 0, range: 42, ranged: false },
+    enemies: [],
+    defenseAnchor: { 0: 305, 1: 325, 2: 345 },
+  });
+  assert.equal(intent.intent, ALLY_AI_INTENTS.RETURN_TO_DEFENSE);
+  assert.equal(intent.desiredX, 305);
+  assert.equal(intent.assignedLane, 0);
+  assert.equal(intent.destinationLane, 0);
+});
+
+test("an in-progress lane reassignment releases the old-lane target until the assigned lane is reached", () => {
+  const intent = decideAllyIntent({
+    missionType: "timed-defense",
+    unit: { id: "transfer", x: 360, lane: 2, assignedLane: 0, range: 42, ranged: false },
+    enemies: [{ id: "old-lane", x: 370, lane: 2, hp: 100 }],
+    defenseAnchor: { 0: 305, 1: 325, 2: 345 },
+    previousIntent: { targetId: "old-lane", destinationX: 360, moveDirection: 0 },
+    laneTransitioning: true,
+  });
+  assert.equal(intent.targetId, null);
+  assert.equal(intent.releaseTarget, true);
+  assert.equal(intent.intent, ALLY_AI_INTENTS.RETURN_TO_DEFENSE);
+  assert.equal(intent.destinationLane, 0);
+});
+
+test("a visible adjacent target temporarily owns destination lane, then loss returns the assignment", () => {
+  const enemy = { id: "runner", x: 400, lane: 1, hp: 100 };
+  const engaged = decideAllyIntent({
+    missionType: "timed-defense",
+    unit: { id: "ranged", x: 300, lane: 0, assignedLane: 0, range: 158, ranged: true },
+    enemies: [enemy],
+    defenseAnchor: { 0: 305, 1: 325, 2: 345 },
+    hasLineOfSight: true,
+  });
+  assert.equal(engaged.targetId, enemy.id);
+  assert.equal(engaged.destinationLane, 1);
+
+  const released = decideAllyIntent({
+    missionType: "timed-defense",
+    unit: { id: "ranged", x: 300, lane: 0, assignedLane: 0, range: 158, ranged: true },
+    enemies: [],
+    defenseAnchor: { 0: 305, 1: 325, 2: 345 },
+    previousIntent: engaged,
+  });
+  assert.equal(released.targetId, null);
+  assert.equal(released.releaseTarget, true);
+  assert.equal(released.destinationLane, 0);
+});
+
+test("assigned lane never makes adjacent-lane pseudo-contact legal for melee", () => {
+  const intent = decideAllyIntent({
+    missionType: "assault",
+    unit: { id: "melee", x: 300, lane: 2, assignedLane: 1, range: 42, ranged: false },
+    enemies: [{ id: "adjacent", x: 305, lane: 1, hp: 100 }],
+    objective: { x: 850, active: true },
+  });
+  assert.equal(intent.targetId, null);
+  assert.equal(intent.destinationLane, 1);
+  assert.equal(intent.intent, ALLY_AI_INTENTS.ADVANCE_OBJECTIVE);
+});

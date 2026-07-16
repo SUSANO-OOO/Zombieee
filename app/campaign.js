@@ -501,7 +501,7 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 
 export const calculateBattleRewards = calculateStageRewards;
 
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 3;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 4;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
 
 export const DEFAULT_CAMPAIGN_SETTINGS = deepFreeze({
@@ -558,16 +558,26 @@ function normalizeClaimedRewards(value) {
   return normalized;
 }
 
-function normalizeSettings(value) {
+function normalizeSettings(value, { recoverLegacySilence = false } = {}) {
   const source = isRecord(value) ? value : {};
   const bgmLegacy = firstDefined(source, ["bgmEnabled", "bgm", "musicEnabled"], DEFAULT_CAMPAIGN_SETTINGS.bgmEnabled);
   const sfxLegacy = firstDefined(source, ["sfxEnabled", "sfx", "effectsEnabled"], DEFAULT_CAMPAIGN_SETTINGS.sfxEnabled);
-  return {
+  const normalized = {
     bgmEnabled: typeof bgmLegacy === "boolean" ? bgmLegacy : DEFAULT_CAMPAIGN_SETTINGS.bgmEnabled,
     sfxEnabled: typeof sfxLegacy === "boolean" ? sfxLegacy : DEFAULT_CAMPAIGN_SETTINGS.sfxEnabled,
     bgmVolume: clampNumber(source.bgmVolume, 0, 1, DEFAULT_CAMPAIGN_SETTINGS.bgmVolume),
     sfxVolume: clampNumber(source.sfxVolume, 0, 1, DEFAULT_CAMPAIGN_SETTINGS.sfxVolume),
     reducedMotion: typeof source.reducedMotion === "boolean" ? source.reducedMotion : DEFAULT_CAMPAIGN_SETTINGS.reducedMotion,
+  };
+  const fullySilent = (!normalized.bgmEnabled || normalized.bgmVolume <= 0)
+    && (!normalized.sfxEnabled || normalized.sfxVolume <= 0);
+  if (!recoverLegacySilence || !fullySilent) return normalized;
+  return {
+    ...normalized,
+    bgmEnabled: true,
+    sfxEnabled: true,
+    bgmVolume: normalized.bgmVolume > 0 ? normalized.bgmVolume : DEFAULT_CAMPAIGN_SETTINGS.bgmVolume,
+    sfxVolume: normalized.sfxVolume > 0 ? normalized.sfxVolume : DEFAULT_CAMPAIGN_SETTINGS.sfxVolume,
   };
 }
 
@@ -682,7 +692,10 @@ export function migrateCampaignSave(rawSave) {
     supplies: clampInteger(firstDefined(source, ["supplies", "supply", "currency"], 0), 0, Number.MAX_SAFE_INTEGER, 0),
     ...unlocks,
     lastSelectedStageId,
-    settings: normalizeSettings(rawSettings),
+    settings: normalizeSettings(rawSettings, {
+      recoverLegacySilence: !Number.isFinite(sourceSchemaVersion)
+        || sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION,
+    }),
   };
 }
 

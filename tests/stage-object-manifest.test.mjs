@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
+  STAGE_OBJECT_DEPTH_BANDS,
   STAGE_OBJECT_MANIFEST,
   stageObjectsFor,
   stageObjectStageIds,
@@ -80,5 +81,75 @@ test("required mutable production slots exist for traps, rescue flow, radio entr
   for (const overlay of baseOverlays) {
     assert.equal(overlay.placement.x, 850);
     assert.equal(overlay.interactionX, 875);
+  }
+});
+
+test("stage objects declare rear, objective, or foreground depth intent", () => {
+  assert.deepEqual(STAGE_OBJECT_DEPTH_BANDS, ["rear-scenery", "objective", "foreground-prop"]);
+  const rearIds = new Set([
+    "nishijin-static-dressing",
+    "nishijin-sign-intact",
+    "nishijin-fire-shutter-closed",
+    "nishijin-fire-shutter-open",
+    "sawara-static-dressing",
+    "sawara-rescue-van-blocked",
+    "sawara-rescue-van-ready",
+    "sawara-shooting-window-lit",
+    "defense-static-dressing",
+  ]);
+  const objectiveIds = new Set([
+    "nishijin-infection-node-active",
+    "nishijin-infection-node-destroyed",
+    "defense-transmitter-active",
+    "defense-transmitter-damaged",
+    "defense-infection-nest-dormant",
+    "defense-infection-nest-exposed",
+    "defense-infection-nest-damaged",
+    "defense-infection-nest-destroyed",
+  ]);
+  const foregroundIds = new Set([
+    "nishijin-wire-trap-intact",
+    "nishijin-wire-trap-sprung",
+    "nishijin-sign-fallen",
+    "sawara-rubble-blocking",
+    "sawara-rubble-cleared",
+    "sawara-lunch-crate-sealed",
+    "sawara-lunch-crate-open",
+    "defense-spawn-marker",
+  ]);
+  const objects = stageObjectStageIds.flatMap((stageId) => STAGE_OBJECT_MANIFEST[stageId].objects);
+  assert.deepEqual(new Set(objects.filter(({ depthBand }) => depthBand === "rear-scenery").map(({ id }) => id)), rearIds);
+  assert.deepEqual(new Set(objects.filter(({ depthBand }) => depthBand === "objective").map(({ id }) => id)), objectiveIds);
+  assert.deepEqual(new Set(objects.filter(({ depthBand }) => depthBand === "foreground-prop").map(({ id }) => id)), foregroundIds);
+  assert.equal(rearIds.size + objectiveIds.size + foregroundIds.size, objects.length);
+
+  for (const object of objects) {
+    if (objectiveIds.has(object.id)) {
+      assert.equal(object.laneCorridorPolicy, "battlefield-objective", `${object.id} corridor policy`);
+      continue;
+    }
+    if (foregroundIds.has(object.id)) {
+      assert.equal(object.laneCorridorPolicy, "overlays-walkable-lanes", `${object.id} corridor policy`);
+      continue;
+    }
+    assert.equal(object.depthBand, "rear-scenery", `${object.id} depth band`);
+    assert.equal(object.laneCorridorPolicy, "outside-walkable-lanes", `${object.id} corridor policy`);
+    if (object.stageId !== "stage-nishijin-defense-line-takuya") {
+      assert.ok(object.placement.y <= 184, `${object.id} bottom stays above compact top lane at y=188`);
+      assert.ok(object.placement.width <= 300, `${object.id} rear scenery width`);
+      assert.equal(object.collision, null, `${object.id} cannot leave an invisible supply exclusion in a battle lane`);
+    }
+  }
+});
+
+test("every visible collision declares the physical lane excluded from supply placement", () => {
+  const collidable = stageObjectStageIds
+    .flatMap((stageId) => STAGE_OBJECT_MANIFEST[stageId].objects)
+    .filter((object) => object.collision);
+  assert.ok(collidable.length > 0);
+  for (const object of collidable) {
+    assert.deepEqual(object.collision.lanes, [2], `${object.id} collision lane`);
+    assert.ok(object.collision.width > 0, `${object.id} collision width`);
+    assert.ok(object.collision.height > 0, `${object.id} collision height`);
   }
 });

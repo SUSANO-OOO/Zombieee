@@ -346,20 +346,30 @@ test("legacy SFX mapping covers every current SFX_CUES key and only targets prod
   assert.notEqual(LEGACY_SFX_CUE_MAP.defeat, "music-defeat");
 });
 
-test("gameplay routes scenes and combat identity through production audio before oscillator fallback", () => {
+test("gameplay routes scenes, combat identity, and procedural fallback through the production mixer", () => {
   const source = readFileSync(path.join(repositoryRoot, "app", "AshfallGame.tsx"), "utf8");
   assert.match(source, /createAudioMixer\(\{[\s\S]*manifest: PRODUCTION_AUDIO_MANIFEST/);
   assert.match(source, /const productionCue = LEGACY_SFX_CUE_MAP\[cueId\]/);
-  assert.match(source, /if \(!productionMixer \|\| !productionCue\) return playSynthCue\(cueId, options\)/);
+  assert.match(source, /const fallback = \(\) => productionMixer\.playTestTone\(\{/);
+  assert.match(source, /if \(!productionMixer\) return false/);
+  assert.match(source, /if \(!productionCue\) return fallback\(\)/);
+  assert.match(source, /audioActivationPendingRef\.current = true[\s\S]*mixer\.playTestTone\(\{ respectSettings: true \}\)[\s\S]*await mixer\.enableAudio\(\)[\s\S]*mixer\.retryFailedAudio\(\)/);
+  assert.match(source, /onAssetFailure: \(\) => \{[\s\S]*setAudioUnlockUi\("failed"\)/);
+  assert.match(source, /className="audio-test-tone" data-audio-unlock-control="true" onClick=\{playAudioTestTone\}/);
+  assert.match(source, /className="enable-audio-button"[\s\S]*data-audio-unlock-control="true"/);
+  assert.match(source, /音声を有効にする[\s\S]*音声を準備中…[\s\S]*音声が有効になりました[\s\S]*音声を開始できませんでした　もう一度試す/);
   assert.match(source, /runGuardedAudioRequest\(\{[\s\S]*play: \(guardedFallback\) => productionMixer\.play\(productionCue/);
   assert.match(source, /onLoadFailure: guardedFallback/);
+  assert.doesNotMatch(source, /return playSynthCue\(cueId, options\)/);
   assert.match(source, /sfxRequestGateRef\.current\.cancelPending\(\)/);
+  assert.match(source, /if \(!productionMixer\?\.unlocked\) return/);
+  assert.match(source, /productionMixer\.hasInstance\(instanceKey\)/);
   assert.match(source, /durationSeconds: productionCue === "radio-open" \? \.72 : undefined/);
   assert.match(source, /durationSeconds: active \? \.72 : undefined/);
-  assert.match(source, /setScene\(sceneId, \{ onBgmLoadFailure: startSynthMusic \}\)/);
+  assert.match(source, /productionMixer\.setScene\(sceneId\)\.then/);
   assert.match(source, /sceneIdForScreen\(screen, selectedStageId, musicState\)/);
   assert.match(source, /if \(desiredProductionSceneRef\.current === sceneId\) return/);
-  assert.match(source, /setScene\(sceneId, \{ onBgmLoadFailure: \(\) => startSynthMusicRef\.current\(\) \}\)/);
+  assert.doesNotMatch(source, /onBgmLoadFailure/);
   assert.match(source, /createAudioMixer\(\{[\s\S]*maxVoices: 28/);
   assert.match(source, /const localQaAudio = Boolean\(legacyQa \|\| campaignQa\)/);
   assert.match(source, /setBgmMuted\(localQaAudio \? false : !loaded\.settings\.bgmEnabled\)/);
@@ -373,7 +383,9 @@ test("gameplay routes scenes and combat identity through production audio before
   assert.match(source, /enemyVoiceCue\(fighter\.kind, "death"\)/);
   assert.match(source, /"infection-warning-01"/);
   assert.match(source, /BATTLE_AUDIO_LOOP_CONTRACTS\.corpseBurn\.cueId/);
-  assert.match(source, /instanceKey: BATTLE_AUDIO_LOOP_CONTRACTS\.corpseBurn\.instanceKey/);
+  assert.match(source, /const instanceKey = `\$\{BATTLE_AUDIO_LOOP_CONTRACTS\.corpseBurn\.instanceKey\}:\$\{burningCorpse\.id\}`/);
+  assert.match(source, /dedupeKey: instanceKey/);
+  assert.match(source, /burningCorpses = [\s\S]*\.slice\(0, 3\)/);
   const corpseBurnAsset = PRODUCTION_AUDIO_MANIFEST.assets.find(({ id }) => id === BATTLE_AUDIO_LOOP_CONTRACTS.corpseBurn.cueId);
   assert.equal(corpseBurnAsset?.loop, true);
   assert.equal(corpseBurnAsset?.maxInstances, 3);

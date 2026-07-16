@@ -63,6 +63,16 @@ export async function runGuardedAudioRequest({
 
 const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, Number.isFinite(value) ? value : minimum));
 
+const PRELOAD_PRIORITIES = Object.freeze({
+  background: 0,
+  normal: 1,
+  critical: 2,
+});
+
+function preloadPriority(value) {
+  return PRELOAD_PRIORITIES[value] ?? PRELOAD_PRIORITIES.normal;
+}
+
 function defaultContextFactory() {
   const AudioContextConstructor = globalThis.AudioContext ?? globalThis.webkitAudioContext;
   if (!AudioContextConstructor) throw new Error("Web Audio API is not available");
@@ -108,7 +118,10 @@ export class AudioMixer {
     maxWarningsPerKey = 1,
     closeContextOnDispose = true,
     gestureDedupeMs = 750,
+    maxPreloadConcurrency = 4,
+    unlockTimeoutMs = 2000,
     clock = Date.now,
+    onAssetFailure = null,
   } = {}) {
     this.manifest = createAudioManifest(manifest ?? {});
     this.contextFactory = contextFactory;
@@ -120,9 +133,18 @@ export class AudioMixer {
     this.maxWarningsPerKey = Math.max(0, Math.floor(maxWarningsPerKey));
     this.closeContextOnDispose = closeContextOnDispose;
     this.gestureDedupeMs = Math.max(0, Number.isFinite(gestureDedupeMs) ? gestureDedupeMs : 750);
+    this.maxPreloadConcurrency = Math.max(1, Math.min(16, Math.floor(
+      Number.isFinite(maxPreloadConcurrency) ? maxPreloadConcurrency : 4,
+    )));
+    this.unlockTimeoutMs = Math.max(1, Math.min(30000, Math.floor(
+      Number.isFinite(unlockTimeoutMs) ? unlockTimeoutMs : 2000,
+    )));
     this.clock = typeof clock === "function" ? clock : Date.now;
+    this.onAssetFailure = typeof onAssetFailure === "function" ? onAssetFailure : null;
 
     this.context = null;
+    this.contextGeneration = 0;
+    this.contextCreateCount = 0;
     this.master = null;
     this.limiter = null;
     this.buses = {};
@@ -144,6 +166,10 @@ export class AudioMixer {
       error: null,
     });
     this.assetCache = new Map();
+    this.preloadQueue = [];
+    this.preloadTasks = new Map();
+    this.activePreloads = 0;
+    this.preloadSequence = 0;
     this.activeVoices = new Map();
     this.lastPlayedAt = new Map();
     this.poolState = new Map();
@@ -225,6 +251,9 @@ export class AudioMixer {
     let active = true;
     const listener = (event) => {
       if (!active || this.#isDuplicateGesture(event)) return;
+      const unlockControl = event?.target?.closest?.('[data-audio-unlock-control="true"]')
+        ?? event?.composedPath?.().some((node) => node?.dataset?.audioUnlockControl === "true");
+      if (unlockControl) return;
       void this.unlock({ reason: `gesture:${String(event?.type ?? "unknown")}` });
     };
     const eventNames = ["pointerdown", "touchend", "keydown"];
@@ -309,6 +338,14 @@ export class AudioMixer {
   #handleContextStateChange(context) {
     if (this.disposed || context !== this.context) return;
     if (context.state === "running") {
+      // resume() may dispatch statechange before the gesture unlock pipeline has
+      // started its confirmation tone and queued the pending critical scene.
+      // The explicit unlock branch publishes RUNNING at that stable boundary.
+      if (this.unlockPromise) return;
+      // A resume promise can settle or dispatch statechange after its timeout.
+      // Preserve the actionable failure UI until a fresh user retry confirms
+      // the graph and starts its tone explicitly.
+      if (this.audioStatus.state === AUDIO_MIXER_STATES.FAILED && this.audioStatus.needsGesture) return;
       this.#setAudioStatus(AUDIO_MIXER_STATES.RUNNING, { reason: "context-statechange" });
       return;
     }
@@ -344,11 +381,30 @@ export class AudioMixer {
   #createContextAndGraph() {
     if (this.context || this.master) this.#releaseContextGraph();
     const context = this.contextFactory();
+    this.contextGeneration += 1;
+    this.contextCreateCount += 1;
     this.context = context;
     this.#attachContextStateListener(context);
     this.#createGraph();
     if (this.desiredScene && !this.pendingScene) this.pendingScene = this.desiredScene;
     return context;
+  }
+
+  async #resumeContextWithTimeout(context) {
+    const resumePromise = Promise.resolve(context.resume());
+    let timeoutId = null;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = globalThis.setTimeout(() => {
+        const error = new Error(`AudioContext resume timed out after ${this.unlockTimeoutMs}ms`);
+        error.name = "TimeoutError";
+        reject(error);
+      }, this.unlockTimeoutMs);
+    });
+    try {
+      await Promise.race([resumePromise, timeoutPromise]);
+    } finally {
+      if (timeoutId !== null) globalThis.clearTimeout(timeoutId);
+    }
   }
 
   async unlock({ reason = "unlock" } = {}) {
@@ -363,14 +419,36 @@ export class AudioMixer {
         if (!this.context || this.context.state === "closed") {
           this.#createContextAndGraph();
         }
-        if (this.context.state !== "running" && typeof this.context.resume === "function") await this.context.resume();
+        if (this.context.state !== "running" && typeof this.context.resume === "function") {
+          await this.#resumeContextWithTimeout(this.context);
+        }
         if (this.context.state !== "running") throw new Error(`AudioContext remained ${String(this.context.state)}`);
         this.unlockCleanup?.();
-        this.#setAudioStatus(AUDIO_MIXER_STATES.RUNNING, { reason });
-        await Promise.all([...this.assetCache.keys()].map((assetId) => this.#decodeAsset(assetId)));
         const pendingScene = this.pendingScene;
+        // This oscillator starts synchronously on the resumed production graph,
+        // providing an audible enable acknowledgement without another context.
+        if (!this.playTestTone({ respectSettings: false })) {
+          throw new Error("The audio confirmation tone could not start");
+        }
         this.pendingScene = null;
-        if (pendingScene) await this.setScene(pendingScene.sceneId, pendingScene.options);
+        // Decode and scene playback may finish after enableAudio() resolves. The
+        // critical scene queue is entered before optional cache warming so music
+        // and ambience retain priority without extending the gesture pipeline.
+        if (pendingScene) {
+          void this.setScene(pendingScene.sceneId, pendingScene.options).catch((error) => {
+            this.#warn("scene-after-unlock", "The pending audio scene could not start after unlock.", error);
+          });
+        }
+        // RUNNING observers may start optional battle loops. Publish only after
+        // the pending scene has entered the critical queue so they cannot jump
+        // ahead of the first music and ambience decode.
+        this.#setAudioStatus(AUDIO_MIXER_STATES.RUNNING, { reason });
+        // Previously fetched optional assets warm in the bounded background
+        // queue. unlock() intentionally resolves without waiting for them.
+        const cachedAssetIds = [...this.assetCache.keys()];
+        if (cachedAssetIds.length > 0) {
+          void this.#preloadAssetIds(cachedAssetIds, { priority: "background" });
+        }
         return true;
       } catch (error) {
         this.#setAudioStatus(AUDIO_MIXER_STATES.FAILED, { reason, error, needsGesture: true });
@@ -400,6 +478,10 @@ export class AudioMixer {
       return false;
     }
     if (this.context.state === "running") {
+      if (this.audioStatus.state === AUDIO_MIXER_STATES.FAILED
+        || this.audioStatus.state === AUDIO_MIXER_STATES.RECOVERY_NEEDED) {
+        return this.unlock({ reason });
+      }
       this.#setAudioStatus(AUDIO_MIXER_STATES.RUNNING, { reason });
       return true;
     }
@@ -452,6 +534,66 @@ export class AudioMixer {
     return { ...this.settings };
   }
 
+  getSharedAudioGraph() {
+    if (!this.context || !this.master) return null;
+    return Object.freeze({
+      context: this.context,
+      generation: this.contextGeneration,
+      categoryInputs: Object.freeze({ ...this.buses }),
+    });
+  }
+
+  playTestTone({
+    frequency = 660,
+    duration = 0.09,
+    volume = 0.12,
+    respectSettings = true,
+  } = {}) {
+    const context = this.context;
+    const uiBus = this.buses.ui;
+    if (this.disposed
+      || context?.state !== "running"
+      || !uiBus
+      || typeof context.createOscillator !== "function"
+      || typeof context.createGain !== "function") return false;
+    if (respectSettings && (this.settings.muted
+      || !this.settings.sfxEnabled
+      || this.settings.masterVolume <= 0
+      || this.settings.sfxVolume <= 0
+      || this.categoryVolumes.ui <= 0)) return false;
+
+    const now = context.currentTime;
+    const toneDuration = clamp(duration, 0.02, 2);
+    const toneVolume = clamp(volume, 0, 1);
+    let oscillator = null;
+    let gain = null;
+    try {
+      oscillator = context.createOscillator();
+      gain = context.createGain();
+      oscillator.type = "sine";
+      setParamValue(oscillator.frequency, clamp(frequency, 80, 2400), now);
+      setParamValue(gain.gain, toneVolume, now);
+      rampParamValue(gain.gain, 0.0001, now + toneDuration);
+      oscillator.connect(gain);
+      // The unlock acknowledgement must remain audible even when a legacy
+      // save left master/SFX buses at zero. It stays on this context and
+      // limiter; ordinary test tones continue through the UI bus.
+      gain.connect(respectSettings ? uiBus : (this.limiter ?? context.destination));
+      oscillator.onended = () => {
+        safeDisconnect(oscillator);
+        safeDisconnect(gain);
+      };
+      oscillator.start(now);
+      oscillator.stop(now + toneDuration);
+      return true;
+    } catch (error) {
+      safeDisconnect(oscillator);
+      safeDisconnect(gain);
+      this.#warn("test-tone", "The audio test tone could not start.", error);
+      return false;
+    }
+  }
+
   setCategoryVolume(category, volume) {
     if (!AUDIO_CATEGORIES.includes(category)) throw new RangeError(`Unknown audio category: ${String(category)}`);
     this.categoryVolumes[category] = clamp(volume, 0, 1);
@@ -477,6 +619,18 @@ export class AudioMixer {
     this.warningCounts.set(key, count + 1);
     this.warningTotal += 1;
     this.logger?.warn?.(`[audio] ${message}`, error instanceof Error ? error.message : error);
+  }
+
+  #reportAssetFailure(assetId, phase, error) {
+    try {
+      this.onAssetFailure?.(Object.freeze({
+        assetId,
+        phase,
+        error: error instanceof Error ? error.message : error ? String(error) : "unknown audio source failure",
+      }));
+    } catch {
+      // Player-facing failure reporting must not interrupt mixer cleanup.
+    }
   }
 
   #expandCueIds(cueIds) {
@@ -533,6 +687,7 @@ export class AudioMixer {
         }
       }
       entry.status = "failed";
+      this.#reportAssetFailure(assetId, "load", lastError);
       this.#warn(`load:${assetId}`, `Failed to load ${assetId}; the cue will remain silent.`, lastError);
       return null;
     })().finally(() => {
@@ -590,6 +745,7 @@ export class AudioMixer {
         }
       }
       entry.status = "failed";
+      this.#reportAssetFailure(assetId, "decode", lastError);
       this.#warn(`decode:${assetId}`, `Failed to decode ${assetId}; the cue will remain silent.`, lastError);
       return null;
     })().finally(() => {
@@ -598,27 +754,110 @@ export class AudioMixer {
     return cacheEntry.decodePromise;
   }
 
-  async preloadAssets(cueIds) {
+  #sortPreloadQueue() {
+    this.preloadQueue.sort((left, right) => right.priority - left.priority || left.sequence - right.sequence);
+  }
+
+  #settlePreloadTask(item, loaded) {
+    if (item.settled) return;
+    item.settled = true;
+    if (item.started) this.activePreloads = Math.max(0, this.activePreloads - 1);
+    if (this.preloadTasks.get(item.assetId) === item) this.preloadTasks.delete(item.assetId);
+    item.resolve(Boolean(loaded));
+    this.#drainPreloadQueue();
+  }
+
+  #drainPreloadQueue() {
+    while (!this.disposed
+      && this.activePreloads < this.maxPreloadConcurrency
+      && this.preloadQueue.length > 0) {
+      const item = this.preloadQueue.shift();
+      item.started = true;
+      this.activePreloads += 1;
+      void (async () => {
+        const entry = await this.#fetchAsset(item.assetId);
+        if (!entry || this.disposed) return false;
+        if (this.context && this.context.state !== "closed") {
+          return Boolean(await this.#decodeAsset(item.assetId));
+        }
+        return true;
+      })().then(
+        (loaded) => this.#settlePreloadTask(item, loaded),
+        () => this.#settlePreloadTask(item, false),
+      );
+    }
+  }
+
+  #queuePreloadAsset(assetId, { priority = "normal" } = {}) {
+    const numericPriority = preloadPriority(priority);
+    const existing = this.preloadTasks.get(assetId);
+    if (existing) {
+      if (!existing.started && numericPriority > existing.priority) {
+        existing.priority = numericPriority;
+        this.#sortPreloadQueue();
+      }
+      return existing.promise;
+    }
+    let resolveTask;
+    const promise = new Promise((resolve) => { resolveTask = resolve; });
+    const item = {
+      assetId,
+      priority: numericPriority,
+      sequence: ++this.preloadSequence,
+      started: false,
+      settled: false,
+      promise,
+      resolve: resolveTask,
+    };
+    this.preloadTasks.set(assetId, item);
+    this.preloadQueue.push(item);
+    this.#sortPreloadQueue();
+    this.#drainPreloadQueue();
+    return promise;
+  }
+
+  async #preloadAssetIds(assetIds, options = {}) {
+    if (this.disposed) return { loaded: [], failed: [] };
+    const uniqueAssetIds = [...new Set(Array.isArray(assetIds) ? assetIds : [])];
+    const outcomes = await Promise.all(uniqueAssetIds.map((assetId) => this.#queuePreloadAsset(assetId, options)));
+    return {
+      loaded: uniqueAssetIds.filter((_, index) => outcomes[index]),
+      failed: uniqueAssetIds.filter((_, index) => !outcomes[index]),
+    };
+  }
+
+  async preloadAssets(cueIds, { priority = "normal" } = {}) {
     if (this.disposed) return { loaded: [], failed: [] };
     const assetIds = this.#expandCueIds(Array.isArray(cueIds) ? cueIds : []);
-    const loaded = [];
-    const failed = [];
-    await Promise.all(assetIds.map(async (assetId) => {
-      const entry = await this.#fetchAsset(assetId);
-      if (!entry) {
-        failed.push(assetId);
-        return;
-      }
-      if (this.context && this.context.state !== "closed") {
-        const decoded = await this.#decodeAsset(assetId);
-        if (!decoded) {
-          failed.push(assetId);
-          return;
-        }
-      }
-      loaded.push(assetId);
-    }));
-    return { loaded, failed };
+    return this.#preloadAssetIds(assetIds, { priority });
+  }
+
+  async retryFailedAssets(cueIds = null, { priority = "critical" } = {}) {
+    if (this.disposed) return { loaded: [], failed: [] };
+    const requestedCueIds = Array.isArray(cueIds) ? cueIds : typeof cueIds === "string" ? [cueIds] : [];
+    const candidateAssetIds = cueIds == null
+      ? [...this.assetCache.entries()].filter(([, entry]) => entry.status === "failed").map(([assetId]) => assetId)
+      : this.#expandCueIds(requestedCueIds);
+    const settlingTasks = candidateAssetIds
+      .map((assetId) => this.preloadTasks.get(assetId)?.promise)
+      .filter(Boolean);
+    if (settlingTasks.length > 0) await Promise.all(settlingTasks);
+    if (this.disposed) return { loaded: [], failed: [] };
+    const retryAssetIds = candidateAssetIds.filter((assetId) => this.assetCache.get(assetId)?.status === "failed");
+    for (const assetId of retryAssetIds) this.assetCache.delete(assetId);
+    return this.#preloadAssetIds(retryAssetIds, { priority });
+  }
+
+  async retryFailedAudio({ priority = "critical" } = {}) {
+    if (this.disposed) return false;
+    if (this.getDiagnostics().cache.failed === 0) return true;
+    const result = await this.retryFailedAssets(null, { priority });
+    if (result.failed.length > 0) return false;
+    const desired = this.desiredScene;
+    if (!desired || !this.unlocked) return true;
+    const state = await this.setScene(desired.sceneId, desired.options);
+    const scene = this.manifest.sceneById[desired.sceneId];
+    return !scene?.bgm || Boolean(state?.bgmAssetId);
   }
 
   async preloadScene(sceneId, { includeOptional = true } = {}) {
@@ -627,11 +866,19 @@ export class AudioMixer {
       this.#warn(`unknown-scene:${String(sceneId)}`, `Unknown audio scene ${String(sceneId)} was ignored.`);
       return { loaded: [], failed: [] };
     }
-    return this.preloadAssets([
-      scene.bgm,
-      ...scene.ambience,
-      ...(includeOptional ? scene.preload : []),
-    ].filter(Boolean));
+    const criticalAssetIds = this.#expandCueIds([scene.bgm, ...scene.ambience].filter(Boolean));
+    const criticalAssets = new Set(criticalAssetIds);
+    const optionalAssetIds = includeOptional
+      ? this.#expandCueIds(scene.preload).filter((assetId) => !criticalAssets.has(assetId))
+      : [];
+    const [criticalResult, optionalResult] = await Promise.all([
+      this.#preloadAssetIds(criticalAssetIds, { priority: "critical" }),
+      this.#preloadAssetIds(optionalAssetIds, { priority: "normal" }),
+    ]);
+    return {
+      loaded: [...criticalResult.loaded, ...optionalResult.loaded],
+      failed: [...criticalResult.failed, ...optionalResult.failed],
+    };
   }
 
   #refillShufflePool(pool, state) {
@@ -867,7 +1114,7 @@ export class AudioMixer {
 
   async play(cueId, options = {}) {
     if (!options.dedupeKey) return this.#playCue(cueId, options);
-    const duplicate = this.#findVoice((voice) => !voice.cleaned && voice.dedupeKey === options.dedupeKey);
+    const duplicate = this.#findVoice((voice) => !voice.cleaned && !voice.stopping && voice.dedupeKey === options.dedupeKey);
     if (duplicate) return duplicate.handle;
     const pending = this.pendingDedupe.get(options.dedupeKey);
     if (pending) return pending;
@@ -886,14 +1133,20 @@ export class AudioMixer {
     // A request arriving after the context starts running supersedes any
     // pre-gesture scene that unlock() may still be decoding.
     if (this.unlocked) this.pendingScene = null;
-    if (sceneId === this.sceneState.sceneId && (this.sceneState.bgm || this.sceneState.ambience.length > 0)) {
-      return this.getSceneState();
-    }
     const scene = this.manifest.sceneById[sceneId];
     if (!scene) {
       this.#warn(`unknown-scene:${String(sceneId)}`, `Unknown audio scene ${String(sceneId)} was ignored.`);
       return null;
     }
+    const bgmVoice = this.sceneState.bgm ? this.activeVoices.get(this.sceneState.bgm.id) : null;
+    const liveAmbienceCount = this.sceneState.ambience.filter((handle) => {
+      const voice = this.activeVoices.get(handle.id);
+      return voice && !voice.cleaned && !voice.stopping;
+    }).length;
+    const sameSceneComplete = sceneId === this.sceneState.sceneId
+      && (!scene.bgm || Boolean(bgmVoice && !bgmVoice.cleaned && !bgmVoice.stopping))
+      && liveAmbienceCount === scene.ambience.length;
+    if (sameSceneComplete) return this.getSceneState();
     this.desiredScene = { sceneId, options: { ...options } };
     if (!this.unlocked) {
       this.pendingScene = { sceneId, options: { ...options } };
@@ -946,7 +1199,7 @@ export class AudioMixer {
     this.sceneState = { sceneId, bgm: nextBgm, ambience: nextAmbience };
     if (previous.bgm?.id !== nextBgm?.id) previous.bgm?.stop(fadeMs);
     previous.ambience.filter((handle) => !nextAmbience.some((next) => next.id === handle.id)).forEach((handle) => handle.stop(Math.min(400, fadeMs)));
-    void this.preloadAssets(scene.preload);
+    void this.preloadAssets(scene.preload, { priority: "background" });
     return this.getSceneState();
   }
 
@@ -1020,6 +1273,13 @@ export class AudioMixer {
     return stopped;
   }
 
+  hasInstance(instanceKey) {
+    if (typeof instanceKey !== "string" || instanceKey.length === 0) return false;
+    if (this.pendingDedupe.has(instanceKey)) return true;
+    return [...this.activeVoices.values()].some((voice) => !voice.cleaned
+      && !voice.stopping && voice.instanceKey === instanceKey);
+  }
+
   stopInstances(instanceKeys, options = {}) {
     const keys = [...new Set(Array.isArray(instanceKeys) ? instanceKeys : [])];
     return keys.reduce((total, instanceKey) => total + this.stopInstance(instanceKey, options), 0);
@@ -1031,6 +1291,9 @@ export class AudioMixer {
     return {
       unlocked: this.unlocked,
       contextState: this.context?.state ?? null,
+      contextGeneration: this.contextGeneration,
+      contextCreateCount: this.contextCreateCount,
+      unlockTimeoutMs: this.unlockTimeoutMs,
       disposed: this.disposed,
       activeVoices: this.activeVoices.size,
       sceneId: this.sceneState.sceneId,
@@ -1038,6 +1301,9 @@ export class AudioMixer {
       audioState: this.audioStatus.state,
       needsGesture: this.audioStatus.needsGesture,
       cache,
+      maxPreloadConcurrency: this.maxPreloadConcurrency,
+      activePreloads: this.activePreloads,
+      queuedPreloads: this.preloadQueue.length,
       warningTotal: this.warningTotal,
     };
   }
@@ -1053,6 +1319,9 @@ export class AudioMixer {
     this.lifecycleCleanup?.();
     this.contextStateCleanup?.();
     this.stopAll();
+    this.preloadQueue.length = 0;
+    for (const item of [...this.preloadTasks.values()]) this.#settlePreloadTask(item, false);
+    this.preloadTasks.clear();
     for (const bus of Object.values(this.buses)) safeDisconnect(bus);
     safeDisconnect(this.musicDuck);
     safeDisconnect(this.master);

@@ -6,7 +6,31 @@ const STAGE_IDS = Object.freeze({
   TAKUYA: "stage-nishijin-defense-line-takuya",
 });
 
-function stageObject({ id, stageId, slot, state, path, x, y, width, z = 1, defaultVisible = false, collision = null, interactionX = null, replacesRuntimeSprite = null }) {
+export const STAGE_OBJECT_DEPTH_BANDS = Object.freeze([
+  "rear-scenery",
+  "objective",
+  "foreground-prop",
+]);
+
+function stageObject({
+  id,
+  stageId,
+  slot,
+  state,
+  path,
+  x,
+  y,
+  width,
+  z = 1,
+  depthBand,
+  defaultVisible = false,
+  collision = null,
+  interactionX = null,
+  replacesRuntimeSprite = null,
+}) {
+  if (!STAGE_OBJECT_DEPTH_BANDS.includes(depthBand)) {
+    throw new RangeError(`Unknown stage object depth band: ${String(depthBand)}`);
+  }
   return Object.freeze({
     id,
     stageId,
@@ -14,8 +38,20 @@ function stageObject({ id, stageId, slot, state, path, x, y, width, z = 1, defau
     state,
     visibleWhen: Object.freeze([state]),
     path,
+    // Rear scenery renders before fighters, while foreground props render
+    // afterward. z orders objects within the same explicit depth band.
     placement: Object.freeze({ x, y, width, anchorX: 0.5, anchorY: 1, z }),
-    collision: collision ? Object.freeze({ ...collision, purpose: "battlefield-supply-placement-exclusion" }) : null,
+    depthBand,
+    laneCorridorPolicy: depthBand === "rear-scenery"
+      ? "outside-walkable-lanes"
+      : depthBand === "objective"
+        ? "battlefield-objective"
+        : "overlays-walkable-lanes",
+    collision: collision ? Object.freeze({
+      ...collision,
+      lanes: Object.freeze([...(collision.lanes ?? [])]),
+      purpose: "battlefield-supply-placement-exclusion",
+    }) : null,
     interactionX,
     replacesRuntimeSprite,
     defaultVisible,
@@ -112,15 +148,15 @@ export const STAGE_OBJECT_MANIFEST = Object.freeze({
     staticTreatment: "authored-in-production-background",
     productionInventory: NISHIJIN_INVENTORY,
     objects: Object.freeze([
-      stageObject({ id: "nishijin-static-dressing", stageId: STAGE_IDS.NISHIJIN, slot: "static-dressing", state: "static-dressing", path: "/art/v060/stage-objects/nishijin-static-dressing-v1.png", x: 610, y: 392, width: 286, z: 0 }),
-      stageObject({ id: "nishijin-wire-trap-intact", stageId: STAGE_IDS.NISHIJIN, slot: "wire-trap", state: "trap-armed", path: "/art/v060/stage-objects/nishijin-wire-trap-intact-v1.png", x: 305, y: 438, width: 145, z: 3, defaultVisible: true, collision: { width: 116, height: 16 } }),
-      stageObject({ id: "nishijin-wire-trap-sprung", stageId: STAGE_IDS.NISHIJIN, slot: "wire-trap", state: "trap-sprung", path: "/art/v060/stage-objects/nishijin-wire-trap-sprung-v1.png", x: 305, y: 438, width: 145, z: 3 }),
-      stageObject({ id: "nishijin-sign-intact", stageId: STAGE_IDS.NISHIJIN, slot: "arcade-sign", state: "sign-hanging", path: "/art/v060/stage-objects/nishijin-sign-intact-v1.png", x: 522, y: 304, width: 122, z: 2, defaultVisible: true }),
-      stageObject({ id: "nishijin-sign-fallen", stageId: STAGE_IDS.NISHIJIN, slot: "arcade-sign", state: "sign-fallen", path: "/art/v060/stage-objects/nishijin-sign-fallen-v1.png", x: 522, y: 438, width: 150, z: 3, collision: { width: 126, height: 28 } }),
-      stageObject({ id: "nishijin-fire-shutter-closed", stageId: STAGE_IDS.NISHIJIN, slot: "fire-shutter", state: "shutter-closed", path: "/art/v060/stage-objects/nishijin-fire-shutter-closed-v1.png", x: 762, y: 414, width: 150, z: 1, defaultVisible: true, collision: { width: 132, height: 118 } }),
-      stageObject({ id: "nishijin-fire-shutter-open", stageId: STAGE_IDS.NISHIJIN, slot: "fire-shutter", state: "shutter-open", path: "/art/v060/stage-objects/nishijin-fire-shutter-open-v1.png", x: 762, y: 414, width: 150, z: 1 }),
-      stageObject({ id: "nishijin-infection-node-active", stageId: STAGE_IDS.NISHIJIN, slot: "infection-node", state: "base-exposed", path: "/art/v060/stage-objects/nishijin-infection-node-active-v1.png", x: 850, y: 434, width: 128, z: 3, collision: { width: 94, height: 68 }, interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
-      stageObject({ id: "nishijin-infection-node-destroyed", stageId: STAGE_IDS.NISHIJIN, slot: "infection-node", state: "base-destroyed", path: "/art/v060/stage-objects/nishijin-infection-node-destroyed-v1.png", x: 850, y: 434, width: 128, z: 3, interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
+      stageObject({ id: "nishijin-static-dressing", stageId: STAGE_IDS.NISHIJIN, slot: "static-dressing", state: "static-dressing", path: "/art/v060/stage-objects/nishijin-static-dressing-v1.png", x: 640, y: 184, width: 240, z: 0, depthBand: "rear-scenery" }),
+      stageObject({ id: "nishijin-wire-trap-intact", stageId: STAGE_IDS.NISHIJIN, slot: "wire-trap", state: "trap-armed", path: "/art/v060/stage-objects/nishijin-wire-trap-intact-v1.png", x: 305, y: 438, width: 145, z: 3, depthBand: "foreground-prop", defaultVisible: true, collision: { width: 116, height: 16, lanes: [2] } }),
+      stageObject({ id: "nishijin-wire-trap-sprung", stageId: STAGE_IDS.NISHIJIN, slot: "wire-trap", state: "trap-sprung", path: "/art/v060/stage-objects/nishijin-wire-trap-sprung-v1.png", x: 305, y: 438, width: 145, z: 3, depthBand: "foreground-prop" }),
+      stageObject({ id: "nishijin-sign-intact", stageId: STAGE_IDS.NISHIJIN, slot: "arcade-sign", state: "sign-hanging", path: "/art/v060/stage-objects/nishijin-sign-intact-v1.png", x: 522, y: 175, width: 100, z: 1, depthBand: "rear-scenery", defaultVisible: true }),
+      stageObject({ id: "nishijin-sign-fallen", stageId: STAGE_IDS.NISHIJIN, slot: "arcade-sign", state: "sign-fallen", path: "/art/v060/stage-objects/nishijin-sign-fallen-v1.png", x: 522, y: 438, width: 150, z: 3, depthBand: "foreground-prop", collision: { width: 126, height: 28, lanes: [2] } }),
+      stageObject({ id: "nishijin-fire-shutter-closed", stageId: STAGE_IDS.NISHIJIN, slot: "fire-shutter", state: "shutter-closed", path: "/art/v060/stage-objects/nishijin-fire-shutter-closed-v1.png", x: 820, y: 184, width: 120, z: 1, depthBand: "rear-scenery", defaultVisible: true }),
+      stageObject({ id: "nishijin-fire-shutter-open", stageId: STAGE_IDS.NISHIJIN, slot: "fire-shutter", state: "shutter-open", path: "/art/v060/stage-objects/nishijin-fire-shutter-open-v1.png", x: 820, y: 184, width: 120, z: 1, depthBand: "rear-scenery" }),
+      stageObject({ id: "nishijin-infection-node-active", stageId: STAGE_IDS.NISHIJIN, slot: "infection-node", state: "base-exposed", path: "/art/v060/stage-objects/nishijin-infection-node-active-v1.png", x: 850, y: 434, width: 128, z: 3, depthBand: "objective", collision: { width: 94, height: 68, lanes: [2] }, interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
+      stageObject({ id: "nishijin-infection-node-destroyed", stageId: STAGE_IDS.NISHIJIN, slot: "infection-node", state: "base-destroyed", path: "/art/v060/stage-objects/nishijin-infection-node-destroyed-v1.png", x: 850, y: 434, width: 128, z: 3, depthBand: "objective", interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
     ]),
   }),
   [STAGE_IDS.SAWARA]: Object.freeze({
@@ -128,14 +164,14 @@ export const STAGE_OBJECT_MANIFEST = Object.freeze({
     staticTreatment: "authored-in-production-background",
     productionInventory: SAWARA_INVENTORY,
     objects: Object.freeze([
-      stageObject({ id: "sawara-static-dressing", stageId: STAGE_IDS.SAWARA, slot: "static-dressing", state: "static-dressing", path: "/art/v060/stage-objects/sawara-static-dressing-v1.png", x: 575, y: 402, width: 365, z: 0 }),
-      stageObject({ id: "sawara-rescue-van-blocked", stageId: STAGE_IDS.SAWARA, slot: "rescue-van", state: "evac-blocked", path: "/art/v060/stage-objects/sawara-rescue-van-blocked-v1.png", x: 786, y: 430, width: 190, z: 2, defaultVisible: true, collision: { width: 164, height: 72 } }),
-      stageObject({ id: "sawara-rescue-van-ready", stageId: STAGE_IDS.SAWARA, slot: "rescue-van", state: "evac-ready", path: "/art/v060/stage-objects/sawara-rescue-van-ready-v1.png", x: 786, y: 430, width: 190, z: 2 }),
-      stageObject({ id: "sawara-rubble-blocking", stageId: STAGE_IDS.SAWARA, slot: "rubble", state: "rubble-blocking", path: "/art/v060/stage-objects/sawara-rubble-blocking-v1.png", x: 654, y: 438, width: 150, z: 3, defaultVisible: true, collision: { width: 126, height: 34 } }),
-      stageObject({ id: "sawara-rubble-cleared", stageId: STAGE_IDS.SAWARA, slot: "rubble", state: "rubble-cleared", path: "/art/v060/stage-objects/sawara-rubble-cleared-v1.png", x: 654, y: 438, width: 150, z: 3 }),
-      stageObject({ id: "sawara-shooting-window-lit", stageId: STAGE_IDS.SAWARA, slot: "upper-window", state: "under-fire", path: "/art/v060/stage-objects/sawara-shooting-window-lit-v1.png", x: 720, y: 249, width: 168, z: 1, defaultVisible: true }),
-      stageObject({ id: "sawara-lunch-crate-sealed", stageId: STAGE_IDS.SAWARA, slot: "lunch-crate", state: "supplies-sealed", path: "/art/v060/stage-objects/sawara-lunch-crate-sealed-v1.png", x: 523, y: 438, width: 86, z: 3, defaultVisible: true, collision: { width: 72, height: 34 } }),
-      stageObject({ id: "sawara-lunch-crate-open", stageId: STAGE_IDS.SAWARA, slot: "lunch-crate", state: "supplies-open", path: "/art/v060/stage-objects/sawara-lunch-crate-open-v1.png", x: 523, y: 438, width: 86, z: 3 }),
+      stageObject({ id: "sawara-static-dressing", stageId: STAGE_IDS.SAWARA, slot: "static-dressing", state: "static-dressing", path: "/art/v060/stage-objects/sawara-static-dressing-v1.png", x: 560, y: 180, width: 300, z: 0, depthBand: "rear-scenery" }),
+      stageObject({ id: "sawara-rescue-van-blocked", stageId: STAGE_IDS.SAWARA, slot: "rescue-van", state: "evac-blocked", path: "/art/v060/stage-objects/sawara-rescue-van-blocked-v1.png", x: 805, y: 184, width: 150, z: 1, depthBand: "rear-scenery", defaultVisible: true }),
+      stageObject({ id: "sawara-rescue-van-ready", stageId: STAGE_IDS.SAWARA, slot: "rescue-van", state: "evac-ready", path: "/art/v060/stage-objects/sawara-rescue-van-ready-v1.png", x: 805, y: 184, width: 150, z: 1, depthBand: "rear-scenery" }),
+      stageObject({ id: "sawara-rubble-blocking", stageId: STAGE_IDS.SAWARA, slot: "rubble", state: "rubble-blocking", path: "/art/v060/stage-objects/sawara-rubble-blocking-v1.png", x: 654, y: 438, width: 150, z: 3, depthBand: "foreground-prop", defaultVisible: true, collision: { width: 126, height: 34, lanes: [2] } }),
+      stageObject({ id: "sawara-rubble-cleared", stageId: STAGE_IDS.SAWARA, slot: "rubble", state: "rubble-cleared", path: "/art/v060/stage-objects/sawara-rubble-cleared-v1.png", x: 654, y: 438, width: 150, z: 3, depthBand: "foreground-prop" }),
+      stageObject({ id: "sawara-shooting-window-lit", stageId: STAGE_IDS.SAWARA, slot: "upper-window", state: "under-fire", path: "/art/v060/stage-objects/sawara-shooting-window-lit-v1.png", x: 720, y: 116, width: 120, z: 1, depthBand: "rear-scenery", defaultVisible: true }),
+      stageObject({ id: "sawara-lunch-crate-sealed", stageId: STAGE_IDS.SAWARA, slot: "lunch-crate", state: "supplies-sealed", path: "/art/v060/stage-objects/sawara-lunch-crate-sealed-v1.png", x: 523, y: 438, width: 86, z: 3, depthBand: "foreground-prop", defaultVisible: true, collision: { width: 72, height: 34, lanes: [2] } }),
+      stageObject({ id: "sawara-lunch-crate-open", stageId: STAGE_IDS.SAWARA, slot: "lunch-crate", state: "supplies-open", path: "/art/v060/stage-objects/sawara-lunch-crate-open-v1.png", x: 523, y: 438, width: 86, z: 3, depthBand: "foreground-prop" }),
     ]),
   }),
   [STAGE_IDS.TAKUYA]: Object.freeze({
@@ -143,14 +179,14 @@ export const STAGE_OBJECT_MANIFEST = Object.freeze({
     staticTreatment: "authored-in-production-background",
     productionInventory: DEFENSE_INVENTORY,
     objects: Object.freeze([
-      stageObject({ id: "defense-static-dressing", stageId: STAGE_IDS.TAKUYA, slot: "static-dressing", state: "static-dressing", path: "/art/v060/stage-objects/defense-static-dressing-v1.png", x: 610, y: 398, width: 318, z: 0 }),
-      stageObject({ id: "defense-transmitter-active", stageId: STAGE_IDS.TAKUYA, slot: "transmitter", state: "transmitter-active", path: "/art/v060/stage-objects/defense-transmitter-active-v1.png", x: 790, y: 430, width: 98, z: 3, defaultVisible: true, collision: { width: 70, height: 92 } }),
-      stageObject({ id: "defense-transmitter-damaged", stageId: STAGE_IDS.TAKUYA, slot: "transmitter", state: "transmitter-damaged", path: "/art/v060/stage-objects/defense-transmitter-damaged-v1.png", x: 790, y: 430, width: 98, z: 3 }),
-      stageObject({ id: "defense-spawn-marker", stageId: STAGE_IDS.TAKUYA, slot: "spawn-marker", state: "takuya-entry", path: "/art/v060/stage-objects/defense-spawn-marker-v1.png", x: 526, y: 442, width: 132, z: 2 }),
-      stageObject({ id: "defense-infection-nest-dormant", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-dormant", path: "/art/v060/stage-objects/defense-infection-nest-dormant-v1.png", x: 850, y: 436, width: 155, z: 3, defaultVisible: true, collision: { width: 124, height: 74 }, interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
-      stageObject({ id: "defense-infection-nest-exposed", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-exposed", path: "/art/v060/stage-objects/defense-infection-nest-exposed-v1.png", x: 850, y: 436, width: 155, z: 3, collision: { width: 124, height: 74 }, interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
-      stageObject({ id: "defense-infection-nest-damaged", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-damaged", path: "/art/v060/stage-objects/defense-infection-nest-damaged-v1.png", x: 850, y: 436, width: 155, z: 3, collision: { width: 124, height: 62 }, interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
-      stageObject({ id: "defense-infection-nest-destroyed", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-destroyed", path: "/art/v060/stage-objects/defense-infection-nest-destroyed-v1.png", x: 850, y: 436, width: 155, z: 3, interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
+      stageObject({ id: "defense-static-dressing", stageId: STAGE_IDS.TAKUYA, slot: "static-dressing", state: "static-dressing", path: "/art/v060/stage-objects/defense-static-dressing-v1.png", x: 610, y: 398, width: 318, z: 0, depthBand: "rear-scenery" }),
+      stageObject({ id: "defense-transmitter-active", stageId: STAGE_IDS.TAKUYA, slot: "transmitter", state: "transmitter-active", path: "/art/v060/stage-objects/defense-transmitter-active-v1.png", x: 790, y: 430, width: 98, z: 3, depthBand: "objective", defaultVisible: true, collision: { width: 70, height: 92, lanes: [2] } }),
+      stageObject({ id: "defense-transmitter-damaged", stageId: STAGE_IDS.TAKUYA, slot: "transmitter", state: "transmitter-damaged", path: "/art/v060/stage-objects/defense-transmitter-damaged-v1.png", x: 790, y: 430, width: 98, z: 3, depthBand: "objective" }),
+      stageObject({ id: "defense-spawn-marker", stageId: STAGE_IDS.TAKUYA, slot: "spawn-marker", state: "takuya-entry", path: "/art/v060/stage-objects/defense-spawn-marker-v1.png", x: 526, y: 442, width: 132, z: 2, depthBand: "foreground-prop" }),
+      stageObject({ id: "defense-infection-nest-dormant", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-dormant", path: "/art/v060/stage-objects/defense-infection-nest-dormant-v1.png", x: 850, y: 436, width: 155, z: 3, depthBand: "objective", defaultVisible: true, collision: { width: 124, height: 74, lanes: [2] }, interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
+      stageObject({ id: "defense-infection-nest-exposed", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-exposed", path: "/art/v060/stage-objects/defense-infection-nest-exposed-v1.png", x: 850, y: 436, width: 155, z: 3, depthBand: "objective", collision: { width: 124, height: 74, lanes: [2] }, interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
+      stageObject({ id: "defense-infection-nest-damaged", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-damaged", path: "/art/v060/stage-objects/defense-infection-nest-damaged-v1.png", x: 850, y: 436, width: 155, z: 3, depthBand: "objective", collision: { width: 124, height: 62, lanes: [2] }, interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
+      stageObject({ id: "defense-infection-nest-destroyed", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-destroyed", path: "/art/v060/stage-objects/defense-infection-nest-destroyed-v1.png", x: 850, y: 436, width: 155, z: 3, depthBand: "objective", interactionX: 875, replacesRuntimeSprite: "/infected-checkpoint-v1.png" }),
     ]),
   }),
 });
