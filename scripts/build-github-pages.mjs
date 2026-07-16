@@ -72,6 +72,13 @@ function prefixAbsoluteReferences(source) {
   return result;
 }
 
+function patchVinextPreloadBase(source) {
+  if (!basePath) return source;
+  const originalHelper = "function(e){return`/`+e}";
+  const pagesHelper = `function(e){return\`${basePath}/\`+e}`;
+  return source.replaceAll(originalHelper, pagesHelper);
+}
+
 html = prefixAbsoluteReferences(html);
 html = html.replace(
   "<head>",
@@ -82,6 +89,7 @@ await writeFile(path.join(outputDir, "index.html"), html, "utf8");
 await writeFile(path.join(outputDir, "404.html"), html, "utf8");
 await writeFile(path.join(outputDir, ".nojekyll"), "", "utf8");
 
+let preloadHelperPatchCount = 0;
 async function rewriteCompiledFiles(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const entryPath = path.join(directory, entry.name);
@@ -89,13 +97,21 @@ async function rewriteCompiledFiles(directory) {
       await rewriteCompiledFiles(entryPath);
     } else if ([".css", ".html", ".js"].includes(path.extname(entry.name))) {
       const original = await readFile(entryPath, "utf8");
-      const rewritten = prefixAbsoluteReferences(original);
+      let rewritten = prefixAbsoluteReferences(original);
+      if (path.extname(entry.name) === ".js") {
+        const patched = patchVinextPreloadBase(rewritten);
+        if (patched !== rewritten) preloadHelperPatchCount += 1;
+        rewritten = patched;
+      }
       if (rewritten !== original) await writeFile(entryPath, rewritten, "utf8");
     }
   }
 }
 
 await rewriteCompiledFiles(outputDir);
+if (basePath && preloadHelperPatchCount !== 1) {
+  throw new Error(`Expected one vinext preload helper patch, found ${preloadHelperPatchCount}`);
+}
 
 const index = await readFile(path.join(outputDir, "index.html"), "utf8");
 const requiredReferences = [...index.matchAll(/(?:href|src)="([^"?#]+)["?#]/g)].map((match) => match[1]);
@@ -111,4 +127,10 @@ for (const reference of requiredReferences) {
 }
 if (missing.length) throw new Error(`Missing GitHub Pages assets: ${missing.join(", ")}`);
 
-console.log(JSON.stringify({ basePath: basePath || "/", outputDir, renderedBytes: index.length, checkedReferences: requiredReferences.length }, null, 2));
+console.log(JSON.stringify({
+  basePath: basePath || "/",
+  outputDir,
+  renderedBytes: index.length,
+  checkedReferences: requiredReferences.length,
+  preloadHelperPatchCount,
+}, null, 2));
