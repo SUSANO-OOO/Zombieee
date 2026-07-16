@@ -14,6 +14,50 @@ function uniqueStrings(value) {
 
 export const STORY_FLOW_SCRIPT_VERSION = STORY_SCRIPT_VERSION;
 
+export const BATTLE_EVENT_MODES = deepFreeze(["first-time", "compact", "all"]);
+export const MANDATORY_BATTLE_ALERT_IDS = deepFreeze([
+  "stage-nishijin-battle-base-exposed",
+  "stage-takuya-warning",
+  "stage-takuya-base-remains",
+]);
+
+const BATTLE_ALERT_LABELS = deepFreeze({
+  "stage-nishijin-battle-base-exposed": "感染拠点が露出",
+  "stage-takuya-warning": "巨大反応を検知",
+  "stage-takuya-base-remains": "TAKUYA撃破　感染拠点を破壊せよ",
+});
+
+export function battleStoryBriefLabel(eventId) {
+  return BATTLE_ALERT_LABELS[eventId] ?? "通信更新";
+}
+
+export function resolveBattleStoryPresentation({
+  eventIds = [],
+  readStoryEventIds = [],
+  mode = "first-time",
+} = {}) {
+  const events = uniqueStrings(eventIds);
+  const read = new Set(uniqueStrings(readStoryEventIds));
+  const normalizedMode = BATTLE_EVENT_MODES.includes(mode) ? mode : "first-time";
+  const fullEventIds = [];
+  const briefEventIds = [];
+  const skippedEventIds = [];
+  for (const eventId of events) {
+    if (MANDATORY_BATTLE_ALERT_IDS.includes(eventId) || normalizedMode === "compact") {
+      briefEventIds.push(eventId);
+    } else if (normalizedMode === "all" || !read.has(eventId)) {
+      fullEventIds.push(eventId);
+    } else {
+      skippedEventIds.push(eventId);
+    }
+  }
+  return Object.freeze({
+    fullEventIds: Object.freeze(fullEventIds),
+    briefEventIds: Object.freeze(briefEventIds),
+    skippedEventIds: Object.freeze(skippedEventIds),
+  });
+}
+
 export const BATTLE_DEFEAT_REASON_IDS = deepFreeze({
   CRAWLER_DESTROYED: "crawler-destroyed",
   CONVOY_LOST: "convoy-lost",

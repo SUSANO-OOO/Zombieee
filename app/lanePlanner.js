@@ -302,6 +302,19 @@ export function advanceTowardLane({
   });
 }
 
+/**
+ * Distinguishes a real assignment transfer from the few pixels of same-lane Y
+ * drift produced by squad separation. Small drift must not suppress targeting.
+ */
+export function humanLaneTransitioning({
+  currentLane,
+  assignedLane,
+} = {}) {
+  const current = isLane(currentLane) ? currentLane : 1;
+  const assigned = isLane(assignedLane) ? assignedLane : current;
+  return current !== assigned;
+}
+
 function routeCostFor(routeCosts, lane) {
   return valueForLane(routeCosts, lane, 0);
 }

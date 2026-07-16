@@ -10,10 +10,13 @@ import {
 } from "../app/campaign.js";
 import { STORY_EVENT_IDS } from "../app/storyEvents.js";
 import {
+  BATTLE_EVENT_MODES,
   BATTLE_DEFEAT_REASON_IDS,
+  MANDATORY_BATTLE_ALERT_IDS,
   STORY_FLOW_SCRIPT_VERSION,
   STAGE_STORY_FLOWS,
   advanceBattleStoryFlow,
+  battleStoryBriefLabel,
   battleStoryTriggerMatches,
   createBattleStoryFlowState,
   deriveBattleDefeatReason,
@@ -26,6 +29,7 @@ import {
   getStageRetryStoryEventId,
   getTriggeredBattleStoryEventIds,
   listStoryFlowEventIds,
+  resolveBattleStoryPresentation,
   resolveStoryEventCompletion,
   shouldAutoSkipStoryEvent,
 } from "../app/storyFlow.js";
@@ -215,6 +219,56 @@ test("automatic skipping is allowed only for an event already marked read", () =
     readStoryEventIds: ["stage-nishijin-pre"],
     autoSkipReadStory: true,
   }), true);
+});
+
+test("battle event presentation supports first-time, compact, and all without suppressing mandatory alerts", () => {
+  assert.deepEqual(BATTLE_EVENT_MODES, ["first-time", "compact", "all"]);
+  assert.deepEqual(MANDATORY_BATTLE_ALERT_IDS, [
+    "stage-nishijin-battle-base-exposed",
+    "stage-takuya-warning",
+    "stage-takuya-base-remains",
+  ]);
+
+  const ordinary = "stage-nishijin-battle-runner";
+  const mandatory = "stage-takuya-base-remains";
+  assert.deepEqual(resolveBattleStoryPresentation({
+    eventIds: [ordinary, mandatory, ordinary],
+    readStoryEventIds: [],
+    mode: "first-time",
+  }), {
+    fullEventIds: [ordinary],
+    briefEventIds: [mandatory],
+    skippedEventIds: [],
+  });
+  assert.deepEqual(resolveBattleStoryPresentation({
+    eventIds: [ordinary, mandatory],
+    readStoryEventIds: [ordinary, mandatory],
+    mode: "first-time",
+  }), {
+    fullEventIds: [],
+    briefEventIds: [mandatory],
+    skippedEventIds: [ordinary],
+  });
+  assert.deepEqual(resolveBattleStoryPresentation({
+    eventIds: [ordinary, mandatory],
+    readStoryEventIds: [ordinary, mandatory],
+    mode: "compact",
+  }), {
+    fullEventIds: [],
+    briefEventIds: [ordinary, mandatory],
+    skippedEventIds: [],
+  });
+  assert.deepEqual(resolveBattleStoryPresentation({
+    eventIds: [ordinary, mandatory],
+    readStoryEventIds: [ordinary, mandatory],
+    mode: "all",
+  }), {
+    fullEventIds: [ordinary],
+    briefEventIds: [mandatory],
+    skippedEventIds: [],
+  });
+  assert.equal(battleStoryBriefLabel(mandatory), "TAKUYA撃破　感染拠点を破壊せよ");
+  assert.equal(battleStoryBriefLabel(ordinary), "通信更新");
 });
 
 test("normal completion, manual skip, and read auto-skip share one deterministic transition", () => {

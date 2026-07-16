@@ -120,8 +120,38 @@ test("stage objectives, prerequisites, defense duration, boss, and future signal
   assert.deepEqual(defenseLine.prerequisiteStageIds, [STAGE_2]);
   assert.deepEqual(defenseLine.nextUnlocks.mapSignalIds, ["map-signal-momochihama-anomaly"]);
   assert.equal(defenseLine.waves.length, 12);
-  assert.deepEqual(defenseLine.waves.map(({ atSeconds }) => atSeconds), [0, 15, 37, 55, 75, 98, 118, 137, 143, 163, 183, 215]);
+  assert.deepEqual(defenseLine.waves.map(({ atSeconds }) => atSeconds), [0, 12, 30, 47, 65, 84, 103, 120, 126, 147, 169, 196]);
   assert.equal(defenseLine.waves.find(({ waveNumber }) => waveNumber === 8).units.some(([kind]) => kind === "takuya"), true);
+});
+
+test("Stage 1-3 increase pressure through bounded cadence and mixed compositions", () => {
+  const unitEntries = (wave) => Array.isArray(wave.units)
+    ? wave.units
+    : (wave.groups ?? []).flatMap(({ kind, count }) => Array.from({ length: count }, () => [kind]));
+  const waveSizes = (stage) => stage.waves.map((wave) => unitEntries(wave).length);
+  const enemyKinds = (stage) => new Set(stage.waves.flatMap((wave) => unitEntries(wave).map(([kind]) => kind)));
+  const largestGap = (stage) => Math.max(...stage.waves.slice(1).map((wave, index) => (
+    wave.atSeconds - stage.waves[index].atSeconds
+  )));
+
+  const stage1 = CAMPAIGN_STAGE_BY_ID[STAGE_1];
+  const stage2 = CAMPAIGN_STAGE_BY_ID[STAGE_2];
+  const stage3 = CAMPAIGN_STAGE_BY_ID[STAGE_3];
+
+  assert.deepEqual(stage1.waves.map(({ atSeconds }) => atSeconds), [4, 21, 39, 58, 76]);
+  assert.deepEqual(stage2.waves.map(({ atSeconds }) => atSeconds), [6, 31, 56, 82, 109, 136, 162]);
+  assert.deepEqual(stage3.waves.map(({ atSeconds }) => atSeconds), [0, 12, 30, 47, 65, 84, 103, 120, 126, 147, 169, 196]);
+  assert.deepEqual([largestGap(stage1), largestGap(stage2), largestGap(stage3)], [19, 27, 27]);
+  assert.deepEqual([
+    waveSizes(stage1).reduce((total, count) => total + count, 0),
+    waveSizes(stage2).reduce((total, count) => total + count, 0),
+    waveSizes(stage3).reduce((total, count) => total + count, 0),
+  ], [28, 53, 65]);
+  assert.equal(Math.max(...CAMPAIGN_STAGES.flatMap(waveSizes)), 9);
+  assert.deepEqual([...enemyKinds(stage1)].sort(), ["crusher", "runner", "spitter", "walker"]);
+  assert.deepEqual([...enemyKinds(stage2)].sort(), ["abomination", "crusher", "runner", "spitter", "walker"]);
+  assert.deepEqual([...enemyKinds(stage3)].sort(), ["abomination", "crusher", "runner", "shade", "spitter", "takuya", "walker"]);
+  assert.deepEqual(CAMPAIGN_STAGES.map(({ baseHp }) => baseHp), [1000, 1000, 520]);
 });
 
 test("nine stable combat units and the non-combat guide use Japanese player-facing data", () => {
@@ -357,6 +387,7 @@ test("default save is versioned and contains initial progression, selection, and
     bgmVolume: 0.75,
     sfxVolume: 0.8,
     reducedMotion: false,
+    battleEventMode: "first-time",
   });
 });
 
@@ -393,6 +424,7 @@ test("migration accepts schema-less and v0 aliases, derives unlocks, and tolerat
     bgmVolume: 0.4,
     sfxVolume: 0.6,
     reducedMotion: true,
+    battleEventMode: "first-time",
   });
 });
 
@@ -422,6 +454,7 @@ test("migration repairs malformed fields without crashing or removing mandatory 
     bgmVolume: 1,
     sfxVolume: 0,
     reducedMotion: false,
+    battleEventMode: "first-time",
   });
 });
 
@@ -466,7 +499,7 @@ test("schema v2 to v4 migration is idempotent and preserves progress, receipts, 
   assert.deepEqual(migrated.claimedStarRewardsByStage, schema2.claimedStarRewardsByStage);
   assert.equal(migrated.supplies, schema2.supplies);
   assert.equal(migrated.lastSelectedStageId, schema2.lastSelectedStageId);
-  assert.deepEqual(migrated.settings, schema2.settings);
+  assert.deepEqual(migrated.settings, { ...schema2.settings, battleEventMode: "first-time" });
   assert.deepEqual(migrated.readStoryEventIds, ["prologue-opening", "stage-nishijin-pre"]);
   assert.equal(migrated.autoSkipReadStory, true);
   assert.deepEqual(migrated.unlockedUnitIds, [
@@ -491,6 +524,7 @@ test("schema v3 migrates a fully silent legacy audio configuration once, while v
     bgmVolume: 0.75,
     sfxVolume: 0.8,
     reducedMotion: false,
+    battleEventMode: "first-time",
   });
 
   const currentSilent = migrateCampaignSave({
@@ -503,6 +537,7 @@ test("schema v3 migrates a fully silent legacy audio configuration once, while v
     bgmVolume: 0,
     sfxVolume: 0,
     reducedMotion: false,
+    battleEventMode: "first-time",
   });
 });
 
@@ -576,6 +611,31 @@ test("serialization round-trips stars, rewards, unlocks, selection, and settings
   assert.equal(restored.settings.sfxVolume, 0.25);
 });
 
+test("battle event mode migrates safely and round-trips without touching progress or receipts", () => {
+  let progressed = applyStageResult(createDefaultCampaignSave(), STAGE_1, {
+    resultId: "battle-event-mode-receipt",
+    won: true,
+    baseHp: 90,
+    baseMaxHp: 100,
+  });
+  progressed = markStoryEventRead(progressed, "stage-nishijin-battle-runner");
+  const compact = updateStoryPlaybackSettings(progressed, { battleEventMode: "compact" });
+  const restored = deserializeCampaignSave(serializeCampaignSave(compact));
+
+  assert.equal(restored.settings.battleEventMode, "compact");
+  assert.equal(restored.supplies, progressed.supplies);
+  assert.deepEqual(restored.completedStageIds, progressed.completedStageIds);
+  assert.deepEqual(restored.bestStarsByStage, progressed.bestStarsByStage);
+  assert.deepEqual(restored.claimedStarRewardsByStage, progressed.claimedStarRewardsByStage);
+  assert.deepEqual(restored.processedResultIds, ["battle-event-mode-receipt"]);
+  assert.deepEqual(restored.readStoryEventIds, ["stage-nishijin-battle-runner"]);
+
+  const showAll = updateStoryPlaybackSettings(restored, { battleEventMode: "all" });
+  assert.equal(deserializeCampaignSave(serializeCampaignSave(showAll)).settings.battleEventMode, "all");
+  assert.equal(updateStoryPlaybackSettings(showAll, { battleEventMode: "invalid" }).settings.battleEventMode, "all");
+  assert.equal(migrateCampaignSave({ schemaVersion: 4, settings: { battleEventMode: "invalid" } }).settings.battleEventMode, "first-time");
+});
+
 test("read tracking and read-only auto-skip preferences update without erasing campaign progress", () => {
   const progressed = applyStageResult(createDefaultCampaignSave(), STAGE_1, {
     resultId: "story-setting-progress",
@@ -585,11 +645,12 @@ test("read tracking and read-only auto-skip preferences update without erasing c
   });
   const readOnce = markStoryEventRead(progressed, "stage-nishijin-post");
   const readTwice = markStoryEventRead(readOnce, "stage-nishijin-post");
-  const enabled = updateStoryPlaybackSettings(readTwice, { autoSkipReadStory: true });
+  const enabled = updateStoryPlaybackSettings(readTwice, { autoSkipReadStory: true, battleEventMode: "compact" });
 
   assert.deepEqual(readOnce.readStoryEventIds, ["stage-nishijin-post"]);
   assert.deepEqual(readTwice.readStoryEventIds, readOnce.readStoryEventIds);
   assert.equal(enabled.autoSkipReadStory, true);
+  assert.equal(enabled.settings.battleEventMode, "compact");
   assert.equal(enabled.storyScriptVersion, "prologue-v5");
   assert.equal(enabled.supplies, progressed.supplies);
   assert.deepEqual(enabled.processedResultIds, progressed.processedResultIds);

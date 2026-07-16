@@ -132,10 +132,11 @@ export const CAMPAIGN_STAGES = deepFreeze([
     },
     enemyKinds: ["walker", "runner", "spitter", "crusher"],
     waves: [
-      { id: "nishijin-wave-01", atSeconds: 5, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 3 }] },
-      { id: "nishijin-wave-02", atSeconds: 24, groups: [{ kind: "runner", lanes: [0, 2], count: 4 }, { kind: "walker", lanes: [1], count: 2 }] },
-      { id: "nishijin-wave-03", atSeconds: 48, groups: [{ kind: "spitter", lanes: [1], count: 2 }, { kind: "walker", lanes: [0, 2], count: 4 }] },
-      { id: "nishijin-wave-04", atSeconds: 76, groups: [{ kind: "crusher", lanes: [1], count: 1 }, { kind: "runner", lanes: [0, 2], count: 4 }] },
+      { id: "nishijin-wave-01", atSeconds: 4, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 4 }] },
+      { id: "nishijin-wave-02", atSeconds: 21, groups: [{ kind: "runner", lanes: [0, 2], count: 4 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
+      { id: "nishijin-wave-03", atSeconds: 39, groups: [{ kind: "spitter", lanes: [0, 1, 2], count: 3 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
+      { id: "nishijin-wave-04", atSeconds: 58, groups: [{ kind: "crusher", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [0, 1, 2], count: 4 }] },
+      { id: "nishijin-wave-05", atSeconds: 76, groups: [{ kind: "spitter", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [0, 1, 2], count: 3 }] },
     ],
     boss: null,
     baseHp: 1000,
@@ -168,11 +169,13 @@ export const CAMPAIGN_STAGES = deepFreeze([
     },
     enemyKinds: ["walker", "runner", "spitter", "crusher", "abomination"],
     waves: [
-      { id: "sawara-wave-01", atSeconds: 8, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 6 }] },
-      { id: "sawara-wave-02", atSeconds: 38, groups: [{ kind: "runner", lanes: [0, 2], count: 6 }, { kind: "spitter", lanes: [1], count: 2 }] },
-      { id: "sawara-wave-03", atSeconds: 78, groups: [{ kind: "crusher", lanes: [0, 2], count: 2 }, { kind: "walker", lanes: [1], count: 4 }] },
-      { id: "sawara-wave-04", atSeconds: 122, groups: [{ kind: "abomination", lanes: [1], count: 1 }, { kind: "runner", lanes: [0, 2], count: 8 }] },
-      { id: "sawara-wave-05", atSeconds: 160, groups: [{ kind: "crusher", lanes: [0, 1, 2], count: 3 }, { kind: "spitter", lanes: [0, 2], count: 4 }] },
+      { id: "sawara-wave-01", atSeconds: 6, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 6 }] },
+      { id: "sawara-wave-02", atSeconds: 31, groups: [{ kind: "runner", lanes: [0, 2], count: 5 }, { kind: "spitter", lanes: [1], count: 3 }] },
+      { id: "sawara-wave-03", atSeconds: 56, groups: [{ kind: "crusher", lanes: [0, 2], count: 2 }, { kind: "walker", lanes: [0, 1, 2], count: 5 }] },
+      { id: "sawara-wave-04", atSeconds: 82, groups: [{ kind: "runner", lanes: [0, 1, 2], count: 5 }, { kind: "spitter", lanes: [0, 2], count: 3 }] },
+      { id: "sawara-wave-05", atSeconds: 109, groups: [{ kind: "abomination", lanes: [1], count: 1 }, { kind: "crusher", lanes: [0, 2], count: 3 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
+      { id: "sawara-wave-06", atSeconds: 136, groups: [{ kind: "runner", lanes: [0, 2], count: 6 }, { kind: "spitter", lanes: [0, 1, 2], count: 3 }] },
+      { id: "sawara-wave-07", atSeconds: 162, groups: [{ kind: "crusher", lanes: [0, 1, 2], count: 3 }, { kind: "spitter", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [0, 2], count: 3 }] },
     ],
     boss: null,
     baseHp: 1000,
@@ -206,17 +209,17 @@ export const CAMPAIGN_STAGES = deepFreeze([
     enemyKinds: ["walker", "runner", "spitter", "crusher", "shade", "abomination", "takuya"],
     waves: [
       { id: "takuya-wave-01", atSeconds: 0, waveNumber: 1, label: "第1波 — 接敵", units: [["walker", 0], ["walker", 1], ["walker", 2]] },
-      { id: "takuya-wave-02", atSeconds: 15, waveNumber: 2, label: "第2波 — 分散攻撃", units: [["walker", 0], ["runner", 0], ["spitter", 1], ["walker", 1], ["walker", 2]] },
-      { id: "takuya-wave-03", atSeconds: 37, waveNumber: 3, label: "第3波 — 圧力上昇", units: [["runner", 0], ["walker", 0], ["runner", 1], ["walker", 1], ["runner", 2], ["walker", 2]] },
-      { id: "takuya-wave-04", atSeconds: 55, waveNumber: 4, label: "精鋭出現 — 影走り", units: [["shade", 0], ["runner", 0], ["walker", 1], ["spitter", 1], ["runner", 2]] },
-      { id: "takuya-wave-05", atSeconds: 75, waveNumber: 5, label: "第5波 — 重装感染体", units: [["crusher", 0], ["walker", 0], ["spitter", 1], ["runner", 1], ["crusher", 2], ["walker", 2]] },
-      { id: "takuya-wave-06", atSeconds: 98, waveNumber: 6, label: "第6波 — 全レーン警戒", units: [["runner", 0], ["spitter", 0], ["walker", 1], ["crusher", 1], ["runner", 2], ["spitter", 2]] },
-      { id: "takuya-wave-07", atSeconds: 118, waveNumber: 7, label: "最終防衛線 — 維持", units: [["crusher", 0], ["runner", 0], ["abomination", 1], ["walker", 1], ["crusher", 2], ["runner", 2]] },
-      { id: "takuya-warning", atSeconds: 137, waveNumber: 7, label: "警告 — 巨大反応", units: [] },
-      { id: "takuya-wave-boss", atSeconds: 143, waveNumber: 8, label: "異常感染者 — TAKUYA / 鉄の審判", units: [["walker", 0], ["spitter", 0], ["takuya", 1], ["runner", 1], ["crusher", 2]] },
-      { id: "takuya-wave-09", atSeconds: 163, waveNumber: 9, label: "感染体増援", units: [["runner", 0], ["spitter", 1], ["runner", 2]] },
-      { id: "takuya-wave-10", atSeconds: 183, waveNumber: 10, label: "TAKUYA — 激昂", bossOnly: true, units: [["crusher", 0], ["runner", 1], ["crusher", 2]] },
-      { id: "takuya-wave-final", atSeconds: 215, waveNumber: 11, label: "最終機会 — 感染拠点を破壊", units: [["runner", 0], ["spitter", 0], ["runner", 1], ["crusher", 1], ["runner", 2], ["spitter", 2]] },
+      { id: "takuya-wave-02", atSeconds: 12, waveNumber: 2, label: "第2波 — 分散攻撃", units: [["walker", 0], ["runner", 0], ["spitter", 1], ["walker", 1], ["runner", 2], ["walker", 2]] },
+      { id: "takuya-wave-03", atSeconds: 30, waveNumber: 3, label: "第3波 — 圧力上昇", units: [["runner", 0], ["walker", 0], ["runner", 1], ["spitter", 1], ["runner", 2], ["walker", 2]] },
+      { id: "takuya-wave-04", atSeconds: 47, waveNumber: 4, label: "精鋭出現 — 影走り", units: [["shade", 0], ["runner", 0], ["walker", 1], ["spitter", 1], ["runner", 2], ["spitter", 2]] },
+      { id: "takuya-wave-05", atSeconds: 65, waveNumber: 5, label: "第5波 — 重装感染体", units: [["crusher", 0], ["walker", 0], ["spitter", 1], ["runner", 1], ["crusher", 2], ["walker", 2], ["runner", 2]] },
+      { id: "takuya-wave-06", atSeconds: 84, waveNumber: 6, label: "第6波 — 全レーン警戒", units: [["runner", 0], ["spitter", 0], ["walker", 1], ["crusher", 1], ["runner", 2], ["spitter", 2], ["walker", 2]] },
+      { id: "takuya-wave-07", atSeconds: 103, waveNumber: 7, label: "最終防衛線 — 維持", units: [["crusher", 0], ["runner", 0], ["abomination", 1], ["walker", 1], ["spitter", 1], ["crusher", 2], ["runner", 2]] },
+      { id: "takuya-warning", atSeconds: 120, waveNumber: 7, label: "警告 — 巨大反応", units: [] },
+      { id: "takuya-wave-boss", atSeconds: 126, waveNumber: 8, label: "異常感染者 — TAKUYA / 鉄の審判", units: [["walker", 0], ["spitter", 0], ["takuya", 1], ["runner", 1], ["crusher", 2], ["runner", 2]] },
+      { id: "takuya-wave-09", atSeconds: 147, waveNumber: 9, label: "感染体増援", units: [["runner", 0], ["spitter", 0], ["spitter", 1], ["runner", 2], ["walker", 2]] },
+      { id: "takuya-wave-10", atSeconds: 169, waveNumber: 10, label: "TAKUYA — 激昂", bossOnly: true, units: [["crusher", 0], ["runner", 0], ["runner", 1], ["crusher", 2], ["spitter", 2]] },
+      { id: "takuya-wave-final", atSeconds: 196, waveNumber: 11, label: "最終機会 — 感染拠点を破壊", units: [["runner", 0], ["spitter", 0], ["runner", 1], ["crusher", 1], ["walker", 1], ["runner", 2], ["spitter", 2]] },
     ],
     boss: {
       id: "boss-takuya",
@@ -510,6 +513,7 @@ export const DEFAULT_CAMPAIGN_SETTINGS = deepFreeze({
   bgmVolume: 0.75,
   sfxVolume: 0.8,
   reducedMotion: false,
+  battleEventMode: "first-time",
 });
 
 export function createDefaultCampaignSave() {
@@ -568,6 +572,9 @@ function normalizeSettings(value, { recoverLegacySilence = false } = {}) {
     bgmVolume: clampNumber(source.bgmVolume, 0, 1, DEFAULT_CAMPAIGN_SETTINGS.bgmVolume),
     sfxVolume: clampNumber(source.sfxVolume, 0, 1, DEFAULT_CAMPAIGN_SETTINGS.sfxVolume),
     reducedMotion: typeof source.reducedMotion === "boolean" ? source.reducedMotion : DEFAULT_CAMPAIGN_SETTINGS.reducedMotion,
+    battleEventMode: ["first-time", "compact", "all"].includes(source.battleEventMode)
+      ? source.battleEventMode
+      : DEFAULT_CAMPAIGN_SETTINGS.battleEventMode,
   };
   const fullySilent = (!normalized.bgmEnabled || normalized.bgmVolume <= 0)
     && (!normalized.sfxEnabled || normalized.sfxVolume <= 0);
@@ -728,10 +735,17 @@ export function markStoryEventRead(save, eventId) {
 
 export function updateStoryPlaybackSettings(save, changes = {}) {
   const current = migrateCampaignSave(save);
-  if (!isRecord(changes) || typeof changes.autoSkipReadStory !== "boolean") return current;
+  if (!isRecord(changes)) return current;
+  const autoSkipReadStory = typeof changes.autoSkipReadStory === "boolean"
+    ? changes.autoSkipReadStory
+    : current.autoSkipReadStory;
+  const battleEventMode = ["first-time", "compact", "all"].includes(changes.battleEventMode)
+    ? changes.battleEventMode
+    : current.settings.battleEventMode;
   return migrateCampaignSave({
     ...current,
-    autoSkipReadStory: changes.autoSkipReadStory,
+    autoSkipReadStory,
+    settings: { ...current.settings, battleEventMode },
   });
 }
 

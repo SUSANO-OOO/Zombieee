@@ -4,6 +4,7 @@ import test from "node:test";
 
 import {
   AIRSTRIKE_DEF,
+  airstrikePlacementCheck,
   BARRICADE_MAX_HP,
   BATTLEFIELD_SUPPLY_DEFS,
   CAMERA_SHAKE_EVENTS,
@@ -41,9 +42,12 @@ import {
   airstrikeObserverPose,
   autonomousTargetScore,
   barricadeState,
+  battlefieldPlacementForbiddenZones,
   battleOutcome,
   battlefieldSupplyPlacementCheck,
+  bossPhaseForHp,
   cameraShakeAmplitude,
+  canvasPointerToWorld,
   canDeploy,
   capRenderArray,
   containerBlocksEnemy,
@@ -56,11 +60,13 @@ import {
   crawlerThreatLevel,
   damageContainer,
   enemyCanTargetBattlefieldSupply,
+  enemyBaseTargetPoint,
   enemyBaseVisualState,
   enemyGateSpawnPosition,
   enemySpawnInterval,
   enqueueEnemyWave,
   humanAttackMultiplier,
+  humanCombatMinX,
   isBrawlerFinisher,
   interceptorTargetScore,
   isCrawlerRouteBlocker,
@@ -209,6 +215,22 @@ test("draws three unmistakably different stage environments", async () => {
   assert.match(game, /trapSprung[\s\S]*evac-ready[\s\S]*nest-destroyed/);
   assert.match(game, /compact && g\.definition\.stageId === CAMPAIGN_STAGE_IDS\.SAWARA_WARD_OFFICE[\s\S]*naturalHeight \* \.24[\s\S]*ctx\.drawImage/);
   assert.match(game, /else if \(g\.definition\.stageId === CAMPAIGN_STAGE_IDS\.SAWARA_WARD_OFFICE\)[\s\S]*naturalHeight \* \.2[\s\S]*ctx\.drawImage/);
+  const backgroundDraw = game.slice(game.indexOf("function drawStageBackground"), game.indexOf("function drawWorld"));
+  assert.match(backgroundDraw, /compact && g\.definition\.stageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_DEFENSE_LINE[\s\S]*naturalHeight \* \.2/);
+  assert.match(backgroundDraw, /else if \(g\.definition\.stageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_DEFENSE_LINE\)[\s\S]*naturalHeight \* \.17/);
+
+  const worldDraw = game.slice(game.indexOf("function drawWorld"), game.indexOf("export function AshfallGame"));
+  const drawOrder = [
+    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"])',
+    "drawCrawler(ctx, g, sprites)",
+    "drawEnemyBase(ctx, g, enemyBaseSprite)",
+    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"])',
+    "const renderables = [",
+    'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["foreground-prop"])',
+  ].map((needle) => worldDraw.indexOf(needle));
+  assert.ok(drawOrder.every((index) => index >= 0), `missing draw step: ${drawOrder.join(",")}`);
+  assert.ok(drawOrder.every((index, position) => position === 0 || index > drawOrder[position - 1]), "background, gate, objective, fighters, and foreground preserve depth order");
+  assert.match(worldDraw, /if \(g\.definition\.enemyBaseMode !== "scenery"\) \{\s*drawEnemyBase/);
   assert.match(objectManifest, /stage-nishijin-shopping-street[\s\S]*wire-trap[\s\S]*fire-shutter/);
   assert.match(objectManifest, /stage-sawara-ward-office[\s\S]*rescue-van[\s\S]*upper-window[\s\S]*lunch-crate/);
   assert.match(objectManifest, /stage-nishijin-defense-line-takuya[\s\S]*transmitter[\s\S]*spawn-marker[\s\S]*infection-nest/);
@@ -307,7 +329,7 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.deepEqual(laneCentersForViewport(844, 340), MOBILE_LANDSCAPE_LANE_Y);
   assert.equal(laneCentersForViewport(1280, 720), LANE_Y);
   assert.equal(laneCentersForViewport(390, 844), LANE_Y);
-  assert.deepEqual(MOBILE_LANDSCAPE_LANE_Y, [188, 233, 278]);
+  assert.deepEqual(MOBILE_LANDSCAPE_LANE_Y, [240, 285, 325]);
   assert.match(game, /for \(const fighter of g\.fighters\) fighter\.y \+= shiftForLane\(fighter\.lane\)/);
   assert.match(game, /for \(const object of g\.battlefieldObjects\) object\.y \+= shiftForLane\(object\.lane\)/);
   assert.match(game, /for \(const effect of g\.areaEffects\) effect\.y \+= shiftForLane\(effect\.lane\)/);
@@ -316,12 +338,73 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /resolveDrumDetonation\(\{ supply: object, fighters: g\.fighters, areaEffects: g\.areaEffects, nextAreaEffectId: g\.nextAreaEffectId, laneCenters: activeLaneCenters \}\)/);
   assert.match(game, /resolveAirstrikeImpact\(\{ runtime: g\.airstrike, fighters: g\.fighters, laneCenters: activeLaneCenters \}\)/);
   assert.match(game, /canvas\.dataset\.laneLayout = nextLaneCenters === LANE_Y \? "standard" : "compact-landscape"/);
-  assert.match(game, /\(event\.clientX - rect\.left - transform\.offsetX\) \/ transform\.scale/);
+  assert.match(game, /canvasPointerToWorld\(\{ clientX: event\.clientX, clientY: event\.clientY, rect, transform, worldWidth: W, worldHeight: H \}\)/);
+  assert.match(game, /<span>戦場をタップ<\/span>/);
+  assert.match(game, /className="placement-cancel"[\s\S]*配置をキャンセル/);
+  assert.match(css, /\.placement-hint \{[^}]*max-height:44px;[^}]*pointer-events:none;/);
+  assert.match(css, /\.placement-cancel \{[^}]*pointer-events:auto;/);
+  assert.match(game, /onPointerDown=\{handleBattlefieldPointerDown\}[\s\S]*onPointerUp=\{handleBattlefieldPointerUp\}/);
+  assert.match(game, /handleBattlefieldPointerDown[\s\S]*setPointerCapture[\s\S]*handleBattlefieldPointerMove/);
+  assert.doesNotMatch(game, /executeSelectedInLane|className="lane-targets?"/);
+  assert.doesNotMatch(css, /\.lane-targets?\b/);
+
+  const coverTransform = (width, height) => {
+    const scale = Math.max(width / 960, height / 540);
+    return { scale, offsetX: (width - 960 * scale) / 2, offsetY: (height - 540 * scale) / 2 };
+  };
+  const reducedHeightTransform = coverTransform(844, 340);
+  const reducedHeightHudTop = 340 - 21 - 14 - 60;
+  const reducedHeightLowLaneBoundary = ((MOBILE_LANDSCAPE_LANE_Y[1] + MOBILE_LANDSCAPE_LANE_Y[2]) / 2) * reducedHeightTransform.scale + reducedHeightTransform.offsetY;
+  assert.ok(reducedHeightHudTop - reducedHeightLowLaneBoundary >= 44);
+  const assertCoverRoundTrip = ({ width, height, left, top }, worldPoint) => {
+    const transform = coverTransform(width, height);
+    const mapped = canvasPointerToWorld({
+      clientX: left + transform.offsetX + worldPoint.x * transform.scale,
+      clientY: top + transform.offsetY + worldPoint.y * transform.scale,
+      rect: { left, top, width, height },
+      transform,
+      worldWidth: 960,
+      worldHeight: 540,
+    });
+    assertClose(mapped.x, worldPoint.x);
+    assertClose(mapped.y, worldPoint.y);
+  };
+  assertCoverRoundTrip({ width: 844, height: 390, left: 17, top: 6 }, { x: 760, y: MOBILE_LANDSCAPE_LANE_Y[1] });
+  assertCoverRoundTrip({ width: 844, height: 340, left: 41, top: 9 }, { x: 760, y: MOBILE_LANDSCAPE_LANE_Y[2] });
+  // A visual-viewport resize during rotation must not retain portrait offsets.
+  assertCoverRoundTrip({ width: 390, height: 844, left: 7, top: 23 }, { x: 480, y: 270 });
+  assertCoverRoundTrip({ width: 844, height: 390, left: 23, top: 7 }, { x: 480, y: 270 });
+
+  const stageObjectiveZones = [0, 1, 2].map((lane) => ({ lane, minX: 772, maxX: 928 }));
+  const placementBase = {
+    running: true, paused: false, over: false, scrap: 100,
+    supplyKind: "pod", lane: 1, x: 760, supplies: [], areaEffects: [],
+    forbiddenZones: battlefieldPlacementForbiddenZones(stageObjectiveZones),
+  };
+  assert.deepEqual(battlefieldSupplyPlacementCheck(placementBase), { ok: true, reason: "配置できます" });
+  assert.equal(battlefieldSupplyPlacementCheck({ ...placementBase, x: 780 }).reason, "進行上の禁止領域です");
+  assert.equal(battlefieldSupplyPlacementCheck({ ...placementBase, lane: 0, x: 780 }).reason, "進行上の禁止領域です");
+  assert.equal(battlefieldSupplyPlacementCheck({ ...placementBase, lane: 0, x: 760 }).ok, true);
+  assert.equal(battlefieldPlacementForbiddenZones()[0].maxX, WORLD_GEOMETRY.crawler.exitX + 18);
+
+  const indicatorFactory = game.slice(game.indexOf("function placementIndicatorFor"), game.indexOf("type Fighter"));
+  assert.match(indicatorFactory, /landingRadius[\s\S]*blastRadius[\s\S]*healRadius[\s\S]*AIRSTRIKE_DEF\.radius/);
+  assert.match(indicatorFactory, /innerRadius: supplyDefs\.drum\.burnRadius/);
+  const indicatorDraw = game.slice(game.indexOf("function drawPlacementIndicator"), game.indexOf("function drawAirstrikeObserver"));
+  assert.match(indicatorDraw, /ctx\.ellipse\(0, 4, radius, radius \* \.34/);
+  assert.match(indicatorDraw, /indicator\.innerRadius[\s\S]*ctx\.ellipse/);
+  assert.match(indicatorDraw, /ctx\.lineWidth = 1\.4[\s\S]*ctx\.moveTo\(-9, 0\)[\s\S]*labelX = Math\.max/);
+  assert.match(game, /g\.banner = placementReasonLabel\(result\.reason\); g\.bannerTime = \.75/);
+  assert.match(game, /const compactScale = activeLaneCenters === LANE_Y \? 1 : 1\.1/);
+  assert.match(game, /const bannerY = compact \? 132 : 70/);
+  for (const label of ["投下ポッド", "爆薬ドラム", "救護所", "航空支援", "一斉掃射"]) assert.match(game, new RegExp(label));
   assert.match(css, /battle-nishijin-shopping-street-v1\.webp/);
   for (const edge of ["top", "right", "bottom", "left"]) {
     assert.match(css, new RegExp(`--app-viewport-safe-${edge}:env\\(safe-area-inset-${edge},0px\\)`));
   }
   assert.match(css, /@supports \(height:100dvh\) \{ :root \{ --app-viewport-height:100dvh; \} \}/);
+  assert.match(css, /\.game-shell\[data-screen="battle"\] \.enable-audio-button \{ top:var\(--app-viewport-safe-top\); right:calc\(8px \+ var\(--app-viewport-safe-right\)\); left:auto;[^}]*width:88px;[^}]*height:44px;/);
+  assert.match(game, /className="audio-unlock-short"/);
   assert.match(css, /\.game-shell \{ position:fixed; top:var\(--app-viewport-top\); left:var\(--app-viewport-left\); width:var\(--app-viewport-width\); height:var\(--app-viewport-height\)/);
   assert.match(css, /\.game-frame \{ position:relative; width:100%; height:100%/);
   assert.match(css, /\.bottom-hud \{[^}]*var\(--app-viewport-safe-bottom\)[^}]*var\(--app-viewport-safe-right\)[^}]*var\(--app-viewport-safe-left\)/);
@@ -400,12 +483,12 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
       damageX: 88, damageY: 250,
     },
     enemyBase: {
-      drawX: 850, drawY: 88, width: 184, height: 340,
+      drawX: 770, drawY: 88, width: 190, height: 340,
       attackX: 875, enemySpawnMinX: 805, enemySpawnMaxX: 833,
       gateX: 880, gateY: 282,
     },
     barricade: {
-      drawX: 850, drawY: 88, width: 184, height: 340,
+      drawX: 770, drawY: 88, width: 190, height: 340,
       attackX: 875, enemySpawnMinX: 805, enemySpawnMaxX: 833,
       gateX: 880, gateY: 282,
     },
@@ -416,11 +499,23 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
   });
   assert.ok(WORLD_GEOMETRY.barricade.drawY < LANE_Y[0]);
   assert.ok(WORLD_GEOMETRY.barricade.drawY + WORLD_GEOMETRY.barricade.height > LANE_Y[2]);
-  assert.ok(WORLD_GEOMETRY.barricade.enemySpawnMaxX < WORLD_GEOMETRY.barricade.drawX);
+  assert.ok(WORLD_GEOMETRY.barricade.drawX <= WORLD_GEOMETRY.barricade.enemySpawnMinX);
+  assert.ok(WORLD_GEOMETRY.barricade.enemySpawnMaxX <= WORLD_GEOMETRY.barricade.drawX + WORLD_GEOMETRY.barricade.width);
+  assert.ok(WORLD_GEOMETRY.barricade.drawX <= WORLD_GEOMETRY.barricade.attackX);
+  assert.ok(WORLD_GEOMETRY.barricade.attackX <= WORLD_GEOMETRY.barricade.drawX + WORLD_GEOMETRY.barricade.width);
   assert.equal(WORLD_GEOMETRY.enemyBase, WORLD_GEOMETRY.barricade);
   assert.ok(WORLD_GEOMETRY.musterX < WORLD_GEOMETRY.crawler.exitX);
   assert.ok(WORLD_GEOMETRY.crawler.exitX < WORLD_GEOMETRY.supportMinX);
   assert.equal((WORLD_GEOMETRY.enemyBase.attackX - WORLD_GEOMETRY.baseX) / (800 - 188), 1.25);
+
+  for (const lane of [0, 1, 2]) {
+    assert.deepEqual(enemyBaseTargetPoint(lane), { x: 875, y: LANE_Y[lane] - 24 });
+    assert.deepEqual(enemyBaseTargetPoint(lane, MOBILE_LANDSCAPE_LANE_Y), { x: 875, y: MOBILE_LANDSCAPE_LANE_Y[lane] - 24 });
+  }
+  assert.deepEqual(enemyBaseTargetPoint(99), enemyBaseTargetPoint(1));
+  assert.deepEqual(bossPhaseForHp(100, 100), { phase: 1, label: "第1段階" });
+  assert.deepEqual(bossPhaseForHp(75, 100), { phase: 2, label: "第2段階" });
+  assert.deepEqual(bossPhaseForHp(25, 100), { phase: 3, label: "最終段階" });
 });
 
 test("bounds advance by phase, vulnerability, and tactical posture", () => {
@@ -609,7 +704,7 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   assert.deepEqual(battlefieldSupplyPlacementCheck(base), { ok: true, reason: "配置できます" });
   assert.equal(battlefieldSupplyPlacementCheck({ ...base, running: false }).ok, false);
   assert.equal(battlefieldSupplyPlacementCheck({ ...base, scrap: 49 }).reason, "スクラップが不足しています");
-  assert.equal(battlefieldSupplyPlacementCheck({ ...base, x: 259 }).reason, "配置可能範囲外です");
+  assert.equal(battlefieldSupplyPlacementCheck({ ...base, x: 234 }).reason, "配置可能範囲外です");
   assert.equal(battlefieldSupplyPlacementCheck({ ...base, forbiddenZones: [{ lane: 1, minX: 420, maxX: 460 }] }).reason, "進行上の禁止領域です");
 
   const podPlacement = resolveBattlefieldSupplyPlacement(base);
@@ -803,7 +898,12 @@ test("models airstrike request and one-at-a-time emergency-support transitions",
   assert.equal(insufficient.ok, false);
   assert.equal(insufficient.supportGauge, AIRSTRIKE_DEF.gaugeCost - 1);
 
-  const requested = requestAirstrike({ running: true, paused: false, over: false, supportGauge: 100, lane: 1, x: 999, runtime: idle });
+  assert.deepEqual(
+    airstrikePlacementCheck({ running: true, paused: false, over: false, supportGauge: 100, lane: 1, x: 999, runtime: idle }),
+    { ok: false, reason: "航空支援の有効範囲外です" },
+  );
+  assert.equal(requestAirstrike({ running: true, paused: false, over: false, supportGauge: 100, lane: 1, x: 999, runtime: idle }).ok, false);
+  const requested = requestAirstrike({ running: true, paused: false, over: false, supportGauge: 100, lane: 1, x: AIRSTRIKE_DEF.maxX, runtime: idle });
   assert.equal(requested.ok, true);
   assert.equal(requested.supportGauge, 40);
   assert.equal(requested.runtime.phase, "radio");
@@ -888,6 +988,31 @@ test("models the independently charged all-lane Crawler barrage with boss mitiga
   assert.equal(cooldown.runtime.phase, "cooldown");
   assert.equal(cooldown.runtime.charge, 0);
   assert.deepEqual(cooldown.events, ["cooldown"]);
+});
+
+test("renders causal weapon tracers and vehicle-origin Crawler fire without screen-wide placeholder beams", async () => {
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const crawlerMuzzle = game.slice(game.indexOf("function drawCrawlerBarrage"), game.indexOf("function stageObjectStatesForGame"));
+  assert.match(crawlerMuzzle, /WORLD_GEOMETRY\.crawler/);
+  assert.match(crawlerMuzzle, /const muzzleX = crawler\.weaponX \+ 45/);
+  assert.match(crawlerMuzzle, /createRadialGradient\(muzzleX, muzzleY/);
+  assert.doesNotMatch(crawlerMuzzle, /scanline|repeating|for \(const lane/);
+
+  const barrageStart = game.indexOf('if (crawlerStep.events.includes("fire"))');
+  const barrageResolution = game.slice(barrageStart, game.indexOf("for (const object of g.battlefieldObjects)", barrageStart));
+  assert.match(barrageResolution, /const visualHitsByLane = \[0, 0, 0\]/);
+  assert.match(barrageResolution, /visualHitsByLane\[fighter\.lane\] < 3/);
+  assert.match(barrageResolution, /x: WORLD_GEOMETRY\.crawler\.weaponX \+ 45[\s\S]*tx: fighter\.x[\s\S]*ty: fighter\.y - 24/);
+  assert.match(barrageResolution, /style: "crawler",\s*weapon: "crawler"/);
+  assert.match(barrageResolution, /addParticles\(g, fighter\.x, fighter\.y - 22/);
+
+  const shotDraw = game.slice(game.indexOf("for (const shot of g.shots)"), game.indexOf("ctx.shadowBlur = 0;", game.indexOf("for (const shot of g.shots)")));
+  assert.match(shotDraw, /const weapon = shot\.weapon \?\? shot\.effect/);
+  assert.match(shotDraw, /weapon === "ranger"[\s\S]*weapon === "gunner"[\s\S]*weapon === "spitter"[\s\S]*weapon === "crawler"/);
+  assert.match(shotDraw, /const tailLength = weapon === "crawler" \? 46[\s\S]*ctx\.moveTo\(x - ux \* tailLength, y - uy \* tailLength\);\s*ctx\.lineTo\(x, y\)/);
+  assert.match(shotDraw, /if \(p < \.3\)[\s\S]*const muzzle =/);
+  assert.match(shotDraw, /if \(p > \.62\)[\s\S]*ctx\.arc\(shot\.tx, shot\.ty/);
+  assert.doesNotMatch(shotDraw, /ctx\.moveTo\(shot\.x, shot\.y\);\s*ctx\.lineTo\(shot\.tx, shot\.ty\)/);
 });
 
 test("caps transient render arrays and limits camera shake to major events", () => {
@@ -1003,6 +1128,11 @@ test("validates, damages, and releases the battlefield container without changin
   assert.equal(advanceZombieX({ enemyX: 600, speed: 20, seconds: 1 }), 580);
   assert.equal(battleOutcome(0, 0), "lost");
 
+  const normalHumanFloor = humanCombatMinX();
+  const breachPursuitFloor = humanCombatMinX({ desiredX: 169, hasEnemyTarget: true });
+  assert.ok(breachPursuitFloor < normalHumanFloor);
+  assert.ok(breachPursuitFloor <= 169);
+
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   assert.match(game, /battlefieldObjects: BattlefieldObject\[\]/);
   assert.match(game, /targetObjectId: number \| null/);
@@ -1016,6 +1146,10 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /physicalContact \?\? \(blockingSupply \? undefined/);
   assert.match(game, /chooseCommittedEnemyLane\(\{[\s\S]*hasTarget: Boolean\(target\)[\s\S]*hasObjectTarget: Boolean\(objectTarget\)[\s\S]*inContact: Boolean\(physicalContact\)/);
   assert.match(game, /advanceZombieX\(\{ enemyX: f\.x,[\s\S]*targetFloor: zombieTargetFloor \}\)/);
+  assert.match(game, /const humanMinX = humanCombatMinX\(\{/);
+  assert.ok((game.match(/Math\.max\(humanMinX,/g) ?? []).length >= 3);
+  assert.doesNotMatch(game, /Math\.max\(MUSTER_X - 8,/);
+  assert.match(game, /allyIntent\?\.reason !== "crawler-under-attack"[\s\S]*BARRICADE_X - f\.x/);
   assert.match(game, /objectTarget \? Math\.abs\(f\.x - objectTarget\.x\)/);
   assert.match(game, /applyBattlefieldSupplyDamage\(objectTarget, f\.damage\)/);
   assert.match(game, /resolveBattlefieldSupplyLanding\(\{/);
@@ -1027,14 +1161,11 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /フィニッシュ/);
   assert.match(game, /重装破砕/);
   assert.match(game, /value: "救護"/);
-  for (const effect of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) {
-    assert.match(game, new RegExp(`shot\\.effect === "${effect}"|effect: "${effect}"`));
-  }
   assert.doesNotMatch(game, /effect: f\.kind as RoleEffect/);
   assert.match(game, /roleEffectForAction\(\{[\s\S]*targetAlreadyMarked: target\.marked > 0[\s\S]*holdingFrontline: f\.kind === "brute" && target\.targetId === f\.id/);
-  assert.match(game, /effect: roleEffect \?\? undefined, emphasized, style: ranged \? "projectile" : "melee"/);
+  assert.match(game, /effect: roleEffect \?\? undefined, emphasized, style: ranged \? "projectile" : "melee", weapon: f\.kind/);
   assert.match(game, /roleEffect === "brawler" \? "フィニッシュ"/);
-  assert.match(game, /action: "structure"[\s\S]*playCue\("role-brute"\)/);
+  assert.match(game, /action: "structure"[\s\S]*if \(roleEffect\)[\s\S]*playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
   assert.match(game, /action: "heal"[\s\S]*playCue\("role-medic"\)/);
   assert.doesNotMatch(game, /g\.areaEffects = capRenderArray/);
   assert.match(game, /g\.areaEffects = retainActiveAreaEffects\(areaStep\.areaEffects\)/);
@@ -1047,6 +1178,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.doesNotMatch(enemyBaseDraw, /fillRect\(-34, -54, 68, 108\)|strokeRect\(-34, -54, 68, 108\)/);
   assert.doesNotMatch(enemyBaseDraw, /fillRect\(-13, -15, 28, 31\)|strokeRect\(-13, -15, 28, 31\)/);
   assert.doesNotMatch(enemyBaseDraw, /LANE_Y/);
+  assert.match(enemyBaseDraw, /const hitX = barrier\.attackX;[\s\S]*createRadialGradient\(hitX,[\s\S]*fillRect\(hitX - 55/);
   assert.match(enemyBaseDraw, /breached[\s\S]*感染拠点 破壊/);
   assert.match(game, /const enemyBaseDestroyed = g\.barricadeHp <= 0[\s\S]*g\.resultPresented = !enemyBaseDestroyed/);
   assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, g\)/);
@@ -1174,15 +1306,28 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(game, /g\.wave = 8/);
   for (const kind of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) assert.match(game, new RegExp(`\\["${kind}",`));
   assert.match(game, /aria-live="polite" aria-label="戦闘台詞"/);
-  assert.match(css, /\.battle-barks \{ position:absolute; z-index:16; top:32%; left:calc\(2% \+ var\(--app-viewport-safe-left\)\);/);
+  assert.match(css, /\.battle-barks \{ position:absolute; z-index:16; top:32%; left:calc\(2% \+ var\(--app-viewport-safe-left\)\); width:min\(270px,29%\);/);
   assert.match(css, /\.start-screen,\.pause-screen,\.end-screen \{ position:absolute; z-index:15;/);
   assert.match(css, /\.game-frame:has\(\.start-screen\) \.qa-badge \{ top:4%; left:50%; right:auto; bottom:auto; transform:translateX\(-100%\); \}/);
   assert.match(css, /\.game-frame:has\(\.pause-screen\) \.battle-barks \{ display:none; \}/);
   assert.match(css, /\.game-frame:has\(\.end-screen\) \.battle-barks \{ top:4%; left:calc\(2% \+ var\(--app-viewport-safe-left\)\); \}/);
   assert.match(css, /\.game-frame:has\(\.pause-screen\) \.qa-badge,\.game-frame:has\(\.end-screen\) \.qa-badge/);
   assert.match(css, /\.pause-screen button,\.end-screen button \{ min-height:44px; \}/);
-  assert.match(css, /\.unit-cards \{ gap:2px; scrollbar-width:none; \}\.unit-cards::-webkit-scrollbar \{ display:none; \}\.unit-card \{ height:100%; min-height:44px; \}/);
-  assert.match(css, /\.qa-badge \{ bottom:35%; \}\.battle-barks \{ top:32%;/);
+  assert.match(css, /\.unit-cards \{ gap:2px; scrollbar-width:none; \}\.unit-cards::-webkit-scrollbar \{ display:none; \}\.unit-card \{[^}]*flex-basis:78px; min-width:78px; height:100%; min-height:44px; \}/);
+  assert.match(css, /\.bottom-hud \{ height:60px; min-height:60px; max-height:60px;/);
+  assert.match(css, /\.combat-deck \{ display:grid; grid-template-columns:minmax\(300px,1\.35fr\) minmax\(260px,1fr\); grid-template-rows:minmax\(0,1fr\)/);
+  assert.match(css, /\.support-btn small \{ display:none; \}/);
+  assert.match(css, /\.card-copy small \{ display:none; \}/);
+  assert.match(css, /\.placement-hint \{ right:calc\(7px \+ var\(--app-viewport-safe-right\)\); bottom:calc\(90px \+ var\(--app-viewport-safe-bottom\)\);[^}]*height:44px; min-height:44px;/);
+  assert.match(css, /\.placement-cancel \{ min-width:58px; height:44px; min-height:44px; margin-block:-1px;/);
+  assert.match(css, /\.crawler-alert \{ position:absolute; z-index:17;/);
+  assert.match(css, /\.battle-barks \{ top:calc\(104px \+ var\(--app-viewport-safe-top\)\);/);
+  assert.match(css, /\.cooldown-mask small \{ display:block;[^}]*font-size:6px;/);
+  assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
+  assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax\)/);
+  assert.match(game, /TAKUYA \/\/ \{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
+  assert.match(css, /\.boss-hud \{[^}]*top:18%; right:calc\(2% \+ var\(--app-viewport-safe-right\)\); width:23%/);
+  assert.match(css, /\.boss-hud \{ top:78px; right:calc\(8px \+ var\(--app-viewport-safe-right\)\); width:24%/);
 });
 
 test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, and map return", async () => {
@@ -1228,7 +1373,18 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /if \(kind === "pod"\) playCue\("pod-descent"\)/);
   assert.match(game, /airstrikeStep\.events\.includes\("targeting"\)[\s\S]*playCue\("airstrike-targeting"\)/);
   assert.match(game, /areaStep\.changes\.some\(\(change\) => change\.kind === "healing"\)[\s\S]*playCue\("medical-heal"\)/);
-  assert.match(game, /if \(roleEffect\) playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
+  assert.match(game, /if \(roleEffect && !\["crazy-king", "kumaverson", "babayaga"\]\.includes\(f\.kind\)\) playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
+  const deployAudioStart = game.indexOf("if (g.deployQueue.length");
+  const deployAudio = game.slice(deployAudioStart, game.indexOf("const crawlerStep =", deployAudioStart));
+  assert.match(deployAudio, /playProductionCue\("support-pod-deploy", MUSTER_X,[\s\S]*volume: kind === "brute" \? \.42 : \.32[\s\S]*maxInstances: 1/);
+  assert.doesNotMatch(deployAudio, /weaponCueForUnit\(kind\)/);
+  const newcomerAudio = game.slice(game.indexOf("const weaponEvent ="), game.indexOf('if (f.kind === "scout"'));
+  assert.match(newcomerAudio, /const contactAudioX = f\.kind === "crazy-king" \|\| f\.kind === "kumaverson" \? \(f\.x \+ target\.x\) \/ 2 : f\.x/);
+  assert.match(newcomerAudio, /volume: f\.kind === "crazy-king" \? \.66 : f\.kind === "kumaverson" \? \.52 : undefined/);
+  assert.match(newcomerAudio, /f\.kind === "crazy-king"[\s\S]*"fleshHit"[\s\S]*maxInstances: 1/);
+  assert.doesNotMatch(newcomerAudio, /unitAudioCueFor\(f\.kind, "weapon", "hardHit"\)/);
+  const chainsawLoopStarts = [...game.matchAll(/playProductionCue\(BATTLE_AUDIO_LOOP_CONTRACTS\.crazyKingChainsaw\.cueId, W \/ 2,/g)];
+  assert.equal(chainsawLoopStarts.length, 2);
   assert.match(game, /fighter\.kind === "takuya"[\s\S]*playCue\("takuya-down"\)/);
   assert.match(game, /const retrying = gameRef\.current\.over[\s\S]*if \(retrying\) playCue\("retry"\)/);
   assert.match(game, /keyboardInputGate\(\{ running: g\.running, paused: g\.paused, over: g\.over, key: event\.key, repeat: event\.repeat \}\)/);
@@ -1366,7 +1522,7 @@ test("integrates attack identity, corpse phases, infection, cremation, and gener
 
 test("defines an ordered mission timeline after the five-second preparation window", () => {
   const eventTimes = MISSION_EVENTS.map(({ at }) => at);
-  assert.deepEqual(eventTimes, [5, 20, 42, 60, 80, 103, 123, 142, 148, 168, 188, 220]);
+  assert.deepEqual(eventTimes, [5, 17, 35, 52, 70, 89, 108, 125, 131, 152, 174, 201]);
   assert.equal(new Set(eventTimes).size, MISSION_EVENTS.length);
   assert.equal(new Set(MISSION_EVENTS.map(({ at, label }) => `${at}:${label}`)).size, MISSION_EVENTS.length);
   assert.ok(eventTimes.every((at, index) => index === 0 || at > eventTimes[index - 1]));
@@ -1375,13 +1531,13 @@ test("defines an ordered mission timeline after the five-second preparation wind
 
   const takuyaEvents = MISSION_EVENTS.filter(({ units }) => units.some(([kind]) => kind === "takuya"));
   assert.equal(takuyaEvents.length, 1);
-  assert.equal(takuyaEvents[0].at, 148);
+  assert.equal(takuyaEvents[0].at, 131);
   assert.equal(takuyaEvents[0].wave, 8);
   assert.deepEqual(takuyaEvents[0].units.find(([kind]) => kind === "takuya"), ["takuya", 1]);
 
-  const warning = MISSION_EVENTS.find(({ at }) => at === 142);
+  const warning = MISSION_EVENTS.find(({ at }) => at === 125);
   assert.deepEqual(warning?.units, []);
-  const enrage = MISSION_EVENTS.find(({ at }) => at === 188);
+  const enrage = MISSION_EVENTS.find(({ at }) => at === 174);
   assert.equal(enrage?.bossOnly, true);
   assert.equal(MISSION_EVENTS.at(-1)?.label, "最終機会 — 感染拠点を破壊");
 });

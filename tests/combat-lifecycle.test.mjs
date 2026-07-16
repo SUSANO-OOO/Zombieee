@@ -53,7 +53,10 @@ test("keeps three lanes while widening the effective objective distance by 20-30
   assert.ok(COMBAT_GEOMETRY.distanceExpansion <= 1.3);
   closeTo(COMBAT_GEOMETRY.enemyObjectiveX - COMBAT_GEOMETRY.friendlyObjectiveX, COMBAT_GEOMETRY.effectiveCombatDistance);
   assert.ok(COMBAT_GEOMETRY.friendlyBaseBounds.x < 0);
-  assert.ok(COMBAT_GEOMETRY.enemyBaseBounds.x + COMBAT_GEOMETRY.enemyBaseBounds.width > COMBAT_GEOMETRY.canvasWidth);
+  assert.ok(COMBAT_GEOMETRY.enemyBaseBounds.x >= 0);
+  assert.ok(COMBAT_GEOMETRY.enemyBaseBounds.x + COMBAT_GEOMETRY.enemyBaseBounds.width <= COMBAT_GEOMETRY.canvasWidth);
+  assert.ok(COMBAT_GEOMETRY.enemyObjectiveX >= COMBAT_GEOMETRY.enemyBaseBounds.x);
+  assert.ok(COMBAT_GEOMETRY.enemyObjectiveX <= COMBAT_GEOMETRY.enemyBaseBounds.x + COMBAT_GEOMETRY.enemyBaseBounds.width);
   assert.ok(COMBAT_GEOMETRY.friendlyDeploymentX > COMBAT_GEOMETRY.friendlyObjectiveX);
   assert.ok(COMBAT_GEOMETRY.enemyCombatStartX < COMBAT_GEOMETRY.enemyObjectiveX);
 });
