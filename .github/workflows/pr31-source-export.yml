@@ -1,4 +1,4 @@
-name: PR31 Source Export
+name: PR31 Source Export and Release QA
 
 on:
   push:
@@ -35,3 +35,53 @@ jobs:
             ${{ runner.temp }}/pr31-source.sha256
           if-no-files-found: error
           retention-days: 1
+
+  release-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout QA branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+      - name: Install application dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install isolated Playwright runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Build production application
+        run: npm run build
+      - name: Start production server
+        shell: bash
+        run: |
+          mkdir -p qa-output
+          PORT=3001 npm start > qa-output/server.log 2>&1 &
+          echo $! > qa-output/server.pid
+          for attempt in {1..60}; do
+            if curl -fsS http://127.0.0.1:3001/ >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat qa-output/server.log
+          exit 1
+      - name: Run Stage 2 and latest-screen browser QA
+        env:
+          QA_BASE_URL: http://127.0.0.1:3001
+          QA_OUT_DIR: qa-output
+        run: node qa/pr31-release-qa.mjs
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr31-release-qa-evidence
+          path: qa-output
+          if-no-files-found: warn
+          retention-days: 3
