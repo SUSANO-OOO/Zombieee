@@ -59,23 +59,16 @@ const directoryPrefixes = topLevelEntries
 const rootFiles = topLevelEntries
   .filter((entry) => entry.isFile())
   .map((entry) => `/${entry.name}`);
+const absoluteTargets = [...directoryPrefixes, ...rootFiles];
 
 function prefixAbsoluteReferences(source) {
   let result = source;
-  for (const prefix of directoryPrefixes) {
-    for (const quote of ["\"", "'", "`"]) {
-      result = result.replaceAll(`${quote}${prefix}`, `${quote}${basePath}${prefix}`);
-    }
-    result = result.replaceAll(`url(${prefix}`, `url(${basePath}${prefix}`);
-    result = result.replaceAll(`\\\"${prefix}`, `\\\"${basePath}${prefix}`);
-  }
-  for (const file of rootFiles) {
-    for (const quote of ["\"", "'", "`"]) {
-      result = result.replaceAll(`${quote}${file}${quote}`, `${quote}${basePath}${file}${quote}`);
-    }
-    result = result.replaceAll(`url(${file})`, `url(${basePath}${file})`);
-    result = result.replaceAll(`\\\"${file}\\\"`, `\\\"${basePath}${file}\\\"`);
-  }
+  absoluteTargets.forEach((target, index) => {
+    const protectedMarker = `__GITHUB_PAGES_PROTECTED_${index}__`;
+    result = result.replaceAll(`${basePath}${target}`, protectedMarker);
+    result = result.replaceAll(target, `${basePath}${target}`);
+    result = result.replaceAll(protectedMarker, `${basePath}${target}`);
+  });
   return result;
 }
 
