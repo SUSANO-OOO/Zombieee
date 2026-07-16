@@ -328,7 +328,7 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.deepEqual(laneCentersForViewport(844, 340), MOBILE_LANDSCAPE_LANE_Y);
   assert.equal(laneCentersForViewport(1280, 720), LANE_Y);
   assert.equal(laneCentersForViewport(390, 844), LANE_Y);
-  assert.deepEqual(MOBILE_LANDSCAPE_LANE_Y, [168, 225, 282]);
+  assert.deepEqual(MOBILE_LANDSCAPE_LANE_Y, [240, 285, 325]);
   assert.match(game, /for \(const fighter of g\.fighters\) fighter\.y \+= shiftForLane\(fighter\.lane\)/);
   assert.match(game, /for \(const object of g\.battlefieldObjects\) object\.y \+= shiftForLane\(object\.lane\)/);
   assert.match(game, /for \(const effect of g\.areaEffects\) effect\.y \+= shiftForLane\(effect\.lane\)/);
@@ -338,8 +338,10 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /resolveAirstrikeImpact\(\{ runtime: g\.airstrike, fighters: g\.fighters, laneCenters: activeLaneCenters \}\)/);
   assert.match(game, /canvas\.dataset\.laneLayout = nextLaneCenters === LANE_Y \? "standard" : "compact-landscape"/);
   assert.match(game, /canvasPointerToWorld\(\{ clientX: event\.clientX, clientY: event\.clientY, rect, transform, worldWidth: W, worldHeight: H \}\)/);
-  assert.match(game, /戦場へ直接タップ/);
+  assert.match(game, /<span>戦場をタップ<\/span>/);
   assert.match(game, /className="placement-cancel"[\s\S]*配置をキャンセル/);
+  assert.match(css, /\.placement-hint \{[^}]*max-height:44px;[^}]*pointer-events:none;/);
+  assert.match(css, /\.placement-cancel \{[^}]*pointer-events:auto;/);
   assert.match(game, /onPointerDown=\{handleBattlefieldPointerDown\}[\s\S]*onPointerUp=\{handleBattlefieldPointerUp\}/);
   assert.match(game, /handleBattlefieldPointerDown[\s\S]*setPointerCapture[\s\S]*handleBattlefieldPointerMove/);
   assert.doesNotMatch(game, /executeSelectedInLane|className="lane-targets?"/);
@@ -349,6 +351,10 @@ test("keeps the battlefield centered in the visual viewport while routing across
     const scale = Math.max(width / 960, height / 540);
     return { scale, offsetX: (width - 960 * scale) / 2, offsetY: (height - 540 * scale) / 2 };
   };
+  const reducedHeightTransform = coverTransform(844, 340);
+  const reducedHeightHudTop = 340 - 21 - 14 - 60;
+  const reducedHeightLowLaneBoundary = ((MOBILE_LANDSCAPE_LANE_Y[1] + MOBILE_LANDSCAPE_LANE_Y[2]) / 2) * reducedHeightTransform.scale + reducedHeightTransform.offsetY;
+  assert.ok(reducedHeightHudTop - reducedHeightLowLaneBoundary >= 44);
   const assertCoverRoundTrip = ({ width, height, left, top }, worldPoint) => {
     const transform = coverTransform(width, height);
     const mapped = canvasPointerToWorld({
@@ -386,11 +392,18 @@ test("keeps the battlefield centered in the visual viewport while routing across
   const indicatorDraw = game.slice(game.indexOf("function drawPlacementIndicator"), game.indexOf("function drawAirstrikeObserver"));
   assert.match(indicatorDraw, /ctx\.ellipse\(0, 4, radius, radius \* \.34/);
   assert.match(indicatorDraw, /indicator\.innerRadius[\s\S]*ctx\.ellipse/);
+  assert.match(indicatorDraw, /ctx\.lineWidth = 1\.4[\s\S]*ctx\.moveTo\(-9, 0\)[\s\S]*labelX = Math\.max/);
+  assert.match(game, /g\.banner = placementReasonLabel\(result\.reason\); g\.bannerTime = \.75/);
+  assert.match(game, /const compactScale = activeLaneCenters === LANE_Y \? 1 : 1\.1/);
+  assert.match(game, /const bannerY = compact \? 132 : 70/);
+  for (const label of ["投下ポッド", "爆薬ドラム", "救護所", "航空支援", "一斉掃射"]) assert.match(game, new RegExp(label));
   assert.match(css, /battle-nishijin-shopping-street-v1\.webp/);
   for (const edge of ["top", "right", "bottom", "left"]) {
     assert.match(css, new RegExp(`--app-viewport-safe-${edge}:env\\(safe-area-inset-${edge},0px\\)`));
   }
   assert.match(css, /@supports \(height:100dvh\) \{ :root \{ --app-viewport-height:100dvh; \} \}/);
+  assert.match(css, /\.game-shell\[data-screen="battle"\] \.enable-audio-button \{ top:var\(--app-viewport-safe-top\); right:calc\(8px \+ var\(--app-viewport-safe-right\)\); left:auto;[^}]*width:88px;[^}]*height:44px;/);
+  assert.match(game, /className="audio-unlock-short"/);
   assert.match(css, /\.game-shell \{ position:fixed; top:var\(--app-viewport-top\); left:var\(--app-viewport-left\); width:var\(--app-viewport-width\); height:var\(--app-viewport-height\)/);
   assert.match(css, /\.game-frame \{ position:relative; width:100%; height:100%/);
   assert.match(css, /\.bottom-hud \{[^}]*var\(--app-viewport-safe-bottom\)[^}]*var\(--app-viewport-safe-right\)[^}]*var\(--app-viewport-safe-left\)/);
@@ -1283,7 +1296,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(game, /g\.wave = 8/);
   for (const kind of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) assert.match(game, new RegExp(`\\["${kind}",`));
   assert.match(game, /aria-live="polite" aria-label="戦闘台詞"/);
-  assert.match(css, /\.battle-barks \{ position:absolute; z-index:16; top:32%; left:calc\(2% \+ var\(--app-viewport-safe-left\)\);/);
+  assert.match(css, /\.battle-barks \{ position:absolute; z-index:16; top:32%; left:calc\(2% \+ var\(--app-viewport-safe-left\)\); width:min\(270px,29%\);/);
   assert.match(css, /\.start-screen,\.pause-screen,\.end-screen \{ position:absolute; z-index:15;/);
   assert.match(css, /\.game-frame:has\(\.start-screen\) \.qa-badge \{ top:4%; left:50%; right:auto; bottom:auto; transform:translateX\(-100%\); \}/);
   assert.match(css, /\.game-frame:has\(\.pause-screen\) \.battle-barks \{ display:none; \}/);
@@ -1291,11 +1304,15 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.game-frame:has\(\.pause-screen\) \.qa-badge,\.game-frame:has\(\.end-screen\) \.qa-badge/);
   assert.match(css, /\.pause-screen button,\.end-screen button \{ min-height:44px; \}/);
   assert.match(css, /\.unit-cards \{ gap:2px; scrollbar-width:none; \}\.unit-cards::-webkit-scrollbar \{ display:none; \}\.unit-card \{[^}]*flex-basis:78px; min-width:78px; height:100%; min-height:44px; \}/);
-  assert.match(css, /\.bottom-hud \{ height:72px; min-height:72px; max-height:72px;/);
+  assert.match(css, /\.bottom-hud \{ height:60px; min-height:60px; max-height:60px;/);
   assert.match(css, /\.combat-deck \{ display:grid; grid-template-columns:minmax\(300px,1\.35fr\) minmax\(260px,1fr\); grid-template-rows:minmax\(0,1fr\)/);
   assert.match(css, /\.support-btn small \{ display:none; \}/);
   assert.match(css, /\.card-copy small \{ display:none; \}/);
-  assert.match(css, /\.placement-cancel \{ min-width:72px; min-height:44px;/);
+  assert.match(css, /\.placement-hint \{ right:calc\(7px \+ var\(--app-viewport-safe-right\)\); bottom:calc\(90px \+ var\(--app-viewport-safe-bottom\)\);[^}]*height:44px; min-height:44px;/);
+  assert.match(css, /\.placement-cancel \{ min-width:58px; height:44px; min-height:44px; margin-block:-1px;/);
+  assert.match(css, /\.crawler-alert \{ position:absolute; z-index:17;/);
+  assert.match(css, /\.battle-barks \{ top:calc\(104px \+ var\(--app-viewport-safe-top\)\);/);
+  assert.match(css, /\.cooldown-mask small \{ display:block;[^}]*font-size:6px;/);
   assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
   assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax\)/);
   assert.match(game, /TAKUYA \/\/ \{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);

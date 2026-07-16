@@ -97,7 +97,10 @@ export function advanceConvoyEvacuation({
 
 // Three invisible routing bands follow the open roadway bands in battlefield-v4.
 export const LANE_Y = [212, 282, 352];
-export const MOBILE_LANDSCAPE_LANE_Y = Object.freeze([168, 225, 282]);
+// In Safari's reduced-height landscape viewport the cover-scaled world is
+// cropped vertically. These compact centers keep the top route below the HUD
+// while leaving the low route tappable above the combat deck.
+export const MOBILE_LANDSCAPE_LANE_Y = Object.freeze([240, 285, 325]);
 export const LANE_NAMES = ["TOP", "MID", "LOW"];
 export const GROUND_EFFECT_VERTICAL_RATIO = .34;
 

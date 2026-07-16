@@ -357,7 +357,10 @@ test("gameplay routes scenes, combat identity, and procedural fallback through t
   assert.match(source, /onAssetFailure: \(\) => \{[\s\S]*setAudioUnlockUi\("failed"\)/);
   assert.match(source, /className="audio-test-tone" data-audio-unlock-control="true" onClick=\{playAudioTestTone\}/);
   assert.match(source, /className="enable-audio-button"[\s\S]*data-audio-unlock-control="true"/);
-  assert.match(source, /音声を有効にする[\s\S]*音声を準備中…[\s\S]*音声が有効になりました[\s\S]*音声を開始できませんでした　もう一度試す/);
+  for (const label of ["音声を有効にする", "音声を準備中…", "音声が有効になりました", "音声を開始できませんでした　もう一度試す"]) {
+    assert.match(source, new RegExp(label));
+  }
+  assert.match(source, /const audioUnlockShortLabel = [\s\S]*"音声開始"/);
   assert.match(source, /runGuardedAudioRequest\(\{[\s\S]*play: \(guardedFallback\) => productionMixer\.play\(productionCue/);
   assert.match(source, /onLoadFailure: guardedFallback/);
   assert.doesNotMatch(source, /return playSynthCue\(cueId, options\)/);

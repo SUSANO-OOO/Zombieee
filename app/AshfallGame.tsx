@@ -264,6 +264,25 @@ const supplyDefs = BATTLEFIELD_SUPPLY_DEFS as Record<SupplyKind, {
   placementClearance: number; blocksEnemies: boolean; landingRadius?: number; blastRadius?: number; burnRadius?: number; healRadius?: number;
 }>;
 
+const SUPPORT_DISPLAY_NAMES: Record<SupplyKind, string> = {
+  pod: "投下ポッド",
+  drum: "爆薬ドラム",
+  medical: "救護所",
+};
+
+function placementReasonLabel(reason: string) {
+  const shortReasons: Record<string, string> = {
+    "配置できます": "配置可",
+    "配置可能範囲外です": "配置範囲外",
+    "進行上の禁止領域です": "禁止領域",
+    "既存物資に近すぎます": "物資に近すぎます",
+    "スクラップが不足しています": "スクラップ不足",
+    "支援ゲージが不足しています": "支援ゲージ不足",
+    "航空支援の有効範囲外です": "航空支援範囲外",
+  };
+  return shortReasons[reason] ?? reason.replace(/です$/, "");
+}
+
 function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, valid: boolean, reason: string): PlacementIndicator {
   const kind = action?.startsWith("supply:") ? action.slice("supply:".length) as SupplyKind : null;
   const radius = kind === "pod" ? supplyDefs.pod.landingRadius ?? 92
@@ -1111,7 +1130,9 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
           : "idle";
   const direction = f.side === "human" ? (f.aiMoveDirection < -.05 ? "left" : "right") : "left";
   const frame = spriteFrameFor(f.kind, state, direction);
-  const size = fitSpriteBattleDisplaySize(f.kind, frame, spriteDisplaySize(f.kind));
+  const authoredSize = fitSpriteBattleDisplaySize(f.kind, frame, spriteDisplaySize(f.kind));
+  const compactScale = activeLaneCenters === LANE_Y ? 1 : 1.1;
+  const size = { w: authoredSize.w * compactScale, h: authoredSize.h * compactScale };
   const bob = Math.abs(Math.sin(f.step * 7)) * 1.1;
   ctx.save();
   if (f.side === "human" && f.spawnGrace > 0) {
@@ -1132,6 +1153,10 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     ctx.globalAlpha = .7;
     ctx.shadowColor = "#fff1ad";
     ctx.shadowBlur = 16;
+  } else if (compactScale > 1) {
+    ctx.shadowColor = "rgba(0,0,0,.9)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
   }
   ctx.translate(f.x, f.y - bob);
   if (frame.flipX) ctx.scale(-1, 1);
@@ -1231,20 +1256,37 @@ function drawPlacementIndicator(ctx: CanvasRenderingContext2D, indicator: Placem
   const radius = Math.max(24, indicator.radius);
   ctx.save();
   ctx.translate(indicator.x, indicator.y);
-  ctx.strokeStyle = indicator.valid ? "#71d8aa" : "#ef6448";
-  ctx.fillStyle = indicator.valid ? "rgba(74,180,135,.18)" : "rgba(221,73,52,.2)";
-  ctx.lineWidth = 3; ctx.setLineDash([8, 5]);
+  ctx.strokeStyle = indicator.valid ? "rgba(113,216,170,.7)" : "rgba(239,100,72,.76)";
+  ctx.fillStyle = indicator.valid ? "rgba(74,180,135,.06)" : "rgba(221,73,52,.075)";
+  ctx.lineWidth = 1.4; ctx.setLineDash([5, 5]);
   ctx.beginPath(); ctx.ellipse(0, 4, radius, radius * .34, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   if (indicator.innerRadius && indicator.innerRadius < radius) {
-    ctx.globalAlpha = .55;
+    ctx.globalAlpha = .38;
     ctx.beginPath(); ctx.ellipse(0, 4, indicator.innerRadius, indicator.innerRadius * .34, 0, 0, Math.PI * 2); ctx.stroke();
   }
-  ctx.setLineDash([]); ctx.globalAlpha = .68;
-  if (indicator.action?.startsWith("supply:")) ctx.fillRect(-31, -35, 62, 38);
-  else { ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(18, 0); ctx.moveTo(0, -18); ctx.lineTo(0, 18); ctx.stroke(); }
-  ctx.globalAlpha = 1; ctx.fillStyle = indicator.valid ? "#a7f0cf" : "#ff9a82";
-  ctx.font = "900 12px monospace"; ctx.textAlign = "center";
-  ctx.fillText(indicator.reason, 0, -Math.min(58, radius * .34 + 18));
+  ctx.setLineDash([]); ctx.globalAlpha = .62;
+  if (indicator.action?.startsWith("supply:")) {
+    ctx.strokeRect(-15, -24, 30, 24);
+    ctx.beginPath(); ctx.moveTo(-7, -12); ctx.lineTo(7, -12); ctx.moveTo(0, -19); ctx.lineTo(0, -5); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(9, 0); ctx.moveTo(0, -9); ctx.lineTo(0, 9); ctx.stroke();
+  }
+  ctx.restore();
+
+  const label = placementReasonLabel(indicator.reason);
+  const labelY = indicator.y - Math.min(52, radius * .34 + 16);
+  ctx.save();
+  ctx.font = "900 10px monospace";
+  const labelWidth = Math.min(138, Math.ceil(ctx.measureText(label).width) + 14);
+  const labelX = Math.max(labelWidth / 2 + 8, Math.min(W - labelWidth / 2 - 8, indicator.x));
+  ctx.fillStyle = "rgba(12,14,14,.78)";
+  ctx.fillRect(labelX - labelWidth / 2, labelY - 12, labelWidth, 18);
+  ctx.strokeStyle = indicator.valid ? "rgba(113,216,170,.55)" : "rgba(239,100,72,.72)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(labelX - labelWidth / 2 + .5, labelY - 11.5, labelWidth - 1, 17);
+  ctx.fillStyle = indicator.valid ? "#b8efd7" : "#ffac97";
+  ctx.textAlign = "center";
+  ctx.fillText(label, labelX, labelY + 1);
   ctx.restore();
 }
 
@@ -1842,12 +1884,14 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
     }
     drawSpriteFighter(ctx, f, sprites);
     if (!f.combatReady) continue;
-    const barW = f.kind === "takuya" ? 52 : f.kind === "crusher" || f.kind === "brute" ? 38 : f.kind === "abomination" ? 52 : 28;
-    const height = f.kind === "takuya" ? 111 : f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "brute" ? 94 : 80;
-    const barY = f.y - height;
-    ctx.fillStyle = "rgba(0,0,0,.58)"; ctx.fillRect(f.x - barW / 2, barY, barW, 4);
+    const compactScale = activeLaneCenters === LANE_Y ? 1 : 1.1;
+    const barW = (f.kind === "takuya" ? 52 : f.kind === "crusher" || f.kind === "brute" ? 38 : f.kind === "abomination" ? 52 : 28) * compactScale;
+    const height = (f.kind === "takuya" ? 111 : f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "brute" ? 94 : 80) * compactScale;
+    const barHeight = compactScale > 1 ? 6 : 4;
+    const barY = f.y - height - (compactScale > 1 ? 2 : 0);
+    ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(f.x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
     ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
-    ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), 4);
+    ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), barHeight);
     if (f.side === "zombie" && f.marked > 0) {
       ctx.save();
       ctx.translate(f.x, barY - 10);
@@ -2954,7 +2998,7 @@ export function AshfallGame() {
     });
     g.placementIndicator = placementIndicatorFor(`supply:${kind}`, lane, x, result.ok, result.reason);
     if (!result.ok) {
-      g.banner = `配置不可 // ${result.reason}`; g.bannerTime = 1.15; playCue("denied");
+      g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playCue("denied");
       return false;
     }
     g.scrap = result.scrap;
@@ -2980,7 +3024,7 @@ export function AshfallGame() {
       lane, x, runtime: g.airstrike,
     });
     if (!result.ok) {
-      g.banner = `配置不可 // ${result.reason}`; g.bannerTime = 1.15; playCue("denied"); return false;
+      g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playCue("denied"); return false;
     }
     g.supportGauge = result.supportGauge;
     g.airstrike = result.runtime as AirstrikeRuntime;
@@ -4718,10 +4762,15 @@ export function AshfallGame() {
 
       drawWorld(ctx, g, backgroundRef.current, spriteRefs.current, stageObjectRefs.current, enemyBaseSpriteRef.current);
       if (g.bannerTime > 0 && g.running) {
-        ctx.fillStyle = "rgba(15,14,14,.8)"; ctx.fillRect(302, 70, 356, 54);
-        ctx.strokeStyle = "#d79647"; ctx.strokeRect(302.5, 70.5, 355, 53);
-        ctx.fillStyle = "#f0d2a3"; ctx.font = "bold 19px monospace"; ctx.textAlign = "center";
-        ctx.fillText(g.banner, W / 2, 104); ctx.textAlign = "left";
+        const compact = activeLaneCenters !== LANE_Y;
+        const bannerWidth = compact ? 268 : 356;
+        const bannerHeight = compact ? 32 : 54;
+        const bannerX = (W - bannerWidth) / 2;
+        const bannerY = compact ? 132 : 70;
+        ctx.fillStyle = "rgba(15,14,14,.82)"; ctx.fillRect(bannerX, bannerY, bannerWidth, bannerHeight);
+        ctx.strokeStyle = "#d79647"; ctx.strokeRect(bannerX + .5, bannerY + .5, bannerWidth - 1, bannerHeight - 1);
+        ctx.fillStyle = "#f0d2a3"; ctx.font = `bold ${compact ? 12 : 19}px monospace`; ctx.textAlign = "center";
+        ctx.fillText(g.banner, W / 2, bannerY + (compact ? 21 : 34)); ctx.textAlign = "left";
       }
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
@@ -4752,9 +4801,11 @@ export function AshfallGame() {
   const phaseName = hud.phase === 1 ? "防衛" : hud.phase === 2 ? "前進" : "総攻撃";
   const tacticName = hud.tactic === "defend" ? "防衛" : hud.tactic === "assault" ? "突撃" : "均衡";
   const selectedName = selectedAction?.startsWith("supply:")
-    ? supplyDefs[selectedAction.slice("supply:".length) as SupplyKind].name
-    : selectedAction === "airstrike" ? "緊急航空支援" : null;
+    ? SUPPORT_DISPLAY_NAMES[selectedAction.slice("supply:".length) as SupplyKind]
+    : selectedAction === "airstrike" ? "航空支援" : null;
   const combatLocked = !!end || hud.baseHp <= 0 || hud.barricadeHp <= 0;
+  const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
+  const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
 
   return (
     <main className="game-shell" data-screen={screen} data-stage-id={selectedStageId}>
@@ -4774,7 +4825,7 @@ export function AshfallGame() {
           aria-label={audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする"}
           aria-live="polite"
         >
-          <b>{audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする"}</b>
+          <b><span className="audio-unlock-long">{audioUnlockLabel}</span><span className="audio-unlock-short">{audioUnlockShortLabel}</span></b>
           <small>{audioUnlockUi === "success" ? "確認音を再生しました（聞こえない場合は端末・タブのミュートを確認）" : audioUnlockUi === "failed" ? "音源または再生処理を確認して、タップで再試行" : "タップしてBGM・効果音・ボイスを開始"}</small>
         </button>}
         {screen === "battle" && <>
@@ -4794,8 +4845,8 @@ export function AshfallGame() {
         {hud.bossMax > 0 && <div className="boss-hud"><div><span>TAKUYA // {bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
         {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
 
-        {selectedAction && started && !paused && !end && <div className="placement-hint">
-          <span className="placement-copy"><b>{selectedName}選択中</b><span>置きたい場所を戦場へ直接タップ</span><small>効果範囲と配置可否を戦場に表示</small></span>
+        {selectedAction && started && !paused && !end && <div className="placement-hint" role="status" aria-live="polite">
+          <span className="placement-copy"><b>{selectedName}</b><span>戦場をタップ</span></span>
           <button className="placement-cancel" onClick={() => chooseActionWithCue(null)} aria-label={`${selectedName}の配置をキャンセル`}>キャンセル</button>
         </div>}
 
@@ -4810,10 +4861,10 @@ export function AshfallGame() {
               {cards.filter((card) => formationKinds.includes(card.kind)).map((card) => {
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
                 return (
-                  <button key={card.kind} className="unit-card" data-kind={card.kind} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={{ "--unit-card-art": `url('${(PORTRAIT_ART as Record<string, string>)[card.kind]}')` } as CSSProperties}>
+                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={{ "--unit-card-art": `url('${(PORTRAIT_ART as Record<string, string>)[card.kind]}')` } as CSSProperties}>
                     <span className="keycap">{card.key}</span><span className="portrait"><i /></span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
-                    {cooldown > 0 && <span className="cooldown-mask"><b>{cooldown}</b><small>秒</small></span>}
+                    {cooldown > 0 && <span className="cooldown-mask"><b>{cooldown}</b><small>秒待ち</small></span>}
                   </button>
                 );
               })}
@@ -4826,13 +4877,13 @@ export function AshfallGame() {
                 onClick={() => chooseActionWithCue(selectedAction === `supply:${selectedSupply}` ? null : `supply:${selectedSupply}`)}
                 aria-label={`${supplyDefs[selectedSupply].name} ${supplyDefs[selectedSupply].cost}スクラップ`}
               >
-                <span className="support-key">{supplyDefs[selectedSupply].key}</span><b>{supplyDefs[selectedSupply].name}</b><small>{selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復"}</small><em>▰{supplyDefs[selectedSupply].cost}</em>
+                <span className="support-key">{supplyDefs[selectedSupply].key}</span><b>{SUPPORT_DISPLAY_NAMES[selectedSupply]}</b><small>{selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復"}</small><em>▰{supplyDefs[selectedSupply].cost}</em>
               </button>
-              <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")}>
-                <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"}</b><small>通信・照準・飛来・着弾・帰投</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
+              <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
+                <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>通信・照準・飛来・着弾・帰投</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
               </button>
-              <button className="support-btn barrage" disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked} onClick={triggerCrawlerBarrage}>
-                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `再装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>全3レーン固定火器</small><em>⌁</em>
+              <button className="support-btn barrage" disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
+                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>全3レーン固定火器</small><em>⌁</em>
               </button>
             </div>
           </div>

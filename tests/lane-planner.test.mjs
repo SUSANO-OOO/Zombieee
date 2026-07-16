@@ -144,10 +144,10 @@ test("Y movement reaches assignments in standard and 844x390 lane layouts", () =
     currentLane: 2,
     destinationLane: 1,
     laneCenters: MOBILE_LANDSCAPE_LANE_Y,
-    laneSpeed: 45,
+    laneSpeed: 25,
     seconds: 1,
   });
-  assert.equal(compact.y, 237);
+  assert.equal(compact.y, 300);
   assert.equal(compact.lane, 1);
   assert.equal(compact.reached, false);
   const compactSettled = advanceTowardLane({
@@ -155,7 +155,7 @@ test("Y movement reaches assignments in standard and 844x390 lane layouts", () =
     currentLane: compact.lane,
     destinationLane: 1,
     laneCenters: MOBILE_LANDSCAPE_LANE_Y,
-    laneSpeed: 45,
+    laneSpeed: 25,
     seconds: 1,
   });
   assert.equal(compactSettled.y, MOBILE_LANDSCAPE_LANE_Y[1]);
