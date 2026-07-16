@@ -24,14 +24,14 @@ jobs:
       - name: Archive source snapshot
         shell: bash
         run: |
-          tar --exclude=.git --exclude=node_modules --exclude=pr31-source.tgz -czf pr31-source.tgz .
-          sha256sum pr31-source.tgz | tee pr31-source.sha256
+          tar --exclude=.git --exclude=node_modules -czf "$RUNNER_TEMP/pr31-source.tgz" .
+          sha256sum "$RUNNER_TEMP/pr31-source.tgz" | tee "$RUNNER_TEMP/pr31-source.sha256"
       - name: Upload source snapshot
         uses: actions/upload-artifact@v4
         with:
           name: pr31-source-cc4eb3a6
           path: |
-            pr31-source.tgz
-            pr31-source.sha256
+            ${{ runner.temp }}/pr31-source.tgz
+            ${{ runner.temp }}/pr31-source.sha256
           if-no-files-found: error
           retention-days: 1
