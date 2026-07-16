@@ -69,7 +69,8 @@ try {
     const navigation = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
     if (!navigation?.ok()) throw new Error(`GitHub Pages document failed: ${navigation?.status()}`);
     await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout: 120_000 });
-    await page.getByRole("button", { name: "物語を始める", exact: true }).waitFor({ state: "visible", timeout: 30_000 });
+    const startButton = page.locator(".title-start");
+    await startButton.waitFor({ state: "visible", timeout: 30_000 });
 
     const dimensions = await page.evaluate(() => ({
       innerWidth: window.innerWidth,
@@ -84,7 +85,7 @@ try {
     }
 
     await page.screenshot({ path: path.join(evidenceDir, `github-pages-title-${viewport.width}x${viewport.height}.png`), fullPage: true });
-    await page.getByRole("button", { name: "物語を始める", exact: true }).click();
+    await startButton.click();
     await page.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 30_000 });
 
     const unexpectedWarnings = diagnostics.warnings.filter((warning) => !warning.includes("was preloaded using link preload but not used"));
