@@ -1,4 +1,4 @@
-# リリース・バックアップ・復元手順
+# 西新世紀末物語 — GitHub Pages公開・復元手順
 
 更新日：2026-07-17
 
@@ -6,142 +6,175 @@
 
 唯一の正式公開先はGitHub Pages。
 
-- repository：`SUSANO-OOO/Zombieee`
-- branch：`main`
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
-- workflow：`.github/workflows/github-pages-release.yml`
-- `main` pushでbuild、browser smoke、Pages deploymentを実行
+- source：`main`へPR経由で反映されたrelease SHA
+- deployment：`.github/workflows/github-pages-release.yml`
+- ChatGPT Sitesは旧公開先であり、新規deployment、QA、復元に使用しない
 
-ChatGPT Sitesは旧公開先。今後のdeployment、正式QA、障害切り分け、公開判定に使用しない。
+## 2. 公開前preflight
 
-## 2. リリース前ゲート
+実装の後半まで進めてから公開不能と判明することを防ぐため、P0で次を確認する。
 
-対象ミッションで明示された全ゲートを満たすまで、Ready化・merge・tag・Releaseへ進まない。
+- repositoryのGitHub Pages APIへアクセス可能
+- workflow build typeを作成・更新できる権限がある
+- Actionsに`pages: write`と`id-token: write`がある
+- `main` pushでbuild、browser smoke、artifact upload、deployが実行される
+- private repositoryの現在のplan・Pages設定で、一般プレイヤー向け公開が可能か確認する
+- 匿名公開を妨げるaccess controlがある場合、公開前阻害として記録する
+
+P0時点でURL実体を公開できない場合でも、Pages API、repository plan、workflow権限を確認する。一般公開が不可能と判明した場合は、実装を破棄せずrelease工程だけ停止し、Issue #37へ理由を報告する。
+
+## 3. 公開前ゲート
+
+`docs/IMPLEMENTATION_DIRECTIVE_0.7.0.md`とIssue #37のP0〜P7、R1〜R4をすべて完了する。
 
 最低条件：
 
-- PRのbase、head、mergeabilityを最新状態で再取得
-- CI `Verify`成功
-- build、test、Lint、diff check成功
-- 未解決の重大・中程度レビュー0
-- 未承認アセット0
-- 欠落asset・参照切れ0
-- save migrationと復旧テスト成功
-- 指定されたスマートフォン受入成功
-- 公開を阻害する既知不具合0
+- 全画像個別承認
+- identity lock維持
+- Stage 1〜6実プレイ可能
+- save migrationと破損復旧成功
+- 手動戦術残存0
+- 敵素通り0
+- スマートフォン受入完了
+- build、test、Lint、diff check、CI成功
+- console error、asset 404、参照切れ0
+- High／Medium未解消0
 
-承認済みの具体的なPR、tag、Release名、公開権限は対応Issueと実行ランブックを正式所有元とする。
+workflowやpreviewが成功しただけでは公開前ゲート通過としない。
 
-## 3. マージとリリース
+## 4. mergeとrelease SHA
 
-1. PR番号、base、head、CI、mergeabilityを再照合。
-2. 条件成立後にDraftをReady化。
-3. PR経由で通常merge。`main`直接pushは禁止。
-4. GitHub `main`とPR result SHAを再取得。
-5. result SHAをrelease SHAとして固定。
-6. annotated tagをrelease SHAへ作成。
-7. `tag^{commit}`がrelease SHAと一致することを確認。
-8. tagだけを通常push。
-9. remote tagを再取得し、targetを確認。
-10. 同じtag・release SHAでGitHub Releaseを作成。
-11. `main` pushで起動したGitHub Pages workflowを確認。
-12. build、browser smoke、deploy成功後、正式URLを確認。
-
-既存tagの移動、上書き、削除は禁止。失敗時もforce操作を使わない。
-
-## 4. GitHub Pages公開確認
-
-公開成功には次が必要。
-
-- workflow build：success
-- browser smoke：success
-- deploy：success
-- Pagesが返したURLが正式URLと一致
-- 公開HTMLのrelease SHAがrelease SHAと一致
-- 主要assetのHTTP 404が0
-- console errorが0
-- fresh saveと既存saveの基本導線が動作
-
-workflowの実行成功だけで、ゲーム公開成功と断定しない。
-
-## 5. 公開後QA
-
-対応Issueで定めた端末・導線を正式URL上で確認する。
-
-最低限：
-
-- タイトルとversion
-- fresh save
-- 既存save続行
-- 主要画面遷移
-- 全公開ステージ
-- 再読込後の進行保持
-- 音声有効化、BGM、SE
-- 指定スマートフォンviewport
-- console error 0
-- 主要asset 404 0
-
-完了後、IssueとGitHub Releaseへrelease SHA、tag、workflow run、正式URL、QA結果を記録する。
-
-## 6. ロールバック
-
-重大不具合時：
-
-1. 対応Issueを再open。
-2. 直前の正常release SHAとtagを確認。
-3. 問題mergeを打ち消す通常のrevert PRを作成。
-4. CIと必須QAを通す。
-5. revert PRを通常merge。
-6. GitHub Pages deployment成功を確認。
-7. 正式URLで復旧確認。
+1. PR #38のstate、draft、base、head、CI、mergeabilityを再取得。
+2. expected head SHAを固定。
+3. PRをReady化。
+4. PR経由で通常merge。
+5. merge結果のSHAを取得。
+6. head SHAではなくmerge result SHAをrelease SHAとする。
+7. `main`がrelease SHAを指すことを確認。
 
 禁止：
 
+- `main`直接push
 - force push
-- `main`の巻き戻しpush
-- tagの移動
-- Releaseの履歴改変で問題を隠す
+- 共有履歴rebase・amend
+- head SHAをrelease SHAとして誤記
 
-## 7. 正式bundle
+## 5. tagとGitHub Release
 
-必要なリリースでは、release SHAとannotated tagを基準にbundleを作成できる。
+1. release SHAへannotated tag `v0.7.0`を作成。
+2. tagを通常push。
+3. `v0.7.0^{commit}`がrelease SHAと一致することを確認。
+4. GitHub Releaseを作成。
+5. Release notesへ変更内容、save migration、公開URL、既知事項を記載。
 
-- clean mirror cloneまたはbare repositoryを入力元にする
-- 日常checkoutで`--all`を使わない
-- `refs/heads/main`と対象tagだけを明示
-- `main`と`tag^{commit}`がrelease SHAに一致することを事前確認
-- repository外の新規パスへ出力
-- 既存bundleを上書きしない
-- `git bundle verify`成功
-- `git bundle list-heads`でmainとtagを確認
-- SHA-256、サイズ、作成日時、release SHAを記録
+既存tagを移動・上書きしない。
 
-例：
+## 6. GitHub Pages deployment
 
-```bash
-git bundle create <new-path>.bundle refs/heads/main refs/tags/vX.Y.Z
-git bundle verify <new-path>.bundle
-git bundle list-heads <new-path>.bundle
-sha256sum <new-path>.bundle
-```
+`main` pushで`GitHub Pages Release` workflowを起動する。
 
-同一PC内だけのbundleは独立バックアップではない。必要な場合は別デバイスまたは別の非公開保存先へ複製し、SHA-256を再照合する。
+確認：
 
-## 8. bundleからの復元
+- production build成功
+- static Pages build成功
+- browser smoke成功
+- Pages artifact upload成功
+- deploy成功
+- environment URLが正式URLと一致
+- 公開HTMLのreleaseメタ情報がrelease SHAと一致
 
-- 既存checkoutを上書きしない
-- 新規ディレクトリへ隔離clone
-- SHA-256、`bundle verify`、`bundle list-heads`を先に確認
-- `main`と`tag^{commit}`を期待するrelease SHAと照合
-- GitHubを別remoteとして追加し、読み取り比較
-- 復元確認とGitHubへのpushを別操作として扱う
-- dependencies、test、Lint、buildを再実行
-- GitHub Pagesの再公開は正常なPRと`main` mergeで行う
+失敗した場合はIssueを閉じず、原因をfeature branchまたは新しい修正PRで解消する。
 
-## 9. 記録先
+## 7. 一般プレイヤー向け公開確認
 
-- 製品判断：対応するプロデューサー決定台帳
-- 実行順・権限：対応する実行ランブック
-- 現在のrelease SHA、tag、Release、GitHub Pages URL：`PROJECT_STATE.md`
-- 実行ログ、QA、承認、障害：対応Issue・PR
-- 公開配布物とrelease notes：GitHub Release
+公開完了は認証済みの開発者ブラウザだけで判定しない。
+
+正式URLを次の条件で確認する。
+
+- GitHubへログインしていない新規ブラウザ相当
+- Cookie、localStorage、IndexedDB、service worker、cacheなし
+- 認証ヘッダーなし
+- 直接URL入力
+
+最低確認：
+
+- HTTP成功
+- 認証要求、404、access deniedなし
+- タイトル表示
+- Version 0.7.0表示
+- 主要JS、CSS、画像、音声取得成功
+- fresh saveで物語開始
+- マップ、編成、Stage 1開始
+- console error 0
+
+アクセス制限で一般プレイヤーが開けない場合、deployment successでも正式公開失敗とする。
+
+## 8. 公開後QA
+
+- fresh save
+- v2〜v4 save migration
+- プロローグ
+- マップ、編成、調達
+- Stage 1〜6
+- TAKUYA撃破後の残存敵
+- ユニット役割
+- コスト経済
+- BGM・SE
+- 再読込
+- 844×390
+- 844×340
+- WebKit iPhone相当profile
+- 物理iPhone Safari
+- asset 404 0
+- console error 0
+
+公開後QAと物理iPhone確認の完了前にIssue close・branch削除を行わない。
+
+## 9. ロールバック
+
+重大不具合時：
+
+1. Issue #37を閉じない、または再open。
+2. 直前の正常release SHAを特定。
+3. 不具合mergeを通常のrevert PRで戻す。
+4. revert PRを通常merge。
+5. GitHub Pages workflowを確認。
+6. 正式URLと匿名アクセスを再確認。
+7. 原因修正は別の通常PRで行う。
+
+禁止：
+
+- `main`のforce巻戻し
+- tag移動
+- Release履歴の改変による隠蔽
+- ChatGPT Sitesへ一時退避して正式公開扱いにすること
+
+## 10. バックアップ
+
+リリース前に必要に応じてrepository bundleを作成する。
+
+- release SHAを含むこと
+- SHA-256を記録
+- `git bundle verify`
+- `git bundle list-heads`
+- 新規cloneまたは隔離directoryで復元確認
+
+バックアップの存在だけで復元可能と断定しない。
+
+## 11. 最終記録
+
+- release SHA
+- merge commit
+- annotated tag
+- GitHub Release URL
+- workflow run
+- 正式URL
+- 公開HTML release SHA
+- 匿名アクセス結果
+- 公開後QA
+- 物理iPhone結果
+- rollback要否
+- Issue #37・PR #38状態
+- branch cleanup
+- ChatGPT Sites未更新
