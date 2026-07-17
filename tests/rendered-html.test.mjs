@@ -143,7 +143,7 @@ test("server-renders the 0.6.0 campaign title as the formal entry point", async 
   assert.match(html, /<small>にしじんせいきまつものがたり<\/small>/);
   assert.match(html, /<h1><span>西新<\/span><b>世紀末物語<\/b><\/h1>/);
   assert.match(html, /<p>アーリーアクセス版<\/p>/);
-  assert.match(html, /<span>物語を始める<\/span><small>序章　新たな世界の始まり<\/small>/);
+  assert.match(html, /<span>セーブ確認中<\/span><small>序章　新たな世界の始まり<\/small>/);
   assert.doesNotMatch(html, /BOSS STAGE LOADOUT|CRAWLER SYSTEM CHECK|Three-lane wasteland battlefield/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
@@ -171,7 +171,7 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(screens, /className="result-unlocks"[\s\S]*新たな戦力を解放/);
   assert.match(game, /newlyUnlockedUnitIds\.map/);
   assert.match(game, /newlyUnlockedStageIds\.map/);
-  assert.match(game, /resolveStageResult\(campaignSave,[\s\S]*if \(!localQaResult\) \{[\s\S]*writeCampaignSave\(campaignStorageFor\(window\), "nishijin-campaign-v1", serializeCampaignSave\(resolved\.save\)\)[\s\S]*setCampaignSave\(resolved\.save as CampaignSave\)/);
+  assert.match(game, /resolveStageResult\(campaignSave,[\s\S]*if \(!localQaResult\) \{[\s\S]*writeCampaignSave\(campaignStorageFor\(window\), CAMPAIGN_SAVE_KEY, serialized\)[\s\S]*writeCampaignBackup\(indexedDbFor\(window\), CAMPAIGN_SAVE_KEY, serialized\)[\s\S]*setCampaignSave\(resolved\.save as CampaignSave\)/);
 
   assert.match(game, /if \(resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)[\s\S]*resolveLocalQaScenario\(window\.location\.hostname, window\.location\.search\)\) return;/);
   assert.match(game, /unlocked: Boolean\(qaMode \|\| qaScenario\) \|\| isUnitUnlocked/);
