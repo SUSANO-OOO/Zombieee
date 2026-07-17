@@ -30,24 +30,48 @@ ChatGPT Sitesは0.6.5以前の旧公開先である。
 
 `main`の現在値は作業開始時にGitHub APIまたは更新済みremote refで再取得する。この文書のSHAを永久に最新として扱わない。
 
-## 3. Version 0.7.0候補
+## 3. Version 0.7.0作業状態
 
 - Issue：[Issue #37](https://github.com/SUSANO-OOO/Zombieee/issues/37)
 - PR：[Draft PR #38](https://github.com/SUSANO-OOO/Zombieee/pull/38)
 - branch：`feat/0.7.0-unit-collection`
 - target schema：v5
-- 状態：実装・画像承認・QA・公開を同じミッションで進める候補
+- 実行方式：実装、画像承認、QA、正式公開まで同じ一気通貫ミッション
 
 最上位文書：
 
 1. `PRODUCER_DECISIONS_0.7.0.md`
 2. `IMPLEMENTATION_DIRECTIVE_0.7.0.md`
+3. Issue #37の実行タスク台帳
 
-0.7.0の正式リリースまでは、feature branchの内容を公開済みとして扱わない。
+現在の正確な状態：
 
-## 4. 0.7.0公開権限
+- 製品判断：ロック済み
+- 公開権限：ゲート通過後のGitHub Pages公開までCodexへ委任済み
+- 実行タスク：P0〜P7、R1〜R4へ分解済み
+- 画像品質：一枚承認、identity lock、派生同一性、実ゲーム統合品質を固定済み
+- ゲームコード実装：未開始
+- 正式画像制作：未開始
+- Stage 4〜6実装：未開始
+- PR #38：文書、台本、運用、CI、GitHub Pages設定が中心
 
-Issue #37と0.7.0実行ランブックにより、公開前ゲート通過後の次の操作をCodexへ委任する。
+0.7.0の正式リリースまでは、feature branchの内容を公開済みまたは実装完了として扱わない。
+
+## 4. Codexの最初の工程
+
+1. リモート最新状態を取得
+2. PR #38のbase、head、draft、mergeability、CIを確認
+3. 最新`origin/main`をfeature branchへ通常merge
+4. PR #39のSafari保存修正取込みを確認
+5. baseline build、test、Lint、diff check
+6. 現行Stage 1〜3のfresh save、既存save、音響、844×390、844×340を確認
+7. 変更予定モジュールと既知不具合をPR #38へ記録
+
+P0完了前に本実装へ入らない。
+
+## 5. 0.7.0公開権限
+
+公開前ゲート通過後、Codexへ次を委任する。
 
 - PR Ready化
 - PRを通した通常merge
@@ -62,9 +86,13 @@ Issue #37と0.7.0実行ランブックにより、公開前ゲート通過後の
 
 ChatGPT Sitesへのdeploymentは委任範囲に含めない。
 
-## 5. 公開前阻害条件
+## 6. 公開前阻害条件
 
+- P0〜P7未完了
+- R1〜R4のHighまたはMedium未解消
 - 未承認画像がある
+- identity lockまたは派生同一性が未確認
+- 承認画像の実ゲーム統合品質が未確認
 - build、test、Lint、diff check、CI失敗
 - 欠落asset、参照切れ、console error
 - save migration・破損復旧失敗
@@ -73,13 +101,22 @@ ChatGPT Sitesへのdeploymentは委任範囲に含めない。
 - TAKUYA撃破後を含む敵素通り
 - 表示とhitboxの不一致
 - Stage 1〜6の進行不能
+- ユニット役割の重複・無価値化
+- コスト上限拡張による難度崩壊
 - 844×390、844×340受入未完了
 - WebKit iPhone相当profile、touch、safe area、回転受入未完了
-- 独立review HighまたはMedium未解消
 
 物理iPhone Safariは正式URL公開後、Issue closeとbranch削除の前に必須確認する。重大不具合時は通常のrevert PRで復旧する。
 
-## 6. 公開後状態の更新
+## 7. 画像承認記録
+
+- machine-readable manifest：`docs/ASSET_APPROVALS_0.7.0.json`
+- 承認記録：Asset ID、revision、承認者、承認日時、承認コメント、commit、最終パス
+- 人物基準アート承認後はidentity lock
+- 派生画像は元の承認済み画像との比較証拠を必須とする
+- 個別画像承認だけで実ゲーム統合を合格にしない
+
+## 8. 公開後状態の更新
 
 0.7.0公開後に次を記録する。
 
@@ -89,6 +126,8 @@ ChatGPT Sitesへのdeploymentは委任範囲に含めない。
 - GitHub Pages workflow run
 - 正式URL
 - 公開HTMLのrelease SHA
+- P0〜P7完了表
+- R1〜R4レビュー結果
 - 公開後QA
 - 物理iPhone Safari結果
 - rollbackの要否
@@ -97,7 +136,7 @@ ChatGPT Sitesへのdeploymentは委任範囲に含めない。
 
 未完了工程を完了済みとして先書きしない。
 
-## 7. 歴史的リリース
+## 9. 歴史的リリース
 
 ### v0.5.0
 
@@ -116,7 +155,7 @@ ChatGPT Sitesへのdeploymentは委任範囲に含めない。
 
 正確な現在公開SHAはworkflowと正式URLで確認する。
 
-## 8. 復元
+## 10. 復元
 
 - `docs/RELEASE_BACKUP_RECOVERY.md`に従う
 - 既存checkoutを上書きせず、新規cloneまたは隔離復元
@@ -125,11 +164,12 @@ ChatGPT Sitesへのdeploymentは委任範囲に含めない。
 - GitHub Pages再公開は正常なPRと`main` mergeで行う
 - ChatGPT Sitesを復元経路として使用しない
 
-## 9. 記録の所有元
+## 11. 記録の所有元
 
 - 製品判断：バージョン別プロデューサー決定台帳
 - 実行順と権限：バージョン別実行ランブック
+- 実行進捗：Issue #37
 - 現在の公開状態：本書
-- 実装・承認・QAログ：対象Issue・PR
+- 実装・承認・QA・release証拠：PR #38
 - 公開配布物：GitHub Release
 - deployment：GitHub Actions／GitHub Pages
