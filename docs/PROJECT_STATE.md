@@ -47,7 +47,7 @@ ChatGPT Sitesは0.6.5以前の旧公開先である。
 
 ## 4. 0.7.0公開権限
 
-Issue #37と0.7.0実行ランブックにより、全ゲート通過後の次の操作をCodexへ委任する。
+Issue #37と0.7.0実行ランブックにより、公開前ゲート通過後の次の操作をCodexへ委任する。
 
 - PR Ready化
 - PRを通した通常merge
@@ -56,12 +56,13 @@ Issue #37と0.7.0実行ランブックにより、全ゲート通過後の次の
 - GitHub Release
 - GitHub Pages deployment確認
 - 正式URLでの公開後QA
-- Issue #37 close
+- 物理iPhone Safari確認
+- 成功後のIssue #37 close
 - 公開後確認済みbranchの安全な削除
 
 ChatGPT Sitesへのdeploymentは委任範囲に含めない。
 
-## 5. 0.7.0リリース阻害条件
+## 5. 公開前阻害条件
 
 - 未承認画像がある
 - build、test、Lint、diff check、CI失敗
@@ -72,8 +73,11 @@ ChatGPT Sitesへのdeploymentは委任範囲に含めない。
 - TAKUYA撃破後を含む敵素通り
 - 表示とhitboxの不一致
 - Stage 1〜6の進行不能
-- 844×390、844×340、物理iPhone Safari受入未完了
+- 844×390、844×340受入未完了
+- WebKit iPhone相当profile、touch、safe area、回転受入未完了
 - 独立review HighまたはMedium未解消
+
+物理iPhone Safariは正式URL公開後、Issue closeとbranch削除の前に必須確認する。重大不具合時は通常のrevert PRで復旧する。
 
 ## 6. 公開後状態の更新
 
@@ -86,6 +90,7 @@ ChatGPT Sitesへのdeploymentは委任範囲に含めない。
 - 正式URL
 - 公開HTMLのrelease SHA
 - 公開後QA
+- 物理iPhone Safari結果
 - rollbackの要否
 - Issue #37・PR #38の最終状態
 - branch cleanup
