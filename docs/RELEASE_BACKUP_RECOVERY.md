@@ -9,8 +9,8 @@
 - repository：`SUSANO-OOO/Zombieee`
 - branch：`main`
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
-- workflow：`.github/workflows/github-pages-playtest.yml`
-- `main` pushでbuild、browser smoke、Pages deployment、Issue報告を実行
+- workflow：`.github/workflows/github-pages-release.yml`
+- `main` pushでbuild、browser smoke、Pages deploymentを実行
 
 ChatGPT Sitesは旧公開先。今後のdeployment、正式QA、障害切り分け、公開判定に使用しない。
 
