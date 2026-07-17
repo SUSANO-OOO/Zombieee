@@ -19,7 +19,14 @@ import { createAudioMixer, createAudioRequestGate, runGuardedAudioRequest } from
 import { BattleBarkAuditScreen } from "./BattleBarkAuditScreen";
 import { SpriteAuditScreen } from "./SpriteAuditScreen";
 import { createBattleResultId, createBattleSessionTransition, resolvePauseAction } from "./battleSession.js";
-import { campaignStorageFor, readCampaignSave, writeCampaignSave } from "./campaignStorage.js";
+import {
+  campaignStorageFor,
+  indexedDbFor,
+  readCampaignBackup,
+  readCampaignSave,
+  writeCampaignBackup,
+  writeCampaignSave,
+} from "./campaignStorage.js";
 import { claimDefeatResolution } from "./defeatLedger.js";
 import { CampaignScreens, type CampaignResultView, type CampaignScreen, type StageScreenView, type SupplyScreenView, type UnitScreenView } from "./CampaignScreens";
 import {
@@ -531,6 +538,9 @@ type BattleResult = {
   bossDefeated: boolean;
   enemyBaseDestroyed: boolean;
 };
+
+type SavePersistenceState = "checking" | "saved" | "recovered" | "unavailable";
+const CAMPAIGN_SAVE_KEY = "nishijin-campaign-v1";
 type AudioUnlockUiState = "idle" | "pending" | "success" | "failed";
 
 type SpriteMap = Record<string, HTMLImageElement>;
@@ -2078,6 +2088,7 @@ export function AshfallGame() {
   const [formationKinds, setFormationKinds] = useState<UnitKind[]>(["brawler", "scout", "ranger", "medic"]);
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
   const [saveHydrated, setSaveHydrated] = useState(false);
+  const [savePersistence, setSavePersistence] = useState<SavePersistenceState>("checking");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
   const [hud, setHud] = useState<Hud>({
     missionType: "assault", energy: 70, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
@@ -2097,8 +2108,12 @@ export function AshfallGame() {
   }, []);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const loaded = deserializeCampaignSave(readCampaignSave(campaignStorageFor(window), "nishijin-campaign-v1")) as CampaignSave;
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      const localSerialized = readCampaignSave(campaignStorageFor(window), CAMPAIGN_SAVE_KEY);
+      const backupSerialized = localSerialized ? "" : await readCampaignBackup(indexedDbFor(window), CAMPAIGN_SAVE_KEY);
+      if (cancelled) return;
+      const loaded = deserializeCampaignSave(localSerialized || backupSerialized) as CampaignSave;
       const legacyQa = resolveLocalQaMode(window.location.hostname, window.location.search) as QaMode | null;
       const campaignQa = resolveLocalQaScenario(window.location.hostname, window.location.search);
       const localQaAudio = Boolean(legacyQa || campaignQa);
@@ -2109,9 +2124,13 @@ export function AshfallGame() {
       setBgmMuted(localQaAudio ? false : !loaded.settings.bgmEnabled);
       sfxMutedRef.current = localQaAudio ? false : !loaded.settings.sfxEnabled;
       setSfxMuted(localQaAudio ? false : !loaded.settings.sfxEnabled);
+      if (!localSerialized && backupSerialized) setSavePersistence("recovered");
       setSaveHydrated(true);
     }, 0);
-    return () => window.clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -2120,7 +2139,16 @@ export function AshfallGame() {
     // conveniences into ordinary campaign progress.
     if (resolveLocalQaMode(window.location.hostname, window.location.search)
       || resolveLocalQaScenario(window.location.hostname, window.location.search)) return;
-    writeCampaignSave(campaignStorageFor(window), "nishijin-campaign-v1", serializeCampaignSave(campaignSave));
+    let cancelled = false;
+    const serialized = serializeCampaignSave(campaignSave);
+    const localSaved = writeCampaignSave(campaignStorageFor(window), CAMPAIGN_SAVE_KEY, serialized);
+    void writeCampaignBackup(indexedDbFor(window), CAMPAIGN_SAVE_KEY, serialized).then((backupSaved) => {
+      if (cancelled) return;
+      setSavePersistence(localSaved || backupSaved ? "saved" : "unavailable");
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [campaignSave, saveHydrated]);
 
   useEffect(() => {
@@ -3382,7 +3410,11 @@ export function AshfallGame() {
         // exposing the result UI. A reload cannot replay rewards in the gap
         // between React state publication and the passive save effect.
         if (!localQaResult) {
-          writeCampaignSave(campaignStorageFor(window), "nishijin-campaign-v1", serializeCampaignSave(resolved.save));
+          const serialized = serializeCampaignSave(resolved.save);
+          const localSaved = writeCampaignSave(campaignStorageFor(window), CAMPAIGN_SAVE_KEY, serialized);
+          void writeCampaignBackup(indexedDbFor(window), CAMPAIGN_SAVE_KEY, serialized).then((backupSaved) => {
+            setSavePersistence(localSaved || backupSaved ? "saved" : "unavailable");
+          });
         }
         setCampaignSave(resolved.save as CampaignSave);
       }
@@ -4953,6 +4985,7 @@ export function AshfallGame() {
           assetsReady={assetsReady}
           assetError={assetError}
           hasCampaignSave={campaignSave.campaignStarted}
+          savePersistence={savePersistence}
           readStoryEventIds={campaignSave.readStoryEventIds}
           autoSkipReadStory={campaignSave.autoSkipReadStory}
           onBegin={beginCampaign}
@@ -4971,6 +5004,10 @@ export function AshfallGame() {
           onReloadAssets={() => window.location.reload()}
         />}
       </section>
+      {savePersistence === "unavailable" && <div className="save-persistence-warning" role="alert">
+        <b>セーブを端末へ保存できません</b>
+        <span>進行すると再読み込み後に失われるため、Safariの通常タブで開き直してください。</span>
+      </div>}
       <div className="rotate-notice"><span>↻</span><b>スマホを横向きにしてください</b><small>この作戦は横画面に最適化されています</small></div>
     </main>
   );
