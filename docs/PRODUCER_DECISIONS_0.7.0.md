@@ -37,7 +37,7 @@ Codexは同じ0.7.0ミッション内で次まで実行できる。
 - 画像一枚ごとの承認依頼
 - CI、隔離プレビュー、実ブラウザQA
 - 独立read-onlyレビューと修正
-- 全リリースゲート通過後のPR Ready化
+- 全公開前ゲート通過後のPR Ready化
 - PR #38の`main`への通常merge
 - `v0.7.0` annotated tag
 - GitHub Release作成
@@ -52,7 +52,7 @@ Codexは同じ0.7.0ミッション内で次まで実行できる。
 - 公開履歴のrebase・amend
 - `main`への直接push
 - 未承認画像の正式採用
-- リリースゲート未達でのReady化・merge・公開
+- 公開前ゲート未達でのReady化・merge・公開
 - ChatGPT Sitesへの新規deployment
 - saveを破壊する移行
 
@@ -177,7 +177,7 @@ Codexは同じ0.7.0ミッション内で次まで実行できる。
 - Yずれ、レーン移動、target消失後に次tickで再取得
 - 実ブラウザで敵素通り再現0件
 
-敵素通り、非現実的な接触、表示とhitboxの不一致はリリース阻害条件。
+敵素通り、非現実的な接触、表示とhitboxの不一致は公開阻害条件。
 
 ## 11. 救助・難易度・音響
 
@@ -190,7 +190,10 @@ Codexは同じ0.7.0ミッション内で次まで実行できる。
 ## 12. スマートフォンとsave
 
 - スマートフォンが主対象
-- 844×390、844×340、物理iPhone Safariを最優先
+- 公開前に844×390、844×340、Playwright WebKitのiPhone相当profile、touch、safe area、回転を必須検証
+- 利用可能な物理iPhoneがある場合は公開前にも確認
+- 正式URL公開後、Issue closeとbranch削除の前に物理iPhone Safariで必須確認
+- 物理iPhone確認に失敗した場合はIssueを閉じず、通常のrevert PRで復旧
 - PCは基本回帰確認
 - schema v5
 - v2〜v4 migration
@@ -200,7 +203,7 @@ Codexは同じ0.7.0ミッション内で次まで実行できる。
 - 手動バックアップ、破損データ書出し、完全初期化
 - 星、報酬、加入の二重適用禁止
 
-## 13. リリースゲート
+## 13. 公開前ゲート
 
 Ready化・merge・公開へ進む条件：
 
@@ -212,7 +215,7 @@ Ready化・merge・公開へ進む条件：
 - save migrationと破損復旧が成立
 - 手動戦術UI残存0
 - TAKUYA撃破後を含む敵素通り再現0
-- 844×390、844×340、物理iPhone Safariの受入完了
+- 844×390、844×340、WebKit iPhone相当profileの受入完了
 - 独立read-onlyレビュー High 0／Medium 0
 
 公開後：
@@ -221,4 +224,5 @@ Ready化・merge・公開へ進む条件：
 - 正式URLのrelease SHAが`main`のmerge結果と一致
 - fresh saveと既存saveで開始・続行・Stage 1〜6・再読込を確認
 - 主要画像・音声の404が0
-- 重大不具合時は直前tag／merge commitへ通常のrevertで戻し、force操作を使わない
+- 物理iPhone Safariの確認完了後にIssue closeとbranch削除
+- 重大不具合時は通常のrevert PRで戻し、force操作を使わない
