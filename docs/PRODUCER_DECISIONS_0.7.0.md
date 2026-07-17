@@ -27,8 +27,10 @@ Version 0.7.0で変更してはならない製品判断だけを記録する。
 - ChatGPT Sitesは旧公開先。0.7.0以降のデプロイ、QA、正式判定、障害切り分けに使用しない
 - 旧Sites URLはGitHub Pages切替確認後に更新停止。非公開化できる場合は非公開化し、できない場合も正式URLとして案内しない
 - 公開先を二重運用しない
+- GitHub Pagesのdeployment成功だけで一般公開成功としない。GitHub未ログインの新規ブラウザ相当で匿名アクセスを確認する
+- private repositoryのまま匿名公開できない場合、Codexはrepository visibilityを変更しない。Issue #37をopenのまま、原因、確認結果、安全な選択肢を報告して停止する
 
-## 3. Codexへの権限委任
+## 3. Codexへの権限委任と自律判断
 
 Codexは同じ0.7.0ミッション内で次まで実行できる。
 
@@ -46,6 +48,28 @@ Codexは同じ0.7.0ミッション内で次まで実行できる。
 - Issue #37の最終報告とclose
 - 公開後確認完了後のfeature branch削除
 
+Codexは、固定済み製品判断と安全境界を維持する限り、次を確認なしで自律決定できる。
+
+- 内部アーキテクチャ、モジュール分割、型、関数、データ構造
+- AI、save、描画、音響、アセットpipelineの具体的な実装方式
+- 技術的に同等または品質が高い代替手段
+- テスト方式、seed、fixture、シミュレーション、証拠形式
+- 非依存タスクの並行順とフェーズ内の作業順
+- 許容範囲内の数値調整
+- 影響範囲を限定したrefactor、性能改善、アクセシビリティ改善
+- 一つのGitHub操作手段が使えない場合の、connector、`gh`、通常gitによる安全な代替
+
+Codexがプロデューサーへ確認して停止するのは次に限る。
+
+- 固定済みの人物、物語、加入順、役割、名称、画風、公開先を変更する必要がある
+- 許容範囲外の数値変更が必要
+- 一枚単位の画像承認が必要
+- repository visibility、課金、secrets、外部サービス契約、法務・ライセンス判断が必要
+- データ消失、履歴破壊、force操作など不可逆または危険な変更が必要
+- GitHub Pagesを一般プレイヤーへ匿名公開できず、安全な技術代替が存在しない
+
+上記以外の技術的な迷い、軽微なUI調整、不具合修正、テスト追加、内部構造変更では逐次質問せず、自律的に実装・検証する。
+
 禁止：
 
 - force push
@@ -55,6 +79,8 @@ Codexは同じ0.7.0ミッション内で次まで実行できる。
 - 公開前ゲート未達でのReady化・merge・公開
 - ChatGPT Sitesへの新規deployment
 - saveを破壊する移行
+- repository visibilityの変更
+- secrets、課金、外部契約の無断変更
 
 ## 4. 作品と主人公
 
@@ -244,9 +270,10 @@ Codexは同じ0.7.0ミッション内で次まで実行できる。
 
 - スマートフォンが主対象
 - 公開前に844×390、844×340、Playwright WebKitのiPhone相当profile、touch、safe area、回転を必須検証
-- 利用可能な物理iPhoneがある場合は公開前にも確認
-- 正式URL公開後、Issue closeとbranch削除の前に物理iPhone Safariで必須確認
-- 物理iPhone確認に失敗した場合はIssueを閉じず、通常のrevert PRで復旧
+- 利用可能な物理iPhoneまたは実機クラウドがある場合は公開前または公開後に確認する
+- 物理iPhone・実機クラウドが利用できない場合、844×390、844×340、Playwright WebKitのiPhone相当profile、touch、safe area、回転、画面ロック・復帰、タブ復帰の全成功を正式代替ゲートとし、公開・Issue close・branch削除まで進めてよい
+- 代替ゲートを使用した場合は、物理実機未確認であることと実施した代替証拠を最終報告へ明記する
+- 物理iPhone確認を実施し重大不具合があった場合はIssueを閉じず、通常のrevert PRで復旧する
 - PCは基本回帰確認
 - schema v5
 - v2〜v4 migration
@@ -275,12 +302,15 @@ Ready化・merge・公開へ進む条件：
 - コスト上限拡張後もStage 1〜6が簡単になりすぎていない
 - 844×390、844×340、WebKit iPhone相当profileの受入完了
 - 段階レビューR1〜R4のHigh／Medium未解消0
+- GitHub Pagesを匿名公開できる見込みをP0で確認済み
 
 公開後：
 
 - GitHub Pages deployment成功
 - 正式URLのrelease SHAが`main`のmerge結果と一致
+- GitHub未ログインの新規ブラウザ相当で、認証要求なし、HTTP成功、主要asset取得、fresh save開始、Stage 1開始を確認
 - fresh saveと既存saveで開始・続行・Stage 1〜6・再読込を確認
 - 主要画像・音声の404が0
-- 物理iPhone Safariの確認完了後にIssue closeとbranch削除
+- 物理iPhone・実機クラウドを利用できない場合は定義済みWebKit代替ゲートの完了を確認
+- private repositoryの匿名公開が不可能な場合は、visibilityを変更せずIssueをopenのまま停止・報告
 - 重大不具合時は通常のrevert PRで戻し、force操作を使わない
