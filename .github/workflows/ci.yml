@@ -42,10 +42,19 @@ jobs:
         run: |
           set -o pipefail
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            git diff --check "$PR_BASE_SHA...$PR_HEAD_SHA" 2>&1 | tee /tmp/diff-check.log
+            git diff --check "$PR_BASE_SHA...$PR_HEAD_SHA" 2>&1 | tee diff-check.log
           else
-            git diff --check "origin/$DEFAULT_BRANCH...HEAD" 2>&1 | tee /tmp/diff-check.log
+            git diff --check "origin/$DEFAULT_BRANCH...HEAD" 2>&1 | tee diff-check.log
           fi
+
+      - name: Upload patch whitespace evidence
+        if: steps.whitespace.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch-whitespace-evidence
+          path: diff-check.log
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Report patch whitespace failure
         if: steps.whitespace.outcome == 'failure' && github.event_name == 'pull_request'
@@ -57,7 +66,7 @@ jobs:
             echo "## Patch whitespace check failed"
             echo
             echo '```text'
-            cat /tmp/diff-check.log
+            cat diff-check.log
             echo '```'
           } > /tmp/diff-check-comment.md
           gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/diff-check-comment.md
