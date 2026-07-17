@@ -510,6 +510,57 @@ test("formation presets enforce one to seven unique owned cards and convert only
   );
 });
 
+test("one-to-seven slot presets remain independent and survive serialization with empty slots", () => {
+  let save = applyStageResult(createDefaultCampaignSave(), STAGE_1, {
+    resultId: "formation-three-preset-roundtrip",
+    won: true,
+    baseHp: 80,
+    baseMaxHp: 100,
+  });
+  const oneUnit = [CAMPAIGN_UNIT_IDS.PAISEN];
+  const threeUnits = [
+    CAMPAIGN_UNIT_IDS.HACHI,
+    CAMPAIGN_UNIT_IDS.MIZUCHI,
+    CAMPAIGN_UNIT_IDS.NAO,
+  ];
+  const sevenUnits = [
+    CAMPAIGN_UNIT_IDS.PAISEN,
+    CAMPAIGN_UNIT_IDS.HACHI,
+    CAMPAIGN_UNIT_IDS.MIZUCHI,
+    CAMPAIGN_UNIT_IDS.NAO,
+    CAMPAIGN_UNIT_IDS.CRAZY_KING,
+    CAMPAIGN_UNIT_IDS.KUMAVERSON,
+    CAMPAIGN_UNIT_IDS.BABAYAGA,
+  ];
+
+  save = setFormationPresetUnits(save, CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_1, oneUnit);
+  save = setFormationPresetUnits(save, CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_2, threeUnits);
+  save = setFormationPresetUnits(save, CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_3, sevenUnits);
+
+  assert.deepEqual(
+    selectFormationPreset(save, CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_1).formationPresets.map(({ unitIds }) => unitIds),
+    [oneUnit, threeUnits, sevenUnits],
+  );
+  assert.deepEqual(
+    getSelectedFormationUnitIds(selectFormationPreset(save, CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_1)),
+    oneUnit,
+  );
+  assert.deepEqual(
+    getSelectedFormationUnitIds(selectFormationPreset(save, CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_2)),
+    threeUnits,
+  );
+  assert.deepEqual(
+    getSelectedFormationUnitIds(selectFormationPreset(save, CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_3)),
+    sevenUnits,
+  );
+
+  const restored = deserializeCampaignSave(serializeCampaignSave(
+    selectFormationPreset(save, CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_2),
+  ));
+  assert.deepEqual(restored.formationPresets.map(({ unitIds }) => unitIds), [oneUnit, threeUnits, sevenUnits]);
+  assert.equal(restored.selectedFormationPresetId, CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_2);
+});
+
 test("migration accepts schema-less and v0 aliases, derives unlocks, and tolerates unknown fields", () => {
   const migrated = migrateCampaignSave({
     version: 0,

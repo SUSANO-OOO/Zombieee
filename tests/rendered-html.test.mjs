@@ -550,10 +550,11 @@ test("applies role focus, marking, finishing, and structure-breach multipliers",
   assert.equal(roleTargetBias("scout", "shade"), -34);
   assert.equal(roleTargetBias("ranger", "spitter"), -42);
   assert.equal(roleTargetBias("ranger", "walker"), 0);
-  assert.equal(roleTargetBias("gunner", "crusher"), -34);
-  assert.equal(roleTargetBias("gunner", "abomination"), -34);
+  assert.equal(roleTargetBias("brute", "crusher"), -46);
+  assert.equal(roleTargetBias("gunner", "crusher"), 0);
+  assert.equal(roleTargetBias("gunner", "walker"), -12);
 
-  assert.equal(humanAttackMultiplier("gunner", "crusher"), 1.3);
+  assert.equal(humanAttackMultiplier("gunner", "crusher"), 1);
   assert.equal(isBrawlerFinisher("brawler", .351), false);
   assert.equal(isBrawlerFinisher("brawler", .35), true);
   assert.equal(isBrawlerFinisher("scout", .2), false);
@@ -561,12 +562,12 @@ test("applies role focus, marking, finishing, and structure-breach multipliers",
   assert.equal(humanAttackMultiplier("brawler", "walker", .35), 1.35);
   assert.equal(humanAttackMultiplier("scout", "runner", 1, true), 1.15);
   assertClose(humanAttackMultiplier("brawler", "walker", .2, true), 1.5525);
-  assertClose(humanAttackMultiplier("gunner", "crusher", 1, true), 1.495);
+  assertClose(humanAttackMultiplier("gunner", "crusher", 1, true), 1.15);
 
   assert.equal(structureDamageMultiplier("scout"), 1);
-  assert.equal(structureDamageMultiplier("brute"), 1.5);
+  assert.equal(structureDamageMultiplier("brute"), 1.75);
   assert.equal(structureDamageMultiplier("brawler"), 1.2);
-  assert.equal(structureDamageMultiplier("gunner"), 1.1);
+  assert.equal(structureDamageMultiplier("gunner"), .9);
   assert.equal(structureDamageMultiplier("medic"), .7);
 
   assert.equal(roleEffectForAction({ unitKind: "scout", targetKind: "runner", targetAlreadyMarked: false }), "scout");
@@ -575,12 +576,13 @@ test("applies role focus, marking, finishing, and structure-breach multipliers",
   assert.equal(roleEffectForAction({ unitKind: "ranger", targetKind: "walker" }), null);
   assert.equal(roleEffectForAction({ unitKind: "brute", targetKind: "walker", holdingFrontline: true }), "brute");
   assert.equal(roleEffectForAction({ unitKind: "brute", targetKind: "walker", holdingFrontline: false }), null);
+  assert.equal(roleEffectForAction({ unitKind: "brute", targetKind: "crusher", holdingFrontline: false }), "brute");
   assert.equal(roleEffectForAction({ unitKind: "brute", action: "structure" }), "brute");
   assert.equal(roleEffectForAction({ unitKind: "brawler", targetKind: "walker", targetHpRatio: .35 }), "brawler");
   assert.equal(roleEffectForAction({ unitKind: "brawler", targetKind: "walker", targetHpRatio: .351 }), null);
   assert.equal(roleEffectForAction({ unitKind: "gunner", targetKind: "crusher" }), "gunner");
   assert.equal(roleEffectForAction({ unitKind: "gunner", targetKind: "abomination" }), "gunner");
-  assert.equal(roleEffectForAction({ unitKind: "gunner", targetKind: "walker" }), null);
+  assert.equal(roleEffectForAction({ unitKind: "gunner", targetKind: "walker" }), "gunner");
   assert.equal(roleEffectForAction({ unitKind: "medic", action: "heal" }), "medic");
   assert.equal(roleEffectForAction({ unitKind: "medic", action: "attack", targetKind: "walker" }), null);
 });
@@ -689,13 +691,15 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.deepEqual(UNIT_CARDS.map(({ kind, desc }) => [kind, desc]), [
     ["scout", "遊撃手・高速迎撃"],
     ["ranger", "射撃手・遠距離射撃"],
-    ["brute", "破砕兵・前線維持"],
+    ["brute", "破砕兵・装甲拠点破壊"],
     ["brawler", "格闘家・素手近接"],
-    ["gunner", "制圧射手・大型制圧"],
-    ["medic", "衛生兵・回復支援"],
+    ["gunner", "制圧射手・直線弾幕"],
+    ["medic", "救護支援・単体治療"],
     ["crazy-king", "狂戦士・密集殲滅"],
     ["kumaverson", "前衛打撃・足止め"],
     ["babayaga", "精密射撃・特殊排除"],
+    ["guardian", "重装盾・被害肩代わり"],
+    ["engineer", "工兵・自動足止め"],
   ]);
 });
 
@@ -1161,9 +1165,9 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /advanceAreaEffects\(\{/);
   assert.match(game, /索敵マーク/);
   assert.match(game, /対・毒吐き/);
-  assert.match(game, /前線保持/);
+  assert.match(game, /対装甲破砕/);
   assert.match(game, /フィニッシュ/);
-  assert.match(game, /重装破砕/);
+  assert.match(game, /直線制圧/);
   assert.match(game, /value: "救護"/);
   assert.doesNotMatch(game, /effect: f\.kind as RoleEffect/);
   assert.match(game, /roleEffectForAction\(\{[\s\S]*targetAlreadyMarked: target\.marked > 0[\s\S]*holdingFrontline: f\.kind === "brute" && target\.targetId === f\.id/);
@@ -1304,6 +1308,19 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(game, /for \(const lane of \[0, 1, 2\] as Lane\[\]\)[\s\S]*index < 3/);
   assert.match(game, /g\.crawlerAbility = createCrawlerAbilityRuntime\(1\)/);
   assert.match(game, /function prepareStressQa[\s\S]*index < 5[\s\S]*index < 8[\s\S]*index < 18/);
+  assert.match(game, /const unitKinds: UnitKind\[\] = \[[^\]]*"guardian", "engineer"\]/);
+  assert.match(game, /function prepareRolesQa[\s\S]*g\.barricadeVulnerable = true[\s\S]*g\.barricadeMaxHp = Math\.max\(BARRICADE_MAX_HP, 5000\)/);
+  assert.match(game, /guardianAssault\.maxHp = 1600[\s\S]*guardianAssault\.targetId = brawler\.id/);
+  assert.match(game, /raiderTarget\.maxHp = 1600/);
+  assert.match(game, /fighter\.maxHp = 420[\s\S]*fighter\.hp = 380/);
+  assert.match(game, /tataraTarget\.maxHp = 300/);
+  assert.match(game, /resolveGantetsuSteadfastDamage\([\s\S]*target\.guardStandRemaining/);
+  assert.match(game, /resolveTataraStrikeDamage\(f\.damage, tataraTarget\)[\s\S]*humanAttackMultiplier\(f\.kind, target\.kind, targetHpRatio, target\.marked > 0\)/);
+  assert.match(game, /effectDistance\(candidate, f\) <= preview\.radius/);
+  assert.match(game, /data-portrait=\{portraitArt \? "approved" : "diagnostic"\}/);
+  assert.match(game, /style=\{portraitArt \? \{ "--unit-card-art": `url\('\$\{portraitArt\}'\)` \} as CSSProperties : undefined\}/);
+  assert.match(game, /className="diagnostic-portrait" aria-hidden="true">\{card\.kind === "guardian" \? "盾" : "工"\}/);
+  assert.match(css, /\.diagnostic-portrait \{[^}]*display:grid; place-items:center;[^}]*background:linear-gradient\(155deg,#354443,#18201f\);/);
   assert.match(game, /g\.supportGauge = 0/);
   assert.match(game, /takuya\.hp = 420/);
   assert.match(game, /takuya\.abilityCooldown = 0/);

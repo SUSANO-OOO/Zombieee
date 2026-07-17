@@ -184,6 +184,27 @@ import {
   supportGaugeReward,
   triggerCameraShake,
 } from "./gameRules.js";
+import {
+  UNIT_ROLE_TUNING,
+  advanceCrazyKingMomentum,
+  advanceNaoProtection,
+  advanceRaiderSuppression,
+  applyRaiderShots,
+  applyRaiderSuppression,
+  coolRaiderHeat,
+  crazyKingAttackInterval,
+  createMonkeyTrap,
+  naoDamageAfterProtection,
+  raiderCanFire,
+  resolveGantetsuInterception,
+  resolveGantetsuSteadfastDamage,
+  resolveNaoHealing,
+  resolveTataraStrikeDamage,
+  selectNaoHealTarget,
+  selectRaiderLineTargets,
+  tataraTargetSpecialty,
+  triggerMonkeyTrap,
+} from "./unitRoleMechanics.js";
 
 const W = 960;
 const H = 540;
@@ -350,6 +371,25 @@ type Fighter = {
   abilityCooldown: number;
   abilityWindup: number;
   attackSequence: number;
+  damageReductionRemaining: number;
+  damageReductionMultiplier: number;
+  healFocusTargetId: number | null;
+  healFocusRemaining: number;
+  comboHits: number;
+  comboWindow: number;
+  weaponHeat: number;
+  overheated: boolean;
+  suppressionStacks: number;
+  suppressedRemaining: number;
+  suppressionMultiplier: number;
+  guardStandRemaining: number;
+  guardStandAvailable: boolean;
+  engineerTrapReady: boolean;
+  engineerTrapX: number;
+  engineerTrapLane: Lane | null;
+  engineerTrapCooldown: number;
+  armorBreakStacks: number;
+  armorBrokenRemaining: number;
   burning?: boolean;
   slowMultiplier?: number;
 };
@@ -420,6 +460,20 @@ type BattleBarkRuntime = ReturnType<typeof createBattleBarkRuntime>;
 type BattleBark = BattleBarkRuntime["active"][number];
 type PlacementIndicator = { lane: Lane; x: number; y: number; valid: boolean; reason: string; radius: number; innerRadius?: number; action: SelectedAction };
 
+type RoleMetrics = {
+  naoHealing: number;
+  naoPreventedDamage: number;
+  crazyKingSecondaryHits: number;
+  crazyKingMaxTier: number;
+  raiderPierceHits: number;
+  raiderSuppressionApplications: number;
+  raiderOverheats: number;
+  tataraHeavyDamage: number;
+  tataraStructureDamage: number;
+  gantetsuRedirectedDamage: number;
+  monkeyTrapTriggers: number;
+};
+
 type Game = {
   definition: BattleDefinition;
   resultId: string;
@@ -489,6 +543,7 @@ type Game = {
   bossDefeated: boolean;
   bossDefeatPending: boolean;
   qaBarks: boolean;
+  roleMetrics: RoleMetrics;
 };
 
 type Hud = {
@@ -665,6 +720,19 @@ type SfxRuntime = {
 };
 
 const emptyCooldowns = () => Object.fromEntries(cards.map((card) => [card.kind, 0])) as Record<UnitKind, number>;
+const emptyRoleMetrics = (): RoleMetrics => ({
+  naoHealing: 0,
+  naoPreventedDamage: 0,
+  crazyKingSecondaryHits: 0,
+  crazyKingMaxTier: 0,
+  raiderPierceHits: 0,
+  raiderSuppressionApplications: 0,
+  raiderOverheats: 0,
+  tataraHeavyDamage: 0,
+  tataraStructureDamage: 0,
+  gantetsuRedirectedDamage: 0,
+  monkeyTrapTriggers: 0,
+});
 
 const initialGame = (
   selectedSupply: SupplyKind = "pod",
@@ -742,6 +810,7 @@ const initialGame = (
   bossDefeated: false,
   bossDefeatPending: false,
   qaBarks: false,
+  roleMetrics: emptyRoleMetrics(),
   });
 };
 
@@ -777,8 +846,135 @@ function effectDistance(a: { x: number; y: number }, b: { x: number; y: number }
   return Math.hypot(a.x - b.x, (a.y - b.y) * 2);
 }
 
+function createUnitRoleRuntime() {
+  return {
+    damageReductionRemaining: 0,
+    damageReductionMultiplier: 1,
+    healFocusTargetId: null,
+    healFocusRemaining: 0,
+    comboHits: 0,
+    comboWindow: 0,
+    weaponHeat: 0,
+    overheated: false,
+    suppressionStacks: 0,
+    suppressedRemaining: 0,
+    suppressionMultiplier: 1,
+    guardStandRemaining: 0,
+    guardStandAvailable: true,
+    engineerTrapReady: false,
+    engineerTrapX: 0,
+    engineerTrapLane: null,
+    engineerTrapCooldown: 0,
+    armorBreakStacks: 0,
+    armorBrokenRemaining: 0,
+  };
+}
+
+function applyIncomingHumanDamage(
+  g: Game,
+  target: Fighter,
+  incomingDamage: number,
+  { attackKind = "melee" }: { attackKind?: "melee" | "ranged" } = {},
+) {
+  const incoming = Math.max(0, incomingDamage);
+  let targetDamage = incoming;
+  let redirectedDamage = 0;
+  let preventedDamage = 0;
+  const guardian = g.fighters
+    .filter((candidate) => candidate.side === "human" && candidate.kind === "guardian" && candidate.hp > 0)
+    .sort((left, right) => fighterDistance(left, target) - fighterDistance(right, target) || left.id - right.id)
+    .find((candidate) => resolveGantetsuInterception({
+      guardian: candidate,
+      target,
+      incomingDamage: incoming,
+      attackKind,
+      steadfast: { remainingSeconds: candidate.guardStandRemaining, available: candidate.guardStandAvailable },
+    }).eligible);
+
+  if (guardian) {
+    const rawInterception = resolveGantetsuInterception({
+      guardian,
+      target,
+      incomingDamage: incoming,
+      attackKind,
+      steadfast: { remainingSeconds: guardian.guardStandRemaining, available: guardian.guardStandAvailable },
+    });
+    const guardedDamage = naoDamageAfterProtection({
+      damage: rawInterception.guardianDamage,
+      protectionSeconds: guardian.damageReductionRemaining,
+    });
+    const protectedGuardian = {
+      ...guardian,
+      hp: guardian.hp + guardedDamage.prevented,
+    };
+    const appliedInterception = resolveGantetsuInterception({
+      guardian: protectedGuardian,
+      target,
+      incomingDamage: incoming,
+      attackKind,
+      steadfast: { remainingSeconds: guardian.guardStandRemaining, available: guardian.guardStandAvailable },
+    });
+    guardian.hp = appliedInterception.guardianHp;
+    guardian.guardStandRemaining = appliedInterception.steadfast.remainingSeconds;
+    guardian.guardStandAvailable = appliedInterception.steadfast.available;
+    guardian.flash = Math.max(guardian.flash, .12);
+    redirectedDamage = rawInterception.guardianDamage;
+    targetDamage = rawInterception.targetDamage;
+    preventedDamage += guardedDamage.prevented;
+    g.roleMetrics.gantetsuRedirectedDamage += redirectedDamage;
+    g.roleMetrics.naoPreventedDamage += guardedDamage.prevented;
+    addDamageText(g, {
+      x: guardian.x,
+      y: guardian.y - 72,
+      value: `盾 -${Math.round(guardedDamage.damage)}`,
+      life: .7,
+      color: "#bcd5d5",
+    });
+  }
+
+  const protectedTarget = naoDamageAfterProtection({
+    damage: targetDamage,
+    protectionSeconds: target.damageReductionRemaining,
+  });
+  let appliedTargetDamage = protectedTarget.damage;
+  if (target.kind === "guardian") {
+    const steadfastDamage = resolveGantetsuSteadfastDamage({
+      guardian: target,
+      incomingDamage: protectedTarget.damage,
+      steadfast: {
+        remainingSeconds: target.guardStandRemaining,
+        available: target.guardStandAvailable,
+      },
+    });
+    target.hp = steadfastDamage.hp;
+    target.guardStandRemaining = steadfastDamage.steadfast.remainingSeconds;
+    target.guardStandAvailable = steadfastDamage.steadfast.available;
+    appliedTargetDamage = steadfastDamage.damage;
+    preventedDamage += Math.max(0, protectedTarget.damage - steadfastDamage.damage);
+    if (steadfastDamage.steadfast.triggered) {
+      addDamageText(g, {
+        x: target.x,
+        y: target.y - 78,
+        value: "踏みとどまる",
+        life: .95,
+        color: "#d7ecec",
+      });
+    }
+  } else {
+    target.hp -= protectedTarget.damage;
+  }
+  preventedDamage += protectedTarget.prevented;
+  g.roleMetrics.naoPreventedDamage += protectedTarget.prevented;
+  return Object.freeze({
+    targetDamage: appliedTargetDamage,
+    redirectedDamage,
+    preventedDamage,
+  });
+}
+
 function bodyRadiusFor(kind: string) {
   if (kind === "takuya" || kind === "abomination") return 20;
+  if (kind === "guardian") return 18;
   if (kind === "crusher" || kind === "brute" || kind === "kumaverson") return 16;
   if (kind === "crazy-king") return 14;
   return 11;
@@ -846,6 +1042,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     abilityCooldown: kind === "takuya" ? 4.2 : 0,
     abilityWindup: 0,
     attackSequence: 0,
+    ...createUnitRoleRuntime(),
   });
   return g.fighters[g.fighters.length - 1];
 }
@@ -862,10 +1059,12 @@ function spawnHuman(g: Game, kind: UnitKind) {
   const laneSpeed = kind === "scout" ? 78
     : kind === "brawler" ? 68
       : kind === "brute" ? 42
+        : kind === "guardian" ? 36
         : kind === "gunner" ? 54
           : kind === "crazy-king" ? 58
             : kind === "kumaverson" ? 48
               : kind === "babayaga" ? 62
+                : kind === "engineer" ? 56
                 : 60;
   g.fighters.push({
     id, side: "human", kind, lane: MUSTER_LANE, anchorLane: assignedLane, x: MUSTER_X, y: activeMusterY(), hp: card.hp, maxHp: card.hp,
@@ -874,6 +1073,7 @@ function spawnHuman(g: Game, kind: UnitKind) {
     targetId: null, targetObjectId: null, retargetIn: 0, nextLaneDecisionAt: 0, bodyRadius: bodyRadiusFor(kind), laneSpeed, spawnGrace: .95,
     combatReady: true, gateEntering: false, gateEntrySpeed: 0, combatReadyX: 0,
     marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: MUSTER_X, aiMoveDirection: 0, abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
+    ...createUnitRoleRuntime(),
   });
   addParticles(g, MUSTER_X, activeMusterY(), "#d0b48b", 7);
   g.banner = `${card.name} // 移動拠点から出撃`;
@@ -956,33 +1156,59 @@ function prepareRolesQa(g: Game) {
   g.barricadeHp = BARRICADE_MAX_HP;
   g.energy = COMMAND_MAX;
   g.scrap = 100;
+  g.barricadeVulnerable = true;
+  g.barricadeMaxHp = Math.max(BARRICADE_MAX_HP, 5000);
+  g.barricadeHp = g.barricadeMaxHp;
 
   const lineup: [UnitKind, Lane, number][] = [
-    ["scout", 0, 350], ["brawler", 0, 505], ["crazy-king", 0, 650],
-    ["ranger", 1, 350], ["gunner", 1, 505], ["babayaga", 1, 650],
-    ["medic", 2, 350], ["brute", 2, 505], ["kumaverson", 2, 650],
+    ["scout", 0, 310], ["brawler", 0, 465], ["guardian", 0, 520], ["crazy-king", 0, 650],
+    ["ranger", 1, 300], ["gunner", 1, 430], ["babayaga", 1, 360], ["engineer", 1, 690],
+    ["medic", 2, 420], ["brute", 2, 700], ["kumaverson", 2, 600],
   ];
   for (const [kind, lane, x] of lineup) {
     spawnHuman(g, kind);
     const fighter = g.fighters[g.fighters.length - 1];
     fighter.lane = lane; fighter.anchorLane = lane; fighter.x = x; fighter.y = laneY(lane, fighter.id);
     fighter.cooldown = 0; fighter.spawnGrace = 0;
-    if (kind === "brute") fighter.hp -= 40;
+    if (kind === "brute") {
+      fighter.maxHp = 420;
+      fighter.hp = 380;
+    }
   }
 
   const scenarios: [EnemyKind, Lane, number, number?][] = [
-    ["runner", 0, 450], ["walker", 0, 640, .3], ["spitter", 1, 535],
-    ["crusher", 1, 720], ["walker", 2, 535],
+    ["crusher", 0, 470], ["walker", 0, 680, .45], ["walker", 0, 700], ["walker", 0, 720],
+    ["walker", 1, 500], ["walker", 1, 540], ["walker", 1, 580], ["spitter", 1, 640],
+    ["crusher", 2, 740], ["walker", 2, 820],
   ];
   for (const [kind, lane, x, hpRatio] of scenarios) {
     const fighter = spawnEnemy(g, kind, lane);
     fighter.x = x; fighter.y = laneY(lane, fighter.id); fighter.cooldown = 1.2;
     if (hpRatio) fighter.hp = fighter.maxHp * hpRatio;
   }
+  const brawler = g.fighters.find((fighter) => fighter.side === "human" && fighter.kind === "brawler");
+  const guardianAssault = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === "crusher" && fighter.lane === 0);
+  if (brawler && guardianAssault) {
+    guardianAssault.maxHp = 1600;
+    guardianAssault.hp = guardianAssault.maxHp;
+    guardianAssault.cooldown = 0;
+    guardianAssault.targetId = brawler.id;
+    guardianAssault.retargetIn = 99;
+  }
+  const raiderTarget = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === "walker" && fighter.lane === 1);
+  if (raiderTarget) {
+    raiderTarget.maxHp = 1600;
+    raiderTarget.hp = raiderTarget.maxHp;
+  }
+  const tataraTarget = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === "crusher" && fighter.lane === 2);
+  if (tataraTarget) {
+    tataraTarget.maxHp = 300;
+    tataraTarget.hp = tataraTarget.maxHp;
+  }
   const breaker = g.fighters.find((fighter) => fighter.side === "human" && fighter.kind === "brute");
   const heldEnemy = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === "walker" && fighter.lane === 2);
   if (breaker && heldEnemy) heldEnemy.targetId = breaker.id;
-  g.banner = "QA ROLES // NINE UNIT LIVE FIRE";
+  g.banner = "QA ROLES // ELEVEN UNIT LIVE FIRE";
   g.bannerTime = 2.2;
 }
 
@@ -1105,7 +1331,7 @@ function prepareStressQa(g: Game) {
       enemy.x = 460 + index * 28; enemy.y = laneY(lane, enemy.id); enemy.cooldown = 1.8;
     }
   }
-  const unitKinds: UnitKind[] = ["scout", "ranger", "brute", "brawler", "gunner", "medic", "crazy-king", "kumaverson", "babayaga"];
+  const unitKinds: UnitKind[] = ["scout", "ranger", "brute", "brawler", "gunner", "medic", "crazy-king", "kumaverson", "babayaga", "guardian", "engineer"];
   for (let index = 0; index < 18; index++) {
     spawnHuman(g, unitKinds[index % unitKinds.length]);
     const fighter = g.fighters[g.fighters.length - 1];
@@ -1177,6 +1403,7 @@ const SPRITE_DISPLAY_SIZES: Record<string, { w: number; h: number }> = {
   scout: { w: 58, h: 98 }, ranger: { w: 58, h: 98 }, brute: { w: 72, h: 108 },
   brawler: { w: 62, h: 99 }, gunner: { w: 60, h: 100 }, medic: { w: 60, h: 100 },
   "crazy-king": { w: 72, h: 104 }, kumaverson: { w: 64, h: 102 }, babayaga: { w: 62, h: 103 },
+  guardian: { w: 78, h: 108 }, engineer: { w: 60, h: 100 },
   walker: { w: 58, h: 96 }, runner: { w: 53, h: 90 }, turned: { w: 58, h: 96 },
   shade: { w: 64, h: 101 }, spitter: { w: 62, h: 101 }, crusher: { w: 80, h: 112 },
   abomination: { w: 101, h: 132 }, takuya: { w: 94, h: 128 },
@@ -1186,9 +1413,63 @@ function spriteDisplaySize(kind: string) {
   return SPRITE_DISPLAY_SIZES[kind] ?? { w: 58, h: 96 };
 }
 
+// P3 diagnostic rendering only. These geometry marks keep the two late-game
+// roles testable before P6 art approval; they are not approved character art
+// and must be replaced by manifest-backed sprites before the release gate.
+function drawDiagnosticRoleFighter(ctx: CanvasRenderingContext2D, f: Fighter) {
+  if (f.kind !== "guardian" && f.kind !== "engineer") return;
+  const guardian = f.kind === "guardian";
+  ctx.save();
+  ctx.translate(f.x, f.y);
+  ctx.fillStyle = "rgba(0,0,0,.42)";
+  ctx.beginPath(); ctx.ellipse(0, 8, guardian ? 24 : 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = guardian ? "#48575b" : "#806b3e";
+  ctx.strokeStyle = f.flash > 0 ? "#fff1ad" : guardian ? "#aebfc1" : "#d5bd78";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  if (guardian) {
+    ctx.roundRect(-19, -69, 38, 66, 10);
+  } else {
+    ctx.roundRect(-14, -61, 28, 58, 8);
+  }
+  ctx.fill(); ctx.stroke();
+  if (guardian) {
+    ctx.fillStyle = "#2c3538"; ctx.strokeStyle = "#d1dadd"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(5, -62, 27, 55, 7); ctx.fill(); ctx.stroke();
+  } else {
+    ctx.strokeStyle = "#e1c978"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(-20, -43); ctx.lineTo(21, -21); ctx.stroke();
+    ctx.beginPath(); ctx.arc(23, -20, 6, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.fillStyle = "#fff4d4";
+  ctx.font = "900 13px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(guardian ? "G" : "M", guardian ? -2 : 0, -35);
+  ctx.restore();
+}
+
+function drawMonkeyTrap(ctx: CanvasRenderingContext2D, fighter: Fighter) {
+  if (fighter.kind !== "engineer" || !fighter.engineerTrapReady || fighter.engineerTrapLane === null) return;
+  const x = fighter.engineerTrapX;
+  const y = activeLaneCenters[fighter.engineerTrapLane] + 5;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = "rgba(0,0,0,.45)";
+  ctx.beginPath(); ctx.ellipse(0, 3, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#d9c16d"; ctx.fillStyle = "#5b5335"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(-14, -7, 28, 10, 3); ctx.fill(); ctx.stroke();
+  for (const offset of [-9, 0, 9]) {
+    ctx.beginPath(); ctx.moveTo(offset - 3, -7); ctx.lineTo(offset, -15); ctx.lineTo(offset + 3, -7); ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: SpriteMap) {
   const sprite = sprites[f.kind];
-  if (!sprite?.complete || !sprite.naturalWidth) return;
+  if (!sprite?.complete || !sprite.naturalWidth) {
+    drawDiagnosticRoleFighter(ctx, f);
+    return;
+  }
   const moving = f.side === "zombie" || Math.abs(f.aiMoveDirection) > .05;
   const state = f.flash > 0 ? "hit"
     : f.attack > .09 ? "attack-b"
@@ -1933,6 +2214,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
     }
   }
 
+  for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter);
   const renderables = [
     ...g.fighters.map((fighter) => ({ type: "fighter" as const, x: fighter.x, y: fighter.y, fighter })),
     ...g.battlefieldObjects.filter((object) => object.phase !== "expired").map((object) => ({ type: "object" as const, x: object.x, y: object.y, object })),
@@ -1952,8 +2234,8 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
     drawSpriteFighter(ctx, f, sprites);
     if (!f.combatReady) continue;
     const compactScale = activeLaneCenters === LANE_Y ? 1 : 1.1;
-    const barW = (f.kind === "takuya" ? 52 : f.kind === "crusher" || f.kind === "brute" ? 38 : f.kind === "abomination" ? 52 : 28) * compactScale;
-    const height = (f.kind === "takuya" ? 111 : f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "brute" ? 94 : 80) * compactScale;
+    const barW = (f.kind === "takuya" ? 52 : f.kind === "crusher" || f.kind === "brute" || f.kind === "guardian" ? 38 : f.kind === "abomination" ? 52 : 28) * compactScale;
+    const height = (f.kind === "takuya" ? 111 : f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "brute" || f.kind === "guardian" ? 94 : 80) * compactScale;
     const barHeight = compactScale > 1 ? 6 : 4;
     const barY = f.y - height - (compactScale > 1 ? 2 : 0);
     ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(f.x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
@@ -2597,6 +2879,7 @@ export function AshfallGame() {
           energy: g.energy,
           scrap: g.scrap,
           supportGauge: g.supportGauge,
+          roleMetrics: { ...g.roleMetrics },
           fighters: g.fighters.map((fighter) => ({
             id: fighter.id,
             side: fighter.side,
@@ -2609,6 +2892,17 @@ export function AshfallGame() {
             targetId: fighter.targetId,
             targetObjectId: fighter.targetObjectId,
             combatReady: fighter.combatReady,
+            damageReductionRemaining: fighter.damageReductionRemaining,
+            comboHits: fighter.comboHits,
+            weaponHeat: fighter.weaponHeat,
+            overheated: fighter.overheated,
+            suppressionStacks: fighter.suppressionStacks,
+            suppressedRemaining: fighter.suppressedRemaining,
+            guardStandRemaining: fighter.guardStandRemaining,
+            guardStandAvailable: fighter.guardStandAvailable,
+            engineerTrapReady: fighter.engineerTrapReady,
+            engineerTrapX: fighter.engineerTrapX,
+            armorBreakStacks: fighter.armorBreakStacks,
           })),
           completedStageIds: [...campaignSave.completedStageIds],
           unlockedStageIds: [...campaignSave.unlockedStageIds],
@@ -4474,12 +4768,22 @@ export function AshfallGame() {
           object.hitFlash = Math.max(0, object.hitFlash - dt);
           Object.assign(object, advanceBattlefieldSupply(object, dt));
           if (object.kind === "pod" && object.readyToLand && !object.landingTriggered) {
+            const hpBeforeLanding = new Map(g.fighters.map((fighter) => [fighter.id, fighter.hp]));
             const landing = resolveBattlefieldSupplyLanding({ supply: object, fighters: g.fighters, laneCenters: activeLaneCenters });
             Object.assign(object, landing.supply);
             g.fighters = landing.fighters as Fighter[];
             for (const hit of landing.hits) {
               const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
-              if (fighter) { fighter.flash = .2; fighter.knock = Math.max(fighter.knock, 10); addDamageText(g, { x: fighter.x, y: fighter.y - 56, value: `着地 -${hit.damage}`, life: .9, color: hit.side === "zombie" ? "#ffd06b" : "#ff8a70" }); }
+              if (fighter) {
+                let appliedDamage = hit.damage;
+                if (hit.side === "human") {
+                  fighter.hp = hpBeforeLanding.get(fighter.id) ?? fighter.hp;
+                  appliedDamage = applyIncomingHumanDamage(g, fighter, hit.damage, { attackKind: "ranged" }).targetDamage;
+                }
+                fighter.flash = .2;
+                fighter.knock = Math.max(fighter.knock, 10);
+                addDamageText(g, { x: fighter.x, y: fighter.y - 56, value: `着地 -${Math.round(appliedDamage)}`, life: .9, color: hit.side === "zombie" ? "#ffd06b" : "#ff8a70" });
+              }
             }
             addParticles(g, object.x, object.y + 4, "#d7aa63", 26);
             g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.podLanding); g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("pod-impact");
@@ -4563,6 +4867,28 @@ export function AshfallGame() {
           f.cooldown = advanceAttackCooldown(f.cooldown, dt); f.supportCooldown -= dt; f.retargetIn = Math.max(0, f.retargetIn - dt); f.spawnGrace = Math.max(0, f.spawnGrace - dt);
           f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.marked = Math.max(0, f.marked - dt); f.step += dt;
           f.stunned = Math.max(0, f.stunned - dt);
+          f.damageReductionRemaining = advanceNaoProtection(f.damageReductionRemaining, dt);
+          if (f.damageReductionRemaining <= 0) f.damageReductionMultiplier = 1;
+          f.healFocusRemaining = Math.max(0, f.healFocusRemaining - dt);
+          if (f.healFocusRemaining <= 0) f.healFocusTargetId = null;
+          f.comboWindow = Math.max(0, f.comboWindow - dt);
+          if (f.comboWindow <= 0) f.comboHits = 0;
+          if (f.kind === "gunner") {
+            const heat = coolRaiderHeat({ heat: f.weaponHeat, overheated: f.overheated }, dt);
+            f.weaponHeat = heat.heat;
+            f.overheated = heat.overheated;
+          }
+          const suppression = advanceRaiderSuppression({
+            stacks: f.suppressionStacks,
+            remainingSeconds: f.suppressedRemaining,
+          }, dt);
+          f.suppressionStacks = suppression.stacks;
+          f.suppressedRemaining = suppression.remainingSeconds;
+          f.suppressionMultiplier = suppression.speedMultiplier;
+          f.guardStandRemaining = Math.max(0, f.guardStandRemaining - dt);
+          f.engineerTrapCooldown = Math.max(0, f.engineerTrapCooldown - dt);
+          f.armorBrokenRemaining = Math.max(0, f.armorBrokenRemaining - dt);
+          if (f.armorBrokenRemaining <= 0) f.armorBreakStacks = 0;
           if (f.bleedRemaining > 0) {
             const bleedStep = Math.min(dt, f.bleedRemaining);
             f.hp = Math.max(0, f.hp - f.bleedDamagePerSecond * bleedStep);
@@ -4616,8 +4942,9 @@ export function AshfallGame() {
                 for (const victim of g.fighters) {
                   // Perspective-scaled distance matches the on-ground warning ellipse.
                   if (victim.side !== "human" || victim.hp <= 0 || effectDistance(victim, f) > radius) continue;
-                  victim.hp -= damage; victim.flash = .16; victim.knock = Math.max(victim.knock, 12);
-                  g.damageTexts.push({ x: victim.x, y: victim.y - 48, value: String(damage), life: .8, color: "#ff7658" });
+                  const resolved = applyIncomingHumanDamage(g, victim, damage, { attackKind: "melee" });
+                  victim.flash = .16; victim.knock = Math.max(victim.knock, 12);
+                  g.damageTexts.push({ x: victim.x, y: victim.y - 48, value: String(Math.round(resolved.targetDamage)), life: .8, color: "#ff7658" });
                 }
                 addParticles(g, f.x, f.y - 4, "#e7653d", 28);
                 g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy); g.flashOverlay = Math.max(g.flashOverlay, .22);
@@ -4634,14 +4961,75 @@ export function AshfallGame() {
             if (abilityFrame) continue;
           }
 
+          if (f.kind === "engineer") {
+            if (!f.engineerTrapReady && f.engineerTrapCooldown <= 0) {
+              const placement = createMonkeyTrap({
+                id: `monkey-trap-${f.id}-${Math.floor(g.time * 10)}`,
+                engineer: { ...f, assignedLane: f.anchorLane ?? f.lane },
+                assignedLane: f.anchorLane ?? f.lane,
+                elapsedSinceLastPlacement: Infinity,
+                minimumX: BASE_X + 86,
+                maximumX: BARRICADE_X - 24,
+              });
+              if (placement.ok && placement.trap) {
+                f.engineerTrapReady = true;
+                f.engineerTrapX = placement.trap.x;
+                f.engineerTrapLane = placement.trap.lane as Lane;
+              }
+            }
+            if (f.engineerTrapReady && f.engineerTrapLane !== null) {
+              const trap = {
+                id: `monkey-trap-${f.id}`,
+                ownerId: f.id,
+                ownerSide: f.side,
+                lane: f.engineerTrapLane,
+                x: f.engineerTrapX,
+                active: true,
+                used: false,
+                triggerRadius: UNIT_ROLE_TUNING.monkey.triggerRadius,
+                stopSeconds: UNIT_ROLE_TUNING.monkey.stopSeconds,
+              };
+              const trigger = triggerMonkeyTrap(trap, g.fighters.filter((candidate) => candidate.side === "zombie"));
+              if (trigger.triggered) {
+                const trapped = g.fighters.find((candidate) => candidate.id === trigger.targetId && candidate.side === "zombie" && candidate.hp > 0);
+                if (trapped) {
+                  trapped.stunned = Math.max(trapped.stunned, trigger.stopSeconds);
+                  f.engineerTrapReady = false;
+                  f.engineerTrapCooldown = UNIT_ROLE_TUNING.monkey.placementIntervalSeconds;
+                  g.roleMetrics.monkeyTrapTriggers += 1;
+                  addDamageText(g, { x: trapped.x, y: trapped.y - 60, value: "足止め", life: .8, color: "#e1c978" });
+                }
+              }
+            }
+          }
+
           if (f.kind === "medic" && f.supportCooldown <= 0) {
-            const wounded = g.fighters
-              .filter((other) => other.side === "human" && other.id !== f.id && other.hp > 0 && other.hp < other.maxHp && fighterDistance(other, f) <= 108)
-              .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+            const wounded = selectNaoHealTarget({
+              healer: f,
+              allies: g.fighters.filter((other) => other.side === "human" && other.id !== f.id),
+              maxRange: UNIT_ROLE_TUNING.nao.healRange,
+              distanceBetween: fighterDistance,
+            }) as Fighter | null;
             if (wounded) {
-              const healed = Math.min(16, wounded.maxHp - wounded.hp);
+              const concurrentHealers = g.fighters.filter((other) => other.side === "human"
+                && other.kind === "medic"
+                && other.id !== f.id
+                && other.healFocusTargetId === wounded.id
+                && other.healFocusRemaining > 0).length;
+              const healing = resolveNaoHealing({
+                target: wounded,
+                healerNumber: concurrentHealers + 1,
+                existingProtectionSeconds: wounded.damageReductionRemaining,
+              });
+              const healed = healing.amount;
               const roleEffect = roleEffectForAction({ unitKind: f.kind, action: "heal", targetKind: wounded.kind }) as RoleEffect | null;
-              wounded.hp += healed; f.supportCooldown = 1.55;
+              wounded.hp = healing.hp;
+              wounded.damageReductionRemaining = healing.protectionSeconds;
+              wounded.damageReductionMultiplier = 1 - healing.damageReduction;
+              f.healFocusTargetId = wounded.id;
+              f.healFocusRemaining = 1.55;
+              f.supportCooldown = 1.55;
+              g.roleMetrics.naoHealing += healed;
               g.damageTexts.push({ x: wounded.x, y: wounded.y - 70, value: `+${Math.ceil(healed)}`, life: .8, color: "#83e0a2" });
               g.damageTexts.push({ x: f.x, y: f.y - 64, value: "救護", life: .7, color: "#9bf0ba" });
               g.shots.push({ x: f.x + 8, y: f.y - 34, tx: wounded.x, ty: wounded.y - 28, life: .32, duration: .32, side: "human", effect: roleEffect ?? undefined });
@@ -4769,7 +5157,7 @@ export function AshfallGame() {
               .sort((a, b) => fighterDistance(f, a) - fighterDistance(f, b))[0];
             const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
             const lookAhead = Math.max(105, f.range + 36);
-            const defenderCapacity = (human: Fighter) => human.kind === "brute" ? 3 : human.kind === "scout" || human.kind === "medic" ? 1 : 2;
+            const defenderCapacity = (human: Fighter) => human.kind === "guardian" ? 4 : human.kind === "scout" || human.kind === "medic" ? 1 : 2;
             const routeBlockers = crawlerInRange ? [] : humans.filter((human) => isCrawlerRouteBlocker({
               enemyX: f.x, defenderX: human.x, defenderY: human.y, routeY, lookAhead,
             }));
@@ -4783,7 +5171,7 @@ export function AshfallGame() {
               capacity: defenderCapacity(human),
               isCurrent: f.targetId === human.id,
               rearward: human.x - f.x,
-            }) + (human.kind === "brute" ? -45 : 0);
+            }) + (human.kind === "guardian" ? -65 : human.kind === "brute" ? -10 : 0);
             const bestInterceptor = availableBlockers.reduce<Fighter | undefined>((choice, human) => {
               return !choice || interceptorScore(human) < interceptorScore(choice) ? human : choice;
             }, undefined);
@@ -4896,7 +5284,7 @@ export function AshfallGame() {
               }
             } else {
               const stopX = objectTarget.x + stoppingDistance;
-              f.x = Math.max(stopX, f.x - f.speed * dt);
+              f.x = Math.max(stopX, f.x - f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier) * dt);
               const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
               const dy = routeY - f.y;
               if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
@@ -4905,6 +5293,10 @@ export function AshfallGame() {
             }
           } else if (target && distance <= f.range + target.bodyRadius) {
             if (f.cooldown <= 0) {
+              if (f.side === "human" && f.kind === "gunner" && !raiderCanFire({ heat: f.weaponHeat, overheated: f.overheated })) {
+                f.cooldown = .1;
+                continue;
+              }
               const enragedTakuya = f.kind === "takuya" && f.hp / f.maxHp <= .5;
               const targetHpRatio = target.hp / target.maxHp;
               const roleEffect = f.side === "human" ? roleEffectForAction({
@@ -4915,13 +5307,83 @@ export function AshfallGame() {
                 targetAlreadyMarked: target.marked > 0,
                 holdingFrontline: f.kind === "brute" && target.targetId === f.id,
               }) as RoleEffect | null : null;
-              const attackDamage = f.side === "human" ? f.damage * humanAttackMultiplier(f.kind, target.kind, targetHpRatio, target.marked > 0) : f.damage;
-              target.hp -= attackDamage; target.flash = .12;
+              const tataraTarget = {
+                ...target,
+                armored: target.kind === "crusher",
+              };
+              const attackDamage = f.side === "human"
+                ? f.kind === "brute"
+                  ? resolveTataraStrikeDamage(f.damage, tataraTarget)
+                    * humanAttackMultiplier(f.kind, target.kind, targetHpRatio, target.marked > 0)
+                    * (target.armorBrokenRemaining > 0 ? 1.12 : 1)
+                  : f.damage * humanAttackMultiplier(f.kind, target.kind, targetHpRatio, target.marked > 0)
+                : f.damage;
+              const appliedAttack = f.side === "zombie" && target.side === "human"
+                ? applyIncomingHumanDamage(g, target, attackDamage, { attackKind: f.range > 64 ? "ranged" : "melee" })
+                : { targetDamage: attackDamage };
+              if (!(f.side === "zombie" && target.side === "human")) target.hp -= attackDamage;
+              target.flash = .12;
               f.attackSequence += 1;
+              let crazyKingRadius: number | null = null;
+              if (f.side === "human" && f.kind === "crazy-king") {
+                const momentum = advanceCrazyKingMomentum({
+                  hitCount: f.comboHits,
+                  secondsSinceLastHit: f.comboWindow > 0 ? 0 : Infinity,
+                  hitLanded: true,
+                });
+                f.comboHits = momentum.hitCount;
+                f.comboWindow = UNIT_ROLE_TUNING.crazyKing.comboWindowSeconds;
+                crazyKingRadius = momentum.radius;
+                g.roleMetrics.crazyKingMaxTier = Math.max(g.roleMetrics.crazyKingMaxTier, momentum.tier);
+              }
+              if (f.side === "human" && f.kind === "brute") {
+                const specialty = tataraTargetSpecialty(tataraTarget);
+                if (specialty !== "normal") {
+                  g.roleMetrics.tataraHeavyDamage += attackDamage;
+                  target.armorBreakStacks += 1;
+                  if (target.armorBreakStacks >= 3) {
+                    target.armorBreakStacks = 0;
+                    target.armorBrokenRemaining = Math.max(target.armorBrokenRemaining, 3.2);
+                    target.stunned = Math.max(target.stunned, .75);
+                    addDamageText(g, { x: target.x, y: target.y - 66, value: "装甲破砕", life: .85, color: "#ffba70" });
+                  }
+                }
+              }
+              if (f.side === "human" && f.kind === "gunner") {
+                const wasOverheated = f.overheated;
+                const heat = applyRaiderShots({ heat: f.weaponHeat, overheated: f.overheated }, 1);
+                f.weaponHeat = heat.heat;
+                f.overheated = heat.overheated;
+                if (!wasOverheated && heat.overheated) g.roleMetrics.raiderOverheats += 1;
+                const lineTargets = [...selectRaiderLineTargets({
+                  attacker: f,
+                  enemies: g.fighters.filter((candidate) => candidate.side === "zombie" && candidate.hp > 0),
+                  range: UNIT_ROLE_TUNING.raider.lineRange,
+                })] as Fighter[];
+                if (!lineTargets.some((candidate) => candidate.id === target?.id)) lineTargets.unshift(target);
+                for (const lineTarget of lineTargets) {
+                  const suppression = applyRaiderSuppression(lineTarget.suppressionStacks, 1);
+                  lineTarget.suppressionStacks = suppression.stacks;
+                  lineTarget.suppressedRemaining = suppression.remainingSeconds;
+                  lineTarget.suppressionMultiplier = suppression.speedMultiplier;
+                  g.roleMetrics.raiderSuppressionApplications += 1;
+                  if (lineTarget.id === target.id) continue;
+                  const pierceDamage = attackDamage * .58;
+                  lineTarget.hp -= pierceDamage;
+                  lineTarget.flash = Math.max(lineTarget.flash, .1);
+                  g.roleMetrics.raiderPierceHits += 1;
+                  addDamageText(g, { x: lineTarget.x, y: lineTarget.y - 43, value: String(Math.round(pierceDamage)), life: .55, color: "#e8cc72" });
+                }
+              }
               if (f.side === "human" && ["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) {
-                const preview = newcomerAttackPayload({ unitKind: f.kind, targetKind: target.kind, targetIsHeavy: ["crusher", "abomination", "takuya"].includes(target.kind) });
+                const preview = newcomerAttackPayload({
+                  unitKind: f.kind,
+                  targetKind: target.kind,
+                  targetIsHeavy: ["crusher", "abomination", "takuya"].includes(target.kind),
+                  areaRadius: crazyKingRadius,
+                });
                 const nearbyTargets = preview.radius > 0
-                  ? g.fighters.filter((candidate) => candidate.side === "zombie" && candidate.hp > 0 && candidate.id !== target.id && effectDistance(candidate, target) <= preview.radius)
+                  ? g.fighters.filter((candidate) => candidate.side === "zombie" && candidate.hp > 0 && candidate.id !== target.id && effectDistance(candidate, f) <= preview.radius)
                   : [];
                 const newcomerEffects = resolveNewcomerAttackEffects({
                   unitKind: f.kind,
@@ -4929,12 +5391,14 @@ export function AshfallGame() {
                   nearbyTargets,
                   attackDamage,
                   targetIsHeavy: ["crusher", "abomination", "takuya"].includes(target.kind),
+                  areaRadius: crazyKingRadius,
                 });
                 Object.assign(target, newcomerEffects.target);
                 for (const nextSecondary of newcomerEffects.secondaryTargets) {
                   const secondary = g.fighters.find((candidate) => candidate.id === nextSecondary.id && candidate.side === "zombie" && candidate.hp > 0);
                   if (!secondary) continue;
                   Object.assign(secondary, nextSecondary);
+                  if (f.kind === "crazy-king") g.roleMetrics.crazyKingSecondaryHits += 1;
                   g.damageTexts.push({ x: secondary.x, y: secondary.y - 43, value: String(Math.round(newcomerEffects.secondaryDamage)), life: .58, color: "#efb95f" });
                 }
               }
@@ -4948,7 +5412,7 @@ export function AshfallGame() {
                   cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 70,
                   volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
                   maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
-                  fallbackCue: ["ranger", "gunner", "medic", "babayaga"].includes(f.kind) ? "ranged-shot" : "melee-hit",
+                  fallbackCue: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "ranged-shot" : "melee-hit",
                 });
                 if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), contactAudioX, { priority: targetIsHeavy ? 76 : 67, cooldownMs: 110, volume: targetIsHeavy ? .62 : .54, maxInstances: 1 });
                 if (f.kind === "kumaverson") {
@@ -4990,28 +5454,34 @@ export function AshfallGame() {
               }
               if (f.kind === "scout" && target.side === "zombie") target.marked = Math.max(target.marked, 3.2);
               target.knock = Math.max(target.knock, f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" ? 9 : 3);
-              f.attack = .18; f.cooldown = enragedTakuya ? .9 : f.attackEvery;
-              g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(attackDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
+              f.attack = .18;
+              f.cooldown = enragedTakuya
+                ? .9
+                : f.kind === "crazy-king"
+                  ? crazyKingAttackInterval(f.attackEvery, f.comboHits)
+                  : f.attackEvery;
+              g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(appliedAttack.targetDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
               if (roleEffect && f.abilityCooldown <= 0) {
-                const roleCue = roleEffect === "scout" ? "索敵マーク" : roleEffect === "ranger" ? "対・毒吐き" : roleEffect === "brute" ? "前線保持" : roleEffect === "brawler" ? "フィニッシュ" : roleEffect === "gunner" ? "重装破砕" : roleEffect === "crazy-king" ? "密集切断" : roleEffect === "kumaverson" ? "打撃・足止め" : roleEffect === "babayaga" ? "特殊個体分析" : null;
+                const roleCue = roleEffect === "scout" ? "索敵マーク" : roleEffect === "ranger" ? "対・毒吐き" : roleEffect === "brute" ? "対装甲破砕" : roleEffect === "brawler" ? "フィニッシュ" : roleEffect === "gunner" ? "直線制圧" : roleEffect === "crazy-king" ? "密集切断" : roleEffect === "kumaverson" ? "打撃・足止め" : roleEffect === "babayaga" ? "特殊個体分析" : null;
                 if (roleCue) { g.damageTexts.push({ x: f.x, y: f.y - 66, value: roleCue, life: .75, color: "#ffe078" }); f.abilityCooldown = 1.8; emitBattleBark(g, "role-cue", f.kind, f.id); }
               }
               if (f.kind === "takuya") {
                 for (const splash of g.fighters) {
                   if (splash.side === "human" && splash.id !== target.id && splash.hp > 0 && fighterDistance(splash, target) < 58) {
-                    splash.hp -= 22; splash.flash = .12; splash.knock = 6;
-                    g.damageTexts.push({ x: splash.x, y: splash.y - 46, value: "22", life: .65, color: "#e98a72" });
+                    const resolved = applyIncomingHumanDamage(g, splash, 22, { attackKind: "melee" });
+                    splash.flash = .12; splash.knock = 6;
+                    g.damageTexts.push({ x: splash.x, y: splash.y - 46, value: String(Math.round(resolved.targetDamage)), life: .65, color: "#e98a72" });
                   }
                 }
                 addParticles(g, target.x, target.y + 2, "#b78656", 13); playCue("takuya-hit");
               }
               if (f.side === "human") {
                 const emphasized = roleEffect === "brawler" || roleEffect === "gunner" || roleEffect === "crazy-king" || roleEffect === "kumaverson" || roleEffect === "babayaga";
-                const ranged = ["ranger", "gunner", "medic", "babayaga"].includes(f.kind);
+                const ranged = ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind);
                 g.shots.push({ x: f.x + 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee", weapon: f.kind });
                 if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) playCue(`role-${roleEffect}` as SfxCueId);
                 if (!productionMixerRef.current) {
-                  if (["ranger", "gunner", "medic", "babayaga"].includes(f.kind)) playCue("ranged-shot", { frequency: 310 + Math.random() * 50 });
+                  if (["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)) playCue("ranged-shot", { frequency: 310 + Math.random() * 50 });
                   else playCue("melee-hit");
                 }
               } else if (f.kind === "spitter") {
@@ -5025,10 +5495,24 @@ export function AshfallGame() {
           } else if (!target && baseDistance <= f.range + 10) {
             if (f.cooldown <= 0) {
               if (f.side === "human") {
+                if (f.kind === "gunner" && !raiderCanFire({ heat: f.weaponHeat, overheated: f.overheated })) {
+                  f.cooldown = .1;
+                  continue;
+                }
                 const beforeHit = g.barricadeHp;
                 const roleEffect = roleEffectForAction({ unitKind: f.kind, action: "structure", targetKind: "infected-base" }) as RoleEffect | null;
-                const structureDamage = f.damage * structureDamageMultiplier(f.kind);
+                const structureDamage = f.kind === "brute"
+                  ? resolveTataraStrikeDamage(f.damage, { targetType: "infected-base" })
+                  : f.damage * structureDamageMultiplier(f.kind);
                 g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
+                if (f.kind === "brute") g.roleMetrics.tataraStructureDamage += structureDamage;
+                if (f.kind === "gunner") {
+                  const wasOverheated = f.overheated;
+                  const heat = applyRaiderShots({ heat: f.weaponHeat, overheated: f.overheated }, 1);
+                  f.weaponHeat = heat.heat;
+                  f.overheated = heat.overheated;
+                  if (!wasOverheated && heat.overheated) g.roleMetrics.raiderOverheats += 1;
+                }
                 f.attackSequence += 1;
                 emitBattleBarkOnce(g, `enemy-base-attack:${f.kind}`, RANDOM_BATTLE_BARK_TRIGGER_IDS.ENEMY_BASE_ATTACK, f.kind as UnitKind);
                 const structureWeaponEvent = f.kind === "crazy-king" ? "attack" : f.kind === "kumaverson" ? "swing" : f.kind === "babayaga" ? "shot" : null;
@@ -5047,11 +5531,11 @@ export function AshfallGame() {
                 g.barricadeHitY = f.y;
                 g.damageTexts.push({ x: enemyBaseTarget.x, y: enemyBaseTarget.y - 14, value: `-${Math.round(structureDamage)}`, life: .7, color: "#ffd06b" });
                 addParticles(g, enemyBaseTarget.x, enemyBaseTarget.y, "#e78b45", f.kind === "brute" ? 10 : 5);
-                if (!roleEffect && ["ranger", "gunner", "medic", "babayaga"].includes(f.kind)) {
+                if (!roleEffect && ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)) {
                   g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .2, duration: .2, side: "human", style: "projectile", weapon: f.kind });
                 }
                 if (roleEffect) {
-                  g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: ["ranger", "gunner", "medic", "babayaga"].includes(f.kind) ? "projectile" : "melee", weapon: f.kind });
+                  g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "projectile" : "melee", weapon: f.kind });
                   if (!productionMixerRef.current && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) {
                     playCue(`role-${roleEffect}` as SfxCueId);
                   }
@@ -5115,7 +5599,7 @@ export function AshfallGame() {
             f.lane = laneStep.lane as Lane;
           } else if (target && f.side === "zombie") {
             // The CRAWLER remains the objective: enemies advance on their route and only stop for a physical blocker.
-            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * (f.slowMultiplier ?? 1), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
+            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
             const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
             if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
@@ -5141,7 +5625,7 @@ export function AshfallGame() {
               f.y = laneStep.y;
               f.lane = laneStep.lane as Lane;
             } else {
-              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * (f.slowMultiplier ?? 1), seconds: dt, burning: false });
+              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false });
             }
             if (f.side === "zombie" && f.anchorLane !== null) {
               const dy = activeLaneCenters[f.anchorLane] - f.y;
@@ -5281,6 +5765,7 @@ export function AshfallGame() {
               targetId: null, targetObjectId: null, retargetIn: 0, nextLaneDecisionAt: g.time + .8, bodyRadius: bodyRadiusFor("turned"), laneSpeed: enemyLaneSpeedFor("turned"), spawnGrace: generic.riseLockRemaining,
               combatReady: true, gateEntering: false, gateEntrySpeed: 0, combatReadyX: 0,
               marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: corpse.x, aiMoveDirection: 0, abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
+              ...createUnitRoleRuntime(),
             });
             addParticles(g, corpse.x, corpse.y - 20, "#90a965", 14); playCue("turned");
             continue;
@@ -5441,9 +5926,10 @@ export function AshfallGame() {
             <div className="unit-cards" aria-label="生存者ユニット">
               {cards.filter((card) => formationKinds.includes(card.kind)).map((card) => {
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
+                const portraitArt = (PORTRAIT_ART as Record<string, string | undefined>)[card.kind];
                 return (
-                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={{ "--unit-card-art": `url('${(PORTRAIT_ART as Record<string, string>)[card.kind]}')` } as CSSProperties}>
-                    <span className="keycap">{card.key}</span><span className="portrait"><i /></span>
+                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                    <span className="keycap">{card.key}</span><span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
                     {cooldown > 0 && <span className="cooldown-mask"><b>{cooldown}</b><small>秒待ち</small></span>}
                   </button>
