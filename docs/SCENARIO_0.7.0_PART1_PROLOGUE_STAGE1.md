@@ -1,9 +1,7 @@
 # 西新世紀末物語 — 0.7.0完全台本 PART 1
 
 更新日：2026-07-17  
-script version：`outbreak-origin-v7`本文／`outbreak-origin-v8`正規化対象
-
-> 実装前注記：本PARTはv7本文を保持している。最上位正本は`IMPLEMENTATION_DIRECTIVE_0.7.0.md`と`SCENARIO_0.7.0_COMPLETE.md`。本文中の`小料理屋`表記、仮称、加入条件、UI実装メモはv8正規化後にのみゲームデータへ実装する。
+script version：`outbreak-origin-v8`
 
 ## 1. 実装契約
 
