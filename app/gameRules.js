@@ -1,6 +1,7 @@
 import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "./campaign.js";
 
-export const COMMAND_MAX = 100;
+export const COMMAND_MAX = 150;
+export const COMMAND_INITIAL = 70;
 export const COMMAND_REGEN = 3.5;
 export const SUPPORT_GAUGE_MAX = 100;
 // Compatibility aliases keep the current UI operational while the integration
@@ -9,7 +10,6 @@ export const RAGE_MAX = SUPPORT_GAUGE_MAX;
 export const BARRICADE_MAX_HP = 1000;
 export const ENEMY_BASE_COLLAPSE_SECONDS = 1.05;
 export const PREP_SECONDS = 5;
-export const TACTIC_MODES = ["defend", "balanced", "assault"];
 export const FIELD_OBJECT_CLEARANCE = 72;
 export const CONVOY_CAPACITY = 24;
 const INCOMPLETE_CONVOY_PROGRESS = 1 - Number.EPSILON;
@@ -270,12 +270,12 @@ export const CAMERA_SHAKE_EVENTS = Object.freeze({
 // producer can adjust the three newcomers without changing battle logic. The
 // original 1-6 keyboard order is a compatibility contract; newcomers use 7-9.
 export const UNIT_CARDS = Object.freeze([
-  Object.freeze({ kind: "scout", name: "橘 迅", cost: 25, key: "1", desc: "遊撃手・高速迎撃", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 }),
-  Object.freeze({ kind: "ranger", name: "黒木 凛", cost: 45, key: "2", desc: "射撃手・遠距離射撃", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 }),
-  Object.freeze({ kind: "brute", name: "大庭 豪", cost: 70, key: "3", desc: "破砕兵・前線維持", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 }),
+  Object.freeze({ kind: "scout", name: "ハチ", cost: 25, key: "1", desc: "遊撃手・高速迎撃", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 }),
+  Object.freeze({ kind: "ranger", name: "ミズチ", cost: 45, key: "2", desc: "射撃手・遠距離射撃", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 }),
+  Object.freeze({ kind: "brute", name: "タタラ", cost: 70, key: "3", desc: "破砕兵・前線維持", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 }),
   Object.freeze({ kind: "brawler", name: "パイセン", cost: 55, key: "4", desc: "格闘家・素手近接", deployCooldown: 13, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: .72 }),
-  Object.freeze({ kind: "gunner", name: "真壁 玲奈", cost: 60, key: "5", desc: "制圧射手・大型制圧", deployCooldown: 15, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 }),
-  Object.freeze({ kind: "medic", name: "白石 直人", cost: 50, key: "6", desc: "衛生兵・回復支援", deployCooldown: 20, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: .96 }),
+  Object.freeze({ kind: "gunner", name: "レイダー", cost: 60, key: "5", desc: "制圧射手・大型制圧", deployCooldown: 15, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 }),
+  Object.freeze({ kind: "medic", name: "ナオ", cost: 50, key: "6", desc: "衛生兵・回復支援", deployCooldown: 20, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: .96 }),
   Object.freeze({ kind: "crazy-king", name: "クレイジーキング", cost: 65, key: "7", desc: "狂戦士・密集殲滅", deployCooldown: 17, hp: 124, speed: 20, damage: 20, range: 34, attackEvery: .82 }),
   Object.freeze({ kind: "kumaverson", name: "クマバーソン", cost: 62, key: "8", desc: "前衛打撃・足止め", deployCooldown: 17, hp: 152, speed: 17, damage: 27, range: 31, attackEvery: 1.02 }),
   Object.freeze({ kind: "babayaga", name: "ババヤガ", cost: 58, key: "9", desc: "精密射撃・特殊排除", deployCooldown: 16, hp: 76, speed: 19, damage: 31, range: 158, attackEvery: 1.04 }),
@@ -1030,24 +1030,14 @@ export function objectiveFor(phase, barricadeVulnerable) {
   return barricadeVulnerable ? "感染拠点を破壊" : "TAKUYAを撃破";
 }
 
-export function advanceLimitFor(tactic, phase, barricadeVulnerable) {
-  // Once TAKUYA falls, every posture must be able to reach the shared objective.
+export function advanceLimitFor(phase, barricadeVulnerable) {
+  // Once TAKUYA falls, every ally must be able to reach the shared objective.
   if (phase >= 3 && barricadeVulnerable) return WORLD_GEOMETRY.barricade.attackX;
-  const baseLimit = phase === 1 ? 550 : 800;
-  const adjustment = tactic === "defend" ? -40 : tactic === "assault" ? 40 : 0;
-  return Math.max(300, Math.min(WORLD_GEOMETRY.barricade.attackX, baseLimit + adjustment));
+  return Math.min(WORLD_GEOMETRY.barricade.attackX, phase === 1 ? 550 : 800);
 }
 
-export function tacticTargetBias(tactic, enemyX) {
-  if (tactic === "defend") return enemyX < WORLD_GEOMETRY.threatStartX ? -70 : 20;
-  if (tactic === "assault") return enemyX > 600 ? -45 : 15;
-  return 0;
-}
-
-export function structureDamageMultiplier(kind, tactic = "balanced") {
-  const role = ({ brute: 1.5, brawler: 1.2, gunner: 1.1, medic: .7, "crazy-king": 1.05, kumaverson: 1.08, babayaga: .9 })[kind] ?? 1;
-  const posture = tactic === "assault" ? 1.12 : tactic === "defend" ? .9 : 1;
-  return role * posture;
+export function structureDamageMultiplier(kind) {
+  return ({ brute: 1.5, brawler: 1.2, gunner: 1.1, medic: .7, "crazy-king": 1.05, kumaverson: 1.08, babayaga: .9 })[kind] ?? 1;
 }
 
 export function barricadeState(hp) {

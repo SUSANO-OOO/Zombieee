@@ -52,8 +52,6 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .phase-block small { padding:0 8px; color:#a99c85; font-size:8px; font-weight:700; letter-spacing:.14em; }
 .phase-block strong { padding:0 11px; border-left:1px solid rgba(235,205,161,.2); border-right:1px solid rgba(235,205,161,.2); color:var(--gold); font-size:15px; font-weight:900; letter-spacing:.08em; }
 .phase-block em { padding:0 8px; color:#c7b89d; font-size:9px; font-weight:800; letter-spacing:.08em; }
-.tactic-cycle { position:relative; width:86px; height:39px; padding:4px 17px 3px 8px; border:1px solid rgba(235,205,161,.28); border-left:3px solid #9e8c70; background:linear-gradient(105deg,rgba(18,20,20,.88),rgba(38,32,27,.78)); color:#d8c7a9; cursor:pointer; text-align:left; }
-.tactic-cycle small,.tactic-cycle b { display:block; white-space:nowrap; font-family:monospace; }.tactic-cycle small { color:#887d6c; font-size:6px; letter-spacing:.12em; }.tactic-cycle b { margin-top:2px; font-size:9px; letter-spacing:.05em; }.tactic-cycle em { position:absolute; top:4px; right:4px; color:#776d5f; font:700 6px monospace; font-style:normal; }.tactic-cycle.defend { border-left-color:#65a5a2; }.tactic-cycle.defend b { color:#8cd1ca; }.tactic-cycle.assault { border-left-color:#d06442; }.tactic-cycle.assault b { color:#ef8a60; }.tactic-cycle:active { transform:scale(.96); }
 .icon-btn { width:38px; height:38px; border:1px solid rgba(235,205,161,.28); background:rgba(18,20,20,.72); color:#d7c6a9; cursor:pointer; }
 .icon-btn:active { transform:scale(.94); }
 .audio-btn { position:relative; width:46px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
@@ -187,7 +185,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
   .game-shell[data-screen="battle"] .enable-audio-button { top:var(--app-viewport-safe-top); right:calc(8px + var(--app-viewport-safe-right)); left:auto; width:88px; min-width:88px; max-width:88px; height:44px; min-height:44px; padding:4px 6px; transform:none; }.game-shell[data-screen="battle"] .enable-audio-button:active { transform:scale(.97); }.game-shell[data-screen="battle"] .enable-audio-button b { font-size:9px; }.game-shell[data-screen="battle"] .audio-unlock-long { display:none; }.game-shell[data-screen="battle"] .audio-unlock-short { display:block; }
   .top-hud { min-height:calc(46px + var(--app-viewport-safe-top)); padding:calc(.65% + var(--app-viewport-safe-top)) calc(1.4% + var(--app-viewport-safe-right)) .65% calc(1.4% + var(--app-viewport-safe-left)); gap:.7%; }
   .brand-block { gap:6px; }.brand-mark { width:30px; height:30px; font-size:18px; }.brand-block small em { display:none; }
-  .phase-block,.tactic-cycle,.icon-btn { height:44px; }.tactic-cycle { width:76px; padding:5px 12px 3px 6px; border-left-width:2px; }.tactic-cycle small { font-size:5px; }.tactic-cycle b { margin-top:2px; font-size:8px; }.icon-btn,.audio-btn { width:44px; }.audio-btn b { font-size:10px; }.audio-btn small { font-size:5px; }
+  .phase-block,.icon-btn { height:44px; }.icon-btn,.audio-btn { width:44px; }.audio-btn b { font-size:10px; }.audio-btn small { font-size:5px; }
   .phase-block small { padding:0 5px; font-size:6px; }.phase-block strong { padding:0 7px; font-size:11px; }.phase-block em { padding:0 5px; font-size:7px; }
   .bottom-hud { height:60px; min-height:60px; max-height:60px; gap:.55%; padding:4px calc(7px + var(--app-viewport-safe-right)) 4px calc(7px + var(--app-viewport-safe-left)); }
   .resource-stack { flex-basis:10.5%; gap:3px; padding-right:.55%; }
@@ -206,7 +204,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 @media (orientation:landscape) and (max-height:390px) {
   .top-hud { height:calc(44px + var(--app-viewport-safe-top)); min-height:44px; padding:calc(4px + var(--app-viewport-safe-top)) calc(9px + var(--app-viewport-safe-right)) 4px calc(9px + var(--app-viewport-safe-left)); gap:5px; }
   .brand-block { gap:5px; }.brand-mark { width:34px; height:34px; font-size:19px; }
-  .phase-block,.tactic-cycle,.icon-btn { height:44px; }.icon-btn,.audio-btn { width:44px; }
+  .phase-block,.icon-btn { height:44px; }.icon-btn,.audio-btn { width:44px; }
   .health-hud { top:48px; width:27%; }.boss-hud { top:78px; right:calc(8px + var(--app-viewport-safe-right)); width:24%; padding:3px 7px 4px; }.crawler-alert { top:79px; }
   .bottom-hud { bottom:calc(14px + var(--app-viewport-safe-bottom)); height:60px; min-height:60px; max-height:60px; padding:4px calc(7px + var(--app-viewport-safe-right)) 4px calc(7px + var(--app-viewport-safe-left)); }
   .stats-strip { height:calc(14px + var(--app-viewport-safe-bottom)); padding:2px calc(8px + var(--app-viewport-safe-right)) var(--app-viewport-safe-bottom) calc(8px + var(--app-viewport-safe-left)); gap:12px; }
@@ -224,8 +222,8 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 @media (orientation:landscape) and (max-height:350px) {
   .top-hud { height:calc(44px + var(--app-viewport-safe-top)); min-height:calc(44px + var(--app-viewport-safe-top)); padding-top:calc(2px + var(--app-viewport-safe-top)); padding-bottom:2px; }
   .brand-mark { width:30px; height:30px; }.brand-block small { display:none; }
-  .phase-block,.tactic-cycle,.icon-btn { height:44px; }.icon-btn { width:44px; }.audio-btn { width:44px; }
-  .tactic-cycle small,.audio-btn small { font-size:6px; }.tactic-cycle b { font-size:9px; }
+  .phase-block,.icon-btn { height:44px; }.icon-btn { width:44px; }.audio-btn { width:44px; }
+  .audio-btn small { font-size:6px; }
   .health-hud { top:48px; }.boss-hud { top:76px; }.crawler-alert { top:77px; }
   .bottom-hud { bottom:calc(14px + var(--app-viewport-safe-bottom)); height:60px; min-height:60px; max-height:60px; }
   .stats-strip { height:calc(14px + var(--app-viewport-safe-bottom)); font-size:7px; }.combat-deck { grid-template-columns:minmax(300px,1.35fr) minmax(260px,1fr); grid-template-rows:minmax(0,1fr); }.support-row { min-height:44px; }

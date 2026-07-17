@@ -330,8 +330,11 @@ test("legacy SFX mapping covers every current SFX_CUES key and only targets prod
   const cueBlock = source.slice(start, end);
   const currentCueIds = [...cueBlock.matchAll(/^\s*(?:"([^"]+)"|([a-z][a-z0-9-]*)):\s*\{\s*category:/gm)]
     .map((match) => match[1] ?? match[2]);
-  assert.equal(currentCueIds.length, 58);
+  assert.equal(currentCueIds.length, 55);
   assert.deepEqual(Object.keys(LEGACY_SFX_CUE_MAP).sort(), currentCueIds.sort());
+  for (const removedCueId of ["tactic-defend", "tactic-balanced", "tactic-assault"]) {
+    assert.equal(Object.hasOwn(LEGACY_SFX_CUE_MAP, removedCueId), false);
+  }
   for (const [legacyId, productionId] of Object.entries(LEGACY_SFX_CUE_MAP)) {
     assert.ok(
       PRODUCTION_AUDIO_MANIFEST.assetById[productionId]

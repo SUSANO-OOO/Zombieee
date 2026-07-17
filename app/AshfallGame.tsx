@@ -27,10 +27,12 @@ import {
   createCorruptCampaignRawExport,
   indexedDbFor,
   parseCampaignManualImport,
+  preflightUnreadableCampaignRecovery,
   reconcileCampaignStorage,
   writeCampaignBackup,
   writeCampaignRecoverySnapshot,
   writeCampaignSave,
+  writeCampaignSaveReplicas,
 } from "./campaignStorage.js";
 import { claimDefeatResolution } from "./defeatLedger.js";
 import { CampaignScreens, type CampaignResultView, type CampaignScreen, type StageScreenView, type SupplyScreenView, type UnitScreenView } from "./CampaignScreens";
@@ -110,6 +112,7 @@ import {
   BARRICADE_MAX_HP,
   BATTLEFIELD_SUPPLY_DEFS,
   CAMERA_SHAKE_EVENTS,
+  COMMAND_INITIAL,
   COMMAND_MAX,
   ENEMY_GATE_SPAWN,
   ENEMY_BASE_COLLAPSE_SECONDS,
@@ -118,7 +121,6 @@ import {
   PREP_SECONDS,
   RENDER_ARRAY_LIMITS,
   SUPPORT_GAUGE_MAX,
-  TACTIC_MODES,
   UNIT_CARDS,
   WORLD_GEOMETRY,
   advanceAttackCooldown,
@@ -180,7 +182,6 @@ import {
   selectAreaEffectsForRender,
   structureDamageMultiplier,
   supportGaugeReward,
-  tacticTargetBias,
   triggerCameraShake,
 } from "./gameRules.js";
 
@@ -192,8 +193,7 @@ type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | 
 type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned";
 type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "danger" | "boss";
-type TacticMode = "defend" | "balanced" | "assault";
-type QaMode = "endgame" | "roles" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
+type QaMode = "endgame" | "ai-reacquire" | "roles" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
 type EventDestination = "map" | "battle" | "battle-resume" | "result";
 type PauseAction = "restart" | "loadout" | "withdraw";
@@ -464,7 +464,6 @@ type Game = {
   deployCooldowns: Record<UnitKind, number>;
   deployQueue: UnitKind[];
   deployTimer: number;
-  tactic: TacticMode;
   nextId: number;
   nextLanePlanAt: number;
   resolvedDefeatIds: Set<number>;
@@ -506,7 +505,6 @@ type Hud = {
   barricadeMaxHp: number;
   barricadeVulnerable: boolean;
   barricadeHitFlash: number;
-  tactic: TacticMode;
   deployQueue: number;
   airstrikePhase: AirstrikeRuntime["phase"];
   crawlerPhase: CrawlerRuntime["phase"];
@@ -564,6 +562,7 @@ type SaveRecoveryState = {
   conflict?: boolean;
   candidates: readonly SaveRecoveryCandidate[];
   corruptCandidates: readonly SaveRecoveryCandidate[];
+  writeBlockedSources?: readonly string[];
 };
 type PendingResultCommit = {
   save: CampaignSave;
@@ -619,9 +618,6 @@ const SFX_CUES = {
   "drum-request": { category: "ui", frequency: 112, duration: .08, type: "square", volume: .055, cooldown: .12, priority: 30 },
   "start-low": { category: "ui", frequency: 180, duration: .12, type: "square", volume: .055, cooldown: .2, priority: 45 },
   "start-high": { category: "ui", frequency: 260, duration: .12, type: "square", volume: .055, cooldown: .2, priority: 45 },
-  "tactic-defend": { category: "ui", frequency: 130, duration: .06, type: "square", volume: .055, cooldown: .08, priority: 15 },
-  "tactic-balanced": { category: "ui", frequency: 190, duration: .06, type: "square", volume: .055, cooldown: .08, priority: 15 },
-  "tactic-assault": { category: "ui", frequency: 250, duration: .06, type: "square", volume: .055, cooldown: .08, priority: 15 },
   "deploy-light": { category: "combat", frequency: 220, duration: .07, type: "square", volume: .055, cooldown: .04, priority: 25 },
   "deploy-heavy": { category: "combat", frequency: 110, duration: .07, type: "square", volume: .055, cooldown: .04, priority: 30 },
   "wave-contact": { category: "combat", frequency: 82, duration: .24, type: "sawtooth", volume: .055, cooldown: .18, priority: 55 },
@@ -687,7 +683,7 @@ const initialGame = (
   won: false,
   time: 0,
   last: 0,
-  energy: 70,
+  energy: COMMAND_INITIAL,
   supportGauge: 0,
   scrap: 0,
   kills: 0,
@@ -721,7 +717,6 @@ const initialGame = (
   deployCooldowns: emptyCooldowns(),
   deployQueue: [],
   deployTimer: 0,
-  tactic: "balanced",
   nextId: 1,
   nextLanePlanAt: 0,
   resolvedDefeatIds: new Set<number>(),
@@ -894,7 +889,6 @@ function prepareEndgameQa(g: Game) {
   g.baseHp = 500;
   g.barricadeHp = 760;
   g.energy = COMMAND_MAX;
-  g.tactic = "assault";
 
   const lineup: [UnitKind, Lane, number][] = [
     ["brute", 0, 730],
@@ -923,6 +917,36 @@ function prepareEndgameQa(g: Game) {
 
 }
 
+function prepareAiReacquireQa(g: Game) {
+  prepareEndgameQa(g);
+  g.time = 168;
+  g.baseHp = g.baseMaxHp;
+  const takuya = g.fighters.find((fighter) => fighter.kind === "takuya");
+  if (takuya) {
+    takuya.hp = 18;
+    takuya.cooldown = 2;
+    takuya.abilityCooldown = 99;
+  }
+  for (const ally of g.fighters.filter((fighter) => fighter.side === "human")) ally.cooldown = 0;
+  for (const [kind, lane, x] of [
+    ["runner", 0, 790],
+    ["walker", 1, 805],
+    ["spitter", 2, 820],
+  ] as [EnemyKind, Lane, number][]) {
+    const enemy = spawnEnemy(g, kind, lane);
+    enemy.x = x;
+    enemy.y = laneY(lane, enemy.id);
+    enemy.combatReady = false;
+    enemy.gateEntering = true;
+    enemy.combatReadyX = 650 + lane * 8;
+    enemy.gateEntrySpeed = 92;
+    enemy.targetId = null;
+    enemy.targetObjectId = null;
+  }
+  g.banner = "QA AI // POST-TAKUYA REACQUIRE";
+  g.bannerTime = 2.2;
+}
+
 function prepareRolesQa(g: Game) {
   g.time = 60;
   g.phase = 2;
@@ -932,7 +956,6 @@ function prepareRolesQa(g: Game) {
   g.barricadeHp = BARRICADE_MAX_HP;
   g.energy = COMMAND_MAX;
   g.scrap = 100;
-  g.tactic = "balanced";
 
   const lineup: [UnitKind, Lane, number][] = [
     ["scout", 0, 350], ["brawler", 0, 505], ["crazy-king", 0, 650],
@@ -1138,6 +1161,7 @@ function prepareQaMode(g: Game, qaMode: QaMode | null) {
   g.qaBarks = qaMode !== null && qaMode !== "loadout";
   if (qaMode === "roles" || qaMode === "dialogue") prepareRolesQa(g);
   else if (qaMode === "endgame") prepareEndgameQa(g);
+  else if (qaMode === "ai-reacquire") prepareAiReacquireQa(g);
   else if (qaMode === "supplies") prepareSuppliesQa(g);
   else if (qaMode === "airstrike") prepareAirstrikeQa(g);
   else if (qaMode === "crawler") prepareCrawlerQa(g);
@@ -2124,6 +2148,7 @@ export function AshfallGame() {
   const [resultSaveRetrying, setResultSaveRetrying] = useState(false);
   const lastPersistedSerializedRef = useRef("");
   const lastPersistedReplicaRef = useRef<PersistedReplicaReceipt>({ serialized: "", localSaved: false, backupSaved: false });
+  const persistenceWriteBlockedSourcesRef = useRef<Set<string>>(new Set());
   const persistenceQueueRef = useRef<Promise<void>>(Promise.resolve());
   const saveMutationPendingRef = useRef(false);
   const resultSaveRetryingRef = useRef(false);
@@ -2131,9 +2156,9 @@ export function AshfallGame() {
   const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
   const [hud, setHud] = useState<Hud>({
-    missionType: "assault", energy: 70, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
+    missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
     barricadeHp: BARRICADE_MAX_HP, barricadeMaxHp: BARRICADE_MAX_HP, barricadeVulnerable: true, barricadeHitFlash: 0,
-    tactic: "balanced", deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0,
+    deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0,
     crawlerHitFlash: 0, threat: 0,
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), battleBarks: [],
   });
@@ -2184,12 +2209,18 @@ export function AshfallGame() {
         }
       }
       const sameSerialized = serialized === replica.serialized;
-      const localSaved = sameSerialized && replica.localSaved
-        ? true
-        : writeCampaignSave(storage, CAMPAIGN_SAVE_KEY, serialized);
-      const backupSaved = sameSerialized && replica.backupSaved
-        ? true
-        : await writeCampaignBackup(indexedDb, CAMPAIGN_SAVE_KEY, serialized);
+      const alreadySavedSources = [
+        ...(sameSerialized && replica.localSaved ? ["localStorage"] : []),
+        ...(sameSerialized && replica.backupSaved ? ["indexedDB"] : []),
+      ];
+      const { localSaved, backupSaved } = await writeCampaignSaveReplicas({
+        storage,
+        indexedDb,
+        key: CAMPAIGN_SAVE_KEY,
+        serialized,
+        blockedSources: [...persistenceWriteBlockedSourcesRef.current],
+        alreadySavedSources,
+      });
       if (localSaved || backupSaved) {
         lastPersistedSerializedRef.current = serialized;
         lastPersistedReplicaRef.current = { serialized, localSaved, backupSaved };
@@ -2223,6 +2254,7 @@ export function AshfallGame() {
         validate: (serialized: string, context: { source: string }) => inspectCampaignSaveCandidate(serialized, { source: context.source }),
       });
       if (cancelled) return;
+      persistenceWriteBlockedSourcesRef.current = new Set(reconciled.writeBlockedSources ?? []);
       if (reconciled.status === "recovery-needed") {
         setSaveRecovery(reconciled as SaveRecoveryState);
         setSavePersistence("unavailable");
@@ -2575,6 +2607,8 @@ export function AshfallGame() {
             y: fighter.y,
             hp: fighter.hp,
             targetId: fighter.targetId,
+            targetObjectId: fighter.targetObjectId,
+            combatReady: fighter.combatReady,
           })),
           completedStageIds: [...campaignSave.completedStageIds],
           unlockedStageIds: [...campaignSave.unlockedStageIds],
@@ -3444,7 +3478,7 @@ export function AshfallGame() {
     setHud({ missionType: fresh.definition.missionType, energy: Math.floor(fresh.energy), supportGauge: Math.floor(fresh.supportGauge), scrap: fresh.scrap, kills: fresh.kills,
       wave: fresh.wave, phase: fresh.phase, baseHp: fresh.baseHp, baseMaxHp: fresh.baseMaxHp,
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
-      tactic: fresh.tactic, deployQueue: fresh.deployQueue.length, airstrikePhase: fresh.airstrike.phase,
+      deployQueue: fresh.deployQueue.length, airstrikePhase: fresh.airstrike.phase,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
       bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
@@ -3602,6 +3636,28 @@ export function AshfallGame() {
         const outcome = await enqueueCampaignStorageMutation(async () => {
           const storage = campaignStorageFor(window);
           const indexedDb = indexedDbFor(window);
+          if (saveRecovery?.recoveryReason === "replica-unreadable") {
+            const preflight = await preflightUnreadableCampaignRecovery({
+              storage,
+              indexedDb,
+              key: CAMPAIGN_SAVE_KEY,
+              selectedSerialized: imported.raw,
+              validate: (serialized: string, context: { source: string }) => inspectCampaignSaveCandidate(serialized, { source: context.source }),
+            });
+            if (preflight.status === "blocked") {
+              return { status: "blocked" as const, reason: "replica-still-unreadable" };
+            }
+            if (preflight.status === "refresh-required") {
+              return {
+                status: "refresh-required" as const,
+                recovery: {
+                  ...preflight.resolution,
+                  status: "recovery-needed",
+                  recoveryReason: "revealed-replica-conflict",
+                } as SaveRecoveryState,
+              };
+            }
+          }
           const sourceSchemaVersion = Number(imported.candidate?.validation?.sourceSchemaVersion);
           if (Number.isFinite(sourceSchemaVersion) && sourceSchemaVersion < 5) {
             const preMigrationSnapshot = await writeCampaignRecoverySnapshot({
@@ -3645,11 +3701,20 @@ export function AshfallGame() {
           const backupSaved = await writeCampaignBackup(indexedDb, CAMPAIGN_SAVE_KEY, serialized);
           return { status: "written" as const, loaded, serialized, localSaved, backupSaved };
         });
+        if (outcome.status === "refresh-required") {
+          persistenceWriteBlockedSourcesRef.current = new Set(outcome.recovery.writeBlockedSources ?? []);
+          setSaveRecovery(outcome.recovery);
+          setSavePersistence("unavailable");
+          window.alert("読めなかった保存先を再確認したところ、別の有効なセーブが見つかりました。どちらを使うか改めて選んでください。まだ上書きしていません。");
+          return;
+        }
         if (outcome.status === "blocked") {
           if (!saveRecovery) setSaveHydrated(true);
-          window.alert(outcome.reason === "pre-migration-snapshot-failed"
-            ? "移行前バックアップを保存できないため、読み込みを停止しました。現在のセーブは変更していません。"
-            : "現在のセーブの退避に失敗したため、読み込みを停止しました。現在のセーブは変更していません。");
+          window.alert(outcome.reason === "replica-still-unreadable"
+            ? "読めない保存先が残っているため、読み込みを停止しました。ページを再読み込みしてから再試行してください。保存先には何も書き込んでいません。"
+            : outcome.reason === "pre-migration-snapshot-failed"
+              ? "移行前バックアップを保存できないため、読み込みを停止しました。現在のセーブは変更していません。"
+              : "現在のセーブの退避に失敗したため、読み込みを停止しました。現在のセーブは変更していません。");
           return;
         }
         if (!outcome.localSaved && !outcome.backupSaved) {
@@ -3663,6 +3728,8 @@ export function AshfallGame() {
           localSaved: outcome.localSaved,
           backupSaved: outcome.backupSaved,
         };
+        if (outcome.localSaved) persistenceWriteBlockedSourcesRef.current.delete("localStorage");
+        if (outcome.backupSaved) persistenceWriteBlockedSourcesRef.current.delete("indexedDB");
         setCampaignSave(outcome.loaded);
         setSelectedStageId(outcome.loaded.lastSelectedStageId);
         setCampaignResult(null);
@@ -3726,6 +3793,7 @@ export function AshfallGame() {
         const fresh = createDefaultCampaignSave() as CampaignSave;
         lastPersistedSerializedRef.current = "";
         lastPersistedReplicaRef.current = { serialized: "", localSaved: false, backupSaved: false };
+        persistenceWriteBlockedSourcesRef.current = new Set();
         setCampaignSave(fresh);
         setSelectedStageId(fresh.lastSelectedStageId);
         setCampaignResult(null);
@@ -3760,6 +3828,7 @@ export function AshfallGame() {
         const fresh = createDefaultCampaignSave() as CampaignSave;
         lastPersistedSerializedRef.current = "";
         lastPersistedReplicaRef.current = { serialized: "", localSaved: false, backupSaved: false };
+        persistenceWriteBlockedSourcesRef.current = new Set();
         setCampaignSave(fresh);
         setSelectedStageId(fresh.lastSelectedStageId);
         setCampaignResult(null);
@@ -3795,6 +3864,7 @@ export function AshfallGame() {
         const fresh = markCampaignStarted(createDefaultCampaignSave()) as CampaignSave;
         lastPersistedSerializedRef.current = "";
         lastPersistedReplicaRef.current = { serialized: "", localSaved: false, backupSaved: false };
+        persistenceWriteBlockedSourcesRef.current = new Set();
         setCampaignSave(fresh);
         setSelectedStageId(fresh.lastSelectedStageId);
         setCampaignResult(null);
@@ -4151,22 +4221,6 @@ export function AshfallGame() {
     enableAudio();
   }, [enableAudio]);
 
-  const setTactic = useCallback((tactic: TacticMode) => {
-    const g = gameRef.current;
-    if (!g.running || g.paused || g.over || g.tactic === tactic) return;
-    g.tactic = tactic;
-    g.banner = `作戦方針 // ${tactic === "defend" ? "防衛" : tactic === "assault" ? "突撃" : "均衡"}`;
-    g.bannerTime = .9;
-    setHud((current) => ({ ...current, tactic }));
-    playCue(tactic === "defend" ? "tactic-defend" : tactic === "assault" ? "tactic-assault" : "tactic-balanced");
-  }, [playCue]);
-
-  const cycleTactic = useCallback(() => {
-    const current = gameRef.current.tactic;
-    const modes = TACTIC_MODES as TacticMode[];
-    setTactic(modes[(modes.indexOf(current) + 1) % modes.length]);
-  }, [setTactic]);
-
   const dispatchBattleStoryEvents = useCallback((g: Game) => {
     const stageId = g.definition.stageId;
     const elapsedBattleSeconds = Math.max(0, g.time - g.definition.prepSeconds);
@@ -4242,11 +4296,10 @@ export function AshfallGame() {
         return;
       }
       if (normalizedKey === "p") { togglePause(); return; }
-      if (normalizedKey === "r") cycleTactic();
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [chooseActionWithCue, cycleTactic, deployHuman, selectedSupply, togglePause, triggerCrawlerBarrage]);
+  }, [chooseActionWithCue, deployHuman, selectedSupply, togglePause, triggerCrawlerBarrage]);
 
   useEffect(() => {
     let frame = 0;
@@ -4636,15 +4689,19 @@ export function AshfallGame() {
               ? null
               : g.barricadeVulnerable
                 ? BARRICADE_X
-                : advanceLimitFor(g.tactic, g.phase, g.barricadeVulnerable);
-            const defenseFrontX = g.tactic === "defend" ? 470 : g.tactic === "assault" ? 635 : 555;
+                : advanceLimitFor(g.phase, g.barricadeVulnerable);
+            const defenseFrontX = 555;
             allyIntent = decideAllyIntent({
               missionType: g.definition.missionType,
               unit: {
                 id: f.id,
+                kind: f.kind,
+                side: f.side,
                 x: f.x,
+                y: f.y,
                 lane: f.lane,
                 assignedLane,
+                bodyRadius: f.bodyRadius,
                 range: f.range,
                 ranged: f.range > 64,
                 allowAdjacentLaneTargets: COMBAT_ROLE_RULES[f.kind]?.allowAdjacentLaneTargets === true,
@@ -4652,14 +4709,22 @@ export function AshfallGame() {
               assignedLane,
               enemies: tacticalEnemies.map((enemy) => ({
                 id: enemy.id,
+                side: enemy.side,
                 x: enemy.x,
+                y: enemy.y,
                 lane: enemy.lane,
                 hp: enemy.hp,
+                combatReady: enemy.combatReady,
                 bodyRadius: enemy.bodyRadius,
                 verticalDistance: Math.abs(f.y - enemy.y),
+                attackingCrawler: enemy.targetId === null
+                  && enemy.targetObjectId === null
+                  && enemy.x - BASE_X <= enemy.range + 10,
+                blocksPath: Math.abs(enemy.y - f.y) <= enemy.bodyRadius + f.bodyRadius + 12
+                  && Math.abs(enemy.x - f.x) <= Math.max(105, f.range + 36),
                 threatensBase: enemy.x <= WORLD_GEOMETRY.threatNearX,
                 baseThreatDistance: Math.max(0, enemy.x - BASE_X),
-                priority: -roleTargetBias(f.kind, enemy.kind) - tacticTargetBias(g.tactic, enemy.x),
+                priority: -roleTargetBias(f.kind, enemy.kind),
               })),
               objective: objectiveX === null ? null : { x: objectiveX, active: true },
               defenseAnchor: { 0: BASE_X + 205, 1: BASE_X + 225, 2: BASE_X + 205 },
@@ -4765,7 +4830,7 @@ export function AshfallGame() {
               targetPriority: (candidate: Fighter) => number;
             }) => { target: Fighter; targetId: number } | null)({
               attacker: f,
-              candidates: g.fighters.filter((candidate) => candidate.side !== f.side && candidate.hp > 0 && candidate.combatReady),
+              candidates: target ? [target] : [],
               damage: f.damage,
               hasLineOfSight: (attacker, candidate) => hasAdjacentLaneLineOfSight({
                 attacker,
@@ -4774,7 +4839,6 @@ export function AshfallGame() {
               }),
               targetPriority: (candidate: Fighter) => (
                 roleTargetBias(f.kind, candidate.kind)
-                + tacticTargetBias(g.tactic, candidate.x)
                 + (candidate.id === target?.id ? -10 : 0)
               ),
             });
@@ -4963,7 +5027,7 @@ export function AshfallGame() {
               if (f.side === "human") {
                 const beforeHit = g.barricadeHp;
                 const roleEffect = roleEffectForAction({ unitKind: f.kind, action: "structure", targetKind: "infected-base" }) as RoleEffect | null;
-                const structureDamage = f.damage * structureDamageMultiplier(f.kind, g.tactic);
+                const structureDamage = f.damage * structureDamageMultiplier(f.kind);
                 g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
                 f.attackSequence += 1;
                 emitBattleBarkOnce(g, `enemy-base-attack:${f.kind}`, RANDOM_BATTLE_BARK_TRIGGER_IDS.ENEMY_BASE_ATTACK, f.kind as UnitKind);
@@ -5029,10 +5093,9 @@ export function AshfallGame() {
           } else if (target && f.side === "human") {
             const dx = target.x - f.x;
             const stoppingDistance = Math.max(18, f.range + target.bodyRadius * .55);
-            const moveMultiplier = g.tactic === "assault" ? 1.12 : g.tactic === "defend" ? .92 : 1;
             const desiredX = allyIntent?.destinationX ?? (target.x - Math.sign(dx || 1) * stoppingDistance);
             if (Math.abs(desiredX - f.x) > 2) {
-              f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), f.speed * dt * moveMultiplier);
+              f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), f.speed * dt);
               f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
             }
             const destinationLane = (f.range > 64
@@ -5061,9 +5124,8 @@ export function AshfallGame() {
           } else {
             if (f.side === "human") {
               const desiredX = allyIntent?.destinationX ?? f.x;
-              const moveMultiplier = g.tactic === "assault" ? 1.12 : g.tactic === "defend" ? .92 : 1;
               if (Math.abs(desiredX - f.x) > 2) {
-                f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), f.speed * dt * moveMultiplier);
+                f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), f.speed * dt);
                 f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
               }
               const laneStep = advanceTowardLane({
@@ -5301,7 +5363,7 @@ export function AshfallGame() {
           missionType: g.definition.missionType, energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
           wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp), baseMaxHp: g.baseMaxHp,
           barricadeHp: Math.max(0, g.barricadeHp), barricadeMaxHp: g.barricadeMaxHp, barricadeVulnerable: g.barricadeVulnerable, barricadeHitFlash: g.barricadeHitFlash,
-          tactic: g.tactic, deployQueue: g.deployQueue.length,
+          deployQueue: g.deployQueue.length,
           airstrikePhase: g.airstrike.phase, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
           combo: g.combo, bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
@@ -5320,7 +5382,6 @@ export function AshfallGame() {
   const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
   const bossPhase = bossPhaseForHp(hud.bossHp, hud.bossMax);
   const phaseName = hud.phase === 1 ? "防衛" : hud.phase === 2 ? "前進" : "総攻撃";
-  const tacticName = hud.tactic === "defend" ? "防衛" : hud.tactic === "assault" ? "突撃" : "均衡";
   const selectedName = selectedAction?.startsWith("supply:")
     ? SUPPORT_DISPLAY_NAMES[selectedAction.slice("supply:".length) as SupplyKind]
     : selectedAction === "airstrike" ? "航空支援" : null;
@@ -5355,7 +5416,6 @@ export function AshfallGame() {
         <div className="top-hud">
           <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>先行版 0.6.0</em></small></div></div>
           <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
-          <button className={`tactic-cycle ${hud.tactic}`} onClick={cycleTactic} aria-label={`作戦方針を切り替え（現在：${tacticName}）`}><small>方針</small><b>{tacticName}</b><em>R</em></button>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
           <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
@@ -5373,7 +5433,7 @@ export function AshfallGame() {
 
         <div className="bottom-hud">
           <div className="resource-stack">
-            <div className="resource command"><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy}%` }} /></i></div>
+            <div className="resource command"><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
             <div className="resource rage"><span>支援</span><strong>{hud.supportGauge}</strong><small>/{SUPPORT_GAUGE_MAX}</small><i><em style={{ width: `${hud.supportGauge}%` }} /></i></div>
           </div>
 

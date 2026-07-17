@@ -81,6 +81,15 @@ export const RANDOM_BATTLE_BARK_TRIGGER_IDS = Object.freeze({
   VICTORY_NEAR: "victory-near",
 });
 
+const PLAYER_FACING_SPEAKER_NAMES = Object.freeze({
+  "橘 迅": "ハチ",
+  "黒木 凛": "ミズチ",
+  "白石 直人": "ナオ",
+  "大庭 豪": "タタラ",
+  "真壁 玲奈": "レイダー",
+  "水城 奈々": "いくらちゃん",
+});
+
 function approvedLine({ duration = 1.7, cooldown = 12, ...line }) {
   return Object.freeze({
     duration,
@@ -89,6 +98,7 @@ function approvedLine({ duration = 1.7, cooldown = 12, ...line }) {
     weight: 1,
     tone: "radio",
     ...line,
+    speaker: PLAYER_FACING_SPEAKER_NAMES[line.speaker] ?? line.speaker,
   });
 }
 
