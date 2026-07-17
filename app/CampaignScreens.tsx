@@ -82,6 +82,7 @@ type Props = {
   assetsReady: boolean;
   assetError: boolean;
   hasCampaignSave: boolean;
+  savePersistence: "checking" | "saved" | "recovered" | "unavailable";
   readStoryEventIds: readonly string[];
   autoSkipReadStory: boolean;
   onBegin: () => void;
@@ -111,7 +112,8 @@ function formatTime(seconds: number) {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
 }
 
-function TitleScreen({ hasCampaignSave, onBegin, onRestartCampaign }: Pick<Props, "hasCampaignSave" | "onBegin" | "onRestartCampaign">) {
+function TitleScreen({ hasCampaignSave, savePersistence, onBegin, onRestartCampaign }: Pick<Props, "hasCampaignSave" | "savePersistence" | "onBegin" | "onRestartCampaign">) {
+  const saveUnavailable = savePersistence === "checking" || savePersistence === "unavailable";
   return <div className="campaign-overlay title-screen-v060" style={artStyle(PRODUCTION_VISUALS.title)} aria-label="西新世紀末物語 タイトル画面">
     <div className="title-atmosphere" aria-hidden="true"><i /><i /><i /><i /></div>
     <div className="title-logo" aria-label="西新世紀末物語">
@@ -122,8 +124,8 @@ function TitleScreen({ hasCampaignSave, onBegin, onRestartCampaign }: Pick<Props
     <p className="title-copy">三本の道。途切れた通信。まだ終わっていない街。</p>
     <section className="title-synopsis" aria-label="序章のあらすじ"><b>序章のあらすじ</b><p>{PROLOGUE_SYNOPSIS.short}</p></section>
     <div className="title-actions">
-      <button className="campaign-primary title-start" onClick={onBegin}><span>{hasCampaignSave ? "物語を続ける" : "物語を始める"}</span><small>{hasCampaignSave ? "保存した進行から再開" : "序章　新たな世界の始まり"}</small></button>
-      {hasCampaignSave && <button className="campaign-secondary title-restart" onClick={onRestartCampaign}>最初から始める</button>}
+      <button className="campaign-primary title-start" disabled={saveUnavailable} onClick={onBegin}><span>{savePersistence === "checking" ? "セーブ確認中" : hasCampaignSave ? "物語を続ける" : "物語を始める"}</span><small>{savePersistence === "unavailable" ? "Safariの通常タブで開き直してください" : hasCampaignSave ? "保存した進行から再開" : "序章　新たな世界の始まり"}</small></button>
+      {hasCampaignSave && <button className="campaign-secondary title-restart" disabled={saveUnavailable} onClick={onRestartCampaign}>最初から始める</button>}
     </div>
   </div>;
 }
@@ -247,7 +249,7 @@ function ResultScreen({ selectedStage, result, onRetry, onContinueResult }: Pick
 
 export function CampaignScreens(props: Props) {
   if (props.screen === "battle") return null;
-  if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} />;
+  if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} savePersistence={props.savePersistence} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} />;
   if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} onEventComplete={props.onEventComplete} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />;
   if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} onSelectStage={props.onSelectStage} onOpenLoadout={props.onOpenLoadout} onResetSave={props.onResetSave} />;
   if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationKinds={props.formationKinds} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} onReturnToMap={props.onReturnToMap} onToggleFormation={props.onToggleFormation} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
