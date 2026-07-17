@@ -8,10 +8,10 @@
 
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
 - source：GitHub `main`のrelease SHA
-- deployment：`.github/workflows/github-pages-playtest.yml`
+- deployment：`.github/workflows/github-pages-release.yml`
 - 公開成功条件：build、browser smoke、deploy、正式URLの公開後QA
 
-公開中の正確なrelease SHAは、GitHub Pages workflow結果、Issue #29のdeployment報告、公開HTMLの`github-pages-release`メタ情報を照合して確認する。
+公開中の正確なrelease SHAは、GitHub Pages workflow結果と公開HTMLの`github-pages-release`メタ情報を照合して確認する。
 
 ChatGPT Sitesは0.6.5以前の旧公開先である。
 
