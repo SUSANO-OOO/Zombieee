@@ -19,6 +19,7 @@ import {
   lastKnownGoodCampaignSaveKey,
   parseCampaignManualImport,
   preMigrationCampaignSaveKey,
+  preflightUnreadableCampaignRecovery,
   readCampaignBackup,
   readCampaignRecoverySnapshot,
   readCampaignSave,
@@ -28,6 +29,7 @@ import {
   writeCampaignRecoverySnapshot,
   writeCampaignBackup,
   writeCampaignSave,
+  writeCampaignSaveReplicas,
 } from "../app/campaignStorage.js";
 
 test("campaign storage accessor survives a localStorage getter SecurityError", () => {
@@ -92,7 +94,7 @@ test("indexedDB accessor survives privacy-mode access errors", () => {
   assert.equal(indexedDbFor({ indexedDB: { marker: true } }).marker, true);
 });
 
-function createFakeIndexedDb({ deleteFailures = new Set(), putFailures = new Set() } = {}) {
+function createFakeIndexedDb({ deleteFailures = new Set(), getFailures = new Set(), putFailures = new Set(), putCalls = null } = {}) {
   const values = new Map();
   let created = false;
   const database = {
@@ -107,8 +109,13 @@ function createFakeIndexedDb({ deleteFailures = new Set(), putFailures = new Set
         objectStore() {
           return {
             get(key) {
-              const request = { result: undefined, onsuccess: null, onerror: null };
+              const request = { result: undefined, error: null, onsuccess: null, onerror: null };
               queueMicrotask(() => {
+                if (getFailures.has(key)) {
+                  request.error = new Error(`get failed for ${key}`);
+                  request.onerror?.();
+                  return;
+                }
                 request.result = values.get(key);
                 request.onsuccess?.();
                 listeners.get("complete")?.();
@@ -118,6 +125,7 @@ function createFakeIndexedDb({ deleteFailures = new Set(), putFailures = new Set
             put(value, key) {
               const request = { result: undefined, error: null, onsuccess: null, onerror: null };
               queueMicrotask(() => {
+                putCalls?.push(key);
                 if (putFailures.has(key)) {
                   request.error = new Error(`put failed for ${key}`);
                   request.onerror?.();
@@ -254,6 +262,212 @@ test("an unreadable candidate plus a missing replica never becomes an empty fres
   assert.equal(resolution.recoveryNeeded, true);
   assert.equal(resolution.recoveryReason, "unreadable-without-valid-candidate");
   assert.equal(resolution.serialized, "");
+});
+
+test("foreign legacy JSON plus a missing replica requires recovery and is never replicated", async () => {
+  const key = "foreign-plus-missing";
+  const foreign = JSON.stringify({ foo: "bar" });
+  const storage = createFakeLocalStorage({ [key]: foreign });
+  const indexedDb = createFakeIndexedDb();
+
+  const result = await reconcileCampaignStorage({
+    storage,
+    indexedDb,
+    key,
+    validate: inspectCampaignSaveCandidate,
+  });
+
+  assert.equal(result.status, "recovery-needed");
+  assert.equal(result.recoveryReason, "corrupt-without-valid-candidate");
+  assert.deepEqual(result.repairedSources, []);
+  assert.equal(storage.getItem(key), foreign);
+  assert.equal(await readCampaignBackup(indexedDb, key), "");
+});
+
+test("a temporarily unreadable replica is write-blocked through passive persistence and keeps a hidden newer save", async () => {
+  const key = "hidden-newer-local";
+  const hiddenNewer = serializedSave(9, "2026-07-17T09:00:00.000Z", { marker: "hidden-newer" });
+  const readableOlder = serializedSave(4, "2026-07-17T04:00:00.000Z", { marker: "readable-older" });
+  const nextReadable = serializedSave(5, "2026-07-17T05:00:00.000Z", { marker: "next-readable" });
+  const localSnapshotKey = lastKnownGoodCampaignSaveKey(key);
+  const hiddenSnapshot = serializedSave(8, "2026-07-17T08:00:00.000Z", { marker: "hidden-snapshot" });
+  const localValues = new Map([[key, hiddenNewer], [localSnapshotKey, hiddenSnapshot]]);
+  let primaryReads = 0;
+  let primaryWrites = 0;
+  const storage = {
+    getItem(candidateKey) {
+      if (candidateKey === key) {
+        primaryReads += 1;
+        if (primaryReads === 1) throw new DOMException("temporary read failure", "SecurityError");
+      }
+      return localValues.get(candidateKey) ?? null;
+    },
+    setItem(candidateKey, value) {
+      if (candidateKey === key) {
+        primaryWrites += 1;
+      }
+      localValues.set(candidateKey, String(value));
+    },
+    removeItem() {},
+  };
+  const indexedDb = createFakeIndexedDb();
+  await writeCampaignBackup(indexedDb, key, readableOlder);
+
+  const reconciled = await reconcileCampaignStorage({
+    storage,
+    indexedDb,
+    key,
+    validate: inspectSerializedSave,
+  });
+
+  assert.equal(reconciled.status, "recovery-needed");
+  assert.equal(reconciled.source, "indexedDB");
+  assert.equal(reconciled.recoveryReason, "replica-unreadable");
+  assert.deepEqual(reconciled.repairSources, []);
+  assert.deepEqual(reconciled.writeBlockedSources, ["localStorage"]);
+  assert.equal(primaryWrites, 0);
+
+  const revealed = await preflightUnreadableCampaignRecovery({
+    storage,
+    indexedDb,
+    key,
+    selectedSerialized: reconciled.serialized,
+    validate: inspectSerializedSave,
+  });
+  assert.equal(revealed.status, "refresh-required");
+  assert.equal(revealed.reason, "revealed-replica-conflict");
+  assert.equal(revealed.revealedDifferentCandidates[0].serialized, hiddenNewer);
+  assert.equal(primaryWrites, 0);
+  assert.equal(localValues.get(key), hiddenNewer);
+  assert.equal(localValues.get(localSnapshotKey), hiddenSnapshot);
+
+  const passive = await writeCampaignSaveReplicas({
+    storage,
+    indexedDb,
+    key,
+    serialized: reconciled.serialized,
+    blockedSources: reconciled.writeBlockedSources,
+    alreadySavedSources: ["indexedDB"],
+  });
+  assert.equal(passive.localSaved, false);
+  assert.equal(passive.backupSaved, true);
+  assert.equal(primaryWrites, 0);
+  assert.equal(localValues.get(key), hiddenNewer);
+  assert.equal(localValues.get(localSnapshotKey), hiddenSnapshot);
+
+  const laterSave = await writeCampaignSaveReplicas({
+    storage,
+    indexedDb,
+    key,
+    serialized: nextReadable,
+    blockedSources: reconciled.writeBlockedSources,
+  });
+  assert.equal(laterSave.localSaved, false);
+  assert.equal(laterSave.backupSaved, true);
+  assert.equal(primaryWrites, 0);
+  assert.equal(localValues.get(key), hiddenNewer);
+  assert.equal(localValues.get(localSnapshotKey), hiddenSnapshot);
+  assert.equal(await readCampaignBackup(indexedDb, key), nextReadable);
+});
+
+test("unreadable recovery preflight performs no trial write when verification reads still fail", async () => {
+  const key = "unreadable-preflight-no-write";
+  const snapshotKey = lastKnownGoodCampaignSaveKey(key);
+  const hiddenPrimary = serializedSave(9, "2026-07-17T09:00:00.000Z", { marker: "hidden-primary" });
+  const hiddenSnapshot = serializedSave(8, "2026-07-17T08:00:00.000Z", { marker: "hidden-snapshot" });
+  const selected = serializedSave(4, "2026-07-17T04:00:00.000Z", { marker: "selected" });
+  const values = new Map([[key, hiddenPrimary], [snapshotKey, hiddenSnapshot]]);
+  let writes = 0;
+  const storage = {
+    getItem(candidateKey) {
+      if (candidateKey === key) throw new DOMException("still denied", "SecurityError");
+      return values.get(candidateKey) ?? null;
+    },
+    setItem(candidateKey, value) {
+      writes += 1;
+      values.set(candidateKey, String(value));
+    },
+    removeItem() {},
+  };
+  const indexedDb = createFakeIndexedDb();
+  await writeCampaignBackup(indexedDb, key, selected);
+
+  const result = await preflightUnreadableCampaignRecovery({
+    storage,
+    indexedDb,
+    key,
+    selectedSerialized: selected,
+    validate: inspectSerializedSave,
+  });
+
+  assert.equal(result.status, "blocked");
+  assert.equal(result.reason, "replica-still-unreadable");
+  assert.deepEqual(result.unreadableSources, ["localStorage"]);
+  assert.equal(writes, 0, "preflight must not probe writability with setItem");
+  assert.equal(values.get(key), hiddenPrimary);
+  assert.equal(values.get(snapshotKey), hiddenSnapshot);
+  assert.equal(await readCampaignBackup(indexedDb, key), selected);
+});
+
+test("unreadable recovery preflight blocks when a previously readable peer becomes unreadable", async () => {
+  const key = "preflight-new-unreadable-peer";
+  const selected = serializedSave(4, "2026-07-17T04:00:00.000Z", { marker: "selected" });
+  let localWrites = 0;
+  const storage = {
+    getItem() { return null; },
+    setItem() { localWrites += 1; },
+    removeItem() {},
+  };
+  const getFailures = new Set();
+  const putCalls = [];
+  const indexedDb = createFakeIndexedDb({ getFailures, putCalls });
+  await writeCampaignBackup(indexedDb, key, selected);
+  const putsBeforePreflight = putCalls.length;
+  getFailures.add(key);
+
+  const result = await preflightUnreadableCampaignRecovery({
+    storage,
+    indexedDb,
+    key,
+    selectedSerialized: selected,
+    validate: inspectSerializedSave,
+  });
+
+  assert.equal(result.status, "blocked");
+  assert.equal(result.reason, "replica-still-unreadable");
+  assert.deepEqual(result.unreadableSources, ["indexedDB"]);
+  assert.equal(localWrites, 0);
+  assert.equal(putCalls.length, putsBeforePreflight, "preflight must not write to a newly unreadable peer");
+});
+
+test("unreadable recovery preflight refreshes when the previously selected peer changes before adoption", async () => {
+  const key = "preflight-selected-peer-changed";
+  const originallySelected = serializedSave(4, "2026-07-17T04:00:00.000Z", { marker: "original" });
+  const changedPeer = serializedSave(6, "2026-07-17T06:00:00.000Z", { marker: "changed" });
+  let localWrites = 0;
+  const storage = {
+    getItem() { return null; },
+    setItem() { localWrites += 1; },
+    removeItem() {},
+  };
+  const putCalls = [];
+  const indexedDb = createFakeIndexedDb({ putCalls });
+  await writeCampaignBackup(indexedDb, key, changedPeer);
+  const putsBeforePreflight = putCalls.length;
+
+  const result = await preflightUnreadableCampaignRecovery({
+    storage,
+    indexedDb,
+    key,
+    selectedSerialized: originallySelected,
+    validate: inspectSerializedSave,
+  });
+
+  assert.equal(result.status, "refresh-required");
+  assert.equal(result.reason, "revealed-replica-conflict");
+  assert.equal(result.revealedDifferentCandidates[0].serialized, changedPeer);
+  assert.equal(localWrites, 0);
+  assert.equal(putCalls.length, putsBeforePreflight);
 });
 
 test("a missing local replica plus unavailable IndexedDB never authorizes initialization", async () => {
@@ -538,6 +752,14 @@ test("strict campaign inspection rejects a checksum-tampered manual import witho
   assert.equal(imported.status, "recovery-needed");
   assert.equal(imported.reason, "integrity-mismatch");
   assert.equal(imported.serialized, "");
+  assert.equal(storage.getItem(key), serialized);
+
+  const foreign = parseCampaignManualImport(JSON.stringify({ foo: "bar" }), {
+    validate: inspectCampaignSaveCandidate,
+  });
+  assert.equal(foreign.status, "recovery-needed");
+  assert.equal(foreign.reason, "unrecognized-legacy-shape");
+  assert.equal(foreign.serialized, "");
   assert.equal(storage.getItem(key), serialized);
 });
 

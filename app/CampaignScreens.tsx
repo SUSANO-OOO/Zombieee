@@ -164,6 +164,10 @@ function SaveRecoveryScreen({
 }: Pick<Props, "saveRecoveryReason" | "saveRecoveryCandidateSources" | "saveRecoveryCanExport" | "saveMutationPending" | "onExportCorruptSave" | "onImportSave" | "onUseRecoveryCandidate" | "onResetCorruptSave">) {
   const explanation = saveRecoveryReason === "both-corrupt"
     ? "端末内の2つの保存先がどちらも破損しています。自動で初期化せず、復旧方法を選べる状態で停止しました。"
+    : saveRecoveryReason === "replica-unreadable"
+      ? "保存先の一方を現在読み取れません。見えていない新しいデータの上書きを避けるため、再読込または明示的な復旧まで停止しました。"
+    : saveRecoveryReason === "revealed-replica-conflict"
+      ? "先ほど読めなかった保存先から別の有効なセーブが見つかりました。自動上書きせず、使う候補を改めて選べる状態で停止しました。"
     : saveRecoveryReason === "equal-freshness-conflict"
       ? "2つの保存先はどちらも読み取れますが、同じ更新番号で内容が異なります。誤った上書きを避けるため、自動選択を停止しました。"
       : saveRecoveryReason === "pre-migration-snapshot-failed"

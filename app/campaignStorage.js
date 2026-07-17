@@ -126,6 +126,38 @@ export async function writeCampaignBackup(indexedDb, key, serialized) {
   }
 }
 
+/**
+ * Writes the two primary replicas while honoring sources whose contents could
+ * not be read during hydration. An unreadable source may contain a newer save,
+ * so only an explicit recovery/reset action may overwrite it.
+ */
+export async function writeCampaignSaveReplicas({
+  storage,
+  indexedDb,
+  key,
+  serialized,
+  blockedSources = [],
+  alreadySavedSources = [],
+}) {
+  const blocked = new Set(blockedSources);
+  const alreadySaved = new Set(alreadySavedSources);
+  const localSaved = blocked.has(CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE)
+    ? false
+    : alreadySaved.has(CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE)
+      ? true
+      : writeCampaignSave(storage, key, serialized);
+  const backupSaved = blocked.has(CAMPAIGN_STORAGE_SOURCES.INDEXED_DB)
+    ? false
+    : alreadySaved.has(CAMPAIGN_STORAGE_SOURCES.INDEXED_DB)
+      ? true
+      : await writeCampaignBackup(indexedDb, key, serialized);
+  return {
+    localSaved,
+    backupSaved,
+    blockedSources: [...blocked],
+  };
+}
+
 function describeStorageError(error, fallback) {
   return {
     name: typeof error?.name === "string" && error.name ? error.name : "Error",
@@ -440,6 +472,9 @@ export function resolveCampaignStorageCandidates(candidates, callbacks = {}) {
       reason: candidate.reason,
       metadata: candidate.metadata,
     }));
+  const unreadableSources = inspected
+    .filter((candidate) => candidate.rawState === "unavailable" || candidate.rawState === "read-error")
+    .map((candidate) => candidate.source);
   const base = {
     source: null,
     localValid: local?.valid === true,
@@ -450,6 +485,8 @@ export function resolveCampaignStorageCandidates(candidates, callbacks = {}) {
     sourceSchemaVersion: undefined,
     candidates: inspected,
     corruptCandidates,
+    unreadableSources,
+    writeBlockedSources: unreadableSources,
     repairSources: [],
     recoveryNeeded: false,
     recoveryReason: "",
@@ -501,12 +538,16 @@ export function resolveCampaignStorageCandidates(candidates, callbacks = {}) {
   const repairSources = inspected
     .filter((candidate) => (
       candidate.source !== selected.source
-        && (!candidate.valid || candidate.serialized !== selected.serialized)
+        && (
+          candidate.rawState === "missing"
+          || candidate.state === "corrupt"
+          || (candidate.valid && candidate.serialized !== selected.serialized)
+        )
     ))
     .map((candidate) => candidate.source);
   return {
     ...base,
-    status: "ready",
+    status: unreadableSources.length > 0 ? "recovery-needed" : "ready",
     source: selected.source,
     serialized: selected.serialized,
     value: selected.value,
@@ -515,8 +556,63 @@ export function resolveCampaignStorageCandidates(candidates, callbacks = {}) {
     candidates: inspected,
     corruptCandidates,
     repairSources,
-    recoveryNeeded: repairSources.length > 0,
-    recoveryReason: repairSources.length > 0 ? "replica-missing-corrupt-or-stale" : "",
+    recoveryNeeded: repairSources.length > 0 || unreadableSources.length > 0,
+    recoveryReason: unreadableSources.length > 0
+      ? "replica-unreadable"
+      : repairSources.length > 0
+        ? "replica-missing-corrupt-or-stale"
+        : "",
+  };
+}
+
+/**
+ * Re-reads sources that were unavailable during hydration before an explicit
+ * recovery choice is allowed to write anything. A newly revealed, different
+ * valid save must be shown to the player as a candidate instead of being
+ * overwritten by the previously visible peer.
+ */
+export async function preflightUnreadableCampaignRecovery({
+  storage,
+  indexedDb,
+  key,
+  selectedSerialized,
+  validate,
+  deserialize,
+  getMetadata,
+}) {
+  const candidates = await readCampaignStorageCandidates({ storage, indexedDb, key });
+  const resolution = resolveCampaignStorageCandidates(candidates, {
+    validate,
+    deserialize,
+    getMetadata,
+  });
+  const stillUnreadable = resolution.candidates.filter((candidate) => (
+    candidate.rawState === "unavailable" || candidate.rawState === "read-error"
+  ));
+  if (stillUnreadable.length > 0) {
+    return {
+      status: "blocked",
+      reason: "replica-still-unreadable",
+      resolution,
+      unreadableSources: stillUnreadable.map((candidate) => candidate.source),
+    };
+  }
+  const revealedDifferentCandidates = resolution.candidates.filter((candidate) => (
+    candidate.valid === true && candidate.serialized !== selectedSerialized
+  ));
+  if (revealedDifferentCandidates.length > 0) {
+    return {
+      status: "refresh-required",
+      reason: "revealed-replica-conflict",
+      resolution,
+      revealedDifferentCandidates,
+    };
+  }
+  return {
+    status: "ready",
+    reason: "",
+    resolution,
+    revealedDifferentCandidates: [],
   };
 }
 

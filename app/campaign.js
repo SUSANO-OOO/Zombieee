@@ -1224,6 +1224,80 @@ export function verifyCampaignSaveIntegrity(rawSave) {
   return source.integrity === computeCampaignSaveIntegrity(source);
 }
 
+function hasTypedCampaignField(source, keys, predicate) {
+  return keys.some((key) => (
+    Object.prototype.hasOwnProperty.call(source, key)
+    && predicate(source[key])
+  ));
+}
+
+/**
+ * Durable storage/import boundaries must not pass arbitrary JSON through the
+ * intentionally forgiving migration function. Persisted v1-v4 saves always
+ * contained this complete campaign fingerprint; schema-less/v0 saves used the
+ * same groups under aliases. A partial or foreign object is recovery material,
+ * not a fresh campaign that may be replicated over another store.
+ */
+function isRecognizedLegacyCampaignSave(source, sourceSchemaVersion) {
+  const hasCompletedStages = hasTypedCampaignField(
+    source,
+    ["completedStageIds", "completedStages", "clearedStages"],
+    Array.isArray,
+  );
+  const hasBestStars = hasTypedCampaignField(
+    source,
+    ["bestStarsByStage", "stageStars", "bestStars"],
+    isRecord,
+  );
+  const hasClaimedRewards = hasTypedCampaignField(
+    source,
+    ["claimedStarRewardsByStage", "claimedStarMilestones", "claimedStarRewards"],
+    isRecord,
+  );
+  const hasEconomy = hasTypedCampaignField(
+    source,
+    ["caps", "supplies", "supply", "currency"],
+    (value) => typeof value === "number" && Number.isFinite(value),
+  );
+  const hasUnlockedStages = hasTypedCampaignField(
+    source,
+    ["unlockedStageIds", "unlockedStages"],
+    Array.isArray,
+  );
+  const hasRoster = hasTypedCampaignField(
+    source,
+    ["ownership", "ownedUnitIds", "unlockedUnitIds", "unlockedUnits"],
+    Array.isArray,
+  );
+  const hasLastStage = hasTypedCampaignField(
+    source,
+    ["lastSelectedStageId", "lastSelectedStage", "lastStageId"],
+    (value) => typeof value === "string",
+  );
+  const hasSettings = hasTypedCampaignField(
+    source,
+    ["settings", "options"],
+    isRecord,
+  );
+  const hasCoreFingerprint = hasCompletedStages
+    && hasBestStars
+    && hasClaimedRewards
+    && hasEconomy
+    && hasUnlockedStages
+    && hasRoster
+    && hasLastStage
+    && hasSettings;
+
+  if (!hasCoreFingerprint) return false;
+  if (sourceSchemaVersion === 0) {
+    return !Object.prototype.hasOwnProperty.call(source, "version")
+      || source.version === 0;
+  }
+  if (sourceSchemaVersion === 1) return true;
+  return typeof source.campaignStarted === "boolean"
+    && Array.isArray(source.processedResultIds);
+}
+
 export function inspectCampaignSaveCandidate(raw, { source = "unknown" } = {}) {
   const rawText = typeof raw === "string"
     ? raw
@@ -1273,9 +1347,24 @@ export function inspectCampaignSaveCandidate(raw, { source = "unknown" } = {}) {
     };
   }
 
-  const sourceSchemaVersion = Number.isFinite(Number(parsed.schemaVersion))
-    ? Math.floor(Number(parsed.schemaVersion))
-    : 0;
+  const hasSchemaVersion = Object.prototype.hasOwnProperty.call(parsed, "schemaVersion");
+  if (hasSchemaVersion && (
+    typeof parsed.schemaVersion !== "number"
+    || !Number.isInteger(parsed.schemaVersion)
+    || parsed.schemaVersion < 0
+  )) {
+    return {
+      status: "corrupt",
+      source,
+      raw: rawText,
+      save: null,
+      revision: 0,
+      updatedAt: "",
+      reason: "invalid-schema",
+      sourceSchemaVersion: null,
+    };
+  }
+  const sourceSchemaVersion = hasSchemaVersion ? parsed.schemaVersion : 0;
   if (sourceSchemaVersion > CAMPAIGN_SAVE_SCHEMA_VERSION) {
     return {
       status: "corrupt",
@@ -1285,6 +1374,19 @@ export function inspectCampaignSaveCandidate(raw, { source = "unknown" } = {}) {
       revision: 0,
       updatedAt: "",
       reason: "unsupported-schema",
+      sourceSchemaVersion,
+    };
+  }
+  if (sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION
+    && !isRecognizedLegacyCampaignSave(parsed, sourceSchemaVersion)) {
+    return {
+      status: "corrupt",
+      source,
+      raw: rawText,
+      save: null,
+      revision: 0,
+      updatedAt: "",
+      reason: "unrecognized-legacy-shape",
       sourceSchemaVersion,
     };
   }

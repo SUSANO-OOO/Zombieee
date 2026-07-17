@@ -944,14 +944,77 @@ test("save integrity stamps canonical v5 data and strict inspection distinguishe
 
   const legacy = inspectCampaignSaveCandidate(JSON.stringify({
     schemaVersion: 4,
+    campaignStarted: true,
+    processedResultIds: ["legacy-result"],
+    completedStageIds: [STAGE_1],
+    bestStarsByStage: { [STAGE_1]: 2 },
+    claimedStarRewardsByStage: { [STAGE_1]: [1, 2] },
     supplies: 77,
+    unlockedStageIds: [STAGE_1, STAGE_2],
     unlockedUnitIds: ["medic", "gunner"],
+    lastSelectedStageId: STAGE_2,
+    settings: {},
   }));
   assert.equal(legacy.status, "valid");
   assert.equal(legacy.reason, "migrated");
   assert.equal(legacy.save.caps, 77);
   assert.equal(legacy.save.ownership.includes(CAMPAIGN_UNIT_IDS.NAO), true);
   assert.equal(legacy.save.ownership.includes(CAMPAIGN_UNIT_IDS.RAIDER), true);
+});
+
+test("strict save inspection accepts complete v0 and v2-v4 fingerprints but rejects truncated or foreign JSON", () => {
+  const versionedFixture = (schemaVersion) => ({
+    schemaVersion,
+    campaignStarted: true,
+    processedResultIds: [`v${schemaVersion}-result`],
+    completedStageIds: [STAGE_1],
+    bestStarsByStage: { [STAGE_1]: 2 },
+    claimedStarRewardsByStage: { [STAGE_1]: [1, 2] },
+    supplies: 432,
+    unlockedStageIds: [STAGE_1, STAGE_2],
+    unlockedUnitIds: [...INITIAL_UNIT_IDS, "brute"],
+    lastSelectedStageId: STAGE_2,
+    settings: { bgmEnabled: true, sfxEnabled: true },
+  });
+
+  for (const schemaVersion of [2, 3, 4]) {
+    const inspected = inspectCampaignSaveCandidate(JSON.stringify(versionedFixture(schemaVersion)));
+    assert.equal(inspected.status, "valid", `v${schemaVersion} should be recognized`);
+    assert.equal(inspected.reason, "migrated");
+    assert.equal(inspected.sourceSchemaVersion, schemaVersion);
+  }
+
+  const v0 = inspectCampaignSaveCandidate(JSON.stringify({
+    version: 0,
+    clearedStages: [STAGE_1],
+    stageStars: { [STAGE_1]: 2 },
+    claimedStarMilestones: { [STAGE_1]: [1, 2] },
+    currency: 345,
+    unlockedStages: [STAGE_1, STAGE_2],
+    unlockedUnits: [...INITIAL_UNIT_IDS],
+    lastStageId: STAGE_2,
+    options: { bgm: true, sfx: true },
+  }));
+  assert.equal(v0.status, "valid");
+  assert.equal(v0.sourceSchemaVersion, 0);
+
+  for (const candidate of [
+    {},
+    { foo: "bar" },
+    { version: 0 },
+    { schemaVersion: 4 },
+    { schemaVersion: 4, settings: {} },
+    { schemaVersion: 4, caps: "bad", unlockedUnitIds: [] },
+  ]) {
+    const inspected = inspectCampaignSaveCandidate(JSON.stringify(candidate));
+    assert.equal(inspected.status, "corrupt", JSON.stringify(candidate));
+    assert.equal(inspected.reason, "unrecognized-legacy-shape", JSON.stringify(candidate));
+  }
+
+  assert.equal(
+    inspectCampaignSaveCandidate(JSON.stringify({ ...versionedFixture(4), schemaVersion: "4" })).reason,
+    "invalid-schema",
+  );
 });
 
 test("the same result receipt applies rewards, stars, and unlocks exactly once", () => {
