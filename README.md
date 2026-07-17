@@ -74,7 +74,7 @@ git diff --check
 - `app/gameRules.js`：数値、レーン、戦闘ルール
 - `public/`：画像・音声アセット
 - `tests/`：仕様・回帰テスト
-- `.github/workflows/github-pages-playtest.yml`：正式GitHub Pages build・smoke・deployment
+- `.github/workflows/github-pages-release.yml`：正式GitHub Pages build・smoke・deployment
 
 ## 開発と公開
 
