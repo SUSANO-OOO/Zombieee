@@ -20,11 +20,16 @@ import { BattleBarkAuditScreen } from "./BattleBarkAuditScreen";
 import { SpriteAuditScreen } from "./SpriteAuditScreen";
 import { createBattleResultId, createBattleSessionTransition, resolvePauseAction } from "./battleSession.js";
 import {
+  CAMPAIGN_SNAPSHOT_KINDS,
   campaignStorageFor,
+  clearCampaignSaveEverywhere,
+  createCampaignManualExport,
+  createCorruptCampaignRawExport,
   indexedDbFor,
-  readCampaignBackup,
-  readCampaignSave,
+  parseCampaignManualImport,
+  reconcileCampaignStorage,
   writeCampaignBackup,
+  writeCampaignRecoverySnapshot,
   writeCampaignSave,
 } from "./campaignStorage.js";
 import { claimDefeatResolution } from "./defeatLedger.js";
@@ -33,17 +38,27 @@ import {
   CAMPAIGN_STAGE_BY_ID,
   CAMPAIGN_STAGE_IDS,
   CAMPAIGN_STAGES,
+  CAMPAIGN_RECRUITMENT_COSTS,
   CAMPAIGN_UNITS,
   INITIAL_STAGE_ID,
   createDefaultCampaignSave,
-  deserializeCampaignSave,
+  getSelectedFormationCombatKinds,
+  getSelectedFormationUnitIds,
+  inspectCampaignSaveCandidate,
+  isUnitDiscovered,
+  isUnitOwned,
+  isUnitRecruitable,
   isStageUnlocked,
-  isUnitUnlocked,
   markCampaignStarted,
   markStoryEventRead,
+  recruitCampaignUnit,
+  reviseCampaignSave,
   resolveStageResult,
+  selectFormationPreset,
   selectCampaignStage,
+  setFormationPresetUnits,
   serializeCampaignSave,
+  updateCampaignSettings,
   updateStoryPlaybackSettings,
 } from "./campaign.js";
 import {
@@ -173,7 +188,7 @@ const W = 960;
 const H = 540;
 
 type Lane = 0 | 1 | 2;
-type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga";
+type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer";
 type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned";
 type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "danger" | "boss";
@@ -233,25 +248,7 @@ type BattleDefinition = {
   phaseSchedule: { at: number; phase: 1 | 2 | 3; label: string; objective: string }[] | null;
   objective: string;
 };
-type CampaignSave = {
-  schemaVersion: number;
-  campaignStarted: boolean;
-  storyScriptVersion: string;
-  readStoryEventIds: string[];
-  autoSkipReadStory: boolean;
-  processedResultIds: string[];
-  completedStageIds: string[];
-  bestStarsByStage: Record<string, number>;
-  claimedStarRewardsByStage: Record<string, number[]>;
-  supplies: number;
-  unlockedStageIds: string[];
-  unlockedUnitIds: string[];
-  lastSelectedStageId: string;
-  settings: {
-    bgmEnabled: boolean; sfxEnabled: boolean; bgmVolume: number; sfxVolume: number; reducedMotion: boolean;
-    battleEventMode: "first-time" | "compact" | "all";
-  };
-};
+type CampaignSave = ReturnType<typeof createDefaultCampaignSave>;
 type CampaignStageData = {
   id: string; displayName: string; objective: string; missionType: "assault" | "timed-defense" | "boss-assault";
   baseReward: number; firstTimeStarRewards: Record<number, number>; mapPosition: { x: number; y: number };
@@ -259,7 +256,8 @@ type CampaignStageData = {
 type CampaignUnitData = {
   id: string; combatKind: UnitKind; displayName: string; roleName: string; description: string;
   roleIcon: string; weaponName: string; attackMode: string; rangeBand: string; primaryTarget: string; deploymentHint: string;
-  unlock: { type: "initial" } | { type: "stage-clear"; stageId: string };
+  recruitmentCostCaps?: number;
+  unlock: { type: string; stageId?: string; stageNumber?: number; costCaps?: number };
 };
 type EnemySpawnEntry = {
   entryId: number; kind: string; lane: Lane; wave: number; order: number; delay: number;
@@ -540,6 +538,38 @@ type BattleResult = {
 };
 
 type SavePersistenceState = "checking" | "saved" | "recovered" | "unavailable";
+type CampaignPersistResult = {
+  durable: boolean;
+  localSaved: boolean;
+  backupSaved: boolean;
+  skipped?: boolean;
+};
+type PersistedReplicaReceipt = {
+  serialized: string;
+  localSaved: boolean;
+  backupSaved: boolean;
+};
+type SaveRecoveryCandidate = {
+  source: string;
+  raw: string;
+  reason: string;
+  state?: string;
+  valid?: boolean;
+  metadata?: { revision?: number; updatedAt?: string };
+};
+type SaveRecoveryState = {
+  status: string;
+  recoveryReason: string;
+  bothCorrupt?: boolean;
+  conflict?: boolean;
+  candidates: readonly SaveRecoveryCandidate[];
+  corruptCandidates: readonly SaveRecoveryCandidate[];
+};
+type PendingResultCommit = {
+  save: CampaignSave;
+  view: CampaignResultView;
+  storyEventIds: readonly string[];
+};
 const CAMPAIGN_SAVE_KEY = "nishijin-campaign-v1";
 type AudioUnlockUiState = "idle" | "pending" | "success" | "failed";
 
@@ -643,7 +673,7 @@ const emptyCooldowns = () => Object.fromEntries(cards.map((card) => [card.kind, 
 const initialGame = (
   selectedSupply: SupplyKind = "pod",
   stageId = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
-  formationKinds: UnitKind[] = cards.map((card) => card.kind),
+  formationKinds: UnitKind[] = cards.slice(0, 7).map((card) => card.kind),
   resultId = createBattleResultId(stageId),
 ): Game => {
   const definition = createBattleDefinition(stageId) as BattleDefinition;
@@ -2085,10 +2115,20 @@ export function AshfallGame() {
   const [screen, setScreen] = useState<CampaignScreen>("title");
   const [eventId, setEventId] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState(INITIAL_STAGE_ID);
-  const [formationKinds, setFormationKinds] = useState<UnitKind[]>(["brawler", "scout", "ranger", "medic"]);
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
   const [saveHydrated, setSaveHydrated] = useState(false);
   const [savePersistence, setSavePersistence] = useState<SavePersistenceState>("checking");
+  const [saveRecovery, setSaveRecovery] = useState<SaveRecoveryState | null>(null);
+  const [saveMutationPending, setSaveMutationPending] = useState(false);
+  const [pendingResultCommit, setPendingResultCommit] = useState<PendingResultCommit | null>(null);
+  const [resultSaveRetrying, setResultSaveRetrying] = useState(false);
+  const lastPersistedSerializedRef = useRef("");
+  const lastPersistedReplicaRef = useRef<PersistedReplicaReceipt>({ serialized: "", localSaved: false, backupSaved: false });
+  const persistenceQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const saveMutationPendingRef = useRef(false);
+  const resultSaveRetryingRef = useRef(false);
+  const formationUnitIds = useMemo(() => getSelectedFormationUnitIds(campaignSave), [campaignSave]);
+  const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
   const [hud, setHud] = useState<Hud>({
     missionType: "assault", energy: 70, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
@@ -2098,6 +2138,70 @@ export function AshfallGame() {
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), battleBarks: [],
   });
   const [end, setEnd] = useState<BattleResult | null>(null);
+
+  const enqueueCampaignStorageMutation = useCallback(<T,>(mutation: () => Promise<T>) => {
+    const queued = persistenceQueueRef.current.then(mutation);
+    persistenceQueueRef.current = queued.then(() => undefined, () => undefined);
+    return queued;
+  }, []);
+
+  const beginSaveMutation = useCallback(() => {
+    if (saveMutationPendingRef.current) return false;
+    saveMutationPendingRef.current = true;
+    setSaveMutationPending(true);
+    return true;
+  }, []);
+
+  const finishSaveMutation = useCallback(() => {
+    saveMutationPendingRef.current = false;
+    setSaveMutationPending(false);
+  }, []);
+
+  const persistCampaignSave = useCallback((nextSave: CampaignSave): Promise<CampaignPersistResult> => {
+    if (saveMutationPendingRef.current) {
+      return Promise.resolve({ durable: false, localSaved: false, backupSaved: false, skipped: true });
+    }
+    const serialized = serializeCampaignSave(nextSave);
+    return enqueueCampaignStorageMutation(async () => {
+      const replica = lastPersistedReplicaRef.current;
+      if (serialized === replica.serialized && replica.localSaved && replica.backupSaved) {
+        return { durable: true, localSaved: true, backupSaved: true };
+      }
+      const storage = campaignStorageFor(window);
+      const indexedDb = indexedDbFor(window);
+      const previous = lastPersistedSerializedRef.current;
+      if (previous) {
+        const snapshot = await writeCampaignRecoverySnapshot({
+          storage,
+          indexedDb,
+          key: CAMPAIGN_SAVE_KEY,
+          kind: CAMPAIGN_SNAPSHOT_KINDS.LAST_KNOWN_GOOD,
+          serialized: previous,
+        });
+        if (!snapshot.saved) {
+          setSavePersistence("unavailable");
+          return { durable: false, localSaved: false, backupSaved: false };
+        }
+      }
+      const sameSerialized = serialized === replica.serialized;
+      const localSaved = sameSerialized && replica.localSaved
+        ? true
+        : writeCampaignSave(storage, CAMPAIGN_SAVE_KEY, serialized);
+      const backupSaved = sameSerialized && replica.backupSaved
+        ? true
+        : await writeCampaignBackup(indexedDb, CAMPAIGN_SAVE_KEY, serialized);
+      if (localSaved || backupSaved) {
+        lastPersistedSerializedRef.current = serialized;
+        lastPersistedReplicaRef.current = { serialized, localSaved, backupSaved };
+      }
+      setSavePersistence(localSaved || backupSaved ? (localSaved && backupSaved ? "saved" : "recovered") : "unavailable");
+      return {
+        durable: localSaved || backupSaved,
+        localSaved,
+        backupSaved,
+      };
+    });
+  }, [enqueueCampaignStorageMutation]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -2110,21 +2214,89 @@ export function AshfallGame() {
   useEffect(() => {
     let cancelled = false;
     const timer = window.setTimeout(async () => {
-      const localSerialized = readCampaignSave(campaignStorageFor(window), CAMPAIGN_SAVE_KEY);
-      const backupSerialized = localSerialized ? "" : await readCampaignBackup(indexedDbFor(window), CAMPAIGN_SAVE_KEY);
+      const storage = campaignStorageFor(window);
+      const indexedDb = indexedDbFor(window);
+      const reconciled = await reconcileCampaignStorage({
+        storage,
+        indexedDb,
+        key: CAMPAIGN_SAVE_KEY,
+        validate: (serialized: string, context: { source: string }) => inspectCampaignSaveCandidate(serialized, { source: context.source }),
+      });
       if (cancelled) return;
-      const loaded = deserializeCampaignSave(localSerialized || backupSerialized) as CampaignSave;
+      if (reconciled.status === "recovery-needed") {
+        setSaveRecovery(reconciled as SaveRecoveryState);
+        setSavePersistence("unavailable");
+        return;
+      }
+      if (reconciled.status === "unavailable") {
+        setSavePersistence("unavailable");
+        return;
+      }
+      if (reconciled.repairBlockedBySnapshot) {
+        lastPersistedSerializedRef.current = reconciled.serialized || "";
+        lastPersistedReplicaRef.current = {
+          serialized: reconciled.serialized || "",
+          localSaved: reconciled.source === "localStorage",
+          backupSaved: reconciled.source === "indexedDB",
+        };
+        setSaveRecovery({
+          ...(reconciled as SaveRecoveryState),
+          status: "recovery-needed",
+          recoveryReason: "last-known-good-snapshot-failed",
+        });
+        setSavePersistence("unavailable");
+        return;
+      }
+      const loaded = (reconciled.value ?? createDefaultCampaignSave()) as CampaignSave;
+      const selectedCandidate = reconciled.candidates?.find((candidate: { source: string }) => candidate.source === reconciled.source);
+      const sourceSchemaVersion = Number(selectedCandidate?.validation?.sourceSchemaVersion);
+      if (reconciled.serialized && Number.isFinite(sourceSchemaVersion) && sourceSchemaVersion < 5) {
+        const snapshot = await writeCampaignRecoverySnapshot({
+          storage,
+          indexedDb,
+          key: CAMPAIGN_SAVE_KEY,
+          kind: CAMPAIGN_SNAPSHOT_KINDS.PRE_MIGRATION,
+          serialized: reconciled.serialized,
+        });
+        if (!snapshot.saved) {
+          setSaveRecovery({
+            ...(reconciled as SaveRecoveryState),
+            status: "recovery-needed",
+            recoveryReason: "pre-migration-snapshot-failed",
+          });
+          setSavePersistence("unavailable");
+          return;
+        }
+      }
+      if (cancelled) return;
+      lastPersistedSerializedRef.current = reconciled.serialized || "";
+      lastPersistedReplicaRef.current = {
+        serialized: reconciled.serialized || "",
+        localSaved: Boolean(reconciled.serialized && (
+          reconciled.candidates?.some((candidate: { source: string; valid: boolean; serialized: string }) => candidate.source === "localStorage" && candidate.valid && candidate.serialized === reconciled.serialized)
+          || reconciled.repairedSources?.includes("localStorage")
+        )),
+        backupSaved: Boolean(reconciled.serialized && (
+          reconciled.candidates?.some((candidate: { source: string; valid: boolean; serialized: string }) => candidate.source === "indexedDB" && candidate.valid && candidate.serialized === reconciled.serialized)
+          || reconciled.repairedSources?.includes("indexedDB")
+        )),
+      };
       const legacyQa = resolveLocalQaMode(window.location.hostname, window.location.search) as QaMode | null;
       const campaignQa = resolveLocalQaScenario(window.location.hostname, window.location.search);
       const localQaAudio = Boolean(legacyQa || campaignQa);
       setCampaignSave(loaded);
       setSelectedStageId(legacyQa ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : loaded.lastSelectedStageId);
-      setFormationKinds(legacyQa ? cards.map((card) => card.kind) : (current) => current.filter((kind) => loaded.unlockedUnitIds.includes(kind)));
       if (legacyQa) setScreen("loadout");
       setBgmMuted(localQaAudio ? false : !loaded.settings.bgmEnabled);
       sfxMutedRef.current = localQaAudio ? false : !loaded.settings.sfxEnabled;
       setSfxMuted(localQaAudio ? false : !loaded.settings.sfxEnabled);
-      if (!localSerialized && backupSerialized) setSavePersistence("recovered");
+      setSavePersistence(reconciled.status === "recovered" || reconciled.status === "degraded"
+        ? "recovered"
+        : reconciled.status === "unavailable"
+          ? "unavailable"
+          : reconciled.status === "empty"
+            ? "checking"
+            : "saved");
       setSaveHydrated(true);
     }, 0);
     return () => {
@@ -2139,17 +2311,8 @@ export function AshfallGame() {
     // conveniences into ordinary campaign progress.
     if (resolveLocalQaMode(window.location.hostname, window.location.search)
       || resolveLocalQaScenario(window.location.hostname, window.location.search)) return;
-    let cancelled = false;
-    const serialized = serializeCampaignSave(campaignSave);
-    const localSaved = writeCampaignSave(campaignStorageFor(window), CAMPAIGN_SAVE_KEY, serialized);
-    void writeCampaignBackup(indexedDbFor(window), CAMPAIGN_SAVE_KEY, serialized).then((backupSaved) => {
-      if (cancelled) return;
-      setSavePersistence(localSaved || backupSaved ? "saved" : "unavailable");
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [campaignSave, saveHydrated]);
+    void persistCampaignSave(campaignSave);
+  }, [campaignSave, persistCampaignSave, saveHydrated]);
 
   useEffect(() => {
     const sfxRequestGate = sfxRequestGateRef.current;
@@ -3185,10 +3348,15 @@ export function AshfallGame() {
     rangeBand: unit.rangeBand,
     primaryTarget: unit.primaryTarget,
     deploymentHint: unit.deploymentHint,
-    unlocked: Boolean(qaMode || qaScenario) || isUnitUnlocked(campaignSave, unit.id),
+    owned: Boolean(qaMode || qaScenario) || isUnitOwned(campaignSave, unit.id),
+    discovered: Boolean(qaMode || qaScenario) || isUnitDiscovered(campaignSave, unit.id),
+    recruitable: !isUnitOwned(campaignSave, unit.id) && (Boolean(qaMode || qaScenario) || isUnitRecruitable(campaignSave, unit.id)),
+    recruitCost: CAMPAIGN_RECRUITMENT_COSTS[unit.id as keyof typeof CAMPAIGN_RECRUITMENT_COSTS] ?? unit.recruitmentCostCaps ?? 0,
     unlockHint: unit.unlock.type === "initial"
-      ? "初期解放"
-      : `${CAMPAIGN_STAGE_BY_ID[unit.unlock.stageId]?.displayName ?? "指定ステージ"}クリアで解放`,
+      ? "初期加入"
+      : unit.unlock.type === "recruitment"
+        ? `${CAMPAIGN_STAGE_BY_ID[unit.unlock.stageId ?? ""]?.displayName ?? `Stage ${unit.unlock.stageNumber ?? "?"}`}後に調達`
+        : `Stage ${unit.unlock.stageNumber ?? "?"}で加入`,
   })), [campaignSave, qaMode, qaScenario]);
   const supplyViews = useMemo<SupplyScreenView[]>(() => (Object.keys(supplyDefs) as SupplyKind[]).map((kind) => ({
     kind,
@@ -3247,9 +3415,11 @@ export function AshfallGame() {
     const battleStageId = qaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : sessionOverride?.stageId ?? selectedStageId;
     const requestedFormation = sessionOverride?.formationKinds ?? formationKinds;
     const permittedFormation = qaAllUnlocked
-      ? requestedFormation
-      : requestedFormation.filter((kind) => isUnitUnlocked(campaignSave, kind));
-    const fallbackFormation = cards.map((card) => card.kind).filter((kind) => qaAllUnlocked || isUnitUnlocked(campaignSave, kind));
+      ? requestedFormation.slice(0, 7)
+      : requestedFormation.filter((kind) => isUnitOwned(campaignSave, kind)).slice(0, 7);
+    const fallbackFormation = getSelectedFormationCombatKinds(campaignSave)
+      .filter((kind: string) => qaAllUnlocked || isUnitOwned(campaignSave, kind))
+      .slice(0, 7) as UnitKind[];
     const battleSupply = sessionOverride?.selectedSupply ?? selectedSupply;
     const fresh = initialGame(
       battleSupply,
@@ -3339,12 +3509,35 @@ export function AshfallGame() {
     setCampaignSave((current) => selectCampaignStage(current, stageId) as CampaignSave);
   }, [campaignSave, qaMode, qaScenario]);
 
-  const toggleFormation = useCallback((kind: string) => {
-    if (!qaMode && !qaScenario && !isUnitUnlocked(campaignSave, kind)) return;
-    setFormationKinds((current) => current.includes(kind as UnitKind)
-      ? current.filter((entry) => entry !== kind)
-      : [...current, kind as UnitKind]);
-  }, [campaignSave, qaMode, qaScenario]);
+  const selectFormation = useCallback((presetId: string) => {
+    setCampaignSave((current) => selectFormationPreset(current, presetId) as CampaignSave);
+  }, []);
+
+  const toggleFormation = useCallback((unitId: string) => {
+    setCampaignSave((current) => {
+      if (!qaMode && !qaScenario && !isUnitOwned(current, unitId)) return current;
+      const workingSave = qaMode || qaScenario
+        ? {
+          ...current,
+          ownership: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
+          discovery: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
+          unlockedUnitIds: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
+        } as CampaignSave
+        : current;
+      const selected = getSelectedFormationUnitIds(workingSave);
+      const next = selected.includes(unitId)
+        ? selected.length > 1 ? selected.filter((entry) => entry !== unitId) : selected
+        : selected.length < 7 ? [...selected, unitId] : selected;
+      if (next === selected || (next.length === selected.length && next.every((entry, index) => entry === selected[index]))) return current;
+      return setFormationPresetUnits(workingSave, workingSave.selectedFormationPresetId, next) as CampaignSave;
+    });
+  }, [qaMode, qaScenario]);
+  const recruitUnit = useCallback((unitId: string) => {
+    setCampaignSave((current) => recruitCampaignUnit(current, {
+      unitId,
+      acquisitionId: `recruit:${unitId}`,
+    }).save as CampaignSave);
+  }, []);
 
   const beginCampaign = useCallback(() => {
     if (campaignSave.campaignStarted) {
@@ -3370,28 +3563,292 @@ export function AshfallGame() {
   const continueResult = useCallback(() => {
     returnToMap();
   }, [returnToMap]);
+  const downloadCampaignText = useCallback((filename: string, text: string) => {
+    const url = URL.createObjectURL(new Blob([text], { type: "application/json;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, []);
+  const exportCampaignSave = useCallback(() => {
+    const serialized = serializeCampaignSave(campaignSave);
+    downloadCampaignText("nishijin-campaign-v5-backup.json", createCampaignManualExport(serialized, {
+      metadata: { revision: campaignSave.revision, updatedAt: campaignSave.updatedAt },
+    }));
+  }, [campaignSave, downloadCampaignText]);
+  const exportCorruptCampaignSave = useCallback(() => {
+    if (!saveRecovery) return;
+    const candidates = saveRecovery.corruptCandidates.length > 0
+      ? saveRecovery.corruptCandidates
+      : saveRecovery.candidates;
+    downloadCampaignText("nishijin-campaign-recovery-candidates.json", createCorruptCampaignRawExport(candidates));
+  }, [downloadCampaignText, saveRecovery]);
+  const importCampaignSave = useCallback((text: string) => {
+    const imported = parseCampaignManualImport(text, {
+      validate: (serialized: string, context: { source: string }) => inspectCampaignSaveCandidate(serialized, { source: context.source }),
+    });
+    if (imported.status !== "ready" || !imported.value) {
+      window.alert(`バックアップを読み込めませんでした。現在のセーブは変更していません。\n${imported.reason || "整合性確認に失敗しました。"}`);
+      return;
+    }
+    if (campaignSave.campaignStarted && !saveRecovery && !window.confirm("現在のセーブを、選択したバックアップで置き換えますか？")) return;
+    if (!beginSaveMutation()) return;
+    setSaveHydrated(false);
+    void (async () => {
+      try {
+        const outcome = await enqueueCampaignStorageMutation(async () => {
+          const storage = campaignStorageFor(window);
+          const indexedDb = indexedDbFor(window);
+          const sourceSchemaVersion = Number(imported.candidate?.validation?.sourceSchemaVersion);
+          if (Number.isFinite(sourceSchemaVersion) && sourceSchemaVersion < 5) {
+            const preMigrationSnapshot = await writeCampaignRecoverySnapshot({
+              storage,
+              indexedDb,
+              key: CAMPAIGN_SAVE_KEY,
+              kind: CAMPAIGN_SNAPSHOT_KINDS.PRE_MIGRATION,
+              serialized: imported.raw,
+            });
+            if (!preMigrationSnapshot.saved) {
+              return { status: "blocked" as const, reason: "pre-migration-snapshot-failed" };
+            }
+          }
+          const recoveryBackupCandidate = saveRecovery?.candidates.find((candidate) => (
+            candidate.valid === true && candidate.raw && candidate.raw !== imported.raw
+          )) ?? saveRecovery?.candidates.find((candidate) => candidate.valid === true && candidate.raw);
+          const existingSerialized = lastPersistedSerializedRef.current || recoveryBackupCandidate?.raw || "";
+          if (existingSerialized) {
+            const lastKnownGoodSnapshot = await writeCampaignRecoverySnapshot({
+              storage,
+              indexedDb,
+              key: CAMPAIGN_SAVE_KEY,
+              kind: CAMPAIGN_SNAPSHOT_KINDS.LAST_KNOWN_GOOD,
+              serialized: existingSerialized,
+            });
+            if (!lastKnownGoodSnapshot.saved) {
+              return { status: "blocked" as const, reason: "last-known-good-snapshot-failed" };
+            }
+          }
+          const highestRecoveryRevision = Math.max(
+            0,
+            ...(saveRecovery?.candidates ?? []).map((candidate) => Number(candidate.metadata?.revision) || 0),
+          );
+          const importedSave = imported.value as CampaignSave;
+          const loaded = reviseCampaignSave({
+            ...importedSave,
+            revision: Math.max(importedSave.revision, campaignSave.revision, highestRecoveryRevision),
+          }) as CampaignSave;
+          const serialized = serializeCampaignSave(loaded);
+          const localSaved = writeCampaignSave(storage, CAMPAIGN_SAVE_KEY, serialized);
+          const backupSaved = await writeCampaignBackup(indexedDb, CAMPAIGN_SAVE_KEY, serialized);
+          return { status: "written" as const, loaded, serialized, localSaved, backupSaved };
+        });
+        if (outcome.status === "blocked") {
+          if (!saveRecovery) setSaveHydrated(true);
+          window.alert(outcome.reason === "pre-migration-snapshot-failed"
+            ? "移行前バックアップを保存できないため、読み込みを停止しました。現在のセーブは変更していません。"
+            : "現在のセーブの退避に失敗したため、読み込みを停止しました。現在のセーブは変更していません。");
+          return;
+        }
+        if (!outcome.localSaved && !outcome.backupSaved) {
+          if (!saveRecovery) setSaveHydrated(true);
+          window.alert("バックアップを検証できましたが、端末へ保存できませんでした。現在のセーブは変更していません。");
+          return;
+        }
+        lastPersistedSerializedRef.current = outcome.serialized;
+        lastPersistedReplicaRef.current = {
+          serialized: outcome.serialized,
+          localSaved: outcome.localSaved,
+          backupSaved: outcome.backupSaved,
+        };
+        setCampaignSave(outcome.loaded);
+        setSelectedStageId(outcome.loaded.lastSelectedStageId);
+        setCampaignResult(null);
+        setSaveRecovery(null);
+        setSavePersistence(outcome.localSaved && outcome.backupSaved ? "saved" : "recovered");
+        setScreen("title");
+        setSaveHydrated(true);
+      } catch {
+        if (!saveRecovery) setSaveHydrated(true);
+        window.alert("バックアップの読み込み処理に失敗しました。現在のセーブは変更していません。");
+      } finally {
+        finishSaveMutation();
+      }
+    })();
+  }, [beginSaveMutation, campaignSave, enqueueCampaignStorageMutation, finishSaveMutation, saveRecovery]);
+  const useRecoveryCandidate = useCallback((source: string) => {
+    const candidate = saveRecovery?.candidates.find((entry) => (
+      entry.source === source && entry.valid === true && typeof entry.raw === "string" && entry.raw.length > 0
+    ));
+    if (!candidate) {
+      window.alert("選択した保存候補を読み込めませんでした。候補データを書き出して内容を確認してください。");
+      return;
+    }
+    importCampaignSave(candidate.raw);
+  }, [importCampaignSave, saveRecovery]);
+  const enterRollbackFailureRecovery = useCallback(() => {
+    const memoryCandidate: SaveRecoveryCandidate = {
+      source: "memory-before-reset",
+      raw: serializeCampaignSave(campaignSave),
+      reason: "reset-rollback-failed",
+      state: "valid",
+      valid: true,
+      metadata: { revision: campaignSave.revision, updatedAt: campaignSave.updatedAt },
+    };
+    setSaveRecovery(saveRecovery
+      ? { ...saveRecovery, status: "recovery-needed", recoveryReason: "reset-rollback-failed" }
+      : {
+        status: "recovery-needed",
+        recoveryReason: "reset-rollback-failed",
+        candidates: [memoryCandidate],
+        corruptCandidates: [],
+      });
+    setSavePersistence("unavailable");
+    setSaveHydrated(false);
+  }, [campaignSave, saveRecovery]);
+  const resetCorruptCampaignSave = useCallback(() => {
+    if (!window.confirm("破損したセーブを完全初期化しますか？ 星・報酬・加入・編成は元に戻せません。")) return;
+    if (!beginSaveMutation()) return;
+    void (async () => {
+      try {
+        const cleared = await enqueueCampaignStorageMutation(() => clearCampaignSaveEverywhere({ storage: campaignStorageFor(window), indexedDb: indexedDbFor(window), key: CAMPAIGN_SAVE_KEY }));
+        if (!cleared.cleared) {
+          if (cleared.status === "rollback-failed") {
+            enterRollbackFailureRecovery();
+            window.alert("保存先の一部削除後に復元できなかったため、復旧画面で停止しました。候補データを書き出してから復旧方法を選んでください。");
+            return;
+          }
+          window.alert("完全初期化できませんでした。2つの保存先を消去できる通常ブラウザで開き直してください。現在のセーブ候補は変更していません。");
+          return;
+        }
+        const fresh = createDefaultCampaignSave() as CampaignSave;
+        lastPersistedSerializedRef.current = "";
+        lastPersistedReplicaRef.current = { serialized: "", localSaved: false, backupSaved: false };
+        setCampaignSave(fresh);
+        setSelectedStageId(fresh.lastSelectedStageId);
+        setCampaignResult(null);
+        setSaveRecovery(null);
+        setSavePersistence("checking");
+        setScreen("title");
+        setSaveHydrated(true);
+      } catch {
+        window.alert("完全初期化処理に失敗しました。現在のセーブ候補は変更していません。");
+      } finally {
+        finishSaveMutation();
+      }
+    })();
+  }, [beginSaveMutation, enqueueCampaignStorageMutation, enterRollbackFailureRecovery, finishSaveMutation]);
   const resetCampaign = useCallback(() => {
     if (!window.confirm("セーブデータを初期化しますか？ 星・報酬・解放状態は元に戻せません。")) return;
-    const fresh = createDefaultCampaignSave() as CampaignSave;
-    setCampaignSave(fresh);
-    setSelectedStageId(fresh.lastSelectedStageId);
-    setFormationKinds(["brawler", "scout", "ranger", "medic"]);
-    setCampaignResult(null);
-    setScreen("title");
-  }, []);
+    if (!beginSaveMutation()) return;
+    setSaveHydrated(false);
+    void (async () => {
+      try {
+        const cleared = await enqueueCampaignStorageMutation(() => clearCampaignSaveEverywhere({ storage: campaignStorageFor(window), indexedDb: indexedDbFor(window), key: CAMPAIGN_SAVE_KEY }));
+        if (!cleared.cleared) {
+          if (cleared.status === "rollback-failed") {
+            enterRollbackFailureRecovery();
+            window.alert("保存先の一部削除後に復元できなかったため、復旧画面で停止しました。操作前のメモリ保存候補を書き出せます。");
+            return;
+          }
+          setSaveHydrated(true);
+          window.alert("初期化できませんでした。2つの保存先を消去できる通常ブラウザで開き直してください。現在のセーブは変更していません。");
+          return;
+        }
+        const fresh = createDefaultCampaignSave() as CampaignSave;
+        lastPersistedSerializedRef.current = "";
+        lastPersistedReplicaRef.current = { serialized: "", localSaved: false, backupSaved: false };
+        setCampaignSave(fresh);
+        setSelectedStageId(fresh.lastSelectedStageId);
+        setCampaignResult(null);
+        setSaveRecovery(null);
+        setSavePersistence("checking");
+        setScreen("title");
+        setSaveHydrated(true);
+      } catch {
+        setSaveHydrated(true);
+        window.alert("初期化処理に失敗しました。現在のセーブは変更していません。");
+      } finally {
+        finishSaveMutation();
+      }
+    })();
+  }, [beginSaveMutation, enqueueCampaignStorageMutation, enterRollbackFailureRecovery, finishSaveMutation]);
   const restartCampaign = useCallback(() => {
     if (!window.confirm("現在のセーブデータを初期化して、物語を最初から始めますか？")) return;
-    const fresh = markCampaignStarted(createDefaultCampaignSave()) as CampaignSave;
-    setCampaignSave(fresh);
-    setSelectedStageId(fresh.lastSelectedStageId);
-    setFormationKinds(["brawler", "scout", "ranger", "medic"]);
-    setCampaignResult(null);
-    openEvents(getPrologueOpeningEventIds(), "map");
+    if (!beginSaveMutation()) return;
+    setSaveHydrated(false);
+    void (async () => {
+      try {
+        const cleared = await enqueueCampaignStorageMutation(() => clearCampaignSaveEverywhere({ storage: campaignStorageFor(window), indexedDb: indexedDbFor(window), key: CAMPAIGN_SAVE_KEY }));
+        if (!cleared.cleared) {
+          if (cleared.status === "rollback-failed") {
+            enterRollbackFailureRecovery();
+            window.alert("保存先の一部削除後に復元できなかったため、復旧画面で停止しました。操作前のメモリ保存候補を書き出せます。");
+            return;
+          }
+          setSaveHydrated(true);
+          window.alert("最初から始めるための初期化に失敗しました。現在のセーブは変更していません。");
+          return;
+        }
+        const fresh = markCampaignStarted(createDefaultCampaignSave()) as CampaignSave;
+        lastPersistedSerializedRef.current = "";
+        lastPersistedReplicaRef.current = { serialized: "", localSaved: false, backupSaved: false };
+        setCampaignSave(fresh);
+        setSelectedStageId(fresh.lastSelectedStageId);
+        setCampaignResult(null);
+        setSaveRecovery(null);
+        setSavePersistence("checking");
+        setSaveHydrated(true);
+        openEvents(getPrologueOpeningEventIds(), "map");
+      } catch {
+        setSaveHydrated(true);
+        window.alert("最初から始めるための初期化処理に失敗しました。現在のセーブは変更していません。");
+      } finally {
+        finishSaveMutation();
+      }
+    })();
+  }, [beginSaveMutation, enqueueCampaignStorageMutation, enterRollbackFailureRecovery, finishSaveMutation, openEvents]);
+
+  const publishPendingResult = useCallback((pending: PendingResultCommit) => {
+    setCampaignSave(pending.save);
+    setCampaignResult(pending.view);
+    setPendingResultCommit(null);
+    setStarted(false);
+    if (!openEvents(pending.storyEventIds, "result")) setScreen("result");
   }, [openEvents]);
+
+  const retryPendingResultSave = useCallback(() => {
+    if (!pendingResultCommit || resultSaveRetryingRef.current) return;
+    resultSaveRetryingRef.current = true;
+    setResultSaveRetrying(true);
+    void (async () => {
+      try {
+        const persisted = await persistCampaignSave(pendingResultCommit.save);
+        if (!persisted.durable) {
+          window.alert("作戦結果をまだ端末へ保存できません。通常ブラウザで開き直す前に、結果バックアップを書き出してください。");
+          return;
+        }
+        publishPendingResult(pendingResultCommit);
+      } finally {
+        resultSaveRetryingRef.current = false;
+        setResultSaveRetrying(false);
+      }
+    })();
+  }, [pendingResultCommit, persistCampaignSave, publishPendingResult]);
+
+  const exportPendingResultSave = useCallback(() => {
+    if (!pendingResultCommit) return;
+    const serialized = serializeCampaignSave(pendingResultCommit.save);
+    downloadCampaignText("nishijin-campaign-v5-pending-result.json", createCampaignManualExport(serialized, {
+      metadata: { revision: pendingResultCommit.save.revision, updatedAt: pendingResultCommit.save.updatedAt },
+    }));
+  }, [downloadCampaignText, pendingResultCommit]);
 
   useEffect(() => {
     if (!end || finalizedEndRef.current === end) return;
-    const timer = window.setTimeout(() => {
+    const timer = window.setTimeout(async () => {
       if (finalizedEndRef.current === end) return;
       finalizedEndRef.current = end;
       const resolved = resolveStageResult(campaignSave, {
@@ -3401,24 +3858,7 @@ export function AshfallGame() {
         baseHp: end.baseHp,
         baseMaxHp: end.baseMaxHp,
       });
-      if (resolved.result.applied) {
-        const localQaResult = Boolean(
-          resolveLocalQaMode(window.location.hostname, window.location.search)
-          || resolveLocalQaScenario(window.location.hostname, window.location.search),
-        );
-        // Persist the processed receipt in the same result transaction, before
-        // exposing the result UI. A reload cannot replay rewards in the gap
-        // between React state publication and the passive save effect.
-        if (!localQaResult) {
-          const serialized = serializeCampaignSave(resolved.save);
-          const localSaved = writeCampaignSave(campaignStorageFor(window), CAMPAIGN_SAVE_KEY, serialized);
-          void writeCampaignBackup(indexedDbFor(window), CAMPAIGN_SAVE_KEY, serialized).then((backupSaved) => {
-            setSavePersistence(localSaved || backupSaved ? "saved" : "unavailable");
-          });
-        }
-        setCampaignSave(resolved.save as CampaignSave);
-      }
-      setCampaignResult({
+      const view: CampaignResultView = {
         won: end.won,
         currentStars: resolved.result.stars,
         previousBestStars: resolved.result.previousBestStars,
@@ -3427,7 +3867,7 @@ export function AshfallGame() {
         clearReward: resolved.result.replayReward,
         newStarReward: resolved.result.firstTimeStarReward,
         totalReward: resolved.result.totalReward,
-        suppliesAfter: resolved.save.supplies,
+        capsAfter: resolved.save.caps,
         time: end.time,
         kills: end.kills,
         unitsLost: end.unitsLost,
@@ -3437,36 +3877,60 @@ export function AshfallGame() {
           return unit ? `${unit.displayName}（${unit.roleName}）` : id;
         }),
         newlyUnlockedStages: resolved.result.newlyUnlockedStageIds.map((id: string) => CAMPAIGN_STAGE_BY_ID[id]?.displayName ?? id),
-      });
-      setStarted(false);
-      const resultStoryEventIds = getStageResultStoryEventIds({
+      };
+      const storyEventIds = getStageResultStoryEventIds({
         stageId: end.stageId,
         won: end.won,
         completedStageIds: campaignSave.completedStageIds,
         bossDefeated: end.bossDefeated,
         enemyBaseDestroyed: end.enemyBaseDestroyed,
       });
-      if (!openEvents(resultStoryEventIds, "result")) setScreen("result");
+      const pending = { save: resolved.save as CampaignSave, view, storyEventIds };
+      if (resolved.result.applied) {
+        const localQaResult = Boolean(
+          resolveLocalQaMode(window.location.hostname, window.location.search)
+          || resolveLocalQaScenario(window.location.hostname, window.location.search),
+        );
+        // Persist the processed receipt in the same result transaction, before
+        // exposing the result UI. A reload cannot replay rewards in the gap
+        // between React state publication and the passive save effect.
+        if (!localQaResult) {
+          const persisted = await persistCampaignSave(resolved.save as CampaignSave);
+          if (!persisted.durable) {
+            setPendingResultCommit(pending);
+            setSavePersistence("unavailable");
+            return;
+          }
+        }
+      }
+      publishPendingResult(pending);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [campaignSave, end, openEvents]);
+  }, [campaignSave, end, persistCampaignSave, publishPendingResult]);
 
   useEffect(() => {
     if (!saveHydrated || !qaScenario || qaScenarioAppliedRef.current) return;
     qaScenarioAppliedRef.current = true;
     const timer = window.setTimeout(() => {
       setSelectedStageId(qaScenario.stageId);
+      const qaUnitIds = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id);
+      const qaFormationUnitIds = qaUnitIds.slice(0, 7);
       const qaSave = {
         ...campaignSave,
         campaignStarted: true,
         ...(qaScenario.mode === "story" ? { readStoryEventIds: [], autoSkipReadStory: false } : {}),
         unlockedStageIds: [...new Set([...campaignSave.unlockedStageIds, qaScenario.stageId])],
-        unlockedUnitIds: cards.map((card) => card.kind),
+        ownership: qaUnitIds,
+        discovery: qaUnitIds,
+        recruitable: [],
+        unlockedUnitIds: qaUnitIds,
+        formationPresets: campaignSave.formationPresets.map((preset) => preset.id === campaignSave.selectedFormationPresetId
+          ? { ...preset, unitIds: qaFormationUnitIds }
+          : preset),
         lastSelectedStageId: qaScenario.stageId,
       } as CampaignSave;
       if (qaScenario.mode === "story" && "eventId" in qaScenario) {
         setCampaignSave(qaSave);
-        setFormationKinds(cards.map((card) => card.kind));
         openEvent(qaScenario.eventId, "map");
         return;
       }
@@ -3490,7 +3954,7 @@ export function AshfallGame() {
           clearReward: resolved.result.replayReward,
           newStarReward: resolved.result.firstTimeStarReward,
           totalReward: resolved.result.totalReward,
-          suppliesAfter: resolved.save.supplies,
+          capsAfter: resolved.save.caps,
           time: 94,
           kills: 24,
           unitsLost: 1,
@@ -3501,12 +3965,10 @@ export function AshfallGame() {
           }),
           newlyUnlockedStages: resolved.result.newlyUnlockedStageIds.map((id: string) => CAMPAIGN_STAGE_BY_ID[id]?.displayName ?? id),
         });
-        setFormationKinds(cards.map((card) => card.kind));
         setScreen("result");
         return;
       }
       setCampaignSave(qaSave);
-      setFormationKinds(cards.map((card) => card.kind));
       if (qaScenario.mode === "defense") {
         setScreen("loadout");
         return;
@@ -3594,15 +4056,12 @@ export function AshfallGame() {
   }, [campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, returnToMap, selectedStageId, selectedSupply, startGame]);
 
   const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
+    if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const normalized = Math.max(0, Math.min(1, value));
-    setCampaignSave((current) => ({
-      ...current,
-      settings: {
-        ...current.settings,
-        ...(kind === "bgm" ? { bgmVolume: normalized } : { sfxVolume: normalized }),
-      },
-    }));
-  }, []);
+    setCampaignSave((current) => updateCampaignSettings(current, kind === "bgm"
+      ? { bgmVolume: normalized }
+      : { sfxVolume: normalized }) as CampaignSave);
+  }, [end, pendingResultCommit]);
 
   const setAutoSkipReadStory = useCallback((enabled: boolean) => {
     setCampaignSave((current) => updateStoryPlaybackSettings(current, { autoSkipReadStory: enabled }) as CampaignSave);
@@ -3617,21 +4076,24 @@ export function AshfallGame() {
   }, []);
 
   const toggleBgm = useCallback(() => {
+    if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const next = !bgmMuted; setBgmMuted(next);
-    setCampaignSave((current) => ({ ...current, settings: { ...current.settings, bgmEnabled: !next } }));
+    setCampaignSave((current) => updateCampaignSettings(current, { bgmEnabled: !next }) as CampaignSave);
     if (next) stopMusic(); else if (started && !paused && !end) startMusic();
-  }, [bgmMuted, end, paused, startMusic, started, stopMusic]);
+  }, [bgmMuted, end, paused, pendingResultCommit, startMusic, started, stopMusic]);
 
   const toggleSfx = useCallback(() => {
+    if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const next = !sfxMutedRef.current;
     sfxMutedRef.current = next;
     setSfxMuted(next);
-    setCampaignSave((current) => ({ ...current, settings: { ...current.settings, sfxEnabled: !next } }));
+    setCampaignSave((current) => updateCampaignSettings(current, { sfxEnabled: !next }) as CampaignSave);
     if (next) { stopJingle(); stopSfx(); }
     else if (gameRef.current.running && !gameRef.current.paused && !gameRef.current.over) resumeBattleAudioLoops(gameRef.current);
-  }, [resumeBattleAudioLoops, stopJingle, stopSfx]);
+  }, [end, pendingResultCommit, resumeBattleAudioLoops, stopJingle, stopSfx]);
 
   const enableAudio = useCallback(() => {
+    if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const mixer = productionMixerRef.current;
     if (!mixer) return;
     const restoredBgmVolume = Math.max(.35, campaignSave.settings.bgmVolume);
@@ -3641,16 +4103,12 @@ export function AshfallGame() {
       setBgmMuted(false);
       sfxMutedRef.current = false;
       setSfxMuted(false);
-      setCampaignSave((current) => ({
-        ...current,
-        settings: {
-          ...current.settings,
+      setCampaignSave((current) => updateCampaignSettings(current, {
           bgmEnabled: true,
           sfxEnabled: true,
           bgmVolume: Math.max(.35, current.settings.bgmVolume),
           sfxVolume: Math.max(.4, current.settings.sfxVolume),
-        },
-      }));
+      }) as CampaignSave);
       mixer.setSettings({
         muted: false,
         masterVolume: .9,
@@ -3687,7 +4145,7 @@ export function AshfallGame() {
       audioActivationPendingRef.current = false;
       setAudioUnlockUi("failed");
     });
-  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume]);
+  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end, pendingResultCommit]);
 
   const playAudioTestTone = useCallback(() => {
     enableAudio();
@@ -4884,7 +5342,7 @@ export function AshfallGame() {
           data-state={audioUnlockUi}
           data-audio-unlock-control="true"
           onClick={enableAudio}
-          disabled={audioUnlockUi === "pending"}
+          disabled={audioUnlockUi === "pending" || Boolean(end || pendingResultCommit)}
           aria-label={audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする"}
           aria-live="polite"
         >
@@ -4899,8 +5357,8 @@ export function AshfallGame() {
           <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
           <button className={`tactic-cycle ${hud.tactic}`} onClick={cycleTactic} aria-label={`作戦方針を切り替え（現在：${tacticName}）`}><small>方針</small><b>{tacticName}</b><em>R</em></button>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
-          <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
-          <button className="icon-btn audio-btn" data-muted={sfxMuted} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
+          <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
+          <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
         </div>
 
         <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>移動拠点</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
@@ -4962,9 +5420,9 @@ export function AshfallGame() {
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>エリアマップへ撤退</button>
           </div>
           <section className="pause-volume" aria-label="音量設定"><h3>音量設定</h3>
-            <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
-            <label><span>効果音 <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
-            <div><button onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone}>テスト音を鳴らす</button></div>
+            <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
+            <label><span>効果音 <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
+            <div><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit)}>テスト音を鳴らす</button></div>
             <p className="audio-troubleshooting">成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。</p>
           </section>
           <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>
@@ -4977,25 +5435,40 @@ export function AshfallGame() {
           stages={stageViews}
           selectedStage={selectedStageView}
           units={unitViews}
-          formationKinds={formationKinds}
+          formationUnitIds={formationUnitIds}
+          formationPresets={campaignSave.formationPresets.map((preset) => ({ id: preset.id, name: preset.displayName, unitIds: preset.unitIds }))}
+          selectedFormationPresetId={campaignSave.selectedFormationPresetId}
           supplies={supplyViews}
           selectedSupply={selectedSupply}
-          supplyCurrency={campaignSave.supplies}
+          supplyCurrency={campaignSave.caps}
+          caps={campaignSave.caps}
           result={campaignResult}
           assetsReady={assetsReady}
           assetError={assetError}
           hasCampaignSave={campaignSave.campaignStarted}
+          saveRecoveryRequired={saveRecovery !== null}
+          saveRecoveryReason={saveRecovery?.recoveryReason ?? ""}
+          saveRecoveryCandidateSources={(saveRecovery?.candidates ?? []).filter((candidate) => candidate.valid === true).map((candidate) => candidate.source)}
+          saveRecoveryCanExport={Boolean(saveRecovery && (saveRecovery.corruptCandidates.length > 0 || saveRecovery.candidates.length > 0))}
+          saveMutationPending={saveMutationPending}
           savePersistence={savePersistence}
           readStoryEventIds={campaignSave.readStoryEventIds}
           autoSkipReadStory={campaignSave.autoSkipReadStory}
           onBegin={beginCampaign}
           onRestartCampaign={restartCampaign}
+          onExportSave={exportCampaignSave}
+          onExportCorruptSave={exportCorruptCampaignSave}
+          onImportSave={importCampaignSave}
+          onUseRecoveryCandidate={useRecoveryCandidate}
+          onResetCorruptSave={resetCorruptCampaignSave}
           onEventComplete={handleEventComplete}
           onSetAutoSkipReadStory={setAutoSkipReadStory}
           onSelectStage={selectStage}
           onOpenLoadout={openLoadout}
           onReturnToMap={returnToMap}
+          onSelectFormationPreset={selectFormation}
           onToggleFormation={toggleFormation}
+          onRecruitUnit={recruitUnit}
           onSelectSupply={(kind) => setSelectedSupply(kind as SupplyKind)}
           onStartBattle={requestBattle}
           onRetry={retryBattle}
@@ -5004,6 +5477,9 @@ export function AshfallGame() {
           onReloadAssets={() => window.location.reload()}
         />}
       </section>
+      {pendingResultCommit && <div className="result-save-blocker" role="alertdialog" aria-modal="true" aria-label="作戦結果の保存失敗">
+        <section><small>SAVE REQUIRED</small><h2>作戦結果を保存できません</h2><p>報酬や加入の二重適用を防ぐため、結果画面へ進まず停止しています。保存を再試行するか、結果を含むバックアップを書き出してください。</p><div><button disabled={resultSaveRetrying} onClick={retryPendingResultSave}>{resultSaveRetrying ? "保存を再試行中" : "保存を再試行"}</button><button disabled={resultSaveRetrying} onClick={exportPendingResultSave}>結果バックアップを書き出す</button></div></section>
+      </div>}
       {savePersistence === "unavailable" && <div className="save-persistence-warning" role="alert">
         <b>セーブを端末へ保存できません</b>
         <span>進行すると再読み込み後に失われるため、Safariの通常タブで開き直してください。</span>

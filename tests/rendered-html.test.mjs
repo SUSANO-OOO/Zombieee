@@ -156,7 +156,7 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   ]);
 
   assert.match(screens, /hasCampaignSave \? "物語を続ける" : "物語を始める"/);
-  assert.match(screens, /hasCampaignSave && <button[^>]*onClick=\{onRestartCampaign\}>最初から始める/);
+  assert.match(screens, /hasCampaignSave && <button[^>]*onClick=\{onRestartCampaign\}>\{saveMutationPending \? "保存処理中" : "最初から始める"\}/);
   assert.match(game, /hasCampaignSave=\{campaignSave\.campaignStarted\}/);
   assert.match(game, /const beginCampaign[\s\S]*if \(campaignSave\.campaignStarted\)[\s\S]*setScreen\("map"\)[\s\S]*markCampaignStarted\(current\)/);
   const beginBlock = game.slice(game.indexOf("const beginCampaign"), game.indexOf("const openLoadout"));
@@ -165,17 +165,35 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(game, /window\.confirm\("セーブデータを初期化しますか？ 星・報酬・解放状態は元に戻せません。"\)/);
 
   assert.match(campaign, /INITIAL_UNIT_IDS = deepFreeze\(CAMPAIGN_UNITS\.filter\(\(unit\) => unit\.unlock\.type === "initial"\)/);
-  assert.match(game, /permittedFormation = qaAllUnlocked[\s\S]*requestedFormation\.filter\(\(kind\) => isUnitUnlocked\(campaignSave, kind\)\)/);
-  assert.match(screens, /unit\.unlocked \? `\$\{unit\.weaponName\}・\$\{unit\.rangeBand\}・\$\{unit\.primaryTarget\}` : unit\.unlockHint/);
-  assert.match(screens, /unit\.unlocked \? selected \? "選択中" : "待機" : "未解放"/);
+  assert.match(game, /getSelectedFormationCombatKinds\(campaignSave\)[\s\S]*isUnitOwned\(campaignSave, kind\)[\s\S]*slice\(0, 7\)/);
+  assert.match(screens, /unit\.discovered \? `\$\{unit\.weaponName\}・\$\{unit\.rangeBand\}・\$\{unit\.primaryTarget\}` : "物語を進めると情報が明らかになります"/);
+  assert.match(screens, /unit\.owned \? selected \? "選択中" : "待機" : unit\.recruitable \? "調達可能"/);
+  assert.match(screens, /formationUnitIds\.length}\/7名選択中[\s\S]*formationPresets\.map[\s\S]*preset\.name/);
+  assert.match(screens, /unit\.recruitable && !unit\.owned[\s\S]*unit\.recruitCost}キャップで調達/);
   assert.match(screens, /className="result-unlocks"[\s\S]*新たな戦力を解放/);
   assert.match(game, /newlyUnlockedUnitIds\.map/);
   assert.match(game, /newlyUnlockedStageIds\.map/);
-  assert.match(game, /resolveStageResult\(campaignSave,[\s\S]*if \(!localQaResult\) \{[\s\S]*writeCampaignSave\(campaignStorageFor\(window\), CAMPAIGN_SAVE_KEY, serialized\)[\s\S]*writeCampaignBackup\(indexedDbFor\(window\), CAMPAIGN_SAVE_KEY, serialized\)[\s\S]*setCampaignSave\(resolved\.save as CampaignSave\)/);
+  assert.match(game, /resolveStageResult\(campaignSave,[\s\S]*if \(!localQaResult\) \{[\s\S]*const persisted = await persistCampaignSave\(resolved\.save as CampaignSave\)[\s\S]*if \(!persisted\.durable\)[\s\S]*setPendingResultCommit\(pending\)[\s\S]*publishPendingResult\(pending\)/);
+  assert.match(game, /className="result-save-blocker"[\s\S]*保存を再試行[\s\S]*結果バックアップを書き出す/);
 
   assert.match(game, /if \(resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)[\s\S]*resolveLocalQaScenario\(window\.location\.hostname, window\.location\.search\)\) return;/);
-  assert.match(game, /unlocked: Boolean\(qaMode \|\| qaScenario\) \|\| isUnitUnlocked/);
-  assert.match(game, /if \(!qaMode && !qaScenario && !isUnitUnlocked\(campaignSave, kind\)\) return/);
+  assert.match(game, /owned: Boolean\(qaMode \|\| qaScenario\) \|\| isUnitOwned/);
+  assert.match(game, /if \(!qaMode && !qaScenario && !isUnitOwned\(current, unitId\)\) return current/);
+  assert.match(game, /reconcileCampaignStorage\([\s\S]*inspectCampaignSaveCandidate[\s\S]*reconciled\.status === "recovery-needed"/);
+  assert.match(game, /reconciled\.repairBlockedBySnapshot[\s\S]*recoveryReason: "last-known-good-snapshot-failed"/);
+  assert.match(game, /kind: CAMPAIGN_SNAPSHOT_KINDS\.PRE_MIGRATION[\s\S]*if \(!snapshot\.saved\)[\s\S]*recoveryReason: "pre-migration-snapshot-failed"/);
+  assert.match(screens, /セーブデータを自動選択できません[\s\S]*候補データを書き出す[\s\S]*onUseRecoveryCandidate[\s\S]*SaveImportButton[\s\S]*完全初期化/);
+  assert.match(screens, /saveRecoveryReason === "both-corrupt"[\s\S]*saveRecoveryReason === "equal-freshness-conflict"/);
+  assert.match(game, /enqueueCampaignStorageMutation\(async \(\) => \{[\s\S]*reviseCampaignSave\([\s\S]*Math\.max\(importedSave\.revision, campaignSave\.revision, highestRecoveryRevision\)/);
+  assert.match(game, /recoveryBackupCandidate[\s\S]*candidate\.raw !== imported\.raw[\s\S]*LAST_KNOWN_GOOD/);
+  assert.match(game, /enqueueCampaignStorageMutation\(\(\) => clearCampaignSaveEverywhere[\s\S]*if \(!cleared\.cleared\)/);
+  assert.match(game, /cleared\.status === "rollback-failed"[\s\S]*enterRollbackFailureRecovery/);
+  assert.match(game, /saveMutationPendingRef\.current[\s\S]*setSaveMutationPending\(true\)/);
+  assert.match(screens, /disabled=\{saveMutationPending\}/);
+  assert.match(game, /const updateVolume[\s\S]*updateCampaignSettings\(current,[\s\S]*const toggleBgm[\s\S]*updateCampaignSettings\(current,[\s\S]*const toggleSfx[\s\S]*updateCampaignSettings\(current/);
+  assert.match(game, /lastPersistedReplicaRef[\s\S]*replica\.localSaved && replica\.backupSaved[\s\S]*sameSerialized && replica\.localSaved[\s\S]*sameSerialized && replica\.backupSaved/);
+  assert.match(game, /const updateVolume[\s\S]*if \(end \|\| pendingResultCommit \|\| resultSaveRetryingRef\.current\) return;[\s\S]*const toggleBgm[\s\S]*const toggleSfx/);
+  assert.match(screens, /label = "バックアップを読み込む"/);
   assert.match(game, /className=\{`qa-badge \$\{screen === "battle" \? "" : "campaign-qa-badge"\}`\}/);
   assert.match(game, /通常セーブ非反映/);
   assert.match(game, /\{screen === "battle" && <>/);
@@ -1185,7 +1203,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /g\.resultPresented = !enemyBaseDestroyed/);
   assert.match(game, /advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*setEnd\(\{ resultId: g\.resultId, stageId: g\.definition\.stageId, won: g\.won/);
   assert.match(game, /resolveStageResult\(campaignSave, \{[\s\S]*resultId: end\.resultId,[\s\S]*stageId: end\.stageId,[\s\S]*baseMaxHp: end\.baseMaxHp/);
-  assert.match(game, /if \(!end \|\| finalizedEndRef\.current === end\) return;[\s\S]*window\.setTimeout\(\(\) => \{[\s\S]*if \(finalizedEndRef\.current === end\) return;[\s\S]*finalizedEndRef\.current = end/);
+  assert.match(game, /if \(!end \|\| finalizedEndRef\.current === end\) return;[\s\S]*window\.setTimeout\(async \(\) => \{[\s\S]*if \(finalizedEndRef\.current === end\) return;[\s\S]*finalizedEndRef\.current = end/);
   assert.match(game, /setCampaignSave\(resolved\.save as CampaignSave\)[\s\S]*setScreen\("result"\)/);
   assert.match(game, /const combatLocked = !!end \|\| hud\.baseHp <= 0 \|\| hud\.barricadeHp <= 0/);
   assert.match(game, /const chooseActionWithCue[\s\S]*if \(!g\.running \|\| g\.paused \|\| g\.over\) return/);
