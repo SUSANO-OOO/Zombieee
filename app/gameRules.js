@@ -266,25 +266,28 @@ export const CAMERA_SHAKE_EVENTS = Object.freeze({
   enemyBaseCollapse: Object.freeze({ strength: 12, seconds: .28 }),
 });
 
-// PROVISIONAL BALANCE (0.6.0 early access). Keep combat tuning here so the
-// producer can adjust the three newcomers without changing battle logic. The
-// original 1-6 keyboard order is a compatibility contract; newcomers use 7-9.
+// Version 0.7.0 roster balance. Keep deployment and baseline combat values in
+// one table; role-specific scaling lives in unitRoleMechanics.js. The original
+// 1-6 keyboard order remains a compatibility contract. The final two PC keys
+// deliberately follow 9 with 0 and -, while touch remains the primary input.
 export const UNIT_CARDS = Object.freeze([
   Object.freeze({ kind: "scout", name: "ハチ", cost: 25, key: "1", desc: "遊撃手・高速迎撃", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 }),
   Object.freeze({ kind: "ranger", name: "ミズチ", cost: 45, key: "2", desc: "射撃手・遠距離射撃", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 }),
-  Object.freeze({ kind: "brute", name: "タタラ", cost: 70, key: "3", desc: "破砕兵・前線維持", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 }),
+  Object.freeze({ kind: "brute", name: "タタラ", cost: 70, key: "3", desc: "破砕兵・装甲拠点破壊", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 }),
   Object.freeze({ kind: "brawler", name: "パイセン", cost: 55, key: "4", desc: "格闘家・素手近接", deployCooldown: 13, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: .72 }),
-  Object.freeze({ kind: "gunner", name: "レイダー", cost: 60, key: "5", desc: "制圧射手・大型制圧", deployCooldown: 15, hp: 95, speed: 18, damage: 36, range: 92, attackEvery: 1.08 }),
-  Object.freeze({ kind: "medic", name: "ナオ", cost: 50, key: "6", desc: "衛生兵・回復支援", deployCooldown: 20, hp: 82, speed: 19, damage: 11, range: 118, attackEvery: .96 }),
+  Object.freeze({ kind: "gunner", name: "レイダー", cost: 60, key: "5", desc: "制圧射手・直線弾幕", deployCooldown: 15, hp: 90, speed: 18, damage: 13, range: 112, attackEvery: .34 }),
+  Object.freeze({ kind: "medic", name: "ナオ", cost: 35, key: "6", desc: "救護支援・単体治療", deployCooldown: 12, hp: 68, speed: 20, damage: 7, range: 118, attackEvery: 1.05 }),
   Object.freeze({ kind: "crazy-king", name: "クレイジーキング", cost: 65, key: "7", desc: "狂戦士・密集殲滅", deployCooldown: 17, hp: 124, speed: 20, damage: 20, range: 34, attackEvery: .82 }),
   Object.freeze({ kind: "kumaverson", name: "クマバーソン", cost: 62, key: "8", desc: "前衛打撃・足止め", deployCooldown: 17, hp: 152, speed: 17, damage: 27, range: 31, attackEvery: 1.02 }),
   Object.freeze({ kind: "babayaga", name: "ババヤガ", cost: 58, key: "9", desc: "精密射撃・特殊排除", deployCooldown: 16, hp: 76, speed: 19, damage: 31, range: 158, attackEvery: 1.04 }),
+  Object.freeze({ kind: "guardian", name: "ガンテツ", cost: 48, key: "0", desc: "重装盾・被害肩代わり", deployCooldown: 16, hp: 240, speed: 11, damage: 12, range: 32, attackEvery: 1.25 }),
+  Object.freeze({ kind: "engineer", name: "モンキー", cost: 42, key: "-", desc: "工兵・自動足止め", deployCooldown: 13, hp: 88, speed: 17, damage: 14, range: 104, attackEvery: .9 }),
 ]);
 
 export const UNIT_BY_ID = Object.freeze(Object.fromEntries(UNIT_CARDS.map((card) => [card.kind, card])));
 
 export const UNIT_SPECIALS = Object.freeze({
-  "crazy-king": Object.freeze({ radius: 66, secondaryMultiplier: .46, bleedDamage: 8, bleedSeconds: 2.4, push: 7 }),
+  "crazy-king": Object.freeze({ radius: 54, secondaryMultiplier: .46, bleedDamage: 8, bleedSeconds: 2.4, push: 7 }),
   kumaverson: Object.freeze({ push: 18, stunSeconds: .72, heavyStunSeconds: .38 }),
   babayaga: Object.freeze({ specialMultiplier: 1.34, analysisMarkSeconds: 3.2, markMultiplier: 1.15 }),
 });
@@ -1037,7 +1040,17 @@ export function advanceLimitFor(phase, barricadeVulnerable) {
 }
 
 export function structureDamageMultiplier(kind) {
-  return ({ brute: 1.5, brawler: 1.2, gunner: 1.1, medic: .7, "crazy-king": 1.05, kumaverson: 1.08, babayaga: .9 })[kind] ?? 1;
+  return ({
+    brute: 1.75,
+    brawler: 1.2,
+    gunner: .9,
+    medic: .7,
+    "crazy-king": 1.05,
+    kumaverson: 1.08,
+    babayaga: .9,
+    guardian: .75,
+    engineer: .85,
+  })[kind] ?? 1;
 }
 
 export function barricadeState(hp) {
@@ -1124,7 +1137,8 @@ export function isBabayagaPriorityTarget(targetKind) {
 export function roleTargetBias(attackerKind, targetKind) {
   if (attackerKind === "scout" && (targetKind === "runner" || targetKind === "shade")) return -34;
   if (attackerKind === "ranger" && targetKind === "spitter") return -42;
-  if (attackerKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination")) return -34;
+  if (attackerKind === "brute" && (targetKind === "crusher" || targetKind === "abomination" || targetKind === "takuya")) return -46;
+  if (attackerKind === "gunner" && (targetKind === "walker" || targetKind === "runner" || targetKind === "turned")) return -12;
   if (attackerKind === "crazy-king" && (targetKind === "walker" || targetKind === "runner" || targetKind === "turned")) return -24;
   if (attackerKind === "kumaverson" && (targetKind === "runner" || targetKind === "crusher")) return -28;
   if (attackerKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) return -48;
@@ -1144,9 +1158,9 @@ export function roleEffectForAction({
   if (action !== "attack") return null;
   if (unitKind === "scout") return targetAlreadyMarked ? null : "scout";
   if (unitKind === "ranger") return targetKind === "spitter" ? "ranger" : null;
-  if (unitKind === "brute") return holdingFrontline ? "brute" : null;
+  if (unitKind === "brute") return holdingFrontline || ["crusher", "abomination", "takuya"].includes(targetKind) ? "brute" : null;
   if (isBrawlerFinisher(unitKind, targetHpRatio)) return "brawler";
-  if (unitKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination")) return "gunner";
+  if (unitKind === "gunner") return "gunner";
   if (unitKind === "crazy-king") return "crazy-king";
   if (unitKind === "kumaverson") return "kumaverson";
   if (unitKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) return "babayaga";
@@ -1165,7 +1179,7 @@ export function isBrawlerFinisher(attackerKind, targetHpRatio = 1) {
 }
 
 export function humanAttackMultiplier(attackerKind, targetKind, targetHpRatio = 1, marked = false) {
-  let multiplier = attackerKind === "gunner" && (targetKind === "crusher" || targetKind === "abomination") ? 1.3 : 1;
+  let multiplier = 1;
   if (attackerKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) {
     multiplier *= UNIT_SPECIALS.babayaga.specialMultiplier;
   }
@@ -1178,12 +1192,12 @@ export function humanAttackMultiplier(attackerKind, targetKind, targetHpRatio = 
  * Returns the deterministic secondary combat payload for the newcomer roles.
  * Applying the payload remains the battle runtime's responsibility.
  */
-export function newcomerAttackPayload({ unitKind, targetKind, nearbyTargetIds = [], targetIsHeavy = false }) {
+export function newcomerAttackPayload({ unitKind, targetKind, nearbyTargetIds = [], targetIsHeavy = false, areaRadius = null }) {
   if (unitKind === "crazy-king") {
     const special = UNIT_SPECIALS[unitKind];
     return Object.freeze({
       effect: unitKind,
-      radius: special.radius,
+      radius: Number.isFinite(Number(areaRadius)) ? Math.max(0, Number(areaRadius)) : special.radius,
       secondaryTargetIds: Object.freeze([...new Set(nearbyTargetIds)]),
       secondaryMultiplier: special.secondaryMultiplier,
       damageOverTime: Object.freeze({ damage: special.bleedDamage, seconds: special.bleedSeconds }),
@@ -1228,6 +1242,7 @@ export function resolveNewcomerAttackEffects({
   nearbyTargets = [],
   attackDamage = 0,
   targetIsHeavy = false,
+  areaRadius = null,
 } = {}) {
   if (!target || target.id === undefined) throw new TypeError("A primary target is required");
   const eligibleSecondaries = new Map(
@@ -1240,6 +1255,7 @@ export function resolveNewcomerAttackEffects({
     targetKind: target.kind,
     targetIsHeavy,
     nearbyTargetIds: [...eligibleSecondaries.keys()],
+    areaRadius,
   });
   const applyPrimaryStatus = (entity) => ({
     ...entity,

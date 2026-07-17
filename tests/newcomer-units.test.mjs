@@ -23,14 +23,16 @@ import {
   structureDamageMultiplier,
 } from "../app/gameRules.js";
 
-test("the nine card roster preserves keys 1-6 and assigns newcomers to 7-9", () => {
-  assert.equal(UNIT_CARDS.length, 9);
-  assert.deepEqual(UNIT_CARDS.map(({ key }) => key), ["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
-  assert.deepEqual(UNIT_CARDS.slice(6).map(({ kind }) => kind), ["crazy-king", "kumaverson", "babayaga"]);
-  assert.equal(Object.keys(UNIT_BY_ID).length, 9);
+test("the eleven-card roster preserves keys 1-9 and adds PC keys for Gantetsu and Monkey", () => {
+  assert.equal(UNIT_CARDS.length, 11);
+  assert.deepEqual(UNIT_CARDS.map(({ key }) => key), ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-"]);
+  assert.deepEqual(UNIT_CARDS.slice(6).map(({ kind }) => kind), ["crazy-king", "kumaverson", "babayaga", "guardian", "engineer"]);
+  assert.equal(Object.keys(UNIT_BY_ID).length, 11);
+  assert.equal(UNIT_BY_ID.medic.cost, 35);
+  assert.equal(UNIT_BY_ID.guardian.cost, 48);
 });
 
-test("newcomer provisional balance is data-driven and no card is a clone", () => {
+test("roster balance is data-driven and no card is a clone", () => {
   const signatures = UNIT_CARDS.map(({ cost, deployCooldown, hp, speed, damage, range, attackEvery }) =>
     JSON.stringify([cost, deployCooldown, hp, speed, damage, range, attackEvery]));
   assert.equal(new Set(signatures).size, UNIT_CARDS.length);
@@ -176,5 +178,5 @@ test("the battle loop uses the tested newcomer effect and cooldown helpers", asy
   assert.match(source, /const newcomerEffects = resolveNewcomerAttackEffects\(\{/);
   assert.match(source, /Object\.assign\(target, newcomerEffects\.target\)/);
   assert.match(source, /Object\.assign\(secondary, nextSecondary\)/);
-  assert.match(source, /f\.attack = \.18; f\.cooldown = enragedTakuya \? \.9 : f\.attackEvery/);
+  assert.match(source, /crazyKingAttackInterval\(f\.attackEvery, f\.comboHits\)/);
 });

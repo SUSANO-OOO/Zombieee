@@ -353,7 +353,7 @@ test("all campaign stages and melee allies reach a CRAWLER attacker instead of s
     let unit = { id: `${card.kind}-${stage.id}`, x: 520, lane: 1, assignedLane: 1, range: card.range, ranged: false };
     let previousIntent = null;
 
-    for (let tick = 0; tick < 120; tick += 1) {
+    for (let tick = 0; tick < 160; tick += 1) {
       const intent = decideAllyIntent({
         missionType: definition.missionType,
         unit,
@@ -662,7 +662,7 @@ test("same-lane Y drift reacquires on the next aligned tick without advancing th
   assert.equal(aligned.moveDirection, 0);
 });
 
-test("all nine playable roles keep search and real attack eligibility aligned across all three lanes", () => {
+test("all eleven playable roles keep search and real attack eligibility aligned across all three lanes", () => {
   for (const lane of [0, 1, 2]) for (const card of UNIT_CARDS) {
     const rule = COMBAT_ROLE_RULES[card.kind];
     const role = {
