@@ -12,7 +12,9 @@ import {
   applyCombatLifecycleBoundary,
   beginAllyDeath,
   beginEnemyDeath,
+  canAcquireCombatTarget,
   canNormalAttackTarget,
+  combatHitboxesOverlap,
   createAllyLifecycle,
   createAttackTransaction,
   createCombatLifecycleRuntime,
@@ -71,6 +73,70 @@ test("allows melee attacks only against close targets in the same lane", () => {
   assert.equal(canNormalAttackTarget({ attacker, target: closerAdjacent }), false);
   assert.equal(canNormalAttackTarget({ attacker, target: farSameLane }), false);
   assert.equal(selectCombatTarget({ attacker, candidates: [closerAdjacent, closeSameLane] }), closeSameLane);
+});
+
+test("pursuit and firing share lifecycle, side, lane, role, and line-of-sight rules", () => {
+  const farSameLane = fighter({
+    id: 2,
+    side: "zombie",
+    lane: 0,
+    x: 520,
+    y: COMBAT_GEOMETRY.laneY[0],
+  });
+  const adjacent = fighter({
+    id: 3,
+    side: "zombie",
+    lane: 1,
+    x: 318,
+    y: COMBAT_GEOMETRY.laneY[1],
+  });
+  const ranger = fighter({
+    kind: "ranger",
+    lane: 0,
+    y: COMBAT_GEOMETRY.laneY[0],
+    range: 145,
+    attackType: "ranged",
+  });
+  const nao = { ...ranger, kind: "medic", role: "medic" };
+
+  assert.equal(canAcquireCombatTarget({ attacker: ranger, target: farSameLane }), true);
+  assert.equal(canNormalAttackTarget({ attacker: ranger, target: farSameLane }), false, "range is the only pursuit/fire difference");
+  assert.equal(canAcquireCombatTarget({ attacker: ranger, target: adjacent, hasLineOfSight: true }), true);
+  assert.equal(canNormalAttackTarget({ attacker: ranger, target: adjacent, hasLineOfSight: true }), true);
+  assert.equal(canAcquireCombatTarget({ attacker: ranger, target: adjacent, hasLineOfSight: false }), false);
+  assert.equal(canNormalAttackTarget({ attacker: ranger, target: adjacent, hasLineOfSight: false }), false);
+  assert.equal(canAcquireCombatTarget({ attacker: nao, target: adjacent, hasLineOfSight: true }), false, "Nao searches only lanes he can actually shoot");
+  assert.equal(canNormalAttackTarget({ attacker: nao, target: adjacent, hasLineOfSight: true }), false);
+});
+
+test("combat hitbox overlap uses the same two-dimensional body geometry as targeting", () => {
+  const left = fighter({ x: 300, y: 250, bodyRadius: 14 });
+  const touching = fighter({ id: 2, side: "zombie", x: 322, y: 250, bodyRadius: 8 });
+  const ySeparated = fighter({ id: 3, side: "zombie", x: 300, y: 273, bodyRadius: 8 });
+
+  assert.equal(combatHitboxesOverlap({ left, right: touching }), true);
+  assert.equal(combatHitboxesOverlap({ left, right: ySeparated }), false);
+});
+
+test("physical overlap during a mobile lane transition outranks the logical melee lane gate", () => {
+  const attacker = fighter({ lane: 0, x: 300, y: 255, range: 30, bodyRadius: 12 });
+  const takuya = fighter({
+    id: 2,
+    side: "zombie",
+    kind: "takuya",
+    lane: 1,
+    x: 300,
+    y: 285,
+    range: 36,
+    bodyRadius: 28,
+    hp: 300,
+  });
+
+  assert.equal(combatHitboxesOverlap({ left: attacker, right: takuya }), true);
+  assert.equal(canAcquireCombatTarget({ attacker, target: takuya }), true);
+  assert.equal(canNormalAttackTarget({ attacker, target: takuya }), true);
+  const transaction = createAttackTransaction({ attacker, candidates: [takuya] });
+  assert.equal(transaction?.targetId, takuya.id);
 });
 
 test("ranged targeting prioritizes its lane and gates adjacent lanes by role, range, and line of sight", () => {

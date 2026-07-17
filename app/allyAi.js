@@ -1,3 +1,9 @@
+import {
+  canAcquireCombatTarget,
+  canNormalAttackTarget,
+  combatHitboxesOverlap,
+} from "./combatLifecycle.js";
+
 export const ALLY_AI_INTENTS = Object.freeze({
   HOLD_POSITION: "hold-position",
   HOLD_DEFENSE: "hold-defense",
@@ -60,10 +66,10 @@ export function destinationWithinRange({
   const padding = nonNegative(rangePadding, 10);
   const bufferedReach = Math.max(contact, range + nonNegative(targetRadius) - padding);
   const vertical = nonNegative(verticalDistance);
-  const rangedStandOff = vertical > 0
+  const horizontalReach = vertical > 0
     ? Math.sqrt(Math.max(0, bufferedReach * bufferedReach - vertical * vertical))
-    : Math.max(contact, range - padding);
-  const standOff = isRanged ? rangedStandOff : contact;
+    : bufferedReach;
+  const standOff = isRanged ? horizontalReach : Math.min(contact, horizontalReach);
   if (Math.abs(target - origin) <= standOff) return origin;
   const direction = Math.sign(target - origin) || 1;
   return target - direction * standOff;
@@ -100,6 +106,9 @@ function resultForDestination({
   destinationLane = assignedLane,
   claimGranted = false,
   takuyaDefeated = false,
+  attackable = false,
+  overlapping = false,
+  blocksPath = false,
 }) {
   const movement = movementWithDeadband({ currentX: unitX, desiredX, previousIntent, deadband });
   const targetId = target?.id ?? null;
@@ -116,6 +125,9 @@ function resultForDestination({
     reached: movement.reached,
     deadbandHeld: movement.deadbandHeld,
     claimGranted,
+    attackable,
+    overlapping,
+    blocksPath,
     releaseTarget: Boolean(previousTargetId && previousTargetId !== targetId),
     reassess: Boolean(takuyaDefeated && previousTargetId),
   });
@@ -127,6 +139,25 @@ function liveEnemies(enemies) {
     && Number.isFinite(enemy.x)
     && enemy.alive !== false
     && !(Number.isFinite(enemy.hp) && enemy.hp <= 0));
+}
+
+function normalizedCombatants(unit, enemy) {
+  const attacker = {
+    ...unit,
+    side: unit.side ?? "human",
+    range: unit.attackRange ?? unit.range,
+    allowAdjacentLaneTargets: unit.allowAdjacentLaneTargets ?? unit.ranged === true,
+  };
+  const target = {
+    ...enemy,
+    side: enemy.side ?? "zombie",
+  };
+  if (!Number.isFinite(target.y)
+    && Number.isFinite(attacker.y)
+    && Number.isFinite(enemy.verticalDistance)) {
+    target.y = attacker.y + nonNegative(enemy.verticalDistance);
+  }
+  return { attacker, target };
 }
 
 function selectEnemy({
@@ -143,30 +174,36 @@ function selectEnemy({
 }) {
   const candidates = [];
   for (const enemy of liveEnemies(enemies)) {
-    const threatensBase = enemy.threatensBase === true;
+    const attackingCrawler = enemy.attackingCrawler === true || enemy.threatensBase === true;
     const sameLane = laneMatches(unit.lane, enemy.lane);
-    const laneDistance = Number.isInteger(unit.lane) && Number.isInteger(enemy.lane)
-      ? Math.abs(unit.lane - enemy.lane)
-      : 0;
-    const adjacentLaneVisible = unit.ranged === true
-      && unit.allowAdjacentLaneTargets !== false
-      && laneDistance === 1
-      && (typeof hasLineOfSight === "function"
-        ? hasLineOfSight(unit, enemy) === true
-        : hasLineOfSight === true);
-    const assignedLaneThreat = threatensBase
+    const assignedLaneThreat = attackingCrawler
       && validLane(unit.assignedLane)
       && unit.assignedLane === enemy.lane;
-    const laneEligible = sameLane || adjacentLaneVisible || assignedLaneThreat;
+    const { attacker, target } = normalizedCombatants(unit, enemy);
+    const acquisitionAttacker = assignedLaneThreat && !sameLane
+      ? { ...attacker, lane: unit.assignedLane }
+      : attacker;
+    const laneEligible = canAcquireCombatTarget({
+      attacker: acquisitionAttacker,
+      target,
+      hasLineOfSight,
+    });
     if (!laneEligible) continue;
     const distance = Math.abs(enemy.x - unit.x);
-    const contact = unit.ranged !== true
-      && sameLane
-      && distance <= nonNegative(unit.contactRange, Math.max(48, nonNegative(unit.attackRange ?? unit.range) + 16));
+    const attackable = canNormalAttackTarget({ attacker, target, hasLineOfSight });
+    const overlapping = enemy.hitboxOverlapping === true || combatHitboxesOverlap({
+      left: attacker,
+      right: target,
+    });
+    const contact = enemy.inContact === true
+      || overlapping
+      || (unit.ranged !== true && attackable);
+    const blocksPath = enemy.blocksPath === true || enemy.pathBlocking === true;
     const local = sameLane && distance <= localThreatRadius;
     const claimed = claimCount(claims, enemy.id);
     const isPrevious = previousIntent?.targetId === enemy.id;
-    const claimAvailable = local || isPrevious || claimed < maxPursuersPerEnemy;
+    const hardEngagement = attackingCrawler || contact || blocksPath || attackable;
+    const claimAvailable = hardEngagement || local || isPrevious || claimed < maxPursuersPerEnemy;
     const threateningDefense = laneEligible
       && Math.min(distance, Math.abs(enemy.x - defenseAnchor)) <= defenseLeash;
     const eligible = missionType === "timed-defense"
@@ -175,22 +212,28 @@ function selectEnemy({
     if (!eligible) continue;
     candidates.push({
       enemy,
-      contact,
       local,
       sameLane,
       distance,
       claimed,
       isPrevious,
-      threatensBase,
+      attackingCrawler,
+      attackable,
+      overlapping,
+      contact,
+      blocksPath,
       baseThreatDistance: nonNegative(enemy.baseThreatDistance, enemy.x),
       priority: finite(enemy.priorityScore ?? enemy.priority),
     });
   }
-  candidates.sort((left, right) => Number(right.threatensBase) - Number(left.threatensBase)
-    || (left.threatensBase && right.threatensBase
+  candidates.sort((left, right) => Number(right.attackingCrawler) - Number(left.attackingCrawler)
+    || (left.attackingCrawler && right.attackingCrawler
       ? left.baseThreatDistance - right.baseThreatDistance
       : 0)
+    || Number(right.overlapping) - Number(left.overlapping)
     || Number(right.contact) - Number(left.contact)
+    || Number(right.blocksPath) - Number(left.blocksPath)
+    || Number(right.attackable) - Number(left.attackable)
     || Number(right.local) - Number(left.local)
     || Number(right.isPrevious) - Number(left.isPrevious)
     || right.priority - left.priority
@@ -228,12 +271,19 @@ export function decideAllyIntent({
   const forward = defenseAnchorFor(forwardAnchor, deploymentLane, anchor);
   const normalizedClaimLimit = Math.max(1, Math.floor(nonNegative(maxPursuersPerEnemy, 2)));
 
-  // TAKUYA's defeat is a hard phase boundary: stale enemy locks are released and
-  // every ally reevaluates the now-vulnerable infection base as its objective,
-  // except for an enemy that is actively breaching the CRAWLER.
-  const forceObjective = Boolean(takuyaDefeated && objectiveActive);
-  const urgentEnemies = liveEnemies(enemies).filter((enemy) => enemy.threatensBase === true);
-  const candidateEnemies = forceObjective || laneTransitioning ? urgentEnemies : enemies;
+  // TAKUYA's defeat invalidates the old lock, but it never suppresses living
+  // stragglers or reinforcements. The next decision uses the current enemy set.
+  const currentEnemies = liveEnemies(enemies);
+  const urgentEnemies = currentEnemies.filter((enemy) => (
+    enemy.attackingCrawler === true || enemy.threatensBase === true
+  ));
+  const candidateEnemies = laneTransitioning
+    ? currentEnemies.filter((enemy) => {
+      if (urgentEnemies.includes(enemy)) return true;
+      const { attacker, target } = normalizedCombatants(unit, enemy);
+      return enemy.hitboxOverlapping === true || combatHitboxesOverlap({ left: attacker, right: target });
+    })
+    : enemies;
   const selected = selectEnemy({
     enemies: candidateEnemies,
     unit: { ...unit, x: unitX, assignedLane: deploymentLane },
@@ -248,24 +298,36 @@ export function decideAllyIntent({
   });
 
   if (selected) {
-    const crossLane = validLane(unit.lane)
-      && validLane(selected.enemy.lane)
-      && unit.lane !== selected.enemy.lane;
-    const desiredX = destinationWithinRange({
-      fromX: unitX,
-      targetX: selected.enemy.x,
-      attackRange: unit.attackRange ?? unit.range,
-      contactRange: unit.contactRange ?? contactRange,
-      rangePadding,
-      ranged: unit.ranged,
-      targetRadius: crossLane ? selected.enemy.bodyRadius : 0,
-      verticalDistance: crossLane ? selected.enemy.verticalDistance : 0,
-    });
+    const verticalDistance = Number.isFinite(selected.enemy.verticalDistance)
+      ? selected.enemy.verticalDistance
+      : Number.isFinite(unit.y) && Number.isFinite(selected.enemy.y)
+        ? Math.abs(unit.y - selected.enemy.y)
+        : 0;
+    const desiredX = selected.attackable || selected.overlapping
+      ? unitX
+      : destinationWithinRange({
+        fromX: unitX,
+        targetX: selected.enemy.x,
+        attackRange: unit.attackRange ?? unit.range,
+        contactRange: unit.contactRange ?? contactRange,
+        rangePadding,
+        ranged: unit.ranged,
+        targetRadius: selected.enemy.bodyRadius,
+        verticalDistance,
+      });
     return resultForDestination({
       intent: ALLY_AI_INTENTS.INTERCEPT_ENEMY,
       reachedIntent: ALLY_AI_INTENTS.HOLD_RANGE,
-      reason: selected.threatensBase
+      reason: selected.attackingCrawler
         ? "crawler-under-attack"
+        : selected.overlapping
+          ? "hitbox-overlap"
+          : selected.contact
+            ? "contact-enemy"
+            : selected.blocksPath
+              ? "path-blocker"
+              : selected.attackable
+                ? "attackable-enemy"
         : selected.local
           ? "local-threat"
           : selected.isPrevious
@@ -278,8 +340,16 @@ export function decideAllyIntent({
       target: selected.enemy,
       assignedLane: deploymentLane,
       destinationLane: validLane(selected.enemy.lane) ? selected.enemy.lane : deploymentLane,
-      claimGranted: !selected.local && !selected.isPrevious,
+      claimGranted: !selected.local
+        && !selected.isPrevious
+        && !selected.attackingCrawler
+        && !selected.contact
+        && !selected.blocksPath
+        && !selected.attackable,
       takuyaDefeated,
+      attackable: selected.attackable,
+      overlapping: selected.overlapping,
+      blocksPath: selected.blocksPath,
     });
   }
 
@@ -311,10 +381,12 @@ export function decideAllyIntent({
     return resultForDestination({
       intent: ALLY_AI_INTENTS.ADVANCE_OBJECTIVE,
       reachedIntent: ALLY_AI_INTENTS.ATTACK_OBJECTIVE,
-      reason: forceObjective
+      reason: takuyaDefeated && !farEnemiesExist
         ? "takuya-defeated-objective"
         : farEnemiesExist
-          ? "objective-after-claim-limit"
+          ? takuyaDefeated
+            ? "post-takuya-claim-limit"
+            : "objective-after-claim-limit"
           : "objective-no-enemy",
       unitX,
       desiredX,
@@ -338,6 +410,9 @@ export function decideAllyIntent({
     reached: true,
     deadbandHeld: true,
     claimGranted: false,
+    attackable: false,
+    overlapping: false,
+    blocksPath: false,
     releaseTarget: Boolean(previousIntent?.targetId),
     reassess: Boolean(takuyaDefeated && previousIntent?.targetId),
   });

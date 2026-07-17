@@ -6,6 +6,7 @@ import {
   LOCAL_QA_CAMPAIGN_SCREENS,
   LOCAL_QA_CAMPAIGN_STAGE_ALIASES,
   LOCAL_QA_MODES,
+  measureCommandEconomy,
   resolveLocalQaMode,
   resolveLocalQaSafeArea,
   resolveLocalQaScenario,
@@ -16,7 +17,7 @@ const STAGE_2 = CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE;
 const STAGE_3 = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
 
 test("local battle QA modes remain host-gated and include lifecycle evidence", () => {
-  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
+  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "ai-reacquire", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
   for (const mode of LOCAL_QA_MODES) {
     assert.equal(resolveLocalQaMode("localhost", `?qa=${mode}`), mode);
     assert.equal(resolveLocalQaMode("127.0.0.1", `?qa=${mode}`), mode);
@@ -131,4 +132,51 @@ test("invalid, ambiguous, and unknown campaign QA parameters are rejected", () =
   ]) {
     assert.equal(resolveLocalQaScenario("localhost", search), null, search);
   }
+});
+
+test("command economy measurement preserves the opening and regeneration while measuring the 150 cap", () => {
+  const immediate = measureCommandEconomy({
+    durationSeconds: 0,
+    deployments: [{ id: "opening-heavy", at: 0, cost: 70 }],
+  });
+  assert.equal(immediate.initialCommand, 70);
+  assert.equal(immediate.regenPerSecond, 3.5);
+  assert.equal(immediate.commandMax, 150);
+  assert.equal(immediate.firstDeploymentSeconds, 0);
+  assert.equal(immediate.successfulDeployments, 1);
+  assert.equal(immediate.finalCommand, 0);
+
+  const noSpend = measureCommandEconomy({ durationSeconds: 60 });
+  assert.equal(noSpend.finalCommand, 150);
+  assert.ok(Math.abs(noSpend.cappedSeconds - (60 - 80 / 3.5)) < 1e-9);
+  assert.ok(Math.abs(noSpend.overflowCommand - 130) < 1e-9);
+  assert.ok(Math.abs(noSpend.overflowRate - 130 / 210) < 1e-9);
+});
+
+test("command economy measurement proves planned medium-pair and low-triple bursts fit under the cap", () => {
+  const measured = measureCommandEconomy({
+    durationSeconds: 60,
+    deployments: [
+      { id: "medium-1", at: 23, cost: 70 },
+      { id: "medium-2", at: 23, cost: 65 },
+      { id: "low-1", at: 60, cost: 25 },
+      { id: "low-2", at: 60, cost: 45 },
+      { id: "low-3", at: 60, cost: 50 },
+    ],
+  });
+
+  assert.equal(measured.successfulDeployments, 5);
+  assert.equal(measured.failedDeployments, 0);
+  assert.equal(measured.spentCommand, 255);
+  assert.equal(measured.firstDeploymentSeconds, 23);
+  assert.ok(Math.abs(measured.finalCommand - 24.5) < 1e-9);
+  assert.ok(Math.abs(measured.cappedSeconds - (23 - 80 / 3.5)) < 1e-9);
+  assert.ok(Math.abs(measured.overflowCommand - .5) < 1e-9);
+  assert.deepEqual(measured.attempts.map(({ id, deployed }) => [id, deployed]), [
+    ["medium-1", true],
+    ["medium-2", true],
+    ["low-1", true],
+    ["low-2", true],
+    ["low-3", true],
+  ]);
 });
