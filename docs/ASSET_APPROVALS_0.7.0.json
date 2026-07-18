@@ -221,6 +221,47 @@
       },
       "finalPath": "public/art/v070/characters/reference/nao-base-r1.png",
       "commit": "34931830710f9b614f29bc8fff97226ae00a81e4"
+    },
+    {
+      "assetId": "V070-CHAR-TATARA-BASE",
+      "revision": "r1",
+      "status": "approved",
+      "type": "character_identity_base",
+      "subject": "タタラ",
+      "use": "ポートレート、会話立ち絵、表情差分、戦闘スプライトのidentity master",
+      "approvalPreviewPath": "outputs/p6-approvals/V070-CHAR-TATARA-BASE-r1.png",
+      "plannedPath": "public/art/v070/characters/reference/tatara-base-r1.png",
+      "sourceApprovedAssetId": null,
+      "styleReferencePaths": [],
+      "designIntent": "解体・鉄骨切断・夜間道路工事の現場職人として、構造を読む静かな視線、重い体格、現場保護具、無装飾の鋼製解体ハンマーを一つの対装甲・対拠点シルエットへまとめる。",
+      "smartphoneRecognition": "片側だけの黄色い肩、額の透明保護具、首の防音具、太い作業員体型、低い開脚姿勢、身体から離れた角形鋼製ハンマー頭。",
+      "previewSha256": "75fd7aca679694e5d9de82b48b3d56966921ec4ba95a44340273f41607d8a6f8",
+      "approvalUrl": "https://github.com/SUSANO-OOO/Zombieee/pull/38#issuecomment-5010992806",
+      "approvalResponse": "承認",
+      "approvedBy": "producer",
+      "reviewedAt": "2026-07-18",
+      "rejectionReason": null,
+      "approvedAt": "2026-07-18",
+      "productionCorrectionRequired": "人物同一性は承認済み。固定仕様の短柄と一点破砕の読みを満たすため、ハンマーの柄長と握り・視線・槌頭位置だけを次revisionで補正し、ランタイム統合前に再承認を得る。",
+      "identityLock": {
+        "faceAndAge": "38歳の精悍な日本人男性。角張った顎、濃い眉、右下を観察する茶褐色の瞳、通った鼻、短い無精髭、日焼けと現場の汚れが残る落ち着いた顔。",
+        "hair": "短く波打つ黒髪。こめかみに明確な白髪が入り、前髪を無造作に額へ落とす。",
+        "body": "厚い胸板、太い首と肩、発達した前腕、重量を低く受け止める太い脚を持つ、現場作業で鍛えた大型の成人男性体型。",
+        "clothing": "片側の肩だけが安全黄色になった濃紺の擦れた作業ジャケット、胴の反射帯、黒い汚れた作業パンツ、黒い編上げ安全靴。",
+        "palette": [
+          "deep navy",
+          "safety yellow",
+          "steel gray",
+          "dirty off-white",
+          "survey orange"
+        ],
+        "weapons": "無装飾で傷の入った黒い角形鋼製の大型解体ハンマー。槌頭の材質・工業的形状は固定し、柄長と握り位置は短柄仕様へ補正するためidentity lock対象外。",
+        "equipment": "額の透明保護ゴーグル、首の黒と黄色の防音イヤーマフ、左腰の鮮やかなオレンジ色の巻尺と赤いマーキングペン、片手だけの汚れた白い作業手袋。",
+        "posture": "上体を前へ傾けて右下の構造を観察する低い立位。広い握りと槌頭位置は一点破砕姿勢へ補正するためidentity lock対象外。",
+        "silhouette": "片側の大きな黄色い肩、額のゴーグル、首のイヤーマフ、幅広い上半身、低い脚、身体から離れた角形ハンマー頭で構成された重量級の非対称シルエット。"
+      },
+      "finalPath": "public/art/v070/characters/reference/tatara-base-r1.png",
+      "commit": null
     }
   ]
 }
