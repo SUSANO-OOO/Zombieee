@@ -41,6 +41,9 @@ export const CAMPAIGN_STAGE_IDS = deepFreeze({
   NISHIJIN_SHOPPING_STREET: "stage-nishijin-shopping-street",
   SAWARA_WARD_OFFICE: "stage-sawara-ward-office",
   NISHIJIN_DEFENSE_LINE: "stage-nishijin-defense-line-takuya",
+  NISHIJIN_STATION_GATE: "stage-nishijin-station-gate",
+  NISHIJIN_STATION_PLATFORM: "stage-nishijin-station-platform",
+  NISHIJIN_STATION_TUNNEL: "stage-nishijin-station-tunnel-seal",
 });
 
 export const STAGE_VISUAL_SIGNATURES = deepFreeze({
@@ -67,6 +70,30 @@ export const STAGE_VISUAL_SIGNATURES = deepFreeze({
     environment: ["anti-vehicle-obstacles", "red-infection-smoke"],
     lighting: "red-fire-glow",
     battleScars: ["shell-craters", "scorched-concrete"],
+  },
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE]: {
+    kind: "subway-ticket-gate",
+    background: "station-concourse",
+    landmark: "infected-relay-at-ticket-gates",
+    environment: ["closed-shutters", "evacuation-stretcher"],
+    lighting: "failing-concourse-lamps",
+    battleScars: ["torn-wayfinding", "infected-cable-growth"],
+  },
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM]: {
+    kind: "subway-platform-escort",
+    background: "platform-and-track",
+    landmark: "maintenance-cart",
+    environment: ["platform-columns", "signal-lights"],
+    lighting: "red-emergency-lamps",
+    battleScars: ["leaking-ceiling", "contaminated-floor"],
+  },
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL]: {
+    kind: "maintenance-tunnel-seal",
+    background: "maintenance-tunnel",
+    landmark: "three-power-panels-and-seal-door",
+    environment: ["service-cables", "research-container"],
+    lighting: "sequential-power-lamps",
+    battleScars: ["bent-ticket-gates", "infected-door-frame"],
   },
 });
 
@@ -105,13 +132,16 @@ export const DEFAULT_REPLAY_REWARD_MULTIPLIERS = deepFreeze({
   3: 1.5,
 });
 
-// PROVISIONAL BALANCE (0.6.0): these supply values are explicit starting
+// PROVISIONAL BALANCE (0.7.0): these supply values are explicit starting
 // points for playtesting, not final economy decisions. Star milestone rewards
 // below intentionally begin at one half of each stage's provisional base.
 export const PROVISIONAL_BASE_REWARDS = deepFreeze({
   [CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET]: 100,
   [CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE]: 140,
   [CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE]: 200,
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE]: 240,
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM]: 280,
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL]: 360,
 });
 
 function firstStarRewards(baseReward) {
@@ -122,6 +152,9 @@ function firstStarRewards(baseReward) {
 const nishijinBaseReward = PROVISIONAL_BASE_REWARDS[CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET];
 const sawaraBaseReward = PROVISIONAL_BASE_REWARDS[CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE];
 const takuyaBaseReward = PROVISIONAL_BASE_REWARDS[CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE];
+const stationGateBaseReward = PROVISIONAL_BASE_REWARDS[CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE];
+const stationPlatformBaseReward = PROVISIONAL_BASE_REWARDS[CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM];
+const stationTunnelBaseReward = PROVISIONAL_BASE_REWARDS[CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL];
 
 export const CAMPAIGN_STAGES = deepFreeze([
   {
@@ -252,11 +285,184 @@ export const CAMPAIGN_STAGES = deepFreeze([
     preBattleEventId: "stage-takuya-pre",
     postBattleEventId: "stage-takuya-post",
     nextUnlocks: {
-      stageIds: [],
+      stageIds: [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE],
       unitIds: [],
       discoveredUnitIds: [],
       recruitableUnitIds: [],
-      mapSignalIds: ["map-signal-momochihama-anomaly"],
+      mapSignalIds: ["map-signal-nishijin-station"],
+    },
+  },
+  {
+    id: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE,
+    stageNumber: 4,
+    displayName: "西新駅・改札区域",
+    chapterId: CAMPAIGN_CHAPTER_ID,
+    mapPosition: { x: 78, y: 34, unit: "percent" },
+    unlockRequirements: [{ type: "stage-stars", stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE, minimumStars: 1 }],
+    prerequisiteStageIds: [CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE],
+    missionType: "assault",
+    objective: "感染中継点を破壊し、生存者の退路を確保",
+    objectiveConfig: { target: "infected-relay", rescueCount: 7, rescueMode: "automatic-on-objective-destroyed" },
+    theme: {
+      id: "theme-nishijin-station-gate",
+      backgroundId: "background-nishijin-station-gate-v1",
+      tags: ["西新駅", "改札区域", "感染中継点"],
+    },
+    enemyKinds: ["walker", "runner", "spitter", "crusher", "grappler"],
+    waves: [
+      { id: "station-gate-wave-01", atSeconds: 4, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 5 }] },
+      { id: "station-gate-wave-02", atSeconds: 22, groups: [{ kind: "grappler", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [0, 1, 2], count: 3 }] },
+      { id: "station-gate-wave-03", atSeconds: 41, groups: [{ kind: "spitter", lanes: [0, 2], count: 3 }, { kind: "walker", lanes: [0, 1, 2], count: 4 }] },
+      { id: "station-gate-wave-04", atSeconds: 62, groups: [{ kind: "grappler", lanes: [0, 1, 2], count: 3 }, { kind: "crusher", lanes: [1], count: 1 }] },
+      { id: "station-gate-wave-05", atSeconds: 84, groups: [{ kind: "runner", lanes: [0, 2], count: 5 }, { kind: "spitter", lanes: [1], count: 2 }] },
+      { id: "station-gate-wave-06", atSeconds: 108, groups: [{ kind: "grappler", lanes: [0, 2], count: 2 }, { kind: "crusher", lanes: [0, 2], count: 2 }, { kind: "walker", lanes: [1], count: 3 }] },
+      { id: "station-gate-wave-07", atSeconds: 132, groups: [{ kind: "grappler", lanes: [1], count: 2 }, { kind: "runner", lanes: [0, 2], count: 4 }, { kind: "spitter", lanes: [0, 2], count: 2 }] },
+    ],
+    boss: null,
+    baseHp: 850,
+    starThresholds: DEFAULT_STAR_THRESHOLDS,
+    baseReward: stationGateBaseReward,
+    firstTimeStarRewards: firstStarRewards(stationGateBaseReward),
+    replayRewardMultipliers: DEFAULT_REPLAY_REWARD_MULTIPLIERS,
+    preBattleEventId: "stage-station-gate-pre-v070",
+    postBattleEventId: "stage-station-gate-post-v070",
+    nextUnlocks: {
+      stageIds: [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM],
+      unitIds: [CAMPAIGN_UNIT_IDS.GANTETSU],
+      discoveredUnitIds: [CAMPAIGN_UNIT_IDS.GANTETSU],
+      recruitableUnitIds: [],
+      mapSignalIds: [],
+    },
+  },
+  {
+    id: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
+    stageNumber: 5,
+    displayName: "西新駅・ホーム／線路区域",
+    chapterId: CAMPAIGN_CHAPTER_ID,
+    mapPosition: { x: 87, y: 51, unit: "percent" },
+    unlockRequirements: [{ type: "stage-stars", stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE, minimumStars: 1 }],
+    prerequisiteStageIds: [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE],
+    missionType: "escort",
+    objective: "保守台車を護衛し、生存者と物資を出口へ運ぶ",
+    objectiveConfig: {
+      target: "maintenance-cart",
+      durationSeconds: 135,
+      maxIntegrity: 500,
+      repairSeconds: 20,
+      rescueCount: 5,
+      startX: 258,
+      endX: 776,
+      cartLane: 1,
+      escortRadiusX: 110,
+      escortRadiusY: 48,
+      threatRadiusX: 90,
+      threatRadiusY: 55,
+    },
+    theme: {
+      id: "theme-nishijin-station-platform",
+      backgroundId: "background-nishijin-station-platform-v1",
+      tags: ["ホーム", "線路", "保守台車"],
+    },
+    enemyKinds: ["walker", "runner", "spitter", "crusher", "ooze", "sprinter"],
+    waves: [
+      { id: "station-platform-wave-01", atSeconds: 3, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 5 }] },
+      { id: "station-platform-wave-02", atSeconds: 19, groups: [{ kind: "ooze", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [1], count: 3 }] },
+      { id: "station-platform-wave-03", atSeconds: 38, groups: [{ kind: "sprinter", lanes: [0, 2], count: 3 }, { kind: "spitter", lanes: [1], count: 2 }] },
+      { id: "station-platform-wave-04", atSeconds: 58, groups: [{ kind: "ooze", lanes: [0, 1, 2], count: 3 }, { kind: "crusher", lanes: [1], count: 1 }] },
+      { id: "station-platform-wave-05", atSeconds: 80, groups: [{ kind: "sprinter", lanes: [0, 1, 2], count: 4 }, { kind: "walker", lanes: [0, 2], count: 4 }] },
+      { id: "station-platform-wave-06", atSeconds: 104, groups: [{ kind: "ooze", lanes: [0, 2], count: 2 }, { kind: "spitter", lanes: [0, 1, 2], count: 3 }, { kind: "runner", lanes: [1], count: 3 }] },
+      { id: "station-platform-wave-07", atSeconds: 130, groups: [{ kind: "sprinter", lanes: [0, 2], count: 4 }, { kind: "crusher", lanes: [0, 2], count: 2 }] },
+      { id: "station-platform-wave-08", atSeconds: 158, groups: [{ kind: "ooze", lanes: [1], count: 2 }, { kind: "sprinter", lanes: [0, 1, 2], count: 4 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
+    ],
+    boss: null,
+    baseHp: 760,
+    starThresholds: DEFAULT_STAR_THRESHOLDS,
+    baseReward: stationPlatformBaseReward,
+    firstTimeStarRewards: firstStarRewards(stationPlatformBaseReward),
+    replayRewardMultipliers: DEFAULT_REPLAY_REWARD_MULTIPLIERS,
+    preBattleEventId: "stage-station-platform-pre-v070",
+    postBattleEventId: "stage-station-platform-post-v070",
+    nextUnlocks: {
+      stageIds: [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL],
+      unitIds: [],
+      discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MONKEY],
+      recruitableUnitIds: [],
+      mapSignalIds: [],
+    },
+  },
+  {
+    id: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL,
+    stageNumber: 6,
+    displayName: "西新駅・保守トンネル／封鎖区域",
+    chapterId: CAMPAIGN_CHAPTER_ID,
+    mapPosition: { x: 92, y: 72, unit: "percent" },
+    unlockRequirements: [{ type: "stage-stars", stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM, minimumStars: 1 }],
+    prerequisiteStageIds: [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM],
+    missionType: "sequential-seal",
+    objective: "三つの電源を起動し、感染流出路を封鎖",
+    objectiveConfig: {
+      targetsInOrder: [
+        "power-1",
+        "power-2",
+        "power-3",
+        "gate-eater",
+        "research-container",
+        "seal-door",
+        "return-route",
+      ],
+      powerHoldSeconds: 6,
+      powerReadyAtSeconds: [24, 62, 104],
+      powerLanes: [0, 2, 1],
+      powerXs: [410, 584, 744],
+      powerRadiusX: 84,
+      powerRadiusY: 42,
+      sealDoorX: 867,
+      sealLane: 1,
+      researchContainerStartX: 708,
+      researchContainerLane: 1,
+      returnX: 205,
+      returnRadiusX: 96,
+      returnRadiusY: 48,
+      escapeSeconds: 45,
+    },
+    theme: {
+      id: "theme-nishijin-station-tunnel",
+      backgroundId: "background-nishijin-station-tunnel-v1",
+      tags: ["保守トンネル", "三電源", "封鎖扉"],
+    },
+    enemyKinds: ["walker", "runner", "spitter", "crusher", "grappler", "ooze", "sprinter", "gate-eater"],
+    waves: [
+      { id: "station-tunnel-wave-01", atSeconds: 0, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 5 }] },
+      { id: "station-tunnel-wave-02", atSeconds: 18, groups: [{ kind: "grappler", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [1], count: 3 }] },
+      { id: "station-tunnel-wave-03", atSeconds: 42, groups: [{ kind: "ooze", lanes: [0, 2], count: 2 }, { kind: "spitter", lanes: [1], count: 2 }] },
+      { id: "station-tunnel-wave-04", atSeconds: 66, groups: [{ kind: "sprinter", lanes: [0, 1, 2], count: 4 }, { kind: "crusher", lanes: [1], count: 1 }] },
+      { id: "station-tunnel-wave-05", atSeconds: 92, groups: [{ kind: "grappler", lanes: [0, 2], count: 2 }, { kind: "ooze", lanes: [1], count: 2 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
+      { id: "station-tunnel-warning", atSeconds: 112, waveNumber: 6, label: "大型特殊個体反応", units: [] },
+      { id: "station-tunnel-gate-eater", atSeconds: 120, waveNumber: 7, label: "改札喰い // 封鎖対象", units: [["gate-eater", 1], ["sprinter", 0], ["sprinter", 2], ["spitter", 0], ["spitter", 2]] },
+      { id: "station-tunnel-wave-08", atSeconds: 146, groups: [{ kind: "grappler", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [0, 1, 2], count: 4 }] },
+      { id: "station-tunnel-wave-09", atSeconds: 172, groups: [{ kind: "ooze", lanes: [0, 1, 2], count: 3 }, { kind: "crusher", lanes: [0, 2], count: 2 }] },
+      { id: "station-tunnel-wave-10", atSeconds: 198, groups: [{ kind: "sprinter", lanes: [0, 2], count: 4 }, { kind: "grappler", lanes: [1], count: 2 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
+    ],
+    boss: {
+      id: "boss-gate-eater",
+      enemyKind: "gate-eater",
+      displayName: "改札喰い",
+      classification: "駅設備・研究容器融合大型特殊個体",
+      entranceEventId: "stage-station-tunnel-gate-eater-v070",
+    },
+    baseHp: 720,
+    starThresholds: DEFAULT_STAR_THRESHOLDS,
+    baseReward: stationTunnelBaseReward,
+    firstTimeStarRewards: firstStarRewards(stationTunnelBaseReward),
+    replayRewardMultipliers: DEFAULT_REPLAY_REWARD_MULTIPLIERS,
+    preBattleEventId: "stage-station-tunnel-pre-v070",
+    postBattleEventId: "stage-station-tunnel-post-v070",
+    nextUnlocks: {
+      stageIds: [],
+      unitIds: [CAMPAIGN_UNIT_IDS.MONKEY],
+      discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MONKEY],
+      recruitableUnitIds: [],
+      mapSignalIds: ["map-signal-university-hospital"],
     },
   },
 ]);
@@ -630,6 +836,11 @@ export const CAMPAIGN_RECRUITMENT_MILESTONES = deepFreeze({
   4: {
     storyJoinUnitIds: [CAMPAIGN_UNIT_IDS.GANTETSU],
     discoveredUnitIds: [CAMPAIGN_UNIT_IDS.GANTETSU],
+    recruitableUnitIds: [],
+  },
+  5: {
+    storyJoinUnitIds: [],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MONKEY],
     recruitableUnitIds: [],
   },
   6: {

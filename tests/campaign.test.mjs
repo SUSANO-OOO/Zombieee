@@ -59,16 +59,29 @@ import {
 const STAGE_1 = CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET;
 const STAGE_2 = CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE;
 const STAGE_3 = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
+const STAGE_4 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE;
+const STAGE_5 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM;
+const STAGE_6 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL;
 
-test("campaign defines three stable, ordered, data-driven stages", () => {
-  assert.equal(CAMPAIGN_STAGES.length, 3);
-  assert.deepEqual(CAMPAIGN_STAGES.map((stage) => stage.id), [STAGE_1, STAGE_2, STAGE_3]);
+test("campaign defines six stable, ordered, data-driven stages", () => {
+  assert.equal(CAMPAIGN_STAGES.length, 6);
+  assert.deepEqual(CAMPAIGN_STAGES.map((stage) => stage.id), [
+    STAGE_1,
+    STAGE_2,
+    STAGE_3,
+    STAGE_4,
+    STAGE_5,
+    STAGE_6,
+  ]);
   assert.deepEqual(CAMPAIGN_STAGES.map((stage) => stage.displayName), [
     "西新商店街",
     "早良区役所",
     "西新防衛線・TAKUYA",
+    "西新駅・改札区域",
+    "西新駅・ホーム／線路区域",
+    "西新駅・保守トンネル／封鎖区域",
   ]);
-  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.id)).size, 3);
+  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.id)).size, 6);
 
   for (const stage of CAMPAIGN_STAGES) {
     assert.equal(CAMPAIGN_STAGE_BY_ID[stage.id], stage);
@@ -102,13 +115,19 @@ test("campaign defines three stable, ordered, data-driven stages", () => {
     "background-nishijin-shopping-street-v1",
     "background-sawara-ward-office-v1",
     "background-nishijin-defense-line-v1",
+    "background-nishijin-station-gate-v1",
+    "background-nishijin-station-platform-v1",
+    "background-nishijin-station-tunnel-v1",
   ]);
 });
 
 test("each stage has a unique multi-layer visual signature", () => {
-  assert.deepEqual(Object.keys(STAGE_VISUAL_SIGNATURES).sort(), [STAGE_1, STAGE_2, STAGE_3].sort());
+  assert.deepEqual(
+    Object.keys(STAGE_VISUAL_SIGNATURES).sort(),
+    [STAGE_1, STAGE_2, STAGE_3, STAGE_4, STAGE_5, STAGE_6].sort(),
+  );
   const signatures = Object.values(STAGE_VISUAL_SIGNATURES);
-  assert.equal(new Set(signatures.map(({ kind }) => kind)).size, 3);
+  assert.equal(new Set(signatures.map(({ kind }) => kind)).size, 6);
   for (const signature of signatures) {
     assert.equal(typeof signature.background, "string");
     assert.equal(typeof signature.landmark, "string");
@@ -118,10 +137,13 @@ test("each stage has a unique multi-layer visual signature", () => {
   }
 });
 
-test("stage objectives, prerequisites, defense duration, boss, and future signal match the mission", () => {
+test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match the mission", () => {
   const shoppingStreet = CAMPAIGN_STAGE_BY_ID[STAGE_1];
   const wardOffice = CAMPAIGN_STAGE_BY_ID[STAGE_2];
   const defenseLine = CAMPAIGN_STAGE_BY_ID[STAGE_3];
+  const stationGate = CAMPAIGN_STAGE_BY_ID[STAGE_4];
+  const stationPlatform = CAMPAIGN_STAGE_BY_ID[STAGE_5];
+  const stationTunnel = CAMPAIGN_STAGE_BY_ID[STAGE_6];
 
   assert.equal(shoppingStreet.objective, "感染拠点を破壊");
   assert.deepEqual(shoppingStreet.prerequisiteStageIds, []);
@@ -144,10 +166,79 @@ test("stage objectives, prerequisites, defense duration, boss, and future signal
   assert.equal(defenseLine.boss.displayName, "TAKUYA");
   assert.match(defenseLine.objective, /TAKUYA.*感染拠点/);
   assert.deepEqual(defenseLine.prerequisiteStageIds, [STAGE_2]);
-  assert.deepEqual(defenseLine.nextUnlocks.mapSignalIds, ["map-signal-momochihama-anomaly"]);
+  assert.deepEqual(defenseLine.nextUnlocks.stageIds, [STAGE_4]);
+  assert.deepEqual(defenseLine.nextUnlocks.mapSignalIds, ["map-signal-nishijin-station"]);
   assert.equal(defenseLine.waves.length, 12);
   assert.deepEqual(defenseLine.waves.map(({ atSeconds }) => atSeconds), [0, 12, 30, 47, 65, 84, 103, 120, 126, 147, 169, 196]);
   assert.equal(defenseLine.waves.find(({ waveNumber }) => waveNumber === 8).units.some(([kind]) => kind === "takuya"), true);
+
+  assert.equal(stationGate.missionType, "assault");
+  assert.match(stationGate.objective, /感染中継点.*生存者/);
+  assert.deepEqual(stationGate.objectiveConfig, {
+    target: "infected-relay",
+    rescueCount: 7,
+    rescueMode: "automatic-on-objective-destroyed",
+  });
+  assert.deepEqual(stationGate.prerequisiteStageIds, [STAGE_3]);
+  assert.deepEqual(stationGate.nextUnlocks.stageIds, [STAGE_5]);
+  assert.deepEqual(stationGate.nextUnlocks.unitIds, [CAMPAIGN_UNIT_IDS.GANTETSU]);
+  assert.deepEqual(stationGate.nextUnlocks.discoveredUnitIds, [CAMPAIGN_UNIT_IDS.GANTETSU]);
+  assert.deepEqual(stationGate.nextUnlocks.recruitableUnitIds, []);
+
+  assert.equal(stationPlatform.missionType, "escort");
+  assert.match(stationPlatform.objective, /保守台車.*生存者と物資/);
+  assert.deepEqual(stationPlatform.objectiveConfig, {
+    target: "maintenance-cart",
+    durationSeconds: 135,
+    maxIntegrity: 500,
+    repairSeconds: 20,
+    rescueCount: 5,
+    startX: 258,
+    endX: 776,
+    cartLane: 1,
+    escortRadiusX: 110,
+    escortRadiusY: 48,
+    threatRadiusX: 90,
+    threatRadiusY: 55,
+  });
+  assert.deepEqual(stationPlatform.prerequisiteStageIds, [STAGE_4]);
+  assert.deepEqual(stationPlatform.nextUnlocks.stageIds, [STAGE_6]);
+  assert.deepEqual(stationPlatform.nextUnlocks.unitIds, []);
+  assert.deepEqual(stationPlatform.nextUnlocks.discoveredUnitIds, [CAMPAIGN_UNIT_IDS.MONKEY]);
+
+  assert.equal(stationTunnel.missionType, "sequential-seal");
+  assert.match(stationTunnel.objective, /三つの電源.*感染流出路.*封鎖/);
+  assert.deepEqual(stationTunnel.objectiveConfig, {
+    targetsInOrder: [
+      "power-1",
+      "power-2",
+      "power-3",
+      "gate-eater",
+      "research-container",
+      "seal-door",
+      "return-route",
+    ],
+    powerHoldSeconds: 6,
+    powerReadyAtSeconds: [24, 62, 104],
+    powerLanes: [0, 2, 1],
+    powerXs: [410, 584, 744],
+    powerRadiusX: 84,
+    powerRadiusY: 42,
+    sealDoorX: 867,
+    sealLane: 1,
+    researchContainerStartX: 708,
+    researchContainerLane: 1,
+    returnX: 205,
+    returnRadiusX: 96,
+    returnRadiusY: 48,
+    escapeSeconds: 45,
+  });
+  assert.deepEqual(stationTunnel.prerequisiteStageIds, [STAGE_5]);
+  assert.equal(stationTunnel.boss.enemyKind, "gate-eater");
+  assert.equal(stationTunnel.boss.displayName, "改札喰い");
+  assert.deepEqual(stationTunnel.nextUnlocks.stageIds, []);
+  assert.deepEqual(stationTunnel.nextUnlocks.unitIds, [CAMPAIGN_UNIT_IDS.MONKEY]);
+  assert.deepEqual(stationTunnel.nextUnlocks.mapSignalIds, ["map-signal-university-hospital"]);
 });
 
 test("Stage 1-3 increase pressure through bounded cadence and mixed compositions", () => {
@@ -173,11 +264,30 @@ test("Stage 1-3 increase pressure through bounded cadence and mixed compositions
     waveSizes(stage2).reduce((total, count) => total + count, 0),
     waveSizes(stage3).reduce((total, count) => total + count, 0),
   ], [28, 53, 65]);
-  assert.equal(Math.max(...CAMPAIGN_STAGES.flatMap(waveSizes)), 9);
+  assert.equal(Math.max(...[stage1, stage2, stage3].flatMap(waveSizes)), 9);
   assert.deepEqual([...enemyKinds(stage1)].sort(), ["crusher", "runner", "spitter", "walker"]);
   assert.deepEqual([...enemyKinds(stage2)].sort(), ["abomination", "crusher", "runner", "spitter", "walker"]);
   assert.deepEqual([...enemyKinds(stage3)].sort(), ["abomination", "crusher", "runner", "shade", "spitter", "takuya", "walker"]);
-  assert.deepEqual(CAMPAIGN_STAGES.map(({ baseHp }) => baseHp), [1000, 1000, 520]);
+  assert.deepEqual([stage1, stage2, stage3].map(({ baseHp }) => baseHp), [1000, 1000, 520]);
+});
+
+test("Stage 4-6 introduce each station enemy through bounded mission-specific waves", () => {
+  const enemyKinds = (stageId) => new Set(CAMPAIGN_STAGE_BY_ID[stageId].waves.flatMap((wave) => (
+    Array.isArray(wave.units)
+      ? wave.units.map(([kind]) => kind)
+      : (wave.groups ?? []).map(({ kind }) => kind)
+  )));
+
+  assert.deepEqual([...enemyKinds(STAGE_4)].sort(), ["crusher", "grappler", "runner", "spitter", "walker"]);
+  assert.deepEqual([...enemyKinds(STAGE_5)].sort(), ["crusher", "ooze", "runner", "spitter", "sprinter", "walker"]);
+  assert.deepEqual(
+    [...enemyKinds(STAGE_6)].sort(),
+    ["crusher", "gate-eater", "grappler", "ooze", "runner", "spitter", "sprinter", "walker"],
+  );
+  assert.deepEqual(
+    [STAGE_4, STAGE_5, STAGE_6].map((stageId) => CAMPAIGN_STAGE_BY_ID[stageId].baseHp),
+    [850, 760, 720],
+  );
 });
 
 test("eleven canonical playable units and guide-ikura use approved player-facing identities", () => {
@@ -414,6 +524,63 @@ test("fresh progression separates free ownership from discovery and caps recruit
   assert.equal(isUnitOwned(afterStage2, CAMPAIGN_UNIT_IDS.RAIDER), false);
   assert.equal(isUnitRecruitable(afterStage2, CAMPAIGN_UNIT_IDS.RAIDER), true);
   assert.deepEqual(afterStage2.completedStageIds, [STAGE_1, STAGE_2]);
+});
+
+test("Stage 4 and Stage 6 story joins are free while Stage 5 only discovers Monkey", () => {
+  let save = createDefaultCampaignSave();
+  for (const [index, stageId] of [STAGE_1, STAGE_2, STAGE_3].entries()) {
+    save = applyStageResult(save, stageId, {
+      resultId: `station-progression-prerequisite-${index + 1}`,
+      won: true,
+      baseHp: 100,
+      baseMaxHp: 100,
+    });
+  }
+  assert.equal(isStageUnlocked(save, STAGE_4), true);
+  assert.equal(isUnitOwned(save, CAMPAIGN_UNIT_IDS.GANTETSU), false);
+
+  const stage4 = resolveStageResult(save, STAGE_4, {
+    resultId: "station-progression-stage-4",
+    won: true,
+    baseHp: 100,
+    baseMaxHp: 100,
+  });
+  assert.deepEqual(stage4.result.newlyUnlockedStageIds, [STAGE_5]);
+  assert.deepEqual(stage4.result.newlyUnlockedUnitIds, [CAMPAIGN_UNIT_IDS.GANTETSU]);
+  assert.equal(isUnitOwned(stage4.save, CAMPAIGN_UNIT_IDS.GANTETSU), true);
+  assert.equal(isUnitRecruitable(stage4.save, CAMPAIGN_UNIT_IDS.GANTETSU), false);
+
+  const stage5 = resolveStageResult(stage4.save, STAGE_5, {
+    resultId: "station-progression-stage-5",
+    won: true,
+    baseHp: 100,
+    baseMaxHp: 100,
+  });
+  assert.deepEqual(stage5.result.newlyUnlockedStageIds, [STAGE_6]);
+  assert.deepEqual(stage5.result.newlyUnlockedUnitIds, []);
+  assert.deepEqual(stage5.result.newlyDiscoveredUnitIds, [CAMPAIGN_UNIT_IDS.MONKEY]);
+  assert.equal(isUnitDiscovered(stage5.save, CAMPAIGN_UNIT_IDS.MONKEY), true);
+  assert.equal(isUnitOwned(stage5.save, CAMPAIGN_UNIT_IDS.MONKEY), false);
+  assert.equal(isUnitRecruitable(stage5.save, CAMPAIGN_UNIT_IDS.MONKEY), false);
+
+  const stage6 = resolveStageResult(stage5.save, STAGE_6, {
+    resultId: "station-progression-stage-6",
+    won: true,
+    baseHp: 100,
+    baseMaxHp: 100,
+  });
+  assert.deepEqual(stage6.result.newlyUnlockedStageIds, []);
+  assert.deepEqual(stage6.result.newlyUnlockedUnitIds, [CAMPAIGN_UNIT_IDS.MONKEY]);
+  assert.equal(isUnitOwned(stage6.save, CAMPAIGN_UNIT_IDS.MONKEY), true);
+
+  const replay = resolveStageResult(stage6.save, STAGE_4, {
+    resultId: "station-progression-stage-4-replay",
+    won: true,
+    baseHp: 100,
+    baseMaxHp: 100,
+  });
+  assert.deepEqual(replay.result.newlyUnlockedUnitIds, []);
+  assert.equal(replay.save.ownership.filter((unitId) => unitId === CAMPAIGN_UNIT_IDS.GANTETSU).length, 1);
 });
 
 test("default save is versioned and contains initial progression, selection, and settings", () => {
@@ -762,7 +929,7 @@ test("migration repairs accidentally persisted QA all-unlock flags", () => {
     schemaVersion: 2,
     campaignStarted: true,
     completedStageIds: [],
-    unlockedStageIds: [STAGE_1, STAGE_2, STAGE_3],
+    unlockedStageIds: CAMPAIGN_STAGES.map(({ id }) => id),
     unlockedUnitIds: CAMPAIGN_UNITS.map(({ id }) => id),
   });
   assert.deepEqual(repaired.unlockedStageIds, [STAGE_1]);
