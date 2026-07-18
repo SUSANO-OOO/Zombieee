@@ -1,0 +1,994 @@
+{
+  "baseUrl": "http://127.0.0.1:3000/",
+  "generatedAt": "2026-07-18T18:14:01.796Z",
+  "passed": 6,
+  "failed": 0,
+  "results": [
+    {
+      "engine": "webkit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "stage": 4,
+      "stageId": "stage-nishijin-station-gate",
+      "state": "start",
+      "scenarioKind": "live-start-deployment",
+      "url": "http://127.0.0.1:3000/?qa=station&stage=4&state=start&safe=iphone-landscape",
+      "status": "passed",
+      "snapshot": {
+        "screen": "battle",
+        "resultId": "local-qa:stage-nishijin-station-gate:start",
+        "stageId": "stage-nishijin-station-gate",
+        "time": 1.8369999999999989,
+        "running": true,
+        "paused": false,
+        "over": false,
+        "won": false,
+        "bossDefeated": false,
+        "bossDefeatPending": false,
+        "baseHp": 850,
+        "baseMaxHp": 850,
+        "barricadeHp": 1000,
+        "barricadeMaxHp": 1000,
+        "wave": 1,
+        "eventIndex": 0,
+        "pendingSpawnCount": 0,
+        "takuyaEntranceAudioRemaining": 0,
+        "energy": 51.42949999999991,
+        "scrap": 0,
+        "supportGauge": 0,
+        "storyBattleReadEventIds": [],
+        "storyBattleReceiptEventIds": [],
+        "storyBattleEvaluatedCueKeys": [],
+        "battleBarks": {
+          "clock": 1.8369999999999989,
+          "active": [
+            {
+              "id": "random-scout-deploy:1",
+              "lineId": "random-scout-deploy",
+              "trigger": "deploy",
+              "speakerId": "scout",
+              "speakerKind": "scout",
+              "speaker": "ハチ",
+              "text": "先を見る",
+              "remaining": 0.15400000000000078,
+              "priority": 23,
+              "sequence": 1,
+              "tone": "radio"
+            }
+          ],
+          "pendingScripted": [],
+          "scriptedCueIds": []
+        },
+        "roleMetrics": {
+          "naoHealing": 0,
+          "naoPreventedDamage": 0,
+          "crazyKingSecondaryHits": 0,
+          "crazyKingMaxTier": 0,
+          "raiderPierceHits": 0,
+          "raiderSuppressionApplications": 0,
+          "raiderOverheats": 0,
+          "tataraHeavyDamage": 0,
+          "tataraStructureDamage": 0,
+          "gantetsuRedirectedDamage": 0,
+          "monkeyTrapTriggers": 0
+        },
+        "stationMetrics": {
+          "karamiteBinds": 0,
+          "leakMudZones": 0,
+          "soukiBursts": 0,
+          "gateEaterCharges": 0,
+          "powerActivations": 0,
+          "escortCompletions": 0,
+          "sealCompletions": 0,
+          "offFloorSteps": 0,
+          "maxLaneAnchorError": 19.4079999999999
+        },
+        "stageMission": {
+          "missionType": "assault",
+          "completed": false,
+          "failed": false,
+          "transitions": []
+        },
+        "researchContainer": null,
+        "stationHazards": [],
+        "geometry": {
+          "viewportId": "844x390",
+          "checkedCount": 1,
+          "offFloorCount": 0,
+          "offFloorIds": [],
+          "debugPrimitiveCount": 15
+        },
+        "fighters": [
+          {
+            "id": 1,
+            "side": "human",
+            "kind": "scout",
+            "lane": 1,
+            "assignedLane": 1,
+            "x": 240.5049999999997,
+            "y": 285,
+            "hp": 80,
+            "bodyRadius": 11,
+            "targetId": null,
+            "targetObjectId": null,
+            "combatReady": true,
+            "contained": false,
+            "damageReductionRemaining": 0,
+            "comboHits": 0,
+            "weaponHeat": 0,
+            "overheated": false,
+            "suppressionStacks": 0,
+            "suppressedRemaining": 0,
+            "slowMultiplier": 1,
+            "guardStandRemaining": 0,
+            "guardStandAvailable": true,
+            "engineerTrapReady": false,
+            "engineerTrapX": 0,
+            "armorBreakStacks": 0,
+            "stationAbility": {
+              "phase": "idle",
+              "remainingSeconds": 0
+            }
+          }
+        ],
+        "completedStageIds": [],
+        "unlockedStageIds": [
+          "stage-nishijin-shopping-street",
+          "stage-nishijin-station-gate"
+        ],
+        "processedResultIds": []
+      },
+      "dimensions": {
+        "innerWidth": 844,
+        "innerHeight": 390,
+        "documentWidth": 844,
+        "documentHeight": 390,
+        "bodyWidth": 844,
+        "bodyHeight": 390,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "outsideViewportElements": []
+      },
+      "activity": {
+        "deployedUnitId": 1,
+        "movementDistance": 40.34463820633413
+      },
+      "postResult": null,
+      "diagnostics": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestFailures": [],
+        "httpErrors": [],
+        "warnings": []
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "stage": 4,
+      "stageId": "stage-nishijin-station-gate",
+      "state": "near-win",
+      "scenarioKind": "near-terminal-fixture",
+      "url": "http://127.0.0.1:3000/?qa=station&stage=4&state=near-win&safe=iphone-landscape",
+      "status": "passed",
+      "snapshot": {
+        "screen": "result",
+        "resultId": "local-qa:stage-nishijin-station-gate:near-win",
+        "stageId": "stage-nishijin-station-gate",
+        "time": 137,
+        "running": true,
+        "paused": false,
+        "over": true,
+        "won": true,
+        "bossDefeated": false,
+        "bossDefeatPending": false,
+        "baseHp": 850,
+        "baseMaxHp": 850,
+        "barricadeHp": 0,
+        "barricadeMaxHp": 1000,
+        "wave": 1,
+        "eventIndex": 7,
+        "pendingSpawnCount": 0,
+        "takuyaEntranceAudioRemaining": 0,
+        "energy": 150,
+        "scrap": 0,
+        "supportGauge": 0,
+        "storyBattleReadEventIds": [],
+        "storyBattleReceiptEventIds": [],
+        "storyBattleEvaluatedCueKeys": [],
+        "battleBarks": {
+          "clock": 4.198999999999993,
+          "active": [],
+          "pendingScripted": [],
+          "scriptedCueIds": []
+        },
+        "roleMetrics": {
+          "naoHealing": 0,
+          "naoPreventedDamage": 0,
+          "crazyKingSecondaryHits": 0,
+          "crazyKingMaxTier": 0,
+          "raiderPierceHits": 0,
+          "raiderSuppressionApplications": 0,
+          "raiderOverheats": 0,
+          "tataraHeavyDamage": 0,
+          "tataraStructureDamage": 52.5,
+          "gantetsuRedirectedDamage": 0,
+          "monkeyTrapTriggers": 0
+        },
+        "stationMetrics": {
+          "karamiteBinds": 0,
+          "leakMudZones": 0,
+          "soukiBursts": 0,
+          "gateEaterCharges": 0,
+          "powerActivations": 0,
+          "escortCompletions": 0,
+          "sealCompletions": 0,
+          "offFloorSteps": 0,
+          "maxLaneAnchorError": 0
+        },
+        "stageMission": {
+          "missionType": "assault",
+          "completed": false,
+          "failed": false,
+          "transitions": []
+        },
+        "researchContainer": null,
+        "stationHazards": [],
+        "geometry": {
+          "viewportId": "844x390",
+          "checkedCount": 1,
+          "offFloorCount": 0,
+          "offFloorIds": [],
+          "debugPrimitiveCount": 15
+        },
+        "fighters": [
+          {
+            "id": 1,
+            "side": "human",
+            "kind": "brute",
+            "lane": 1,
+            "assignedLane": 1,
+            "x": 841,
+            "y": 285,
+            "hp": 175,
+            "bodyRadius": 16,
+            "targetId": null,
+            "targetObjectId": null,
+            "combatReady": true,
+            "contained": false,
+            "damageReductionRemaining": 0,
+            "comboHits": 0,
+            "weaponHeat": 0,
+            "overheated": false,
+            "suppressionStacks": 0,
+            "suppressedRemaining": 0,
+            "slowMultiplier": 1,
+            "guardStandRemaining": 0,
+            "guardStandAvailable": true,
+            "engineerTrapReady": false,
+            "engineerTrapX": 0,
+            "armorBreakStacks": 0,
+            "stationAbility": {
+              "phase": "idle",
+              "remainingSeconds": 0
+            }
+          }
+        ],
+        "completedStageIds": [
+          "stage-nishijin-station-gate"
+        ],
+        "unlockedStageIds": [
+          "stage-nishijin-shopping-street",
+          "stage-nishijin-station-gate",
+          "stage-nishijin-station-platform"
+        ],
+        "processedResultIds": [
+          "local-qa:stage-nishijin-station-gate:near-win"
+        ]
+      },
+      "dimensions": {
+        "innerWidth": 844,
+        "innerHeight": 390,
+        "documentWidth": 844,
+        "documentHeight": 390,
+        "bodyWidth": 844,
+        "bodyHeight": 390,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "outsideViewportElements": []
+      },
+      "activity": null,
+      "postResult": {
+        "action": "retry",
+        "screen": "battle",
+        "previousResultId": "local-qa:stage-nishijin-station-gate:near-win",
+        "nextResultId": "stage-nishijin-station-gate:eacd3da3-1a1c-4af7-98ca-ab4663edddcb:38"
+      },
+      "diagnostics": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestFailures": [],
+        "httpErrors": [],
+        "warnings": []
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "stage": 4,
+      "stageId": "stage-nishijin-station-gate",
+      "state": "near-loss",
+      "scenarioKind": "near-terminal-fixture",
+      "url": "http://127.0.0.1:3000/?qa=station&stage=4&state=near-loss&safe=iphone-landscape",
+      "status": "passed",
+      "snapshot": {
+        "screen": "result",
+        "resultId": "local-qa:stage-nishijin-station-gate:near-loss",
+        "stageId": "stage-nishijin-station-gate",
+        "time": 137,
+        "running": true,
+        "paused": false,
+        "over": true,
+        "won": false,
+        "bossDefeated": false,
+        "bossDefeatPending": false,
+        "baseHp": 0,
+        "baseMaxHp": 850,
+        "barricadeHp": 1000,
+        "barricadeMaxHp": 1000,
+        "wave": 1,
+        "eventIndex": 7,
+        "pendingSpawnCount": 0,
+        "takuyaEntranceAudioRemaining": 0,
+        "energy": 150,
+        "scrap": 0,
+        "supportGauge": 0,
+        "storyBattleReadEventIds": [],
+        "storyBattleReceiptEventIds": [],
+        "storyBattleEvaluatedCueKeys": [],
+        "battleBarks": {
+          "clock": 1.1260000000000003,
+          "active": [
+            {
+              "id": "defeat-01:1",
+              "lineId": "defeat-01",
+              "trigger": "defeat",
+              "speakerId": "guide",
+              "speakerKind": "guide",
+              "speaker": "いくらちゃん",
+              "text": "移動拠点がもちません。撤退してください！",
+              "remaining": 0.5740000000000013,
+              "priority": 100,
+              "sequence": 1,
+              "tone": "radio"
+            }
+          ],
+          "pendingScripted": [],
+          "scriptedCueIds": []
+        },
+        "roleMetrics": {
+          "naoHealing": 0,
+          "naoPreventedDamage": 0,
+          "crazyKingSecondaryHits": 0,
+          "crazyKingMaxTier": 0,
+          "raiderPierceHits": 0,
+          "raiderSuppressionApplications": 0,
+          "raiderOverheats": 0,
+          "tataraHeavyDamage": 0,
+          "tataraStructureDamage": 0,
+          "gantetsuRedirectedDamage": 0,
+          "monkeyTrapTriggers": 0
+        },
+        "stationMetrics": {
+          "karamiteBinds": 0,
+          "leakMudZones": 0,
+          "soukiBursts": 0,
+          "gateEaterCharges": 0,
+          "powerActivations": 0,
+          "escortCompletions": 0,
+          "sealCompletions": 0,
+          "offFloorSteps": 0,
+          "maxLaneAnchorError": 0
+        },
+        "stageMission": {
+          "missionType": "assault",
+          "completed": false,
+          "failed": false,
+          "transitions": []
+        },
+        "researchContainer": null,
+        "stationHazards": [],
+        "geometry": {
+          "viewportId": "844x390",
+          "checkedCount": 1,
+          "offFloorCount": 0,
+          "offFloorIds": [],
+          "debugPrimitiveCount": 15
+        },
+        "fighters": [
+          {
+            "id": 1,
+            "side": "zombie",
+            "kind": "walker",
+            "lane": 1,
+            "assignedLane": 1,
+            "x": 128,
+            "y": 285,
+            "hp": 91,
+            "bodyRadius": 11,
+            "targetId": null,
+            "targetObjectId": null,
+            "combatReady": true,
+            "contained": false,
+            "damageReductionRemaining": 0,
+            "comboHits": 0,
+            "weaponHeat": 0,
+            "overheated": false,
+            "suppressionStacks": 0,
+            "suppressedRemaining": 0,
+            "slowMultiplier": 1,
+            "guardStandRemaining": 0,
+            "guardStandAvailable": true,
+            "engineerTrapReady": false,
+            "engineerTrapX": 0,
+            "armorBreakStacks": 0,
+            "stationAbility": {
+              "phase": "idle",
+              "remainingSeconds": 0
+            }
+          }
+        ],
+        "completedStageIds": [],
+        "unlockedStageIds": [
+          "stage-nishijin-shopping-street",
+          "stage-nishijin-station-gate"
+        ],
+        "processedResultIds": [
+          "local-qa:stage-nishijin-station-gate:near-loss"
+        ]
+      },
+      "dimensions": {
+        "innerWidth": 844,
+        "innerHeight": 390,
+        "documentWidth": 844,
+        "documentHeight": 390,
+        "bodyWidth": 844,
+        "bodyHeight": 390,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "outsideViewportElements": []
+      },
+      "activity": null,
+      "postResult": {
+        "action": "map",
+        "screen": "map"
+      },
+      "diagnostics": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestFailures": [],
+        "httpErrors": [],
+        "warnings": []
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": {
+        "width": 844,
+        "height": 340
+      },
+      "stage": 4,
+      "stageId": "stage-nishijin-station-gate",
+      "state": "start",
+      "scenarioKind": "live-start-deployment",
+      "url": "http://127.0.0.1:3000/?qa=station&stage=4&state=start&safe=iphone-landscape",
+      "status": "passed",
+      "snapshot": {
+        "screen": "battle",
+        "resultId": "local-qa:stage-nishijin-station-gate:start",
+        "stageId": "stage-nishijin-station-gate",
+        "time": 1.965999999999999,
+        "running": true,
+        "paused": false,
+        "over": false,
+        "won": false,
+        "bossDefeated": false,
+        "bossDefeatPending": false,
+        "baseHp": 850,
+        "baseMaxHp": 850,
+        "barricadeHp": 1000,
+        "barricadeMaxHp": 1000,
+        "wave": 1,
+        "eventIndex": 0,
+        "pendingSpawnCount": 0,
+        "takuyaEntranceAudioRemaining": 0,
+        "energy": 51.88099999999992,
+        "scrap": 0,
+        "supportGauge": 0,
+        "storyBattleReadEventIds": [],
+        "storyBattleReceiptEventIds": [],
+        "storyBattleEvaluatedCueKeys": [],
+        "battleBarks": {
+          "clock": 1.965999999999999,
+          "active": [
+            {
+              "id": "random-scout-deploy:1",
+              "lineId": "random-scout-deploy",
+              "trigger": "deploy",
+              "speakerId": "scout",
+              "speakerKind": "scout",
+              "speaker": "ハチ",
+              "text": "先を見る",
+              "remaining": 0.010999999999999677,
+              "priority": 23,
+              "sequence": 1,
+              "tone": "radio"
+            }
+          ],
+          "pendingScripted": [],
+          "scriptedCueIds": []
+        },
+        "roleMetrics": {
+          "naoHealing": 0,
+          "naoPreventedDamage": 0,
+          "crazyKingSecondaryHits": 0,
+          "crazyKingMaxTier": 0,
+          "raiderPierceHits": 0,
+          "raiderSuppressionApplications": 0,
+          "raiderOverheats": 0,
+          "tataraHeavyDamage": 0,
+          "tataraStructureDamage": 0,
+          "gantetsuRedirectedDamage": 0,
+          "monkeyTrapTriggers": 0
+        },
+        "stationMetrics": {
+          "karamiteBinds": 0,
+          "leakMudZones": 0,
+          "soukiBursts": 0,
+          "gateEaterCharges": 0,
+          "powerActivations": 0,
+          "escortCompletions": 0,
+          "sealCompletions": 0,
+          "offFloorSteps": 0,
+          "maxLaneAnchorError": 19.577999999999975
+        },
+        "stageMission": {
+          "missionType": "assault",
+          "completed": false,
+          "failed": false,
+          "transitions": []
+        },
+        "researchContainer": null,
+        "stationHazards": [],
+        "geometry": {
+          "viewportId": "844x340",
+          "checkedCount": 1,
+          "offFloorCount": 0,
+          "offFloorIds": [],
+          "debugPrimitiveCount": 15
+        },
+        "fighters": [
+          {
+            "id": 1,
+            "side": "human",
+            "kind": "scout",
+            "lane": 1,
+            "assignedLane": 1,
+            "x": 243.85299999999975,
+            "y": 285,
+            "hp": 80,
+            "bodyRadius": 11,
+            "targetId": null,
+            "targetObjectId": null,
+            "combatReady": true,
+            "contained": false,
+            "damageReductionRemaining": 0,
+            "comboHits": 0,
+            "weaponHeat": 0,
+            "overheated": false,
+            "suppressionStacks": 0,
+            "suppressedRemaining": 0,
+            "slowMultiplier": 1,
+            "guardStandRemaining": 0,
+            "guardStandAvailable": true,
+            "engineerTrapReady": false,
+            "engineerTrapX": 0,
+            "armorBreakStacks": 0,
+            "stationAbility": {
+              "phase": "idle",
+              "remainingSeconds": 0
+            }
+          }
+        ],
+        "completedStageIds": [],
+        "unlockedStageIds": [
+          "stage-nishijin-shopping-street",
+          "stage-nishijin-station-gate"
+        ],
+        "processedResultIds": []
+      },
+      "dimensions": {
+        "innerWidth": 844,
+        "innerHeight": 340,
+        "documentWidth": 844,
+        "documentHeight": 340,
+        "bodyWidth": 844,
+        "bodyHeight": 340,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "outsideViewportElements": []
+      },
+      "activity": {
+        "deployedUnitId": 1,
+        "movementDistance": 41.34799154735325
+      },
+      "postResult": null,
+      "diagnostics": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestFailures": [],
+        "httpErrors": [],
+        "warnings": []
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": {
+        "width": 844,
+        "height": 340
+      },
+      "stage": 4,
+      "stageId": "stage-nishijin-station-gate",
+      "state": "near-win",
+      "scenarioKind": "near-terminal-fixture",
+      "url": "http://127.0.0.1:3000/?qa=station&stage=4&state=near-win&safe=iphone-landscape",
+      "status": "passed",
+      "snapshot": {
+        "screen": "result",
+        "resultId": "local-qa:stage-nishijin-station-gate:near-win",
+        "stageId": "stage-nishijin-station-gate",
+        "time": 137,
+        "running": true,
+        "paused": false,
+        "over": true,
+        "won": true,
+        "bossDefeated": false,
+        "bossDefeatPending": false,
+        "baseHp": 850,
+        "baseMaxHp": 850,
+        "barricadeHp": 0,
+        "barricadeMaxHp": 1000,
+        "wave": 1,
+        "eventIndex": 7,
+        "pendingSpawnCount": 0,
+        "takuyaEntranceAudioRemaining": 0,
+        "energy": 150,
+        "scrap": 0,
+        "supportGauge": 0,
+        "storyBattleReadEventIds": [],
+        "storyBattleReceiptEventIds": [],
+        "storyBattleEvaluatedCueKeys": [],
+        "battleBarks": {
+          "clock": 4.384999999999992,
+          "active": [],
+          "pendingScripted": [],
+          "scriptedCueIds": []
+        },
+        "roleMetrics": {
+          "naoHealing": 0,
+          "naoPreventedDamage": 0,
+          "crazyKingSecondaryHits": 0,
+          "crazyKingMaxTier": 0,
+          "raiderPierceHits": 0,
+          "raiderSuppressionApplications": 0,
+          "raiderOverheats": 0,
+          "tataraHeavyDamage": 0,
+          "tataraStructureDamage": 52.5,
+          "gantetsuRedirectedDamage": 0,
+          "monkeyTrapTriggers": 0
+        },
+        "stationMetrics": {
+          "karamiteBinds": 0,
+          "leakMudZones": 0,
+          "soukiBursts": 0,
+          "gateEaterCharges": 0,
+          "powerActivations": 0,
+          "escortCompletions": 0,
+          "sealCompletions": 0,
+          "offFloorSteps": 0,
+          "maxLaneAnchorError": 0
+        },
+        "stageMission": {
+          "missionType": "assault",
+          "completed": false,
+          "failed": false,
+          "transitions": []
+        },
+        "researchContainer": null,
+        "stationHazards": [],
+        "geometry": {
+          "viewportId": "844x340",
+          "checkedCount": 1,
+          "offFloorCount": 0,
+          "offFloorIds": [],
+          "debugPrimitiveCount": 15
+        },
+        "fighters": [
+          {
+            "id": 1,
+            "side": "human",
+            "kind": "brute",
+            "lane": 1,
+            "assignedLane": 1,
+            "x": 841,
+            "y": 285,
+            "hp": 175,
+            "bodyRadius": 16,
+            "targetId": null,
+            "targetObjectId": null,
+            "combatReady": true,
+            "contained": false,
+            "damageReductionRemaining": 0,
+            "comboHits": 0,
+            "weaponHeat": 0,
+            "overheated": false,
+            "suppressionStacks": 0,
+            "suppressedRemaining": 0,
+            "slowMultiplier": 1,
+            "guardStandRemaining": 0,
+            "guardStandAvailable": true,
+            "engineerTrapReady": false,
+            "engineerTrapX": 0,
+            "armorBreakStacks": 0,
+            "stationAbility": {
+              "phase": "idle",
+              "remainingSeconds": 0
+            }
+          }
+        ],
+        "completedStageIds": [
+          "stage-nishijin-station-gate"
+        ],
+        "unlockedStageIds": [
+          "stage-nishijin-shopping-street",
+          "stage-nishijin-station-gate",
+          "stage-nishijin-station-platform"
+        ],
+        "processedResultIds": [
+          "local-qa:stage-nishijin-station-gate:near-win"
+        ]
+      },
+      "dimensions": {
+        "innerWidth": 844,
+        "innerHeight": 340,
+        "documentWidth": 844,
+        "documentHeight": 340,
+        "bodyWidth": 844,
+        "bodyHeight": 340,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "outsideViewportElements": []
+      },
+      "activity": null,
+      "postResult": {
+        "action": "retry",
+        "screen": "battle",
+        "previousResultId": "local-qa:stage-nishijin-station-gate:near-win",
+        "nextResultId": "stage-nishijin-station-gate:31e468a4-42cd-4838-a085-82530ffe3e4d:34"
+      },
+      "diagnostics": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestFailures": [],
+        "httpErrors": [],
+        "warnings": []
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": {
+        "width": 844,
+        "height": 340
+      },
+      "stage": 4,
+      "stageId": "stage-nishijin-station-gate",
+      "state": "near-loss",
+      "scenarioKind": "near-terminal-fixture",
+      "url": "http://127.0.0.1:3000/?qa=station&stage=4&state=near-loss&safe=iphone-landscape",
+      "status": "passed",
+      "snapshot": {
+        "screen": "result",
+        "resultId": "local-qa:stage-nishijin-station-gate:near-loss",
+        "stageId": "stage-nishijin-station-gate",
+        "time": 137,
+        "running": true,
+        "paused": false,
+        "over": true,
+        "won": false,
+        "bossDefeated": false,
+        "bossDefeatPending": false,
+        "baseHp": 0,
+        "baseMaxHp": 850,
+        "barricadeHp": 1000,
+        "barricadeMaxHp": 1000,
+        "wave": 1,
+        "eventIndex": 7,
+        "pendingSpawnCount": 0,
+        "takuyaEntranceAudioRemaining": 0,
+        "energy": 150,
+        "scrap": 0,
+        "supportGauge": 0,
+        "storyBattleReadEventIds": [],
+        "storyBattleReceiptEventIds": [],
+        "storyBattleEvaluatedCueKeys": [],
+        "battleBarks": {
+          "clock": 1.0840000000000005,
+          "active": [
+            {
+              "id": "defeat-01:1",
+              "lineId": "defeat-01",
+              "trigger": "defeat",
+              "speakerId": "guide",
+              "speakerKind": "guide",
+              "speaker": "いくらちゃん",
+              "text": "移動拠点がもちません。撤退してください！",
+              "remaining": 0.6160000000000009,
+              "priority": 100,
+              "sequence": 1,
+              "tone": "radio"
+            }
+          ],
+          "pendingScripted": [],
+          "scriptedCueIds": []
+        },
+        "roleMetrics": {
+          "naoHealing": 0,
+          "naoPreventedDamage": 0,
+          "crazyKingSecondaryHits": 0,
+          "crazyKingMaxTier": 0,
+          "raiderPierceHits": 0,
+          "raiderSuppressionApplications": 0,
+          "raiderOverheats": 0,
+          "tataraHeavyDamage": 0,
+          "tataraStructureDamage": 0,
+          "gantetsuRedirectedDamage": 0,
+          "monkeyTrapTriggers": 0
+        },
+        "stationMetrics": {
+          "karamiteBinds": 0,
+          "leakMudZones": 0,
+          "soukiBursts": 0,
+          "gateEaterCharges": 0,
+          "powerActivations": 0,
+          "escortCompletions": 0,
+          "sealCompletions": 0,
+          "offFloorSteps": 0,
+          "maxLaneAnchorError": 0
+        },
+        "stageMission": {
+          "missionType": "assault",
+          "completed": false,
+          "failed": false,
+          "transitions": []
+        },
+        "researchContainer": null,
+        "stationHazards": [],
+        "geometry": {
+          "viewportId": "844x340",
+          "checkedCount": 1,
+          "offFloorCount": 0,
+          "offFloorIds": [],
+          "debugPrimitiveCount": 15
+        },
+        "fighters": [
+          {
+            "id": 1,
+            "side": "zombie",
+            "kind": "walker",
+            "lane": 1,
+            "assignedLane": 1,
+            "x": 128,
+            "y": 285,
+            "hp": 91,
+            "bodyRadius": 11,
+            "targetId": null,
+            "targetObjectId": null,
+            "combatReady": true,
+            "contained": false,
+            "damageReductionRemaining": 0,
+            "comboHits": 0,
+            "weaponHeat": 0,
+            "overheated": false,
+            "suppressionStacks": 0,
+            "suppressedRemaining": 0,
+            "slowMultiplier": 1,
+            "guardStandRemaining": 0,
+            "guardStandAvailable": true,
+            "engineerTrapReady": false,
+            "engineerTrapX": 0,
+            "armorBreakStacks": 0,
+            "stationAbility": {
+              "phase": "idle",
+              "remainingSeconds": 0
+            }
+          }
+        ],
+        "completedStageIds": [],
+        "unlockedStageIds": [
+          "stage-nishijin-shopping-street",
+          "stage-nishijin-station-gate"
+        ],
+        "processedResultIds": [
+          "local-qa:stage-nishijin-station-gate:near-loss"
+        ]
+      },
+      "dimensions": {
+        "innerWidth": 844,
+        "innerHeight": 340,
+        "documentWidth": 844,
+        "documentHeight": 340,
+        "bodyWidth": 844,
+        "bodyHeight": 340,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "outsideViewportElements": []
+      },
+      "activity": null,
+      "postResult": {
+        "action": "map",
+        "screen": "map"
+      },
+      "diagnostics": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestFailures": [],
+        "httpErrors": [],
+        "warnings": []
+      }
+    }
+  ]
+}
