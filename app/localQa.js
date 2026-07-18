@@ -129,6 +129,21 @@ export const LOCAL_QA_CAMPAIGN_STAGE_ALIASES = Object.freeze({
   1: CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET,
   2: CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE,
   3: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
+  4: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE,
+  5: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
+  6: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL,
+});
+
+export const LOCAL_QA_STATION_STATES = Object.freeze([
+  "start",
+  "near-win",
+  "near-loss",
+]);
+
+const LOCAL_QA_STATION_STAGE_ALIASES = Object.freeze({
+  4: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE,
+  5: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
+  6: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL,
 });
 
 function isLocalQaHostname(hostname) {
@@ -167,10 +182,11 @@ export function resolveLocalQaScenario(hostname, search = "") {
   const stageParam = optionalSingleValue(params, "stage");
   const starsParam = optionalSingleValue(params, "stars");
   const eventParam = optionalSingleValue(params, "event");
-  if (!screenParam.valid || !stageParam.valid || !starsParam.valid || !eventParam.valid) return null;
+  const stateParam = optionalSingleValue(params, "state");
+  if (!screenParam.valid || !stageParam.valid || !starsParam.valid || !eventParam.valid || !stateParam.valid) return null;
 
   if (qa === "flow") {
-    if (eventParam.value !== null) return null;
+    if (eventParam.value !== null || stateParam.value !== null) return null;
     if (!LOCAL_QA_CAMPAIGN_SCREENS.includes(screenParam.value)) return null;
     const stageId = resolveCampaignStageId(stageParam.value, INITIAL_STAGE_ID);
     const stars = resolveQaStars(starsParam.value);
@@ -179,16 +195,25 @@ export function resolveLocalQaScenario(hostname, search = "") {
   }
 
   if (qa === "defense") {
-    if (screenParam.value !== null || starsParam.value !== null || eventParam.value !== null) return null;
+    if (screenParam.value !== null || starsParam.value !== null || eventParam.value !== null || stateParam.value !== null) return null;
     const stageId = resolveCampaignStageId(stageParam.value, CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE);
     if (stageId !== CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE) return null;
     return { mode: "defense", screen: "battle", stageId, stars: 0 };
   }
 
   if (qa === "story") {
-    if (screenParam.value !== null || stageParam.value !== null || starsParam.value !== null) return null;
+    if (screenParam.value !== null || stageParam.value !== null || starsParam.value !== null || stateParam.value !== null) return null;
     if (!eventParam.value || !STORY_EVENT_IDS.includes(eventParam.value)) return null;
     return { mode: "story", screen: "event", stageId: INITIAL_STAGE_ID, stars: 0, eventId: eventParam.value };
+  }
+
+  if (qa === "station") {
+    if (screenParam.value !== null || starsParam.value !== null || eventParam.value !== null) return null;
+    const stageId = stageParam.value === null
+      ? null
+      : LOCAL_QA_STATION_STAGE_ALIASES[stageParam.value] ?? null;
+    if (!stageId || !LOCAL_QA_STATION_STATES.includes(stateParam.value)) return null;
+    return { mode: "station", screen: "battle", stageId, stars: 0, state: stateParam.value };
   }
 
   return null;

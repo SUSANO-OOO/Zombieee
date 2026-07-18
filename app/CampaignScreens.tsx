@@ -73,6 +73,7 @@ export type CampaignResultView = {
   kills: number;
   unitsLost: number;
   baseHpRatio: number;
+  missionFacts: readonly string[];
   newlyUnlockedUnits: readonly string[];
   newlyUnlockedStages: readonly string[];
 };
@@ -317,6 +318,7 @@ function ResultScreen({ selectedStage, result, onRetry, onContinueResult }: Pick
       <header><small>{selectedStage.displayName}</small><h1>{result.won ? "作戦成功" : "戦線崩壊"}</h1><div className="result-stars" aria-label={`今回の星 ${result.currentStars}`}>{stars(result.currentStars)}</div></header>
       <div className="result-records"><span><small>今回の星</small><b>{stars(result.currentStars)}</b></span><span><small>過去最高星</small><b>{stars(result.previousBestStars)}</b></span><span data-highlight={result.newBest}><small>最高記録更新</small><b>{result.newBest ? "更新" : "維持"}</b></span></div>
       <div className="result-rewards"><h2>獲得報酬</h2><dl><div><dt>通常クリア報酬</dt><dd>{result.clearReward}</dd></div><div><dt>新規星到達報酬</dt><dd>{result.newStarReward}</dd></div><div className="total"><dt>合計獲得キャップ</dt><dd>{result.totalReward}</dd></div></dl><p>所持：{result.capsAfter} キャップ</p></div>
+      {result.missionFacts.length > 0 && <section className="result-mission-facts" aria-live="polite"><h2>作戦記録</h2>{result.missionFacts.map((fact) => <p key={fact}>{fact}</p>)}</section>}
       {(result.newlyUnlockedUnits.length > 0 || result.newlyUnlockedStages.length > 0) && <section className="result-unlocks" aria-live="polite"><h2>新たな戦力を解放</h2>{result.newlyUnlockedUnits.map((label) => <p key={`unit-${label}`}><b>ユニット</b><span>{label}</span></p>)}{result.newlyUnlockedStages.map((label) => <p key={`stage-${label}`}><b>作戦区域</b><span>{label}</span></p>)}</section>}
       <div className="result-stats"><span><small>作戦時間</small><b>{formatTime(result.time)}</b></span><span><small>撃破数</small><b>{result.kills}</b></span><span><small>移動拠点HP</small><b>{Math.round(result.baseHpRatio * 100)}%</b></span><span><small>戦闘不能</small><b>{result.unitsLost}</b></span></div>
       <footer><button className="campaign-secondary" onClick={onRetry}>同じ編成で再戦</button><button className="campaign-primary" onClick={onContinueResult}>{result.won ? "作戦後の通信へ" : "エリアマップへ"}</button></footer>

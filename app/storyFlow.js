@@ -116,6 +116,33 @@ export const STAGE_STORY_FLOWS = deepFreeze({
     defeat: "stage-takuya-defeat",
     retry: "stage-takuya-retry",
   }),
+  // P4 keeps the new station battles playable before P5 installs their
+  // canonical dialogue. Null entry/result events deliberately route straight
+  // to battle/result without inventing temporary story copy.
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE]: stageFlow({
+    pre: null,
+    replay: null,
+    battle: [],
+    post: null,
+    defeat: null,
+    retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM]: stageFlow({
+    pre: null,
+    replay: null,
+    battle: [],
+    post: null,
+    defeat: null,
+    retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL]: stageFlow({
+    pre: null,
+    replay: null,
+    battle: [],
+    post: null,
+    defeat: null,
+    retry: null,
+  }),
 });
 
 function getStageFlow(stageId) {
@@ -248,11 +275,13 @@ export function getStageResultStoryEventIds({
   defeatReason,
 } = {}) {
   const flow = getStageFlow(stageId);
-  if (!won) return [getStageDefeatStoryEventId({ stageId, bossDefeated, enemyBaseDestroyed, defeatReason })];
+  if (!won) {
+    return uniqueStrings([
+      getStageDefeatStoryEventId({ stageId, bossDefeated, enemyBaseDestroyed, defeatReason }),
+    ]);
+  }
   if (uniqueStrings(completedStageIds).includes(stageId)) return [];
-  return stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE
-    ? [flow.post, "prologue-ending"]
-    : [flow.post];
+  return flow.post ? [flow.post] : [];
 }
 
 export function isStoryEventRead(readStoryEventIds, eventId) {
@@ -292,14 +321,14 @@ export function resolveStoryEventCompletion({
 }
 
 export function listStoryFlowEventIds() {
-  const stageEventIds = Object.values(STAGE_STORY_FLOWS).flatMap((flow) => [
+  const stageEventIds = uniqueStrings(Object.values(STAGE_STORY_FLOWS).flatMap((flow) => [
     flow.pre,
     ...flow.battle.map(({ eventId }) => eventId),
     flow.post,
     flow.defeat,
     flow.retry,
     flow.replay,
-  ]);
+  ]));
   return [...new Set([...getPrologueOpeningEventIds(), ...stageEventIds, "stage-takuya-defeat-after-boss", "prologue-ending"])
   ];
 }

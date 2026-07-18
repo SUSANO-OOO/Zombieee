@@ -37,12 +37,45 @@ import {
 const STAGE_1 = CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET;
 const STAGE_2 = CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE;
 const STAGE_3 = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
+const STAGE_4 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE;
+const STAGE_5 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM;
+const STAGE_6 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL;
 
 test("the deterministic flow reaches all 39 prologue-v5 events", () => {
   assert.equal(STORY_FLOW_SCRIPT_VERSION, "prologue-v5");
   assert.deepEqual(new Set(listStoryFlowEventIds()), new Set(STORY_EVENT_IDS));
-  assert.deepEqual(Object.keys(STAGE_STORY_FLOWS), [STAGE_1, STAGE_2, STAGE_3]);
+  assert.deepEqual(Object.keys(STAGE_STORY_FLOWS), [STAGE_1, STAGE_2, STAGE_3, STAGE_4, STAGE_5, STAGE_6]);
   assert.deepEqual(getPrologueOpeningEventIds(), ["prologue-opening", "prologue-operations-room"]);
+});
+
+test("P4 station stages route directly without inventing temporary story events", () => {
+  const noStoryFlow = {
+    pre: null,
+    replay: null,
+    battle: [],
+    post: null,
+    defeat: null,
+    retry: null,
+  };
+  for (const stageId of [STAGE_4, STAGE_5, STAGE_6]) {
+    assert.deepEqual(STAGE_STORY_FLOWS[stageId], noStoryFlow);
+    assert.equal(getStageEntryStoryEventId({ stageId }), null);
+    assert.equal(getStageEntryStoryEventId({ stageId, completedStageIds: [stageId] }), null);
+    assert.equal(getStageReplayStoryEventId(stageId), null);
+    assert.equal(getStageRetryStoryEventId(stageId), null);
+    assert.equal(getStageNextAttemptStoryEventId({ stageId, previousWon: false }), null);
+    assert.equal(getStageNextAttemptStoryEventId({ stageId, previousWon: true }), null);
+    assert.deepEqual(getStageResultStoryEventIds({ stageId, won: true }), []);
+    assert.deepEqual(getStageResultStoryEventIds({ stageId, won: false }), []);
+    assert.deepEqual(
+      advanceBattleStoryFlow({
+        state: createBattleStoryFlowState(stageId),
+        snapshot: { battleStarted: true, enemyKindsSeen: ["grappler", "ooze", "sprinter", "gate-eater"] },
+      }).eventIds,
+      [],
+    );
+  }
+  assert.equal(listStoryFlowEventIds().includes(null), false);
 });
 
 test("first attempts, retries, and cleared-stage replays never reuse first-meeting scenes", () => {
@@ -196,7 +229,7 @@ test("result routing distinguishes ordinary defeat, post-boss defeat, victory, a
     bossDefeated: true,
     enemyBaseDestroyed: false,
   }), ["stage-takuya-defeat-after-boss"]);
-  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_3, won: true }), ["stage-takuya-post", "prologue-ending"]);
+  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_3, won: true }), ["stage-takuya-post"]);
   assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_3, won: true, completedStageIds: [STAGE_3] }), []);
   assert.equal(deriveBattleDefeatReason({ stageId: STAGE_3, bossDefeated: true }), BATTLE_DEFEAT_REASON_IDS.TAKUYA_BASE_REMAINS);
   assert.equal(getStageDefeatStoryEventId({ stageId: STAGE_3, defeatReason: BATTLE_DEFEAT_REASON_IDS.TAKUYA_BASE_REMAINS }), "stage-takuya-defeat-after-boss");

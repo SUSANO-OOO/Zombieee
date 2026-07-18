@@ -290,11 +290,12 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /barricadeHp: number/);
   assert.match(game, /barricadeHp: definition\.enemyBaseMaxHp/);
   assert.match(game, /g\.barricadeHp = Math\.max\(0, g\.barricadeHp - structureDamage\)/);
-  assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, g\)/);
+  assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
   assert.match(game, /TAKUYA撃破 — 感染拠点が露出/);
   assert.match(game, /感染拠点 \/\/ 損傷/);
   assert.match(game, /感染拠点 \/\/ 大破/);
-  assert.match(game, /hud\.missionType === "timed-defense" \? "救援区域" : "感染拠点"/);
+  assert.match(game, /const enemyBaseLabel = selectedStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"/);
+  assert.match(game, /hud\.missionType === "timed-defense" \? "救援区域" : enemyBaseLabel/);
   assert.match(screens, /result\.won \? "作戦成功" : "戦線崩壊"/);
   assert.match(screens, /過去最高星<\/small><b>\{stars\(result\.previousBestStars\)\}/);
   assert.match(campaign, /最終機会 — 感染拠点を破壊/);
@@ -669,7 +670,20 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.equal(crawlerThreatLevel(315), .5);
   assert.equal(crawlerThreatLevel(175), 1);
 
-  const gaugeRewards = { walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20, takuya: 25, turned: 7 };
+  const gaugeRewards = {
+    walker: 4,
+    runner: 5,
+    spitter: 8,
+    crusher: 14,
+    shade: 22,
+    abomination: 20,
+    takuya: 25,
+    turned: 7,
+    grappler: 13,
+    ooze: 11,
+    sprinter: 8,
+    "gate-eater": 30,
+  };
   assert.deepEqual(
     Object.fromEntries(Object.keys(gaugeRewards).map((kind) => [kind, supportGaugeReward(kind)])),
     gaugeRewards,
@@ -1189,9 +1203,10 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(enemyBaseDraw, /const hitX = barrier\.attackX;[\s\S]*createRadialGradient\(hitX,[\s\S]*fillRect\(hitX - 55/);
   assert.match(enemyBaseDraw, /breached[\s\S]*感染拠点 破壊/);
   assert.match(game, /const enemyBaseDestroyed = g\.barricadeHp <= 0[\s\S]*g\.resultPresented = !enemyBaseDestroyed/);
-  assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, g\)/);
+  assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
   assert.match(game, /g\.resultPresented = !enemyBaseDestroyed/);
-  assert.match(game, /advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*setEnd\(\{ resultId: g\.resultId, stageId: g\.definition\.stageId, won: g\.won/);
+  assert.match(game, /if \(!enemyBaseDestroyed\) setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.stageId,[\s\S]*won: g\.won/);
+  assert.match(game, /if \(g\.over && !g\.resultPresented\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*if \(collapseStep\.complete\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.stageId,[\s\S]*won: g\.won/);
   assert.match(game, /resolveStageResult\(campaignSave, \{[\s\S]*resultId: end\.resultId,[\s\S]*stageId: end\.stageId,[\s\S]*baseMaxHp: end\.baseMaxHp/);
   assert.match(game, /if \(!end \|\| finalizedEndRef\.current === end\) return;[\s\S]*window\.setTimeout\(async \(\) => \{[\s\S]*if \(finalizedEndRef\.current === end\) return;[\s\S]*finalizedEndRef\.current = end/);
   assert.match(game, /setCampaignSave\(resolved\.save as CampaignSave\)[\s\S]*setScreen\("result"\)/);
@@ -1348,7 +1363,8 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.cooldown-mask small \{ display:block;[^}]*font-size:6px;/);
   assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
   assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax\)/);
-  assert.match(game, /TAKUYA \/\/ \{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
+  assert.match(game, /const bossLabel = selectedStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL \? "改札喰い" : "TAKUYA"/);
+  assert.match(game, /\{bossLabel\}\{" \/\/ "\}\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
   assert.match(css, /\.boss-hud \{[^}]*top:18%; right:calc\(2% \+ var\(--app-viewport-safe-right\)\); width:23%/);
   assert.match(css, /\.boss-hud \{ top:78px; right:calc\(8px \+ var\(--app-viewport-safe-right\)\); width:24%/);
 });
@@ -1516,7 +1532,7 @@ test("integrates the enemy gate queue without changing direct QA or turned place
   assert.match(game, /combatReady: true, gateEntering: false/);
   assert.match(game, /ctx\.rect\(0, 0, ENEMY_GATE_SPAWN\.revealX, H\);[\s\S]*ctx\.clip\(\)/);
   assert.match(game, /includesTakuya[\s\S]*playCue\(includesTakuya \? "boss-warning" : "wave-contact"\)[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance/);
-  assert.match(game, /bossActiveOrIncoming[\s\S]*g\.enemySpawn\.pending\.some\(\(entry\) => entry\.kind === "takuya"\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);
+  assert.match(game, /bossActiveOrIncoming[\s\S]*\["takuya", "gate-eater"\]\.includes\(entry\.kind\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);
 });
 
 test("integrates attack identity, corpse phases, infection, cremation, and generic turning into the battle loop", async () => {
@@ -1541,6 +1557,39 @@ test("integrates attack identity, corpse phases, infection, cremation, and gener
   assert.match(corpseDraw, /eyeGlint[\s\S]*smokePuffs[\s\S]*flameTongues[\s\S]*corpse\.state === "ash"/);
   assert.doesNotMatch(corpseDraw, /infectionRemaining|fillText|strokeRect|setLineDash/i);
   assert.match(game, /enforceEnemyCorpseCaps\(nextCorpses\.filter\(\(corpse\) => corpse\.side === "zombie"\)\)/);
+});
+
+test("station QA positions spawned fighters instead of immutable unit cards", async () => {
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const stationQa = game.slice(
+    game.indexOf("function prepareStationQa"),
+    game.indexOf("function prepareQaMode"),
+  );
+
+  assert.match(stationQa, /const spawnQaHuman = \(kind: UnitKind\) => \{[\s\S]*g\.fighters\[g\.fighters\.length - 1\]/);
+  assert.match(stationQa, /const finisher = spawnQaHuman\("brute"\)/);
+  assert.match(stationQa, /const escort = spawnQaHuman\(kind\)/);
+  assert.match(stationQa, /const returning = spawnQaHuman\("brawler"\)/);
+  assert.doesNotMatch(stationQa, /const (?:finisher|escort|returning) = spawnHuman/);
+  assert.match(game, /prepareStationQa\(fresh, retrying \? "start" : qaScenario\.state\)/);
+});
+
+test("station objectives use spatial evidence, containment, and reversible hazards in the live loop", async () => {
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+
+  assert.match(game, /stationSpatialSnapshot\(\{[\s\S]*escortCount: spatial\.escortCount[\s\S]*powerOperatorCount: spatial\.powerOperatorCount[\s\S]*returnedCount: spatial\.returnedCount/);
+  assert.match(game, /wavesResolved: stationResolution\.wavesResolved/);
+  assert.match(game, /resolveContainmentStrike\(\{[\s\S]*researchContainer: g\.researchContainer[\s\S]*powerActivated: g\.stageMission\.powerActivated/);
+  assert.doesNotMatch(game, /gateEaterDefeated/);
+  assert.match(game, /fighter\.side === "human" && fighter\.hp > 0\) fighter\.slowMultiplier = 1/);
+  assert.match(game, /g\.stationHazards = relocateStationHazards\(\{[\s\S]*previousLaneCenters,[\s\S]*nextLaneCenters/);
+  assert.match(game, /selectKaramiteTarget\(\{[\s\S]*attacker: f,[\s\S]*candidates: g\.fighters,[\s\S]*beginKaramiteWindup/);
+  assert.match(game, /enforceGateEaterContainmentInvariant\(fighter\)[\s\S]*const dead = g\.fighters\.filter/);
+  assert.match(game, /advanceLeakMudHazards\(\{[\s\S]*g\.stationHazards = \[\.\.\.hazardFrame\.zones\]/);
+  assert.match(game, /stationHumanMoveSpeed\(\{[\s\S]*slowMultiplier: f\.slowMultiplier/);
+  assert.match(game, /stationHazards: g\.stationHazards\.map\(\(hazard\) => \(\{ \.\.\.hazard \}\)\)/);
+  assert.match(game, /slowMultiplier: fighter\.slowMultiplier/);
+  assert.match(game, /f\.contained\)[\s\S]*f\.targetId = null;[\s\S]*f\.knock = 0;[\s\S]*continue;/);
 });
 
 test("defines an ordered mission timeline after the five-second preparation window", () => {

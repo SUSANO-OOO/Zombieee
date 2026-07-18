@@ -73,6 +73,10 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .barrier-health.vulnerable b { color:#efb06a; text-shadow:0 0 8px rgba(224,91,56,.45); }
 .barrier-health.hit { animation:crawler-hit .16s ease-out; }
 .barrier-health > small { display:block; margin-top:3px; color:#d17b52; font:800 clamp(5px,.52vw,7px) monospace; letter-spacing:.1em; }
+.mission-health { opacity:1; padding:5px 8px; border:1px solid rgba(216,188,118,.45); background:rgba(7,12,13,.78); }
+.mission-health div { display:block; text-align:right; }
+.mission-health span,.mission-health b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mission-health b { margin-top:3px; color:#ead08d; }
 .boss-hud { position:absolute; z-index:5; top:18%; right:calc(2% + var(--app-viewport-safe-right)); width:23%; padding:5px 9px 6px; border:1px solid rgba(73,176,212,.65); border-left:4px solid #62c6e6; background:linear-gradient(90deg,rgba(8,13,17,.94),rgba(29,24,22,.92)); box-shadow:0 5px 24px rgba(0,0,0,.6),inset 0 0 14px rgba(61,158,192,.12); clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%,0 8px); animation:boss-intro .45s ease-out; }
 .boss-hud div { display:flex; align-items:center; justify-content:space-between; gap:8px; font:900 clamp(7px,.72vw,10px) monospace; letter-spacing:.12em; }
 .boss-hud span { color:#82d9ef; }.boss-hud b { color:#c5b8a1; font-size:clamp(6px,.58vw,8px); }

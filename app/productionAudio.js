@@ -53,6 +53,12 @@ const WEAPON_POOL_CATEGORIES = Object.freeze({
 const HUMAN_VOICE_PROFILES = Object.freeze(["female", "male-heavy", "male-light"]);
 const HUMAN_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
 const ENEMY_KINDS = Object.freeze(["walker", "runner", "spitter", "crusher", "shade", "abomination", "turned", "takuya"]);
+const ENEMY_VOICE_PROFILE_BY_KIND = Object.freeze({
+  grappler: "crusher",
+  ooze: "spitter",
+  sprinter: "runner",
+  "gate-eater": "takuya",
+});
 const ENEMY_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
 
 const NEW_UNIT_AUDIO_CUES = Object.freeze([
@@ -258,6 +264,9 @@ const STAGE_SCENE_BY_ID = Object.freeze({
   [CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_1,
   [CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_2,
   [CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
 });
 
 const UNIT_WEAPON_CUES = Object.freeze({
@@ -379,7 +388,8 @@ export function stopBattleAudioLoops(mixer, { fadeMs = 0 } = {}) {
 }
 
 export function enemyVoiceCue(kind, event) {
-  return ENEMY_KINDS.includes(kind) && ENEMY_VOICE_EVENTS.includes(event) ? `enemy-${kind}-${event}` : null;
+  const profile = ENEMY_KINDS.includes(kind) ? kind : ownValue(ENEMY_VOICE_PROFILE_BY_KIND, kind);
+  return profile && ENEMY_VOICE_EVENTS.includes(event) ? `enemy-${profile}-${event}` : null;
 }
 
 function outcomeFrom(value) {

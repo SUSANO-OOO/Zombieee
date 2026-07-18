@@ -218,6 +218,9 @@ test("screen and stage routing selects title, story, preparation, stage, boss, a
   assert.equal(sceneIdForScreen("battle", CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET, "normal"), "stage1");
   assert.equal(sceneIdForScreen("battle", CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE, { musicMode: "danger" }), "stage2");
   assert.equal(sceneIdForScreen("battle", CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE, { musicMode: "normal" }), "stage3");
+  assert.equal(sceneIdForScreen("battle", CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE, { musicMode: "normal" }), "stage3");
+  assert.equal(sceneIdForScreen("battle", CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM, { musicMode: "normal" }), "stage3");
+  assert.equal(sceneIdForScreen("battle", CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL, { musicMode: "normal" }), "stage3");
   assert.equal(sceneIdForScreen("battle", CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE, { musicMode: "boss" }), "boss");
   assert.equal(sceneIdForScreen("result", null, { won: true }), "victory");
   assert.equal(sceneIdForScreen("result", null, { end: { won: false } }), "defeat");
@@ -317,6 +320,10 @@ test("all eight enemy kinds expose distinct attack, hurt, and death variation po
     }
   }
   assert.equal(new Set(cueIds).size, 24);
+  assert.equal(enemyVoiceCue("grappler", "attack"), "enemy-crusher-attack");
+  assert.equal(enemyVoiceCue("ooze", "hurt"), "enemy-spitter-hurt");
+  assert.equal(enemyVoiceCue("sprinter", "death"), "enemy-runner-death");
+  assert.equal(enemyVoiceCue("gate-eater", "attack"), "enemy-takuya-attack");
   assert.equal(enemyVoiceCue("crawler", "attack"), null);
   assert.equal(enemyVoiceCue("walker", "spawn"), null);
 });

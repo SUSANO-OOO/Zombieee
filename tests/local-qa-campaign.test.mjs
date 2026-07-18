@@ -6,6 +6,7 @@ import {
   LOCAL_QA_CAMPAIGN_SCREENS,
   LOCAL_QA_CAMPAIGN_STAGE_ALIASES,
   LOCAL_QA_MODES,
+  LOCAL_QA_STATION_STATES,
   measureCommandEconomy,
   resolveLocalQaMode,
   resolveLocalQaSafeArea,
@@ -15,6 +16,9 @@ import {
 const STAGE_1 = CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET;
 const STAGE_2 = CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE;
 const STAGE_3 = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
+const STAGE_4 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE;
+const STAGE_5 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM;
+const STAGE_6 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL;
 
 test("local battle QA modes remain host-gated and include lifecycle evidence", () => {
   assert.deepEqual(LOCAL_QA_MODES, ["endgame", "ai-reacquire", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
@@ -24,6 +28,7 @@ test("local battle QA modes remain host-gated and include lifecycle evidence", (
   }
   assert.equal(resolveLocalQaMode("localhost", "?qa=flow&screen=map"), null);
   assert.equal(resolveLocalQaMode("localhost", "?qa=defense"), null);
+  assert.equal(resolveLocalQaMode("localhost", "?qa=station&stage=4&state=start"), null);
   assert.equal(resolveLocalQaMode("example.com", "?qa=endgame"), null);
 });
 
@@ -53,14 +58,24 @@ test("flow QA resolves short stage aliases through a closed allowlist", () => {
     1: STAGE_1,
     2: STAGE_2,
     3: STAGE_3,
+    4: STAGE_4,
+    5: STAGE_5,
+    6: STAGE_6,
   });
-  assert.equal(resolveLocalQaScenario("localhost", "?qa=flow&screen=details&stage=1").stageId, STAGE_1);
-  assert.equal(resolveLocalQaScenario("localhost", "?qa=flow&screen=details&stage=2").stageId, STAGE_2);
-  assert.equal(resolveLocalQaScenario("localhost", "?qa=flow&screen=details&stage=3").stageId, STAGE_3);
+  for (const [alias, stageId] of [
+    [1, STAGE_1],
+    [2, STAGE_2],
+    [3, STAGE_3],
+    [4, STAGE_4],
+    [5, STAGE_5],
+    [6, STAGE_6],
+  ]) {
+    assert.equal(resolveLocalQaScenario("localhost", `?qa=flow&screen=details&stage=${alias}`).stageId, stageId);
+  }
 });
 
 test("flow QA accepts each full stable campaign stage ID", () => {
-  for (const stageId of [STAGE_1, STAGE_2, STAGE_3]) {
+  for (const stageId of [STAGE_1, STAGE_2, STAGE_3, STAGE_4, STAGE_5, STAGE_6]) {
     assert.deepEqual(resolveLocalQaScenario("localhost", `?qa=flow&screen=formation&stage=${stageId}&stars=2`), {
       mode: "flow",
       screen: "formation",
@@ -106,10 +121,54 @@ test("story QA opens every canonical event only on an exact local host", async (
   assert.equal(resolveLocalQaScenario("localhost", `?qa=story&event=${STORY_EVENT_IDS[0]}&screen=event`), null);
 });
 
+test("station QA exposes only the three station stages and deterministic battle states", () => {
+  assert.deepEqual(LOCAL_QA_STATION_STATES, ["start", "near-win", "near-loss"]);
+  for (const hostname of ["localhost", "127.0.0.1"]) {
+    for (const [stage, stageId] of [
+      [4, STAGE_4],
+      [5, STAGE_5],
+      [6, STAGE_6],
+    ]) {
+      for (const state of LOCAL_QA_STATION_STATES) {
+        assert.deepEqual(resolveLocalQaScenario(hostname, `?qa=station&stage=${stage}&state=${state}`), {
+          mode: "station",
+          screen: "battle",
+          stageId,
+          stars: 0,
+          state,
+        });
+      }
+    }
+  }
+});
+
+test("station QA rejects non-station stages, unknown states, and ambiguous parameters", () => {
+  for (const search of [
+    "?qa=station&stage=1&state=start",
+    "?qa=station&stage=2&state=near-win",
+    "?qa=station&stage=3&state=near-loss",
+    `?qa=station&stage=${STAGE_4}&state=start`,
+    "?qa=station&stage=4",
+    "?qa=station&state=start",
+    "?qa=station&stage=4&state=win",
+    "?qa=station&stage=4&state=START",
+    "?qa=station&stage=4&state=",
+    "?qa=station&qa=station&stage=4&state=start",
+    "?qa=station&stage=4&stage=5&state=start",
+    "?qa=station&stage=4&state=start&state=near-win",
+    "?qa=station&stage=4&state=start&screen=battle",
+    "?qa=station&stage=4&state=start&stars=0",
+    "?qa=station&stage=4&state=start&event=prologue-opening",
+  ]) {
+    assert.equal(resolveLocalQaScenario("localhost", search), null, search);
+  }
+});
+
 test("campaign QA is unavailable away from the exact local host allowlist", () => {
   for (const hostname of ["example.com", "localhost.example", "0.0.0.0", "::1", "LOCALHOST", ""]) {
     assert.equal(resolveLocalQaScenario(hostname, "?qa=flow&screen=map&stage=1&stars=3"), null);
     assert.equal(resolveLocalQaScenario(hostname, "?qa=defense"), null);
+    assert.equal(resolveLocalQaScenario(hostname, "?qa=station&stage=4&state=start"), null);
   }
 });
 
@@ -119,7 +178,7 @@ test("invalid, ambiguous, and unknown campaign QA parameters are rejected", () =
     "?qa=flow",
     "?qa=flow&screen=battle",
     "?qa=flow&screen=MAP",
-    "?qa=flow&screen=map&stage=4",
+    "?qa=flow&screen=map&stage=7",
     "?qa=flow&screen=map&stage=../../save",
     "?qa=flow&screen=map&stage=",
     "?qa=unknown&screen=map",
@@ -128,6 +187,9 @@ test("invalid, ambiguous, and unknown campaign QA parameters are rejected", () =
     "?qa=flow&screen=map&stage=1&stage=2",
     "?qa=flow&screen=map&stars=1&stars=2",
     "?qa=flow&screen=map&event=prologue-opening",
+    "?qa=flow&screen=map&state=start",
+    "?qa=defense&state=start",
+    "?qa=story&event=prologue-opening&state=start",
     "?qa=story&event=prologue-opening&event=prologue-ending",
   ]) {
     assert.equal(resolveLocalQaScenario("localhost", search), null, search);
