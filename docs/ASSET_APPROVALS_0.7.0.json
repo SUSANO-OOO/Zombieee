@@ -119,7 +119,7 @@
         "prohibitedDrift": "別人化、髪色変更、歯の欠けと鼻の絆創膏の消失、衣装色変更、装備の置換、他人物の顔や衣装の引用を禁止する。"
       },
       "finalPath": "public/art/v070/characters/portraits/scout-portrait-v1.webp",
-      "commit": null
+      "commit": "2533af6ac3a07a45eac50082490cb69e15f87d2d"
     },
     {
       "assetId": "V070-CHAR-HACHI-BATTLE",
@@ -206,7 +206,7 @@
         "prohibitedDrift": "別人化、装備交換、武器変形、余分な手足、接地不良、stateの入替、他人物の顔や衣装の引用を禁止する。"
       },
       "finalPath": "public/art/v070/characters/scout-battle-v1.png",
-      "commit": null
+      "commit": "2533af6ac3a07a45eac50082490cb69e15f87d2d"
     },
     {
       "assetId": "V070-CHAR-MIZUCHI-BASE",
@@ -491,7 +491,7 @@
         "silhouette": "画面左上の巨大な両頭ハンマー、幅広い肩と黒い前腕装甲、身体を斜めに横切る長柄、低く開いた両脚で構成する重量級シルエット。"
       },
       "finalPath": "public/art/v070/characters/reference/tatara-base-r8.png",
-      "commit": null
+      "commit": "2533af6ac3a07a45eac50082490cb69e15f87d2d"
     },
     {
       "assetId": "V070-CHAR-RAIDER-BASE",
@@ -532,7 +532,7 @@
         "silhouette": "短い砂色髪、露出した両肩、中央のtan carrierと弾薬バッグ、画面右へ長く伸びるLMG、長い脚で構成する火力支援シルエット。"
       },
       "finalPath": "public/art/v070/characters/reference/raider-base-r10.png",
-      "commit": null
+      "commit": "2533af6ac3a07a45eac50082490cb69e15f87d2d"
     },
     {
       "assetId": "V070-CHAR-GANTETSU-BASE",
@@ -572,7 +572,7 @@
         "silhouette": "丸い完全被覆helmet、画面中央を占める巨大な縦長盾、画面左へ広がる深緑のロングコート、盾の後ろに隠れる大型体格で構成する一枚壁のシルエット。"
       },
       "finalPath": "public/art/v070/characters/reference/gantetsu-base-r7.png",
-      "commit": null
+      "commit": "2533af6ac3a07a45eac50082490cb69e15f87d2d"
     },
     {
       "assetId": "V070-CHAR-MONKEY-BASE",
@@ -612,7 +612,7 @@
         "silhouette": "大きく流れる銀灰髪、中央のtan rig、腰前を横切る二カム式crossbow、曲げた両脚、腿外側の角形罠cassetteで構成する軽量で非対称なシルエット。"
       },
       "finalPath": "public/art/v070/characters/reference/monkey-base-r11.png",
-      "commit": null
+      "commit": "2533af6ac3a07a45eac50082490cb69e15f87d2d"
     }
   ]
 }
