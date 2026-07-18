@@ -1,6 +1,6 @@
 # Third-party and generated asset ledger
 
-> 対象: 西新世紀末物語 アーリーアクセス版 0.6.0 production assets
+> 対象: 西新世紀末物語 0.6.0 production assetsおよび0.7.0正式visual assets
 > 取得・生成日: 2026-07-15
 > ライセンス確認基準: 各配布者の一次配布ページ。検索結果、転載、ライセンス不明素材は採用していない。
 
@@ -419,6 +419,21 @@ Each MP3 below is a compatibility encoding of the paired final OGG in the comple
 - 本節は生成物やproducer提供物をCC0へ変更する宣言ではない。適用法、OpenAI Terms/Usage Policies、producerの提供許可、既存project assetの権利範囲内で使用する。
 - 生成物は類似性が生じ得るため、完全な独自性や第三者権利不存在を保証しない。文字、ロゴ、標章、既知キャラクター指定、実在人物の明示的肖像をpromptから除き、finalを人手監査した。
 - 人物10名の参照隔離、参照/source/final SHAは`reference/characters/portrait-provenance-v2.json`へ固定した。これは権利保証ではなく、キャラクター間の参照混入を防ぐ制作監査記録である。
+
+## Version 0.7.0 visual assets
+
+0.7.0の正式visual assetsは`docs/ASSET_APPROVALS_0.7.0.json`を正規台帳とする。台帳は43件の承認済みfinal artifact（active 40件）について、Asset ID、revision、source identity、final path、SHA-256、採否、derivative comparison、実ゲーム品質証拠、commit provenanceを保持する。
+
+### 生成元とpublic repository再配布
+
+- `V070-CHAR-MIZUCHI-BASE@r3`は、プロデューサーが本ミッションで直接提供し、正式採用、派生制作、ゲーム利用、repository収録を明示指示した原本である。第三者配布ページから取得していない。
+- 上記原本そのものを除く0.7.0正式visualは、OpenAI image generationによる本ミッションの新規Output、または承認済みproject assetだけを入力にした派生・切り出し・透明化・resize・encode成果物である。
+- OpenAI Terms of UseのContent条項に基づき、適用法で認められる範囲においてOpenAIとユーザーの間ではユーザーがOutputを所有する。これを本ゲームとrepositoryへ収録・配布する権利根拠とする。
+- 正式採用前に、可読テキスト、第三者ロゴ、保護標章、明示的な実在人物の肖像、既知キャラクター指定、人物間の参照混入を人手監査した。生成物の完全な独自性や第三者権利不存在を保証するものではない。
+- 0.7.0 visualに第三者サイトからdownloadした画像はない。外部音響は本書前半のCC0台帳に従う。
+- 生成物とプロデューサー提供物をCC0へ変更するものではない。public repositoryへの収録は、第三者へ独立した再利用licenseを付与する宣言ではない。
+
+権利根拠の機械可読情報は`docs/ASSET_APPROVALS_0.7.0.json`の`rightsProvenance`に保持する。各final artifactの個別hashとsource chainは同台帳のasset recordを参照し、ここへ重複転記しない。
 
 ## 任意クレジット（表示用）
 

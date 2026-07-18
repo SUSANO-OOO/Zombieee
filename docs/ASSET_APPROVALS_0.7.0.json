@@ -20,6 +20,29 @@
       "asset_hash_and_final_path"
     ]
   },
+  "rightsProvenance": {
+    "scope": "All approved records whose finalPath is under public/art/v070/",
+    "publicRedistribution": "approved_for_project_repository_and_game_distribution",
+    "reviewedAt": "2026-07-19",
+    "openAiTermsUrl": "https://openai.com/policies/terms-of-use/",
+    "openAiTermsEffectiveDate": "2026-01-01",
+    "openAiGeneratedOutputs": {
+      "appliesTo": "All approved final artifacts except the exact producer-provided identity source listed below; derivatives of that source are newly generated or mechanically processed project outputs.",
+      "rightsBasis": "OpenAI Terms of Use Content section: as between the user and OpenAI and to the extent permitted by applicable law, the user owns Output.",
+      "humanReview": "Final artifacts were reviewed for identity drift, visible text, logos, protected insignia, explicit real-person likeness, cross-character copying, and gameplay integration before approval."
+    },
+    "producerProvidedInputs": [
+      {
+        "assetRevision": "V070-CHAR-MIZUCHI-BASE@r3",
+        "finalPath": "public/art/v070/characters/reference/mizuchi-base-r3.png",
+        "rightsBasis": "The producer supplied this image directly in the Version 0.7.0 mission and explicitly instructed its adoption, derivation, repository inclusion, and game use.",
+        "thirdPartyDistributionPage": null
+      }
+    ],
+    "derivativeRule": "Derivative portraits, battle atlases, stage art, event cuts, and processed files inherit only approved internal project sources identified by sourceApprovedAssetId, sourceApprovedRevision, styleReferencePaths, and derivativeComparison.",
+    "thirdPartyDownloadedVisuals": false,
+    "notCc0Notice": "Generated and producer-provided visual assets are not declared CC0. Public repository inclusion does not grant a separate reuse license beyond applicable law and repository platform terms."
+  },
   "assets": [
     {
       "assetId": "V070-CHAR-HACHI-BASE",

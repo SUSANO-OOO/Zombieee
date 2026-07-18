@@ -74,6 +74,23 @@ test("0.7.0 asset approval manifest has unique revision records", async () => {
 
   assert.equal(manifest.schemaVersion, 1);
   assert.equal(manifest.release, "0.7.0");
+  assert.equal(
+    manifest.rightsProvenance.publicRedistribution,
+    "approved_for_project_repository_and_game_distribution",
+  );
+  assert.equal(manifest.rightsProvenance.reviewedAt, "2026-07-19");
+  assert.match(manifest.rightsProvenance.openAiTermsUrl, /^https:\/\/openai\.com\/policies\/terms-of-use\/$/);
+  assert.equal(manifest.rightsProvenance.thirdPartyDownloadedVisuals, false);
+  assert.deepEqual(
+    manifest.rightsProvenance.producerProvidedInputs.map(({ assetRevision, finalPath }) => ({
+      assetRevision,
+      finalPath,
+    })),
+    [{
+      assetRevision: "V070-CHAR-MIZUCHI-BASE@r3",
+      finalPath: "public/art/v070/characters/reference/mizuchi-base-r3.png",
+    }],
+  );
   assert.equal(manifest.reviewPolicy.mode, delegatedReviewMode);
   assert.equal(manifest.reviewPolicy.individualApprovalRequired, false);
   assert.equal(manifest.reviewPolicy.preserveHistoricalIndividualReviews, true);
@@ -106,6 +123,10 @@ test("approved image revisions have an identity lock and an exact formal artifac
     assert.ok(asset.identityLock && typeof asset.identityLock === "object");
     assert.ok(asset.finalPath?.startsWith("public/art/v070/"));
     assert.match(asset.commit, /^[a-f0-9]{40}$/, `${asset.assetId}@${asset.revision} is missing commit provenance`);
+    assert.ok(
+      manifest.rightsProvenance.scope.includes("public/art/v070/"),
+      "rights provenance must cover every approved formal visual",
+    );
 
     const bytes = await readFile(new URL(asset.finalPath, repositoryRoot));
     const digest = createHash("sha256").update(bytes).digest("hex");
