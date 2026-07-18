@@ -4,6 +4,9 @@ const STAGE_IDS = Object.freeze({
   NISHIJIN: "stage-nishijin-shopping-street",
   SAWARA: "stage-sawara-ward-office",
   TAKUYA: "stage-nishijin-defense-line-takuya",
+  STATION_GATE: "stage-nishijin-station-gate",
+  STATION_PLATFORM: "stage-nishijin-station-platform",
+  STATION_TUNNEL: "stage-nishijin-station-tunnel-seal",
 });
 
 export const STAGE_OBJECT_DEPTH_BANDS = Object.freeze([
@@ -27,6 +30,7 @@ function stageObject({
   collision = null,
   interactionX = null,
   replacesRuntimeSprite = null,
+  runtimeUsage = "battle-overlay",
 }) {
   if (!STAGE_OBJECT_DEPTH_BANDS.includes(depthBand)) {
     throw new RangeError(`Unknown stage object depth band: ${String(depthBand)}`);
@@ -42,11 +46,13 @@ function stageObject({
     // afterward. z orders objects within the same explicit depth band.
     placement: Object.freeze({ x, y, width, anchorX: 0.5, anchorY: 1, z }),
     depthBand,
-    laneCorridorPolicy: depthBand === "rear-scenery"
-      ? "outside-walkable-lanes"
-      : depthBand === "objective"
-        ? "battlefield-objective"
-        : "overlays-walkable-lanes",
+    laneCorridorPolicy: runtimeUsage === "mission-render-source"
+      ? "source-cropped-to-gameplay-object"
+      : depthBand === "rear-scenery"
+        ? "outside-walkable-lanes"
+        : depthBand === "objective"
+          ? "battlefield-objective"
+          : "overlays-walkable-lanes",
     collision: collision ? Object.freeze({
       ...collision,
       lanes: Object.freeze([...(collision.lanes ?? [])]),
@@ -55,6 +61,7 @@ function stageObject({
     interactionX,
     replacesRuntimeSprite,
     defaultVisible,
+    runtimeUsage,
     productionTreatment: "generated-transparent-overlay-v1",
   });
 }
@@ -142,6 +149,28 @@ const DEFENSE_INVENTORY = Object.freeze([
   inventoryItem("exposed-infection-base", "TAKUYA撃破後の感染拠点", "dynamic-production-overlay", "infection-nest exposed/damaged/destroyed state"),
 ]);
 
+const STATION_GATE_INVENTORY = Object.freeze([
+  inventoryItem("damaged-ticket-gates", "破損した自動改札", "production-background+dynamic-production-overlay", "改札背景とmission-art-source内の3基"),
+  inventoryItem("infected-relay", "感染中継点", "dynamic-production-overlay", "mission-art-source右端から戦闘目標へcrop"),
+  inventoryItem("relay-warning-beacon", "中継点警告灯", "dynamic-production-overlay", "感染中継点上部の赤色回転灯"),
+  inventoryItem("relay-infection-tissue", "中継点を覆う感染組織", "dynamic-production-overlay", "中継点の右側と基部"),
+]);
+
+const STATION_PLATFORM_INVENTORY = Object.freeze([
+  inventoryItem("maintenance-cart", "保守台車", "dynamic-production-overlay", "mission-art-source全体から護送対象へcrop"),
+  inventoryItem("water-containers", "搬送用飲料水", "dynamic-production-overlay", "台車中央の青い水容器"),
+  inventoryItem("evacuation-supplies", "避難物資", "dynamic-production-overlay", "台車右側の荷物群"),
+  inventoryItem("cart-warning-beacons", "台車警告灯", "dynamic-production-overlay", "台車四隅の橙色灯"),
+]);
+
+const STATION_TUNNEL_INVENTORY = Object.freeze([
+  inventoryItem("power-cabinet-1", "第一電源盤", "dynamic-production-overlay", "mission-art-source左端から個別crop"),
+  inventoryItem("power-cabinet-2", "第二電源盤", "dynamic-production-overlay", "mission-art-source中央左から個別crop"),
+  inventoryItem("power-cabinet-3", "第三電源盤", "dynamic-production-overlay", "mission-art-source中央右から個別crop"),
+  inventoryItem("research-container-controller", "研究容器制御器", "dynamic-production-overlay", "mission-art-source右端の青色制御器"),
+  inventoryItem("seal-door", "封鎖扉", "production-background+dynamic-production-overlay", "背景の青色扉とruntime封鎖状態"),
+]);
+
 export const STAGE_OBJECT_MANIFEST = Object.freeze({
   [STAGE_IDS.NISHIJIN]: Object.freeze({
     backgroundPath: "/art/v060/battle-nishijin-shopping-street-v1.webp",
@@ -187,6 +216,30 @@ export const STAGE_OBJECT_MANIFEST = Object.freeze({
       stageObject({ id: "defense-infection-nest-exposed", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-exposed", path: "/art/v060/stage-objects/defense-infection-nest-exposed-v1.png", x: 850, y: 436, width: 155, z: 3, depthBand: "objective", collision: { width: 156, height: 300, lanes: [0, 1, 2] }, interactionX: 875 }),
       stageObject({ id: "defense-infection-nest-damaged", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-damaged", path: "/art/v060/stage-objects/defense-infection-nest-damaged-v1.png", x: 850, y: 436, width: 155, z: 3, depthBand: "objective", collision: { width: 156, height: 300, lanes: [0, 1, 2] }, interactionX: 875 }),
       stageObject({ id: "defense-infection-nest-destroyed", stageId: STAGE_IDS.TAKUYA, slot: "infection-nest", state: "nest-destroyed", path: "/art/v060/stage-objects/defense-infection-nest-destroyed-v1.png", x: 850, y: 436, width: 155, z: 3, depthBand: "objective", interactionX: 875 }),
+    ]),
+  }),
+  [STAGE_IDS.STATION_GATE]: Object.freeze({
+    backgroundPath: "/art/v070/stages/station-gate-background-v1.webp",
+    staticTreatment: "authored-background+cropped-mission-source",
+    productionInventory: STATION_GATE_INVENTORY,
+    objects: Object.freeze([
+      stageObject({ id: "station-gate-mission-art-source", stageId: STAGE_IDS.STATION_GATE, slot: "mission-art-source", state: "mission-art-source", path: "/art/v070/stages/objects/station-gate-objects-v1.png", x: 480, y: 540, width: 960, z: 0, depthBand: "rear-scenery", runtimeUsage: "mission-render-source" }),
+    ]),
+  }),
+  [STAGE_IDS.STATION_PLATFORM]: Object.freeze({
+    backgroundPath: "/art/v070/stages/station-platform-background-v1.webp",
+    staticTreatment: "authored-background+cropped-mission-source",
+    productionInventory: STATION_PLATFORM_INVENTORY,
+    objects: Object.freeze([
+      stageObject({ id: "station-platform-mission-art-source", stageId: STAGE_IDS.STATION_PLATFORM, slot: "mission-art-source", state: "mission-art-source", path: "/art/v070/stages/objects/station-platform-objects-v1.png", x: 480, y: 540, width: 960, z: 0, depthBand: "rear-scenery", runtimeUsage: "mission-render-source" }),
+    ]),
+  }),
+  [STAGE_IDS.STATION_TUNNEL]: Object.freeze({
+    backgroundPath: "/art/v070/stages/station-tunnel-background-v1.webp",
+    staticTreatment: "authored-background+cropped-mission-source",
+    productionInventory: STATION_TUNNEL_INVENTORY,
+    objects: Object.freeze([
+      stageObject({ id: "station-tunnel-mission-art-source", stageId: STAGE_IDS.STATION_TUNNEL, slot: "mission-art-source", state: "mission-art-source", path: "/art/v070/stages/objects/station-tunnel-objects-v1.png", x: 480, y: 540, width: 960, z: 0, depthBand: "rear-scenery", runtimeUsage: "mission-render-source" }),
     ]),
   }),
 });

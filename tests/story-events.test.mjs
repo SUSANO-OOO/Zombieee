@@ -150,7 +150,7 @@ test("outbreak-origin-v8 exposes the complete fixed P5 event inventory", () => {
   );
 });
 
-test("all event and line presentation metadata is immutable and character voice remains disabled", () => {
+test("all event metadata is immutable and story read-aloud remains disabled", () => {
   for (const [eventId, storyEvent] of Object.entries(STORY_EVENTS)) {
     assert.equal(storyEvent.id, eventId);
     assert.equal(storyEvent.scriptVersion, STORY_SCRIPT_VERSION);
@@ -178,10 +178,19 @@ test("all event and line presentation metadata is immutable and character voice 
   }
 });
 
-test("redesigned people use the radio placeholder until a production-quality portrait is integrated", () => {
-  for (const speaker of ["ミズチ", "ナオ", "タタラ", "レイダー", "ガンテツ", "モンキー", "いくらちゃん"]) {
-    assert.equal(STORY_SPEAKER_PROFILES[speaker].approvedPortrait, false);
-    assert.equal(STORY_SPEAKER_PROFILES[speaker].portrait, "radio");
+test("redesigned people use their production-quality 0.7.0 portraits", () => {
+  const redesignedPortraits = new Map([
+    ["ミズチ", "ranger"],
+    ["ナオ", "medic"],
+    ["タタラ", "brute"],
+    ["レイダー", "gunner"],
+    ["ガンテツ", "guardian"],
+    ["モンキー", "engineer"],
+    ["いくらちゃん", "guide"],
+  ]);
+  for (const [speaker, portrait] of redesignedPortraits) {
+    assert.equal(STORY_SPEAKER_PROFILES[speaker].approvedPortrait, true);
+    assert.equal(STORY_SPEAKER_PROFILES[speaker].portrait, portrait);
   }
   for (const speaker of ["パイセン", "ハチ", "クマバーソン", "ババヤガ", "クレイジーキング"]) {
     assert.equal(STORY_SPEAKER_PROFILES[speaker].approvedPortrait, true);

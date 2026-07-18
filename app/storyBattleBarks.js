@@ -193,7 +193,9 @@ function cueLine({ eventId, trigger, lineIndex, line, contract, mandatory }) {
     eventId,
     trigger,
     lineIndex,
-    speakerKind: contract?.speakerKind ?? (line.portrait === "radio" ? null : line.portrait ?? null),
+    speakerKind: contract && Object.hasOwn(contract, "speakerKind")
+      ? contract.speakerKind
+      : line.portrait === "radio" ? null : line.portrait ?? null,
     speaker: line.speaker,
     text: line.text,
     mandatory: contract?.mandatory === true || mandatory,

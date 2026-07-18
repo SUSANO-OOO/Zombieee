@@ -323,13 +323,17 @@ test("eleven canonical playable units and guide-ikura use approved player-facing
   assert.equal(CAMPAIGN_GUIDE.displayName, "いくらちゃん");
   assert.equal(CAMPAIGN_GUIDE.roleName, "通信・地図・情報分析");
   assert.equal(CAMPAIGN_GUIDE.combatant, false);
+  assert.equal(CAMPAIGN_GUIDE.age, 18);
+  assert.equal(CAMPAIGN_GUIDE.portraitPath, "/art/v070/characters/portraits/guide-portrait-v1.webp");
+  assert.equal(CAMPAIGN_GUIDE.assetStatus, "approved");
+  assert.match(CAMPAIGN_GUIDE.appearanceAudit.presentation, /pink space bun/);
   assert.doesNotMatch(
     [...CAMPAIGN_UNITS.map(({ displayName }) => displayName), CAMPAIGN_GUIDE.displayName].join(" "),
     /センセイ|ノイズ|ロッカ|白石|真壁|橘|黒木|水城/,
   );
 });
 
-test("all eleven units separate canonical IDs from combat kinds and do not pass pending art as final", () => {
+test("all eleven units separate canonical IDs from combat kinds and use formal runtime art", () => {
   for (const unit of CAMPAIGN_UNITS) {
     assert.match(unit.id, /^unit-/);
     assert.equal(unit.unitId, unit.id);
@@ -342,17 +346,24 @@ test("all eleven units separate canonical IDs from combat kinds and do not pass 
     }
     assert.match(unit.appearanceAudit.presentation, /表現/);
     assert.ok(unit.appearanceAudit.weaponMatch.length > 0);
-    if (unit.assetStatus === "pending-approval") {
-      assert.equal(unit.spritePath, null);
-      assert.match(unit.appearanceAudit.result, /承認待ち/);
-    } else {
-      assert.equal(typeof unit.spritePath, "string");
-    }
+    assert.notEqual(unit.assetStatus, "pending-approval");
+    assert.equal(typeof unit.spritePath, "string");
   }
   assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.NAO].deploymentCost, 35);
   assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.GANTETSU].deploymentCost, 48);
-  assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.HACHI].assetStatus, "approved");
-  assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.HACHI].spritePath, "/art/v070/characters/scout-battle-v1.png");
+  const redesignedPaths = new Map([
+    [CAMPAIGN_UNIT_IDS.HACHI, "/art/v070/characters/scout-battle-v1.png"],
+    [CAMPAIGN_UNIT_IDS.MIZUCHI, "/art/v070/characters/ranger-battle-v1.png"],
+    [CAMPAIGN_UNIT_IDS.NAO, "/art/v070/characters/medic-battle-v1.png"],
+    [CAMPAIGN_UNIT_IDS.TATARA, "/art/v070/characters/brute-battle-v1.png"],
+    [CAMPAIGN_UNIT_IDS.RAIDER, "/art/v070/characters/gunner-battle-v1.png"],
+    [CAMPAIGN_UNIT_IDS.GANTETSU, "/art/v070/characters/guardian-battle-v1.png"],
+    [CAMPAIGN_UNIT_IDS.MONKEY, "/art/v070/characters/engineer-battle-v1.png"],
+  ]);
+  for (const [unitId, spritePath] of redesignedPaths) {
+    assert.equal(CAMPAIGN_UNIT_BY_ID[unitId].assetStatus, "approved");
+    assert.equal(CAMPAIGN_UNIT_BY_ID[unitId].spritePath, spritePath);
+  }
   assert.equal(CAMPAIGN_RECRUITMENT_COSTS[CAMPAIGN_UNIT_IDS.TATARA], 150);
   assert.equal(CAMPAIGN_RECRUITMENT_COSTS[CAMPAIGN_UNIT_IDS.RAIDER], 200);
   assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.RAIDER].weaponName, "軽機関銃");

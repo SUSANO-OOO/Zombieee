@@ -241,7 +241,7 @@ test("draws three unmistakably different stage environments", async () => {
   const drawOrder = [
     'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"])',
     "drawCrawler(ctx, g, sprites)",
-    "drawEnemyBase(ctx, g, enemyBaseSprite)",
+    "drawEnemyBase(ctx, g, enemyBaseSprite, stageObjects)",
     'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"])',
     "const renderables = [",
     'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["foreground-prop"])',
@@ -280,7 +280,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
     access(new URL("../public/medical-supply-station-v1.png", import.meta.url)),
   ]);
 
-  assert.match(game, /loadImage\("\/infected-checkpoint-v1\.png"/);
+  assert.match(game, /ensureImageLoaded\(enemyBaseSpriteRef\.current, "\/infected-checkpoint-v1\.png"/);
   assert.match(game, /crawler: "\/crawler-fortress-v1\.png"/);
   assert.match(game, /pod: "\/tactical-drop-pod-v1\.png"/);
   assert.match(game, /drum: "\/explosive-drum-v1\.png"/);
@@ -307,7 +307,16 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(layout, /viewportFit: "cover"/);
   assert.doesNotMatch(layout, /images: \[.*\/og\.png/);
   assert.match(layout, /rel="preload" as="image" href="\/infected-checkpoint-v1\.png"/);
-  assert.match(game, /spriteKinds\.map\(\(kind\) => \[kind, spriteSheetPath\(kind\)\]\)/);
+  assert.match(game, /const requiredSpriteKinds = qaMode \|\| qaScenario[\s\S]*\[\.\.\.new Set\(\[\.\.\.selectedFormationKinds, \.\.\.stageEnemyKinds\]\)\]/);
+  assert.match(game, /requiredSpriteKinds\.map\(\(kind\) => \([\s\S]*spriteSheetPath\(kind\)/);
+  assert.match(game, /STAGE_OBJECT_MANIFEST\[selectedStageId\]\?\.objects \?\? \[\]/);
+  assert.match(game, /releaseImage\(image\);[\s\S]*delete spriteRefs\.current\[key\]/);
+  assert.match(game, /delete backgroundCacheRef\.current\[stageId\];[\s\S]*const criticalJobs = \[/);
+  assert.match(game, /root\.dataset\.assetResidentScope = qaMode \|\| qaScenario \? "all-local-qa" : "stage-and-formation"/);
+  assert.match(game, /root\.dataset\.assetResidentBackgrounds = String\(Object\.keys\(backgroundCacheRef\.current\)\.length\)/);
+  assert.doesNotMatch(game, /const cached = backgroundCacheRef\.current\[selectedStageId\]/);
+  assert.doesNotMatch(game, /Object\.values\(STAGE_OBJECT_MANIFEST\)\.flatMap/);
+  assert.doesNotMatch(game, /for \(const \[stageId, src\] of Object\.entries\(PRODUCTION_VISUALS\.stages\)\)/);
   assert.match(spriteManifest, /brawler:[\s\S]*"\/brawler-sprites-v1\.png"/);
   assert.match(
     spriteManifest,

@@ -1956,9 +1956,8 @@ function spriteDisplaySize(kind: string) {
   return SPRITE_DISPLAY_SIZES[kind] ?? { w: 58, h: 96 };
 }
 
-// P3 diagnostic rendering only. These geometry marks keep the two late-game
-// roles testable before P6 art approval; they are not approved character art
-// and must be replaced by manifest-backed sprites before the release gate.
+// Asset-load diagnostic fallback only. Normal production rendering resolves
+// both late-game roles through manifest-backed approved atlases.
 function drawDiagnosticRoleFighter(ctx: CanvasRenderingContext2D, f: Fighter) {
   if (f.kind !== "guardian" && f.kind !== "engineer") return;
   const guardian = f.kind === "guardian";
@@ -1991,8 +1990,8 @@ function drawDiagnosticRoleFighter(ctx: CanvasRenderingContext2D, f: Fighter) {
   ctx.restore();
 }
 
-// P4 diagnostic rendering only. Formal station-enemy art remains blocked on
-// the one-image approval lane and is not represented by these code primitives.
+// Asset-load diagnostic fallback only. Normal production rendering resolves
+// station enemies through manifest-backed approved atlases.
 function drawDiagnosticStationEnemy(ctx: CanvasRenderingContext2D, f: Fighter) {
   if (!["grappler", "ooze", "sprinter", "gate-eater"].includes(f.kind)) return;
   const gateEater = f.kind === "gate-eater";
@@ -2164,7 +2163,7 @@ function drawStationHazard(ctx: CanvasRenderingContext2D, hazard: StationHazard,
   ctx.restore();
 }
 
-function drawStationMission(ctx: CanvasRenderingContext2D, g: Game) {
+function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap) {
   if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
     const x = escortCartX(g.stageMission, g.definition.missionConfig);
     const y = activeLaneCenters[1] + 13;
@@ -2174,13 +2173,23 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game) {
     ctx.translate(x, y);
     ctx.fillStyle = "rgba(0,0,0,.45)";
     ctx.beginPath(); ctx.ellipse(0, 6, 32, 6, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#5f665f"; ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0"; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.roundRect(-28, -27, 56, 30, 5); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#bfc8bb"; ctx.fillRect(-22, -20, 18, 12);
-    ctx.fillStyle = "#81735a"; ctx.fillRect(2, -20, 20, 12);
-    ctx.fillStyle = "#171b1a"; ctx.beginPath(); ctx.arc(-18, 5, 6, 0, Math.PI * 2); ctx.arc(18, 5, 6, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillRect(-29, -37, 58, 5);
-    ctx.fillStyle = "#d5b85e"; ctx.fillRect(-28, -36, 56 * integrity / maxIntegrity, 3);
+    const cartSprite = stageObjects["station-platform-mission-art-source"];
+    if (cartSprite?.complete && cartSprite.naturalWidth) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(cartSprite, 90, 260, 1400, 520, -60, -51, 120, 45);
+    } else {
+      ctx.fillStyle = "#5f665f"; ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(-28, -27, 56, 30, 5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#bfc8bb"; ctx.fillRect(-22, -20, 18, 12);
+      ctx.fillStyle = "#81735a"; ctx.fillRect(2, -20, 20, 12);
+      ctx.fillStyle = "#171b1a"; ctx.beginPath(); ctx.arc(-18, 5, 6, 0, Math.PI * 2); ctx.arc(18, 5, 6, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(-60, -51, 120, 45);
+    ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillRect(-60, -61, 120, 6);
+    ctx.fillStyle = "#d5b85e"; ctx.fillRect(-59, -60, 118 * integrity / maxIntegrity, 4);
     ctx.restore();
   }
   if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
@@ -2199,13 +2208,27 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game) {
       const x = panelXs[index];
       const y = activeLaneCenters[lanes[index]] - 8;
       ctx.save(); ctx.translate(x, y);
-      ctx.fillStyle = active ? "#596d58" : "#3b4240";
+      const powerSprite = stageObjects["station-tunnel-mission-art-source"];
+      const powerCrops = [
+        { x: 82, y: 55, w: 378, h: 760 },
+        { x: 520, y: 48, w: 365, h: 770 },
+        { x: 930, y: 58, w: 350, h: 755 },
+      ];
+      if (powerSprite?.complete && powerSprite.naturalWidth) {
+        const crop = powerCrops[index];
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(powerSprite, crop.x, crop.y, crop.w, crop.h, -23, -92, 46, 94);
+      } else {
+        ctx.fillStyle = active ? "#596d58" : "#3b4240";
+        ctx.fillRect(-13, -33, 26, 35);
+      }
       ctx.strokeStyle = active ? "#b8df83" : current ? "#e1aa5f" : "#707872";
       ctx.lineWidth = current ? 3 : 2;
-      ctx.fillRect(-13, -33, 26, 35); ctx.strokeRect(-13, -33, 26, 35);
+      ctx.strokeRect(-23, -92, 46, 94);
       ctx.fillStyle = active ? "#c9f09a" : "#7a6d57";
       ctx.font = "900 12px monospace"; ctx.textAlign = "center";
-      ctx.fillText(String(index + 1), 0, -11);
+      ctx.fillText(String(index + 1), 0, -6);
       ctx.restore();
     }
     if (g.researchContainer?.exposed) {
@@ -2215,14 +2238,22 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game) {
       ctx.translate(container.x, y);
       ctx.fillStyle = "rgba(0,0,0,.44)";
       ctx.beginPath(); ctx.ellipse(0, 7, 25, 6, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = container.contained ? "#4b6758" : "#635f50";
+      const controllerSprite = stageObjects["station-tunnel-mission-art-source"];
+      if (controllerSprite?.complete && controllerSprite.naturalWidth) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(controllerSprite, 1280, 420, 270, 390, -23, -54, 46, 66);
+      } else {
+        ctx.fillStyle = container.contained ? "#4b6758" : "#635f50";
+        ctx.beginPath(); ctx.roundRect(-22, -35, 44, 39, 5); ctx.fill();
+        ctx.fillStyle = "#181b1a"; ctx.fillRect(-14, -28, 28, 15);
+      }
       ctx.strokeStyle = container.contained ? "#b8dc97" : "#d3b56e";
       ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.roundRect(-22, -35, 44, 39, 5); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = "#181b1a"; ctx.fillRect(-14, -28, 28, 15);
+      ctx.strokeRect(-23, -54, 46, 66);
       ctx.fillStyle = container.contained ? "#b8dc97" : "#e1c272";
       ctx.font = "900 11px monospace"; ctx.textAlign = "center";
-      ctx.fillText("研究", 0, -17);
+      ctx.fillText("研究", 0, 8);
       ctx.restore();
     }
     const sealDoorX = Number(g.definition.missionConfig.sealDoorX ?? 867);
@@ -2477,8 +2508,16 @@ function drawCrawlerExitFrame(ctx: CanvasRenderingContext2D, g: Game) {
   ctx.restore();
 }
 
-function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: HTMLImageElement | null) {
+function drawEnemyBase(
+  ctx: CanvasRenderingContext2D,
+  g: Game,
+  enemyBaseSprite: HTMLImageElement | null,
+  stageObjects: SpriteMap,
+) {
   const barrier = WORLD_GEOMETRY.enemyBase;
+  const stationRelaySprite = g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE
+    ? stageObjects["station-gate-mission-art-source"]
+    : null;
   const ratio = Math.max(0, g.barricadeHp / g.barricadeMaxHp);
   const visualState = enemyBaseVisualState({ hp: g.barricadeHp, elapsed: g.enemyBaseCollapse });
   const damageLevel = visualState.damageLevel;
@@ -2489,7 +2528,10 @@ function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: 
   ctx.beginPath();
   ctx.ellipse(barrier.drawX + barrier.width * .55, barrier.drawY + barrier.height - 5, barrier.width * .5, 12, 0, 0, Math.PI * 2);
   ctx.fill();
-  if (enemyBaseSprite?.complete && enemyBaseSprite.naturalWidth && collapse < 1) {
+  const productionBaseSprite = stationRelaySprite?.complete && stationRelaySprite.naturalWidth
+    ? stationRelaySprite
+    : enemyBaseSprite;
+  if (productionBaseSprite?.complete && productionBaseSprite.naturalWidth && collapse < 1) {
     ctx.save();
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
@@ -2504,7 +2546,21 @@ function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: 
       ctx.translate(collapse * 18, collapse * collapse * 76);
     }
     ctx.globalAlpha = breached ? Math.max(0, 1 - collapse * 1.2) : .94 + ratio * .06;
-    ctx.drawImage(enemyBaseSprite, barrier.drawX, barrier.drawY, barrier.width, barrier.height);
+    if (productionBaseSprite === stationRelaySprite) {
+      ctx.drawImage(
+        productionBaseSprite,
+        1080,
+        210,
+        360,
+        540,
+        barrier.drawX,
+        barrier.drawY + 28,
+        barrier.width,
+        285,
+      );
+    } else {
+      ctx.drawImage(productionBaseSprite, barrier.drawX, barrier.drawY, barrier.width, barrier.height);
+    }
     ctx.restore();
   }
   ctx.shadowBlur = 0;
@@ -2848,7 +2904,7 @@ function drawDiagnosticStationBackground(ctx: CanvasRenderingContext2D, g: Game)
   }
   ctx.fillStyle = "rgba(255,255,255,.58)";
   ctx.font = "900 11px monospace";
-  ctx.fillText("P4 DIAGNOSTIC FLOOR // FORMAL ART PENDING APPROVAL", 18, 24);
+  ctx.fillText("STATION ART LOAD FALLBACK // CHECK ASSET MANIFEST", 18, 24);
 }
 
 function drawStageGeometryDebug(ctx: CanvasRenderingContext2D, g: Game) {
@@ -2918,14 +2974,7 @@ function drawWorld(
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.restore();
-  const stationDiagnostic = [
-    CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE,
-    CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
-    CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL,
-  ].includes(g.definition.stageId);
-  if (stationDiagnostic) {
-    drawDiagnosticStationBackground(ctx, g);
-  } else if (background?.complete) {
+  if (background?.complete && background.naturalWidth) {
     drawStageBackground(ctx, g, background);
   } else drawDiagnosticStationBackground(ctx, g);
   ctx.save();
@@ -2944,13 +2993,13 @@ function drawWorld(
 
   // A single shared-HP infected checkpoint closes all three routes.
   if (g.definition.enemyBaseMode !== "scenery") {
-    drawEnemyBase(ctx, g, enemyBaseSprite);
+    drawEnemyBase(ctx, g, enemyBaseSprite, stageObjects);
   }
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"]);
 
   for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
-  drawStationMission(ctx, g);
+  drawStationMission(ctx, g, stageObjects);
   drawEmergencySupport(ctx, g);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
@@ -3290,6 +3339,7 @@ export function AshfallGame() {
   const resultSaveRetryingRef = useRef(false);
   const formationUnitIds = useMemo(() => getSelectedFormationUnitIds(campaignSave), [campaignSave]);
   const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
+  const formationKindKey = formationKinds.join("|");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
   const [hud, setHud] = useState<Hud>({
     missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
@@ -3877,6 +3927,11 @@ export function AshfallGame() {
 
   useEffect(() => {
     let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setAssetsReady(false);
+      setAssetError(false);
+    });
     const loadImage = (src: string, onReady: (image: HTMLImageElement) => void) => new Promise<void>((resolve, reject) => {
       const image = new Image();
       image.decoding = "async";
@@ -3892,33 +3947,85 @@ export function AshfallGame() {
       image.onerror = () => reject(new Error(`Image unavailable: ${src}`));
       image.src = src;
     });
-    const criticalPaths: Record<string, string> = {
-      ...Object.fromEntries(spriteKinds.map((kind) => [kind, spriteSheetPath(kind)])),
+    const ensureImageLoaded = (
+      current: HTMLImageElement | null | undefined,
+      src: string,
+      onReady: (image: HTMLImageElement) => void,
+    ) => {
+      if (current?.naturalWidth) {
+        onReady(current);
+        return Promise.resolve();
+      }
+      return loadImage(src, onReady);
+    };
+    const releaseImage = (image: HTMLImageElement | null | undefined) => {
+      if (!image) return;
+      image.onload = null;
+      image.onerror = null;
+      image.removeAttribute("src");
+    };
+    const selectedFormationKinds = formationKindKey.split("|").filter(Boolean) as UnitKind[];
+    const stageEnemyKinds = Array.isArray(CAMPAIGN_STAGE_BY_ID[selectedStageId]?.enemyKinds)
+      ? CAMPAIGN_STAGE_BY_ID[selectedStageId].enemyKinds as UnitKind[]
+      : [];
+    // QA galleries intentionally exercise every atlas. Production only retains
+    // the selected formation and the current stage's enemy roster, preventing
+    // all 23 high-resolution atlases from occupying mobile memory at once.
+    const requiredSpriteKinds = qaMode || qaScenario
+      ? [...spriteKinds]
+      : [...new Set([...selectedFormationKinds, ...stageEnemyKinds])];
+    const persistentPaths: Record<string, string> = {
       crawler: "/crawler-fortress-v1.png", pod: "/tactical-drop-pod-v1.png",
       drum: "/explosive-drum-v1.png", medical: "/medical-supply-station-v1.png",
     };
-    const stageObjectAssets = Object.values(STAGE_OBJECT_MANIFEST).flatMap((stage) => stage.objects);
+    const stageObjectAssets = STAGE_OBJECT_MANIFEST[selectedStageId]?.objects ?? [];
+    const retainedSpriteKeys = new Set([...Object.keys(persistentPaths), ...requiredSpriteKinds]);
+    for (const [key, image] of Object.entries(spriteRefs.current)) {
+      if (retainedSpriteKeys.has(key)) continue;
+      releaseImage(image);
+      delete spriteRefs.current[key];
+    }
+    const retainedStageObjectIds = new Set(stageObjectAssets.map((object) => object.id));
+    for (const [id, image] of Object.entries(stageObjectRefs.current)) {
+      if (retainedStageObjectIds.has(id)) continue;
+      releaseImage(image);
+      delete stageObjectRefs.current[id];
+    }
+    for (const [stageId, image] of Object.entries(backgroundCacheRef.current)) {
+      if (stageId === selectedStageId) continue;
+      releaseImage(image);
+      delete backgroundCacheRef.current[stageId];
+    }
+    if (!backgroundCacheRef.current[selectedStageId]) backgroundRef.current = null;
+    const currentBackground = backgroundCacheRef.current[selectedStageId];
     const criticalJobs = [
-      loadImage(stageVisualFor(INITIAL_STAGE_ID), (image) => {
-        backgroundCacheRef.current[INITIAL_STAGE_ID] = image;
-        if (!backgroundRef.current) backgroundRef.current = image;
+      ensureImageLoaded(currentBackground, stageVisualFor(selectedStageId), (image) => {
+        backgroundCacheRef.current[selectedStageId] = image;
+        backgroundRef.current = image;
       }),
-      loadImage("/infected-checkpoint-v1.png", (image) => { enemyBaseSpriteRef.current = image; }),
-      ...Object.entries(criticalPaths).map(([key, src]) => loadImage(src, (image) => { spriteRefs.current[key] = image; })),
-      ...stageObjectAssets.map((object) => loadImage(object.path, (image) => { stageObjectRefs.current[object.id] = image; })),
+      ensureImageLoaded(enemyBaseSpriteRef.current, "/infected-checkpoint-v1.png", (image) => { enemyBaseSpriteRef.current = image; }),
+      ...Object.entries(persistentPaths).map(([key, src]) => (
+        ensureImageLoaded(spriteRefs.current[key], src, (image) => { spriteRefs.current[key] = image; })
+      )),
+      ...requiredSpriteKinds.map((kind) => (
+        ensureImageLoaded(spriteRefs.current[kind], spriteSheetPath(kind), (image) => { spriteRefs.current[kind] = image; })
+      )),
+      ...stageObjectAssets.map((object) => (
+        ensureImageLoaded(stageObjectRefs.current[object.id], object.path, (image) => { stageObjectRefs.current[object.id] = image; })
+      )),
     ];
     void Promise.all(criticalJobs).then(() => {
       if (cancelled) return;
+      const root = document.documentElement;
+      root.dataset.assetResidentScope = qaMode || qaScenario ? "all-local-qa" : "stage-and-formation";
+      root.dataset.assetResidentStage = selectedStageId;
+      root.dataset.assetResidentSprites = String(Object.keys(spriteRefs.current).length);
+      root.dataset.assetResidentStageObjects = String(Object.keys(stageObjectRefs.current).length);
+      root.dataset.assetResidentBackgrounds = String(Object.keys(backgroundCacheRef.current).length);
       setAssetsReady(true);
-      for (const [stageId, src] of Object.entries(PRODUCTION_VISUALS.stages)) {
-        if (backgroundCacheRef.current[stageId]) continue;
-        void loadImage(src, (image) => {
-          backgroundCacheRef.current[stageId] = image;
-        }).catch(() => undefined);
-      }
     }).catch(() => { if (!cancelled) setAssetError(true); });
     return () => { cancelled = true; };
-  }, []);
+  }, [formationKindKey, qaMode, qaScenario, selectedStageId]);
 
   useEffect(() => {
     const configureCanvas = () => {
@@ -3989,24 +4096,6 @@ export function AshfallGame() {
       window.visualViewport?.removeEventListener("scroll", configureCanvas);
     };
   }, []);
-
-  useEffect(() => {
-    const cached = backgroundCacheRef.current[selectedStageId];
-    if (cached) {
-      backgroundRef.current = cached;
-      return;
-    }
-    let cancelled = false;
-    const image = new Image();
-    image.decoding = "async";
-    image.onload = () => {
-      if (cancelled || !image.naturalWidth) return;
-      backgroundCacheRef.current[selectedStageId] = image;
-      backgroundRef.current = image;
-    };
-    image.src = stageVisualFor(selectedStageId);
-    return () => { cancelled = true; };
-  }, [selectedStageId]);
 
   const ensureAudio = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;

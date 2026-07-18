@@ -18,18 +18,22 @@ function publicFile(assetPath) {
   return path.join(ROOT, "public", assetPath.replace(/^\//, ""));
 }
 
-test("all three campaign stages expose audited dynamic overlay variants and complete production inventories", async () => {
+test("all six campaign stages expose audited production imagery and mission-object sources", async () => {
   assert.deepEqual(stageObjectStageIds, [
     "stage-nishijin-shopping-street",
     "stage-sawara-ward-office",
     "stage-nishijin-defense-line-takuya",
+    "stage-nishijin-station-gate",
+    "stage-nishijin-station-platform",
+    "stage-nishijin-station-tunnel-seal",
   ]);
   const ids = new Set();
   for (const stageId of stageObjectStageIds) {
     const stage = STAGE_OBJECT_MANIFEST[stageId];
-    assert.ok(stage.objects.length >= 7, `${stageId} overlay count`);
-    assert.equal(stage.staticTreatment, "authored-in-production-background");
-    assert.ok(stage.productionInventory.length >= 22, `${stageId} production inventory count`);
+    const stationStage = stageId.includes("-station-");
+    assert.ok(stage.objects.length >= (stationStage ? 1 : 7), `${stageId} overlay count`);
+    assert.equal(stage.staticTreatment, stationStage ? "authored-background+cropped-mission-source" : "authored-in-production-background");
+    assert.ok(stage.productionInventory.length >= (stationStage ? 4 : 22), `${stageId} production inventory count`);
     assert.equal(new Set(stage.productionInventory.map((item) => item.id)).size, stage.productionInventory.length);
     for (const item of stage.productionInventory) {
       assert.ok(item.label.length > 0);
@@ -43,28 +47,31 @@ test("all three campaign stages expose audited dynamic overlay variants and comp
       assert.equal(ids.has(object.id), false, `duplicate overlay id: ${object.id}`);
       ids.add(object.id);
       assert.equal(object.productionTreatment, "generated-transparent-overlay-v1");
-      assert.match(object.path, /^\/art\/v060\/stage-objects\/.+-v1\.png$/);
+      assert.match(object.path, /^\/art\/v0(?:60\/stage-objects|70\/stages\/objects)\/.+-v1\.png$/);
       assert.ok(object.placement.width > 0);
       const decoded = decodeRgbaPng(await readFile(publicFile(object.path)));
       assert.ok(alphaBounds(decoded), `${object.id} has visible RGBA content`);
       assert.equal(hasTransparentPerimeter(decoded, { x: 0, y: 0, w: decoded.width, h: decoded.height }, 12), true, `${object.id} transparent gutter`);
     }
   }
-  assert.equal(ids.size, 25);
+  assert.equal(ids.size, 28);
 });
 
 test("stageObjectsFor returns one default per mutable slot and exact requested states", () => {
   for (const stageId of stageObjectStageIds) {
     const defaults = stageObjectsFor(stageId);
-    assert.ok(defaults.length > 0);
+    const sourceOnly = STAGE_OBJECT_MANIFEST[stageId].objects.every((entry) => entry.runtimeUsage === "mission-render-source");
+    assert.equal(defaults.length > 0, !sourceOnly);
     assert.equal(new Set(defaults.map((entry) => entry.slot)).size, defaults.length, `${stageId} default slot collision`);
     for (const object of STAGE_OBJECT_MANIFEST[stageId].objects) {
       assert.deepEqual(stageObjectsFor(stageId, object.state), [object]);
     }
     const mutablePair = Object.values(Object.groupBy(STAGE_OBJECT_MANIFEST[stageId].objects, (entry) => entry.slot))
-      .find((entries) => entries.length >= 2)
-      .slice(0, 2);
-    assert.deepEqual(stageObjectsFor(stageId, mutablePair.map((entry) => entry.state)), [mutablePair[1]], "later state wins within one mutable slot");
+      .find((entries) => entries.length >= 2);
+    if (mutablePair) {
+      const pair = mutablePair.slice(0, 2);
+      assert.deepEqual(stageObjectsFor(stageId, pair.map((entry) => entry.state)), [pair[1]], "later state wins within one mutable slot");
+    }
   }
   assert.throws(() => stageObjectsFor("missing-stage"), RangeError);
 });
@@ -74,6 +81,9 @@ test("required mutable production slots preserve the runtime gate and align obje
   assert.deepEqual(slotsFor("stage-nishijin-shopping-street"), new Set(["static-dressing", "wire-trap", "arcade-sign", "fire-shutter", "infection-node"]));
   assert.deepEqual(slotsFor("stage-sawara-ward-office"), new Set(["static-dressing", "rescue-van", "rubble", "upper-window", "lunch-crate"]));
   assert.deepEqual(slotsFor("stage-nishijin-defense-line-takuya"), new Set(["static-dressing", "transmitter", "spawn-marker", "infection-nest"]));
+  assert.deepEqual(slotsFor("stage-nishijin-station-gate"), new Set(["mission-art-source"]));
+  assert.deepEqual(slotsFor("stage-nishijin-station-platform"), new Set(["mission-art-source"]));
+  assert.deepEqual(slotsFor("stage-nishijin-station-tunnel-seal"), new Set(["mission-art-source"]));
 
   const baseOverlays = stageObjectStageIds.flatMap((stageId) => STAGE_OBJECT_MANIFEST[stageId].objects)
     .filter((entry) => entry.replacesRuntimeSprite === "/infected-checkpoint-v1.png");
@@ -104,6 +114,9 @@ test("stage objects declare rear, objective, or foreground depth intent", () => 
     "sawara-rescue-van-ready",
     "sawara-shooting-window-lit",
     "defense-static-dressing",
+    "station-gate-mission-art-source",
+    "station-platform-mission-art-source",
+    "station-tunnel-mission-art-source",
   ]);
   const objectiveIds = new Set([
     "nishijin-infection-node-active",
@@ -132,6 +145,12 @@ test("stage objects declare rear, objective, or foreground depth intent", () => 
   assert.equal(rearIds.size + objectiveIds.size + foregroundIds.size, objects.length);
 
   for (const object of objects) {
+    if (object.runtimeUsage === "mission-render-source") {
+      assert.equal(object.depthBand, "rear-scenery", `${object.id} source depth band`);
+      assert.equal(object.laneCorridorPolicy, "source-cropped-to-gameplay-object", `${object.id} source crop policy`);
+      assert.equal(object.defaultVisible, false, `${object.id} cannot be drawn as a full-canvas battle overlay`);
+      continue;
+    }
     if (objectiveIds.has(object.id)) {
       assert.equal(object.laneCorridorPolicy, "battlefield-objective", `${object.id} corridor policy`);
       continue;
