@@ -1,0 +1,1090 @@
+{
+  "version": 1,
+  "generator": "scripts/build-v070-story-audio.py",
+  "sampleRate": 44100,
+  "seed": 10874992,
+  "policy": "Every 0.7.0 cue is a layered project-original master. No story-dialogue voiceover is generated; existing v060 battle voices are retained separately.",
+  "cues": [
+    {
+      "id": "music-v070-kumaya-daily",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "warm-bass",
+        "muted-plucks",
+        "table-percussion",
+        "room-air"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-kumaya-daily.wav",
+        "sha256": "449841bb9b044e178a1a68e439232589a199754819bf852c6946f89c84a48655"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-kumaya-daily.mp3",
+          "sha256": "44f15cd5b5a276a0b1d7378683d598f44b510cb5ecc01f6a8159f4dce732d737",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-kumaya-daily.ogg",
+          "sha256": "abb885e697e65bd801035ef5f643eb322c591ba2ee01c8413f616954a076da7e",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-crawler-life",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "engine-pulse",
+        "light-chords",
+        "utensil-ticks",
+        "radio-shimmer"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-crawler-life.wav",
+        "sha256": "477cb07a7a1ad0cce1bfb2b52f94421c8d6558e35f75a8caa9fbcef9a7297cff"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-crawler-life.mp3",
+          "sha256": "dcbac29b8249c8b1056ed76d8f91b02952d1f6b2052e33a95ab6dddfa4cccf42",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-crawler-life.ogg",
+          "sha256": "039fcc96c07336cc28c1ca2cdef6d55f76c95b4f70003d4366d247786783a539",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-stage2-tension",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "low-pulse",
+        "engine-rhythm",
+        "metal-note",
+        "wind-bed"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-stage2-tension.wav",
+        "sha256": "6a48b540ef2b57e564421a8f89f4b3e3efb88990bc96078e2b5f0de2848cc1cf"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-stage2-tension.mp3",
+          "sha256": "86415604f568c8a64245e8b3cbbfa8a2a1dce9c339378991d59e5958276ebecc",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-stage2-tension.ogg",
+          "sha256": "ab4994c3214025659c708ab82467812245e2c6bb53d384103aea2e6bb565d982",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-stage3-approach",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "sparse-bass",
+        "slow-impact",
+        "metal-scrape",
+        "cold-wind"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-stage3-approach.wav",
+        "sha256": "13d66c7d45976c0c2f4fa644f9d7418627a81043427333d1a6673e513e6f72bf"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-stage3-approach.mp3",
+          "sha256": "f7eff5aae6ab581ce55cc36acf9f1a8beb853c287c8faf769b24ecd7f7999063",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-stage3-approach.ogg",
+          "sha256": "bdfa92b71775360a1ba999092475f7e7554a485dc2051e82e1e7e98d0c263385",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-collapse-montage",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "sub-rumble",
+        "broken-percussion",
+        "metal-harmonics",
+        "city-noise"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-collapse-montage.wav",
+        "sha256": "5e1c11378a8a5e6c7b9555bc6153f77459a1028995a8cdfa59f66901a181d15c"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-collapse-montage.mp3",
+          "sha256": "58baf17fa54c60dcbf5ceb383c0cc0743ef0afeb82be5a4405545d5a9d37ef14",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-collapse-montage.ogg",
+          "sha256": "c6b8a8088b84a2866e24167678dfd56d5d63fe74199927f64442f40185986522",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-crawler-montage",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "engine-bass",
+        "frame-percussion",
+        "minor-motif",
+        "air-bed"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-crawler-montage.wav",
+        "sha256": "c1195e22e4db2a79a1e22f1f39a9ccc7d4a76e0f17f522592eac81ef9728bb6b"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-crawler-montage.mp3",
+          "sha256": "e99fa247c4f51a2b6b0588adece8729369800b2edcd764b12efa61378230afd3",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-crawler-montage.ogg",
+          "sha256": "d63112c9aa36a942aa9a18dbd0f6686e7712d861be3dc69533b3a77d6ad7df4a",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-crawler-briefing",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "low-drum",
+        "muted-pulse",
+        "terminal-texture",
+        "room-bed"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-crawler-briefing.wav",
+        "sha256": "712fdd059add88e31a2dc8a55d81b5f1b84a131e85094de64d2a49e57e31d00a"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-crawler-briefing.mp3",
+          "sha256": "d6dde9a96c4ad013aeaf23d63a0c4cab8632c5de922c14a55ed93a7e1e63d126",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-crawler-briefing.ogg",
+          "sha256": "ff2800e1229c8834f3231a463f75053f93890b2f3416ba4311bc96fd65f4e125",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-station-gate",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "tension-bass",
+        "metal-pulse",
+        "alarm-shadow",
+        "noise-bed"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-station-gate.wav",
+        "sha256": "e72a94a2c5762abedb7b36ad4793bd39939b715162615f67b4baa0633097ae83"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-station-gate.mp3",
+          "sha256": "e25846698a22d3f47395f49c5b5af5ff299a9c6f2a043f9b46983032cddf5a5a",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-station-gate.ogg",
+          "sha256": "a79cadefb2a1ab79a735054736a911c3292c0071d4961bfee70906b7925631b2",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-station-platform",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "machine-rhythm",
+        "rail-clack",
+        "transformer-bass",
+        "high-tick"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-station-platform.wav",
+        "sha256": "5c19fe81420063695980cb37f758fd0f2d1e92f6be428313c986e31e871ab494"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-station-platform.mp3",
+          "sha256": "f2cd223e346c3d349b5dc41ee6d92426bb33eec8e05d59bdba7289b2ae19efa0",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-station-platform.ogg",
+          "sha256": "af07fb8b94ea2fb2ca9359fd7f7136a6fd03d7dad51cfb40180533840fbadce7",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-station-tunnel",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "irregular-pulse",
+        "electric-grit",
+        "sub-drone",
+        "metal-resonance"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-station-tunnel.wav",
+        "sha256": "57cb159a1ea4724e32bdb3702be861721021ab84cb26e42dd1772fcb67e735c6"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-station-tunnel.mp3",
+          "sha256": "76695c051671555609264b401722f046314c8d8c4cf1394ec23c127e6dc9c671",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-station-tunnel.ogg",
+          "sha256": "6b70742bc5b2bd9f7d7cadcb5b10c76d09645729161758c612c5eaf7e08add85",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-rescue",
+      "category": "music",
+      "durationSeconds": 4.2,
+      "loop": false,
+      "layers": [
+        "warm-pad",
+        "ascending-motif",
+        "soft-impact",
+        "air-tail"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-rescue.wav",
+        "sha256": "e4f573f09fe71e594adcc5d94b0b77b8c5cce03bb6ad70b4cec5617b69c9cf9c"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-rescue.mp3",
+          "sha256": "b6c4a02232a4f6fbe31191ad6b1bcbed2c3cda9cf6d480d4e4dee28cae31a466",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-rescue.ogg",
+          "sha256": "aab3447a7ef10c4506251d049b19bca9fdd689035957f47b534c408bf56bed4c",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-return",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "engine-theme",
+        "quiet-drum",
+        "return-motif",
+        "soft-noise"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-return.wav",
+        "sha256": "a8ef777c9182457f7d57f041152bcebd05185ac1bc932ec7bedf8e83d1a2b4c2"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-return.mp3",
+          "sha256": "dcb6619c9b0f8679906a2143eb8ed9eda40ad838093c8751a5a3f67cfd91d670",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-return.ogg",
+          "sha256": "94758483ea3b2be388247060ec19eefb9e013b8e68c5ea3e992be45810a685dc",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "music-v070-crawler-morning",
+      "category": "music",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "morning-chords",
+        "crawler-theme",
+        "table-percussion",
+        "engine-bed"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/music-v070-crawler-morning.wav",
+        "sha256": "cd17485e7bfdc94aa4ef1b32140ac7513338e17f875611f5232709e291a6b97a"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/music/music-v070-crawler-morning.mp3",
+          "sha256": "4044800b1bb697b94ce7f3ff2bfb499bd939d937a63d4909647f3e48dff1a2af",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/music/music-v070-crawler-morning.ogg",
+          "sha256": "c499449b9299d2c8fbbf6eecdf782b138a4dbdd868de9f63d3d086a4dcf75b24",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-kumaya-daily-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "room-murmur",
+        "dish-clinks",
+        "television-hiss",
+        "passing-cars"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-kumaya-daily-loop.wav",
+        "sha256": "6e9970b53539a09513b26588d9c863e17e7133b2259a6e1b05726d7cf9376cd1"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-kumaya-daily-loop.mp3",
+          "sha256": "605c6d046a5bda577aa1b994d9450ab5487c5b70c52d82d5887fc700c8b9b74e",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-kumaya-daily-loop.ogg",
+          "sha256": "a02bf0bfcfb511bc63a7d432c72f9f306a105e5d5a972a51ed0ad456e95fab3f",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-kumaya-crisis-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "stuck-horn",
+        "crowd-alarm-texture",
+        "glass-falls",
+        "rainy-alley"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-kumaya-crisis-loop.wav",
+        "sha256": "2cc0cdab00eb4f830165258cbe38eb67a8b2a7900056966012c2bcbb3168feb7"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-kumaya-crisis-loop.mp3",
+          "sha256": "09c0a4020af4f2130171936852f386970a7dffe1879ee4c6a88acccb3588a1ce",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-kumaya-crisis-loop.ogg",
+          "sha256": "abd5035d34f82386ec3812b626a1bcca35a98a9c149f10a6dde2a9f32ed1ba9a",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-rain-street-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "steady-rain",
+        "sign-creak",
+        "distant-infected",
+        "drainage"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-rain-street-loop.wav",
+        "sha256": "40546244992d593ce1a057ab8f2b0ae5ae212d498f667e2948c443d1acdb87ea"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-rain-street-loop.mp3",
+          "sha256": "3286faf0b0812d64706db5892c998eb0bf7a5e52efcc421b5186bfc7c50c38f3",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-rain-street-loop.ogg",
+          "sha256": "4da330cb57569fce3e09bc30b755c5974122bc2b867399671bc18918f033771a",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-stage2-engine-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "failing-engine",
+        "sign-rattle",
+        "crosswind",
+        "distant-infected"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-stage2-engine-loop.wav",
+        "sha256": "94ce4948f7abeec7657b3df3ad8a8240f6f41e3e51c65be421343e3eb8f38f2a"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-stage2-engine-loop.mp3",
+          "sha256": "9dbf61e02da73a67128c2b709a14acecd5e7cad6de2a5dbde211487b5e473297",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-stage2-engine-loop.ogg",
+          "sha256": "33f076077d34bf5ad4a985b042e769562ae1ed98400017200b82f20acfd73aef",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-medical-bay-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "crawler-engine",
+        "medical-device",
+        "ventilation",
+        "tool-clinks"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-medical-bay-loop.wav",
+        "sha256": "8f6eef0ef5dfa62075c470ddfeda6cbab77bb10fe922e7e91ca67568d88dd637"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-medical-bay-loop.mp3",
+          "sha256": "ca8a39682e55e250853ac83f0726bac0d7688ca5589ac42efcf1d99e28798cd4",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-medical-bay-loop.ogg",
+          "sha256": "23c3268e70df953abe7d6184947eea7abbb2a10eac16957109dd7eb9c2903140",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-stage3-wind-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "cold-wind",
+        "metal-sheet",
+        "distant-heavy-breath",
+        "debris"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-stage3-wind-loop.wav",
+        "sha256": "70864248131591a71c8fffa1ee0f3f6340df7ea46f6b2f409d0314f14744f29f"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-stage3-wind-loop.mp3",
+          "sha256": "a9a8a481d639f6687813ec645145f01e6026a99b823086b7679e719a2deaf9de",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-stage3-wind-loop.ogg",
+          "sha256": "d775d1d7d599bf3f084a46ca6766fbeeaf1a1ab572bdd5dd0fe15b9c12ba15c9",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-collapse-city-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "city-rumble",
+        "distant-siren",
+        "debris",
+        "wind"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-collapse-city-loop.wav",
+        "sha256": "aa5b352bb8089d7a5f69abd493a25bffcafce8dfbfc24628374d105005176799"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-collapse-city-loop.mp3",
+          "sha256": "439acbc125557e0eab4a98e2829d7100367a2738435888bcceda9ce39d420f0f",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-collapse-city-loop.ogg",
+          "sha256": "05797b2952964655ce1592f729e84f338b01d92de82a0d7e1cc89dfbf1ddae5c",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-crawler-ops-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "engine",
+        "paper",
+        "terminal",
+        "distant-kitchen"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-crawler-ops-loop.wav",
+        "sha256": "304b7ef4d158801a566f58a01b87024d80caa484001a23de9b10c5e03cbfdc14"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-crawler-ops-loop.mp3",
+          "sha256": "89c620af59383657d10379d6418a4c3a850504d93309a4c2db25a87206b00ede",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-crawler-ops-loop.ogg",
+          "sha256": "5660206bc48e0de9bc304ea92bd188083ec13315e543b11e300cc38f14786600",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-crawler-canteen-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "engine",
+        "dish-clinks",
+        "room-murmur",
+        "ventilation"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-crawler-canteen-loop.wav",
+        "sha256": "e0cc4eac53e1250e3789a6eaecef1fadb3be796112dc37fac9639af6c205429c"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-crawler-canteen-loop.mp3",
+          "sha256": "a7e400608815ab536139c235fe5c1dc7f7b9afa66b422528d904195bf658e7f6",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-crawler-canteen-loop.ogg",
+          "sha256": "762e5be0b35af0b4f6b0dee3d6cb4a750101d6297fb04530c30fba86d777d08b",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-radio-signal-loop",
+      "category": "ambience",
+      "durationSeconds": 6.0,
+      "loop": true,
+      "layers": [
+        "radio-static",
+        "data-pulse",
+        "receiver-hum",
+        "dropouts"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-radio-signal-loop.wav",
+        "sha256": "51b2511faa926af34314637c42b484dd4f1b5f98ad99af84cd79e7f257a09044"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-radio-signal-loop.mp3",
+          "sha256": "d33e0b7c5683128ba29fe5daa6c9cddcb7ee05d9e8b438f8feeb84fe9d7343fa",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-radio-signal-loop.ogg",
+          "sha256": "f1293e7f5c090415c81a952cf8f78b256268b3bc2b2d3fffd2d78d2ad3c57042",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-station-gate-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "vent-fan",
+        "water-drops",
+        "distant-alarm",
+        "metal-stress"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-station-gate-loop.wav",
+        "sha256": "8d801ae26ebc0d673d1a1b2c41f875c3e2dcf4279fab7ede94bb9485162145e7"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-station-gate-loop.mp3",
+          "sha256": "f4500539aa7497ce8667a25a3fa45e020630a0eb5eeb448dd936a5d0fb080baa",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-station-gate-loop.ogg",
+          "sha256": "834143a73ccc2aae35cbaed02c986d883f0d1718daec55aaea2dcba08c2c3d44",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-station-platform-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "rail-groan",
+        "transformer",
+        "water",
+        "tunnel-air"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-station-platform-loop.wav",
+        "sha256": "1f34655675075fde7c7c1eca177f4bcf62cf42e2e7f8cc4b7ca2ca4169444b07"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-station-platform-loop.mp3",
+          "sha256": "13c383a5a7405ca969e01182b086f1abd6efba00ebd260e271d126115c4a0b16",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-station-platform-loop.ogg",
+          "sha256": "058171b475bdaff3b4f5ca3e7e452a7a165b5e561a0c119dc31aa63dd578932c",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-station-tunnel-loop",
+      "category": "ambience",
+      "durationSeconds": 8.0,
+      "loop": true,
+      "layers": [
+        "discharge",
+        "rail-vibration",
+        "distant-horde",
+        "electrical-room"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-station-tunnel-loop.wav",
+        "sha256": "33531385fd21d1ebef948b5c1f87cae0e8e86830405b2c766f235e03b8fa0832"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-station-tunnel-loop.mp3",
+          "sha256": "c9b91cb439b6c521b1ed140c27ab39a7740810177d22bd0bd6a1ce61f81e4ece",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-station-tunnel-loop.ogg",
+          "sha256": "0682f5bf0b3fdcfd68e68d720bd930062910ee607f0bfee2bc338dcac148ba87",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ambience-v070-station-seal-aftermath-loop",
+      "category": "ambience",
+      "durationSeconds": 6.0,
+      "loop": true,
+      "layers": [
+        "breathing-air",
+        "stopped-machine",
+        "metal-cooling",
+        "deep-room"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/ambience-v070-station-seal-aftermath-loop.wav",
+        "sha256": "202a339bafbae74aa68f16e26c55926b255e01a86acf0597df95d4f69b6a72e2"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-station-seal-aftermath-loop.mp3",
+          "sha256": "21303f404f3a0d9cf11ab2bfde90800a4fcf565513395d2e111e80f0198ee649",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/ambience/ambience-v070-station-seal-aftermath-loop.ogg",
+          "sha256": "91a85983a6968c07a7a8c4d1d20fbee2e8ddc3004de220e9df75119192dea80b",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "sfx-v070-takuya-entrance",
+      "category": "sfx",
+      "durationSeconds": 3.4,
+      "loop": false,
+      "layers": [
+        "vehicle-metal-rip",
+        "music-stop-gap",
+        "heavy-footstep-1",
+        "heavy-footstep-2",
+        "heavy-footstep-3"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/sfx-v070-takuya-entrance.wav",
+        "sha256": "2dc3fb0f4d61179dd71791f968ef55fbaad3a839129a406acf4346ae9dd438c2"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-takuya-entrance.mp3",
+          "sha256": "a0a47b109bc26d040edbbb032aa6a36b2e2c678185849683060eea775e05f36b",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-takuya-entrance.ogg",
+          "sha256": "8b49ac2f74c47ab2acddd5875721a2dfba11fc7ff2d418d843ad57080b328fd3",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "sfx-v070-station-warning",
+      "category": "sfx",
+      "durationSeconds": 1.25,
+      "loop": false,
+      "layers": [
+        "alarm-fundamental",
+        "alarm-harmonics",
+        "relay-click",
+        "noise-body"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/sfx-v070-station-warning.wav",
+        "sha256": "4c88f8ce2ccc7ca9f055849aebda3005e9828b27ab2f50895538808b373ee516"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-station-warning.mp3",
+          "sha256": "89c385c6164fa0c5f3f8a6980d240c65e0ea9b98a33f2ee4d6b12988b483bb00",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-station-warning.ogg",
+          "sha256": "68dbf27b66171357632de1df61cba7b6e2b3895b5bcf41edc81cab6cf36127f2",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "sfx-v070-power-switch",
+      "category": "sfx",
+      "durationSeconds": 0.85,
+      "loop": false,
+      "layers": [
+        "breaker-clunk",
+        "electric-arc",
+        "bus-hum",
+        "cabinet-ring"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/sfx-v070-power-switch.wav",
+        "sha256": "c5b0c363a7a8606eb3b1898a41b0242680bd704199f28ab5388ae0d4ea74dd2d"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-power-switch.mp3",
+          "sha256": "54343f68d400c11fe2165db44c6404bd37028d93e19e9d7494d7703a18a5e636",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-power-switch.ogg",
+          "sha256": "c759f92d69fc5c93477fa04034fa0c6541a1477d029d93850d4ff5cca3929ba7",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "sfx-v070-cart-stall",
+      "category": "sfx",
+      "durationSeconds": 1.1,
+      "loop": false,
+      "layers": [
+        "motor-decay",
+        "wheel-clatter",
+        "rail-ring",
+        "friction"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/sfx-v070-cart-stall.wav",
+        "sha256": "3c74e2098b03d804b05c09eacdd38c9efa6b0b4223aa4467037f4f0c308a1723"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-cart-stall.mp3",
+          "sha256": "19e5de76c36350e46df59e778328c1e131a0edfcf92a9688221435bd641cbbc2",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-cart-stall.ogg",
+          "sha256": "abc654f9e87e7748508151b880631ad6cb1c7efe5d509978028d3bd0cf1d0540",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "sfx-v070-seal-engage",
+      "category": "sfx",
+      "durationSeconds": 1.7,
+      "loop": false,
+      "layers": [
+        "hydraulic-drive",
+        "door-rumble",
+        "lock-clanks",
+        "pressure-tail"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/sfx-v070-seal-engage.wav",
+        "sha256": "ec0cca39f259dce6699ea6a9a06b16cd65db3ce76746ef1bc60f1fb5e0b4f327"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-seal-engage.mp3",
+          "sha256": "183b4579ddbe80abf49c39cae548aa1a38d9fa1b6da70909f6d7e326e45d5b6a",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-seal-engage.ogg",
+          "sha256": "31ebcb4322907ba7217706f8a3954daa6918ce4703ed665ae7c83af889540190",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "sfx-v070-machine-stop",
+      "category": "sfx",
+      "durationSeconds": 1.45,
+      "loop": false,
+      "layers": [
+        "motor-spin-down",
+        "contactor",
+        "frame-rattle",
+        "air-release"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/sfx-v070-machine-stop.wav",
+        "sha256": "a951ea3c1918ae96e6d3e46dfcdd7b614426f5853c6938693ad3a2eaa6f86789"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-machine-stop.mp3",
+          "sha256": "e7c632189db9751cefced3adab552e905549ba8071e23240ca98b3ad85b92fb8",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-machine-stop.ogg",
+          "sha256": "34e0760d7804efb976261e019d11416623903949bf277891e92765826ff94e3e",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "sfx-v070-rescue-confirm",
+      "category": "sfx",
+      "durationSeconds": 0.95,
+      "loop": false,
+      "layers": [
+        "warm-chord",
+        "latch",
+        "soft-noise",
+        "short-tail"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/sfx-v070-rescue-confirm.wav",
+        "sha256": "a521c3d243a4f08f488ac4b3ac7a1f86cc083c7e4a0c84a788eea5edaca485c1"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-rescue-confirm.mp3",
+          "sha256": "cc18fc5b3fa7c6137e26876f6a79bf98c0c14c8d763978ce33b33f091ffac3cc",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-rescue-confirm.ogg",
+          "sha256": "e4f1985f4e66bcc82aba69b8a9146615ca23962e103d8a7f1210ccb1b6ead83d",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "sfx-v070-return-marker",
+      "category": "sfx",
+      "durationSeconds": 0.72,
+      "loop": false,
+      "layers": [
+        "radio-chirp",
+        "map-click",
+        "static-tail",
+        "low-confirm"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/sfx-v070-return-marker.wav",
+        "sha256": "e4335a5a634b6a9e352924a7faa67673d79420b7d662443e46434653b8f5ed39"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-return-marker.mp3",
+          "sha256": "c63f66321e2af801eff0d70776653dbcc44abdafa263ea6ba57e6eb8fa0b83ab",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-return-marker.ogg",
+          "sha256": "800faca0de8a4ee956d5f239669e9995bca0821fda48368d8ab64d2fbab97a2c",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "sfx-v070-terminal-confirm",
+      "category": "sfx",
+      "durationSeconds": 0.52,
+      "loop": false,
+      "layers": [
+        "terminal-chord",
+        "key-click",
+        "data-noise",
+        "room-tail"
+      ],
+      "simpleTone": false,
+      "origin": "project-original deterministic layered synthesis; no sampled recording or generated voice",
+      "source": {
+        "path": "reference/audio/v070-generated/masters/sfx-v070-terminal-confirm.wav",
+        "sha256": "4817c433b02d7e32d6d6928b30522aeb6b6ffed901ec3ebc797ad269cf3164ed"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-terminal-confirm.mp3",
+          "sha256": "c6499c0cc94b4f5890e97558c5da33f79f9c96d4f3885d9f7c7254e78dc06ad5",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v070/sfx/sfx-v070-terminal-confirm.ogg",
+          "sha256": "a9ef656162d0448d3d52351c2d81ca7393eb57e0acf89823ee39be8dc66d717f",
+          "type": "audio/ogg"
+        }
+      ]
+    }
+  ]
+}
