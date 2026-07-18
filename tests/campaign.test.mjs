@@ -351,6 +351,8 @@ test("all eleven units separate canonical IDs from combat kinds and do not pass 
   }
   assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.NAO].deploymentCost, 35);
   assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.GANTETSU].deploymentCost, 48);
+  assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.HACHI].assetStatus, "approved");
+  assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.HACHI].spritePath, "/art/v070/characters/scout-battle-v1.png");
   assert.equal(CAMPAIGN_RECRUITMENT_COSTS[CAMPAIGN_UNIT_IDS.TATARA], 150);
   assert.equal(CAMPAIGN_RECRUITMENT_COSTS[CAMPAIGN_UNIT_IDS.RAIDER], 200);
   assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.RAIDER].weaponName, "軽機関銃");

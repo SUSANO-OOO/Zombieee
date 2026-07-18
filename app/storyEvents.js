@@ -74,7 +74,7 @@ function deepFreeze(value) {
 
 export const STORY_SPEAKER_PROFILES = deepFreeze({
   "パイセン": { role: "前衛", portrait: "brawler", side: "left", approvedPortrait: true },
-  "ハチ": { role: "遊撃", portrait: "radio", side: "left", approvedPortrait: false },
+  "ハチ": { role: "遊撃", portrait: "scout", side: "left", approvedPortrait: true },
   "ミズチ": { role: "射撃", portrait: "radio", side: "right", approvedPortrait: false },
   "ナオ": { role: "救護・損害抑制", portrait: "radio", side: "right", approvedPortrait: false },
   "タタラ": { role: "対装甲・構造破壊", portrait: "radio", side: "left", approvedPortrait: false },
@@ -82,8 +82,8 @@ export const STORY_SPEAKER_PROFILES = deepFreeze({
   "クマバーソン": { role: "前衛打撃・調理", portrait: "kumaverson", side: "left", approvedPortrait: true },
   "ババヤガ": { role: "精密射撃", portrait: "babayaga", side: "right", approvedPortrait: true },
   "レイダー": { role: "連射・制圧", portrait: "radio", side: "right", approvedPortrait: false },
-  "ガンテツ": { role: "警備・盾", portrait: "radio", side: "left", approvedPortrait: false },
-  "モンキー": { role: "保線・設備", portrait: "radio", side: "right", approvedPortrait: false },
+  "ガンテツ": { role: "防衛重装", portrait: "radio", side: "left", approvedPortrait: false },
+  "モンキー": { role: "罠・妨害", portrait: "radio", side: "right", approvedPortrait: false },
   "いくらちゃん": { role: "通信・地図・情報分析", portrait: "radio", side: "right", approvedPortrait: false },
   "テレビ音声": { role: "緊急報道", portrait: "radio", side: "right", approvedPortrait: true },
   "救難無線": { role: "西新商店街", portrait: "radio", side: "left", approvedPortrait: true },
@@ -686,7 +686,7 @@ const EVENT_DEFINITIONS = {
 ババヤガ\t残り十六。人間の嫌いな算数ですね
 モンキー\t地上の連中。算数が終わったら聞け。改札奥に七人いる
 いくらちゃん\t所属と名前を
-モンキー\t保線のモンキー。駅の警備員が入口を押さえてる。そいつが礼儀正しく死のうとしてる
+モンキー\t地下のモンキー。入口を押さえてる盾持ちがいる。そいつが礼儀正しく死のうとしてる
 ガンテツ\t死ぬ予定はありません
 モンキー\t予定表どおりに死ぬ奴がおるか
 ガンテツ\t生存者七名。歩行不能二名、出血一名、子ども一名。私は数に入れなくて結構です

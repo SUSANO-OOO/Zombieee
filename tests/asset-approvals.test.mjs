@@ -20,6 +20,9 @@ test("0.7.0 asset approval manifest has unique revision records", async () => {
 
   assert.equal(manifest.schemaVersion, 1);
   assert.equal(manifest.release, "0.7.0");
+  assert.equal(manifest.reviewPolicy.mode, "producer_delegated_internal_quality_gate");
+  assert.equal(manifest.reviewPolicy.individualApprovalRequired, false);
+  assert.equal(manifest.reviewPolicy.preserveHistoricalIndividualReviews, true);
   assert.ok(Array.isArray(manifest.assets));
 
   const revisionKeys = manifest.assets.map((asset) => `${asset.assetId}@${asset.revision}`);
@@ -38,7 +41,12 @@ test("approved image revisions have an identity lock and an exact formal artifac
   assert.ok(approvedAssets.length > 0);
 
   for (const asset of approvedAssets) {
-    assert.match(asset.approvalUrl, /^https:\/\/github\.com\/SUSANO-OOO\/Zombieee\//);
+    if (asset.reviewMode === "producer_delegated_internal_quality_gate") {
+      assert.equal(asset.approvalUrl, null);
+      assert.ok(asset.qualityEvidence && typeof asset.qualityEvidence === "object");
+    } else {
+      assert.match(asset.approvalUrl, /^https:\/\/github\.com\/SUSANO-OOO\/Zombieee\//);
+    }
     assert.ok(asset.approvalResponse);
     assert.ok(asset.approvedAt);
     assert.ok(asset.identityLock && typeof asset.identityLock === "object");
@@ -47,6 +55,24 @@ test("approved image revisions have an identity lock and an exact formal artifac
     const bytes = await readFile(new URL(asset.finalPath, repositoryRoot));
     const digest = createHash("sha256").update(bytes).digest("hex");
     assert.equal(digest, asset.previewSha256, `${asset.assetId}@${asset.revision} differs from its approved preview`);
+  }
+});
+
+test("each approved asset id resolves to one active revision", async () => {
+  const manifest = await loadManifest();
+  const approvedByAssetId = Map.groupBy(
+    manifest.assets.filter((asset) => asset.status === "approved"),
+    (asset) => asset.assetId,
+  );
+
+  for (const [assetId, revisions] of approvedByAssetId) {
+    const supersededRevisions = new Set(
+      revisions
+        .map((asset) => asset.supersedesRevision)
+        .filter((revision) => typeof revision === "string"),
+    );
+    const active = revisions.filter((asset) => !supersededRevisions.has(asset.revision));
+    assert.equal(active.length, 1, `${assetId} must have exactly one active approved revision`);
   }
 });
 

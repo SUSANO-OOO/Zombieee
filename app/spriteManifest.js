@@ -4,7 +4,8 @@
  * Legacy producer sheets are read-only six-cell inputs.  Production rendering
  * uses deterministic derived atlases that isolate every authored cell behind a
  * 16px transparent gutter, preventing adjacent-frame interpolation bleed.  The
- * three 0.6.0 newcomers use a purpose-built seven-column/two-direction atlas.
+ * Approved 0.6.0 newcomers and 0.7.0 replacements use purpose-built
+ * seven-column/two-direction atlases.
  */
 
 export const SPRITE_STATES = Object.freeze([
@@ -101,6 +102,10 @@ const LEGACY_PADDED_CELL = Object.freeze({
 });
 
 const NEWCOMER_VISIBLE = Object.freeze({
+  scout: {
+    right: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
+    left: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
+  },
   "crazy-king": {
     right: [[140, 84, 340, 432], [138, 94, 342, 432], [119, 115, 361, 432], [121, 59, 358, 432], [56, 129, 424, 432], [87, 109, 393, 432], [58, 290, 422, 432]],
     left: [[140, 84, 340, 432], [138, 94, 342, 432], [119, 115, 361, 432], [121, 59, 358, 432], [56, 129, 424, 432], [87, 109, 393, 432], [58, 290, 422, 432]],
@@ -222,8 +227,7 @@ function legacyManifestEntry(auditKey, nativeDirection, { battleScale = 1 } = {}
   });
 }
 
-function newcomerManifestEntry(kind) {
-  const path = `/art/v060/characters/${kind}-battle-v1.png`;
+function explicitAtlasManifestEntry(kind, path) {
   const frames = {};
   for (let index = 0; index < SPRITE_STATES.length; index += 1) {
     const state = SPRITE_STATES[index];
@@ -258,7 +262,7 @@ function newcomerManifestEntry(kind) {
 
 export const SPRITE_MANIFEST = Object.freeze({
   brawler: legacyManifestEntry("brawler", "right"),
-  scout: legacyManifestEntry("scout", "right"),
+  scout: explicitAtlasManifestEntry("scout", "/art/v070/characters/scout-battle-v1.png"),
   ranger: legacyManifestEntry("ranger", "right"),
   medic: legacyManifestEntry("medic", "right"),
   brute: legacyManifestEntry("brute", "right", { battleScale: 1.12 }),
@@ -271,9 +275,9 @@ export const SPRITE_MANIFEST = Object.freeze({
   crusher: legacyManifestEntry("crusher", "left"),
   abomination: legacyManifestEntry("crusher", "left"),
   takuya: legacyManifestEntry("takuya", "left"),
-  "crazy-king": newcomerManifestEntry("crazy-king"),
-  kumaverson: newcomerManifestEntry("kumaverson"),
-  babayaga: newcomerManifestEntry("babayaga"),
+  "crazy-king": explicitAtlasManifestEntry("crazy-king", "/art/v060/characters/crazy-king-battle-v1.png"),
+  kumaverson: explicitAtlasManifestEntry("kumaverson", "/art/v060/characters/kumaverson-battle-v1.png"),
+  babayaga: explicitAtlasManifestEntry("babayaga", "/art/v060/characters/babayaga-battle-v1.png"),
 });
 
 /** Stable ordered list for the localhost all-frame QA gallery. */
@@ -344,7 +348,7 @@ export function fitSpriteBattleDisplaySize(kind, frame, maximum = {}) {
 
 export const CHARACTER_PORTRAIT_ART = Object.freeze({
   brawler: "/art/v060/characters/portraits/brawler-portrait-v2.webp",
-  scout: "/art/v060/characters/portraits/scout-portrait-v2.webp",
+  scout: "/art/v070/characters/portraits/scout-portrait-v1.webp",
   ranger: "/art/v060/characters/portraits/ranger-portrait-v2.webp",
   medic: "/art/v060/characters/portraits/medic-portrait-v2.webp",
   brute: "/art/v060/characters/portraits/brute-portrait-v2.webp",

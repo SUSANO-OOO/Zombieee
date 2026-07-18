@@ -309,7 +309,10 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(layout, /rel="preload" as="image" href="\/infected-checkpoint-v1\.png"/);
   assert.match(game, /spriteKinds\.map\(\(kind\) => \[kind, spriteSheetPath\(kind\)\]\)/);
   assert.match(spriteManifest, /brawler:[\s\S]*"\/brawler-sprites-v1\.png"/);
-  assert.match(spriteManifest, /"crazy-king": newcomerManifestEntry[\s\S]*kumaverson: newcomerManifestEntry[\s\S]*babayaga: newcomerManifestEntry/);
+  assert.match(
+    spriteManifest,
+    /scout: explicitAtlasManifestEntry[\s\S]*"crazy-king": explicitAtlasManifestEntry[\s\S]*kumaverson: explicitAtlasManifestEntry[\s\S]*babayaga: explicitAtlasManifestEntry/,
+  );
 });
 
 test("keeps the battlefield centered in the visual viewport while routing across three roadway bands", async () => {

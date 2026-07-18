@@ -178,12 +178,12 @@ test("all event and line presentation metadata is immutable and character voice 
   }
 });
 
-test("redesigned people use the existing radio placeholder until one-image approval", () => {
-  for (const speaker of ["ハチ", "ミズチ", "ナオ", "タタラ", "レイダー", "ガンテツ", "モンキー", "いくらちゃん"]) {
+test("redesigned people use the radio placeholder until a production-quality portrait is integrated", () => {
+  for (const speaker of ["ミズチ", "ナオ", "タタラ", "レイダー", "ガンテツ", "モンキー", "いくらちゃん"]) {
     assert.equal(STORY_SPEAKER_PROFILES[speaker].approvedPortrait, false);
     assert.equal(STORY_SPEAKER_PROFILES[speaker].portrait, "radio");
   }
-  for (const speaker of ["パイセン", "クマバーソン", "ババヤガ", "クレイジーキング"]) {
+  for (const speaker of ["パイセン", "ハチ", "クマバーソン", "ババヤガ", "クレイジーキング"]) {
     assert.equal(STORY_SPEAKER_PROFILES[speaker].approvedPortrait, true);
     assert.notEqual(STORY_SPEAKER_PROFILES[speaker].portrait, "radio");
   }
@@ -338,7 +338,7 @@ test("the complete speaker-by-speaker dialogue ledger is immutable and exact", (
     .join("\n");
   assert.equal(
     createHash("sha256").update(serialized).digest("hex"),
-    "5b69a3f295546390dbd7bb81b9c6462860ebf2a55c874d6ccef78f9b0be90f8e",
+    "027042a0e83e3e7187e65a740063fef1652a4318c7d83bca17d69176f608d365",
   );
 });
 

@@ -39,6 +39,7 @@ test("battle display boxes preserve every authored source aspect ratio", () => {
     assert.ok(Math.abs(fitted.w / fitted.h - frame.sourceRect.w / frame.sourceRect.h) < 1e-12, kind);
   }
   const newcomerBoxes = {
+    scout: { w: 64, h: 102 },
     "crazy-king": { w: 72, h: 104 },
     kumaverson: { w: 64, h: 102 },
     babayaga: { w: 62, h: 103 },
@@ -115,8 +116,8 @@ test("every kind/state/direction resolves to an in-bounds audited source and con
   }
 });
 
-test("newcomer atlases have seven explicit states in both directions and a transparent cell perimeter", async () => {
-  for (const kind of ["crazy-king", "kumaverson", "babayaga"]) {
+test("approved explicit atlases have seven states in both directions and a transparent cell perimeter", async () => {
+  for (const kind of ["scout", "crazy-king", "kumaverson", "babayaga"]) {
     const decoded = decodeRgbaPng(await readFile(publicFile(spriteSheetPath(kind))));
     assert.deepEqual({ width: decoded.width, height: decoded.height }, { width: 3360, height: 896 });
     for (const state of SPRITE_STATES) {
@@ -158,7 +159,8 @@ test("legacy gutter atlases preserve every source-cell pixel without scaling or 
       .filter(({ sourceSheet }) => sourceSheet)
       .map((entry) => [entry.path, entry]),
   ).values()];
-  assert.equal(uniqueEntries.length, 11);
+  assert.equal(uniqueEntries.length, 10);
+  assert.equal(SPRITE_MANIFEST.scout.sourceSheet, undefined, "approved v070 Hachi no longer reads the legacy scout sheet");
   for (const entry of uniqueEntries) {
     assert.notEqual(entry.sourceSheet.path, "/takuya-boss-sprites-v1.png", "retired TAKUYA sheet cannot be a runtime source");
     assert.equal(entry.sourceSheet.cellEdges[0], 0);
@@ -262,7 +264,11 @@ test("all ten people use independent portrait files and radio remains a separate
   const battlePaths = new Set(spriteKinds.map((kind) => spriteSheetPath(kind)));
   const portraitHashes = new Set();
   for (const [kind, assetPath] of Object.entries(CHARACTER_PORTRAIT_ART)) {
-    assert.match(assetPath, /^\/art\/v060\/characters\/portraits\/.+-portrait-v2\.webp$/);
+    if (kind === "scout") {
+      assert.equal(assetPath, "/art/v070/characters/portraits/scout-portrait-v1.webp");
+    } else {
+      assert.match(assetPath, /^\/art\/v060\/characters\/portraits\/.+-portrait-v2\.webp$/);
+    }
     assert.equal(battlePaths.has(assetPath), false, `${kind} cannot point at a battle sheet`);
     assert.equal(assetPath.includes("sprites"), false);
     const dimensions = decodeWebpDimensions(await readFile(publicFile(assetPath)));
@@ -320,7 +326,11 @@ test("portrait provenance binds every character to one isolated reference and fi
   assert.equal(provenance.entries.length, 10);
   assert.equal(new Set(provenance.entries.map(({ kind }) => kind)).size, 10);
   for (const entry of provenance.entries) {
-    assert.equal(entry.finalPath, `public${CHARACTER_PORTRAIT_ART[entry.kind]}`);
+    if (entry.kind === "scout") {
+      assert.notEqual(entry.finalPath, `public${CHARACTER_PORTRAIT_ART[entry.kind]}`, "approved v070 Hachi supersedes the historical v060 portrait");
+    } else {
+      assert.equal(entry.finalPath, `public${CHARACTER_PORTRAIT_ART[entry.kind]}`);
+    }
     assert.equal(await sha256(path.join(ROOT, entry.referencePath)), entry.referenceSha256, `${entry.kind} reference hash`);
     assert.equal(await sha256(path.join(ROOT, entry.sourcePath)), entry.sourceSha256, `${entry.kind} source hash`);
     assert.equal(await sha256(path.join(ROOT, entry.finalPath)), entry.finalSha256, `${entry.kind} final hash`);
