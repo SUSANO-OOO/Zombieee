@@ -3971,9 +3971,11 @@ export function AshfallGame() {
     // QA galleries intentionally exercise every atlas. Production only retains
     // the selected formation and the current stage's enemy roster, preventing
     // all 23 high-resolution atlases from occupying mobile memory at once.
+    // `turned` can be created from any fallen ally, independent of the stage's
+    // authored enemy roster, so its atlas must remain available in production.
     const requiredSpriteKinds = qaMode || qaScenario
       ? [...spriteKinds]
-      : [...new Set([...selectedFormationKinds, ...stageEnemyKinds])];
+      : [...new Set([...selectedFormationKinds, ...stageEnemyKinds, "turned" as UnitKind])];
     const persistentPaths: Record<string, string> = {
       crawler: "/crawler-fortress-v1.png", pod: "/tactical-drop-pod-v1.png",
       drum: "/explosive-drum-v1.png", medical: "/medical-supply-station-v1.png",
