@@ -262,6 +262,33 @@
       },
       "finalPath": "public/art/v070/characters/reference/tatara-base-r1.png",
       "commit": "6de77d37bce886d589c9eb0779b3088f8d2a063b"
+    },
+    {
+      "assetId": "V070-CHAR-TATARA-BASE",
+      "revision": "r2",
+      "status": "rejected_by_producer",
+      "type": "character_identity_base",
+      "subject": "タタラ",
+      "use": "ポートレート、会話立ち絵、表情差分、戦闘スプライトのidentity master",
+      "approvalPreviewPath": "outputs/p6-approvals/V070-CHAR-TATARA-BASE-r2.png",
+      "plannedPath": "public/art/v070/characters/reference/tatara-base-r2.png",
+      "sourceApprovedAssetId": "V070-CHAR-TATARA-BASE",
+      "sourceApprovedRevision": "r1",
+      "supersedesRevision": "r1",
+      "styleReferencePaths": [
+        "public/art/v070/characters/reference/tatara-base-r1.png"
+      ],
+      "designIntent": "承認済みr1の人物同一性、片側の黄色い肩、保護具、現場装備、角形鋼製槌頭を維持し、柄だけを前腕から片腕程度の短柄へ縮める。視線と槌頭を同じ鉄筋コンクリート接合部へ揃え、大振りではなく構造を見抜いて一点を壊す対装甲・対拠点役を明確化する。",
+      "smartphoneRecognition": "片側だけの黄色い肩、額の透明保護具、首の防音具、太い作業員体型、腰のオレンジ色巻尺、片手の白い手袋、身体近くの短い黒柄、亀裂へ置いた角形鋼製ハンマー頭。",
+      "previewSha256": "128c113606e5ecb96318234777c6be5146a5218297be8817b0b9dd47a07a9922",
+      "approvalUrl": null,
+      "reviewedAt": "2026-07-18",
+      "rejectionUrl": "https://github.com/SUSANO-OOO/Zombieee/pull/38#issuecomment-5011038710",
+      "rejectionReason": "戦闘キャラクターとして使いたくなる魅力、デザイン上の工夫、威圧感が不足し、全体として格好悪い。",
+      "approvedAt": null,
+      "identityLock": null,
+      "finalPath": null,
+      "commit": null
     }
   ]
 }
