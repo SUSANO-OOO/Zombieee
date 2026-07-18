@@ -13,6 +13,18 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - ".github/workflows/github-pages-release.yml"
+  workflow_dispatch:
+    inputs:
+      release_ref:
+        description: "Annotated release tag or immutable commit to deploy"
+        required: true
+        type: string
+      release_sha:
+        description: "Commit SHA expected from release_ref and embedded in the release"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -32,7 +44,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_ref || github.sha }}
           persist-credentials: false
+
+      - name: Verify requested release identity
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+        run: |
+          actual_sha="$(git rev-parse HEAD)"
+          if [[ "$actual_sha" != "$RELEASE_SHA" ]]; then
+            echo "::error::release_ref resolved to $actual_sha, expected $RELEASE_SHA"
+            exit 1
+          fi
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -49,7 +74,20 @@ jobs:
       - name: Build GitHub Pages static release
         env:
           GITHUB_PAGES_BASE_PATH: /Zombieee
-        run: node scripts/build-github-pages.mjs
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.release_sha || github.sha }}
+        shell: bash
+        run: |
+          node --input-type=module --eval \
+            "process.env.GITHUB_SHA = process.env.GITHUB_PAGES_RELEASE_SHA; await import('./scripts/build-github-pages.mjs')"
+
+      - name: Verify GitHub Pages release identity
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+        run: |
+          grep -Fq "<meta name=\"github-pages-release\" content=\"$RELEASE_SHA\">" _site/index.html
+          grep -Fq '<meta name="github-pages-base" content="/Zombieee/">' _site/index.html
 
       - name: Install isolated browser runtime
         run: |
@@ -99,44 +137,38 @@ jobs:
         if: steps.smoke.outcome == 'failure'
         run: exit 1
 
-      - name: Ensure GitHub Pages uses Actions
-        if: github.event_name == 'push'
+      - name: Verify GitHub Pages uses Actions
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: actions/github-script@v7
         with:
           github-token: ${{ github.token }}
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            try {
-              await github.request('GET /repos/{owner}/{repo}/pages', { owner, repo });
-              await github.request('PUT /repos/{owner}/{repo}/pages', {
-                owner,
-                repo,
-                build_type: 'workflow',
-              });
-              core.info('GitHub Pages already exists and uses the workflow build type.');
-            } catch (error) {
-              if (error.status !== 404) throw error;
-              await github.request('POST /repos/{owner}/{repo}/pages', {
-                owner,
-                repo,
-                build_type: 'workflow',
-              });
-              core.info('GitHub Pages was created with the workflow build type.');
+            const response = await github.request(
+              'GET /repos/{owner}/{repo}/pages',
+              { owner, repo },
+            );
+            if (response.data.build_type !== 'workflow') {
+              core.setFailed(
+                `GitHub Pages build_type is ${response.data.build_type}; expected workflow.`,
+              );
+            } else {
+              core.info('GitHub Pages exists and uses the workflow build type.');
             }
 
       - name: Configure GitHub Pages
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: actions/configure-pages@v5
 
       - name: Upload GitHub Pages artifact
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
 
   deploy:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
