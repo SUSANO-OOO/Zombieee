@@ -255,14 +255,15 @@ Codexが未確定キャラクターのデザイン制作、アセット生成、
 - `characterId`：`guide-ikura`
 - migration alias：`guide-noise`、`guide-mizuki-nana`、水城奈々
 - 戦闘参加：しない
-- 年齢：31歳
+- 年齢：18歳（成人）
 - 性別：女性
 - 発生前：コミュニティFMとライブハウスの音響技術者
 - 役割：通信、地図、音声分析、作戦情報、記録
 - 性格：無駄な言葉を嫌うが、人間の声を雑音として切り捨てられない
 - 口調：平坦、短い、具体的。指揮官へ必要な情報だけを報告し、判断を代行しない
 - 表示名：`いくらちゃん`。`ノイズ`は正式表示に使用しない
-- デザイン目的：通信・情報担当が分かる。武器を持たせず、サイバーパンクハッカーやDJにしない
+- デザイン目的：若く可愛い顔、鮮やかなピンク色のspace bunと長い波状twin-tail、cream／teal headset、tealの短いbolero、非常に豊かな胸部を立体的に支えるivoryのsweetheart bustier、極短navyのasymmetrical pleated tactical skort、スコートとの間に上腿を大きく見せる低いcharcoal thigh-high、teal laceのankle combat bootsで、他人物と重複しない可愛く個性的な通信・情報担当として識別できる。pink／teal trim、小型ribbon tab、gold hardwareを統一し、可愛さと戦術装備の一貫性を両立する
+- 装備：cream／teal headset、腰の小型radio、片手で自然に保持するrugged tactical tablet、小型utility pouch。武器、medical pack、過剰なarmorは持たせない
 
 ## 7. 加入・所有
 
