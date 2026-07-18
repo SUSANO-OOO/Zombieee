@@ -103,6 +103,7 @@ type Props = {
   savePersistence: "checking" | "saved" | "recovered" | "unavailable";
   readStoryEventIds: readonly string[];
   autoSkipReadStory: boolean;
+  forceStoryReplay: boolean;
   onBegin: () => void;
   onRestartCampaign: () => void;
   onExportSave: () => void;
@@ -111,7 +112,10 @@ type Props = {
   onUseRecoveryCandidate: (source: string) => void;
   onResetCorruptSave: () => void;
   onEventComplete: () => void;
+  onEventSkip: () => void;
+  onStoryAudioPositionChange: (eventId: string, lineIndex: number) => void;
   onSetAutoSkipReadStory: (enabled: boolean) => void;
+  onReplayPrologue: () => void;
   onSelectStage: (stageId: string) => void;
   onOpenLoadout: () => void;
   onReturnToMap: () => void;
@@ -192,21 +196,24 @@ function TitleScreen({ hasCampaignSave, savePersistence, saveMutationPending, on
       <h1><span>西新</span><b>世紀末物語</b></h1>
       <p>アーリーアクセス版</p>
     </div>
-    <p className="title-copy">三本の道。途切れた通信。まだ終わっていない街。</p>
-    <section className="title-synopsis" aria-label="序章のあらすじ"><b>序章のあらすじ</b><p>{PROLOGUE_SYNOPSIS.short}</p></section>
+    <p className="title-copy">西新が終わった夜から四十三日。指揮官の作戦が、街の明日をつなぐ。</p>
+    <section className="title-synopsis" aria-label="物語のあらすじ"><b>物語のあらすじ</b><p>{PROLOGUE_SYNOPSIS.short}</p></section>
     <div className="title-actions">
-      <button className="campaign-primary title-start" disabled={saveUnavailable} onClick={onBegin}><span>{savePersistence === "checking" ? "セーブ確認中" : hasCampaignSave ? "物語を続ける" : "物語を始める"}</span><small>{savePersistence === "unavailable" ? "Safariの通常タブで開き直してください" : hasCampaignSave ? "保存した進行から再開" : "序章　新たな世界の始まり"}</small></button>
+      <button className="campaign-primary title-start" disabled={saveUnavailable} onClick={onBegin}><span>{savePersistence === "checking" ? "セーブ確認中" : hasCampaignSave ? "物語を続ける" : "物語を始める"}</span><small>{savePersistence === "unavailable" ? "Safariの通常タブで開き直してください" : hasCampaignSave ? "保存した進行から再開" : "PROLOGUE　西新が終わった夜"}</small></button>
       {hasCampaignSave && <button className="campaign-secondary title-restart" disabled={saveUnavailable} onClick={onRestartCampaign}>{saveMutationPending ? "保存処理中" : "最初から始める"}</button>}
     </div>
     <div className="title-save-tools" aria-label="セーブ管理">{hasCampaignSave && <button disabled={saveMutationPending} onClick={onExportSave}>バックアップを書き出す</button>}<SaveImportButton onImport={onImportSave} disabled={saveMutationPending} /></div>
   </div>;
 }
 
-function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, onEventComplete, onSetAutoSkipReadStory }: Pick<Props, "eventId" | "readStoryEventIds" | "autoSkipReadStory" | "onEventComplete" | "onSetAutoSkipReadStory">) {
+function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStoryReplay, onEventComplete, onEventSkip, onStoryAudioPositionChange, onSetAutoSkipReadStory }: Pick<Props, "eventId" | "readStoryEventIds" | "autoSkipReadStory" | "forceStoryReplay" | "onEventComplete" | "onEventSkip" | "onStoryAudioPositionChange" | "onSetAutoSkipReadStory">) {
   const [index, setIndex] = useState(0);
   const [logOpen, setLogOpen] = useState(false);
   const [skipOpen, setSkipOpen] = useState(false);
+  const [silenceTail, setSilenceTail] = useState(false);
   const completedRef = useRef(false);
+  const silenceTailStartedRef = useRef(false);
+  const silenceTimerRef = useRef<number | null>(null);
   const event = eventId ? getStoryEvent(eventId) : null;
   const line = event?.lines[index] ?? null;
   const log = useMemo(() => eventId ? storyEventLog(eventId, index) : [], [eventId, index]);
@@ -227,16 +234,44 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, onEventCom
     completedRef.current = true;
     onEventComplete();
   }, [onEventComplete]);
+  const skipOnce = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    onEventSkip();
+  }, [onEventSkip]);
+  const completeWithAuthoredSilence = useCallback(() => {
+    if (!event || completedRef.current || silenceTailStartedRef.current) return;
+    const holdMs = event.presentation.silenceAfterMs;
+    if (!(holdMs > 0)) {
+      completeOnce();
+      return;
+    }
+    silenceTailStartedRef.current = true;
+    setSilenceTail(true);
+    onStoryAudioPositionChange(event.id, event.lines.length);
+    silenceTimerRef.current = window.setTimeout(completeOnce, holdMs);
+  }, [completeOnce, event, onStoryAudioPositionChange]);
   const eventRead = Boolean(eventId && readStoryEventIds.includes(eventId));
   useEffect(() => {
-    if (!eventId || !eventRead || !autoSkipReadStory || completedRef.current) return;
+    if (!event || silenceTailStartedRef.current) return;
+    onStoryAudioPositionChange(event.id, index);
+  }, [event, index, onStoryAudioPositionChange]);
+  useEffect(() => () => {
+    if (silenceTimerRef.current !== null) window.clearTimeout(silenceTimerRef.current);
+  }, []);
+  useEffect(() => {
+    if (!eventId || !eventRead || !autoSkipReadStory || forceStoryReplay || completedRef.current) return;
     const timer = window.setTimeout(completeOnce, 0);
     return () => window.clearTimeout(timer);
-  }, [autoSkipReadStory, completeOnce, eventId, eventRead]);
+  }, [autoSkipReadStory, completeOnce, eventId, eventRead, forceStoryReplay]);
   if (!event || !line) return <div className="campaign-overlay event-screen"><button className="campaign-primary" onClick={completeOnce}>地図へ進む</button></div>;
   const art = portraitArt[line.portrait] ?? "";
   const contextArt = contextLine ? portraitArt[contextLine.portrait] ?? "" : "";
-  const advance = () => index + 1 < event.lines.length ? setIndex((value) => value + 1) : completeOnce();
+  const advance = () => {
+    if (silenceTail) return;
+    if (index + 1 < event.lines.length) setIndex((value) => value + 1);
+    else completeWithAuthoredSilence();
+  };
   const backgroundArt = STORY_BACKGROUND_VISUALS[event.background as keyof typeof STORY_BACKGROUND_VISUALS] ?? PRODUCTION_VISUALS.command;
   return <div className={`campaign-overlay event-screen event-${event.background} effect-${line.effect ?? "none"}`} style={artStyle(backgroundArt)} aria-label="会話イベント">
     <div className="event-vignette" />
@@ -244,27 +279,27 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, onEventCom
     <div className={`event-portrait active ${line.side} ${line.portrait === "guide" ? "guide" : line.portrait === "radio" ? "radio" : ""}`} data-expression={line.expression} style={art ? { backgroundImage: `url('${art}')` } : undefined} aria-hidden="true" />
     <div className="event-controls"><button onClick={() => setLogOpen((value) => !value)}>会話ログ</button><button onClick={() => setSkipOpen(true)}>スキップ</button></div>
     {logOpen && <section className="event-log" aria-label="会話ログ"><header><b>会話ログ</b><button onClick={() => setLogOpen(false)}>閉じる</button></header>{log.map((entry: { id: string; speaker: string; text: string }) => <p key={entry.id}><b>{entry.speaker}</b><span>{entry.text}</span></p>)}</section>}
-    <button className="dialogue-box" onClick={advance} aria-label="セリフを送る">
+    <button className="dialogue-box" onClick={advance} disabled={silenceTail} aria-busy={silenceTail} aria-label="セリフを送る">
       <span className="dialogue-name"><b>{line.speaker}</b><small>{line.role}</small></span>
       <span className="dialogue-text">{line.text}</span>
-      <em>{index + 1 < event.lines.length ? "次へ" : "完了"} ▾</em>
+      <em>{silenceTail ? "無音" : index + 1 < event.lines.length ? "次へ" : "完了"} ▾</em>
     </button>
-    {skipOpen && <div className="story-skip-confirm" role="alertdialog" aria-modal="true" aria-label="会話をスキップ"><section><h2>会話をスキップしますか？</h2><p>進行・加入・報酬・解放の結果は変わりません。</p><button onClick={completeOnce}>この会話だけスキップ</button><button onClick={() => { onSetAutoSkipReadStory(true); completeOnce(); }}>既読会話を今後自動スキップ</button><button className="cancel" onClick={() => setSkipOpen(false)}>キャンセル</button></section></div>}
+    {skipOpen && <div className="story-skip-confirm" role="alertdialog" aria-modal="true" aria-label="会話をスキップ"><section><h2>会話をスキップしますか？</h2><p>進行・加入・報酬・解放の結果は変わりません。プロローグでは固定要約を表示して四十三日後へ進みます。</p><button onClick={skipOnce}>この会話をスキップ</button><button onClick={() => { onSetAutoSkipReadStory(true); skipOnce(); }}>既読会話を今後自動スキップ</button><button className="cancel" onClick={() => setSkipOpen(false)}>キャンセル</button></section></div>}
   </div>;
 }
 
-function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPending, onSelectStage, onOpenLoadout, onResetSave }: Pick<Props, "stages" | "selectedStage" | "supplyCurrency" | "saveMutationPending" | "onSelectStage" | "onOpenLoadout" | "onResetSave">) {
-  const prologueComplete = stages.every((stage) => stage.completed);
+function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPending, onSelectStage, onOpenLoadout, onReplayPrologue, onResetSave }: Pick<Props, "stages" | "selectedStage" | "supplyCurrency" | "saveMutationPending" | "onSelectStage" | "onOpenLoadout" | "onReplayPrologue" | "onResetSave">) {
+  const chapterComplete = stages.every((stage) => stage.completed);
   return <div className="campaign-overlay map-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="エリアマップ">
-    <header className="campaign-header"><div><small>序章</small><h1>新たな世界の始まり</h1></div><div className="map-resource"><small>キャップ</small><b>{supplyCurrency}</b></div></header>
+    <header className="campaign-header"><div><small>CHAPTER 1</small><h1>発生から四十三日</h1></div><div className="map-resource"><small>キャップ</small><b>{supplyCurrency}</b></div></header>
     <div className="map-layout">
-      <section className="nishijin-map" aria-label="西新・早良区・百道浜 エリアマップ">
+      <section className="nishijin-map" aria-label="西新・早良区・西新駅 エリアマップ">
         <div className="map-water" /><div className="map-road road-a" /><div className="map-road road-b" /><div className="map-road road-c" />
         <div className="map-landmark tower"><i /><span>福岡タワー<small>高危険区域</small></span></div>
-        <div className={`map-landmark coast ${prologueComplete ? "anomaly" : ""}`}><span>百道浜<small>{prologueComplete ? "異常反応" : "通信途絶"}</small></span></div>
-        <div className="map-landmark subway"><span>地下鉄区域<small>経路封鎖</small></span></div>
+        <div className={`map-landmark coast ${chapterComplete ? "anomaly" : ""}`}><span>大学病院地下<small>{chapterComplete ? "電源稼働を確認" : "調査保留"}</small></span></div>
+        <div className="map-landmark subway"><span>西新駅地下<small>{chapterComplete ? "暫定封鎖" : "経路確認中"}</small></span></div>
         <div className="map-landmark police"><span>警察署周辺<small>調査中</small></span></div>
-        <div className="map-landmark hospital"><span>病院<small>救難信号</small></span></div>
+        <div className="map-landmark hospital"><span>福岡市西部医科大学附属病院<small>T計画の研究施設</small></span></div>
         <div className="map-landmark shelter"><span>学校・避難所<small>応答なし</small></span></div>
         <div className="map-landmark shoreline"><span>海岸線<small>高危険区域</small></span></div>
         <div className="map-landmark blockade"><span>封鎖区域<small>進入不能</small></span></div>
@@ -285,7 +320,7 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
         <button className="campaign-primary" onClick={onOpenLoadout}>編成へ進む</button>
       </aside>
     </div>
-    <footer className="map-footer"><span>封鎖地点は今後の調査で解放されます</span><button disabled={saveMutationPending} onClick={onResetSave}>{saveMutationPending ? "保存処理中" : "セーブデータを初期化"}</button></footer>
+    <footer className="map-footer"><span>固定4場面のプロローグは進行を変えず再視聴できます</span><button disabled={saveMutationPending} onClick={onReplayPrologue}>プロローグを回想</button><button disabled={saveMutationPending} onClick={onResetSave}>{saveMutationPending ? "保存処理中" : "セーブデータを初期化"}</button></footer>
   </div>;
 }
 
@@ -321,7 +356,7 @@ function ResultScreen({ selectedStage, result, onRetry, onContinueResult }: Pick
       {result.missionFacts.length > 0 && <section className="result-mission-facts" aria-live="polite"><h2>作戦記録</h2>{result.missionFacts.map((fact) => <p key={fact}>{fact}</p>)}</section>}
       {(result.newlyUnlockedUnits.length > 0 || result.newlyUnlockedStages.length > 0) && <section className="result-unlocks" aria-live="polite"><h2>新たな戦力を解放</h2>{result.newlyUnlockedUnits.map((label) => <p key={`unit-${label}`}><b>ユニット</b><span>{label}</span></p>)}{result.newlyUnlockedStages.map((label) => <p key={`stage-${label}`}><b>作戦区域</b><span>{label}</span></p>)}</section>}
       <div className="result-stats"><span><small>作戦時間</small><b>{formatTime(result.time)}</b></span><span><small>撃破数</small><b>{result.kills}</b></span><span><small>移動拠点HP</small><b>{Math.round(result.baseHpRatio * 100)}%</b></span><span><small>戦闘不能</small><b>{result.unitsLost}</b></span></div>
-      <footer><button className="campaign-secondary" onClick={onRetry}>同じ編成で再戦</button><button className="campaign-primary" onClick={onContinueResult}>{result.won ? "作戦後の通信へ" : "エリアマップへ"}</button></footer>
+      <footer><button className="campaign-secondary" onClick={onRetry}>同じ編成で再戦</button><button className="campaign-primary" onClick={onContinueResult}>エリアマップへ</button></footer>
     </section>
   </div>;
 }
@@ -330,8 +365,8 @@ export function CampaignScreens(props: Props) {
   if (props.saveRecoveryRequired) return <SaveRecoveryScreen saveRecoveryReason={props.saveRecoveryReason} saveRecoveryCandidateSources={props.saveRecoveryCandidateSources} saveRecoveryCanExport={props.saveRecoveryCanExport} saveMutationPending={props.saveMutationPending} onExportCorruptSave={props.onExportCorruptSave} onImportSave={props.onImportSave} onUseRecoveryCandidate={props.onUseRecoveryCandidate} onResetCorruptSave={props.onResetCorruptSave} />;
   if (props.screen === "battle") return null;
   if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} savePersistence={props.savePersistence} saveMutationPending={props.saveMutationPending} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} onExportSave={props.onExportSave} onImportSave={props.onImportSave} />;
-  if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} onEventComplete={props.onEventComplete} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />;
-  if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} onSelectStage={props.onSelectStage} onOpenLoadout={props.onOpenLoadout} onResetSave={props.onResetSave} />;
+  if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} forceStoryReplay={props.forceStoryReplay} onEventComplete={props.onEventComplete} onEventSkip={props.onEventSkip} onStoryAudioPositionChange={props.onStoryAudioPositionChange} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />;
+  if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} onSelectStage={props.onSelectStage} onOpenLoadout={props.onOpenLoadout} onReplayPrologue={props.onReplayPrologue} onResetSave={props.onResetSave} />;
   if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} caps={props.caps} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} onReturnToMap={props.onReturnToMap} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onRecruitUnit={props.onRecruitUnit} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
   return <ResultScreen selectedStage={props.selectedStage} result={props.result} onRetry={props.onRetry} onContinueResult={props.onContinueResult} />;
 }

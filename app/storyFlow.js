@@ -16,15 +16,21 @@ export const STORY_FLOW_SCRIPT_VERSION = STORY_SCRIPT_VERSION;
 
 export const BATTLE_EVENT_MODES = deepFreeze(["first-time", "compact", "all"]);
 export const MANDATORY_BATTLE_ALERT_IDS = deepFreeze([
-  "stage-nishijin-battle-base-exposed",
-  "stage-takuya-warning",
-  "stage-takuya-base-remains",
+  "stage-nishijin-alert-v070",
+  "stage-takuya-warning-v070",
+  "stage-takuya-base-remains-v070",
 ]);
 
 const BATTLE_ALERT_LABELS = deepFreeze({
-  "stage-nishijin-battle-base-exposed": "感染拠点が露出",
-  "stage-takuya-warning": "巨大反応を検知",
-  "stage-takuya-base-remains": "TAKUYA撃破　感染拠点を破壊せよ",
+  "stage-nishijin-alert-v070": "感染拠点が露出",
+  "stage-sawara-alert-v070": "避難車両が発進",
+  "stage-takuya-warning-v070": "TAKUYAを確認",
+  "stage-takuya-final-v070": "最終弱点が露出",
+  "stage-takuya-base-remains-v070": "TAKUYA制圧　残存敵を掃討",
+  "stage-station-gate-alert-v070": "絡手を確認",
+  "stage-station-platform-alert-v070": "漏泥を確認",
+  "stage-station-tunnel-power-v070": "封鎖電源を起動",
+  "stage-station-escape-v070": "封鎖完了　全員帰還",
 });
 
 export function battleStoryBriefLabel(eventId) {
@@ -43,10 +49,10 @@ export function resolveBattleStoryPresentation({
   const briefEventIds = [];
   const skippedEventIds = [];
   for (const eventId of events) {
-    if (MANDATORY_BATTLE_ALERT_IDS.includes(eventId) || normalizedMode === "compact") {
-      briefEventIds.push(eventId);
-    } else if (normalizedMode === "all" || !read.has(eventId)) {
+    if (normalizedMode === "all" || !read.has(eventId)) {
       fullEventIds.push(eventId);
+    } else if (normalizedMode === "compact" || MANDATORY_BATTLE_ALERT_IDS.includes(eventId)) {
+      briefEventIds.push(eventId);
     } else {
       skippedEventIds.push(eventId);
     }
@@ -64,84 +70,84 @@ export const BATTLE_DEFEAT_REASON_IDS = deepFreeze({
   TAKUYA_BASE_REMAINS: "takuya-base-remains",
 });
 
+function eventIds(value) {
+  return uniqueStrings(Array.isArray(value) ? value : [value]);
+}
+
 function stageFlow({ pre, replay, battle, post, defeat, retry }) {
-  return { pre, replay, battle, post, defeat, retry };
+  return {
+    pre: eventIds(pre),
+    replay,
+    battle,
+    post: eventIds(post),
+    defeat,
+    retry,
+  };
 }
 
 export const STAGE_STORY_FLOWS = deepFreeze({
   [CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET]: stageFlow({
-    pre: "stage-nishijin-pre",
-    replay: "stage-nishijin-replay",
+    pre: "stage-nishijin-pre-v070",
+    replay: "stage-nishijin-replay-v070",
     battle: [
-      { eventId: "stage-nishijin-battle-start", trigger: { type: "battle-start" } },
-      { eventId: "stage-nishijin-battle-runner", trigger: { type: "enemy-first-seen", enemyKind: "runner" } },
-      { eventId: "stage-nishijin-battle-spitter", trigger: { type: "enemy-first-seen", enemyKind: "spitter" } },
-      { eventId: "stage-nishijin-battle-distress-voice", trigger: { type: "signal", signalId: "distress-voice" } },
-      { eventId: "stage-nishijin-battle-base-exposed", trigger: { type: "enemy-base-exposed" } },
+      { eventId: "stage-nishijin-alert-v070", trigger: { type: "enemy-base-exposed" } },
     ],
-    post: "stage-nishijin-post",
-    defeat: "stage-nishijin-defeat",
-    retry: "stage-nishijin-retry",
+    post: "stage-nishijin-post-v070",
+    defeat: "stage-nishijin-defeat-v070",
+    retry: "stage-nishijin-retry-v070",
   }),
   [CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE]: stageFlow({
-    pre: "stage-sawara-pre",
-    replay: "stage-sawara-replay",
+    pre: "stage-sawara-pre-v070",
+    replay: "stage-sawara-replay-v070",
     battle: [
-      { eventId: "stage-sawara-battle-start", trigger: { type: "battle-start" } },
-      { eventId: "stage-sawara-battle-30", trigger: { type: "defense-milestone", seconds: 30, convoyProgress: 1 / 6 } },
-      { eventId: "stage-sawara-battle-60", trigger: { type: "defense-milestone", seconds: 60, convoyProgress: 1 / 3 } },
-      { eventId: "stage-sawara-battle-90", trigger: { type: "defense-milestone", seconds: 90, convoyProgress: 1 / 2 } },
-      { eventId: "stage-sawara-battle-120", trigger: { type: "defense-milestone", seconds: 120, convoyProgress: 2 / 3 } },
-      { eventId: "stage-sawara-battle-150", trigger: { type: "defense-milestone", seconds: 150, convoyProgress: 5 / 6 } },
-      { eventId: "stage-sawara-battle-success", trigger: { type: "convoy-evacuated" } },
+      { eventId: "stage-sawara-alert-v070", trigger: { type: "convoy-evacuated" } },
     ],
-    post: "stage-sawara-post",
-    defeat: "stage-sawara-defeat",
-    retry: "stage-sawara-retry",
+    post: "stage-sawara-post-v070",
+    defeat: "stage-sawara-defeat-v070",
+    retry: "stage-sawara-retry-v070",
   }),
   [CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE]: stageFlow({
-    pre: "stage-takuya-pre",
-    replay: "stage-takuya-replay",
+    pre: "stage-takuya-pre-v070",
+    replay: "stage-takuya-replay-v070",
     battle: [
-      { eventId: "stage-takuya-battle-start", trigger: { type: "battle-start" } },
-      { eventId: "stage-takuya-battle-mimic", trigger: { type: "signal", signalId: "mimic-voice" } },
-      { eventId: "stage-takuya-battle-heavy", trigger: { type: "enemy-first-seen", enemyKind: "crusher" } },
-      { eventId: "stage-takuya-warning", trigger: { type: "boss-warning" } },
-      { eventId: "stage-takuya-phase-1", trigger: { type: "boss-hp-at-most", ratio: 0.75 } },
-      { eventId: "stage-takuya-mimic-child", trigger: { type: "signal", signalId: "takuya-mimic-child" } },
-      { eventId: "stage-takuya-final", trigger: { type: "boss-hp-at-most", ratio: 0.25 } },
-      { eventId: "stage-takuya-base-remains", trigger: { type: "boss-defeated-base-remains" } },
+      { eventId: "stage-takuya-warning-v070", trigger: { type: "boss-warning" } },
+      { eventId: "stage-takuya-final-v070", trigger: { type: "boss-hp-at-most", ratio: 0.25 } },
+      { eventId: "stage-takuya-base-remains-v070", trigger: { type: "boss-defeated-base-remains" } },
     ],
-    post: "stage-takuya-post",
-    defeat: "stage-takuya-defeat",
-    retry: "stage-takuya-retry",
+    post: "stage-takuya-post-v070",
+    defeat: "stage-takuya-defeat-v070",
+    retry: "stage-takuya-retry-v070",
   }),
-  // P4 keeps the new station battles playable before P5 installs their
-  // canonical dialogue. Null entry/result events deliberately route straight
-  // to battle/result without inventing temporary story copy.
   [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE]: stageFlow({
-    pre: null,
-    replay: null,
-    battle: [],
-    post: null,
-    defeat: null,
-    retry: null,
+    pre: ["station-briefing-v070", "stage-station-gate-pre-v070"],
+    replay: "stage-station-gate-replay-v070",
+    battle: [
+      { eventId: "stage-station-gate-alert-v070", trigger: { type: "enemy-first-seen", enemyKind: "grappler" } },
+    ],
+    post: "stage-station-gate-post-v070",
+    defeat: "stage-station-gate-defeat-v070",
+    retry: "stage-station-gate-retry-v070",
   }),
   [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM]: stageFlow({
-    pre: null,
-    replay: null,
-    battle: [],
-    post: null,
-    defeat: null,
-    retry: null,
+    pre: "stage-station-platform-pre-v070",
+    replay: "stage-station-platform-replay-v070",
+    battle: [
+      { eventId: "stage-station-platform-alert-v070", trigger: { type: "enemy-first-seen", enemyKind: "ooze" } },
+    ],
+    post: "stage-station-platform-post-v070",
+    defeat: "stage-station-platform-defeat-v070",
+    retry: "stage-station-platform-retry-v070",
   }),
   [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL]: stageFlow({
-    pre: null,
-    replay: null,
-    battle: [],
-    post: null,
-    defeat: null,
-    retry: null,
+    pre: "stage-station-tunnel-pre-v070",
+    replay: "stage-station-tunnel-replay-v070",
+    battle: [
+      { eventId: "stage-station-tunnel-power-v070", trigger: { type: "power-at-least", count: 1 } },
+      { eventId: "stage-station-escape-v070", trigger: { type: "mission-complete" } },
+    ],
+    post: ["stage-station-tunnel-post-v070", "chapter-ending-v070"],
+    defeat: "stage-station-tunnel-defeat-v070",
+    retry: "stage-station-tunnel-retry-v070",
   }),
 });
 
@@ -183,6 +189,10 @@ export function battleStoryTriggerMatches(trigger, snapshot = {}) {
       return snapshot.bossDefeated !== true && bossHpRatio(snapshot) <= trigger.ratio;
     case "boss-defeated-base-remains":
       return snapshot.bossDefeated === true && snapshot.enemyBaseDestroyed !== true;
+    case "power-at-least":
+      return Number(snapshot.powerActivated) >= trigger.count;
+    case "mission-complete":
+      return snapshot.missionCompleted === true;
     default:
       return false;
   }
@@ -220,20 +230,43 @@ export function advanceBattleStoryFlow({ state, snapshot = {} }) {
 }
 
 export function getPrologueOpeningEventIds() {
-  return ["prologue-opening", "prologue-operations-room"];
+  return [
+    "prologue-kumaya-v070",
+    "prologue-collapse-montage-v070",
+    "prologue-crawler-montage-v070",
+    "crawler-signal-v070",
+  ];
 }
 
-export function getStageEntryStoryEventId({ stageId, completedStageIds = [], readStoryEventIds = [] }) {
+export function getPrologueReplayEventIds() {
+  return getPrologueOpeningEventIds();
+}
+
+export function getPrologueSkipEventIds() {
+  return ["prologue-skip-summary-v070"];
+}
+
+export function isPrologueOpeningEventId(eventId) {
+  return getPrologueOpeningEventIds().includes(eventId);
+}
+
+export function getStageEntryStoryEventIds({ stageId, completedStageIds = [], readStoryEventIds = [] }) {
   const flow = getStageFlow(stageId);
-  if (uniqueStrings(completedStageIds).includes(stageId)) return flow.replay;
+  if (uniqueStrings(completedStageIds).includes(stageId)) return eventIds(flow.replay);
   const read = new Set(uniqueStrings(readStoryEventIds));
   const defeatIds = [flow.defeat];
-  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE) defeatIds.push("stage-takuya-defeat-after-boss");
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE) defeatIds.push("stage-takuya-defeat-after-boss-v070");
   // Completing the pre-operation scene means this stage has already been
   // attempted, even if the player later withdrew or the session ended before
   // a defeat receipt was written. Never introduce rescued/joined characters a
   // second time; use the canonical retry operation briefing instead.
-  return read.has(flow.pre) || defeatIds.some((eventId) => read.has(eventId)) ? flow.retry : flow.pre;
+  const unreadPre = flow.pre.filter((eventId) => !read.has(eventId));
+  if (unreadPre.length > 0 && !defeatIds.some((eventId) => read.has(eventId))) return unreadPre;
+  return eventIds(flow.retry);
+}
+
+export function getStageEntryStoryEventId(options) {
+  return getStageEntryStoryEventIds(options)[0] ?? null;
 }
 
 export function getStageReplayStoryEventId(stageId) {
@@ -262,7 +295,7 @@ export function getStageDefeatStoryEventId({ stageId, bossDefeated = false, enem
   const flow = getStageFlow(stageId);
   const reason = deriveBattleDefeatReason({ stageId, bossDefeated, enemyBaseDestroyed, defeatReason });
   if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE
-    && reason === BATTLE_DEFEAT_REASON_IDS.TAKUYA_BASE_REMAINS) return "stage-takuya-defeat-after-boss";
+    && reason === BATTLE_DEFEAT_REASON_IDS.TAKUYA_BASE_REMAINS) return "stage-takuya-defeat-after-boss-v070";
   return flow.defeat;
 }
 
@@ -281,7 +314,7 @@ export function getStageResultStoryEventIds({
     ]);
   }
   if (uniqueStrings(completedStageIds).includes(stageId)) return [];
-  return flow.post ? [flow.post] : [];
+  return flow.post;
 }
 
 export function isStoryEventRead(readStoryEventIds, eventId) {
@@ -322,14 +355,19 @@ export function resolveStoryEventCompletion({
 
 export function listStoryFlowEventIds() {
   const stageEventIds = uniqueStrings(Object.values(STAGE_STORY_FLOWS).flatMap((flow) => [
-    flow.pre,
+    ...flow.pre,
     ...flow.battle.map(({ eventId }) => eventId),
-    flow.post,
+    ...flow.post,
     flow.defeat,
     flow.retry,
     flow.replay,
   ]));
-  return [...new Set([...getPrologueOpeningEventIds(), ...stageEventIds, "stage-takuya-defeat-after-boss", "prologue-ending"])
+  return [...new Set([
+    ...getPrologueOpeningEventIds(),
+    ...getPrologueSkipEventIds(),
+    ...stageEventIds,
+    "stage-takuya-defeat-after-boss-v070",
+  ])
   ];
 }
 

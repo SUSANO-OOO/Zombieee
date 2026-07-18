@@ -590,7 +590,7 @@ test("default save is versioned and contains initial progression, selection, and
   assert.equal(save.revision, 0);
   assert.equal(save.updatedAt, "");
   assert.equal(save.integrity, "");
-  assert.equal(save.storyScriptVersion, "prologue-v5");
+  assert.equal(save.storyScriptVersion, "outbreak-origin-v8");
   assert.deepEqual(save.readStoryEventIds, []);
   assert.equal(save.autoSkipReadStory, false);
   assert.equal(save.campaignStarted, false);
@@ -752,7 +752,7 @@ test("migration accepts schema-less and v0 aliases, derives unlocks, and tolerat
   assert.equal(migrated.unlockedStageIds.includes(STAGE_2), true);
   assert.equal(migrated.ownership.includes(CAMPAIGN_UNIT_IDS.TATARA), true);
   assert.equal(migrated.unlockedUnitIds.includes(CAMPAIGN_UNIT_IDS.CRAZY_KING), true);
-  assert.equal(migrated.storyScriptVersion, "prologue-v5");
+  assert.equal(migrated.storyScriptVersion, "outbreak-origin-v8");
   assert.deepEqual(migrated.readStoryEventIds, []);
   assert.equal(migrated.autoSkipReadStory, false);
   assert.equal(migrated.lastSelectedStageId, STAGE_2);
@@ -830,7 +830,7 @@ test("schema v2 to v4 migration is idempotent and preserves progress, receipts, 
   const migrated = migrateCampaignSave(schema2);
 
   assert.equal(migrated.schemaVersion, 5);
-  assert.equal(migrated.storyScriptVersion, "prologue-v5");
+  assert.equal(migrated.storyScriptVersion, "outbreak-origin-v8");
   assert.deepEqual(migrated.processedResultIds, schema2.processedResultIds);
   assert.deepEqual(migrated.completedStageIds, schema2.completedStageIds);
   assert.deepEqual(migrated.bestStarsByStage, schema2.bestStarsByStage);
@@ -967,10 +967,10 @@ test("explicitly versioned story receipts reset only when the script version cha
 
   const currentVersion = migrateCampaignSave({
     schemaVersion: 3,
-    storyScriptVersion: "prologue-v5",
-    readStoryEventIds: ["prologue-opening"],
+    storyScriptVersion: "outbreak-origin-v8",
+    readStoryEventIds: ["prologue-kumaya-v070"],
   });
-  assert.deepEqual(currentVersion.readStoryEventIds, ["prologue-opening"]);
+  assert.deepEqual(currentVersion.readStoryEventIds, ["prologue-kumaya-v070"]);
 
   const legacyWithoutVersion = migrateCampaignSave({
     schemaVersion: 2,
@@ -1042,15 +1042,15 @@ test("read tracking and read-only auto-skip preferences update without erasing c
     baseHp: 90,
     baseMaxHp: 100,
   });
-  const readOnce = markStoryEventRead(progressed, "stage-nishijin-post");
-  const readTwice = markStoryEventRead(readOnce, "stage-nishijin-post");
+  const readOnce = markStoryEventRead(progressed, "stage-nishijin-post-v070");
+  const readTwice = markStoryEventRead(readOnce, "stage-nishijin-post-v070");
   const enabled = updateStoryPlaybackSettings(readTwice, { autoSkipReadStory: true, battleEventMode: "compact" });
 
-  assert.deepEqual(readOnce.readStoryEventIds, ["stage-nishijin-post"]);
+  assert.deepEqual(readOnce.readStoryEventIds, ["stage-nishijin-post-v070"]);
   assert.deepEqual(readTwice.readStoryEventIds, readOnce.readStoryEventIds);
   assert.equal(enabled.autoSkipReadStory, true);
   assert.equal(enabled.settings.battleEventMode, "compact");
-  assert.equal(enabled.storyScriptVersion, "prologue-v5");
+  assert.equal(enabled.storyScriptVersion, "outbreak-origin-v8");
   assert.equal(enabled.supplies, progressed.supplies);
   assert.deepEqual(enabled.processedResultIds, progressed.processedResultIds);
   assert.deepEqual(enabled.completedStageIds, progressed.completedStageIds);

@@ -21,13 +21,17 @@ import {
   createBattleStoryFlowState,
   deriveBattleDefeatReason,
   getPrologueOpeningEventIds,
+  getPrologueReplayEventIds,
+  getPrologueSkipEventIds,
   getStageDefeatStoryEventId,
   getStageEntryStoryEventId,
+  getStageEntryStoryEventIds,
   getStageNextAttemptStoryEventId,
   getStageReplayStoryEventId,
   getStageResultStoryEventIds,
   getStageRetryStoryEventId,
   getTriggeredBattleStoryEventIds,
+  isPrologueOpeningEventId,
   listStoryFlowEventIds,
   resolveBattleStoryPresentation,
   resolveStoryEventCompletion,
@@ -41,236 +45,163 @@ const STAGE_4 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE;
 const STAGE_5 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM;
 const STAGE_6 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL;
 
-test("the deterministic flow reaches all 39 prologue-v5 events", () => {
-  assert.equal(STORY_FLOW_SCRIPT_VERSION, "prologue-v5");
+test("outbreak-origin-v8 flow reaches every canonical event across all six stages", () => {
+  assert.equal(STORY_FLOW_SCRIPT_VERSION, "outbreak-origin-v8");
   assert.deepEqual(new Set(listStoryFlowEventIds()), new Set(STORY_EVENT_IDS));
   assert.deepEqual(Object.keys(STAGE_STORY_FLOWS), [STAGE_1, STAGE_2, STAGE_3, STAGE_4, STAGE_5, STAGE_6]);
-  assert.deepEqual(getPrologueOpeningEventIds(), ["prologue-opening", "prologue-operations-room"]);
+  assert.deepEqual(getPrologueOpeningEventIds(), [
+    "prologue-kumaya-v070",
+    "prologue-collapse-montage-v070",
+    "prologue-crawler-montage-v070",
+    "crawler-signal-v070",
+  ]);
+  assert.deepEqual(getPrologueReplayEventIds(), getPrologueOpeningEventIds());
+  assert.deepEqual(getPrologueSkipEventIds(), ["prologue-skip-summary-v070"]);
+  assert.equal(isPrologueOpeningEventId("prologue-kumaya-v070"), true);
+  assert.equal(isPrologueOpeningEventId("stage-nishijin-pre-v070"), false);
 });
 
-test("P4 station stages route directly without inventing temporary story events", () => {
-  const noStoryFlow = {
-    pre: null,
-    replay: null,
-    battle: [],
-    post: null,
-    defeat: null,
-    retry: null,
-  };
-  for (const stageId of [STAGE_4, STAGE_5, STAGE_6]) {
-    assert.deepEqual(STAGE_STORY_FLOWS[stageId], noStoryFlow);
-    assert.equal(getStageEntryStoryEventId({ stageId }), null);
-    assert.equal(getStageEntryStoryEventId({ stageId, completedStageIds: [stageId] }), null);
-    assert.equal(getStageReplayStoryEventId(stageId), null);
-    assert.equal(getStageRetryStoryEventId(stageId), null);
-    assert.equal(getStageNextAttemptStoryEventId({ stageId, previousWon: false }), null);
-    assert.equal(getStageNextAttemptStoryEventId({ stageId, previousWon: true }), null);
-    assert.deepEqual(getStageResultStoryEventIds({ stageId, won: true }), []);
-    assert.deepEqual(getStageResultStoryEventIds({ stageId, won: false }), []);
-    assert.deepEqual(
-      advanceBattleStoryFlow({
-        state: createBattleStoryFlowState(stageId),
-        snapshot: { battleStarted: true, enemyKindsSeen: ["grappler", "ooze", "sprinter", "gate-eater"] },
-      }).eventIds,
-      [],
-    );
+test("first attempts, interrupted multi-scene entries, retries, and replays never repeat introductions", () => {
+  assert.deepEqual(getStageEntryStoryEventIds({ stageId: STAGE_1 }), ["stage-nishijin-pre-v070"]);
+  assert.deepEqual(getStageEntryStoryEventIds({ stageId: STAGE_4 }), [
+    "station-briefing-v070",
+    "stage-station-gate-pre-v070",
+  ]);
+  assert.deepEqual(getStageEntryStoryEventIds({
+    stageId: STAGE_4,
+    readStoryEventIds: ["station-briefing-v070"],
+  }), ["stage-station-gate-pre-v070"]);
+  assert.deepEqual(getStageEntryStoryEventIds({
+    stageId: STAGE_4,
+    readStoryEventIds: ["station-briefing-v070", "stage-station-gate-pre-v070"],
+  }), ["stage-station-gate-retry-v070"]);
+  assert.equal(getStageEntryStoryEventId({ stageId: STAGE_1, completedStageIds: [STAGE_1] }), "stage-nishijin-replay-v070");
+  assert.equal(getStageEntryStoryEventId({ stageId: STAGE_3, readStoryEventIds: ["stage-takuya-defeat-after-boss-v070"] }), "stage-takuya-retry-v070");
+  for (const [stageId, prefix] of [
+    [STAGE_1, "stage-nishijin"],
+    [STAGE_2, "stage-sawara"],
+    [STAGE_3, "stage-takuya"],
+    [STAGE_4, "stage-station-gate"],
+    [STAGE_5, "stage-station-platform"],
+    [STAGE_6, "stage-station-tunnel"],
+  ]) {
+    assert.equal(getStageReplayStoryEventId(stageId), `${prefix}-replay-v070`);
+    assert.equal(getStageRetryStoryEventId(stageId), `${prefix}-retry-v070`);
+    assert.equal(getStageNextAttemptStoryEventId({ stageId, previousWon: false }), `${prefix}-retry-v070`);
+    assert.equal(getStageNextAttemptStoryEventId({ stageId, previousWon: true }), `${prefix}-replay-v070`);
   }
-  assert.equal(listStoryFlowEventIds().includes(null), false);
 });
 
-test("first attempts, retries, and cleared-stage replays never reuse first-meeting scenes", () => {
-  assert.equal(getStageEntryStoryEventId({ stageId: STAGE_1 }), "stage-nishijin-pre");
-  assert.equal(getStageEntryStoryEventId({ stageId: STAGE_1, completedStageIds: [STAGE_1] }), "stage-nishijin-replay");
-  assert.equal(getStageEntryStoryEventId({ stageId: STAGE_1, readStoryEventIds: ["stage-nishijin-pre"] }), "stage-nishijin-retry");
-  assert.equal(getStageEntryStoryEventId({ stageId: STAGE_2, readStoryEventIds: ["stage-sawara-pre"] }), "stage-sawara-retry");
-  assert.equal(getStageEntryStoryEventId({ stageId: STAGE_3, readStoryEventIds: ["stage-takuya-pre"] }), "stage-takuya-retry");
-  assert.equal(getStageEntryStoryEventId({ stageId: STAGE_1, readStoryEventIds: ["stage-nishijin-defeat"] }), "stage-nishijin-retry");
-  assert.equal(getStageEntryStoryEventId({ stageId: STAGE_3, readStoryEventIds: ["stage-takuya-defeat-after-boss"] }), "stage-takuya-retry");
-  assert.equal(getStageReplayStoryEventId(STAGE_2), "stage-sawara-replay");
-  assert.equal(getStageRetryStoryEventId(STAGE_1), "stage-nishijin-retry");
-  assert.equal(getStageRetryStoryEventId(STAGE_2), "stage-sawara-retry");
-  assert.equal(getStageRetryStoryEventId(STAGE_3), "stage-takuya-retry");
-  assert.equal(getStageNextAttemptStoryEventId({ stageId: STAGE_1, previousWon: false }), "stage-nishijin-retry");
-  assert.equal(getStageNextAttemptStoryEventId({ stageId: STAGE_1, previousWon: true }), "stage-nishijin-replay");
-  assert.equal(getStageNextAttemptStoryEventId({ stageId: STAGE_2, previousWon: false }), "stage-sawara-retry");
-  assert.equal(getStageNextAttemptStoryEventId({ stageId: STAGE_2, previousWon: true }), "stage-sawara-replay");
-  assert.equal(getStageNextAttemptStoryEventId({ stageId: STAGE_3, previousWon: false }), "stage-takuya-retry");
-  assert.equal(getStageNextAttemptStoryEventId({ stageId: STAGE_3, previousWon: true }), "stage-takuya-replay");
-});
-
-test("stage-one state events fire from battle state and only once", () => {
+test("battle state emits only the compact canonical alerts and never repeats one", () => {
   let state = createBattleStoryFlowState(STAGE_1);
-  const first = advanceBattleStoryFlow({
-    state,
-    snapshot: { battleStarted: true, enemyKindsSeen: ["runner"], signalIds: ["distress-voice"] },
-  });
-  assert.deepEqual(first.eventIds, [
-    "stage-nishijin-battle-start",
-    "stage-nishijin-battle-runner",
-    "stage-nishijin-battle-distress-voice",
-  ]);
-  state = first.state;
+  const quiet = advanceBattleStoryFlow({ state, snapshot: { battleStarted: true, enemyKindsSeen: ["runner"] } });
+  assert.deepEqual(quiet.eventIds, []);
+  const exposed = advanceBattleStoryFlow({ state: quiet.state, snapshot: { enemyBaseExposed: true } });
+  assert.deepEqual(exposed.eventIds, ["stage-nishijin-alert-v070"]);
+  assert.deepEqual(advanceBattleStoryFlow({ state: exposed.state, snapshot: { enemyBaseExposed: true } }).eventIds, []);
 
-  const second = advanceBattleStoryFlow({
-    state,
-    snapshot: {
-      battleStarted: true,
-      enemyKindsSeen: ["runner", "spitter"],
-      signalIds: ["distress-voice"],
-      enemyBaseExposed: true,
-    },
-  });
-  assert.deepEqual(second.eventIds, ["stage-nishijin-battle-spitter", "stage-nishijin-battle-base-exposed"]);
-  const duplicate = advanceBattleStoryFlow({ state: second.state, snapshot: { battleStarted: true, enemyBaseExposed: true } });
-  assert.deepEqual(duplicate.eventIds, []);
-});
-
-test("the timed-defense milestones remain ordered and can catch up deterministically", () => {
-  const before = getTriggeredBattleStoryEventIds({
+  assert.deepEqual(getTriggeredBattleStoryEventIds({
     stageId: STAGE_2,
-    snapshot: { battleStarted: true, elapsedSeconds: 89, convoyProgress: 89 / 180 },
-  });
-  assert.deepEqual(before, ["stage-sawara-battle-start", "stage-sawara-battle-30", "stage-sawara-battle-60"]);
-
-  const after = getTriggeredBattleStoryEventIds({
-    stageId: STAGE_2,
-    snapshot: { battleStarted: true, elapsedSeconds: 180, convoyProgress: 1, convoyEvacuated: true },
-    firedEventIds: before,
-  });
-  assert.deepEqual(after, [
-    "stage-sawara-battle-90",
-    "stage-sawara-battle-120",
-    "stage-sawara-battle-150",
-    "stage-sawara-battle-success",
-  ]);
-});
-
-test("timed-defense dialogue cannot fire from elapsed time or convoy progress alone", () => {
-  const elapsedOnly = getTriggeredBattleStoryEventIds({
-    stageId: STAGE_2,
-    snapshot: { elapsedSeconds: 120, convoyProgress: 0 },
-  });
-  const progressOnly = getTriggeredBattleStoryEventIds({
-    stageId: STAGE_2,
-    snapshot: { elapsedSeconds: 0, convoyProgress: 1 },
-  });
-  const bothAtThirty = getTriggeredBattleStoryEventIds({
-    stageId: STAGE_2,
-    snapshot: { elapsedSeconds: 30, convoyProgress: 1 / 6 },
-  });
-
-  assert.deepEqual(elapsedOnly, []);
-  assert.deepEqual(progressOnly, []);
-  assert.deepEqual(bothAtThirty, ["stage-sawara-battle-30"]);
-});
-
-test("TAKUYA events use explicit signals, enemy first sight, boss HP, and base state", () => {
-  const eventIds = getTriggeredBattleStoryEventIds({
+    snapshot: { elapsedSeconds: 180, convoyProgress: 1, convoyEvacuated: true },
+  }), ["stage-sawara-alert-v070"]);
+  assert.deepEqual(getTriggeredBattleStoryEventIds({
     stageId: STAGE_3,
-    snapshot: {
-      battleStarted: true,
-      enemyKindsSeen: ["crusher"],
-      signalIds: ["mimic-voice", "takuya-warning", "takuya-mimic-child"],
-      bossHp: 200,
-      bossMaxHp: 1000,
-      bossDefeated: false,
-    },
-  });
-  assert.deepEqual(eventIds, [
-    "stage-takuya-battle-start",
-    "stage-takuya-battle-mimic",
-    "stage-takuya-battle-heavy",
-    "stage-takuya-warning",
-    "stage-takuya-phase-1",
-    "stage-takuya-mimic-child",
-    "stage-takuya-final",
-  ]);
-  assert.equal(battleStoryTriggerMatches({ type: "boss-defeated-base-remains" }, {
-    bossDefeated: true,
-    enemyBaseDestroyed: false,
-  }), true);
+    snapshot: { bossWarning: true, bossHp: 200, bossMaxHp: 1000, bossDefeated: false },
+  }), ["stage-takuya-warning-v070", "stage-takuya-final-v070"]);
+  assert.deepEqual(getTriggeredBattleStoryEventIds({
+    stageId: STAGE_4,
+    snapshot: { enemyKindsSeen: ["grappler"] },
+  }), ["stage-station-gate-alert-v070"]);
+  assert.deepEqual(getTriggeredBattleStoryEventIds({
+    stageId: STAGE_5,
+    snapshot: { enemyKindsSeen: ["ooze"] },
+  }), ["stage-station-platform-alert-v070"]);
+  assert.deepEqual(getTriggeredBattleStoryEventIds({
+    stageId: STAGE_6,
+    snapshot: { powerActivated: 1, missionCompleted: true },
+  }), ["stage-station-tunnel-power-v070", "stage-station-escape-v070"]);
+  assert.equal(battleStoryTriggerMatches({ type: "power-at-least", count: 2 }, { powerActivated: 1 }), false);
+  assert.equal(battleStoryTriggerMatches({ type: "mission-complete" }, { missionCompleted: true }), true);
+  assert.equal(battleStoryTriggerMatches({ type: "mission-complete" }, { sealed: true }), false);
 });
 
-test("a lethal TAKUYA burst catches up HP dialogue before the surviving base event", () => {
-  const started = advanceBattleStoryFlow({
-    state: createBattleStoryFlowState(STAGE_3),
-    snapshot: { battleStarted: true, bossHp: 800, bossMaxHp: 1000, bossDefeated: false },
-  });
-  const lethal = advanceBattleStoryFlow({
-    state: started.state,
-    snapshot: {
-      battleStarted: true,
-      signalIds: ["takuya-mimic-child"],
-      bossHp: 0,
-      bossMaxHp: 1000,
-      bossDefeated: false,
-    },
-  });
-  assert.deepEqual(lethal.eventIds, [
-    "stage-takuya-phase-1",
-    "stage-takuya-mimic-child",
-    "stage-takuya-final",
-  ]);
-  const remains = advanceBattleStoryFlow({
-    state: lethal.state,
-    snapshot: { bossDefeated: true, enemyBaseDestroyed: false },
-  });
-  assert.deepEqual(remains.eventIds, ["stage-takuya-base-remains"]);
-});
-
-test("result routing distinguishes ordinary defeat, post-boss defeat, victory, and ending", () => {
-  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_1, won: true }), ["stage-nishijin-post"]);
-  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_1, won: true, completedStageIds: [STAGE_1] }), []);
-  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_2, won: false }), ["stage-sawara-defeat"]);
-  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_3, won: false }), ["stage-takuya-defeat"]);
+test("result routing covers Stage 1-6, special TAKUYA defeat, and the ending", () => {
+  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_1, won: true }), ["stage-nishijin-post-v070"]);
+  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_2, won: false }), ["stage-sawara-defeat-v070"]);
+  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_3, won: true }), ["stage-takuya-post-v070"]);
   assert.deepEqual(getStageResultStoryEventIds({
     stageId: STAGE_3,
     won: false,
     bossDefeated: true,
     enemyBaseDestroyed: false,
-  }), ["stage-takuya-defeat-after-boss"]);
-  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_3, won: true }), ["stage-takuya-post"]);
-  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_3, won: true, completedStageIds: [STAGE_3] }), []);
+  }), ["stage-takuya-defeat-after-boss-v070"]);
+  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_4, won: true }), ["stage-station-gate-post-v070"]);
+  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_5, won: true }), ["stage-station-platform-post-v070"]);
+  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_6, won: true }), [
+    "stage-station-tunnel-post-v070",
+    "chapter-ending-v070",
+  ]);
+  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_6, won: false }), ["stage-station-tunnel-defeat-v070"]);
+  assert.deepEqual(getStageResultStoryEventIds({ stageId: STAGE_6, won: true, completedStageIds: [STAGE_6] }), []);
   assert.equal(deriveBattleDefeatReason({ stageId: STAGE_3, bossDefeated: true }), BATTLE_DEFEAT_REASON_IDS.TAKUYA_BASE_REMAINS);
-  assert.equal(getStageDefeatStoryEventId({ stageId: STAGE_3, defeatReason: BATTLE_DEFEAT_REASON_IDS.TAKUYA_BASE_REMAINS }), "stage-takuya-defeat-after-boss");
-  assert.equal(getStageDefeatStoryEventId({ stageId: STAGE_1, defeatReason: BATTLE_DEFEAT_REASON_IDS.TAKUYA_BASE_REMAINS }), "stage-nishijin-defeat");
+  assert.equal(getStageDefeatStoryEventId({
+    stageId: STAGE_3,
+    defeatReason: BATTLE_DEFEAT_REASON_IDS.TAKUYA_BASE_REMAINS,
+  }), "stage-takuya-defeat-after-boss-v070");
 });
 
-test("automatic skipping is allowed only for an event already marked read", () => {
+test("automatic skip applies only to read events while explicit replay remains a UI override", () => {
   assert.equal(shouldAutoSkipStoryEvent({
-    eventId: "stage-nishijin-pre",
+    eventId: "stage-nishijin-pre-v070",
     readStoryEventIds: [],
     autoSkipReadStory: true,
   }), false);
   assert.equal(shouldAutoSkipStoryEvent({
-    eventId: "stage-nishijin-pre",
-    readStoryEventIds: ["stage-nishijin-pre"],
+    eventId: "stage-nishijin-pre-v070",
+    readStoryEventIds: ["stage-nishijin-pre-v070"],
     autoSkipReadStory: false,
   }), false);
   assert.equal(shouldAutoSkipStoryEvent({
-    eventId: "stage-nishijin-pre",
-    readStoryEventIds: ["stage-nishijin-pre"],
+    eventId: "stage-nishijin-pre-v070",
+    readStoryEventIds: ["stage-nishijin-pre-v070"],
     autoSkipReadStory: true,
   }), true);
 });
 
-test("battle event presentation supports first-time, compact, and all without suppressing mandatory alerts", () => {
+test("battle event presentation shows unread authored lines and keeps read mandatory alerts visible", () => {
   assert.deepEqual(BATTLE_EVENT_MODES, ["first-time", "compact", "all"]);
   assert.deepEqual(MANDATORY_BATTLE_ALERT_IDS, [
-    "stage-nishijin-battle-base-exposed",
-    "stage-takuya-warning",
-    "stage-takuya-base-remains",
+    "stage-nishijin-alert-v070",
+    "stage-takuya-warning-v070",
+    "stage-takuya-base-remains-v070",
   ]);
-
-  const ordinary = "stage-nishijin-battle-runner";
-  const mandatory = "stage-takuya-base-remains";
+  const ordinary = "stage-station-gate-alert-v070";
+  const mandatory = "stage-takuya-base-remains-v070";
   assert.deepEqual(resolveBattleStoryPresentation({
     eventIds: [ordinary, mandatory, ordinary],
     readStoryEventIds: [],
     mode: "first-time",
   }), {
-    fullEventIds: [ordinary],
-    briefEventIds: [mandatory],
+    fullEventIds: [ordinary, mandatory],
+    briefEventIds: [],
+    skippedEventIds: [],
+  });
+  assert.deepEqual(resolveBattleStoryPresentation({
+    eventIds: [ordinary, mandatory],
+    readStoryEventIds: [],
+    mode: "compact",
+  }), {
+    fullEventIds: [ordinary, mandatory],
+    briefEventIds: [],
+    skippedEventIds: [],
+  });
+  assert.deepEqual(resolveBattleStoryPresentation({
+    eventIds: [ordinary, mandatory],
+    readStoryEventIds: [ordinary, mandatory],
+    mode: "compact",
+  }), {
+    fullEventIds: [],
+    briefEventIds: [ordinary, mandatory],
     skippedEventIds: [],
   });
   assert.deepEqual(resolveBattleStoryPresentation({
@@ -285,85 +216,47 @@ test("battle event presentation supports first-time, compact, and all without su
   assert.deepEqual(resolveBattleStoryPresentation({
     eventIds: [ordinary, mandatory],
     readStoryEventIds: [ordinary, mandatory],
-    mode: "compact",
-  }), {
-    fullEventIds: [],
-    briefEventIds: [ordinary, mandatory],
-    skippedEventIds: [],
-  });
-  assert.deepEqual(resolveBattleStoryPresentation({
-    eventIds: [ordinary, mandatory],
-    readStoryEventIds: [ordinary, mandatory],
     mode: "all",
   }), {
-    fullEventIds: [ordinary],
-    briefEventIds: [mandatory],
+    fullEventIds: [ordinary, mandatory],
+    briefEventIds: [],
     skippedEventIds: [],
   });
-  assert.equal(battleStoryBriefLabel(mandatory), "TAKUYA撃破　感染拠点を破壊せよ");
-  assert.equal(battleStoryBriefLabel(ordinary), "通信更新");
+  assert.equal(battleStoryBriefLabel(mandatory), "TAKUYA制圧　残存敵を掃討");
 });
 
-test("normal completion, manual skip, and read auto-skip share one deterministic transition", () => {
-  const input = {
-    eventId: "prologue-opening",
-    eventQueue: ["prologue-operations-room"],
+test("the completion reducer preserves queues, destinations, and duplicate protection", () => {
+  const first = resolveStoryEventCompletion({
+    eventId: "prologue-kumaya-v070",
+    eventQueue: ["prologue-collapse-montage-v070"],
     destination: "map",
-    completionLocked: false,
-  };
-  const normal = resolveStoryEventCompletion(input);
-  const manualSkip = resolveStoryEventCompletion(input);
-  const automaticSkip = resolveStoryEventCompletion(input);
-  assert.deepEqual(manualSkip, normal);
-  assert.deepEqual(automaticSkip, normal);
-  assert.deepEqual(normal, {
+  });
+  assert.deepEqual(first, {
     applied: true,
-    readEventId: "prologue-opening",
-    nextEventId: "prologue-operations-room",
+    readEventId: "prologue-kumaya-v070",
+    nextEventId: "prologue-collapse-montage-v070",
     remainingEventIds: [],
     destination: null,
     completionLocked: false,
   });
-
   const terminal = resolveStoryEventCompletion({
-    eventId: normal.nextEventId,
-    eventQueue: normal.remainingEventIds,
+    eventId: first.nextEventId,
+    eventQueue: first.remainingEventIds,
     destination: "map",
-    completionLocked: normal.completionLocked,
   });
-  assert.equal(terminal.applied, true);
   assert.equal(terminal.destination, "map");
   assert.equal(terminal.completionLocked, true);
-  const duplicate = resolveStoryEventCompletion({
-    eventId: null,
-    eventQueue: terminal.remainingEventIds,
-    destination: "map",
-    completionLocked: terminal.completionLocked,
-  });
-  assert.equal(duplicate.applied, false);
-  assert.equal(duplicate.destination, null);
-});
-
-test("all story completion destinations are preserved by the single completion reducer", () => {
+  assert.equal(resolveStoryEventCompletion({ completionLocked: true }).applied, false);
   for (const destination of ["battle", "battle-resume", "result", "map"]) {
-    const completion = resolveStoryEventCompletion({ eventId: "stage-nishijin-pre", destination });
-    assert.equal(completion.applied, true);
-    assert.equal(completion.readEventId, "stage-nishijin-pre");
-    assert.equal(completion.destination, destination);
-    assert.equal(completion.completionLocked, true);
+    assert.equal(resolveStoryEventCompletion({ eventId: "stage-nishijin-pre-v070", destination }).destination, destination);
   }
 });
 
-test("normal completion, manual skip, and auto-skip produce identical battle rewards and unlocks", () => {
+test("normal completion, manual skip, and auto-skip cannot change battle rewards", () => {
   const run = (mode) => {
     let save = createDefaultCampaignSave();
     if (mode === "auto-skip") save = updateStoryPlaybackSettings(save, { autoSkipReadStory: true });
-    const completion = resolveStoryEventCompletion({
-      eventId: "stage-nishijin-pre",
-      destination: "battle",
-    });
-    assert.equal(completion.applied, true);
-    assert.equal(completion.destination, "battle");
+    const completion = resolveStoryEventCompletion({ eventId: "stage-nishijin-pre-v070", destination: "battle" });
     save = markStoryEventRead(save, completion.readEventId);
     const resolved = resolveStageResult(save, {
       resultId: `same-result-${mode}`,
@@ -373,22 +266,11 @@ test("normal completion, manual skip, and auto-skip produce identical battle rew
       baseMaxHp: 100,
     });
     return {
-      result: {
-        stars: resolved.result.stars,
-        firstTimeStarReward: resolved.result.firstTimeStarReward,
-        replayReward: resolved.result.replayReward,
-        totalReward: resolved.result.totalReward,
-        newlyUnlockedStageIds: resolved.result.newlyUnlockedStageIds,
-        newlyUnlockedUnitIds: resolved.result.newlyUnlockedUnitIds,
-      },
-      progression: {
-        completedStageIds: resolved.save.completedStageIds,
-        bestStarsByStage: resolved.save.bestStarsByStage,
-        claimedStarRewardsByStage: resolved.save.claimedStarRewardsByStage,
-        supplies: resolved.save.supplies,
-        unlockedStageIds: resolved.save.unlockedStageIds,
-        unlockedUnitIds: resolved.save.unlockedUnitIds,
-      },
+      stars: resolved.result.stars,
+      rewards: resolved.result.totalReward,
+      completed: resolved.save.completedStageIds,
+      unlockedStages: resolved.save.unlockedStageIds,
+      unlockedUnits: resolved.save.unlockedUnitIds,
     };
   };
   const normal = run("normal");
@@ -396,17 +278,21 @@ test("normal completion, manual skip, and auto-skip produce identical battle rew
   assert.deepEqual(run("auto-skip"), normal);
 });
 
-test("the story UI routes line completion, manual skip, and auto-skip through completeOnce", async () => {
-  const source = await readFile(new URL("../app/CampaignScreens.tsx", import.meta.url), "utf8");
-  assert.match(source, /const completeOnce = useCallback\(\(\) => \{[\s\S]*completedRef\.current = true;[\s\S]*onEventComplete\(\)/);
-  assert.match(source, /window\.setTimeout\(completeOnce, 0\)/);
-  assert.match(source, /const advance = \(\) =>[\s\S]*: completeOnce\(\)/);
-  assert.match(source, /<button onClick=\{completeOnce\}>この会話だけスキップ<\/button>/);
-  assert.match(source, /onSetAutoSkipReadStory\(true\); completeOnce\(\)/);
-  assert.match(source, /className="cancel" onClick=\{\(\) => setSkipOpen\(false\)\}/);
+test("story UI has fixed-summary prologue skip and force-replay bypass", async () => {
+  const [screens, game] = await Promise.all([
+    readFile(new URL("../app/CampaignScreens.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(screens, /forceStoryReplay \|\| completedRef\.current/);
+  assert.match(screens, /const skipOnce = useCallback/);
+  assert.match(screens, /プロローグでは固定要約を表示して四十三日後へ進みます/);
+  assert.match(screens, /プロローグを回想/);
+  assert.match(game, /getPrologueSkipEventIds/);
+  assert.match(game, /openEvents\(getPrologueReplayEventIds\(\), "map", \{ forceReplay: true \}\)/);
+  assert.match(game, /getStageEntryStoryEventIds/);
 });
 
-test("unknown stages are rejected instead of silently routing to the wrong story", () => {
+test("unknown stages are rejected instead of silently routing to another story", () => {
   assert.throws(() => createBattleStoryFlowState("missing-stage"), /Unknown campaign story stage/);
-  assert.throws(() => getStageEntryStoryEventId({ stageId: "missing-stage" }), /Unknown campaign story stage/);
+  assert.throws(() => getStageEntryStoryEventIds({ stageId: "missing-stage" }), /Unknown campaign story stage/);
 });

@@ -187,8 +187,8 @@ export const CAMPAIGN_STAGES = deepFreeze([
     baseReward: nishijinBaseReward,
     firstTimeStarRewards: firstStarRewards(nishijinBaseReward),
     replayRewardMultipliers: DEFAULT_REPLAY_REWARD_MULTIPLIERS,
-    preBattleEventId: "stage-nishijin-pre",
-    postBattleEventId: "stage-nishijin-post",
+    preBattleEventId: "stage-nishijin-pre-v070",
+    postBattleEventId: "stage-nishijin-post-v070",
     nextUnlocks: {
       stageIds: [CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE],
       unitIds: [CAMPAIGN_UNIT_IDS.CRAZY_KING],
@@ -229,8 +229,8 @@ export const CAMPAIGN_STAGES = deepFreeze([
     baseReward: sawaraBaseReward,
     firstTimeStarRewards: firstStarRewards(sawaraBaseReward),
     replayRewardMultipliers: DEFAULT_REPLAY_REWARD_MULTIPLIERS,
-    preBattleEventId: "stage-sawara-pre",
-    postBattleEventId: "stage-sawara-post",
+    preBattleEventId: "stage-sawara-pre-v070",
+    postBattleEventId: "stage-sawara-post-v070",
     nextUnlocks: {
       stageIds: [CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE],
       unitIds: [],
@@ -282,8 +282,8 @@ export const CAMPAIGN_STAGES = deepFreeze([
     baseReward: takuyaBaseReward,
     firstTimeStarRewards: firstStarRewards(takuyaBaseReward),
     replayRewardMultipliers: DEFAULT_REPLAY_REWARD_MULTIPLIERS,
-    preBattleEventId: "stage-takuya-pre",
-    postBattleEventId: "stage-takuya-post",
+    preBattleEventId: "stage-takuya-pre-v070",
+    postBattleEventId: "stage-takuya-post-v070",
     nextUnlocks: {
       stageIds: [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE],
       unitIds: [],
