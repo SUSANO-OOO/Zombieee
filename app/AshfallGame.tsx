@@ -4,8 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import {
   RANDOM_BATTLE_BARK_TRIGGER_IDS,
   advanceBattleBarkRuntime,
+  clearNonScriptedBattleBarks,
   createBattleBarkRuntime,
   queueBattleBark,
+  queueScriptedBattleBarkCue,
 } from "./battleBarks.js";
 import { decideAllyIntent } from "./allyAi.js";
 import {
@@ -20,12 +22,19 @@ import { BattleBarkAuditScreen } from "./BattleBarkAuditScreen";
 import { SpriteAuditScreen } from "./SpriteAuditScreen";
 import { createBattleResultId, createBattleSessionTransition, resolvePauseAction } from "./battleSession.js";
 import {
+  CAMPAIGN_SNAPSHOT_KINDS,
   campaignStorageFor,
+  clearCampaignSaveEverywhere,
+  createCampaignManualExport,
+  createCorruptCampaignRawExport,
   indexedDbFor,
-  readCampaignBackup,
-  readCampaignSave,
+  parseCampaignManualImport,
+  preflightUnreadableCampaignRecovery,
+  reconcileCampaignStorage,
   writeCampaignBackup,
+  writeCampaignRecoverySnapshot,
   writeCampaignSave,
+  writeCampaignSaveReplicas,
 } from "./campaignStorage.js";
 import { claimDefeatResolution } from "./defeatLedger.js";
 import { CampaignScreens, type CampaignResultView, type CampaignScreen, type StageScreenView, type SupplyScreenView, type UnitScreenView } from "./CampaignScreens";
@@ -33,30 +42,48 @@ import {
   CAMPAIGN_STAGE_BY_ID,
   CAMPAIGN_STAGE_IDS,
   CAMPAIGN_STAGES,
+  CAMPAIGN_RECRUITMENT_COSTS,
   CAMPAIGN_UNITS,
   INITIAL_STAGE_ID,
   createDefaultCampaignSave,
-  deserializeCampaignSave,
+  getSelectedFormationCombatKinds,
+  getSelectedFormationUnitIds,
+  inspectCampaignSaveCandidate,
+  isUnitDiscovered,
+  isUnitOwned,
+  isUnitRecruitable,
   isStageUnlocked,
-  isUnitUnlocked,
   markCampaignStarted,
   markStoryEventRead,
+  recruitCampaignUnit,
+  reviseCampaignSave,
   resolveStageResult,
+  selectFormationPreset,
   selectCampaignStage,
+  setFormationPresetUnits,
   serializeCampaignSave,
+  updateCampaignSettings,
   updateStoryPlaybackSettings,
 } from "./campaign.js";
 import {
   advanceBattleStoryFlow,
   createBattleStoryFlowState,
   getPrologueOpeningEventIds,
-  getStageEntryStoryEventId,
+  getPrologueReplayEventIds,
+  getPrologueSkipEventIds,
+  getStageEntryStoryEventIds,
   getStageNextAttemptStoryEventId,
   getStageResultStoryEventIds,
-  battleStoryBriefLabel,
-  resolveBattleStoryPresentation,
+  isPrologueOpeningEventId,
   resolveStoryEventCompletion,
 } from "./storyFlow.js";
+import {
+  STORY_BATTLE_EVENT_IDS,
+  STORY_BATTLE_TRIGGER_IDS,
+  createStoryBattleBarkState,
+  resolveStoryBattleBarkCue,
+  resolveStoryBattleBarkPresentation,
+} from "./storyBattleBarks.js";
 import { battleOutcomeFor, createBattleDefinition, objectiveForBattle, phaseBannerForBattle, phaseForBattle } from "./battleDefinitions.js";
 import {
   COMBAT_ROLE_RULES,
@@ -80,13 +107,27 @@ import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
 import { PORTRAIT_ART, fitSpriteBattleDisplaySize, spriteFrameFor, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST, stageObjectsFor } from "./stageObjectManifest.js";
 import {
+  STAGE_VIEWPORT_IDS,
+  clampToWalkable,
+  combatReadyGroundingAudit,
+  resolveStageViewportProfile,
+  stageDebugPrimitives,
+  stageGeometryFor,
+} from "./stageGeometry.js";
+import { stageResultFacts } from "./stageResultFacts.js";
+import {
   BATTLE_AUDIO_LOOP_CONTRACTS,
   LEGACY_SFX_CUE_MAP,
   PRODUCTION_AUDIO_MANIFEST,
+  STATION_AUDIO_CUE_IDS,
+  STORY_AUDIO_MIX,
+  TAKUYA_ENTRANCE_AUDIO,
   enemyVoiceCue,
   humanVoiceCueForUnit,
   sceneIdForScreen,
+  sceneIdForStoryEvent,
   stopBattleAudioLoops,
+  storyWarningCueForEvent,
   unitAudioCueFor,
   weaponCueForUnit,
 } from "./productionAudio.js";
@@ -95,6 +136,7 @@ import {
   BARRICADE_MAX_HP,
   BATTLEFIELD_SUPPLY_DEFS,
   CAMERA_SHAKE_EVENTS,
+  COMMAND_INITIAL,
   COMMAND_MAX,
   ENEMY_GATE_SPAWN,
   ENEMY_BASE_COLLAPSE_SECONDS,
@@ -103,7 +145,6 @@ import {
   PREP_SECONDS,
   RENDER_ARRAY_LIMITS,
   SUPPORT_GAUGE_MAX,
-  TACTIC_MODES,
   UNIT_CARDS,
   WORLD_GEOMETRY,
   advanceAttackCooldown,
@@ -165,20 +206,75 @@ import {
   selectAreaEffectsForRender,
   structureDamageMultiplier,
   supportGaugeReward,
-  tacticTargetBias,
   triggerCameraShake,
 } from "./gameRules.js";
+import {
+  UNIT_ROLE_TUNING,
+  advanceCrazyKingMomentum,
+  advanceNaoProtection,
+  advanceRaiderSuppression,
+  applyRaiderShots,
+  applyRaiderSuppression,
+  coolRaiderHeat,
+  crazyKingAttackInterval,
+  createMonkeyTrap,
+  naoDamageAfterProtection,
+  raiderCanFire,
+  resolveGantetsuInterception,
+  resolveGantetsuSteadfastDamage,
+  resolveNaoHealing,
+  resolveTataraStrikeDamage,
+  selectNaoHealTarget,
+  selectRaiderLineTargets,
+  tataraTargetSpecialty,
+  triggerMonkeyTrap,
+} from "./unitRoleMechanics.js";
+import {
+  STATION_ENEMY_TUNING,
+  advanceKaramitePull,
+  advanceKaramiteWindup,
+  advanceLeakMudHazards,
+  advanceLeakMudWindup,
+  advanceSoukiBurst,
+  advanceTicketGateEaterCharge,
+  beginKaramiteWindup,
+  beginLeakMudWindup,
+  beginSoukiBurst,
+  beginTicketGateEaterCharge,
+  createKaramiteRuntime,
+  createLeakMudRuntime,
+  createSoukiRuntime,
+  createTicketGateEaterRuntime,
+  resolveKaramiteBind,
+  resolveLeakMudZone,
+  selectKaramiteTarget,
+  ticketGateEaterDamageProfile,
+} from "./stationEnemyMechanics.js";
+import {
+  STATION_MISSION_TYPES,
+  advanceStationMissionRuntime,
+  createStationMissionRuntime,
+  currentPowerNode,
+  escortCartX,
+  stationHumanMoveSpeed,
+} from "./stationStageMechanics.js";
+import {
+  createResearchContainerRuntime,
+  enforceGateEaterContainmentInvariant,
+  relocateStationHazards,
+  resolveContainmentStrike,
+  stationSpatialSnapshot,
+} from "./stationSpatialMechanics.js";
 
 const W = 960;
 const H = 540;
 
 type Lane = 0 | 1 | 2;
-type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga";
-type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned";
+type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer";
+type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater";
 type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "danger" | "boss";
-type TacticMode = "defend" | "balanced" | "assault";
-type QaMode = "endgame" | "roles" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
+type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
 type EventDestination = "map" | "battle" | "battle-resume" | "result";
 type PauseAction = "restart" | "loadout" | "withdraw";
@@ -189,6 +285,7 @@ const MUSTER_X = WORLD_GEOMETRY.musterX;
 const MUSTER_LANE = 2 as Lane;
 type LaneCenters = readonly [number, number, number];
 let activeLaneCenters = LANE_Y as unknown as LaneCenters;
+let activeStageViewportId = STAGE_VIEWPORT_IDS.STANDARD;
 
 function activeLaneForY(y: number, fallback: Lane = 1) {
   let closest = fallback;
@@ -202,6 +299,43 @@ function activeMusterY() {
   return activeLaneCenters[MUSTER_LANE];
 }
 const LANE_NAMES_JA = ["上", "中央", "下"] as const;
+
+function stationObjectiveDestination(g: Game, fighter: Fighter) {
+  if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
+    const lane = ([0, 1, 2].includes(Number(g.definition.missionConfig.cartLane))
+      ? Number(g.definition.missionConfig.cartLane)
+      : 1) as Lane;
+    return {
+      x: escortCartX(g.stageMission, g.definition.missionConfig) - 18 - (fighter.id % 3) * 18,
+      lane,
+    };
+  }
+  if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) return null;
+  if (g.stageMission.sealed) {
+    return {
+      x: Number(g.definition.missionConfig.returnX ?? MUSTER_X),
+      lane: fighter.anchorLane ?? fighter.lane,
+    };
+  }
+  if (g.stageMission.gateEaterContained && g.stageMission.researchContainerContained) return null;
+  const powerNode = currentPowerNode(g.stageMission, g.definition.missionConfig);
+  if (powerNode) {
+    return {
+      x: powerNode.x - 12 - (fighter.id % 3) * 15,
+      lane: powerNode.lane as Lane,
+    };
+  }
+  const gateEater = g.fighters.find((candidate) => candidate.kind === "gate-eater"
+    && candidate.hp > 0
+    && candidate.contained !== true);
+  const containmentX = gateEater?.x
+    ?? g.researchContainer?.x
+    ?? Number(g.definition.missionConfig.sealDoorX ?? 867) - 90;
+  return {
+    x: Math.max(MUSTER_X, containmentX - Math.max(28, fighter.range * .72)),
+    lane: (gateEater?.lane ?? g.researchContainer?.lane ?? 1) as Lane,
+  };
+}
 
 type UnitCard = {
   kind: UnitKind;
@@ -221,7 +355,7 @@ type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolea
 type BattleDefinition = {
   stageId: string;
   displayName: string;
-  missionType: "assault" | "timed-defense" | "boss-assault";
+  missionType: "assault" | "timed-defense" | "boss-assault" | "escort" | "sequential-seal";
   prepSeconds: number;
   baseMaxHp: number;
   enemyBaseMaxHp: number;
@@ -232,34 +366,19 @@ type BattleDefinition = {
   defenseEndAt: number | null;
   phaseSchedule: { at: number; phase: 1 | 2 | 3; label: string; objective: string }[] | null;
   objective: string;
+  missionConfig: Record<string, unknown>;
+  rescueCount: number;
 };
-type CampaignSave = {
-  schemaVersion: number;
-  campaignStarted: boolean;
-  storyScriptVersion: string;
-  readStoryEventIds: string[];
-  autoSkipReadStory: boolean;
-  processedResultIds: string[];
-  completedStageIds: string[];
-  bestStarsByStage: Record<string, number>;
-  claimedStarRewardsByStage: Record<string, number[]>;
-  supplies: number;
-  unlockedStageIds: string[];
-  unlockedUnitIds: string[];
-  lastSelectedStageId: string;
-  settings: {
-    bgmEnabled: boolean; sfxEnabled: boolean; bgmVolume: number; sfxVolume: number; reducedMotion: boolean;
-    battleEventMode: "first-time" | "compact" | "all";
-  };
-};
+type CampaignSave = ReturnType<typeof createDefaultCampaignSave>;
 type CampaignStageData = {
-  id: string; displayName: string; objective: string; missionType: "assault" | "timed-defense" | "boss-assault";
+  id: string; displayName: string; objective: string; missionType: BattleDefinition["missionType"];
   baseReward: number; firstTimeStarRewards: Record<number, number>; mapPosition: { x: number; y: number };
 };
 type CampaignUnitData = {
   id: string; combatKind: UnitKind; displayName: string; roleName: string; description: string;
   roleIcon: string; weaponName: string; attackMode: string; rangeBand: string; primaryTarget: string; deploymentHint: string;
-  unlock: { type: "initial" } | { type: "stage-clear"; stageId: string };
+  recruitmentCostCaps?: number;
+  unlock: { type: string; stageId?: string; stageNumber?: number; costCaps?: number };
 };
 type EnemySpawnEntry = {
   entryId: number; kind: string; lane: Lane; wave: number; order: number; delay: number;
@@ -340,6 +459,7 @@ type Fighter = {
   laneSpeed: number;
   spawnGrace: number;
   combatReady: boolean;
+  contained: boolean;
   gateEntering: boolean;
   gateEntrySpeed: number;
   combatReadyX: number;
@@ -352,8 +472,85 @@ type Fighter = {
   abilityCooldown: number;
   abilityWindup: number;
   attackSequence: number;
+  damageReductionRemaining: number;
+  damageReductionMultiplier: number;
+  healFocusTargetId: number | null;
+  healFocusRemaining: number;
+  comboHits: number;
+  comboWindow: number;
+  weaponHeat: number;
+  overheated: boolean;
+  suppressionStacks: number;
+  suppressedRemaining: number;
+  suppressionMultiplier: number;
+  guardStandRemaining: number;
+  guardStandAvailable: boolean;
+  engineerTrapReady: boolean;
+  engineerTrapX: number;
+  engineerTrapLane: Lane | null;
+  engineerTrapCooldown: number;
+  armorBreakStacks: number;
+  armorBrokenRemaining: number;
   burning?: boolean;
   slowMultiplier?: number;
+  stationAbility: StationAbilityRuntime;
+};
+type StationAbilityRuntime = {
+  phase: string;
+  remainingSeconds: number;
+  targetId?: string | null;
+  lane?: Lane | null;
+  lockedLane?: Lane | null;
+  zoneId?: string | number | null;
+  ownerId?: string | number | null;
+  ownerSide?: "human" | "zombie" | null;
+  centerX?: number | null;
+  centerY?: number | null;
+  targetX?: number | null;
+  direction?: number;
+};
+type StationHazard = {
+  id: string | number | null;
+  ownerId: string | number | null;
+  ownerSide: "human" | "zombie" | null;
+  lane: Lane;
+  centerX: number;
+  centerY: number;
+  radiusX: number;
+  radiusY: number;
+  remainingSeconds: number;
+  tickAccumulator: number;
+  active: boolean;
+};
+type ResearchContainerRuntime = {
+  x: number;
+  lane: Lane;
+  exposed: boolean;
+  contained: boolean;
+};
+type StageMissionRuntime = {
+  missionType: string;
+  completed: boolean;
+  failed: boolean;
+  transitions: readonly string[];
+  progress?: number;
+  integrity?: number;
+  maxIntegrity?: number;
+  repairRemaining?: number;
+  contaminated?: boolean;
+  stalled?: boolean;
+  powerActivated?: number;
+  powerHold?: number;
+  gateEaterSeen?: boolean;
+  gateEaterContained?: boolean;
+  researchContainerExposed?: boolean;
+  researchContainerContained?: boolean;
+  sealed?: boolean;
+  escapeRemaining?: number | null;
+  returnTargetCount?: number | null;
+  returnTargetIds?: readonly string[] | null;
+  returnedUnitIds?: readonly string[];
+  returnedCount?: number;
 };
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number };
@@ -422,6 +619,32 @@ type BattleBarkRuntime = ReturnType<typeof createBattleBarkRuntime>;
 type BattleBark = BattleBarkRuntime["active"][number];
 type PlacementIndicator = { lane: Lane; x: number; y: number; valid: boolean; reason: string; radius: number; innerRadius?: number; action: SelectedAction };
 
+type RoleMetrics = {
+  naoHealing: number;
+  naoPreventedDamage: number;
+  crazyKingSecondaryHits: number;
+  crazyKingMaxTier: number;
+  raiderPierceHits: number;
+  raiderSuppressionApplications: number;
+  raiderOverheats: number;
+  tataraHeavyDamage: number;
+  tataraStructureDamage: number;
+  gantetsuRedirectedDamage: number;
+  monkeyTrapTriggers: number;
+};
+
+type StationMetrics = {
+  karamiteBinds: number;
+  leakMudZones: number;
+  soukiBursts: number;
+  gateEaterCharges: number;
+  powerActivations: number;
+  escortCompletions: number;
+  sealCompletions: number;
+  offFloorSteps: number;
+  maxLaneAnchorError: number;
+};
+
 type Game = {
   definition: BattleDefinition;
   resultId: string;
@@ -459,6 +682,9 @@ type Game = {
   selectedSupply: SupplyKind;
   battlefieldObjects: BattlefieldObject[];
   areaEffects: AreaEffect[];
+  stationHazards: StationHazard[];
+  researchContainer: ResearchContainerRuntime | null;
+  stageMission: StageMissionRuntime;
   nextAreaEffectId: number;
   airstrike: AirstrikeRuntime;
   crawlerAbility: CrawlerRuntime;
@@ -466,7 +692,6 @@ type Game = {
   deployCooldowns: Record<UnitKind, number>;
   deployQueue: UnitKind[];
   deployTimer: number;
-  tactic: TacticMode;
   nextId: number;
   nextLanePlanAt: number;
   resolvedDefeatIds: Set<number>;
@@ -484,14 +709,20 @@ type Game = {
   crawlerHitSfxCooldown: number;
   criticalAnnounced: boolean;
   takuyaEnragedAnnounced: boolean;
+  takuyaEntranceAudioRemaining: number;
   battleBarks: BattleBarkRuntime;
   barkFlags: string[];
   storyFlowState: ReturnType<typeof createBattleStoryFlowState>;
+  storyBattleBarkState: ReturnType<typeof createStoryBattleBarkState>;
+  storyBattleReadEventIds: string[];
+  storyBattleReceiptEventIds: string[];
   enemyKindsSeen: string[];
   signalIds: string[];
   bossDefeated: boolean;
   bossDefeatPending: boolean;
   qaBarks: boolean;
+  roleMetrics: RoleMetrics;
+  stationMetrics: StationMetrics;
 };
 
 type Hud = {
@@ -508,7 +739,6 @@ type Hud = {
   barricadeMaxHp: number;
   barricadeVulnerable: boolean;
   barricadeHitFlash: number;
-  tactic: TacticMode;
   deployQueue: number;
   airstrikePhase: AirstrikeRuntime["phase"];
   crawlerPhase: CrawlerRuntime["phase"];
@@ -516,6 +746,7 @@ type Hud = {
   combo: number;
   bossHp: number;
   bossMax: number;
+  takuyaEntranceAudioActive: boolean;
   crawlerHitFlash: number;
   threat: number;
   objective: string;
@@ -537,9 +768,43 @@ type BattleResult = {
   unitsLost: number;
   bossDefeated: boolean;
   enemyBaseDestroyed: boolean;
+  missionRuntime?: StageMissionRuntime;
 };
 
 type SavePersistenceState = "checking" | "saved" | "recovered" | "unavailable";
+type CampaignPersistResult = {
+  durable: boolean;
+  localSaved: boolean;
+  backupSaved: boolean;
+  skipped?: boolean;
+};
+type PersistedReplicaReceipt = {
+  serialized: string;
+  localSaved: boolean;
+  backupSaved: boolean;
+};
+type SaveRecoveryCandidate = {
+  source: string;
+  raw: string;
+  reason: string;
+  state?: string;
+  valid?: boolean;
+  metadata?: { revision?: number; updatedAt?: string };
+};
+type SaveRecoveryState = {
+  status: string;
+  recoveryReason: string;
+  bothCorrupt?: boolean;
+  conflict?: boolean;
+  candidates: readonly SaveRecoveryCandidate[];
+  corruptCandidates: readonly SaveRecoveryCandidate[];
+  writeBlockedSources?: readonly string[];
+};
+type PendingResultCommit = {
+  save: CampaignSave;
+  view: CampaignResultView;
+  storyEventIds: readonly string[];
+};
 const CAMPAIGN_SAVE_KEY = "nishijin-campaign-v1";
 type AudioUnlockUiState = "idle" | "pending" | "success" | "failed";
 
@@ -589,9 +854,6 @@ const SFX_CUES = {
   "drum-request": { category: "ui", frequency: 112, duration: .08, type: "square", volume: .055, cooldown: .12, priority: 30 },
   "start-low": { category: "ui", frequency: 180, duration: .12, type: "square", volume: .055, cooldown: .2, priority: 45 },
   "start-high": { category: "ui", frequency: 260, duration: .12, type: "square", volume: .055, cooldown: .2, priority: 45 },
-  "tactic-defend": { category: "ui", frequency: 130, duration: .06, type: "square", volume: .055, cooldown: .08, priority: 15 },
-  "tactic-balanced": { category: "ui", frequency: 190, duration: .06, type: "square", volume: .055, cooldown: .08, priority: 15 },
-  "tactic-assault": { category: "ui", frequency: 250, duration: .06, type: "square", volume: .055, cooldown: .08, priority: 15 },
   "deploy-light": { category: "combat", frequency: 220, duration: .07, type: "square", volume: .055, cooldown: .04, priority: 25 },
   "deploy-heavy": { category: "combat", frequency: 110, duration: .07, type: "square", volume: .055, cooldown: .04, priority: 30 },
   "wave-contact": { category: "combat", frequency: 82, duration: .24, type: "sawtooth", volume: .055, cooldown: .18, priority: 55 },
@@ -639,12 +901,45 @@ type SfxRuntime = {
 };
 
 const emptyCooldowns = () => Object.fromEntries(cards.map((card) => [card.kind, 0])) as Record<UnitKind, number>;
+const emptyRoleMetrics = (): RoleMetrics => ({
+  naoHealing: 0,
+  naoPreventedDamage: 0,
+  crazyKingSecondaryHits: 0,
+  crazyKingMaxTier: 0,
+  raiderPierceHits: 0,
+  raiderSuppressionApplications: 0,
+  raiderOverheats: 0,
+  tataraHeavyDamage: 0,
+  tataraStructureDamage: 0,
+  gantetsuRedirectedDamage: 0,
+  monkeyTrapTriggers: 0,
+});
+const emptyStationMetrics = (): StationMetrics => ({
+  karamiteBinds: 0,
+  leakMudZones: 0,
+  soukiBursts: 0,
+  gateEaterCharges: 0,
+  powerActivations: 0,
+  escortCompletions: 0,
+  sealCompletions: 0,
+  offFloorSteps: 0,
+  maxLaneAnchorError: 0,
+});
+
+function createStationAbilityRuntime(kind: string): StationAbilityRuntime {
+  if (kind === "grappler") return createKaramiteRuntime() as StationAbilityRuntime;
+  if (kind === "ooze") return createLeakMudRuntime() as StationAbilityRuntime;
+  if (kind === "sprinter") return createSoukiRuntime() as StationAbilityRuntime;
+  if (kind === "gate-eater") return createTicketGateEaterRuntime() as StationAbilityRuntime;
+  return { phase: "idle", remainingSeconds: 0 };
+}
 
 const initialGame = (
   selectedSupply: SupplyKind = "pod",
   stageId = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
-  formationKinds: UnitKind[] = cards.map((card) => card.kind),
+  formationKinds: UnitKind[] = cards.slice(0, 7).map((card) => card.kind),
   resultId = createBattleResultId(stageId),
+  storyBattleReadEventIds: string[] = [],
 ): Game => {
   const definition = createBattleDefinition(stageId) as BattleDefinition;
   return ({
@@ -657,7 +952,7 @@ const initialGame = (
   won: false,
   time: 0,
   last: 0,
-  energy: 70,
+  energy: COMMAND_INITIAL,
   supportGauge: 0,
   scrap: 0,
   kills: 0,
@@ -684,6 +979,11 @@ const initialGame = (
   selectedSupply,
   battlefieldObjects: [],
   areaEffects: [],
+  stationHazards: [],
+  researchContainer: definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
+    ? createResearchContainerRuntime(definition.missionConfig) as ResearchContainerRuntime
+    : null,
+  stageMission: createStationMissionRuntime(definition.missionType, definition.missionConfig) as StageMissionRuntime,
   nextAreaEffectId: 1,
   airstrike: createEmergencySupportRuntime() as AirstrikeRuntime,
   crawlerAbility: createCrawlerAbilityRuntime() as CrawlerRuntime,
@@ -691,7 +991,6 @@ const initialGame = (
   deployCooldowns: emptyCooldowns(),
   deployQueue: [],
   deployTimer: 0,
-  tactic: "balanced",
   nextId: 1,
   nextLanePlanAt: 0,
   resolvedDefeatIds: new Set<number>(),
@@ -709,14 +1008,20 @@ const initialGame = (
   crawlerHitSfxCooldown: 0,
   criticalAnnounced: false,
   takuyaEnragedAnnounced: false,
+  takuyaEntranceAudioRemaining: 0,
   battleBarks: createBattleBarkRuntime(),
   barkFlags: [],
   storyFlowState: createBattleStoryFlowState(stageId),
+  storyBattleBarkState: createStoryBattleBarkState(),
+  storyBattleReadEventIds: [...storyBattleReadEventIds],
+  storyBattleReceiptEventIds: [],
   enemyKindsSeen: [],
   signalIds: [],
   bossDefeated: false,
   bossDefeatPending: false,
   qaBarks: false,
+  roleMetrics: emptyRoleMetrics(),
+  stationMetrics: emptyStationMetrics(),
   });
 };
 
@@ -752,16 +1057,149 @@ function effectDistance(a: { x: number; y: number }, b: { x: number; y: number }
   return Math.hypot(a.x - b.x, (a.y - b.y) * 2);
 }
 
+function createUnitRoleRuntime() {
+  return {
+    damageReductionRemaining: 0,
+    damageReductionMultiplier: 1,
+    healFocusTargetId: null,
+    healFocusRemaining: 0,
+    comboHits: 0,
+    comboWindow: 0,
+    weaponHeat: 0,
+    overheated: false,
+    suppressionStacks: 0,
+    suppressedRemaining: 0,
+    suppressionMultiplier: 1,
+    guardStandRemaining: 0,
+    guardStandAvailable: true,
+    engineerTrapReady: false,
+    engineerTrapX: 0,
+    engineerTrapLane: null,
+    engineerTrapCooldown: 0,
+    armorBreakStacks: 0,
+    armorBrokenRemaining: 0,
+  };
+}
+
+function applyIncomingHumanDamage(
+  g: Game,
+  target: Fighter,
+  incomingDamage: number,
+  { attackKind = "melee" }: { attackKind?: "melee" | "ranged" } = {},
+) {
+  const incoming = Math.max(0, incomingDamage);
+  let targetDamage = incoming;
+  let redirectedDamage = 0;
+  let preventedDamage = 0;
+  const guardian = g.fighters
+    .filter((candidate) => candidate.side === "human" && candidate.kind === "guardian" && candidate.hp > 0)
+    .sort((left, right) => fighterDistance(left, target) - fighterDistance(right, target) || left.id - right.id)
+    .find((candidate) => resolveGantetsuInterception({
+      guardian: candidate,
+      target,
+      incomingDamage: incoming,
+      attackKind,
+      steadfast: { remainingSeconds: candidate.guardStandRemaining, available: candidate.guardStandAvailable },
+    }).eligible);
+
+  if (guardian) {
+    const rawInterception = resolveGantetsuInterception({
+      guardian,
+      target,
+      incomingDamage: incoming,
+      attackKind,
+      steadfast: { remainingSeconds: guardian.guardStandRemaining, available: guardian.guardStandAvailable },
+    });
+    const guardedDamage = naoDamageAfterProtection({
+      damage: rawInterception.guardianDamage,
+      protectionSeconds: guardian.damageReductionRemaining,
+    });
+    const protectedGuardian = {
+      ...guardian,
+      hp: guardian.hp + guardedDamage.prevented,
+    };
+    const appliedInterception = resolveGantetsuInterception({
+      guardian: protectedGuardian,
+      target,
+      incomingDamage: incoming,
+      attackKind,
+      steadfast: { remainingSeconds: guardian.guardStandRemaining, available: guardian.guardStandAvailable },
+    });
+    guardian.hp = appliedInterception.guardianHp;
+    guardian.guardStandRemaining = appliedInterception.steadfast.remainingSeconds;
+    guardian.guardStandAvailable = appliedInterception.steadfast.available;
+    guardian.flash = Math.max(guardian.flash, .12);
+    redirectedDamage = rawInterception.guardianDamage;
+    targetDamage = rawInterception.targetDamage;
+    preventedDamage += guardedDamage.prevented;
+    g.roleMetrics.gantetsuRedirectedDamage += redirectedDamage;
+    g.roleMetrics.naoPreventedDamage += guardedDamage.prevented;
+    addDamageText(g, {
+      x: guardian.x,
+      y: guardian.y - 72,
+      value: `盾 -${Math.round(guardedDamage.damage)}`,
+      life: .7,
+      color: "#bcd5d5",
+    });
+  }
+
+  const protectedTarget = naoDamageAfterProtection({
+    damage: targetDamage,
+    protectionSeconds: target.damageReductionRemaining,
+  });
+  let appliedTargetDamage = protectedTarget.damage;
+  if (target.kind === "guardian") {
+    const steadfastDamage = resolveGantetsuSteadfastDamage({
+      guardian: target,
+      incomingDamage: protectedTarget.damage,
+      steadfast: {
+        remainingSeconds: target.guardStandRemaining,
+        available: target.guardStandAvailable,
+      },
+    });
+    target.hp = steadfastDamage.hp;
+    target.guardStandRemaining = steadfastDamage.steadfast.remainingSeconds;
+    target.guardStandAvailable = steadfastDamage.steadfast.available;
+    appliedTargetDamage = steadfastDamage.damage;
+    preventedDamage += Math.max(0, protectedTarget.damage - steadfastDamage.damage);
+    if (steadfastDamage.steadfast.triggered) {
+      addDamageText(g, {
+        x: target.x,
+        y: target.y - 78,
+        value: "踏みとどまる",
+        life: .95,
+        color: "#d7ecec",
+      });
+    }
+  } else {
+    target.hp -= protectedTarget.damage;
+  }
+  preventedDamage += protectedTarget.prevented;
+  g.roleMetrics.naoPreventedDamage += protectedTarget.prevented;
+  return Object.freeze({
+    targetDamage: appliedTargetDamage,
+    redirectedDamage,
+    preventedDamage,
+  });
+}
+
 function bodyRadiusFor(kind: string) {
+  if (kind === "gate-eater") return 25;
   if (kind === "takuya" || kind === "abomination") return 20;
-  if (kind === "crusher" || kind === "brute" || kind === "kumaverson") return 16;
+  if (kind === "guardian") return 18;
+  if (kind === "crusher" || kind === "brute" || kind === "kumaverson" || kind === "grappler") return 16;
+  if (kind === "ooze") return 14;
   if (kind === "crazy-king") return 14;
   return 11;
 }
 
 function enemyLaneSpeedFor(kind: string) {
+  if (kind === "sprinter") return 82;
   if (kind === "runner" || kind === "shade") return 64;
   if (kind === "spitter") return 42;
+  if (kind === "grappler") return 32;
+  if (kind === "ooze") return 26;
+  if (kind === "gate-eater") return 22;
   if (kind === "walker" || kind === "turned") return 38;
   if (kind === "takuya") return 32;
   if (kind === "crusher") return 24;
@@ -769,6 +1207,10 @@ function enemyLaneSpeedFor(kind: string) {
 }
 
 function enemyStats(kind: string, wave: number) {
+  if (kind === "gate-eater") return { hp: 1800, speed: 7, damage: 64, range: 42, attackEvery: 1.32 };
+  if (kind === "grappler") return { hp: 165 + wave * 4, speed: 13, damage: 20, range: 34, attackEvery: 1.12 };
+  if (kind === "ooze") return { hp: 138 + wave * 3, speed: 10, damage: 14, range: 68, attackEvery: 1.45 };
+  if (kind === "sprinter") return { hp: 78 + wave * 2, speed: 38, damage: 18, range: 24, attackEvery: .68 };
   if (kind === "takuya") return { hp: 1200, speed: 9, damage: 58, range: 38, attackEvery: 1.15 };
   if (kind === "shade") return { hp: 220, speed: 29, damage: 23, range: 27, attackEvery: .62 };
   if (kind === "abomination") return { hp: 480, speed: 8, damage: 50, range: 28, attackEvery: 1.18 };
@@ -809,6 +1251,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     laneSpeed: enemyLaneSpeedFor(kind),
     spawnGrace: 0,
     combatReady: !gateEntering,
+    contained: false,
     gateEntering,
     gateEntrySpeed: gateEntry?.entrySpeed ?? 0,
     combatReadyX: gateEntry?.combatReadyX ?? 0,
@@ -818,9 +1261,16 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     bleedDamagePerSecond: 0,
     aiDestinationX: 0,
     aiMoveDirection: 0,
-    abilityCooldown: kind === "takuya" ? 4.2 : 0,
+    abilityCooldown: kind === "takuya" ? 4.2
+      : kind === "gate-eater" ? 4
+        : kind === "grappler" ? 2.5
+          : kind === "ooze" ? 3
+            : kind === "sprinter" ? 2
+              : 0,
     abilityWindup: 0,
     attackSequence: 0,
+    stationAbility: createStationAbilityRuntime(kind),
+    ...createUnitRoleRuntime(),
   });
   return g.fighters[g.fighters.length - 1];
 }
@@ -837,10 +1287,12 @@ function spawnHuman(g: Game, kind: UnitKind) {
   const laneSpeed = kind === "scout" ? 78
     : kind === "brawler" ? 68
       : kind === "brute" ? 42
+        : kind === "guardian" ? 36
         : kind === "gunner" ? 54
           : kind === "crazy-king" ? 58
             : kind === "kumaverson" ? 48
               : kind === "babayaga" ? 62
+                : kind === "engineer" ? 56
                 : 60;
   g.fighters.push({
     id, side: "human", kind, lane: MUSTER_LANE, anchorLane: assignedLane, x: MUSTER_X, y: activeMusterY(), hp: card.hp, maxHp: card.hp,
@@ -848,7 +1300,10 @@ function spawnHuman(g: Game, kind: UnitKind) {
     attackEvery: card.attackEvery, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: id % 3,
     targetId: null, targetObjectId: null, retargetIn: 0, nextLaneDecisionAt: 0, bodyRadius: bodyRadiusFor(kind), laneSpeed, spawnGrace: .95,
     combatReady: true, gateEntering: false, gateEntrySpeed: 0, combatReadyX: 0,
+    contained: false,
     marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: MUSTER_X, aiMoveDirection: 0, abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
+    stationAbility: createStationAbilityRuntime(kind),
+    ...createUnitRoleRuntime(),
   });
   addParticles(g, MUSTER_X, activeMusterY(), "#d0b48b", 7);
   g.banner = `${card.name} // 移動拠点から出撃`;
@@ -864,7 +1319,6 @@ function prepareEndgameQa(g: Game) {
   g.baseHp = 500;
   g.barricadeHp = 760;
   g.energy = COMMAND_MAX;
-  g.tactic = "assault";
 
   const lineup: [UnitKind, Lane, number][] = [
     ["brute", 0, 730],
@@ -893,6 +1347,70 @@ function prepareEndgameQa(g: Game) {
 
 }
 
+function prepareTakuyaEntranceQa(g: Game) {
+  const bossEventIndex = g.definition.timeline.findIndex((event) => (
+    event.units.some(([kind]) => kind === "takuya")
+  ));
+  const bossEvent = g.definition.timeline[bossEventIndex];
+  if (!bossEvent || bossEventIndex < 0) return;
+
+  g.time = Math.max(PREP_SECONDS, bossEvent.at - 1.2);
+  g.phase = 3;
+  g.wave = Math.max(1, bossEvent.wave - 1);
+  g.eventIndex = bossEventIndex;
+  g.baseHp = g.baseMaxHp;
+  g.barricadeHp = BARRICADE_MAX_HP;
+  g.energy = COMMAND_MAX;
+
+  const lineup: [UnitKind, Lane, number][] = [
+    ["brawler", 0, 700],
+    ["gunner", 1, 660],
+    ["kumaverson", 2, 700],
+  ];
+  for (const [kind, lane, x] of lineup) {
+    spawnHuman(g, kind);
+    const fighter = g.fighters[g.fighters.length - 1];
+    fighter.lane = lane;
+    fighter.anchorLane = lane;
+    fighter.x = x;
+    fighter.y = laneY(lane, fighter.id);
+    fighter.cooldown = 2.2;
+    fighter.spawnGrace = 0;
+  }
+  g.banner = "QA AUDIO // TAKUYA ENTRANCE IN 1.2s";
+  g.bannerTime = 2.2;
+}
+
+function prepareAiReacquireQa(g: Game) {
+  prepareEndgameQa(g);
+  g.time = 168;
+  g.baseHp = g.baseMaxHp;
+  const takuya = g.fighters.find((fighter) => fighter.kind === "takuya");
+  if (takuya) {
+    takuya.hp = 18;
+    takuya.cooldown = 2;
+    takuya.abilityCooldown = 99;
+  }
+  for (const ally of g.fighters.filter((fighter) => fighter.side === "human")) ally.cooldown = 0;
+  for (const [kind, lane, x] of [
+    ["runner", 0, 790],
+    ["walker", 1, 805],
+    ["spitter", 2, 820],
+  ] as [EnemyKind, Lane, number][]) {
+    const enemy = spawnEnemy(g, kind, lane);
+    enemy.x = x;
+    enemy.y = laneY(lane, enemy.id);
+    enemy.combatReady = false;
+    enemy.gateEntering = true;
+    enemy.combatReadyX = 650 + lane * 8;
+    enemy.gateEntrySpeed = 92;
+    enemy.targetId = null;
+    enemy.targetObjectId = null;
+  }
+  g.banner = "QA AI // POST-TAKUYA REACQUIRE";
+  g.bannerTime = 2.2;
+}
+
 function prepareRolesQa(g: Game) {
   g.time = 60;
   g.phase = 2;
@@ -902,34 +1420,59 @@ function prepareRolesQa(g: Game) {
   g.barricadeHp = BARRICADE_MAX_HP;
   g.energy = COMMAND_MAX;
   g.scrap = 100;
-  g.tactic = "balanced";
+  g.barricadeVulnerable = true;
+  g.barricadeMaxHp = Math.max(BARRICADE_MAX_HP, 5000);
+  g.barricadeHp = g.barricadeMaxHp;
 
   const lineup: [UnitKind, Lane, number][] = [
-    ["scout", 0, 350], ["brawler", 0, 505], ["crazy-king", 0, 650],
-    ["ranger", 1, 350], ["gunner", 1, 505], ["babayaga", 1, 650],
-    ["medic", 2, 350], ["brute", 2, 505], ["kumaverson", 2, 650],
+    ["scout", 0, 310], ["brawler", 0, 465], ["guardian", 0, 520], ["crazy-king", 0, 650],
+    ["ranger", 1, 300], ["gunner", 1, 430], ["babayaga", 1, 360], ["engineer", 1, 690],
+    ["medic", 2, 420], ["brute", 2, 700], ["kumaverson", 2, 600],
   ];
   for (const [kind, lane, x] of lineup) {
     spawnHuman(g, kind);
     const fighter = g.fighters[g.fighters.length - 1];
     fighter.lane = lane; fighter.anchorLane = lane; fighter.x = x; fighter.y = laneY(lane, fighter.id);
     fighter.cooldown = 0; fighter.spawnGrace = 0;
-    if (kind === "brute") fighter.hp -= 40;
+    if (kind === "brute") {
+      fighter.maxHp = 420;
+      fighter.hp = 380;
+    }
   }
 
   const scenarios: [EnemyKind, Lane, number, number?][] = [
-    ["runner", 0, 450], ["walker", 0, 640, .3], ["spitter", 1, 535],
-    ["crusher", 1, 720], ["walker", 2, 535],
+    ["crusher", 0, 470], ["walker", 0, 680, .45], ["walker", 0, 700], ["walker", 0, 720],
+    ["walker", 1, 500], ["walker", 1, 540], ["walker", 1, 580], ["spitter", 1, 640],
+    ["crusher", 2, 740], ["walker", 2, 820],
   ];
   for (const [kind, lane, x, hpRatio] of scenarios) {
     const fighter = spawnEnemy(g, kind, lane);
     fighter.x = x; fighter.y = laneY(lane, fighter.id); fighter.cooldown = 1.2;
     if (hpRatio) fighter.hp = fighter.maxHp * hpRatio;
   }
+  const brawler = g.fighters.find((fighter) => fighter.side === "human" && fighter.kind === "brawler");
+  const guardianAssault = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === "crusher" && fighter.lane === 0);
+  if (brawler && guardianAssault) {
+    guardianAssault.maxHp = 1600;
+    guardianAssault.hp = guardianAssault.maxHp;
+    guardianAssault.cooldown = 0;
+    guardianAssault.targetId = brawler.id;
+    guardianAssault.retargetIn = 99;
+  }
+  const raiderTarget = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === "walker" && fighter.lane === 1);
+  if (raiderTarget) {
+    raiderTarget.maxHp = 1600;
+    raiderTarget.hp = raiderTarget.maxHp;
+  }
+  const tataraTarget = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === "crusher" && fighter.lane === 2);
+  if (tataraTarget) {
+    tataraTarget.maxHp = 300;
+    tataraTarget.hp = tataraTarget.maxHp;
+  }
   const breaker = g.fighters.find((fighter) => fighter.side === "human" && fighter.kind === "brute");
   const heldEnemy = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === "walker" && fighter.lane === 2);
   if (breaker && heldEnemy) heldEnemy.targetId = breaker.id;
-  g.banner = "QA ROLES // NINE UNIT LIVE FIRE";
+  g.banner = "QA ROLES // ELEVEN UNIT LIVE FIRE";
   g.bannerTime = 2.2;
 }
 
@@ -946,8 +1489,174 @@ function emitBattleBarkOnce(g: Game, flag: string, trigger: string, speakerKind:
   return shown;
 }
 
+function emitStoryBattleBark(
+  g: Game,
+  eventId: string,
+  trigger: string,
+  mode: CampaignSave["settings"]["battleEventMode"],
+) {
+  const deployedKinds = [...new Set(g.fighters
+    .filter((fighter) => fighter.side === "human" && fighter.hp > 0)
+    .map((fighter) => fighter.kind))];
+  const resolved = resolveStoryBattleBarkCue({
+    state: g.storyBattleBarkState,
+    eventId,
+    trigger,
+    deployedKinds,
+  });
+  g.storyBattleBarkState = resolved.state;
+  const presentation = resolveStoryBattleBarkPresentation({
+    cue: resolved.cue,
+    eventId,
+    trigger,
+    readStoryEventIds: g.storyBattleReadEventIds,
+    mode,
+  });
+  if (presentation.kind === "brief") {
+    if (!g.storyBattleReceiptEventIds.includes(eventId)) g.storyBattleReceiptEventIds.push(eventId);
+    g.banner = `通信 // ${presentation.label}`;
+    g.bannerTime = Math.max(g.bannerTime, 1.8);
+    return true;
+  }
+  if (presentation.kind !== "full" || !resolved.cue) return false;
+  const queued = queueScriptedBattleBarkCue({ runtime: g.battleBarks, cue: resolved.cue });
+  g.battleBarks = queued.runtime as BattleBarkRuntime;
+  if (queued.queued && !g.storyBattleReceiptEventIds.includes(eventId)) {
+    g.storyBattleReceiptEventIds.push(eventId);
+  }
+  return queued.queued;
+}
+
 function livingSpeaker(g: Game, kinds: readonly UnitKind[]) {
   return kinds.find((kind) => g.fighters.some((fighter) => fighter.side === "human" && fighter.kind === kind && fighter.hp > 0)) ?? null;
+}
+
+function battleSilenceSceneId(g: Game) {
+  const scriptedFinalActive = g.battleBarks.active.some((bark) => (
+    bark.scripted === true
+    && bark.trigger === STORY_BATTLE_TRIGGER_IDS.FINAL_WEAKPOINT_EXPOSED
+  ));
+  if (scriptedFinalActive) return sceneIdForStoryEvent("stage-takuya-final-v070");
+  if (g.takuyaEntranceAudioRemaining > 0) return TAKUYA_ENTRANCE_AUDIO.silenceSceneId;
+  return null;
+}
+
+function dispatchScriptedStoryBattleBarks(
+  g: Game,
+  mode: CampaignSave["settings"]["battleEventMode"],
+  newlyTriggeredEventIds: readonly string[] = [],
+) {
+  const stageId = g.definition.stageId;
+  const activeEnemies = g.fighters.filter((fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady);
+  const boss = activeEnemies.find((fighter) => fighter.kind === "takuya");
+
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET) {
+    if (livingSpeaker(g, ["brawler"])) {
+      emitStoryBattleBark(g, "stage-nishijin-alert-v070", STORY_BATTLE_TRIGGER_IDS.DEPLOY, mode);
+    }
+    if (g.enemyKindsSeen.some((kind) => kind === "runner" || kind === "sprinter")) {
+      emitStoryBattleBark(g, "stage-nishijin-alert-v070", STORY_BATTLE_TRIGGER_IDS.FAST_ENEMY, mode);
+    }
+    if (g.barricadeBucklingAnnounced) {
+      emitStoryBattleBark(g, "stage-nishijin-alert-v070", STORY_BATTLE_TRIGGER_IDS.FRONTLINE_OPEN, mode);
+    }
+    if (activeEnemies.some((enemy) => activeEnemies.filter((candidate) => effectDistance(enemy, candidate) <= 86).length >= 3)) {
+      emitStoryBattleBark(g, "stage-nishijin-alert-v070", STORY_BATTLE_TRIGGER_IDS.GROUPED_ENEMIES, mode);
+    }
+    return;
+  }
+
+  if (stageId === CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE) {
+    if (g.time >= g.definition.prepSeconds) {
+      emitStoryBattleBark(g, "stage-sawara-alert-v070", STORY_BATTLE_TRIGGER_IDS.CONVOY_START, mode);
+    }
+    if (g.enemyKindsSeen.some((kind) => kind === "crusher" || kind === "abomination")) {
+      emitStoryBattleBark(g, "stage-sawara-alert-v070", STORY_BATTLE_TRIGGER_IDS.HEAVY_ENEMY, mode);
+    }
+    if (g.definition.defenseEndAt !== null && g.definition.defenseEndAt - g.time <= 30) {
+      emitStoryBattleBark(g, "stage-sawara-alert-v070", STORY_BATTLE_TRIGGER_IDS.DEFENSE_30_REMAINING, mode);
+    }
+    if (g.baseHp / Math.max(1, g.baseMaxHp) <= .35) {
+      emitStoryBattleBark(g, "stage-sawara-alert-v070", STORY_BATTLE_TRIGGER_IDS.CONVOY_CRITICAL, mode);
+    }
+    return;
+  }
+
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE) {
+    if (boss || g.enemySpawn.pending.some((entry) => entry.kind === "takuya")) {
+      emitStoryBattleBark(g, "stage-takuya-warning-v070", STORY_BATTLE_TRIGGER_IDS.TAKUYA_ENTRANCE, mode);
+    }
+    const nearestHumanDistance = boss
+      ? Math.min(...g.fighters
+        .filter((fighter) => fighter.side === "human" && fighter.hp > 0)
+        .map((fighter) => fighterDistance(boss, fighter)), Number.POSITIVE_INFINITY)
+      : Number.POSITIVE_INFINITY;
+    if (nearestHumanDistance <= 230) {
+      emitStoryBattleBark(g, "stage-takuya-warning-v070", STORY_BATTLE_TRIGGER_IDS.TAKUYA_APPROACH, mode);
+    }
+    if (boss && boss.hp / Math.max(1, boss.maxHp) <= .5) {
+      emitStoryBattleBark(g, "stage-takuya-warning-v070", STORY_BATTLE_TRIGGER_IDS.RIGHT_SHOULDER_EXPOSED, mode);
+    }
+    const criticalKumaverson = g.fighters.some((fighter) => (
+      fighter.side === "human"
+      && fighter.kind === "kumaverson"
+      && fighter.hp > 0
+      && fighter.hp / Math.max(1, fighter.maxHp) <= .28
+    ));
+    if (criticalKumaverson) {
+      emitStoryBattleBark(g, "stage-takuya-warning-v070", STORY_BATTLE_TRIGGER_IDS.KUMAVERSON_CRITICAL, mode);
+    }
+    if (newlyTriggeredEventIds.includes("stage-takuya-final-v070")
+      || (boss && boss.hp / Math.max(1, boss.maxHp) <= .25)) {
+      emitStoryBattleBark(g, "stage-takuya-final-v070", STORY_BATTLE_TRIGGER_IDS.FINAL_WEAKPOINT_EXPOSED, mode);
+    }
+    if (g.bossDefeated && g.barricadeHp > 0) {
+      emitStoryBattleBark(g, "stage-takuya-base-remains-v070", STORY_BATTLE_TRIGGER_IDS.BOSS_DEFEATED_BASE_REMAINS, mode);
+    }
+    return;
+  }
+
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE) {
+    if (g.enemyKindsSeen.includes("grappler")) {
+      emitStoryBattleBark(g, "stage-station-gate-alert-v070", STORY_BATTLE_TRIGGER_IDS.GRAPPLER_SEEN, mode);
+    }
+    if (g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.GRAPPLER_GRAB)) {
+      emitStoryBattleBark(g, "stage-station-gate-alert-v070", STORY_BATTLE_TRIGGER_IDS.GRAPPLER_GRAB, mode);
+    }
+    if (g.barricadeBucklingAnnounced) {
+      emitStoryBattleBark(g, "stage-station-gate-alert-v070", STORY_BATTLE_TRIGGER_IDS.CONTAINER_EXPOSED, mode);
+    }
+    return;
+  }
+
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM) {
+    if (g.enemyKindsSeen.includes("ooze")) {
+      emitStoryBattleBark(g, "stage-station-platform-alert-v070", STORY_BATTLE_TRIGGER_IDS.OOZE_SEEN, mode);
+    }
+    if (g.enemyKindsSeen.includes("sprinter")) {
+      emitStoryBattleBark(g, "stage-station-platform-alert-v070", STORY_BATTLE_TRIGGER_IDS.SPRINTER_SEEN, mode);
+    }
+    if (g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.CART_STALLED)) {
+      emitStoryBattleBark(g, "stage-station-platform-alert-v070", STORY_BATTLE_TRIGGER_IDS.CART_STALLED, mode);
+    }
+    return;
+  }
+
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL) {
+    for (const trigger of [
+      STORY_BATTLE_TRIGGER_IDS.POWER_1_ACTIVATED,
+      STORY_BATTLE_TRIGGER_IDS.GATE_EATER_CHARGE,
+      STORY_BATTLE_TRIGGER_IDS.GATE_EATER_FLANK,
+      STORY_BATTLE_TRIGGER_IDS.POWER_2_ACTIVATED,
+      STORY_BATTLE_TRIGGER_IDS.RESEARCH_CONTAINER_EXPOSED,
+      STORY_BATTLE_TRIGGER_IDS.POWER_3_ACTIVATED,
+      STORY_BATTLE_TRIGGER_IDS.RETURN_WINDOW_OPEN,
+    ]) {
+      if (g.signalIds.includes(trigger)) {
+        emitStoryBattleBark(g, "stage-station-tunnel-power-v070", trigger, mode);
+      }
+    }
+  }
 }
 
 function dispatchSituationalBattleBarks(g: Game) {
@@ -966,10 +1675,12 @@ function dispatchSituationalBattleBarks(g: Game) {
   const dangerSpeaker = allyInDanger ? livingSpeaker(g, ["medic", "brawler", "ranger", "gunner", "kumaverson"]) : null;
   if (dangerSpeaker) emitBattleBarkOnce(g, "ally-danger", RANDOM_BATTLE_BARK_TRIGGER_IDS.ALLY_DANGER, dangerSpeaker);
 
-  const fastSpeaker = g.enemyKindsSeen.includes("runner") ? livingSpeaker(g, ["ranger", "scout"]) : null;
+  const fastSpeaker = g.enemyKindsSeen.some((kind) => kind === "runner" || kind === "sprinter")
+    ? livingSpeaker(g, ["ranger", "scout"])
+    : null;
   if (fastSpeaker) emitBattleBarkOnce(g, "fast-enemy", RANDOM_BATTLE_BARK_TRIGGER_IDS.FAST_ENEMY, fastSpeaker);
 
-  const heavySeen = g.enemyKindsSeen.some((kind) => ["crusher", "abomination", "takuya"].includes(kind));
+  const heavySeen = g.enemyKindsSeen.some((kind) => ["crusher", "abomination", "takuya", "grappler", "gate-eater"].includes(kind));
   if (heavySeen && livingSpeaker(g, ["brute"])) emitBattleBarkOnce(g, "heavy-enemy", RANDOM_BATTLE_BARK_TRIGGER_IDS.HEAVY_ENEMY, "brute");
 
   const specialSeen = g.enemyKindsSeen.some((kind) => isBabayagaPriorityTarget(kind));
@@ -1052,7 +1763,7 @@ function prepareStressQa(g: Game) {
       enemy.x = 460 + index * 28; enemy.y = laneY(lane, enemy.id); enemy.cooldown = 1.8;
     }
   }
-  const unitKinds: UnitKind[] = ["scout", "ranger", "brute", "brawler", "gunner", "medic", "crazy-king", "kumaverson", "babayaga"];
+  const unitKinds: UnitKind[] = ["scout", "ranger", "brute", "brawler", "gunner", "medic", "crazy-king", "kumaverson", "babayaga", "guardian", "engineer"];
   for (let index = 0; index < 18; index++) {
     spawnHuman(g, unitKinds[index % unitKinds.length]);
     const fighter = g.fighters[g.fighters.length - 1];
@@ -1104,10 +1815,120 @@ function prepareLifecycleQa(g: Game) {
   g.banner = "QA 表現確認 // 死亡・感染・焼却"; g.bannerTime = 3;
 }
 
+function prepareStationQa(g: Game, state: "start" | "near-win" | "near-loss") {
+  const spawnQaHuman = (kind: UnitKind) => {
+    const card = spawnHuman(g, kind);
+    return card ? g.fighters[g.fighters.length - 1] : null;
+  };
+  if (state === "start") {
+    g.banner = `LOCAL QA // ${g.definition.displayName} START`;
+    g.bannerTime = 2.2;
+    return;
+  }
+  g.time = Math.max(PREP_SECONDS, g.definition.timeline.at(-1)?.at ?? PREP_SECONDS);
+  g.phase = phaseForBattle(g.definition, g.time) as Game["phase"];
+  g.eventIndex = g.definition.timeline.length;
+  g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+  g.energy = COMMAND_MAX;
+
+  if (state === "near-loss") {
+    if (g.definition.missionType === "escort") {
+      g.stageMission = {
+        ...g.stageMission,
+        progress: .5,
+        integrity: 1,
+      };
+      const threat = spawnEnemy(g, "walker", 1);
+      threat.x = escortCartX(g.stageMission, g.definition.missionConfig);
+      threat.y = laneY(1, threat.id);
+      threat.cooldown = 5;
+    } else {
+      g.baseHp = 1;
+      const attacker = spawnEnemy(g, "walker", 1);
+      attacker.x = BASE_X + 18;
+      attacker.y = laneY(1, attacker.id);
+      attacker.cooldown = 0;
+    }
+    g.banner = `LOCAL QA // ${g.definition.displayName} NEAR LOSS`;
+    g.bannerTime = 2.2;
+    return;
+  }
+
+  g.baseHp = g.baseMaxHp;
+  if (g.definition.missionType === "assault") {
+    g.barricadeVulnerable = true;
+    g.barricadeHp = 1;
+    const finisher = spawnQaHuman("brute");
+    if (finisher) {
+      finisher.lane = 1;
+      finisher.anchorLane = 1;
+      finisher.x = BARRICADE_X - 34;
+      finisher.y = laneY(1, finisher.id);
+      finisher.cooldown = 0;
+      finisher.spawnGrace = 0;
+    }
+  } else if (g.definition.missionType === "escort") {
+    g.stageMission = {
+      ...g.stageMission,
+      progress: .999,
+      integrity: g.stageMission.maxIntegrity,
+      repairRemaining: 0,
+      contaminated: false,
+      stalled: false,
+    };
+    for (const [index, kind] of (["brawler", "ranger", "medic"] as UnitKind[]).entries()) {
+      const escort = spawnQaHuman(kind);
+      if (escort) {
+        escort.lane = 1;
+        escort.anchorLane = 1;
+        escort.x = escortCartX(g.stageMission, g.definition.missionConfig) - 32 - index * 26;
+        escort.y = laneY(1, escort.id);
+        escort.cooldown = 4;
+        escort.spawnGrace = 0;
+      }
+    }
+  } else if (g.definition.missionType === "sequential-seal") {
+    if (g.researchContainer) {
+      g.researchContainer = {
+        ...g.researchContainer,
+        x: Number(g.definition.missionConfig.sealDoorX ?? 867) + 24,
+        exposed: true,
+        contained: true,
+      };
+    }
+    g.stageMission = {
+      ...g.stageMission,
+      powerActivated: 3,
+      powerHold: 0,
+      gateEaterSeen: true,
+      gateEaterContained: true,
+      researchContainerExposed: true,
+      researchContainerContained: true,
+      sealed: true,
+      escapeRemaining: .35,
+      returnTargetCount: 1,
+      returnedCount: 1,
+    };
+    const returning = spawnQaHuman("brawler");
+    if (returning) {
+      returning.lane = 1;
+      returning.anchorLane = 1;
+      returning.x = Number(g.definition.missionConfig.returnX ?? BASE_X + 115);
+      returning.y = laneY(1, returning.id);
+      returning.cooldown = 4;
+      returning.spawnGrace = 0;
+    }
+  }
+  g.banner = `LOCAL QA // ${g.definition.displayName} NEAR WIN`;
+  g.bannerTime = 2.2;
+}
+
 function prepareQaMode(g: Game, qaMode: QaMode | null) {
   g.qaBarks = qaMode !== null && qaMode !== "loadout";
   if (qaMode === "roles" || qaMode === "dialogue") prepareRolesQa(g);
+  else if (qaMode === "takuya-entrance") prepareTakuyaEntranceQa(g);
   else if (qaMode === "endgame") prepareEndgameQa(g);
+  else if (qaMode === "ai-reacquire") prepareAiReacquireQa(g);
   else if (qaMode === "supplies") prepareSuppliesQa(g);
   else if (qaMode === "airstrike") prepareAirstrikeQa(g);
   else if (qaMode === "crawler") prepareCrawlerQa(g);
@@ -1123,18 +1944,130 @@ const SPRITE_DISPLAY_SIZES: Record<string, { w: number; h: number }> = {
   scout: { w: 58, h: 98 }, ranger: { w: 58, h: 98 }, brute: { w: 72, h: 108 },
   brawler: { w: 62, h: 99 }, gunner: { w: 60, h: 100 }, medic: { w: 60, h: 100 },
   "crazy-king": { w: 72, h: 104 }, kumaverson: { w: 64, h: 102 }, babayaga: { w: 62, h: 103 },
+  guardian: { w: 78, h: 108 }, engineer: { w: 60, h: 100 },
   walker: { w: 58, h: 96 }, runner: { w: 53, h: 90 }, turned: { w: 58, h: 96 },
   shade: { w: 64, h: 101 }, spitter: { w: 62, h: 101 }, crusher: { w: 80, h: 112 },
   abomination: { w: 101, h: 132 }, takuya: { w: 94, h: 128 },
+  grappler: { w: 78, h: 108 }, ooze: { w: 70, h: 94 }, sprinter: { w: 58, h: 96 },
+  "gate-eater": { w: 126, h: 142 },
 };
 
 function spriteDisplaySize(kind: string) {
   return SPRITE_DISPLAY_SIZES[kind] ?? { w: 58, h: 96 };
 }
 
+// Asset-load diagnostic fallback only. Normal production rendering resolves
+// both late-game roles through manifest-backed approved atlases.
+function drawDiagnosticRoleFighter(ctx: CanvasRenderingContext2D, f: Fighter) {
+  if (f.kind !== "guardian" && f.kind !== "engineer") return;
+  const guardian = f.kind === "guardian";
+  ctx.save();
+  ctx.translate(f.x, f.y);
+  ctx.fillStyle = "rgba(0,0,0,.42)";
+  ctx.beginPath(); ctx.ellipse(0, 8, guardian ? 24 : 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = guardian ? "#48575b" : "#806b3e";
+  ctx.strokeStyle = f.flash > 0 ? "#fff1ad" : guardian ? "#aebfc1" : "#d5bd78";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  if (guardian) {
+    ctx.roundRect(-19, -69, 38, 66, 10);
+  } else {
+    ctx.roundRect(-14, -61, 28, 58, 8);
+  }
+  ctx.fill(); ctx.stroke();
+  if (guardian) {
+    ctx.fillStyle = "#2c3538"; ctx.strokeStyle = "#d1dadd"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(5, -62, 27, 55, 7); ctx.fill(); ctx.stroke();
+  } else {
+    ctx.strokeStyle = "#e1c978"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(-20, -43); ctx.lineTo(21, -21); ctx.stroke();
+    ctx.beginPath(); ctx.arc(23, -20, 6, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.fillStyle = "#fff4d4";
+  ctx.font = "900 13px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(guardian ? "G" : "M", guardian ? -2 : 0, -35);
+  ctx.restore();
+}
+
+// Asset-load diagnostic fallback only. Normal production rendering resolves
+// station enemies through manifest-backed approved atlases.
+function drawDiagnosticStationEnemy(ctx: CanvasRenderingContext2D, f: Fighter) {
+  if (!["grappler", "ooze", "sprinter", "gate-eater"].includes(f.kind)) return;
+  const gateEater = f.kind === "gate-eater";
+  const grappler = f.kind === "grappler";
+  const ooze = f.kind === "ooze";
+  const color = gateEater ? "#635f54" : grappler ? "#625044" : ooze ? "#4c5d47" : "#655047";
+  const accent = gateEater ? "#e0b35c" : grappler ? "#d68c68" : ooze ? "#a7c071" : "#e2a76f";
+  ctx.save();
+  ctx.translate(f.x, f.y);
+  ctx.fillStyle = "rgba(0,0,0,.46)";
+  ctx.beginPath(); ctx.ellipse(0, 8, gateEater ? 38 : ooze ? 25 : 20, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = color;
+  ctx.strokeStyle = f.flash > 0 ? "#fff1ad" : accent;
+  ctx.lineWidth = gateEater ? 4 : 3;
+  if (gateEater) {
+    ctx.beginPath(); ctx.roundRect(-38, -84, 76, 78, 8); ctx.fill(); ctx.stroke();
+    for (const offset of [-24, 0, 24]) {
+      ctx.beginPath(); ctx.moveTo(offset, -76); ctx.lineTo(offset, -12); ctx.stroke();
+    }
+    ctx.fillStyle = "#332d28"; ctx.fillRect(-25, -66, 50, 28);
+  } else if (ooze) {
+    ctx.beginPath();
+    ctx.moveTo(-25, -10); ctx.quadraticCurveTo(-21, -55, 0, -58);
+    ctx.quadraticCurveTo(22, -52, 25, -8); ctx.closePath(); ctx.fill(); ctx.stroke();
+    for (const offset of [-16, 0, 15]) {
+      ctx.beginPath(); ctx.moveTo(offset, -7); ctx.quadraticCurveTo(offset + 4, 2, offset + 1, 8); ctx.stroke();
+    }
+  } else {
+    ctx.beginPath();
+    if (f.kind === "sprinter") {
+      ctx.moveTo(-10, -66); ctx.lineTo(20, -45); ctx.lineTo(10, -4); ctx.lineTo(-18, -10); ctx.closePath();
+    } else {
+      ctx.roundRect(-15, -70, 30, 66, 9);
+    }
+    ctx.fill(); ctx.stroke();
+    ctx.lineWidth = grappler ? 7 : 4;
+    ctx.beginPath();
+    if (grappler) {
+      ctx.moveTo(-10, -53); ctx.lineTo(-38, -27); ctx.lineTo(-48, -2);
+      ctx.moveTo(10, -53); ctx.lineTo(38, -27); ctx.lineTo(48, -2);
+    } else {
+      ctx.moveTo(-6, -10); ctx.lineTo(-24, 4);
+      ctx.moveTo(8, -8); ctx.lineTo(28, 1);
+    }
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#fff4d4";
+  ctx.font = `900 ${gateEater ? 17 : 14}px monospace`;
+  ctx.textAlign = "center";
+  ctx.fillText(gateEater ? "改" : grappler ? "絡" : ooze ? "泥" : "走", 0, gateEater ? -46 : -32);
+  ctx.restore();
+}
+
+function drawMonkeyTrap(ctx: CanvasRenderingContext2D, fighter: Fighter) {
+  if (fighter.kind !== "engineer" || !fighter.engineerTrapReady || fighter.engineerTrapLane === null) return;
+  const x = fighter.engineerTrapX;
+  const y = activeLaneCenters[fighter.engineerTrapLane] + 5;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = "rgba(0,0,0,.45)";
+  ctx.beginPath(); ctx.ellipse(0, 3, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#d9c16d"; ctx.fillStyle = "#5b5335"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(-14, -7, 28, 10, 3); ctx.fill(); ctx.stroke();
+  for (const offset of [-9, 0, 9]) {
+    ctx.beginPath(); ctx.moveTo(offset - 3, -7); ctx.lineTo(offset, -15); ctx.lineTo(offset + 3, -7); ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: SpriteMap) {
   const sprite = sprites[f.kind];
-  if (!sprite?.complete || !sprite.naturalWidth) return;
+  if (!sprite?.complete || !sprite.naturalWidth) {
+    drawDiagnosticRoleFighter(ctx, f);
+    drawDiagnosticStationEnemy(ctx, f);
+    return;
+  }
   const moving = f.side === "zombie" || Math.abs(f.aiMoveDirection) > .05;
   const state = f.flash > 0 ? "hit"
     : f.attack > .09 ? "attack-b"
@@ -1206,6 +2139,167 @@ function drawAreaEffect(ctx: CanvasRenderingContext2D, effect: AreaEffect, time:
       ctx.fillStyle = i % 2 ? "#ffb33f" : "#e64e29";
       ctx.beginPath(); ctx.arc(fx, fy, 4 + (i % 3), 0, Math.PI * 2); ctx.fill();
     }
+  }
+  ctx.restore();
+}
+
+function drawStationHazard(ctx: CanvasRenderingContext2D, hazard: StationHazard, time: number) {
+  if (!hazard.active) return;
+  ctx.save();
+  ctx.translate(hazard.centerX, hazard.centerY);
+  ctx.fillStyle = "rgba(93,118,65,.22)";
+  ctx.strokeStyle = `rgba(181,205,116,${.48 + Math.sin(time * 5) * .12})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, hazard.radiusX, hazard.radiusY, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  for (let index = 0; index < 5; index++) {
+    const x = Math.sin(time * 2.8 + index * 1.7) * hazard.radiusX * .72;
+    const y = Math.cos(time * 3.2 + index * 1.3) * hazard.radiusY * .55;
+    ctx.fillStyle = index % 2 ? "#778b55" : "#a1b66f";
+    ctx.beginPath(); ctx.arc(x, y, 2 + index % 2, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap) {
+  if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
+    const x = escortCartX(g.stageMission, g.definition.missionConfig);
+    const y = activeLaneCenters[1] + 13;
+    const integrity = Math.max(0, g.stageMission.integrity ?? 0);
+    const maxIntegrity = Math.max(1, g.stageMission.maxIntegrity ?? 1);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = "rgba(0,0,0,.45)";
+    ctx.beginPath(); ctx.ellipse(0, 6, 32, 6, 0, 0, Math.PI * 2); ctx.fill();
+    const cartSprite = stageObjects["station-platform-mission-art-source"];
+    if (cartSprite?.complete && cartSprite.naturalWidth) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(cartSprite, 90, 260, 1400, 520, -60, -51, 120, 45);
+    } else {
+      ctx.fillStyle = "#5f665f"; ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(-28, -27, 56, 30, 5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#bfc8bb"; ctx.fillRect(-22, -20, 18, 12);
+      ctx.fillStyle = "#81735a"; ctx.fillRect(2, -20, 20, 12);
+      ctx.fillStyle = "#171b1a"; ctx.beginPath(); ctx.arc(-18, 5, 6, 0, Math.PI * 2); ctx.arc(18, 5, 6, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(-60, -51, 120, 45);
+    ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillRect(-60, -61, 120, 6);
+    ctx.fillStyle = "#d5b85e"; ctx.fillRect(-59, -60, 118 * integrity / maxIntegrity, 4);
+    ctx.restore();
+  }
+  if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+    const activated = g.stageMission.powerActivated ?? 0;
+    const configuredPanelXs = g.definition.missionConfig.powerXs;
+    const panelXs = Array.isArray(configuredPanelXs) && configuredPanelXs.length === 3
+      ? configuredPanelXs.map((value, index) => Number(value) || [410, 584, 744][index])
+      : [410, 584, 744];
+    const configuredLanes = g.definition.missionConfig.powerLanes;
+    const lanes = (Array.isArray(configuredLanes) && configuredLanes.length === 3
+      ? configuredLanes.map((value, index) => [0, 1, 2].includes(Number(value)) ? Number(value) : [0, 2, 1][index])
+      : [0, 2, 1]) as Lane[];
+    for (let index = 0; index < 3; index++) {
+      const active = index < activated;
+      const current = index === activated;
+      const x = panelXs[index];
+      const y = activeLaneCenters[lanes[index]] - 8;
+      ctx.save(); ctx.translate(x, y);
+      const powerSprite = stageObjects["station-tunnel-mission-art-source"];
+      const powerCrops = [
+        { x: 82, y: 55, w: 378, h: 760 },
+        { x: 520, y: 48, w: 365, h: 770 },
+        { x: 930, y: 58, w: 350, h: 755 },
+      ];
+      if (powerSprite?.complete && powerSprite.naturalWidth) {
+        const crop = powerCrops[index];
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(powerSprite, crop.x, crop.y, crop.w, crop.h, -23, -92, 46, 94);
+      } else {
+        ctx.fillStyle = active ? "#596d58" : "#3b4240";
+        ctx.fillRect(-13, -33, 26, 35);
+      }
+      ctx.strokeStyle = active ? "#b8df83" : current ? "#e1aa5f" : "#707872";
+      ctx.lineWidth = current ? 3 : 2;
+      ctx.strokeRect(-23, -92, 46, 94);
+      ctx.fillStyle = active ? "#c9f09a" : "#7a6d57";
+      ctx.font = "900 12px monospace"; ctx.textAlign = "center";
+      ctx.fillText(String(index + 1), 0, -6);
+      ctx.restore();
+    }
+    if (g.researchContainer?.exposed) {
+      const container = g.researchContainer;
+      const y = activeLaneCenters[container.lane] + 8;
+      ctx.save();
+      ctx.translate(container.x, y);
+      ctx.fillStyle = "rgba(0,0,0,.44)";
+      ctx.beginPath(); ctx.ellipse(0, 7, 25, 6, 0, 0, Math.PI * 2); ctx.fill();
+      const controllerSprite = stageObjects["station-tunnel-mission-art-source"];
+      if (controllerSprite?.complete && controllerSprite.naturalWidth) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(controllerSprite, 1280, 420, 270, 390, -23, -54, 46, 66);
+      } else {
+        ctx.fillStyle = container.contained ? "#4b6758" : "#635f50";
+        ctx.beginPath(); ctx.roundRect(-22, -35, 44, 39, 5); ctx.fill();
+        ctx.fillStyle = "#181b1a"; ctx.fillRect(-14, -28, 28, 15);
+      }
+      ctx.strokeStyle = container.contained ? "#b8dc97" : "#d3b56e";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(-23, -54, 46, 66);
+      ctx.fillStyle = container.contained ? "#b8dc97" : "#e1c272";
+      ctx.font = "900 11px monospace"; ctx.textAlign = "center";
+      ctx.fillText("研究", 0, 8);
+      ctx.restore();
+    }
+    const sealDoorX = Number(g.definition.missionConfig.sealDoorX ?? 867);
+    ctx.save();
+    const doorClosed = g.stageMission.completed === true;
+    const returnWindowOpen = g.stageMission.sealed === true && !doorClosed;
+    ctx.fillStyle = doorClosed
+      ? "rgba(54,75,62,.85)"
+      : returnWindowOpen
+        ? "rgba(82,57,37,.82)"
+        : "rgba(52,46,42,.82)";
+    ctx.strokeStyle = doorClosed ? "#b6d38f" : returnWindowOpen ? "#e0a15e" : "#b2875a";
+    ctx.lineWidth = 4;
+    ctx.fillRect(sealDoorX - 39, activeLaneCenters[0] - 68, 78, activeLaneCenters[2] - activeLaneCenters[0] + 92);
+    ctx.strokeRect(sealDoorX - 39, activeLaneCenters[0] - 68, 78, activeLaneCenters[2] - activeLaneCenters[0] + 92);
+    ctx.restore();
+  }
+}
+
+function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+  if (f.stationAbility.phase === "idle") return;
+  ctx.save();
+  ctx.lineWidth = 3;
+  ctx.setLineDash([8, 6]);
+  if (f.kind === "grappler" && f.stationAbility.phase === "windup") {
+    const target = g.fighters.find((candidate) => String(candidate.id) === String(f.stationAbility.targetId));
+    if (target) {
+      ctx.strokeStyle = "rgba(222,128,92,.8)";
+      ctx.beginPath(); ctx.moveTo(f.x, f.y - 35); ctx.lineTo(target.x, target.y - 34); ctx.stroke();
+    }
+  } else if (f.kind === "ooze" && f.stationAbility.phase === "windup") {
+    ctx.strokeStyle = "rgba(172,198,103,.82)";
+    ctx.beginPath();
+    ctx.ellipse(f.stationAbility.centerX ?? f.x, f.stationAbility.centerY ?? f.y, STATION_ENEMY_TUNING.leakMud.radiusX, STATION_ENEMY_TUNING.leakMud.radiusY, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (f.kind === "sprinter" && f.stationAbility.phase === "telegraph") {
+    ctx.fillStyle = "rgba(225,153,88,.16)";
+    ctx.fillRect(BASE_X + 28, f.y - 18, Math.max(0, f.x - BASE_X - 28), 36);
+    ctx.strokeStyle = "rgba(230,164,103,.85)";
+    ctx.strokeRect(BASE_X + 28, f.y - 18, Math.max(0, f.x - BASE_X - 28), 36);
+  } else if (f.kind === "gate-eater" && f.stationAbility.phase === "windup") {
+    const targetX = f.stationAbility.targetX ?? BASE_X + 48;
+    ctx.fillStyle = "rgba(224,166,83,.16)";
+    ctx.fillRect(targetX, f.y - 31, Math.max(0, f.x - targetX), 62);
+    ctx.strokeStyle = "rgba(231,178,91,.9)";
+    ctx.strokeRect(targetX, f.y - 31, Math.max(0, f.x - targetX), 62);
   }
   ctx.restore();
 }
@@ -1414,8 +2508,16 @@ function drawCrawlerExitFrame(ctx: CanvasRenderingContext2D, g: Game) {
   ctx.restore();
 }
 
-function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: HTMLImageElement | null) {
+function drawEnemyBase(
+  ctx: CanvasRenderingContext2D,
+  g: Game,
+  enemyBaseSprite: HTMLImageElement | null,
+  stageObjects: SpriteMap,
+) {
   const barrier = WORLD_GEOMETRY.enemyBase;
+  const stationRelaySprite = g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE
+    ? stageObjects["station-gate-mission-art-source"]
+    : null;
   const ratio = Math.max(0, g.barricadeHp / g.barricadeMaxHp);
   const visualState = enemyBaseVisualState({ hp: g.barricadeHp, elapsed: g.enemyBaseCollapse });
   const damageLevel = visualState.damageLevel;
@@ -1426,7 +2528,10 @@ function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: 
   ctx.beginPath();
   ctx.ellipse(barrier.drawX + barrier.width * .55, barrier.drawY + barrier.height - 5, barrier.width * .5, 12, 0, 0, Math.PI * 2);
   ctx.fill();
-  if (enemyBaseSprite?.complete && enemyBaseSprite.naturalWidth && collapse < 1) {
+  const productionBaseSprite = stationRelaySprite?.complete && stationRelaySprite.naturalWidth
+    ? stationRelaySprite
+    : enemyBaseSprite;
+  if (productionBaseSprite?.complete && productionBaseSprite.naturalWidth && collapse < 1) {
     ctx.save();
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
@@ -1441,7 +2546,21 @@ function drawEnemyBase(ctx: CanvasRenderingContext2D, g: Game, enemyBaseSprite: 
       ctx.translate(collapse * 18, collapse * collapse * 76);
     }
     ctx.globalAlpha = breached ? Math.max(0, 1 - collapse * 1.2) : .94 + ratio * .06;
-    ctx.drawImage(enemyBaseSprite, barrier.drawX, barrier.drawY, barrier.width, barrier.height);
+    if (productionBaseSprite === stationRelaySprite) {
+      ctx.drawImage(
+        productionBaseSprite,
+        1080,
+        210,
+        360,
+        540,
+        barrier.drawX,
+        barrier.drawY + 28,
+        barrier.width,
+        285,
+      );
+    } else {
+      ctx.drawImage(productionBaseSprite, barrier.drawX, barrier.drawY, barrier.width, barrier.height);
+    }
     ctx.restore();
   }
   ctx.shadowBlur = 0;
@@ -1643,6 +2762,7 @@ function stageObjectStatesForGame(g: Game) {
       g.convoyProgress >= 1 / 6 ? "supplies-open" : "supplies-sealed",
     ];
   }
+  if (g.definition.stageId !== CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE) return [];
   const bossIncoming = g.enemySpawn.pending.some((entry) => entry.kind === "takuya");
   const nestState = g.barricadeHp <= 0 ? "nest-destroyed"
     : g.bossDefeated && g.barricadeHp / Math.max(1, g.barricadeMaxHp) <= .7 ? "nest-damaged"
@@ -1651,6 +2771,7 @@ function stageObjectStatesForGame(g: Game) {
 }
 
 function activeStageObjectsForGame(g: Game) {
+  if (!STAGE_OBJECT_MANIFEST[g.definition.stageId]) return [];
   return stageObjectsFor(g.definition.stageId, stageObjectStatesForGame(g));
 }
 
@@ -1735,7 +2856,117 @@ function drawStageBackground(ctx: CanvasRenderingContext2D, g: Game, background:
   ctx.restore();
 }
 
-function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImageElement | null, sprites: SpriteMap, stageObjects: SpriteMap, enemyBaseSprite: HTMLImageElement | null) {
+function drawDiagnosticStationBackground(ctx: CanvasRenderingContext2D, g: Game) {
+  if (![CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE, CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM, CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL].includes(g.definition.stageId)) {
+    ctx.fillStyle = "#111617";
+    ctx.fillRect(0, 0, W, H);
+    return;
+  }
+  const gate = g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE;
+  const platform = g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM;
+  ctx.fillStyle = gate ? "#202323" : platform ? "#171d20" : "#17191a";
+  ctx.fillRect(0, 0, W, H);
+  const wall = ctx.createLinearGradient(0, 0, 0, activeLaneCenters[0] - 70);
+  wall.addColorStop(0, gate ? "#323737" : platform ? "#253038" : "#292b2b");
+  wall.addColorStop(1, "#151919");
+  ctx.fillStyle = wall;
+  ctx.fillRect(0, 0, W, activeLaneCenters[0] - 58);
+  ctx.fillStyle = gate ? "#3a3731" : platform ? "#32373a" : "#2e302f";
+  ctx.fillRect(0, activeLaneCenters[0] - 58, W, activeLaneCenters[2] - activeLaneCenters[0] + 132);
+  ctx.strokeStyle = "rgba(219,183,112,.18)";
+  ctx.lineWidth = 2;
+  for (const lane of [0, 1, 2] as Lane[]) {
+    ctx.beginPath();
+    ctx.moveTo(BASE_X + 28, activeLaneCenters[lane] + 13);
+    ctx.lineTo(912, activeLaneCenters[lane] + 13);
+    ctx.stroke();
+  }
+  if (gate) {
+    for (let index = 0; index < 5; index++) {
+      const x = 650 + index * 54;
+      ctx.fillStyle = "#464b49"; ctx.fillRect(x, activeLaneCenters[0] - 52, 34, activeLaneCenters[2] - activeLaneCenters[0] + 88);
+      ctx.fillStyle = "#b45d49"; ctx.fillRect(x + 7, activeLaneCenters[0] - 42, 20, 8);
+    }
+  } else if (platform) {
+    ctx.fillStyle = "#101416";
+    ctx.fillRect(0, activeLaneCenters[2] + 52, W, H - activeLaneCenters[2] - 52);
+    ctx.strokeStyle = "#808581"; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(0, activeLaneCenters[2] + 75); ctx.lineTo(W, activeLaneCenters[2] + 75); ctx.stroke();
+    ctx.strokeStyle = "#d8b84d"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(0, activeLaneCenters[2] + 43); ctx.lineTo(W, activeLaneCenters[2] + 43); ctx.stroke();
+  } else {
+    ctx.strokeStyle = "#4d5453"; ctx.lineWidth = 18;
+    ctx.beginPath(); ctx.moveTo(0, activeLaneCenters[0] - 74); ctx.lineTo(W, activeLaneCenters[0] - 74); ctx.stroke();
+    ctx.strokeStyle = "#29302f"; ctx.lineWidth = 8;
+    for (let x = 110; x < W; x += 120) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, activeLaneCenters[0] - 62); ctx.stroke();
+    }
+  }
+  ctx.fillStyle = "rgba(255,255,255,.58)";
+  ctx.font = "900 11px monospace";
+  ctx.fillText("STATION ART LOAD FALLBACK // CHECK ASSET MANIFEST", 18, 24);
+}
+
+function drawStageGeometryDebug(ctx: CanvasRenderingContext2D, g: Game) {
+  const geometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
+  ctx.save();
+  ctx.globalAlpha = .82;
+  ctx.setLineDash([7, 5]);
+  for (const primitive of stageDebugPrimitives(g.definition.stageId, activeStageViewportId)) {
+    ctx.strokeStyle = primitive.role === "walkable-floor" ? "#62d8a1"
+      : primitive.role === "logical-lane" ? "#7bbde8"
+        : primitive.role === "forbidden-floor" ? "#e36b5d"
+          : primitive.role === "objective-anchor" || primitive.role === "objective-route" ? "#f1cb62"
+            : "#d8e1df";
+    ctx.lineWidth = primitive.role === "walkable-floor" ? 3 : 2;
+    if (primitive.kind === "rect" && "minX" in primitive) {
+      ctx.strokeRect(
+        primitive.minX,
+        primitive.minY,
+        primitive.maxX - primitive.minX,
+        primitive.maxY - primitive.minY,
+      );
+    } else if (primitive.kind === "line" && "x1" in primitive) {
+      ctx.beginPath();
+      ctx.moveTo(primitive.x1, primitive.y1);
+      ctx.lineTo(primitive.x2, primitive.y2);
+      ctx.stroke();
+    } else if (primitive.kind === "circle" && "x" in primitive) {
+      ctx.beginPath();
+      ctx.arc(primitive.x, primitive.y, primitive.radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+  ctx.setLineDash([]);
+  const audit = combatReadyGroundingAudit({ geometry, fighters: g.fighters });
+  const offFloorIds = new Set(audit.offFloor.map(({ id }) => id));
+  for (const fighter of g.fighters) {
+    if (!fighter.combatReady || fighter.hp <= 0) continue;
+    ctx.strokeStyle = offFloorIds.has(fighter.id) ? "#ff4f45" : fighter.side === "human" ? "#74e0b0" : "#ef9b72";
+    ctx.lineWidth = offFloorIds.has(fighter.id) ? 4 : 1.5;
+    ctx.beginPath();
+    ctx.arc(fighter.x, fighter.y, fighter.bodyRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.fillRect(fighter.x - 2, fighter.y - 2, 4, 4);
+  }
+  ctx.fillStyle = "rgba(8,12,13,.88)";
+  ctx.fillRect(14, H - 42, 300, 28);
+  ctx.fillStyle = audit.offFloorCount === 0 ? "#9fe1b5" : "#ff7d70";
+  ctx.font = "900 12px monospace";
+  ctx.fillText(`GEOMETRY ${geometry.viewport.id} // OFF-FLOOR ${audit.offFloorCount}`, 24, H - 24);
+  ctx.restore();
+}
+
+function drawWorld(
+  ctx: CanvasRenderingContext2D,
+  g: Game,
+  background: HTMLImageElement | null,
+  sprites: SpriteMap,
+  stageObjects: SpriteMap,
+  enemyBaseSprite: HTMLImageElement | null,
+  debugGeometry = false,
+) {
   const shakeAmplitude = cameraShakeAmplitude(g.shake);
   const sx = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
   const sy = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
@@ -1743,9 +2974,9 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.restore();
-  if (background?.complete) {
+  if (background?.complete && background.naturalWidth) {
     drawStageBackground(ctx, g, background);
-  }
+  } else drawDiagnosticStationBackground(ctx, g);
   ctx.save();
   ctx.translate(sx, sy);
   const grade = ctx.createLinearGradient(0, 0, W, 0);
@@ -1762,11 +2993,13 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
 
   // A single shared-HP infected checkpoint closes all three routes.
   if (g.definition.enemyBaseMode !== "scenery") {
-    drawEnemyBase(ctx, g, enemyBaseSprite);
+    drawEnemyBase(ctx, g, enemyBaseSprite, stageObjects);
   }
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"]);
 
   for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time);
+  for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
+  drawStationMission(ctx, g, stageObjects);
   drawEmergencySupport(ctx, g);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
@@ -1791,7 +3024,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
       ctx.translate(corpse.x + (allyCue?.tremorX ?? 0), corpse.y + 5 + (allyCue?.tremorY ?? 0));
       const fallAngle = authoredDeathPose ? 0
         : corpse.side === "human" ? -1.18
-          : corpse.kind === "takuya" ? .68
+          : corpse.deathClass === "boss" ? .68
             : corpse.deathClass === "heavy" ? .9 : 1.08;
       ctx.rotate(fallDirection * fallAngle * dyingProgress + (allyCue?.postureJitter ?? 0));
       if (corpse.state === "ashing") {
@@ -1820,8 +3053,8 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
     } else {
       ctx.globalAlpha = corpse.state === "ashing" || corpse.state === "ash" ? Math.min(.55, corpse.life / 2) : .65;
       ctx.translate(corpse.x, corpse.y + 7); ctx.scale(1, .45);
-      ctx.fillStyle = corpse.kind === "takuya" || corpse.kind === "shade" ? "#292d31" : corpse.side === "zombie" ? "#4e5a3e" : "#5d392f";
-      ctx.beginPath(); ctx.ellipse(0, 0, corpse.kind === "abomination" || corpse.kind === "takuya" ? 25 : 15, 7, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = corpse.kind === "takuya" || corpse.kind === "gate-eater" || corpse.kind === "shade" ? "#292d31" : corpse.side === "zombie" ? "#4e5a3e" : "#5d392f";
+      ctx.beginPath(); ctx.ellipse(0, 0, corpse.kind === "abomination" || corpse.kind === "takuya" || corpse.kind === "gate-eater" ? 25 : 15, 7, 0, 0, Math.PI * 2); ctx.fill();
     }
     ctx.restore();
     if (corpse.side === "zombie" && corpse.state === "dying" && corpse.kind === "takuya") {
@@ -1832,7 +3065,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
     if (corpse.side === "zombie" && corpse.state === "ashing") {
       const timing = ENEMY_DEATH_CONFIG.timings[corpse.deathClass ?? "normal"];
       const ashProgress = Math.min(1, corpse.phaseElapsed / timing.ashingSeconds);
-      for (let index = 0; index < (corpse.kind === "takuya" ? 12 : corpse.deathClass === "heavy" ? 8 : 5); index++) {
+      for (let index = 0; index < (corpse.deathClass === "boss" ? 12 : corpse.deathClass === "heavy" ? 8 : 5); index++) {
         const drift = Math.sin(corpse.id * 1.7 + index * 2.3 + g.time * .9);
         ctx.globalAlpha = Math.max(0, .7 - ashProgress * .5 - index * .025);
         ctx.fillStyle = index % 3 === 0 ? "#a15d3e" : "#5d5d52";
@@ -1879,6 +3112,7 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
     }
   }
 
+  for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter);
   const renderables = [
     ...g.fighters.map((fighter) => ({ type: "fighter" as const, x: fighter.x, y: fighter.y, fighter })),
     ...g.battlefieldObjects.filter((object) => object.phase !== "expired").map((object) => ({ type: "object" as const, x: object.x, y: object.y, object })),
@@ -1895,11 +3129,12 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
       ctx.ellipse(f.x, f.y + 2, pulse, pulse / 2, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
+    if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g);
     drawSpriteFighter(ctx, f, sprites);
     if (!f.combatReady) continue;
     const compactScale = activeLaneCenters === LANE_Y ? 1 : 1.1;
-    const barW = (f.kind === "takuya" ? 52 : f.kind === "crusher" || f.kind === "brute" ? 38 : f.kind === "abomination" ? 52 : 28) * compactScale;
-    const height = (f.kind === "takuya" ? 111 : f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "brute" ? 94 : 80) * compactScale;
+    const barW = (f.kind === "takuya" || f.kind === "gate-eater" ? 52 : f.kind === "crusher" || f.kind === "grappler" || f.kind === "brute" || f.kind === "guardian" ? 38 : f.kind === "abomination" ? 52 : 28) * compactScale;
+    const height = (f.kind === "takuya" || f.kind === "gate-eater" ? 111 : f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "grappler" || f.kind === "brute" || f.kind === "guardian" ? 94 : 80) * compactScale;
     const barHeight = compactScale > 1 ? 6 : 4;
     const barY = f.y - height - (compactScale > 1 ? 2 : 0);
     ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(f.x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
@@ -2014,6 +3249,8 @@ function drawWorld(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImage
   }
   ctx.restore();
 
+  if (debugGeometry) drawStageGeometryDebug(ctx, g);
+
   const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 ? Math.min(nearest, fighter.x) : nearest, Infinity);
   const threat = crawlerThreatLevel(nearestEnemyX);
   if (threat > 0 || g.crawlerHitFlash > 0) {
@@ -2084,20 +3321,114 @@ export function AshfallGame() {
   const [selectedAction, setSelectedAction] = useState<SelectedAction>(null);
   const [screen, setScreen] = useState<CampaignScreen>("title");
   const [eventId, setEventId] = useState<string | null>(null);
+  const [storyAudioPosition, setStoryAudioPosition] = useState<{ eventId: string | null; lineIndex: number }>({ eventId: null, lineIndex: 0 });
+  const [forceStoryReplay, setForceStoryReplay] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState(INITIAL_STAGE_ID);
-  const [formationKinds, setFormationKinds] = useState<UnitKind[]>(["brawler", "scout", "ranger", "medic"]);
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
   const [saveHydrated, setSaveHydrated] = useState(false);
   const [savePersistence, setSavePersistence] = useState<SavePersistenceState>("checking");
+  const [saveRecovery, setSaveRecovery] = useState<SaveRecoveryState | null>(null);
+  const [saveMutationPending, setSaveMutationPending] = useState(false);
+  const [pendingResultCommit, setPendingResultCommit] = useState<PendingResultCommit | null>(null);
+  const [resultSaveRetrying, setResultSaveRetrying] = useState(false);
+  const lastPersistedSerializedRef = useRef("");
+  const lastPersistedReplicaRef = useRef<PersistedReplicaReceipt>({ serialized: "", localSaved: false, backupSaved: false });
+  const persistenceWriteBlockedSourcesRef = useRef<Set<string>>(new Set());
+  const persistenceQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const saveMutationPendingRef = useRef(false);
+  const resultSaveRetryingRef = useRef(false);
+  const formationUnitIds = useMemo(() => getSelectedFormationUnitIds(campaignSave), [campaignSave]);
+  const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
+  const formationKindKey = formationKinds.join("|");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
   const [hud, setHud] = useState<Hud>({
-    missionType: "assault", energy: 70, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
+    missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
     barricadeHp: BARRICADE_MAX_HP, barricadeMaxHp: BARRICADE_MAX_HP, barricadeVulnerable: true, barricadeHitFlash: 0,
-    tactic: "balanced", deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0,
+    deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0,
+    takuyaEntranceAudioActive: false,
     crawlerHitFlash: 0, threat: 0,
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), battleBarks: [],
   });
   const [end, setEnd] = useState<BattleResult | null>(null);
+
+  const handleStoryAudioPositionChange = useCallback((nextEventId: string, lineIndex: number) => {
+    const nextLineIndex = Number.isFinite(lineIndex) ? Math.max(0, Math.trunc(lineIndex)) : 0;
+    setStoryAudioPosition((current) => (
+      current.eventId === nextEventId && current.lineIndex === nextLineIndex
+        ? current
+        : { eventId: nextEventId, lineIndex: nextLineIndex }
+    ));
+  }, []);
+
+  const enqueueCampaignStorageMutation = useCallback(<T,>(mutation: () => Promise<T>) => {
+    const queued = persistenceQueueRef.current.then(mutation);
+    persistenceQueueRef.current = queued.then(() => undefined, () => undefined);
+    return queued;
+  }, []);
+
+  const beginSaveMutation = useCallback(() => {
+    if (saveMutationPendingRef.current) return false;
+    saveMutationPendingRef.current = true;
+    setSaveMutationPending(true);
+    return true;
+  }, []);
+
+  const finishSaveMutation = useCallback(() => {
+    saveMutationPendingRef.current = false;
+    setSaveMutationPending(false);
+  }, []);
+
+  const persistCampaignSave = useCallback((nextSave: CampaignSave): Promise<CampaignPersistResult> => {
+    if (saveMutationPendingRef.current) {
+      return Promise.resolve({ durable: false, localSaved: false, backupSaved: false, skipped: true });
+    }
+    const serialized = serializeCampaignSave(nextSave);
+    return enqueueCampaignStorageMutation(async () => {
+      const replica = lastPersistedReplicaRef.current;
+      if (serialized === replica.serialized && replica.localSaved && replica.backupSaved) {
+        return { durable: true, localSaved: true, backupSaved: true };
+      }
+      const storage = campaignStorageFor(window);
+      const indexedDb = indexedDbFor(window);
+      const previous = lastPersistedSerializedRef.current;
+      if (previous) {
+        const snapshot = await writeCampaignRecoverySnapshot({
+          storage,
+          indexedDb,
+          key: CAMPAIGN_SAVE_KEY,
+          kind: CAMPAIGN_SNAPSHOT_KINDS.LAST_KNOWN_GOOD,
+          serialized: previous,
+        });
+        if (!snapshot.saved) {
+          setSavePersistence("unavailable");
+          return { durable: false, localSaved: false, backupSaved: false };
+        }
+      }
+      const sameSerialized = serialized === replica.serialized;
+      const alreadySavedSources = [
+        ...(sameSerialized && replica.localSaved ? ["localStorage"] : []),
+        ...(sameSerialized && replica.backupSaved ? ["indexedDB"] : []),
+      ];
+      const { localSaved, backupSaved } = await writeCampaignSaveReplicas({
+        storage,
+        indexedDb,
+        key: CAMPAIGN_SAVE_KEY,
+        serialized,
+        blockedSources: [...persistenceWriteBlockedSourcesRef.current],
+        alreadySavedSources,
+      });
+      if (localSaved || backupSaved) {
+        lastPersistedSerializedRef.current = serialized;
+        lastPersistedReplicaRef.current = { serialized, localSaved, backupSaved };
+      }
+      setSavePersistence(localSaved || backupSaved ? (localSaved && backupSaved ? "saved" : "recovered") : "unavailable");
+      return {
+        durable: localSaved || backupSaved,
+        localSaved,
+        backupSaved,
+      };
+    });
+  }, [enqueueCampaignStorageMutation]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -2110,21 +3441,90 @@ export function AshfallGame() {
   useEffect(() => {
     let cancelled = false;
     const timer = window.setTimeout(async () => {
-      const localSerialized = readCampaignSave(campaignStorageFor(window), CAMPAIGN_SAVE_KEY);
-      const backupSerialized = localSerialized ? "" : await readCampaignBackup(indexedDbFor(window), CAMPAIGN_SAVE_KEY);
+      const storage = campaignStorageFor(window);
+      const indexedDb = indexedDbFor(window);
+      const reconciled = await reconcileCampaignStorage({
+        storage,
+        indexedDb,
+        key: CAMPAIGN_SAVE_KEY,
+        validate: (serialized: string, context: { source: string }) => inspectCampaignSaveCandidate(serialized, { source: context.source }),
+      });
       if (cancelled) return;
-      const loaded = deserializeCampaignSave(localSerialized || backupSerialized) as CampaignSave;
+      persistenceWriteBlockedSourcesRef.current = new Set(reconciled.writeBlockedSources ?? []);
+      if (reconciled.status === "recovery-needed") {
+        setSaveRecovery(reconciled as SaveRecoveryState);
+        setSavePersistence("unavailable");
+        return;
+      }
+      if (reconciled.status === "unavailable") {
+        setSavePersistence("unavailable");
+        return;
+      }
+      if (reconciled.repairBlockedBySnapshot) {
+        lastPersistedSerializedRef.current = reconciled.serialized || "";
+        lastPersistedReplicaRef.current = {
+          serialized: reconciled.serialized || "",
+          localSaved: reconciled.source === "localStorage",
+          backupSaved: reconciled.source === "indexedDB",
+        };
+        setSaveRecovery({
+          ...(reconciled as SaveRecoveryState),
+          status: "recovery-needed",
+          recoveryReason: "last-known-good-snapshot-failed",
+        });
+        setSavePersistence("unavailable");
+        return;
+      }
+      const loaded = (reconciled.value ?? createDefaultCampaignSave()) as CampaignSave;
+      const selectedCandidate = reconciled.candidates?.find((candidate: { source: string }) => candidate.source === reconciled.source);
+      const sourceSchemaVersion = Number(selectedCandidate?.validation?.sourceSchemaVersion);
+      if (reconciled.serialized && Number.isFinite(sourceSchemaVersion) && sourceSchemaVersion < 5) {
+        const snapshot = await writeCampaignRecoverySnapshot({
+          storage,
+          indexedDb,
+          key: CAMPAIGN_SAVE_KEY,
+          kind: CAMPAIGN_SNAPSHOT_KINDS.PRE_MIGRATION,
+          serialized: reconciled.serialized,
+        });
+        if (!snapshot.saved) {
+          setSaveRecovery({
+            ...(reconciled as SaveRecoveryState),
+            status: "recovery-needed",
+            recoveryReason: "pre-migration-snapshot-failed",
+          });
+          setSavePersistence("unavailable");
+          return;
+        }
+      }
+      if (cancelled) return;
+      lastPersistedSerializedRef.current = reconciled.serialized || "";
+      lastPersistedReplicaRef.current = {
+        serialized: reconciled.serialized || "",
+        localSaved: Boolean(reconciled.serialized && (
+          reconciled.candidates?.some((candidate: { source: string; valid: boolean; serialized: string }) => candidate.source === "localStorage" && candidate.valid && candidate.serialized === reconciled.serialized)
+          || reconciled.repairedSources?.includes("localStorage")
+        )),
+        backupSaved: Boolean(reconciled.serialized && (
+          reconciled.candidates?.some((candidate: { source: string; valid: boolean; serialized: string }) => candidate.source === "indexedDB" && candidate.valid && candidate.serialized === reconciled.serialized)
+          || reconciled.repairedSources?.includes("indexedDB")
+        )),
+      };
       const legacyQa = resolveLocalQaMode(window.location.hostname, window.location.search) as QaMode | null;
       const campaignQa = resolveLocalQaScenario(window.location.hostname, window.location.search);
       const localQaAudio = Boolean(legacyQa || campaignQa);
       setCampaignSave(loaded);
       setSelectedStageId(legacyQa ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : loaded.lastSelectedStageId);
-      setFormationKinds(legacyQa ? cards.map((card) => card.kind) : (current) => current.filter((kind) => loaded.unlockedUnitIds.includes(kind)));
       if (legacyQa) setScreen("loadout");
       setBgmMuted(localQaAudio ? false : !loaded.settings.bgmEnabled);
       sfxMutedRef.current = localQaAudio ? false : !loaded.settings.sfxEnabled;
       setSfxMuted(localQaAudio ? false : !loaded.settings.sfxEnabled);
-      if (!localSerialized && backupSerialized) setSavePersistence("recovered");
+      setSavePersistence(reconciled.status === "recovered" || reconciled.status === "degraded"
+        ? "recovered"
+        : reconciled.status === "unavailable"
+          ? "unavailable"
+          : reconciled.status === "empty"
+            ? "checking"
+            : "saved");
       setSaveHydrated(true);
     }, 0);
     return () => {
@@ -2139,17 +3539,8 @@ export function AshfallGame() {
     // conveniences into ordinary campaign progress.
     if (resolveLocalQaMode(window.location.hostname, window.location.search)
       || resolveLocalQaScenario(window.location.hostname, window.location.search)) return;
-    let cancelled = false;
-    const serialized = serializeCampaignSave(campaignSave);
-    const localSaved = writeCampaignSave(campaignStorageFor(window), CAMPAIGN_SAVE_KEY, serialized);
-    void writeCampaignBackup(indexedDbFor(window), CAMPAIGN_SAVE_KEY, serialized).then((backupSaved) => {
-      if (cancelled) return;
-      setSavePersistence(localSaved || backupSaved ? "saved" : "unavailable");
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [campaignSave, saveHydrated]);
+    void persistCampaignSave(campaignSave);
+  }, [campaignSave, persistCampaignSave, saveHydrated]);
 
   useEffect(() => {
     const sfxRequestGate = sfxRequestGateRef.current;
@@ -2234,6 +3625,13 @@ export function AshfallGame() {
         if (!await mixer.unlock()) return null;
         return mixer.setScene(sceneId);
       },
+      suspend: async () => {
+        if (!mixer.context || mixer.context.state === "closed") return false;
+        await mixer.context.suspend();
+        return mixer.context.state === "suspended";
+      },
+      recover: () => mixer.recoverAudio({ reason: "local-qa" }),
+      hasInstance: (instanceKey: string) => mixer.hasInstance(instanceKey),
       stopScene: (fadeMs = 0) => mixer.stopScene({ fadeMs }),
       stopAll: (fadeMs = 0) => mixer.stopAll({ fadeMs }),
     };
@@ -2253,6 +3651,9 @@ export function AshfallGame() {
         root.dataset.audioUnlocked = String(diagnostics.unlocked);
         root.dataset.audioContextState = diagnostics.contextState ?? "none";
         root.dataset.audioActiveVoices = String(diagnostics.activeVoices);
+        root.dataset.audioActiveLoopVoices = String(diagnostics.activeLoopVoices);
+        root.dataset.audioActiveSceneVoices = String(diagnostics.activeSceneVoices);
+        root.dataset.audioDuplicateLoopInstances = String(diagnostics.duplicateLoopInstanceKeys.length);
         root.dataset.audioWarnings = String(diagnostics.warningTotal);
         root.dataset.audioCacheReady = String(diagnostics.cache.ready);
         root.dataset.audioCacheFailed = String(diagnostics.cache.failed);
@@ -2370,6 +3771,9 @@ export function AshfallGame() {
         delete document.documentElement.dataset.audioUnlocked;
         delete document.documentElement.dataset.audioContextState;
         delete document.documentElement.dataset.audioActiveVoices;
+        delete document.documentElement.dataset.audioActiveLoopVoices;
+        delete document.documentElement.dataset.audioActiveSceneVoices;
+        delete document.documentElement.dataset.audioDuplicateLoopInstances;
         delete document.documentElement.dataset.audioWarnings;
         delete document.documentElement.dataset.audioCacheReady;
         delete document.documentElement.dataset.audioCacheFailed;
@@ -2388,20 +3792,51 @@ export function AshfallGame() {
     const bridge = {
       getSnapshot: () => {
         const g = gameRef.current;
+        const geometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
+        const grounding = combatReadyGroundingAudit({ geometry, fighters: g.fighters });
         return {
           screen,
+          resultId: g.resultId,
           stageId: g.definition.stageId,
           time: g.time,
           running: g.running,
           paused: g.paused,
           over: g.over,
           won: g.won,
+          bossDefeated: g.bossDefeated,
+          bossDefeatPending: g.bossDefeatPending,
           baseHp: g.baseHp,
           baseMaxHp: g.baseMaxHp,
+          barricadeHp: g.barricadeHp,
+          barricadeMaxHp: g.barricadeMaxHp,
           wave: g.wave,
+          eventIndex: g.eventIndex,
+          pendingSpawnCount: g.enemySpawn.pending.length,
+          takuyaEntranceAudioRemaining: g.takuyaEntranceAudioRemaining,
           energy: g.energy,
           scrap: g.scrap,
           supportGauge: g.supportGauge,
+          storyBattleReadEventIds: [...g.storyBattleReadEventIds],
+          storyBattleReceiptEventIds: [...g.storyBattleReceiptEventIds],
+          storyBattleEvaluatedCueKeys: [...g.storyBattleBarkState.evaluatedCueKeys],
+          battleBarks: {
+            clock: g.battleBarks.clock,
+            active: g.battleBarks.active.map((bark) => ({ ...bark })),
+            pendingScripted: g.battleBarks.pendingScripted.map((bark) => ({ ...bark })),
+            scriptedCueIds: [...g.battleBarks.scriptedCueIds],
+          },
+          roleMetrics: { ...g.roleMetrics },
+          stationMetrics: { ...g.stationMetrics },
+          stageMission: { ...g.stageMission },
+          researchContainer: g.researchContainer ? { ...g.researchContainer } : null,
+          stationHazards: g.stationHazards.map((hazard) => ({ ...hazard })),
+          geometry: {
+            viewportId: geometry.viewport.id,
+            checkedCount: grounding.checkedCount,
+            offFloorCount: grounding.offFloorCount,
+            offFloorIds: grounding.offFloor.map(({ id }) => id),
+            debugPrimitiveCount: geometry.debugPrimitives.length,
+          },
           fighters: g.fighters.map((fighter) => ({
             id: fighter.id,
             side: fighter.side,
@@ -2411,7 +3846,24 @@ export function AshfallGame() {
             x: fighter.x,
             y: fighter.y,
             hp: fighter.hp,
+            bodyRadius: fighter.bodyRadius,
             targetId: fighter.targetId,
+            targetObjectId: fighter.targetObjectId,
+            combatReady: fighter.combatReady,
+            contained: fighter.contained,
+            damageReductionRemaining: fighter.damageReductionRemaining,
+            comboHits: fighter.comboHits,
+            weaponHeat: fighter.weaponHeat,
+            overheated: fighter.overheated,
+            suppressionStacks: fighter.suppressionStacks,
+            suppressedRemaining: fighter.suppressedRemaining,
+            slowMultiplier: fighter.slowMultiplier,
+            guardStandRemaining: fighter.guardStandRemaining,
+            guardStandAvailable: fighter.guardStandAvailable,
+            engineerTrapReady: fighter.engineerTrapReady,
+            engineerTrapX: fighter.engineerTrapX,
+            armorBreakStacks: fighter.armorBreakStacks,
+            stationAbility: { ...fighter.stationAbility },
           })),
           completedStageIds: [...campaignSave.completedStageIds],
           unlockedStageIds: [...campaignSave.unlockedStageIds],
@@ -2475,6 +3927,11 @@ export function AshfallGame() {
 
   useEffect(() => {
     let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setAssetsReady(false);
+      setAssetError(false);
+    });
     const loadImage = (src: string, onReady: (image: HTMLImageElement) => void) => new Promise<void>((resolve, reject) => {
       const image = new Image();
       image.decoding = "async";
@@ -2490,33 +3947,87 @@ export function AshfallGame() {
       image.onerror = () => reject(new Error(`Image unavailable: ${src}`));
       image.src = src;
     });
-    const criticalPaths: Record<string, string> = {
-      ...Object.fromEntries(spriteKinds.map((kind) => [kind, spriteSheetPath(kind)])),
+    const ensureImageLoaded = (
+      current: HTMLImageElement | null | undefined,
+      src: string,
+      onReady: (image: HTMLImageElement) => void,
+    ) => {
+      if (current?.naturalWidth) {
+        onReady(current);
+        return Promise.resolve();
+      }
+      return loadImage(src, onReady);
+    };
+    const releaseImage = (image: HTMLImageElement | null | undefined) => {
+      if (!image) return;
+      image.onload = null;
+      image.onerror = null;
+      image.removeAttribute("src");
+    };
+    const selectedFormationKinds = formationKindKey.split("|").filter(Boolean) as UnitKind[];
+    const stageEnemyKinds = Array.isArray(CAMPAIGN_STAGE_BY_ID[selectedStageId]?.enemyKinds)
+      ? CAMPAIGN_STAGE_BY_ID[selectedStageId].enemyKinds as UnitKind[]
+      : [];
+    // QA galleries intentionally exercise every atlas. Production only retains
+    // the selected formation and the current stage's enemy roster, preventing
+    // all 23 high-resolution atlases from occupying mobile memory at once.
+    // `turned` can be created from any fallen ally, independent of the stage's
+    // authored enemy roster, so its atlas must remain available in production.
+    const requiredSpriteKinds = qaMode || qaScenario
+      ? [...spriteKinds]
+      : [...new Set([...selectedFormationKinds, ...stageEnemyKinds, "turned" as UnitKind])];
+    const persistentPaths: Record<string, string> = {
       crawler: "/crawler-fortress-v1.png", pod: "/tactical-drop-pod-v1.png",
       drum: "/explosive-drum-v1.png", medical: "/medical-supply-station-v1.png",
     };
-    const stageObjectAssets = Object.values(STAGE_OBJECT_MANIFEST).flatMap((stage) => stage.objects);
+    const stageObjectAssets = STAGE_OBJECT_MANIFEST[selectedStageId]?.objects ?? [];
+    const retainedSpriteKeys = new Set([...Object.keys(persistentPaths), ...requiredSpriteKinds]);
+    for (const [key, image] of Object.entries(spriteRefs.current)) {
+      if (retainedSpriteKeys.has(key)) continue;
+      releaseImage(image);
+      delete spriteRefs.current[key];
+    }
+    const retainedStageObjectIds = new Set(stageObjectAssets.map((object) => object.id));
+    for (const [id, image] of Object.entries(stageObjectRefs.current)) {
+      if (retainedStageObjectIds.has(id)) continue;
+      releaseImage(image);
+      delete stageObjectRefs.current[id];
+    }
+    for (const [stageId, image] of Object.entries(backgroundCacheRef.current)) {
+      if (stageId === selectedStageId) continue;
+      releaseImage(image);
+      delete backgroundCacheRef.current[stageId];
+    }
+    if (!backgroundCacheRef.current[selectedStageId]) backgroundRef.current = null;
+    const currentBackground = backgroundCacheRef.current[selectedStageId];
     const criticalJobs = [
-      loadImage(stageVisualFor(INITIAL_STAGE_ID), (image) => {
-        backgroundCacheRef.current[INITIAL_STAGE_ID] = image;
-        if (!backgroundRef.current) backgroundRef.current = image;
+      ensureImageLoaded(currentBackground, stageVisualFor(selectedStageId), (image) => {
+        backgroundCacheRef.current[selectedStageId] = image;
+        backgroundRef.current = image;
       }),
-      loadImage("/infected-checkpoint-v1.png", (image) => { enemyBaseSpriteRef.current = image; }),
-      ...Object.entries(criticalPaths).map(([key, src]) => loadImage(src, (image) => { spriteRefs.current[key] = image; })),
-      ...stageObjectAssets.map((object) => loadImage(object.path, (image) => { stageObjectRefs.current[object.id] = image; })),
+      ensureImageLoaded(enemyBaseSpriteRef.current, "/infected-checkpoint-v1.png", (image) => { enemyBaseSpriteRef.current = image; }),
+      ...Object.entries(persistentPaths).map(([key, src]) => (
+        ensureImageLoaded(spriteRefs.current[key], src, (image) => { spriteRefs.current[key] = image; })
+      )),
+      ...requiredSpriteKinds.map((kind) => (
+        ensureImageLoaded(spriteRefs.current[kind], spriteSheetPath(kind), (image) => { spriteRefs.current[kind] = image; })
+      )),
+      ...stageObjectAssets.map((object) => (
+        ensureImageLoaded(stageObjectRefs.current[object.id], object.path, (image) => { stageObjectRefs.current[object.id] = image; })
+      )),
     ];
     void Promise.all(criticalJobs).then(() => {
       if (cancelled) return;
+      const root = document.documentElement;
+      root.dataset.assetResidentScope = qaMode || qaScenario ? "all-local-qa" : "stage-and-formation";
+      root.dataset.assetResidentStage = selectedStageId;
+      root.dataset.assetResidentSprites = String(Object.keys(spriteRefs.current).length);
+      root.dataset.assetResidentStageObjects = String(Object.keys(stageObjectRefs.current).length);
+      root.dataset.assetResidentBackgrounds = String(Object.keys(backgroundCacheRef.current).length);
       setAssetsReady(true);
-      for (const [stageId, src] of Object.entries(PRODUCTION_VISUALS.stages)) {
-        if (backgroundCacheRef.current[stageId]) continue;
-        void loadImage(src, (image) => {
-          backgroundCacheRef.current[stageId] = image;
-        }).catch(() => undefined);
-      }
     }).catch(() => { if (!cancelled) setAssetError(true); });
     return () => { cancelled = true; };
-  }, []);
+  }, [formationKindKey, qaMode, qaScenario, selectedStageId]);
 
   useEffect(() => {
     const configureCanvas = () => {
@@ -2526,6 +4037,10 @@ export function AshfallGame() {
       const rect = canvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
       const nextLaneCenters = laneCentersForViewport(rect.width, rect.height) as LaneCenters;
+      activeStageViewportId = resolveStageViewportProfile({
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      }).id;
       if (nextLaneCenters.some((center, lane) => center !== activeLaneCenters[lane])) {
         const previousLaneCenters = activeLaneCenters;
         const shiftForLane = (lane: Lane) => nextLaneCenters[lane] - previousLaneCenters[lane];
@@ -2534,6 +4049,11 @@ export function AshfallGame() {
         for (const corpse of g.corpses) corpse.y += shiftForLane(corpse.lane);
         for (const object of g.battlefieldObjects) object.y += shiftForLane(object.lane);
         for (const effect of g.areaEffects) effect.y += shiftForLane(effect.lane);
+        g.stationHazards = relocateStationHazards({
+          hazards: g.stationHazards,
+          previousLaneCenters,
+          nextLaneCenters,
+        }) as StationHazard[];
         for (const entry of g.enemySpawn.pending) entry.y += shiftForLane(entry.lane);
         if (g.placementIndicator) g.placementIndicator.y += shiftForLane(g.placementIndicator.lane);
         const hitLane = ([0, 1, 2] as Lane[]).reduce((nearest, lane) => (
@@ -2578,24 +4098,6 @@ export function AshfallGame() {
       window.visualViewport?.removeEventListener("scroll", configureCanvas);
     };
   }, []);
-
-  useEffect(() => {
-    const cached = backgroundCacheRef.current[selectedStageId];
-    if (cached) {
-      backgroundRef.current = cached;
-      return;
-    }
-    let cancelled = false;
-    const image = new Image();
-    image.decoding = "async";
-    image.onload = () => {
-      if (cancelled || !image.naturalWidth) return;
-      backgroundCacheRef.current[selectedStageId] = image;
-      backgroundRef.current = image;
-    };
-    image.src = stageVisualFor(selectedStageId);
-    return () => { cancelled = true; };
-  }, [selectedStageId]);
 
   const ensureAudio = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -2797,7 +4299,12 @@ export function AshfallGame() {
     desiredMusicModeRef.current = mode;
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return;
-    const sceneId = sceneIdForScreen("battle", gameRef.current.definition.stageId, { musicMode: mode });
+    const g = gameRef.current;
+    // React owns the two authored silence scenes. The simulation still tracks
+    // the eventual boss/danger mode, but must not overwrite either silence
+    // while its entrance timer or fixed final lines remain active.
+    if (battleSilenceSceneId(g)) return;
+    const sceneId = sceneIdForScreen("battle", g.definition.stageId, { musicMode: mode });
     if (desiredProductionSceneRef.current === sceneId) return;
     desiredProductionSceneRef.current = sceneId;
     if (sceneId && productionMixer.getSettings().bgmEnabled) {
@@ -2896,7 +4403,9 @@ export function AshfallGame() {
   const startMusic = useCallback(() => {
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return;
-    const sceneId = sceneIdForScreen("battle", gameRef.current.definition.stageId, { musicMode: desiredMusicModeRef.current });
+    const g = gameRef.current;
+    const sceneId = battleSilenceSceneId(g)
+      ?? sceneIdForScreen("battle", g.definition.stageId, { musicMode: desiredMusicModeRef.current });
     desiredProductionSceneRef.current = sceneId;
     productionMixer.setSettings({ bgmEnabled: true });
     if (!sceneId) return;
@@ -2949,6 +4458,12 @@ export function AshfallGame() {
     if (audio && audio.state !== "closed") void audio.close();
   }, [stopJingle, stopMusic, stopSfx]);
 
+  const storyFinalCutAudioActive = screen === "battle" && hud.battleBarks.some((bark) => (
+    bark.scripted === true
+    && bark.trigger === STORY_BATTLE_TRIGGER_IDS.FINAL_WEAKPOINT_EXPOSED
+  ));
+  const takuyaEntranceAudioActive = screen === "battle" && hud.takuyaEntranceAudioActive;
+
   useEffect(() => {
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return;
@@ -2961,19 +4476,27 @@ export function AshfallGame() {
       masterVolume: .9,
     });
     productionMixer.setDialogueDucking(screen === "event" || (screen === "battle" && hud.battleBarks.length > 0), {
-      level: screen === "event" ? .42 : .58,
-      fadeMs: 120,
+      level: STORY_AUDIO_MIX.dialogueBgmDuckLevel,
+      ambienceLevel: STORY_AUDIO_MIX.importantAmbienceDuckLevel,
+      fadeMs: STORY_AUDIO_MIX.dialogueReleaseMs,
     });
     const outcome = campaignResult?.won ?? end?.won;
+    const storyLineIndex = storyAudioPosition.eventId === eventId ? storyAudioPosition.lineIndex : 0;
     const musicState = screen === "battle"
-      ? (typeof outcome === "boolean" ? { won: outcome, musicMode: desiredMusicModeRef.current } : { musicMode: desiredMusicModeRef.current })
-      : (typeof outcome === "boolean" ? { won: outcome } : null);
-    const sceneId = sceneIdForScreen(screen, selectedStageId, musicState);
+      ? (typeof outcome === "boolean"
+        ? { won: outcome, musicMode: desiredMusicModeRef.current, eventId, storyLineIndex }
+        : { musicMode: desiredMusicModeRef.current, eventId, storyLineIndex })
+      : (typeof outcome === "boolean" ? { won: outcome, eventId, storyLineIndex } : { eventId, storyLineIndex });
+    const sceneId = storyFinalCutAudioActive
+      ? sceneIdForStoryEvent("stage-takuya-final-v070")
+      : takuyaEntranceAudioActive
+        ? TAKUYA_ENTRANCE_AUDIO.silenceSceneId
+        : sceneIdForScreen(screen, selectedStageId, musicState);
     desiredProductionSceneRef.current = sceneId;
     if (document.documentElement.dataset.audioMixer === "production") {
       document.documentElement.dataset.audioScene = sceneId ?? "none";
     }
-    if (bgmMuted || !sceneId || (screen === "battle" && paused)) {
+    if (!sceneId || (screen === "battle" && paused)) {
       void productionMixer.stopScene({ fadeMs: 180 });
       stopSynthMusic();
       setMusicActive(false);
@@ -2981,9 +4504,9 @@ export function AshfallGame() {
     }
     void productionMixer.setScene(sceneId).then((state) => {
       if (desiredProductionSceneRef.current !== sceneId) return;
-      setMusicActive(Boolean(state?.bgmAssetId));
+      setMusicActive(Boolean(state?.bgmAssetId) && !bgmMuted);
     }).catch(() => setMusicActive(false));
-  }, [bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, hud.battleBarks.length, paused, screen, selectedStageId, sfxMuted, stopSynthMusic]);
+  }, [bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, selectedStageId, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, storyFinalCutAudioActive, takuyaEntranceAudioActive]);
 
   useEffect(() => {
     const active = screen === "battle" && hud.battleBarks.length > 0;
@@ -3153,7 +4676,7 @@ export function AshfallGame() {
     if (selectedActionRef.current) gameRef.current.placementIndicator = null;
   }, []);
 
-  const stageViews = useMemo<StageScreenView[]>(() => (CAMPAIGN_STAGES as unknown as readonly CampaignStageData[]).map((stage, index) => {
+  const stageViews = useMemo<StageScreenView[]>(() => (CAMPAIGN_STAGES as unknown as readonly CampaignStageData[]).map((stage) => {
     const claimed = campaignSave.claimedStarRewardsByStage[stage.id] ?? [];
     const nextMilestone = [1, 2, 3].find((star) => !claimed.includes(star));
     return {
@@ -3161,8 +4684,28 @@ export function AshfallGame() {
       displayName: stage.displayName,
       chapterName: "序章　新たな世界の始まり",
       objective: stage.objective,
-      missionLabel: stage.missionType === "assault" ? "拠点破壊作戦" : stage.missionType === "timed-defense" ? "180秒防衛作戦" : "ボス・拠点攻略",
-      threat: index === 0 ? "危険度 低〜中" : index === 1 ? "危険度 中" : "危険度 極高 / TAKUYA",
+      missionLabel: stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE
+        ? "感染中継点破壊作戦"
+        : stage.missionType === "escort"
+          ? "保守台車護衛作戦"
+          : stage.missionType === "sequential-seal"
+            ? "三電源・封鎖作戦"
+            : stage.missionType === "assault"
+              ? "拠点破壊作戦"
+              : stage.missionType === "timed-defense"
+                ? "180秒防衛作戦"
+                : "ボス・拠点攻略",
+      threat: stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET
+        ? "危険度 低〜中"
+        : stage.id === CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE
+          ? "危険度 中"
+          : stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE
+            ? "危険度 極高 / TAKUYA"
+            : stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE
+              ? "危険度 高 / 絡手"
+              : stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM
+                ? "危険度 高 / 漏泥・走鬼"
+                : "危険度 極高 / 改札喰い",
       unlocked: Boolean(qaMode || qaScenario) || isStageUnlocked(campaignSave, stage.id),
       completed: campaignSave.completedStageIds.includes(stage.id),
       bestStars: campaignSave.bestStarsByStage[stage.id] ?? 0,
@@ -3185,10 +4728,15 @@ export function AshfallGame() {
     rangeBand: unit.rangeBand,
     primaryTarget: unit.primaryTarget,
     deploymentHint: unit.deploymentHint,
-    unlocked: Boolean(qaMode || qaScenario) || isUnitUnlocked(campaignSave, unit.id),
+    owned: Boolean(qaMode || qaScenario) || isUnitOwned(campaignSave, unit.id),
+    discovered: Boolean(qaMode || qaScenario) || isUnitDiscovered(campaignSave, unit.id),
+    recruitable: !isUnitOwned(campaignSave, unit.id) && (Boolean(qaMode || qaScenario) || isUnitRecruitable(campaignSave, unit.id)),
+    recruitCost: CAMPAIGN_RECRUITMENT_COSTS[unit.id as keyof typeof CAMPAIGN_RECRUITMENT_COSTS] ?? unit.recruitmentCostCaps ?? 0,
     unlockHint: unit.unlock.type === "initial"
-      ? "初期解放"
-      : `${CAMPAIGN_STAGE_BY_ID[unit.unlock.stageId]?.displayName ?? "指定ステージ"}クリアで解放`,
+      ? "初期加入"
+      : unit.unlock.type === "recruitment"
+        ? `${CAMPAIGN_STAGE_BY_ID[unit.unlock.stageId ?? ""]?.displayName ?? `Stage ${unit.unlock.stageNumber ?? "?"}`}後に調達`
+        : `Stage ${unit.unlock.stageNumber ?? "?"}で加入`,
   })), [campaignSave, qaMode, qaScenario]);
   const supplyViews = useMemo<SupplyScreenView[]>(() => (Object.keys(supplyDefs) as SupplyKind[]).map((kind) => ({
     kind,
@@ -3207,6 +4755,7 @@ export function AshfallGame() {
     desiredProductionSceneRef.current = null;
     eventQueueRef.current = [];
     eventCompletionLockRef.current = false;
+    setForceStoryReplay(false);
     gameRef.current.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
     const mixer = productionMixerRef.current;
     if (mixer) void mixer.stopAll({ fadeMs: 80 });
@@ -3215,16 +4764,22 @@ export function AshfallGame() {
     stopSfx();
   }, [chooseAction, stopJingle, stopMusic, stopSfx]);
 
-  const openEvents = useCallback((nextEventIds: readonly string[], destination: EventDestination) => {
+  const openEvents = useCallback((
+    nextEventIds: readonly string[],
+    destination: EventDestination,
+    { forceReplay = false }: { forceReplay?: boolean } = {},
+  ) => {
     const queue = [...new Set(nextEventIds.filter(Boolean))];
     if (queue.length === 0) return false;
     eventCompletionLockRef.current = false;
+    setForceStoryReplay(forceReplay);
     eventDestinationRef.current = destination;
     eventQueueRef.current = queue.slice(1);
     if (destination === "battle-resume") {
       const g = gameRef.current;
       g.paused = true;
-      g.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
+      g.battleBarks = clearNonScriptedBattleBarks(g.battleBarks) as BattleBarkRuntime;
+      setHud((current) => ({ ...current, battleBarks: [] }));
       setPaused(true);
       chooseAction(null);
       stopMusic(); stopJingle(); stopSfx();
@@ -3247,15 +4802,18 @@ export function AshfallGame() {
     const battleStageId = qaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : sessionOverride?.stageId ?? selectedStageId;
     const requestedFormation = sessionOverride?.formationKinds ?? formationKinds;
     const permittedFormation = qaAllUnlocked
-      ? requestedFormation
-      : requestedFormation.filter((kind) => isUnitUnlocked(campaignSave, kind));
-    const fallbackFormation = cards.map((card) => card.kind).filter((kind) => qaAllUnlocked || isUnitUnlocked(campaignSave, kind));
+      ? requestedFormation.slice(0, 7)
+      : requestedFormation.filter((kind) => isUnitOwned(campaignSave, kind)).slice(0, 7);
+    const fallbackFormation = getSelectedFormationCombatKinds(campaignSave)
+      .filter((kind: string) => qaAllUnlocked || isUnitOwned(campaignSave, kind))
+      .slice(0, 7) as UnitKind[];
     const battleSupply = sessionOverride?.selectedSupply ?? selectedSupply;
     const fresh = initialGame(
       battleSupply,
       battleStageId,
       permittedFormation.length > 0 ? permittedFormation : fallbackFormation,
       sessionOverride?.resultId ?? createBattleResultId(battleStageId),
+      campaignSave.readStoryEventIds,
     );
     fresh.running = true;
     prepareQaMode(fresh, qaMode);
@@ -3266,6 +4824,12 @@ export function AshfallGame() {
       fresh.banner = "LOCAL QA // 防衛終了8秒前";
       fresh.bannerTime = 2.2;
     }
+    if (qaScenario?.mode === "station") {
+      // A terminal QA fixture must not immediately re-inject the same result
+      // after the player chooses retry. Replays exercise the real fresh-start
+      // path while retaining local-save isolation.
+      prepareStationQa(fresh, retrying ? "start" : qaScenario.state);
+    }
     gameRef.current = fresh;
     const boss = fresh.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
     desiredMusicModeRef.current = "normal";
@@ -3274,9 +4838,10 @@ export function AshfallGame() {
     setHud({ missionType: fresh.definition.missionType, energy: Math.floor(fresh.energy), supportGauge: Math.floor(fresh.supportGauge), scrap: fresh.scrap, kills: fresh.kills,
       wave: fresh.wave, phase: fresh.phase, baseHp: fresh.baseHp, baseMaxHp: fresh.baseMaxHp,
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
-      tactic: fresh.tactic, deployQueue: fresh.deployQueue.length, airstrikePhase: fresh.airstrike.phase,
+      deployQueue: fresh.deployQueue.length, airstrikePhase: fresh.airstrike.phase,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
       bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
+      takuyaEntranceAudioActive: false,
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
       deployCooldowns: { ...fresh.deployCooldowns }, battleBarks: [...fresh.battleBarks.active] });
     disposeBattleRuntime(); if (!bgmMuted) startMusic();
@@ -3321,6 +4886,7 @@ export function AshfallGame() {
       return;
     }
     setEventId(null);
+    setForceStoryReplay(false);
     if (completion.destination === "battle") startGame();
     else if (completion.destination === "battle-resume") {
       const g = gameRef.current;
@@ -3333,18 +4899,59 @@ export function AshfallGame() {
     else returnToMap();
   }, [bgmMuted, eventId, resumeBattleAudioLoops, returnToMap, startGame, startMusic]);
 
+  const handleEventSkip = useCallback(() => {
+    if (eventId && isPrologueOpeningEventId(eventId)) {
+      setCampaignSave((current) => getPrologueOpeningEventIds().reduce(
+        (next, openingEventId) => markStoryEventRead(next, openingEventId) as CampaignSave,
+        current,
+      ));
+      eventQueueRef.current = [];
+      eventCompletionLockRef.current = false;
+      eventDestinationRef.current = "map";
+      setForceStoryReplay(false);
+      const [summaryEventId] = getPrologueSkipEventIds();
+      setEventId(summaryEventId ?? null);
+      if (!summaryEventId) setScreen("map");
+      return;
+    }
+    handleEventComplete();
+  }, [eventId, handleEventComplete]);
+
   const selectStage = useCallback((stageId: string) => {
     if (!qaMode && !qaScenario && !isStageUnlocked(campaignSave, stageId)) return;
     setSelectedStageId(stageId);
     setCampaignSave((current) => selectCampaignStage(current, stageId) as CampaignSave);
   }, [campaignSave, qaMode, qaScenario]);
 
-  const toggleFormation = useCallback((kind: string) => {
-    if (!qaMode && !qaScenario && !isUnitUnlocked(campaignSave, kind)) return;
-    setFormationKinds((current) => current.includes(kind as UnitKind)
-      ? current.filter((entry) => entry !== kind)
-      : [...current, kind as UnitKind]);
-  }, [campaignSave, qaMode, qaScenario]);
+  const selectFormation = useCallback((presetId: string) => {
+    setCampaignSave((current) => selectFormationPreset(current, presetId) as CampaignSave);
+  }, []);
+
+  const toggleFormation = useCallback((unitId: string) => {
+    setCampaignSave((current) => {
+      if (!qaMode && !qaScenario && !isUnitOwned(current, unitId)) return current;
+      const workingSave = qaMode || qaScenario
+        ? {
+          ...current,
+          ownership: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
+          discovery: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
+          unlockedUnitIds: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
+        } as CampaignSave
+        : current;
+      const selected = getSelectedFormationUnitIds(workingSave);
+      const next = selected.includes(unitId)
+        ? selected.length > 1 ? selected.filter((entry) => entry !== unitId) : selected
+        : selected.length < 7 ? [...selected, unitId] : selected;
+      if (next === selected || (next.length === selected.length && next.every((entry, index) => entry === selected[index]))) return current;
+      return setFormationPresetUnits(workingSave, workingSave.selectedFormationPresetId, next) as CampaignSave;
+    });
+  }, [qaMode, qaScenario]);
+  const recruitUnit = useCallback((unitId: string) => {
+    setCampaignSave((current) => recruitCampaignUnit(current, {
+      unitId,
+      acquisitionId: `recruit:${unitId}`,
+    }).save as CampaignSave);
+  }, []);
 
   const beginCampaign = useCallback(() => {
     if (campaignSave.campaignStarted) {
@@ -3355,43 +4962,352 @@ export function AshfallGame() {
     setCampaignSave((current) => markCampaignStarted(current) as CampaignSave);
     openEvents(getPrologueOpeningEventIds(), "map");
   }, [campaignSave.campaignStarted, campaignSave.lastSelectedStageId, openEvents]);
+  const replayPrologue = useCallback(() => {
+    openEvents(getPrologueReplayEventIds(), "map", { forceReplay: true });
+  }, [openEvents]);
   const openLoadout = useCallback(() => setScreen("loadout"), []);
   const requestBattle = useCallback(() => {
-    openEvent(getStageEntryStoryEventId({
+    const nextEventIds = getStageEntryStoryEventIds({
       stageId: selectedStageId,
       completedStageIds: campaignSave.completedStageIds,
       readStoryEventIds: campaignSave.readStoryEventIds,
-    }), "battle");
-  }, [campaignSave.completedStageIds, campaignSave.readStoryEventIds, openEvent, selectedStageId]);
-  const retryBattle = useCallback(() => openEvent(getStageNextAttemptStoryEventId({
-    stageId: selectedStageId,
-    previousWon: campaignResult?.won === true,
-  }), "battle"), [campaignResult?.won, openEvent, selectedStageId]);
+    });
+    if (nextEventIds.length > 0) openEvents(nextEventIds, "battle");
+    else startGame();
+  }, [campaignSave.completedStageIds, campaignSave.readStoryEventIds, openEvents, selectedStageId, startGame]);
+  const retryBattle = useCallback(() => {
+    const nextEventId = getStageNextAttemptStoryEventId({
+      stageId: selectedStageId,
+      previousWon: campaignResult?.won === true,
+    });
+    if (nextEventId) openEvent(nextEventId, "battle");
+    else startGame();
+  }, [campaignResult?.won, openEvent, selectedStageId, startGame]);
   const continueResult = useCallback(() => {
     returnToMap();
   }, [returnToMap]);
+  const downloadCampaignText = useCallback((filename: string, text: string) => {
+    const url = URL.createObjectURL(new Blob([text], { type: "application/json;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, []);
+  const exportCampaignSave = useCallback(() => {
+    const serialized = serializeCampaignSave(campaignSave);
+    downloadCampaignText("nishijin-campaign-v5-backup.json", createCampaignManualExport(serialized, {
+      metadata: { revision: campaignSave.revision, updatedAt: campaignSave.updatedAt },
+    }));
+  }, [campaignSave, downloadCampaignText]);
+  const exportCorruptCampaignSave = useCallback(() => {
+    if (!saveRecovery) return;
+    const candidates = saveRecovery.corruptCandidates.length > 0
+      ? saveRecovery.corruptCandidates
+      : saveRecovery.candidates;
+    downloadCampaignText("nishijin-campaign-recovery-candidates.json", createCorruptCampaignRawExport(candidates));
+  }, [downloadCampaignText, saveRecovery]);
+  const importCampaignSave = useCallback((text: string) => {
+    const imported = parseCampaignManualImport(text, {
+      validate: (serialized: string, context: { source: string }) => inspectCampaignSaveCandidate(serialized, { source: context.source }),
+    });
+    if (imported.status !== "ready" || !imported.value) {
+      window.alert(`バックアップを読み込めませんでした。現在のセーブは変更していません。\n${imported.reason || "整合性確認に失敗しました。"}`);
+      return;
+    }
+    if (campaignSave.campaignStarted && !saveRecovery && !window.confirm("現在のセーブを、選択したバックアップで置き換えますか？")) return;
+    if (!beginSaveMutation()) return;
+    setSaveHydrated(false);
+    void (async () => {
+      try {
+        const outcome = await enqueueCampaignStorageMutation(async () => {
+          const storage = campaignStorageFor(window);
+          const indexedDb = indexedDbFor(window);
+          if (saveRecovery?.recoveryReason === "replica-unreadable") {
+            const preflight = await preflightUnreadableCampaignRecovery({
+              storage,
+              indexedDb,
+              key: CAMPAIGN_SAVE_KEY,
+              selectedSerialized: imported.raw,
+              validate: (serialized: string, context: { source: string }) => inspectCampaignSaveCandidate(serialized, { source: context.source }),
+            });
+            if (preflight.status === "blocked") {
+              return { status: "blocked" as const, reason: "replica-still-unreadable" };
+            }
+            if (preflight.status === "refresh-required") {
+              return {
+                status: "refresh-required" as const,
+                recovery: {
+                  ...preflight.resolution,
+                  status: "recovery-needed",
+                  recoveryReason: "revealed-replica-conflict",
+                } as SaveRecoveryState,
+              };
+            }
+          }
+          const sourceSchemaVersion = Number(imported.candidate?.validation?.sourceSchemaVersion);
+          if (Number.isFinite(sourceSchemaVersion) && sourceSchemaVersion < 5) {
+            const preMigrationSnapshot = await writeCampaignRecoverySnapshot({
+              storage,
+              indexedDb,
+              key: CAMPAIGN_SAVE_KEY,
+              kind: CAMPAIGN_SNAPSHOT_KINDS.PRE_MIGRATION,
+              serialized: imported.raw,
+            });
+            if (!preMigrationSnapshot.saved) {
+              return { status: "blocked" as const, reason: "pre-migration-snapshot-failed" };
+            }
+          }
+          const recoveryBackupCandidate = saveRecovery?.candidates.find((candidate) => (
+            candidate.valid === true && candidate.raw && candidate.raw !== imported.raw
+          )) ?? saveRecovery?.candidates.find((candidate) => candidate.valid === true && candidate.raw);
+          const existingSerialized = lastPersistedSerializedRef.current || recoveryBackupCandidate?.raw || "";
+          if (existingSerialized) {
+            const lastKnownGoodSnapshot = await writeCampaignRecoverySnapshot({
+              storage,
+              indexedDb,
+              key: CAMPAIGN_SAVE_KEY,
+              kind: CAMPAIGN_SNAPSHOT_KINDS.LAST_KNOWN_GOOD,
+              serialized: existingSerialized,
+            });
+            if (!lastKnownGoodSnapshot.saved) {
+              return { status: "blocked" as const, reason: "last-known-good-snapshot-failed" };
+            }
+          }
+          const highestRecoveryRevision = Math.max(
+            0,
+            ...(saveRecovery?.candidates ?? []).map((candidate) => Number(candidate.metadata?.revision) || 0),
+          );
+          const importedSave = imported.value as CampaignSave;
+          const loaded = reviseCampaignSave({
+            ...importedSave,
+            revision: Math.max(importedSave.revision, campaignSave.revision, highestRecoveryRevision),
+          }) as CampaignSave;
+          const serialized = serializeCampaignSave(loaded);
+          const localSaved = writeCampaignSave(storage, CAMPAIGN_SAVE_KEY, serialized);
+          const backupSaved = await writeCampaignBackup(indexedDb, CAMPAIGN_SAVE_KEY, serialized);
+          return { status: "written" as const, loaded, serialized, localSaved, backupSaved };
+        });
+        if (outcome.status === "refresh-required") {
+          persistenceWriteBlockedSourcesRef.current = new Set(outcome.recovery.writeBlockedSources ?? []);
+          setSaveRecovery(outcome.recovery);
+          setSavePersistence("unavailable");
+          window.alert("読めなかった保存先を再確認したところ、別の有効なセーブが見つかりました。どちらを使うか改めて選んでください。まだ上書きしていません。");
+          return;
+        }
+        if (outcome.status === "blocked") {
+          if (!saveRecovery) setSaveHydrated(true);
+          window.alert(outcome.reason === "replica-still-unreadable"
+            ? "読めない保存先が残っているため、読み込みを停止しました。ページを再読み込みしてから再試行してください。保存先には何も書き込んでいません。"
+            : outcome.reason === "pre-migration-snapshot-failed"
+              ? "移行前バックアップを保存できないため、読み込みを停止しました。現在のセーブは変更していません。"
+              : "現在のセーブの退避に失敗したため、読み込みを停止しました。現在のセーブは変更していません。");
+          return;
+        }
+        if (!outcome.localSaved && !outcome.backupSaved) {
+          if (!saveRecovery) setSaveHydrated(true);
+          window.alert("バックアップを検証できましたが、端末へ保存できませんでした。現在のセーブは変更していません。");
+          return;
+        }
+        lastPersistedSerializedRef.current = outcome.serialized;
+        lastPersistedReplicaRef.current = {
+          serialized: outcome.serialized,
+          localSaved: outcome.localSaved,
+          backupSaved: outcome.backupSaved,
+        };
+        if (outcome.localSaved) persistenceWriteBlockedSourcesRef.current.delete("localStorage");
+        if (outcome.backupSaved) persistenceWriteBlockedSourcesRef.current.delete("indexedDB");
+        setCampaignSave(outcome.loaded);
+        setSelectedStageId(outcome.loaded.lastSelectedStageId);
+        setCampaignResult(null);
+        setSaveRecovery(null);
+        setSavePersistence(outcome.localSaved && outcome.backupSaved ? "saved" : "recovered");
+        setScreen("title");
+        setSaveHydrated(true);
+      } catch {
+        if (!saveRecovery) setSaveHydrated(true);
+        window.alert("バックアップの読み込み処理に失敗しました。現在のセーブは変更していません。");
+      } finally {
+        finishSaveMutation();
+      }
+    })();
+  }, [beginSaveMutation, campaignSave, enqueueCampaignStorageMutation, finishSaveMutation, saveRecovery]);
+  const useRecoveryCandidate = useCallback((source: string) => {
+    const candidate = saveRecovery?.candidates.find((entry) => (
+      entry.source === source && entry.valid === true && typeof entry.raw === "string" && entry.raw.length > 0
+    ));
+    if (!candidate) {
+      window.alert("選択した保存候補を読み込めませんでした。候補データを書き出して内容を確認してください。");
+      return;
+    }
+    importCampaignSave(candidate.raw);
+  }, [importCampaignSave, saveRecovery]);
+  const enterRollbackFailureRecovery = useCallback(() => {
+    const memoryCandidate: SaveRecoveryCandidate = {
+      source: "memory-before-reset",
+      raw: serializeCampaignSave(campaignSave),
+      reason: "reset-rollback-failed",
+      state: "valid",
+      valid: true,
+      metadata: { revision: campaignSave.revision, updatedAt: campaignSave.updatedAt },
+    };
+    setSaveRecovery(saveRecovery
+      ? { ...saveRecovery, status: "recovery-needed", recoveryReason: "reset-rollback-failed" }
+      : {
+        status: "recovery-needed",
+        recoveryReason: "reset-rollback-failed",
+        candidates: [memoryCandidate],
+        corruptCandidates: [],
+      });
+    setSavePersistence("unavailable");
+    setSaveHydrated(false);
+  }, [campaignSave, saveRecovery]);
+  const resetCorruptCampaignSave = useCallback(() => {
+    if (!window.confirm("破損したセーブを完全初期化しますか？ 星・報酬・加入・編成は元に戻せません。")) return;
+    if (!beginSaveMutation()) return;
+    void (async () => {
+      try {
+        const cleared = await enqueueCampaignStorageMutation(() => clearCampaignSaveEverywhere({ storage: campaignStorageFor(window), indexedDb: indexedDbFor(window), key: CAMPAIGN_SAVE_KEY }));
+        if (!cleared.cleared) {
+          if (cleared.status === "rollback-failed") {
+            enterRollbackFailureRecovery();
+            window.alert("保存先の一部削除後に復元できなかったため、復旧画面で停止しました。候補データを書き出してから復旧方法を選んでください。");
+            return;
+          }
+          window.alert("完全初期化できませんでした。2つの保存先を消去できる通常ブラウザで開き直してください。現在のセーブ候補は変更していません。");
+          return;
+        }
+        const fresh = createDefaultCampaignSave() as CampaignSave;
+        lastPersistedSerializedRef.current = "";
+        lastPersistedReplicaRef.current = { serialized: "", localSaved: false, backupSaved: false };
+        persistenceWriteBlockedSourcesRef.current = new Set();
+        setCampaignSave(fresh);
+        setSelectedStageId(fresh.lastSelectedStageId);
+        setCampaignResult(null);
+        setSaveRecovery(null);
+        setSavePersistence("checking");
+        setScreen("title");
+        setSaveHydrated(true);
+      } catch {
+        window.alert("完全初期化処理に失敗しました。現在のセーブ候補は変更していません。");
+      } finally {
+        finishSaveMutation();
+      }
+    })();
+  }, [beginSaveMutation, enqueueCampaignStorageMutation, enterRollbackFailureRecovery, finishSaveMutation]);
   const resetCampaign = useCallback(() => {
     if (!window.confirm("セーブデータを初期化しますか？ 星・報酬・解放状態は元に戻せません。")) return;
-    const fresh = createDefaultCampaignSave() as CampaignSave;
-    setCampaignSave(fresh);
-    setSelectedStageId(fresh.lastSelectedStageId);
-    setFormationKinds(["brawler", "scout", "ranger", "medic"]);
-    setCampaignResult(null);
-    setScreen("title");
-  }, []);
+    if (!beginSaveMutation()) return;
+    setSaveHydrated(false);
+    void (async () => {
+      try {
+        const cleared = await enqueueCampaignStorageMutation(() => clearCampaignSaveEverywhere({ storage: campaignStorageFor(window), indexedDb: indexedDbFor(window), key: CAMPAIGN_SAVE_KEY }));
+        if (!cleared.cleared) {
+          if (cleared.status === "rollback-failed") {
+            enterRollbackFailureRecovery();
+            window.alert("保存先の一部削除後に復元できなかったため、復旧画面で停止しました。操作前のメモリ保存候補を書き出せます。");
+            return;
+          }
+          setSaveHydrated(true);
+          window.alert("初期化できませんでした。2つの保存先を消去できる通常ブラウザで開き直してください。現在のセーブは変更していません。");
+          return;
+        }
+        const fresh = createDefaultCampaignSave() as CampaignSave;
+        lastPersistedSerializedRef.current = "";
+        lastPersistedReplicaRef.current = { serialized: "", localSaved: false, backupSaved: false };
+        persistenceWriteBlockedSourcesRef.current = new Set();
+        setCampaignSave(fresh);
+        setSelectedStageId(fresh.lastSelectedStageId);
+        setCampaignResult(null);
+        setSaveRecovery(null);
+        setSavePersistence("checking");
+        setScreen("title");
+        setSaveHydrated(true);
+      } catch {
+        setSaveHydrated(true);
+        window.alert("初期化処理に失敗しました。現在のセーブは変更していません。");
+      } finally {
+        finishSaveMutation();
+      }
+    })();
+  }, [beginSaveMutation, enqueueCampaignStorageMutation, enterRollbackFailureRecovery, finishSaveMutation]);
   const restartCampaign = useCallback(() => {
     if (!window.confirm("現在のセーブデータを初期化して、物語を最初から始めますか？")) return;
-    const fresh = markCampaignStarted(createDefaultCampaignSave()) as CampaignSave;
-    setCampaignSave(fresh);
-    setSelectedStageId(fresh.lastSelectedStageId);
-    setFormationKinds(["brawler", "scout", "ranger", "medic"]);
-    setCampaignResult(null);
-    openEvents(getPrologueOpeningEventIds(), "map");
+    if (!beginSaveMutation()) return;
+    setSaveHydrated(false);
+    void (async () => {
+      try {
+        const cleared = await enqueueCampaignStorageMutation(() => clearCampaignSaveEverywhere({ storage: campaignStorageFor(window), indexedDb: indexedDbFor(window), key: CAMPAIGN_SAVE_KEY }));
+        if (!cleared.cleared) {
+          if (cleared.status === "rollback-failed") {
+            enterRollbackFailureRecovery();
+            window.alert("保存先の一部削除後に復元できなかったため、復旧画面で停止しました。操作前のメモリ保存候補を書き出せます。");
+            return;
+          }
+          setSaveHydrated(true);
+          window.alert("最初から始めるための初期化に失敗しました。現在のセーブは変更していません。");
+          return;
+        }
+        const fresh = markCampaignStarted(createDefaultCampaignSave()) as CampaignSave;
+        lastPersistedSerializedRef.current = "";
+        lastPersistedReplicaRef.current = { serialized: "", localSaved: false, backupSaved: false };
+        persistenceWriteBlockedSourcesRef.current = new Set();
+        setCampaignSave(fresh);
+        setSelectedStageId(fresh.lastSelectedStageId);
+        setCampaignResult(null);
+        setSaveRecovery(null);
+        setSavePersistence("checking");
+        setSaveHydrated(true);
+        openEvents(getPrologueOpeningEventIds(), "map");
+      } catch {
+        setSaveHydrated(true);
+        window.alert("最初から始めるための初期化処理に失敗しました。現在のセーブは変更していません。");
+      } finally {
+        finishSaveMutation();
+      }
+    })();
+  }, [beginSaveMutation, enqueueCampaignStorageMutation, enterRollbackFailureRecovery, finishSaveMutation, openEvents]);
+
+  const publishPendingResult = useCallback((pending: PendingResultCommit) => {
+    setCampaignSave(pending.save);
+    setCampaignResult(pending.view);
+    setPendingResultCommit(null);
+    setStarted(false);
+    if (!openEvents(pending.storyEventIds, "result")) setScreen("result");
   }, [openEvents]);
+
+  const retryPendingResultSave = useCallback(() => {
+    if (!pendingResultCommit || resultSaveRetryingRef.current) return;
+    resultSaveRetryingRef.current = true;
+    setResultSaveRetrying(true);
+    void (async () => {
+      try {
+        const persisted = await persistCampaignSave(pendingResultCommit.save);
+        if (!persisted.durable) {
+          window.alert("作戦結果をまだ端末へ保存できません。通常ブラウザで開き直す前に、結果バックアップを書き出してください。");
+          return;
+        }
+        publishPendingResult(pendingResultCommit);
+      } finally {
+        resultSaveRetryingRef.current = false;
+        setResultSaveRetrying(false);
+      }
+    })();
+  }, [pendingResultCommit, persistCampaignSave, publishPendingResult]);
+
+  const exportPendingResultSave = useCallback(() => {
+    if (!pendingResultCommit) return;
+    const serialized = serializeCampaignSave(pendingResultCommit.save);
+    downloadCampaignText("nishijin-campaign-v5-pending-result.json", createCampaignManualExport(serialized, {
+      metadata: { revision: pendingResultCommit.save.revision, updatedAt: pendingResultCommit.save.updatedAt },
+    }));
+  }, [downloadCampaignText, pendingResultCommit]);
 
   useEffect(() => {
     if (!end || finalizedEndRef.current === end) return;
-    const timer = window.setTimeout(() => {
+    const timer = window.setTimeout(async () => {
       if (finalizedEndRef.current === end) return;
       finalizedEndRef.current = end;
       const resolved = resolveStageResult(campaignSave, {
@@ -3401,6 +5317,40 @@ export function AshfallGame() {
         baseHp: end.baseHp,
         baseMaxHp: end.baseMaxHp,
       });
+      const view: CampaignResultView = {
+        won: end.won,
+        currentStars: resolved.result.stars,
+        previousBestStars: resolved.result.previousBestStars,
+        bestStars: resolved.result.bestStars,
+        newBest: resolved.result.isNewBest,
+        clearReward: resolved.result.replayReward,
+        newStarReward: resolved.result.firstTimeStarReward,
+        totalReward: resolved.result.totalReward,
+        capsAfter: resolved.save.caps,
+        time: end.time,
+        kills: end.kills,
+        unitsLost: end.unitsLost,
+        baseHpRatio: end.baseMaxHp > 0 ? end.baseHp / end.baseMaxHp : 0,
+        missionFacts: stageResultFacts({
+          stageId: end.stageId,
+          won: end.won,
+          firstClear: !campaignSave.completedStageIds.includes(end.stageId),
+          missionRuntime: end.missionRuntime,
+        }),
+        newlyUnlockedUnits: resolved.result.newlyUnlockedUnitIds.map((id: string) => {
+          const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === id);
+          return unit ? `${unit.displayName}（${unit.roleName}）` : id;
+        }),
+        newlyUnlockedStages: resolved.result.newlyUnlockedStageIds.map((id: string) => CAMPAIGN_STAGE_BY_ID[id]?.displayName ?? id),
+      };
+      const storyEventIds = getStageResultStoryEventIds({
+        stageId: end.stageId,
+        won: end.won,
+        completedStageIds: campaignSave.completedStageIds,
+        bossDefeated: end.bossDefeated,
+        enemyBaseDestroyed: end.enemyBaseDestroyed,
+      });
+      const pending = { save: resolved.save as CampaignSave, view, storyEventIds };
       if (resolved.result.applied) {
         const localQaResult = Boolean(
           resolveLocalQaMode(window.location.hostname, window.location.search)
@@ -3410,63 +5360,42 @@ export function AshfallGame() {
         // exposing the result UI. A reload cannot replay rewards in the gap
         // between React state publication and the passive save effect.
         if (!localQaResult) {
-          const serialized = serializeCampaignSave(resolved.save);
-          const localSaved = writeCampaignSave(campaignStorageFor(window), CAMPAIGN_SAVE_KEY, serialized);
-          void writeCampaignBackup(indexedDbFor(window), CAMPAIGN_SAVE_KEY, serialized).then((backupSaved) => {
-            setSavePersistence(localSaved || backupSaved ? "saved" : "unavailable");
-          });
+          const persisted = await persistCampaignSave(resolved.save as CampaignSave);
+          if (!persisted.durable) {
+            setPendingResultCommit(pending);
+            setSavePersistence("unavailable");
+            return;
+          }
         }
-        setCampaignSave(resolved.save as CampaignSave);
       }
-      setCampaignResult({
-        won: end.won,
-        currentStars: resolved.result.stars,
-        previousBestStars: resolved.result.previousBestStars,
-        bestStars: resolved.result.bestStars,
-        newBest: resolved.result.isNewBest,
-        clearReward: resolved.result.replayReward,
-        newStarReward: resolved.result.firstTimeStarReward,
-        totalReward: resolved.result.totalReward,
-        suppliesAfter: resolved.save.supplies,
-        time: end.time,
-        kills: end.kills,
-        unitsLost: end.unitsLost,
-        baseHpRatio: end.baseMaxHp > 0 ? end.baseHp / end.baseMaxHp : 0,
-        newlyUnlockedUnits: resolved.result.newlyUnlockedUnitIds.map((id: string) => {
-          const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === id);
-          return unit ? `${unit.displayName}（${unit.roleName}）` : id;
-        }),
-        newlyUnlockedStages: resolved.result.newlyUnlockedStageIds.map((id: string) => CAMPAIGN_STAGE_BY_ID[id]?.displayName ?? id),
-      });
-      setStarted(false);
-      const resultStoryEventIds = getStageResultStoryEventIds({
-        stageId: end.stageId,
-        won: end.won,
-        completedStageIds: campaignSave.completedStageIds,
-        bossDefeated: end.bossDefeated,
-        enemyBaseDestroyed: end.enemyBaseDestroyed,
-      });
-      if (!openEvents(resultStoryEventIds, "result")) setScreen("result");
+      publishPendingResult(pending);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [campaignSave, end, openEvents]);
+  }, [campaignSave, end, persistCampaignSave, publishPendingResult]);
 
   useEffect(() => {
     if (!saveHydrated || !qaScenario || qaScenarioAppliedRef.current) return;
     qaScenarioAppliedRef.current = true;
     const timer = window.setTimeout(() => {
       setSelectedStageId(qaScenario.stageId);
+      const qaUnitIds = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id);
+      const qaFormationUnitIds = qaUnitIds.slice(0, 7);
       const qaSave = {
         ...campaignSave,
         campaignStarted: true,
         ...(qaScenario.mode === "story" ? { readStoryEventIds: [], autoSkipReadStory: false } : {}),
         unlockedStageIds: [...new Set([...campaignSave.unlockedStageIds, qaScenario.stageId])],
-        unlockedUnitIds: cards.map((card) => card.kind),
+        ownership: qaUnitIds,
+        discovery: qaUnitIds,
+        recruitable: [],
+        unlockedUnitIds: qaUnitIds,
+        formationPresets: campaignSave.formationPresets.map((preset) => preset.id === campaignSave.selectedFormationPresetId
+          ? { ...preset, unitIds: qaFormationUnitIds }
+          : preset),
         lastSelectedStageId: qaScenario.stageId,
       } as CampaignSave;
       if (qaScenario.mode === "story" && "eventId" in qaScenario) {
         setCampaignSave(qaSave);
-        setFormationKinds(cards.map((card) => card.kind));
         openEvent(qaScenario.eventId, "map");
         return;
       }
@@ -3490,23 +5419,38 @@ export function AshfallGame() {
           clearReward: resolved.result.replayReward,
           newStarReward: resolved.result.firstTimeStarReward,
           totalReward: resolved.result.totalReward,
-          suppliesAfter: resolved.save.supplies,
+          capsAfter: resolved.save.caps,
           time: 94,
           kills: 24,
           unitsLost: 1,
           baseHpRatio,
+          missionFacts: stageResultFacts({
+            stageId: qaScenario.stageId,
+            won: qaScenario.stars > 0,
+            firstClear: !qaSave.completedStageIds.includes(qaScenario.stageId),
+          }),
           newlyUnlockedUnits: resolved.result.newlyUnlockedUnitIds.map((id: string) => {
             const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === id);
             return unit ? `${unit.displayName}（${unit.roleName}）` : id;
           }),
           newlyUnlockedStages: resolved.result.newlyUnlockedStageIds.map((id: string) => CAMPAIGN_STAGE_BY_ID[id]?.displayName ?? id),
         });
-        setFormationKinds(cards.map((card) => card.kind));
         setScreen("result");
         return;
       }
       setCampaignSave(qaSave);
-      setFormationKinds(cards.map((card) => card.kind));
+      if (qaScenario.mode === "station") {
+        const qaFormationKinds = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
+          .slice(0, 7)
+          .map((unit) => unit.combatKind as UnitKind);
+        startGame({
+          stageId: qaScenario.stageId,
+          formationKinds: qaFormationKinds,
+          selectedSupply,
+          resultId: `local-qa:${qaScenario.stageId}:${qaScenario.state}`,
+        });
+        return;
+      }
       if (qaScenario.mode === "defense") {
         setScreen("loadout");
         return;
@@ -3517,7 +5461,7 @@ export function AshfallGame() {
       else setScreen("map");
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [campaignSave, openEvent, openEvents, qaScenario, saveHydrated]);
+  }, [campaignSave, openEvent, openEvents, qaScenario, saveHydrated, selectedSupply, startGame]);
 
   const togglePause = useCallback(() => {
     const g = gameRef.current;
@@ -3527,14 +5471,28 @@ export function AshfallGame() {
     g.paused = transition.paused; setPaused(g.paused);
     setPauseConfirm(null);
     if (g.paused) {
-      g.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
+      g.battleBarks = clearNonScriptedBattleBarks(g.battleBarks) as BattleBarkRuntime;
       setHud((current) => ({ ...current, battleBarks: [] }));
       stopMusic(); stopJingle(); stopSfx();
     } else {
+      if (g.takuyaEntranceAudioRemaining > 0) {
+        g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
+        playProductionCue(TAKUYA_ENTRANCE_AUDIO.cueId, W / 2, {
+          priority: 104,
+          cooldownMs: 0,
+          volume: .92,
+          maxInstances: 1,
+        });
+      }
+      setHud((current) => ({
+        ...current,
+        battleBarks: [...g.battleBarks.active],
+        takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
+      }));
       if (!bgmMuted) startMusic();
       resumeBattleAudioLoops(g);
     }
-  }, [bgmMuted, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
+  }, [bgmMuted, playProductionCue, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
 
   const requestPauseAction = useCallback((action: PauseAction) => {
     if (!gameRef.current.running || gameRef.current.over) return;
@@ -3594,15 +5552,12 @@ export function AshfallGame() {
   }, [campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, returnToMap, selectedStageId, selectedSupply, startGame]);
 
   const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
+    if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const normalized = Math.max(0, Math.min(1, value));
-    setCampaignSave((current) => ({
-      ...current,
-      settings: {
-        ...current.settings,
-        ...(kind === "bgm" ? { bgmVolume: normalized } : { sfxVolume: normalized }),
-      },
-    }));
-  }, []);
+    setCampaignSave((current) => updateCampaignSettings(current, kind === "bgm"
+      ? { bgmVolume: normalized }
+      : { sfxVolume: normalized }) as CampaignSave);
+  }, [end, pendingResultCommit]);
 
   const setAutoSkipReadStory = useCallback((enabled: boolean) => {
     setCampaignSave((current) => updateStoryPlaybackSettings(current, { autoSkipReadStory: enabled }) as CampaignSave);
@@ -3617,21 +5572,24 @@ export function AshfallGame() {
   }, []);
 
   const toggleBgm = useCallback(() => {
+    if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const next = !bgmMuted; setBgmMuted(next);
-    setCampaignSave((current) => ({ ...current, settings: { ...current.settings, bgmEnabled: !next } }));
+    setCampaignSave((current) => updateCampaignSettings(current, { bgmEnabled: !next }) as CampaignSave);
     if (next) stopMusic(); else if (started && !paused && !end) startMusic();
-  }, [bgmMuted, end, paused, startMusic, started, stopMusic]);
+  }, [bgmMuted, end, paused, pendingResultCommit, startMusic, started, stopMusic]);
 
   const toggleSfx = useCallback(() => {
+    if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const next = !sfxMutedRef.current;
     sfxMutedRef.current = next;
     setSfxMuted(next);
-    setCampaignSave((current) => ({ ...current, settings: { ...current.settings, sfxEnabled: !next } }));
+    setCampaignSave((current) => updateCampaignSettings(current, { sfxEnabled: !next }) as CampaignSave);
     if (next) { stopJingle(); stopSfx(); }
     else if (gameRef.current.running && !gameRef.current.paused && !gameRef.current.over) resumeBattleAudioLoops(gameRef.current);
-  }, [resumeBattleAudioLoops, stopJingle, stopSfx]);
+  }, [end, pendingResultCommit, resumeBattleAudioLoops, stopJingle, stopSfx]);
 
   const enableAudio = useCallback(() => {
+    if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const mixer = productionMixerRef.current;
     if (!mixer) return;
     const restoredBgmVolume = Math.max(.35, campaignSave.settings.bgmVolume);
@@ -3641,16 +5599,12 @@ export function AshfallGame() {
       setBgmMuted(false);
       sfxMutedRef.current = false;
       setSfxMuted(false);
-      setCampaignSave((current) => ({
-        ...current,
-        settings: {
-          ...current.settings,
+      setCampaignSave((current) => updateCampaignSettings(current, {
           bgmEnabled: true,
           sfxEnabled: true,
           bgmVolume: Math.max(.35, current.settings.bgmVolume),
           sfxVolume: Math.max(.4, current.settings.sfxVolume),
-        },
-      }));
+      }) as CampaignSave);
       mixer.setSettings({
         muted: false,
         masterVolume: .9,
@@ -3687,27 +5641,11 @@ export function AshfallGame() {
       audioActivationPendingRef.current = false;
       setAudioUnlockUi("failed");
     });
-  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume]);
+  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end, pendingResultCommit]);
 
   const playAudioTestTone = useCallback(() => {
     enableAudio();
   }, [enableAudio]);
-
-  const setTactic = useCallback((tactic: TacticMode) => {
-    const g = gameRef.current;
-    if (!g.running || g.paused || g.over || g.tactic === tactic) return;
-    g.tactic = tactic;
-    g.banner = `作戦方針 // ${tactic === "defend" ? "防衛" : tactic === "assault" ? "突撃" : "均衡"}`;
-    g.bannerTime = .9;
-    setHud((current) => ({ ...current, tactic }));
-    playCue(tactic === "defend" ? "tactic-defend" : tactic === "assault" ? "tactic-assault" : "tactic-balanced");
-  }, [playCue]);
-
-  const cycleTactic = useCallback(() => {
-    const current = gameRef.current.tactic;
-    const modes = TACTIC_MODES as TacticMode[];
-    setTactic(modes[(modes.indexOf(current) + 1) % modes.length]);
-  }, [setTactic]);
 
   const dispatchBattleStoryEvents = useCallback((g: Game) => {
     const stageId = g.definition.stageId;
@@ -3739,6 +5677,10 @@ export function AshfallGame() {
         bossMaxHp: g.bossDefeatPending ? enemyStats("takuya", g.wave).hp : boss?.maxHp ?? 0,
         bossDefeated: g.bossDefeatPending ? false : g.bossDefeated,
         enemyBaseDestroyed: g.barricadeHp <= 0,
+        powerActivated: g.stageMission.powerActivated ?? 0,
+        gateEaterContained: g.stageMission.gateEaterContained === true,
+        sealed: g.stageMission.sealed === true,
+        missionCompleted: g.stageMission.completed === true,
       },
     });
     g.storyFlowState = step.state;
@@ -3746,21 +5688,34 @@ export function AshfallGame() {
       g.bossDefeatPending = false;
       g.bossDefeated = true;
     }
-    const presentation = resolveBattleStoryPresentation({
-      eventIds: step.eventIds,
-      readStoryEventIds: campaignSave.readStoryEventIds,
-      mode: campaignSave.settings.battleEventMode,
-    });
-    if (presentation.briefEventIds.length > 0) {
-      setCampaignSave((current) => presentation.briefEventIds.reduce(
-        (next, briefEventId) => markStoryEventRead(next, briefEventId) as CampaignSave,
+    const priorReceiptCount = g.storyBattleReceiptEventIds.length;
+    dispatchScriptedStoryBattleBarks(
+      g,
+      campaignSave.settings.battleEventMode,
+      step.eventIds,
+    );
+    const newReceiptIds = g.storyBattleReceiptEventIds.slice(priorReceiptCount);
+    if (newReceiptIds.length > 0) {
+      setCampaignSave((current) => newReceiptIds.reduce(
+        (next, receiptEventId) => markStoryEventRead(next, receiptEventId) as CampaignSave,
         current,
       ));
-      g.banner = `通信 // ${battleStoryBriefLabel(presentation.briefEventIds.at(-1) ?? "")}`;
-      g.bannerTime = Math.max(g.bannerTime, 1.8);
     }
-    return presentation.fullEventIds.length > 0 && openEvents(presentation.fullEventIds, "battle-resume");
-  }, [campaignSave.readStoryEventIds, campaignSave.settings.battleEventMode, openEvents]);
+    const warningCue = step.eventIds
+      .map((storyEventId) => storyWarningCueForEvent(storyEventId))
+      .find(Boolean);
+    if (warningCue) playProductionCue(warningCue, W / 2, {
+      priority: 98,
+      cooldownMs: 600,
+      volume: .9,
+      maxInstances: 1,
+    });
+    // Canonical in-battle lines are dispatched through the non-blocking bark
+    // runtime at their individual combat transitions. Only true dialogue
+    // events (currently the completed Stage 6 escape) may open StoryScreen.
+    const blockingEventIds = step.eventIds.filter((storyEventId) => !STORY_BATTLE_EVENT_IDS.includes(storyEventId));
+    return blockingEventIds.length > 0 && openEvents(blockingEventIds, "battle-resume");
+  }, [campaignSave.settings.battleEventMode, openEvents, playProductionCue]);
 
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
@@ -3784,11 +5739,10 @@ export function AshfallGame() {
         return;
       }
       if (normalizedKey === "p") { togglePause(); return; }
-      if (normalizedKey === "r") cycleTactic();
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [chooseActionWithCue, cycleTactic, deployHuman, selectedSupply, togglePause, triggerCrawlerBarrage]);
+  }, [chooseActionWithCue, deployHuman, selectedSupply, togglePause, triggerCrawlerBarrage]);
 
   useEffect(() => {
     let frame = 0;
@@ -3822,12 +5776,89 @@ export function AshfallGame() {
           g.convoyProgress = convoy.progress;
           g.civiliansEvacuated = convoy.civiliansEvacuated;
         }
+        if ((g.definition.missionType === STATION_MISSION_TYPES.ESCORT
+          || g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL)
+          && g.time >= g.definition.prepSeconds) {
+          const spatial = stationSpatialSnapshot({
+            missionType: g.definition.missionType,
+            missionRuntime: g.stageMission,
+            config: g.definition.missionConfig,
+            fighters: g.fighters,
+            hazards: g.stationHazards,
+            researchContainer: g.researchContainer,
+            laneCenters: activeLaneCenters,
+            eventIndex: g.eventIndex,
+            timelineLength: g.definition.timeline.length,
+            pendingSpawnCount: g.enemySpawn.pending.length,
+          });
+          const beforeTransitions = g.stageMission.transitions.length;
+          const nextMission = advanceStationMissionRuntime({
+            runtime: g.stageMission,
+            missionType: g.definition.missionType,
+            config: g.definition.missionConfig,
+            seconds: dt,
+            battleElapsedSeconds: Math.max(0, g.time - g.definition.prepSeconds),
+            humanCount: spatial.humanCount,
+            baseHp: g.baseHp,
+            escortCount: spatial.escortCount,
+            nearbyThreats: spatial.nearbyThreats,
+            contaminated: spatial.contaminated,
+            powerOperatorCount: spatial.powerOperatorCount,
+            powerLaneThreats: spatial.powerLaneThreats,
+            gateEaterSeen: spatial.gateEaterSeen,
+            gateEaterContained: spatial.gateEaterContained,
+            researchContainerExposed: spatial.researchContainerExposed,
+            researchContainerContained: spatial.researchContainerContained,
+            returnedCount: spatial.returnedCount,
+            returnTargetCount: spatial.returnTargetCount,
+            activeUnitIds: spatial.activeUnitIds,
+            returnedUnitIds: spatial.returnedUnitIds,
+            escapeRouteThreats: spatial.escapeRouteThreats,
+            wavesResolved: spatial.wavesResolved,
+          }) as StageMissionRuntime;
+          if (nextMission.transitions.length > beforeTransitions) {
+            const transition = nextMission.transitions.at(-1) ?? "";
+            if (transition && !g.signalIds.includes(transition)) g.signalIds.push(transition);
+            if (transition === "escort-contaminated"
+              && !g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.CART_STALLED)) {
+              g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.CART_STALLED);
+            }
+            if (transition.startsWith("power-")) {
+              g.stationMetrics.powerActivations += 1;
+              g.banner = `電源 ${nextMission.powerActivated ?? 0}/3 起動`;
+              g.bannerTime = 1.4;
+              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, W * .68, { priority: 84, maxInstances: 2 });
+            } else if (transition === "escort-contaminated") {
+              playProductionCue(STATION_AUDIO_CUE_IDS.CART_STALL, Number(spatial.cartX ?? W / 2), { priority: 82, maxInstances: 1 });
+            } else if (transition === "escort-complete") {
+              g.stationMetrics.escortCompletions += 1;
+              playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, Number(spatial.cartX ?? W / 2), { priority: 72, maxInstances: 1 });
+            } else if (transition === "return-window-open") {
+              g.banner = "退路 45秒 // 全員戻れ";
+              g.bannerTime = 2;
+              playProductionCue(STATION_AUDIO_CUE_IDS.RETURN_MARKER, W * .72, { priority: 80, maxInstances: 1 });
+            } else if (transition === "return-complete") {
+              g.stationMetrics.sealCompletions += 1;
+              g.banner = "全員帰還 // 封鎖扉閉鎖";
+              g.bannerTime = 2;
+              const sealDoorX = Number(g.definition.missionConfig.sealDoorX ?? W * .9);
+              playProductionCue(STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, sealDoorX, { priority: 98, maxInstances: 1 });
+              playProductionCue(STATION_AUDIO_CUE_IDS.MACHINE_STOP, sealDoorX, { priority: 90, maxInstances: 1 });
+            }
+          }
+          g.stageMission = nextMission;
+          if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
+            g.convoyProgress = nextMission.progress ?? 0;
+            g.civiliansEvacuated = Math.min(5, Math.floor((nextMission.progress ?? 0) * 5));
+          }
+        }
         g.energy = advanceCommand(g.energy, dt);
         g.bannerTime = Math.max(0, g.bannerTime - dt);
         g.flashOverlay = Math.max(0, g.flashOverlay - dt * 2.2);
         g.crawlerHitFlash = Math.max(0, g.crawlerHitFlash - dt);
         g.barricadeHitFlash = Math.max(0, g.barricadeHitFlash - dt);
         g.crawlerHitSfxCooldown = Math.max(0, g.crawlerHitSfxCooldown - dt);
+        g.takuyaEntranceAudioRemaining = Math.max(0, g.takuyaEntranceAudioRemaining - dt);
         g.comboTime = Math.max(0, g.comboTime - dt);
         if (g.comboTime <= 0) g.combo = 0;
         for (const card of cards) g.deployCooldowns[card.kind] = Math.max(0, g.deployCooldowns[card.kind] - dt);
@@ -3846,9 +5877,9 @@ export function AshfallGame() {
                 maxInstances: 1,
                 fallbackCue: kind === "brute" ? "deploy-heavy" : "deploy-light",
               });
-              const dedicatedDeployVoice = unitAudioCueFor(kind, "voice", "deploy");
-              if (dedicatedDeployVoice) {
-                playProductionCue(dedicatedDeployVoice, MUSTER_X, {
+              const deployVoice = unitAudioCueFor(kind, "voice", "deploy") || humanVoiceCueForUnit(kind, "deploy");
+              if (deployVoice) {
+                playProductionCue(deployVoice, MUSTER_X, {
                   priority: 72,
                   cooldownMs: 400,
                   volume: kind === "crazy-king" || kind === "kumaverson" ? .94 : .8,
@@ -3897,11 +5928,21 @@ export function AshfallGame() {
           }));
           if (mission.units.length) {
             const includesTakuya = mission.units.some(([kind]) => kind === "takuya");
-            playCue(includesTakuya ? "boss-warning" : "wave-contact");
             if (includesTakuya) {
+              g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
+              setHud((current) => ({ ...current, takuyaEntranceAudioActive: true }));
+              playProductionCue(TAKUYA_ENTRANCE_AUDIO.cueId, W / 2, {
+                priority: 104,
+                cooldownMs: 0,
+                volume: .92,
+                maxInstances: 1,
+              });
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
               emitBattleBark(g, "takuya-entrance", "ranger", "takuya-entrance");
-            } else emitBattleBark(g, "wave-contact", "guide", `wave-${mission.wave}`);
+            } else {
+              playCue("wave-contact");
+              emitBattleBark(g, "wave-contact", "guide", `wave-${mission.wave}`);
+            }
           }
         }
 
@@ -3963,12 +6004,22 @@ export function AshfallGame() {
           object.hitFlash = Math.max(0, object.hitFlash - dt);
           Object.assign(object, advanceBattlefieldSupply(object, dt));
           if (object.kind === "pod" && object.readyToLand && !object.landingTriggered) {
+            const hpBeforeLanding = new Map(g.fighters.map((fighter) => [fighter.id, fighter.hp]));
             const landing = resolveBattlefieldSupplyLanding({ supply: object, fighters: g.fighters, laneCenters: activeLaneCenters });
             Object.assign(object, landing.supply);
             g.fighters = landing.fighters as Fighter[];
             for (const hit of landing.hits) {
               const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
-              if (fighter) { fighter.flash = .2; fighter.knock = Math.max(fighter.knock, 10); addDamageText(g, { x: fighter.x, y: fighter.y - 56, value: `着地 -${hit.damage}`, life: .9, color: hit.side === "zombie" ? "#ffd06b" : "#ff8a70" }); }
+              if (fighter) {
+                let appliedDamage = hit.damage;
+                if (hit.side === "human") {
+                  fighter.hp = hpBeforeLanding.get(fighter.id) ?? fighter.hp;
+                  appliedDamage = applyIncomingHumanDamage(g, fighter, hit.damage, { attackKind: "ranged" }).targetDamage;
+                }
+                fighter.flash = .2;
+                fighter.knock = Math.max(fighter.knock, 10);
+                addDamageText(g, { x: fighter.x, y: fighter.y - 56, value: `着地 -${Math.round(appliedDamage)}`, life: .9, color: hit.side === "zombie" ? "#ffd06b" : "#ff8a70" });
+              }
             }
             addParticles(g, object.x, object.y + 4, "#d7aa63", 26);
             g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.podLanding); g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("pod-impact");
@@ -3992,6 +6043,33 @@ export function AshfallGame() {
         g.areaEffects = retainActiveAreaEffects(areaStep.areaEffects) as AreaEffect[];
         g.fighters = areaStep.fighters as Fighter[];
         if (areaStep.changes.some((change) => change.kind === "healing")) playCue("medical-heal");
+        for (const fighter of g.fighters) {
+          if (fighter.side === "human" && fighter.hp > 0) fighter.slowMultiplier = 1;
+        }
+        const hazardFrame = advanceLeakMudHazards({
+          hazards: g.stationHazards,
+          entities: g.fighters,
+          elapsedSeconds: dt,
+        }) as {
+          zones: readonly StationHazard[];
+          effects: readonly { targetId: number; damage: number; speedMultiplier: number }[];
+          slowEffects: readonly { targetId: string; speedMultiplier: number }[];
+        };
+        g.stationHazards = [...hazardFrame.zones];
+        for (const effect of hazardFrame.effects) {
+          const target = g.fighters.find((fighter) => fighter.id === effect.targetId && fighter.side === "human" && fighter.hp > 0);
+          if (!target) continue;
+          const damage = applyIncomingHumanDamage(g, target, effect.damage, { attackKind: "ranged" }).targetDamage;
+          target.flash = Math.max(target.flash, .12);
+          target.slowMultiplier = Math.min(target.slowMultiplier ?? 1, effect.speedMultiplier);
+          addDamageText(g, { x: target.x, y: target.y - 52, value: `汚染 -${Math.round(damage)}`, life: .72, color: "#a9bf70" });
+        }
+        for (const slow of hazardFrame.slowEffects) {
+          const fighter = g.fighters.find((candidate) => String(candidate.id) === slow.targetId
+            && candidate.side === "human"
+            && candidate.hp > 0);
+          if (fighter) fighter.slowMultiplier = Math.min(fighter.slowMultiplier ?? 1, slow.speedMultiplier);
+        }
 
         const fighterById = new Map(g.fighters.filter((fighter) => fighter.hp > 0 && fighter.combatReady).map((fighter) => [fighter.id, fighter]));
         const targetClaims = new Map<number, number>();
@@ -4048,10 +6126,54 @@ export function AshfallGame() {
         }
 
         for (const f of g.fighters) {
+          if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
+            && f.kind === "gate-eater") {
+            Object.assign(f, enforceGateEaterContainmentInvariant(f));
+          }
           if (f.hp <= 0) continue;
+          const humanMovementSpeed = f.side === "human"
+            ? stationHumanMoveSpeed({
+              baseSpeed: f.speed,
+              slowMultiplier: f.slowMultiplier ?? 1,
+              runtime: g.stageMission,
+              missionType: g.definition.missionType,
+              config: g.definition.missionConfig,
+            })
+            : f.speed;
+          const humanLaneSpeed = f.side === "human"
+            ? stationHumanMoveSpeed({
+              baseSpeed: f.laneSpeed,
+              slowMultiplier: f.slowMultiplier ?? 1,
+              runtime: g.stageMission,
+              missionType: g.definition.missionType,
+              config: g.definition.missionConfig,
+            })
+            : f.laneSpeed;
           f.cooldown = advanceAttackCooldown(f.cooldown, dt); f.supportCooldown -= dt; f.retargetIn = Math.max(0, f.retargetIn - dt); f.spawnGrace = Math.max(0, f.spawnGrace - dt);
           f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.marked = Math.max(0, f.marked - dt); f.step += dt;
           f.stunned = Math.max(0, f.stunned - dt);
+          f.damageReductionRemaining = advanceNaoProtection(f.damageReductionRemaining, dt);
+          if (f.damageReductionRemaining <= 0) f.damageReductionMultiplier = 1;
+          f.healFocusRemaining = Math.max(0, f.healFocusRemaining - dt);
+          if (f.healFocusRemaining <= 0) f.healFocusTargetId = null;
+          f.comboWindow = Math.max(0, f.comboWindow - dt);
+          if (f.comboWindow <= 0) f.comboHits = 0;
+          if (f.kind === "gunner") {
+            const heat = coolRaiderHeat({ heat: f.weaponHeat, overheated: f.overheated }, dt);
+            f.weaponHeat = heat.heat;
+            f.overheated = heat.overheated;
+          }
+          const suppression = advanceRaiderSuppression({
+            stacks: f.suppressionStacks,
+            remainingSeconds: f.suppressedRemaining,
+          }, dt);
+          f.suppressionStacks = suppression.stacks;
+          f.suppressedRemaining = suppression.remainingSeconds;
+          f.suppressionMultiplier = suppression.speedMultiplier;
+          f.guardStandRemaining = Math.max(0, f.guardStandRemaining - dt);
+          f.engineerTrapCooldown = Math.max(0, f.engineerTrapCooldown - dt);
+          f.armorBrokenRemaining = Math.max(0, f.armorBrokenRemaining - dt);
+          if (f.armorBrokenRemaining <= 0) f.armorBreakStacks = 0;
           if (f.bleedRemaining > 0) {
             const bleedStep = Math.min(dt, f.bleedRemaining);
             f.hp = Math.max(0, f.hp - f.bleedDamagePerSecond * bleedStep);
@@ -4060,6 +6182,12 @@ export function AshfallGame() {
             if (f.hp <= 0) continue;
           }
           f.abilityCooldown = Math.max(0, f.abilityCooldown - dt);
+          if (f.contained) {
+            f.targetId = null;
+            f.targetObjectId = null;
+            f.knock = 0;
+            continue;
+          }
           if (Math.abs(f.knock) > .1) { f.x += (f.side === "human" ? -1 : 1) * f.knock * dt * 6; f.knock *= .9; }
 
           if (f.gateEntering) {
@@ -4089,7 +6217,184 @@ export function AshfallGame() {
           if (f.stunned > 0) {
             f.targetId = null;
             f.targetObjectId = null;
+            if (["grappler", "ooze", "sprinter", "gate-eater"].includes(f.kind)
+              && f.stationAbility.phase !== "idle") {
+              f.stationAbility = createStationAbilityRuntime(f.kind);
+              f.abilityCooldown = Math.max(f.abilityCooldown, 1.8);
+            }
             continue;
+          }
+
+          if (f.kind === "grappler") {
+            let abilityFrame = f.stationAbility.phase !== "idle";
+            if (f.stationAbility.phase === "windup") {
+              f.stationAbility = advanceKaramiteWindup(f.stationAbility, dt) as StationAbilityRuntime;
+            }
+            if (f.stationAbility.phase === "ready") {
+              const victim = g.fighters.find((candidate) => candidate.side === "human"
+                && String(candidate.id) === String(f.stationAbility.targetId));
+              const bind = resolveKaramiteBind({ runtime: f.stationAbility, attacker: f, target: victim });
+              f.stationAbility = bind.runtime as StationAbilityRuntime;
+              if (bind.bound && victim) {
+                g.stationMetrics.karamiteBinds += 1;
+                if (!g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.GRAPPLER_GRAB)) {
+                  g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.GRAPPLER_GRAB);
+                }
+                addDamageText(g, { x: victim.x, y: victim.y - 64, value: "拘束", life: .9, color: "#d98f6f" });
+              } else {
+                f.abilityCooldown = Math.max(f.abilityCooldown, 2);
+              }
+            }
+            if (f.stationAbility.phase === "pulling") {
+              const victim = g.fighters.find((candidate) => candidate.side === "human"
+                && String(candidate.id) === String(f.stationAbility.targetId));
+              const pull = advanceKaramitePull({
+                runtime: f.stationAbility,
+                attacker: f,
+                target: victim,
+                elapsedSeconds: dt,
+              });
+              f.stationAbility = pull.runtime as StationAbilityRuntime;
+              if (victim && pull.bound) {
+                victim.x = Math.max(BASE_X + 34, Math.min(BARRICADE_X, pull.target.x));
+                victim.stunned = Math.max(victim.stunned, .08);
+              }
+              if (!pull.bound) f.abilityCooldown = Math.max(f.abilityCooldown, 6);
+            }
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+              const victim = selectKaramiteTarget({
+                attacker: f,
+                candidates: g.fighters,
+              }) as Fighter | null;
+              const windup = beginKaramiteWindup({ attacker: f, target: victim });
+              if (windup.ok) {
+                f.stationAbility = windup.runtime as StationAbilityRuntime;
+                abilityFrame = true;
+                g.banner = "絡手 // 拘束予告";
+                g.bannerTime = Math.max(g.bannerTime, .75);
+              }
+            }
+            if (abilityFrame || f.stationAbility.phase !== "idle") continue;
+          }
+
+          if (f.kind === "ooze") {
+            let abilityFrame = f.stationAbility.phase !== "idle";
+            if (f.stationAbility.phase === "windup") {
+              f.stationAbility = advanceLeakMudWindup(f.stationAbility, dt) as StationAbilityRuntime;
+            }
+            if (f.stationAbility.phase === "ready") {
+              const resolved = resolveLeakMudZone(f.stationAbility);
+              f.stationAbility = resolved.runtime as StationAbilityRuntime;
+              if (resolved.created && resolved.zone) {
+                g.stationHazards.push(resolved.zone as StationHazard);
+                g.stationMetrics.leakMudZones += 1;
+                f.abilityCooldown = 7.5;
+                addDamageText(g, { x: resolved.zone.centerX, y: resolved.zone.centerY - 18, value: "床汚染", life: .9, color: "#a9bf70" });
+              }
+            }
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+              const victim = g.fighters
+                .filter((candidate) => candidate.side === "human" && candidate.hp > 0 && candidate.combatReady
+                  && (candidate.anchorLane ?? candidate.lane) === (f.anchorLane ?? f.lane)
+                  && Math.abs(candidate.x - f.x) <= 210)
+                .sort((left, right) => Math.abs(left.x - f.x) - Math.abs(right.x - f.x))[0];
+              if (victim) {
+                const windup = beginLeakMudWindup({
+                  source: f,
+                  zoneId: `leak-mud-${f.id}-${Math.floor(g.time * 10)}`,
+                  lane: f.anchorLane ?? f.lane,
+                  centerX: victim.x,
+                  centerY: activeLaneCenters[f.anchorLane ?? f.lane],
+                });
+                if (windup.ok) {
+                  f.stationAbility = windup.runtime as StationAbilityRuntime;
+                  abilityFrame = true;
+                  g.banner = "漏泥 // 床汚染予告";
+                  g.bannerTime = Math.max(g.bannerTime, .8);
+                }
+              }
+            }
+            if (abilityFrame || f.stationAbility.phase !== "idle") continue;
+          }
+
+          if (f.kind === "sprinter") {
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+              const started = beginSoukiBurst({ runner: f });
+              if (started.ok) {
+                f.stationAbility = started.runtime as StationAbilityRuntime;
+                g.banner = "走鬼 // 後方侵入予告";
+                g.bannerTime = Math.max(g.bannerTime, .62);
+              }
+            }
+            if (f.stationAbility.phase !== "idle") {
+              const beforeX = f.x;
+              const burst = advanceSoukiBurst({
+                runtime: f.stationAbility,
+                runner: f,
+                elapsedSeconds: dt,
+                crawlerRearBoundaryX: BASE_X + 28,
+              });
+              f.stationAbility = burst.runtime as StationAbilityRuntime;
+              const physicalFloor = g.fighters
+                .filter((candidate) => candidate.side === "human" && candidate.hp > 0
+                  && (candidate.anchorLane ?? candidate.lane) === (f.anchorLane ?? f.lane)
+                  && candidate.x <= beforeX && candidate.x >= burst.runner.x - 4)
+                .reduce((floor, candidate) => Math.max(floor, candidate.x + candidate.bodyRadius + f.bodyRadius), BASE_X + 28);
+              f.x = Math.max(physicalFloor, burst.runner.x);
+              f.lane = burst.runner.lane as Lane;
+              f.anchorLane = f.lane;
+              f.y = activeLaneCenters[f.lane];
+              if (burst.burstStarted) g.stationMetrics.soukiBursts += 1;
+              if (f.stationAbility.phase === "idle") f.abilityCooldown = 5.2;
+              continue;
+            }
+          }
+
+          if (f.kind === "gate-eater") {
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+              const victim = g.fighters
+                .filter((candidate) => candidate.side === "human" && candidate.hp > 0)
+                .sort((left, right) => fighterDistance(f, left) - fighterDistance(f, right))[0];
+              const targetX = victim ? Math.max(BASE_X + 48, victim.x - 12) : Math.max(BASE_X + 48, f.x - 132);
+              const started = beginTicketGateEaterCharge({ boss: f, targetX });
+              if (started.ok) {
+                f.stationAbility = started.runtime as StationAbilityRuntime;
+                g.banner = "改札喰い // 突進予告";
+                g.bannerTime = Math.max(g.bannerTime, 1.05);
+              }
+            }
+            if (f.stationAbility.phase !== "idle") {
+              const charge = advanceTicketGateEaterCharge({
+                runtime: f.stationAbility,
+                boss: f,
+                elapsedSeconds: dt,
+              });
+              f.stationAbility = charge.runtime as StationAbilityRuntime;
+              f.x = Math.max(BASE_X + 48, charge.boss.x);
+              f.lane = charge.boss.lane as Lane;
+              f.anchorLane = f.lane;
+              f.y = activeLaneCenters[f.lane];
+              if (charge.chargeStarted) {
+                g.stationMetrics.gateEaterCharges += 1;
+                if (!g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_CHARGE)) {
+                  g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_CHARGE);
+                }
+              }
+              if (charge.flankOpened && !g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_FLANK)) {
+                g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_FLANK);
+              }
+              if (charge.chargeEnded) {
+                for (const victim of g.fighters) {
+                  if (victim.side !== "human" || victim.hp <= 0 || fighterDistance(victim, f) > 92) continue;
+                  const damage = applyIncomingHumanDamage(g, victim, 34, { attackKind: "melee" }).targetDamage;
+                  victim.flash = Math.max(victim.flash, .18);
+                  victim.knock = Math.max(victim.knock, 14);
+                  addDamageText(g, { x: victim.x, y: victim.y - 54, value: `突進 -${Math.round(damage)}`, life: .85, color: "#e2a65e" });
+                }
+              }
+              if (f.stationAbility.phase === "idle") f.abilityCooldown = 7;
+              continue;
+            }
           }
 
           if (f.kind === "takuya") {
@@ -4105,8 +6410,9 @@ export function AshfallGame() {
                 for (const victim of g.fighters) {
                   // Perspective-scaled distance matches the on-ground warning ellipse.
                   if (victim.side !== "human" || victim.hp <= 0 || effectDistance(victim, f) > radius) continue;
-                  victim.hp -= damage; victim.flash = .16; victim.knock = Math.max(victim.knock, 12);
-                  g.damageTexts.push({ x: victim.x, y: victim.y - 48, value: String(damage), life: .8, color: "#ff7658" });
+                  const resolved = applyIncomingHumanDamage(g, victim, damage, { attackKind: "melee" });
+                  victim.flash = .16; victim.knock = Math.max(victim.knock, 12);
+                  g.damageTexts.push({ x: victim.x, y: victim.y - 48, value: String(Math.round(resolved.targetDamage)), life: .8, color: "#ff7658" });
                 }
                 addParticles(g, f.x, f.y - 4, "#e7653d", 28);
                 g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy); g.flashOverlay = Math.max(g.flashOverlay, .22);
@@ -4123,14 +6429,75 @@ export function AshfallGame() {
             if (abilityFrame) continue;
           }
 
+          if (f.kind === "engineer") {
+            if (!f.engineerTrapReady && f.engineerTrapCooldown <= 0) {
+              const placement = createMonkeyTrap({
+                id: `monkey-trap-${f.id}-${Math.floor(g.time * 10)}`,
+                engineer: { ...f, assignedLane: f.anchorLane ?? f.lane },
+                assignedLane: f.anchorLane ?? f.lane,
+                elapsedSinceLastPlacement: Infinity,
+                minimumX: BASE_X + 86,
+                maximumX: BARRICADE_X - 24,
+              });
+              if (placement.ok && placement.trap) {
+                f.engineerTrapReady = true;
+                f.engineerTrapX = placement.trap.x;
+                f.engineerTrapLane = placement.trap.lane as Lane;
+              }
+            }
+            if (f.engineerTrapReady && f.engineerTrapLane !== null) {
+              const trap = {
+                id: `monkey-trap-${f.id}`,
+                ownerId: f.id,
+                ownerSide: f.side,
+                lane: f.engineerTrapLane,
+                x: f.engineerTrapX,
+                active: true,
+                used: false,
+                triggerRadius: UNIT_ROLE_TUNING.monkey.triggerRadius,
+                stopSeconds: UNIT_ROLE_TUNING.monkey.stopSeconds,
+              };
+              const trigger = triggerMonkeyTrap(trap, g.fighters.filter((candidate) => candidate.side === "zombie"));
+              if (trigger.triggered) {
+                const trapped = g.fighters.find((candidate) => candidate.id === trigger.targetId && candidate.side === "zombie" && candidate.hp > 0);
+                if (trapped) {
+                  trapped.stunned = Math.max(trapped.stunned, trigger.stopSeconds);
+                  f.engineerTrapReady = false;
+                  f.engineerTrapCooldown = UNIT_ROLE_TUNING.monkey.placementIntervalSeconds;
+                  g.roleMetrics.monkeyTrapTriggers += 1;
+                  addDamageText(g, { x: trapped.x, y: trapped.y - 60, value: "足止め", life: .8, color: "#e1c978" });
+                }
+              }
+            }
+          }
+
           if (f.kind === "medic" && f.supportCooldown <= 0) {
-            const wounded = g.fighters
-              .filter((other) => other.side === "human" && other.id !== f.id && other.hp > 0 && other.hp < other.maxHp && fighterDistance(other, f) <= 108)
-              .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+            const wounded = selectNaoHealTarget({
+              healer: f,
+              allies: g.fighters.filter((other) => other.side === "human" && other.id !== f.id),
+              maxRange: UNIT_ROLE_TUNING.nao.healRange,
+              distanceBetween: fighterDistance,
+            }) as Fighter | null;
             if (wounded) {
-              const healed = Math.min(16, wounded.maxHp - wounded.hp);
+              const concurrentHealers = g.fighters.filter((other) => other.side === "human"
+                && other.kind === "medic"
+                && other.id !== f.id
+                && other.healFocusTargetId === wounded.id
+                && other.healFocusRemaining > 0).length;
+              const healing = resolveNaoHealing({
+                target: wounded,
+                healerNumber: concurrentHealers + 1,
+                existingProtectionSeconds: wounded.damageReductionRemaining,
+              });
+              const healed = healing.amount;
               const roleEffect = roleEffectForAction({ unitKind: f.kind, action: "heal", targetKind: wounded.kind }) as RoleEffect | null;
-              wounded.hp += healed; f.supportCooldown = 1.55;
+              wounded.hp = healing.hp;
+              wounded.damageReductionRemaining = healing.protectionSeconds;
+              wounded.damageReductionMultiplier = 1 - healing.damageReduction;
+              f.healFocusTargetId = wounded.id;
+              f.healFocusRemaining = 1.55;
+              f.supportCooldown = 1.55;
+              g.roleMetrics.naoHealing += healed;
               g.damageTexts.push({ x: wounded.x, y: wounded.y - 70, value: `+${Math.ceil(healed)}`, life: .8, color: "#83e0a2" });
               g.damageTexts.push({ x: f.x, y: f.y - 64, value: "救護", life: .7, color: "#9bf0ba" });
               g.shots.push({ x: f.x + 8, y: f.y - 34, tx: wounded.x, ty: wounded.y - 28, life: .32, duration: .32, side: "human", effect: roleEffect ?? undefined });
@@ -4155,8 +6522,8 @@ export function AshfallGame() {
             if (cohesion?.needsRegroup) {
               const dx = cohesion.destination.x - f.x;
               const dy = cohesion.destination.y - f.y;
-              f.x += Math.sign(dx) * Math.min(Math.abs(dx), f.speed * dt);
-              f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
+              f.x += Math.sign(dx) * Math.min(Math.abs(dx), humanMovementSpeed * dt);
+              f.y += Math.sign(dy) * Math.min(Math.abs(dy), humanLaneSpeed * dt);
               f.lane = activeLaneForY(f.y, cohesion.destination.lane);
               f.targetId = null;
               continue;
@@ -4174,19 +6541,24 @@ export function AshfallGame() {
             const stagingForAssignedLane = f.x <= MUSTER_X + 12 && returningToAssignedLane;
             const tacticalEnemies = enemies;
             const takuyaAlive = enemies.some((enemy) => enemy.kind === "takuya");
+            const containmentBossAlive = enemies.some((enemy) => enemy.kind === "gate-eater" && enemy.contained !== true);
             const objectiveX = g.definition.missionType === "timed-defense"
               ? null
               : g.barricadeVulnerable
                 ? BARRICADE_X
-                : advanceLimitFor(g.tactic, g.phase, g.barricadeVulnerable);
-            const defenseFrontX = g.tactic === "defend" ? 470 : g.tactic === "assault" ? 635 : 555;
+                : advanceLimitFor(g.phase, g.barricadeVulnerable);
+            const defenseFrontX = 555;
             allyIntent = decideAllyIntent({
               missionType: g.definition.missionType,
               unit: {
                 id: f.id,
+                kind: f.kind,
+                side: f.side,
                 x: f.x,
+                y: f.y,
                 lane: f.lane,
                 assignedLane,
+                bodyRadius: f.bodyRadius,
                 range: f.range,
                 ranged: f.range > 64,
                 allowAdjacentLaneTargets: COMBAT_ROLE_RULES[f.kind]?.allowAdjacentLaneTargets === true,
@@ -4194,14 +6566,22 @@ export function AshfallGame() {
               assignedLane,
               enemies: tacticalEnemies.map((enemy) => ({
                 id: enemy.id,
+                side: enemy.side,
                 x: enemy.x,
+                y: enemy.y,
                 lane: enemy.lane,
                 hp: enemy.hp,
+                combatReady: enemy.combatReady,
                 bodyRadius: enemy.bodyRadius,
                 verticalDistance: Math.abs(f.y - enemy.y),
+                attackingCrawler: enemy.targetId === null
+                  && enemy.targetObjectId === null
+                  && enemy.x - BASE_X <= enemy.range + 10,
+                blocksPath: Math.abs(enemy.y - f.y) <= enemy.bodyRadius + f.bodyRadius + 12
+                  && Math.abs(enemy.x - f.x) <= Math.max(105, f.range + 36),
                 threatensBase: enemy.x <= WORLD_GEOMETRY.threatNearX,
                 baseThreatDistance: Math.max(0, enemy.x - BASE_X),
-                priority: -roleTargetBias(f.kind, enemy.kind) - tacticTargetBias(g.tactic, enemy.x),
+                priority: -roleTargetBias(f.kind, enemy.kind),
               })),
               objective: objectiveX === null ? null : { x: objectiveX, active: true },
               defenseAnchor: { 0: BASE_X + 205, 1: BASE_X + 225, 2: BASE_X + 205 },
@@ -4210,7 +6590,7 @@ export function AshfallGame() {
               previousIntent: { targetId: f.targetId, destinationX: f.aiDestinationX, desiredX: f.aiDestinationX, moveDirection: f.aiMoveDirection },
               laneTransitioning: returningToAssignedLane,
               takuyaDefeated: g.definition.missionType === "boss-assault" && g.barricadeVulnerable && !takuyaAlive,
-              maxPursuersPerEnemy: takuyaAlive ? 9 : 2,
+              maxPursuersPerEnemy: takuyaAlive || containmentBossAlive ? 9 : 2,
               localThreatRadius: Math.max(150, f.range + 56),
               hasLineOfSight: (_attacker, candidate) => {
                 const actualTarget = fighterById.get(candidate.id);
@@ -4221,7 +6601,20 @@ export function AshfallGame() {
                 }) : false;
               },
             });
-            const holdAtMuster = stagingForAssignedLane && allyIntent.reason !== "crawler-under-attack";
+            const stationObjective = stationObjectiveDestination(g, f);
+            if (stationObjective && allyIntent.reason !== "crawler-under-attack") {
+              f.anchorLane = stationObjective.lane;
+              allyIntent = {
+                ...allyIntent,
+                destinationX: stationObjective.x,
+                desiredX: stationObjective.x,
+                destinationLane: stationObjective.lane,
+                moveDirection: Math.sign(stationObjective.x - f.x),
+              };
+            }
+            const holdAtMuster = stagingForAssignedLane
+              && allyIntent.reason !== "crawler-under-attack"
+              && !stationObjective;
             if (holdAtMuster) allyIntent = { ...allyIntent, destinationX: MUSTER_X, desiredX: MUSTER_X, moveDirection: 0 };
             f.aiDestinationX = holdAtMuster ? MUSTER_X : allyIntent.destinationX;
             f.aiMoveDirection = allyIntent.moveDirection;
@@ -4246,7 +6639,7 @@ export function AshfallGame() {
               .sort((a, b) => fighterDistance(f, a) - fighterDistance(f, b))[0];
             const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
             const lookAhead = Math.max(105, f.range + 36);
-            const defenderCapacity = (human: Fighter) => human.kind === "brute" ? 3 : human.kind === "scout" || human.kind === "medic" ? 1 : 2;
+            const defenderCapacity = (human: Fighter) => human.kind === "guardian" ? 4 : human.kind === "scout" || human.kind === "medic" ? 1 : 2;
             const routeBlockers = crawlerInRange ? [] : humans.filter((human) => isCrawlerRouteBlocker({
               enemyX: f.x, defenderX: human.x, defenderY: human.y, routeY, lookAhead,
             }));
@@ -4260,7 +6653,7 @@ export function AshfallGame() {
               capacity: defenderCapacity(human),
               isCurrent: f.targetId === human.id,
               rearward: human.x - f.x,
-            }) + (human.kind === "brute" ? -45 : 0);
+            }) + (human.kind === "guardian" ? -65 : human.kind === "brute" ? -10 : 0);
             const bestInterceptor = availableBlockers.reduce<Fighter | undefined>((choice, human) => {
               return !choice || interceptorScore(human) < interceptorScore(choice) ? human : choice;
             }, undefined);
@@ -4307,7 +6700,7 @@ export function AshfallGame() {
               targetPriority: (candidate: Fighter) => number;
             }) => { target: Fighter; targetId: number } | null)({
               attacker: f,
-              candidates: g.fighters.filter((candidate) => candidate.side !== f.side && candidate.hp > 0 && candidate.combatReady),
+              candidates: target ? [target] : [],
               damage: f.damage,
               hasLineOfSight: (attacker, candidate) => hasAdjacentLaneLineOfSight({
                 attacker,
@@ -4316,7 +6709,6 @@ export function AshfallGame() {
               }),
               targetPriority: (candidate: Fighter) => (
                 roleTargetBias(f.kind, candidate.kind)
-                + tacticTargetBias(g.tactic, candidate.x)
                 + (candidate.id === target?.id ? -10 : 0)
               ),
             });
@@ -4355,14 +6747,14 @@ export function AshfallGame() {
                 f.attack = .18;
                 f.cooldown = f.kind === "takuya" && f.hp / f.maxHp <= .5 ? 1 : f.attackEvery;
                 playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
-                  priority: f.kind === "takuya" ? 94 : 64,
+                  priority: f.kind === "takuya" || f.kind === "gate-eater" ? 94 : 64,
                   cooldownMs: 150,
                   maxInstances: 3,
-                  fallbackCue: "melee-hit",
+                  fallbackCue: f.kind === "takuya" || f.kind === "gate-eater" ? "takuya-slam" : "melee-hit",
                 });
                 g.damageTexts.push({ x: objectTarget.x, y: objectTarget.y - 58, value: `-${Math.round(f.damage)}`, life: .65, color: "#ff9a70" });
-                addParticles(g, objectTarget.x + 24, objectTarget.y - 18, "#9aa58d", f.kind === "takuya" || f.kind === "crusher" ? 9 : 4);
-                if (f.kind === "spitter") g.shots.push({ x: f.x - 14, y: f.y - 32, tx: objectTarget.x, ty: objectTarget.y - 22, life: .2, duration: .2, side: "zombie", style: "projectile", weapon: "spitter" });
+                addParticles(g, objectTarget.x + 24, objectTarget.y - 18, "#9aa58d", f.kind === "takuya" || f.kind === "gate-eater" || f.kind === "crusher" ? 9 : 4);
+                if (f.kind === "spitter" || f.kind === "ooze") g.shots.push({ x: f.x - 14, y: f.y - 32, tx: objectTarget.x, ty: objectTarget.y - 22, life: .2, duration: .2, side: "zombie", style: "projectile", weapon: "spitter" });
                 if (result.detonationRequested) {
                   f.targetObjectId = null;
                   g.banner = `爆薬ドラム損壊・起爆 // ${LANE_NAMES_JA[objectTarget.lane]}レーン`; g.bannerTime = 1.05;
@@ -4374,7 +6766,7 @@ export function AshfallGame() {
               }
             } else {
               const stopX = objectTarget.x + stoppingDistance;
-              f.x = Math.max(stopX, f.x - f.speed * dt);
+              f.x = Math.max(stopX, f.x - f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier) * dt);
               const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
               const dy = routeY - f.y;
               if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
@@ -4383,6 +6775,10 @@ export function AshfallGame() {
             }
           } else if (target && distance <= f.range + target.bodyRadius) {
             if (f.cooldown <= 0) {
+              if (f.side === "human" && f.kind === "gunner" && !raiderCanFire({ heat: f.weaponHeat, overheated: f.overheated })) {
+                f.cooldown = .1;
+                continue;
+              }
               const enragedTakuya = f.kind === "takuya" && f.hp / f.maxHp <= .5;
               const targetHpRatio = target.hp / target.maxHp;
               const roleEffect = f.side === "human" ? roleEffectForAction({
@@ -4393,32 +6789,153 @@ export function AshfallGame() {
                 targetAlreadyMarked: target.marked > 0,
                 holdingFrontline: f.kind === "brute" && target.targetId === f.id,
               }) as RoleEffect | null : null;
-              const attackDamage = f.side === "human" ? f.damage * humanAttackMultiplier(f.kind, target.kind, targetHpRatio, target.marked > 0) : f.damage;
-              target.hp -= attackDamage; target.flash = .12;
+              const tataraTarget = {
+                ...target,
+                armored: target.kind === "crusher" || target.kind === "grappler" || target.kind === "gate-eater",
+              };
+              const baseAttackDamage = f.side === "human"
+                ? f.kind === "brute"
+                  ? resolveTataraStrikeDamage(f.damage, tataraTarget)
+                    * humanAttackMultiplier(f.kind, target.kind, targetHpRatio, target.marked > 0)
+                    * (target.armorBrokenRemaining > 0 ? 1.12 : 1)
+                  : f.damage * humanAttackMultiplier(f.kind, target.kind, targetHpRatio, target.marked > 0)
+                : f.damage;
+              const gateEaterProfile = target.kind === "gate-eater" && f.side === "human"
+                ? ticketGateEaterDamageProfile({
+                  runtime: target.stationAbility,
+                  attackVector: Math.abs(f.y - target.y) > 24 ? "flank" : "front",
+                })
+                : { multiplier: 1 };
+              const attackDamage = baseAttackDamage * gateEaterProfile.multiplier;
+              let appliedAttack: { targetDamage: number };
+              if (f.side === "human"
+                && target.kind === "gate-eater"
+                && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
+                && g.researchContainer) {
+                const hpBeforeStrike = target.hp;
+                const containerWasExposed = g.researchContainer.exposed;
+                const containment = resolveContainmentStrike({
+                  boss: target,
+                  researchContainer: g.researchContainer,
+                  attackDamage,
+                  powerActivated: g.stageMission.powerActivated ?? 0,
+                  sealDoorX: Number(g.definition.missionConfig.sealDoorX ?? 867),
+                });
+                Object.assign(target, containment.boss);
+                g.researchContainer = containment.researchContainer as ResearchContainerRuntime;
+                appliedAttack = { targetDamage: Math.max(0, hpBeforeStrike - target.hp) };
+                if (!containerWasExposed && g.researchContainer.exposed) {
+                  if (!g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.RESEARCH_CONTAINER_EXPOSED)) {
+                    g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.RESEARCH_CONTAINER_EXPOSED);
+                  }
+                  g.banner = "研究容器露出 // 改札喰いと共に押し込め";
+                  g.bannerTime = 2;
+                }
+                if (containment.containmentComplete && g.stageMission.gateEaterContained !== true) {
+                  g.banner = "封鎖対象を扉の向こうへ収容";
+                  g.bannerTime = 1.8;
+                }
+              } else if (f.side === "zombie" && target.side === "human") {
+                appliedAttack = applyIncomingHumanDamage(g, target, attackDamage, { attackKind: f.range > 64 ? "ranged" : "melee" });
+              } else {
+                target.hp -= attackDamage;
+                appliedAttack = { targetDamage: attackDamage };
+              }
+              target.flash = .12;
               f.attackSequence += 1;
+              let crazyKingRadius: number | null = null;
+              if (f.side === "human" && f.kind === "crazy-king") {
+                const momentum = advanceCrazyKingMomentum({
+                  hitCount: f.comboHits,
+                  secondsSinceLastHit: f.comboWindow > 0 ? 0 : Infinity,
+                  hitLanded: true,
+                });
+                f.comboHits = momentum.hitCount;
+                f.comboWindow = UNIT_ROLE_TUNING.crazyKing.comboWindowSeconds;
+                crazyKingRadius = momentum.radius;
+                g.roleMetrics.crazyKingMaxTier = Math.max(g.roleMetrics.crazyKingMaxTier, momentum.tier);
+              }
+              if (f.side === "human" && f.kind === "brute") {
+                const specialty = tataraTargetSpecialty(tataraTarget);
+                if (specialty !== "normal") {
+                  g.roleMetrics.tataraHeavyDamage += attackDamage;
+                  target.armorBreakStacks += 1;
+                  if (target.armorBreakStacks >= 3) {
+                    target.armorBreakStacks = 0;
+                    target.armorBrokenRemaining = Math.max(target.armorBrokenRemaining, 3.2);
+                    target.stunned = Math.max(target.stunned, .75);
+                    addDamageText(g, { x: target.x, y: target.y - 66, value: "装甲破砕", life: .85, color: "#ffba70" });
+                  }
+                }
+              }
+              if (f.side === "human" && f.kind === "gunner") {
+                const wasOverheated = f.overheated;
+                const heat = applyRaiderShots({ heat: f.weaponHeat, overheated: f.overheated }, 1);
+                f.weaponHeat = heat.heat;
+                f.overheated = heat.overheated;
+                if (!wasOverheated && heat.overheated) g.roleMetrics.raiderOverheats += 1;
+                const lineTargets = [...selectRaiderLineTargets({
+                  attacker: f,
+                  enemies: g.fighters.filter((candidate) => candidate.side === "zombie"
+                    && candidate.hp > 0
+                    && candidate.combatReady
+                    && candidate.contained !== true),
+                  range: UNIT_ROLE_TUNING.raider.lineRange,
+                })] as Fighter[];
+                if (!lineTargets.some((candidate) => candidate.id === target?.id)) lineTargets.unshift(target);
+                for (const lineTarget of lineTargets) {
+                  const suppression = applyRaiderSuppression(lineTarget.suppressionStacks, 1);
+                  lineTarget.suppressionStacks = suppression.stacks;
+                  lineTarget.suppressedRemaining = suppression.remainingSeconds;
+                  lineTarget.suppressionMultiplier = suppression.speedMultiplier;
+                  g.roleMetrics.raiderSuppressionApplications += 1;
+                  if (lineTarget.id === target.id) continue;
+                  const pierceDamage = attackDamage * .58;
+                  lineTarget.hp -= pierceDamage;
+                  lineTarget.flash = Math.max(lineTarget.flash, .1);
+                  g.roleMetrics.raiderPierceHits += 1;
+                  addDamageText(g, { x: lineTarget.x, y: lineTarget.y - 43, value: String(Math.round(pierceDamage)), life: .55, color: "#e8cc72" });
+                }
+              }
               if (f.side === "human" && ["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) {
-                const preview = newcomerAttackPayload({ unitKind: f.kind, targetKind: target.kind, targetIsHeavy: ["crusher", "abomination", "takuya"].includes(target.kind) });
+                const preview = newcomerAttackPayload({
+                  unitKind: f.kind,
+                  targetKind: target.kind,
+                  targetIsHeavy: ["crusher", "abomination", "takuya", "grappler", "gate-eater"].includes(target.kind),
+                  areaRadius: crazyKingRadius,
+                });
                 const nearbyTargets = preview.radius > 0
-                  ? g.fighters.filter((candidate) => candidate.side === "zombie" && candidate.hp > 0 && candidate.id !== target.id && effectDistance(candidate, target) <= preview.radius)
+                  ? g.fighters.filter((candidate) => candidate.side === "zombie"
+                    && candidate.hp > 0
+                    && candidate.combatReady
+                    && candidate.contained !== true
+                    && candidate.id !== target.id
+                    && effectDistance(candidate, f) <= preview.radius)
                   : [];
                 const newcomerEffects = resolveNewcomerAttackEffects({
                   unitKind: f.kind,
                   target,
                   nearbyTargets,
                   attackDamage,
-                  targetIsHeavy: ["crusher", "abomination", "takuya"].includes(target.kind),
+                  targetIsHeavy: ["crusher", "abomination", "takuya", "grappler", "gate-eater"].includes(target.kind),
+                  areaRadius: crazyKingRadius,
                 });
                 Object.assign(target, newcomerEffects.target);
                 for (const nextSecondary of newcomerEffects.secondaryTargets) {
                   const secondary = g.fighters.find((candidate) => candidate.id === nextSecondary.id && candidate.side === "zombie" && candidate.hp > 0);
                   if (!secondary) continue;
                   Object.assign(secondary, nextSecondary);
+                  if (f.kind === "crazy-king") g.roleMetrics.crazyKingSecondaryHits += 1;
                   g.damageTexts.push({ x: secondary.x, y: secondary.y - 43, value: String(Math.round(newcomerEffects.secondaryDamage)), life: .58, color: "#efb95f" });
                 }
               }
+              if (target.kind === "gate-eater"
+                && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+                Object.assign(target, enforceGateEaterContainmentInvariant(target));
+              }
               if (f.side === "human") {
                 emitBattleBarkOnce(g, `contact:${f.kind}`, RANDOM_BATTLE_BARK_TRIGGER_IDS.CONTACT, f.kind as UnitKind);
-                const targetIsHeavy = ["crusher", "abomination", "takuya"].includes(target.kind);
+                const targetIsHeavy = ["crusher", "abomination", "takuya", "grappler", "gate-eater"].includes(target.kind);
                 const weaponEvent = f.kind === "crazy-king" ? "attack" : f.kind === "kumaverson" ? "swing" : f.kind === "babayaga" ? "shot" : null;
                 const contactAudioX = f.kind === "crazy-king" || f.kind === "kumaverson" ? (f.x + target.x) / 2 : f.x;
                 playProductionCue((weaponEvent && unitAudioCueFor(f.kind, "weapon", weaponEvent)) || weaponCueForUnit(f.kind), contactAudioX, {
@@ -4426,7 +6943,7 @@ export function AshfallGame() {
                   cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 70,
                   volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
                   maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
-                  fallbackCue: ["ranger", "gunner", "medic", "babayaga"].includes(f.kind) ? "ranged-shot" : "melee-hit",
+                  fallbackCue: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "ranged-shot" : "melee-hit",
                 });
                 if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), contactAudioX, { priority: targetIsHeavy ? 76 : 67, cooldownMs: 110, volume: targetIsHeavy ? .62 : .54, maxInstances: 1 });
                 if (f.kind === "kumaverson") {
@@ -4448,16 +6965,16 @@ export function AshfallGame() {
                   maxInstances: 2,
                 });
                 if (target.side === "zombie" && Math.random() < .48) playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
-                  priority: target.kind === "takuya" ? 88 : 62,
+                  priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
                   cooldownMs: 210,
                   maxInstances: 3,
                 });
               } else {
                 playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
-                  priority: f.kind === "takuya" ? 94 : 65,
+                  priority: f.kind === "takuya" || f.kind === "gate-eater" ? 94 : 65,
                   cooldownMs: 160,
                   maxInstances: 3,
-                  fallbackCue: f.kind === "spitter" ? "ranged-shot" : "melee-hit",
+                  fallbackCue: f.kind === "spitter" || f.kind === "ooze" ? "ranged-shot" : "melee-hit",
                 });
                 if (target.side === "human" && Math.random() < .5) playProductionCue(humanVoiceCueForUnit(target.kind, "hurt"), target.x, {
                   priority: 72,
@@ -4467,32 +6984,38 @@ export function AshfallGame() {
                 });
               }
               if (f.kind === "scout" && target.side === "zombie") target.marked = Math.max(target.marked, 3.2);
-              target.knock = Math.max(target.knock, f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" ? 9 : 3);
-              f.attack = .18; f.cooldown = enragedTakuya ? .9 : f.attackEvery;
-              g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(attackDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
+              target.knock = Math.max(target.knock, f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" || f.kind === "gate-eater" ? 9 : 3);
+              f.attack = .18;
+              f.cooldown = enragedTakuya
+                ? .9
+                : f.kind === "crazy-king"
+                  ? crazyKingAttackInterval(f.attackEvery, f.comboHits)
+                  : f.attackEvery;
+              g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(appliedAttack.targetDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
               if (roleEffect && f.abilityCooldown <= 0) {
-                const roleCue = roleEffect === "scout" ? "索敵マーク" : roleEffect === "ranger" ? "対・毒吐き" : roleEffect === "brute" ? "前線保持" : roleEffect === "brawler" ? "フィニッシュ" : roleEffect === "gunner" ? "重装破砕" : roleEffect === "crazy-king" ? "密集切断" : roleEffect === "kumaverson" ? "打撃・足止め" : roleEffect === "babayaga" ? "特殊個体分析" : null;
+                const roleCue = roleEffect === "scout" ? "索敵マーク" : roleEffect === "ranger" ? "対・毒吐き" : roleEffect === "brute" ? "対装甲破砕" : roleEffect === "brawler" ? "フィニッシュ" : roleEffect === "gunner" ? "直線制圧" : roleEffect === "crazy-king" ? "密集切断" : roleEffect === "kumaverson" ? "打撃・足止め" : roleEffect === "babayaga" ? "特殊個体分析" : null;
                 if (roleCue) { g.damageTexts.push({ x: f.x, y: f.y - 66, value: roleCue, life: .75, color: "#ffe078" }); f.abilityCooldown = 1.8; emitBattleBark(g, "role-cue", f.kind, f.id); }
               }
               if (f.kind === "takuya") {
                 for (const splash of g.fighters) {
                   if (splash.side === "human" && splash.id !== target.id && splash.hp > 0 && fighterDistance(splash, target) < 58) {
-                    splash.hp -= 22; splash.flash = .12; splash.knock = 6;
-                    g.damageTexts.push({ x: splash.x, y: splash.y - 46, value: "22", life: .65, color: "#e98a72" });
+                    const resolved = applyIncomingHumanDamage(g, splash, 22, { attackKind: "melee" });
+                    splash.flash = .12; splash.knock = 6;
+                    g.damageTexts.push({ x: splash.x, y: splash.y - 46, value: String(Math.round(resolved.targetDamage)), life: .65, color: "#e98a72" });
                   }
                 }
                 addParticles(g, target.x, target.y + 2, "#b78656", 13); playCue("takuya-hit");
               }
               if (f.side === "human") {
                 const emphasized = roleEffect === "brawler" || roleEffect === "gunner" || roleEffect === "crazy-king" || roleEffect === "kumaverson" || roleEffect === "babayaga";
-                const ranged = ["ranger", "gunner", "medic", "babayaga"].includes(f.kind);
+                const ranged = ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind);
                 g.shots.push({ x: f.x + 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee", weapon: f.kind });
                 if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) playCue(`role-${roleEffect}` as SfxCueId);
                 if (!productionMixerRef.current) {
-                  if (["ranger", "gunner", "medic", "babayaga"].includes(f.kind)) playCue("ranged-shot", { frequency: 310 + Math.random() * 50 });
+                  if (["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)) playCue("ranged-shot", { frequency: 310 + Math.random() * 50 });
                   else playCue("melee-hit");
                 }
-              } else if (f.kind === "spitter") {
+              } else if (f.kind === "spitter" || f.kind === "ooze") {
                 g.shots.push({ x: f.x - 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .2, duration: .2, side: "zombie", style: "projectile", weapon: "spitter" });
                 if (!productionMixerRef.current) playCue("ranged-shot", { frequency: 205 });
               } else {
@@ -4503,10 +7026,24 @@ export function AshfallGame() {
           } else if (!target && baseDistance <= f.range + 10) {
             if (f.cooldown <= 0) {
               if (f.side === "human") {
+                if (f.kind === "gunner" && !raiderCanFire({ heat: f.weaponHeat, overheated: f.overheated })) {
+                  f.cooldown = .1;
+                  continue;
+                }
                 const beforeHit = g.barricadeHp;
                 const roleEffect = roleEffectForAction({ unitKind: f.kind, action: "structure", targetKind: "infected-base" }) as RoleEffect | null;
-                const structureDamage = f.damage * structureDamageMultiplier(f.kind, g.tactic);
+                const structureDamage = f.kind === "brute"
+                  ? resolveTataraStrikeDamage(f.damage, { targetType: "infected-base" })
+                  : f.damage * structureDamageMultiplier(f.kind);
                 g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
+                if (f.kind === "brute") g.roleMetrics.tataraStructureDamage += structureDamage;
+                if (f.kind === "gunner") {
+                  const wasOverheated = f.overheated;
+                  const heat = applyRaiderShots({ heat: f.weaponHeat, overheated: f.overheated }, 1);
+                  f.weaponHeat = heat.heat;
+                  f.overheated = heat.overheated;
+                  if (!wasOverheated && heat.overheated) g.roleMetrics.raiderOverheats += 1;
+                }
                 f.attackSequence += 1;
                 emitBattleBarkOnce(g, `enemy-base-attack:${f.kind}`, RANDOM_BATTLE_BARK_TRIGGER_IDS.ENEMY_BASE_ATTACK, f.kind as UnitKind);
                 const structureWeaponEvent = f.kind === "crazy-king" ? "attack" : f.kind === "kumaverson" ? "swing" : f.kind === "babayaga" ? "shot" : null;
@@ -4525,11 +7062,11 @@ export function AshfallGame() {
                 g.barricadeHitY = f.y;
                 g.damageTexts.push({ x: enemyBaseTarget.x, y: enemyBaseTarget.y - 14, value: `-${Math.round(structureDamage)}`, life: .7, color: "#ffd06b" });
                 addParticles(g, enemyBaseTarget.x, enemyBaseTarget.y, "#e78b45", f.kind === "brute" ? 10 : 5);
-                if (!roleEffect && ["ranger", "gunner", "medic", "babayaga"].includes(f.kind)) {
+                if (!roleEffect && ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)) {
                   g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .2, duration: .2, side: "human", style: "projectile", weapon: f.kind });
                 }
                 if (roleEffect) {
-                  g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: ["ranger", "gunner", "medic", "babayaga"].includes(f.kind) ? "projectile" : "melee", weapon: f.kind });
+                  g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "projectile" : "melee", weapon: f.kind });
                   if (!productionMixerRef.current && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) {
                     playCue(`role-${roleEffect}` as SfxCueId);
                   }
@@ -4546,10 +7083,10 @@ export function AshfallGame() {
                 const siegeDamage = crawlerSiegeDamage(f.damage, g.phase);
                 g.baseHp = Math.max(0, g.baseHp - siegeDamage);
                 playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
-                  priority: f.kind === "takuya" ? 94 : 66,
+                  priority: f.kind === "takuya" || f.kind === "gate-eater" ? 94 : 66,
                   cooldownMs: 170,
                   maxInstances: 3,
-                  fallbackCue: f.kind === "takuya" ? "takuya-slam" : "structure-light",
+                  fallbackCue: f.kind === "takuya" || f.kind === "gate-eater" ? "takuya-slam" : "structure-light",
                 });
                 g.crawlerHitFlash = .18;
                 if (beforeHit === g.baseMaxHp) { g.banner = "突破発生 — 移動拠点が攻撃を受けています"; g.bannerTime = 1.4; }
@@ -4571,10 +7108,9 @@ export function AshfallGame() {
           } else if (target && f.side === "human") {
             const dx = target.x - f.x;
             const stoppingDistance = Math.max(18, f.range + target.bodyRadius * .55);
-            const moveMultiplier = g.tactic === "assault" ? 1.12 : g.tactic === "defend" ? .92 : 1;
             const desiredX = allyIntent?.destinationX ?? (target.x - Math.sign(dx || 1) * stoppingDistance);
             if (Math.abs(desiredX - f.x) > 2) {
-              f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), f.speed * dt * moveMultiplier);
+              f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), humanMovementSpeed * dt);
               f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
             }
             const destinationLane = (f.range > 64
@@ -4585,7 +7121,7 @@ export function AshfallGame() {
               currentLane: f.lane,
               destinationLane,
               laneCenters: activeLaneCenters,
-              laneSpeed: f.laneSpeed,
+              laneSpeed: humanLaneSpeed,
               seconds: dt,
               settleTolerance: 2,
               hysteresis: 5,
@@ -4594,7 +7130,7 @@ export function AshfallGame() {
             f.lane = laneStep.lane as Lane;
           } else if (target && f.side === "zombie") {
             // The CRAWLER remains the objective: enemies advance on their route and only stop for a physical blocker.
-            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * (f.slowMultiplier ?? 1), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
+            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
             const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
             if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
@@ -4603,9 +7139,8 @@ export function AshfallGame() {
           } else {
             if (f.side === "human") {
               const desiredX = allyIntent?.destinationX ?? f.x;
-              const moveMultiplier = g.tactic === "assault" ? 1.12 : g.tactic === "defend" ? .92 : 1;
               if (Math.abs(desiredX - f.x) > 2) {
-                f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), f.speed * dt * moveMultiplier);
+                f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), humanMovementSpeed * dt);
                 f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
               }
               const laneStep = advanceTowardLane({
@@ -4613,7 +7148,7 @@ export function AshfallGame() {
                 currentLane: f.lane,
                 destinationLane: f.anchorLane ?? f.lane,
                 laneCenters: activeLaneCenters,
-                laneSpeed: f.laneSpeed,
+                laneSpeed: humanLaneSpeed,
                 seconds: dt,
                 settleTolerance: 2,
                 hysteresis: 5,
@@ -4621,7 +7156,7 @@ export function AshfallGame() {
               f.y = laneStep.y;
               f.lane = laneStep.lane as Lane;
             } else {
-              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * (f.slowMultiplier ?? 1), seconds: dt, burning: false });
+              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false });
             }
             if (f.side === "zombie" && f.anchorLane !== null) {
               const dy = activeLaneCenters[f.anchorLane] - f.y;
@@ -4656,10 +7191,33 @@ export function AshfallGame() {
           }
         }
 
+        const stageGeometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
+        for (const fighter of g.fighters) {
+          if (!fighter.combatReady || fighter.hp <= 0) continue;
+          const laneAnchorError = Math.abs(fighter.y - activeLaneCenters[fighter.lane]);
+          g.stationMetrics.maxLaneAnchorError = Math.max(g.stationMetrics.maxLaneAnchorError, laneAnchorError);
+          const grounded = clampToWalkable(stageGeometry, {
+            x: fighter.x,
+            y: fighter.y,
+            bodyRadius: fighter.bodyRadius,
+          });
+          if (grounded.clamped) g.stationMetrics.offFloorSteps += 1;
+          fighter.x = grounded.x;
+          fighter.y = grounded.y;
+          fighter.lane = activeLaneForY(fighter.y, fighter.lane);
+        }
+
+        if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+          for (const fighter of g.fighters) {
+            if (fighter.kind === "gate-eater") {
+              Object.assign(fighter, enforceGateEaterContainmentInvariant(fighter));
+            }
+          }
+        }
         const dead = g.fighters.filter((fighter) => fighter.hp <= 0);
         for (const fighter of dead) {
           if (!claimDefeatResolution(g.resolvedDefeatIds, fighter.id)) continue;
-          addParticles(g, fighter.x, fighter.y - 15, fighter.kind === "takuya" || fighter.kind === "shade" ? "#c08d62" : fighter.side === "zombie" ? "#7e965e" : "#b0614e", fighter.kind === "takuya" ? 20 : 11);
+          addParticles(g, fighter.x, fighter.y - 15, fighter.kind === "takuya" || fighter.kind === "gate-eater" || fighter.kind === "shade" ? "#c08d62" : fighter.side === "zombie" ? "#7e965e" : "#b0614e", fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 20 : 11);
           if (fighter.side === "human") playProductionCue(humanVoiceCueForUnit(fighter.kind, "death"), fighter.x, {
             priority: 88,
             cooldownMs: 220,
@@ -4667,9 +7225,9 @@ export function AshfallGame() {
             maxInstances: 3,
           });
           else playProductionCue(enemyVoiceCue(fighter.kind, "death"), fighter.x, {
-            priority: fighter.kind === "takuya" ? 98 : 82,
+            priority: fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 98 : 82,
             cooldownMs: 180,
-            volume: fighter.kind === "takuya" ? 1 : .88,
+            volume: fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 1 : .88,
             maxInstances: 4,
           });
           if (fighter.side === "human" && fighter.kind === "crazy-king"
@@ -4759,8 +7317,10 @@ export function AshfallGame() {
               range: data.range, cooldown: Math.max(.4, generic.riseLockRemaining), supportCooldown: 0, attackEvery: data.attackEvery,
               flash: 0, step: 0, attack: 0, knock: 0, variant: corpse.variant,
               targetId: null, targetObjectId: null, retargetIn: 0, nextLaneDecisionAt: g.time + .8, bodyRadius: bodyRadiusFor("turned"), laneSpeed: enemyLaneSpeedFor("turned"), spawnGrace: generic.riseLockRemaining,
-              combatReady: true, gateEntering: false, gateEntrySpeed: 0, combatReadyX: 0,
-              marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: corpse.x, aiMoveDirection: 0, abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
+               combatReady: true, gateEntering: false, gateEntrySpeed: 0, combatReadyX: 0, contained: false,
+               marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: corpse.x, aiMoveDirection: 0, abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
+               stationAbility: createStationAbilityRuntime("turned"),
+               ...createUnitRoleRuntime(),
             });
             addParticles(g, corpse.x, corpse.y - 20, "#90a965", 14); playCue("turned");
             continue;
@@ -4786,8 +7346,9 @@ export function AshfallGame() {
 
         dispatchSituationalBattleBarks(g);
         dispatchBattleStoryEvents(g);
-        const bossActiveOrIncoming = g.fighters.some((fighter) => fighter.kind === "takuya" && fighter.hp > 0)
-          || g.enemySpawn.pending.some((entry) => entry.kind === "takuya");
+        const bossActiveOrIncoming = g.fighters.some((fighter) => ["takuya", "gate-eater"].includes(fighter.kind)
+            && fighter.hp > 0 && fighter.contained !== true)
+          || g.enemySpawn.pending.some((entry) => ["takuya", "gate-eater"].includes(entry.kind));
         const enragedTakuya = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0 && fighter.hp / fighter.maxHp <= .5);
         if (enragedTakuya && !g.takuyaEnragedAnnounced) {
           g.takuyaEnragedAnnounced = true;
@@ -4795,7 +7356,22 @@ export function AshfallGame() {
         }
         syncMusicMode(bossActiveOrIncoming ? "boss" : g.phase >= 2 || g.baseHp <= 260 ? "danger" : "normal");
 
-        const outcome = g.paused ? null : battleOutcomeFor(g.definition, g);
+        const stationResolution = stationSpatialSnapshot({
+          missionType: g.definition.missionType,
+          missionRuntime: g.stageMission,
+          config: g.definition.missionConfig,
+          fighters: g.fighters,
+          hazards: g.stationHazards,
+          researchContainer: g.researchContainer,
+          laneCenters: activeLaneCenters,
+          eventIndex: g.eventIndex,
+          timelineLength: g.definition.timeline.length,
+          pendingSpawnCount: g.enemySpawn.pending.length,
+        });
+        const outcome = g.paused ? null : battleOutcomeFor(g.definition, {
+          ...g,
+          wavesResolved: stationResolution.wavesResolved,
+        });
         if (outcome) {
           // A simultaneous collapse is a loss: protecting the crawler always remains mandatory.
           g.won = outcome === "won";
@@ -4805,7 +7381,24 @@ export function AshfallGame() {
           emitBattleBark(g, g.won ? "victory" : "defeat", "guide", "tactical");
           g.over = true;
           g.resultPresented = !enemyBaseDestroyed;
-          if (!enemyBaseDestroyed) setEnd({ resultId: g.resultId, stageId: g.definition.stageId, won: g.won, time: g.time, wave: g.wave, kills: g.kills, scrap: g.scrap, baseHp: Math.max(0, g.baseHp), baseMaxHp: g.baseMaxHp, maxCombo: g.maxCombo, unitsLost: g.unitsLost, bossDefeated: g.bossDefeated, enemyBaseDestroyed });
+          if (!enemyBaseDestroyed) setEnd({
+            resultId: g.resultId,
+            stageId: g.definition.stageId,
+            won: g.won,
+            time: g.time,
+            wave: g.wave,
+            kills: g.kills,
+            scrap: g.scrap,
+            baseHp: Math.max(0, g.baseHp),
+            baseMaxHp: g.baseMaxHp,
+            maxCombo: g.maxCombo,
+            unitsLost: g.unitsLost,
+            bossDefeated: g.bossDefeated,
+            enemyBaseDestroyed,
+            missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
+              ? { ...g.stageMission }
+              : undefined,
+          });
           chooseAction(null);
           stopMusic(); stopSfx();
           if (enemyBaseDestroyed) playCue("base-collapse");
@@ -4819,11 +7412,33 @@ export function AshfallGame() {
         g.enemyBaseCollapse = collapseStep.elapsed;
         if (collapseStep.complete) {
           g.resultPresented = true;
-          setEnd({ resultId: g.resultId, stageId: g.definition.stageId, won: g.won, time: g.time, wave: g.wave, kills: g.kills, scrap: g.scrap, baseHp: Math.max(0, g.baseHp), baseMaxHp: g.baseMaxHp, maxCombo: g.maxCombo, unitsLost: g.unitsLost, bossDefeated: g.bossDefeated, enemyBaseDestroyed: g.barricadeHp <= 0 });
+          setEnd({
+            resultId: g.resultId,
+            stageId: g.definition.stageId,
+            won: g.won,
+            time: g.time,
+            wave: g.wave,
+            kills: g.kills,
+            scrap: g.scrap,
+            baseHp: Math.max(0, g.baseHp),
+            baseMaxHp: g.baseMaxHp,
+            maxCombo: g.maxCombo,
+            unitsLost: g.unitsLost,
+            bossDefeated: g.bossDefeated,
+            enemyBaseDestroyed: g.barricadeHp <= 0,
+          });
         }
       }
 
-      drawWorld(ctx, g, backgroundRef.current, spriteRefs.current, stageObjectRefs.current, enemyBaseSpriteRef.current);
+      drawWorld(
+        ctx,
+        g,
+        backgroundRef.current,
+        spriteRefs.current,
+        stageObjectRefs.current,
+        enemyBaseSpriteRef.current,
+        qaScenario?.mode === "station",
+      );
       if (g.bannerTime > 0 && g.running) {
         const compact = activeLaneCenters !== LANE_Y;
         const bannerWidth = compact ? 268 : 356;
@@ -4837,32 +7452,41 @@ export function AshfallGame() {
       }
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
-        const boss = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0 && fighter.combatReady);
+        const boss = g.fighters.find((fighter) => ["takuya", "gate-eater"].includes(fighter.kind)
+          && fighter.hp > 0 && fighter.combatReady && fighter.contained !== true);
         const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);
         setHud({
           missionType: g.definition.missionType, energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
           wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp), baseMaxHp: g.baseMaxHp,
           barricadeHp: Math.max(0, g.barricadeHp), barricadeMaxHp: g.barricadeMaxHp, barricadeVulnerable: g.barricadeVulnerable, barricadeHitFlash: g.barricadeHitFlash,
-          tactic: g.tactic, deployQueue: g.deployQueue.length,
+          deployQueue: g.deployQueue.length,
           airstrikePhase: g.airstrike.phase, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
           combo: g.combo, bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
+          takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
-          objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns }, battleBarks: [...g.battleBarks.active],
+          objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns },
+          battleBarks: g.paused ? [] : [...g.battleBarks.active],
         });
       }
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
-  }, [chooseAction, dispatchBattleStoryEvents, playCue, playEndJingle, playProductionCue, resumeBattleAudioLoops, stopMusic, stopSfx, syncMusicMode]);
+  }, [chooseAction, dispatchBattleStoryEvents, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
   const barricadeCondition = barricadeState(hud.barricadeHp) === "BREACHED" ? "破壊" : barricadeState(hud.barricadeHp) === "BREACH IMMINENT" ? "大破" : barricadeState(hud.barricadeHp) === "BUCKLING" ? "損傷" : "健全";
   const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
   const bossPhase = bossPhaseForHp(hud.bossHp, hud.bossMax);
-  const phaseName = hud.phase === 1 ? "防衛" : hud.phase === 2 ? "前進" : "総攻撃";
-  const tacticName = hud.tactic === "defend" ? "防衛" : hud.tactic === "assault" ? "突撃" : "均衡";
+  const phaseName = hud.missionType === "escort"
+    ? hud.phase === 1 ? "発進" : hud.phase === 2 ? "突破" : "護送"
+    : hud.missionType === "sequential-seal"
+      ? hud.phase === 1 ? "電源1" : hud.phase === 2 ? "電源2・3" : "封鎖"
+      : hud.phase === 1 ? "防衛" : hud.phase === 2 ? "前進" : "総攻撃";
+  const stationMissionHud = hud.missionType === "escort" || hud.missionType === "sequential-seal";
+  const enemyBaseLabel = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
+  const bossLabel = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL ? "改札喰い" : "TAKUYA";
   const selectedName = selectedAction?.startsWith("supply:")
     ? SUPPORT_DISPLAY_NAMES[selectedAction.slice("supply:".length) as SupplyKind]
     : selectedAction === "airstrike" ? "航空支援" : null;
@@ -4884,28 +7508,29 @@ export function AshfallGame() {
           data-state={audioUnlockUi}
           data-audio-unlock-control="true"
           onClick={enableAudio}
-          disabled={audioUnlockUi === "pending"}
+          disabled={audioUnlockUi === "pending" || Boolean(end || pendingResultCommit)}
           aria-label={audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする"}
           aria-live="polite"
         >
           <b><span className="audio-unlock-long">{audioUnlockLabel}</span><span className="audio-unlock-short">{audioUnlockShortLabel}</span></b>
-          <small>{audioUnlockUi === "success" ? "確認音を再生しました（聞こえない場合は端末・タブのミュートを確認）" : audioUnlockUi === "failed" ? "音源または再生処理を確認して、タップで再試行" : "タップしてBGM・効果音・ボイスを開始"}</small>
+          <small>{audioUnlockUi === "success" ? "確認音を再生しました（聞こえない場合は端末・タブのミュートを確認）" : audioUnlockUi === "failed" ? "音源または再生処理を確認して、タップで再試行" : "タップしてBGM・環境音・効果音・戦闘ボイスを開始"}</small>
         </button>}
         {screen === "battle" && <>
-        {hud.battleBarks.length > 0 && <div className="battle-barks" aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
+        {hud.battleBarks.length > 0 && <div className="battle-barks" aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
 
         <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>先行版 0.6.0</em></small></div></div>
+          <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>Version 0.7.0</em></small></div></div>
           <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
-          <button className={`tactic-cycle ${hud.tactic}`} onClick={cycleTactic} aria-label={`作戦方針を切り替え（現在：${tacticName}）`}><small>方針</small><b>{tacticName}</b><em>R</em></button>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
-          <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
-          <button className="icon-btn audio-btn" data-muted={sfxMuted} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
+          <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
+          <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
         </div>
 
         <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>移動拠点</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
-        <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : "感染拠点"}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>
-        {hud.bossMax > 0 && <div className="boss-hud"><div><span>TAKUYA // {bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
+        {stationMissionHud
+          ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{hud.objective}</b></div></div>
+          : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
+        {hud.bossMax > 0 && <div className="boss-hud"><div><span>{bossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
         {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
 
         {selectedAction && started && !paused && !end && <div className="placement-hint" role="status" aria-live="polite">
@@ -4915,7 +7540,7 @@ export function AshfallGame() {
 
         <div className="bottom-hud">
           <div className="resource-stack">
-            <div className="resource command"><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy}%` }} /></i></div>
+            <div className="resource command"><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
             <div className="resource rage"><span>支援</span><strong>{hud.supportGauge}</strong><small>/{SUPPORT_GAUGE_MAX}</small><i><em style={{ width: `${hud.supportGauge}%` }} /></i></div>
           </div>
 
@@ -4923,9 +7548,10 @@ export function AshfallGame() {
             <div className="unit-cards" aria-label="生存者ユニット">
               {cards.filter((card) => formationKinds.includes(card.kind)).map((card) => {
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
+                const portraitArt = (PORTRAIT_ART as Record<string, string | undefined>)[card.kind];
                 return (
-                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={{ "--unit-card-art": `url('${(PORTRAIT_ART as Record<string, string>)[card.kind]}')` } as CSSProperties}>
-                    <span className="keycap">{card.key}</span><span className="portrait"><i /></span>
+                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                    <span className="keycap">{card.key}</span><span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
                     {cooldown > 0 && <span className="cooldown-mask"><b>{cooldown}</b><small>秒待ち</small></span>}
                   </button>
@@ -4962,9 +7588,9 @@ export function AshfallGame() {
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>エリアマップへ撤退</button>
           </div>
           <section className="pause-volume" aria-label="音量設定"><h3>音量設定</h3>
-            <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
-            <label><span>効果音 <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
-            <div><button onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone}>テスト音を鳴らす</button></div>
+            <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
+            <label><span>効果音 <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
+            <div><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit)}>テスト音を鳴らす</button></div>
             <p className="audio-troubleshooting">成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。</p>
           </section>
           <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>
@@ -4977,25 +7603,44 @@ export function AshfallGame() {
           stages={stageViews}
           selectedStage={selectedStageView}
           units={unitViews}
-          formationKinds={formationKinds}
+          formationUnitIds={formationUnitIds}
+          formationPresets={campaignSave.formationPresets.map((preset) => ({ id: preset.id, name: preset.displayName, unitIds: preset.unitIds }))}
+          selectedFormationPresetId={campaignSave.selectedFormationPresetId}
           supplies={supplyViews}
           selectedSupply={selectedSupply}
-          supplyCurrency={campaignSave.supplies}
+          supplyCurrency={campaignSave.caps}
+          caps={campaignSave.caps}
           result={campaignResult}
           assetsReady={assetsReady}
           assetError={assetError}
           hasCampaignSave={campaignSave.campaignStarted}
+          saveRecoveryRequired={saveRecovery !== null}
+          saveRecoveryReason={saveRecovery?.recoveryReason ?? ""}
+          saveRecoveryCandidateSources={(saveRecovery?.candidates ?? []).filter((candidate) => candidate.valid === true).map((candidate) => candidate.source)}
+          saveRecoveryCanExport={Boolean(saveRecovery && (saveRecovery.corruptCandidates.length > 0 || saveRecovery.candidates.length > 0))}
+          saveMutationPending={saveMutationPending}
           savePersistence={savePersistence}
           readStoryEventIds={campaignSave.readStoryEventIds}
           autoSkipReadStory={campaignSave.autoSkipReadStory}
+          forceStoryReplay={forceStoryReplay}
           onBegin={beginCampaign}
           onRestartCampaign={restartCampaign}
+          onExportSave={exportCampaignSave}
+          onExportCorruptSave={exportCorruptCampaignSave}
+          onImportSave={importCampaignSave}
+          onUseRecoveryCandidate={useRecoveryCandidate}
+          onResetCorruptSave={resetCorruptCampaignSave}
           onEventComplete={handleEventComplete}
+          onEventSkip={handleEventSkip}
+          onStoryAudioPositionChange={handleStoryAudioPositionChange}
           onSetAutoSkipReadStory={setAutoSkipReadStory}
+          onReplayPrologue={replayPrologue}
           onSelectStage={selectStage}
           onOpenLoadout={openLoadout}
           onReturnToMap={returnToMap}
+          onSelectFormationPreset={selectFormation}
           onToggleFormation={toggleFormation}
+          onRecruitUnit={recruitUnit}
           onSelectSupply={(kind) => setSelectedSupply(kind as SupplyKind)}
           onStartBattle={requestBattle}
           onRetry={retryBattle}
@@ -5004,6 +7649,9 @@ export function AshfallGame() {
           onReloadAssets={() => window.location.reload()}
         />}
       </section>
+      {pendingResultCommit && <div className="result-save-blocker" role="alertdialog" aria-modal="true" aria-label="作戦結果の保存失敗">
+        <section><small>SAVE REQUIRED</small><h2>作戦結果を保存できません</h2><p>報酬や加入の二重適用を防ぐため、結果画面へ進まず停止しています。保存を再試行するか、結果を含むバックアップを書き出してください。</p><div><button disabled={resultSaveRetrying} onClick={retryPendingResultSave}>{resultSaveRetrying ? "保存を再試行中" : "保存を再試行"}</button><button disabled={resultSaveRetrying} onClick={exportPendingResultSave}>結果バックアップを書き出す</button></div></section>
+      </div>}
       {savePersistence === "unavailable" && <div className="save-persistence-warning" role="alert">
         <b>セーブを端末へ保存できません</b>
         <span>進行すると再読み込み後に失われるため、Safariの通常タブで開き直してください。</span>

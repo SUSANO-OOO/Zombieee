@@ -7,25 +7,37 @@ import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "..
 
 const repoAsset = (publicPath) => new URL(`../public${publicPath}`, import.meta.url);
 
-test("production visual manifest uses dedicated title, command, guide, and three stage images", async () => {
-  const paths = [PRODUCTION_VISUALS.title, PRODUCTION_VISUALS.command, PRODUCTION_VISUALS.guide, ...Object.values(PRODUCTION_VISUALS.stages)];
-  assert.equal(paths.length, 6);
+test("production visual manifest uses dedicated title, command, guide, six stages, and three event cuts", async () => {
+  const paths = [
+    PRODUCTION_VISUALS.title,
+    PRODUCTION_VISUALS.command,
+    PRODUCTION_VISUALS.guide,
+    ...Object.values(PRODUCTION_VISUALS.stages),
+    ...Object.values(PRODUCTION_VISUALS.eventCuts),
+  ];
+  assert.equal(paths.length, 12);
   assert.equal(new Set(paths).size, paths.length);
   const hashes = [];
   for (const path of paths) {
-    assert.match(path, /^\/art\/v060\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.webp$/);
+    assert.match(path, /^\/art\/v0(?:60|70)\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.webp$/);
     const bytes = await readFile(repoAsset(path));
     assert.equal(bytes.subarray(0, 4).toString("ascii"), "RIFF");
     assert.equal(bytes.subarray(8, 12).toString("ascii"), "WEBP");
     assert.ok(bytes.length > 50_000, `${path} must be a production-size image`);
     hashes.push(createHash("sha256").update(bytes).digest("hex"));
   }
-  assert.equal(new Set(hashes).size, hashes.length, "the three stages must not reuse a recolored identical image");
+  assert.equal(new Set(hashes).size, hashes.length, "production locations and cuts must not reuse identical image bytes");
 });
 
 test("story and battle screens resolve the same location-specific art", () => {
   assert.equal(STORY_BACKGROUND_VISUALS["shopping-street"], stageVisualFor("stage-nishijin-shopping-street"));
   assert.equal(STORY_BACKGROUND_VISUALS["ward-office"], stageVisualFor("stage-sawara-ward-office"));
   assert.equal(STORY_BACKGROUND_VISUALS["defense-line"], stageVisualFor("stage-nishijin-defense-line-takuya"));
+  assert.equal(STORY_BACKGROUND_VISUALS["station-gate"], stageVisualFor("stage-nishijin-station-gate"));
+  assert.equal(STORY_BACKGROUND_VISUALS["station-platform"], stageVisualFor("stage-nishijin-station-platform"));
+  assert.equal(STORY_BACKGROUND_VISUALS["station-tunnel"], stageVisualFor("stage-nishijin-station-tunnel-seal"));
+  assert.equal(STORY_BACKGROUND_VISUALS["station-gate-rescue-cut"], PRODUCTION_VISUALS.eventCuts["station-gate-rescue-cut"]);
+  assert.equal(STORY_BACKGROUND_VISUALS["station-platform-escort-cut"], PRODUCTION_VISUALS.eventCuts["station-platform-escort-cut"]);
+  assert.equal(STORY_BACKGROUND_VISUALS["station-tunnel-containment-cut"], PRODUCTION_VISUALS.eventCuts["station-tunnel-containment-cut"]);
   assert.equal(stageVisualFor("unknown-stage"), "/battlefield-v4.png");
 });

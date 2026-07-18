@@ -1,0 +1,348 @@
+{
+  "generatedAt": "2026-07-18T19:38:00.683Z",
+  "baseUrl": "http://127.0.0.1:3000/",
+  "physicalIphoneTested": false,
+  "profile": "Playwright WebKit iPhone-landscape substitute",
+  "screenLockMode": "synthetic-headless-screen-lock",
+  "tabReturnMode": "native-tab-switch-plus-deterministic-pageshow",
+  "passed": 2,
+  "failed": 0,
+  "results": [
+    {
+      "engine": "webkit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "status": "passed",
+      "initial": {
+        "screen": "battle",
+        "running": null,
+        "paused": null,
+        "innerWidth": 844,
+        "innerHeight": 390,
+        "documentWidth": 844,
+        "documentHeight": 390,
+        "bodyWidth": 844,
+        "bodyHeight": 390,
+        "maxTouchPoints": 0,
+        "coarsePointer": true,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "assetsReady": "all-local-qa",
+        "assetStage": "stage-nishijin-station-tunnel-seal",
+        "visibilityState": "visible",
+        "rotateNoticeVisible": false
+      },
+      "touchEvidence": {
+        "mode": "Playwright touchscreen.tap",
+        "navigatorMaxTouchPoints": 0,
+        "coarsePointer": true,
+        "pauseTarget": {
+          "x": 649,
+          "y": 0,
+          "width": 44,
+          "height": 44
+        },
+        "resumeTarget": {
+          "x": 33.3125,
+          "y": 112.90625,
+          "width": 191.328125,
+          "height": 44
+        }
+      },
+      "portrait": {
+        "screen": "battle",
+        "running": null,
+        "paused": null,
+        "innerWidth": 390,
+        "innerHeight": 844,
+        "documentWidth": 844,
+        "documentHeight": 390,
+        "bodyWidth": 844,
+        "bodyHeight": 390,
+        "maxTouchPoints": 0,
+        "coarsePointer": true,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "assetsReady": "all-local-qa",
+        "assetStage": "stage-nishijin-station-tunnel-seal",
+        "visibilityState": "visible",
+        "rotateNoticeVisible": false
+      },
+      "afterRotation": {
+        "screen": "battle",
+        "running": null,
+        "paused": null,
+        "innerWidth": 844,
+        "innerHeight": 390,
+        "documentWidth": 844,
+        "documentHeight": 390,
+        "bodyWidth": 844,
+        "bodyHeight": 390,
+        "maxTouchPoints": 0,
+        "coarsePointer": true,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "assetsReady": "all-local-qa",
+        "assetStage": "stage-nishijin-station-tunnel-seal",
+        "visibilityState": "visible",
+        "rotateNoticeVisible": false
+      },
+      "lockLifecycle": {
+        "mode": "synthetic-headless-screen-lock",
+        "states": [
+          "visible",
+          "hidden",
+          "visible"
+        ],
+        "pagehideDispatched": true,
+        "pageshowDispatched": true,
+        "restored": "visible"
+      },
+      "afterLock": {
+        "screen": "battle",
+        "running": null,
+        "paused": null,
+        "innerWidth": 844,
+        "innerHeight": 390,
+        "documentWidth": 844,
+        "documentHeight": 390,
+        "bodyWidth": 844,
+        "bodyHeight": 390,
+        "maxTouchPoints": 0,
+        "coarsePointer": true,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "assetsReady": "all-local-qa",
+        "assetStage": "stage-nishijin-station-tunnel-seal",
+        "visibilityState": "visible",
+        "rotateNoticeVisible": false
+      },
+      "tabReturnMode": "native-tab-switch-plus-deterministic-pageshow",
+      "afterTabReturn": {
+        "screen": "battle",
+        "running": null,
+        "paused": null,
+        "innerWidth": 844,
+        "innerHeight": 390,
+        "documentWidth": 844,
+        "documentHeight": 390,
+        "bodyWidth": 844,
+        "bodyHeight": 390,
+        "maxTouchPoints": 0,
+        "coarsePointer": true,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "assetsReady": "all-local-qa",
+        "assetStage": "stage-nishijin-station-tunnel-seal",
+        "visibilityState": "visible",
+        "rotateNoticeVisible": false
+      },
+      "diagnostics": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestFailures": [],
+        "httpErrors": []
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": {
+        "width": 844,
+        "height": 340
+      },
+      "status": "passed",
+      "initial": {
+        "screen": "battle",
+        "running": null,
+        "paused": null,
+        "innerWidth": 844,
+        "innerHeight": 340,
+        "documentWidth": 844,
+        "documentHeight": 340,
+        "bodyWidth": 844,
+        "bodyHeight": 340,
+        "maxTouchPoints": 0,
+        "coarsePointer": true,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "assetsReady": "all-local-qa",
+        "assetStage": "stage-nishijin-station-tunnel-seal",
+        "visibilityState": "visible",
+        "rotateNoticeVisible": false
+      },
+      "touchEvidence": {
+        "mode": "Playwright touchscreen.tap",
+        "navigatorMaxTouchPoints": 0,
+        "coarsePointer": true,
+        "pauseTarget": {
+          "x": 649,
+          "y": 0,
+          "width": 44,
+          "height": 44
+        },
+        "resumeTarget": {
+          "x": 33.3125,
+          "y": 87.90625,
+          "width": 191.328125,
+          "height": 44
+        }
+      },
+      "portrait": {
+        "screen": "battle",
+        "running": null,
+        "paused": null,
+        "innerWidth": 340,
+        "innerHeight": 844,
+        "documentWidth": 340,
+        "documentHeight": 844,
+        "bodyWidth": 340,
+        "bodyHeight": 844,
+        "maxTouchPoints": 0,
+        "coarsePointer": true,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "assetsReady": "all-local-qa",
+        "assetStage": "stage-nishijin-station-tunnel-seal",
+        "visibilityState": "visible",
+        "rotateNoticeVisible": true
+      },
+      "afterRotation": {
+        "screen": "battle",
+        "running": null,
+        "paused": null,
+        "innerWidth": 844,
+        "innerHeight": 340,
+        "documentWidth": 844,
+        "documentHeight": 340,
+        "bodyWidth": 844,
+        "bodyHeight": 340,
+        "maxTouchPoints": 0,
+        "coarsePointer": true,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "assetsReady": "all-local-qa",
+        "assetStage": "stage-nishijin-station-tunnel-seal",
+        "visibilityState": "visible",
+        "rotateNoticeVisible": false
+      },
+      "lockLifecycle": {
+        "mode": "synthetic-headless-screen-lock",
+        "states": [
+          "visible",
+          "hidden",
+          "visible"
+        ],
+        "pagehideDispatched": true,
+        "pageshowDispatched": true,
+        "restored": "visible"
+      },
+      "afterLock": {
+        "screen": "battle",
+        "running": null,
+        "paused": null,
+        "innerWidth": 844,
+        "innerHeight": 340,
+        "documentWidth": 844,
+        "documentHeight": 340,
+        "bodyWidth": 844,
+        "bodyHeight": 340,
+        "maxTouchPoints": 0,
+        "coarsePointer": true,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "assetsReady": "all-local-qa",
+        "assetStage": "stage-nishijin-station-tunnel-seal",
+        "visibilityState": "visible",
+        "rotateNoticeVisible": false
+      },
+      "tabReturnMode": "native-tab-switch-plus-deterministic-pageshow",
+      "afterTabReturn": {
+        "screen": "battle",
+        "running": null,
+        "paused": null,
+        "innerWidth": 844,
+        "innerHeight": 340,
+        "documentWidth": 844,
+        "documentHeight": 340,
+        "bodyWidth": 844,
+        "bodyHeight": 340,
+        "maxTouchPoints": 0,
+        "coarsePointer": true,
+        "viewportSource": "visual",
+        "safeAreaSource": "local-qa-iphone-landscape",
+        "safeArea": {
+          "top": "0px",
+          "right": "44px",
+          "bottom": "21px",
+          "left": "44px"
+        },
+        "assetsReady": "all-local-qa",
+        "assetStage": "stage-nishijin-station-tunnel-seal",
+        "visibilityState": "visible",
+        "rotateNoticeVisible": false
+      },
+      "diagnostics": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestFailures": [],
+        "httpErrors": []
+      }
+    }
+  ]
+}

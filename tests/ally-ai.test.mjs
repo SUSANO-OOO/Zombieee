@@ -4,13 +4,22 @@ import test from "node:test";
 import { ALLY_AI_INTENTS, decideAllyIntent, destinationWithinRange } from "../app/allyAi.js";
 import { createBattleDefinition } from "../app/battleDefinitions.js";
 import { CAMPAIGN_STAGES } from "../app/campaign.js";
-import { UNIT_CARDS, WORLD_GEOMETRY, humanCombatMinX } from "../app/gameRules.js";
+import { COMBAT_ROLE_RULES, canNormalAttackTarget, combatHitboxesOverlap } from "../app/combatLifecycle.js";
+import { LANE_Y, UNIT_CARDS, WORLD_GEOMETRY, advanceZombieX, humanCombatMinX, isCrawlerRouteBlocker } from "../app/gameRules.js";
 
 function advance(unit, intent, speed = 40) {
   if (intent.moveDirection === 0) return { ...unit };
   const remaining = intent.destinationX - unit.x;
   const step = Math.sign(remaining) * Math.min(Math.abs(remaining), speed);
   return { ...unit, x: unit.x + step };
+}
+
+function seededRandom(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
 }
 
 test("timed defense returns to its lane anchor and never advances into an empty enemy side", () => {
@@ -344,7 +353,7 @@ test("all campaign stages and melee allies reach a CRAWLER attacker instead of s
     let unit = { id: `${card.kind}-${stage.id}`, x: 520, lane: 1, assignedLane: 1, range: card.range, ranged: false };
     let previousIntent = null;
 
-    for (let tick = 0; tick < 120; tick += 1) {
+    for (let tick = 0; tick < 160; tick += 1) {
       const intent = decideAllyIntent({
         missionType: definition.missionType,
         unit,
@@ -372,20 +381,30 @@ test("all campaign stages and melee allies reach a CRAWLER attacker instead of s
   }
 });
 
-test("TAKUYA defeat releases stale targets and forces a fresh infection-base objective decision", () => {
+test("Stage 3 reacquires a surviving enemy on the tick after TAKUYA is defeated", () => {
   const intent = decideAllyIntent({
     missionType: "boss-assault",
     unit: { id: "ally", x: 400, lane: 1, range: 130, ranged: true },
-    enemies: [{ id: "stale-runner", x: 430, lane: 1 }],
+    enemies: [{ id: "surviving-runner", x: 430, lane: 1 }],
     objective: { x: 900, active: true },
-    previousIntent: { targetId: "stale-runner", destinationX: 410, desiredX: 410, moveDirection: 1 },
+    previousIntent: { targetId: "takuya", destinationX: 410, desiredX: 410, moveDirection: 1 },
     takuyaDefeated: true,
   });
-  assert.equal(intent.intent, ALLY_AI_INTENTS.ADVANCE_OBJECTIVE);
-  assert.equal(intent.reason, "takuya-defeated-objective");
-  assert.equal(intent.targetId, null);
+  assert.equal(intent.intent, ALLY_AI_INTENTS.HOLD_RANGE);
+  assert.equal(intent.targetId, "surviving-runner");
   assert.equal(intent.releaseTarget, true);
   assert.equal(intent.reassess, true);
+
+  const reinforcement = decideAllyIntent({
+    missionType: "boss-assault",
+    unit: { id: "ally", x: 400, lane: 1, range: 130, ranged: true },
+    enemies: [{ id: "later-reinforcement", x: 470, lane: 1 }],
+    objective: { x: 900, active: true },
+    previousIntent: intent,
+    takuyaDefeated: true,
+  });
+  assert.equal(reinforcement.targetId, "later-reinforcement");
+  assert.equal(reinforcement.releaseTarget, true);
 });
 
 test("TAKUYA defeat never makes the squad ignore a live CRAWLER breach", () => {
@@ -478,6 +497,44 @@ test("an in-progress lane reassignment releases the old-lane target until the as
   assert.equal(intent.destinationLane, 0);
 });
 
+test("a mobile lane transfer stops for real TAKUYA hitbox overlap and selects the same attack target", () => {
+  const unit = {
+    id: "mobile-transfer",
+    side: "human",
+    kind: "brawler",
+    x: 300,
+    y: 255,
+    lane: 0,
+    assignedLane: 1,
+    range: 30,
+    bodyRadius: 12,
+    ranged: false,
+  };
+  const takuya = {
+    id: "takuya-transition",
+    side: "zombie",
+    kind: "takuya",
+    x: 300,
+    y: 285,
+    lane: 1,
+    hp: 300,
+    bodyRadius: 28,
+  };
+
+  assert.equal(combatHitboxesOverlap({ left: unit, right: takuya }), true);
+  assert.equal(canNormalAttackTarget({ attacker: unit, target: takuya }), true);
+  const intent = decideAllyIntent({
+    missionType: "assault",
+    unit,
+    enemies: [takuya],
+    objective: { x: 875, active: true },
+    laneTransitioning: true,
+  });
+  assert.equal(intent.targetId, takuya.id);
+  assert.equal(intent.attackable, true);
+  assert.equal(intent.moveDirection, 0);
+});
+
 test("a lane transfer still pursues an urgent CRAWLER threat in its destination lane", () => {
   const intent = decideAllyIntent({
     missionType: "boss-assault",
@@ -531,4 +588,227 @@ test("assigned lane never makes adjacent-lane pseudo-contact legal for melee", (
   assert.equal(intent.targetId, null);
   assert.equal(intent.destinationLane, 1);
   assert.equal(intent.intent, ALLY_AI_INTENTS.ADVANCE_OBJECTIVE);
+});
+
+test("an attackable or overlapping enemy cannot be ignored because its claim limit is full", () => {
+  const unit = { id: "gunner", x: 300, y: LANE_Y[1], lane: 1, range: 145, ranged: true, bodyRadius: 12 };
+  const enemy = { id: "claimed", x: 420, y: LANE_Y[1], lane: 1, hp: 100, bodyRadius: 12 };
+  const attackable = decideAllyIntent({
+    unit,
+    enemies: [enemy],
+    objective: { x: 875, active: true },
+    claims: { claimed: 99 },
+  });
+  assert.equal(canNormalAttackTarget({
+    attacker: { ...unit, side: "human" },
+    target: { ...enemy, side: "zombie" },
+  }), true);
+  assert.equal(attackable.targetId, enemy.id);
+  assert.equal(attackable.moveDirection, 0);
+  assert.equal(attackable.attackable, true);
+
+  const overlappingEnemy = { ...enemy, id: "overlap", x: 308 };
+  const overlap = decideAllyIntent({
+    unit,
+    enemies: [overlappingEnemy],
+    objective: { x: 875, active: true },
+    claims: { overlap: 99 },
+  });
+  assert.equal(combatHitboxesOverlap({
+    left: { ...unit, side: "human" },
+    right: { ...overlappingEnemy, side: "zombie" },
+  }), true);
+  assert.equal(overlap.reason, "hitbox-overlap");
+  assert.equal(overlap.moveDirection, 0);
+  assert.equal(overlap.destinationX, unit.x);
+});
+
+test("contact and path blockers outrank retained and high-score remote targets", () => {
+  const common = {
+    unit: { id: "front", x: 300, y: LANE_Y[1], lane: 1, range: 30, ranged: false, bodyRadius: 12 },
+    objective: { x: 875, active: true },
+    previousIntent: { targetId: "retained", destinationX: 500, desiredX: 500, moveDirection: 1 },
+  };
+  const path = decideAllyIntent({
+    ...common,
+    enemies: [
+      { id: "retained", x: 480, y: LANE_Y[1], lane: 1, hp: 100, priority: 100 },
+      { id: "blocker", x: 410, y: LANE_Y[1], lane: 1, hp: 100, blocksPath: true, priority: -100 },
+    ],
+  });
+  assert.equal(path.targetId, "blocker");
+  assert.equal(path.reason, "path-blocker");
+});
+
+test("same-lane Y drift reacquires on the next aligned tick without advancing through the target", () => {
+  const enemy = { id: "drift-target", x: 300, y: LANE_Y[1], lane: 1, hp: 100, bodyRadius: 11 };
+  const drifted = decideAllyIntent({
+    unit: { id: "melee", x: 300, y: LANE_Y[1] - 50, lane: 1, range: 30, ranged: false, bodyRadius: 12 },
+    enemies: [enemy],
+    objective: { x: 875, active: true },
+  });
+  assert.equal(drifted.targetId, enemy.id);
+  assert.equal(drifted.attackable, false);
+  assert.equal(drifted.moveDirection, 0);
+
+  const aligned = decideAllyIntent({
+    unit: { id: "melee", x: 300, y: LANE_Y[1], lane: 1, range: 30, ranged: false, bodyRadius: 12 },
+    enemies: [enemy],
+    objective: { x: 875, active: true },
+    previousIntent: drifted,
+  });
+  assert.equal(aligned.targetId, enemy.id);
+  assert.equal(aligned.attackable, true);
+  assert.equal(aligned.moveDirection, 0);
+});
+
+test("all eleven playable roles keep search and real attack eligibility aligned across all three lanes", () => {
+  for (const lane of [0, 1, 2]) for (const card of UNIT_CARDS) {
+    const rule = COMBAT_ROLE_RULES[card.kind];
+    const role = {
+      kind: card.kind,
+      range: card.range,
+      ranged: rule.attackType === "ranged",
+      attackType: rule.attackType,
+      allowAdjacentLaneTargets: rule.allowAdjacentLaneTargets,
+    };
+    const unit = { id: `${card.kind}-${lane}`, side: "human", x: 300, y: LANE_Y[lane], lane, bodyRadius: 12, ...role };
+    const enemy = { id: `same-${card.kind}-${lane}`, side: "zombie", x: 320, y: LANE_Y[lane], lane, hp: 100, bodyRadius: 11 };
+    const intent = decideAllyIntent({ unit, enemies: [enemy], objective: { x: 875, active: true }, hasLineOfSight: true });
+    assert.equal(canNormalAttackTarget({ attacker: unit, target: enemy, hasLineOfSight: true }), true);
+    assert.equal(intent.targetId, enemy.id, `${card.kind}/lane-${lane}`);
+    assert.equal(intent.moveDirection, 0, `${card.kind}/lane-${lane}`);
+
+    const adjacentLane = lane === 2 ? 1 : lane + 1;
+    const adjacent = { ...enemy, id: `adjacent-${card.kind}-${lane}`, lane: adjacentLane, y: LANE_Y[adjacentLane], x: 305 };
+    const adjacentIntent = decideAllyIntent({ unit, enemies: [adjacent], objective: { x: 875, active: true }, hasLineOfSight: true });
+    const canAttackAdjacent = canNormalAttackTarget({ attacker: unit, target: adjacent, hasLineOfSight: true });
+    assert.equal(Boolean(adjacentIntent.targetId), canAttackAdjacent, `${card.kind}/lane-${lane} adjacent consistency`);
+  }
+});
+
+function simulateStage3Interception(seed, decide = decideAllyIntent) {
+  const rolePool = [
+    { kind: "brawler", range: 30, ranged: false, allowAdjacentLaneTargets: false },
+    { kind: "ranger", range: 145, ranged: true, allowAdjacentLaneTargets: true },
+    { kind: "medic", role: "medic", range: 118, ranged: true, allowAdjacentLaneTargets: false },
+  ];
+  const random = seededRandom(seed);
+  const allies = [0, 1, 2].map((lane) => ({
+    id: `ally-${seed}-${lane}`,
+    side: "human",
+    lane,
+    x: 250 + Math.floor(random() * 31),
+    y: LANE_Y[lane] + Math.floor(random() * 29) - 14,
+    bodyRadius: 12,
+    hp: 100,
+    ...rolePool[(seed + lane) % rolePool.length],
+  }));
+  let enemies = [0, 1, 2].map((lane) => ({
+    id: `enemy-${seed}-${lane}`,
+    side: "zombie",
+    kind: lane === 1 ? "takuya" : "walker",
+    lane,
+    x: 540 + Math.floor(random() * 81),
+    y: LANE_Y[lane],
+    hp: lane === 1 ? 240 : 100,
+    bodyRadius: lane === 1 ? 28 : 11,
+    combatReady: true,
+  }));
+  const previous = new Map();
+  let passThroughs = 0;
+  let ignoredAttackableTicks = 0;
+  let reacquiredAfterTakuya = false;
+
+  for (let tick = 0; tick < 120; tick += 1) {
+    if (tick === 30) enemies = enemies.filter((enemy) => enemy.kind !== "takuya");
+    if (tick === 31) enemies.push({
+      id: `reinforcement-${seed}`,
+      side: "zombie",
+      kind: "runner",
+      lane: seed % 3,
+      x: 620,
+      y: LANE_Y[seed % 3],
+      hp: 100,
+      bodyRadius: 11,
+      combatReady: true,
+    });
+
+    const claims = {};
+    for (const intent of previous.values()) {
+      if (intent?.targetId != null) claims[intent.targetId] = (claims[intent.targetId] ?? 0) + 1;
+    }
+
+    for (const ally of allies) {
+      const intent = decide({
+        missionType: "boss-assault",
+        unit: ally,
+        enemies,
+        objective: { x: 875, active: true },
+        claims,
+        previousIntent: previous.get(ally.id),
+        takuyaDefeated: tick >= 30,
+        hasLineOfSight: true,
+      });
+      previous.set(ally.id, intent);
+      const selected = enemies.find((enemy) => enemy.id === intent.targetId);
+      const attackableEnemies = enemies.filter((enemy) => canNormalAttackTarget({ attacker: ally, target: enemy, hasLineOfSight: true }));
+      if (attackableEnemies.length > 0 && (
+        !attackableEnemies.some((enemy) => enemy.id === intent.targetId)
+        || intent.moveDirection !== 0
+      )) ignoredAttackableTicks += 1;
+      const attackable = selected && canNormalAttackTarget({ attacker: ally, target: selected, hasLineOfSight: true });
+      if (attackable) {
+        assert.equal(intent.moveDirection, 0, `seed ${seed}, tick ${tick}: advanced while selected target was attackable`);
+        selected.hp -= ally.kind === "ranger" ? 12 : 8;
+      }
+      if (tick >= 31 && intent.targetId === `reinforcement-${seed}`) reacquiredAfterTakuya = true;
+      ally.x += Math.sign(intent.destinationX - ally.x) * Math.min(Math.abs(intent.destinationX - ally.x), 12);
+      ally.y += Math.sign(LANE_Y[ally.lane] - ally.y) * Math.min(Math.abs(LANE_Y[ally.lane] - ally.y), 10);
+    }
+
+    enemies = enemies.filter((enemy) => enemy.hp > 0);
+    for (const enemy of enemies) {
+      const defender = allies.find((ally) => ally.lane === enemy.lane);
+      const routeBlocker = allies
+        .filter((ally) => isCrawlerRouteBlocker({
+          enemyX: enemy.x,
+          defenderX: ally.x,
+          defenderY: ally.y,
+          routeY: LANE_Y[enemy.lane],
+          lookAhead: 105,
+        }))
+        .sort((left, right) => right.x - left.x)[0];
+      const beforeX = enemy.x;
+      enemy.x = advanceZombieX({
+        enemyX: enemy.x,
+        speed: 28 + random() * 12,
+        seconds: .25,
+        targetFloor: routeBlocker?.x ?? null,
+      });
+      if (beforeX >= defender.x && enemy.x < defender.x) passThroughs += 1;
+    }
+  }
+
+  return { passThroughs, ignoredAttackableTicks, reacquiredAfterTakuya };
+}
+
+test("100 deterministic Stage 3 seeds produce zero AI pass-throughs and reacquire post-TAKUYA reinforcements", () => {
+  for (let seed = 1; seed <= 100; seed += 1) {
+    const result = simulateStage3Interception(seed);
+    assert.equal(result.passThroughs, 0, `seed ${seed}`);
+    assert.equal(result.ignoredAttackableTicks, 0, `seed ${seed}: attackable enemy was ignored`);
+    assert.equal(result.reacquiredAfterTakuya, true, `seed ${seed}: reinforcement was not reacquired`);
+  }
+
+  const ignoreEnemies = ({ unit }) => ({
+    targetId: null,
+    destinationX: unit.x,
+    desiredX: unit.x,
+    moveDirection: 0,
+  });
+  assert.ok(
+    simulateStage3Interception(1, ignoreEnemies).ignoredAttackableTicks > 0,
+    "the regression simulation must detect disabled target acquisition",
+  );
 });

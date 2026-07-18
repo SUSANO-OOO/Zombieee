@@ -30,6 +30,18 @@ import {
 } from "./image-asset-helpers.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const V070_REDESIGNED_COMBAT_KINDS = Object.freeze([
+  "scout", "ranger", "medic", "brute", "gunner", "guardian", "engineer",
+]);
+const V070_STATION_ENEMY_KINDS = Object.freeze([
+  "grappler", "ooze", "sprinter", "gate-eater",
+]);
+const EXPLICIT_ATLAS_KINDS = Object.freeze([
+  ...V070_REDESIGNED_COMBAT_KINDS,
+  ...V070_STATION_ENEMY_KINDS,
+  "crazy-king", "kumaverson", "babayaga",
+]);
+const V070_PORTRAIT_KINDS = new Set([...V070_REDESIGNED_COMBAT_KINDS, "guide"]);
 
 test("battle display boxes preserve every authored source aspect ratio", () => {
   for (const kind of spriteKinds) {
@@ -39,6 +51,13 @@ test("battle display boxes preserve every authored source aspect ratio", () => {
     assert.ok(Math.abs(fitted.w / fitted.h - frame.sourceRect.w / frame.sourceRect.h) < 1e-12, kind);
   }
   const newcomerBoxes = {
+    scout: { w: 64, h: 102 },
+    ranger: { w: 58, h: 98 },
+    medic: { w: 60, h: 100 },
+    brute: { w: 72, h: 108 },
+    gunner: { w: 60, h: 100 },
+    guardian: { w: 78, h: 108 },
+    engineer: { w: 60, h: 100 },
     "crazy-king": { w: 72, h: 104 },
     kumaverson: { w: 64, h: 102 },
     babayaga: { w: 62, h: 103 },
@@ -66,13 +85,14 @@ async function sha256(filename) {
   return createHash("sha256").update(await readFile(filename)).digest("hex");
 }
 
-test("sprite manifest enumerates all six allies, eight enemy kinds, and three newcomers", () => {
+test("sprite manifest enumerates all eleven playable kinds and twelve enemy kinds", () => {
   assert.deepEqual(spriteKinds, [
-    "brawler", "scout", "ranger", "medic", "brute", "gunner",
+    "brawler", "scout", "ranger", "medic", "brute", "gunner", "guardian", "engineer",
     "walker", "runner", "turned", "spitter", "shade", "crusher", "abomination", "takuya",
+    "grappler", "ooze", "sprinter", "gate-eater",
     "crazy-king", "kumaverson", "babayaga",
   ]);
-  assert.equal(spriteKinds.length, 17);
+  assert.equal(spriteKinds.length, 23);
   for (const kind of spriteKinds) {
     assert.deepEqual(spriteStatesFor(kind), SPRITE_STATES);
     assert.equal(spriteSheetPath(kind), SPRITE_MANIFEST[kind].path);
@@ -115,8 +135,8 @@ test("every kind/state/direction resolves to an in-bounds audited source and con
   }
 });
 
-test("newcomer atlases have seven explicit states in both directions and a transparent cell perimeter", async () => {
-  for (const kind of ["crazy-king", "kumaverson", "babayaga"]) {
+test("approved explicit atlases have seven states in both directions and a transparent cell perimeter", async () => {
+  for (const kind of EXPLICIT_ATLAS_KINDS) {
     const decoded = decodeRgbaPng(await readFile(publicFile(spriteSheetPath(kind))));
     assert.deepEqual({ width: decoded.width, height: decoded.height }, { width: 3360, height: 896 });
     for (const state of SPRITE_STATES) {
@@ -144,12 +164,9 @@ test("legacy source cells are segmented exactly and rendered from isolated gutte
   assert.deepEqual(standard.sourceSheet.cellEdges, [0, 362, 724, 1086, 1448, 1810, 2172]);
   assert.deepEqual(SPRITE_STATES.slice(0, 6).map((state) => standard.frames[state].right.w), [394, 394, 394, 394, 394, 394]);
 
-  const gunner = SPRITE_MANIFEST.gunner;
-  assert.equal(gunner.sourceSheet.width, 2170);
-  assert.deepEqual(gunner.sourceSheet.cellEdges, [0, 361, 723, 1085, 1446, 1808, 2170]);
-  assert.deepEqual(gunner.sourceSheet.cellWidths, [361, 362, 362, 361, 362, 362]);
-  assert.deepEqual(SPRITE_STATES.slice(0, 6).map((state) => gunner.frames[state].right.authoredCell.w), [361, 362, 362, 361, 362, 362]);
-  assert.equal(gunner.frames.death.right.derivedFrom, "hit");
+  for (const kind of V070_REDESIGNED_COMBAT_KINDS) {
+    assert.equal(SPRITE_MANIFEST[kind].sourceSheet, undefined, `${kind} no longer reads a legacy sheet`);
+  }
 });
 
 test("legacy gutter atlases preserve every source-cell pixel without scaling or cropping", async () => {
@@ -158,7 +175,7 @@ test("legacy gutter atlases preserve every source-cell pixel without scaling or 
       .filter(({ sourceSheet }) => sourceSheet)
       .map((entry) => [entry.path, entry]),
   ).values()];
-  assert.equal(uniqueEntries.length, 11);
+  assert.equal(uniqueEntries.length, 6);
   for (const entry of uniqueEntries) {
     assert.notEqual(entry.sourceSheet.path, "/takuya-boss-sprites-v1.png", "retired TAKUYA sheet cannot be a runtime source");
     assert.equal(entry.sourceSheet.cellEdges[0], 0);
@@ -215,54 +232,42 @@ test("legacy derived padding preserves authored battle scale, center anchor, and
   }
 });
 
-test("Ooba uses one uniform battle scale correction without changing crop, anchor, or baseline", () => {
-  assert.equal(SPRITE_MANIFEST.brute.battleScale, 1.12);
-  for (const [kind, entry] of Object.entries(SPRITE_MANIFEST).filter(([, { sourceSheet }]) => sourceSheet)) {
-    if (kind !== "brute") assert.equal(entry.battleScale, 1, `${kind} keeps authored battle scale`);
-  }
-
-  const maximum = { w: 72, h: 104 };
-  const bruteFrame = spriteFrameFor("brute", "idle", "right");
-  const brawlerFrame = spriteFrameFor("brawler", "idle", "right");
-  const bruteSize = fitSpriteBattleDisplaySize("brute", bruteFrame, maximum);
-  const brawlerSize = fitSpriteBattleDisplaySize("brawler", brawlerFrame, maximum);
-  const visibleSize = (frame, fitted) => ({
-    w: fitted.w * frame.contentRect.w / frame.sourceRect.w,
-    h: fitted.h * frame.contentRect.h / frame.sourceRect.h,
-  });
-  const bruteVisible = visibleSize(bruteFrame, bruteSize);
-  const brawlerVisible = visibleSize(brawlerFrame, brawlerSize);
-  assert.ok(bruteVisible.w > brawlerVisible.w * 1.15, "Ooba keeps the broader authored silhouette");
-  assert.ok(bruteVisible.h > brawlerVisible.h * 1.05, "Ooba reads taller than the brawler in battle");
-
-  for (const state of SPRITE_STATES) {
-    const frame = spriteFrameFor("brute", state, "right");
-    const fitted = fitSpriteBattleDisplaySize("brute", frame, maximum);
-    const scale = fitted.h / frame.sourceRect.h;
-    const localContentBottom = frame.contentRect.y + frame.contentRect.h - frame.sourceRect.y;
-    const baseline = -fitted.h * frame.anchorY + localContentBottom * scale;
-    assert.ok(Math.abs(baseline) < 1e-9, `${state} baseline`);
+test("every redesigned 0.7.0 playable atlas has an authored death pose and measured baseline", () => {
+  for (const kind of V070_REDESIGNED_COMBAT_KINDS) {
+    const entry = SPRITE_MANIFEST[kind];
+    assert.equal(entry.battleContentHeight, 68);
+    for (const direction of SPRITE_DIRECTIONS) {
+      assert.equal(entry.frames.death[direction].derivedFrom, undefined, `${kind}/${direction} death is authored`);
+    }
+    for (const state of SPRITE_STATES) {
+      const frame = spriteFrameFor(kind, state, "right");
+      const fitted = fitSpriteBattleDisplaySize(kind, frame, { w: 78, h: 108 });
+      const scale = fitted.h / frame.sourceRect.h;
+      const localContentBottom = frame.contentRect.y + frame.contentRect.h - frame.sourceRect.y;
+      const baseline = -fitted.h * frame.anchorY + localContentBottom * scale;
+      assert.ok(Math.abs(baseline) < 1e-9, `${kind}/${state} baseline`);
+    }
   }
 });
 
-test("Ooba's short opaque portrait is compensated only in the event portrait layer", async () => {
-  const css = await readFile(new URL("../app/campaign.css", import.meta.url), "utf8");
-  const selector = /\.event-portrait\[style\*="brute-portrait-v2\.webp"\]\s*\{[^}]*background-size:auto 142%;[^}]*background-position:center bottom;[^}]*\}/g;
-  assert.equal(css.match(selector)?.length, 1);
-  assert.doesNotMatch(css, /\.formation-portrait\[style\*="brute-portrait-v2\.webp"\]/);
-});
-
-test("all ten people use independent portrait files and radio remains a separate non-person asset", async () => {
-  const expectedPeople = ["brawler", "scout", "ranger", "medic", "brute", "gunner", "crazy-king", "kumaverson", "babayaga", "guide"];
+test("all twelve people use independent portrait files and radio remains a separate non-person asset", async () => {
+  const expectedPeople = [
+    "brawler", "scout", "ranger", "medic", "brute", "gunner",
+    "crazy-king", "kumaverson", "babayaga", "guardian", "engineer", "guide",
+  ];
   assert.deepEqual(Object.keys(CHARACTER_PORTRAIT_ART), expectedPeople);
-  assert.equal(new Set(Object.values(CHARACTER_PORTRAIT_ART)).size, 10);
+  assert.equal(new Set(Object.values(CHARACTER_PORTRAIT_ART)).size, 12);
   assert.equal(PORTRAIT_ART.radio, RADIO_PORTRAIT_ART);
   assert.notEqual(RADIO_PORTRAIT_ART, CHARACTER_PORTRAIT_ART.guide);
 
   const battlePaths = new Set(spriteKinds.map((kind) => spriteSheetPath(kind)));
   const portraitHashes = new Set();
   for (const [kind, assetPath] of Object.entries(CHARACTER_PORTRAIT_ART)) {
-    assert.match(assetPath, /^\/art\/v060\/characters\/portraits\/.+-portrait-v2\.webp$/);
+    if (V070_PORTRAIT_KINDS.has(kind)) {
+      assert.equal(assetPath, `/art/v070/characters/portraits/${kind}-portrait-v1.webp`);
+    } else {
+      assert.match(assetPath, /^\/art\/v060\/characters\/portraits\/.+-portrait-v2\.webp$/);
+    }
     assert.equal(battlePaths.has(assetPath), false, `${kind} cannot point at a battle sheet`);
     assert.equal(assetPath.includes("sprites"), false);
     const dimensions = decodeWebpDimensions(await readFile(publicFile(assetPath)));
@@ -290,8 +295,9 @@ test("every production WebP passes an actual image decoder", async () => {
     PRODUCTION_VISUALS.command,
     PRODUCTION_VISUALS.guide,
     ...Object.values(PRODUCTION_VISUALS.stages),
+    ...Object.values(PRODUCTION_VISUALS.eventCuts),
   ])];
-  assert.equal(productionWebps.length, 16);
+  assert.equal(productionWebps.length, 24);
 
   for (const assetPath of productionWebps) {
     assert.match(assetPath, /\.webp$/);
@@ -313,14 +319,18 @@ test("every production WebP passes an actual image decoder", async () => {
   }
 });
 
-test("portrait provenance binds every character to one isolated reference and fixed source/final hashes", async () => {
+test("historical 0.6.0 portrait provenance remains intact after 0.7.0 replacements", async () => {
   const provenancePath = path.join(ROOT, "reference", "characters", "portrait-provenance-v2.json");
   const provenance = JSON.parse(await readFile(provenancePath, "utf8"));
   assert.equal(provenance.policyId, "portrait-reference-isolation-v2");
   assert.equal(provenance.entries.length, 10);
   assert.equal(new Set(provenance.entries.map(({ kind }) => kind)).size, 10);
   for (const entry of provenance.entries) {
-    assert.equal(entry.finalPath, `public${CHARACTER_PORTRAIT_ART[entry.kind]}`);
+    if (V070_PORTRAIT_KINDS.has(entry.kind)) {
+      assert.notEqual(entry.finalPath, `public${CHARACTER_PORTRAIT_ART[entry.kind]}`, `${entry.kind} uses its v070 replacement`);
+    } else {
+      assert.equal(entry.finalPath, `public${CHARACTER_PORTRAIT_ART[entry.kind]}`);
+    }
     assert.equal(await sha256(path.join(ROOT, entry.referencePath)), entry.referenceSha256, `${entry.kind} reference hash`);
     assert.equal(await sha256(path.join(ROOT, entry.sourcePath)), entry.sourceSha256, `${entry.kind} source hash`);
     assert.equal(await sha256(path.join(ROOT, entry.finalPath)), entry.finalSha256, `${entry.kind} final hash`);

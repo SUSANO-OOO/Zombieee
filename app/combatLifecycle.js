@@ -50,14 +50,20 @@ export const COMBAT_ROLE_RULES = freeze({
   abomination: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   shade: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   takuya: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  grappler: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  ooze: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
+  sprinter: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  "gate-eater": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   turned: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   ranger: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
-  gunner: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
+  gunner: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
   medic: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
   spitter: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
   "crazy-king": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   kumaverson: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   babayaga: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
+  guardian: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  engineer: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
 });
 
 const NON_TARGETABLE_STATES = new Set([
@@ -110,7 +116,9 @@ function roleRuleFor(attacker, roleRules) {
   const role = attacker?.role ?? attacker?.kind;
   const configured = roleRules?.[role] ?? COMBAT_ROLE_RULES[role] ?? {};
   return {
-    attackType: attacker?.attackType ?? configured.attackType ?? "melee",
+    attackType: attacker?.attackType
+      ?? configured.attackType
+      ?? (attacker?.ranged === true ? "ranged" : "melee"),
     allowAdjacentLaneTargets: attacker?.allowAdjacentLaneTargets
       ?? attacker?.allowAdjacentLanes
       ?? configured.allowAdjacentLaneTargets
@@ -125,13 +133,19 @@ function lineOfSightResult(hasLineOfSight, attacker, target, required) {
 }
 
 /**
- * Checks normal-attack eligibility. Melee never changes lane. Ranged attacks
- * prefer the same lane and may use one adjacent lane only when both the role
- * and an explicit line-of-sight result allow it. Two-lane shots are rejected.
+ * Checks whether a target is legal for this attacker's normal-attack search.
+ * Range is deliberately excluded so pursuit and firing share every other
+ * eligibility rule: lifecycle, side, lane, role and line of sight.
  */
-export function canNormalAttackTarget({ attacker, target, roleRules, hasLineOfSight } = {}) {
+export function canAcquireCombatTarget({ attacker, target, roleRules, hasLineOfSight } = {}) {
   if (!attacker || !target || attacker.id === target.id || !isCombatTargetable(target)) return false;
   if (attacker.side && target.side && attacker.side === target.side) return false;
+
+  // A lane index is a routing intent, not a license to walk through a body.
+  // During lane transitions the rendered hitboxes can overlap before the
+  // logical lane flips; physical hostile contact therefore outranks the lane
+  // gate for both search and the eventual attack transaction.
+  if (combatHitboxesOverlap({ left: attacker, right: target })) return true;
   if (!Number.isInteger(attacker.lane) || !Number.isInteger(target.lane)) return false;
 
   const laneDistance = Math.abs(attacker.lane - target.lane);
@@ -144,8 +158,28 @@ export function canNormalAttackTarget({ attacker, target, roleRules, hasLineOfSi
     if (!lineOfSightResult(hasLineOfSight, attacker, target, true)) return false;
   } else if (!lineOfSightResult(hasLineOfSight, attacker, target, false)) return false;
 
+  return true;
+}
+
+/**
+ * Checks normal-attack eligibility. Melee never changes lane. Ranged attacks
+ * prefer the same lane and may use one adjacent lane only when both the role
+ * and an explicit line-of-sight result allow it. Two-lane shots are rejected.
+ */
+export function canNormalAttackTarget({ attacker, target, roleRules, hasLineOfSight } = {}) {
+  if (!canAcquireCombatTarget({ attacker, target, roleRules, hasLineOfSight })) return false;
+  if (combatHitboxesOverlap({ left: attacker, right: target })) return true;
   const reach = Math.max(0, finiteNumber(attacker.range)) + Math.max(0, finiteNumber(target.bodyRadius));
   return combatDistance(attacker, target) <= reach;
+}
+
+/** True only while the two rendered combat body circles physically overlap. */
+export function combatHitboxesOverlap({ left, right, padding = 0 } = {}) {
+  if (!left || !right) return false;
+  const combinedRadius = Math.max(0, finiteNumber(left.bodyRadius))
+    + Math.max(0, finiteNumber(right.bodyRadius))
+    + Math.max(0, finiteNumber(padding));
+  return combinedRadius > 0 && combatDistance(left, right) <= combinedRadius;
 }
 
 export function hasAdjacentLaneLineOfSight({ attacker, target, blockers = [] } = {}) {
@@ -299,8 +333,8 @@ export const ENEMY_DEATH_CONFIG = freeze({
 
 export function enemyDeathClassFor(enemy = {}) {
   if (enemy.deathClass && ENEMY_DEATH_CONFIG.timings[enemy.deathClass]) return enemy.deathClass;
-  if (enemy.boss || enemy.kind === "takuya") return "boss";
-  if (["crusher", "abomination", "heavy"].includes(enemy.kind)) return "heavy";
+  if (enemy.boss || enemy.kind === "takuya" || enemy.kind === "gate-eater") return "boss";
+  if (["crusher", "abomination", "grappler", "heavy"].includes(enemy.kind)) return "heavy";
   return "normal";
 }
 

@@ -149,6 +149,7 @@ export class AudioMixer {
     this.limiter = null;
     this.buses = {};
     this.musicDuck = null;
+    this.ambienceDuck = null;
     this.disposed = false;
     this.unlockCleanup = null;
     this.unlockTarget = null;
@@ -184,6 +185,7 @@ export class AudioMixer {
     this.desiredScene = null;
     this.sceneState = { sceneId: null, bgm: null, ambience: [] };
     this.persistentDuckLevel = 1;
+    this.persistentAmbienceDuckLevel = 1;
     this.categoryVolumes = { ...DEFAULT_CATEGORY_VOLUMES };
     this.settings = {
       muted: false,
@@ -368,10 +370,12 @@ export class AudioMixer {
     this.sceneState = { sceneId: null, bgm: null, ambience: [] };
     for (const bus of Object.values(this.buses)) safeDisconnect(bus);
     safeDisconnect(this.musicDuck);
+    safeDisconnect(this.ambienceDuck);
     safeDisconnect(this.master);
     safeDisconnect(this.limiter);
     this.buses = {};
     this.musicDuck = null;
+    this.ambienceDuck = null;
     this.master = null;
     this.limiter = null;
     this.contextStateCleanup?.();
@@ -506,12 +510,15 @@ export class AudioMixer {
       this.master.connect(context.destination);
     }
     this.musicDuck = context.createGain();
-    setParamValue(this.musicDuck.gain, 1, context.currentTime);
+    setParamValue(this.musicDuck.gain, this.persistentDuckLevel, context.currentTime);
     this.musicDuck.connect(this.master);
+    this.ambienceDuck = context.createGain();
+    setParamValue(this.ambienceDuck.gain, this.persistentAmbienceDuckLevel, context.currentTime);
+    this.ambienceDuck.connect(this.master);
     for (const category of AUDIO_CATEGORIES) {
       const bus = context.createGain();
       this.buses[category] = bus;
-      bus.connect(category === "bgm" ? this.musicDuck : this.master);
+      bus.connect(category === "bgm" ? this.musicDuck : category === "ambience" ? this.ambienceDuck : this.master);
     }
     this.#applySettings();
   }
@@ -1035,6 +1042,7 @@ export class AudioMixer {
       gain,
       panner,
       volume,
+      loop: source.loop,
       startedAt: now,
       stopping: false,
       cleaned: false,
@@ -1221,13 +1229,17 @@ export class AudioMixer {
     };
   }
 
-  setDialogueDucking(enabled, { level = 0.45, fadeMs = 120 } = {}) {
+  setDialogueDucking(enabled, { level = 0.62, ambienceLevel = 0.8, fadeMs = 320 } = {}) {
     this.persistentDuckLevel = enabled ? clamp(level, 0.05, 1) : 1;
-    if (!this.context || !this.musicDuck) return;
+    this.persistentAmbienceDuckLevel = enabled ? clamp(ambienceLevel, 0.05, 1) : 1;
+    if (!this.context || !this.musicDuck || !this.ambienceDuck) return;
     const now = this.context.currentTime;
     cancelParamSchedule(this.musicDuck.gain, now);
     setParamValue(this.musicDuck.gain, Math.max(0.0001, this.musicDuck.gain.value ?? 1), now);
     rampParamValue(this.musicDuck.gain, this.persistentDuckLevel, now + Math.max(0, fadeMs) / 1000);
+    cancelParamSchedule(this.ambienceDuck.gain, now);
+    setParamValue(this.ambienceDuck.gain, Math.max(0.0001, this.ambienceDuck.gain.value ?? 1), now);
+    rampParamValue(this.ambienceDuck.gain, this.persistentAmbienceDuckLevel, now + Math.max(0, fadeMs) / 1000);
   }
 
   duckMusic({ level = 0.3, attackMs = 30, holdMs = 350, releaseMs = 220 } = {}) {
@@ -1288,6 +1300,11 @@ export class AudioMixer {
   getDiagnostics() {
     const cache = { loading: 0, fetched: 0, ready: 0, failed: 0, idle: 0 };
     for (const entry of this.assetCache.values()) cache[entry.status] = (cache[entry.status] ?? 0) + 1;
+    const active = [...this.activeVoices.values()].filter((voice) => !voice.cleaned && !voice.stopping);
+    const loopInstanceCounts = new Map();
+    for (const voice of active.filter((candidate) => candidate.loop)) {
+      loopInstanceCounts.set(voice.instanceKey, (loopInstanceCounts.get(voice.instanceKey) ?? 0) + 1);
+    }
     return {
       unlocked: this.unlocked,
       contextState: this.context?.state ?? null,
@@ -1295,7 +1312,12 @@ export class AudioMixer {
       contextCreateCount: this.contextCreateCount,
       unlockTimeoutMs: this.unlockTimeoutMs,
       disposed: this.disposed,
-      activeVoices: this.activeVoices.size,
+      activeVoices: active.length,
+      activeLoopVoices: active.filter((voice) => voice.loop).length,
+      activeSceneVoices: active.filter((voice) => voice.instanceKey?.startsWith("scene:")).length,
+      duplicateLoopInstanceKeys: [...loopInstanceCounts.entries()]
+        .filter(([, count]) => count > 1)
+        .map(([instanceKey]) => instanceKey),
       sceneId: this.sceneState.sceneId,
       desiredSceneId: this.desiredScene?.sceneId ?? null,
       audioState: this.audioStatus.state,
@@ -1324,11 +1346,13 @@ export class AudioMixer {
     this.preloadTasks.clear();
     for (const bus of Object.values(this.buses)) safeDisconnect(bus);
     safeDisconnect(this.musicDuck);
+    safeDisconnect(this.ambienceDuck);
     safeDisconnect(this.master);
     safeDisconnect(this.limiter);
     const context = this.context;
     this.buses = {};
     this.musicDuck = null;
+    this.ambienceDuck = null;
     this.master = null;
     this.limiter = null;
     this.assetCache.clear();

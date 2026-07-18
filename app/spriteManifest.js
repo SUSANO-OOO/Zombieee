@@ -4,7 +4,8 @@
  * Legacy producer sheets are read-only six-cell inputs.  Production rendering
  * uses deterministic derived atlases that isolate every authored cell behind a
  * 16px transparent gutter, preventing adjacent-frame interpolation bleed.  The
- * three 0.6.0 newcomers use a purpose-built seven-column/two-direction atlas.
+ * Approved 0.6.0 newcomers and 0.7.0 replacements use purpose-built
+ * seven-column/two-direction atlases.
  */
 
 export const SPRITE_STATES = Object.freeze([
@@ -101,6 +102,34 @@ const LEGACY_PADDED_CELL = Object.freeze({
 });
 
 const NEWCOMER_VISIBLE = Object.freeze({
+  scout: {
+    right: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
+    left: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
+  },
+  ranger: {
+    right: [[136, 16, 344, 432], [115, 16, 364, 432], [121, 16, 359, 432], [105, 16, 375, 432], [117, 27, 362, 432], [111, 50, 368, 432], [86, 303, 393, 432]],
+    left: [[136, 16, 344, 432], [115, 16, 364, 432], [121, 16, 359, 432], [105, 16, 375, 432], [117, 27, 362, 432], [111, 50, 368, 432], [86, 303, 393, 432]],
+  },
+  medic: {
+    right: [[148, 16, 332, 432], [133, 16, 347, 432], [139, 16, 341, 432], [127, 16, 353, 432], [126, 16, 354, 432], [120, 43, 359, 432], [95, 320, 385, 432]],
+    left: [[148, 16, 332, 432], [133, 16, 347, 432], [139, 16, 341, 432], [127, 16, 353, 432], [126, 16, 354, 432], [120, 43, 359, 432], [95, 320, 385, 432]],
+  },
+  brute: {
+    right: [[101, 16, 378, 432], [113, 16, 366, 432], [124, 16, 356, 432], [144, 16, 335, 432], [16, 86, 464, 432], [89, 16, 390, 432], [74, 273, 405, 432]],
+    left: [[101, 16, 378, 432], [113, 16, 366, 432], [124, 16, 356, 432], [144, 16, 335, 432], [16, 86, 464, 432], [89, 16, 390, 432], [74, 273, 405, 432]],
+  },
+  gunner: {
+    right: [[122, 59, 358, 432], [131, 79, 349, 432], [119, 83, 360, 432], [117, 94, 362, 432], [97, 94, 383, 432], [111, 100, 369, 432], [81, 312, 399, 432]],
+    left: [[122, 59, 358, 432], [131, 79, 349, 432], [119, 83, 360, 432], [117, 94, 362, 432], [97, 94, 383, 432], [111, 100, 369, 432], [81, 312, 399, 432]],
+  },
+  guardian: {
+    right: [[137, 74, 343, 432], [133, 91, 346, 432], [140, 90, 340, 432], [126, 155, 354, 432], [80, 150, 399, 432], [135, 139, 345, 432], [92, 309, 388, 432]],
+    left: [[137, 74, 343, 432], [133, 91, 346, 432], [140, 90, 340, 432], [126, 155, 354, 432], [80, 150, 399, 432], [135, 139, 345, 432], [92, 309, 388, 432]],
+  },
+  engineer: {
+    right: [[130, 16, 349, 432], [127, 16, 352, 432], [97, 16, 382, 432], [66, 16, 413, 432], [101, 31, 379, 432], [97, 36, 383, 432], [70, 265, 410, 432]],
+    left: [[130, 16, 349, 432], [127, 16, 352, 432], [97, 16, 382, 432], [66, 16, 413, 432], [101, 31, 379, 432], [97, 36, 383, 432], [70, 265, 410, 432]],
+  },
   "crazy-king": {
     right: [[140, 84, 340, 432], [138, 94, 342, 432], [119, 115, 361, 432], [121, 59, 358, 432], [56, 129, 424, 432], [87, 109, 393, 432], [58, 290, 422, 432]],
     left: [[140, 84, 340, 432], [138, 94, 342, 432], [119, 115, 361, 432], [121, 59, 358, 432], [56, 129, 424, 432], [87, 109, 393, 432], [58, 290, 422, 432]],
@@ -112,6 +141,22 @@ const NEWCOMER_VISIBLE = Object.freeze({
   babayaga: {
     right: [[179, 43, 301, 432], [133, 48, 347, 432], [125, 53, 355, 432], [114, 61, 365, 432], [94, 58, 386, 432], [75, 77, 405, 432], [57, 328, 423, 432]],
     left: [[181, 57, 299, 432], [127, 61, 353, 432], [127, 65, 352, 432], [112, 70, 367, 432], [92, 82, 388, 432], [50, 77, 429, 432], [28, 282, 452, 432]],
+  },
+  grappler: {
+    right: [[137, 16, 342, 432], [128, 16, 351, 432], [139, 16, 340, 432], [78, 62, 401, 432], [44, 57, 435, 432], [102, 16, 378, 432], [62, 306, 418, 432]],
+    left: [[137, 16, 342, 432], [128, 16, 351, 432], [139, 16, 340, 432], [78, 62, 401, 432], [44, 57, 435, 432], [102, 16, 378, 432], [62, 306, 418, 432]],
+  },
+  ooze: {
+    right: [[134, 116, 346, 432], [106, 120, 373, 432], [117, 116, 363, 432], [111, 214, 369, 432], [45, 146, 434, 432], [139, 104, 341, 432], [92, 302, 388, 432]],
+    left: [[134, 116, 346, 432], [106, 120, 373, 432], [117, 116, 363, 432], [111, 214, 369, 432], [45, 146, 434, 432], [139, 104, 341, 432], [92, 302, 388, 432]],
+  },
+  sprinter: {
+    right: [[102, 44, 377, 432], [56, 65, 424, 432], [44, 25, 436, 432], [100, 209, 379, 432], [28, 122, 451, 432], [134, 84, 346, 432], [33, 304, 447, 432]],
+    left: [[102, 44, 377, 432], [56, 65, 424, 432], [44, 25, 436, 432], [100, 209, 379, 432], [28, 122, 451, 432], [134, 84, 346, 432], [33, 304, 447, 432]],
+  },
+  "gate-eater": {
+    right: [[122, 16, 358, 432], [111, 16, 368, 432], [108, 16, 372, 432], [103, 16, 377, 432], [54, 65, 425, 432], [88, 37, 392, 432], [51, 265, 428, 432]],
+    left: [[122, 16, 358, 432], [111, 16, 368, 432], [108, 16, 372, 432], [103, 16, 377, 432], [54, 65, 425, 432], [88, 37, 392, 432], [51, 265, 428, 432]],
   },
 });
 
@@ -222,8 +267,7 @@ function legacyManifestEntry(auditKey, nativeDirection, { battleScale = 1 } = {}
   });
 }
 
-function newcomerManifestEntry(kind) {
-  const path = `/art/v060/characters/${kind}-battle-v1.png`;
+function explicitAtlasManifestEntry(kind, path) {
   const frames = {};
   for (let index = 0; index < SPRITE_STATES.length; index += 1) {
     const state = SPRITE_STATES[index];
@@ -258,11 +302,13 @@ function newcomerManifestEntry(kind) {
 
 export const SPRITE_MANIFEST = Object.freeze({
   brawler: legacyManifestEntry("brawler", "right"),
-  scout: legacyManifestEntry("scout", "right"),
-  ranger: legacyManifestEntry("ranger", "right"),
-  medic: legacyManifestEntry("medic", "right"),
-  brute: legacyManifestEntry("brute", "right", { battleScale: 1.12 }),
-  gunner: legacyManifestEntry("gunner", "right"),
+  scout: explicitAtlasManifestEntry("scout", "/art/v070/characters/scout-battle-v1.png"),
+  ranger: explicitAtlasManifestEntry("ranger", "/art/v070/characters/ranger-battle-v1.png"),
+  medic: explicitAtlasManifestEntry("medic", "/art/v070/characters/medic-battle-v1.png"),
+  brute: explicitAtlasManifestEntry("brute", "/art/v070/characters/brute-battle-v1.png"),
+  gunner: explicitAtlasManifestEntry("gunner", "/art/v070/characters/gunner-battle-v1.png"),
+  guardian: explicitAtlasManifestEntry("guardian", "/art/v070/characters/guardian-battle-v1.png"),
+  engineer: explicitAtlasManifestEntry("engineer", "/art/v070/characters/engineer-battle-v1.png"),
   walker: legacyManifestEntry("infected", "left"),
   runner: legacyManifestEntry("infected", "left"),
   turned: legacyManifestEntry("infected", "left"),
@@ -271,9 +317,13 @@ export const SPRITE_MANIFEST = Object.freeze({
   crusher: legacyManifestEntry("crusher", "left"),
   abomination: legacyManifestEntry("crusher", "left"),
   takuya: legacyManifestEntry("takuya", "left"),
-  "crazy-king": newcomerManifestEntry("crazy-king"),
-  kumaverson: newcomerManifestEntry("kumaverson"),
-  babayaga: newcomerManifestEntry("babayaga"),
+  grappler: explicitAtlasManifestEntry("grappler", "/art/v070/characters/grappler-battle-v1.png"),
+  ooze: explicitAtlasManifestEntry("ooze", "/art/v070/characters/ooze-battle-v1.png"),
+  sprinter: explicitAtlasManifestEntry("sprinter", "/art/v070/characters/sprinter-battle-v1.png"),
+  "gate-eater": explicitAtlasManifestEntry("gate-eater", "/art/v070/characters/gate-eater-battle-v1.png"),
+  "crazy-king": explicitAtlasManifestEntry("crazy-king", "/art/v060/characters/crazy-king-battle-v1.png"),
+  kumaverson: explicitAtlasManifestEntry("kumaverson", "/art/v060/characters/kumaverson-battle-v1.png"),
+  babayaga: explicitAtlasManifestEntry("babayaga", "/art/v060/characters/babayaga-battle-v1.png"),
 });
 
 /** Stable ordered list for the localhost all-frame QA gallery. */
@@ -344,15 +394,17 @@ export function fitSpriteBattleDisplaySize(kind, frame, maximum = {}) {
 
 export const CHARACTER_PORTRAIT_ART = Object.freeze({
   brawler: "/art/v060/characters/portraits/brawler-portrait-v2.webp",
-  scout: "/art/v060/characters/portraits/scout-portrait-v2.webp",
-  ranger: "/art/v060/characters/portraits/ranger-portrait-v2.webp",
-  medic: "/art/v060/characters/portraits/medic-portrait-v2.webp",
-  brute: "/art/v060/characters/portraits/brute-portrait-v2.webp",
-  gunner: "/art/v060/characters/portraits/gunner-portrait-v2.webp",
+  scout: "/art/v070/characters/portraits/scout-portrait-v1.webp",
+  ranger: "/art/v070/characters/portraits/ranger-portrait-v1.webp",
+  medic: "/art/v070/characters/portraits/medic-portrait-v1.webp",
+  brute: "/art/v070/characters/portraits/brute-portrait-v1.webp",
+  gunner: "/art/v070/characters/portraits/gunner-portrait-v1.webp",
   "crazy-king": "/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
   kumaverson: "/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
   babayaga: "/art/v060/characters/portraits/babayaga-portrait-v2.webp",
-  guide: "/art/v060/characters/portraits/guide-portrait-v2.webp",
+  guardian: "/art/v070/characters/portraits/guardian-portrait-v1.webp",
+  engineer: "/art/v070/characters/portraits/engineer-portrait-v1.webp",
+  guide: "/art/v070/characters/portraits/guide-portrait-v1.webp",
 });
 
 export const RADIO_PORTRAIT_ART = "/art/v060/characters/portraits/radio-terminal-portrait-v1.webp";

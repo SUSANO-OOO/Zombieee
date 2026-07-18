@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -30,6 +31,8 @@ jobs:
           persist-credentials: false
 
       - name: Check patch whitespace
+        id: whitespace
+        continue-on-error: true
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -37,11 +40,40 @@ jobs:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
+          set -o pipefail
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            git diff --check "$PR_BASE_SHA...$PR_HEAD_SHA"
+            git diff --check "$PR_BASE_SHA...$PR_HEAD_SHA" 2>&1 | tee diff-check.log
           else
-            git diff --check "origin/$DEFAULT_BRANCH...HEAD"
+            git diff --check "origin/$DEFAULT_BRANCH...HEAD" 2>&1 | tee diff-check.log
           fi
+
+      - name: Upload patch whitespace evidence
+        if: steps.whitespace.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch-whitespace-evidence
+          path: diff-check.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Report patch whitespace failure
+        if: steps.whitespace.outcome == 'failure' && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          {
+            echo "## Patch whitespace check failed"
+            echo
+            echo '```text'
+            cat diff-check.log
+            echo '```'
+          } > /tmp/diff-check-comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/diff-check-comment.md
+
+      - name: Enforce patch whitespace result
+        if: steps.whitespace.outcome == 'failure'
+        run: exit 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -54,6 +86,8 @@ jobs:
         run: npm ci
 
       - name: Lint
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npm run lint
 
       - name: Test
