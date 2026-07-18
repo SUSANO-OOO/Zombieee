@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/github-pages-release.yml"
+      - ".github/pages-release-request.json"
       - "app/**"
       - "public/**"
       - "scripts/build-github-pages.mjs"
@@ -41,23 +42,64 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Checkout
+      - name: Checkout workflow source
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_ref || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify requested release identity
-        if: github.event_name == 'workflow_dispatch'
+      - name: Resolve release identity
+        id: release
         shell: bash
         env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_RELEASE_REF: ${{ inputs.release_ref }}
+          INPUT_RELEASE_SHA: ${{ inputs.release_sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_SHA: ${{ github.sha }}
         run: |
-          actual_sha="$(git rev-parse HEAD)"
-          if [[ "$actual_sha" != "$RELEASE_SHA" ]]; then
-            echo "::error::release_ref resolved to $actual_sha, expected $RELEASE_SHA"
+          release_ref="$PUSH_SHA"
+          release_sha="$PUSH_SHA"
+          requested=false
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            release_ref="$INPUT_RELEASE_REF"
+            release_sha="$INPUT_RELEASE_SHA"
+            requested=true
+          elif [[ "$EVENT_NAME" == "push" ]] \
+            && git diff --name-only "$PUSH_BEFORE" "$PUSH_SHA" -- \
+              | grep -Fxq '.github/pages-release-request.json'; then
+            if [[ ! -f .github/pages-release-request.json ]]; then
+              echo "::error::.github/pages-release-request.json changed but is unavailable"
+              exit 1
+            fi
+            release_ref="$(jq -er '.release_ref | select(type == "string" and length > 0)' .github/pages-release-request.json)"
+            release_sha="$(jq -er '.release_sha | select(type == "string" and test("^[0-9a-f]{40}$"))' .github/pages-release-request.json)"
+            requested=true
+          fi
+
+          if [[ "$requested" == "true" ]]; then
+            actual_sha="$(git rev-list -n 1 "$release_ref")"
+            if [[ -z "$actual_sha" ]]; then
+              echo "::error::release_ref could not be resolved: $release_ref"
+              exit 1
+            fi
+            if [[ "$actual_sha" != "$release_sha" ]]; then
+              echo "::error::release_ref resolved to $actual_sha, expected $release_sha"
+              exit 1
+            fi
+            git checkout --detach "$actual_sha"
+          fi
+
+          actual_checkout_sha="$(git rev-parse HEAD)"
+          if [[ "$actual_checkout_sha" != "$release_sha" ]]; then
+            echo "::error::checkout is $actual_checkout_sha, expected $release_sha"
             exit 1
           fi
+
+          echo "release_ref=$release_ref" >> "$GITHUB_OUTPUT"
+          echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
+          echo "requested=$requested" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -74,17 +116,17 @@ jobs:
       - name: Build GitHub Pages static release
         env:
           GITHUB_PAGES_BASE_PATH: /Zombieee
-          GITHUB_PAGES_RELEASE_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.release_sha || github.sha }}
+          GITHUB_PAGES_RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
         shell: bash
         run: |
           node --input-type=module --eval \
             "process.env.GITHUB_SHA = process.env.GITHUB_PAGES_RELEASE_SHA; await import('./scripts/build-github-pages.mjs')"
 
       - name: Verify GitHub Pages release identity
-        if: github.event_name == 'workflow_dispatch'
+        if: steps.release.outputs.requested == 'true'
         shell: bash
         env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
         run: |
           grep -Fq "<meta name=\"github-pages-release\" content=\"$RELEASE_SHA\">" _site/index.html
           grep -Fq '<meta name="github-pages-base" content="/Zombieee/">' _site/index.html
