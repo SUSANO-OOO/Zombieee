@@ -123,12 +123,12 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.6.0 campaign title as the formal entry point", async () => {
+test("server-renders the 0.7.0 campaign title as the formal entry point", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.6\.0<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.7\.0<\/title>/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
@@ -142,7 +142,8 @@ test("server-renders the 0.6.0 campaign title as the formal entry point", async 
   assert.match(html, /<small>にしじんせいきまつものがたり<\/small>/);
   assert.match(html, /<h1><span>西新<\/span><b>世紀末物語<\/b><\/h1>/);
   assert.match(html, /<p>アーリーアクセス版<\/p>/);
-  assert.match(html, /<span>セーブ確認中<\/span><small>序章　新たな世界の始まり<\/small>/);
+  assert.match(html, /<span>セーブ確認中<\/span><small>PROLOGUE　西新が終わった夜<\/small>/);
+  assert.doesNotMatch(html, /百道浜|新たな世界の始まり/);
   assert.doesNotMatch(html, /BOSS STAGE LOADOUT|CRAWLER SYSTEM CHECK|Three-lane wasteland battlefield/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
@@ -217,8 +218,8 @@ test("keeps the main player-facing battle and result UI Japanese-first", async (
   assert.match(game, /★ 作戦成功・移動拠点HP 1%以上/);
   assert.doesNotMatch(screens, />LOCK<|>TIME<|>KILLS<|>CRAWLER<|>LOSSES<|TAP TO RELOAD|CRAWLER SYSTEM CHECK/);
   assert.doesNotMatch(campaign, /label: "(?:WAVE|WARNING|BOSS)\b/);
-  assert.match(story, /STORY_SCRIPT_VERSION = "prologue-v5"/);
-  assert.match(story, /中心が開きました。今です/);
+  assert.match(story, /STORY_SCRIPT_VERSION = "outbreak-origin-v8"/);
+  assert.match(story, /右肩、開きました。数字が合わん。今です/);
 });
 
 test("draws three unmistakably different stage environments", async () => {
@@ -302,7 +303,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(css, /\.barrier-health/);
   assert.match(css, /\.barrier-health\.vulnerable/);
   assert.match(css, /\.barrier-health\.hit/);
-  assert.match(layout, /title: "西新世紀末物語｜アーリーアクセス版 0\.6\.0"/);
+  assert.match(layout, /title: "西新世紀末物語｜アーリーアクセス版 0\.7\.0"/);
   assert.match(layout, /viewportFit: "cover"/);
   assert.doesNotMatch(layout, /images: \[.*\/og\.png/);
   assert.match(layout, /rel="preload" as="image" href="\/infected-checkpoint-v1\.png"/);
@@ -1295,7 +1296,7 @@ test("models state-linked production radio with rotating variants, QA isolation,
 });
 
 test("exposes localhost-only QA routes and wires deterministic battle and lifecycle scenarios", async () => {
-  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "ai-reacquire", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
+  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "takuya-entrance", "ai-reacquire", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
   for (const mode of LOCAL_QA_MODES) {
     assert.equal(resolveLocalQaMode("localhost", `?qa=${mode}`), mode);
     assert.equal(resolveLocalQaMode("127.0.0.1", `?qa=${mode}`), mode);
@@ -1307,6 +1308,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(game, /qaMode === "roles" \|\| qaMode === "dialogue"\) prepareRolesQa\(g\)/);
   assert.match(game, /qaMode === "endgame"\) prepareEndgameQa\(g\)/);
+  assert.match(game, /qaMode === "takuya-entrance"\) prepareTakuyaEntranceQa\(g\)/);
   assert.match(game, /qaMode === "ai-reacquire"\) prepareAiReacquireQa\(g\)/);
   assert.match(game, /prepareAiReacquireQa[\s\S]*takuya\.hp = 18[\s\S]*combatReady = false[\s\S]*gateEntering = true/);
   assert.match(game, /qaMode === "supplies"\) prepareSuppliesQa\(g\)/);
@@ -1392,7 +1394,7 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /for \(const bus of Object\.values\(runtime\.buses\)\)/);
   assert.match(game, /productionMixer\.stopAll\(\{ category, fadeMs: 35 \}\)/);
   assert.match(game, /sfxMutedRef\.current = next/);
-  assert.match(game, /if \(g\.paused\) \{[\s\S]*g\.battleBarks = createBattleBarkRuntime\(\)[\s\S]*stopMusic\(\); stopJingle\(\); stopSfx\(\);/);
+  assert.match(game, /if \(g\.paused\) \{[\s\S]*g\.battleBarks = clearNonScriptedBattleBarks\(g\.battleBarks\)[\s\S]*stopMusic\(\); stopJingle\(\); stopSfx\(\);/);
   assert.match(game, /stopMusic\(\); stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
   assert.match(game, /const disposeBattleRuntime = useCallback\(\(\) => \{[\s\S]*stopMusic\(\);[\s\S]*stopJingle\(\);[\s\S]*stopSfx\(\)/);
   const returnToMapBlock = game.slice(game.indexOf("const returnToMap"), game.indexOf("const handleEventComplete"));
@@ -1401,7 +1403,7 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /data-muted=\{bgmMuted\}/);
   assert.match(game, /data-muted=\{sfxMuted\}/);
   assert.match(screens, /同じ編成で再戦/);
-  assert.match(screens, /result\.won \? "作戦後の通信へ" : "エリアマップへ"/);
+  assert.match(screens, /onClick=\{onContinueResult\}>エリアマップへ/);
   assert.match(screens, /← 地図へ/);
   for (const cue of [
     "ui-confirm", "ui-cancel", "pod-descent", "pod-hit", "pod-destroy", "burn-start", "medical-heal",
@@ -1531,8 +1533,9 @@ test("integrates the enemy gate queue without changing direct QA or turned place
   assert.match(game, /kind !== "turned" && gateEntry !== null/);
   assert.match(game, /combatReady: true, gateEntering: false/);
   assert.match(game, /ctx\.rect\(0, 0, ENEMY_GATE_SPAWN\.revealX, H\);[\s\S]*ctx\.clip\(\)/);
-  assert.match(game, /includesTakuya[\s\S]*playCue\(includesTakuya \? "boss-warning" : "wave-contact"\)[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance/);
+  assert.match(game, /includesTakuya[\s\S]*TAKUYA_ENTRANCE_AUDIO\.durationSeconds[\s\S]*playProductionCue\(TAKUYA_ENTRANCE_AUDIO\.cueId[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance/);
   assert.match(game, /bossActiveOrIncoming[\s\S]*\["takuya", "gate-eater"\]\.includes\(entry\.kind\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);
+  assert.match(game, /if \(battleSilenceSceneId\(g\)\) return/);
 });
 
 test("integrates attack identity, corpse phases, infection, cremation, and generic turning into the battle loop", async () => {

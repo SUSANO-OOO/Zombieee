@@ -74,7 +74,7 @@ test("a failed timed defense never completes the convoy or dispatches the succes
       outcome,
     },
   });
-  assert.equal(events.includes("stage-sawara-battle-success"), false);
+  assert.equal(events.includes("stage-sawara-alert-v070"), false);
 });
 
 test("a successful timed defense reaches 24 of 24 and dispatches the success scene", () => {
@@ -107,5 +107,5 @@ test("a successful timed defense reaches 24 of 24 and dispatches the success sce
       outcome,
     },
   });
-  assert.equal(events.includes("stage-sawara-battle-success"), true);
+  assert.equal(events.includes("stage-sawara-alert-v070"), true);
 });

@@ -35,16 +35,39 @@ export const BATTLE_BARK_CONFIG = Object.freeze({
  *   priority: number,
  *   sequence: number,
  *   tone: string,
+ *   scripted?: boolean,
+ *   scriptedCueId?: string,
+ *   playVoice?: boolean,
  * }} BattleBark
  * @typedef {{
  *   clock: number,
  *   sequence: number,
  *   active: BattleBark[],
+ *   pendingScripted: BattleBark[],
+ *   scriptedCueIds: string[],
  *   globalReadyAt: number,
  *   speakerReadyAt: Record<string, number>,
  *   lineReadyAt: Record<string, number>,
  * }} BattleBarkRuntime
  * @typedef {{trigger: string, speakerKind: string, speakerId?: string | number}} BattleBarkEvent
+ * @typedef {{
+ *   id: string,
+ *   eventId?: string,
+ *   trigger: string,
+ *   priority?: number,
+ *   playVoice?: boolean,
+ *   lines: Array<{
+ *     id: string,
+ *     lineId?: string,
+ *     speakerKind?: string | null,
+ *     speaker: string,
+ *     text: string,
+ *     duration?: number,
+ *     priority?: number,
+ *     tone?: string,
+ *     playVoice?: boolean,
+ *   }>,
+ * }} ScriptedBattleBarkCue
  */
 
 export const BATTLE_BARK_TRIGGER_IDS = Object.freeze({
@@ -253,9 +276,51 @@ export function createBattleBarkRuntime() {
     clock: 0,
     sequence: 0,
     active: [],
+    pendingScripted: [],
+    scriptedCueIds: [],
     globalReadyAt: 0,
     speakerReadyAt: {},
     lineReadyAt: {},
+  };
+}
+
+/**
+ * Pause hides battle chatter without consuming authored story dialogue.
+ * Normal situational barks are discarded, while the active scripted line,
+ * its FIFO tail, and duplicate-cue ledger remain frozen for resume.
+ *
+ * @param {BattleBarkRuntime} runtime
+ * @returns {BattleBarkRuntime}
+ */
+export function clearNonScriptedBattleBarks(runtime) {
+  return {
+    ...runtime,
+    active: runtime.active.filter((bark) => bark.scripted === true),
+    pendingScripted: Array.isArray(runtime.pendingScripted) ? [...runtime.pendingScripted] : [],
+    scriptedCueIds: Array.isArray(runtime.scriptedCueIds) ? [...runtime.scriptedCueIds] : [],
+    globalReadyAt: runtime.clock,
+    speakerReadyAt: {},
+    lineReadyAt: {},
+  };
+}
+
+function rankedActive(active) {
+  return active
+    .sort((a, b) => b.priority - a.priority || b.sequence - a.sequence)
+    .slice(0, BATTLE_BARK_CONFIG.maxVisible)
+    .sort((a, b) => a.sequence - b.sequence);
+}
+
+function promotePendingScripted(runtime) {
+  const pendingScripted = Array.isArray(runtime.pendingScripted) ? runtime.pendingScripted : [];
+  if (runtime.active.some((bark) => bark.scripted === true) || pendingScripted.length === 0) {
+    return { ...runtime, pendingScripted };
+  }
+  const [next, ...remaining] = pendingScripted;
+  return {
+    ...runtime,
+    active: rankedActive([...runtime.active, next]),
+    pendingScripted: remaining,
   };
 }
 
@@ -266,15 +331,104 @@ export function createBattleBarkRuntime() {
  */
 export function advanceBattleBarkRuntime(runtime, seconds) {
   const elapsed = Math.max(0, Number(seconds) || 0);
-  const clock = runtime.clock + elapsed;
-  return {
+  const finalClock = runtime.clock + elapsed;
+  let remainingElapsed = elapsed;
+  let next = promotePendingScripted({
     ...runtime,
-    clock,
-    active: runtime.active
-      .map((bark) => ({ ...bark, remaining: Math.max(0, bark.remaining - elapsed) }))
-      .filter((bark) => bark.remaining > 0),
+    active: [...runtime.active],
+    pendingScripted: Array.isArray(runtime.pendingScripted) ? [...runtime.pendingScripted] : [],
+    scriptedCueIds: Array.isArray(runtime.scriptedCueIds) ? [...runtime.scriptedCueIds] : [],
+  });
+
+  while (remainingElapsed > 0) {
+    const scripted = next.active.find((bark) => bark.scripted === true);
+    const step = scripted
+      ? Math.min(remainingElapsed, Math.max(0, scripted.remaining))
+      : remainingElapsed;
+    if (step <= 0) {
+      next = promotePendingScripted({
+        ...next,
+        active: next.active.filter((bark) => bark.remaining > 0),
+      });
+      if (next.active.some((bark) => bark.scripted === true)) continue;
+      break;
+    }
+    next = promotePendingScripted({
+      ...next,
+      clock: next.clock + step,
+      active: next.active
+        .map((bark) => ({ ...bark, remaining: Math.max(0, bark.remaining - step) }))
+        .filter((bark) => bark.remaining > 0),
+    });
+    remainingElapsed -= step;
+  }
+
+  return promotePendingScripted({ ...next, clock: finalClock });
+}
+
+/**
+ * Queue exact authored lines without pausing battle simulation. Scripted lines
+ * are materialized once, retain declaration order, and display one at a time.
+ * Their priority is kept above every normal catalog bark, and story dialogue
+ * voice playback is explicitly disabled.
+ *
+ * @param {{runtime: BattleBarkRuntime, cue: ScriptedBattleBarkCue}} input
+ * @returns {{queued: boolean, reason?: string, runtime: BattleBarkRuntime, bark?: BattleBark}}
+ */
+export function queueScriptedBattleBarkCue({ runtime, cue }) {
+  if (!cue || typeof cue.id !== "string" || cue.id.length === 0 || !Array.isArray(cue.lines) || cue.lines.length === 0) {
+    return { queued: false, reason: "invalid-scripted-cue", runtime };
+  }
+  const scriptedCueIds = Array.isArray(runtime.scriptedCueIds) ? runtime.scriptedCueIds : [];
+  if (scriptedCueIds.includes(cue.id)) {
+    return { queued: false, reason: "duplicate-scripted-cue", runtime };
+  }
+
+  let sequence = runtime.sequence;
+  const scriptedLines = cue.lines.map((line, lineIndex) => {
+    sequence += 1;
+    const speakerKind = typeof line.speakerKind === "string" && line.speakerKind.length > 0
+      ? line.speakerKind
+      : "story";
+    const priority = Math.max(110, Number(line.priority ?? cue.priority) || 0);
+    return {
+      id: `${line.id}:${sequence}`,
+      lineId: line.lineId ?? line.id,
+      trigger: cue.trigger,
+      speakerId: speakerKind,
+      speakerKind,
+      speaker: line.speaker,
+      text: line.text,
+      remaining: Math.max(.1, Number(line.duration) || BATTLE_BARK_CONFIG.defaultDuration),
+      priority,
+      sequence,
+      tone: line.tone ?? "story-scripted",
+      scripted: true,
+      scriptedCueId: cue.id,
+      playVoice: false,
+      scriptedLineIndex: lineIndex,
+    };
+  });
+  const hadActiveScripted = runtime.active.some((bark) => bark.scripted === true);
+  const [first, ...rest] = scriptedLines;
+  const queuedRuntime = {
+    ...runtime,
+    sequence,
+    active: hadActiveScripted ? [...runtime.active] : rankedActive([...runtime.active, first]),
+    pendingScripted: [
+      ...(Array.isArray(runtime.pendingScripted) ? runtime.pendingScripted : []),
+      ...(hadActiveScripted ? scriptedLines : rest),
+    ],
+    scriptedCueIds: [...scriptedCueIds, cue.id],
+  };
+  return {
+    queued: true,
+    bark: hadActiveScripted ? undefined : first,
+    runtime: queuedRuntime,
   };
 }
+
+export const queueScriptedBattleBarks = queueScriptedBattleBarkCue;
 
 /** @param {BattleBarkLine} line @param {BattleBarkEvent} event */
 function lineMatches(line, event) {

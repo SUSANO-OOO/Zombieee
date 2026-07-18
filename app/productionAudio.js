@@ -1,7 +1,8 @@
 import { createAudioManifest } from "./audioManifest.js";
 import { CAMPAIGN_STAGE_IDS } from "./campaign.js";
 
-const AUDIO_ROOT = "/audio/v060";
+const V060_AUDIO_ROOT = "/audio/v060";
+const V070_AUDIO_ROOT = "/audio/v070";
 
 const MUSIC_TRACKS = Object.freeze([
   "title",
@@ -98,12 +99,51 @@ const NEW_UNIT_AUDIO_CUES = Object.freeze([
   { id: "voice-babayaga-death", category: "humanVoices", cooldownMs: 1000, maxInstances: 1, gain: 0.78, priority: 88 },
 ]);
 
-function sourceFor(folder, name) {
+const V070_AUDIO_ASSET_SPECS = Object.freeze([
+  { id: "music-v070-kumaya-daily", folder: "music", category: "bgm", loop: true, gain: 0.54, priority: 900 },
+  { id: "music-v070-crawler-life", folder: "music", category: "bgm", loop: true, gain: 0.56, priority: 900 },
+  { id: "music-v070-stage2-tension", folder: "music", category: "bgm", loop: true, gain: 0.58, priority: 900 },
+  { id: "music-v070-stage3-approach", folder: "music", category: "bgm", loop: true, gain: 0.56, priority: 900 },
+  { id: "music-v070-collapse-montage", folder: "music", category: "bgm", loop: true, gain: 0.64, priority: 900 },
+  { id: "music-v070-crawler-montage", folder: "music", category: "bgm", loop: true, gain: 0.62, priority: 900 },
+  { id: "music-v070-crawler-briefing", folder: "music", category: "bgm", loop: true, gain: 0.58, priority: 900 },
+  { id: "music-v070-station-gate", folder: "music", category: "bgm", loop: true, gain: 0.66, priority: 900 },
+  { id: "music-v070-station-platform", folder: "music", category: "bgm", loop: true, gain: 0.64, priority: 900 },
+  { id: "music-v070-station-tunnel", folder: "music", category: "bgm", loop: true, gain: 0.62, priority: 900 },
+  { id: "music-v070-rescue", folder: "music", category: "bgm", loop: false, gain: 0.62, priority: 900 },
+  { id: "music-v070-return", folder: "music", category: "bgm", loop: true, gain: 0.58, priority: 900 },
+  { id: "music-v070-crawler-morning", folder: "music", category: "bgm", loop: true, gain: 0.60, priority: 900 },
+  { id: "ambience-v070-kumaya-daily-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.36, priority: 120 },
+  { id: "ambience-v070-kumaya-crisis-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.50, priority: 120 },
+  { id: "ambience-v070-rain-street-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.46, priority: 120 },
+  { id: "ambience-v070-stage2-engine-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.46, priority: 120 },
+  { id: "ambience-v070-medical-bay-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.38, priority: 120 },
+  { id: "ambience-v070-stage3-wind-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.44, priority: 120 },
+  { id: "ambience-v070-collapse-city-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.48, priority: 120 },
+  { id: "ambience-v070-crawler-ops-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.45, priority: 120 },
+  { id: "ambience-v070-crawler-canteen-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.42, priority: 120 },
+  { id: "ambience-v070-radio-signal-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.38, priority: 120 },
+  { id: "ambience-v070-station-gate-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.50, priority: 120 },
+  { id: "ambience-v070-station-platform-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.48, priority: 120 },
+  { id: "ambience-v070-station-tunnel-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.48, priority: 120 },
+  { id: "ambience-v070-station-seal-aftermath-loop", folder: "ambience", category: "ambience", loop: true, gain: 0.42, priority: 120 },
+  { id: "sfx-v070-takuya-entrance", folder: "sfx", category: "monsters", loop: false, gain: 0.82, priority: 104, cooldownMs: 5000, maxInstances: 1 },
+  { id: "sfx-v070-station-warning", folder: "sfx", category: "ui", loop: false, gain: 0.68, priority: 96, cooldownMs: 600, maxInstances: 1 },
+  { id: "sfx-v070-power-switch", folder: "sfx", category: "support", loop: false, gain: 0.74, priority: 84, cooldownMs: 180, maxInstances: 2 },
+  { id: "sfx-v070-cart-stall", folder: "sfx", category: "support", loop: false, gain: 0.70, priority: 82, cooldownMs: 500, maxInstances: 1 },
+  { id: "sfx-v070-seal-engage", folder: "sfx", category: "support", loop: false, gain: 0.78, priority: 98, cooldownMs: 800, maxInstances: 1 },
+  { id: "sfx-v070-machine-stop", folder: "sfx", category: "support", loop: false, gain: 0.66, priority: 90, cooldownMs: 900, maxInstances: 1 },
+  { id: "sfx-v070-rescue-confirm", folder: "sfx", category: "ui", loop: false, gain: 0.60, priority: 72, cooldownMs: 500, maxInstances: 1 },
+  { id: "sfx-v070-return-marker", folder: "sfx", category: "ui", loop: false, gain: 0.62, priority: 80, cooldownMs: 350, maxInstances: 1 },
+  { id: "sfx-v070-terminal-confirm", folder: "sfx", category: "ui", loop: false, gain: 0.54, priority: 64, cooldownMs: 180, maxInstances: 2 },
+]);
+
+function sourceFor(root, folder, name) {
   // MP3 is first because it is supported by older iPhone Safari versions;
   // Vorbis OGG remains the higher-efficiency alternate for modern browsers.
   return [
-    { src: `${AUDIO_ROOT}/${folder}/${name}.mp3`, type: "audio/mpeg" },
-    { src: `${AUDIO_ROOT}/${folder}/${name}.ogg`, type: "audio/ogg" },
+    { src: `${root}/${folder}/${name}.mp3`, type: "audio/mpeg" },
+    { src: `${root}/${folder}/${name}.ogg`, type: "audio/ogg" },
   ];
 }
 
@@ -111,7 +151,7 @@ function musicAsset(name) {
   return {
     id: `music-${name}`,
     category: "bgm",
-    sources: sourceFor("music", name),
+    sources: sourceFor(V060_AUDIO_ROOT, "music", name),
     preload: "scene",
     loop: !["victory", "defeat"].includes(name),
     gain: name === "boss" ? 0.82 : 0.76,
@@ -125,13 +165,27 @@ function sfxAsset(name, category, options = {}) {
   return {
     id: name,
     category,
-    sources: sourceFor("sfx", name),
+    sources: sourceFor(V060_AUDIO_ROOT, "sfx", name),
     preload: options.preload ?? "lazy",
     loop: options.loop ?? false,
     gain: options.gain ?? 0.82,
     priority: options.priority ?? 50,
     cooldownMs: options.cooldownMs ?? 60,
     maxInstances: options.maxInstances ?? 4,
+  };
+}
+
+function v070Asset(spec) {
+  return {
+    id: spec.id,
+    category: spec.category,
+    sources: sourceFor(V070_AUDIO_ROOT, spec.folder, spec.id),
+    preload: spec.category === "bgm" || spec.category === "ambience" ? "scene" : "lazy",
+    loop: spec.loop,
+    gain: spec.gain,
+    priority: spec.priority,
+    cooldownMs: spec.cooldownMs ?? 0,
+    maxInstances: spec.maxInstances ?? (spec.category === "bgm" ? 1 : 2),
   };
 }
 
@@ -213,6 +267,7 @@ const assets = [
   ...humanVoiceAssets,
   ...enemyVoiceAssets,
   ...NEW_UNIT_AUDIO_CUES.map(({ id, category, ...options }) => sfxAsset(id, category, options)),
+  ...V070_AUDIO_ASSET_SPECS.map(v070Asset),
 ];
 
 const pools = [...weaponPools, ...humanVoicePools, ...enemyVoicePools];
@@ -226,6 +281,33 @@ const COMBAT_PRELOAD = Object.freeze([
   ...NEW_UNIT_AUDIO_CUES.map(({ id }) => id),
 ]);
 
+export const STORY_AUDIO_MIX = Object.freeze({
+  dialogueBgmDuckDb: -4,
+  dialogueBgmDuckLevel: 0.630957,
+  importantAmbienceDuckDb: -2,
+  importantAmbienceDuckLevel: 0.794328,
+  dialogueReleaseMs: 350,
+});
+
+export const STATION_AUDIO_CUE_IDS = Object.freeze({
+  WARNING: "sfx-v070-station-warning",
+  POWER_SWITCH: "sfx-v070-power-switch",
+  CART_STALL: "sfx-v070-cart-stall",
+  SEAL_ENGAGE: "sfx-v070-seal-engage",
+  MACHINE_STOP: "sfx-v070-machine-stop",
+  RESCUE_CONFIRM: "sfx-v070-rescue-confirm",
+  RETURN_MARKER: "sfx-v070-return-marker",
+  TERMINAL_CONFIRM: "sfx-v070-terminal-confirm",
+});
+
+export const TAKUYA_ENTRANCE_AUDIO = Object.freeze({
+  cueId: "sfx-v070-takuya-entrance",
+  silenceSceneId: "silence-stage3-entrance",
+  durationSeconds: 3.4,
+});
+
+const STATION_PRELOAD = Object.freeze(Object.values(STATION_AUDIO_CUE_IDS));
+
 const scenes = [
   { id: "title", bgm: "music-title", preload: COMMON_UI_PRELOAD, crossfadeMs: 900 },
   { id: "intro", bgm: "music-intro", ambience: ["radio-static-loop"], preload: [...COMMON_UI_PRELOAD, ...RADIO_CUES], crossfadeMs: 700 },
@@ -233,14 +315,47 @@ const scenes = [
   { id: "loadout", bgm: "music-map", preload: [...COMMON_UI_PRELOAD, ...Object.keys(WEAPON_POOL_CATEGORIES)], crossfadeMs: 350 },
   { id: "stage1", bgm: "music-battle-stage1", preload: COMBAT_PRELOAD, crossfadeMs: 800 },
   { id: "stage2", bgm: "music-battle-stage2", preload: COMBAT_PRELOAD, crossfadeMs: 800 },
-  { id: "stage3", bgm: "music-battle-stage3", preload: COMBAT_PRELOAD, crossfadeMs: 800 },
+  { id: "stage3", bgm: "music-battle-stage3", preload: [...COMBAT_PRELOAD, TAKUYA_ENTRANCE_AUDIO.cueId], crossfadeMs: 800 },
+  { id: "station-gate", bgm: "music-v070-station-gate", ambience: ["ambience-v070-station-gate-loop"], preload: [...COMBAT_PRELOAD, ...STATION_PRELOAD], crossfadeMs: 650 },
+  { id: "station-platform", bgm: "music-v070-station-platform", ambience: ["ambience-v070-station-platform-loop"], preload: [...COMBAT_PRELOAD, ...STATION_PRELOAD], crossfadeMs: 620 },
+  { id: "station-tunnel", bgm: "music-v070-station-tunnel", ambience: ["ambience-v070-station-tunnel-loop"], preload: [...COMBAT_PRELOAD, ...STATION_PRELOAD], crossfadeMs: 520 },
   { id: "boss", bgm: "music-boss", preload: COMBAT_PRELOAD, crossfadeMs: 420 },
   { id: "victory", bgm: "music-victory", preload: ["ui-confirm"], crossfadeMs: 320 },
   { id: "defeat", bgm: "music-defeat", preload: ["ui-confirm", "ui-cancel"], crossfadeMs: 320 },
+  { id: "silence-prologue-title", preload: [], crossfadeMs: 0 },
+  { id: "story-kumaya-daily", bgm: "music-v070-kumaya-daily", ambience: ["ambience-v070-kumaya-daily-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 520 },
+  { id: "story-kumaya-crisis", ambience: ["ambience-v070-kumaya-crisis-loop"], preload: [], crossfadeMs: 120 },
+  { id: "story-collapse-montage", bgm: "music-v070-collapse-montage", ambience: ["ambience-v070-collapse-city-loop"], preload: [], crossfadeMs: 700 },
+  { id: "story-crawler-montage", bgm: "music-v070-crawler-montage", ambience: ["ambience-v070-crawler-ops-loop"], preload: [STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM], crossfadeMs: 680 },
+  { id: "story-crawler-signal", bgm: "music-v070-crawler-life", ambience: ["ambience-v070-crawler-ops-loop", "ambience-v070-radio-signal-loop"], preload: ["radio-open", "radio-close", STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM], crossfadeMs: 360 },
+  { id: "story-stage1-pre", ambience: ["ambience-v070-rain-street-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 260 },
+  { id: "story-stage1-battle", bgm: "music-battle-stage1", preload: COMMON_UI_PRELOAD, crossfadeMs: 420 },
+  { id: "story-stage1-post", bgm: "music-v070-rescue", ambience: ["ambience-v070-rain-street-loop"], preload: [STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM], crossfadeMs: 260 },
+  { id: "story-stage2-pre", bgm: "music-v070-stage2-tension", ambience: ["ambience-v070-stage2-engine-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 420 },
+  { id: "story-stage2-battle", bgm: "music-battle-stage2", preload: COMMON_UI_PRELOAD, crossfadeMs: 420 },
+  { id: "story-stage2-post", ambience: ["ambience-v070-medical-bay-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 260 },
+  { id: "story-stage3-pre", bgm: "music-v070-stage3-approach", ambience: ["ambience-v070-stage3-wind-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 420 },
+  { id: "story-stage3-battle", bgm: "music-battle-stage3", preload: [...COMMON_UI_PRELOAD, TAKUYA_ENTRANCE_AUDIO.cueId], crossfadeMs: 360 },
+  { id: "story-boss", bgm: "music-boss", preload: COMMON_UI_PRELOAD, crossfadeMs: 260 },
+  { id: "silence-stage3-entrance", preload: ["sfx-v070-takuya-entrance"], crossfadeMs: 80 },
+  { id: "silence-stage3-final", preload: [], crossfadeMs: 180 },
+  { id: "story-stage3-post", ambience: ["ambience-v070-stage3-wind-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 260 },
+  { id: "story-station-briefing", bgm: "music-v070-crawler-briefing", ambience: ["ambience-v070-crawler-ops-loop"], preload: [STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM], crossfadeMs: 520 },
+  { id: "story-station-gate-pre", ambience: ["ambience-v070-station-gate-loop"], preload: [STATION_AUDIO_CUE_IDS.WARNING], crossfadeMs: 280 },
+  { id: "story-station-gate-battle", bgm: "music-v070-station-gate", ambience: ["ambience-v070-station-gate-loop"], preload: STATION_PRELOAD, crossfadeMs: 360 },
+  { id: "story-station-gate-post", bgm: "music-v070-rescue", ambience: ["ambience-v070-station-gate-loop"], preload: [STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM], crossfadeMs: 260 },
+  { id: "story-station-platform-pre", bgm: "music-v070-station-platform", ambience: ["ambience-v070-station-platform-loop"], preload: [STATION_AUDIO_CUE_IDS.CART_STALL], crossfadeMs: 360 },
+  { id: "story-station-platform-battle", bgm: "music-v070-station-platform", ambience: ["ambience-v070-station-platform-loop"], preload: STATION_PRELOAD, crossfadeMs: 320 },
+  { id: "story-station-platform-post", ambience: ["ambience-v070-station-platform-loop"], preload: [STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM], crossfadeMs: 240 },
+  { id: "story-station-tunnel-pre", bgm: "music-v070-station-tunnel", ambience: ["ambience-v070-station-tunnel-loop"], preload: [STATION_AUDIO_CUE_IDS.POWER_SWITCH], crossfadeMs: 320 },
+  { id: "story-station-tunnel-battle", bgm: "music-v070-station-tunnel", ambience: ["ambience-v070-station-tunnel-loop"], preload: STATION_PRELOAD, crossfadeMs: 260 },
+  { id: "silence-station-seal", ambience: ["ambience-v070-station-seal-aftermath-loop"], preload: [STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, STATION_AUDIO_CUE_IDS.MACHINE_STOP, STATION_AUDIO_CUE_IDS.RETURN_MARKER], crossfadeMs: 140 },
+  { id: "story-station-return", bgm: "music-v070-return", ambience: ["ambience-v070-crawler-ops-loop"], preload: [STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM], crossfadeMs: 560 },
+  { id: "story-chapter-ending", bgm: "music-v070-crawler-morning", ambience: ["ambience-v070-crawler-canteen-loop"], preload: [STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM], crossfadeMs: 640 },
 ];
 
 export const PRODUCTION_AUDIO_MANIFEST = createAudioManifest({
-  version: 1,
+  version: 2,
   assets,
   pools,
   aliases: [],
@@ -255,18 +370,51 @@ export const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({
   STAGE_1: "stage1",
   STAGE_2: "stage2",
   STAGE_3: "stage3",
+  STATION_GATE: "station-gate",
+  STATION_PLATFORM: "station-platform",
+  STATION_TUNNEL: "station-tunnel",
   BOSS: "boss",
   VICTORY: "victory",
   DEFEAT: "defeat",
+  SILENCE_PROLOGUE_TITLE: "silence-prologue-title",
+  STORY_KUMAYA_DAILY: "story-kumaya-daily",
+  STORY_KUMAYA_CRISIS: "story-kumaya-crisis",
+  STORY_COLLAPSE_MONTAGE: "story-collapse-montage",
+  STORY_CRAWLER_MONTAGE: "story-crawler-montage",
+  STORY_CRAWLER_SIGNAL: "story-crawler-signal",
+  STORY_STAGE1_PRE: "story-stage1-pre",
+  STORY_STAGE1_BATTLE: "story-stage1-battle",
+  STORY_STAGE1_POST: "story-stage1-post",
+  STORY_STAGE2_PRE: "story-stage2-pre",
+  STORY_STAGE2_BATTLE: "story-stage2-battle",
+  STORY_STAGE2_POST: "story-stage2-post",
+  STORY_STAGE3_PRE: "story-stage3-pre",
+  STORY_STAGE3_BATTLE: "story-stage3-battle",
+  STORY_BOSS: "story-boss",
+  SILENCE_STAGE3_ENTRANCE: "silence-stage3-entrance",
+  SILENCE_STAGE3_FINAL: "silence-stage3-final",
+  STORY_STAGE3_POST: "story-stage3-post",
+  STORY_STATION_BRIEFING: "story-station-briefing",
+  STORY_STATION_GATE_PRE: "story-station-gate-pre",
+  STORY_STATION_GATE_BATTLE: "story-station-gate-battle",
+  STORY_STATION_GATE_POST: "story-station-gate-post",
+  STORY_STATION_PLATFORM_PRE: "story-station-platform-pre",
+  STORY_STATION_PLATFORM_BATTLE: "story-station-platform-battle",
+  STORY_STATION_PLATFORM_POST: "story-station-platform-post",
+  STORY_STATION_TUNNEL_PRE: "story-station-tunnel-pre",
+  STORY_STATION_TUNNEL_BATTLE: "story-station-tunnel-battle",
+  SILENCE_STATION_SEAL: "silence-station-seal",
+  STORY_STATION_RETURN: "story-station-return",
+  STORY_CHAPTER_ENDING: "story-chapter-ending",
 });
 
 const STAGE_SCENE_BY_ID = Object.freeze({
   [CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_1,
   [CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_2,
   [CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
-  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
-  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
-  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE]: PRODUCTION_AUDIO_SCENE_IDS.STATION_GATE,
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM]: PRODUCTION_AUDIO_SCENE_IDS.STATION_PLATFORM,
+  [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL]: PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL,
 });
 
 const UNIT_WEAPON_CUES = Object.freeze({
@@ -291,6 +439,8 @@ const UNIT_VOICE_PROFILES = Object.freeze({
   "crazy-king": "male-heavy",
   kumaverson: "male-heavy",
   babayaga: "male-light",
+  guardian: "male-heavy",
+  engineer: "male-light",
 });
 
 const newUnitContract = ({ weapon, voiceProfile, weaponEvents, voicePrefix }) => Object.freeze({
@@ -368,7 +518,8 @@ export function humanVoiceCueForUnit(kind, event) {
   const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];
   if (contractCue) return contractCue;
   const profile = ownValue(UNIT_VOICE_PROFILES, kind);
-  return profile && HUMAN_VOICE_EVENTS.includes(event) ? `human-${profile}-${event}` : null;
+  const profileEvent = event === "deploy" ? "attack" : event;
+  return profile && HUMAN_VOICE_EVENTS.includes(profileEvent) ? `human-${profile}-${profileEvent}` : null;
 }
 
 export function unitAudioCueFor(kind, group, event) {
@@ -405,12 +556,95 @@ function outcomeFrom(value) {
   return null;
 }
 
+export const STORY_AUDIO_EVENT_SCENE_IDS = Object.freeze({
+  "prologue-kumaya-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY,
+  "prologue-collapse-montage-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_COLLAPSE_MONTAGE,
+  "prologue-crawler-montage-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_MONTAGE,
+  "crawler-signal-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_SIGNAL,
+  "prologue-skip-summary-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_SIGNAL,
+  "stage-nishijin-pre-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE1_PRE,
+  "stage-nishijin-alert-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE1_BATTLE,
+  "stage-nishijin-post-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE1_POST,
+  "stage-nishijin-defeat-v070": PRODUCTION_AUDIO_SCENE_IDS.DEFEAT,
+  "stage-nishijin-retry-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE1_BATTLE,
+  "stage-nishijin-replay-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE1_BATTLE,
+  "stage-sawara-pre-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE2_PRE,
+  "stage-sawara-alert-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE2_BATTLE,
+  "stage-sawara-post-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE2_POST,
+  "stage-sawara-defeat-v070": PRODUCTION_AUDIO_SCENE_IDS.DEFEAT,
+  "stage-sawara-retry-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE2_BATTLE,
+  "stage-sawara-replay-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE2_BATTLE,
+  "stage-takuya-pre-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE3_PRE,
+  "stage-takuya-warning-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_BOSS,
+  "stage-takuya-final-v070": PRODUCTION_AUDIO_SCENE_IDS.SILENCE_STAGE3_FINAL,
+  "stage-takuya-base-remains-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE3_BATTLE,
+  "stage-takuya-post-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE3_POST,
+  "stage-takuya-defeat-v070": PRODUCTION_AUDIO_SCENE_IDS.DEFEAT,
+  "stage-takuya-defeat-after-boss-v070": PRODUCTION_AUDIO_SCENE_IDS.DEFEAT,
+  "stage-takuya-retry-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE3_BATTLE,
+  "stage-takuya-replay-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE3_BATTLE,
+  "station-briefing-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_BRIEFING,
+  "stage-station-gate-pre-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_GATE_PRE,
+  "stage-station-gate-alert-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_GATE_BATTLE,
+  "stage-station-gate-post-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_GATE_POST,
+  "stage-station-gate-defeat-v070": PRODUCTION_AUDIO_SCENE_IDS.DEFEAT,
+  "stage-station-gate-retry-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_GATE_BATTLE,
+  "stage-station-gate-replay-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_GATE_BATTLE,
+  "stage-station-platform-pre-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_PLATFORM_PRE,
+  "stage-station-platform-alert-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_PLATFORM_BATTLE,
+  "stage-station-platform-post-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_PLATFORM_POST,
+  "stage-station-platform-defeat-v070": PRODUCTION_AUDIO_SCENE_IDS.DEFEAT,
+  "stage-station-platform-retry-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_PLATFORM_BATTLE,
+  "stage-station-platform-replay-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_PLATFORM_BATTLE,
+  "stage-station-tunnel-pre-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_TUNNEL_PRE,
+  "stage-station-tunnel-power-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_TUNNEL_BATTLE,
+  "stage-station-escape-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_TUNNEL_BATTLE,
+  "stage-station-tunnel-post-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_RETURN,
+  "stage-station-tunnel-defeat-v070": PRODUCTION_AUDIO_SCENE_IDS.DEFEAT,
+  "stage-station-tunnel-retry-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_TUNNEL_BATTLE,
+  "stage-station-tunnel-replay-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_STATION_TUNNEL_BATTLE,
+  "chapter-ending-v070": PRODUCTION_AUDIO_SCENE_IDS.STORY_CHAPTER_ENDING,
+});
+
+export const STORY_AUDIO_PHASE_RULES = Object.freeze([
+  Object.freeze({ eventId: "prologue-kumaya-v070", fromLineIndex: 17, sceneId: PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_CRISIS }),
+  Object.freeze({ eventId: "prologue-collapse-montage-v070", fromLineIndex: 4, sceneId: PRODUCTION_AUDIO_SCENE_IDS.SILENCE_PROLOGUE_TITLE, holdMs: 2000 }),
+  Object.freeze({ eventId: "stage-station-escape-v070", fromLineIndex: 5, sceneId: PRODUCTION_AUDIO_SCENE_IDS.SILENCE_STATION_SEAL, holdMs: 2500 }),
+]);
+
+export const STORY_AUDIO_SCENE_RULES = Object.freeze(
+  Object.entries(STORY_AUDIO_EVENT_SCENE_IDS).map(([value, sceneId]) => Object.freeze({ match: "exact", value, sceneId })),
+);
+
+export const STORY_WARNING_EVENT_IDS = Object.freeze([
+  "stage-station-gate-alert-v070",
+  "stage-station-platform-alert-v070",
+  "stage-station-tunnel-power-v070",
+]);
+
+export function storyWarningCueForEvent(eventId) {
+  return STORY_WARNING_EVENT_IDS.includes(eventId) ? STATION_AUDIO_CUE_IDS.WARNING : null;
+}
+
+export function sceneIdForStoryEvent(eventId, lineIndex = 0) {
+  if (typeof eventId !== "string" || eventId.length === 0) return null;
+  let sceneId = ownValue(STORY_AUDIO_EVENT_SCENE_IDS, eventId);
+  if (!sceneId) return null;
+  const normalizedLineIndex = Number.isInteger(lineIndex) && lineIndex >= 0 ? lineIndex : 0;
+  for (const rule of STORY_AUDIO_PHASE_RULES) {
+    if (rule.eventId === eventId && normalizedLineIndex >= rule.fromLineIndex) sceneId = rule.sceneId;
+  }
+  return sceneId;
+}
+
 export function sceneIdForScreen(screen, stageId = null, musicState = null) {
   const outcome = outcomeFrom(musicState);
   const musicMode = typeof musicState === "string" ? musicState : musicState?.musicMode;
+  const eventId = musicState && typeof musicState === "object" ? musicState.eventId : null;
+  const storyLineIndex = musicState && typeof musicState === "object" ? musicState.storyLineIndex : 0;
   if (screen === "result") return outcome;
   if (screen === "title") return PRODUCTION_AUDIO_SCENE_IDS.TITLE;
-  if (screen === "event" || screen === "intro") return PRODUCTION_AUDIO_SCENE_IDS.INTRO;
+  if (screen === "event" || screen === "intro") return sceneIdForStoryEvent(eventId, storyLineIndex) ?? PRODUCTION_AUDIO_SCENE_IDS.INTRO;
   if (screen === "map") return PRODUCTION_AUDIO_SCENE_IDS.MAP;
   if (screen === "loadout" || screen === "formation") return PRODUCTION_AUDIO_SCENE_IDS.LOADOUT;
   if (screen === "victory" || screen === "defeat") return screen;

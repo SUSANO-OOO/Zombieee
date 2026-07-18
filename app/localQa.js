@@ -2,7 +2,7 @@ import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS, INITIAL_STAGE_ID } from "./ca
 import { COMMAND_INITIAL, COMMAND_MAX, COMMAND_REGEN } from "./gameRules.js";
 import { STORY_EVENT_IDS } from "./storyEvents.js";
 
-export const LOCAL_QA_MODES = Object.freeze(["endgame", "ai-reacquire", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
+export const LOCAL_QA_MODES = Object.freeze(["endgame", "takuya-entrance", "ai-reacquire", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
 
 export function resolveLocalQaMode(hostname, search = "") {
   if (hostname !== "localhost" && hostname !== "127.0.0.1") return null;

@@ -21,7 +21,7 @@ const STAGE_5 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM;
 const STAGE_6 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL;
 
 test("local battle QA modes remain host-gated and include lifecycle evidence", () => {
-  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "ai-reacquire", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
+  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "takuya-entrance", "ai-reacquire", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
   for (const mode of LOCAL_QA_MODES) {
     assert.equal(resolveLocalQaMode("localhost", `?qa=${mode}`), mode);
     assert.equal(resolveLocalQaMode("127.0.0.1", `?qa=${mode}`), mode);

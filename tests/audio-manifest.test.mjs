@@ -81,6 +81,28 @@ test("audio manifest indexes immutable assets, variation pools, and scenes", () 
   assert.throws(() => manifest.assets.push({}), TypeError);
 });
 
+test("audio manifest supports intentional story silence without inventing a BGM cue", () => {
+  const candidate = representativeManifest();
+  candidate.scenes.push({
+    id: "story-silence",
+    preload: [],
+    crossfadeMs: 180,
+  });
+  candidate.scenes.push({
+    id: "story-ambience-only",
+    ambience: ["ambience-1"],
+    preload: ["ui-2"],
+    crossfadeMs: 240,
+  });
+
+  const manifest = createAudioManifest(candidate);
+  assert.equal(manifest.sceneById["story-silence"].bgm, undefined);
+  assert.deepEqual(manifest.sceneById["story-silence"].ambience, []);
+  assert.deepEqual(manifest.sceneById["story-silence"].preload, []);
+  assert.equal(manifest.sceneById["story-ambience-only"].bgm, undefined);
+  assert.deepEqual(manifest.sceneById["story-ambience-only"].ambience, ["ambience-1"]);
+});
+
 test("audio manifest rejects hotlinks, broken references, category mixing, and ambiguous ids", () => {
   const candidate = representativeManifest();
   candidate.assets[0].sources[0].src = "https://example.test/title.ogg";

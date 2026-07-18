@@ -4,8 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import {
   RANDOM_BATTLE_BARK_TRIGGER_IDS,
   advanceBattleBarkRuntime,
+  clearNonScriptedBattleBarks,
   createBattleBarkRuntime,
   queueBattleBark,
+  queueScriptedBattleBarkCue,
 } from "./battleBarks.js";
 import { decideAllyIntent } from "./allyAi.js";
 import {
@@ -67,13 +69,21 @@ import {
   advanceBattleStoryFlow,
   createBattleStoryFlowState,
   getPrologueOpeningEventIds,
-  getStageEntryStoryEventId,
+  getPrologueReplayEventIds,
+  getPrologueSkipEventIds,
+  getStageEntryStoryEventIds,
   getStageNextAttemptStoryEventId,
   getStageResultStoryEventIds,
-  battleStoryBriefLabel,
-  resolveBattleStoryPresentation,
+  isPrologueOpeningEventId,
   resolveStoryEventCompletion,
 } from "./storyFlow.js";
+import {
+  STORY_BATTLE_EVENT_IDS,
+  STORY_BATTLE_TRIGGER_IDS,
+  createStoryBattleBarkState,
+  resolveStoryBattleBarkCue,
+  resolveStoryBattleBarkPresentation,
+} from "./storyBattleBarks.js";
 import { battleOutcomeFor, createBattleDefinition, objectiveForBattle, phaseBannerForBattle, phaseForBattle } from "./battleDefinitions.js";
 import {
   COMBAT_ROLE_RULES,
@@ -109,10 +119,15 @@ import {
   BATTLE_AUDIO_LOOP_CONTRACTS,
   LEGACY_SFX_CUE_MAP,
   PRODUCTION_AUDIO_MANIFEST,
+  STATION_AUDIO_CUE_IDS,
+  STORY_AUDIO_MIX,
+  TAKUYA_ENTRANCE_AUDIO,
   enemyVoiceCue,
   humanVoiceCueForUnit,
   sceneIdForScreen,
+  sceneIdForStoryEvent,
   stopBattleAudioLoops,
+  storyWarningCueForEvent,
   unitAudioCueFor,
   weaponCueForUnit,
 } from "./productionAudio.js";
@@ -259,7 +274,7 @@ type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | 
 type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater";
 type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "danger" | "boss";
-type QaMode = "endgame" | "ai-reacquire" | "roles" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
+type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
 type EventDestination = "map" | "battle" | "battle-resume" | "result";
 type PauseAction = "restart" | "loadout" | "withdraw";
@@ -694,9 +709,13 @@ type Game = {
   crawlerHitSfxCooldown: number;
   criticalAnnounced: boolean;
   takuyaEnragedAnnounced: boolean;
+  takuyaEntranceAudioRemaining: number;
   battleBarks: BattleBarkRuntime;
   barkFlags: string[];
   storyFlowState: ReturnType<typeof createBattleStoryFlowState>;
+  storyBattleBarkState: ReturnType<typeof createStoryBattleBarkState>;
+  storyBattleReadEventIds: string[];
+  storyBattleReceiptEventIds: string[];
   enemyKindsSeen: string[];
   signalIds: string[];
   bossDefeated: boolean;
@@ -727,6 +746,7 @@ type Hud = {
   combo: number;
   bossHp: number;
   bossMax: number;
+  takuyaEntranceAudioActive: boolean;
   crawlerHitFlash: number;
   threat: number;
   objective: string;
@@ -919,6 +939,7 @@ const initialGame = (
   stageId = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
   formationKinds: UnitKind[] = cards.slice(0, 7).map((card) => card.kind),
   resultId = createBattleResultId(stageId),
+  storyBattleReadEventIds: string[] = [],
 ): Game => {
   const definition = createBattleDefinition(stageId) as BattleDefinition;
   return ({
@@ -987,9 +1008,13 @@ const initialGame = (
   crawlerHitSfxCooldown: 0,
   criticalAnnounced: false,
   takuyaEnragedAnnounced: false,
+  takuyaEntranceAudioRemaining: 0,
   battleBarks: createBattleBarkRuntime(),
   barkFlags: [],
   storyFlowState: createBattleStoryFlowState(stageId),
+  storyBattleBarkState: createStoryBattleBarkState(),
+  storyBattleReadEventIds: [...storyBattleReadEventIds],
+  storyBattleReceiptEventIds: [],
   enemyKindsSeen: [],
   signalIds: [],
   bossDefeated: false,
@@ -1322,6 +1347,40 @@ function prepareEndgameQa(g: Game) {
 
 }
 
+function prepareTakuyaEntranceQa(g: Game) {
+  const bossEventIndex = g.definition.timeline.findIndex((event) => (
+    event.units.some(([kind]) => kind === "takuya")
+  ));
+  const bossEvent = g.definition.timeline[bossEventIndex];
+  if (!bossEvent || bossEventIndex < 0) return;
+
+  g.time = Math.max(PREP_SECONDS, bossEvent.at - 1.2);
+  g.phase = 3;
+  g.wave = Math.max(1, bossEvent.wave - 1);
+  g.eventIndex = bossEventIndex;
+  g.baseHp = g.baseMaxHp;
+  g.barricadeHp = BARRICADE_MAX_HP;
+  g.energy = COMMAND_MAX;
+
+  const lineup: [UnitKind, Lane, number][] = [
+    ["brawler", 0, 700],
+    ["gunner", 1, 660],
+    ["kumaverson", 2, 700],
+  ];
+  for (const [kind, lane, x] of lineup) {
+    spawnHuman(g, kind);
+    const fighter = g.fighters[g.fighters.length - 1];
+    fighter.lane = lane;
+    fighter.anchorLane = lane;
+    fighter.x = x;
+    fighter.y = laneY(lane, fighter.id);
+    fighter.cooldown = 2.2;
+    fighter.spawnGrace = 0;
+  }
+  g.banner = "QA AUDIO // TAKUYA ENTRANCE IN 1.2s";
+  g.bannerTime = 2.2;
+}
+
 function prepareAiReacquireQa(g: Game) {
   prepareEndgameQa(g);
   g.time = 168;
@@ -1430,8 +1489,174 @@ function emitBattleBarkOnce(g: Game, flag: string, trigger: string, speakerKind:
   return shown;
 }
 
+function emitStoryBattleBark(
+  g: Game,
+  eventId: string,
+  trigger: string,
+  mode: CampaignSave["settings"]["battleEventMode"],
+) {
+  const deployedKinds = [...new Set(g.fighters
+    .filter((fighter) => fighter.side === "human" && fighter.hp > 0)
+    .map((fighter) => fighter.kind))];
+  const resolved = resolveStoryBattleBarkCue({
+    state: g.storyBattleBarkState,
+    eventId,
+    trigger,
+    deployedKinds,
+  });
+  g.storyBattleBarkState = resolved.state;
+  const presentation = resolveStoryBattleBarkPresentation({
+    cue: resolved.cue,
+    eventId,
+    trigger,
+    readStoryEventIds: g.storyBattleReadEventIds,
+    mode,
+  });
+  if (presentation.kind === "brief") {
+    if (!g.storyBattleReceiptEventIds.includes(eventId)) g.storyBattleReceiptEventIds.push(eventId);
+    g.banner = `通信 // ${presentation.label}`;
+    g.bannerTime = Math.max(g.bannerTime, 1.8);
+    return true;
+  }
+  if (presentation.kind !== "full" || !resolved.cue) return false;
+  const queued = queueScriptedBattleBarkCue({ runtime: g.battleBarks, cue: resolved.cue });
+  g.battleBarks = queued.runtime as BattleBarkRuntime;
+  if (queued.queued && !g.storyBattleReceiptEventIds.includes(eventId)) {
+    g.storyBattleReceiptEventIds.push(eventId);
+  }
+  return queued.queued;
+}
+
 function livingSpeaker(g: Game, kinds: readonly UnitKind[]) {
   return kinds.find((kind) => g.fighters.some((fighter) => fighter.side === "human" && fighter.kind === kind && fighter.hp > 0)) ?? null;
+}
+
+function battleSilenceSceneId(g: Game) {
+  const scriptedFinalActive = g.battleBarks.active.some((bark) => (
+    bark.scripted === true
+    && bark.trigger === STORY_BATTLE_TRIGGER_IDS.FINAL_WEAKPOINT_EXPOSED
+  ));
+  if (scriptedFinalActive) return sceneIdForStoryEvent("stage-takuya-final-v070");
+  if (g.takuyaEntranceAudioRemaining > 0) return TAKUYA_ENTRANCE_AUDIO.silenceSceneId;
+  return null;
+}
+
+function dispatchScriptedStoryBattleBarks(
+  g: Game,
+  mode: CampaignSave["settings"]["battleEventMode"],
+  newlyTriggeredEventIds: readonly string[] = [],
+) {
+  const stageId = g.definition.stageId;
+  const activeEnemies = g.fighters.filter((fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady);
+  const boss = activeEnemies.find((fighter) => fighter.kind === "takuya");
+
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET) {
+    if (livingSpeaker(g, ["brawler"])) {
+      emitStoryBattleBark(g, "stage-nishijin-alert-v070", STORY_BATTLE_TRIGGER_IDS.DEPLOY, mode);
+    }
+    if (g.enemyKindsSeen.some((kind) => kind === "runner" || kind === "sprinter")) {
+      emitStoryBattleBark(g, "stage-nishijin-alert-v070", STORY_BATTLE_TRIGGER_IDS.FAST_ENEMY, mode);
+    }
+    if (g.barricadeBucklingAnnounced) {
+      emitStoryBattleBark(g, "stage-nishijin-alert-v070", STORY_BATTLE_TRIGGER_IDS.FRONTLINE_OPEN, mode);
+    }
+    if (activeEnemies.some((enemy) => activeEnemies.filter((candidate) => effectDistance(enemy, candidate) <= 86).length >= 3)) {
+      emitStoryBattleBark(g, "stage-nishijin-alert-v070", STORY_BATTLE_TRIGGER_IDS.GROUPED_ENEMIES, mode);
+    }
+    return;
+  }
+
+  if (stageId === CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE) {
+    if (g.time >= g.definition.prepSeconds) {
+      emitStoryBattleBark(g, "stage-sawara-alert-v070", STORY_BATTLE_TRIGGER_IDS.CONVOY_START, mode);
+    }
+    if (g.enemyKindsSeen.some((kind) => kind === "crusher" || kind === "abomination")) {
+      emitStoryBattleBark(g, "stage-sawara-alert-v070", STORY_BATTLE_TRIGGER_IDS.HEAVY_ENEMY, mode);
+    }
+    if (g.definition.defenseEndAt !== null && g.definition.defenseEndAt - g.time <= 30) {
+      emitStoryBattleBark(g, "stage-sawara-alert-v070", STORY_BATTLE_TRIGGER_IDS.DEFENSE_30_REMAINING, mode);
+    }
+    if (g.baseHp / Math.max(1, g.baseMaxHp) <= .35) {
+      emitStoryBattleBark(g, "stage-sawara-alert-v070", STORY_BATTLE_TRIGGER_IDS.CONVOY_CRITICAL, mode);
+    }
+    return;
+  }
+
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE) {
+    if (boss || g.enemySpawn.pending.some((entry) => entry.kind === "takuya")) {
+      emitStoryBattleBark(g, "stage-takuya-warning-v070", STORY_BATTLE_TRIGGER_IDS.TAKUYA_ENTRANCE, mode);
+    }
+    const nearestHumanDistance = boss
+      ? Math.min(...g.fighters
+        .filter((fighter) => fighter.side === "human" && fighter.hp > 0)
+        .map((fighter) => fighterDistance(boss, fighter)), Number.POSITIVE_INFINITY)
+      : Number.POSITIVE_INFINITY;
+    if (nearestHumanDistance <= 230) {
+      emitStoryBattleBark(g, "stage-takuya-warning-v070", STORY_BATTLE_TRIGGER_IDS.TAKUYA_APPROACH, mode);
+    }
+    if (boss && boss.hp / Math.max(1, boss.maxHp) <= .5) {
+      emitStoryBattleBark(g, "stage-takuya-warning-v070", STORY_BATTLE_TRIGGER_IDS.RIGHT_SHOULDER_EXPOSED, mode);
+    }
+    const criticalKumaverson = g.fighters.some((fighter) => (
+      fighter.side === "human"
+      && fighter.kind === "kumaverson"
+      && fighter.hp > 0
+      && fighter.hp / Math.max(1, fighter.maxHp) <= .28
+    ));
+    if (criticalKumaverson) {
+      emitStoryBattleBark(g, "stage-takuya-warning-v070", STORY_BATTLE_TRIGGER_IDS.KUMAVERSON_CRITICAL, mode);
+    }
+    if (newlyTriggeredEventIds.includes("stage-takuya-final-v070")
+      || (boss && boss.hp / Math.max(1, boss.maxHp) <= .25)) {
+      emitStoryBattleBark(g, "stage-takuya-final-v070", STORY_BATTLE_TRIGGER_IDS.FINAL_WEAKPOINT_EXPOSED, mode);
+    }
+    if (g.bossDefeated && g.barricadeHp > 0) {
+      emitStoryBattleBark(g, "stage-takuya-base-remains-v070", STORY_BATTLE_TRIGGER_IDS.BOSS_DEFEATED_BASE_REMAINS, mode);
+    }
+    return;
+  }
+
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE) {
+    if (g.enemyKindsSeen.includes("grappler")) {
+      emitStoryBattleBark(g, "stage-station-gate-alert-v070", STORY_BATTLE_TRIGGER_IDS.GRAPPLER_SEEN, mode);
+    }
+    if (g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.GRAPPLER_GRAB)) {
+      emitStoryBattleBark(g, "stage-station-gate-alert-v070", STORY_BATTLE_TRIGGER_IDS.GRAPPLER_GRAB, mode);
+    }
+    if (g.barricadeBucklingAnnounced) {
+      emitStoryBattleBark(g, "stage-station-gate-alert-v070", STORY_BATTLE_TRIGGER_IDS.CONTAINER_EXPOSED, mode);
+    }
+    return;
+  }
+
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM) {
+    if (g.enemyKindsSeen.includes("ooze")) {
+      emitStoryBattleBark(g, "stage-station-platform-alert-v070", STORY_BATTLE_TRIGGER_IDS.OOZE_SEEN, mode);
+    }
+    if (g.enemyKindsSeen.includes("sprinter")) {
+      emitStoryBattleBark(g, "stage-station-platform-alert-v070", STORY_BATTLE_TRIGGER_IDS.SPRINTER_SEEN, mode);
+    }
+    if (g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.CART_STALLED)) {
+      emitStoryBattleBark(g, "stage-station-platform-alert-v070", STORY_BATTLE_TRIGGER_IDS.CART_STALLED, mode);
+    }
+    return;
+  }
+
+  if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL) {
+    for (const trigger of [
+      STORY_BATTLE_TRIGGER_IDS.POWER_1_ACTIVATED,
+      STORY_BATTLE_TRIGGER_IDS.GATE_EATER_CHARGE,
+      STORY_BATTLE_TRIGGER_IDS.GATE_EATER_FLANK,
+      STORY_BATTLE_TRIGGER_IDS.POWER_2_ACTIVATED,
+      STORY_BATTLE_TRIGGER_IDS.RESEARCH_CONTAINER_EXPOSED,
+      STORY_BATTLE_TRIGGER_IDS.POWER_3_ACTIVATED,
+      STORY_BATTLE_TRIGGER_IDS.RETURN_WINDOW_OPEN,
+    ]) {
+      if (g.signalIds.includes(trigger)) {
+        emitStoryBattleBark(g, "stage-station-tunnel-power-v070", trigger, mode);
+      }
+    }
+  }
 }
 
 function dispatchSituationalBattleBarks(g: Game) {
@@ -1701,6 +1926,7 @@ function prepareStationQa(g: Game, state: "start" | "near-win" | "near-loss") {
 function prepareQaMode(g: Game, qaMode: QaMode | null) {
   g.qaBarks = qaMode !== null && qaMode !== "loadout";
   if (qaMode === "roles" || qaMode === "dialogue") prepareRolesQa(g);
+  else if (qaMode === "takuya-entrance") prepareTakuyaEntranceQa(g);
   else if (qaMode === "endgame") prepareEndgameQa(g);
   else if (qaMode === "ai-reacquire") prepareAiReacquireQa(g);
   else if (qaMode === "supplies") prepareSuppliesQa(g);
@@ -3046,6 +3272,8 @@ export function AshfallGame() {
   const [selectedAction, setSelectedAction] = useState<SelectedAction>(null);
   const [screen, setScreen] = useState<CampaignScreen>("title");
   const [eventId, setEventId] = useState<string | null>(null);
+  const [storyAudioPosition, setStoryAudioPosition] = useState<{ eventId: string | null; lineIndex: number }>({ eventId: null, lineIndex: 0 });
+  const [forceStoryReplay, setForceStoryReplay] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState(INITIAL_STAGE_ID);
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
   const [saveHydrated, setSaveHydrated] = useState(false);
@@ -3067,10 +3295,20 @@ export function AshfallGame() {
     missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
     barricadeHp: BARRICADE_MAX_HP, barricadeMaxHp: BARRICADE_MAX_HP, barricadeVulnerable: true, barricadeHitFlash: 0,
     deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0,
+    takuyaEntranceAudioActive: false,
     crawlerHitFlash: 0, threat: 0,
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), battleBarks: [],
   });
   const [end, setEnd] = useState<BattleResult | null>(null);
+
+  const handleStoryAudioPositionChange = useCallback((nextEventId: string, lineIndex: number) => {
+    const nextLineIndex = Number.isFinite(lineIndex) ? Math.max(0, Math.trunc(lineIndex)) : 0;
+    setStoryAudioPosition((current) => (
+      current.eventId === nextEventId && current.lineIndex === nextLineIndex
+        ? current
+        : { eventId: nextEventId, lineIndex: nextLineIndex }
+    ));
+  }, []);
 
   const enqueueCampaignStorageMutation = useCallback(<T,>(mutation: () => Promise<T>) => {
     const queued = persistenceQueueRef.current.then(mutation);
@@ -3337,6 +3575,13 @@ export function AshfallGame() {
         if (!await mixer.unlock()) return null;
         return mixer.setScene(sceneId);
       },
+      suspend: async () => {
+        if (!mixer.context || mixer.context.state === "closed") return false;
+        await mixer.context.suspend();
+        return mixer.context.state === "suspended";
+      },
+      recover: () => mixer.recoverAudio({ reason: "local-qa" }),
+      hasInstance: (instanceKey: string) => mixer.hasInstance(instanceKey),
       stopScene: (fadeMs = 0) => mixer.stopScene({ fadeMs }),
       stopAll: (fadeMs = 0) => mixer.stopAll({ fadeMs }),
     };
@@ -3356,6 +3601,9 @@ export function AshfallGame() {
         root.dataset.audioUnlocked = String(diagnostics.unlocked);
         root.dataset.audioContextState = diagnostics.contextState ?? "none";
         root.dataset.audioActiveVoices = String(diagnostics.activeVoices);
+        root.dataset.audioActiveLoopVoices = String(diagnostics.activeLoopVoices);
+        root.dataset.audioActiveSceneVoices = String(diagnostics.activeSceneVoices);
+        root.dataset.audioDuplicateLoopInstances = String(diagnostics.duplicateLoopInstanceKeys.length);
         root.dataset.audioWarnings = String(diagnostics.warningTotal);
         root.dataset.audioCacheReady = String(diagnostics.cache.ready);
         root.dataset.audioCacheFailed = String(diagnostics.cache.failed);
@@ -3473,6 +3721,9 @@ export function AshfallGame() {
         delete document.documentElement.dataset.audioUnlocked;
         delete document.documentElement.dataset.audioContextState;
         delete document.documentElement.dataset.audioActiveVoices;
+        delete document.documentElement.dataset.audioActiveLoopVoices;
+        delete document.documentElement.dataset.audioActiveSceneVoices;
+        delete document.documentElement.dataset.audioDuplicateLoopInstances;
         delete document.documentElement.dataset.audioWarnings;
         delete document.documentElement.dataset.audioCacheReady;
         delete document.documentElement.dataset.audioCacheFailed;
@@ -3502,14 +3753,28 @@ export function AshfallGame() {
           paused: g.paused,
           over: g.over,
           won: g.won,
+          bossDefeated: g.bossDefeated,
+          bossDefeatPending: g.bossDefeatPending,
           baseHp: g.baseHp,
           baseMaxHp: g.baseMaxHp,
+          barricadeHp: g.barricadeHp,
+          barricadeMaxHp: g.barricadeMaxHp,
           wave: g.wave,
           eventIndex: g.eventIndex,
           pendingSpawnCount: g.enemySpawn.pending.length,
+          takuyaEntranceAudioRemaining: g.takuyaEntranceAudioRemaining,
           energy: g.energy,
           scrap: g.scrap,
           supportGauge: g.supportGauge,
+          storyBattleReadEventIds: [...g.storyBattleReadEventIds],
+          storyBattleReceiptEventIds: [...g.storyBattleReceiptEventIds],
+          storyBattleEvaluatedCueKeys: [...g.storyBattleBarkState.evaluatedCueKeys],
+          battleBarks: {
+            clock: g.battleBarks.clock,
+            active: g.battleBarks.active.map((bark) => ({ ...bark })),
+            pendingScripted: g.battleBarks.pendingScripted.map((bark) => ({ ...bark })),
+            scriptedCueIds: [...g.battleBarks.scriptedCueIds],
+          },
           roleMetrics: { ...g.roleMetrics },
           stationMetrics: { ...g.stationMetrics },
           stageMission: { ...g.stageMission },
@@ -3943,7 +4208,12 @@ export function AshfallGame() {
     desiredMusicModeRef.current = mode;
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return;
-    const sceneId = sceneIdForScreen("battle", gameRef.current.definition.stageId, { musicMode: mode });
+    const g = gameRef.current;
+    // React owns the two authored silence scenes. The simulation still tracks
+    // the eventual boss/danger mode, but must not overwrite either silence
+    // while its entrance timer or fixed final lines remain active.
+    if (battleSilenceSceneId(g)) return;
+    const sceneId = sceneIdForScreen("battle", g.definition.stageId, { musicMode: mode });
     if (desiredProductionSceneRef.current === sceneId) return;
     desiredProductionSceneRef.current = sceneId;
     if (sceneId && productionMixer.getSettings().bgmEnabled) {
@@ -4042,7 +4312,9 @@ export function AshfallGame() {
   const startMusic = useCallback(() => {
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return;
-    const sceneId = sceneIdForScreen("battle", gameRef.current.definition.stageId, { musicMode: desiredMusicModeRef.current });
+    const g = gameRef.current;
+    const sceneId = battleSilenceSceneId(g)
+      ?? sceneIdForScreen("battle", g.definition.stageId, { musicMode: desiredMusicModeRef.current });
     desiredProductionSceneRef.current = sceneId;
     productionMixer.setSettings({ bgmEnabled: true });
     if (!sceneId) return;
@@ -4095,6 +4367,12 @@ export function AshfallGame() {
     if (audio && audio.state !== "closed") void audio.close();
   }, [stopJingle, stopMusic, stopSfx]);
 
+  const storyFinalCutAudioActive = screen === "battle" && hud.battleBarks.some((bark) => (
+    bark.scripted === true
+    && bark.trigger === STORY_BATTLE_TRIGGER_IDS.FINAL_WEAKPOINT_EXPOSED
+  ));
+  const takuyaEntranceAudioActive = screen === "battle" && hud.takuyaEntranceAudioActive;
+
   useEffect(() => {
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return;
@@ -4107,19 +4385,27 @@ export function AshfallGame() {
       masterVolume: .9,
     });
     productionMixer.setDialogueDucking(screen === "event" || (screen === "battle" && hud.battleBarks.length > 0), {
-      level: screen === "event" ? .42 : .58,
-      fadeMs: 120,
+      level: STORY_AUDIO_MIX.dialogueBgmDuckLevel,
+      ambienceLevel: STORY_AUDIO_MIX.importantAmbienceDuckLevel,
+      fadeMs: STORY_AUDIO_MIX.dialogueReleaseMs,
     });
     const outcome = campaignResult?.won ?? end?.won;
+    const storyLineIndex = storyAudioPosition.eventId === eventId ? storyAudioPosition.lineIndex : 0;
     const musicState = screen === "battle"
-      ? (typeof outcome === "boolean" ? { won: outcome, musicMode: desiredMusicModeRef.current } : { musicMode: desiredMusicModeRef.current })
-      : (typeof outcome === "boolean" ? { won: outcome } : null);
-    const sceneId = sceneIdForScreen(screen, selectedStageId, musicState);
+      ? (typeof outcome === "boolean"
+        ? { won: outcome, musicMode: desiredMusicModeRef.current, eventId, storyLineIndex }
+        : { musicMode: desiredMusicModeRef.current, eventId, storyLineIndex })
+      : (typeof outcome === "boolean" ? { won: outcome, eventId, storyLineIndex } : { eventId, storyLineIndex });
+    const sceneId = storyFinalCutAudioActive
+      ? sceneIdForStoryEvent("stage-takuya-final-v070")
+      : takuyaEntranceAudioActive
+        ? TAKUYA_ENTRANCE_AUDIO.silenceSceneId
+        : sceneIdForScreen(screen, selectedStageId, musicState);
     desiredProductionSceneRef.current = sceneId;
     if (document.documentElement.dataset.audioMixer === "production") {
       document.documentElement.dataset.audioScene = sceneId ?? "none";
     }
-    if (bgmMuted || !sceneId || (screen === "battle" && paused)) {
+    if (!sceneId || (screen === "battle" && paused)) {
       void productionMixer.stopScene({ fadeMs: 180 });
       stopSynthMusic();
       setMusicActive(false);
@@ -4127,9 +4413,9 @@ export function AshfallGame() {
     }
     void productionMixer.setScene(sceneId).then((state) => {
       if (desiredProductionSceneRef.current !== sceneId) return;
-      setMusicActive(Boolean(state?.bgmAssetId));
+      setMusicActive(Boolean(state?.bgmAssetId) && !bgmMuted);
     }).catch(() => setMusicActive(false));
-  }, [bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, hud.battleBarks.length, paused, screen, selectedStageId, sfxMuted, stopSynthMusic]);
+  }, [bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, selectedStageId, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, storyFinalCutAudioActive, takuyaEntranceAudioActive]);
 
   useEffect(() => {
     const active = screen === "battle" && hud.battleBarks.length > 0;
@@ -4378,6 +4664,7 @@ export function AshfallGame() {
     desiredProductionSceneRef.current = null;
     eventQueueRef.current = [];
     eventCompletionLockRef.current = false;
+    setForceStoryReplay(false);
     gameRef.current.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
     const mixer = productionMixerRef.current;
     if (mixer) void mixer.stopAll({ fadeMs: 80 });
@@ -4386,16 +4673,22 @@ export function AshfallGame() {
     stopSfx();
   }, [chooseAction, stopJingle, stopMusic, stopSfx]);
 
-  const openEvents = useCallback((nextEventIds: readonly string[], destination: EventDestination) => {
+  const openEvents = useCallback((
+    nextEventIds: readonly string[],
+    destination: EventDestination,
+    { forceReplay = false }: { forceReplay?: boolean } = {},
+  ) => {
     const queue = [...new Set(nextEventIds.filter(Boolean))];
     if (queue.length === 0) return false;
     eventCompletionLockRef.current = false;
+    setForceStoryReplay(forceReplay);
     eventDestinationRef.current = destination;
     eventQueueRef.current = queue.slice(1);
     if (destination === "battle-resume") {
       const g = gameRef.current;
       g.paused = true;
-      g.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
+      g.battleBarks = clearNonScriptedBattleBarks(g.battleBarks) as BattleBarkRuntime;
+      setHud((current) => ({ ...current, battleBarks: [] }));
       setPaused(true);
       chooseAction(null);
       stopMusic(); stopJingle(); stopSfx();
@@ -4429,6 +4722,7 @@ export function AshfallGame() {
       battleStageId,
       permittedFormation.length > 0 ? permittedFormation : fallbackFormation,
       sessionOverride?.resultId ?? createBattleResultId(battleStageId),
+      campaignSave.readStoryEventIds,
     );
     fresh.running = true;
     prepareQaMode(fresh, qaMode);
@@ -4456,6 +4750,7 @@ export function AshfallGame() {
       deployQueue: fresh.deployQueue.length, airstrikePhase: fresh.airstrike.phase,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
       bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
+      takuyaEntranceAudioActive: false,
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
       deployCooldowns: { ...fresh.deployCooldowns }, battleBarks: [...fresh.battleBarks.active] });
     disposeBattleRuntime(); if (!bgmMuted) startMusic();
@@ -4500,6 +4795,7 @@ export function AshfallGame() {
       return;
     }
     setEventId(null);
+    setForceStoryReplay(false);
     if (completion.destination === "battle") startGame();
     else if (completion.destination === "battle-resume") {
       const g = gameRef.current;
@@ -4511,6 +4807,24 @@ export function AshfallGame() {
     } else if (completion.destination === "result") setScreen("result");
     else returnToMap();
   }, [bgmMuted, eventId, resumeBattleAudioLoops, returnToMap, startGame, startMusic]);
+
+  const handleEventSkip = useCallback(() => {
+    if (eventId && isPrologueOpeningEventId(eventId)) {
+      setCampaignSave((current) => getPrologueOpeningEventIds().reduce(
+        (next, openingEventId) => markStoryEventRead(next, openingEventId) as CampaignSave,
+        current,
+      ));
+      eventQueueRef.current = [];
+      eventCompletionLockRef.current = false;
+      eventDestinationRef.current = "map";
+      setForceStoryReplay(false);
+      const [summaryEventId] = getPrologueSkipEventIds();
+      setEventId(summaryEventId ?? null);
+      if (!summaryEventId) setScreen("map");
+      return;
+    }
+    handleEventComplete();
+  }, [eventId, handleEventComplete]);
 
   const selectStage = useCallback((stageId: string) => {
     if (!qaMode && !qaScenario && !isStageUnlocked(campaignSave, stageId)) return;
@@ -4557,16 +4871,19 @@ export function AshfallGame() {
     setCampaignSave((current) => markCampaignStarted(current) as CampaignSave);
     openEvents(getPrologueOpeningEventIds(), "map");
   }, [campaignSave.campaignStarted, campaignSave.lastSelectedStageId, openEvents]);
+  const replayPrologue = useCallback(() => {
+    openEvents(getPrologueReplayEventIds(), "map", { forceReplay: true });
+  }, [openEvents]);
   const openLoadout = useCallback(() => setScreen("loadout"), []);
   const requestBattle = useCallback(() => {
-    const nextEventId = getStageEntryStoryEventId({
+    const nextEventIds = getStageEntryStoryEventIds({
       stageId: selectedStageId,
       completedStageIds: campaignSave.completedStageIds,
       readStoryEventIds: campaignSave.readStoryEventIds,
     });
-    if (nextEventId) openEvent(nextEventId, "battle");
+    if (nextEventIds.length > 0) openEvents(nextEventIds, "battle");
     else startGame();
-  }, [campaignSave.completedStageIds, campaignSave.readStoryEventIds, openEvent, selectedStageId, startGame]);
+  }, [campaignSave.completedStageIds, campaignSave.readStoryEventIds, openEvents, selectedStageId, startGame]);
   const retryBattle = useCallback(() => {
     const nextEventId = getStageNextAttemptStoryEventId({
       stageId: selectedStageId,
@@ -5063,14 +5380,28 @@ export function AshfallGame() {
     g.paused = transition.paused; setPaused(g.paused);
     setPauseConfirm(null);
     if (g.paused) {
-      g.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
+      g.battleBarks = clearNonScriptedBattleBarks(g.battleBarks) as BattleBarkRuntime;
       setHud((current) => ({ ...current, battleBarks: [] }));
       stopMusic(); stopJingle(); stopSfx();
     } else {
+      if (g.takuyaEntranceAudioRemaining > 0) {
+        g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
+        playProductionCue(TAKUYA_ENTRANCE_AUDIO.cueId, W / 2, {
+          priority: 104,
+          cooldownMs: 0,
+          volume: .92,
+          maxInstances: 1,
+        });
+      }
+      setHud((current) => ({
+        ...current,
+        battleBarks: [...g.battleBarks.active],
+        takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
+      }));
       if (!bgmMuted) startMusic();
       resumeBattleAudioLoops(g);
     }
-  }, [bgmMuted, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
+  }, [bgmMuted, playProductionCue, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
 
   const requestPauseAction = useCallback((action: PauseAction) => {
     if (!gameRef.current.running || gameRef.current.over) return;
@@ -5255,6 +5586,10 @@ export function AshfallGame() {
         bossMaxHp: g.bossDefeatPending ? enemyStats("takuya", g.wave).hp : boss?.maxHp ?? 0,
         bossDefeated: g.bossDefeatPending ? false : g.bossDefeated,
         enemyBaseDestroyed: g.barricadeHp <= 0,
+        powerActivated: g.stageMission.powerActivated ?? 0,
+        gateEaterContained: g.stageMission.gateEaterContained === true,
+        sealed: g.stageMission.sealed === true,
+        missionCompleted: g.stageMission.completed === true,
       },
     });
     g.storyFlowState = step.state;
@@ -5262,21 +5597,34 @@ export function AshfallGame() {
       g.bossDefeatPending = false;
       g.bossDefeated = true;
     }
-    const presentation = resolveBattleStoryPresentation({
-      eventIds: step.eventIds,
-      readStoryEventIds: campaignSave.readStoryEventIds,
-      mode: campaignSave.settings.battleEventMode,
-    });
-    if (presentation.briefEventIds.length > 0) {
-      setCampaignSave((current) => presentation.briefEventIds.reduce(
-        (next, briefEventId) => markStoryEventRead(next, briefEventId) as CampaignSave,
+    const priorReceiptCount = g.storyBattleReceiptEventIds.length;
+    dispatchScriptedStoryBattleBarks(
+      g,
+      campaignSave.settings.battleEventMode,
+      step.eventIds,
+    );
+    const newReceiptIds = g.storyBattleReceiptEventIds.slice(priorReceiptCount);
+    if (newReceiptIds.length > 0) {
+      setCampaignSave((current) => newReceiptIds.reduce(
+        (next, receiptEventId) => markStoryEventRead(next, receiptEventId) as CampaignSave,
         current,
       ));
-      g.banner = `通信 // ${battleStoryBriefLabel(presentation.briefEventIds.at(-1) ?? "")}`;
-      g.bannerTime = Math.max(g.bannerTime, 1.8);
     }
-    return presentation.fullEventIds.length > 0 && openEvents(presentation.fullEventIds, "battle-resume");
-  }, [campaignSave.readStoryEventIds, campaignSave.settings.battleEventMode, openEvents]);
+    const warningCue = step.eventIds
+      .map((storyEventId) => storyWarningCueForEvent(storyEventId))
+      .find(Boolean);
+    if (warningCue) playProductionCue(warningCue, W / 2, {
+      priority: 98,
+      cooldownMs: 600,
+      volume: .9,
+      maxInstances: 1,
+    });
+    // Canonical in-battle lines are dispatched through the non-blocking bark
+    // runtime at their individual combat transitions. Only true dialogue
+    // events (currently the completed Stage 6 escape) may open StoryScreen.
+    const blockingEventIds = step.eventIds.filter((storyEventId) => !STORY_BATTLE_EVENT_IDS.includes(storyEventId));
+    return blockingEventIds.length > 0 && openEvents(blockingEventIds, "battle-resume");
+  }, [campaignSave.settings.battleEventMode, openEvents, playProductionCue]);
 
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
@@ -5379,19 +5727,32 @@ export function AshfallGame() {
           }) as StageMissionRuntime;
           if (nextMission.transitions.length > beforeTransitions) {
             const transition = nextMission.transitions.at(-1) ?? "";
+            if (transition && !g.signalIds.includes(transition)) g.signalIds.push(transition);
+            if (transition === "escort-contaminated"
+              && !g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.CART_STALLED)) {
+              g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.CART_STALLED);
+            }
             if (transition.startsWith("power-")) {
               g.stationMetrics.powerActivations += 1;
               g.banner = `電源 ${nextMission.powerActivated ?? 0}/3 起動`;
               g.bannerTime = 1.4;
+              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, W * .68, { priority: 84, maxInstances: 2 });
+            } else if (transition === "escort-contaminated") {
+              playProductionCue(STATION_AUDIO_CUE_IDS.CART_STALL, Number(spatial.cartX ?? W / 2), { priority: 82, maxInstances: 1 });
             } else if (transition === "escort-complete") {
               g.stationMetrics.escortCompletions += 1;
+              playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, Number(spatial.cartX ?? W / 2), { priority: 72, maxInstances: 1 });
             } else if (transition === "return-window-open") {
               g.banner = "退路 45秒 // 全員戻れ";
               g.bannerTime = 2;
+              playProductionCue(STATION_AUDIO_CUE_IDS.RETURN_MARKER, W * .72, { priority: 80, maxInstances: 1 });
             } else if (transition === "return-complete") {
               g.stationMetrics.sealCompletions += 1;
               g.banner = "全員帰還 // 封鎖扉閉鎖";
               g.bannerTime = 2;
+              const sealDoorX = Number(g.definition.missionConfig.sealDoorX ?? W * .9);
+              playProductionCue(STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, sealDoorX, { priority: 98, maxInstances: 1 });
+              playProductionCue(STATION_AUDIO_CUE_IDS.MACHINE_STOP, sealDoorX, { priority: 90, maxInstances: 1 });
             }
           }
           g.stageMission = nextMission;
@@ -5406,6 +5767,7 @@ export function AshfallGame() {
         g.crawlerHitFlash = Math.max(0, g.crawlerHitFlash - dt);
         g.barricadeHitFlash = Math.max(0, g.barricadeHitFlash - dt);
         g.crawlerHitSfxCooldown = Math.max(0, g.crawlerHitSfxCooldown - dt);
+        g.takuyaEntranceAudioRemaining = Math.max(0, g.takuyaEntranceAudioRemaining - dt);
         g.comboTime = Math.max(0, g.comboTime - dt);
         if (g.comboTime <= 0) g.combo = 0;
         for (const card of cards) g.deployCooldowns[card.kind] = Math.max(0, g.deployCooldowns[card.kind] - dt);
@@ -5424,9 +5786,9 @@ export function AshfallGame() {
                 maxInstances: 1,
                 fallbackCue: kind === "brute" ? "deploy-heavy" : "deploy-light",
               });
-              const dedicatedDeployVoice = unitAudioCueFor(kind, "voice", "deploy");
-              if (dedicatedDeployVoice) {
-                playProductionCue(dedicatedDeployVoice, MUSTER_X, {
+              const deployVoice = unitAudioCueFor(kind, "voice", "deploy") || humanVoiceCueForUnit(kind, "deploy");
+              if (deployVoice) {
+                playProductionCue(deployVoice, MUSTER_X, {
                   priority: 72,
                   cooldownMs: 400,
                   volume: kind === "crazy-king" || kind === "kumaverson" ? .94 : .8,
@@ -5475,11 +5837,21 @@ export function AshfallGame() {
           }));
           if (mission.units.length) {
             const includesTakuya = mission.units.some(([kind]) => kind === "takuya");
-            playCue(includesTakuya ? "boss-warning" : "wave-contact");
             if (includesTakuya) {
+              g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
+              setHud((current) => ({ ...current, takuyaEntranceAudioActive: true }));
+              playProductionCue(TAKUYA_ENTRANCE_AUDIO.cueId, W / 2, {
+                priority: 104,
+                cooldownMs: 0,
+                volume: .92,
+                maxInstances: 1,
+              });
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
               emitBattleBark(g, "takuya-entrance", "ranger", "takuya-entrance");
-            } else emitBattleBark(g, "wave-contact", "guide", `wave-${mission.wave}`);
+            } else {
+              playCue("wave-contact");
+              emitBattleBark(g, "wave-contact", "guide", `wave-${mission.wave}`);
+            }
           }
         }
 
@@ -5774,6 +6146,9 @@ export function AshfallGame() {
               f.stationAbility = bind.runtime as StationAbilityRuntime;
               if (bind.bound && victim) {
                 g.stationMetrics.karamiteBinds += 1;
+                if (!g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.GRAPPLER_GRAB)) {
+                  g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.GRAPPLER_GRAB);
+                }
                 addDamageText(g, { x: victim.x, y: victim.y - 64, value: "拘束", life: .9, color: "#d98f6f" });
               } else {
                 f.abilityCooldown = Math.max(f.abilityCooldown, 2);
@@ -5908,7 +6283,15 @@ export function AshfallGame() {
               f.lane = charge.boss.lane as Lane;
               f.anchorLane = f.lane;
               f.y = activeLaneCenters[f.lane];
-              if (charge.chargeStarted) g.stationMetrics.gateEaterCharges += 1;
+              if (charge.chargeStarted) {
+                g.stationMetrics.gateEaterCharges += 1;
+                if (!g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_CHARGE)) {
+                  g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_CHARGE);
+                }
+              }
+              if (charge.flankOpened && !g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_FLANK)) {
+                g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_FLANK);
+              }
               if (charge.chargeEnded) {
                 for (const victim of g.fighters) {
                   if (victim.side !== "human" || victim.hp <= 0 || fighterDistance(victim, f) > 92) continue;
@@ -6351,6 +6734,9 @@ export function AshfallGame() {
                 g.researchContainer = containment.researchContainer as ResearchContainerRuntime;
                 appliedAttack = { targetDamage: Math.max(0, hpBeforeStrike - target.hp) };
                 if (!containerWasExposed && g.researchContainer.exposed) {
+                  if (!g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.RESEARCH_CONTAINER_EXPOSED)) {
+                    g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.RESEARCH_CONTAINER_EXPOSED);
+                  }
                   g.banner = "研究容器露出 // 改札喰いと共に押し込め";
                   g.bannerTime = 2;
                 }
@@ -6985,8 +7371,10 @@ export function AshfallGame() {
           deployQueue: g.deployQueue.length,
           airstrikePhase: g.airstrike.phase, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
           combo: g.combo, bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
+          takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
-          objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns }, battleBarks: [...g.battleBarks.active],
+          objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns },
+          battleBarks: g.paused ? [] : [...g.battleBarks.active],
         });
       }
       frame = requestAnimationFrame(loop);
@@ -7034,13 +7422,13 @@ export function AshfallGame() {
           aria-live="polite"
         >
           <b><span className="audio-unlock-long">{audioUnlockLabel}</span><span className="audio-unlock-short">{audioUnlockShortLabel}</span></b>
-          <small>{audioUnlockUi === "success" ? "確認音を再生しました（聞こえない場合は端末・タブのミュートを確認）" : audioUnlockUi === "failed" ? "音源または再生処理を確認して、タップで再試行" : "タップしてBGM・効果音・ボイスを開始"}</small>
+          <small>{audioUnlockUi === "success" ? "確認音を再生しました（聞こえない場合は端末・タブのミュートを確認）" : audioUnlockUi === "failed" ? "音源または再生処理を確認して、タップで再試行" : "タップしてBGM・環境音・効果音・戦闘ボイスを開始"}</small>
         </button>}
         {screen === "battle" && <>
-        {hud.battleBarks.length > 0 && <div className="battle-barks" aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
+        {hud.battleBarks.length > 0 && <div className="battle-barks" aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
 
         <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>先行版 0.6.0</em></small></div></div>
+          <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>Version 0.7.0</em></small></div></div>
           <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
@@ -7143,6 +7531,7 @@ export function AshfallGame() {
           savePersistence={savePersistence}
           readStoryEventIds={campaignSave.readStoryEventIds}
           autoSkipReadStory={campaignSave.autoSkipReadStory}
+          forceStoryReplay={forceStoryReplay}
           onBegin={beginCampaign}
           onRestartCampaign={restartCampaign}
           onExportSave={exportCampaignSave}
@@ -7151,7 +7540,10 @@ export function AshfallGame() {
           onUseRecoveryCandidate={useRecoveryCandidate}
           onResetCorruptSave={resetCorruptCampaignSave}
           onEventComplete={handleEventComplete}
+          onEventSkip={handleEventSkip}
+          onStoryAudioPositionChange={handleStoryAudioPositionChange}
           onSetAutoSkipReadStory={setAutoSkipReadStory}
+          onReplayPrologue={replayPrologue}
           onSelectStage={selectStage}
           onOpenLoadout={openLoadout}
           onReturnToMap={returnToMap}
