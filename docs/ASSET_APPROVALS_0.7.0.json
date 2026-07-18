@@ -181,6 +181,46 @@
       "identityLock": null,
       "finalPath": null,
       "commit": null
+    },
+    {
+      "assetId": "V070-CHAR-NAO-BASE",
+      "revision": "r1",
+      "status": "approved",
+      "type": "character_identity_base",
+      "subject": "ナオ",
+      "use": "ポートレート、会話立ち絵、表情差分、戦闘スプライトのidentity master",
+      "approvalPreviewPath": "outputs/p6-approvals/V070-CHAR-NAO-BASE-r1.png",
+      "plannedPath": "public/art/v070/characters/reference/nao-base-r1.png",
+      "sourceApprovedAssetId": null,
+      "styleReferencePaths": [],
+      "designIntent": "夜間動物病院の看護助手だった移動救護者として、美しい成人女性の存在感、駆け寄る機動性、斜めに横切る大型救急バッグ、短いカービンを一つの救護シルエットへまとめる。",
+      "smartphoneRecognition": "銅色を帯びた長い編み込みポニーテール、青緑と珊瑚色の救護服、身体を斜めに横切る珊瑚色ストラップ、大型救急バッグ、短銃身カービン。",
+      "previewSha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d",
+      "approvalUrl": "https://github.com/SUSANO-OOO/Zombieee/pull/38#issuecomment-5010950904",
+      "approvalResponse": "承認",
+      "approvedBy": "producer",
+      "reviewedAt": "2026-07-18",
+      "rejectionReason": null,
+      "approvedAt": "2026-07-18",
+      "identityLock": {
+        "faceAndAge": "美しい32歳の日本人女性。細い卵型の輪郭、すっきりした顎、琥珀色を帯びた切れ長の瞳、整った眉と鼻、珊瑚色の唇、落ち着きと親しみを感じる小さな微笑。",
+        "hair": "赤銅色の光を帯びた濃い茶髪。頭頂近くでラフにまとめ、太く長い編み込みを画面左へ垂らす。頬を縁取る長い後れ毛。",
+        "body": "長い脚、豊かな胸部、細い腰と丸みのある腰骨を持つ、健康的で均整の取れた成人女性の体型。",
+        "clothing": "珊瑚色の裏地と立ち襟を持つ青緑のショートジャケット、白系のリブ編みハイネック、黒いカーゴパンツ、珊瑚色のベルト、黒い編上げワークブーツ。",
+        "palette": [
+          "petrol teal",
+          "coral orange",
+          "warm ivory",
+          "charcoal black",
+          "copper brown"
+        ],
+        "weapons": "小型光学照準器と短い弾倉を備えた黒い短銃身カービン。身体の画面右側へ下向きに携行。",
+        "equipment": "珊瑚色の太い斜めストラップで吊った大型の青緑色救急バッグ。開口部に包帯、ガーゼ、剪刀、筒状の救護用品を露出。バッグに肉球形の金属チャーム。腰に複数の小物ポーチと白い固定帯。",
+        "posture": "画面右脚を前へ出した歩行中の立位。画面左手で大型救急バッグを支え、反対の手を腰元に構える、救護へ向かう余裕と機動性のある姿勢。",
+        "silhouette": "画面左へ伸びる長い太編み、左側の大型救急バッグ、胸元を斜めに横切る珊瑚色ストラップ、右側の短銃身カービン、交差する長い脚で構成された明確な左右非対称シルエット。"
+      },
+      "finalPath": "public/art/v070/characters/reference/nao-base-r1.png",
+      "commit": null
     }
   ]
 }
