@@ -326,17 +326,17 @@ export const ENEMY_GATE_SPAWN = Object.freeze({
 });
 
 function enemySpawnClass(kind) {
-  if (kind === "takuya") return "boss";
-  if (kind === "crusher" || kind === "abomination") return "heavy";
+  if (kind === "takuya" || kind === "gate-eater") return "boss";
+  if (kind === "crusher" || kind === "abomination" || kind === "grappler") return "heavy";
   return "normal";
 }
 
 export function enemySpawnInterval({ kind, lane = 1, order = 0 }) {
-  const base = kind === "takuya" ? .92
+  const base = kind === "takuya" || kind === "gate-eater" ? .92
     : kind === "abomination" ? .78
       : kind === "crusher" ? .64
-        : kind === "spitter" || kind === "shade" ? .5
-          : kind === "runner" ? .34
+          : kind === "spitter" || kind === "shade" || kind === "ooze" ? .5
+          : kind === "runner" || kind === "sprinter" ? .34
             : .42;
   return Number((base + ((lane * 2 + order) % 3) * .035).toFixed(3));
 }
@@ -345,11 +345,11 @@ export function enemyGateSpawnPosition({ kind, lane, order = 0, wave = 1 }) {
   const slot = (wave * 2 + order * 3 + lane) % ENEMY_GATE_SPAWN.interiorX.length;
   const spawnClass = enemySpawnClass(kind);
   const clearance = spawnClass === "boss" ? 49 : spawnClass === "heavy" ? 43 : 31;
-  const entrySpeed = kind === "takuya" ? 29
+  const entrySpeed = kind === "takuya" || kind === "gate-eater" ? 29
     : kind === "abomination" ? 32
       : kind === "crusher" ? 36
-        : kind === "spitter" || kind === "shade" ? 46
-          : kind === "runner" ? 62
+        : kind === "spitter" || kind === "shade" || kind === "ooze" ? 46
+          : kind === "runner" || kind === "sprinter" ? 62
             : 52;
   return Object.freeze({
     x: ENEMY_GATE_SPAWN.interiorX[slot],
@@ -409,13 +409,13 @@ export function canDeploy({ running, paused, over, command, cost, cooldown }) {
 }
 
 export function supportGaugeReward(kind) {
-  return ({ walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20, takuya: 25, turned: 7 })[kind] ?? 4;
+  return ({ walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20, takuya: 25, turned: 7, grappler: 13, ooze: 11, sprinter: 8, "gate-eater": 30 })[kind] ?? 4;
 }
 
 export const rageReward = supportGaugeReward;
 
 export function scrapReward(kind) {
-  return ({ walker: 6, runner: 7, spitter: 10, crusher: 18, shade: 24, abomination: 40, takuya: 80, turned: 9 })[kind] ?? 6;
+  return ({ walker: 6, runner: 7, spitter: 10, crusher: 18, shade: 24, abomination: 40, takuya: 80, turned: 9, grappler: 18, ooze: 15, sprinter: 11, "gate-eater": 96 })[kind] ?? 6;
 }
 
 export function capRenderArray(items, kindOrLimit) {
@@ -958,7 +958,7 @@ export function resolveCrawlerBarrage({ runtime, fighters = [] }) {
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
     if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.combatReady === false || !CRAWLER_BARRAGE_DEF.lanes.includes(fighter.lane)) return fighter;
-    const boss = fighter.kind === "takuya" || fighter.boss === true;
+    const boss = fighter.kind === "takuya" || fighter.kind === "gate-eater" || fighter.boss === true;
     const damage = Math.round(CRAWLER_BARRAGE_DEF.damage * (boss ? CRAWLER_BARRAGE_DEF.bossDamageMultiplier : 1));
     hits.push({ id: fighter.id, lane: fighter.lane, damage, boss });
     return { ...fighter, hp: Math.max(0, fighter.hp - damage) };
@@ -1128,6 +1128,10 @@ export const BABAYAGA_PRIORITY_TARGET_KINDS = Object.freeze([
   "crusher",
   "abomination",
   "takuya",
+  "grappler",
+  "ooze",
+  "gate-eater",
+  // Souki stays Scout-favored so the fast-intercept role remains distinct.
 ]);
 
 export function isBabayagaPriorityTarget(targetKind) {
@@ -1135,9 +1139,9 @@ export function isBabayagaPriorityTarget(targetKind) {
 }
 
 export function roleTargetBias(attackerKind, targetKind) {
-  if (attackerKind === "scout" && (targetKind === "runner" || targetKind === "shade")) return -34;
-  if (attackerKind === "ranger" && targetKind === "spitter") return -42;
-  if (attackerKind === "brute" && (targetKind === "crusher" || targetKind === "abomination" || targetKind === "takuya")) return -46;
+  if (attackerKind === "scout" && (targetKind === "runner" || targetKind === "shade" || targetKind === "sprinter")) return -34;
+  if (attackerKind === "ranger" && (targetKind === "spitter" || targetKind === "ooze")) return -42;
+  if (attackerKind === "brute" && (targetKind === "crusher" || targetKind === "abomination" || targetKind === "takuya" || targetKind === "grappler" || targetKind === "gate-eater")) return -46;
   if (attackerKind === "gunner" && (targetKind === "walker" || targetKind === "runner" || targetKind === "turned")) return -12;
   if (attackerKind === "crazy-king" && (targetKind === "walker" || targetKind === "runner" || targetKind === "turned")) return -24;
   if (attackerKind === "kumaverson" && (targetKind === "runner" || targetKind === "crusher")) return -28;
@@ -1158,7 +1162,7 @@ export function roleEffectForAction({
   if (action !== "attack") return null;
   if (unitKind === "scout") return targetAlreadyMarked ? null : "scout";
   if (unitKind === "ranger") return targetKind === "spitter" ? "ranger" : null;
-  if (unitKind === "brute") return holdingFrontline || ["crusher", "abomination", "takuya"].includes(targetKind) ? "brute" : null;
+  if (unitKind === "brute") return holdingFrontline || ["crusher", "abomination", "takuya", "grappler", "gate-eater"].includes(targetKind) ? "brute" : null;
   if (isBrawlerFinisher(unitKind, targetHpRatio)) return "brawler";
   if (unitKind === "gunner") return "gunner";
   if (unitKind === "crazy-king") return "crazy-king";

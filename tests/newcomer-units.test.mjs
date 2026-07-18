@@ -67,13 +67,23 @@ test("Babayaga prioritizes and marks special infected without boosting walkers",
   assert.equal(normal.markSeconds, 0);
   assert.ok(roleTargetBias("babayaga", "takuya") < roleTargetBias("babayaga", "walker"));
   assert.ok(humanAttackMultiplier("babayaga", "spitter") > humanAttackMultiplier("babayaga", "walker"));
-  assert.deepEqual(BABAYAGA_PRIORITY_TARGET_KINDS, ["spitter", "shade", "crusher", "abomination", "takuya"]);
+  assert.deepEqual(BABAYAGA_PRIORITY_TARGET_KINDS, [
+    "spitter",
+    "shade",
+    "crusher",
+    "abomination",
+    "takuya",
+    "grappler",
+    "ooze",
+    "gate-eater",
+  ]);
   for (const targetKind of BABAYAGA_PRIORITY_TARGET_KINDS) {
     assert.equal(isBabayagaPriorityTarget(targetKind), true, targetKind);
     assert.equal(roleTargetBias("babayaga", targetKind), -48, `${targetKind} target priority`);
     assert.equal(roleEffectForAction({ unitKind: "babayaga", targetKind }), "babayaga", `${targetKind} role effect`);
     assert.equal(newcomerAttackPayload({ unitKind: "babayaga", targetKind }).effect, "babayaga", `${targetKind} mark payload`);
   }
+  assert.equal(isBabayagaPriorityTarget("sprinter"), false, "Souki remains the Scout's fast-intercept specialty");
   assert.equal(isBabayagaPriorityTarget("walker"), false);
 });
 

@@ -352,7 +352,7 @@ export function coolRaiderHeat(state = {}, elapsedSeconds = 0) {
   return Object.freeze({ heat, overheated });
 }
 
-const HEAVY_TARGET_KINDS = Object.freeze(["crusher", "abomination", "takuya"]);
+const HEAVY_TARGET_KINDS = Object.freeze(["crusher", "abomination", "takuya", "grappler", "gate-eater"]);
 
 function targetTags(target) {
   return Array.isArray(target?.tags) ? target.tags : [];

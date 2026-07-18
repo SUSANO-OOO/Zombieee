@@ -50,6 +50,10 @@ export const COMBAT_ROLE_RULES = freeze({
   abomination: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   shade: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   takuya: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  grappler: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  ooze: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
+  sprinter: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  "gate-eater": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   turned: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   ranger: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
   gunner: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
@@ -329,8 +333,8 @@ export const ENEMY_DEATH_CONFIG = freeze({
 
 export function enemyDeathClassFor(enemy = {}) {
   if (enemy.deathClass && ENEMY_DEATH_CONFIG.timings[enemy.deathClass]) return enemy.deathClass;
-  if (enemy.boss || enemy.kind === "takuya") return "boss";
-  if (["crusher", "abomination", "heavy"].includes(enemy.kind)) return "heavy";
+  if (enemy.boss || enemy.kind === "takuya" || enemy.kind === "gate-eater") return "boss";
+  if (["crusher", "abomination", "grappler", "heavy"].includes(enemy.kind)) return "heavy";
   return "normal";
 }
 

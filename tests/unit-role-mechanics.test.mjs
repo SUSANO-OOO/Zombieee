@@ -272,10 +272,12 @@ test("Raider overheat cooldown resumes only at the configured threshold", () => 
 test("Tatara specializes in heavy, armored, and infected-base targets without stacking", () => {
   assert.equal(tataraTargetSpecialty({ kind: "walker" }), "normal");
   assert.equal(tataraTargetSpecialty({ kind: "crusher" }), "heavy");
+  assert.equal(tataraTargetSpecialty({ kind: "grappler" }), "heavy");
   assert.equal(tataraTargetSpecialty({ armored: true, kind: "crusher" }), "armored");
   assert.equal(tataraTargetSpecialty({ isInfectedBase: true, armored: true }), "infected-base");
   assert.equal(resolveTataraStrikeDamage(100, { kind: "walker" }), 100);
   assert.equal(resolveTataraStrikeDamage(100, { kind: "crusher" }), 145);
+  assert.equal(resolveTataraStrikeDamage(100, { kind: "grappler" }), 145);
   assert.equal(resolveTataraStrikeDamage(100, { armor: 1 }), 155);
   assert.equal(resolveTataraStrikeDamage(100, { targetType: "infected-base" }), 175);
   assert.equal(resolveTataraStrikeDamage(100, { kind: "enemy-base" }), 175);

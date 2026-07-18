@@ -244,6 +244,8 @@ test("advances enemy alive-dying-corpse-ashing-removed with class-specific confi
   const boss = beginEnemyDeath(createEnemyLifecycle({ id: 41, kind: "takuya", boss: true }));
   assert.equal(boss.deathClass, "boss");
   assert.equal(advanceEnemyLifecycle(boss, timing.dyingSeconds).state, "dying", "boss timing is longer than normal timing");
+  assert.equal(createEnemyLifecycle({ id: 42, kind: "gate-eater" }).deathClass, "boss");
+  assert.equal(createEnemyLifecycle({ id: 43, kind: "grappler" }).deathClass, "heavy");
   const custom = { normal: { dyingSeconds: 0.1, corpseSeconds: 0.2, ashingSeconds: 0.3 } };
   assert.equal(advanceEnemyLifecycle(dying, 0.6, { timings: custom }).state, "removed");
 });
