@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "release": "0.7.0",
+  "updatedAt": "2026-07-18",
+  "policySources": [
+    "docs/PRODUCER_DECISIONS_0.7.0.md",
+    "docs/IMPLEMENTATION_DIRECTIVE_0.7.0.md"
+  ],
+  "assets": [
+    {
+      "assetId": "V070-CHAR-HACHI-BASE",
+      "revision": "r1",
+      "status": "rejected_by_producer",
+      "type": "character_identity_base",
+      "subject": "ハチ",
+      "use": "ポートレート、会話立ち絵、表情差分、戦闘スプライトのidentity master",
+      "approvalPreviewPath": "outputs/p6-approvals/V070-CHAR-HACHI-BASE-r1.png",
+      "plannedPath": "public/art/v070/characters/reference/hachi-base-r1.png",
+      "sourceApprovedAssetId": null,
+      "styleReferencePaths": [
+        "public/art/v060/characters/portraits/brawler-portrait-v2.webp",
+        "public/art/v060/characters/kumaverson-battle-v1.png",
+        "public/art/v060/characters/babayaga-battle-v1.png"
+      ],
+      "designIntent": "小柄な夜間配送員の機動性と、危険地帯から帰還路を作る実務的な遊撃手像を一つの前傾シルエットへまとめる。",
+      "smartphoneRecognition": "黄土色の斜め反射ストラップ、前傾した小柄な輪郭、短いバール。",
+      "previewSha256": "4abaa7ca614076fdcb231f3a876b7df5805a6d9aa41326b2b03b95ac35e9da38",
+      "approvalUrl": null,
+      "reviewedAt": "2026-07-18",
+      "rejectionReason": "見た目に個性や魅力がなく、使いたいと思えない。",
+      "approvedAt": null,
+      "identityLock": null,
+      "finalPath": null,
+      "commit": null
+    },
+    {
+      "assetId": "V070-CHAR-HACHI-BASE",
+      "revision": "r2",
+      "status": "approved",
+      "type": "character_identity_base",
+      "subject": "ハチ",
+      "use": "ポートレート、会話立ち絵、表情差分、戦闘スプライトのidentity master",
+      "approvalPreviewPath": "outputs/p6-approvals/V070-CHAR-HACHI-BASE-r2.png",
+      "plannedPath": "public/art/v070/characters/reference/hachi-base-r2.png",
+      "sourceApprovedAssetId": null,
+      "supersedesRevision": "r1",
+      "styleReferencePaths": [],
+      "designIntent": "人間味のある悪戯っぽい表情と、自転車便の職歴が伝わる装備を主役にし、オレンジの破れたレインシェルと青巻きのベル付き短バールでハチ固有の躍動感を作る。",
+      "smartphoneRecognition": "オレンジの三角形に翻る裾、青い地図バッグ、青巻きの鉤形バール、欠けた歯の笑顔。",
+      "previewSha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3",
+      "approvalUrl": "https://github.com/SUSANO-OOO/Zombieee/pull/38#issuecomment-5010811423",
+      "approvalResponse": "ひとまずいいよ",
+      "approvedBy": "producer",
+      "reviewedAt": "2026-07-18",
+      "rejectionReason": null,
+      "approvedAt": "2026-07-18",
+      "identityLock": {
+        "faceAndAge": "23歳の日本人男性。細い顔、少し目立つ耳、活発な目、上がった眉、欠けた前歯の笑顔、鼻の絆創膏、そばかすと路上の汚れ。",
+        "hair": "自分で刈ったような左右非対称の黒いアンダーカット。前方に赤銅色のメッシュ。",
+        "body": "小柄で細身、ばねのある自転車便の体格。",
+        "clothing": "破れた長い後裾を持つ橙色レインシェル、濃い青緑のサイクルジャージ、黒い短パンとレギンス、黒いハイカット靴。",
+        "palette": [
+          "burnt orange",
+          "cobalt blue",
+          "petrol blue",
+          "charcoal black"
+        ],
+        "weapons": "青いハンドルテープと真鍮色の自転車ベルを付けた短いバール。腰に折り畳み式打撃棒。",
+        "equipment": "地図窓付きの青いメッセンジャーバッグ。バッグに吊った橙色の自転車ヘルメット。",
+        "posture": "右向きの低い旋回姿勢。",
+        "silhouette": "三角形に翻る橙色の後裾、背中の高いバッグとヘルメット、鉤形バール。"
+      },
+      "finalPath": "public/art/v070/characters/reference/hachi-base-r2.png",
+      "commit": null
+    }
+  ]
+}
