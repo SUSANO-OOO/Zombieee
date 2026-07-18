@@ -1,0 +1,117 @@
+name: GitHub Pages Public QA
+
+on:
+  workflow_run:
+    workflows:
+      - GitHub Pages Release
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  verify-public:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Resolve expected release
+        id: release
+        shell: bash
+        run: |
+          release_sha="$(jq -er '.release_sha | select(type == "string" and test("^[0-9a-f]{40}$"))' .github/pages-release-request.json)"
+          echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install isolated browser runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Run published-site QA
+        id: public_smoke
+        continue-on-error: true
+        env:
+          GITHUB_PAGES_PUBLIC_URL: https://susano-ooo.github.io/Zombieee/
+          GITHUB_PAGES_EXPECTED_RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+        shell: bash
+        run: |
+          mkdir -p pages-evidence-public
+          set +e
+          node scripts/github-pages-public-smoke.mjs > pages-evidence-public/public-smoke.log 2>&1
+          status=$?
+          set -e
+          cat pages-evidence-public/public-smoke.log
+          exit "$status"
+
+      - name: Upload public QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages-public-qa-evidence
+          path: pages-evidence-public
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Report public QA success
+        if: steps.public_smoke.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+          SOURCE_RUN: ${{ github.event.workflow_run.html_url }}
+        shell: bash
+        run: |
+          gh issue comment 37 --body "## 0.7.0 GitHub Pages公開後QA成功
+
+- 正式URL: https://susano-ooo.github.io/Zombieee/
+- release SHA: \`$RELEASE_SHA\`
+- 1280×720: pass
+- 844×390: pass
+- 844×340: pass
+- title表示・開始操作: pass
+- console error・page error・request failure・横スクロール: 0
+- deploy source run: $SOURCE_RUN
+- public QA run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+      - name: Report public QA failure
+        if: steps.public_smoke.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+          SOURCE_RUN: ${{ github.event.workflow_run.html_url }}
+        shell: bash
+        run: |
+          {
+            echo "## 0.7.0 GitHub Pages公開後QA失敗"
+            echo
+            echo "- release SHA: \`$RELEASE_SHA\`"
+            echo "- deploy source run: $SOURCE_RUN"
+            echo "- public QA run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo
+            echo '```text'
+            tail -n 120 pages-evidence-public/public-smoke.log || true
+            echo '```'
+          } > /tmp/public-qa-failure.md
+          gh issue comment 37 --body-file /tmp/public-qa-failure.md
+
+      - name: Enforce public QA result
+        if: steps.public_smoke.outcome == 'failure'
+        run: exit 1
