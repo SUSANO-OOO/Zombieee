@@ -78,6 +78,38 @@ function caseUrl(stage, state) {
   return url;
 }
 
+async function advanceStoryToScreen(page, targetScreen, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  for (let step = 0; step < 160 && Date.now() < deadline; step += 1) {
+    const screen = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().screen ?? null);
+    if (screen === targetScreen) return;
+    if (screen === "event") {
+      await page.locator(".dialogue-box").click({ timeout: Math.max(1000, deadline - Date.now()) });
+      await page.waitForTimeout(20);
+      continue;
+    }
+    await page.waitForTimeout(40);
+  }
+  const finalScreen = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().screen ?? null);
+  throw new Error(`story transition did not reach ${targetScreen}; screen=${finalScreen}`);
+}
+
+async function advanceToBattleOutcome(page, expectedStageId, expectedWin, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  for (let step = 0; step < 240 && Date.now() < deadline; step += 1) {
+    const snapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null);
+    if (snapshot?.stageId === expectedStageId && snapshot.over === true && snapshot.won === expectedWin) return;
+    if (snapshot?.screen === "event") {
+      await page.locator(".dialogue-box").click({ timeout: Math.max(1000, deadline - Date.now()) });
+      await page.waitForTimeout(20);
+      continue;
+    }
+    await page.waitForTimeout(40);
+  }
+  const snapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null);
+  throw new Error(`battle outcome did not settle: ${JSON.stringify(snapshot)}`);
+}
+
 function assertSnapshot({
   snapshot,
   dimensions,
@@ -294,19 +326,8 @@ for (const engine of requestedEngines) {
               };
             } else {
               const expectedWin = state === "near-win";
-              await page.waitForFunction(
-                ({ expectedStageId, expectedWin }) => {
-                  const bridge = window.__ASHFALL_BATTLE_QA__;
-                  if (!bridge || typeof bridge.getSnapshot !== "function") return false;
-                  const snapshot = bridge.getSnapshot();
-                  return snapshot.stageId === expectedStageId
-                    && snapshot.over === true
-                    && snapshot.won === expectedWin
-                    && snapshot.screen === "result";
-                },
-                { expectedStageId: stage.id, expectedWin },
-                { timeout },
-              );
+              await advanceToBattleOutcome(page, stage.id, expectedWin, timeout);
+              await advanceStoryToScreen(page, "result", timeout);
             }
 
             await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 10_000) });
@@ -327,6 +348,7 @@ for (const engine of requestedEngines) {
               const completedResultId = evidence.snapshot.resultId;
               invariant(completedResultId, "completed battle did not expose a result receipt");
               await page.getByRole("button", { name: "同じ編成で再戦", exact: true }).click({ timeout });
+              await advanceStoryToScreen(page, "battle", timeout);
               await page.waitForFunction(
                 ({ expectedStageId, completedResultId }) => {
                   const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
