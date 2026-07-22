@@ -123,12 +123,12 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.7.0 campaign title as the formal entry point", async () => {
+test("server-renders the 0.7.1 campaign title as the formal entry point", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.7\.0<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.7\.1<\/title>/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
@@ -295,6 +295,8 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /TAKUYA撃破 — 感染拠点が露出/);
   assert.match(game, /感染拠点 \/\/ 損傷/);
   assert.match(game, /感染拠点 \/\/ 大破/);
+  assert.match(game, /const isStationPlatformAssault = selectedStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_PLATFORM/);
+  assert.match(game, /isStationPlatformAssault[\s\S]*hud\.phase === 1 \? "確保" : hud\.phase === 2 \? "制圧" : "総攻撃"/);
   assert.match(game, /const enemyBaseLabel = selectedStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"/);
   assert.match(game, /hud\.missionType === "timed-defense" \? "救援区域" : enemyBaseLabel/);
   assert.match(screens, /result\.won \? "作戦成功" : "戦線崩壊"/);
@@ -303,7 +305,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(css, /\.barrier-health/);
   assert.match(css, /\.barrier-health\.vulnerable/);
   assert.match(css, /\.barrier-health\.hit/);
-  assert.match(layout, /title: "西新世紀末物語｜アーリーアクセス版 0\.7\.0"/);
+  assert.match(layout, /title: "西新世紀末物語｜アーリーアクセス版 0\.7\.1"/);
   assert.match(layout, /viewportFit: "cover"/);
   assert.doesNotMatch(layout, /images: \[.*\/og\.png/);
   assert.match(layout, /rel="preload" as="image" href="\/infected-checkpoint-v1\.png"/);
@@ -1589,13 +1591,14 @@ test("station QA positions spawned fighters instead of immutable unit cards", as
   assert.match(game, /prepareStationQa\(fresh, retrying \? "start" : qaScenario\.state\)/);
 });
 
-test("station objectives use spatial evidence, containment, and reversible hazards in the live loop", async () => {
+test("station objectives use spatial evidence, lethal boss resolution, and reversible hazards in the live loop", async () => {
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
 
   assert.match(game, /stationSpatialSnapshot\(\{[\s\S]*escortCount: spatial\.escortCount[\s\S]*powerOperatorCount: spatial\.powerOperatorCount[\s\S]*returnedCount: spatial\.returnedCount/);
   assert.match(game, /wavesResolved: stationResolution\.wavesResolved/);
   assert.match(game, /resolveContainmentStrike\(\{[\s\S]*researchContainer: g\.researchContainer[\s\S]*powerActivated: g\.stageMission\.powerActivated/);
-  assert.doesNotMatch(game, /gateEaterDefeated/);
+  assert.match(game, /gateEaterDefeated: spatial\.gateEaterDefeated/);
+  assert.match(game, /fighter\.kind === "gate-eater"[\s\S]*g\.bossDefeated = true[\s\S]*gateEaterDefeated: true/);
   assert.match(game, /fighter\.side === "human" && fighter\.hp > 0\) fighter\.slowMultiplier = 1/);
   assert.match(game, /g\.stationHazards = relocateStationHazards\(\{[\s\S]*previousLaneCenters,[\s\S]*nextLaneCenters/);
   assert.match(game, /selectKaramiteTarget\(\{[\s\S]*attacker: f,[\s\S]*candidates: g\.fighters,[\s\S]*beginKaramiteWindup/);

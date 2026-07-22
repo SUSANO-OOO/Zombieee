@@ -140,6 +140,8 @@ export const LOCAL_QA_STATION_STATES = Object.freeze([
   "near-loss",
 ]);
 
+export const LOCAL_QA_GATE_EATER_STATE = "boss-regression";
+
 const LOCAL_QA_STATION_STAGE_ALIASES = Object.freeze({
   4: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE,
   5: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
@@ -212,7 +214,10 @@ export function resolveLocalQaScenario(hostname, search = "") {
     const stageId = stageParam.value === null
       ? null
       : LOCAL_QA_STATION_STAGE_ALIASES[stageParam.value] ?? null;
-    if (!stageId || !LOCAL_QA_STATION_STATES.includes(stateParam.value)) return null;
+    const validState = LOCAL_QA_STATION_STATES.includes(stateParam.value)
+      || (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL
+        && stateParam.value === LOCAL_QA_GATE_EATER_STATE);
+    if (!stageId || !validState) return null;
     return { mode: "station", screen: "battle", stageId, stars: 0, state: stateParam.value };
   }
 

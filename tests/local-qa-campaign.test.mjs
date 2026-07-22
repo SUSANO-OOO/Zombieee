@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
 import {
+  LOCAL_QA_GATE_EATER_STATE,
   LOCAL_QA_CAMPAIGN_SCREENS,
   LOCAL_QA_CAMPAIGN_STAGE_ALIASES,
   LOCAL_QA_MODES,
@@ -140,6 +141,19 @@ test("station QA exposes only the three station stages and deterministic battle 
       }
     }
   }
+});
+
+test("the Gate Eater regression battle is available only for Stage 6 on localhost", () => {
+  assert.equal(LOCAL_QA_GATE_EATER_STATE, "boss-regression");
+  assert.deepEqual(resolveLocalQaScenario("localhost", "?qa=station&stage=6&state=boss-regression"), {
+    mode: "station",
+    screen: "battle",
+    stageId: STAGE_6,
+    stars: 0,
+    state: "boss-regression",
+  });
+  assert.equal(resolveLocalQaScenario("localhost", "?qa=station&stage=5&state=boss-regression"), null);
+  assert.equal(resolveLocalQaScenario("example.com", "?qa=station&stage=6&state=boss-regression"), null);
 });
 
 test("station QA rejects non-station stages, unknown states, and ambiguous parameters", () => {

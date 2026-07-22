@@ -149,6 +149,7 @@ import {
   WORLD_GEOMETRY,
   advanceAttackCooldown,
   advanceAreaEffects,
+  advanceBleedDamage,
   advanceConvoyEvacuation,
   advanceBattlefieldSupply,
   advanceCameraShakeRuntime,
@@ -317,7 +318,7 @@ function stationObjectiveDestination(g: Game, fighter: Fighter) {
       lane: fighter.anchorLane ?? fighter.lane,
     };
   }
-  if (g.stageMission.gateEaterContained && g.stageMission.researchContainerContained) return null;
+  if (g.stageMission.gateEaterDefeated && g.stageMission.researchContainerContained) return null;
   const powerNode = currentPowerNode(g.stageMission, g.definition.missionConfig);
   if (powerNode) {
     return {
@@ -542,6 +543,7 @@ type StageMissionRuntime = {
   powerActivated?: number;
   powerHold?: number;
   gateEaterSeen?: boolean;
+  gateEaterDefeated?: boolean;
   gateEaterContained?: boolean;
   researchContainerExposed?: boolean;
   researchContainerContained?: boolean;
@@ -1815,7 +1817,7 @@ function prepareLifecycleQa(g: Game) {
   g.banner = "QA 表現確認 // 死亡・感染・焼却"; g.bannerTime = 3;
 }
 
-function prepareStationQa(g: Game, state: "start" | "near-win" | "near-loss") {
+function prepareStationQa(g: Game, state: "start" | "near-win" | "near-loss" | "boss-regression") {
   const spawnQaHuman = (kind: UnitKind) => {
     const card = spawnHuman(g, kind);
     return card ? g.fighters[g.fighters.length - 1] : null;
@@ -1830,6 +1832,44 @@ function prepareStationQa(g: Game, state: "start" | "near-win" | "near-loss") {
   g.eventIndex = g.definition.timeline.length;
   g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
   g.energy = COMMAND_MAX;
+
+  if (state === "boss-regression"
+    && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+    g.stageMission = {
+      ...g.stageMission,
+      powerActivated: 3,
+      powerHold: 0,
+      gateEaterSeen: true,
+      researchContainerExposed: true,
+    };
+    if (g.researchContainer) {
+      g.researchContainer = {
+        ...g.researchContainer,
+        exposed: true,
+      };
+    }
+    const boss = spawnEnemy(g, "gate-eater", 1);
+    boss.hp = Math.ceil(boss.maxHp * .29);
+    boss.x = 720;
+    boss.y = laneY(1, boss.id);
+    boss.combatReady = true;
+    boss.gateEntering = false;
+    boss.cooldown = 4;
+    boss.spawnGrace = 0;
+    for (const [index, kind] of (["brute", "ranger", "gunner"] as UnitKind[]).entries()) {
+      const attacker = spawnQaHuman(kind);
+      if (!attacker) continue;
+      attacker.lane = 1;
+      attacker.anchorLane = 1;
+      attacker.x = 610 - index * 12;
+      attacker.y = laneY(1, attacker.id);
+      attacker.cooldown = 0;
+      attacker.spawnGrace = 0;
+    }
+    g.banner = `LOCAL QA // 改札喰い ${boss.hp}/${boss.maxHp} HP REGRESSION`;
+    g.bannerTime = 3;
+    return;
+  }
 
   if (state === "near-loss") {
     if (g.definition.missionType === "escort") {
@@ -1901,6 +1941,7 @@ function prepareStationQa(g: Game, state: "start" | "near-win" | "near-loss") {
       powerActivated: 3,
       powerHold: 0,
       gateEaterSeen: true,
+      gateEaterDefeated: true,
       gateEaterContained: true,
       researchContainerExposed: true,
       researchContainerContained: true,
@@ -5806,6 +5847,7 @@ export function AshfallGame() {
             powerOperatorCount: spatial.powerOperatorCount,
             powerLaneThreats: spatial.powerLaneThreats,
             gateEaterSeen: spatial.gateEaterSeen,
+            gateEaterDefeated: spatial.gateEaterDefeated,
             gateEaterContained: spatial.gateEaterContained,
             researchContainerExposed: spatial.researchContainerExposed,
             researchContainerContained: spatial.researchContainerContained,
@@ -6175,10 +6217,7 @@ export function AshfallGame() {
           f.armorBrokenRemaining = Math.max(0, f.armorBrokenRemaining - dt);
           if (f.armorBrokenRemaining <= 0) f.armorBreakStacks = 0;
           if (f.bleedRemaining > 0) {
-            const bleedStep = Math.min(dt, f.bleedRemaining);
-            f.hp = Math.max(0, f.hp - f.bleedDamagePerSecond * bleedStep);
-            f.bleedRemaining = Math.max(0, f.bleedRemaining - dt);
-            if (f.bleedRemaining <= 0) f.bleedDamagePerSecond = 0;
+            Object.assign(f, advanceBleedDamage(f, dt));
             if (f.hp <= 0) continue;
           }
           f.abilityCooldown = Math.max(0, f.abilityCooldown - dt);
@@ -6831,8 +6870,8 @@ export function AshfallGame() {
                   g.banner = "研究容器露出 // 改札喰いと共に押し込め";
                   g.bannerTime = 2;
                 }
-                if (containment.containmentComplete && g.stageMission.gateEaterContained !== true) {
-                  g.banner = "封鎖対象を扉の向こうへ収容";
+                if (containment.bossDefeated && g.stageMission.gateEaterDefeated !== true) {
+                  g.banner = "改札喰い撃破 // 研究容器を確保";
                   g.bannerTime = 1.8;
                 }
               } else if (f.side === "zombie" && target.side === "human") {
@@ -7261,6 +7300,30 @@ export function AshfallGame() {
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaDefeat);
               playCue("takuya-down");
               if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
+            } else if (fighter.kind === "gate-eater"
+              && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+              g.bossDefeated = true;
+              const sealDoorX = Number(g.definition.missionConfig.sealDoorX ?? 867);
+              if (g.researchContainer) {
+                g.researchContainer = {
+                  ...g.researchContainer,
+                  x: Math.max(g.researchContainer.x, sealDoorX + 18),
+                  exposed: true,
+                  contained: true,
+                };
+              }
+              g.stageMission = {
+                ...g.stageMission,
+                gateEaterSeen: true,
+                gateEaterDefeated: true,
+                gateEaterContained: true,
+                researchContainerExposed: true,
+                researchContainerContained: true,
+              };
+              g.banner = "改札喰い撃破 — 研究容器を封鎖区画へ確保";
+              g.bannerTime = 3.4;
+              g.flashOverlay = .3;
+              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaDefeat);
             }
           } else {
             g.unitsLost++;
@@ -7479,11 +7542,16 @@ export function AshfallGame() {
   const barricadeCondition = barricadeState(hud.barricadeHp) === "BREACHED" ? "破壊" : barricadeState(hud.barricadeHp) === "BREACH IMMINENT" ? "大破" : barricadeState(hud.barricadeHp) === "BUCKLING" ? "損傷" : "健全";
   const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
   const bossPhase = bossPhaseForHp(hud.bossHp, hud.bossMax);
+  const isStationPlatformAssault = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";
   const phaseName = hud.missionType === "escort"
     ? hud.phase === 1 ? "発進" : hud.phase === 2 ? "突破" : "護送"
     : hud.missionType === "sequential-seal"
       ? hud.phase === 1 ? "電源1" : hud.phase === 2 ? "電源2・3" : "封鎖"
-      : hud.phase === 1 ? "防衛" : hud.phase === 2 ? "前進" : "総攻撃";
+      : isStationPlatformAssault
+        ? hud.phase === 1 ? "確保" : hud.phase === 2 ? "制圧" : "総攻撃"
+        : hud.missionType === "assault"
+          ? hud.phase === 1 ? "侵入" : hud.phase === 2 ? "前進" : "総攻撃"
+          : hud.phase === 1 ? "防衛" : hud.phase === 2 ? "前進" : "総攻撃";
   const stationMissionHud = hud.missionType === "escort" || hud.missionType === "sequential-seal";
   const enemyBaseLabel = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
   const bossLabel = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL ? "改札喰い" : "TAKUYA";
@@ -7519,7 +7587,7 @@ export function AshfallGame() {
         {hud.battleBarks.length > 0 && <div className="battle-barks" aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
 
         <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>Version 0.7.0</em></small></div></div>
+          <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>Version 0.7.1</em></small></div></div>
           <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>

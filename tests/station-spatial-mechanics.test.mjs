@@ -14,12 +14,6 @@ import {
   createStationMissionRuntime,
 } from "../app/stationStageMechanics.js";
 import { advanceLeakMudHazards } from "../app/stationEnemyMechanics.js";
-import { CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
-import {
-  STAGE_VIEWPORT_IDS,
-  combatReadyGroundingAudit,
-  stageGeometryFor,
-} from "../app/stageGeometry.js";
 
 const lanes = [100, 180, 260];
 
@@ -180,6 +174,7 @@ test("position snapshots drive power activation and the 45-second all-return dea
   runtime = {
     ...runtime,
     powerActivated: 3,
+    gateEaterDefeated: true,
     gateEaterContained: true,
     researchContainerExposed: true,
     researchContainerContained: true,
@@ -284,7 +279,7 @@ test("frozen Leak Mud hazards relocate immutably across viewport lane layouts", 
   assert.equal(Object.isFrozen(relocated[0]), true);
 });
 
-test("containment strikes suppress rather than kill Gate Eater and move both seal targets", () => {
+test("Gate Eater strikes pass the former 28 percent floor, reach zero, and secure the container", () => {
   const boss = {
     id: 7,
     kind: "gate-eater",
@@ -302,61 +297,47 @@ test("containment strikes suppress rather than kill Gate Eater and move both sea
     ...createResearchContainerRuntime({ researchContainerStartX: 870 }),
     exposed: true,
   };
-  const unpowered = resolveContainmentStrike({
+  const belowFormerFloor = resolveContainmentStrike({
     boss,
     researchContainer: container,
-    attackDamage: 999,
+    attackDamage: 73,
     powerActivated: 2,
     sealDoorX: 867,
   });
-  assert.equal(unpowered.boss.hp, 28);
-  assert.equal(unpowered.boss.x, 850);
-  assert.equal(unpowered.researchContainer.x, 870);
-  assert.equal(unpowered.containmentComplete, false);
+  assert.equal(belowFormerFloor.boss.hp, 27);
+  assert.equal(belowFormerFloor.boss.x, 850);
+  assert.equal(belowFormerFloor.researchContainer.x, 870);
+  assert.equal(belowFormerFloor.bossDefeated, false);
 
-  const contained = resolveContainmentStrike({
-    boss: { ...boss, hp: 28, x: 888 },
-    researchContainer: { ...container, x: 884 },
-    attackDamage: 100,
+  const defeated = resolveContainmentStrike({
+    boss: belowFormerFloor.boss,
+    researchContainer: belowFormerFloor.researchContainer,
+    attackDamage: 999,
     powerActivated: 3,
     sealDoorX: 867,
   });
-  assert.equal(contained.boss.hp, 28);
-  assert.equal(contained.boss.contained, true);
-  assert.equal(contained.boss.combatReady, false);
-  assert.equal(contained.researchContainer.contained, true);
-  assert.equal(contained.containmentComplete, true);
-
-  // The sealed target intentionally crosses the walkable-floor boundary. It
-  // becomes non-combat-ready in the same transaction, so runtime grounding
-  // never clamps it back in front of the door or counts it as an active
-  // off-floor step.
-  const geometry = stageGeometryFor(
-    CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL,
-    STAGE_VIEWPORT_IDS.MOBILE_844_340,
-  );
-  assert.ok(contained.boss.x > geometry.floor.corridor.maxX - contained.boss.bodyRadius);
-  const grounding = combatReadyGroundingAudit({
-    geometry,
-    fighters: [contained.boss],
-  });
-  assert.equal(grounding.checkedCount, 0);
-  assert.equal(grounding.offFloorCount, 0);
+  assert.equal(defeated.boss.hp, 0);
+  assert.equal(defeated.boss.contained, true);
+  assert.equal(defeated.boss.combatReady, false);
+  assert.equal(defeated.bossDefeated, true);
+  assert.equal(defeated.researchContainer.exposed, true);
+  assert.equal(defeated.researchContainer.contained, true);
+  assert.equal(defeated.containmentComplete, true);
 });
 
-test("the Gate Eater invariant survives every damage channel and disables a contained boss", () => {
-  for (const hp of [0, -4, 3, 27.999]) {
+test("the Gate Eater invariant preserves lethal damage from every channel and never resurrects the boss", () => {
+  for (const [hp, expected] of [[504, 504], [503, 503], [3, 3], [0, 0], [-4, 0]]) {
     const boss = enforceGateEaterContainmentInvariant({
       id: "boss",
       kind: "gate-eater",
-      maxHp: 100,
+      maxHp: 1800,
       hp,
       combatReady: true,
       gateEntering: true,
       targetId: "human",
     });
-    assert.equal(boss.hp, 28);
-    assert.equal(boss.combatReady, true);
+    assert.equal(boss.hp, expected);
+    assert.equal(boss.combatReady, expected > 0);
     assert.equal(Object.isFrozen(boss), true);
   }
   const contained = enforceGateEaterContainmentInvariant({
@@ -369,7 +350,7 @@ test("the Gate Eater invariant survives every damage channel and disables a cont
     targetId: "human",
     targetObjectId: "crawler",
   });
-  assert.equal(contained.hp, 28);
+  assert.equal(contained.hp, 0);
   assert.equal(contained.combatReady, false);
   assert.equal(contained.gateEntering, false);
   assert.equal(contained.targetId, null);

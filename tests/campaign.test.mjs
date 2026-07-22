@@ -185,21 +185,12 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
   assert.deepEqual(stationGate.nextUnlocks.discoveredUnitIds, [CAMPAIGN_UNIT_IDS.GANTETSU]);
   assert.deepEqual(stationGate.nextUnlocks.recruitableUnitIds, []);
 
-  assert.equal(stationPlatform.missionType, "escort");
-  assert.match(stationPlatform.objective, /保守台車.*生存者と物資/);
+  assert.equal(stationPlatform.missionType, "assault");
+  assert.match(stationPlatform.objective, /ホーム.*感染拠点.*破壊/);
   assert.deepEqual(stationPlatform.objectiveConfig, {
-    target: "maintenance-cart",
-    durationSeconds: 135,
-    maxIntegrity: 500,
-    repairSeconds: 20,
+    target: "infection-base",
     rescueCount: 5,
-    startX: 258,
-    endX: 776,
-    cartLane: 1,
-    escortRadiusX: 110,
-    escortRadiusY: 48,
-    threatRadiusX: 90,
-    threatRadiusY: 55,
+    rescueMode: "automatic-on-objective-destroyed",
   });
   assert.deepEqual(stationPlatform.prerequisiteStageIds, [STAGE_4]);
   assert.deepEqual(stationPlatform.nextUnlocks.stageIds, [STAGE_6]);
@@ -213,7 +204,7 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
       "power-1",
       "power-2",
       "power-3",
-      "gate-eater",
+      "gate-eater-defeat",
       "research-container",
       "seal-door",
       "return-route",

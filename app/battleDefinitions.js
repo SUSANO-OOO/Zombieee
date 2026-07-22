@@ -25,9 +25,15 @@ const PHASE_SCHEDULES = Object.freeze({
   "sequential-seal": Object.freeze([
     Object.freeze({ at: 0, phase: 1, label: "電源1を確保", objective: "三つの電源を順番に起動" }),
     Object.freeze({ at: 62, phase: 2, label: "電源2・3を起動", objective: "三つの電源を順番に起動" }),
-    Object.freeze({ at: 120, phase: 3, label: "改札喰いを封鎖", objective: "感染流出路を封鎖" }),
+    Object.freeze({ at: 120, phase: 3, label: "改札喰いを撃破", objective: "感染流出路を封鎖" }),
   ]),
 });
+
+const STATION_PLATFORM_ASSAULT_SCHEDULE = Object.freeze([
+  Object.freeze({ at: 0, phase: 1, label: "ホーム入口を確保", objective: "感染拠点を破壊" }),
+  Object.freeze({ at: 60, phase: 2, label: "ホーム中央を制圧", objective: "感染拠点を破壊" }),
+  Object.freeze({ at: 120, phase: 3, label: "感染拠点へ総攻撃", objective: "感染拠点を破壊" }),
+]);
 
 function unitsForWave(wave) {
   if (Array.isArray(wave.units)) return wave.units.map((unit) => [...unit]);
@@ -71,7 +77,11 @@ export function createBattleDefinition(stageId) {
     bossUnlocksEnemyBase: isTakuya,
     timeline,
     defenseEndAt: isDefense ? PREP_SECONDS + stage.objectiveConfig.durationSeconds : null,
-    phaseSchedule: isTakuya ? null : PHASE_SCHEDULES[stage.missionType],
+    phaseSchedule: isTakuya
+      ? null
+      : stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM
+        ? STATION_PLATFORM_ASSAULT_SCHEDULE
+        : PHASE_SCHEDULES[stage.missionType],
     objective: stage.objective,
     missionConfig: stage.objectiveConfig ?? {},
     rescueCount: Number(stage.objectiveConfig?.rescueCount) || 0,

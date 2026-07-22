@@ -100,42 +100,45 @@ test("stage 4 destroys the relay, rescues seven survivors, and keeps an assault 
   }), "won");
 });
 
-test("stage 5 uses the real cart runtime instead of a scenery or elapsed-time shortcut", () => {
+test("stage 5 is a normal base-destruction battle with no mandatory cart state", () => {
   const definition = createBattleDefinition(STAGE_5);
-  const active = createStationMissionRuntime(STATION_MISSION_TYPES.ESCORT, definition.missionConfig);
-  const complete = { ...active, progress: 1, completed: true };
-  const failed = { ...active, integrity: 0, failed: true };
-
-  assert.equal(definition.missionType, STATION_MISSION_TYPES.ESCORT);
-  assert.equal(definition.enemyBaseMode, "scenery");
-  assert.equal(definition.startsEnemyBaseVulnerable, false);
+  assert.equal(definition.missionType, "assault");
+  assert.equal(definition.enemyBaseMode, "target");
+  assert.equal(definition.startsEnemyBaseVulnerable, true);
   assert.equal(definition.rescueCount, 5);
-  assert.equal(definition.missionConfig.durationSeconds, 135);
-  assert.equal(definition.missionConfig.maxIntegrity, 500);
-  assert.equal(definition.missionConfig.repairSeconds, 20);
-  assert.match(objectiveForBattle(definition, { stageMission: active }), /保守台車.*0%/);
+  assert.deepEqual(definition.missionConfig, {
+    target: "infection-base",
+    rescueCount: 5,
+    rescueMode: "automatic-on-objective-destroyed",
+  });
+  assert.match(objectiveForBattle(definition, {
+    time: PREP_SECONDS,
+    phase: 1,
+    barricadeVulnerable: true,
+  }), /感染拠点/);
   assert.equal(battleOutcomeFor(definition, {
     baseHp: definition.baseMaxHp,
-    stageMission: active,
-    time: Number.MAX_SAFE_INTEGER,
+    barricadeHp: 1,
+    time: 200,
   }), null);
   assert.equal(battleOutcomeFor(definition, {
     baseHp: definition.baseMaxHp,
-    stageMission: complete,
-    wavesResolved: true,
+    barricadeHp: 0,
+    time: 200,
   }), "won");
   assert.equal(battleOutcomeFor(definition, {
-    baseHp: definition.baseMaxHp,
-    stageMission: failed,
+    baseHp: 0,
+    barricadeHp: 0,
   }), "lost");
 });
 
-test("stage 6 requires power 1-2-3, Gate Eater containment, sealing, and the 45-second return", () => {
+test("stage 6 requires power 1-2-3, Gate Eater defeat, container sealing, and the 45-second return", () => {
   const definition = createBattleDefinition(STAGE_6);
   const initial = createStationMissionRuntime(STATION_MISSION_TYPES.SEQUENTIAL_SEAL, definition.missionConfig);
   const gateEaterContained = {
     ...initial,
     gateEaterSeen: true,
+    gateEaterDefeated: true,
     gateEaterContained: true,
     researchContainerExposed: true,
     researchContainerContained: false,
@@ -157,7 +160,7 @@ test("stage 6 requires power 1-2-3, Gate Eater containment, sealing, and the 45-
     "power-1",
     "power-2",
     "power-3",
-    "gate-eater",
+    "gate-eater-defeat",
     "research-container",
     "seal-door",
     "return-route",
@@ -185,10 +188,19 @@ test("stage 6 requires power 1-2-3, Gate Eater containment, sealing, and the 45-
 });
 
 test("station victory waits until every wave, pending spawn, and living unsealed enemy is resolved", () => {
-  const definition = createBattleDefinition(STAGE_5);
+  const definition = createBattleDefinition(STAGE_6);
   const complete = {
-    ...createStationMissionRuntime(STATION_MISSION_TYPES.ESCORT, definition.missionConfig),
-    progress: 1,
+    ...createStationMissionRuntime(STATION_MISSION_TYPES.SEQUENTIAL_SEAL, definition.missionConfig),
+    powerActivated: 3,
+    gateEaterSeen: true,
+    gateEaterDefeated: true,
+    gateEaterContained: true,
+    researchContainerExposed: true,
+    researchContainerContained: true,
+    sealed: true,
+    escapeRemaining: 20,
+    returnTargetCount: 1,
+    returnedCount: 1,
     completed: true,
   };
 

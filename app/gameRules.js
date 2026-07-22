@@ -1290,6 +1290,21 @@ export function resolveNewcomerAttackEffects({
   });
 }
 
+export function advanceBleedDamage(fighter, seconds) {
+  const elapsed = Math.max(0, Number(seconds) || 0);
+  const remaining = Math.max(0, Number(fighter?.bleedRemaining) || 0);
+  const damagePerSecond = Math.max(0, Number(fighter?.bleedDamagePerSecond) || 0);
+  const activeSeconds = Math.min(elapsed, remaining);
+  const hp = Math.max(0, (Number(fighter?.hp) || 0) - damagePerSecond * activeSeconds);
+  const bleedRemaining = Math.max(0, remaining - elapsed);
+  return Object.freeze({
+    ...fighter,
+    hp,
+    bleedRemaining,
+    bleedDamagePerSecond: bleedRemaining > 0 ? damagePerSecond : 0,
+  });
+}
+
 export function advanceAttackCooldown(cooldown, dt) {
   return Math.max(0, (Number(cooldown) || 0) - Math.max(0, Number(dt) || 0));
 }

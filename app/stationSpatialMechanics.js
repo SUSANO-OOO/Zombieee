@@ -102,15 +102,17 @@ export function relocateStationHazards({
 export function enforceGateEaterContainmentInvariant(boss) {
   const original = { ...(boss ?? {}) };
   if (original.kind !== "gate-eater") return frozen(original);
-  const suppressionFloor = Math.max(1, Math.ceil(positive(original.maxHp, 1) * 28 / 100));
+  const maxHp = positive(original.maxHp, 1);
+  const hp = Math.max(0, Math.min(maxHp, finite(original.hp, maxHp)));
   const contained = original.contained === true;
+  const inactive = contained || hp <= 0;
   return frozen({
     ...original,
-    hp: Math.max(suppressionFloor, finite(original.hp, suppressionFloor)),
-    combatReady: contained ? false : original.combatReady,
-    gateEntering: contained ? false : original.gateEntering,
-    targetId: contained ? null : original.targetId,
-    targetObjectId: contained ? null : original.targetObjectId,
+    hp,
+    combatReady: inactive ? false : original.combatReady,
+    gateEntering: inactive ? false : original.gateEntering,
+    targetId: inactive ? null : original.targetId,
+    targetObjectId: inactive ? null : original.targetObjectId,
   });
 }
 
@@ -128,28 +130,33 @@ export function resolveContainmentStrike({
   };
   const damage = Math.max(0, finite(attackDamage));
   const powered = integer(powerActivated) >= 3;
+  const maxHp = positive(originalBoss.maxHp, 1);
+  const hp = Math.max(0, Math.min(maxHp, finite(originalBoss.hp, maxHp)) - damage);
+  const bossDefeated = hp <= 0;
   const exposed = originalContainer.exposed === true
-    || (powered && living(originalBoss));
-  const suppressionFloor = Math.max(1, Math.ceil(positive(originalBoss.maxHp, 1) * 28 / 100));
-  const hp = Math.max(suppressionFloor, finite(originalBoss.hp, suppressionFloor) - damage);
-  const bossPush = powered ? Math.min(18, 3 + damage * .055) : 0;
+    || (powered && living(originalBoss))
+    || bossDefeated;
+  const bossPush = powered && !bossDefeated ? Math.min(18, 3 + damage * .055) : 0;
   const containerPush = powered && exposed ? Math.min(18, 5 + damage * .1) : 0;
   const nextBossX = finite(originalBoss.x) + bossPush;
-  const nextContainerX = finite(originalContainer.x, 708) + containerPush;
+  const movedContainerX = finite(originalContainer.x, 708) + containerPush;
+  const nextContainerX = bossDefeated
+    ? Math.max(movedContainerX, finite(sealDoorX, 867) + 18)
+    : movedContainerX;
   const bossAtSeal = nextBossX >= finite(sealDoorX, 867) + positive(originalBoss.bodyRadius, 25);
   const containerAtSeal = nextContainerX >= finite(sealDoorX, 867) + 18;
-  const containmentComplete = bossAtSeal && containerAtSeal;
+  const containmentComplete = bossDefeated && containerAtSeal;
 
   return frozen({
     boss: enforceGateEaterContainmentInvariant({
       ...originalBoss,
       x: nextBossX,
       hp,
-      contained: containmentComplete,
-      combatReady: containmentComplete ? false : originalBoss.combatReady,
-      gateEntering: containmentComplete ? false : originalBoss.gateEntering,
-      targetId: containmentComplete ? null : originalBoss.targetId,
-      targetObjectId: containmentComplete ? null : originalBoss.targetObjectId,
+      contained: bossDefeated,
+      combatReady: bossDefeated ? false : originalBoss.combatReady,
+      gateEntering: bossDefeated ? false : originalBoss.gateEntering,
+      targetId: bossDefeated ? null : originalBoss.targetId,
+      targetObjectId: bossDefeated ? null : originalBoss.targetObjectId,
     }),
     researchContainer: frozen({
       ...originalContainer,
@@ -157,7 +164,7 @@ export function resolveContainmentStrike({
       exposed,
       contained: containerAtSeal,
     }),
-    suppressionFloor,
+    bossDefeated,
     bossAtSeal,
     containerAtSeal,
     containmentComplete,
@@ -251,7 +258,9 @@ export function stationSpatialSnapshot({
     const returnedHumans = humans.filter((human) => inSharedLaneReturnZone(human, config, lanes));
     const returnedUnitIds = returnedHumans.map(entityId).filter((id) => id !== null);
     const escapeRouteThreats = enemies.filter((enemy) => inSharedLaneReturnZone(enemy, config, lanes)).length;
-    const gateEaterContained = missionRuntime.gateEaterContained === true
+    const gateEaterDefeated = missionRuntime.gateEaterDefeated === true;
+    const gateEaterContained = gateEaterDefeated
+      || missionRuntime.gateEaterContained === true
       || gateEaters.some((fighter) => fighter.contained === true);
     const container = researchContainer ?? createResearchContainerRuntime(config);
     return frozen({
@@ -259,6 +268,7 @@ export function stationSpatialSnapshot({
       powerOperatorCount,
       powerLaneThreats,
       gateEaterSeen: missionRuntime.gateEaterSeen === true || gateEaters.length > 0,
+      gateEaterDefeated,
       gateEaterContained,
       researchContainerExposed: missionRuntime.researchContainerExposed === true
         || container.exposed === true,
