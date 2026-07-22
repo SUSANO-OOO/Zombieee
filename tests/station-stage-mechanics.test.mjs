@@ -219,7 +219,7 @@ test("remote units cannot activate a power node", () => {
   assert.equal(runtime.failed, false);
 });
 
-test("seal requires all powers plus both the Gate Eater and research container", () => {
+test("seal requires all powers, Gate Eater defeat, and the secured research container", () => {
   let runtime = createStationMissionRuntime(STATION_MISSION_TYPES.SEQUENTIAL_SEAL);
   for (const elapsed of [30, 68, 110]) {
     runtime = advanceStationMissionRuntime({
@@ -242,6 +242,7 @@ test("seal requires all powers plus both the Gate Eater and research container",
     battleElapsedSeconds: 112,
     humanCount: 3,
     gateEaterSeen: true,
+    gateEaterDefeated: true,
     gateEaterContained: true,
     researchContainerExposed: true,
     researchContainerContained: false,
@@ -320,6 +321,7 @@ test("the 45-second return window is a deadline and times out before a partial s
   const sealed = {
     ...createStationMissionRuntime(STATION_MISSION_TYPES.SEQUENTIAL_SEAL),
     powerActivated: 3,
+    gateEaterDefeated: true,
     gateEaterContained: true,
     researchContainerExposed: true,
     researchContainerContained: true,
@@ -357,6 +359,7 @@ test("return completion tracks the sealed squad by identity and rejects replacem
   const ready = {
     ...createStationMissionRuntime(STATION_MISSION_TYPES.SEQUENTIAL_SEAL),
     powerActivated: 3,
+    gateEaterDefeated: true,
     gateEaterContained: true,
     researchContainerExposed: true,
     researchContainerContained: true,

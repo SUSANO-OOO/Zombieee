@@ -12,7 +12,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "西新世紀末物語｜アーリーアクセス版 0.7.0",
+  title: "西新世紀末物語｜アーリーアクセス版 0.7.1",
   description:
     "西新・早良区・西新駅地下を舞台に、移動拠点と生存者を率いるアーリーアクセス版ストラテジー。",
   icons: {

@@ -86,26 +86,26 @@ test("Stage 4-6 each have three successful formations with no mandatory unit", (
       assert.ok(result.slotCount <= CAMPAIGN_FORMATION_MAX_SLOTS, `${stage.id}/${index}`);
       assert.equal(result.waves.spawned, result.waves.scheduled, `${stage.id}/${index}`);
       if (stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL) {
+        assert.equal(result.stationMission.gateEaterDefeated, true, `${stage.id}/${index}`);
         assert.equal(result.stationMission.gateEaterContained, true, `${stage.id}/${index}`);
         assert.equal(result.stationMission.researchContainerContained, true, `${stage.id}/${index}`);
         assert.equal(result.stationMission.sealed, true, `${stage.id}/${index}`);
         assert.equal(result.stationMission.completed, true, `${stage.id}/${index}`);
-        assert.equal(result.waves.defeatedKinds.includes("gate-eater"), false, `${stage.id}/${index}`);
+        assert.equal(result.waves.defeatedKinds.includes("gate-eater"), true, `${stage.id}/${index}`);
       }
     }
   }
 });
 
-test("station wins are produced by the shared escort and sequential-seal state machines", () => {
-  const escort = simulateStageBalance({
+test("Stage 5 uses the normal assault outcome while Stage 6 uses the sequential-seal state machine", () => {
+  const platform = simulateStageBalance({
     stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
     formation: P4_BALANCE_FORMATIONS[CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM][0],
-    seed: "escort-state-machine",
+    seed: "platform-assault",
   });
-  assert.equal(escort.stationMission.missionType, "escort");
-  assert.equal(escort.stationMission.completed, true);
-  assert.equal(escort.stationMission.progress, 1);
-  assert.equal(escort.stoppedBy, "escort-complete");
+  assert.equal(platform.missionType, "assault");
+  assert.equal(platform.structureHp, 0);
+  assert.equal(platform.stoppedBy, "objective-destroyed");
 
   const seal = simulateStageBalance({
     stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL,
@@ -115,6 +115,7 @@ test("station wins are produced by the shared escort and sequential-seal state m
   assert.equal(seal.stationMission.missionType, "sequential-seal");
   assert.equal(seal.stationMission.powerActivated, 3);
   assert.equal(seal.stationMission.gateEaterSeen, true);
+  assert.equal(seal.stationMission.gateEaterDefeated, true);
   assert.equal(seal.stationMission.gateEaterContained, true);
   assert.equal(seal.stationMission.researchContainerExposed, true);
   assert.equal(seal.stationMission.researchContainerContained, true);
@@ -125,7 +126,7 @@ test("station wins are produced by the shared escort and sequential-seal state m
   assert.ok(seal.stationMission.escapeRemaining <= 45);
   assert.equal(seal.stationMission.completed, true);
   assert.equal(seal.stoppedBy, "return-complete");
-  assert.equal(seal.waves.defeatedKinds.includes("gate-eater"), false);
+  assert.equal(seal.waves.defeatedKinds.includes("gate-eater"), true);
 });
 
 test("underfilled squads lose because unresolved wave pressure reaches the objective", () => {

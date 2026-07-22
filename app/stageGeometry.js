@@ -117,17 +117,7 @@ function objectivesForStage(stageId, laneCenters) {
     case CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE:
       return [sharedLaneObjective("infected-relay", WORLD_GEOMETRY.enemyBase.attackX, laneCenters)];
     case CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM:
-      return [{
-        id: "maintenance-cart",
-        kind: "escort-route",
-        lane: objectiveConfig.cartLane,
-        start: lanePoint(laneCenters, objectiveConfig.cartLane, objectiveConfig.startX),
-        end: lanePoint(laneCenters, objectiveConfig.cartLane, objectiveConfig.endX),
-        escortRadiusX: objectiveConfig.escortRadiusX,
-        escortRadiusY: objectiveConfig.escortRadiusY,
-        threatRadiusX: objectiveConfig.threatRadiusX,
-        threatRadiusY: objectiveConfig.threatRadiusY,
-      }];
+      return [sharedLaneObjective("infected-base", WORLD_GEOMETRY.enemyBase.attackX, laneCenters)];
     case CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL: {
       const powers = objectiveConfig.powerXs.map((x, index) => ({
         id: `power-${index + 1}`,

@@ -30,9 +30,6 @@ const ENEMY_APPROACH_DISTANCE = 520;
 const CONTACT_PROGRESS = 0.58;
 const OBJECTIVE_DANGER_PROGRESS = 0.82;
 const STRUCTURE_DAMAGE_START_DELAY = 0;
-const GATE_EATER_SUPPRESSION_HP_RATIO = 0.2;
-const GATE_EATER_CONTAINMENT_WORK_RATIO = 0.55;
-const RESEARCH_CONTAINER_CONTAINMENT_WORK_RATIO = 0.32;
 
 /**
  * These are projections of the combat runtime's enemy baselines. Wave scaling
@@ -352,12 +349,10 @@ export function simulateStageBalance({
   let nextWaveIndex = 0;
   let stageMission = createStationMissionRuntime(stage.missionType, stage.objectiveConfig);
   let gateEaterSeen = false;
+  let gateEaterDefeated = false;
   let gateEaterContained = false;
   let researchContainerExposed = false;
   let researchContainerContained = false;
-  let gateEaterContainmentWork = 0;
-  let researchContainerContainmentWork = 0;
-  let gateEaterMaxHp = STAGE_BALANCE_ENEMY_PROFILES["gate-eater"].hp;
   let stoppedBy = "time-limit";
 
   const normalizedWaves = stage.waves.map((wave, index) => freeze({
@@ -413,7 +408,6 @@ export function simulateStageBalance({
         spawnedKinds.add(kind);
         if (kind === "gate-eater") {
           gateEaterSeen = true;
-          gateEaterMaxHp = hp;
         }
       });
       nextWaveIndex += 1;
@@ -448,20 +442,18 @@ export function simulateStageBalance({
         * seedVariance
         * SIMULATION_STEP_SECONDS;
       if (target.kind === "gate-eater") {
-        const suppressionFloor = target.maxHp * GATE_EATER_SUPPRESSION_HP_RATIO;
-        const applied = Math.min(Math.max(0, target.hp - suppressionFloor), damage);
+        const applied = Math.min(target.hp, damage);
         target.hp -= applied;
         totalUnitDamage += applied;
         if (target.hp <= target.maxHp * 0.72 && stageMission.powerActivated >= 2) {
           researchContainerExposed = true;
         }
-        if (stageMission.powerActivated >= 3) {
-          gateEaterContainmentWork += damage;
-          if (gateEaterContainmentWork >= target.maxHp * GATE_EATER_CONTAINMENT_WORK_RATIO) {
-            gateEaterContained = true;
-            target.contained = true;
-            researchContainerExposed = true;
-          }
+        if (target.hp <= 0) {
+          defeatedKinds.add(target.kind);
+          gateEaterDefeated = true;
+          gateEaterContained = true;
+          researchContainerExposed = true;
+          researchContainerContained = true;
         }
         continue;
       }
@@ -474,26 +466,6 @@ export function simulateStageBalance({
     }
 
     const activeEnemies = enemies.filter((enemy) => enemy.hp > 0 && enemy.contained !== true);
-    if (
-      stage.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
-      && stageMission.powerActivated >= 3
-      && gateEaterContained
-      && researchContainerExposed
-      && !researchContainerContained
-      && activeEnemies.length === 0
-    ) {
-      const containmentPressure = activeUnits.reduce((total, unit) => {
-        const engagement = unit.range >= 100 ? 1 : unit.range >= 60 ? 0.92 : 0.8;
-        return total + unit.damage / unit.attackEvery * engagement;
-      }, 0) * readiness * 0.68 * SIMULATION_STEP_SECONDS;
-      researchContainerContainmentWork += containmentPressure;
-      if (
-        researchContainerContainmentWork
-        >= gateEaterMaxHp * RESEARCH_CONTAINER_CONTAINMENT_WORK_RATIO
-      ) {
-        researchContainerContained = true;
-      }
-    }
     for (const enemy of activeEnemies) {
       const laneDefenders = assignedPerLane[enemy.lane];
       const control = laneDefenders > 0 ? Math.min(0.38, laneDefenders * 0.09) : 0;
@@ -577,6 +549,7 @@ export function simulateStageBalance({
         powerOperatorCount: powerLaneThreats === 0 && activeUnits.length > 0 ? 1 : 0,
         powerLaneThreats,
         gateEaterSeen,
+        gateEaterDefeated,
         gateEaterContained,
         researchContainerExposed,
         researchContainerContained,

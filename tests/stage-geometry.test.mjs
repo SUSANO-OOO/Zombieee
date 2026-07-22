@@ -89,31 +89,13 @@ test("keeps all logical lanes, spawn anchors, and fixed objectives on walkable f
   }
 });
 
-test("Stage 5 and Stage 6 objective geometry follows the campaign mission config", () => {
-  const escortConfig = CAMPAIGN_STAGE_BY_ID[CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM].objectiveConfig;
+test("Stage 5 base destruction and Stage 6 seal geometry follow their campaign missions", () => {
   const sealConfig = CAMPAIGN_STAGE_BY_ID[CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL].objectiveConfig;
   for (const viewportId of ALL_VIEWPORT_IDS) {
-    const escort = stageGeometryFor(CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM, viewportId);
-    const cart = escort.objectives.find(({ id }) => id === "maintenance-cart");
-    assert.deepEqual({
-      startX: cart.start.x,
-      endX: cart.end.x,
-      lane: cart.start.lane,
-      escortRadiusX: cart.escortRadiusX,
-      escortRadiusY: cart.escortRadiusY,
-      threatRadiusX: cart.threatRadiusX,
-      threatRadiusY: cart.threatRadiusY,
-    }, {
-      startX: escortConfig.startX,
-      endX: escortConfig.endX,
-      lane: escortConfig.cartLane,
-      escortRadiusX: escortConfig.escortRadiusX,
-      escortRadiusY: escortConfig.escortRadiusY,
-      threatRadiusX: escortConfig.threatRadiusX,
-      threatRadiusY: escortConfig.threatRadiusY,
-    });
-    assert.ok(escort.floor.corridor.maxY < escort.floor.platformEdgeY);
-    assert.equal(isWalkable(escort, { x: 500, y: escort.floor.platformEdgeY + 1 }), false, "track is not walkable");
+    const platform = stageGeometryFor(CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM, viewportId);
+    assert.deepEqual(platform.objectives.map(({ id }) => id), ["infected-base"]);
+    assert.ok(platform.floor.corridor.maxY < platform.floor.platformEdgeY);
+    assert.equal(isWalkable(platform, { x: 500, y: platform.floor.platformEdgeY + 1 }), false, "track is not walkable");
 
     const seal = stageGeometryFor(CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL, viewportId);
     const powers = seal.objectives.filter(({ kind }) => kind === "hold-point");
@@ -250,7 +232,7 @@ test("debug overlay primitives expose visible bounds, floor, lanes, spawns, obje
   assert.equal(first.filter(({ role }) => role === "logical-lane").length, 3);
   assert.equal(first.filter(({ role }) => role === "friendly-spawn").length, 1);
   assert.equal(first.filter(({ role }) => role === "enemy-combat-entry").length, 3);
-  assert.equal(first.filter(({ role }) => role === "objective-route").length, 1);
+  assert.equal(first.filter(({ role }) => role === "objective-anchor").length, 3);
   assert.ok(first.some(({ id, role }) => id === "walkable-floor" && role === "walkable-floor"));
   assert.ok(first.some(({ id }) => id === "visible-world"));
   assert.ok(first.some(({ id }) => id === "forbidden-platform-track"));

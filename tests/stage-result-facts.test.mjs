@@ -48,29 +48,30 @@ test("stage 4 always reports relay destruction but never recounts its rescue", (
   }), ["感染中継点を破壊"]);
 });
 
-test("stage 5 always reports a completed escort but never recounts its rescue", () => {
-  const completedEscort = {
+test("stage 5 reports normal platform control and base destruction", () => {
+  const completedAssault = {
     completed: true,
     failed: false,
-    progress: 1,
+    enemyBaseDestroyed: true,
   };
   assert.deepEqual(stageResultFacts({
     stageId: STAGE_5,
     won: true,
     firstClear: true,
-    missionRuntime: completedEscort,
-  }), ["保守台車の護送を完了", "生存者5名を救助"]);
+    missionRuntime: completedAssault,
+  }), ["ホームを制圧し、感染拠点を破壊", "生存者5名を救助"]);
   assert.deepEqual(stageResultFacts({
     stageId: STAGE_5,
     won: true,
     firstClear: false,
-    missionRuntime: completedEscort,
-  }), ["保守台車の護送を完了"]);
+    missionRuntime: completedAssault,
+  }), ["ホームを制圧し、感染拠点を破壊"]);
 });
 
 test("stage 6 reports the completed sequence and joins Monkey on first clear only", () => {
   const completedSeal = {
     powerActivated: 3,
+    gateEaterDefeated: true,
     gateEaterContained: true,
     researchContainerContained: true,
     sealed: true,
@@ -88,7 +89,7 @@ test("stage 6 reports the completed sequence and joins Monkey on first clear onl
     firstClear: false,
   }), [
     "電源を順番に起動（3/3）",
-    "改札喰いと研究容器を封鎖",
+    "改札喰いを撃破し、研究容器を封鎖",
     "45秒の退路を全員で帰還",
   ]);
   assert.deepEqual(stageResultFacts({
@@ -98,7 +99,7 @@ test("stage 6 reports the completed sequence and joins Monkey on first clear onl
     missionRuntime: completedSeal,
   }), [
     "電源を順番に起動（3/3）",
-    "改札喰いと研究容器を封鎖",
+    "改札喰いを撃破し、研究容器を封鎖",
     "45秒の退路を全員で帰還",
     "モンキーが部隊に加入",
   ]);
@@ -109,7 +110,7 @@ test("stage 6 reports the completed sequence and joins Monkey on first clear onl
     missionRuntime: completedSeal,
   }), [
     "電源を順番に起動（3/3）",
-    "改札喰いと研究容器を封鎖",
+    "改札喰いを撃破し、研究容器を封鎖",
     "45秒の退路を全員で帰還",
   ]);
 });
@@ -125,7 +126,7 @@ test("runtime state suppresses facts that would contradict actual progress", () 
     stageId: STAGE_5,
     won: true,
     firstClear: true,
-    missionRuntime: { completed: true, failed: false, progress: .99 },
+    missionRuntime: { completed: true, failed: false, enemyBaseDestroyed: false },
   }), []);
   assert.deepEqual(stageResultFacts({
     stageId: STAGE_6,
@@ -149,7 +150,7 @@ test("stage 6 partial runtime never overstates containment or full-party return"
   const powerFact = ["電源を順番に起動（3/3）"];
   const containmentFacts = [
     ...powerFact,
-    "改札喰いと研究容器を封鎖",
+    "改札喰いを撃破し、研究容器を封鎖",
   ];
 
   assert.deepEqual(stageResultFacts({
@@ -158,6 +159,7 @@ test("stage 6 partial runtime never overstates containment or full-party return"
     firstClear: true,
     missionRuntime: {
       powerActivated: 3,
+      gateEaterDefeated: true,
       gateEaterContained: true,
       sealed: true,
       completed: true,
@@ -172,6 +174,7 @@ test("stage 6 partial runtime never overstates containment or full-party return"
     firstClear: true,
     missionRuntime: {
       powerActivated: 3,
+      gateEaterDefeated: true,
       gateEaterContained: true,
       researchContainerContained: true,
       sealed: false,
@@ -187,6 +190,7 @@ test("stage 6 partial runtime never overstates containment or full-party return"
     firstClear: true,
     missionRuntime: {
       powerActivated: 3,
+      gateEaterDefeated: true,
       gateEaterContained: true,
       researchContainerContained: true,
       sealed: true,
@@ -202,6 +206,7 @@ test("stage 6 partial runtime never overstates containment or full-party return"
     firstClear: true,
     missionRuntime: {
       powerActivated: 3,
+      gateEaterDefeated: true,
       gateEaterContained: true,
       researchContainerContained: true,
       sealed: true,
@@ -235,6 +240,7 @@ test("every returned facts array is frozen and calls are deterministic", () => {
     firstClear: true,
     missionRuntime: {
       powerActivated: 3,
+      gateEaterDefeated: true,
       gateEaterContained: true,
       researchContainerContained: true,
       sealed: true,

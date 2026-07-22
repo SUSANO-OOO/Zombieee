@@ -36,7 +36,7 @@ function freezeFacts(facts) {
  *
  * A supplied mission runtime is authoritative: completion-dependent facts are
  * omitted unless that runtime confirms completion, and optional counters are
- * never allowed to contradict a rescue, escort, power, seal, or return claim.
+ * never allowed to contradict a rescue, objective, power, boss, seal, or return claim.
  */
 export function stageResultFacts({
   stageId,
@@ -65,12 +65,8 @@ export function stageResultFacts({
 
   if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM) {
     if (!completedMission(missionRuntime)) return EMPTY_FACTS;
-    if (isRuntime(missionRuntime)
-      && hasOwn(missionRuntime, "progress")
-      && Number(missionRuntime.progress) < 1) {
-      return EMPTY_FACTS;
-    }
-    const facts = ["保守台車の護送を完了"];
+    if (isRuntime(missionRuntime) && missionRuntime.enemyBaseDestroyed === false) return EMPTY_FACTS;
+    const facts = ["ホームを制圧し、感染拠点を破壊"];
     if (firstClear === true
       && optionalMinimum(missionRuntime, ["rescuedCount", "rescueCount"], 5)) {
       facts.push("生存者5名を救助");
@@ -82,7 +78,7 @@ export function stageResultFacts({
     if (missionRuntime === undefined || missionRuntime === null) {
       return freezeFacts([
         "電源を順番に起動（3/3）",
-        "改札喰いと研究容器を封鎖",
+        "改札喰いを撃破し、研究容器を封鎖",
         "45秒の退路を全員で帰還",
         ...(firstClear === true ? ["モンキーが部隊に加入"] : []),
       ]);
@@ -91,7 +87,7 @@ export function stageResultFacts({
 
     const powerComplete = Number(missionRuntime.powerActivated) >= 3;
     const containmentComplete = powerComplete
-      && missionRuntime.gateEaterContained === true
+      && missionRuntime.gateEaterDefeated === true
       && missionRuntime.researchContainerContained === true
       && missionRuntime.sealed === true;
     const escapeRemaining = missionRuntime.escapeRemaining;
@@ -120,7 +116,7 @@ export function stageResultFacts({
       && allRequiredUnitsReturned;
     const facts = [];
     if (powerComplete) facts.push("電源を順番に起動（3/3）");
-    if (containmentComplete) facts.push("改札喰いと研究容器を封鎖");
+    if (containmentComplete) facts.push("改札喰いを撃破し、研究容器を封鎖");
     if (returnComplete) facts.push("45秒の退路を全員で帰還");
     if (firstClear === true && returnComplete) facts.push("モンキーが部隊に加入");
     return freezeFacts(facts);

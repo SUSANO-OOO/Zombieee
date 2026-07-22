@@ -105,6 +105,7 @@ export function createStationMissionRuntime(missionType, config = {}) {
       powerActivated: 0,
       powerHold: 0,
       gateEaterSeen: false,
+      gateEaterDefeated: false,
       gateEaterContained: false,
       researchContainerExposed: false,
       researchContainerContained: false,
@@ -183,6 +184,7 @@ export function advanceStationMissionRuntime({
   powerOperatorCount = 0,
   powerLaneThreats = 0,
   gateEaterSeen = false,
+  gateEaterDefeated = false,
   gateEaterContained = false,
   researchContainerExposed = false,
   researchContainerContained = false,
@@ -252,8 +254,14 @@ export function advanceStationMissionRuntime({
 
   if (missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     const resolved = sealConfig(config);
-    const seen = current.gateEaterSeen === true || gateEaterSeen === true || gateEaterContained === true;
-    const gateContained = current.gateEaterContained === true || gateEaterContained === true;
+    const defeated = current.gateEaterDefeated === true || gateEaterDefeated === true;
+    const seen = current.gateEaterSeen === true
+      || gateEaterSeen === true
+      || gateEaterContained === true
+      || defeated;
+    const gateContained = current.gateEaterContained === true
+      || gateEaterContained === true
+      || defeated;
     const researchExposed = current.researchContainerExposed === true
       || researchContainerExposed === true
       || researchContainerContained === true;
@@ -276,7 +284,7 @@ export function advanceStationMissionRuntime({
     }
 
     const containmentReady = powerActivated >= resolved.powerCount
-      && gateContained
+      && defeated
       && researchContained;
     const sealed = current.sealed === true
       || (containmentReady && wavesResolved === true);
@@ -335,6 +343,7 @@ export function advanceStationMissionRuntime({
       powerActivated,
       powerHold,
       gateEaterSeen: seen,
+      gateEaterDefeated: defeated,
       gateEaterContained: gateContained,
       researchContainerExposed: researchExposed,
       researchContainerContained: researchContained,
@@ -385,7 +394,7 @@ export function stationMissionObjective(runtime, config = {}) {
       const percent = Math.min(99, Math.floor(finiteNonNegative(runtime.powerHold) / resolved.powerHoldSeconds * 100));
       return `電源${node?.number ?? runtime.powerActivated + 1}を起動 ${percent}%`;
     }
-    if (!runtime.gateEaterContained) return "改札喰いを封鎖扉の向こうへ押し込め";
+    if (!runtime.gateEaterDefeated) return "改札喰いを撃破";
     if (!runtime.researchContainerExposed) return "研究容器を露出させろ";
     if (!runtime.researchContainerContained) return "研究容器を封鎖扉の向こうへ押し込め";
     if (!runtime.sealed) return "残存感染体を排除し退路を確保";

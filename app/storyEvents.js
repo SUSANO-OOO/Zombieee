@@ -801,8 +801,8 @@ const EVENT_DEFINITIONS = {
     background: "station-platform-escort-cut",
     music: "mechanical-low-rhythm",
     ambience: ["レールの軋み", "変電設備", "漏水"],
-    objective: "保守台車を護衛し、生存者と物資を出口へ運べ",
-    beats: ["プレイヤーが台車と出口を確認し、前進を指示する"],
+    objective: "ホームを制圧し、感染拠点を破壊せよ",
+    beats: ["プレイヤーが感染拠点へ攻撃マーカーを置き、戦闘後の搬送路を確保する"],
     playerPresence: "silent-commander",
     source: `モンキー\t触るな
 パイセン\tまだ触ってないっす
@@ -880,7 +880,7 @@ const EVENT_DEFINITIONS = {
     source: `モンキー\t床を汚す奴から落とせ`,
   },
   "stage-station-platform-replay-v070": {
-    title: "ホーム／線路区域・再護送",
+    title: "ホーム／線路区域・再掃討",
     chapter: "STAGE 5",
     scene: "クリア後再戦",
     background: "station-platform",
@@ -946,7 +946,7 @@ const EVENT_DEFINITIONS = {
     beats: [
       "プレイヤーがガンテツへ帰還マーカーを置く",
       "全員が退路へ戻る",
-      "改札喰いと研究容器を封鎖扉の向こうへ閉じ込める",
+      "改札喰いを撃破し、確保した研究容器を封鎖扉の向こうへ収める",
     ],
     playerPresence: "silent-commander",
     source: `ガンテツ\t先に行ってください
