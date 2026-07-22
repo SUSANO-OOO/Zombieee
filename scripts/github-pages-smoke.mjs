@@ -6,7 +6,7 @@ import { chromium } from "playwright";
 
 const root = path.resolve("_site");
 const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? "/Zombieee";
-const evidenceDir = path.resolve("pages-evidence");
+const evidenceDir = path.resolve(process.env.GITHUB_PAGES_EVIDENCE_DIR ?? "pages-evidence");
 await mkdir(evidenceDir, { recursive: true });
 
 const contentTypes = {
@@ -55,16 +55,23 @@ const url = `http://127.0.0.1:${address.port}${basePath}/`;
 const browser = await chromium.launch({ headless: true });
 const results = [];
 try {
-  for (const viewport of [{ width: 1280, height: 720 }, { width: 844, height: 390 }]) {
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 844, height: 390 },
+    { width: 844, height: 340 },
+  ]) {
     const context = await browser.newContext({ viewport });
     const page = await context.newPage();
-    const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], warnings: [] };
+    const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [], warnings: [] };
     page.on("console", (message) => {
       if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
       if (message.type() === "warning") diagnostics.warnings.push(message.text());
     });
     page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
     page.on("requestfailed", (request) => diagnostics.requestFailures.push(`${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`));
+    page.on("response", (response) => {
+      if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
+    });
 
     const navigation = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
     if (!navigation?.ok()) throw new Error(`GitHub Pages document failed: ${navigation?.status()}`);
@@ -89,7 +96,7 @@ try {
     await page.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 30_000 });
 
     const unexpectedWarnings = diagnostics.warnings.filter((warning) => !warning.includes("was preloaded using link preload but not used"));
-    if (diagnostics.consoleErrors.length || diagnostics.pageErrors.length || diagnostics.requestFailures.length || unexpectedWarnings.length) {
+    if (diagnostics.consoleErrors.length || diagnostics.pageErrors.length || diagnostics.requestFailures.length || diagnostics.httpErrors.length || unexpectedWarnings.length) {
       throw new Error(`Browser diagnostics failed: ${JSON.stringify({ ...diagnostics, warnings: unexpectedWarnings })}`);
     }
 
