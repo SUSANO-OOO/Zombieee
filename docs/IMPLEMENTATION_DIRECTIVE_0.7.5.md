@@ -1,609 +1,444 @@
-# 西新世紀末物語 — Version 0.7.1／0.7.5 実行ランブック
+# 西新世紀末物語 — Version 0.7.1／0.7.5 技術実行ランブック
 
-更新日：2026-07-19  
-状態：Stage 5先行hotfixから0.7.5 release candidateまでの実行正本
+更新日：2026-07-22  
+状態：**Execution Lock配下の技術工程正本**
 
-## 1. 最初に読むもの
+## 1. 役割と参照順
 
-開始時に読むのは次の2点だけ。
+本書は、`docs/EXECUTION_LOCK_0.7.5.md`で確定した実行順を、実装・検証工程へ落とす技術ランブックである。
+
+参照順：
 
 1. `docs/PRODUCER_DECISIONS_0.7.5.md`
-2. 本書
+2. `docs/EXECUTION_LOCK_0.7.5.md`
+3. 本書
+4. Issue #43またはIssue #44の最新本文・差分
+5. `AGENTS.md`
+6. 工程別の実装・QA記録
 
-実行台帳：
+製品判断はProducer Decisions、実行順・権限・停止条件はExecution Lockが所有する。本書と上位正本が衝突する場合は上位正本を優先する。
 
-- Issue #43：`[0.7.1] Stage 5進行阻害hotfix`
-- Issue #44：`[0.7.5] コンテンツ量産基盤・戦闘品質再構築`
+Codexは開始時に上位2文書と対象Issueを先に読み、本書は該当工程の技術詳細として参照する。過去コメント、旧稿、古いSHAを現在値として採用しない。
 
-詳細文書、既存コード、過去のIssue・PRは、該当フェーズで必要な箇所だけ読む。旧稿、過去の会話、古いロードマップが最上位正本と衝突する場合は採用しない。
+## 2. 共通開始確認
 
-文書、CI、preview、simulationだけでは完成としない。実ゲーム、save、スマートフォン、公開後QA、プロデューサー受入を必要なゲートで確認する。
+作業開始時、重要操作直前、公開後に現在値を再取得する。
 
-## 2. リポジトリと公開先
+- repository、remote、branch、HEAD、working tree
+- GitHub `main` SHA
+- open PR、Issue #43、Issue #44
+- tag、GitHub Release、Actions
+- 正式URLのversion／release SHA metadata
+- push、PR、Issue、Release、Actions権限
+- Node・browser・画像処理等の利用可能性
+- baseline test、Lint、production build、`git diff --check`
 
-- repository：`SUSANO-OOO/Zombieee`
-- 正式branch：`main`
-- 正式URL：`https://susano-ooo.github.io/Zombieee/`
-- 正式公開：GitHub Pages
-- 旧公開先：ChatGPT Sites。新規deployment、QA、正式判定に使用しない
-- save key：開始時に現行コードと公開版から再取得し、既存値を維持する
+既存未commit・未追跡変更を削除、reset、上書きしない。必要なら安全な別cloneまたは隔離worktreeを使用する。
 
-文書記載SHAを現在値として固定しない。開始時、PR操作直前、merge直前、tag作成直前、公開後にGitHubの最新状態を再取得する。
+各browser、server、Playwright、待機処理へ明示timeoutを設定する。同一検証が再度timeoutした場合は無限再試行せず、原因、代替証拠、影響範囲を記録する。
 
-## 3. 一気通貫ミッションの構造
+# Part A — R0とVersion 0.7.1
 
-本ミッションは一つの統合依頼として実行できるが、成果物、Issue、PR、tag、Release、完了判定を分離する。
+## A0. R0公開運用preflight
 
-### 成果物A
+### 目的
 
-Version 0.7.1：Stage 5進行阻害hotfix
+Stage 5／6のゲームコードへ触る前に、現行Pages運用をversion非依存の明示的release contractへ移行する。
 
-- 実行台帳：Issue #43
-- 専用feature branch
-- 専用PR
-- `v0.7.1` annotated tag
-- GitHub Release
-- GitHub Pages公開
-- 公開後QA
+### 調査
 
-### 成果物B
+- `.github/workflows/github-pages-release.yml`
+- `.github/workflows/github-pages-public-qa.yml`
+- `.github/pages-release-request.json`
+- Pages build type、permissions、environment
+- `AGENTS.md`
+- `docs/PROJECT_STATE.md`
+- `docs/RELEASE_BACKUP_RECOVERY.md`
+- build／smoke／public QA scriptsとtests
 
-Version 0.7.5：コンテンツ量産基盤・戦闘品質再構築
+### 実装契約
 
-- 実行台帳：Issue #44
-- 0.7.1公開後の最新`main`から開始
-- integration branchを使用
-- 検証可能な工程単位のcommit・PR
-- release candidateでプロデューサー最終受入まで進める
-- 最終受入後の明示承認を受けて正式公開
+release requestは最低限次を持つ。
 
-0.7.1完了後、ユーザーの追加開始指示を待たず、Issue #44へ状態を引き継ぎ、0.7.5のP0から継続してよい。
+- `version`
+- `release_ref`
+- `release_sha`
+- `issue_number`
+- `request_id`
 
-## 4. Codexの裁量
+必須：
 
-`PRODUCER_DECISIONS_0.7.5.md`の固定判断と安全境界を維持する限り、Codexは次を確認なしで決定できる。
+- public QA内の固定`0.7.0`、Issue #37、固定SHA依存を撤廃
+- 通常`main` push、docs-only mergeで製品版を自動deploymentしない
+- 明示的release requestまたは安全なmanual dispatchだけで正式deployment
+- PR段階のproduction build、static build、browser smoke、contract testを維持
+- requestのversion／ref／SHA／Issue／request IDを検証
+- 公開HTMLへversion／release SHA metadataを埋め込む
+- public QAが同じrequest identityを使用
+- 対象Issueへ成功・失敗を報告
+- immutable release再deploymentを維持
+- 既存tagを移動しない
+- 恒久運用文書の衝突記述を同じops PRで整合
 
-- 内部アーキテクチャ
-- フォルダ、モジュール、ファイル分割
-- JSON、TypeScript、YAML等のデータ形式
-- schema、registry、loader、generator、validator
-- AI、経路探索、衝突、描画、音響、VFXの方式
-- レベル、Rank、併用等の強化方式
-- 初期バランス数値と許容範囲内の調整
-- animation clipの形式
-- performance最適化方式
-- migration内部方式
-- テスト、seed、fixture、simulation、証拠形式
-- 非依存タスクの並行順と工程内順序
-- connector、`gh`、通常gitの安全な使い分け
+### 公開状態保全
 
-停止して確認するのは次に限る。
+- 正式URLの公開HTMLを匿名ブラウザ相当で確認
+- Version 0.7.0正式release SHA `782c70351a8fe22ca4ca0daa926c31c83433653a`と一致しない場合、tag・Release・ゲームコードを変更せずimmutable v0.7.0を再deployment
+- Actions成功だけで復旧済みと断定しない
 
-- いくらちゃん、CRAWLER、敵拠点の基準デザイン3点
-- 0.7.5 release candidate最終実プレイ受入
-- stable ID変更が必要
-- 既存saveを安全にmigrationできない
-- 固定済み製品判断を変更する必要がある
-- repository visibility、課金、secrets、外部契約、法務・ライセンス判断が必要
-- 大量削除、履歴破壊、force操作など不可逆な変更が必要
-- 公開後に重大不具合を検出
+### 出口ゲート
 
-上記以外の技術的迷い、軽微なUI調整、不具合修正、内部構造変更では逐次質問せず、実装、検証、修正を継続する。
+- ops専用branch、PR
+- contract test、全test、Lint、build、`git diff --check`成功
+- CI成功
+- independent read-only review High／Medium未解消0
+- 通常merge
+- 正式URLのversion／release SHA一致
+- 匿名アクセス、主要asset、console／page／request error 0
+- Issue #43へ入力SHA、commit、PR、merge SHA、QA、次の再開位置を記録
 
-## 5. 使用量、再開、証拠
-
-- Issue #43またはIssue #44を対象工程の唯一の実行台帳とする
-- 完了済み工程を、依存変更がない限り最初から再調査しない
-- コード検索、diff、対象moduleから入り、無目的な全repository再読込を避ける
-- 対象testを先に実行し、全test・build・browser matrixは工程出口でまとめる
-- 状態変化のないコメント、空commit、重複文書、重複調査を作らない
-- 同じファイルを複数エージェントへ無調整で並行編集させない
-- 安全な依存関係、browser、生成物cacheは再利用できる
-- 品質問題は原則として発見工程内で修正し、未解消High／Mediumを後工程へ送らない
-
-各工程完了時にIssueへ一件の集約報告を残す。
-
-報告項目：
-
-- 工程名
-- 入力base／開始SHA
-- 完了commit SHA
-- 変更ファイル・モジュール
-- 対象test／全test／Lint／build／diff check
-- browser QA
-- 独立review結果
-- 残存事項
-- 次の再開位置
-
-使用上限、時間切れ、ブラウザ停止で中断する場合、未commit変更を破棄せず、完了済み工程、現在SHA、未完了項目、再開コマンドをIssueへ記録する。
-
-ブラウザQA、Playwright、server、待機処理には明示的なtimeoutを設定する。同一検証が再度timeoutした場合は無限再試行せず、原因、代替証拠、影響範囲を記録する。
-
-## 6. 共通安全境界
-
-禁止：
-
-- `main`への直接push
-- force push
-- 共有履歴のrebase・amend
-- 既存tagの移動・上書き
-- repository visibilityの変更
-- 課金、secrets、外部契約の無断変更
-- 既存未commit・未追跡変更の削除、reset、上書き
-- saveの自動初期化
-- ライセンス不明素材の正式採用
-- 未確認・失敗を成功として報告
-- 検証不能な一つの巨大commit
-- ChatGPT Sitesへの新規deployment
-
-削除候補は、import、runtime、build、asset manifest、文書、test参照を検索し、対象test、全test、build、実ブラウザQAを通過した後にのみ削除できる。
-
-重大な公開不具合は、直前のrelease SHAを確認し、通常のrevert PRで復旧する。`main`のforce巻き戻し、tag移動、Release履歴改変は禁止する。
-
-# Part A — Version 0.7.1 Stage 5 hotfix
-
-## A0. プレフライト
-
-1. GitHubから現在のrepository visibility、`main` SHA、公開中release SHA、tag、Release、open PR、open Issueを再取得
-2. ローカルbranch、HEAD、remote、未commit・未追跡・stage済み変更を確認
-3. Issue #43本文と本書の一致を確認
-4. 現行Stage 5のデータ、runtime、AI、勝敗条件、Stage 6解放、saveを特定
-5. baselineとして全test、Lint、build、diff checkを実行
-6. fresh save、既存save、Stage 4〜6導線、PC、844×390、844×340、WebKitの現状を記録
-
-出口証拠：開始SHA、公開SHA、baseline、Stage 5再現、対象module、既存変更保護。
+R0完了後、追加承認を待たずA1へ進む。
 
 ## A1. Stage 5再設計
 
-固定判断：
+### 調査対象
 
-- Stage 5 stable IDを変更しない
+- Stage 5 content定義
+- maintenance cart runtime
+- mission／victory／failure判定
+- unit AIの護衛追従
+- enemy spawn／waves
+- Stage 6 unlock
+- save、star、reward、read event
+- balance simulationと実browser導線
+
+### 固定要件
+
+- Stage 5 stable ID維持
 - 必須台車護衛を撤廃
-- ホーム制圧・感染拠点破壊中心へ変更
-- 台車は背景演出、戦闘後搬送、または失敗条件でない副目標に限定
-- 報酬、星、既読、Stage 6解放、save互換を維持
-- 0.7.5の大規模基盤変更を混在させない
+- ホーム制圧・感染拠点破壊中心の通常戦闘へ変更
+- 台車は背景演出、戦闘後搬送、または敗北条件ではない副目標に限定
+- save、星、報酬、既読、Stage 6解放を維持
+- 3種類以上の異なる編成で通常クリア可能
+- 調達ユニット、特定ユニット、最大強化を必須にしない
+- 0.7.5のレーン撤廃、AI全面刷新、育成、量産基盤、画像刷新を混在させない
 
-Codexが決定すること：
+### 必須test
 
-- 具体的な敵構成
-- 台車の残し方
-- 目的文、UI表現
-- 数値調整
-- テスト方式
+- Stage 4クリアでStage 5解放
+- Stage 5勝利でStage 6解放
+- Stage 5勝利、敗北、再挑戦、撤退、再読込
+- fresh save、公開版由来の既存save fixture
+- 3種類以上の編成
+- 調達ユニットなし
+- reward／star／unlock二重適用0
 
-必須検証：
+## A2. Stage 6ボスHP504停止
 
-- 3種類以上の異なる編成でクリア
-- 調達ユニットなしで本筋進行可能
-- 特定ユニット必須0
-- Stage 4クリア後にStage 5解放
-- Stage 5クリア後にStage 6解放
-- 敗北、再挑戦、撤退、再読込
-- fresh save、既存save
+### 再現と切り分け
 
-## A2. 0.7.1 release gate
+- 公開版または同等baselineでHP504停止を再現
+- UI表示値とauthoritative stateを比較
+- damage計算
+- target selection／hit判定
+- invulnerability／damage immunity
+- phase threshold／phase state
+- objective sequence
+- boss registry／entity replacement
+- state reducer／simulation tick／React同期
+- death／victory／reward／return transition
 
-- 対象test成功
-- 全test成功
-- Lint成功
-- production build成功
-- `git diff --check`成功
-- PC、844×390、844×340、WebKit成功
+### 修正契約
+
+- `504`という値だけを例外処理しない
+- 根本原因を修正
+- phase閾値が意図された仕様なら、正しいphase遷移・演出・再標的化後にdamage可能にする
+- 複数のユニット・武器構成でHPが504未満、0へ到達
+- death／victory／result／reward／map returnが一度だけ成立
+- boss entity、objective、event、audioが重複しない
+
+### 必須test
+
+- deterministic unit test
+- phase境界直前・直後
+- overkill、DoT、範囲、連射、近接、支援damage
+- victory、defeat、retry、withdraw、reload
+- Stage 5から通常導線でStage 6へ進行
+- 公開版で実際にボス撃破
+
+## A3. Version 0.7.1統合QA
+
+最低対象：
+
+- 1280×720
+- 844×390
+- 844×340
+- Chromium
+- Playwright WebKit iPhone相当
+- touch、safe area、回転、tab／lock復帰
+- fresh save、既存save、再読込
+- BGM、SE、戦闘ボイス、二重再生0
 - console error、page error、request failure、主要asset 404が0
-- 独立read-onlyレビューHigh／Medium未解消0
-- PRのbase、head、CI、mergeabilityを操作直前に再取得
+- 対象test、全test、Lint、build、`git diff --check`
+- CI
+- independent read-only review High／Medium未解消0
 
-全ゲート通過後、Issue #43の承認範囲で次を連続実行できる。
+公開後QAでは正式URL上でStage 5をクリアし、Stage 6ボスを撃破し、結果画面、報酬、マップ帰還まで確認する。
 
-1. Draft PRをReady化
-2. `main`へ通常merge
-3. result SHAを取得
-4. `v0.7.1` annotated tag
-5. GitHub Release
-6. GitHub Pages公開
-7. 正式URLのrelease SHA確認
-8. 匿名状態でタイトル、fresh save、Stage 1開始、既存saveを確認
-9. Stage 5／Stage 6進行を公開版で確認
-10. Issue #43へ最終報告
-11. completedでclose
-12. 公開後確認済みbranchを安全に削除
+## A4. Version 0.7.1正式リリース
 
-# Part B — Version 0.7.5 本体
+全ゲート通過後、Issue #43の承認範囲で実行する。
 
-## B0. 0.7.5開始・正本・公開運用
+1. PR base／head／CI／mergeability再取得
+2. Ready化
+3. 通常merge
+4. merge result SHA取得
+5. `v0.7.1` annotated tag
+6. GitHub Release
+7. 明示的release requestによるPages deployment
+8. 正式URLのversion／release SHA確認
+9. 匿名公開後QA
+10. Issue #43最終報告・completed close
+11. 確認済みbranch cleanup
 
-0.7.1公開後の最新`main`から開始する。
+その後、追加開始指示を待たず最新`main`からPart Bへ進む。
 
-作業：
+# Part B — Version 0.7.5
 
-1. Issue #44本文、本書、Producer Decisionsを確認
-2. `integration/0.7.5`または同等の明確なintegration branchを作成
-3. 現在の`PROJECT_STATE.md`を公開済み0.7.1と0.7.5開始状態へ更新
-4. `PRODUCT_ROADMAP.md`を現在の50ステージ、30ユニット、1.0まで戦闘中心、Challenge Mode方向へ更新
-5. GitHub Pages release／public QAのversion、release SHA、報告先Issueをrelease単位で指定できるよう汎用化
-6. 0.7.0、0.7.1、Issue #37への固定依存を今後のrelease pathから除去
-7. immutable release再公開能力は、安全で必要なら維持
+## B0. integration開始とリポジトリ監査
 
-過去のIssue、PR、tag、Release履歴は書き換えない。
+- `integration/0.7.5`作成
+- runtime、content、UI、save、assets、animation、audio、tests、workflows、docsを監査
+- 現在使用中、正本、互換用、自動生成、test専用、旧版、重複候補、未使用候補へ分類
+- module責任、依存関係、移行順、risk、rollback、旧構造廃止条件を記録
+- R0 release contractと0.7.1公開状態を確認し、同じ汎用化を再実装しない
 
-出口証拠：正本所有関係、汎用release contract、文書とGitHub現状の一致。
+出口証拠：現状図、責任境界、移行計画、rollback、旧構造削除条件。
 
-## B1. リポジトリ監査と移行設計
-
-監査対象：
-
-- runtimeコード
-- campaign／unit／enemy／mission／saveデータ
-- UI
-- asset manifest
-- sprite／animation
-- audio
-- tests／QA evidence
-- workflows
-- docs
-
-分類：
-
-- 現在使用中
-- 正本
-- 互換用
-- 自動生成物
-- テスト専用
-- 旧版
-- 重複候補
-- 未使用候補
-
-設計条件：
-
-- runtimeとcontentの責任分離
-- stable IDと表示名の分離
-- aliasとmigration維持
-- 段階移行
-- 既存ゲームを動かしたまま移す
-- 旧構造の廃止条件を定義
-- 全面書き直しを前提にしない
-
-Codexは複数案を内部比較できるが、製品判断を変えない限り、最適案を自律採用して実装へ進める。
-
-出口証拠：現状図、責任境界、移行順、リスク、rollback、旧構造廃止条件。
-
-## B2. データ駆動・量産基盤
-
-最低限の対象：
-
-- units
-- enemies
-- stages
-- missions
-- waves／spawn
-- maps／battle spaces
-- difficulty
-- rewards／unlock
-- acquisition
-- upgrades
-- battle events
-- side／challenge／future timed events
-- assets／portraits／sprites／animation／VFX／audio
-- save／migration
-
-最低限の自動化：
-
-- 新規コンテンツ雛形生成
-- schema検証
-- ID重複検出
-- 参照切れ検出
-- アセット不足検出
-- 未使用候補検出
-- balance simulation
-- caps economy simulation
-- save migration matrix
-- synthetic scale test
-
-合成データで100ユニット、100敵、100ステージ相当を検証する。実際のコンテンツを100件制作する必要はない。
-
-出口証拠：generator実行例、validator結果、合成規模試験、既存content移行率、runtime広範囲編集不要の実例。
-
-## B3. 戦場空間、配置、CRAWLER、敵拠点
-
-製品要求：
-
-- プレイヤー向け固定3レーン撤廃
-- 連続した戦場
-- 座標、距離、形状、範囲、視線による戦闘
-- 支援物の設置予告、可否、理由、必要に応じた補正
-- 一画面で戦況を把握できるスマートフォン構図
-- キャラクター豆粒化を避ける
-
-内部の経路ノード、navigation mesh、flow field、見えない移動帯は許可する。
-
-CRAWLER：
-
-- 明確な出入口
-- 味方が実際の出口から出撃
-- 縦線ワープ撤去
-- ドア、照明、足音、走り出しを同期
-- 本体と最小安全域以外へ支援物を置ける
-
-敵拠点：
-
-- 細く、視認しやすく、戦場を隠さない
-- HP、破損、崩壊が理解できる
-- 敵が後方、内部、画面外から自然に出現
-
-基準デザイン3点の停止：
-
-- いくらちゃん
-- CRAWLER
-- 敵拠点
-
-3点は、基準案と844×390／844×340簡易モックをまとめて提示し、プロデューサー確認を待つ。画像非依存作業は継続する。
-
-出口証拠：空間方式比較、配置QA、spawn QA、実ゲームモック、性能計測。
-
-## B4. AI、標的、ミッション、Stage 1〜6移行
-
-味方AIを役割プロファイル化する。
-
-- 前衛
-- 重装
-- 遊撃
-- 射撃
-- 制圧
-- 支援
-- 工兵
-
-敵AIを行動プロファイル化する。
-
-- CRAWLER優先
-- 最寄り味方
-- 後衛
-- 支援物
-- 拠点防衛
-- 突進
-- 拘束
-- 遠距離
-- 汚染
-- 範囲攻撃
-- 召喚
-
-必須：
-
-- 接敵、適正距離、再索敵、迂回、詰まり解消
-- 攻撃対象、投射物、ダメージ対象の一致
-- CRAWLER危機への反応
-- 特定ユニット必須0
-- 複数の対応手段
-- Stage 1〜6を新基盤へ移行
-- Stage 5の0.7.1修正を回帰させない
-- Stage 6の勝利、敗北、再挑戦、帰還を実プレイ
-
-出口証拠：決定的AIテスト、seed反復、WebKit反復、Stage 1〜6実プレイ、編成差比較。
-
-## B5. 人員管理、購入、強化、難易度、経済
-
-画面：
-
-- 所有一覧
-- 調達
-- 強化
-
-固定：
-
-- 購入と強化にキャップを使用
-- 後半は育成と編成判断の双方が必要
-- 最大強化、特定ユニット、過剰周回を本編必須にしない
-- 後発ユニットに追いつき措置
-- 購入・強化の誤選択で進行不能にしない
-- stable IDで保存
-
-Codexが決定：
-
-- レベル、Rank、併用
-- 最大値
-- 価格曲線
-- 節目能力
-- キャップ収支
-- respec／返還の必要性
-
-ステージ情報：
-
-- 推奨育成水準
-- 主要脅威
-- 敵特性
-- 有効になりやすい能力
-- 特殊ルール
-
-固定正解編成や役割人数を表示しない。
-
-出口証拠：経済simulation、進行不能検査、後発追いつき、複数編成・複数育成水準の実測。
-
-## B6. キャラクター表示、縮尺、アニメーション、VFX
-
-用途別表示：
-
-- identity master
-- event portrait
-- formation card
-- battle sprite
-- 必要ならencyclopedia
-
-crop、focus point、scale、anchor、safe areaを用途別に定義する。
-
-必須：
-
-- イベント全身押し込みによる見切れ0
-- 編成カードの顔位置・余白・倍率統一
-- タタラを含む自然な体格差
-- 足元、頭頂、影、hitbox、選択判定の整合
-
-animation clip：
-
-- 可変フレーム数
-- idle、move、wind-up、active、recovery、hit、incapacitated、death、専用行動
-- フレーム時間、判定、投射物位置、SE、VFX、loop、接地、scale
-
-武器プロファイル：
-
-- 素手、鈍器、チェーンソー、拳銃、ライフル、狙撃銃、マシンガン、クロスボウ、設置武器、回復・支援
-
-マシンガン：
-
-- 構え、反動、銃口発光、連射音、弾道、薬莢、複数ダメージ、着弾、被弾反応を同期
-
-近接：
-
-- ×印などの仮図形を正式な武器軌道、衝撃、接触、ヒットストップへ置換
-
-いくらちゃん：
-
-- Producer Decisionsの露出維持方針を厳守
-- 基準デザイン確認後、用途別cropと統合を進める
-
-出口証拠：全用途ギャラリー、実ゲーム画面、frame／event同期test、武器別QA、スマートフォン比較。
-
-## B7. イベント基盤
-
-通常戦闘と共通の部品から次を登録できるようにする。
-
-- 戦闘中イベント
-- サイド任務
-- 高難易度作戦
-- Challenge Mode
-- 将来の期間イベント
-
-共通利用：units、enemies、maps、missions、waves、difficulty、battle events、rewards、formation、save。
-
-0.7.5では大型イベント、新規大量アート、長尺ストーリーを制作しない。登録、表示、開始、終了、保存、復刻の差し込み口までとする。
-
-出口証拠：最小fixtureイベント、常設／期間指定、終了／復刻、save互換。
-
-## B8. スマートフォン性能
+## B1. content pipeline／generator／validator
 
 対象：
 
-- 844×390
-- 844×340
-- WebKit iPhone相当
-- PC回帰
+- units、enemies、stages、missions、waves／spawn
+- maps／battle spaces、difficulty、rewards／unlock
+- acquisition、upgrades、battle events
+- side／challenge／future timed events
+- assets、portraits、sprites、animation、VFX、audio
+- save／migration
 
-計測：
+必須：
 
-- FPS／frame time
-- 入力遅延
-- AI更新回数
-- 描画数
-- particle／shot／damage text
-- audio同時再生
-- memory増加
-- background／tab／lock復帰
-- browser reload
+- schema、registry、loader、generator、validator
+- stable IDと表示名分離
+- alias、migration維持
+- ID重複、参照切れ、アセット不足、未使用候補検出
+- balance、caps economy、save migration、synthetic scale test
+- 100 units／100 enemies／100 stages相当の合成規模試験
 
-最適化候補：
+実追加ドリル：
 
-- 画面外描画停止
-- object pooling
-- particle再利用
-- 不要なReact再描画削減
-- AI更新頻度適正化
-- 高DPI内部解像度上限
-- effect品質調整
-- audio多重制御
-- background時更新停止
-- memory解放
+- productionへ配信しないfixtureでtest unit 1、enemy 1、stage 1をgeneratorから作成
+- dry-runまたは同等の非破壊確認
+- 同じ入力から同じ成果物
+- 再実行不要差分0
+- core runtimeへ対象固有コードを追加しない
+- build、test、QA gallery成功
+- fixture除去後のproduction差分0
 
-物理iPhone 14 Pro Max相当を利用可能なら10〜15分以上の連続戦闘と発熱傾向を確認する。利用不能なら温度確認済みと断定せず、代替計測を報告する。
+## B2. battle space／placement／spawn
 
-出口証拠：before／after計測、長時間run、WebKit、物理端末または未確認明記。
+- player-facing固定3レーン撤廃
+- contentの固定lane番号依存を撤廃
+- 座標、距離、形状、範囲、視線による戦闘
+- placement preview、可否、理由、nearest valid position補正
+- smartphone一画面で戦況把握
+- character豆粒化回避
+- CRAWLERの出入口、door、lighting、footstep、run-outを同期
+- CRAWLER本体と最小安全域以外へ支援物を配置可能
+- enemy baseを細く視認しやすくし、damage／破損／崩壊を表示
+- enemyはbase後方、内部、画面外から自然spawn
 
-## B9. save migrationと回帰
+内部経路ノード、navigation mesh、flow field、steering、見えない移動帯は許可する。
 
-維持対象：
+出口証拠：方式比較、placement QA、spawn QA、実game mock、performance計測。
 
-- stable unit／stage ID
-- 所有
-- 発見
-- 調達
-- 強化
-- 編成プリセット
-- 星
-- キャップ
-- 解放
-- 既読イベント
-- 設定
-- 戦闘ボイス設定
+## B3. AI／missions／Stage 1〜6
 
-必要ならschemaを更新する。
+味方profile例：frontline、heavy、skirmisher、marksman、suppression、support、engineer。
+
+敵profile例：CRAWLER priority、nearest unit、backline、support object、base defense、charge、grab、ranged、contamination、area、summon。
+
+必須：
+
+- contact、preferred range、retarget、reroute、stuck recovery
+- attack target、projectile、damage target一致
+- CRAWLER危機への反応
+- 主要脅威へ複数の対応方法
+- 特定ユニット必須0
+- Stage 1〜6新基盤移行
+- 0.7.1 Stage 5／6修正を回帰させない
+- Stage 6 victory、defeat、retry、returnを実browser確認
+
+出口証拠：deterministic AI tests、seed反復、WebKit反復、Stage 1〜6実プレイ、編成差比較。
+
+## B4. progression／economy／UI
+
+画面：owned roster、acquisition、upgrade。
+
+minimum viable progression vertical slice：
+
+- 全11ユニットが共通基盤から強化可能
+- キャップ消費
+- 数段階の成長
+- 役割を壊さない少数の節目効果
+- 後発ユニット追いつき
+- stable ID保存、migration
+- 誤投資で本編進行不能にしない
+- 最大強化、特定ユニット、過剰周回を本編必須にしない
+- 育成だけで押し切れず編成判断も必要
+
+Codexが決定：level／rank／併用、段階数、価格曲線、節目効果、caps収支。
+
+対象外：大規模skill tree、多数の固有能力、装備在庫、rarity、gacha、覚醒、限界突破、複雑なrespec。
+
+出口証拠：economy simulation、進行不能検査、後発追いつき、複数編成・育成水準の実測。
+
+## B5. portraits／scale／animation／VFX
+
+用途別profile：identity master、event portrait、formation card、battle sprite、必要ならencyclopedia。
+
+- crop、focus point、scale、anchor、safe area
+- event全身押し込みによる見切れ0
+- formation cardの顔位置、余白、倍率統一
+- 足元、頭頂、体格、武器、影、hitbox、selection一致
+- 小柄、標準、大柄、重装の自然な差
+- タタラを大柄として自然に表示
+
+animation clip：可変frame数、idle、move、wind-up、active、recovery、hit、incapacitated、death、special。
+
+clip data：frame duration、loop、hit event、projectile origin、weapon tip、SE、VFX、movement、recovery、direction、ground anchor、body scale。
+
+weapon profile：unarmed、blunt、chainsaw、handgun、rifle、sniper、machine gun、crossbow、deployable、heal／support。
+
+- machine gunは反動、muzzle flash、連射音、trajectory、case、複数damage、impact、hit reactionを同期
+- 単純な十字、線、×印を正式なweapon trail、impact、contact、hit stop、enemy reactionへ置換
+
+基準デザイン確認：いくらちゃん、CRAWLER、敵拠点。844×390／844×340の簡易実game mockと共に提示する。待機中も画像非依存作業を継続する。
+
+出口証拠：用途別gallery、実game screen、frame／event同期test、weapon QA、smartphone比較。
+
+## B6. event foundation
+
+通常戦闘と共通部品から次を登録可能にする。
+
+- battle event
+- side mission
+- high-difficulty operation
+- Challenge Mode
+- future timed event
+
+0.7.5では大型イベント、新規大量アート、長尺storyを制作しない。registration、display、start、end、save、rerun／revivalの入口までを対象とする。
+
+出口証拠：minimal fixture event、permanent／timed、end／rerun、save互換。
+
+## B7. mobile performance
+
+0.7.1公開版と同一QA環境でbaselineを取得し、本実装前にIssue #44へbudgetを記録する。
+
+第一目標：
+
+- median 50fps以上
+- p95 frame time 33ms以下
+- 15分でmedian frame time悪化10%以内
+- memory指標増加25%以内
+- 100ms超long taskが連続しない
+- background中simulation、render、不要audio更新停止
+- 復帰後game loop、BGM、SE、voice二重化0
+- browser auto reload、進行消失、入力不能0
+
+絶対値取得不能時は、同一環境before／after、frame time分布、long task、memory proxy、render／AI更新数を代替証拠とする。結果を見て説明なくbudgetを緩和しない。物理iPhone未使用なら発熱確認済みと断定しない。
+
+## B8. save migration／integration QA
+
+維持：stable unit／stage ID、owned、discovered、acquisition、upgrade、formation、stars、caps、unlock、read events、settings、battle voice settings。
 
 必須：
 
 - migration前snapshot
 - last-known-good
-- localStorage／IndexedDB
+- localStorage／IndexedDB独立検証
 - 片側破損、両側破損
 - export／import
 - 旧save自動初期化禁止
+- 表示名、画像、crop、animation、class変更だけでsaveを壊さない
 
-出口証拠：migration matrix、公開版save fixture、破損復旧、前後データdiff。
+音声：story全文読み上げ／full voiceは実装しない。人間キャラクターの出撃、攻撃、被弾、戦闘不能voice、weapon sound、body reaction、enemy voiceを維持する。
 
-## B10. 統合QAとrelease candidate
-
-必須：
+## B9. release candidate統合QA
 
 - Stage 1〜6通常導線
 - Stage 5進行阻害0
-- Stage 6勝利、敗北、再挑戦
-- 固定3レーンplayer-facing残存0
-- CRAWLER出撃
-- 敵自然出現
-- 支援配置
+- Stage 6ボス撃破、victory、defeat、retry、return
+- fixed 3-lane player-facing残存0
+- CRAWLER出撃、enemy自然spawn、support placement
 - event／formation画像見切れ0
-- スプライト縮尺・接地
-- 武器種別演出
-- マシンガン連射
-- 調達・強化
-- generator／validator
-- synthetic scale
-- save migration
-- PC、844×390、844×340、WebKit
+- sprite scale／grounding
+- weapon-specific VFX、machine-gun burst
+- acquisition／upgrade
+- generator／validator／実追加ドリル
+- synthetic scale、save migration
+- 1280×720、844×390、844×340、WebKit
 - console error、page error、request failure、主要asset 404が0
-- 全test、Lint、build、diff check、CI
-- 独立read-onlyレビューHigh／Medium未解消0
+- 全test、Lint、build、`git diff --check`、CI
+- independent review High／Medium未解消0
 
-release candidateを隔離URLまたは同等の安全な試遊経路へ公開し、プロデューサーへ次を提示する。
+隔離URLまたは同等の安全な試遊経路へrelease candidateを出し、source SHA、変更概要、既知制約、デザイン3点、Stage 1〜6、AI、animation／VFX、progression、performance、save移行を提示する。
 
-- source SHA
-- 変更概要
-- 既知制約
-- いくらちゃん、CRAWLER、敵拠点
-- Stage 1〜6
-- Stage 5／6
-- 支援配置
-- AI
-- animation／VFX
-- 調達・強化
-- 性能結果
-- save移行結果
+ここで停止し、プロデューサー最終実プレイ受入を待つ。
 
-ここで停止し、プロデューサーの最終実プレイ受入を待つ。
+## B10. 正式リリース
 
-## B11. 0.7.5正式リリース
+最終実プレイ合格後の別承認を受けてのみ実行する。
 
-最終実プレイ合格後の明示承認を受けて、次を連続実行する。
-
-1. PRのbase、head、CI、mergeability再取得
-2. Draft PR Ready化
-3. `main`への通常merge
+1. final PR base／head／CI／mergeability再取得
+2. Ready化
+3. `main`へ通常merge
 4. result SHA取得
 5. `v0.7.5` annotated tag
 6. GitHub Release
-7. GitHub Pages build、browser smoke、deploy
+7. 明示的release requestによるPages deployment
 8. 正式URLのversion／release SHA確認
-9. 匿名状態でタイトル、主要asset、fresh save、既存save、Stage 1開始を確認
-10. 公開後QA
-11. `PROJECT_STATE.md`更新
-12. Issue #44最終報告
-13. completedでclose
-14. 公開後確認済みbranch cleanup
+9. 匿名公開後QA
+10. `PROJECT_STATE.md`更新
+11. Issue #44最終報告・completed close
+12. branch cleanup
 
 0.7.0、0.7.1のtag、Release、履歴を変更しない。
+
+# 共通証拠・レビュー
+
+## 3層レビュー
+
+各主要工程で次を分離する。
+
+1. 実装者self-check
+2. independent read-only review
+3. browser／simulation／save evidence
+
+High／Medium未解消を次工程やreleaseへ送らない。
+
+## Issue報告
+
+各工程完了時に対象Issueへ一件に集約する。
+
+- 工程名
+- input base／開始SHA
+- branch、commit、PR、merge SHA
+- 変更module
+- 対象test、全test、Lint、build、`git diff --check`
+- browser QA
+- independent review
+- remaining work
+- exact next action
+
+使用上限・時間切れで停止する場合、未commit変更を破棄せず、現在SHAと正確な再開地点を記録する。
