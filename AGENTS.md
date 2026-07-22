@@ -1,170 +1,166 @@
 # 西新世紀末物語 — 開発運用ルール
 
-更新日：2026-07-17
+更新日：2026-07-22
 
-## 1. 適用範囲と優先順位
+## 1. 適用範囲
 
-この文書は、このリポジトリで作業するCodex、ChatGPT、サブエージェント、作業確認者に適用する恒久ルールである。
+本書は、このリポジトリで作業するCodex、ChatGPT、Claude Code、サブエージェント、レビュー担当に適用する恒久ルールである。
 
-参照順：
+個別バージョンの製品判断と実行手順は、対象バージョンの正本を優先する。
 
-1. 対象Issueまたはプロデューサー決定台帳の最新明示指示
-2. 対象バージョンの実行ランブック
-3. 本書
-4. 工程別の詳細文書
+Version 0.7.1／0.7.5の参照順：
 
-個別ミッションが対象、権限、ゲート、公開先を明示している場合、その範囲で本書の通常停止地点を上書きできる。
+1. `docs/PRODUCER_DECISIONS_0.7.5.md`
+2. `docs/EXECUTION_LOCK_0.7.5.md`
+3. `docs/IMPLEMENTATION_DIRECTIVE_0.7.5.md`
+4. Issue #43またはIssue #44の最新本文・最新差分
+5. 本書
+6. 工程別の実装・QA記録
 
-相談、仮説、検討案は正式決定として扱わない。確定事項はGitHubの所有文書またはIssueへ記録する。
+製品判断はProducer Decisions、実行順と権限はExecution Lock、詳細工程はImplementation Directiveが所有する。過去コメント、旧PR、旧ロードマップ、会話上の検討案が正本と矛盾する場合は採用しない。
 
 ## 2. 正しい情報源
 
 - 正式コード：GitHub `main`上のrelease SHA
-- 作業中コード：指定feature branch
-- 正式公開版：GitHub Pagesで稼働するrelease SHA
+- 作業中コード：指定feature／integration branch
+- 正式公開版：GitHub Pagesで配信中のrelease SHA
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
-- 現在のrelease・公開状態：`docs/PROJECT_STATE.md`
-- リリース・復元：`docs/RELEASE_BACKUP_RECOVERY.md`
-- 個別判断・承認・実行ログ：対象Issue・PR
-- 実環境固有挙動：対象環境で行った最新QA
+- 現在状態：`docs/PROJECT_STATE.md`
+- 公開・復元：`docs/RELEASE_BACKUP_RECOVERY.md`
+- 実行ログ・承認・QA：対象IssueとPR
+- 実環境固有挙動：最新の実ブラウザQA
 
-ChatGPT Sitesは旧公開先であり、正式公開・QA・障害判定の情報源にしない。
+作業開始時、PR操作直前、merge直前、tag作成直前、公開後にGitHubの現在値を再取得する。文書記載SHAや過去報告を永久に最新として扱わない。
 
-`main`の現在値は、作業開始時にGitHub APIまたは更新済みremote refで確認する。古い文書記載SHAを現在値として扱わない。
+ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、障害復旧に使用しない。
 
 ## 3. 役割
 
-- プロデューサー：製品方向、採否、固定判断、承認
-- ChatGPT：企画、仕様整理、整合監査、Codex指示、結果評価
-- Codex：調査、設計、実装、画像制作、テスト、QA、承認済み範囲のリリース作業
-- サブエージェント：読み取り監査、限定調査、独立レビュー。権限拡張は不可
+- プロデューサー：製品方向、固定判断、画像採否、最終実プレイ受入
+- ChatGPT：要件整理、GitHub正本整備、整合監査、Codex指示、結果評価
+- Codex：調査、設計、実装、対象アセット、テスト、QA、承認済み範囲のGitHub・release操作
+- Claude Code：明示された限定範囲だけの一時代行
+- サブエージェント：読み取り専用監査、限定調査、独立レビュー
 
-Codexは、技術的に同等な実装方法、構造、初期数値、テスト方法を自律決定できる。固定済みの製品判断を変更する場合だけ確認する。
+Codexは、固定済み製品判断と安全境界を守る限り、内部構造、データ形式、アルゴリズム、初期数値、テスト方式を自律決定する。技術方式の選択だけを理由に逐次質問しない。
 
-## 4. ミッションの種類
+## 4. 作業開始
 
-### 4.1 実装ミッション
+開始時に最低限確認する。
 
-明示された範囲で次を連続実行できる。
+- repository、remote、branch、HEAD
+- `main`の最新SHA
+- working treeと未追跡ファイル
+- open PR、対象Issue
+- tag、GitHub Release、Actions
+- 正式URLのrelease metadata
+- push、PR、Issue、Release、Actions権限
+- baseline test、Lint、build、`git diff --check`
 
-- 調査、設計、実装、文書、対象アセット
-- テスト、Lint、build、実ブラウザQA
-- 問題修正と再検証
-- 通常commit
-- feature branchへの通常push
-- Draft PR作成・更新
-- Issue・PR報告
+既存未commit・未追跡変更を削除、reset、上書きしない。安全な別cloneまたは隔離worktreeを使用できる。
 
-通常の停止地点は、リリース可能なDraft PRと検証報告。
-
-### 4.2 一気通貫ミッション
-
-プロデューサーが、対象PR、公開先、リリースゲート、許可操作を明示した場合、実装から正式公開までを一つのミッションとして実行できる。
-
-ゲート通過後に許可される操作：
-
-- Draft PRのReady化
-- PRを通した`main`への通常merge
-- result SHAの取得
-- annotated tag
-- GitHub Release
-- GitHub Pages deployment確認
-- 正式URLでの公開後QA
-- Issue close
-- 公開後確認済みfeature branchの安全な削除
-
-途中でbase/head移動、CI失敗、未承認画像、公開阻害不具合が発生した場合は、その工程だけ停止する。解決可能な技術問題はfeature branch上で修正し、ゲートを再実行する。
-
-## 5. 画像承認
-
-個別ミッションで一枚承認制が指定された場合：
-
-- 一度に一枚だけ提示
-- 明示承認前に正式採用・派生制作・統合・次画像提示をしない
-- 修正版は同Asset IDの新revision
-- 却下画像を再利用しない
-- 承認履歴をIssue・PR・manifestへ記録
-
-画像承認待ちを理由に、save、AI、UI、ロジック、テストなど画像非依存作業を停止しない。
-
-## 6. GitHub運用
+## 5. GitHub運用
 
 - `main`はPR経由でのみ変更
-- feature branchへの通常pushのみ許可
+- feature／integration branchへの通常pushのみ許可
 - force push禁止
 - 共有履歴のrebase・amend禁止
 - PRのbase、head、CI、mergeabilityを操作直前に再取得
-- merge後はhead SHAではなくresult SHAをrelease SHAとする
-- tag・Releaseはrelease SHAへ固定
+- merge後はhead SHAではなくmerge result SHAをrelease SHAとする
+- tagとGitHub Releaseはrelease SHAへ固定
 - 既存tagの移動・上書き禁止
-- 状態変化がない進捗コメントを連投しない
-- 同じ変動値を複数文書へ複製せず、正式所有元へリンク
+- 状態変化のないコメント、空commit、重複文書を作らない
+- 同じファイルを複数エージェントで無調整に並行編集しない
 
-## 7. 公開
+Version 0.7.5では、工程branchを`integration/0.7.5`向けPRとして統合できる。`integration/0.7.5 → main`の最終PRは、release candidateのプロデューサー受入後までmergeしない。
 
-唯一の正式公開経路はGitHub Pages。
+## 6. 公開契約
 
-- `main` pushでGitHub Pages workflowを起動
-- build、browser smoke、deployの全成功を確認
-- 正式URL上のrelease SHAを確認
-- 公開後QAを実施
-- workflow成功だけで製品受入完了と断定しない
+正式deploymentは、明示的なrelease requestまたは安全なmanual dispatchだけで実行する。
 
-ChatGPT Sitesへのdeployment、保存、更新、QAを新規ミッションへ含めない。
+release requestは最低限次を持つ。
 
-## 8. スマートフォンQA
+- `version`
+- `release_ref`
+- `release_sha`
+- `issue_number`
+- `request_id`
 
-スマートフォン横画面を主対象とする。
+通常の`main` pushやdocs-only mergeで製品版を自動deploymentしない。PR段階のbuild、browser smoke、release contract検証は維持する。
 
-最低確認：
+公開完了条件：
 
-- 844×390
-- 844×340
-- safe area
-- ブラウザUI表示中
-- タッチ領域
-- 回転・画面ロック・タブ復帰
-- BGM・SE開始と残留音
-- save再読込
-- console error・asset 404
+- production build成功
+- static Pages build成功
+- browser smoke成功
+- Pages deploy成功
+- 公開HTMLのversion／release SHAがrequestと一致
+- 匿名ブラウザ相当で認証要求・404なし
+- 主要asset取得成功
+- fresh saveと既存saveの必須導線成功
+- 対象Issueへの公開後QA記録
 
-PCは基本回帰を確認する。
+Actions成功だけで一般公開成功と断定しない。
 
-個別ミッションで物理iPhoneがリリースゲートに指定された場合、完了証拠が揃うまで公開しない。
+## 7. 一気通貫ミッション
 
-## 9. 安全原則
+対象Issue、正本、公開先、停止条件、許可操作が明示されている場合、Codexは次を一つのミッションとして実行できる。
 
-- 作業開始時にGit状態、対象Issue、対象ファイルを確認
-- 既存未コミット変更を勝手に消さない
-- 過去報告から現在状態を推測しない
-- 必要以上の全面リファクタリングを先行しない
-- プレイヤー体験単位で分割し、検証不能な巨大差分にしない
-- ライセンス不明素材を追加しない
-- secrets、認証、課金、本番データ、repository設定を暗黙に変更しない
-- 未確認・失敗を成功扱いしない
-- 複数エージェントが同じファイルを無調整で並行編集しない
+- 調査、設計、実装、対象文書・アセット
+- test、Lint、build、実ブラウザQA
+- 不具合修正と再検証
+- 通常commit・通常push
+- Draft PR作成・更新
+- 独立read-onlyレビュー
+- 承認済み範囲のReady化、通常merge
+- annotated tag、GitHub Release
+- 明示的requestによるPages deployment
+- 公開後QA、Issue close、確認済みbranch cleanup
 
-## 10. ロールバック
+使用上限や時間切れで中断する場合は、完了工程、現在SHA、未完了項目、正確な再開位置を対象Issueへ記録する。依存変更がない完了工程を最初からやり直さない。
 
-重大な公開不具合は、直前release SHAを確認し、通常のrevert PRで復旧する。
+## 8. テスト・QA
+
+テスト本数だけで完成としない。実ゲームの成立を確認する。
+
+最低基準：
+
+- 対象test、全test、Lint、build、`git diff --check`
+- console error、page error、request failure、主要asset 404が0
+- 1280×720、844×390、844×340
+- Playwright WebKitのiPhone相当
+- touch、safe area、回転、タブ・画面ロック復帰
+- BGM、SE、戦闘ボイス、二重再生なし
+- fresh save、既存save、migration、破損復旧
+- 独立read-onlyレビューHigh／Medium未解消0
+
+物理iPhoneを利用できない場合、発熱確認済みと断定しない。frame time、memory、WebKit結果を代替証拠として明記する。
+
+## 9. 画像・音声
+
+個別ミッションで基準デザイン確認が指定された場合、その画像だけは正式統合前に確認する。確認待ちの間も、画像非依存の基盤、save、AI、データ、テスト、性能作業は続行する。
+
+ストーリー会話の全文読み上げを実装しないことと、戦闘中キャラクターボイスを削除することを混同しない。出撃、攻撃、被弾、戦闘不能の人間キャラクターボイス、武器音、敵ボイスは明示変更がない限り維持する。
+
+## 10. 安全境界
 
 禁止：
 
-- `main`のforce巻き戻し
-- tag移動
-- Release履歴の改変による隠蔽
+- `main`直接push
+- force push、共有履歴rebase・amend
+- 既存tag移動・上書き
+- repository visibility、課金、secrets、外部契約の無断変更
+- 既存未commit・未追跡変更の削除
+- saveの自動初期化
+- ライセンス不明素材の正式採用
+- 未確認・失敗の成功報告
+- 検証不能な巨大commit・巨大差分
+- ChatGPT Sitesへの新規deployment
 
-復旧後もGitHub Pages workflowと正式URLを再確認する。
+重大な公開不具合は、直前の正常release SHAを確認し、通常のrevert PRで復旧する。`main`のforce巻戻し、tag移動、Release履歴改変は禁止する。
 
-## 11. 文書の所有関係
+## 11. 設計打ち切り
 
-- `README.md`：作品入口、正式URL、セットアップ、文書案内
-- `AGENTS.md`：恒久運用ルール
-- `docs/PROJECT_STATE.md`：現在のrelease・公開状態
-- `docs/RELEASE_BACKUP_RECOVERY.md`：公開、tag、Release、rollback、bundle
-- バージョン別プロデューサー決定台帳：変更不可の製品判断
-- バージョン別実行ランブック：工程、ゲート、権限
-- Product Spec：システム詳細
-- Characters：人物・内部ID
-- Story／Scenario：物語詳細
-- GitHub Issue・PR：実行ログ、承認、QA、完了報告
+GitHub正本が承認済みで、開始前提に変化がない場合、同じ要件について新しい「最終計画書」を追加しない。実装を伴わない再監査、状態変化のない追加レビュー、完了工程の無目的な再読込を禁止する。
+
+計画を変更できるのは、プロデューサー判断の変更、実装・計測・QAで判明した重大事実、セーブ・公開・法務・安全blockerがある場合だけとする。その場合も既存計画を全面再作成せず、対象Issueへ差分を記録する。
