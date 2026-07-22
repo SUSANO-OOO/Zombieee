@@ -6,37 +6,56 @@ on:
       - GitHub Pages Release
     types:
       - completed
-    branches:
-      - main
 
 permissions:
+  actions: read
   contents: read
   issues: write
 
 jobs:
   verify-public:
-    if: github.event.workflow_run.conclusion == 'success'
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      (github.event.workflow_run.event == 'workflow_dispatch' || github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - name: Checkout main
+      - name: Checkout public QA tooling
         uses: actions/checkout@v4
         with:
           ref: main
           persist-credentials: false
-
-      - name: Resolve expected release
-        id: release
-        shell: bash
-        run: |
-          release_sha="$(jq -er '.release_sha | select(type == "string" and test("^[0-9a-f]{40}$"))' .github/pages-release-request.json)"
-          echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 22.13.0
           cache: npm
+
+      - name: Download source release contract
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages-release-contract
+          path: release-contract
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Validate source release identity
+        id: release
+        shell: bash
+        run: |
+          node scripts/release-contract.mjs \
+            --file release-contract/release-contract.json \
+            --output release-contract/validated-release-contract.json
+          {
+            echo "version=$(jq -er '.version' release-contract/validated-release-contract.json)"
+            echo "release_ref=$(jq -er '.release_ref' release-contract/validated-release-contract.json)"
+            echo "release_sha=$(jq -er '.release_sha' release-contract/validated-release-contract.json)"
+            echo "issue_number=$(jq -er '.issue_number' release-contract/validated-release-contract.json)"
+            echo "request_id=$(jq -er '.request_id' release-contract/validated-release-contract.json)"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
@@ -51,58 +70,73 @@ jobs:
         continue-on-error: true
         env:
           GITHUB_PAGES_PUBLIC_URL: https://susano-ooo.github.io/Zombieee/
+          GITHUB_PAGES_EXPECTED_VERSION: ${{ steps.release.outputs.version }}
           GITHUB_PAGES_EXPECTED_RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+          GITHUB_PAGES_EXPECTED_REQUEST_ID: ${{ steps.release.outputs.request_id }}
+          GITHUB_PAGES_EXPECTED_ISSUE_NUMBER: ${{ steps.release.outputs.issue_number }}
+          GITHUB_PAGES_EVIDENCE_DIR: ${{ github.workspace }}/pages-evidence-public
         shell: bash
         run: |
-          mkdir -p pages-evidence-public
+          mkdir -p "$GITHUB_PAGES_EVIDENCE_DIR"
           set +e
-          node scripts/github-pages-public-smoke.mjs > pages-evidence-public/public-smoke.log 2>&1
+          node scripts/github-pages-public-smoke.mjs > "$GITHUB_PAGES_EVIDENCE_DIR/public-smoke.log" 2>&1
           status=$?
           set -e
-          cat pages-evidence-public/public-smoke.log
+          cat "$GITHUB_PAGES_EVIDENCE_DIR/public-smoke.log"
           exit "$status"
 
       - name: Upload public QA evidence
-        if: always()
+        if: always() && steps.public_smoke.outcome != ''
         uses: actions/upload-artifact@v4
         with:
           name: github-pages-public-qa-evidence
           path: pages-evidence-public
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
 
       - name: Report public QA success
         if: steps.public_smoke.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release.outputs.version }}
           RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+          ISSUE_NUMBER: ${{ steps.release.outputs.issue_number }}
+          REQUEST_ID: ${{ steps.release.outputs.request_id }}
           SOURCE_RUN: ${{ github.event.workflow_run.html_url }}
         shell: bash
         run: |
-          gh issue comment 37 --body "## 0.7.0 GitHub Pages公開後QA成功
-
-- 正式URL: https://susano-ooo.github.io/Zombieee/
-- release SHA: \`$RELEASE_SHA\`
-- 1280×720: pass
-- 844×390: pass
-- 844×340: pass
-- title表示・開始操作: pass
-- console error・page error・request failure・横スクロール: 0
-- deploy source run: $SOURCE_RUN
-- public QA run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          {
+            echo "## Version $VERSION GitHub Pages公開後QA成功"
+            echo
+            echo "- 正式URL: https://susano-ooo.github.io/Zombieee/"
+            echo "- release SHA: \`$RELEASE_SHA\`"
+            echo "- request ID: \`$REQUEST_ID\`"
+            echo "- 1280×720: pass"
+            echo "- 844×390: pass"
+            echo "- 844×340: pass"
+            echo "- title表示・開始操作: pass"
+            echo "- console error・page error・request failure・横スクロール: 0"
+            echo "- deploy source run: $SOURCE_RUN"
+            echo "- public QA run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } > /tmp/public-qa-success.md
+          gh issue comment "$ISSUE_NUMBER" --body-file /tmp/public-qa-success.md
 
       - name: Report public QA failure
         if: steps.public_smoke.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release.outputs.version }}
           RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+          ISSUE_NUMBER: ${{ steps.release.outputs.issue_number }}
+          REQUEST_ID: ${{ steps.release.outputs.request_id }}
           SOURCE_RUN: ${{ github.event.workflow_run.html_url }}
         shell: bash
         run: |
           {
-            echo "## 0.7.0 GitHub Pages公開後QA失敗"
+            echo "## Version $VERSION GitHub Pages公開後QA失敗"
             echo
             echo "- release SHA: \`$RELEASE_SHA\`"
+            echo "- request ID: \`$REQUEST_ID\`"
             echo "- deploy source run: $SOURCE_RUN"
             echo "- public QA run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo
@@ -110,7 +144,7 @@ jobs:
             tail -n 120 pages-evidence-public/public-smoke.log || true
             echo '```'
           } > /tmp/public-qa-failure.md
-          gh issue comment 37 --body-file /tmp/public-qa-failure.md
+          gh issue comment "$ISSUE_NUMBER" --body-file /tmp/public-qa-failure.md
 
       - name: Enforce public QA result
         if: steps.public_smoke.outcome == 'failure'

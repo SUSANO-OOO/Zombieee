@@ -8,6 +8,18 @@ const serverEntry = path.join(root, "dist", "server", "index.js");
 const outputDir = path.join(root, "_site");
 const requestedBasePath = process.env.GITHUB_PAGES_BASE_PATH ?? "/Zombieee";
 const basePath = requestedBasePath === "/" ? "" : `/${requestedBasePath.replace(/^\/+|\/+$/g, "")}`;
+const releaseVersion = process.env.GITHUB_PAGES_RELEASE_VERSION ?? "preview";
+const releaseSha = process.env.GITHUB_PAGES_RELEASE_SHA ?? process.env.GITHUB_SHA ?? "local";
+const releaseRequestId = process.env.GITHUB_PAGES_REQUEST_ID ?? "local-preview";
+const releaseIssueNumber = process.env.GITHUB_PAGES_ISSUE_NUMBER ?? "0";
+
+function escapeHtmlAttribute(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
 
 await stat(clientDir);
 await stat(serverEntry);
@@ -82,7 +94,7 @@ function patchVinextPreloadBase(source) {
 html = prefixAbsoluteReferences(html);
 html = html.replace(
   "<head>",
-  `<head><meta name="github-pages-release" content="${process.env.GITHUB_SHA ?? "local"}"><meta name="github-pages-base" content="${basePath || "/"}/">`,
+  `<head><meta name="github-pages-version" content="${escapeHtmlAttribute(releaseVersion)}"><meta name="github-pages-release" content="${escapeHtmlAttribute(releaseSha)}"><meta name="github-pages-request-id" content="${escapeHtmlAttribute(releaseRequestId)}"><meta name="github-pages-issue" content="${escapeHtmlAttribute(releaseIssueNumber)}"><meta name="github-pages-base" content="${basePath || "/"}/">`,
 );
 
 await writeFile(path.join(outputDir, "index.html"), html, "utf8");
@@ -133,4 +145,8 @@ console.log(JSON.stringify({
   renderedBytes: index.length,
   checkedReferences: requiredReferences.length,
   preloadHelperPatchCount,
+  releaseVersion,
+  releaseSha,
+  releaseRequestId,
+  releaseIssueNumber,
 }, null, 2));
