@@ -1,5 +1,7 @@
 {
+  "version": "0.7.0",
   "release_ref": "v0.7.0",
   "release_sha": "782c70351a8fe22ca4ca0daa926c31c83433653a",
+  "issue_number": 37,
   "request_id": "v0.7.0-docs-consolidation-20260722"
 }
