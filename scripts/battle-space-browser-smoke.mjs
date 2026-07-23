@@ -221,6 +221,11 @@ async function deploymentAndSpawnCase(page) {
     enteringHuman.id,
     { timeout },
   );
+  const humanReadySnapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+  invariant(
+    humanReadySnapshot.crawlerFootstepCount >= 1,
+    "CRAWLER run-out completed without a distance-synchronized footstep cue",
+  );
 
   try {
     await page.waitForFunction(
@@ -249,6 +254,7 @@ async function deploymentAndSpawnCase(page) {
   return {
     enteringHuman,
     enteringEnemy,
+    crawlerFootstepCount: humanReadySnapshot.crawlerFootstepCount,
     battleSpace: finalSnapshot.battleSpace,
   };
 }

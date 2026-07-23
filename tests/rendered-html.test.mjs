@@ -861,9 +861,10 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   const leftBurn = advanceAreaEffects({ areaEffects: burned.areaEffects, fighters: burned.fighters.map((fighter) => ({ ...fighter, x: 900 })), seconds: 1 });
   assert.equal(leftBurn.fighters[0].burning, false);
   assert.equal(leftBurn.fighters[0].slowMultiplier, 1);
-  assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyLane: 1, attackRange: 20 }), true);
-  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 600, enemyLane: 1, attackRange: 20 }), false);
-  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 480, enemyLane: 1, attackRange: 20 }), true);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), true);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), false);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 480, enemyY: LANE_Y[1], attackRange: 20 }), true);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyY: LANE_Y[0], attackRange: 20 }), false);
 });
 
 test("keeps supplies, area effects, and airstrikes aligned and lane-isolated in standard and compact layouts", () => {
@@ -1146,14 +1147,14 @@ test("validates, damages, and releases the battlefield container without changin
 
   assert.deepEqual(damageContainer(CONTAINER_DEF.maxHp, 35), { hp: CONTAINER_DEF.maxHp - 35, phase: "active" });
   assert.deepEqual(damageContainer(20, 35), { hp: 0, phase: "destroying" });
-  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), true);
-  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "impact" }), true);
-  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 0, containerX: 440, containerLane: 1, phase: "active" }), false);
-  assert.equal(containerBlocksEnemy({ enemyX: 400, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), false);
-  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "destroying" }), false);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyY: LANE_Y[1], containerX: 440, containerY: LANE_Y[1], phase: "active" }), true);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyY: LANE_Y[1], containerX: 440, containerY: LANE_Y[1], phase: "impact" }), true);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyY: LANE_Y[0], containerX: 440, containerY: LANE_Y[1], phase: "active" }), false);
+  assert.equal(containerBlocksEnemy({ enemyX: 400, enemyY: LANE_Y[1], containerX: 440, containerY: LANE_Y[1], phase: "active" }), false);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyY: LANE_Y[1], containerX: 440, containerY: LANE_Y[1], phase: "destroying" }), false);
 
   const rearContainer = { ...activeContainer, id: 41, x: 360 };
-  const blocking = selectBlockingContainer({ enemyX: 600, enemyLane: 1, objects: [rearContainer, activeContainer] });
+  const blocking = selectBlockingContainer({ enemyX: 600, enemyY: LANE_Y[1], objects: [rearContainer, activeContainer] });
   assert.equal(blocking.id, activeContainer.id);
 
   const destroyed = applyContainerDamage({ ...activeContainer, hp: 20 }, 35);
@@ -1161,7 +1162,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.equal(destroyed.phase, "destroying");
   assert.equal(destroyed.blocksEnemies, false);
   assert.equal(destroyed.targetable, false);
-  assert.equal(selectBlockingContainer({ enemyX: 600, enemyLane: 1, objects: [destroyed] }), undefined);
+  assert.equal(selectBlockingContainer({ enemyX: 600, enemyY: LANE_Y[1], objects: [destroyed] }), undefined);
   assert.equal(advanceZombieX({ enemyX: 600, speed: 20, seconds: 1 }), 580);
   assert.equal(battleOutcome(0, 0), "lost");
 
@@ -1179,8 +1180,8 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /correctedBattlefieldTargetForGame\(g, \{ x, y \}, kind\)/);
   assert.match(game, /placeBattlefieldSupply\(kind, x, y\)/);
   assert.match(game, /if \(deployAirstrike\(x, y\)\) chooseAction\(null\)/);
-  assert.match(game, /const routeLane = f\.lane/);
-  assert.match(game, /selectBlockingContainer\(\{/);
+  assert.match(game, /selectBlockingContainer\(\{[\s\S]*enemyX: f\.x,[\s\S]*enemyY: f\.y,[\s\S]*enemyRadius: f\.bodyRadius/);
+  assert.match(game, /enemyCanTargetBattlefieldSupply\(\{[\s\S]*enemyX: f\.x,[\s\S]*enemyY: f\.y,[\s\S]*attackRange: f\.range/);
   assert.match(game, /physicalContact \?\? \(blockingSupply \? undefined/);
   assert.match(game, /chooseCommittedEnemyLane\(\{[\s\S]*hasTarget: Boolean\(target\)[\s\S]*hasObjectTarget: Boolean\(objectTarget\)[\s\S]*inContact: Boolean\(physicalContact\)/);
   assert.match(game, /advanceZombieX\(\{ enemyX: f\.x,[\s\S]*targetFloor: zombieTargetFloor \}\)/);
@@ -1433,7 +1434,8 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   const deployAudioStart = game.indexOf("if (g.deployQueue.length");
   const deployAudio = game.slice(deployAudioStart, game.indexOf("const crawlerStep =", deployAudioStart));
   assert.match(deployAudio, /playProductionCue\("support-pod-deploy", deploymentX,[\s\S]*volume: kind === "brute" \? \.42 : \.32[\s\S]*maxInstances: 1/);
-  assert.match(deployAudio, /playProductionCue\("weapon-melee-impact", deploymentX,[\s\S]*playbackRate:/);
+  assert.doesNotMatch(deployAudio, /playProductionCue\("weapon-melee-impact"/);
+  assert.match(game, /if \(f\.gateEntering\)[\s\S]*entryStepDistance[\s\S]*crawlerFootstepCount \+= 1[\s\S]*playProductionCue\("weapon-melee-impact", f\.x,[\s\S]*playbackRate:/);
   assert.doesNotMatch(deployAudio, /weaponCueForUnit\(kind\)/);
   const newcomerAudio = game.slice(game.indexOf("const weaponEvent ="), game.indexOf('if (f.kind === "scout"'));
   assert.match(newcomerAudio, /const contactAudioX = f\.kind === "crazy-king" \|\| f\.kind === "kumaverson" \? \(f\.x \+ target\.x\) \/ 2 : f\.x/);
@@ -1461,17 +1463,18 @@ test("queues each wave into staggered multi-height enemy gate entries", () => {
 
   assert.equal(initial.pending.length, 0);
   assert.equal(queued.pending.length, wave.units.length);
-  assert.deepEqual(queued.pending.map(({ kind, lane }) => [kind, lane]), wave.units);
+  assert.deepEqual(queued.pending.map(({ kind }) => kind), wave.units);
+  assert.ok(queued.pending.every(({ lane }) => Number.isInteger(lane) && lane >= 0 && lane < 3));
   assert.equal(queued.pending[0].delay, 0);
   assert.ok(queued.pending.slice(1).every(({ delay }) => delay > 0));
   assert.equal(new Set(queued.pending.map(({ x, y }) => `${x}:${y}`)).size, wave.units.length);
   assert.ok(queued.pending.every(({ x }) => ENEMY_GATE_SPAWN.interiorX.includes(x)));
-  assert.ok(queued.pending.every(({ lane, y }) => Math.abs(y - LANE_Y[lane]) <= 17));
-  assert.ok(enemySpawnInterval({ kind: "crusher", lane: 0, order: 1 }) > enemySpawnInterval({ kind: "runner", lane: 0, order: 1 }));
-  assert.ok(enemySpawnInterval({ kind: "takuya", lane: 1, order: 2 }) > enemySpawnInterval({ kind: "crusher", lane: 1, order: 2 }));
+  assert.ok(queued.pending.every(({ y }) => ENEMY_GATE_SPAWN.interiorY.includes(y)));
+  assert.ok(enemySpawnInterval({ kind: "crusher", order: 1, wave: 8 }) > enemySpawnInterval({ kind: "runner", order: 1, wave: 8 }));
+  assert.ok(enemySpawnInterval({ kind: "takuya", order: 2, wave: 8 }) > enemySpawnInterval({ kind: "crusher", order: 2, wave: 8 }));
 
-  const upperA = enemyGateSpawnPosition({ kind: "walker", lane: 0, order: 0, wave: 3 });
-  const upperB = enemyGateSpawnPosition({ kind: "runner", lane: 0, order: 1, wave: 3 });
+  const upperA = enemyGateSpawnPosition({ kind: "walker", order: 0, wave: 3, entryId: 1 });
+  const upperB = enemyGateSpawnPosition({ kind: "runner", order: 1, wave: 3, entryId: 2 });
   assert.notDeepEqual([upperA.x, upperA.y], [upperB.x, upperB.y]);
 
   const firstFrame = advanceEnemySpawnRuntime(queued, 1 / 60);
@@ -1495,7 +1498,7 @@ test("queues each wave into staggered multi-height enemy gate entries", () => {
   }
   assert.equal(spawned.length, wave.units.length);
   assert.equal(new Set(spawned.map(({ entryId }) => entryId)).size, wave.units.length);
-  assert.deepEqual(spawned.map(({ kind, lane }) => [kind, lane]), wave.units);
+  assert.deepEqual(spawned.map(({ kind }) => kind), wave.units);
   assert.deepEqual(createEnemySpawnRuntime(), { pending: [], cooldown: 0, nextEntryId: 1 });
 });
 
@@ -1539,10 +1542,10 @@ test("keeps gate-entering enemies immune until combat-ready", () => {
 test("integrates the enemy gate queue without changing direct QA or turned placement", async () => {
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   assert.match(game, /enemySpawn: createEnemySpawnRuntime\(\)/);
-  assert.match(game, /g\.enemySpawn = \(enqueueEnemyWave as unknown as \(runtime: EnemySpawnRuntime, input: \{ units: \[string, Lane\]\[\]; wave: number \}\) => EnemySpawnRuntime\)\(g\.enemySpawn, \{ units: mission\.units, wave: mission\.wave \}\)/);
+  assert.match(game, /g\.enemySpawn = \(enqueueEnemyWave as unknown as \(runtime: EnemySpawnRuntime, input: \{ units: string\[\]; wave: number \}\) => EnemySpawnRuntime\)\(g\.enemySpawn, \{ units: mission\.units, wave: mission\.wave \}\)/);
   assert.doesNotMatch(game, /mission\.units\.forEach\(\(\[kind, lane\]/);
   assert.match(game, /advanceEnemySpawnRuntime\(g\.enemySpawn, dt, g\.paused\)/);
-  assert.match(game, /if \(f\.gateEntering\)[\s\S]*f\.combatReady = true;[\s\S]*continue;/);
+  assert.match(game, /if \(f\.gateEntering\)[\s\S]*entryStepDistance[\s\S]*crawlerFootstepCount \+= 1[\s\S]*playProductionCue\("weapon-melee-impact"[\s\S]*f\.combatReady = true;[\s\S]*continue;/);
   assert.match(game, /fighterById = new Map\(g\.fighters\.filter\(\(fighter\) => fighter\.hp > 0 && fighter\.combatReady\)/);
   assert.match(game, /enemy\.side === "zombie" && enemy\.hp > 0 && enemy\.combatReady/);
   assert.match(game, /other\.hp <= 0 \|\| !other\.combatReady/);
@@ -1618,14 +1621,14 @@ test("defines an ordered mission timeline after the five-second preparation wind
   assert.equal(new Set(eventTimes).size, MISSION_EVENTS.length);
   assert.equal(new Set(MISSION_EVENTS.map(({ at, label }) => `${at}:${label}`)).size, MISSION_EVENTS.length);
   assert.ok(eventTimes.every((at, index) => index === 0 || at > eventTimes[index - 1]));
-  assert.ok(MISSION_EVENTS.every(({ units }) => units.every(([, lane]) => Number.isInteger(lane) && lane >= 0 && lane < 3)));
-  assert.deepEqual(MISSION_EVENTS[0].units, [["walker", 0], ["walker", 1], ["walker", 2]]);
+  assert.ok(MISSION_EVENTS.every(({ units }) => units.every((kind) => typeof kind === "string")));
+  assert.deepEqual(MISSION_EVENTS[0].units, ["walker", "walker", "walker"]);
 
-  const takuyaEvents = MISSION_EVENTS.filter(({ units }) => units.some(([kind]) => kind === "takuya"));
+  const takuyaEvents = MISSION_EVENTS.filter(({ units }) => units.includes("takuya"));
   assert.equal(takuyaEvents.length, 1);
   assert.equal(takuyaEvents[0].at, 131);
   assert.equal(takuyaEvents[0].wave, 8);
-  assert.deepEqual(takuyaEvents[0].units.find(([kind]) => kind === "takuya"), ["takuya", 1]);
+  assert.equal(takuyaEvents[0].units.find((kind) => kind === "takuya"), "takuya");
 
   const warning = MISSION_EVENTS.find(({ at }) => at === 125);
   assert.deepEqual(warning?.units, []);

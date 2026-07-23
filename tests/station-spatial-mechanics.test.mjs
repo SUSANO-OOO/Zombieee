@@ -96,7 +96,7 @@ test("cart contamination requires the same lane and overlapping ellipse", () => 
 test("power and return counts are derived from their actual objective zones", () => {
   const config = {
     powerXs: [400, 580, 740],
-    powerLanes: [0, 2, 1],
+    powerYs: [212, 352, 282],
     powerRadiusX: 80,
     powerRadiusY: 40,
     returnX: 205,
@@ -129,7 +129,7 @@ test("power and return counts are derived from their actual objective zones", ()
 test("position snapshots drive power activation and the 45-second all-return deadline", () => {
   const config = {
     powerXs: [400, 580, 740],
-    powerLanes: [0, 2, 1],
+    powerYs: [212, 352, 282],
     powerReadyAtSeconds: [0, 0, 0],
     powerHoldSeconds: 1,
     returnX: 205,

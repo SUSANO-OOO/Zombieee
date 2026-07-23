@@ -119,6 +119,14 @@ test("Stage 5 continuous placement never corrects onto the track", () => {
     assert.equal(result.ok, true);
     assert.ok(result.position.y + 20 <= space.supportArea.maxY);
     assert.equal(isWalkable(stageId, { ...result.position, radius: 20 }, viewport), true);
+    const track = space.forbiddenAreas.find(({ id }) => id === "platform-track");
+    assert.ok(track, "Stage 5 exposes the track as a forbidden placement area");
+    const closestX = Math.max(track.minX, Math.min(track.maxX, result.position.x));
+    const closestY = Math.max(track.minY, Math.min(track.maxY, result.position.y));
+    assert.ok(
+      Math.hypot(result.position.x - closestX, result.position.y - closestY) > 20,
+      "corrected support circle does not intersect the platform track",
+    );
   }
 });
 
