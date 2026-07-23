@@ -78,6 +78,11 @@ test("workflows enforce explicit deployment and pass one request identity into p
   assert.match(publicSmoke, /github-pages-request-id/u);
   assert.match(publicSmoke, /pageTitle\.includes\(expectedVersion\)/u);
   assert.match(publicSmoke, /httpErrors/u);
+  assert.match(releaseWorkflow, /<title>西新世紀末物語｜アーリーアクセス版 \$VERSION<\/title>/u);
+  assert.match(releaseWorkflow, /GITHUB_PAGES_EXPECTED_VERSION: \$\{\{ steps\.release\.outputs\.version \}\}/u);
+  assert.match(pagesBuilder, /function normalizeReleaseTitle/u);
+  assert.match(pagesBuilder, /アーリーアクセス版 \$\{escapeHtmlAttribute\(releaseVersion\)\}/u);
+  assert.match(await readFile("scripts/github-pages-smoke.mjs", "utf8"), /postInteractionTitle !== expectedTitle/u);
   assert.match(pagesBuilder, /github-pages-version/u);
   assert.match(pagesBuilder, /github-pages-request-id/u);
 });

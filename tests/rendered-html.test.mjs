@@ -123,12 +123,12 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.7.1 campaign title as the formal entry point", async () => {
+test("server-renders the 0.7.5 campaign title as the formal entry point", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.7\.1<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.7\.5<\/title>/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
@@ -327,7 +327,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(css, /\.barrier-health/);
   assert.match(css, /\.barrier-health\.vulnerable/);
   assert.match(css, /\.barrier-health\.hit/);
-  assert.match(layout, /title: "西新世紀末物語｜アーリーアクセス版 0\.7\.1"/);
+  assert.match(layout, /title: "西新世紀末物語｜アーリーアクセス版 0\.7\.5"/);
   assert.match(layout, /viewportFit: "cover"/);
   assert.doesNotMatch(layout, /images: \[.*\/og\.png/);
   assert.match(layout, /href=\{V075_VISUAL_PROFILES\.enemyBase\.intact\.path\}/);
