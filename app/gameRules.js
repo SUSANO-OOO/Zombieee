@@ -94,7 +94,7 @@ export function advanceConvoyEvacuation({
  *   phase: "active" | "expired",
  *   slowMultiplier?: number,
  * }} RuleAreaEffect
- * @typedef {{minX: number, maxX: number, lane?: number}} ForbiddenZone
+ * @typedef {{minX: number, maxX: number, minY?: number, maxY?: number, lane?: number}} ForbiddenZone
  */
 
 // Three invisible routing bands follow the open roadway bands in battlefield-v4.
@@ -157,9 +157,9 @@ const CRAWLER_GEOMETRY = Object.freeze({
   damageX: 88, damageY: 250,
 });
 const ENEMY_BASE_GEOMETRY = Object.freeze({
-  drawX: 770, drawY: 88, width: 190, height: 340,
-  attackX: 875, enemySpawnMinX: 805, enemySpawnMaxX: 833,
-  gateX: 880, gateY: LANE_Y[1],
+  drawX: 815, drawY: 88, width: 145, height: 340,
+  attackX: 875, enemySpawnMinX: 836, enemySpawnMaxX: 858,
+  gateX: 900, gateY: LANE_Y[1],
 });
 export const WORLD_GEOMETRY = Object.freeze({
   baseX: 110,
@@ -466,8 +466,16 @@ function battlefieldEffectDistance(origin, point, laneCenters = LANE_Y) {
   return Math.hypot(point.x - origin.x, (worldYFor(point) - origin.y) * verticalScale);
 }
 
-function battlefieldDistance(lane, x, object, laneCenters = LANE_Y) {
-  return Math.hypot(object.x - x, (worldYFor(object) - laneCenters[lane]) * 2);
+function normalizedInternalLane(lane, y, laneCenters = LANE_Y) {
+  if (Number.isInteger(lane) && lane >= 0 && lane < laneCenters.length) return lane;
+  if (!Number.isFinite(y)) return null;
+  return laneCenters.reduce((nearest, center, index) => (
+    Math.abs(y - center) < Math.abs(y - laneCenters[nearest]) ? index : nearest
+  ), 0);
+}
+
+function battlefieldDistance(x, y, object) {
+  return Math.hypot(object.x - x, worldYFor(object) - y);
 }
 
 function supplyStillPresent(supply) {
@@ -477,13 +485,13 @@ function supplyStillPresent(supply) {
 /**
  * @param {{
  *   running: boolean, paused: boolean, over: boolean, scrap: number,
- *   kind?: string, supplyKind?: string, lane: number, x: number,
+ *   kind?: string, supplyKind?: string, lane?: number, x: number, y?: number,
  *   supplies?: RuleSupply[], objects?: RuleSupply[], supports?: RuleSupply[],
  *   forbiddenZones?: ForbiddenZone[], laneCenters?: readonly number[],
  * }} input
  */
 export function battlefieldSupplyPlacementCheck({
-  running, paused, over, scrap, kind, supplyKind, lane, x,
+  running, paused, over, scrap, kind, supplyKind, lane, x, y,
   supplies = [], objects = [], supports = [], forbiddenZones = [], laneCenters = LANE_Y,
 }) {
   const selectedKind = supplyKind ?? kind;
@@ -493,19 +501,24 @@ export function battlefieldSupplyPlacementCheck({
   if (paused) return { ok: false, reason: "一時停止中は配置できません" };
   if (over) return { ok: false, reason: "作戦終了後は配置できません" };
   if (scrap < def.cost) return { ok: false, reason: "スクラップが不足しています" };
-  if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_Y.length || !Number.isFinite(x) || x < def.minX || x > def.maxX) {
+  const internalLane = normalizedInternalLane(lane, y, laneCenters);
+  const placementY = Number.isFinite(y) ? y : internalLane === null ? Number.NaN : laneCenters[internalLane];
+  if (internalLane === null || !Number.isFinite(placementY) || !Number.isFinite(x) || x < def.minX || x > def.maxX) {
     return { ok: false, reason: "配置可能範囲外です" };
   }
   if (forbiddenZones.some((zone) => {
-    if (Number.isInteger(zone.lane) && zone.lane !== lane) return false;
-    return x >= zone.minX && x <= zone.maxX;
+    if (x < zone.minX || x > zone.maxX) return false;
+    if (Number.isFinite(zone.minY) && placementY < zone.minY) return false;
+    if (Number.isFinite(zone.maxY) && placementY > zone.maxY) return false;
+    if (!Number.isFinite(zone.minY) && !Number.isFinite(zone.maxY) && Number.isInteger(zone.lane) && zone.lane !== internalLane) return false;
+    return true;
   })) return { ok: false, reason: "進行上の禁止領域です" };
 
   const occupied = [...supplies, ...objects, ...supports].filter(supplyStillPresent);
   if (occupied.some((existing) => {
     const existingDef = battlefieldSupplyDef(existing.kind);
     const clearance = Math.max(def.placementClearance, existingDef?.placementClearance ?? FIELD_OBJECT_CLEARANCE);
-    return battlefieldDistance(lane, x, existing, laneCenters) < clearance;
+    return battlefieldDistance(x, placementY, existing) < clearance;
   })) return { ok: false, reason: "既存物資に近すぎます" };
 
   return { ok: true, reason: "配置できます" };
@@ -530,7 +543,7 @@ function createMedicalAreaEffect(supply, id) {
 /**
  * @param {{
  *   running: boolean, paused: boolean, over: boolean, scrap: number,
- *   kind?: string, supplyKind?: string, lane: number, x: number,
+ *   kind?: string, supplyKind?: string, lane?: number, x: number, y?: number,
  *   supplies?: RuleSupply[], objects?: RuleSupply[], supports?: RuleSupply[],
  *   areaEffects?: RuleAreaEffect[], forbiddenZones?: ForbiddenZone[], laneCenters?: readonly number[],
  *   nextId?: number, nextAreaEffectId?: number,
@@ -545,13 +558,16 @@ export function resolveBattlefieldSupplyPlacement(input) {
   const def = battlefieldSupplyDef(kind);
   const check = battlefieldSupplyPlacementCheck({ ...input, kind });
   if (!check.ok) return { ...check, scrap: input.scrap, supplies, areaEffects, nextId, nextAreaEffectId };
+  const laneCenters = input.laneCenters ?? LANE_Y;
+  const lane = normalizedInternalLane(input.lane, input.y, laneCenters);
+  const y = Number.isFinite(input.y) ? input.y : laneCenters[lane];
 
   const supply = {
     id: nextId,
     kind,
-    lane: input.lane,
+    lane,
     x: input.x,
-    y: (input.laneCenters ?? LANE_Y)[input.lane],
+    y,
     phase: kind === "pod" ? "dropping" : "active",
     phaseTime: kind === "pod" ? def.dropSeconds : 0,
     remaining: kind === "medical" ? def.effectSeconds : null,
@@ -778,7 +794,7 @@ export function resolveFieldSupportPlacement({ running, paused, over, rage, cost
   if (rage < cost) return { ok: false, reason: "レイジが不足しています", rage, x };
   if (kind === "airstrike" && strikeCooldown > 0) return { ok: false, reason: "航空支援は再装填中です", rage, x };
   if (kind === "barrel" && supports.some((support) => support.kind === "barrel" && support.lane === lane)) {
-    return { ok: false, reason: "このレーンにはドラム設置済みです", rage, x };
+    return { ok: false, reason: "同じ戦線にドラム設置済みです", rage, x };
   }
 
   const placedX = Math.max(WORLD_GEOMETRY.supportMinX, Math.min(WORLD_GEOMETRY.supportMaxX, x));
@@ -792,23 +808,25 @@ export function createEmergencySupportRuntime() {
   return { phase: "idle", phaseTime: 0, targetX: null, targetLane: null, impactTriggered: false };
 }
 
-export function airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, runtime = createEmergencySupportRuntime() }) {
+export function airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, y, laneCenters = LANE_Y, runtime = createEmergencySupportRuntime() }) {
   if (!running) return { ok: false, reason: "作戦開始後に要請できます" };
   if (paused) return { ok: false, reason: "一時停止中は要請できません" };
   if (over) return { ok: false, reason: "作戦終了後は要請できません" };
   if (runtime.phase !== "idle") return { ok: false, reason: "航空支援を実行中です" };
   if (supportGauge < AIRSTRIKE_DEF.gaugeCost) return { ok: false, reason: "支援ゲージが不足しています" };
-  if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_Y.length || !Number.isFinite(x)) {
+  const internalLane = normalizedInternalLane(lane, y, laneCenters);
+  const targetY = Number.isFinite(y) ? y : internalLane === null ? Number.NaN : laneCenters[internalLane];
+  if (internalLane === null || !Number.isFinite(targetY) || !Number.isFinite(x)) {
     return { ok: false, reason: "目標地点が無効です" };
   }
   if (x < AIRSTRIKE_DEF.minX || x > AIRSTRIKE_DEF.maxX) {
     return { ok: false, reason: "航空支援の有効範囲外です" };
   }
-  return { ok: true, reason: "航空支援目標", targetX: x };
+  return { ok: true, reason: "航空支援目標", targetX: x, targetY, internalLane };
 }
 
-export function requestAirstrike({ running, paused, over, supportGauge, lane, x, runtime = createEmergencySupportRuntime() }) {
-  const check = airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, runtime });
+export function requestAirstrike({ running, paused, over, supportGauge, lane, x, y, laneCenters = LANE_Y, runtime = createEmergencySupportRuntime() }) {
+  const check = airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, y, laneCenters, runtime });
   if (!check.ok) return { ...check, supportGauge, runtime };
   return {
     ok: true,
@@ -818,7 +836,8 @@ export function requestAirstrike({ running, paused, over, supportGauge, lane, x,
       phase: "radio",
       phaseTime: AIRSTRIKE_DEF.radioSeconds,
       targetX: check.targetX,
-      targetLane: lane,
+      targetY: check.targetY,
+      targetLane: check.internalLane,
       impactTriggered: false,
     },
   };
@@ -869,7 +888,7 @@ export function advanceEmergencySupportRuntime(runtime, seconds) {
 /** @param {{runtime: ReturnType<typeof createEmergencySupportRuntime>, fighters?: RuleFighter[], laneCenters?: readonly number[]}} input */
 export function resolveAirstrikeImpact({ runtime, fighters = [], laneCenters = LANE_Y }) {
   if (runtime.phase !== "impact" || runtime.impactTriggered) return { triggered: false, runtime, fighters, hits: [] };
-  const targetY = laneCenters[runtime.targetLane];
+  const targetY = Number.isFinite(runtime.targetY) ? runtime.targetY : laneCenters[runtime.targetLane];
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
     const y = worldYFor(fighter);
@@ -1013,7 +1032,7 @@ export function humanCombatMinX({ desiredX = null, hasEnemyTarget = false } = {}
 }
 
 export function objectiveFor(phase, barricadeVulnerable) {
-  if (phase === 1) return "3レーンを防衛";
+  if (phase === 1) return "戦線を防衛";
   if (phase === 2) return "感染拠点へ前進";
   return barricadeVulnerable ? "感染拠点を破壊" : "TAKUYAを撃破";
 }
