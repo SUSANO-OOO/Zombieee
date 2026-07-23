@@ -26,6 +26,7 @@ import {
   createStationMissionRuntime,
   stationMissionOutcome,
 } from "./stationStageMechanics.js";
+import { applyUnitProgression } from "./unitProgression.js";
 
 const freeze = (value) => Object.freeze(value);
 const UNIT_BY_KIND = freeze(Object.fromEntries(UNIT_CARDS.map((card) => [card.kind, card])));
@@ -193,21 +194,39 @@ function roleCounterMultiplier(kind, enemyKind, laneEnemyCount, enabled) {
   return 1;
 }
 
+export function unitMobilityEngagementMultiplier(unit) {
+  const baseline = UNIT_BY_KIND[unit?.kind];
+  if (!baseline) return 1;
+  const speedRatio = baseline.speed > 0 ? unit.speed / baseline.speed : 1;
+  const laneSpeedRatio = baseline.laneSpeed > 0 ? unit.laneSpeed / baseline.laneSpeed : 1;
+  const mobilityRatio = (speedRatio + laneSpeedRatio) / 2;
+  const boundedImprovement = Math.max(-.2, Math.min(.2, mobilityRatio - 1));
+  return 1 + boundedImprovement * .45;
+}
+
 function defensiveMultiplier(activeUnits, roleCounters) {
-  if (!roleCounters) return 1;
+  const totalHp = activeUnits.reduce((total, unit) => total + unit.hp, 0);
+  const progressionDefense = totalHp > 0
+    ? activeUnits.reduce((total, unit) => total + unit.hp * (unit.defense ?? 0), 0) / totalHp
+    : 0;
+  let multiplier = 1 - progressionDefense;
+  if (!roleCounters) return multiplier;
   const kinds = new Set(activeUnits.map(({ kind }) => kind));
-  let multiplier = 1;
   if (kinds.has("medic")) multiplier *= 1 - UNIT_ROLE_TUNING.nao.damageReduction * 0.72;
   if (kinds.has("guardian")) multiplier *= 1 - UNIT_ROLE_TUNING.gantetsu.interceptRatio * 0.58;
   if (kinds.has("kumaverson")) multiplier *= 0.88;
-  if (kinds.has("engineer")) multiplier *= 0.92;
+  const engineer = activeUnits.find(({ kind }) => kind === "engineer");
+  if (engineer) multiplier *= 1 - .08 * (engineer.trapDurationMultiplier ?? 1);
   return multiplier;
 }
 
 function healingPerSecond(activeUnits, roleCounters) {
   if (!roleCounters) return 0;
-  const naoCount = activeUnits.filter(({ kind }) => kind === "medic").length;
-  return naoCount * UNIT_ROLE_TUNING.nao.baseHealing * 0.3;
+  return activeUnits
+    .filter(({ kind }) => kind === "medic")
+    .reduce((total, unit) => (
+      total + UNIT_ROLE_TUNING.nao.baseHealing * (unit.healingMultiplier ?? 1) * 0.3
+    ), 0);
 }
 
 function missionTimeLimit(stage, facts) {
@@ -304,6 +323,7 @@ export function simulateStageBalance({
   formation,
   seed = "stage-balance-v070",
   roleCounters = true,
+  unitRanks = {},
 } = {}) {
   const stage = resolveStage(stageId);
   const normalizedFormation = normalizeFormation(formation);
@@ -353,7 +373,7 @@ export function simulateStageBalance({
       const affordableIndex = deploymentQueue.findIndex((kind) => UNIT_BY_KIND[kind].cost <= command);
       if (affordableIndex >= 0) {
         const [kind] = deploymentQueue.splice(affordableIndex, 1);
-        const card = UNIT_BY_KIND[kind];
+        const card = applyUnitProgression(UNIT_BY_KIND[kind], unitRanks?.[kind] ?? 0);
         command -= card.cost;
         commandSpent += card.cost;
         squadHp += card.hp;
@@ -422,6 +442,7 @@ export function simulateStageBalance({
       const damage = unit.damage / unit.attackEvery
         * counter
         * engagement
+        * unitMobilityEngagementMultiplier(unit)
         * readiness
         * seedVariance
         * SIMULATION_STEP_SECONDS;
@@ -591,6 +612,16 @@ export function simulateStageBalance({
     formation: freeze([...normalizedFormation]),
     slotCount: normalizedFormation.length,
     roleCounters,
+    progression: freeze({
+      unitRanks: freeze(Object.fromEntries(normalizedFormation.map((kind) => [
+        kind,
+        activeUnits.find((unit) => unit.kind === kind)?.progressionRank ?? 0,
+      ]))),
+      mobilityEngagement: freeze(Object.fromEntries(normalizedFormation.map((kind) => {
+        const unit = activeUnits.find((candidate) => candidate.kind === kind);
+        return [kind, Number(unitMobilityEngagementMultiplier(unit).toFixed(4))];
+      }))),
+    }),
     outcome,
     stoppedBy,
     elapsedSeconds: currentTime,

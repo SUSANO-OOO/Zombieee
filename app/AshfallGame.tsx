@@ -61,7 +61,9 @@ import {
   CAMPAIGN_RECRUITMENT_COSTS,
   CAMPAIGN_UNITS,
   INITIAL_STAGE_ID,
+  campaignUnitUpgradeQuote,
   createDefaultCampaignSave,
+  getCampaignUnitRank,
   getSelectedFormationCombatKinds,
   getSelectedFormationUnitIds,
   inspectCampaignSaveCandidate,
@@ -80,6 +82,7 @@ import {
   serializeCampaignSave,
   updateCampaignSettings,
   updateStoryPlaybackSettings,
+  upgradeCampaignUnit,
 } from "./campaign.js";
 import {
   enemyBodyRadiusFor,
@@ -289,6 +292,12 @@ import {
   resolveContainmentStrike,
   stationSpatialSnapshot,
 } from "./stationSpatialMechanics.js";
+import {
+  UNIT_PROGRESSION_MAX_RANK,
+  applyUnitProgression,
+  damageAfterUnitDefense,
+  unitProgressionMilestones,
+} from "./unitProgression.js";
 
 const W = 960;
 const H = 540;
@@ -378,9 +387,15 @@ type UnitCard = {
   deployCooldown: number;
   hp: number;
   speed: number;
+  laneSpeed: number;
+  bodyRadius: number;
   damage: number;
   range: number;
   attackEvery: number;
+  progressionRank?: number;
+  defense?: number;
+  healingMultiplier?: number;
+  trapDurationMultiplier?: number;
 };
 
 type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: string[] };
@@ -520,6 +535,9 @@ type Fighter = {
   attackSequence: number;
   damageReductionRemaining: number;
   damageReductionMultiplier: number;
+  defense: number;
+  healingMultiplier: number;
+  trapDurationMultiplier: number;
   healFocusTargetId: number | null;
   healFocusRemaining: number;
   comboHits: number;
@@ -540,6 +558,7 @@ type Fighter = {
   burning?: boolean;
   slowMultiplier?: number;
   stationAbility: StationAbilityRuntime;
+  progressionRank?: number;
 };
 type StationAbilityRuntime = {
   phase: string;
@@ -697,6 +716,7 @@ type Game = {
   definition: BattleDefinition;
   resultId: string;
   formationKinds: UnitKind[];
+  unitRanksByKind: Record<string, number>;
   running: boolean;
   paused: boolean;
   over: boolean;
@@ -990,12 +1010,16 @@ const initialGame = (
   formationKinds: UnitKind[] = cards.slice(0, 7).map((card) => card.kind),
   resultId = createBattleResultId(stageId),
   storyBattleReadEventIds: string[] = [],
+  unitRanks: Record<string, number> = {},
 ): Game => {
   const definition = createBattleDefinition(stageId) as BattleDefinition;
+  const unitRanksByKind = Object.fromEntries((CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
+    .map((unit) => [unit.combatKind, unitRanks[unit.id] ?? 0]));
   return ({
   definition,
   resultId,
   formationKinds: [...formationKinds],
+  unitRanksByKind,
   running: false,
   paused: false,
   over: false,
@@ -1108,10 +1132,17 @@ function effectDistance(a: { x: number; y: number }, b: { x: number; y: number }
   return Math.hypot(a.x - b.x, (a.y - b.y) * 2);
 }
 
-function createUnitRoleRuntime() {
+function createUnitRoleRuntime({
+  defense = 0,
+  healingMultiplier = 1,
+  trapDurationMultiplier = 1,
+}: Pick<UnitCard, "defense" | "healingMultiplier" | "trapDurationMultiplier"> = {}) {
   return {
     damageReductionRemaining: 0,
     damageReductionMultiplier: 1,
+    defense,
+    healingMultiplier,
+    trapDurationMultiplier,
     healFocusTargetId: null,
     healFocusRemaining: 0,
     comboHits: 0,
@@ -1161,13 +1192,14 @@ function applyIncomingHumanDamage(
       attackKind,
       steadfast: { remainingSeconds: guardian.guardStandRemaining, available: guardian.guardStandAvailable },
     });
+    const armoredGuardianDamage = damageAfterUnitDefense(rawInterception.guardianDamage, guardian.defense);
     const guardedDamage = naoDamageAfterProtection({
-      damage: rawInterception.guardianDamage,
+      damage: armoredGuardianDamage.damage,
       protectionSeconds: guardian.damageReductionRemaining,
     });
     const protectedGuardian = {
       ...guardian,
-      hp: guardian.hp + guardedDamage.prevented,
+      hp: guardian.hp + armoredGuardianDamage.prevented + guardedDamage.prevented,
     };
     const appliedInterception = resolveGantetsuInterception({
       guardian: protectedGuardian,
@@ -1182,7 +1214,7 @@ function applyIncomingHumanDamage(
     guardian.flash = Math.max(guardian.flash, .12);
     redirectedDamage = rawInterception.guardianDamage;
     targetDamage = rawInterception.targetDamage;
-    preventedDamage += guardedDamage.prevented;
+    preventedDamage += armoredGuardianDamage.prevented + guardedDamage.prevented;
     g.roleMetrics.gantetsuRedirectedDamage += redirectedDamage;
     g.roleMetrics.naoPreventedDamage += guardedDamage.prevented;
     addDamageText(g, {
@@ -1194,8 +1226,9 @@ function applyIncomingHumanDamage(
     });
   }
 
+  const armoredTargetDamage = damageAfterUnitDefense(targetDamage, target.defense);
   const protectedTarget = naoDamageAfterProtection({
-    damage: targetDamage,
+    damage: armoredTargetDamage.damage,
     protectionSeconds: target.damageReductionRemaining,
   });
   let appliedTargetDamage = protectedTarget.damage;
@@ -1225,7 +1258,7 @@ function applyIncomingHumanDamage(
   } else {
     target.hp -= protectedTarget.damage;
   }
-  preventedDamage += protectedTarget.prevented;
+  preventedDamage += armoredTargetDamage.prevented + protectedTarget.prevented;
   g.roleMetrics.naoPreventedDamage += protectedTarget.prevented;
   return Object.freeze({
     targetDamage: appliedTargetDamage,
@@ -1299,8 +1332,9 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
 }
 
 function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
-  const card = cards.find((item) => item.kind === kind);
-  if (!card) return null;
+  const baseCard = cards.find((item) => item.kind === kind);
+  if (!baseCard) return null;
+  const card = applyUnitProgression(baseCard, g.unitRanksByKind[kind] ?? 0) as UnitCard & { progressionRank: number };
   const id = g.nextId++;
   const laneCounts = [0, 0, 0];
   for (const ally of g.fighters) {
@@ -1331,7 +1365,8 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     navigationRecovery: createNavigationRecoveryState({ x: deployment.x, y: deployment.y, lane: assignedLane }),
     abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
-    ...createUnitRoleRuntime(),
+    progressionRank: card.progressionRank,
+    ...createUnitRoleRuntime(card),
   });
   addParticles(g, deployment.combatReadyX, deployment.combatReadyY, "#d0b48b", 7);
   g.banner = `${card.name} // 移動拠点から出撃`;
@@ -3433,6 +3468,8 @@ export function AshfallGame() {
   const [selectedSupply, setSelectedSupply] = useState<SupplyKind>("pod");
   const [selectedAction, setSelectedAction] = useState<SelectedAction>(null);
   const [screen, setScreen] = useState<CampaignScreen>("title");
+  const upgradeLocksRef = useRef(new Set<string>());
+  const [upgradePendingUnitIds, setUpgradePendingUnitIds] = useState<readonly string[]>([]);
   const [eventId, setEventId] = useState<string | null>(null);
   const [storyAudioPosition, setStoryAudioPosition] = useState<{ eventId: string | null; lineIndex: number }>({ eventId: null, lineIndex: 0 });
   const [forceStoryReplay, setForceStoryReplay] = useState(false);
@@ -3903,6 +3940,29 @@ export function AshfallGame() {
     if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") return;
     const qaWindow = window as typeof window & { __ASHFALL_BATTLE_QA__?: unknown };
     const bridge = {
+      spawnHumanForDamageProof: (kind: UnitKind) => {
+        const g = gameRef.current;
+        if (!g.formationKinds.includes(kind)) return null;
+        const card = spawnHuman(g, kind);
+        return card ? g.fighters[g.fighters.length - 1]?.id ?? null : null;
+      },
+      applyHumanDamage: (fighterId: number, incomingDamage: number) => {
+        const g = gameRef.current;
+        const target = g.fighters.find((fighter) => (
+          fighter.id === fighterId
+          && fighter.side === "human"
+          && fighter.hp > 0
+        ));
+        if (!target) return null;
+        const beforeHp = target.hp;
+        const resolved = applyIncomingHumanDamage(g, target, incomingDamage);
+        return {
+          ...resolved,
+          beforeHp,
+          afterHp: target.hp,
+          defense: target.defense,
+        };
+      },
       getSnapshot: () => {
         const g = gameRef.current;
         const geometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
@@ -3985,6 +4045,16 @@ export function AshfallGame() {
             x: fighter.x,
             y: fighter.y,
             hp: fighter.hp,
+            maxHp: fighter.maxHp,
+            damage: fighter.damage,
+            speed: fighter.speed,
+            laneSpeed: fighter.laneSpeed,
+            range: fighter.range,
+            attackEvery: fighter.attackEvery,
+            defense: fighter.defense,
+            healingMultiplier: fighter.healingMultiplier,
+            trapDurationMultiplier: fighter.trapDurationMultiplier,
+            progressionRank: fighter.progressionRank ?? 0,
             bodyRadius: fighter.bodyRadius,
             targetId: fighter.targetId,
             targetObjectId: fighter.targetObjectId,
@@ -4012,6 +4082,8 @@ export function AshfallGame() {
           completedStageIds: [...campaignSave.completedStageIds],
           unlockedStageIds: [...campaignSave.unlockedStageIds],
           processedResultIds: [...campaignSave.processedResultIds],
+          caps: campaignSave.caps,
+          unitRanks: { ...campaignSave.unitRanks },
         };
       },
     };
@@ -4026,7 +4098,7 @@ export function AshfallGame() {
       delete document.documentElement.dataset.battleQaSnapshot;
       if (qaWindow.__ASHFALL_BATTLE_QA__ === bridge) delete qaWindow.__ASHFALL_BATTLE_QA__;
     };
-  }, [campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.unlockedStageIds, screen]);
+  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.unitRanks, campaignSave.unlockedStageIds, screen]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -4885,28 +4957,61 @@ export function AshfallGame() {
     };
   }), [campaignSave, qaMode, qaScenario]);
   const selectedStageView = stageViews.find((stage) => stage.id === selectedStageId) ?? stageViews[0];
-  const unitViews = useMemo<UnitScreenView[]>(() => (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => ({
-    id: unit.id,
-    kind: unit.combatKind,
-    name: unit.displayName,
-    role: unit.roleName,
-    description: unit.description,
-    roleIcon: unit.roleIcon,
-    weaponName: unit.weaponName,
-    attackMode: unit.attackMode,
-    rangeBand: unit.rangeBand,
-    primaryTarget: unit.primaryTarget,
-    deploymentHint: unit.deploymentHint,
-    owned: Boolean(qaMode || qaScenario) || isUnitOwned(campaignSave, unit.id),
-    discovered: Boolean(qaMode || qaScenario) || isUnitDiscovered(campaignSave, unit.id),
-    recruitable: !isUnitOwned(campaignSave, unit.id) && (Boolean(qaMode || qaScenario) || isUnitRecruitable(campaignSave, unit.id)),
-    recruitCost: CAMPAIGN_RECRUITMENT_COSTS[unit.id as keyof typeof CAMPAIGN_RECRUITMENT_COSTS] ?? unit.recruitmentCostCaps ?? 0,
-    unlockHint: unit.unlock.type === "initial"
-      ? "初期加入"
-      : unit.unlock.type === "recruitment"
-        ? `${CAMPAIGN_STAGE_BY_ID[unit.unlock.stageId ?? ""]?.displayName ?? `Stage ${unit.unlock.stageNumber ?? "?"}`}後に調達`
-        : `Stage ${unit.unlock.stageNumber ?? "?"}で加入`,
-  })), [campaignSave, qaMode, qaScenario]);
+  const unitViews = useMemo<UnitScreenView[]>(() => (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => {
+    const rank = getCampaignUnitRank(campaignSave, unit.id);
+    const quote = campaignUnitUpgradeQuote(campaignSave, unit.id);
+    const baseCard = cards.find((card) => card.kind === unit.combatKind) ?? cards[0];
+    const aiProfile = baseCard.aiProfile;
+    const milestones = unitProgressionMilestones(aiProfile, rank);
+    const nextMilestones = quote.nextRank === null
+      ? []
+      : unitProgressionMilestones(aiProfile, quote.nextRank).filter((milestone) => !milestones.includes(milestone));
+    const statSummaryFor = (targetRank: number) => {
+      if (targetRank <= 0) return "基礎ステータス";
+      const progressed = applyUnitProgression(baseCard, targetRank);
+      const increase = (current: number, base: number) => Math.round((current / base - 1) * 100);
+      return `HP +${increase(progressed.hp, baseCard.hp)}%・攻撃 +${increase(progressed.damage, baseCard.damage)}%・防御 ${Math.round(progressed.defense * 1000) / 10}%軽減・機動 +${increase(progressed.speed, baseCard.speed)}%・攻撃速度 +${increase(baseCard.attackEvery, progressed.attackEvery)}%`;
+    };
+    const compactStatSummaryFor = (targetRank: number) => {
+      if (targetRank <= 0) return "基礎";
+      const progressed = applyUnitProgression(baseCard, targetRank);
+      const increase = (current: number, base: number) => Math.round((current / base - 1) * 100);
+      return `HP+${increase(progressed.hp, baseCard.hp)} 攻+${increase(progressed.damage, baseCard.damage)} 防${Math.round(progressed.defense * 1000) / 10}% 機+${increase(progressed.speed, baseCard.speed)} 速+${increase(baseCard.attackEvery, progressed.attackEvery)}%`;
+    };
+    return {
+      id: unit.id,
+      kind: unit.combatKind,
+      name: unit.displayName,
+      role: unit.roleName,
+      description: unit.description,
+      roleIcon: unit.roleIcon,
+      weaponName: unit.weaponName,
+      attackMode: unit.attackMode,
+      rangeBand: unit.rangeBand,
+      primaryTarget: unit.primaryTarget,
+      deploymentHint: unit.deploymentHint,
+      owned: Boolean(qaMode || qaScenario) || isUnitOwned(campaignSave, unit.id),
+      discovered: Boolean(qaMode || qaScenario) || isUnitDiscovered(campaignSave, unit.id),
+      recruitable: !isUnitOwned(campaignSave, unit.id) && (Boolean(qaMode || qaScenario) || isUnitRecruitable(campaignSave, unit.id)),
+      recruitCost: CAMPAIGN_RECRUITMENT_COSTS[unit.id as keyof typeof CAMPAIGN_RECRUITMENT_COSTS] ?? unit.recruitmentCostCaps ?? 0,
+      unlockHint: unit.unlock.type === "initial"
+        ? "初期加入"
+        : unit.unlock.type === "recruitment"
+          ? `${CAMPAIGN_STAGE_BY_ID[unit.unlock.stageId ?? ""]?.displayName ?? `Stage ${unit.unlock.stageNumber ?? "?"}`}後に調達`
+          : `Stage ${unit.unlock.stageNumber ?? "?"}で加入`,
+      rank,
+      maxRank: UNIT_PROGRESSION_MAX_RANK,
+      nextUpgradeCost: quote.nextRank === null ? null : quote.costCaps,
+      upgradeBaseCost: quote.baseCostCaps,
+      upgradeDiscount: quote.discountCaps,
+      catchUp: quote.catchUp,
+      milestones,
+      nextMilestones,
+      statSummary: statSummaryFor(rank),
+      nextStatSummary: statSummaryFor(quote.nextRank ?? rank),
+      nextStatCompact: compactStatSummaryFor(quote.nextRank ?? rank),
+    };
+  }), [campaignSave, qaMode, qaScenario]);
   const supplyViews = useMemo<SupplyScreenView[]>(() => (Object.keys(supplyDefs) as SupplyKind[]).map((kind) => ({
     kind,
     name: supplyDefs[kind].name,
@@ -4983,6 +5088,7 @@ export function AshfallGame() {
       permittedFormation.length > 0 ? permittedFormation : fallbackFormation,
       sessionOverride?.resultId ?? createBattleResultId(battleStageId),
       campaignSave.readStoryEventIds,
+      campaignSave.unitRanks,
     );
     fresh.running = true;
     prepareQaMode(fresh, qaMode);
@@ -5037,11 +5143,14 @@ export function AshfallGame() {
       sessionOverride?.selectedSupply ?? selectedSupply,
       sessionOverride?.stageId ?? selectedStageId,
       sessionOverride?.formationKinds ?? formationKinds,
+      createBattleResultId(sessionOverride?.stageId ?? selectedStageId),
+      campaignSave.readStoryEventIds,
+      campaignSave.unitRanks,
     );
     gameRef.current = fresh;
     finalizedEndRef.current = null;
     setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setScreen("map"); chooseAction(null);
-  }, [chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
+  }, [campaignSave.readStoryEventIds, campaignSave.unitRanks, chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
 
   const handleEventComplete = useCallback(() => {
     const completion = resolveStoryEventCompletion({
@@ -5127,6 +5236,23 @@ export function AshfallGame() {
       acquisitionId: `recruit:${unitId}`,
     }).save as CampaignSave);
   }, []);
+  const upgradeUnit = useCallback((unitId: string) => {
+    if (upgradeLocksRef.current.has(unitId)) return;
+    upgradeLocksRef.current.add(unitId);
+    setUpgradePendingUnitIds([...upgradeLocksRef.current]);
+    const nextRank = getCampaignUnitRank(campaignSave, unitId) + 1;
+    const upgradeId = `upgrade:${unitId}:rank-${nextRank}`;
+    setCampaignSave((current) => {
+      return upgradeCampaignUnit(current, {
+        unitId,
+        upgradeId,
+      }).save as CampaignSave;
+    });
+    window.setTimeout(() => {
+      upgradeLocksRef.current.delete(unitId);
+      setUpgradePendingUnitIds([...upgradeLocksRef.current]);
+    }, 500);
+  }, [campaignSave]);
 
   const beginCampaign = useCallback(() => {
     if (campaignSave.campaignStarted) {
@@ -5140,6 +5266,7 @@ export function AshfallGame() {
   const replayPrologue = useCallback(() => {
     openEvents(getPrologueReplayEventIds(), "map", { forceReplay: true });
   }, [openEvents]);
+  const openPersonnel = useCallback(() => setScreen("personnel"), []);
   const openLoadout = useCallback(() => setScreen("loadout"), []);
   const requestBattle = useCallback(() => {
     const nextEventIds = getStageEntryStoryEventIds({
@@ -5555,6 +5682,8 @@ export function AshfallGame() {
       setSelectedStageId(qaScenario.stageId);
       const qaUnitIds = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id);
       const qaFormationUnitIds = qaUnitIds.slice(0, 7);
+      const progressionPreview = qaScenario.mode === "flow"
+        && (qaScenario.screen === "personnel" || qaScenario.screen === "formation");
       const qaSave = {
         ...campaignSave,
         campaignStarted: true,
@@ -5568,6 +5697,15 @@ export function AshfallGame() {
           ? { ...preset, unitIds: qaFormationUnitIds }
           : preset),
         lastSelectedStageId: qaScenario.stageId,
+        ...(progressionPreview ? {
+          caps: 2500,
+          supplies: 2500,
+          completedStageIds: CAMPAIGN_STAGES.slice(0, 3).map((stage) => stage.id),
+          unitRanks: Object.fromEntries(qaUnitIds.map((unitId, index) => [
+            unitId,
+            Math.min(UNIT_PROGRESSION_MAX_RANK, Math.floor(index / 2)),
+          ])),
+        } : {}),
       } as CampaignSave;
       if (qaScenario.mode === "story" && "eventId" in qaScenario) {
         setCampaignSave(qaSave);
@@ -5632,6 +5770,7 @@ export function AshfallGame() {
       }
       if (qaScenario.screen === "title") setScreen("title");
       else if (qaScenario.screen === "intro") openEvents(getPrologueOpeningEventIds(), "map");
+      else if (qaScenario.screen === "personnel") setScreen("personnel");
       else if (qaScenario.screen === "formation") setScreen("loadout");
       else setScreen("map");
     }, 0);
@@ -5713,7 +5852,14 @@ export function AshfallGame() {
     }
     if (transition.destination === "loadout") {
       disposeBattleRuntime();
-      const fresh = initialGame(transition.selectedSupply, transition.stageId, transition.formationKinds as UnitKind[]);
+      const fresh = initialGame(
+        transition.selectedSupply,
+        transition.stageId,
+        transition.formationKinds as UnitKind[],
+        createBattleResultId(transition.stageId),
+        campaignSave.readStoryEventIds,
+        campaignSave.unitRanks,
+      );
       gameRef.current = fresh;
       finalizedEndRef.current = null;
       setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setScreen("loadout"); chooseAction(null);
@@ -6666,7 +6812,7 @@ export function AshfallGame() {
                 active: true,
                 used: false,
                 triggerRadius: UNIT_ROLE_TUNING.monkey.triggerRadius,
-                stopSeconds: UNIT_ROLE_TUNING.monkey.stopSeconds,
+                stopSeconds: UNIT_ROLE_TUNING.monkey.stopSeconds * f.trapDurationMultiplier,
               };
               const trigger = triggerMonkeyTrap(trap, g.fighters.filter((candidate) => candidate.side === "zombie"));
               if (trigger.triggered) {
@@ -6697,6 +6843,7 @@ export function AshfallGame() {
                 && other.healFocusRemaining > 0).length;
               const healing = resolveNaoHealing({
                 target: wounded,
+                baseHealing: UNIT_ROLE_TUNING.nao.baseHealing * f.healingMultiplier,
                 healerNumber: concurrentHealers + 1,
                 existingProtectionSeconds: wounded.damageReductionRemaining,
               });
@@ -7958,6 +8105,7 @@ export function AshfallGame() {
           saveRecoveryCandidateSources={(saveRecovery?.candidates ?? []).filter((candidate) => candidate.valid === true).map((candidate) => candidate.source)}
           saveRecoveryCanExport={Boolean(saveRecovery && (saveRecovery.corruptCandidates.length > 0 || saveRecovery.candidates.length > 0))}
           saveMutationPending={saveMutationPending}
+          upgradePendingUnitIds={upgradePendingUnitIds}
           savePersistence={savePersistence}
           readStoryEventIds={campaignSave.readStoryEventIds}
           autoSkipReadStory={campaignSave.autoSkipReadStory}
@@ -7975,11 +8123,13 @@ export function AshfallGame() {
           onSetAutoSkipReadStory={setAutoSkipReadStory}
           onReplayPrologue={replayPrologue}
           onSelectStage={selectStage}
+          onOpenPersonnel={openPersonnel}
           onOpenLoadout={openLoadout}
           onReturnToMap={returnToMap}
           onSelectFormationPreset={selectFormation}
           onToggleFormation={toggleFormation}
           onRecruitUnit={recruitUnit}
+          onUpgradeUnit={upgradeUnit}
           onSelectSupply={(kind) => setSelectedSupply(kind as SupplyKind)}
           onStartBattle={requestBattle}
           onRetry={retryBattle}

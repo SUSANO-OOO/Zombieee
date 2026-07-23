@@ -593,7 +593,7 @@ test("Stage 4 and Stage 6 story joins are free while Stage 5 only discovers Monk
 test("default save is versioned and contains initial progression, selection, and settings", () => {
   const save = createDefaultCampaignSave();
   assert.equal(save.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
-  assert.equal(save.schemaVersion, 5);
+  assert.equal(save.schemaVersion, 6);
   assert.equal(save.revision, 0);
   assert.equal(save.updatedAt, "");
   assert.equal(save.integrity, "");
@@ -603,6 +603,8 @@ test("default save is versioned and contains initial progression, selection, and
   assert.equal(save.campaignStarted, false);
   assert.deepEqual(save.processedResultIds, []);
   assert.deepEqual(save.processedAcquisitionIds, []);
+  assert.deepEqual(save.processedUpgradeIds, []);
+  assert.deepEqual(Object.values(save.unitRanks), Array(CAMPAIGN_UNITS.length).fill(0));
   assert.deepEqual(save.completedStageIds, []);
   assert.deepEqual(save.bestStarsByStage, {});
   assert.deepEqual(save.claimedStarRewardsByStage, {});
@@ -836,7 +838,7 @@ test("schema v2 to v4 migration is idempotent and preserves progress, receipts, 
   };
   const migrated = migrateCampaignSave(schema2);
 
-  assert.equal(migrated.schemaVersion, 5);
+  assert.equal(migrated.schemaVersion, 6);
   assert.equal(migrated.storyScriptVersion, "outbreak-origin-v8");
   assert.deepEqual(migrated.processedResultIds, schema2.processedResultIds);
   assert.deepEqual(migrated.completedStageIds, schema2.completedStageIds);
@@ -878,7 +880,7 @@ test("v2, v3, and v4 migration preserves every formerly usable character and can
       unlockedUnitIds: ["brawler", "scout", "ranger", "medic", "brute", "crazy-king", "kumaverson", "babayaga", "gunner"],
       formationKinds: ["brawler", "medic", "gunner"],
     });
-    assert.equal(migrated.schemaVersion, 5);
+    assert.equal(migrated.schemaVersion, 6);
     assert.equal(migrated.caps, 432);
     assert.deepEqual(migrated.processedResultIds, [`v${schemaVersion}-receipt`]);
     for (const unitId of [

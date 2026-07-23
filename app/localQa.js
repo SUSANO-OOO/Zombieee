@@ -121,6 +121,7 @@ export const LOCAL_QA_CAMPAIGN_SCREENS = Object.freeze([
   "intro",
   "map",
   "details",
+  "personnel",
   "formation",
   "result",
 ]);

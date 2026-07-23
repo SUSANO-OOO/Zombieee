@@ -1,4 +1,10 @@
 import { STORY_SCRIPT_VERSION } from "./storyEvents.js";
+import {
+  UNIT_PROGRESSION_MAX_RANK,
+  normalizeUnitRanks,
+  unitRankFor,
+  unitUpgradeQuote,
+} from "./unitProgression.js";
 
 /**
  * Pure, data-driven campaign progression for the 0.7.0 unit-collection release.
@@ -914,7 +920,7 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 
 export const calculateBattleRewards = calculateStageRewards;
 
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 5;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 6;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
 
 export const CAMPAIGN_FORMATION_MAX_SLOTS = 7;
@@ -960,6 +966,7 @@ export function createDefaultCampaignSave() {
     autoSkipReadStory: false,
     processedResultIds: [],
     processedAcquisitionIds: [],
+    processedUpgradeIds: [],
     completedStageIds: [],
     bestStarsByStage: {},
     claimedStarRewardsByStage: {},
@@ -970,6 +977,7 @@ export function createDefaultCampaignSave() {
     ownership,
     discovery: [...ownership],
     recruitable: [],
+    unitRanks: normalizeUnitRanks({}, CAMPAIGN_UNITS.map((unit) => unit.id)),
     // Deprecated 0.6.x roster field retained as a canonical-ID mirror.
     unlockedUnitIds: [...ownership],
     formationPresets,
@@ -1257,6 +1265,11 @@ export function migrateCampaignSave(rawSave) {
     ["processedAcquisitionIds", "processedRecruitmentIds", "appliedRecruitmentIds"],
     [],
   ));
+  const processedUpgradeIds = uniqueStrings(firstDefined(
+    source,
+    ["processedUpgradeIds", "appliedUpgradeIds"],
+    [],
+  ));
   const sourceStoryScriptVersion = typeof source.storyScriptVersion === "string"
     ? source.storyScriptVersion.trim()
     : "";
@@ -1322,6 +1335,14 @@ export function migrateCampaignSave(rawSave) {
     sourceSchemaVersion,
     repairQaAllUnlockLeak,
   });
+  const sourceUnitRanks = firstDefined(source, ["unitRanks", "unitLevels", "upgrades"], {});
+  const canonicalUnitRanks = isRecord(sourceUnitRanks)
+    ? Object.fromEntries(Object.entries(sourceUnitRanks).flatMap(([candidateId, rank]) => {
+      const canonicalId = normalizeCampaignUnitId(candidateId);
+      return canonicalId ? [[canonicalId, rank]] : [];
+    }))
+    : {};
+  const unitRanks = normalizeUnitRanks(canonicalUnitRanks, knownUnitIds);
   const legacyFormation = firstDefined(
     source,
     ["formationUnitIds", "formationKinds", "selectedUnitIds", "loadoutUnitIds"],
@@ -1359,6 +1380,7 @@ export function migrateCampaignSave(rawSave) {
     autoSkipReadStory: typeof autoSkipCandidate === "boolean" ? autoSkipCandidate : false,
     processedResultIds,
     processedAcquisitionIds,
+    processedUpgradeIds,
     completedStageIds,
     bestStarsByStage,
     claimedStarRewardsByStage,
@@ -1366,6 +1388,7 @@ export function migrateCampaignSave(rawSave) {
     supplies: caps,
     ...effectiveUnlocks,
     ...roster,
+    unitRanks,
     unlockedUnitIds: [...roster.ownership],
     formationPresets,
     selectedFormationPresetId,
@@ -1819,6 +1842,98 @@ export const purchaseCampaignUnit = recruitCampaignUnit;
 export function grantStoryCampaignUnit(save, unitIdOrInput, maybeInput) {
   const input = normalizeAcquisitionInput(unitIdOrInput, maybeInput);
   return resolveCampaignUnitAcquisition(save, { ...input, mode: "story" });
+}
+
+export function getCampaignUnitRank(save, unitId) {
+  const canonicalId = normalizeCampaignUnitId(unitId);
+  if (!canonicalId) throw new RangeError(`Unknown campaign unit: ${String(unitId)}`);
+  return unitRankFor(migrateCampaignSave(save).unitRanks, canonicalId);
+}
+
+export function campaignUnitUpgradeQuote(save, unitId) {
+  const canonicalId = normalizeCampaignUnitId(unitId);
+  if (!canonicalId) throw new RangeError(`Unknown campaign unit: ${String(unitId)}`);
+  const current = migrateCampaignSave(save);
+  return unitUpgradeQuote({
+    unitId: canonicalId,
+    ranks: current.unitRanks,
+    ownedUnitIds: current.ownership,
+    completedStageCount: current.completedStageIds.length,
+  });
+}
+
+/**
+ * Pays for exactly one rank on one stable campaign-unit ID. A rank-specific
+ * receipt makes touch retries idempotent without blocking a later upgrade.
+ */
+export function upgradeCampaignUnit(save, unitIdOrInput, maybeInput) {
+  const input = normalizeAcquisitionInput(unitIdOrInput, maybeInput);
+  const unitId = normalizeCampaignUnitId(input.unitId);
+  if (!unitId) throw new RangeError(`Unknown campaign unit: ${String(input.unitId)}`);
+  const upgradeId = typeof input.upgradeId === "string"
+    ? input.upgradeId.trim()
+    : typeof input.receiptId === "string"
+      ? input.receiptId.trim()
+      : "";
+  if (!upgradeId) throw new TypeError("A non-empty upgradeId is required");
+
+  const current = migrateCampaignSave(save);
+  const quote = unitUpgradeQuote({
+    unitId,
+    ranks: current.unitRanks,
+    ownedUnitIds: current.ownership,
+    completedStageCount: current.completedStageIds.length,
+  });
+  const baseResult = {
+    upgradeId,
+    unitId,
+    currentRank: quote.currentRank,
+    nextRank: quote.nextRank,
+    costCaps: quote.costCaps,
+    baseCostCaps: quote.baseCostCaps,
+    discountCaps: quote.discountCaps,
+    catchUp: quote.catchUp,
+    spentCaps: 0,
+    applied: false,
+    alreadyProcessed: false,
+    reason: "",
+  };
+  if (current.processedUpgradeIds.includes(upgradeId)) {
+    return {
+      save: current,
+      result: { ...baseResult, alreadyProcessed: true, reason: "already-processed" },
+    };
+  }
+  if (!current.ownership.includes(unitId)) {
+    return { save: current, result: { ...baseResult, reason: "not-owned" } };
+  }
+  if (quote.currentRank >= UNIT_PROGRESSION_MAX_RANK || quote.nextRank === null) {
+    return { save: current, result: { ...baseResult, reason: "max-rank" } };
+  }
+  if (current.caps < quote.costCaps) {
+    return { save: current, result: { ...baseResult, reason: "insufficient-caps" } };
+  }
+
+  const caps = current.caps - quote.costCaps;
+  const nextSave = reviseCampaignSave({
+    ...current,
+    processedUpgradeIds: [...current.processedUpgradeIds, upgradeId],
+    caps,
+    supplies: caps,
+    unitRanks: {
+      ...current.unitRanks,
+      [unitId]: quote.nextRank,
+    },
+  });
+  return {
+    save: nextSave,
+    result: {
+      ...baseResult,
+      spentCaps: quote.costCaps,
+      applied: true,
+      reason: "applied",
+    },
+  };
 }
 
 export function markStoryEventRead(save, eventId) {

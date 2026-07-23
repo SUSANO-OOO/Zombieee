@@ -41,7 +41,7 @@ test("iPhone landscape safe-area simulation is exact and localhost-only", () => 
 });
 
 test("flow QA accepts every allowlisted campaign screen on both local hosts", () => {
-  assert.deepEqual(LOCAL_QA_CAMPAIGN_SCREENS, ["title", "intro", "map", "details", "formation", "result"]);
+  assert.deepEqual(LOCAL_QA_CAMPAIGN_SCREENS, ["title", "intro", "map", "details", "personnel", "formation", "result"]);
   for (const hostname of ["localhost", "127.0.0.1"]) {
     for (const screen of LOCAL_QA_CAMPAIGN_SCREENS) {
       assert.deepEqual(resolveLocalQaScenario(hostname, `?qa=flow&screen=${screen}`), {

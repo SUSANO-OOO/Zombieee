@@ -167,9 +167,17 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(campaign, /INITIAL_UNIT_IDS = deepFreeze\(CAMPAIGN_UNITS\.filter\(\(unit\) => unit\.unlock\.type === "initial"\)/);
   assert.match(game, /getSelectedFormationCombatKinds\(campaignSave\)[\s\S]*isUnitOwned\(campaignSave, kind\)[\s\S]*slice\(0, 7\)/);
   assert.match(screens, /unit\.discovered \? `\$\{unit\.weaponName\}・\$\{unit\.rangeBand\}・\$\{unit\.primaryTarget\}` : "物語を進めると情報が明らかになります"/);
-  assert.match(screens, /unit\.owned \? selected \? "選択中" : "待機" : unit\.recruitable \? "調達可能"/);
+  assert.match(screens, /unit\.owned \? `Rank \$\{unit\.rank}\/\$\{unit\.maxRank}` : unit\.recruitable \? "調達可能"/);
   assert.match(screens, /formationUnitIds\.length}\/7名選択中[\s\S]*formationPresets\.map[\s\S]*preset\.name/);
-  assert.match(screens, /unit\.recruitable && !unit\.owned[\s\S]*unit\.recruitCost}キャップで調達/);
+  assert.match(screens, /screen === "personnel"[\s\S]*<PersonnelScreen/);
+  assert.match(screens, /人員管理/);
+  assert.match(screens, /所有一覧/);
+  assert.match(screens, /新規調達/);
+  assert.match(screens, /戦力強化/);
+  const loadoutBlock = screens.slice(screens.indexOf("function LoadoutScreen"), screens.indexOf("function PersonnelScreen"));
+  assert.doesNotMatch(loadoutBlock, /mode === "acquisition"|mode === "upgrade"|onRecruitUnit|onUpgradeUnit/);
+  assert.match(screens, /mode === "acquisition" && unit\.recruitable && !unit\.owned[\s\S]*unit\.recruitCost}キャップで調達/);
+  assert.match(screens, /mode === "upgrade" && unit\.owned[\s\S]*Rank \$\{unit\.rank \+ 1}へ：/);
   assert.match(screens, /className="result-unlocks"[\s\S]*新たな戦力を解放/);
   assert.match(game, /newlyUnlockedUnitIds\.map/);
   assert.match(game, /newlyUnlockedStageIds\.map/);
@@ -178,6 +186,14 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
 
   assert.match(game, /if \(resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)[\s\S]*resolveLocalQaScenario\(window\.location\.hostname, window\.location\.search\)\) return;/);
   assert.match(game, /owned: Boolean\(qaMode \|\| qaScenario\) \|\| isUnitOwned/);
+  assert.match(game, /applyUnitProgression\(baseCard, g\.unitRanksByKind\[kind\] \?\? 0\)/);
+  assert.match(game, /upgradeCampaignUnit\(current/);
+  assert.match(game, /HP \+\$\{increase\(progressed\.hp, baseCard\.hp\)}%・攻撃[\s\S]*防御 \$\{Math\.round\(progressed\.defense/);
+  assert.doesNotMatch(game, /射程 \+\$\{increase\(progressed\.range/);
+  const upgradeBlock = game.slice(game.indexOf("const upgradeUnit"), game.indexOf("const beginCampaign"));
+  assert.match(upgradeBlock, /upgradeLocksRef\.current\.has\(unitId\)[\s\S]*const nextRank = getCampaignUnitRank\(campaignSave, unitId\) \+ 1[\s\S]*const upgradeId = `upgrade:\$\{unitId}:rank-\$\{nextRank}`[\s\S]*upgradeCampaignUnit\(current,[\s\S]*upgradeId/);
+  assert.match(game, /damageAfterUnitDefense\(rawInterception\.guardianDamage, guardian\.defense\)[\s\S]*damageAfterUnitDefense\(targetDamage, target\.defense\)/);
+  assert.match(screens, /追いつき割引/);
   assert.match(game, /if \(!qaMode && !qaScenario && !isUnitOwned\(current, unitId\)\) return current/);
   assert.match(game, /reconcileCampaignStorage\([\s\S]*inspectCampaignSaveCandidate[\s\S]*reconciled\.status === "recovery-needed"/);
   assert.match(game, /reconciled\.repairBlockedBySnapshot[\s\S]*recoveryReason: "last-known-good-snapshot-failed"/);
