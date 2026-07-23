@@ -8,6 +8,8 @@ import {
   createDefaultCampaignSave,
   getCampaignUnitRank,
   migrateCampaignSave,
+  deserializeCampaignSave,
+  serializeCampaignSave,
   upgradeCampaignUnit,
 } from "../app/campaign.js";
 import { CONTENT_REGISTRY } from "../app/content/registry.js";
@@ -16,6 +18,7 @@ import {
   UNIT_PROGRESSION_MAX_RANK,
   UNIT_PROGRESSION_RANKS,
   applyUnitProgression,
+  damageAfterUnitDefense,
   progressionPowerIndex,
   unitProgressionMilestones,
   unitUpgradeQuote,
@@ -67,8 +70,9 @@ test("every rank raises combat stats while maximum growth preserves formation va
       assert.ok(progressed.damage >= previous.damage, `${card.kind} damage rank ${rank}`);
       assert.ok(progressed.speed >= previous.speed, `${card.kind} speed rank ${rank}`);
       assert.ok(progressed.laneSpeed >= previous.laneSpeed, `${card.kind} lane speed rank ${rank}`);
-      assert.ok(progressed.range >= previous.range, `${card.kind} range rank ${rank}`);
+      assert.equal(progressed.range, card.range, `${card.kind} range stays role-locked at rank ${rank}`);
       assert.ok(progressed.attackEvery <= previous.attackEvery, `${card.kind} cadence rank ${rank}`);
+      assert.ok(progressed.defense > previous.defense, `${card.kind} defense rank ${rank}`);
       previous = progressed;
     }
     const maximum = applyUnitProgression(card, UNIT_PROGRESSION_MAX_RANK);
@@ -76,19 +80,40 @@ test("every rank raises combat stats while maximum growth preserves formation va
     assert.ok(maximum.hp > card.hp);
     assert.ok(maximum.damage > card.damage);
     assert.ok(maximum.speed > card.speed);
-    assert.ok(maximum.range > card.range);
+    assert.equal(maximum.range, card.range);
     assert.ok(maximum.attackEvery < card.attackEvery);
     assert.ok(power.durability <= 1.24, `${card.kind} durability cap`);
     assert.ok(power.damagePerSecond <= 1.35, `${card.kind} dps cap`);
+    assert.ok(power.defense >= .06 && power.defense <= .09, `${card.kind} defense cap`);
   }
 });
 
 test("rank two and four add role milestones on top of base stat growth", () => {
   assert.deepEqual(unitProgressionMilestones("heavy", 1), []);
-  assert.deepEqual(unitProgressionMilestones("heavy", 2), ["重装耐久"]);
-  assert.deepEqual(unitProgressionMilestones("heavy", 4), ["重装耐久", "実戦連携"]);
-  assert.deepEqual(unitProgressionMilestones("marksman", 2), ["射線延伸"]);
-  assert.deepEqual(unitProgressionMilestones("engineer", 2), ["工兵延伸"]);
+  assert.deepEqual(unitProgressionMilestones("heavy", 2), ["重装装甲"]);
+  assert.deepEqual(unitProgressionMilestones("heavy", 4), ["重装装甲", "実戦連携"]);
+  assert.deepEqual(unitProgressionMilestones("marksman", 2), ["精密火力"]);
+  assert.deepEqual(unitProgressionMilestones("engineer", 2), ["拘束強化"]);
+
+  const heavy = applyUnitProgression(UNIT_CARDS.find(({ aiProfile }) => aiProfile === "heavy"), 2);
+  const marksman = applyUnitProgression(UNIT_CARDS.find(({ aiProfile }) => aiProfile === "marksman"), 2);
+  const support = applyUnitProgression(UNIT_CARDS.find(({ aiProfile }) => aiProfile === "support"), 2);
+  const engineer = applyUnitProgression(UNIT_CARDS.find(({ aiProfile }) => aiProfile === "engineer"), 2);
+  assert.equal(heavy.defense, .06);
+  assert.equal(marksman.damage > UNIT_CARDS.find(({ aiProfile }) => aiProfile === "marksman").damage * 1.06, true);
+  assert.equal(support.healingMultiplier, 1.06);
+  assert.equal(engineer.trapDurationMultiplier, 1.08);
+});
+
+test("percentage defense reduces every hit without flattening low-damage attacks", () => {
+  assert.deepEqual(damageAfterUnitDefense(100, .06), {
+    damage: 94,
+    prevented: 6,
+    reduction: .06,
+  });
+  assert.equal(damageAfterUnitDefense(2, .09).damage, 1.82);
+  assert.equal(damageAfterUnitDefense(-4, .5).damage, 0);
+  assert.equal(damageAfterUnitDefense(100, 9).reduction, .75);
 });
 
 test("late recruits receive a bounded catch-up discount below the owned-roster median", () => {
@@ -185,6 +210,17 @@ test("schema 5 and alias-keyed ranks migrate to canonical schema 6 without data 
   assert.equal(getCampaignUnitRank(migrated, "brute"), UNIT_PROGRESSION_MAX_RANK);
   assert.equal(Object.hasOwn(migrated.unitRanks, "unknown"), false);
   assert.deepEqual(migrateCampaignSave(migrated), migrated);
+});
+
+test("nonzero stable ranks and processed upgrade receipts survive serialize and reload", () => {
+  const save = fullyOwnedSave({
+    unitRanks: Object.fromEntries(unitIds.map((unitId, index) => [unitId, index % 5])),
+    processedUpgradeIds: ["upgrade:unit-paisen:rank-1", "upgrade:unit-raider:rank-2"],
+  });
+  const restored = deserializeCampaignSave(serializeCampaignSave(save));
+  assert.deepEqual(restored.unitRanks, save.unitRanks);
+  assert.deepEqual(restored.processedUpgradeIds, save.processedUpgradeIds);
+  assert.deepEqual(deserializeCampaignSave(serializeCampaignSave(restored)), restored);
 });
 
 test("caps spending cannot lock stage progression and unupgraded play remains valid", () => {

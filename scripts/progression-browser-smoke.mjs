@@ -139,7 +139,7 @@ try {
           const url = new URL(baseUrl);
           url.search = new URLSearchParams({
             qa: "flow",
-            screen: "formation",
+            screen: "personnel",
             stage: "4",
             stars: "2",
             safe: "iphone-landscape",
@@ -147,7 +147,7 @@ try {
           const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
           await page.waitForFunction(() => (
-            document.querySelector(".game-shell")?.getAttribute("data-screen") === "loadout"
+            document.querySelector(".game-shell")?.getAttribute("data-screen") === "personnel"
             && document.querySelectorAll(".formation-unit-card").length === 11
           ), undefined, { timeout });
 
@@ -157,12 +157,16 @@ try {
           const firstUpgrade = page.locator(".formation-unit-upgrade:not(:disabled)").first();
           const costLabel = await firstUpgrade.locator("b").innerText();
           invariant(costLabel.includes("40キャップ"), `catch-up price missing: ${costLabel}`);
-          await firstUpgrade.click();
+          await firstUpgrade.evaluate((button) => {
+            button.click();
+            button.click();
+          });
           await page.waitForFunction(
             (caps) => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().caps < caps,
             before.caps,
             { timeout },
           );
+          await page.waitForTimeout(650);
           const after = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
           const upgradedUnitId = Object.keys(after.unitRanks).find((unitId) => after.unitRanks[unitId] !== before.unitRanks[unitId]);
           invariant(Boolean(upgradedUnitId), "no stable unit rank changed");
@@ -170,8 +174,10 @@ try {
           invariant(before.caps - after.caps === 40, `caps spend mismatch ${before.caps} -> ${after.caps}`);
           const upgradeText = await page.locator(".formation-unit-card").first().innerText();
           invariant(upgradeText.includes("Rank 1/4"), `rank UI missing: ${upgradeText}`);
-          invariant(upgradeText.includes("HP +4%"), `HP growth UI missing: ${upgradeText}`);
+          invariant(upgradeText.includes("HP +3%"), `HP growth UI missing: ${upgradeText}`);
           invariant(upgradeText.includes("攻撃 +3%"), `damage growth UI missing: ${upgradeText}`);
+          invariant(upgradeText.includes("防御 1.5%軽減"), `defense growth UI missing: ${upgradeText}`);
+          invariant(!upgradeText.includes("射程 +"), `range must not grow: ${upgradeText}`);
 
           const dimensions = await page.evaluate(() => ({
             innerWidth: window.innerWidth,
@@ -186,7 +192,8 @@ try {
             `safe area missing: ${JSON.stringify(dimensions)}`);
           await page.screenshot({ path: path.join(evidenceDir, `${name}-upgrade.png`) });
 
-          await page.getByRole("button", { name: "編成", exact: true }).click();
+          await page.getByRole("button", { name: "← 地図へ", exact: true }).click();
+          await page.getByRole("button", { name: "編成へ進む", exact: true }).click();
           await enterBattle(page);
           const brawlerButton = page.locator('button.unit-card[data-kind="brawler"]');
           await brawlerButton.waitFor({ state: "visible", timeout });
@@ -198,7 +205,7 @@ try {
           const baseCard = UNIT_CARDS.find((card) => card.kind === "brawler");
           const expected = applyUnitProgression(baseCard, 1);
           invariant(fighter.progressionRank === 1, `battle rank mismatch: ${JSON.stringify(fighter)}`);
-          invariant(fighter.maxHp === expected.hp && fighter.damage === expected.damage,
+          invariant(fighter.maxHp === expected.hp && fighter.damage === expected.damage && fighter.defense === expected.defense,
             `battle stats mismatch: ${JSON.stringify({ fighter, expected })}`);
 
           for (const [kind, entries] of Object.entries(diagnostics)) {
@@ -214,6 +221,7 @@ try {
               progressionRank: fighter.progressionRank,
               maxHp: fighter.maxHp,
               damage: fighter.damage,
+              defense: fighter.defense,
             },
             dimensions,
             diagnostics,

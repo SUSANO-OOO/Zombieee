@@ -646,7 +646,7 @@ export function sceneIdForScreen(screen, stageId = null, musicState = null) {
   if (screen === "title") return PRODUCTION_AUDIO_SCENE_IDS.TITLE;
   if (screen === "event" || screen === "intro") return sceneIdForStoryEvent(eventId, storyLineIndex) ?? PRODUCTION_AUDIO_SCENE_IDS.INTRO;
   if (screen === "map") return PRODUCTION_AUDIO_SCENE_IDS.MAP;
-  if (screen === "loadout" || screen === "formation") return PRODUCTION_AUDIO_SCENE_IDS.LOADOUT;
+  if (screen === "personnel" || screen === "loadout" || screen === "formation") return PRODUCTION_AUDIO_SCENE_IDS.LOADOUT;
   if (screen === "victory" || screen === "defeat") return screen;
   if (screen !== "battle") return null;
   if (outcome) return outcome;

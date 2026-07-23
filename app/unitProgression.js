@@ -11,13 +11,13 @@ export const UNIT_PROGRESSION_RANKS = deepFreeze([
 ]);
 
 const ROLE_MILESTONES = deepFreeze({
-  frontline: { rank2: "前線耐久", hpMultiplier: 1.06 },
-  heavy: { rank2: "重装耐久", hpMultiplier: 1.06 },
+  frontline: { rank2: "前線装甲", defenseBonus: .03 },
+  heavy: { rank2: "重装装甲", defenseBonus: .03 },
   skirmisher: { rank2: "高速展開", speedMultiplier: 1.06 },
-  marksman: { rank2: "射線延伸", rangeMultiplier: 1.05 },
-  suppression: { rank2: "制圧延伸", rangeMultiplier: 1.05 },
-  support: { rank2: "支援延伸", rangeMultiplier: 1.06 },
-  engineer: { rank2: "工兵延伸", rangeMultiplier: 1.06 },
+  marksman: { rank2: "精密火力", damageMultiplier: 1.05 },
+  suppression: { rank2: "制圧連射", attackEveryMultiplier: .95 },
+  support: { rank2: "応急熟練", healingMultiplier: 1.06 },
+  engineer: { rank2: "拘束強化", trapDurationMultiplier: 1.08 },
 });
 
 function integer(value, minimum = 0, maximum = Number.MAX_SAFE_INTEGER) {
@@ -80,11 +80,13 @@ export function unitProgressionMilestones(aiProfile, rank) {
 export function applyUnitProgression(card, rank) {
   const safeRank = integer(rank, 0, UNIT_PROGRESSION_MAX_RANK);
   const role = ROLE_MILESTONES[card?.aiProfile] ?? ROLE_MILESTONES.frontline;
-  const hpMultiplier = (1 + safeRank * .04) * (safeRank >= 2 ? role.hpMultiplier ?? 1 : 1);
-  const damageMultiplier = 1 + safeRank * .03;
+  const roleMilestoneActive = safeRank >= 2;
+  const hpMultiplier = 1 + safeRank * .03;
+  const damageMultiplier = (1 + safeRank * .03) * (roleMilestoneActive ? role.damageMultiplier ?? 1 : 1);
   const speedMultiplier = (1 + safeRank * .015) * (safeRank >= 2 ? role.speedMultiplier ?? 1 : 1);
-  const rangeMultiplier = (1 + safeRank * .01) * (safeRank >= 2 ? role.rangeMultiplier ?? 1 : 1);
-  const attackEveryMultiplier = 1 - safeRank * .02 - (safeRank >= 4 ? .04 : 0);
+  const attackEveryMultiplier = (1 - safeRank * .02 - (safeRank >= 4 ? .04 : 0))
+    * (roleMilestoneActive ? role.attackEveryMultiplier ?? 1 : 1);
+  const defense = safeRank * .015 + (roleMilestoneActive ? role.defenseBonus ?? 0 : 0);
   return Object.freeze({
     ...card,
     progressionRank: safeRank,
@@ -92,18 +94,31 @@ export function applyUnitProgression(card, rank) {
     damage: Math.round(card.damage * damageMultiplier * 10) / 10,
     speed: Math.round(card.speed * speedMultiplier * 100) / 100,
     laneSpeed: Math.round(card.laneSpeed * speedMultiplier * 100) / 100,
-    range: Math.round(card.range * rangeMultiplier * 10) / 10,
+    range: card.range,
     attackEvery: Math.round(card.attackEvery * attackEveryMultiplier * 1000) / 1000,
+    defense: Math.round(defense * 10000) / 10000,
+    healingMultiplier: roleMilestoneActive ? role.healingMultiplier ?? 1 : 1,
+    trapDurationMultiplier: roleMilestoneActive ? role.trapDurationMultiplier ?? 1 : 1,
     milestones: unitProgressionMilestones(card.aiProfile, safeRank),
+  });
+}
+
+export function damageAfterUnitDefense(damage, defense = 0) {
+  const incoming = Math.max(0, Number.isFinite(Number(damage)) ? Number(damage) : 0);
+  const reduction = Math.max(0, Math.min(.75, Number.isFinite(Number(defense)) ? Number(defense) : 0));
+  return Object.freeze({
+    damage: incoming * (1 - reduction),
+    prevented: incoming * reduction,
+    reduction,
   });
 }
 
 export function progressionPowerIndex(card, rank) {
   const progressed = applyUnitProgression(card, rank);
   return Object.freeze({
-    durability: progressed.hp / card.hp,
+    durability: (progressed.hp / card.hp) / (1 - progressed.defense),
     damagePerSecond: (progressed.damage / progressed.attackEvery) / (card.damage / card.attackEvery),
     mobility: progressed.speed / card.speed,
-    reach: progressed.range / card.range,
+    defense: progressed.defense,
   });
 }

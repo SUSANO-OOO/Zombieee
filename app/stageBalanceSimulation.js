@@ -195,20 +195,28 @@ function roleCounterMultiplier(kind, enemyKind, laneEnemyCount, enabled) {
 }
 
 function defensiveMultiplier(activeUnits, roleCounters) {
-  if (!roleCounters) return 1;
+  const totalHp = activeUnits.reduce((total, unit) => total + unit.hp, 0);
+  const progressionDefense = totalHp > 0
+    ? activeUnits.reduce((total, unit) => total + unit.hp * (unit.defense ?? 0), 0) / totalHp
+    : 0;
+  let multiplier = 1 - progressionDefense;
+  if (!roleCounters) return multiplier;
   const kinds = new Set(activeUnits.map(({ kind }) => kind));
-  let multiplier = 1;
   if (kinds.has("medic")) multiplier *= 1 - UNIT_ROLE_TUNING.nao.damageReduction * 0.72;
   if (kinds.has("guardian")) multiplier *= 1 - UNIT_ROLE_TUNING.gantetsu.interceptRatio * 0.58;
   if (kinds.has("kumaverson")) multiplier *= 0.88;
-  if (kinds.has("engineer")) multiplier *= 0.92;
+  const engineer = activeUnits.find(({ kind }) => kind === "engineer");
+  if (engineer) multiplier *= 1 - .08 * (engineer.trapDurationMultiplier ?? 1);
   return multiplier;
 }
 
 function healingPerSecond(activeUnits, roleCounters) {
   if (!roleCounters) return 0;
-  const naoCount = activeUnits.filter(({ kind }) => kind === "medic").length;
-  return naoCount * UNIT_ROLE_TUNING.nao.baseHealing * 0.3;
+  return activeUnits
+    .filter(({ kind }) => kind === "medic")
+    .reduce((total, unit) => (
+      total + UNIT_ROLE_TUNING.nao.baseHealing * (unit.healingMultiplier ?? 1) * 0.3
+    ), 0);
 }
 
 function missionTimeLimit(stage, facts) {

@@ -292,7 +292,12 @@ import {
   resolveContainmentStrike,
   stationSpatialSnapshot,
 } from "./stationSpatialMechanics.js";
-import { UNIT_PROGRESSION_MAX_RANK, applyUnitProgression, unitProgressionMilestones } from "./unitProgression.js";
+import {
+  UNIT_PROGRESSION_MAX_RANK,
+  applyUnitProgression,
+  damageAfterUnitDefense,
+  unitProgressionMilestones,
+} from "./unitProgression.js";
 
 const W = 960;
 const H = 540;
@@ -387,6 +392,10 @@ type UnitCard = {
   damage: number;
   range: number;
   attackEvery: number;
+  progressionRank?: number;
+  defense?: number;
+  healingMultiplier?: number;
+  trapDurationMultiplier?: number;
 };
 
 type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: string[] };
@@ -526,6 +535,9 @@ type Fighter = {
   attackSequence: number;
   damageReductionRemaining: number;
   damageReductionMultiplier: number;
+  defense: number;
+  healingMultiplier: number;
+  trapDurationMultiplier: number;
   healFocusTargetId: number | null;
   healFocusRemaining: number;
   comboHits: number;
@@ -1120,10 +1132,17 @@ function effectDistance(a: { x: number; y: number }, b: { x: number; y: number }
   return Math.hypot(a.x - b.x, (a.y - b.y) * 2);
 }
 
-function createUnitRoleRuntime() {
+function createUnitRoleRuntime({
+  defense = 0,
+  healingMultiplier = 1,
+  trapDurationMultiplier = 1,
+}: Pick<UnitCard, "defense" | "healingMultiplier" | "trapDurationMultiplier"> = {}) {
   return {
     damageReductionRemaining: 0,
     damageReductionMultiplier: 1,
+    defense,
+    healingMultiplier,
+    trapDurationMultiplier,
     healFocusTargetId: null,
     healFocusRemaining: 0,
     comboHits: 0,
@@ -1173,13 +1192,14 @@ function applyIncomingHumanDamage(
       attackKind,
       steadfast: { remainingSeconds: guardian.guardStandRemaining, available: guardian.guardStandAvailable },
     });
+    const armoredGuardianDamage = damageAfterUnitDefense(rawInterception.guardianDamage, guardian.defense);
     const guardedDamage = naoDamageAfterProtection({
-      damage: rawInterception.guardianDamage,
+      damage: armoredGuardianDamage.damage,
       protectionSeconds: guardian.damageReductionRemaining,
     });
     const protectedGuardian = {
       ...guardian,
-      hp: guardian.hp + guardedDamage.prevented,
+      hp: guardian.hp + armoredGuardianDamage.prevented + guardedDamage.prevented,
     };
     const appliedInterception = resolveGantetsuInterception({
       guardian: protectedGuardian,
@@ -1194,7 +1214,7 @@ function applyIncomingHumanDamage(
     guardian.flash = Math.max(guardian.flash, .12);
     redirectedDamage = rawInterception.guardianDamage;
     targetDamage = rawInterception.targetDamage;
-    preventedDamage += guardedDamage.prevented;
+    preventedDamage += armoredGuardianDamage.prevented + guardedDamage.prevented;
     g.roleMetrics.gantetsuRedirectedDamage += redirectedDamage;
     g.roleMetrics.naoPreventedDamage += guardedDamage.prevented;
     addDamageText(g, {
@@ -1206,8 +1226,9 @@ function applyIncomingHumanDamage(
     });
   }
 
+  const armoredTargetDamage = damageAfterUnitDefense(targetDamage, target.defense);
   const protectedTarget = naoDamageAfterProtection({
-    damage: targetDamage,
+    damage: armoredTargetDamage.damage,
     protectionSeconds: target.damageReductionRemaining,
   });
   let appliedTargetDamage = protectedTarget.damage;
@@ -1237,7 +1258,7 @@ function applyIncomingHumanDamage(
   } else {
     target.hp -= protectedTarget.damage;
   }
-  preventedDamage += protectedTarget.prevented;
+  preventedDamage += armoredTargetDamage.prevented + protectedTarget.prevented;
   g.roleMetrics.naoPreventedDamage += protectedTarget.prevented;
   return Object.freeze({
     targetDamage: appliedTargetDamage,
@@ -1345,7 +1366,7 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
     progressionRank: card.progressionRank,
-    ...createUnitRoleRuntime(),
+    ...createUnitRoleRuntime(card),
   });
   addParticles(g, deployment.combatReadyX, deployment.combatReadyY, "#d0b48b", 7);
   g.banner = `${card.name} // 移動拠点から出撃`;
@@ -3447,6 +3468,8 @@ export function AshfallGame() {
   const [selectedSupply, setSelectedSupply] = useState<SupplyKind>("pod");
   const [selectedAction, setSelectedAction] = useState<SelectedAction>(null);
   const [screen, setScreen] = useState<CampaignScreen>("title");
+  const upgradeLocksRef = useRef(new Set<string>());
+  const [upgradePendingUnitIds, setUpgradePendingUnitIds] = useState<readonly string[]>([]);
   const [eventId, setEventId] = useState<string | null>(null);
   const [storyAudioPosition, setStoryAudioPosition] = useState<{ eventId: string | null; lineIndex: number }>({ eventId: null, lineIndex: 0 });
   const [forceStoryReplay, setForceStoryReplay] = useState(false);
@@ -4005,6 +4028,9 @@ export function AshfallGame() {
             laneSpeed: fighter.laneSpeed,
             range: fighter.range,
             attackEvery: fighter.attackEvery,
+            defense: fighter.defense,
+            healingMultiplier: fighter.healingMultiplier,
+            trapDurationMultiplier: fighter.trapDurationMultiplier,
             progressionRank: fighter.progressionRank ?? 0,
             bodyRadius: fighter.bodyRadius,
             targetId: fighter.targetId,
@@ -4921,13 +4947,13 @@ export function AshfallGame() {
       if (targetRank <= 0) return "基礎ステータス";
       const progressed = applyUnitProgression(baseCard, targetRank);
       const increase = (current: number, base: number) => Math.round((current / base - 1) * 100);
-      return `HP +${increase(progressed.hp, baseCard.hp)}%・攻撃 +${increase(progressed.damage, baseCard.damage)}%・機動 +${increase(progressed.speed, baseCard.speed)}%・射程 +${increase(progressed.range, baseCard.range)}%・攻撃速度 +${increase(baseCard.attackEvery, progressed.attackEvery)}%`;
+      return `HP +${increase(progressed.hp, baseCard.hp)}%・攻撃 +${increase(progressed.damage, baseCard.damage)}%・防御 ${Math.round(progressed.defense * 1000) / 10}%軽減・機動 +${increase(progressed.speed, baseCard.speed)}%・攻撃速度 +${increase(baseCard.attackEvery, progressed.attackEvery)}%`;
     };
     const compactStatSummaryFor = (targetRank: number) => {
       if (targetRank <= 0) return "基礎";
       const progressed = applyUnitProgression(baseCard, targetRank);
       const increase = (current: number, base: number) => Math.round((current / base - 1) * 100);
-      return `HP+${increase(progressed.hp, baseCard.hp)} 攻+${increase(progressed.damage, baseCard.damage)} 機+${increase(progressed.speed, baseCard.speed)} 射+${increase(progressed.range, baseCard.range)} 速+${increase(baseCard.attackEvery, progressed.attackEvery)}%`;
+      return `HP+${increase(progressed.hp, baseCard.hp)} 攻+${increase(progressed.damage, baseCard.damage)} 防${Math.round(progressed.defense * 1000) / 10}% 機+${increase(progressed.speed, baseCard.speed)} 速+${increase(baseCard.attackEvery, progressed.attackEvery)}%`;
     };
     return {
       id: unit.id,
@@ -5188,14 +5214,22 @@ export function AshfallGame() {
     }).save as CampaignSave);
   }, []);
   const upgradeUnit = useCallback((unitId: string) => {
+    if (upgradeLocksRef.current.has(unitId)) return;
+    upgradeLocksRef.current.add(unitId);
+    setUpgradePendingUnitIds([...upgradeLocksRef.current]);
+    const nextRank = getCampaignUnitRank(campaignSave, unitId) + 1;
+    const upgradeId = `upgrade:${unitId}:rank-${nextRank}`;
     setCampaignSave((current) => {
-      const nextRank = getCampaignUnitRank(current, unitId) + 1;
       return upgradeCampaignUnit(current, {
         unitId,
-        upgradeId: `upgrade:${unitId}:rank-${nextRank}`,
+        upgradeId,
       }).save as CampaignSave;
     });
-  }, []);
+    window.setTimeout(() => {
+      upgradeLocksRef.current.delete(unitId);
+      setUpgradePendingUnitIds([...upgradeLocksRef.current]);
+    }, 500);
+  }, [campaignSave]);
 
   const beginCampaign = useCallback(() => {
     if (campaignSave.campaignStarted) {
@@ -5209,6 +5243,7 @@ export function AshfallGame() {
   const replayPrologue = useCallback(() => {
     openEvents(getPrologueReplayEventIds(), "map", { forceReplay: true });
   }, [openEvents]);
+  const openPersonnel = useCallback(() => setScreen("personnel"), []);
   const openLoadout = useCallback(() => setScreen("loadout"), []);
   const requestBattle = useCallback(() => {
     const nextEventIds = getStageEntryStoryEventIds({
@@ -5624,7 +5659,8 @@ export function AshfallGame() {
       setSelectedStageId(qaScenario.stageId);
       const qaUnitIds = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id);
       const qaFormationUnitIds = qaUnitIds.slice(0, 7);
-      const progressionPreview = qaScenario.mode === "flow" && qaScenario.screen === "formation";
+      const progressionPreview = qaScenario.mode === "flow"
+        && (qaScenario.screen === "personnel" || qaScenario.screen === "formation");
       const qaSave = {
         ...campaignSave,
         campaignStarted: true,
@@ -5711,6 +5747,7 @@ export function AshfallGame() {
       }
       if (qaScenario.screen === "title") setScreen("title");
       else if (qaScenario.screen === "intro") openEvents(getPrologueOpeningEventIds(), "map");
+      else if (qaScenario.screen === "personnel") setScreen("personnel");
       else if (qaScenario.screen === "formation") setScreen("loadout");
       else setScreen("map");
     }, 0);
@@ -6752,7 +6789,7 @@ export function AshfallGame() {
                 active: true,
                 used: false,
                 triggerRadius: UNIT_ROLE_TUNING.monkey.triggerRadius,
-                stopSeconds: UNIT_ROLE_TUNING.monkey.stopSeconds,
+                stopSeconds: UNIT_ROLE_TUNING.monkey.stopSeconds * f.trapDurationMultiplier,
               };
               const trigger = triggerMonkeyTrap(trap, g.fighters.filter((candidate) => candidate.side === "zombie"));
               if (trigger.triggered) {
@@ -6783,6 +6820,7 @@ export function AshfallGame() {
                 && other.healFocusRemaining > 0).length;
               const healing = resolveNaoHealing({
                 target: wounded,
+                baseHealing: UNIT_ROLE_TUNING.nao.baseHealing * f.healingMultiplier,
                 healerNumber: concurrentHealers + 1,
                 existingProtectionSeconds: wounded.damageReductionRemaining,
               });
@@ -8044,6 +8082,7 @@ export function AshfallGame() {
           saveRecoveryCandidateSources={(saveRecovery?.candidates ?? []).filter((candidate) => candidate.valid === true).map((candidate) => candidate.source)}
           saveRecoveryCanExport={Boolean(saveRecovery && (saveRecovery.corruptCandidates.length > 0 || saveRecovery.candidates.length > 0))}
           saveMutationPending={saveMutationPending}
+          upgradePendingUnitIds={upgradePendingUnitIds}
           savePersistence={savePersistence}
           readStoryEventIds={campaignSave.readStoryEventIds}
           autoSkipReadStory={campaignSave.autoSkipReadStory}
@@ -8061,6 +8100,7 @@ export function AshfallGame() {
           onSetAutoSkipReadStory={setAutoSkipReadStory}
           onReplayPrologue={replayPrologue}
           onSelectStage={selectStage}
+          onOpenPersonnel={openPersonnel}
           onOpenLoadout={openLoadout}
           onReturnToMap={returnToMap}
           onSelectFormationPreset={selectFormation}
