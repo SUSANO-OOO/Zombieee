@@ -13,6 +13,7 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "qa:performance:install": "playwright install chromium webkit",
     "qa:performance": "node scripts/browser-performance-budget.mjs",
+    "qa:battle-space": "node scripts/battle-space-browser-smoke.mjs",
     "content:validate": "node scripts/content-pipeline.mjs validate",
     "content:drill": "node scripts/content-pipeline.mjs drill",
     "content:gallery-qa": "node scripts/content-pipeline.mjs gallery-qa",
