@@ -1,4 +1,6 @@
 import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "./campaign.js";
+import { enemySpawnClassFor } from "./content/enemyCatalog.js";
+import { UNIT_CONTENT, UNIT_CONTENT_BY_ID } from "./content/unitCatalog.js";
 
 export const COMMAND_MAX = 150;
 export const COMMAND_INITIAL = 70;
@@ -266,25 +268,10 @@ export const CAMERA_SHAKE_EVENTS = Object.freeze({
   enemyBaseCollapse: Object.freeze({ strength: 12, seconds: .28 }),
 });
 
-// Version 0.7.0 roster balance. Keep deployment and baseline combat values in
-// one table; role-specific scaling lives in unitRoleMechanics.js. The original
-// 1-6 keyboard order remains a compatibility contract. The final two PC keys
-// deliberately follow 9 with 0 and -, while touch remains the primary input.
-export const UNIT_CARDS = Object.freeze([
-  Object.freeze({ kind: "scout", name: "ハチ", cost: 25, key: "1", desc: "遊撃手・高速迎撃", deployCooldown: 8, hp: 80, speed: 27, damage: 11, range: 28, attackEvery: .62 }),
-  Object.freeze({ kind: "ranger", name: "ミズチ", cost: 45, key: "2", desc: "射撃手・遠距離射撃", deployCooldown: 11, hp: 70, speed: 20, damage: 20, range: 145, attackEvery: .82 }),
-  Object.freeze({ kind: "brute", name: "タタラ", cost: 70, key: "3", desc: "破砕兵・装甲拠点破壊", deployCooldown: 18, hp: 175, speed: 14, damage: 30, range: 28, attackEvery: 1.05 }),
-  Object.freeze({ kind: "brawler", name: "パイセン", cost: 55, key: "4", desc: "格闘家・素手近接", deployCooldown: 13, hp: 135, speed: 23, damage: 26, range: 30, attackEvery: .72 }),
-  Object.freeze({ kind: "gunner", name: "レイダー", cost: 60, key: "5", desc: "制圧射手・直線弾幕", deployCooldown: 15, hp: 90, speed: 18, damage: 13, range: 112, attackEvery: .34 }),
-  Object.freeze({ kind: "medic", name: "ナオ", cost: 35, key: "6", desc: "救護支援・単体治療", deployCooldown: 12, hp: 68, speed: 20, damage: 7, range: 118, attackEvery: 1.05 }),
-  Object.freeze({ kind: "crazy-king", name: "クレイジーキング", cost: 65, key: "7", desc: "狂戦士・密集殲滅", deployCooldown: 17, hp: 124, speed: 20, damage: 20, range: 34, attackEvery: .82 }),
-  Object.freeze({ kind: "kumaverson", name: "クマバーソン", cost: 62, key: "8", desc: "前衛打撃・足止め", deployCooldown: 17, hp: 152, speed: 17, damage: 27, range: 31, attackEvery: 1.02 }),
-  Object.freeze({ kind: "babayaga", name: "ババヤガ", cost: 58, key: "9", desc: "精密射撃・特殊排除", deployCooldown: 16, hp: 76, speed: 19, damage: 31, range: 158, attackEvery: 1.04 }),
-  Object.freeze({ kind: "guardian", name: "ガンテツ", cost: 48, key: "0", desc: "重装盾・被害肩代わり", deployCooldown: 16, hp: 240, speed: 11, damage: 12, range: 32, attackEvery: 1.25 }),
-  Object.freeze({ kind: "engineer", name: "モンキー", cost: 42, key: "-", desc: "工兵・自動足止め", deployCooldown: 13, hp: 88, speed: 17, damage: 14, range: 104, attackEvery: .9 }),
-]);
-
-export const UNIT_BY_ID = Object.freeze(Object.fromEntries(UNIT_CARDS.map((card) => [card.kind, card])));
+// Compatibility exports keep the current combat API stable while the canonical
+// data now lives in the content catalog.
+export const UNIT_CARDS = UNIT_CONTENT;
+export const UNIT_BY_ID = UNIT_CONTENT_BY_ID;
 
 export const UNIT_SPECIALS = Object.freeze({
   "crazy-king": Object.freeze({ radius: 54, secondaryMultiplier: .46, bleedDamage: 8, bleedSeconds: 2.4, push: 7 }),
@@ -326,9 +313,7 @@ export const ENEMY_GATE_SPAWN = Object.freeze({
 });
 
 function enemySpawnClass(kind) {
-  if (kind === "takuya" || kind === "gate-eater") return "boss";
-  if (kind === "crusher" || kind === "abomination" || kind === "grappler") return "heavy";
-  return "normal";
+  return enemySpawnClassFor(kind);
 }
 
 export function enemySpawnInterval({ kind, lane = 1, order = 0 }) {

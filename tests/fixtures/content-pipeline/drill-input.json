@@ -1,0 +1,41 @@
+{
+  "fixture": true,
+  "unit": {
+    "id": "fixture-unit-sentinel",
+    "displayName": "Fixture Sentinel",
+    "aliases": [
+      "fixture-sentinel"
+    ],
+    "hp": 120,
+    "damage": 18,
+    "range": 72,
+    "attackEvery": 0.9,
+    "cost": 30
+  },
+  "enemy": {
+    "id": "fixture-enemy-probe",
+    "displayName": "Fixture Probe",
+    "hp": 140,
+    "hpPerWave": 3,
+    "speed": 16,
+    "damage": 12,
+    "range": 28,
+    "attackEvery": 1.1,
+    "bodyRadius": 12,
+    "laneSpeed": 20,
+    "spawnClass": "normal"
+  },
+  "stage": {
+    "id": "fixture-stage-pipeline-drill",
+    "displayName": "Fixture Pipeline Drill",
+    "stageNumber": 9001,
+    "missionType": "fixture-assault",
+    "objective": "Destroy the fixture target",
+    "objectiveConfig": {
+      "target": "fixture-target"
+    },
+    "firstWaveAtSeconds": 5,
+    "enemyCount": 3,
+    "baseReward": 1
+  }
+}
