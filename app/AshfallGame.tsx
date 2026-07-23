@@ -11,6 +11,13 @@ import {
 } from "./battleBarks.js";
 import { decideAllyIntent } from "./allyAi.js";
 import {
+  advanceNavigationRecovery,
+  allyAiProfileFor,
+  chooseEnemyTargetForProfile,
+  createNavigationRecoveryState,
+  enemyAiProfileFor,
+} from "./combatAiProfiles.js";
+import {
   advanceTowardLane,
   chooseCommittedEnemyLane,
   chooseHumanDeploymentLane,
@@ -493,6 +500,15 @@ type Fighter = {
   bleedDamagePerSecond: number;
   aiDestinationX: number;
   aiMoveDirection: number;
+  navigationRecovery: {
+    lastX: number;
+    lastY: number;
+    stuckSeconds: number;
+    recoverySeconds: number;
+    recoveryLane: number | null;
+    originalLane: number;
+    recoveryCount: number;
+  };
   abilityCooldown: number;
   abilityWindup: number;
   attackSequence: number;
@@ -580,7 +596,7 @@ type StageMissionRuntime = {
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number };
 type RoleEffect = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga";
-type Shot = { x: number; y: number; tx: number; ty: number; life: number; side: "human" | "zombie"; effect?: RoleEffect; emphasized?: boolean; duration?: number; style?: "projectile" | "melee" | "crawler"; weapon?: string };
+type Shot = { x: number; y: number; tx: number; ty: number; life: number; side: "human" | "zombie"; sourceId?: number; targetId?: number; damageTargetId?: number; effect?: RoleEffect; emphasized?: boolean; duration?: number; style?: "projectile" | "melee" | "crawler"; weapon?: string };
 type DamageText = { x: number; y: number; value: string; life: number; color: string };
 type Corpse = {
   id: number;
@@ -659,6 +675,7 @@ type RoleMetrics = {
 };
 
 type StationMetrics = {
+  aiRecoveries: number;
   karamiteBinds: number;
   leakMudZones: number;
   soukiBursts: number;
@@ -941,6 +958,7 @@ const emptyRoleMetrics = (): RoleMetrics => ({
   monkeyTrapTriggers: 0,
 });
 const emptyStationMetrics = (): StationMetrics => ({
+  aiRecoveries: 0,
   karamiteBinds: 0,
   leakMudZones: 0,
   soukiBursts: 0,
@@ -1259,6 +1277,11 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     bleedDamagePerSecond: 0,
     aiDestinationX: 0,
     aiMoveDirection: 0,
+    navigationRecovery: createNavigationRecoveryState({
+      x: gateEntering ? gateEntry.x : kind === "turned" ? 0 : Math.min(WORLD_GEOMETRY.barricade.enemySpawnMaxX, WORLD_GEOMETRY.barricade.enemySpawnMinX + order * 16),
+      y: gateEntering ? gateEntry.y : laneY(lane, id),
+      lane,
+    }),
     abilityCooldown: enemyInitialAbilityCooldownFor(kind),
     abilityWindup: 0,
     attackSequence: 0,
@@ -1297,7 +1320,9 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     targetId: null, targetObjectId: null, retargetIn: 0, nextLaneDecisionAt: 0, bodyRadius: bodyRadiusFor(kind), laneSpeed, spawnGrace: .95,
     combatReady: !runOutFromCrawler, gateEntering: runOutFromCrawler, entryDirection: 1, spawnPortalId: runOutFromCrawler ? "crawler-door" : null, entryStepDistance: 0, gateEntrySpeed: Math.max(54, card.speed * 3.2), combatReadyX: deployment.combatReadyX,
     contained: false,
-    marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: MUSTER_X, aiMoveDirection: 0, abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
+    marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: MUSTER_X, aiMoveDirection: 0,
+    navigationRecovery: createNavigationRecoveryState({ x: deployment.x, y: deployment.y, lane: assignedLane }),
+    abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
     ...createUnitRoleRuntime(),
   });
@@ -3936,10 +3961,20 @@ export function AshfallGame() {
           })),
           airstrike: { ...g.airstrike },
           placementIndicator: g.placementIndicator ? { ...g.placementIndicator } : null,
+          attackIdentity: g.shots
+            .filter((shot) => shot.targetId !== undefined)
+            .map((shot) => ({
+              sourceId: shot.sourceId ?? null,
+              targetId: shot.targetId ?? null,
+              damageTargetId: shot.damageTargetId ?? null,
+            })),
           fighters: g.fighters.map((fighter) => ({
             id: fighter.id,
             side: fighter.side,
             kind: fighter.kind,
+            aiProfile: fighter.side === "human"
+              ? allyAiProfileFor(fighter.kind).id
+              : enemyAiProfileFor(fighter.kind).id,
             lane: fighter.lane,
             assignedLane: fighter.anchorLane,
             x: fighter.x,
@@ -3966,6 +4001,7 @@ export function AshfallGame() {
             engineerTrapReady: fighter.engineerTrapReady,
             engineerTrapX: fighter.engineerTrapX,
             armorBreakStacks: fighter.armorBreakStacks,
+            navigationRecovery: { ...fighter.navigationRecovery },
             stationAbility: { ...fighter.stationAbility },
           })),
           completedStageIds: [...campaignSave.completedStageIds],
@@ -4952,6 +4988,12 @@ export function AshfallGame() {
       fresh.banner = "LOCAL QA // 防衛終了8秒前";
       fresh.bannerTime = 2.2;
     }
+    if (qaScenario?.mode === "mission") {
+      fresh.time = PREP_SECONDS;
+      fresh.phase = phaseForBattle(fresh.definition, fresh.time) as Game["phase"];
+      fresh.banner = "LOCAL QA // Stage 1–6 AI実戦開始";
+      fresh.bannerTime = 2.2;
+    }
     if (qaScenario?.mode === "station") {
       // A terminal QA fixture must not immediately re-inject the same result
       // after the player chooses retry. Replays exercise the real fresh-start
@@ -5567,7 +5609,7 @@ export function AshfallGame() {
         return;
       }
       setCampaignSave(qaSave);
-      if (qaScenario.mode === "station") {
+      if (qaScenario.mode === "station" || qaScenario.mode === "mission") {
         const qaFormationKinds = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
           .slice(0, 7)
           .map((unit) => unit.combatKind as UnitKind);
@@ -6341,7 +6383,7 @@ export function AshfallGame() {
             f.x = entryDirection > 0
               ? Math.min(f.combatReadyX, f.x + f.gateEntrySpeed * dt)
               : Math.max(f.combatReadyX, f.x - f.gateEntrySpeed * dt);
-            const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
+            const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
             if (Math.abs(dy) > 1) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * .58 * dt);
             if (f.side === "human") {
@@ -6700,6 +6742,7 @@ export function AshfallGame() {
           let distance = Infinity;
           if (f.side === "human") {
             f.targetObjectId = null;
+            const allyProfile = allyAiProfileFor(f.kind);
             const enemies = g.fighters.filter((enemy) => enemy.side === "zombie" && enemy.hp > 0 && enemy.combatReady);
             const assignedLane = f.anchorLane ?? f.lane;
             const stagingForAssignedLane = f.x <= MUSTER_X + 12 && returningToAssignedLane;
@@ -6754,8 +6797,10 @@ export function AshfallGame() {
               previousIntent: { targetId: f.targetId, destinationX: f.aiDestinationX, desiredX: f.aiDestinationX, moveDirection: f.aiMoveDirection },
               laneTransitioning: returningToAssignedLane,
               takuyaDefeated: g.definition.missionType === "boss-assault" && g.barricadeVulnerable && !takuyaAlive,
-              maxPursuersPerEnemy: takuyaAlive || containmentBossAlive ? 9 : 2,
-              localThreatRadius: Math.max(150, f.range + 56),
+              maxPursuersPerEnemy: takuyaAlive || containmentBossAlive ? 9 : allyProfile.maxPursuersPerEnemy,
+              localThreatRadius: Math.max(allyProfile.localThreatRadius, f.range + 56),
+              defenseLeash: allyProfile.defenseLeash,
+              rangePadding: allyProfile.rangePadding,
               hasLineOfSight: (_attacker, candidate) => {
                 const actualTarget = fighterById.get(candidate.id);
                 return actualTarget ? hasBattleSpaceLineOfSight(g, f, actualTarget) : false;
@@ -6779,13 +6824,16 @@ export function AshfallGame() {
             f.aiDestinationX = holdAtMuster ? MUSTER_X : allyIntent.destinationX;
             f.aiMoveDirection = allyIntent.moveDirection;
             target = tacticalEnemies.find((enemy) => enemy.id === allyIntent?.targetId);
-            if (f.retargetIn <= 0 || target?.id !== f.targetId) f.retargetIn = .34 + (f.variant % 3) * .05;
+            if (f.retargetIn <= 0 || target?.id !== f.targetId) {
+              f.retargetIn = allyProfile.retargetSeconds + (f.variant % 3) * .05;
+            }
             if (target?.id !== f.targetId) {
               if (f.targetId !== null) targetClaims.set(f.targetId, Math.max(0, (targetClaims.get(f.targetId) ?? 1) - 1));
               if (target) targetClaims.set(target.id, (targetClaims.get(target.id) ?? 0) + 1);
               f.targetId = target?.id ?? null;
             }
           } else {
+            const enemyProfile = enemyAiProfileFor(f.kind);
             const humans = g.fighters.filter((human) => human.side === "human" && human.hp > 0);
             const locked = f.targetId === null ? undefined : fighterById.get(f.targetId);
             const blockingSupply = selectBlockingContainer({
@@ -6806,7 +6854,7 @@ export function AshfallGame() {
             const physicalContact = crawlerInRange ? undefined : humans
               .filter((human) => fighterDistance(f, human) <= f.range + human.bodyRadius + 4)
               .sort((a, b) => fighterDistance(f, a) - fighterDistance(f, b))[0];
-            const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
+            const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
             const lookAhead = Math.max(105, f.range + 36);
             const defenderCapacity = (human: Fighter) => human.kind === "guardian" ? 4 : human.kind === "scout" || human.kind === "medic" ? 1 : 2;
             const routeBlockers = crawlerInRange ? [] : humans.filter((human) => isCrawlerRouteBlocker({
@@ -6826,10 +6874,34 @@ export function AshfallGame() {
             const bestInterceptor = availableBlockers.reduce<Fighter | undefined>((choice, human) => {
               return !choice || interceptorScore(human) < interceptorScore(choice) ? human : choice;
             }, undefined);
-            const lockedValid = locked?.side === "human" && locked.hp > 0 && availableBlockers.some((human) => human.id === locked.id);
-            target = physicalContact ?? (blockingSupply ? undefined : (lockedValid && f.retargetIn > 0 ? locked : bestInterceptor));
+            const profileCandidates = humans.map((human) => ({
+              ...human,
+              distance: fighterDistance(f, human),
+              inContact: physicalContact?.id === human.id,
+              blocksRoute: routeBlockers.some((blocker) => blocker.id === human.id),
+              capacity: defenderCapacity(human),
+              nearbyAllies: humans.filter((other) => other.id !== human.id && fighterDistance(human, other) <= 82).length,
+            }));
+            const lockedCandidate = profileCandidates.find((candidate) => candidate.id === locked?.id);
+            const lockedPursuable = lockedCandidate
+              && (lockedCandidate.inContact
+                || lockedCandidate.blocksRoute
+                || (enemyProfile.humanPursuit && lockedCandidate.distance <= enemyProfile.engagementRadius));
+            const selectedCandidate = f.retargetIn > 0 && lockedPursuable
+              ? lockedCandidate
+              : chooseEnemyTargetForProfile({
+                kind: f.kind,
+                enemy: f,
+                candidates: profileCandidates,
+                claims: interceptorClaims,
+                currentTargetId: f.targetId,
+              });
+            const profileTarget = humans.find((human) => human.id === selectedCandidate?.id);
+            target = physicalContact ?? (blockingSupply ? undefined : (profileTarget ?? bestInterceptor));
             if (!target) objectTarget = blockingSupply ?? contactSupply;
-            if (f.retargetIn <= 0 || target?.id !== f.targetId) f.retargetIn = .52 + (f.variant % 3) * .08;
+            if (f.retargetIn <= 0 || target?.id !== f.targetId) {
+              f.retargetIn = enemyProfile.retargetSeconds + (f.variant % 3) * .08;
+            }
             const routeCosts = ([0, 1, 2] as Lane[]).map((candidate) => {
               const defense = humans
                 .filter((human) => human.x < f.x && (human.anchorLane ?? human.lane) === candidate)
@@ -6850,8 +6922,8 @@ export function AshfallGame() {
               hasTarget: Boolean(target),
               hasObjectTarget: Boolean(objectTarget),
               inContact: Boolean(physicalContact),
-              routeCooldown: 1.05 + f.variant * .18,
-              switchMargin: 9,
+              routeCooldown: enemyProfile.routeCooldown + f.variant * .12,
+              switchMargin: enemyProfile.routeSwitchMargin,
             });
             f.anchorLane = routeDecision.committedLane as Lane;
             f.nextLaneDecisionAt = routeDecision.nextLaneDecisionAt;
@@ -6932,7 +7004,7 @@ export function AshfallGame() {
             } else {
               const stopX = objectTarget.x + stoppingDistance;
               f.x = Math.max(stopX, f.x - f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier) * dt);
-              const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
+              const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
               const dy = routeY - f.y;
               if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
               f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
@@ -7174,14 +7246,14 @@ export function AshfallGame() {
               if (f.side === "human") {
                 const emphasized = roleEffect === "brawler" || roleEffect === "gunner" || roleEffect === "crazy-king" || roleEffect === "kumaverson" || roleEffect === "babayaga";
                 const ranged = ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind);
-                g.shots.push({ x: f.x + 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee", weapon: f.kind });
+                g.shots.push({ x: f.x + 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", sourceId: f.id, targetId: target.id, damageTargetId: target.id, effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee", weapon: f.kind });
                 if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) playCue(`role-${roleEffect}` as SfxCueId);
                 if (!productionMixerRef.current) {
                   if (["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)) playCue("ranged-shot", { frequency: 310 + Math.random() * 50 });
                   else playCue("melee-hit");
                 }
               } else if (f.kind === "spitter" || f.kind === "ooze") {
-                g.shots.push({ x: f.x - 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .2, duration: .2, side: "zombie", style: "projectile", weapon: "spitter" });
+                g.shots.push({ x: f.x - 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .2, duration: .2, side: "zombie", sourceId: f.id, targetId: target.id, damageTargetId: target.id, style: "projectile", weapon: "spitter" });
                 if (!productionMixerRef.current) playCue("ranged-shot", { frequency: 205 });
               } else {
                 addParticles(g, target.x, target.y - 18, target.kind === "takuya" || target.kind === "shade" ? "#b98a62" : target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
@@ -7278,9 +7350,9 @@ export function AshfallGame() {
               f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), humanMovementSpeed * dt);
               f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
             }
-            const destinationLane = (f.range > 64
+            const destinationLane = (f.navigationRecovery.recoveryLane ?? (f.range > 64
               ? f.anchorLane ?? f.lane
-              : allyIntent?.destinationLane ?? f.anchorLane ?? f.lane) as Lane;
+              : allyIntent?.destinationLane ?? f.anchorLane ?? f.lane)) as Lane;
             const laneStep = advanceTowardLane({
               y: f.y,
               currentLane: f.lane,
@@ -7296,7 +7368,7 @@ export function AshfallGame() {
           } else if (target && f.side === "zombie") {
             // The CRAWLER remains the objective: enemies advance on their route and only stop for a physical blocker.
             f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
-            const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
+            const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
             if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
             f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
@@ -7311,7 +7383,7 @@ export function AshfallGame() {
               const laneStep = advanceTowardLane({
                 y: f.y,
                 currentLane: f.lane,
-                destinationLane: f.anchorLane ?? f.lane,
+                destinationLane: (f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane) as Lane,
                 laneCenters: activeLaneCenters,
                 laneSpeed: humanLaneSpeed,
                 seconds: dt,
@@ -7324,7 +7396,7 @@ export function AshfallGame() {
               f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false });
             }
             if (f.side === "zombie" && f.anchorLane !== null) {
-              const dy = activeLaneCenters[f.anchorLane] - f.y;
+              const dy = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane] - f.y;
               if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
               f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
               f.lane = activeLaneForY(f.y, f.lane);
@@ -7370,6 +7442,38 @@ export function AshfallGame() {
           fighter.x = grounded.x;
           fighter.y = grounded.y;
           fighter.lane = activeLaneForY(fighter.y, fighter.lane);
+          const lockedTarget = fighter.targetId === null ? undefined : fighterById.get(fighter.targetId);
+          const lockedObject = fighter.targetObjectId === null
+            ? undefined
+            : g.battlefieldObjects.find((object) => object.id === fighter.targetObjectId);
+          const targetEngaged = Boolean(lockedTarget
+            && fighterDistance(fighter, lockedTarget) <= fighter.range + lockedTarget.bodyRadius + 2);
+          const objectEngaged = Boolean(lockedObject
+            && Math.hypot(fighter.x - lockedObject.x, fighter.y - lockedObject.y) <= fighter.range + 34);
+          const desiredLane = fighter.navigationRecovery.recoveryLane ?? fighter.anchorLane ?? fighter.lane;
+          const desiredX = fighter.side === "human"
+            ? fighter.aiDestinationX
+            : lockedTarget?.x ?? lockedObject?.x ?? BASE_X;
+          const desiredY = activeLaneCenters[desiredLane];
+          const moving = Math.hypot(desiredX - fighter.x, desiredY - fighter.y) > 3;
+          const previousRecoveryCount = fighter.navigationRecovery.recoveryCount;
+          fighter.navigationRecovery = advanceNavigationRecovery({
+            state: fighter.navigationRecovery,
+            x: fighter.x,
+            y: fighter.y,
+            desiredX,
+            desiredY,
+            lane: fighter.anchorLane ?? fighter.lane,
+            laneCount: activeLaneCenters.length,
+            seed: fighter.id,
+            seconds: dt,
+            moving,
+            engaged: targetEngaged || objectEngaged,
+          });
+          g.stationMetrics.aiRecoveries += Math.max(
+            0,
+            fighter.navigationRecovery.recoveryCount - previousRecoveryCount,
+          );
         }
 
         if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
@@ -7507,7 +7611,9 @@ export function AshfallGame() {
               flash: 0, step: 0, attack: 0, knock: 0, variant: corpse.variant,
               targetId: null, targetObjectId: null, retargetIn: 0, nextLaneDecisionAt: g.time + .8, bodyRadius: bodyRadiusFor("turned"), laneSpeed: enemyLaneSpeedFor("turned"), spawnGrace: generic.riseLockRemaining,
                combatReady: true, gateEntering: false, gateEntrySpeed: 0, combatReadyX: 0, contained: false,
-               marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: corpse.x, aiMoveDirection: 0, abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
+               marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: corpse.x, aiMoveDirection: 0,
+               navigationRecovery: createNavigationRecoveryState({ x: generic.x, y: generic.y, lane: generic.lane }),
+               abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
                stationAbility: createStationAbilityRuntime("turned"),
                ...createUnitRoleRuntime(),
             });

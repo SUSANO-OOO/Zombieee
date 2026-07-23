@@ -156,6 +156,36 @@ test("the Gate Eater regression battle is available only for Stage 6 on localhos
   assert.equal(resolveLocalQaScenario("example.com", "?qa=station&stage=6&state=boss-regression"), null);
 });
 
+test("mission QA starts every Stage 1-6 battle through one localhost-only contract", () => {
+  for (const hostname of ["localhost", "127.0.0.1"]) {
+    for (const [stage, stageId] of [
+      [1, STAGE_1],
+      [2, STAGE_2],
+      [3, STAGE_3],
+      [4, STAGE_4],
+      [5, STAGE_5],
+      [6, STAGE_6],
+    ]) {
+      assert.deepEqual(resolveLocalQaScenario(hostname, `?qa=mission&stage=${stage}&state=start`), {
+        mode: "mission",
+        screen: "battle",
+        stageId,
+        stars: 0,
+        state: "start",
+      });
+    }
+  }
+  for (const search of [
+    "?qa=mission&stage=7&state=start",
+    "?qa=mission&stage=1",
+    "?qa=mission&stage=1&state=near-win",
+    "?qa=mission&stage=1&state=start&screen=battle",
+    "?qa=mission&stage=1&state=start&stars=0",
+  ]) {
+    assert.equal(resolveLocalQaScenario("localhost", search), null, search);
+  }
+});
+
 test("station QA rejects non-station stages, unknown states, and ambiguous parameters", () => {
   for (const search of [
     "?qa=station&stage=1&state=start",
@@ -183,6 +213,7 @@ test("campaign QA is unavailable away from the exact local host allowlist", () =
     assert.equal(resolveLocalQaScenario(hostname, "?qa=flow&screen=map&stage=1&stars=3"), null);
     assert.equal(resolveLocalQaScenario(hostname, "?qa=defense"), null);
     assert.equal(resolveLocalQaScenario(hostname, "?qa=station&stage=4&state=start"), null);
+    assert.equal(resolveLocalQaScenario(hostname, "?qa=mission&stage=1&state=start"), null);
   }
 });
 
