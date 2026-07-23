@@ -13,6 +13,9 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "qa:performance:install": "playwright install chromium webkit",
     "qa:performance": "node scripts/browser-performance-budget.mjs",
+    "content:validate": "node scripts/content-pipeline.mjs validate",
+    "content:drill": "node scripts/content-pipeline.mjs drill",
+    "content:gallery-qa": "node scripts/content-pipeline.mjs gallery-qa",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
