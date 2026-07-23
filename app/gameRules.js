@@ -298,36 +298,36 @@ export const MISSION_EVENTS = Object.freeze(
     wave: wave.waveNumber ?? index + 1,
     label: wave.label,
     ...(wave.bossOnly === true ? { bossOnly: true } : {}),
-    units: Object.freeze(wave.units.map((unit) => Object.freeze([...unit]))),
+    units: Object.freeze(wave.units.map((unit) => String(Array.isArray(unit) ? unit[0] : unit))),
   })),
 );
 
 export const ENEMY_GATE_SPAWN = Object.freeze({
   revealX: WORLD_GEOMETRY.enemyBase.drawX + 18,
   interiorX: Object.freeze([836, 850, 862, 842, 856]),
-  laneOffsets: Object.freeze([
-    Object.freeze([-15, 5, 16, -5, 11]),
-    Object.freeze([12, -11, 3, 17, -3]),
-    Object.freeze([-12, 15, -2, 8, -17]),
-  ]),
+  interiorY: Object.freeze([220, 250, 282, 314, 344]),
 });
 
 function enemySpawnClass(kind) {
   return enemySpawnClassFor(kind);
 }
 
-export function enemySpawnInterval({ kind, lane = 1, order = 0 }) {
+export function enemySpawnInterval({ kind, order = 0, wave = 1 }) {
   const base = kind === "takuya" || kind === "gate-eater" ? .92
     : kind === "abomination" ? .78
       : kind === "crusher" ? .64
           : kind === "spitter" || kind === "shade" || kind === "ooze" ? .5
           : kind === "runner" || kind === "sprinter" ? .34
             : .42;
-  return Number((base + ((lane * 2 + order) % 3) * .035).toFixed(3));
+  return Number((base + ((wave + order + String(kind).length) % 3) * .035).toFixed(3));
 }
 
-export function enemyGateSpawnPosition({ kind, lane, order = 0, wave = 1 }) {
-  const slot = (wave * 2 + order * 3 + lane) % ENEMY_GATE_SPAWN.interiorX.length;
+export function enemyGateSpawnPosition({ kind, order = 0, wave = 1, entryId = 1 }) {
+  const pairCount = ENEMY_GATE_SPAWN.interiorX.length * ENEMY_GATE_SPAWN.interiorY.length;
+  const pairIndex = Math.abs(wave * 7 + entryId + order) % pairCount;
+  const slot = pairIndex % ENEMY_GATE_SPAWN.interiorX.length;
+  const verticalBand = Math.floor(pairIndex / ENEMY_GATE_SPAWN.interiorX.length);
+  const verticalSlot = (verticalBand + slot * 2 + wave) % ENEMY_GATE_SPAWN.interiorY.length;
   const spawnClass = enemySpawnClass(kind);
   const clearance = spawnClass === "boss" ? 49 : spawnClass === "heavy" ? 43 : 31;
   const entrySpeed = kind === "takuya" || kind === "gate-eater" ? 29
@@ -338,7 +338,8 @@ export function enemyGateSpawnPosition({ kind, lane, order = 0, wave = 1 }) {
             : 52;
   return Object.freeze({
     x: ENEMY_GATE_SPAWN.interiorX[slot],
-    y: LANE_Y[lane] + ENEMY_GATE_SPAWN.laneOffsets[lane][slot],
+    y: ENEMY_GATE_SPAWN.interiorY[verticalSlot],
+    routeIndex: (verticalSlot + wave + order) % LANE_Y.length,
     combatReadyX: ENEMY_GATE_SPAWN.revealX - clearance,
     entrySpeed,
     slot,
@@ -352,15 +353,20 @@ export function createEnemySpawnRuntime() {
 export function enqueueEnemyWave(runtime, { units = [], wave = 1 }) {
   let nextEntryId = runtime.nextEntryId;
   const startsIdle = runtime.pending.length === 0 && runtime.cooldown <= 0;
-  const added = units.map(([kind, lane], order) => ({
-    entryId: nextEntryId++,
-    kind,
-    lane,
-    wave,
-    order,
-    delay: startsIdle && order === 0 ? 0 : enemySpawnInterval({ kind, lane, order }),
-    ...enemyGateSpawnPosition({ kind, lane, order, wave }),
-  }));
+  const added = units.map((unit, order) => {
+    const kind = String(Array.isArray(unit) ? unit[0] : unit);
+    const entryId = nextEntryId++;
+    const spawn = enemyGateSpawnPosition({ kind, order, wave, entryId });
+    return {
+      entryId,
+      kind,
+      lane: spawn.routeIndex,
+      wave,
+      order,
+      delay: startsIdle && order === 0 ? 0 : enemySpawnInterval({ kind, order, wave }),
+      ...spawn,
+    };
+  });
   return {
     ...runtime,
     pending: [...runtime.pending, ...added],
@@ -970,11 +976,16 @@ export function resolveCrawlerBarrage({ runtime, fighters = [] }) {
   return { triggered: true, runtime: { ...runtime, damageTriggered: true }, fighters: nextFighters, hits };
 }
 
-export function enemyCanTargetBattlefieldSupply({ supply, enemyX, enemyLane, attackRange = 0, contactPadding = 30 }) {
+export function enemyCanTargetBattlefieldSupply({ supply, enemyX, enemyY, attackRange = 0, contactPadding = 30 }) {
   if (!supply || !supply.targetable || !["active", "impact"].includes(supply.phase) || supply.hp <= 0) return false;
-  if (supply.lane !== enemyLane) return false;
-  if (supply.blocksEnemies) return supply.x < enemyX;
-  return Math.abs(enemyX - supply.x) <= Math.max(0, attackRange) + Math.max(0, contactPadding);
+  if (!Number.isFinite(enemyX) || !Number.isFinite(enemyY)) return false;
+  const supplyY = worldYFor(supply);
+  const verticalDistance = Math.abs(enemyY - supplyY);
+  if (supply.blocksEnemies) {
+    return supply.x < enemyX && verticalDistance <= Math.max(30, contactPadding);
+  }
+  return Math.hypot(enemyX - supply.x, enemyY - supplyY)
+    <= Math.max(0, attackRange) + Math.max(0, contactPadding);
 }
 
 export function damageContainer(hp, damage) {
@@ -994,18 +1005,34 @@ export function applyContainerDamage(container, damage) {
   };
 }
 
-export function containerBlocksEnemy({ enemyX, enemyLane, containerX, containerLane, phase }) {
-  return (phase === "impact" || phase === "active") && enemyLane === containerLane && containerX > WORLD_GEOMETRY.baseX && containerX < enemyX;
+export function containerBlocksEnemy({
+  enemyX,
+  enemyY,
+  enemyRadius = 11,
+  containerX,
+  containerY,
+  containerRadius = 24,
+  phase,
+}) {
+  return (phase === "impact" || phase === "active")
+    && Number.isFinite(enemyX)
+    && Number.isFinite(enemyY)
+    && Number.isFinite(containerX)
+    && Number.isFinite(containerY)
+    && containerX > WORLD_GEOMETRY.baseX
+    && containerX < enemyX
+    && Math.abs(enemyY - containerY) <= Math.max(0, enemyRadius) + Math.max(0, containerRadius);
 }
 
-/** @param {{enemyX: number, enemyLane: number, objects?: RuleSupply[]}} input */
-export function selectBlockingContainer({ enemyX, enemyLane, objects = [] }) {
+/** @param {{enemyX: number, enemyY: number, enemyRadius?: number, objects?: RuleSupply[]}} input */
+export function selectBlockingContainer({ enemyX, enemyY, enemyRadius = 11, objects = [] }) {
   return objects.reduce((nearest, object) => {
     if (!object.blocksEnemies || !object.targetable || !containerBlocksEnemy({
       enemyX,
-      enemyLane,
+      enemyY,
+      enemyRadius,
       containerX: object.x,
-      containerLane: object.lane,
+      containerY: worldYFor(object),
       phase: object.phase,
     })) return nearest;
     return !nearest || object.x > nearest.x ? object : nearest;

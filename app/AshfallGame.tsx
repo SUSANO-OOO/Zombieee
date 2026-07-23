@@ -312,6 +312,14 @@ function activeMusterY() {
   return activeLaneCenters[MUSTER_LANE];
 }
 
+function activeYForContentY(y: number) {
+  const contentY = Number.isFinite(y) ? y : LANE_Y[1];
+  const route = LANE_Y.reduce((nearest, routeY, index) => (
+    Math.abs(contentY - routeY) < Math.abs(contentY - LANE_Y[nearest]) ? index : nearest
+  ), 1);
+  return activeLaneCenters[route] + contentY - LANE_Y[route];
+}
+
 function stationObjectiveDestination(g: Game, fighter: Fighter) {
   if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
     const lane = ([0, 1, 2].includes(Number(g.definition.missionConfig.cartLane))
@@ -363,7 +371,7 @@ type UnitCard = {
   attackEvery: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: [string, Lane][] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: string[] };
 type BattleDefinition = {
   stageId: string;
   displayName: string;
@@ -476,6 +484,7 @@ type Fighter = {
   gateEntering: boolean;
   entryDirection?: -1 | 1;
   spawnPortalId?: string | null;
+  entryStepDistance?: number;
   gateEntrySpeed: number;
   combatReadyX: number;
   marked: number;
@@ -721,6 +730,7 @@ type Game = {
   comboTime: number;
   maxCombo: number;
   unitsLost: number;
+  crawlerFootstepCount: number;
   crawlerHitFlash: number;
   crawlerHitSfxCooldown: number;
   criticalAnnounced: boolean;
@@ -1020,6 +1030,7 @@ const initialGame = (
   comboTime: 0,
   maxCombo: 0,
   unitsLost: 0,
+  crawlerFootstepCount: 0,
   crawlerHitFlash: 0,
   crawlerHitSfxCooldown: 0,
   criticalAnnounced: false,
@@ -1239,6 +1250,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     gateEntering,
     entryDirection: -1,
     spawnPortalId: gateEntry?.portalId ?? null,
+    entryStepDistance: 0,
     gateEntrySpeed: gateEntry?.entrySpeed ?? 0,
     combatReadyX: gateEntry?.combatReadyX ?? 0,
     marked: 0,
@@ -1283,7 +1295,7 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     speed: card.speed, damage: card.damage, range: card.range, cooldown: 0, supportCooldown: 0,
     attackEvery: card.attackEvery, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: id % 3,
     targetId: null, targetObjectId: null, retargetIn: 0, nextLaneDecisionAt: 0, bodyRadius: bodyRadiusFor(kind), laneSpeed, spawnGrace: .95,
-    combatReady: !runOutFromCrawler, gateEntering: runOutFromCrawler, entryDirection: 1, spawnPortalId: runOutFromCrawler ? "crawler-door" : null, gateEntrySpeed: Math.max(54, card.speed * 3.2), combatReadyX: deployment.combatReadyX,
+    combatReady: !runOutFromCrawler, gateEntering: runOutFromCrawler, entryDirection: 1, spawnPortalId: runOutFromCrawler ? "crawler-door" : null, entryStepDistance: 0, gateEntrySpeed: Math.max(54, card.speed * 3.2), combatReadyX: deployment.combatReadyX,
     contained: false,
     marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: MUSTER_X, aiMoveDirection: 0, abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
@@ -1333,7 +1345,7 @@ function prepareEndgameQa(g: Game) {
 
 function prepareTakuyaEntranceQa(g: Game) {
   const bossEventIndex = g.definition.timeline.findIndex((event) => (
-    event.units.some(([kind]) => kind === "takuya")
+    event.units.includes("takuya")
   ));
   const bossEvent = g.definition.timeline[bossEventIndex];
   if (!bossEvent || bossEventIndex < 0) return;
@@ -2221,15 +2233,15 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
     const panelXs = Array.isArray(configuredPanelXs) && configuredPanelXs.length === 3
       ? configuredPanelXs.map((value, index) => Number(value) || [410, 584, 744][index])
       : [410, 584, 744];
-    const configuredLanes = g.definition.missionConfig.powerLanes;
-    const lanes = (Array.isArray(configuredLanes) && configuredLanes.length === 3
-      ? configuredLanes.map((value, index) => [0, 1, 2].includes(Number(value)) ? Number(value) : [0, 2, 1][index])
-      : [0, 2, 1]) as Lane[];
+    const configuredYs = g.definition.missionConfig.powerYs;
+    const panelYs = Array.isArray(configuredYs) && configuredYs.length === 3
+      ? configuredYs.map((value, index) => activeYForContentY(Number(value) || [212, 352, 282][index]))
+      : [212, 352, 282].map(activeYForContentY);
     for (let index = 0; index < 3; index++) {
       const active = index < activated;
       const current = index === activated;
       const x = panelXs[index];
-      const y = activeLaneCenters[lanes[index]] - 8;
+      const y = panelYs[index] - 8;
       ctx.save(); ctx.translate(x, y);
       const powerSprite = stageObjects["station-tunnel-mission-art-source"];
       const powerCrops = [
@@ -3883,6 +3895,7 @@ export function AshfallGame() {
           eventIndex: g.eventIndex,
           pendingSpawnCount: g.enemySpawn.pending.length,
           takuyaEntranceAudioRemaining: g.takuyaEntranceAudioRemaining,
+          crawlerFootstepCount: g.crawlerFootstepCount,
           energy: g.energy,
           scrap: g.scrap,
           supportGauge: g.supportGauge,
@@ -5995,13 +6008,6 @@ export function AshfallGame() {
                 maxInstances: 1,
                 fallbackCue: kind === "brute" ? "deploy-heavy" : "deploy-light",
               });
-              playProductionCue("weapon-melee-impact", deploymentX, {
-                priority: 44,
-                cooldownMs: 70,
-                volume: kind === "brute" || kind === "guardian" ? .24 : .16,
-                playbackRate: kind === "brute" || kind === "guardian" ? .78 : 1.24,
-                maxInstances: 1,
-              });
               const deployVoice = unitAudioCueFor(kind, "voice", "deploy") || humanVoiceCueForUnit(kind, "deploy");
               if (deployVoice) {
                 playProductionCue(deployVoice, deploymentX, {
@@ -6044,7 +6050,7 @@ export function AshfallGame() {
           g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
           if (mission.label.includes("警告")) g.flashOverlay = .12;
           const firstNewEntryId = g.enemySpawn.nextEntryId;
-          g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: [string, Lane][]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
+          g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
           g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {
             if (entry.entryId < firstNewEntryId) return entry;
             const portal = enemySpawnPortalPoint({
@@ -6060,7 +6066,7 @@ export function AshfallGame() {
             };
           });
           if (mission.units.length) {
-            const includesTakuya = mission.units.some(([kind]) => kind === "takuya");
+            const includesTakuya = mission.units.includes("takuya");
             if (includesTakuya) {
               g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
               setHud((current) => ({ ...current, takuyaEntranceAudioActive: true }));
@@ -6329,6 +6335,8 @@ export function AshfallGame() {
           if (f.gateEntering) {
             f.targetId = null;
             f.targetObjectId = null;
+            const previousX = f.x;
+            const previousY = f.y;
             const entryDirection = f.entryDirection ?? -1;
             f.x = entryDirection > 0
               ? Math.min(f.combatReadyX, f.x + f.gateEntrySpeed * dt)
@@ -6336,6 +6344,20 @@ export function AshfallGame() {
             const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
             if (Math.abs(dy) > 1) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * .58 * dt);
+            if (f.side === "human") {
+              f.entryStepDistance = (f.entryStepDistance ?? 0) + Math.hypot(f.x - previousX, f.y - previousY);
+              if (f.entryStepDistance >= 18) {
+                f.entryStepDistance %= 18;
+                g.crawlerFootstepCount += 1;
+                playProductionCue("weapon-melee-impact", f.x, {
+                  priority: 44,
+                  cooldownMs: 40,
+                  volume: f.kind === "brute" || f.kind === "guardian" ? .24 : .16,
+                  playbackRate: f.kind === "brute" || f.kind === "guardian" ? .78 : 1.24,
+                  maxInstances: 2,
+                });
+              }
+            }
             const reachedCombatPoint = entryDirection > 0
               ? f.x >= f.combatReadyX - .01
               : f.x <= f.combatReadyX + .01;
@@ -6766,10 +6788,19 @@ export function AshfallGame() {
           } else {
             const humans = g.fighters.filter((human) => human.side === "human" && human.hp > 0);
             const locked = f.targetId === null ? undefined : fighterById.get(f.targetId);
-            const routeLane = f.lane;
-            const blockingSupply = selectBlockingContainer({ enemyX: f.x, enemyLane: routeLane, objects: g.battlefieldObjects }) as BattlefieldObject | undefined;
+            const blockingSupply = selectBlockingContainer({
+              enemyX: f.x,
+              enemyY: f.y,
+              enemyRadius: f.bodyRadius,
+              objects: g.battlefieldObjects,
+            }) as BattlefieldObject | undefined;
             const contactSupply = g.battlefieldObjects
-              .filter((supply) => !supply.blocksEnemies && enemyCanTargetBattlefieldSupply({ supply, enemyX: f.x, enemyLane: routeLane, attackRange: f.range }))
+              .filter((supply) => !supply.blocksEnemies && enemyCanTargetBattlefieldSupply({
+                supply,
+                enemyX: f.x,
+                enemyY: f.y,
+                attackRange: f.range,
+              }))
               .sort((a, b) => Math.abs(f.x - a.x) - Math.abs(f.x - b.x))[0];
             const crawlerInRange = !blockingSupply && f.x - BASE_X <= f.range + 10;
             const physicalContact = crawlerInRange ? undefined : humans
