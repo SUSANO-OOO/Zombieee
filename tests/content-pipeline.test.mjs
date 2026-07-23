@@ -126,6 +126,29 @@ test("validator reports malformed registries instead of throwing", () => {
   assert.equal(result.errors.some(({ code, collection }) => code === "invalid-record" && collection === "units"), true);
 });
 
+test("validator fails closed for non-array collections and fields", () => {
+  const broken = structuredClone(CONTENT_REGISTRY);
+  broken.units = {};
+  broken.enemies[0].aliases = {};
+  broken.stages[0].enemyKinds = {};
+  broken.stages[0].waveIds = "not-an-array";
+  broken.waves[0].spawns = {};
+  broken.maps[0].assetRefs = {};
+  const result = validateContentRegistry(broken, { physicalAssetPaths: new Set() });
+  assert.equal(result.ok, false);
+  const codes = new Set(result.errors.map(({ code }) => code));
+  assert.equal(codes.has("missing-collection"), true);
+  assert.equal(codes.has("missing-array"), true);
+});
+
+test("validator diagnoses invalid nested spawn records without throwing", () => {
+  const broken = structuredClone(CONTENT_REGISTRY);
+  broken.waves[0].spawns = [null, "invalid"];
+  const result = validateContentRegistry(broken);
+  assert.equal(result.ok, false);
+  assert.equal(result.errors.filter(({ code }) => code === "invalid-spawn").length, 2);
+});
+
 test("content migration is stable, idempotent, and preserves legacy aliases", () => {
   const legacy = { kind: "legacy-unit", name: "Legacy Unit", aliases: [" Old ", "Old"] };
   const migrated = migrateContentRecord(legacy, { collection: "units", fromVersion: 0 });

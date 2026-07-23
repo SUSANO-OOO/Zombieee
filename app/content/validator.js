@@ -24,6 +24,10 @@ function hasNumber(record, field) {
   return Number.isFinite(record[field]);
 }
 
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
 function validateRecordShape(collection, record, errors) {
   const schema = CONTENT_SCHEMAS[collection];
   for (const field of schema.requiredStrings ?? []) {
@@ -44,14 +48,14 @@ function validateRecordShape(collection, record, errors) {
 
 function buildIds(registry) {
   return Object.fromEntries(CONTENT_COLLECTIONS.map((collection) => (
-    [collection, new Set((registry[collection] ?? [])
+    [collection, new Set(safeArray(registry[collection])
       .filter((record) => record && typeof record === "object" && !Array.isArray(record))
       .map(({ id }) => id))]
   )));
 }
 
 function validRecords(registry, collection) {
-  return (registry[collection] ?? [])
+  return safeArray(registry[collection])
     .filter((record) => record && typeof record === "object" && !Array.isArray(record));
 }
 
@@ -74,7 +78,7 @@ function validateReferences(registry, ids, errors, warnings) {
     if (unit.combat?.id !== unit.combatKind) {
       errors.push(issue("unit-combat-mismatch", "units", unit.id, `Combat profile mismatch: ${unit.combatKind}`));
     }
-    for (const path of unit.assetRefs ?? []) {
+    for (const path of safeArray(unit.assetRefs)) {
       referenced.assets.add(path);
       if (!assetPaths.has(path)) errors.push(issue("missing-asset-record", "units", unit.id, `Missing asset record: ${path}`));
     }
@@ -89,24 +93,24 @@ function validateReferences(registry, ids, errors, warnings) {
       referenced[collection].add(reference);
       if (!ids[collection].has(reference)) errors.push(issue("broken-reference", "stages", stage.id, `Missing ${collection} reference: ${reference}`));
     }
-    for (const stageId of stage.prerequisiteStageIds ?? []) {
+    for (const stageId of safeArray(stage.prerequisiteStageIds)) {
       if (!ids.stages.has(stageId)) errors.push(issue("broken-stage-reference", "stages", stage.id, `Missing prerequisite stage: ${stageId}`));
     }
-    for (const stageId of stage.nextUnlocks?.stageIds ?? []) {
+    for (const stageId of safeArray(stage.nextUnlocks?.stageIds)) {
       if (!ids.stages.has(stageId)) errors.push(issue("broken-stage-reference", "stages", stage.id, `Missing unlocked stage: ${stageId}`));
     }
     for (const unitId of [
-      ...(stage.nextUnlocks?.unitIds ?? []),
-      ...(stage.nextUnlocks?.discoveredUnitIds ?? []),
-      ...(stage.nextUnlocks?.recruitableUnitIds ?? []),
+      ...safeArray(stage.nextUnlocks?.unitIds),
+      ...safeArray(stage.nextUnlocks?.discoveredUnitIds),
+      ...safeArray(stage.nextUnlocks?.recruitableUnitIds),
     ]) {
       if (!ids.units.has(unitId)) errors.push(issue("broken-unit-reference", "stages", stage.id, `Missing unlocked unit: ${unitId}`));
     }
-    for (const enemyId of stage.enemyKinds ?? []) {
+    for (const enemyId of safeArray(stage.enemyKinds)) {
       referenced.enemies.add(enemyId);
       if (!ids.enemies.has(enemyId)) errors.push(issue("broken-enemy-reference", "stages", stage.id, `Missing enemy: ${enemyId}`));
     }
-    for (const waveId of stage.waveIds ?? []) {
+    for (const waveId of safeArray(stage.waveIds)) {
       referenced.waves.add(waveId);
       if (!ids.waves.has(waveId)) errors.push(issue("broken-wave-reference", "stages", stage.id, `Missing wave: ${waveId}`));
     }
@@ -117,11 +121,15 @@ function validateReferences(registry, ids, errors, warnings) {
 
   for (const wave of validRecords(registry, "waves")) {
     if (!ids.stages.has(wave.stageId)) errors.push(issue("broken-stage-reference", "waves", wave.id, `Missing stage: ${wave.stageId}`));
-    for (const enemyId of wave.enemyKinds ?? []) {
+    for (const enemyId of safeArray(wave.enemyKinds)) {
       referenced.enemies.add(enemyId);
       if (!ids.enemies.has(enemyId)) errors.push(issue("broken-enemy-reference", "waves", wave.id, `Missing enemy: ${enemyId}`));
     }
-    for (const spawn of wave.spawns ?? []) {
+    for (const spawn of safeArray(wave.spawns)) {
+      if (!spawn || typeof spawn !== "object" || Array.isArray(spawn)) {
+        errors.push(issue("invalid-spawn", "waves", wave.id, "Spawn must be an object"));
+        continue;
+      }
       if (!ids.enemies.has(spawn.enemyId)) errors.push(issue("broken-enemy-reference", "waves", wave.id, `Missing spawn enemy: ${spawn.enemyId}`));
       if (!Number.isInteger(spawn.count) || spawn.count < 1) errors.push(issue("invalid-spawn-count", "waves", wave.id, `Invalid spawn count for ${spawn.enemyId}`));
     }
@@ -132,7 +140,7 @@ function validateReferences(registry, ids, errors, warnings) {
   }
   for (const map of validRecords(registry, "maps")) {
     if (!ids.stages.has(map.stageId)) errors.push(issue("broken-stage-reference", "maps", map.id, `Missing stage: ${map.stageId}`));
-    for (const path of map.assetRefs ?? []) {
+    for (const path of safeArray(map.assetRefs)) {
       referenced.assets.add(path);
       if (!assetPaths.has(path)) errors.push(issue("missing-asset-record", "maps", map.id, `Missing asset record: ${path}`));
     }
@@ -188,7 +196,7 @@ export function validateContentRegistry(registry, { physicalAssetPaths = null } 
       if (!STABLE_CONTENT_ID_PATTERN.test(record.id)) errors.push(issue("invalid-id", collection, record.id, "Stable ID has an invalid format"));
       if (seenIds.has(record.id)) errors.push(issue("duplicate-id", collection, record.id, "Duplicate stable ID"));
       seenIds.add(record.id);
-      for (const alias of [record.id, ...(record.aliases ?? [])]) {
+      for (const alias of [record.id, ...safeArray(record.aliases)]) {
         const key = normalizeAlias(alias);
         if (!key) continue;
         const owner = aliasOwners.get(key);
@@ -204,8 +212,11 @@ export function validateContentRegistry(registry, { physicalAssetPaths = null } 
   const missingPhysicalAssets = [];
   const unusedPhysicalAssetCandidates = [];
   if (physicalAssetPaths) {
-    const registeredRelativePaths = new Set(validRecords(registry, "assets").map(({ path }) => path.replace(/^\/+/u, "")));
+    const registeredRelativePaths = new Set(validRecords(registry, "assets")
+      .filter(({ path }) => typeof path === "string")
+      .map(({ path }) => path.replace(/^\/+/u, "")));
     for (const asset of validRecords(registry, "assets")) {
+      if (typeof asset.path !== "string") continue;
       const relativePath = asset.path.replace(/^\/+/u, "");
       if (!physicalAssetPaths.has(relativePath)) {
         missingPhysicalAssets.push(relativePath);
