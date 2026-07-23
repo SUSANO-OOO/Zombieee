@@ -11,6 +11,7 @@
     "start": "node scripts/run-vinext.mjs start",
     "test": "npm run build && node --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "qa:performance": "node scripts/browser-performance-budget.mjs",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
