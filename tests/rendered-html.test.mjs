@@ -137,7 +137,7 @@ test("server-renders the 0.7.1 campaign title as the formal entry point", async 
   assert.match(html, /<main class="game-shell" data-screen="title" data-stage-id="stage-nishijin-shopping-street">/);
   assert.match(html, /aria-label="西新世紀末物語 ゲーム"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
-  assert.match(html, /class="battlefield  inactive" aria-label="3レーン戦場" aria-hidden="true"/);
+  assert.match(html, /class="battlefield  inactive" aria-label="連続座標の戦場" aria-hidden="true"/);
   assert.match(html, /class="campaign-overlay title-screen-v060"[^>]*title-key-visual-v1\.webp[^>]*aria-label="西新世紀末物語 タイトル画面"/);
   assert.match(html, /<small>にしじんせいきまつものがたり<\/small>/);
   assert.match(html, /<h1><span>西新<\/span><b>世紀末物語<\/b><\/h1>/);
@@ -519,14 +519,14 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
       damageX: 88, damageY: 250,
     },
     enemyBase: {
-      drawX: 770, drawY: 88, width: 190, height: 340,
-      attackX: 875, enemySpawnMinX: 805, enemySpawnMaxX: 833,
-      gateX: 880, gateY: 282,
+      drawX: 815, drawY: 88, width: 145, height: 340,
+      attackX: 875, enemySpawnMinX: 836, enemySpawnMaxX: 858,
+      gateX: 900, gateY: 282,
     },
     barricade: {
-      drawX: 770, drawY: 88, width: 190, height: 340,
-      attackX: 875, enemySpawnMinX: 805, enemySpawnMaxX: 833,
-      gateX: 880, gateY: 282,
+      drawX: 815, drawY: 88, width: 145, height: 340,
+      attackX: 875, enemySpawnMinX: 836, enemySpawnMaxX: 858,
+      gateX: 900, gateY: 282,
     },
     supportMinX: 230,
     supportMaxX: 805,
@@ -672,7 +672,7 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.equal(phaseAt(147.999), 2);
   assert.equal(phaseAt(148), 3);
 
-  assert.equal(objectiveFor(1, false), "3レーンを防衛");
+  assert.equal(objectiveFor(1, false), "戦線を防衛");
   assert.equal(objectiveFor(2, false), "感染拠点へ前進");
   assert.equal(objectiveFor(3, false), "TAKUYAを撃破");
   assert.equal(objectiveFor(3, true), "感染拠点を破壊");
@@ -1176,8 +1176,9 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /resolveBattlefieldSupplyPlacement\(\{/);
   assert.match(game, /requestAirstrike\(\{/);
   assert.match(game, /requestCrawlerBarrage\(\{/);
-  assert.match(game, /placeBattlefieldSupply\(kind, lane, x\)/);
-  assert.match(game, /if \(deployAirstrike\(lane, x\)\) chooseAction\(null\)/);
+  assert.match(game, /correctedBattlefieldTargetForGame\(g, \{ x, y \}, kind\)/);
+  assert.match(game, /placeBattlefieldSupply\(kind, x, y\)/);
+  assert.match(game, /if \(deployAirstrike\(x, y\)\) chooseAction\(null\)/);
   assert.match(game, /const routeLane = f\.lane/);
   assert.match(game, /selectBlockingContainer\(\{/);
   assert.match(game, /physicalContact \?\? \(blockingSupply \? undefined/);
@@ -1431,7 +1432,8 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /if \(roleEffect && !\["crazy-king", "kumaverson", "babayaga"\]\.includes\(f\.kind\)\) playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
   const deployAudioStart = game.indexOf("if (g.deployQueue.length");
   const deployAudio = game.slice(deployAudioStart, game.indexOf("const crawlerStep =", deployAudioStart));
-  assert.match(deployAudio, /playProductionCue\("support-pod-deploy", MUSTER_X,[\s\S]*volume: kind === "brute" \? \.42 : \.32[\s\S]*maxInstances: 1/);
+  assert.match(deployAudio, /playProductionCue\("support-pod-deploy", deploymentX,[\s\S]*volume: kind === "brute" \? \.42 : \.32[\s\S]*maxInstances: 1/);
+  assert.match(deployAudio, /playProductionCue\("weapon-melee-impact", deploymentX,[\s\S]*playbackRate:/);
   assert.doesNotMatch(deployAudio, /weaponCueForUnit\(kind\)/);
   const newcomerAudio = game.slice(game.indexOf("const weaponEvent ="), game.indexOf('if (f.kind === "scout"'));
   assert.match(newcomerAudio, /const contactAudioX = f\.kind === "crazy-king" \|\| f\.kind === "kumaverson" \? \(f\.x \+ target\.x\) \/ 2 : f\.x/);
