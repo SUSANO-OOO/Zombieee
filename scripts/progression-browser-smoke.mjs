@@ -23,7 +23,11 @@ if (engines.some((engine) => !browserTypes[engine])) {
   throw new Error(`Unknown PROGRESSION_QA_ENGINES: ${engines.join(", ")}`);
 }
 
-const viewports = [{ width: 844, height: 390 }, { width: 844, height: 340 }];
+const viewports = [
+  { width: 1280, height: 720, safeArea: false },
+  { width: 844, height: 390, safeArea: true },
+  { width: 844, height: 340, safeArea: true },
+];
 const evidenceDir = path.resolve(process.env.PROGRESSION_QA_EVIDENCE_DIR ?? "outputs/progression-browser-smoke");
 const timeout = Math.max(8_000, Number(process.env.PROGRESSION_QA_TIMEOUT_MS) || 30_000);
 const results = [];
@@ -137,13 +141,14 @@ try {
         const result = { engine, viewport, status: "failed" };
         try {
           const url = new URL(baseUrl);
-          url.search = new URLSearchParams({
+          const search = new URLSearchParams({
             qa: "flow",
             screen: "personnel",
             stage: "4",
             stars: "2",
-            safe: "iphone-landscape",
-          }).toString();
+          });
+          if (viewport.safeArea) search.set("safe", "iphone-landscape");
+          url.search = search.toString();
           const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
           await page.waitForFunction(() => (
@@ -188,8 +193,12 @@ try {
           }));
           invariant(dimensions.documentWidth <= viewport.width && dimensions.documentHeight <= viewport.height,
             `viewport overflow: ${JSON.stringify(dimensions)}`);
-          invariant(dimensions.safeAreaSource === "local-qa-iphone-landscape",
-            `safe area missing: ${JSON.stringify(dimensions)}`);
+          invariant(
+            viewport.safeArea
+              ? dimensions.safeAreaSource === "local-qa-iphone-landscape"
+              : dimensions.safeAreaSource !== "local-qa-iphone-landscape",
+            `safe area mismatch: ${JSON.stringify(dimensions)}`,
+          );
           await page.screenshot({ path: path.join(evidenceDir, `${name}-upgrade.png`) });
 
           await page.getByRole("button", { name: "← 地図へ", exact: true }).click();
