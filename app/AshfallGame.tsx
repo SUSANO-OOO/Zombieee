@@ -66,6 +66,12 @@ import {
   updateStoryPlaybackSettings,
 } from "./campaign.js";
 import {
+  enemyBodyRadiusFor,
+  enemyInitialAbilityCooldownFor,
+  enemyLaneSpeedFor,
+  enemyStatsForWave,
+} from "./content/enemyCatalog.js";
+import {
   advanceBattleStoryFlow,
   createBattleStoryFlowState,
   getPrologueOpeningEventIds,
@@ -1186,45 +1192,13 @@ function applyIncomingHumanDamage(
 }
 
 function bodyRadiusFor(kind: string) {
-  if (kind === "gate-eater") return 25;
-  if (kind === "takuya" || kind === "abomination") return 20;
-  if (kind === "guardian") return 18;
-  if (kind === "crusher" || kind === "brute" || kind === "kumaverson" || kind === "grappler") return 16;
-  if (kind === "ooze") return 14;
-  if (kind === "crazy-king") return 14;
-  return 11;
-}
-
-function enemyLaneSpeedFor(kind: string) {
-  if (kind === "sprinter") return 82;
-  if (kind === "runner" || kind === "shade") return 64;
-  if (kind === "spitter") return 42;
-  if (kind === "grappler") return 32;
-  if (kind === "ooze") return 26;
-  if (kind === "gate-eater") return 22;
-  if (kind === "walker" || kind === "turned") return 38;
-  if (kind === "takuya") return 32;
-  if (kind === "crusher") return 24;
-  return 18;
-}
-
-function enemyStats(kind: string, wave: number) {
-  if (kind === "gate-eater") return { hp: 1800, speed: 7, damage: 64, range: 42, attackEvery: 1.32 };
-  if (kind === "grappler") return { hp: 165 + wave * 4, speed: 13, damage: 20, range: 34, attackEvery: 1.12 };
-  if (kind === "ooze") return { hp: 138 + wave * 3, speed: 10, damage: 14, range: 68, attackEvery: 1.45 };
-  if (kind === "sprinter") return { hp: 78 + wave * 2, speed: 38, damage: 18, range: 24, attackEvery: .68 };
-  if (kind === "takuya") return { hp: 1200, speed: 9, damage: 58, range: 38, attackEvery: 1.15 };
-  if (kind === "shade") return { hp: 220, speed: 29, damage: 23, range: 27, attackEvery: .62 };
-  if (kind === "abomination") return { hp: 480, speed: 8, damage: 50, range: 28, attackEvery: 1.18 };
-  if (kind === "crusher") return { hp: 210 + wave * 5, speed: 11, damage: 35, range: 27, attackEvery: 1.18 };
-  if (kind === "spitter") return { hp: 72 + wave * 3, speed: 14, damage: 13, range: 122, attackEvery: 1.5 };
-  if (kind === "runner") return { hp: 52 + wave * 2, speed: 34, damage: 14, range: 25, attackEvery: .72 };
-  if (kind === "turned") return { hp: 95, speed: 18, damage: 18, range: 25, attackEvery: .88 };
-  return { hp: 86 + wave * 5, speed: 18, damage: 15, range: 25, attackEvery: 1.02 };
+  return UNIT_CARDS.find((unit) => unit.kind === kind)?.bodyRadius
+    ?? enemyBodyRadiusFor(kind)
+    ?? 11;
 }
 
 function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: EnemySpawnEntry | null = null) {
-  const data = enemyStats(kind, g.wave);
+  const data = enemyStatsForWave(kind, g.wave);
   if (!g.enemyKindsSeen.includes(kind)) g.enemyKindsSeen.push(kind);
   const id = g.nextId++;
   const gateEntering = kind !== "turned" && gateEntry !== null;
@@ -1263,12 +1237,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     bleedDamagePerSecond: 0,
     aiDestinationX: 0,
     aiMoveDirection: 0,
-    abilityCooldown: kind === "takuya" ? 4.2
-      : kind === "gate-eater" ? 4
-        : kind === "grappler" ? 2.5
-          : kind === "ooze" ? 3
-            : kind === "sprinter" ? 2
-              : 0,
+    abilityCooldown: enemyInitialAbilityCooldownFor(kind),
     abilityWindup: 0,
     attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
@@ -1286,16 +1255,7 @@ function spawnHuman(g: Game, kind: UnitKind) {
     if (ally.side === "human" && ally.hp > 0 && ally.anchorLane !== null) laneCounts[ally.anchorLane] += 1;
   }
   const assignedLane = chooseHumanDeploymentLane({ laneCounts }) as Lane;
-  const laneSpeed = kind === "scout" ? 78
-    : kind === "brawler" ? 68
-      : kind === "brute" ? 42
-        : kind === "guardian" ? 36
-        : kind === "gunner" ? 54
-          : kind === "crazy-king" ? 58
-            : kind === "kumaverson" ? 48
-              : kind === "babayaga" ? 62
-                : kind === "engineer" ? 56
-                : 60;
+  const laneSpeed = card.laneSpeed;
   g.fighters.push({
     id, side: "human", kind, lane: MUSTER_LANE, anchorLane: assignedLane, x: MUSTER_X, y: activeMusterY(), hp: card.hp, maxHp: card.hp,
     speed: card.speed, damage: card.damage, range: card.range, cooldown: 0, supportCooldown: 0,
@@ -5715,7 +5675,7 @@ export function AshfallGame() {
         convoyEvacuated: g.definition.missionType === "timed-defense" && g.convoyProgress >= 1,
         bossWarning: Boolean(boss || bossIncoming),
         bossHp: g.bossDefeatPending ? 0 : boss?.hp ?? 0,
-        bossMaxHp: g.bossDefeatPending ? enemyStats("takuya", g.wave).hp : boss?.maxHp ?? 0,
+        bossMaxHp: g.bossDefeatPending ? enemyStatsForWave("takuya", g.wave).hp : boss?.maxHp ?? 0,
         bossDefeated: g.bossDefeatPending ? false : g.bossDefeated,
         enemyBaseDestroyed: g.barricadeHp <= 0,
         powerActivated: g.stageMission.powerActivated ?? 0,
@@ -7373,7 +7333,7 @@ export function AshfallGame() {
           if (next.state === "generic-zombie") {
             const generic = createGenericZombieSpawn(next);
             if (!generic) continue;
-            const data = enemyStats("turned", g.wave); const id = g.nextId++;
+            const data = enemyStatsForWave("turned", g.wave); const id = g.nextId++;
             revived.push({
               id, side: "zombie", kind: "turned", lane: generic.lane as Lane, anchorLane: generic.lane as Lane,
               x: generic.x, y: generic.y, hp: data.hp, maxHp: data.hp, speed: data.speed, damage: data.damage,

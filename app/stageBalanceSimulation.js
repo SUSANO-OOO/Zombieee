@@ -14,6 +14,10 @@ import {
   enemySpawnInterval,
   structureDamageMultiplier,
 } from "./gameRules.js";
+import {
+  ENEMY_CONTENT_BY_ID,
+  enemyBalanceStatsForWave as contentEnemyBalanceStatsForWave,
+} from "./content/enemyCatalog.js";
 import { UNIT_ROLE_TUNING } from "./unitRoleMechanics.js";
 import {
   STATION_MISSION_TYPES,
@@ -31,24 +35,9 @@ const CONTACT_PROGRESS = 0.58;
 const OBJECTIVE_DANGER_PROGRESS = 0.82;
 const STRUCTURE_DAMAGE_START_DELAY = 0;
 
-/**
- * These are projections of the combat runtime's enemy baselines. Wave scaling
- * is applied by enemyStatsForWave below, matching the live walker/runner/
- * spitter/crusher formulas where those formulas scale by wave.
- */
-export const STAGE_BALANCE_ENEMY_PROFILES = freeze({
-  walker: freeze({ hp: 86, hpPerWave: 5, speed: 18, damage: 15, attackEvery: 1.02, abilityPressure: 1 }),
-  runner: freeze({ hp: 52, hpPerWave: 2, speed: 34, damage: 14, attackEvery: 0.72, abilityPressure: 1.12 }),
-  spitter: freeze({ hp: 72, hpPerWave: 3, speed: 14, damage: 13, attackEvery: 1.5, abilityPressure: 1.18 }),
-  crusher: freeze({ hp: 210, hpPerWave: 5, speed: 11, damage: 35, attackEvery: 1.18, abilityPressure: 1.28 }),
-  shade: freeze({ hp: 220, hpPerWave: 0, speed: 29, damage: 23, attackEvery: 0.62, abilityPressure: 1.35 }),
-  abomination: freeze({ hp: 480, hpPerWave: 0, speed: 8, damage: 50, attackEvery: 1.18, abilityPressure: 1.42 }),
-  takuya: freeze({ hp: 1200, hpPerWave: 0, speed: 9, damage: 58, attackEvery: 1.15, abilityPressure: 1.55 }),
-  grappler: freeze({ hp: 165, hpPerWave: 4, speed: 13, damage: 20, attackEvery: 1.12, abilityPressure: 1.34 }),
-  ooze: freeze({ hp: 138, hpPerWave: 3, speed: 10, damage: 14, attackEvery: 1.45, abilityPressure: 1.4 }),
-  sprinter: freeze({ hp: 78, hpPerWave: 2, speed: 38, damage: 18, attackEvery: 0.68, abilityPressure: 1.38 }),
-  "gate-eater": freeze({ hp: 1800, hpPerWave: 0, speed: 7, damage: 64, attackEvery: 1.32, abilityPressure: 1.65 }),
-});
+// Compatibility projection for existing balance callers. Runtime and simulation
+// now consume the same canonical enemy records.
+export const STAGE_BALANCE_ENEMY_PROFILES = ENEMY_CONTENT_BY_ID;
 
 const ALL_STAGE_FORMATIONS = freeze({
   early: freeze(["scout", "ranger", "brawler", "medic", "kumaverson", "babayaga"]),
@@ -147,14 +136,7 @@ function unitsForWave(wave) {
 }
 
 function enemyStatsForWave(kind, waveNumber) {
-  const profile = STAGE_BALANCE_ENEMY_PROFILES[kind];
-  if (!profile) throw new RangeError(`Missing balance profile for enemy kind: ${kind}`);
-  const hp = profile.hp + profile.hpPerWave * Math.max(1, waveNumber);
-  return freeze({
-    ...profile,
-    hp,
-    dps: profile.damage / profile.attackEvery,
-  });
+  return contentEnemyBalanceStatsForWave(kind, waveNumber);
 }
 
 export function stageBalanceWaveFacts(stageId) {
