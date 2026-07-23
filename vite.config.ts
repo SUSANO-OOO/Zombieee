@@ -47,6 +47,30 @@ export default defineConfig(async () => {
     server: isCodexSeatbeltSandbox
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,
+    build: {
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            minSize: 40_000,
+            maxSize: 450_000,
+            groups: [
+              {
+                name: "campaign-runtime",
+                test: /app[\\/](?:campaign(?:Storage)?|eventFoundation|storyEvents|storyFlow|storyBattleBarks|content[\\/])/,
+              },
+              {
+                name: "audio-runtime",
+                test: /app[\\/](?:audioMixer|productionAudio|battleBarks)\./,
+              },
+              {
+                name: "battle-runtime",
+                test: /app[\\/](?:gameRules|combatLifecycle|combatPresentation|unitRoleMechanics|battleDefinitions|battleSpace|stageBalanceSimulation|station(?:Enemy|Stage)Mechanics)\./,
+              },
+            ],
+          },
+        },
+      },
+    },
     plugins: [
       vinext(),
       sites(),
