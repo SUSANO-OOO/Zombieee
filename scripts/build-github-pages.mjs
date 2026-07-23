@@ -2,6 +2,8 @@ import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promi
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { normalizeReleaseTitle } from "./pages-release-identity.mjs";
+
 const root = process.cwd();
 const clientDir = path.join(root, "dist", "client");
 const serverEntry = path.join(root, "dist", "server", "index.js");
@@ -19,15 +21,6 @@ function escapeHtmlAttribute(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
-}
-
-function normalizeReleaseTitle(source) {
-  const renderedTitles = source.match(/<title>[^<]*<\/title>/gu) ?? [];
-  if (renderedTitles.length !== 1) {
-    throw new Error(`Expected one rendered title, found ${renderedTitles.length}`);
-  }
-  const releaseTitle = `<title>西新世紀末物語｜アーリーアクセス版 ${escapeHtmlAttribute(releaseVersion)}</title>`;
-  return source.replace(renderedTitles[0], releaseTitle);
 }
 
 await stat(clientDir);
@@ -72,7 +65,7 @@ const worker = (await import(`${pathToFileURL(serverEntry).href}?pages=${Date.no
 const rendered = await worker.fetch(new Request("https://pages.invalid/"), { ASSETS: assets });
 if (!rendered.ok) throw new Error(`Failed to render the root document: ${rendered.status}`);
 let html = await rendered.text();
-html = normalizeReleaseTitle(html);
+html = normalizeReleaseTitle(html, releaseVersion);
 
 const topLevelEntries = await readdir(clientDir, { withFileTypes: true });
 const directoryPrefixes = topLevelEntries
