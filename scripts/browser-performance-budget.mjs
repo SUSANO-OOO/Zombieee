@@ -16,17 +16,24 @@ const engineName = process.env.PERF_QA_ENGINE ?? 'chromium';
 const browserType = playwright[engineName];
 if (!browserType) throw new Error(`Unsupported PERF_QA_ENGINE: ${engineName}`);
 
+const runMode = process.env.PERF_QA_MODE ?? 'gate';
+if (!['gate', 'smoke'].includes(runMode)) throw new Error(`Unsupported PERF_QA_MODE: ${runMode}`);
+const isGate = runMode === 'gate';
 const durationMs = Math.max(30_000, Number(process.env.PERF_QA_DURATION_MS) || 15 * 60_000);
+if (isGate && durationMs < 15 * 60_000) {
+  throw new Error('Performance gate requires at least 15 minutes; use PERF_QA_MODE=smoke for shorter diagnostics');
+}
 const [width, height] = (process.env.PERF_QA_VIEWPORT ?? '844x390').split('x').map(Number);
 if (!Number.isFinite(width) || !Number.isFinite(height)) throw new Error('PERF_QA_VIEWPORT must use WIDTHxHEIGHT');
 const outputPath = path.resolve(process.env.PERF_QA_OUTPUT ?? `outputs/performance/${engineName}-${width}x${height}.json`);
+const resultVersion = process.env.PERF_QA_VERSION ?? '0.7.1';
 const target = new URL(baseUrl);
 target.search = new URLSearchParams({ qa: 'stress', safe: 'iphone-landscape' }).toString();
 
 function percentile(values, ratio) {
   if (values.length === 0) return null;
   const sorted = [...values].sort((left, right) => left - right);
-  return sorted[Math.min(sorted.length - 1, Math.floor((sorted.length - 1) * ratio))];
+  return sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * ratio) - 1))];
 }
 
 function median(values) {
@@ -130,6 +137,8 @@ try {
       longTasks: [],
       memory: [],
       battleActiveMs: 0,
+      longTaskSupported: false,
+      memorySupported: false,
     };
     Object.defineProperty(window, '__ASHFALL_PERFORMANCE_QA__', { value: state });
     let lastBattleFrame = null;
@@ -154,13 +163,15 @@ try {
           }
         });
         observer.observe({ entryTypes: ['longtask'] });
+        state.longTaskSupported = true;
       } catch {
         // Long Task API is optional (notably absent in WebKit).
       }
     }
     const sampleMemory = () => {
       const memory = performance.memory;
-      if (memory?.usedJSHeapSize) {
+      if (memory && Number.isFinite(memory.usedJSHeapSize)) {
+        state.memorySupported = true;
         state.memory.push({ at: performance.now() - state.startedAt, usedJSHeapSize: memory.usedJSHeapSize });
       }
     };
@@ -217,14 +228,32 @@ try {
   ), 0);
   const medianFrameMs = median(frameTimes);
   const p95FrameMs = percentile(frameTimes, 0.95);
+  const battleCoveragePercent = Math.min(100, raw.battleActiveMs / durationMs * 100);
+  const minimumFrameSamples = Math.floor(durationMs / 1_000 * 10);
+  const gateChecks = {
+    durationAtLeast15Minutes: durationMs >= 15 * 60_000,
+    battleActiveAtLeast95Percent: battleCoveragePercent >= 95,
+    frameSamplesSufficient: frameTimes.length >= minimumFrameSamples,
+    medianFpsAtLeast50: medianFrameMs !== null && 1_000 / medianFrameMs >= 50,
+    p95FrameAtMost33Ms: p95FrameMs !== null && p95FrameMs <= 33,
+    degradationAtMost10Percent: frameTimeDegradationPercent !== null && frameTimeDegradationPercent <= 10,
+    memoryGrowthAtMost25Percent: raw.memorySupported && memoryGrowthPercent !== null
+      ? memoryGrowthPercent <= 25
+      : null,
+    noConsecutiveLongTasks: raw.longTaskSupported ? consecutiveLongTaskClusters === 0 : null,
+  };
+  const gatePassed = isGate && Object.values(gateChecks).every((check) => check === true);
   const summary = {
-    baselineVersion: '0.7.1',
+    resultVersion,
+    runMode,
     engine: engineName,
     viewport: { width, height },
     durationMs,
     battleActiveMs: round(raw.battleActiveMs),
+    battleCoveragePercent: round(battleCoveragePercent),
     retries,
     frameSamples: frameTimes.length,
+    minimumFrameSamples,
     medianFrameMs: round(medianFrameMs),
     medianFps: round(medianFrameMs ? 1_000 / medianFrameMs : null),
     p95FrameMs: round(p95FrameMs),
@@ -237,19 +266,22 @@ try {
     memoryGrowthPercent: round(memoryGrowthPercent),
     longTasksOver100Ms: longTasksOver100Ms.length,
     consecutiveLongTaskClusters,
+    capabilities: {
+      memory: raw.memorySupported,
+      longTask: raw.longTaskSupported,
+    },
     diagnostics,
-    budget: {
-      medianFpsAtLeast50: medianFrameMs ? 1_000 / medianFrameMs >= 50 : false,
-      p95FrameAtMost33Ms: p95FrameMs !== null && p95FrameMs <= 33,
-      degradationAtMost10Percent: frameTimeDegradationPercent !== null && frameTimeDegradationPercent <= 10,
-      memoryGrowthAtMost25Percent: memoryGrowthPercent === null ? null : memoryGrowthPercent <= 25,
-      noConsecutiveLongTasks: consecutiveLongTaskClusters === 0,
+    gate: {
+      evaluated: isGate,
+      passed: isGate ? gatePassed : null,
+      checks: isGate ? gateChecks : null,
     },
   };
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
   console.log(JSON.stringify(summary, null, 2));
-  if (Object.values(diagnostics).some((entries) => entries.length > 0)) process.exitCode = 1;
+  const diagnosticsFailed = Object.values(diagnostics).some((entries) => entries.length > 0);
+  if (diagnosticsFailed || (isGate && !gatePassed)) process.exitCode = 1;
 } finally {
   await context?.close();
   await browser?.close();
