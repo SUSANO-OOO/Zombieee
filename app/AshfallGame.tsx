@@ -19,6 +19,13 @@ import {
 } from "./lanePlanner.js";
 import { createAudioMixer, createAudioRequestGate, runGuardedAudioRequest } from "./audioMixer.js";
 import { BattleBarkAuditScreen } from "./BattleBarkAuditScreen";
+import {
+  battleSpaceFor,
+  battleSpaceLineOfSight,
+  enemySpawnPortalPoint,
+  friendlyDeploymentPoint,
+  nearestValidBattlefieldPlacement,
+} from "./battleSpace.js";
 import { SpriteAuditScreen } from "./SpriteAuditScreen";
 import { createBattleResultId, createBattleSessionTransition, resolvePauseAction } from "./battleSession.js";
 import {
@@ -103,7 +110,6 @@ import {
   createGenericZombieSpawn,
   ENEMY_DEATH_CONFIG,
   enforceEnemyCorpseCaps,
-  hasAdjacentLaneLineOfSight,
   igniteAllyCorpsesInFire,
   supportCohesion,
 } from "./combatLifecycle.js";
@@ -305,7 +311,14 @@ function activeLaneForY(y: number, fallback: Lane = 1) {
 function activeMusterY() {
   return activeLaneCenters[MUSTER_LANE];
 }
-const LANE_NAMES_JA = ["上", "中央", "下"] as const;
+
+function activeYForContentY(y: number) {
+  const contentY = Number.isFinite(y) ? y : LANE_Y[1];
+  const route = LANE_Y.reduce((nearest, routeY, index) => (
+    Math.abs(contentY - routeY) < Math.abs(contentY - LANE_Y[nearest]) ? index : nearest
+  ), 1);
+  return activeLaneCenters[route] + contentY - LANE_Y[route];
+}
 
 function stationObjectiveDestination(g: Game, fighter: Fighter) {
   if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
@@ -358,7 +371,7 @@ type UnitCard = {
   attackEvery: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: [string, Lane][] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: string[] };
 type BattleDefinition = {
   stageId: string;
   displayName: string;
@@ -389,7 +402,8 @@ type CampaignUnitData = {
 };
 type EnemySpawnEntry = {
   entryId: number; kind: string; lane: Lane; wave: number; order: number; delay: number;
-  x: number; y: number; combatReadyX: number; entrySpeed: number; slot: number;
+  x: number; y: number; combatReadyX: number; combatReadyY?: number; entrySpeed: number; slot: number;
+  portalId?: string; routeId?: string;
 };
 type EnemySpawnRuntime = { pending: EnemySpawnEntry[]; cooldown: number; nextEntryId: number };
 
@@ -419,7 +433,7 @@ function placementReasonLabel(reason: string) {
   return shortReasons[reason] ?? reason.replace(/です$/, "");
 }
 
-function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, valid: boolean, reason: string): PlacementIndicator {
+function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, y: number, valid: boolean, reason: string): PlacementIndicator {
   const kind = action?.startsWith("supply:") ? action.slice("supply:".length) as SupplyKind : null;
   const radius = kind === "pod" ? supplyDefs.pod.landingRadius ?? 92
     : kind === "drum" ? supplyDefs.drum.blastRadius ?? 112
@@ -428,7 +442,7 @@ function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, va
   return {
     lane,
     x,
-    y: activeLaneCenters[lane],
+    y,
     valid,
     reason,
     radius,
@@ -468,6 +482,9 @@ type Fighter = {
   combatReady: boolean;
   contained: boolean;
   gateEntering: boolean;
+  entryDirection?: -1 | 1;
+  spawnPortalId?: string | null;
+  entryStepDistance?: number;
   gateEntrySpeed: number;
   combatReadyX: number;
   marked: number;
@@ -621,7 +638,7 @@ type AreaEffect = {
   phase: "active" | "expired";
   slowMultiplier?: number;
 };
-type AirstrikeRuntime = ReturnType<typeof createEmergencySupportRuntime> & { targetLane: Lane | null };
+type AirstrikeRuntime = ReturnType<typeof createEmergencySupportRuntime> & { targetLane: Lane | null; targetY?: number | null };
 type CrawlerRuntime = ReturnType<typeof createCrawlerAbilityRuntime>;
 type BattleBarkRuntime = ReturnType<typeof createBattleBarkRuntime>;
 type BattleBark = BattleBarkRuntime["active"][number];
@@ -713,6 +730,7 @@ type Game = {
   comboTime: number;
   maxCombo: number;
   unitsLost: number;
+  crawlerFootstepCount: number;
   crawlerHitFlash: number;
   crawlerHitSfxCooldown: number;
   criticalAnnounced: boolean;
@@ -1012,6 +1030,7 @@ const initialGame = (
   comboTime: 0,
   maxCombo: 0,
   unitsLost: 0,
+  crawlerFootstepCount: 0,
   crawlerHitFlash: 0,
   crawlerHitSfxCooldown: 0,
   criticalAnnounced: false,
@@ -1229,6 +1248,9 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     combatReady: !gateEntering,
     contained: false,
     gateEntering,
+    entryDirection: -1,
+    spawnPortalId: gateEntry?.portalId ?? null,
+    entryStepDistance: 0,
     gateEntrySpeed: gateEntry?.entrySpeed ?? 0,
     combatReadyX: gateEntry?.combatReadyX ?? 0,
     marked: 0,
@@ -1246,7 +1268,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
   return g.fighters[g.fighters.length - 1];
 }
 
-function spawnHuman(g: Game, kind: UnitKind) {
+function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
   const card = cards.find((item) => item.kind === kind);
   if (!card) return null;
   const id = g.nextId++;
@@ -1256,18 +1278,30 @@ function spawnHuman(g: Game, kind: UnitKind) {
   }
   const assignedLane = chooseHumanDeploymentLane({ laneCounts }) as Lane;
   const laneSpeed = card.laneSpeed;
+  const deployment = runOutFromCrawler
+    ? friendlyDeploymentPoint({
+      stageId: g.definition.stageId,
+      viewport: activeStageViewportId,
+    })
+    : {
+      legacyLane: MUSTER_LANE,
+      x: MUSTER_X,
+      y: activeMusterY(),
+      combatReadyX: MUSTER_X,
+      combatReadyY: activeMusterY(),
+    };
   g.fighters.push({
-    id, side: "human", kind, lane: MUSTER_LANE, anchorLane: assignedLane, x: MUSTER_X, y: activeMusterY(), hp: card.hp, maxHp: card.hp,
+    id, side: "human", kind, lane: deployment.legacyLane as Lane, anchorLane: assignedLane, x: deployment.x, y: deployment.y, hp: card.hp, maxHp: card.hp,
     speed: card.speed, damage: card.damage, range: card.range, cooldown: 0, supportCooldown: 0,
     attackEvery: card.attackEvery, flash: 0, step: Math.random() * 4, attack: 0, knock: 0, variant: id % 3,
     targetId: null, targetObjectId: null, retargetIn: 0, nextLaneDecisionAt: 0, bodyRadius: bodyRadiusFor(kind), laneSpeed, spawnGrace: .95,
-    combatReady: true, gateEntering: false, gateEntrySpeed: 0, combatReadyX: 0,
+    combatReady: !runOutFromCrawler, gateEntering: runOutFromCrawler, entryDirection: 1, spawnPortalId: runOutFromCrawler ? "crawler-door" : null, entryStepDistance: 0, gateEntrySpeed: Math.max(54, card.speed * 3.2), combatReadyX: deployment.combatReadyX,
     contained: false,
     marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: MUSTER_X, aiMoveDirection: 0, abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
     ...createUnitRoleRuntime(),
   });
-  addParticles(g, MUSTER_X, activeMusterY(), "#d0b48b", 7);
+  addParticles(g, deployment.combatReadyX, deployment.combatReadyY, "#d0b48b", 7);
   g.banner = `${card.name} // 移動拠点から出撃`;
   g.bannerTime = .8;
   return card;
@@ -1311,7 +1345,7 @@ function prepareEndgameQa(g: Game) {
 
 function prepareTakuyaEntranceQa(g: Game) {
   const bossEventIndex = g.definition.timeline.findIndex((event) => (
-    event.units.some(([kind]) => kind === "takuya")
+    event.units.includes("takuya")
   ));
   const bossEvent = g.definition.timeline[bossEventIndex];
   if (!bossEvent || bossEventIndex < 0) return;
@@ -2199,15 +2233,15 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
     const panelXs = Array.isArray(configuredPanelXs) && configuredPanelXs.length === 3
       ? configuredPanelXs.map((value, index) => Number(value) || [410, 584, 744][index])
       : [410, 584, 744];
-    const configuredLanes = g.definition.missionConfig.powerLanes;
-    const lanes = (Array.isArray(configuredLanes) && configuredLanes.length === 3
-      ? configuredLanes.map((value, index) => [0, 1, 2].includes(Number(value)) ? Number(value) : [0, 2, 1][index])
-      : [0, 2, 1]) as Lane[];
+    const configuredYs = g.definition.missionConfig.powerYs;
+    const panelYs = Array.isArray(configuredYs) && configuredYs.length === 3
+      ? configuredYs.map((value, index) => activeYForContentY(Number(value) || [212, 352, 282][index]))
+      : [212, 352, 282].map(activeYForContentY);
     for (let index = 0; index < 3; index++) {
       const active = index < activated;
       const current = index === activated;
       const x = panelXs[index];
-      const y = activeLaneCenters[lanes[index]] - 8;
+      const y = panelYs[index] - 8;
       ctx.save(); ctx.translate(x, y);
       const powerSprite = stageObjects["station-tunnel-mission-art-source"];
       const powerCrops = [
@@ -2697,8 +2731,10 @@ function drawEnemyBase(
 
 function drawEmergencySupport(ctx: CanvasRenderingContext2D, g: Game) {
   const runtime = g.airstrike;
-  if (runtime.phase === "idle" || runtime.targetX === null || runtime.targetLane === null) return;
-  const y = activeLaneCenters[runtime.targetLane];
+  if (runtime.phase === "idle" || runtime.targetX === null) return;
+  const y = Number.isFinite(runtime.targetY)
+    ? runtime.targetY as number
+    : activeLaneCenters[runtime.targetLane ?? 1];
   ctx.save();
   if (["targeting", "inbound", "impact"].includes(runtime.phase)) {
     const pulse = AIRSTRIKE_DEF.radius * (.82 + Math.sin(g.time * 13) * .04);
@@ -2779,19 +2815,63 @@ function activeStageObjectsForGame(g: Game) {
 function stageObjectForbiddenZonesForGame(g: Game) {
   return activeStageObjectsForGame(g)
     .filter((object) => object.collision)
-    .flatMap((object) => {
+    .map((object) => {
       const renderY = stageObjectRenderY(object);
       const halfHeight = (object.collision?.height ?? 0) / 2;
-      const declaredLanes = object.collision?.lanes ?? [];
-      const affectedLanes = declaredLanes.length > 0
-        ? declaredLanes.filter((lane): lane is Lane => lane === 0 || lane === 1 || lane === 2)
-        : ([0, 1, 2] as Lane[]).filter((lane) => Math.abs(activeLaneCenters[lane] - renderY) <= halfHeight + 18);
-      return affectedLanes.map((lane) => ({
-        lane,
+      return {
+        id: object.id,
         minX: object.placement.x - (object.collision?.width ?? 0) / 2,
         maxX: object.placement.x + (object.collision?.width ?? 0) / 2,
-      }));
+        minY: renderY - halfHeight,
+        maxY: renderY + halfHeight,
+      };
     });
+}
+
+function correctedBattlefieldTargetForGame(
+  g: Game,
+  requested: { x: number; y: number },
+  kind: SupplyKind | null,
+) {
+  const def = kind ? supplyDefs[kind] : null;
+  const placementClearance = def?.placementClearance ?? 0;
+  return nearestValidBattlefieldPlacement({
+    stageId: g.definition.stageId,
+    viewport: activeStageViewportId,
+    requested,
+    radius: kind === "pod" ? 22 : kind ? 18 : 0,
+    clearance: placementClearance,
+    obstacles: kind
+      ? g.battlefieldObjects
+        .filter((object) => object.phase !== "expired" && object.phase !== "destroying")
+        .map((object) => ({
+          id: `supply-${object.id}`,
+          x: object.x,
+          y: object.y,
+          clearance: Math.max(placementClearance, supplyDefs[object.kind]?.placementClearance ?? placementClearance),
+        }))
+      : [],
+    forbiddenAreas: stageObjectForbiddenZonesForGame(g),
+  });
+}
+
+function hasBattleSpaceLineOfSight(g: Game, attacker: Fighter, target: Fighter) {
+  if (attacker.range <= 64) return true;
+  const supplyObstacles = g.battlefieldObjects
+    .filter((object) => object.blocksEnemies && ["impact", "active"].includes(object.phase))
+    .map((object) => ({
+      id: `supply-${object.id}`,
+      minX: object.x - 18,
+      maxX: object.x + 18,
+      minY: object.y - 31,
+      maxY: object.y + 12,
+    }));
+  return battleSpaceLineOfSight({
+    from: attacker,
+    to: target,
+    obstacles: [...stageObjectForbiddenZonesForGame(g), ...supplyObstacles],
+    padding: 2,
+  }).clear;
 }
 
 function stageObjectRenderY(object: ReturnType<typeof stageObjectsFor>[number]) {
@@ -3794,6 +3874,7 @@ export function AshfallGame() {
       getSnapshot: () => {
         const g = gameRef.current;
         const geometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
+        const battleSpace = battleSpaceFor(g.definition.stageId, activeStageViewportId);
         const grounding = combatReadyGroundingAudit({ geometry, fighters: g.fighters });
         return {
           screen,
@@ -3814,6 +3895,7 @@ export function AshfallGame() {
           eventIndex: g.eventIndex,
           pendingSpawnCount: g.enemySpawn.pending.length,
           takuyaEntranceAudioRemaining: g.takuyaEntranceAudioRemaining,
+          crawlerFootstepCount: g.crawlerFootstepCount,
           energy: g.energy,
           scrap: g.scrap,
           supportGauge: g.supportGauge,
@@ -3838,6 +3920,22 @@ export function AshfallGame() {
             offFloorIds: grounding.offFloor.map(({ id }) => id),
             debugPrimitiveCount: geometry.debugPrimitives.length,
           },
+          battleSpace: {
+            playerFacingLaneCount: battleSpace.playerFacingLaneCount,
+            supportArea: { ...battleSpace.supportArea },
+            crawlerDoor: { ...battleSpace.crawler.door },
+            enemyPortalCount: battleSpace.spawnPortals.enemy.length,
+          },
+          battlefieldObjects: g.battlefieldObjects.map((object) => ({
+            id: object.id,
+            kind: object.kind,
+            lane: object.lane,
+            x: object.x,
+            y: object.y,
+            phase: object.phase,
+          })),
+          airstrike: { ...g.airstrike },
+          placementIndicator: g.placementIndicator ? { ...g.placementIndicator } : null,
           fighters: g.fighters.map((fighter) => ({
             id: fighter.id,
             side: fighter.side,
@@ -3851,6 +3949,10 @@ export function AshfallGame() {
             targetId: fighter.targetId,
             targetObjectId: fighter.targetObjectId,
             combatReady: fighter.combatReady,
+            gateEntering: fighter.gateEntering,
+            entryDirection: fighter.entryDirection ?? -1,
+            spawnPortalId: fighter.spawnPortalId ?? null,
+            combatReadyX: fighter.combatReadyX,
             contained: fighter.contained,
             damageReductionRemaining: fighter.damageReductionRemaining,
             comboHits: fighter.comboHits,
@@ -4540,18 +4642,27 @@ export function AshfallGame() {
     return true;
   }, [playCue]);
 
-  const placeBattlefieldSupply = useCallback((kind: SupplyKind, lane: Lane, x: number) => {
+  const placeBattlefieldSupply = useCallback((kind: SupplyKind, requestedX: number, requestedY: number) => {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return false;
     const stageObjectForbiddenZones = stageObjectForbiddenZonesForGame(g);
+    const placement = correctedBattlefieldTargetForGame(g, { x: requestedX, y: requestedY }, kind);
+    const target = placement.position ?? placement.requested;
+    const lane = placement.legacyLane as Lane | null;
+    if (!placement.ok || lane === null) {
+      g.placementIndicator = placementIndicatorFor(`supply:${kind}`, activeLaneForY(target.y), target.x, target.y, false, placement.reason);
+      g.banner = placementReasonLabel(placement.reason); g.bannerTime = .75; playCue("denied");
+      return false;
+    }
     const result = resolveBattlefieldSupplyPlacement({
-      running: g.running, paused: g.paused, over: g.over, scrap: g.scrap, supplyKind: kind, lane, x,
+      running: g.running, paused: g.paused, over: g.over, scrap: g.scrap, supplyKind: kind, lane, x: target.x, y: target.y,
       supplies: g.battlefieldObjects, objects: [], supports: [], areaEffects: g.areaEffects,
       nextId: g.nextId, nextAreaEffectId: g.nextAreaEffectId,
       laneCenters: activeLaneCenters,
       forbiddenZones: battlefieldPlacementForbiddenZones(stageObjectForbiddenZones),
     });
-    g.placementIndicator = placementIndicatorFor(`supply:${kind}`, lane, x, result.ok, result.reason);
+    const placementReason = result.ok && placement.adjusted ? placement.reason : result.reason;
+    g.placementIndicator = placementIndicatorFor(`supply:${kind}`, lane, target.x, target.y, result.ok, placementReason);
     if (!result.ok) {
       g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playCue("denied");
       return false;
@@ -4564,26 +4675,36 @@ export function AshfallGame() {
     g.areaEffects = result.areaEffects as AreaEffect[];
     g.nextId = result.nextId;
     g.nextAreaEffectId = result.nextAreaEffectId;
-    g.banner = `${supplyDefs[kind].name}配置 // ${LANE_NAMES_JA[lane]}レーン`;
+    g.banner = placement.adjusted
+      ? `${supplyDefs[kind].name} // 最寄りの配置可能地点へ補正`
+      : `${supplyDefs[kind].name} // 戦場配置`;
     g.bannerTime = 1.2; playCue(kind === "pod" ? "supply-pod" : kind === "drum" ? "supply-drum" : "supply-medical");
     emitBattleBark(g, kind === "pod" ? "support-pod" : kind === "drum" ? "support-drum" : "support-medical", kind === "drum" ? "gunner" : kind === "medical" ? "medic" : "guide", `support-${kind}`);
     if (kind === "pod") playCue("pod-descent");
     return true;
   }, [playCue]);
 
-  const deployAirstrike = useCallback((lane: Lane, x: number) => {
+  const deployAirstrike = useCallback((requestedX: number, requestedY: number) => {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return false;
+    const placement = correctedBattlefieldTargetForGame(g, { x: requestedX, y: requestedY }, null);
+    const target = placement.position ?? placement.requested;
+    const lane = placement.legacyLane as Lane | null;
+    if (!placement.ok || lane === null) {
+      g.placementIndicator = placementIndicatorFor("airstrike", activeLaneForY(target.y), target.x, target.y, false, placement.reason);
+      g.banner = placementReasonLabel(placement.reason); g.bannerTime = .75; playCue("denied");
+      return false;
+    }
     const result = requestAirstrike({
       running: g.running, paused: g.paused, over: g.over, supportGauge: g.supportGauge,
-      lane, x, runtime: g.airstrike,
+      lane, x: target.x, y: target.y, laneCenters: activeLaneCenters, runtime: g.airstrike,
     });
     if (!result.ok) {
       g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playCue("denied"); return false;
     }
     g.supportGauge = result.supportGauge;
     g.airstrike = result.runtime as AirstrikeRuntime;
-    g.banner = `航空支援要請 // ${LANE_NAMES_JA[lane]}レーン`;
+    g.banner = placement.adjusted ? "航空支援 // 最寄りの有効地点へ補正" : "航空支援要請 // 指定地点";
     g.bannerTime = 1; playCue("airstrike-request");
     emitBattleBark(g, "airstrike-request", "guide", "airstrike");
     return true;
@@ -4600,29 +4721,29 @@ export function AshfallGame() {
     return true;
   }, [playCue]);
 
-  const triggerDrumAt = useCallback((lane: Lane, x: number) => {
+  const triggerDrumAt = useCallback((x: number, y: number) => {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return false;
     const drum = g.battlefieldObjects
-      .filter((supply) => supply.kind === "drum" && supply.lane === lane && supply.phase === "active" && Math.abs(supply.x - x) <= 44)
-      .sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
+      .filter((supply) => supply.kind === "drum" && supply.phase === "active" && effectDistance(supply, { x, y }) <= 52)
+      .sort((a, b) => effectDistance(a, { x, y }) - effectDistance(b, { x, y }))[0];
     if (!drum) return false;
     const result = requestDrumDetonation(drum, "manual");
     if (!result.ok) return false;
     Object.assign(drum, result.supply);
-    g.banner = `爆薬ドラム起爆 // ${LANE_NAMES_JA[lane]}レーン`; g.bannerTime = .85; playCue("drum-request");
+    g.banner = "爆薬ドラム起爆 // 指定地点"; g.bannerTime = .85; playCue("drum-request");
     return true;
   }, [playCue]);
 
-  const executeSelected = useCallback((lane: Lane, x: number) => {
+  const executeSelected = useCallback((x: number, y: number) => {
     const action = selectedActionRef.current;
     if (!action) return;
     if (action.startsWith("supply:")) {
       const kind = action.slice("supply:".length) as SupplyKind;
-      if (placeBattlefieldSupply(kind, lane, x)) chooseAction(null);
+      if (placeBattlefieldSupply(kind, x, y)) chooseAction(null);
       return;
     }
-    if (deployAirstrike(lane, x)) chooseAction(null);
+    if (deployAirstrike(x, y)) chooseAction(null);
   }, [chooseAction, deployAirstrike, placeBattlefieldSupply]);
 
   const pointerWorldPosition = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -4632,27 +4753,33 @@ export function AshfallGame() {
     let lane: Lane = 0;
     if (Math.abs(y - activeLaneCenters[1]) < Math.abs(y - activeLaneCenters[lane])) lane = 1;
     if (Math.abs(y - activeLaneCenters[2]) < Math.abs(y - activeLaneCenters[lane])) lane = 2;
-    return { x, lane };
+    return { x, y, lane };
   }, []);
 
   const handleBattlefieldPointerMove = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     const action = selectedActionRef.current;
     if (!action) return;
-    const { x, lane } = pointerWorldPosition(event);
+    const { x, y, lane } = pointerWorldPosition(event);
     const g = gameRef.current;
-    const stageObjectForbiddenZones = stageObjectForbiddenZonesForGame(g);
-    const check = action.startsWith("supply:")
-      ? battlefieldSupplyPlacementCheck({
-        running: g.running, paused: g.paused, over: g.over, scrap: g.scrap,
-        supplyKind: action.slice("supply:".length), lane, x, supplies: g.battlefieldObjects,
-        laneCenters: activeLaneCenters,
-        forbiddenZones: battlefieldPlacementForbiddenZones(stageObjectForbiddenZones),
-      })
-      : airstrikePlacementCheck({
-        running: g.running, paused: g.paused, over: g.over, supportGauge: g.supportGauge,
-        lane, x, runtime: g.airstrike,
-      });
-    g.placementIndicator = placementIndicatorFor(action, lane, x, check.ok, check.reason);
+    const kind = action.startsWith("supply:") ? action.slice("supply:".length) as SupplyKind : null;
+    const placement = correctedBattlefieldTargetForGame(g, { x, y }, kind);
+    const target = placement.position ?? placement.requested;
+    const targetLane = (placement.legacyLane ?? lane) as Lane;
+    const check = !placement.ok
+      ? { ok: false, reason: placement.reason }
+      : kind
+        ? battlefieldSupplyPlacementCheck({
+          running: g.running, paused: g.paused, over: g.over, scrap: g.scrap,
+          supplyKind: kind, lane: targetLane, x: target.x, y: target.y, supplies: g.battlefieldObjects,
+          laneCenters: activeLaneCenters,
+          forbiddenZones: battlefieldPlacementForbiddenZones(stageObjectForbiddenZonesForGame(g)),
+        })
+        : airstrikePlacementCheck({
+          running: g.running, paused: g.paused, over: g.over, supportGauge: g.supportGauge,
+          lane: targetLane, x: target.x, y: target.y, laneCenters: activeLaneCenters, runtime: g.airstrike,
+        });
+    const reason = check.ok && placement.adjusted ? placement.reason : check.reason;
+    g.placementIndicator = placementIndicatorFor(action, targetLane, target.x, target.y, check.ok, reason);
   }, [pointerWorldPosition]);
 
   const handleBattlefieldPointerDown = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -4667,9 +4794,9 @@ export function AshfallGame() {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return;
-    const { x, lane } = pointerWorldPosition(event);
-    if (!selectedActionRef.current) { triggerDrumAt(lane, x); return; }
-    executeSelected(lane, x);
+    const { x, y } = pointerWorldPosition(event);
+    if (!selectedActionRef.current) { triggerDrumAt(x, y); return; }
+    executeSelected(x, y);
   }, [executeSelected, pointerWorldPosition, triggerDrumAt]);
 
   const handleBattlefieldPointerCancel = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -5868,10 +5995,12 @@ export function AshfallGame() {
         if (g.deployQueue.length && g.deployTimer <= 0) {
           const kind = g.deployQueue.shift();
           if (kind) {
-            const deployed = spawnHuman(g, kind);
+            const deployed = spawnHuman(g, kind, true);
             g.deployTimer = .45;
             if (deployed) {
-              playProductionCue("support-pod-deploy", MUSTER_X, {
+              const deploymentFighter = g.fighters[g.fighters.length - 1];
+              const deploymentX = deploymentFighter?.combatReadyX ?? WORLD_GEOMETRY.crawler.exitX;
+              playProductionCue("support-pod-deploy", deploymentX, {
                 priority: 58,
                 cooldownMs: 90,
                 volume: kind === "brute" ? .42 : .32,
@@ -5881,7 +6010,7 @@ export function AshfallGame() {
               });
               const deployVoice = unitAudioCueFor(kind, "voice", "deploy") || humanVoiceCueForUnit(kind, "deploy");
               if (deployVoice) {
-                playProductionCue(deployVoice, MUSTER_X, {
+                playProductionCue(deployVoice, deploymentX, {
                   priority: 72,
                   cooldownMs: 400,
                   volume: kind === "crazy-king" || kind === "kumaverson" ? .94 : .8,
@@ -5921,15 +6050,23 @@ export function AshfallGame() {
           g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
           if (mission.label.includes("警告")) g.flashOverlay = .12;
           const firstNewEntryId = g.enemySpawn.nextEntryId;
-          g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: [string, Lane][]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
-          g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => ({
-            ...entry,
-            y: entry.entryId >= firstNewEntryId
-              ? activeLaneCenters[entry.lane] + (entry.y - LANE_Y[entry.lane])
-              : entry.y,
-          }));
+          g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
+          g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {
+            if (entry.entryId < firstNewEntryId) return entry;
+            const portal = enemySpawnPortalPoint({
+              stageId: g.definition.stageId,
+              viewport: activeStageViewportId,
+              entryId: entry.entryId,
+              kind: entry.kind,
+            });
+            return {
+              ...entry,
+              ...portal,
+              lane: portal.legacyLane as Lane,
+            };
+          });
           if (mission.units.length) {
-            const includesTakuya = mission.units.some(([kind]) => kind === "takuya");
+            const includesTakuya = mission.units.includes("takuya");
             if (includesTakuya) {
               g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
               setHud((current) => ({ ...current, takuyaEntranceAudioActive: true }));
@@ -5964,7 +6101,13 @@ export function AshfallGame() {
             const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
             if (fighter) { fighter.flash = .2; fighter.knock = Math.max(fighter.knock, 18); addDamageText(g, { x: fighter.x, y: fighter.y - 54, value: `航空 -${hit.damage}`, life: .85, color: "#fff0a0" }); }
           }
-          addParticles(g, g.airstrike.targetX ?? W / 2, activeLaneCenters[g.airstrike.targetLane ?? 1], "#f28d46", 34);
+          addParticles(
+            g,
+            g.airstrike.targetX ?? W / 2,
+            Number.isFinite(g.airstrike.targetY) ? g.airstrike.targetY as number : activeLaneCenters[g.airstrike.targetLane ?? 1],
+            "#f28d46",
+            34,
+          );
           g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact); g.flashOverlay = .4; playCue("airstrike-impact");
         }
         if (airstrikeStep.events.includes("returning")) playCue("airstrike-return");
@@ -6192,11 +6335,33 @@ export function AshfallGame() {
           if (f.gateEntering) {
             f.targetId = null;
             f.targetObjectId = null;
-            f.x = Math.max(f.combatReadyX, f.x - f.gateEntrySpeed * dt);
+            const previousX = f.x;
+            const previousY = f.y;
+            const entryDirection = f.entryDirection ?? -1;
+            f.x = entryDirection > 0
+              ? Math.min(f.combatReadyX, f.x + f.gateEntrySpeed * dt)
+              : Math.max(f.combatReadyX, f.x - f.gateEntrySpeed * dt);
             const routeY = activeLaneCenters[f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
             if (Math.abs(dy) > 1) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * .58 * dt);
-            if (f.x <= f.combatReadyX + .01) {
+            if (f.side === "human") {
+              f.entryStepDistance = (f.entryStepDistance ?? 0) + Math.hypot(f.x - previousX, f.y - previousY);
+              if (f.entryStepDistance >= 18) {
+                f.entryStepDistance %= 18;
+                g.crawlerFootstepCount += 1;
+                playProductionCue("weapon-melee-impact", f.x, {
+                  priority: 44,
+                  cooldownMs: 40,
+                  volume: f.kind === "brute" || f.kind === "guardian" ? .24 : .16,
+                  playbackRate: f.kind === "brute" || f.kind === "guardian" ? .78 : 1.24,
+                  maxInstances: 2,
+                });
+              }
+            }
+            const reachedCombatPoint = entryDirection > 0
+              ? f.x >= f.combatReadyX - .01
+              : f.x <= f.combatReadyX + .01;
+            if (reachedCombatPoint) {
               f.x = f.combatReadyX;
               f.gateEntering = false;
               f.combatReady = true;
@@ -6593,11 +6758,7 @@ export function AshfallGame() {
               localThreatRadius: Math.max(150, f.range + 56),
               hasLineOfSight: (_attacker, candidate) => {
                 const actualTarget = fighterById.get(candidate.id);
-                return actualTarget ? hasAdjacentLaneLineOfSight({
-                  attacker: f,
-                  target: actualTarget,
-                  blockers: [...g.fighters, ...g.battlefieldObjects],
-                }) : false;
+                return actualTarget ? hasBattleSpaceLineOfSight(g, f, actualTarget) : false;
               },
             });
             const stationObjective = stationObjectiveDestination(g, f);
@@ -6627,10 +6788,19 @@ export function AshfallGame() {
           } else {
             const humans = g.fighters.filter((human) => human.side === "human" && human.hp > 0);
             const locked = f.targetId === null ? undefined : fighterById.get(f.targetId);
-            const routeLane = f.lane;
-            const blockingSupply = selectBlockingContainer({ enemyX: f.x, enemyLane: routeLane, objects: g.battlefieldObjects }) as BattlefieldObject | undefined;
+            const blockingSupply = selectBlockingContainer({
+              enemyX: f.x,
+              enemyY: f.y,
+              enemyRadius: f.bodyRadius,
+              objects: g.battlefieldObjects,
+            }) as BattlefieldObject | undefined;
             const contactSupply = g.battlefieldObjects
-              .filter((supply) => !supply.blocksEnemies && enemyCanTargetBattlefieldSupply({ supply, enemyX: f.x, enemyLane: routeLane, attackRange: f.range }))
+              .filter((supply) => !supply.blocksEnemies && enemyCanTargetBattlefieldSupply({
+                supply,
+                enemyX: f.x,
+                enemyY: f.y,
+                attackRange: f.range,
+              }))
               .sort((a, b) => Math.abs(f.x - a.x) - Math.abs(f.x - b.x))[0];
             const crawlerInRange = !blockingSupply && f.x - BASE_X <= f.range + 10;
             const physicalContact = crawlerInRange ? undefined : humans
@@ -6701,11 +6871,7 @@ export function AshfallGame() {
               attacker: f,
               candidates: target ? [target] : [],
               damage: f.damage,
-              hasLineOfSight: (attacker, candidate) => hasAdjacentLaneLineOfSight({
-                attacker,
-                target: candidate,
-                blockers: [...g.fighters, ...g.battlefieldObjects],
-              }),
+              hasLineOfSight: (attacker, candidate) => hasBattleSpaceLineOfSight(g, attacker, candidate),
               targetPriority: (candidate: Fighter) => (
                 roleTargetBias(f.kind, candidate.kind)
                 + (candidate.id === target?.id ? -10 : 0)
@@ -6756,10 +6922,10 @@ export function AshfallGame() {
                 if (f.kind === "spitter" || f.kind === "ooze") g.shots.push({ x: f.x - 14, y: f.y - 32, tx: objectTarget.x, ty: objectTarget.y - 22, life: .2, duration: .2, side: "zombie", style: "projectile", weapon: "spitter" });
                 if (result.detonationRequested) {
                   f.targetObjectId = null;
-                  g.banner = `爆薬ドラム損壊・起爆 // ${LANE_NAMES_JA[objectTarget.lane]}レーン`; g.bannerTime = 1.05;
+                  g.banner = "爆薬ドラム損壊・起爆 // 戦場"; g.bannerTime = 1.05;
                 } else if (result.supply.phase === "destroying") {
                   f.targetObjectId = null;
-                  g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // ${LANE_NAMES_JA[objectTarget.lane]}レーン`; g.bannerTime = 1.25;
+                  g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`; g.bannerTime = 1.25;
                   addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18); playCue(objectTarget.kind === "pod" ? "pod-destroy" : "object-destroy");
                 } else playCue(objectTarget.kind === "pod" ? "pod-hit" : "object-hit");
               }
@@ -7525,7 +7691,7 @@ export function AshfallGame() {
   return (
     <main className="game-shell" data-screen={screen} data-stage-id={selectedStageId}>
       <section className="game-frame" style={{ "--battlefield-art": `url('${stageVisualFor(selectedStageId)}')` } as CSSProperties} aria-label="西新世紀末物語 ゲーム">
-        <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="3レーン戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
+        <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
         {(qaMode || qaScenario) && (
           <div className={`qa-badge ${screen === "battle" ? "" : "campaign-qa-badge"}`} role="status">
             {"LOCAL QA // "}{(qaMode ?? qaScenario?.mode ?? "flow").toUpperCase()}{" // 通常セーブ非反映"}
@@ -7600,7 +7766,7 @@ export function AshfallGame() {
                 <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>通信・照準・飛来・着弾・帰投</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
               </button>
               <button className="support-btn barrage" disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
-                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>全3レーン固定火器</small><em>⌁</em>
+                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>戦場全域固定火器</small><em>⌁</em>
               </button>
             </div>
           </div>

@@ -33,6 +33,17 @@ function close(actual, expected, tolerance = 1e-9) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
 }
 
+function projectedContentPoint(geometry, x, y) {
+  const lane = LANE_Y.reduce((nearest, routeY, index) => (
+    Math.abs(y - routeY) < Math.abs(y - LANE_Y[nearest]) ? index : nearest
+  ), 1);
+  return {
+    x,
+    y: geometry.lanes[lane].y + y - LANE_Y[lane],
+    lane,
+  };
+}
+
 test("defines deterministic geometry for every Stage 1-6 viewport profile", () => {
   assert.deepEqual(STAGE_GEOMETRY_STAGE_IDS, ALL_STAGE_IDS);
   for (const [stageIndex, stageId] of ALL_STAGE_IDS.entries()) {
@@ -99,11 +110,14 @@ test("Stage 5 base destruction and Stage 6 seal geometry follow their campaign m
 
     const seal = stageGeometryFor(CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL, viewportId);
     const powers = seal.objectives.filter(({ kind }) => kind === "hold-point");
-    assert.deepEqual(powers.map(({ id, sequence, lane, x }) => ({ id, sequence, lane, x })), [
-      { id: "power-1", sequence: 1, lane: sealConfig.powerLanes[0], x: sealConfig.powerXs[0] },
-      { id: "power-2", sequence: 2, lane: sealConfig.powerLanes[1], x: sealConfig.powerXs[1] },
-      { id: "power-3", sequence: 3, lane: sealConfig.powerLanes[2], x: sealConfig.powerXs[2] },
-    ]);
+    assert.deepEqual(
+      powers.map(({ id, sequence, lane, x, y }) => ({ id, sequence, lane, x, y })),
+      sealConfig.powerXs.map((x, index) => ({
+        id: `power-${index + 1}`,
+        sequence: index + 1,
+        ...projectedContentPoint(seal, x, sealConfig.powerYs[index]),
+      })),
+    );
     assert.deepEqual(seal.objectives.map(({ id }) => id), [
       "power-1", "power-2", "power-3", "gate-eater", "research-container", "seal-door", "return-route",
     ]);
@@ -117,12 +131,12 @@ test("Stage 5 base destruction and Stage 6 seal geometry follow their campaign m
     const sealDoor = seal.objectives.find(({ id }) => id === "seal-door");
     const returnRoute = seal.objectives.find(({ id }) => id === "return-route");
     assert.deepEqual(
-      { x: researchContainer.x, lane: researchContainer.lane },
-      { x: sealConfig.researchContainerStartX, lane: sealConfig.researchContainerLane },
+      { x: researchContainer.x, y: researchContainer.y, lane: researchContainer.lane },
+      projectedContentPoint(seal, sealConfig.researchContainerStartX, sealConfig.researchContainerY),
     );
     assert.deepEqual(
-      { x: sealDoor.x, lane: sealDoor.lane },
-      { x: sealConfig.sealDoorX, lane: sealConfig.sealLane },
+      { x: sealDoor.x, y: sealDoor.y, lane: sealDoor.lane },
+      projectedContentPoint(seal, sealConfig.sealDoorX, sealConfig.sealY),
     );
     assert.deepEqual(
       returnRoute.points.map(({ x, lane }) => ({ x, lane })),

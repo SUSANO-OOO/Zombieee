@@ -41,11 +41,15 @@ function assetKind(path) {
 
 function normalizeWave(stage, wave, index) {
   const spawns = Array.isArray(wave.units)
-    ? wave.units.map(([enemyId, laneHint]) => ({ enemyId, count: 1, laneHints: [laneHint] }))
+    ? wave.units.map((unit) => ({
+      enemyId: String(Array.isArray(unit) ? unit[0] : unit),
+      count: 1,
+      laneHints: [],
+    }))
     : (wave.groups ?? []).map((group) => ({
       enemyId: group.kind,
       count: group.count,
-      laneHints: [...group.lanes],
+      laneHints: [],
     }));
   return {
     ...wave,

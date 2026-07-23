@@ -98,6 +98,9 @@ test("campaign defines six stable, ordered, data-driven stages", () => {
     assert.equal(stage.waves.every((wave) => wave.id
       && Number.isFinite(wave.atSeconds)
       && ((Array.isArray(wave.groups) && wave.groups.length > 0) || Array.isArray(wave.units))), true);
+    assert.equal(stage.waves.every((wave) => !Object.hasOwn(wave, "lanes")), true);
+    assert.equal(stage.waves.every((wave) => (wave.groups ?? []).every((group) => !Object.hasOwn(group, "lanes"))), true);
+    assert.equal(stage.waves.every((wave) => (wave.units ?? []).every((kind) => typeof kind === "string")), true);
     assert.equal(stage.baseHp > 0, true);
     assert.deepEqual(stage.starThresholds, DEFAULT_STAR_THRESHOLDS);
     assert.deepEqual(stage.replayRewardMultipliers, DEFAULT_REPLAY_REWARD_MULTIPLIERS);
@@ -170,7 +173,7 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
   assert.deepEqual(defenseLine.nextUnlocks.mapSignalIds, ["map-signal-nishijin-station"]);
   assert.equal(defenseLine.waves.length, 12);
   assert.deepEqual(defenseLine.waves.map(({ atSeconds }) => atSeconds), [0, 12, 30, 47, 65, 84, 103, 120, 126, 147, 169, 196]);
-  assert.equal(defenseLine.waves.find(({ waveNumber }) => waveNumber === 8).units.some(([kind]) => kind === "takuya"), true);
+  assert.equal(defenseLine.waves.find(({ waveNumber }) => waveNumber === 8).units.includes("takuya"), true);
 
   assert.equal(stationGate.missionType, "assault");
   assert.match(stationGate.objective, /感染中継点.*生存者/);
@@ -211,14 +214,14 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
     ],
     powerHoldSeconds: 6,
     powerReadyAtSeconds: [24, 62, 104],
-    powerLanes: [0, 2, 1],
+    powerYs: [212, 352, 282],
     powerXs: [410, 584, 744],
     powerRadiusX: 84,
     powerRadiusY: 42,
     sealDoorX: 867,
-    sealLane: 1,
+    sealY: 282,
     researchContainerStartX: 708,
-    researchContainerLane: 1,
+    researchContainerY: 282,
     returnX: 205,
     returnRadiusX: 96,
     returnRadiusY: 48,
@@ -234,7 +237,7 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
 
 test("Stage 1-3 increase pressure through bounded cadence and mixed compositions", () => {
   const unitEntries = (wave) => Array.isArray(wave.units)
-    ? wave.units
+    ? wave.units.map((kind) => [kind])
     : (wave.groups ?? []).flatMap(({ kind, count }) => Array.from({ length: count }, () => [kind]));
   const waveSizes = (stage) => stage.waves.map((wave) => unitEntries(wave).length);
   const enemyKinds = (stage) => new Set(stage.waves.flatMap((wave) => unitEntries(wave).map(([kind]) => kind)));
@@ -265,7 +268,7 @@ test("Stage 1-3 increase pressure through bounded cadence and mixed compositions
 test("Stage 4-6 introduce each station enemy through bounded mission-specific waves", () => {
   const enemyKinds = (stageId) => new Set(CAMPAIGN_STAGE_BY_ID[stageId].waves.flatMap((wave) => (
     Array.isArray(wave.units)
-      ? wave.units.map(([kind]) => kind)
+      ? wave.units
       : (wave.groups ?? []).map(({ kind }) => kind)
   )));
 

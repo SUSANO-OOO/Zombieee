@@ -9,6 +9,7 @@ import {
   COMMAND_INITIAL,
   COMMAND_MAX,
   COMMAND_REGEN,
+  LANE_Y,
   PREP_SECONDS,
   UNIT_CARDS,
   enemySpawnInterval,
@@ -123,16 +124,16 @@ function resolveStage(stageId) {
   return stage;
 }
 
-function unitsForWave(wave) {
-  if (Array.isArray(wave.units)) {
-    return wave.units.map(([kind, lane]) => ({ kind, lane }));
-  }
-  return (wave.groups ?? []).flatMap((group) => (
-    Array.from({ length: group.count }, (_, index) => ({
-      kind: group.kind,
-      lane: group.lanes[index % group.lanes.length],
-    }))
-  ));
+function unitsForWave(wave, waveNumber = 1) {
+  const kinds = Array.isArray(wave.units)
+    ? wave.units.map((unit) => String(Array.isArray(unit) ? unit[0] : unit))
+    : (wave.groups ?? []).flatMap((group) => (
+      Array.from({ length: group.count }, () => String(group.kind))
+    ));
+  return kinds.map((kind, order) => ({
+    kind,
+    lane: (waveNumber + order + kind.length) % LANE_COUNT,
+  }));
 }
 
 function enemyStatsForWave(kind, waveNumber) {
@@ -142,10 +143,11 @@ function enemyStatsForWave(kind, waveNumber) {
 export function stageBalanceWaveFacts(stageId) {
   const stage = resolveStage(stageId);
   const waves = stage.waves.map((wave, index) => {
-    const units = unitsForWave(wave);
+    const waveNumber = wave.waveNumber ?? index + 1;
+    const units = unitsForWave(wave, waveNumber);
     return freeze({
       id: wave.id,
-      waveNumber: wave.waveNumber ?? index + 1,
+      waveNumber,
       atSeconds: PREP_SECONDS + wave.atSeconds,
       unitCount: units.length,
       enemyKinds: freeze([...new Set(units.map(({ kind }) => kind))].sort()),
@@ -341,7 +343,7 @@ export function simulateStageBalance({
     ...wave,
     waveNumber: wave.waveNumber ?? index + 1,
     atSeconds: PREP_SECONDS + wave.atSeconds,
-    units: freeze(unitsForWave(wave)),
+    units: freeze(unitsForWave(wave, wave.waveNumber ?? index + 1)),
   }));
 
   while (currentTime <= maxTime && outcome === null) {
@@ -372,7 +374,7 @@ export function simulateStageBalance({
       spawnedWaveIds.add(wave.id);
       wave.units.forEach(({ kind, lane }, unitIndex) => {
         const stats = enemyStatsForWave(kind, wave.waveNumber);
-        const spawnSpacing = enemySpawnInterval({ kind, lane, order: unitIndex });
+        const spawnSpacing = enemySpawnInterval({ kind, order: unitIndex, wave: wave.waveNumber });
         const spawnWorkMultiplier = 1 + spawnSpacing * 0.035;
         const hp = stats.hp * spawnWorkMultiplier;
         enemies.push({
@@ -511,7 +513,10 @@ export function simulateStageBalance({
           ? "won"
           : null;
     } else if (stage.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
-      const powerLane = stage.objectiveConfig.powerLanes[Math.min(2, stageMission.powerActivated)] ?? 1;
+      const powerY = stage.objectiveConfig.powerYs[Math.min(2, stageMission.powerActivated)] ?? LANE_Y[1];
+      const powerLane = LANE_Y.reduce((nearest, routeY, index) => (
+        Math.abs(powerY - routeY) < Math.abs(powerY - LANE_Y[nearest]) ? index : nearest
+      ), 1);
       const powerLaneThreats = activeEnemies.filter((enemy) => (
         enemy.lane === powerLane && enemy.progress >= CONTACT_PROGRESS
       )).length;
