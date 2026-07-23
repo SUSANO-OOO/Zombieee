@@ -155,7 +155,9 @@ try {
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
-    if (typeof PerformanceObserver === 'function') {
+    const supportsLongTasks = typeof PerformanceObserver === 'function'
+      && PerformanceObserver.supportedEntryTypes?.includes('longtask');
+    if (supportsLongTasks) {
       try {
         const observer = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
