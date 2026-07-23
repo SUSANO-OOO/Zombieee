@@ -5,6 +5,10 @@ import {
   STABLE_CONTENT_ID_PATTERN,
 } from "./schema.js";
 import { deepFreeze } from "./freeze.js";
+import {
+  ALLY_AI_PROFILE_IDS,
+  ENEMY_AI_PROFILE_IDS,
+} from "../combatAiProfiles.js";
 
 function issue(code, collection, id, message) {
   return Object.freeze({ code, collection, id: id ?? null, message });
@@ -72,6 +76,9 @@ function validateReferences(registry, ids, errors, warnings) {
   };
 
   for (const unit of validRecords(registry, "units")) {
+    if (!ALLY_AI_PROFILE_IDS.includes(unit.aiProfile)) {
+      errors.push(issue("unknown-ai-profile", "units", unit.id, `Unknown ally AI profile: ${unit.aiProfile}`));
+    }
     if (!unit.combat) {
       errors.push(issue("missing-unit-combat", "units", unit.id, `Missing combat profile: ${unit.combatKind}`));
     }
@@ -81,6 +88,12 @@ function validateReferences(registry, ids, errors, warnings) {
     for (const path of safeArray(unit.assetRefs)) {
       referenced.assets.add(path);
       if (!assetPaths.has(path)) errors.push(issue("missing-asset-record", "units", unit.id, `Missing asset record: ${path}`));
+    }
+  }
+
+  for (const enemy of validRecords(registry, "enemies")) {
+    if (!ENEMY_AI_PROFILE_IDS.includes(enemy.aiProfile)) {
+      errors.push(issue("unknown-ai-profile", "enemies", enemy.id, `Unknown enemy AI profile: ${enemy.aiProfile}`));
     }
   }
 

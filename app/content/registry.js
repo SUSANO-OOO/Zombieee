@@ -103,6 +103,7 @@ const units = CAMPAIGN_UNITS.map((unit) => {
     ...unit,
     id: unit.id,
     aliases: uniqueSorted([unit.combatKind, ...unit.aliases]),
+    aiProfile: combat.aiProfile,
     combat,
     assetRefs: uniqueSorted([unit.spritePath, PORTRAIT_ART[unit.combatKind]]),
   };
