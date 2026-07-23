@@ -98,6 +98,9 @@ test("campaign defines six stable, ordered, data-driven stages", () => {
     assert.equal(stage.waves.every((wave) => wave.id
       && Number.isFinite(wave.atSeconds)
       && ((Array.isArray(wave.groups) && wave.groups.length > 0) || Array.isArray(wave.units))), true);
+    assert.equal(stage.waves.every((wave) => !Object.hasOwn(wave, "lanes")), true);
+    assert.equal(stage.waves.every((wave) => (wave.groups ?? []).every((group) => !Object.hasOwn(group, "lanes"))), true);
+    assert.equal(stage.waves.every((wave) => (wave.units ?? []).every((kind) => typeof kind === "string")), true);
     assert.equal(stage.baseHp > 0, true);
     assert.deepEqual(stage.starThresholds, DEFAULT_STAR_THRESHOLDS);
     assert.deepEqual(stage.replayRewardMultipliers, DEFAULT_REPLAY_REWARD_MULTIPLIERS);
@@ -170,7 +173,7 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
   assert.deepEqual(defenseLine.nextUnlocks.mapSignalIds, ["map-signal-nishijin-station"]);
   assert.equal(defenseLine.waves.length, 12);
   assert.deepEqual(defenseLine.waves.map(({ atSeconds }) => atSeconds), [0, 12, 30, 47, 65, 84, 103, 120, 126, 147, 169, 196]);
-  assert.equal(defenseLine.waves.find(({ waveNumber }) => waveNumber === 8).units.some(([kind]) => kind === "takuya"), true);
+  assert.equal(defenseLine.waves.find(({ waveNumber }) => waveNumber === 8).units.includes("takuya"), true);
 
   assert.equal(stationGate.missionType, "assault");
   assert.match(stationGate.objective, /感染中継点.*生存者/);
@@ -211,14 +214,14 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
     ],
     powerHoldSeconds: 6,
     powerReadyAtSeconds: [24, 62, 104],
-    powerLanes: [0, 2, 1],
+    powerYs: [212, 352, 282],
     powerXs: [410, 584, 744],
     powerRadiusX: 84,
     powerRadiusY: 42,
     sealDoorX: 867,
-    sealLane: 1,
+    sealY: 282,
     researchContainerStartX: 708,
-    researchContainerLane: 1,
+    researchContainerY: 282,
     returnX: 205,
     returnRadiusX: 96,
     returnRadiusY: 48,
@@ -234,7 +237,7 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
 
 test("Stage 1-3 increase pressure through bounded cadence and mixed compositions", () => {
   const unitEntries = (wave) => Array.isArray(wave.units)
-    ? wave.units
+    ? wave.units.map((kind) => [kind])
     : (wave.groups ?? []).flatMap(({ kind, count }) => Array.from({ length: count }, () => [kind]));
   const waveSizes = (stage) => stage.waves.map((wave) => unitEntries(wave).length);
   const enemyKinds = (stage) => new Set(stage.waves.flatMap((wave) => unitEntries(wave).map(([kind]) => kind)));
@@ -265,7 +268,7 @@ test("Stage 1-3 increase pressure through bounded cadence and mixed compositions
 test("Stage 4-6 introduce each station enemy through bounded mission-specific waves", () => {
   const enemyKinds = (stageId) => new Set(CAMPAIGN_STAGE_BY_ID[stageId].waves.flatMap((wave) => (
     Array.isArray(wave.units)
-      ? wave.units.map(([kind]) => kind)
+      ? wave.units
       : (wave.groups ?? []).map(({ kind }) => kind)
   )));
 
@@ -315,7 +318,7 @@ test("eleven canonical playable units and guide-ikura use approved player-facing
   assert.equal(CAMPAIGN_GUIDE.roleName, "通信・地図・情報分析");
   assert.equal(CAMPAIGN_GUIDE.combatant, false);
   assert.equal(CAMPAIGN_GUIDE.age, 18);
-  assert.equal(CAMPAIGN_GUIDE.portraitPath, "/art/v070/characters/portraits/guide-portrait-v1.webp");
+  assert.equal(CAMPAIGN_GUIDE.portraitPath, "/art/v075/characters/portraits/ikura-event-portrait-v4.webp");
   assert.equal(CAMPAIGN_GUIDE.assetStatus, "approved");
   assert.match(CAMPAIGN_GUIDE.appearanceAudit.presentation, /pink space bun/);
   assert.doesNotMatch(
@@ -590,7 +593,7 @@ test("Stage 4 and Stage 6 story joins are free while Stage 5 only discovers Monk
 test("default save is versioned and contains initial progression, selection, and settings", () => {
   const save = createDefaultCampaignSave();
   assert.equal(save.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
-  assert.equal(save.schemaVersion, 5);
+  assert.equal(save.schemaVersion, 7);
   assert.equal(save.revision, 0);
   assert.equal(save.updatedAt, "");
   assert.equal(save.integrity, "");
@@ -600,6 +603,8 @@ test("default save is versioned and contains initial progression, selection, and
   assert.equal(save.campaignStarted, false);
   assert.deepEqual(save.processedResultIds, []);
   assert.deepEqual(save.processedAcquisitionIds, []);
+  assert.deepEqual(save.processedUpgradeIds, []);
+  assert.deepEqual(Object.values(save.unitRanks), Array(CAMPAIGN_UNITS.length).fill(0));
   assert.deepEqual(save.completedStageIds, []);
   assert.deepEqual(save.bestStarsByStage, {});
   assert.deepEqual(save.claimedStarRewardsByStage, {});
@@ -833,7 +838,7 @@ test("schema v2 to v4 migration is idempotent and preserves progress, receipts, 
   };
   const migrated = migrateCampaignSave(schema2);
 
-  assert.equal(migrated.schemaVersion, 5);
+  assert.equal(migrated.schemaVersion, 7);
   assert.equal(migrated.storyScriptVersion, "outbreak-origin-v8");
   assert.deepEqual(migrated.processedResultIds, schema2.processedResultIds);
   assert.deepEqual(migrated.completedStageIds, schema2.completedStageIds);
@@ -875,7 +880,7 @@ test("v2, v3, and v4 migration preserves every formerly usable character and can
       unlockedUnitIds: ["brawler", "scout", "ranger", "medic", "brute", "crazy-king", "kumaverson", "babayaga", "gunner"],
       formationKinds: ["brawler", "medic", "gunner"],
     });
-    assert.equal(migrated.schemaVersion, 5);
+    assert.equal(migrated.schemaVersion, 7);
     assert.equal(migrated.caps, 432);
     assert.deepEqual(migrated.processedResultIds, [`v${schemaVersion}-receipt`]);
     for (const unitId of [
@@ -1137,7 +1142,7 @@ test("recruitment rejects undiscovered or underfunded units without consuming a 
   );
 });
 
-test("save integrity stamps canonical v5 data and strict inspection distinguishes missing, legacy, valid, and corrupt", () => {
+test("save integrity stamps canonical v7 data and strict inspection distinguishes missing, legacy, valid, and corrupt", () => {
   const save = applyStageResult(createDefaultCampaignSave(), STAGE_1, {
     resultId: "integrity-stage-1",
     won: true,
@@ -1182,6 +1187,60 @@ test("save integrity stamps canonical v5 data and strict inspection distinguishe
   assert.equal(legacy.save.caps, 77);
   assert.equal(legacy.save.ownership.includes(CAMPAIGN_UNIT_IDS.NAO), true);
   assert.equal(legacy.save.ownership.includes(CAMPAIGN_UNIT_IDS.RAIDER), true);
+});
+
+test("v0.7.1 schema v5 integrity is verified before migration and rejects tampering", () => {
+  const release071 = {
+    schemaVersion: 5,
+    revision: 41,
+    updatedAt: "2026-07-22T12:34:56.000Z",
+    integrity: "",
+    campaignStarted: true,
+    storyScriptVersion: "outbreak-origin-v8",
+    readStoryEventIds: ["prologue-opening-v070"],
+    autoSkipReadStory: true,
+    processedResultIds: ["release-071-result-stage-1"],
+    processedAcquisitionIds: ["release-071-recruit-tatara"],
+    completedStageIds: [STAGE_1],
+    bestStarsByStage: { [STAGE_1]: 2 },
+    claimedStarRewardsByStage: { [STAGE_1]: [1, 2] },
+    caps: 987,
+    supplies: 987,
+    unlockedStageIds: [STAGE_1, STAGE_2],
+    ownership: [...INITIAL_UNIT_IDS],
+    discovery: [...INITIAL_UNIT_IDS],
+    recruitable: [],
+    unlockedUnitIds: [...INITIAL_UNIT_IDS],
+    formationPresets: [
+      { id: "formation-preset-1", displayName: "部隊1", unitIds: [...INITIAL_UNIT_IDS] },
+      { id: "formation-preset-2", displayName: "部隊2", unitIds: [...INITIAL_UNIT_IDS] },
+      { id: "formation-preset-3", displayName: "部隊3", unitIds: [...INITIAL_UNIT_IDS] },
+    ],
+    selectedFormationPresetId: "formation-preset-2",
+    selectedPresetId: "formation-preset-2",
+    lastSelectedStageId: STAGE_2,
+    settings: {
+      bgmEnabled: false,
+      sfxEnabled: true,
+      bgmVolume: 0.35,
+      sfxVolume: 0.6,
+      reducedMotion: true,
+      battleEventMode: "compact",
+    },
+  };
+  release071.integrity = computeCampaignSaveIntegrity(release071);
+
+  const valid = inspectCampaignSaveCandidate(JSON.stringify(release071));
+  assert.equal(valid.status, "valid");
+  assert.equal(valid.sourceSchemaVersion, 5);
+  assert.equal(valid.reason, "migrated");
+  assert.equal(valid.save.caps, 987);
+
+  const tampered = { ...release071, caps: 1_987, revision: 42 };
+  const rejected = inspectCampaignSaveCandidate(JSON.stringify(tampered));
+  assert.equal(rejected.status, "corrupt");
+  assert.equal(rejected.reason, "integrity-mismatch");
+  assert.equal(deserializeCampaignSave(JSON.stringify(tampered)).campaignStarted, false);
 });
 
 test("strict save inspection accepts complete v0 and v2-v4 fingerprints but rejects truncated or foreign JSON", () => {

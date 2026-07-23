@@ -1,6 +1,7 @@
 import { STATION_MISSION_TYPES, currentPowerNode, escortCartX } from "./stationStageMechanics.js";
 
 const DEFAULT_LANE_CENTERS = Object.freeze([286, 366, 446]);
+const CONTENT_ROUTE_Y = Object.freeze([212, 282, 352]);
 
 function finite(value, fallback = 0) {
   const number = Number(value);
@@ -58,6 +59,14 @@ function nearestLaneY(entity, laneCenters) {
   return laneCenters[lane];
 }
 
+function projectedContentY(y, laneCenters) {
+  const contentY = finite(y, CONTENT_ROUTE_Y[1]);
+  const route = CONTENT_ROUTE_Y.reduce((nearest, routeY, index) => (
+    Math.abs(contentY - routeY) < Math.abs(contentY - CONTENT_ROUTE_Y[nearest]) ? index : nearest
+  ), 1);
+  return laneCenters[route] + contentY - CONTENT_ROUTE_Y[route];
+}
+
 function inSharedLaneReturnZone(entity, config, laneCenters) {
   return pointInEllipse(
     entity,
@@ -69,11 +78,14 @@ function inSharedLaneReturnZone(entity, config, laneCenters) {
 }
 
 export function createResearchContainerRuntime(config = {}) {
+  const y = finite(config.researchContainerY, CONTENT_ROUTE_Y[1]);
+  const lane = CONTENT_ROUTE_Y.reduce((nearest, routeY, index) => (
+    Math.abs(y - routeY) < Math.abs(y - CONTENT_ROUTE_Y[nearest]) ? index : nearest
+  ), 1);
   return frozen({
     x: finite(config.researchContainerStartX, 708),
-    lane: [0, 1, 2].includes(config.researchContainerLane)
-      ? config.researchContainerLane
-      : 1,
+    y,
+    lane,
     exposed: false,
     contained: false,
   });
@@ -237,11 +249,12 @@ export function stationSpatialSnapshot({
 
   if (missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     const node = currentPowerNode(missionRuntime, config);
+    const nodeY = node ? projectedContentY(node.y, lanes) : null;
     const powerOperatorCount = node
       ? humans.filter((human) => pointInEllipse(
         human,
         node.x,
-        lanes[node.lane],
+        nodeY,
         node.radiusX,
         node.radiusY,
       )).length
@@ -250,7 +263,7 @@ export function stationSpatialSnapshot({
       ? enemies.filter((enemy) => pointInEllipse(
         enemy,
         node.x,
-        lanes[node.lane],
+        nodeY,
         node.radiusX,
         node.radiusY,
       )).length

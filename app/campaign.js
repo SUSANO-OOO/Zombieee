@@ -1,4 +1,19 @@
 import { STORY_SCRIPT_VERSION } from "./storyEvents.js";
+import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
+import {
+  EVENT_FOUNDATION_REGISTRY,
+  createEventFoundationProgress,
+  eventDisplayView,
+  finishEventRun,
+  normalizeEventFoundationProgress,
+  startEventRun,
+} from "./eventFoundation.js";
+import {
+  UNIT_PROGRESSION_MAX_RANK,
+  normalizeUnitRanks,
+  unitRankFor,
+  unitUpgradeQuote,
+} from "./unitProgression.js";
 
 /**
  * Pure, data-driven campaign progression for the 0.7.0 unit-collection release.
@@ -175,11 +190,11 @@ export const CAMPAIGN_STAGES = deepFreeze([
     },
     enemyKinds: ["walker", "runner", "spitter", "crusher"],
     waves: [
-      { id: "nishijin-wave-01", atSeconds: 4, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 4 }] },
-      { id: "nishijin-wave-02", atSeconds: 21, groups: [{ kind: "runner", lanes: [0, 2], count: 4 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
-      { id: "nishijin-wave-03", atSeconds: 39, groups: [{ kind: "spitter", lanes: [0, 1, 2], count: 3 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
-      { id: "nishijin-wave-04", atSeconds: 58, groups: [{ kind: "crusher", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [0, 1, 2], count: 4 }] },
-      { id: "nishijin-wave-05", atSeconds: 76, groups: [{ kind: "spitter", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [0, 1, 2], count: 3 }] },
+      { id: "nishijin-wave-01", atSeconds: 4, groups: [{ kind: "walker", count: 4 }] },
+      { id: "nishijin-wave-02", atSeconds: 21, groups: [{ kind: "runner", count: 4 }, { kind: "walker", count: 3 }] },
+      { id: "nishijin-wave-03", atSeconds: 39, groups: [{ kind: "spitter", count: 3 }, { kind: "walker", count: 3 }] },
+      { id: "nishijin-wave-04", atSeconds: 58, groups: [{ kind: "crusher", count: 2 }, { kind: "runner", count: 4 }] },
+      { id: "nishijin-wave-05", atSeconds: 76, groups: [{ kind: "spitter", count: 2 }, { kind: "runner", count: 3 }] },
     ],
     boss: null,
     baseHp: 1000,
@@ -215,13 +230,13 @@ export const CAMPAIGN_STAGES = deepFreeze([
     },
     enemyKinds: ["walker", "runner", "spitter", "crusher", "abomination"],
     waves: [
-      { id: "sawara-wave-01", atSeconds: 6, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 6 }] },
-      { id: "sawara-wave-02", atSeconds: 31, groups: [{ kind: "runner", lanes: [0, 2], count: 5 }, { kind: "spitter", lanes: [1], count: 3 }] },
-      { id: "sawara-wave-03", atSeconds: 56, groups: [{ kind: "crusher", lanes: [0, 2], count: 2 }, { kind: "walker", lanes: [0, 1, 2], count: 5 }] },
-      { id: "sawara-wave-04", atSeconds: 82, groups: [{ kind: "runner", lanes: [0, 1, 2], count: 5 }, { kind: "spitter", lanes: [0, 2], count: 3 }] },
-      { id: "sawara-wave-05", atSeconds: 109, groups: [{ kind: "abomination", lanes: [1], count: 1 }, { kind: "crusher", lanes: [0, 2], count: 3 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
-      { id: "sawara-wave-06", atSeconds: 136, groups: [{ kind: "runner", lanes: [0, 2], count: 6 }, { kind: "spitter", lanes: [0, 1, 2], count: 3 }] },
-      { id: "sawara-wave-07", atSeconds: 162, groups: [{ kind: "crusher", lanes: [0, 1, 2], count: 3 }, { kind: "spitter", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [0, 2], count: 3 }] },
+      { id: "sawara-wave-01", atSeconds: 6, groups: [{ kind: "walker", count: 6 }] },
+      { id: "sawara-wave-02", atSeconds: 31, groups: [{ kind: "runner", count: 5 }, { kind: "spitter", count: 3 }] },
+      { id: "sawara-wave-03", atSeconds: 56, groups: [{ kind: "crusher", count: 2 }, { kind: "walker", count: 5 }] },
+      { id: "sawara-wave-04", atSeconds: 82, groups: [{ kind: "runner", count: 5 }, { kind: "spitter", count: 3 }] },
+      { id: "sawara-wave-05", atSeconds: 109, groups: [{ kind: "abomination", count: 1 }, { kind: "crusher", count: 3 }, { kind: "walker", count: 3 }] },
+      { id: "sawara-wave-06", atSeconds: 136, groups: [{ kind: "runner", count: 6 }, { kind: "spitter", count: 3 }] },
+      { id: "sawara-wave-07", atSeconds: 162, groups: [{ kind: "crusher", count: 3 }, { kind: "spitter", count: 2 }, { kind: "runner", count: 3 }] },
     ],
     boss: null,
     baseHp: 1000,
@@ -257,18 +272,18 @@ export const CAMPAIGN_STAGES = deepFreeze([
     },
     enemyKinds: ["walker", "runner", "spitter", "crusher", "shade", "abomination", "takuya"],
     waves: [
-      { id: "takuya-wave-01", atSeconds: 0, waveNumber: 1, label: "第1波 — 接敵", units: [["walker", 0], ["walker", 1], ["walker", 2]] },
-      { id: "takuya-wave-02", atSeconds: 12, waveNumber: 2, label: "第2波 — 分散攻撃", units: [["walker", 0], ["runner", 0], ["spitter", 1], ["walker", 1], ["runner", 2], ["walker", 2]] },
-      { id: "takuya-wave-03", atSeconds: 30, waveNumber: 3, label: "第3波 — 圧力上昇", units: [["runner", 0], ["walker", 0], ["runner", 1], ["spitter", 1], ["runner", 2], ["walker", 2]] },
-      { id: "takuya-wave-04", atSeconds: 47, waveNumber: 4, label: "精鋭出現 — 影走り", units: [["shade", 0], ["runner", 0], ["walker", 1], ["spitter", 1], ["runner", 2], ["spitter", 2]] },
-      { id: "takuya-wave-05", atSeconds: 65, waveNumber: 5, label: "第5波 — 重装感染体", units: [["crusher", 0], ["walker", 0], ["spitter", 1], ["runner", 1], ["crusher", 2], ["walker", 2], ["runner", 2]] },
-      { id: "takuya-wave-06", atSeconds: 84, waveNumber: 6, label: "第6波 — 全レーン警戒", units: [["runner", 0], ["spitter", 0], ["walker", 1], ["crusher", 1], ["runner", 2], ["spitter", 2], ["walker", 2]] },
-      { id: "takuya-wave-07", atSeconds: 103, waveNumber: 7, label: "最終防衛線 — 維持", units: [["crusher", 0], ["runner", 0], ["abomination", 1], ["walker", 1], ["spitter", 1], ["crusher", 2], ["runner", 2]] },
+      { id: "takuya-wave-01", atSeconds: 0, waveNumber: 1, label: "第1波 — 接敵", units: ["walker", "walker", "walker"] },
+      { id: "takuya-wave-02", atSeconds: 12, waveNumber: 2, label: "第2波 — 分散攻撃", units: ["walker", "runner", "spitter", "walker", "runner", "walker"] },
+      { id: "takuya-wave-03", atSeconds: 30, waveNumber: 3, label: "第3波 — 圧力上昇", units: ["runner", "walker", "runner", "spitter", "runner", "walker"] },
+      { id: "takuya-wave-04", atSeconds: 47, waveNumber: 4, label: "精鋭出現 — 影走り", units: ["shade", "runner", "walker", "spitter", "runner", "spitter"] },
+      { id: "takuya-wave-05", atSeconds: 65, waveNumber: 5, label: "第5波 — 重装感染体", units: ["crusher", "walker", "spitter", "runner", "crusher", "walker", "runner"] },
+      { id: "takuya-wave-06", atSeconds: 84, waveNumber: 6, label: "第6波 — 戦場全域警戒", units: ["runner", "spitter", "walker", "crusher", "runner", "spitter", "walker"] },
+      { id: "takuya-wave-07", atSeconds: 103, waveNumber: 7, label: "最終防衛線 — 維持", units: ["crusher", "runner", "abomination", "walker", "spitter", "crusher", "runner"] },
       { id: "takuya-warning", atSeconds: 120, waveNumber: 7, label: "警告 — 巨大反応", units: [] },
-      { id: "takuya-wave-boss", atSeconds: 126, waveNumber: 8, label: "異常感染者 — TAKUYA / 鉄の審判", units: [["walker", 0], ["spitter", 0], ["takuya", 1], ["runner", 1], ["crusher", 2], ["runner", 2]] },
-      { id: "takuya-wave-09", atSeconds: 147, waveNumber: 9, label: "感染体増援", units: [["runner", 0], ["spitter", 0], ["spitter", 1], ["runner", 2], ["walker", 2]] },
-      { id: "takuya-wave-10", atSeconds: 169, waveNumber: 10, label: "TAKUYA — 激昂", bossOnly: true, units: [["crusher", 0], ["runner", 0], ["runner", 1], ["crusher", 2], ["spitter", 2]] },
-      { id: "takuya-wave-final", atSeconds: 196, waveNumber: 11, label: "最終機会 — 感染拠点を破壊", units: [["runner", 0], ["spitter", 0], ["runner", 1], ["crusher", 1], ["walker", 1], ["runner", 2], ["spitter", 2]] },
+      { id: "takuya-wave-boss", atSeconds: 126, waveNumber: 8, label: "異常感染者 — TAKUYA / 鉄の審判", units: ["walker", "spitter", "takuya", "runner", "crusher", "runner"] },
+      { id: "takuya-wave-09", atSeconds: 147, waveNumber: 9, label: "感染体増援", units: ["runner", "spitter", "spitter", "runner", "walker"] },
+      { id: "takuya-wave-10", atSeconds: 169, waveNumber: 10, label: "TAKUYA — 激昂", bossOnly: true, units: ["crusher", "runner", "runner", "crusher", "spitter"] },
+      { id: "takuya-wave-final", atSeconds: 196, waveNumber: 11, label: "最終機会 — 感染拠点を破壊", units: ["runner", "spitter", "runner", "crusher", "walker", "runner", "spitter"] },
     ],
     boss: {
       id: "boss-takuya",
@@ -310,13 +325,13 @@ export const CAMPAIGN_STAGES = deepFreeze([
     },
     enemyKinds: ["walker", "runner", "spitter", "crusher", "grappler"],
     waves: [
-      { id: "station-gate-wave-01", atSeconds: 4, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 5 }] },
-      { id: "station-gate-wave-02", atSeconds: 22, groups: [{ kind: "grappler", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [0, 1, 2], count: 3 }] },
-      { id: "station-gate-wave-03", atSeconds: 41, groups: [{ kind: "spitter", lanes: [0, 2], count: 3 }, { kind: "walker", lanes: [0, 1, 2], count: 4 }] },
-      { id: "station-gate-wave-04", atSeconds: 62, groups: [{ kind: "grappler", lanes: [0, 1, 2], count: 3 }, { kind: "crusher", lanes: [1], count: 1 }] },
-      { id: "station-gate-wave-05", atSeconds: 84, groups: [{ kind: "runner", lanes: [0, 2], count: 5 }, { kind: "spitter", lanes: [1], count: 2 }] },
-      { id: "station-gate-wave-06", atSeconds: 108, groups: [{ kind: "grappler", lanes: [0, 2], count: 2 }, { kind: "crusher", lanes: [0, 2], count: 2 }, { kind: "walker", lanes: [1], count: 3 }] },
-      { id: "station-gate-wave-07", atSeconds: 132, groups: [{ kind: "grappler", lanes: [1], count: 2 }, { kind: "runner", lanes: [0, 2], count: 4 }, { kind: "spitter", lanes: [0, 2], count: 2 }] },
+      { id: "station-gate-wave-01", atSeconds: 4, groups: [{ kind: "walker", count: 5 }] },
+      { id: "station-gate-wave-02", atSeconds: 22, groups: [{ kind: "grappler", count: 2 }, { kind: "runner", count: 3 }] },
+      { id: "station-gate-wave-03", atSeconds: 41, groups: [{ kind: "spitter", count: 3 }, { kind: "walker", count: 4 }] },
+      { id: "station-gate-wave-04", atSeconds: 62, groups: [{ kind: "grappler", count: 3 }, { kind: "crusher", count: 1 }] },
+      { id: "station-gate-wave-05", atSeconds: 84, groups: [{ kind: "runner", count: 5 }, { kind: "spitter", count: 2 }] },
+      { id: "station-gate-wave-06", atSeconds: 108, groups: [{ kind: "grappler", count: 2 }, { kind: "crusher", count: 2 }, { kind: "walker", count: 3 }] },
+      { id: "station-gate-wave-07", atSeconds: 132, groups: [{ kind: "grappler", count: 2 }, { kind: "runner", count: 4 }, { kind: "spitter", count: 2 }] },
     ],
     boss: null,
     baseHp: 850,
@@ -356,14 +371,14 @@ export const CAMPAIGN_STAGES = deepFreeze([
     },
     enemyKinds: ["walker", "runner", "spitter", "crusher", "ooze", "sprinter"],
     waves: [
-      { id: "station-platform-wave-01", atSeconds: 3, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 5 }] },
-      { id: "station-platform-wave-02", atSeconds: 19, groups: [{ kind: "ooze", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [1], count: 3 }] },
-      { id: "station-platform-wave-03", atSeconds: 38, groups: [{ kind: "sprinter", lanes: [0, 2], count: 3 }, { kind: "spitter", lanes: [1], count: 2 }] },
-      { id: "station-platform-wave-04", atSeconds: 58, groups: [{ kind: "ooze", lanes: [0, 1, 2], count: 3 }, { kind: "crusher", lanes: [1], count: 1 }] },
-      { id: "station-platform-wave-05", atSeconds: 80, groups: [{ kind: "sprinter", lanes: [0, 1, 2], count: 4 }, { kind: "walker", lanes: [0, 2], count: 4 }] },
-      { id: "station-platform-wave-06", atSeconds: 104, groups: [{ kind: "ooze", lanes: [0, 2], count: 2 }, { kind: "spitter", lanes: [0, 1, 2], count: 3 }, { kind: "runner", lanes: [1], count: 3 }] },
-      { id: "station-platform-wave-07", atSeconds: 130, groups: [{ kind: "sprinter", lanes: [0, 2], count: 4 }, { kind: "crusher", lanes: [0, 2], count: 2 }] },
-      { id: "station-platform-wave-08", atSeconds: 158, groups: [{ kind: "ooze", lanes: [1], count: 2 }, { kind: "sprinter", lanes: [0, 1, 2], count: 4 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
+      { id: "station-platform-wave-01", atSeconds: 3, groups: [{ kind: "walker", count: 5 }] },
+      { id: "station-platform-wave-02", atSeconds: 19, groups: [{ kind: "ooze", count: 2 }, { kind: "runner", count: 3 }] },
+      { id: "station-platform-wave-03", atSeconds: 38, groups: [{ kind: "sprinter", count: 3 }, { kind: "spitter", count: 2 }] },
+      { id: "station-platform-wave-04", atSeconds: 58, groups: [{ kind: "ooze", count: 3 }, { kind: "crusher", count: 1 }] },
+      { id: "station-platform-wave-05", atSeconds: 80, groups: [{ kind: "sprinter", count: 4 }, { kind: "walker", count: 4 }] },
+      { id: "station-platform-wave-06", atSeconds: 104, groups: [{ kind: "ooze", count: 2 }, { kind: "spitter", count: 3 }, { kind: "runner", count: 3 }] },
+      { id: "station-platform-wave-07", atSeconds: 130, groups: [{ kind: "sprinter", count: 4 }, { kind: "crusher", count: 2 }] },
+      { id: "station-platform-wave-08", atSeconds: 158, groups: [{ kind: "ooze", count: 2 }, { kind: "sprinter", count: 4 }, { kind: "walker", count: 3 }] },
     ],
     boss: null,
     baseHp: 760,
@@ -403,14 +418,14 @@ export const CAMPAIGN_STAGES = deepFreeze([
       ],
       powerHoldSeconds: 6,
       powerReadyAtSeconds: [24, 62, 104],
-      powerLanes: [0, 2, 1],
+      powerYs: [212, 352, 282],
       powerXs: [410, 584, 744],
       powerRadiusX: 84,
       powerRadiusY: 42,
       sealDoorX: 867,
-      sealLane: 1,
+      sealY: 282,
       researchContainerStartX: 708,
-      researchContainerLane: 1,
+      researchContainerY: 282,
       returnX: 205,
       returnRadiusX: 96,
       returnRadiusY: 48,
@@ -423,16 +438,16 @@ export const CAMPAIGN_STAGES = deepFreeze([
     },
     enemyKinds: ["walker", "runner", "spitter", "crusher", "grappler", "ooze", "sprinter", "gate-eater"],
     waves: [
-      { id: "station-tunnel-wave-01", atSeconds: 0, groups: [{ kind: "walker", lanes: [0, 1, 2], count: 5 }] },
-      { id: "station-tunnel-wave-02", atSeconds: 18, groups: [{ kind: "grappler", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [1], count: 3 }] },
-      { id: "station-tunnel-wave-03", atSeconds: 42, groups: [{ kind: "ooze", lanes: [0, 2], count: 2 }, { kind: "spitter", lanes: [1], count: 2 }] },
-      { id: "station-tunnel-wave-04", atSeconds: 66, groups: [{ kind: "sprinter", lanes: [0, 1, 2], count: 4 }, { kind: "crusher", lanes: [1], count: 1 }] },
-      { id: "station-tunnel-wave-05", atSeconds: 92, groups: [{ kind: "grappler", lanes: [0, 2], count: 2 }, { kind: "ooze", lanes: [1], count: 2 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
+      { id: "station-tunnel-wave-01", atSeconds: 0, groups: [{ kind: "walker", count: 5 }] },
+      { id: "station-tunnel-wave-02", atSeconds: 18, groups: [{ kind: "grappler", count: 2 }, { kind: "runner", count: 3 }] },
+      { id: "station-tunnel-wave-03", atSeconds: 42, groups: [{ kind: "ooze", count: 2 }, { kind: "spitter", count: 2 }] },
+      { id: "station-tunnel-wave-04", atSeconds: 66, groups: [{ kind: "sprinter", count: 4 }, { kind: "crusher", count: 1 }] },
+      { id: "station-tunnel-wave-05", atSeconds: 92, groups: [{ kind: "grappler", count: 2 }, { kind: "ooze", count: 2 }, { kind: "walker", count: 3 }] },
       { id: "station-tunnel-warning", atSeconds: 112, waveNumber: 6, label: "大型特殊個体反応", units: [] },
-      { id: "station-tunnel-gate-eater", atSeconds: 120, waveNumber: 7, label: "改札喰い // 封鎖対象", units: [["gate-eater", 1], ["sprinter", 0], ["sprinter", 2], ["spitter", 0], ["spitter", 2]] },
-      { id: "station-tunnel-wave-08", atSeconds: 146, groups: [{ kind: "grappler", lanes: [0, 2], count: 2 }, { kind: "runner", lanes: [0, 1, 2], count: 4 }] },
-      { id: "station-tunnel-wave-09", atSeconds: 172, groups: [{ kind: "ooze", lanes: [0, 1, 2], count: 3 }, { kind: "crusher", lanes: [0, 2], count: 2 }] },
-      { id: "station-tunnel-wave-10", atSeconds: 198, groups: [{ kind: "sprinter", lanes: [0, 2], count: 4 }, { kind: "grappler", lanes: [1], count: 2 }, { kind: "walker", lanes: [0, 1, 2], count: 3 }] },
+      { id: "station-tunnel-gate-eater", atSeconds: 120, waveNumber: 7, label: "改札喰い // 封鎖対象", units: ["gate-eater", "sprinter", "sprinter", "spitter", "spitter"] },
+      { id: "station-tunnel-wave-08", atSeconds: 146, groups: [{ kind: "grappler", count: 2 }, { kind: "runner", count: 4 }] },
+      { id: "station-tunnel-wave-09", atSeconds: 172, groups: [{ kind: "ooze", count: 3 }, { kind: "crusher", count: 2 }] },
+      { id: "station-tunnel-wave-10", atSeconds: 198, groups: [{ kind: "sprinter", count: 4 }, { kind: "grappler", count: 2 }, { kind: "walker", count: 3 }] },
     ],
     boss: {
       id: "boss-gate-eater",
@@ -494,7 +509,7 @@ export const CAMPAIGN_UNITS = deepFreeze([
     combatKind: "scout",
     displayName: "ハチ",
     primaryClassId: "class-skirmisher",
-    roleTags: ["高機動", "近接", "レーン移動", "対高速"],
+    roleTags: ["高機動", "近接", "縦横機動", "対高速"],
     roleName: "遊撃手",
     roleIcon: "速",
     weaponName: "バール",
@@ -679,11 +694,11 @@ export const CAMPAIGN_UNITS = deepFreeze([
     combatKind: "gunner",
     displayName: "レイダー",
     primaryClassId: "class-marksman",
-    roleTags: ["中遠距離", "同一レーン直線範囲", "連射", "制圧", "対群体"],
+    roleTags: ["中遠距離", "射線上直線範囲", "連射", "制圧", "対群体"],
     roleName: "制圧射手",
     roleIcon: "制",
     weaponName: "軽機関銃",
-    attackMode: "同一レーン制圧連射",
+    attackMode: "射線上制圧連射",
     rangeBand: "中～遠距離",
     primaryTarget: "大型・密集群",
     deploymentHint: "火線を通せる後列へ配備",
@@ -743,7 +758,7 @@ export const CAMPAIGN_UNITS = deepFreeze([
     attackMode: "射撃・自動足止め装置",
     rangeBand: "中距離",
     primaryTarget: "高速型・侵入経路",
-    deploymentHint: "守るレーンの後方へ配備",
+    deploymentHint: "守る戦線の後方へ配備",
     description: "コンパウンドクロスボウと足止め装置で敵の進行を妨害する",
     spritePath: "/art/v070/characters/engineer-battle-v1.png",
     assetStatus: "approved",
@@ -765,12 +780,12 @@ export const CAMPAIGN_GUIDE = deepFreeze({
   combatant: false,
   location: "移動拠点",
   age: 18,
-  portraitPath: "/art/v070/characters/portraits/guide-portrait-v1.webp",
+  portraitPath: V075_VISUAL_PROFILES.ikura.eventPortrait.path,
   assetStatus: "approved",
   appearanceAudit: {
     presentation: "鮮やかなpink space bunと長いtwin-tail、非常に豊かな胸部を支えるivory sweetheart bustier、短いteal bolero、上腿を大きく見せる極短tactical skortと低いthigh-highを持つ18歳の成人女性表現",
     equipmentMatch: "cream／teal headset、rugged tactical tablet、腰の小型radioと通信・地図・情報分析役が一致",
-    result: "producer-delegated品質ゲートを通過した0.7.0 portraitと整合",
+    result: "0.7.5基準デザイン確認済みidentity masterから派生したevent portraitと整合",
   },
 });
 
@@ -914,8 +929,9 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 
 export const calculateBattleRewards = calculateStageRewards;
 
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 5;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 7;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
+const CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION = 5;
 
 export const CAMPAIGN_FORMATION_MAX_SLOTS = 7;
 export const CAMPAIGN_FORMATION_PRESET_IDS = deepFreeze({
@@ -960,6 +976,8 @@ export function createDefaultCampaignSave() {
     autoSkipReadStory: false,
     processedResultIds: [],
     processedAcquisitionIds: [],
+    processedUpgradeIds: [],
+    eventFoundation: createEventFoundationProgress(),
     completedStageIds: [],
     bestStarsByStage: {},
     claimedStarRewardsByStage: {},
@@ -970,6 +988,7 @@ export function createDefaultCampaignSave() {
     ownership,
     discovery: [...ownership],
     recruitable: [],
+    unitRanks: normalizeUnitRanks({}, CAMPAIGN_UNITS.map((unit) => unit.id)),
     // Deprecated 0.6.x roster field retained as a canonical-ID mirror.
     unlockedUnitIds: [...ownership],
     formationPresets,
@@ -1207,7 +1226,10 @@ function normalizeFormationPresets(value, ownership, legacyFormation) {
  * Normalizes current data and migrates schema-less/v0 aliases. Unknown fields
  * are ignored without invalidating recognized progress.
  */
-export function migrateCampaignSave(rawSave) {
+export function migrateCampaignSave(
+  rawSave,
+  { eventRegistry = EVENT_FOUNDATION_REGISTRY } = {},
+) {
   let source = rawSave;
   if (typeof source === "string") {
     try {
@@ -1257,6 +1279,16 @@ export function migrateCampaignSave(rawSave) {
     ["processedAcquisitionIds", "processedRecruitmentIds", "appliedRecruitmentIds"],
     [],
   ));
+  const processedUpgradeIds = uniqueStrings(firstDefined(
+    source,
+    ["processedUpgradeIds", "appliedUpgradeIds"],
+    [],
+  ));
+  const eventFoundation = normalizeEventFoundationProgress(firstDefined(
+    source,
+    ["eventFoundation", "eventProgress"],
+    null,
+  ), { registry: eventRegistry });
   const sourceStoryScriptVersion = typeof source.storyScriptVersion === "string"
     ? source.storyScriptVersion.trim()
     : "";
@@ -1322,6 +1354,14 @@ export function migrateCampaignSave(rawSave) {
     sourceSchemaVersion,
     repairQaAllUnlockLeak,
   });
+  const sourceUnitRanks = firstDefined(source, ["unitRanks", "unitLevels", "upgrades"], {});
+  const canonicalUnitRanks = isRecord(sourceUnitRanks)
+    ? Object.fromEntries(Object.entries(sourceUnitRanks).flatMap(([candidateId, rank]) => {
+      const canonicalId = normalizeCampaignUnitId(candidateId);
+      return canonicalId ? [[canonicalId, rank]] : [];
+    }))
+    : {};
+  const unitRanks = normalizeUnitRanks(canonicalUnitRanks, knownUnitIds);
   const legacyFormation = firstDefined(
     source,
     ["formationUnitIds", "formationKinds", "selectedUnitIds", "loadoutUnitIds"],
@@ -1359,6 +1399,8 @@ export function migrateCampaignSave(rawSave) {
     autoSkipReadStory: typeof autoSkipCandidate === "boolean" ? autoSkipCandidate : false,
     processedResultIds,
     processedAcquisitionIds,
+    processedUpgradeIds,
+    eventFoundation,
     completedStageIds,
     bestStarsByStage,
     claimedStarRewardsByStage,
@@ -1366,6 +1408,7 @@ export function migrateCampaignSave(rawSave) {
     supplies: caps,
     ...effectiveUnlocks,
     ...roster,
+    unitRanks,
     unlockedUnitIds: [...roster.ownership],
     formationPresets,
     selectedFormationPresetId,
@@ -1383,8 +1426,14 @@ function normalizedTimestamp(value, fallback = "") {
   return new Date(value).toISOString();
 }
 
-export function reviseCampaignSave(save, { updatedAt = new Date().toISOString() } = {}) {
-  const current = migrateCampaignSave(save);
+export function reviseCampaignSave(
+  save,
+  {
+    updatedAt = new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry });
   return {
     ...current,
     revision: Math.min(Number.MAX_SAFE_INTEGER, current.revision + 1),
@@ -1393,9 +1442,71 @@ export function reviseCampaignSave(save, { updatedAt = new Date().toISOString() 
   };
 }
 
+export function campaignEventViews(
+  save,
+  {
+    now = new Date().toISOString(),
+    registry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry: registry });
+  return registry.map((definition) => eventDisplayView(definition, {
+    now,
+    progress: current.eventFoundation,
+    registry,
+  }));
+}
+
+export function startCampaignEvent(save, eventId, input = {}) {
+  const registry = input.registry ?? EVENT_FOUNDATION_REGISTRY;
+  const current = migrateCampaignSave(save, { eventRegistry: registry });
+  const result = startEventRun(current.eventFoundation, eventId, input);
+  return {
+    save: result.applied
+      ? reviseCampaignSave(
+        { ...current, eventFoundation: result.progress },
+        { updatedAt: input.now, eventRegistry: registry },
+      )
+      : current,
+    result,
+  };
+}
+
+export function finishCampaignEvent(save, input = {}) {
+  const registry = input.registry ?? EVENT_FOUNDATION_REGISTRY;
+  const current = migrateCampaignSave(save, { eventRegistry: registry });
+  const result = finishEventRun(current.eventFoundation, input);
+  return {
+    save: result.applied
+      ? reviseCampaignSave(
+        { ...current, eventFoundation: result.progress },
+        { updatedAt: input.endedAt, eventRegistry: registry },
+      )
+      : current,
+    result,
+  };
+}
+
+export function activeCampaignEventBattleRequest(
+  save,
+  { registry = EVENT_FOUNDATION_REGISTRY } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry: registry });
+  const activeRun = current.eventFoundation.activeRun;
+  if (!activeRun) return null;
+  return {
+    engine: "standard-battle",
+    eventId: activeRun.eventId,
+    runId: activeRun.runId,
+    occurrenceId: activeRun.occurrenceId,
+    stageId: activeRun.stageId,
+    difficultyId: activeRun.difficultyId,
+  };
+}
+
 function campaignIntegrityPayload(save) {
-  const normalized = migrateCampaignSave(save);
-  const payload = { ...normalized };
+  if (!isRecord(save)) throw new TypeError("Campaign integrity requires an object");
+  const payload = { ...save };
   delete payload.integrity;
   return JSON.stringify(payload);
 }
@@ -1409,12 +1520,17 @@ function fnv1a32(value) {
   return hash.toString(16).padStart(8, "0");
 }
 
-export function computeCampaignSaveIntegrity(save) {
+export function computeCampaignSaveIntegrity(
+  save,
+) {
   return `fnv1a32:${fnv1a32(campaignIntegrityPayload(save))}`;
 }
 
-export function withCampaignSaveIntegrity(save) {
-  const normalized = migrateCampaignSave(save);
+export function withCampaignSaveIntegrity(
+  save,
+  { eventRegistry = EVENT_FOUNDATION_REGISTRY } = {},
+) {
+  const normalized = migrateCampaignSave(save, { eventRegistry });
   return {
     ...normalized,
     integrity: computeCampaignSaveIntegrity(normalized),
@@ -1443,7 +1559,7 @@ function hasTypedCampaignField(source, keys, predicate) {
 
 /**
  * Durable storage/import boundaries must not pass arbitrary JSON through the
- * intentionally forgiving migration function. Persisted v1-v4 saves always
+ * intentionally forgiving migration function. Persisted older-schema saves
  * contained this complete campaign fingerprint; schema-less/v0 saves used the
  * same groups under aliases. A partial or foreign object is recovery material,
  * not a fresh campaign that may be replicated over another store.
@@ -1600,7 +1716,8 @@ export function inspectCampaignSaveCandidate(raw, { source = "unknown" } = {}) {
       sourceSchemaVersion,
     };
   }
-  if (sourceSchemaVersion >= CAMPAIGN_SAVE_SCHEMA_VERSION && !verifyCampaignSaveIntegrity(parsed)) {
+  if (sourceSchemaVersion >= CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION
+    && !verifyCampaignSaveIntegrity(parsed)) {
     return {
       status: "corrupt",
       source,
@@ -1615,7 +1732,21 @@ export function inspectCampaignSaveCandidate(raw, { source = "unknown" } = {}) {
     };
   }
 
-  const save = migrateCampaignSave(parsed);
+  let save;
+  try {
+    save = migrateCampaignSave(parsed);
+  } catch {
+    return {
+      status: "corrupt",
+      source,
+      raw: rawText,
+      save: null,
+      revision: clampInteger(parsed.revision, 0, Number.MAX_SAFE_INTEGER, 0),
+      updatedAt: normalizedTimestamp(parsed.updatedAt),
+      reason: "migration-failed",
+      sourceSchemaVersion,
+    };
+  }
   return {
     status: "valid",
     source,
@@ -1628,26 +1759,32 @@ export function inspectCampaignSaveCandidate(raw, { source = "unknown" } = {}) {
   };
 }
 
-export function serializeCampaignSave(save) {
+export function serializeCampaignSave(
+  save,
+  { eventRegistry = EVENT_FOUNDATION_REGISTRY } = {},
+) {
   try {
-    return JSON.stringify(withCampaignSaveIntegrity(save));
+    return JSON.stringify(withCampaignSaveIntegrity(save, { eventRegistry }));
   } catch {
     return JSON.stringify(withCampaignSaveIntegrity(createDefaultCampaignSave()));
   }
 }
 
-export function deserializeCampaignSave(serialized) {
-  if (typeof serialized !== "string") return migrateCampaignSave(serialized);
+export function deserializeCampaignSave(
+  serialized,
+  { eventRegistry = EVENT_FOUNDATION_REGISTRY } = {},
+) {
+  if (typeof serialized !== "string") return migrateCampaignSave(serialized, { eventRegistry });
   try {
     const parsed = JSON.parse(serialized);
     if (isRecord(parsed)
-      && Number(parsed.schemaVersion) >= CAMPAIGN_SAVE_SCHEMA_VERSION
+      && Number(parsed.schemaVersion) >= CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION
       && typeof parsed.integrity === "string"
       && parsed.integrity.length > 0
-      && !verifyCampaignSaveIntegrity(parsed)) {
+      && !verifyCampaignSaveIntegrity(parsed, { eventRegistry })) {
       return createDefaultCampaignSave();
     }
-    return migrateCampaignSave(parsed);
+    return migrateCampaignSave(parsed, { eventRegistry });
   } catch {
     return createDefaultCampaignSave();
   }
@@ -1819,6 +1956,98 @@ export const purchaseCampaignUnit = recruitCampaignUnit;
 export function grantStoryCampaignUnit(save, unitIdOrInput, maybeInput) {
   const input = normalizeAcquisitionInput(unitIdOrInput, maybeInput);
   return resolveCampaignUnitAcquisition(save, { ...input, mode: "story" });
+}
+
+export function getCampaignUnitRank(save, unitId) {
+  const canonicalId = normalizeCampaignUnitId(unitId);
+  if (!canonicalId) throw new RangeError(`Unknown campaign unit: ${String(unitId)}`);
+  return unitRankFor(migrateCampaignSave(save).unitRanks, canonicalId);
+}
+
+export function campaignUnitUpgradeQuote(save, unitId) {
+  const canonicalId = normalizeCampaignUnitId(unitId);
+  if (!canonicalId) throw new RangeError(`Unknown campaign unit: ${String(unitId)}`);
+  const current = migrateCampaignSave(save);
+  return unitUpgradeQuote({
+    unitId: canonicalId,
+    ranks: current.unitRanks,
+    ownedUnitIds: current.ownership,
+    completedStageCount: current.completedStageIds.length,
+  });
+}
+
+/**
+ * Pays for exactly one rank on one stable campaign-unit ID. A rank-specific
+ * receipt makes touch retries idempotent without blocking a later upgrade.
+ */
+export function upgradeCampaignUnit(save, unitIdOrInput, maybeInput) {
+  const input = normalizeAcquisitionInput(unitIdOrInput, maybeInput);
+  const unitId = normalizeCampaignUnitId(input.unitId);
+  if (!unitId) throw new RangeError(`Unknown campaign unit: ${String(input.unitId)}`);
+  const upgradeId = typeof input.upgradeId === "string"
+    ? input.upgradeId.trim()
+    : typeof input.receiptId === "string"
+      ? input.receiptId.trim()
+      : "";
+  if (!upgradeId) throw new TypeError("A non-empty upgradeId is required");
+
+  const current = migrateCampaignSave(save);
+  const quote = unitUpgradeQuote({
+    unitId,
+    ranks: current.unitRanks,
+    ownedUnitIds: current.ownership,
+    completedStageCount: current.completedStageIds.length,
+  });
+  const baseResult = {
+    upgradeId,
+    unitId,
+    currentRank: quote.currentRank,
+    nextRank: quote.nextRank,
+    costCaps: quote.costCaps,
+    baseCostCaps: quote.baseCostCaps,
+    discountCaps: quote.discountCaps,
+    catchUp: quote.catchUp,
+    spentCaps: 0,
+    applied: false,
+    alreadyProcessed: false,
+    reason: "",
+  };
+  if (current.processedUpgradeIds.includes(upgradeId)) {
+    return {
+      save: current,
+      result: { ...baseResult, alreadyProcessed: true, reason: "already-processed" },
+    };
+  }
+  if (!current.ownership.includes(unitId)) {
+    return { save: current, result: { ...baseResult, reason: "not-owned" } };
+  }
+  if (quote.currentRank >= UNIT_PROGRESSION_MAX_RANK || quote.nextRank === null) {
+    return { save: current, result: { ...baseResult, reason: "max-rank" } };
+  }
+  if (current.caps < quote.costCaps) {
+    return { save: current, result: { ...baseResult, reason: "insufficient-caps" } };
+  }
+
+  const caps = current.caps - quote.costCaps;
+  const nextSave = reviseCampaignSave({
+    ...current,
+    processedUpgradeIds: [...current.processedUpgradeIds, upgradeId],
+    caps,
+    supplies: caps,
+    unitRanks: {
+      ...current.unitRanks,
+      [unitId]: quote.nextRank,
+    },
+  });
+  return {
+    save: nextSave,
+    result: {
+      ...baseResult,
+      spentCaps: quote.costCaps,
+      applied: true,
+      reason: "applied",
+    },
+  };
 }
 
 export function markStoryEventRead(save, eventId) {

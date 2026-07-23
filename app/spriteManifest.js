@@ -1,3 +1,5 @@
+import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
+
 /**
  * Audited sprite source geometry for the 0.6.0 renderer and localhost QA.
  *
@@ -404,7 +406,7 @@ export const CHARACTER_PORTRAIT_ART = Object.freeze({
   babayaga: "/art/v060/characters/portraits/babayaga-portrait-v2.webp",
   guardian: "/art/v070/characters/portraits/guardian-portrait-v1.webp",
   engineer: "/art/v070/characters/portraits/engineer-portrait-v1.webp",
-  guide: "/art/v070/characters/portraits/guide-portrait-v1.webp",
+  guide: V075_VISUAL_PROFILES.ikura.eventPortrait.path,
 });
 
 export const RADIO_PORTRAIT_ART = "/art/v060/characters/portraits/radio-terminal-portrait-v1.webp";

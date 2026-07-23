@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "release": "0.7.5",
+  "updatedAt": "2026-07-23",
+  "policySources": [
+    "docs/PRODUCER_DECISIONS_0.7.5.md",
+    "docs/EXECUTION_LOCK_0.7.5.md",
+    "docs/IMPLEMENTATION_DIRECTIVE_0.7.5.md"
+  ],
+  "reviewPolicy": {
+    "mode": "producer_checkpoint",
+    "authority": "producer",
+    "individualApprovalRequired": true,
+    "approvedSubjects": [
+      "いくらちゃん",
+      "CRAWLER",
+      "敵拠点"
+    ],
+    "approvalEvidence": "Producer confirmed that Ikura and the enemy base were acceptable, approved the CRAWLER vehicle design, and required the deployment door to start closed, open before launch, and close after the unit exits. The corrected runtime behavior passed the checkpoint.",
+    "requiredEvidence": [
+      "identity_lock",
+      "source_chain",
+      "asset_hash",
+      "844x390_in_game",
+      "844x340_in_game",
+      "crawler_closed_open_deployment"
+    ]
+  },
+  "rightsProvenance": {
+    "scope": "All records in this manifest",
+    "source": "OpenAI image generation performed for the Version 0.7.5 project mission",
+    "publicRedistribution": "approved_for_project_repository_and_game_distribution",
+    "thirdPartyDownloadedVisuals": false,
+    "realPersonLikenessRequested": false,
+    "trademarkedCharacterRequested": false,
+    "openAiTermsUrl": "https://openai.com/policies/terms-of-use/",
+    "rightsBasis": "Project-generated outputs adopted by the producer for repository and game use; no third-party stock or downloaded artwork was incorporated."
+  },
+  "assets": [
+    {
+      "assetId": "V075-IKURA-IDENTITY",
+      "revision": "r1",
+      "status": "approved",
+      "active": true,
+      "type": "character_identity_master",
+      "subject": "いくらちゃん",
+      "use": "Identity source for event portrait and future consistent derivatives",
+      "sourceApprovedAssetId": null,
+      "sourceApprovedRevision": null,
+      "finalPath": "public/art/v075/characters/reference/ikura-identity-master-r1.png",
+      "sha256": "b095f3ee8eb84422b2f1719a455e049eb0a03f3459e17095df96e4a7d0b7772f",
+      "bytes": 2373394,
+      "width": 866,
+      "height": 1817,
+      "identityLock": [
+        "warm-amber-eyes",
+        "pink-twin-buns-and-voluminous-twin-tails",
+        "black-amber-tactical-headset",
+        "teal-pink-cropped-jacket-and-white-structured-top",
+        "rugged-map-tablet"
+      ]
+    },
+    {
+      "assetId": "V075-IKURA-EVENT-PORTRAIT",
+      "revision": "v4",
+      "status": "approved",
+      "active": true,
+      "type": "character_event_portrait",
+      "subject": "いくらちゃん",
+      "use": "Story and communication event portrait",
+      "sourceApprovedAssetId": "V075-IKURA-IDENTITY",
+      "sourceApprovedRevision": "r1",
+      "finalPath": "public/art/v075/characters/portraits/ikura-event-portrait-v4.webp",
+      "sha256": "9fdc78abe6f192235e433fb96221625a7082c3d0fa310868b7ea6b7bccba11c3",
+      "bytes": 110740,
+      "width": 512,
+      "height": 640,
+      "identityLock": [
+        "warm-amber-eyes",
+        "pink-twin-buns-and-voluminous-twin-tails",
+        "black-amber-tactical-headset",
+        "teal-pink-cropped-jacket-and-white-structured-top",
+        "rugged-map-tablet"
+      ]
+    },
+    {
+      "assetId": "V075-CRAWLER-IDENTITY",
+      "revision": "r1",
+      "status": "approved",
+      "active": true,
+      "type": "vehicle_identity_master",
+      "subject": "CRAWLER",
+      "use": "Identity source for closed and open deployment states",
+      "sourceApprovedAssetId": null,
+      "sourceApprovedRevision": null,
+      "finalPath": "public/art/v075/crawler/crawler-command-base-identity-r1.png",
+      "sha256": "7aa082adac522e3342f42cd9dcd3dc264004df83c83b1c003dea7e16f077850e",
+      "bytes": 2403511,
+      "width": 1536,
+      "height": 1024,
+      "identityLock": [
+        "right-facing-multi-axle-armored-command-base",
+        "front-quarter-side-troop-door",
+        "roof-turret-and-communications-array",
+        "dark-weathered-armor-with-amber-lights"
+      ]
+    },
+    {
+      "assetId": "V075-CRAWLER-CLOSED",
+      "revision": "v1",
+      "status": "approved",
+      "active": true,
+      "type": "vehicle_runtime_state",
+      "subject": "CRAWLER",
+      "use": "Idle and post-deployment closed-door state",
+      "sourceApprovedAssetId": "V075-CRAWLER-IDENTITY",
+      "sourceApprovedRevision": "r1",
+      "finalPath": "public/art/v075/crawler/crawler-command-base-closed-v1.png",
+      "sha256": "d4ce35c5cdd09750fa8d4e2df0c926385b1ebceb04d0cb6dccd36e08928fd854",
+      "bytes": 1221889,
+      "width": 1536,
+      "height": 1024,
+      "identityLock": [
+        "right-facing-multi-axle-armored-command-base",
+        "front-quarter-side-troop-door",
+        "roof-turret-and-communications-array",
+        "dark-weathered-armor-with-amber-lights"
+      ]
+    },
+    {
+      "assetId": "V075-CRAWLER-OPEN",
+      "revision": "v2",
+      "status": "approved",
+      "active": true,
+      "type": "vehicle_runtime_state",
+      "subject": "CRAWLER",
+      "use": "Deployment door, ramp, and run-out state",
+      "sourceApprovedAssetId": "V075-CRAWLER-IDENTITY",
+      "sourceApprovedRevision": "r1",
+      "finalPath": "public/art/v075/crawler/crawler-command-base-open-v2.png",
+      "sha256": "9e2ea0c4e5feb799a19a534859fad04f4323223cf147a6c6d715a65b3ecf408a",
+      "bytes": 1207019,
+      "width": 1536,
+      "height": 1024,
+      "identityLock": [
+        "right-facing-multi-axle-armored-command-base",
+        "front-quarter-side-troop-door",
+        "roof-turret-and-communications-array",
+        "dark-weathered-armor-with-amber-lights"
+      ]
+    },
+    {
+      "assetId": "V075-ENEMY-BASE-IDENTITY",
+      "revision": "r1",
+      "status": "approved",
+      "active": true,
+      "type": "enemy_base_identity_master",
+      "subject": "敵拠点",
+      "use": "Identity source for battlefield enemy-base states",
+      "sourceApprovedAssetId": null,
+      "sourceApprovedRevision": null,
+      "finalPath": "public/art/v075/enemy-base/enemy-stronghold-identity-r1.png",
+      "sha256": "dea5c463d61f319eca344be5c081ca1cf5ab8153a3d3ab612cbc4b01330d7aa8",
+      "bytes": 2090638,
+      "width": 1023,
+      "height": 1537,
+      "identityLock": [
+        "slender-asymmetrical-infected-communications-spire",
+        "broken-sail-and-antenna-crown",
+        "rusted-industrial-frame-and-organic-tendrils",
+        "orange-infected-core-and-rooted-rubble-base"
+      ]
+    },
+    {
+      "assetId": "V075-ENEMY-BASE-INTACT",
+      "revision": "v2",
+      "status": "approved",
+      "active": true,
+      "type": "enemy_base_runtime_state",
+      "subject": "敵拠点",
+      "use": "Intact and progressively damaged battlefield enemy base",
+      "sourceApprovedAssetId": "V075-ENEMY-BASE-IDENTITY",
+      "sourceApprovedRevision": "r1",
+      "finalPath": "public/art/v075/enemy-base/enemy-stronghold-intact-v2.png",
+      "sha256": "7819d1b8c803c0213309e885b745b4d1477ed589543e5795e6aaf9773ff73756",
+      "bytes": 1108331,
+      "width": 1023,
+      "height": 1537,
+      "identityLock": [
+        "slender-asymmetrical-infected-communications-spire",
+        "broken-sail-and-antenna-crown",
+        "rusted-industrial-frame-and-organic-tendrils",
+        "orange-infected-core-and-rooted-rubble-base"
+      ]
+    }
+  ]
+}

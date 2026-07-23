@@ -88,6 +88,19 @@ function lanePoint(laneCenters, lane, x, extra = {}) {
   return { x, y: laneCenters[lane], lane, ...extra };
 }
 
+function contentYPoint(laneCenters, y, x, extra = {}) {
+  const numericY = finite(y, LANE_Y[1]);
+  const lane = LANE_Y.reduce((nearest, routeY, index) => (
+    Math.abs(numericY - routeY) < Math.abs(numericY - LANE_Y[nearest]) ? index : nearest
+  ), 1);
+  return {
+    x,
+    y: laneCenters[lane] + numericY - LANE_Y[lane],
+    lane,
+    ...extra,
+  };
+}
+
 function sharedLaneObjective(id, x, laneCenters, extra = {}) {
   return {
     id,
@@ -122,7 +135,7 @@ function objectivesForStage(stageId, laneCenters) {
       const powers = objectiveConfig.powerXs.map((x, index) => ({
         id: `power-${index + 1}`,
         kind: "hold-point",
-        ...lanePoint(laneCenters, objectiveConfig.powerLanes[index], x),
+        ...contentYPoint(laneCenters, objectiveConfig.powerYs[index], x),
         sequence: index + 1,
         radiusX: objectiveConfig.powerRadiusX,
         radiusY: objectiveConfig.powerRadiusY,
@@ -139,9 +152,9 @@ function objectivesForStage(stageId, laneCenters) {
         {
           id: "research-container",
           kind: "containment-objective",
-          ...lanePoint(
+          ...contentYPoint(
             laneCenters,
-            objectiveConfig.researchContainerLane,
+            objectiveConfig.researchContainerY,
             objectiveConfig.researchContainerStartX,
           ),
           sequence: 5,
@@ -149,7 +162,7 @@ function objectivesForStage(stageId, laneCenters) {
         {
           id: "seal-door",
           kind: "seal",
-          ...lanePoint(laneCenters, objectiveConfig.sealLane, objectiveConfig.sealDoorX),
+          ...contentYPoint(laneCenters, objectiveConfig.sealY, objectiveConfig.sealDoorX),
           sequence: 6,
         },
         {

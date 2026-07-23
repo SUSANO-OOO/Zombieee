@@ -9,11 +9,16 @@ import {
   COMMAND_INITIAL,
   COMMAND_MAX,
   COMMAND_REGEN,
+  LANE_Y,
   PREP_SECONDS,
   UNIT_CARDS,
   enemySpawnInterval,
   structureDamageMultiplier,
 } from "./gameRules.js";
+import {
+  ENEMY_CONTENT_BY_ID,
+  enemyBalanceStatsForWave as contentEnemyBalanceStatsForWave,
+} from "./content/enemyCatalog.js";
 import { UNIT_ROLE_TUNING } from "./unitRoleMechanics.js";
 import {
   STATION_MISSION_TYPES,
@@ -21,6 +26,7 @@ import {
   createStationMissionRuntime,
   stationMissionOutcome,
 } from "./stationStageMechanics.js";
+import { applyUnitProgression } from "./unitProgression.js";
 
 const freeze = (value) => Object.freeze(value);
 const UNIT_BY_KIND = freeze(Object.fromEntries(UNIT_CARDS.map((card) => [card.kind, card])));
@@ -31,24 +37,9 @@ const CONTACT_PROGRESS = 0.58;
 const OBJECTIVE_DANGER_PROGRESS = 0.82;
 const STRUCTURE_DAMAGE_START_DELAY = 0;
 
-/**
- * These are projections of the combat runtime's enemy baselines. Wave scaling
- * is applied by enemyStatsForWave below, matching the live walker/runner/
- * spitter/crusher formulas where those formulas scale by wave.
- */
-export const STAGE_BALANCE_ENEMY_PROFILES = freeze({
-  walker: freeze({ hp: 86, hpPerWave: 5, speed: 18, damage: 15, attackEvery: 1.02, abilityPressure: 1 }),
-  runner: freeze({ hp: 52, hpPerWave: 2, speed: 34, damage: 14, attackEvery: 0.72, abilityPressure: 1.12 }),
-  spitter: freeze({ hp: 72, hpPerWave: 3, speed: 14, damage: 13, attackEvery: 1.5, abilityPressure: 1.18 }),
-  crusher: freeze({ hp: 210, hpPerWave: 5, speed: 11, damage: 35, attackEvery: 1.18, abilityPressure: 1.28 }),
-  shade: freeze({ hp: 220, hpPerWave: 0, speed: 29, damage: 23, attackEvery: 0.62, abilityPressure: 1.35 }),
-  abomination: freeze({ hp: 480, hpPerWave: 0, speed: 8, damage: 50, attackEvery: 1.18, abilityPressure: 1.42 }),
-  takuya: freeze({ hp: 1200, hpPerWave: 0, speed: 9, damage: 58, attackEvery: 1.15, abilityPressure: 1.55 }),
-  grappler: freeze({ hp: 165, hpPerWave: 4, speed: 13, damage: 20, attackEvery: 1.12, abilityPressure: 1.34 }),
-  ooze: freeze({ hp: 138, hpPerWave: 3, speed: 10, damage: 14, attackEvery: 1.45, abilityPressure: 1.4 }),
-  sprinter: freeze({ hp: 78, hpPerWave: 2, speed: 38, damage: 18, attackEvery: 0.68, abilityPressure: 1.38 }),
-  "gate-eater": freeze({ hp: 1800, hpPerWave: 0, speed: 7, damage: 64, attackEvery: 1.32, abilityPressure: 1.65 }),
-});
+// Compatibility projection for existing balance callers. Runtime and simulation
+// now consume the same canonical enemy records.
+export const STAGE_BALANCE_ENEMY_PROFILES = ENEMY_CONTENT_BY_ID;
 
 const ALL_STAGE_FORMATIONS = freeze({
   early: freeze(["scout", "ranger", "brawler", "medic", "kumaverson", "babayaga"]),
@@ -134,36 +125,30 @@ function resolveStage(stageId) {
   return stage;
 }
 
-function unitsForWave(wave) {
-  if (Array.isArray(wave.units)) {
-    return wave.units.map(([kind, lane]) => ({ kind, lane }));
-  }
-  return (wave.groups ?? []).flatMap((group) => (
-    Array.from({ length: group.count }, (_, index) => ({
-      kind: group.kind,
-      lane: group.lanes[index % group.lanes.length],
-    }))
-  ));
+function unitsForWave(wave, waveNumber = 1) {
+  const kinds = Array.isArray(wave.units)
+    ? wave.units.map((unit) => String(Array.isArray(unit) ? unit[0] : unit))
+    : (wave.groups ?? []).flatMap((group) => (
+      Array.from({ length: group.count }, () => String(group.kind))
+    ));
+  return kinds.map((kind, order) => ({
+    kind,
+    lane: (waveNumber + order + kind.length) % LANE_COUNT,
+  }));
 }
 
 function enemyStatsForWave(kind, waveNumber) {
-  const profile = STAGE_BALANCE_ENEMY_PROFILES[kind];
-  if (!profile) throw new RangeError(`Missing balance profile for enemy kind: ${kind}`);
-  const hp = profile.hp + profile.hpPerWave * Math.max(1, waveNumber);
-  return freeze({
-    ...profile,
-    hp,
-    dps: profile.damage / profile.attackEvery,
-  });
+  return contentEnemyBalanceStatsForWave(kind, waveNumber);
 }
 
 export function stageBalanceWaveFacts(stageId) {
   const stage = resolveStage(stageId);
   const waves = stage.waves.map((wave, index) => {
-    const units = unitsForWave(wave);
+    const waveNumber = wave.waveNumber ?? index + 1;
+    const units = unitsForWave(wave, waveNumber);
     return freeze({
       id: wave.id,
-      waveNumber: wave.waveNumber ?? index + 1,
+      waveNumber,
       atSeconds: PREP_SECONDS + wave.atSeconds,
       unitCount: units.length,
       enemyKinds: freeze([...new Set(units.map(({ kind }) => kind))].sort()),
@@ -209,21 +194,39 @@ function roleCounterMultiplier(kind, enemyKind, laneEnemyCount, enabled) {
   return 1;
 }
 
+export function unitMobilityEngagementMultiplier(unit) {
+  const baseline = UNIT_BY_KIND[unit?.kind];
+  if (!baseline) return 1;
+  const speedRatio = baseline.speed > 0 ? unit.speed / baseline.speed : 1;
+  const laneSpeedRatio = baseline.laneSpeed > 0 ? unit.laneSpeed / baseline.laneSpeed : 1;
+  const mobilityRatio = (speedRatio + laneSpeedRatio) / 2;
+  const boundedImprovement = Math.max(-.2, Math.min(.2, mobilityRatio - 1));
+  return 1 + boundedImprovement * .45;
+}
+
 function defensiveMultiplier(activeUnits, roleCounters) {
-  if (!roleCounters) return 1;
+  const totalHp = activeUnits.reduce((total, unit) => total + unit.hp, 0);
+  const progressionDefense = totalHp > 0
+    ? activeUnits.reduce((total, unit) => total + unit.hp * (unit.defense ?? 0), 0) / totalHp
+    : 0;
+  let multiplier = 1 - progressionDefense;
+  if (!roleCounters) return multiplier;
   const kinds = new Set(activeUnits.map(({ kind }) => kind));
-  let multiplier = 1;
   if (kinds.has("medic")) multiplier *= 1 - UNIT_ROLE_TUNING.nao.damageReduction * 0.72;
   if (kinds.has("guardian")) multiplier *= 1 - UNIT_ROLE_TUNING.gantetsu.interceptRatio * 0.58;
   if (kinds.has("kumaverson")) multiplier *= 0.88;
-  if (kinds.has("engineer")) multiplier *= 0.92;
+  const engineer = activeUnits.find(({ kind }) => kind === "engineer");
+  if (engineer) multiplier *= 1 - .08 * (engineer.trapDurationMultiplier ?? 1);
   return multiplier;
 }
 
 function healingPerSecond(activeUnits, roleCounters) {
   if (!roleCounters) return 0;
-  const naoCount = activeUnits.filter(({ kind }) => kind === "medic").length;
-  return naoCount * UNIT_ROLE_TUNING.nao.baseHealing * 0.3;
+  return activeUnits
+    .filter(({ kind }) => kind === "medic")
+    .reduce((total, unit) => (
+      total + UNIT_ROLE_TUNING.nao.baseHealing * (unit.healingMultiplier ?? 1) * 0.3
+    ), 0);
 }
 
 function missionTimeLimit(stage, facts) {
@@ -320,6 +323,7 @@ export function simulateStageBalance({
   formation,
   seed = "stage-balance-v070",
   roleCounters = true,
+  unitRanks = {},
 } = {}) {
   const stage = resolveStage(stageId);
   const normalizedFormation = normalizeFormation(formation);
@@ -359,7 +363,7 @@ export function simulateStageBalance({
     ...wave,
     waveNumber: wave.waveNumber ?? index + 1,
     atSeconds: PREP_SECONDS + wave.atSeconds,
-    units: freeze(unitsForWave(wave)),
+    units: freeze(unitsForWave(wave, wave.waveNumber ?? index + 1)),
   }));
 
   while (currentTime <= maxTime && outcome === null) {
@@ -369,7 +373,7 @@ export function simulateStageBalance({
       const affordableIndex = deploymentQueue.findIndex((kind) => UNIT_BY_KIND[kind].cost <= command);
       if (affordableIndex >= 0) {
         const [kind] = deploymentQueue.splice(affordableIndex, 1);
-        const card = UNIT_BY_KIND[kind];
+        const card = applyUnitProgression(UNIT_BY_KIND[kind], unitRanks?.[kind] ?? 0);
         command -= card.cost;
         commandSpent += card.cost;
         squadHp += card.hp;
@@ -390,7 +394,7 @@ export function simulateStageBalance({
       spawnedWaveIds.add(wave.id);
       wave.units.forEach(({ kind, lane }, unitIndex) => {
         const stats = enemyStatsForWave(kind, wave.waveNumber);
-        const spawnSpacing = enemySpawnInterval({ kind, lane, order: unitIndex });
+        const spawnSpacing = enemySpawnInterval({ kind, order: unitIndex, wave: wave.waveNumber });
         const spawnWorkMultiplier = 1 + spawnSpacing * 0.035;
         const hp = stats.hp * spawnWorkMultiplier;
         enemies.push({
@@ -438,6 +442,7 @@ export function simulateStageBalance({
       const damage = unit.damage / unit.attackEvery
         * counter
         * engagement
+        * unitMobilityEngagementMultiplier(unit)
         * readiness
         * seedVariance
         * SIMULATION_STEP_SECONDS;
@@ -529,7 +534,10 @@ export function simulateStageBalance({
           ? "won"
           : null;
     } else if (stage.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
-      const powerLane = stage.objectiveConfig.powerLanes[Math.min(2, stageMission.powerActivated)] ?? 1;
+      const powerY = stage.objectiveConfig.powerYs[Math.min(2, stageMission.powerActivated)] ?? LANE_Y[1];
+      const powerLane = LANE_Y.reduce((nearest, routeY, index) => (
+        Math.abs(powerY - routeY) < Math.abs(powerY - LANE_Y[nearest]) ? index : nearest
+      ), 1);
       const powerLaneThreats = activeEnemies.filter((enemy) => (
         enemy.lane === powerLane && enemy.progress >= CONTACT_PROGRESS
       )).length;
@@ -604,6 +612,16 @@ export function simulateStageBalance({
     formation: freeze([...normalizedFormation]),
     slotCount: normalizedFormation.length,
     roleCounters,
+    progression: freeze({
+      unitRanks: freeze(Object.fromEntries(normalizedFormation.map((kind) => [
+        kind,
+        activeUnits.find((unit) => unit.kind === kind)?.progressionRank ?? 0,
+      ]))),
+      mobilityEngagement: freeze(Object.fromEntries(normalizedFormation.map((kind) => {
+        const unit = activeUnits.find((candidate) => candidate.kind === kind);
+        return [kind, Number(unitMobilityEngagementMultiplier(unit).toFixed(4))];
+      }))),
+    }),
     outcome,
     stoppedBy,
     elapsedSeconds: currentTime,

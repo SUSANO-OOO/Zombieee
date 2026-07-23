@@ -65,6 +65,7 @@ class FakeContext extends EventTarget {
     this.sources = [];
     this.oscillators = [];
     this.resumeCount = 0;
+    this.suspendCount = 0;
     this.closeCount = 0;
     this.failResume = false;
   }
@@ -79,6 +80,11 @@ class FakeContext extends EventTarget {
     this.resumeCount += 1;
     if (this.failResume) throw new Error("gesture required");
     this.state = "running";
+    this.dispatchEvent(new Event("statechange"));
+  }
+  async suspend() {
+    this.suspendCount += 1;
+    this.state = "suspended";
     this.dispatchEvent(new Event("statechange"));
   }
   async close() {
@@ -264,6 +270,107 @@ test("statechange, pageshow, and visible visibilitychange recover suspended and 
   assert.equal(context.state, "running");
   assert.ok(states.includes(AUDIO_MIXER_STATES.RECOVERY_NEEDED));
   assert.equal(context.resumeCount, 5);
+  await mixer.dispose();
+});
+
+test("background visibility suspends the existing audio graph and resumes it once without duplicates", async () => {
+  const context = new FakeContext();
+  const mixer = createAudioMixer({ manifest: manifest(), fetcher, contextFactory: () => context });
+  const windowTarget = new FakeWindow();
+  mixer.attachUnlock(windowTarget);
+  await mixer.setScene("title");
+  assert.equal(await mixer.enableAudio(), true);
+  await flush();
+  assert.equal(mixer.getDiagnostics().activeSceneVoices, 1);
+
+  windowTarget.document.fireVisibility("hidden");
+  await flush();
+  assert.equal(context.state, "suspended");
+  assert.equal(context.suspendCount, 1);
+  assert.equal(context.resumeCount, 1);
+  assert.equal(mixer.getDiagnostics().lifecycleHidden, true);
+  assert.equal(mixer.getDiagnostics().activeSceneVoices, 1);
+
+  windowTarget.document.fireVisibility("visible");
+  await flush();
+  assert.equal(context.state, "running");
+  assert.equal(context.resumeCount, 2);
+  assert.equal(mixer.getDiagnostics().contextCreateCount, 1);
+  assert.equal(mixer.getDiagnostics().activeSceneVoices, 1);
+  assert.deepEqual(mixer.getDiagnostics().duplicateLoopInstanceKeys, []);
+
+  windowTarget.fire("pagehide");
+  await flush();
+  assert.equal(context.state, "suspended");
+  assert.equal(context.suspendCount, 2);
+  assert.equal(mixer.getDiagnostics().lifecycleHidden, true);
+  windowTarget.fire("pageshow");
+  await flush();
+  assert.equal(context.state, "running");
+  assert.equal(context.resumeCount, 3);
+  assert.equal(mixer.getDiagnostics().contextCreateCount, 1);
+  assert.equal(mixer.getDiagnostics().activeSceneVoices, 1);
+  assert.deepEqual(mixer.getDiagnostics().duplicateLoopInstanceKeys, []);
+  await mixer.dispose();
+});
+
+test("backgrounding during unlock re-suspends the graph and starts no tone or voice", async () => {
+  const context = new FakeContext();
+  let releaseResume;
+  context.resume = () => {
+    context.resumeCount += 1;
+    return new Promise((resolve) => {
+      releaseResume = () => {
+        context.state = "running";
+        context.dispatchEvent(new Event("statechange"));
+        resolve();
+      };
+    });
+  };
+  const mixer = createAudioMixer({ manifest: manifest(), fetcher, contextFactory: () => context });
+  const windowTarget = new FakeWindow();
+  mixer.attachUnlock(windowTarget);
+  await mixer.setScene("title");
+
+  const unlocking = mixer.enableAudio();
+  while (!releaseResume) await Promise.resolve();
+  windowTarget.fire("pagehide");
+  releaseResume();
+  assert.equal(await unlocking, false);
+  await flush();
+  assert.equal(context.state, "suspended");
+  assert.equal(context.oscillators.length, 0);
+  assert.equal(context.sources.length, 0);
+  assert.equal(mixer.getDiagnostics().lifecycleHidden, true);
+  assert.equal(mixer.getAudioStatus().needsGesture, false);
+  await mixer.dispose();
+});
+
+test("backgrounding during decode cancels the delayed cue without fallback or source start", async () => {
+  const context = new FakeContext();
+  let releaseDecode;
+  context.decodeAudioData = () => new Promise((resolve) => {
+    releaseDecode = () => resolve({ duration: 1 });
+  });
+  const mixer = createAudioMixer({ manifest: manifest(), fetcher, contextFactory: () => context });
+  const windowTarget = new FakeWindow();
+  mixer.attachUnlock(windowTarget);
+  assert.equal(await mixer.enableAudio(), true);
+  let fallbackCount = 0;
+  const pending = mixer.play("logical-loop", {
+    onLoadFailure: () => { fallbackCount += 1; },
+  });
+  while (!releaseDecode) await Promise.resolve();
+
+  windowTarget.document.fireVisibility("hidden");
+  releaseDecode();
+  assert.equal(await pending, null);
+  await flush();
+  assert.equal(context.state, "suspended");
+  assert.equal(context.sources.length, 0);
+  assert.equal(fallbackCount, 0);
+  assert.equal(await mixer.play("logical-loop"), null);
+  assert.equal(context.resumeCount, 1);
   await mixer.dispose();
 });
 

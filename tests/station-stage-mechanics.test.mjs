@@ -150,6 +150,7 @@ test("power nodes activate only in the canonical order after their readiness gat
     index: 0,
     number: 1,
     lane: 0,
+    y: 212,
     x: 410,
     radiusX: 84,
     radiusY: 42,

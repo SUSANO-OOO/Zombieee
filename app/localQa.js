@@ -121,6 +121,7 @@ export const LOCAL_QA_CAMPAIGN_SCREENS = Object.freeze([
   "intro",
   "map",
   "details",
+  "personnel",
   "formation",
   "result",
 ]);
@@ -219,6 +220,13 @@ export function resolveLocalQaScenario(hostname, search = "") {
         && stateParam.value === LOCAL_QA_GATE_EATER_STATE);
     if (!stageId || !validState) return null;
     return { mode: "station", screen: "battle", stageId, stars: 0, state: stateParam.value };
+  }
+
+  if (qa === "mission") {
+    if (screenParam.value !== null || starsParam.value !== null || eventParam.value !== null) return null;
+    const stageId = resolveCampaignStageId(stageParam.value, INITIAL_STAGE_ID);
+    if (!stageId || stateParam.value !== "start") return null;
+    return { mode: "mission", screen: "battle", stageId, stars: 0, state: "start" };
   }
 
   return null;

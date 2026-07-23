@@ -1,4 +1,5 @@
 const freeze = (value) => Object.freeze(value);
+const INTERNAL_ROUTE_Y = freeze([212, 282, 352]);
 
 export const STATION_MISSION_TYPES = freeze({
   ESCORT: "escort",
@@ -19,7 +20,7 @@ export const STATION_MISSION_TUNING = freeze({
     powerCount: 3,
     powerHoldSeconds: 6,
     powerReadyAtSeconds: freeze([24, 62, 104]),
-    powerLanes: freeze([0, 2, 1]),
+    powerYs: freeze([212, 352, 282]),
     escapeSeconds: 45,
     returnSpeedMultiplier: 1.8,
   }),
@@ -61,9 +62,12 @@ function sealConfig(config = {}) {
   const readyAt = Array.isArray(config.powerReadyAtSeconds) && config.powerReadyAtSeconds.length === 3
     ? config.powerReadyAtSeconds.map((value, index) => finiteNonNegative(value, STATION_MISSION_TUNING.seal.powerReadyAtSeconds[index]))
     : [...STATION_MISSION_TUNING.seal.powerReadyAtSeconds];
-  const lanes = Array.isArray(config.powerLanes) && config.powerLanes.length === 3
-    ? config.powerLanes.map((lane, index) => [0, 1, 2].includes(lane) ? lane : STATION_MISSION_TUNING.seal.powerLanes[index])
-    : [...STATION_MISSION_TUNING.seal.powerLanes];
+  const powerYs = Array.isArray(config.powerYs) && config.powerYs.length === 3
+    ? config.powerYs.map((value, index) => finiteNonNegative(value, STATION_MISSION_TUNING.seal.powerYs[index]))
+    : [...STATION_MISSION_TUNING.seal.powerYs];
+  const powerLanes = powerYs.map((y) => INTERNAL_ROUTE_Y.reduce((nearest, routeY, index) => (
+    Math.abs(y - routeY) < Math.abs(y - INTERNAL_ROUTE_Y[nearest]) ? index : nearest
+  ), 0));
   const powerXs = Array.isArray(config.powerXs) && config.powerXs.length === 3
     ? config.powerXs.map((value, index) => finiteNonNegative(value, [410, 584, 744][index]))
     : [410, 584, 744];
@@ -71,7 +75,8 @@ function sealConfig(config = {}) {
     ...STATION_MISSION_TUNING.seal,
     powerHoldSeconds: positive(config.powerHoldSeconds, STATION_MISSION_TUNING.seal.powerHoldSeconds),
     powerReadyAtSeconds: freeze(readyAt),
-    powerLanes: freeze(lanes),
+    powerYs: freeze(powerYs),
+    powerLanes: freeze(powerLanes),
     powerXs: freeze(powerXs),
     powerRadiusX: positive(config.powerRadiusX, 84),
     powerRadiusY: positive(config.powerRadiusY, 42),
@@ -141,6 +146,7 @@ export function currentPowerNode(runtime, config = {}) {
     index: activated,
     number: activated + 1,
     lane: resolved.powerLanes[activated],
+    y: resolved.powerYs[activated],
     x: resolved.powerXs[activated],
     radiusX: resolved.powerRadiusX,
     radiusY: resolved.powerRadiusY,

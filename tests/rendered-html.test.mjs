@@ -137,7 +137,7 @@ test("server-renders the 0.7.1 campaign title as the formal entry point", async 
   assert.match(html, /<main class="game-shell" data-screen="title" data-stage-id="stage-nishijin-shopping-street">/);
   assert.match(html, /aria-label="西新世紀末物語 ゲーム"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
-  assert.match(html, /class="battlefield  inactive" aria-label="3レーン戦場" aria-hidden="true"/);
+  assert.match(html, /class="battlefield  inactive" aria-label="連続座標の戦場" aria-hidden="true"/);
   assert.match(html, /class="campaign-overlay title-screen-v060"[^>]*title-key-visual-v1\.webp[^>]*aria-label="西新世紀末物語 タイトル画面"/);
   assert.match(html, /<small>にしじんせいきまつものがたり<\/small>/);
   assert.match(html, /<h1><span>西新<\/span><b>世紀末物語<\/b><\/h1>/);
@@ -167,9 +167,17 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(campaign, /INITIAL_UNIT_IDS = deepFreeze\(CAMPAIGN_UNITS\.filter\(\(unit\) => unit\.unlock\.type === "initial"\)/);
   assert.match(game, /getSelectedFormationCombatKinds\(campaignSave\)[\s\S]*isUnitOwned\(campaignSave, kind\)[\s\S]*slice\(0, 7\)/);
   assert.match(screens, /unit\.discovered \? `\$\{unit\.weaponName\}・\$\{unit\.rangeBand\}・\$\{unit\.primaryTarget\}` : "物語を進めると情報が明らかになります"/);
-  assert.match(screens, /unit\.owned \? selected \? "選択中" : "待機" : unit\.recruitable \? "調達可能"/);
+  assert.match(screens, /unit\.owned \? `Rank \$\{unit\.rank}\/\$\{unit\.maxRank}` : unit\.recruitable \? "調達可能"/);
   assert.match(screens, /formationUnitIds\.length}\/7名選択中[\s\S]*formationPresets\.map[\s\S]*preset\.name/);
-  assert.match(screens, /unit\.recruitable && !unit\.owned[\s\S]*unit\.recruitCost}キャップで調達/);
+  assert.match(screens, /screen === "personnel"[\s\S]*<PersonnelScreen/);
+  assert.match(screens, /人員管理/);
+  assert.match(screens, /所有一覧/);
+  assert.match(screens, /新規調達/);
+  assert.match(screens, /戦力強化/);
+  const loadoutBlock = screens.slice(screens.indexOf("function LoadoutScreen"), screens.indexOf("function PersonnelScreen"));
+  assert.doesNotMatch(loadoutBlock, /mode === "acquisition"|mode === "upgrade"|onRecruitUnit|onUpgradeUnit/);
+  assert.match(screens, /mode === "acquisition" && unit\.recruitable && !unit\.owned[\s\S]*unit\.recruitCost}キャップで調達/);
+  assert.match(screens, /mode === "upgrade" && unit\.owned[\s\S]*Rank \$\{unit\.rank \+ 1}へ：/);
   assert.match(screens, /className="result-unlocks"[\s\S]*新たな戦力を解放/);
   assert.match(game, /newlyUnlockedUnitIds\.map/);
   assert.match(game, /newlyUnlockedStageIds\.map/);
@@ -178,11 +186,23 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
 
   assert.match(game, /if \(resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)[\s\S]*resolveLocalQaScenario\(window\.location\.hostname, window\.location\.search\)\) return;/);
   assert.match(game, /owned: Boolean\(qaMode \|\| qaScenario\) \|\| isUnitOwned/);
+  assert.match(game, /applyUnitProgression\(baseCard, g\.unitRanksByKind\[kind\] \?\? 0\)/);
+  assert.match(game, /upgradeCampaignUnit\(current/);
+  assert.match(game, /HP \+\$\{increase\(progressed\.hp, baseCard\.hp\)}%・攻撃[\s\S]*防御 \$\{Math\.round\(progressed\.defense/);
+  assert.doesNotMatch(game, /射程 \+\$\{increase\(progressed\.range/);
+  const upgradeBlock = game.slice(game.indexOf("const upgradeUnit"), game.indexOf("const beginCampaign"));
+  assert.match(upgradeBlock, /upgradeLocksRef\.current\.has\(unitId\)[\s\S]*const nextRank = getCampaignUnitRank\(campaignSave, unitId\) \+ 1[\s\S]*const upgradeId = `upgrade:\$\{unitId}:rank-\$\{nextRank}`[\s\S]*upgradeCampaignUnit\(current,[\s\S]*upgradeId/);
+  assert.match(game, /damageAfterUnitDefense\(rawInterception\.guardianDamage, guardian\.defense\)[\s\S]*damageAfterUnitDefense\(targetDamage, target\.defense\)/);
+  assert.match(screens, /追いつき割引/);
   assert.match(game, /if \(!qaMode && !qaScenario && !isUnitOwned\(current, unitId\)\) return current/);
   assert.match(game, /reconcileCampaignStorage\([\s\S]*inspectCampaignSaveCandidate[\s\S]*reconciled\.status === "recovery-needed"/);
   assert.match(game, /reconciled\.repairBlockedBySnapshot[\s\S]*recoveryReason: "last-known-good-snapshot-failed"/);
   assert.match(game, /kind: CAMPAIGN_SNAPSHOT_KINDS\.PRE_MIGRATION[\s\S]*if \(!snapshot\.saved\)[\s\S]*recoveryReason: "pre-migration-snapshot-failed"/);
+  assert.match(game, /sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION/);
+  assert.doesNotMatch(game, /sourceSchemaVersion < 5/);
+  assert.match(game, /nishijin-campaign-v\$\{CAMPAIGN_SAVE_SCHEMA_VERSION\}-backup\.json/);
   assert.match(screens, /セーブデータを自動選択できません[\s\S]*候補データを書き出す[\s\S]*onUseRecoveryCandidate[\s\S]*SaveImportButton[\s\S]*完全初期化/);
+  assert.match(screens, /file\.size > CAMPAIGN_IMPORT_MAX_BYTES[\s\S]*現在のセーブは変更していません/);
   assert.match(screens, /saveRecoveryReason === "both-corrupt"[\s\S]*saveRecoveryReason === "equal-freshness-conflict"/);
   assert.match(game, /enqueueCampaignStorageMutation\(async \(\) => \{[\s\S]*reviseCampaignSave\([\s\S]*Math\.max\(importedSave\.revision, campaignSave\.revision, highestRecoveryRevision\)/);
   assert.match(game, /recoveryBackupCandidate[\s\S]*candidate\.raw !== imported\.raw[\s\S]*LAST_KNOWN_GOOD/);
@@ -266,8 +286,9 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
 
   await Promise.all([
     access(new URL("../public/battlefield-v4.png", import.meta.url)),
-    access(new URL("../public/infected-checkpoint-v1.png", import.meta.url)),
-    access(new URL("../public/crawler-fortress-v1.png", import.meta.url)),
+    access(new URL("../public/art/v075/enemy-base/enemy-stronghold-intact-v2.png", import.meta.url)),
+    access(new URL("../public/art/v075/crawler/crawler-command-base-closed-v1.png", import.meta.url)),
+    access(new URL("../public/art/v075/crawler/crawler-command-base-open-v2.png", import.meta.url)),
     access(new URL("../public/takuya-boss-sprites-v2.png", import.meta.url)),
     access(new URL("../public/ranger-sprites-v1.png", import.meta.url)),
     access(new URL("../public/brawler-sprites-v1.png", import.meta.url)),
@@ -280,8 +301,9 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
     access(new URL("../public/medical-supply-station-v1.png", import.meta.url)),
   ]);
 
-  assert.match(game, /ensureImageLoaded\(enemyBaseSpriteRef\.current, "\/infected-checkpoint-v1\.png"/);
-  assert.match(game, /crawler: "\/crawler-fortress-v1\.png"/);
+  assert.match(game, /ensureImageLoaded\(enemyBaseSpriteRef\.current, V075_VISUAL_PROFILES\.enemyBase\.intact\.path/);
+  assert.match(game, /crawlerClosed: V075_VISUAL_PROFILES\.crawler\.closed\.path/);
+  assert.match(game, /crawlerOpen: V075_VISUAL_PROFILES\.crawler\.open\.path/);
   assert.match(game, /pod: "\/tactical-drop-pod-v1\.png"/);
   assert.match(game, /drum: "\/explosive-drum-v1\.png"/);
   assert.match(game, /medical: "\/medical-supply-station-v1\.png"/);
@@ -308,7 +330,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(layout, /title: "西新世紀末物語｜アーリーアクセス版 0\.7\.1"/);
   assert.match(layout, /viewportFit: "cover"/);
   assert.doesNotMatch(layout, /images: \[.*\/og\.png/);
-  assert.match(layout, /rel="preload" as="image" href="\/infected-checkpoint-v1\.png"/);
+  assert.match(layout, /href=\{V075_VISUAL_PROFILES\.enemyBase\.intact\.path\}/);
   assert.match(game, /const requiredSpriteKinds = qaMode \|\| qaScenario[\s\S]*\[\.\.\.new Set\(\[\.\.\.selectedFormationKinds, \.\.\.stageEnemyKinds, "turned" as UnitKind\]\)\]/);
   assert.match(game, /requiredSpriteKinds\.map\(\(kind\) => \([\s\S]*spriteSheetPath\(kind\)/);
   assert.match(game, /STAGE_OBJECT_MANIFEST\[selectedStageId\]\?\.objects \?\? \[\]/);
@@ -514,19 +536,20 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
     musterX: 205,
     musterY: 352,
     crawler: {
-      x: -112, y: 170, width: 310, height: 210, exitX: 214,
+      x: -112, y: 130, width: 310, height: 210, exitX: 214,
+      doorX: 96, rampFootX: 148,
       commandDeckX: 64, commandDeckY: 186, weaponX: 108, weaponY: 224,
       damageX: 88, damageY: 250,
     },
     enemyBase: {
-      drawX: 770, drawY: 88, width: 190, height: 340,
-      attackX: 875, enemySpawnMinX: 805, enemySpawnMaxX: 833,
-      gateX: 880, gateY: 282,
+      drawX: 815, drawY: 88, width: 145, height: 340,
+      attackX: 875, enemySpawnMinX: 836, enemySpawnMaxX: 858,
+      gateX: 900, gateY: 282,
     },
     barricade: {
-      drawX: 770, drawY: 88, width: 190, height: 340,
-      attackX: 875, enemySpawnMinX: 805, enemySpawnMaxX: 833,
-      gateX: 880, gateY: 282,
+      drawX: 815, drawY: 88, width: 145, height: 340,
+      attackX: 875, enemySpawnMinX: 836, enemySpawnMaxX: 858,
+      gateX: 900, gateY: 282,
     },
     supportMinX: 230,
     supportMaxX: 805,
@@ -540,6 +563,8 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
   assert.ok(WORLD_GEOMETRY.barricade.drawX <= WORLD_GEOMETRY.barricade.attackX);
   assert.ok(WORLD_GEOMETRY.barricade.attackX <= WORLD_GEOMETRY.barricade.drawX + WORLD_GEOMETRY.barricade.width);
   assert.equal(WORLD_GEOMETRY.enemyBase, WORLD_GEOMETRY.barricade);
+  assert.ok(WORLD_GEOMETRY.crawler.doorX < WORLD_GEOMETRY.crawler.rampFootX);
+  assert.ok(WORLD_GEOMETRY.crawler.rampFootX < WORLD_GEOMETRY.musterX);
   assert.ok(WORLD_GEOMETRY.musterX < WORLD_GEOMETRY.crawler.exitX);
   assert.ok(WORLD_GEOMETRY.crawler.exitX < WORLD_GEOMETRY.supportMinX);
   assert.equal((WORLD_GEOMETRY.enemyBase.attackX - WORLD_GEOMETRY.baseX) / (800 - 188), 1.25);
@@ -672,7 +697,7 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.equal(phaseAt(147.999), 2);
   assert.equal(phaseAt(148), 3);
 
-  assert.equal(objectiveFor(1, false), "3レーンを防衛");
+  assert.equal(objectiveFor(1, false), "戦線を防衛");
   assert.equal(objectiveFor(2, false), "感染拠点へ前進");
   assert.equal(objectiveFor(3, false), "TAKUYAを撃破");
   assert.equal(objectiveFor(3, true), "感染拠点を破壊");
@@ -861,9 +886,10 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   const leftBurn = advanceAreaEffects({ areaEffects: burned.areaEffects, fighters: burned.fighters.map((fighter) => ({ ...fighter, x: 900 })), seconds: 1 });
   assert.equal(leftBurn.fighters[0].burning, false);
   assert.equal(leftBurn.fighters[0].slowMultiplier, 1);
-  assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyLane: 1, attackRange: 20 }), true);
-  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 600, enemyLane: 1, attackRange: 20 }), false);
-  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 480, enemyLane: 1, attackRange: 20 }), true);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), true);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), false);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 480, enemyY: LANE_Y[1], attackRange: 20 }), true);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyY: LANE_Y[0], attackRange: 20 }), false);
 });
 
 test("keeps supplies, area effects, and airstrikes aligned and lane-isolated in standard and compact layouts", () => {
@@ -1045,11 +1071,91 @@ test("renders causal weapon tracers and vehicle-origin Crawler fire without scre
 
   const shotDraw = game.slice(game.indexOf("for (const shot of g.shots)"), game.indexOf("ctx.shadowBlur = 0;", game.indexOf("for (const shot of g.shots)")));
   assert.match(shotDraw, /const weapon = shot\.weapon \?\? shot\.effect/);
-  assert.match(shotDraw, /weapon === "ranger"[\s\S]*weapon === "gunner"[\s\S]*weapon === "spitter"[\s\S]*weapon === "crawler"/);
-  assert.match(shotDraw, /const tailLength = weapon === "crawler" \? 46[\s\S]*ctx\.moveTo\(x - ux \* tailLength, y - uy \* tailLength\);\s*ctx\.lineTo\(x, y\)/);
-  assert.match(shotDraw, /if \(p < \.3\)[\s\S]*const muzzle =/);
-  assert.match(shotDraw, /if \(p > \.62\)[\s\S]*ctx\.arc\(shot\.tx, shot\.ty/);
+  assert.match(shotDraw, /const weaponProfile = weaponProfileForUnit\(weapon\)/);
+  assert.match(shotDraw, /weaponProfile\.trailColor/);
+  assert.match(shotDraw, /const impactDelay =/);
+  assert.match(shotDraw, /const hitStopSeconds =/);
+  assert.match(shotDraw, /const impactProgress =/);
+  assert.match(shotDraw, /const p = elapsed < impactDelay[\s\S]*elapsed \/ impactDelay[\s\S]*: 1/);
+  assert.match(shotDraw, /weaponProfile\.trail === "high-velocity"[\s\S]*weaponProfile\.trail === "burst-tracer"[\s\S]*weaponProfile\.trail === "bolt"/);
+  assert.match(shotDraw, /ctx\.moveTo\(x - ux \* tailLength, y - uy \* tailLength\);\s*ctx\.lineTo\(x, y\)/);
+  assert.match(shotDraw, /if \(p < \.3\)[\s\S]*const muzzle =[\s\S]*ctx\.closePath\(\);\s*ctx\.fill\(\)/);
+  assert.match(shotDraw, /if \(shot\.casing && p < \.52\)[\s\S]*ctx\.fillStyle = "#d8a94f"/);
+  assert.match(shotDraw, /if \(impactProgress >= 0\)[\s\S]*weaponProfile\.impactRadius[\s\S]*ctx\.arc\(shot\.tx, shot\.ty/);
   assert.doesNotMatch(shotDraw, /ctx\.moveTo\(shot\.x, shot\.y\);\s*ctx\.lineTo\(shot\.tx, shot\.ty\)/);
+  assert.doesNotMatch(shotDraw, /ctx\.moveTo\(shot\.x - \d+, shot\.y\);\s*ctx\.lineTo\(shot\.x \+ \d+, shot\.y\)/);
+});
+
+test("machinegun burst damage is deferred to visual impact for fighters and the enemy base", async () => {
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const pendingResolution = game.slice(
+    game.indexOf("const pendingWeaponStep = advancePendingWeaponHits"),
+    game.indexOf("if (g.definition.stageId ===", game.indexOf("const pendingWeaponStep = advancePendingWeaponHits")),
+  );
+  const fighterBurst = game.slice(
+    game.indexOf("if (splitMachineGunBurst)"),
+    game.indexOf("if (!splitMachineGunBurst) target.flash", game.indexOf("if (splitMachineGunBurst)")),
+  );
+  const structureBurst = game.slice(
+    game.indexOf('targetKind: "enemy-base" as const'),
+    game.indexOf("if (roleEffect && f.kind !==", game.indexOf('targetKind: "enemy-base" as const')),
+  );
+
+  assert.match(pendingResolution, /if \(hit\.eventKind === "muzzle"\)[\s\S]*addWeaponShot/);
+  assert.match(pendingResolution, /if \(!hit\.applyDamage\) continue/);
+  assert.match(pendingResolution, /if \(hit\.targetKind === "enemy-base"\)[\s\S]*g\.barricadeHp = Math\.max\(0, g\.barricadeHp - hit\.damage\)/);
+  assert.match(pendingResolution, /target\.hp -= hit\.damage[\s\S]*target\.flash = Math\.max/);
+  assert.match(fighterBurst, /eventKind: "muzzle"[\s\S]*eventKind: "impact"/);
+  assert.match(fighterBurst, /remainingSeconds: event\.hitOffsetSeconds[\s\S]*damage: event\.damage/);
+  assert.match(structureBurst, /eventKind: "muzzle"[\s\S]*eventKind: "impact"/);
+  assert.match(structureBurst, /remainingSeconds: event\.hitOffsetSeconds[\s\S]*damage: event\.damage/);
+  assert.match(game, /damageMode: target\.kind === "gate-eater"[\s\S]*"containment"/);
+  assert.match(game, /raiderSecondary: true[\s\S]*eventKind: "impact"[\s\S]*remainingSeconds: event\.hitOffsetSeconds/);
+  assert.match(pendingResolution, /hit\.damageMode === "containment"[\s\S]*resolveContainmentStrike/);
+  assert.match(pendingResolution, /hit\.raiderLineHit && hit\.shotIndex === 0[\s\S]*raiderPierceHits/);
+});
+
+test("browser QA helper propagates its selected local port into every wrapped smoke", async () => {
+  const helper = await readFile(new URL("../scripts/run-browser-qa-with-server.mjs", import.meta.url), "utf8");
+  const progression = await readFile(new URL("../scripts/progression-browser-smoke.mjs", import.meta.url), "utf8");
+  const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+  assert.match(helper, /reserveQaPort\(requestedPort\)/);
+  assert.match(helper, /refusing to reuse an unknown server/);
+  assert.match(helper, /const origin = `http:\/\/127\.0\.0\.1:\$\{port\}\/`/);
+  assert.match(helper, /process\.env\.COMBAT_PRESENTATION_QA_BASE_URL = origin/);
+  assert.match(helper, /process\.env\.MOBILE_LIFECYCLE_QA_BASE_URL = origin/);
+  assert.match(helper, /process\.env\.SAVE_MIGRATION_QA_BASE_URL = origin/);
+  assert.match(helper, /process\.env\.BATTLE_SPACE_QA_BASE_URL = origin/);
+  assert.match(helper, /process\.env\.AI_MISSION_QA_BASE_URL = origin/);
+  assert.match(helper, /process\.env\.STATION_QA_BASE_URL = origin/);
+  assert.match(helper, /process\.env\.P5_QA_BASE_URL = origin/);
+  assert.match(helper, /process\.env\.PROGRESSION_QA_BASE_URL = origin/);
+  assert.doesNotMatch(helper, /_QA_BASE_URL \?\?= origin/);
+  assert.equal(
+    packageJson.scripts["qa:progression"],
+    "node scripts/run-browser-qa-with-server.mjs scripts/progression-browser-smoke.mjs",
+  );
+  assert.match(progression, /PROGRESSION_QA_BASE_URL is required; use the isolated QA runner/);
+  assert.doesNotMatch(progression, /serverIsReady|ensureLocalServer|spawn\(process\.execPath/);
+});
+
+test("performance and lifecycle gates fail closed when browser capabilities are unavailable", async () => {
+  const performance = await readFile(
+    new URL("../scripts/browser-performance-budget.mjs", import.meta.url),
+    "utf8",
+  );
+  const lifecycle = await readFile(
+    new URL("../scripts/mobile-lifecycle-browser-smoke.mjs", import.meta.url),
+    "utf8",
+  );
+  assert.match(performance, /cdp-retained-heap-after-gc-and-bounded-runtime-proxy/);
+  assert.match(performance, /memoryGrowthAtMost25Percent: memoryBudgetPassed/);
+  assert.match(performance, /simulationUpdatesSufficient/);
+  assert.match(performance, /renderUpdatesSufficient/);
+  assert.match(performance, /noUnexpectedNavigationOrReload/);
+  assert.match(performance, /Object\.values\(gateChecks\)\.every\(\(check\) => check === true\)/);
+  assert.match(lifecycle, /MOBILE_LIFECYCLE_QA_MODE \?\? "gate"/);
+  assert.match(lifecycle, /runMode === "gate" && summary\.passedWithCapabilityGaps > 0/);
 });
 
 test("caps transient render arrays and limits camera shake to major events", () => {
@@ -1146,14 +1252,14 @@ test("validates, damages, and releases the battlefield container without changin
 
   assert.deepEqual(damageContainer(CONTAINER_DEF.maxHp, 35), { hp: CONTAINER_DEF.maxHp - 35, phase: "active" });
   assert.deepEqual(damageContainer(20, 35), { hp: 0, phase: "destroying" });
-  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), true);
-  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "impact" }), true);
-  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 0, containerX: 440, containerLane: 1, phase: "active" }), false);
-  assert.equal(containerBlocksEnemy({ enemyX: 400, enemyLane: 1, containerX: 440, containerLane: 1, phase: "active" }), false);
-  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyLane: 1, containerX: 440, containerLane: 1, phase: "destroying" }), false);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyY: LANE_Y[1], containerX: 440, containerY: LANE_Y[1], phase: "active" }), true);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyY: LANE_Y[1], containerX: 440, containerY: LANE_Y[1], phase: "impact" }), true);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyY: LANE_Y[0], containerX: 440, containerY: LANE_Y[1], phase: "active" }), false);
+  assert.equal(containerBlocksEnemy({ enemyX: 400, enemyY: LANE_Y[1], containerX: 440, containerY: LANE_Y[1], phase: "active" }), false);
+  assert.equal(containerBlocksEnemy({ enemyX: 600, enemyY: LANE_Y[1], containerX: 440, containerY: LANE_Y[1], phase: "destroying" }), false);
 
   const rearContainer = { ...activeContainer, id: 41, x: 360 };
-  const blocking = selectBlockingContainer({ enemyX: 600, enemyLane: 1, objects: [rearContainer, activeContainer] });
+  const blocking = selectBlockingContainer({ enemyX: 600, enemyY: LANE_Y[1], objects: [rearContainer, activeContainer] });
   assert.equal(blocking.id, activeContainer.id);
 
   const destroyed = applyContainerDamage({ ...activeContainer, hp: 20 }, 35);
@@ -1161,7 +1267,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.equal(destroyed.phase, "destroying");
   assert.equal(destroyed.blocksEnemies, false);
   assert.equal(destroyed.targetable, false);
-  assert.equal(selectBlockingContainer({ enemyX: 600, enemyLane: 1, objects: [destroyed] }), undefined);
+  assert.equal(selectBlockingContainer({ enemyX: 600, enemyY: LANE_Y[1], objects: [destroyed] }), undefined);
   assert.equal(advanceZombieX({ enemyX: 600, speed: 20, seconds: 1 }), 580);
   assert.equal(battleOutcome(0, 0), "lost");
 
@@ -1176,11 +1282,17 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /resolveBattlefieldSupplyPlacement\(\{/);
   assert.match(game, /requestAirstrike\(\{/);
   assert.match(game, /requestCrawlerBarrage\(\{/);
-  assert.match(game, /placeBattlefieldSupply\(kind, lane, x\)/);
-  assert.match(game, /if \(deployAirstrike\(lane, x\)\) chooseAction\(null\)/);
-  assert.match(game, /const routeLane = f\.lane/);
-  assert.match(game, /selectBlockingContainer\(\{/);
-  assert.match(game, /physicalContact \?\? \(blockingSupply \? undefined/);
+  assert.match(game, /correctedBattlefieldTargetForGame\(g, \{ x, y \}, kind\)/);
+  assert.match(game, /placeBattlefieldSupply\(kind, x, y\)/);
+  assert.match(game, /if \(deployAirstrike\(x, y\)\) chooseAction\(null\)/);
+  assert.match(game, /selectBlockingContainer\(\{[\s\S]*enemyX: f\.x,[\s\S]*enemyY: f\.y,[\s\S]*enemyRadius: f\.bodyRadius/);
+  assert.match(game, /enemyCanTargetBattlefieldSupply\(\{[\s\S]*enemyX: f\.x,[\s\S]*enemyY: f\.y,[\s\S]*attackRange: f\.range/);
+  assert.match(game, /aiProfile: enemyContentFor\(kind\)\?\.aiProfile \?\? "nearest"/);
+  assert.match(game, /side: "human", kind, aiProfile: card\.aiProfile/);
+  assert.match(game, /retainedTargetDuringRetarget\(\{[\s\S]*retargetIn: f\.retargetIn,[\s\S]*currentTargetId: f\.targetId/);
+  assert.match(game, /const canAcquireHumanTarget = \(human: Fighter\) => canAcquireCombatTarget\(\{/);
+  assert.match(game, /target = physicalContact[\s\S]*\?\? \(blockingSupply \|\| supportObjectPreferred \? undefined : humanTarget\)/);
+  assert.match(game, /shouldPrioritizeSupportObject\(\{/);
   assert.match(game, /chooseCommittedEnemyLane\(\{[\s\S]*hasTarget: Boolean\(target\)[\s\S]*hasObjectTarget: Boolean\(objectTarget\)[\s\S]*inContact: Boolean\(physicalContact\)/);
   assert.match(game, /advanceZombieX\(\{ enemyX: f\.x,[\s\S]*targetFloor: zombieTargetFloor \}\)/);
   assert.match(game, /const humanMinX = humanCombatMinX\(\{/);
@@ -1202,7 +1314,8 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /roleEffectForAction\(\{[\s\S]*targetAlreadyMarked: target\.marked > 0[\s\S]*holdingFrontline: f\.kind === "brute" && target\.targetId === f\.id/);
   assert.match(game, /effect: roleEffect \?\? undefined, emphasized, style: ranged \? "projectile" : "melee", weapon: f\.kind/);
   assert.match(game, /roleEffect === "brawler" \? "フィニッシュ"/);
-  assert.match(game, /action: "structure"[\s\S]*if \(roleEffect\)[\s\S]*playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
+  assert.match(game, /action: "structure"[\s\S]*if \(roleEffect && f\.kind !== "gunner"\)[\s\S]*playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
+  assert.match(game, /roleEffect === "gunner"[\s\S]*playCue\("role-gunner"\)/);
   assert.match(game, /action: "heal"[\s\S]*playCue\("role-medic"\)/);
   assert.doesNotMatch(game, /g\.areaEffects = capRenderArray/);
   assert.match(game, /g\.areaEffects = retainActiveAreaEffects\(areaStep\.areaEffects\)/);
@@ -1431,7 +1544,9 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /if \(roleEffect && !\["crazy-king", "kumaverson", "babayaga"\]\.includes\(f\.kind\)\) playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
   const deployAudioStart = game.indexOf("if (g.deployQueue.length");
   const deployAudio = game.slice(deployAudioStart, game.indexOf("const crawlerStep =", deployAudioStart));
-  assert.match(deployAudio, /playProductionCue\("support-pod-deploy", MUSTER_X,[\s\S]*volume: kind === "brute" \? \.42 : \.32[\s\S]*maxInstances: 1/);
+  assert.match(deployAudio, /playProductionCue\("support-pod-deploy", deploymentX,[\s\S]*volume: kind === "brute" \? \.42 : \.32[\s\S]*maxInstances: 1/);
+  assert.doesNotMatch(deployAudio, /playProductionCue\("weapon-melee-impact"/);
+  assert.match(game, /if \(f\.gateEntering\)[\s\S]*entryStepDistance[\s\S]*crawlerFootstepCount \+= 1[\s\S]*playProductionCue\("weapon-melee-impact", f\.x,[\s\S]*playbackRate:/);
   assert.doesNotMatch(deployAudio, /weaponCueForUnit\(kind\)/);
   const newcomerAudio = game.slice(game.indexOf("const weaponEvent ="), game.indexOf('if (f.kind === "scout"'));
   assert.match(newcomerAudio, /const contactAudioX = f\.kind === "crazy-king" \|\| f\.kind === "kumaverson" \? \(f\.x \+ target\.x\) \/ 2 : f\.x/);
@@ -1459,17 +1574,18 @@ test("queues each wave into staggered multi-height enemy gate entries", () => {
 
   assert.equal(initial.pending.length, 0);
   assert.equal(queued.pending.length, wave.units.length);
-  assert.deepEqual(queued.pending.map(({ kind, lane }) => [kind, lane]), wave.units);
+  assert.deepEqual(queued.pending.map(({ kind }) => kind), wave.units);
+  assert.ok(queued.pending.every(({ lane }) => Number.isInteger(lane) && lane >= 0 && lane < 3));
   assert.equal(queued.pending[0].delay, 0);
   assert.ok(queued.pending.slice(1).every(({ delay }) => delay > 0));
   assert.equal(new Set(queued.pending.map(({ x, y }) => `${x}:${y}`)).size, wave.units.length);
   assert.ok(queued.pending.every(({ x }) => ENEMY_GATE_SPAWN.interiorX.includes(x)));
-  assert.ok(queued.pending.every(({ lane, y }) => Math.abs(y - LANE_Y[lane]) <= 17));
-  assert.ok(enemySpawnInterval({ kind: "crusher", lane: 0, order: 1 }) > enemySpawnInterval({ kind: "runner", lane: 0, order: 1 }));
-  assert.ok(enemySpawnInterval({ kind: "takuya", lane: 1, order: 2 }) > enemySpawnInterval({ kind: "crusher", lane: 1, order: 2 }));
+  assert.ok(queued.pending.every(({ y }) => ENEMY_GATE_SPAWN.interiorY.includes(y)));
+  assert.ok(enemySpawnInterval({ kind: "crusher", order: 1, wave: 8 }) > enemySpawnInterval({ kind: "runner", order: 1, wave: 8 }));
+  assert.ok(enemySpawnInterval({ kind: "takuya", order: 2, wave: 8 }) > enemySpawnInterval({ kind: "crusher", order: 2, wave: 8 }));
 
-  const upperA = enemyGateSpawnPosition({ kind: "walker", lane: 0, order: 0, wave: 3 });
-  const upperB = enemyGateSpawnPosition({ kind: "runner", lane: 0, order: 1, wave: 3 });
+  const upperA = enemyGateSpawnPosition({ kind: "walker", order: 0, wave: 3, entryId: 1 });
+  const upperB = enemyGateSpawnPosition({ kind: "runner", order: 1, wave: 3, entryId: 2 });
   assert.notDeepEqual([upperA.x, upperA.y], [upperB.x, upperB.y]);
 
   const firstFrame = advanceEnemySpawnRuntime(queued, 1 / 60);
@@ -1493,7 +1609,7 @@ test("queues each wave into staggered multi-height enemy gate entries", () => {
   }
   assert.equal(spawned.length, wave.units.length);
   assert.equal(new Set(spawned.map(({ entryId }) => entryId)).size, wave.units.length);
-  assert.deepEqual(spawned.map(({ kind, lane }) => [kind, lane]), wave.units);
+  assert.deepEqual(spawned.map(({ kind }) => kind), wave.units);
   assert.deepEqual(createEnemySpawnRuntime(), { pending: [], cooldown: 0, nextEntryId: 1 });
 });
 
@@ -1537,10 +1653,10 @@ test("keeps gate-entering enemies immune until combat-ready", () => {
 test("integrates the enemy gate queue without changing direct QA or turned placement", async () => {
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   assert.match(game, /enemySpawn: createEnemySpawnRuntime\(\)/);
-  assert.match(game, /g\.enemySpawn = \(enqueueEnemyWave as unknown as \(runtime: EnemySpawnRuntime, input: \{ units: \[string, Lane\]\[\]; wave: number \}\) => EnemySpawnRuntime\)\(g\.enemySpawn, \{ units: mission\.units, wave: mission\.wave \}\)/);
+  assert.match(game, /g\.enemySpawn = \(enqueueEnemyWave as unknown as \(runtime: EnemySpawnRuntime, input: \{ units: string\[\]; wave: number \}\) => EnemySpawnRuntime\)\(g\.enemySpawn, \{ units: mission\.units, wave: mission\.wave \}\)/);
   assert.doesNotMatch(game, /mission\.units\.forEach\(\(\[kind, lane\]/);
   assert.match(game, /advanceEnemySpawnRuntime\(g\.enemySpawn, dt, g\.paused\)/);
-  assert.match(game, /if \(f\.gateEntering\)[\s\S]*f\.combatReady = true;[\s\S]*continue;/);
+  assert.match(game, /if \(f\.gateEntering\)[\s\S]*entryStepDistance[\s\S]*crawlerFootstepCount \+= 1[\s\S]*playProductionCue\("weapon-melee-impact"[\s\S]*f\.combatReady = true;[\s\S]*continue;/);
   assert.match(game, /fighterById = new Map\(g\.fighters\.filter\(\(fighter\) => fighter\.hp > 0 && fighter\.combatReady\)/);
   assert.match(game, /enemy\.side === "zombie" && enemy\.hp > 0 && enemy\.combatReady/);
   assert.match(game, /other\.hp <= 0 \|\| !other\.combatReady/);
@@ -1616,14 +1732,14 @@ test("defines an ordered mission timeline after the five-second preparation wind
   assert.equal(new Set(eventTimes).size, MISSION_EVENTS.length);
   assert.equal(new Set(MISSION_EVENTS.map(({ at, label }) => `${at}:${label}`)).size, MISSION_EVENTS.length);
   assert.ok(eventTimes.every((at, index) => index === 0 || at > eventTimes[index - 1]));
-  assert.ok(MISSION_EVENTS.every(({ units }) => units.every(([, lane]) => Number.isInteger(lane) && lane >= 0 && lane < 3)));
-  assert.deepEqual(MISSION_EVENTS[0].units, [["walker", 0], ["walker", 1], ["walker", 2]]);
+  assert.ok(MISSION_EVENTS.every(({ units }) => units.every((kind) => typeof kind === "string")));
+  assert.deepEqual(MISSION_EVENTS[0].units, ["walker", "walker", "walker"]);
 
-  const takuyaEvents = MISSION_EVENTS.filter(({ units }) => units.some(([kind]) => kind === "takuya"));
+  const takuyaEvents = MISSION_EVENTS.filter(({ units }) => units.includes("takuya"));
   assert.equal(takuyaEvents.length, 1);
   assert.equal(takuyaEvents[0].at, 131);
   assert.equal(takuyaEvents[0].wave, 8);
-  assert.deepEqual(takuyaEvents[0].units.find(([kind]) => kind === "takuya"), ["takuya", 1]);
+  assert.equal(takuyaEvents[0].units.find((kind) => kind === "takuya"), "takuya");
 
   const warning = MISSION_EVENTS.find(({ at }) => at === 125);
   assert.deepEqual(warning?.units, []);

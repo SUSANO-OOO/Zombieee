@@ -36,11 +36,12 @@ const STATION_PLATFORM_ASSAULT_SCHEDULE = Object.freeze([
 ]);
 
 function unitsForWave(wave) {
-  if (Array.isArray(wave.units)) return wave.units.map((unit) => [...unit]);
-  return (wave.groups ?? []).flatMap((group) => Array.from({ length: group.count }, (_, index) => [
-    group.kind,
-    group.lanes[index % group.lanes.length],
-  ]));
+  if (Array.isArray(wave.units)) {
+    return wave.units.map((unit) => String(Array.isArray(unit) ? unit[0] : unit));
+  }
+  return (wave.groups ?? []).flatMap((group) => (
+    Array.from({ length: group.count }, () => String(group.kind))
+  ));
 }
 
 function campaignTimeline(stage) {
@@ -49,7 +50,7 @@ function campaignTimeline(stage) {
       at: PREP_SECONDS + wave.atSeconds,
       wave: wave.waveNumber ?? index + 1,
       label: wave.label ?? `${stage.displayName} // 第${index + 1}波`,
-      units: Object.freeze(unitsForWave(wave).map((unit) => Object.freeze(unit))),
+      units: Object.freeze(unitsForWave(wave)),
     };
     if (wave.bossOnly === true) event.bossOnly = true;
     return Object.freeze(event);
