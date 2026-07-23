@@ -1,4 +1,6 @@
 import { deepFreeze } from "./content/freeze.js";
+import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
+import { UNIT_CONTENT } from "./content/unitCatalog.js";
 
 export const ALLY_AI_PROFILE_IDS = deepFreeze([
   "frontline",
@@ -207,41 +209,24 @@ export const ENEMY_AI_PROFILES = deepFreeze({
   },
 });
 
-export const ALLY_AI_PROFILE_BY_KIND = deepFreeze({
-  scout: "skirmisher",
-  ranger: "marksman",
-  brute: "heavy",
-  brawler: "frontline",
-  gunner: "suppression",
-  medic: "support",
-  "crazy-king": "frontline",
-  kumaverson: "heavy",
-  babayaga: "marksman",
-  guardian: "heavy",
-  engineer: "engineer",
-});
+export const ALLY_AI_PROFILE_BY_KIND = deepFreeze(Object.fromEntries(
+  UNIT_CONTENT.map(({ kind, aiProfile }) => [kind, aiProfile]),
+));
 
-export const ENEMY_AI_PROFILE_BY_KIND = deepFreeze({
-  walker: "nearest",
-  runner: "crawler-priority",
-  spitter: "ranged",
-  crusher: "support-object",
-  shade: "backline",
-  abomination: "area",
-  turned: "nearest",
-  takuya: "summon",
-  grappler: "grab",
-  ooze: "contamination",
-  sprinter: "charge",
-  "gate-eater": "base-defense",
-});
+export const ENEMY_AI_PROFILE_BY_KIND = deepFreeze(Object.fromEntries(
+  ENEMY_CONTENT.map(({ id, aiProfile }) => [id, aiProfile]),
+));
 
-export function allyAiProfileFor(kind) {
-  return ALLY_AI_PROFILES[ALLY_AI_PROFILE_BY_KIND[kind]] ?? ALLY_AI_PROFILES.frontline;
+export function allyAiProfileFor(profileOrKind) {
+  return ALLY_AI_PROFILES[profileOrKind]
+    ?? ALLY_AI_PROFILES[ALLY_AI_PROFILE_BY_KIND[profileOrKind]]
+    ?? ALLY_AI_PROFILES.frontline;
 }
 
-export function enemyAiProfileFor(kind) {
-  return ENEMY_AI_PROFILES[ENEMY_AI_PROFILE_BY_KIND[kind]] ?? ENEMY_AI_PROFILES.nearest;
+export function enemyAiProfileFor(profileOrKind) {
+  return ENEMY_AI_PROFILES[profileOrKind]
+    ?? ENEMY_AI_PROFILES[ENEMY_AI_PROFILE_BY_KIND[profileOrKind]]
+    ?? ENEMY_AI_PROFILES.nearest;
 }
 
 function finite(value, fallback = 0) {
@@ -293,12 +278,13 @@ export function enemyTargetScore({
 
 export function chooseEnemyTargetForProfile({
   kind,
+  profile: profileId,
   enemy,
   candidates = [],
   claims = new Map(),
   currentTargetId = null,
 } = {}) {
-  const profile = enemyAiProfileFor(kind);
+  const profile = enemyAiProfileFor(profileId ?? kind);
   const claimCount = (targetId) => claims instanceof Map
     ? finite(claims.get(targetId))
     : finite(claims?.[targetId]);
@@ -306,6 +292,7 @@ export function chooseEnemyTargetForProfile({
     .filter((candidate) => candidate
       && candidate.id !== undefined
       && candidate.alive !== false
+      && candidate.attackEligible !== false
       && !(Number.isFinite(candidate.hp) && candidate.hp <= 0))
     .map((candidate) => {
       const distance = Math.max(0, finite(candidate.distance, Math.hypot(
@@ -342,6 +329,37 @@ export function chooseEnemyTargetForProfile({
     .sort((left, right) => left.score - right.score
       || String(left.candidate.id).localeCompare(String(right.candidate.id), "en"));
   return eligible[0]?.candidate ?? null;
+}
+
+export function retainedTargetDuringRetarget({
+  retargetIn = 0,
+  currentTargetId = null,
+  candidates = [],
+} = {}) {
+  if (finite(retargetIn) <= 0 || currentTargetId === null || currentTargetId === undefined) return null;
+  const current = candidates.find((candidate) => candidate?.id === currentTargetId);
+  if (!current
+    || current.attackEligible === false
+    || current.alive === false
+    || (Number.isFinite(current.hp) && current.hp <= 0)) return null;
+  const emergency = candidates.some((candidate) => candidate
+    && candidate.id !== currentTargetId
+    && candidate.attackEligible !== false
+    && (candidate.inContact === true || candidate.attackingCrawler === true));
+  return emergency ? null : current;
+}
+
+export function shouldPrioritizeSupportObject({
+  profile,
+  targetDistance = Infinity,
+  objectDistance = Infinity,
+  hasPhysicalContact = false,
+  hasBlockingObject = false,
+} = {}) {
+  if (hasPhysicalContact || hasBlockingObject || !Number.isFinite(objectDistance)) return false;
+  const resolved = enemyAiProfileFor(profile);
+  return !Number.isFinite(targetDistance)
+    || objectDistance - Math.max(0, finite(resolved.supportObjectPriority)) <= targetDistance;
 }
 
 function recoveryLaneFor(lane, laneCount, seed) {

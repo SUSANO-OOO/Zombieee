@@ -12,7 +12,10 @@ import {
   chooseEnemyTargetForProfile,
   createNavigationRecoveryState,
   enemyAiProfileFor,
+  retainedTargetDuringRetarget,
+  shouldPrioritizeSupportObject,
 } from "../app/combatAiProfiles.js";
+import { canAcquireCombatTarget, createAttackTransaction } from "../app/combatLifecycle.js";
 import { ENEMY_CONTENT } from "../app/content/enemyCatalog.js";
 import { UNIT_CONTENT } from "../app/content/unitCatalog.js";
 
@@ -24,11 +27,13 @@ test("every canonical combatant owns one valid immutable AI profile", () => {
   for (const unit of UNIT_CONTENT) {
     assert.equal(unit.aiProfile, ALLY_AI_PROFILE_BY_KIND[unit.kind]);
     assert.equal(allyAiProfileFor(unit.kind).id, unit.aiProfile);
+    assert.equal(allyAiProfileFor(unit.aiProfile).id, unit.aiProfile);
     assert.equal(Object.isFrozen(allyAiProfileFor(unit.kind)), true);
   }
   for (const enemy of ENEMY_CONTENT) {
     assert.equal(enemy.aiProfile, ENEMY_AI_PROFILE_BY_KIND[enemy.id]);
     assert.equal(enemyAiProfileFor(enemy.id).id, enemy.aiProfile);
+    assert.equal(enemyAiProfileFor(enemy.aiProfile).id, enemy.aiProfile);
     assert.equal(Object.isFrozen(enemyAiProfileFor(enemy.id)), true);
   }
 });
@@ -136,6 +141,89 @@ test("target claims prevent dogpiles unless contact or a route block is present"
     candidates: [{ ...candidate, inContact: true }],
     claims: new Map([[7, 8]]),
   })?.id, 7);
+});
+
+test("enemy profiles reject targets that the combat transaction cannot acquire", () => {
+  const shade = {
+    id: 1,
+    side: "zombie",
+    kind: "shade",
+    lane: 0,
+    x: 650,
+    y: 120,
+    range: 27,
+    bodyRadius: 11,
+  };
+  const remoteMedic = {
+    id: 2,
+    side: "human",
+    kind: "medic",
+    lane: 2,
+    x: 500,
+    y: 340,
+    hp: 68,
+    maxHp: 68,
+    bodyRadius: 11,
+  };
+  const attackEligible = canAcquireCombatTarget({ attacker: shade, target: remoteMedic });
+  assert.equal(attackEligible, false);
+  assert.equal(chooseEnemyTargetForProfile({
+    profile: "backline",
+    enemy: shade,
+    candidates: [{
+      ...remoteMedic,
+      distance: Math.hypot(shade.x - remoteMedic.x, shade.y - remoteMedic.y),
+      attackEligible,
+    }],
+  }), null);
+  assert.equal(createAttackTransaction({
+    attacker: shade,
+    candidates: [remoteMedic],
+  }), null);
+});
+
+test("ally retarget windows retain a legal lock but yield to contact and CRAWLER emergencies", () => {
+  const current = { id: 10, hp: 80, attackEligible: true };
+  const ordinary = { id: 11, hp: 80, attackEligible: true };
+  assert.equal(retainedTargetDuringRetarget({
+    retargetIn: .4,
+    currentTargetId: 10,
+    candidates: [current, ordinary],
+  })?.id, 10);
+  assert.equal(retainedTargetDuringRetarget({
+    retargetIn: .4,
+    currentTargetId: 10,
+    candidates: [current, { ...ordinary, inContact: true }],
+  }), null);
+  assert.equal(retainedTargetDuringRetarget({
+    retargetIn: .4,
+    currentTargetId: 10,
+    candidates: [current, { ...ordinary, attackingCrawler: true }],
+  }), null);
+  assert.equal(retainedTargetDuringRetarget({
+    retargetIn: 0,
+    currentTargetId: 10,
+    candidates: [current],
+  }), null);
+});
+
+test("support-object priority is distance-aware and never overrides physical contact", () => {
+  assert.equal(shouldPrioritizeSupportObject({
+    profile: "support-object",
+    targetDistance: 40,
+    objectDistance: 120,
+  }), true);
+  assert.equal(shouldPrioritizeSupportObject({
+    profile: "nearest",
+    targetDistance: 40,
+    objectDistance: 120,
+  }), false);
+  assert.equal(shouldPrioritizeSupportObject({
+    profile: "support-object",
+    targetDistance: 40,
+    objectDistance: 20,
+    hasPhysicalContact: true,
+  }), false);
 });
 
 test("navigation recovery is deterministic, alternates its detour, and clears on engagement", () => {
