@@ -221,5 +221,12 @@ export function resolveLocalQaScenario(hostname, search = "") {
     return { mode: "station", screen: "battle", stageId, stars: 0, state: stateParam.value };
   }
 
+  if (qa === "mission") {
+    if (screenParam.value !== null || starsParam.value !== null || eventParam.value !== null) return null;
+    const stageId = resolveCampaignStageId(stageParam.value, INITIAL_STAGE_ID);
+    if (!stageId || stateParam.value !== "start") return null;
+    return { mode: "mission", screen: "battle", stageId, stars: 0, state: "start" };
+  }
+
   return null;
 }

@@ -1182,7 +1182,12 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /if \(deployAirstrike\(x, y\)\) chooseAction\(null\)/);
   assert.match(game, /selectBlockingContainer\(\{[\s\S]*enemyX: f\.x,[\s\S]*enemyY: f\.y,[\s\S]*enemyRadius: f\.bodyRadius/);
   assert.match(game, /enemyCanTargetBattlefieldSupply\(\{[\s\S]*enemyX: f\.x,[\s\S]*enemyY: f\.y,[\s\S]*attackRange: f\.range/);
-  assert.match(game, /physicalContact \?\? \(blockingSupply \? undefined/);
+  assert.match(game, /aiProfile: enemyContentFor\(kind\)\?\.aiProfile \?\? "nearest"/);
+  assert.match(game, /side: "human", kind, aiProfile: card\.aiProfile/);
+  assert.match(game, /retainedTargetDuringRetarget\(\{[\s\S]*retargetIn: f\.retargetIn,[\s\S]*currentTargetId: f\.targetId/);
+  assert.match(game, /const canAcquireHumanTarget = \(human: Fighter\) => canAcquireCombatTarget\(\{/);
+  assert.match(game, /target = physicalContact[\s\S]*\?\? \(blockingSupply \|\| supportObjectPreferred \? undefined : humanTarget\)/);
+  assert.match(game, /shouldPrioritizeSupportObject\(\{/);
   assert.match(game, /chooseCommittedEnemyLane\(\{[\s\S]*hasTarget: Boolean\(target\)[\s\S]*hasObjectTarget: Boolean\(objectTarget\)[\s\S]*inContact: Boolean\(physicalContact\)/);
   assert.match(game, /advanceZombieX\(\{ enemyX: f\.x,[\s\S]*targetFloor: zombieTargetFloor \}\)/);
   assert.match(game, /const humanMinX = humanCombatMinX\(\{/);

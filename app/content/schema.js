@@ -23,12 +23,12 @@ export const CONTENT_COLLECTIONS = deepFreeze([
 
 export const CONTENT_SCHEMAS = deepFreeze({
   units: {
-    requiredStrings: ["id", "displayName", "combatKind"],
+    requiredStrings: ["id", "displayName", "combatKind", "aiProfile"],
     requiredObjects: ["combat", "unlock"],
     requiredArrays: ["aliases", "assetRefs"],
   },
   enemies: {
-    requiredStrings: ["id", "displayName", "spawnClass"],
+    requiredStrings: ["id", "displayName", "spawnClass", "aiProfile"],
     requiredNumbers: ["hp", "hpPerWave", "speed", "damage", "range", "attackEvery", "bodyRadius", "laneSpeed"],
     requiredArrays: ["aliases"],
   },
