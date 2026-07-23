@@ -56,6 +56,7 @@ test("workflows enforce explicit deployment and pass one request identity into p
   const publicWorkflow = await readFile(".github/workflows/github-pages-public-qa.yml", "utf8");
   const publicSmoke = await readFile("scripts/github-pages-public-smoke.mjs", "utf8");
   const pagesBuilder = await readFile("scripts/build-github-pages.mjs", "utf8");
+  const pagesIdentity = await readFile("scripts/pages-release-identity.mjs", "utf8");
 
   assert.match(releaseWorkflow, /push:\s+branches:\s+- main\s+paths:\s+- "\.github\/pages-release-request\.json"/u);
   assert.doesNotMatch(releaseWorkflow, /paths-ignore:/u);
@@ -80,8 +81,9 @@ test("workflows enforce explicit deployment and pass one request identity into p
   assert.match(publicSmoke, /httpErrors/u);
   assert.match(releaseWorkflow, /<title>西新世紀末物語｜アーリーアクセス版 \$VERSION<\/title>/u);
   assert.match(releaseWorkflow, /GITHUB_PAGES_EXPECTED_VERSION: \$\{\{ steps\.release\.outputs\.requested == 'true' && steps\.release\.outputs\.version \|\| '' \}\}/u);
-  assert.match(pagesBuilder, /function normalizeReleaseTitle/u);
-  assert.match(pagesBuilder, /アーリーアクセス版 \$\{escapeHtmlAttribute\(releaseVersion\)\}/u);
+  assert.match(pagesBuilder, /normalizeReleaseTitle\(html, releaseVersion\)/u);
+  assert.match(pagesIdentity, /VERSIONED_PRODUCT_TITLE_PATTERN/u);
+  assert.match(pagesIdentity, /source\.replace\(VERSIONED_PRODUCT_TITLE_PATTERN, expectedTitle\)/u);
   assert.match(await readFile("scripts/github-pages-smoke.mjs", "utf8"), /postInteractionTitle !== expectedTitle/u);
   assert.match(pagesBuilder, /github-pages-version/u);
   assert.match(pagesBuilder, /github-pages-request-id/u);
