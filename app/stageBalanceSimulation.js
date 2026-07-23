@@ -26,6 +26,7 @@ import {
   createStationMissionRuntime,
   stationMissionOutcome,
 } from "./stationStageMechanics.js";
+import { applyUnitProgression } from "./unitProgression.js";
 
 const freeze = (value) => Object.freeze(value);
 const UNIT_BY_KIND = freeze(Object.fromEntries(UNIT_CARDS.map((card) => [card.kind, card])));
@@ -304,6 +305,7 @@ export function simulateStageBalance({
   formation,
   seed = "stage-balance-v070",
   roleCounters = true,
+  unitRanks = {},
 } = {}) {
   const stage = resolveStage(stageId);
   const normalizedFormation = normalizeFormation(formation);
@@ -353,7 +355,7 @@ export function simulateStageBalance({
       const affordableIndex = deploymentQueue.findIndex((kind) => UNIT_BY_KIND[kind].cost <= command);
       if (affordableIndex >= 0) {
         const [kind] = deploymentQueue.splice(affordableIndex, 1);
-        const card = UNIT_BY_KIND[kind];
+        const card = applyUnitProgression(UNIT_BY_KIND[kind], unitRanks?.[kind] ?? 0);
         command -= card.cost;
         commandSpent += card.cost;
         squadHp += card.hp;
@@ -591,6 +593,12 @@ export function simulateStageBalance({
     formation: freeze([...normalizedFormation]),
     slotCount: normalizedFormation.length,
     roleCounters,
+    progression: freeze({
+      unitRanks: freeze(Object.fromEntries(normalizedFormation.map((kind) => [
+        kind,
+        activeUnits.find((unit) => unit.kind === kind)?.progressionRank ?? 0,
+      ]))),
+    }),
     outcome,
     stoppedBy,
     elapsedSeconds: currentTime,

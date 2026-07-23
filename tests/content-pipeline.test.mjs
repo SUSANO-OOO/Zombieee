@@ -213,6 +213,7 @@ test("automated balance, caps economy, and save migration audits all pass", () =
   const saveMigration = runSaveMigrationAudit();
   assert.equal(balance.ok, true, JSON.stringify(balance));
   assert.equal(capsEconomy.ok, true, JSON.stringify(capsEconomy));
+  assert.equal(capsEconomy.steps.every(({ upgradeApplied, capsAfterUpgrade }) => upgradeApplied && capsAfterUpgrade >= 0), true);
   assert.equal(saveMigration.ok, true, JSON.stringify(saveMigration));
   assert.equal(saveMigration.results.every(({ schemaVersion }) => schemaVersion === CAMPAIGN_SAVE_SCHEMA_VERSION), true);
   assert.equal(runContentPipelineAudits().ok, true);

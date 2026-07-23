@@ -172,6 +172,31 @@ test("role counters materially improve matched formations rather than acting as 
   );
 });
 
+test("multiple formations clear at multiple training levels while maximum rank cannot replace a viable squad", () => {
+  const stageId = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL;
+  for (const [formationIndex, formation] of P4_BALANCE_FORMATIONS[stageId].entries()) {
+    const results = [0, 2, 4].map((rank) => simulateStageBalance({
+      stageId,
+      formation,
+      seed: `training-${formationIndex}`,
+      unitRanks: Object.fromEntries(formation.map((kind) => [kind, rank])),
+    }));
+    assert.equal(results.every(({ outcome }) => outcome === "won"), true, `formation ${formationIndex}`);
+    assert.ok(results[1].waves.totalUnitDamage >= results[0].waves.totalUnitDamage, `formation ${formationIndex} rank 2`);
+    assert.ok(results[2].waves.totalUnitDamage >= results[1].waves.totalUnitDamage, `formation ${formationIndex} rank 4`);
+    assert.deepEqual(Object.values(results[2].progression.unitRanks), Array(formation.length).fill(4));
+  }
+
+  const maxedSolo = simulateStageBalance({
+    stageId,
+    formation: ["medic"],
+    seed: "max-rank-cannot-solo",
+    unitRanks: { medic: 4 },
+  });
+  assert.equal(maxedSolo.outcome, "lost");
+  assert.ok(maxedSolo.waves.remainingEnemies.length > 0 || maxedSolo.stationMission.failed === true);
+});
+
 test("the same seed is exactly repeatable", () => {
   const options = {
     stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,

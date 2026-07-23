@@ -4,10 +4,12 @@ import {
   CAMPAIGN_STAGE_IDS,
   CAMPAIGN_STAGES,
   CAMPAIGN_UNIT_IDS,
+  campaignUnitUpgradeQuote,
   createDefaultCampaignSave,
   migrateCampaignSave,
   recruitCampaignUnit,
   resolveStageResult,
+  upgradeCampaignUnit,
 } from "../campaign.js";
 import {
   STAGE_BALANCE_REFERENCE_FORMATIONS,
@@ -77,6 +79,10 @@ export function runCapsEconomyAudit() {
     const recruited = recruitCampaignUnit(resolved.save, unitId, {
       acquisitionId: `content-pipeline:recruit:${unitId}`,
     });
+    const upgradeQuote = campaignUnitUpgradeQuote(recruited.save, unitId);
+    const upgraded = upgradeCampaignUnit(recruited.save, unitId, {
+      upgradeId: `content-pipeline:upgrade:${unitId}:rank-${upgradeQuote.nextRank}`,
+    });
     steps.push({
       stageId,
       earnedCaps: resolved.result.totalReward,
@@ -86,12 +92,20 @@ export function runCapsEconomyAudit() {
       capsAfterRecruitment: recruited.save.caps,
       recruitApplied: recruited.result.applied,
       affordable: beforeRecruitment >= cost,
-      neverNegative: recruited.save.caps >= 0,
+      upgradeCost: upgradeQuote.costCaps,
+      capsAfterUpgrade: upgraded.save.caps,
+      upgradeApplied: upgraded.result.applied,
+      neverNegative: upgraded.save.caps >= 0,
     });
-    save = recruited.save;
+    save = upgraded.save;
   }
   return deepFreeze({
-    ok: steps.every((step) => step.recruitApplied && step.affordable && step.neverNegative),
+    ok: steps.every((step) => (
+      step.recruitApplied
+      && step.affordable
+      && step.upgradeApplied
+      && step.neverNegative
+    )),
     steps,
     finalCaps: save.caps,
   });
