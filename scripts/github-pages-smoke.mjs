@@ -6,6 +6,8 @@ import { chromium } from "playwright";
 
 const root = path.resolve("_site");
 const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? "/Zombieee";
+const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION?.trim() || null;
+const expectedTitle = expectedVersion ? `西新世紀末物語｜アーリーアクセス版 ${expectedVersion}` : null;
 const evidenceDir = path.resolve(process.env.GITHUB_PAGES_EVIDENCE_DIR ?? "pages-evidence");
 await mkdir(evidenceDir, { recursive: true });
 
@@ -78,6 +80,10 @@ try {
     await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout: 120_000 });
     const startButton = page.locator(".title-start");
     await startButton.waitFor({ state: "visible", timeout: 30_000 });
+    const initialTitle = await page.title();
+    if (expectedTitle && initialTitle !== expectedTitle) {
+      throw new Error(`Hydrated title does not equal "${expectedTitle}": ${initialTitle}`);
+    }
 
     const dimensions = await page.evaluate(() => ({
       innerWidth: window.innerWidth,
@@ -94,13 +100,17 @@ try {
     await page.screenshot({ path: path.join(evidenceDir, `github-pages-title-${viewport.width}x${viewport.height}.png`), fullPage: true });
     await startButton.click();
     await page.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 30_000 });
+    const postInteractionTitle = await page.title();
+    if (expectedTitle && postInteractionTitle !== expectedTitle) {
+      throw new Error(`Post-interaction title does not equal "${expectedTitle}": ${postInteractionTitle}`);
+    }
 
     const unexpectedWarnings = diagnostics.warnings.filter((warning) => !warning.includes("was preloaded using link preload but not used"));
     if (diagnostics.consoleErrors.length || diagnostics.pageErrors.length || diagnostics.requestFailures.length || diagnostics.httpErrors.length || unexpectedWarnings.length) {
       throw new Error(`Browser diagnostics failed: ${JSON.stringify({ ...diagnostics, warnings: unexpectedWarnings })}`);
     }
 
-    results.push({ viewport, title: await page.title(), dimensions, warningCount: diagnostics.warnings.length });
+    results.push({ viewport, initialTitle, postInteractionTitle, dimensions, warningCount: diagnostics.warnings.length });
     await context.close();
   }
 } finally {

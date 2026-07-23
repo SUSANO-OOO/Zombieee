@@ -21,6 +21,15 @@ function escapeHtmlAttribute(value) {
     .replaceAll(">", "&gt;");
 }
 
+function normalizeReleaseTitle(source) {
+  const renderedTitles = source.match(/<title>[^<]*<\/title>/gu) ?? [];
+  if (renderedTitles.length !== 1) {
+    throw new Error(`Expected one rendered title, found ${renderedTitles.length}`);
+  }
+  const releaseTitle = `<title>西新世紀末物語｜アーリーアクセス版 ${escapeHtmlAttribute(releaseVersion)}</title>`;
+  return source.replace(renderedTitles[0], releaseTitle);
+}
+
 await stat(clientDir);
 await stat(serverEntry);
 await rm(outputDir, { recursive: true, force: true });
@@ -63,6 +72,7 @@ const worker = (await import(`${pathToFileURL(serverEntry).href}?pages=${Date.no
 const rendered = await worker.fetch(new Request("https://pages.invalid/"), { ASSETS: assets });
 if (!rendered.ok) throw new Error(`Failed to render the root document: ${rendered.status}`);
 let html = await rendered.text();
+html = normalizeReleaseTitle(html);
 
 const topLevelEntries = await readdir(clientDir, { withFileTypes: true });
 const directoryPrefixes = topLevelEntries
