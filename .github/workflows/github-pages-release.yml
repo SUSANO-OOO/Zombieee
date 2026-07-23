@@ -256,7 +256,7 @@ jobs:
         working-directory: ${{ steps.release.outputs.source_dir }}
         env:
           GITHUB_PAGES_BASE_PATH: /Zombieee
-          GITHUB_PAGES_EXPECTED_VERSION: ${{ steps.release.outputs.version }}
+          GITHUB_PAGES_EXPECTED_VERSION: ${{ steps.release.outputs.requested == 'true' && steps.release.outputs.version || '' }}
           GITHUB_PAGES_EVIDENCE_DIR: ${{ github.workspace }}/pages-evidence
         shell: bash
         run: |

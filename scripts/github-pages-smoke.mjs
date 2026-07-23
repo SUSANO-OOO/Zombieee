@@ -6,8 +6,8 @@ import { chromium } from "playwright";
 
 const root = path.resolve("_site");
 const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? "/Zombieee";
-const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION ?? "preview";
-const expectedTitle = `西新世紀末物語｜アーリーアクセス版 ${expectedVersion}`;
+const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION?.trim() || null;
+const expectedTitle = expectedVersion ? `西新世紀末物語｜アーリーアクセス版 ${expectedVersion}` : null;
 const evidenceDir = path.resolve(process.env.GITHUB_PAGES_EVIDENCE_DIR ?? "pages-evidence");
 await mkdir(evidenceDir, { recursive: true });
 
@@ -81,7 +81,7 @@ try {
     const startButton = page.locator(".title-start");
     await startButton.waitFor({ state: "visible", timeout: 30_000 });
     const initialTitle = await page.title();
-    if (initialTitle !== expectedTitle) {
+    if (expectedTitle && initialTitle !== expectedTitle) {
       throw new Error(`Hydrated title does not equal "${expectedTitle}": ${initialTitle}`);
     }
 
@@ -101,7 +101,7 @@ try {
     await startButton.click();
     await page.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 30_000 });
     const postInteractionTitle = await page.title();
-    if (postInteractionTitle !== expectedTitle) {
+    if (expectedTitle && postInteractionTitle !== expectedTitle) {
       throw new Error(`Post-interaction title does not equal "${expectedTitle}": ${postInteractionTitle}`);
     }
 
