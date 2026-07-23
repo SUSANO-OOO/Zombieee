@@ -9,6 +9,7 @@ import {
   COMMAND_INITIAL,
   COMMAND_MAX,
   COMMAND_REGEN,
+  UNIT_CARDS,
 } from "../app/gameRules.js";
 import {
   P4_BALANCE_FORMATIONS,
@@ -16,7 +17,9 @@ import {
   formationIntersection,
   simulateStageBalance,
   stageBalanceWaveFacts,
+  unitMobilityEngagementMultiplier,
 } from "../app/stageBalanceSimulation.js";
+import { applyUnitProgression } from "../app/unitProgression.js";
 
 test("balance facts are derived from all six canonical wave schedules", () => {
   assert.equal(CAMPAIGN_STAGES.length, 6);
@@ -195,6 +198,32 @@ test("multiple formations clear at multiple training levels while maximum rank c
   });
   assert.equal(maxedSolo.outcome, "lost");
   assert.ok(maxedSolo.waves.remainingEnemies.length > 0 || maxedSolo.stationMission.failed === true);
+});
+
+test("mobility progression creates a conservative engagement benefit without changing range", () => {
+  const scout = UNIT_CARDS.find(({ kind }) => kind === "scout");
+  const baseline = applyUnitProgression(scout, 0);
+  const roleMilestone = applyUnitProgression(scout, 2);
+  assert.equal(roleMilestone.range, baseline.range);
+  assert.equal(unitMobilityEngagementMultiplier(baseline), 1);
+  assert.ok(unitMobilityEngagementMultiplier(roleMilestone) > 1);
+
+  const stageId = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL;
+  const formation = ["scout", "ranger", "brawler", "medic", "guardian"];
+  const rankZero = simulateStageBalance({
+    stageId,
+    formation,
+    seed: "mobility-engagement-proof",
+    unitRanks: Object.fromEntries(formation.map((kind) => [kind, 0])),
+  });
+  const rankTwo = simulateStageBalance({
+    stageId,
+    formation,
+    seed: "mobility-engagement-proof",
+    unitRanks: Object.fromEntries(formation.map((kind) => [kind, 2])),
+  });
+  assert.equal(rankZero.progression.mobilityEngagement.scout, 1);
+  assert.ok(rankTwo.progression.mobilityEngagement.scout > rankZero.progression.mobilityEngagement.scout);
 });
 
 test("the same seed is exactly repeatable", () => {

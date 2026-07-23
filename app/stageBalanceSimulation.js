@@ -194,6 +194,16 @@ function roleCounterMultiplier(kind, enemyKind, laneEnemyCount, enabled) {
   return 1;
 }
 
+export function unitMobilityEngagementMultiplier(unit) {
+  const baseline = UNIT_BY_KIND[unit?.kind];
+  if (!baseline) return 1;
+  const speedRatio = baseline.speed > 0 ? unit.speed / baseline.speed : 1;
+  const laneSpeedRatio = baseline.laneSpeed > 0 ? unit.laneSpeed / baseline.laneSpeed : 1;
+  const mobilityRatio = (speedRatio + laneSpeedRatio) / 2;
+  const boundedImprovement = Math.max(-.2, Math.min(.2, mobilityRatio - 1));
+  return 1 + boundedImprovement * .45;
+}
+
 function defensiveMultiplier(activeUnits, roleCounters) {
   const totalHp = activeUnits.reduce((total, unit) => total + unit.hp, 0);
   const progressionDefense = totalHp > 0
@@ -432,6 +442,7 @@ export function simulateStageBalance({
       const damage = unit.damage / unit.attackEvery
         * counter
         * engagement
+        * unitMobilityEngagementMultiplier(unit)
         * readiness
         * seedVariance
         * SIMULATION_STEP_SECONDS;
@@ -606,6 +617,10 @@ export function simulateStageBalance({
         kind,
         activeUnits.find((unit) => unit.kind === kind)?.progressionRank ?? 0,
       ]))),
+      mobilityEngagement: freeze(Object.fromEntries(normalizedFormation.map((kind) => {
+        const unit = activeUnits.find((candidate) => candidate.kind === kind);
+        return [kind, Number(unitMobilityEngagementMultiplier(unit).toFixed(4))];
+      }))),
     }),
     outcome,
     stoppedBy,

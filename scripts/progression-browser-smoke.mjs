@@ -216,6 +216,24 @@ try {
           invariant(fighter.progressionRank === 1, `battle rank mismatch: ${JSON.stringify(fighter)}`);
           invariant(fighter.maxHp === expected.hp && fighter.damage === expected.damage && fighter.defense === expected.defense,
             `battle stats mismatch: ${JSON.stringify({ fighter, expected })}`);
+          const damageProof = await page.evaluate(() => {
+            const bridge = window.__ASHFALL_BATTLE_QA__;
+            const baselineId = bridge.spawnHumanForDamageProof("scout");
+            const snapshot = bridge.getSnapshot();
+            const trained = snapshot.fighters.find((candidate) => (
+              candidate.side === "human" && candidate.kind === "brawler"
+            ));
+            return {
+              trained: bridge.applyHumanDamage(trained.id, 50),
+              baseline: bridge.applyHumanDamage(baselineId, 50),
+            };
+          });
+          invariant(damageProof.trained.defense === expected.defense, `trained defense mismatch: ${JSON.stringify(damageProof)}`);
+          invariant(damageProof.baseline.defense === 0, `baseline defense mismatch: ${JSON.stringify(damageProof)}`);
+          invariant(damageProof.trained.targetDamage < damageProof.baseline.targetDamage,
+            `defense did not reduce live damage: ${JSON.stringify(damageProof)}`);
+          invariant(damageProof.trained.targetDamage === 49.25 && damageProof.baseline.targetDamage === 50,
+            `live damage values mismatch: ${JSON.stringify(damageProof)}`);
 
           for (const [kind, entries] of Object.entries(diagnostics)) {
             invariant(entries.length === 0, `${kind}: ${JSON.stringify(entries)}`);
@@ -232,6 +250,7 @@ try {
               damage: fighter.damage,
               defense: fighter.defense,
             },
+            damageProof,
             dimensions,
             diagnostics,
           });

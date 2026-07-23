@@ -3940,6 +3940,29 @@ export function AshfallGame() {
     if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") return;
     const qaWindow = window as typeof window & { __ASHFALL_BATTLE_QA__?: unknown };
     const bridge = {
+      spawnHumanForDamageProof: (kind: UnitKind) => {
+        const g = gameRef.current;
+        if (!g.formationKinds.includes(kind)) return null;
+        const card = spawnHuman(g, kind);
+        return card ? g.fighters[g.fighters.length - 1]?.id ?? null : null;
+      },
+      applyHumanDamage: (fighterId: number, incomingDamage: number) => {
+        const g = gameRef.current;
+        const target = g.fighters.find((fighter) => (
+          fighter.id === fighterId
+          && fighter.side === "human"
+          && fighter.hp > 0
+        ));
+        if (!target) return null;
+        const beforeHp = target.hp;
+        const resolved = applyIncomingHumanDamage(g, target, incomingDamage);
+        return {
+          ...resolved,
+          beforeHp,
+          afterHp: target.hp,
+          defense: target.defense,
+        };
+      },
       getSnapshot: () => {
         const g = gameRef.current;
         const geometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
