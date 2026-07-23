@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import "./globals.css";
 import "./campaign.css";
 
@@ -38,10 +39,11 @@ export default function RootLayout({
     <html lang="ja">
       <head>
         <link rel="preload" as="image" href="/art/v060/title-key-visual-v1.webp" fetchPriority="high" />
-        <link rel="preload" as="image" href="/art/v070/characters/portraits/guide-portrait-v1.webp" />
+        <link rel="preload" as="image" href={V075_VISUAL_PROFILES.ikura.eventPortrait.path} />
         <link rel="preload" as="image" href="/art/v060/battle-nishijin-shopping-street-v1.webp" fetchPriority="high" />
-        <link rel="preload" as="image" href="/crawler-fortress-v1.png" fetchPriority="high" />
-        <link rel="preload" as="image" href="/infected-checkpoint-v1.png" fetchPriority="high" />
+        <link rel="preload" as="image" href={V075_VISUAL_PROFILES.crawler.closed.path} fetchPriority="high" />
+        <link rel="preload" as="image" href={V075_VISUAL_PROFILES.crawler.open.path} />
+        <link rel="preload" as="image" href={V075_VISUAL_PROFILES.enemyBase.intact.path} fetchPriority="high" />
       </head>
       <body>{children}</body>
     </html>

@@ -9,6 +9,9 @@ import {
 import {
   CAMPAIGN_CORRUPT_EXPORT_FORMAT,
   CAMPAIGN_EXPORT_FORMAT,
+  CAMPAIGN_IMPORT_MAX_BYTES,
+  CAMPAIGN_IMPORT_MAX_COLLECTION_ENTRIES,
+  CAMPAIGN_IMPORT_MAX_DEPTH,
   CAMPAIGN_SNAPSHOT_KINDS,
   campaignStorageFor,
   clearCampaignSaveEverywhere,
@@ -736,6 +739,36 @@ test("manual export and import are pure and accept campaign inspection callbacks
   assert.equal(corrupt.status, "recovery-needed");
   assert.equal(corrupt.serialized, "");
   assert.equal(corrupt.raw, "{broken");
+
+  const oversized = parseCampaignManualImport(" ".repeat(CAMPAIGN_IMPORT_MAX_BYTES + 1), {
+    validate: inspectSerializedSave,
+  });
+  assert.equal(oversized.status, "recovery-needed");
+  assert.equal(oversized.serialized, "");
+  assert.equal(oversized.raw, "");
+  assert.match(oversized.reason, /size limit/);
+
+  const oversizedLedger = serializedSave(12, "2026-07-17T07:00:00.000Z", {
+    processedResultIds: Array.from(
+      { length: CAMPAIGN_IMPORT_MAX_COLLECTION_ENTRIES + 1 },
+      (_, index) => `result-${index}`,
+    ),
+  });
+  const ledgerImport = parseCampaignManualImport(oversizedLedger, {
+    validate: inspectSerializedSave,
+  });
+  assert.equal(ledgerImport.status, "recovery-needed");
+  assert.equal(ledgerImport.serialized, "");
+  assert.match(ledgerImport.reason, /oversized list/);
+
+  let nested = { schemaVersion: 5 };
+  for (let depth = 0; depth <= CAMPAIGN_IMPORT_MAX_DEPTH; depth += 1) nested = { child: nested };
+  const nestedImport = parseCampaignManualImport(JSON.stringify(nested), {
+    validate: () => true,
+  });
+  assert.equal(nestedImport.status, "recovery-needed");
+  assert.equal(nestedImport.serialized, "");
+  assert.match(nestedImport.reason, /nested too deeply/);
 });
 
 test("strict campaign inspection rejects a checksum-tampered manual import without mutating storage", () => {

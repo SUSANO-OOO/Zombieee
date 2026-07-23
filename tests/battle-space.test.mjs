@@ -159,8 +159,17 @@ test("friendly deployment owns one lit CRAWLER door and a walkable run-out point
   for (const stage of CAMPAIGN_STAGES) {
     for (const viewport of VIEWPORTS) {
       const point = friendlyDeploymentPoint({ stageId: stage.id, viewport });
+      const space = battleSpaceFor(stage.id, viewport);
       assert.equal(point.portalId, "crawler-door");
+      assert.deepEqual(
+        { x: point.x, y: point.y },
+        space.crawler.door,
+      );
       assert.ok(point.x < point.combatReadyX);
+      assert.ok(point.x < point.rampFootX);
+      assert.ok(point.rampFootX < point.combatReadyX);
+      assert.ok(point.y < point.rampFootY);
+      assert.equal(point.rampFootY, point.combatReadyY);
       assert.equal(isWalkable(stage.id, {
         x: point.combatReadyX,
         y: point.combatReadyY,

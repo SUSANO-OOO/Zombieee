@@ -154,6 +154,8 @@ export class AudioMixer {
     this.unlockCleanup = null;
     this.unlockTarget = null;
     this.lifecycleCleanup = null;
+    this.lifecycleHidden = false;
+    this.lifecycleGeneration = 0;
     this.contextStateCleanup = null;
     this.unlockPromise = null;
     this.lastGestureAt = -Infinity;
@@ -292,20 +294,54 @@ export class AudioMixer {
     this.lifecycleCleanup?.();
     let active = true;
     const recover = (reason) => {
-      if (!active || this.disposed) return;
+      if (!active || this.disposed || this.lifecycleHidden) return;
       void this.recoverAudio({ reason });
     };
-    const onPageShow = () => recover("pageshow");
+    const readHidden = () => documentTarget?.visibilityState === "hidden";
+    const markHidden = () => {
+      if (!this.lifecycleHidden) {
+        this.lifecycleGeneration += 1;
+        this.sceneTransitionToken += 1;
+      }
+      this.lifecycleHidden = true;
+      if (this.desiredScene) this.pendingScene = this.desiredScene;
+    };
+    const suspendForBackground = () => {
+      const context = this.context;
+      if (!context || context.state !== "running" || typeof context.suspend !== "function") return;
+      void Promise.resolve(context.suspend()).catch(() => undefined);
+    };
+    const onPageShow = () => {
+      this.lifecycleHidden = readHidden();
+      recover("pageshow");
+    };
+    const onPageHide = () => {
+      markHidden();
+      suspendForBackground();
+    };
     const onVisibilityChange = () => {
-      if (!documentTarget || documentTarget.visibilityState === undefined || documentTarget.visibilityState === "visible") {
+      if (readHidden()) {
+        markHidden();
+        suspendForBackground();
+      } else {
+        this.lifecycleHidden = false;
         recover("visibilitychange");
       }
     };
+    if (readHidden()) {
+      markHidden();
+      suspendForBackground();
+    } else {
+      this.lifecycleHidden = false;
+    }
+    windowTarget?.addEventListener?.("pagehide", onPageHide, { capture: true, passive: true });
     windowTarget?.addEventListener?.("pageshow", onPageShow, { capture: true, passive: true });
     documentTarget?.addEventListener?.("visibilitychange", onVisibilityChange, { capture: true, passive: true });
     const cleanup = () => {
       if (!active) return;
       active = false;
+      this.lifecycleHidden = false;
+      windowTarget?.removeEventListener?.("pagehide", onPageHide, { capture: true });
       windowTarget?.removeEventListener?.("pageshow", onPageShow, { capture: true });
       documentTarget?.removeEventListener?.("visibilitychange", onVisibilityChange, { capture: true });
       if (this.lifecycleCleanup === cleanup) this.lifecycleCleanup = null;
@@ -352,6 +388,13 @@ export class AudioMixer {
       return;
     }
     if (["suspended", "interrupted", "closed"].includes(context.state)) {
+      if (this.lifecycleHidden && context.state !== "closed") {
+        this.#setAudioStatus(AUDIO_MIXER_STATES.RECOVERY_NEEDED, {
+          reason: "background-hidden",
+          needsGesture: false,
+        });
+        return;
+      }
       this.#setAudioStatus(AUDIO_MIXER_STATES.RECOVERY_NEEDED, {
         reason: `context-${context.state}`,
         needsGesture: true,
@@ -413,7 +456,15 @@ export class AudioMixer {
 
   async unlock({ reason = "unlock" } = {}) {
     if (this.disposed) return false;
+    if (this.lifecycleHidden) {
+      this.#setAudioStatus(AUDIO_MIXER_STATES.RECOVERY_NEEDED, {
+        reason: "background-hidden",
+        needsGesture: false,
+      });
+      return false;
+    }
     if (this.unlockPromise) return this.unlockPromise;
+    const lifecycleGeneration = this.lifecycleGeneration;
     this.#setAudioStatus(AUDIO_MIXER_STATES.UNLOCKING, { reason });
     let settleUnlock;
     const task = new Promise((resolve) => { settleUnlock = resolve; });
@@ -425,6 +476,16 @@ export class AudioMixer {
         }
         if (this.context.state !== "running" && typeof this.context.resume === "function") {
           await this.#resumeContextWithTimeout(this.context);
+        }
+        if (this.lifecycleHidden || lifecycleGeneration !== this.lifecycleGeneration) {
+          if (this.context?.state === "running" && typeof this.context.suspend === "function") {
+            await Promise.resolve(this.context.suspend()).catch(() => undefined);
+          }
+          this.#setAudioStatus(AUDIO_MIXER_STATES.RECOVERY_NEEDED, {
+            reason: "background-hidden",
+            needsGesture: false,
+          });
+          return false;
         }
         if (this.context.state !== "running") throw new Error(`AudioContext remained ${String(this.context.state)}`);
         this.unlockCleanup?.();
@@ -476,6 +537,7 @@ export class AudioMixer {
 
   async recoverAudio({ reason = "manual-recovery" } = {}) {
     if (this.disposed) return false;
+    if (this.lifecycleHidden) return false;
     if (!this.context) {
       this.#setAudioStatus(AUDIO_MIXER_STATES.LOCKED, { reason });
       this.#installUnlockListeners();
@@ -559,6 +621,7 @@ export class AudioMixer {
     const context = this.context;
     const uiBus = this.buses.ui;
     if (this.disposed
+      || this.lifecycleHidden
       || context?.state !== "running"
       || !uiBus
       || typeof context.createOscillator !== "function"
@@ -1000,6 +1063,7 @@ export class AudioMixer {
   }
 
   #createVoice(resolved, buffer, options) {
+    if (this.lifecycleHidden) return null;
     const { cueId, asset, pool, alias } = resolved;
     const context = this.context;
     const priority = clamp(options.priority ?? alias?.priority ?? pool?.priority ?? asset.priority, 0, 1000);
@@ -1070,7 +1134,8 @@ export class AudioMixer {
   }
 
   async #playCue(cueId, options) {
-    if (this.disposed || !this.unlocked) return null;
+    if (this.disposed || this.lifecycleHidden || !this.unlocked) return null;
+    const lifecycleGeneration = this.lifecycleGeneration;
     const alias = this.manifest.aliasById[cueId] ?? null;
     const targetId = alias?.targetId ?? cueId;
     const direct = this.manifest.assetById[targetId];
@@ -1095,6 +1160,8 @@ export class AudioMixer {
     const buffer = await this.#decodeAsset(resolved.asset.id);
     if (!buffer
       || this.disposed
+      || this.lifecycleHidden
+      || lifecycleGeneration !== this.lifecycleGeneration
       || !this.unlocked
       || this.categoryGenerations[resolved.asset.category] !== categoryGeneration
       || (this.instanceGenerations.get(instanceKey) ?? 0) !== instanceGeneration) {
@@ -1104,6 +1171,8 @@ export class AudioMixer {
       const sourceFailed = this.assetCache.get(resolved.asset.id)?.status === "failed";
       if (!buffer
          && !this.disposed
+         && !this.lifecycleHidden
+         && lifecycleGeneration === this.lifecycleGeneration
          && this.unlocked
          && this.categoryGenerations[resolved.asset.category] === categoryGeneration
         && (this.instanceGenerations.get(instanceKey) ?? 0) === instanceGeneration
@@ -1121,6 +1190,7 @@ export class AudioMixer {
   }
 
   async play(cueId, options = {}) {
+    if (this.disposed || this.lifecycleHidden) return null;
     if (!options.dedupeKey) return this.#playCue(cueId, options);
     const duplicate = this.#findVoice((voice) => !voice.cleaned && !voice.stopping && voice.dedupeKey === options.dedupeKey);
     if (duplicate) return duplicate.handle;
@@ -1144,6 +1214,11 @@ export class AudioMixer {
     const scene = this.manifest.sceneById[sceneId];
     if (!scene) {
       this.#warn(`unknown-scene:${String(sceneId)}`, `Unknown audio scene ${String(sceneId)} was ignored.`);
+      return null;
+    }
+    if (this.lifecycleHidden) {
+      this.desiredScene = { sceneId, options: { ...options } };
+      this.pendingScene = this.desiredScene;
       return null;
     }
     const bgmVoice = this.sceneState.bgm ? this.activeVoices.get(this.sceneState.bgm.id) : null;
@@ -1310,6 +1385,7 @@ export class AudioMixer {
       contextState: this.context?.state ?? null,
       contextGeneration: this.contextGeneration,
       contextCreateCount: this.contextCreateCount,
+      lifecycleHidden: this.lifecycleHidden,
       unlockTimeoutMs: this.unlockTimeoutMs,
       disposed: this.disposed,
       activeVoices: active.length,

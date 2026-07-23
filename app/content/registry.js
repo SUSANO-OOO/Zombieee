@@ -17,6 +17,7 @@ import { deepFreeze } from "./freeze.js";
 import { createContentLoader } from "./loader.js";
 import { CONTENT_SCHEMA_VERSION } from "./schema.js";
 import { UNIT_CONTENT_BY_ID } from "./unitCatalog.js";
+import { EVENT_FOUNDATION_CONTENT } from "../eventFoundation.js";
 
 function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((left, right) => left.localeCompare(right, "en"));
@@ -133,10 +134,44 @@ const upgrades = CAMPAIGN_UNITS.map((unit) => ({
   ranks: UNIT_PROGRESSION_RANKS,
 }));
 
-const events = Object.values(STORY_EVENTS).map((event) => ({
+const events = [
+  ...Object.values(STORY_EVENTS).map((event) => ({
   ...event,
   aliases: event.aliases ?? [],
-}));
+  })),
+  ...EVENT_FOUNDATION_CONTENT.events,
+];
+
+const difficulty = [
+  {
+    id: "difficulty:standard",
+    displayName: "標準",
+    enemyHpMultiplier: 1,
+    enemyDamageMultiplier: 1,
+    rewardMultiplier: 1,
+  },
+  {
+    id: "difficulty:high",
+    displayName: "高難易度",
+    enemyHpMultiplier: 1,
+    enemyDamageMultiplier: 1,
+    rewardMultiplier: 1,
+  },
+  {
+    id: "difficulty:challenge",
+    displayName: "Challenge Mode",
+    enemyHpMultiplier: 1,
+    enemyDamageMultiplier: 1,
+    rewardMultiplier: 1,
+  },
+  {
+    id: "difficulty:event",
+    displayName: "期間イベント",
+    enemyHpMultiplier: 1,
+    enemyDamageMultiplier: 1,
+    rewardMultiplier: 1,
+  },
+];
 
 const assetSources = [
   units,
@@ -163,20 +198,14 @@ export const CONTENT_REGISTRY = deepFreeze({
   missions,
   waves,
   maps,
-  difficulty: [{
-    id: "difficulty:standard",
-    displayName: "標準",
-    enemyHpMultiplier: 1,
-    enemyDamageMultiplier: 1,
-    rewardMultiplier: 1,
-  }],
+  difficulty,
   rewards,
   acquisition,
   upgrades,
   events,
-  sideEvents: [],
-  challenges: [],
-  timedEvents: [],
+  sideEvents: EVENT_FOUNDATION_CONTENT.sideEvents,
+  challenges: EVENT_FOUNDATION_CONTENT.challenges,
+  timedEvents: EVENT_FOUNDATION_CONTENT.timedEvents,
   assets,
   saves: [{
     id: `save:campaign-v${CAMPAIGN_SAVE_SCHEMA_VERSION}`,

@@ -41,7 +41,7 @@ const EXPLICIT_ATLAS_KINDS = Object.freeze([
   ...V070_STATION_ENEMY_KINDS,
   "crazy-king", "kumaverson", "babayaga",
 ]);
-const V070_PORTRAIT_KINDS = new Set([...V070_REDESIGNED_COMBAT_KINDS, "guide"]);
+const V070_PORTRAIT_KINDS = new Set(V070_REDESIGNED_COMBAT_KINDS);
 
 test("battle display boxes preserve every authored source aspect ratio", () => {
   for (const kind of spriteKinds) {
@@ -263,7 +263,9 @@ test("all twelve people use independent portrait files and radio remains a separ
   const battlePaths = new Set(spriteKinds.map((kind) => spriteSheetPath(kind)));
   const portraitHashes = new Set();
   for (const [kind, assetPath] of Object.entries(CHARACTER_PORTRAIT_ART)) {
-    if (V070_PORTRAIT_KINDS.has(kind)) {
+    if (kind === "guide") {
+      assert.equal(assetPath, "/art/v075/characters/portraits/ikura-event-portrait-v4.webp");
+    } else if (V070_PORTRAIT_KINDS.has(kind)) {
       assert.equal(assetPath, `/art/v070/characters/portraits/${kind}-portrait-v1.webp`);
     } else {
       assert.match(assetPath, /^\/art\/v060\/characters\/portraits\/.+-portrait-v2\.webp$/);
@@ -326,8 +328,12 @@ test("historical 0.6.0 portrait provenance remains intact after 0.7.0 replacemen
   assert.equal(provenance.entries.length, 10);
   assert.equal(new Set(provenance.entries.map(({ kind }) => kind)).size, 10);
   for (const entry of provenance.entries) {
-    if (V070_PORTRAIT_KINDS.has(entry.kind)) {
-      assert.notEqual(entry.finalPath, `public${CHARACTER_PORTRAIT_ART[entry.kind]}`, `${entry.kind} uses its v070 replacement`);
+    if (V070_PORTRAIT_KINDS.has(entry.kind) || entry.kind === "guide") {
+      assert.notEqual(
+        entry.finalPath,
+        `public${CHARACTER_PORTRAIT_ART[entry.kind]}`,
+        `${entry.kind} uses its post-v060 replacement`,
+      );
     } else {
       assert.equal(entry.finalPath, `public${CHARACTER_PORTRAIT_ART[entry.kind]}`);
     }

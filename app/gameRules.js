@@ -151,7 +151,8 @@ export function pointInGroundEffectEllipse(effect, point) {
 
 // One geometry source keeps combat hit points, art placement, and deployment aligned.
 const CRAWLER_GEOMETRY = Object.freeze({
-  x: -112, y: 170, width: 310, height: 210, exitX: 214,
+  x: -112, y: 130, width: 310, height: 210, exitX: 214,
+  doorX: 96, rampFootX: 148,
   commandDeckX: 64, commandDeckY: 186,
   weaponX: 108, weaponY: 224,
   damageX: 88, damageY: 250,

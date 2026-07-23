@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "./productionVisuals.js";
 import { PORTRAIT_ART } from "./spriteManifest.js";
 import { PROLOGUE_SYNOPSIS, getStoryEvent, storyEventLog } from "./storyEvents.js";
+import { CAMPAIGN_IMPORT_MAX_BYTES } from "./campaignStorage.js";
 
 export type CampaignScreen = "title" | "event" | "map" | "personnel" | "loadout" | "battle" | "result";
 
@@ -160,7 +161,14 @@ function SaveImportButton({ onImport, label = "バックアップを読み込む
   return <><button type="button" disabled={disabled} onClick={() => inputRef.current?.click()}>{disabled ? "保存処理中" : label}</button><input ref={inputRef} className="campaign-save-file" type="file" accept="application/json,.json" disabled={disabled} onChange={(event) => {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
-    if (file) void file.text().then(onImport);
+    if (!file) return;
+    if (file.size > CAMPAIGN_IMPORT_MAX_BYTES) {
+      window.alert("バックアップのサイズが上限を超えています。現在のセーブは変更していません。");
+      return;
+    }
+    void file.text()
+      .then(onImport)
+      .catch(() => window.alert("バックアップを読み込めませんでした。現在のセーブは変更していません。"));
   }} /></>;
 }
 

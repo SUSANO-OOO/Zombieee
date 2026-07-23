@@ -72,13 +72,19 @@ export const CONTENT_SCHEMAS = deepFreeze({
     requiredStrings: ["id"],
   },
   sideEvents: {
-    requiredStrings: ["id", "displayName"],
+    requiredStrings: ["id", "displayName", "summary", "eventKind", "rewardPolicy"],
+    requiredObjects: ["mission", "schedule"],
+    requiredArrays: ["aliases"],
   },
   challenges: {
-    requiredStrings: ["id", "displayName"],
+    requiredStrings: ["id", "displayName", "summary", "eventKind", "rewardPolicy"],
+    requiredObjects: ["mission", "schedule"],
+    requiredArrays: ["aliases"],
   },
   timedEvents: {
-    requiredStrings: ["id", "displayName"],
+    requiredStrings: ["id", "displayName", "summary", "eventKind", "rewardPolicy"],
+    requiredObjects: ["mission", "schedule"],
+    requiredArrays: ["aliases"],
   },
   assets: {
     requiredStrings: ["id", "path", "kind"],

@@ -1,16 +1,17 @@
-import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { pathToFileURL } from "node:url";
 
 import { UNIT_CARDS } from "../app/gameRules.js";
 import { applyUnitProgression } from "../app/unitProgression.js";
 
-const baseUrl = new URL(process.env.PROGRESSION_QA_BASE_URL ?? "http://127.0.0.1:4177/");
+if (!process.env.PROGRESSION_QA_BASE_URL) {
+  throw new Error("PROGRESSION_QA_BASE_URL is required; use the isolated QA runner");
+}
+const baseUrl = new URL(process.env.PROGRESSION_QA_BASE_URL);
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) {
   throw new Error(`Progression QA is local-only; refusing ${baseUrl}`);
 }
-const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const playwright = process.env.PLAYWRIGHT_MODULE_PATH
   ? await import(pathToFileURL(path.resolve(process.env.PLAYWRIGHT_MODULE_PATH)).href)
   : await import("playwright");
@@ -35,55 +36,6 @@ await mkdir(evidenceDir, { recursive: true });
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
-}
-
-async function serverIsReady() {
-  try {
-    const response = await fetch(baseUrl, { signal: AbortSignal.timeout(3_000) });
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
-async function ensureLocalServer() {
-  if (await serverIsReady()) return null;
-  const logs = [];
-  const server = spawn(process.execPath, [
-    path.join(projectRoot, "scripts", "run-vinext.mjs"),
-    "start",
-    "--host",
-    baseUrl.hostname,
-    "--port",
-    baseUrl.port || "80",
-  ], {
-    cwd: projectRoot,
-    windowsHide: true,
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  const capture = (chunk) => {
-    logs.push(String(chunk));
-    if (logs.length > 20) logs.shift();
-  };
-  server.stdout.on("data", capture);
-  server.stderr.on("data", capture);
-  const deadline = Date.now() + 120_000;
-  while (Date.now() < deadline) {
-    if (await serverIsReady()) return server;
-    if (server.exitCode !== null) throw new Error(`Progression QA server exited ${server.exitCode}\n${logs.join("")}`);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-  }
-  server.kill();
-  throw new Error(`Progression QA server timeout\n${logs.join("")}`);
-}
-
-async function stopLocalServer(server) {
-  if (!server || server.exitCode !== null) return;
-  server.kill();
-  await Promise.race([
-    new Promise((resolve) => server.once("exit", resolve)),
-    new Promise((resolve) => setTimeout(resolve, 5_000)),
-  ]);
 }
 
 function diagnosticsFor(page) {
@@ -122,9 +74,7 @@ async function enterBattle(page) {
   throw new Error("Progression QA could not enter battle");
 }
 
-const server = await ensureLocalServer();
-try {
-  for (const engine of engines) {
+for (const engine of engines) {
     let browser;
     try {
       browser = await browserTypes[engine].launch({ headless: true });
@@ -270,9 +220,6 @@ try {
     } finally {
       await browser.close();
     }
-  }
-} finally {
-  await stopLocalServer(server);
 }
 
 const summary = {

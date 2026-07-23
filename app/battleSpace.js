@@ -106,7 +106,11 @@ export function battleSpaceFor(stageId, viewport = STAGE_VIEWPORT_IDS.STANDARD) 
         maxY: WORLD_GEOMETRY.crawler.y + WORLD_GEOMETRY.crawler.height,
       }),
       door: {
-        x: WORLD_GEOMETRY.crawler.exitX,
+        x: WORLD_GEOMETRY.crawler.doorX,
+        y: friendlyDoorY - 30,
+      },
+      rampFoot: {
+        x: WORLD_GEOMETRY.crawler.rampFootX,
         y: friendlyDoorY,
       },
       safeArea: crawlerSafeArea,
@@ -129,7 +133,11 @@ export function battleSpaceFor(stageId, viewport = STAGE_VIEWPORT_IDS.STANDARD) 
       friendly: [{
         id: "crawler-door",
         hidden: {
-          x: WORLD_GEOMETRY.crawler.exitX - 22,
+          x: WORLD_GEOMETRY.crawler.doorX,
+          y: friendlyDoorY - 30,
+        },
+        rampFoot: {
+          x: WORLD_GEOMETRY.crawler.rampFootX,
           y: friendlyDoorY,
         },
         entry: {
@@ -322,6 +330,8 @@ export function friendlyDeploymentPoint({
     legacyLane: internalRoute.index,
     x: portal.hidden.x,
     y: portal.hidden.y,
+    rampFootX: portal.rampFoot.x,
+    rampFootY: portal.rampFoot.y,
     combatReadyX: portal.entry.x,
     combatReadyY: portal.entry.y,
   });

@@ -195,7 +195,15 @@ async function airstrikeCase(page) {
 
 async function deploymentAndSpawnCase(page) {
   await openBattle(page, qaUrl({ qa: "station", stage: "4", state: "start" }));
+  const closedSnapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+  invariant(closedSnapshot.crawlerDoor.phase === "closed", "CRAWLER door was not closed at rest");
+  invariant(closedSnapshot.crawlerDoor.doorProgress === 0, "CRAWLER ramp was visible at rest");
   await page.locator("button.unit-card:not([disabled])").first().click();
+  await page.waitForFunction(
+    () => ["warning", "opening", "open"].includes(window.__ASHFALL_BATTLE_QA__.getSnapshot().crawlerDoor.phase),
+    null,
+    { timeout, polling: 10 },
+  );
   try {
     await page.waitForFunction(
       () => window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.some(
@@ -211,8 +219,19 @@ async function deploymentAndSpawnCase(page) {
   const enteringHuman = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(
     (fighter) => fighter.side === "human" && fighter.spawnPortalId === "crawler-door",
   ));
+  const enteringSnapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+  invariant(enteringSnapshot.crawlerDoor.phase === "open", "unit spawned before the CRAWLER door fully opened");
+  invariant(enteringSnapshot.crawlerDoor.doorProgress === 1, "unit spawned on a partially opened ramp");
   invariant(enteringHuman.entryDirection === 1, "human did not run outward from the CRAWLER");
-  invariant(enteringHuman.x < enteringHuman.combatReadyX, "human was not hidden behind the CRAWLER door");
+  invariant(
+    Math.abs(enteringHuman.x - enteringSnapshot.battleSpace.crawlerDoor.x) < 8,
+    "human did not originate inside the physical CRAWLER door",
+  );
+  invariant(
+    enteringHuman.entryRampX === enteringSnapshot.battleSpace.crawlerRampFoot.x,
+    "human ramp waypoint drifted from the rendered ramp foot",
+  );
+  invariant(enteringHuman.x < enteringHuman.combatReadyX, "human did not run out toward the battlefield");
   await page.waitForFunction(
     (id) => {
       const fighter = window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find((candidate) => candidate.id === id);
@@ -225,6 +244,14 @@ async function deploymentAndSpawnCase(page) {
   invariant(
     humanReadySnapshot.crawlerFootstepCount >= 1,
     "CRAWLER run-out completed without a distance-synchronized footstep cue",
+  );
+  await page.waitForFunction(
+    () => {
+      const door = window.__ASHFALL_BATTLE_QA__.getSnapshot().crawlerDoor;
+      return door.phase === "closed" && door.doorProgress === 0;
+    },
+    null,
+    { timeout, polling: 10 },
   );
 
   try {
@@ -254,6 +281,7 @@ async function deploymentAndSpawnCase(page) {
   return {
     enteringHuman,
     enteringEnemy,
+    crawlerDoor: humanReadySnapshot.crawlerDoor,
     crawlerFootstepCount: humanReadySnapshot.crawlerFootstepCount,
     battleSpace: finalSnapshot.battleSpace,
   };

@@ -9,6 +9,7 @@ import {
   ALLY_AI_PROFILE_IDS,
   ENEMY_AI_PROFILE_IDS,
 } from "../combatAiProfiles.js";
+import { registerEventDefinition } from "../eventFoundation.js";
 
 function issue(code, collection, id, message) {
   return Object.freeze({ code, collection, id: id ?? null, message });
@@ -168,6 +169,51 @@ function validateReferences(registry, ids, errors, warnings) {
   }
   for (const upgrade of validRecords(registry, "upgrades")) {
     if (!ids.units.has(upgrade.unitId)) errors.push(issue("broken-unit-reference", "upgrades", upgrade.id, `Missing unit: ${upgrade.unitId}`));
+  }
+
+  const eventKindsByCollection = {
+    events: new Set(["battle-event"]),
+    sideEvents: new Set(["side-mission", "high-difficulty-operation"]),
+    challenges: new Set(["challenge-mode"]),
+    timedEvents: new Set(["timed-event"]),
+  };
+  for (const collection of Object.keys(eventKindsByCollection)) {
+    for (const event of validRecords(registry, collection)) {
+      const foundationCandidate = collection !== "events"
+        || ["eventKind", "mission", "schedule", "rewardPolicy", "fixtureOnly"].some(
+          (field) => Object.prototype.hasOwnProperty.call(event, field),
+        );
+      if (!foundationCandidate) continue;
+      try {
+        registerEventDefinition(event);
+      } catch (error) {
+        errors.push(issue(
+          "invalid-event-definition",
+          collection,
+          event.id,
+          error instanceof Error ? error.message : "Invalid event definition",
+        ));
+        continue;
+      }
+      if (!eventKindsByCollection[collection].has(event.eventKind)) {
+        errors.push(issue(
+          "event-family-mismatch",
+          collection,
+          event.id,
+          `${event.eventKind} cannot be registered in ${collection}`,
+        ));
+      }
+      if (!event.mission || typeof event.mission !== "object" || Array.isArray(event.mission)) {
+        errors.push(issue("missing-event-mission", collection, event.id, "Event foundation record requires a mission"));
+        continue;
+      }
+      if (!ids.stages.has(event.mission.stageId)) {
+        errors.push(issue("broken-stage-reference", collection, event.id, `Missing event stage: ${event.mission.stageId}`));
+      }
+      if (!ids.difficulty.has(event.mission.difficultyId)) {
+        errors.push(issue("broken-difficulty-reference", collection, event.id, `Missing event difficulty: ${event.mission.difficultyId}`));
+      }
+    }
   }
 
   for (const collection of ["missions", "waves", "maps", "rewards", "enemies"]) {

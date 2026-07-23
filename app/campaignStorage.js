@@ -15,6 +15,11 @@ export const CAMPAIGN_SNAPSHOT_KINDS = Object.freeze({
 
 export const CAMPAIGN_EXPORT_FORMAT = "nishijin-campaign-save";
 export const CAMPAIGN_CORRUPT_EXPORT_FORMAT = "nishijin-campaign-corrupt-raw";
+export const CAMPAIGN_IMPORT_MAX_BYTES = 1024 * 1024;
+export const CAMPAIGN_IMPORT_MAX_NODES = 20_000;
+export const CAMPAIGN_IMPORT_MAX_COLLECTION_ENTRIES = 4_096;
+export const CAMPAIGN_IMPORT_MAX_DEPTH = 24;
+export const CAMPAIGN_IMPORT_MAX_STRING_LENGTH = 32_768;
 const CAMPAIGN_EXPORT_VERSION = 1;
 
 function hasOwn(value, key) {
@@ -811,7 +816,63 @@ export function createCampaignManualExport(serialized, {
   }, null, 2);
 }
 
+function inspectCampaignImportResourceBudget(serialized) {
+  let root;
+  try {
+    root = JSON.parse(serialized);
+  } catch {
+    return { valid: true };
+  }
+  let nodes = 0;
+  const stack = [{ value: root, depth: 0 }];
+  while (stack.length > 0) {
+    const { value, depth } = stack.pop();
+    nodes += 1;
+    if (nodes > CAMPAIGN_IMPORT_MAX_NODES) {
+      return { valid: false, reason: "Manual backup contains too many values" };
+    }
+    if (depth > CAMPAIGN_IMPORT_MAX_DEPTH) {
+      return { valid: false, reason: "Manual backup is nested too deeply" };
+    }
+    if (typeof value === "string" && value.length > CAMPAIGN_IMPORT_MAX_STRING_LENGTH) {
+      return { valid: false, reason: "Manual backup contains an oversized text value" };
+    }
+    if (Array.isArray(value)) {
+      if (value.length > CAMPAIGN_IMPORT_MAX_COLLECTION_ENTRIES) {
+        return { valid: false, reason: "Manual backup contains an oversized list" };
+      }
+      for (const child of value) stack.push({ value: child, depth: depth + 1 });
+      continue;
+    }
+    if (value && typeof value === "object") {
+      const entries = Object.entries(value);
+      if (entries.length > CAMPAIGN_IMPORT_MAX_COLLECTION_ENTRIES) {
+        return { valid: false, reason: "Manual backup contains an oversized object" };
+      }
+      for (const [key, child] of entries) {
+        if (key.length > CAMPAIGN_IMPORT_MAX_STRING_LENGTH) {
+          return { valid: false, reason: "Manual backup contains an oversized field name" };
+        }
+        stack.push({ value: child, depth: depth + 1 });
+      }
+    }
+  }
+  return { valid: true };
+}
+
 export function parseCampaignManualImport(text, callbacks = {}) {
+  if (typeof text === "string" && text.length > CAMPAIGN_IMPORT_MAX_BYTES) {
+    return {
+      status: "recovery-needed",
+      source: CAMPAIGN_STORAGE_SOURCES.MANUAL,
+      serialized: "",
+      value: undefined,
+      metadata: normalizeCandidateMetadata(),
+      sourceSchemaVersion: undefined,
+      raw: "",
+      reason: "Manual backup exceeds the supported size limit",
+    };
+  }
   if (typeof text !== "string" || !text.trim()) {
     return {
       status: "recovery-needed",
@@ -849,6 +910,20 @@ export function parseCampaignManualImport(text, callbacks = {}) {
         reason: describeStorageError(error, "Could not parse campaign export").message,
       };
     }
+  }
+
+  const budget = inspectCampaignImportResourceBudget(serialized);
+  if (!budget.valid) {
+    return {
+      status: "recovery-needed",
+      source: CAMPAIGN_STORAGE_SOURCES.MANUAL,
+      serialized: "",
+      value: undefined,
+      metadata: normalizeCandidateMetadata(),
+      sourceSchemaVersion: undefined,
+      raw: "",
+      reason: budget.reason,
+    };
   }
 
   const inspected = validateCampaignStorageCandidate(
