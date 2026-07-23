@@ -1,4 +1,13 @@
 import { STORY_SCRIPT_VERSION } from "./storyEvents.js";
+import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
+import {
+  EVENT_FOUNDATION_REGISTRY,
+  createEventFoundationProgress,
+  eventDisplayView,
+  finishEventRun,
+  normalizeEventFoundationProgress,
+  startEventRun,
+} from "./eventFoundation.js";
 import {
   UNIT_PROGRESSION_MAX_RANK,
   normalizeUnitRanks,
@@ -771,12 +780,12 @@ export const CAMPAIGN_GUIDE = deepFreeze({
   combatant: false,
   location: "移動拠点",
   age: 18,
-  portraitPath: "/art/v070/characters/portraits/guide-portrait-v1.webp",
+  portraitPath: V075_VISUAL_PROFILES.ikura.eventPortrait.path,
   assetStatus: "approved",
   appearanceAudit: {
     presentation: "鮮やかなpink space bunと長いtwin-tail、非常に豊かな胸部を支えるivory sweetheart bustier、短いteal bolero、上腿を大きく見せる極短tactical skortと低いthigh-highを持つ18歳の成人女性表現",
     equipmentMatch: "cream／teal headset、rugged tactical tablet、腰の小型radioと通信・地図・情報分析役が一致",
-    result: "producer-delegated品質ゲートを通過した0.7.0 portraitと整合",
+    result: "0.7.5基準デザイン確認済みidentity masterから派生したevent portraitと整合",
   },
 });
 
@@ -920,8 +929,9 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 
 export const calculateBattleRewards = calculateStageRewards;
 
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 6;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 7;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
+const CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION = 5;
 
 export const CAMPAIGN_FORMATION_MAX_SLOTS = 7;
 export const CAMPAIGN_FORMATION_PRESET_IDS = deepFreeze({
@@ -967,6 +977,7 @@ export function createDefaultCampaignSave() {
     processedResultIds: [],
     processedAcquisitionIds: [],
     processedUpgradeIds: [],
+    eventFoundation: createEventFoundationProgress(),
     completedStageIds: [],
     bestStarsByStage: {},
     claimedStarRewardsByStage: {},
@@ -1215,7 +1226,10 @@ function normalizeFormationPresets(value, ownership, legacyFormation) {
  * Normalizes current data and migrates schema-less/v0 aliases. Unknown fields
  * are ignored without invalidating recognized progress.
  */
-export function migrateCampaignSave(rawSave) {
+export function migrateCampaignSave(
+  rawSave,
+  { eventRegistry = EVENT_FOUNDATION_REGISTRY } = {},
+) {
   let source = rawSave;
   if (typeof source === "string") {
     try {
@@ -1270,6 +1284,11 @@ export function migrateCampaignSave(rawSave) {
     ["processedUpgradeIds", "appliedUpgradeIds"],
     [],
   ));
+  const eventFoundation = normalizeEventFoundationProgress(firstDefined(
+    source,
+    ["eventFoundation", "eventProgress"],
+    null,
+  ), { registry: eventRegistry });
   const sourceStoryScriptVersion = typeof source.storyScriptVersion === "string"
     ? source.storyScriptVersion.trim()
     : "";
@@ -1381,6 +1400,7 @@ export function migrateCampaignSave(rawSave) {
     processedResultIds,
     processedAcquisitionIds,
     processedUpgradeIds,
+    eventFoundation,
     completedStageIds,
     bestStarsByStage,
     claimedStarRewardsByStage,
@@ -1406,8 +1426,14 @@ function normalizedTimestamp(value, fallback = "") {
   return new Date(value).toISOString();
 }
 
-export function reviseCampaignSave(save, { updatedAt = new Date().toISOString() } = {}) {
-  const current = migrateCampaignSave(save);
+export function reviseCampaignSave(
+  save,
+  {
+    updatedAt = new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry });
   return {
     ...current,
     revision: Math.min(Number.MAX_SAFE_INTEGER, current.revision + 1),
@@ -1416,9 +1442,71 @@ export function reviseCampaignSave(save, { updatedAt = new Date().toISOString() 
   };
 }
 
+export function campaignEventViews(
+  save,
+  {
+    now = new Date().toISOString(),
+    registry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry: registry });
+  return registry.map((definition) => eventDisplayView(definition, {
+    now,
+    progress: current.eventFoundation,
+    registry,
+  }));
+}
+
+export function startCampaignEvent(save, eventId, input = {}) {
+  const registry = input.registry ?? EVENT_FOUNDATION_REGISTRY;
+  const current = migrateCampaignSave(save, { eventRegistry: registry });
+  const result = startEventRun(current.eventFoundation, eventId, input);
+  return {
+    save: result.applied
+      ? reviseCampaignSave(
+        { ...current, eventFoundation: result.progress },
+        { updatedAt: input.now, eventRegistry: registry },
+      )
+      : current,
+    result,
+  };
+}
+
+export function finishCampaignEvent(save, input = {}) {
+  const registry = input.registry ?? EVENT_FOUNDATION_REGISTRY;
+  const current = migrateCampaignSave(save, { eventRegistry: registry });
+  const result = finishEventRun(current.eventFoundation, input);
+  return {
+    save: result.applied
+      ? reviseCampaignSave(
+        { ...current, eventFoundation: result.progress },
+        { updatedAt: input.endedAt, eventRegistry: registry },
+      )
+      : current,
+    result,
+  };
+}
+
+export function activeCampaignEventBattleRequest(
+  save,
+  { registry = EVENT_FOUNDATION_REGISTRY } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry: registry });
+  const activeRun = current.eventFoundation.activeRun;
+  if (!activeRun) return null;
+  return {
+    engine: "standard-battle",
+    eventId: activeRun.eventId,
+    runId: activeRun.runId,
+    occurrenceId: activeRun.occurrenceId,
+    stageId: activeRun.stageId,
+    difficultyId: activeRun.difficultyId,
+  };
+}
+
 function campaignIntegrityPayload(save) {
-  const normalized = migrateCampaignSave(save);
-  const payload = { ...normalized };
+  if (!isRecord(save)) throw new TypeError("Campaign integrity requires an object");
+  const payload = { ...save };
   delete payload.integrity;
   return JSON.stringify(payload);
 }
@@ -1432,12 +1520,17 @@ function fnv1a32(value) {
   return hash.toString(16).padStart(8, "0");
 }
 
-export function computeCampaignSaveIntegrity(save) {
+export function computeCampaignSaveIntegrity(
+  save,
+) {
   return `fnv1a32:${fnv1a32(campaignIntegrityPayload(save))}`;
 }
 
-export function withCampaignSaveIntegrity(save) {
-  const normalized = migrateCampaignSave(save);
+export function withCampaignSaveIntegrity(
+  save,
+  { eventRegistry = EVENT_FOUNDATION_REGISTRY } = {},
+) {
+  const normalized = migrateCampaignSave(save, { eventRegistry });
   return {
     ...normalized,
     integrity: computeCampaignSaveIntegrity(normalized),
@@ -1466,7 +1559,7 @@ function hasTypedCampaignField(source, keys, predicate) {
 
 /**
  * Durable storage/import boundaries must not pass arbitrary JSON through the
- * intentionally forgiving migration function. Persisted v1-v4 saves always
+ * intentionally forgiving migration function. Persisted older-schema saves
  * contained this complete campaign fingerprint; schema-less/v0 saves used the
  * same groups under aliases. A partial or foreign object is recovery material,
  * not a fresh campaign that may be replicated over another store.
@@ -1623,7 +1716,8 @@ export function inspectCampaignSaveCandidate(raw, { source = "unknown" } = {}) {
       sourceSchemaVersion,
     };
   }
-  if (sourceSchemaVersion >= CAMPAIGN_SAVE_SCHEMA_VERSION && !verifyCampaignSaveIntegrity(parsed)) {
+  if (sourceSchemaVersion >= CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION
+    && !verifyCampaignSaveIntegrity(parsed)) {
     return {
       status: "corrupt",
       source,
@@ -1638,7 +1732,21 @@ export function inspectCampaignSaveCandidate(raw, { source = "unknown" } = {}) {
     };
   }
 
-  const save = migrateCampaignSave(parsed);
+  let save;
+  try {
+    save = migrateCampaignSave(parsed);
+  } catch {
+    return {
+      status: "corrupt",
+      source,
+      raw: rawText,
+      save: null,
+      revision: clampInteger(parsed.revision, 0, Number.MAX_SAFE_INTEGER, 0),
+      updatedAt: normalizedTimestamp(parsed.updatedAt),
+      reason: "migration-failed",
+      sourceSchemaVersion,
+    };
+  }
   return {
     status: "valid",
     source,
@@ -1651,26 +1759,32 @@ export function inspectCampaignSaveCandidate(raw, { source = "unknown" } = {}) {
   };
 }
 
-export function serializeCampaignSave(save) {
+export function serializeCampaignSave(
+  save,
+  { eventRegistry = EVENT_FOUNDATION_REGISTRY } = {},
+) {
   try {
-    return JSON.stringify(withCampaignSaveIntegrity(save));
+    return JSON.stringify(withCampaignSaveIntegrity(save, { eventRegistry }));
   } catch {
     return JSON.stringify(withCampaignSaveIntegrity(createDefaultCampaignSave()));
   }
 }
 
-export function deserializeCampaignSave(serialized) {
-  if (typeof serialized !== "string") return migrateCampaignSave(serialized);
+export function deserializeCampaignSave(
+  serialized,
+  { eventRegistry = EVENT_FOUNDATION_REGISTRY } = {},
+) {
+  if (typeof serialized !== "string") return migrateCampaignSave(serialized, { eventRegistry });
   try {
     const parsed = JSON.parse(serialized);
     if (isRecord(parsed)
-      && Number(parsed.schemaVersion) >= CAMPAIGN_SAVE_SCHEMA_VERSION
+      && Number(parsed.schemaVersion) >= CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION
       && typeof parsed.integrity === "string"
       && parsed.integrity.length > 0
-      && !verifyCampaignSaveIntegrity(parsed)) {
+      && !verifyCampaignSaveIntegrity(parsed, { eventRegistry })) {
       return createDefaultCampaignSave();
     }
-    return migrateCampaignSave(parsed);
+    return migrateCampaignSave(parsed, { eventRegistry });
   } catch {
     return createDefaultCampaignSave();
   }

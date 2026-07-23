@@ -17,6 +17,9 @@ import {
   enemyStatsForWave,
 } from "../app/content/enemyCatalog.js";
 import {
+  EVENT_FOUNDATION_FIXTURE_REGISTRY,
+} from "../app/eventFoundation.js";
+import {
   createSyntheticContentRegistry,
   generateContentFixture,
   generateContentFixtureFiles,
@@ -147,6 +150,58 @@ test("validator diagnoses invalid nested spawn records without throwing", () => 
   const result = validateContentRegistry(broken);
   assert.equal(result.ok, false);
   assert.equal(result.errors.filter(({ code }) => code === "invalid-spawn").length, 2);
+});
+
+test("event foundation records fail closed when stage or difficulty references are broken", () => {
+  const broken = structuredClone(CONTENT_REGISTRY);
+  broken.sideEvents = [structuredClone(EVENT_FOUNDATION_FIXTURE_REGISTRY.find(
+    ({ eventKind }) => eventKind === "side-mission",
+  ))];
+  broken.timedEvents = [structuredClone(EVENT_FOUNDATION_FIXTURE_REGISTRY.find(
+    ({ eventKind }) => eventKind === "timed-event",
+  ))];
+  broken.sideEvents[0].mission.stageId = "stage:attacker-controlled";
+  broken.timedEvents[0].mission.difficultyId = "difficulty:attacker-controlled";
+  const result = validateContentRegistry(broken);
+  assert.equal(result.ok, false);
+  assert.equal(result.errors.some(({ code, collection }) => (
+    code === "broken-stage-reference" && collection === "sideEvents"
+  )), true);
+  assert.equal(result.errors.some(({ code, collection }) => (
+    code === "broken-difficulty-reference" && collection === "timedEvents"
+  )), true);
+});
+
+test("event family schema rejects missing registration fields and family mismatches", () => {
+  const broken = structuredClone(CONTENT_REGISTRY);
+  const sideEvent = structuredClone(EVENT_FOUNDATION_FIXTURE_REGISTRY.find(
+    ({ eventKind }) => eventKind === "side-mission",
+  ));
+  delete sideEvent.mission;
+  delete sideEvent.schedule;
+  delete sideEvent.eventKind;
+  broken.sideEvents = [sideEvent];
+  broken.events.push({
+    id: "battle-event:missing-kind",
+    displayName: "Missing kind",
+    summary: "Foundation-shaped event missing its discriminator",
+    mission: {
+      stageId: CONTENT_REGISTRY.stages[0].id,
+      difficultyId: CONTENT_REGISTRY.difficulty[0].id,
+    },
+    schedule: { type: "permanent" },
+    rewardPolicy: "none",
+    aliases: [],
+  });
+  broken.challenges = [structuredClone(EVENT_FOUNDATION_FIXTURE_REGISTRY.find(
+    ({ eventKind }) => eventKind === "timed-event",
+  ))];
+  const result = validateContentRegistry(broken);
+  assert.equal(result.ok, false);
+  const codes = new Set(result.errors.map(({ code }) => code));
+  assert.equal(codes.has("missing-string"), true);
+  assert.equal(codes.has("missing-object"), true);
+  assert.equal(codes.has("event-family-mismatch"), true);
 });
 
 test("content migration is stable, idempotent, and preserves legacy aliases", () => {

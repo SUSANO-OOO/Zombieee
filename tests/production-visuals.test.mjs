@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import sharp from "sharp";
 import test from "node:test";
 
 import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "../app/productionVisuals.js";
+import { V075_VISUAL_PROFILES } from "../app/visualProfiles.js";
 
 const repoAsset = (publicPath) => new URL(`../public${publicPath}`, import.meta.url);
+const repoAssetFile = (publicPath) => fileURLToPath(repoAsset(publicPath));
 
 test("production visual manifest uses dedicated title, command, guide, six stages, and three event cuts", async () => {
   const paths = [
@@ -19,7 +23,7 @@ test("production visual manifest uses dedicated title, command, guide, six stage
   assert.equal(new Set(paths).size, paths.length);
   const hashes = [];
   for (const path of paths) {
-    assert.match(path, /^\/art\/v0(?:60|70)\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.webp$/);
+    assert.match(path, /^\/art\/v0(?:60|70|75)\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.webp$/);
     const bytes = await readFile(repoAsset(path));
     assert.equal(bytes.subarray(0, 4).toString("ascii"), "RIFF");
     assert.equal(bytes.subarray(8, 12).toString("ascii"), "WEBP");
@@ -27,6 +31,42 @@ test("production visual manifest uses dedicated title, command, guide, six stage
     hashes.push(createHash("sha256").update(bytes).digest("hex"));
   }
   assert.equal(new Set(hashes).size, hashes.length, "production locations and cuts must not reuse identical image bytes");
+});
+
+test("0.7.5 checkpoint identities resolve to purpose-specific production assets", async () => {
+  assert.equal(PRODUCTION_VISUALS.guide, V075_VISUAL_PROFILES.ikura.eventPortrait.path);
+  assert.equal(V075_VISUAL_PROFILES.ikura.identityLock.length, 5);
+  assert.equal(V075_VISUAL_PROFILES.crawler.identityLock.length, 4);
+  assert.equal(V075_VISUAL_PROFILES.enemyBase.identityLock.length, 4);
+
+  const paths = [
+    V075_VISUAL_PROFILES.ikura.identityMaster.path,
+    V075_VISUAL_PROFILES.ikura.eventPortrait.path,
+    V075_VISUAL_PROFILES.crawler.identityMaster.path,
+    V075_VISUAL_PROFILES.crawler.closed.path,
+    V075_VISUAL_PROFILES.crawler.open.path,
+    V075_VISUAL_PROFILES.enemyBase.identityMaster.path,
+    V075_VISUAL_PROFILES.enemyBase.intact.path,
+  ];
+  for (const path of paths) {
+    const metadata = await sharp(repoAssetFile(path), { failOn: "error" }).metadata();
+    assert.ok(metadata.width > 0 && metadata.height > 0, `${path} dimensions`);
+  }
+
+  const portrait = await sharp(repoAssetFile(V075_VISUAL_PROFILES.ikura.eventPortrait.path)).metadata();
+  assert.deepEqual(
+    { format: portrait.format, width: portrait.width, height: portrait.height, hasAlpha: portrait.hasAlpha },
+    { format: "webp", width: 512, height: 640, hasAlpha: true },
+  );
+  const closed = await sharp(repoAssetFile(V075_VISUAL_PROFILES.crawler.closed.path)).metadata();
+  const open = await sharp(repoAssetFile(V075_VISUAL_PROFILES.crawler.open.path)).metadata();
+  assert.deepEqual(
+    { width: closed.width, height: closed.height, hasAlpha: closed.hasAlpha },
+    { width: open.width, height: open.height, hasAlpha: open.hasAlpha },
+  );
+  const enemyBase = await sharp(repoAssetFile(V075_VISUAL_PROFILES.enemyBase.intact.path)).metadata();
+  assert.equal(enemyBase.hasAlpha, true);
+  assert.ok(enemyBase.height > enemyBase.width, "enemy base preserves the approved slender vertical silhouette");
 });
 
 test("story and battle screens resolve the same location-specific art", () => {

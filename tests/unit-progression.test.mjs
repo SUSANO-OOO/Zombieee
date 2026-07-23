@@ -194,7 +194,7 @@ test("upgrade transactions are idempotent and reject invalid spend paths", () =>
   }).result.reason, "max-rank");
 });
 
-test("schema 5 and alias-keyed ranks migrate to canonical schema 6 without data loss", () => {
+test("schema 5 and alias-keyed ranks migrate through the current schema without data loss", () => {
   const legacy = {
     ...createDefaultCampaignSave(),
     schemaVersion: 5,
@@ -203,7 +203,7 @@ test("schema 5 and alias-keyed ranks migrate to canonical schema 6 without data 
     unitRanks: { brawler: 2, gunner: 3, brute: 99, unknown: 4 },
   };
   const migrated = migrateCampaignSave(legacy);
-  assert.equal(migrated.schemaVersion, 6);
+  assert.equal(migrated.schemaVersion, 7);
   assert.deepEqual(migrated.processedUpgradeIds, ["legacy-upgrade"]);
   assert.equal(getCampaignUnitRank(migrated, "brawler"), 2);
   assert.equal(getCampaignUnitRank(migrated, "gunner"), 3);
