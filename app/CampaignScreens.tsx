@@ -40,6 +40,17 @@ export type UnitScreenView = {
   recruitable: boolean;
   recruitCost: number;
   unlockHint: string;
+  rank: number;
+  maxRank: number;
+  nextUpgradeCost: number | null;
+  upgradeBaseCost: number;
+  upgradeDiscount: number;
+  catchUp: boolean;
+  milestones: readonly string[];
+  nextMilestones: readonly string[];
+  statSummary: string;
+  nextStatSummary: string;
+  nextStatCompact: string;
 };
 
 export type FormationPresetView = {
@@ -122,6 +133,7 @@ type Props = {
   onSelectFormationPreset: (presetId: string) => void;
   onToggleFormation: (unitId: string) => void;
   onRecruitUnit: (unitId: string) => void;
+  onUpgradeUnit: (unitId: string) => void;
   onSelectSupply: (kind: string) => void;
   onStartBattle: () => void;
   onRetry: () => void;
@@ -324,22 +336,25 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
   </div>;
 }
 
-function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPresets, selectedFormationPresetId, caps, supplies, selectedSupply, assetsReady, assetError, onReturnToMap, onSelectFormationPreset, onToggleFormation, onRecruitUnit, onSelectSupply, onStartBattle, onReloadAssets }: Pick<Props, "selectedStage" | "units" | "formationUnitIds" | "formationPresets" | "selectedFormationPresetId" | "caps" | "supplies" | "selectedSupply" | "assetsReady" | "assetError" | "onReturnToMap" | "onSelectFormationPreset" | "onToggleFormation" | "onRecruitUnit" | "onSelectSupply" | "onStartBattle" | "onReloadAssets">) {
+function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPresets, selectedFormationPresetId, caps, supplies, selectedSupply, assetsReady, assetError, onReturnToMap, onSelectFormationPreset, onToggleFormation, onRecruitUnit, onUpgradeUnit, onSelectSupply, onStartBattle, onReloadAssets }: Pick<Props, "selectedStage" | "units" | "formationUnitIds" | "formationPresets" | "selectedFormationPresetId" | "caps" | "supplies" | "selectedSupply" | "assetsReady" | "assetError" | "onReturnToMap" | "onSelectFormationPreset" | "onToggleFormation" | "onRecruitUnit" | "onUpgradeUnit" | "onSelectSupply" | "onStartBattle" | "onReloadAssets">) {
+  const [mode, setMode] = useState<"roster" | "acquisition" | "upgrade">("roster");
+  const visibleUnits = units.filter((unit) => mode === "roster" ? unit.owned : mode === "upgrade" ? unit.owned : !unit.owned);
   return <div className="campaign-overlay formation-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="出撃編成">
     <header className="campaign-header"><button className="campaign-back" onClick={onReturnToMap}>← 地図へ</button><div><small>出撃編成</small><h1>{selectedStage.displayName}</h1></div><p>{selectedStage.objective}</p></header>
     <div className="formation-layout">
-      <section className="formation-units" aria-label="使用ユニットを選択"><header className="formation-roster-header"><h2>出撃可能ユニット <small>{formationUnitIds.length}/7名選択中</small></h2><nav aria-label="部隊プリセット">{formationPresets.map((preset) => <button key={preset.id} data-active={preset.id === selectedFormationPresetId} onClick={() => onSelectFormationPreset(preset.id)} aria-pressed={preset.id === selectedFormationPresetId}><b>{preset.name}</b><small>{preset.unitIds.length}/7</small></button>)}</nav></header><div>{units.map((unit) => {
+      <section className="formation-units" data-mode={mode} aria-label={mode === "roster" ? "使用ユニットを選択" : mode === "upgrade" ? "ユニットを強化" : "ユニットを調達"}><header className="formation-roster-header"><div><h2>{mode === "roster" ? <>出撃可能ユニット <small>{formationUnitIds.length}/7名選択中</small></> : mode === "upgrade" ? <>戦力強化 <small>所持 {caps}キャップ</small></> : <>新規調達 <small>所持 {caps}キャップ</small></>}</h2><nav className="formation-mode-tabs" aria-label="部隊管理"><button data-active={mode === "roster"} onClick={() => setMode("roster")}>編成</button><button data-active={mode === "acquisition"} onClick={() => setMode("acquisition")}>調達</button><button data-active={mode === "upgrade"} onClick={() => setMode("upgrade")}>強化</button></nav></div>{mode === "roster" && <nav aria-label="部隊プリセット">{formationPresets.map((preset) => <button key={preset.id} data-active={preset.id === selectedFormationPresetId} onClick={() => onSelectFormationPreset(preset.id)} aria-pressed={preset.id === selectedFormationPresetId}><b>{preset.name}</b><small>{preset.unitIds.length}/7</small></button>)}</nav>}</header><div>{visibleUnits.map((unit) => {
         const selected = formationUnitIds.includes(unit.id);
         const atCapacity = formationUnitIds.length >= 7 && !selected;
         const portrait = unit.discovered ? portraitArt[unit.kind] : "";
         const state = unit.owned ? "owned" : unit.recruitable ? "recruitable" : unit.discovered ? "discovered" : "unknown";
         return <article key={unit.id} className="formation-unit-card" data-state={state} data-selected={selected}>
-          <button className="formation-unit-select" data-kind={unit.kind} data-unit-id={unit.id} data-selected={selected} disabled={!unit.owned || atCapacity} onClick={() => onToggleFormation(unit.id)} aria-pressed={selected} aria-label={unit.discovered ? `${unit.name}、${unit.role}、${unit.weaponName}、${unit.deploymentHint}` : "未発見の仲間"} title={unit.discovered ? `${unit.attackMode} / ${unit.primaryTarget} / ${unit.deploymentHint}` : undefined} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>
-            <span className="formation-portrait" /><span><b>{unit.discovered ? unit.name : "未発見"}</b><em>{unit.discovered && <><i>{unit.roleIcon}</i>{unit.role}</>}</em><small className="unit-combat">{unit.discovered ? `${unit.weaponName}・${unit.rangeBand}・${unit.primaryTarget}` : "物語を進めると情報が明らかになります"}</small>{unit.owned && <small className="unit-intent">配置：{unit.deploymentHint}</small>}</span><i>{unit.owned ? selected ? "選択中" : "待機" : unit.recruitable ? "調達可能" : unit.discovered ? "加入条件未達" : "未発見"}</i>
+          <button className="formation-unit-select" data-kind={unit.kind} data-unit-id={unit.id} data-selected={selected} disabled={mode !== "roster" || !unit.owned || atCapacity} onClick={() => onToggleFormation(unit.id)} aria-pressed={mode === "roster" ? selected : undefined} aria-label={unit.discovered ? `${unit.name}、Rank ${unit.rank}、${unit.role}、${unit.weaponName}、${unit.deploymentHint}` : "未発見の仲間"} title={unit.discovered ? `${unit.attackMode} / ${unit.primaryTarget} / ${unit.deploymentHint}` : undefined} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>
+            <span className="formation-portrait" /><span><b>{unit.discovered ? unit.name : "未発見"}</b><em>{unit.discovered && <><i>{unit.roleIcon}</i>{unit.role}</>}</em><small className="unit-combat">{unit.discovered ? `${unit.weaponName}・${unit.rangeBand}・${unit.primaryTarget}` : "物語を進めると情報が明らかになります"}</small>{unit.owned && <small className="unit-intent">{mode === "upgrade" ? `${unit.statSummary}${unit.milestones.length ? ` / ${unit.milestones.join("・")}` : ""}` : `配置：${unit.deploymentHint}`}</small>}</span><i>{unit.owned ? `Rank ${unit.rank}/${unit.maxRank}` : unit.recruitable ? "調達可能" : unit.discovered ? "加入条件未達" : "未発見"}</i>
           </button>
-          {unit.recruitable && !unit.owned && <button className="formation-unit-recruit" disabled={caps < unit.recruitCost} onClick={() => onRecruitUnit(unit.id)}><b>{unit.recruitCost}キャップで調達</b><small>所持 {caps}</small></button>}
+          {mode === "acquisition" && unit.recruitable && !unit.owned && <button className="formation-unit-recruit" disabled={caps < unit.recruitCost} onClick={() => onRecruitUnit(unit.id)}><b>{unit.recruitCost}キャップで調達</b><small>所持 {caps}</small></button>}
+          {mode === "upgrade" && unit.owned && <button className="formation-unit-upgrade" disabled={unit.nextUpgradeCost === null || caps < unit.nextUpgradeCost} onClick={() => onUpgradeUnit(unit.id)} title={unit.nextUpgradeCost === null ? unit.statSummary : `${unit.nextMilestones.join("・")} ${unit.nextStatSummary}`}><b>{unit.nextUpgradeCost === null ? "最大強化済み" : `Rank ${unit.rank + 1}へ：${unit.nextUpgradeCost}キャップ`}</b><small>{unit.nextUpgradeCost === null ? unit.statSummary : `${unit.catchUp ? `追いつき割引 -${unit.upgradeDiscount} / ` : ""}${unit.nextMilestones.length ? `${unit.nextMilestones.join("・")} / ` : ""}${unit.nextStatCompact}`}</small></button>}
         </article>;
-      })}</div></section>
+      })}{visibleUnits.length === 0 && <p className="formation-empty">{mode === "acquisition" ? "現在調達できる候補はいません。物語を進めると候補が増えます。" : "対象ユニットがいません。"}</p>}</div></section>
       <section className="formation-support" aria-label="戦場物資を選択"><h2>戦場物資</h2>{supplies.map((supply) => <button key={supply.kind} data-supply={supply.kind} data-selected={selectedSupply === supply.kind} onClick={() => onSelectSupply(supply.kind)} aria-pressed={selectedSupply === supply.kind}><b>{supply.name}</b><small>{supply.description}</small><em>▰{supply.cost}</em></button>)}<div className="formation-note"><b>固定支援</b><span>緊急航空支援 / 移動拠点一斉掃射</span></div></section>
     </div>
     <footer className="formation-footer"><p>1〜7名で出撃できます。同じ仲間は戦闘中に何度でも再召喚できます。</p><button className="campaign-primary" disabled={formationUnitIds.length === 0 || (!assetsReady && !assetError)} onClick={assetError ? onReloadAssets : onStartBattle}><span>{assetError ? "アセット再読込" : assetsReady ? "この編成で出撃" : "アセット準備中"}</span><small>{assetError ? "タップして再読込" : assetsReady ? selectedStage.missionLabel : "移動拠点を点検中"}</small></button></footer>
@@ -367,6 +382,6 @@ export function CampaignScreens(props: Props) {
   if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} savePersistence={props.savePersistence} saveMutationPending={props.saveMutationPending} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} onExportSave={props.onExportSave} onImportSave={props.onImportSave} />;
   if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} forceStoryReplay={props.forceStoryReplay} onEventComplete={props.onEventComplete} onEventSkip={props.onEventSkip} onStoryAudioPositionChange={props.onStoryAudioPositionChange} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />;
   if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} onSelectStage={props.onSelectStage} onOpenLoadout={props.onOpenLoadout} onReplayPrologue={props.onReplayPrologue} onResetSave={props.onResetSave} />;
-  if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} caps={props.caps} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} onReturnToMap={props.onReturnToMap} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onRecruitUnit={props.onRecruitUnit} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
+  if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} caps={props.caps} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} onReturnToMap={props.onReturnToMap} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onRecruitUnit={props.onRecruitUnit} onUpgradeUnit={props.onUpgradeUnit} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
   return <ResultScreen selectedStage={props.selectedStage} result={props.result} onRetry={props.onRetry} onContinueResult={props.onContinueResult} />;
 }

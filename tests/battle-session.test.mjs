@@ -99,7 +99,7 @@ test("the runtime routes destructive pause actions through the no-result contrac
   assert.match(source, /const requestedFormation = sessionOverride\?\.formationKinds \?\? formationKinds/);
   assert.match(source, /const battleSupply = sessionOverride\?\.selectedSupply \?\? selectedSupply/);
   assert.match(source, /sessionOverride\?\.resultId \?\? createBattleResultId\(battleStageId\)/);
-  assert.match(source, /initialGame\(transition\.selectedSupply, transition\.stageId, transition\.formationKinds as UnitKind\[\]\)/);
+  assert.match(source, /initialGame\(\s*transition\.selectedSupply,\s*transition\.stageId,\s*transition\.formationKinds as UnitKind\[\],[\s\S]*?campaignSave\.unitRanks/);
   const returnToMapBody = source.match(/const returnToMap = useCallback\(\(sessionOverride\?: \{[\s\S]*?\n  \}\) => \{([\s\S]*?)\n  \}, \[/)?.[1] ?? "";
   assert.notEqual(returnToMapBody, "", "returnToMap source extraction must remain live");
   assert.match(returnToMapBody, /sessionOverride\?\.selectedSupply \?\? selectedSupply/);
