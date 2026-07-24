@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
 import { MISSION_EVENTS, PREP_SECONDS } from "../app/gameRules.js";
-import { battleOutcomeFor, createBattleDefinition, objectiveForBattle, phaseForBattle } from "../app/battleDefinitions.js";
+import {
+  battleOutcomeFor,
+  createBattleDefinition,
+  objectiveForBattle,
+  phaseBannerForBattle,
+  phaseForBattle,
+} from "../app/battleDefinitions.js";
 import { stationSpatialSnapshot } from "../app/stationSpatialMechanics.js";
 import { STATION_MISSION_TYPES, createStationMissionRuntime } from "../app/stationStageMechanics.js";
 
@@ -42,6 +48,31 @@ test("stage 2 survives a full 180 seconds after deployment and does not target s
   assert.equal(battleOutcomeFor(definition, { baseHp: 9, baseMaxHp: 1000, barricadeHp: 0, time: definition.defenseEndAt - .001 }), null);
   assert.equal(battleOutcomeFor(definition, { baseHp: 9, baseMaxHp: 1000, barricadeHp: 0, time: definition.defenseEndAt }), "lost");
   assert.match(objectiveForBattle(definition, { time: PREP_SECONDS, phase: 1, barricadeVulnerable: false }), /180秒/);
+});
+
+test("Version 0.8.0 defense and escort HUDs name their actual mission objects", () => {
+  const cases = [
+    [CAMPAIGN_STAGE_IDS.UNIVERSITY_HOSPITAL_APPROACH, "救急搬入口"],
+    [CAMPAIGN_STAGE_IDS.HOSPITAL_EVACUATION_ROUTE, "移動診断装置"],
+    [CAMPAIGN_STAGE_IDS.RESEARCH_CONTAINMENT, "隔離制御"],
+    [CAMPAIGN_STAGE_IDS.RESEARCH_FREIGHT_PASSAGE, "封印検体キャリア"],
+    [CAMPAIGN_STAGE_IDS.EVACUATION_FREIGHT_YARD, "避難貨物列"],
+  ];
+  for (const [stageId, expectedLabel] of cases) {
+    const definition = createBattleDefinition(stageId);
+    const stageMission = definition.missionType === STATION_MISSION_TYPES.ESCORT
+      ? createStationMissionRuntime(definition.missionType, definition.missionConfig)
+      : null;
+    const objective = objectiveForBattle(definition, {
+      time: PREP_SECONDS,
+      phase: 1,
+      barricadeVulnerable: false,
+      stageMission,
+    });
+    assert.match(objective, new RegExp(expectedLabel), stageId);
+    assert.match(phaseBannerForBattle(definition, 1), new RegExp(expectedLabel), stageId);
+    assert.doesNotMatch(`${objective} ${phaseBannerForBattle(definition, 1)}`, /救援部隊|保守台車/, stageId);
+  }
 });
 
 test("stage 3 cannot report victory until TAKUYA is defeated and the infection base is vulnerable", () => {
