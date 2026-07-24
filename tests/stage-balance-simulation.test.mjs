@@ -100,12 +100,22 @@ test("Stage 4-6 each have three successful formations with no mandatory unit", (
   }
 });
 
-test("Stage 7-16 expose three non-mandatory reference formations", () => {
+test("Stage 7-16 each clear with three non-mandatory reference formations", () => {
   for (const stage of CAMPAIGN_STAGES.slice(6)) {
     const formations = P4_BALANCE_FORMATIONS[stage.id];
     assert.equal(formations.length, 3, stage.id);
     assert.deepEqual(formationIntersection(formations), [], `${stage.id} has a hidden mandatory pick`);
     assert.equal(formations.every((formation) => formation.length <= CAMPAIGN_FORMATION_MAX_SLOTS), true);
+    for (const [index, formation] of formations.entries()) {
+      const result = simulateStageBalance({
+        stageId: stage.id,
+        formation,
+        seed: `v080-${stage.stageNumber}-${index}`,
+      });
+      assert.equal(result.outcome, "won", `${stage.id}/${index}: ${JSON.stringify(result)}`);
+      assert.ok(result.baseHp > 0, `${stage.id}/${index}`);
+      assert.equal(result.waves.spawned, result.waves.scheduled, `${stage.id}/${index}`);
+    }
   }
 });
 

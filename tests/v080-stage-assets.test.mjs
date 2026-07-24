@@ -13,7 +13,7 @@ const outputRoot = path.join(root, "public", "art", "v080", "stages");
 const sourceRoot = path.join(root, "assets", "source", "v080", "stages");
 const expansionStages = CAMPAIGN_STAGES.slice(6);
 
-test("Version 0.8.0 ships ten distinct 1600x900 stage variants from four source masters", async () => {
+test("Version 0.8.0 ships ten distinct 1600x900 stage variants from five source masters", async () => {
   const stagePaths = expansionStages.map(({ id }) => PRODUCTION_VISUALS.stages[id]);
   assert.equal(stagePaths.length, 10);
   assert.equal(new Set(stagePaths).size, 10);
@@ -33,6 +33,7 @@ test("Version 0.8.0 ships ten distinct 1600x900 stage variants from four source 
   const masterNames = (await readdir(sourceRoot)).filter((name) => name.endsWith("-master.png")).sort();
   assert.deepEqual(masterNames, [
     "hospital-master.png",
+    "hospital-ward-master.png",
     "logistics-master.png",
     "research-master.png",
     "t-plan-master.png",

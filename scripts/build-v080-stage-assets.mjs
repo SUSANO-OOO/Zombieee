@@ -21,10 +21,10 @@ const variants = [
   },
   {
     id: "hospital-emergency-ward",
-    master: "hospital-master.png",
-    focus: "west",
-    zoom: 1.13,
-    grade: { brightness: 0.78, saturation: 0.62 },
+    master: "hospital-ward-master.png",
+    focus: "centre",
+    zoom: 1.02,
+    grade: { brightness: 0.86, saturation: 0.72 },
     accent: "#e94b55",
     layout: "relay",
   },
@@ -108,19 +108,20 @@ function overlaySvg({ accent, layout }) {
       <path d="M250 695 L350 660 L440 692 M1160 692 L1255 660 L1350 695" class="mark"/>
       <path d="M350 660 L350 625 M1255 660 L1255 625" class="thin"/>`,
     relay: `
-      <circle cx="1240" cy="300" r="42" class="glow"/>
-      <circle cx="1240" cy="300" r="19" class="core"/>
-      <path d="M1240 250 L1240 176 M1192 300 L1134 300 M1288 300 L1346 300" class="thin"/>`,
+      <circle cx="1450" cy="470" r="42" class="glow"/>
+      <circle cx="1450" cy="470" r="19" class="core"/>
+      <path d="M1450 420 L1450 346 M1402 470 L1344 470 M1498 470 L1556 470" class="thin"/>`,
     route: `
-      <path d="M250 688 C520 652 835 704 1340 650" class="route"/>
-      <path d="M1290 632 L1340 650 L1298 684" class="route"/>`,
+      <path d="M430 470 C670 445 985 500 1293 470" class="route"/>
+      <path d="M1243 452 L1293 470 L1251 504" class="route"/>`,
     gate: `
-      <path d="M1190 170 L1320 170 L1350 430 L1160 430 Z" class="gate"/>
-      <path d="M1208 385 L1302 385" class="thin"/>`,
+      <path d="M1390 185 L1515 185 L1540 515 L1360 515 Z" class="gate"/>
+      <path d="M1408 470 L1498 470" class="thin"/>`,
     seal: `
-      <circle cx="425" cy="326" r="18" class="seal-light"/>
-      <circle cx="800" cy="294" r="21" class="seal-light"/>
-      <circle cx="1175" cy="326" r="18" class="seal-light"/>`,
+      <circle cx="683" cy="353" r="18" class="seal-light"/>
+      <circle cx="973" cy="587" r="21" class="seal-light"/>
+      <circle cx="1240" cy="470" r="18" class="seal-light"/>
+      <path d="M1445 265 L1515 265 L1515 670 L1445 670 Z" class="gate"/>`,
   };
   return Buffer.from(`
     <svg width="${outputWidth}" height="${outputHeight}" viewBox="0 0 ${outputWidth} ${outputHeight}" xmlns="http://www.w3.org/2000/svg">

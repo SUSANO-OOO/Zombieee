@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
+  CAMPAIGN_STAGES,
   CAMPAIGN_STAGE_IDS,
   createDefaultCampaignSave,
   markStoryEventRead,
@@ -45,10 +46,10 @@ const STAGE_4 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE;
 const STAGE_5 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM;
 const STAGE_6 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL;
 
-test("outbreak-origin-v8 flow reaches every canonical event across all six stages", () => {
+test("outbreak-origin-v8 flow reaches every canonical event and covers all sixteen stages", () => {
   assert.equal(STORY_FLOW_SCRIPT_VERSION, "outbreak-origin-v8");
   assert.deepEqual(new Set(listStoryFlowEventIds()), new Set(STORY_EVENT_IDS));
-  assert.deepEqual(Object.keys(STAGE_STORY_FLOWS), [STAGE_1, STAGE_2, STAGE_3, STAGE_4, STAGE_5, STAGE_6]);
+  assert.deepEqual(Object.keys(STAGE_STORY_FLOWS), CAMPAIGN_STAGES.map(({ id }) => id));
   assert.deepEqual(getPrologueOpeningEventIds(), [
     "prologue-kumaya-v070",
     "prologue-collapse-montage-v070",

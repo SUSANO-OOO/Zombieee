@@ -273,6 +273,14 @@ test("Stage 7-16 use four new regions, five objective patterns, and a strict for
     assert.ok(stage.waves.length >= 7 && stage.waves.length <= 12, stage.id);
     assert.equal(stage.preBattleEventId, null);
     assert.equal(stage.postBattleEventId, null);
+    const scheduledKinds = new Set(stage.waves.flatMap((wave) => (
+      Array.isArray(wave.units)
+        ? wave.units
+        : (wave.groups ?? []).map(({ kind }) => kind)
+    )));
+    for (const kind of scheduledKinds) {
+      assert.equal(stage.enemyKinds.includes(kind), true, `${stage.id} is missing ${kind} from sprite preload`);
+    }
   }
   for (let index = 2; index < expansion.length; index += 1) {
     assert.equal(

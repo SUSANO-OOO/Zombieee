@@ -683,7 +683,12 @@ export const CAMPAIGN_STAGES = deepFreeze([
     missionType: "timed-defense",
     objectivePattern: "perimeter-hold",
     objective: "救急搬入口を150秒確保し、地下への侵入経路を開く",
-    objectiveConfig: { target: "hospital-access", durationSeconds: 150 },
+    objectiveConfig: {
+      target: "hospital-access",
+      targetLabel: "救急搬入口",
+      hudLabel: "救急搬入口の確保",
+      durationSeconds: 150,
+    },
     theme: {
       id: "theme-university-hospital-approach",
       backgroundId: "background-university-hospital-approach-v1",
@@ -718,7 +723,7 @@ export const CAMPAIGN_STAGES = deepFreeze([
       backgroundId: "background-hospital-emergency-ward-v1",
       tags: ["救急病棟", "感染中継点", "浸水床"],
     },
-    enemyKinds: ["walker", "runner", "spitter", "ooze", "sprinter"],
+    enemyKinds: ["walker", "runner", "spitter", "crusher", "ooze", "sprinter"],
     waves: [
       { id: "hospital-ward-wave-01", atSeconds: 3, groups: [{ kind: "walker", count: 5 }, { kind: "ooze", count: 1 }] },
       { id: "hospital-ward-wave-02", atSeconds: 19, groups: [{ kind: "sprinter", count: 3 }, { kind: "runner", count: 3 }] },
@@ -742,7 +747,16 @@ export const CAMPAIGN_STAGES = deepFreeze([
     missionType: "escort",
     objectivePattern: "mobile-objective-escort",
     objective: "移動診断装置を地下研究区画の入口まで護送",
-    objectiveConfig: { target: "diagnostic-rig", durationSeconds: 125, maxIntegrity: 560, repairSeconds: 16, startX: 258, endX: 776, cartLane: 1 },
+    objectiveConfig: {
+      target: "diagnostic-rig",
+      targetLabel: "移動診断装置",
+      durationSeconds: 125,
+      maxIntegrity: 560,
+      repairSeconds: 16,
+      startX: 258,
+      endX: 776,
+      cartLane: 1,
+    },
     theme: {
       id: "theme-hospital-evacuation-route",
       backgroundId: "background-hospital-evacuation-route-v1",
@@ -803,7 +817,12 @@ export const CAMPAIGN_STAGES = deepFreeze([
     missionType: "timed-defense",
     objectivePattern: "perimeter-hold",
     objective: "隔離制御の再起動まで165秒防衛",
-    objectiveConfig: { target: "containment-control", durationSeconds: 165 },
+    objectiveConfig: {
+      target: "containment-control",
+      targetLabel: "隔離制御",
+      hudLabel: "隔離制御の再起動",
+      durationSeconds: 165,
+    },
     theme: {
       id: "theme-research-containment",
       backgroundId: "background-research-containment-v1",
@@ -833,7 +852,16 @@ export const CAMPAIGN_STAGES = deepFreeze([
     missionType: "escort",
     objectivePattern: "mobile-objective-escort",
     objective: "封印検体キャリアを地上搬出口まで護送",
-    objectiveConfig: { target: "sealed-sample-carrier", durationSeconds: 145, maxIntegrity: 620, repairSeconds: 18, startX: 248, endX: 790, cartLane: 1 },
+    objectiveConfig: {
+      target: "sealed-sample-carrier",
+      targetLabel: "封印検体キャリア",
+      durationSeconds: 145,
+      maxIntegrity: 620,
+      repairSeconds: 18,
+      startX: 248,
+      endX: 790,
+      cartLane: 1,
+    },
     theme: {
       id: "theme-research-freight-passage",
       backgroundId: "background-research-freight-passage-v1",
@@ -896,7 +924,12 @@ export const CAMPAIGN_STAGES = deepFreeze([
     missionType: "timed-defense",
     objectivePattern: "perimeter-hold",
     objective: "最後の避難貨物列を180秒防衛",
-    objectiveConfig: { target: "evacuation-freight", durationSeconds: 180 },
+    objectiveConfig: {
+      target: "evacuation-freight",
+      targetLabel: "避難貨物列",
+      hudLabel: "避難貨物列の防衛完了",
+      durationSeconds: 180,
+    },
     theme: {
       id: "theme-evacuation-freight-yard",
       backgroundId: "background-evacuation-freight-yard-v1",
