@@ -62,9 +62,21 @@ const STAGE_3 = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
 const STAGE_4 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE;
 const STAGE_5 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM;
 const STAGE_6 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL;
+const EXPANSION_STAGE_IDS = [
+  CAMPAIGN_STAGE_IDS.UNIVERSITY_HOSPITAL_APPROACH,
+  CAMPAIGN_STAGE_IDS.HOSPITAL_EMERGENCY_WARD,
+  CAMPAIGN_STAGE_IDS.HOSPITAL_EVACUATION_ROUTE,
+  CAMPAIGN_STAGE_IDS.RESEARCH_ACCESS,
+  CAMPAIGN_STAGE_IDS.RESEARCH_CONTAINMENT,
+  CAMPAIGN_STAGE_IDS.RESEARCH_FREIGHT_PASSAGE,
+  CAMPAIGN_STAGE_IDS.LOGISTICS_RELAY,
+  CAMPAIGN_STAGE_IDS.EVACUATION_FREIGHT_YARD,
+  CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE,
+  CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL,
+];
 
-test("campaign defines six stable, ordered, data-driven stages", () => {
-  assert.equal(CAMPAIGN_STAGES.length, 6);
+test("campaign preserves Stage 1-6 and defines ten ordered Version 0.8.0 stages", () => {
+  assert.equal(CAMPAIGN_STAGES.length, 16);
   assert.deepEqual(CAMPAIGN_STAGES.map((stage) => stage.id), [
     STAGE_1,
     STAGE_2,
@@ -72,8 +84,9 @@ test("campaign defines six stable, ordered, data-driven stages", () => {
     STAGE_4,
     STAGE_5,
     STAGE_6,
+    ...EXPANSION_STAGE_IDS,
   ]);
-  assert.deepEqual(CAMPAIGN_STAGES.map((stage) => stage.displayName), [
+  assert.deepEqual(CAMPAIGN_STAGES.slice(0, 6).map((stage) => stage.displayName), [
     "西新商店街",
     "早良区役所",
     "西新防衛線・TAKUYA",
@@ -81,11 +94,13 @@ test("campaign defines six stable, ordered, data-driven stages", () => {
     "西新駅・ホーム／線路区域",
     "西新駅・保守トンネル／封鎖区域",
   ]);
-  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.id)).size, 6);
+  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.id)).size, 16);
 
-  for (const stage of CAMPAIGN_STAGES) {
+  for (const [index, stage] of CAMPAIGN_STAGES.entries()) {
     assert.equal(CAMPAIGN_STAGE_BY_ID[stage.id], stage);
+    assert.equal(stage.stageNumber, index + 1);
     assert.equal(typeof stage.chapterId, "string");
+    assert.equal(typeof stage.regionId, "string");
     assert.equal(stage.mapPosition.unit, "percent");
     assert.equal(Number.isFinite(stage.mapPosition.x), true);
     assert.equal(Number.isFinite(stage.mapPosition.y), true);
@@ -106,15 +121,15 @@ test("campaign defines six stable, ordered, data-driven stages", () => {
     assert.deepEqual(stage.replayRewardMultipliers, DEFAULT_REPLAY_REWARD_MULTIPLIERS);
     assert.equal(stage.baseReward, PROVISIONAL_BASE_REWARDS[stage.id]);
     assert.deepEqual(Object.values(stage.firstTimeStarRewards), Array(3).fill(stage.baseReward * 0.5));
-    assert.equal(typeof stage.preBattleEventId, "string");
-    assert.equal(typeof stage.postBattleEventId, "string");
+    assert.equal(stage.preBattleEventId === null || typeof stage.preBattleEventId === "string", true);
+    assert.equal(stage.postBattleEventId === null || typeof stage.postBattleEventId === "string", true);
     assert.equal(Array.isArray(stage.nextUnlocks.stageIds), true);
     assert.equal(Array.isArray(stage.nextUnlocks.unitIds), true);
     assert.equal(Array.isArray(stage.nextUnlocks.discoveredUnitIds), true);
     assert.equal(Array.isArray(stage.nextUnlocks.recruitableUnitIds), true);
     assert.equal(Array.isArray(stage.nextUnlocks.mapSignalIds), true);
   }
-  assert.deepEqual(CAMPAIGN_STAGES.map((stage) => stage.theme.backgroundId), [
+  assert.deepEqual(CAMPAIGN_STAGES.slice(0, 6).map((stage) => stage.theme.backgroundId), [
     "background-nishijin-shopping-street-v1",
     "background-sawara-ward-office-v1",
     "background-nishijin-defense-line-v1",
@@ -122,15 +137,16 @@ test("campaign defines six stable, ordered, data-driven stages", () => {
     "background-nishijin-station-platform-v1",
     "background-nishijin-station-tunnel-v1",
   ]);
+  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.theme.backgroundId)).size, 16);
 });
 
 test("each stage has a unique multi-layer visual signature", () => {
   assert.deepEqual(
     Object.keys(STAGE_VISUAL_SIGNATURES).sort(),
-    [STAGE_1, STAGE_2, STAGE_3, STAGE_4, STAGE_5, STAGE_6].sort(),
+    CAMPAIGN_STAGES.map(({ id }) => id).sort(),
   );
   const signatures = Object.values(STAGE_VISUAL_SIGNATURES);
-  assert.equal(new Set(signatures.map(({ kind }) => kind)).size, 6);
+  assert.equal(new Set(signatures.map(({ kind }) => kind)).size, 16);
   for (const signature of signatures) {
     assert.equal(typeof signature.background, "string");
     assert.equal(typeof signature.landmark, "string");
@@ -230,9 +246,50 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
   assert.deepEqual(stationTunnel.prerequisiteStageIds, [STAGE_5]);
   assert.equal(stationTunnel.boss.enemyKind, "gate-eater");
   assert.equal(stationTunnel.boss.displayName, "改札喰い");
-  assert.deepEqual(stationTunnel.nextUnlocks.stageIds, []);
+  assert.deepEqual(stationTunnel.nextUnlocks.stageIds, [CAMPAIGN_STAGE_IDS.UNIVERSITY_HOSPITAL_APPROACH]);
   assert.deepEqual(stationTunnel.nextUnlocks.unitIds, [CAMPAIGN_UNIT_IDS.MONKEY]);
   assert.deepEqual(stationTunnel.nextUnlocks.mapSignalIds, ["map-signal-university-hospital"]);
+});
+
+test("Stage 7-16 use four new regions, five objective patterns, and a strict forward chain", () => {
+  const expansion = CAMPAIGN_STAGES.slice(6);
+  assert.deepEqual(expansion.map(({ id }) => id), EXPANSION_STAGE_IDS);
+  assert.equal(new Set(expansion.map(({ regionId }) => regionId)).size, 4);
+  assert.deepEqual(
+    new Set(expansion.map(({ objectivePattern }) => objectivePattern)),
+    new Set([
+      "perimeter-hold",
+      "relay-destruction",
+      "mobile-objective-escort",
+      "command-node-destruction",
+      "sequential-containment",
+    ]),
+  );
+  for (const [index, stage] of expansion.entries()) {
+    assert.deepEqual(stage.prerequisiteStageIds, [
+      index === 0 ? STAGE_6 : expansion[index - 1].id,
+    ]);
+    assert.deepEqual(stage.nextUnlocks.stageIds, index === expansion.length - 1 ? [] : [expansion[index + 1].id]);
+    assert.ok(stage.waves.length >= 7 && stage.waves.length <= 12, stage.id);
+    assert.equal(stage.preBattleEventId, null);
+    assert.equal(stage.postBattleEventId, null);
+    const scheduledKinds = new Set(stage.waves.flatMap((wave) => (
+      Array.isArray(wave.units)
+        ? wave.units
+        : (wave.groups ?? []).map(({ kind }) => kind)
+    )));
+    for (const kind of scheduledKinds) {
+      assert.equal(stage.enemyKinds.includes(kind), true, `${stage.id} is missing ${kind} from sprite preload`);
+    }
+  }
+  for (let index = 2; index < expansion.length; index += 1) {
+    assert.equal(
+      expansion[index].objectivePattern === expansion[index - 1].objectivePattern
+        && expansion[index - 1].objectivePattern === expansion[index - 2].objectivePattern,
+      false,
+      `three consecutive objective patterns at Stage ${index + 7}`,
+    );
+  }
 });
 
 test("Stage 1-3 increase pressure through bounded cadence and mixed compositions", () => {
@@ -352,7 +409,7 @@ test("all eleven units separate canonical IDs from combat kinds and use formal r
     [CAMPAIGN_UNIT_IDS.TATARA, "/art/v070/characters/brute-battle-v1.png"],
     [CAMPAIGN_UNIT_IDS.RAIDER, "/art/v070/characters/gunner-battle-v1.png"],
     [CAMPAIGN_UNIT_IDS.GANTETSU, "/art/v070/characters/guardian-battle-v1.png"],
-    [CAMPAIGN_UNIT_IDS.MONKEY, "/art/v070/characters/engineer-battle-v1.png"],
+    [CAMPAIGN_UNIT_IDS.MONKEY, "/art/v080/characters/monkey-battle-r2.png"],
   ]);
   for (const [unitId, spritePath] of redesignedPaths) {
     assert.equal(CAMPAIGN_UNIT_BY_ID[unitId].assetStatus, "approved");
@@ -363,6 +420,9 @@ test("all eleven units separate canonical IDs from combat kinds and use formal r
   assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.RAIDER].weaponName, "軽機関銃");
   assert.match(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.RAIDER].description, /軽機関銃/);
   assert.match(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.RAIDER].appearanceAudit.weaponMatch, /軽機関銃/);
+  assert.match(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.MONKEY].weaponName, /コンパクトカービン/);
+  assert.match(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.MONKEY].description, /コンパクトカービン/);
+  assert.match(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.MONKEY].appearanceAudit.weaponMatch, /コンパクトカービン/);
 });
 
 test("migration aliases resolve to canonical IDs while player-facing names stay canonical", () => {
@@ -576,7 +636,7 @@ test("Stage 4 and Stage 6 story joins are free while Stage 5 only discovers Monk
     baseHp: 100,
     baseMaxHp: 100,
   });
-  assert.deepEqual(stage6.result.newlyUnlockedStageIds, []);
+  assert.deepEqual(stage6.result.newlyUnlockedStageIds, [CAMPAIGN_STAGE_IDS.UNIVERSITY_HOSPITAL_APPROACH]);
   assert.deepEqual(stage6.result.newlyUnlockedUnitIds, [CAMPAIGN_UNIT_IDS.MONKEY]);
   assert.equal(isUnitOwned(stage6.save, CAMPAIGN_UNIT_IDS.MONKEY), true);
 

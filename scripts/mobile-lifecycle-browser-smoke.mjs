@@ -134,6 +134,20 @@ async function unlockAudio(page) {
   };
 }
 
+async function waitForInitialSceneAudio(page, { requireAudio }) {
+  if (!requireAudio) return;
+  await page.waitForFunction(
+    () => {
+      const audio = window.__ASHFALL_AUDIO_QA__?.getDiagnostics?.();
+      return audio?.desiredSceneId
+        && audio.sceneId === audio.desiredSceneId
+        && audio.activeSceneVoices > 0;
+    },
+    undefined,
+    { timeout },
+  );
+}
+
 async function enterBackground(page, context, { requireAudio }) {
   const background = await context.newPage();
   try {
@@ -376,6 +390,7 @@ for (const engine of engines) {
         const requireAudio = audioCapability.available;
         invariant(engine !== "chromium" || requireAudio,
           `${label} Chromium AudioContext lifecycle capability unavailable`);
+        await waitForInitialSceneAudio(page, { requireAudio });
         await page.waitForTimeout(250);
         const before = await readRuntime(page);
         invariant(before.performance && before.battle && before.audio, "QA diagnostics unavailable");

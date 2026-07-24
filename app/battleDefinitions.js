@@ -57,6 +57,27 @@ function campaignTimeline(stage) {
   });
 }
 
+function operationPhaseSchedule(stage) {
+  const schedule = PHASE_SCHEDULES[stage.missionType];
+  if (stage.stageNumber <= 6 || !schedule) return schedule;
+  const targetLabel = stage.objectiveConfig?.targetLabel;
+  if (stage.missionType === "timed-defense") {
+    return Object.freeze([
+      Object.freeze({ at: 0, phase: 1, label: `${targetLabel}を防衛`, objective: stage.objective }),
+      Object.freeze({ at: 65, phase: 2, label: "防衛線を維持", objective: stage.objective }),
+      Object.freeze({ at: 125, phase: 3, label: "最終防衛", objective: stage.objective }),
+    ]);
+  }
+  if (stage.missionType === STATION_MISSION_TYPES.ESCORT) {
+    return Object.freeze([
+      Object.freeze({ at: 0, phase: 1, label: `${targetLabel}を発進`, objective: stage.objective }),
+      Object.freeze({ at: 60, phase: 2, label: "護送経路を確保", objective: stage.objective }),
+      Object.freeze({ at: 120, phase: 3, label: `${targetLabel}を出口へ`, objective: stage.objective }),
+    ]);
+  }
+  return schedule;
+}
+
 export function createBattleDefinition(stageId) {
   const stage = CAMPAIGN_STAGE_BY_ID[stageId];
   if (!stage) throw new RangeError(`Unknown campaign stage: ${String(stageId)}`);
@@ -82,7 +103,7 @@ export function createBattleDefinition(stageId) {
       ? null
       : stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM
         ? STATION_PLATFORM_ASSAULT_SCHEDULE
-        : PHASE_SCHEDULES[stage.missionType],
+        : operationPhaseSchedule(stage),
     objective: stage.objective,
     missionConfig: stage.objectiveConfig ?? {},
     rescueCount: Number(stage.objectiveConfig?.rescueCount) || 0,
@@ -102,7 +123,8 @@ export function phaseBannerForBattle(definition, phase) {
 export function objectiveForBattle(definition, state) {
   if (definition.missionType === "timed-defense") {
     const remaining = Math.max(0, Math.ceil(definition.defenseEndAt - Math.max(definition.prepSeconds, state.time)));
-    return `救援部隊の撤収まで ${remaining}秒`;
+    const hudLabel = definition.missionConfig?.hudLabel ?? "救援部隊の撤収";
+    return `${hudLabel}まで ${remaining}秒`;
   }
   if (definition.missionType === STATION_MISSION_TYPES.ESCORT
     || definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {

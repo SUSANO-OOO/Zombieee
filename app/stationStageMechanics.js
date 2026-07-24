@@ -379,12 +379,15 @@ export function stationMissionOutcome({ runtime, baseHp = 1 } = {}) {
 
 export function stationMissionObjective(runtime, config = {}) {
   if (runtime?.missionType === STATION_MISSION_TYPES.ESCORT) {
-    if (runtime.failed) return "保守台車を防衛できなかった";
-    if (runtime.completed) return "保守台車と生存者を出口へ護送完了";
+    const targetLabel = typeof config.targetLabel === "string" && config.targetLabel.trim()
+      ? config.targetLabel.trim()
+      : "保守台車";
+    if (runtime.failed) return `${targetLabel}を防衛できなかった`;
+    if (runtime.completed) return `${targetLabel}を出口へ護送完了`;
     if (runtime.contaminated) return "漏泥の床汚染を排除";
-    if (runtime.repairRemaining > 0) return `保守台車を復旧中 ${Math.ceil(runtime.repairRemaining)}秒`;
-    if (runtime.stalled) return "保守台車の周囲を確保";
-    return `保守台車を護衛 ${Math.floor(clamp01(runtime.progress) * 100)}%`;
+    if (runtime.repairRemaining > 0) return `${targetLabel}を復旧中 ${Math.ceil(runtime.repairRemaining)}秒`;
+    if (runtime.stalled) return `${targetLabel}の周囲を確保`;
+    return `${targetLabel}を護衛 ${Math.floor(clamp01(runtime.progress) * 100)}%`;
   }
   if (runtime?.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     const resolved = sealConfig(config);

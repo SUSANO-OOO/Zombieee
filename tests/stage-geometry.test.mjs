@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
+import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS, CAMPAIGN_STAGES } from "../app/campaign.js";
 import { LANE_Y, MOBILE_LANDSCAPE_LANE_Y } from "../app/gameRules.js";
 import {
   STAGE_GEOMETRY_STAGE_IDS,
@@ -18,14 +18,7 @@ import {
   stageGeometryFor,
 } from "../app/stageGeometry.js";
 
-const ALL_STAGE_IDS = [
-  CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET,
-  CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE,
-  CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
-  CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE,
-  CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
-  CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL,
-];
+const ALL_STAGE_IDS = CAMPAIGN_STAGES.map(({ id }) => id);
 
 const ALL_VIEWPORT_IDS = Object.values(STAGE_VIEWPORT_IDS);
 
@@ -44,7 +37,7 @@ function projectedContentPoint(geometry, x, y) {
   };
 }
 
-test("defines deterministic geometry for every Stage 1-6 viewport profile", () => {
+test("defines deterministic geometry for every Stage 1-16 viewport profile", () => {
   assert.deepEqual(STAGE_GEOMETRY_STAGE_IDS, ALL_STAGE_IDS);
   for (const [stageIndex, stageId] of ALL_STAGE_IDS.entries()) {
     for (const viewportId of ALL_VIEWPORT_IDS) {

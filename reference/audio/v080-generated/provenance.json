@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "generator": "scripts/build-v080-audio.py",
+  "sampleRate": 44100,
+  "policy": "Dedicated suppressed-carbine pool; no sampled recording and no human or generated voice.",
+  "cues": [
+    {
+      "id": "weapon-suppressed-carbine-01",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/v080-generated/masters/weapon-suppressed-carbine-01.wav",
+        "sha256": "75a43e423f99d93efce8b6bea2cba28168d05adea0a5d8c77b768e61cfbeb1e2"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v080/sfx/weapon-suppressed-carbine-01.mp3",
+          "sha256": "cf68d834d56341ca142ec82b8f18b798dde71e182f4f1babefcd8289ab651e95",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v080/sfx/weapon-suppressed-carbine-01.ogg",
+          "sha256": "a665e9bcafa443b65bfefa81e6303bb1e7f1caa96b0436b74ca395f80e5fdf26",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-suppressed-carbine-02",
+      "origin": "project-original deterministic synthesis; no sampled recording",
+      "source": {
+        "path": "reference/audio/v080-generated/masters/weapon-suppressed-carbine-02.wav",
+        "sha256": "805a3324bf3386c2068596352e85d4c52f3ec1b40a55cea5e0a9406e27f07c30"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v080/sfx/weapon-suppressed-carbine-02.mp3",
+          "sha256": "6b5e81b007355375f12db9a9734df847454e6dcbc5e9fc6bf3ea0d2d02d63dae",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v080/sfx/weapon-suppressed-carbine-02.ogg",
+          "sha256": "8dff657cf8afee479b8ede40f8707c607b47825f450b95ee050254064a43d130",
+          "type": "audio/ogg"
+        }
+      ]
+    }
+  ]
+}

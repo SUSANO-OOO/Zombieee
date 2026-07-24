@@ -275,6 +275,11 @@ async function readLayoutAndAudio(page) {
       speaker: document.querySelector(".dialogue-name b")?.textContent ?? null,
       text: document.querySelector(".dialogue-text")?.textContent ?? null,
       visibleText: document.body.innerText,
+      eventPortraits: {
+        total: document.querySelectorAll(".event-portrait").length,
+        active: document.querySelectorAll(".event-portrait.active").length,
+        inactive: document.querySelectorAll(".event-portrait.inactive").length,
+      },
       audioSceneDataset: document.documentElement.dataset.audioScene ?? null,
       audioDiagnostics: bridge?.getDiagnostics?.() ?? null,
       audioSceneState: bridge?.getSceneState?.() ?? null,
@@ -366,6 +371,12 @@ async function auditStoryEvent({ page, diagnostics, engine, viewport, eventId })
       `${label}/${index} speaker mismatch: ${evidence.speaker} !== ${expectedLine.speaker}`);
     invariant(evidence.text === expectedLine.text,
       `${label}/${index} text mismatch: ${evidence.text} !== ${expectedLine.text}`);
+    invariant(
+      evidence.eventPortraits.total === 1
+        && evidence.eventPortraits.active === 1
+        && evidence.eventPortraits.inactive === 0,
+      `${label}/${index} ghost portrait detected: ${JSON.stringify(evidence.eventPortraits)}`,
+    );
     invariant(evidence.audioSceneDataset === expectedLineSceneId,
       `${label}/${index} audio scene mismatch: ${evidence.audioSceneDataset} !== ${expectedLineSceneId}`);
     assertNoRetiredNames(evidence.visibleText, `${label}/${index}`);

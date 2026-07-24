@@ -3,6 +3,8 @@ import { CAMPAIGN_STAGE_IDS } from "./campaign.js";
 
 const V060_AUDIO_ROOT = "/audio/v060";
 const V070_AUDIO_ROOT = "/audio/v070";
+const V080_AUDIO_ROOT = "/audio/v080";
+const V080_SUPPRESSED_CARBINE_CUE_ID = "weapon-suppressed-carbine";
 
 const MUSIC_TRACKS = Object.freeze([
   "title",
@@ -189,6 +191,21 @@ function v070Asset(spec) {
   };
 }
 
+function v080SuppressedCarbineAsset(variation) {
+  const id = `${V080_SUPPRESSED_CARBINE_CUE_ID}-${String(variation).padStart(2, "0")}`;
+  return {
+    id,
+    category: "weapons",
+    sources: sourceFor(V080_AUDIO_ROOT, "sfx", id),
+    preload: "lazy",
+    loop: false,
+    gain: 0.70,
+    priority: 70,
+    cooldownMs: 72,
+    maxInstances: 5,
+  };
+}
+
 function variationAssets(baseId, category, options = {}) {
   return [1, 2].map((variation) => sfxAsset(
     `${baseId}-${String(variation).padStart(2, "0")}`,
@@ -268,9 +285,19 @@ const assets = [
   ...enemyVoiceAssets,
   ...NEW_UNIT_AUDIO_CUES.map(({ id, category, ...options }) => sfxAsset(id, category, options)),
   ...V070_AUDIO_ASSET_SPECS.map(v070Asset),
+  ...[1, 2].map(v080SuppressedCarbineAsset),
 ];
 
-const pools = [...weaponPools, ...humanVoicePools, ...enemyVoicePools];
+const pools = [
+  ...weaponPools,
+  variationPool(V080_SUPPRESSED_CARBINE_CUE_ID, "weapons", {
+    priority: 70,
+    cooldownMs: 72,
+    maxInstances: 5,
+  }),
+  ...humanVoicePools,
+  ...enemyVoicePools,
+];
 const COMMON_UI_PRELOAD = Object.freeze(["ui-cancel", "ui-confirm", "ui-error", "ui-hover", "ui-select"]);
 const COMBAT_PRELOAD = Object.freeze([
   ...COMMON_UI_PRELOAD,
@@ -278,6 +305,7 @@ const COMBAT_PRELOAD = Object.freeze([
   ...LIFECYCLE_CUES,
   "radio-open",
   "radio-close",
+  V080_SUPPRESSED_CARBINE_CUE_ID,
   ...NEW_UNIT_AUDIO_CUES.map(({ id }) => id),
 ]);
 
@@ -298,6 +326,12 @@ export const STATION_AUDIO_CUE_IDS = Object.freeze({
   RESCUE_CONFIRM: "sfx-v070-rescue-confirm",
   RETURN_MARKER: "sfx-v070-return-marker",
   TERMINAL_CONFIRM: "sfx-v070-terminal-confirm",
+});
+
+export const UPGRADE_AUDIO_CUE_IDS = Object.freeze({
+  CURRENCY: "ui-select",
+  SUCCESS: "ui-confirm",
+  MAX: STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM,
 });
 
 export const TAKUYA_ENTRANCE_AUDIO = Object.freeze({
@@ -415,6 +449,16 @@ const STAGE_SCENE_BY_ID = Object.freeze({
   [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE]: PRODUCTION_AUDIO_SCENE_IDS.STATION_GATE,
   [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM]: PRODUCTION_AUDIO_SCENE_IDS.STATION_PLATFORM,
   [CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL]: PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL,
+  [CAMPAIGN_STAGE_IDS.UNIVERSITY_HOSPITAL_APPROACH]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_2,
+  [CAMPAIGN_STAGE_IDS.HOSPITAL_EMERGENCY_WARD]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_1,
+  [CAMPAIGN_STAGE_IDS.HOSPITAL_EVACUATION_ROUTE]: PRODUCTION_AUDIO_SCENE_IDS.STATION_PLATFORM,
+  [CAMPAIGN_STAGE_IDS.RESEARCH_ACCESS]: PRODUCTION_AUDIO_SCENE_IDS.STATION_GATE,
+  [CAMPAIGN_STAGE_IDS.RESEARCH_CONTAINMENT]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
+  [CAMPAIGN_STAGE_IDS.RESEARCH_FREIGHT_PASSAGE]: PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL,
+  [CAMPAIGN_STAGE_IDS.LOGISTICS_RELAY]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_1,
+  [CAMPAIGN_STAGE_IDS.EVACUATION_FREIGHT_YARD]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_2,
+  [CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
+  [CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL]: PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL,
 });
 
 const UNIT_WEAPON_CUES = Object.freeze({
@@ -427,6 +471,7 @@ const UNIT_WEAPON_CUES = Object.freeze({
   "crazy-king": "weapon-chainsaw-attack",
   kumaverson: "weapon-pan-swing",
   babayaga: "weapon-suppressed-pistol",
+  engineer: V080_SUPPRESSED_CARBINE_CUE_ID,
 });
 
 const UNIT_VOICE_PROFILES = Object.freeze({

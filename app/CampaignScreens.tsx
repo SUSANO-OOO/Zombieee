@@ -2,14 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "./productionVisuals.js";
-import { PORTRAIT_ART } from "./spriteManifest.js";
+import { FORMATION_CARD_ART, PERSONNEL_CARD_ART, PORTRAIT_ART } from "./spriteManifest.js";
 import { PROLOGUE_SYNOPSIS, getStoryEvent, storyEventLog } from "./storyEvents.js";
 import { CAMPAIGN_IMPORT_MAX_BYTES } from "./campaignStorage.js";
+import { RELEASE_LABEL } from "./releaseIdentity.js";
 
 export type CampaignScreen = "title" | "event" | "map" | "personnel" | "loadout" | "battle" | "result";
 
 export type StageScreenView = {
   id: string;
+  stageNumber: number;
+  regionId: string;
+  regionLabel: string;
+  regionName: string;
   displayName: string;
   chapterName: string;
   objective: string;
@@ -22,6 +27,35 @@ export type StageScreenView = {
   nextStarReward: number;
   mapPosition: { x: number; y: number };
   starCriteria: readonly string[];
+};
+
+const MAP_LANDMARKS: Record<string, readonly { className: string; label: string; status: string }[]> = {
+  "region-nishijin": [
+    { className: "tower", label: "福岡タワー", status: "高危険区域" },
+    { className: "subway", label: "西新駅地下", status: "暫定封鎖" },
+    { className: "police", label: "警察署周辺", status: "調査中" },
+    { className: "hospital", label: "大学病院", status: "地下信号を確認" },
+  ],
+  "region-university-hospital": [
+    { className: "hospital", label: "救急搬入口", status: "感染体接近" },
+    { className: "shelter", label: "救急病棟", status: "中継反応あり" },
+    { className: "subway", label: "地下搬送口", status: "研究区画へ接続" },
+  ],
+  "region-underground-research": [
+    { className: "blockade", label: "除染ゲート", status: "隔離扉停止" },
+    { className: "police", label: "検体隔離環", status: "制御再起動待ち" },
+    { className: "subway", label: "搬送坑道", status: "地上線へ接続" },
+  ],
+  "region-logistics-line": [
+    { className: "coast", label: "中継ヤード", status: "通信汚染" },
+    { className: "shelter", label: "貨物退避場", status: "避難列待機" },
+    { className: "shoreline", label: "湾岸搬出路", status: "高危険区域" },
+  ],
+  "region-t-plan-core": [
+    { className: "blockade", label: "外郭制御環", status: "指令核稼働" },
+    { className: "hospital", label: "中央封鎖核", status: "感染裂孔を確認" },
+    { className: "coast", label: "観測区画", status: "応答なし" },
+  ],
 };
 
 export type UnitScreenView = {
@@ -52,6 +86,16 @@ export type UnitScreenView = {
   statSummary: string;
   nextStatSummary: string;
   nextStatCompact: string;
+};
+
+export type UpgradeFeedbackView = {
+  unitId: string;
+  rank: number;
+  reachedMax: boolean;
+  spentCaps: number;
+  statDelta: string;
+  milestones: readonly string[];
+  receipt: string;
 };
 
 export type FormationPresetView = {
@@ -113,6 +157,7 @@ type Props = {
   saveRecoveryCanExport: boolean;
   saveMutationPending: boolean;
   upgradePendingUnitIds: readonly string[];
+  upgradeFeedback: UpgradeFeedbackView | null;
   savePersistence: "checking" | "saved" | "recovered" | "unavailable";
   readStoryEventIds: readonly string[];
   autoSkipReadStory: boolean;
@@ -146,6 +191,8 @@ type Props = {
 };
 
 const portraitArt = PORTRAIT_ART as Record<string, string>;
+const formationCardArt = FORMATION_CARD_ART as Record<string, string>;
+const personnelCardArt = PERSONNEL_CARD_ART as Record<string, string>;
 
 function stars(value: number) {
   return `${"★".repeat(Math.max(0, Math.min(3, value)))}${"☆".repeat(Math.max(0, 3 - value))}`;
@@ -216,7 +263,7 @@ function TitleScreen({ hasCampaignSave, savePersistence, saveMutationPending, on
     <div className="title-logo" aria-label="西新世紀末物語">
       <small>にしじんせいきまつものがたり</small>
       <h1><span>西新</span><b>世紀末物語</b></h1>
-      <p>アーリーアクセス版</p>
+      <p>アーリーアクセス版　{RELEASE_LABEL}</p>
     </div>
     <p className="title-copy">西新が終わった夜から四十三日。指揮官の作戦が、街の明日をつなぐ。</p>
     <section className="title-synopsis" aria-label="物語のあらすじ"><b>物語のあらすじ</b><p>{PROLOGUE_SYNOPSIS.short}</p></section>
@@ -239,18 +286,6 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   const event = eventId ? getStoryEvent(eventId) : null;
   const line = event?.lines[index] ?? null;
   const log = useMemo(() => eventId ? storyEventLog(eventId, index) : [], [eventId, index]);
-  const contextLine = useMemo(() => {
-    if (!event || !line) return null;
-    const candidates = [
-      ...event.lines.slice(0, index).reverse(),
-      ...event.lines.slice(index + 1),
-    ];
-    return candidates.find((candidate) => (
-      candidate.portrait !== line.portrait
-      && candidate.side !== line.side
-      && Boolean(portraitArt[candidate.portrait])
-    )) ?? null;
-  }, [event, index, line]);
   const completeOnce = useCallback(() => {
     if (completedRef.current) return;
     completedRef.current = true;
@@ -288,7 +323,6 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   }, [autoSkipReadStory, completeOnce, eventId, eventRead, forceStoryReplay]);
   if (!event || !line) return <div className="campaign-overlay event-screen"><button className="campaign-primary" onClick={completeOnce}>地図へ進む</button></div>;
   const art = portraitArt[line.portrait] ?? "";
-  const contextArt = contextLine ? portraitArt[contextLine.portrait] ?? "" : "";
   const advance = () => {
     if (silenceTail) return;
     if (index + 1 < event.lines.length) setIndex((value) => value + 1);
@@ -297,7 +331,6 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   const backgroundArt = STORY_BACKGROUND_VISUALS[event.background as keyof typeof STORY_BACKGROUND_VISUALS] ?? PRODUCTION_VISUALS.command;
   return <div className={`campaign-overlay event-screen event-${event.background} effect-${line.effect ?? "none"}`} style={artStyle(backgroundArt)} aria-label="会話イベント">
     <div className="event-vignette" />
-    {contextLine && contextArt && <div className={`event-portrait inactive ${contextLine.side} ${contextLine.portrait === "guide" ? "guide" : contextLine.portrait === "radio" ? "radio" : ""}`} style={{ backgroundImage: `url('${contextArt}')` }} aria-hidden="true" />}
     <div className={`event-portrait active ${line.side} ${line.portrait === "guide" ? "guide" : line.portrait === "radio" ? "radio" : ""}`} data-expression={line.expression} style={art ? { backgroundImage: `url('${art}')` } : undefined} aria-hidden="true" />
     <div className="event-controls"><button onClick={() => setLogOpen((value) => !value)}>会話ログ</button><button onClick={() => setSkipOpen(true)}>スキップ</button></div>
     {logOpen && <section className="event-log" aria-label="会話ログ"><header><b>会話ログ</b><button onClick={() => setLogOpen(false)}>閉じる</button></header>{log.map((entry: { id: string; speaker: string; text: string }) => <p key={entry.id}><b>{entry.speaker}</b><span>{entry.text}</span></p>)}</section>}
@@ -311,35 +344,63 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
 }
 
 function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPending, onSelectStage, onOpenPersonnel, onOpenLoadout, onReplayPrologue, onResetSave }: Pick<Props, "stages" | "selectedStage" | "supplyCurrency" | "saveMutationPending" | "onSelectStage" | "onOpenPersonnel" | "onOpenLoadout" | "onReplayPrologue" | "onResetSave">) {
-  const chapterComplete = stages.every((stage) => stage.completed);
+  const [activeRegionId, setActiveRegionId] = useState(selectedStage.regionId);
+  const regions = useMemo(() => {
+    const seen = new Set<string>();
+    return stages.flatMap((stage) => {
+      if (seen.has(stage.regionId)) return [];
+      seen.add(stage.regionId);
+      return [{
+        id: stage.regionId,
+        label: stage.regionLabel,
+        name: stage.regionName,
+        unlocked: stages.some((candidate) => candidate.regionId === stage.regionId && candidate.unlocked),
+      }];
+    });
+  }, [stages]);
+  const visibleStages = stages.filter((stage) => stage.regionId === activeRegionId);
+  const displayedStage = selectedStage.regionId === activeRegionId
+    ? selectedStage
+    : visibleStages.find((stage) => stage.unlocked) ?? visibleStages[0] ?? selectedStage;
+  const activeRegion = regions.find((region) => region.id === activeRegionId) ?? regions[0];
+  const landmarks = MAP_LANDMARKS[activeRegionId] ?? MAP_LANDMARKS["region-nishijin"];
+  const selectRegion = (regionId: string) => {
+    const firstOpenStage = stages.find((stage) => stage.regionId === regionId && stage.unlocked);
+    if (!firstOpenStage) return;
+    setActiveRegionId(regionId);
+    if (firstOpenStage.id !== selectedStage.id) onSelectStage(firstOpenStage.id);
+  };
   return <div className="campaign-overlay map-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="エリアマップ">
     <header className="campaign-header"><div><small>CHAPTER 1</small><h1>発生から四十三日</h1></div><div className="map-resource"><small>キャップ</small><b>{supplyCurrency}</b></div></header>
+    <nav className="map-region-tabs" aria-label="作戦区域">
+      {regions.map((region) => <button
+        key={region.id}
+        type="button"
+        data-active={region.id === activeRegionId}
+        disabled={!region.unlocked}
+        onClick={() => selectRegion(region.id)}
+        aria-pressed={region.id === activeRegionId}
+      ><b>{region.label}</b><small>{region.unlocked ? region.name : "未到達"}</small></button>)}
+    </nav>
     <div className="map-layout">
-      <section className="nishijin-map" aria-label="西新・早良区・西新駅 エリアマップ">
+      <section className="nishijin-map" data-region={activeRegionId} aria-label={`${activeRegion?.name ?? "作戦区域"} エリアマップ`}>
         <div className="map-water" /><div className="map-road road-a" /><div className="map-road road-b" /><div className="map-road road-c" />
-        <div className="map-landmark tower"><i /><span>福岡タワー<small>高危険区域</small></span></div>
-        <div className={`map-landmark coast ${chapterComplete ? "anomaly" : ""}`}><span>大学病院地下<small>{chapterComplete ? "電源稼働を確認" : "調査保留"}</small></span></div>
-        <div className="map-landmark subway"><span>西新駅地下<small>{chapterComplete ? "暫定封鎖" : "経路確認中"}</small></span></div>
-        <div className="map-landmark police"><span>警察署周辺<small>調査中</small></span></div>
-        <div className="map-landmark hospital"><span>福岡市西部医科大学附属病院<small>T計画の研究施設</small></span></div>
-        <div className="map-landmark shelter"><span>学校・避難所<small>応答なし</small></span></div>
-        <div className="map-landmark shoreline"><span>海岸線<small>高危険区域</small></span></div>
-        <div className="map-landmark blockade"><span>封鎖区域<small>進入不能</small></span></div>
-        {stages.map((stage, index) => <button
+        {landmarks.map((landmark) => <div key={landmark.label} className={`map-landmark ${landmark.className}`}><span>{landmark.label}<small>{landmark.status}</small></span></div>)}
+        {visibleStages.map((stage) => <button
           key={stage.id}
-          className={`stage-node ${stage.unlocked ? "open" : "locked"} ${selectedStage.id === stage.id ? "selected" : ""}`}
+          className={`stage-node ${stage.unlocked ? "open" : "locked"} ${displayedStage.id === stage.id ? "selected" : ""}`}
           style={{ left: `${stage.mapPosition.x}%`, top: `${stage.mapPosition.y}%` }}
           disabled={!stage.unlocked}
           onClick={() => onSelectStage(stage.id)}
           aria-label={`${stage.displayName} ${stage.unlocked ? stars(stage.bestStars) : "封鎖中"}`}
-        ><span>{index + 1}</span><b>{stage.displayName}</b><em>{stage.unlocked ? stars(stage.bestStars) : "封鎖"}</em></button>)}
+        ><span>{stage.stageNumber}</span><b>{stage.displayName}</b><em>{stage.unlocked ? stars(stage.bestStars) : "封鎖"}</em></button>)}
       </section>
       <aside className="stage-detail" aria-label="選択中のステージ詳細">
-        <div className="stage-preview" style={artStyle(stageVisualFor(selectedStage.id))} role="img" aria-label={`${selectedStage.displayName}の作戦区域`} />
-        <header><small>{selectedStage.missionLabel}</small><h2>{selectedStage.displayName}</h2><p>{selectedStage.threat}</p></header>
-        <dl><div><dt>目的</dt><dd>{selectedStage.objective}</dd></div><div><dt>過去最高星</dt><dd className="star-text">{stars(selectedStage.bestStars)}</dd></div><div><dt>基本報酬</dt><dd>{selectedStage.baseReward} キャップ</dd></div><div><dt>次の未取得星報酬</dt><dd>{selectedStage.nextStarReward ? `${selectedStage.nextStarReward} キャップ` : "取得済み"}</dd></div></dl>
-        <div className="star-criteria"><b>星判定</b>{selectedStage.starCriteria.map((criterion) => <span key={criterion}>{criterion}</span>)}</div>
-        <div className="stage-actions"><button className="campaign-secondary" onClick={onOpenPersonnel}>人員管理</button><button className="campaign-primary" onClick={onOpenLoadout}>編成へ進む</button></div>
+        <div className="stage-preview" style={artStyle(stageVisualFor(displayedStage.id))} role="img" aria-label={`${displayedStage.displayName}の作戦区域`} />
+        <header><small>{displayedStage.missionLabel}</small><h2>{displayedStage.displayName}</h2><p>{displayedStage.threat}</p></header>
+        <dl><div><dt>目的</dt><dd>{displayedStage.objective}</dd></div><div><dt>過去最高星</dt><dd className="star-text">{stars(displayedStage.bestStars)}</dd></div><div><dt>基本報酬</dt><dd>{displayedStage.baseReward} キャップ</dd></div><div><dt>次の未取得星報酬</dt><dd>{displayedStage.nextStarReward ? `${displayedStage.nextStarReward} キャップ` : "取得済み"}</dd></div></dl>
+        <div className="star-criteria"><b>星判定</b>{displayedStage.starCriteria.map((criterion) => <span key={criterion}>{criterion}</span>)}</div>
+        <div className="stage-actions"><button className="campaign-secondary" onClick={onOpenPersonnel}>人員管理</button><button className="campaign-primary" disabled={!displayedStage.unlocked} onClick={onOpenLoadout}>編成へ進む</button></div>
       </aside>
     </div>
     <footer className="map-footer"><span>固定4場面のプロローグは進行を変えず再視聴できます</span><button disabled={saveMutationPending} onClick={onReplayPrologue}>プロローグを回想</button><button disabled={saveMutationPending} onClick={onResetSave}>{saveMutationPending ? "保存処理中" : "セーブデータを初期化"}</button></footer>
@@ -354,7 +415,7 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
       <section className="formation-units" data-mode="roster" aria-label="使用ユニットを選択"><header className="formation-roster-header"><div><h2>出撃可能ユニット <small>{formationUnitIds.length}/7名選択中</small></h2></div><nav aria-label="部隊プリセット">{formationPresets.map((preset) => <button key={preset.id} data-active={preset.id === selectedFormationPresetId} onClick={() => onSelectFormationPreset(preset.id)} aria-pressed={preset.id === selectedFormationPresetId}><b>{preset.name}</b><small>{preset.unitIds.length}/7</small></button>)}</nav></header><div>{visibleUnits.map((unit) => {
         const selected = formationUnitIds.includes(unit.id);
         const atCapacity = formationUnitIds.length >= 7 && !selected;
-        const portrait = unit.discovered ? portraitArt[unit.kind] : "";
+        const portrait = unit.discovered ? formationCardArt[unit.kind] : "";
         return <article key={unit.id} className="formation-unit-card" data-state="owned" data-selected={selected}>
           <button className="formation-unit-select" data-kind={unit.kind} data-unit-id={unit.id} data-selected={selected} disabled={atCapacity} onClick={() => onToggleFormation(unit.id)} aria-pressed={selected} aria-label={`${unit.name}、Rank ${unit.rank}、${unit.role}、${unit.weaponName}、${unit.deploymentHint}`} title={`${unit.attackMode} / ${unit.primaryTarget} / ${unit.deploymentHint}`} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>
             <span className="formation-portrait" /><span><b>{unit.name}</b><em><i>{unit.roleIcon}</i>{unit.role}</em><small className="unit-combat">{unit.weaponName}・{unit.rangeBand}・{unit.primaryTarget}</small><small className="unit-intent">配置：{unit.deploymentHint}</small></span><i>Rank {unit.rank}/{unit.maxRank}</i>
@@ -367,7 +428,7 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
   </div>;
 }
 
-function PersonnelScreen({ units, caps, upgradePendingUnitIds, onReturnToMap, onRecruitUnit, onUpgradeUnit }: Pick<Props, "units" | "caps" | "upgradePendingUnitIds" | "onReturnToMap" | "onRecruitUnit" | "onUpgradeUnit">) {
+function PersonnelScreen({ units, caps, upgradePendingUnitIds, upgradeFeedback, onReturnToMap, onRecruitUnit, onUpgradeUnit }: Pick<Props, "units" | "caps" | "upgradePendingUnitIds" | "upgradeFeedback" | "onReturnToMap" | "onRecruitUnit" | "onUpgradeUnit">) {
   const [mode, setMode] = useState<"roster" | "acquisition" | "upgrade">("roster");
   const visibleUnits = units.filter((unit) => mode === "acquisition" ? !unit.owned : unit.owned);
   return <div className="campaign-overlay personnel-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="人員管理">
@@ -376,14 +437,21 @@ function PersonnelScreen({ units, caps, upgradePendingUnitIds, onReturnToMap, on
       <section className="formation-units personnel-units" data-mode={mode} aria-label={mode === "roster" ? "所有ユニット一覧" : mode === "upgrade" ? "ユニットを強化" : "ユニットを調達"}>
         <header className="formation-roster-header"><div><h2>{mode === "roster" ? "所有一覧" : mode === "upgrade" ? "戦力強化" : "新規調達"} <small>{mode === "roster" ? `${visibleUnits.length}/11名` : `所持 ${caps}キャップ`}</small></h2><nav className="formation-mode-tabs" aria-label="人員管理メニュー"><button data-active={mode === "roster"} onClick={() => setMode("roster")}>所有一覧</button><button data-active={mode === "acquisition"} onClick={() => setMode("acquisition")}>調達</button><button data-active={mode === "upgrade"} onClick={() => setMode("upgrade")}>強化</button></nav></div></header>
         <div>{visibleUnits.map((unit) => {
-          const portrait = unit.discovered ? portraitArt[unit.kind] : "";
+          const portrait = unit.discovered ? personnelCardArt[unit.kind] : "";
           const state = unit.owned ? "owned" : unit.recruitable ? "recruitable" : unit.discovered ? "discovered" : "unknown";
-          return <article key={unit.id} className="formation-unit-card" data-state={state}>
+          const feedback = upgradeFeedback?.unitId === unit.id ? upgradeFeedback : null;
+          return <article key={unit.id} className="formation-unit-card" data-state={state} data-upgrade-effect={feedback ? feedback.reachedMax ? "max" : "normal" : undefined}>
             <div className="formation-unit-select personnel-unit-summary" data-kind={unit.kind} data-unit-id={unit.id} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>
               <span className="formation-portrait" /><span><b>{unit.discovered ? unit.name : "未発見"}</b><em>{unit.discovered && <><i>{unit.roleIcon}</i>{unit.role}</>}</em><small className="unit-combat">{unit.discovered ? `${unit.weaponName}・${unit.rangeBand}・${unit.primaryTarget}` : "物語を進めると情報が明らかになります"}</small><small className="unit-intent">{unit.owned ? `${unit.statSummary}${unit.milestones.length ? ` / ${unit.milestones.join("・")}` : ""}` : unit.unlockHint}</small></span><i>{unit.owned ? `Rank ${unit.rank}/${unit.maxRank}` : unit.recruitable ? "調達可能" : unit.discovered ? "加入条件未達" : "未発見"}</i>
             </div>
             {mode === "acquisition" && unit.recruitable && !unit.owned && <button className="formation-unit-recruit" disabled={caps < unit.recruitCost} onClick={() => onRecruitUnit(unit.id)}><b>{unit.recruitCost}キャップで調達</b><small>所持 {caps}</small></button>}
-            {mode === "upgrade" && unit.owned && <button className="formation-unit-upgrade" disabled={upgradePendingUnitIds.includes(unit.id) || unit.nextUpgradeCost === null || caps < unit.nextUpgradeCost} onClick={() => onUpgradeUnit(unit.id)}><b>{upgradePendingUnitIds.includes(unit.id) ? "強化処理中" : unit.nextUpgradeCost === null ? "最大強化済み" : `Rank ${unit.rank + 1}へ：${unit.nextUpgradeCost}キャップ`}</b><small>{unit.nextUpgradeCost === null ? unit.statSummary : `${unit.catchUp ? `追いつき割引 -${unit.upgradeDiscount} / ` : ""}${unit.nextMilestones.length ? `${unit.nextMilestones.join("・")} / ` : ""}${unit.nextStatCompact}`}</small></button>}
+            {mode === "upgrade" && unit.owned && (feedback
+              ? <div className="upgrade-feedback" data-level={feedback.reachedMax ? "max" : "normal"} role="status" aria-live="polite">
+                <b>{feedback.reachedMax ? "MAX強化 完了" : `Rank ${feedback.rank} 強化完了`}</b>
+                <span>{feedback.statDelta}</span>
+                <small>{feedback.milestones.length > 0 ? feedback.milestones.join("・") : `${feedback.spentCaps}キャップ使用`}</small>
+              </div>
+              : <button className="formation-unit-upgrade" disabled={upgradePendingUnitIds.includes(unit.id) || unit.nextUpgradeCost === null || caps < unit.nextUpgradeCost} onClick={() => onUpgradeUnit(unit.id)}><b>{upgradePendingUnitIds.includes(unit.id) ? "強化処理中" : unit.nextUpgradeCost === null ? "最大強化済み" : `Rank ${unit.rank + 1}へ：${unit.nextUpgradeCost}キャップ`}</b><small>{unit.nextUpgradeCost === null ? unit.statSummary : `${unit.catchUp ? `追いつき割引 -${unit.upgradeDiscount} / ` : ""}${unit.nextMilestones.length ? `${unit.nextMilestones.join("・")} / ` : ""}${unit.nextStatCompact}`}</small></button>)}
           </article>;
         })}{visibleUnits.length === 0 && <p className="formation-empty">{mode === "acquisition" ? "現在調達できる候補はいません。物語を進めると候補が増えます。" : "対象ユニットがいません。"}</p>}</div>
       </section>
@@ -412,7 +480,7 @@ export function CampaignScreens(props: Props) {
   if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} savePersistence={props.savePersistence} saveMutationPending={props.saveMutationPending} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} onExportSave={props.onExportSave} onImportSave={props.onImportSave} />;
   if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} forceStoryReplay={props.forceStoryReplay} onEventComplete={props.onEventComplete} onEventSkip={props.onEventSkip} onStoryAudioPositionChange={props.onStoryAudioPositionChange} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />;
   if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} onSelectStage={props.onSelectStage} onOpenPersonnel={props.onOpenPersonnel} onOpenLoadout={props.onOpenLoadout} onReplayPrologue={props.onReplayPrologue} onResetSave={props.onResetSave} />;
-  if (props.screen === "personnel") return <PersonnelScreen units={props.units} caps={props.caps} upgradePendingUnitIds={props.upgradePendingUnitIds} onReturnToMap={props.onReturnToMap} onRecruitUnit={props.onRecruitUnit} onUpgradeUnit={props.onUpgradeUnit} />;
+  if (props.screen === "personnel") return <PersonnelScreen units={props.units} caps={props.caps} upgradePendingUnitIds={props.upgradePendingUnitIds} upgradeFeedback={props.upgradeFeedback} onReturnToMap={props.onReturnToMap} onRecruitUnit={props.onRecruitUnit} onUpgradeUnit={props.onUpgradeUnit} />;
   if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} onReturnToMap={props.onReturnToMap} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
   return <ResultScreen selectedStage={props.selectedStage} result={props.result} onRetry={props.onRetry} onContinueResult={props.onContinueResult} />;
 }

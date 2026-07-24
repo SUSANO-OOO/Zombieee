@@ -396,14 +396,14 @@ test("the exported speaker ledger accounts for every line and contains no retire
   t.diagnostic(`P5 speaker line counts: ${JSON.stringify(counts)}`);
 });
 
-test("Stage 1-6 expose complete first-attempt, defeat, retry, replay, battle, and result story routes", () => {
+test("Stage 1-6 preserve complete story routes while Stage 7-16 remain battle-first", () => {
   assert.deepEqual(
     Object.keys(storyFlow.STAGE_STORY_FLOWS),
     campaign.CAMPAIGN_STAGES.map((stage) => stage.id),
   );
   assert.deepEqual(new Set(storyFlow.listStoryFlowEventIds()), new Set(EXPECTED_STORY_EVENT_IDS));
 
-  for (const stage of campaign.CAMPAIGN_STAGES) {
+  for (const stage of campaign.CAMPAIGN_STAGES.slice(0, 6)) {
     const flow = storyFlow.STAGE_STORY_FLOWS[stage.id];
     const firstAttempt = storyFlow.getStageEntryStoryEventId({
       stageId: stage.id,
@@ -477,6 +477,25 @@ test("Stage 1-6 expose complete first-attempt, defeat, retry, replay, battle, an
     }), [], `${stage.displayName} defeat reports no completion facts`);
   }
 
+  for (const stage of campaign.CAMPAIGN_STAGES.slice(6)) {
+    const flow = storyFlow.STAGE_STORY_FLOWS[stage.id];
+    assert.deepEqual(flow, {
+      pre: [],
+      replay: null,
+      battle: [],
+      post: [],
+      defeat: null,
+      retry: null,
+    });
+    assert.deepEqual(storyFlow.getStageEntryStoryEventIds({
+      stageId: stage.id,
+      completedStageIds: [],
+      readStoryEventIds: [],
+    }), []);
+    assert.deepEqual(storyFlow.getStageResultStoryEventIds({ stageId: stage.id, won: true }), []);
+    assert.deepEqual(storyFlow.getStageResultStoryEventIds({ stageId: stage.id, won: false }), []);
+  }
+
   for (const stageId of [
     campaign.CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET,
     campaign.CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE,
@@ -515,6 +534,16 @@ test("every P5 audio scene resolves, Stage 1-6 route distinctly, and story event
     "stage3",
     "station-gate",
     "station-platform",
+    "station-tunnel",
+    "stage2",
+    "stage1",
+    "station-platform",
+    "station-gate",
+    "stage3",
+    "station-tunnel",
+    "stage1",
+    "stage2",
+    "stage3",
     "station-tunnel",
   ]);
   assert.equal(new Set(stageSceneIds).size, 6);

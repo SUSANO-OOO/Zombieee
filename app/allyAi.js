@@ -109,6 +109,7 @@ function resultForDestination({
   attackable = false,
   overlapping = false,
   blocksPath = false,
+  emergencyDefense = false,
 }) {
   const movement = movementWithDeadband({ currentX: unitX, desiredX, previousIntent, deadband });
   const targetId = target?.id ?? null;
@@ -128,6 +129,7 @@ function resultForDestination({
     attackable,
     overlapping,
     blocksPath,
+    emergencyDefense,
     releaseTarget: Boolean(previousTargetId && previousTargetId !== targetId),
     reassess: Boolean(takuyaDefeated && previousTargetId),
   });
@@ -174,18 +176,26 @@ function selectEnemy({
 }) {
   const candidates = [];
   for (const enemy of liveEnemies(enemies)) {
-    const attackingCrawler = enemy.attackingCrawler === true || enemy.threatensBase === true;
+    const attackingCrawler = enemy.attackingCrawler === true;
+    const threatensBase = enemy.threatensBase === true;
+    const urgentDefense = attackingCrawler || threatensBase;
     const sameLane = laneMatches(unit.lane, enemy.lane);
-    const assignedLaneThreat = attackingCrawler
+    const defenseLane = attackingCrawler && validLane(enemy.assignedLane)
+      ? enemy.assignedLane
+      : enemy.lane;
+    const assignedLaneThreat = urgentDefense
       && validLane(unit.assignedLane)
-      && unit.assignedLane === enemy.lane;
+      && unit.assignedLane === defenseLane;
     const { attacker, target } = normalizedCombatants(unit, enemy);
     const acquisitionAttacker = assignedLaneThreat && !sameLane
       ? { ...attacker, lane: unit.assignedLane }
       : attacker;
+    const acquisitionTarget = assignedLaneThreat && !sameLane
+      ? { ...target, lane: defenseLane }
+      : target;
     const laneEligible = canAcquireCombatTarget({
       attacker: acquisitionAttacker,
-      target,
+      target: acquisitionTarget,
       hasLineOfSight,
     });
     if (!laneEligible) continue;
@@ -202,8 +212,14 @@ function selectEnemy({
     const local = sameLane && distance <= localThreatRadius;
     const claimed = claimCount(claims, enemy.id);
     const isPrevious = previousIntent?.targetId === enemy.id;
-    const hardEngagement = attackingCrawler || contact || blocksPath || attackable;
-    const claimAvailable = hardEngagement || local || isPrevious || claimed < maxPursuersPerEnemy;
+    const hardEngagement = contact || blocksPath || attackable;
+    const emergencyCapacity = Math.max(1, Math.floor(nonNegative(
+      enemy.crawlerDefenseCapacity,
+      maxPursuersPerEnemy,
+    )));
+    const claimAvailable = urgentDefense
+      ? contact || overlapping || isPrevious || claimed < emergencyCapacity
+      : hardEngagement || local || isPrevious || claimed < maxPursuersPerEnemy;
     const threateningDefense = laneEligible
       && Math.min(distance, Math.abs(enemy.x - defenseAnchor)) <= defenseLeash;
     const eligible = missionType === "timed-defense"
@@ -218,6 +234,8 @@ function selectEnemy({
       claimed,
       isPrevious,
       attackingCrawler,
+      threatensBase,
+      urgentDefense,
       attackable,
       overlapping,
       contact,
@@ -227,7 +245,8 @@ function selectEnemy({
     });
   }
   candidates.sort((left, right) => Number(right.attackingCrawler) - Number(left.attackingCrawler)
-    || (left.attackingCrawler && right.attackingCrawler
+    || Number(right.urgentDefense) - Number(left.urgentDefense)
+    || (left.urgentDefense && right.urgentDefense
       ? left.baseThreatDistance - right.baseThreatDistance
       : 0)
     || Number(right.overlapping) - Number(left.overlapping)
@@ -318,7 +337,7 @@ export function decideAllyIntent({
     return resultForDestination({
       intent: ALLY_AI_INTENTS.INTERCEPT_ENEMY,
       reachedIntent: ALLY_AI_INTENTS.HOLD_RANGE,
-      reason: selected.attackingCrawler
+      reason: selected.urgentDefense
         ? "crawler-under-attack"
         : selected.overlapping
           ? "hitbox-overlap"
@@ -339,10 +358,14 @@ export function decideAllyIntent({
       deadband,
       target: selected.enemy,
       assignedLane: deploymentLane,
-      destinationLane: validLane(selected.enemy.lane) ? selected.enemy.lane : deploymentLane,
+      destinationLane: selected.attackingCrawler && validLane(selected.enemy.assignedLane)
+        ? selected.enemy.assignedLane
+        : validLane(selected.enemy.lane)
+          ? selected.enemy.lane
+          : deploymentLane,
       claimGranted: !selected.local
         && !selected.isPrevious
-        && !selected.attackingCrawler
+        && !selected.urgentDefense
         && !selected.contact
         && !selected.blocksPath
         && !selected.attackable,
@@ -350,6 +373,7 @@ export function decideAllyIntent({
       attackable: selected.attackable,
       overlapping: selected.overlapping,
       blocksPath: selected.blocksPath,
+      emergencyDefense: selected.attackingCrawler,
     });
   }
 
@@ -413,6 +437,7 @@ export function decideAllyIntent({
     attackable: false,
     overlapping: false,
     blocksPath: false,
+    emergencyDefense: false,
     releaseTarget: Boolean(previousIntent?.targetId),
     reassess: Boolean(takuyaDefeated && previousIntent?.targetId),
   });

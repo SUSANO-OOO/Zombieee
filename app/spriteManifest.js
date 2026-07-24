@@ -1,4 +1,4 @@
-import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
+import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 
 /**
  * Audited sprite source geometry for the 0.6.0 renderer and localhost QA.
@@ -129,8 +129,8 @@ const NEWCOMER_VISIBLE = Object.freeze({
     left: [[137, 74, 343, 432], [133, 91, 346, 432], [140, 90, 340, 432], [126, 155, 354, 432], [80, 150, 399, 432], [135, 139, 345, 432], [92, 309, 388, 432]],
   },
   engineer: {
-    right: [[130, 16, 349, 432], [127, 16, 352, 432], [97, 16, 382, 432], [66, 16, 413, 432], [101, 31, 379, 432], [97, 36, 383, 432], [70, 265, 410, 432]],
-    left: [[130, 16, 349, 432], [127, 16, 352, 432], [97, 16, 382, 432], [66, 16, 413, 432], [101, 31, 379, 432], [97, 36, 383, 432], [70, 265, 410, 432]],
+    right: [[149, 16, 331, 432], [135, 16, 336, 432], [121, 16, 369, 432], [117, 16, 384, 432], [131, 16, 381, 432], [106, 16, 360, 432], [16, 236, 464, 432]],
+    left: [[149, 16, 331, 432], [135, 16, 336, 432], [121, 16, 369, 432], [117, 16, 384, 432], [131, 16, 381, 432], [106, 16, 360, 432], [16, 236, 464, 432]],
   },
   "crazy-king": {
     right: [[140, 84, 340, 432], [138, 94, 342, 432], [119, 115, 361, 432], [121, 59, 358, 432], [56, 129, 424, 432], [87, 109, 393, 432], [58, 290, 422, 432]],
@@ -310,7 +310,7 @@ export const SPRITE_MANIFEST = Object.freeze({
   brute: explicitAtlasManifestEntry("brute", "/art/v070/characters/brute-battle-v1.png"),
   gunner: explicitAtlasManifestEntry("gunner", "/art/v070/characters/gunner-battle-v1.png"),
   guardian: explicitAtlasManifestEntry("guardian", "/art/v070/characters/guardian-battle-v1.png"),
-  engineer: explicitAtlasManifestEntry("engineer", "/art/v070/characters/engineer-battle-v1.png"),
+  engineer: explicitAtlasManifestEntry("engineer", "/art/v080/characters/monkey-battle-r2.png"),
   walker: legacyManifestEntry("infected", "left"),
   runner: legacyManifestEntry("infected", "left"),
   turned: legacyManifestEntry("infected", "left"),
@@ -395,19 +395,20 @@ export function fitSpriteBattleDisplaySize(kind, frame, maximum = {}) {
 }
 
 export const CHARACTER_PORTRAIT_ART = Object.freeze({
-  brawler: "/art/v060/characters/portraits/brawler-portrait-v2.webp",
-  scout: "/art/v070/characters/portraits/scout-portrait-v1.webp",
-  ranger: "/art/v070/characters/portraits/ranger-portrait-v1.webp",
-  medic: "/art/v070/characters/portraits/medic-portrait-v1.webp",
-  brute: "/art/v070/characters/portraits/brute-portrait-v1.webp",
-  gunner: "/art/v070/characters/portraits/gunner-portrait-v1.webp",
-  "crazy-king": "/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
-  kumaverson: "/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
-  babayaga: "/art/v060/characters/portraits/babayaga-portrait-v2.webp",
-  guardian: "/art/v070/characters/portraits/guardian-portrait-v1.webp",
-  engineer: "/art/v070/characters/portraits/engineer-portrait-v1.webp",
+  ...Object.fromEntries(Object.entries(V080_UNIT_VISUAL_PROFILES)
+    .map(([kind, profile]) => [kind, profile.eventPortrait.path])),
   guide: V075_VISUAL_PROFILES.ikura.eventPortrait.path,
 });
+
+export const FORMATION_CARD_ART = Object.freeze(Object.fromEntries(
+  Object.entries(V080_UNIT_VISUAL_PROFILES)
+    .map(([kind, profile]) => [kind, profile.formationCard.path]),
+));
+
+export const PERSONNEL_CARD_ART = Object.freeze(Object.fromEntries(
+  Object.entries(V080_UNIT_VISUAL_PROFILES)
+    .map(([kind, profile]) => [kind, profile.personnelCard.path]),
+));
 
 export const RADIO_PORTRAIT_ART = "/art/v060/characters/portraits/radio-terminal-portrait-v1.webp";
 
