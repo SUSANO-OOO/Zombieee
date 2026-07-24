@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
@@ -9,7 +10,10 @@ import {
   FORMATION_CARD_ART,
   PERSONNEL_CARD_ART,
 } from "../app/spriteManifest.js";
-import { V080_UNIT_VISUAL_PROFILES } from "../app/visualProfiles.js";
+import {
+  V080_CARD_READ_CONTRACTS,
+  V080_UNIT_VISUAL_PROFILES,
+} from "../app/visualProfiles.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const publicFile = (assetPath) => path.join(ROOT, "public", assetPath.replace(/^\//, ""));
@@ -30,6 +34,11 @@ test("all eleven units define explicit event, formation, personnel, and battle v
     assert.notEqual(profile.eventPortrait.path, profile.formationCard.path);
     assert.equal(profile.formationCard.path, FORMATION_CARD_ART[kind]);
     assert.equal(profile.personnelCard.path, PERSONNEL_CARD_ART[kind]);
+    assert.equal(profile.formationCard.weaponRead, V080_CARD_READ_CONTRACTS[kind].weaponId);
+    assert.equal(profile.formationCard.roleRead, V080_CARD_READ_CONTRACTS[kind].role);
+    assert.equal(profile.formationCard.accent, V080_CARD_READ_CONTRACTS[kind].accent);
+    assert.equal(profile.personnelCard.weaponRead, V080_CARD_READ_CONTRACTS[kind].weaponId);
+    assert.equal(profile.personnelCard.roleRead, V080_CARD_READ_CONTRACTS[kind].role);
     assert.ok(profile.identityLock.length >= 3);
     await Promise.all([
       access(publicFile(profile.identityMaster.path)),
@@ -68,6 +77,17 @@ test("all eleven units define explicit event, formation, personnel, and battle v
       }
     }
     assert.ok(right - left >= 400 && bottom - top >= 450, `${kind} upper-body card cannot remain a full-body thumbnail`);
+    const accent = V080_CARD_READ_CONTRACTS[kind].accent.match(/[a-f0-9]{2}/gi).map((value) => Number.parseInt(value, 16));
+    let accentPixels = 0;
+    for (let pixel = 0; pixel < cardPixels.info.width * cardPixels.info.height; pixel += 1) {
+      const channel = pixel * 4;
+      if (cardPixels.data[channel + 3] <= 8) continue;
+      const distance = Math.abs(cardPixels.data[channel] - accent[0])
+        + Math.abs(cardPixels.data[channel + 1] - accent[1])
+        + Math.abs(cardPixels.data[channel + 2] - accent[2]);
+      if (distance <= 48) accentPixels += 1;
+    }
+    assert.ok(accentPixels >= 1_200, `${kind} generated card is missing its weapon/role badge`);
   }
 });
 
@@ -83,6 +103,45 @@ test("Monkey keeps one carbine identity across master, portrait, card, and battl
   assert.deepEqual({ width: master.width, height: master.height }, { width: 1024, height: 1536 });
   const battle = await sharp(publicFile(profile.battleSprite.path)).metadata();
   assert.deepEqual({ width: battle.width, height: battle.height, hasAlpha: battle.hasAlpha }, { width: 3360, height: 896, hasAlpha: true });
+});
+
+test("Monkey battle atlas uses authored movement, shouldered fire, hit, and grounded defeat poses", async () => {
+  const atlasPath = publicFile(V080_UNIT_VISUAL_PROFILES.engineer.battleSprite.path);
+  const cells = [];
+  for (let column = 0; column < 7; column += 1) {
+    const cell = await sharp(atlasPath)
+      .extract({ left: column * 480, top: 0, width: 480, height: 448 })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    let left = 480;
+    let top = 448;
+    let right = -1;
+    let bottom = -1;
+    for (let y = 0; y < 448; y += 1) {
+      for (let x = 0; x < 480; x += 1) {
+        if (cell.data[(y * 480 + x) * 4 + 3] <= 8) continue;
+        left = Math.min(left, x);
+        top = Math.min(top, y);
+        right = Math.max(right, x + 1);
+        bottom = Math.max(bottom, y + 1);
+      }
+    }
+    cells.push({
+      digest: createHash("sha256").update(cell.data).digest("hex"),
+      width: right - left,
+      height: bottom - top,
+      bottom,
+    });
+  }
+  assert.equal(new Set(cells.map(({ digest }) => digest)).size, 7, "states cannot be transform-identical duplicates");
+  assert.ok(cells[1].width !== cells[2].width, "walk contact and passing silhouettes must differ");
+  assert.ok(cells[3].width >= cells[0].width + 70, "attack pose must visibly shoulder and extend the carbine");
+  assert.ok(cells[4].width >= cells[0].width + 60, "recoil pose must retain the shouldered carbine");
+  assert.ok(cells[5].width >= cells[0].width + 60, "hit pose must visibly recoil");
+  assert.ok(cells[6].height <= cells[0].height * .55, "death must be a collapsed body, not a rotated standing pose");
+  assert.ok(cells[6].width >= 430, "collapsed pose must preserve full-body combat scale");
+  assert.equal(cells.every(({ bottom }) => bottom === 432), true, "every pose must share the authored ground line");
 });
 
 test("event presentation never invents an inactive portrait from another dialogue line", async () => {

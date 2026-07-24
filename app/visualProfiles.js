@@ -4,6 +4,20 @@ function deepFreeze(value) {
   return Object.freeze(value);
 }
 
+export const V080_CARD_READ_CONTRACTS = deepFreeze({
+  brawler: { weaponId: "fist", label: "FIST", role: "frontline", accent: "#f0a34a" },
+  scout: { weaponId: "crowbar", label: "BAR", role: "skirmisher", accent: "#e6c84f" },
+  ranger: { weaponId: "rifle", label: "RIFLE", role: "marksman", accent: "#55c9e8" },
+  medic: { weaponId: "medic", label: "MED", role: "support", accent: "#6fe0a0" },
+  brute: { weaponId: "hammer", label: "HAMMER", role: "breaker", accent: "#a688ff" },
+  gunner: { weaponId: "lmg", label: "LMG", role: "suppression", accent: "#ef6b5e" },
+  "crazy-king": { weaponId: "chainsaw", label: "SAW", role: "berserker", accent: "#ff4e62" },
+  kumaverson: { weaponId: "pan", label: "PAN", role: "disruptor", accent: "#efb751" },
+  babayaga: { weaponId: "pistol", label: "PISTOL", role: "assassin", accent: "#75a8ff" },
+  guardian: { weaponId: "shield", label: "SHIELD", role: "tank", accent: "#8eabc2" },
+  engineer: { weaponId: "carbine", label: "CARBINE", role: "controller", accent: "#45d6db" },
+});
+
 export const V075_VISUAL_PROFILES = deepFreeze({
   ikura: {
     identityMaster: {
@@ -75,6 +89,7 @@ function unitProfile({
   cardPath,
   battlePath,
   battleRevision,
+  cardRead,
   focus = { x: .5, y: .28 },
   identityLock,
 }) {
@@ -97,12 +112,18 @@ function unitProfile({
       revision: "r2",
       focus: { x: focus.x, y: Math.max(.2, focus.y) },
       requiredRead: ["face", "upper-body", "primary-weapon", "role-silhouette"],
+      weaponRead: cardRead.weaponId,
+      roleRead: cardRead.role,
+      accent: cardRead.accent,
     },
     personnelCard: {
       path: cardPath,
       revision: "r2",
       focus: { x: focus.x, y: Math.max(.2, focus.y) },
       requiredRead: ["face", "upper-body", "primary-weapon", "role-silhouette"],
+      weaponRead: cardRead.weaponId,
+      roleRead: cardRead.role,
+      accent: cardRead.accent,
     },
     battleSprite: {
       path: battlePath,
@@ -123,6 +144,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/brawler-formation-card-r2.webp",
     battlePath: "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
     battleRevision: "v1",
+    cardRead: V080_CARD_READ_CONTRACTS.brawler,
     focus: { x: .5, y: .26 },
     identityLock: ["short-dark-hair", "bare-knuckle-frontliner", "weathered-street-tactical"],
   }),
@@ -136,6 +158,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/scout-formation-card-r2.webp",
     battlePath: "/art/v070/characters/scout-battle-v1.png",
     battleRevision: "v1",
+    cardRead: V080_CARD_READ_CONTRACTS.scout,
     focus: { x: .5, y: .24 },
     identityLock: ["light-scout-silhouette", "fast-melee-kit", "hachi-face-and-hair"],
   }),
@@ -149,6 +172,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/ranger-formation-card-r2.webp",
     battlePath: "/art/v070/characters/ranger-battle-v1.png",
     battleRevision: "v1",
+    cardRead: V080_CARD_READ_CONTRACTS.ranger,
     focus: { x: .5, y: .23 },
     identityLock: ["mizuchi-face-and-hair", "long-range-rifle", "slim-marksman-silhouette"],
   }),
@@ -162,6 +186,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/medic-formation-card-r2.webp",
     battlePath: "/art/v070/characters/medic-battle-v1.png",
     battleRevision: "v1",
+    cardRead: V080_CARD_READ_CONTRACTS.medic,
     focus: { x: .5, y: .23 },
     identityLock: ["nao-face-and-hair", "compact-medical-kit", "support-rifle"],
   }),
@@ -175,6 +200,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/brute-formation-card-r2.webp",
     battlePath: "/art/v070/characters/brute-battle-v1.png",
     battleRevision: "v1",
+    cardRead: V080_CARD_READ_CONTRACTS.brute,
     focus: { x: .51, y: .24 },
     identityLock: ["tatara-face-and-hair", "oversized-sledgehammer", "heavy-breaker-silhouette"],
   }),
@@ -188,6 +214,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/gunner-formation-card-r2.webp",
     battlePath: "/art/v070/characters/gunner-battle-v1.png",
     battleRevision: "v1",
+    cardRead: V080_CARD_READ_CONTRACTS.gunner,
     focus: { x: .5, y: .23 },
     identityLock: ["raider-face-and-hair", "machine-gun", "suppression-shooter-silhouette"],
   }),
@@ -201,6 +228,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/crazy-king-formation-card-r2.webp",
     battlePath: "/art/v060/characters/crazy-king-battle-v1.png",
     battleRevision: "v1",
+    cardRead: V080_CARD_READ_CONTRACTS["crazy-king"],
     focus: { x: .5, y: .27 },
     identityLock: ["crazy-king-mask-and-hair", "chainsaw", "berserker-silhouette"],
   }),
@@ -214,6 +242,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/kumaverson-formation-card-r2.webp",
     battlePath: "/art/v060/characters/kumaverson-battle-v1.png",
     battleRevision: "v1",
+    cardRead: V080_CARD_READ_CONTRACTS.kumaverson,
     focus: { x: .5, y: .26 },
     identityLock: ["kumaverson-face-and-hair", "large-frontline-frame", "impact-weapon"],
   }),
@@ -227,6 +256,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/babayaga-formation-card-r2.webp",
     battlePath: "/art/v060/characters/babayaga-battle-v1.png",
     battleRevision: "v1",
+    cardRead: V080_CARD_READ_CONTRACTS.babayaga,
     focus: { x: .5, y: .22 },
     identityLock: ["babayaga-face-and-hair", "precision-rifle", "lean-sniper-silhouette"],
   }),
@@ -240,6 +270,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/guardian-formation-card-r2.webp",
     battlePath: "/art/v070/characters/guardian-battle-v1.png",
     battleRevision: "v1",
+    cardRead: V080_CARD_READ_CONTRACTS.guardian,
     focus: { x: .5, y: .25 },
     identityLock: ["full-face-protective-gear", "shotgun-and-shield-kit", "heavy-guardian-frame"],
   }),
@@ -253,6 +284,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     cardPath: "/art/v080/characters/cards/monkey-formation-card-r2.webp",
     battlePath: "/art/v080/characters/monkey-battle-r2.png",
     battleRevision: "r2",
+    cardRead: V080_CARD_READ_CONTRACTS.engineer,
     focus: { x: .54, y: .2 },
     identityLock: [
       "young-handsome-male-three-quarter-gaze",

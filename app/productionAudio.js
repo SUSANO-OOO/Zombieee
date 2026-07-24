@@ -443,6 +443,7 @@ const UNIT_WEAPON_CUES = Object.freeze({
   "crazy-king": "weapon-chainsaw-attack",
   kumaverson: "weapon-pan-swing",
   babayaga: "weapon-suppressed-pistol",
+  engineer: "weapon-rifle",
 });
 
 const UNIT_VOICE_PROFILES = Object.freeze({

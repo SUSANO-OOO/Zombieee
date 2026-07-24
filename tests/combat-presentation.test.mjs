@@ -99,8 +99,9 @@ test("ten weapon profiles cover all eleven playable units without generic missin
     assert.equal(profile.damageWeights.length, profile.shotOffsetsSeconds.length);
     assert.ok(Math.abs(profile.damageWeights.reduce((total, weight) => total + weight, 0) - 1) < 1e-9);
   }
-  assert.equal(UNIT_WEAPON_PROFILE.engineer, "crossbow");
-  assert.equal(weaponProfileForAction("engineer", "attack").id, "crossbow");
+  assert.equal(UNIT_WEAPON_PROFILE.engineer, "suppressed-carbine");
+  assert.equal(weaponProfileForAction("engineer", "attack").id, "suppressed-carbine");
+  assert.equal(weaponProfileForAction("engineer", "attack").casing, true);
   assert.equal(weaponProfileForAction("engineer", "deploy").id, "deployable");
   assert.equal(weaponProfileForAction("medic", "heal").id, "heal-support");
 });

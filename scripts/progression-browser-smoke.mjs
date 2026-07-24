@@ -24,11 +24,20 @@ if (engines.some((engine) => !browserTypes[engine])) {
   throw new Error(`Unknown PROGRESSION_QA_ENGINES: ${engines.join(", ")}`);
 }
 
-const viewports = [
+const defaultViewports = [
   { width: 1280, height: 720, safeArea: false },
   { width: 844, height: 390, safeArea: true },
   { width: 844, height: 340, safeArea: true },
 ];
+const viewports = process.env.PROGRESSION_QA_VIEWPORTS
+  ? process.env.PROGRESSION_QA_VIEWPORTS.split(",").map((entry) => {
+    const match = entry.trim().match(/^(\d+)x(\d+)$/);
+    if (!match) throw new Error(`Invalid PROGRESSION_QA_VIEWPORTS entry: ${entry}`);
+    const width = Number(match[1]);
+    const height = Number(match[2]);
+    return { width, height, safeArea: width === 844 && (height === 390 || height === 340) };
+  })
+  : defaultViewports;
 const evidenceDir = path.resolve(process.env.PROGRESSION_QA_EVIDENCE_DIR ?? "outputs/progression-browser-smoke");
 const timeout = Math.max(8_000, Number(process.env.PROGRESSION_QA_TIMEOUT_MS) || 30_000);
 const results = [];
@@ -254,6 +263,9 @@ for (const engine of engines) {
           const bgmSlider = page.locator('input[data-volume-kind="bgm"]');
           const sfxSlider = page.locator('input[data-volume-kind="sfx"]');
           const initialAudioSettings = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().settings);
+          const bgmPreviewCapability = await page.evaluate(() => Boolean(
+            window.AudioContext || window.webkitAudioContext,
+          ));
           const setSlider = async (locator, value) => locator.evaluate((input, nextValue) => {
             const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
             setter.call(input, String(nextValue));
@@ -271,6 +283,25 @@ for (const engine of engines) {
             initialAudioSettings.sfxVolume,
             { timeout },
           );
+          try {
+            await page.waitForFunction(
+              (hasWebAudio) => document.documentElement.dataset.audioBgmPreviewStatus
+                === (hasWebAudio ? "played" : "locked"),
+              bgmPreviewCapability,
+              { timeout },
+            );
+          } catch (error) {
+            const previewState = await page.evaluate(() => ({
+              status: document.documentElement.dataset.audioBgmPreviewStatus ?? "missing",
+              unlocked: document.documentElement.dataset.audioUnlocked ?? "missing",
+              context: document.documentElement.dataset.audioContextState ?? "missing",
+              active: document.documentElement.dataset.audioActiveVoices ?? "missing",
+              scene: document.documentElement.dataset.audioRuntimeScene ?? "missing",
+              mixer: window.__ASHFALL_AUDIO_QA__?.getDiagnostics?.() ?? null,
+            }));
+            throw new Error(`${String(error)} BGM preview diagnostics: ${JSON.stringify(previewState)}`);
+          }
+          const bgmPreview = bgmPreviewCapability ? "played" : "headless-web-audio-unavailable";
           await setSlider(sfxSlider, .6);
           await page.waitForFunction(() => {
             const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
@@ -320,6 +351,7 @@ for (const engine of engines) {
             },
             damageProof,
             audioSettings,
+            bgmPreview,
             visualCards,
             dimensions,
             diagnostics,

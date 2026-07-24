@@ -435,6 +435,28 @@ Each MP3 below is a compatibility encoding of the paired final OGG in the comple
 
 権利根拠の機械可読情報は`docs/ASSET_APPROVALS_0.7.0.json`の`rightsProvenance`に保持する。各final artifactの個別hashとsource chainは同台帳のasset recordを参照し、ここへ重複転記しない。
 
+## Version 0.8.0 visual derivatives
+
+`monkey-combat-poses-source-r1.png`は、既存のプロジェクト内Monkey identity masterだけを参照したOpenAI image generation Outputである。第三者配布画像、既知キャラクター名、実在人物、ロゴ、標章、可読テキストは入力・生成条件に使用していない。OpenAI Terms of UseのContent条項、適用法および既存プロジェクト資産の権利範囲をrepository収録・製品利用の根拠とし、CC0への変更や第三者への独立ライセンス付与を意味しない。
+
+11件のformation／personnel card R2は、各人物の既存正式portraitへ`build-v080-character-assets.mjs`で自作SVGの武器シルエット、役割色、短い識別ラベルを合成した派生物である。外部画像、外部アイコン、外部フォントファイルは使用していない。
+
+| Path | SHA-256 | Source / processing |
+|---|---|---|
+| `assets/source/v080/characters/monkey-combat-poses-source-r1.png` | `ec046d00c8ac0ff96ca3513752dbeefa48c5afd80410cc79e654a22587fa5aa8` | project Monkey identity masterを単独参照した7状態の新規OpenAI Output |
+| `public/art/v080/characters/monkey-battle-r2.png` | `c0113f96ae3fafab99d37f607687b2ad56d2aa77d5804d46903fabae2c8102f2` | 上記sourceを透明化、状態分離、接地統一し、右向き7状態＋mirror左向きへ構成 |
+| `public/art/v080/characters/cards/babayaga-formation-card-r2.webp` | `6af05149eb99e1880227578c134f9546150e9a662ead4adfe6f246a080bc88a0` | 既存正式portrait＋自作PISTOL badge |
+| `public/art/v080/characters/cards/brawler-formation-card-r2.webp` | `aa2f878ab5d83233938b645f1b80bf85e861afda0f0a0731e39d6f7094ece02f` | 既存正式portrait＋自作FIST badge |
+| `public/art/v080/characters/cards/brute-formation-card-r2.webp` | `f124ddf777cdd8f4430b08f4d91ef4d88f6dfcc0e21f00f7c6cdc366edcf9753` | 既存正式portrait＋自作HAMMER badge |
+| `public/art/v080/characters/cards/crazy-king-formation-card-r2.webp` | `b1e722fb14cd72a0dcaefdaea399a75275b014e414956eb29086cb2be50f0b90` | 既存正式portrait＋自作SAW badge |
+| `public/art/v080/characters/cards/guardian-formation-card-r2.webp` | `94b52abea738971148cd852509064bf86df5deeb71a747f0d21b686e0698e8c9` | 既存正式portrait＋自作SHIELD badge |
+| `public/art/v080/characters/cards/gunner-formation-card-r2.webp` | `f7f1032d756be3ca02e50e524c2df8ef5410f53bf92dcf81da6c7a32cc6b0f24` | 既存正式portrait＋自作LMG badge |
+| `public/art/v080/characters/cards/kumaverson-formation-card-r2.webp` | `5e7974c6c47739faa888af40be6954e765fea80801f301368a69da858d1b38b7` | 既存正式portrait＋自作PAN badge |
+| `public/art/v080/characters/cards/medic-formation-card-r2.webp` | `a9a1eac0599e34a1173f395d8ab3090a7265537307cabb6cbefbb60f49927730` | 既存正式portrait＋自作MED badge |
+| `public/art/v080/characters/cards/monkey-formation-card-r2.webp` | `14bb6dd3cd36f4b2c973a3f3812f8a6367821f9cf30c91964161e4cfcc2a3498` | Monkey identity master派生card＋自作CARBINE badge |
+| `public/art/v080/characters/cards/ranger-formation-card-r2.webp` | `9c631d32c0f06c81ffea6ec4bda0918b0059c2e6e55ac16bab6333463caf9639` | 既存正式portrait＋自作RIFLE badge |
+| `public/art/v080/characters/cards/scout-formation-card-r2.webp` | `99bbaeca6e2ae498ae1a88504627254cacc5daf97a8db37cb10ef15830d3f92f` | 既存正式portrait＋自作BAR badge |
+
 ## 任意クレジット（表示用）
 
 Audio: SRG774, nene, Emma_MA, Kenney, artisticdude, rubberduck, Tabasco, HaelDB, cicifyre, Galacti-Chron / Sky Rae, Ogrebane, xhunterko, AntumDeluge, Delta12 Studio. All external audio used under CC0 1.0; attribution is not required but is gratefully retained.

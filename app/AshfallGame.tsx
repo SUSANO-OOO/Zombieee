@@ -6440,6 +6440,35 @@ export function AshfallGame() {
         bgmEnabled: enabled,
         bgmVolume: normalized,
       }) as CampaignSave);
+      const now = performance.now();
+      if (enabled && mixer && now - volumePreviewLastAtRef.current >= 120) {
+        volumePreviewLastAtRef.current = now;
+        document.documentElement.dataset.audioBgmPreviewStatus = "requested";
+        const desiredScene = desiredProductionSceneRef.current;
+        const previewCue = (desiredScene && PRODUCTION_AUDIO_MANIFEST.sceneById[desiredScene]?.bgm)
+          || PRODUCTION_AUDIO_MANIFEST.sceneById.title?.bgm
+          || "music-title";
+        void mixer.unlock().then((unlocked) => {
+          if (!unlocked || productionMixerRef.current !== mixer) {
+            document.documentElement.dataset.audioBgmPreviewStatus = "locked";
+            return null;
+          }
+          mixer.stopInstance("volume-preview:bgm", { fadeMs: 24 });
+          return mixer.play(previewCue, {
+            loop: false,
+            durationSeconds: 1.1,
+            offsetSeconds: 1,
+            priority: 1000,
+            cooldownMs: 0,
+            maxInstances: 1,
+            instanceKey: "volume-preview:bgm",
+            volume: .78,
+          }).then((handle) => {
+            document.documentElement.dataset.audioBgmPreviewStatus = handle ? "played" : "skipped";
+            return handle;
+          });
+        });
+      }
       return;
     }
     sfxMutedRef.current = !enabled;

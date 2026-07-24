@@ -513,6 +513,7 @@ test("all weapon-mapped units retain production weapons and all eleven units ret
     "crazy-king": "weapon-chainsaw-attack",
     kumaverson: "weapon-pan-swing",
     babayaga: "weapon-suppressed-pistol",
+    engineer: "weapon-rifle",
   };
   const expectedVoicePrefixes = {
     scout: "human-male-light",
@@ -685,6 +686,9 @@ test("gameplay routes scenes, combat identity, and procedural fallback through t
   assert.match(source, /sfxVolume: campaignSave\.settings\.sfxVolume/);
   assert.match(source, /bgmEnabled: !bgmMuted/);
   assert.match(source, /if \(!sceneId \|\| \(screen === "battle" && paused\)\)/);
+  assert.match(source, /const previewCue = \(desiredScene && PRODUCTION_AUDIO_MANIFEST\.sceneById\[desiredScene\]\?\.bgm\)/);
+  assert.match(source, /mixer\.stopInstance\("volume-preview:bgm", \{ fadeMs: 24 \}\)/);
+  assert.match(source, /durationSeconds: 1\.1,[\s\S]*instanceKey: "volume-preview:bgm"/);
   assert.match(source, /weaponCueForUnit\(f\.kind\)/);
   assert.match(source, /const deployVoice = unitAudioCueFor\(kind, "voice", "deploy"\) \|\| humanVoiceCueForUnit\(kind, "deploy"\)/);
   assert.match(source, /humanVoiceCueForUnit\(f\.kind, "attack"\)/);

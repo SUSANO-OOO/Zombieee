@@ -420,6 +420,9 @@ test("all eleven units separate canonical IDs from combat kinds and use formal r
   assert.equal(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.RAIDER].weaponName, "軽機関銃");
   assert.match(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.RAIDER].description, /軽機関銃/);
   assert.match(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.RAIDER].appearanceAudit.weaponMatch, /軽機関銃/);
+  assert.match(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.MONKEY].weaponName, /コンパクトカービン/);
+  assert.match(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.MONKEY].description, /コンパクトカービン/);
+  assert.match(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.MONKEY].appearanceAudit.weaponMatch, /コンパクトカービン/);
 });
 
 test("migration aliases resolve to canonical IDs while player-facing names stay canonical", () => {
