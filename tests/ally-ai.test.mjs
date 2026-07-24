@@ -337,6 +337,53 @@ test("the closest CRAWLER threat outranks another enemy inside the broad danger 
   assert.equal(intent.reason, "crawler-under-attack");
 });
 
+test("exact CRAWLER attackers reserve bounded responder slots", () => {
+  const common = {
+    missionType: "assault",
+    unit: { id: "new-deployment", x: 520, lane: 1, assignedLane: 1, range: 30, ranged: false },
+    objective: { x: 875, active: true },
+    localThreatRadius: 120,
+  };
+  const walker = {
+    id: "walker",
+    x: 145,
+    lane: 1,
+    hp: 100,
+    attackingCrawler: true,
+    crawlerDefenseCapacity: 1,
+    baseThreatDistance: 35,
+  };
+
+  const first = decideAllyIntent({ ...common, enemies: [walker], claims: { walker: 0 } });
+  assert.equal(first.targetId, "walker");
+  assert.equal(first.emergencyDefense, true);
+
+  const filled = decideAllyIntent({ ...common, enemies: [walker], claims: { walker: 1 } });
+  assert.equal(filled.intent, ALLY_AI_INTENTS.ADVANCE_OBJECTIVE);
+  assert.equal(filled.targetId, null);
+
+  const heavy = { ...walker, id: "heavy", crawlerDefenseCapacity: 2 };
+  const second = decideAllyIntent({ ...common, enemies: [heavy], claims: { heavy: 1 } });
+  assert.equal(second.targetId, "heavy");
+  assert.equal(second.emergencyDefense, true);
+});
+
+test("an exact CRAWLER attacker outranks a broad base-zone threat", () => {
+  const intent = decideAllyIntent({
+    missionType: "assault",
+    unit: { id: "defender", x: 520, lane: 1, assignedLane: 1, range: 30, ranged: false },
+    enemies: [
+      { id: "zone", x: 135, lane: 1, hp: 100, threatensBase: true, baseThreatDistance: 25 },
+      { id: "attacker", x: 150, lane: 1, hp: 100, attackingCrawler: true, baseThreatDistance: 40 },
+    ],
+    objective: { x: 875, active: true },
+    localThreatRadius: 120,
+  });
+
+  assert.equal(intent.targetId, "attacker");
+  assert.equal(intent.emergencyDefense, true);
+});
+
 test("all campaign stages and melee allies reach a CRAWLER attacker instead of sticking at the muster line", () => {
   const enemy = {
     id: "breach-walker",

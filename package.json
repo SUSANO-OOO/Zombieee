@@ -15,6 +15,7 @@
     "qa:performance": "node scripts/browser-performance-budget.mjs",
     "qa:battle-space": "node scripts/run-browser-qa-with-server.mjs scripts/battle-space-browser-smoke.mjs",
     "qa:ai-missions": "node scripts/run-browser-qa-with-server.mjs scripts/ai-mission-browser-smoke.mjs",
+    "qa:crawler-defense": "node scripts/run-browser-qa-with-server.mjs scripts/crawler-defense-browser-smoke.mjs",
     "qa:combat-presentation": "node scripts/run-browser-qa-with-server.mjs scripts/combat-presentation-browser-smoke.mjs",
     "qa:mobile-lifecycle": "node scripts/run-browser-qa-with-server.mjs scripts/mobile-lifecycle-browser-smoke.mjs",
     "qa:save-migration": "node scripts/save-migration-browser-matrix.mjs",

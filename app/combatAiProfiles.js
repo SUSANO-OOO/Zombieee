@@ -345,7 +345,11 @@ export function retainedTargetDuringRetarget({
   const emergency = candidates.some((candidate) => candidate
     && candidate.id !== currentTargetId
     && candidate.attackEligible !== false
-    && (candidate.inContact === true || candidate.attackingCrawler === true));
+    && (
+      candidate.inContact === true
+      || candidate.attackingCrawler === true
+      || candidate.threatensBase === true
+    ));
   return emergency ? null : current;
 }
 
