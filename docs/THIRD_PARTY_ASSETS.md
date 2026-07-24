@@ -435,6 +435,52 @@ Each MP3 below is a compatibility encoding of the paired final OGG in the comple
 
 権利根拠の機械可読情報は`docs/ASSET_APPROVALS_0.7.0.json`の`rightsProvenance`に保持する。各final artifactの個別hashとsource chainは同台帳のasset recordを参照し、ここへ重複転記しない。
 
+## Version 0.8.0 asset inventory
+
+0.8.0で正式に残すvisualは下表の31件だけである。制作途中のformation card R1 11件とMonkey event portrait R1は実行時参照がないことを確認してrepositoryから除外した。
+
+7件のsource/masterは、本ミッションで新規作成したOpenAI image generation Outputである。第三者配布画像、既知キャラクター名、実在人物、第三者ロゴ・標章、可読テキストは入力・生成条件に使用していない。Monkey sourceは承認済みproject内Monkey identityだけを参照し、stage masterは人物・商標を含まない区域背景として生成した。OpenAI Terms of UseのContent条項、適用法および既存project assetの権利範囲をrepository収録・製品利用の根拠とする。CC0への変更や第三者への独立ライセンス付与を意味しない。
+
+finalは`build-v080-character-assets.mjs`または`build-v080-stage-assets.mjs`によるproject内派生である。11件のformation／personnel card R2は、各人物の既存正式portraitへ自作SVGの武器シルエット、役割色、短い識別ラベルを合成した。外部画像、外部アイコン、外部フォントファイルは使用していない。
+
+| Path | SHA-256 | Source / processing |
+|---|---|---|
+| `assets/source/v080/characters/monkey-combat-poses-source-r1.png` | `ec046d00c8ac0ff96ca3513752dbeefa48c5afd80410cc79e654a22587fa5aa8` | Monkey identity masterだけを参照した7状態の新規OpenAI Output |
+| `assets/source/v080/characters/monkey-cutout-source-r1.png` | `881f3c17f22647164c7141ea6379957a2484d5b9a9f248b95ef96e03cbbbd79d` | Monkey基準デザインの新規OpenAI Output |
+| `assets/source/v080/stages/hospital-master.png` | `0d5894590dae46a4afd4cb92074e6d36927857ebc986aa63d3e5e029f97957d2` | 大学病院接近区域の新規OpenAI Output |
+| `assets/source/v080/stages/hospital-ward-master.png` | `28a6662a3a893990d23c8c1cfaebb13ae14fca4a177a5f1e4e14a31fa33f6709` | 病院病棟内部の新規OpenAI Output |
+| `assets/source/v080/stages/logistics-master.png` | `70f398a0f7e6f50a4bb7c4d203d2f693a8ef73bc6dae6bf52320134e934fa149` | 物流区域の新規OpenAI Output |
+| `assets/source/v080/stages/research-master.png` | `125d029d2cd845f9e58fc4cfa7d717aaa2c6bca9dab653d220748392ac0224c3` | 研究区画の新規OpenAI Output |
+| `assets/source/v080/stages/t-plan-master.png` | `91b4b80c3379718067d1bbea200314a55a2eb7931cf54ca9eef2196cbad640e7` | T計画中枢区画の新規OpenAI Output |
+| `public/art/v080/characters/reference/monkey-identity-master-r1.png` | `0101aedb7151e7d54b099fb69e7e72dbf5d2c5cef878b3dcf8c5ed26098dd3c4` | Monkey cutout sourceから固定したidentity master |
+| `public/art/v080/characters/portraits/monkey-event-portrait-r2.webp` | `183fdc1eceb4c2fb5d6be38e968598f4485943d3291d93881b378d1740d3b60f` | Monkey cutout sourceを透明化、island除去、event用crop |
+| `public/art/v080/characters/monkey-battle-r2.png` | `67e7dc452309358c012322647096ae44ab03214b6bd796e38b1e87aef5796d8c` | combat sourceを透明化、分離、接地・床影補正し、右7状態＋mirror左7状態へ構成 |
+| `public/art/v080/characters/cards/babayaga-formation-card-r2.webp` | `6af05149eb99e1880227578c134f9546150e9a662ead4adfe6f246a080bc88a0` | 既存正式portrait＋自作PISTOL badge |
+| `public/art/v080/characters/cards/brawler-formation-card-r2.webp` | `aa2f878ab5d83233938b645f1b80bf85e861afda0f0a0731e39d6f7094ece02f` | 既存正式portrait＋自作FIST badge |
+| `public/art/v080/characters/cards/brute-formation-card-r2.webp` | `f124ddf777cdd8f4430b08f4d91ef4d88f6dfcc0e21f00f7c6cdc366edcf9753` | 既存正式portrait＋自作HAMMER badge |
+| `public/art/v080/characters/cards/crazy-king-formation-card-r2.webp` | `b1e722fb14cd72a0dcaefdaea399a75275b014e414956eb29086cb2be50f0b90` | 既存正式portrait＋自作SAW badge |
+| `public/art/v080/characters/cards/guardian-formation-card-r2.webp` | `94b52abea738971148cd852509064bf86df5deeb71a747f0d21b686e0698e8c9` | 既存正式portrait＋自作SHIELD badge |
+| `public/art/v080/characters/cards/gunner-formation-card-r2.webp` | `f7f1032d756be3ca02e50e524c2df8ef5410f53bf92dcf81da6c7a32cc6b0f24` | 既存正式portrait＋自作LMG badge |
+| `public/art/v080/characters/cards/kumaverson-formation-card-r2.webp` | `5e7974c6c47739faa888af40be6954e765fea80801f301368a69da858d1b38b7` | 既存正式portrait＋自作PAN badge |
+| `public/art/v080/characters/cards/medic-formation-card-r2.webp` | `a9a1eac0599e34a1173f395d8ab3090a7265537307cabb6cbefbb60f49927730` | 既存正式portrait＋自作MED badge |
+| `public/art/v080/characters/cards/monkey-formation-card-r2.webp` | `95b1704c0cb3ba9351bb16bebb4a27ef92e115d1d58861c53abbb5427213166f` | Monkey cutout source＋自作CARBINE badge |
+| `public/art/v080/characters/cards/ranger-formation-card-r2.webp` | `9c631d32c0f06c81ffea6ec4bda0918b0059c2e6e55ac16bab6333463caf9639` | 既存正式portrait＋自作RIFLE badge |
+| `public/art/v080/characters/cards/scout-formation-card-r2.webp` | `99bbaeca6e2ae498ae1a88504627254cacc5daf97a8db37cb10ef15830d3f92f` | 既存正式portrait＋自作BAR badge |
+| `public/art/v080/stages/university-hospital-approach-background-v1.webp` | `29ef54d2cb53f6e3cae806be252c8a987df300be03dd4df953671d0ebd9b6c91` | hospital master＋自作overlay／grade |
+| `public/art/v080/stages/hospital-emergency-ward-background-v1.webp` | `d9d900e00d4eede807dd6e964bc561e9a5c296b60be0511fd1b98e051422d712` | hospital-ward master＋自作overlay／grade |
+| `public/art/v080/stages/hospital-evacuation-route-background-v1.webp` | `d0045bf4e4ad26e9b5a1b97312c2f940bb2a875fbe33aa1460176034fb39439b` | hospital master＋自作route overlay／grade |
+| `public/art/v080/stages/research-access-background-v1.webp` | `bf73e4ce894a454fb8013f8c35774ed6e343c225d2a0d902c31cfb7e7b8477cd` | research master＋自作gate overlay／grade |
+| `public/art/v080/stages/research-containment-background-v1.webp` | `4203c7dc98754a2795f4364e237b336e5ecaf7c0c74494451a73830eae8f31e0` | research master＋自作hold overlay／grade |
+| `public/art/v080/stages/research-freight-passage-background-v1.webp` | `979760fe1a798a6d6301da2ca438ff754cbdb934b682f0091a08d951f8330e4b` | research master＋自作route overlay／grade |
+| `public/art/v080/stages/logistics-relay-background-v1.webp` | `b8439e21356b6f20072a4fb62fdb7bb4a7c86f3dcb551a9c3f291328ea5ffa4f` | logistics master＋自作relay overlay／grade |
+| `public/art/v080/stages/evacuation-freight-yard-background-v1.webp` | `45aaf5c6370575f257b65dbe209967f58d7783fd7460f8b9af61682b965ff57d` | logistics master＋自作hold overlay／grade |
+| `public/art/v080/stages/t-plan-outer-core-background-v1.webp` | `6556def1a12c3708c5842561d6edda7e1db6da4ba0543257417d80ff62fcd458` | T-plan master＋自作gate overlay／grade |
+| `public/art/v080/stages/t-plan-central-seal-background-v1.webp` | `40cce9db29f84604392aba10ccbeff27e9164f838a14d41b122f131181159a67` | T-plan master＋自作seal overlay／grade |
+
+### Version 0.8.0 project-original audio
+
+Monkeyの`weapon-suppressed-carbine`は`build-v080-audio.py`が数学波形とseed固定noiseだけから合成する2 variationの専用poolである。録音素材、sample library、生成音声、人間音声、外部serviceは使用しない。WAV masterとMP3／OGG finalのhash、source chainは`reference/audio/v080-generated/provenance.json`へ固定した。既存の出撃・攻撃・被弾・戦闘不能の人間キャラクターボイスは変更・削除していない。
+
 ## 任意クレジット（表示用）
 
 Audio: SRG774, nene, Emma_MA, Kenney, artisticdude, rubberduck, Tabasco, HaelDB, cicifyre, Galacti-Chron / Sky Rae, Ogrebane, xhunterko, AntumDeluge, Delta12 Studio. All external audio used under CC0 1.0; attribution is not required but is gratefully retained.

@@ -28,7 +28,7 @@ if (isGate && durationMs < 15 * 60_000) {
 const [width, height] = (process.env.PERF_QA_VIEWPORT ?? '844x390').split('x').map(Number);
 if (!Number.isFinite(width) || !Number.isFinite(height)) throw new Error('PERF_QA_VIEWPORT must use WIDTHxHEIGHT');
 const outputPath = path.resolve(process.env.PERF_QA_OUTPUT ?? `outputs/performance/${engineName}-${width}x${height}.json`);
-const resultVersion = process.env.PERF_QA_VERSION ?? '0.7.5';
+const resultVersion = process.env.PERF_QA_VERSION ?? '0.8.0';
 
 function percentile(values, ratio) {
   if (values.length === 0) return null;

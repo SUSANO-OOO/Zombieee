@@ -65,7 +65,15 @@ import {
   writeCampaignSaveReplicas,
 } from "./campaignStorage.js";
 import { claimDefeatResolution } from "./defeatLedger.js";
-import { CampaignScreens, type CampaignResultView, type CampaignScreen, type StageScreenView, type SupplyScreenView, type UnitScreenView } from "./CampaignScreens";
+import {
+  CampaignScreens,
+  type CampaignResultView,
+  type CampaignScreen,
+  type StageScreenView,
+  type SupplyScreenView,
+  type UnitScreenView,
+  type UpgradeFeedbackView,
+} from "./CampaignScreens";
 import {
   CAMPAIGN_SAVE_SCHEMA_VERSION,
   CAMPAIGN_REGIONS,
@@ -153,7 +161,7 @@ import {
 import { allyCorpseVisualCue } from "./corpseVisuals.js";
 import { resolveLocalQaMode, resolveLocalQaSafeArea, resolveLocalQaScenario } from "./localQa.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
-import { PORTRAIT_ART, fitSpriteBattleDisplaySize, spriteFrameFor, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
+import { FORMATION_CARD_ART, PORTRAIT_ART, fitSpriteBattleDisplaySize, spriteFrameFor, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST, stageObjectsFor } from "./stageObjectManifest.js";
 import {
   STAGE_VIEWPORT_IDS,
@@ -172,6 +180,7 @@ import {
   STATION_AUDIO_CUE_IDS,
   STORY_AUDIO_MIX,
   TAKUYA_ENTRANCE_AUDIO,
+  UPGRADE_AUDIO_CUE_IDS,
   enemyVoiceCue,
   humanVoiceCueForUnit,
   sceneIdForScreen,
@@ -181,6 +190,7 @@ import {
   unitAudioCueFor,
   weaponCueForUnit,
 } from "./productionAudio.js";
+import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
 import {
   AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
@@ -3657,6 +3667,8 @@ export function AshfallGame() {
   const resumeBattleAudioLoopsRef = useRef<(g: Game) => void>(() => undefined);
   const activeBurnLoopIdsRef = useRef<Set<number>>(new Set());
   const audioSuccessTimerRef = useRef<number | null>(null);
+  const upgradeFeedbackTimerRef = useRef<number | null>(null);
+  const volumePreviewLastAtRef = useRef(0);
   const audioActivationPendingRef = useRef(false);
   const audioAssetFailureRef = useRef(false);
   const pageHiddenRef = useRef(false);
@@ -3693,11 +3705,16 @@ export function AshfallGame() {
   const [screen, setScreen] = useState<CampaignScreen>("title");
   const upgradeLocksRef = useRef(new Set<string>());
   const [upgradePendingUnitIds, setUpgradePendingUnitIds] = useState<readonly string[]>([]);
+  const [upgradeFeedback, setUpgradeFeedback] = useState<UpgradeFeedbackView | null>(null);
   const [eventId, setEventId] = useState<string | null>(null);
   const [storyAudioPosition, setStoryAudioPosition] = useState<{ eventId: string | null; lineIndex: number }>({ eventId: null, lineIndex: 0 });
   const [forceStoryReplay, setForceStoryReplay] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState(INITIAL_STAGE_ID);
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
+  const campaignSaveRef = useRef(campaignSave);
+  useEffect(() => {
+    campaignSaveRef.current = campaignSave;
+  }, [campaignSave]);
   const [saveHydrated, setSaveHydrated] = useState(false);
   const [savePersistence, setSavePersistence] = useState<SavePersistenceState>("checking");
   const [saveRecovery, setSaveRecovery] = useState<SaveRecoveryState | null>(null);
@@ -3890,9 +3907,11 @@ export function AshfallGame() {
       setCampaignSave(loaded);
       setSelectedStageId(legacyQa ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : loaded.lastSelectedStageId);
       if (legacyQa) setScreen("loadout");
-      setBgmMuted(localQaAudio ? false : !loaded.settings.bgmEnabled);
-      sfxMutedRef.current = localQaAudio ? false : !loaded.settings.sfxEnabled;
-      setSfxMuted(localQaAudio ? false : !loaded.settings.sfxEnabled);
+      const loadedBgmMuted = !loaded.settings.bgmEnabled || loaded.settings.bgmVolume <= 0;
+      const loadedSfxMuted = !loaded.settings.sfxEnabled || loaded.settings.sfxVolume <= 0;
+      setBgmMuted(localQaAudio ? false : loadedBgmMuted);
+      sfxMutedRef.current = localQaAudio ? false : loadedSfxMuted;
+      setSfxMuted(localQaAudio ? false : loadedSfxMuted);
       setSavePersistence(reconciled.status === "recovered" || reconciled.status === "degraded"
         ? "recovered"
         : reconciled.status === "unavailable"
@@ -4042,7 +4061,10 @@ export function AshfallGame() {
 
       if (new URLSearchParams(window.location.search).get("decode") === "assets") {
         const root = document.documentElement;
-        const portraitPaths = [...new Set(Object.values(PORTRAIT_ART))];
+        const portraitPaths = [...new Set([
+          ...Object.values(PORTRAIT_ART),
+          ...Object.values(FORMATION_CARD_ART),
+        ])];
         const productionImagePaths = [...new Set([
           ...portraitPaths,
           PRODUCTION_VISUALS.title,
@@ -4133,6 +4155,10 @@ export function AshfallGame() {
       if (audioSuccessTimerRef.current !== null) {
         window.clearTimeout(audioSuccessTimerRef.current);
         audioSuccessTimerRef.current = null;
+      }
+      if (upgradeFeedbackTimerRef.current !== null) {
+        window.clearTimeout(upgradeFeedbackTimerRef.current);
+        upgradeFeedbackTimerRef.current = null;
       }
       if (diagnosticsTimer !== null) window.clearInterval(diagnosticsTimer);
       if (qaWindow.__ASHFALL_AUDIO_QA__ === qaBridge) delete qaWindow.__ASHFALL_AUDIO_QA__;
@@ -4559,6 +4585,7 @@ export function AshfallGame() {
           processedResultIds: [...campaignSave.processedResultIds],
           caps: campaignSave.caps,
           unitRanks: { ...campaignSave.unitRanks },
+          settings: { ...campaignSave.settings },
         };
       },
       getPerformanceSnapshot: () => ({ ...runtimePerformanceRef.current }),
@@ -4572,7 +4599,7 @@ export function AshfallGame() {
         delete qaWindow.__ASHFALL_RUNTIME_PERFORMANCE__;
       }
     };
-  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.unitRanks, campaignSave.unlockedStageIds, screen]);
+  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.settings, campaignSave.unitRanks, campaignSave.unlockedStageIds, screen]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -5728,19 +5755,59 @@ export function AshfallGame() {
     if (upgradeLocksRef.current.has(unitId)) return;
     upgradeLocksRef.current.add(unitId);
     setUpgradePendingUnitIds([...upgradeLocksRef.current]);
-    const nextRank = getCampaignUnitRank(campaignSave, unitId) + 1;
-    const upgradeId = `upgrade:${unitId}:rank-${nextRank}`;
-    setCampaignSave((current) => {
-      return upgradeCampaignUnit(current, {
+    const currentSave = campaignSaveRef.current;
+    const currentRank = getCampaignUnitRank(currentSave, unitId);
+    const upgradeId = `upgrade:${unitId}:rank-${currentRank + 1}`;
+    const transaction = upgradeCampaignUnit(currentSave, { unitId, upgradeId });
+    if (transaction.result.applied) {
+      const nextRank = transaction.result.nextRank ?? currentRank;
+      const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === unitId);
+      const baseCard = cards.find((candidate) => candidate.kind === unit?.combatKind) ?? cards[0];
+      const before = applyUnitProgression(baseCard, currentRank);
+      const after = applyUnitProgression(baseCard, nextRank);
+      const milestones = unitProgressionMilestones(baseCard.aiProfile, nextRank)
+        .filter((milestone) => !unitProgressionMilestones(baseCard.aiProfile, currentRank).includes(milestone));
+      const defensePercent = (value: number) => Math.round(value * 1000) / 10;
+      campaignSaveRef.current = transaction.save as CampaignSave;
+      setCampaignSave(transaction.save as CampaignSave);
+      setUpgradeFeedback({
         unitId,
-        upgradeId,
-      }).save as CampaignSave;
-    });
+        rank: nextRank,
+        reachedMax: nextRank >= UNIT_PROGRESSION_MAX_RANK,
+        spentCaps: transaction.result.spentCaps,
+        statDelta: `HP ${before.hp}→${after.hp} / 攻撃 ${before.damage}→${after.damage} / 防御 ${defensePercent(before.defense)}→${defensePercent(after.defense)}%`,
+        milestones,
+        receipt: transaction.result.upgradeId,
+      });
+      playProductionCue(UPGRADE_AUDIO_CUE_IDS.CURRENCY, W / 2, {
+        priority: 68,
+        cooldownMs: 60,
+        volume: .72,
+        maxInstances: 1,
+        dedupeKey: `${upgradeId}:currency`,
+      });
+      playProductionCue(
+        nextRank >= UNIT_PROGRESSION_MAX_RANK ? UPGRADE_AUDIO_CUE_IDS.MAX : UPGRADE_AUDIO_CUE_IDS.SUCCESS,
+        W / 2,
+        {
+          priority: nextRank >= UNIT_PROGRESSION_MAX_RANK ? 82 : 74,
+          cooldownMs: 60,
+          volume: nextRank >= UNIT_PROGRESSION_MAX_RANK ? .9 : .78,
+          maxInstances: 1,
+          dedupeKey: `${upgradeId}:result`,
+        },
+      );
+      if (upgradeFeedbackTimerRef.current !== null) window.clearTimeout(upgradeFeedbackTimerRef.current);
+      upgradeFeedbackTimerRef.current = window.setTimeout(() => {
+        setUpgradeFeedback((current) => current?.receipt === transaction.result.upgradeId ? null : current);
+        upgradeFeedbackTimerRef.current = null;
+      }, nextRank >= UNIT_PROGRESSION_MAX_RANK ? 1700 : 1350);
+    }
     window.setTimeout(() => {
       upgradeLocksRef.current.delete(unitId);
       setUpgradePendingUnitIds([...upgradeLocksRef.current]);
-    }, 500);
-  }, [campaignSave]);
+    }, 650);
+  }, [playProductionCue]);
 
   const beginCampaign = useCallback(() => {
     if (campaignSave.campaignStarted) {
@@ -6364,10 +6431,65 @@ export function AshfallGame() {
   const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const normalized = Math.max(0, Math.min(1, value));
-    setCampaignSave((current) => updateCampaignSettings(current, kind === "bgm"
-      ? { bgmVolume: normalized }
-      : { sfxVolume: normalized }) as CampaignSave);
-  }, [end, pendingResultCommit]);
+    const enabled = normalized > 0;
+    const mixer = productionMixerRef.current;
+    if (kind === "bgm") {
+      setBgmMuted(!enabled);
+      mixer?.setSettings({ bgmEnabled: enabled, bgmVolume: normalized });
+      setCampaignSave((current) => updateCampaignSettings(current, {
+        bgmEnabled: enabled,
+        bgmVolume: normalized,
+      }) as CampaignSave);
+      const now = performance.now();
+      if (enabled && mixer && now - volumePreviewLastAtRef.current >= 120) {
+        volumePreviewLastAtRef.current = now;
+        document.documentElement.dataset.audioBgmPreviewStatus = "requested";
+        const desiredScene = desiredProductionSceneRef.current;
+        const previewCue = (desiredScene && PRODUCTION_AUDIO_MANIFEST.sceneById[desiredScene]?.bgm)
+          || PRODUCTION_AUDIO_MANIFEST.sceneById.title?.bgm
+          || "music-title";
+        void mixer.unlock().then((unlocked) => {
+          if (!unlocked || productionMixerRef.current !== mixer) {
+            document.documentElement.dataset.audioBgmPreviewStatus = "locked";
+            return null;
+          }
+          mixer.stopInstance("volume-preview:bgm", { fadeMs: 24 });
+          return mixer.play(previewCue, {
+            loop: false,
+            durationSeconds: 1.1,
+            offsetSeconds: 1,
+            priority: 1000,
+            cooldownMs: 0,
+            maxInstances: 1,
+            instanceKey: "volume-preview:bgm",
+            volume: .78,
+          }).then((handle) => {
+            document.documentElement.dataset.audioBgmPreviewStatus = handle ? "played" : "skipped";
+            return handle;
+          });
+        });
+      }
+      return;
+    }
+    sfxMutedRef.current = !enabled;
+    setSfxMuted(!enabled);
+    mixer?.setSettings({ sfxEnabled: enabled, sfxVolume: normalized });
+    setCampaignSave((current) => updateCampaignSettings(current, {
+      sfxEnabled: enabled,
+      sfxVolume: normalized,
+    }) as CampaignSave);
+    const now = performance.now();
+    if (enabled && now - volumePreviewLastAtRef.current >= 120) {
+      volumePreviewLastAtRef.current = now;
+      playProductionCue("ui-select", W / 2, {
+        priority: 64,
+        cooldownMs: 80,
+        volume: .78,
+        maxInstances: 1,
+        dedupeKey: `volume-preview:${Math.round(normalized * 20)}`,
+      });
+    }
+  }, [end, pendingResultCommit, playProductionCue]);
 
   const setAutoSkipReadStory = useCallback((enabled: boolean) => {
     setCampaignSave((current) => updateStoryPlaybackSettings(current, { autoSkipReadStory: enabled }) as CampaignSave);
@@ -6384,7 +6506,10 @@ export function AshfallGame() {
   const toggleBgm = useCallback(() => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const next = !bgmMuted; setBgmMuted(next);
-    setCampaignSave((current) => updateCampaignSettings(current, { bgmEnabled: !next }) as CampaignSave);
+    setCampaignSave((current) => updateCampaignSettings(current, {
+      bgmEnabled: !next,
+      bgmVolume: !next && current.settings.bgmVolume <= 0 ? .5 : current.settings.bgmVolume,
+    }) as CampaignSave);
     if (next) stopMusic(); else if (started && !paused && !end) startMusic();
   }, [bgmMuted, end, paused, pendingResultCommit, startMusic, started, stopMusic]);
 
@@ -6393,7 +6518,10 @@ export function AshfallGame() {
     const next = !sfxMutedRef.current;
     sfxMutedRef.current = next;
     setSfxMuted(next);
-    setCampaignSave((current) => updateCampaignSettings(current, { sfxEnabled: !next }) as CampaignSave);
+    setCampaignSave((current) => updateCampaignSettings(current, {
+      sfxEnabled: !next,
+      sfxVolume: !next && current.settings.sfxVolume <= 0 ? .6 : current.settings.sfxVolume,
+    }) as CampaignSave);
     if (next) { stopJingle(); stopSfx(); }
     else if (gameRef.current.running && !gameRef.current.paused && !gameRef.current.over) resumeBattleAudioLoops(gameRef.current);
   }, [end, pendingResultCommit, resumeBattleAudioLoops, stopJingle, stopSfx]);
@@ -8972,7 +9100,7 @@ export function AshfallGame() {
   const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
 
   return (
-    <main className="game-shell" data-screen={screen} data-stage-id={selectedStageId}>
+    <main className="game-shell" data-screen={screen} data-stage-id={selectedStageId} data-release-version={RELEASE_VERSION}>
       <section className="game-frame" style={{ "--battlefield-art": `url('${stageVisualFor(selectedStageId)}')` } as CSSProperties} aria-label="西新世紀末物語 ゲーム">
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
         {(qaMode || qaScenario) && (
@@ -8996,7 +9124,7 @@ export function AshfallGame() {
         {hud.battleBarks.length > 0 && <div className="battle-barks" aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
 
         <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>Version 0.7.1</em></small></div></div>
+          <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
           <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
           <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
           <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
@@ -9025,7 +9153,7 @@ export function AshfallGame() {
             <div className="unit-cards" aria-label="生存者ユニット">
               {cards.filter((card) => formationKinds.includes(card.kind)).map((card) => {
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
-                const portraitArt = (PORTRAIT_ART as Record<string, string | undefined>)[card.kind];
+                const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 return (
                   <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="keycap">{card.key}</span><span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
@@ -9065,8 +9193,8 @@ export function AshfallGame() {
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>エリアマップへ撤退</button>
           </div>
           <section className="pause-volume" aria-label="音量設定"><h3>音量設定</h3>
-            <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
-            <label><span>効果音 <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
+            <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} data-volume-kind="bgm" data-audio-unlock-control="true" aria-label="BGM音量" aria-valuetext={`${Math.round(campaignSave.settings.bgmVolume * 100)}%${campaignSave.settings.bgmVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
+            <label><span>SE・戦闘ボイス <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} data-volume-kind="sfx" data-audio-unlock-control="true" aria-label="SE・戦闘ボイス音量" aria-valuetext={`${Math.round(campaignSave.settings.sfxVolume * 100)}%${campaignSave.settings.sfxVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
             <div><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit)}>テスト音を鳴らす</button></div>
             <p className="audio-troubleshooting">成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。</p>
           </section>
@@ -9097,6 +9225,7 @@ export function AshfallGame() {
           saveRecoveryCanExport={Boolean(saveRecovery && (saveRecovery.corruptCandidates.length > 0 || saveRecovery.candidates.length > 0))}
           saveMutationPending={saveMutationPending}
           upgradePendingUnitIds={upgradePendingUnitIds}
+          upgradeFeedback={upgradeFeedback}
           savePersistence={savePersistence}
           readStoryEventIds={campaignSave.readStoryEventIds}
           autoSkipReadStory={campaignSave.autoSkipReadStory}

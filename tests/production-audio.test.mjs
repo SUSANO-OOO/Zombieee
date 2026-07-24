@@ -21,6 +21,7 @@ import {
   STORY_WARNING_EVENT_IDS,
   TAKUYA_ENTRANCE_AUDIO,
   UNIT_AUDIO_CUE_CONTRACTS,
+  UPGRADE_AUDIO_CUE_IDS,
   enemyVoiceCue,
   humanVoiceCueForUnit,
   sceneIdForStoryEvent,
@@ -106,7 +107,7 @@ function sha256(filePath) {
   return createHash("sha256").update(readFileSync(filePath)).digest("hex");
 }
 
-test("production manifest preserves every v060 battle cue and adds only non-voice v070 story finals", () => {
+test("production manifest preserves v060/v070 audio and adds only the audited v080 carbine pool", () => {
   const manifestPaths = PRODUCTION_AUDIO_MANIFEST.assets.flatMap((asset) => asset.sources.map((source) => source.src));
   const v060Paths = [
     ...inventoryPaths("v060", "music", "mp3"),
@@ -122,16 +123,23 @@ test("production manifest preserves every v060 battle cue and adds only non-voic
     ...inventoryPaths("v070", "sfx", "mp3"),
     ...inventoryPaths("v070", "sfx", "ogg"),
   ];
+  const v080Paths = [
+    ...inventoryPaths("v080", "sfx", "mp3"),
+    ...inventoryPaths("v080", "sfx", "ogg"),
+  ];
   const activeV060Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v060/"));
   const activeV070Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v070/"));
+  const activeV080Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v080/"));
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 171);
-  assert.equal(manifestPaths.length, 342);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 173);
+  assert.equal(manifestPaths.length, 346);
   assert.equal(new Set(manifestPaths).size, manifestPaths.length);
   assert.equal(activeV060Paths.length, 270);
   assert.equal(activeV070Paths.length, 72);
+  assert.equal(activeV080Paths.length, 4);
   assert.deepEqual([...activeV060Paths].sort(), [...v060Paths].sort());
   assert.deepEqual([...activeV070Paths].sort(), [...v070Paths].sort());
+  assert.deepEqual([...activeV080Paths].sort(), [...v080Paths].sort());
   assert.equal(activeV060Paths.some((sourcePath) => /\/sfx\/(?:human-|voice-)/.test(sourcePath)), true);
   assert.equal(activeV070Paths.some((sourcePath) => /voice|speech|tts/i.test(sourcePath)), false);
 });
@@ -141,7 +149,7 @@ test("every referenced source is repository-local, nonempty, and has parseable M
     assert.equal(asset.sources.length, 2, asset.id);
     assert.deepEqual(asset.sources.map((source) => source.type), ["audio/mpeg", "audio/ogg"], asset.id);
     for (const source of asset.sources) {
-      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx))\/[a-z0-9-]+\.(mp3|ogg)$/);
+      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx)\/[a-z0-9-]+\.(mp3|ogg)$/);
       assert.doesNotMatch(source.src, /:\/\/|^\/\//);
       const filePath = publicFileFor(source.src);
       assert.equal(existsSync(filePath), true, `${asset.id}: ${source.src}`);
@@ -184,6 +192,51 @@ test("all 26 existing newcomer weapon and battle-voice cues remain active", () =
     }
   }
   assert.equal(provenance.cues.filter(({ id }) => id.startsWith("voice-")).length, 12);
+});
+
+test("Monkey's suppressed compact carbine uses a dedicated reproducible Version 0.8.0 pool", () => {
+  const provenancePath = path.join(repositoryRoot, "reference", "audio", "v080-generated", "provenance.json");
+  const provenance = JSON.parse(readFileSync(provenancePath, "utf8"));
+  assert.equal(provenance.version, 1);
+  assert.equal(provenance.generator, "scripts/build-v080-audio.py");
+  assert.equal(provenance.cues.length, 2);
+  assert.match(provenance.policy, /no sampled recording/i);
+  assert.match(provenance.policy, /no human or generated voice/i);
+  const pool = PRODUCTION_AUDIO_MANIFEST.poolById["weapon-suppressed-carbine"];
+  assert.ok(pool);
+  assert.equal(pool.category, "weapons");
+  assert.deepEqual(pool.assetIds, provenance.cues.map(({ id }) => id));
+  for (const record of provenance.cues) {
+    assert.equal(record.origin, "project-original deterministic synthesis; no sampled recording");
+    const sourcePath = path.join(repositoryRoot, ...record.source.path.split("/"));
+    assert.equal(sha256(sourcePath), record.source.sha256, record.id);
+    const asset = PRODUCTION_AUDIO_MANIFEST.assetById[record.id];
+    assert.ok(asset, record.id);
+    assert.deepEqual(
+      asset.sources.map(({ src }) => src),
+      record.finals.map(({ path: finalPath }) => `/${finalPath.replace(/^public\//, "")}`),
+    );
+    for (const final of record.finals) {
+      assert.equal(
+        sha256(path.join(repositoryRoot, ...final.path.split("/"))),
+        final.sha256,
+        `${record.id}: ${final.path}`,
+      );
+    }
+  }
+});
+
+test("normal and maximum upgrades use distinct production UI cues on the SFX bus", () => {
+  assert.equal(UPGRADE_AUDIO_CUE_IDS.CURRENCY, "ui-select");
+  assert.equal(UPGRADE_AUDIO_CUE_IDS.SUCCESS, "ui-confirm");
+  assert.equal(UPGRADE_AUDIO_CUE_IDS.MAX, STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM);
+  assert.equal(new Set(Object.values(UPGRADE_AUDIO_CUE_IDS)).size, 3);
+  for (const cueId of Object.values(UPGRADE_AUDIO_CUE_IDS)) {
+    const asset = PRODUCTION_AUDIO_MANIFEST.assetById[cueId];
+    assert.ok(asset, cueId);
+    assert.equal(asset.category, "ui", cueId);
+    assert.equal(asset.loop, false, cueId);
+  }
 });
 
 test("all 36 v070 cues are reproducible layered masters rather than placeholder beeps", () => {
@@ -244,7 +297,7 @@ test("production manifest keeps every mixer category and valid two-sample variat
     [...new Set(PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.category))].sort(),
     [...AUDIO_CATEGORIES].sort(),
   );
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.pools.length, 41);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.pools.length, 42);
   for (const pool of PRODUCTION_AUDIO_MANIFEST.pools) {
     assert.equal(pool.assetIds.length, 2, pool.id);
     assert.equal(new Set(pool.assetIds).size, 2, pool.id);
@@ -499,6 +552,7 @@ test("all weapon-mapped units retain production weapons and all eleven units ret
     "crazy-king": "weapon-chainsaw-attack",
     kumaverson: "weapon-pan-swing",
     babayaga: "weapon-suppressed-pistol",
+    engineer: "weapon-suppressed-carbine",
   };
   const expectedVoicePrefixes = {
     scout: "human-male-light",
@@ -664,11 +718,16 @@ test("gameplay routes scenes, combat identity, and procedural fallback through t
   assert.doesNotMatch(source, /onBgmLoadFailure/);
   assert.match(source, /createAudioMixer\(\{[\s\S]*maxVoices: 28/);
   assert.match(source, /const localQaAudio = Boolean\(legacyQa \|\| campaignQa\)/);
-  assert.match(source, /setBgmMuted\(localQaAudio \? false : !loaded\.settings\.bgmEnabled\)/);
+  assert.match(source, /const loadedBgmMuted = !loaded\.settings\.bgmEnabled \|\| loaded\.settings\.bgmVolume <= 0/);
+  assert.match(source, /const loadedSfxMuted = !loaded\.settings\.sfxEnabled \|\| loaded\.settings\.sfxVolume <= 0/);
+  assert.match(source, /setBgmMuted\(localQaAudio \? false : loadedBgmMuted\)/);
   assert.match(source, /bgmVolume: campaignSave\.settings\.bgmVolume/);
   assert.match(source, /sfxVolume: campaignSave\.settings\.sfxVolume/);
   assert.match(source, /bgmEnabled: !bgmMuted/);
   assert.match(source, /if \(!sceneId \|\| \(screen === "battle" && paused\)\)/);
+  assert.match(source, /const previewCue = \(desiredScene && PRODUCTION_AUDIO_MANIFEST\.sceneById\[desiredScene\]\?\.bgm\)/);
+  assert.match(source, /mixer\.stopInstance\("volume-preview:bgm", \{ fadeMs: 24 \}\)/);
+  assert.match(source, /durationSeconds: 1\.1,[\s\S]*instanceKey: "volume-preview:bgm"/);
   assert.match(source, /weaponCueForUnit\(f\.kind\)/);
   assert.match(source, /const deployVoice = unitAudioCueFor\(kind, "voice", "deploy"\) \|\| humanVoiceCueForUnit\(kind, "deploy"\)/);
   assert.match(source, /humanVoiceCueForUnit\(f\.kind, "attack"\)/);
@@ -706,7 +765,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 212);
+  assert.equal(allCueIds.length, 215);
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(

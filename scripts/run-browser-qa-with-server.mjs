@@ -41,6 +41,7 @@ process.env.CRAWLER_DEFENSE_QA_BASE_URL = origin;
 process.env.STATION_QA_BASE_URL = origin;
 process.env.P5_QA_BASE_URL = origin;
 process.env.PROGRESSION_QA_BASE_URL = origin;
+process.env.ASSET_DECODE_QA_BASE_URL = origin;
 const server = spawn(process.execPath, [
   "scripts/run-vinext.mjs",
   "start",

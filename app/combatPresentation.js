@@ -24,7 +24,7 @@ export const WEAPON_PROFILE_IDS = Object.freeze([
   "rifle",
   "sniper",
   "machine-gun",
-  "crossbow",
+  "suppressed-carbine",
   "deployable",
   "heal-support",
 ]);
@@ -268,15 +268,15 @@ export const WEAPON_PROFILES = deepFreeze({
     damageWeights: [.34, .33, .33],
     shotOffsetsSeconds: [0, .055, .11],
   },
-  crossbow: {
-    id: "crossbow",
-    trail: "bolt",
-    trailColor: "#d8d19b",
-    impact: "bolt-stick",
+  "suppressed-carbine": {
+    id: "suppressed-carbine",
+    trail: "ballistic",
+    trailColor: "#7ee8ea",
+    impact: "precision-burst",
     impactRadius: 8,
-    hitStopSeconds: .026,
-    recoil: .12,
-    casing: false,
+    hitStopSeconds: .022,
+    recoil: .2,
+    casing: true,
     damageWeights: [1],
     shotOffsetsSeconds: [0],
   },
@@ -317,7 +317,7 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   kumaverson: "blunt",
   babayaga: "sniper",
   guardian: "blunt",
-  engineer: "crossbow",
+  engineer: "suppressed-carbine",
 });
 
 export function combatPresentationFor(kind) {

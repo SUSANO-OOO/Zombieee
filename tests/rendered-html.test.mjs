@@ -123,25 +123,25 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.7.5 campaign title as the formal entry point", async () => {
+test("server-renders the 0.8.0 campaign title as the formal entry point", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.7\.5<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.8\.0<\/title>/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
   assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"/);
   await access(new URL("../public/favicon.svg", import.meta.url));
-  assert.match(html, /<main class="game-shell" data-screen="title" data-stage-id="stage-nishijin-shopping-street">/);
+  assert.match(html, /<main class="game-shell" data-screen="title" data-stage-id="stage-nishijin-shopping-street" data-release-version="0\.8\.0">/);
   assert.match(html, /aria-label="西新世紀末物語 ゲーム"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /class="battlefield  inactive" aria-label="連続座標の戦場" aria-hidden="true"/);
   assert.match(html, /class="campaign-overlay title-screen-v060"[^>]*title-key-visual-v1\.webp[^>]*aria-label="西新世紀末物語 タイトル画面"/);
   assert.match(html, /<small>にしじんせいきまつものがたり<\/small>/);
   assert.match(html, /<h1><span>西新<\/span><b>世紀末物語<\/b><\/h1>/);
-  assert.match(html, /<p>アーリーアクセス版<\/p>/);
+  assert.match(html, /<p>アーリーアクセス版　(?:<!-- -->)?Version 0\.8\.0<\/p>/);
   assert.match(html, /<span>セーブ確認中<\/span><small>PROLOGUE　西新が終わった夜<\/small>/);
   assert.doesNotMatch(html, /百道浜|新たな世界の始まり/);
   assert.doesNotMatch(html, /BOSS STAGE LOADOUT|CRAWLER SYSTEM CHECK|Three-lane wasteland battlefield/);
@@ -187,11 +187,11 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(game, /if \(resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)[\s\S]*resolveLocalQaScenario\(window\.location\.hostname, window\.location\.search\)\) return;/);
   assert.match(game, /owned: Boolean\(qaMode \|\| qaScenario\) \|\| isUnitOwned/);
   assert.match(game, /applyUnitProgression\(baseCard, g\.unitRanksByKind\[kind\] \?\? 0\)/);
-  assert.match(game, /upgradeCampaignUnit\(current/);
+  assert.match(game, /const currentSave = campaignSaveRef\.current[\s\S]*upgradeCampaignUnit\(currentSave/);
   assert.match(game, /HP \+\$\{increase\(progressed\.hp, baseCard\.hp\)}%・攻撃[\s\S]*防御 \$\{Math\.round\(progressed\.defense/);
   assert.doesNotMatch(game, /射程 \+\$\{increase\(progressed\.range/);
   const upgradeBlock = game.slice(game.indexOf("const upgradeUnit"), game.indexOf("const beginCampaign"));
-  assert.match(upgradeBlock, /upgradeLocksRef\.current\.has\(unitId\)[\s\S]*const nextRank = getCampaignUnitRank\(campaignSave, unitId\) \+ 1[\s\S]*const upgradeId = `upgrade:\$\{unitId}:rank-\$\{nextRank}`[\s\S]*upgradeCampaignUnit\(current,[\s\S]*upgradeId/);
+  assert.match(upgradeBlock, /upgradeLocksRef\.current\.has\(unitId\)[\s\S]*const currentRank = getCampaignUnitRank\(currentSave, unitId\)[\s\S]*const upgradeId = `upgrade:\$\{unitId}:rank-\$\{currentRank \+ 1}`[\s\S]*upgradeCampaignUnit\(currentSave,[\s\S]*upgradeId/);
   assert.match(game, /damageAfterUnitDefense\(rawInterception\.guardianDamage, guardian\.defense\)[\s\S]*damageAfterUnitDefense\(targetDamage, target\.defense\)/);
   assert.match(screens, /追いつき割引/);
   assert.match(game, /if \(!qaMode && !qaScenario && !isUnitOwned\(current, unitId\)\) return current/);
@@ -327,7 +327,8 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(css, /\.barrier-health/);
   assert.match(css, /\.barrier-health\.vulnerable/);
   assert.match(css, /\.barrier-health\.hit/);
-  assert.match(layout, /title: "西新世紀末物語｜アーリーアクセス版 0\.7\.5"/);
+  assert.match(layout, /import \{ RELEASE_TITLE \} from "\.\/releaseIdentity\.js"/);
+  assert.match(layout, /title: RELEASE_TITLE/);
   assert.match(layout, /viewportFit: "cover"/);
   assert.doesNotMatch(layout, /images: \[.*\/og\.png/);
   assert.match(layout, /href=\{V075_VISUAL_PROFILES\.enemyBase\.intact\.path\}/);
