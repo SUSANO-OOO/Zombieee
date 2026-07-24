@@ -21,6 +21,7 @@ import {
   STORY_WARNING_EVENT_IDS,
   TAKUYA_ENTRANCE_AUDIO,
   UNIT_AUDIO_CUE_CONTRACTS,
+  UPGRADE_AUDIO_CUE_IDS,
   enemyVoiceCue,
   humanVoiceCueForUnit,
   sceneIdForStoryEvent,
@@ -184,6 +185,19 @@ test("all 26 existing newcomer weapon and battle-voice cues remain active", () =
     }
   }
   assert.equal(provenance.cues.filter(({ id }) => id.startsWith("voice-")).length, 12);
+});
+
+test("normal and maximum upgrades use distinct production UI cues on the SFX bus", () => {
+  assert.equal(UPGRADE_AUDIO_CUE_IDS.CURRENCY, "ui-select");
+  assert.equal(UPGRADE_AUDIO_CUE_IDS.SUCCESS, "ui-confirm");
+  assert.equal(UPGRADE_AUDIO_CUE_IDS.MAX, STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM);
+  assert.equal(new Set(Object.values(UPGRADE_AUDIO_CUE_IDS)).size, 3);
+  for (const cueId of Object.values(UPGRADE_AUDIO_CUE_IDS)) {
+    const asset = PRODUCTION_AUDIO_MANIFEST.assetById[cueId];
+    assert.ok(asset, cueId);
+    assert.equal(asset.category, "ui", cueId);
+    assert.equal(asset.loop, false, cueId);
+  }
 });
 
 test("all 36 v070 cues are reproducible layered masters rather than placeholder beeps", () => {
@@ -664,7 +678,9 @@ test("gameplay routes scenes, combat identity, and procedural fallback through t
   assert.doesNotMatch(source, /onBgmLoadFailure/);
   assert.match(source, /createAudioMixer\(\{[\s\S]*maxVoices: 28/);
   assert.match(source, /const localQaAudio = Boolean\(legacyQa \|\| campaignQa\)/);
-  assert.match(source, /setBgmMuted\(localQaAudio \? false : !loaded\.settings\.bgmEnabled\)/);
+  assert.match(source, /const loadedBgmMuted = !loaded\.settings\.bgmEnabled \|\| loaded\.settings\.bgmVolume <= 0/);
+  assert.match(source, /const loadedSfxMuted = !loaded\.settings\.sfxEnabled \|\| loaded\.settings\.sfxVolume <= 0/);
+  assert.match(source, /setBgmMuted\(localQaAudio \? false : loadedBgmMuted\)/);
   assert.match(source, /bgmVolume: campaignSave\.settings\.bgmVolume/);
   assert.match(source, /sfxVolume: campaignSave\.settings\.sfxVolume/);
   assert.match(source, /bgmEnabled: !bgmMuted/);

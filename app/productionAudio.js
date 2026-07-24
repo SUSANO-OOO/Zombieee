@@ -300,6 +300,12 @@ export const STATION_AUDIO_CUE_IDS = Object.freeze({
   TERMINAL_CONFIRM: "sfx-v070-terminal-confirm",
 });
 
+export const UPGRADE_AUDIO_CUE_IDS = Object.freeze({
+  CURRENCY: "ui-select",
+  SUCCESS: "ui-confirm",
+  MAX: STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM,
+});
+
 export const TAKUYA_ENTRANCE_AUDIO = Object.freeze({
   cueId: "sfx-v070-takuya-entrance",
   silenceSceneId: "silence-stage3-entrance",

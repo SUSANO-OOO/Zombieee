@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { RELEASE_TITLE } from "./releaseIdentity.js";
 import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import "./globals.css";
 import "./campaign.css";
@@ -13,7 +14,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "西新世紀末物語｜アーリーアクセス版 0.7.5",
+  title: RELEASE_TITLE,
   description:
     "西新・早良区・西新駅地下を舞台に、移動拠点と生存者を率いるアーリーアクセス版ストラテジー。",
   icons: {
