@@ -1,4 +1,4 @@
-import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
+import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 
 /**
  * Audited sprite source geometry for the 0.6.0 renderer and localhost QA.
@@ -395,19 +395,20 @@ export function fitSpriteBattleDisplaySize(kind, frame, maximum = {}) {
 }
 
 export const CHARACTER_PORTRAIT_ART = Object.freeze({
-  brawler: "/art/v060/characters/portraits/brawler-portrait-v2.webp",
-  scout: "/art/v070/characters/portraits/scout-portrait-v1.webp",
-  ranger: "/art/v070/characters/portraits/ranger-portrait-v1.webp",
-  medic: "/art/v070/characters/portraits/medic-portrait-v1.webp",
-  brute: "/art/v070/characters/portraits/brute-portrait-v1.webp",
-  gunner: "/art/v070/characters/portraits/gunner-portrait-v1.webp",
-  "crazy-king": "/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
-  kumaverson: "/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
-  babayaga: "/art/v060/characters/portraits/babayaga-portrait-v2.webp",
-  guardian: "/art/v070/characters/portraits/guardian-portrait-v1.webp",
-  engineer: "/art/v070/characters/portraits/engineer-portrait-v1.webp",
+  ...Object.fromEntries(Object.entries(V080_UNIT_VISUAL_PROFILES)
+    .map(([kind, profile]) => [kind, profile.eventPortrait.path])),
   guide: V075_VISUAL_PROFILES.ikura.eventPortrait.path,
 });
+
+export const FORMATION_CARD_ART = Object.freeze(Object.fromEntries(
+  Object.entries(V080_UNIT_VISUAL_PROFILES)
+    .map(([kind, profile]) => [kind, profile.formationCard.path]),
+));
+
+export const PERSONNEL_CARD_ART = Object.freeze(Object.fromEntries(
+  Object.entries(V080_UNIT_VISUAL_PROFILES)
+    .map(([kind, profile]) => [kind, profile.personnelCard.path]),
+));
 
 export const RADIO_PORTRAIT_ART = "/art/v060/characters/portraits/radio-terminal-portrait-v1.webp";
 

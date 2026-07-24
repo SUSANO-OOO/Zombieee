@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "./productionVisuals.js";
-import { PORTRAIT_ART } from "./spriteManifest.js";
+import { FORMATION_CARD_ART, PERSONNEL_CARD_ART, PORTRAIT_ART } from "./spriteManifest.js";
 import { PROLOGUE_SYNOPSIS, getStoryEvent, storyEventLog } from "./storyEvents.js";
 import { CAMPAIGN_IMPORT_MAX_BYTES } from "./campaignStorage.js";
 
@@ -146,6 +146,8 @@ type Props = {
 };
 
 const portraitArt = PORTRAIT_ART as Record<string, string>;
+const formationCardArt = FORMATION_CARD_ART as Record<string, string>;
+const personnelCardArt = PERSONNEL_CARD_ART as Record<string, string>;
 
 function stars(value: number) {
   return `${"★".repeat(Math.max(0, Math.min(3, value)))}${"☆".repeat(Math.max(0, 3 - value))}`;
@@ -239,18 +241,6 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   const event = eventId ? getStoryEvent(eventId) : null;
   const line = event?.lines[index] ?? null;
   const log = useMemo(() => eventId ? storyEventLog(eventId, index) : [], [eventId, index]);
-  const contextLine = useMemo(() => {
-    if (!event || !line) return null;
-    const candidates = [
-      ...event.lines.slice(0, index).reverse(),
-      ...event.lines.slice(index + 1),
-    ];
-    return candidates.find((candidate) => (
-      candidate.portrait !== line.portrait
-      && candidate.side !== line.side
-      && Boolean(portraitArt[candidate.portrait])
-    )) ?? null;
-  }, [event, index, line]);
   const completeOnce = useCallback(() => {
     if (completedRef.current) return;
     completedRef.current = true;
@@ -288,7 +278,6 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   }, [autoSkipReadStory, completeOnce, eventId, eventRead, forceStoryReplay]);
   if (!event || !line) return <div className="campaign-overlay event-screen"><button className="campaign-primary" onClick={completeOnce}>地図へ進む</button></div>;
   const art = portraitArt[line.portrait] ?? "";
-  const contextArt = contextLine ? portraitArt[contextLine.portrait] ?? "" : "";
   const advance = () => {
     if (silenceTail) return;
     if (index + 1 < event.lines.length) setIndex((value) => value + 1);
@@ -297,7 +286,6 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   const backgroundArt = STORY_BACKGROUND_VISUALS[event.background as keyof typeof STORY_BACKGROUND_VISUALS] ?? PRODUCTION_VISUALS.command;
   return <div className={`campaign-overlay event-screen event-${event.background} effect-${line.effect ?? "none"}`} style={artStyle(backgroundArt)} aria-label="会話イベント">
     <div className="event-vignette" />
-    {contextLine && contextArt && <div className={`event-portrait inactive ${contextLine.side} ${contextLine.portrait === "guide" ? "guide" : contextLine.portrait === "radio" ? "radio" : ""}`} style={{ backgroundImage: `url('${contextArt}')` }} aria-hidden="true" />}
     <div className={`event-portrait active ${line.side} ${line.portrait === "guide" ? "guide" : line.portrait === "radio" ? "radio" : ""}`} data-expression={line.expression} style={art ? { backgroundImage: `url('${art}')` } : undefined} aria-hidden="true" />
     <div className="event-controls"><button onClick={() => setLogOpen((value) => !value)}>会話ログ</button><button onClick={() => setSkipOpen(true)}>スキップ</button></div>
     {logOpen && <section className="event-log" aria-label="会話ログ"><header><b>会話ログ</b><button onClick={() => setLogOpen(false)}>閉じる</button></header>{log.map((entry: { id: string; speaker: string; text: string }) => <p key={entry.id}><b>{entry.speaker}</b><span>{entry.text}</span></p>)}</section>}
@@ -354,7 +342,7 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
       <section className="formation-units" data-mode="roster" aria-label="使用ユニットを選択"><header className="formation-roster-header"><div><h2>出撃可能ユニット <small>{formationUnitIds.length}/7名選択中</small></h2></div><nav aria-label="部隊プリセット">{formationPresets.map((preset) => <button key={preset.id} data-active={preset.id === selectedFormationPresetId} onClick={() => onSelectFormationPreset(preset.id)} aria-pressed={preset.id === selectedFormationPresetId}><b>{preset.name}</b><small>{preset.unitIds.length}/7</small></button>)}</nav></header><div>{visibleUnits.map((unit) => {
         const selected = formationUnitIds.includes(unit.id);
         const atCapacity = formationUnitIds.length >= 7 && !selected;
-        const portrait = unit.discovered ? portraitArt[unit.kind] : "";
+        const portrait = unit.discovered ? formationCardArt[unit.kind] : "";
         return <article key={unit.id} className="formation-unit-card" data-state="owned" data-selected={selected}>
           <button className="formation-unit-select" data-kind={unit.kind} data-unit-id={unit.id} data-selected={selected} disabled={atCapacity} onClick={() => onToggleFormation(unit.id)} aria-pressed={selected} aria-label={`${unit.name}、Rank ${unit.rank}、${unit.role}、${unit.weaponName}、${unit.deploymentHint}`} title={`${unit.attackMode} / ${unit.primaryTarget} / ${unit.deploymentHint}`} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>
             <span className="formation-portrait" /><span><b>{unit.name}</b><em><i>{unit.roleIcon}</i>{unit.role}</em><small className="unit-combat">{unit.weaponName}・{unit.rangeBand}・{unit.primaryTarget}</small><small className="unit-intent">配置：{unit.deploymentHint}</small></span><i>Rank {unit.rank}/{unit.maxRank}</i>
@@ -376,7 +364,7 @@ function PersonnelScreen({ units, caps, upgradePendingUnitIds, onReturnToMap, on
       <section className="formation-units personnel-units" data-mode={mode} aria-label={mode === "roster" ? "所有ユニット一覧" : mode === "upgrade" ? "ユニットを強化" : "ユニットを調達"}>
         <header className="formation-roster-header"><div><h2>{mode === "roster" ? "所有一覧" : mode === "upgrade" ? "戦力強化" : "新規調達"} <small>{mode === "roster" ? `${visibleUnits.length}/11名` : `所持 ${caps}キャップ`}</small></h2><nav className="formation-mode-tabs" aria-label="人員管理メニュー"><button data-active={mode === "roster"} onClick={() => setMode("roster")}>所有一覧</button><button data-active={mode === "acquisition"} onClick={() => setMode("acquisition")}>調達</button><button data-active={mode === "upgrade"} onClick={() => setMode("upgrade")}>強化</button></nav></div></header>
         <div>{visibleUnits.map((unit) => {
-          const portrait = unit.discovered ? portraitArt[unit.kind] : "";
+          const portrait = unit.discovered ? personnelCardArt[unit.kind] : "";
           const state = unit.owned ? "owned" : unit.recruitable ? "recruitable" : unit.discovered ? "discovered" : "unknown";
           return <article key={unit.id} className="formation-unit-card" data-state={state}>
             <div className="formation-unit-select personnel-unit-summary" data-kind={unit.kind} data-unit-id={unit.id} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>

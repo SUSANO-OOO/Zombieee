@@ -5,7 +5,13 @@ import { fileURLToPath } from "node:url";
 
 import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
 import { PRODUCTION_VISUALS } from "../app/productionVisuals.js";
-import { CHARACTER_PORTRAIT_ART, PORTRAIT_ART, SPRITE_MANIFEST } from "../app/spriteManifest.js";
+import {
+  CHARACTER_PORTRAIT_ART,
+  FORMATION_CARD_ART,
+  PERSONNEL_CARD_ART,
+  PORTRAIT_ART,
+  SPRITE_MANIFEST,
+} from "../app/spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 
 const repositoryRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -17,6 +23,8 @@ function flattenVisualPaths() {
     PRODUCTION_VISUALS.guide,
     ...Object.values(PRODUCTION_VISUALS.stages),
     ...Object.values(CHARACTER_PORTRAIT_ART),
+    ...Object.values(FORMATION_CARD_ART),
+    ...Object.values(PERSONNEL_CARD_ART),
     ...Object.values(PORTRAIT_ART),
     ...Object.values(SPRITE_MANIFEST).map(({ path: spritePath }) => spritePath),
     ...Object.values(STAGE_OBJECT_MANIFEST).flatMap((stage) => [

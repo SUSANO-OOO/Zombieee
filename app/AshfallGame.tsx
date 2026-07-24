@@ -145,7 +145,7 @@ import {
 import { allyCorpseVisualCue } from "./corpseVisuals.js";
 import { resolveLocalQaMode, resolveLocalQaSafeArea, resolveLocalQaScenario } from "./localQa.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
-import { PORTRAIT_ART, fitSpriteBattleDisplaySize, spriteFrameFor, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
+import { FORMATION_CARD_ART, PORTRAIT_ART, fitSpriteBattleDisplaySize, spriteFrameFor, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST, stageObjectsFor } from "./stageObjectManifest.js";
 import {
   STAGE_VIEWPORT_IDS,
@@ -4018,7 +4018,10 @@ export function AshfallGame() {
 
       if (new URLSearchParams(window.location.search).get("decode") === "assets") {
         const root = document.documentElement;
-        const portraitPaths = [...new Set(Object.values(PORTRAIT_ART))];
+        const portraitPaths = [...new Set([
+          ...Object.values(PORTRAIT_ART),
+          ...Object.values(FORMATION_CARD_ART),
+        ])];
         const productionImagePaths = [...new Set([
           ...portraitPaths,
           PRODUCTION_VISUALS.title,
@@ -8751,7 +8754,7 @@ export function AshfallGame() {
             <div className="unit-cards" aria-label="生存者ユニット">
               {cards.filter((card) => formationKinds.includes(card.kind)).map((card) => {
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
-                const portraitArt = (PORTRAIT_ART as Record<string, string | undefined>)[card.kind];
+                const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 return (
                   <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="keycap">{card.key}</span><span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>

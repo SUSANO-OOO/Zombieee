@@ -105,6 +105,21 @@ for (const engine of engines) {
             document.querySelector(".game-shell")?.getAttribute("data-screen") === "personnel"
             && document.querySelectorAll(".formation-unit-card").length === 11
           ), undefined, { timeout });
+          const visualCards = await page.evaluate(() => {
+            const portraits = [...document.querySelectorAll(".formation-portrait")];
+            return {
+              total: portraits.length,
+              withArt: portraits.filter((portrait) => (
+                getComputedStyle(portrait).backgroundImage.includes("/art/v080/characters/cards/")
+              )).length,
+              minimumWidth: Math.min(...portraits.map((portrait) => portrait.getBoundingClientRect().width)),
+              minimumHeight: Math.min(...portraits.map((portrait) => portrait.getBoundingClientRect().height)),
+            };
+          });
+          invariant(visualCards.total === 11 && visualCards.withArt === 11,
+            `purpose-specific visual cards missing: ${JSON.stringify(visualCards)}`);
+          invariant(visualCards.minimumWidth >= 50 && visualCards.minimumHeight >= 50,
+            `visual cards are too small to identify: ${JSON.stringify(visualCards)}`);
 
           await page.getByRole("button", { name: "強化", exact: true }).click();
           await page.waitForFunction(() => document.querySelectorAll(".formation-unit-upgrade").length === 11, undefined, { timeout });
@@ -201,6 +216,7 @@ for (const engine of engines) {
               defense: fighter.defense,
             },
             damageProof,
+            visualCards,
             dimensions,
             diagnostics,
           });

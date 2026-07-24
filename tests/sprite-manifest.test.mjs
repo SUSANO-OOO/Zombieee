@@ -9,6 +9,8 @@ import { fileURLToPath } from "node:url";
 import { PRODUCTION_VISUALS } from "../app/productionVisuals.js";
 import {
   CHARACTER_PORTRAIT_ART,
+  FORMATION_CARD_ART,
+  PERSONNEL_CARD_ART,
   PORTRAIT_ART,
   RADIO_PORTRAIT_ART,
   SPRITE_DIRECTIONS,
@@ -265,6 +267,8 @@ test("all twelve people use independent portrait files and radio remains a separ
   for (const [kind, assetPath] of Object.entries(CHARACTER_PORTRAIT_ART)) {
     if (kind === "guide") {
       assert.equal(assetPath, "/art/v075/characters/portraits/ikura-event-portrait-v4.webp");
+    } else if (kind === "engineer") {
+      assert.equal(assetPath, "/art/v080/characters/portraits/monkey-event-portrait-r1.webp");
     } else if (V070_PORTRAIT_KINDS.has(kind)) {
       assert.equal(assetPath, `/art/v070/characters/portraits/${kind}-portrait-v1.webp`);
     } else {
@@ -277,6 +281,8 @@ test("all twelve people use independent portrait files and radio remains a separ
     portraitHashes.add(await sha256(publicFile(assetPath)));
   }
   assert.equal(portraitHashes.size, expectedPeople.length, "no person portrait may reuse another character's bytes");
+  assert.deepEqual(Object.keys(FORMATION_CARD_ART), expectedPeople.slice(0, -1));
+  assert.deepEqual(Object.keys(PERSONNEL_CARD_ART), expectedPeople.slice(0, -1));
   const radioDimensions = decodeWebpDimensions(await readFile(publicFile(RADIO_PORTRAIT_ART)));
   assert.ok(radioDimensions.width > 0 && radioDimensions.height > 0);
   assert.notEqual(await sha256(publicFile(RADIO_PORTRAIT_ART)), await sha256(publicFile(CHARACTER_PORTRAIT_ART.guide)));
