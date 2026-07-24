@@ -258,7 +258,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     battleRevision: "v1",
     cardRead: V080_CARD_READ_CONTRACTS.babayaga,
     focus: { x: .5, y: .22 },
-    identityLock: ["babayaga-face-and-hair", "precision-rifle", "lean-sniper-silhouette"],
+    identityLock: ["babayaga-face-and-hair", "suppressed-pistol", "lean-precision-shooter-silhouette"],
   }),
   guardian: unitProfile({
     unitId: "unit-gantetsu",
@@ -272,7 +272,7 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
     battleRevision: "v1",
     cardRead: V080_CARD_READ_CONTRACTS.guardian,
     focus: { x: .5, y: .25 },
-    identityLock: ["full-face-protective-gear", "shotgun-and-shield-kit", "heavy-guardian-frame"],
+    identityLock: ["full-face-protective-gear", "large-shield-only-no-visible-secondary-weapon", "heavy-guardian-frame"],
   }),
   engineer: unitProfile({
     unitId: "unit-monkey",

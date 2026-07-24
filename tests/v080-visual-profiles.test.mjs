@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import test from "node:test";
@@ -11,12 +11,27 @@ import {
   PERSONNEL_CARD_ART,
 } from "../app/spriteManifest.js";
 import {
+  CAMPAIGN_UNIT_BY_ID,
+  CAMPAIGN_UNIT_IDS,
+} from "../app/campaign.js";
+import { weaponCueForUnit } from "../app/productionAudio.js";
+import {
   V080_CARD_READ_CONTRACTS,
   V080_UNIT_VISUAL_PROFILES,
 } from "../app/visualProfiles.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const publicFile = (assetPath) => path.join(ROOT, "public", assetPath.replace(/^\//, ""));
+const filesBelow = async (directory) => {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...await filesBelow(absolute));
+    else if (entry.isFile()) files.push(absolute);
+  }
+  return files;
+};
 
 test("all eleven units define explicit event, formation, personnel, and battle visual profiles", async () => {
   const profiles = Object.entries(V080_UNIT_VISUAL_PROFILES);
@@ -105,6 +120,30 @@ test("Monkey keeps one carbine identity across master, portrait, card, and battl
   assert.deepEqual({ width: battle.width, height: battle.height, hasAlpha: battle.hasAlpha }, { width: 3360, height: 896, hasAlpha: true });
 });
 
+test("visual identity locks agree with the canonical campaign weapon and production audio", () => {
+  const babayaga = V080_UNIT_VISUAL_PROFILES.babayaga;
+  const babayagaCampaign = CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.BABAYAGA];
+  assert.equal(babayagaCampaign.weaponName, "サプレッサー付き拳銃");
+  assert.match(babayagaCampaign.appearanceAudit.weaponMatch, /サプレッサー付き拳銃/);
+  assert.ok(babayaga.identityLock.includes("suppressed-pistol"));
+  assert.equal(babayaga.identityLock.some((lock) => lock.includes("rifle")), false);
+  assert.equal(weaponCueForUnit("babayaga"), "weapon-suppressed-pistol");
+
+  const guardian = V080_UNIT_VISUAL_PROFILES.guardian;
+  const guardianCampaign = CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.GANTETSU];
+  assert.equal(guardianCampaign.weaponName, "大型防護盾");
+  assert.match(guardianCampaign.appearanceAudit.weaponMatch, /副武器は画面に出さない/);
+  assert.ok(guardian.identityLock.includes("large-shield-only-no-visible-secondary-weapon"));
+  assert.equal(guardian.identityLock.some((lock) => /shotgun|baton/.test(lock)), false);
+
+  const monkey = V080_UNIT_VISUAL_PROFILES.engineer;
+  const monkeyCampaign = CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.MONKEY];
+  assert.match(monkeyCampaign.weaponName, /サプレッサー付きコンパクトカービン/);
+  assert.match(monkeyCampaign.appearanceAudit.weaponMatch, /サプレッサー付きコンパクトカービン/);
+  assert.ok(monkey.identityLock.includes("suppressed-compact-carbine"));
+  assert.equal(weaponCueForUnit("engineer"), "weapon-suppressed-carbine");
+});
+
 test("Monkey battle atlas uses authored movement, shouldered fire, hit, and grounded defeat poses", async () => {
   const atlasPath = publicFile(V080_UNIT_VISUAL_PROFILES.engineer.battleSprite.path);
   const cells = [];
@@ -148,4 +187,19 @@ test("event presentation never invents an inactive portrait from another dialogu
   const source = await readFile(path.join(ROOT, "app/CampaignScreens.tsx"), "utf8");
   assert.equal(source.includes("contextLine"), false);
   assert.equal(source.includes("event-portrait inactive"), false);
+});
+
+test("the rights ledger covers every retained Version 0.8.0 visual with its exact hash", async () => {
+  const files = [
+    ...await filesBelow(path.join(ROOT, "assets", "source", "v080")),
+    ...await filesBelow(path.join(ROOT, "public", "art", "v080")),
+  ].sort();
+  assert.equal(files.length, 31);
+  const ledger = await readFile(path.join(ROOT, "docs", "THIRD_PARTY_ASSETS.md"), "utf8");
+  for (const absolute of files) {
+    const relative = path.relative(ROOT, absolute).split(path.sep).join("/");
+    const digest = createHash("sha256").update(await readFile(absolute)).digest("hex");
+    assert.match(ledger, new RegExp(`\\| \`${relative.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\` \\| \`${digest}\` \\|`));
+  }
+  assert.match(ledger, /制作途中のformation card R1 11件とMonkey event portrait R1.*repositoryから除外/);
 });

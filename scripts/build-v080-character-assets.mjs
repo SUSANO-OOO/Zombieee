@@ -73,7 +73,48 @@ const buildCutout = async (inputPath, { stricterNeutral = false, erosionPasses =
   return { pixels: rgba, info: sourceInfo };
 };
 
-const { pixels: cutoutPixels, info } = await buildCutout(source);
+const removeSmallAlphaComponents = ({ pixels, info }, minimumPixels = 72) => {
+  const pixelCount = info.width * info.height;
+  const visited = new Uint8Array(pixelCount);
+  const queue = new Int32Array(pixelCount);
+  for (let start = 0; start < pixelCount; start += 1) {
+    if (visited[start] || pixels[start * 4 + 3] <= 8) continue;
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = start;
+    visited[start] = 1;
+    const component = [];
+    while (head < tail) {
+      const pixel = queue[head++];
+      component.push(pixel);
+      const x = pixel % info.width;
+      const y = Math.floor(pixel / info.width);
+      for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+        for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+          if (offsetX === 0 && offsetY === 0) continue;
+          const nextX = x + offsetX;
+          const nextY = y + offsetY;
+          if (nextX < 0 || nextX >= info.width || nextY < 0 || nextY >= info.height) continue;
+          const next = nextY * info.width + nextX;
+          if (visited[next] || pixels[next * 4 + 3] <= 8) continue;
+          visited[next] = 1;
+          queue[tail++] = next;
+        }
+      }
+    }
+    if (component.length >= minimumPixels) continue;
+    for (const pixel of component) {
+      const channel = pixel * 4;
+      pixels[channel] = 0;
+      pixels[channel + 1] = 0;
+      pixels[channel + 2] = 0;
+      pixels[channel + 3] = 0;
+    }
+  }
+  return { pixels, info };
+};
+
+const { pixels: cutoutPixels, info } = removeSmallAlphaComponents(await buildCutout(source));
 if (info.width !== 1024 || info.height !== 1536 || info.channels !== 3) {
   throw new Error(`Unexpected Monkey source geometry ${info.width}x${info.height}x${info.channels}`);
 }
@@ -241,6 +282,30 @@ const keepLargestAlphaComponent = async (input) => {
     raw: { width, height, channels: 4 },
   }).png().toBuffer();
 };
+const stripNeutralGroundFringe = async (input) => {
+  const decoded = await sharp(input).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { width, height } = decoded.info;
+  const floorStart = Math.floor(height * .78);
+  for (let y = floorStart; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const channel = (y * width + x) * 4;
+      if (decoded.data[channel + 3] <= 8) continue;
+      const red = decoded.data[channel];
+      const green = decoded.data[channel + 1];
+      const blue = decoded.data[channel + 2];
+      const spread = Math.max(red, green, blue) - Math.min(red, green, blue);
+      const luminance = red * .2126 + green * .7152 + blue * .0722;
+      if (luminance < 110 || spread > 45) continue;
+      decoded.data[channel] = 0;
+      decoded.data[channel + 1] = 0;
+      decoded.data[channel + 2] = 0;
+      decoded.data[channel + 3] = 0;
+    }
+  }
+  return sharp(decoded.data, {
+    raw: { width, height, channels: 4 },
+  }).png().toBuffer();
+};
 const atlasComposites = [];
 for (let column = 0; column < battleStates.length; column += 1) {
   const state = battleStates[column];
@@ -252,7 +317,8 @@ for (let column = 0; column < battleStates.length; column += 1) {
     .png()
     .toBuffer();
   const isolatedPose = await keepLargestAlphaComponent(poseRegion);
-  const pose = await sharp(isolatedPose)
+  const floorCleanPose = await stripNeutralGroundFringe(isolatedPose);
+  const pose = await sharp(floorCleanPose)
     .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 4 })
     .png()
     .toBuffer();

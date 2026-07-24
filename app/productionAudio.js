@@ -3,6 +3,8 @@ import { CAMPAIGN_STAGE_IDS } from "./campaign.js";
 
 const V060_AUDIO_ROOT = "/audio/v060";
 const V070_AUDIO_ROOT = "/audio/v070";
+const V080_AUDIO_ROOT = "/audio/v080";
+const V080_SUPPRESSED_CARBINE_CUE_ID = "weapon-suppressed-carbine";
 
 const MUSIC_TRACKS = Object.freeze([
   "title",
@@ -189,6 +191,21 @@ function v070Asset(spec) {
   };
 }
 
+function v080SuppressedCarbineAsset(variation) {
+  const id = `${V080_SUPPRESSED_CARBINE_CUE_ID}-${String(variation).padStart(2, "0")}`;
+  return {
+    id,
+    category: "weapons",
+    sources: sourceFor(V080_AUDIO_ROOT, "sfx", id),
+    preload: "lazy",
+    loop: false,
+    gain: 0.70,
+    priority: 70,
+    cooldownMs: 72,
+    maxInstances: 5,
+  };
+}
+
 function variationAssets(baseId, category, options = {}) {
   return [1, 2].map((variation) => sfxAsset(
     `${baseId}-${String(variation).padStart(2, "0")}`,
@@ -268,9 +285,19 @@ const assets = [
   ...enemyVoiceAssets,
   ...NEW_UNIT_AUDIO_CUES.map(({ id, category, ...options }) => sfxAsset(id, category, options)),
   ...V070_AUDIO_ASSET_SPECS.map(v070Asset),
+  ...[1, 2].map(v080SuppressedCarbineAsset),
 ];
 
-const pools = [...weaponPools, ...humanVoicePools, ...enemyVoicePools];
+const pools = [
+  ...weaponPools,
+  variationPool(V080_SUPPRESSED_CARBINE_CUE_ID, "weapons", {
+    priority: 70,
+    cooldownMs: 72,
+    maxInstances: 5,
+  }),
+  ...humanVoicePools,
+  ...enemyVoicePools,
+];
 const COMMON_UI_PRELOAD = Object.freeze(["ui-cancel", "ui-confirm", "ui-error", "ui-hover", "ui-select"]);
 const COMBAT_PRELOAD = Object.freeze([
   ...COMMON_UI_PRELOAD,
@@ -278,6 +305,7 @@ const COMBAT_PRELOAD = Object.freeze([
   ...LIFECYCLE_CUES,
   "radio-open",
   "radio-close",
+  V080_SUPPRESSED_CARBINE_CUE_ID,
   ...NEW_UNIT_AUDIO_CUES.map(({ id }) => id),
 ]);
 
@@ -443,7 +471,7 @@ const UNIT_WEAPON_CUES = Object.freeze({
   "crazy-king": "weapon-chainsaw-attack",
   kumaverson: "weapon-pan-swing",
   babayaga: "weapon-suppressed-pistol",
-  engineer: "weapon-rifle",
+  engineer: V080_SUPPRESSED_CARBINE_CUE_ID,
 });
 
 const UNIT_VOICE_PROFILES = Object.freeze({

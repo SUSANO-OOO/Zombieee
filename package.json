@@ -13,6 +13,7 @@
     "lint": "node --max-old-space-size=8192 ./node_modules/eslint/bin/eslint.js . --ignore-pattern dist --ignore-pattern .next",
     "qa:performance:install": "playwright install chromium webkit",
     "qa:performance": "node scripts/browser-performance-budget.mjs",
+    "qa:asset-decode": "node scripts/run-browser-qa-with-server.mjs scripts/asset-decode-browser-smoke.mjs",
     "qa:battle-space": "node scripts/run-browser-qa-with-server.mjs scripts/battle-space-browser-smoke.mjs",
     "qa:ai-missions": "node scripts/run-browser-qa-with-server.mjs scripts/ai-mission-browser-smoke.mjs",
     "qa:crawler-defense": "node scripts/run-browser-qa-with-server.mjs scripts/crawler-defense-browser-smoke.mjs",
