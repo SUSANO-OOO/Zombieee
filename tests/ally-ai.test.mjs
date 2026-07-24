@@ -601,6 +601,32 @@ test("a lane transfer still pursues an urgent CRAWLER threat in its destination 
   assert.equal(intent.moveDirection, -1);
 });
 
+test("a CRAWLER attacker cannot escape its defender while physically changing to the committed route", () => {
+  const intent = decideAllyIntent({
+    missionType: "assault",
+    unit: { id: "deployed", x: 205, lane: 0, assignedLane: 0, range: 30, ranged: false },
+    enemies: [{
+      id: "route-transition",
+      x: 130,
+      y: 250,
+      lane: 1,
+      assignedLane: 0,
+      hp: 100,
+      bodyRadius: 20,
+      attackingCrawler: true,
+      crawlerDefenseCapacity: 1,
+    }],
+    objective: { x: 875, active: true },
+    laneTransitioning: false,
+    hasLineOfSight: true,
+  });
+
+  assert.equal(intent.targetId, "route-transition");
+  assert.equal(intent.reason, "crawler-under-attack");
+  assert.equal(intent.destinationLane, 0);
+  assert.equal(intent.moveDirection, -1);
+});
+
 test("a visible adjacent target temporarily owns destination lane, then loss returns the assignment", () => {
   const enemy = { id: "runner", x: 400, lane: 1, hp: 100 };
   const engaged = decideAllyIntent({

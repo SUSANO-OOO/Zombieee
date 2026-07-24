@@ -34,6 +34,7 @@ import {
 } from "./crawlerDeployment.js";
 import {
   crawlerDefenseResponderCapacity,
+  isEffectiveCrawlerDefenseClaim,
   isCrawlerAttackThreat,
   shouldReleaseCrawlerDefenseTarget,
 } from "./crawlerDefense.js";
@@ -829,6 +830,7 @@ type Game = {
   placementIndicator: PlacementIndicator | null;
   deployCooldowns: Record<UnitKind, number>;
   deployQueue: UnitKind[];
+  qaNextDeploymentLane?: Lane | null;
   crawlerDoor: ReturnType<typeof createCrawlerDoorRuntime>;
   nextId: number;
   nextLanePlanAt: number;
@@ -1135,6 +1137,7 @@ const initialGame = (
   placementIndicator: null,
   deployCooldowns: emptyCooldowns(),
   deployQueue: [],
+  qaNextDeploymentLane: null,
   crawlerDoor: createCrawlerDoorRuntime(),
   nextId: 1,
   nextLanePlanAt: 0,
@@ -1441,7 +1444,11 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
   for (const ally of g.fighters) {
     if (ally.side === "human" && ally.hp > 0 && ally.anchorLane !== null) laneCounts[ally.anchorLane] += 1;
   }
-  const assignedLane = chooseHumanDeploymentLane({ laneCounts }) as Lane;
+  const assignedLane = runOutFromCrawler && g.qaNextDeploymentLane !== null
+    && g.qaNextDeploymentLane !== undefined
+    ? g.qaNextDeploymentLane
+    : chooseHumanDeploymentLane({ laneCounts }) as Lane;
+  if (runOutFromCrawler) g.qaNextDeploymentLane = null;
   const laneSpeed = card.laneSpeed;
   const deployment = runOutFromCrawler
     ? friendlyDeploymentPoint({
@@ -4198,13 +4205,25 @@ export function AshfallGame() {
       __ASHFALL_RUNTIME_PERFORMANCE__?: unknown;
     };
     const bridge = {
-      prepareCrawlerDefenseProof: (attackerKind: EnemyKind = "walker") => {
+      prepareCrawlerDefenseProof: (
+        input: EnemyKind | {
+          attackerKind?: EnemyKind;
+          lane?: Lane;
+          existingClaim?: boolean;
+        } = "walker",
+      ) => {
         const g = gameRef.current;
+        const options = typeof input === "string" ? { attackerKind: input } : input;
+        const attackerKind = options.attackerKind ?? "walker";
+        const proofLane = ([0, 1, 2] as const).includes(options.lane as Lane)
+          ? options.lane as Lane
+          : 1;
         g.fighters = [];
         g.corpses = [];
         g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
         g.eventIndex = g.definition.timeline.length;
         g.deployQueue = [];
+        g.qaNextDeploymentLane = null;
         g.crawlerDoor = createCrawlerDoorRuntime();
         g.battlefieldObjects = [];
         g.energy = COMMAND_MAX;
@@ -4215,11 +4234,11 @@ export function AshfallGame() {
         g.won = false;
         for (const card of cards) g.deployCooldowns[card.kind] = 0;
 
-        const attacker = spawnEnemy(g, attackerKind, 1);
+        const attacker = spawnEnemy(g, attackerKind, proofLane);
         attacker.x = BASE_X + 20;
-        attacker.y = activeLaneCenters[1];
-        attacker.lane = 1;
-        attacker.anchorLane = 1;
+        attacker.y = activeLaneCenters[proofLane];
+        attacker.lane = proofLane;
+        attacker.anchorLane = proofLane;
         attacker.combatReady = true;
         attacker.gateEntering = false;
         attacker.contained = false;
@@ -4231,16 +4250,57 @@ export function AshfallGame() {
         attacker.targetObjectId = 888_888;
         attacker.retargetIn = 99;
         attacker.stunned = 0;
+        let existingClaimId: number | null = null;
+        if (options.existingClaim === true) {
+          const existing = spawnHuman(g, "scout");
+          if (existing) {
+            const claimant = g.fighters[g.fighters.length - 1];
+            claimant.x = BARRICADE_X - 90;
+            claimant.y = activeLaneCenters[proofLane];
+            claimant.lane = proofLane;
+            claimant.anchorLane = proofLane;
+            claimant.combatReady = true;
+            claimant.gateEntering = false;
+            claimant.spawnGrace = 0;
+            claimant.speed = 0;
+            claimant.laneSpeed = 0;
+            claimant.damage = 0;
+            claimant.targetId = attacker.id;
+            claimant.crawlerDefenseTargetId = null;
+            claimant.retargetIn = 99;
+            existingClaimId = claimant.id;
+          }
+        }
         return {
           attackerId: attacker.id,
           attackerKind: attacker.kind,
           crawlerX: BASE_X,
+          lane: proofLane,
+          initialAttackerHp: attacker.hp,
+          existingClaimId,
         };
       },
-      queueCrawlerDefenseUnit: (kind: UnitKind) => {
+      queueCrawlerDefenseUnit: (kind: UnitKind, lane: Lane = 1) => {
         const g = gameRef.current;
         if (!cards.some((card) => card.kind === kind)) return false;
+        g.qaNextDeploymentLane = ([0, 1, 2] as const).includes(lane) ? lane : 1;
         g.deployQueue.push(kind);
+        return true;
+      },
+      releaseCrawlerDefenseThreat: (attackerId: number) => {
+        const g = gameRef.current;
+        const attacker = g.fighters.find((fighter) => (
+          fighter.id === attackerId
+          && fighter.side === "zombie"
+          && fighter.hp > 0
+        ));
+        if (!attacker) return false;
+        attacker.x = BASE_X + 520;
+        attacker.targetId = null;
+        attacker.targetObjectId = null;
+        attacker.retargetIn = 99;
+        attacker.cooldown = 99;
+        attacker.contained = true;
         return true;
       },
       spawnHumanForDamageProof: (kind: UnitKind) => {
@@ -4451,6 +4511,8 @@ export function AshfallGame() {
             hp: fighter.hp,
             maxHp: fighter.maxHp,
             damage: fighter.damage,
+            cooldown: fighter.cooldown,
+            attack: fighter.attack,
             speed: fighter.speed,
             laneSpeed: fighter.laneSpeed,
             range: fighter.range,
@@ -6979,13 +7041,58 @@ export function AshfallGame() {
         }
 
         const fighterById = new Map(g.fighters.filter((fighter) => fighter.hp > 0 && fighter.combatReady).map((fighter) => [fighter.id, fighter]));
+        const crawlerAttackThreatIds = new Set(g.fighters
+          .filter((fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady)
+          .filter((enemy) => {
+            const blockingObject = selectBlockingContainer({
+              enemyX: enemy.x,
+              enemyY: enemy.y,
+              enemyRadius: enemy.bodyRadius,
+              objects: g.battlefieldObjects,
+            }) as BattlefieldObject | undefined;
+            return isCrawlerAttackThreat({
+              enemyX: enemy.x,
+              enemyRange: enemy.range,
+              baseX: BASE_X,
+              blockingObject,
+              combatReady: enemy.combatReady,
+              hp: enemy.hp,
+              contained: enemy.contained,
+            });
+          })
+          .map((fighter) => fighter.id));
         const targetClaims = new Map<number, number>();
         const interceptorClaims = new Map<number, number>();
         for (const fighter of g.fighters) {
           if (fighter.hp <= 0 || !fighter.combatReady || fighter.targetId === null) continue;
           const claimed = fighterById.get(fighter.targetId);
           if (fighter.side === "human" && claimed?.side === "zombie" && claimed.hp > 0) {
-            targetClaims.set(claimed.id, (targetClaims.get(claimed.id) ?? 0) + 1);
+            const countsAsClaim = !crawlerAttackThreatIds.has(claimed.id)
+              || isEffectiveCrawlerDefenseClaim({
+                fighterTargetId: fighter.targetId,
+                fighterDefenseTargetId: fighter.crawlerDefenseTargetId,
+                fighterHp: fighter.hp,
+                fighterCombatReady: fighter.combatReady,
+                fighterX: fighter.x,
+                fighterY: fighter.y,
+                fighterRange: fighter.range,
+                targetId: claimed.id,
+                targetHp: claimed.hp,
+                targetCombatReady: claimed.combatReady,
+                targetX: claimed.x,
+                targetY: claimed.y,
+                targetBodyRadius: claimed.bodyRadius,
+                canEngage: canAcquireCombatTarget({
+                  attacker: fighter,
+                  target: claimed,
+                  hasLineOfSight: (attacker, candidate) => hasBattleSpaceLineOfSight(
+                    g,
+                    attacker as Fighter,
+                    candidate as Fighter,
+                  ),
+                }),
+              });
+            if (countsAsClaim) targetClaims.set(claimed.id, (targetClaims.get(claimed.id) ?? 0) + 1);
           } else if (fighter.side === "zombie" && claimed?.side === "human" && claimed.hp > 0) {
             interceptorClaims.set(claimed.id, (interceptorClaims.get(claimed.id) ?? 0) + 1);
           }
@@ -7454,7 +7561,10 @@ export function AshfallGame() {
             y: f.y,
             laneCenters: activeLaneCenters,
           });
-          if (f.kind === "medic" && !returningToAssignedLane) {
+          if (f.kind === "medic"
+            && !returningToAssignedLane
+            && crawlerAttackThreatIds.size === 0
+            && (f.crawlerDefenseTargetId === null || f.crawlerDefenseTargetId === undefined)) {
             const livingAllies = g.fighters.filter((ally) => ally.side === "human" && ally.hp > 0);
             const assignedPeers = livingAllies.filter((ally) => ally.anchorLane === f.anchorLane);
             const cohesion = assignedPeers.length > 1 ? (supportCohesion as unknown as (input: { support: Fighter; allies: Fighter[] }) => {
@@ -7504,6 +7614,7 @@ export function AshfallGame() {
                 x: enemy.x,
                 y: enemy.y,
                 lane: enemy.lane,
+                assignedLane: enemy.anchorLane ?? enemy.lane,
                 hp: enemy.hp,
                 combatReady: enemy.combatReady,
                 bodyRadius: enemy.bodyRadius,
@@ -7606,7 +7717,35 @@ export function AshfallGame() {
             }
             if (target?.id !== f.targetId) {
               if (f.targetId !== null) targetClaims.set(f.targetId, Math.max(0, (targetClaims.get(f.targetId) ?? 1) - 1));
-              if (target) targetClaims.set(target.id, (targetClaims.get(target.id) ?? 0) + 1);
+              const nextDefenseTargetId = allyIntent.emergencyDefense ? target?.id ?? null : null;
+              const nextClaimIsEffective = target && (
+                !crawlerAttackThreatIds.has(target.id)
+                || isEffectiveCrawlerDefenseClaim({
+                  fighterTargetId: target.id,
+                  fighterDefenseTargetId: nextDefenseTargetId,
+                  fighterHp: f.hp,
+                  fighterCombatReady: f.combatReady,
+                  fighterX: f.x,
+                  fighterY: f.y,
+                  fighterRange: f.range,
+                  targetId: target.id,
+                  targetHp: target.hp,
+                  targetCombatReady: target.combatReady,
+                  targetX: target.x,
+                  targetY: target.y,
+                  targetBodyRadius: target.bodyRadius,
+                  canEngage: canAcquireCombatTarget({
+                    attacker: f,
+                    target,
+                    hasLineOfSight: (attacker, candidate) => hasBattleSpaceLineOfSight(
+                      g,
+                      attacker as Fighter,
+                      candidate as Fighter,
+                    ),
+                  }),
+                })
+              );
+              if (nextClaimIsEffective) targetClaims.set(target.id, (targetClaims.get(target.id) ?? 0) + 1);
               f.targetId = target?.id ?? null;
             }
             f.crawlerDefenseTargetId = allyIntent.emergencyDefense ? target?.id ?? null : null;
@@ -7706,6 +7845,15 @@ export function AshfallGame() {
             if (f.retargetIn <= 0 || target?.id !== f.targetId) {
               f.retargetIn = enemyProfile.retargetSeconds + (f.variant % 3) * .08;
             }
+            const attackingCrawlerOnCurrentRoute = isCrawlerAttackThreat({
+              enemyX: f.x,
+              enemyRange: f.range,
+              baseX: BASE_X,
+              blockingObject: blockingSupply,
+              combatReady: f.combatReady,
+              hp: f.hp,
+              contained: f.contained,
+            });
             const routeCosts = ([0, 1, 2] as Lane[]).map((candidate) => {
               const defense = humans
                 .filter((human) => human.x < f.x && (human.anchorLane ?? human.lane) === candidate)
@@ -7725,7 +7873,10 @@ export function AshfallGame() {
               nextLaneDecisionAt: f.nextLaneDecisionAt,
               hasTarget: Boolean(target),
               hasObjectTarget: Boolean(objectTarget),
-              inContact: Boolean(physicalContact),
+              // Once a zombie is actually striking the CRAWLER it has reached
+              // the end of its committed route. Do not let avoidance scoring
+              // make it drift lanes while responders are converging.
+              inContact: Boolean(physicalContact) || attackingCrawlerOnCurrentRoute,
               routeCooldown: enemyProfile.routeCooldown + f.variant * .12,
               switchMargin: enemyProfile.routeSwitchMargin,
             });
@@ -8452,6 +8603,15 @@ export function AshfallGame() {
             && fighterDistance(fighter, lockedTarget) <= fighter.range + lockedTarget.bodyRadius + 2);
           const objectEngaged = Boolean(lockedObject
             && Math.hypot(fighter.x - lockedObject.x, fighter.y - lockedObject.y) <= fighter.range + 34);
+          const crawlerEngaged = fighter.side === "zombie" && isCrawlerAttackThreat({
+            enemyX: fighter.x,
+            enemyRange: fighter.range,
+            baseX: BASE_X,
+            blockingObject: lockedObject,
+            combatReady: fighter.combatReady,
+            hp: fighter.hp,
+            contained: fighter.contained,
+          });
           const desiredLane = fighter.navigationRecovery.recoveryLane ?? fighter.anchorLane ?? fighter.lane;
           const desiredX = fighter.side === "human"
             ? fighter.aiDestinationX
@@ -8470,7 +8630,7 @@ export function AshfallGame() {
             seed: fighter.id,
             seconds: dt,
             moving,
-            engaged: targetEngaged || objectEngaged,
+            engaged: targetEngaged || objectEngaged || crawlerEngaged,
           });
           g.stationMetrics.aiRecoveries += Math.max(
             0,

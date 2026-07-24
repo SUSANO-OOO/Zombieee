@@ -180,16 +180,22 @@ function selectEnemy({
     const threatensBase = enemy.threatensBase === true;
     const urgentDefense = attackingCrawler || threatensBase;
     const sameLane = laneMatches(unit.lane, enemy.lane);
+    const defenseLane = attackingCrawler && validLane(enemy.assignedLane)
+      ? enemy.assignedLane
+      : enemy.lane;
     const assignedLaneThreat = urgentDefense
       && validLane(unit.assignedLane)
-      && unit.assignedLane === enemy.lane;
+      && unit.assignedLane === defenseLane;
     const { attacker, target } = normalizedCombatants(unit, enemy);
     const acquisitionAttacker = assignedLaneThreat && !sameLane
       ? { ...attacker, lane: unit.assignedLane }
       : attacker;
+    const acquisitionTarget = assignedLaneThreat && !sameLane
+      ? { ...target, lane: defenseLane }
+      : target;
     const laneEligible = canAcquireCombatTarget({
       attacker: acquisitionAttacker,
-      target,
+      target: acquisitionTarget,
       hasLineOfSight,
     });
     if (!laneEligible) continue;
@@ -352,7 +358,11 @@ export function decideAllyIntent({
       deadband,
       target: selected.enemy,
       assignedLane: deploymentLane,
-      destinationLane: validLane(selected.enemy.lane) ? selected.enemy.lane : deploymentLane,
+      destinationLane: selected.attackingCrawler && validLane(selected.enemy.assignedLane)
+        ? selected.enemy.assignedLane
+        : validLane(selected.enemy.lane)
+          ? selected.enemy.lane
+          : deploymentLane,
       claimGranted: !selected.local
         && !selected.isPrevious
         && !selected.urgentDefense

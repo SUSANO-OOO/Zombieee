@@ -36,6 +36,47 @@ export function crawlerDefenseResponderCapacity({ enemyKind } = {}) {
   return 1;
 }
 
+/**
+ * A stale target ID must never reserve a scarce CRAWLER response slot.
+ * A claimant counts only after it owns the explicit defense lock and is close
+ * enough to be an actionable responder on the current route.
+ */
+export function isEffectiveCrawlerDefenseClaim({
+  fighterTargetId = null,
+  fighterDefenseTargetId = null,
+  fighterHp = 1,
+  fighterCombatReady = true,
+  fighterX,
+  fighterY,
+  fighterRange,
+  targetId = null,
+  targetHp = 1,
+  targetCombatReady = true,
+  targetX,
+  targetY,
+  targetBodyRadius,
+  canEngage = true,
+  approachLeash = 220,
+} = {}) {
+  if (targetId === null || targetId === undefined
+    || fighterTargetId !== targetId
+    || fighterDefenseTargetId !== targetId
+    || fighterCombatReady === false
+    || targetCombatReady === false
+    || finite(fighterHp, 0) <= 0
+    || finite(targetHp, 0) <= 0
+    || canEngage === false) return false;
+  const distance = Math.hypot(
+    finite(targetX) - finite(fighterX),
+    finite(targetY) - finite(fighterY),
+  );
+  const actionableDistance = Math.max(
+    Math.max(0, finite(approachLeash, 220)),
+    Math.max(0, finite(fighterRange)) + Math.max(0, finite(targetBodyRadius)) + 72,
+  );
+  return distance <= actionableDistance;
+}
+
 export function shouldReleaseCrawlerDefenseTarget({
   lockedTargetId = null,
   candidates = [],

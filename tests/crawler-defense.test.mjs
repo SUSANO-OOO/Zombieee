@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   crawlerDefenseResponderCapacity,
+  isEffectiveCrawlerDefenseClaim,
   isCrawlerAttackThreat,
   shouldReleaseCrawlerDefenseTarget,
 } from "../app/crawlerDefense.js";
@@ -31,6 +32,30 @@ test("CRAWLER defense uses bounded responder capacities by threat class", () => 
   assert.equal(crawlerDefenseResponderCapacity({ enemyKind: "abomination" }), 2);
   assert.equal(crawlerDefenseResponderCapacity({ enemyKind: "gate-eater" }), 3);
   assert.equal(crawlerDefenseResponderCapacity({ enemyKind: "takuya" }), 3);
+});
+
+test("only a nearby explicit CRAWLER defender consumes the responder capacity", () => {
+  const claim = {
+    fighterTargetId: 8,
+    fighterDefenseTargetId: 8,
+    fighterHp: 100,
+    fighterCombatReady: true,
+    fighterX: 230,
+    fighterY: 270,
+    fighterRange: 38,
+    targetId: 8,
+    targetHp: 100,
+    targetCombatReady: true,
+    targetX: 145,
+    targetY: 270,
+    targetBodyRadius: 20,
+    canEngage: true,
+  };
+  assert.equal(isEffectiveCrawlerDefenseClaim(claim), true);
+  assert.equal(isEffectiveCrawlerDefenseClaim({ ...claim, fighterDefenseTargetId: null }), false);
+  assert.equal(isEffectiveCrawlerDefenseClaim({ ...claim, fighterTargetId: 99 }), false);
+  assert.equal(isEffectiveCrawlerDefenseClaim({ ...claim, fighterX: 620 }), false);
+  assert.equal(isEffectiveCrawlerDefenseClaim({ ...claim, canEngage: false }), false);
 });
 
 test("a defense lock releases as soon as the enemy stops attacking the CRAWLER", () => {
