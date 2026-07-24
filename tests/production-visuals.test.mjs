@@ -5,13 +5,14 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import test from "node:test";
 
+import { CAMPAIGN_STAGES } from "../app/campaign.js";
 import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "../app/productionVisuals.js";
 import { V075_VISUAL_PROFILES } from "../app/visualProfiles.js";
 
 const repoAsset = (publicPath) => new URL(`../public${publicPath}`, import.meta.url);
 const repoAssetFile = (publicPath) => fileURLToPath(repoAsset(publicPath));
 
-test("production visual manifest uses dedicated title, command, guide, six stages, and three event cuts", async () => {
+test("production visual manifest uses dedicated title, command, guide, sixteen stages, and three event cuts", async () => {
   const paths = [
     PRODUCTION_VISUALS.title,
     PRODUCTION_VISUALS.command,
@@ -19,11 +20,12 @@ test("production visual manifest uses dedicated title, command, guide, six stage
     ...Object.values(PRODUCTION_VISUALS.stages),
     ...Object.values(PRODUCTION_VISUALS.eventCuts),
   ];
-  assert.equal(paths.length, 12);
+  assert.equal(Object.keys(PRODUCTION_VISUALS.stages).length, CAMPAIGN_STAGES.length);
+  assert.equal(paths.length, 3 + CAMPAIGN_STAGES.length + 3);
   assert.equal(new Set(paths).size, paths.length);
   const hashes = [];
   for (const path of paths) {
-    assert.match(path, /^\/art\/v0(?:60|70|75)\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.webp$/);
+    assert.match(path, /^\/art\/v0(?:60|70|75|80)\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.webp$/);
     const bytes = await readFile(repoAsset(path));
     assert.equal(bytes.subarray(0, 4).toString("ascii"), "RIFF");
     assert.equal(bytes.subarray(8, 12).toString("ascii"), "WEBP");

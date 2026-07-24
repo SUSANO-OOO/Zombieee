@@ -68,6 +68,7 @@ import { claimDefeatResolution } from "./defeatLedger.js";
 import { CampaignScreens, type CampaignResultView, type CampaignScreen, type StageScreenView, type SupplyScreenView, type UnitScreenView } from "./CampaignScreens";
 import {
   CAMPAIGN_SAVE_SCHEMA_VERSION,
+  CAMPAIGN_REGIONS,
   CAMPAIGN_STAGE_BY_ID,
   CAMPAIGN_STAGE_IDS,
   CAMPAIGN_STAGES,
@@ -441,7 +442,8 @@ type BattleDefinition = {
 };
 type CampaignSave = ReturnType<typeof createDefaultCampaignSave>;
 type CampaignStageData = {
-  id: string; displayName: string; objective: string; missionType: BattleDefinition["missionType"];
+  id: string; stageNumber: number; regionId: string; displayName: string; objective: string; missionType: BattleDefinition["missionType"];
+  objectivePattern?: string;
   baseReward: number; firstTimeStarRewards: Record<number, number>; mapPosition: { x: number; y: number };
 };
 type CampaignUnitData = {
@@ -5396,19 +5398,23 @@ export function AshfallGame() {
     const nextMilestone = [1, 2, 3].find((star) => !claimed.includes(star));
     return {
       id: stage.id,
+      stageNumber: stage.stageNumber,
+      regionId: stage.regionId,
+      regionLabel: CAMPAIGN_REGIONS.find(({ id }) => id === stage.regionId)?.shortLabel ?? "作戦区",
+      regionName: CAMPAIGN_REGIONS.find(({ id }) => id === stage.regionId)?.displayName ?? "作戦区域",
       displayName: stage.displayName,
       chapterName: "序章　新たな世界の始まり",
       objective: stage.objective,
       missionLabel: stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE
         ? "感染中継点破壊作戦"
         : stage.missionType === "escort"
-          ? "保守台車護衛作戦"
+          ? "移動目標護衛作戦"
           : stage.missionType === "sequential-seal"
             ? "三電源・封鎖作戦"
             : stage.missionType === "assault"
               ? "拠点破壊作戦"
               : stage.missionType === "timed-defense"
-                ? "180秒防衛作戦"
+              ? `${Number((CAMPAIGN_STAGE_BY_ID[stage.id].objectiveConfig as { durationSeconds?: number })?.durationSeconds) || 180}秒防衛作戦`
                 : "ボス・拠点攻略",
       threat: stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET
         ? "危険度 低〜中"
@@ -5420,7 +5426,15 @@ export function AshfallGame() {
               ? "危険度 高 / 絡手"
               : stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM
                 ? "危険度 高 / 漏泥・走鬼"
-                : "危険度 極高 / 改札喰い",
+              : stage.stageNumber <= 6
+                ? "危険度 極高 / 改札喰い"
+                : stage.stageNumber <= 9
+                  ? "危険度 高 / 病院区域"
+                  : stage.stageNumber <= 12
+                    ? "危険度 高〜極高 / 研究区画"
+                    : stage.stageNumber <= 14
+                      ? "危険度 極高 / 物流線"
+                      : "危険度 極高 / T計画中枢",
       unlocked: Boolean(qaMode || qaScenario) || isStageUnlocked(campaignSave, stage.id),
       completed: campaignSave.completedStageIds.includes(stage.id),
       bestStars: campaignSave.bestStarsByStage[stage.id] ?? 0,

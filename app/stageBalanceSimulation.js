@@ -47,6 +47,12 @@ const ALL_STAGE_FORMATIONS = freeze({
   late: freeze(["scout", "ranger", "brute", "brawler", "gunner", "medic", "babayaga"]),
 });
 
+const EXPANDED_STAGE_FORMATIONS = freeze([
+  freeze(["guardian", "ranger", "gunner", "medic", "scout", "engineer"]),
+  freeze(["brute", "crazy-king", "brawler", "kumaverson", "babayaga", "gunner"]),
+  freeze(["guardian", "brute", "ranger", "babayaga", "scout", "crazy-king", "engineer"]),
+]);
+
 /**
  * Three successful, deliberately non-identical formations for each P4 stage.
  * Their empty intersection is checked by the test suite; no character is a
@@ -68,6 +74,16 @@ export const P4_BALANCE_FORMATIONS = freeze({
     freeze(["brute", "crazy-king", "brawler", "kumaverson", "babayaga"]),
     freeze(["guardian", "brute", "ranger", "babayaga", "scout", "crazy-king"]),
   ]),
+  [CAMPAIGN_STAGE_IDS.UNIVERSITY_HOSPITAL_APPROACH]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.HOSPITAL_EMERGENCY_WARD]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.HOSPITAL_EVACUATION_ROUTE]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.RESEARCH_ACCESS]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.RESEARCH_CONTAINMENT]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.RESEARCH_FREIGHT_PASSAGE]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.LOGISTICS_RELAY]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.EVACUATION_FREIGHT_YARD]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL]: EXPANDED_STAGE_FORMATIONS,
 });
 
 export const STAGE_BALANCE_REFERENCE_FORMATIONS = freeze({
