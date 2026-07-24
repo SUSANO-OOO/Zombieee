@@ -129,8 +129,8 @@ const NEWCOMER_VISIBLE = Object.freeze({
     left: [[137, 74, 343, 432], [133, 91, 346, 432], [140, 90, 340, 432], [126, 155, 354, 432], [80, 150, 399, 432], [135, 139, 345, 432], [92, 309, 388, 432]],
   },
   engineer: {
-    right: [[130, 16, 349, 432], [127, 16, 352, 432], [97, 16, 382, 432], [66, 16, 413, 432], [101, 31, 379, 432], [97, 36, 383, 432], [70, 265, 410, 432]],
-    left: [[130, 16, 349, 432], [127, 16, 352, 432], [97, 16, 382, 432], [66, 16, 413, 432], [101, 31, 379, 432], [97, 36, 383, 432], [70, 265, 410, 432]],
+    right: [[131, 16, 350, 432], [127, 17, 350, 426], [133, 18, 350, 432], [147, 21, 370, 424], [160, 26, 386, 413], [121, 22, 316, 425], [75, 237, 414, 429]],
+    left: [[131, 16, 350, 432], [121, 17, 344, 426], [141, 18, 358, 432], [134, 21, 357, 424], [135, 26, 361, 413], [148, 22, 343, 425], [67, 237, 406, 429]],
   },
   "crazy-king": {
     right: [[140, 84, 340, 432], [138, 94, 342, 432], [119, 115, 361, 432], [121, 59, 358, 432], [56, 129, 424, 432], [87, 109, 393, 432], [58, 290, 422, 432]],
@@ -310,7 +310,7 @@ export const SPRITE_MANIFEST = Object.freeze({
   brute: explicitAtlasManifestEntry("brute", "/art/v070/characters/brute-battle-v1.png"),
   gunner: explicitAtlasManifestEntry("gunner", "/art/v070/characters/gunner-battle-v1.png"),
   guardian: explicitAtlasManifestEntry("guardian", "/art/v070/characters/guardian-battle-v1.png"),
-  engineer: explicitAtlasManifestEntry("engineer", "/art/v070/characters/engineer-battle-v1.png"),
+  engineer: explicitAtlasManifestEntry("engineer", "/art/v080/characters/monkey-battle-r2.png"),
   walker: legacyManifestEntry("infected", "left"),
   runner: legacyManifestEntry("infected", "left"),
   turned: legacyManifestEntry("infected", "left"),

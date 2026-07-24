@@ -50,19 +50,39 @@ test("all eleven units define explicit event, formation, personnel, and battle v
       { width: 512, height: 512, hasAlpha: true },
       `${kind} card geometry`,
     );
+    const cardPixels = await sharp(publicFile(profile.formationCard.path))
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    let left = cardPixels.info.width;
+    let top = cardPixels.info.height;
+    let right = -1;
+    let bottom = -1;
+    for (let y = 0; y < cardPixels.info.height; y += 1) {
+      for (let x = 0; x < cardPixels.info.width; x += 1) {
+        if (cardPixels.data[(y * cardPixels.info.width + x) * 4 + 3] <= 8) continue;
+        left = Math.min(left, x);
+        top = Math.min(top, y);
+        right = Math.max(right, x + 1);
+        bottom = Math.max(bottom, y + 1);
+      }
+    }
+    assert.ok(right - left >= 400 && bottom - top >= 450, `${kind} upper-body card cannot remain a full-body thumbnail`);
   }
 });
 
-test("Monkey owns a new identity master and purpose-specific portrait/card without changing battle identity", async () => {
+test("Monkey keeps one carbine identity across master, portrait, card, and battle representation", async () => {
   const profile = V080_UNIT_VISUAL_PROFILES.engineer;
   assert.equal(profile.identityMaster.path, "/art/v080/characters/reference/monkey-identity-master-r1.png");
-  assert.equal(profile.eventPortrait.path, "/art/v080/characters/portraits/monkey-event-portrait-r1.webp");
-  assert.equal(profile.formationCard.path, "/art/v080/characters/cards/monkey-formation-card-r1.webp");
-  assert.equal(profile.battleSprite.path, "/art/v070/characters/engineer-battle-v1.png");
+  assert.equal(profile.eventPortrait.path, "/art/v080/characters/portraits/monkey-event-portrait-r2.webp");
+  assert.equal(profile.formationCard.path, "/art/v080/characters/cards/monkey-formation-card-r2.webp");
+  assert.equal(profile.battleSprite.path, "/art/v080/characters/monkey-battle-r2.png");
   assert.ok(profile.identityLock.includes("layered-silver-hair-with-dark-roots"));
   assert.ok(profile.identityLock.includes("suppressed-compact-carbine"));
   const master = await sharp(publicFile(profile.identityMaster.path)).metadata();
   assert.deepEqual({ width: master.width, height: master.height }, { width: 1024, height: 1536 });
+  const battle = await sharp(publicFile(profile.battleSprite.path)).metadata();
+  assert.deepEqual({ width: battle.width, height: battle.height, hasAlpha: battle.hasAlpha }, { width: 3360, height: 896, hasAlpha: true });
 });
 
 test("event presentation never invents an inactive portrait from another dialogue line", async () => {

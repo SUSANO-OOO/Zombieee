@@ -268,7 +268,7 @@ test("all twelve people use independent portrait files and radio remains a separ
     if (kind === "guide") {
       assert.equal(assetPath, "/art/v075/characters/portraits/ikura-event-portrait-v4.webp");
     } else if (kind === "engineer") {
-      assert.equal(assetPath, "/art/v080/characters/portraits/monkey-event-portrait-r1.webp");
+      assert.equal(assetPath, "/art/v080/characters/portraits/monkey-event-portrait-r2.webp");
     } else if (V070_PORTRAIT_KINDS.has(kind)) {
       assert.equal(assetPath, `/art/v070/characters/portraits/${kind}-portrait-v1.webp`);
     } else {

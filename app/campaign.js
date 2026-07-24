@@ -760,7 +760,7 @@ export const CAMPAIGN_UNITS = deepFreeze([
     primaryTarget: "高速型・侵入経路",
     deploymentHint: "守る戦線の後方へ配備",
     description: "コンパウンドクロスボウと足止め装置で敵の進行を妨害する",
-    spritePath: "/art/v070/characters/engineer-battle-v1.png",
+    spritePath: "/art/v080/characters/monkey-battle-r2.png",
     assetStatus: "approved",
     appearanceAudit: {
       presentation: "銀灰色の髪、黒とtanの軽装、俊敏な低姿勢の罠師表現",
