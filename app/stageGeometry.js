@@ -1,4 +1,4 @@
-import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "./campaign.js";
+import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS, CAMPAIGN_STAGES } from "./campaign.js";
 import {
   ENEMY_GATE_SPAWN,
   LANE_Y,
@@ -73,14 +73,11 @@ export const STAGE_VIEWPORT_PROFILES = deepFreeze(Object.fromEntries(VIEWPORT_IN
   }];
 })));
 
-const STAGE_LAYOUTS = deepFreeze([
-  { id: CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET, stageNumber: 1, floorKind: "shopping-arcade" },
-  { id: CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE, stageNumber: 2, floorKind: "civic-evacuation-line" },
-  { id: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE, stageNumber: 3, floorKind: "defense-line" },
-  { id: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE, stageNumber: 4, floorKind: "station-concourse" },
-  { id: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM, stageNumber: 5, floorKind: "station-platform" },
-  { id: CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL, stageNumber: 6, floorKind: "maintenance-tunnel" },
-]);
+const STAGE_LAYOUTS = deepFreeze(CAMPAIGN_STAGES.map((stage) => ({
+  id: stage.id,
+  stageNumber: stage.stageNumber,
+  floorKind: stage.theme.id,
+})));
 
 export const STAGE_GEOMETRY_STAGE_IDS = deepFreeze(STAGE_LAYOUTS.map(({ id }) => id));
 
@@ -110,8 +107,54 @@ function sharedLaneObjective(id, x, laneCenters, extra = {}) {
   };
 }
 
+function sequentialSealObjectives(objectiveConfig, laneCenters) {
+  const powers = objectiveConfig.powerXs.map((x, index) => ({
+    id: `power-${index + 1}`,
+    kind: "hold-point",
+    ...contentYPoint(laneCenters, objectiveConfig.powerYs[index], x),
+    sequence: index + 1,
+    radiusX: objectiveConfig.powerRadiusX,
+    radiusY: objectiveConfig.powerRadiusY,
+  }));
+  return [
+    ...powers,
+    {
+      id: "gate-eater",
+      kind: "dynamic-boss-objective",
+      dynamic: true,
+      points: [lanePoint(laneCenters, 1, ENEMY_GATE_SPAWN.revealX - 49)],
+      sequence: 4,
+    },
+    {
+      id: "research-container",
+      kind: "containment-objective",
+      ...contentYPoint(
+        laneCenters,
+        objectiveConfig.researchContainerY,
+        objectiveConfig.researchContainerStartX,
+      ),
+      sequence: 5,
+    },
+    {
+      id: "seal-door",
+      kind: "seal",
+      ...contentYPoint(laneCenters, objectiveConfig.sealY, objectiveConfig.sealDoorX),
+      sequence: 6,
+    },
+    {
+      id: "return-route",
+      kind: "shared-lane-return",
+      points: laneCenters.map((_, lane) => lanePoint(laneCenters, lane, objectiveConfig.returnX)),
+      radiusX: objectiveConfig.returnRadiusX,
+      radiusY: objectiveConfig.returnRadiusY,
+      sequence: 7,
+    },
+  ];
+}
+
 function objectivesForStage(stageId, laneCenters) {
-  const objectiveConfig = CAMPAIGN_STAGE_BY_ID[stageId]?.objectiveConfig ?? {};
+  const stage = CAMPAIGN_STAGE_BY_ID[stageId];
+  const objectiveConfig = stage?.objectiveConfig ?? {};
   switch (stageId) {
     case CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET:
       return [sharedLaneObjective("infected-base", WORLD_GEOMETRY.enemyBase.attackX, laneCenters)];
@@ -132,51 +175,41 @@ function objectivesForStage(stageId, laneCenters) {
     case CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM:
       return [sharedLaneObjective("infected-base", WORLD_GEOMETRY.enemyBase.attackX, laneCenters)];
     case CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL: {
-      const powers = objectiveConfig.powerXs.map((x, index) => ({
-        id: `power-${index + 1}`,
-        kind: "hold-point",
-        ...contentYPoint(laneCenters, objectiveConfig.powerYs[index], x),
-        sequence: index + 1,
-        radiusX: objectiveConfig.powerRadiusX,
-        radiusY: objectiveConfig.powerRadiusY,
-      }));
-      return [
-        ...powers,
-        {
-          id: "gate-eater",
-          kind: "dynamic-boss-objective",
-          dynamic: true,
-          points: [lanePoint(laneCenters, 1, ENEMY_GATE_SPAWN.revealX - 49)],
-          sequence: 4,
-        },
-        {
-          id: "research-container",
-          kind: "containment-objective",
-          ...contentYPoint(
-            laneCenters,
-            objectiveConfig.researchContainerY,
-            objectiveConfig.researchContainerStartX,
-          ),
-          sequence: 5,
-        },
-        {
-          id: "seal-door",
-          kind: "seal",
-          ...contentYPoint(laneCenters, objectiveConfig.sealY, objectiveConfig.sealDoorX),
-          sequence: 6,
-        },
-        {
-          id: "return-route",
-          kind: "shared-lane-return",
-          points: laneCenters.map((_, lane) => lanePoint(laneCenters, lane, objectiveConfig.returnX)),
-          radiusX: objectiveConfig.returnRadiusX,
-          radiusY: objectiveConfig.returnRadiusY,
-          sequence: 7,
-        },
-      ];
+      return sequentialSealObjectives(objectiveConfig, laneCenters);
     }
-    default:
+    default: {
+      if (stage?.missionType === "assault") {
+        return [sharedLaneObjective(
+          objectiveConfig.target ?? "infected-base",
+          WORLD_GEOMETRY.enemyBase.attackX,
+          laneCenters,
+        )];
+      }
+      if (stage?.missionType === "timed-defense") {
+        return [sharedLaneObjective(
+          objectiveConfig.target ?? "defense-objective",
+          WORLD_GEOMETRY.baseX,
+          laneCenters,
+          { defend: true },
+        )];
+      }
+      if (stage?.missionType === "escort") {
+        const lane = [0, 1, 2].includes(Number(objectiveConfig.cartLane))
+          ? Number(objectiveConfig.cartLane)
+          : 1;
+        return [{
+          id: objectiveConfig.target ?? "escort-objective",
+          kind: "escort-route",
+          lane,
+          start: lanePoint(laneCenters, lane, finite(objectiveConfig.startX, 258)),
+          end: lanePoint(laneCenters, lane, finite(objectiveConfig.endX, 776)),
+        }];
+      }
+      if (stage?.missionType === "sequential-seal") {
+        return sequentialSealObjectives(objectiveConfig, laneCenters);
+      }
       return [];
+    }
   }
 }
 

@@ -137,9 +137,14 @@
 .save-persistence-warning span { color:#f0d4bd; }
 
 /* Area map */
-.map-screen { display:grid; grid-template-rows:auto minmax(0,1fr) auto; background:linear-gradient(145deg,rgba(8,15,16,.9),rgba(23,17,14,.92)),var(--campaign-art) center/cover no-repeat; }
+.map-screen { display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; background:linear-gradient(145deg,rgba(8,15,16,.9),rgba(23,17,14,.92)),var(--campaign-art) center/cover no-repeat; }
 .map-resource { margin-left:auto; min-width:92px; padding:6px 9px; border:1px solid rgba(226,169,80,.35); border-left:3px solid #d78d42; background:rgba(11,14,14,.55); text-align:right; }
 .map-resource b { color:#f0bd62; font:900 18px/1 monospace; }
+.map-region-tabs { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:3px; min-height:44px; padding:3px max(8px,calc(8px + var(--app-viewport-safe-right))) 3px max(8px,calc(8px + var(--app-viewport-safe-left))); border-bottom:1px solid rgba(213,184,138,.18); background:rgba(6,10,11,.82); }
+.map-region-tabs button { min-width:0; min-height:44px; display:grid; place-content:center; gap:2px; padding:3px 7px; border:1px solid rgba(142,128,104,.3); border-left:3px solid #5e6764; background:rgba(18,23,23,.84); color:#9e9687; cursor:pointer; }
+.map-region-tabs button b,.map-region-tabs button small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.map-region-tabs button b { font:900 10px/1 monospace; }.map-region-tabs button small { color:#777e78; font:700 7px/1 monospace; }
+.map-region-tabs button[data-active="true"] { border-color:rgba(235,175,88,.62); border-left-color:#e2a342; background:linear-gradient(90deg,rgba(103,58,33,.9),rgba(43,32,26,.9)); color:#f0c47b; }.map-region-tabs button[data-active="true"] small { color:#d3b483; }
+.map-region-tabs button:disabled { opacity:.4; cursor:not-allowed; }
 .map-layout { min-height:0; display:grid; grid-template-columns:minmax(0,1.58fr) minmax(220px,.82fr); gap:8px; padding:8px; }
 .nishijin-map { position:relative; min-width:0; overflow:hidden; border:1px solid rgba(207,183,143,.24); background:linear-gradient(150deg,#303932,#1d2929 48%,#202120); box-shadow:inset 0 0 34px rgba(0,0,0,.55); perspective:520px; }
 .nishijin-map::before { content:""; position:absolute; inset:-10%; background:repeating-linear-gradient(27deg,transparent 0 27px,rgba(226,211,174,.05) 27px 30px,transparent 30px 61px),repeating-linear-gradient(115deg,transparent 0 34px,rgba(5,8,8,.25) 34px 40px,transparent 40px 72px); transform:rotate(-3deg); }
@@ -256,6 +261,7 @@
 @media (max-height:430px) {
   .campaign-header { min-height:49px; padding:5px 10px; gap:8px; }.campaign-header h1 { font-size:16px; }.campaign-header > p { font-size:6px; }
   .title-screen-v060 { gap:7px; }.title-logo h1 { font-size:clamp(38px,8.5vw,60px); }.title-logo p { margin-top:3px; }.title-start { min-height:44px; padding:5px 12px; }
+  .map-region-tabs { min-height:44px; padding-block:1px; }.map-region-tabs button { min-height:42px; padding:2px 5px; }.map-region-tabs button b { font-size:8px; }.map-region-tabs button small { font-size:6px; }
   .map-layout { gap:5px; padding:5px; grid-template-columns:minmax(0,1.5fr) minmax(210px,.88fr); }.stage-node { width:112px; min-height:44px; }.stage-node b { font-size:7px; }.stage-detail { padding:6px; }.stage-preview { height:42px; margin-bottom:4px; }.stage-detail header h2 { font-size:15px; }.stage-detail header p { margin-bottom:4px; }.star-criteria { margin:4px 0; }
   .formation-layout { gap:4px; padding:4px; grid-template-columns:minmax(0,1.72fr) minmax(184px,.58fr); }.formation-units,.formation-support { padding:4px; }.formation-units > div { gap:3px; }.formation-units button { min-height:72px; grid-template-columns:68px minmax(0,1fr); gap:3px; }.formation-units button b { font-size:14px; }.formation-units button small { font-size:12px; }.formation-units button .unit-intent { font-size:11px; }.formation-support { gap:3px; }.formation-footer { min-height:49px; padding:3px 7px; }.formation-footer .campaign-primary { min-width:190px; min-height:44px; }
   .personnel-layout { padding:4px; }.personnel-units > div { grid-template-columns:repeat(2,minmax(0,1fr)); }.personnel-units .formation-unit-card { min-height:84px; }.personnel-units[data-mode="upgrade"] .formation-unit-card,.personnel-units[data-mode="acquisition"] .formation-unit-card { min-height:120px; }

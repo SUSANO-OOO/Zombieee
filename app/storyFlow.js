@@ -149,6 +149,36 @@ export const STAGE_STORY_FLOWS = deepFreeze({
     defeat: "stage-station-tunnel-defeat-v070",
     retry: "stage-station-tunnel-retry-v070",
   }),
+  [CAMPAIGN_STAGE_IDS.UNIVERSITY_HOSPITAL_APPROACH]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.HOSPITAL_EMERGENCY_WARD]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.HOSPITAL_EVACUATION_ROUTE]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.RESEARCH_ACCESS]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.RESEARCH_CONTAINMENT]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.RESEARCH_FREIGHT_PASSAGE]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.LOGISTICS_RELAY]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.EVACUATION_FREIGHT_YARD]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
 });
 
 function getStageFlow(stageId) {

@@ -11,6 +11,10 @@ export type CampaignScreen = "title" | "event" | "map" | "personnel" | "loadout"
 
 export type StageScreenView = {
   id: string;
+  stageNumber: number;
+  regionId: string;
+  regionLabel: string;
+  regionName: string;
   displayName: string;
   chapterName: string;
   objective: string;
@@ -23,6 +27,35 @@ export type StageScreenView = {
   nextStarReward: number;
   mapPosition: { x: number; y: number };
   starCriteria: readonly string[];
+};
+
+const MAP_LANDMARKS: Record<string, readonly { className: string; label: string; status: string }[]> = {
+  "region-nishijin": [
+    { className: "tower", label: "福岡タワー", status: "高危険区域" },
+    { className: "subway", label: "西新駅地下", status: "暫定封鎖" },
+    { className: "police", label: "警察署周辺", status: "調査中" },
+    { className: "hospital", label: "大学病院", status: "地下信号を確認" },
+  ],
+  "region-university-hospital": [
+    { className: "hospital", label: "救急搬入口", status: "感染体接近" },
+    { className: "shelter", label: "救急病棟", status: "中継反応あり" },
+    { className: "subway", label: "地下搬送口", status: "研究区画へ接続" },
+  ],
+  "region-underground-research": [
+    { className: "blockade", label: "除染ゲート", status: "隔離扉停止" },
+    { className: "police", label: "検体隔離環", status: "制御再起動待ち" },
+    { className: "subway", label: "搬送坑道", status: "地上線へ接続" },
+  ],
+  "region-logistics-line": [
+    { className: "coast", label: "中継ヤード", status: "通信汚染" },
+    { className: "shelter", label: "貨物退避場", status: "避難列待機" },
+    { className: "shoreline", label: "湾岸搬出路", status: "高危険区域" },
+  ],
+  "region-t-plan-core": [
+    { className: "blockade", label: "外郭制御環", status: "指令核稼働" },
+    { className: "hospital", label: "中央封鎖核", status: "感染裂孔を確認" },
+    { className: "coast", label: "観測区画", status: "応答なし" },
+  ],
 };
 
 export type UnitScreenView = {
@@ -311,35 +344,63 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
 }
 
 function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPending, onSelectStage, onOpenPersonnel, onOpenLoadout, onReplayPrologue, onResetSave }: Pick<Props, "stages" | "selectedStage" | "supplyCurrency" | "saveMutationPending" | "onSelectStage" | "onOpenPersonnel" | "onOpenLoadout" | "onReplayPrologue" | "onResetSave">) {
-  const chapterComplete = stages.every((stage) => stage.completed);
+  const [activeRegionId, setActiveRegionId] = useState(selectedStage.regionId);
+  const regions = useMemo(() => {
+    const seen = new Set<string>();
+    return stages.flatMap((stage) => {
+      if (seen.has(stage.regionId)) return [];
+      seen.add(stage.regionId);
+      return [{
+        id: stage.regionId,
+        label: stage.regionLabel,
+        name: stage.regionName,
+        unlocked: stages.some((candidate) => candidate.regionId === stage.regionId && candidate.unlocked),
+      }];
+    });
+  }, [stages]);
+  const visibleStages = stages.filter((stage) => stage.regionId === activeRegionId);
+  const displayedStage = selectedStage.regionId === activeRegionId
+    ? selectedStage
+    : visibleStages.find((stage) => stage.unlocked) ?? visibleStages[0] ?? selectedStage;
+  const activeRegion = regions.find((region) => region.id === activeRegionId) ?? regions[0];
+  const landmarks = MAP_LANDMARKS[activeRegionId] ?? MAP_LANDMARKS["region-nishijin"];
+  const selectRegion = (regionId: string) => {
+    const firstOpenStage = stages.find((stage) => stage.regionId === regionId && stage.unlocked);
+    if (!firstOpenStage) return;
+    setActiveRegionId(regionId);
+    if (firstOpenStage.id !== selectedStage.id) onSelectStage(firstOpenStage.id);
+  };
   return <div className="campaign-overlay map-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="エリアマップ">
     <header className="campaign-header"><div><small>CHAPTER 1</small><h1>発生から四十三日</h1></div><div className="map-resource"><small>キャップ</small><b>{supplyCurrency}</b></div></header>
+    <nav className="map-region-tabs" aria-label="作戦区域">
+      {regions.map((region) => <button
+        key={region.id}
+        type="button"
+        data-active={region.id === activeRegionId}
+        disabled={!region.unlocked}
+        onClick={() => selectRegion(region.id)}
+        aria-pressed={region.id === activeRegionId}
+      ><b>{region.label}</b><small>{region.unlocked ? region.name : "未到達"}</small></button>)}
+    </nav>
     <div className="map-layout">
-      <section className="nishijin-map" aria-label="西新・早良区・西新駅 エリアマップ">
+      <section className="nishijin-map" data-region={activeRegionId} aria-label={`${activeRegion?.name ?? "作戦区域"} エリアマップ`}>
         <div className="map-water" /><div className="map-road road-a" /><div className="map-road road-b" /><div className="map-road road-c" />
-        <div className="map-landmark tower"><i /><span>福岡タワー<small>高危険区域</small></span></div>
-        <div className={`map-landmark coast ${chapterComplete ? "anomaly" : ""}`}><span>大学病院地下<small>{chapterComplete ? "電源稼働を確認" : "調査保留"}</small></span></div>
-        <div className="map-landmark subway"><span>西新駅地下<small>{chapterComplete ? "暫定封鎖" : "経路確認中"}</small></span></div>
-        <div className="map-landmark police"><span>警察署周辺<small>調査中</small></span></div>
-        <div className="map-landmark hospital"><span>福岡市西部医科大学附属病院<small>T計画の研究施設</small></span></div>
-        <div className="map-landmark shelter"><span>学校・避難所<small>応答なし</small></span></div>
-        <div className="map-landmark shoreline"><span>海岸線<small>高危険区域</small></span></div>
-        <div className="map-landmark blockade"><span>封鎖区域<small>進入不能</small></span></div>
-        {stages.map((stage, index) => <button
+        {landmarks.map((landmark) => <div key={landmark.label} className={`map-landmark ${landmark.className}`}><span>{landmark.label}<small>{landmark.status}</small></span></div>)}
+        {visibleStages.map((stage) => <button
           key={stage.id}
-          className={`stage-node ${stage.unlocked ? "open" : "locked"} ${selectedStage.id === stage.id ? "selected" : ""}`}
+          className={`stage-node ${stage.unlocked ? "open" : "locked"} ${displayedStage.id === stage.id ? "selected" : ""}`}
           style={{ left: `${stage.mapPosition.x}%`, top: `${stage.mapPosition.y}%` }}
           disabled={!stage.unlocked}
           onClick={() => onSelectStage(stage.id)}
           aria-label={`${stage.displayName} ${stage.unlocked ? stars(stage.bestStars) : "封鎖中"}`}
-        ><span>{index + 1}</span><b>{stage.displayName}</b><em>{stage.unlocked ? stars(stage.bestStars) : "封鎖"}</em></button>)}
+        ><span>{stage.stageNumber}</span><b>{stage.displayName}</b><em>{stage.unlocked ? stars(stage.bestStars) : "封鎖"}</em></button>)}
       </section>
       <aside className="stage-detail" aria-label="選択中のステージ詳細">
-        <div className="stage-preview" style={artStyle(stageVisualFor(selectedStage.id))} role="img" aria-label={`${selectedStage.displayName}の作戦区域`} />
-        <header><small>{selectedStage.missionLabel}</small><h2>{selectedStage.displayName}</h2><p>{selectedStage.threat}</p></header>
-        <dl><div><dt>目的</dt><dd>{selectedStage.objective}</dd></div><div><dt>過去最高星</dt><dd className="star-text">{stars(selectedStage.bestStars)}</dd></div><div><dt>基本報酬</dt><dd>{selectedStage.baseReward} キャップ</dd></div><div><dt>次の未取得星報酬</dt><dd>{selectedStage.nextStarReward ? `${selectedStage.nextStarReward} キャップ` : "取得済み"}</dd></div></dl>
-        <div className="star-criteria"><b>星判定</b>{selectedStage.starCriteria.map((criterion) => <span key={criterion}>{criterion}</span>)}</div>
-        <div className="stage-actions"><button className="campaign-secondary" onClick={onOpenPersonnel}>人員管理</button><button className="campaign-primary" onClick={onOpenLoadout}>編成へ進む</button></div>
+        <div className="stage-preview" style={artStyle(stageVisualFor(displayedStage.id))} role="img" aria-label={`${displayedStage.displayName}の作戦区域`} />
+        <header><small>{displayedStage.missionLabel}</small><h2>{displayedStage.displayName}</h2><p>{displayedStage.threat}</p></header>
+        <dl><div><dt>目的</dt><dd>{displayedStage.objective}</dd></div><div><dt>過去最高星</dt><dd className="star-text">{stars(displayedStage.bestStars)}</dd></div><div><dt>基本報酬</dt><dd>{displayedStage.baseReward} キャップ</dd></div><div><dt>次の未取得星報酬</dt><dd>{displayedStage.nextStarReward ? `${displayedStage.nextStarReward} キャップ` : "取得済み"}</dd></div></dl>
+        <div className="star-criteria"><b>星判定</b>{displayedStage.starCriteria.map((criterion) => <span key={criterion}>{criterion}</span>)}</div>
+        <div className="stage-actions"><button className="campaign-secondary" onClick={onOpenPersonnel}>人員管理</button><button className="campaign-primary" disabled={!displayedStage.unlocked} onClick={onOpenLoadout}>編成へ進む</button></div>
       </aside>
     </div>
     <footer className="map-footer"><span>固定4場面のプロローグは進行を変えず再視聴できます</span><button disabled={saveMutationPending} onClick={onReplayPrologue}>プロローグを回想</button><button disabled={saveMutationPending} onClick={onResetSave}>{saveMutationPending ? "保存処理中" : "セーブデータを初期化"}</button></footer>

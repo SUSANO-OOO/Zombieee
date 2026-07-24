@@ -305,7 +305,7 @@ test("every production WebP passes an actual image decoder", async () => {
     ...Object.values(PRODUCTION_VISUALS.stages),
     ...Object.values(PRODUCTION_VISUALS.eventCuts),
   ])];
-  assert.equal(productionWebps.length, 24);
+  assert.equal(productionWebps.length, 34);
 
   for (const assetPath of productionWebps) {
     assert.match(assetPath, /\.webp$/);
