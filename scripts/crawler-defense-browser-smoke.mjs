@@ -31,7 +31,10 @@ const scenarios = [
   { id: "heavy-bottom", unitKind: "brute", attackerKind: "crusher", lane: 2 },
   { id: "support-center", unitKind: "medic", attackerKind: "walker", lane: 1 },
 ];
-const maxParallelCases = 6;
+const maxParallelCases = Math.max(
+  1,
+  Number(process.env.CRAWLER_DEFENSE_QA_MAX_PARALLEL_CASES) || 6,
+);
 const results = [];
 
 await mkdir(evidenceDir, { recursive: true });
@@ -81,10 +84,10 @@ function assertDiagnostics(diagnostics) {
 for (const engine of engines) {
   const browserType = browserTypes[engine];
   invariant(browserType, `unsupported engine: ${engine}`);
-  const browser = await browserType.launch({ headless: true });
-  try {
-    const cases = viewports.flatMap((viewport) => scenarios.map((scenario) => ({ viewport, scenario })));
-    for (let offset = 0; offset < cases.length; offset += maxParallelCases) {
+  const cases = viewports.flatMap((viewport) => scenarios.map((scenario) => ({ viewport, scenario })));
+  for (let offset = 0; offset < cases.length; offset += maxParallelCases) {
+    const browser = await browserType.launch({ headless: true });
+    try {
       await Promise.all(cases.slice(offset, offset + maxParallelCases).map(async ({ viewport, scenario }) => {
         const context = await browser.newContext({ viewport });
         const page = await context.newPage();
@@ -301,9 +304,9 @@ for (const engine of engines) {
           await context.close();
         }
       }));
+    } finally {
+      await browser.close();
     }
-  } finally {
-    await browser.close();
   }
 }
 
