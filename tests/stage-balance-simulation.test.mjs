@@ -21,8 +21,8 @@ import {
 } from "../app/stageBalanceSimulation.js";
 import { applyUnitProgression } from "../app/unitProgression.js";
 
-test("balance facts are derived from all six canonical wave schedules", () => {
-  assert.equal(CAMPAIGN_STAGES.length, 6);
+test("balance facts are derived from all sixteen canonical wave schedules", () => {
+  assert.equal(CAMPAIGN_STAGES.length, 16);
   for (const stage of CAMPAIGN_STAGES) {
     const facts = stageBalanceWaveFacts(stage.id);
     const expectedEnemyCount = stage.waves.reduce((total, wave) => (
@@ -74,7 +74,7 @@ test("Stage 1-3 clear with seven-slot-era formations and exercise every schedule
 });
 
 test("Stage 4-6 each have three successful formations with no mandatory unit", () => {
-  for (const stage of CAMPAIGN_STAGES.slice(3)) {
+  for (const stage of CAMPAIGN_STAGES.slice(3, 6)) {
     const formations = P4_BALANCE_FORMATIONS[stage.id];
     assert.equal(formations.length >= 3, true, stage.id);
     assert.deepEqual(formationIntersection(formations), [], `${stage.id} has a hidden mandatory pick`);
@@ -97,6 +97,15 @@ test("Stage 4-6 each have three successful formations with no mandatory unit", (
         assert.equal(result.waves.defeatedKinds.includes("gate-eater"), true, `${stage.id}/${index}`);
       }
     }
+  }
+});
+
+test("Stage 7-16 expose three non-mandatory reference formations", () => {
+  for (const stage of CAMPAIGN_STAGES.slice(6)) {
+    const formations = P4_BALANCE_FORMATIONS[stage.id];
+    assert.equal(formations.length, 3, stage.id);
+    assert.deepEqual(formationIntersection(formations), [], `${stage.id} has a hidden mandatory pick`);
+    assert.equal(formations.every((formation) => formation.length <= CAMPAIGN_FORMATION_MAX_SLOTS), true);
   }
 });
 
