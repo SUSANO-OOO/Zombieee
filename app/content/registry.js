@@ -79,7 +79,7 @@ const missions = CAMPAIGN_STAGES.map((stage) => ({
 
 const maps = CAMPAIGN_STAGES.map((stage) => {
   const visualSignature = STAGE_VISUAL_SIGNATURES[stage.id];
-  const visual = PRODUCTION_VISUALS[stage.id] ?? null;
+  const visual = PRODUCTION_VISUALS.stages[stage.id] ?? null;
   const stageObjects = STAGE_OBJECT_MANIFEST[stage.id] ?? null;
   return {
     id: `map:${stage.id}`,
