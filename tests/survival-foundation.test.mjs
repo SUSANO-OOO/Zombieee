@@ -100,6 +100,7 @@ test("unlocks starts at wave 11, 21, and later without granting skipped rewards"
     formation: {
       presetId: "formation-preset-2",
       unitIds: ["unit-paissen", "unit-nao"],
+      unitLevelsByUnit: { "unit-paissen": 18, "unit-nao": 7 },
       personalEquipmentByUnit: { "unit-paissen": ["equipment-a", "equipment-b", "ignored-third"] },
       tacticalEquipmentIds: ["tactical-a", "tactical-b", "ignored-third"],
     },
@@ -108,8 +109,12 @@ test("unlocks starts at wave 11, 21, and later without granting skipped rewards"
   assert.equal(late.currentWave, 21);
   assert.equal(late.lastCompletedWave, 20);
   assert.equal(Object.values(late.temporaryUpgradeStacks).reduce((total, stacks) => total + stacks, 0), 4);
-  assert.deepEqual(late.pendingReward, { caps: 0, equipmentIds: [] });
+  assert.deepEqual(late.pendingReward, { caps: 0, equipmentGrants: [] });
   assert.deepEqual(late.checkpointRewards, []);
+  assert.deepEqual(late.formation.unitLevelsByUnit, {
+    "unit-paissen": 18,
+    "unit-nao": 7,
+  });
   assert.deepEqual(late.formation.personalEquipmentByUnit["unit-paissen"], ["equipment-a", "equipment-b"]);
   assert.deepEqual(late.formation.tacticalEquipmentIds, ["tactical-a", "tactical-b"]);
   assert.deepEqual(survivalLateStartUpgradeStacks(1), {});
@@ -163,13 +168,43 @@ test("offers deterministic unique three-choice upgrades and applies only the sel
   assert.equal(run.temporaryUpgradeStacks[selectedId], 1);
 });
 
+test("deterministic shuffle terminates with three unique choices for 3, 6, 7, 8, and 9 upgrades", () => {
+  for (const upgradeCount of [3, 6, 7, 8, 9]) {
+    const pool = Array.from(
+      { length: upgradeCount },
+      (_, index) => ({ id: `test-upgrade-${upgradeCount}-${index + 1}` }),
+    );
+    for (let seedIndex = 0; seedIndex < 100; seedIndex += 1) {
+      const runId = `shuffle-${upgradeCount}-${seedIndex}`;
+      const choices = survivalUpgradeChoices(runId, 5 + seedIndex * 5, pool);
+      assert.equal(choices.length, 3);
+      assert.equal(new Set(choices).size, 3);
+      assert.ok(choices.every((upgradeId) => pool.some(({ id }) => id === upgradeId)));
+      assert.deepEqual(
+        survivalUpgradeChoices(runId, 5 + seedIndex * 5, pool),
+        choices,
+      );
+    }
+  }
+  assert.throws(
+    () => survivalUpgradeChoices("too-small", 5, [{ id: "a" }, { id: "b" }]),
+    /at least three unique upgrades/,
+  );
+});
+
 test("saves only boss-boundary checkpoints and resumes pending upgrade selection after reload", () => {
   const initialProgress = createDefaultSurvivalProgress();
   let run = createSurvivalRun({ runId: "checkpoint-run" });
   run = playThrough(run, 4, 5);
   assert.equal(createSurvivalCheckpoint(run), null);
 
-  run = playWave(run, { kills: 9, reward: { caps: 10, equipmentIds: ["boss-drop-a"] } });
+  run = playWave(run, {
+    kills: 9,
+    reward: {
+      caps: 10,
+      equipmentGrants: [{ equipmentId: "boss-drop-a", quantity: 1 }],
+    },
+  });
   const checkpoint = createSurvivalCheckpoint(run, "2026-07-26T09:30:00.000Z");
   assert.equal(checkpoint.checkpointWave, 5);
   assert.equal(checkpoint.run.phase, SURVIVAL_RUN_PHASES.UPGRADE_SELECTION);
@@ -189,6 +224,112 @@ test("saves only boss-boundary checkpoints and resumes pending upgrade selection
   assert.equal(updatedProgress.activeCheckpoint.checkpointWave, 5);
 });
 
+test("preserves duplicate equipment quantities within and across checkpoints through settlement", () => {
+  const equipmentId = "equipment-survival-repeat";
+  let run = createSurvivalRun({ runId: "equipment-quantity-run" });
+  run = playWave(run, {
+    reward: {
+      equipmentGrants: [
+        { equipmentId, quantity: 2 },
+        { equipmentId, quantity: 3 },
+      ],
+    },
+  });
+  run = playWave(run, {
+    reward: { equipmentGrants: [{ equipmentId, quantity: 4 }] },
+  });
+  run = playWave(run);
+  run = playWave(run);
+  run = playWave(run, {
+    reward: { equipmentGrants: [{ equipmentId, quantity: 1 }] },
+  });
+  assert.deepEqual(run.checkpointRewards[0].reward.equipmentGrants, [
+    { equipmentId, quantity: 10 },
+  ]);
+
+  run = selectSurvivalUpgrade(run, run.pendingUpgradeChoices[0]);
+  run = playWave(run, {
+    reward: { equipmentGrants: [{ equipmentId, quantity: 2 }] },
+  });
+  run = playWave(run);
+  run = playWave(run);
+  run = playWave(run);
+  run = playWave(run, {
+    reward: { equipmentGrants: [{ equipmentId, quantity: 5 }] },
+  });
+  assert.deepEqual(run.checkpointRewards[1].reward.equipmentGrants, [
+    { equipmentId, quantity: 7 },
+  ]);
+
+  const progress = saveSurvivalCheckpoint(createDefaultSurvivalProgress(), run);
+  run = endSurvivalRun(run, SURVIVAL_END_REASONS.WITHDRAWAL);
+  const settled = settleSurvivalRun(progress, run);
+  assert.deepEqual(settled.payout.equipmentGrants, [
+    { equipmentId, quantity: 17 },
+  ]);
+  assert.deepEqual(settled.progress.lastResult.earnedEquipmentGrants, [
+    { equipmentId, quantity: 17 },
+  ]);
+  const campaign = {
+    ...createDefaultCampaignSave(),
+    survival: settled.progress,
+  };
+  const restored = deserializeCampaignSave(serializeCampaignSave(campaign));
+  assert.deepEqual(restored.survival.lastResult.earnedEquipmentGrants, [
+    { equipmentId, quantity: 17 },
+  ]);
+
+  const legacyReward = playWave(
+    createSurvivalRun({ runId: "legacy-equipment-array" }),
+    { reward: { equipmentIds: [equipmentId, equipmentId] } },
+  );
+  assert.deepEqual(legacyReward.pendingReward.equipmentGrants, [
+    { equipmentId, quantity: 2 },
+  ]);
+});
+
+test("checkpoints and results retain the run-start unit Level snapshot", () => {
+  const formation = {
+    presetId: "formation-preset-levels",
+    unitIds: ["unit-paissen", "unit-nao", "unit-kumaverson"],
+    unitLevelsByUnit: {
+      "unit-paissen": 18,
+      "unit-nao": 7,
+      "unit-kumaverson": 99,
+      "unit-not-deployed": 40,
+    },
+  };
+  let run = createSurvivalRun({ runId: "level-snapshot-run", formation });
+  formation.unitLevelsByUnit["unit-paissen"] = 50;
+  assert.deepEqual(run.formation.unitLevelsByUnit, {
+    "unit-paissen": 18,
+    "unit-nao": 7,
+    "unit-kumaverson": 50,
+  });
+
+  run = playThrough(run, 5);
+  const progress = saveSurvivalCheckpoint(createDefaultSurvivalProgress(), run);
+  const campaign = {
+    ...createDefaultCampaignSave(),
+    survival: progress,
+  };
+  const restored = deserializeCampaignSave(serializeCampaignSave(campaign));
+  const resumed = resumeSurvivalCheckpoint(restored.survival);
+  assert.deepEqual(resumed.formation.unitLevelsByUnit, {
+    "unit-paissen": 18,
+    "unit-nao": 7,
+    "unit-kumaverson": 50,
+  });
+
+  const ended = endSurvivalRun(resumed, SURVIVAL_END_REASONS.WITHDRAWAL);
+  const settled = settleSurvivalRun(progress, ended);
+  assert.deepEqual(settled.progress.lastResult.formation.unitLevelsByUnit, {
+    "unit-paissen": 18,
+    "unit-nao": 7,
+    "unit-kumaverson": 50,
+  });
+});
+
 test("settles completed checkpoint and partial-wave rewards exactly once", () => {
   let run = createSurvivalRun({
     runId: "settlement-run",
@@ -202,14 +343,22 @@ test("settles completed checkpoint and partial-wave rewards exactly once", () =>
   let progress = saveSurvivalCheckpoint(createDefaultSurvivalProgress(), run);
   run = selectSurvivalUpgrade(run, run.pendingUpgradeChoices[0]);
   run = playWave(run, { kills: 6, reward: { caps: 10 } });
-  run = playWave(run, { kills: 7, reward: { caps: 10, equipmentIds: ["equipment-survival-a"] } });
+  run = playWave(run, {
+    kills: 7,
+    reward: {
+      caps: 10,
+      equipmentGrants: [{ equipmentId: "equipment-survival-a", quantity: 1 }],
+    },
+  });
   run = endSurvivalRun(run, SURVIVAL_END_REASONS.WITHDRAWAL, "2026-07-26T10:00:00.000Z");
 
   const settled = settleSurvivalRun(progress, run, { endedAt: "2026-07-26T10:00:00.000Z" });
   progress = settled.progress;
   assert.equal(settled.duplicate, false);
   assert.equal(settled.payout.caps, 70);
-  assert.deepEqual(settled.payout.equipmentIds, ["equipment-survival-a"]);
+  assert.deepEqual(settled.payout.equipmentGrants, [
+    { equipmentId: "equipment-survival-a", quantity: 1 },
+  ]);
   assert.equal(settled.payout.rewardIds.length, 2);
   assert.equal(progress.highestWave, 7);
   assert.equal(progress.totalRuns, 1);
@@ -220,7 +369,11 @@ test("settles completed checkpoint and partial-wave rewards exactly once", () =>
 
   const duplicate = settleSurvivalRun(progress, run);
   assert.equal(duplicate.duplicate, true);
-  assert.deepEqual(duplicate.payout, { caps: 0, equipmentIds: [], rewardIds: [] });
+  assert.deepEqual(duplicate.payout, {
+    caps: 0,
+    equipmentGrants: [],
+    rewardIds: [],
+  });
   assert.equal(duplicate.progress.totalRuns, 1);
   assert.deepEqual(duplicate.progress.claimedRewardIds, progress.claimedRewardIds);
 });

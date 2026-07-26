@@ -45,6 +45,23 @@ function fnv1a32(value) {
   return hash >>> 0;
 }
 
+function seededShuffle(values, seed) {
+  const shuffled = [...values];
+  let state = seed >>> 0;
+  const random = () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let mixed = state;
+    mixed = Math.imul(mixed ^ (mixed >>> 15), mixed | 1);
+    mixed ^= mixed + Math.imul(mixed ^ (mixed >>> 7), mixed | 61);
+    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4_294_967_296;
+  };
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
 function normalizeEquipmentSnapshot(value) {
   const source = isRecord(value) ? value : {};
   const personalSource = isRecord(source.personalEquipmentByUnit)
@@ -59,12 +76,22 @@ function normalizeEquipmentSnapshot(value) {
   };
 }
 
+function normalizeUnitLevelsByUnit(value, unitIds) {
+  const source = isRecord(value) ? value : {};
+  return Object.fromEntries(unitIds.map((unitId) => [
+    unitId,
+    clampInteger(source[unitId], 1, 50, 1),
+  ]));
+}
+
 function normalizeFormationSnapshot(value) {
   const source = isRecord(value) ? value : {};
   const equipment = normalizeEquipmentSnapshot(source);
+  const unitIds = uniqueStrings(source.unitIds, 7);
   return {
     presetId: typeof source.presetId === "string" ? source.presetId.trim() : "",
-    unitIds: uniqueStrings(source.unitIds, 7),
+    unitIds,
+    unitLevelsByUnit: normalizeUnitLevelsByUnit(source.unitLevelsByUnit, unitIds),
     ...equipment,
   };
 }
@@ -99,21 +126,53 @@ function normalizeRunStats(value) {
   };
 }
 
+function normalizeEquipmentGrants(value, legacyEquipmentIds) {
+  const quantities = new Map();
+  const add = (equipmentId, quantity) => {
+    const id = typeof equipmentId === "string" ? equipmentId.trim().slice(0, 160) : "";
+    const numeric = Number(quantity);
+    if (!id || !Number.isFinite(numeric) || numeric <= 0) return;
+    const normalizedQuantity = clampInteger(numeric, 1, Number.MAX_SAFE_INTEGER, 1);
+    quantities.set(
+      id,
+      Math.min(Number.MAX_SAFE_INTEGER, (quantities.get(id) ?? 0) + normalizedQuantity),
+    );
+  };
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      if (!isRecord(entry)) continue;
+      add(entry.equipmentId, entry.quantity);
+    }
+  } else if (Array.isArray(legacyEquipmentIds)) {
+    for (const equipmentId of legacyEquipmentIds) add(equipmentId, 1);
+  }
+  return [...quantities.entries()]
+    .map(([equipmentId, quantity]) => ({ equipmentId, quantity }))
+    .sort((left, right) => {
+      if (left.equipmentId < right.equipmentId) return -1;
+      if (left.equipmentId > right.equipmentId) return 1;
+      return 0;
+    });
+}
+
 function normalizeReward(value) {
   const source = isRecord(value) ? value : {};
   return {
     caps: clampInteger(source.caps, 0, Number.MAX_SAFE_INTEGER, 0),
-    equipmentIds: uniqueStrings(source.equipmentIds),
+    equipmentGrants: normalizeEquipmentGrants(
+      source.equipmentGrants,
+      source.equipmentIds,
+    ),
   };
 }
 
 function addRewards(left, right) {
   const a = normalizeReward(left);
   const b = normalizeReward(right);
-  return {
+  return normalizeReward({
     caps: Math.min(Number.MAX_SAFE_INTEGER, a.caps + b.caps),
-    equipmentIds: [...a.equipmentIds, ...b.equipmentIds],
-  };
+    equipmentGrants: [...a.equipmentGrants, ...b.equipmentGrants],
+  });
 }
 
 function normalizeUpgradeStacks(value) {
@@ -248,18 +307,20 @@ export function survivalLateStartUpgradeStacks(startWave) {
   return stacks;
 }
 
-export function survivalUpgradeChoices(runId, checkpointWave) {
+export function survivalUpgradeChoices(
+  runId,
+  checkpointWave,
+  upgradePool = SURVIVAL_UPGRADES,
+) {
   const stableRunId = normalizedId(runId, "Survival upgrade choice");
   const wave = clampInteger(checkpointWave, SURVIVAL_BLOCK_WAVES, SURVIVAL_MAX_SAFE_WAVE, SURVIVAL_BLOCK_WAVES);
-  const seed = fnv1a32(`${stableRunId}:${wave}`);
-  const offset = seed % SURVIVAL_UPGRADES.length;
-  const step = (Math.floor(seed / SURVIVAL_UPGRADES.length) % (SURVIVAL_UPGRADES.length - 1)) + 1;
-  const choices = [];
-  for (let index = 0; choices.length < 3; index += 1) {
-    const upgradeId = SURVIVAL_UPGRADES[(offset + index * step) % SURVIVAL_UPGRADES.length].id;
-    if (!choices.includes(upgradeId)) choices.push(upgradeId);
+  const upgradeIds = uniqueStrings((Array.isArray(upgradePool) ? upgradePool : [])
+    .map((upgrade) => (typeof upgrade === "string" ? upgrade : upgrade?.id)));
+  if (upgradeIds.length < 3) {
+    throw new RangeError("Survival upgrade choices require at least three unique upgrades");
   }
-  return choices;
+  const seed = fnv1a32(`${stableRunId}:${wave}:${upgradeIds.join("\u0000")}`);
+  return seededShuffle(upgradeIds, seed).slice(0, 3);
 }
 
 function normalizeCheckpointReward(value, runId) {
@@ -551,7 +612,10 @@ function normalizeLastResult(value) {
     stats: normalizeRunStats(source.stats),
     formation: normalizeFormationSnapshot(source.formation),
     earnedCaps: clampInteger(source.earnedCaps, 0, Number.MAX_SAFE_INTEGER, 0),
-    earnedEquipmentIds: uniqueStrings(source.earnedEquipmentIds),
+    earnedEquipmentGrants: normalizeEquipmentGrants(
+      source.earnedEquipmentGrants,
+      source.earnedEquipmentIds,
+    ),
     newHighestWave: source.newHighestWave === true,
     endedAt: normalizedTimestamp(source.endedAt),
   };
@@ -640,7 +704,7 @@ export function settleSurvivalRun(progress, run, { endedAt = new Date().toISOStr
     || current.processedRunIds.includes(endedRun.runId)) {
     return {
       progress: current,
-      payout: { caps: 0, equipmentIds: [], rewardIds: [] },
+      payout: { caps: 0, equipmentGrants: [], rewardIds: [] },
       duplicate: Boolean(endedRun && current.processedRunIds.includes(endedRun.runId)),
     };
   }
@@ -680,7 +744,7 @@ export function settleSurvivalRun(progress, run, { endedAt = new Date().toISOStr
       stats: endedRun.stats,
       formation: endedRun.formation,
       earnedCaps: payout.caps,
-      earnedEquipmentIds: payout.equipmentIds,
+      earnedEquipmentGrants: payout.equipmentGrants,
       newHighestWave,
       endedAt: normalizedTimestamp(endedAt, endedRun.updatedAt),
     },
