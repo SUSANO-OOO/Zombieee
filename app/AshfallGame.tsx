@@ -782,6 +782,10 @@ type ManualAbilityIconView = {
   x: number;
   y: number;
   hitSize: number;
+  anchorX: number;
+  anchorY: number;
+  pointerLength: number;
+  pointerAngle: number;
 };
 type Corpse = {
   id: number;
@@ -1894,6 +1898,7 @@ function prepareZakimiyaQa(g: Game) {
   g.barricadeMaxHp = Math.max(BARRICADE_MAX_HP, 5000);
   g.barricadeHp = g.barricadeMaxHp;
   g.energy = COMMAND_MAX;
+  g.scrap = 150;
   g.fighters = [];
   g.corpses = [];
   g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
@@ -5767,7 +5772,7 @@ export function AshfallGame() {
 
   const activateManualAbility = useCallback((fighterId: number) => {
     const g = gameRef.current;
-    if (!g.running || g.paused || g.over) return false;
+    if (!g.running || g.paused || g.over || selectedActionRef.current) return false;
     const fighter = g.fighters.find((candidate) => (
       candidate.id === fighterId
       && candidate.side === "human"
@@ -5788,6 +5793,7 @@ export function AshfallGame() {
     fighter.manualAbility = startedAbility.runtime as ManualAbilityRuntime;
     fighter.attack = Math.max(fighter.attack, MANUAL_ABILITY_REGISTRY.zakimiya.windupSeconds);
     fighter.cooldown = Math.max(fighter.cooldown, MANUAL_ABILITY_REGISTRY.zakimiya.windupSeconds);
+    fighter.flash = Math.max(fighter.flash, .26);
     g.manualAbilityVfx = [...g.manualAbilityVfx, {
       ownerId: fighter.id,
       activationId: startedAbility.activationId,
@@ -5805,11 +5811,10 @@ export function AshfallGame() {
       ...current,
       manualAbilityIcons: current.manualAbilityIcons.filter((icon) => icon.fighterId !== fighter.id),
     }));
-    chooseAction(null);
     playCue("ui-confirm");
     playCue("burn-start");
     return true;
-  }, [chooseAction, playCue]);
+  }, [playCue]);
 
   const stopSfx = useCallback(() => {
     sfxRequestGateRef.current.cancelPending();
@@ -10385,7 +10390,7 @@ export function AshfallGame() {
             height: bannerHeight * transform.scale,
           });
         }
-        const readyAbilityFighters = g.running && !g.paused && !g.over
+        const readyAbilityFighters = g.running && !g.paused && !g.over && !selectedActionRef.current
           ? g.fighters.filter((fighter) => canActivateManualAbility({ fighter, fighters: g.fighters }))
             .map((fighter) => ({
               id: fighter.id,
@@ -10396,18 +10401,33 @@ export function AshfallGame() {
               screenY: transform.offsetY + (fighter.y - spriteBattleDisplaySizeFor(fighter.kind).h - 6) * transform.scale,
             }))
           : [];
+        const rootStyle = getComputedStyle(document.documentElement);
+        const safeInsets = Object.fromEntries(["top", "right", "bottom", "left"].map((edge) => [
+          edge,
+          Math.max(0, Number.parseFloat(rootStyle.getPropertyValue(`--app-viewport-safe-${edge}`)) || 0) + 6,
+        ]));
         const manualAbilityIcons = layoutManualAbilityIcons({
           fighters: readyAbilityFighters,
           obstacles: obstacleRects,
           displayWidth: canvasRect.width,
           displayHeight: canvasRect.height,
-          safeInsets: { top: 6, right: 6, bottom: 6, left: 6 },
+          safeInsets,
         }).map((icon) => ({
           fighterId: Number(icon.fighterId),
           kind: icon.kind as UnitKind,
           x: icon.x,
           y: icon.y,
           hitSize: icon.hitSize,
+          anchorX: icon.anchorX,
+          anchorY: icon.anchorY,
+          pointerLength: Math.hypot(
+            icon.anchorX - icon.x - icon.hitSize / 2,
+            icon.anchorY - icon.y - icon.hitSize / 2,
+          ),
+          pointerAngle: Math.atan2(
+            icon.anchorY - icon.y - icon.hitSize / 2,
+            icon.anchorX - icon.x - icon.hitSize / 2,
+          ) * 180 / Math.PI - 90,
         }));
         setHud({
           missionType: g.definition.missionType, energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
@@ -10478,7 +10498,7 @@ export function AshfallGame() {
     <main className="game-shell" data-screen={screen} data-stage-id={selectedStageId} data-release-version={RELEASE_VERSION}>
       <section className="game-frame" style={{ "--battlefield-art": `url('${stageVisualFor(selectedStageId)}')` } as CSSProperties} aria-label="西新世紀末物語 ゲーム">
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
-        {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
+        {screen === "battle" && !selectedAction && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;
           return <button
@@ -10487,6 +10507,8 @@ export function AshfallGame() {
             className="manual-ability-ready"
             data-fighter-id={icon.fighterId}
             data-ability-kind={icon.kind}
+            data-owner-anchor-x={icon.anchorX}
+            data-owner-anchor-y={icon.anchorY}
             style={{ left: icon.x, top: icon.y, width: icon.hitSize, height: icon.hitSize }}
             aria-label={`${cards.find((card) => card.kind === icon.kind)?.name ?? icon.kind}：${ability.displayName}`}
             onPointerDown={(event) => event.stopPropagation()}
@@ -10498,7 +10520,10 @@ export function AshfallGame() {
             }}
           >
             <span aria-hidden="true"><b className="manual-ability-ready-icon" /></span>
-            <i aria-hidden="true" />
+            <i
+              aria-hidden="true"
+              style={{ height: icon.pointerLength, transform: `rotate(${icon.pointerAngle}deg)` }}
+            />
           </button>;
         })}
         {(qaMode || qaScenario) && (

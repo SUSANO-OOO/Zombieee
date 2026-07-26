@@ -8,6 +8,7 @@ import {
   CAMPAIGN_GUIDE,
   CAMPAIGN_GUIDE_ID,
   CAMPAIGN_RECRUITMENT_COSTS,
+  CAMPAIGN_RECRUITMENT_MILESTONES,
   CAMPAIGN_SAVE_SCHEMA_VERSION,
   CAMPAIGN_STAGE_BY_ID,
   CAMPAIGN_STAGE_IDS,
@@ -372,6 +373,17 @@ test("twelve canonical playable units and guide-ikura use approved player-facing
     [CAMPAIGN_UNIT_IDS.ZAKIMIYA, "ザキミヤ"],
   ]);
   assert.equal(new Set(CAMPAIGN_UNITS.map(({ id }) => id)).size, 12);
+  assert.deepEqual(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.ZAKIMIYA].unlock, {
+    type: "recruitment",
+    stageNumber: 17,
+    costCaps: 240,
+  });
+  assert.deepEqual(CAMPAIGN_RECRUITMENT_MILESTONES[17], {
+    storyJoinUnitIds: [],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.ZAKIMIYA],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.ZAKIMIYA],
+  });
+  assert.equal(CAMPAIGN_RECRUITMENT_MILESTONES[7], undefined);
   assert.equal(CAMPAIGN_UNIT_BY_ID.brawler.id, CAMPAIGN_UNIT_IDS.PAISEN);
   assert.equal(CAMPAIGN_UNIT_BY_ID.brute.id, CAMPAIGN_UNIT_IDS.TATARA);
   assert.equal(CAMPAIGN_UNIT_BY_ID["unit-rokka"].id, CAMPAIGN_UNIT_IDS.RAIDER);

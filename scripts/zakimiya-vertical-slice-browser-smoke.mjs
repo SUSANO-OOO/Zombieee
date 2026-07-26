@@ -100,10 +100,16 @@ for (const engine of engines) {
       });
       const readyButton = page.locator(".manual-ability-ready[data-ability-kind='zakimiya']");
       await readyButton.waitFor({ state: "visible" });
+      const supportButton = page.locator(".support-btn:not([disabled])").first();
+      await supportButton.click();
+      await readyButton.waitFor({ state: "detached" });
+      await supportButton.click();
+      await readyButton.waitFor({ state: "visible" });
 
       const before = await page.evaluate(() => {
         const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
         const button = document.querySelector(".manual-ability-ready[data-ability-kind='zakimiya']");
+        const pointer = button?.querySelector(":scope > i");
         const canvas = document.querySelector("canvas.battlefield");
         const selectors = [
           ".top-hud", ".survival-hud", ".boss-hud", ".crawler-alert",
@@ -113,6 +119,14 @@ for (const engine of engines) {
           snapshot,
           buttonRect: button?.getBoundingClientRect().toJSON() ?? null,
           canvasRect: canvas?.getBoundingClientRect().toJSON() ?? null,
+          ownerAnchor: button ? {
+            x: Number(button.dataset.ownerAnchorX),
+            y: Number(button.dataset.ownerAnchorY),
+          } : null,
+          pointer: pointer ? {
+            height: Number.parseFloat(pointer.style.height),
+            transform: pointer.style.transform,
+          } : null,
           obstacleRects: selectors.flatMap((selector) => [...document.querySelectorAll(selector)])
             .filter((element) => {
               const style = getComputedStyle(element);
@@ -132,6 +146,24 @@ for (const engine of engines) {
         `${engine}/${viewport.height}: ready icon entered left safe area`);
       invariant(before.buttonRect.right <= before.canvasRect.right - 44,
         `${engine}/${viewport.height}: ready icon entered right safe area`);
+      invariant(before.buttonRect.top >= before.canvasRect.top,
+        `${engine}/${viewport.height}: ready icon entered top safe area`);
+      invariant(before.buttonRect.bottom <= before.canvasRect.bottom - 21,
+        `${engine}/${viewport.height}: ready icon entered bottom safe area`);
+      invariant(before.ownerAnchor && before.pointer,
+        `${engine}/${viewport.height}: owner pointer evidence missing`);
+      const pointerOrigin = {
+        x: before.buttonRect.left - before.canvasRect.left + before.buttonRect.width / 2,
+        y: before.buttonRect.top - before.canvasRect.top + before.buttonRect.height / 2,
+      };
+      const expectedPointerLength = Math.hypot(
+        before.ownerAnchor.x - pointerOrigin.x,
+        before.ownerAnchor.y - pointerOrigin.y,
+      );
+      invariant(Math.abs(before.pointer.height - expectedPointerLength) < 1,
+        `${engine}/${viewport.height}: ready icon pointer does not reach its owner`);
+      invariant(/^rotate\(-?\d+(?:\.\d+)?deg\)$/.test(before.pointer.transform),
+        `${engine}/${viewport.height}: ready icon pointer direction missing`);
       for (const obstacle of before.obstacleRects) {
         invariant(!rectanglesOverlap(before.buttonRect, obstacle),
           `${engine}/${viewport.height}: ready icon overlaps HUD obstacle`);

@@ -1389,8 +1389,7 @@ export const CAMPAIGN_UNITS = deepFreeze([
     },
     unlock: {
       type: "recruitment",
-      stageId: CAMPAIGN_STAGE_IDS.UNIVERSITY_HOSPITAL_APPROACH,
-      stageNumber: 7,
+      stageNumber: 17,
       costCaps: 240,
     },
   },
@@ -1487,7 +1486,7 @@ export const CAMPAIGN_RECRUITMENT_MILESTONES = deepFreeze({
     discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MONKEY],
     recruitableUnitIds: [],
   },
-  7: {
+  17: {
     storyJoinUnitIds: [],
     discoveredUnitIds: [CAMPAIGN_UNIT_IDS.ZAKIMIYA],
     recruitableUnitIds: [CAMPAIGN_UNIT_IDS.ZAKIMIYA],

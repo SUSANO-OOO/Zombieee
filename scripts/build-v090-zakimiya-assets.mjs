@@ -1,4 +1,5 @@
-import { mkdir } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import sharp from "sharp";
@@ -6,8 +7,14 @@ import sharp from "sharp";
 const root = process.cwd();
 const sourceDir = path.join(root, "assets/source/v090/characters");
 const publicDir = path.join(root, "public/art/v090/characters");
+const identityMaster = path.join(sourceDir, "zakimiya-identity-master-r1.png");
 const cutoutSource = path.join(sourceDir, "zakimiya-cutout-source-r1.png");
 const poseSource = path.join(sourceDir, "zakimiya-combat-poses-source-r1.png");
+const sourceHashes = Object.freeze(new Map([
+  [identityMaster, "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7"],
+  [cutoutSource, "50c0e3bd0ff028a700c5051353f8d5d2a3e28c23ec0fda2c5f0cba63d5ed4259"],
+  [poseSource, "3413bb6050ecc712254e5250eab452f7f13e506c35fc3f9150fe24d8710170c9"],
+]));
 
 const output = Object.freeze({
   portrait: path.join(publicDir, "portraits/zakimiya-event-portrait-r1.webp"),
@@ -20,6 +27,13 @@ await Promise.all([
   mkdir(path.dirname(output.card), { recursive: true }),
   mkdir(path.dirname(output.battle), { recursive: true }),
 ]);
+
+for (const [sourcePath, expectedHash] of sourceHashes) {
+  const digest = createHash("sha256").update(await readFile(sourcePath)).digest("hex");
+  if (digest !== expectedHash) {
+    throw new Error(`Unapproved Zakimiya source revision: ${path.relative(root, sourcePath)}`);
+  }
+}
 
 function chromaAlpha(red, green, blue) {
   const distance = Math.hypot(red, green, 255 - blue);

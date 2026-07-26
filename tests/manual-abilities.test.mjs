@@ -120,21 +120,23 @@ test("screen-space ready icons clamp to safe areas and avoid HUD, bodies, and ea
     obstacles,
     displayWidth: 844,
     displayHeight: 340,
-    safeInsets: { top: 6, right: 12, bottom: 12, left: 12 },
+    safeInsets: { top: 6, right: 50, bottom: 27, left: 50 },
   });
   const second = layoutManualAbilityIcons({
     fighters: [...fighters].reverse(),
     obstacles,
     displayWidth: 844,
     displayHeight: 340,
-    safeInsets: { top: 6, right: 12, bottom: 12, left: 12 },
+    safeInsets: { top: 6, right: 50, bottom: 27, left: 50 },
   });
   assert.deepEqual(second, first);
   assert.equal(first.length, 2);
   assert.notDeepEqual([first[0].x, first[0].y], [first[1].x, first[1].y]);
   for (const icon of first) {
-    assert.ok(icon.x >= 12 && icon.x + icon.hitSize <= 832);
-    assert.ok(icon.y >= 6 && icon.y + icon.hitSize <= 328);
+    assert.ok(icon.x >= 50 && icon.x + icon.hitSize <= 794);
+    assert.ok(icon.y >= 6 && icon.y + icon.hitSize <= 313);
+    assert.equal(icon.anchorX, 440);
+    assert.equal(icon.anchorY, 86);
   }
 });
 
@@ -146,4 +148,16 @@ test("runtime renders only ready buttons and never a cooldown ring or number abo
   assert.match(source, /onPointerDown=\{\(event\) => event\.stopPropagation\(\)\}/);
   assert.doesNotMatch(css, /\.manual-ability-(?:cooldown|ring|countdown)/);
   assert.doesNotMatch(source, /manualAbilityIcons[\s\S]{0,800}cooldownRemaining/);
+});
+
+test("support placement owns input until it is cancelled or completed", async () => {
+  const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const activation = source.slice(
+    source.indexOf("const activateManualAbility"),
+    source.indexOf("const stopSfx"),
+  );
+  assert.match(activation, /g\.over \|\| selectedActionRef\.current/);
+  assert.doesNotMatch(activation, /chooseAction\(null\)/);
+  assert.match(source, /g\.running && !g\.paused && !g\.over && !selectedActionRef\.current/);
+  assert.match(source, /screen === "battle" && !selectedAction && hud\.manualAbilityIcons\.map/);
 });
