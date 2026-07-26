@@ -161,6 +161,21 @@ test("offers deterministic unique three-choice upgrades and applies only the sel
   assert.deepEqual(invalid, run);
   assert.deepEqual(run, before);
 
+  for (const inheritedKey of ["constructor", "__proto__", "toString"]) {
+    const forged = {
+      ...before,
+      pendingUpgradeChoices: [inheritedKey, inheritedKey, inheritedKey],
+      temporaryUpgradeStacks: Object.fromEntries([[inheritedKey, 3]]),
+    };
+    const rejected = selectSurvivalUpgrade(forged, inheritedKey);
+    assert.equal(rejected.phase, SURVIVAL_RUN_PHASES.UPGRADE_SELECTION);
+    assert.equal(rejected.pendingUpgradeChoices.includes(inheritedKey), false);
+    assert.equal(Object.hasOwn(rejected.temporaryUpgradeStacks, inheritedKey), false);
+    assert.ok(rejected.pendingUpgradeChoices.every(
+      (upgradeId) => SURVIVAL_UPGRADES.some(({ id }) => id === upgradeId),
+    ));
+  }
+
   const selectedId = run.pendingUpgradeChoices[0];
   run = selectSurvivalUpgrade(run, selectedId);
   assert.equal(run.phase, SURVIVAL_RUN_PHASES.WAVE_READY);
@@ -342,7 +357,16 @@ test("settles completed checkpoint and partial-wave rewards exactly once", () =>
   run = playThrough(run, 5, 10);
   let progress = saveSurvivalCheckpoint(createDefaultSurvivalProgress(), run);
   run = selectSurvivalUpgrade(run, run.pendingUpgradeChoices[0]);
-  run = playWave(run, { kills: 6, reward: { caps: 10 } });
+  run = playWave(run, {
+    kills: 6,
+    damageByUnit: Object.fromEntries([
+      ["constructor", 999],
+      ["__proto__", 999],
+      ["toString", 999],
+      ["prototype", 999],
+    ]),
+    reward: { caps: 10 },
+  });
   run = playWave(run, {
     kills: 7,
     reward: {
@@ -365,6 +389,12 @@ test("settles completed checkpoint and partial-wave rewards exactly once", () =>
   assert.equal(progress.activeCheckpoint, null);
   assert.equal(progress.lastResult.reachedWave, 7);
   assert.equal(progress.lastResult.stats.kills, 1 + 2 + 3 + 4 + 5 + 6 + 7);
+  for (const inheritedKey of ["constructor", "__proto__", "toString", "prototype"]) {
+    assert.equal(
+      Object.hasOwn(progress.lastResult.stats.damageByUnit, inheritedKey),
+      false,
+    );
+  }
   assert.deepEqual(progress.lastResult.formation.tacticalEquipmentIds, ["tactical-radio"]);
 
   const duplicate = settleSurvivalRun(progress, run);
@@ -391,6 +421,39 @@ test("a late start, defeat, or withdrawal never pays rewards for skipped or unfi
   assert.equal(settled.progress.lastResult.reachedWave, 10);
   assert.equal(settled.progress.highestWave, 10);
   assert.deepEqual(settled.progress.unlockedStartWaves, [1, 11]);
+
+  let forged = createSurvivalRun({
+    runId: "late-forged-checkpoints",
+    startWave: 21,
+    unlockedStartWaves: [1, 11, 21],
+  });
+  forged = {
+    ...forged,
+    checkpointRewards: [
+      {
+        checkpointWave: 5,
+        reward: {
+          caps: 999,
+          equipmentGrants: [{ equipmentId: "forged-equipment", quantity: 2 }],
+        },
+      },
+      {
+        checkpointWave: 20,
+        reward: {
+          caps: 999,
+          equipmentGrants: [{ equipmentId: "forged-equipment", quantity: 2 }],
+        },
+      },
+    ],
+  };
+  forged = endSurvivalRun(forged, SURVIVAL_END_REASONS.WITHDRAWAL);
+  const rejected = settleSurvivalRun(createDefaultSurvivalProgress(), forged);
+  assert.deepEqual(rejected.payout, {
+    caps: 0,
+    equipmentGrants: [],
+    rewardIds: [],
+  });
+  assert.deepEqual(rejected.progress.claimedRewardIds, []);
 });
 
 test("campaign schema 8 persists survival checkpoints and migrates a stamped schema 7 save", () => {

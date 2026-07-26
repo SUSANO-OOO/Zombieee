@@ -10,6 +10,11 @@ function isRecord(value) {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
+function isSafeDictionaryKey(value) {
+  if (typeof value !== "string" || !value.trim()) return false;
+  return value !== "prototype" && !Object.hasOwn(Object.prototype, value);
+}
+
 function clampInteger(value, minimum, maximum, fallback = minimum) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return fallback;
@@ -99,7 +104,7 @@ function normalizeFormationSnapshot(value) {
 function normalizeStatRecord(value) {
   if (!isRecord(value)) return {};
   return Object.fromEntries(Object.entries(value)
-    .filter(([unitId]) => typeof unitId === "string" && unitId.trim())
+    .filter(([unitId]) => isSafeDictionaryKey(unitId))
     .map(([unitId, amount]) => [
       unitId.trim(),
       clampInteger(amount, 0, Number.MAX_SAFE_INTEGER, 0),
@@ -178,7 +183,7 @@ function addRewards(left, right) {
 function normalizeUpgradeStacks(value) {
   if (!isRecord(value)) return {};
   return Object.fromEntries(Object.entries(value)
-    .filter(([upgradeId]) => SURVIVAL_UPGRADE_BY_ID[upgradeId])
+    .filter(([upgradeId]) => Object.hasOwn(SURVIVAL_UPGRADE_BY_ID, upgradeId))
     .map(([upgradeId, stacks]) => [
       upgradeId,
       clampInteger(stacks, 0, 999, 0),
@@ -369,15 +374,24 @@ export function normalizeSurvivalRun(value) {
   const crawlerMaxHp = clampInteger(source.crawler?.maxHp, 1, Number.MAX_SAFE_INTEGER, 700);
   const checkpointRewards = [];
   const rewardIds = new Set();
+  const firstEarnedCheckpointWave = Math.ceil(
+    normalizedStartWave / SURVIVAL_BLOCK_WAVES,
+  ) * SURVIVAL_BLOCK_WAVES;
   for (const entry of Array.isArray(source.checkpointRewards) ? source.checkpointRewards : []) {
     const normalized = normalizeCheckpointReward(entry, runId);
-    if (!normalized || normalized.checkpointWave > lastCompletedWave || rewardIds.has(normalized.rewardId)) continue;
+    if (!normalized
+      || normalized.checkpointWave < firstEarnedCheckpointWave
+      || normalized.checkpointWave > lastCompletedWave
+      || rewardIds.has(normalized.rewardId)) {
+      continue;
+    }
     rewardIds.add(normalized.rewardId);
     checkpointRewards.push(normalized);
   }
   checkpointRewards.sort((a, b) => a.checkpointWave - b.checkpointWave);
   const storedUpgradeChoices = phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION
-    ? uniqueStrings(source.pendingUpgradeChoices, 3).filter((upgradeId) => SURVIVAL_UPGRADE_BY_ID[upgradeId])
+    ? uniqueStrings(source.pendingUpgradeChoices, 3)
+      .filter((upgradeId) => Object.hasOwn(SURVIVAL_UPGRADE_BY_ID, upgradeId))
     : [];
   const pendingUpgradeChoices = phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION
     && storedUpgradeChoices.length !== 3
@@ -549,7 +563,7 @@ export function selectSurvivalUpgrade(run, upgradeId) {
   if (!current
     || current.phase !== SURVIVAL_RUN_PHASES.UPGRADE_SELECTION
     || !current.pendingUpgradeChoices.includes(upgradeId)
-    || !SURVIVAL_UPGRADE_BY_ID[upgradeId]) {
+    || !Object.hasOwn(SURVIVAL_UPGRADE_BY_ID, upgradeId)) {
     return current;
   }
   const temporaryUpgradeStacks = {
