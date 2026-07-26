@@ -735,7 +735,7 @@ test("same-lane Y drift reacquires on the next aligned tick without advancing th
   assert.equal(aligned.moveDirection, 0);
 });
 
-test("all fifteen playable roles keep search and real attack eligibility aligned across all three lanes", () => {
+test("all sixteen playable roles keep search and real attack eligibility aligned across all three lanes", () => {
   for (const lane of [0, 1, 2]) for (const card of UNIT_CARDS) {
     const rule = COMBAT_ROLE_RULES[card.kind];
     const role = {

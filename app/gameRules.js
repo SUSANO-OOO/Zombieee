@@ -1179,6 +1179,7 @@ export function roleTargetBias(attackerKind, targetKind) {
   if (attackerKind === "crazy-king" && (targetKind === "walker" || targetKind === "runner" || targetKind === "turned")) return -24;
   if (attackerKind === "kumaverson" && (targetKind === "runner" || targetKind === "crusher")) return -28;
   if (attackerKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) return -48;
+  if (attackerKind === "mayo-chan" && ["runner", "turned", "sprinter", "walker"].includes(targetKind)) return -52;
   return 0;
 }
 

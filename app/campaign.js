@@ -285,6 +285,7 @@ export const CAMPAIGN_UNIT_IDS = deepFreeze({
   TKY: "unit-tky",
   MRS_CHIHA: "unit-mrs-chiha",
   MIYAMOTO_MUSASHI: "unit-miyamoto-musashi",
+  MAYO_CHAN: "unit-mayo-chan",
   // Deprecated property names remain import-compatible. Their values are the
   // canonical 0.7.0 IDs; old names are never player-facing.
   TACHIBANA_JIN: "unit-hachi",
@@ -1474,6 +1475,32 @@ export const CAMPAIGN_UNITS = deepFreeze([
     },
     unlock: { type: "recruitment", stageNumber: 20, costCaps: 340 },
   },
+  {
+    id: CAMPAIGN_UNIT_IDS.MAYO_CHAN,
+    unitId: CAMPAIGN_UNIT_IDS.MAYO_CHAN,
+    aliases: ["mayo-chan", "マヨちゃん", "マヨ"],
+    combatKind: "mayo-chan",
+    displayName: "マヨちゃん",
+    primaryClassId: "class-skirmisher",
+    roleTags: ["高速", "小型優先", "減速", "負傷退避"],
+    roleName: "高速遊撃犬",
+    roleIcon: "犬",
+    weaponName: "噛みつき・タクティカル医療ハーネス",
+    attackMode: "高速接近・足元噛みつき・短時間減速",
+    rangeBand: "近距離",
+    primaryTarget: "小型・高速感染体",
+    deploymentHint: "高速敵が抜ける側面へ配備",
+    description: "小さな体で敵の側面へ駆け込み、凶暴マヨで連続襲撃して負傷前に退避する",
+    recruitmentCostCaps: 260,
+    spritePath: "/art/v090/characters/mayo-chan-battle-r1.png",
+    assetStatus: "approved",
+    appearanceAudit: {
+      presentation: "Producer承認済みidentity masterに基づく、長毛cream Chihuahuaの顔・耳・尾・小型体格を維持した愛犬表現",
+      weaponMatch: "黄色bandana、黒いtactical medical harness、medical pouchとcanisterを通常・凶暴状態で維持",
+      result: "0.9.0正式identity masterからportrait／card／通常・凶暴battle atlasを派生し、同一個体として固定",
+    },
+    unlock: { type: "recruitment", stageNumber: 20, costCaps: 260 },
+  },
 ]);
 
 export const CAMPAIGN_GUIDE = deepFreeze({
@@ -1584,8 +1611,8 @@ export const CAMPAIGN_RECRUITMENT_MILESTONES = deepFreeze({
   },
   20: {
     storyJoinUnitIds: [],
-    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI],
-    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
   },
 });
 
@@ -1596,6 +1623,7 @@ export const CAMPAIGN_RECRUITMENT_COSTS = deepFreeze({
   [CAMPAIGN_UNIT_IDS.TKY]: 280,
   [CAMPAIGN_UNIT_IDS.MRS_CHIHA]: 300,
   [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI]: 340,
+  [CAMPAIGN_UNIT_IDS.MAYO_CHAN]: 260,
 });
 
 /**

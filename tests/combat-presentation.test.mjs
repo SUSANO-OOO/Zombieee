@@ -91,9 +91,9 @@ test("machine-gun active clip and damage timeline share three synchronized round
   assert.equal(sampleAttackPresentation("gunner", .2).state, "recovery");
 });
 
-test("thirteen weapon profiles cover all fifteen playable units without generic missing VFX", () => {
+test("fourteen weapon profiles cover all sixteen playable units without generic missing VFX", () => {
   assert.deepEqual(Object.keys(WEAPON_PROFILES), WEAPON_PROFILE_IDS);
-  assert.equal(Object.keys(UNIT_WEAPON_PROFILE).length, 15);
+  assert.equal(Object.keys(UNIT_WEAPON_PROFILE).length, 16);
   for (const [kind, profileId] of Object.entries(UNIT_WEAPON_PROFILE)) {
     const profile = WEAPON_PROFILES[profileId];
     assert.ok(profile, `${kind} profile`);
@@ -110,6 +110,7 @@ test("thirteen weapon profiles cover all fifteen playable units without generic 
   assert.equal(weaponProfileForAction("tky", "attack").id, "plasma-blade");
   assert.equal(weaponProfileForAction("mrs-chiha", "attack").id, "grenade");
   assert.equal(weaponProfileForAction("miyamoto-musashi", "attack").id, "dual-katana");
+  assert.equal(weaponProfileForAction("mayo-chan", "attack").id, "bite");
 });
 
 test("new playable special clips preserve authored body phases and Mrs. Chiha's normal launcher cycle", () => {
