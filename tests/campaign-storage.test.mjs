@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  CAMPAIGN_SAVE_SCHEMA_VERSION,
   computeCampaignSaveIntegrity,
   createDefaultCampaignSave,
   inspectCampaignSaveCandidate,
@@ -554,7 +555,7 @@ test("a partial schema migration selects the canonical current replica and repai
     assert.equal(resolution.status, "ready");
     assert.equal(resolution.conflict, false);
     assert.equal(resolution.source, currentSource);
-    assert.equal(resolution.sourceSchemaVersion, 10);
+    assert.equal(resolution.sourceSchemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
     assert.deepEqual(resolution.repairSources, [legacySource]);
   }
 });

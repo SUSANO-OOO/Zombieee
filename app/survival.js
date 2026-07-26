@@ -1,3 +1,5 @@
+import { normalizeEquipmentEnhancementLevels } from "./equipment.js";
+
 const SURVIVAL_MAX_SAFE_WAVE = 1_000_000;
 
 function deepFreeze(value) {
@@ -69,17 +71,21 @@ function seededShuffle(values, seed) {
   return shuffled;
 }
 
-function normalizeEquipmentSnapshot(value) {
+function normalizeEquipmentSnapshot(value, unitIds) {
   const source = isRecord(value) ? value : {};
+  const deployed = new Set(unitIds);
   const personalSource = isRecord(source.personalEquipmentByUnit)
     ? source.personalEquipmentByUnit
     : {};
   const personalEquipmentByUnit = Object.fromEntries(Object.entries(personalSource)
-    .filter(([unitId]) => typeof unitId === "string" && unitId.trim())
+    .filter(([unitId]) => typeof unitId === "string" && deployed.has(unitId.trim()))
     .map(([unitId, equipmentIds]) => [unitId.trim(), uniqueStrings(equipmentIds, 2)]));
   return {
     personalEquipmentByUnit,
     tacticalEquipmentIds: uniqueStrings(source.tacticalEquipmentIds, 2),
+    equipmentEnhancementLevels: normalizeEquipmentEnhancementLevels(
+      source.equipmentEnhancementLevels,
+    ),
   };
 }
 
@@ -93,8 +99,8 @@ function normalizeUnitLevelsByUnit(value, unitIds) {
 
 function normalizeFormationSnapshot(value) {
   const source = isRecord(value) ? value : {};
-  const equipment = normalizeEquipmentSnapshot(source);
   const unitIds = uniqueStrings(source.unitIds, 7);
+  const equipment = normalizeEquipmentSnapshot(source, unitIds);
   return {
     presetId: typeof source.presetId === "string" ? source.presetId.trim() : "",
     unitIds,

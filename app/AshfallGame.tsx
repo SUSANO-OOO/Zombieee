@@ -89,6 +89,7 @@ import {
   createDefaultCampaignSave,
   getCampaignLevelCap,
   getCampaignUnitLevel,
+  getFormationPresetEquipmentSnapshot,
   getSelectedFormationCombatKinds,
   getSelectedFormationUnitIds,
   inspectCampaignSaveCandidate,
@@ -110,6 +111,7 @@ import {
   updateStoryPlaybackSettings,
   upgradeCampaignUnit,
 } from "./campaign.js";
+import { aggregateEquipmentEffects } from "./equipment.js";
 import {
   SURVIVAL_END_REASONS,
   SURVIVAL_RUN_PHASES,
@@ -837,6 +839,9 @@ type Game = {
   resultId: string;
   formationKinds: UnitKind[];
   unitLevelsByKind: Record<string, number>;
+  personalEquipmentByKind: Record<string, string[]>;
+  tacticalEquipmentIds: string[];
+  equipmentEnhancementLevels: Record<string, number>;
   running: boolean;
   paused: boolean;
   over: boolean;
@@ -1154,23 +1159,45 @@ const initialGame = (
   resultId = createBattleResultId(stageId),
   storyBattleReadEventIds: string[] = [],
   unitLevels: Record<string, number> = {},
+  equipmentSnapshot: {
+    personalEquipmentByUnit?: Record<string, readonly (string | null)[]>;
+    tacticalEquipmentIds?: readonly (string | null)[];
+    equipmentEnhancementLevels?: Record<string, number>;
+  } = {},
 ): Game => {
   const definition = createBattleDefinition(stageId) as BattleDefinition;
-  const unitLevelsByKind = Object.fromEntries((CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
+  const campaignUnits = CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[];
+  const unitLevelsByKind = Object.fromEntries(campaignUnits
     .map((unit) => [unit.combatKind, unitLevels[unit.id] ?? 1]));
+  const personalEquipmentByKind = Object.fromEntries(campaignUnits.map((unit) => [
+    unit.combatKind,
+    (equipmentSnapshot.personalEquipmentByUnit?.[unit.id] ?? [])
+      .filter((equipmentId): equipmentId is string => typeof equipmentId === "string"),
+  ]));
+  const tacticalEquipmentIds = (equipmentSnapshot.tacticalEquipmentIds ?? [])
+    .filter((equipmentId): equipmentId is string => typeof equipmentId === "string");
+  const equipmentEnhancementLevels = { ...(equipmentSnapshot.equipmentEnhancementLevels ?? {}) };
+  const tacticalEffects = aggregateEquipmentEffects(
+    tacticalEquipmentIds,
+    equipmentEnhancementLevels,
+  );
+  const adjustedBaseMaxHp = Math.round(definition.baseMaxHp * tacticalEffects.baseHpMultiplier);
   return ({
   definition,
   resultId,
   formationKinds: [...formationKinds],
   unitLevelsByKind,
+  personalEquipmentByKind,
+  tacticalEquipmentIds,
+  equipmentEnhancementLevels,
   running: false,
   paused: false,
   over: false,
   won: false,
   time: 0,
   last: 0,
-  energy: COMMAND_INITIAL,
-  supportGauge: 0,
+  energy: Math.min(COMMAND_MAX, COMMAND_INITIAL + tacticalEffects.startingEnergyFlat),
+  supportGauge: Math.min(SUPPORT_GAUGE_MAX, tacticalEffects.supportGaugeFlat),
   scrap: 0,
   kills: 0,
   wave: 1,
@@ -1179,8 +1206,8 @@ const initialGame = (
   convoyProgress: 0,
   civiliansEvacuated: 0,
   enemySpawn: createEnemySpawnRuntime() as EnemySpawnRuntime,
-  baseHp: definition.baseMaxHp,
-  baseMaxHp: definition.baseMaxHp,
+  baseHp: adjustedBaseMaxHp,
+  baseMaxHp: adjustedBaseMaxHp,
   barricadeHp: definition.enemyBaseMaxHp,
   barricadeMaxHp: definition.enemyBaseMaxHp,
   barricadeVulnerable: definition.startsEnemyBaseVulnerable,
@@ -1267,6 +1294,7 @@ const initialSurvivalGame = ({
     run.runId,
     [],
     unitLevels,
+    run.formation,
   );
   game.definition = {
     ...game.definition,
@@ -1564,18 +1592,42 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
   return g.fighters[g.fighters.length - 1];
 }
 
-function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
+function equippedCardForGame(g: Game, kind: UnitKind) {
   const baseCard = cards.find((item) => item.kind === kind);
   if (!baseCard) return null;
   const progressedCard = applyUnitLevelProgression(baseCard, g.unitLevelsByKind[kind] ?? 1) as UnitCard & { progressionLevel: number; progressionRank: number };
+  const equipmentEffects = aggregateEquipmentEffects([
+    ...(g.personalEquipmentByKind[kind] ?? []),
+    ...g.tacticalEquipmentIds,
+  ], g.equipmentEnhancementLevels);
   const survivalEffects = survivalUpgradeEffects(g.survivalRun);
-  const card = {
+  return {
     ...progressedCard,
-    damage: progressedCard.damage * survivalEffects.attackMultiplier,
-    range: progressedCard.range * survivalEffects.rangeMultiplier,
-    defense: 1 - (1 - (progressedCard.defense ?? 0)) * survivalEffects.defenseMultiplier,
-    healingMultiplier: (progressedCard.healingMultiplier ?? 1) * survivalEffects.healingMultiplier,
+    hp: Math.max(1, Math.round(progressedCard.hp * equipmentEffects.hpMultiplier)),
+    damage: progressedCard.damage
+      * survivalEffects.attackMultiplier
+      * equipmentEffects.damageMultiplier,
+    range: progressedCard.range
+      * survivalEffects.rangeMultiplier
+      * equipmentEffects.rangeMultiplier,
+    speed: progressedCard.speed * equipmentEffects.speedMultiplier,
+    laneSpeed: progressedCard.laneSpeed * equipmentEffects.speedMultiplier,
+    attackEvery: progressedCard.attackEvery * equipmentEffects.attackEveryMultiplier,
+    defense: Math.min(
+      .75,
+      1 - (1 - Math.min(.75, (progressedCard.defense ?? 0) + equipmentEffects.defenseFlat))
+        * survivalEffects.defenseMultiplier,
+    ),
+    healingMultiplier: (progressedCard.healingMultiplier ?? 1)
+      * survivalEffects.healingMultiplier
+      * equipmentEffects.healingMultiplier,
+    deployCooldown: progressedCard.deployCooldown * equipmentEffects.redeployMultiplier,
   } as UnitCard & { progressionLevel: number; progressionRank: number };
+}
+
+function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
+  const card = equippedCardForGame(g, kind);
+  if (!card) return null;
   const id = g.nextId++;
   const laneCounts = [0, 0, 0];
   for (const ally of g.fighters) {
@@ -4671,6 +4723,7 @@ export function AshfallGame() {
               unitLevelsByUnit: { ...g.survivalRun.formation.unitLevelsByUnit },
               personalEquipmentByUnit: { ...g.survivalRun.formation.personalEquipmentByUnit },
               tacticalEquipmentIds: [...g.survivalRun.formation.tacticalEquipmentIds],
+              equipmentEnhancementLevels: { ...g.survivalRun.formation.equipmentEnhancementLevels },
             },
             crawler: { ...g.survivalRun.crawler },
             temporaryUpgradeStacks: { ...g.survivalRun.temporaryUpgradeStacks },
@@ -5472,14 +5525,15 @@ export function AshfallGame() {
   const deployHuman = useCallback((kind: UnitKind) => {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return false;
-    const card = cards.find((item) => item.kind === kind);
+    const card = equippedCardForGame(g, kind);
     if (!card || !g.formationKinds.includes(kind) || g.deployQueue.length >= 3 || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
       playCue("denied");
       if (g.deployQueue.length >= 3) { g.banner = "格納庫満員 // 3"; g.bannerTime = .9; }
       return false;
     }
     g.energy -= card.cost;
-    g.deployCooldowns[kind] = card.deployCooldown * survivalUpgradeEffects(g.survivalRun).redeployMultiplier;
+    g.deployCooldowns[kind] = card.deployCooldown
+      * survivalUpgradeEffects(g.survivalRun).redeployMultiplier;
     g.deployQueue.push(kind);
     g.banner = `${card.name} // 出撃待機 ${g.deployQueue.length}/3`;
     g.bannerTime = .7;
@@ -5836,6 +5890,7 @@ export function AshfallGame() {
       sessionOverride?.resultId ?? createBattleResultId(battleStageId),
       campaignSave.readStoryEventIds,
       campaignSave.unitLevels,
+      getFormationPresetEquipmentSnapshot(campaignSave),
     );
     fresh.running = true;
     prepareQaMode(fresh, qaMode);
@@ -5925,25 +5980,22 @@ export function AshfallGame() {
   }, [campaignSave.survival.unlockedStartWaves, selectedSurvivalStartWave]);
 
   const startNewSurvival = useCallback(() => {
-    const unitLevelsByUnit = Object.fromEntries(formationUnitIds.map((unitId) => [
-      unitId,
-      Math.max(1, Number(campaignSave.unitLevels[unitId] ?? 1)),
-    ]));
+    const formationSnapshot = getFormationPresetEquipmentSnapshot(campaignSave);
+    const tacticalEffects = aggregateEquipmentEffects(
+      formationSnapshot.tacticalEquipmentIds.filter(
+        (equipmentId): equipmentId is string => typeof equipmentId === "string",
+      ),
+      formationSnapshot.equipmentEnhancementLevels,
+    );
     const run = createSurvivalRun({
       runId: createBattleResultId("survival"),
       startWave: selectedSurvivalStartWave,
       unlockedStartWaves: campaignSave.survival.unlockedStartWaves,
-      formation: {
-        presetId: campaignSave.selectedFormationPresetId,
-        unitIds: formationUnitIds,
-        unitLevelsByUnit,
-        personalEquipmentByUnit: {},
-        tacticalEquipmentIds: [],
-      },
-      crawlerMaxHp: 700,
+      formation: formationSnapshot,
+      crawlerMaxHp: Math.round(700 * tacticalEffects.baseHpMultiplier),
     });
     startSurvivalGame(run);
-  }, [campaignSave, formationUnitIds, selectedSurvivalStartWave, startSurvivalGame]);
+  }, [campaignSave, selectedSurvivalStartWave, startSurvivalGame]);
 
   const resumeSurvival = useCallback(() => {
     const run = resumeSurvivalCheckpoint(campaignSave.survival);
@@ -5964,11 +6016,12 @@ export function AshfallGame() {
       createBattleResultId(sessionOverride?.stageId ?? selectedStageId),
       campaignSave.readStoryEventIds,
       campaignSave.unitLevels,
+      getFormationPresetEquipmentSnapshot(campaignSave),
     );
     gameRef.current = fresh;
     finalizedEndRef.current = null;
     setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setSurvivalHud(null); setSurvivalResult(null); setPendingSurvivalSettlement(null); setSurvivalSettlementAwaitingRetry(false); setScreen("map"); chooseAction(null);
-  }, [campaignSave.readStoryEventIds, campaignSave.unitLevels, chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
+  }, [campaignSave, chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
 
   const handleEventComplete = useCallback(() => {
     const completion = resolveStoryEventCompletion({
@@ -6903,6 +6956,7 @@ export function AshfallGame() {
         createBattleResultId(transition.stageId),
         campaignSave.readStoryEventIds,
         campaignSave.unitLevels,
+        getFormationPresetEquipmentSnapshot(campaignSave),
       );
       gameRef.current = fresh;
       finalizedEndRef.current = null;

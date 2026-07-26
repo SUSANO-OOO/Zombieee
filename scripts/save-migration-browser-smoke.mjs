@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import {
   CAMPAIGN_SAVE_SCHEMA_VERSION,
   computeCampaignSaveIntegrity,
+  createDefaultCampaignSave,
   inspectCampaignSaveCandidate,
   serializeCampaignSave,
 } from "../app/campaign.js";
@@ -111,6 +112,40 @@ const release071MigratedSerialized = serializeCampaignSave(
   inspectCampaignSaveCandidate(release071Serialized).save,
 );
 const release071MigratedCaps = reorganizeLegacyCaps(release071Fixture.caps).nextCaps;
+const schema10Fixture = {
+  ...createDefaultCampaignSave(),
+  schemaVersion: 10,
+  revision: 73,
+  updatedAt: "2026-07-26T13:00:00.000Z",
+  integrity: "",
+  campaignStarted: true,
+  caps: 613,
+  supplies: 613,
+  processedMigrationIds: [],
+  migrationNotices: [],
+  unitLevels: {
+    ...createDefaultCampaignSave().unitLevels,
+    [unitIds[0]]: 5,
+  },
+  unitRanks: {
+    ...createDefaultCampaignSave().unitRanks,
+    [unitIds[0]]: 4,
+  },
+  equipmentInventory: [
+    { equipmentId: "field-machete", quantity: 1 },
+    { equipmentId: "field-machete", quantity: 2 },
+    { equipmentId: "future-preserved-id", quantity: 4 },
+  ],
+  formationPresets: createDefaultCampaignSave().formationPresets.map(({
+    id,
+    displayName,
+    unitIds: formationUnitIds,
+  }) => ({ id, displayName, unitIds: formationUnitIds })),
+};
+delete schema10Fixture.processedEquipmentTransactionIds;
+delete schema10Fixture.equipmentEnhancementLevels;
+schema10Fixture.integrity = computeCampaignSaveIntegrity(schema10Fixture);
+const schema10Serialized = JSON.stringify(schema10Fixture);
 const corruptLocal = "{\"schemaVersion\":5,\"caps\":";
 const corruptIndexed = "not-json-indexed";
 
@@ -287,10 +322,19 @@ function assertMigratedSave(
     `${label} acquisition receipts changed`);
   invariant(Array.isArray(save.processedUpgradeIds) && save.processedUpgradeIds.length === 0,
     `${label} upgrade receipts were not initialized safely`);
+  invariant(Array.isArray(save.processedEquipmentTransactionIds)
+    && save.processedEquipmentTransactionIds.length === 0,
+  `${label} equipment receipts were not initialized safely`);
   invariant(JSON.stringify(save.recruitable) === JSON.stringify(release071Fixture.recruitable),
     `${label} recruitable roster changed`);
-  invariant(JSON.stringify(save.formationPresets) === JSON.stringify(release071Fixture.formationPresets),
-    `${label} formation presets changed`);
+  invariant(save.formationPresets.length === release071Fixture.formationPresets.length
+    && save.formationPresets.every((preset, index) => (
+      preset.id === release071Fixture.formationPresets[index].id
+      && JSON.stringify(preset.unitIds) === JSON.stringify(release071Fixture.formationPresets[index].unitIds)
+      && Object.keys(preset.personalEquipmentByUnit ?? {}).length === 0
+      && JSON.stringify(preset.tacticalEquipmentIds) === JSON.stringify([null, null])
+    )),
+  `${label} formation presets changed`);
   invariant(save.autoSkipReadStory === true, `${label} story setting changed`);
   invariant(save.settings.bgmEnabled === false, `${label} BGM setting changed`);
   invariant(save.settings.bgmVolume === release071Fixture.settings.bgmVolume,
@@ -307,6 +351,11 @@ function assertMigratedSave(
     && JSON.stringify(Object.keys(save.unitLevels).sort()) === JSON.stringify([...unitIds].sort())
     && Object.values(save.unitLevels).every((level) => level === 1),
   `${label} Level defaults were not added safely`);
+  invariant(Array.isArray(save.equipmentInventory) && save.equipmentInventory.length === 0,
+    `${label} equipment inventory was not initialized safely`);
+  invariant(save.equipmentEnhancementLevels
+    && Object.keys(save.equipmentEnhancementLevels).length === 0,
+  `${label} equipment enhancements were not initialized safely`);
   invariant(save.eventFoundation?.schemaVersion === 1, `${label} event progress was not initialized safely`);
   invariant(!Object.hasOwn(save, "visualOverrides"), `${label} persisted obsolete visual fields`);
   invariant(typeof save.integrity === "string" && save.integrity.startsWith("fnv1a32:"),
@@ -512,6 +561,46 @@ try {
       };
     });
   }
+
+  await runCase("schema-10-equipment-migration", {
+    local: schema10Serialized,
+    indexed: null,
+  }, async (page) => {
+    await waitForTitleReady(page, "物語を続ける");
+    const storage = await waitForMigratedReplicas(page);
+    const local = parseSave(storage.local[SAVE_KEY], "schema10 migrated localStorage");
+    const indexed = parseSave(storage.indexed[SAVE_KEY], "schema10 migrated IndexedDB");
+    for (const [label, save] of [["local", local], ["indexed", indexed]]) {
+      invariant(save.schemaVersion === CURRENT_SCHEMA_VERSION, `${label} schema10 target mismatch`);
+      invariant(save.revision === schema10Fixture.revision + 1, `${label} schema10 revision mismatch`);
+      invariant(save.caps === schema10Fixture.caps, `${label} schema10 caps were reorganized twice`);
+      invariant(save.unitLevels[unitIds[0]] === 5, `${label} schema10 Level changed`);
+      invariant(save.processedMigrationIds.length === 0, `${label} schema10 gained a false caps receipt`);
+      invariant(save.migrationNotices.length === 0, `${label} schema10 gained a false caps notice`);
+      invariant(JSON.stringify(save.equipmentInventory) === JSON.stringify([
+        { equipmentId: "field-machete", quantity: 3 },
+        { equipmentId: "future-preserved-id", quantity: 4 },
+      ]), `${label} schema10 inventory quantity changed`);
+      invariant(Object.keys(save.equipmentEnhancementLevels).length === 0,
+        `${label} schema10 enhancement defaults changed`);
+      invariant(save.formationPresets.every((preset) => (
+        Object.keys(preset.personalEquipmentByUnit).length === 0
+        && JSON.stringify(preset.tacticalEquipmentIds) === JSON.stringify([null, null])
+      )), `${label} schema10 preset equipment defaults changed`);
+      invariant(typeof save.integrity === "string" && save.integrity.startsWith("fnv1a32:"),
+        `${label} schema10 integrity missing`);
+    }
+    invariant(storage.local[PRE_MIGRATION_KEY] === schema10Serialized,
+      "schema10 local pre-migration snapshot changed");
+    invariant(storage.indexed[PRE_MIGRATION_KEY] === schema10Serialized,
+      "schema10 IndexedDB pre-migration snapshot changed");
+    return {
+      capsMigrationRepeated: false,
+      unitLevel: local.unitLevels[unitIds[0]],
+      equipmentQuantity: local.equipmentInventory[0].quantity,
+      unknownInventoryPreserved: true,
+    };
+  });
 
   await runCase("partial-schema-migration", {
     local: release071MigratedSerialized,

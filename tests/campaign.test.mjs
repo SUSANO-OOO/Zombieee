@@ -658,7 +658,7 @@ test("Stage 4 and Stage 6 story joins are free while Stage 5 only discovers Monk
 test("default save is versioned and contains initial progression, selection, and settings", () => {
   const save = createDefaultCampaignSave();
   assert.equal(save.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
-  assert.equal(save.schemaVersion, 10);
+  assert.equal(save.schemaVersion, 11);
   assert.equal(save.revision, 0);
   assert.equal(save.updatedAt, "");
   assert.equal(save.integrity, "");
@@ -669,6 +669,7 @@ test("default save is versioned and contains initial progression, selection, and
   assert.deepEqual(save.processedResultIds, []);
   assert.deepEqual(save.processedAcquisitionIds, []);
   assert.deepEqual(save.processedUpgradeIds, []);
+  assert.deepEqual(save.processedEquipmentTransactionIds, []);
   assert.deepEqual(save.processedMigrationIds, []);
   assert.deepEqual(save.migrationNotices, []);
   assert.deepEqual(Object.values(save.unitLevels), Array(CAMPAIGN_UNITS.length).fill(1));
@@ -678,6 +679,8 @@ test("default save is versioned and contains initial progression, selection, and
   assert.deepEqual(save.claimedStarRewardsByStage, {});
   assert.equal(save.caps, V090_CAPS_MIGRATION_BASE);
   assert.equal(save.supplies, save.caps);
+  assert.deepEqual(save.equipmentInventory, []);
+  assert.deepEqual(save.equipmentEnhancementLevels, {});
   assert.deepEqual(save.unlockedStageIds, [INITIAL_STAGE_ID]);
   assert.deepEqual(save.ownership, INITIAL_UNIT_IDS);
   assert.deepEqual(save.discovery, INITIAL_UNIT_IDS);
@@ -907,7 +910,7 @@ test("schema v2 to v4 migration is idempotent and preserves progress, receipts, 
   };
   const migrated = migrateCampaignSave(schema2);
 
-  assert.equal(migrated.schemaVersion, 10);
+  assert.equal(migrated.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
   assert.equal(migrated.storyScriptVersion, "outbreak-origin-v8");
   assert.deepEqual(migrated.processedResultIds, schema2.processedResultIds);
   assert.deepEqual(migrated.completedStageIds, schema2.completedStageIds);
@@ -949,7 +952,7 @@ test("v2, v3, and v4 migration preserves every formerly usable character and can
       unlockedUnitIds: ["brawler", "scout", "ranger", "medic", "brute", "crazy-king", "kumaverson", "babayaga", "gunner"],
       formationKinds: ["brawler", "medic", "gunner"],
     });
-    assert.equal(migrated.schemaVersion, 10);
+    assert.equal(migrated.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
     assert.equal(migrated.caps, reorganizeLegacyCaps(432).nextCaps);
     assert.deepEqual(migrated.processedResultIds, [`v${schemaVersion}-receipt`]);
     for (const unitId of [

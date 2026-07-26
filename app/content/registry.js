@@ -18,6 +18,7 @@ import { createContentLoader } from "./loader.js";
 import { CONTENT_SCHEMA_VERSION } from "./schema.js";
 import { UNIT_CONTENT_BY_ID } from "./unitCatalog.js";
 import { EVENT_FOUNDATION_CONTENT } from "../eventFoundation.js";
+import { EQUIPMENT_CATALOG, EQUIPMENT_MAX_ENHANCEMENT } from "../equipment.js";
 
 function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((left, right) => left.localeCompare(right, "en"));
@@ -134,6 +135,12 @@ const upgrades = CAMPAIGN_UNITS.map((unit) => ({
   levels: UNIT_LEVEL_COSTS,
 }));
 
+const equipment = EQUIPMENT_CATALOG.map((entry) => ({
+  ...entry,
+  aliases: [entry.displayName],
+  maxEnhancement: EQUIPMENT_MAX_ENHANCEMENT,
+}));
+
 const events = [
   ...Object.values(STORY_EVENTS).map((event) => ({
   ...event,
@@ -202,6 +209,7 @@ export const CONTENT_REGISTRY = deepFreeze({
   rewards,
   acquisition,
   upgrades,
+  equipment,
   events,
   sideEvents: EVENT_FOUNDATION_CONTENT.sideEvents,
   challenges: EVENT_FOUNDATION_CONTENT.challenges,

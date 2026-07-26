@@ -1,6 +1,6 @@
 import { deepFreeze } from "./freeze.js";
 
-export const CONTENT_SCHEMA_VERSION = 1;
+export const CONTENT_SCHEMA_VERSION = 2;
 
 export const CONTENT_COLLECTIONS = deepFreeze([
   "units",
@@ -13,6 +13,7 @@ export const CONTENT_COLLECTIONS = deepFreeze([
   "rewards",
   "acquisition",
   "upgrades",
+  "equipment",
   "events",
   "sideEvents",
   "challenges",
@@ -67,6 +68,12 @@ export const CONTENT_SCHEMAS = deepFreeze({
   upgrades: {
     requiredStrings: ["id", "unitId", "displayName"],
     requiredNumbers: ["maxLevel"],
+  },
+  equipment: {
+    requiredStrings: ["id", "displayName", "slotType", "source", "category", "iconKey", "sourceHint"],
+    requiredNumbers: ["enhancementBaseCaps", "maxEnhancement"],
+    requiredObjects: ["effect"],
+    requiredArrays: ["aliases"],
   },
   events: {
     requiredStrings: ["id"],

@@ -500,7 +500,7 @@ test("provides stage-aware preparation and phase banners with no manual-tactics 
   assert.match(game, /g\.deployCooldowns\[kind\] = card\.deployCooldown/);
 
   const removedRuntimeContracts = `${game}\n${css}\n${rules}\n${productionAudio}`;
-  assert.doesNotMatch(removedRuntimeContracts, /TacticMode|TACTIC_MODES|tacticTargetBias|tactic-cycle|setTactic|cycleTactic|g\.tactic|hud\.tactic|tactic-(?:defend|balanced|assault)/);
+  assert.doesNotMatch(removedRuntimeContracts, /TacticMode|TACTIC_MODES|tacticTargetBias|tactic-cycle|setTactic(?!al)|cycleTactic(?!al)|g\.tactic(?!al)|hud\.tactic(?!al)|tactic-(?:defend|balanced|assault)/);
   assert.doesNotMatch(game, /作戦方針|方針を切り替え|均衡|突撃|後退/);
   assert.doesNotMatch(game, /normalizedKey === "r"/);
 });

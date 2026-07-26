@@ -20,6 +20,7 @@ function assertFixtureId(id, label) {
 function emptyCollections() {
   return {
     upgrades: [],
+    equipment: [],
     events: [],
     sideEvents: [],
     challenges: [],
