@@ -472,6 +472,7 @@ const UNIT_WEAPON_CUES = Object.freeze({
   kumaverson: "weapon-pan-swing",
   babayaga: "weapon-suppressed-pistol",
   engineer: V080_SUPPRESSED_CARBINE_CUE_ID,
+  zakimiya: "weapon-pan-hit",
 });
 
 const UNIT_VOICE_PROFILES = Object.freeze({
@@ -486,6 +487,7 @@ const UNIT_VOICE_PROFILES = Object.freeze({
   babayaga: "male-light",
   guardian: "male-heavy",
   engineer: "male-light",
+  zakimiya: "male-light",
 });
 
 const newUnitContract = ({ weapon, voiceProfile, weaponEvents, voicePrefix }) => Object.freeze({

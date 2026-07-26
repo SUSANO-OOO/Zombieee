@@ -122,6 +122,7 @@ const PRESENTATION_KINDS = Object.freeze([
   "gunner",
   "guardian",
   "engineer",
+  "zakimiya",
   "walker",
   "runner",
   "turned",
@@ -318,6 +319,7 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   babayaga: "sniper",
   guardian: "blunt",
   engineer: "suppressed-carbine",
+  zakimiya: "blunt",
 });
 
 export function combatPresentationFor(kind) {

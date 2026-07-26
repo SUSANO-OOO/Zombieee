@@ -87,14 +87,14 @@ async function sha256(filename) {
   return createHash("sha256").update(await readFile(filename)).digest("hex");
 }
 
-test("sprite manifest enumerates all eleven playable kinds and twelve enemy kinds", () => {
+test("sprite manifest enumerates all twelve playable kinds and twelve enemy kinds", () => {
   assert.deepEqual(spriteKinds, [
-    "brawler", "scout", "ranger", "medic", "brute", "gunner", "guardian", "engineer",
+    "brawler", "scout", "ranger", "medic", "brute", "gunner", "guardian", "engineer", "zakimiya",
     "walker", "runner", "turned", "spitter", "shade", "crusher", "abomination", "takuya",
     "grappler", "ooze", "sprinter", "gate-eater",
     "crazy-king", "kumaverson", "babayaga",
   ]);
-  assert.equal(spriteKinds.length, 23);
+  assert.equal(spriteKinds.length, 24);
   for (const kind of spriteKinds) {
     assert.deepEqual(spriteStatesFor(kind), SPRITE_STATES);
     assert.equal(spriteSheetPath(kind), SPRITE_MANIFEST[kind].path);
@@ -252,13 +252,13 @@ test("every redesigned 0.7.0 playable atlas has an authored death pose and measu
   }
 });
 
-test("all twelve people use independent portrait files and radio remains a separate non-person asset", async () => {
+test("all thirteen people use independent portrait files and radio remains a separate non-person asset", async () => {
   const expectedPeople = [
     "brawler", "scout", "ranger", "medic", "brute", "gunner",
-    "crazy-king", "kumaverson", "babayaga", "guardian", "engineer", "guide",
+    "crazy-king", "kumaverson", "babayaga", "guardian", "engineer", "zakimiya", "guide",
   ];
   assert.deepEqual(Object.keys(CHARACTER_PORTRAIT_ART), expectedPeople);
-  assert.equal(new Set(Object.values(CHARACTER_PORTRAIT_ART)).size, 12);
+  assert.equal(new Set(Object.values(CHARACTER_PORTRAIT_ART)).size, 13);
   assert.equal(PORTRAIT_ART.radio, RADIO_PORTRAIT_ART);
   assert.notEqual(RADIO_PORTRAIT_ART, CHARACTER_PORTRAIT_ART.guide);
 
@@ -269,6 +269,8 @@ test("all twelve people use independent portrait files and radio remains a separ
       assert.equal(assetPath, "/art/v075/characters/portraits/ikura-event-portrait-v4.webp");
     } else if (kind === "engineer") {
       assert.equal(assetPath, "/art/v080/characters/portraits/monkey-event-portrait-r2.webp");
+    } else if (kind === "zakimiya") {
+      assert.equal(assetPath, "/art/v090/characters/portraits/zakimiya-event-portrait-r1.webp");
     } else if (V070_PORTRAIT_KINDS.has(kind)) {
       assert.equal(assetPath, `/art/v070/characters/portraits/${kind}-portrait-v1.webp`);
     } else {
@@ -305,7 +307,7 @@ test("every production WebP passes an actual image decoder", async () => {
     ...Object.values(PRODUCTION_VISUALS.stages),
     ...Object.values(PRODUCTION_VISUALS.eventCuts),
   ])];
-  assert.equal(productionWebps.length, 34);
+  assert.equal(productionWebps.length, 35);
 
   for (const assetPath of productionWebps) {
     assert.match(assetPath, /\.webp$/);

@@ -88,9 +88,9 @@ test("machine-gun active clip and damage timeline share three synchronized round
   assert.equal(sampleAttackPresentation("gunner", .2).state, "recovery");
 });
 
-test("ten weapon profiles cover all eleven playable units without generic missing VFX", () => {
+test("ten weapon profiles cover all twelve playable units without generic missing VFX", () => {
   assert.deepEqual(Object.keys(WEAPON_PROFILES), WEAPON_PROFILE_IDS);
-  assert.equal(Object.keys(UNIT_WEAPON_PROFILE).length, 11);
+  assert.equal(Object.keys(UNIT_WEAPON_PROFILE).length, 12);
   for (const [kind, profileId] of Object.entries(UNIT_WEAPON_PROFILE)) {
     const profile = WEAPON_PROFILES[profileId];
     assert.ok(profile, `${kind} profile`);

@@ -27,6 +27,15 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .battlefield { position:absolute; inset:0; width:100%; height:100%; image-rendering:auto; touch-action:none; }
 .battlefield.inactive { pointer-events:none; }
 .battlefield.targeting { cursor:crosshair; }
+.manual-ability-ready { position:absolute; z-index:15; display:grid; place-items:center; padding:0; border:0; background:transparent; touch-action:manipulation; cursor:pointer; }
+.manual-ability-ready > span { position:relative; z-index:2; display:grid; place-items:center; width:28px; height:28px; overflow:hidden; border:2px solid #f5ca73; border-radius:8px; background:linear-gradient(145deg,rgba(35,28,18,.96),rgba(12,13,14,.96)); box-shadow:0 0 0 2px rgba(10,12,12,.86),0 0 12px rgba(242,151,55,.68); animation:manual-ready-arrive .22s ease-out both; }
+.manual-ability-ready-icon { display:block; width:100%; height:100%; background:url('/art/v090/characters/abilities/zakimiya-fire-whiskey-ready-r1.svg') center/cover no-repeat; }
+.manual-ability-ready > i { position:absolute; z-index:1; left:50%; top:31px; width:2px; height:8px; margin-left:-1px; background:#f5ca73; box-shadow:0 0 0 1px rgba(10,12,12,.8); pointer-events:none; animation:manual-ready-stem .22s ease-out both; }
+.manual-ability-ready > i::after { content:""; position:absolute; left:50%; bottom:-3px; width:5px; height:5px; margin-left:-2.5px; transform:rotate(45deg); border-right:2px solid #f5ca73; border-bottom:2px solid #f5ca73; }
+.manual-ability-ready:focus-visible > span { outline:2px solid #fff5cc; outline-offset:3px; }
+.manual-ability-ready:active > span { transform:scale(.92); }
+@keyframes manual-ready-arrive { from { opacity:0; transform:translateY(5px) scale(.86); } to { opacity:1; transform:none; } }
+@keyframes manual-ready-stem { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:none; } }
 .qa-badge { position:absolute; z-index:17; right:calc(1.5% + var(--app-viewport-safe-right)); bottom:29%; padding:4px 7px; border:1px solid rgba(103,199,207,.55); border-left:3px solid #67c7cf; background:rgba(8,18,21,.88); color:#9ce1e5; font:800 clamp(8px,.7vw,10px)/1 monospace; letter-spacing:.06em; pointer-events:none; }
 .campaign-qa-badge { z-index:30; top:calc(6px + var(--app-viewport-safe-top)); right:calc(8px + var(--app-viewport-safe-right)); bottom:auto!important; left:auto!important; transform:none!important; }
 .bark-audit-screen { position:absolute; inset:0; z-index:28; overflow:auto; padding:18px max(18px,calc(18px + var(--app-viewport-safe-right))) 22px max(18px,calc(18px + var(--app-viewport-safe-left))); background:linear-gradient(145deg,#111719 0%,#1d1714 58%,#0c1113 100%); color:#f0e6d2; }

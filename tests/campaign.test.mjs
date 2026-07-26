@@ -346,9 +346,9 @@ test("Stage 4-6 introduce each station enemy through bounded mission-specific wa
   );
 });
 
-test("eleven canonical playable units and guide-ikura use approved player-facing identities", () => {
-  assert.equal(CAMPAIGN_UNITS.length, 11);
-  assert.equal(CAMPAIGN_CHARACTERS.length, 12);
+test("twelve canonical playable units and guide-ikura use approved player-facing identities", () => {
+  assert.equal(CAMPAIGN_UNITS.length, 12);
+  assert.equal(CAMPAIGN_CHARACTERS.length, 13);
   assert.deepEqual(INITIAL_UNIT_IDS, [
     CAMPAIGN_UNIT_IDS.PAISEN,
     CAMPAIGN_UNIT_IDS.HACHI,
@@ -369,8 +369,9 @@ test("eleven canonical playable units and guide-ikura use approved player-facing
     [CAMPAIGN_UNIT_IDS.RAIDER, "レイダー"],
     [CAMPAIGN_UNIT_IDS.GANTETSU, "ガンテツ"],
     [CAMPAIGN_UNIT_IDS.MONKEY, "モンキー"],
+    [CAMPAIGN_UNIT_IDS.ZAKIMIYA, "ザキミヤ"],
   ]);
-  assert.equal(new Set(CAMPAIGN_UNITS.map(({ id }) => id)).size, 11);
+  assert.equal(new Set(CAMPAIGN_UNITS.map(({ id }) => id)).size, 12);
   assert.equal(CAMPAIGN_UNIT_BY_ID.brawler.id, CAMPAIGN_UNIT_IDS.PAISEN);
   assert.equal(CAMPAIGN_UNIT_BY_ID.brute.id, CAMPAIGN_UNIT_IDS.TATARA);
   assert.equal(CAMPAIGN_UNIT_BY_ID["unit-rokka"].id, CAMPAIGN_UNIT_IDS.RAIDER);
@@ -389,7 +390,7 @@ test("eleven canonical playable units and guide-ikura use approved player-facing
   );
 });
 
-test("all eleven units separate canonical IDs from combat kinds and use formal runtime art", () => {
+test("all twelve units separate canonical IDs from combat kinds and use formal runtime art", () => {
   for (const unit of CAMPAIGN_UNITS) {
     assert.match(unit.id, /^unit-/);
     assert.equal(unit.unitId, unit.id);
