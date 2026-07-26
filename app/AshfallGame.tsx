@@ -394,6 +394,7 @@ import {
 import {
   advanceMayoRetreat,
   createMayoRetreatRuntime,
+  mayoRetreatBlocksDamage,
   mayoRetreatSpriteState,
 } from "./mayoLifecycle.js";
 
@@ -610,6 +611,7 @@ type Fighter = {
   bodyRadius: number;
   laneSpeed: number;
   spawnGrace: number;
+  targetable?: boolean;
   combatReady: boolean;
   contained: boolean;
   gateEntering: boolean;
@@ -1511,6 +1513,13 @@ function applyIncomingHumanDamage(
   { attackKind = "melee", attacker = null }: { attackKind?: "melee" | "ranged"; attacker?: Fighter | null } = {},
 ) {
   const incoming = Math.max(0, incomingDamage);
+  if (target.kind === "mayo-chan" && mayoRetreatBlocksDamage(target.mayoRetreat)) {
+    return Object.freeze({
+      targetDamage: 0,
+      redirectedDamage: 0,
+      preventedDamage: incoming,
+    });
+  }
   if (target.kind === "miyamoto-musashi" && attackKind === "melee" && target.manualAbility) {
     const counter = triggerMusashiCounter(target.manualAbility);
     if (counter.ok) {
@@ -1840,6 +1849,7 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
 function beginMayoRetreat(g: Game, fighter: Fighter, reason: "ability" | "injury") {
   if (fighter.kind !== "mayo-chan" || fighter.mayoRetreat) return false;
   fighter.hp = Math.max(1, fighter.hp);
+  fighter.targetable = false;
   fighter.combatReady = false;
   fighter.gateEntering = false;
   fighter.contained = false;
@@ -5002,6 +5012,26 @@ export function AshfallGame() {
         mayo.hp = 0;
         return true;
       },
+      probeMayoRetreatDamage: () => {
+        if (qaMode !== "mayo") return null;
+        const g = gameRef.current;
+        const mayo = g.fighters.find((fighter) => (
+          fighter.kind === "mayo-chan"
+          && fighter.side === "human"
+          && fighter.mayoRetreat
+        ));
+        if (!mayo) return null;
+        const beforeHp = mayo.hp;
+        const hazard = applyIncomingHumanDamage(g, mayo, 12, { attackKind: "ranged" });
+        const bossArea = applyIncomingHumanDamage(g, mayo, 34, { attackKind: "melee" });
+        return {
+          beforeHp,
+          afterHp: mayo.hp,
+          targetable: mayo.targetable !== false,
+          hazardDamage: hazard.targetDamage,
+          bossAreaDamage: bossArea.targetDamage,
+        };
+      },
       prepareBossFoundationProof: (kind: "takuya" | "gate-eater") => {
         const g = gameRef.current;
         if (!isBossEnemyKind(kind)) throw new RangeError(`Unknown boss proof kind: ${String(kind)}`);
@@ -5711,6 +5741,7 @@ export function AshfallGame() {
             crawlerDefenseTargetId: fighter.crawlerDefenseTargetId ?? null,
             aiDestinationX: fighter.aiDestinationX,
             aiMoveDirection: fighter.aiMoveDirection,
+            targetable: fighter.targetable !== false,
             combatReady: fighter.combatReady,
             gateEntering: fighter.gateEntering,
             entryDirection: fighter.entryDirection ?? -1,
@@ -9769,6 +9800,8 @@ export function AshfallGame() {
                 y: enemy.y,
                 lane: enemy.lane,
                 assignedLane: enemy.anchorLane ?? enemy.lane,
+                kind: enemy.kind,
+                boss: isBossEnemyKind(enemy.kind),
                 hp: enemy.hp,
                 combatReady: enemy.combatReady,
                 bodyRadius: enemy.bodyRadius,

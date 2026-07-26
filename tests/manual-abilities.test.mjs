@@ -21,6 +21,7 @@ import {
 import {
   advanceMayoRetreat,
   createMayoRetreatRuntime,
+  mayoRetreatBlocksDamage,
   mayoRetreatSpriteState,
 } from "../app/mayoLifecycle.js";
 
@@ -310,6 +311,23 @@ test("Mayo-chan falls, rises, and runs to the moving base without creating a dea
   step = advanceMayoRetreat(runtime, 2, { x: step.x, baseX: 100 });
   assert.equal(step.runtime.complete, true);
   assert.equal(step.x, 100);
+});
+
+test("Mayo retreat remains damage-immune through hazards and boss area hits until base arrival", () => {
+  let runtime = createMayoRetreatRuntime({ reason: "injury" });
+  let x = 440;
+  let hp = 1;
+  for (const incomingDamage of [12, 34, 28, 80]) {
+    if (!mayoRetreatBlocksDamage(runtime)) hp = Math.max(0, hp - incomingDamage);
+    const step = advanceMayoRetreat(runtime, .5, { x, baseX: 100 });
+    runtime = step.runtime;
+    x = step.x;
+    assert.equal(hp, 1);
+  }
+  const completion = advanceMayoRetreat(runtime, 3, { x, baseX: 100 });
+  assert.equal(completion.runtime.complete, true);
+  assert.equal(completion.x, 100);
+  assert.equal(hp, 1);
 });
 
 test("screen-space ready icons clamp to safe areas and avoid HUD, bodies, and each other deterministically", () => {

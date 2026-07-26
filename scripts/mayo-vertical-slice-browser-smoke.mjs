@@ -77,9 +77,9 @@ async function decodeAudio(page) {
   return page.evaluate(async (cueIds) => {
     const bridge = window.__ASHFALL_AUDIO_QA__;
     const AudioContextCtor = window.AudioContext ?? window.webkitAudioContext;
-    if (!AudioContextCtor) return { supported: false, decoded: 0, requested: cueIds.length, failures: [] };
-    const context = new AudioContextCtor();
+    const context = AudioContextCtor ? new AudioContextCtor() : null;
     const failures = [];
+    let fetched = 0;
     let decoded = 0;
     try {
       for (const cueId of cueIds) {
@@ -91,17 +91,24 @@ async function decodeAudio(page) {
         try {
           const response = await fetch(source.src, { cache: "no-store" });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const buffer = await context.decodeAudioData((await response.arrayBuffer()).slice(0));
-          if (!(buffer.duration > 0) || buffer.numberOfChannels < 1) throw new Error("invalid decoded buffer");
-          decoded += 1;
+          const bytes = new Uint8Array(await response.arrayBuffer());
+          const signature = String.fromCharCode(...bytes.slice(0, 4));
+          const wave = String.fromCharCode(...bytes.slice(8, 12));
+          if (signature !== "RIFF" || wave !== "WAVE" || bytes.length <= 44) throw new Error("invalid WAV payload");
+          fetched += 1;
+          if (context) {
+            const buffer = await context.decodeAudioData(bytes.buffer.slice(0));
+            if (!(buffer.duration > 0) || buffer.numberOfChannels < 1) throw new Error("invalid decoded buffer");
+            decoded += 1;
+          }
         } catch (error) {
           failures.push(`${source.src}: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
     } finally {
-      await context.close();
+      if (context) await context.close();
     }
-    return { supported: true, decoded, requested: cueIds.length, failures };
+    return { supported: Boolean(context), fetched, decoded, requested: cueIds.length, failures };
   }, audioCueIds);
 }
 
@@ -175,19 +182,25 @@ for (const engine of engines) {
       invariant(await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.forceMayoIncapacitation()), `${engine}/${viewport.height}: injury could not be forced`);
       await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
         .some(({ kind, mayoRetreat }) => kind === "mayo-chan" && mayoRetreat?.reason === "injury"));
+      const retreatDamageProof = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.probeMayoRetreatDamage());
+      invariant(retreatDamageProof?.beforeHp > 0, `${engine}/${viewport.height}: retreat damage proof missing`);
+      invariant(retreatDamageProof.afterHp === retreatDamageProof.beforeHp, `${engine}/${viewport.height}: retreat HP changed under hazard/boss damage`);
+      invariant(retreatDamageProof.targetable === false, `${engine}/${viewport.height}: retreat stayed targetable`);
+      invariant(retreatDamageProof.hazardDamage === 0 && retreatDamageProof.bossAreaDamage === 0, `${engine}/${viewport.height}: retreat accepted hazard/boss damage`);
       await page.screenshot({ path: path.join(evidenceDir, `${baseName}-injury-retreat.png`) });
       await page.waitForFunction(() => !window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.some(({ kind }) => kind === "mayo-chan"), null, { timeout: 8_000 });
       const injuryRetreat = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
       invariant(!injuryRetreat.corpses.some(({ kind }) => kind === "mayo-chan"), `${engine}/${viewport.height}: injury retreat created a corpse`);
 
       const audio = await decodeAudio(page);
-      invariant(!audio.supported || (audio.decoded === audio.requested && audio.failures.length === 0), `${engine}/${viewport.height}: audio decode failed ${JSON.stringify(audio)}`);
+      invariant(audio.fetched === audio.requested && audio.failures.length === 0, `${engine}/${viewport.height}: audio fetch/WAV validation failed ${JSON.stringify(audio)}`);
+      invariant(!audio.supported || audio.decoded === audio.requested, `${engine}/${viewport.height}: audio decode failed ${JSON.stringify(audio)}`);
       invariant(diagnostics.consoleErrors.length === 0, `${engine}/${viewport.height}: console errors ${JSON.stringify(diagnostics.consoleErrors)}`);
       invariant(diagnostics.pageErrors.length === 0, `${engine}/${viewport.height}: page errors ${JSON.stringify(diagnostics.pageErrors)}`);
       invariant(diagnostics.requestFailures.length === 0, `${engine}/${viewport.height}: request failures ${JSON.stringify(diagnostics.requestFailures)}`);
       invariant(diagnostics.httpErrors.length === 0, `${engine}/${viewport.height}: HTTP errors ${JSON.stringify(diagnostics.httpErrors)}`);
 
-      results.push({ engine, viewport, ready, feralMayo, abilityRetreat, injuryRetreat, assetProof, audio, diagnostics });
+      results.push({ engine, viewport, ready, feralMayo, abilityRetreat, retreatDamageProof, injuryRetreat, assetProof, audio, diagnostics });
       await page.close();
     }
   } finally {

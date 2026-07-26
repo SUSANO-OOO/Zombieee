@@ -15,6 +15,10 @@ export function createMayoRetreatRuntime({ reason = "injury" } = {}) {
   });
 }
 
+export function mayoRetreatBlocksDamage(runtime) {
+  return Boolean(runtime && runtime.complete !== true);
+}
+
 export function advanceMayoRetreat(runtime, seconds, {
   x,
   baseX,
