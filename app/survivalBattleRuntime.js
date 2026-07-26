@@ -195,6 +195,16 @@ export function advanceSurvivalCombat(runtime, run, {
     nextRuntime.noHumanSeconds += elapsed;
   }
 
+  const terminalReason = survivalCombatEndReason(nextRuntime, currentRun, { crawlerHp });
+  if (terminalReason) {
+    return {
+      run: nextRun,
+      runtime: nextRuntime,
+      events,
+      terminalReason,
+    };
+  }
+
   if (currentRun.phase === SURVIVAL_RUN_PHASES.WAVE_READY) {
     nextRuntime.intermissionRemaining = Math.max(0, nextRuntime.intermissionRemaining - elapsed);
     if (nextRuntime.intermissionRemaining <= 0) {
@@ -209,11 +219,11 @@ export function advanceSurvivalCombat(runtime, run, {
       events.push({ type: "queue-wave", plan });
       if (plan.bossKind) events.push({ type: "boss-warning", bossKind: plan.bossKind });
     }
-    return { run: nextRun, runtime: nextRuntime, events };
+    return { run: nextRun, runtime: nextRuntime, events, terminalReason: null };
   }
 
   if (currentRun.phase !== SURVIVAL_RUN_PHASES.IN_WAVE) {
-    return { run: nextRun, runtime: nextRuntime, events };
+    return { run: nextRun, runtime: nextRuntime, events, terminalReason: null };
   }
 
   if (currentRun.bossEntrancePending && bossCombatReady) {
@@ -255,7 +265,7 @@ export function advanceSurvivalCombat(runtime, run, {
       });
     }
   }
-  return { run: nextRun, runtime: nextRuntime, events };
+  return { run: nextRun, runtime: nextRuntime, events, terminalReason: null };
 }
 
 export function chooseSurvivalCombatUpgrade(runtime, run, upgradeId) {

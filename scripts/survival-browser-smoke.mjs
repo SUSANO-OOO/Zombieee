@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import sharp from "sharp";
 
 if (!process.env.SURVIVAL_QA_BASE_URL) {
   throw new Error("SURVIVAL_QA_BASE_URL is required; use the isolated QA runner");
@@ -58,6 +59,19 @@ function diagnosticsFor(page) {
 
 async function snapshot(page) {
   return page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.());
+}
+
+async function activate(page, locator, useTouch) {
+  await locator.waitFor({ state: "visible", timeout });
+  if (!useTouch) {
+    await locator.click();
+    return "mouse";
+  }
+  await locator.scrollIntoViewIfNeeded();
+  const box = await locator.boundingBox();
+  invariant(box && box.width > 0 && box.height > 0, "touch target has no visible bounds");
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+  return "touch";
 }
 
 async function assertCompactLayout(page, viewport) {
@@ -118,7 +132,11 @@ for (const engine of engines) {
   try {
     for (const viewport of viewports) {
       const name = `${engine}-${viewport.width}x${viewport.height}`;
-      const context = await browser.newContext({ viewport });
+      const context = await browser.newContext({
+        viewport,
+        hasTouch: viewport.safeArea,
+        isMobile: viewport.safeArea,
+      });
       const page = await context.newPage();
       const diagnostics = diagnosticsFor(page);
       const result = { engine, viewport, status: "failed" };
@@ -138,16 +156,25 @@ for (const engine of engines) {
         });
         invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
         await page.locator('.game-shell[data-screen="map"]').waitFor({ timeout });
-        await page.getByRole("button", { name: "サバイバル", exact: true }).click();
+        let touchActivationCount = 0;
+        if (await activate(
+          page,
+          page.getByRole("button", { name: "サバイバル", exact: true }),
+          viewport.safeArea,
+        ) === "touch") touchActivationCount += 1;
         await page.locator('.game-shell[data-screen="survival"]').waitFor({ timeout });
         invariant(await page.getByText("Survival Mode", { exact: true }).isVisible(), "Survival lobby missing");
         await page.screenshot({ path: path.join(evidenceDir, `${name}-lobby.png`) });
 
-        await page.getByRole("button", { name: "新しいrunを開始", exact: true }).click();
+        if (await activate(
+          page,
+          page.getByRole("button", { name: "新しいrunを開始", exact: true }),
+          viewport.safeArea,
+        ) === "touch") touchActivationCount += 1;
         await page.locator('.game-shell[data-screen="battle"] .survival-hud').waitFor({ timeout });
         const unitCard = page.locator(".unit-card:not(:disabled)").first();
         await unitCard.waitFor({ timeout });
-        await unitCard.click();
+        if (await activate(page, unitCard, viewport.safeArea) === "touch") touchActivationCount += 1;
         await page.waitForFunction(() => (
           window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().survivalRun?.phase === "in-wave"
         ), undefined, { timeout });
@@ -175,29 +202,114 @@ for (const engine of engines) {
         );
 
         const speed2 = page.getByRole("button", { name: "2倍", exact: true });
-        await speed2.click();
+        if (await activate(page, speed2, viewport.safeArea) === "touch") touchActivationCount += 1;
         await page.waitForFunction(() => (
           window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().survivalRun?.speed === 2
         ), undefined, { timeout });
         const layout = await assertCompactLayout(page, viewport);
         await page.screenshot({ path: path.join(evidenceDir, `${name}-battle.png`) });
 
+        const entryVisibilityProof = await page.evaluate(() => (
+          window.__ASHFALL_BATTLE_QA__.prepareSurvivalEntryVisibilityProof()
+        ));
+        invariant(
+          entryVisibilityProof.x > entryVisibilityProof.combatReadyX,
+          `entry visibility proof crossed combat-ready boundary: ${JSON.stringify(entryVisibilityProof)}`,
+        );
+        await page.waitForTimeout(50);
+        const canvas = page.locator("canvas").first();
+        const visibleEntryPng = await canvas.screenshot({
+          path: path.join(evidenceDir, `${name}-entry-visible.png`),
+        });
+        const switchedToLegacyClip = await page.evaluate(
+          ({ fighterId }) => window.__ASHFALL_BATTLE_QA__
+            .setSurvivalEntryVisibilityMode(fighterId, "base-interior"),
+          entryVisibilityProof,
+        );
+        invariant(switchedToLegacyClip, "could not apply legacy entry clip for pixel comparison");
+        await page.waitForTimeout(50);
+        const legacyClippedPng = await canvas.screenshot();
+        const visibleMetadata = await sharp(visibleEntryPng).metadata();
+        const proofCropWidth = Math.min(180, visibleMetadata.width);
+        const proofCrop = {
+          left: visibleMetadata.width - proofCropWidth,
+          top: 0,
+          width: proofCropWidth,
+          height: visibleMetadata.height,
+        };
+        const visibleEntryPixels = await sharp(visibleEntryPng).extract(proofCrop).raw().toBuffer();
+        const legacyClippedPixels = await sharp(legacyClippedPng).extract(proofCrop).raw().toBuffer();
+        let entryChangedChannels = 0;
+        for (let index = 0; index < visibleEntryPixels.length; index += 1) {
+          if (Math.abs(visibleEntryPixels[index] - legacyClippedPixels[index]) >= 8) {
+            entryChangedChannels += 1;
+          }
+        }
+        invariant(
+          entryChangedChannels >= 120,
+          `right-edge entry is not visibly different from the legacy hidden clip: ${entryChangedChannels}`,
+        );
+        const restoredRightEdgeClip = await page.evaluate(
+          ({ fighterId }) => window.__ASHFALL_BATTLE_QA__
+            .setSurvivalEntryVisibilityMode(fighterId, "right-edge-outside"),
+          entryVisibilityProof,
+        );
+        invariant(restoredRightEdgeClip, "could not restore right-edge entry clip");
+
         const checkpoint = await page.evaluate(() => (
           window.__ASHFALL_BATTLE_QA__.prepareSurvivalUpgradeProof()
         ));
         invariant(checkpoint.choices.length === 3, `upgrade choice count mismatch: ${JSON.stringify(checkpoint)}`);
         await page.locator(".survival-upgrade-screen").waitFor({ timeout });
-        await page.locator(".survival-upgrade-choices button:not(:disabled)").first().waitFor({ timeout });
+        const upgradeChoice = page.locator(".survival-upgrade-choices button:not(:disabled)").first();
+        await upgradeChoice.waitFor({ timeout });
         await page.screenshot({ path: path.join(evidenceDir, `${name}-upgrade.png`) });
-        await page.locator(".survival-upgrade-choices button:not(:disabled)").first().click();
+        if (await activate(page, upgradeChoice, viewport.safeArea) === "touch") touchActivationCount += 1;
         await page.waitForFunction(() => {
           const run = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().survivalRun;
           return run?.phase === "wave-ready" && Object.keys(run.temporaryUpgradeStacks).length > 0;
         }, undefined, { timeout });
 
-        await page.locator(".survival-pause").click();
-        await page.getByRole("button", { name: "エリアマップへ撤退", exact: true }).click();
-        await page.getByRole("button", { name: "実行する", exact: true }).click();
+        const settlementAttemptsBeforeFailure = await page.evaluate(() => (
+          window.__ASHFALL_BATTLE_QA__.failNextSurvivalSettlementSave()
+        ));
+        if (await activate(page, page.locator(".survival-pause"), viewport.safeArea) === "touch") {
+          touchActivationCount += 1;
+        }
+        if (await activate(
+          page,
+          page.getByRole("button", { name: "エリアマップへ撤退", exact: true }),
+          viewport.safeArea,
+        ) === "touch") touchActivationCount += 1;
+        if (await activate(
+          page,
+          page.getByRole("button", { name: "実行する", exact: true }),
+          viewport.safeArea,
+        ) === "touch") touchActivationCount += 1;
+        await page.waitForFunction((expectedAttempts) => (
+          window.__ASHFALL_BATTLE_QA__?.getSnapshot?.()
+            .survivalSettlementPersistenceAttempts === expectedAttempts
+          && [...document.querySelectorAll("h2")]
+            .some((heading) => heading.textContent === "Survival結果を保存できません")
+        ), settlementAttemptsBeforeFailure + 1, { timeout });
+        const settlementAttemptsAfterFailure = (await snapshot(page))
+          .survivalSettlementPersistenceAttempts;
+        invariant(
+          settlementAttemptsAfterFailure === settlementAttemptsBeforeFailure + 1,
+          `settlement failure attempt count mismatch: ${settlementAttemptsBeforeFailure} -> ${settlementAttemptsAfterFailure}`,
+        );
+        await page.waitForTimeout(250);
+        const settlementAttemptsWhileAwaitingRetry = (await snapshot(page))
+          .survivalSettlementPersistenceAttempts;
+        invariant(
+          settlementAttemptsWhileAwaitingRetry === settlementAttemptsAfterFailure,
+          `settlement auto-retried while awaiting user action: ${settlementAttemptsAfterFailure} -> ${settlementAttemptsWhileAwaitingRetry}`,
+        );
+        if (await activate(
+          page,
+          page.getByRole("button", { name: "一括保存を再試行", exact: true }),
+          viewport.safeArea,
+        ) === "touch") touchActivationCount += 1;
         await page.locator('.game-shell[data-screen="survival-result"]').waitFor({ timeout });
         const settlementSnapshot = await snapshot(page);
         const runId = settlementSnapshot.survivalRun.runId;
@@ -226,6 +338,18 @@ for (const engine of engines) {
             x: enteringEnemy.x,
             combatReadyX: enteringEnemy.combatReadyX,
           },
+          entryVisibilityProof: {
+            ...entryVisibilityProof,
+            changedChannels: entryChangedChannels,
+          },
+          settlementRetryProof: {
+            beforeFailure: settlementAttemptsBeforeFailure,
+            afterFailure: settlementAttemptsAfterFailure,
+            whileAwaitingRetry: settlementAttemptsWhileAwaitingRetry,
+            afterManualRetry: settlementSnapshot.survivalSettlementPersistenceAttempts,
+          },
+          inputMode: viewport.safeArea ? "touch" : "mouse",
+          touchActivationCount,
           checkpointId: checkpoint.checkpointId,
           processedRunId: runId,
           equipmentInventory: settlementSnapshot.equipmentInventory,

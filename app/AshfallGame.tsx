@@ -184,7 +184,16 @@ import {
 import { allyCorpseVisualCue } from "./corpseVisuals.js";
 import { resolveLocalQaMode, resolveLocalQaSafeArea, resolveLocalQaScenario } from "./localQa.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
-import { FORMATION_CARD_ART, PORTRAIT_ART, fitSpriteBattleDisplaySize, spriteFrameFor, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
+import {
+  COMPACT_BATTLE_SPRITE_SCALE,
+  FORMATION_CARD_ART,
+  PORTRAIT_ART,
+  fitSpriteBattleDisplaySize,
+  spriteBattleDisplaySizeFor,
+  spriteFrameFor,
+  spriteKinds,
+  spriteSheetPath,
+} from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST, stageObjectsFor } from "./stageObjectManifest.js";
 import {
   STAGE_VIEWPORT_IDS,
@@ -485,10 +494,11 @@ type CampaignUnitData = {
   recruitmentCostCaps?: number;
   unlock: { type: string; stageId?: string; stageNumber?: number; costCaps?: number };
 };
+type EnemyEntryMode = "base-interior" | "right-edge" | "right-edge-outside";
 type EnemySpawnEntry = {
   entryId: number; kind: string; lane: Lane; wave: number; order: number; delay: number;
   x: number; y: number; combatReadyX: number; combatReadyY?: number; entrySpeed: number; slot: number;
-  portalId?: string; routeId?: string;
+  portalId?: string; routeId?: string; entryMode?: EnemyEntryMode;
 };
 type EnemySpawnRuntime = { pending: EnemySpawnEntry[]; cooldown: number; nextEntryId: number };
 
@@ -571,6 +581,7 @@ type Fighter = {
   gateEntering: boolean;
   entryDirection?: -1 | 1;
   spawnPortalId?: string | null;
+  spawnEntryMode?: EnemyEntryMode;
   entryStepDistance?: number;
   gateEntrySpeed: number;
   combatReadyX: number;
@@ -1524,6 +1535,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     gateEntering,
     entryDirection: -1,
     spawnPortalId: gateEntry?.portalId ?? null,
+    spawnEntryMode: gateEntry?.entryMode,
     entryStepDistance: 0,
     gateEntrySpeed: gateEntry?.entrySpeed ?? 0,
     combatReadyX: gateEntry?.combatReadyX ?? 0,
@@ -2275,20 +2287,8 @@ function prepareQaMode(g: Game, qaMode: QaMode | null) {
   }
 }
 
-const SPRITE_DISPLAY_SIZES: Record<string, { w: number; h: number }> = {
-  scout: { w: 58, h: 98 }, ranger: { w: 58, h: 98 }, brute: { w: 72, h: 108 },
-  brawler: { w: 62, h: 99 }, gunner: { w: 60, h: 100 }, medic: { w: 60, h: 100 },
-  "crazy-king": { w: 72, h: 104 }, kumaverson: { w: 64, h: 102 }, babayaga: { w: 62, h: 103 },
-  guardian: { w: 78, h: 108 }, engineer: { w: 60, h: 100 },
-  walker: { w: 58, h: 96 }, runner: { w: 53, h: 90 }, turned: { w: 58, h: 96 },
-  shade: { w: 64, h: 101 }, spitter: { w: 62, h: 101 }, crusher: { w: 80, h: 112 },
-  abomination: { w: 101, h: 132 }, takuya: { w: 94, h: 128 },
-  grappler: { w: 78, h: 108 }, ooze: { w: 70, h: 94 }, sprinter: { w: 58, h: 96 },
-  "gate-eater": { w: 126, h: 142 },
-};
-
 function spriteDisplaySize(kind: string) {
-  return SPRITE_DISPLAY_SIZES[kind] ?? { w: 58, h: 96 };
+  return spriteBattleDisplaySizeFor(kind);
 }
 
 // Asset-load diagnostic fallback only. Normal production rendering resolves
@@ -2422,7 +2422,7 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   const direction = f.side === "human" ? (f.aiMoveDirection < -.05 ? "left" : "right") : "left";
   const frame = spriteFrameFor(f.kind, state, direction);
   const authoredSize = fitSpriteBattleDisplaySize(f.kind, frame, spriteDisplaySize(f.kind));
-  const compactScale = activeLaneCenters === LANE_Y ? 1 : 1.1;
+  const compactScale = activeLaneCenters === LANE_Y ? 1 : COMPACT_BATTLE_SPRITE_SCALE;
   const size = {
     w: authoredSize.w * compactScale * animationSample.bodyScale,
     h: authoredSize.h * compactScale * animationSample.bodyScale,
@@ -2450,8 +2450,12 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     );
     ctx.clip();
   } else if (f.side === "zombie" && f.gateEntering) {
+    const revealRight = f.spawnEntryMode === "right-edge"
+      || f.spawnEntryMode === "right-edge-outside"
+      ? W
+      : ENEMY_GATE_SPAWN.revealX;
     ctx.beginPath();
-    ctx.rect(0, 0, ENEMY_GATE_SPAWN.revealX, H);
+    ctx.rect(0, 0, revealRight, H);
     ctx.clip();
   }
   ctx.fillStyle = "rgba(0,0,0,.42)";
@@ -3797,6 +3801,7 @@ export function AshfallGame() {
   const eventCompletionLockRef = useRef(false);
   const finalizedEndRef = useRef<BattleResult | null>(null);
   const survivalCheckpointSaveLocksRef = useRef(new Set<string>());
+  const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const qaScenarioAppliedRef = useRef(false);
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -3845,6 +3850,7 @@ export function AshfallGame() {
   const [survivalHud, setSurvivalHud] = useState<ReturnType<typeof survivalHudSnapshot>>(null);
   const [survivalResult, setSurvivalResult] = useState<SurvivalResultView | null>(null);
   const [survivalSavePending, setSurvivalSavePending] = useState(false);
+  const [survivalSettlementAwaitingRetry, setSurvivalSettlementAwaitingRetry] = useState(false);
   const [pendingSurvivalCheckpoint, setPendingSurvivalCheckpoint] = useState<PendingSurvivalCheckpoint | null>(null);
   const [pendingSurvivalSettlement, setPendingSurvivalSettlement] = useState<PendingSurvivalSettlement | null>(null);
   const [hud, setHud] = useState<Hud>({
@@ -4602,6 +4608,41 @@ export function AshfallGame() {
           choices: [...checkpointRun.pendingUpgradeChoices],
         };
       },
+      prepareSurvivalEntryVisibilityProof: () => {
+        const g = gameRef.current;
+        const enteringEnemy = g.fighters.find((fighter) => (
+          fighter.side === "zombie"
+          && fighter.hp > 0
+          && fighter.gateEntering
+          && !fighter.combatReady
+          && (fighter.spawnEntryMode === "right-edge" || fighter.spawnEntryMode === "right-edge-outside")
+        ));
+        if (!enteringEnemy) {
+          throw new Error("Survival entry visibility proof requires a right-edge entering enemy");
+        }
+        g.paused = true;
+        enteringEnemy.x = Math.max(
+          enteringEnemy.combatReadyX + 12,
+          W - Math.max(12, enteringEnemy.bodyRadius),
+        );
+        enteringEnemy.spawnEntryMode = "right-edge-outside";
+        return {
+          fighterId: enteringEnemy.id,
+          x: enteringEnemy.x,
+          combatReadyX: enteringEnemy.combatReadyX,
+          entryMode: enteringEnemy.spawnEntryMode,
+        };
+      },
+      setSurvivalEntryVisibilityMode: (fighterId: number, entryMode: EnemyEntryMode) => {
+        const fighter = gameRef.current.fighters.find((candidate) => candidate.id === fighterId);
+        if (!fighter || fighter.side !== "zombie" || !fighter.gateEntering) return false;
+        fighter.spawnEntryMode = entryMode;
+        return true;
+      },
+      failNextSurvivalSettlementSave: () => {
+        survivalSettlementPersistenceQaRef.current.failuresRemaining += 1;
+        return survivalSettlementPersistenceQaRef.current.attempts;
+      },
       getSnapshot: () => {
         const g = gameRef.current;
         const currentCampaignSave = campaignSaveRef.current;
@@ -4640,6 +4681,7 @@ export function AshfallGame() {
             claimedRewardIds: [...currentCampaignSave.survival.claimedRewardIds],
           },
           equipmentInventory: [...currentCampaignSave.equipmentInventory],
+          survivalSettlementPersistenceAttempts: survivalSettlementPersistenceQaRef.current.attempts,
           bossDefeated: g.bossDefeated,
           bossDefeatPending: g.bossDefeatPending,
           baseHp: g.baseHp,
@@ -4738,6 +4780,7 @@ export function AshfallGame() {
             gateEntering: fighter.gateEntering,
             entryDirection: fighter.entryDirection ?? -1,
             spawnPortalId: fighter.spawnPortalId ?? null,
+            spawnEntryMode: fighter.spawnEntryMode ?? null,
             combatReadyX: fighter.combatReadyX,
             combatReadyY: fighter.combatReadyY ?? fighter.y,
             entryRampX: fighter.entryRampX ?? null,
@@ -5852,6 +5895,7 @@ export function AshfallGame() {
     setCampaignResult(null);
     setSurvivalResult(null);
     setPendingSurvivalSettlement(null);
+    setSurvivalSettlementAwaitingRetry(false);
     setSurvivalHud(survivalHudSnapshot(run));
     setSelectedStageId(CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL);
     setScreen("battle");
@@ -5915,7 +5959,7 @@ export function AshfallGame() {
     );
     gameRef.current = fresh;
     finalizedEndRef.current = null;
-    setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setSurvivalHud(null); setSurvivalResult(null); setPendingSurvivalSettlement(null); setScreen("map"); chooseAction(null);
+    setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setSurvivalHud(null); setSurvivalResult(null); setPendingSurvivalSettlement(null); setSurvivalSettlementAwaitingRetry(false); setScreen("map"); chooseAction(null);
   }, [campaignSave.readStoryEventIds, campaignSave.unitRanks, chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
 
   const handleEventComplete = useCallback(() => {
@@ -6464,11 +6508,19 @@ export function AshfallGame() {
         pending.run,
         {
           endedAt: pending.endedAt,
-          persist: persistCampaignSave,
+          persist: async (candidate) => {
+            survivalSettlementPersistenceQaRef.current.attempts += 1;
+            if (survivalSettlementPersistenceQaRef.current.failuresRemaining > 0) {
+              survivalSettlementPersistenceQaRef.current.failuresRemaining -= 1;
+              return { durable: false };
+            }
+            return persistCampaignSave(candidate as CampaignSave);
+          },
         },
       );
       if (!result.committed) {
         setSavePersistence("unavailable");
+        setSurvivalSettlementAwaitingRetry(true);
         setSurvivalSavePending(false);
         return;
       }
@@ -6476,6 +6528,7 @@ export function AshfallGame() {
       const lastResult = nextSave.survival.lastResult;
       setCampaignSave(nextSave);
       setPendingSurvivalSettlement(null);
+      setSurvivalSettlementAwaitingRetry(false);
       setSurvivalSavePending(false);
       setStarted(false);
       setPaused(false);
@@ -6497,15 +6550,21 @@ export function AshfallGame() {
   }, [persistCampaignSave, survivalSavePending]);
 
   useEffect(() => {
-    if (!pendingSurvivalSettlement || survivalSavePending) return;
+    if (!pendingSurvivalSettlement || survivalSavePending || survivalSettlementAwaitingRetry) return;
     const timer = window.setTimeout(() => {
       commitSurvivalSettlement(pendingSurvivalSettlement);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [commitSurvivalSettlement, pendingSurvivalSettlement, survivalSavePending]);
+  }, [
+    commitSurvivalSettlement,
+    pendingSurvivalSettlement,
+    survivalSavePending,
+    survivalSettlementAwaitingRetry,
+  ]);
 
   const retrySurvivalSettlementSave = useCallback(() => {
     if (!pendingSurvivalSettlement || survivalSavePending) return;
+    setSurvivalSettlementAwaitingRetry(false);
     commitSurvivalSettlement(pendingSurvivalSettlement);
   }, [commitSurvivalSettlement, pendingSurvivalSettlement, survivalSavePending]);
 
@@ -7501,9 +7560,10 @@ export function AshfallGame() {
               }
             }
           }
-          const survivalEndReason = survivalCombatEndReason(g.survivalRuntime, g.survivalRun, {
-            crawlerHp: g.baseHp,
-          });
+          const survivalEndReason = survivalStep.terminalReason
+            ?? survivalCombatEndReason(g.survivalRuntime, g.survivalRun, {
+              crawlerHp: g.baseHp,
+            });
           if (survivalEndReason) {
             const endedAt = new Date().toISOString();
             const endedRun = endSurvivalRun(g.survivalRun, survivalEndReason, endedAt);
@@ -7512,6 +7572,8 @@ export function AshfallGame() {
               g.over = true;
               g.paused = true;
               setPaused(true);
+              setPendingSurvivalCheckpoint(null);
+              setSurvivalSettlementAwaitingRetry(false);
               setPendingSurvivalSettlement({ run: endedRun, endedAt });
               chooseAction(null);
               stopMusic();

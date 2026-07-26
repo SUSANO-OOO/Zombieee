@@ -37,6 +37,10 @@ test("Survival settlement is connected as one atomic persistence boundary", () =
   assert.match(ashfallSource, /setCampaignSave\(nextSave\)/);
   assert.match(ashfallSource, /setScreen\("survival-result"\)/);
   assert.match(ashfallSource, /CAPS、装備数量、last result、checkpoint削除、revision、integrity/);
+  assert.match(ashfallSource, /survivalStep\.terminalReason[\s\S]*setPendingSurvivalCheckpoint\(null\)[\s\S]*setPendingSurvivalSettlement/);
+  assert.match(ashfallSource, /survivalSettlementAwaitingRetry[\s\S]*setSurvivalSettlementAwaitingRetry\(true\)[\s\S]*if \(!pendingSurvivalSettlement \|\| survivalSavePending \|\| survivalSettlementAwaitingRetry\) return/);
+  assert.match(ashfallSource, /failNextSurvivalSettlementSave[\s\S]*failuresRemaining \+= 1/);
+  assert.match(ashfallSource, /failuresRemaining > 0[\s\S]*return \{ durable: false \}/);
 });
 
 test("Survival overlays retain 44px controls and compact landscape rules", () => {

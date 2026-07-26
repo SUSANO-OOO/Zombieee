@@ -1663,7 +1663,7 @@ test("integrates the enemy gate queue without changing direct QA or turned place
   assert.match(game, /other\.hp <= 0 \|\| !other\.combatReady/);
   assert.match(game, /kind !== "turned" && gateEntry !== null/);
   assert.match(game, /combatReady: true, gateEntering: false/);
-  assert.match(game, /ctx\.rect\(0, 0, ENEMY_GATE_SPAWN\.revealX, H\);[\s\S]*ctx\.clip\(\)/);
+  assert.match(game, /f\.spawnEntryMode === "right-edge"[\s\S]*f\.spawnEntryMode === "right-edge-outside"[\s\S]*\? W[\s\S]*: ENEMY_GATE_SPAWN\.revealX;[\s\S]*ctx\.rect\(0, 0, revealRight, H\);[\s\S]*ctx\.clip\(\)/);
   assert.match(game, /includesTakuya[\s\S]*TAKUYA_ENTRANCE_AUDIO\.durationSeconds[\s\S]*playProductionCue\(TAKUYA_ENTRANCE_AUDIO\.cueId[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance/);
   assert.match(game, /bossActiveOrIncoming[\s\S]*\["takuya", "gate-eater"\]\.includes\(entry\.kind\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);
   assert.match(game, /if \(battleSilenceSceneId\(g\)\) return/);

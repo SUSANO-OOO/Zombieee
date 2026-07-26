@@ -4,6 +4,7 @@ import { CAMPAIGN_STAGE_IDS, CAMPAIGN_STAGES } from "../app/campaign.js";
 import {
   battleSpaceFor,
   battleSpaceLineOfSight,
+  enemyRenderedVisualHalfWidth,
   enemySpawnPortalPoint,
   enemySpawnProfileFor,
   friendlyDeploymentPoint,
@@ -186,8 +187,38 @@ test("boss combat-ready point guarantees the full display body has entered", () 
     });
     assert.equal(point.spawnClass, "boss");
     assert.equal(point.entryMode, "right-edge-outside");
+    assert.equal(point.visualHalfWidth, enemyRenderedVisualHalfWidth("gate-eater"));
     assert.ok(point.x - point.visualHalfWidth >= 960);
     assert.ok(point.combatReadyX + point.visualHalfWidth <= 960);
+  }
+});
+
+test("right-edge combat-ready boundaries include the renderer's compact atlas width", () => {
+  for (const kind of [
+    "walker",
+    "ooze",
+    "sprinter",
+    "crusher",
+    "abomination",
+    "takuya",
+    "gate-eater",
+  ]) {
+    const renderedHalfWidth = enemyRenderedVisualHalfWidth(kind);
+    assert.ok(renderedHalfWidth > 0, `${kind} owns a renderer-derived half width`);
+    const point = enemySpawnPortalPoint({
+      stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
+      entryId: 31,
+      kind,
+      missionType: "survival",
+    });
+    assert.ok(
+      point.visualHalfWidth >= renderedHalfWidth,
+      `${kind} spawn clearance covers its maximum compact render width`,
+    );
+    assert.ok(
+      point.combatReadyX + renderedHalfWidth <= 960,
+      `${kind} full rendered body enters before combat-ready`,
+    );
   }
 });
 

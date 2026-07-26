@@ -147,6 +147,58 @@ test("combat runtime queues a wave, keeps the boss at 1x until combat-ready, and
   assert.equal(selected.runtime.intermissionRemaining, 1.5);
 });
 
+test("terminal loss wins atomically over boss completion and emits no checkpoint", () => {
+  let run = completeThroughWave(newRun("terminal-before-checkpoint"), 4);
+  let runtime = createSurvivalCombatRuntime(run);
+  let step = advanceSurvivalCombat(runtime, run, {
+    seconds: 2,
+    totalKills: run.stats.kills,
+    livingHumanCount: 1,
+  });
+  run = step.run;
+  runtime = step.runtime;
+  assert.equal(run.currentWave, 5);
+  assert.equal(run.phase, SURVIVAL_RUN_PHASES.IN_WAVE);
+
+  step = advanceSurvivalCombat(runtime, run, {
+    seconds: 0.1,
+    activeEnemyCount: 0,
+    pendingSpawnCount: 0,
+    totalKills: run.stats.kills + 1,
+    crawlerHp: 0,
+    livingHumanCount: 1,
+  });
+  assert.equal(step.terminalReason, SURVIVAL_END_REASONS.CRAWLER_DESTROYED);
+  assert.deepEqual(step.events, []);
+  assert.equal(step.run.lastCompletedWave, 4);
+  assert.equal(step.run.phase, SURVIVAL_RUN_PHASES.IN_WAVE);
+  assert.equal(step.run.pendingUpgradeChoices.length, 0);
+});
+
+test("squad terminal grace wins over an otherwise empty boss wave", () => {
+  let run = completeThroughWave(newRun("squad-terminal-before-checkpoint"), 4);
+  let runtime = createSurvivalCombatRuntime(run);
+  let step = advanceSurvivalCombat(runtime, run, {
+    seconds: 2,
+    totalKills: run.stats.kills,
+    livingHumanCount: 1,
+  });
+  run = step.run;
+  runtime = { ...step.runtime, hadLivingHuman: true, noHumanSeconds: 2.95 };
+  step = advanceSurvivalCombat(runtime, run, {
+    seconds: 0.1,
+    activeEnemyCount: 0,
+    pendingSpawnCount: 0,
+    totalKills: run.stats.kills + 1,
+    crawlerHp: 700,
+    livingHumanCount: 0,
+    queuedHumanCount: 0,
+  });
+  assert.equal(step.terminalReason, SURVIVAL_END_REASONS.SQUAD_DEFEATED);
+  assert.deepEqual(step.events, []);
+  assert.equal(step.run.lastCompletedWave, 4);
+});
+
 test("defense front clamps role anchors and returns temporary pursuit to the front", () => {
   assert.equal(
     survivalDefenseDestination({ aiProfile: "frontline", desiredX: 900 }),

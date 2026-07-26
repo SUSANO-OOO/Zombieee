@@ -6,6 +6,15 @@ import {
   nearestLogicalLane,
   stageGeometryFor,
 } from "./stageGeometry.js";
+import { combatPresentationFor } from "./combatPresentation.js";
+import {
+  COMPACT_BATTLE_SPRITE_SCALE,
+  SPRITE_DIRECTIONS,
+  fitSpriteBattleDisplaySize,
+  spriteBattleDisplaySizeFor,
+  spriteFrameFor,
+  spriteStatesFor,
+} from "./spriteManifest.js";
 
 const TAU = Math.PI * 2;
 const SEARCH_ANGLE_COUNT = 24;
@@ -282,15 +291,41 @@ export function nearestValidBattlefieldPlacement({
   });
 }
 
+export function enemyRenderedVisualHalfWidth(kind) {
+  try {
+    const displaySize = spriteBattleDisplaySizeFor(kind);
+    const maximumBodyScale = Math.max(
+      ...Object.values(combatPresentationFor(kind).clips)
+        .map(({ bodyScale }) => nonNegative(bodyScale, 1)),
+    );
+    const maximumRenderedWidth = Math.max(
+      ...spriteStatesFor(kind).flatMap((state) => SPRITE_DIRECTIONS.map((direction) => (
+        fitSpriteBattleDisplaySize(
+          kind,
+          spriteFrameFor(kind, state, direction),
+          displaySize,
+        ).w
+      ))),
+    );
+    return maximumRenderedWidth * COMPACT_BATTLE_SPRITE_SCALE * maximumBodyScale / 2;
+  } catch {
+    return 0;
+  }
+}
+
 function spawnClassGeometry(kind) {
   const enemy = enemyContentFor(kind);
   const spawnClass = enemy?.spawnClass ?? "normal";
   const clearance = spawnClass === "boss" ? 49 : spawnClass === "heavy" ? 43 : 31;
-  const visualHalfWidth = spawnClass === "boss"
+  const estimatedVisualHalfWidth = spawnClass === "boss"
     ? Math.max(58, nonNegative(enemy?.bodyRadius, 20) * 2.45)
     : spawnClass === "heavy"
       ? Math.max(36, nonNegative(enemy?.bodyRadius, 16) * 1.9)
       : Math.max(26, nonNegative(enemy?.bodyRadius, 11) * 1.75);
+  const visualHalfWidth = Math.max(
+    estimatedVisualHalfWidth,
+    enemyRenderedVisualHalfWidth(kind),
+  );
   const entrySpeed = spawnClass === "boss" ? 29
     : spawnClass === "heavy" ? 38
       : ["runner", "sprinter"].includes(kind) ? 62
