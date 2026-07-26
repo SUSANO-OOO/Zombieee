@@ -39,6 +39,7 @@
 - boss共通基盤、既存boss改修、新boss5体
 - 通常感染体6種
 - 新プレイアブル5名、合計16名
+- 全16体の頭上ready icon式・個体別手動アビリティ
 - RankからLevel 1〜50への統合
 - Stage進行によるlevel cap
 - 個人equipment2枠、戦術equipment2枠
@@ -48,7 +49,7 @@
 
 新プレイアブル5名のidentity master portraitはプロデューサーが各1枚制作し、Codexへ直接提供します。Codexは受領portraitからevent、card、battle sprite等を派生制作します。
 
-0.9.0の正式製品判断は[プロデューサー決定台帳](docs/PRODUCER_DECISIONS_0.9.0.md)を参照してください。
+0.9.0の正式製品判断は[プロデューサー決定台帳](docs/PRODUCER_DECISIONS_0.9.0.md)、プレイアブル側の個別能力と頭上UIは[手動アビリティ仕様](docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md)を参照してください。
 
 ## 文書
 
@@ -58,6 +59,7 @@
 | [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | 現在のrelease、SHA、公開、次の正式作業 |
 | [docs/PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md) | 長期目標、Version順、Stage／unit拡張方針 |
 | [docs/PRODUCER_DECISIONS_0.9.0.md](docs/PRODUCER_DECISIONS_0.9.0.md) | Version 0.9.0の製品判断と境界 |
+| [docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md](docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md) | 全16体の手動アビリティ、ready icon、個体別cooldown、新5体の戦闘仕様 |
 | [docs/RELEASE_BACKUP_RECOVERY.md](docs/RELEASE_BACKUP_RECOVERY.md) | GitHub Pages公開、tag、Release、rollback、bundle |
 | [docs/CHARACTERS_0.7.0.md](docs/CHARACTERS_0.7.0.md) | 既存人物、役割、加入、内部IDの履歴基準 |
 | [docs/STORY_BIBLE_0.7.0.md](docs/STORY_BIBLE_0.7.0.md) | 世界観と物語構造の履歴基準 |
