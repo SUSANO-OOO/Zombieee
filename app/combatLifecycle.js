@@ -1,4 +1,5 @@
 import { LANE_Y, UNIT_CARDS, WORLD_GEOMETRY, pointInGroundEffectEllipse } from "./gameRules.js";
+import { isBossEnemyKind } from "./bossFoundation.js";
 
 const freeze = (value) => Object.freeze(value);
 
@@ -333,7 +334,7 @@ export const ENEMY_DEATH_CONFIG = freeze({
 
 export function enemyDeathClassFor(enemy = {}) {
   if (enemy.deathClass && ENEMY_DEATH_CONFIG.timings[enemy.deathClass]) return enemy.deathClass;
-  if (enemy.boss || enemy.kind === "takuya" || enemy.kind === "gate-eater") return "boss";
+  if (enemy.boss || isBossEnemyKind(enemy.kind)) return "boss";
   if (["crusher", "abomination", "grappler", "heavy"].includes(enemy.kind)) return "heavy";
   return "normal";
 }

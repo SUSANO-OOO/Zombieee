@@ -39,6 +39,7 @@ import {
   equipmentEnhancementLevel,
   normalizeEquipmentEnhancementLevels,
 } from "./equipment.js";
+import { bossCampaignEntry } from "./bossFoundation.js";
 
 /**
  * Pure, data-driven campaign progression for the 0.7.0 unit-collection release.
@@ -508,13 +509,9 @@ export const CAMPAIGN_STAGES = deepFreeze([
       { id: "takuya-wave-10", atSeconds: 169, waveNumber: 10, label: "TAKUYA — 激昂", bossOnly: true, units: ["crusher", "runner", "runner", "crusher", "spitter"] },
       { id: "takuya-wave-final", atSeconds: 196, waveNumber: 11, label: "最終機会 — 感染拠点を破壊", units: ["runner", "spitter", "runner", "crusher", "walker", "runner", "spitter"] },
     ],
-    boss: {
-      id: "boss-takuya",
-      enemyKind: "takuya",
-      displayName: "TAKUYA",
-      classification: "正体不明の変異種・異常感染者",
+    boss: bossCampaignEntry("takuya", {
       entranceEventId: "event-prologue-takuya-entrance",
-    },
+    }),
     baseHp: 520,
     starThresholds: DEFAULT_STAR_THRESHOLDS,
     baseReward: takuyaBaseReward,
@@ -675,13 +672,9 @@ export const CAMPAIGN_STAGES = deepFreeze([
       { id: "station-tunnel-wave-09", atSeconds: 172, groups: [{ kind: "ooze", count: 3 }, { kind: "crusher", count: 2 }] },
       { id: "station-tunnel-wave-10", atSeconds: 198, groups: [{ kind: "sprinter", count: 4 }, { kind: "grappler", count: 2 }, { kind: "walker", count: 3 }] },
     ],
-    boss: {
-      id: "boss-gate-eater",
-      enemyKind: "gate-eater",
-      displayName: "改札喰い",
-      classification: "駅設備・研究容器融合大型特殊個体",
+    boss: bossCampaignEntry("gate-eater", {
       entranceEventId: "stage-station-tunnel-gate-eater-v070",
-    },
+    }),
     baseHp: 720,
     starThresholds: DEFAULT_STAR_THRESHOLDS,
     baseReward: stationTunnelBaseReward,
@@ -1063,13 +1056,12 @@ export const CAMPAIGN_STAGES = deepFreeze([
       { id: "t-plan-seal-wave-11", atSeconds: 210, groups: [{ kind: "abomination", count: 1 }, { kind: "crusher", count: 3 }, { kind: "sprinter", count: 5 }] },
       { id: "t-plan-seal-wave-12", atSeconds: 238, groups: [{ kind: "grappler", count: 4 }, { kind: "shade", count: 3 }, { kind: "runner", count: 5 }, { kind: "spitter", count: 3 }] },
     ],
-    boss: {
-      id: "boss-gate-eater-central",
-      enemyKind: "gate-eater",
+    boss: bossCampaignEntry("gate-eater", {
+      encounterId: "boss-gate-eater-central",
       displayName: "改札喰い・再活性体",
       classification: "中央感染裂孔に再接続した大型特殊個体",
       entranceEventId: null,
-    },
+    }),
     baseHp: 700,
   }),
 ]);

@@ -1136,6 +1136,7 @@ test("browser QA helper propagates its selected local port into every wrapped sm
   assert.match(helper, /process\.env\.P5_QA_BASE_URL = origin/);
   assert.match(helper, /process\.env\.PROGRESSION_QA_BASE_URL = origin/);
   assert.match(helper, /process\.env\.EQUIPMENT_RUNTIME_QA_BASE_URL = origin/);
+  assert.match(helper, /process\.env\.BOSS_QA_BASE_URL = origin/);
   assert.doesNotMatch(helper, /_QA_BASE_URL \?\?= origin/);
   assert.equal(
     packageJson.scripts["qa:progression"],
@@ -1507,11 +1508,14 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.battle-barks \{ top:calc\(104px \+ var\(--app-viewport-safe-top\)\);/);
   assert.match(css, /\.cooldown-mask small \{ display:block;[^}]*font-size:6px;/);
   assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
-  assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax\)/);
-  assert.match(game, /const bossLabel = selectedStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL \? "改札喰い" : "TAKUYA"/);
+  assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax, hud\.bossKind\)/);
+  assert.match(game, /bossHudSnapshot\(fighter\)/);
+  assert.match(game, /enforceBossBodyBarrier\(\{[\s\S]*mover: f,[\s\S]*previousX: movementStartX,[\s\S]*\}\)/);
+  assert.match(game, /const selectedStageBossKind = CAMPAIGN_STAGE_BY_ID\[selectedStageId\]\?\.boss\?\.enemyKind \?\? null/);
+  assert.match(game, /bossDefinitionForEnemyKind\(activeBossKind\)\?\.displayName/);
   assert.match(game, /\{activeBossLabel\}\{" \/\/ "\}\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
-  assert.match(css, /\.boss-hud \{[^}]*top:18%; right:calc\(2% \+ var\(--app-viewport-safe-right\)\); width:23%/);
-  assert.match(css, /\.boss-hud \{ top:78px; right:calc\(8px \+ var\(--app-viewport-safe-right\)\); width:24%/);
+  assert.match(css, /\.boss-hud \{[^}]*top:20%; right:calc\(2% \+ var\(--app-viewport-safe-right\)\); width:23%/);
+  assert.match(css, /\.boss-hud \{ top:90px; right:calc\(8px \+ var\(--app-viewport-safe-right\)\); width:24%/);
 });
 
 test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, and map return", async () => {

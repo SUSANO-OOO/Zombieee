@@ -148,8 +148,8 @@ const BODY_SCALE_BY_KIND = Object.freeze({
   kumaverson: 1.08,
   crusher: 1.1,
   abomination: 1.13,
-  takuya: 1.2,
-  "gate-eater": 1.16,
+  takuya: 1.3,
+  "gate-eater": 1.67,
 });
 
 function clipsForKind(kind) {
