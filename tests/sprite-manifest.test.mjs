@@ -88,15 +88,15 @@ async function sha256(filename) {
   return createHash("sha256").update(await readFile(filename)).digest("hex");
 }
 
-test("sprite manifest enumerates all sixteen playable units, Mayo's temporary feral atlas, and twelve enemy kinds", () => {
+test("sprite manifest enumerates all sixteen playable units, Mayo's feral atlas, enemies, and the isolated Kurome prototype", () => {
   assert.deepEqual(spriteKinds, [
     "brawler", "scout", "ranger", "medic", "brute", "gunner", "guardian", "engineer", "zakimiya",
     "tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan", "mayo-chan-feral",
     "walker", "runner", "turned", "spitter", "shade", "crusher", "abomination", "takuya",
-    "grappler", "ooze", "sprinter", "gate-eater",
+    "grappler", "ooze", "sprinter", "gate-eater", "kurome",
     "crazy-king", "kumaverson", "babayaga",
   ]);
-  assert.equal(spriteKinds.length, 29);
+  assert.equal(spriteKinds.length, 30);
   for (const kind of spriteKinds) {
     assert.deepEqual(spriteStatesFor(kind), SPRITE_STATES);
     assert.equal(spriteSheetPath(kind), SPRITE_MANIFEST[kind].path);
