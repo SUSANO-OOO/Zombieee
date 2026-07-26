@@ -315,7 +315,7 @@ function enemySpawnClass(kind) {
 }
 
 export function enemySpawnInterval({ kind, order = 0, wave = 1 }) {
-  const base = kind === "takuya" || kind === "gate-eater" ? .92
+  const base = enemySpawnClass(kind) === "boss" ? .92
     : kind === "abomination" ? .78
       : kind === "crusher" ? .64
           : kind === "spitter" || kind === "shade" || kind === "ooze" ? .5
@@ -332,7 +332,7 @@ export function enemyGateSpawnPosition({ kind, order = 0, wave = 1, entryId = 1 
   const verticalSlot = (verticalBand + slot * 2 + wave) % ENEMY_GATE_SPAWN.interiorY.length;
   const spawnClass = enemySpawnClass(kind);
   const clearance = spawnClass === "boss" ? 49 : spawnClass === "heavy" ? 43 : 31;
-  const entrySpeed = kind === "takuya" || kind === "gate-eater" ? 29
+  const entrySpeed = spawnClass === "boss" ? 29
     : kind === "abomination" ? 32
       : kind === "crusher" ? 36
         : kind === "spitter" || kind === "shade" || kind === "ooze" ? 46

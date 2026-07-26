@@ -151,6 +151,14 @@ import {
   isBossEnemyKind,
 } from "./bossFoundation.js";
 import {
+  KUROME_PROTOTYPE_TUNING,
+  advanceKuromeTracking,
+  beginKuromeTracking,
+  createKuromeTrackingRuntime,
+  kuromeEmergencyEvadePlan,
+  resolveKuromeBeam,
+} from "./kuromeBoss.js";
+import {
   advanceBattleStoryFlow,
   createBattleStoryFlowState,
   getPrologueOpeningEventIds,
@@ -403,7 +411,7 @@ const H = 540;
 
 type Lane = 0 | 1 | 2;
 type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
-type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater";
+type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater" | "kurome";
 type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "danger" | "boss";
 type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "mayo" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
@@ -673,6 +681,7 @@ type Fighter = {
   manualAbility?: ManualAbilityRuntime | null;
   mayoBiteSlowRemaining?: number;
   mayoRetreat?: ReturnType<typeof createMayoRetreatRuntime> | null;
+  visionDisruptedRemaining?: number;
 };
 type StationAbilityRuntime = {
   phase: string;
@@ -686,6 +695,7 @@ type StationAbilityRuntime = {
   centerX?: number | null;
   centerY?: number | null;
   targetX?: number | null;
+  targetY?: number | null;
   direction?: number;
 };
 type StationHazard = {
@@ -1025,6 +1035,7 @@ type Hud = {
   bossHp: number;
   bossMax: number;
   bossKind: string | null;
+  bossWorldX: number | null;
   takuyaEntranceAudioActive: boolean;
   crawlerHitFlash: number;
   threat: number;
@@ -1230,6 +1241,7 @@ function createStationAbilityRuntime(kind: string): StationAbilityRuntime {
   if (kind === "ooze") return createLeakMudRuntime() as StationAbilityRuntime;
   if (kind === "sprinter") return createSoukiRuntime() as StationAbilityRuntime;
   if (kind === "gate-eater") return createTicketGateEaterRuntime() as StationAbilityRuntime;
+  if (kind === "kurome") return createKuromeTrackingRuntime() as StationAbilityRuntime;
   return { phase: "idle", remainingSeconds: 0 };
 }
 
@@ -2830,6 +2842,12 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     ? sampleAnimationClip("mayo-chan", mayoRetreatSpriteState(f.mayoRetreat), f.mayoRetreat.phaseElapsed)
     : manualAbilityActive
     ? sampleAnimationClip(f.kind, "special", manualAbilityElapsed)
+    : f.kind === "kurome" && ["tracking", "locked"].includes(f.stationAbility.phase)
+      ? sampleAnimationClip(f.kind, "wind-up", KUROME_PROTOTYPE_TUNING.warningSeconds - f.stationAbility.remainingSeconds)
+      : f.kind === "kurome" && f.stationAbility.phase === "firing"
+        ? sampleAnimationClip(f.kind, "active", KUROME_PROTOTYPE_TUNING.fireSeconds - f.stationAbility.remainingSeconds)
+        : f.kind === "kurome" && f.stationAbility.phase === "recovery"
+          ? sampleAnimationClip(f.kind, "recovery", KUROME_PROTOTYPE_TUNING.recoverySeconds - f.stationAbility.remainingSeconds)
     : f.flash > 0
     ? sampleAnimationClip(f.kind, "hit", Math.max(0, .12 - f.flash))
     : f.abilityWindup > 0
@@ -3240,6 +3258,25 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
     ctx.fillRect(targetX, f.y - halfHeight, width, halfHeight * 2);
     ctx.globalAlpha = .9;
     ctx.strokeRect(targetX, f.y - halfHeight, width, halfHeight * 2);
+  } else if (telegraph.kind === "tracking-ray") {
+    const targetX = telegraph.targetX ?? BASE_X + 48;
+    const targetY = telegraph.targetY ?? f.y;
+    const originY = f.y - 64;
+    const pulse = .58 + Math.sin(g.time * 22) * .18;
+    ctx.globalAlpha = telegraph.locked ? .94 : pulse;
+    ctx.lineWidth = telegraph.locked ? 5 : 3;
+    ctx.beginPath();
+    ctx.moveTo(f.x - 4, originY);
+    ctx.lineTo(targetX, targetY - 38);
+    ctx.stroke();
+    ctx.globalAlpha = telegraph.locked ? .22 : .1;
+    ctx.lineWidth = Math.max(8, (telegraph.beamHalfWidth ?? 18) * 2);
+    ctx.stroke();
+    ctx.globalAlpha = .92;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 38, telegraph.locked ? 12 : 8, 0, Math.PI * 2);
+    ctx.stroke();
   }
   ctx.setLineDash([]);
   ctx.globalAlpha = .95;
@@ -3247,6 +3284,53 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
   ctx.font = "900 10px monospace";
   ctx.textAlign = "center";
   ctx.fillText(`${telegraph.displayName} // ${telegraph.counterplay}`, f.x, f.y - 142);
+  ctx.restore();
+}
+
+function drawKuromeCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+  if (f.kind !== "kurome" || f.stationAbility.phase !== "firing") return;
+  const targetX = Number(f.stationAbility.targetX);
+  const targetY = Number(f.stationAbility.targetY);
+  if (!Number.isFinite(targetX) || !Number.isFinite(targetY)) return;
+  const phaseRatio = f.hp / Math.max(1, f.maxHp);
+  const halfWidth = phaseRatio <= .3
+    ? KUROME_PROTOTYPE_TUNING.finalPhaseBeamHalfWidth
+    : KUROME_PROTOTYPE_TUNING.beamHalfWidth;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.lineCap = "round";
+  ctx.shadowColor = "#54f4ff";
+  ctx.shadowBlur = 18;
+  ctx.strokeStyle = "rgba(68,225,242,.32)";
+  ctx.lineWidth = halfWidth * 2;
+  ctx.beginPath();
+  ctx.moveTo(f.x - 4, f.y - 64);
+  ctx.lineTo(targetX, targetY - 38);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(232,253,255,.96)";
+  ctx.lineWidth = 4 + Math.sin(g.time * 70) * 1.2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawKuromeVisionInterference(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+  const remaining = Math.max(0, Number(f.visionDisruptedRemaining) || 0);
+  if (f.side !== "human" || remaining <= 0) return;
+  const alpha = Math.min(.38, .12 + remaining * .18);
+  ctx.save();
+  const gradient = ctx.createRadialGradient(f.x, f.y - 35, 8, f.x, f.y - 35, 72);
+  gradient.addColorStop(0, `rgba(74,226,238,${alpha * .55})`);
+  gradient.addColorStop(.48, `rgba(32,15,53,${alpha})`);
+  gradient.addColorStop(1, "rgba(8,4,18,0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.ellipse(f.x, f.y - 35, 72, 48, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = `rgba(104,233,241,${.4 + Math.sin(g.time * 18) * .16})`;
+  ctx.setLineDash([5, 8]);
+  ctx.beginPath();
+  ctx.ellipse(f.x, f.y - 35, 49, 32, 0, 0, Math.PI * 2);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -4178,6 +4262,8 @@ function drawWorld(
     if (f.combatReady) drawBossTelegraph(ctx, f, g);
     if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g);
     drawSpriteFighter(ctx, f, sprites);
+    if (f.combatReady) drawKuromeCombatVfx(ctx, f, g);
+    drawKuromeVisionInterference(ctx, f, g);
     if (!f.combatReady) continue;
     const compactScale = activeLaneCenters === LANE_Y ? 1 : 1.1;
     const bossDefinition = bossDefinitionForEnemyKind(f.kind);
@@ -4406,6 +4492,12 @@ export function AshfallGame() {
   const bossFoundationQaRef = useRef<{
     entranceCounts: Record<string, number>;
     lastEntrance: { kind: string; cueId: string; warningLabel: string } | null;
+    lastCounterplay: {
+      kind: string;
+      input: string;
+      targetId: number;
+      destinationLane: number;
+    } | null;
     barrierChallenge: {
       bossId: number;
       humanId: number;
@@ -4417,6 +4509,7 @@ export function AshfallGame() {
   }>({
     entranceCounts: {},
     lastEntrance: null,
+    lastCounterplay: null,
     barrierChallenge: null,
   });
   const qaScenarioAppliedRef = useRef(false);
@@ -4473,7 +4566,7 @@ export function AshfallGame() {
   const [hud, setHud] = useState<Hud>({
     missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
     barricadeHp: BARRICADE_MAX_HP, barricadeMaxHp: BARRICADE_MAX_HP, barricadeVulnerable: true, barricadeHitFlash: 0,
-    deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null,
+    deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null, bossWorldX: null,
     takuyaEntranceAudioActive: false,
     crawlerHitFlash: 0, threat: 0,
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), battleBarks: [], manualAbilityIcons: [],
@@ -5032,18 +5125,23 @@ export function AshfallGame() {
           bossAreaDamage: bossArea.targetDamage,
         };
       },
-      prepareBossFoundationProof: (kind: "takuya" | "gate-eater") => {
+      prepareBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome") => {
         const g = gameRef.current;
         if (!isBossEnemyKind(kind)) throw new RangeError(`Unknown boss proof kind: ${String(kind)}`);
-        const missionIndex = g.definition.timeline.findIndex((mission) => mission.units.includes(kind));
-        if (missionIndex < 0) {
+        const prototypeRoute = kind === "kurome";
+        const missionIndex = prototypeRoute
+          ? -1
+          : g.definition.timeline.findIndex((mission) => mission.units.includes(kind));
+        if (!prototypeRoute && missionIndex < 0) {
           throw new Error(`Boss proof route ${g.definition.stageId} does not contain ${kind}`);
         }
-        const mission = g.definition.timeline[missionIndex];
+        const mission = prototypeRoute
+          ? { id: "qa-kurome-prototype", at: 0, wave: 1 }
+          : g.definition.timeline[missionIndex];
         g.fighters = [];
         g.corpses = [];
         g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
-        g.eventIndex = missionIndex;
+        g.eventIndex = prototypeRoute ? g.definition.timeline.length : missionIndex;
         g.time = mission.at;
         g.wave = mission.wave;
         g.deployQueue = [];
@@ -5058,6 +5156,7 @@ export function AshfallGame() {
         bossFoundationQaRef.current = {
           entranceCounts: {},
           lastEntrance: null,
+          lastCounterplay: null,
           barrierChallenge: null,
         };
         const proofLane: Lane = 1;
@@ -5075,6 +5174,35 @@ export function AshfallGame() {
         human.laneSpeed = 0;
         human.cooldown = 99;
         human.damage = 0;
+        if (prototypeRoute) {
+          const portal = enemySpawnPortalPoint({
+            stageId: g.definition.stageId,
+            viewport: activeStageViewportId,
+            entryId: 1,
+            kind,
+            missionType: "boss-assault",
+          });
+          const entry = {
+            entryId: 1,
+            kind,
+            wave: 1,
+            order: 0,
+            delay: 0,
+            ...portal,
+            lane: portal.legacyLane as Lane,
+          } as EnemySpawnEntry;
+          spawnEnemy(g, kind, entry.lane, 0, entry);
+          const definition = bossDefinitionForEnemyKind(kind);
+          if (!definition) throw new Error("Kurome prototype contract missing");
+          bossFoundationQaRef.current.entranceCounts[kind] = 1;
+          bossFoundationQaRef.current.lastEntrance = {
+            kind,
+            cueId: definition.entrance.cueId,
+            warningLabel: definition.entrance.warningLabel,
+          };
+          g.banner = definition.entrance.warningLabel;
+          g.bannerTime = 3.2;
+        }
         setPaused(false);
         return {
           kind,
@@ -5083,7 +5211,7 @@ export function AshfallGame() {
           warningLabel: bossDefinitionForEnemyKind(kind)?.entrance.warningLabel ?? null,
         };
       },
-      getBossFoundationProof: (kind: "takuya" | "gate-eater") => {
+      getBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome") => {
         const g = gameRef.current;
         const boss = g.fighters.find((fighter) => fighter.kind === kind && fighter.side === "zombie");
         const human = g.fighters.find((fighter) => fighter.side === "human");
@@ -5092,10 +5220,24 @@ export function AshfallGame() {
         const authoredSize = fitSpriteBattleDisplaySize(kind, idleFrame, spriteDisplaySize(kind));
         const renderScale = activeLaneCenters === LANE_Y ? 1 : COMPACT_BATTLE_SPRITE_SCALE;
         const visibleHeightRatio = idleFrame.contentRect.h / idleFrame.sourceRect.h;
-        const renderedBodyHeight = authoredSize.h
-          * visibleHeightRatio
-          * renderScale
-          * sampleAnimationClip(kind, "idle", 0).bodyScale;
+        const idleBodyScale = sampleAnimationClip(kind, "idle", 0).bodyScale;
+        const renderedWidth = authoredSize.w * renderScale * idleBodyScale;
+        const renderedHeight = authoredSize.h * renderScale * idleBodyScale;
+        const renderedBodyHeight = renderedHeight * visibleHeightRatio;
+        const renderedVisibleRect = boss ? {
+          left: boss.x - renderedWidth * idleFrame.anchorX
+            + renderedWidth * (idleFrame.contentRect.x - idleFrame.sourceRect.x) / idleFrame.sourceRect.w,
+          top: boss.y - renderedHeight * idleFrame.anchorY
+            + renderedHeight * (idleFrame.contentRect.y - idleFrame.sourceRect.y) / idleFrame.sourceRect.h,
+          right: boss.x - renderedWidth * idleFrame.anchorX
+            + renderedWidth * (
+              idleFrame.contentRect.x - idleFrame.sourceRect.x + idleFrame.contentRect.w
+            ) / idleFrame.sourceRect.w,
+          bottom: boss.y - renderedHeight * idleFrame.anchorY
+            + renderedHeight * (
+              idleFrame.contentRect.y - idleFrame.sourceRect.y + idleFrame.contentRect.h
+            ) / idleFrame.sourceRect.h,
+        } : null;
         const compact = activeLaneCenters !== LANE_Y;
         const bannerWidth = compact ? 268 : 356;
         const bannerHeight = compact ? 32 : 54;
@@ -5122,11 +5264,24 @@ export function AshfallGame() {
           humanHp: human?.hp ?? null,
           hud: boss ? bossHudSnapshot(boss) : null,
           telegraph: boss ? bossTelegraphSnapshot(boss, { fallbackTargetX: BASE_X + 48 }) : null,
+          stationPhase: boss?.stationAbility.phase ?? null,
+          trackingTarget: boss ? {
+            targetId: boss.stationAbility.targetId ?? null,
+            targetX: boss.stationAbility.targetX ?? null,
+            targetY: boss.stationAbility.targetY ?? null,
+          } : null,
+          visionDisruptedRemaining: human?.visionDisruptedRemaining ?? 0,
+          prototypeStatus: definition?.prototypeStatus ?? null,
+          spriteLoadedWidth: spriteRefs.current[kind]?.naturalWidth ?? 0,
           renderedBodyHeight,
-          groundedAtY: boss?.y ?? null,
+          renderedVisibleRect,
+          footAnchorDelta: renderedVisibleRect && boss
+            ? renderedVisibleRect.bottom - boss.y
+            : null,
           display: definition?.display ?? null,
           entranceCount: bossFoundationQaRef.current.entranceCounts[kind] ?? 0,
           lastEntrance: bossFoundationQaRef.current.lastEntrance,
+          lastCounterplay: bossFoundationQaRef.current.lastCounterplay,
           barrier: bossFoundationQaRef.current.barrierChallenge,
           banner: g.bannerTime > 0 ? {
             text: g.banner,
@@ -5144,7 +5299,9 @@ export function AshfallGame() {
       accelerateBossFoundationEntry: (bossId: number) => {
         const boss = gameRef.current.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
         if (!boss || !boss.gateEntering) return false;
-        boss.gateEntrySpeed = Math.max(boss.gateEntrySpeed, 360);
+        boss.gateEntrySpeed = Math.max(boss.gateEntrySpeed, 96);
+        boss.cooldown = 99;
+        boss.abilityCooldown = 99;
         return true;
       },
       startBossFoundationBarrierChallenge: (bossId: number, humanId: number) => {
@@ -5185,7 +5342,8 @@ export function AshfallGame() {
         boss.abilityCooldown = 0;
         boss.abilityWindup = 0;
         boss.stationAbility = createStationAbilityRuntime(boss.kind);
-        human.x = boss.x - 90;
+        if (boss.kind === "kurome") boss.x = Math.min(boss.x, 560);
+        human.x = boss.x - (boss.kind === "kurome" ? 210 : 90);
         human.y = boss.y;
         human.lane = boss.lane;
         human.anchorLane = boss.lane;
@@ -5194,6 +5352,17 @@ export function AshfallGame() {
         return {
           warningSeconds: bossDefinitionForEnemyKind(boss.kind)?.attackTelegraph.warningSeconds ?? 0,
         };
+      },
+      moveBossFoundationHumanToLane: (humanId: number, lane: Lane) => {
+        const human = gameRef.current.fighters.find((fighter) => (
+          fighter.id === humanId
+          && fighter.side === "human"
+        ));
+        if (!human || !([0, 1, 2] as const).includes(lane)) return false;
+        human.lane = lane;
+        human.anchorLane = lane;
+        human.y = activeLaneCenters[lane];
+        return true;
       },
       prepareCrawlerDefenseProof: (
         input: EnemyKind | {
@@ -5770,6 +5939,7 @@ export function AshfallGame() {
             manualAbility: fighter.manualAbility ? { ...fighter.manualAbility } : null,
             mayoBiteSlowRemaining: fighter.mayoBiteSlowRemaining ?? 0,
             mayoRetreat: fighter.mayoRetreat ? { ...fighter.mayoRetreat } : null,
+            visionDisruptedRemaining: fighter.visionDisruptedRemaining ?? 0,
           })),
           corpses: g.corpses.map((corpse) => ({ ...corpse })),
           manualAbilityVfx: g.manualAbilityVfx.map((effect) => ({ ...effect })),
@@ -6679,6 +6849,47 @@ export function AshfallGame() {
     return true;
   }, [playCue]);
 
+  const triggerKuromeEmergencyEvadeAt = useCallback((x: number, y: number) => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over) return false;
+    for (const boss of g.fighters.filter((fighter) => (
+      fighter.kind === "kurome"
+      && fighter.side === "zombie"
+      && fighter.combatReady
+      && ["tracking", "locked"].includes(fighter.stationAbility.phase)
+    ))) {
+      const target = g.fighters.find((fighter) => (
+        fighter.side === "human"
+        && String(fighter.id) === String(boss.stationAbility.targetId)
+      ));
+      const plan = kuromeEmergencyEvadePlan({
+        runtime: boss.stationAbility,
+        target,
+        tap: { x, y },
+        laneCenters: activeLaneCenters,
+      });
+      if (!plan.ok || !target || !Number.isInteger(plan.lane)) continue;
+      boss.stationAbility = plan.runtime as StationAbilityRuntime;
+      target.lane = plan.lane as Lane;
+      target.anchorLane = plan.lane as Lane;
+      target.y = activeLaneCenters[plan.lane as Lane];
+      target.targetId = null;
+      target.targetObjectId = null;
+      target.aiMoveDirection = 0;
+      g.banner = "緊急回避 // 照準線を離脱";
+      g.bannerTime = .85;
+      bossFoundationQaRef.current.lastCounterplay = {
+        kind: "kurome-emergency-evade",
+        input: "battlefield-pointer",
+        targetId: target.id,
+        destinationLane: plan.lane,
+      };
+      playCue("deploy-light");
+      return true;
+    }
+    return false;
+  }, [playCue]);
+
   const executeSelected = useCallback((x: number, y: number) => {
     const action = selectedActionRef.current;
     if (!action) return;
@@ -6739,9 +6950,13 @@ export function AshfallGame() {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return;
     const { x, y } = pointerWorldPosition(event);
-    if (!selectedActionRef.current) { triggerDrumAt(x, y); return; }
+    if (!selectedActionRef.current) {
+      if (triggerKuromeEmergencyEvadeAt(x, y)) return;
+      triggerDrumAt(x, y);
+      return;
+    }
     executeSelected(x, y);
-  }, [executeSelected, pointerWorldPosition, triggerDrumAt]);
+  }, [executeSelected, pointerWorldPosition, triggerDrumAt, triggerKuromeEmergencyEvadeAt]);
 
   const handleBattlefieldPointerCancel = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -6970,7 +7185,7 @@ export function AshfallGame() {
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
       deployQueue: fresh.deployQueue.length, airstrikePhase: fresh.airstrike.phase,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
-      bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null,
+      bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
       takuyaEntranceAudioActive: false,
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
       deployCooldowns: { ...fresh.deployCooldowns }, battleBarks: [...fresh.battleBarks.active], manualAbilityIcons: [] });
@@ -9312,6 +9527,7 @@ export function AshfallGame() {
           }
           if (f.hp <= 0) continue;
           f.mayoBiteSlowRemaining = Math.max(0, (f.mayoBiteSlowRemaining ?? 0) - dt);
+          f.visionDisruptedRemaining = Math.max(0, (f.visionDisruptedRemaining ?? 0) - dt);
           const mayoFeralMultiplier = f.kind === "mayo-chan" && f.manualAbility?.phase === "feral"
             ? MANUAL_ABILITY_REGISTRY["mayo-chan"].moveSpeedMultiplier
             : 1;
@@ -9438,7 +9654,7 @@ export function AshfallGame() {
           if (f.stunned > 0) {
             f.targetId = null;
             f.targetObjectId = null;
-            if (["grappler", "ooze", "sprinter", "gate-eater"].includes(f.kind)
+            if (["grappler", "ooze", "sprinter", "gate-eater", "kurome"].includes(f.kind)
               && f.stationAbility.phase !== "idle") {
               f.stationAbility = createStationAbilityRuntime(f.kind);
               f.abilityCooldown = Math.max(f.abilityCooldown, 1.8);
@@ -9577,6 +9793,97 @@ export function AshfallGame() {
               if (f.stationAbility.phase === "idle") f.abilityCooldown = 5.2;
               continue;
             }
+          }
+
+          if (f.kind === "kurome") {
+            let abilityFrame = f.stationAbility.phase !== "idle";
+            if (f.stationAbility.phase !== "idle") {
+              const liveTarget = g.fighters.find((candidate) => (
+                candidate.side === "human"
+                && String(candidate.id) === String(f.stationAbility.targetId)
+              ));
+              const step = advanceKuromeTracking(f.stationAbility, dt, liveTarget);
+              f.stationAbility = step.runtime as StationAbilityRuntime;
+              if (step.fired) {
+                const finalPhase = f.hp / Math.max(1, f.maxHp) <= .3;
+                const beam = resolveKuromeBeam({
+                  boss: f,
+                  runtime: f.stationAbility,
+                  candidates: g.fighters,
+                  beamHalfWidth: finalPhase
+                    ? KUROME_PROTOTYPE_TUNING.finalPhaseBeamHalfWidth
+                    : KUROME_PROTOTYPE_TUNING.beamHalfWidth,
+                });
+                const damage = finalPhase
+                  ? KUROME_PROTOTYPE_TUNING.finalPhaseDamage
+                  : KUROME_PROTOTYPE_TUNING.damage;
+                for (const victimId of beam.hits) {
+                  const victim = g.fighters.find((candidate) => String(candidate.id) === victimId);
+                  if (!victim) continue;
+                  const resolved = applyIncomingHumanDamage(g, victim, damage, {
+                    attackKind: "ranged",
+                    attacker: f,
+                  });
+                  victim.flash = Math.max(victim.flash, .16);
+                  victim.visionDisruptedRemaining = Math.max(
+                    victim.visionDisruptedRemaining ?? 0,
+                    KUROME_PROTOTYPE_TUNING.interferenceSeconds,
+                  );
+                  addDamageText(g, {
+                    x: victim.x,
+                    y: victim.y - 64,
+                    value: `視界撹乱 -${Math.round(resolved.targetDamage)}`,
+                    life: .95,
+                    color: "#6ceaf1",
+                  });
+                }
+                if (beam.target) addParticles(g, beam.target.x, beam.target.y, "#62e8ef", 22);
+                g.flashOverlay = Math.max(g.flashOverlay, .12);
+                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+                g.banner = finalPhase
+                  ? "クロメ（作業名） // 追跡眼・過励起"
+                  : "クロメ（作業名） // 追跡眼";
+                g.bannerTime = .82;
+                playProductionCue("enemy-takuya-attack", f.x, {
+                  priority: 94,
+                  cooldownMs: 200,
+                  volume: .84,
+                  playbackRate: 1.28,
+                  fallbackCue: "boss-warning",
+                });
+              }
+              if (step.recovered) {
+                f.abilityCooldown = f.hp / Math.max(1, f.maxHp) <= .3
+                  ? KUROME_PROTOTYPE_TUNING.finalPhaseCooldownSeconds
+                  : KUROME_PROTOTYPE_TUNING.cooldownSeconds;
+              }
+            }
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+              const victim = g.fighters
+                .filter((candidate) => candidate.side === "human"
+                  && candidate.hp > 0
+                  && candidate.combatReady
+                  && candidate.targetable !== false
+                  && fighterDistance(candidate, f) <= f.range)
+                .sort((left, right) => left.x - right.x || fighterDistance(left, f) - fighterDistance(right, f))[0];
+              const started = beginKuromeTracking(victim);
+              if (started.ok) {
+                f.stationAbility = started.runtime as StationAbilityRuntime;
+                abilityFrame = true;
+                g.banner = "クロメ（作業名） // 追跡照準";
+                // The ray itself owns the full warning window. Keep the global
+                // banner brief so compact screens do not cover this tall boss.
+                g.bannerTime = .68;
+                playProductionCue("enemy-takuya-attack", f.x, {
+                  priority: 90,
+                  cooldownMs: 250,
+                  volume: .52,
+                  playbackRate: 1.65,
+                  fallbackCue: "boss-warning",
+                });
+              }
+            }
+            if (abilityFrame || f.stationAbility.phase !== "idle") continue;
           }
 
           if (f.kind === "gate-eater") {
@@ -11188,9 +11495,9 @@ export function AshfallGame() {
 
         dispatchSituationalBattleBarks(g);
         if (!g.survivalRun) dispatchBattleStoryEvents(g);
-        const bossActiveOrIncoming = g.fighters.some((fighter) => ["takuya", "gate-eater"].includes(fighter.kind)
+        const bossActiveOrIncoming = g.fighters.some((fighter) => isBossEnemyKind(fighter.kind)
             && fighter.hp > 0 && fighter.contained !== true)
-          || g.enemySpawn.pending.some((entry) => ["takuya", "gate-eater"].includes(entry.kind));
+          || g.enemySpawn.pending.some((entry) => isBossEnemyKind(entry.kind));
         const enragedTakuya = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0 && fighter.hp / fighter.maxHp <= .5);
         if (enragedTakuya && !g.takuyaEnragedAnnounced) {
           g.takuyaEnragedAnnounced = true;
@@ -11379,7 +11686,7 @@ export function AshfallGame() {
           barricadeHp: Math.max(0, g.barricadeHp), barricadeMaxHp: g.barricadeMaxHp, barricadeVulnerable: g.barricadeVulnerable, barricadeHitFlash: g.barricadeHitFlash,
           deployQueue: g.deployQueue.length,
           airstrikePhase: g.airstrike.phase, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
-          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null,
+          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
           takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
           objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns },
@@ -11431,6 +11738,7 @@ export function AshfallGame() {
   const activeBossLabel = activeBossKind
     ? bossDefinitionForEnemyKind(activeBossKind)?.displayName ?? enemyContentFor(activeBossKind).displayName
     : "BOSS";
+  const bossHudSide = (hud.bossWorldX ?? 0) >= W * .64 ? "boss-hud-left" : "boss-hud-right";
   const selectedName = selectedAction?.startsWith("supply:")
     ? SUPPORT_DISPLAY_NAMES[selectedAction.slice("supply:".length) as SupplyKind]
     : selectedAction === "airstrike" ? "航空支援" : null;
@@ -11517,7 +11825,7 @@ export function AshfallGame() {
             : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
         </>}
-        {hud.bossMax > 0 && <div className={`boss-hud ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
+        {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
 
         {selectedAction && started && !paused && !end && <div className="placement-hint" role="status" aria-live="polite">
           <span className="placement-copy"><b>{selectedName}</b><span>戦場をタップ</span></span>

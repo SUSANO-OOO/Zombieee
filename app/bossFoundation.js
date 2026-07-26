@@ -10,8 +10,8 @@ const phase = (phaseNumber, label, startsAtRatio) => ({
 
 /**
  * Existing bosses are the first consumers of the 0.9.0 shared boss contract.
- * New boss identities are intentionally absent until their producer-approved
- * prototype has passed the required real-screen review.
+ * Kurome remains an isolated working-name prototype until its identity and
+ * real-screen proof pass the producer checkpoint; no campaign stage consumes it.
  */
 export const BOSS_DEFINITIONS = deepFreeze([
   {
@@ -113,6 +113,61 @@ export const BOSS_DEFINITIONS = deepFreeze([
       summary: "駅設備と融合し、予告後にlaneを突進する大型特殊個体。",
     },
   },
+  {
+    id: "boss-kurome-prototype",
+    enemyKind: "kurome",
+    displayName: "クロメ（作業名）",
+    workingName: true,
+    prototypeStatus: "producer-review-required",
+    classification: "長距離追跡・視界撹乱型異常発生個体",
+    hpBar: { color: "#38cddd", accentColor: "#d461ed" },
+    phases: [
+      phase(1, "第1段階", 1),
+      phase(2, "第2段階", .65),
+      phase(3, "最終段階", .3),
+    ],
+    entrance: {
+      warningLabel: "警告 // クロメ（作業名）",
+      cueId: "enemy-takuya-attack",
+      fullBodyRequired: true,
+    },
+    attackTelegraph: {
+      attackId: "tracking-oculus",
+      displayName: "追跡眼",
+      kind: "tracking-ray",
+      warningSeconds: 1.25,
+      trackingSeconds: .82,
+      beamHalfWidth: 18,
+      finalPhaseBeamHalfWidth: 23,
+      interferenceSeconds: 1.2,
+      color: "#55e6ef",
+      counterplay: "照準線から離脱",
+    },
+    display: {
+      sizeClass: "giant-boss",
+      compactBodyHeight: 146,
+      standardBodyHeight: 133,
+      bodyBounds: { width: 150, height: 170 },
+      footAnchor: { x: .5, y: .98 },
+      shadow: { radiusX: 46, radiusY: 11 },
+      hitboxRadius: 36,
+    },
+    combat: {
+      attackRange: 240,
+      statusResistance: { stun: .66, push: .08, slow: .78 },
+      formChange: "sensor-fin-expansion",
+      summonProfile: null,
+      componentChange: "oculus-tracking-lock",
+    },
+    reward: { equipmentId: "boss-resonance-gland", quantity: 1 },
+    resultId: "boss-result-kurome-prototype",
+    compendiumId: "boss-compendium-kurome-prototype",
+    compendium: {
+      title: "クロメ（作業名）",
+      summary: "照準を追従させ、固定後に長距離射線と局所的な視界撹乱を発生させる試作個体。",
+      assetPath: "/art/v090-prototypes/bosses/kurome-compendium-candidate-r1.webp",
+    },
+  },
 ]);
 
 export const BOSS_DEFINITION_BY_ID = deepFreeze(Object.fromEntries(
@@ -181,6 +236,7 @@ export function bossHudSnapshot(fighter) {
     hp,
     maxHp,
     hpRatio: hp / maxHp,
+    worldX: Number(fighter.x) || 0,
     phase: bossPhaseForHp(hp, maxHp, definition.enemyKind),
     hpBar: definition.hpBar,
   });
@@ -219,6 +275,30 @@ export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
         ? Number(fighter.stationAbility.targetX)
         : Number(fallbackTargetX) || 0,
       laneHalfHeight: definition.attackTelegraph.laneHalfHeight,
+      color: definition.attackTelegraph.color,
+      counterplay: definition.attackTelegraph.counterplay,
+    });
+  }
+  if (definition.enemyKind === "kurome"
+    && ["tracking", "locked"].includes(fighter.stationAbility?.phase)) {
+    return deepFreeze({
+      bossId: definition.id,
+      attackId: definition.attackTelegraph.attackId,
+      displayName: definition.attackTelegraph.displayName,
+      kind: definition.attackTelegraph.kind,
+      remainingSeconds: Math.max(0, Number(fighter.stationAbility.remainingSeconds) || 0),
+      originX: Number(fighter.x) || 0,
+      originY: Number(fighter.y) || 0,
+      targetX: Number.isFinite(Number(fighter.stationAbility.targetX))
+        ? Number(fighter.stationAbility.targetX)
+        : Number(fallbackTargetX) || 0,
+      targetY: Number.isFinite(Number(fighter.stationAbility.targetY))
+        ? Number(fighter.stationAbility.targetY)
+        : Number(fighter.y) || 0,
+      beamHalfWidth: Number(fighter.hp) / Math.max(1, Number(fighter.maxHp) || 1) <= .3
+        ? definition.attackTelegraph.finalPhaseBeamHalfWidth
+        : definition.attackTelegraph.beamHalfWidth,
+      locked: fighter.stationAbility.phase === "locked",
       color: definition.attackTelegraph.color,
       counterplay: definition.attackTelegraph.counterplay,
     });

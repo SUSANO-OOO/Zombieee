@@ -248,7 +248,12 @@ function validateReferences(registry, ids, errors, warnings) {
 
   for (const collection of ["missions", "waves", "maps", "rewards", "enemies"]) {
     for (const id of ids[collection]) {
-      if (collection === "enemies" && validRecords(registry, "enemies").find((enemy) => enemy.id === id)?.runtimeGenerated) continue;
+      if (collection === "enemies") {
+        const enemy = validRecords(registry, "enemies").find((candidate) => candidate.id === id);
+        // Runtime-generated records and explicit producer-review prototypes
+        // are intentionally valid without a campaign mission consumer.
+        if (enemy?.runtimeGenerated || enemy?.prototypeStatus === "producer-review-required") continue;
+      }
       if (!referenced[collection].has(id)) warnings.push(issue("unused-content-candidate", collection, id, `Unreferenced ${collection} record`));
     }
   }
