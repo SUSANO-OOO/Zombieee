@@ -5,12 +5,28 @@ import {
   reorganizeLegacyCaps,
 } from "../app/campaignEconomy.js";
 import { unitLevelCost } from "../app/unitProgression.js";
+import {
+  EQUIPMENT_CATALOG,
+  EQUIPMENT_MAX_ENHANCEMENT,
+  equipmentEnhancementCost,
+} from "../app/equipment.js";
 
 const legacyBalances = [0, 100, 1_000, 10_000, Number.MAX_SAFE_INTEGER];
 const earlyLevelCosts = [2, 3, 4, 5].map(unitLevelCost);
 const allUnitsToLevel25 = CAMPAIGN_UNITS.length
   * Array.from({ length: 24 }, (_, index) => unitLevelCost(index + 2))
     .reduce((total, cost) => total + cost, 0);
+const supplyShopEquipment = EQUIPMENT_CATALOG.filter(({ source }) => source === "supply-shop");
+const starterEquipment = EQUIPMENT_CATALOG.find(({ id }) => id === "field-machete");
+const allShopPurchaseCaps = supplyShopEquipment.reduce(
+  (total, equipment) => total + equipment.purchaseCaps,
+  0,
+);
+const allEquipmentEnhancementCaps = EQUIPMENT_CATALOG.reduce((total, equipment) => (
+  total + Array.from({ length: EQUIPMENT_MAX_ENHANCEMENT }, (_, level) => (
+    equipmentEnhancementCost(equipment.id, level)
+  )).reduce((subtotal, cost) => subtotal + cost, 0)
+), 0);
 
 const cases = legacyBalances.map((legacyCaps) => {
   const migration = reorganizeLegacyCaps(legacyCaps);
@@ -25,6 +41,14 @@ const cases = legacyBalances.map((legacyCaps) => {
 if (cases[0].affordability.affordableLevelUps < 3) {
   throw new Error("The minimum migration grant cannot fund starter equipment plus multiple Level ups");
 }
+if (starterEquipment?.purchaseCaps !== V090_STARTER_EQUIPMENT_BUDGET) {
+  throw new Error("Starter equipment budget drifted from the canonical shop catalog");
+}
+if (cases.some(({ migration }) => (
+  migration.nextCaps >= allShopPurchaseCaps + allEquipmentEnhancementCaps
+))) {
+  throw new Error("A migrated balance can instantly purchase and enhance the complete equipment catalog");
+}
 if (cases.some(({ migration }) => migration.nextCaps >= allUnitsToLevel25)) {
   throw new Error("A migrated balance can instantly max the complete current roster");
 }
@@ -37,5 +61,8 @@ console.log(JSON.stringify({
   earlyLevelCosts,
   starterEquipmentBudget: V090_STARTER_EQUIPMENT_BUDGET,
   allUnitsToLevel25,
+  supplyShopEquipmentCount: supplyShopEquipment.length,
+  allShopPurchaseCaps,
+  allEquipmentEnhancementCaps,
   cases,
 }, null, 2));

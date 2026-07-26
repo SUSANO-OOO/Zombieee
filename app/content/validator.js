@@ -170,6 +170,36 @@ function validateReferences(registry, ids, errors, warnings) {
   for (const upgrade of validRecords(registry, "upgrades")) {
     if (!ids.units.has(upgrade.unitId)) errors.push(issue("broken-unit-reference", "upgrades", upgrade.id, `Missing unit: ${upgrade.unitId}`));
   }
+  for (const equipment of validRecords(registry, "equipment")) {
+    if (!["personal", "tactical"].includes(equipment.slotType)) {
+      errors.push(issue("invalid-equipment-slot", "equipment", equipment.id, `Invalid slot type: ${equipment.slotType}`));
+    }
+    if (!["supply-shop", "survival", "boss"].includes(equipment.source)) {
+      errors.push(issue("invalid-equipment-source", "equipment", equipment.id, `Invalid source: ${equipment.source}`));
+    }
+    if (!["weapon", "armor", "medical", "communications", "biological"].includes(equipment.category)) {
+      errors.push(issue("invalid-equipment-category", "equipment", equipment.id, `Invalid category: ${equipment.category}`));
+    }
+    if (equipment.maxEnhancement !== 5) {
+      errors.push(issue("invalid-equipment-enhancement", "equipment", equipment.id, "Equipment must have five fixed enhancement stages"));
+    }
+    if (!Number.isFinite(equipment.enhancementBaseCaps) || equipment.enhancementBaseCaps <= 0) {
+      errors.push(issue("invalid-equipment-cost", "equipment", equipment.id, "Enhancement cost must be positive"));
+    }
+    if (equipment.source === "supply-shop"
+      && (!Number.isFinite(equipment.purchaseCaps) || equipment.purchaseCaps <= 0)) {
+      errors.push(issue("invalid-equipment-cost", "equipment", equipment.id, "Supply-shop equipment requires a positive purchase cost"));
+    }
+    for (const [stat, tuning] of Object.entries(equipment.effect ?? {})) {
+      if (!tuning
+        || typeof tuning !== "object"
+        || Array.isArray(tuning)
+        || !Number.isFinite(tuning.base)
+        || !Number.isFinite(tuning.perEnhancement)) {
+        errors.push(issue("invalid-equipment-effect", "equipment", equipment.id, `Invalid fixed effect: ${stat}`));
+      }
+    }
+  }
 
   const eventKindsByCollection = {
     events: new Set(["battle-event"]),

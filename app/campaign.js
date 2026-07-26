@@ -28,6 +28,17 @@ import {
   saveSurvivalCheckpoint,
   settleSurvivalRun,
 } from "./survival.js";
+import {
+  EQUIPMENT_MAX_ENHANCEMENT,
+  EQUIPMENT_SLOT_TYPES,
+  EQUIPMENT_SOURCES,
+  PERSONAL_EQUIPMENT_SLOTS,
+  TACTICAL_EQUIPMENT_SLOTS,
+  equipmentDefinition,
+  equipmentEnhancementCost,
+  equipmentEnhancementLevel,
+  normalizeEquipmentEnhancementLevels,
+} from "./equipment.js";
 
 /**
  * Pure, data-driven campaign progression for the 0.7.0 unit-collection release.
@@ -1519,7 +1530,8 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 
 export const calculateBattleRewards = calculateStageRewards;
 
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 10;
+const V090_LEVEL_ECONOMY_SCHEMA_VERSION = 10;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 11;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
 const CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION = 5;
 
@@ -1585,6 +1597,16 @@ function addEquipmentInventory(inventory, grants) {
   ]);
 }
 
+function equipmentQuantityMap(inventory) {
+  return new Map(normalizeEquipmentInventory(inventory)
+    .map(({ equipmentId, quantity }) => [equipmentId, quantity]));
+}
+
+export function campaignEquipmentQuantity(save, equipmentId) {
+  const current = migrateCampaignSave(save);
+  return equipmentQuantityMap(current.equipmentInventory).get(equipmentId) ?? 0;
+}
+
 export function createDefaultCampaignSave() {
   const ownership = [...INITIAL_UNIT_IDS];
   const formationUnitIds = [...INITIAL_UNIT_IDS].slice(0, CAMPAIGN_FORMATION_MAX_SLOTS);
@@ -1592,6 +1614,8 @@ export function createDefaultCampaignSave() {
     id,
     displayName: CAMPAIGN_FORMATION_PRESET_LABELS[id],
     unitIds: [...formationUnitIds],
+    personalEquipmentByUnit: {},
+    tacticalEquipmentIds: Array.from({ length: TACTICAL_EQUIPMENT_SLOTS }, () => null),
   }));
   return {
     schemaVersion: CAMPAIGN_SAVE_SCHEMA_VERSION,
@@ -1605,6 +1629,7 @@ export function createDefaultCampaignSave() {
     processedResultIds: [],
     processedAcquisitionIds: [],
     processedUpgradeIds: [],
+    processedEquipmentTransactionIds: [],
     processedMigrationIds: [],
     migrationNotices: [],
     eventFoundation: createEventFoundationProgress(),
@@ -1615,6 +1640,7 @@ export function createDefaultCampaignSave() {
     // Deprecated 0.6.x currency field retained as a synchronized read alias.
     supplies: V090_CAPS_MIGRATION_BASE,
     equipmentInventory: [],
+    equipmentEnhancementLevels: {},
     unlockedStageIds: [INITIAL_STAGE_ID],
     ownership,
     discovery: [...ownership],
@@ -1796,7 +1822,7 @@ function deriveRoster({
     }
   }
 
-  if (!Number.isFinite(sourceSchemaVersion) || sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION) {
+  if (!Number.isFinite(sourceSchemaVersion) || sourceSchemaVersion < V090_LEVEL_ECONOMY_SCHEMA_VERSION) {
     for (const stageId of completedStageIds) {
       for (const unitId of LEGACY_STAGE_OWNERSHIP[stageId] ?? []) ownership.add(unitId);
     }
@@ -1840,7 +1866,53 @@ function normalizeFormationUnitIds(value, ownership) {
   return candidates.slice(0, CAMPAIGN_FORMATION_MAX_SLOTS);
 }
 
-function normalizeFormationPresets(value, ownership, legacyFormation) {
+function normalizePresetEquipment(source, unitIds, inventory) {
+  const available = equipmentQuantityMap(inventory);
+  const usage = new Map();
+  const reserve = (equipmentId, slotType, seen) => {
+    const entry = equipmentDefinition(equipmentId);
+    if (!entry || entry.slotType !== slotType || seen.has(equipmentId)) return false;
+    const nextUsage = (usage.get(equipmentId) ?? 0) + 1;
+    if (nextUsage > (available.get(equipmentId) ?? 0)) return false;
+    usage.set(equipmentId, nextUsage);
+    seen.add(equipmentId);
+    return true;
+  };
+  const personalSource = isRecord(source)
+    ? firstDefined(source, ["personalEquipmentByUnit", "personalEquipment", "unitEquipment"], {})
+    : {};
+  const personalEquipmentByUnit = {};
+  if (isRecord(personalSource)) {
+    for (const unitId of unitIds) {
+      const seen = new Set();
+      const equipmentIds = Array.isArray(personalSource[unitId]) ? personalSource[unitId] : [];
+      const normalized = Array.from({ length: PERSONAL_EQUIPMENT_SLOTS }, () => null);
+      for (let slotIndex = 0; slotIndex < PERSONAL_EQUIPMENT_SLOTS; slotIndex += 1) {
+        const equipmentId = equipmentIds[slotIndex];
+        if (typeof equipmentId !== "string") continue;
+        if (reserve(equipmentId, EQUIPMENT_SLOT_TYPES.PERSONAL, seen)) {
+          normalized[slotIndex] = equipmentId;
+        }
+      }
+      if (normalized.some(Boolean)) personalEquipmentByUnit[unitId] = normalized;
+    }
+  }
+  const tacticalSource = isRecord(source)
+    ? firstDefined(source, ["tacticalEquipmentIds", "tacticalEquipment", "teamEquipmentIds"], [])
+    : [];
+  const tacticalEquipmentIds = Array.from({ length: TACTICAL_EQUIPMENT_SLOTS }, () => null);
+  const tacticalSeen = new Set();
+  for (let slotIndex = 0; slotIndex < TACTICAL_EQUIPMENT_SLOTS; slotIndex += 1) {
+    const equipmentId = Array.isArray(tacticalSource) ? tacticalSource[slotIndex] : null;
+    if (typeof equipmentId !== "string") continue;
+    if (reserve(equipmentId, EQUIPMENT_SLOT_TYPES.TACTICAL, tacticalSeen)) {
+      tacticalEquipmentIds[slotIndex] = equipmentId;
+    }
+  }
+  return { personalEquipmentByUnit, tacticalEquipmentIds };
+}
+
+function normalizeFormationPresets(value, ownership, legacyFormation, equipmentInventory = []) {
   const ownedKnownIds = ownership.filter((unitId) => CAMPAIGN_UNIT_BY_CANONICAL_ID[unitId]);
   const defaultUnitIds = normalizeFormationUnitIds(
     Array.isArray(legacyFormation) && legacyFormation.length > 0 ? legacyFormation : ownedKnownIds,
@@ -1870,10 +1942,13 @@ function normalizeFormationPresets(value, ownership, legacyFormation) {
       ? firstDefined(source, ["unitIds", "units", "formationUnitIds", "formationKinds"], [])
       : [];
     const unitIds = normalizeFormationUnitIds(requested, ownership);
+    const selectedUnitIds = unitIds.length > 0 ? unitIds : [...safeDefault];
+    const equipment = normalizePresetEquipment(source, selectedUnitIds, equipmentInventory);
     return {
       id,
       displayName: CAMPAIGN_FORMATION_PRESET_LABELS[id],
-      unitIds: unitIds.length > 0 ? unitIds : [...safeDefault],
+      unitIds: selectedUnitIds,
+      ...equipment,
     };
   });
 }
@@ -1938,6 +2013,11 @@ export function migrateCampaignSave(
   const processedUpgradeIds = uniqueStrings(firstDefined(
     source,
     ["processedUpgradeIds", "appliedUpgradeIds"],
+    [],
+  ));
+  const processedEquipmentTransactionIds = uniqueStrings(firstDefined(
+    source,
+    ["processedEquipmentTransactionIds", "appliedEquipmentTransactionIds"],
     [],
   ));
   const sourceProcessedMigrationIds = uniqueStrings(firstDefined(
@@ -2005,7 +2085,7 @@ export function migrateCampaignSave(
   const qaHasExactlyLegacyRoster = explicitOwnership.length === legacyQaAllUnitIds.length
     && legacyQaAllUnitIds.every((unitId) => explicitOwnership.includes(unitId));
   const repairQaAllUnlockLeak = completedStageIds.length === 0
-    && (!Number.isFinite(sourceSchemaVersion) || sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION)
+    && (!Number.isFinite(sourceSchemaVersion) || sourceSchemaVersion < V090_LEVEL_ECONOMY_SCHEMA_VERSION)
     && !source.ownership
     && qaHasExactlyAllKnownStages
     && (qaHasExactlyCurrentRoster || qaHasExactlyLegacyRoster);
@@ -2021,14 +2101,14 @@ export function migrateCampaignSave(
     repairQaAllUnlockLeak,
   });
   const sourceProgression = Number.isFinite(sourceSchemaVersion)
-    && sourceSchemaVersion >= CAMPAIGN_SAVE_SCHEMA_VERSION
+    && sourceSchemaVersion >= V090_LEVEL_ECONOMY_SCHEMA_VERSION
     ? firstDefined(source, ["unitLevels", "unitRanks", "upgrades"], {})
     : firstDefined(source, ["unitRanks", "unitLevels", "upgrades"], {});
   const canonicalProgression = isRecord(sourceProgression)
     ? Object.fromEntries(Object.entries(sourceProgression).flatMap(([candidateId, value]) => {
       const canonicalId = normalizeCampaignUnitId(candidateId);
       if (!canonicalId) return [];
-      const level = Number.isFinite(sourceSchemaVersion) && sourceSchemaVersion >= CAMPAIGN_SAVE_SCHEMA_VERSION
+      const level = Number.isFinite(sourceSchemaVersion) && sourceSchemaVersion >= V090_LEVEL_ECONOMY_SCHEMA_VERSION
         ? value
         : legacyRankToLevel(value);
       return [[canonicalId, level]];
@@ -2043,10 +2123,21 @@ export function migrateCampaignSave(
     ["formationUnitIds", "formationKinds", "selectedUnitIds", "loadoutUnitIds"],
     [],
   );
+  const equipmentInventory = normalizeEquipmentInventory(firstDefined(
+    source,
+    ["equipmentInventory", "equipment", "inventoryEquipment"],
+    [],
+  ));
+  const equipmentEnhancementLevels = normalizeEquipmentEnhancementLevels(firstDefined(
+    source,
+    ["equipmentEnhancementLevels", "equipmentLevelsById", "equipmentUpgradeLevels"],
+    {},
+  ));
   const formationPresets = normalizeFormationPresets(
     firstDefined(source, ["formationPresets", "presets", "formations"], []),
     roster.ownership,
     legacyFormation,
+    equipmentInventory,
   );
   const selectedFormationPresetId = normalizeFormationPresetId(firstDefined(
     source,
@@ -2060,7 +2151,7 @@ export function migrateCampaignSave(
     0,
   );
   const requiresEconomyMigration = (!Number.isFinite(sourceSchemaVersion)
-      || sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION)
+      || sourceSchemaVersion < V090_LEVEL_ECONOMY_SCHEMA_VERSION)
     && !sourceProcessedMigrationIds.includes(V090_CAPS_MIGRATION_ID);
   const capsMigration = requiresEconomyMigration ? reorganizeLegacyCaps(sourceCaps) : null;
   const caps = capsMigration?.nextCaps ?? sourceCaps;
@@ -2098,6 +2189,7 @@ export function migrateCampaignSave(
     processedResultIds,
     processedAcquisitionIds,
     processedUpgradeIds,
+    processedEquipmentTransactionIds,
     processedMigrationIds,
     migrationNotices,
     eventFoundation,
@@ -2106,11 +2198,8 @@ export function migrateCampaignSave(
     claimedStarRewardsByStage,
     caps,
     supplies: caps,
-    equipmentInventory: normalizeEquipmentInventory(firstDefined(
-      source,
-      ["equipmentInventory", "equipment", "inventoryEquipment"],
-      [],
-    )),
+    equipmentInventory,
+    equipmentEnhancementLevels,
     ...effectiveUnlocks,
     ...roster,
     unitLevels,
@@ -2693,6 +2782,282 @@ export function setFormationPresetUnits(save, presetId, unitIds) {
   if (existing.length === canonicalUnitIds.length
     && existing.every((unitId, index) => unitId === canonicalUnitIds[index])) return current;
   return reviseCampaignSave({ ...current, formationPresets });
+}
+
+export function getFormationPresetEquipmentSnapshot(save, presetId = null) {
+  const current = migrateCampaignSave(save);
+  const normalizedPresetId = presetId === null
+    ? current.selectedFormationPresetId
+    : requireFormationPresetId(presetId);
+  const preset = current.formationPresets.find(({ id }) => id === normalizedPresetId);
+  if (!preset) throw new RangeError(`Unknown formation preset: ${String(normalizedPresetId)}`);
+  return deepFreeze({
+    presetId: preset.id,
+    unitIds: [...preset.unitIds],
+    unitLevelsByUnit: Object.fromEntries(preset.unitIds.map((unitId) => [
+      unitId,
+      current.unitLevels[unitId] ?? 1,
+    ])),
+    personalEquipmentByUnit: Object.fromEntries(Object.entries(preset.personalEquipmentByUnit)
+      .map(([unitId, equipmentIds]) => [unitId, [...equipmentIds]])),
+    tacticalEquipmentIds: [...preset.tacticalEquipmentIds],
+    equipmentEnhancementLevels: { ...current.equipmentEnhancementLevels },
+  });
+}
+
+function equipmentTransactionInput(equipmentIdOrInput, maybeInput) {
+  if (isRecord(equipmentIdOrInput)) return equipmentIdOrInput;
+  return {
+    ...(isRecord(maybeInput) ? maybeInput : {}),
+    equipmentId: equipmentIdOrInput,
+  };
+}
+
+function equipmentTransactionId(input) {
+  return typeof input.transactionId === "string"
+    ? input.transactionId.trim()
+    : typeof input.receiptId === "string"
+      ? input.receiptId.trim()
+      : "";
+}
+
+export function purchaseCampaignEquipment(save, equipmentIdOrInput, maybeInput) {
+  const input = equipmentTransactionInput(equipmentIdOrInput, maybeInput);
+  const equipmentId = typeof input.equipmentId === "string" ? input.equipmentId.trim() : "";
+  const transactionId = equipmentTransactionId(input);
+  if (!transactionId) throw new TypeError("A non-empty equipment transactionId is required");
+  const current = migrateCampaignSave(save);
+  const entry = equipmentDefinition(equipmentId);
+  const costCaps = entry?.source === EQUIPMENT_SOURCES.SUPPLY_SHOP
+    ? Number(entry.purchaseCaps)
+    : 0;
+  const baseResult = {
+    transactionId,
+    equipmentId,
+    costCaps,
+    spentCaps: 0,
+    quantityAfter: campaignEquipmentQuantity(current, equipmentId),
+    applied: false,
+    alreadyProcessed: false,
+    reason: "",
+  };
+  if (current.processedEquipmentTransactionIds.includes(transactionId)) {
+    return {
+      save: current,
+      result: { ...baseResult, alreadyProcessed: true, reason: "already-processed" },
+    };
+  }
+  if (!entry) return { save: current, result: { ...baseResult, reason: "unknown-equipment" } };
+  if (entry.source !== EQUIPMENT_SOURCES.SUPPLY_SHOP || !Number.isFinite(entry.purchaseCaps)) {
+    return { save: current, result: { ...baseResult, reason: "not-purchasable" } };
+  }
+  if (current.caps < costCaps) {
+    return { save: current, result: { ...baseResult, reason: "insufficient-caps" } };
+  }
+  const caps = current.caps - costCaps;
+  const equipmentInventory = addEquipmentInventory(current.equipmentInventory, [
+    { equipmentId, quantity: 1 },
+  ]);
+  return {
+    save: reviseCampaignSave({
+      ...current,
+      processedEquipmentTransactionIds: [
+        ...current.processedEquipmentTransactionIds,
+        transactionId,
+      ],
+      caps,
+      supplies: caps,
+      equipmentInventory,
+    }),
+    result: {
+      ...baseResult,
+      spentCaps: costCaps,
+      quantityAfter: campaignEquipmentQuantity({ ...current, equipmentInventory }, equipmentId),
+      applied: true,
+      reason: "applied",
+    },
+  };
+}
+
+export function enhanceCampaignEquipment(save, equipmentIdOrInput, maybeInput) {
+  const input = equipmentTransactionInput(equipmentIdOrInput, maybeInput);
+  const equipmentId = typeof input.equipmentId === "string" ? input.equipmentId.trim() : "";
+  const transactionId = equipmentTransactionId(input);
+  if (!transactionId) throw new TypeError("A non-empty equipment transactionId is required");
+  const current = migrateCampaignSave(save);
+  const entry = equipmentDefinition(equipmentId);
+  const currentLevel = equipmentEnhancementLevel(current.equipmentEnhancementLevels, equipmentId);
+  const costCaps = equipmentEnhancementCost(equipmentId, currentLevel) ?? 0;
+  const baseResult = {
+    transactionId,
+    equipmentId,
+    currentLevel,
+    nextLevel: currentLevel >= EQUIPMENT_MAX_ENHANCEMENT ? null : currentLevel + 1,
+    costCaps,
+    spentCaps: 0,
+    applied: false,
+    alreadyProcessed: false,
+    reason: "",
+  };
+  if (current.processedEquipmentTransactionIds.includes(transactionId)) {
+    return {
+      save: current,
+      result: { ...baseResult, alreadyProcessed: true, reason: "already-processed" },
+    };
+  }
+  if (!entry) return { save: current, result: { ...baseResult, reason: "unknown-equipment" } };
+  if (campaignEquipmentQuantity(current, equipmentId) < 1) {
+    return { save: current, result: { ...baseResult, reason: "not-owned" } };
+  }
+  if (baseResult.nextLevel === null) {
+    return { save: current, result: { ...baseResult, reason: "max-enhancement" } };
+  }
+  if (current.caps < costCaps) {
+    return { save: current, result: { ...baseResult, reason: "insufficient-caps" } };
+  }
+  const caps = current.caps - costCaps;
+  return {
+    save: reviseCampaignSave({
+      ...current,
+      processedEquipmentTransactionIds: [
+        ...current.processedEquipmentTransactionIds,
+        transactionId,
+      ],
+      caps,
+      supplies: caps,
+      equipmentEnhancementLevels: {
+        ...current.equipmentEnhancementLevels,
+        [equipmentId]: baseResult.nextLevel,
+      },
+    }),
+    result: {
+      ...baseResult,
+      spentCaps: costCaps,
+      applied: true,
+      reason: "applied",
+    },
+  };
+}
+
+function setFormationEquipmentSlot(save, {
+  presetId,
+  unitId = null,
+  slotIndex,
+  equipmentId = null,
+  slotType,
+}) {
+  const current = migrateCampaignSave(save);
+  const normalizedPresetId = requireFormationPresetId(presetId);
+  const maximumSlots = slotType === EQUIPMENT_SLOT_TYPES.PERSONAL
+    ? PERSONAL_EQUIPMENT_SLOTS
+    : TACTICAL_EQUIPMENT_SLOTS;
+  const normalizedSlotIndex = Number(slotIndex);
+  if (!Number.isInteger(normalizedSlotIndex)
+    || normalizedSlotIndex < 0
+    || normalizedSlotIndex >= maximumSlots) {
+    throw new RangeError(`Equipment slot index must be 0-${maximumSlots - 1}`);
+  }
+  const preset = current.formationPresets.find(({ id }) => id === normalizedPresetId);
+  if (!preset) throw new RangeError(`Unknown formation preset: ${String(presetId)}`);
+  const canonicalEquipmentId = equipmentId === null || equipmentId === ""
+    ? null
+    : typeof equipmentId === "string" ? equipmentId.trim() : "";
+  if (canonicalEquipmentId) {
+    const entry = equipmentDefinition(canonicalEquipmentId);
+    if (!entry) throw new RangeError(`Unknown equipment: ${String(equipmentId)}`);
+    if (entry.slotType !== slotType) {
+      throw new RangeError(`Equipment cannot be assigned to ${slotType}: ${canonicalEquipmentId}`);
+    }
+    const personalOccurrences = Object.entries(preset.personalEquipmentByUnit)
+      .flatMap(([candidateUnitId, equipmentIds]) => equipmentIds.map((candidateEquipmentId, candidateSlotIndex) => ({
+        unitId: candidateUnitId,
+        slotIndex: candidateSlotIndex,
+        equipmentId: candidateEquipmentId,
+        slotType: EQUIPMENT_SLOT_TYPES.PERSONAL,
+      })));
+    const tacticalOccurrences = preset.tacticalEquipmentIds.map((candidateEquipmentId, candidateSlotIndex) => ({
+      unitId: null,
+      slotIndex: candidateSlotIndex,
+      equipmentId: candidateEquipmentId,
+      slotType: EQUIPMENT_SLOT_TYPES.TACTICAL,
+    }));
+    const occupiedElsewhere = [...personalOccurrences, ...tacticalOccurrences].filter((occurrence) => (
+      occurrence.equipmentId === canonicalEquipmentId
+      && !(occurrence.slotType === slotType
+        && occurrence.slotIndex === normalizedSlotIndex
+        && (slotType !== EQUIPMENT_SLOT_TYPES.PERSONAL
+          || occurrence.unitId === normalizeCampaignUnitId(unitId)))
+    ));
+    if (slotType === EQUIPMENT_SLOT_TYPES.TACTICAL
+      && occupiedElsewhere.some((occurrence) => occurrence.slotType === slotType)) {
+      throw new RangeError(`Tactical equipment cannot stack with itself: ${canonicalEquipmentId}`);
+    }
+    if (slotType === EQUIPMENT_SLOT_TYPES.PERSONAL
+      && occupiedElsewhere.some((occurrence) => (
+        occurrence.slotType === slotType
+        && occurrence.unitId === normalizeCampaignUnitId(unitId)
+      ))) {
+      throw new RangeError(`A unit cannot equip duplicate equipment: ${canonicalEquipmentId}`);
+    }
+    if (occupiedElsewhere.length >= campaignEquipmentQuantity(current, canonicalEquipmentId)) {
+      throw new RangeError(`Equipment quantity is already allocated in preset: ${canonicalEquipmentId}`);
+    }
+  }
+  let nextPreset;
+  if (slotType === EQUIPMENT_SLOT_TYPES.PERSONAL) {
+    const canonicalUnitId = normalizeCampaignUnitId(unitId);
+    if (!canonicalUnitId || !preset.unitIds.includes(canonicalUnitId)) {
+      throw new RangeError(`Unit is not deployed in formation preset: ${String(unitId)}`);
+    }
+    const slots = [...(preset.personalEquipmentByUnit[canonicalUnitId]
+      ?? Array.from({ length: PERSONAL_EQUIPMENT_SLOTS }, () => null))];
+    slots[normalizedSlotIndex] = canonicalEquipmentId;
+    nextPreset = {
+      ...preset,
+      personalEquipmentByUnit: {
+        ...preset.personalEquipmentByUnit,
+        [canonicalUnitId]: slots,
+      },
+    };
+  } else {
+    const slots = [...preset.tacticalEquipmentIds];
+    slots[normalizedSlotIndex] = canonicalEquipmentId;
+    nextPreset = { ...preset, tacticalEquipmentIds: slots };
+  }
+  const normalizedPreset = normalizeFormationPresets(
+    [nextPreset],
+    current.ownership,
+    [],
+    current.equipmentInventory,
+  ).find(({ id }) => id === normalizedPresetId);
+  const requestedStillAssigned = canonicalEquipmentId === null
+    || (slotType === EQUIPMENT_SLOT_TYPES.PERSONAL
+      ? normalizedPreset?.personalEquipmentByUnit[normalizeCampaignUnitId(unitId)]?.[normalizedSlotIndex]
+      : normalizedPreset?.tacticalEquipmentIds[normalizedSlotIndex]) === canonicalEquipmentId;
+  if (!requestedStillAssigned) {
+    throw new RangeError(`Equipment quantity is already allocated in preset: ${canonicalEquipmentId}`);
+  }
+  const formationPresets = current.formationPresets.map((candidate) => (
+    candidate.id === normalizedPresetId ? normalizedPreset : candidate
+  ));
+  if (JSON.stringify(current.formationPresets) === JSON.stringify(formationPresets)) return current;
+  return reviseCampaignSave({ ...current, formationPresets });
+}
+
+export function setFormationPersonalEquipmentSlot(save, input) {
+  if (!isRecord(input)) throw new TypeError("Personal equipment assignment is required");
+  return setFormationEquipmentSlot(save, {
+    ...input,
+    slotType: EQUIPMENT_SLOT_TYPES.PERSONAL,
+  });
+}
+
+export function setFormationTacticalEquipmentSlot(save, input) {
+  if (!isRecord(input)) throw new TypeError("Tactical equipment assignment is required");
+  return setFormationEquipmentSlot(save, {
+    ...input,
+    slotType: EQUIPMENT_SLOT_TYPES.TACTICAL,
+  });
 }
 
 function normalizeAcquisitionInput(unitIdOrInput, maybeInput) {

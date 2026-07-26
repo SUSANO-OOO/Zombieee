@@ -73,6 +73,7 @@ test("production content registry validates every schema and reference", () => {
   assert.equal(result.counts.enemies, 12);
   assert.equal(result.counts.stages, 16);
   assert.equal(result.counts.waves, 137);
+  assert.equal(result.counts.equipment, 20);
   assert.deepEqual(CONTENT_REGISTRY_FACTS.collectionCounts, result.counts);
 });
 

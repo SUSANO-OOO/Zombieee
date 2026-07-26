@@ -1,7 +1,7 @@
 import { CONTENT_SCHEMA_VERSION } from "./schema.js";
 import { deepFreeze } from "./freeze.js";
 
-export const CONTENT_MIGRATION_VERSION = 1;
+export const CONTENT_MIGRATION_VERSION = 2;
 
 function normalizeAliases(record) {
   return [...new Set((record.aliases ?? [])
