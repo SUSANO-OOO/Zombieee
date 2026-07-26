@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "status": "producer-review-required",
+  "workingName": "クロメ",
+  "prototypeId": "boss-kurome-prototype",
+  "integrationGate": "Producer confirms identity, working name, 844x390 and 844x340 real-screen proof.",
+  "sourceAssets": [
+    {
+      "path": "assets/source/v090-prototypes/bosses/kurome-identity-master-candidate-r1.png",
+      "sha256": "575d7676550e973dbfb4732d86266c85cc00039735174d97c499b71bbc6bcd35",
+      "role": "identity-master-candidate"
+    },
+    {
+      "path": "assets/source/v090-prototypes/bosses/kurome-pose-sheet-candidate-r1.png",
+      "sha256": "2a094c73dcad26fcd5d8f25da0001b0891d448799f8d6fd9a123b5136461b2d6",
+      "role": "battle-animation-source-candidate"
+    }
+  ],
+  "generatedAssets": [
+    {
+      "path": "public/art/v090-prototypes/bosses/kurome-identity-candidate-r1.webp",
+      "sha256": "c065f94040d82e8d407ff32abb1f826c8f016393a248cf8495a505eafc1838f4",
+      "bytes": 77856,
+      "dimensions": [512, 768],
+      "generatedBy": "scripts/build-v090-kurome-prototype-assets.mjs",
+      "derivedFrom": ["assets/source/v090-prototypes/bosses/kurome-identity-master-candidate-r1.png"]
+    },
+    {
+      "path": "public/art/v090-prototypes/bosses/kurome-compendium-candidate-r1.webp",
+      "sha256": "59b842c673e48cd57322c98c8bb8b194ad7f92b6fb98eed0982cdb9faa333790",
+      "bytes": 55834,
+      "dimensions": [512, 512],
+      "generatedBy": "scripts/build-v090-kurome-prototype-assets.mjs",
+      "derivedFrom": ["assets/source/v090-prototypes/bosses/kurome-identity-master-candidate-r1.png"]
+    },
+    {
+      "path": "public/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
+      "sha256": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+      "bytes": 2384701,
+      "dimensions": [3360, 896],
+      "generatedBy": "scripts/build-v090-kurome-prototype-assets.mjs",
+      "derivedFrom": ["assets/source/v090-prototypes/bosses/kurome-pose-sheet-candidate-r1.png"]
+    }
+  ]
+}
