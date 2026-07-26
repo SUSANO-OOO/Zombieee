@@ -41,6 +41,14 @@ CUES = (
     "weapon-musashi-dual-katana",
     "ability-musashi-cross-guard",
     "ability-musashi-counter",
+    "weapon-mayo-bite",
+    "ability-mayo-feral-start",
+    "ability-mayo-feral-rush",
+    "ability-mayo-feral-end",
+    "voice-mayo-deploy",
+    "voice-mayo-attack",
+    "voice-mayo-hurt",
+    "voice-mayo-retreat",
 )
 
 
@@ -65,6 +73,8 @@ def cue_family(cue_id: str) -> str:
         return "plasma"
     if "mrs-chiha" in cue_id:
         return "launcher"
+    if "mayo" in cue_id:
+        return "mayo"
     return "katana"
 
 
@@ -75,6 +85,8 @@ def cue_duration(cue_id: str) -> float:
         return .46
     if cue_id.endswith("impact"):
         return .38
+    if cue_id.endswith("retreat") or cue_id.endswith("feral-end"):
+        return .42
     return .30
 
 
@@ -104,13 +116,29 @@ def synthesize(cue_id: str) -> list[float]:
             rotation = math.sin(2 * math.pi * (18 + progress * 6) * time * 2 * math.pi)
             blast = body_noise[index] * math.exp(-time / (.07 if "impact" in cue_id or "final" in cue_id else .035))
             signal = .44 * thump + .22 * mechanism + .14 * rotation + .42 * blast
-        else:
+        elif family == "katana":
             sweep_frequency = 2_900 - 2_050 * progress
             blade = math.sin(2 * math.pi * sweep_frequency * time)
             second_blade = math.sin(2 * math.pi * (sweep_frequency * 1.31) * max(0, time - .045))
             ring = math.sin(2 * math.pi * 3_420 * time) * math.exp(-time / .18)
             air = body_noise[index] * math.exp(-time / .065)
             signal = .30 * blade + .27 * second_blade + .28 * ring + .34 * air
+        else:
+            if "bite" in cue_id:
+                jaw = math.sin(2 * math.pi * (210 - 90 * progress) * time) * math.exp(-time / .045)
+                snap = body_noise[index] * math.exp(-time / .018)
+                signal = .5 * jaw + .58 * snap
+            elif "ability" in cue_id:
+                infection = math.sin(2 * math.pi * (92 + 36 * math.sin(time * 18)) * time)
+                pulse = math.sin(2 * math.pi * (320 + 740 * progress) * time)
+                rasp = body_noise[index] * math.exp(-time / .16)
+                signal = .38 * infection + .3 * pulse + .38 * rasp
+            else:
+                base = 780 if "deploy" in cue_id or "attack" in cue_id else 520
+                yip = math.sin(2 * math.pi * (base + 160 * math.sin(time * 34)) * time)
+                growl = math.sin(2 * math.pi * (115 + 28 * math.sin(time * 19)) * time)
+                rasp = body_noise[index] * math.exp(-time / .11)
+                signal = (.55 * yip if "deploy" in cue_id or "attack" in cue_id else .28 * yip) + .34 * growl + .24 * rasp
         signal *= envelope(index, length, .0015, .07)
         samples.append(signal)
     peak = max(abs(sample) for sample in samples) or 1.0
@@ -158,35 +186,46 @@ def sha256(path: Path) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--ffmpeg", help="Path to ffmpeg.exe")
+    parser.add_argument("--wav-only", action="store_true", help="Keep generated WAV finals when FFmpeg is unavailable")
     args = parser.parse_args()
-    ffmpeg = find_ffmpeg(args.ffmpeg)
+    ffmpeg = None if args.wav_only else find_ffmpeg(args.ffmpeg)
     records = []
     for cue_id in CUES:
         master = MASTER_DIR / f"{cue_id}.wav"
         mp3 = OUTPUT_DIR / f"{cue_id}.mp3"
         ogg = OUTPUT_DIR / f"{cue_id}.ogg"
+        final_wav = OUTPUT_DIR / f"{cue_id}.wav"
         write_wav(master, synthesize(cue_id))
-        encode(ffmpeg, master, mp3, "mp3")
-        encode(ffmpeg, master, ogg, "ogg")
+        if ffmpeg:
+            encode(ffmpeg, master, mp3, "mp3")
+            encode(ffmpeg, master, ogg, "ogg")
+        if not mp3.is_file() or not ogg.is_file():
+            final_wav.parent.mkdir(parents=True, exist_ok=True)
+            final_wav.write_bytes(master.read_bytes())
+        encoded_finals = [
+            {"path": mp3.relative_to(ROOT).as_posix(), "sha256": sha256(mp3), "type": "audio/mpeg"},
+            {"path": ogg.relative_to(ROOT).as_posix(), "sha256": sha256(ogg), "type": "audio/ogg"},
+        ] if mp3.is_file() and ogg.is_file() else [
+            {"path": final_wav.relative_to(ROOT).as_posix(), "sha256": sha256(final_wav), "type": "audio/wav"},
+        ]
         records.append({
             "id": cue_id,
-            "origin": "project-original deterministic synthesis; no sampled recording or voice",
+            "origin": "project-original deterministic Chihuahua synthesis; no sampled recording or human voice"
+            if cue_id.startswith("voice-mayo-")
+            else "project-original deterministic synthesis; no sampled recording or voice",
             "source": {"path": master.relative_to(ROOT).as_posix(), "sha256": sha256(master)},
-            "finals": [
-                {"path": mp3.relative_to(ROOT).as_posix(), "sha256": sha256(mp3), "type": "audio/mpeg"},
-                {"path": ogg.relative_to(ROOT).as_posix(), "sha256": sha256(ogg), "type": "audio/ogg"},
-            ],
+            "finals": encoded_finals,
         })
     payload = {
         "version": 1,
         "generator": "scripts/build-v090-playable-audio.py",
         "sampleRate": SAMPLE_RATE,
-        "policy": "Dedicated non-voice weapon and manual ability cues synthesized in-repository.",
+        "policy": "Dedicated weapon, manual ability, and synthesized Chihuahua battle cues authored in-repository without sampled recordings or human voice.",
         "cues": records,
     }
     PROVENANCE_PATH.parent.mkdir(parents=True, exist_ok=True)
     PROVENANCE_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"built {len(records)} Version 0.9.0 playable cues with {ffmpeg}")
+    print(f"built {len(records)} Version 0.9.0 playable cues with {ffmpeg or 'WAV-only mode'}")
 
 
 if __name__ == "__main__":

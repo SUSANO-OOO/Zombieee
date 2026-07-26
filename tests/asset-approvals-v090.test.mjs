@@ -40,6 +40,7 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
       "producer-message-2026-07-26-image-2",
       "producer-message-2026-07-26-image-3",
       "producer-message-2026-07-26-image-4",
+      "producer-message-2026-07-26-image-5",
     ],
   );
 
@@ -48,7 +49,7 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
     ...await filesBelow(path.join(ROOT, "public", "art", "v090")),
   ].map(repositoryPath).sort();
   const records = ledger.assets;
-  assert.equal(records.length, 29);
+  assert.equal(records.length, 38);
   assert.equal(new Set(records.map(({ assetId }) => assetId)).size, records.length);
   assert.equal(new Set(records.map(({ path: assetPath }) => assetPath)).size, records.length);
   assert.deepEqual(records.map(({ path: assetPath }) => assetPath).sort(), activeFiles);
@@ -75,6 +76,7 @@ test("each active character resolves only to its producer master and both builds
     ["tky", "V090-TKY"],
     ["mrs-chiha", "V090-MRS-CHIHA"],
     ["miyamoto-musashi", "V090-MIYAMOTO-MUSASHI"],
+    ["mayo-chan", "V090-MAYO-CHAN"],
   ];
   const reachesMaster = (assetId, masterId, visited = new Set()) => {
     if (assetId === masterId) return true;
@@ -106,11 +108,15 @@ test("each active character resolves only to its producer master and both builds
       profile.battleSprite.path,
     ].map((assetPath) => `public${assetPath}`);
     for (const runtimePath of runtimePaths) assert.equal(registeredPaths.has(runtimePath), true, runtimePath);
+    if (kind === "mayo-chan") {
+      assert.equal(registeredPaths.has(`public${profile.feralBattleSprite.path}`), true);
+    }
   }
 
   const buildScripts = [
     await readFile(path.join(ROOT, "scripts", "build-v090-zakimiya-assets.mjs"), "utf8"),
     await readFile(path.join(ROOT, "scripts", "build-v090-new-playable-human-assets.mjs"), "utf8"),
+    await readFile(path.join(ROOT, "scripts", "build-v090-mayo-assets.mjs"), "utf8"),
   ].join("\n");
   for (const record of ledger.assets.filter(({ kind }) => (
     kind === "producer-identity-master" || kind === "openai-generated-identity-derivative"

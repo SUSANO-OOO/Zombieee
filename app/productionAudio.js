@@ -117,6 +117,14 @@ const V090_PLAYABLE_AUDIO_CUES = Object.freeze([
   { id: "weapon-musashi-dual-katana", category: "melee", gain: .68, priority: 72, cooldownMs: 80 },
   { id: "ability-musashi-cross-guard", category: "melee", gain: .62, priority: 78, cooldownMs: 300 },
   { id: "ability-musashi-counter", category: "melee", gain: .78, priority: 88, cooldownMs: 180 },
+  { id: "weapon-mayo-bite", category: "melee", gain: .62, priority: 68, cooldownMs: 80, maxInstances: 3 },
+  { id: "ability-mayo-feral-start", category: "monsters", gain: .62, priority: 82, cooldownMs: 400 },
+  { id: "ability-mayo-feral-rush", category: "monsters", gain: .56, priority: 72, cooldownMs: 120, maxInstances: 2 },
+  { id: "ability-mayo-feral-end", category: "monsters", gain: .58, priority: 78, cooldownMs: 400 },
+  { id: "voice-mayo-deploy", category: "humanVoices", gain: .58, priority: 70, cooldownMs: 500 },
+  { id: "voice-mayo-attack", category: "humanVoices", gain: .56, priority: 68, cooldownMs: 220, maxInstances: 2 },
+  { id: "voice-mayo-hurt", category: "humanVoices", gain: .62, priority: 76, cooldownMs: 300, maxInstances: 2 },
+  { id: "voice-mayo-retreat", category: "humanVoices", gain: .6, priority: 88, cooldownMs: 1000 },
 ]);
 
 const V070_AUDIO_ASSET_SPECS = Object.freeze([
@@ -228,7 +236,9 @@ function v090PlayableAsset(spec) {
   return {
     id: spec.id,
     category: spec.category,
-    sources: sourceFor(V090_AUDIO_ROOT, "sfx", spec.id),
+    sources: spec.id.includes("mayo")
+      ? [{ src: `${V090_AUDIO_ROOT}/sfx/${spec.id}.wav`, type: "audio/wav" }]
+      : sourceFor(V090_AUDIO_ROOT, "sfx", spec.id),
     preload: "lazy",
     loop: false,
     gain: spec.gain,
@@ -510,6 +520,7 @@ const UNIT_WEAPON_CUES = Object.freeze({
   tky: "weapon-tky-plasma-blade",
   "mrs-chiha": "weapon-mrs-chiha-grenade-launcher",
   "miyamoto-musashi": "weapon-musashi-dual-katana",
+  "mayo-chan": "weapon-mayo-bite",
 });
 
 const UNIT_VOICE_PROFILES = Object.freeze({
@@ -577,6 +588,24 @@ export const UNIT_AUDIO_CUE_CONTRACTS = Object.freeze({
       reload: "weapon-suppressed-reload",
       specialKill: "weapon-special-kill",
     },
+  }),
+  "mayo-chan": Object.freeze({
+    weapon: "weapon-mayo-bite",
+    voiceProfile: "chihuahua",
+    weaponEvents: Object.freeze({
+      attack: "weapon-mayo-bite",
+      bite: "weapon-mayo-bite",
+      abilityStart: "ability-mayo-feral-start",
+      abilityRush: "ability-mayo-feral-rush",
+      abilityEnd: "ability-mayo-feral-end",
+    }),
+    voiceEvents: Object.freeze({
+      deploy: "voice-mayo-deploy",
+      attack: "voice-mayo-attack",
+      hurt: "voice-mayo-hurt",
+      death: "voice-mayo-retreat",
+      retreat: "voice-mayo-retreat",
+    }),
   }),
 });
 

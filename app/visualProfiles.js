@@ -302,6 +302,7 @@ export const V090_CARD_READ_CONTRACTS = deepFreeze({
   tky: { weaponId: "plasma-blade", label: "LIGHT BLADE", role: "forward-sweeper", accent: "#ff42c8" },
   "mrs-chiha": { weaponId: "rotary-grenade-launcher", label: "FULL SALVO", role: "multi-zone-bombardier", accent: "#cf9f50" },
   "miyamoto-musashi": { weaponId: "dual-katana", label: "NITEN ICHIRYU", role: "boss-counter", accent: "#6b90b2" },
+  "mayo-chan": { weaponId: "bite-and-medical-harness", label: "FERAL RESCUE", role: "fast-disruptor", accent: "#e2ba4b" },
 });
 
 export const V090_UNIT_VISUAL_PROFILES = deepFreeze({
@@ -389,4 +390,32 @@ export const V090_UNIT_VISUAL_PROFILES = deepFreeze({
       "two-distinct-japanese-swords",
     ],
   }),
+  "mayo-chan": {
+    ...unitProfile({
+      unitId: "unit-mayo-chan",
+      combatKind: "mayo-chan",
+      identityPath: "/art/v090/characters/reference/mayo-chan-identity-master-r1.png",
+      identityRevision: "r1",
+      eventPath: "/art/v090/characters/portraits/mayo-chan-event-portrait-r1.webp",
+      eventRevision: "r1",
+      cardPath: "/art/v090/characters/cards/mayo-chan-formation-card-r1.webp",
+      cardRevision: "r1",
+      battlePath: "/art/v090/characters/mayo-chan-battle-r1.png",
+      battleRevision: "r1",
+      cardRead: V090_CARD_READ_CONTRACTS["mayo-chan"],
+      focus: { x: .49, y: .31 },
+      identityLock: [
+        "same-small-long-haired-cream-chihuahua",
+        "round-dark-eyes-short-muzzle-upright-feathered-ears",
+        "cream-coat-markings-and-curled-fluffy-tail",
+        "yellow-bandana",
+        "black-tactical-medical-harness-cross-pouches-and-canister",
+      ],
+    }),
+    feralBattleSprite: {
+      path: "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      revision: "r1",
+      identityState: "same-individual-temporary-manual-ability-state",
+    },
+  },
 });

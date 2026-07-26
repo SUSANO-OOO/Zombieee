@@ -2,7 +2,7 @@
   "version": 1,
   "generator": "scripts/build-v090-playable-audio.py",
   "sampleRate": 44100,
-  "policy": "Dedicated non-voice weapon and manual ability cues synthesized in-repository.",
+  "policy": "Dedicated weapon, manual ability, and synthesized Chihuahua battle cues authored in-repository without sampled recordings or human voice.",
   "cues": [
     {
       "id": "weapon-tky-plasma-blade",
@@ -281,6 +281,126 @@
           "path": "public/audio/v090/sfx/ability-musashi-counter.ogg",
           "sha256": "3a129b1f53b0f94639484146ea12514431d43a620f6f0c43c4ef748fb420db16",
           "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mayo-bite",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mayo-bite.wav",
+        "sha256": "157f39cf34c382bcdb5bae58cdca07295cbdaddd6c01032d1340d16ba11f89e0"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mayo-bite.wav",
+          "sha256": "157f39cf34c382bcdb5bae58cdca07295cbdaddd6c01032d1340d16ba11f89e0",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "ability-mayo-feral-start",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mayo-feral-start.wav",
+        "sha256": "2ad06f5e3365a7c0352461a2107a0447e797bb6dc841b636dce24e0662a11fc3"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mayo-feral-start.wav",
+          "sha256": "2ad06f5e3365a7c0352461a2107a0447e797bb6dc841b636dce24e0662a11fc3",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "ability-mayo-feral-rush",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mayo-feral-rush.wav",
+        "sha256": "9f89cac333dbd2dab618ad9fb1c70db816ffb0613d61c9aafa9556c2126e0d6f"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mayo-feral-rush.wav",
+          "sha256": "9f89cac333dbd2dab618ad9fb1c70db816ffb0613d61c9aafa9556c2126e0d6f",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "ability-mayo-feral-end",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mayo-feral-end.wav",
+        "sha256": "c4ec39b8d0e4da8a81f90b2d5f1b09135c5066b1c3d6cfef1b1dead5e0b529f7"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mayo-feral-end.wav",
+          "sha256": "c4ec39b8d0e4da8a81f90b2d5f1b09135c5066b1c3d6cfef1b1dead5e0b529f7",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "voice-mayo-deploy",
+      "origin": "project-original deterministic Chihuahua synthesis; no sampled recording or human voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/voice-mayo-deploy.wav",
+        "sha256": "cef61b5b831d33b47beb6723e0b2900fea5ef225826a14d40a9887fa1077c2c8"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/voice-mayo-deploy.wav",
+          "sha256": "cef61b5b831d33b47beb6723e0b2900fea5ef225826a14d40a9887fa1077c2c8",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "voice-mayo-attack",
+      "origin": "project-original deterministic Chihuahua synthesis; no sampled recording or human voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/voice-mayo-attack.wav",
+        "sha256": "986cd711a2ef1ecdad4ffe5a4664f76e85f46c7628c169d0fef65d73e6937fc4"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/voice-mayo-attack.wav",
+          "sha256": "986cd711a2ef1ecdad4ffe5a4664f76e85f46c7628c169d0fef65d73e6937fc4",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "voice-mayo-hurt",
+      "origin": "project-original deterministic Chihuahua synthesis; no sampled recording or human voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/voice-mayo-hurt.wav",
+        "sha256": "108b9a0e2a5e857fb4bef27a287b20db9e1cfbe53e79fb502e0147d76be85a5b"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/voice-mayo-hurt.wav",
+          "sha256": "108b9a0e2a5e857fb4bef27a287b20db9e1cfbe53e79fb502e0147d76be85a5b",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "voice-mayo-retreat",
+      "origin": "project-original deterministic Chihuahua synthesis; no sampled recording or human voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/voice-mayo-retreat.wav",
+        "sha256": "26314ae62434645e2cfc3206c89474e946a8ac690c2ec835b2bd7014744d99bf"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/voice-mayo-retreat.wav",
+          "sha256": "26314ae62434645e2cfc3206c89474e946a8ac690c2ec835b2bd7014744d99bf",
+          "type": "audio/wav"
         }
       ]
     }
