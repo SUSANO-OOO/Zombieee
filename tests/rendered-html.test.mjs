@@ -1119,6 +1119,10 @@ test("machinegun burst damage is deferred to visual impact for fighters and the 
 test("browser QA helper propagates its selected local port into every wrapped smoke", async () => {
   const helper = await readFile(new URL("../scripts/run-browser-qa-with-server.mjs", import.meta.url), "utf8");
   const progression = await readFile(new URL("../scripts/progression-browser-smoke.mjs", import.meta.url), "utf8");
+  const equipmentRuntime = await readFile(
+    new URL("../scripts/equipment-runtime-browser-smoke.mjs", import.meta.url),
+    "utf8",
+  );
   const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
   assert.match(helper, /reserveQaPort\(requestedPort\)/);
   assert.match(helper, /refusing to reuse an unknown server/);
@@ -1131,13 +1135,24 @@ test("browser QA helper propagates its selected local port into every wrapped sm
   assert.match(helper, /process\.env\.STATION_QA_BASE_URL = origin/);
   assert.match(helper, /process\.env\.P5_QA_BASE_URL = origin/);
   assert.match(helper, /process\.env\.PROGRESSION_QA_BASE_URL = origin/);
+  assert.match(helper, /process\.env\.EQUIPMENT_RUNTIME_QA_BASE_URL = origin/);
   assert.doesNotMatch(helper, /_QA_BASE_URL \?\?= origin/);
   assert.equal(
     packageJson.scripts["qa:progression"],
     "node scripts/run-browser-qa-with-server.mjs scripts/progression-browser-smoke.mjs",
   );
+  assert.equal(
+    packageJson.scripts["qa:equipment-runtime"],
+    "node scripts/run-browser-qa-with-server.mjs scripts/equipment-runtime-browser-smoke.mjs",
+  );
   assert.match(progression, /PROGRESSION_QA_BASE_URL is required; use the isolated QA runner/);
   assert.doesNotMatch(progression, /serverIsReady|ensureLocalServer|spawn\(process\.execPath/);
+  assert.match(
+    equipmentRuntime,
+    /EQUIPMENT_RUNTIME_QA_BASE_URL is required; use the isolated QA runner/,
+  );
+  assert.match(equipmentRuntime, /mode: "standard"[\s\S]*mode: "survival-new"[\s\S]*mode: "survival-resume"/);
+  assert.doesNotMatch(equipmentRuntime, /serverIsReady|ensureLocalServer|spawn\(process\.execPath/);
 });
 
 test("performance and lifecycle gates fail closed when browser capabilities are unavailable", async () => {

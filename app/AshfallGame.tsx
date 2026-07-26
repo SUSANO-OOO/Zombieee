@@ -118,9 +118,11 @@ import {
   SURVIVAL_UPGRADE_BY_ID,
   beginSurvivalWave,
   completeSurvivalWave,
+  createDefaultSurvivalProgress,
   createSurvivalRun,
   endSurvivalRun,
   resumeSurvivalCheckpoint,
+  saveSurvivalCheckpoint,
   setSurvivalRunSpeed,
 } from "./survival.js";
 import {
@@ -4699,6 +4701,128 @@ export function AshfallGame() {
       failNextSurvivalSettlementSave: () => {
         survivalSettlementPersistenceQaRef.current.failuresRemaining += 1;
         return survivalSettlementPersistenceQaRef.current.attempts;
+      },
+      prepareEquipmentRuntimeProof: ({
+        mode = "standard",
+        equipped = true,
+        profile = "offense",
+      }: {
+        mode?: "standard" | "survival-new" | "survival-resume";
+        equipped?: boolean;
+        profile?: "offense" | "durability";
+      } = {}) => {
+        const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])[0];
+        if (!unit) throw new Error("Equipment runtime proof requires a campaign unit");
+        const personalEquipmentIds = profile === "durability"
+          ? ["boss-ossified-core", "quick-loader"]
+          : ["boss-muscle-fiber", "boss-rail-spine"];
+        const personalEquipmentByUnit = equipped
+          ? { [unit.id]: personalEquipmentIds }
+          : {};
+        const tacticalEquipmentIds = equipped
+          ? ["boss-resonance-gland", "tactical-barricade-kit"]
+          : [];
+        const equipmentEnhancementLevels = equipped
+          ? Object.fromEntries([
+            ...personalEquipmentIds,
+            "boss-resonance-gland",
+            "tactical-barricade-kit",
+          ].map((equipmentId) => [equipmentId, 3]))
+          : {};
+        const formation = {
+          presetId: "formation-preset-1",
+          unitIds: [unit.id],
+          unitLevelsByUnit: { [unit.id]: 1 },
+          personalEquipmentByUnit,
+          tacticalEquipmentIds,
+          equipmentEnhancementLevels,
+        };
+        let fresh: Game;
+        let serializedResume = false;
+        if (mode === "standard") {
+          fresh = initialGame(
+            "pod",
+            CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET,
+            [unit.combatKind as UnitKind],
+            createBattleResultId(`equipment-runtime-${equipped ? "equipped" : "control"}`),
+            [],
+            formation.unitLevelsByUnit,
+            formation,
+          );
+        } else {
+          const tacticalEffects = aggregateEquipmentEffects(
+            tacticalEquipmentIds,
+            equipmentEnhancementLevels,
+          );
+          const createdRun = createSurvivalRun({
+            runId: `equipment-runtime-${mode}-${equipped ? "equipped" : "control"}`,
+            formation,
+            crawlerMaxHp: Math.round(700 * tacticalEffects.baseHpMultiplier),
+          });
+          const checkpointRun = {
+            ...createdRun,
+            phase: SURVIVAL_RUN_PHASES.UPGRADE_SELECTION,
+            currentWave: 6,
+            lastCompletedWave: 5,
+          };
+          const serializedProgress = mode === "survival-resume"
+            ? JSON.parse(JSON.stringify(saveSurvivalCheckpoint(
+              createDefaultSurvivalProgress(),
+              checkpointRun,
+              "2026-07-26T00:00:00.000Z",
+            )))
+            : null;
+          const run = serializedProgress
+            ? resumeSurvivalCheckpoint(serializedProgress)
+            : createdRun;
+          if (!run) throw new Error("Equipment runtime proof could not resume checkpoint");
+          serializedResume = mode === "survival-resume";
+          fresh = initialSurvivalGame({
+            selectedSupply: "pod",
+            run,
+            formationKinds: [unit.combatKind as UnitKind],
+            unitLevels: formation.unitLevelsByUnit,
+          });
+        }
+        fresh.running = true;
+        const deployed = spawnHuman(fresh, unit.combatKind as UnitKind);
+        const fighter = deployed ? fresh.fighters.at(-1) : null;
+        if (!fighter) throw new Error("Equipment runtime proof could not deploy a fighter");
+        gameRef.current = fresh;
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return {
+          mode,
+          equipped,
+          profile,
+          serializedResume,
+          unitId: unit.id,
+          kind: fighter.kind,
+          baseHp: fresh.baseHp,
+          baseMaxHp: fresh.baseMaxHp,
+          energy: fresh.energy,
+          supportGauge: fresh.supportGauge,
+          fighter: {
+            hp: fighter.hp,
+            maxHp: fighter.maxHp,
+            damage: fighter.damage,
+            range: fighter.range,
+            speed: fighter.speed,
+            laneSpeed: fighter.laneSpeed,
+            attackEvery: fighter.attackEvery,
+            defense: fighter.defense,
+            deployCooldown: deployed.deployCooldown,
+          },
+          formation: fresh.survivalRun ? {
+            personalEquipmentByUnit: { ...fresh.survivalRun.formation.personalEquipmentByUnit },
+            tacticalEquipmentIds: [...fresh.survivalRun.formation.tacticalEquipmentIds],
+            equipmentEnhancementLevels: {
+              ...fresh.survivalRun.formation.equipmentEnhancementLevels,
+            },
+          } : null,
+        };
       },
       getSnapshot: () => {
         const g = gameRef.current;
