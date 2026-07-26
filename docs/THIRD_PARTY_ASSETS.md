@@ -483,11 +483,11 @@ Monkeyの`weapon-suppressed-carbine`は`build-v080-audio.py`が数学波形とse
 
 ## Version 0.9.0 visual assets
 
-0.9.0の正式visualは`docs/ASSET_APPROVALS_0.9.0.json`を正規台帳とする。現時点のactive範囲は、プロデューサーが2026-07-26の直接メッセージで1枚目をザキミヤ唯一の正式identity masterとして提供・承認した縦切りassetだけである。
+0.9.0の正式visualは`docs/ASSET_APPROVALS_0.9.0.json`を正規台帳とする。現時点のactive範囲は、プロデューサーが2026-07-26の直接メッセージで正式identity masterとして提供・承認したザキミヤ、TKY、Mrs.チハ、宮本武蔵と、その人物別派生assetである。
 
-原本、byte-identical reference、原本だけを参照したOpenAI image generationのcutout／combat pose source、project内build scriptによるevent portrait／formation・personnel card／battle atlas、自作SVG ready iconのSHA-256、寸法、source chainを台帳へ固定する。他人物、第三者配布画像、既存人物の色替え、外部iconは入力に使用していない。
+原本、byte-identical reference、各人物の原本だけを参照したOpenAI image generationのcutout／combat pose source、project内build scriptによるevent portrait／formation・personnel card／battle atlas、自作SVG ready iconのSHA-256、寸法、source chainを台帳へ固定する。他人物、第三者配布画像、既存人物の色替え、外部iconは入力に使用していない。
 
-台帳のrepository収録・ゲーム利用根拠は、プロデューサーによる原本と派生利用の明示承認、および適用されるOpenAI Content termsである。これはCC0への変更や第三者への独立した再利用license付与を意味しない。残り4体は、各正式identity masterから同じfail-closed契約へ追加するまでactive assetとして扱わない。
+台帳のrepository収録・ゲーム利用根拠は、プロデューサーによる原本と派生利用の明示承認、および適用されるOpenAI Content termsである。これはCC0への変更や第三者への独立した再利用license付与を意味しない。マヨちゃんは通常時と凶暴時のidentity chainを同じfail-closed契約へ追加するまでactive assetとして扱わない。
 
 ## 任意クレジット（表示用）
 
