@@ -5,6 +5,10 @@ import {
   CAMPAIGN_SAVE_SCHEMA_VERSION,
   computeCampaignSaveIntegrity,
 } from "../app/campaign.js";
+import {
+  V090_CAPS_MIGRATION_ID,
+  reorganizeLegacyCaps,
+} from "../app/campaignEconomy.js";
 
 const baseUrl = new URL(process.env.SAVE_MIGRATION_QA_BASE_URL
   ?? process.env.COMBAT_PRESENTATION_QA_BASE_URL
@@ -101,6 +105,7 @@ const release071Fixture = {
 // fixed v0.7.1 release commit. Its integrity must be valid before v7 migration.
 release071Fixture.integrity = computeCampaignSaveIntegrity(release071Fixture);
 const release071Serialized = JSON.stringify(release071Fixture);
+const release071MigratedCaps = reorganizeLegacyCaps(release071Fixture.caps).nextCaps;
 const corruptLocal = "{\"schemaVersion\":5,\"caps\":";
 const corruptIndexed = "not-json-indexed";
 
@@ -221,7 +226,11 @@ function parseSave(serialized, label) {
   }
 }
 
-function assertMigratedSave(save, label, { allowNewRevision = false } = {}) {
+function assertMigratedSave(
+  save,
+  label,
+  { allowNewRevision = false, noticeAcknowledged = false } = {},
+) {
   invariant(save.schemaVersion === CURRENT_SCHEMA_VERSION, `${label} schema ${save.schemaVersion}`);
   if (allowNewRevision) {
     invariant(save.revision > release071Fixture.revision, `${label} did not create a newer revision`);
@@ -237,8 +246,20 @@ function assertMigratedSave(save, label, { allowNewRevision = false } = {}) {
     `${label} stars changed`);
   invariant(JSON.stringify(save.claimedStarRewardsByStage) === JSON.stringify(release071Fixture.claimedStarRewardsByStage),
     `${label} claimed star rewards changed`);
-  invariant(save.caps === release071Fixture.caps && save.supplies === release071Fixture.caps,
-    `${label} caps changed`);
+  invariant(save.caps === release071MigratedCaps && save.supplies === release071MigratedCaps,
+    `${label} caps economy migration mismatch`);
+  invariant(save.processedMigrationIds?.includes(V090_CAPS_MIGRATION_ID),
+    `${label} caps migration receipt missing`);
+  invariant(
+    noticeAcknowledged
+      ? !save.migrationNotices?.some(({ id }) => id === V090_CAPS_MIGRATION_ID)
+      : save.migrationNotices?.some(({ id, previousCaps, nextCaps }) => (
+        id === V090_CAPS_MIGRATION_ID
+        && previousCaps === release071Fixture.caps
+        && nextCaps === release071MigratedCaps
+      )),
+    `${label} caps migration notice state mismatch`,
+  );
   invariant(JSON.stringify(save.unlockedStageIds) === JSON.stringify(release071Fixture.unlockedStageIds),
     `${label} stage unlocks changed`);
   invariant(JSON.stringify(save.ownership) === JSON.stringify(release071Fixture.ownership),
@@ -273,6 +294,10 @@ function assertMigratedSave(save, label, { allowNewRevision = false } = {}) {
     && JSON.stringify(Object.keys(save.unitRanks).sort()) === JSON.stringify([...unitIds].sort())
     && Object.values(save.unitRanks).every((rank) => rank === 0),
     `${label} rank defaults were not added safely`);
+  invariant(save.unitLevels
+    && JSON.stringify(Object.keys(save.unitLevels).sort()) === JSON.stringify([...unitIds].sort())
+    && Object.values(save.unitLevels).every((level) => level === 1),
+  `${label} Level defaults were not added safely`);
   invariant(save.eventFoundation?.schemaVersion === 1, `${label} event progress was not initialized safely`);
   invariant(!Object.hasOwn(save, "visualOverrides"), `${label} persisted obsolete visual fields`);
   invariant(typeof save.integrity === "string" && save.integrity.startsWith("fnv1a32:"),
@@ -426,6 +451,8 @@ try {
         `${source} IndexedDB last-known-good snapshot missing`);
 
       if (source === "localStorage") {
+        await page.getByRole("button", { name: "内容を確認", exact: true }).click();
+        await waitForMigratedReplicas(page);
         const downloadPromise = page.waitForEvent("download", { timeout });
         await page.getByRole("button", { name: "バックアップを書き出す", exact: true }).click();
         const download = await downloadPromise;
@@ -437,7 +464,10 @@ try {
           return Buffer.concat(chunks).toString("utf8");
         });
         const envelope = JSON.parse(exportedBackup);
-        assertMigratedSave(JSON.parse(envelope.serialized), "manual export");
+        assertMigratedSave(JSON.parse(envelope.serialized), "manual export", {
+          allowNewRevision: true,
+          noticeAcknowledged: true,
+        });
       }
       return {
         schemaVersion: local.schemaVersion,
@@ -484,7 +514,7 @@ try {
     const indexed = parseSave(storage.indexed[SAVE_KEY], "tamper recovery IndexedDB");
     assertMigratedSave(local, "tamper recovery localStorage");
     assertMigratedSave(indexed, "tamper recovery IndexedDB");
-    invariant(local.caps === release071Fixture.caps, "tampered schema5 economy was adopted");
+    invariant(local.caps === release071MigratedCaps, "tampered schema5 economy was adopted");
     return { tamperedReplicaRejected: true, recoveredFrom: "indexedDB" };
   });
 
@@ -538,8 +568,14 @@ try {
       const storage = await waitForMigratedReplicas(page);
       const local = parseSave(storage.local[SAVE_KEY], "imported localStorage");
       const indexed = parseSave(storage.indexed[SAVE_KEY], "imported IndexedDB");
-      assertMigratedSave(local, "imported localStorage", { allowNewRevision: true });
-      assertMigratedSave(indexed, "imported IndexedDB", { allowNewRevision: true });
+      assertMigratedSave(local, "imported localStorage", {
+        allowNewRevision: true,
+        noticeAcknowledged: true,
+      });
+      assertMigratedSave(indexed, "imported IndexedDB", {
+        allowNewRevision: true,
+        noticeAcknowledged: true,
+      });
       invariant(local.revision > release071Fixture.revision, "manual import did not create a newer durable revision");
       invariant(local.integrity === indexed.integrity, "manual import replicas diverged");
       return { revision: local.revision, bothReplicas: true, integrityVerified: true };

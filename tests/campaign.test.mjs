@@ -55,6 +55,7 @@ import {
   verifyCampaignSaveIntegrity,
   withCampaignSaveIntegrity,
 } from "../app/campaign.js";
+import { V090_CAPS_MIGRATION_ID, reorganizeLegacyCaps } from "../app/campaignEconomy.js";
 
 const STAGE_1 = CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET;
 const STAGE_2 = CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE;
@@ -653,7 +654,7 @@ test("Stage 4 and Stage 6 story joins are free while Stage 5 only discovers Monk
 test("default save is versioned and contains initial progression, selection, and settings", () => {
   const save = createDefaultCampaignSave();
   assert.equal(save.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
-  assert.equal(save.schemaVersion, 9);
+  assert.equal(save.schemaVersion, 10);
   assert.equal(save.revision, 0);
   assert.equal(save.updatedAt, "");
   assert.equal(save.integrity, "");
@@ -664,6 +665,9 @@ test("default save is versioned and contains initial progression, selection, and
   assert.deepEqual(save.processedResultIds, []);
   assert.deepEqual(save.processedAcquisitionIds, []);
   assert.deepEqual(save.processedUpgradeIds, []);
+  assert.deepEqual(save.processedMigrationIds, []);
+  assert.deepEqual(save.migrationNotices, []);
+  assert.deepEqual(Object.values(save.unitLevels), Array(CAMPAIGN_UNITS.length).fill(1));
   assert.deepEqual(Object.values(save.unitRanks), Array(CAMPAIGN_UNITS.length).fill(0));
   assert.deepEqual(save.completedStageIds, []);
   assert.deepEqual(save.bestStarsByStage, {});
@@ -816,8 +820,9 @@ test("migration accepts schema-less and v0 aliases, derives unlocks, and tolerat
   assert.deepEqual(migrated.completedStageIds, [STAGE_1]);
   assert.equal(migrated.bestStarsByStage[STAGE_1], 2);
   assert.deepEqual(migrated.claimedStarRewardsByStage[STAGE_1], [1]);
-  assert.equal(migrated.caps, 345);
-  assert.equal(migrated.supplies, 345);
+  assert.equal(migrated.caps, reorganizeLegacyCaps(345).nextCaps);
+  assert.equal(migrated.supplies, migrated.caps);
+  assert.deepEqual(migrated.processedMigrationIds, [V090_CAPS_MIGRATION_ID]);
   assert.equal(migrated.unlockedStageIds.includes(STAGE_2), true);
   assert.equal(migrated.ownership.includes(CAMPAIGN_UNIT_IDS.TATARA), true);
   assert.equal(migrated.unlockedUnitIds.includes(CAMPAIGN_UNIT_IDS.CRAZY_KING), true);
@@ -851,7 +856,7 @@ test("migration repairs malformed fields without crashing or removing mandatory 
   assert.equal(repaired.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
   assert.equal(repaired.bestStarsByStage[STAGE_1], 3);
   assert.deepEqual(repaired.claimedStarRewardsByStage[STAGE_1], [1, 2]);
-  assert.equal(repaired.supplies, 0);
+  assert.equal(repaired.supplies, reorganizeLegacyCaps(0).nextCaps);
   assert.equal(repaired.unlockedStageIds.includes(STAGE_1), true);
   assert.deepEqual(INITIAL_UNIT_IDS.every((id) => repaired.unlockedUnitIds.includes(id)), true);
   assert.equal(repaired.lastSelectedStageId, INITIAL_STAGE_ID);
@@ -898,14 +903,14 @@ test("schema v2 to v4 migration is idempotent and preserves progress, receipts, 
   };
   const migrated = migrateCampaignSave(schema2);
 
-  assert.equal(migrated.schemaVersion, 9);
+  assert.equal(migrated.schemaVersion, 10);
   assert.equal(migrated.storyScriptVersion, "outbreak-origin-v8");
   assert.deepEqual(migrated.processedResultIds, schema2.processedResultIds);
   assert.deepEqual(migrated.completedStageIds, schema2.completedStageIds);
   assert.deepEqual(migrated.bestStarsByStage, schema2.bestStarsByStage);
   assert.deepEqual(migrated.claimedStarRewardsByStage, schema2.claimedStarRewardsByStage);
-  assert.equal(migrated.caps, schema2.supplies);
-  assert.equal(migrated.supplies, schema2.supplies);
+  assert.equal(migrated.caps, reorganizeLegacyCaps(schema2.supplies).nextCaps);
+  assert.equal(migrated.supplies, migrated.caps);
   assert.equal(migrated.lastSelectedStageId, schema2.lastSelectedStageId);
   assert.deepEqual(migrated.settings, { ...schema2.settings, battleEventMode: "first-time" });
   assert.deepEqual(migrated.readStoryEventIds, ["prologue-opening", "stage-nishijin-pre"]);
@@ -940,8 +945,8 @@ test("v2, v3, and v4 migration preserves every formerly usable character and can
       unlockedUnitIds: ["brawler", "scout", "ranger", "medic", "brute", "crazy-king", "kumaverson", "babayaga", "gunner"],
       formationKinds: ["brawler", "medic", "gunner"],
     });
-    assert.equal(migrated.schemaVersion, 9);
-    assert.equal(migrated.caps, 432);
+    assert.equal(migrated.schemaVersion, 10);
+    assert.equal(migrated.caps, reorganizeLegacyCaps(432).nextCaps);
     assert.deepEqual(migrated.processedResultIds, [`v${schemaVersion}-receipt`]);
     for (const unitId of [
       CAMPAIGN_UNIT_IDS.PAISEN,
@@ -1244,7 +1249,7 @@ test("save integrity stamps canonical v8 data and strict inspection distinguishe
   }));
   assert.equal(legacy.status, "valid");
   assert.equal(legacy.reason, "migrated");
-  assert.equal(legacy.save.caps, 77);
+  assert.equal(legacy.save.caps, reorganizeLegacyCaps(77).nextCaps);
   assert.equal(legacy.save.ownership.includes(CAMPAIGN_UNIT_IDS.NAO), true);
   assert.equal(legacy.save.ownership.includes(CAMPAIGN_UNIT_IDS.RAIDER), true);
 });
@@ -1294,7 +1299,7 @@ test("v0.7.1 schema v5 integrity is verified before migration and rejects tamper
   assert.equal(valid.status, "valid");
   assert.equal(valid.sourceSchemaVersion, 5);
   assert.equal(valid.reason, "migrated");
-  assert.equal(valid.save.caps, 987);
+  assert.equal(valid.save.caps, reorganizeLegacyCaps(987).nextCaps);
 
   const tampered = { ...release071, caps: 1_987, revision: 42 };
   const rejected = inspectCampaignSaveCandidate(JSON.stringify(tampered));
