@@ -1,4 +1,8 @@
 import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "./campaign.js";
+import {
+  bossPhaseForHp as sharedBossPhaseForHp,
+  isBossEnemyKind,
+} from "./bossFoundation.js";
 import { enemySpawnClassFor } from "./content/enemyCatalog.js";
 import { UNIT_CONTENT, UNIT_CONTENT_BY_ID } from "./content/unitCatalog.js";
 
@@ -208,10 +212,7 @@ export function enemyBaseTargetPoint(lane, laneCenters = LANE_Y) {
 }
 
 export function bossPhaseForHp(hp, maxHp) {
-  const ratio = Math.max(0, Number(hp) || 0) / Math.max(1, Number(maxHp) || 1);
-  if (ratio <= .25) return Object.freeze({ phase: 3, label: "最終段階" });
-  if (ratio <= .75) return Object.freeze({ phase: 2, label: "第2段階" });
-  return Object.freeze({ phase: 1, label: "第1段階" });
+  return sharedBossPhaseForHp(hp, maxHp);
 }
 
 export function battlefieldPlacementForbiddenZones(stageZones = []) {
@@ -969,7 +970,7 @@ export function resolveCrawlerBarrage({ runtime, fighters = [] }) {
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
     if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.combatReady === false || !CRAWLER_BARRAGE_DEF.lanes.includes(fighter.lane)) return fighter;
-    const boss = fighter.kind === "takuya" || fighter.kind === "gate-eater" || fighter.boss === true;
+    const boss = isBossEnemyKind(fighter.kind) || fighter.boss === true;
     const damage = Math.round(CRAWLER_BARRAGE_DEF.damage * (boss ? CRAWLER_BARRAGE_DEF.bossDamageMultiplier : 1));
     hits.push({ id: fighter.id, lane: fighter.lane, damage, boss });
     return { ...fighter, hp: Math.max(0, fighter.hp - damage) };

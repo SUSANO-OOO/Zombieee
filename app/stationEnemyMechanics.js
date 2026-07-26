@@ -1,3 +1,5 @@
+import { bossDefinitionForEnemyKind } from "./bossFoundation.js";
+
 const LANE_MIN = 0;
 const LANE_MAX = 2;
 const EPSILON = 1e-9;
@@ -28,7 +30,7 @@ export const STATION_ENEMY_TUNING = Object.freeze({
     crawlerRearBoundaryX: -96,
   }),
   ticketGateEater: Object.freeze({
-    windupSeconds: 1.15,
+    windupSeconds: bossDefinitionForEnemyKind("gate-eater").attackTelegraph.warningSeconds,
     chargeSeconds: 0.9,
     chargeSpeed: 150,
     flankExposureSeconds: 1.6,

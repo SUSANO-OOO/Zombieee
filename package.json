@@ -25,6 +25,7 @@
     "qa:progression": "node scripts/run-browser-qa-with-server.mjs scripts/progression-browser-smoke.mjs",
     "qa:survival": "node scripts/run-browser-qa-with-server.mjs scripts/survival-browser-smoke.mjs",
     "qa:equipment-runtime": "node scripts/run-browser-qa-with-server.mjs scripts/equipment-runtime-browser-smoke.mjs",
+    "qa:boss-foundation": "node scripts/run-browser-qa-with-server.mjs scripts/boss-foundation-browser-smoke.mjs",
     "qa:economy": "node scripts/economy-simulation.mjs",
     "art:v080:characters": "node scripts/build-v080-character-assets.mjs",
     "art:v080": "node scripts/build-v080-stage-assets.mjs",

@@ -1,7 +1,8 @@
+import { isBossEnemyKind } from "./bossFoundation.js";
+
 const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 
 const TWO_RESPONDER_KINDS = new Set(["crusher", "abomination", "grappler"]);
-const THREE_RESPONDER_KINDS = new Set(["takuya", "gate-eater"]);
 
 /**
  * Exact runtime predicate shared by enemy attacks and ally threat discovery.
@@ -31,7 +32,7 @@ export function isCrawlerAttackThreat({
  */
 export function crawlerDefenseResponderCapacity({ enemyKind } = {}) {
   const kind = String(enemyKind ?? "");
-  if (THREE_RESPONDER_KINDS.has(kind)) return 3;
+  if (isBossEnemyKind(kind)) return 3;
   if (TWO_RESPONDER_KINDS.has(kind)) return 2;
   return 1;
 }
