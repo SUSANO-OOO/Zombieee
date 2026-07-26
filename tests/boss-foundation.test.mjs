@@ -24,9 +24,10 @@ const EXISTING_BOSS_KINDS = ["takuya", "gate-eater"];
 
 test("existing bosses own one immutable shared contract with stable result and compendium IDs", () => {
   assert.equal(BOSS_FOUNDATION_SCHEMA_VERSION, 1);
-  assert.deepEqual(BOSS_DEFINITIONS.map(({ enemyKind }) => enemyKind), EXISTING_BOSS_KINDS);
+  assert.deepEqual(BOSS_DEFINITIONS.map(({ enemyKind }) => enemyKind), [...EXISTING_BOSS_KINDS, "kurome"]);
   assert.equal(Object.isFrozen(BOSS_DEFINITIONS), true);
-  for (const definition of BOSS_DEFINITIONS) {
+  for (const kind of EXISTING_BOSS_KINDS) {
+    const definition = bossDefinitionForEnemyKind(kind);
     assert.equal(bossDefinitionForId(definition.id), definition);
     assert.equal(bossDefinitionForEnemyKind(definition.enemyKind), definition);
     assert.equal(isBossEnemyKind(definition.enemyKind), true);
@@ -54,6 +55,30 @@ test("existing bosses own one immutable shared contract with stable result and c
   assert.equal(
     bossDefinitionForEnemyKind("gate-eater").attackTelegraph.warningSeconds,
     STATION_ENEMY_TUNING.ticketGateEater.windupSeconds,
+  );
+});
+
+test("Kurome is producer-approved but remains isolated until its campaign consumer lands", () => {
+  const definition = bossDefinitionForEnemyKind("kurome");
+  assert.equal(definition.id, "boss-kurome-prototype");
+  assert.equal(definition.displayName, "クロメ");
+  assert.equal(definition.workingName, false);
+  assert.equal(definition.prototypeStatus, "producer-approved");
+  assert.equal(definition.attackTelegraph.kind, "tracking-ray");
+  assert.equal(definition.attackTelegraph.warningSeconds, 1.25);
+  assert.equal(definition.attackTelegraph.trackingSeconds, .82);
+  assert.equal(definition.display.compactBodyHeight, 146);
+  assert.equal(definition.display.standardBodyHeight, 133);
+  assert.equal(definition.reward.equipmentId, "boss-resonance-gland");
+  assert.equal(enemyContentFor("kurome").prototypeStatus, "producer-approved");
+  assert.equal(
+    Object.values(CAMPAIGN_STAGE_BY_ID).some((stage) => (
+      stage.boss?.enemyKind === "kurome"
+      || stage.waves?.some((wave) => wave.units?.some((unit) => (
+        (Array.isArray(unit) ? unit[0] : unit) === "kurome"
+      )))
+    )),
+    false,
   );
 });
 
@@ -144,6 +169,31 @@ test("TAKUYA and Gate Eater telegraphs share readiness gates and retain speciali
     combatReady: false,
     abilityWindup: .8,
   }), null);
+});
+
+test("Kurome telegraph locks a screen-space ray with final-phase pressure", () => {
+  const telegraph = bossTelegraphSnapshot({
+    side: "zombie",
+    kind: "kurome",
+    hp: 620,
+    maxHp: 2100,
+    x: 760,
+    y: 270,
+    combatReady: true,
+    contained: false,
+    stationAbility: {
+      phase: "locked",
+      remainingSeconds: .24,
+      targetX: 314,
+      targetY: 272,
+    },
+  });
+  assert.equal(telegraph.kind, "tracking-ray");
+  assert.equal(telegraph.locked, true);
+  assert.equal(telegraph.targetX, 314);
+  assert.equal(telegraph.targetY, 272);
+  assert.equal(telegraph.beamHalfWidth, 23);
+  assert.match(telegraph.counterplay, /離脱/u);
 });
 
 test("boss body barrier prevents ally pass-through without blocking another route", () => {

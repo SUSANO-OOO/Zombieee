@@ -62,6 +62,7 @@ const ENEMY_VOICE_PROFILE_BY_KIND = Object.freeze({
   ooze: "spitter",
   sprinter: "runner",
   "gate-eater": "takuya",
+  kurome: "takuya",
 });
 const ENEMY_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
 

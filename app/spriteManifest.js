@@ -53,6 +53,7 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   ooze: Object.freeze({ w: 70, h: 94 }),
   sprinter: Object.freeze({ w: 58, h: 96 }),
   "gate-eater": Object.freeze({ w: 126, h: 142 }),
+  kurome: Object.freeze({ w: 150, h: 170 }),
 });
 
 export function spriteBattleDisplaySizeFor(kind) {
@@ -220,6 +221,10 @@ const NEWCOMER_VISIBLE = Object.freeze({
   "gate-eater": {
     right: [[122, 16, 358, 432], [111, 16, 368, 432], [108, 16, 372, 432], [103, 16, 377, 432], [54, 65, 425, 432], [88, 37, 392, 432], [51, 265, 428, 432]],
     left: [[122, 16, 358, 432], [111, 16, 368, 432], [108, 16, 372, 432], [103, 16, 377, 432], [54, 65, 425, 432], [88, 37, 392, 432], [51, 265, 428, 432]],
+  },
+  kurome: {
+    right: [[111, 16, 370, 432], [84, 16, 397, 432], [102, 16, 378, 432], [89, 16, 391, 432], [71, 16, 410, 432], [82, 16, 398, 432], [16, 181, 464, 432]],
+    left: [[111, 16, 370, 432], [84, 16, 397, 432], [102, 16, 378, 432], [89, 16, 391, 432], [71, 16, 410, 432], [82, 16, 398, 432], [16, 181, 464, 432]],
   },
 });
 
@@ -390,6 +395,7 @@ export const SPRITE_MANIFEST = Object.freeze({
   ooze: explicitAtlasManifestEntry("ooze", "/art/v070/characters/ooze-battle-v1.png"),
   sprinter: explicitAtlasManifestEntry("sprinter", "/art/v070/characters/sprinter-battle-v1.png"),
   "gate-eater": explicitAtlasManifestEntry("gate-eater", "/art/v070/characters/gate-eater-battle-v1.png"),
+  kurome: explicitAtlasManifestEntry("kurome", "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png"),
   "crazy-king": explicitAtlasManifestEntry("crazy-king", "/art/v060/characters/crazy-king-battle-v1.png"),
   kumaverson: explicitAtlasManifestEntry("kumaverson", "/art/v060/characters/kumaverson-battle-v1.png"),
   babayaga: explicitAtlasManifestEntry("babayaga", "/art/v060/characters/babayaga-battle-v1.png"),
