@@ -11,8 +11,10 @@ function isRecord(value) {
 }
 
 function isSafeDictionaryKey(value) {
-  if (typeof value !== "string" || !value.trim()) return false;
-  return value !== "prototype" && !Object.hasOwn(Object.prototype, value);
+  if (typeof value !== "string") return false;
+  const key = value.trim();
+  if (!key) return false;
+  return key !== "prototype" && !Object.hasOwn(Object.prototype, key);
 }
 
 function clampInteger(value, minimum, maximum, fallback = minimum) {

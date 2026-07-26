@@ -364,6 +364,10 @@ test("settles completed checkpoint and partial-wave rewards exactly once", () =>
       ["__proto__", 999],
       ["toString", 999],
       ["prototype", 999],
+      [" constructor ", 999],
+      [" __proto__ ", 999],
+      [" toString ", 999],
+      [" prototype ", 999],
     ]),
     reward: { caps: 10 },
   });
