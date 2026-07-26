@@ -347,9 +347,9 @@ test("Stage 4-6 introduce each station enemy through bounded mission-specific wa
   );
 });
 
-test("fifteen canonical playable units and guide-ikura use approved player-facing identities", () => {
-  assert.equal(CAMPAIGN_UNITS.length, 15);
-  assert.equal(CAMPAIGN_CHARACTERS.length, 16);
+test("sixteen canonical playable units and guide-ikura use approved player-facing identities", () => {
+  assert.equal(CAMPAIGN_UNITS.length, 16);
+  assert.equal(CAMPAIGN_CHARACTERS.length, 17);
   assert.deepEqual(INITIAL_UNIT_IDS, [
     CAMPAIGN_UNIT_IDS.PAISEN,
     CAMPAIGN_UNIT_IDS.HACHI,
@@ -374,25 +374,38 @@ test("fifteen canonical playable units and guide-ikura use approved player-facin
     [CAMPAIGN_UNIT_IDS.TKY, "TKY"],
     [CAMPAIGN_UNIT_IDS.MRS_CHIHA, "Mrs.チハ"],
     [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, "宮本武蔵"],
+    [CAMPAIGN_UNIT_IDS.MAYO_CHAN, "マヨちゃん"],
   ]);
-  assert.equal(new Set(CAMPAIGN_UNITS.map(({ id }) => id)).size, 15);
+  assert.equal(new Set(CAMPAIGN_UNITS.map(({ id }) => id)).size, 16);
   for (const [stageNumber, unitId, costCaps] of [
     [17, CAMPAIGN_UNIT_IDS.ZAKIMIYA, 240],
     [18, CAMPAIGN_UNIT_IDS.TKY, 280],
     [19, CAMPAIGN_UNIT_IDS.MRS_CHIHA, 300],
     [20, CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, 340],
+    [20, CAMPAIGN_UNIT_IDS.MAYO_CHAN, 260],
   ]) {
     assert.deepEqual(CAMPAIGN_UNIT_BY_ID[unitId].unlock, {
       type: "recruitment",
       stageNumber,
       costCaps,
     });
+  }
+  for (const [stageNumber, unitId] of [
+    [17, CAMPAIGN_UNIT_IDS.ZAKIMIYA],
+    [18, CAMPAIGN_UNIT_IDS.TKY],
+    [19, CAMPAIGN_UNIT_IDS.MRS_CHIHA],
+  ]) {
     assert.deepEqual(CAMPAIGN_RECRUITMENT_MILESTONES[stageNumber], {
       storyJoinUnitIds: [],
       discoveredUnitIds: [unitId],
       recruitableUnitIds: [unitId],
     });
   }
+  assert.deepEqual(CAMPAIGN_RECRUITMENT_MILESTONES[20], {
+    storyJoinUnitIds: [],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+  });
   assert.equal(CAMPAIGN_RECRUITMENT_MILESTONES[7], undefined);
   assert.equal(CAMPAIGN_UNIT_BY_ID.brawler.id, CAMPAIGN_UNIT_IDS.PAISEN);
   assert.equal(CAMPAIGN_UNIT_BY_ID.brute.id, CAMPAIGN_UNIT_IDS.TATARA);
@@ -412,7 +425,7 @@ test("fifteen canonical playable units and guide-ikura use approved player-facin
   );
 });
 
-test("all fifteen units separate canonical IDs from combat kinds and use formal runtime art", () => {
+test("all sixteen units separate canonical IDs from combat kinds and use formal runtime art", () => {
   for (const unit of CAMPAIGN_UNITS) {
     assert.match(unit.id, /^unit-/);
     assert.equal(unit.unitId, unit.id);

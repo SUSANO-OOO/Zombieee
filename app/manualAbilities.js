@@ -73,7 +73,21 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
     bossDamageMultiplier: 1.65,
     counterStunSeconds: .9,
   },
-  "mayo-chan": { unitId: "unit-mayo-chan", displayName: "凶暴マヨ", iconMotif: "chihuahua-infection-bloom", runtimeStatus: "foundation" },
+  "mayo-chan": {
+    unitId: "unit-mayo-chan",
+    displayName: "凶暴マヨ",
+    iconMotif: "chihuahua-infection-bloom",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 34,
+    windupSeconds: .3,
+    activeSeconds: 6.2,
+    moveSpeedMultiplier: 1.75,
+    attackIntervalMultiplier: .48,
+    hpDrainPerSecond: 7,
+    safeHpRatio: .2,
+    biteSlowMultiplier: .72,
+    biteSlowSeconds: 1.1,
+  },
 });
 
 export function manualAbilityDefinitionFor(kind) {
@@ -89,6 +103,7 @@ export function createManualAbilityRuntime(kind) {
     cooldownRemaining: 0,
     windupRemaining: 0,
     guardRemaining: 0,
+    activeRemaining: 0,
     salvoIndex: 0,
     abilityElapsed: 0,
     activationId: 0,
@@ -244,11 +259,35 @@ export function selectMusashiAbilityTarget({
   return candidates.length > 0 ? Object.freeze(candidates[0]) : null;
 }
 
+const MAYO_PRIORITY_KINDS = Object.freeze(["runner", "turned", "sprinter", "walker"]);
+
+export function selectMayoAbilityTarget({ owner, fighters = [] } = {}) {
+  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
+  const candidates = fighters
+    .filter(livingTarget)
+    .map((candidate) => ({
+      targetId: candidate.id,
+      x: Number(candidate.x),
+      y: Number(candidate.y),
+      lane: candidate.lane,
+      direction: Number(candidate.x) < Number(owner.x) ? -1 : 1,
+      priority: MAYO_PRIORITY_KINDS.includes(candidate.kind) ? 0 : candidate.isBoss === true || candidate.boss === true ? 2 : 1,
+      ownerDistance: distance(owner, candidate),
+    }))
+    .sort((left, right) => (
+      left.priority - right.priority
+      || left.ownerDistance - right.ownerDistance
+      || String(left.targetId).localeCompare(String(right.targetId))
+    ));
+  return candidates.length > 0 ? Object.freeze(candidates[0]) : null;
+}
+
 export function selectManualAbilityTarget({ owner, fighters = [] } = {}) {
   if (owner?.kind === "zakimiya") return selectZakimiyaAbilityTarget({ owner, fighters });
   if (owner?.kind === "tky") return selectTkyAbilityTarget({ owner, fighters });
   if (owner?.kind === "mrs-chiha") return selectMrsChihaAbilityTarget({ owner, fighters });
   if (owner?.kind === "miyamoto-musashi") return selectMusashiAbilityTarget({ owner, fighters });
+  if (owner?.kind === "mayo-chan") return selectMayoAbilityTarget({ owner, fighters });
   return null;
 }
 
@@ -280,6 +319,7 @@ export function beginManualAbility(runtime, target) {
       phase: "windup",
       windupRemaining: definition.windupSeconds,
       guardRemaining: 0,
+      activeRemaining: 0,
       salvoIndex: 0,
       abilityElapsed: 0,
       activationId,
@@ -299,6 +339,9 @@ export function advanceManualAbility(runtime, seconds) {
   }
   if (runtime.kind === "mrs-chiha") {
     return advanceMrsChihaAbility(runtime, elapsed);
+  }
+  if (runtime.kind === "mayo-chan") {
+    return advanceMayoAbility(runtime, elapsed);
   }
   if (runtime.phase === "windup") {
     const remaining = runtime.windupRemaining - elapsed;
@@ -395,6 +438,98 @@ export function advanceManualAbility(runtime, seconds) {
       cooldownRemaining,
     }),
     events: Object.freeze([]),
+  });
+}
+
+function advanceMayoAbility(runtime, elapsedSeconds) {
+  const definition = MANUAL_ABILITY_REGISTRY["mayo-chan"];
+  if (runtime.phase === "windup") {
+    const remaining = runtime.windupRemaining - elapsedSeconds;
+    if (remaining > 0) {
+      return Object.freeze({
+        runtime: Object.freeze({ ...runtime, windupRemaining: remaining }),
+        events: Object.freeze([]),
+      });
+    }
+    const overflow = Math.max(0, -remaining);
+    if (overflow < definition.activeSeconds) {
+      return Object.freeze({
+        runtime: Object.freeze({
+          ...runtime,
+          phase: "feral",
+          windupRemaining: 0,
+          activeRemaining: definition.activeSeconds - overflow,
+        }),
+        events: Object.freeze([Object.freeze({
+          type: "feral-start",
+          kind: runtime.kind,
+          activationId: runtime.activationId,
+          target: runtime.target,
+        })]),
+      });
+    }
+    return Object.freeze({
+      runtime: Object.freeze({
+        ...runtime,
+        phase: "retreat",
+        windupRemaining: 0,
+        activeRemaining: 0,
+      }),
+      events: Object.freeze([
+        Object.freeze({
+          type: "feral-start",
+          kind: runtime.kind,
+          activationId: runtime.activationId,
+          target: runtime.target,
+        }),
+        Object.freeze({
+          type: "retreat",
+          kind: runtime.kind,
+          activationId: runtime.activationId,
+          target: runtime.target,
+        }),
+      ]),
+    });
+  }
+  if (runtime.phase === "feral") {
+    const remaining = runtime.activeRemaining - elapsedSeconds;
+    if (remaining > 0) {
+      return Object.freeze({
+        runtime: Object.freeze({ ...runtime, activeRemaining: remaining }),
+        events: Object.freeze([]),
+      });
+    }
+    return Object.freeze({
+      runtime: Object.freeze({
+        ...runtime,
+        phase: "retreat",
+        activeRemaining: 0,
+      }),
+      events: Object.freeze([Object.freeze({
+        type: "retreat",
+        kind: runtime.kind,
+        activationId: runtime.activationId,
+        target: runtime.target,
+      })]),
+    });
+  }
+  return Object.freeze({ runtime, events: Object.freeze([]) });
+}
+
+export function mayoAbilityHpStep({
+  hp,
+  maxHp,
+  seconds,
+  drainPerSecond = MANUAL_ABILITY_REGISTRY["mayo-chan"].hpDrainPerSecond,
+  safeHpRatio = MANUAL_ABILITY_REGISTRY["mayo-chan"].safeHpRatio,
+} = {}) {
+  const normalizedMaxHp = Math.max(1, Number(maxHp) || 1);
+  const safeHp = Math.max(1, normalizedMaxHp * Math.max(0, Math.min(1, Number(safeHpRatio) || 0)));
+  const nextHp = Math.max(safeHp, Math.max(0, Number(hp) || 0) - Math.max(0, Number(seconds) || 0) * Math.max(0, Number(drainPerSecond) || 0));
+  return Object.freeze({
+    hp: nextHp,
+    safeHp,
+    forceRetreat: nextHp <= safeHp + Number.EPSILON,
   });
 }
 

@@ -30,6 +30,7 @@ export const WEAPON_PROFILE_IDS = Object.freeze([
   "plasma-blade",
   "grenade",
   "dual-katana",
+  "bite",
 ]);
 
 const frame = (spriteState, durationSeconds, events = []) => ({
@@ -153,6 +154,11 @@ const MANUAL_ABILITY_SPECIAL_CLIPS = {
     frame("attack-a", .22, [{ type: "cross-guard-ready", at: .02 }]),
     frame("attack-b", .36, [{ type: "cross-guard-hold", at: 0 }]),
   ]),
+  "mayo-chan": clip([
+    frame("attack-a", .12, [{ type: "feral-surge", at: 0 }]),
+    frame("attack-b", .16, [{ type: "infection-bloom", at: .04 }]),
+    frame("walk-a", .08, [{ type: "feral-rush", at: 0 }]),
+  ], { movement: true }),
 };
 
 const PRESENTATION_KINDS = Object.freeze([
@@ -168,6 +174,8 @@ const PRESENTATION_KINDS = Object.freeze([
   "tky",
   "mrs-chiha",
   "miyamoto-musashi",
+  "mayo-chan",
+  "mayo-chan-feral",
   "walker",
   "runner",
   "turned",
@@ -196,6 +204,8 @@ const BODY_SCALE_BY_KIND = Object.freeze({
   abomination: 1.13,
   takuya: 1.3,
   "gate-eater": 1.67,
+  "mayo-chan": .82,
+  "mayo-chan-feral": .82,
 });
 
 function clipsForKind(kind) {
@@ -393,6 +403,18 @@ export const WEAPON_PROFILES = deepFreeze({
     damageWeights: [.52, .48],
     shotOffsetsSeconds: [0, .07],
   },
+  bite: {
+    id: "bite",
+    trail: "bite-lunge",
+    trailColor: "#f0cd77",
+    impact: "infection-snap",
+    impactRadius: 8,
+    hitStopSeconds: .024,
+    recoil: 0,
+    casing: false,
+    damageWeights: [1],
+    shotOffsetsSeconds: [0],
+  },
 });
 
 export const UNIT_WEAPON_PROFILE = deepFreeze({
@@ -411,6 +433,7 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   tky: "plasma-blade",
   "mrs-chiha": "grenade",
   "miyamoto-musashi": "dual-katana",
+  "mayo-chan": "bite",
 });
 
 export function combatPresentationFor(kind) {

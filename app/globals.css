@@ -33,6 +33,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .manual-ability-ready-icon.ability-tky { background-image:url('/art/v090/characters/abilities/tky-light-blade-ready-r1.svg'); }
 .manual-ability-ready-icon.ability-mrs-chiha { background-image:url('/art/v090/characters/abilities/mrs-chiha-full-salvo-ready-r1.svg'); }
 .manual-ability-ready-icon.ability-miyamoto-musashi { background-image:url('/art/v090/characters/abilities/miyamoto-musashi-muku-ready-r1.svg'); }
+.manual-ability-ready-icon.ability-mayo-chan { background-image:url('/art/v090/characters/abilities/mayo-chan-feral-ready-r1.svg'); }
 .manual-ability-ready > i { position:absolute; z-index:1; left:50%; top:50%; width:2px; min-height:12px; margin-left:-1px; transform-origin:50% 0; background:#f5ca73; box-shadow:0 0 0 1px rgba(10,12,12,.8); pointer-events:none; animation:manual-ready-stem .22s ease-out both; }
 .manual-ability-ready > i::after { content:""; position:absolute; left:50%; bottom:-3px; width:5px; height:5px; margin-left:-2.5px; transform:rotate(45deg); border-right:2px solid #f5ca73; border-bottom:2px solid #f5ca73; }
 .manual-ability-ready:focus-visible > span { outline:2px solid #fff5cc; outline-offset:3px; }

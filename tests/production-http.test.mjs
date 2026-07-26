@@ -37,6 +37,10 @@ function flattenVisualPaths() {
 function expectedContentType(assetPath) {
   if (assetPath.endsWith(".mp3")) return "audio/mpeg";
   if (assetPath.endsWith(".ogg")) return "audio/ogg";
+  // vinext's static server currently sends WAV as octet-stream. The runtime
+  // fetches and decodes the RIFF bytes directly; Chromium and WebKit decoding
+  // is covered by the Mayo browser smoke.
+  if (assetPath.endsWith(".wav")) return "application/octet-stream";
   if (assetPath.endsWith(".png")) return "image/png";
   if (assetPath.endsWith(".webp")) return "image/webp";
   if (assetPath.endsWith(".css")) return "text/css";

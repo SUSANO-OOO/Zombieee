@@ -39,6 +39,8 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   tky: Object.freeze({ w: 61, h: 102 }),
   "mrs-chiha": Object.freeze({ w: 63, h: 103 }),
   "miyamoto-musashi": Object.freeze({ w: 67, h: 106 }),
+  "mayo-chan": Object.freeze({ w: 70, h: 62 }),
+  "mayo-chan-feral": Object.freeze({ w: 76, h: 67 }),
   walker: Object.freeze({ w: 58, h: 96 }),
   runner: Object.freeze({ w: 53, h: 90 }),
   turned: Object.freeze({ w: 58, h: 96 }),
@@ -154,6 +156,14 @@ const NEWCOMER_VISIBLE = Object.freeze({
   "miyamoto-musashi": {
     right: [[78, 16, 402, 432], [114, 16, 366, 432], [133, 16, 348, 432], [90, 16, 390, 432], [106, 16, 374, 432], [89, 16, 392, 432], [120, 300, 455, 432]],
     left: [[78, 16, 402, 432], [114, 16, 366, 432], [133, 16, 348, 432], [90, 16, 390, 432], [106, 16, 374, 432], [89, 16, 392, 432], [26, 300, 360, 432]],
+  },
+  "mayo-chan": {
+    right: [[50, 16, 430, 432], [16, 95, 464, 432], [16, 75, 464, 432], [16, 185, 464, 432], [48, 16, 433, 432], [54, 16, 427, 432], [16, 171, 464, 432]],
+    left: [[50, 16, 430, 432], [16, 95, 464, 432], [16, 75, 464, 432], [16, 185, 464, 432], [48, 16, 433, 432], [54, 16, 427, 432], [16, 171, 464, 432]],
+  },
+  "mayo-chan-feral": {
+    right: [[40, 16, 441, 432], [16, 47, 464, 432], [16, 87, 464, 432], [66, 16, 414, 432], [39, 16, 442, 432], [16, 43, 464, 432], [16, 53, 464, 432]],
+    left: [[40, 16, 441, 432], [16, 47, 464, 432], [16, 87, 464, 432], [66, 16, 414, 432], [39, 16, 442, 432], [16, 43, 464, 432], [16, 53, 464, 432]],
   },
   scout: {
     right: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
@@ -366,6 +376,8 @@ export const SPRITE_MANIFEST = Object.freeze({
   tky: explicitAtlasManifestEntry("tky", "/art/v090/characters/tky-battle-r1.png"),
   "mrs-chiha": explicitAtlasManifestEntry("mrs-chiha", "/art/v090/characters/mrs-chiha-battle-r1.png"),
   "miyamoto-musashi": explicitAtlasManifestEntry("miyamoto-musashi", "/art/v090/characters/miyamoto-musashi-battle-r1.png"),
+  "mayo-chan": explicitAtlasManifestEntry("mayo-chan", "/art/v090/characters/mayo-chan-battle-r1.png"),
+  "mayo-chan-feral": explicitAtlasManifestEntry("mayo-chan-feral", "/art/v090/characters/mayo-chan-feral-battle-r1.png"),
   walker: legacyManifestEntry("infected", "left"),
   runner: legacyManifestEntry("infected", "left"),
   turned: legacyManifestEntry("infected", "left"),

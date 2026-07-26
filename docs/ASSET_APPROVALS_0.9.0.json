@@ -36,6 +36,13 @@
         "path": "assets/source/v090/characters/miyamoto-musashi-identity-master-r1.png",
         "sha256": "9d2a1ee6e8dd56b5993a1386bcecaa89c219b83cd77a0aaadab080553f6182e9",
         "approval": "The producer directly supplied this image and explicitly fixed it as Miyamoto Musashi's sole formal identity master for derivative production, repository inclusion, and game use."
+      },
+      {
+        "unitId": "unit-mayo-chan",
+        "messageReference": "producer-message-2026-07-26-image-5",
+        "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+        "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c",
+        "approval": "The producer directly supplied this image and explicitly fixed it as Mayo-chan's sole formal identity master, and authorized a feral ability-state derivative of the same individual for repository inclusion and game use."
       }
     ],
     "thirdPartyDownloadedVisuals": false,
@@ -399,6 +406,113 @@
       "height": 96,
       "sourceAssetIds": ["V090-MIYAMOTO-MUSASHI-IDENTITY@r1"],
       "processing": "Project-authored SVG using two katana and a hollow center circle; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-IDENTITY@r1",
+      "kind": "producer-identity-master",
+      "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+      "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c",
+      "bytes": 1705766,
+      "width": 1122,
+      "height": 1402,
+      "sourceAssetIds": [],
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-COMBAT-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/mayo-chan-combat-poses-source-r1.png",
+      "sha256": "fe9c29393e8da17ba6f72be33498a96b6ea3212ffb0125f738ab10aac453ff63",
+      "bytes": 1246638,
+      "width": 2172,
+      "height": 724,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "OpenAI image generation referenced only the approved Mayo-chan identity master to author seven grounded Chihuahua combat poses while preserving face, cream coat, ears, curled tail, yellow bandana, harness, medical pouches, and small body.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-FERAL-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/mayo-chan-feral-poses-source-r1.png",
+      "sha256": "b6e86d70fcd761ed80197a20c0ee386eeab45ea3820815bc25db8856b2e5aa74",
+      "bytes": 1411304,
+      "width": 2153,
+      "height": 730,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "Producer-authorized OpenAI derivative of the same Mayo-chan individual in the feral ability state; Chihuahua breed, face, coat, ears, tail, size, bandana, harness, and equipment remain recognizable while infection anomaly, split mouth, and tendrils are added without excessive gore.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-REFERENCE@r1",
+      "kind": "runtime-reference-copy",
+      "path": "public/art/v090/characters/reference/mayo-chan-identity-master-r1.png",
+      "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c",
+      "bytes": 1705766,
+      "width": 1122,
+      "height": 1402,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "Byte-identical versioned repository copy.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-EVENT-PORTRAIT@r1",
+      "kind": "event-portrait",
+      "path": "public/art/v090/characters/portraits/mayo-chan-event-portrait-r1.webp",
+      "sha256": "1c23a8cddc81f28ce6610415192caab8a1022db681f54b0de3978cf7f3f36020",
+      "bytes": 53676,
+      "width": 512,
+      "height": 640,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "build-v090-mayo-assets.mjs identity-preserving crop, background removal, resize, and WebP encode.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-FORMATION-CARD@r1",
+      "kind": "formation-and-personnel-card",
+      "path": "public/art/v090/characters/cards/mayo-chan-formation-card-r1.webp",
+      "sha256": "93dfb698cbf52f2a4acb22e3360451c966d7e17cfd19edc9ba317d9f0ee1c6d8",
+      "bytes": 50100,
+      "width": 512,
+      "height": 512,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "build-v090-mayo-assets.mjs normal-state identity crop plus project-authored Chihuahua and medical-harness role frame.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-BATTLE@r1",
+      "kind": "battle-atlas",
+      "path": "public/art/v090/characters/mayo-chan-battle-r1.png",
+      "sha256": "9b22480d26b1ad892a086817eea15c993c4af24d8df5c4fb33a4a8d71a33c86c",
+      "bytes": 2789017,
+      "width": 3360,
+      "height": 896,
+      "sourceAssetIds": ["V090-MAYO-CHAN-COMBAT-SOURCE@r1"],
+      "processing": "build-v090-mayo-assets.mjs background removal, seven grounded Chihuahua poses, and mirrored directions.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-FERAL-BATTLE@r1",
+      "kind": "battle-atlas",
+      "path": "public/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c",
+      "bytes": 3550255,
+      "width": 3360,
+      "height": 896,
+      "sourceAssetIds": ["V090-MAYO-CHAN-FERAL-SOURCE@r1"],
+      "processing": "build-v090-mayo-assets.mjs background removal and seven grounded feral-state poses; same-individual identity locks remain visible.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-FERAL-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/mayo-chan-feral-ready-r1.svg",
+      "sha256": "c666332fbc03bb7375855aca0405c9c20b640f85ebe3844eecba6d18f9291c54",
+      "bytes": 1372,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "Project-authored SVG using the approved Chihuahua face, yellow bandana, and red feral-speed accent; no external icon source.",
       "status": "approved"
     }
   ]

@@ -10,12 +10,20 @@ import {
   createManualAbilityRuntime,
   layoutManualAbilityIcons,
   manualAbilityLocksNormalAction,
+  mayoAbilityHpStep,
+  selectMayoAbilityTarget,
   selectMrsChihaAbilityTarget,
   selectMusashiAbilityTarget,
   selectTkyAbilityTarget,
   selectZakimiyaAbilityTarget,
   triggerMusashiCounter,
 } from "../app/manualAbilities.js";
+import {
+  advanceMayoRetreat,
+  createMayoRetreatRuntime,
+  mayoRetreatBlocksDamage,
+  mayoRetreatSpriteState,
+} from "../app/mayoLifecycle.js";
 
 const owner = (id = 1, kind = "zakimiya") => ({
   id,
@@ -251,6 +259,77 @@ test("Miyamoto Musashi prioritizes a boss, counters one melee hit, and falls bac
   assert.equal(fallback.runtime.phase, "cooldown");
 });
 
+test("Mayo-chan deterministically prioritizes small fast infected and every deployment owns its own feral timer", () => {
+  const first = owner(61, "mayo-chan");
+  const second = owner(62, "mayo-chan");
+  const runner = { ...enemy("runner", 380), kind: "runner" };
+  const boss = { ...enemy("boss", 245), kind: "takuya", isBoss: true };
+  const selected = selectMayoAbilityTarget({ owner: first, fighters: [first, second, boss, runner] });
+  assert.equal(selected.targetId, "runner");
+  assert.deepEqual(
+    selectMayoAbilityTarget({ owner: first, fighters: [runner, boss, second, first] }),
+    selected,
+  );
+
+  const started = beginManualAbility(first.manualAbility, selected);
+  first.manualAbility = started.runtime;
+  assert.equal(first.manualAbility.phase, "windup");
+  assert.equal(second.manualAbility.phase, "ready");
+
+  let step = advanceManualAbility(first.manualAbility, MANUAL_ABILITY_REGISTRY["mayo-chan"].windupSeconds);
+  assert.equal(step.runtime.phase, "feral");
+  assert.deepEqual(step.events.map(({ type }) => type), ["feral-start"]);
+  step = advanceManualAbility(step.runtime, MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds);
+  assert.equal(step.runtime.phase, "retreat");
+  assert.deepEqual(step.events.map(({ type }) => type), ["retreat"]);
+  assert.deepEqual(advanceManualAbility(step.runtime, 30).events, [], "retreat cannot emit twice");
+  assert.equal(second.manualAbility.phase, "ready");
+});
+
+test("feral HP drain stops at the safety floor and requests retreat without reaching zero", () => {
+  const beforeFloor = mayoAbilityHpStep({ hp: 64, maxHp: 64, seconds: 1 });
+  assert.equal(beforeFloor.hp, 57);
+  assert.equal(beforeFloor.forceRetreat, false);
+  const floor = mayoAbilityHpStep({ hp: 14, maxHp: 64, seconds: 1 });
+  assert.equal(floor.hp, 12.8);
+  assert.equal(floor.safeHp, 12.8);
+  assert.equal(floor.forceRetreat, true);
+  assert.ok(floor.hp > 0);
+});
+
+test("Mayo-chan falls, rises, and runs to the moving base without creating a death lifecycle", () => {
+  let runtime = createMayoRetreatRuntime({ reason: "injury" });
+  assert.equal(mayoRetreatSpriteState(runtime), "death");
+  let step = advanceMayoRetreat(runtime, .34, { x: 400, baseX: 100 });
+  runtime = step.runtime;
+  assert.equal(runtime.phase, "rise");
+  assert.equal(mayoRetreatSpriteState(runtime), "hit");
+  step = advanceMayoRetreat(runtime, .22, { x: step.x, baseX: 100 });
+  runtime = step.runtime;
+  assert.equal(runtime.phase, "run");
+  assert.equal(mayoRetreatSpriteState(runtime), "move");
+  step = advanceMayoRetreat(runtime, 2, { x: step.x, baseX: 100 });
+  assert.equal(step.runtime.complete, true);
+  assert.equal(step.x, 100);
+});
+
+test("Mayo retreat remains damage-immune through hazards and boss area hits until base arrival", () => {
+  let runtime = createMayoRetreatRuntime({ reason: "injury" });
+  let x = 440;
+  let hp = 1;
+  for (const incomingDamage of [12, 34, 28, 80]) {
+    if (!mayoRetreatBlocksDamage(runtime)) hp = Math.max(0, hp - incomingDamage);
+    const step = advanceMayoRetreat(runtime, .5, { x, baseX: 100 });
+    runtime = step.runtime;
+    x = step.x;
+    assert.equal(hp, 1);
+  }
+  const completion = advanceMayoRetreat(runtime, 3, { x, baseX: 100 });
+  assert.equal(completion.runtime.complete, true);
+  assert.equal(completion.x, 100);
+  assert.equal(hp, 1);
+});
+
 test("screen-space ready icons clamp to safe areas and avoid HUD, bodies, and each other deterministically", () => {
   const fighters = [
     { id: 9, kind: "zakimiya", screenX: 440, screenY: 86 },
@@ -296,6 +375,22 @@ test("runtime renders only ready buttons and never a cooldown ring or number abo
   assert.doesNotMatch(source, /manualAbilityIcons[\s\S]{0,800}cooldownRemaining/);
   assert.match(source, /manualAbilityLocksNormalAction\(f\.manualAbility\)[\s\S]{0,220}f\.aiMoveDirection = 0;[\s\S]{0,40}continue;/);
   assert.match(source, /manualAbilityActive[\s\S]{0,900}sampleAnimationClip\(f\.kind, "special", manualAbilityElapsed\)/);
+});
+
+test("Mayo-chan incapacitation branches to injury retreat before corpse, infection, zombie, or burning lifecycles", async () => {
+  const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const deathResolution = source.slice(
+    source.indexOf("const dead = g.fighters.filter"),
+    source.indexOf("const beforeFireStates"),
+  );
+  assert.match(deathResolution, /fighter\.kind === "mayo-chan"/);
+  assert.match(deathResolution, /beginMayoRetreat\(g, fighter, "injury"\)/);
+  assert.ok(
+    deathResolution.indexOf('fighter.kind === "mayo-chan"') < deathResolution.indexOf("beginAllyDeath"),
+    "Mayo retreat must resolve before the generic ally corpse path",
+  );
+  assert.match(source, /fighter\.mayoRetreat\?\.complete !== true/);
+  assert.match(source, /mayo-chan-feral/);
 });
 
 test("support placement owns input until it is cancelled or completed", async () => {

@@ -387,19 +387,26 @@ import {
   createManualAbilityRuntime,
   layoutManualAbilityIcons,
   manualAbilityLocksNormalAction,
+  mayoAbilityHpStep,
   selectManualAbilityTarget,
   triggerMusashiCounter,
 } from "./manualAbilities.js";
+import {
+  advanceMayoRetreat,
+  createMayoRetreatRuntime,
+  mayoRetreatBlocksDamage,
+  mayoRetreatSpriteState,
+} from "./mayoLifecycle.js";
 
 const W = 960;
 const H = 540;
 
 type Lane = 0 | 1 | 2;
-type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi";
+type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
 type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater";
 type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "danger" | "boss";
-type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
+type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "mayo" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
 type EventDestination = "map" | "battle" | "battle-resume" | "result";
 type PauseAction = "restart" | "loadout" | "withdraw";
@@ -604,6 +611,7 @@ type Fighter = {
   bodyRadius: number;
   laneSpeed: number;
   spawnGrace: number;
+  targetable?: boolean;
   combatReady: boolean;
   contained: boolean;
   gateEntering: boolean;
@@ -663,6 +671,8 @@ type Fighter = {
   progressionLevel?: number;
   progressionRank?: number;
   manualAbility?: ManualAbilityRuntime | null;
+  mayoBiteSlowRemaining?: number;
+  mayoRetreat?: ReturnType<typeof createMayoRetreatRuntime> | null;
 };
 type StationAbilityRuntime = {
   phase: string;
@@ -1503,6 +1513,13 @@ function applyIncomingHumanDamage(
   { attackKind = "melee", attacker = null }: { attackKind?: "melee" | "ranged"; attacker?: Fighter | null } = {},
 ) {
   const incoming = Math.max(0, incomingDamage);
+  if (target.kind === "mayo-chan" && mayoRetreatBlocksDamage(target.mayoRetreat)) {
+    return Object.freeze({
+      targetDamage: 0,
+      redirectedDamage: 0,
+      preventedDamage: incoming,
+    });
+  }
   if (target.kind === "miyamoto-musashi" && attackKind === "melee" && target.manualAbility) {
     const counter = triggerMusashiCounter(target.manualAbility);
     if (counter.ok) {
@@ -1817,6 +1834,8 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
     manualAbility: createManualAbilityRuntime(kind) as ManualAbilityRuntime | null,
+    mayoBiteSlowRemaining: 0,
+    mayoRetreat: null,
     progressionLevel: card.progressionLevel,
     progressionRank: card.progressionRank,
     ...createUnitRoleRuntime(card),
@@ -1825,6 +1844,30 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
   g.banner = `${card.name} // 移動拠点から出撃`;
   g.bannerTime = .8;
   return card;
+}
+
+function beginMayoRetreat(g: Game, fighter: Fighter, reason: "ability" | "injury") {
+  if (fighter.kind !== "mayo-chan" || fighter.mayoRetreat) return false;
+  fighter.hp = Math.max(1, fighter.hp);
+  fighter.targetable = false;
+  fighter.combatReady = false;
+  fighter.gateEntering = false;
+  fighter.contained = false;
+  fighter.targetId = null;
+  fighter.targetObjectId = null;
+  fighter.aiMoveDirection = -1;
+  fighter.cooldown = Number.POSITIVE_INFINITY;
+  fighter.manualAbility = fighter.manualAbility
+    ? ({ ...fighter.manualAbility, phase: "retreat", activeRemaining: 0, target: null } as ManualAbilityRuntime)
+    : null;
+  fighter.mayoRetreat = createMayoRetreatRuntime({ reason });
+  g.manualAbilityVfx = g.manualAbilityVfx.filter((effect) => effect.ownerId !== fighter.id);
+  const redeploy = Math.max(36, (cards.find((card) => card.kind === "mayo-chan")?.deployCooldown ?? 24) * 1.75);
+  g.deployCooldowns["mayo-chan"] = Math.max(g.deployCooldowns["mayo-chan"] ?? 0, redeploy);
+  g.banner = reason === "injury" ? "マヨちゃん // 負傷退避" : "マヨちゃん // 退避";
+  g.bannerTime = 1.35;
+  addParticles(g, fighter.x, fighter.y - 10, reason === "injury" ? "#e6c97a" : "#b05268", 9);
+  return true;
 }
 
 function prepareEndgameQa(g: Game) {
@@ -2086,6 +2129,52 @@ function prepareNewPlayablesQa(g: Game) {
     target.gateEntering = false;
   }
   g.banner = "QA NEW PLAYABLES // TKY + Mrs.チハ + 宮本武蔵";
+  g.bannerTime = 1.4;
+}
+
+function prepareMayoQa(g: Game) {
+  g.time = 60;
+  g.phase = 2;
+  g.wave = 4;
+  g.eventIndex = missionEvents.length;
+  g.baseHp = g.baseMaxHp;
+  g.barricadeVulnerable = true;
+  g.barricadeMaxHp = Math.max(BARRICADE_MAX_HP, 8000);
+  g.barricadeHp = g.barricadeMaxHp;
+  g.energy = COMMAND_MAX;
+  g.scrap = 200;
+  g.fighters = [];
+  g.corpses = [];
+  g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+  g.manualAbilityReceipts = [];
+  g.manualAbilityVfx = [];
+  g.resolvedDefeatIds = new Set();
+
+  spawnHuman(g, "mayo-chan");
+  const mayo = g.fighters[g.fighters.length - 1];
+  mayo.lane = 1;
+  mayo.anchorLane = 1;
+  mayo.x = 320;
+  mayo.y = laneY(1, mayo.id);
+  mayo.spawnGrace = 0;
+  mayo.combatReady = true;
+  mayo.gateEntering = false;
+  mayo.cooldown = 0;
+
+  for (const [index, x] of [410, 485, 560].entries()) {
+    const target = spawnEnemy(g, index === 0 ? "runner" : "walker", 1);
+    target.x = x;
+    target.y = laneY(1, target.id);
+    target.maxHp = 2400;
+    target.hp = target.maxHp;
+    target.speed = 0;
+    target.laneSpeed = 0;
+    target.damage = 0;
+    target.cooldown = 99;
+    target.combatReady = true;
+    target.gateEntering = false;
+  }
+  g.banner = "QA MAYO-CHAN // NORMAL + 凶暴マヨ + 負傷退避";
   g.bannerTime = 1.4;
 }
 
@@ -2580,6 +2669,7 @@ function prepareQaMode(g: Game, qaMode: QaMode | null) {
   if (qaMode === "roles" || qaMode === "dialogue") prepareRolesQa(g);
   else if (qaMode === "zakimiya") prepareZakimiyaQa(g);
   else if (qaMode === "new-playables") prepareNewPlayablesQa(g);
+  else if (qaMode === "mayo") prepareMayoQa(g);
   else if (qaMode === "takuya-entrance") prepareTakuyaEntranceQa(g);
   else if (qaMode === "endgame") prepareEndgameQa(g);
   else if (qaMode === "ai-reacquire") prepareAiReacquireQa(g);
@@ -2708,13 +2798,19 @@ function drawMonkeyTrap(ctx: CanvasRenderingContext2D, fighter: Fighter) {
 }
 
 function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: SpriteMap) {
-  const sprite = sprites[f.kind];
+  const mayoFeral = f.kind === "mayo-chan"
+    && (f.manualAbility?.phase === "feral" || f.mayoRetreat?.reason === "ability");
+  const renderKind = mayoFeral ? "mayo-chan-feral" : f.kind;
+  const sprite = sprites[renderKind];
   if (!sprite?.complete || !sprite.naturalWidth) {
     drawDiagnosticRoleFighter(ctx, f);
     drawDiagnosticStationEnemy(ctx, f);
     return;
   }
-  const moving = f.gateEntering || f.side === "zombie" || Math.abs(f.aiMoveDirection) > .05;
+  const moving = f.mayoRetreat?.phase === "run"
+    || f.gateEntering
+    || f.side === "zombie"
+    || Math.abs(f.aiMoveDirection) > .05;
   const attackDuration = f.kind === "mrs-chiha" && f.attackVariant === "launcher-bash"
     ? mrsChihaLauncherBashDuration()
     : attackPresentationDuration(f.kind);
@@ -2730,7 +2826,9 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
           ? manualAbilityDefinition.windupSeconds
             + ((manualAbilityDefinition.guardSeconds - f.manualAbility.guardRemaining) % .36)
           : f.step;
-  const animationSample = manualAbilityActive
+  const animationSample = f.mayoRetreat
+    ? sampleAnimationClip("mayo-chan", mayoRetreatSpriteState(f.mayoRetreat), f.mayoRetreat.phaseElapsed)
+    : manualAbilityActive
     ? sampleAnimationClip(f.kind, "special", manualAbilityElapsed)
     : f.flash > 0
     ? sampleAnimationClip(f.kind, "hit", Math.max(0, .12 - f.flash))
@@ -2748,8 +2846,8 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   const direction = f.side === "human"
     ? (manualAbilityActive && lockedDirection < 0) || (!manualAbilityActive && f.aiMoveDirection < -.05) ? "left" : "right"
     : "left";
-  const frame = spriteFrameFor(f.kind, state, direction);
-  const authoredSize = fitSpriteBattleDisplaySize(f.kind, frame, spriteDisplaySize(f.kind));
+  const frame = spriteFrameFor(renderKind, state, direction);
+  const authoredSize = fitSpriteBattleDisplaySize(renderKind, frame, spriteDisplaySize(renderKind));
   const compactScale = activeLaneCenters === LANE_Y ? 1 : COMPACT_BATTLE_SPRITE_SCALE;
   const size = {
     w: authoredSize.w * compactScale * animationSample.bodyScale,
@@ -2841,6 +2939,30 @@ function drawAreaEffect(ctx: CanvasRenderingContext2D, effect: AreaEffect, time:
 
 function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbilityVfx) {
   const progress = Math.max(0, Math.min(1, effect.elapsed / Math.max(.001, effect.duration)));
+  if (effect.kind === "mayo-chan") {
+    const pulse = .72 + Math.sin(effect.elapsed * 13) * .16;
+    ctx.save();
+    ctx.translate(effect.originX, effect.originY + 52);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(206,57,92,${pulse})`;
+    ctx.shadowColor = "#b11f4c";
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 30 + Math.sin(effect.elapsed * 8) * 4, 10, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    for (let index = 0; index < 4; index += 1) {
+      const offset = index * 8;
+      ctx.globalAlpha = Math.max(.15, .7 - index * .13);
+      ctx.beginPath();
+      ctx.moveTo(-direction * (10 + offset), -18 + index * 8);
+      ctx.lineTo(-direction * (42 + offset + Math.sin(effect.elapsed * 14 + index) * 7), -18 + index * 8);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
   if (effect.kind === "tky") {
     const charge = Math.min(1, progress / .42);
     const release = Math.max(0, (progress - .38) / .62);
@@ -4861,6 +4983,55 @@ export function AshfallGame() {
         }
         return true;
       },
+      stabilizeMayoProof: () => {
+        if (qaMode !== "mayo") return false;
+        const g = gameRef.current;
+        for (const fighter of g.fighters) {
+          if (fighter.side === "zombie") {
+            fighter.speed = 0;
+            fighter.laneSpeed = 0;
+            fighter.damage = 0;
+            fighter.cooldown = 99;
+          }
+        }
+        return g.fighters.some((fighter) => fighter.kind === "mayo-chan" && fighter.side === "human");
+      },
+      resetMayoProof: () => {
+        if (qaMode !== "mayo") return false;
+        prepareMayoQa(gameRef.current);
+        return true;
+      },
+      forceMayoIncapacitation: () => {
+        if (qaMode !== "mayo") return false;
+        const mayo = gameRef.current.fighters.find((fighter) => (
+          fighter.kind === "mayo-chan"
+          && fighter.side === "human"
+          && !fighter.mayoRetreat
+        ));
+        if (!mayo) return false;
+        mayo.hp = 0;
+        return true;
+      },
+      probeMayoRetreatDamage: () => {
+        if (qaMode !== "mayo") return null;
+        const g = gameRef.current;
+        const mayo = g.fighters.find((fighter) => (
+          fighter.kind === "mayo-chan"
+          && fighter.side === "human"
+          && fighter.mayoRetreat
+        ));
+        if (!mayo) return null;
+        const beforeHp = mayo.hp;
+        const hazard = applyIncomingHumanDamage(g, mayo, 12, { attackKind: "ranged" });
+        const bossArea = applyIncomingHumanDamage(g, mayo, 34, { attackKind: "melee" });
+        return {
+          beforeHp,
+          afterHp: mayo.hp,
+          targetable: mayo.targetable !== false,
+          hazardDamage: hazard.targetDamage,
+          bossAreaDamage: bossArea.targetDamage,
+        };
+      },
       prepareBossFoundationProof: (kind: "takuya" | "gate-eater") => {
         const g = gameRef.current;
         if (!isBossEnemyKind(kind)) throw new RangeError(`Unknown boss proof kind: ${String(kind)}`);
@@ -5570,6 +5741,7 @@ export function AshfallGame() {
             crawlerDefenseTargetId: fighter.crawlerDefenseTargetId ?? null,
             aiDestinationX: fighter.aiDestinationX,
             aiMoveDirection: fighter.aiMoveDirection,
+            targetable: fighter.targetable !== false,
             combatReady: fighter.combatReady,
             gateEntering: fighter.gateEntering,
             entryDirection: fighter.entryDirection ?? -1,
@@ -5596,7 +5768,10 @@ export function AshfallGame() {
             navigationRecovery: { ...fighter.navigationRecovery },
             stationAbility: { ...fighter.stationAbility },
             manualAbility: fighter.manualAbility ? { ...fighter.manualAbility } : null,
+            mayoBiteSlowRemaining: fighter.mayoBiteSlowRemaining ?? 0,
+            mayoRetreat: fighter.mayoRetreat ? { ...fighter.mayoRetreat } : null,
           })),
+          corpses: g.corpses.map((corpse) => ({ ...corpse })),
           manualAbilityVfx: g.manualAbilityVfx.map((effect) => ({ ...effect })),
           manualAbilityReceipts: g.manualAbilityReceipts.map((receipt) => ({ ...receipt })),
           areaEffects: g.areaEffects.map((effect) => ({ ...effect })),
@@ -6092,6 +6267,8 @@ export function AshfallGame() {
       elapsed: 0,
       duration: fighter.kind === "miyamoto-musashi"
         ? definition.windupSeconds + definition.guardSeconds
+        : fighter.kind === "mayo-chan"
+          ? definition.windupSeconds + definition.activeSeconds
         : fighter.kind === "mrs-chiha"
           ? definition.windupSeconds
             + definition.salvoIntervalSeconds * (definition.salvoCount - 1)
@@ -6117,6 +6294,8 @@ export function AshfallGame() {
         ? unitAudioCueFor(fighter.kind, "weapon", "abilityReady")
         : fighter.kind === "miyamoto-musashi"
           ? unitAudioCueFor(fighter.kind, "weapon", "abilityGuard")
+          : fighter.kind === "mayo-chan"
+            ? unitAudioCueFor(fighter.kind, "weapon", "abilityStart")
           : null;
     if (abilityStartCue) {
       playProductionCue(abilityStartCue, fighter.x, {
@@ -8132,6 +8311,26 @@ export function AshfallGame() {
         }
         for (const owner of g.fighters) {
           if (owner.side !== "human" || !owner.manualAbility) continue;
+          if (owner.kind === "mayo-chan" && owner.manualAbility.phase === "feral" && !owner.mayoRetreat) {
+            const hpStep = mayoAbilityHpStep({ hp: owner.hp, maxHp: owner.maxHp, seconds: dt });
+            owner.hp = hpStep.hp;
+            if (hpStep.forceRetreat && beginMayoRetreat(g, owner, "ability")) {
+              g.manualAbilityReceipts.push({
+                ownerId: owner.id,
+                activationId: owner.manualAbility?.activationId ?? 0,
+                kind: owner.kind,
+                eventType: "retreat-safe-floor",
+                at: g.time,
+              });
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityEnd"), owner.x, {
+                priority: 82,
+                cooldownMs: 400,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+              });
+            }
+            if (owner.mayoRetreat) continue;
+          }
           const abilityStep = advanceManualAbility(owner.manualAbility, dt);
           owner.manualAbility = abilityStep.runtime as ManualAbilityRuntime;
           for (const event of abilityStep.events) {
@@ -8145,6 +8344,34 @@ export function AshfallGame() {
               mode: event.mode,
             });
             g.manualAbilityReceipts = g.manualAbilityReceipts.slice(-32);
+            if (event.type === "feral-start" && event.kind === "mayo-chan") {
+              owner.retargetIn = 0;
+              owner.targetId = null;
+              owner.cooldown = 0;
+              g.banner = "マヨちゃん // 凶暴マヨ";
+              g.bannerTime = 1.05;
+              addParticles(g, owner.x, owner.y - 20, "#b52c52", 16);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityRush"), owner.x, {
+                priority: 80,
+                cooldownMs: 160,
+                maxInstances: 2,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:feral`,
+              });
+              continue;
+            }
+            if (event.type === "retreat" && event.kind === "mayo-chan") {
+              if (beginMayoRetreat(g, owner, "ability")) {
+                playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityEnd"), owner.x, {
+                  priority: 82,
+                  cooldownMs: 400,
+                  maxInstances: 1,
+                  fallbackCue: "melee-hit",
+                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:retreat`,
+                });
+              }
+              continue;
+            }
             if (event.type === "guard-start" && event.kind === "miyamoto-musashi") {
               g.banner = "宮本武蔵 // 受け流し構え";
               g.bannerTime = 1;
@@ -9071,26 +9298,45 @@ export function AshfallGame() {
             && f.kind === "gate-eater") {
             Object.assign(f, enforceGateEaterContainmentInvariant(f));
           }
+          if (f.kind === "mayo-chan" && f.mayoRetreat) {
+            const retreatStep = advanceMayoRetreat(f.mayoRetreat, dt, {
+              x: f.x,
+              baseX: BASE_X + 18,
+            });
+            f.mayoRetreat = retreatStep.runtime as Fighter["mayoRetreat"];
+            f.x = retreatStep.x;
+            f.y += Math.sign(activeMusterY() - f.y) * Math.min(Math.abs(activeMusterY() - f.y), 90 * dt);
+            f.aiMoveDirection = f.mayoRetreat?.phase === "run" ? -1 : 0;
+            f.step += dt;
+            continue;
+          }
           if (f.hp <= 0) continue;
+          f.mayoBiteSlowRemaining = Math.max(0, (f.mayoBiteSlowRemaining ?? 0) - dt);
+          const mayoFeralMultiplier = f.kind === "mayo-chan" && f.manualAbility?.phase === "feral"
+            ? MANUAL_ABILITY_REGISTRY["mayo-chan"].moveSpeedMultiplier
+            : 1;
+          const mayoBiteSlowMultiplier = (f.mayoBiteSlowRemaining ?? 0) > 0
+            ? MANUAL_ABILITY_REGISTRY["mayo-chan"].biteSlowMultiplier
+            : 1;
           const movementStartX = f.x;
           const humanMovementSpeed = f.side === "human"
             ? stationHumanMoveSpeed({
-              baseSpeed: f.speed,
+              baseSpeed: f.speed * mayoFeralMultiplier,
               slowMultiplier: f.slowMultiplier ?? 1,
               runtime: g.stageMission,
               missionType: g.definition.missionType,
               config: g.definition.missionConfig,
             })
-            : f.speed;
+            : f.speed * mayoBiteSlowMultiplier;
           const humanLaneSpeed = f.side === "human"
             ? stationHumanMoveSpeed({
-              baseSpeed: f.laneSpeed,
+              baseSpeed: f.laneSpeed * mayoFeralMultiplier,
               slowMultiplier: f.slowMultiplier ?? 1,
               runtime: g.stageMission,
               missionType: g.definition.missionType,
               config: g.definition.missionConfig,
             })
-            : f.laneSpeed;
+            : f.laneSpeed * mayoBiteSlowMultiplier;
           f.cooldown = advanceAttackCooldown(f.cooldown, dt); f.supportCooldown -= dt; f.retargetIn = Math.max(0, f.retargetIn - dt); f.spawnGrace = Math.max(0, f.spawnGrace - dt);
           f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.marked = Math.max(0, f.marked - dt); f.step += dt;
           f.stunned = Math.max(0, f.stunned - dt);
@@ -9554,6 +9800,8 @@ export function AshfallGame() {
                 y: enemy.y,
                 lane: enemy.lane,
                 assignedLane: enemy.anchorLane ?? enemy.lane,
+                kind: enemy.kind,
+                boss: isBossEnemyKind(enemy.kind),
                 hp: enemy.hp,
                 combatReady: enemy.combatReady,
                 bodyRadius: enemy.bodyRadius,
@@ -9918,10 +10166,10 @@ export function AshfallGame() {
               }
             } else {
               const stopX = objectTarget.x + stoppingDistance;
-              f.x = Math.max(stopX, f.x - f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier) * dt);
+              f.x = Math.max(stopX, f.x - f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier) * dt);
               const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
               const dy = routeY - f.y;
-              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
+              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * mayoBiteSlowMultiplier * dt);
               f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
               f.lane = activeLaneForY(f.y, f.lane);
             }
@@ -10243,6 +10491,8 @@ export function AshfallGame() {
                         ? mrsLauncherBash ? "bash" : "shot"
                         : f.kind === "tky" || f.kind === "miyamoto-musashi"
                           ? "attack"
+                          : f.kind === "mayo-chan"
+                            ? "bite"
                           : null;
                 const contactAudioX = f.kind === "crazy-king" || f.kind === "kumaverson" ? (f.x + target.x) / 2 : f.x;
                 const defersMrsLauncherAudio = f.kind === "mrs-chiha" && !mrsLauncherBash;
@@ -10268,6 +10518,23 @@ export function AshfallGame() {
                     playProductionCue(unitAudioCueFor(f.kind, "weapon", "specialKill"), target.x, { priority: 86, maxInstances: 1 });
                   } else if (f.attackSequence % 6 === 0) {
                     playProductionCue(unitAudioCueFor(f.kind, "weapon", "reload"), f.x, { priority: 52, maxInstances: 1 });
+                  }
+                }
+                if (f.kind === "mayo-chan" && target.side === "zombie") {
+                  target.mayoBiteSlowRemaining = Math.max(
+                    target.mayoBiteSlowRemaining ?? 0,
+                    MANUAL_ABILITY_REGISTRY["mayo-chan"].biteSlowSeconds,
+                  );
+                  addParticles(g, target.x, target.y - 18, f.manualAbility?.phase === "feral" ? "#b72d52" : "#e4ca76", 5);
+                  if (f.manualAbility?.phase === "feral") {
+                    f.targetId = null;
+                    f.retargetIn = 0;
+                    playProductionCue(unitAudioCueFor(f.kind, "weapon", "abilityRush"), f.x, {
+                      priority: 72,
+                      cooldownMs: 130,
+                      maxInstances: 2,
+                      fallbackCue: "melee-hit",
+                    });
                   }
                 }
                 if (Math.random() < .34) playProductionCue(humanVoiceCueForUnit(f.kind, "attack"), f.x, {
@@ -10310,6 +10577,8 @@ export function AshfallGame() {
                 ? .9
                 : f.kind === "crazy-king"
                   ? crazyKingAttackInterval(f.attackEvery, f.comboHits)
+                  : f.kind === "mayo-chan" && f.manualAbility?.phase === "feral"
+                    ? f.attackEvery * MANUAL_ABILITY_REGISTRY["mayo-chan"].attackIntervalMultiplier
                   : f.attackEvery;
               if (!splitMachineGunBurst && !(f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash)) {
                 g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(appliedAttack.targetDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
@@ -10588,10 +10857,10 @@ export function AshfallGame() {
             f.lane = laneStep.lane as Lane;
           } else if (target && f.side === "zombie") {
             // The CRAWLER remains the objective: enemies advance on their route and only stop for a physical blocker.
-            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
+            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
             const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
-            if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
+            if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * mayoBiteSlowMultiplier * dt);
             f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
             f.lane = activeLaneForY(f.y, f.lane);
           } else {
@@ -10614,11 +10883,11 @@ export function AshfallGame() {
               f.y = laneStep.y;
               f.lane = laneStep.lane as Lane;
             } else {
-              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false });
+              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false });
             }
             if (f.side === "zombie" && f.anchorLane !== null) {
               const dy = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane] - f.y;
-              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
+              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * mayoBiteSlowMultiplier * dt);
               f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
               f.lane = activeLaneForY(f.y, f.lane);
             }
@@ -10745,6 +11014,25 @@ export function AshfallGame() {
         const dead = g.fighters.filter((fighter) => fighter.hp <= 0);
         for (const fighter of dead) {
           if (!claimDefeatResolution(g.resolvedDefeatIds, fighter.id)) continue;
+          if (fighter.side === "human" && fighter.kind === "mayo-chan") {
+            if (beginMayoRetreat(g, fighter, "injury")) {
+              g.unitsLost++;
+              emitBattleBark(g, "ally-down", "medic", `mayo-retreat-${fighter.id}`);
+              playProductionCue(unitAudioCueFor("mayo-chan", "voice", "hurt"), fighter.x, {
+                priority: 88,
+                cooldownMs: 300,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+              });
+              playProductionCue(unitAudioCueFor("mayo-chan", "voice", "retreat"), fighter.x, {
+                priority: 86,
+                cooldownMs: 1000,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+              });
+            }
+            continue;
+          }
           addParticles(g, fighter.x, fighter.y - 15, fighter.kind === "takuya" || fighter.kind === "gate-eater" || fighter.kind === "shade" ? "#c08d62" : fighter.side === "zombie" ? "#7e965e" : "#b0614e", fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 20 : 11);
           if (fighter.side === "human") playProductionCue(humanVoiceCueForUnit(fighter.kind, "death"), fighter.x, {
             priority: 88,
@@ -10819,7 +11107,7 @@ export function AshfallGame() {
             emitBattleBark(g, "ally-down", "medic", `ally-down-${fighter.id}`);
           }
         }
-        g.fighters = g.fighters.filter((fighter) => fighter.hp > 0);
+        g.fighters = g.fighters.filter((fighter) => fighter.hp > 0 && fighter.mayoRetreat?.complete !== true);
 
         const beforeFireStates = new Map(g.corpses.map((corpse) => [corpse.id, corpse.state]));
         const ignition = (igniteAllyCorpsesInFire as unknown as (input: {

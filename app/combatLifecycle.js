@@ -69,6 +69,7 @@ export const COMBAT_ROLE_RULES = freeze({
   tky: freeze({ attackType: "melee", allowAdjacentLaneTargets: true }),
   "mrs-chiha": freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
   "miyamoto-musashi": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  "mayo-chan": freeze({ attackType: "melee", allowAdjacentLaneTargets: true }),
 });
 
 const NON_TARGETABLE_STATES = new Set([
