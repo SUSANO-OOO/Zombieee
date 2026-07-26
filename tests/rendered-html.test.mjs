@@ -1335,7 +1335,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
   assert.match(game, /g\.resultPresented = !enemyBaseDestroyed/);
   assert.match(game, /if \(!enemyBaseDestroyed\) setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.stageId,[\s\S]*won: g\.won/);
-  assert.match(game, /if \(g\.over && !g\.resultPresented\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*if \(collapseStep\.complete\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.stageId,[\s\S]*won: g\.won/);
+  assert.match(game, /if \(g\.over && !g\.resultPresented && !g\.survivalRun\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*if \(collapseStep\.complete\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.stageId,[\s\S]*won: g\.won/);
   assert.match(game, /resolveStageResult\(campaignSave, \{[\s\S]*resultId: end\.resultId,[\s\S]*stageId: end\.stageId,[\s\S]*baseMaxHp: end\.baseMaxHp/);
   assert.match(game, /if \(!end \|\| finalizedEndRef\.current === end\) return;[\s\S]*window\.setTimeout\(async \(\) => \{[\s\S]*if \(finalizedEndRef\.current === end\) return;[\s\S]*finalizedEndRef\.current = end/);
   assert.match(game, /setCampaignSave\(resolved\.save as CampaignSave\)[\s\S]*setScreen\("result"\)/);
@@ -1494,7 +1494,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
   assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax\)/);
   assert.match(game, /const bossLabel = selectedStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL \? "改札喰い" : "TAKUYA"/);
-  assert.match(game, /\{bossLabel\}\{" \/\/ "\}\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
+  assert.match(game, /\{activeBossLabel\}\{" \/\/ "\}\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
   assert.match(css, /\.boss-hud \{[^}]*top:18%; right:calc\(2% \+ var\(--app-viewport-safe-right\)\); width:23%/);
   assert.match(css, /\.boss-hud \{ top:78px; right:calc\(8px \+ var\(--app-viewport-safe-right\)\); width:24%/);
 });
