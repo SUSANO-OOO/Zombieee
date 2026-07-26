@@ -83,10 +83,12 @@ import {
   CAMPAIGN_RECRUITMENT_COSTS,
   CAMPAIGN_UNITS,
   INITIAL_STAGE_ID,
-  campaignUnitUpgradeQuote,
+  acknowledgeCampaignMigrationNotice,
+  campaignUnitLevelUpgradeQuote,
   checkpointSurvivalCampaignSave,
   createDefaultCampaignSave,
-  getCampaignUnitRank,
+  getCampaignLevelCap,
+  getCampaignUnitLevel,
   getSelectedFormationCombatKinds,
   getSelectedFormationUnitIds,
   inspectCampaignSaveCandidate,
@@ -359,10 +361,10 @@ import {
   stationSpatialSnapshot,
 } from "./stationSpatialMechanics.js";
 import {
-  UNIT_PROGRESSION_MAX_RANK,
-  applyUnitProgression,
+  UNIT_LEVEL_MAX,
+  applyUnitLevelProgression,
   damageAfterUnitDefense,
-  unitProgressionMilestones,
+  unitLevelMilestones,
 } from "./unitProgression.js";
 
 const W = 960;
@@ -458,6 +460,7 @@ type UnitCard = {
   damage: number;
   range: number;
   attackEvery: number;
+  progressionLevel?: number;
   progressionRank?: number;
   defense?: number;
   healingMultiplier?: number;
@@ -632,6 +635,7 @@ type Fighter = {
   burning?: boolean;
   slowMultiplier?: number;
   stationAbility: StationAbilityRuntime;
+  progressionLevel?: number;
   progressionRank?: number;
 };
 type StationAbilityRuntime = {
@@ -832,7 +836,7 @@ type Game = {
   definition: BattleDefinition;
   resultId: string;
   formationKinds: UnitKind[];
-  unitRanksByKind: Record<string, number>;
+  unitLevelsByKind: Record<string, number>;
   running: boolean;
   paused: boolean;
   over: boolean;
@@ -1149,16 +1153,16 @@ const initialGame = (
   formationKinds: UnitKind[] = cards.slice(0, 7).map((card) => card.kind),
   resultId = createBattleResultId(stageId),
   storyBattleReadEventIds: string[] = [],
-  unitRanks: Record<string, number> = {},
+  unitLevels: Record<string, number> = {},
 ): Game => {
   const definition = createBattleDefinition(stageId) as BattleDefinition;
-  const unitRanksByKind = Object.fromEntries((CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
-    .map((unit) => [unit.combatKind, unitRanks[unit.id] ?? 0]));
+  const unitLevelsByKind = Object.fromEntries((CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
+    .map((unit) => [unit.combatKind, unitLevels[unit.id] ?? 1]));
   return ({
   definition,
   resultId,
   formationKinds: [...formationKinds],
-  unitRanksByKind,
+  unitLevelsByKind,
   running: false,
   paused: false,
   over: false,
@@ -1248,12 +1252,12 @@ const initialSurvivalGame = ({
   selectedSupply,
   run,
   formationKinds,
-  unitRanks,
+  unitLevels,
 }: {
   selectedSupply: SupplyKind;
   run: ReturnType<typeof createSurvivalRun>;
   formationKinds: UnitKind[];
-  unitRanks: Record<string, number>;
+  unitLevels: Record<string, number>;
 }): Game => {
   const stageId = CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL;
   const game = initialGame(
@@ -1262,7 +1266,7 @@ const initialSurvivalGame = ({
     formationKinds,
     run.runId,
     [],
-    unitRanks,
+    unitLevels,
   );
   game.definition = {
     ...game.definition,
@@ -1563,7 +1567,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
 function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
   const baseCard = cards.find((item) => item.kind === kind);
   if (!baseCard) return null;
-  const progressedCard = applyUnitProgression(baseCard, g.unitRanksByKind[kind] ?? 0) as UnitCard & { progressionRank: number };
+  const progressedCard = applyUnitLevelProgression(baseCard, g.unitLevelsByKind[kind] ?? 1) as UnitCard & { progressionLevel: number; progressionRank: number };
   const survivalEffects = survivalUpgradeEffects(g.survivalRun);
   const card = {
     ...progressedCard,
@@ -1571,7 +1575,7 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     range: progressedCard.range * survivalEffects.rangeMultiplier,
     defense: 1 - (1 - (progressedCard.defense ?? 0)) * survivalEffects.defenseMultiplier,
     healingMultiplier: (progressedCard.healingMultiplier ?? 1) * survivalEffects.healingMultiplier,
-  } as UnitCard & { progressionRank: number };
+  } as UnitCard & { progressionLevel: number; progressionRank: number };
   const id = g.nextId++;
   const laneCounts = [0, 0, 0];
   for (const ally of g.fighters) {
@@ -1610,6 +1614,7 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     navigationRecovery: createNavigationRecoveryState({ x: deployment.x, y: deployment.y, lane: assignedLane }),
     abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
+    progressionLevel: card.progressionLevel,
     progressionRank: card.progressionRank,
     ...createUnitRoleRuntime(card),
   });
@@ -4769,6 +4774,7 @@ export function AshfallGame() {
             defense: fighter.defense,
             healingMultiplier: fighter.healingMultiplier,
             trapDurationMultiplier: fighter.trapDurationMultiplier,
+            progressionLevel: fighter.progressionLevel ?? 1,
             progressionRank: fighter.progressionRank ?? 0,
             bodyRadius: fighter.bodyRadius,
             targetId: fighter.targetId,
@@ -4806,6 +4812,7 @@ export function AshfallGame() {
           unlockedStageIds: [...campaignSave.unlockedStageIds],
           processedResultIds: [...campaignSave.processedResultIds],
           caps: campaignSave.caps,
+          unitLevels: { ...campaignSave.unitLevels },
           unitRanks: { ...campaignSave.unitRanks },
           settings: { ...campaignSave.settings },
         };
@@ -4821,7 +4828,7 @@ export function AshfallGame() {
         delete qaWindow.__ASHFALL_RUNTIME_PERFORMANCE__;
       }
     };
-  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.settings, campaignSave.unitRanks, campaignSave.unlockedStageIds, screen]);
+  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, screen]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -5694,24 +5701,25 @@ export function AshfallGame() {
     };
   }), [campaignSave, qaMode, qaScenario]);
   const selectedStageView = stageViews.find((stage) => stage.id === selectedStageId) ?? stageViews[0];
+  const campaignLevelCap = getCampaignLevelCap(campaignSave);
   const unitViews = useMemo<UnitScreenView[]>(() => (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => {
-    const rank = getCampaignUnitRank(campaignSave, unit.id);
-    const quote = campaignUnitUpgradeQuote(campaignSave, unit.id);
+    const level = getCampaignUnitLevel(campaignSave, unit.id);
+    const quote = campaignUnitLevelUpgradeQuote(campaignSave, unit.id);
     const baseCard = cards.find((card) => card.kind === unit.combatKind) ?? cards[0];
     const aiProfile = baseCard.aiProfile;
-    const milestones = unitProgressionMilestones(aiProfile, rank);
-    const nextMilestones = quote.nextRank === null
+    const milestones = unitLevelMilestones(aiProfile, level);
+    const nextMilestones = quote.nextLevel === null
       ? []
-      : unitProgressionMilestones(aiProfile, quote.nextRank).filter((milestone) => !milestones.includes(milestone));
-    const statSummaryFor = (targetRank: number) => {
-      if (targetRank <= 0) return "基礎ステータス";
-      const progressed = applyUnitProgression(baseCard, targetRank);
+      : unitLevelMilestones(aiProfile, quote.nextLevel).filter((milestone) => !milestones.includes(milestone));
+    const statSummaryFor = (targetLevel: number) => {
+      if (targetLevel <= 1) return "基礎ステータス";
+      const progressed = applyUnitLevelProgression(baseCard, targetLevel);
       const increase = (current: number, base: number) => Math.round((current / base - 1) * 100);
       return `HP +${increase(progressed.hp, baseCard.hp)}%・攻撃 +${increase(progressed.damage, baseCard.damage)}%・防御 ${Math.round(progressed.defense * 1000) / 10}%軽減・機動 +${increase(progressed.speed, baseCard.speed)}%・攻撃速度 +${increase(baseCard.attackEvery, progressed.attackEvery)}%`;
     };
-    const compactStatSummaryFor = (targetRank: number) => {
-      if (targetRank <= 0) return "基礎";
-      const progressed = applyUnitProgression(baseCard, targetRank);
+    const compactStatSummaryFor = (targetLevel: number) => {
+      if (targetLevel <= 1) return "基礎";
+      const progressed = applyUnitLevelProgression(baseCard, targetLevel);
       const increase = (current: number, base: number) => Math.round((current / base - 1) * 100);
       return `HP+${increase(progressed.hp, baseCard.hp)} 攻+${increase(progressed.damage, baseCard.damage)} 防${Math.round(progressed.defense * 1000) / 10}% 機+${increase(progressed.speed, baseCard.speed)} 速+${increase(baseCard.attackEvery, progressed.attackEvery)}%`;
     };
@@ -5736,19 +5744,21 @@ export function AshfallGame() {
         : unit.unlock.type === "recruitment"
           ? `${CAMPAIGN_STAGE_BY_ID[unit.unlock.stageId ?? ""]?.displayName ?? `Stage ${unit.unlock.stageNumber ?? "?"}`}後に調達`
           : `Stage ${unit.unlock.stageNumber ?? "?"}で加入`,
-      rank,
-      maxRank: UNIT_PROGRESSION_MAX_RANK,
-      nextUpgradeCost: quote.nextRank === null ? null : quote.costCaps,
+      level,
+      maxLevel: UNIT_LEVEL_MAX,
+      levelCap: campaignLevelCap,
+      nextUpgradeCost: quote.nextLevel === null ? null : quote.costCaps,
+      upgradeBlockedReason: quote.reason,
       upgradeBaseCost: quote.baseCostCaps,
       upgradeDiscount: quote.discountCaps,
       catchUp: quote.catchUp,
       milestones,
       nextMilestones,
-      statSummary: statSummaryFor(rank),
-      nextStatSummary: statSummaryFor(quote.nextRank ?? rank),
-      nextStatCompact: compactStatSummaryFor(quote.nextRank ?? rank),
+      statSummary: statSummaryFor(level),
+      nextStatSummary: statSummaryFor(quote.nextLevel ?? level),
+      nextStatCompact: compactStatSummaryFor(quote.nextLevel ?? level),
     };
-  }), [campaignSave, qaMode, qaScenario]);
+  }), [campaignLevelCap, campaignSave, qaMode, qaScenario]);
   const supplyViews = useMemo<SupplyScreenView[]>(() => (Object.keys(supplyDefs) as SupplyKind[]).map((kind) => ({
     kind,
     name: supplyDefs[kind].name,
@@ -5825,7 +5835,7 @@ export function AshfallGame() {
       permittedFormation.length > 0 ? permittedFormation : fallbackFormation,
       sessionOverride?.resultId ?? createBattleResultId(battleStageId),
       campaignSave.readStoryEventIds,
-      campaignSave.unitRanks,
+      campaignSave.unitLevels,
     );
     fresh.running = true;
     prepareQaMode(fresh, qaMode);
@@ -5877,13 +5887,11 @@ export function AshfallGame() {
       return unit ? [unit.combatKind] : [];
     }) as UnitKind[];
     const activeKinds = requestedKinds.length > 0 ? requestedKinds : formationKinds;
-    const unitRanks = Object.fromEntries(Object.entries(run.formation.unitLevelsByUnit)
-      .map(([unitId, level]) => [unitId, Math.max(0, Number(level) - 1)]));
     const fresh = initialSurvivalGame({
       selectedSupply,
       run,
       formationKinds: activeKinds,
-      unitRanks,
+      unitLevels: { ...run.formation.unitLevelsByUnit },
     });
     fresh.running = true;
     gameRef.current = fresh;
@@ -5919,7 +5927,7 @@ export function AshfallGame() {
   const startNewSurvival = useCallback(() => {
     const unitLevelsByUnit = Object.fromEntries(formationUnitIds.map((unitId) => [
       unitId,
-      Math.max(1, Number(campaignSave.unitRanks[unitId] ?? 0) + 1),
+      Math.max(1, Number(campaignSave.unitLevels[unitId] ?? 1)),
     ]));
     const run = createSurvivalRun({
       runId: createBattleResultId("survival"),
@@ -5955,12 +5963,12 @@ export function AshfallGame() {
       sessionOverride?.formationKinds ?? formationKinds,
       createBattleResultId(sessionOverride?.stageId ?? selectedStageId),
       campaignSave.readStoryEventIds,
-      campaignSave.unitRanks,
+      campaignSave.unitLevels,
     );
     gameRef.current = fresh;
     finalizedEndRef.current = null;
     setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setSurvivalHud(null); setSurvivalResult(null); setPendingSurvivalSettlement(null); setSurvivalSettlementAwaitingRetry(false); setScreen("map"); chooseAction(null);
-  }, [campaignSave.readStoryEventIds, campaignSave.unitRanks, chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
+  }, [campaignSave.readStoryEventIds, campaignSave.unitLevels, chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
 
   const handleEventComplete = useCallback(() => {
     const completion = resolveStoryEventCompletion({
@@ -6051,24 +6059,24 @@ export function AshfallGame() {
     upgradeLocksRef.current.add(unitId);
     setUpgradePendingUnitIds([...upgradeLocksRef.current]);
     const currentSave = campaignSaveRef.current;
-    const currentRank = getCampaignUnitRank(currentSave, unitId);
-    const upgradeId = `upgrade:${unitId}:rank-${currentRank + 1}`;
+    const currentLevel = getCampaignUnitLevel(currentSave, unitId);
+    const upgradeId = `upgrade:${unitId}:level-${currentLevel + 1}`;
     const transaction = upgradeCampaignUnit(currentSave, { unitId, upgradeId });
     if (transaction.result.applied) {
-      const nextRank = transaction.result.nextRank ?? currentRank;
+      const nextLevel = transaction.result.nextLevel ?? currentLevel;
       const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === unitId);
       const baseCard = cards.find((candidate) => candidate.kind === unit?.combatKind) ?? cards[0];
-      const before = applyUnitProgression(baseCard, currentRank);
-      const after = applyUnitProgression(baseCard, nextRank);
-      const milestones = unitProgressionMilestones(baseCard.aiProfile, nextRank)
-        .filter((milestone) => !unitProgressionMilestones(baseCard.aiProfile, currentRank).includes(milestone));
+      const before = applyUnitLevelProgression(baseCard, currentLevel);
+      const after = applyUnitLevelProgression(baseCard, nextLevel);
+      const milestones = unitLevelMilestones(baseCard.aiProfile, nextLevel)
+        .filter((milestone) => !unitLevelMilestones(baseCard.aiProfile, currentLevel).includes(milestone));
       const defensePercent = (value: number) => Math.round(value * 1000) / 10;
       campaignSaveRef.current = transaction.save as CampaignSave;
       setCampaignSave(transaction.save as CampaignSave);
       setUpgradeFeedback({
         unitId,
-        rank: nextRank,
-        reachedMax: nextRank >= UNIT_PROGRESSION_MAX_RANK,
+        level: nextLevel,
+        reachedMax: nextLevel >= UNIT_LEVEL_MAX,
         spentCaps: transaction.result.spentCaps,
         statDelta: `HP ${before.hp}→${after.hp} / 攻撃 ${before.damage}→${after.damage} / 防御 ${defensePercent(before.defense)}→${defensePercent(after.defense)}%`,
         milestones,
@@ -6082,12 +6090,12 @@ export function AshfallGame() {
         dedupeKey: `${upgradeId}:currency`,
       });
       playProductionCue(
-        nextRank >= UNIT_PROGRESSION_MAX_RANK ? UPGRADE_AUDIO_CUE_IDS.MAX : UPGRADE_AUDIO_CUE_IDS.SUCCESS,
+        nextLevel >= UNIT_LEVEL_MAX ? UPGRADE_AUDIO_CUE_IDS.MAX : UPGRADE_AUDIO_CUE_IDS.SUCCESS,
         W / 2,
         {
-          priority: nextRank >= UNIT_PROGRESSION_MAX_RANK ? 82 : 74,
+          priority: nextLevel >= UNIT_LEVEL_MAX ? 82 : 74,
           cooldownMs: 60,
-          volume: nextRank >= UNIT_PROGRESSION_MAX_RANK ? .9 : .78,
+          volume: nextLevel >= UNIT_LEVEL_MAX ? .9 : .78,
           maxInstances: 1,
           dedupeKey: `${upgradeId}:result`,
         },
@@ -6096,7 +6104,7 @@ export function AshfallGame() {
       upgradeFeedbackTimerRef.current = window.setTimeout(() => {
         setUpgradeFeedback((current) => current?.receipt === transaction.result.upgradeId ? null : current);
         upgradeFeedbackTimerRef.current = null;
-      }, nextRank >= UNIT_PROGRESSION_MAX_RANK ? 1700 : 1350);
+      }, nextLevel >= UNIT_LEVEL_MAX ? 1700 : 1350);
     }
     window.setTimeout(() => {
       upgradeLocksRef.current.delete(unitId);
@@ -6138,6 +6146,9 @@ export function AshfallGame() {
   const continueResult = useCallback(() => {
     returnToMap();
   }, [returnToMap]);
+  const acknowledgeMigrationNotice = useCallback((noticeId: string) => {
+    setCampaignSave((current) => acknowledgeCampaignMigrationNotice(current, noticeId) as CampaignSave);
+  }, []);
   const downloadCampaignText = useCallback((filename: string, text: string) => {
     const url = URL.createObjectURL(new Blob([text], { type: "application/json;charset=utf-8" }));
     const anchor = document.createElement("a");
@@ -6662,9 +6673,9 @@ export function AshfallGame() {
           caps: 2500,
           supplies: 2500,
           completedStageIds: CAMPAIGN_STAGES.slice(0, 3).map((stage) => stage.id),
-          unitRanks: Object.fromEntries(qaUnitIds.map((unitId, index) => [
+          unitLevels: Object.fromEntries(qaUnitIds.map((unitId, index) => [
             unitId,
-            Math.min(UNIT_PROGRESSION_MAX_RANK, Math.floor(index / 2)),
+            Math.min(5, Math.floor(index / 2) + 1),
           ])),
         } : {}),
       } as CampaignSave;
@@ -6891,7 +6902,7 @@ export function AshfallGame() {
         transition.formationKinds as UnitKind[],
         createBattleResultId(transition.stageId),
         campaignSave.readStoryEventIds,
-        campaignSave.unitRanks,
+        campaignSave.unitLevels,
       );
       gameRef.current = fresh;
       finalizedEndRef.current = null;
@@ -9866,7 +9877,7 @@ export function AshfallGame() {
               <small>FORMATION SNAPSHOT</small><h2>出撃部隊</h2>
               <ul>{formationUnitIds.map((unitId) => {
                 const unit = unitViews.find((candidate) => candidate.id === unitId);
-                return <li key={unitId}><b>{unit?.name ?? unitId}</b><span>Level {Math.max(1, Number(campaignSave.unitRanks[unitId] ?? 0) + 1)}</span></li>;
+                return <li key={unitId}><b>{unit?.name ?? unitId}</b><span>Level {Math.max(1, Number(campaignSave.unitLevels[unitId] ?? 1))}</span></li>;
               })}</ul>
               <p>開始時のLevelと装備をsnapshotへ固定し、checkpoint再開時も同じ値を使用します。</p>
             </article>
@@ -9952,6 +9963,15 @@ export function AshfallGame() {
           onResetSave={resetCampaign}
           onReloadAssets={() => window.location.reload()}
         />}
+        {screen !== "battle" && campaignSave.migrationNotices[0] && <div className="migration-notice" role="alertdialog" aria-modal="true" aria-label="Version 0.9.0キャップ経済再編">
+          <section>
+            <small>MIGRATION RECEIPT</small>
+            <h2>{campaignSave.migrationNotices[0].title}</h2>
+            <p>{campaignSave.migrationNotices[0].body}</p>
+            <dl><div><dt>旧残高</dt><dd>{campaignSave.migrationNotices[0].previousCaps}</dd></div><div><dt>新開始資金</dt><dd>{campaignSave.migrationNotices[0].nextCaps}</dd></div></dl>
+            <button onClick={() => acknowledgeMigrationNotice(campaignSave.migrationNotices[0].id)}>内容を確認</button>
+          </section>
+        </div>}
       </section>
       {pendingResultCommit && <div className="result-save-blocker" role="alertdialog" aria-modal="true" aria-label="作戦結果の保存失敗">
         <section><small>SAVE REQUIRED</small><h2>作戦結果を保存できません</h2><p>報酬や加入の二重適用を防ぐため、結果画面へ進まず停止しています。保存を再試行するか、結果を含むバックアップを書き出してください。</p><div><button disabled={resultSaveRetrying} onClick={retryPendingResultSave}>{resultSaveRetrying ? "保存を再試行中" : "保存を再試行"}</button><button disabled={resultSaveRetrying} onClick={exportPendingResultSave}>結果バックアップを書き出す</button></div></section>

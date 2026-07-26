@@ -3,7 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { UNIT_CARDS } from "../app/gameRules.js";
-import { applyUnitProgression } from "../app/unitProgression.js";
+import { applyUnitLevelProgression } from "../app/unitProgression.js";
 
 if (!process.env.PROGRESSION_QA_BASE_URL) {
   throw new Error("PROGRESSION_QA_BASE_URL is required; use the isolated QA runner");
@@ -66,17 +66,29 @@ function diagnosticsFor(page) {
   return state;
 }
 
-async function enterBattle(page) {
+async function activate(page, locator, useTouch) {
+  await locator.waitFor({ state: "visible", timeout });
+  if (!useTouch) {
+    await locator.click();
+    return;
+  }
+  await locator.scrollIntoViewIfNeeded();
+  const box = await locator.boundingBox();
+  invariant(box && box.width > 0 && box.height > 0, "touch target has no visible bounds");
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+}
+
+async function enterBattle(page, useTouch) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     const screen = await page.locator(".game-shell").getAttribute("data-screen");
     if (screen === "battle") return;
     if (screen === "loadout") {
       const deploy = page.getByRole("button", { name: /この編成で出撃/u });
-      if (await deploy.count() === 1 && await deploy.isEnabled()) await deploy.click();
+      if (await deploy.count() === 1 && await deploy.isEnabled()) await activate(page, deploy, useTouch);
     } else if (screen === "event") {
       const advance = page.locator('button[aria-label="セリフを送る"]');
-      if (await advance.count() === 1) await advance.click();
+      if (await advance.count() === 1) await activate(page, advance, useTouch);
     }
     await page.waitForTimeout(30);
   }
@@ -94,7 +106,11 @@ for (const engine of engines) {
     try {
       for (const viewport of viewports) {
         const name = `${engine}-${viewport.width}x${viewport.height}`;
-        const context = await browser.newContext({ viewport });
+        const context = await browser.newContext({
+          viewport,
+          hasTouch: viewport.safeArea,
+          isMobile: viewport.safeArea,
+        });
         const page = await context.newPage();
         const diagnostics = diagnosticsFor(page);
         const result = { engine, viewport, status: "failed" };
@@ -142,16 +158,25 @@ for (const engine of engines) {
             element.scrollTop = 0;
           });
 
-          await page.getByRole("button", { name: "強化", exact: true }).click();
+          await activate(page, page.getByRole("button", { name: "Level", exact: true }), viewport.safeArea);
           await page.waitForFunction(() => document.querySelectorAll(".formation-unit-upgrade").length === 11, undefined, { timeout });
           const before = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
           const firstUpgrade = page.locator(".formation-unit-upgrade:not(:disabled)").first();
           const costLabel = await firstUpgrade.locator("b").innerText();
           invariant(costLabel.includes("40キャップ"), `catch-up price missing: ${costLabel}`);
-          await firstUpgrade.evaluate((button) => {
-            button.click();
-            button.click();
-          });
+          if (viewport.safeArea) {
+            const upgradeBounds = await firstUpgrade.boundingBox();
+            invariant(upgradeBounds, "upgrade touch target has no visible bounds");
+            const upgradeX = upgradeBounds.x + upgradeBounds.width / 2;
+            const upgradeY = upgradeBounds.y + upgradeBounds.height / 2;
+            await page.touchscreen.tap(upgradeX, upgradeY);
+            await page.touchscreen.tap(upgradeX, upgradeY);
+          } else {
+            await firstUpgrade.evaluate((button) => {
+              button.click();
+              button.click();
+            });
+          }
           await page.waitForFunction(
             (caps) => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().caps < caps,
             before.caps,
@@ -159,49 +184,48 @@ for (const engine of engines) {
           );
           await page.locator('.upgrade-feedback[data-level="normal"]').waitFor({ state: "visible", timeout });
           const normalFeedback = await page.locator('.upgrade-feedback[data-level="normal"]').innerText();
-          invariant(normalFeedback.includes("Rank 1 強化完了"), `normal upgrade feedback missing: ${normalFeedback}`);
+          invariant(normalFeedback.includes("Lv2 強化完了"), `normal upgrade feedback missing: ${normalFeedback}`);
           invariant(normalFeedback.includes("HP ") && normalFeedback.includes("攻撃 ") && normalFeedback.includes("防御 "),
             `normal stat delta missing: ${normalFeedback}`);
           await page.waitForTimeout(700);
           const after = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
-          const upgradedUnitId = Object.keys(after.unitRanks).find((unitId) => after.unitRanks[unitId] !== before.unitRanks[unitId]);
-          invariant(Boolean(upgradedUnitId), "no stable unit rank changed");
-          invariant(after.unitRanks[upgradedUnitId] === before.unitRanks[upgradedUnitId] + 1, "rank did not increase exactly once");
+          const upgradedUnitId = Object.keys(after.unitLevels).find((unitId) => after.unitLevels[unitId] !== before.unitLevels[unitId]);
+          invariant(Boolean(upgradedUnitId), "no stable unit Level changed");
+          invariant(after.unitLevels[upgradedUnitId] === before.unitLevels[upgradedUnitId] + 1, "Level did not increase exactly once");
           invariant(before.caps - after.caps === 40, `caps spend mismatch ${before.caps} -> ${after.caps}`);
           const upgradeText = await page.locator(".formation-unit-card").first().innerText();
-          invariant(upgradeText.includes("Rank 1/4"), `rank UI missing: ${upgradeText}`);
+          invariant(upgradeText.includes("Lv 2 / 上限 5"), `Level UI missing: ${upgradeText}`);
           invariant(upgradeText.includes("HP +3%"), `HP growth UI missing: ${upgradeText}`);
           invariant(upgradeText.includes("攻撃 +3%"), `damage growth UI missing: ${upgradeText}`);
           invariant(upgradeText.includes("防御 1.5%軽減"), `defense growth UI missing: ${upgradeText}`);
           invariant(!upgradeText.includes("射程 +"), `range must not grow: ${upgradeText}`);
 
-          let expectedBattleRank = 1;
+          let expectedBattleLevel = 2;
           let maxFeedback = null;
           if (engine === "chromium" && viewport.width === 1280 && viewport.height === 720) {
             const upgradedCard = page.locator(`.formation-unit-card:has([data-unit-id="${upgradedUnitId}"])`);
-            for (const expectedRank of [2, 3, 4]) {
+            for (const expectedLevel of [3, 4, 5]) {
               const button = upgradedCard.locator(".formation-unit-upgrade");
               await button.waitFor({ state: "visible", timeout });
               await page.waitForFunction(
-                ({ unitId, rank }) => window.__ASHFALL_BATTLE_QA__.getSnapshot().unitRanks[unitId] === rank - 1,
-                { unitId: upgradedUnitId, rank: expectedRank },
+                ({ unitId, level }) => window.__ASHFALL_BATTLE_QA__.getSnapshot().unitLevels[unitId] === level - 1,
+                { unitId: upgradedUnitId, level: expectedLevel },
                 { timeout },
               );
-              await button.click();
+              await activate(page, button, viewport.safeArea);
               await page.waitForFunction(
-                ({ unitId, rank }) => window.__ASHFALL_BATTLE_QA__.getSnapshot().unitRanks[unitId] === rank,
-                { unitId: upgradedUnitId, rank: expectedRank },
+                ({ unitId, level }) => window.__ASHFALL_BATTLE_QA__.getSnapshot().unitLevels[unitId] === level,
+                { unitId: upgradedUnitId, level: expectedLevel },
                 { timeout },
               );
-              const level = expectedRank === 4 ? "max" : "normal";
-              await upgradedCard.locator(`.upgrade-feedback[data-level="${level}"]`).waitFor({ state: "visible", timeout });
-              if (expectedRank === 4) {
-                maxFeedback = await upgradedCard.locator('.upgrade-feedback[data-level="max"]').innerText();
-                invariant(maxFeedback.includes("MAX強化 完了"), `maximum upgrade feedback missing: ${maxFeedback}`);
-              }
+              await upgradedCard.locator('.upgrade-feedback[data-level="normal"]').waitFor({ state: "visible", timeout });
               await page.waitForTimeout(700);
             }
-            expectedBattleRank = 4;
+            await upgradedCard.locator(".formation-unit-upgrade").waitFor({ state: "visible", timeout });
+            const capText = await upgradedCard.locator(".formation-unit-upgrade").innerText();
+            invariant(capText.includes("Level上限 5") && capText.includes("Stage進行"), `Level cap UI missing: ${capText}`);
+            maxFeedback = capText;
+            expectedBattleLevel = 5;
           }
 
           const dimensions = await page.evaluate(() => ({
@@ -221,20 +245,23 @@ for (const engine of engines) {
           );
           await page.screenshot({ path: path.join(evidenceDir, `${name}-upgrade.png`) });
 
-          await page.getByRole("button", { name: "← 地図へ", exact: true }).click();
-          await page.getByRole("button", { name: "編成へ進む", exact: true }).click();
-          await enterBattle(page);
+          await activate(page, page.getByRole("button", { name: "← 地図へ", exact: true }), viewport.safeArea);
+          await activate(page, page.getByRole("button", { name: "編成へ進む", exact: true }), viewport.safeArea);
+          await enterBattle(page, viewport.safeArea);
           const brawlerButton = page.locator('button.unit-card[data-kind="brawler"]');
           await brawlerButton.waitFor({ state: "visible", timeout });
-          await brawlerButton.click();
+          await activate(page, brawlerButton, viewport.safeArea);
           await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().fighters
             .some((fighter) => fighter.side === "human" && fighter.kind === "brawler"), undefined, { timeout });
           const battle = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
           const fighter = battle.fighters.find((candidate) => candidate.side === "human" && candidate.kind === "brawler");
           const baseCard = UNIT_CARDS.find((card) => card.kind === "brawler");
-          const expected = applyUnitProgression(baseCard, expectedBattleRank);
-          invariant(fighter.progressionRank === expectedBattleRank, `battle rank mismatch: ${JSON.stringify(fighter)}`);
-          invariant(fighter.maxHp === expected.hp && fighter.damage === expected.damage && fighter.defense === expected.defense,
+          const expected = applyUnitLevelProgression(baseCard, expectedBattleLevel);
+          invariant(fighter.progressionLevel === expectedBattleLevel, `battle Level mismatch: ${JSON.stringify(fighter)}`);
+          invariant(
+            fighter.maxHp === expected.hp
+              && fighter.damage === expected.damage
+              && Math.abs(fighter.defense - expected.defense) < 1e-9,
             `battle stats mismatch: ${JSON.stringify({ fighter, expected })}`);
           const damageProof = await page.evaluate(() => {
             const bridge = window.__ASHFALL_BATTLE_QA__;
@@ -248,7 +275,8 @@ for (const engine of engines) {
               baseline: bridge.applyHumanDamage(baselineId, 50),
             };
           });
-          invariant(damageProof.trained.defense === expected.defense, `trained defense mismatch: ${JSON.stringify(damageProof)}`);
+          invariant(Math.abs(damageProof.trained.defense - expected.defense) < 1e-9,
+            `trained defense mismatch: ${JSON.stringify(damageProof)}`);
           invariant(damageProof.baseline.defense === 0, `baseline defense mismatch: ${JSON.stringify(damageProof)}`);
           invariant(damageProof.trained.targetDamage < damageProof.baseline.targetDamage,
             `defense did not reduce live damage: ${JSON.stringify(damageProof)}`);
@@ -257,7 +285,7 @@ for (const engine of engines) {
               && damageProof.baseline.targetDamage === 50,
             `live damage values mismatch: ${JSON.stringify(damageProof)}`);
 
-          await page.getByRole("button", { name: "一時停止", exact: true }).click();
+          await activate(page, page.getByRole("button", { name: "一時停止", exact: true }), viewport.safeArea);
           const pauseMenu = page.getByRole("dialog", { name: "一時停止メニュー" });
           await pauseMenu.waitFor({ state: "visible", timeout });
           const bgmSlider = page.locator('input[data-volume-kind="bgm"]');
@@ -330,7 +358,7 @@ for (const engine of engines) {
               && snapshot.settings.sfxVolume === .65;
           }, undefined, { timeout });
           const audioSettings = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().settings);
-          await page.getByRole("button", { name: "作戦を再開", exact: true }).click();
+          await activate(page, page.getByRole("button", { name: "作戦を再開", exact: true }), viewport.safeArea);
 
           for (const [kind, entries] of Object.entries(diagnostics)) {
             invariant(entries.length === 0, `${kind}: ${JSON.stringify(entries)}`);
@@ -352,6 +380,7 @@ for (const engine of engines) {
             damageProof,
             audioSettings,
             bgmPreview,
+            inputMode: viewport.safeArea ? "touch" : "mouse",
             visualCards,
             dimensions,
             diagnostics,

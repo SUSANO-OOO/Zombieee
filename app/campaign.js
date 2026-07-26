@@ -9,11 +9,19 @@ import {
   startEventRun,
 } from "./eventFoundation.js";
 import {
-  UNIT_PROGRESSION_MAX_RANK,
+  legacyRankToLevel,
+  normalizeUnitLevels,
   normalizeUnitRanks,
-  unitRankFor,
-  unitUpgradeQuote,
+  unitLevelCapForHighestStage,
+  unitLevelFor,
+  unitLevelUpgradeQuote,
 } from "./unitProgression.js";
+import {
+  V090_CAPS_MIGRATION_BASE,
+  V090_CAPS_MIGRATION_ID,
+  capsMigrationNotice,
+  reorganizeLegacyCaps,
+} from "./campaignEconomy.js";
 import {
   createDefaultSurvivalProgress,
   normalizeSurvivalProgress,
@@ -1511,7 +1519,7 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 
 export const calculateBattleRewards = calculateStageRewards;
 
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 9;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 10;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
 const CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION = 5;
 
@@ -1597,18 +1605,22 @@ export function createDefaultCampaignSave() {
     processedResultIds: [],
     processedAcquisitionIds: [],
     processedUpgradeIds: [],
+    processedMigrationIds: [],
+    migrationNotices: [],
     eventFoundation: createEventFoundationProgress(),
     completedStageIds: [],
     bestStarsByStage: {},
     claimedStarRewardsByStage: {},
-    caps: 0,
+    caps: V090_CAPS_MIGRATION_BASE,
     // Deprecated 0.6.x currency field retained as a synchronized read alias.
-    supplies: 0,
+    supplies: V090_CAPS_MIGRATION_BASE,
     equipmentInventory: [],
     unlockedStageIds: [INITIAL_STAGE_ID],
     ownership,
     discovery: [...ownership],
     recruitable: [],
+    unitLevels: normalizeUnitLevels({}, CAMPAIGN_UNITS.map((unit) => unit.id)),
+    // Deprecated pre-0.9 progression alias. Values remain Level - 1.
     unitRanks: normalizeUnitRanks({}, CAMPAIGN_UNITS.map((unit) => unit.id)),
     // Deprecated 0.6.x roster field retained as a canonical-ID mirror.
     unlockedUnitIds: [...ownership],
@@ -1646,6 +1658,28 @@ function normalizeClaimedRewards(value) {
     if (claimed.length > 0) normalized[stageId] = claimed;
   }
   return normalized;
+}
+
+function normalizeMigrationNotices(value) {
+  if (!Array.isArray(value)) return [];
+  const notices = [];
+  const seen = new Set();
+  for (const entry of value) {
+    if (!isRecord(entry)) continue;
+    const id = typeof entry.id === "string" ? entry.id.trim().slice(0, 160) : "";
+    const title = typeof entry.title === "string" ? entry.title.trim().slice(0, 160) : "";
+    const body = typeof entry.body === "string" ? entry.body.trim().slice(0, 1_200) : "";
+    if (!id || !title || !body || seen.has(id) || Object.hasOwn(Object.prototype, id)) continue;
+    seen.add(id);
+    notices.push({
+      id,
+      title,
+      body,
+      previousCaps: clampInteger(entry.previousCaps, 0, Number.MAX_SAFE_INTEGER, 0),
+      nextCaps: clampInteger(entry.nextCaps, 0, Number.MAX_SAFE_INTEGER, 0),
+    });
+  }
+  return notices;
 }
 
 function normalizeSettings(value, { recoverLegacySilence = false } = {}) {
@@ -1906,6 +1940,16 @@ export function migrateCampaignSave(
     ["processedUpgradeIds", "appliedUpgradeIds"],
     [],
   ));
+  const sourceProcessedMigrationIds = uniqueStrings(firstDefined(
+    source,
+    ["processedMigrationIds", "migrationReceipts"],
+    [],
+  ));
+  const sourceMigrationNotices = normalizeMigrationNotices(firstDefined(
+    source,
+    ["migrationNotices", "pendingMigrationNotices"],
+    [],
+  ));
   const eventFoundation = normalizeEventFoundationProgress(firstDefined(
     source,
     ["eventFoundation", "eventProgress"],
@@ -1976,14 +2020,24 @@ export function migrateCampaignSave(
     sourceSchemaVersion,
     repairQaAllUnlockLeak,
   });
-  const sourceUnitRanks = firstDefined(source, ["unitRanks", "unitLevels", "upgrades"], {});
-  const canonicalUnitRanks = isRecord(sourceUnitRanks)
-    ? Object.fromEntries(Object.entries(sourceUnitRanks).flatMap(([candidateId, rank]) => {
+  const sourceProgression = Number.isFinite(sourceSchemaVersion)
+    && sourceSchemaVersion >= CAMPAIGN_SAVE_SCHEMA_VERSION
+    ? firstDefined(source, ["unitLevels", "unitRanks", "upgrades"], {})
+    : firstDefined(source, ["unitRanks", "unitLevels", "upgrades"], {});
+  const canonicalProgression = isRecord(sourceProgression)
+    ? Object.fromEntries(Object.entries(sourceProgression).flatMap(([candidateId, value]) => {
       const canonicalId = normalizeCampaignUnitId(candidateId);
-      return canonicalId ? [[canonicalId, rank]] : [];
+      if (!canonicalId) return [];
+      const level = Number.isFinite(sourceSchemaVersion) && sourceSchemaVersion >= CAMPAIGN_SAVE_SCHEMA_VERSION
+        ? value
+        : legacyRankToLevel(value);
+      return [[canonicalId, level]];
     }))
     : {};
-  const unitRanks = normalizeUnitRanks(canonicalUnitRanks, knownUnitIds);
+  const unitLevels = normalizeUnitLevels(canonicalProgression, knownUnitIds);
+  const unitRanks = Object.freeze(Object.fromEntries(
+    knownUnitIds.map((unitId) => [unitId, unitLevels[unitId] - 1]),
+  ));
   const legacyFormation = firstDefined(
     source,
     ["formationUnitIds", "formationKinds", "selectedUnitIds", "loadoutUnitIds"],
@@ -1999,16 +2053,38 @@ export function migrateCampaignSave(
     ["selectedFormationPresetId", "selectedPresetId", "selectedFormationPreset", "selectedPreset"],
     CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_1,
   )) ?? CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_1;
-  const caps = clampInteger(
+  const sourceCaps = clampInteger(
     firstDefined(source, ["caps", "supplies", "supply", "currency"], 0),
     0,
     Number.MAX_SAFE_INTEGER,
     0,
   );
-  const revision = clampInteger(source.revision, 0, Number.MAX_SAFE_INTEGER, 0);
-  const updatedAt = typeof source.updatedAt === "string" && Number.isFinite(Date.parse(source.updatedAt))
+  const requiresEconomyMigration = (!Number.isFinite(sourceSchemaVersion)
+      || sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION)
+    && !sourceProcessedMigrationIds.includes(V090_CAPS_MIGRATION_ID);
+  const capsMigration = requiresEconomyMigration ? reorganizeLegacyCaps(sourceCaps) : null;
+  const caps = capsMigration?.nextCaps ?? sourceCaps;
+  const processedMigrationIds = capsMigration
+    ? [...sourceProcessedMigrationIds, V090_CAPS_MIGRATION_ID]
+    : sourceProcessedMigrationIds;
+  const migrationNotices = capsMigration
+    ? [
+      ...sourceMigrationNotices.filter(({ id }) => id !== V090_CAPS_MIGRATION_ID),
+      capsMigrationNotice(capsMigration),
+    ]
+    : sourceMigrationNotices;
+  const migratesSchema = !Number.isFinite(sourceSchemaVersion)
+    || sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION;
+  const sourceRevision = clampInteger(source.revision, 0, Number.MAX_SAFE_INTEGER, 0);
+  const revision = migratesSchema
+    ? Math.min(Number.MAX_SAFE_INTEGER, sourceRevision + 1)
+    : sourceRevision;
+  const sourceUpdatedAt = typeof source.updatedAt === "string" && Number.isFinite(Date.parse(source.updatedAt))
     ? new Date(source.updatedAt).toISOString()
     : "";
+  const updatedAt = migratesSchema
+    ? new Date((sourceUpdatedAt ? Date.parse(sourceUpdatedAt) : 0) + 1).toISOString()
+    : sourceUpdatedAt;
 
   return {
     schemaVersion: CAMPAIGN_SAVE_SCHEMA_VERSION,
@@ -2022,6 +2098,8 @@ export function migrateCampaignSave(
     processedResultIds,
     processedAcquisitionIds,
     processedUpgradeIds,
+    processedMigrationIds,
+    migrationNotices,
     eventFoundation,
     completedStageIds,
     bestStarsByStage,
@@ -2035,6 +2113,7 @@ export function migrateCampaignSave(
     )),
     ...effectiveUnlocks,
     ...roster,
+    unitLevels,
     unitRanks,
     unlockedUnitIds: [...roster.ownership],
     formationPresets,
@@ -2709,25 +2788,55 @@ export function grantStoryCampaignUnit(save, unitIdOrInput, maybeInput) {
 }
 
 export function getCampaignUnitRank(save, unitId) {
-  const canonicalId = normalizeCampaignUnitId(unitId);
-  if (!canonicalId) throw new RangeError(`Unknown campaign unit: ${String(unitId)}`);
-  return unitRankFor(migrateCampaignSave(save).unitRanks, canonicalId);
+  return getCampaignUnitLevel(save, unitId) - 1;
 }
 
-export function campaignUnitUpgradeQuote(save, unitId) {
+export function getCampaignUnitLevel(save, unitId) {
+  const canonicalId = normalizeCampaignUnitId(unitId);
+  if (!canonicalId) throw new RangeError(`Unknown campaign unit: ${String(unitId)}`);
+  return unitLevelFor(migrateCampaignSave(save).unitLevels, canonicalId);
+}
+
+export function getCampaignLevelCap(save) {
+  const current = migrateCampaignSave(save);
+  const highestStage = current.completedStageIds.reduce(
+    (highest, stageId) => Math.max(highest, stageNumberForId(stageId) ?? 0),
+    0,
+  );
+  return unitLevelCapForHighestStage(highestStage);
+}
+
+export function campaignUnitLevelUpgradeQuote(save, unitId) {
   const canonicalId = normalizeCampaignUnitId(unitId);
   if (!canonicalId) throw new RangeError(`Unknown campaign unit: ${String(unitId)}`);
   const current = migrateCampaignSave(save);
-  return unitUpgradeQuote({
+  return unitLevelUpgradeQuote({
     unitId: canonicalId,
-    ranks: current.unitRanks,
+    levels: current.unitLevels,
     ownedUnitIds: current.ownership,
     completedStageCount: current.completedStageIds.length,
+    levelCap: getCampaignLevelCap(current),
+  });
+}
+
+export function campaignUnitUpgradeQuote(save, unitId) {
+  const quote = campaignUnitLevelUpgradeQuote(save, unitId);
+  return Object.freeze({
+    currentRank: quote.currentLevel - 1,
+    nextRank: quote.nextLevel === null ? null : quote.nextLevel - 1,
+    currentLevel: quote.currentLevel,
+    nextLevel: quote.nextLevel,
+    levelCap: quote.levelCap,
+    baseCostCaps: quote.baseCostCaps,
+    discountCaps: quote.discountCaps,
+    costCaps: quote.costCaps,
+    catchUp: quote.catchUp,
+    reason: quote.reason,
   });
 }
 
 /**
- * Pays for exactly one rank on one stable campaign-unit ID. A rank-specific
+ * Pays for exactly one Level on one stable campaign-unit ID. A Level-specific
  * receipt makes touch retries idempotent without blocking a later upgrade.
  */
 export function upgradeCampaignUnit(save, unitIdOrInput, maybeInput) {
@@ -2742,17 +2851,21 @@ export function upgradeCampaignUnit(save, unitIdOrInput, maybeInput) {
   if (!upgradeId) throw new TypeError("A non-empty upgradeId is required");
 
   const current = migrateCampaignSave(save);
-  const quote = unitUpgradeQuote({
+  const quote = unitLevelUpgradeQuote({
     unitId,
-    ranks: current.unitRanks,
+    levels: current.unitLevels,
     ownedUnitIds: current.ownership,
     completedStageCount: current.completedStageIds.length,
+    levelCap: getCampaignLevelCap(current),
   });
   const baseResult = {
     upgradeId,
     unitId,
-    currentRank: quote.currentRank,
-    nextRank: quote.nextRank,
+    currentLevel: quote.currentLevel,
+    nextLevel: quote.nextLevel,
+    levelCap: quote.levelCap,
+    currentRank: quote.currentLevel - 1,
+    nextRank: quote.nextLevel === null ? null : quote.nextLevel - 1,
     costCaps: quote.costCaps,
     baseCostCaps: quote.baseCostCaps,
     discountCaps: quote.discountCaps,
@@ -2771,8 +2884,8 @@ export function upgradeCampaignUnit(save, unitIdOrInput, maybeInput) {
   if (!current.ownership.includes(unitId)) {
     return { save: current, result: { ...baseResult, reason: "not-owned" } };
   }
-  if (quote.currentRank >= UNIT_PROGRESSION_MAX_RANK || quote.nextRank === null) {
-    return { save: current, result: { ...baseResult, reason: "max-rank" } };
+  if (quote.nextLevel === null) {
+    return { save: current, result: { ...baseResult, reason: quote.reason } };
   }
   if (current.caps < quote.costCaps) {
     return { save: current, result: { ...baseResult, reason: "insufficient-caps" } };
@@ -2784,9 +2897,13 @@ export function upgradeCampaignUnit(save, unitIdOrInput, maybeInput) {
     processedUpgradeIds: [...current.processedUpgradeIds, upgradeId],
     caps,
     supplies: caps,
+    unitLevels: {
+      ...current.unitLevels,
+      [unitId]: quote.nextLevel,
+    },
     unitRanks: {
       ...current.unitRanks,
-      [unitId]: quote.nextRank,
+      [unitId]: quote.nextLevel - 1,
     },
   });
   return {
@@ -2825,6 +2942,16 @@ export function updateStoryPlaybackSettings(save, changes = {}) {
     ...current,
     autoSkipReadStory,
     settings: { ...current.settings, battleEventMode },
+  });
+}
+
+export function acknowledgeCampaignMigrationNotice(save, noticeId) {
+  const current = migrateCampaignSave(save);
+  const normalizedId = typeof noticeId === "string" ? noticeId.trim() : "";
+  if (!normalizedId || !current.migrationNotices.some(({ id }) => id === normalizedId)) return current;
+  return reviseCampaignSave({
+    ...current,
+    migrationNotices: current.migrationNotices.filter(({ id }) => id !== normalizedId),
   });
 }
 

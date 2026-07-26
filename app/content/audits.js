@@ -81,7 +81,7 @@ export function runCapsEconomyAudit() {
     });
     const upgradeQuote = campaignUnitUpgradeQuote(recruited.save, unitId);
     const upgraded = upgradeCampaignUnit(recruited.save, unitId, {
-      upgradeId: `content-pipeline:upgrade:${unitId}:rank-${upgradeQuote.nextRank}`,
+      upgradeId: `content-pipeline:upgrade:${unitId}:level-${upgradeQuote.nextLevel}`,
     });
     steps.push({
       stageId,
