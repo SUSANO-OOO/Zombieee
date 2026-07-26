@@ -1335,7 +1335,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
   assert.match(game, /g\.resultPresented = !enemyBaseDestroyed/);
   assert.match(game, /if \(!enemyBaseDestroyed\) setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.stageId,[\s\S]*won: g\.won/);
-  assert.match(game, /if \(g\.over && !g\.resultPresented\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*if \(collapseStep\.complete\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.stageId,[\s\S]*won: g\.won/);
+  assert.match(game, /if \(g\.over && !g\.resultPresented && !g\.survivalRun\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*if \(collapseStep\.complete\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.stageId,[\s\S]*won: g\.won/);
   assert.match(game, /resolveStageResult\(campaignSave, \{[\s\S]*resultId: end\.resultId,[\s\S]*stageId: end\.stageId,[\s\S]*baseMaxHp: end\.baseMaxHp/);
   assert.match(game, /if \(!end \|\| finalizedEndRef\.current === end\) return;[\s\S]*window\.setTimeout\(async \(\) => \{[\s\S]*if \(finalizedEndRef\.current === end\) return;[\s\S]*finalizedEndRef\.current = end/);
   assert.match(game, /setCampaignSave\(resolved\.save as CampaignSave\)[\s\S]*setScreen\("result"\)/);
@@ -1494,7 +1494,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
   assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax\)/);
   assert.match(game, /const bossLabel = selectedStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL \? "改札喰い" : "TAKUYA"/);
-  assert.match(game, /\{bossLabel\}\{" \/\/ "\}\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
+  assert.match(game, /\{activeBossLabel\}\{" \/\/ "\}\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
   assert.match(css, /\.boss-hud \{[^}]*top:18%; right:calc\(2% \+ var\(--app-viewport-safe-right\)\); width:23%/);
   assert.match(css, /\.boss-hud \{ top:78px; right:calc\(8px \+ var\(--app-viewport-safe-right\)\); width:24%/);
 });
@@ -1663,7 +1663,7 @@ test("integrates the enemy gate queue without changing direct QA or turned place
   assert.match(game, /other\.hp <= 0 \|\| !other\.combatReady/);
   assert.match(game, /kind !== "turned" && gateEntry !== null/);
   assert.match(game, /combatReady: true, gateEntering: false/);
-  assert.match(game, /ctx\.rect\(0, 0, ENEMY_GATE_SPAWN\.revealX, H\);[\s\S]*ctx\.clip\(\)/);
+  assert.match(game, /f\.spawnEntryMode === "right-edge"[\s\S]*f\.spawnEntryMode === "right-edge-outside"[\s\S]*\? W[\s\S]*: ENEMY_GATE_SPAWN\.revealX;[\s\S]*ctx\.rect\(0, 0, revealRight, H\);[\s\S]*ctx\.clip\(\)/);
   assert.match(game, /includesTakuya[\s\S]*TAKUYA_ENTRANCE_AUDIO\.durationSeconds[\s\S]*playProductionCue\(TAKUYA_ENTRANCE_AUDIO\.cueId[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance/);
   assert.match(game, /bossActiveOrIncoming[\s\S]*\["takuya", "gate-eater"\]\.includes\(entry\.kind\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);
   assert.match(game, /if \(battleSilenceSceneId\(g\)\) return/);

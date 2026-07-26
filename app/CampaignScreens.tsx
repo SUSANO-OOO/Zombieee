@@ -7,7 +7,7 @@ import { PROLOGUE_SYNOPSIS, getStoryEvent, storyEventLog } from "./storyEvents.j
 import { CAMPAIGN_IMPORT_MAX_BYTES } from "./campaignStorage.js";
 import { RELEASE_LABEL } from "./releaseIdentity.js";
 
-export type CampaignScreen = "title" | "event" | "map" | "personnel" | "loadout" | "battle" | "result";
+export type CampaignScreen = "title" | "event" | "map" | "personnel" | "loadout" | "battle" | "result" | "survival" | "survival-result";
 
 export type StageScreenView = {
   id: string;
@@ -177,6 +177,7 @@ type Props = {
   onSelectStage: (stageId: string) => void;
   onOpenPersonnel: () => void;
   onOpenLoadout: () => void;
+  onOpenSurvival: () => void;
   onReturnToMap: () => void;
   onSelectFormationPreset: (presetId: string) => void;
   onToggleFormation: (unitId: string) => void;
@@ -343,7 +344,7 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   </div>;
 }
 
-function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPending, onSelectStage, onOpenPersonnel, onOpenLoadout, onReplayPrologue, onResetSave }: Pick<Props, "stages" | "selectedStage" | "supplyCurrency" | "saveMutationPending" | "onSelectStage" | "onOpenPersonnel" | "onOpenLoadout" | "onReplayPrologue" | "onResetSave">) {
+function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPending, onSelectStage, onOpenPersonnel, onOpenLoadout, onOpenSurvival, onReplayPrologue, onResetSave }: Pick<Props, "stages" | "selectedStage" | "supplyCurrency" | "saveMutationPending" | "onSelectStage" | "onOpenPersonnel" | "onOpenLoadout" | "onOpenSurvival" | "onReplayPrologue" | "onResetSave">) {
   const [activeRegionId, setActiveRegionId] = useState(selectedStage.regionId);
   const regions = useMemo(() => {
     const seen = new Set<string>();
@@ -400,7 +401,7 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
         <header><small>{displayedStage.missionLabel}</small><h2>{displayedStage.displayName}</h2><p>{displayedStage.threat}</p></header>
         <dl><div><dt>目的</dt><dd>{displayedStage.objective}</dd></div><div><dt>過去最高星</dt><dd className="star-text">{stars(displayedStage.bestStars)}</dd></div><div><dt>基本報酬</dt><dd>{displayedStage.baseReward} キャップ</dd></div><div><dt>次の未取得星報酬</dt><dd>{displayedStage.nextStarReward ? `${displayedStage.nextStarReward} キャップ` : "取得済み"}</dd></div></dl>
         <div className="star-criteria"><b>星判定</b>{displayedStage.starCriteria.map((criterion) => <span key={criterion}>{criterion}</span>)}</div>
-        <div className="stage-actions"><button className="campaign-secondary" onClick={onOpenPersonnel}>人員管理</button><button className="campaign-primary" disabled={!displayedStage.unlocked} onClick={onOpenLoadout}>編成へ進む</button></div>
+        <div className="stage-actions"><button className="campaign-secondary survival-entry" onClick={onOpenSurvival}>サバイバル</button><button className="campaign-secondary" onClick={onOpenPersonnel}>人員管理</button><button className="campaign-primary" disabled={!displayedStage.unlocked} onClick={onOpenLoadout}>編成へ進む</button></div>
       </aside>
     </div>
     <footer className="map-footer"><span>固定4場面のプロローグは進行を変えず再視聴できます</span><button disabled={saveMutationPending} onClick={onReplayPrologue}>プロローグを回想</button><button disabled={saveMutationPending} onClick={onResetSave}>{saveMutationPending ? "保存処理中" : "セーブデータを初期化"}</button></footer>
@@ -476,10 +477,10 @@ function ResultScreen({ selectedStage, result, onRetry, onContinueResult }: Pick
 
 export function CampaignScreens(props: Props) {
   if (props.saveRecoveryRequired) return <SaveRecoveryScreen saveRecoveryReason={props.saveRecoveryReason} saveRecoveryCandidateSources={props.saveRecoveryCandidateSources} saveRecoveryCanExport={props.saveRecoveryCanExport} saveMutationPending={props.saveMutationPending} onExportCorruptSave={props.onExportCorruptSave} onImportSave={props.onImportSave} onUseRecoveryCandidate={props.onUseRecoveryCandidate} onResetCorruptSave={props.onResetCorruptSave} />;
-  if (props.screen === "battle") return null;
+  if (props.screen === "battle" || props.screen === "survival" || props.screen === "survival-result") return null;
   if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} savePersistence={props.savePersistence} saveMutationPending={props.saveMutationPending} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} onExportSave={props.onExportSave} onImportSave={props.onImportSave} />;
   if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} forceStoryReplay={props.forceStoryReplay} onEventComplete={props.onEventComplete} onEventSkip={props.onEventSkip} onStoryAudioPositionChange={props.onStoryAudioPositionChange} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />;
-  if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} onSelectStage={props.onSelectStage} onOpenPersonnel={props.onOpenPersonnel} onOpenLoadout={props.onOpenLoadout} onReplayPrologue={props.onReplayPrologue} onResetSave={props.onResetSave} />;
+  if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} onSelectStage={props.onSelectStage} onOpenPersonnel={props.onOpenPersonnel} onOpenLoadout={props.onOpenLoadout} onOpenSurvival={props.onOpenSurvival} onReplayPrologue={props.onReplayPrologue} onResetSave={props.onResetSave} />;
   if (props.screen === "personnel") return <PersonnelScreen units={props.units} caps={props.caps} upgradePendingUnitIds={props.upgradePendingUnitIds} upgradeFeedback={props.upgradeFeedback} onReturnToMap={props.onReturnToMap} onRecruitUnit={props.onRecruitUnit} onUpgradeUnit={props.onUpgradeUnit} />;
   if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} onReturnToMap={props.onReturnToMap} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
   return <ResultScreen selectedStage={props.selectedStage} result={props.result} onRetry={props.onRetry} onContinueResult={props.onContinueResult} />;

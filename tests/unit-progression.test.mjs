@@ -203,7 +203,7 @@ test("schema 5 and alias-keyed ranks migrate through the current schema without 
     unitRanks: { brawler: 2, gunner: 3, brute: 99, unknown: 4 },
   };
   const migrated = migrateCampaignSave(legacy);
-  assert.equal(migrated.schemaVersion, 8);
+  assert.equal(migrated.schemaVersion, 9);
   assert.deepEqual(migrated.processedUpgradeIds, ["legacy-upgrade"]);
   assert.equal(getCampaignUnitRank(migrated, "brawler"), 2);
   assert.equal(getCampaignUnitRank(migrated, "gunner"), 3);

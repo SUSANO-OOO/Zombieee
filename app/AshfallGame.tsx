@@ -84,6 +84,7 @@ import {
   CAMPAIGN_UNITS,
   INITIAL_STAGE_ID,
   campaignUnitUpgradeQuote,
+  checkpointSurvivalCampaignSave,
   createDefaultCampaignSave,
   getCampaignUnitRank,
   getSelectedFormationCombatKinds,
@@ -95,6 +96,7 @@ import {
   isStageUnlocked,
   markCampaignStarted,
   markStoryEventRead,
+  persistSurvivalCampaignSettlement,
   recruitCampaignUnit,
   reviseCampaignSave,
   resolveStageResult,
@@ -106,6 +108,27 @@ import {
   updateStoryPlaybackSettings,
   upgradeCampaignUnit,
 } from "./campaign.js";
+import {
+  SURVIVAL_END_REASONS,
+  SURVIVAL_RUN_PHASES,
+  SURVIVAL_UPGRADE_BY_ID,
+  beginSurvivalWave,
+  completeSurvivalWave,
+  createSurvivalRun,
+  endSurvivalRun,
+  resumeSurvivalCheckpoint,
+  setSurvivalRunSpeed,
+} from "./survival.js";
+import {
+  advanceSurvivalCombat,
+  chooseSurvivalCombatUpgrade,
+  createSurvivalCombatRuntime,
+  survivalCombatEndReason,
+  survivalDefenseDestination,
+  survivalHudSnapshot,
+  survivalUpgradeEffects,
+  survivalWaveReward,
+} from "./survivalBattleRuntime.js";
 import {
   enemyBodyRadiusFor,
   enemyContentFor,
@@ -161,7 +184,16 @@ import {
 import { allyCorpseVisualCue } from "./corpseVisuals.js";
 import { resolveLocalQaMode, resolveLocalQaSafeArea, resolveLocalQaScenario } from "./localQa.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
-import { FORMATION_CARD_ART, PORTRAIT_ART, fitSpriteBattleDisplaySize, spriteFrameFor, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
+import {
+  COMPACT_BATTLE_SPRITE_SCALE,
+  FORMATION_CARD_ART,
+  PORTRAIT_ART,
+  fitSpriteBattleDisplaySize,
+  spriteBattleDisplaySizeFor,
+  spriteFrameFor,
+  spriteKinds,
+  spriteSheetPath,
+} from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST, stageObjectsFor } from "./stageObjectManifest.js";
 import {
   STAGE_VIEWPORT_IDS,
@@ -436,7 +468,7 @@ type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolea
 type BattleDefinition = {
   stageId: string;
   displayName: string;
-  missionType: "assault" | "timed-defense" | "boss-assault" | "escort" | "sequential-seal";
+  missionType: "assault" | "timed-defense" | "boss-assault" | "escort" | "sequential-seal" | "survival";
   prepSeconds: number;
   baseMaxHp: number;
   enemyBaseMaxHp: number;
@@ -462,10 +494,11 @@ type CampaignUnitData = {
   recruitmentCostCaps?: number;
   unlock: { type: string; stageId?: string; stageNumber?: number; costCaps?: number };
 };
+type EnemyEntryMode = "base-interior" | "right-edge" | "right-edge-outside";
 type EnemySpawnEntry = {
   entryId: number; kind: string; lane: Lane; wave: number; order: number; delay: number;
   x: number; y: number; combatReadyX: number; combatReadyY?: number; entrySpeed: number; slot: number;
-  portalId?: string; routeId?: string;
+  portalId?: string; routeId?: string; entryMode?: EnemyEntryMode;
 };
 type EnemySpawnRuntime = { pending: EnemySpawnEntry[]; cooldown: number; nextEntryId: number };
 
@@ -548,6 +581,7 @@ type Fighter = {
   gateEntering: boolean;
   entryDirection?: -1 | 1;
   spawnPortalId?: string | null;
+  spawnEntryMode?: EnemyEntryMode;
   entryStepDistance?: number;
   gateEntrySpeed: number;
   combatReadyX: number;
@@ -876,6 +910,9 @@ type Game = {
   qaBarks: boolean;
   roleMetrics: RoleMetrics;
   stationMetrics: StationMetrics;
+  survivalRun: ReturnType<typeof createSurvivalRun> | null;
+  survivalRuntime: ReturnType<typeof createSurvivalCombatRuntime> | null;
+  survivalCheckpointReceipt: string | null;
 };
 
 type Hud = {
@@ -957,6 +994,24 @@ type PendingResultCommit = {
   save: CampaignSave;
   view: CampaignResultView;
   storyEventIds: readonly string[];
+};
+type SurvivalResultView = {
+  endReason: string;
+  reachedWave: number;
+  kills: number;
+  bossKills: number;
+  earnedCaps: number;
+  earnedEquipmentGrants: readonly { equipmentId: string; quantity: number }[];
+  newHighestWave: boolean;
+  capsAfter: number;
+};
+type PendingSurvivalSettlement = {
+  run: ReturnType<typeof createSurvivalRun>;
+  endedAt: string;
+};
+type PendingSurvivalCheckpoint = {
+  run: ReturnType<typeof createSurvivalRun>;
+  checkpointId: string;
 };
 const CAMPAIGN_SAVE_KEY = "nishijin-campaign-v1";
 type AudioUnlockUiState = "idle" | "pending" | "success" | "failed";
@@ -1183,7 +1238,64 @@ const initialGame = (
   qaBarks: false,
   roleMetrics: emptyRoleMetrics(),
   stationMetrics: emptyStationMetrics(),
+  survivalRun: null,
+  survivalRuntime: null,
+  survivalCheckpointReceipt: null,
   });
+};
+
+const initialSurvivalGame = ({
+  selectedSupply,
+  run,
+  formationKinds,
+  unitRanks,
+}: {
+  selectedSupply: SupplyKind;
+  run: ReturnType<typeof createSurvivalRun>;
+  formationKinds: UnitKind[];
+  unitRanks: Record<string, number>;
+}): Game => {
+  const stageId = CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL;
+  const game = initialGame(
+    selectedSupply,
+    stageId,
+    formationKinds,
+    run.runId,
+    [],
+    unitRanks,
+  );
+  game.definition = {
+    ...game.definition,
+    displayName: "感染防衛前線",
+    missionType: "survival",
+    prepSeconds: 0,
+    enemyBaseMode: "scenery",
+    startsEnemyBaseVulnerable: false,
+    bossUnlocksEnemyBase: false,
+    timeline: [],
+    defenseEndAt: null,
+    phaseSchedule: null,
+    objective: "CRAWLER防衛・無限wave",
+    missionConfig: {
+      spawnProfile: "survival-infection-breach",
+      defenseFrontX: 646,
+    },
+    rescueCount: 0,
+  };
+  game.survivalRun = run;
+  game.survivalRuntime = createSurvivalCombatRuntime(run);
+  game.survivalCheckpointReceipt = null;
+  game.baseHp = run.crawler.hp;
+  game.baseMaxHp = run.crawler.maxHp;
+  game.barricadeHp = 1;
+  game.barricadeMaxHp = 1;
+  game.barricadeVulnerable = false;
+  game.wave = run.currentWave;
+  game.phase = 1;
+  game.eventIndex = 0;
+  game.banner = `SURVIVAL // WAVE ${run.currentWave}`;
+  game.bannerTime = 2.2;
+  return game;
 };
 
 function addParticles(g: Game, x: number, y: number, color: string, count = 8) {
@@ -1423,6 +1535,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     gateEntering,
     entryDirection: -1,
     spawnPortalId: gateEntry?.portalId ?? null,
+    spawnEntryMode: gateEntry?.entryMode,
     entryStepDistance: 0,
     gateEntrySpeed: gateEntry?.entrySpeed ?? 0,
     combatReadyX: gateEntry?.combatReadyX ?? 0,
@@ -1450,7 +1563,15 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
 function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
   const baseCard = cards.find((item) => item.kind === kind);
   if (!baseCard) return null;
-  const card = applyUnitProgression(baseCard, g.unitRanksByKind[kind] ?? 0) as UnitCard & { progressionRank: number };
+  const progressedCard = applyUnitProgression(baseCard, g.unitRanksByKind[kind] ?? 0) as UnitCard & { progressionRank: number };
+  const survivalEffects = survivalUpgradeEffects(g.survivalRun);
+  const card = {
+    ...progressedCard,
+    damage: progressedCard.damage * survivalEffects.attackMultiplier,
+    range: progressedCard.range * survivalEffects.rangeMultiplier,
+    defense: 1 - (1 - (progressedCard.defense ?? 0)) * survivalEffects.defenseMultiplier,
+    healingMultiplier: (progressedCard.healingMultiplier ?? 1) * survivalEffects.healingMultiplier,
+  } as UnitCard & { progressionRank: number };
   const id = g.nextId++;
   const laneCounts = [0, 0, 0];
   for (const ally of g.fighters) {
@@ -2166,20 +2287,8 @@ function prepareQaMode(g: Game, qaMode: QaMode | null) {
   }
 }
 
-const SPRITE_DISPLAY_SIZES: Record<string, { w: number; h: number }> = {
-  scout: { w: 58, h: 98 }, ranger: { w: 58, h: 98 }, brute: { w: 72, h: 108 },
-  brawler: { w: 62, h: 99 }, gunner: { w: 60, h: 100 }, medic: { w: 60, h: 100 },
-  "crazy-king": { w: 72, h: 104 }, kumaverson: { w: 64, h: 102 }, babayaga: { w: 62, h: 103 },
-  guardian: { w: 78, h: 108 }, engineer: { w: 60, h: 100 },
-  walker: { w: 58, h: 96 }, runner: { w: 53, h: 90 }, turned: { w: 58, h: 96 },
-  shade: { w: 64, h: 101 }, spitter: { w: 62, h: 101 }, crusher: { w: 80, h: 112 },
-  abomination: { w: 101, h: 132 }, takuya: { w: 94, h: 128 },
-  grappler: { w: 78, h: 108 }, ooze: { w: 70, h: 94 }, sprinter: { w: 58, h: 96 },
-  "gate-eater": { w: 126, h: 142 },
-};
-
 function spriteDisplaySize(kind: string) {
-  return SPRITE_DISPLAY_SIZES[kind] ?? { w: 58, h: 96 };
+  return spriteBattleDisplaySizeFor(kind);
 }
 
 // Asset-load diagnostic fallback only. Normal production rendering resolves
@@ -2313,7 +2422,7 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   const direction = f.side === "human" ? (f.aiMoveDirection < -.05 ? "left" : "right") : "left";
   const frame = spriteFrameFor(f.kind, state, direction);
   const authoredSize = fitSpriteBattleDisplaySize(f.kind, frame, spriteDisplaySize(f.kind));
-  const compactScale = activeLaneCenters === LANE_Y ? 1 : 1.1;
+  const compactScale = activeLaneCenters === LANE_Y ? 1 : COMPACT_BATTLE_SPRITE_SCALE;
   const size = {
     w: authoredSize.w * compactScale * animationSample.bodyScale,
     h: authoredSize.h * compactScale * animationSample.bodyScale,
@@ -2341,8 +2450,12 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     );
     ctx.clip();
   } else if (f.side === "zombie" && f.gateEntering) {
+    const revealRight = f.spawnEntryMode === "right-edge"
+      || f.spawnEntryMode === "right-edge-outside"
+      ? W
+      : ENEMY_GATE_SPAWN.revealX;
     ctx.beginPath();
-    ctx.rect(0, 0, ENEMY_GATE_SPAWN.revealX, H);
+    ctx.rect(0, 0, revealRight, H);
     ctx.clip();
   }
   ctx.fillStyle = "rgba(0,0,0,.42)";
@@ -3687,6 +3800,8 @@ export function AshfallGame() {
   const eventQueueRef = useRef<string[]>([]);
   const eventCompletionLockRef = useRef(false);
   const finalizedEndRef = useRef<BattleResult | null>(null);
+  const survivalCheckpointSaveLocksRef = useRef(new Set<string>());
+  const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const qaScenarioAppliedRef = useRef(false);
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -3731,6 +3846,13 @@ export function AshfallGame() {
   const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
   const formationKindKey = formationKinds.join("|");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
+  const [selectedSurvivalStartWave, setSelectedSurvivalStartWave] = useState(1);
+  const [survivalHud, setSurvivalHud] = useState<ReturnType<typeof survivalHudSnapshot>>(null);
+  const [survivalResult, setSurvivalResult] = useState<SurvivalResultView | null>(null);
+  const [survivalSavePending, setSurvivalSavePending] = useState(false);
+  const [survivalSettlementAwaitingRetry, setSurvivalSettlementAwaitingRetry] = useState(false);
+  const [pendingSurvivalCheckpoint, setPendingSurvivalCheckpoint] = useState<PendingSurvivalCheckpoint | null>(null);
+  const [pendingSurvivalSettlement, setPendingSurvivalSettlement] = useState<PendingSurvivalSettlement | null>(null);
   const [hud, setHud] = useState<Hud>({
     missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
     barricadeHp: BARRICADE_MAX_HP, barricadeMaxHp: BARRICADE_MAX_HP, barricadeVulnerable: true, barricadeHitFlash: 0,
@@ -4447,8 +4569,83 @@ export function AshfallGame() {
           initialTargetHp: proofTarget?.hp ?? g.barricadeHp,
         };
       },
+      prepareSurvivalUpgradeProof: () => {
+        const g = gameRef.current;
+        if (!g.survivalRun || !g.survivalRuntime || g.over) {
+          throw new Error("Survival upgrade proof requires an active run");
+        }
+        const bossWave = beginSurvivalWave({
+          ...g.survivalRun,
+          phase: SURVIVAL_RUN_PHASES.WAVE_READY,
+          currentWave: 5,
+          lastCompletedWave: 4,
+          speed: 1,
+          bossEntrancePending: false,
+          pendingUpgradeChoices: [],
+        });
+        const checkpointRun = completeSurvivalWave(bossWave, {
+          kills: 1,
+          bossKills: 1,
+          crawlerHp: g.baseHp,
+          reward: survivalWaveReward(5),
+        });
+        if (!checkpointRun || checkpointRun.phase !== SURVIVAL_RUN_PHASES.UPGRADE_SELECTION) {
+          throw new Error("Could not prepare Survival upgrade checkpoint");
+        }
+        const checkpointId = `survival:${checkpointRun.runId}:wave:${checkpointRun.lastCompletedWave}`;
+        g.survivalRun = checkpointRun;
+        g.survivalRuntime = createSurvivalCombatRuntime(checkpointRun);
+        g.survivalCheckpointReceipt = checkpointId;
+        g.wave = checkpointRun.currentWave;
+        g.paused = true;
+        g.enemySpawn = createEnemySpawnRuntime();
+        g.fighters = g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0);
+        setPaused(true);
+        setSurvivalHud(survivalHudSnapshot(checkpointRun));
+        setPendingSurvivalCheckpoint({ run: checkpointRun, checkpointId });
+        return {
+          checkpointId,
+          choices: [...checkpointRun.pendingUpgradeChoices],
+        };
+      },
+      prepareSurvivalEntryVisibilityProof: () => {
+        const g = gameRef.current;
+        const enteringEnemy = g.fighters.find((fighter) => (
+          fighter.side === "zombie"
+          && fighter.hp > 0
+          && fighter.gateEntering
+          && !fighter.combatReady
+          && (fighter.spawnEntryMode === "right-edge" || fighter.spawnEntryMode === "right-edge-outside")
+        ));
+        if (!enteringEnemy) {
+          throw new Error("Survival entry visibility proof requires a right-edge entering enemy");
+        }
+        g.paused = true;
+        enteringEnemy.x = Math.max(
+          enteringEnemy.combatReadyX + 12,
+          W - Math.max(12, enteringEnemy.bodyRadius),
+        );
+        enteringEnemy.spawnEntryMode = "right-edge-outside";
+        return {
+          fighterId: enteringEnemy.id,
+          x: enteringEnemy.x,
+          combatReadyX: enteringEnemy.combatReadyX,
+          entryMode: enteringEnemy.spawnEntryMode,
+        };
+      },
+      setSurvivalEntryVisibilityMode: (fighterId: number, entryMode: EnemyEntryMode) => {
+        const fighter = gameRef.current.fighters.find((candidate) => candidate.id === fighterId);
+        if (!fighter || fighter.side !== "zombie" || !fighter.gateEntering) return false;
+        fighter.spawnEntryMode = entryMode;
+        return true;
+      },
+      failNextSurvivalSettlementSave: () => {
+        survivalSettlementPersistenceQaRef.current.failuresRemaining += 1;
+        return survivalSettlementPersistenceQaRef.current.attempts;
+      },
       getSnapshot: () => {
         const g = gameRef.current;
+        const currentCampaignSave = campaignSaveRef.current;
         const geometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
         const battleSpace = battleSpaceFor(g.definition.stageId, activeStageViewportId);
         const grounding = combatReadyGroundingAudit({ geometry, fighters: g.fighters });
@@ -4461,6 +4658,30 @@ export function AshfallGame() {
           paused: g.paused,
           over: g.over,
           won: g.won,
+          survivalRun: g.survivalRun ? {
+            ...g.survivalRun,
+            formation: {
+              ...g.survivalRun.formation,
+              unitIds: [...g.survivalRun.formation.unitIds],
+              unitLevelsByUnit: { ...g.survivalRun.formation.unitLevelsByUnit },
+              personalEquipmentByUnit: { ...g.survivalRun.formation.personalEquipmentByUnit },
+              tacticalEquipmentIds: [...g.survivalRun.formation.tacticalEquipmentIds],
+            },
+            crawler: { ...g.survivalRun.crawler },
+            temporaryUpgradeStacks: { ...g.survivalRun.temporaryUpgradeStacks },
+            pendingUpgradeChoices: [...g.survivalRun.pendingUpgradeChoices],
+            stats: { ...g.survivalRun.stats },
+            checkpointRewards: [...g.survivalRun.checkpointRewards],
+            pendingReward: { ...g.survivalRun.pendingReward },
+          } : null,
+          survivalProgress: {
+            ...currentCampaignSave.survival,
+            unlockedStartWaves: [...currentCampaignSave.survival.unlockedStartWaves],
+            processedRunIds: [...currentCampaignSave.survival.processedRunIds],
+            claimedRewardIds: [...currentCampaignSave.survival.claimedRewardIds],
+          },
+          equipmentInventory: [...currentCampaignSave.equipmentInventory],
+          survivalSettlementPersistenceAttempts: survivalSettlementPersistenceQaRef.current.attempts,
           bossDefeated: g.bossDefeated,
           bossDefeatPending: g.bossDefeatPending,
           baseHp: g.baseHp,
@@ -4559,6 +4780,7 @@ export function AshfallGame() {
             gateEntering: fighter.gateEntering,
             entryDirection: fighter.entryDirection ?? -1,
             spawnPortalId: fighter.spawnPortalId ?? null,
+            spawnEntryMode: fighter.spawnEntryMode ?? null,
             combatReadyX: fighter.combatReadyX,
             combatReadyY: fighter.combatReadyY ?? fighter.y,
             entryRampX: fighter.entryRampX ?? null,
@@ -5250,7 +5472,7 @@ export function AshfallGame() {
       return false;
     }
     g.energy -= card.cost;
-    g.deployCooldowns[kind] = card.deployCooldown;
+    g.deployCooldowns[kind] = card.deployCooldown * survivalUpgradeEffects(g.survivalRun).redeployMultiplier;
     g.deployQueue.push(kind);
     g.banner = `${card.name} // 出撃待機 ${g.deployQueue.length}/3`;
     g.bannerTime = .7;
@@ -5648,6 +5870,79 @@ export function AshfallGame() {
     }
   }, [bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, playCue, qaMode, qaScenario, selectedStageId, selectedSupply, startMusic]);
 
+  const startSurvivalGame = useCallback((run: ReturnType<typeof createSurvivalRun>) => {
+    const requestedKinds = run.formation.unitIds.flatMap((unitId: string) => {
+      const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
+        .find((candidate) => candidate.id === unitId);
+      return unit ? [unit.combatKind] : [];
+    }) as UnitKind[];
+    const activeKinds = requestedKinds.length > 0 ? requestedKinds : formationKinds;
+    const unitRanks = Object.fromEntries(Object.entries(run.formation.unitLevelsByUnit)
+      .map(([unitId, level]) => [unitId, Math.max(0, Number(level) - 1)]));
+    const fresh = initialSurvivalGame({
+      selectedSupply,
+      run,
+      formationKinds: activeKinds,
+      unitRanks,
+    });
+    fresh.running = true;
+    gameRef.current = fresh;
+    finalizedEndRef.current = null;
+    setStarted(true);
+    setPaused(run.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION);
+    fresh.paused = run.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
+    setEnd(null);
+    setCampaignResult(null);
+    setSurvivalResult(null);
+    setPendingSurvivalSettlement(null);
+    setSurvivalSettlementAwaitingRetry(false);
+    setSurvivalHud(survivalHudSnapshot(run));
+    setSelectedStageId(CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL);
+    setScreen("battle");
+    chooseAction(null);
+    disposeBattleRuntime();
+    desiredMusicModeRef.current = "normal";
+    if (!bgmMuted) startMusic();
+    playCue("start-low");
+  }, [bgmMuted, chooseAction, disposeBattleRuntime, formationKinds, playCue, selectedSupply, startMusic]);
+
+  const openSurvival = useCallback(() => {
+    const unlocked = campaignSave.survival.unlockedStartWaves;
+    setSelectedSurvivalStartWave(unlocked.includes(selectedSurvivalStartWave)
+      ? selectedSurvivalStartWave
+      : unlocked[unlocked.length - 1] ?? 1);
+    setSelectedStageId(CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL);
+    setSurvivalResult(null);
+    setScreen("survival");
+  }, [campaignSave.survival.unlockedStartWaves, selectedSurvivalStartWave]);
+
+  const startNewSurvival = useCallback(() => {
+    const unitLevelsByUnit = Object.fromEntries(formationUnitIds.map((unitId) => [
+      unitId,
+      Math.max(1, Number(campaignSave.unitRanks[unitId] ?? 0) + 1),
+    ]));
+    const run = createSurvivalRun({
+      runId: createBattleResultId("survival"),
+      startWave: selectedSurvivalStartWave,
+      unlockedStartWaves: campaignSave.survival.unlockedStartWaves,
+      formation: {
+        presetId: campaignSave.selectedFormationPresetId,
+        unitIds: formationUnitIds,
+        unitLevelsByUnit,
+        personalEquipmentByUnit: {},
+        tacticalEquipmentIds: [],
+      },
+      crawlerMaxHp: 700,
+    });
+    startSurvivalGame(run);
+  }, [campaignSave, formationUnitIds, selectedSurvivalStartWave, startSurvivalGame]);
+
+  const resumeSurvival = useCallback(() => {
+    const run = resumeSurvivalCheckpoint(campaignSave.survival);
+    if (!run) return;
+    startSurvivalGame(run);
+  }, [campaignSave.survival, startSurvivalGame]);
+
   const returnToMap = useCallback((sessionOverride?: {
     stageId: string;
     formationKinds: UnitKind[];
@@ -5664,7 +5959,7 @@ export function AshfallGame() {
     );
     gameRef.current = fresh;
     finalizedEndRef.current = null;
-    setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setScreen("map"); chooseAction(null);
+    setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setSurvivalHud(null); setSurvivalResult(null); setPendingSurvivalSettlement(null); setSurvivalSettlementAwaitingRetry(false); setScreen("map"); chooseAction(null);
   }, [campaignSave.readStoryEventIds, campaignSave.unitRanks, chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
 
   const handleEventComplete = useCallback(() => {
@@ -6164,6 +6459,116 @@ export function AshfallGame() {
   }, [downloadCampaignText, pendingResultCommit]);
 
   useEffect(() => {
+    if (!pendingSurvivalCheckpoint) return;
+    const { run, checkpointId } = pendingSurvivalCheckpoint;
+    if (survivalCheckpointSaveLocksRef.current.has(checkpointId)) return;
+    survivalCheckpointSaveLocksRef.current.add(checkpointId);
+    setSurvivalSavePending(true);
+    let cancelled = false;
+    void (async () => {
+      const checkpoint = checkpointSurvivalCampaignSave(campaignSaveRef.current, run, {
+        savedAt: new Date().toISOString(),
+      });
+      if (!checkpoint.applied) {
+        if (!cancelled) {
+          setPendingSurvivalCheckpoint(null);
+          setSurvivalSavePending(false);
+        }
+        return;
+      }
+      const persisted = await persistCampaignSave(checkpoint.save as CampaignSave);
+      if (cancelled) return;
+      if (!persisted.durable) {
+        survivalCheckpointSaveLocksRef.current.delete(checkpointId);
+        setSavePersistence("unavailable");
+        setSurvivalSavePending(false);
+        return;
+      }
+      setCampaignSave(checkpoint.save as CampaignSave);
+      setPendingSurvivalCheckpoint(null);
+      setSurvivalSavePending(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingSurvivalCheckpoint, persistCampaignSave]);
+
+  const retrySurvivalCheckpointSave = useCallback(() => {
+    if (!pendingSurvivalCheckpoint || survivalSavePending) return;
+    survivalCheckpointSaveLocksRef.current.delete(pendingSurvivalCheckpoint.checkpointId);
+    setPendingSurvivalCheckpoint({ ...pendingSurvivalCheckpoint });
+  }, [pendingSurvivalCheckpoint, survivalSavePending]);
+
+  const commitSurvivalSettlement = useCallback((pending: PendingSurvivalSettlement) => {
+    if (survivalSavePending) return;
+    setSurvivalSavePending(true);
+    void (async () => {
+      const result = await persistSurvivalCampaignSettlement(
+        campaignSaveRef.current,
+        pending.run,
+        {
+          endedAt: pending.endedAt,
+          persist: async (candidate) => {
+            survivalSettlementPersistenceQaRef.current.attempts += 1;
+            if (survivalSettlementPersistenceQaRef.current.failuresRemaining > 0) {
+              survivalSettlementPersistenceQaRef.current.failuresRemaining -= 1;
+              return { durable: false };
+            }
+            return persistCampaignSave(candidate as CampaignSave);
+          },
+        },
+      );
+      if (!result.committed) {
+        setSavePersistence("unavailable");
+        setSurvivalSettlementAwaitingRetry(true);
+        setSurvivalSavePending(false);
+        return;
+      }
+      const nextSave = result.save as CampaignSave;
+      const lastResult = nextSave.survival.lastResult;
+      setCampaignSave(nextSave);
+      setPendingSurvivalSettlement(null);
+      setSurvivalSettlementAwaitingRetry(false);
+      setSurvivalSavePending(false);
+      setStarted(false);
+      setPaused(false);
+      setSurvivalHud(null);
+      if (lastResult) {
+        setSurvivalResult({
+          endReason: lastResult.endReason,
+          reachedWave: lastResult.reachedWave,
+          kills: lastResult.stats.kills,
+          bossKills: lastResult.stats.bossKills,
+          earnedCaps: lastResult.earnedCaps,
+          earnedEquipmentGrants: lastResult.earnedEquipmentGrants,
+          newHighestWave: lastResult.newHighestWave,
+          capsAfter: nextSave.caps,
+        });
+      }
+      setScreen("survival-result");
+    })();
+  }, [persistCampaignSave, survivalSavePending]);
+
+  useEffect(() => {
+    if (!pendingSurvivalSettlement || survivalSavePending || survivalSettlementAwaitingRetry) return;
+    const timer = window.setTimeout(() => {
+      commitSurvivalSettlement(pendingSurvivalSettlement);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [
+    commitSurvivalSettlement,
+    pendingSurvivalSettlement,
+    survivalSavePending,
+    survivalSettlementAwaitingRetry,
+  ]);
+
+  const retrySurvivalSettlementSave = useCallback(() => {
+    if (!pendingSurvivalSettlement || survivalSavePending) return;
+    setSurvivalSettlementAwaitingRetry(false);
+    commitSurvivalSettlement(pendingSurvivalSettlement);
+  }, [commitSurvivalSettlement, pendingSurvivalSettlement, survivalSavePending]);
+
+  useEffect(() => {
     if (!end || finalizedEndRef.current === end) return;
     const timer = window.setTimeout(async () => {
       if (finalizedEndRef.current === end) return;
@@ -6336,6 +6741,7 @@ export function AshfallGame() {
   const togglePause = useCallback(() => {
     const g = gameRef.current;
     if (!g.running || g.over) return;
+    if (g.survivalRun?.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION) return;
     const transition = resolvePauseAction(g.paused ? "resume" : "pause");
     if (!transition) return;
     g.paused = transition.paused; setPaused(g.paused);
@@ -6364,6 +6770,60 @@ export function AshfallGame() {
     }
   }, [bgmMuted, playProductionCue, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
 
+  const changeSurvivalSpeed = useCallback((speed: 1 | 2) => {
+    const g = gameRef.current;
+    if (!g.survivalRun || g.over || g.paused) return;
+    const nextRun = setSurvivalRunSpeed(g.survivalRun, speed);
+    g.survivalRun = nextRun;
+    const boss = g.fighters.find((fighter) => (
+      ["takuya", "gate-eater"].includes(fighter.kind)
+      && fighter.hp > 0
+      && fighter.combatReady
+      && fighter.contained !== true
+    ));
+    setSurvivalHud(survivalHudSnapshot(nextRun, {
+      bossKind: boss?.kind ?? null,
+      bossHp: boss?.hp ?? 0,
+      bossMaxHp: boss?.maxHp ?? 0,
+    }));
+  }, []);
+
+  const selectSurvivalUpgrade = useCallback((upgradeId: string) => {
+    const g = gameRef.current;
+    if (!g.survivalRun
+      || !g.survivalRuntime
+      || pendingSurvivalCheckpoint
+      || survivalSavePending) return;
+    const previousEffects = survivalUpgradeEffects(g.survivalRun);
+    const selection = chooseSurvivalCombatUpgrade(g.survivalRuntime, g.survivalRun, upgradeId);
+    if (!selection.selected || !selection.run || !selection.runtime) return;
+    const nextEffects = survivalUpgradeEffects(selection.run);
+    for (const fighter of g.fighters) {
+      if (fighter.side !== "human" || fighter.hp <= 0) continue;
+      const remainingDamageFraction = 1 - fighter.defense;
+      Object.assign(fighter, {
+        damage: fighter.damage * (nextEffects.attackMultiplier / previousEffects.attackMultiplier),
+        range: fighter.range * (nextEffects.rangeMultiplier / previousEffects.rangeMultiplier),
+        healingMultiplier: fighter.healingMultiplier
+          * (nextEffects.healingMultiplier / previousEffects.healingMultiplier),
+        defense: 1 - remainingDamageFraction
+          * (nextEffects.defenseMultiplier / previousEffects.defenseMultiplier),
+      });
+    }
+    for (const kind of Object.keys(g.deployCooldowns) as UnitKind[]) {
+      g.deployCooldowns[kind] *= nextEffects.redeployMultiplier / previousEffects.redeployMultiplier;
+    }
+    g.survivalRun = selection.run;
+    g.survivalRuntime = selection.runtime;
+    g.baseHp = selection.run.crawler.hp;
+    g.baseMaxHp = selection.run.crawler.maxHp;
+    g.paused = false;
+    setPaused(false);
+    setSurvivalHud(survivalHudSnapshot(selection.run));
+    if (!bgmMuted) startMusic();
+    playCue("ui-confirm");
+  }, [bgmMuted, pendingSurvivalCheckpoint, playCue, startMusic, survivalSavePending]);
+
   const requestPauseAction = useCallback((action: PauseAction) => {
     if (!gameRef.current.running || gameRef.current.over) return;
     setPauseConfirm(action);
@@ -6386,6 +6846,23 @@ export function AshfallGame() {
   const confirmPauseAction = useCallback(() => {
     const action = pauseConfirm;
     if (!action) return;
+    const activeGame = gameRef.current;
+    if (activeGame.survivalRun) {
+      if (action !== "withdraw" || activeGame.over) return;
+      const endedAt = new Date().toISOString();
+      const endedRun = endSurvivalRun(activeGame.survivalRun, SURVIVAL_END_REASONS.WITHDRAWAL, endedAt);
+      if (!endedRun) return;
+      activeGame.survivalRun = endedRun;
+      activeGame.over = true;
+      activeGame.paused = true;
+      setPauseConfirm(null);
+      setPaused(true);
+      setPendingSurvivalSettlement({ run: endedRun, endedAt });
+      chooseAction(null);
+      stopMusic();
+      stopSfx();
+      return;
+    }
     const transition = createBattleSessionTransition({
       action,
       stageId: selectedStageId,
@@ -6426,7 +6903,7 @@ export function AshfallGame() {
       formationKinds: UnitKind[];
       selectedSupply: SupplyKind;
     });
-  }, [campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, returnToMap, selectedStageId, selectedSupply, startGame]);
+  }, [campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, returnToMap, selectedStageId, selectedSupply, startGame, stopMusic, stopSfx]);
 
   const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
@@ -6698,7 +7175,8 @@ export function AshfallGame() {
       }
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
-      const dt = Math.min(.033, g.last ? (now - g.last) / 1000 : 0);
+      const frameDt = Math.min(.033, g.last ? (now - g.last) / 1000 : 0);
+      const dt = frameDt * (g.survivalRun?.speed ?? 1);
       g.last = now;
       g.shake = advanceCameraShakeRuntime(g.shake, dt);
       if (g.running && !g.paused) g.battleBarks = advanceBattleBarkRuntime(g.battleBarks, dt) as BattleBarkRuntime;
@@ -7009,44 +7487,141 @@ export function AshfallGame() {
           g.bannerTime = 3; g.flashOverlay = .15;
         }
 
-        while (g.eventIndex < g.definition.timeline.length && g.time >= g.definition.timeline[g.eventIndex].at) {
-          const mission = g.definition.timeline[g.eventIndex++] as MissionEvent;
-          const bossAlive = g.fighters.some((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
-          if (mission.bossOnly && !bossAlive) continue;
-          g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
-          if (mission.label.includes("警告")) g.flashOverlay = .12;
-          const firstNewEntryId = g.enemySpawn.nextEntryId;
-          g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
-          g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {
-            if (entry.entryId < firstNewEntryId) return entry;
-            const portal = enemySpawnPortalPoint({
-              stageId: g.definition.stageId,
-              viewport: activeStageViewportId,
-              entryId: entry.entryId,
-              kind: entry.kind,
-            });
-            return {
-              ...entry,
-              ...portal,
-              lane: portal.legacyLane as Lane,
-            };
+        if (g.survivalRun && g.survivalRuntime) {
+          g.survivalRun = {
+            ...g.survivalRun,
+            crawler: {
+              ...g.survivalRun.crawler,
+              hp: Math.max(0, Math.min(g.survivalRun.crawler.maxHp, Math.round(g.baseHp))),
+            },
+          };
+          const activeSurvivalEnemies = g.fighters.filter((fighter) => (
+            fighter.side === "zombie"
+            && fighter.hp > 0
+            && fighter.contained !== true
+          ));
+          const survivalBoss = activeSurvivalEnemies.find((fighter) => (
+            ["takuya", "gate-eater"].includes(fighter.kind)
+          ));
+          const survivalStep = advanceSurvivalCombat(g.survivalRuntime, g.survivalRun, {
+            seconds: dt,
+            activeEnemyCount: activeSurvivalEnemies.length,
+            pendingSpawnCount: g.enemySpawn.pending.length,
+            totalKills: g.kills,
+            crawlerHp: g.baseHp,
+            bossCombatReady: Boolean(survivalBoss?.combatReady),
+            livingHumanCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
+            queuedHumanCount: g.deployQueue.length,
           });
-          if (mission.units.length) {
-            const includesTakuya = mission.units.includes("takuya");
-            if (includesTakuya) {
-              g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
-              setHud((current) => ({ ...current, takuyaEntranceAudioActive: true }));
-              playProductionCue(TAKUYA_ENTRANCE_AUDIO.cueId, W / 2, {
-                priority: 104,
-                cooldownMs: 0,
-                volume: .92,
-                maxInstances: 1,
+          if (survivalStep.run && survivalStep.runtime) {
+            g.survivalRun = survivalStep.run;
+            g.survivalRuntime = survivalStep.runtime;
+            g.wave = survivalStep.run.currentWave;
+            g.baseHp = survivalStep.run.crawler.hp;
+            g.baseMaxHp = survivalStep.run.crawler.maxHp;
+          }
+          for (const event of survivalStep.events) {
+            if (event.type === "queue-wave") {
+              const firstNewEntryId = g.enemySpawn.nextEntryId;
+              g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(
+                g.enemySpawn,
+                { units: [...event.plan.units], wave: event.plan.wave },
+              );
+              g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {
+                if (entry.entryId < firstNewEntryId) return entry;
+                const portal = enemySpawnPortalPoint({
+                  stageId: g.definition.stageId,
+                  viewport: activeStageViewportId,
+                  entryId: entry.entryId,
+                  kind: entry.kind,
+                  missionType: "survival",
+                });
+                return { ...entry, ...portal, lane: portal.legacyLane as Lane };
               });
-              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
-              emitBattleBark(g, "takuya-entrance", "ranger", "takuya-entrance");
-            } else {
+              g.banner = `WAVE ${event.plan.wave}`;
+              g.bannerTime = 1.8;
               playCue("wave-contact");
-              emitBattleBark(g, "wave-contact", "guide", `wave-${mission.wave}`);
+              emitBattleBark(g, "wave-contact", "guide", `survival-wave-${event.plan.wave}`);
+            } else if (event.type === "boss-warning") {
+              g.banner = `警告 // ${enemyContentFor(event.bossKind).displayName}`;
+              g.bannerTime = 3.2;
+              g.flashOverlay = Math.max(g.flashOverlay, .18);
+              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
+            } else if (event.type === "boss-combat-ready") {
+              g.banner = "BOSS COMBAT READY";
+              g.bannerTime = 1.6;
+            } else if (event.type === "checkpoint" && g.survivalRun) {
+              const checkpointId = `survival:${g.survivalRun.runId}:wave:${event.completedWave}`;
+              if (g.survivalCheckpointReceipt !== checkpointId) {
+                g.survivalCheckpointReceipt = checkpointId;
+                g.paused = true;
+                setPaused(true);
+                setPendingSurvivalCheckpoint({ run: g.survivalRun, checkpointId });
+              }
+            }
+          }
+          const survivalEndReason = survivalStep.terminalReason
+            ?? survivalCombatEndReason(g.survivalRuntime, g.survivalRun, {
+              crawlerHp: g.baseHp,
+            });
+          if (survivalEndReason) {
+            const endedAt = new Date().toISOString();
+            const endedRun = endSurvivalRun(g.survivalRun, survivalEndReason, endedAt);
+            if (endedRun) {
+              g.survivalRun = endedRun;
+              g.over = true;
+              g.paused = true;
+              setPaused(true);
+              setPendingSurvivalCheckpoint(null);
+              setSurvivalSettlementAwaitingRetry(false);
+              setPendingSurvivalSettlement({ run: endedRun, endedAt });
+              chooseAction(null);
+              stopMusic();
+              stopSfx();
+              playCue("defeat");
+            }
+          }
+        } else {
+          while (g.eventIndex < g.definition.timeline.length && g.time >= g.definition.timeline[g.eventIndex].at) {
+            const mission = g.definition.timeline[g.eventIndex++] as MissionEvent;
+            const bossAlive = g.fighters.some((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
+            if (mission.bossOnly && !bossAlive) continue;
+            g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
+            if (mission.label.includes("警告")) g.flashOverlay = .12;
+            const firstNewEntryId = g.enemySpawn.nextEntryId;
+            g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
+            g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {
+              if (entry.entryId < firstNewEntryId) return entry;
+              const portal = enemySpawnPortalPoint({
+                stageId: g.definition.stageId,
+                viewport: activeStageViewportId,
+                entryId: entry.entryId,
+                kind: entry.kind,
+                missionType: g.definition.missionType,
+              });
+              return {
+                ...entry,
+                ...portal,
+                lane: portal.legacyLane as Lane,
+              };
+            });
+            if (mission.units.length) {
+              const includesTakuya = mission.units.includes("takuya");
+              if (includesTakuya) {
+                g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
+                setHud((current) => ({ ...current, takuyaEntranceAudioActive: true }));
+                playProductionCue(TAKUYA_ENTRANCE_AUDIO.cueId, W / 2, {
+                  priority: 104,
+                  cooldownMs: 0,
+                  volume: .92,
+                  maxInstances: 1,
+                });
+                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
+                emitBattleBark(g, "takuya-entrance", "ranger", "takuya-entrance");
+              } else {
+                playCue("wave-contact");
+                emitBattleBark(g, "wave-contact", "guide", `wave-${mission.wave}`);
+              }
             }
           }
         }
@@ -7798,11 +8373,14 @@ export function AshfallGame() {
             const takuyaAlive = enemies.some((enemy) => enemy.kind === "takuya");
             const containmentBossAlive = enemies.some((enemy) => enemy.kind === "gate-eater" && enemy.contained !== true);
             const objectiveX = g.definition.missionType === "timed-defense"
+              || g.definition.missionType === "survival"
               ? null
               : g.barricadeVulnerable
                 ? BARRICADE_X
                 : advanceLimitFor(g.phase, g.barricadeVulnerable);
-            const defenseFrontX = 555;
+            const defenseFrontX = g.survivalRun
+              ? survivalDefenseDestination({ aiProfile: f.aiProfile })
+              : 555;
             allyIntent = decideAllyIntent({
               missionType: g.definition.missionType,
               unit: {
@@ -7845,6 +8423,21 @@ export function AshfallGame() {
                 desiredX: stationObjective.x,
                 destinationLane: stationObjective.lane,
                 moveDirection: Math.sign(stationObjective.x - f.x),
+              };
+            }
+            if (g.survivalRun && allyIntent.reason !== "crawler-under-attack") {
+              const survivalTarget = tacticalEnemies.find((enemy) => enemy.id === allyIntent?.targetId);
+              const destinationX = survivalDefenseDestination({
+                aiProfile: f.aiProfile,
+                desiredX: allyIntent.destinationX,
+                emergencyDefense: allyIntent.emergencyDefense,
+                activeThreatX: survivalTarget?.x ?? null,
+              });
+              allyIntent = {
+                ...allyIntent,
+                destinationX,
+                desiredX: destinationX,
+                moveDirection: Math.sign(destinationX - f.x),
               };
             }
             const holdAtMuster = stagingForAssignedLane
@@ -8067,6 +8660,9 @@ export function AshfallGame() {
             desiredX: allyIntent?.destinationX,
             hasEnemyTarget: f.side === "human" && Boolean(target),
           });
+          const humanMaxX = g.survivalRun
+            ? survivalDefenseDestination({ aiProfile: f.aiProfile, desiredX: 9999 })
+            : BARRICADE_X;
           const zombieTargetX = f.side === "zombie" ? (target?.x ?? objectTarget?.x) : undefined;
           const zombieTargetFloor = zombieTargetX !== undefined && zombieTargetX <= f.x ? zombieTargetX : null;
           const enemyBaseTarget = enemyBaseTargetPoint(f.lane, activeLaneCenters);
@@ -8140,7 +8736,12 @@ export function AshfallGame() {
                   attackVector: Math.abs(f.y - target.y) > 24 ? "flank" : "front",
                 })
                 : { multiplier: 1 };
-              const attackDamage = baseAttackDamage * gateEaterProfile.multiplier;
+              const bossDamageMultiplier = g.survivalRun
+                && f.side === "human"
+                && ["takuya", "gate-eater"].includes(target.kind)
+                ? survivalUpgradeEffects(g.survivalRun).bossDamageMultiplier
+                : 1;
+              const attackDamage = baseAttackDamage * gateEaterProfile.multiplier * bossDamageMultiplier;
               const weaponDamageEvents = f.side === "human"
                 ? weaponDamageEventsFor(f.kind, attackDamage)
                 : null;
@@ -8642,7 +9243,7 @@ export function AshfallGame() {
             const desiredX = allyIntent?.destinationX ?? (target.x - Math.sign(dx || 1) * stoppingDistance);
             if (Math.abs(desiredX - f.x) > 2) {
               f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), humanMovementSpeed * dt);
-              f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
+              f.x = Math.max(humanMinX, Math.min(humanMaxX, f.x));
             }
             const destinationLane = (f.navigationRecovery.recoveryLane ?? (f.range > 64
               ? f.anchorLane ?? f.lane
@@ -8672,7 +9273,7 @@ export function AshfallGame() {
               const desiredX = allyIntent?.destinationX ?? f.x;
               if (Math.abs(desiredX - f.x) > 2) {
                 f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), humanMovementSpeed * dt);
-                f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
+                f.x = Math.max(humanMinX, Math.min(humanMaxX, f.x));
               }
               const laneStep = advanceTowardLane({
                 y: f.y,
@@ -8944,7 +9545,7 @@ export function AshfallGame() {
         g.damageTexts = capRenderArray(g.damageTexts, "damageTexts") as DamageText[];
 
         dispatchSituationalBattleBarks(g);
-        dispatchBattleStoryEvents(g);
+        if (!g.survivalRun) dispatchBattleStoryEvents(g);
         const bossActiveOrIncoming = g.fighters.some((fighter) => ["takuya", "gate-eater"].includes(fighter.kind)
             && fighter.hp > 0 && fighter.contained !== true)
           || g.enemySpawn.pending.some((entry) => ["takuya", "gate-eater"].includes(entry.kind));
@@ -8971,7 +9572,7 @@ export function AshfallGame() {
           ...g,
           wavesResolved: stationResolution.wavesResolved,
         });
-        if (outcome) {
+        if (outcome && !g.survivalRun) {
           // A simultaneous collapse is a loss: protecting the crawler always remains mandatory.
           g.won = outcome === "won";
           const enemyBaseDestroyed = g.barricadeHp <= 0;
@@ -9006,7 +9607,7 @@ export function AshfallGame() {
         }
       }
 
-      if (g.over && !g.resultPresented) {
+      if (g.over && !g.resultPresented && !g.survivalRun) {
         const collapseStep = advanceEnemyBaseCollapse({ barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt, duration: ENEMY_BASE_COLLAPSE_SECONDS });
         g.enemyBaseCollapse = collapseStep.elapsed;
         if (collapseStep.complete) {
@@ -9067,6 +9668,19 @@ export function AshfallGame() {
           objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns },
           battleBarks: g.paused ? [] : [...g.battleBarks.active],
         });
+        if (g.survivalRun) {
+          setSurvivalHud(survivalHudSnapshot({
+            ...g.survivalRun,
+            crawler: {
+              ...g.survivalRun.crawler,
+              hp: Math.max(0, Math.min(g.survivalRun.crawler.maxHp, Math.round(g.baseHp))),
+            },
+          }, {
+            bossKind: boss?.kind ?? null,
+            bossHp: boss?.hp ?? 0,
+            bossMaxHp: boss?.maxHp ?? 0,
+          }));
+        }
       }
       frame = requestAnimationFrame(loop);
     };
@@ -9090,8 +9704,14 @@ export function AshfallGame() {
           ? hud.phase === 1 ? "侵入" : hud.phase === 2 ? "前進" : "総攻撃"
           : hud.phase === 1 ? "防衛" : hud.phase === 2 ? "前進" : "総攻撃";
   const stationMissionHud = hud.missionType === "escort" || hud.missionType === "sequential-seal";
+  const isSurvivalBattle = screen === "battle" && survivalHud !== null;
+  const survivalUpgradeOpen = isSurvivalBattle
+    && survivalHud.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
   const enemyBaseLabel = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
   const bossLabel = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL ? "改札喰い" : "TAKUYA";
+  const activeBossLabel = survivalHud?.bossKind
+    ? enemyContentFor(survivalHud.bossKind).displayName
+    : bossLabel;
   const selectedName = selectedAction?.startsWith("supply:")
     ? SUPPORT_DISPLAY_NAMES[selectedAction.slice("supply:".length) as SupplyKind]
     : selectedAction === "airstrike" ? "航空支援" : null;
@@ -9123,20 +9743,34 @@ export function AshfallGame() {
         {screen === "battle" && <>
         {hud.battleBarks.length > 0 && <div className="battle-barks" aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
 
-        <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
-          <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
-          <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
-          <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
-          <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
-        </div>
+        {isSurvivalBattle ? <div className="survival-hud" role="region" aria-label="Survival戦闘情報">
+          <div className="survival-wave"><small>WAVE</small><strong>{survivalHud.wave}</strong></div>
+          <div className="survival-next-boss"><small>NEXT BOSS</small><b>WAVE {survivalHud.nextBossWave}</b></div>
+          <div className={`survival-crawler-health ${healthPct <= 25 ? "critical" : ""}`}>
+            <span>CRAWLER HP</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b>
+            <i><em style={{ width: `${healthPct}%` }} /></i>
+          </div>
+          <div className="survival-speed" aria-label="戦闘速度">
+            <button className={survivalHud.speed === 1 ? "active" : ""} disabled={paused || survivalSavePending} onClick={() => changeSurvivalSpeed(1)}>1倍</button>
+            <button className={survivalHud.speed === 2 ? "active" : ""} disabled={paused || survivalHud.speedLocked || survivalSavePending} onClick={() => changeSurvivalSpeed(2)}>2倍</button>
+          </div>
+          <button className="survival-pause" onClick={togglePause} disabled={survivalUpgradeOpen || survivalSavePending} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
+        </div> : <>
+          <div className="top-hud">
+            <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
+            <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
+            <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
+            <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
+            <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
+          </div>
 
-        <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>移動拠点</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
-        {stationMissionHud
-          ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{hud.objective}</b></div></div>
-          : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
-        {hud.bossMax > 0 && <div className="boss-hud"><div><span>{bossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
-        {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
+          <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>移動拠点</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
+          {stationMissionHud
+            ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{hud.objective}</b></div></div>
+            : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
+          {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
+        </>}
+        {hud.bossMax > 0 && <div className={`boss-hud ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
 
         {selectedAction && started && !paused && !end && <div className="placement-hint" role="status" aria-live="polite">
           <span className="placement-copy"><b>{selectedName}</b><span>戦場をタップ</span></span>
@@ -9183,13 +9817,36 @@ export function AshfallGame() {
           </div>
         </div>
 
-        <div className="stats-strip"><span>☠ 撃破 {hud.kills}</span><span>▰ スクラップ {hud.scrap}</span><span className="bay-status">格納庫 {hud.deployQueue}/3</span>{hud.combo > 1 && <span className="combo">×{hud.combo} 連続</span>}<span className="objective">目標：{hud.objective}</span></div>
-        {paused && started && !end && <div className="pause-screen" role="dialog" aria-modal="true" aria-label="一時停止メニュー"><div className="pause-panel">
+        {isSurvivalBattle
+          ? <div className="stats-strip survival-stats"><span>☠ 撃破 {hud.kills}</span><span>BOSS {survivalHud.bossKills}</span><span className="bay-status">格納庫 {hud.deployQueue}/3</span>{hud.combo > 1 && <span className="combo">×{hud.combo} 連続</span>}<span className="objective">防衛前線を維持</span></div>
+          : <div className="stats-strip"><span>☠ 撃破 {hud.kills}</span><span>▰ スクラップ {hud.scrap}</span><span className="bay-status">格納庫 {hud.deployQueue}/3</span>{hud.combo > 1 && <span className="combo">×{hud.combo} 連続</span>}<span className="objective">目標：{hud.objective}</span></div>}
+        {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
+          <small>BOSS CHECKPOINT // WAVE {survivalHud.lastCompletedWave}</small>
+          <h2>3択強化を選択</h2>
+          <p>{pendingSurvivalCheckpoint || survivalSavePending ? "checkpointを保存しています。保存完了後に選択できます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。"}</p>
+          <div className="survival-upgrade-choices">
+            {survivalHud.pendingUpgradeChoices.map((upgradeId) => {
+              const upgrade = SURVIVAL_UPGRADE_BY_ID[upgradeId];
+              if (!upgrade) return null;
+              const stack = survivalHud.upgradeStacks[upgradeId] ?? 0;
+              return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)}>
+                <small>{upgrade.category.toUpperCase()}</small>
+                <b>{upgrade.displayName}</b>
+                <span>1段階あたり +{Math.round(upgrade.effectPerStack * 100)}%</span>
+                <em>現在 {stack} / 選択後 {stack + 1}</em>
+              </button>;
+            })}
+          </div>
+          {pendingSurvivalCheckpoint && !survivalSavePending && savePersistence === "unavailable" && <div className="survival-save-retry" role="alert">
+            <b>checkpointを保存できませんでした</b><button onClick={retrySurvivalCheckpointSave}>保存を再試行</button>
+          </div>}
+        </section></div>}
+        {paused && started && !end && !survivalUpgradeOpen && !pendingSurvivalSettlement && <div className="pause-screen" role="dialog" aria-modal="true" aria-label="一時停止メニュー"><div className="pause-panel">
           <small>作戦一時停止</small><h2>一時停止</h2>
           <div className="pause-actions">
             <button className="primary" onClick={togglePause}>作戦を再開</button>
-            <button onClick={() => requestPauseAction("restart")}>ステージを最初からやり直す</button>
-            <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>
+            {!isSurvivalBattle && <button onClick={() => requestPauseAction("restart")}>ステージを最初からやり直す</button>}
+            {!isSurvivalBattle && <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>}
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>エリアマップへ撤退</button>
           </div>
           <section className="pause-volume" aria-label="音量設定"><h3>音量設定</h3>
@@ -9198,10 +9855,47 @@ export function AshfallGame() {
             <div><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit)}>テスト音を鳴らす</button></div>
             <p className="audio-troubleshooting">成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。</p>
           </section>
-          <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>
-          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
+          {!isSurvivalBattle && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
+          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>{isSurvivalBattle ? "完了済みwaveの報酬を一括保存してrunを終了します。" : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
         </div></div>}
         </>}
+        {screen === "survival" && <div className="survival-lobby campaign-overlay"><section>
+          <header><div><small>ENDLESS DEFENSE</small><h1>Survival Mode</h1><p>感染防衛前線でCRAWLERを守り、5waveごとのboss checkpointを突破してください。</p></div><button onClick={() => returnToMap()}>エリアマップへ戻る</button></header>
+          <div className="survival-lobby-grid">
+            <article>
+              <small>FORMATION SNAPSHOT</small><h2>出撃部隊</h2>
+              <ul>{formationUnitIds.map((unitId) => {
+                const unit = unitViews.find((candidate) => candidate.id === unitId);
+                return <li key={unitId}><b>{unit?.name ?? unitId}</b><span>Level {Math.max(1, Number(campaignSave.unitRanks[unitId] ?? 0) + 1)}</span></li>;
+              })}</ul>
+              <p>開始時のLevelと装備をsnapshotへ固定し、checkpoint再開時も同じ値を使用します。</p>
+            </article>
+            <article>
+              <small>START WAVE</small><h2>開始wave</h2>
+              <div className="survival-start-waves">{campaignSave.survival.unlockedStartWaves.map((wave) => <button key={wave} className={selectedSurvivalStartWave === wave ? "active" : ""} onClick={() => setSelectedSurvivalStartWave(wave)}>WAVE {wave}</button>)}</div>
+              <p>最高到達wave {campaignSave.survival.highestWave} / 累計run {campaignSave.survival.totalRuns}</p>
+              <button className="survival-start" disabled={formationUnitIds.length === 0 || saveMutationPending} onClick={startNewSurvival}>新しいrunを開始</button>
+            </article>
+            {campaignSave.survival.activeCheckpoint && <article className="survival-resume-card">
+              <small>CHECKPOINT FOUND</small><h2>WAVE {campaignSave.survival.activeCheckpoint.checkpointWave}から再開</h2>
+              <p>保存済みの部隊Level・装備・一時強化・CRAWLER HPを復元します。</p>
+              <button disabled={saveMutationPending} onClick={resumeSurvival}>checkpointから再開</button>
+            </article>}
+          </div>
+        </section></div>}
+        {screen === "survival-result" && survivalResult && <div className="survival-result campaign-overlay"><section>
+          <small>RUN SETTLED // ATOMIC SAVE COMPLETE</small>
+          <h1>{survivalResult.endReason === SURVIVAL_END_REASONS.WITHDRAWAL ? "撤退完了" : survivalResult.endReason === SURVIVAL_END_REASONS.CRAWLER_DESTROYED ? "CRAWLER大破" : "部隊壊滅"}</h1>
+          <div className="survival-result-grid">
+            <article><small>到達</small><b>WAVE {survivalResult.reachedWave}</b>{survivalResult.newHighestWave && <em>NEW RECORD</em>}</article>
+            <article><small>撃破</small><b>{survivalResult.kills}</b><span>BOSS {survivalResult.bossKills}</span></article>
+            <article><small>獲得CAPS</small><b>+{survivalResult.earnedCaps}</b><span>所持 {survivalResult.capsAfter}</span></article>
+          </div>
+          <div className="survival-equipment-result"><h2>装備報酬</h2>{survivalResult.earnedEquipmentGrants.length > 0
+            ? <ul>{survivalResult.earnedEquipmentGrants.map((grant) => <li key={grant.equipmentId}><b>{grant.equipmentId}</b><span>×{grant.quantity}</span></li>)}</ul>
+            : <p>今回の装備報酬はありません。</p>}</div>
+          <div className="survival-result-actions"><button onClick={openSurvival}>次のrunへ</button><button onClick={() => returnToMap()}>エリアマップへ戻る</button></div>
+        </section></div>}
         {qaMode === "barks" ? <BattleBarkAuditScreen /> : qaMode === "sprites" ? <SpriteAuditScreen /> : <CampaignScreens
           screen={screen}
           eventId={eventId}
@@ -9243,6 +9937,7 @@ export function AshfallGame() {
           onSetAutoSkipReadStory={setAutoSkipReadStory}
           onReplayPrologue={replayPrologue}
           onSelectStage={selectStage}
+          onOpenSurvival={openSurvival}
           onOpenPersonnel={openPersonnel}
           onOpenLoadout={openLoadout}
           onReturnToMap={returnToMap}
@@ -9260,6 +9955,9 @@ export function AshfallGame() {
       </section>
       {pendingResultCommit && <div className="result-save-blocker" role="alertdialog" aria-modal="true" aria-label="作戦結果の保存失敗">
         <section><small>SAVE REQUIRED</small><h2>作戦結果を保存できません</h2><p>報酬や加入の二重適用を防ぐため、結果画面へ進まず停止しています。保存を再試行するか、結果を含むバックアップを書き出してください。</p><div><button disabled={resultSaveRetrying} onClick={retryPendingResultSave}>{resultSaveRetrying ? "保存を再試行中" : "保存を再試行"}</button><button disabled={resultSaveRetrying} onClick={exportPendingResultSave}>結果バックアップを書き出す</button></div></section>
+      </div>}
+      {pendingSurvivalSettlement && <div className="result-save-blocker survival-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="Survival結果の保存">
+        <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{survivalSavePending ? "Survival結果を保存しています" : "Survival結果を保存できません"}</h2><p>進行、receipt、CAPS、装備数量、last result、checkpoint削除、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
       </div>}
       {savePersistence === "unavailable" && <div className="save-persistence-warning" role="alert">
         <b>セーブを端末へ保存できません</b>

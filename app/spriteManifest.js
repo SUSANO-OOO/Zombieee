@@ -21,6 +21,37 @@ export const SPRITE_STATES = Object.freeze([
 ]);
 
 export const SPRITE_DIRECTIONS = Object.freeze(["left", "right"]);
+export const COMPACT_BATTLE_SPRITE_SCALE = 1.1;
+
+export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
+  scout: Object.freeze({ w: 58, h: 98 }),
+  ranger: Object.freeze({ w: 58, h: 98 }),
+  brute: Object.freeze({ w: 72, h: 108 }),
+  brawler: Object.freeze({ w: 62, h: 99 }),
+  gunner: Object.freeze({ w: 60, h: 100 }),
+  medic: Object.freeze({ w: 60, h: 100 }),
+  "crazy-king": Object.freeze({ w: 72, h: 104 }),
+  kumaverson: Object.freeze({ w: 64, h: 102 }),
+  babayaga: Object.freeze({ w: 62, h: 103 }),
+  guardian: Object.freeze({ w: 78, h: 108 }),
+  engineer: Object.freeze({ w: 60, h: 100 }),
+  walker: Object.freeze({ w: 58, h: 96 }),
+  runner: Object.freeze({ w: 53, h: 90 }),
+  turned: Object.freeze({ w: 58, h: 96 }),
+  shade: Object.freeze({ w: 64, h: 101 }),
+  spitter: Object.freeze({ w: 62, h: 101 }),
+  crusher: Object.freeze({ w: 80, h: 112 }),
+  abomination: Object.freeze({ w: 101, h: 132 }),
+  takuya: Object.freeze({ w: 94, h: 128 }),
+  grappler: Object.freeze({ w: 78, h: 108 }),
+  ooze: Object.freeze({ w: 70, h: 94 }),
+  sprinter: Object.freeze({ w: 58, h: 96 }),
+  "gate-eater": Object.freeze({ w: 126, h: 142 }),
+});
+
+export function spriteBattleDisplaySizeFor(kind) {
+  return SPRITE_BATTLE_DISPLAY_SIZES[kind] ?? Object.freeze({ w: 58, h: 96 });
+}
 
 const STATE_FRAME_INDEX = Object.freeze({
   idle: 0,
