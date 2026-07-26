@@ -17,6 +17,7 @@ import {
   unitLevelUpgradeQuote,
 } from "./unitProgression.js";
 import {
+  V090_CAPS_MIGRATION_BASE,
   V090_CAPS_MIGRATION_ID,
   capsMigrationNotice,
   reorganizeLegacyCaps,
@@ -1610,9 +1611,9 @@ export function createDefaultCampaignSave() {
     completedStageIds: [],
     bestStarsByStage: {},
     claimedStarRewardsByStage: {},
-    caps: 0,
+    caps: V090_CAPS_MIGRATION_BASE,
     // Deprecated 0.6.x currency field retained as a synchronized read alias.
-    supplies: 0,
+    supplies: V090_CAPS_MIGRATION_BASE,
     equipmentInventory: [],
     unlockedStageIds: [INITIAL_STAGE_ID],
     ownership,
@@ -2072,10 +2073,18 @@ export function migrateCampaignSave(
       capsMigrationNotice(capsMigration),
     ]
     : sourceMigrationNotices;
-  const revision = clampInteger(source.revision, 0, Number.MAX_SAFE_INTEGER, 0);
-  const updatedAt = typeof source.updatedAt === "string" && Number.isFinite(Date.parse(source.updatedAt))
+  const migratesSchema = !Number.isFinite(sourceSchemaVersion)
+    || sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION;
+  const sourceRevision = clampInteger(source.revision, 0, Number.MAX_SAFE_INTEGER, 0);
+  const revision = migratesSchema
+    ? Math.min(Number.MAX_SAFE_INTEGER, sourceRevision + 1)
+    : sourceRevision;
+  const sourceUpdatedAt = typeof source.updatedAt === "string" && Number.isFinite(Date.parse(source.updatedAt))
     ? new Date(source.updatedAt).toISOString()
     : "";
+  const updatedAt = migratesSchema
+    ? new Date((sourceUpdatedAt ? Date.parse(sourceUpdatedAt) : 0) + 1).toISOString()
+    : sourceUpdatedAt;
 
   return {
     schemaVersion: CAMPAIGN_SAVE_SCHEMA_VERSION,

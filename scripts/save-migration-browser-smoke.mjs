@@ -236,8 +236,12 @@ function assertMigratedSave(
     invariant(save.revision > release071Fixture.revision, `${label} did not create a newer revision`);
     invariant(Number.isFinite(Date.parse(save.updatedAt)), `${label} did not create a valid updatedAt`);
   } else {
-    invariant(save.revision === release071Fixture.revision, `${label} revision changed`);
-    invariant(save.updatedAt === release071Fixture.updatedAt, `${label} updatedAt changed`);
+    invariant(save.revision === release071Fixture.revision + 1,
+      `${label} migration revision did not advance exactly once`);
+    invariant(
+      save.updatedAt === new Date(Date.parse(release071Fixture.updatedAt) + 1).toISOString(),
+      `${label} migration updatedAt did not advance deterministically`,
+    );
   }
   invariant(save.campaignStarted === true, `${label} campaignStarted changed`);
   invariant(JSON.stringify(save.completedStageIds) === JSON.stringify(release071Fixture.completedStageIds),

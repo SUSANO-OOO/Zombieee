@@ -38,7 +38,6 @@ import {
   UNIT_LEVEL_MIN,
   UNIT_LEVEL_PUBLIC_CAP,
   applyUnitLevelProgression,
-  applyUnitProgression,
   levelProgressionPowerIndex,
   unitLevelCapForHighestStage,
   unitLevelCost,
@@ -47,6 +46,37 @@ import {
 } from "../app/unitProgression.js";
 
 const unitIds = CAMPAIGN_UNITS.map((unit) => unit.id);
+const V080_ROLE_PROGRESSION = Object.freeze({
+  frontline: { defenseBonus: .03 },
+  heavy: { defenseBonus: .03 },
+  skirmisher: { speedMultiplier: 1.06 },
+  marksman: { damageMultiplier: 1.05 },
+  suppression: { attackEveryMultiplier: .95 },
+  support: { healingMultiplier: 1.06 },
+  engineer: { trapDurationMultiplier: 1.08 },
+});
+
+function v080RankGolden(card, rank) {
+  const role = V080_ROLE_PROGRESSION[card.aiProfile] ?? V080_ROLE_PROGRESSION.frontline;
+  const milestone = rank >= 2;
+  const hpMultiplier = 1 + rank * .03;
+  const damageMultiplier = hpMultiplier * (milestone ? role.damageMultiplier ?? 1 : 1);
+  const speedMultiplier = (1 + rank * .015) * (milestone ? role.speedMultiplier ?? 1 : 1);
+  const attackEveryMultiplier = (1 - rank * .02 - (rank >= 4 ? .04 : 0))
+    * (milestone ? role.attackEveryMultiplier ?? 1 : 1);
+  const defense = rank * .015 + (milestone ? role.defenseBonus ?? 0 : 0);
+  return {
+    hp: Math.round(card.hp * hpMultiplier),
+    damage: Math.round(card.damage * damageMultiplier * 10) / 10,
+    speed: Math.round(card.speed * speedMultiplier * 100) / 100,
+    laneSpeed: Math.round(card.laneSpeed * speedMultiplier * 100) / 100,
+    range: card.range,
+    attackEvery: Math.round(card.attackEvery * attackEveryMultiplier * 1000) / 1000,
+    defense: Math.round(defense * 10000) / 10000,
+    healingMultiplier: milestone ? role.healingMultiplier ?? 1 : 1,
+    trapDurationMultiplier: milestone ? role.trapDurationMultiplier ?? 1 : 1,
+  };
+}
 
 function fullyOwnedSave(extra = {}) {
   return migrateCampaignSave({
@@ -137,7 +167,7 @@ test("schema 9 Rank 0-4 migrates exactly to Level 1-5 and keeps run-start checkp
 test("Level 1-5 preserves every legacy Rank 0-4 combat value", () => {
   for (const card of UNIT_CARDS) {
     for (let rank = 0; rank <= 4; rank += 1) {
-      const legacy = applyUnitProgression(card, rank);
+      const legacy = v080RankGolden(card, rank);
       const leveled = applyUnitLevelProgression(card, rank + 1);
       for (const field of ["hp", "damage", "speed", "laneSpeed", "range", "attackEvery", "defense", "healingMultiplier", "trapDurationMultiplier"]) {
         assert.equal(leveled[field], legacy[field], `${card.kind} Rank ${rank} ${field}`);
@@ -254,6 +284,8 @@ test("caps migration is one-time, receipt-backed, visible, and preserves unrelat
   });
   const expected = reorganizeLegacyCaps(previousCaps);
   const migrated = inspectCampaignSaveCandidate(JSON.stringify(legacy)).save;
+  assert.equal(migrated.revision, legacy.revision + 1);
+  assert.ok(Date.parse(migrated.updatedAt) > Date.parse(legacy.updatedAt || "1970-01-01T00:00:00.000Z"));
   assert.equal(migrated.caps, expected.nextCaps);
   assert.equal(migrated.supplies, expected.nextCaps);
   assert.deepEqual(migrated.processedMigrationIds, [V090_CAPS_MIGRATION_ID]);

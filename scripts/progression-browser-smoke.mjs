@@ -66,17 +66,29 @@ function diagnosticsFor(page) {
   return state;
 }
 
-async function enterBattle(page) {
+async function activate(page, locator, useTouch) {
+  await locator.waitFor({ state: "visible", timeout });
+  if (!useTouch) {
+    await locator.click();
+    return;
+  }
+  await locator.scrollIntoViewIfNeeded();
+  const box = await locator.boundingBox();
+  invariant(box && box.width > 0 && box.height > 0, "touch target has no visible bounds");
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+}
+
+async function enterBattle(page, useTouch) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     const screen = await page.locator(".game-shell").getAttribute("data-screen");
     if (screen === "battle") return;
     if (screen === "loadout") {
       const deploy = page.getByRole("button", { name: /この編成で出撃/u });
-      if (await deploy.count() === 1 && await deploy.isEnabled()) await deploy.click();
+      if (await deploy.count() === 1 && await deploy.isEnabled()) await activate(page, deploy, useTouch);
     } else if (screen === "event") {
       const advance = page.locator('button[aria-label="セリフを送る"]');
-      if (await advance.count() === 1) await advance.click();
+      if (await advance.count() === 1) await activate(page, advance, useTouch);
     }
     await page.waitForTimeout(30);
   }
@@ -94,7 +106,11 @@ for (const engine of engines) {
     try {
       for (const viewport of viewports) {
         const name = `${engine}-${viewport.width}x${viewport.height}`;
-        const context = await browser.newContext({ viewport });
+        const context = await browser.newContext({
+          viewport,
+          hasTouch: viewport.safeArea,
+          isMobile: viewport.safeArea,
+        });
         const page = await context.newPage();
         const diagnostics = diagnosticsFor(page);
         const result = { engine, viewport, status: "failed" };
@@ -142,16 +158,25 @@ for (const engine of engines) {
             element.scrollTop = 0;
           });
 
-          await page.getByRole("button", { name: "Level", exact: true }).click();
+          await activate(page, page.getByRole("button", { name: "Level", exact: true }), viewport.safeArea);
           await page.waitForFunction(() => document.querySelectorAll(".formation-unit-upgrade").length === 11, undefined, { timeout });
           const before = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
           const firstUpgrade = page.locator(".formation-unit-upgrade:not(:disabled)").first();
           const costLabel = await firstUpgrade.locator("b").innerText();
           invariant(costLabel.includes("40キャップ"), `catch-up price missing: ${costLabel}`);
-          await firstUpgrade.evaluate((button) => {
-            button.click();
-            button.click();
-          });
+          if (viewport.safeArea) {
+            const upgradeBounds = await firstUpgrade.boundingBox();
+            invariant(upgradeBounds, "upgrade touch target has no visible bounds");
+            const upgradeX = upgradeBounds.x + upgradeBounds.width / 2;
+            const upgradeY = upgradeBounds.y + upgradeBounds.height / 2;
+            await page.touchscreen.tap(upgradeX, upgradeY);
+            await page.touchscreen.tap(upgradeX, upgradeY);
+          } else {
+            await firstUpgrade.evaluate((button) => {
+              button.click();
+              button.click();
+            });
+          }
           await page.waitForFunction(
             (caps) => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().caps < caps,
             before.caps,
@@ -187,7 +212,7 @@ for (const engine of engines) {
                 { unitId: upgradedUnitId, level: expectedLevel },
                 { timeout },
               );
-              await button.click();
+              await activate(page, button, viewport.safeArea);
               await page.waitForFunction(
                 ({ unitId, level }) => window.__ASHFALL_BATTLE_QA__.getSnapshot().unitLevels[unitId] === level,
                 { unitId: upgradedUnitId, level: expectedLevel },
@@ -220,12 +245,12 @@ for (const engine of engines) {
           );
           await page.screenshot({ path: path.join(evidenceDir, `${name}-upgrade.png`) });
 
-          await page.getByRole("button", { name: "← 地図へ", exact: true }).click();
-          await page.getByRole("button", { name: "編成へ進む", exact: true }).click();
-          await enterBattle(page);
+          await activate(page, page.getByRole("button", { name: "← 地図へ", exact: true }), viewport.safeArea);
+          await activate(page, page.getByRole("button", { name: "編成へ進む", exact: true }), viewport.safeArea);
+          await enterBattle(page, viewport.safeArea);
           const brawlerButton = page.locator('button.unit-card[data-kind="brawler"]');
           await brawlerButton.waitFor({ state: "visible", timeout });
-          await brawlerButton.click();
+          await activate(page, brawlerButton, viewport.safeArea);
           await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().fighters
             .some((fighter) => fighter.side === "human" && fighter.kind === "brawler"), undefined, { timeout });
           const battle = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
@@ -260,7 +285,7 @@ for (const engine of engines) {
               && damageProof.baseline.targetDamage === 50,
             `live damage values mismatch: ${JSON.stringify(damageProof)}`);
 
-          await page.getByRole("button", { name: "一時停止", exact: true }).click();
+          await activate(page, page.getByRole("button", { name: "一時停止", exact: true }), viewport.safeArea);
           const pauseMenu = page.getByRole("dialog", { name: "一時停止メニュー" });
           await pauseMenu.waitFor({ state: "visible", timeout });
           const bgmSlider = page.locator('input[data-volume-kind="bgm"]');
@@ -333,7 +358,7 @@ for (const engine of engines) {
               && snapshot.settings.sfxVolume === .65;
           }, undefined, { timeout });
           const audioSettings = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().settings);
-          await page.getByRole("button", { name: "作戦を再開", exact: true }).click();
+          await activate(page, page.getByRole("button", { name: "作戦を再開", exact: true }), viewport.safeArea);
 
           for (const [kind, entries] of Object.entries(diagnostics)) {
             invariant(entries.length === 0, `${kind}: ${JSON.stringify(entries)}`);
@@ -355,6 +380,7 @@ for (const engine of engines) {
             damageProof,
             audioSettings,
             bgmPreview,
+            inputMode: viewport.safeArea ? "touch" : "mouse",
             visualCards,
             dimensions,
             diagnostics,

@@ -55,7 +55,11 @@ import {
   verifyCampaignSaveIntegrity,
   withCampaignSaveIntegrity,
 } from "../app/campaign.js";
-import { V090_CAPS_MIGRATION_ID, reorganizeLegacyCaps } from "../app/campaignEconomy.js";
+import {
+  V090_CAPS_MIGRATION_BASE,
+  V090_CAPS_MIGRATION_ID,
+  reorganizeLegacyCaps,
+} from "../app/campaignEconomy.js";
 
 const STAGE_1 = CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET;
 const STAGE_2 = CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE;
@@ -672,7 +676,7 @@ test("default save is versioned and contains initial progression, selection, and
   assert.deepEqual(save.completedStageIds, []);
   assert.deepEqual(save.bestStarsByStage, {});
   assert.deepEqual(save.claimedStarRewardsByStage, {});
-  assert.equal(save.caps, 0);
+  assert.equal(save.caps, V090_CAPS_MIGRATION_BASE);
   assert.equal(save.supplies, save.caps);
   assert.deepEqual(save.unlockedStageIds, [INITIAL_STAGE_ID]);
   assert.deepEqual(save.ownership, INITIAL_UNIT_IDS);
@@ -1148,12 +1152,15 @@ test("caps recruitment and story joins are receipt-backed, free/paid as specifie
     baseHp: 1,
     baseMaxHp: 100,
   });
-  assert.equal(afterStage1.caps, CAMPAIGN_RECRUITMENT_COSTS[CAMPAIGN_UNIT_IDS.TATARA]);
+  assert.equal(
+    afterStage1.caps,
+    V090_CAPS_MIGRATION_BASE + CAMPAIGN_RECRUITMENT_COSTS[CAMPAIGN_UNIT_IDS.TATARA],
+  );
   const recruited = recruitCampaignUnit(afterStage1, "brute", { acquisitionId: "recruit-tatara-once" });
   assert.equal(recruited.result.applied, true);
   assert.equal(recruited.result.spentCaps, 150);
-  assert.equal(recruited.save.caps, 0);
-  assert.equal(recruited.save.supplies, 0);
+  assert.equal(recruited.save.caps, V090_CAPS_MIGRATION_BASE);
+  assert.equal(recruited.save.supplies, V090_CAPS_MIGRATION_BASE);
   assert.equal(isUnitOwned(recruited.save, CAMPAIGN_UNIT_IDS.TATARA), true);
   assert.equal(isUnitRecruitable(recruited.save, CAMPAIGN_UNIT_IDS.TATARA), false);
   assert.deepEqual(recruited.save.processedAcquisitionIds, ["recruit-tatara-once"]);
