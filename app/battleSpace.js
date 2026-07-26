@@ -286,34 +286,103 @@ function spawnClassGeometry(kind) {
   const enemy = enemyContentFor(kind);
   const spawnClass = enemy?.spawnClass ?? "normal";
   const clearance = spawnClass === "boss" ? 49 : spawnClass === "heavy" ? 43 : 31;
+  const visualHalfWidth = spawnClass === "boss"
+    ? Math.max(58, nonNegative(enemy?.bodyRadius, 20) * 2.45)
+    : spawnClass === "heavy"
+      ? Math.max(36, nonNegative(enemy?.bodyRadius, 16) * 1.9)
+      : Math.max(26, nonNegative(enemy?.bodyRadius, 11) * 1.75);
   const entrySpeed = spawnClass === "boss" ? 29
     : spawnClass === "heavy" ? 38
       : ["runner", "sprinter"].includes(kind) ? 62
         : 52;
-  return { clearance, entrySpeed };
+  return { clearance, entrySpeed, visualHalfWidth, spawnClass };
+}
+
+export const MISSION_SPAWN_PROFILES = deepFreeze({
+  assault: {
+    id: "infected-base-gate",
+    entryMode: "base-interior",
+    outsideMargin: 0,
+    readyPadding: 0,
+  },
+  "boss-assault": {
+    id: "boss-right-edge",
+    entryMode: "right-edge-outside",
+    outsideMargin: 18,
+    readyPadding: 10,
+  },
+  "timed-defense": {
+    id: "defense-right-edge",
+    entryMode: "right-edge-outside",
+    outsideMargin: 14,
+    readyPadding: 8,
+  },
+  escort: {
+    id: "escort-right-edge",
+    entryMode: "right-edge",
+    outsideMargin: 4,
+    readyPadding: 6,
+  },
+  "sequential-seal": {
+    id: "containment-right-edge",
+    entryMode: "right-edge",
+    outsideMargin: 6,
+    readyPadding: 8,
+  },
+  survival: {
+    id: "survival-infection-breach",
+    entryMode: "right-edge-outside",
+    outsideMargin: 32,
+    readyPadding: 14,
+  },
+});
+
+export function enemySpawnProfileFor(missionType) {
+  return MISSION_SPAWN_PROFILES[missionType] ?? MISSION_SPAWN_PROFILES.assault;
 }
 
 export function enemySpawnPortalPoint({
   stageId,
   entryId = 1,
   kind = "walker",
+  missionType = "assault",
   viewport = STAGE_VIEWPORT_IDS.STANDARD,
 } = {}) {
   const space = battleSpaceFor(stageId, viewport);
   const portals = space.spawnPortals.enemy;
   const slot = Math.abs(Math.trunc(finite(entryId, 1)) * 7 + kind.length * 3) % portals.length;
   const portal = portals[slot];
-  const { clearance, entrySpeed } = spawnClassGeometry(kind);
+  const {
+    clearance,
+    entrySpeed,
+    visualHalfWidth,
+    spawnClass,
+  } = spawnClassGeometry(kind);
+  const profile = enemySpawnProfileFor(missionType);
   const internalRoute = nearestLogicalLane(stageId, portal.entry.y, space.viewportId);
+  const usesRightEdge = profile.entryMode !== "base-interior";
+  const x = usesRightEdge
+    ? space.world.width + visualHalfWidth + profile.outsideMargin
+    : portal.hidden.x;
+  const combatReadyX = usesRightEdge
+    ? space.world.width - visualHalfWidth - profile.readyPadding
+    : portal.entry.x - clearance;
   return deepFreeze({
     portalId: portal.id,
+    spawnProfileId: profile.id,
+    entryMode: profile.entryMode,
     routeId: `internal-route-${internalRoute.index + 1}`,
     legacyLane: internalRoute.index,
-    x: portal.hidden.x,
+    x,
     y: portal.hidden.y,
-    combatReadyX: portal.entry.x - clearance,
+    combatReadyX,
     combatReadyY: portal.entry.y,
     entrySpeed,
+    visualHalfWidth,
+    spawnClass,
+    targetableDuringEntry: false,
+    canAttackDuringEntry: false,
+    collisionDuringEntry: false,
   });
 }
 
