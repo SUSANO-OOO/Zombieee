@@ -36,6 +36,9 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   guardian: Object.freeze({ w: 78, h: 108 }),
   engineer: Object.freeze({ w: 60, h: 100 }),
   zakimiya: Object.freeze({ w: 62, h: 102 }),
+  tky: Object.freeze({ w: 61, h: 102 }),
+  "mrs-chiha": Object.freeze({ w: 63, h: 103 }),
+  "miyamoto-musashi": Object.freeze({ w: 67, h: 106 }),
   walker: Object.freeze({ w: 58, h: 96 }),
   runner: Object.freeze({ w: 53, h: 90 }),
   turned: Object.freeze({ w: 58, h: 96 }),
@@ -139,6 +142,18 @@ const NEWCOMER_VISIBLE = Object.freeze({
   zakimiya: {
     right: [[160, 16, 321, 432], [142, 16, 329, 432], [136, 16, 354, 432], [119, 16, 311, 421], [160, 16, 397, 426], [140, 16, 329, 432], [220, 327, 426, 432]],
     left: [[160, 16, 321, 432], [142, 16, 329, 432], [136, 16, 354, 432], [169, 16, 368, 421], [100, 16, 329, 426], [140, 16, 329, 432], [55, 327, 260, 432]],
+  },
+  tky: {
+    right: [[157, 16, 323, 432], [120, 16, 360, 432], [117, 16, 364, 432], [110, 40, 401, 432], [159, 16, 362, 432], [108, 16, 373, 432], [16, 244, 464, 432]],
+    left: [[157, 16, 323, 432], [120, 16, 360, 432], [117, 16, 364, 432], [79, 40, 370, 432], [118, 16, 321, 432], [108, 16, 373, 432], [16, 244, 464, 432]],
+  },
+  "mrs-chiha": {
+    right: [[171, 16, 309, 432], [132, 16, 349, 432], [126, 16, 355, 432], [135, 16, 345, 432], [42, 16, 439, 432], [67, 16, 414, 432], [70, 176, 410, 432]],
+    left: [[171, 16, 309, 432], [132, 16, 349, 432], [126, 16, 355, 432], [135, 16, 345, 432], [42, 16, 439, 432], [67, 16, 414, 432], [70, 176, 410, 432]],
+  },
+  "miyamoto-musashi": {
+    right: [[78, 16, 402, 432], [114, 16, 366, 432], [133, 16, 348, 432], [90, 16, 390, 432], [106, 16, 374, 432], [89, 16, 392, 432], [120, 300, 455, 432]],
+    left: [[78, 16, 402, 432], [114, 16, 366, 432], [133, 16, 348, 432], [90, 16, 390, 432], [106, 16, 374, 432], [89, 16, 392, 432], [26, 300, 360, 432]],
   },
   scout: {
     right: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
@@ -348,6 +363,9 @@ export const SPRITE_MANIFEST = Object.freeze({
   guardian: explicitAtlasManifestEntry("guardian", "/art/v070/characters/guardian-battle-v1.png"),
   engineer: explicitAtlasManifestEntry("engineer", "/art/v080/characters/monkey-battle-r2.png"),
   zakimiya: explicitAtlasManifestEntry("zakimiya", "/art/v090/characters/zakimiya-battle-r1.png"),
+  tky: explicitAtlasManifestEntry("tky", "/art/v090/characters/tky-battle-r1.png"),
+  "mrs-chiha": explicitAtlasManifestEntry("mrs-chiha", "/art/v090/characters/mrs-chiha-battle-r1.png"),
+  "miyamoto-musashi": explicitAtlasManifestEntry("miyamoto-musashi", "/art/v090/characters/miyamoto-musashi-battle-r1.png"),
   walker: legacyManifestEntry("infected", "left"),
   runner: legacyManifestEntry("infected", "left"),
   turned: legacyManifestEntry("infected", "left"),

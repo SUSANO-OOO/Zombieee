@@ -23,13 +23,19 @@ import {
   structureDamageMultiplier,
 } from "../app/gameRules.js";
 
-test("the twelve-card roster preserves existing keys and adds a stable Zakimiya keyboard key", () => {
-  assert.equal(UNIT_CARDS.length, 12);
-  assert.deepEqual(UNIT_CARDS.map(({ key }) => key), ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "^"]);
-  assert.deepEqual(UNIT_CARDS.slice(6).map(({ kind }) => kind), ["crazy-king", "kumaverson", "babayaga", "guardian", "engineer", "zakimiya"]);
-  assert.equal(Object.keys(UNIT_BY_ID).length, 12);
+test("the fifteen-card roster preserves existing keys and assigns stable keys to the new human units", () => {
+  assert.equal(UNIT_CARDS.length, 15);
+  assert.deepEqual(UNIT_CARDS.map(({ key }) => key), ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "^", "Q", "W", "E"]);
+  assert.deepEqual(UNIT_CARDS.slice(6).map(({ kind }) => kind), [
+    "crazy-king", "kumaverson", "babayaga", "guardian", "engineer", "zakimiya",
+    "tky", "mrs-chiha", "miyamoto-musashi",
+  ]);
+  assert.equal(Object.keys(UNIT_BY_ID).length, 15);
   assert.equal(UNIT_BY_ID.medic.cost, 35);
   assert.equal(UNIT_BY_ID.guardian.cost, 48);
+  assert.equal(UNIT_BY_ID.tky.name, "TKY");
+  assert.equal(UNIT_BY_ID["mrs-chiha"].name, "Mrs.チハ");
+  assert.equal(UNIT_BY_ID["miyamoto-musashi"].name, "宮本武蔵");
 });
 
 test("roster balance is data-driven and no card is a clone", () => {

@@ -33,10 +33,14 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
   assert.equal(ledger.rightsProvenance.thirdPartyDownloadedVisuals, false);
   assert.match(ledger.rightsProvenance.publicRedistribution, /producer directly authorized/i);
   assert.match(ledger.rightsProvenance.identityIsolation, /no other character/i);
-  assert.equal(ledger.rightsProvenance.producerProvidedInputs.length, 1);
-  assert.equal(
-    ledger.rightsProvenance.producerProvidedInputs[0].messageReference,
-    "producer-message-2026-07-26-image-1",
+  assert.deepEqual(
+    ledger.rightsProvenance.producerProvidedInputs.map(({ messageReference }) => messageReference),
+    [
+      "producer-message-2026-07-26-image-1",
+      "producer-message-2026-07-26-image-2",
+      "producer-message-2026-07-26-image-3",
+      "producer-message-2026-07-26-image-4",
+    ],
   );
 
   const activeFiles = [
@@ -44,7 +48,7 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
     ...await filesBelow(path.join(ROOT, "public", "art", "v090")),
   ].map(repositoryPath).sort();
   const records = ledger.assets;
-  assert.equal(records.length, 8);
+  assert.equal(records.length, 29);
   assert.equal(new Set(records.map(({ assetId }) => assetId)).size, records.length);
   assert.equal(new Set(records.map(({ path: assetPath }) => assetPath)).size, records.length);
   assert.deepEqual(records.map(({ path: assetPath }) => assetPath).sort(), activeFiles);
@@ -52,50 +56,65 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
   for (const record of records) {
     assert.equal(record.status, "approved");
     const data = await readFile(path.join(ROOT, record.path));
-    assert.equal(createHash("sha256").update(data).digest("hex"), record.sha256, record.path);
-    assert.equal(data.length, record.bytes, record.path);
+    const canonicalData = record.path.endsWith(".svg")
+      ? Buffer.from(data.toString("utf8").replaceAll("\r\n", "\n"), "utf8")
+      : data;
+    assert.equal(createHash("sha256").update(canonicalData).digest("hex"), record.sha256, record.path);
+    assert.equal(canonicalData.length, record.bytes, record.path);
     const metadata = await sharp(data).metadata();
     assert.equal(metadata.width, record.width, record.path);
     assert.equal(metadata.height, record.height, record.path);
   }
 });
 
-test("Zakimiya derivatives resolve only to the producer master and the build fails closed on source revision", async () => {
+test("each active character resolves only to its producer master and both builds fail closed on source revision", async () => {
   const ledger = JSON.parse(await readFile(LEDGER_PATH, "utf8"));
   const records = new Map(ledger.assets.map((record) => [record.assetId, record]));
-  const masterId = "V090-ZAKIMIYA-IDENTITY@r1";
-  const reachesMaster = (assetId, visited = new Set()) => {
+  const unitContracts = [
+    ["zakimiya", "V090-ZAKIMIYA"],
+    ["tky", "V090-TKY"],
+    ["mrs-chiha", "V090-MRS-CHIHA"],
+    ["miyamoto-musashi", "V090-MIYAMOTO-MUSASHI"],
+  ];
+  const reachesMaster = (assetId, masterId, visited = new Set()) => {
     if (assetId === masterId) return true;
     if (visited.has(assetId)) return false;
     visited.add(assetId);
     const record = records.get(assetId);
     return Boolean(record?.sourceAssetIds?.length)
       && record.sourceAssetIds.every((sourceId) => records.has(sourceId))
-      && record.sourceAssetIds.some((sourceId) => reachesMaster(sourceId, visited));
+      && record.sourceAssetIds.some((sourceId) => reachesMaster(sourceId, masterId, visited));
   };
-  for (const record of ledger.assets) {
-    assert.equal(record.assetId === masterId || reachesMaster(record.assetId), true, record.assetId);
+  const registeredPaths = new Set(ledger.assets.map(({ path: assetPath }) => assetPath));
+  for (const [kind, prefix] of unitContracts) {
+    const masterId = `${prefix}-IDENTITY@r1`;
+    const unitRecords = ledger.assets.filter(({ assetId }) => assetId.startsWith(`${prefix}-`));
+    for (const record of unitRecords) {
+      assert.equal(record.assetId === masterId || reachesMaster(record.assetId, masterId), true, record.assetId);
+    }
+
+    const master = await readFile(path.join(ROOT, records.get(masterId).path));
+    const reference = await readFile(path.join(ROOT, records.get(`${prefix}-REFERENCE@r1`).path));
+    assert.deepEqual(reference, master);
+
+    const profile = V090_UNIT_VISUAL_PROFILES[kind];
+    const runtimePaths = [
+      profile.identityMaster.path,
+      profile.eventPortrait.path,
+      profile.formationCard.path,
+      profile.personnelCard.path,
+      profile.battleSprite.path,
+    ].map((assetPath) => `public${assetPath}`);
+    for (const runtimePath of runtimePaths) assert.equal(registeredPaths.has(runtimePath), true, runtimePath);
   }
 
-  const master = await readFile(path.join(ROOT, records.get(masterId).path));
-  const reference = await readFile(path.join(ROOT, records.get("V090-ZAKIMIYA-REFERENCE@r1").path));
-  assert.deepEqual(reference, master);
-
-  const profile = V090_UNIT_VISUAL_PROFILES.zakimiya;
-  const runtimePaths = [
-    profile.identityMaster.path,
-    profile.eventPortrait.path,
-    profile.formationCard.path,
-    profile.personnelCard.path,
-    profile.battleSprite.path,
-  ].map((assetPath) => `public${assetPath}`);
-  const registeredPaths = new Set(ledger.assets.map(({ path: assetPath }) => assetPath));
-  for (const runtimePath of runtimePaths) assert.equal(registeredPaths.has(runtimePath), true, runtimePath);
-
-  const buildScript = await readFile(path.join(ROOT, "scripts", "build-v090-zakimiya-assets.mjs"), "utf8");
+  const buildScripts = [
+    await readFile(path.join(ROOT, "scripts", "build-v090-zakimiya-assets.mjs"), "utf8"),
+    await readFile(path.join(ROOT, "scripts", "build-v090-new-playable-human-assets.mjs"), "utf8"),
+  ].join("\n");
   for (const record of ledger.assets.filter(({ kind }) => (
     kind === "producer-identity-master" || kind === "openai-generated-identity-derivative"
   ))) {
-    assert.match(buildScript, new RegExp(record.sha256));
+    assert.match(buildScripts, new RegExp(record.sha256));
   }
 });

@@ -66,6 +66,9 @@ export const COMBAT_ROLE_RULES = freeze({
   guardian: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   engineer: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
   zakimiya: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  tky: freeze({ attackType: "melee", allowAdjacentLaneTargets: true }),
+  "mrs-chiha": freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
+  "miyamoto-musashi": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
 });
 
 const NON_TARGETABLE_STATES = new Set([
