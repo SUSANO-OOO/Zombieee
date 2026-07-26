@@ -489,6 +489,10 @@ Monkeyの`weapon-suppressed-carbine`は`build-v080-audio.py`が数学波形とse
 
 台帳のrepository収録・ゲーム利用根拠は、プロデューサーによる原本と派生利用の明示承認、および適用されるOpenAI Content termsである。これはCC0への変更や第三者への独立した再利用license付与を意味しない。マヨちゃんは通常時と凶暴時のidentity chainを同じfail-closed契約へ追加するまでactive assetとして扱わない。
 
+### Version 0.9.0 project-original audio
+
+TKY、Mrs.チハ、宮本武蔵の武器とmanual ability用14 cueは、`scripts/build-v090-playable-audio.py`が数学波形とseed固定noiseだけから合成する専用SEである。録音素材、sample library、生成音声、人間音声、外部serviceは使用しない。WAV masterとMP3／OGG finalのhash、source chainは`reference/audio/v090-generated/provenance.json`へ固定した。既存の出撃・攻撃・被弾・戦闘不能の人間キャラクターボイスは変更・削除していない。
+
 ## 任意クレジット（表示用）
 
 Audio: SRG774, nene, Emma_MA, Kenney, artisticdude, rubberduck, Tabasco, HaelDB, cicifyre, Galacti-Chron / Sky Rae, Ogrebane, xhunterko, AntumDeluge, Delta12 Studio. All external audio used under CC0 1.0; attribution is not required but is gratefully retained.

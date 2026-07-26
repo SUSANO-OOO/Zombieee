@@ -27,6 +27,9 @@ export const WEAPON_PROFILE_IDS = Object.freeze([
   "suppressed-carbine",
   "deployable",
   "heal-support",
+  "plasma-blade",
+  "grenade",
+  "dual-katana",
 ]);
 
 const frame = (spriteState, durationSeconds, events = []) => ({
@@ -113,6 +116,45 @@ const MACHINE_GUN_RECOVERY = clip([
   frame("idle", .065),
 ], { recovery: true });
 
+const MRS_CHIHA_ATTACK_ACTIVE = clip([
+  frame("attack-a", .12, [{ type: "launcher-retrieve", at: .02 }]),
+  frame("attack-b", .18, [{ type: "launcher-aim", at: .04 }]),
+  frame("attack-b", .08, [{ type: "muzzle", at: .02, shotIndex: 0 }, { type: "grenade-launch", at: .02 }]),
+]);
+
+const MRS_CHIHA_ATTACK_RECOVERY = clip([
+  frame("attack-a", .14, [{ type: "launcher-stow", at: .02 }]),
+  frame("idle", .08),
+], { recovery: true });
+
+const MRS_CHIHA_LAUNCHER_BASH = clip([
+  frame("attack-b", .1, [{ type: "launcher-bash-windup", at: .01 }]),
+  frame("attack-a", .08, [{ type: "launcher-bash-contact", at: .03 }]),
+  frame("idle", .09, [{ type: "launcher-bash-recover", at: .01 }]),
+]);
+
+const MANUAL_ABILITY_SPECIAL_CLIPS = {
+  tky: clip([
+    frame("attack-a", .2, [{ type: "light-blade-charge", at: 0 }]),
+    frame("attack-b", .28, [{ type: "light-blade-extend", at: 0 }]),
+    frame("attack-b", .14, [{ type: "light-blade-release", at: .14 }]),
+  ]),
+  "mrs-chiha": clip([
+    frame("attack-a", .28, [{ type: "launcher-retrieve", at: .02 }]),
+    frame("attack-b", .55, [{ type: "launcher-aim", at: .04 }]),
+    frame("attack-a", .22, [{ type: "salvo-rotate", at: 0 }, { type: "salvo-shot", at: .22, shotIndex: 0 }]),
+    frame("attack-b", .22, [{ type: "salvo-shot", at: .22, shotIndex: 1 }]),
+    frame("attack-a", .22, [{ type: "salvo-shot", at: .22, shotIndex: 2 }]),
+    frame("attack-b", .22, [{ type: "salvo-shot", at: .22, shotIndex: 3 }]),
+    frame("attack-a", .18, [{ type: "launcher-stow", at: .02 }]),
+    frame("idle", .12),
+  ]),
+  "miyamoto-musashi": clip([
+    frame("attack-a", .22, [{ type: "cross-guard-ready", at: .02 }]),
+    frame("attack-b", .36, [{ type: "cross-guard-hold", at: 0 }]),
+  ]),
+};
+
 const PRESENTATION_KINDS = Object.freeze([
   "brawler",
   "scout",
@@ -123,6 +165,9 @@ const PRESENTATION_KINDS = Object.freeze([
   "guardian",
   "engineer",
   "zakimiya",
+  "tky",
+  "mrs-chiha",
+  "miyamoto-musashi",
   "walker",
   "runner",
   "turned",
@@ -160,6 +205,12 @@ function clipsForKind(kind) {
       ? MACHINE_GUN_ACTIVE
       : kind === "gunner" && state === "recovery"
         ? MACHINE_GUN_RECOVERY
+        : kind === "mrs-chiha" && state === "active"
+          ? MRS_CHIHA_ATTACK_ACTIVE
+          : kind === "mrs-chiha" && state === "recovery"
+            ? MRS_CHIHA_ATTACK_RECOVERY
+            : state === "special" && MANUAL_ABILITY_SPECIAL_CLIPS[kind]
+              ? MANUAL_ABILITY_SPECIAL_CLIPS[kind]
         : STANDARD_CLIPS[state];
     return [state, {
       ...source,
@@ -305,6 +356,43 @@ export const WEAPON_PROFILES = deepFreeze({
     damageWeights: [1],
     shotOffsetsSeconds: [0],
   },
+  "plasma-blade": {
+    id: "plasma-blade",
+    trail: "energy-arc",
+    trailColor: "#ff4dca",
+    impact: "energy-burst",
+    impactRadius: 13,
+    hitStopSeconds: .03,
+    recoil: 0,
+    casing: false,
+    damageWeights: [.56, .44],
+    shotOffsetsSeconds: [0, .08],
+  },
+  grenade: {
+    id: "grenade",
+    trail: "ballistic-arc",
+    trailColor: "#d4a85b",
+    impact: "explosive-burst",
+    impactRadius: 20,
+    hitStopSeconds: .038,
+    recoil: .48,
+    casing: false,
+    damageWeights: [1],
+    shotOffsetsSeconds: [0],
+    projectileTravelSeconds: .28,
+  },
+  "dual-katana": {
+    id: "dual-katana",
+    trail: "cross-cut",
+    trailColor: "#d9e4ed",
+    impact: "precision-burst",
+    impactRadius: 12,
+    hitStopSeconds: .04,
+    recoil: 0,
+    casing: false,
+    damageWeights: [.52, .48],
+    shotOffsetsSeconds: [0, .07],
+  },
 });
 
 export const UNIT_WEAPON_PROFILE = deepFreeze({
@@ -320,6 +408,9 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   guardian: "blunt",
   engineer: "suppressed-carbine",
   zakimiya: "blunt",
+  tky: "plasma-blade",
+  "mrs-chiha": "grenade",
+  "miyamoto-musashi": "dual-katana",
 });
 
 export function combatPresentationFor(kind) {
@@ -418,7 +509,7 @@ export function weaponDamageEventsFor(kind, damage = 0) {
       ?? profile.shotOffsetsSeconds[index]
       ?? 0;
     const hitOffsetSeconds = hitEvents.find((event) => event.shotIndex === index)?.at
-      ?? offsetSeconds;
+      ?? offsetSeconds + Math.max(0, Number(profile.projectileTravelSeconds) || 0);
     return Object.freeze({
       shotIndex: index,
       offsetSeconds,
@@ -434,6 +525,38 @@ export function weaponDamageEventsFor(kind, damage = 0) {
       recoil: profile.recoil,
     });
   }));
+}
+
+export function sampleMrsChihaLauncherBash(elapsedSeconds = 0) {
+  const elapsed = Math.max(0, Number(elapsedSeconds) || 0);
+  const local = Math.min(elapsed, Math.max(0, MRS_CHIHA_LAUNCHER_BASH.durationSeconds - Number.EPSILON));
+  let cursor = 0;
+  for (let index = 0; index < MRS_CHIHA_LAUNCHER_BASH.frames.length; index += 1) {
+    const currentFrame = MRS_CHIHA_LAUNCHER_BASH.frames[index];
+    const end = cursor + currentFrame.durationSeconds;
+    if (local < end || index === MRS_CHIHA_LAUNCHER_BASH.frames.length - 1) {
+      return Object.freeze({
+        state: "launcher-bash",
+        frameIndex: index,
+        spriteState: currentFrame.spriteState,
+        frameElapsedSeconds: local - cursor,
+        frameDurationSeconds: currentFrame.durationSeconds,
+        clipDurationSeconds: MRS_CHIHA_LAUNCHER_BASH.durationSeconds,
+        events: currentFrame.events,
+        movement: false,
+        recovery: index === MRS_CHIHA_LAUNCHER_BASH.frames.length - 1,
+        directional: true,
+        groundAnchor: 1,
+        bodyScale: BODY_SCALE_BY_KIND["mrs-chiha"] ?? 1,
+      });
+    }
+    cursor = end;
+  }
+  throw new RangeError("Mrs. Chiha launcher bash clip has no frames");
+}
+
+export function mrsChihaLauncherBashDuration() {
+  return MRS_CHIHA_LAUNCHER_BASH.durationSeconds;
 }
 
 export function advancePendingWeaponHits(events = [], elapsedSeconds = 0) {

@@ -46,6 +46,7 @@ process.env.EQUIPMENT_RUNTIME_QA_BASE_URL = origin;
 process.env.BOSS_QA_BASE_URL = origin;
 process.env.ASSET_DECODE_QA_BASE_URL = origin;
 process.env.ZAKIMIYA_QA_BASE_URL = origin;
+process.env.NEW_PLAYABLE_HUMANS_QA_BASE_URL = origin;
 const server = spawn(process.execPath, [
   "scripts/run-vinext.mjs",
   "start",

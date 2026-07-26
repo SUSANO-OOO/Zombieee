@@ -756,6 +756,9 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
     ["guardian", "重装盾・被害肩代わり"],
     ["engineer", "工兵・自動足止め"],
     ["zakimiya", "火酒使い・密集焼却"],
+    ["tky", "光刃剣士・前方群体処理"],
+    ["mrs-chiha", "擲弾手・多地点制圧"],
+    ["miyamoto-musashi", "二刀剣豪・対強敵受け流し"],
   ]);
 });
 
@@ -1332,7 +1335,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /roleEffectForAction\(\{[\s\S]*targetAlreadyMarked: target\.marked > 0[\s\S]*holdingFrontline: f\.kind === "brute" && target\.targetId === f\.id/);
   assert.match(game, /effect: roleEffect \?\? undefined, emphasized, style: ranged \? "projectile" : "melee", weapon: f\.kind/);
   assert.match(game, /roleEffect === "brawler" \? "フィニッシュ"/);
-  assert.match(game, /action: "structure"[\s\S]*if \(roleEffect && f\.kind !== "gunner"\)[\s\S]*playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
+  assert.match(game, /action: "structure"[\s\S]*if \(roleEffect && !deferredStructureImpact\)[\s\S]*playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
   assert.match(game, /roleEffect === "gunner"[\s\S]*playCue\("role-gunner"\)/);
   assert.match(game, /action: "heal"[\s\S]*playCue\("role-medic"\)/);
   assert.doesNotMatch(game, /g\.areaEffects = capRenderArray/);
@@ -1441,7 +1444,7 @@ test("models state-linked production radio with rotating variants, QA isolation,
 });
 
 test("exposes localhost-only QA routes and wires deterministic battle and lifecycle scenarios", async () => {
-  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "takuya-entrance", "ai-reacquire", "roles", "zakimiya", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
+  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "takuya-entrance", "ai-reacquire", "roles", "zakimiya", "new-playables", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
   for (const mode of LOCAL_QA_MODES) {
     assert.equal(resolveLocalQaMode("localhost", `?qa=${mode}`), mode);
     assert.equal(resolveLocalQaMode("127.0.0.1", `?qa=${mode}`), mode);
@@ -1456,6 +1459,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(game, /qaMode === "takuya-entrance"\) prepareTakuyaEntranceQa\(g\)/);
   assert.match(game, /qaMode === "ai-reacquire"\) prepareAiReacquireQa\(g\)/);
   assert.match(game, /qaMode === "zakimiya"\) prepareZakimiyaQa\(g\)/);
+  assert.match(game, /qaMode === "new-playables"\) prepareNewPlayablesQa\(g\)/);
   assert.match(game, /prepareAiReacquireQa[\s\S]*takuya\.hp = 18[\s\S]*combatReady = false[\s\S]*gateEntering = true/);
   assert.match(game, /qaMode === "supplies"\) prepareSuppliesQa\(g\)/);
   assert.match(game, /qaMode === "airstrike"\) prepareAirstrikeQa\(g\)/);

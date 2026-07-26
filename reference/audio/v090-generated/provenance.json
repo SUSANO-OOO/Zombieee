@@ -1,0 +1,288 @@
+{
+  "version": 1,
+  "generator": "scripts/build-v090-playable-audio.py",
+  "sampleRate": 44100,
+  "policy": "Dedicated non-voice weapon and manual ability cues synthesized in-repository.",
+  "cues": [
+    {
+      "id": "weapon-tky-plasma-blade",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-tky-plasma-blade.wav",
+        "sha256": "85ba934043d49238961069b9f29b91607a0e0b3dfadab565104e391ee281fba0"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-tky-plasma-blade.mp3",
+          "sha256": "6638a5ea6d1b055426470848c9fe8a6c261bc88ec8b16d173d5eaf441202bfc0",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/weapon-tky-plasma-blade.ogg",
+          "sha256": "d0ccafcfd5b755897a188db543e41950e1f8b987d2d12119d74865bd5c0fb77e",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-tky-light-blade-charge",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-tky-light-blade-charge.wav",
+        "sha256": "aef25cb498cebdaf1d2bff7cb2ba00fb98b4b2700b95676812651a1bd994d4b1"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-charge.mp3",
+          "sha256": "354388f06b4676aec33966ec757e9def78c8c0838abd040995d976fff2978bc2",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-charge.ogg",
+          "sha256": "2308e6c7da021564d7d26d48f8afe7d8a98567a550f01fe537b01b77a43ac71b",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-tky-light-blade-release",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-tky-light-blade-release.wav",
+        "sha256": "9dff84140bb14649a54e203042ebd128d23647cafb45f752829647d984705f84"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-release.mp3",
+          "sha256": "ef800ad1516eaa6ac1c9937e05d428e129a3469da0799317782d42a45dd0af68",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-release.ogg",
+          "sha256": "a91ce3f94db1302029062fbd6846e3a965a8fa39f9aede06065d86cace25c88f",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-tky-light-blade-impact",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-tky-light-blade-impact.wav",
+        "sha256": "3aa2067f48c3b27783d70214ae891377369fe5772d489cd322a5ad67b1e939f3"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-impact.mp3",
+          "sha256": "6a8a1255b4a7b2b40b97ea50c576959a25cfef18b49e0788868603a0458a3666",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-impact.ogg",
+          "sha256": "67d46fedc70dfe18f6f0c234c846faa5c1b119457c1902cdc9339e6ae8228fc3",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-grenade-launcher",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-grenade-launcher.wav",
+        "sha256": "0f1f3bc4789f71ee0422b0b6c152afc1891b4ba34b529ef35265ca11dcd922ea"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-grenade-launcher.mp3",
+          "sha256": "07a7b1a00f32112e27bd28dafaf80c158bacfd4d7e85a4c4ea5a5561985f2c78",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-grenade-launcher.ogg",
+          "sha256": "4a1b7c12eda33e369405487fbe18d2f6e50469142ae08be1e7a7c50eab0c9ba9",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-grenade-impact",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-grenade-impact.wav",
+        "sha256": "ae49b5b080bddf92992b2d2073c0ebbf19360ab123240a555e3fb0d057cce3c1"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-grenade-impact.mp3",
+          "sha256": "575b87fbcade80b995c315719ffdcf12ffee7465bff617146185a56adf8ab667",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-grenade-impact.ogg",
+          "sha256": "ddd61c40b503020e9e2d0ecdda9e941f9966320a8c7b79a20c85fe242110e084",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-launcher-bash",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-launcher-bash.wav",
+        "sha256": "166dbcd1a16665e27cc597f888146ad35dd2adbe0ec89c8fed214aa7ef51e6ae"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-launcher-bash.mp3",
+          "sha256": "11adffce5413e17382ad0604dd3e8d3ccbba587e7b6042c16d2c7ad20001364f",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-launcher-bash.ogg",
+          "sha256": "8eb0b47c361b35d93f19239f1772f5492b3c20559525f90c29277a25f030c16e",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-ready",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mrs-chiha-salvo-ready.wav",
+        "sha256": "8d67096a3983753773373dae38ae413cbf47e0a0034adb6706a58e59774ef5c5"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-ready.mp3",
+          "sha256": "6234f7c9fada43eb74ad91f3cb53a1ddc4e6d0fadd39127ec1069f536e115278",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-ready.ogg",
+          "sha256": "ca7f1cd2eab945cef48bf9537c521274412eeec51561c843ef9c040746ecd1ec",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-shot",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mrs-chiha-salvo-shot.wav",
+        "sha256": "f1c448ffcf371bae603fabb739ecbda9003d58c5cb10db4adca4e8d7eeb8ef99"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-shot.mp3",
+          "sha256": "bd7aeec317ab32fb2eb31324b53bc9ef50f3ef5e8292028866b5c1ebd511e3ce",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-shot.ogg",
+          "sha256": "ff1de64634b8e1173a05c5092fba869122d8b38846a477b7e49c72bf174e9478",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-impact",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mrs-chiha-salvo-impact.wav",
+        "sha256": "507e02387f3fca2ec0aab36a5f40947e026aac03b64508ad14cdd6f4a0407d6c"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-impact.mp3",
+          "sha256": "ddbb98f7e896df55264452cdeefc1b196d91bef2bcc033e28016c13285b2d294",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-impact.ogg",
+          "sha256": "80d7815a96c65972cff58cbba918161cc5968965c457c42fdc1f7cc808d63684",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-final",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mrs-chiha-salvo-final.wav",
+        "sha256": "b615f8fc54d903ddc1a737265dd039689bb36a3a98c20fbf18348f244eac6e5a"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-final.mp3",
+          "sha256": "19c4fc2d4ecbf6c5785b0bee640c527927e68efd41f5c418c3fe009dc87c20af",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-final.ogg",
+          "sha256": "c7745a75b898bfb85f2a89c1dd9293febfa7efe6abd0332fa7b26522708e16d6",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-musashi-dual-katana",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-musashi-dual-katana.wav",
+        "sha256": "95b9f4b2f8393221bbd6eea607112d9df6b4282a472d94e9a1c8c587c495bd69"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-musashi-dual-katana.mp3",
+          "sha256": "8fdb67649c71b332cdeaea2147d3080d0852075e6e67c607c3c28c752b92639f",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/weapon-musashi-dual-katana.ogg",
+          "sha256": "9ab5c90fd17846392f96eff9d82df6483472e7ef594108c7019b878f8524f30b",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-musashi-cross-guard",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-musashi-cross-guard.wav",
+        "sha256": "21bcf8642a8b57f00ebf941eaa9dc1b64296e28da964afbe0882883c9f3739b3"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-musashi-cross-guard.mp3",
+          "sha256": "c2044abf8c01331a23b1868ef8352d3b3c1ef5ea5f4082d105ed99b56583c55a",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-musashi-cross-guard.ogg",
+          "sha256": "983b2cbb068500a8e9ba2f8cbfa17e988e68f32f6ac62a4b71a32445ba052d4c",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-musashi-counter",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-musashi-counter.wav",
+        "sha256": "49674dc3700d61fb74abfd526bd16c099b5e3356eda8737be15c30b8953b5814"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-musashi-counter.mp3",
+          "sha256": "56b85be8f9ea0bec1fc2c91d217f868450484bd588ecf65c9ab081d59f534e39",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-musashi-counter.ogg",
+          "sha256": "3a129b1f53b0f94639484146ea12514431d43a620f6f0c43c4ef748fb420db16",
+          "type": "audio/ogg"
+        }
+      ]
+    }
+  ]
+}

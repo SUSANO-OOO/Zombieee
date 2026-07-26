@@ -189,8 +189,10 @@ import {
 import {
   advancePendingWeaponHits,
   attackPresentationDuration,
+  mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
+  sampleMrsChihaLauncherBash,
   weaponDamageEventsFor,
   weaponProfileForAction,
   weaponProfileForUnit,
@@ -384,18 +386,20 @@ import {
   canActivateManualAbility,
   createManualAbilityRuntime,
   layoutManualAbilityIcons,
-  selectZakimiyaAbilityTarget,
+  manualAbilityLocksNormalAction,
+  selectManualAbilityTarget,
+  triggerMusashiCounter,
 } from "./manualAbilities.js";
 
 const W = 960;
 const H = 540;
 
 type Lane = 0 | 1 | 2;
-type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya";
+type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi";
 type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater";
 type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "danger" | "boss";
-type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
+type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
 type EventDestination = "map" | "battle" | "battle-resume" | "result";
 type PauseAction = "restart" | "loadout" | "withdraw";
@@ -589,6 +593,7 @@ type Fighter = {
   flash: number;
   step: number;
   attack: number;
+  attackVariant?: "launcher-bash" | null;
   knock: number;
   variant: number;
   targetId: number | null;
@@ -744,7 +749,7 @@ type Shot = {
 type PendingWeaponHit = {
   eventKind: "muzzle" | "impact";
   targetKind: "fighter" | "enemy-base";
-  damageMode?: "direct" | "containment";
+  damageMode?: "direct" | "containment" | "grenade";
   raiderLineHit?: boolean;
   raiderSecondary?: boolean;
   sourceId: number;
@@ -775,6 +780,25 @@ type ManualAbilityVfx = {
   targetY: number;
   elapsed: number;
   duration: number;
+  points?: readonly { x: number; y: number }[];
+  windupSeconds?: number;
+  salvoIntervalSeconds?: number;
+  projectileTravelSeconds?: number;
+};
+type ManualAbilityReceipt = {
+  ownerId: number;
+  activationId: number;
+  kind: string;
+  eventType: string;
+  at: number;
+  salvoIndex?: number;
+  mode?: string;
+  attackSequence?: number;
+};
+type PendingAbilityAudioCue = {
+  cueId: string;
+  x: number;
+  dedupeKey: string;
 };
 type ManualAbilityIconView = {
   fighterId: number;
@@ -965,6 +989,8 @@ type Game = {
   survivalRuntime: ReturnType<typeof createSurvivalCombatRuntime> | null;
   survivalCheckpointReceipt: string | null;
   manualAbilityVfx: ManualAbilityVfx[];
+  manualAbilityReceipts: ManualAbilityReceipt[];
+  pendingAbilityAudioCues: PendingAbilityAudioCue[];
 };
 
 type Hud = {
@@ -1318,6 +1344,8 @@ const initialGame = (
   survivalRuntime: null,
   survivalCheckpointReceipt: null,
   manualAbilityVfx: [],
+  manualAbilityReceipts: [],
+  pendingAbilityAudioCues: [],
   });
 };
 
@@ -1472,9 +1500,85 @@ function applyIncomingHumanDamage(
   g: Game,
   target: Fighter,
   incomingDamage: number,
-  { attackKind = "melee" }: { attackKind?: "melee" | "ranged" } = {},
+  { attackKind = "melee", attacker = null }: { attackKind?: "melee" | "ranged"; attacker?: Fighter | null } = {},
 ) {
   const incoming = Math.max(0, incomingDamage);
+  if (target.kind === "miyamoto-musashi" && attackKind === "melee" && target.manualAbility) {
+    const counter = triggerMusashiCounter(target.manualAbility);
+    if (counter.ok) {
+      const storedTargetId = counter.event?.target?.targetId;
+      const counterTarget = attacker?.side === "zombie" && attacker.hp > 0
+        ? attacker
+        : g.fighters.find((candidate) => (
+          candidate.id === storedTargetId
+          && candidate.side === "zombie"
+          && candidate.hp > 0
+          && candidate.combatReady
+        )) ?? null;
+      target.manualAbility = counter.runtime as ManualAbilityRuntime;
+      target.flash = Math.max(target.flash, .32);
+      target.attack = Math.max(target.attack, .42);
+      target.cooldown = Math.max(target.cooldown, .42);
+      g.manualAbilityReceipts.push({
+        ownerId: target.id,
+        activationId: counter.event?.activationId ?? target.manualAbility.activationId,
+        kind: target.kind,
+        eventType: "impact",
+        mode: "counter",
+        at: g.time,
+      });
+      g.manualAbilityReceipts = g.manualAbilityReceipts.slice(-32);
+      g.pendingAbilityAudioCues.push({
+        cueId: "ability-musashi-counter",
+        x: counterTarget?.x ?? target.x,
+        dedupeKey: `manual-ability:${target.id}:${counter.event?.activationId ?? target.manualAbility.activationId}:counter`,
+      });
+      g.pendingAbilityAudioCues = g.pendingAbilityAudioCues.slice(-8);
+      g.manualAbilityVfx = g.manualAbilityVfx
+        .filter((effect) => effect.ownerId !== target.id)
+        .concat({
+          ownerId: target.id,
+          activationId: counter.event?.activationId ?? target.manualAbility.activationId,
+          kind: target.kind,
+          originX: target.x,
+          originY: target.y,
+          targetX: counterTarget?.x ?? target.x + 42,
+          targetY: counterTarget?.y ?? target.y,
+          elapsed: 0,
+          duration: .46,
+        })
+        .slice(-8);
+      addDamageText(g, {
+        x: target.x,
+        y: target.y - 72,
+        value: "受け流し",
+        life: .9,
+        color: "#c5e7ff",
+      });
+      if (counterTarget) {
+        const definition = MANUAL_ABILITY_REGISTRY["miyamoto-musashi"];
+        const strikeDamage = definition.counterDamage * (isBossEnemyKind(counterTarget.kind) ? definition.bossDamageMultiplier : 1);
+        const applied = Math.min(counterTarget.hp, strikeDamage);
+        counterTarget.hp = Math.max(0, counterTarget.hp - strikeDamage);
+        counterTarget.stunned = Math.max(counterTarget.stunned, definition.counterStunSeconds);
+        counterTarget.flash = Math.max(counterTarget.flash, .3);
+        counterTarget.knock = Math.max(counterTarget.knock, isBossEnemyKind(counterTarget.kind) ? 5 : 14);
+        addDamageText(g, {
+          x: counterTarget.x,
+          y: counterTarget.y - 58,
+          value: `無空 -${Math.round(applied)}`,
+          life: .92,
+          color: "#d7efff",
+        });
+        addParticles(g, counterTarget.x, counterTarget.y - 30, "#c7e4ef", 18);
+      }
+      return Object.freeze({
+        targetDamage: 0,
+        redirectedDamage: 0,
+        preventedDamage: incoming,
+      });
+    }
+  }
   let targetDamage = incoming;
   let redirectedDamage = 0;
   let preventedDamage = 0;
@@ -1928,6 +2032,61 @@ function prepareZakimiyaQa(g: Game) {
   }
   g.banner = "QA ZAKIMIYA // NORMAL ATTACK + 火酒投擲";
   g.bannerTime = 1.25;
+}
+
+function prepareNewPlayablesQa(g: Game) {
+  g.time = 60;
+  g.phase = 2;
+  g.wave = 4;
+  g.eventIndex = missionEvents.length;
+  g.baseHp = g.baseMaxHp;
+  g.barricadeVulnerable = true;
+  g.barricadeMaxHp = Math.max(BARRICADE_MAX_HP, 8000);
+  g.barricadeHp = g.barricadeMaxHp;
+  g.energy = COMMAND_MAX;
+  g.scrap = 200;
+  g.fighters = [];
+  g.corpses = [];
+  g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+
+  const lineup: readonly [UnitKind, Lane, number][] = [
+    ["tky", 0, 350],
+    ["mrs-chiha", 1, 295],
+    ["miyamoto-musashi", 2, 370],
+  ];
+  for (const [kind, lane, x] of lineup) {
+    spawnHuman(g, kind);
+    const fighter = g.fighters[g.fighters.length - 1];
+    fighter.lane = lane;
+    fighter.anchorLane = lane;
+    fighter.x = x;
+    fighter.y = laneY(lane, fighter.id);
+    fighter.spawnGrace = 0;
+    fighter.combatReady = true;
+    fighter.gateEntering = false;
+    fighter.cooldown = 0;
+  }
+
+  const enemies: readonly [EnemyKind, Lane, number][] = [
+    ["walker", 0, 470], ["walker", 0, 510], ["crusher", 0, 550],
+    ["walker", 1, 500], ["walker", 1, 555], ["crusher", 1, 610],
+    ["crusher", 2, 470],
+  ];
+  for (const [kind, lane, x] of enemies) {
+    const target = spawnEnemy(g, kind, lane);
+    target.x = x;
+    target.y = laneY(lane, target.id);
+    target.maxHp = 1600;
+    target.hp = target.maxHp;
+    target.speed = 0;
+    target.laneSpeed = 0;
+    target.damage = 0;
+    target.cooldown = 99;
+    target.combatReady = true;
+    target.gateEntering = false;
+  }
+  g.banner = "QA NEW PLAYABLES // TKY + Mrs.チハ + 宮本武蔵";
+  g.bannerTime = 1.4;
 }
 
 function emitBattleBark(g: Game, trigger: string, speakerKind: string, speakerId?: number | string) {
@@ -2420,6 +2579,7 @@ function prepareQaMode(g: Game, qaMode: QaMode | null) {
   g.qaBarks = qaMode !== null && qaMode !== "loadout";
   if (qaMode === "roles" || qaMode === "dialogue") prepareRolesQa(g);
   else if (qaMode === "zakimiya") prepareZakimiyaQa(g);
+  else if (qaMode === "new-playables") prepareNewPlayablesQa(g);
   else if (qaMode === "takuya-entrance") prepareTakuyaEntranceQa(g);
   else if (qaMode === "endgame") prepareEndgameQa(g);
   else if (qaMode === "ai-reacquire") prepareAiReacquireQa(g);
@@ -2555,18 +2715,39 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     return;
   }
   const moving = f.gateEntering || f.side === "zombie" || Math.abs(f.aiMoveDirection) > .05;
-  const attackDuration = attackPresentationDuration(f.kind);
-  const animationSample = f.flash > 0
+  const attackDuration = f.kind === "mrs-chiha" && f.attackVariant === "launcher-bash"
+    ? mrsChihaLauncherBashDuration()
+    : attackPresentationDuration(f.kind);
+  const manualAbilityActive = f.side === "human" && manualAbilityLocksNormalAction(f.manualAbility);
+  const manualAbilityDefinition = manualAbilityActive ? MANUAL_ABILITY_REGISTRY[f.kind] : null;
+  const manualAbilityElapsed = !manualAbilityActive || !manualAbilityDefinition
+    ? 0
+    : f.manualAbility?.phase === "windup"
+      ? Math.max(0, manualAbilityDefinition.windupSeconds - f.manualAbility.windupRemaining)
+      : f.kind === "mrs-chiha"
+        ? Math.max(0, f.manualAbility?.abilityElapsed ?? 0)
+        : f.kind === "miyamoto-musashi" && f.manualAbility?.phase === "guard"
+          ? manualAbilityDefinition.windupSeconds
+            + ((manualAbilityDefinition.guardSeconds - f.manualAbility.guardRemaining) % .36)
+          : f.step;
+  const animationSample = manualAbilityActive
+    ? sampleAnimationClip(f.kind, "special", manualAbilityElapsed)
+    : f.flash > 0
     ? sampleAnimationClip(f.kind, "hit", Math.max(0, .12 - f.flash))
     : f.abilityWindup > 0
       ? sampleAnimationClip(f.kind, "wind-up", Math.max(0, .24 - f.abilityWindup))
       : f.attack > 0
-        ? sampleAttackPresentation(f.kind, Math.max(0, attackDuration - f.attack))
+        ? f.kind === "mrs-chiha" && f.attackVariant === "launcher-bash"
+          ? sampleMrsChihaLauncherBash(Math.max(0, attackDuration - f.attack))
+          : sampleAttackPresentation(f.kind, Math.max(0, attackDuration - f.attack))
         : moving
           ? sampleAnimationClip(f.kind, "move", f.step)
           : sampleAnimationClip(f.kind, "idle", f.step);
   const state = animationSample.spriteState;
-  const direction = f.side === "human" ? (f.aiMoveDirection < -.05 ? "left" : "right") : "left";
+  const lockedDirection = Number(f.manualAbility?.target?.direction);
+  const direction = f.side === "human"
+    ? (manualAbilityActive && lockedDirection < 0) || (!manualAbilityActive && f.aiMoveDirection < -.05) ? "left" : "right"
+    : "left";
   const frame = spriteFrameFor(f.kind, state, direction);
   const authoredSize = fitSpriteBattleDisplaySize(f.kind, frame, spriteDisplaySize(f.kind));
   const compactScale = activeLaneCenters === LANE_Y ? 1 : COMPACT_BATTLE_SPRITE_SCALE;
@@ -2659,8 +2840,90 @@ function drawAreaEffect(ctx: CanvasRenderingContext2D, effect: AreaEffect, time:
 }
 
 function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbilityVfx) {
-  if (effect.kind !== "zakimiya") return;
   const progress = Math.max(0, Math.min(1, effect.elapsed / Math.max(.001, effect.duration)));
+  if (effect.kind === "tky") {
+    const charge = Math.min(1, progress / .42);
+    const release = Math.max(0, (progress - .38) / .62);
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    ctx.save();
+    ctx.translate(effect.originX, effect.originY);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(255,62,205,${.45 + charge * .5})`;
+    ctx.shadowColor = "#ff42c8";
+    ctx.shadowBlur = 18;
+    ctx.lineCap = "round";
+    ctx.lineWidth = 4 + charge * 6;
+    ctx.beginPath();
+    ctx.moveTo(direction * 8, -45);
+    ctx.lineTo(direction * (34 + charge * 62), -56);
+    ctx.stroke();
+    if (release > 0) {
+      ctx.globalAlpha = 1 - release * .55;
+      ctx.lineWidth = 12 - release * 5;
+      ctx.beginPath();
+      ctx.arc(direction * 10, -34, 92 + release * 62, direction > 0 ? -1.1 : Math.PI - 1.1, direction > 0 ? .9 : Math.PI + .9);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,.9)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "mrs-chiha") {
+    const points = effect.points?.length ? effect.points : [{ x: effect.targetX, y: effect.targetY }];
+    const windupSeconds = effect.windupSeconds ?? 1.05;
+    const salvoIntervalSeconds = effect.salvoIntervalSeconds ?? .22;
+    const projectileTravelSeconds = effect.projectileTravelSeconds ?? .18;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (let index = 0; index < points.length; index += 1) {
+      const launchAt = windupSeconds + salvoIntervalSeconds * index;
+      const impactAt = launchAt + projectileTravelSeconds;
+      const local = Math.max(0, Math.min(1, (effect.elapsed - launchAt) / projectileTravelSeconds));
+      const impactAge = effect.elapsed - impactAt;
+      if (local <= 0 || impactAge > .24) continue;
+      const point = points[index];
+      const x = effect.originX + (point.x - effect.originX) * local;
+      const y = effect.originY + (point.y - effect.originY) * local - Math.sin(local * Math.PI) * (52 + index * 5);
+      ctx.strokeStyle = `rgba(226,172,90,${.3 + local * .55})`;
+      ctx.lineWidth = index === points.length - 1 ? 3 : 2;
+      ctx.beginPath();
+      ctx.moveTo(effect.originX, effect.originY);
+      ctx.quadraticCurveTo((effect.originX + point.x) / 2, Math.min(effect.originY, point.y) - 68, x, y);
+      ctx.stroke();
+      ctx.fillStyle = "#d4a45c";
+      ctx.shadowColor = "#ffb252";
+      ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(x, y, index === points.length - 1 ? 5 : 3.5, 0, Math.PI * 2); ctx.fill();
+      if (impactAge >= 0) {
+        ctx.globalAlpha = Math.max(.08, 1 - impactAge / .24);
+        ctx.strokeStyle = index === points.length - 1 ? "#ffd28b" : "#e6a455";
+        ctx.lineWidth = index === points.length - 1 ? 6 : 3;
+        const impactScale = 1 + Math.min(1, impactAge / .18) * .55;
+        ctx.beginPath(); ctx.ellipse(point.x, point.y, (26 + index * 4) * impactScale, (11 + index * 2) * impactScale, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "miyamoto-musashi") {
+    const pulse = .72 + Math.sin(effect.elapsed * 11) * .12;
+    ctx.save();
+    ctx.translate(effect.originX, effect.originY - 38);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(167,202,226,${pulse})`;
+    ctx.shadowColor = "#88aecb";
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0, 0, 25 + Math.sin(effect.elapsed * 6) * 2, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(-19, 19); ctx.lineTo(19, -19); ctx.moveTo(-19, -19); ctx.lineTo(19, 19); ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  if (effect.kind !== "zakimiya") return;
   const x = effect.originX + (effect.targetX - effect.originX) * progress;
   const linearY = effect.originY + (effect.targetY - effect.originY) * progress;
   const y = linearY - Math.sin(progress * Math.PI) * 72;
@@ -4587,6 +4850,17 @@ export function AshfallGame() {
       __ASHFALL_RUNTIME_PERFORMANCE__?: unknown;
     };
     const bridge = {
+      stabilizeNewPlayableProof: () => {
+        if (qaMode !== "new-playables") return false;
+        for (const fighter of gameRef.current.fighters) {
+          if (fighter.side !== "human"
+            || !["tky", "mrs-chiha", "miyamoto-musashi"].includes(fighter.kind)) continue;
+          fighter.speed = 0;
+          fighter.laneSpeed = 0;
+          fighter.aiMoveDirection = 0;
+        }
+        return true;
+      },
       prepareBossFoundationProof: (kind: "takuya" | "gate-eater") => {
         const g = gameRef.current;
         if (!isBossEnemyKind(kind)) throw new RangeError(`Unknown boss proof kind: ${String(kind)}`);
@@ -5324,6 +5598,7 @@ export function AshfallGame() {
             manualAbility: fighter.manualAbility ? { ...fighter.manualAbility } : null,
           })),
           manualAbilityVfx: g.manualAbilityVfx.map((effect) => ({ ...effect })),
+          manualAbilityReceipts: g.manualAbilityReceipts.map((receipt) => ({ ...receipt })),
           areaEffects: g.areaEffects.map((effect) => ({ ...effect })),
           completedStageIds: [...campaignSave.completedStageIds],
           unlockedStageIds: [...campaignSave.unlockedStageIds],
@@ -5345,7 +5620,7 @@ export function AshfallGame() {
         delete qaWindow.__ASHFALL_RUNTIME_PERFORMANCE__;
       }
     };
-  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, screen]);
+  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, qaMode, screen]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -5782,17 +6057,29 @@ export function AshfallGame() {
       playCue("denied");
       return false;
     }
-    const target = fighter.kind === "zakimiya"
-      ? selectZakimiyaAbilityTarget({ owner: fighter, fighters: g.fighters })
-      : null;
+    const target = selectManualAbilityTarget({ owner: fighter, fighters: g.fighters });
     const startedAbility = beginManualAbility(fighter.manualAbility, target);
     if (!startedAbility.ok || !target) {
       playCue("denied");
       return false;
     }
+    const definition = MANUAL_ABILITY_REGISTRY[fighter.kind];
+    if (!definition || definition.runtimeStatus !== "integrated") {
+      playCue("denied");
+      return false;
+    }
     fighter.manualAbility = startedAbility.runtime as ManualAbilityRuntime;
-    fighter.attack = Math.max(fighter.attack, MANUAL_ABILITY_REGISTRY.zakimiya.windupSeconds);
-    fighter.cooldown = Math.max(fighter.cooldown, MANUAL_ABILITY_REGISTRY.zakimiya.windupSeconds);
+    g.manualAbilityReceipts.push({
+      ownerId: fighter.id,
+      activationId: startedAbility.activationId,
+      kind: fighter.kind,
+      eventType: "start",
+      at: g.time,
+      attackSequence: fighter.attackSequence,
+    });
+    g.manualAbilityReceipts = g.manualAbilityReceipts.slice(-32);
+    fighter.attack = Math.max(fighter.attack, definition.windupSeconds);
+    fighter.cooldown = Math.max(fighter.cooldown, definition.windupSeconds);
     fighter.flash = Math.max(fighter.flash, .26);
     g.manualAbilityVfx = [...g.manualAbilityVfx, {
       ownerId: fighter.id,
@@ -5803,18 +6090,45 @@ export function AshfallGame() {
       targetX: target.x,
       targetY: target.y - 8,
       elapsed: 0,
-      duration: MANUAL_ABILITY_REGISTRY.zakimiya.windupSeconds,
+      duration: fighter.kind === "miyamoto-musashi"
+        ? definition.windupSeconds + definition.guardSeconds
+        : fighter.kind === "mrs-chiha"
+          ? definition.windupSeconds
+            + definition.salvoIntervalSeconds * (definition.salvoCount - 1)
+            + definition.projectileTravelSeconds
+            + definition.recoverySeconds
+        : definition.windupSeconds,
+      points: target.points?.map((point: { x: number; y: number }) => ({ x: point.x, y: point.y - 8 })),
+      windupSeconds: definition.windupSeconds,
+      salvoIntervalSeconds: definition.salvoIntervalSeconds,
+      projectileTravelSeconds: definition.projectileTravelSeconds,
     }].slice(-8);
-    g.banner = `ザキミヤ // ${MANUAL_ABILITY_REGISTRY.zakimiya.displayName}`;
+    g.banner = `${cards.find((card) => card.kind === fighter.kind)?.name ?? fighter.kind} // ${definition.displayName}`;
     g.bannerTime = 1.15;
     setHud((current) => ({
       ...current,
       manualAbilityIcons: current.manualAbilityIcons.filter((icon) => icon.fighterId !== fighter.id),
     }));
     playCue("ui-confirm");
-    playCue("burn-start");
+    if (fighter.kind === "zakimiya") playCue("burn-start");
+    const abilityStartCue = fighter.kind === "tky"
+      ? unitAudioCueFor(fighter.kind, "weapon", "abilityCharge")
+      : fighter.kind === "mrs-chiha"
+        ? unitAudioCueFor(fighter.kind, "weapon", "abilityReady")
+        : fighter.kind === "miyamoto-musashi"
+          ? unitAudioCueFor(fighter.kind, "weapon", "abilityGuard")
+          : null;
+    if (abilityStartCue) {
+      playProductionCue(abilityStartCue, fighter.x, {
+        priority: 82,
+        cooldownMs: 240,
+        maxInstances: 1,
+        fallbackCue: fighter.kind === "mrs-chiha" ? "ranged-shot" : "melee-hit",
+        dedupeKey: `manual-ability:${fighter.id}:${startedAbility.activationId}:start`,
+      });
+    }
     return true;
-  }, [playCue]);
+  }, [playCue, playProductionCue]);
 
   const stopSfx = useCallback(() => {
     sfxRequestGateRef.current.cancelPending();
@@ -7806,60 +8120,208 @@ export function AshfallGame() {
         g.manualAbilityVfx = g.manualAbilityVfx
           .map((effect) => ({ ...effect, elapsed: effect.elapsed + dt }))
           .filter((effect) => effect.elapsed < effect.duration);
+        const pendingAbilityAudioCues = g.pendingAbilityAudioCues.splice(0);
+        for (const pendingCue of pendingAbilityAudioCues) {
+          playProductionCue(pendingCue.cueId, pendingCue.x, {
+            priority: 88,
+            cooldownMs: 80,
+            maxInstances: 2,
+            fallbackCue: "melee-hit",
+            dedupeKey: pendingCue.dedupeKey,
+          });
+        }
         for (const owner of g.fighters) {
           if (owner.side !== "human" || !owner.manualAbility) continue;
           const abilityStep = advanceManualAbility(owner.manualAbility, dt);
           owner.manualAbility = abilityStep.runtime as ManualAbilityRuntime;
           for (const event of abilityStep.events) {
-            if (event.type !== "impact" || event.kind !== "zakimiya" || !event.target) continue;
-            const definition = MANUAL_ABILITY_REGISTRY.zakimiya;
-            const affected = g.fighters.filter((candidate) => (
-              candidate.side === "zombie"
-              && candidate.hp > 0
-              && candidate.combatReady
-              && candidate.contained !== true
-              && effectDistance(candidate, event.target) <= definition.effectRadius
-            ));
-            for (const target of affected) {
-              const damage = Math.min(target.hp, definition.impactDamage);
-              target.hp = Math.max(0, target.hp - definition.impactDamage);
-              target.flash = Math.max(target.flash, .2);
-              target.knock = Math.max(target.knock, 8);
-              addDamageText(g, {
-                x: target.x,
-                y: target.y - 48,
-                value: `火酒 -${Math.round(damage)}`,
-                life: .82,
-                color: "#ffb15a",
+            g.manualAbilityReceipts.push({
+              ownerId: owner.id,
+              activationId: event.activationId,
+              kind: event.kind,
+              eventType: event.type,
+              at: g.time,
+              salvoIndex: event.salvoIndex,
+              mode: event.mode,
+            });
+            g.manualAbilityReceipts = g.manualAbilityReceipts.slice(-32);
+            if (event.type === "guard-start" && event.kind === "miyamoto-musashi") {
+              g.banner = "宮本武蔵 // 受け流し構え";
+              g.bannerTime = 1;
+              addParticles(g, owner.x, owner.y - 38, "#9ec7db", 10);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityGuard"), owner.x, {
+                priority: 82,
+                cooldownMs: 220,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:guard`,
+              });
+              continue;
+            }
+            if (event.type === "launch" && event.kind === "mrs-chiha") {
+              owner.flash = Math.max(owner.flash, .08);
+              addParticles(g, owner.x + 18, owner.y - 36, "#d4a45c", 5);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityShot"), owner.x, {
+                priority: 82,
+                cooldownMs: 70,
+                maxInstances: 4,
+                fallbackCue: "ranged-shot",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:shot:${event.salvoIndex}`,
+              });
+              continue;
+            }
+            if (event.type !== "impact" || !event.target) continue;
+            if (event.kind === "zakimiya") {
+              const definition = MANUAL_ABILITY_REGISTRY.zakimiya;
+              const affected = g.fighters.filter((candidate) => (
+                candidate.side === "zombie"
+                && candidate.hp > 0
+                && candidate.combatReady
+                && candidate.contained !== true
+                && effectDistance(candidate, event.target) <= definition.effectRadius
+              ));
+              for (const target of affected) {
+                const damage = Math.min(target.hp, definition.impactDamage);
+                target.hp = Math.max(0, target.hp - definition.impactDamage);
+                target.flash = Math.max(target.flash, .2);
+                target.knock = Math.max(target.knock, 8);
+                addDamageText(g, {
+                  x: target.x,
+                  y: target.y - 48,
+                  value: `火酒 -${Math.round(damage)}`,
+                  life: .82,
+                  color: "#ffb15a",
+                });
+              }
+              g.areaEffects.push({
+                id: g.nextAreaEffectId++,
+                kind: "burn",
+                sourceSupplyId: -(100000 + owner.id),
+                lane: (event.target.lane ?? activeLaneForY(event.target.y)) as Lane,
+                x: event.target.x,
+                y: event.target.y,
+                radius: definition.effectRadius,
+                amountPerSecond: definition.burnDamagePerSecond,
+                remaining: definition.burnSeconds,
+                phase: "active",
+                slowMultiplier: .86,
+              });
+              addParticles(g, event.target.x, event.target.y - 12, "#f26a35", 28);
+              addParticles(g, event.target.x, event.target.y - 16, "#f2c06d", 14);
+              g.flashOverlay = Math.max(g.flashOverlay, .16);
+              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
+              playProductionCue("weapon-pan-hit", event.target.x, {
+                priority: 82,
+                cooldownMs: 80,
+                volume: .7,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}`,
+              });
+              playCue("drum-blast");
+              playCue("burn-start");
+              continue;
+            }
+            if (event.kind === "tky") {
+              const definition = MANUAL_ABILITY_REGISTRY.tky;
+              const direction = Number(event.target.direction) < 0 ? -1 : 1;
+              const originX = Number(event.target.originX);
+              const originY = Number(event.target.originY);
+              const affected = g.fighters.filter((candidate) => {
+                const forward = (candidate.x - originX) * direction;
+                return candidate.side === "zombie"
+                  && candidate.hp > 0
+                  && candidate.combatReady
+                  && candidate.contained !== true
+                  && forward >= -8
+                  && forward <= definition.reach
+                  && Math.abs(candidate.y - originY) <= definition.effectHalfHeight;
+              });
+              for (const target of affected) {
+                const damage = Math.min(target.hp, definition.impactDamage);
+                target.hp = Math.max(0, target.hp - definition.impactDamage);
+                target.flash = Math.max(target.flash, .28);
+                target.knock = Math.max(target.knock, definition.knockback);
+                target.stunned = Math.max(target.stunned, definition.stunSeconds);
+                addDamageText(g, { x: target.x, y: target.y - 50, value: `光刃 -${Math.round(damage)}`, life: .82, color: "#ff70d4" });
+                addParticles(g, target.x, target.y - 34, "#ff42c8", 11);
+              }
+              g.flashOverlay = Math.max(g.flashOverlay, .12);
+              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityRelease"), owner.x, {
+                priority: 88,
+                cooldownMs: 200,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:release`,
+              });
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityImpact"), event.target.x, {
+                priority: 86,
+                cooldownMs: 80,
+                maxInstances: 2,
+                fallbackCue: "airstrike-impact",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:impact`,
+              });
+              continue;
+            }
+            if (event.kind === "mrs-chiha") {
+              const definition = MANUAL_ABILITY_REGISTRY["mrs-chiha"];
+              const finalRound = event.finalRound === true;
+              const impactDamage = definition.impactDamage * (finalRound ? definition.finalDamageMultiplier : 1);
+              for (const target of g.fighters) {
+                if (target.side !== "zombie"
+                  || target.hp <= 0
+                  || !target.combatReady
+                  || target.contained === true
+                  || effectDistance(target, event.target) > definition.effectRadius) continue;
+                const damage = Math.min(target.hp, impactDamage);
+                target.hp = Math.max(0, target.hp - impactDamage);
+                target.flash = Math.max(target.flash, finalRound ? .3 : .18);
+                target.knock = Math.max(target.knock, finalRound ? definition.finalKnockback : 7);
+                addDamageText(g, { x: target.x, y: target.y - 48, value: `榴弾 -${Math.round(damage)}`, life: .78, color: finalRound ? "#ffd08a" : "#d9aa63" });
+              }
+              addParticles(g, event.target.x, event.target.y - 14, finalRound ? "#ffd08a" : "#d48a42", finalRound ? 28 : 16);
+              g.flashOverlay = Math.max(g.flashOverlay, .18);
+              g.shake = triggerCameraShake(g.shake, finalRound ? CAMERA_SHAKE_EVENTS.airstrikeImpact : CAMERA_SHAKE_EVENTS.weaponHeavy);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", finalRound ? "abilityFinal" : "abilityImpact"), event.target.x, {
+                priority: finalRound ? 92 : 85,
+                cooldownMs: 70,
+                maxInstances: 4,
+                fallbackCue: "drum-blast",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:impact:${event.salvoIndex}`,
+              });
+              continue;
+            }
+            if (event.kind === "miyamoto-musashi") {
+              const definition = MANUAL_ABILITY_REGISTRY["miyamoto-musashi"];
+              const target = g.fighters.find((candidate) => (
+                candidate.id === event.target.targetId
+                && candidate.side === "zombie"
+                && candidate.hp > 0
+                && candidate.combatReady
+              )) ?? g.fighters
+                .filter((candidate) => candidate.side === "zombie" && candidate.hp > 0 && candidate.combatReady)
+                .sort((left, right) => fighterDistance(owner, left) - fighterDistance(owner, right) || left.id - right.id)
+                .find((candidate) => fighterDistance(owner, candidate) <= definition.fallbackRange);
+              g.manualAbilityVfx = g.manualAbilityVfx.filter((effect) => effect.ownerId !== owner.id);
+              if (!target) continue;
+              const strikeDamage = definition.counterDamage * (isBossEnemyKind(target.kind) ? definition.bossDamageMultiplier : 1);
+              const damage = Math.min(target.hp, strikeDamage);
+              target.hp = Math.max(0, target.hp - strikeDamage);
+              target.flash = Math.max(target.flash, .3);
+              target.stunned = Math.max(target.stunned, definition.counterStunSeconds);
+              target.knock = Math.max(target.knock, isBossEnemyKind(target.kind) ? 4 : 13);
+              owner.x += Math.sign(target.x - owner.x) * Math.min(26, Math.max(0, Math.abs(target.x - owner.x) - owner.range));
+              addDamageText(g, { x: target.x, y: target.y - 54, value: `無空 -${Math.round(damage)}`, life: .9, color: "#d7efff" });
+              addParticles(g, target.x, target.y - 34, "#c7e4ef", 18);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityCounter"), target.x, {
+                priority: 88,
+                cooldownMs: 180,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:${event.mode ?? "fallback"}`,
               });
             }
-            g.areaEffects.push({
-              id: g.nextAreaEffectId++,
-              kind: "burn",
-              sourceSupplyId: -(100000 + owner.id),
-              lane: (event.target.lane ?? activeLaneForY(event.target.y)) as Lane,
-              x: event.target.x,
-              y: event.target.y,
-              radius: definition.effectRadius,
-              amountPerSecond: definition.burnDamagePerSecond,
-              remaining: definition.burnSeconds,
-              phase: "active",
-              slowMultiplier: .86,
-            });
-            addParticles(g, event.target.x, event.target.y - 12, "#f26a35", 28);
-            addParticles(g, event.target.x, event.target.y - 16, "#f2c06d", 14);
-            g.flashOverlay = Math.max(g.flashOverlay, .16);
-            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
-            playProductionCue("weapon-pan-hit", event.target.x, {
-              priority: 82,
-              cooldownMs: 80,
-              volume: .7,
-              maxInstances: 1,
-              fallbackCue: "melee-hit",
-              dedupeKey: `manual-ability:${owner.id}:${event.activationId}`,
-            });
-            playCue("drum-blast");
-            playCue("burn-start");
           }
         }
         const pendingWeaponStep = advancePendingWeaponHits(g.pendingWeaponHits, dt);
@@ -7874,12 +8336,21 @@ export function AshfallGame() {
               && candidate.contained !== true
             )) ?? null;
           if (hit.eventKind === "muzzle") {
+            const locksGrenadeLandingPoint = hit.weapon === "mrs-chiha";
             addWeaponShot(g, {
               ...hit,
-              targetX: target?.x ?? hit.targetX,
-              targetY: target ? target.y - 28 : hit.targetY,
+              targetX: locksGrenadeLandingPoint ? hit.targetX : target?.x ?? hit.targetX,
+              targetY: locksGrenadeLandingPoint ? hit.targetY : target ? target.y - 28 : hit.targetY,
             });
-            if (hit.shotIndex > 0 && !productionMixerRef.current) {
+            if (hit.weapon === "mrs-chiha") {
+              playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "shot"), hit.originX, {
+                priority: 72,
+                cooldownMs: 100,
+                maxInstances: 2,
+                fallbackCue: "ranged-shot",
+              });
+              if (!productionMixerRef.current) playCue("ranged-shot", { frequency: 350 });
+            } else if (hit.shotIndex > 0 && !productionMixerRef.current) {
               playCue("ranged-shot", { frequency: 335 + hit.shotIndex * 18 });
             }
             continue;
@@ -7898,7 +8369,16 @@ export function AshfallGame() {
               life: .62,
               color: "#ffd06b",
             });
-            addParticles(g, hit.targetX, hit.targetY, "#e8c56c", 2);
+            addParticles(g, hit.targetX, hit.targetY, "#e8c56c", hit.weapon === "mrs-chiha" ? 13 : 2);
+            if (hit.weapon === "mrs-chiha") {
+              playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "hit"), hit.targetX, {
+                priority: 78,
+                cooldownMs: 90,
+                maxInstances: 3,
+                fallbackCue: "drum-blast",
+              });
+              if (!productionMixerRef.current) playCue("drum-blast");
+            }
             if (!g.barricadeBucklingAnnounced
               && beforeHit > g.barricadeMaxHp * .7
               && g.barricadeHp <= g.barricadeMaxHp * .7) {
@@ -7916,6 +8396,70 @@ export function AshfallGame() {
               g.flashOverlay = Math.max(g.flashOverlay, .12);
               playCue("base-critical");
             }
+            continue;
+          }
+          if (hit.damageMode === "grenade") {
+            const grenadeDefinition = MANUAL_ABILITY_REGISTRY["mrs-chiha"];
+            const impactPoint = { x: hit.targetX, y: hit.targetY + 28 };
+            for (const splashTarget of g.fighters) {
+              if (splashTarget.side !== "zombie"
+                || splashTarget.hp <= 0
+                || !splashTarget.combatReady
+                || splashTarget.contained === true
+                || effectDistance(splashTarget, impactPoint) > grenadeDefinition.grenadeRadius) continue;
+              const primaryTarget = splashTarget.id === hit.targetId;
+              const grenadeDamage = primaryTarget
+                ? hit.damage
+                : hit.damage * grenadeDefinition.grenadeSplashMultiplier;
+              let appliedSplash;
+              if (primaryTarget
+                && splashTarget.kind === "gate-eater"
+                && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
+                && g.researchContainer) {
+                const hpBeforeStrike = splashTarget.hp;
+                const containerWasExposed = g.researchContainer.exposed;
+                const containment = resolveContainmentStrike({
+                  boss: splashTarget,
+                  researchContainer: g.researchContainer,
+                  attackDamage: grenadeDamage,
+                  powerActivated: g.stageMission.powerActivated ?? 0,
+                  sealDoorX: Number(g.definition.missionConfig.sealDoorX ?? 867),
+                });
+                Object.assign(splashTarget, containment.boss);
+                g.researchContainer = containment.researchContainer as ResearchContainerRuntime;
+                appliedSplash = Math.max(0, hpBeforeStrike - splashTarget.hp);
+                if (!containerWasExposed && g.researchContainer.exposed) {
+                  if (!g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.RESEARCH_CONTAINER_EXPOSED)) {
+                    g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.RESEARCH_CONTAINER_EXPOSED);
+                  }
+                  g.banner = "研究容器露出 // 改札喰いと共に押し込め";
+                  g.bannerTime = 2;
+                }
+                if (containment.bossDefeated && g.stageMission.gateEaterDefeated !== true) {
+                  g.banner = "改札喰い撃破 // 研究容器を確保";
+                  g.bannerTime = 1.8;
+                }
+              } else {
+                appliedSplash = Math.min(splashTarget.hp, grenadeDamage);
+                splashTarget.hp = Math.max(0, splashTarget.hp - grenadeDamage);
+              }
+              splashTarget.flash = Math.max(splashTarget.flash, .16);
+              splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
+              addDamageText(g, {
+                x: splashTarget.x,
+                y: splashTarget.y - 43,
+                value: `${primaryTarget ? "榴弾" : "爆風"} -${Math.round(appliedSplash)}`,
+                life: .66,
+                color: "#e4b46c",
+              });
+            }
+            addParticles(g, impactPoint.x, impactPoint.y - 12, "#d7924f", 13);
+            playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "hit"), impactPoint.x, {
+              priority: 78,
+              cooldownMs: 90,
+              maxInstances: 3,
+              fallbackCue: "drum-blast",
+            });
             continue;
           }
           if (!target) continue;
@@ -8656,6 +9200,14 @@ export function AshfallGame() {
             continue;
           }
 
+          if (f.side === "human" && manualAbilityLocksNormalAction(f.manualAbility)) {
+            f.targetId = null;
+            f.targetObjectId = null;
+            f.aiDestinationX = f.x;
+            f.aiMoveDirection = 0;
+            continue;
+          }
+
           if (f.kind === "grappler") {
             let abilityFrame = f.stationAbility.phase !== "idle";
             if (f.stationAbility.phase === "windup") {
@@ -8820,7 +9372,7 @@ export function AshfallGame() {
               if (charge.chargeEnded) {
                 for (const victim of g.fighters) {
                   if (victim.side !== "human" || victim.hp <= 0 || fighterDistance(victim, f) > 92) continue;
-                  const damage = applyIncomingHumanDamage(g, victim, 34, { attackKind: "melee" }).targetDamage;
+                  const damage = applyIncomingHumanDamage(g, victim, 34, { attackKind: "melee", attacker: f }).targetDamage;
                   victim.flash = Math.max(victim.flash, .18);
                   victim.knock = Math.max(victim.knock, 14);
                   addDamageText(g, { x: victim.x, y: victim.y - 54, value: `突進 -${Math.round(damage)}`, life: .85, color: "#e2a65e" });
@@ -8844,7 +9396,7 @@ export function AshfallGame() {
                 for (const victim of g.fighters) {
                   // Perspective-scaled distance matches the on-ground warning ellipse.
                   if (victim.side !== "human" || victim.hp <= 0 || effectDistance(victim, f) > radius) continue;
-                  const resolved = applyIncomingHumanDamage(g, victim, damage, { attackKind: "melee" });
+                  const resolved = applyIncomingHumanDamage(g, victim, damage, { attackKind: "melee", attacker: f });
                   victim.flash = .16; victim.knock = Math.max(victim.knock, 12);
                   g.damageTexts.push({ x: victim.x, y: victim.y - 48, value: String(Math.round(resolved.targetDamage)), life: .8, color: "#ff7658" });
                 }
@@ -9411,7 +9963,13 @@ export function AshfallGame() {
                 && ["takuya", "gate-eater"].includes(target.kind)
                 ? survivalUpgradeEffects(g.survivalRun).bossDamageMultiplier
                 : 1;
-              const attackDamage = baseAttackDamage * gateEaterProfile.multiplier * bossDamageMultiplier;
+              const mrsLauncherBash = f.side === "human"
+                && f.kind === "mrs-chiha"
+                && distance <= MANUAL_ABILITY_REGISTRY["mrs-chiha"].launcherBashRange + target.bodyRadius;
+              const attackDamage = baseAttackDamage
+                * gateEaterProfile.multiplier
+                * bossDamageMultiplier
+                * (mrsLauncherBash ? MANUAL_ABILITY_REGISTRY["mrs-chiha"].launcherBashDamageMultiplier : 1);
               const weaponDamageEvents = f.side === "human"
                 ? weaponDamageEventsFor(f.kind, attackDamage)
                 : null;
@@ -9422,6 +9980,50 @@ export function AshfallGame() {
               const immediateAttackDamage = attackDamage;
               let appliedAttack: { targetDamage: number };
               if (splitMachineGunBurst) {
+                appliedAttack = { targetDamage: 0 };
+              } else if (f.side === "zombie" && target.side === "human") {
+                appliedAttack = applyIncomingHumanDamage(g, target, immediateAttackDamage, { attackKind: f.range > 64 ? "ranged" : "melee", attacker: f });
+              } else if (f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash && weaponDamageEvents) {
+                const grenadeRound = weaponDamageEvents[0];
+                g.pendingWeaponHits.push({
+                  eventKind: "muzzle",
+                  targetKind: "fighter",
+                  sourceId: f.id,
+                  targetId: target.id,
+                  targetX: target.x,
+                  targetY: target.y - 28,
+                  originX: f.x + 14,
+                  originY: f.y - 32,
+                  remainingSeconds: grenadeRound.offsetSeconds,
+                  damage: 0,
+                  weapon: f.kind,
+                  shotIndex: grenadeRound.shotIndex,
+                  recoil: grenadeRound.recoil,
+                  casing: grenadeRound.casing,
+                  hitStopSeconds: grenadeRound.hitStopSeconds,
+                  impactDelaySeconds: grenadeRound.travelSeconds,
+                  applyDamage: false,
+                }, {
+                  eventKind: "impact",
+                  targetKind: "fighter",
+                  damageMode: "grenade",
+                  sourceId: f.id,
+                  targetId: target.id,
+                  targetX: target.x,
+                  targetY: target.y - 28,
+                  originX: f.x + 14,
+                  originY: f.y - 32,
+                  remainingSeconds: grenadeRound.hitOffsetSeconds,
+                  damage: immediateAttackDamage,
+                  weapon: f.kind,
+                  shotIndex: grenadeRound.shotIndex,
+                  recoil: grenadeRound.recoil,
+                  casing: grenadeRound.casing,
+                  hitStopSeconds: grenadeRound.hitStopSeconds,
+                  impactDelaySeconds: grenadeRound.travelSeconds,
+                  applyDamage: true,
+                });
+                g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
                 appliedAttack = { targetDamage: 0 };
               } else if (f.side === "human"
                 && target.kind === "gate-eater"
@@ -9450,8 +10052,6 @@ export function AshfallGame() {
                   g.banner = "改札喰い撃破 // 研究容器を確保";
                   g.bannerTime = 1.8;
                 }
-              } else if (f.side === "zombie" && target.side === "human") {
-                appliedAttack = applyIncomingHumanDamage(g, target, immediateAttackDamage, { attackKind: f.range > 64 ? "ranged" : "melee" });
               } else {
                 target.hp -= immediateAttackDamage;
                 appliedAttack = { targetDamage: immediateAttackDamage };
@@ -9633,15 +10233,30 @@ export function AshfallGame() {
               if (f.side === "human") {
                 emitBattleBarkOnce(g, `contact:${f.kind}`, RANDOM_BATTLE_BARK_TRIGGER_IDS.CONTACT, f.kind as UnitKind);
                 const targetIsHeavy = ["crusher", "abomination", "takuya", "grappler", "gate-eater"].includes(target.kind);
-                const weaponEvent = f.kind === "crazy-king" ? "attack" : f.kind === "kumaverson" ? "swing" : f.kind === "babayaga" ? "shot" : null;
+                const weaponEvent = f.kind === "crazy-king"
+                  ? "attack"
+                  : f.kind === "kumaverson"
+                    ? "swing"
+                    : f.kind === "babayaga"
+                      ? "shot"
+                      : f.kind === "mrs-chiha"
+                        ? mrsLauncherBash ? "bash" : "shot"
+                        : f.kind === "tky" || f.kind === "miyamoto-musashi"
+                          ? "attack"
+                          : null;
                 const contactAudioX = f.kind === "crazy-king" || f.kind === "kumaverson" ? (f.x + target.x) / 2 : f.x;
-                playProductionCue((weaponEvent && unitAudioCueFor(f.kind, "weapon", weaponEvent)) || weaponCueForUnit(f.kind), contactAudioX, {
-                  priority: f.kind === "gunner" || f.kind === "brute" || f.kind === "crazy-king" ? 74 : 64,
-                  cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 70,
-                  volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
-                  maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
-                  fallbackCue: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "ranged-shot" : "melee-hit",
-                });
+                const defersMrsLauncherAudio = f.kind === "mrs-chiha" && !mrsLauncherBash;
+                if (!defersMrsLauncherAudio) {
+                  playProductionCue((weaponEvent && unitAudioCueFor(f.kind, "weapon", weaponEvent)) || weaponCueForUnit(f.kind), contactAudioX, {
+                    priority: f.kind === "gunner" || f.kind === "brute" || f.kind === "crazy-king" ? 74 : 64,
+                    cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 70,
+                    volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
+                    maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
+                    fallbackCue: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)
+                      ? "ranged-shot"
+                      : "melee-hit",
+                  });
+                }
                 if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), contactAudioX, { priority: targetIsHeavy ? 76 : 67, cooldownMs: 110, volume: targetIsHeavy ? .62 : .54, maxInstances: 1 });
                 if (f.kind === "kumaverson") {
                   playProductionCue(unitAudioCueFor(f.kind, "weapon", targetIsHeavy ? "heavyHit" : "hit"), contactAudioX, { priority: targetIsHeavy ? 76 : 68, cooldownMs: 125, volume: targetIsHeavy ? .56 : .48, maxInstances: 1 });
@@ -9685,13 +10300,18 @@ export function AshfallGame() {
                 target.knock = Math.max(target.knock, f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" || f.kind === "gate-eater" ? 9 : 3);
               }
               f.attack = .18;
-              if (f.side === "human") f.attack = attackPresentationDuration(f.kind);
+              f.attackVariant = f.kind === "mrs-chiha" && mrsLauncherBash ? "launcher-bash" : null;
+              if (f.side === "human") {
+                f.attack = f.attackVariant === "launcher-bash"
+                  ? mrsChihaLauncherBashDuration()
+                  : attackPresentationDuration(f.kind);
+              }
               f.cooldown = enragedTakuya
                 ? .9
                 : f.kind === "crazy-king"
                   ? crazyKingAttackInterval(f.attackEvery, f.comboHits)
                   : f.attackEvery;
-              if (!splitMachineGunBurst) {
+              if (!splitMachineGunBurst && !(f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash)) {
                 g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(appliedAttack.targetDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
               }
               if (roleEffect && f.abilityCooldown <= 0) {
@@ -9710,7 +10330,8 @@ export function AshfallGame() {
               }
               if (f.side === "human") {
                 const emphasized = roleEffect === "brawler" || roleEffect === "gunner" || roleEffect === "crazy-king" || roleEffect === "kumaverson" || roleEffect === "babayaga";
-                const ranged = ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind);
+                const ranged = ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)
+                  || (f.kind === "mrs-chiha" && !mrsLauncherBash);
                 if (f.kind === "gunner" && weaponDamageEvents) {
                   if (!splitMachineGunBurst) {
                     const firstRound = weaponDamageEvents[0];
@@ -9750,7 +10371,7 @@ export function AshfallGame() {
                       });
                     }
                   }
-                } else {
+                } else if (!(f.kind === "mrs-chiha" && !mrsLauncherBash)) {
                   g.shots.push({ x: f.x + 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", sourceId: f.id, targetId: target.id, damageTargetId: target.id, effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee", weapon: f.kind });
                 }
                 if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) playCue(`role-${roleEffect}` as SfxCueId);
@@ -9779,7 +10400,8 @@ export function AshfallGame() {
                   ? resolveTataraStrikeDamage(f.damage, { targetType: "infected-base" })
                   : f.damage * structureDamageMultiplier(f.kind);
                 const structureWeaponEvents = weaponDamageEventsFor(f.kind, structureDamage);
-                if (f.kind !== "gunner") g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
+                const deferredStructureImpact = f.kind === "gunner" || f.kind === "mrs-chiha";
+                if (!deferredStructureImpact) g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
                 if (f.kind === "brute") g.roleMetrics.tataraStructureDamage += structureDamage;
                 if (f.kind === "gunner") {
                   const wasOverheated = f.overheated;
@@ -9795,13 +10417,15 @@ export function AshfallGame() {
                 emitBattleBarkOnce(g, `enemy-base-attack:${f.kind}`, RANDOM_BATTLE_BARK_TRIGGER_IDS.ENEMY_BASE_ATTACK, f.kind as UnitKind);
                 const structureWeaponEvent = f.kind === "crazy-king" ? "attack" : f.kind === "kumaverson" ? "swing" : f.kind === "babayaga" ? "shot" : null;
                 const structureAudioX = f.kind === "crazy-king" || f.kind === "kumaverson" ? (f.x + enemyBaseTarget.x) / 2 : f.x;
-                playProductionCue((structureWeaponEvent && unitAudioCueFor(f.kind, "weapon", structureWeaponEvent)) || weaponCueForUnit(f.kind), structureAudioX, {
-                  priority: f.kind === "brute" || f.kind === "gunner" || f.kind === "crazy-king" ? 76 : 64,
-                  cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 125 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 75,
-                  volume: f.kind === "crazy-king" ? .64 : f.kind === "kumaverson" ? .5 : undefined,
-                  maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
-                  fallbackCue: f.kind === "brute" ? "structure-heavy" : "structure-light",
-                });
+                if (f.kind !== "mrs-chiha") {
+                  playProductionCue((structureWeaponEvent && unitAudioCueFor(f.kind, "weapon", structureWeaponEvent)) || weaponCueForUnit(f.kind), structureAudioX, {
+                    priority: f.kind === "brute" || f.kind === "gunner" || f.kind === "crazy-king" ? 76 : 64,
+                    cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 125 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 75,
+                    volume: f.kind === "crazy-king" ? .64 : f.kind === "kumaverson" ? .5 : undefined,
+                    maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
+                    fallbackCue: f.kind === "brute" ? "structure-heavy" : "structure-light",
+                  });
+                }
                 if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), structureAudioX, { priority: 74, volume: .56, cooldownMs: 110, maxInstances: 1 });
                 if (f.kind === "kumaverson") playProductionCue(unitAudioCueFor(f.kind, "weapon", "heavyHit"), structureAudioX, { priority: 74, volume: .54, cooldownMs: 130, maxInstances: 1 });
                 if (f.kind === "babayaga" && f.attackSequence % 6 === 0) playProductionCue(unitAudioCueFor(f.kind, "weapon", "reload"), f.x, { priority: 52, maxInstances: 1 });
@@ -9855,6 +10479,37 @@ export function AshfallGame() {
                     });
                   }
                   g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
+                } else if (f.kind === "mrs-chiha") {
+                  const grenadeRound = structureWeaponEvents[0];
+                  const sharedGrenadeEvent = {
+                    targetKind: "enemy-base" as const,
+                    sourceId: f.id,
+                    targetId: null,
+                    targetX: enemyBaseTarget.x,
+                    targetY: enemyBaseTarget.y,
+                    originX: f.x + 14,
+                    originY: f.y - 32,
+                    weapon: f.kind as UnitKind,
+                    shotIndex: grenadeRound.shotIndex,
+                    recoil: grenadeRound.recoil,
+                    casing: grenadeRound.casing,
+                    hitStopSeconds: grenadeRound.hitStopSeconds,
+                    impactDelaySeconds: grenadeRound.travelSeconds,
+                  };
+                  g.pendingWeaponHits.push({
+                    ...sharedGrenadeEvent,
+                    eventKind: "muzzle",
+                    remainingSeconds: grenadeRound.offsetSeconds,
+                    damage: 0,
+                    applyDamage: false,
+                  }, {
+                    ...sharedGrenadeEvent,
+                    eventKind: "impact",
+                    remainingSeconds: grenadeRound.hitOffsetSeconds,
+                    damage: grenadeRound.damage,
+                    applyDamage: true,
+                  });
+                  g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
                 } else {
                   g.barricadeHitFlash = .2;
                   g.barricadeHitY = f.y;
@@ -9864,7 +10519,7 @@ export function AshfallGame() {
                     g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .2, duration: .2, side: "human", style: "projectile", weapon: f.kind });
                   }
                 }
-                if (roleEffect && f.kind !== "gunner") {
+                if (roleEffect && !deferredStructureImpact) {
                   g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "projectile" : "melee", weapon: f.kind });
                   if (!productionMixerRef.current && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) {
                     playCue(`role-${roleEffect}` as SfxCueId);
@@ -9872,13 +10527,13 @@ export function AshfallGame() {
                 } else if (roleEffect === "gunner" && !productionMixerRef.current) {
                   playCue("role-gunner");
                 }
-                if (f.kind !== "gunner" && !g.barricadeBucklingAnnounced && beforeHit > g.barricadeMaxHp * .7 && g.barricadeHp <= g.barricadeMaxHp * .7) {
+                if (!deferredStructureImpact && !g.barricadeBucklingAnnounced && beforeHit > g.barricadeMaxHp * .7 && g.barricadeHp <= g.barricadeMaxHp * .7) {
                   g.barricadeBucklingAnnounced = true; g.banner = "感染拠点 // 損傷"; g.bannerTime = 1.5; playCue("base-damaged");
                 }
-                if (f.kind !== "gunner" && !g.barricadeCriticalAnnounced && beforeHit > g.barricadeMaxHp * .35 && g.barricadeHp <= g.barricadeMaxHp * .35) {
+                if (!deferredStructureImpact && !g.barricadeCriticalAnnounced && beforeHit > g.barricadeMaxHp * .35 && g.barricadeHp <= g.barricadeMaxHp * .35) {
                   g.barricadeCriticalAnnounced = true; g.banner = "感染拠点 // 大破"; g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("base-critical");
                 }
-                if (!productionMixerRef.current) playCue(f.kind === "brute" ? "structure-heavy" : "structure-light");
+                if (!productionMixerRef.current && f.kind !== "mrs-chiha") playCue(f.kind === "brute" ? "structure-heavy" : "structure-light");
               } else {
                 const beforeHit = g.baseHp;
                 const siegeDamage = crawlerSiegeDamage(f.damage, g.phase);
@@ -9904,6 +10559,7 @@ export function AshfallGame() {
                 }
               }
               const enragedSiege = f.kind === "takuya" && f.hp / f.maxHp <= .5;
+              f.attackVariant = null;
               f.attack = f.side === "human" ? attackPresentationDuration(f.kind) : .18;
               f.cooldown = enragedSiege ? 1 : f.attackEvery;
             }
@@ -10519,7 +11175,7 @@ export function AshfallGame() {
               activateManualAbility(icon.fighterId);
             }}
           >
-            <span aria-hidden="true"><b className="manual-ability-ready-icon" /></span>
+            <span aria-hidden="true"><b className={`manual-ability-ready-icon ability-${icon.kind}`} /></span>
             <i
               aria-hidden="true"
               style={{ height: icon.pointerLength, transform: `rotate(${icon.pointerAngle}deg)` }}

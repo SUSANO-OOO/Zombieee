@@ -4,6 +4,7 @@ import { CAMPAIGN_STAGE_IDS } from "./campaign.js";
 const V060_AUDIO_ROOT = "/audio/v060";
 const V070_AUDIO_ROOT = "/audio/v070";
 const V080_AUDIO_ROOT = "/audio/v080";
+const V090_AUDIO_ROOT = "/audio/v090";
 const V080_SUPPRESSED_CARBINE_CUE_ID = "weapon-suppressed-carbine";
 
 const MUSIC_TRACKS = Object.freeze([
@@ -99,6 +100,23 @@ const NEW_UNIT_AUDIO_CUES = Object.freeze([
   { id: "voice-babayaga-attack", category: "humanVoices", cooldownMs: 220, maxInstances: 2, gain: 0.70, priority: 68 },
   { id: "voice-babayaga-hurt", category: "humanVoices", cooldownMs: 300, maxInstances: 2, gain: 0.74, priority: 76 },
   { id: "voice-babayaga-death", category: "humanVoices", cooldownMs: 1000, maxInstances: 1, gain: 0.78, priority: 88 },
+]);
+
+const V090_PLAYABLE_AUDIO_CUES = Object.freeze([
+  { id: "weapon-tky-plasma-blade", category: "melee", gain: .68, priority: 72, cooldownMs: 80 },
+  { id: "ability-tky-light-blade-charge", category: "weapons", gain: .66, priority: 78, cooldownMs: 300 },
+  { id: "ability-tky-light-blade-release", category: "weapons", gain: .76, priority: 86, cooldownMs: 300 },
+  { id: "ability-tky-light-blade-impact", category: "melee", gain: .72, priority: 84, cooldownMs: 90 },
+  { id: "weapon-mrs-chiha-grenade-launcher", category: "weapons", gain: .72, priority: 72, cooldownMs: 120 },
+  { id: "weapon-mrs-chiha-grenade-impact", category: "weapons", gain: .72, priority: 78, cooldownMs: 90, maxInstances: 3 },
+  { id: "weapon-mrs-chiha-launcher-bash", category: "melee", gain: .68, priority: 70, cooldownMs: 120 },
+  { id: "ability-mrs-chiha-salvo-ready", category: "weapons", gain: .68, priority: 78, cooldownMs: 400 },
+  { id: "ability-mrs-chiha-salvo-shot", category: "weapons", gain: .74, priority: 82, cooldownMs: 90, maxInstances: 4 },
+  { id: "ability-mrs-chiha-salvo-impact", category: "weapons", gain: .72, priority: 84, cooldownMs: 80, maxInstances: 4 },
+  { id: "ability-mrs-chiha-salvo-final", category: "weapons", gain: .82, priority: 90, cooldownMs: 200 },
+  { id: "weapon-musashi-dual-katana", category: "melee", gain: .68, priority: 72, cooldownMs: 80 },
+  { id: "ability-musashi-cross-guard", category: "melee", gain: .62, priority: 78, cooldownMs: 300 },
+  { id: "ability-musashi-counter", category: "melee", gain: .78, priority: 88, cooldownMs: 180 },
 ]);
 
 const V070_AUDIO_ASSET_SPECS = Object.freeze([
@@ -206,6 +224,20 @@ function v080SuppressedCarbineAsset(variation) {
   };
 }
 
+function v090PlayableAsset(spec) {
+  return {
+    id: spec.id,
+    category: spec.category,
+    sources: sourceFor(V090_AUDIO_ROOT, "sfx", spec.id),
+    preload: "lazy",
+    loop: false,
+    gain: spec.gain,
+    priority: spec.priority,
+    cooldownMs: spec.cooldownMs,
+    maxInstances: spec.maxInstances ?? 2,
+  };
+}
+
 function variationAssets(baseId, category, options = {}) {
   return [1, 2].map((variation) => sfxAsset(
     `${baseId}-${String(variation).padStart(2, "0")}`,
@@ -286,6 +318,7 @@ const assets = [
   ...NEW_UNIT_AUDIO_CUES.map(({ id, category, ...options }) => sfxAsset(id, category, options)),
   ...V070_AUDIO_ASSET_SPECS.map(v070Asset),
   ...[1, 2].map(v080SuppressedCarbineAsset),
+  ...V090_PLAYABLE_AUDIO_CUES.map(v090PlayableAsset),
 ];
 
 const pools = [
@@ -307,6 +340,7 @@ const COMBAT_PRELOAD = Object.freeze([
   "radio-close",
   V080_SUPPRESSED_CARBINE_CUE_ID,
   ...NEW_UNIT_AUDIO_CUES.map(({ id }) => id),
+  ...V090_PLAYABLE_AUDIO_CUES.map(({ id }) => id),
 ]);
 
 export const STORY_AUDIO_MIX = Object.freeze({
@@ -473,6 +507,9 @@ const UNIT_WEAPON_CUES = Object.freeze({
   babayaga: "weapon-suppressed-pistol",
   engineer: V080_SUPPRESSED_CARBINE_CUE_ID,
   zakimiya: "weapon-pan-hit",
+  tky: "weapon-tky-plasma-blade",
+  "mrs-chiha": "weapon-mrs-chiha-grenade-launcher",
+  "miyamoto-musashi": "weapon-musashi-dual-katana",
 });
 
 const UNIT_VOICE_PROFILES = Object.freeze({
@@ -488,6 +525,9 @@ const UNIT_VOICE_PROFILES = Object.freeze({
   guardian: "male-heavy",
   engineer: "male-light",
   zakimiya: "male-light",
+  tky: "male-light",
+  "mrs-chiha": "female",
+  "miyamoto-musashi": "male-heavy",
 });
 
 const newUnitContract = ({ weapon, voiceProfile, weaponEvents, voicePrefix }) => Object.freeze({
@@ -540,6 +580,38 @@ export const UNIT_AUDIO_CUE_CONTRACTS = Object.freeze({
   }),
 });
 
+export const V090_PLAYABLE_WEAPON_CUE_CONTRACTS = Object.freeze({
+  tky: Object.freeze({
+    weapon: "weapon-tky-plasma-blade",
+    weaponEvents: Object.freeze({
+      attack: "weapon-tky-plasma-blade",
+      abilityCharge: "ability-tky-light-blade-charge",
+      abilityRelease: "ability-tky-light-blade-release",
+      abilityImpact: "ability-tky-light-blade-impact",
+    }),
+  }),
+  "mrs-chiha": Object.freeze({
+    weapon: "weapon-mrs-chiha-grenade-launcher",
+    weaponEvents: Object.freeze({
+      shot: "weapon-mrs-chiha-grenade-launcher",
+      hit: "weapon-mrs-chiha-grenade-impact",
+      bash: "weapon-mrs-chiha-launcher-bash",
+      abilityReady: "ability-mrs-chiha-salvo-ready",
+      abilityShot: "ability-mrs-chiha-salvo-shot",
+      abilityImpact: "ability-mrs-chiha-salvo-impact",
+      abilityFinal: "ability-mrs-chiha-salvo-final",
+    }),
+  }),
+  "miyamoto-musashi": Object.freeze({
+    weapon: "weapon-musashi-dual-katana",
+    weaponEvents: Object.freeze({
+      attack: "weapon-musashi-dual-katana",
+      abilityGuard: "ability-musashi-cross-guard",
+      abilityCounter: "ability-musashi-counter",
+    }),
+  }),
+});
+
 export const BATTLE_AUDIO_LOOP_CONTRACTS = Object.freeze({
   corpseBurn: Object.freeze({
     cueId: "corpse-burn-loop",
@@ -571,9 +643,9 @@ export function humanVoiceCueForUnit(kind, event) {
 
 export function unitAudioCueFor(kind, group, event) {
   const contract = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind);
-  if (!contract) return null;
-  if (group === "weapon") return ownValue(contract.weaponEvents, event);
-  if (group === "voice") return ownValue(contract.voiceEvents, event);
+  const weaponContract = contract ?? ownValue(V090_PLAYABLE_WEAPON_CUE_CONTRACTS, kind);
+  if (group === "weapon") return weaponContract ? ownValue(weaponContract.weaponEvents, event) : null;
+  if (group === "voice") return contract ? ownValue(contract.voiceEvents, event) : null;
   return null;
 }
 
