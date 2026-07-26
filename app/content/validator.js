@@ -252,7 +252,8 @@ function validateReferences(registry, ids, errors, warnings) {
         const enemy = validRecords(registry, "enemies").find((candidate) => candidate.id === id);
         // Runtime-generated records and explicit producer-review prototypes
         // are intentionally valid without a campaign mission consumer.
-        if (enemy?.runtimeGenerated || enemy?.prototypeStatus === "producer-review-required") continue;
+        if (enemy?.runtimeGenerated
+          || ["producer-review-required", "producer-approved"].includes(enemy?.prototypeStatus)) continue;
       }
       if (!referenced[collection].has(id)) warnings.push(issue("unused-content-candidate", collection, id, `Unreferenced ${collection} record`));
     }

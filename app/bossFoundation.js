@@ -10,8 +10,8 @@ const phase = (phaseNumber, label, startsAtRatio) => ({
 
 /**
  * Existing bosses are the first consumers of the 0.9.0 shared boss contract.
- * Kurome remains an isolated working-name prototype until its identity and
- * real-screen proof pass the producer checkpoint; no campaign stage consumes it.
+ * Kurome is the producer-approved reference slice for the remaining new bosses,
+ * but stays isolated until its outbreak mission becomes the campaign consumer.
  */
 export const BOSS_DEFINITIONS = deepFreeze([
   {
@@ -116,9 +116,9 @@ export const BOSS_DEFINITIONS = deepFreeze([
   {
     id: "boss-kurome-prototype",
     enemyKind: "kurome",
-    displayName: "クロメ（作業名）",
-    workingName: true,
-    prototypeStatus: "producer-review-required",
+    displayName: "クロメ",
+    workingName: false,
+    prototypeStatus: "producer-approved",
     classification: "長距離追跡・視界撹乱型異常発生個体",
     hpBar: { color: "#38cddd", accentColor: "#d461ed" },
     phases: [
@@ -127,7 +127,7 @@ export const BOSS_DEFINITIONS = deepFreeze([
       phase(3, "最終段階", .3),
     ],
     entrance: {
-      warningLabel: "警告 // クロメ（作業名）",
+      warningLabel: "警告 // クロメ",
       cueId: "enemy-takuya-attack",
       fullBodyRequired: true,
     },
@@ -163,8 +163,8 @@ export const BOSS_DEFINITIONS = deepFreeze([
     resultId: "boss-result-kurome-prototype",
     compendiumId: "boss-compendium-kurome-prototype",
     compendium: {
-      title: "クロメ（作業名）",
-      summary: "照準を追従させ、固定後に長距離射線と局所的な視界撹乱を発生させる試作個体。",
+      title: "クロメ",
+      summary: "照準を追従させ、固定後に長距離射線と局所的な視界撹乱を発生させる異常発生個体。",
       assetPath: "/art/v090-prototypes/bosses/kurome-compendium-candidate-r1.webp",
     },
   },

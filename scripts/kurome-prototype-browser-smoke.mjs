@@ -126,7 +126,7 @@ for (const engine of engines) {
           return proof?.bossId && proof.gateEntering && !proof.combatReady;
         }, undefined, { timeout });
         const entry = await evidence(page);
-        invariant(entry.proof.prototypeStatus === "producer-review-required", `${name}: prototype gate lost`);
+        invariant(entry.proof.prototypeStatus === "producer-approved", `${name}: producer approval lost`);
         invariant(entry.proof.entryMode === "right-edge-outside", `${name}: wrong entry profile`);
         invariant(entry.proof.hud === null && entry.proof.telegraph === null, `${name}: pre-entry combat leak`);
         invariant(entry.proof.bossHp === entry.proof.bossMaxHp, `${name}: entry damage leak`);
@@ -155,14 +155,14 @@ for (const engine of engines) {
           return proof?.combatReady && !proof.gateEntering;
         }, undefined, { timeout });
         await page.waitForFunction(() => (
-          document.querySelector(".boss-hud")?.textContent?.includes("クロメ（作業名）")
+          document.querySelector(".boss-hud")?.textContent?.includes("クロメ")
         ), undefined, { timeout });
         await page.waitForFunction(() => (
           window.__ASHFALL_BATTLE_QA__?.getBossFoundationProof?.("kurome")?.banner === null
         ), undefined, { timeout });
         const ready = await evidence(page);
         invariant(ready.proof.hud?.enemyKind === "kurome", `${name}: boss HUD absent`);
-        invariant(ready.bossHudText.includes("クロメ（作業名）"), `${name}: working-name label absent`);
+        invariant(ready.bossHudText.includes("クロメ"), `${name}: approved display name absent`);
         invariant(ready.proof.spriteLoadedWidth === 3360, `${name}: candidate atlas unavailable`);
         const bodyMinimum = viewport.width === 844 ? 143 : 130;
         const bodyMaximum = viewport.width === 844 ? 149 : 136;

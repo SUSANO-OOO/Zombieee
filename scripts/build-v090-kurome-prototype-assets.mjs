@@ -32,8 +32,8 @@ const expectedGenerated = Object.freeze({
     size: Object.freeze([512, 768]),
   }),
   "kurome-compendium-candidate-r1.webp": Object.freeze({
-    sha256: "59b842c673e48cd57322c98c8bb8b194ad7f92b6fb98eed0982cdb9faa333790",
-    bytes: 55834,
+    sha256: "88e92c93a39f4db5edb86dbe2e7a199d650ca633f3ab670ac0493f5235d050a8",
+    bytes: 55306,
     size: Object.freeze([512, 512]),
   }),
   "kurome-battle-candidate-r1.png": Object.freeze({
@@ -168,7 +168,7 @@ async function buildReferenceAssets(identityPath) {
       <path d="M48 385h88l28 28-28 28H48l28-28z" fill="none" stroke="#df65f2" stroke-width="7"/>
       <circle cx="106" cy="413" r="13" fill="#63e5ef"/><circle cx="106" cy="413" r="5" fill="#081119"/>
       <text x="184" y="405" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#fff">KUROME</text>
-      <text x="184" y="438" font-family="Arial,sans-serif" font-weight="700" font-size="16" letter-spacing="2" fill="#8feef4">WORKING NAME // PROTOTYPE</text>
+      <text x="184" y="438" font-family="Arial,sans-serif" font-weight="700" font-size="16" letter-spacing="2" fill="#8feef4">TRACKING-EYE ANOMALY</text>
       <text x="474" y="478" text-anchor="end" font-family="Arial,sans-serif" font-weight="700" font-size="14" fill="#cfc4d8">TRACKING / VISION DISRUPTION</text>
     </svg>
   `);
@@ -275,7 +275,7 @@ const fixedOutputs = await Promise.all([
 ].map(verifyGenerated));
 
 console.log(JSON.stringify({
-  message: "Built the producer-review-required Kurome boss prototype assets.",
+  message: "Built the producer-approved Kurome boss reference assets.",
   result: {
     identity: path.relative(root, reference.referencePath),
     compendium: path.relative(root, reference.compendiumPath),

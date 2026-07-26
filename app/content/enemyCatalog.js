@@ -15,7 +15,7 @@ export const ENEMY_CONTENT = deepFreeze([
   { id: "ooze", displayName: "漏泥", aliases: [], aiProfile: "contamination", hp: 138, hpPerWave: 3, speed: 10, damage: 14, range: 68, attackEvery: 1.45, bodyRadius: 14, laneSpeed: 26, abilityPressure: 1.4, spawnClass: "normal", initialAbilityCooldown: 3 },
   { id: "sprinter", displayName: "走鬼", aliases: [], aiProfile: "charge", hp: 78, hpPerWave: 2, speed: 38, damage: 18, range: 24, attackEvery: .68, bodyRadius: 11, laneSpeed: 82, abilityPressure: 1.38, spawnClass: "normal", initialAbilityCooldown: 2 },
   { id: "gate-eater", displayName: "改札喰い", aliases: [], aiProfile: "base-defense", hp: 1800, hpPerWave: 0, speed: 7, damage: 64, range: 42, attackEvery: 1.32, bodyRadius: 32, laneSpeed: 22, abilityPressure: 1.65, spawnClass: "boss", initialAbilityCooldown: 4 },
-  { id: "kurome", displayName: "クロメ（作業名）", aliases: [], aiProfile: "ranged", hp: 2100, hpPerWave: 0, speed: 8, damage: 36, range: 240, attackEvery: 1.72, bodyRadius: 36, laneSpeed: 28, abilityPressure: 1.72, spawnClass: "boss", initialAbilityCooldown: 3.4, prototypeStatus: "producer-review-required" },
+  { id: "kurome", displayName: "クロメ", aliases: [], aiProfile: "ranged", hp: 2100, hpPerWave: 0, speed: 8, damage: 36, range: 240, attackEvery: 1.72, bodyRadius: 36, laneSpeed: 28, abilityPressure: 1.72, spawnClass: "boss", initialAbilityCooldown: 3.4, prototypeStatus: "producer-approved" },
 ]);
 
 export const ENEMY_CONTENT_BY_ID = deepFreeze(Object.fromEntries(

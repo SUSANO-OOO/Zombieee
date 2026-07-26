@@ -58,19 +58,19 @@ test("existing bosses own one immutable shared contract with stable result and c
   );
 });
 
-test("Kurome remains a working-name producer-review prototype without a campaign consumer", () => {
+test("Kurome is producer-approved but remains isolated until its campaign consumer lands", () => {
   const definition = bossDefinitionForEnemyKind("kurome");
   assert.equal(definition.id, "boss-kurome-prototype");
-  assert.equal(definition.displayName, "クロメ（作業名）");
-  assert.equal(definition.workingName, true);
-  assert.equal(definition.prototypeStatus, "producer-review-required");
+  assert.equal(definition.displayName, "クロメ");
+  assert.equal(definition.workingName, false);
+  assert.equal(definition.prototypeStatus, "producer-approved");
   assert.equal(definition.attackTelegraph.kind, "tracking-ray");
   assert.equal(definition.attackTelegraph.warningSeconds, 1.25);
   assert.equal(definition.attackTelegraph.trackingSeconds, .82);
   assert.equal(definition.display.compactBodyHeight, 146);
   assert.equal(definition.display.standardBodyHeight, 133);
   assert.equal(definition.reward.equipmentId, "boss-resonance-gland");
-  assert.equal(enemyContentFor("kurome").prototypeStatus, "producer-review-required");
+  assert.equal(enemyContentFor("kurome").prototypeStatus, "producer-approved");
   assert.equal(
     Object.values(CAMPAIGN_STAGE_BY_ID).some((stage) => (
       stage.boss?.enemyKind === "kurome"

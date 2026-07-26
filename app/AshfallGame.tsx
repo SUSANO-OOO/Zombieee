@@ -9841,8 +9841,8 @@ export function AshfallGame() {
                 g.flashOverlay = Math.max(g.flashOverlay, .12);
                 g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
                 g.banner = finalPhase
-                  ? "クロメ（作業名） // 追跡眼・過励起"
-                  : "クロメ（作業名） // 追跡眼";
+                  ? "クロメ // 追跡眼・過励起"
+                  : "クロメ // 追跡眼";
                 g.bannerTime = .82;
                 playProductionCue("enemy-takuya-attack", f.x, {
                   priority: 94,
@@ -9870,7 +9870,7 @@ export function AshfallGame() {
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
                 abilityFrame = true;
-                g.banner = "クロメ（作業名） // 追跡照準";
+                g.banner = "クロメ // 追跡照準";
                 // The ray itself owns the full warning window. Keep the global
                 // banner brief so compact screens do not cover this tall boss.
                 g.bannerTime = .68;

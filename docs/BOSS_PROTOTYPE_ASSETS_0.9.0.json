@@ -1,9 +1,13 @@
 {
   "schemaVersion": 1,
-  "status": "producer-review-required",
-  "workingName": "クロメ",
+  "status": "producer-approved",
+  "displayName": "クロメ",
   "prototypeId": "boss-kurome-prototype",
-  "integrationGate": "Producer confirms identity, working name, 844x390 and 844x340 real-screen proof.",
+  "integrationGate": "Satisfied by Producer confirmation on 2026-07-27: identity, display name, and real-screen prototype accepted.",
+  "producerApproval": {
+    "date": "2026-07-27",
+    "scope": ["identity", "display-name", "844x390", "844x340"]
+  },
   "sourceAssets": [
     {
       "path": "assets/source/v090-prototypes/bosses/kurome-identity-master-candidate-r1.png",
@@ -27,8 +31,8 @@
     },
     {
       "path": "public/art/v090-prototypes/bosses/kurome-compendium-candidate-r1.webp",
-      "sha256": "59b842c673e48cd57322c98c8bb8b194ad7f92b6fb98eed0982cdb9faa333790",
-      "bytes": 55834,
+      "sha256": "88e92c93a39f4db5edb86dbe2e7a199d650ca633f3ab670ac0493f5235d050a8",
+      "bytes": 55306,
       "dimensions": [512, 512],
       "generatedBy": "scripts/build-v090-kurome-prototype-assets.mjs",
       "derivedFrom": ["assets/source/v090-prototypes/bosses/kurome-identity-master-candidate-r1.png"]
