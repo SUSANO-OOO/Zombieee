@@ -281,6 +281,7 @@ export const CAMPAIGN_UNIT_IDS = deepFreeze({
   RAIDER: "unit-raider",
   GANTETSU: "unit-gantetsu",
   MONKEY: "unit-monkey",
+  ZAKIMIYA: "unit-zakimiya",
   // Deprecated property names remain import-compatible. Their values are the
   // canonical 0.7.0 IDs; old names are never player-facing.
   TACHIBANA_JIN: "unit-hachi",
@@ -1362,6 +1363,36 @@ export const CAMPAIGN_UNITS = deepFreeze([
     },
     unlock: { type: "story-join", stageNumber: 6, costCaps: 0 },
   },
+  {
+    id: CAMPAIGN_UNIT_IDS.ZAKIMIYA,
+    unitId: CAMPAIGN_UNIT_IDS.ZAKIMIYA,
+    aliases: ["zakimiya", "ザキミヤ"],
+    combatKind: "zakimiya",
+    displayName: "ザキミヤ",
+    primaryClassId: "class-frontline",
+    roleTags: ["近接", "範囲炎上", "対密集", "継続損害"],
+    roleName: "火酒使い",
+    roleIcon: "酒",
+    weaponName: "ウイスキーボトル",
+    attackMode: "瓶打撃・火炎瓶投擲",
+    rangeBand: "近距離",
+    primaryTarget: "密集した感染者",
+    deploymentHint: "敵が密集する前線へ配備",
+    description: "割れない瓶で前線を支え、火酒投擲で密集群を焼く",
+    recruitmentCostCaps: 240,
+    spritePath: "/art/v090/characters/zakimiya-battle-r1.png",
+    assetStatus: "approved",
+    appearanceAudit: {
+      presentation: "Producer承認済みidentity masterに基づく、痩身で疲労感のある中年男性表現",
+      weaponMatch: "手持ちのウイスキーボトルと腰部の複数ボトルを通常攻撃・火酒投擲へ接続",
+      result: "0.9.0正式identity masterから派生したportrait／card／battle atlasで同一性を固定",
+    },
+    unlock: {
+      type: "recruitment",
+      stageNumber: 17,
+      costCaps: 240,
+    },
+  },
 ]);
 
 export const CAMPAIGN_GUIDE = deepFreeze({
@@ -1455,11 +1486,17 @@ export const CAMPAIGN_RECRUITMENT_MILESTONES = deepFreeze({
     discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MONKEY],
     recruitableUnitIds: [],
   },
+  17: {
+    storyJoinUnitIds: [],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.ZAKIMIYA],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.ZAKIMIYA],
+  },
 });
 
 export const CAMPAIGN_RECRUITMENT_COSTS = deepFreeze({
   [CAMPAIGN_UNIT_IDS.TATARA]: 150,
   [CAMPAIGN_UNIT_IDS.RAIDER]: 200,
+  [CAMPAIGN_UNIT_IDS.ZAKIMIYA]: 240,
 });
 
 /**

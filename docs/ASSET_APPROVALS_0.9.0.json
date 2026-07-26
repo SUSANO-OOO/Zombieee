@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "version": "0.9.0",
+  "reviewedAt": "2026-07-26",
+  "status": "active-partial",
+  "scope": [
+    "assets/source/v090/",
+    "public/art/v090/"
+  ],
+  "rightsProvenance": {
+    "producerProvidedInputs": [
+      {
+        "unitId": "unit-zakimiya",
+        "messageReference": "producer-message-2026-07-26-image-1",
+        "path": "assets/source/v090/characters/zakimiya-identity-master-r1.png",
+        "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7",
+        "approval": "The producer directly supplied this image and explicitly fixed it as Zakimiya's sole formal identity master for derivative production, repository inclusion, and game use."
+      }
+    ],
+    "thirdPartyDownloadedVisuals": false,
+    "publicRedistribution": "The producer directly authorized repository and game use of the supplied master and its derivatives. OpenAI image-generation outputs are retained under the applicable OpenAI Content terms and producer direction. This record does not grant a separate CC0 or standalone reuse license.",
+    "identityIsolation": "Every Zakimiya derivative in this ledger uses only the approved Zakimiya identity master or a ledger-recorded derivative from it; no other character portrait or battle sprite is an input."
+  },
+  "assets": [
+    {
+      "assetId": "V090-ZAKIMIYA-IDENTITY@r1",
+      "kind": "producer-identity-master",
+      "path": "assets/source/v090/characters/zakimiya-identity-master-r1.png",
+      "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7",
+      "bytes": 1619883,
+      "width": 1024,
+      "height": 1536,
+      "sourceAssetIds": [],
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-CUTOUT-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/zakimiya-cutout-source-r1.png",
+      "sha256": "50c0e3bd0ff028a700c5051353f8d5d2a3e28c23ec0fda2c5f0cba63d5ed4259",
+      "bytes": 1676770,
+      "width": 1024,
+      "height": 1536,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-IDENTITY@r1"
+      ],
+      "processing": "OpenAI image generation referenced only the approved identity master to create a blue-screen action cutout while preserving face, age, build, clothing, bottle loadout, and weapon.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-COMBAT-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/zakimiya-combat-poses-source-r1.png",
+      "sha256": "3413bb6050ecc712254e5250eab452f7f13e506c35fc3f9150fe24d8710170c9",
+      "bytes": 1550436,
+      "width": 1536,
+      "height": 1024,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-IDENTITY@r1"
+      ],
+      "processing": "OpenAI image generation referenced only the approved identity master to create seven combat poses with the same person, intact whisky bottle, clothing, proportions, and grounded footwear.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-REFERENCE@r1",
+      "kind": "runtime-reference-copy",
+      "path": "public/art/v090/characters/reference/zakimiya-identity-master-r1.png",
+      "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7",
+      "bytes": 1619883,
+      "width": 1024,
+      "height": 1536,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-IDENTITY@r1"
+      ],
+      "processing": "Byte-identical versioned repository copy.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-EVENT-PORTRAIT@r1",
+      "kind": "event-portrait",
+      "path": "public/art/v090/characters/portraits/zakimiya-event-portrait-r1.webp",
+      "sha256": "ba5c30caec924b50c99f89ab3128acbbc429b3e6b70446b33e92869db278840c",
+      "bytes": 75682,
+      "width": 512,
+      "height": 640,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-CUTOUT-SOURCE@r1"
+      ],
+      "processing": "build-v090-zakimiya-assets.mjs chroma removal, crop, resize, and WebP encode.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-FORMATION-CARD@r1",
+      "kind": "formation-and-personnel-card",
+      "path": "public/art/v090/characters/cards/zakimiya-formation-card-r1.webp",
+      "sha256": "c213145d55aad06d67551f462631d64c793f203201fddebe06525ed1b068168f",
+      "bytes": 60862,
+      "width": 512,
+      "height": 512,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-CUTOUT-SOURCE@r1"
+      ],
+      "processing": "build-v090-zakimiya-assets.mjs crop plus project-authored whisky silhouette and role frame.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-BATTLE@r1",
+      "kind": "battle-atlas",
+      "path": "public/art/v090/characters/zakimiya-battle-r1.png",
+      "sha256": "9fcf28a4575d2757a94f7f6791e06ea95e13fbd7b3ceba40fd1d9fd515745b7c",
+      "bytes": 1228231,
+      "width": 3360,
+      "height": 896,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-COMBAT-SOURCE@r1"
+      ],
+      "processing": "build-v090-zakimiya-assets.mjs chroma removal, component isolation, seven grounded poses, and mirrored directions.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-FIRE-WHISKY-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/zakimiya-fire-whiskey-ready-r1.svg",
+      "sha256": "37e9681292537af1de84193a491f21159bfaed692a19acc559072fe394ef32df",
+      "bytes": 1310,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-IDENTITY@r1"
+      ],
+      "processing": "Project-authored SVG using the approved intact whisky bottle and flame motif; no external icon source.",
+      "status": "approved"
+    }
+  ]
+}

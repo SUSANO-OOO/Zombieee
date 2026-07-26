@@ -87,6 +87,7 @@ function unitProfile({
   eventPath,
   eventRevision,
   cardPath,
+  cardRevision = "r2",
   battlePath,
   battleRevision,
   cardRead,
@@ -109,7 +110,7 @@ function unitProfile({
     },
     formationCard: {
       path: cardPath,
-      revision: "r2",
+      revision: cardRevision,
       focus: { x: focus.x, y: Math.max(.2, focus.y) },
       requiredRead: ["face", "upper-body", "primary-weapon", "role-silhouette"],
       weaponRead: cardRead.weaponId,
@@ -118,7 +119,7 @@ function unitProfile({
     },
     personnelCard: {
       path: cardPath,
-      revision: "r2",
+      revision: cardRevision,
       focus: { x: focus.x, y: Math.max(.2, focus.y) },
       requiredRead: ["face", "upper-body", "primary-weapon", "role-silhouette"],
       weaponRead: cardRead.weaponId,
@@ -292,6 +293,34 @@ export const V080_UNIT_VISUAL_PROFILES = deepFreeze({
       "charcoal-recon-tactical-kit",
       "suppressed-compact-carbine",
       "cyan-tripwire-trap-modules",
+    ],
+  }),
+});
+
+export const V090_CARD_READ_CONTRACTS = deepFreeze({
+  zakimiya: { weaponId: "whisky-bottle", label: "WHISKY", role: "area-burner", accent: "#e2a64b" },
+});
+
+export const V090_UNIT_VISUAL_PROFILES = deepFreeze({
+  zakimiya: unitProfile({
+    unitId: "unit-zakimiya",
+    combatKind: "zakimiya",
+    identityPath: "/art/v090/characters/reference/zakimiya-identity-master-r1.png",
+    identityRevision: "r1",
+    eventPath: "/art/v090/characters/portraits/zakimiya-event-portrait-r1.webp",
+    eventRevision: "r1",
+    cardPath: "/art/v090/characters/cards/zakimiya-formation-card-r1.webp",
+    cardRevision: "r1",
+    battlePath: "/art/v090/characters/zakimiya-battle-r1.png",
+    battleRevision: "r1",
+    cardRead: V090_CARD_READ_CONTRACTS.zakimiya,
+    focus: { x: .5, y: .22 },
+    identityLock: [
+      "middle-aged-japanese-male-face-and-age",
+      "short-messy-black-hair-and-lean-weathered-frame",
+      "black-weathered-jacket-with-white-stripe-and-red-arm-panel",
+      "intact-whisky-bottle-and-multiple-bottle-loadout",
+      "dark-cargo-trousers-wraps-and-lace-up-boots",
     ],
   }),
 });

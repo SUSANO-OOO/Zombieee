@@ -1,4 +1,4 @@
-import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
+import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 
 /**
  * Audited sprite source geometry for the 0.6.0 renderer and localhost QA.
@@ -35,6 +35,7 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   babayaga: Object.freeze({ w: 62, h: 103 }),
   guardian: Object.freeze({ w: 78, h: 108 }),
   engineer: Object.freeze({ w: 60, h: 100 }),
+  zakimiya: Object.freeze({ w: 62, h: 102 }),
   walker: Object.freeze({ w: 58, h: 96 }),
   runner: Object.freeze({ w: 53, h: 90 }),
   turned: Object.freeze({ w: 58, h: 96 }),
@@ -135,6 +136,10 @@ const LEGACY_PADDED_CELL = Object.freeze({
 });
 
 const NEWCOMER_VISIBLE = Object.freeze({
+  zakimiya: {
+    right: [[160, 16, 321, 432], [142, 16, 329, 432], [136, 16, 354, 432], [119, 16, 311, 421], [160, 16, 397, 426], [140, 16, 329, 432], [220, 327, 426, 432]],
+    left: [[160, 16, 321, 432], [142, 16, 329, 432], [136, 16, 354, 432], [169, 16, 368, 421], [100, 16, 329, 426], [140, 16, 329, 432], [55, 327, 260, 432]],
+  },
   scout: {
     right: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
     left: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
@@ -342,6 +347,7 @@ export const SPRITE_MANIFEST = Object.freeze({
   gunner: explicitAtlasManifestEntry("gunner", "/art/v070/characters/gunner-battle-v1.png"),
   guardian: explicitAtlasManifestEntry("guardian", "/art/v070/characters/guardian-battle-v1.png"),
   engineer: explicitAtlasManifestEntry("engineer", "/art/v080/characters/monkey-battle-r2.png"),
+  zakimiya: explicitAtlasManifestEntry("zakimiya", "/art/v090/characters/zakimiya-battle-r1.png"),
   walker: legacyManifestEntry("infected", "left"),
   runner: legacyManifestEntry("infected", "left"),
   turned: legacyManifestEntry("infected", "left"),
@@ -428,16 +434,18 @@ export function fitSpriteBattleDisplaySize(kind, frame, maximum = {}) {
 export const CHARACTER_PORTRAIT_ART = Object.freeze({
   ...Object.fromEntries(Object.entries(V080_UNIT_VISUAL_PROFILES)
     .map(([kind, profile]) => [kind, profile.eventPortrait.path])),
+  ...Object.fromEntries(Object.entries(V090_UNIT_VISUAL_PROFILES)
+    .map(([kind, profile]) => [kind, profile.eventPortrait.path])),
   guide: V075_VISUAL_PROFILES.ikura.eventPortrait.path,
 });
 
 export const FORMATION_CARD_ART = Object.freeze(Object.fromEntries(
-  Object.entries(V080_UNIT_VISUAL_PROFILES)
+  [...Object.entries(V080_UNIT_VISUAL_PROFILES), ...Object.entries(V090_UNIT_VISUAL_PROFILES)]
     .map(([kind, profile]) => [kind, profile.formationCard.path]),
 ));
 
 export const PERSONNEL_CARD_ART = Object.freeze(Object.fromEntries(
-  Object.entries(V080_UNIT_VISUAL_PROFILES)
+  [...Object.entries(V080_UNIT_VISUAL_PROFILES), ...Object.entries(V090_UNIT_VISUAL_PROFILES)]
     .map(([kind, profile]) => [kind, profile.personnelCard.path]),
 ));
 

@@ -316,7 +316,7 @@ test("migration starting funds cover starter equipment and multiple early Level 
 });
 
 test("all stable unit IDs remain registry-backed and Level milestone labels are deterministic", () => {
-  assert.equal(CONTENT_REGISTRY.upgrades.length, 11);
+  assert.equal(CONTENT_REGISTRY.upgrades.length, 12);
   assert.deepEqual(CONTENT_REGISTRY.upgrades.map(({ unitId }) => unitId), unitIds);
   assert.deepEqual(unitLevelMilestones("heavy", 1), []);
   assert.deepEqual(unitLevelMilestones("heavy", 3), ["重装装甲"]);

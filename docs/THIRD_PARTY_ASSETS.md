@@ -481,6 +481,14 @@ finalは`build-v080-character-assets.mjs`または`build-v080-stage-assets.mjs`�
 
 Monkeyの`weapon-suppressed-carbine`は`build-v080-audio.py`が数学波形とseed固定noiseだけから合成する2 variationの専用poolである。録音素材、sample library、生成音声、人間音声、外部serviceは使用しない。WAV masterとMP3／OGG finalのhash、source chainは`reference/audio/v080-generated/provenance.json`へ固定した。既存の出撃・攻撃・被弾・戦闘不能の人間キャラクターボイスは変更・削除していない。
 
+## Version 0.9.0 visual assets
+
+0.9.0の正式visualは`docs/ASSET_APPROVALS_0.9.0.json`を正規台帳とする。現時点のactive範囲は、プロデューサーが2026-07-26の直接メッセージで1枚目をザキミヤ唯一の正式identity masterとして提供・承認した縦切りassetだけである。
+
+原本、byte-identical reference、原本だけを参照したOpenAI image generationのcutout／combat pose source、project内build scriptによるevent portrait／formation・personnel card／battle atlas、自作SVG ready iconのSHA-256、寸法、source chainを台帳へ固定する。他人物、第三者配布画像、既存人物の色替え、外部iconは入力に使用していない。
+
+台帳のrepository収録・ゲーム利用根拠は、プロデューサーによる原本と派生利用の明示承認、および適用されるOpenAI Content termsである。これはCC0への変更や第三者への独立した再利用license付与を意味しない。残り4体は、各正式identity masterから同じfail-closed契約へ追加するまでactive assetとして扱わない。
+
 ## 任意クレジット（表示用）
 
 Audio: SRG774, nene, Emma_MA, Kenney, artisticdude, rubberduck, Tabasco, HaelDB, cicifyre, Galacti-Chron / Sky Rae, Ogrebane, xhunterko, AntumDeluge, Delta12 Studio. All external audio used under CC0 1.0; attribution is not required but is gratefully retained.
