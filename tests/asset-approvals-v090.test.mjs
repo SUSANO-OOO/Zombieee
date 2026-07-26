@@ -3,12 +3,13 @@ import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
 
 import { V090_UNIT_VISUAL_PROFILES } from "../app/visualProfiles.js";
 
-const ROOT = path.resolve(new URL("..", import.meta.url).pathname.slice(1));
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LEDGER_PATH = path.join(ROOT, "docs", "ASSET_APPROVALS_0.9.0.json");
 
 async function filesBelow(directory) {
