@@ -8,7 +8,7 @@
 
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
 - 公開中version：**Version 0.8.0**
-- Version 0.8.0 release commit：`dbc4bd7edea94fdadce094526384ea4a0f181587`
+- Version 0.8.0 game release commit：`dbc4bd7edea94fdadce094526384ea4a0f181587`
 - GitHub Release tag：`v0.8.0`
 - release ledger：Issue #61、completed／closed
 - release PR：#67、merged／closed
@@ -21,10 +21,7 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 
 ## 2. 現在のGitHub基準
 
-本書更新時に確認した`main`：
-
-`dbc4bd7edea94fdadce094526384ea4a0f181587`
-
+- Version 0.8.0 game release baseline：`dbc4bd7edea94fdadce094526384ea4a0f181587`
 - repository visibility：`public`
 - default branch：`main`
 - Version 0.7.1 Issue #43：completed／closed
@@ -34,7 +31,7 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 - save key：`nishijin-campaign-v1`
 - 現行save schema：v7を基準とし、Codex開始時にコードから再確認する
 
-現在値は作業開始時に再取得する。本書記載SHAを永久に最新として扱わない。
+`main`はdocs、ops、hotfix等でも進むため、現在SHAを本書へ永久固定しない。作業開始時、PR操作直前、merge直前、release直前にGitHubの現在値を再取得する。正式公開game sourceは、単なる最新`main`ではなく公開HTML metadata、tag、GitHub Release、release requestと照合する。
 
 ## 3. 現行Version 0.8.0
 
