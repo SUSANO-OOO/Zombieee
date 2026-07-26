@@ -3892,6 +3892,22 @@ export function AshfallGame() {
   const finalizedEndRef = useRef<BattleResult | null>(null);
   const survivalCheckpointSaveLocksRef = useRef(new Set<string>());
   const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
+  const bossFoundationQaRef = useRef<{
+    entranceCounts: Record<string, number>;
+    lastEntrance: { kind: string; cueId: string; warningLabel: string } | null;
+    barrierChallenge: {
+      bossId: number;
+      humanId: number;
+      targetX: number;
+      attempted: boolean;
+      blocked: boolean;
+      resultingX: number | null;
+    } | null;
+  }>({
+    entranceCounts: {},
+    lastEntrance: null,
+    barrierChallenge: null,
+  });
   const qaScenarioAppliedRef = useRef(false);
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -4448,45 +4464,37 @@ export function AshfallGame() {
       prepareBossFoundationProof: (kind: "takuya" | "gate-eater") => {
         const g = gameRef.current;
         if (!isBossEnemyKind(kind)) throw new RangeError(`Unknown boss proof kind: ${String(kind)}`);
+        const missionIndex = g.definition.timeline.findIndex((mission) => mission.units.includes(kind));
+        if (missionIndex < 0) {
+          throw new Error(`Boss proof route ${g.definition.stageId} does not contain ${kind}`);
+        }
+        const mission = g.definition.timeline[missionIndex];
         g.fighters = [];
         g.corpses = [];
         g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
-        g.eventIndex = g.definition.timeline.length;
+        g.eventIndex = missionIndex;
+        g.time = mission.at;
+        g.wave = mission.wave;
         g.deployQueue = [];
         g.battlefieldObjects = [];
+        g.signalIds = [];
+        g.banner = "";
+        g.bannerTime = 0;
         g.running = true;
         g.paused = false;
         g.over = false;
         g.won = false;
+        bossFoundationQaRef.current = {
+          entranceCounts: {},
+          lastEntrance: null,
+          barrierChallenge: null,
+        };
         const proofLane: Lane = 1;
-        const boss = spawnEnemy(g, kind, proofLane);
-        boss.x = 650;
-        boss.y = activeLaneCenters[proofLane];
-        boss.lane = proofLane;
-        boss.anchorLane = proofLane;
-        boss.combatReady = true;
-        boss.gateEntering = false;
-        boss.contained = false;
-        boss.spawnGrace = 0;
-        boss.speed = 0;
-        boss.laneSpeed = 0;
-        boss.cooldown = 99;
-        boss.abilityCooldown = 99;
-        boss.hp = Math.ceil(boss.maxHp * .72);
-        if (kind === "takuya") {
-          boss.abilityWindup = 999;
-        } else {
-          const charge = beginTicketGateEaterCharge({ boss, targetX: 430 });
-          boss.stationAbility = {
-            ...charge.runtime,
-            remainingSeconds: 999,
-          } as StationAbilityRuntime;
-        }
         spawnHuman(g, "scout");
         const human = g.fighters.find((fighter) => fighter.side === "human");
         if (!human) throw new Error("Boss foundation proof requires one human");
-        human.x = boss.x - 12;
-        human.y = boss.y;
+        human.x = 300;
+        human.y = activeLaneCenters[proofLane];
         human.lane = proofLane;
         human.anchorLane = proofLane;
         human.combatReady = true;
@@ -4496,10 +4504,19 @@ export function AshfallGame() {
         human.laneSpeed = 0;
         human.cooldown = 99;
         human.damage = 0;
-        const barrier = enforceBossBodyBarrier({ mover: human, boss, padding: 2 });
-        if (barrier.blocked) human.x = barrier.x;
-        const snapshot = bossHudSnapshot(boss);
-        const telegraph = bossTelegraphSnapshot(boss, { fallbackTargetX: BASE_X + 48 });
+        setPaused(false);
+        return {
+          kind,
+          humanId: human.id,
+          missionId: mission.id,
+          warningLabel: bossDefinitionForEnemyKind(kind)?.entrance.warningLabel ?? null,
+        };
+      },
+      getBossFoundationProof: (kind: "takuya" | "gate-eater") => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => fighter.kind === kind && fighter.side === "zombie");
+        const human = g.fighters.find((fighter) => fighter.side === "human");
+        const definition = bossDefinitionForEnemyKind(kind);
         const idleFrame = spriteFrameFor(kind, "idle", "left");
         const authoredSize = fitSpriteBattleDisplaySize(kind, idleFrame, spriteDisplaySize(kind));
         const renderScale = activeLaneCenters === LANE_Y ? 1 : COMPACT_BATTLE_SPRITE_SCALE;
@@ -4508,29 +4525,103 @@ export function AshfallGame() {
           * visibleHeightRatio
           * renderScale
           * sampleAnimationClip(kind, "idle", 0).bodyScale;
-        setPaused(false);
-        setHud((current) => ({
-          ...current,
-          bossHp: snapshot?.hp ?? 0,
-          bossMax: snapshot?.maxHp ?? 0,
-          bossKind: snapshot?.enemyKind ?? null,
-        }));
+        const compact = activeLaneCenters !== LANE_Y;
+        const bannerWidth = compact ? 268 : 356;
+        const bannerHeight = compact ? 32 : 54;
+        const bannerX = (W - bannerWidth) / 2;
+        const bannerY = compact ? 132 : 70;
         return {
           kind,
-          bossId: boss.id,
-          humanId: human.id,
-          bossX: boss.x,
-          bossY: boss.y,
-          bossBodyRadius: boss.bodyRadius,
-          humanX: human.x,
-          humanY: human.y,
-          humanBodyRadius: human.bodyRadius,
-          barrier,
-          hud: snapshot,
-          telegraph,
+          bossId: boss?.id ?? null,
+          humanId: human?.id ?? null,
+          bossX: boss?.x ?? null,
+          bossY: boss?.y ?? null,
+          bossBodyRadius: boss?.bodyRadius ?? null,
+          combatReadyX: boss?.combatReadyX ?? null,
+          combatReady: boss?.combatReady ?? false,
+          gateEntering: boss?.gateEntering ?? false,
+          entryMode: boss?.spawnEntryMode ?? null,
+          bossAttack: boss?.attack ?? 0,
+          bossTargetId: boss?.targetId ?? null,
+          bossHp: boss?.hp ?? null,
+          bossMaxHp: boss?.maxHp ?? null,
+          humanX: human?.x ?? null,
+          humanY: human?.y ?? null,
+          humanBodyRadius: human?.bodyRadius ?? null,
+          humanHp: human?.hp ?? null,
+          hud: boss ? bossHudSnapshot(boss) : null,
+          telegraph: boss ? bossTelegraphSnapshot(boss, { fallbackTargetX: BASE_X + 48 }) : null,
           renderedBodyHeight,
-          groundedAtY: boss.y,
-          display: bossDefinitionForEnemyKind(kind)?.display ?? null,
+          groundedAtY: boss?.y ?? null,
+          display: definition?.display ?? null,
+          entranceCount: bossFoundationQaRef.current.entranceCounts[kind] ?? 0,
+          lastEntrance: bossFoundationQaRef.current.lastEntrance,
+          barrier: bossFoundationQaRef.current.barrierChallenge,
+          banner: g.bannerTime > 0 ? {
+            text: g.banner,
+            remainingSeconds: g.bannerTime,
+            rect: {
+              left: bannerX,
+              top: bannerY,
+              right: bannerX + bannerWidth,
+              bottom: bannerY + bannerHeight,
+            },
+          } : null,
+          battleBarkCount: g.battleBarks.active.length,
+        };
+      },
+      accelerateBossFoundationEntry: (bossId: number) => {
+        const boss = gameRef.current.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
+        if (!boss || !boss.gateEntering) return false;
+        boss.gateEntrySpeed = Math.max(boss.gateEntrySpeed, 360);
+        return true;
+      },
+      startBossFoundationBarrierChallenge: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
+        const human = g.fighters.find((fighter) => fighter.id === humanId && fighter.side === "human");
+        if (!boss || !human || !boss.combatReady) return null;
+        const separation = boss.bodyRadius + human.bodyRadius + 2;
+        boss.speed = 0;
+        boss.laneSpeed = 0;
+        boss.cooldown = 99;
+        boss.abilityCooldown = 99;
+        human.x = boss.x - separation - 6;
+        human.y = boss.y;
+        human.lane = boss.lane;
+        human.anchorLane = boss.lane;
+        human.speed = 0;
+        human.laneSpeed = 0;
+        human.cooldown = 99;
+        bossFoundationQaRef.current.barrierChallenge = {
+          bossId,
+          humanId,
+          targetX: boss.x + separation + 24,
+          attempted: false,
+          blocked: false,
+          resultingX: null,
+        };
+        return { separation, startX: human.x };
+      },
+      armBossFoundationTelegraph: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
+        const human = g.fighters.find((fighter) => fighter.id === humanId && fighter.side === "human");
+        if (!boss || !human || !boss.combatReady) return null;
+        boss.speed = 0;
+        boss.laneSpeed = 0;
+        boss.hp = Math.ceil(boss.maxHp * .72);
+        boss.abilityCooldown = 0;
+        boss.abilityWindup = 0;
+        boss.stationAbility = createStationAbilityRuntime(boss.kind);
+        human.x = boss.x - 90;
+        human.y = boss.y;
+        human.lane = boss.lane;
+        human.anchorLane = boss.lane;
+        human.hp = human.maxHp;
+        human.cooldown = 99;
+        return {
+          warningSeconds: bossDefinitionForEnemyKind(boss.kind)?.attackTelegraph.warningSeconds ?? 0,
         };
       },
       prepareCrawlerDefenseProof: (
@@ -5454,6 +5545,47 @@ export function AshfallGame() {
     });
     return true;
   }, []);
+
+  const announceBossEntrance = useCallback((
+    g: Game,
+    kind: string,
+    { activateTakuyaScene = false }: { activateTakuyaScene?: boolean } = {},
+  ) => {
+    const definition = bossDefinitionForEnemyKind(kind);
+    if (!definition) return false;
+    const receiptId = `boss-entrance:${kind}:wave-${g.wave}`;
+    if (g.signalIds.includes(receiptId)) return false;
+    g.signalIds.push(receiptId);
+    g.banner = definition.entrance.warningLabel;
+    g.bannerTime = 3.2;
+    g.flashOverlay = Math.max(g.flashOverlay, .18);
+    g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
+    playProductionCue(definition.entrance.cueId, W / 2, {
+      priority: 104,
+      cooldownMs: 0,
+      volume: .92,
+      maxInstances: 1,
+      fallbackCue: "boss-warning",
+      dedupeKey: receiptId,
+    });
+    if (kind === "takuya") {
+      if (activateTakuyaScene) {
+        g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
+        setHud((current) => ({ ...current, takuyaEntranceAudioActive: true }));
+      }
+      emitBattleBark(g, "takuya-entrance", "ranger", receiptId);
+    } else {
+      emitBattleBark(g, "wave-contact", "guide", receiptId);
+    }
+    const qaState = bossFoundationQaRef.current;
+    qaState.entranceCounts[kind] = (qaState.entranceCounts[kind] ?? 0) + 1;
+    qaState.lastEntrance = {
+      kind,
+      cueId: definition.entrance.cueId,
+      warningLabel: definition.entrance.warningLabel,
+    };
+    return true;
+  }, [playProductionCue]);
 
   const resumeBattleAudioLoops = useCallback((g: Game) => {
     const productionMixer = productionMixerRef.current;
@@ -7851,10 +7983,7 @@ export function AshfallGame() {
               playCue("wave-contact");
               emitBattleBark(g, "wave-contact", "guide", `survival-wave-${event.plan.wave}`);
             } else if (event.type === "boss-warning") {
-              g.banner = `警告 // ${enemyContentFor(event.bossKind).displayName}`;
-              g.bannerTime = 3.2;
-              g.flashOverlay = Math.max(g.flashOverlay, .18);
-              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
+              announceBossEntrance(g, event.bossKind);
             } else if (event.type === "boss-combat-ready") {
               g.banner = "BOSS COMBAT READY";
               g.bannerTime = 1.6;
@@ -7914,18 +8043,11 @@ export function AshfallGame() {
               };
             });
             if (mission.units.length) {
-              const includesTakuya = mission.units.includes("takuya");
-              if (includesTakuya) {
-                g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
-                setHud((current) => ({ ...current, takuyaEntranceAudioActive: true }));
-                playProductionCue(TAKUYA_ENTRANCE_AUDIO.cueId, W / 2, {
-                  priority: 104,
-                  cooldownMs: 0,
-                  volume: .92,
-                  maxInstances: 1,
+              const incomingBossKind = mission.units.find((kind) => isBossEnemyKind(kind)) ?? null;
+              if (incomingBossKind) {
+                announceBossEntrance(g, incomingBossKind, {
+                  activateTakuyaScene: incomingBossKind === "takuya",
                 });
-                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
-                emitBattleBark(g, "takuya-entrance", "ranger", "takuya-entrance");
               } else {
                 playCue("wave-contact");
                 emitBattleBark(g, "wave-contact", "guide", `wave-${mission.wave}`);
@@ -8433,7 +8555,10 @@ export function AshfallGame() {
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
                 g.banner = "改札喰い // 突進予告";
-                g.bannerTime = Math.max(g.bannerTime, 1.05);
+                g.bannerTime = Math.max(
+                  g.bannerTime,
+                  bossDefinitionForEnemyKind("gate-eater")?.attackTelegraph.warningSeconds ?? 0,
+                );
               }
             }
             if (f.stationAbility.phase !== "idle") {
@@ -8494,10 +8619,10 @@ export function AshfallGame() {
               }
             } else if (f.abilityCooldown <= 0 && g.fighters.some((human) => human.side === "human" && human.hp > 0 && fighterDistance(human, f) <= 150)) {
               abilityFrame = true;
-              f.abilityWindup = .85;
+              f.abilityWindup = bossDefinitionForEnemyKind("takuya")?.attackTelegraph.warningSeconds ?? 0;
               f.abilityCooldown = f.hp / f.maxHp <= .5 ? 4.8 : 6.5;
               g.banner = "TAKUYA // 鉄槌強襲予告";
-              g.bannerTime = .9;
+              g.bannerTime = f.abilityWindup + .05;
             }
             if (abilityFrame) continue;
           }
@@ -9632,6 +9757,13 @@ export function AshfallGame() {
             f.lane = activeLaneForY(f.y, f.lane);
           }
           if (f.side === "human" && f.combatReady && f.hp > 0) {
+            const qaBarrier = bossFoundationQaRef.current.barrierChallenge;
+            if (qaBarrier
+              && qaBarrier.humanId === f.id
+              && qaBarrier.attempted === false) {
+              f.x = qaBarrier.targetX;
+              qaBarrier.attempted = true;
+            }
             for (const boss of g.fighters) {
               const barrier = enforceBossBodyBarrier({
                 mover: f,
@@ -9639,7 +9771,17 @@ export function AshfallGame() {
                 padding: 2,
                 previousX: movementStartX,
               });
-              if (barrier.blocked) f.x = Math.min(f.x, barrier.x);
+              if (barrier.blocked) {
+                f.x = Math.min(f.x, barrier.x);
+                if (qaBarrier
+                  && qaBarrier.humanId === f.id
+                  && qaBarrier.bossId === boss.id) {
+                  qaBarrier.blocked = true;
+                }
+              }
+            }
+            if (qaBarrier && qaBarrier.humanId === f.id && qaBarrier.attempted) {
+              qaBarrier.resultingX = f.x;
             }
           }
         }
@@ -10007,7 +10149,7 @@ export function AshfallGame() {
     };
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
-  }, [chooseAction, dispatchBattleStoryEvents, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, stopMusic, stopSfx, syncMusicMode]);
+  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);

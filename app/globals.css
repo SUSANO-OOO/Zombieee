@@ -226,7 +226,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
   .top-hud { height:calc(44px + var(--app-viewport-safe-top)); min-height:44px; padding:calc(4px + var(--app-viewport-safe-top)) calc(9px + var(--app-viewport-safe-right)) 4px calc(9px + var(--app-viewport-safe-left)); gap:5px; }
   .brand-block { gap:5px; }.brand-mark { width:34px; height:34px; font-size:19px; }
   .phase-block,.icon-btn { height:44px; }.icon-btn,.audio-btn { width:44px; }
-  .health-hud { top:48px; width:27%; }.boss-hud { top:90px; right:calc(8px + var(--app-viewport-safe-right)); width:24%; padding:3px 7px 4px; }.boss-hud.survival-boss-hud { top:55px; }.crawler-alert { top:79px; }
+  .health-hud { top:48px; width:27%; }.boss-hud { top:100px; right:calc(8px + var(--app-viewport-safe-right)); width:24%; padding:3px 7px 4px; }.boss-hud.survival-boss-hud { top:55px; }.crawler-alert { top:79px; }
   .bottom-hud { bottom:calc(14px + var(--app-viewport-safe-bottom)); height:60px; min-height:60px; max-height:60px; padding:4px calc(7px + var(--app-viewport-safe-right)) 4px calc(7px + var(--app-viewport-safe-left)); }
   .stats-strip { height:calc(14px + var(--app-viewport-safe-bottom)); padding:2px calc(8px + var(--app-viewport-safe-right)) var(--app-viewport-safe-bottom) calc(8px + var(--app-viewport-safe-left)); gap:12px; }
   .combat-deck { grid-template-columns:minmax(300px,1.35fr) minmax(260px,1fr); grid-template-rows:minmax(0,1fr); }.support-row { min-height:44px; }
@@ -245,7 +245,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
   .brand-mark { width:30px; height:30px; }.brand-block small { display:none; }
   .phase-block,.icon-btn { height:44px; }.icon-btn { width:44px; }.audio-btn { width:44px; }
   .audio-btn small { font-size:6px; }
-  .health-hud { top:48px; }.boss-hud { top:90px; }.boss-hud.survival-boss-hud { top:55px; }.crawler-alert { top:77px; }
+  .health-hud { top:48px; }.boss-hud { top:100px; }.boss-hud.survival-boss-hud { top:55px; }.crawler-alert { top:77px; }
   .bottom-hud { bottom:calc(14px + var(--app-viewport-safe-bottom)); height:60px; min-height:60px; max-height:60px; }
   .stats-strip { height:calc(14px + var(--app-viewport-safe-bottom)); font-size:7px; }.combat-deck { grid-template-columns:minmax(300px,1.35fr) minmax(260px,1fr); grid-template-rows:minmax(0,1fr); }.support-row { min-height:44px; }
   .card-copy small { display:none; }.placement-hint { top:auto; bottom:calc(90px + var(--app-viewport-safe-bottom)); }.battle-barks { top:calc(102px + var(--app-viewport-safe-top)); }.battle-barks p + p { display:none; }

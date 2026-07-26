@@ -77,14 +77,14 @@ export const BOSS_DEFINITIONS = deepFreeze([
     ],
     entrance: {
       warningLabel: "警告 // 改札喰い",
-      cueId: "enemy-takuya-attack",
+      cueId: "sfx-v070-station-warning",
       fullBodyRequired: true,
     },
     attackTelegraph: {
       attackId: "ticket-gate-charge",
       displayName: "改札突進",
       kind: "lane-rectangle",
-      warningSeconds: 1.05,
+      warningSeconds: 1.15,
       laneHalfHeight: 31,
       color: "#e7b25b",
       counterplay: "予告laneから退避し側面を攻撃",

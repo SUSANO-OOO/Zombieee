@@ -18,6 +18,7 @@ import {
   CAMPAIGN_STAGE_IDS,
 } from "../app/campaign.js";
 import { enemyContentFor } from "../app/content/enemyCatalog.js";
+import { STATION_ENEMY_TUNING } from "../app/stationEnemyMechanics.js";
 
 const EXISTING_BOSS_KINDS = ["takuya", "gate-eater"];
 
@@ -46,6 +47,14 @@ test("existing bosses own one immutable shared contract with stable result and c
   }
   assert.equal(isBossEnemyKind("crusher"), false);
   assert.equal(bossDefinitionForEnemyKind("crusher"), null);
+  assert.notEqual(
+    bossDefinitionForEnemyKind("takuya").entrance.cueId,
+    bossDefinitionForEnemyKind("gate-eater").entrance.cueId,
+  );
+  assert.equal(
+    bossDefinitionForEnemyKind("gate-eater").attackTelegraph.warningSeconds,
+    STATION_ENEMY_TUNING.ticketGateEater.windupSeconds,
+  );
 });
 
 test("campaign encounters reference canonical boss identity while replay encounters stay distinct", () => {

@@ -83,7 +83,8 @@ function createDiagnostics(page) {
   });
   page.on("response", (response) => {
     if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
-    if (response.status() < 400 && response.request().resourceType() === "media") {
+    if (response.status() < 400
+      && (response.request().resourceType() === "media" || response.url().includes("/audio/"))) {
       pendingRequests.delete(response.request());
     }
   });
@@ -112,19 +113,19 @@ async function waitForPendingRequests(pendingRequests, timeoutMs = 5_000) {
   }
 }
 
-async function readEvidence(page, bossCase, prepare = false) {
-  return page.evaluate(({ expected, shouldPrepare }) => {
+async function readEvidence(page, bossCase) {
+  return page.evaluate((expected) => {
     const bridge = window.__ASHFALL_BATTLE_QA__;
-    if (!bridge?.prepareBossFoundationProof || !bridge?.getSnapshot) {
+    if (!bridge?.getBossFoundationProof || !bridge?.getSnapshot) {
       throw new Error("Boss foundation QA bridge unavailable");
     }
-    const proof = shouldPrepare ? bridge.prepareBossFoundationProof(expected.kind) : null;
+    const proof = bridge.getBossFoundationProof(expected.kind);
     const snapshot = bridge.getSnapshot();
     const bossHud = document.querySelector(".boss-hud");
     const battlefield = document.querySelector(".battlefield");
     const hudRect = bossHud?.getBoundingClientRect() ?? null;
     const fieldRect = battlefield?.getBoundingClientRect() ?? null;
-    const visibleHudRects = [...document.querySelectorAll(".top-hud, .health-hud, .crawler-alert")]
+    const visibleHudRects = [...document.querySelectorAll(".top-hud, .health-hud, .crawler-alert, .battle-barks")]
       .filter((element) => {
         const style = getComputedStyle(element);
         const rect = element.getBoundingClientRect();
@@ -166,7 +167,7 @@ async function readEvidence(page, bossCase, prepare = false) {
         documentHeight: document.documentElement.scrollHeight,
       },
     };
-  }, { expected: bossCase, shouldPrepare: prepare });
+  }, bossCase);
 }
 
 function rectanglesOverlap(left, right) {
@@ -199,12 +200,91 @@ for (const engine of engines) {
             { timeout },
           );
           await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 10_000) });
-          const evidence = await readEvidence(page, bossCase, true);
-          await page.waitForTimeout(200);
-          const finalEvidence = {
-            ...await readEvidence(page, bossCase),
-            proof: evidence.proof,
-          };
+          const setup = await page.evaluate(
+            (kind) => window.__ASHFALL_BATTLE_QA__.prepareBossFoundationProof(kind),
+            bossCase.kind,
+          );
+          await page.waitForFunction(
+            (kind) => {
+              const proof = window.__ASHFALL_BATTLE_QA__?.getBossFoundationProof?.(kind);
+              return proof?.bossId && proof.gateEntering === true && proof.combatReady === false;
+            },
+            bossCase.kind,
+            { timeout },
+          );
+          const entryEvidence = await readEvidence(page, bossCase);
+          const entryProof = entryEvidence.proof;
+          invariant(entryProof.entranceCount === 1, `${name}: entrance did not fire exactly once`);
+          invariant(entryProof.lastEntrance?.kind === bossCase.kind, `${name}: entrance kind mismatch`);
+          invariant(entryProof.lastEntrance?.warningLabel === setup.warningLabel, `${name}: shared warning label not used`);
+          invariant(entryProof.gateEntering === true && entryProof.combatReady === false,
+            `${name}: boss skipped the right-edge entry state`);
+          invariant(["right-edge", "right-edge-outside"].includes(entryProof.entryMode),
+            `${name}: boss did not use a right-edge spawn profile`);
+          invariant(entryProof.hud === null && entryProof.telegraph === null,
+            `${name}: entry boss exposed combat UI before full-body readiness`);
+          invariant(entryProof.bossAttack === 0 && entryProof.bossTargetId === null,
+            `${name}: entry boss attacked or acquired a target`);
+          invariant(entryProof.bossHp === entryProof.bossMaxHp,
+            `${name}: entry boss was targetable before combat-ready`);
+          invariant(entryProof.banner?.text === setup.warningLabel,
+            `${name}: entrance warning was not visible during entry`);
+          await page.evaluate(
+            (bossId) => window.__ASHFALL_BATTLE_QA__.accelerateBossFoundationEntry(bossId),
+            entryProof.bossId,
+          );
+          await page.waitForFunction(
+            (kind) => {
+              const proof = window.__ASHFALL_BATTLE_QA__?.getBossFoundationProof?.(kind);
+              return proof?.combatReady === true && proof.gateEntering === false;
+            },
+            bossCase.kind,
+            { timeout },
+          );
+          const readyEvidence = await readEvidence(page, bossCase);
+          const readyProof = readyEvidence.proof;
+          invariant(Math.abs(readyProof.bossX - readyProof.combatReadyX) <= .01,
+            `${name}: full-body combat-ready point was not reached exactly`);
+          invariant(readyProof.hud?.enemyKind === bossCase.kind,
+            `${name}: boss HUD did not appear at combat-ready`);
+
+          const challenge = await page.evaluate(
+            ({ bossId, humanId }) => window.__ASHFALL_BATTLE_QA__
+              .startBossFoundationBarrierChallenge(bossId, humanId),
+            { bossId: readyProof.bossId, humanId: readyProof.humanId },
+          );
+          invariant(challenge, `${name}: barrier challenge could not start`);
+          await page.waitForFunction(
+            (kind) => {
+              const barrier = window.__ASHFALL_BATTLE_QA__?.getBossFoundationProof?.(kind)?.barrier;
+              return barrier?.attempted === true && barrier?.resultingX !== null;
+            },
+            bossCase.kind,
+            { timeout },
+          );
+          const barrierEvidence = await readEvidence(page, bossCase);
+          const barrierProof = barrierEvidence.proof;
+          invariant(barrierProof.barrier?.blocked === true,
+            `${name}: runtime high-speed pass-through barrier did not engage`);
+          invariant(
+            barrierProof.bossX - barrierProof.humanX + .01
+              >= barrierProof.bossBodyRadius + barrierProof.humanBodyRadius + 2,
+            `${name}: runtime barrier left the ally inside or beyond the boss body`,
+          );
+
+          const armed = await page.evaluate(
+            ({ bossId, humanId }) => window.__ASHFALL_BATTLE_QA__
+              .armBossFoundationTelegraph(bossId, humanId),
+            { bossId: readyProof.bossId, humanId: readyProof.humanId },
+          );
+          invariant(armed?.warningSeconds > 0, `${name}: real telegraph could not be armed`);
+          await page.waitForFunction(
+            (kind) => Boolean(window.__ASHFALL_BATTLE_QA__?.getBossFoundationProof?.(kind)?.telegraph),
+            bossCase.kind,
+            { timeout },
+          );
+          await page.waitForTimeout(100);
+          const finalEvidence = await readEvidence(page, bossCase);
           await waitForPendingRequests(pendingRequests);
           const screenshotPath = path.join(evidenceDir, `${name}.png`);
           await page.screenshot({ path: screenshotPath, fullPage: false });
@@ -214,13 +294,11 @@ for (const engine of engines) {
           invariant(proof.hud?.enemyKind === bossCase.kind, `${name}: shared boss HUD kind mismatch`);
           invariant(proof.hud?.phase?.phase === 2, `${name}: phase was not derived from HP`);
           invariant(proof.telegraph?.kind === bossCase.telegraphKind, `${name}: telegraph mismatch`);
+          invariant(proof.telegraph.remainingSeconds > 0
+            && proof.telegraph.remainingSeconds <= armed.warningSeconds,
+          `${name}: telegraph did not follow the canonical real windup`);
           invariant(finalEvidence.bossHudText.includes(bossCase.name), `${name}: boss name absent from HUD`);
           invariant(finalEvidence.bossHudText.includes("第2段階"), `${name}: phase absent from HUD`);
-          invariant(proof.barrier?.blocked === true, `${name}: ally pass-through barrier did not engage`);
-          invariant(
-            proof.bossX - proof.humanX + .01 >= proof.bossBodyRadius + proof.humanBodyRadius + 2,
-            `${name}: ally remained inside boss body`,
-          );
           invariant(snapshot.geometry?.offFloorCount === 0, `${name}: combat-ready body was off floor`);
           invariant(proof.groundedAtY === proof.bossY, `${name}: boss foot anchor changed`);
           if (viewport.width === 844) {
@@ -247,21 +325,50 @@ for (const engine of engines) {
           const overlapping = finalEvidence.visibleHudRects
             .filter((rect) => !String(rect.className).includes("boss-hud"))
             .filter((rect) => rectanglesOverlap(hudRect, rect));
+          if (proof.banner?.rect) {
+            invariant(!rectanglesOverlap(hudRect, proof.banner.rect),
+              `${name}: boss HUD overlapped the active warning banner`);
+          }
           invariant(overlapping.length === 0, `${name}: boss HUD overlap ${JSON.stringify(overlapping)}`);
+          const safeInset = viewport.width === 844 ? 44 : 0;
+          invariant(hudRect.left >= safeInset - 1 && hudRect.right <= viewport.width - safeInset + 1,
+            `${name}: boss HUD entered the horizontal safe area`);
+          for (const evidence of [entryEvidence, finalEvidence]) {
+            for (const rect of evidence.visibleHudRects
+              .filter(({ className }) => String(className).includes("battle-barks"))) {
+              invariant(rect.left >= safeInset - 1 && rect.right <= viewport.width - safeInset + 1,
+                `${name}: battle bark entered the horizontal safe area`);
+            }
+          }
           invariant(
             dimensions.documentWidth <= viewport.width && dimensions.documentHeight <= viewport.height,
             `${name}: page overflow ${dimensions.documentWidth}x${dimensions.documentHeight}`,
           );
+          await page.waitForFunction(
+            (kind) => window.__ASHFALL_BATTLE_QA__?.getBossFoundationProof?.(kind)?.telegraph === null,
+            bossCase.kind,
+            { timeout },
+          );
+          const endedProof = (await readEvidence(page, bossCase)).proof;
+          invariant(endedProof.entranceCount === 1,
+            `${name}: pause-safe entrance receipt replayed during one encounter`);
+          await waitForPendingRequests(pendingRequests, 10_000);
           assertDiagnostics(diagnostics, pendingRequests);
           results.push({
             name,
             status: "passed",
             renderedBodyHeight: proof.renderedBodyHeight,
+            entry: {
+              mode: entryProof.entryMode,
+              combatReady: entryProof.combatReady,
+              bossHp: entryProof.bossHp,
+              entrance: entryProof.lastEntrance,
+            },
             telegraph: proof.telegraph,
-            barrier: proof.barrier,
+            telegraphEnded: endedProof.telegraph === null,
+            barrier: barrierProof.barrier,
             hudRect,
             screenshotPath,
-            initialProof: evidence.proof,
           });
         } catch (error) {
           results.push({ name, status: "failed", error: String(error), diagnostics });
@@ -275,7 +382,12 @@ for (const engine of engines) {
   }
 }
 
-const reportPath = path.join(evidenceDir, "report.json");
+const fullEngineMatrix = engines.length === Object.keys(browserTypes).length
+  && Object.keys(browserTypes).every((engine) => engines.includes(engine));
+const reportPath = path.join(
+  evidenceDir,
+  fullEngineMatrix ? "report.json" : `report-${engines.join("-")}.json`,
+);
 await writeFile(reportPath, `${JSON.stringify(results, null, 2)}\n`, "utf8");
 const failures = results.filter(({ status }) => status !== "passed");
 if (failures.length > 0) {
