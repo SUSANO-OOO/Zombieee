@@ -215,7 +215,7 @@ test("start and finish are receipt-safe, save-compatible, and reusable for rerun
 test("campaign save migration preserves event runs and routes them into the normal battle request", () => {
   const original = createDefaultCampaignSave();
   assert.equal(original.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
-  assert.equal(CAMPAIGN_SAVE_SCHEMA_VERSION, 8);
+  assert.equal(CAMPAIGN_SAVE_SCHEMA_VERSION, 9);
   assert.deepEqual(original.eventFoundation, createEventFoundationProgress());
 
   const started = startCampaignEvent(original, timedEventId, {

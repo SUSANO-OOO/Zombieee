@@ -17,6 +17,8 @@ import {
 import {
   createDefaultSurvivalProgress,
   normalizeSurvivalProgress,
+  saveSurvivalCheckpoint,
+  settleSurvivalRun,
 } from "./survival.js";
 
 /**
@@ -1509,7 +1511,7 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 
 export const calculateBattleRewards = calculateStageRewards;
 
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 8;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 9;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
 const CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION = 5;
 
@@ -1536,6 +1538,44 @@ export const DEFAULT_CAMPAIGN_SETTINGS = deepFreeze({
   reducedMotion: false,
   battleEventMode: "first-time",
 });
+
+export function normalizeEquipmentInventory(value) {
+  const quantities = new Map();
+  const add = (equipmentId, quantity) => {
+    const id = typeof equipmentId === "string" ? equipmentId.trim().slice(0, 160) : "";
+    const numeric = Number(quantity);
+    if (!id
+      || id === "prototype"
+      || Object.hasOwn(Object.prototype, id)
+      || !Number.isFinite(numeric)
+      || numeric <= 0) {
+      return;
+    }
+    const normalizedQuantity = clampInteger(numeric, 1, Number.MAX_SAFE_INTEGER, 1);
+    quantities.set(
+      id,
+      Math.min(Number.MAX_SAFE_INTEGER, (quantities.get(id) ?? 0) + normalizedQuantity),
+    );
+  };
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      if (isRecord(entry)) add(entry.equipmentId ?? entry.id, entry.quantity);
+      else if (typeof entry === "string") add(entry, 1);
+    }
+  } else if (isRecord(value)) {
+    for (const [equipmentId, quantity] of Object.entries(value)) add(equipmentId, quantity);
+  }
+  return [...quantities.entries()]
+    .map(([equipmentId, quantity]) => ({ equipmentId, quantity }))
+    .sort((left, right) => left.equipmentId.localeCompare(right.equipmentId));
+}
+
+function addEquipmentInventory(inventory, grants) {
+  return normalizeEquipmentInventory([
+    ...normalizeEquipmentInventory(inventory),
+    ...normalizeEquipmentInventory(grants),
+  ]);
+}
 
 export function createDefaultCampaignSave() {
   const ownership = [...INITIAL_UNIT_IDS];
@@ -1564,6 +1604,7 @@ export function createDefaultCampaignSave() {
     caps: 0,
     // Deprecated 0.6.x currency field retained as a synchronized read alias.
     supplies: 0,
+    equipmentInventory: [],
     unlockedStageIds: [INITIAL_STAGE_ID],
     ownership,
     discovery: [...ownership],
@@ -1987,6 +2028,11 @@ export function migrateCampaignSave(
     claimedStarRewardsByStage,
     caps,
     supplies: caps,
+    equipmentInventory: normalizeEquipmentInventory(firstDefined(
+      source,
+      ["equipmentInventory", "equipment", "inventoryEquipment"],
+      [],
+    )),
     ...effectiveUnlocks,
     ...roster,
     unitRanks,
@@ -2121,6 +2167,124 @@ export function withCampaignSaveIntegrity(
     ...normalized,
     integrity: computeCampaignSaveIntegrity(normalized),
   };
+}
+
+export function checkpointSurvivalCampaignSave(
+  save,
+  run,
+  {
+    savedAt = new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry });
+  const survival = saveSurvivalCheckpoint(current.survival, run, savedAt);
+  const currentCheckpointId = current.survival.activeCheckpoint?.checkpointId ?? null;
+  const nextCheckpointId = survival.activeCheckpoint?.checkpointId ?? null;
+  if (!nextCheckpointId || nextCheckpointId === currentCheckpointId) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      applied: false,
+      checkpointId: nextCheckpointId,
+    };
+  }
+  const revised = reviseCampaignSave(
+    { ...current, survival },
+    { updatedAt: savedAt, eventRegistry },
+  );
+  return {
+    save: withCampaignSaveIntegrity(revised, { eventRegistry }),
+    applied: true,
+    checkpointId: nextCheckpointId,
+  };
+}
+
+export function settleSurvivalCampaignSave(
+  save,
+  run,
+  {
+    endedAt = new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry });
+  const settlement = settleSurvivalRun(current.survival, run, { endedAt });
+  if (settlement.duplicate) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      payout: settlement.payout,
+      applied: false,
+      duplicate: true,
+    };
+  }
+  if (!settlement.progress.processedRunIds.includes(run?.runId)) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      payout: settlement.payout,
+      applied: false,
+      duplicate: false,
+    };
+  }
+  const caps = Math.min(Number.MAX_SAFE_INTEGER, current.caps + settlement.payout.caps);
+  const revised = reviseCampaignSave({
+    ...current,
+    caps,
+    supplies: caps,
+    equipmentInventory: addEquipmentInventory(
+      current.equipmentInventory,
+      settlement.payout.equipmentGrants,
+    ),
+    survival: settlement.progress,
+  }, {
+    updatedAt: endedAt,
+    eventRegistry,
+  });
+  return {
+    save: withCampaignSaveIntegrity(revised, { eventRegistry }),
+    payout: settlement.payout,
+    applied: true,
+    duplicate: false,
+  };
+}
+
+export async function persistSurvivalCampaignSettlement(
+  save,
+  run,
+  {
+    persist,
+    endedAt = new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  if (typeof persist !== "function") throw new TypeError("A campaign persistence function is required");
+  const settlement = settleSurvivalCampaignSave(save, run, { endedAt, eventRegistry });
+  if (!settlement.applied) {
+    return {
+      ...settlement,
+      committed: settlement.duplicate,
+      persistCalls: 0,
+    };
+  }
+  try {
+    const result = await persist(settlement.save);
+    const durable = result === true || result?.durable === true;
+    return {
+      ...settlement,
+      save: durable ? settlement.save : save,
+      candidateSave: settlement.save,
+      committed: durable,
+      persistCalls: 1,
+    };
+  } catch (error) {
+    return {
+      ...settlement,
+      save,
+      candidateSave: settlement.save,
+      committed: false,
+      persistCalls: 1,
+      error,
+    };
+  }
 }
 
 export function verifyCampaignSaveIntegrity(rawSave) {
