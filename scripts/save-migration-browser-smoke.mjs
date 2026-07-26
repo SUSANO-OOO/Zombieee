@@ -4,6 +4,8 @@ import { pathToFileURL } from "node:url";
 import {
   CAMPAIGN_SAVE_SCHEMA_VERSION,
   computeCampaignSaveIntegrity,
+  inspectCampaignSaveCandidate,
+  serializeCampaignSave,
 } from "../app/campaign.js";
 import {
   V090_CAPS_MIGRATION_ID,
@@ -105,6 +107,9 @@ const release071Fixture = {
 // fixed v0.7.1 release commit. Its integrity must be valid before v7 migration.
 release071Fixture.integrity = computeCampaignSaveIntegrity(release071Fixture);
 const release071Serialized = JSON.stringify(release071Fixture);
+const release071MigratedSerialized = serializeCampaignSave(
+  inspectCampaignSaveCandidate(release071Serialized).save,
+);
 const release071MigratedCaps = reorganizeLegacyCaps(release071Fixture.caps).nextCaps;
 const corruptLocal = "{\"schemaVersion\":5,\"caps\":";
 const corruptIndexed = "not-json-indexed";
@@ -383,6 +388,14 @@ function assertDiagnostics(diagnostics, label) {
   }
 }
 
+async function tap(page, locator) {
+  await locator.waitFor({ state: "visible", timeout });
+  await locator.scrollIntoViewIfNeeded();
+  const box = await locator.boundingBox();
+  invariant(box && box.width > 0 && box.height > 0, "save migration touch target has no visible bounds");
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+}
+
 const browser = await browserType.launch({ headless: true });
 const results = [];
 let exportedBackup = null;
@@ -390,6 +403,8 @@ let exportedBackup = null;
 async function runCase(name, seed, verify) {
   const context = await browser.newContext({
     viewport: { width: viewportWidth, height: viewportHeight },
+    hasTouch: true,
+    isMobile: true,
     acceptDownloads: true,
   });
   const page = await context.newPage();
@@ -397,13 +412,28 @@ async function runCase(name, seed, verify) {
   const result = { name, status: "failed" };
   try {
     await seedPage(page, seed);
-    const response = await page.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+    const url = new URL(baseUrl);
+    url.searchParams.set("safe", "iphone-landscape");
+    const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
     invariant(response?.ok(), `${name} navigation failed: HTTP ${response?.status()}`);
     const evidence = await verify(page);
+    const environment = await page.evaluate(() => ({
+      inputMode: matchMedia("(pointer: coarse)").matches ? "touch" : "unknown",
+      safeAreaSource: document.documentElement.dataset.safeAreaSource ?? "",
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+      documentWidth: document.documentElement.scrollWidth,
+      documentHeight: document.documentElement.scrollHeight,
+    }));
+    invariant(environment.inputMode === "touch", `${name} did not expose a coarse touch pointer`);
+    invariant(environment.safeAreaSource === "local-qa-iphone-landscape",
+      `${name} safe-area fixture was not active`);
+    invariant(environment.documentWidth <= viewportWidth && environment.documentHeight <= viewportHeight,
+      `${name} viewport overflow: ${JSON.stringify(environment)}`);
     await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 5_000) }).catch(() => undefined);
     await page.waitForTimeout(100);
     assertDiagnostics(diagnostics, name);
-    Object.assign(result, { status: "passed", evidence });
+    Object.assign(result, { status: "passed", evidence: { ...evidence, environment } });
   } catch (error) {
     result.error = String(error);
     try {
@@ -455,10 +485,10 @@ try {
         `${source} IndexedDB last-known-good snapshot missing`);
 
       if (source === "localStorage") {
-        await page.getByRole("button", { name: "内容を確認", exact: true }).click();
+        await tap(page, page.getByRole("button", { name: "内容を確認", exact: true }));
         await waitForMigratedReplicas(page);
         const downloadPromise = page.waitForEvent("download", { timeout });
-        await page.getByRole("button", { name: "バックアップを書き出す", exact: true }).click();
+        await tap(page, page.getByRole("button", { name: "バックアップを書き出す", exact: true }));
         const download = await downloadPromise;
         invariant(download.suggestedFilename() === `nishijin-campaign-v${CURRENT_SCHEMA_VERSION}-backup.json`,
           `stale export filename: ${download.suggestedFilename()}`);
@@ -482,6 +512,23 @@ try {
       };
     });
   }
+
+  await runCase("partial-schema-migration", {
+    local: release071MigratedSerialized,
+    indexed: release071Serialized,
+  }, async (page) => {
+    await waitForTitleReady(page, "物語を続ける");
+    const storage = await waitForMigratedReplicas(page);
+    const local = parseSave(storage.local[SAVE_KEY], "partial migration localStorage");
+    const indexed = parseSave(storage.indexed[SAVE_KEY], "partial migration IndexedDB");
+    assertMigratedSave(local, "partial migration localStorage");
+    assertMigratedSave(indexed, "partial migration IndexedDB");
+    invariant(storage.local[SAVE_KEY] === storage.indexed[SAVE_KEY],
+      "partial schema migration replicas did not converge");
+    invariant(await page.getByRole("alert", { name: "セーブデータ復旧" }).count() === 0,
+      "partial schema migration incorrectly entered recovery");
+    return { recoveredWithoutConflict: true, revision: local.revision };
+  });
 
   for (const validSource of ["localStorage", "indexedDB"]) {
     await runCase(`one-corrupt-replica-valid-${validSource}`, {

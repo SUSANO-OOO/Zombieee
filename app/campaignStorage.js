@@ -454,9 +454,25 @@ function candidatesAsArray(candidates) {
 function candidateWithSourcePriority(left, right) {
   const freshness = compareCampaignCandidateFreshness(left, right);
   if (freshness !== 0) return freshness > 0 ? left : right;
+  if (candidateValuesEquivalent(left, right)) {
+    const leftSchema = Number(left?.sourceSchemaVersion);
+    const rightSchema = Number(right?.sourceSchemaVersion);
+    if (Number.isFinite(leftSchema) && Number.isFinite(rightSchema) && leftSchema !== rightSchema) {
+      return leftSchema > rightSchema ? left : right;
+    }
+  }
   if (left.source === CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE) return left;
   if (right.source === CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE) return right;
   return left;
+}
+
+function candidateValuesEquivalent(left, right) {
+  if (left?.value === undefined || right?.value === undefined) return false;
+  try {
+    return JSON.stringify(left.value) === JSON.stringify(right.value);
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -528,6 +544,7 @@ export function resolveCampaignStorageCandidates(candidates, callbacks = {}) {
     candidate !== selected
       && compareCampaignCandidateFreshness(candidate, selected) === 0
       && candidate.serialized !== selected.serialized
+      && !candidateValuesEquivalent(candidate, selected)
   ));
   if (equalFreshnessConflict) {
     return {

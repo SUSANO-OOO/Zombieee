@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  computeCampaignSaveIntegrity,
   createDefaultCampaignSave,
   inspectCampaignSaveCandidate,
   serializeCampaignSave,
@@ -13,6 +14,7 @@ import {
   CAMPAIGN_IMPORT_MAX_COLLECTION_ENTRIES,
   CAMPAIGN_IMPORT_MAX_DEPTH,
   CAMPAIGN_SNAPSHOT_KINDS,
+  CAMPAIGN_STORAGE_SOURCES,
   campaignStorageFor,
   clearCampaignSaveEverywhere,
   clearCampaignStorageFallback,
@@ -508,6 +510,53 @@ test("updatedAt breaks revision ties while equal-freshness divergent saves requi
   assert.equal(conflicted.conflict, true);
   assert.equal(conflicted.recoveryReason, "equal-freshness-conflict");
   assert.equal(conflicted.serialized, "");
+});
+
+test("a partial schema migration selects the canonical current replica and repairs the legacy peer", () => {
+  const legacy = {
+    ...createDefaultCampaignSave(),
+    schemaVersion: 9,
+    revision: 7,
+    updatedAt: "2026-07-26T00:00:00.000Z",
+    integrity: "",
+    caps: 987,
+    supplies: 987,
+  };
+  delete legacy.unitLevels;
+  delete legacy.processedMigrationIds;
+  delete legacy.migrationNotices;
+  legacy.integrity = computeCampaignSaveIntegrity(legacy);
+  const legacySerialized = JSON.stringify(legacy);
+  const migrated = inspectCampaignSaveCandidate(legacySerialized);
+  assert.equal(migrated.status, "valid");
+  const currentSerialized = serializeCampaignSave(migrated.save);
+
+  for (const [currentSource, legacySource] of [
+    [CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE, CAMPAIGN_STORAGE_SOURCES.INDEXED_DB],
+    [CAMPAIGN_STORAGE_SOURCES.INDEXED_DB, CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE],
+  ]) {
+    const resolution = resolveCampaignStorageCandidates([
+      {
+        source: currentSource,
+        key: "partial-migration",
+        state: "present",
+        raw: currentSerialized,
+        serialized: currentSerialized,
+      },
+      {
+        source: legacySource,
+        key: "partial-migration",
+        state: "present",
+        raw: legacySerialized,
+        serialized: legacySerialized,
+      },
+    ], { validate: inspectCampaignSaveCandidate });
+    assert.equal(resolution.status, "ready");
+    assert.equal(resolution.conflict, false);
+    assert.equal(resolution.source, currentSource);
+    assert.equal(resolution.sourceSchemaVersion, 10);
+    assert.deepEqual(resolution.repairSources, [legacySource]);
+  }
 });
 
 test("a valid IndexedDB candidate repairs corrupt localStorage and preserves raw evidence", async () => {
