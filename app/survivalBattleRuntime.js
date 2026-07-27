@@ -6,6 +6,7 @@ import {
   beginSurvivalWave,
   completeSurvivalBossEntrance,
   completeSurvivalWave,
+  normalizeSurvivalBossPool,
   normalizeSurvivalRun,
   selectSurvivalUpgrade,
   survivalWaveDescriptor,
@@ -77,9 +78,25 @@ const NORMAL_ENEMY_ORDER = deepFreeze([
   "abomination",
 ]);
 
-const SURVIVAL_BOSS_ORDER = deepFreeze(["takuya", "gate-eater"]);
+export function selectSurvivalBossKind({
+  waveNumber,
+  bossPool,
+  lastBossKind = null,
+} = {}) {
+  const descriptor = survivalWaveDescriptor(waveNumber);
+  if (!descriptor.isBoss) return null;
+  const pool = normalizeSurvivalBossPool(bossPool);
+  let index = (descriptor.blockNumber - 1) % pool.length;
+  if (pool.length > 1 && pool[index] === lastBossKind) {
+    index = (index + 1) % pool.length;
+  }
+  return pool[index];
+}
 
-export function survivalWaveSpawnPlan(waveNumber) {
+export function survivalWaveSpawnPlan(waveNumber, {
+  bossPool,
+  lastBossKind = null,
+} = {}) {
   const descriptor = survivalWaveDescriptor(waveNumber);
   const unlockedKinds = Math.min(
     NORMAL_ENEMY_ORDER.length,
@@ -94,17 +111,19 @@ export function survivalWaveSpawnPlan(waveNumber) {
       (descriptor.waveNumber * 5 + descriptor.blockNumber * 3 + index * 7) % unlockedKinds
     ]
   ));
+  const bossKind = selectSurvivalBossKind({
+    waveNumber: descriptor.waveNumber,
+    bossPool,
+    lastBossKind,
+  });
   if (descriptor.isBoss) {
-    const bossIndex = (descriptor.blockNumber - 1) % SURVIVAL_BOSS_ORDER.length;
-    units.splice(Math.min(2, units.length), 0, SURVIVAL_BOSS_ORDER[bossIndex]);
+    units.splice(Math.min(2, units.length), 0, bossKind);
   }
   return deepFreeze({
     wave: descriptor.waveNumber,
     descriptor,
     units,
-    bossKind: descriptor.isBoss
-      ? SURVIVAL_BOSS_ORDER[(descriptor.blockNumber - 1) % SURVIVAL_BOSS_ORDER.length]
-      : null,
+    bossKind,
   });
 }
 
@@ -209,7 +228,11 @@ export function advanceSurvivalCombat(runtime, run, {
     nextRuntime.intermissionRemaining = Math.max(0, nextRuntime.intermissionRemaining - elapsed);
     if (nextRuntime.intermissionRemaining <= 0) {
       nextRun = beginSurvivalWave(currentRun);
-      const plan = survivalWaveSpawnPlan(nextRun.currentWave);
+      const plan = survivalWaveSpawnPlan(nextRun.currentWave, {
+        bossPool: nextRun.bossPool,
+        lastBossKind: nextRun.lastBossKind,
+      });
+      if (plan.bossKind) nextRun = { ...nextRun, lastBossKind: plan.bossKind };
       nextRuntime = {
         ...nextRuntime,
         wave: nextRun.currentWave,

@@ -1,4 +1,5 @@
 import { normalizeEquipmentEnhancementLevels } from "./equipment.js";
+import { isBossEnemyKind } from "./bossFoundation.js";
 
 const SURVIVAL_MAX_SAFE_WAVE = 1_000_000;
 
@@ -208,10 +209,11 @@ function partialRewardId(runId, lastCompletedWave) {
 }
 
 export const SURVIVAL_PROGRESS_SCHEMA_VERSION = 1;
-export const SURVIVAL_RUN_SCHEMA_VERSION = 1;
+export const SURVIVAL_RUN_SCHEMA_VERSION = 2;
 export const SURVIVAL_BLOCK_WAVES = 5;
 export const SURVIVAL_START_SKIP_WAVES = 10;
 export const SURVIVAL_SPEED_OPTIONS = deepFreeze([1, 2]);
+export const SURVIVAL_DEFAULT_BOSS_KINDS = deepFreeze(["takuya", "gate-eater"]);
 
 export const SURVIVAL_RUN_PHASES = deepFreeze({
   WAVE_READY: "wave-ready",
@@ -274,6 +276,11 @@ export const SURVIVAL_UPGRADES = deepFreeze([
 export const SURVIVAL_UPGRADE_BY_ID = deepFreeze(Object.fromEntries(
   SURVIVAL_UPGRADES.map((upgrade) => [upgrade.id, upgrade]),
 ));
+
+export function normalizeSurvivalBossPool(value) {
+  const normalized = uniqueStrings(value, 32).filter(isBossEnemyKind);
+  return normalized.length > 0 ? normalized : [...SURVIVAL_DEFAULT_BOSS_KINDS];
+}
 
 const LATE_START_UPGRADE_ORDER = deepFreeze([
   "assault-drill",
@@ -405,6 +412,11 @@ export function normalizeSurvivalRun(value) {
     && storedUpgradeChoices.length !== 3
     ? survivalUpgradeChoices(runId, lastCompletedWave)
     : storedUpgradeChoices;
+  const bossPool = normalizeSurvivalBossPool(source.bossPool);
+  const lastBossKind = typeof source.lastBossKind === "string"
+    && bossPool.includes(source.lastBossKind)
+    ? source.lastBossKind
+    : null;
   return {
     schemaVersion: SURVIVAL_RUN_SCHEMA_VERSION,
     runId,
@@ -421,6 +433,8 @@ export function normalizeSurvivalRun(value) {
       ? 1
       : SURVIVAL_SPEED_OPTIONS.includes(Number(source.speed)) ? Number(source.speed) : 1,
     bossEntrancePending,
+    bossPool,
+    lastBossKind,
     formation: normalizeFormationSnapshot(source.formation),
     crawler: {
       hp: clampInteger(source.crawler?.hp, 0, crawlerMaxHp, crawlerMaxHp),
@@ -441,6 +455,7 @@ export function createSurvivalRun({
   unlockedStartWaves = [1],
   formation = {},
   crawlerMaxHp = 700,
+  bossPool = SURVIVAL_DEFAULT_BOSS_KINDS,
 } = {}) {
   const stableRunId = normalizedId(runId, "Survival run");
   const requestedStartWave = clampInteger(startWave, 1, SURVIVAL_MAX_SAFE_WAVE, 1);
@@ -466,6 +481,8 @@ export function createSurvivalRun({
     lastCompletedWave: requestedStartWave - 1,
     speed: 1,
     bossEntrancePending: false,
+    bossPool: normalizeSurvivalBossPool(bossPool),
+    lastBossKind: null,
     formation: normalizeFormationSnapshot(formation),
     crawler: { hp: maxHp, maxHp },
     temporaryUpgradeStacks: survivalLateStartUpgradeStacks(requestedStartWave),

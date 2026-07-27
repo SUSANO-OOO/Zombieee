@@ -741,7 +741,7 @@ test("Stage 4 and Stage 6 story joins are free while Stage 5 only discovers Monk
 test("default save is versioned and contains initial progression, selection, and settings", () => {
   const save = createDefaultCampaignSave();
   assert.equal(save.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
-  assert.equal(save.schemaVersion, 11);
+  assert.equal(save.schemaVersion, 12);
   assert.equal(save.revision, 0);
   assert.equal(save.updatedAt, "");
   assert.equal(save.integrity, "");
@@ -778,6 +778,7 @@ test("default save is versioned and contains initial progression, selection, and
   assert.equal(save.selectedPresetId, save.selectedFormationPresetId);
   assert.equal(CAMPAIGN_FORMATION_MAX_SLOTS, 7);
   assert.equal(save.lastSelectedStageId, INITIAL_STAGE_ID);
+  assert.deepEqual(save.outbreaks.survivalBossKinds, ["takuya", "gate-eater"]);
   assert.deepEqual(save.settings, {
     bgmEnabled: true,
     sfxEnabled: true,
