@@ -134,7 +134,7 @@ test("server-renders the 0.8.0 campaign title as the formal entry point", async 
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
   assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"/);
   await access(new URL("../public/favicon.svg", import.meta.url));
-  assert.match(html, /<main class="game-shell" data-screen="title" data-stage-id="stage-nishijin-shopping-street" data-release-version="0\.8\.0">/);
+  assert.match(html, /<main class="game-shell" data-screen="title" data-stage-id="stage-nishijin-shopping-street" data-battlefield-stage-id="stage-nishijin-shopping-street" data-release-version="0\.8\.0">/);
   assert.match(html, /aria-label="西新世紀末物語 ゲーム"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /class="battlefield  inactive" aria-label="連続座標の戦場" aria-hidden="true"/);
@@ -325,9 +325,9 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /TAKUYA撃破 — 感染拠点が露出/);
   assert.match(game, /感染拠点 \/\/ 損傷/);
   assert.match(game, /感染拠点 \/\/ 大破/);
-  assert.match(game, /const isStationPlatformAssault = selectedStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_PLATFORM/);
+  assert.match(game, /const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_PLATFORM/);
   assert.match(game, /isStationPlatformAssault[\s\S]*hud\.phase === 1 \? "確保" : hud\.phase === 2 \? "制圧" : "総攻撃"/);
-  assert.match(game, /const enemyBaseLabel = selectedStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"/);
+  assert.match(game, /const enemyBaseLabel = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"/);
   assert.match(game, /hud\.missionType === "timed-defense" \? "救援区域" : enemyBaseLabel/);
   assert.match(screens, /result\.won \? "作戦成功" : "戦線崩壊"/);
   assert.match(screens, /過去最高星<\/small><b>\{stars\(result\.previousBestStars\)\}/);
@@ -342,7 +342,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(layout, /href=\{V075_VISUAL_PROFILES\.enemyBase\.intact\.path\}/);
   assert.match(game, /const requiredSpriteKinds = qaMode \|\| qaScenario[\s\S]*\[\.\.\.new Set\(\[\.\.\.selectedFormationKinds, \.\.\.stageEnemyKinds, "turned" as UnitKind\]\)\]/);
   assert.match(game, /requiredSpriteKinds\.map\(\(kind\) => \([\s\S]*spriteSheetPath\(kind\)/);
-  assert.match(game, /STAGE_OBJECT_MANIFEST\[selectedStageId\]\?\.objects \?\? \[\]/);
+  assert.match(game, /STAGE_OBJECT_MANIFEST\[activeBattlefieldStageId\]\?\.objects \?\? \[\]/);
   assert.match(game, /releaseImage\(image\);[\s\S]*delete spriteRefs\.current\[key\]/);
   assert.match(game, /delete backgroundCacheRef\.current\[stageId\];[\s\S]*const criticalJobs = \[/);
   assert.match(game, /root\.dataset\.assetResidentScope = qaMode \|\| qaScenario \? "all-local-qa" : "stage-and-formation"/);
@@ -1365,8 +1365,8 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /const enemyBaseDestroyed = g\.barricadeHp <= 0[\s\S]*g\.resultPresented = !enemyBaseDestroyed/);
   assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
   assert.match(game, /g\.resultPresented = !enemyBaseDestroyed/);
-  assert.match(game, /if \(!enemyBaseDestroyed\) setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.stageId,[\s\S]*won: g\.won/);
-  assert.match(game, /if \(g\.over && !g\.resultPresented && !g\.survivalRun\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*if \(collapseStep\.complete\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.stageId,[\s\S]*won: g\.won/);
+  assert.match(game, /if \(!enemyBaseDestroyed\) setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.operationId,[\s\S]*won: g\.won/);
+  assert.match(game, /if \(g\.over && !g\.resultPresented && !g\.survivalRun\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*if \(collapseStep\.complete\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.operationId,[\s\S]*won: g\.won/);
   assert.match(game, /resolveStageResult\(campaignSave, \{[\s\S]*resultId: end\.resultId,[\s\S]*stageId: end\.stageId,[\s\S]*baseMaxHp: end\.baseMaxHp/);
   assert.match(game, /if \(!end \|\| finalizedEndRef\.current === end\) return;[\s\S]*window\.setTimeout\(async \(\) => \{[\s\S]*if \(finalizedEndRef\.current === end\) return;[\s\S]*finalizedEndRef\.current = end/);
   assert.match(game, /setCampaignSave\(resolved\.save as CampaignSave\)[\s\S]*setScreen\("result"\)/);
@@ -1536,7 +1536,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(game, /bossFoundationQaRef\.current\.barrierChallenge/);
   assert.doesNotMatch(game, /f\.abilityWindup = \.85/);
   assert.doesNotMatch(game, /g\.bannerTime = Math\.max\(g\.bannerTime, 1\.05\)/);
-  assert.match(game, /const selectedStageBossKind = CAMPAIGN_STAGE_BY_ID\[selectedStageId\]\?\.boss\?\.enemyKind \?\? null/);
+  assert.match(game, /const selectedStageBossKind = selectedOutbreakMissionId[\s\S]*OUTBREAK_MISSION_BY_ID\[selectedOutbreakMissionId\]\?\.boss\?\.enemyKind[\s\S]*CAMPAIGN_STAGE_BY_ID\[selectedStageId\]\?\.boss\?\.enemyKind \?\? null/);
   assert.match(game, /bossDefinitionForEnemyKind\(activeBossKind\)\?\.displayName/);
   assert.match(game, /\{activeBossLabel\}\{" \/\/ "\}\{bossPhase\.label\}[\s\S]*\{Math\.ceil\(hud\.bossHp\)\} \/ \{hud\.bossMax\}/);
   assert.match(css, /\.boss-hud \{[^}]*top:20%; right:calc\(2% \+ var\(--app-viewport-safe-right\)\); width:23%/);

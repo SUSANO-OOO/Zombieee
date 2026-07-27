@@ -69,6 +69,8 @@ import {
   CampaignScreens,
   type CampaignResultView,
   type CampaignScreen,
+  type OutbreakMissionScreenView,
+  type OutbreakResultView,
   type StageScreenView,
   type SupplyScreenView,
   type UnitScreenView,
@@ -99,6 +101,7 @@ import {
   isStageUnlocked,
   markCampaignStarted,
   markStoryEventRead,
+  persistOutbreakCampaignSettlement,
   persistSurvivalCampaignSettlement,
   recruitCampaignUnit,
   reviseCampaignSave,
@@ -111,7 +114,12 @@ import {
   updateStoryPlaybackSettings,
   upgradeCampaignUnit,
 } from "./campaign.js";
-import { aggregateEquipmentEffects } from "./equipment.js";
+import { EQUIPMENT_BY_ID, aggregateEquipmentEffects } from "./equipment.js";
+import {
+  OUTBREAK_MISSIONS,
+  OUTBREAK_MISSION_BY_ID,
+  isOutbreakMissionUnlocked,
+} from "./outbreakMissions.js";
 import {
   SURVIVAL_END_REASONS,
   SURVIVAL_RUN_PHASES,
@@ -541,6 +549,8 @@ type UnitCard = {
 type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: string[] };
 type BattleDefinition = {
   stageId: string;
+  operationId: string;
+  operationCategory: "campaign" | "outbreak";
   displayName: string;
   missionType: "assault" | "timed-defense" | "boss-assault" | "escort" | "sequential-seal" | "survival";
   prepSeconds: number;
@@ -1156,6 +1166,10 @@ type PendingSurvivalCheckpoint = {
   run: ReturnType<typeof createSurvivalRun>;
   checkpointId: string;
 };
+type PendingOutbreakSettlement = {
+  end: BattleResult;
+  completedAt: string;
+};
 const CAMPAIGN_SAVE_KEY = "nishijin-campaign-v1";
 type AudioUnlockUiState = "idle" | "pending" | "success" | "failed";
 
@@ -1395,7 +1409,9 @@ const initialGame = (
   takuyaEntranceAudioRemaining: 0,
   battleBarks: createBattleBarkRuntime(),
   barkFlags: [],
-  storyFlowState: createBattleStoryFlowState(stageId),
+  // Outbreak operations reuse the prerequisite campaign battlefield and its
+  // authored battle-bark flow; the operation ID itself is not a story stage.
+  storyFlowState: createBattleStoryFlowState(definition.stageId),
   storyBattleBarkState: createStoryBattleBarkState(),
   storyBattleReadEventIds: [...storyBattleReadEventIds],
   storyBattleReceiptEventIds: [],
@@ -5035,6 +5051,7 @@ export function AshfallGame() {
   const finalizedEndRef = useRef<BattleResult | null>(null);
   const survivalCheckpointSaveLocksRef = useRef(new Set<string>());
   const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
+  const outbreakSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const bossFoundationQaRef = useRef<{
     entranceCounts: Record<string, number>;
     lastEntrance: { kind: string; cueId: string; warningLabel: string } | null;
@@ -5081,6 +5098,11 @@ export function AshfallGame() {
   const [storyAudioPosition, setStoryAudioPosition] = useState<{ eventId: string | null; lineIndex: number }>({ eventId: null, lineIndex: 0 });
   const [forceStoryReplay, setForceStoryReplay] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState(INITIAL_STAGE_ID);
+  const [selectedOutbreakMissionId, setSelectedOutbreakMissionId] = useState<string | null>(null);
+  const activeOperationId = selectedOutbreakMissionId ?? selectedStageId;
+  const activeBattlefieldStageId = selectedOutbreakMissionId
+    ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.prerequisiteStageId ?? selectedStageId
+    : selectedStageId;
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
   const campaignSaveRef = useRef(campaignSave);
   useEffect(() => {
@@ -5102,6 +5124,9 @@ export function AshfallGame() {
   const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
   const formationKindKey = formationKinds.join("|");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
+  const [outbreakResult, setOutbreakResult] = useState<OutbreakResultView | null>(null);
+  const [pendingOutbreakSettlement, setPendingOutbreakSettlement] = useState<PendingOutbreakSettlement | null>(null);
+  const [outbreakSavePending, setOutbreakSavePending] = useState(false);
   const [selectedSurvivalStartWave, setSelectedSurvivalStartWave] = useState(1);
   const [survivalHud, setSurvivalHud] = useState<ReturnType<typeof survivalHudSnapshot>>(null);
   const [survivalResult, setSurvivalResult] = useState<SurvivalResultView | null>(null);
@@ -5723,7 +5748,7 @@ export function AshfallGame() {
         human.damage = 0;
         if (prototypeRoute) {
           const portal = enemySpawnPortalPoint({
-            stageId: g.definition.stageId,
+            stageId: g.definition.operationId,
             viewport: activeStageViewportId,
             entryId: 1,
             kind,
@@ -6321,6 +6346,93 @@ export function AshfallGame() {
           entryMode: enteringEnemy.spawnEntryMode,
         };
       },
+      advanceOutbreakTimeline: () => {
+        const g = gameRef.current;
+        if (g.definition.operationCategory !== "outbreak" || g.over) return null;
+        const nextEvent = g.definition.timeline[g.eventIndex];
+        if (!nextEvent) {
+          return {
+            eventIndex: g.eventIndex,
+            timelineLength: g.definition.timeline.length,
+            exhausted: true,
+          };
+        }
+        g.time = Math.max(g.time, nextEvent.at + .05);
+        return {
+          eventIndex: g.eventIndex,
+          timelineLength: g.definition.timeline.length,
+          nextEventAt: nextEvent.at,
+          exhausted: false,
+        };
+      },
+      accelerateOutbreakEntries: () => {
+        const g = gameRef.current;
+        if (g.definition.operationCategory !== "outbreak" || g.over) return 0;
+        let accelerated = 0;
+        for (const fighter of g.fighters) {
+          if (fighter.side !== "zombie" || !fighter.gateEntering || fighter.combatReady) continue;
+          fighter.gateEntrySpeed = Math.max(fighter.gateEntrySpeed, 260);
+          accelerated += 1;
+        }
+        return accelerated;
+      },
+      defeatOutbreakEnemies: () => {
+        const g = gameRef.current;
+        if (g.definition.operationCategory !== "outbreak"
+          || g.over
+          || g.eventIndex < g.definition.timeline.length
+          || g.enemySpawn.pending.length > 0
+          || g.fighters.some((fighter) => (
+            fighter.side === "zombie"
+            && fighter.hp > 0
+            && (!fighter.combatReady || fighter.gateEntering)
+          ))) return 0;
+        let defeated = 0;
+        for (const fighter of g.fighters) {
+          if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.contained) continue;
+          fighter.hp = 0;
+          defeated += 1;
+        }
+        return defeated;
+      },
+      defeatOutbreakBoss: () => {
+        const g = gameRef.current;
+        if (g.definition.operationCategory !== "outbreak" || g.over) return null;
+        const boss = g.fighters.find((fighter) => (
+          fighter.side === "zombie"
+          && fighter.kind === g.definition.bossEnemyKind
+          && fighter.hp > 0
+          && fighter.combatReady
+          && !fighter.gateEntering
+        ));
+        if (!boss) return null;
+        const before = {
+          bossId: boss.id,
+          barricadeHp: g.barricadeHp,
+          barricadeVulnerable: g.barricadeVulnerable,
+        };
+        boss.hp = 0;
+        return before;
+      },
+      defeatOutbreakRemainingEnemies: () => {
+        const g = gameRef.current;
+        if (g.definition.operationCategory !== "outbreak"
+          || g.over
+          || !g.bossDefeated
+          || g.eventIndex < g.definition.timeline.length
+          || g.enemySpawn.pending.length > 0) return 0;
+        let defeated = 0;
+        for (const fighter of g.fighters) {
+          if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.contained) continue;
+          fighter.hp = 0;
+          defeated += 1;
+        }
+        return defeated;
+      },
+      failNextOutbreakSettlementSave: () => {
+        outbreakSettlementPersistenceQaRef.current.failuresRemaining += 1;
+        return outbreakSettlementPersistenceQaRef.current.attempts;
+      },
       setSurvivalEntryVisibilityMode: (fighterId: number, entryMode: EnemyEntryMode) => {
         const fighter = gameRef.current.fighters.find((candidate) => candidate.id === fighterId);
         if (!fighter || fighter.side !== "zombie" || !fighter.gateEntering) return false;
@@ -6463,6 +6575,8 @@ export function AshfallGame() {
           screen,
           resultId: g.resultId,
           stageId: g.definition.stageId,
+          operationId: g.definition.operationId,
+          operationCategory: g.definition.operationCategory,
           time: g.time,
           running: g.running,
           paused: g.paused,
@@ -6493,14 +6607,17 @@ export function AshfallGame() {
           },
           equipmentInventory: [...currentCampaignSave.equipmentInventory],
           survivalSettlementPersistenceAttempts: survivalSettlementPersistenceQaRef.current.attempts,
+          outbreakSettlementPersistenceAttempts: outbreakSettlementPersistenceQaRef.current.attempts,
           bossDefeated: g.bossDefeated,
           bossDefeatPending: g.bossDefeatPending,
           baseHp: g.baseHp,
           baseMaxHp: g.baseMaxHp,
           barricadeHp: g.barricadeHp,
           barricadeMaxHp: g.barricadeMaxHp,
+          barricadeVulnerable: g.barricadeVulnerable,
           wave: g.wave,
           eventIndex: g.eventIndex,
+          timelineLength: g.definition.timeline.length,
           pendingSpawnCount: g.enemySpawn.pending.length,
           takuyaEntranceAudioRemaining: g.takuyaEntranceAudioRemaining,
           crawlerFootstepCount: g.crawlerFootstepCount,
@@ -6732,9 +6849,14 @@ export function AshfallGame() {
       image.removeAttribute("src");
     };
     const selectedFormationKinds = formationKindKey.split("|").filter(Boolean) as UnitKind[];
-    const stageEnemyKinds = Array.isArray(CAMPAIGN_STAGE_BY_ID[selectedStageId]?.enemyKinds)
-      ? CAMPAIGN_STAGE_BY_ID[selectedStageId].enemyKinds as UnitKind[]
+    const activeOutbreakEnemyKinds = selectedOutbreakMissionId
+      ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
       : [];
+    const stageEnemyKinds = activeOutbreakEnemyKinds.length > 0
+      ? activeOutbreakEnemyKinds as UnitKind[]
+      : Array.isArray(CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds)
+        ? CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId].enemyKinds as UnitKind[]
+        : [];
     // QA galleries intentionally exercise every atlas. Production only retains
     // the selected formation and the current stage's enemy roster, preventing
     // all 23 high-resolution atlases from occupying mobile memory at once.
@@ -6749,7 +6871,7 @@ export function AshfallGame() {
       pod: "/tactical-drop-pod-v1.png",
       drum: "/explosive-drum-v1.png", medical: "/medical-supply-station-v1.png",
     };
-    const stageObjectAssets = STAGE_OBJECT_MANIFEST[selectedStageId]?.objects ?? [];
+    const stageObjectAssets = STAGE_OBJECT_MANIFEST[activeBattlefieldStageId]?.objects ?? [];
     const retainedSpriteKeys = new Set([...Object.keys(persistentPaths), ...requiredSpriteKinds]);
     for (const [key, image] of Object.entries(spriteRefs.current)) {
       if (retainedSpriteKeys.has(key)) continue;
@@ -6763,15 +6885,15 @@ export function AshfallGame() {
       delete stageObjectRefs.current[id];
     }
     for (const [stageId, image] of Object.entries(backgroundCacheRef.current)) {
-      if (stageId === selectedStageId) continue;
+      if (stageId === activeBattlefieldStageId) continue;
       releaseImage(image);
       delete backgroundCacheRef.current[stageId];
     }
-    if (!backgroundCacheRef.current[selectedStageId]) backgroundRef.current = null;
-    const currentBackground = backgroundCacheRef.current[selectedStageId];
+    if (!backgroundCacheRef.current[activeBattlefieldStageId]) backgroundRef.current = null;
+    const currentBackground = backgroundCacheRef.current[activeBattlefieldStageId];
     const criticalJobs = [
-      ensureImageLoaded(currentBackground, stageVisualFor(selectedStageId), (image) => {
-        backgroundCacheRef.current[selectedStageId] = image;
+      ensureImageLoaded(currentBackground, stageVisualFor(activeBattlefieldStageId), (image) => {
+        backgroundCacheRef.current[activeBattlefieldStageId] = image;
         backgroundRef.current = image;
       }),
       ensureImageLoaded(enemyBaseSpriteRef.current, V075_VISUAL_PROFILES.enemyBase.intact.path, (image) => { enemyBaseSpriteRef.current = image; }),
@@ -6789,14 +6911,14 @@ export function AshfallGame() {
       if (cancelled) return;
       const root = document.documentElement;
       root.dataset.assetResidentScope = qaMode || qaScenario ? "all-local-qa" : "stage-and-formation";
-      root.dataset.assetResidentStage = selectedStageId;
+      root.dataset.assetResidentStage = activeOperationId;
       root.dataset.assetResidentSprites = String(Object.keys(spriteRefs.current).length);
       root.dataset.assetResidentStageObjects = String(Object.keys(stageObjectRefs.current).length);
       root.dataset.assetResidentBackgrounds = String(Object.keys(backgroundCacheRef.current).length);
       setAssetsReady(true);
     }).catch(() => { if (!cancelled) setAssetError(true); });
     return () => { cancelled = true; };
-  }, [formationKindKey, qaMode, qaScenario, selectedStageId]);
+  }, [activeBattlefieldStageId, activeOperationId, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId]);
 
   useEffect(() => {
     const configureCanvas = () => {
@@ -6812,7 +6934,7 @@ export function AshfallGame() {
       activeStageViewportId = viewportProfile.id;
       const geometryStageId = screen === "battle"
         ? gameRef.current.definition.stageId
-        : selectedStageId;
+        : activeBattlefieldStageId;
       const nextStageGeometry = stageGeometryFor(geometryStageId, viewportProfile.id);
       const nextLaneCenters = nextStageGeometry.lanes.map(({ y }) => y) as LaneCenters;
       if (nextLaneCenters.some((center, lane) => center !== activeLaneCenters[lane])) {
@@ -6876,7 +6998,7 @@ export function AshfallGame() {
       window.visualViewport?.removeEventListener("resize", configureCanvas);
       window.visualViewport?.removeEventListener("scroll", configureCanvas);
     };
-  }, [screen, selectedStageId]);
+  }, [activeBattlefieldStageId, screen]);
 
   const ensureAudio = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -7401,7 +7523,7 @@ export function AshfallGame() {
       ? sceneIdForStoryEvent("stage-takuya-final-v070")
       : takuyaEntranceAudioActive
         ? TAKUYA_ENTRANCE_AUDIO.silenceSceneId
-        : sceneIdForScreen(screen, selectedStageId, musicState);
+        : sceneIdForScreen(screen, activeBattlefieldStageId, musicState);
     desiredProductionSceneRef.current = sceneId;
     if (document.documentElement.dataset.audioMixer === "production") {
       document.documentElement.dataset.audioScene = sceneId ?? "none";
@@ -7416,7 +7538,7 @@ export function AshfallGame() {
       if (desiredProductionSceneRef.current !== sceneId) return;
       setMusicActive(Boolean(state?.bgmAssetId) && !bgmMuted);
     }).catch(() => setMusicActive(false));
-  }, [bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, selectedStageId, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, storyFinalCutAudioActive, takuyaEntranceAudioActive]);
+  }, [activeBattlefieldStageId, bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, storyFinalCutAudioActive, takuyaEntranceAudioActive]);
 
   useEffect(() => {
     const active = screen === "battle" && hud.battleBarks.length > 0;
@@ -7708,6 +7830,53 @@ export function AshfallGame() {
     };
   }), [campaignSave, qaMode, qaScenario]);
   const selectedStageView = stageViews.find((stage) => stage.id === selectedStageId) ?? stageViews[0];
+  const outbreakMissionViews = useMemo<OutbreakMissionScreenView[]>(() => OUTBREAK_MISSIONS.map((mission) => {
+    const boss = bossDefinitionForEnemyKind(mission.boss.enemyKind);
+    const equipmentId = mission.firstClearEquipmentGrant?.equipmentId ?? "";
+    return {
+      id: mission.id,
+      displayName: mission.displayName,
+      location: mission.location,
+      objective: mission.objective,
+      bossName: boss?.displayName ?? mission.boss.enemyKind,
+      bossClassification: boss?.classification ?? "異常発生個体",
+      bossImagePath: boss?.compendium?.assetPath ?? "",
+      prerequisiteLabel: CAMPAIGN_STAGE_BY_ID[mission.prerequisiteStageId]?.displayName ?? mission.prerequisiteStageId,
+      unlocked: Boolean(qaMode || qaScenario) || isOutbreakMissionUnlocked(
+        campaignSave.outbreaks,
+        campaignSave.completedStageIds,
+        mission.id,
+      ),
+      cleared: campaignSave.outbreaks.clearedMissionIds.includes(mission.id),
+      defeatCount: campaignSave.outbreaks.bossDefeatCounts[mission.boss.enemyKind] ?? 0,
+      baseRewardCaps: mission.baseRewardCaps,
+      equipmentName: EQUIPMENT_BY_ID[equipmentId]?.displayName ?? equipmentId,
+    };
+  }), [campaignSave.completedStageIds, campaignSave.outbreaks, qaMode, qaScenario]);
+  const selectedOutbreakMissionView = outbreakMissionViews.find(({ id }) => id === selectedOutbreakMissionId)
+    ?? outbreakMissionViews.find(({ unlocked }) => unlocked)
+    ?? outbreakMissionViews[0];
+  const selectedOperationView = selectedOutbreakMissionId && selectedOutbreakMissionView
+    ? {
+      id: selectedOutbreakMissionView.id,
+      stageNumber: 0,
+      regionId: "region-outbreak",
+      regionLabel: "異常発生",
+      regionName: selectedOutbreakMissionView.location,
+      displayName: selectedOutbreakMissionView.displayName,
+      chapterName: "異常発生任務",
+      objective: selectedOutbreakMissionView.objective,
+      missionLabel: "異常発生個体制圧作戦",
+      threat: `危険度 極高 / ${selectedOutbreakMissionView.bossName}`,
+      unlocked: selectedOutbreakMissionView.unlocked,
+      completed: selectedOutbreakMissionView.cleared,
+      bestStars: 0,
+      baseReward: selectedOutbreakMissionView.baseRewardCaps,
+      nextStarReward: 0,
+      mapPosition: { x: 50, y: 50 },
+      starCriteria: ["異常発生個体を撃破", "残存感染体を掃討", "移動拠点を防衛"],
+    } satisfies StageScreenView
+    : selectedStageView;
   const campaignLevelCap = getCampaignLevelCap(campaignSave);
   const unitViews = useMemo<UnitScreenView[]>(() => (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => {
     const level = getCampaignUnitLevel(campaignSave, unit.id);
@@ -7827,7 +7996,7 @@ export function AshfallGame() {
   }) => {
     const retrying = gameRef.current.over;
     const qaAllUnlocked = Boolean(qaMode || qaScenario);
-    const battleStageId = qaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : sessionOverride?.stageId ?? selectedStageId;
+    const battleStageId = qaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : sessionOverride?.stageId ?? activeOperationId;
     const requestedFormation = sessionOverride?.formationKinds ?? formationKinds;
     const permittedFormation = qaAllUnlocked
       ? requestedFormation.slice(0, 7)
@@ -7872,7 +8041,7 @@ export function AshfallGame() {
       .find((snapshot) => snapshot !== null);
     desiredMusicModeRef.current = "normal";
     finalizedEndRef.current = null;
-    setStarted(true); setPaused(false); setEnd(null); setCampaignResult(null); setScreen("battle"); chooseAction(null);
+    setStarted(true); setPaused(false); setEnd(null); setCampaignResult(null); setOutbreakResult(null); setPendingOutbreakSettlement(null); setScreen("battle"); chooseAction(null);
     setHud({ missionType: fresh.definition.missionType, energy: Math.floor(fresh.energy), supportGauge: Math.floor(fresh.supportGauge), scrap: fresh.scrap, kills: fresh.kills,
       wave: fresh.wave, phase: fresh.phase, baseHp: fresh.baseHp, baseMaxHp: fresh.baseMaxHp,
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
@@ -7888,7 +8057,7 @@ export function AshfallGame() {
       playCue("start-low");
       startCueTimerRef.current = window.setTimeout(() => { startCueTimerRef.current = null; playCue("start-high"); }, 90);
     }
-  }, [bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, playCue, qaMode, qaScenario, selectedStageId, selectedSupply, startMusic]);
+  }, [activeOperationId, bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, playCue, qaMode, qaScenario, selectedSupply, startMusic]);
 
   const startSurvivalGame = useCallback((run: ReturnType<typeof createSurvivalRun>) => {
     const requestedKinds = run.formation.unitIds.flatMap((unitId: string) => {
@@ -7912,6 +8081,9 @@ export function AshfallGame() {
     setEnd(null);
     setCampaignResult(null);
     setSurvivalResult(null);
+    setSelectedOutbreakMissionId(null);
+    setOutbreakResult(null);
+    setPendingOutbreakSettlement(null);
     setPendingSurvivalSettlement(null);
     setSurvivalSettlementAwaitingRetry(false);
     setSurvivalHud(survivalHudSnapshot(run));
@@ -7930,6 +8102,7 @@ export function AshfallGame() {
       ? selectedSurvivalStartWave
       : unlocked[unlocked.length - 1] ?? 1);
     setSelectedStageId(CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL);
+    setSelectedOutbreakMissionId(null);
     setSurvivalResult(null);
     setScreen("survival");
   }, [campaignSave.survival.unlockedStartWaves, selectedSurvivalStartWave]);
@@ -7976,7 +8149,8 @@ export function AshfallGame() {
     );
     gameRef.current = fresh;
     finalizedEndRef.current = null;
-    setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setSurvivalHud(null); setSurvivalResult(null); setPendingSurvivalSettlement(null); setSurvivalSettlementAwaitingRetry(false); setScreen("map"); chooseAction(null);
+    setSelectedOutbreakMissionId(null);
+    setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setOutbreakResult(null); setPendingOutbreakSettlement(null); setSurvivalHud(null); setSurvivalResult(null); setPendingSurvivalSettlement(null); setSurvivalSettlementAwaitingRetry(false); setScreen("map"); chooseAction(null);
   }, [campaignSave, chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
 
   const handleEventComplete = useCallback(() => {
@@ -8135,7 +8309,50 @@ export function AshfallGame() {
   }, [openEvents]);
   const openPersonnel = useCallback(() => setScreen("personnel"), []);
   const openLoadout = useCallback(() => setScreen("loadout"), []);
+  const openOutbreak = useCallback(() => {
+    const selected = outbreakMissionViews.find(({ id }) => id === selectedOutbreakMissionId && isOutbreakMissionUnlocked(
+      campaignSave.outbreaks,
+      campaignSave.completedStageIds,
+      id,
+    )) ?? outbreakMissionViews.find(({ unlocked }) => unlocked) ?? outbreakMissionViews[0];
+    setSelectedOutbreakMissionId(selected?.id ?? null);
+    setOutbreakResult(null);
+    setScreen("outbreak");
+  }, [campaignSave.completedStageIds, campaignSave.outbreaks, outbreakMissionViews, selectedOutbreakMissionId]);
+  const selectOutbreakMission = useCallback((missionId: string) => {
+    if (!isOutbreakMissionUnlocked(
+      campaignSave.outbreaks,
+      campaignSave.completedStageIds,
+      missionId,
+    ) && !qaMode && !qaScenario) return;
+    setSelectedOutbreakMissionId(missionId);
+  }, [campaignSave.completedStageIds, campaignSave.outbreaks, qaMode, qaScenario]);
+  const prepareOutbreak = useCallback(() => {
+    if (!selectedOutbreakMissionId) return;
+    if (!isOutbreakMissionUnlocked(
+      campaignSave.outbreaks,
+      campaignSave.completedStageIds,
+      selectedOutbreakMissionId,
+    ) && !qaMode && !qaScenario) return;
+    setScreen("loadout");
+  }, [campaignSave.completedStageIds, campaignSave.outbreaks, qaMode, qaScenario, selectedOutbreakMissionId]);
+  const returnFromLoadout = useCallback(() => {
+    if (selectedOutbreakMissionId) {
+      setScreen("outbreak");
+      return;
+    }
+    returnToMap();
+  }, [returnToMap, selectedOutbreakMissionId]);
   const requestBattle = useCallback(() => {
+    if (selectedOutbreakMissionId) {
+      startGame({
+        stageId: selectedOutbreakMissionId,
+        formationKinds,
+        selectedSupply,
+        resultId: createBattleResultId(selectedOutbreakMissionId),
+      });
+      return;
+    }
     const nextEventIds = getStageEntryStoryEventIds({
       stageId: selectedStageId,
       completedStageIds: campaignSave.completedStageIds,
@@ -8143,18 +8360,34 @@ export function AshfallGame() {
     });
     if (nextEventIds.length > 0) openEvents(nextEventIds, "battle");
     else startGame();
-  }, [campaignSave.completedStageIds, campaignSave.readStoryEventIds, openEvents, selectedStageId, startGame]);
+  }, [campaignSave.completedStageIds, campaignSave.readStoryEventIds, formationKinds, openEvents, selectedOutbreakMissionId, selectedStageId, selectedSupply, startGame]);
   const retryBattle = useCallback(() => {
+    if (selectedOutbreakMissionId) {
+      startGame({
+        stageId: selectedOutbreakMissionId,
+        formationKinds,
+        selectedSupply,
+        resultId: createBattleResultId(selectedOutbreakMissionId),
+      });
+      return;
+    }
     const nextEventId = getStageNextAttemptStoryEventId({
       stageId: selectedStageId,
       previousWon: campaignResult?.won === true,
     });
     if (nextEventId) openEvent(nextEventId, "battle");
     else startGame();
-  }, [campaignResult?.won, openEvent, selectedStageId, startGame]);
+  }, [campaignResult?.won, formationKinds, openEvent, selectedOutbreakMissionId, selectedStageId, selectedSupply, startGame]);
   const continueResult = useCallback(() => {
     returnToMap();
   }, [returnToMap]);
+  const continueOutbreakResult = useCallback(() => {
+    setStarted(false);
+    setPaused(false);
+    setEnd(null);
+    setOutbreakResult(null);
+    setScreen("outbreak");
+  }, []);
   const acknowledgeMigrationNotice = useCallback((noticeId: string) => {
     setCampaignSave((current) => acknowledgeCampaignMigrationNotice(current, noticeId) as CampaignSave);
   }, []);
@@ -8588,11 +8821,93 @@ export function AshfallGame() {
     commitSurvivalSettlement(pendingSurvivalSettlement);
   }, [commitSurvivalSettlement, pendingSurvivalSettlement, survivalSavePending]);
 
+  const commitOutbreakSettlement = useCallback(async (pending: PendingOutbreakSettlement) => {
+    if (outbreakSavePending) return false;
+    const mission = OUTBREAK_MISSION_BY_ID[pending.end.stageId];
+    if (!mission) return false;
+    setOutbreakSavePending(true);
+    const settlement = await persistOutbreakCampaignSettlement(
+      campaignSaveRef.current,
+      {
+        resultId: pending.end.resultId,
+        missionId: mission.id,
+        won: pending.end.won,
+        completedAt: pending.completedAt,
+        stats: {
+          kills: pending.end.kills,
+          unitsLost: pending.end.unitsLost,
+          battleSeconds: pending.end.time,
+        },
+      },
+      {
+        completedAt: pending.completedAt,
+        persist: async (candidate: CampaignSave) => {
+          outbreakSettlementPersistenceQaRef.current.attempts += 1;
+          if (outbreakSettlementPersistenceQaRef.current.failuresRemaining > 0) {
+            outbreakSettlementPersistenceQaRef.current.failuresRemaining -= 1;
+            return { durable: false };
+          }
+          return persistCampaignSave(candidate);
+        },
+      },
+    );
+    if (!settlement.committed) {
+      setPendingOutbreakSettlement(pending);
+      setSavePersistence("unavailable");
+      setOutbreakSavePending(false);
+      return false;
+    }
+    const nextSave = settlement.save as CampaignSave;
+    const lastResult = nextSave.outbreaks.lastResult;
+    const boss = bossDefinitionForEnemyKind(mission.boss.enemyKind);
+    setCampaignSave(nextSave);
+    setPendingOutbreakSettlement(null);
+    setOutbreakSavePending(false);
+    setStarted(false);
+    setPaused(false);
+    if (lastResult) {
+      setOutbreakResult({
+        missionId: mission.id,
+        displayName: mission.displayName,
+        bossName: boss?.displayName ?? mission.boss.enemyKind,
+        won: lastResult.won,
+        firstClear: lastResult.firstClear,
+        time: lastResult.stats.battleSeconds,
+        kills: lastResult.stats.kills,
+        unitsLost: lastResult.stats.unitsLost,
+        earnedCaps: lastResult.earnedCaps,
+        equipmentGrants: lastResult.equipmentGrants.map((grant: { equipmentId: string; quantity: number }) => ({
+          ...grant,
+          displayName: EQUIPMENT_BY_ID[grant.equipmentId]?.displayName ?? grant.equipmentId,
+        })),
+        survivalUnlocked: lastResult.firstClear
+          && nextSave.outbreaks.survivalBossKinds.includes(lastResult.bossKind),
+        capsAfter: nextSave.caps,
+      });
+    }
+    setScreen("outbreak-result");
+    return true;
+  }, [outbreakSavePending, persistCampaignSave]);
+
+  const retryOutbreakSettlementSave = useCallback(() => {
+    if (!pendingOutbreakSettlement || outbreakSavePending) return;
+    void commitOutbreakSettlement(pendingOutbreakSettlement);
+  }, [commitOutbreakSettlement, outbreakSavePending, pendingOutbreakSettlement]);
+
   useEffect(() => {
     if (!end || finalizedEndRef.current === end) return;
     const timer = window.setTimeout(async () => {
       if (finalizedEndRef.current === end) return;
       finalizedEndRef.current = end;
+      if (OUTBREAK_MISSION_BY_ID[end.stageId]) {
+        const pending = {
+          end,
+          completedAt: new Date().toISOString(),
+        };
+        setPendingOutbreakSettlement(pending);
+        await commitOutbreakSettlement(pending);
+        return;
+      }
       const resolved = resolveStageResult(campaignSave, {
         resultId: end.resultId,
         stageId: end.stageId,
@@ -8654,7 +8969,7 @@ export function AshfallGame() {
       publishPendingResult(pending);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [campaignSave, end, persistCampaignSave, publishPendingResult]);
+  }, [campaignSave, commitOutbreakSettlement, end, persistCampaignSave, publishPendingResult]);
 
   useEffect(() => {
     if (!saveHydrated || !qaScenario || qaScenarioAppliedRef.current) return;
@@ -8852,7 +9167,7 @@ export function AshfallGame() {
   const cancelPauseAction = useCallback(() => {
     const transition = createBattleSessionTransition({
       action: "cancel",
-      stageId: selectedStageId,
+      stageId: activeOperationId,
       formationKinds,
       selectedSupply,
       campaignSave,
@@ -8861,7 +9176,7 @@ export function AshfallGame() {
     if (transition?.destination === "pause" && !transition.discardBattleState && !transition.commitResult) {
       setPauseConfirm(null);
     }
-  }, [campaignSave, formationKinds, selectedStageId, selectedSupply]);
+  }, [activeOperationId, campaignSave, formationKinds, selectedSupply]);
 
   const confirmPauseAction = useCallback(() => {
     const action = pauseConfirm;
@@ -8885,7 +9200,7 @@ export function AshfallGame() {
     }
     const transition = createBattleSessionTransition({
       action,
-      stageId: selectedStageId,
+      stageId: activeOperationId,
       formationKinds,
       selectedSupply,
       campaignSave,
@@ -8919,12 +9234,26 @@ export function AshfallGame() {
       setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setScreen("loadout"); chooseAction(null);
       return;
     }
-    if (transition.destination === "map") returnToMap(transition as {
-      stageId: string;
-      formationKinds: UnitKind[];
-      selectedSupply: SupplyKind;
-    });
-  }, [campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, returnToMap, selectedStageId, selectedSupply, startGame, stopMusic, stopSfx]);
+    if (transition.destination === "map") {
+      if (selectedOutbreakMissionId) {
+        disposeBattleRuntime();
+        finalizedEndRef.current = null;
+        setStarted(false);
+        setPaused(false);
+        setEnd(null);
+        setCampaignResult(null);
+        setOutbreakResult(null);
+        setScreen("outbreak");
+        chooseAction(null);
+        return;
+      }
+      returnToMap(transition as {
+        stageId: string;
+        formationKinds: UnitKind[];
+        selectedSupply: SupplyKind;
+      });
+    }
+  }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
 
   const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
@@ -12531,18 +12860,25 @@ export function AshfallGame() {
             g.maxCombo = Math.max(g.maxCombo, g.combo);
             g.scrap += scrapReward(fighter.kind);
             g.supportGauge = Math.min(SUPPORT_GAUGE_MAX, g.supportGauge + supportGaugeReward(fighter.kind));
-            if (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase) {
+            const isOutbreakBoss = g.definition.operationCategory === "outbreak"
+              && fighter.kind === g.definition.bossEnemyKind;
+            if (isOutbreakBoss
+              || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase)) {
               g.bossDefeatPending = true;
-              g.barricadeVulnerable = true;
+              if (!isOutbreakBoss) g.barricadeVulnerable = true;
               const defeatedBossName = bossDefinitionForEnemyKind(fighter.kind)?.displayName
                 ?? enemyContentFor(fighter.kind)?.displayName
                 ?? "大型感染体";
-              g.banner = fighter.kind === "takuya"
+              g.banner = g.definition.operationCategory === "outbreak"
+                ? `${defeatedBossName}撃破 — 残存感染体を掃討`
+                : fighter.kind === "takuya"
                 ? "TAKUYA撃破 — 感染拠点が露出"
                 : `${defeatedBossName}撃破 — 感染核が露出`;
               g.bannerTime = 3.4; g.flashOverlay = .3;
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaDefeat);
-              if (fighter.kind === "takuya") {
+              if (g.definition.operationCategory === "outbreak") {
+                emitBattleBark(g, "victory", "guide", `outbreak-boss-down-${fighter.kind}`);
+              } else if (fighter.kind === "takuya") {
                 playCue("takuya-down");
                 if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else {
@@ -12696,7 +13032,7 @@ export function AshfallGame() {
           g.resultPresented = !enemyBaseDestroyed;
           if (!enemyBaseDestroyed) setEnd({
             resultId: g.resultId,
-            stageId: g.definition.stageId,
+            stageId: g.definition.operationId,
             won: g.won,
             time: g.time,
             wave: g.wave,
@@ -12727,7 +13063,7 @@ export function AshfallGame() {
           g.resultPresented = true;
           setEnd({
             resultId: g.resultId,
-            stageId: g.definition.stageId,
+            stageId: g.definition.operationId,
             won: g.won,
             time: g.time,
             wave: g.wave,
@@ -12894,7 +13230,7 @@ export function AshfallGame() {
   const barricadeCondition = barricadeState(hud.barricadeHp) === "BREACHED" ? "破壊" : barricadeState(hud.barricadeHp) === "BREACH IMMINENT" ? "大破" : barricadeState(hud.barricadeHp) === "BUCKLING" ? "損傷" : "健全";
   const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
   const bossPhase = bossPhaseForHp(hud.bossHp, hud.bossMax, hud.bossKind);
-  const isStationPlatformAssault = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";
+  const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";
   const phaseName = hud.missionType === "escort"
     ? hud.phase === 1 ? "発進" : hud.phase === 2 ? "突破" : "護送"
     : hud.missionType === "sequential-seal"
@@ -12908,8 +13244,10 @@ export function AshfallGame() {
   const isSurvivalBattle = screen === "battle" && survivalHud !== null;
   const survivalUpgradeOpen = isSurvivalBattle
     && survivalHud.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
-  const enemyBaseLabel = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
-  const selectedStageBossKind = CAMPAIGN_STAGE_BY_ID[selectedStageId]?.boss?.enemyKind ?? null;
+  const enemyBaseLabel = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
+  const selectedStageBossKind = selectedOutbreakMissionId
+    ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.boss?.enemyKind ?? null
+    : CAMPAIGN_STAGE_BY_ID[selectedStageId]?.boss?.enemyKind ?? null;
   const activeBossKind = survivalHud?.bossKind ?? hud.bossKind ?? selectedStageBossKind;
   const activeBossLabel = activeBossKind
     ? bossDefinitionForEnemyKind(activeBossKind)?.displayName ?? enemyContentFor(activeBossKind).displayName
@@ -12923,8 +13261,8 @@ export function AshfallGame() {
   const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
 
   return (
-    <main className="game-shell" data-screen={screen} data-stage-id={selectedStageId} data-release-version={RELEASE_VERSION}>
-      <section className="game-frame" style={{ "--battlefield-art": `url('${stageVisualFor(selectedStageId)}')` } as CSSProperties} aria-label="西新世紀末物語 ゲーム">
+    <main className="game-shell" data-screen={screen} data-stage-id={activeOperationId} data-battlefield-stage-id={activeBattlefieldStageId} data-release-version={RELEASE_VERSION}>
+      <section className="game-frame" style={{ "--battlefield-art": `url('${stageVisualFor(activeBattlefieldStageId)}')` } as CSSProperties} aria-label="西新世紀末物語 ゲーム">
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
         {screen === "battle" && !selectedAction && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
@@ -12988,7 +13326,7 @@ export function AshfallGame() {
           <button className="survival-pause" onClick={togglePause} disabled={survivalUpgradeOpen || survivalSavePending} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
         </div> : <>
           <div className="top-hud">
-            <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
+            <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedOperationView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
             <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
             <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
             <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
@@ -12996,7 +13334,7 @@ export function AshfallGame() {
           </div>
 
           <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>移動拠点</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
-          {stationMissionHud
+          {stationMissionHud || selectedOutbreakMissionId
             ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{hud.objective}</b></div></div>
             : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
@@ -13131,7 +13469,7 @@ export function AshfallGame() {
           screen={screen}
           eventId={eventId}
           stages={stageViews}
-          selectedStage={selectedStageView}
+          selectedStage={selectedOperationView}
           units={unitViews}
           formationUnitIds={formationUnitIds}
           formationPresets={campaignSave.formationPresets.map((preset) => ({ id: preset.id, name: preset.displayName, unitIds: preset.unitIds }))}
@@ -13141,6 +13479,10 @@ export function AshfallGame() {
           supplyCurrency={campaignSave.caps}
           caps={campaignSave.caps}
           result={campaignResult}
+          outbreakMissions={outbreakMissionViews}
+          selectedOutbreakMissionId={selectedOutbreakMissionId}
+          outbreakResult={outbreakResult}
+          loadoutReturnLabel={selectedOutbreakMissionId ? "異常発生任務" : "地図へ"}
           assetsReady={assetsReady}
           assetError={assetError}
           hasCampaignSave={campaignSave.campaignStarted}
@@ -13169,9 +13511,13 @@ export function AshfallGame() {
           onReplayPrologue={replayPrologue}
           onSelectStage={selectStage}
           onOpenSurvival={openSurvival}
+          onOpenOutbreak={openOutbreak}
+          onSelectOutbreakMission={selectOutbreakMission}
+          onPrepareOutbreak={prepareOutbreak}
           onOpenPersonnel={openPersonnel}
           onOpenLoadout={openLoadout}
           onReturnToMap={returnToMap}
+          onReturnFromLoadout={returnFromLoadout}
           onSelectFormationPreset={selectFormation}
           onToggleFormation={toggleFormation}
           onRecruitUnit={recruitUnit}
@@ -13180,6 +13526,7 @@ export function AshfallGame() {
           onStartBattle={requestBattle}
           onRetry={retryBattle}
           onContinueResult={continueResult}
+          onContinueOutbreakResult={continueOutbreakResult}
           onResetSave={resetCampaign}
           onReloadAssets={() => window.location.reload()}
         />}
@@ -13198,6 +13545,9 @@ export function AshfallGame() {
       </div>}
       {pendingSurvivalSettlement && <div className="result-save-blocker survival-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="Survival結果の保存">
         <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{survivalSavePending ? "Survival結果を保存しています" : "Survival結果を保存できません"}</h2><p>進行、receipt、CAPS、装備数量、last result、checkpoint削除、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
+      </div>}
+      {pendingOutbreakSettlement && <div className="result-save-blocker outbreak-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="異常発生任務結果の保存">
+        <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{outbreakSavePending ? "異常発生任務の結果を保存しています" : "異常発生任務の結果を保存できません"}</h2><p>撃破記録、Survival解放、receipt、キャップ、装備数量、last result、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={outbreakSavePending} onClick={retryOutbreakSettlementSave}>{outbreakSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
       </div>}
       {savePersistence === "unavailable" && <div className="save-persistence-warning" role="alert">
         <b>セーブを端末へ保存できません</b>

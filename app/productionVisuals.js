@@ -49,6 +49,15 @@ export const STORY_BACKGROUND_VISUALS = Object.freeze({
   "station-tunnel-containment-cut": PRODUCTION_VISUALS.eventCuts["station-tunnel-containment-cut"],
 });
 
+const OPERATION_BATTLEFIELD_IDS = Object.freeze({
+  "outbreak-mother-brood-vault": "stage-bay-tower-service",
+  "outbreak-ooguchi-drainage-run": "stage-civic-archive-route",
+  "outbreak-kurome-blind-sector": "stage-estuary-floodgate-seal",
+  "outbreak-gairen-breaker-deck": "stage-coastal-link-bridge",
+  "outbreak-futago-shelter-seam": "stage-estuary-floodgate-seal",
+});
+
 export function stageVisualFor(stageId) {
-  return PRODUCTION_VISUALS.stages[stageId] ?? "/battlefield-v4.png";
+  const battlefieldId = OPERATION_BATTLEFIELD_IDS[stageId] ?? stageId;
+  return PRODUCTION_VISUALS.stages[battlefieldId] ?? "/battlefield-v4.png";
 }

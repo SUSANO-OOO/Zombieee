@@ -48,6 +48,7 @@ process.env.ASSET_DECODE_QA_BASE_URL = origin;
 process.env.ZAKIMIYA_QA_BASE_URL = origin;
 process.env.NEW_PLAYABLE_HUMANS_QA_BASE_URL = origin;
 process.env.MAYO_QA_BASE_URL = origin;
+process.env.OUTBREAK_QA_BASE_URL = origin;
 const server = spawn(process.execPath, [
   "scripts/run-vinext.mjs",
   "start",

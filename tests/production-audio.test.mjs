@@ -585,7 +585,7 @@ test("StoryScreen reports line boundaries and holds authored silence before even
   assert.match(screensSource, /window\.setTimeout\(completeOnce, holdMs\)/);
   assert.match(screensSource, /disabled=\{silenceTail\} aria-busy=\{silenceTail\}/);
   assert.match(gameSource, /const storyLineIndex = storyAudioPosition\.eventId === eventId \? storyAudioPosition\.lineIndex : 0/);
-  assert.match(gameSource, /sceneIdForScreen\(screen, selectedStageId, musicState\)/);
+  assert.match(gameSource, /sceneIdForScreen\(screen, activeBattlefieldStageId, musicState\)/);
   assert.match(gameSource, /onStoryAudioPositionChange=\{handleStoryAudioPositionChange\}/);
   assert.match(gameSource, /setMusicActive\(Boolean\(state\?\.bgmAssetId\) && !bgmMuted\)/);
   assert.match(gameSource, /storyWarningCueForEvent\(storyEventId\)/);
@@ -780,7 +780,7 @@ test("gameplay routes scenes, combat identity, and procedural fallback through t
   assert.match(source, /durationSeconds: productionCue === "radio-open" \? \.72 : undefined/);
   assert.match(source, /durationSeconds: active \? \.72 : undefined/);
   assert.match(source, /productionMixer\.setScene\(sceneId\)\.then/);
-  assert.match(source, /sceneIdForScreen\(screen, selectedStageId, musicState\)/);
+  assert.match(source, /sceneIdForScreen\(screen, activeBattlefieldStageId, musicState\)/);
   assert.match(source, /if \(desiredProductionSceneRef\.current === sceneId\) return/);
   assert.doesNotMatch(source, /onBgmLoadFailure/);
   assert.match(source, /createAudioMixer\(\{[\s\S]*maxVoices: 28/);

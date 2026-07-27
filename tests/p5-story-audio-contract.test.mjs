@@ -647,7 +647,7 @@ test("StoryScreen reports every line boundary and holds authored silence before 
   assert.ok(gameSource.includes("setStoryAudioPosition((current) =>"));
   assert.ok(gameSource.includes("storyAudioPosition.eventId === eventId ? storyAudioPosition.lineIndex : 0"));
   assert.ok(gameSource.includes("{ won: outcome, musicMode: desiredMusicModeRef.current, eventId, storyLineIndex }"));
-  assert.ok(gameSource.includes("sceneIdForScreen(screen, selectedStageId, musicState)"));
+  assert.ok(gameSource.includes("sceneIdForScreen(screen, activeBattlefieldStageId, musicState)"));
 });
 
 test("TAKUYA entrance owns an audible 3.4 second silence-scene cut before boss music", async () => {
