@@ -233,6 +233,7 @@ import {
 import { STAGE_OBJECT_MANIFEST, stageObjectsFor } from "./stageObjectManifest.js";
 import {
   STAGE_VIEWPORT_IDS,
+  battlefieldDepthScale,
   clampToWalkable,
   combatReadyGroundingAudit,
   resolveStageViewportProfile,
@@ -314,7 +315,6 @@ import {
   isBabayagaPriorityTarget,
   isCrawlerRouteBlocker,
   keyboardInputGate,
-  laneCentersForViewport,
   newcomerAttackPayload,
   objectiveFor,
   requestAirstrike,
@@ -438,6 +438,15 @@ const MUSTER_LANE = 2 as Lane;
 type LaneCenters = readonly [number, number, number];
 let activeLaneCenters = LANE_Y as unknown as LaneCenters;
 let activeStageViewportId = STAGE_VIEWPORT_IDS.STANDARD;
+let activeStageGeometry = stageGeometryFor(INITIAL_STAGE_ID, STAGE_VIEWPORT_IDS.STANDARD);
+
+function compactBattleViewport() {
+  return activeStageViewportId !== STAGE_VIEWPORT_IDS.STANDARD;
+}
+
+function activeBattlefieldDepthScale(y: number) {
+  return battlefieldDepthScale(activeStageGeometry, y);
+}
 
 function activeLaneForY(y: number, fallback: Lane = 1) {
   let closest = fallback;
@@ -2947,10 +2956,11 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     : "left";
   const frame = spriteFrameFor(renderKind, state, direction);
   const authoredSize = fitSpriteBattleDisplaySize(renderKind, frame, spriteDisplaySize(renderKind));
-  const compactScale = activeLaneCenters === LANE_Y ? 1 : COMPACT_BATTLE_SPRITE_SCALE;
+  const compactScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
+  const depthScale = activeBattlefieldDepthScale(f.y);
   const size = {
-    w: authoredSize.w * compactScale * animationSample.bodyScale,
-    h: authoredSize.h * compactScale * animationSample.bodyScale,
+    w: authoredSize.w * compactScale * depthScale * animationSample.bodyScale,
+    h: authoredSize.h * compactScale * depthScale * animationSample.bodyScale,
   };
   const bob = animationSample.movement ? Math.abs(Math.sin(f.step * 7)) * 1.1 : 0;
   ctx.save();
@@ -2985,7 +2995,7 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   }
   ctx.fillStyle = "rgba(0,0,0,.42)";
   ctx.beginPath();
-  ctx.ellipse(f.x, f.y + 8, size.w * .27, 4.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(f.x, f.y + 5 * depthScale, size.w * .27, 4.5 * depthScale, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.imageSmoothingEnabled = true;
   if (f.flash > 0) {
@@ -4180,7 +4190,7 @@ function drawStageObjectOverlays(
 }
 
 function drawStageBackground(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImageElement) {
-  const compact = activeLaneCenters[0] !== LANE_Y[0];
+  const compact = compactBattleViewport();
   ctx.save();
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
@@ -4374,7 +4384,11 @@ function drawWorld(
     const sprite = sprites[corpse.kind];
     if (sprite?.complete && sprite.naturalWidth) {
       const frame = spriteFrameFor(corpse.kind, "death", corpse.side === "human" ? "right" : "left");
-      const { w: width, h: height } = fitSpriteBattleDisplaySize(corpse.kind, frame, spriteDisplaySize(corpse.kind));
+      const authoredSize = fitSpriteBattleDisplaySize(corpse.kind, frame, spriteDisplaySize(corpse.kind));
+      const compactScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
+      const depthScale = activeBattlefieldDepthScale(corpse.y);
+      const width = authoredSize.w * compactScale * depthScale;
+      const height = authoredSize.h * compactScale * depthScale;
       const authoredDeathPose = frame.derivedFrom !== "hit";
       const timing = ENEMY_DEATH_CONFIG.timings[corpse.deathClass ?? "normal"];
       const dyingProgress = corpse.side === "zombie"
@@ -4490,16 +4504,18 @@ function drawWorld(
     if (f.combatReady) drawKuromeCombatVfx(ctx, f, g);
     drawKuromeVisionInterference(ctx, f, g);
     if (!f.combatReady) continue;
-    const compactScale = activeLaneCenters === LANE_Y ? 1 : 1.1;
+    const compactScale = compactBattleViewport() ? 1.1 : 1;
+    const depthScale = activeBattlefieldDepthScale(f.y);
     const bossDefinition = bossDefinitionForEnemyKind(f.kind);
-    const barW = (bossDefinition ? 58 : f.kind === "crusher" || f.kind === "grappler" || f.kind === "brute" || f.kind === "guardian" ? 38 : f.kind === "abomination" ? 52 : 28) * compactScale;
+    const barW = (bossDefinition ? 58 : f.kind === "crusher" || f.kind === "grappler" || f.kind === "brute" || f.kind === "guardian" ? 38 : f.kind === "abomination" ? 52 : 28) * compactScale * depthScale;
     const height = bossDefinition
-      ? activeLaneCenters === LANE_Y
+      ? !compactBattleViewport()
         ? bossDefinition.display.standardBodyHeight
         : bossDefinition.display.compactBodyHeight
       : (f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "grappler" || f.kind === "brute" || f.kind === "guardian" ? 94 : 80) * compactScale;
+    const depthHeight = height * depthScale;
     const barHeight = compactScale > 1 ? 6 : 4;
-    const barY = f.y - height - (compactScale > 1 ? 2 : 0);
+    const barY = f.y - depthHeight - (compactScale > 1 ? 2 : 0);
     ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(f.x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
     ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
     ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), barHeight);
@@ -5444,11 +5460,12 @@ export function AshfallGame() {
         const definition = bossDefinitionForEnemyKind(kind);
         const idleFrame = spriteFrameFor(kind, "idle", "left");
         const authoredSize = fitSpriteBattleDisplaySize(kind, idleFrame, spriteDisplaySize(kind));
-        const renderScale = activeLaneCenters === LANE_Y ? 1 : COMPACT_BATTLE_SPRITE_SCALE;
+        const renderScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
+        const depthScale = activeBattlefieldDepthScale(boss?.y ?? activeLaneCenters[1]);
         const visibleHeightRatio = idleFrame.contentRect.h / idleFrame.sourceRect.h;
         const idleBodyScale = sampleAnimationClip(kind, "idle", 0).bodyScale;
-        const renderedWidth = authoredSize.w * renderScale * idleBodyScale;
-        const renderedHeight = authoredSize.h * renderScale * idleBodyScale;
+        const renderedWidth = authoredSize.w * renderScale * depthScale * idleBodyScale;
+        const renderedHeight = authoredSize.h * renderScale * depthScale * idleBodyScale;
         const renderedBodyHeight = renderedHeight * visibleHeightRatio;
         const renderedVisibleRect = boss ? {
           left: boss.x - renderedWidth * idleFrame.anchorX
@@ -5464,7 +5481,7 @@ export function AshfallGame() {
               idleFrame.contentRect.y - idleFrame.sourceRect.y + idleFrame.contentRect.h
             ) / idleFrame.sourceRect.h,
         } : null;
-        const compact = activeLaneCenters !== LANE_Y;
+        const compact = compactBattleViewport();
         const bannerWidth = compact ? 268 : 356;
         const bannerHeight = compact ? 32 : 54;
         const bannerX = (W - bannerWidth) / 2;
@@ -6075,6 +6092,10 @@ export function AshfallGame() {
             checkedCount: grounding.checkedCount,
             offFloorCount: grounding.offFloorCount,
             offFloorIds: grounding.offFloor.map(({ id }) => id),
+            visuallyOffFloorCount: grounding.visuallyOffFloorCount,
+            visuallyOffFloorIds: grounding.visuallyOffFloor.map(({ id }) => id),
+            visualFloor: { ...geometry.floor.visual },
+            laneCenters: geometry.lanes.map(({ y }) => y),
             debugPrimitiveCount: geometry.debugPrimitives.length,
           },
           battleSpace: {
@@ -6115,6 +6136,7 @@ export function AshfallGame() {
             assignedLane: fighter.anchorLane,
             x: fighter.x,
             y: fighter.y,
+            renderDepthScale: activeBattlefieldDepthScale(fighter.y),
             hp: fighter.hp,
             maxHp: fighter.maxHp,
             damage: fighter.damage,
@@ -6347,11 +6369,16 @@ export function AshfallGame() {
       const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
       const rect = canvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
-      const nextLaneCenters = laneCentersForViewport(rect.width, rect.height) as LaneCenters;
-      activeStageViewportId = resolveStageViewportProfile({
+      const viewportProfile = resolveStageViewportProfile({
         width: Math.round(rect.width),
         height: Math.round(rect.height),
-      }).id;
+      });
+      activeStageViewportId = viewportProfile.id;
+      const geometryStageId = screen === "battle"
+        ? gameRef.current.definition.stageId
+        : selectedStageId;
+      const nextStageGeometry = stageGeometryFor(geometryStageId, viewportProfile.id);
+      const nextLaneCenters = nextStageGeometry.lanes.map(({ y }) => y) as LaneCenters;
       if (nextLaneCenters.some((center, lane) => center !== activeLaneCenters[lane])) {
         const previousLaneCenters = activeLaneCenters;
         const shiftForLane = (lane: Lane) => nextLaneCenters[lane] - previousLaneCenters[lane];
@@ -6377,6 +6404,7 @@ export function AshfallGame() {
         g.damageTexts = [];
         activeLaneCenters = nextLaneCenters;
       }
+      activeStageGeometry = nextStageGeometry;
       const pixelWidth = Math.max(1, Math.round(rect.width * dpr));
       const pixelHeight = Math.max(1, Math.round(rect.height * dpr));
       if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
@@ -6391,7 +6419,10 @@ export function AshfallGame() {
       canvas.dataset.worldScale = scale.toFixed(6);
       canvas.dataset.worldOffsetX = offsetX.toFixed(2);
       canvas.dataset.worldOffsetY = offsetY.toFixed(2);
-      canvas.dataset.laneLayout = nextLaneCenters === LANE_Y ? "standard" : "compact-landscape";
+      canvas.dataset.laneLayout = compactBattleViewport() ? "compact-landscape" : "standard";
+      canvas.dataset.visualFloorAuthored = String(nextStageGeometry.floor.visual.authored);
+      canvas.dataset.visualFloorHorizonY = String(nextStageGeometry.floor.visual.horizonY);
+      canvas.dataset.visualFloorNearEdgeY = String(nextStageGeometry.floor.visual.nearEdgeY);
       const ctx = canvas.getContext("2d");
       ctx?.setTransform(scale * dpr, 0, 0, scale * dpr, offsetX * dpr, offsetY * dpr);
     };
@@ -6409,7 +6440,7 @@ export function AshfallGame() {
       window.visualViewport?.removeEventListener("resize", configureCanvas);
       window.visualViewport?.removeEventListener("scroll", configureCanvas);
     };
-  }, []);
+  }, [screen, selectedStageId]);
 
   const ensureAudio = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -12007,7 +12038,7 @@ export function AshfallGame() {
       );
       performanceCounters.renderFrames += 1;
       if (g.bannerTime > 0 && g.running) {
-        const compact = activeLaneCenters !== LANE_Y;
+        const compact = compactBattleViewport();
         const bannerWidth = compact ? 268 : 356;
         const bannerHeight = compact ? 32 : 54;
         const bannerX = (W - bannerWidth) / 2;
@@ -12025,6 +12056,15 @@ export function AshfallGame() {
         const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);
         const canvasRect = canvas.getBoundingClientRect();
         const transform = canvasTransformRef.current;
+        const fighterScreenSize = (fighter: Fighter) => {
+          const authored = spriteBattleDisplaySizeFor(fighter.kind);
+          const compactScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
+          const depthScale = activeBattlefieldDepthScale(fighter.y);
+          return {
+            w: authored.w * compactScale * depthScale,
+            h: authored.h * compactScale * depthScale,
+          };
+        };
         const frameElement = canvas.closest(".game-frame");
         const obstacleRects = [...(frameElement?.querySelectorAll(
           ".top-hud,.survival-hud,.boss-hud,.crawler-alert,.battle-barks,.placement-hint,.bottom-hud,.stats-strip",
@@ -12039,7 +12079,7 @@ export function AshfallGame() {
         });
         for (const fighter of g.fighters) {
           if (fighter.hp <= 0) continue;
-          const size = spriteBattleDisplaySizeFor(fighter.kind);
+          const size = fighterScreenSize(fighter);
           obstacleRects.push({
             x: transform.offsetX + fighter.x * transform.scale - size.w * transform.scale * .5,
             y: transform.offsetY + fighter.y * transform.scale - size.h * transform.scale,
@@ -12048,7 +12088,7 @@ export function AshfallGame() {
           });
         }
         if (g.bannerTime > 0 && g.running) {
-          const compact = activeLaneCenters !== LANE_Y;
+          const compact = compactBattleViewport();
           const bannerWidth = compact ? 268 : 356;
           const bannerHeight = compact ? 32 : 54;
           obstacleRects.push({
@@ -12060,14 +12100,17 @@ export function AshfallGame() {
         }
         const readyAbilityFighters = g.running && !g.paused && !g.over && !selectedActionRef.current
           ? g.fighters.filter((fighter) => canActivateManualAbility({ fighter, fighters: g.fighters }))
-            .map((fighter) => ({
-              id: fighter.id,
-              kind: fighter.kind,
-              x: fighter.x,
-              y: fighter.y,
-              screenX: transform.offsetX + fighter.x * transform.scale,
-              screenY: transform.offsetY + (fighter.y - spriteBattleDisplaySizeFor(fighter.kind).h - 6) * transform.scale,
-            }))
+            .map((fighter) => {
+              const size = fighterScreenSize(fighter);
+              return {
+                id: fighter.id,
+                kind: fighter.kind,
+                x: fighter.x,
+                y: fighter.y,
+                screenX: transform.offsetX + fighter.x * transform.scale,
+                screenY: transform.offsetY + (fighter.y - size.h - 6) * transform.scale,
+              };
+            })
           : [];
         const rootStyle = getComputedStyle(document.documentElement);
         const safeInsets = Object.fromEntries(["top", "right", "bottom", "left"].map((edge) => [

@@ -235,6 +235,27 @@ for (const engine of engines) {
             : `${viewport.width}x${viewport.height}`;
           invariant(snapshot.geometry?.viewportId === expectedViewportId, `viewport geometry mismatch: ${snapshot.geometry?.viewportId}`);
           invariant(snapshot.geometry?.offFloorCount === 0, `off-floor fighters: ${JSON.stringify(snapshot.geometry?.offFloorIds)}`);
+          invariant(snapshot.geometry?.visuallyOffFloorCount === 0,
+            `fighters outside authored visual floor: ${JSON.stringify(snapshot.geometry?.visuallyOffFloorIds)}`);
+          if (stage.number >= 17) {
+            invariant(snapshot.geometry?.visualFloor?.authored === true, "Version 0.9.0 visual floor profile missing");
+            const scalesByLane = [0, 1, 2].map((lane) => (
+              activeFighters
+                .filter((fighter) => fighter.lane === lane)
+                .map((fighter) => fighter.renderDepthScale)
+            )).filter((samples) => samples.length > 0);
+            invariant(activeFighters.every((fighter) => (
+              Number.isFinite(fighter.renderDepthScale)
+              && fighter.renderDepthScale >= snapshot.geometry.visualFloor.farScale
+              && fighter.renderDepthScale <= snapshot.geometry.visualFloor.nearScale
+            )), "fighter perspective scale left the authored floor range");
+            for (let index = 1; index < scalesByLane.length; index += 1) {
+              invariant(
+                Math.max(...scalesByLane[index - 1]) < Math.min(...scalesByLane[index]),
+                `near lane was not rendered larger than far lane: ${JSON.stringify(scalesByLane)}`,
+              );
+            }
+          }
           invariant(snapshot.stationMetrics?.offFloorSteps === 0, `runtime grounding clamps: ${snapshot.stationMetrics?.offFloorSteps}`);
           invariant(activeFighters.every((fighter) => typeof fighter.aiProfile === "string" && fighter.aiProfile.length > 0),
             "an active fighter had no AI profile");

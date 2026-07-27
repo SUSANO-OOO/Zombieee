@@ -401,7 +401,9 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /resolveBattlefieldSupplyLanding\(\{ supply: object, fighters: g\.fighters, laneCenters: activeLaneCenters \}\)/);
   assert.match(game, /resolveDrumDetonation\(\{ supply: object, fighters: g\.fighters, areaEffects: g\.areaEffects, nextAreaEffectId: g\.nextAreaEffectId, laneCenters: activeLaneCenters \}\)/);
   assert.match(game, /resolveAirstrikeImpact\(\{ runtime: g\.airstrike, fighters: g\.fighters, laneCenters: activeLaneCenters \}\)/);
-  assert.match(game, /canvas\.dataset\.laneLayout = nextLaneCenters === LANE_Y \? "standard" : "compact-landscape"/);
+  assert.match(game, /canvas\.dataset\.laneLayout = compactBattleViewport\(\) \? "compact-landscape" : "standard"/);
+  assert.match(game, /canvas\.dataset\.visualFloorAuthored/);
+  assert.match(game, /activeBattlefieldDepthScale\(f\.y\)/);
   assert.match(game, /canvasPointerToWorld\(\{ clientX: event\.clientX, clientY: event\.clientY, rect, transform, worldWidth: W, worldHeight: H \}\)/);
   assert.match(game, /<span>戦場をタップ<\/span>/);
   assert.match(game, /className="placement-cancel"[\s\S]*配置をキャンセル/);
@@ -459,7 +461,7 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(indicatorDraw, /indicator\.innerRadius[\s\S]*ctx\.ellipse/);
   assert.match(indicatorDraw, /ctx\.lineWidth = 1\.4[\s\S]*ctx\.moveTo\(-9, 0\)[\s\S]*labelX = Math\.max/);
   assert.match(game, /g\.banner = placementReasonLabel\(result\.reason\); g\.bannerTime = \.75/);
-  assert.match(game, /const compactScale = activeLaneCenters === LANE_Y \? 1 : 1\.1/);
+  assert.match(game, /const compactScale = compactBattleViewport\(\) \? 1\.1 : 1/);
   assert.match(game, /const bannerY = compact \? 132 : 70/);
   for (const label of ["投下ポッド", "爆薬ドラム", "救護所", "航空支援", "一斉掃射"]) assert.match(game, new RegExp(label));
   assert.match(css, /battle-nishijin-shopping-street-v1\.webp/);
