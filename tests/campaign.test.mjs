@@ -80,9 +80,15 @@ const EXPANSION_STAGE_IDS = [
   CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE,
   CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL,
 ];
+const V090_STAGE_IDS = [
+  CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE,
+  CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE,
+  CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE,
+  CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL,
+];
 
-test("campaign preserves Stage 1-6 and defines ten ordered Version 0.8.0 stages", () => {
-  assert.equal(CAMPAIGN_STAGES.length, 16);
+test("campaign preserves Stage 1-16 and appends four ordered Version 0.9.0 stages", () => {
+  assert.equal(CAMPAIGN_STAGES.length, 20);
   assert.deepEqual(CAMPAIGN_STAGES.map((stage) => stage.id), [
     STAGE_1,
     STAGE_2,
@@ -91,6 +97,7 @@ test("campaign preserves Stage 1-6 and defines ten ordered Version 0.8.0 stages"
     STAGE_5,
     STAGE_6,
     ...EXPANSION_STAGE_IDS,
+    ...V090_STAGE_IDS,
   ]);
   assert.deepEqual(CAMPAIGN_STAGES.slice(0, 6).map((stage) => stage.displayName), [
     "西新商店街",
@@ -100,7 +107,7 @@ test("campaign preserves Stage 1-6 and defines ten ordered Version 0.8.0 stages"
     "西新駅・ホーム／線路区域",
     "西新駅・保守トンネル／封鎖区域",
   ]);
-  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.id)).size, 16);
+  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.id)).size, 20);
 
   for (const [index, stage] of CAMPAIGN_STAGES.entries()) {
     assert.equal(CAMPAIGN_STAGE_BY_ID[stage.id], stage);
@@ -143,7 +150,7 @@ test("campaign preserves Stage 1-6 and defines ten ordered Version 0.8.0 stages"
     "background-nishijin-station-platform-v1",
     "background-nishijin-station-tunnel-v1",
   ]);
-  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.theme.backgroundId)).size, 16);
+  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.theme.backgroundId)).size, 20);
 });
 
 test("each stage has a unique multi-layer visual signature", () => {
@@ -152,7 +159,7 @@ test("each stage has a unique multi-layer visual signature", () => {
     CAMPAIGN_STAGES.map(({ id }) => id).sort(),
   );
   const signatures = Object.values(STAGE_VISUAL_SIGNATURES);
-  assert.equal(new Set(signatures.map(({ kind }) => kind)).size, 16);
+  assert.equal(new Set(signatures.map(({ kind }) => kind)).size, 20);
   for (const signature of signatures) {
     assert.equal(typeof signature.background, "string");
     assert.equal(typeof signature.landmark, "string");
@@ -258,7 +265,7 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
 });
 
 test("Stage 7-16 use four new regions, five objective patterns, and a strict forward chain", () => {
-  const expansion = CAMPAIGN_STAGES.slice(6);
+  const expansion = CAMPAIGN_STAGES.slice(6, 16);
   assert.deepEqual(expansion.map(({ id }) => id), EXPANSION_STAGE_IDS);
   assert.equal(new Set(expansion.map(({ regionId }) => regionId)).size, 4);
   assert.deepEqual(
@@ -275,7 +282,12 @@ test("Stage 7-16 use four new regions, five objective patterns, and a strict for
     assert.deepEqual(stage.prerequisiteStageIds, [
       index === 0 ? STAGE_6 : expansion[index - 1].id,
     ]);
-    assert.deepEqual(stage.nextUnlocks.stageIds, index === expansion.length - 1 ? [] : [expansion[index + 1].id]);
+    assert.deepEqual(
+      stage.nextUnlocks.stageIds,
+      index === expansion.length - 1
+        ? [CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE]
+        : [expansion[index + 1].id],
+    );
     assert.ok(stage.waves.length >= 7 && stage.waves.length <= 12, stage.id);
     assert.equal(stage.preBattleEventId, null);
     assert.equal(stage.postBattleEventId, null);
@@ -296,6 +308,41 @@ test("Stage 7-16 use four new regions, five objective patterns, and a strict for
       `three consecutive objective patterns at Stage ${index + 7}`,
     );
   }
+});
+
+test("Stage 17-20 introduce six body-plan-distinct infected and end in a boss-gated Kurome assault", () => {
+  const stages = V090_STAGE_IDS.map((stageId) => CAMPAIGN_STAGE_BY_ID[stageId]);
+  assert.deepEqual(stages.map(({ stageNumber }) => stageNumber), [17, 18, 19, 20]);
+  assert.deepEqual(stages.map(({ missionType }) => missionType), [
+    "assault",
+    "timed-defense",
+    "escort",
+    "boss-assault",
+  ]);
+  assert.deepEqual(stages.map(({ objectivePattern }) => objectivePattern), [
+    "relay-destruction",
+    "perimeter-hold",
+    "mobile-objective-escort",
+    "boss-gated-assault",
+  ]);
+  for (const [index, stage] of stages.entries()) {
+    assert.deepEqual(stage.prerequisiteStageIds, [
+      index === 0 ? CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL : stages[index - 1].id,
+    ]);
+    assert.deepEqual(stage.nextUnlocks.stageIds, index === stages.length - 1 ? [] : [stages[index + 1].id]);
+    assert.ok(stage.waves.length >= 9 && stage.waves.length <= 13, stage.id);
+  }
+  assert.deepEqual(
+    new Set(stages.flatMap(({ enemyKinds }) => enemyKinds).filter((kind) => (
+      ["resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom"].includes(kind)
+    ))),
+    new Set(["resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom"]),
+  );
+  assert.equal(stages[1].objectiveConfig.durationSeconds, 210);
+  assert.equal(stages[2].objectiveConfig.durationSeconds, 195);
+  assert.equal(stages[3].boss.enemyKind, "kurome");
+  assert.equal(stages[3].boss.displayName, "クロメ");
+  assert.equal(stages[3].waves.some((wave) => wave.units?.includes("kurome")), true);
 });
 
 test("Stage 1-3 increase pressure through bounded cadence and mixed compositions", () => {

@@ -256,6 +256,14 @@ test("draws three unmistakably different stage environments", async () => {
   const backgroundDraw = game.slice(game.indexOf("function drawStageBackground"), game.indexOf("function drawWorld"));
   assert.match(backgroundDraw, /compact && g\.definition\.stageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_DEFENSE_LINE[\s\S]*naturalHeight \* \.2/);
   assert.match(backgroundDraw, /else if \(g\.definition\.stageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_DEFENSE_LINE\)[\s\S]*naturalHeight \* \.17/);
+  assert.match(
+    backgroundDraw,
+    /CAMPAIGN_STAGE_IDS\.BAY_TOWER_SERVICE[\s\S]*CAMPAIGN_STAGE_IDS\.COASTAL_LINK_BRIDGE[\s\S]*naturalHeight \* \.12/,
+  );
+  assert.match(
+    backgroundDraw,
+    /CAMPAIGN_STAGE_IDS\.ESTUARY_FLOODGATE_SEAL[\s\S]*naturalHeight \* \.18/,
+  );
 
   const worldDraw = game.slice(game.indexOf("function drawWorld"), game.indexOf("export function AshfallGame"));
   const drawOrder = [

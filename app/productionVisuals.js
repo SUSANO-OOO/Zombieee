@@ -21,11 +21,18 @@ export const PRODUCTION_VISUALS = Object.freeze({
     "stage-evacuation-freight-yard": "/art/v080/stages/evacuation-freight-yard-background-v1.webp",
     "stage-t-plan-outer-core": "/art/v080/stages/t-plan-outer-core-background-v1.webp",
     "stage-t-plan-central-seal": "/art/v080/stages/t-plan-central-seal-background-v1.webp",
+    "stage-bay-tower-service": "/art/v090/stages/bay-tower-service-background-v1.webp",
+    "stage-civic-archive-route": "/art/v090/stages/civic-archive-route-background-v1.webp",
+    "stage-coastal-link-bridge": "/art/v090/stages/coastal-link-bridge-background-v1.webp",
+    "stage-estuary-floodgate-seal": "/art/v090/stages/estuary-floodgate-background-v1.webp",
   }),
   eventCuts: Object.freeze({
     "station-gate-rescue-cut": "/art/v070/events/station-gate-rescue-cut-v1.webp",
     "station-platform-escort-cut": "/art/v070/events/station-platform-escort-cut-v1.webp",
     "station-tunnel-containment-cut": "/art/v070/events/station-tunnel-containment-cut-v1.webp",
+  }),
+  missionObjects: Object.freeze({
+    "coastal-power-rig": "/art/v090/stages/coastal-power-rig-v1.png",
   }),
 });
 

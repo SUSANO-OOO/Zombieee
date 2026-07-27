@@ -545,6 +545,10 @@ test("every P5 audio scene resolves, Stage 1-6 route distinctly, and story event
     "stage2",
     "stage3",
     "station-tunnel",
+    "stage2",
+    "station-gate",
+    "stage3",
+    "station-tunnel",
   ]);
   assert.equal(new Set(stageSceneIds).size, 6);
 

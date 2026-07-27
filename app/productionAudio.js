@@ -63,6 +63,12 @@ const ENEMY_VOICE_PROFILE_BY_KIND = Object.freeze({
   sprinter: "runner",
   "gate-eater": "takuya",
   kurome: "takuya",
+  resonator: "spitter",
+  cagewalker: "crusher",
+  spindle: "shade",
+  "choir-knot": "turned",
+  "pall-manta": "crusher",
+  "anchor-bloom": "abomination",
 });
 const ENEMY_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
 
@@ -504,6 +510,10 @@ const STAGE_SCENE_BY_ID = Object.freeze({
   [CAMPAIGN_STAGE_IDS.EVACUATION_FREIGHT_YARD]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_2,
   [CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
   [CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL]: PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL,
+  [CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_2,
+  [CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE]: PRODUCTION_AUDIO_SCENE_IDS.STATION_GATE,
+  [CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
+  [CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL]: PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL,
 });
 
 const UNIT_WEAPON_CUES = Object.freeze({

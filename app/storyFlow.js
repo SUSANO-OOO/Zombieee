@@ -179,6 +179,18 @@ export const STAGE_STORY_FLOWS = deepFreeze({
   [CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL]: stageFlow({
     pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
   }),
+  [CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
+  [CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL]: stageFlow({
+    pre: [], replay: null, battle: [], post: [], defeat: null, retry: null,
+  }),
 });
 
 function getStageFlow(stageId) {

@@ -103,6 +103,31 @@ test("stage 3 cannot report victory until TAKUYA is defeated and the infection b
   }), "lost");
 });
 
+test("Stage 20 keeps the infection core sealed until Kurome is defeated", () => {
+  const definition = createBattleDefinition(CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL);
+  const destroyedCore = { baseHp: definition.baseMaxHp, barricadeHp: 0, time: 280 };
+  assert.equal(definition.missionType, "boss-assault");
+  assert.equal(definition.bossEnemyKind, "kurome");
+  assert.equal(definition.bossUnlocksEnemyBase, true);
+  assert.equal(definition.startsEnemyBaseVulnerable, false);
+  assert.match(objectiveForBattle(definition, {
+    time: PREP_SECONDS,
+    phase: 1,
+    barricadeVulnerable: false,
+  }), /クロメ/);
+  assert.equal(battleOutcomeFor(definition, destroyedCore), null);
+  assert.equal(battleOutcomeFor(definition, {
+    ...destroyedCore,
+    bossDefeated: true,
+    barricadeVulnerable: true,
+  }), "won");
+  assert.equal(objectiveForBattle(definition, {
+    time: 180,
+    phase: 3,
+    barricadeVulnerable: true,
+  }), "感染核を破壊");
+});
+
 test("stage 4 destroys the relay, rescues seven survivors, and keeps an assault outcome", () => {
   const definition = createBattleDefinition(STAGE_4);
   assert.equal(definition.missionType, "assault");

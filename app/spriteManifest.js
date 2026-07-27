@@ -54,6 +54,12 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   sprinter: Object.freeze({ w: 58, h: 96 }),
   "gate-eater": Object.freeze({ w: 126, h: 142 }),
   kurome: Object.freeze({ w: 150, h: 170 }),
+  resonator: Object.freeze({ w: 70, h: 106 }),
+  cagewalker: Object.freeze({ w: 112, h: 92 }),
+  spindle: Object.freeze({ w: 118, h: 68 }),
+  "choir-knot": Object.freeze({ w: 88, h: 92 }),
+  "pall-manta": Object.freeze({ w: 126, h: 72 }),
+  "anchor-bloom": Object.freeze({ w: 112, h: 62 }),
 });
 
 export function spriteBattleDisplaySizeFor(kind) {
@@ -226,6 +232,30 @@ const NEWCOMER_VISIBLE = Object.freeze({
     right: [[111, 16, 370, 432], [84, 16, 397, 432], [102, 16, 378, 432], [89, 16, 391, 432], [71, 16, 410, 432], [82, 16, 398, 432], [16, 181, 464, 432]],
     left: [[111, 16, 370, 432], [84, 16, 397, 432], [102, 16, 378, 432], [89, 16, 391, 432], [71, 16, 410, 432], [82, 16, 398, 432], [16, 181, 464, 432]],
   },
+  resonator: {
+    right: [[137, 58, 344, 432], [111, 58, 359, 432], [123, 58, 371, 432], [84, 58, 397, 432], [84, 58, 397, 432], [128, 58, 353, 432], [39, 244, 442, 432]],
+    left: [[137, 58, 344, 432], [111, 58, 359, 432], [123, 58, 371, 432], [84, 58, 397, 432], [84, 58, 397, 432], [128, 58, 353, 432], [39, 244, 442, 432]],
+  },
+  cagewalker: {
+    right: [[54, 49, 427, 432], [29, 75, 441, 432], [41, 75, 453, 432], [34, 169, 446, 432], [38, 49, 442, 432], [69, 49, 426, 431], [34, 223, 442, 432]],
+    left: [[54, 49, 427, 432], [29, 75, 441, 432], [41, 75, 453, 432], [34, 169, 446, 432], [38, 49, 442, 432], [55, 49, 412, 431], [38, 223, 446, 432]],
+  },
+  spindle: {
+    right: [[34, 231, 446, 432], [29, 156, 441, 432], [41, 156, 453, 432], [52, 49, 429, 432], [34, 123, 446, 432], [35, 129, 446, 430], [34, 304, 446, 432]],
+    left: [[34, 231, 446, 432], [29, 156, 441, 432], [41, 156, 453, 432], [52, 49, 429, 432], [34, 123, 446, 432], [34, 129, 445, 430], [34, 304, 446, 432]],
+  },
+  "choir-knot": {
+    right: [[76, 53, 405, 432], [75, 53, 395, 432], [87, 53, 407, 432], [75, 53, 405, 432], [64, 53, 416, 432], [73, 53, 408, 432], [36, 242, 442, 432]],
+    left: [[76, 53, 405, 432], [75, 53, 395, 432], [87, 53, 407, 432], [75, 53, 405, 432], [64, 53, 416, 432], [72, 53, 407, 432], [38, 242, 444, 432]],
+  },
+  "pall-manta": {
+    right: [[30, 283, 451, 432], [25, 216, 446, 432], [37, 216, 458, 432], [30, 83, 451, 432], [30, 66, 451, 432], [32, 141, 449, 432], [30, 275, 451, 432]],
+    left: [[30, 283, 451, 432], [25, 216, 446, 432], [37, 216, 458, 432], [30, 83, 451, 432], [30, 66, 451, 432], [32, 141, 449, 432], [30, 275, 451, 432]],
+  },
+  "anchor-bloom": {
+    right: [[32, 74, 449, 432], [27, 105, 444, 432], [39, 105, 456, 432], [32, 165, 449, 432], [32, 145, 449, 422], [36, 45, 445, 429], [32, 225, 449, 427]],
+    left: [[32, 74, 449, 432], [27, 105, 444, 432], [39, 105, 456, 432], [32, 165, 449, 432], [32, 145, 449, 422], [36, 45, 445, 429], [32, 225, 449, 427]],
+  },
 });
 
 function frameRecord({ path, sheetWidth, sheetHeight, source, visible, nativeDirection, direction, derivedFrom, authoredCell, anchorX = 0.5 }) {
@@ -396,6 +426,12 @@ export const SPRITE_MANIFEST = Object.freeze({
   sprinter: explicitAtlasManifestEntry("sprinter", "/art/v070/characters/sprinter-battle-v1.png"),
   "gate-eater": explicitAtlasManifestEntry("gate-eater", "/art/v070/characters/gate-eater-battle-v1.png"),
   kurome: explicitAtlasManifestEntry("kurome", "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png"),
+  resonator: explicitAtlasManifestEntry("resonator", "/art/v090/enemies/resonator-battle-v1.png"),
+  cagewalker: explicitAtlasManifestEntry("cagewalker", "/art/v090/enemies/cagewalker-battle-v1.png"),
+  spindle: explicitAtlasManifestEntry("spindle", "/art/v090/enemies/spindle-battle-v1.png"),
+  "choir-knot": explicitAtlasManifestEntry("choir-knot", "/art/v090/enemies/choir-knot-battle-v1.png"),
+  "pall-manta": explicitAtlasManifestEntry("pall-manta", "/art/v090/enemies/pall-manta-battle-v1.png"),
+  "anchor-bloom": explicitAtlasManifestEntry("anchor-bloom", "/art/v090/enemies/anchor-bloom-battle-v1.png"),
   "crazy-king": explicitAtlasManifestEntry("crazy-king", "/art/v060/characters/crazy-king-battle-v1.png"),
   kumaverson: explicitAtlasManifestEntry("kumaverson", "/art/v060/characters/kumaverson-battle-v1.png"),
   babayaga: explicitAtlasManifestEntry("babayaga", "/art/v060/characters/babayaga-battle-v1.png"),

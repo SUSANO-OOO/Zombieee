@@ -16,6 +16,12 @@ export const ENEMY_CONTENT = deepFreeze([
   { id: "sprinter", displayName: "走鬼", aliases: [], aiProfile: "charge", hp: 78, hpPerWave: 2, speed: 38, damage: 18, range: 24, attackEvery: .68, bodyRadius: 11, laneSpeed: 82, abilityPressure: 1.38, spawnClass: "normal", initialAbilityCooldown: 2 },
   { id: "gate-eater", displayName: "改札喰い", aliases: [], aiProfile: "base-defense", hp: 1800, hpPerWave: 0, speed: 7, damage: 64, range: 42, attackEvery: 1.32, bodyRadius: 32, laneSpeed: 22, abilityPressure: 1.65, spawnClass: "boss", initialAbilityCooldown: 4 },
   { id: "kurome", displayName: "クロメ", aliases: [], aiProfile: "ranged", hp: 2100, hpPerWave: 0, speed: 8, damage: 36, range: 240, attackEvery: 1.72, bodyRadius: 36, laneSpeed: 28, abilityPressure: 1.72, spawnClass: "boss", initialAbilityCooldown: 3.4, prototypeStatus: "producer-approved" },
+  { id: "resonator", displayName: "裂声体", aliases: [], aiProfile: "sonic-cone", hp: 170, hpPerWave: 4, speed: 12, damage: 18, range: 32, attackEvery: 1.2, bodyRadius: 15, laneSpeed: 30, abilityPressure: 1.48, spawnClass: "normal", initialAbilityCooldown: 2.8 },
+  { id: "cagewalker", displayName: "骨檻", aliases: [], aiProfile: "living-barricade", hp: 270, hpPerWave: 6, speed: 9, damage: 28, range: 34, attackEvery: 1.34, bodyRadius: 22, laneSpeed: 20, abilityPressure: 1.56, spawnClass: "heavy", initialAbilityCooldown: 2.4 },
+  { id: "spindle", displayName: "脊走り", aliases: [], aiProfile: "vault-backline", hp: 122, hpPerWave: 3, speed: 31, damage: 22, range: 27, attackEvery: .76, bodyRadius: 18, laneSpeed: 70, abilityPressure: 1.6, spawnClass: "normal", initialAbilityCooldown: 2.1 },
+  { id: "choir-knot", displayName: "百面瘤", aliases: [], aiProfile: "mimic-taunt", hp: 158, hpPerWave: 4, speed: 13, damage: 15, range: 72, attackEvery: 1.38, bodyRadius: 18, laneSpeed: 30, abilityPressure: 1.52, spawnClass: "normal", initialAbilityCooldown: 2.7 },
+  { id: "pall-manta", displayName: "皮幕", aliases: [], aiProfile: "projectile-canopy", hp: 238, hpPerWave: 5, speed: 12, damage: 21, range: 31, attackEvery: 1.22, bodyRadius: 24, laneSpeed: 27, abilityPressure: 1.58, spawnClass: "heavy", initialAbilityCooldown: 2.6 },
+  { id: "anchor-bloom", displayName: "掌根", aliases: [], aiProfile: "root-support", hp: 214, hpPerWave: 5, speed: 6, damage: 16, range: 36, attackEvery: 1.46, bodyRadius: 23, laneSpeed: 18, abilityPressure: 1.62, spawnClass: "heavy", initialAbilityCooldown: 3 },
 ]);
 
 export const ENEMY_CONTENT_BY_ID = deepFreeze(Object.fromEntries(

@@ -316,12 +316,13 @@ export function enemyRenderedVisualHalfWidth(kind) {
 function spawnClassGeometry(kind) {
   const enemy = enemyContentFor(kind);
   const spawnClass = enemy?.spawnClass ?? "normal";
+  const bodyRadius = nonNegative(enemy?.bodyRadius, 11);
   const clearance = spawnClass === "boss" ? 49 : spawnClass === "heavy" ? 43 : 31;
   const estimatedVisualHalfWidth = spawnClass === "boss"
-    ? Math.max(58, nonNegative(enemy?.bodyRadius, 20) * 2.45)
+    ? Math.max(58, bodyRadius * 2.45)
     : spawnClass === "heavy"
-      ? Math.max(36, nonNegative(enemy?.bodyRadius, 16) * 1.9)
-      : Math.max(26, nonNegative(enemy?.bodyRadius, 11) * 1.75);
+      ? Math.max(36, bodyRadius * 1.9)
+      : Math.max(26, bodyRadius * 1.75);
   const visualHalfWidth = Math.max(
     estimatedVisualHalfWidth,
     enemyRenderedVisualHalfWidth(kind),
@@ -330,7 +331,7 @@ function spawnClassGeometry(kind) {
     : spawnClass === "heavy" ? 38
       : ["runner", "sprinter"].includes(kind) ? 62
         : 52;
-  return { clearance, entrySpeed, visualHalfWidth, spawnClass };
+  return { bodyRadius, clearance, entrySpeed, visualHalfWidth, spawnClass };
 }
 
 export const MISSION_SPAWN_PROFILES = deepFreeze({
@@ -388,6 +389,7 @@ export function enemySpawnPortalPoint({
   const slot = Math.abs(Math.trunc(finite(entryId, 1)) * 7 + kind.length * 3) % portals.length;
   const portal = portals[slot];
   const {
+    bodyRadius,
     clearance,
     entrySpeed,
     visualHalfWidth,
@@ -400,7 +402,10 @@ export function enemySpawnPortalPoint({
     ? space.world.width + visualHalfWidth + profile.outsideMargin
     : portal.hidden.x;
   const combatReadyX = usesRightEdge
-    ? space.world.width - visualHalfWidth - profile.readyPadding
+    ? Math.min(
+      space.world.width - visualHalfWidth - profile.readyPadding,
+      space.walkableArea.maxX - bodyRadius,
+    )
     : portal.entry.x - clearance;
   return deepFreeze({
     portalId: portal.id,
@@ -413,6 +418,7 @@ export function enemySpawnPortalPoint({
     combatReadyX,
     combatReadyY: portal.entry.y,
     entrySpeed,
+    bodyRadius,
     visualHalfWidth,
     spawnClass,
     targetableDuringEntry: false,

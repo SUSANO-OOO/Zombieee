@@ -88,15 +88,16 @@ async function sha256(filename) {
   return createHash("sha256").update(await readFile(filename)).digest("hex");
 }
 
-test("sprite manifest enumerates all sixteen playable units, Mayo's feral atlas, enemies, and the isolated Kurome prototype", () => {
+test("sprite manifest enumerates all playable units, Mayo's feral atlas, bosses, and six Version 0.9.0 infected", () => {
   assert.deepEqual(spriteKinds, [
     "brawler", "scout", "ranger", "medic", "brute", "gunner", "guardian", "engineer", "zakimiya",
     "tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan", "mayo-chan-feral",
     "walker", "runner", "turned", "spitter", "shade", "crusher", "abomination", "takuya",
     "grappler", "ooze", "sprinter", "gate-eater", "kurome",
+    "resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom",
     "crazy-king", "kumaverson", "babayaga",
   ]);
-  assert.equal(spriteKinds.length, 30);
+  assert.equal(spriteKinds.length, 36);
   for (const kind of spriteKinds) {
     assert.deepEqual(spriteStatesFor(kind), SPRITE_STATES);
     assert.equal(spriteSheetPath(kind), SPRITE_MANIFEST[kind].path);
@@ -312,7 +313,7 @@ test("every production WebP passes an actual image decoder", async () => {
     ...Object.values(PRODUCTION_VISUALS.stages),
     ...Object.values(PRODUCTION_VISUALS.eventCuts),
   ])];
-  assert.equal(productionWebps.length, 39);
+  assert.equal(productionWebps.length, 43);
 
   for (const assetPath of productionWebps) {
     assert.match(assetPath, /\.webp$/);

@@ -4,8 +4,8 @@
   "reviewedAt": "2026-07-26",
   "status": "active-partial",
   "scope": [
-    "assets/source/v090/",
-    "public/art/v090/"
+    "assets/source/v090/characters/",
+    "public/art/v090/characters/"
   ],
   "rightsProvenance": {
     "producerProvidedInputs": [
