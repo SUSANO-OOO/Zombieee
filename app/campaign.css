@@ -257,6 +257,33 @@
 .result-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; margin-top:7px; }.result-stats span { display:flex; justify-content:space-between; gap:5px; padding:5px 6px; border:1px solid rgba(218,187,140,.13); background:rgba(4,8,9,.35); }.result-stats small { color:#7c7265; font:700 8px monospace; }.result-stats b { color:#d0b88e; font:900 9px monospace; }
 .result-panel > footer { display:flex; justify-content:flex-end; gap:6px; margin-top:8px; }.result-panel > footer button { min-width:160px; text-align:center; }
 
+/* Outbreak operations use a dense military dossier, with the approved boss
+   identity carrying the horror rather than decorative glow effects. */
+.outbreak-screen { display:grid; grid-template-rows:auto minmax(0,1fr); background:linear-gradient(125deg,rgba(6,10,11,.96),rgba(24,18,17,.94)),var(--campaign-art) center/cover no-repeat; }
+.outbreak-layout { min-height:0; display:grid; grid-template-columns:minmax(230px,.72fr) minmax(0,1.75fr); gap:7px; padding:7px calc(8px + var(--app-viewport-safe-right)) calc(7px + var(--app-viewport-safe-bottom)) calc(8px + var(--app-viewport-safe-left)); }
+.outbreak-mission-list { min-height:0; overflow:auto; display:grid; align-content:start; gap:4px; padding-right:2px; }
+.outbreak-mission-list button { min-height:56px; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:2px 8px; padding:6px 9px; border:1px solid rgba(151,139,119,.3); border-left:4px solid #626b68; background:#151b1b; color:#bcb09d; cursor:pointer; text-align:left; }
+.outbreak-mission-list button small { grid-column:1; grid-row:1/3; min-width:52px; color:#77827d; font:900 7px/1.2 monospace; letter-spacing:.06em; }
+.outbreak-mission-list button b { overflow:hidden; color:#d8c6aa; font:900 12px/1.05 sans-serif; text-overflow:ellipsis; white-space:nowrap; }
+.outbreak-mission-list button span { overflow:hidden; color:#8e8577; font:800 8px/1.1 monospace; text-overflow:ellipsis; white-space:nowrap; }
+.outbreak-mission-list button[data-selected="true"] { border-color:#b46a4f; border-left-color:#d85f3c; background:#34231f; }
+.outbreak-mission-list button[data-state="cleared"] { border-left-color:#789c87; }.outbreak-mission-list button[data-state="cleared"] small { color:#95b9a2; }
+.outbreak-mission-list button:disabled { opacity:.42; cursor:not-allowed; }
+.outbreak-detail { min-height:0; display:grid; grid-template-columns:minmax(220px,.85fr) minmax(250px,1.15fr); overflow:hidden; border:1px solid rgba(190,154,119,.28); border-left:5px solid #9c3e32; background:#0b0f10; box-shadow:0 14px 34px rgba(0,0,0,.42); }
+.outbreak-boss-art { min-height:0; background-color:#111; background-repeat:no-repeat; background-position:center 18%; background-size:contain; filter:saturate(.82) contrast(1.08); }
+.outbreak-intel { min-height:0; overflow:auto; padding:12px; border-left:1px solid rgba(190,154,119,.18); background:#171a19; }
+.outbreak-intel > small { color:#c56047; font:900 8px/1.2 monospace; letter-spacing:.08em; }.outbreak-intel h2 { margin:4px 0 6px; color:#f0d7b4; font:900 clamp(24px,3.8vw,44px)/.94 Impact,sans-serif; letter-spacing:.05em; }.outbreak-intel > p { margin:0 0 8px; color:#b8aa95; font:800 10px/1.4 sans-serif; }
+.outbreak-intel dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin:0 0 9px; }.outbreak-intel dl div { min-width:0; padding:6px 7px; border-left:2px solid #59635f; background:#101515; }.outbreak-intel dt { color:#73817b; font:800 7px/1 monospace; }.outbreak-intel dd { overflow:hidden; margin:3px 0 0; color:#d0bea2; font:900 9px/1.2 sans-serif; text-overflow:ellipsis; white-space:nowrap; }
+.outbreak-intel .campaign-primary { width:100%; min-height:48px; text-align:center; }
+.outbreak-detail[data-state="locked"] .outbreak-boss-art { filter:brightness(.14) grayscale(1) contrast(1.35); }
+.outbreak-detail[data-state="cleared"] { border-left-color:#668878; }
+.outbreak-result-screen { display:grid; place-items:center; padding:calc(8px + var(--app-viewport-safe-top)) calc(8px + var(--app-viewport-safe-right)) calc(8px + var(--app-viewport-safe-bottom)) calc(8px + var(--app-viewport-safe-left)); background:#080c0d; }
+.outbreak-result-panel { width:min(760px,91%); max-height:96%; overflow:auto; padding:15px; border:1px solid rgba(204,166,119,.32); border-left:6px solid #a34434; background:#171a19; box-shadow:0 18px 55px #000; }
+.outbreak-result-panel > header { padding-bottom:9px; border-bottom:1px solid rgba(204,166,119,.18); }.outbreak-result-panel header small { color:#b55b44; font:900 8px/1 monospace; letter-spacing:.1em; }.outbreak-result-panel h1 { margin:4px 0 0; color:#efd8b7; font:900 clamp(26px,4.5vw,48px)/.95 Impact,sans-serif; letter-spacing:.05em; }.outbreak-result-panel header p { margin:5px 0 0; color:#9d9080; font:900 10px/1 monospace; }
+.outbreak-result-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; margin:9px 0; }.outbreak-result-stats span { padding:7px; border:1px solid rgba(180,159,126,.18); background:#0e1313; }.outbreak-result-stats small,.outbreak-result-stats b { display:block; }.outbreak-result-stats small { color:#758079; font:800 7px/1 monospace; }.outbreak-result-stats b { margin-top:4px; color:#dbc39d; font:900 14px/1 monospace; }
+.outbreak-result-unlock { padding:9px 10px; border-left:4px solid #858c63; background:#22251a; }.outbreak-result-unlock h2 { margin:0 0 5px; color:#dbbd74; font:900 10px/1 monospace; }.outbreak-result-unlock p { display:flex; justify-content:space-between; gap:12px; margin:4px 0; color:#d7c49f; font:800 10px/1.3 sans-serif; }.outbreak-result-unlock p b { color:#9fa67d; font:900 8px/1.3 monospace; }.outbreak-result-unlock > small { display:block; margin-top:6px; color:#998d78; font:800 8px/1 monospace; }
+.outbreak-result-panel > footer { display:flex; justify-content:flex-end; gap:6px; margin-top:10px; }.outbreak-result-panel > footer button { min-width:170px; text-align:center; }
+
 @keyframes title-ember { to { transform:translate(28px,-190px) scale(.25); opacity:0; } }
 @keyframes event-jolt { 25%{transform:translateX(5px)}55%{transform:translateX(-4px)}80%{transform:translateX(2px)} }
 @keyframes event-fade { from{opacity:.9}to{opacity:0} }
@@ -270,6 +297,8 @@
   .personnel-layout { padding:4px; }.personnel-units > div { grid-template-columns:repeat(2,minmax(0,1fr)); }.personnel-units .formation-unit-card { min-height:84px; }.personnel-units[data-mode="upgrade"] .formation-unit-card,.personnel-units[data-mode="acquisition"] .formation-unit-card { min-height:120px; }
   .dialogue-box { min-height:103px; padding:8px 11px; grid-template-columns:29% minmax(0,1fr) auto; }.dialogue-text { font-size:9px; line-height:1.5; }.event-portrait { bottom:25%; height:68%; }.event-portrait.guide { width:30%; height:60%; }.event-portrait.guide.right { right:8%; }
   .result-panel { width:91%; max-height:95%; padding:8px; }.result-panel header h1 { font-size:25px; }.result-stars { font-size:24px; }.result-records { margin:4px 0; gap:3px; }.result-records span { padding:4px 5px; }.result-rewards { padding:5px 6px; }.result-stats { margin-top:4px; }.result-panel > footer { margin-top:5px; }.result-panel > footer button { min-width:140px; padding:6px 10px; }
+  .outbreak-layout { grid-template-columns:210px minmax(0,1fr); gap:4px; padding:4px calc(5px + var(--app-viewport-safe-right)) calc(4px + var(--app-viewport-safe-bottom)) calc(5px + var(--app-viewport-safe-left)); }.outbreak-mission-list { gap:3px; }.outbreak-mission-list button { min-height:48px; padding:4px 6px; }.outbreak-detail { grid-template-columns:minmax(170px,.82fr) minmax(260px,1.18fr); }.outbreak-intel { padding:7px; }.outbreak-intel h2 { margin:2px 0 4px; font-size:25px; }.outbreak-intel > p { margin-bottom:5px; font-size:8px; }.outbreak-intel dl { margin-bottom:5px; }.outbreak-intel dl div { padding:4px 5px; }.outbreak-intel .campaign-primary { min-height:44px; }
+  .outbreak-result-panel { padding:9px; }.outbreak-result-panel h1 { font-size:28px; }.outbreak-result-stats { margin:6px 0; }.outbreak-result-stats span { padding:5px; }.outbreak-result-unlock { padding:6px 8px; }.outbreak-result-panel > footer { margin-top:6px; }
 }
 
 @media (max-width:760px) and (orientation:landscape) {
@@ -277,6 +306,7 @@
   .campaign-header > p { display:none; }
   .formation-layout { grid-template-columns:minmax(0,1.35fr) 186px; }
   .formation-units button b { font-size:14px; }
+  .outbreak-layout { grid-template-columns:190px minmax(0,1fr); }.outbreak-detail { grid-template-columns:minmax(150px,.7fr) minmax(250px,1.3fr); }.outbreak-mission-list button small { min-width:44px; }.outbreak-result-panel { width:94%; }
 }
 
 @media (prefers-reduced-motion:reduce) {

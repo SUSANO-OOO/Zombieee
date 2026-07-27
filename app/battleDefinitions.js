@@ -1,5 +1,6 @@
 import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "./campaign.js";
 import { BARRICADE_MAX_HP, PREP_SECONDS, battleOutcome, objectiveFor, phaseAt } from "./gameRules.js";
+import { OUTBREAK_MISSION_BY_ID } from "./outbreakMissions.js";
 import {
   STATION_MISSION_TYPES,
   stationMissionObjective,
@@ -79,33 +80,45 @@ function operationPhaseSchedule(stage) {
 }
 
 export function createBattleDefinition(stageId) {
-  const stage = CAMPAIGN_STAGE_BY_ID[stageId];
+  const outbreakMission = OUTBREAK_MISSION_BY_ID[stageId] ?? null;
+  const stage = CAMPAIGN_STAGE_BY_ID[stageId] ?? outbreakMission;
   if (!stage) throw new RangeError(`Unknown campaign stage: ${String(stageId)}`);
   const isDefense = stage.missionType === "timed-defense";
   const isStationObjective = stage.missionType === STATION_MISSION_TYPES.ESCORT
     || stage.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL;
-  const bossUnlocksEnemyBase = ["assault", "boss-assault"].includes(stage.missionType)
+  const bossUnlocksEnemyBase = !outbreakMission
+    && ["assault", "boss-assault"].includes(stage.missionType)
     && Boolean(stage.boss?.enemyKind);
   const timeline = campaignTimeline(stage);
+  const outbreakPhaseSchedule = outbreakMission
+    ? Object.freeze(timeline.map((event, index) => Object.freeze({
+      at: event.at,
+      phase: Math.min(3, index + 1),
+      label: event.label,
+      objective: stage.objective,
+    })))
+    : null;
   return {
-    stageId: stage.id,
+    stageId: outbreakMission?.prerequisiteStageId ?? stage.id,
+    operationId: stage.id,
+    operationCategory: outbreakMission ? "outbreak" : "campaign",
     displayName: stage.displayName,
     missionType: stage.missionType,
     prepSeconds: PREP_SECONDS,
     baseMaxHp: stage.baseHp,
     starThresholds: stage.starThresholds,
     enemyBaseMaxHp: BARRICADE_MAX_HP,
-    enemyBaseMode: isDefense || isStationObjective ? "scenery" : "target",
-    startsEnemyBaseVulnerable: stage.missionType === "assault" && !bossUnlocksEnemyBase,
+    enemyBaseMode: outbreakMission || isDefense || isStationObjective ? "scenery" : "target",
+    startsEnemyBaseVulnerable: !outbreakMission && stage.missionType === "assault" && !bossUnlocksEnemyBase,
     bossUnlocksEnemyBase,
     bossEnemyKind: stage.boss?.enemyKind ?? null,
     timeline,
     defenseEndAt: isDefense ? PREP_SECONDS + stage.objectiveConfig.durationSeconds : null,
-    phaseSchedule: stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE
+    phaseSchedule: outbreakPhaseSchedule ?? (stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE
       ? null
       : stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM
         ? STATION_PLATFORM_ASSAULT_SCHEDULE
-        : operationPhaseSchedule(stage),
+        : operationPhaseSchedule(stage)),
     objective: stage.objective,
     missionConfig: stage.objectiveConfig ?? {},
     rescueCount: Number(stage.objectiveConfig?.rescueCount) || 0,
@@ -123,6 +136,9 @@ export function phaseBannerForBattle(definition, phase) {
 }
 
 export function objectiveForBattle(definition, state) {
+  if (definition.operationCategory === "outbreak") {
+    return state.bossDefeated ? "残存感染体を掃討" : definition.objective;
+  }
   if (definition.missionType === "timed-defense") {
     const remaining = Math.max(0, Math.ceil(definition.defenseEndAt - Math.max(definition.prepSeconds, state.time)));
     const hudLabel = definition.missionConfig?.hudLabel ?? "救援部隊の撤収";
@@ -145,6 +161,19 @@ export function objectiveForBattle(definition, state) {
 
 export function battleOutcomeFor(definition, state) {
   if (state.baseHp <= 0) return "lost";
+  if (definition.operationCategory === "outbreak") {
+    if (state.bossDefeated !== true) return null;
+    const livingEnemies = Array.isArray(state.fighters)
+      && state.fighters.some((fighter) => (
+        fighter?.side === "zombie"
+        && Number(fighter?.hp) > 0
+        && fighter?.contained !== true
+      ));
+    const pendingEnemies = Array.isArray(state.enemySpawn?.pending)
+      && state.enemySpawn.pending.length > 0;
+    const pendingWaves = Number(state.eventIndex) < definition.timeline.length;
+    return livingEnemies || pendingEnemies || pendingWaves ? null : "won";
+  }
   if (definition.missionType === STATION_MISSION_TYPES.ESCORT
     || definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     const missionOutcome = stationMissionOutcome({ runtime: state.stageMission, baseHp: state.baseHp });
