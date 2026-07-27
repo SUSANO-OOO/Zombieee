@@ -11614,6 +11614,16 @@ export function AshfallGame() {
             if (f.side === "human") f.x = Math.max(humanMinX, f.x);
             else if (zombieTargetFloor !== null) f.x = Math.max(zombieTargetFloor, f.x);
             f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
+            // Pair separation is a constrained solver step: project that step
+            // onto the walkable floor here, then leave the frame-level audit
+            // below independent so other movement sources remain detectable.
+            const separatedPosition = clampToWalkable(movementStageGeometry, {
+              x: f.x,
+              y: f.y,
+              bodyRadius: f.bodyRadius,
+            });
+            f.x = separatedPosition.x;
+            f.y = separatedPosition.y;
             f.lane = activeLaneForY(f.y, f.lane);
           }
           if (f.side === "human" && f.combatReady && f.hp > 0) {
@@ -11643,16 +11653,6 @@ export function AshfallGame() {
             if (qaBarrier && qaBarrier.humanId === f.id && qaBarrier.attempted) {
               qaBarrier.resultingX = f.x;
             }
-          }
-          if (f.combatReady && f.hp > 0) {
-            const withinWalkableFloor = clampToWalkable(movementStageGeometry, {
-              x: f.x,
-              y: f.y,
-              bodyRadius: f.bodyRadius,
-            });
-            f.x = withinWalkableFloor.x;
-            f.y = withinWalkableFloor.y;
-            f.lane = activeLaneForY(f.y, f.lane);
           }
         }
 
