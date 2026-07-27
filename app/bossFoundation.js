@@ -224,8 +224,8 @@ export const BOSS_DEFINITIONS = deepFreeze([
     id: "boss-ooguchi",
     enemyKind: "ooguchi",
     displayName: "オオグチ",
-    workingName: true,
-    prototypeStatus: "producer-review-required",
+    workingName: false,
+    prototypeStatus: "producer-approved",
     classification: "捕食・高速突進型異常発生個体",
     hpBar: { color: "#783a31", accentColor: "#d58858" },
     phases: [
@@ -235,7 +235,7 @@ export const BOSS_DEFINITIONS = deepFreeze([
     ],
     entrance: {
       warningLabel: "異常発生 // オオグチ",
-      cueId: "enemy-takuya-attack",
+      cueId: "boss-ooguchi-entrance",
       fullBodyRequired: true,
     },
     attackTelegraph: {
@@ -267,16 +267,17 @@ export const BOSS_DEFINITIONS = deepFreeze([
     resultId: "boss-result-ooguchi",
     compendiumId: "boss-compendium-ooguchi",
     compendium: {
-      title: "オオグチ（呼称仮）",
+      title: "オオグチ",
       summary: "四枚の顎殻を衝角として突進し、停止直後だけ中枢を露出する捕食個体。",
+      assetPath: "/art/v090/bosses/ooguchi-compendium-r1.webp",
     },
   },
   {
     id: "boss-gairen",
     enemyKind: "gairen",
     displayName: "ガイレン",
-    workingName: true,
-    prototypeStatus: "producer-review-required",
+    workingName: false,
+    prototypeStatus: "producer-approved",
     classification: "外殻展開・防御切替型異常発生個体",
     hpBar: { color: "#4f514c", accentColor: "#b69b68" },
     phases: [
@@ -286,7 +287,7 @@ export const BOSS_DEFINITIONS = deepFreeze([
     ],
     entrance: {
       warningLabel: "異常発生 // ガイレン",
-      cueId: "enemy-takuya-attack",
+      cueId: "boss-gairen-entrance",
       fullBodyRequired: true,
     },
     attackTelegraph: {
@@ -318,16 +319,17 @@ export const BOSS_DEFINITIONS = deepFreeze([
     resultId: "boss-result-gairen",
     compendiumId: "boss-compendium-gairen",
     compendium: {
-      title: "ガイレン（呼称仮）",
+      title: "ガイレン",
       summary: "五枚の外殻で正面攻撃を遮断し、掃討動作で中枢を露出する歩行要塞。",
+      assetPath: "/art/v090/bosses/gairen-compendium-r1.webp",
     },
   },
   {
     id: "boss-futago",
     enemyKind: "futago",
     displayName: "フタゴ",
-    workingName: true,
-    prototypeStatus: "producer-review-required",
+    workingName: false,
+    prototypeStatus: "producer-approved",
     classification: "融合・分裂多段階型異常発生個体",
     hpBar: { color: "#6f4a50", accentColor: "#c58c8f" },
     phases: [
@@ -337,7 +339,7 @@ export const BOSS_DEFINITIONS = deepFreeze([
     ],
     entrance: {
       warningLabel: "異常発生 // フタゴ",
-      cueId: "enemy-takuya-attack",
+      cueId: "boss-futago-entrance",
       fullBodyRequired: true,
     },
     attackTelegraph: {
@@ -369,8 +371,9 @@ export const BOSS_DEFINITIONS = deepFreeze([
     resultId: "boss-result-futago",
     compendiumId: "boss-compendium-futago",
     compendium: {
-      title: "フタゴ（呼称仮）",
+      title: "フタゴ",
       summary: "人間の残滓を強く残した融合体。体力低下で裂開し、二方向から交差攻撃を行う。",
+      assetPath: "/art/v090/bosses/futago-compendium-r1.webp",
     },
   },
 ]);

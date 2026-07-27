@@ -55,6 +55,9 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   "gate-eater": Object.freeze({ w: 126, h: 142 }),
   kurome: Object.freeze({ w: 150, h: 170 }),
   mother: Object.freeze({ w: 205, h: 170 }),
+  ooguchi: Object.freeze({ w: 218, h: 148 }),
+  gairen: Object.freeze({ w: 184, h: 176 }),
+  futago: Object.freeze({ w: 164, h: 178 }),
   resonator: Object.freeze({ w: 70, h: 106 }),
   cagewalker: Object.freeze({ w: 112, h: 92 }),
   spindle: Object.freeze({ w: 118, h: 68 }),
@@ -236,6 +239,18 @@ const NEWCOMER_VISIBLE = Object.freeze({
   mother: {
     right: [[16, 93, 464, 432], [16, 83, 464, 432], [16, 80, 464, 432], [16, 85, 464, 432], [16, 82, 464, 432], [16, 112, 464, 432], [16, 228, 464, 432]],
     left: [[16, 93, 464, 432], [16, 83, 464, 432], [16, 80, 464, 432], [16, 85, 464, 432], [16, 82, 464, 432], [16, 112, 464, 432], [16, 228, 464, 432]],
+  },
+  ooguchi: {
+    right: [[16, 245, 464, 432], [16, 252, 464, 432], [16, 253, 464, 432], [16, 234, 464, 432], [16, 272, 464, 432], [16, 197, 464, 432], [16, 293, 464, 432]],
+    left: [[16, 245, 464, 432], [16, 252, 464, 432], [16, 253, 464, 432], [16, 234, 464, 432], [16, 272, 464, 432], [16, 197, 464, 432], [16, 293, 464, 432]],
+  },
+  gairen: {
+    right: [[16, 31, 464, 432], [40, 16, 440, 432], [16, 45, 464, 432], [16, 19, 464, 432], [16, 24, 464, 432], [21, 16, 459, 432], [16, 233, 464, 432]],
+    left: [[16, 31, 464, 432], [40, 16, 440, 432], [16, 45, 464, 432], [16, 19, 464, 432], [16, 24, 464, 432], [21, 16, 459, 432], [16, 233, 464, 432]],
+  },
+  futago: {
+    right: [[17, 16, 463, 432], [63, 16, 418, 432], [35, 16, 445, 432], [16, 28, 464, 432], [25, 16, 456, 432], [27, 16, 454, 432], [16, 204, 464, 432]],
+    left: [[17, 16, 463, 432], [63, 16, 418, 432], [35, 16, 445, 432], [16, 28, 464, 432], [25, 16, 456, 432], [27, 16, 454, 432], [16, 204, 464, 432]],
   },
   resonator: {
     right: [[137, 58, 344, 432], [111, 58, 359, 432], [123, 58, 371, 432], [84, 58, 397, 432], [84, 58, 397, 432], [128, 58, 353, 432], [39, 244, 442, 432]],
@@ -432,6 +447,9 @@ export const SPRITE_MANIFEST = Object.freeze({
   "gate-eater": explicitAtlasManifestEntry("gate-eater", "/art/v070/characters/gate-eater-battle-v1.png"),
   kurome: explicitAtlasManifestEntry("kurome", "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png"),
   mother: explicitAtlasManifestEntry("mother", "/art/v090/bosses/mother-battle-r1.png"),
+  ooguchi: explicitAtlasManifestEntry("ooguchi", "/art/v090/bosses/ooguchi-battle-r1.png"),
+  gairen: explicitAtlasManifestEntry("gairen", "/art/v090/bosses/gairen-battle-r1.png"),
+  futago: explicitAtlasManifestEntry("futago", "/art/v090/bosses/futago-battle-r1.png"),
   resonator: explicitAtlasManifestEntry("resonator", "/art/v090/enemies/resonator-battle-v1.png"),
   cagewalker: explicitAtlasManifestEntry("cagewalker", "/art/v090/enemies/cagewalker-battle-v1.png"),
   spindle: explicitAtlasManifestEntry("spindle", "/art/v090/enemies/spindle-battle-v1.png"),

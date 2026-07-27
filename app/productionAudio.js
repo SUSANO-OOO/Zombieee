@@ -64,6 +64,9 @@ const ENEMY_VOICE_PROFILE_BY_KIND = Object.freeze({
   "gate-eater": "takuya",
   kurome: "takuya",
   mother: "abomination",
+  ooguchi: "abomination",
+  gairen: "crusher",
+  futago: "turned",
   resonator: "spitter",
   cagewalker: "crusher",
   spindle: "shade",
@@ -139,6 +142,15 @@ const V090_BOSS_AUDIO_CUES = Object.freeze([
   { id: "boss-mother-entrance", category: "monsters", gain: .74, priority: 104, cooldownMs: 3000, maxInstances: 1 },
   { id: "boss-mother-brood-warning", category: "monsters", gain: .62, priority: 90, cooldownMs: 600, maxInstances: 1 },
   { id: "boss-mother-brood-eruption", category: "monsters", gain: .78, priority: 98, cooldownMs: 300, maxInstances: 2 },
+  { id: "boss-ooguchi-entrance", category: "monsters", gain: .78, priority: 104, cooldownMs: 3000, maxInstances: 1 },
+  { id: "boss-ooguchi-charge-warning", category: "monsters", gain: .64, priority: 90, cooldownMs: 600, maxInstances: 1 },
+  { id: "boss-ooguchi-charge-impact", category: "monsters", gain: .82, priority: 99, cooldownMs: 260, maxInstances: 2 },
+  { id: "boss-gairen-entrance", category: "monsters", gain: .8, priority: 104, cooldownMs: 3000, maxInstances: 1 },
+  { id: "boss-gairen-shell-warning", category: "monsters", gain: .65, priority: 90, cooldownMs: 600, maxInstances: 1 },
+  { id: "boss-gairen-shell-sweep", category: "monsters", gain: .8, priority: 99, cooldownMs: 260, maxInstances: 2 },
+  { id: "boss-futago-entrance", category: "monsters", gain: .76, priority: 104, cooldownMs: 3000, maxInstances: 1 },
+  { id: "boss-futago-cross-warning", category: "monsters", gain: .63, priority: 90, cooldownMs: 600, maxInstances: 1 },
+  { id: "boss-futago-cross-impact", category: "monsters", gain: .79, priority: 99, cooldownMs: 260, maxInstances: 2 },
 ]);
 
 const V070_AUDIO_ASSET_SPECS = Object.freeze([
@@ -250,7 +262,7 @@ function v090PlayableAsset(spec) {
   return {
     id: spec.id,
     category: spec.category,
-    sources: spec.id.includes("mayo") || spec.id.includes("mother")
+    sources: spec.id.includes("mayo") || spec.id.startsWith("boss-")
       ? [{ src: `${V090_AUDIO_ROOT}/sfx/${spec.id}.wav`, type: "audio/wav" }]
       : sourceFor(V090_AUDIO_ROOT, "sfx", spec.id),
     preload: "lazy",

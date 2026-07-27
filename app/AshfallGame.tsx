@@ -156,8 +156,10 @@ import {
   beginBossAnomalyAbility,
   bossAnomalyAreaTargetIds,
   createBossAnomalyRuntime,
+  gairenIncomingDamageMultiplier,
   isBossAnomalyKind,
   motherBroodSummonPlan,
+  ooguchiChargeStep,
 } from "./bossAnomalies.js";
 import {
   KUROME_PROTOTYPE_TUNING,
@@ -1543,6 +1545,14 @@ function v090EnemyIncomingDamageMultiplier(
       targetX: target.x,
     })
     : 1;
+  if (target.kind === "gairen" && attacker) {
+    multiplier *= gairenIncomingDamageMultiplier({
+      runtime: target.stationAbility,
+      attackerX: attacker.x,
+      bossX: target.x,
+      verticalDistance: attacker.y - target.y,
+    });
+  }
   for (const anchor of g.fighters) {
     if (anchor.kind !== "anchor-bloom" || anchor.hp <= 0 || !anchor.combatReady) continue;
     const reinforcement = anchorBloomReinforcement({
@@ -2929,6 +2939,9 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
           ? manualAbilityDefinition.windupSeconds
             + ((manualAbilityDefinition.guardSeconds - f.manualAbility.guardRemaining) % .36)
           : f.step;
+  const anomalyTuning = isBossAnomalyKind(f.kind)
+    ? BOSS_ANOMALY_TUNING[f.kind as keyof typeof BOSS_ANOMALY_TUNING]
+    : null;
   const animationSample = f.mayoRetreat
     ? sampleAnimationClip("mayo-chan", mayoRetreatSpriteState(f.mayoRetreat), f.mayoRetreat.phaseElapsed)
     : manualAbilityActive
@@ -2939,23 +2952,23 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
         ? sampleAnimationClip(f.kind, "active", KUROME_PROTOTYPE_TUNING.fireSeconds - f.stationAbility.remainingSeconds)
     : f.kind === "kurome" && f.stationAbility.phase === "recovery"
       ? sampleAnimationClip(f.kind, "recovery", KUROME_PROTOTYPE_TUNING.recoverySeconds - f.stationAbility.remainingSeconds)
-    : f.kind === "mother" && f.stationAbility.phase === "warning"
+    : anomalyTuning && f.stationAbility.phase === "warning"
       ? sampleAnimationClip(
         f.kind,
         "wind-up",
-        BOSS_ANOMALY_TUNING.mother.warningSeconds - f.stationAbility.remainingSeconds,
+        anomalyTuning.warningSeconds - f.stationAbility.remainingSeconds,
       )
-    : f.kind === "mother" && f.stationAbility.phase === "active"
+    : anomalyTuning && f.stationAbility.phase === "active"
       ? sampleAnimationClip(
         f.kind,
         "active",
-        BOSS_ANOMALY_TUNING.mother.activeSeconds - f.stationAbility.remainingSeconds,
+        anomalyTuning.activeSeconds - f.stationAbility.remainingSeconds,
       )
-    : f.kind === "mother" && f.stationAbility.phase === "recovery"
+    : anomalyTuning && f.stationAbility.phase === "recovery"
       ? sampleAnimationClip(
         f.kind,
         "recovery",
-        BOSS_ANOMALY_TUNING.mother.recoverySeconds - f.stationAbility.remainingSeconds,
+        anomalyTuning.recoverySeconds - f.stationAbility.remainingSeconds,
       )
     : isV090InfectedKind(f.kind) && f.stationAbility.phase === "warning"
       ? sampleAnimationClip(
@@ -3420,13 +3433,84 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
     }
   } else if (telegraph.kind === "lane-rectangle") {
     const targetX = telegraph.targetX ?? BASE_X + 48;
+    const targetY = telegraph.targetY ?? f.y;
     const halfHeight = telegraph.laneHalfHeight ?? 31;
     const width = Math.max(0, f.x - targetX);
     ctx.globalAlpha = .2;
     ctx.fillStyle = telegraph.color;
-    ctx.fillRect(targetX, f.y - halfHeight, width, halfHeight * 2);
+    ctx.fillRect(targetX, targetY - halfHeight, width, halfHeight * 2);
     ctx.globalAlpha = .9;
-    ctx.strokeRect(targetX, f.y - halfHeight, width, halfHeight * 2);
+    ctx.strokeRect(targetX, targetY - halfHeight, width, halfHeight * 2);
+  } else if (telegraph.kind === "shell-sweep") {
+    const radius = telegraph.radius ?? 0;
+    const halfHeight = BOSS_ANOMALY_TUNING.gairen.sweepHalfHeight;
+    const pulse = .5 + .5 * Math.sin(g.time * 11);
+    ctx.setLineDash([]);
+    ctx.globalAlpha = .18;
+    ctx.fillStyle = telegraph.color;
+    ctx.beginPath();
+    ctx.moveTo(f.x, f.y);
+    ctx.ellipse(f.x, f.y, radius, halfHeight, 0, Math.PI * .5, Math.PI * 1.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = .76 + pulse * .18;
+    for (let shell = 0; shell < 5; shell += 1) {
+      const angle = Math.PI * (.62 + shell * .19);
+      const reach = radius * (.72 + shell % 2 * .2);
+      ctx.lineWidth = 5 - shell * .55;
+      ctx.beginPath();
+      ctx.moveTo(f.x - 18, f.y - 15);
+      ctx.quadraticCurveTo(
+        f.x + Math.cos(angle) * reach * .55,
+        f.y + Math.sin(angle) * reach * .25 - 22,
+        f.x + Math.cos(angle) * reach,
+        f.y + Math.sin(angle) * reach * .5,
+      );
+      ctx.stroke();
+    }
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(
+      f.x,
+      f.y,
+      radius + pulse * 5,
+      halfHeight + pulse * 2,
+      0,
+      Math.PI * .5,
+      Math.PI * 1.5,
+    );
+    ctx.stroke();
+  } else if (telegraph.kind === "cross-strike") {
+    const radius = telegraph.radius ?? 0;
+    const targetX = telegraph.targetX ?? f.x;
+    const targetY = telegraph.targetY ?? f.y;
+    const halfWidth = BOSS_ANOMALY_TUNING.futago.crossStrikeHalfWidth;
+    const pulse = 2 + Math.sin(g.time * 16) * 2;
+    ctx.setLineDash([]);
+    ctx.translate(targetX, targetY);
+    ctx.globalAlpha = .18;
+    ctx.fillStyle = telegraph.color;
+    for (const angle of [
+      -BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
+      BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
+    ]) {
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.fillRect(-radius, -halfWidth - pulse, radius * 2, (halfWidth + pulse) * 2);
+      ctx.restore();
+    }
+    ctx.globalAlpha = .86;
+    ctx.lineWidth = 3;
+    for (const angle of [
+      -BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
+      BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
+    ]) {
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.strokeRect(-radius, -halfWidth - pulse, radius * 2, (halfWidth + pulse) * 2);
+      ctx.restore();
+    }
+    ctx.translate(-targetX, -targetY);
   } else if (telegraph.kind === "tracking-ray") {
     const targetX = telegraph.targetX ?? BASE_X + 48;
     const targetY = telegraph.targetY ?? f.y;
@@ -3452,12 +3536,20 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
   ctx.fillStyle = "#f4dfb8";
   ctx.font = "900 10px monospace";
   ctx.textAlign = "center";
-  const label = telegraph.kind === "brood-radial" && compactBattleViewport()
-    ? "増殖域 // 範囲外へ退避"
+  const compactLabels: Record<string, string> = {
+    "brood-radial": "増殖域 // 範囲外へ退避",
+    "lane-rectangle": "捕食突進 // 上下へ退避",
+    "shell-sweep": "外殻展開 // 側面攻撃",
+    "cross-strike": "交差中心 // 離脱",
+  };
+  const label = compactBattleViewport() && compactLabels[telegraph.kind]
+    ? compactLabels[telegraph.kind]
     : `${telegraph.displayName} // ${telegraph.counterplay}`;
-  const labelY = telegraph.kind === "brood-radial"
+  const labelY = ["brood-radial", "shell-sweep", "cross-strike"].includes(telegraph.kind)
     ? f.y + Math.min(82, (telegraph.radius ?? 0) * .5 + 18)
-    : f.y - 142;
+    : telegraph.kind === "lane-rectangle"
+      ? (telegraph.targetY ?? f.y) + (telegraph.laneHalfHeight ?? 31) + 18
+      : f.y - 142;
   ctx.fillText(label, f.x, labelY);
   ctx.restore();
 }
@@ -3499,6 +3591,101 @@ function drawMotherCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game)
       f.y - 6 + Math.sin(angle) * 35,
     );
     ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+  if (!["ooguchi", "gairen", "futago"].includes(f.kind)
+    || !["active", "recovery"].includes(f.stationAbility.phase)) return;
+  const tuning = BOSS_ANOMALY_TUNING[f.kind as "ooguchi" | "gairen" | "futago"];
+  const active = f.stationAbility.phase === "active";
+  const elapsed = active
+    ? tuning.activeSeconds - f.stationAbility.remainingSeconds
+    : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
+  const intensity = active
+    ? Math.min(1, elapsed / .16)
+    : Math.max(0, 1 - elapsed / tuning.recoverySeconds);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  if (f.kind === "ooguchi") {
+    const gradient = ctx.createRadialGradient(f.x - 42, f.y - 28, 5, f.x - 30, f.y - 20, 94);
+    gradient.addColorStop(0, `rgba(255,194,116,${.46 * intensity})`);
+    gradient.addColorStop(.42, `rgba(172,61,43,${.3 * intensity})`);
+    gradient.addColorStop(1, "rgba(72,20,16,0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(f.x - 34, f.y - 20, 98, 46, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineCap = "round";
+    for (let streak = 0; streak < 8; streak += 1) {
+      const y = f.y - 56 + streak * 9;
+      const reach = 54 + streak % 3 * 18;
+      ctx.strokeStyle = streak % 2
+        ? `rgba(221,120,72,${.34 * intensity})`
+        : `rgba(255,213,151,${.25 * intensity})`;
+      ctx.lineWidth = 2 + streak % 2;
+      ctx.beginPath();
+      ctx.moveTo(f.x + 42, y);
+      ctx.bezierCurveTo(f.x + reach, y - 4, f.x + reach + 22, y + 5, f.x + reach + 42, y);
+      ctx.stroke();
+    }
+  } else if (f.kind === "gairen") {
+    const gradient = ctx.createRadialGradient(f.x, f.y - 66, 4, f.x, f.y - 58, 88);
+    gradient.addColorStop(0, `rgba(255,210,143,${.58 * intensity})`);
+    gradient.addColorStop(.34, `rgba(154,55,48,${.38 * intensity})`);
+    gradient.addColorStop(1, "rgba(82,42,30,0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y - 54, 72, 82, 0, 0, Math.PI * 2);
+    ctx.fill();
+    for (let shell = 0; shell < 5; shell += 1) {
+      const angle = -Math.PI * .9 + shell * Math.PI * .45;
+      const reach = 64 + shell % 2 * 18;
+      ctx.strokeStyle = shell % 2
+        ? `rgba(213,174,102,${.42 * intensity})`
+        : `rgba(255,226,168,${.28 * intensity})`;
+      ctx.lineWidth = 3.2;
+      ctx.beginPath();
+      ctx.moveTo(f.x + Math.cos(angle) * 24, f.y - 54 + Math.sin(angle) * 18);
+      ctx.quadraticCurveTo(
+        f.x + Math.cos(angle) * reach * .65,
+        f.y - 62 + Math.sin(angle) * reach * .25,
+        f.x + Math.cos(angle) * reach,
+        f.y - 26 + Math.sin(angle) * reach * .45,
+      );
+      ctx.stroke();
+    }
+  } else {
+    const split = f.hp / Math.max(1, f.maxHp) <= BOSS_ANOMALY_TUNING.futago.splitThreshold;
+    const separation = split ? 31 : 18;
+    for (const direction of [-1, 1]) {
+      const centerX = f.x + direction * separation;
+      const gradient = ctx.createRadialGradient(centerX, f.y - 54, 4, centerX, f.y - 46, 72);
+      gradient.addColorStop(0, `rgba(255,198,184,${.45 * intensity})`);
+      gradient.addColorStop(.42, `rgba(154,60,74,${.32 * intensity})`);
+      gradient.addColorStop(1, "rgba(70,22,34,0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.ellipse(centerX, f.y - 44, 64, 76, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = `rgba(246,171,158,${.48 * intensity})`;
+    ctx.lineWidth = 2.5;
+    for (let filament = 0; filament < 7; filament += 1) {
+      const y = f.y - 82 + filament * 12;
+      ctx.beginPath();
+      ctx.moveTo(f.x - separation, y);
+      ctx.bezierCurveTo(
+        f.x - 6,
+        y - 12 + Math.sin(g.time * 7 + filament) * 6,
+        f.x + 6,
+        y + 12 - Math.sin(g.time * 7 + filament) * 6,
+        f.x + separation,
+        y,
+      );
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }
@@ -4618,6 +4805,7 @@ function drawWorld(
     if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g);
     drawSpriteFighter(ctx, f, sprites);
     if (f.combatReady) drawMotherCombatVfx(ctx, f, g);
+    if (f.combatReady) drawAnomalyBossCombatVfx(ctx, f, g);
     if (f.combatReady) drawKuromeCombatVfx(ctx, f, g);
     drawKuromeVisionInterference(ctx, f, g);
     if (!f.combatReady) continue;
@@ -5484,10 +5672,10 @@ export function AshfallGame() {
           bossAreaDamage: bossArea.targetDamage,
         };
       },
-      prepareBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother") => {
+      prepareBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother" | "ooguchi" | "gairen" | "futago") => {
         const g = gameRef.current;
         if (!isBossEnemyKind(kind)) throw new RangeError(`Unknown boss proof kind: ${String(kind)}`);
-        const prototypeRoute = kind === "kurome" || kind === "mother";
+        const prototypeRoute = kind === "kurome" || isBossAnomalyKind(kind);
         const missionIndex = prototypeRoute
           ? -1
           : g.definition.timeline.findIndex((mission) => mission.units.includes(kind));
@@ -5570,7 +5758,7 @@ export function AshfallGame() {
           warningLabel: bossDefinitionForEnemyKind(kind)?.entrance.warningLabel ?? null,
         };
       },
-      getBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother") => {
+      getBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother" | "ooguchi" | "gairen" | "futago") => {
         const g = gameRef.current;
         const boss = g.fighters.find((fighter) => fighter.kind === kind && fighter.side === "zombie");
         const human = g.fighters.find((fighter) => fighter.side === "human");
@@ -5625,6 +5813,8 @@ export function AshfallGame() {
           hud: boss ? bossHudSnapshot(boss) : null,
           telegraph: boss ? bossTelegraphSnapshot(boss, { fallbackTargetX: BASE_X + 48 }) : null,
           stationPhase: boss?.stationAbility.phase ?? null,
+          stationTargetIds: boss?.stationAbility.targetIds ?? [],
+          stationSplit: boss?.stationAbility.split ?? false,
           trackingTarget: boss ? {
             targetId: boss.stationAbility.targetId ?? null,
             targetX: boss.stationAbility.targetX ?? null,
@@ -5706,7 +5896,10 @@ export function AshfallGame() {
         if (!boss || !human || !boss.combatReady) return null;
         boss.speed = 0;
         boss.laneSpeed = 0;
-        boss.hp = Math.ceil(boss.maxHp * .72);
+        if (["ooguchi", "gairen", "futago"].includes(boss.kind)) {
+          boss.x = boss.combatReadyX ?? boss.x;
+        }
+        boss.hp = Math.ceil(boss.maxHp * (boss.kind === "futago" ? .55 : .72));
         boss.abilityCooldown = 0;
         boss.abilityWindup = 0;
         boss.stationAbility = createStationAbilityRuntime(boss.kind);
@@ -5718,9 +5911,12 @@ export function AshfallGame() {
         }
         if (boss.kind === "kurome" || boss.kind === "mother") boss.x = Math.min(boss.x, 560);
         human.x = boss.x - (boss.kind === "kurome" ? 210 : boss.kind === "mother" ? 72 : 90);
-        human.y = boss.y;
-        human.lane = boss.lane;
-        human.anchorLane = boss.lane;
+        const proofLane = boss.kind === "ooguchi"
+          ? (boss.lane === 0 ? 1 : 0)
+          : boss.lane;
+        human.y = activeLaneCenters[proofLane];
+        human.lane = proofLane;
+        human.anchorLane = proofLane;
         human.hp = human.maxHp;
         human.cooldown = 99;
         return {
@@ -5740,6 +5936,33 @@ export function AshfallGame() {
         ));
         if (!boss || !human || !boss.combatReady) return null;
         boss.stationAbility = createStationAbilityRuntime("mother");
+        boss.abilityCooldown = 99;
+        boss.cooldown = 0;
+        boss.speed = 0;
+        boss.laneSpeed = 0;
+        human.hp = human.maxHp;
+        human.x = boss.x - boss.bodyRadius - human.bodyRadius - 8;
+        human.y = boss.y;
+        human.lane = boss.lane;
+        human.anchorLane = boss.lane;
+        human.speed = 0;
+        human.laneSpeed = 0;
+        human.cooldown = 99;
+        return { bossId, humanId, humanHp: human.hp };
+      },
+      armAnomalyBossNormalAttack: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => (
+          fighter.id === bossId
+          && ["ooguchi", "gairen", "futago"].includes(fighter.kind)
+          && fighter.side === "zombie"
+        ));
+        const human = g.fighters.find((fighter) => (
+          fighter.id === humanId
+          && fighter.side === "human"
+        ));
+        if (!boss || !human || !boss.combatReady) return null;
+        boss.stationAbility = createStationAbilityRuntime(boss.kind);
         boss.abilityCooldown = 99;
         boss.cooldown = 0;
         boss.speed = 0;
@@ -5777,6 +6000,37 @@ export function AshfallGame() {
           lane,
           distance: fighterDistance(boss, human),
         };
+      },
+      moveAnomalyProofHumanOutsideTelegraph: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => (
+          fighter.id === bossId
+          && ["ooguchi", "gairen", "futago"].includes(fighter.kind)
+          && fighter.side === "zombie"
+        ));
+        const human = g.fighters.find((fighter) => (
+          fighter.id === humanId
+          && fighter.side === "human"
+        ));
+        if (!boss || !human || boss.stationAbility.phase !== "warning") return null;
+        if (boss.kind === "ooguchi") {
+          const lockedLane = boss.stationAbility.lane ?? boss.lane;
+          const safeLane = lockedLane === 0 ? 2 : 0;
+          human.y = activeLaneCenters[safeLane];
+          human.lane = safeLane;
+          human.anchorLane = safeLane;
+        } else if (boss.kind === "gairen") {
+          human.x = boss.x + BOSS_ANOMALY_TUNING.gairen.sweepRadius + 36;
+          human.y = boss.y;
+          human.lane = boss.lane;
+          human.anchorLane = boss.lane;
+        } else {
+          human.x = BASE_X + 42;
+          human.y = activeLaneCenters[boss.lane];
+          human.lane = boss.lane;
+          human.anchorLane = boss.lane;
+        }
+        return { x: human.x, y: human.y, lane: human.lane };
       },
       moveBossFoundationHumanToLane: (humanId: number, lane: Lane) => {
         const human = gameRef.current.fighters.find((fighter) => (
@@ -10491,6 +10745,190 @@ export function AshfallGame() {
             if (abilityFrame || f.stationAbility.phase !== "idle") continue;
           }
 
+          if (["ooguchi", "gairen", "futago"].includes(f.kind)) {
+            const anomalyKind = f.kind as "ooguchi" | "gairen" | "futago";
+            const tuning = BOSS_ANOMALY_TUNING[anomalyKind];
+            let abilityFrame = f.stationAbility.phase !== "idle";
+            if (f.stationAbility.phase !== "idle") {
+              const previousX = f.x;
+              const step = advanceBossAnomalyAbility(f.stationAbility, dt);
+              f.stationAbility = step.runtime as StationAbilityRuntime;
+
+              if (anomalyKind === "ooguchi"
+                && (f.stationAbility.phase === "active" || step.events.includes("activate"))) {
+                const charge = ooguchiChargeStep({
+                  runtime: f.stationAbility,
+                  boss: f,
+                  elapsedSeconds: dt,
+                  minimumX: BASE_X + 54,
+                });
+                if (charge.active) {
+                  f.x = charge.boss.x;
+                  if (Number.isInteger(charge.lane)) {
+                    f.lane = charge.lane as Lane;
+                    f.anchorLane = f.lane;
+                    f.y = Number.isFinite(Number(f.stationAbility.targetY))
+                      ? Number(f.stationAbility.targetY)
+                      : activeLaneCenters[f.lane];
+                  }
+                  const hitIds = new Set(f.stationAbility.targetIds ?? []);
+                  for (const victim of g.fighters) {
+                    if (victim.side !== "human"
+                      || victim.hp <= 0
+                      || victim.targetable === false
+                      || hitIds.has(String(victim.id))
+                      || Math.abs(victim.y - f.y) > tuning.chargeHalfHeight
+                      || victim.x < f.x - f.bodyRadius - victim.bodyRadius
+                      || victim.x > previousX + f.bodyRadius + victim.bodyRadius) continue;
+                    const resolved = applyIncomingHumanDamage(
+                      g,
+                      victim,
+                      tuning.chargeDamage,
+                      { attackKind: "melee", attacker: f },
+                    );
+                    hitIds.add(String(victim.id));
+                    victim.flash = Math.max(victim.flash, .2);
+                    victim.knock = Math.max(victim.knock, 22);
+                    addDamageText(g, {
+                      x: victim.x,
+                      y: victim.y - 58,
+                      value: `捕食突進 -${Math.round(resolved.targetDamage)}`,
+                      life: .92,
+                      color: "#e5a06d",
+                    });
+                  }
+                  f.stationAbility = {
+                    ...f.stationAbility,
+                    targetIds: [...hitIds],
+                  };
+                }
+              }
+
+              if (step.events.includes("activate")) {
+                if (anomalyKind === "ooguchi") {
+                  g.banner = "オオグチ // 捕食突進";
+                  addParticles(g, f.x - 38, f.y - 18, "#c4784e", 18);
+                  playProductionCue("boss-ooguchi-charge-impact", f.x, {
+                    priority: 99,
+                    cooldownMs: 260,
+                    volume: .82,
+                    fallbackCue: "boss-warning",
+                  });
+                } else {
+                  const areaBoss = anomalyKind === "futago"
+                    ? {
+                      ...f,
+                      x: Number(f.stationAbility.targetX) || f.x,
+                      y: Number(f.stationAbility.targetY) || f.y,
+                    }
+                    : f;
+                  const hitIds = bossAnomalyAreaTargetIds({
+                    kind: anomalyKind,
+                    boss: areaBoss,
+                    candidates: g.fighters,
+                  });
+                  const splitMultiplier = anomalyKind === "futago" && f.stationAbility.split
+                    ? 1.2
+                    : 1;
+                  const abilityDamage = anomalyKind === "gairen"
+                    ? BOSS_ANOMALY_TUNING.gairen.sweepDamage
+                    : BOSS_ANOMALY_TUNING.futago.crossStrikeDamage * splitMultiplier;
+                  for (const victimId of hitIds) {
+                    const victim = g.fighters.find((candidate) => (
+                      candidate.side === "human"
+                      && String(candidate.id) === victimId
+                    ));
+                    if (!victim) continue;
+                    const resolved = applyIncomingHumanDamage(
+                      g,
+                      victim,
+                      abilityDamage,
+                      { attackKind: "melee", attacker: f },
+                    );
+                    victim.flash = Math.max(victim.flash, .18);
+                    victim.knock = Math.max(victim.knock, anomalyKind === "gairen" ? 18 : 14);
+                    addDamageText(g, {
+                      x: victim.x,
+                      y: victim.y - 58,
+                      value: anomalyKind === "gairen"
+                        ? `外殻掃討 -${Math.round(resolved.targetDamage)}`
+                        : `融合交差撃 -${Math.round(resolved.targetDamage)}`,
+                      life: .92,
+                      color: anomalyKind === "gairen" ? "#d3b77c" : "#d59a9d",
+                    });
+                  }
+                  addParticles(
+                    g,
+                    areaBoss.x,
+                    areaBoss.y - 20,
+                    anomalyKind === "gairen" ? "#b79a68" : "#ba777d",
+                    24,
+                  );
+                  g.banner = anomalyKind === "gairen"
+                    ? "ガイレン // 外殻掃討・中枢露出"
+                    : f.stationAbility.split
+                      ? "フタゴ // 裂開・融合交差撃"
+                      : "フタゴ // 融合交差撃";
+                  playProductionCue(
+                    anomalyKind === "gairen"
+                      ? "boss-gairen-shell-sweep"
+                      : "boss-futago-cross-impact",
+                    f.x,
+                    {
+                      priority: 99,
+                      cooldownMs: 260,
+                      volume: .8,
+                      fallbackCue: "boss-warning",
+                    },
+                  );
+                }
+                f.attackSequence += 1;
+                g.bannerTime = .82;
+                g.flashOverlay = Math.max(g.flashOverlay, .09);
+                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+              }
+
+              if (step.events.includes("complete")) {
+                const splitSpeed = anomalyKind === "futago"
+                  && f.hp / Math.max(1, f.maxHp) <= BOSS_ANOMALY_TUNING.futago.splitThreshold
+                  ? BOSS_ANOMALY_TUNING.futago.splitSpeedMultiplier
+                  : 1;
+                f.abilityCooldown = tuning.cooldownSeconds / splitSpeed;
+              }
+            }
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+              const started = beginBossAnomalyAbility({
+                boss: f,
+                candidates: g.fighters,
+              });
+              if (started.ok) {
+                f.stationAbility = started.runtime as StationAbilityRuntime;
+                abilityFrame = true;
+                g.banner = anomalyKind === "ooguchi"
+                  ? "オオグチ // 捕食突進予告"
+                  : anomalyKind === "gairen"
+                    ? "ガイレン // 外殻掃討予告"
+                    : "フタゴ // 融合交差撃予告";
+                g.bannerTime = .68;
+                playProductionCue(
+                  anomalyKind === "ooguchi"
+                    ? "boss-ooguchi-charge-warning"
+                    : anomalyKind === "gairen"
+                      ? "boss-gairen-shell-warning"
+                      : "boss-futago-cross-warning",
+                  f.x,
+                  {
+                    priority: 90,
+                    cooldownMs: 600,
+                    volume: .64,
+                    fallbackCue: "boss-warning",
+                  },
+                );
+              }
+            }
+            if (abilityFrame || f.stationAbility.phase !== "idle") continue;
+          }
+
           if (f.kind === "kurome") {
             let abilityFrame = f.stationAbility.phase !== "idle";
             if (f.stationAbility.phase !== "idle") {
@@ -12534,7 +12972,7 @@ export function AshfallGame() {
           <small>{audioUnlockUi === "success" ? "確認音を再生しました（聞こえない場合は端末・タブのミュートを確認）" : audioUnlockUi === "failed" ? "音源または再生処理を確認して、タップで再試行" : "タップしてBGM・環境音・効果音・戦闘ボイスを開始"}</small>
         </button>}
         {screen === "battle" && <>
-        {hud.battleBarks.length > 0 && <div className="battle-barks" aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
+        {hud.battleBarks.length > 0 && <div className={`battle-barks ${bossHudSide === "boss-hud-left" ? "battle-barks-right" : ""}`} aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
 
         {isSurvivalBattle ? <div className="survival-hud" role="region" aria-label="Survival戦闘情報">
           <div className="survival-wave"><small>WAVE</small><strong>{survivalHud.wave}</strong></div>

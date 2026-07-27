@@ -93,11 +93,11 @@ test("sprite manifest enumerates all playable units, Mayo's feral atlas, bosses,
     "brawler", "scout", "ranger", "medic", "brute", "gunner", "guardian", "engineer", "zakimiya",
     "tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan", "mayo-chan-feral",
     "walker", "runner", "turned", "spitter", "shade", "crusher", "abomination", "takuya",
-    "grappler", "ooze", "sprinter", "gate-eater", "kurome", "mother",
+    "grappler", "ooze", "sprinter", "gate-eater", "kurome", "mother", "ooguchi", "gairen", "futago",
     "resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom",
     "crazy-king", "kumaverson", "babayaga",
   ]);
-  assert.equal(spriteKinds.length, 37);
+  assert.equal(spriteKinds.length, 40);
   for (const kind of spriteKinds) {
     assert.deepEqual(spriteStatesFor(kind), SPRITE_STATES);
     assert.equal(spriteSheetPath(kind), SPRITE_MANIFEST[kind].path);

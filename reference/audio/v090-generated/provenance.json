@@ -448,6 +448,141 @@
           "type": "audio/wav"
         }
       ]
+    },
+    {
+      "id": "boss-ooguchi-entrance",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-ooguchi-entrance.wav",
+        "sha256": "4176cd47299a83014e808ab40cd0f55731059da5f414e34bf7dac80d3eed641d"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-ooguchi-entrance.wav",
+          "sha256": "4176cd47299a83014e808ab40cd0f55731059da5f414e34bf7dac80d3eed641d",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-ooguchi-charge-warning",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-ooguchi-charge-warning.wav",
+        "sha256": "8922cf6b3d58453e82a8ea1187a00d958da4f325ff2abe7db395f43f4f9472a6"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-ooguchi-charge-warning.wav",
+          "sha256": "8922cf6b3d58453e82a8ea1187a00d958da4f325ff2abe7db395f43f4f9472a6",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-ooguchi-charge-impact",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-ooguchi-charge-impact.wav",
+        "sha256": "52529e29a39e611d389a919a94eac35136565088f566dc15e2fd5b87141cdcf8"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-ooguchi-charge-impact.wav",
+          "sha256": "52529e29a39e611d389a919a94eac35136565088f566dc15e2fd5b87141cdcf8",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-gairen-entrance",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-gairen-entrance.wav",
+        "sha256": "b5280cd14112ad3dc4078ff2d204b4500bfd22c4cfb14c3681ef101283bd9d83"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-gairen-entrance.wav",
+          "sha256": "b5280cd14112ad3dc4078ff2d204b4500bfd22c4cfb14c3681ef101283bd9d83",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-gairen-shell-warning",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-gairen-shell-warning.wav",
+        "sha256": "6017e8e9b4708f63ac789351e9a5aeb2db5015049ad04437794c8078c4ff0188"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-gairen-shell-warning.wav",
+          "sha256": "6017e8e9b4708f63ac789351e9a5aeb2db5015049ad04437794c8078c4ff0188",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-gairen-shell-sweep",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-gairen-shell-sweep.wav",
+        "sha256": "86d20522bb230bc2664e23dd0f594956e7f2b3a2cd18ba64fa4634c856df7aee"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-gairen-shell-sweep.wav",
+          "sha256": "86d20522bb230bc2664e23dd0f594956e7f2b3a2cd18ba64fa4634c856df7aee",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-futago-entrance",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-futago-entrance.wav",
+        "sha256": "076680b947fe6d9434ff72c352e9310d778309af40c96909fd5d6a300d03a380"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-futago-entrance.wav",
+          "sha256": "076680b947fe6d9434ff72c352e9310d778309af40c96909fd5d6a300d03a380",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-futago-cross-warning",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-futago-cross-warning.wav",
+        "sha256": "53fed1ea45dd23fa1f2a8392ec29e1d804831f1ea60a3265697d4f4bf395dafd"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-futago-cross-warning.wav",
+          "sha256": "53fed1ea45dd23fa1f2a8392ec29e1d804831f1ea60a3265697d4f4bf395dafd",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-futago-cross-impact",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-futago-cross-impact.wav",
+        "sha256": "1cc67d793b899b08fadd67681ff1ab2026b5daf72a3cb887595f8515a5c250ce"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-futago-cross-impact.wav",
+          "sha256": "1cc67d793b899b08fadd67681ff1ab2026b5daf72a3cb887595f8515a5c250ce",
+          "type": "audio/wav"
+        }
+      ]
     }
   ]
 }

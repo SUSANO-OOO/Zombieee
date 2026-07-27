@@ -38,6 +38,7 @@ export const BOSS_ANOMALY_TUNING = deepFreeze({
     exposedMultiplier: 1.28,
     sweepDamage: 38,
     sweepRadius: 104,
+    sweepHalfHeight: 52,
   },
   futago: {
     warningSeconds: 1.2,
@@ -47,6 +48,8 @@ export const BOSS_ANOMALY_TUNING = deepFreeze({
     splitThreshold: .62,
     crossStrikeDamage: 34,
     crossStrikeRadius: 118,
+    crossStrikeHalfWidth: 18,
+    crossStrikeAngleRadians: .43,
     splitSpeedMultiplier: 1.42,
   },
 });
@@ -234,10 +237,28 @@ export function bossAnomalyAreaTargetIds({
   if (!(radius > 0)) return deepFreeze([]);
   return deepFreeze((Array.isArray(candidates) ? candidates : [])
     .filter(livingHuman)
-    .filter((candidate) => Math.hypot(
-      finite(candidate.x) - finite(boss.x),
-      (finite(candidate.y) - finite(boss.y)) * 1.5,
-    ) <= radius)
+    .filter((candidate) => {
+      const dx = finite(candidate.x) - finite(boss.x);
+      const dy = finite(candidate.y) - finite(boss.y);
+      if (kind === "gairen") {
+        const halfHeight = tuning.sweepHalfHeight;
+        return dx <= 0
+          && (dx * dx) / (radius * radius)
+            + (dy * dy) / (halfHeight * halfHeight) <= 1;
+      }
+      if (kind === "futago") {
+        return [-tuning.crossStrikeAngleRadians, tuning.crossStrikeAngleRadians]
+          .some((angle) => {
+            const cosine = Math.cos(angle);
+            const sine = Math.sin(angle);
+            const along = dx * cosine + dy * sine;
+            const across = -dx * sine + dy * cosine;
+            return Math.abs(along) <= radius
+              && Math.abs(across) <= tuning.crossStrikeHalfWidth;
+          });
+      }
+      return Math.hypot(dx, dy * 1.5) <= radius;
+    })
     .map(({ id }) => String(id)));
 }
 
