@@ -151,6 +151,15 @@ import {
   isBossEnemyKind,
 } from "./bossFoundation.js";
 import {
+  BOSS_ANOMALY_TUNING,
+  advanceBossAnomalyAbility,
+  beginBossAnomalyAbility,
+  bossAnomalyAreaTargetIds,
+  createBossAnomalyRuntime,
+  isBossAnomalyKind,
+  motherBroodSummonPlan,
+} from "./bossAnomalies.js";
+import {
   KUROME_PROTOTYPE_TUNING,
   advanceKuromeTracking,
   beginKuromeTracking,
@@ -704,6 +713,8 @@ type Fighter = {
   mayoBiteSlowRemaining?: number;
   mayoRetreat?: ReturnType<typeof createMayoRetreatRuntime> | null;
   visionDisruptedRemaining?: number;
+  summonOwnerId?: number | null;
+  summonSource?: string | null;
 };
 type StationAbilityRuntime = {
   kind?: string | null;
@@ -724,6 +735,8 @@ type StationAbilityRuntime = {
   originX?: number | null;
   originY?: number | null;
   resolved?: boolean;
+  guarded?: boolean;
+  split?: boolean;
 };
 type StationHazard = {
   id: string | number | null;
@@ -1269,6 +1282,7 @@ function createStationAbilityRuntime(kind: string): StationAbilityRuntime {
   if (kind === "sprinter") return createSoukiRuntime() as StationAbilityRuntime;
   if (kind === "gate-eater") return createTicketGateEaterRuntime() as StationAbilityRuntime;
   if (kind === "kurome") return createKuromeTrackingRuntime() as StationAbilityRuntime;
+  if (isBossAnomalyKind(kind)) return createBossAnomalyRuntime(kind) as StationAbilityRuntime;
   if (isV090InfectedKind(kind)) return createV090InfectedRuntime(kind) as StationAbilityRuntime;
   return { phase: "idle", remainingSeconds: 0 };
 }
@@ -2772,6 +2786,11 @@ function spriteDisplaySize(kind: string) {
   return spriteBattleDisplaySizeFor(kind);
 }
 
+function compactSpriteScale(kind: string) {
+  if (!compactBattleViewport()) return 1;
+  return kind === "mother" ? 1.06 : COMPACT_BATTLE_SPRITE_SCALE;
+}
+
 // Asset-load diagnostic fallback only. Normal production rendering resolves
 // both late-game roles through manifest-backed approved atlases.
 function drawDiagnosticRoleFighter(ctx: CanvasRenderingContext2D, f: Fighter) {
@@ -2920,6 +2939,24 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
         ? sampleAnimationClip(f.kind, "active", KUROME_PROTOTYPE_TUNING.fireSeconds - f.stationAbility.remainingSeconds)
     : f.kind === "kurome" && f.stationAbility.phase === "recovery"
       ? sampleAnimationClip(f.kind, "recovery", KUROME_PROTOTYPE_TUNING.recoverySeconds - f.stationAbility.remainingSeconds)
+    : f.kind === "mother" && f.stationAbility.phase === "warning"
+      ? sampleAnimationClip(
+        f.kind,
+        "wind-up",
+        BOSS_ANOMALY_TUNING.mother.warningSeconds - f.stationAbility.remainingSeconds,
+      )
+    : f.kind === "mother" && f.stationAbility.phase === "active"
+      ? sampleAnimationClip(
+        f.kind,
+        "active",
+        BOSS_ANOMALY_TUNING.mother.activeSeconds - f.stationAbility.remainingSeconds,
+      )
+    : f.kind === "mother" && f.stationAbility.phase === "recovery"
+      ? sampleAnimationClip(
+        f.kind,
+        "recovery",
+        BOSS_ANOMALY_TUNING.mother.recoverySeconds - f.stationAbility.remainingSeconds,
+      )
     : isV090InfectedKind(f.kind) && f.stationAbility.phase === "warning"
       ? sampleAnimationClip(
         f.kind,
@@ -2956,7 +2993,7 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     : "left";
   const frame = spriteFrameFor(renderKind, state, direction);
   const authoredSize = fitSpriteBattleDisplaySize(renderKind, frame, spriteDisplaySize(renderKind));
-  const compactScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
+  const compactScale = compactSpriteScale(renderKind);
   const depthScale = activeBattlefieldDepthScale(f.y);
   const size = {
     w: authoredSize.w * compactScale * depthScale * animationSample.bodyScale,
@@ -3349,6 +3386,38 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
     ctx.beginPath();
     ctx.ellipse(f.x, f.y + 2, pulse, pulse / 2, 0, 0, Math.PI * 2);
     ctx.stroke();
+  } else if (telegraph.kind === "brood-radial") {
+    const radius = telegraph.radius ?? 0;
+    const pulse = .5 + .5 * Math.sin(g.time * 10);
+    const gradient = ctx.createRadialGradient(f.x, f.y, radius * .08, f.x, f.y, radius);
+    gradient.addColorStop(0, "rgba(119,39,32,.34)");
+    gradient.addColorStop(.58, "rgba(123,63,48,.18)");
+    gradient.addColorStop(1, "rgba(158,104,85,0)");
+    ctx.globalAlpha = .82;
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y + 2, radius, radius * .5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = .7 + pulse * .22;
+    for (let ring = 0; ring < 3; ring += 1) {
+      const ringRadius = radius * (.46 + ring * .23) + pulse * (3 + ring * 2);
+      ctx.lineWidth = 2.4 - ring * .35;
+      ctx.beginPath();
+      ctx.ellipse(f.x, f.y + 2, ringRadius, ringRadius * .5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    for (let lobe = 0; lobe < 8; lobe += 1) {
+      const angle = lobe / 8 * Math.PI * 2 + g.time * .12;
+      const lobeRadius = radius * (.68 + .05 * Math.sin(g.time * 7 + lobe));
+      const x = f.x + Math.cos(angle) * lobeRadius;
+      const y = f.y + Math.sin(angle) * lobeRadius * .5;
+      ctx.globalAlpha = .52 + pulse * .2;
+      ctx.fillStyle = lobe % 2 ? "#7d4338" : "#b0765c";
+      ctx.beginPath();
+      ctx.ellipse(x, y, 5 + pulse * 2, 3 + pulse, angle, 0, Math.PI * 2);
+      ctx.fill();
+    }
   } else if (telegraph.kind === "lane-rectangle") {
     const targetX = telegraph.targetX ?? BASE_X + 48;
     const halfHeight = telegraph.laneHalfHeight ?? 31;
@@ -3383,7 +3452,54 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
   ctx.fillStyle = "#f4dfb8";
   ctx.font = "900 10px monospace";
   ctx.textAlign = "center";
-  ctx.fillText(`${telegraph.displayName} // ${telegraph.counterplay}`, f.x, f.y - 142);
+  const label = telegraph.kind === "brood-radial" && compactBattleViewport()
+    ? "増殖域 // 範囲外へ退避"
+    : `${telegraph.displayName} // ${telegraph.counterplay}`;
+  const labelY = telegraph.kind === "brood-radial"
+    ? f.y + Math.min(82, (telegraph.radius ?? 0) * .5 + 18)
+    : f.y - 142;
+  ctx.fillText(label, f.x, labelY);
+  ctx.restore();
+}
+
+function drawMotherCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+  if (f.kind !== "mother" || !["active", "recovery"].includes(f.stationAbility.phase)) return;
+  const active = f.stationAbility.phase === "active";
+  const tuning = BOSS_ANOMALY_TUNING.mother;
+  const elapsed = active
+    ? tuning.activeSeconds - f.stationAbility.remainingSeconds
+    : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
+  const intensity = active
+    ? Math.min(1, elapsed / .2)
+    : Math.max(0, 1 - elapsed / tuning.recoverySeconds);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  const gradient = ctx.createRadialGradient(f.x, f.y - 24, 8, f.x, f.y - 18, 118);
+  gradient.addColorStop(0, `rgba(255,210,146,${.3 * intensity})`);
+  gradient.addColorStop(.34, `rgba(169,67,49,${.28 * intensity})`);
+  gradient.addColorStop(1, "rgba(90,26,24,0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.ellipse(f.x, f.y - 14, 122, 68, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineCap = "round";
+  for (let strand = 0; strand < 11; strand += 1) {
+    const angle = -Math.PI + strand / 10 * Math.PI;
+    const reach = 78 + (strand % 3) * 18 + Math.sin(g.time * 8 + strand) * 7;
+    ctx.strokeStyle = strand % 2
+      ? `rgba(220,118,76,${.38 * intensity})`
+      : `rgba(255,194,125,${.28 * intensity})`;
+    ctx.lineWidth = 2 + (strand % 3);
+    ctx.beginPath();
+    ctx.moveTo(f.x + Math.cos(angle) * 28, f.y - 28 + Math.sin(angle) * 11);
+    ctx.quadraticCurveTo(
+      f.x + Math.cos(angle) * reach * .55,
+      f.y - 62 - Math.sin(g.time * 5 + strand) * 14,
+      f.x + Math.cos(angle) * reach,
+      f.y - 6 + Math.sin(angle) * 35,
+    );
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -4501,6 +4617,7 @@ function drawWorld(
     if (f.combatReady) drawBossTelegraph(ctx, f, g);
     if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g);
     drawSpriteFighter(ctx, f, sprites);
+    if (f.combatReady) drawMotherCombatVfx(ctx, f, g);
     if (f.combatReady) drawKuromeCombatVfx(ctx, f, g);
     drawKuromeVisionInterference(ctx, f, g);
     if (!f.combatReady) continue;
@@ -5367,10 +5484,10 @@ export function AshfallGame() {
           bossAreaDamage: bossArea.targetDamage,
         };
       },
-      prepareBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome") => {
+      prepareBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother") => {
         const g = gameRef.current;
         if (!isBossEnemyKind(kind)) throw new RangeError(`Unknown boss proof kind: ${String(kind)}`);
-        const prototypeRoute = kind === "kurome";
+        const prototypeRoute = kind === "kurome" || kind === "mother";
         const missionIndex = prototypeRoute
           ? -1
           : g.definition.timeline.findIndex((mission) => mission.units.includes(kind));
@@ -5435,7 +5552,7 @@ export function AshfallGame() {
           } as EnemySpawnEntry;
           spawnEnemy(g, kind, entry.lane, 0, entry);
           const definition = bossDefinitionForEnemyKind(kind);
-          if (!definition) throw new Error("Kurome prototype contract missing");
+          if (!definition) throw new Error(`${kind} boss contract missing`);
           bossFoundationQaRef.current.entranceCounts[kind] = 1;
           bossFoundationQaRef.current.lastEntrance = {
             kind,
@@ -5453,14 +5570,14 @@ export function AshfallGame() {
           warningLabel: bossDefinitionForEnemyKind(kind)?.entrance.warningLabel ?? null,
         };
       },
-      getBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome") => {
+      getBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother") => {
         const g = gameRef.current;
         const boss = g.fighters.find((fighter) => fighter.kind === kind && fighter.side === "zombie");
         const human = g.fighters.find((fighter) => fighter.side === "human");
         const definition = bossDefinitionForEnemyKind(kind);
         const idleFrame = spriteFrameFor(kind, "idle", "left");
         const authoredSize = fitSpriteBattleDisplaySize(kind, idleFrame, spriteDisplaySize(kind));
-        const renderScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
+        const renderScale = compactSpriteScale(kind);
         const depthScale = activeBattlefieldDepthScale(boss?.y ?? activeLaneCenters[1]);
         const visibleHeightRatio = idleFrame.contentRect.h / idleFrame.sourceRect.h;
         const idleBodyScale = sampleAnimationClip(kind, "idle", 0).bodyScale;
@@ -5537,6 +5654,14 @@ export function AshfallGame() {
             },
           } : null,
           battleBarkCount: g.battleBarks.active.length,
+          broodCount: kind === "mother"
+            ? g.fighters.filter((fighter) => (
+              fighter.side === "zombie"
+              && fighter.hp > 0
+              && fighter.summonSource === "mother-brood"
+              && fighter.summonOwnerId === boss?.id
+            )).length
+            : 0,
         };
       },
       accelerateBossFoundationEntry: (bossId: number) => {
@@ -5585,8 +5710,14 @@ export function AshfallGame() {
         boss.abilityCooldown = 0;
         boss.abilityWindup = 0;
         boss.stationAbility = createStationAbilityRuntime(boss.kind);
-        if (boss.kind === "kurome") boss.x = Math.min(boss.x, 560);
-        human.x = boss.x - (boss.kind === "kurome" ? 210 : 90);
+        if (boss.kind === "mother") {
+          g.fighters = g.fighters.filter((fighter) => (
+            fighter.summonSource !== "mother-brood"
+            || fighter.summonOwnerId !== boss.id
+          ));
+        }
+        if (boss.kind === "kurome" || boss.kind === "mother") boss.x = Math.min(boss.x, 560);
+        human.x = boss.x - (boss.kind === "kurome" ? 210 : boss.kind === "mother" ? 72 : 90);
         human.y = boss.y;
         human.lane = boss.lane;
         human.anchorLane = boss.lane;
@@ -5594,6 +5725,57 @@ export function AshfallGame() {
         human.cooldown = 99;
         return {
           warningSeconds: bossDefinitionForEnemyKind(boss.kind)?.attackTelegraph.warningSeconds ?? 0,
+        };
+      },
+      armMotherNormalAttack: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => (
+          fighter.id === bossId
+          && fighter.kind === "mother"
+          && fighter.side === "zombie"
+        ));
+        const human = g.fighters.find((fighter) => (
+          fighter.id === humanId
+          && fighter.side === "human"
+        ));
+        if (!boss || !human || !boss.combatReady) return null;
+        boss.stationAbility = createStationAbilityRuntime("mother");
+        boss.abilityCooldown = 99;
+        boss.cooldown = 0;
+        boss.speed = 0;
+        boss.laneSpeed = 0;
+        human.hp = human.maxHp;
+        human.x = boss.x - boss.bodyRadius - human.bodyRadius - 8;
+        human.y = boss.y;
+        human.lane = boss.lane;
+        human.anchorLane = boss.lane;
+        human.speed = 0;
+        human.laneSpeed = 0;
+        human.cooldown = 99;
+        return { bossId, humanId, humanHp: human.hp };
+      },
+      moveMotherProofHumanOutsideBrood: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => (
+          fighter.id === bossId
+          && fighter.kind === "mother"
+          && fighter.side === "zombie"
+        ));
+        const human = g.fighters.find((fighter) => (
+          fighter.id === humanId
+          && fighter.side === "human"
+        ));
+        if (!boss || !human || boss.stationAbility.phase !== "warning") return null;
+        const lane = boss.lane === 0 ? 2 : 0;
+        human.x = Math.max(BASE_X + 42, boss.x - BOSS_ANOMALY_TUNING.mother.controlRadius - 72);
+        human.y = activeLaneCenters[lane];
+        human.lane = lane;
+        human.anchorLane = lane;
+        return {
+          x: human.x,
+          y: human.y,
+          lane,
+          distance: fighterDistance(boss, human),
         };
       },
       moveBossFoundationHumanToLane: (humanId: number, lane: Lane) => {
@@ -9914,6 +10096,7 @@ export function AshfallGame() {
             f.targetId = null;
             f.targetObjectId = null;
             if ((["grappler", "ooze", "sprinter", "gate-eater", "kurome"].includes(f.kind)
+              || isBossAnomalyKind(f.kind)
               || isV090InfectedKind(f.kind))
               && f.stationAbility.phase !== "idle") {
               f.stationAbility = createStationAbilityRuntime(f.kind);
@@ -10212,6 +10395,100 @@ export function AshfallGame() {
               continue;
             }
             if (abilityFrame) continue;
+          }
+
+          if (f.kind === "mother") {
+            let abilityFrame = f.stationAbility.phase !== "idle";
+            if (f.stationAbility.phase !== "idle") {
+              const step = advanceBossAnomalyAbility(f.stationAbility, dt);
+              f.stationAbility = step.runtime as StationAbilityRuntime;
+              if (step.events.includes("activate")) {
+                const hitIds = bossAnomalyAreaTargetIds({
+                  kind: "mother",
+                  boss: f,
+                  candidates: g.fighters,
+                });
+                for (const victimId of hitIds) {
+                  const victim = g.fighters.find((candidate) => (
+                    candidate.side === "human"
+                    && String(candidate.id) === victimId
+                  ));
+                  if (!victim) continue;
+                  const damage = applyIncomingHumanDamage(
+                    g,
+                    victim,
+                    BOSS_ANOMALY_TUNING.mother.controlDamage,
+                    { attackKind: "melee", attacker: f },
+                  ).targetDamage;
+                  victim.stunned = Math.max(victim.stunned, .42);
+                  victim.knock = Math.max(victim.knock, 14);
+                  addDamageText(g, {
+                    x: victim.x,
+                    y: victim.y - 58,
+                    value: `増殖圧 -${Math.round(damage)}`,
+                    life: .92,
+                    color: "#d6a078",
+                  });
+                }
+                const summonPlan = motherBroodSummonPlan({
+                  boss: f,
+                  candidates: g.fighters,
+                  attackSequence: f.attackSequence,
+                });
+                for (let index = 0; index < summonPlan.length; index += 1) {
+                  const planned = summonPlan[index];
+                  const lane = Math.max(0, Math.min(2, f.lane + planned.laneOffset)) as Lane;
+                  const summoned = spawnEnemy(g, planned.kind, lane, index);
+                  summoned.x = Math.max(
+                    BASE_X + 90,
+                    Math.min(BARRICADE_X - 28, f.x + planned.xOffset),
+                  );
+                  summoned.y = activeLaneCenters[lane];
+                  summoned.anchorLane = lane;
+                  summoned.summonOwnerId = f.id;
+                  summoned.summonSource = "mother-brood";
+                  summoned.combatReady = true;
+                  summoned.gateEntering = false;
+                  summoned.spawnGrace = Math.max(summoned.spawnGrace, .62);
+                  summoned.cooldown = Math.max(summoned.cooldown, .48);
+                  addParticles(g, summoned.x, summoned.y - 18, index % 2 ? "#8a5344" : "#c08a62", 12);
+                }
+                f.attackSequence += 1;
+                g.flashOverlay = Math.max(g.flashOverlay, .08);
+                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+                g.banner = "マザー // 増殖室離床";
+                g.bannerTime = .8;
+                playProductionCue("boss-mother-brood-eruption", f.x, {
+                  priority: 98,
+                  cooldownMs: 300,
+                  volume: .78,
+                  fallbackCue: "boss-warning",
+                });
+              }
+              if (step.events.includes("complete")) {
+                f.abilityCooldown = BOSS_ANOMALY_TUNING.mother.cooldownSeconds;
+              }
+              continue;
+            }
+            if (f.abilityCooldown <= 0) {
+              const started = beginBossAnomalyAbility({
+                boss: f,
+                candidates: g.fighters,
+              });
+              if (started.ok) {
+                f.stationAbility = started.runtime as StationAbilityRuntime;
+                abilityFrame = true;
+                g.banner = "マザー // 増殖兆候";
+                g.bannerTime = .72;
+                playProductionCue("boss-mother-brood-warning", f.x, {
+                  priority: 90,
+                  cooldownMs: 600,
+                  volume: .62,
+                  fallbackCue: "boss-warning",
+                });
+              }
+            }
+            if (abilityFrame || f.stationAbility.phase !== "idle") continue;
           }
 
           if (f.kind === "kurome") {

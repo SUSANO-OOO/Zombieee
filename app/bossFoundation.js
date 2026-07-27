@@ -172,8 +172,8 @@ export const BOSS_DEFINITIONS = deepFreeze([
     id: "boss-mother",
     enemyKind: "mother",
     displayName: "マザー",
-    workingName: true,
-    prototypeStatus: "producer-review-required",
+    workingName: false,
+    prototypeStatus: "producer-approved",
     classification: "増殖・戦場制圧型異常発生個体",
     hpBar: { color: "#8f5148", accentColor: "#d5a270" },
     phases: [
@@ -183,7 +183,7 @@ export const BOSS_DEFINITIONS = deepFreeze([
     ],
     entrance: {
       warningLabel: "異常発生 // マザー",
-      cueId: "enemy-takuya-attack",
+      cueId: "boss-mother-entrance",
       fullBodyRequired: true,
     },
     attackTelegraph: {
@@ -215,8 +215,9 @@ export const BOSS_DEFINITIONS = deepFreeze([
     resultId: "boss-result-mother",
     compendiumId: "boss-compendium-mother",
     compendium: {
-      title: "マザー（呼称仮）",
+      title: "マザー",
       summary: "増殖室そのものが歩行し、感染体を排出して戦場を狭める異常発生個体。",
+      assetPath: "/art/v090/bosses/mother-compendium-r1.webp",
     },
   },
   {

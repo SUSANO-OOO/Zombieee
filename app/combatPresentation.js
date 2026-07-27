@@ -189,6 +189,7 @@ const PRESENTATION_KINDS = Object.freeze([
   "sprinter",
   "gate-eater",
   "kurome",
+  "mother",
   "resonator",
   "cagewalker",
   "spindle",
@@ -212,6 +213,7 @@ const BODY_SCALE_BY_KIND = Object.freeze({
   takuya: 1.3,
   "gate-eater": 1.67,
   kurome: 1.95,
+  mother: 2.38,
   "mayo-chan": .82,
   "mayo-chan-feral": .82,
 });

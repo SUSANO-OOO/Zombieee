@@ -63,6 +63,7 @@ const ENEMY_VOICE_PROFILE_BY_KIND = Object.freeze({
   sprinter: "runner",
   "gate-eater": "takuya",
   kurome: "takuya",
+  mother: "abomination",
   resonator: "spitter",
   cagewalker: "crusher",
   spindle: "shade",
@@ -132,6 +133,12 @@ const V090_PLAYABLE_AUDIO_CUES = Object.freeze([
   { id: "voice-mayo-attack", category: "humanVoices", gain: .56, priority: 68, cooldownMs: 220, maxInstances: 2 },
   { id: "voice-mayo-hurt", category: "humanVoices", gain: .62, priority: 76, cooldownMs: 300, maxInstances: 2 },
   { id: "voice-mayo-retreat", category: "humanVoices", gain: .6, priority: 88, cooldownMs: 1000 },
+]);
+
+const V090_BOSS_AUDIO_CUES = Object.freeze([
+  { id: "boss-mother-entrance", category: "monsters", gain: .74, priority: 104, cooldownMs: 3000, maxInstances: 1 },
+  { id: "boss-mother-brood-warning", category: "monsters", gain: .62, priority: 90, cooldownMs: 600, maxInstances: 1 },
+  { id: "boss-mother-brood-eruption", category: "monsters", gain: .78, priority: 98, cooldownMs: 300, maxInstances: 2 },
 ]);
 
 const V070_AUDIO_ASSET_SPECS = Object.freeze([
@@ -243,7 +250,7 @@ function v090PlayableAsset(spec) {
   return {
     id: spec.id,
     category: spec.category,
-    sources: spec.id.includes("mayo")
+    sources: spec.id.includes("mayo") || spec.id.includes("mother")
       ? [{ src: `${V090_AUDIO_ROOT}/sfx/${spec.id}.wav`, type: "audio/wav" }]
       : sourceFor(V090_AUDIO_ROOT, "sfx", spec.id),
     preload: "lazy",
@@ -336,6 +343,7 @@ const assets = [
   ...V070_AUDIO_ASSET_SPECS.map(v070Asset),
   ...[1, 2].map(v080SuppressedCarbineAsset),
   ...V090_PLAYABLE_AUDIO_CUES.map(v090PlayableAsset),
+  ...V090_BOSS_AUDIO_CUES.map(v090PlayableAsset),
 ];
 
 const pools = [
@@ -358,6 +366,7 @@ const COMBAT_PRELOAD = Object.freeze([
   V080_SUPPRESSED_CARBINE_CUE_ID,
   ...NEW_UNIT_AUDIO_CUES.map(({ id }) => id),
   ...V090_PLAYABLE_AUDIO_CUES.map(({ id }) => id),
+  ...V090_BOSS_AUDIO_CUES.map(({ id }) => id),
 ]);
 
 export const STORY_AUDIO_MIX = Object.freeze({

@@ -2,7 +2,7 @@
   "version": 1,
   "generator": "scripts/build-v090-playable-audio.py",
   "sampleRate": 44100,
-  "policy": "Dedicated weapon, manual ability, and synthesized Chihuahua battle cues authored in-repository without sampled recordings or human voice.",
+  "policy": "Dedicated weapon, manual ability, synthesized Chihuahua battle cues, and boss combat cues authored in-repository without sampled recordings or human voice.",
   "cues": [
     {
       "id": "weapon-tky-plasma-blade",
@@ -400,6 +400,51 @@
         {
           "path": "public/audio/v090/sfx/voice-mayo-retreat.wav",
           "sha256": "26314ae62434645e2cfc3206c89474e946a8ac690c2ec835b2bd7014744d99bf",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-mother-entrance",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-mother-entrance.wav",
+        "sha256": "8671efdcee9487b7f9af402e57b3310cfb540feefe85298a9387d8f6fae14133"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-mother-entrance.wav",
+          "sha256": "8671efdcee9487b7f9af402e57b3310cfb540feefe85298a9387d8f6fae14133",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-mother-brood-warning",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-mother-brood-warning.wav",
+        "sha256": "70beeb5d8cb514b6d945c6bd8c49e10b2dc7147eb5e9087cdedf38b8c06dbd7a"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-mother-brood-warning.wav",
+          "sha256": "70beeb5d8cb514b6d945c6bd8c49e10b2dc7147eb5e9087cdedf38b8c06dbd7a",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-mother-brood-eruption",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-mother-brood-eruption.wav",
+        "sha256": "65105ef5702f1f92a2b2079356873d4d9017e504b898c5091dbd6dd990fb24a7"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-mother-brood-eruption.wav",
+          "sha256": "65105ef5702f1f92a2b2079356873d4d9017e504b898c5091dbd6dd990fb24a7",
           "type": "audio/wav"
         }
       ]

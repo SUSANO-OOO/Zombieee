@@ -10,6 +10,7 @@ import {
   createBossAnomalyRuntime,
   gairenIncomingDamageMultiplier,
   isBossAnomalyKind,
+  motherBroodSummonPlan,
   ooguchiChargeStep,
 } from "../app/bossAnomalies.js";
 
@@ -143,4 +144,60 @@ test("Ooguchi charge, Gairen shell, and radial target rules preserve counterplay
     bossAnomalyAreaTargetIds({ kind: "ooguchi", boss: ooguchi, candidates }),
     [],
   );
+});
+
+test("Mother brood cap is per owner, deterministic, and ignores ordinary enemies", () => {
+  const mother = boss("mother", { id: 42 });
+  const ownedBrood = (count) => Array.from({ length: count }, (_, index) => ({
+    id: `owned-${index}`,
+    side: "zombie",
+    kind: BOSS_ANOMALY_TUNING.mother.summonKinds[index % 3],
+    hp: 100,
+    summonOwnerId: 42,
+    summonSource: "mother-brood",
+  }));
+  const ordinaryEnemies = BOSS_ANOMALY_TUNING.mother.summonKinds.map((kind, index) => ({
+    id: `ordinary-${index}`,
+    side: "zombie",
+    kind,
+    hp: 100,
+  }));
+
+  const emptyPlan = motherBroodSummonPlan({
+    boss: mother,
+    candidates: ordinaryEnemies,
+    attackSequence: 2,
+  });
+  assert.equal(emptyPlan.length, 3);
+  assert.deepEqual(emptyPlan.map(({ kind }) => kind), ["spindle", "runner", "resonator"]);
+  assert.equal(Object.isFrozen(emptyPlan), true);
+  assert.deepEqual(
+    motherBroodSummonPlan({
+      boss: mother,
+      candidates: ordinaryEnemies,
+      attackSequence: 2,
+    }),
+    emptyPlan,
+  );
+
+  assert.equal(motherBroodSummonPlan({
+    boss: mother,
+    candidates: ownedBrood(8),
+  }).length, 1);
+  assert.deepEqual(motherBroodSummonPlan({
+    boss: mother,
+    candidates: ownedBrood(9),
+  }), []);
+  assert.equal(motherBroodSummonPlan({
+    boss: mother,
+    candidates: [
+      ...ownedBrood(8),
+      ...ordinaryEnemies,
+      {
+        ...ownedBrood(1)[0],
+        id: "other-mother-brood",
+        summonOwnerId: 99,
+      },
+    ],
+  }).length, 1);
 });
