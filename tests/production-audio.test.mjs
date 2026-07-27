@@ -138,13 +138,13 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   const activeV080Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v080/"));
   const activeV090Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v090/"));
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 198);
-  assert.equal(manifestPaths.length, 385);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 207);
+  assert.equal(manifestPaths.length, 394);
   assert.equal(new Set(manifestPaths).size, manifestPaths.length);
   assert.equal(activeV060Paths.length, 270);
   assert.equal(activeV070Paths.length, 72);
   assert.equal(activeV080Paths.length, 4);
-  assert.equal(activeV090Paths.length, 39);
+  assert.equal(activeV090Paths.length, 48);
   assert.deepEqual([...activeV060Paths].sort(), [...v060Paths].sort());
   assert.deepEqual([...activeV070Paths].sort(), [...v070Paths].sort());
   assert.deepEqual([...activeV080Paths].sort(), [...v080Paths].sort());
@@ -155,7 +155,7 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
 
 test("every referenced source is repository-local, nonempty, and has a complete supported audio container", () => {
   for (const asset of PRODUCTION_AUDIO_MANIFEST.assets) {
-    const wavCue = asset.id.includes("mayo") || asset.id.includes("mother");
+    const wavCue = asset.id.includes("mayo") || asset.id.startsWith("boss-");
     assert.equal(asset.sources.length, wavCue ? 1 : 2, asset.id);
     assert.deepEqual(asset.sources.map((source) => source.type), wavCue ? ["audio/wav"] : ["audio/mpeg", "audio/ogg"], asset.id);
     for (const source of asset.sources) {
@@ -240,12 +240,12 @@ test("Monkey's suppressed compact carbine uses a dedicated reproducible Version 
   }
 });
 
-test("Version 0.9.0 uses 25 dedicated reproducible playable and boss combat cues", () => {
+test("Version 0.9.0 uses 34 dedicated reproducible playable and boss combat cues", () => {
   const provenancePath = path.join(repositoryRoot, "reference", "audio", "v090-generated", "provenance.json");
   const provenance = JSON.parse(readFileSync(provenancePath, "utf8"));
   assert.equal(provenance.version, 1);
   assert.equal(provenance.generator, "scripts/build-v090-playable-audio.py");
-  assert.equal(provenance.cues.length, 25);
+  assert.equal(provenance.cues.length, 34);
   assert.match(provenance.policy, /synthesized Chihuahua battle cues/);
   assert.match(provenance.policy, /boss combat cues/);
   for (const record of provenance.cues) {
@@ -832,7 +832,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 240);
+  assert.equal(allCueIds.length, 249);
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(

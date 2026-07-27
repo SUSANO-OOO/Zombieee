@@ -144,6 +144,31 @@ test("Ooguchi charge, Gairen shell, and radial target rules preserve counterplay
     bossAnomalyAreaTargetIds({ kind: "ooguchi", boss: ooguchi, candidates }),
     [],
   );
+  assert.deepEqual(
+    bossAnomalyAreaTargetIds({
+      kind: "gairen",
+      boss: boss("gairen"),
+      candidates: [
+        human("front", 670, 282),
+        human("behind-shell", 790, 282),
+        human("outside-fan", 700, 340, 2),
+      ],
+    }),
+    ["front"],
+  );
+  assert.deepEqual(
+    bossAnomalyAreaTargetIds({
+      kind: "futago",
+      boss: boss("futago", { x: 640, y: 282 }),
+      candidates: [
+        human("diagonal-a", 720, 319),
+        human("diagonal-b", 720, 245),
+        human("between-bars", 720, 282),
+        human("beyond-cross", 780, 347, 2),
+      ],
+    }),
+    ["diagonal-a", "diagonal-b"],
+  );
 });
 
 test("Mother brood cap is per owner, deterministic, and ignores ordinary enemies", () => {

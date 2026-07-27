@@ -22,7 +22,6 @@ import { STATION_ENEMY_TUNING } from "../app/stationEnemyMechanics.js";
 
 const EXISTING_BOSS_KINDS = ["takuya", "gate-eater"];
 const NEW_BOSS_KINDS = ["mother", "ooguchi", "gairen", "futago"];
-const REVIEW_GATED_BOSS_KINDS = ["ooguchi", "gairen", "futago"];
 const ALL_BOSS_KINDS = [...EXISTING_BOSS_KINDS, "kurome", ...NEW_BOSS_KINDS];
 
 test("existing bosses own one immutable shared contract with stable result and compendium IDs", () => {
@@ -69,29 +68,28 @@ test("anomaly bosses keep distinct silhouettes, mechanics, and counterplay contr
   assert.equal(new Set(NEW_BOSS_KINDS.map((kind) => (
     bossDefinitionForEnemyKind(kind).combat.formChange
   ))).size, NEW_BOSS_KINDS.length);
-  for (const kind of REVIEW_GATED_BOSS_KINDS) {
+  for (const kind of NEW_BOSS_KINDS) {
     const definition = bossDefinitionForEnemyKind(kind);
     const enemy = enemyContentFor(kind);
-    assert.equal(definition.workingName, true);
-    assert.equal(definition.prototypeStatus, "producer-review-required");
-    assert.equal(enemy.prototypeStatus, "producer-review-required");
+    assert.equal(definition.workingName, false);
+    assert.equal(definition.prototypeStatus, "producer-approved");
+    assert.equal(enemy.prototypeStatus, "producer-approved");
     assert.equal(definition.entrance.fullBodyRequired, true);
     assert.equal(definition.display.sizeClass, "giant-boss");
     assert.ok(definition.display.bodyBounds.width >= 140);
     assert.ok(definition.display.compactBodyHeight >= 130);
     assert.equal(definition.display.hitboxRadius, enemy.bodyRadius);
     assert.equal(definition.combat.attackRange, enemy.range);
-    assert.match(definition.compendium.title, /呼称仮/u);
+    assert.doesNotMatch(definition.compendium.title, /呼称仮/u);
     assert.ok(definition.attackTelegraph.counterplay.length >= 12);
-    assert.equal(definition.compendium.assetPath, undefined);
+    assert.equal(definition.compendium.assetPath, `/art/v090/bosses/${kind}-compendium-r1.webp`);
+    assert.equal(definition.entrance.cueId, `boss-${kind}-entrance`);
   }
   const mother = bossDefinitionForEnemyKind("mother");
-  assert.equal(mother.workingName, false);
-  assert.equal(mother.prototypeStatus, "producer-approved");
-  assert.equal(enemyContentFor("mother").prototypeStatus, "producer-approved");
   assert.equal(mother.compendium.title, "マザー");
-  assert.equal(mother.compendium.assetPath, "/art/v090/bosses/mother-compendium-r1.webp");
-  assert.equal(mother.entrance.cueId, "boss-mother-entrance");
+  assert.equal(new Set(NEW_BOSS_KINDS.map((kind) => (
+    bossDefinitionForEnemyKind(kind).entrance.cueId
+  ))).size, NEW_BOSS_KINDS.length);
 });
 
 test("Kurome is producer-approved and has exactly one canonical Stage 20 campaign consumer", () => {

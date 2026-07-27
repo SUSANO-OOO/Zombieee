@@ -71,3 +71,46 @@ test("Mother identity derivatives and battle atlas are deterministic and runtime
   assert.equal(definition.prototypeStatus, "producer-approved");
   assert.equal(definition.compendium.assetPath, "/art/v090/bosses/mother-compendium-r1.webp");
 });
+
+test("Ooguchi, Gairen, and Futago derivatives are exact and runtime-bound", async () => {
+  const ledger = JSON.parse(await readFile(LEDGER_PATH, "utf8"));
+  assert.deepEqual(
+    ledger.anomalyBossProduction.map(({ kind }) => kind),
+    ["ooguchi", "gairen", "futago"],
+  );
+  assert.equal(ledger.anomalyBossQa.status, "verified");
+  assert.deepEqual(ledger.anomalyBossQa.browsers, ["chromium", "webkit"]);
+  assert.deepEqual(ledger.anomalyBossQa.viewports, ["1280x720", "844x390", "844x340"]);
+  assert.equal(ledger.anomalyBossQa.casesPassed, 18);
+  assert.equal(ledger.anomalyBossQa.casesFailed, 0);
+  for (const record of ledger.anomalyBossProduction) {
+    assert.equal(record.status, "verified", record.kind);
+    const poseAudit = await fileAudit(record.poseSource.path);
+    assert.equal(poseAudit.sha256, record.poseSource.sha256, record.kind);
+    assert.deepEqual(poseAudit.dimensions, record.poseSource.dimensions, record.kind);
+    for (const asset of record.generatedAssets) {
+      const audit = await fileAudit(asset.path);
+      assert.equal(audit.sha256, asset.sha256, `${record.kind}/${asset.role}`);
+      assert.equal(audit.bytes, asset.bytes, `${record.kind}/${asset.role}`);
+      assert.deepEqual(audit.dimensions, asset.dimensions, `${record.kind}/${asset.role}`);
+    }
+    assert.equal(
+      spriteSheetPath(record.kind),
+      `/art/v090/bosses/${record.kind}-battle-r1.png`,
+    );
+    for (const state of SPRITE_STATES) {
+      for (const direction of ["left", "right"]) {
+        const frame = spriteFrameFor(record.kind, state, direction);
+        assert.equal(frame.path, spriteSheetPath(record.kind));
+        assert.equal(frame.gutter.bottom, 16);
+      }
+    }
+    const definition = bossDefinitionForEnemyKind(record.kind);
+    assert.equal(definition.workingName, false);
+    assert.equal(definition.prototypeStatus, "producer-approved");
+    assert.equal(
+      definition.compendium.assetPath,
+      `/art/v090/bosses/${record.kind}-compendium-r1.webp`,
+    );
+  }
+});

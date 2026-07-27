@@ -52,6 +52,15 @@ CUES = (
     "boss-mother-entrance",
     "boss-mother-brood-warning",
     "boss-mother-brood-eruption",
+    "boss-ooguchi-entrance",
+    "boss-ooguchi-charge-warning",
+    "boss-ooguchi-charge-impact",
+    "boss-gairen-entrance",
+    "boss-gairen-shell-warning",
+    "boss-gairen-shell-sweep",
+    "boss-futago-entrance",
+    "boss-futago-cross-warning",
+    "boss-futago-cross-impact",
 )
 
 
@@ -74,6 +83,12 @@ def lowpass(samples: list[float], cutoff: float) -> list[float]:
 def cue_family(cue_id: str) -> str:
     if "mother" in cue_id:
         return "mother"
+    if "ooguchi" in cue_id:
+        return "ooguchi"
+    if "gairen" in cue_id:
+        return "gairen"
+    if "futago" in cue_id:
+        return "futago"
     if "tky" in cue_id:
         return "plasma"
     if "mrs-chiha" in cue_id:
@@ -84,11 +99,11 @@ def cue_family(cue_id: str) -> str:
 
 
 def cue_duration(cue_id: str) -> float:
-    if cue_id == "boss-mother-entrance":
+    if cue_id.startswith("boss-") and cue_id.endswith("entrance"):
         return .86
-    if cue_id == "boss-mother-brood-warning":
+    if cue_id.startswith("boss-") and cue_id.endswith("warning"):
         return .64
-    if cue_id == "boss-mother-brood-eruption":
+    if cue_id.startswith("boss-"):
         return .72
     if cue_id.endswith("charge") or cue_id.endswith("salvo-ready"):
         return .58
@@ -109,6 +124,7 @@ def synthesize(cue_id: str) -> list[float]:
     raw_noise = [rng.uniform(-1.0, 1.0) for _ in range(length)]
     body_noise = lowpass(raw_noise, 1_500 if "impact" in cue_id else 3_600)
     organic_body = lowpass(raw_noise, 520)
+    shell_noise = lowpass(raw_noise, 880)
     family = cue_family(cue_id)
     samples: list[float] = []
     for index in range(length):
@@ -136,6 +152,45 @@ def synthesize(cue_id: str) -> list[float]:
                 rise = min(1.0, progress * 2.1)
                 shell = math.sin(2 * math.pi * (62 + 26 * progress) * time)
                 signal = rise * (.46 * rumble + .24 * shell + .3 * organic_noise) + .2 * sub
+        elif family == "ooguchi":
+            charge = math.sin(2 * math.pi * (44 + 34 * progress) * time)
+            jaw = math.sin(2 * math.pi * (112 - 46 * progress) * time)
+            scrape = body_noise[index]
+            if cue_id.endswith("warning"):
+                pulse = .35 + .65 * max(0.0, math.sin(2 * math.pi * 5.1 * time))
+                signal = pulse * (.46 * charge + .3 * jaw + .28 * scrape)
+            elif cue_id.endswith("impact"):
+                snap = math.exp(-time / .035)
+                signal = .52 * charge + snap * (.72 * scrape + .36 * jaw)
+            else:
+                rise = min(1.0, progress * 2.4)
+                signal = rise * (.48 * charge + .3 * jaw + .34 * organic_body[index])
+        elif family == "gairen":
+            shell = math.sin(2 * math.pi * (58 + 15 * math.sin(progress * math.pi)) * time)
+            metal = math.sin(2 * math.pi * (420 + 710 * progress) * time)
+            scrape = shell_noise[index]
+            if cue_id.endswith("warning"):
+                pulse = .42 + .58 * max(0.0, math.sin(2 * math.pi * 3.7 * time))
+                signal = pulse * (.42 * shell + .28 * metal + .35 * scrape)
+            elif cue_id.endswith("sweep"):
+                sweep = math.sin(2 * math.pi * (1_100 - 760 * progress) * time)
+                signal = .38 * shell + .36 * sweep + .46 * scrape
+            else:
+                signal = min(1.0, progress * 2.2) * (.5 * shell + .24 * metal + .36 * scrape)
+        elif family == "futago":
+            left_voice = math.sin(2 * math.pi * (82 + 24 * math.sin(time * 13)) * time)
+            right_voice = math.sin(2 * math.pi * (91 + 21 * math.sin(time * 11 + .8)) * time)
+            connective = organic_body[index]
+            if cue_id.endswith("warning"):
+                pulse = .38 + .62 * max(0.0, math.sin(2 * math.pi * 4.4 * time))
+                signal = pulse * (.32 * left_voice + .32 * right_voice + .38 * connective)
+            elif cue_id.endswith("impact"):
+                cross = math.sin(2 * math.pi * (760 - 540 * progress) * time)
+                signal = .3 * left_voice + .3 * right_voice + .36 * cross + .4 * body_noise[index]
+            else:
+                signal = min(1.0, progress * 2.3) * (
+                    .38 * left_voice + .38 * right_voice + .34 * connective
+                )
         elif family == "plasma":
             start_frequency = 220 if "charge" in cue_id else 720
             end_frequency = 1_760 if "charge" in cue_id else 310
