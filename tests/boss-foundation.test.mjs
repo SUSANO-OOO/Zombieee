@@ -21,10 +21,12 @@ import { enemyContentFor } from "../app/content/enemyCatalog.js";
 import { STATION_ENEMY_TUNING } from "../app/stationEnemyMechanics.js";
 
 const EXISTING_BOSS_KINDS = ["takuya", "gate-eater"];
+const NEW_BOSS_KINDS = ["mother", "ooguchi", "gairen", "futago"];
+const ALL_BOSS_KINDS = [...EXISTING_BOSS_KINDS, "kurome", ...NEW_BOSS_KINDS];
 
 test("existing bosses own one immutable shared contract with stable result and compendium IDs", () => {
   assert.equal(BOSS_FOUNDATION_SCHEMA_VERSION, 1);
-  assert.deepEqual(BOSS_DEFINITIONS.map(({ enemyKind }) => enemyKind), [...EXISTING_BOSS_KINDS, "kurome"]);
+  assert.deepEqual(BOSS_DEFINITIONS.map(({ enemyKind }) => enemyKind), ALL_BOSS_KINDS);
   assert.equal(Object.isFrozen(BOSS_DEFINITIONS), true);
   for (const kind of EXISTING_BOSS_KINDS) {
     const definition = bossDefinitionForEnemyKind(kind);
@@ -56,6 +58,32 @@ test("existing bosses own one immutable shared contract with stable result and c
     bossDefinitionForEnemyKind("gate-eater").attackTelegraph.warningSeconds,
     STATION_ENEMY_TUNING.ticketGateEater.windupSeconds,
   );
+});
+
+test("four review-gated anomaly bosses keep distinct silhouettes, mechanics, and counterplay contracts", () => {
+  assert.deepEqual(
+    NEW_BOSS_KINDS.map((kind) => bossDefinitionForEnemyKind(kind).attackTelegraph.kind),
+    ["brood-radial", "lane-rectangle", "shell-sweep", "cross-strike"],
+  );
+  assert.equal(new Set(NEW_BOSS_KINDS.map((kind) => (
+    bossDefinitionForEnemyKind(kind).combat.formChange
+  ))).size, NEW_BOSS_KINDS.length);
+  for (const kind of NEW_BOSS_KINDS) {
+    const definition = bossDefinitionForEnemyKind(kind);
+    const enemy = enemyContentFor(kind);
+    assert.equal(definition.workingName, true);
+    assert.equal(definition.prototypeStatus, "producer-review-required");
+    assert.equal(enemy.prototypeStatus, "producer-review-required");
+    assert.equal(definition.entrance.fullBodyRequired, true);
+    assert.equal(definition.display.sizeClass, "giant-boss");
+    assert.ok(definition.display.bodyBounds.width >= 140);
+    assert.ok(definition.display.compactBodyHeight >= 130);
+    assert.equal(definition.display.hitboxRadius, enemy.bodyRadius);
+    assert.equal(definition.combat.attackRange, enemy.range);
+    assert.match(definition.compendium.title, /呼称仮/u);
+    assert.ok(definition.attackTelegraph.counterplay.length >= 12);
+    assert.equal(definition.compendium.assetPath, undefined);
+  }
 });
 
 test("Kurome is producer-approved and has exactly one canonical Stage 20 campaign consumer", () => {
@@ -197,6 +225,43 @@ test("Kurome telegraph locks a screen-space ray with final-phase pressure", () =
   assert.equal(telegraph.targetY, 272);
   assert.equal(telegraph.beamHalfWidth, 23);
   assert.match(telegraph.counterplay, /離脱/u);
+});
+
+test("review-gated anomaly bosses expose warning-only spatial telegraphs", () => {
+  for (const kind of NEW_BOSS_KINDS) {
+    const definition = bossDefinitionForEnemyKind(kind);
+    const telegraph = bossTelegraphSnapshot({
+      side: "zombie",
+      kind,
+      hp: 1200,
+      maxHp: enemyContentFor(kind).hp,
+      x: 770,
+      y: 282,
+      combatReady: true,
+      contained: false,
+      stationAbility: {
+        phase: "warning",
+        remainingSeconds: .6,
+        targetX: 430,
+        targetY: 306,
+      },
+    });
+    assert.equal(telegraph.kind, definition.attackTelegraph.kind);
+    assert.equal(telegraph.targetX, 430);
+    assert.equal(telegraph.targetY, 306);
+    assert.equal(telegraph.remainingSeconds, .6);
+    assert.equal(
+      bossTelegraphSnapshot({
+        side: "zombie",
+        kind,
+        hp: 1200,
+        maxHp: enemyContentFor(kind).hp,
+        combatReady: true,
+        stationAbility: { phase: "active", remainingSeconds: .6 },
+      }),
+      null,
+    );
+  }
 });
 
 test("boss body barrier prevents ally pass-through without blocking another route", () => {
