@@ -279,7 +279,12 @@ export const SURVIVAL_UPGRADE_BY_ID = deepFreeze(Object.fromEntries(
 
 export function normalizeSurvivalBossPool(value) {
   const normalized = uniqueStrings(value, 32).filter(isBossEnemyKind);
-  return normalized.length > 0 ? normalized : [...SURVIVAL_DEFAULT_BOSS_KINDS];
+  if (normalized.length === 0) return [...SURVIVAL_DEFAULT_BOSS_KINDS];
+  if (normalized.length === 1) {
+    const fallback = SURVIVAL_DEFAULT_BOSS_KINDS.find((kind) => kind !== normalized[0]);
+    return fallback ? [...normalized, fallback] : [...SURVIVAL_DEFAULT_BOSS_KINDS];
+  }
+  return normalized;
 }
 
 const LATE_START_UPGRADE_ORDER = deepFreeze([

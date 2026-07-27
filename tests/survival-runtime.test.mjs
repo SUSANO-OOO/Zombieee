@@ -118,7 +118,8 @@ test("unlocked boss pool is snapshotted and never repeats the previous boss when
     bossPool: ["mother"],
     lastBossKind: "mother",
   });
-  assert.equal(single.bossKind, "mother");
+  assert.equal(single.bossKind, "takuya");
+  assert.notEqual(single.bossKind, "mother");
 });
 
 test("combat runtime queues a wave, keeps the boss at 1x until combat-ready, and pauses for upgrade", () => {

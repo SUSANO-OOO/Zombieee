@@ -42,6 +42,7 @@ import {
 import { bossCampaignEntry } from "./bossFoundation.js";
 import {
   createDefaultOutbreakProgress,
+  isOutbreakMissionUnlocked,
   normalizeOutbreakProgress,
   resolveOutbreakProgress,
 } from "./outbreakMissions.js";
@@ -2836,6 +2837,19 @@ export function settleOutbreakCampaignSave(
   } = {},
 ) {
   const current = migrateCampaignSave(save, { eventRegistry });
+  if (!isOutbreakMissionUnlocked(
+    current.outbreaks,
+    current.completedStageIds,
+    result?.missionId,
+  )) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      payout: { caps: 0, equipmentGrants: [] },
+      applied: false,
+      duplicate: false,
+      reason: "mission-locked",
+    };
+  }
   const settlement = resolveOutbreakProgress(current.outbreaks, {
     ...result,
     completedAt,

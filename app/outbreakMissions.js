@@ -218,8 +218,9 @@ export function resolveOutbreakProgress(progress, {
       reward: { caps: 0, equipmentGrants: [] },
     };
   }
+  const victory = won === true;
   const bossKind = mission.boss.enemyKind;
-  const firstClear = won === true && !current.clearedMissionIds.includes(mission.id);
+  const firstClear = victory && !current.clearedMissionIds.includes(mission.id);
   const rewardId = `outbreak:${mission.id}:first-clear`;
   const equipmentGrants = firstClear && mission.firstClearEquipmentGrant
     ? [{ ...mission.firstClearEquipmentGrant }]
@@ -227,8 +228,8 @@ export function resolveOutbreakProgress(progress, {
   const next = normalizeOutbreakProgress({
     ...current,
     encounteredBossKinds: [...current.encounteredBossKinds, bossKind],
-    clearedMissionIds: won ? [...current.clearedMissionIds, mission.id] : current.clearedMissionIds,
-    bossDefeatCounts: won
+    clearedMissionIds: victory ? [...current.clearedMissionIds, mission.id] : current.clearedMissionIds,
+    bossDefeatCounts: victory
       ? {
         ...current.bossDefeatCounts,
         [bossKind]: (current.bossDefeatCounts[bossKind] ?? 0) + 1,
@@ -242,7 +243,7 @@ export function resolveOutbreakProgress(progress, {
       resultId: stableResultId,
       missionId: mission.id,
       bossKind,
-      won: won === true,
+      won: victory,
       firstClear,
       completedAt,
       stats: {
@@ -250,7 +251,7 @@ export function resolveOutbreakProgress(progress, {
         unitsLost: Math.max(0, Math.floor(Number(stats.unitsLost) || 0)),
         battleSeconds: Math.max(0, Number(stats.battleSeconds) || 0),
       },
-      earnedCaps: won ? mission.baseRewardCaps : 0,
+      earnedCaps: victory ? mission.baseRewardCaps : 0,
       equipmentGrants,
     },
   });
@@ -258,7 +259,7 @@ export function resolveOutbreakProgress(progress, {
     progress: next,
     duplicate: false,
     reward: {
-      caps: won ? mission.baseRewardCaps : 0,
+      caps: victory ? mission.baseRewardCaps : 0,
       equipmentGrants,
     },
   };

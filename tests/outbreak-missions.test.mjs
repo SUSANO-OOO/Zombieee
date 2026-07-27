@@ -24,6 +24,14 @@ import {
 
 const MOTHER_MISSION = OUTBREAK_MISSION_IDS.MOTHER_BROOD_VAULT;
 
+function campaignWithUnlockedMission(missionId = MOTHER_MISSION) {
+  const mission = OUTBREAK_MISSION_BY_ID[missionId];
+  return {
+    ...createDefaultCampaignSave(),
+    completedStageIds: [mission.prerequisiteStageId],
+  };
+}
+
 test("five anomaly missions bind one boss, prerequisite Stage, right-edge spawn profile, and reward", () => {
   assert.equal(OUTBREAK_MISSIONS.length, 5);
   assert.deepEqual(
@@ -76,11 +84,47 @@ test("mission unlocks require the authored prerequisite Stage and first clear un
   assert.deepEqual(duplicate.progress, normalizeOutbreakProgress(first.progress));
 });
 
+test("non-boolean victory values never clear a mission or grant rewards", () => {
+  const progress = createDefaultOutbreakProgress();
+  for (const won of ["false", 1, {}, []]) {
+    const resolved = resolveOutbreakProgress(progress, {
+      resultId: `outbreak-invalid-victory-${typeof won}-${String(won)}`,
+      missionId: MOTHER_MISSION,
+      won,
+    });
+    assert.equal(resolved.progress.clearedMissionIds.length, 0);
+    assert.equal(resolved.progress.survivalBossKinds.includes("mother"), false);
+    assert.equal(resolved.progress.bossDefeatCounts.mother, undefined);
+    assert.equal(resolved.progress.lastResult.won, false);
+    assert.deepEqual(resolved.reward, { caps: 0, equipmentGrants: [] });
+  }
+});
+
+test("campaign settlement rejects a locked mission without consuming its receipt", () => {
+  const current = createDefaultCampaignSave();
+  const result = {
+    resultId: "outbreak-locked-mother",
+    missionId: MOTHER_MISSION,
+    won: true,
+    completedAt: "2026-07-27T06:04:00.000Z",
+  };
+  const settlement = settleOutbreakCampaignSave(current, result);
+  assert.equal(settlement.applied, false);
+  assert.equal(settlement.duplicate, false);
+  assert.equal(settlement.reason, "mission-locked");
+  assert.deepEqual(settlement.payout, { caps: 0, equipmentGrants: [] });
+  assert.equal(settlement.save.revision, current.revision);
+  assert.equal(settlement.save.processedResultIds.includes(result.resultId), false);
+  assert.equal(settlement.save.outbreaks.processedResultIds.includes(result.resultId), false);
+  assert.equal(settlement.save.caps, current.caps);
+  assert.deepEqual(settlement.save.equipmentInventory, current.equipmentInventory);
+});
+
 test("campaign settlement atomically applies receipt, caps, equipment quantity, unlock, revision, and integrity", () => {
   const mission = OUTBREAK_MISSION_BY_ID[MOTHER_MISSION];
   const equipmentId = mission.firstClearEquipmentGrant.equipmentId;
   const current = {
-    ...createDefaultCampaignSave(),
+    ...campaignWithUnlockedMission(),
     caps: 100,
     supplies: 100,
     equipmentInventory: [{ equipmentId, quantity: 2 }],
@@ -150,7 +194,7 @@ test("schema 11 saves migrate once to schema 12 with default outbreak progress",
 });
 
 test("failed persistence publishes no partial outbreak progress or reward", async () => {
-  const current = createDefaultCampaignSave();
+  const current = campaignWithUnlockedMission();
   const result = {
     resultId: "outbreak-persist-failure",
     missionId: MOTHER_MISSION,
