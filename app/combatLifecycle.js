@@ -55,6 +55,12 @@ export const COMBAT_ROLE_RULES = freeze({
   ooze: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
   sprinter: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   "gate-eater": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  resonator: freeze({ attackType: "melee", allowAdjacentLaneTargets: true }),
+  cagewalker: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  spindle: freeze({ attackType: "melee", allowAdjacentLaneTargets: true }),
+  "choir-knot": freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
+  "pall-manta": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  "anchor-bloom": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   turned: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   ranger: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
   gunner: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
@@ -340,7 +346,7 @@ export const ENEMY_DEATH_CONFIG = freeze({
 export function enemyDeathClassFor(enemy = {}) {
   if (enemy.deathClass && ENEMY_DEATH_CONFIG.timings[enemy.deathClass]) return enemy.deathClass;
   if (enemy.boss || isBossEnemyKind(enemy.kind)) return "boss";
-  if (["crusher", "abomination", "grappler", "heavy"].includes(enemy.kind)) return "heavy";
+  if (["crusher", "abomination", "grappler", "cagewalker", "pall-manta", "anchor-bloom", "heavy"].includes(enemy.kind)) return "heavy";
   return "normal";
 }
 

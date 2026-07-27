@@ -159,6 +159,18 @@ import {
   resolveKuromeBeam,
 } from "./kuromeBoss.js";
 import {
+  advanceV090InfectedAbility,
+  anchorBloomReinforcement,
+  beginV090InfectedAbility,
+  cagewalkerFrontDamageMultiplier,
+  createV090InfectedRuntime,
+  isV090InfectedKind,
+  pallMantaProjectileMultiplier,
+  resonatorHowlTargets,
+  spindleLandingPoint,
+  v090InfectedDefinition,
+} from "./v090Infected.js";
+import {
   advanceBattleStoryFlow,
   createBattleStoryFlowState,
   getPrologueOpeningEventIds,
@@ -411,7 +423,7 @@ const H = 540;
 
 type Lane = 0 | 1 | 2;
 type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
-type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater" | "kurome";
+type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater" | "kurome" | "resonator" | "cagewalker" | "spindle" | "choir-knot" | "pall-manta" | "anchor-bloom";
 type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "danger" | "boss";
 type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "mayo" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
@@ -517,6 +529,7 @@ type BattleDefinition = {
   enemyBaseMode: "target" | "scenery";
   startsEnemyBaseVulnerable: boolean;
   bossUnlocksEnemyBase: boolean;
+  bossEnemyKind: string | null;
   timeline: MissionEvent[];
   defenseEndAt: number | null;
   phaseSchedule: { at: number; phase: 1 | 2 | 3; label: string; objective: string }[] | null;
@@ -684,9 +697,11 @@ type Fighter = {
   visionDisruptedRemaining?: number;
 };
 type StationAbilityRuntime = {
+  kind?: string | null;
   phase: string;
   remainingSeconds: number;
   targetId?: string | null;
+  targetIds?: readonly string[];
   lane?: Lane | null;
   lockedLane?: Lane | null;
   zoneId?: string | number | null;
@@ -697,6 +712,9 @@ type StationAbilityRuntime = {
   targetX?: number | null;
   targetY?: number | null;
   direction?: number;
+  originX?: number | null;
+  originY?: number | null;
+  resolved?: boolean;
 };
 type StationHazard = {
   id: string | number | null;
@@ -1242,6 +1260,7 @@ function createStationAbilityRuntime(kind: string): StationAbilityRuntime {
   if (kind === "sprinter") return createSoukiRuntime() as StationAbilityRuntime;
   if (kind === "gate-eater") return createTicketGateEaterRuntime() as StationAbilityRuntime;
   if (kind === "kurome") return createKuromeTrackingRuntime() as StationAbilityRuntime;
+  if (isV090InfectedKind(kind)) return createV090InfectedRuntime(kind) as StationAbilityRuntime;
   return { phase: "idle", remainingSeconds: 0 };
 }
 
@@ -1485,6 +1504,50 @@ function fighterDistance(a: Pick<Fighter, "x" | "y">, b: Pick<Fighter, "x" | "y"
 
 function effectDistance(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, (a.y - b.y) * 2);
+}
+
+function v090EnemyIncomingDamageMultiplier(
+  g: Game,
+  attacker: Fighter | null,
+  target: Fighter,
+  attackKind: "melee" | "ranged",
+) {
+  if (target.side !== "zombie") return 1;
+  let multiplier = target.kind === "cagewalker" && attacker
+    ? cagewalkerFrontDamageMultiplier({
+      phase: target.stationAbility.phase,
+      attackerX: attacker.x,
+      targetX: target.x,
+    })
+    : 1;
+  for (const anchor of g.fighters) {
+    if (anchor.kind !== "anchor-bloom" || anchor.hp <= 0 || !anchor.combatReady) continue;
+    const reinforcement = anchorBloomReinforcement({
+      phase: anchor.stationAbility.phase,
+      anchor,
+      target,
+    });
+    if (reinforcement.active) {
+      multiplier *= reinforcement.incomingDamageMultiplier;
+      break;
+    }
+  }
+  if (attackKind === "ranged" && attacker) {
+    for (const manta of g.fighters) {
+      if (manta.kind !== "pall-manta" || manta.hp <= 0 || !manta.combatReady) continue;
+      const canopyMultiplier = pallMantaProjectileMultiplier({
+        phase: manta.stationAbility.phase,
+        shooter: attacker,
+        target,
+        manta,
+      });
+      if (canopyMultiplier < 1) {
+        multiplier *= canopyMultiplier;
+        break;
+      }
+    }
+  }
+  return multiplier;
 }
 
 function createUnitRoleRuntime({
@@ -2846,8 +2909,26 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
       ? sampleAnimationClip(f.kind, "wind-up", KUROME_PROTOTYPE_TUNING.warningSeconds - f.stationAbility.remainingSeconds)
       : f.kind === "kurome" && f.stationAbility.phase === "firing"
         ? sampleAnimationClip(f.kind, "active", KUROME_PROTOTYPE_TUNING.fireSeconds - f.stationAbility.remainingSeconds)
-        : f.kind === "kurome" && f.stationAbility.phase === "recovery"
-          ? sampleAnimationClip(f.kind, "recovery", KUROME_PROTOTYPE_TUNING.recoverySeconds - f.stationAbility.remainingSeconds)
+    : f.kind === "kurome" && f.stationAbility.phase === "recovery"
+      ? sampleAnimationClip(f.kind, "recovery", KUROME_PROTOTYPE_TUNING.recoverySeconds - f.stationAbility.remainingSeconds)
+    : isV090InfectedKind(f.kind) && f.stationAbility.phase === "warning"
+      ? sampleAnimationClip(
+        f.kind,
+        "wind-up",
+        Math.max(0, (v090InfectedDefinition(f.kind)?.warningSeconds ?? 0) - f.stationAbility.remainingSeconds),
+      )
+      : isV090InfectedKind(f.kind) && f.stationAbility.phase === "active"
+        ? sampleAnimationClip(
+          f.kind,
+          "active",
+          Math.max(0, (v090InfectedDefinition(f.kind)?.activeSeconds ?? 0) - f.stationAbility.remainingSeconds),
+        )
+        : isV090InfectedKind(f.kind) && f.stationAbility.phase === "recovery"
+          ? sampleAnimationClip(
+            f.kind,
+            "recovery",
+            Math.max(0, (v090InfectedDefinition(f.kind)?.recoverySeconds ?? 0) - f.stationAbility.remainingSeconds),
+          )
     : f.flash > 0
     ? sampleAnimationClip(f.kind, "hit", Math.max(0, .12 - f.flash))
     : f.abilityWindup > 0
@@ -3136,11 +3217,18 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
     ctx.translate(x, y);
     ctx.fillStyle = "rgba(0,0,0,.45)";
     ctx.beginPath(); ctx.ellipse(0, 6, 32, 6, 0, 0, Math.PI * 2); ctx.fill();
-    const cartSprite = stageObjects["station-platform-mission-art-source"];
+    const isCoastalPowerRig = g.definition.stageId === CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE;
+    const cartSprite = isCoastalPowerRig
+      ? stageObjects["coastal-power-rig"]
+      : stageObjects["station-platform-mission-art-source"];
     if (cartSprite?.complete && cartSprite.naturalWidth) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(cartSprite, 90, 260, 1400, 520, -60, -51, 120, 45);
+      if (isCoastalPowerRig) {
+        ctx.drawImage(cartSprite, -72, -59, 144, 72);
+      } else {
+        ctx.drawImage(cartSprite, 90, 260, 1400, 520, -60, -51, 120, 45);
+      }
     } else {
       ctx.fillStyle = "#5f665f"; ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0"; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.roundRect(-28, -27, 56, 30, 5); ctx.fill(); ctx.stroke();
@@ -3150,9 +3238,11 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
     }
     ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0";
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(-60, -51, 120, 45);
-    ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillRect(-60, -61, 120, 6);
-    ctx.fillStyle = "#d5b85e"; ctx.fillRect(-59, -60, 118 * integrity / maxIntegrity, 4);
+    const objectiveHalfWidth = isCoastalPowerRig ? 72 : 60;
+    ctx.strokeRect(-objectiveHalfWidth, -51, objectiveHalfWidth * 2, 45);
+    ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillRect(-objectiveHalfWidth, -61, objectiveHalfWidth * 2, 6);
+    ctx.fillStyle = "#d5b85e";
+    ctx.fillRect(-objectiveHalfWidth + 1, -60, (objectiveHalfWidth * 2 - 2) * integrity / maxIntegrity, 4);
     ctx.restore();
   }
   if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
@@ -3355,6 +3445,131 @@ function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g:
     ctx.fillRect(BASE_X + 28, f.y - 18, Math.max(0, f.x - BASE_X - 28), 36);
     ctx.strokeStyle = "rgba(230,164,103,.85)";
     ctx.strokeRect(BASE_X + 28, f.y - 18, Math.max(0, f.x - BASE_X - 28), 36);
+  } else if (f.kind === "resonator") {
+    const reach = 168;
+    const halfHeight = 34 + reach * .22;
+    const pulse = 4 + Math.sin(g.time * 18) * 2;
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "rgba(144,104,94,.78)";
+    ctx.fillStyle = "rgba(91,61,57,.12)";
+    ctx.beginPath();
+    ctx.moveTo(f.x - 8, f.y - 38);
+    ctx.lineTo(f.x - reach, f.y - halfHeight);
+    ctx.lineTo(f.x - reach, f.y + halfHeight);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    for (let index = 0; index < 3; index += 1) {
+      const x = f.x - 42 - index * 39;
+      ctx.globalAlpha = .72 - index * .16;
+      ctx.beginPath();
+      ctx.ellipse(x, f.y - 22, 10 + index * 5 + pulse, 22 + index * 8, 0, Math.PI * .58, Math.PI * 1.42);
+      ctx.stroke();
+    }
+  } else if (f.kind === "cagewalker") {
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "rgba(166,144,109,.8)";
+    ctx.fillStyle = "rgba(45,35,30,.22)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y + 6, 56, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+    for (const offset of [-42, -21, 0, 22, 43]) {
+      ctx.beginPath();
+      ctx.moveTo(f.x + offset, f.y + 9);
+      ctx.quadraticCurveTo(f.x + offset * .82, f.y - 18, f.x + offset * .58, f.y - 42);
+      ctx.stroke();
+    }
+  } else if (f.kind === "spindle") {
+    const targetX = Number(f.stationAbility.targetX);
+    const targetY = Number(f.stationAbility.targetY);
+    if (Number.isFinite(targetX) && Number.isFinite(targetY)) {
+      const landingX = Math.min(BARRICADE_X - 12, targetX + 38);
+      ctx.setLineDash([4, 5]);
+      ctx.strokeStyle = "rgba(143,108,124,.86)";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(f.x, f.y - 16);
+      ctx.quadraticCurveTo((f.x + landingX) / 2, Math.min(f.y, targetY) - 108, landingX, targetY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.ellipse(landingX, targetY + 4, 42, 13, 0, 0, Math.PI * 2);
+      ctx.moveTo(landingX - 24, targetY - 7);
+      ctx.lineTo(landingX + 24, targetY + 11);
+      ctx.moveTo(landingX + 24, targetY - 7);
+      ctx.lineTo(landingX - 24, targetY + 11);
+      ctx.stroke();
+    }
+  } else if (f.kind === "choir-knot") {
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "rgba(151,111,126,.82)";
+    ctx.lineWidth = 2;
+    for (let index = 0; index < (f.stationAbility.targetIds?.length ?? 0); index += 1) {
+      const target = g.fighters.find((candidate) => (
+        String(candidate.id) === String(f.stationAbility.targetIds?.[index])
+      ));
+      if (!target) continue;
+      const sourceOffset = (index - .5) * 13;
+      ctx.beginPath();
+      ctx.moveTo(f.x + sourceOffset, f.y - 44);
+      ctx.bezierCurveTo(
+        f.x - 30,
+        f.y - 74 - index * 8,
+        target.x + 36,
+        target.y - 66,
+        target.x,
+        target.y - 46,
+      );
+      ctx.stroke();
+    }
+  } else if (f.kind === "pall-manta") {
+    const active = f.stationAbility.phase === "active";
+    ctx.setLineDash([]);
+    ctx.fillStyle = active ? "rgba(47,37,44,.28)" : "rgba(74,54,63,.16)";
+    ctx.strokeStyle = "rgba(118,89,101,.82)";
+    ctx.lineWidth = active ? 4 : 2;
+    ctx.beginPath();
+    ctx.moveTo(f.x - 28, f.y - 12);
+    ctx.lineTo(f.x + 32, f.y - 12);
+    ctx.lineTo(f.x + 118, f.y + 17);
+    ctx.lineTo(f.x - 32, f.y + 17);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    for (const offset of [4, 36, 68, 100]) {
+      ctx.beginPath();
+      ctx.moveTo(f.x + offset, f.y - 10);
+      ctx.lineTo(f.x + offset + 9, f.y + 15);
+      ctx.stroke();
+    }
+  } else if (f.kind === "anchor-bloom") {
+    const active = f.stationAbility.phase === "active";
+    ctx.setLineDash([]);
+    ctx.strokeStyle = active ? "rgba(128,75,79,.88)" : "rgba(116,79,76,.7)";
+    ctx.lineWidth = active ? 4 : 2.5;
+    for (let index = 0; index < 5; index += 1) {
+      const angle = index * Math.PI * .4 + Math.sin(g.time * 2) * .03;
+      const reach = 58 + (index % 2) * 17;
+      ctx.beginPath();
+      ctx.moveTo(f.x, f.y + 5);
+      ctx.quadraticCurveTo(
+        f.x + Math.cos(angle + .24) * reach * .58,
+        f.y + Math.sin(angle + .24) * reach * .2,
+        f.x + Math.cos(angle) * reach,
+        f.y + Math.sin(angle) * reach * .32,
+      );
+      ctx.stroke();
+    }
+    for (const targetId of f.stationAbility.targetIds ?? []) {
+      const target = g.fighters.find((candidate) => String(candidate.id) === String(targetId));
+      if (!target) continue;
+      ctx.globalAlpha = .56;
+      ctx.beginPath();
+      ctx.moveTo(f.x, f.y);
+      ctx.lineTo(target.x, target.y + 4);
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }
@@ -3987,6 +4202,16 @@ function drawStageBackground(ctx: CanvasRenderingContext2D, g: Game, background:
     ctx.drawImage(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
   } else if (g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE) {
     const cropTop = Math.round(background.naturalHeight * .17);
+    ctx.drawImage(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
+  } else if ([
+    CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE,
+    CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE,
+    CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE,
+  ].includes(g.definition.stageId)) {
+    const cropTop = Math.round(background.naturalHeight * .12);
+    ctx.drawImage(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
+  } else if (g.definition.stageId === CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL) {
+    const cropTop = Math.round(background.naturalHeight * .18);
     ctx.drawImage(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
   } else {
     ctx.drawImage(background, 0, 0, W, H);
@@ -4903,6 +5128,7 @@ export function AshfallGame() {
           PRODUCTION_VISUALS.command,
           PRODUCTION_VISUALS.guide,
           ...Object.values(PRODUCTION_VISUALS.stages),
+          ...Object.values(PRODUCTION_VISUALS.missionObjects),
         ])];
         root.dataset.assetDecodeStatus = "running";
         root.dataset.assetDecodeAudioRequested = String(qaBridge.assetPaths.length);
@@ -9508,6 +9734,7 @@ export function AshfallGame() {
           fighter.nextLaneDecisionAt = assignment.nextLaneDecisionAt;
         }
 
+        const movementStageGeometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
         for (const f of g.fighters) {
           if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
             && f.kind === "gate-eater") {
@@ -9654,7 +9881,8 @@ export function AshfallGame() {
           if (f.stunned > 0) {
             f.targetId = null;
             f.targetObjectId = null;
-            if (["grappler", "ooze", "sprinter", "gate-eater", "kurome"].includes(f.kind)
+            if ((["grappler", "ooze", "sprinter", "gate-eater", "kurome"].includes(f.kind)
+              || isV090InfectedKind(f.kind))
               && f.stationAbility.phase !== "idle") {
               f.stationAbility = createStationAbilityRuntime(f.kind);
               f.abilityCooldown = Math.max(f.abilityCooldown, 1.8);
@@ -9793,6 +10021,165 @@ export function AshfallGame() {
               if (f.stationAbility.phase === "idle") f.abilityCooldown = 5.2;
               continue;
             }
+          }
+
+          if (isV090InfectedKind(f.kind)) {
+            const definition = v090InfectedDefinition(f.kind);
+            let abilityFrame = f.stationAbility.phase !== "idle";
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+              const started = beginV090InfectedAbility({
+                kind: f.kind,
+                attacker: f,
+                candidates: g.fighters,
+              });
+              if (started.ok) {
+                f.stationAbility = started.runtime as StationAbilityRuntime;
+                abilityFrame = true;
+                g.banner = `${definition?.displayName ?? enemyContentFor(f.kind)?.displayName ?? "異形"} // ${
+                  f.kind === "resonator"
+                    ? "胸郭共鳴"
+                    : f.kind === "cagewalker"
+                      ? "骨檻展開"
+                      : f.kind === "spindle"
+                        ? "脊柱圧縮"
+                        : f.kind === "choir-knot"
+                          ? "擬声斉唱"
+                          : f.kind === "pall-manta"
+                            ? "皮膜展開"
+                            : "五肢定着"
+                }`;
+                g.bannerTime = Math.max(g.bannerTime, Math.min(.86, definition?.warningSeconds ?? .7));
+                playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
+                  priority: 68,
+                  cooldownMs: 140,
+                  volume: .42,
+                  playbackRate: f.kind === "spindle" ? 1.34 : f.kind === "cagewalker" ? .74 : .96,
+                  fallbackCue: "melee-hit",
+                });
+              }
+            }
+            if (f.stationAbility.phase !== "idle") {
+              const step = advanceV090InfectedAbility(f.stationAbility, dt);
+              f.stationAbility = step.runtime as StationAbilityRuntime;
+              if (step.events.includes("activate")) {
+                if (f.kind === "resonator") {
+                  const hitIds = resonatorHowlTargets({ attacker: f, candidates: g.fighters });
+                  for (const victimId of hitIds) {
+                    const victim = g.fighters.find((candidate) => String(candidate.id) === victimId);
+                    if (!victim) continue;
+                    const damage = applyIncomingHumanDamage(g, victim, 21, {
+                      attackKind: "ranged",
+                      attacker: f,
+                    }).targetDamage;
+                    victim.stunned = Math.max(victim.stunned, .34);
+                    victim.knock = Math.max(victim.knock, 8);
+                    addDamageText(g, {
+                      x: victim.x,
+                      y: victim.y - 56,
+                      value: `共鳴 -${Math.round(damage)}`,
+                      life: .82,
+                      color: "#d79a86",
+                    });
+                  }
+                  addParticles(g, f.x - 46, f.y - 38, "#896a62", 18);
+                  g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+                } else if (f.kind === "cagewalker") {
+                  for (const victim of g.fighters) {
+                    if (victim.side !== "human" || victim.hp <= 0 || fighterDistance(victim, f) > 82) continue;
+                    victim.x = Math.max(BASE_X + 32, victim.x - 24);
+                    victim.knock = Math.max(victim.knock, 10);
+                    victim.stunned = Math.max(victim.stunned, .22);
+                  }
+                  addParticles(g, f.x, f.y + 6, "#8e806b", 14);
+                } else if (f.kind === "spindle") {
+                  const victim = g.fighters.find((candidate) => (
+                    String(candidate.id) === String(f.stationAbility.targetIds?.[0])
+                    && candidate.side === "human"
+                    && candidate.hp > 0
+                  ));
+                  const landing = spindleLandingPoint({
+                    attacker: f,
+                    target: victim,
+                    minimumX: BASE_X + 48,
+                    maximumX: BARRICADE_X - 12,
+                  });
+                  if (landing) {
+                    f.x = landing.x;
+                    f.y = landing.y;
+                    f.lane = (victim?.anchorLane ?? victim?.lane ?? f.lane) as Lane;
+                    f.anchorLane = f.lane;
+                  }
+                  for (const impacted of g.fighters) {
+                    if (impacted.side !== "human" || impacted.hp <= 0 || fighterDistance(impacted, f) > 58) continue;
+                    const damage = applyIncomingHumanDamage(g, impacted, 26, {
+                      attackKind: "melee",
+                      attacker: f,
+                    }).targetDamage;
+                    impacted.stunned = Math.max(impacted.stunned, .42);
+                    addDamageText(g, {
+                      x: impacted.x,
+                      y: impacted.y - 50,
+                      value: `着地 -${Math.round(damage)}`,
+                      life: .78,
+                      color: "#b9978e",
+                    });
+                  }
+                  addParticles(g, f.x, f.y + 4, "#766a63", 22);
+                  g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+                } else if (f.kind === "choir-knot") {
+                  for (const victimId of f.stationAbility.targetIds ?? []) {
+                    const victim = g.fighters.find((candidate) => (
+                      String(candidate.id) === victimId
+                      && candidate.side === "human"
+                      && candidate.hp > 0
+                    ));
+                    if (!victim) continue;
+                    victim.targetId = f.id;
+                    victim.targetObjectId = null;
+                    victim.retargetIn = Math.max(victim.retargetIn, 1.25);
+                    addDamageText(g, {
+                      x: victim.x,
+                      y: victim.y - 60,
+                      value: "擬声誘導",
+                      life: .88,
+                      color: "#c7a4ad",
+                    });
+                  }
+                } else if (f.kind === "anchor-bloom") {
+                  addParticles(g, f.x, f.y + 8, "#705552", 16);
+                }
+                playProductionCue("enemy-takuya-attack", f.x, {
+                  priority: 74,
+                  cooldownMs: 160,
+                  volume: .5,
+                  playbackRate: f.kind === "resonator" ? .66 : f.kind === "spindle" ? 1.42 : .88,
+                  fallbackCue: "melee-hit",
+                });
+              }
+              if (f.kind === "anchor-bloom" && f.stationAbility.phase === "active") {
+                for (const targetId of f.stationAbility.targetIds ?? []) {
+                  const target = g.fighters.find((candidate) => (
+                    String(candidate.id) === targetId
+                    && candidate.side === "zombie"
+                    && candidate.hp > 0
+                  ));
+                  if (!target) continue;
+                  const reinforcement = anchorBloomReinforcement({
+                    phase: f.stationAbility.phase,
+                    anchor: f,
+                    target,
+                  });
+                  if (reinforcement.active) {
+                    target.hp = Math.min(target.maxHp, target.hp + reinforcement.healingPerSecond * dt);
+                  }
+                }
+              }
+              if (step.events.includes("finish")) {
+                f.abilityCooldown = definition?.cooldownSeconds ?? 7;
+              }
+              continue;
+            }
+            if (abilityFrame) continue;
           }
 
           if (f.kind === "kurome") {
@@ -10521,10 +10908,15 @@ export function AshfallGame() {
               const mrsLauncherBash = f.side === "human"
                 && f.kind === "mrs-chiha"
                 && distance <= MANUAL_ABILITY_REGISTRY["mrs-chiha"].launcherBashRange + target.bodyRadius;
+              const humanAttackKind = f.range > 64 && !mrsLauncherBash ? "ranged" : "melee";
+              const v090DamageMultiplier = f.side === "human"
+                ? v090EnemyIncomingDamageMultiplier(g, f, target, humanAttackKind)
+                : 1;
               const attackDamage = baseAttackDamage
                 * gateEaterProfile.multiplier
                 * bossDamageMultiplier
-                * (mrsLauncherBash ? MANUAL_ABILITY_REGISTRY["mrs-chiha"].launcherBashDamageMultiplier : 1);
+                * (mrsLauncherBash ? MANUAL_ABILITY_REGISTRY["mrs-chiha"].launcherBashDamageMultiplier : 1)
+                * v090DamageMultiplier;
               const weaponDamageEvents = f.side === "human"
                 ? weaponDamageEventsFor(f.kind, attackDamage)
                 : null;
@@ -11252,9 +11644,19 @@ export function AshfallGame() {
               qaBarrier.resultingX = f.x;
             }
           }
+          if (f.combatReady && f.hp > 0) {
+            const withinWalkableFloor = clampToWalkable(movementStageGeometry, {
+              x: f.x,
+              y: f.y,
+              bodyRadius: f.bodyRadius,
+            });
+            f.x = withinWalkableFloor.x;
+            f.y = withinWalkableFloor.y;
+            f.lane = activeLaneForY(f.y, f.lane);
+          }
         }
 
-        const stageGeometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
+        const stageGeometry = movementStageGeometry;
         for (const fighter of g.fighters) {
           if (!fighter.combatReady || fighter.hp <= 0) continue;
           const laneAnchorError = Math.abs(fighter.y - activeLaneCenters[fighter.lane]);
@@ -11378,12 +11780,23 @@ export function AshfallGame() {
             g.maxCombo = Math.max(g.maxCombo, g.combo);
             g.scrap += scrapReward(fighter.kind);
             g.supportGauge = Math.min(SUPPORT_GAUGE_MAX, g.supportGauge + supportGaugeReward(fighter.kind));
-            if (fighter.kind === "takuya" && g.definition.bossUnlocksEnemyBase) {
+            if (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase) {
               g.bossDefeatPending = true;
-              g.barricadeVulnerable = true; g.banner = "TAKUYA撃破 — 感染拠点が露出"; g.bannerTime = 3.4; g.flashOverlay = .3;
+              g.barricadeVulnerable = true;
+              const defeatedBossName = bossDefinitionForEnemyKind(fighter.kind)?.displayName
+                ?? enemyContentFor(fighter.kind)?.displayName
+                ?? "大型感染体";
+              g.banner = fighter.kind === "takuya"
+                ? "TAKUYA撃破 — 感染拠点が露出"
+                : `${defeatedBossName}撃破 — 感染核が露出`;
+              g.bannerTime = 3.4; g.flashOverlay = .3;
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaDefeat);
-              playCue("takuya-down");
-              if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
+              if (fighter.kind === "takuya") {
+                playCue("takuya-down");
+                if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
+              } else {
+                emitBattleBark(g, "base-exposed", "crawler", "tactical");
+              }
             } else if (fighter.kind === "gate-eater"
               && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
               g.bossDefeated = true;

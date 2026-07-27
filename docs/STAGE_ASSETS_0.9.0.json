@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "version": "0.9.0",
+  "status": "production-candidate",
+  "rightsProvenance": {
+    "source": "OpenAI image generation under producer direction",
+    "thirdPartyDownloadedVisuals": false
+  },
+  "stages": [
+    {
+      "stageId": "stage-bay-tower-service",
+      "sourcePath": "assets/source/v090/stages/stage17-bay-tower-service-r1.png",
+      "sourceSha256": "2776b352e4e6b1d33e9cb79b93ba9e24536292ae36b420b071504bb3133ded85",
+      "path": "public/art/v090/stages/bay-tower-service-background-v1.webp",
+      "sha256": "a2ee399f05d60887005c1e8126c90709b6bca5030a76a83cb57ee67ebb36b63b",
+      "bytes": 265428,
+      "dimensions": [1600, 900]
+    },
+    {
+      "stageId": "stage-civic-archive-route",
+      "sourcePath": "assets/source/v090/stages/stage18-civic-archive-route-r1.png",
+      "sourceSha256": "639e123a61ead3cc83d21c1327ac16712450cd43945738725174bb9614465d1c",
+      "path": "public/art/v090/stages/civic-archive-route-background-v1.webp",
+      "sha256": "441cf53730a3630bae8c6a2669c1e61f9ff5d364f4cc5a99edb7fe84b760719d",
+      "bytes": 325458,
+      "dimensions": [1600, 900]
+    },
+    {
+      "stageId": "stage-coastal-link-bridge",
+      "sourcePath": "assets/source/v090/stages/stage19-coastal-link-bridge-r1.png",
+      "sourceSha256": "d77602a79d97c1144e60fe7b41a03ae9875a4569b00fa4f085a0a22087542bc7",
+      "path": "public/art/v090/stages/coastal-link-bridge-background-v1.webp",
+      "sha256": "4b01df93f04c5da2edf103d48fd32714e19da94acc571c7074888680bec058ff",
+      "bytes": 220972,
+      "dimensions": [1600, 900]
+    },
+    {
+      "stageId": "stage-estuary-floodgate-seal",
+      "sourcePath": "assets/source/v090/stages/stage20-estuary-floodgate-r1.png",
+      "sourceSha256": "f0c7562b55436bea1764333dc5fcd4653c98e1537f448ecf9049a8f1943b6751",
+      "path": "public/art/v090/stages/estuary-floodgate-background-v1.webp",
+      "sha256": "0ec7070894b8b398db0bbbab09ebb2ea2b0b36839e20664e7f61ae7214ce813d",
+      "bytes": 274726,
+      "dimensions": [1600, 900]
+    }
+  ],
+  "missionObjects": [
+    {
+      "objectId": "coastal-power-rig",
+      "stageId": "stage-coastal-link-bridge",
+      "sourcePath": "assets/source/v090/objects/stage19-coastal-power-rig-key-r1.png",
+      "sourceSha256": "8e5be66c8ffb055aa7d9bc665f49661acdee20c87e68bcd15214b1a35954b919",
+      "path": "public/art/v090/stages/coastal-power-rig-v1.png",
+      "sha256": "9fa081695434e63c19deb4e658e810e5570c6a9a53c94308eec58a2b81ac334c",
+      "bytes": 224189,
+      "dimensions": [640, 320],
+      "hasAlpha": true,
+      "runtimeUsage": "escort-objective"
+    }
+  ]
+}

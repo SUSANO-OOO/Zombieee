@@ -7,6 +7,7 @@ const STAGE_IDS = Object.freeze({
   STATION_GATE: "stage-nishijin-station-gate",
   STATION_PLATFORM: "stage-nishijin-station-platform",
   STATION_TUNNEL: "stage-nishijin-station-tunnel-seal",
+  COASTAL_LINK_BRIDGE: "stage-coastal-link-bridge",
 });
 
 export const STAGE_OBJECT_DEPTH_BANDS = Object.freeze([
@@ -171,6 +172,15 @@ const STATION_TUNNEL_INVENTORY = Object.freeze([
   inventoryItem("seal-door", "封鎖扉", "production-background+dynamic-production-overlay", "背景の青色扉とruntime封鎖状態"),
 ]);
 
+const COASTAL_LINK_BRIDGE_INVENTORY = Object.freeze([
+  inventoryItem(
+    "emergency-power-rig",
+    "沿岸連絡橋の非常電源リグ",
+    "dynamic-production-overlay",
+    "専用透過mission-render-sourceを護送対象として使用",
+  ),
+]);
+
 export const STAGE_OBJECT_MANIFEST = Object.freeze({
   [STAGE_IDS.NISHIJIN]: Object.freeze({
     backgroundPath: "/art/v060/battle-nishijin-shopping-street-v1.webp",
@@ -240,6 +250,26 @@ export const STAGE_OBJECT_MANIFEST = Object.freeze({
     productionInventory: STATION_TUNNEL_INVENTORY,
     objects: Object.freeze([
       stageObject({ id: "station-tunnel-mission-art-source", stageId: STAGE_IDS.STATION_TUNNEL, slot: "mission-art-source", state: "mission-art-source", path: "/art/v070/stages/objects/station-tunnel-objects-v1.png", x: 480, y: 540, width: 960, z: 0, depthBand: "rear-scenery", runtimeUsage: "mission-render-source" }),
+    ]),
+  }),
+  [STAGE_IDS.COASTAL_LINK_BRIDGE]: Object.freeze({
+    backgroundPath: "/art/v090/stages/coastal-link-bridge-background-v1.webp",
+    staticTreatment: "authored-background+dedicated-mission-source",
+    productionInventory: COASTAL_LINK_BRIDGE_INVENTORY,
+    objects: Object.freeze([
+      stageObject({
+        id: "coastal-power-rig",
+        stageId: STAGE_IDS.COASTAL_LINK_BRIDGE,
+        slot: "mission-art-source",
+        state: "mission-art-source",
+        path: "/art/v090/stages/coastal-power-rig-v1.png",
+        x: 480,
+        y: 540,
+        width: 640,
+        z: 0,
+        depthBand: "rear-scenery",
+        runtimeUsage: "mission-render-source",
+      }),
     ]),
   }),
 });

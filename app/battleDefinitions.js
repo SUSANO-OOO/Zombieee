@@ -81,10 +81,11 @@ function operationPhaseSchedule(stage) {
 export function createBattleDefinition(stageId) {
   const stage = CAMPAIGN_STAGE_BY_ID[stageId];
   if (!stage) throw new RangeError(`Unknown campaign stage: ${String(stageId)}`);
-  const isTakuya = stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
   const isDefense = stage.missionType === "timed-defense";
   const isStationObjective = stage.missionType === STATION_MISSION_TYPES.ESCORT
     || stage.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL;
+  const bossUnlocksEnemyBase = ["assault", "boss-assault"].includes(stage.missionType)
+    && Boolean(stage.boss?.enemyKind);
   const timeline = campaignTimeline(stage);
   return {
     stageId: stage.id,
@@ -95,11 +96,12 @@ export function createBattleDefinition(stageId) {
     starThresholds: stage.starThresholds,
     enemyBaseMaxHp: BARRICADE_MAX_HP,
     enemyBaseMode: isDefense || isStationObjective ? "scenery" : "target",
-    startsEnemyBaseVulnerable: stage.missionType === "assault",
-    bossUnlocksEnemyBase: isTakuya,
+    startsEnemyBaseVulnerable: stage.missionType === "assault" && !bossUnlocksEnemyBase,
+    bossUnlocksEnemyBase,
+    bossEnemyKind: stage.boss?.enemyKind ?? null,
     timeline,
     defenseEndAt: isDefense ? PREP_SECONDS + stage.objectiveConfig.durationSeconds : null,
-    phaseSchedule: isTakuya
+    phaseSchedule: stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE
       ? null
       : stage.id === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM
         ? STATION_PLATFORM_ASSAULT_SCHEDULE
@@ -134,6 +136,9 @@ export function objectiveForBattle(definition, state) {
     return definition.missionConfig?.target === "infected-relay"
       ? "感染中継点を破壊"
       : "感染拠点を破壊";
+  }
+  if (definition.missionType === "boss-assault") {
+    return state.barricadeVulnerable ? "感染核を破壊" : definition.objective;
   }
   return objectiveFor(state.phase, state.barricadeVulnerable);
 }

@@ -84,6 +84,10 @@ export const P4_BALANCE_FORMATIONS = freeze({
   [CAMPAIGN_STAGE_IDS.EVACUATION_FREIGHT_YARD]: EXPANDED_STAGE_FORMATIONS,
   [CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE]: EXPANDED_STAGE_FORMATIONS,
   [CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE]: EXPANDED_STAGE_FORMATIONS,
+  [CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL]: EXPANDED_STAGE_FORMATIONS,
 });
 
 export const STAGE_BALANCE_REFERENCE_FORMATIONS = freeze({
@@ -516,7 +520,8 @@ export function simulateStageBalance({
       && currentTime >= structureStartAt
       && nextWaveIndex >= normalizedWaves.length
       && activeEnemies.length === 0
-      && (stage.missionType !== "boss-assault" || defeatedKinds.has("takuya"))
+      && (stage.missionType !== "boss-assault"
+        || defeatedKinds.has(stage.boss?.enemyKind ?? "takuya"))
     ) {
       const structureDamage = activeUnits.reduce((total, unit) => (
         total + unit.damage / unit.attackEvery * structureDamageMultiplier(unit.kind)
