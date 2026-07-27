@@ -42,7 +42,10 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
   assert.equal(ledger.schemaVersion, 1);
   assert.equal(ledger.version, "0.9.0");
   assert.equal(ledger.status, "active-partial");
-  assert.deepEqual(ledger.scope, ["assets/source/v090/", "public/art/v090/"]);
+  assert.deepEqual(ledger.scope, [
+    "assets/source/v090/characters/",
+    "public/art/v090/characters/",
+  ]);
   assert.equal(ledger.rightsProvenance.thirdPartyDownloadedVisuals, false);
   assert.match(ledger.rightsProvenance.publicRedistribution, /producer directly authorized/i);
   assert.match(ledger.rightsProvenance.identityIsolation, /no other character/i);
@@ -58,8 +61,8 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
   );
 
   const activeFiles = [
-    ...await filesBelow(path.join(ROOT, "assets", "source", "v090")),
-    ...await filesBelow(path.join(ROOT, "public", "art", "v090")),
+    ...await filesBelow(path.join(ROOT, "assets", "source", "v090", "characters")),
+    ...await filesBelow(path.join(ROOT, "public", "art", "v090", "characters")),
   ].map(repositoryPath).sort();
   const records = ledger.assets;
   assert.equal(records.length, 38);

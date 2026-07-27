@@ -173,6 +173,11 @@ test("mission spawn profiles place applicable enemies at or beyond the right edg
     assert.equal(point.canAttackDuringEntry, false);
     assert.equal(point.collisionDuringEntry, false);
     assert.ok(point.combatReadyX + point.visualHalfWidth <= 960);
+    assert.equal(isWalkable(stageId, {
+      x: point.combatReadyX,
+      y: point.combatReadyY,
+      radius: point.bodyRadius,
+    }), true);
   }
 });
 

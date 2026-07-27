@@ -12,7 +12,7 @@ import { V075_VISUAL_PROFILES } from "../app/visualProfiles.js";
 const repoAsset = (publicPath) => new URL(`../public${publicPath}`, import.meta.url);
 const repoAssetFile = (publicPath) => fileURLToPath(repoAsset(publicPath));
 
-test("production visual manifest uses dedicated title, command, guide, sixteen stages, and three event cuts", async () => {
+test("production visual manifest uses dedicated title, command, guide, twenty stages, and three event cuts", async () => {
   const paths = [
     PRODUCTION_VISUALS.title,
     PRODUCTION_VISUALS.command,
@@ -25,7 +25,7 @@ test("production visual manifest uses dedicated title, command, guide, sixteen s
   assert.equal(new Set(paths).size, paths.length);
   const hashes = [];
   for (const path of paths) {
-    assert.match(path, /^\/art\/v0(?:60|70|75|80)\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.webp$/);
+    assert.match(path, /^\/art\/v0(?:60|70|75|80|90)\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.webp$/);
     const bytes = await readFile(repoAsset(path));
     assert.equal(bytes.subarray(0, 4).toString("ascii"), "RIFF");
     assert.equal(bytes.subarray(8, 12).toString("ascii"), "WEBP");

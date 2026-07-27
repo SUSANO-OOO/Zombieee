@@ -58,7 +58,7 @@ test("existing bosses own one immutable shared contract with stable result and c
   );
 });
 
-test("Kurome is producer-approved but remains isolated until its campaign consumer lands", () => {
+test("Kurome is producer-approved and has exactly one canonical Stage 20 campaign consumer", () => {
   const definition = bossDefinitionForEnemyKind("kurome");
   assert.equal(definition.id, "boss-kurome-prototype");
   assert.equal(definition.displayName, "クロメ");
@@ -71,27 +71,30 @@ test("Kurome is producer-approved but remains isolated until its campaign consum
   assert.equal(definition.display.standardBodyHeight, 133);
   assert.equal(definition.reward.equipmentId, "boss-resonance-gland");
   assert.equal(enemyContentFor("kurome").prototypeStatus, "producer-approved");
-  assert.equal(
-    Object.values(CAMPAIGN_STAGE_BY_ID).some((stage) => (
+  const consumers = Object.values(CAMPAIGN_STAGE_BY_ID).filter((stage) => (
       stage.boss?.enemyKind === "kurome"
       || stage.waves?.some((wave) => wave.units?.some((unit) => (
         (Array.isArray(unit) ? unit[0] : unit) === "kurome"
       )))
-    )),
-    false,
-  );
+  ));
+  assert.deepEqual(consumers.map(({ id }) => id), [CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL]);
+  assert.equal(consumers[0].boss.bossId, definition.id);
+  assert.equal(consumers[0].boss.encounterId, "boss-kurome-floodgate");
 });
 
 test("campaign encounters reference canonical boss identity while replay encounters stay distinct", () => {
   const takuya = CAMPAIGN_STAGE_BY_ID[CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE].boss;
   const station = CAMPAIGN_STAGE_BY_ID[CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL].boss;
   const central = CAMPAIGN_STAGE_BY_ID[CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL].boss;
+  const floodgate = CAMPAIGN_STAGE_BY_ID[CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL].boss;
   assert.equal(takuya.id, "boss-takuya");
   assert.equal(takuya.bossId, "boss-takuya");
   assert.equal(takuya.encounterId, "boss-takuya");
   assert.equal(station.id, "boss-gate-eater");
   assert.equal(station.resultId, "boss-result-gate-eater");
   assert.equal(central.id, "boss-gate-eater");
+  assert.equal(floodgate.id, "boss-kurome-prototype");
+  assert.equal(floodgate.encounterId, "boss-kurome-floodgate");
   assert.equal(central.bossId, "boss-gate-eater");
   assert.equal(central.encounterId, "boss-gate-eater-central");
   assert.equal(central.displayName, "改札喰い・再活性体");
