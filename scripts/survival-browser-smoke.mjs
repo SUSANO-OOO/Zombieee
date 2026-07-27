@@ -145,7 +145,7 @@ for (const engine of engines) {
         const search = new URLSearchParams({
           qa: "flow",
           screen: "map",
-          stage: "stage-t-plan-central-seal",
+          stage: "stage-estuary-floodgate-seal",
           stars: "3",
         });
         if (viewport.safeArea) search.set("safe", "iphone-landscape");
@@ -189,6 +189,25 @@ for (const engine of engines) {
           ));
         }, undefined, { timeout });
         const entrySnapshot = await snapshot(page);
+        invariant(
+          entrySnapshot.stageId === "stage-t-plan-central-seal",
+          `Survival retained the previously selected expansion stage: ${entrySnapshot.stageId}`,
+        );
+        invariant(
+          entrySnapshot.geometry?.visualFloor?.authored === false,
+          `Survival inherited the expansion visual floor: ${JSON.stringify(entrySnapshot.geometry)}`,
+        );
+        const expectedSurvivalLanes = viewport.width === 1280 && viewport.height === 720
+          ? [212, 282, 352]
+          : [240, 285, 325];
+        invariant(
+          JSON.stringify(entrySnapshot.geometry?.laneCenters) === JSON.stringify(expectedSurvivalLanes),
+          `Survival lane restoration mismatch: ${JSON.stringify(entrySnapshot.geometry?.laneCenters)}`,
+        );
+        invariant(
+          entrySnapshot.fighters.every((fighter) => fighter.renderDepthScale === 1),
+          `Survival retained expansion perspective depth: ${JSON.stringify(entrySnapshot.fighters)}`,
+        );
         const enteringEnemy = entrySnapshot.fighters.find((fighter) => (
           fighter.side === "zombie"
           && fighter.gateEntering

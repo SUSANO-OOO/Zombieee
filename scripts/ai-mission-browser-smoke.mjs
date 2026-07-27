@@ -237,7 +237,12 @@ for (const engine of engines) {
           invariant(snapshot.geometry?.offFloorCount === 0, `off-floor fighters: ${JSON.stringify(snapshot.geometry?.offFloorIds)}`);
           invariant(snapshot.geometry?.visuallyOffFloorCount === 0,
             `fighters outside authored visual floor: ${JSON.stringify(snapshot.geometry?.visuallyOffFloorIds)}`);
-          if (stage.number >= 17) {
+          if (stage.number < 17) {
+            invariant(snapshot.geometry?.visualFloor?.authored === false,
+              "legacy stage unexpectedly inherited a Version 0.9.0 visual floor");
+            invariant(activeFighters.every((fighter) => fighter.renderDepthScale === 1),
+              `legacy stage inherited perspective depth: ${JSON.stringify(activeFighters)}`);
+          } else {
             invariant(snapshot.geometry?.visualFloor?.authored === true, "Version 0.9.0 visual floor profile missing");
             const scalesByLane = [0, 1, 2].map((lane) => (
               activeFighters
