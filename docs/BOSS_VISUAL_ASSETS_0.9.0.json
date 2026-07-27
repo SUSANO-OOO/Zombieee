@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "producerApproval": {
+    "date": "2026-07-27",
+    "issue": 68,
+    "scope": [
+      "mother-identity",
+      "ooguchi-identity",
+      "gairen-identity",
+      "futago-identity"
+    ],
+    "note": "The Producer accepted all four revised boss identity masters and instructed implementation to continue."
+  },
+  "rightsProvenance": {
+    "origin": "OpenAI ImageGen under Producer direction",
+    "producerDirected": true,
+    "thirdPartyDownloadedVisuals": false,
+    "licenseStatus": "project-original and Producer-approved for repository use",
+    "scope": "All identity masters and pose-sheet derivatives recorded in this ledger."
+  },
+  "identityMasters": [
+    {
+      "kind": "mother",
+      "displayName": "マザー",
+      "status": "producer-approved",
+      "path": "assets/source/v090/bosses/mother-identity-master-candidate-r1.png",
+      "sha256": "f30c9322fec2e3d7b0de897ae5282b7cf3ff9894f896bed0eeca1d655bca640f",
+      "dimensions": [1536, 1024]
+    },
+    {
+      "kind": "ooguchi",
+      "displayName": "オオグチ",
+      "status": "producer-approved",
+      "path": "assets/source/v090/bosses/ooguchi-identity-master-candidate-r1.png",
+      "sha256": "b4dffa7991c371198c8be84d6e79e5361ecca38fcffb7e7350f9962af7d137e2",
+      "dimensions": [1774, 887]
+    },
+    {
+      "kind": "gairen",
+      "displayName": "ガイレン",
+      "status": "producer-approved",
+      "path": "assets/source/v090/bosses/gairen-identity-master-candidate-r1.png",
+      "sha256": "092929ea415fcb2361bf82bd4efc6d294ea79905d6ae69066315e97ce036a603",
+      "dimensions": [1536, 1024]
+    },
+    {
+      "kind": "futago",
+      "displayName": "フタゴ",
+      "status": "producer-approved",
+      "path": "assets/source/v090/bosses/futago-identity-master-candidate-r1.png",
+      "sha256": "1275c61bf8e9636ceb9204a8dcb6b4e0bc2806db8832f58c7c4ecf387b37f74e",
+      "dimensions": [1536, 1024]
+    }
+  ],
+  "pendingDerivativeSources": [
+    {
+      "kind": "ooguchi",
+      "status": "generated-derivative-qa-pending",
+      "path": "assets/source/v090/bosses/ooguchi-pose-sheet-candidate-r1.png",
+      "sha256": "26ca4df72cda6b63fbf99385bd9a9d4d627c15d4cbd849afc6faee9d5a41fd79",
+      "dimensions": [1774, 887]
+    },
+    {
+      "kind": "gairen",
+      "status": "generated-derivative-qa-pending",
+      "path": "assets/source/v090/bosses/gairen-pose-sheet-candidate-r1.png",
+      "sha256": "a768592a022e3827242b5d67ad874edf1a530da9e7fe99652e9e99a33f65dd11",
+      "dimensions": [1536, 1024]
+    },
+    {
+      "kind": "futago",
+      "status": "generated-derivative-qa-pending",
+      "path": "assets/source/v090/bosses/futago-pose-sheet-candidate-r1.png",
+      "sha256": "315341b661398d01f754a9458d7df56e70b36295258e35e8398c295cf9247e93",
+      "dimensions": [1536, 1024]
+    }
+  ],
+  "motherVerticalSlice": {
+    "status": "verified",
+    "poseSource": {
+      "path": "assets/source/v090/bosses/mother-pose-sheet-candidate-r1.png",
+      "sha256": "3fe0cf591d209588ec36eef688406f716d2a0a387e42f4b5d140af9e4b1fa584",
+      "dimensions": [1536, 1024]
+    },
+    "generatedBy": "scripts/build-v090-boss-assets.mjs",
+    "generatedAssets": [
+      {
+        "role": "identity-reference",
+        "path": "public/art/v090/bosses/mother-identity-master-r1.webp",
+        "sha256": "b49c9065b5de64963bb00b35bd9b81180e8893e951c57cd8595657be48567454",
+        "bytes": 114070,
+        "dimensions": [768, 512]
+      },
+      {
+        "role": "compendium-card",
+        "path": "public/art/v090/bosses/mother-compendium-r1.webp",
+        "sha256": "be4e936acc72be26520253f97764459464ea5371740e165d4e72ab0a2a23e83c",
+        "bytes": 54966,
+        "dimensions": [512, 512]
+      },
+      {
+        "role": "battle-atlas",
+        "path": "public/art/v090/bosses/mother-battle-r1.png",
+        "sha256": "f3b1ba21300495058bdb3fbb445da90bd56fde4cb212eae69f12f4fefb826442",
+        "bytes": 3085965,
+        "dimensions": [3360, 896]
+      }
+    ],
+    "qa": {
+      "report": "outputs/mother-vertical-slice-browser-smoke/report.json",
+      "note": "Report and screenshots are local ignored evidence; the executable QA contract is scripts/mother-vertical-slice-browser-smoke.mjs.",
+      "browsers": ["chromium", "webkit"],
+      "viewports": ["1280x720", "844x390", "844x340"],
+      "casesPassed": 6,
+      "casesFailed": 0,
+      "stageId": "stage-bay-tower-service",
+      "renderedBodyHeight": {
+        "1280x720": 137.25573333333335,
+        "844x390": 150.68987136,
+        "844x340": 150.68987136
+      },
+      "normalAttackDamage": 38,
+      "broodDamage": 46,
+      "broodSummonCount": 3,
+      "outOfRangeEvadeDamage": 0,
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "requestFailures": 0,
+      "httpErrors": 0
+    }
+  }
+}

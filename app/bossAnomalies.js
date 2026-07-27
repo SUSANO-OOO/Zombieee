@@ -15,6 +15,7 @@ export const BOSS_ANOMALY_TUNING = deepFreeze({
     cooldownSeconds: 7.8,
     summonKinds: ["runner", "resonator", "spindle"],
     summonCount: 3,
+    summonCap: 9,
     controlRadius: 128,
     controlDamage: 24,
   },
@@ -238,4 +239,41 @@ export function bossAnomalyAreaTargetIds({
       (finite(candidate.y) - finite(boss.y)) * 1.5,
     ) <= radius)
     .map(({ id }) => String(id)));
+}
+
+export function motherBroodSummonPlan({
+  boss,
+  candidates = [],
+  attackSequence = 0,
+  cap = BOSS_ANOMALY_TUNING.mother.summonCap,
+} = {}) {
+  if (!boss
+    || boss.kind !== "mother"
+    || boss.side !== "zombie"
+    || Number(boss.hp) <= 0) {
+    return deepFreeze([]);
+  }
+  const tuning = BOSS_ANOMALY_TUNING.mother;
+  const ownerId = String(boss.id);
+  const livingOwnedBrood = (Array.isArray(candidates) ? candidates : [])
+    .filter((candidate) => (
+      candidate?.side === "zombie"
+      && Number(candidate.hp) > 0
+      && candidate.summonSource === "mother-brood"
+      && String(candidate.summonOwnerId) === ownerId
+      && tuning.summonKinds.includes(candidate.kind)
+    )).length;
+  const normalizedCap = Math.max(0, Math.floor(finite(cap, tuning.summonCap)));
+  const summonCount = Math.min(
+    tuning.summonCount,
+    Math.max(0, normalizedCap - livingOwnedBrood),
+  );
+  const sequence = Math.max(0, Math.floor(finite(attackSequence)));
+  const laneOffsets = [-1, 1, 0];
+  const xOffsets = [-84, 58, -22];
+  return deepFreeze(Array.from({ length: summonCount }, (_, index) => ({
+    kind: tuning.summonKinds[(sequence + index) % tuning.summonKinds.length],
+    laneOffset: laneOffsets[index % laneOffsets.length],
+    xOffset: xOffsets[index % xOffsets.length],
+  })));
 }

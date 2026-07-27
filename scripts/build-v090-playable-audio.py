@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build dedicated project-original weapon and ability cues for the 0.9.0 trio.
+"""Build dedicated project-original combat cues for Version 0.9.0.
 
 Every WAV master is deterministic synthesis from oscillators and seeded noise.
 No recording, sample library, generated voice, or third-party service is used.
@@ -49,6 +49,9 @@ CUES = (
     "voice-mayo-attack",
     "voice-mayo-hurt",
     "voice-mayo-retreat",
+    "boss-mother-entrance",
+    "boss-mother-brood-warning",
+    "boss-mother-brood-eruption",
 )
 
 
@@ -69,6 +72,8 @@ def lowpass(samples: list[float], cutoff: float) -> list[float]:
 
 
 def cue_family(cue_id: str) -> str:
+    if "mother" in cue_id:
+        return "mother"
     if "tky" in cue_id:
         return "plasma"
     if "mrs-chiha" in cue_id:
@@ -79,6 +84,12 @@ def cue_family(cue_id: str) -> str:
 
 
 def cue_duration(cue_id: str) -> float:
+    if cue_id == "boss-mother-entrance":
+        return .86
+    if cue_id == "boss-mother-brood-warning":
+        return .64
+    if cue_id == "boss-mother-brood-eruption":
+        return .72
     if cue_id.endswith("charge") or cue_id.endswith("salvo-ready"):
         return .58
     if cue_id.endswith("release") or cue_id.endswith("counter") or cue_id.endswith("salvo-final"):
@@ -97,12 +108,35 @@ def synthesize(cue_id: str) -> list[float]:
     rng = random.Random(seed)
     raw_noise = [rng.uniform(-1.0, 1.0) for _ in range(length)]
     body_noise = lowpass(raw_noise, 1_500 if "impact" in cue_id else 3_600)
+    organic_body = lowpass(raw_noise, 520)
     family = cue_family(cue_id)
     samples: list[float] = []
     for index in range(length):
         time = index / SAMPLE_RATE
         progress = time / duration
-        if family == "plasma":
+        if family == "mother":
+            rumble_frequency = 38 + 18 * math.sin(progress * math.pi)
+            rumble = math.sin(2 * math.pi * rumble_frequency * time)
+            sub = math.sin(2 * math.pi * 23 * time)
+            organic_noise = organic_body[index]
+            if cue_id.endswith("warning"):
+                pulse = .45 + .55 * max(0.0, math.sin(2 * math.pi * 4.2 * time))
+                shell = math.sin(2 * math.pi * (118 + 64 * progress) * time)
+                signal = pulse * (.5 * rumble + .3 * shell) + .28 * organic_noise
+            elif cue_id.endswith("eruption"):
+                crack_gate = (
+                    math.exp(-((time - .08) / .018) ** 2)
+                    + .82 * math.exp(-((time - .21) / .024) ** 2)
+                    + .62 * math.exp(-((time - .37) / .03) ** 2)
+                )
+                crack = body_noise[index] * crack_gate
+                organ = math.sin(2 * math.pi * (74 + 38 * progress) * time)
+                signal = .42 * rumble + .23 * sub + .5 * crack + .28 * organ
+            else:
+                rise = min(1.0, progress * 2.1)
+                shell = math.sin(2 * math.pi * (62 + 26 * progress) * time)
+                signal = rise * (.46 * rumble + .24 * shell + .3 * organic_noise) + .2 * sub
+        elif family == "plasma":
             start_frequency = 220 if "charge" in cue_id else 720
             end_frequency = 1_760 if "charge" in cue_id else 310
             frequency = start_frequency + (end_frequency - start_frequency) * progress
@@ -220,12 +254,12 @@ def main() -> None:
         "version": 1,
         "generator": "scripts/build-v090-playable-audio.py",
         "sampleRate": SAMPLE_RATE,
-        "policy": "Dedicated weapon, manual ability, and synthesized Chihuahua battle cues authored in-repository without sampled recordings or human voice.",
+        "policy": "Dedicated weapon, manual ability, synthesized Chihuahua battle cues, and boss combat cues authored in-repository without sampled recordings or human voice.",
         "cues": records,
     }
     PROVENANCE_PATH.parent.mkdir(parents=True, exist_ok=True)
     PROVENANCE_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"built {len(records)} Version 0.9.0 playable cues with {ffmpeg or 'WAV-only mode'}")
+    print(f"built {len(records)} Version 0.9.0 combat cues with {ffmpeg or 'WAV-only mode'}")
 
 
 if __name__ == "__main__":
