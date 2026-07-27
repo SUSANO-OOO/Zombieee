@@ -11593,6 +11593,7 @@ export function AshfallGame() {
           }
 
           if (f.side === "human" || f.side === "zombie") {
+            let appliedSeparation = false;
             for (const other of g.fighters) {
               if (other.side !== f.side || other.id >= f.id || other.hp <= 0 || !other.combatReady) continue;
               const separationStep = sameSideSeparationStep({
@@ -11608,6 +11609,7 @@ export function AshfallGame() {
                 laneMinY: activeLaneCenters[0],
                 laneMaxY: activeLaneCenters[2],
               });
+              appliedSeparation ||= separationStep.dx !== 0 || separationStep.dy !== 0;
               f.x += separationStep.dx;
               f.y += separationStep.dy;
             }
@@ -11617,13 +11619,15 @@ export function AshfallGame() {
             // Pair separation is a constrained solver step: project that step
             // onto the walkable floor here, then leave the frame-level audit
             // below independent so other movement sources remain detectable.
-            const separatedPosition = clampToWalkable(movementStageGeometry, {
-              x: f.x,
-              y: f.y,
-              bodyRadius: f.bodyRadius,
-            });
-            f.x = separatedPosition.x;
-            f.y = separatedPosition.y;
+            if (appliedSeparation) {
+              const separatedPosition = clampToWalkable(movementStageGeometry, {
+                x: f.x,
+                y: f.y,
+                bodyRadius: f.bodyRadius,
+              });
+              f.x = separatedPosition.x;
+              f.y = separatedPosition.y;
+            }
             f.lane = activeLaneForY(f.y, f.lane);
           }
           if (f.side === "human" && f.combatReady && f.hp > 0) {
