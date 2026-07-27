@@ -1772,6 +1772,16 @@ test("station objectives use spatial evidence, lethal boss resolution, and rever
   assert.match(game, /f\.contained\)[\s\S]*f\.targetId = null;[\s\S]*f\.knock = 0;[\s\S]*continue;/);
 });
 
+test("snapshots mission-unlocked boss kinds when a new Survival run starts", async () => {
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const startSurvival = game.slice(
+    game.indexOf("const startNewSurvival"),
+    game.indexOf("const resumeSurvival"),
+  );
+
+  assert.match(startSurvival, /createSurvivalRun\(\{[\s\S]*bossPool: campaignSave\.outbreaks\.survivalBossKinds/);
+});
+
 test("defines an ordered mission timeline after the five-second preparation window", () => {
   const eventTimes = MISSION_EVENTS.map(({ at }) => at);
   assert.deepEqual(eventTimes, [5, 17, 35, 52, 70, 89, 108, 125, 131, 152, 174, 201]);

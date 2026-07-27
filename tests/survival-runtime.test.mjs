@@ -29,6 +29,7 @@ import {
   survivalCombatEndReason,
   survivalDefenseDestination,
   survivalHudSnapshot,
+  selectSurvivalBossKind,
   survivalUpgradeEffects,
   survivalWaveReward,
   survivalWaveSpawnPlan,
@@ -88,6 +89,39 @@ test("wave plans are deterministic, bounded, and put bosses on every fifth wave"
   assert.notEqual(survivalWaveSpawnPlan(5).bossKind, survivalWaveSpawnPlan(10).bossKind);
 });
 
+test("unlocked boss pool is snapshotted and never repeats the previous boss when alternatives exist", () => {
+  const bossPool = ["takuya", "gate-eater", "kurome", "mother", "ooguchi", "gairen", "futago"];
+  const run = createSurvivalRun({
+    runId: "survival-boss-pool",
+    formation: formation(),
+    bossPool,
+  });
+  assert.deepEqual(run.bossPool, bossPool);
+  assert.equal(run.lastBossKind, null);
+  let lastBossKind = null;
+  const sequence = [];
+  for (const waveNumber of [5, 10, 15, 20, 25, 30, 35, 40, 45]) {
+    const plan = survivalWaveSpawnPlan(waveNumber, { bossPool, lastBossKind });
+    assert.equal(plan.bossKind, selectSurvivalBossKind({
+      waveNumber,
+      bossPool,
+      lastBossKind,
+    }));
+    assert.notEqual(plan.bossKind, lastBossKind);
+    assert.equal(plan.units.includes(plan.bossKind), true);
+    sequence.push(plan.bossKind);
+    lastBossKind = plan.bossKind;
+  }
+  assert.ok(new Set(sequence).size >= 6);
+
+  const single = survivalWaveSpawnPlan(5, {
+    bossPool: ["mother"],
+    lastBossKind: "mother",
+  });
+  assert.equal(single.bossKind, "takuya");
+  assert.notEqual(single.bossKind, "mother");
+});
+
 test("combat runtime queues a wave, keeps the boss at 1x until combat-ready, and pauses for upgrade", () => {
   let run = newRun();
   let runtime = createSurvivalCombatRuntime(run);
@@ -115,6 +149,10 @@ test("combat runtime queues a wave, keeps the boss at 1x until combat-ready, and
   assert.equal(run.speed, 1);
   assert.equal(run.bossEntrancePending, true);
   assert.equal(step.events.some(({ type }) => type === "boss-warning"), true);
+  assert.equal(
+    run.lastBossKind,
+    step.events.find(({ type }) => type === "boss-warning").bossKind,
+  );
 
   step = advanceSurvivalCombat(runtime, run, {
     activeEnemyCount: 1,

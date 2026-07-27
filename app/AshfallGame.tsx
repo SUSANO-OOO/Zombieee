@@ -7512,6 +7512,7 @@ export function AshfallGame() {
       unlockedStartWaves: campaignSave.survival.unlockedStartWaves,
       formation: formationSnapshot,
       crawlerMaxHp: Math.round(700 * tacticalEffects.baseHpMultiplier),
+      bossPool: campaignSave.outbreaks.survivalBossKinds,
     });
     startSurvivalGame(run);
   }, [campaignSave, selectedSurvivalStartWave, startSurvivalGame]);

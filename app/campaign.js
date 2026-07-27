@@ -40,6 +40,12 @@ import {
   normalizeEquipmentEnhancementLevels,
 } from "./equipment.js";
 import { bossCampaignEntry } from "./bossFoundation.js";
+import {
+  createDefaultOutbreakProgress,
+  isOutbreakMissionUnlocked,
+  normalizeOutbreakProgress,
+  resolveOutbreakProgress,
+} from "./outbreakMissions.js";
 
 /**
  * Pure, data-driven campaign progression for the 0.7.0 unit-collection release.
@@ -1892,7 +1898,7 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 export const calculateBattleRewards = calculateStageRewards;
 
 const V090_LEVEL_ECONOMY_SCHEMA_VERSION = 10;
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 11;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 12;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
 const CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION = 5;
 
@@ -2016,6 +2022,7 @@ export function createDefaultCampaignSave() {
     selectedPresetId: CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_1,
     lastSelectedStageId: INITIAL_STAGE_ID,
     survival: createDefaultSurvivalProgress(),
+    outbreaks: createDefaultOutbreakProgress(),
     settings: { ...DEFAULT_CAMPAIGN_SETTINGS },
   };
 }
@@ -2575,6 +2582,11 @@ export function migrateCampaignSave(
       ["survival", "survivalProgress"],
       null,
     )),
+    outbreaks: normalizeOutbreakProgress(firstDefined(
+      source,
+      ["outbreaks", "outbreakProgress"],
+      null,
+    )),
     settings: normalizeSettings(rawSettings, {
       recoverLegacySilence: !Number.isFinite(sourceSchemaVersion)
         || sourceSchemaVersion < 4,
@@ -2797,6 +2809,107 @@ export async function persistSurvivalCampaignSettlement(
   try {
     const result = await persist(settlement.save);
     const durable = result === true || result?.durable === true;
+    return {
+      ...settlement,
+      save: durable ? settlement.save : save,
+      candidateSave: settlement.save,
+      committed: durable,
+      persistCalls: 1,
+    };
+  } catch (error) {
+    return {
+      ...settlement,
+      save,
+      candidateSave: settlement.save,
+      committed: false,
+      persistCalls: 1,
+      error,
+    };
+  }
+}
+
+export function settleOutbreakCampaignSave(
+  save,
+  result,
+  {
+    completedAt = result?.completedAt ?? new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry });
+  if (!isOutbreakMissionUnlocked(
+    current.outbreaks,
+    current.completedStageIds,
+    result?.missionId,
+  )) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      payout: { caps: 0, equipmentGrants: [] },
+      applied: false,
+      duplicate: false,
+      reason: "mission-locked",
+    };
+  }
+  const settlement = resolveOutbreakProgress(current.outbreaks, {
+    ...result,
+    completedAt,
+  });
+  const resultId = typeof result?.resultId === "string" ? result.resultId.trim() : "";
+  if (settlement.duplicate || current.processedResultIds.includes(resultId)) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      payout: { caps: 0, equipmentGrants: [] },
+      applied: false,
+      duplicate: true,
+    };
+  }
+  const caps = Math.min(Number.MAX_SAFE_INTEGER, current.caps + settlement.reward.caps);
+  const revised = reviseCampaignSave({
+    ...current,
+    processedResultIds: [...new Set([...current.processedResultIds, resultId])],
+    caps,
+    supplies: caps,
+    equipmentInventory: addEquipmentInventory(
+      current.equipmentInventory,
+      settlement.reward.equipmentGrants,
+    ),
+    outbreaks: settlement.progress,
+  }, {
+    updatedAt: completedAt,
+    eventRegistry,
+  });
+  return {
+    save: withCampaignSaveIntegrity(revised, { eventRegistry }),
+    payout: settlement.reward,
+    applied: true,
+    duplicate: false,
+  };
+}
+
+export async function persistOutbreakCampaignSettlement(
+  save,
+  result,
+  {
+    persist,
+    completedAt = result?.completedAt ?? new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  if (typeof persist !== "function") throw new TypeError("A campaign persistence function is required");
+  const settlement = settleOutbreakCampaignSave(save, result, {
+    completedAt,
+    eventRegistry,
+  });
+  if (!settlement.applied) {
+    return {
+      ...settlement,
+      committed: settlement.duplicate,
+      persistCalls: 0,
+    };
+  }
+  try {
+    const persisted = await persist(settlement.save);
+    const durable = persisted === true || persisted?.durable === true;
     return {
       ...settlement,
       save: durable ? settlement.save : save,

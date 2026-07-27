@@ -66,6 +66,7 @@ const unitIds = [
   "unit-gantetsu",
   "unit-monkey",
 ];
+const currentUnitIds = Object.keys(createDefaultCampaignSave().unitLevels);
 const release071Fixture = {
   schemaVersion: 5,
   revision: 41,
@@ -344,11 +345,11 @@ function assertMigratedSave(
   invariant(save.settings.reducedMotion === true && save.settings.battleEventMode === "compact",
     `${label} accessibility/story settings changed`);
   invariant(save.unitRanks
-    && JSON.stringify(Object.keys(save.unitRanks).sort()) === JSON.stringify([...unitIds].sort())
+    && JSON.stringify(Object.keys(save.unitRanks).sort()) === JSON.stringify([...currentUnitIds].sort())
     && Object.values(save.unitRanks).every((rank) => rank === 0),
     `${label} rank defaults were not added safely`);
   invariant(save.unitLevels
-    && JSON.stringify(Object.keys(save.unitLevels).sort()) === JSON.stringify([...unitIds].sort())
+    && JSON.stringify(Object.keys(save.unitLevels).sort()) === JSON.stringify([...currentUnitIds].sort())
     && Object.values(save.unitLevels).every((level) => level === 1),
   `${label} Level defaults were not added safely`);
   invariant(Array.isArray(save.equipmentInventory) && save.equipmentInventory.length === 0,
@@ -357,6 +358,10 @@ function assertMigratedSave(
     && Object.keys(save.equipmentEnhancementLevels).length === 0,
   `${label} equipment enhancements were not initialized safely`);
   invariant(save.eventFoundation?.schemaVersion === 1, `${label} event progress was not initialized safely`);
+  invariant(
+    JSON.stringify(save.outbreaks?.survivalBossKinds) === JSON.stringify(["takuya", "gate-eater"]),
+    `${label} outbreak progress was not initialized safely`,
+  );
   invariant(!Object.hasOwn(save, "visualOverrides"), `${label} persisted obsolete visual fields`);
   invariant(typeof save.integrity === "string" && save.integrity.startsWith("fnv1a32:"),
     `${label} current integrity stamp missing`);

@@ -460,12 +460,16 @@ test("a late start, defeat, or withdrawal never pays rewards for skipped or unfi
   assert.deepEqual(rejected.progress.claimedRewardIds, []);
 });
 
-test("campaign schema 11 persists survival checkpoints and migrates a stamped schema 7 save", () => {
+test("campaign schema 12 persists survival checkpoints and migrates a stamped schema 7 save", () => {
   const fresh = createDefaultCampaignSave();
-  assert.equal(CAMPAIGN_SAVE_SCHEMA_VERSION, 11);
+  assert.equal(CAMPAIGN_SAVE_SCHEMA_VERSION, 12);
   assert.deepEqual(fresh.survival, createDefaultSurvivalProgress());
 
-  let run = playThrough(createSurvivalRun({ runId: "campaign-checkpoint" }), 5, 4);
+  const checkpointBossPool = ["takuya", "gate-eater", "mother", "gairen"];
+  let run = playThrough(createSurvivalRun({
+    runId: "campaign-checkpoint",
+    bossPool: checkpointBossPool,
+  }), 5, 4);
   const save = {
     ...fresh,
     survival: saveSurvivalCheckpoint(fresh.survival, run, "2026-07-26T11:00:00.000Z"),
@@ -473,7 +477,10 @@ test("campaign schema 11 persists survival checkpoints and migrates a stamped sc
   const restored = deserializeCampaignSave(serializeCampaignSave(save));
   assert.equal(restored.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
   assert.equal(restored.survival.activeCheckpoint.checkpointWave, 5);
-  assert.equal(resumeSurvivalCheckpoint(restored.survival).runId, "campaign-checkpoint");
+  const resumed = resumeSurvivalCheckpoint(restored.survival);
+  assert.equal(resumed.runId, "campaign-checkpoint");
+  assert.deepEqual(resumed.bossPool, checkpointBossPool);
+  assert.equal(resumed.lastBossKind, null);
 
   const legacy = { ...fresh, schemaVersion: 7 };
   delete legacy.survival;
