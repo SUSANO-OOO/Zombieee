@@ -1,11 +1,22 @@
 import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "./campaign.js";
+import {
+  bossPhaseForHp as sharedBossPhaseForHp,
+  isBossEnemyKind,
+} from "./bossFoundation.js";
 import { enemySpawnClassFor } from "./content/enemyCatalog.js";
 import { UNIT_CONTENT, UNIT_CONTENT_BY_ID } from "./content/unitCatalog.js";
 
 export const COMMAND_MAX = 150;
 export const COMMAND_INITIAL = 70;
 export const COMMAND_REGEN = 3.5;
+export const STANDARD_COMMAND_REGEN = 3;
+export const STAGE_20_COMMAND_REGEN = 3.65;
 export const SUPPORT_GAUGE_MAX = 100;
+export const BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS = Object.freeze({
+  pod: 14,
+  drum: 12,
+  medical: 18,
+});
 // Compatibility aliases keep the current UI operational while the integration
 // commit moves player-facing wording from rage to support gauge.
 export const RAGE_MAX = SUPPORT_GAUGE_MAX;
@@ -208,10 +219,7 @@ export function enemyBaseTargetPoint(lane, laneCenters = LANE_Y) {
 }
 
 export function bossPhaseForHp(hp, maxHp) {
-  const ratio = Math.max(0, Number(hp) || 0) / Math.max(1, Number(maxHp) || 1);
-  if (ratio <= .25) return Object.freeze({ phase: 3, label: "最終段階" });
-  if (ratio <= .75) return Object.freeze({ phase: 2, label: "第2段階" });
-  return Object.freeze({ phase: 1, label: "第1段階" });
+  return sharedBossPhaseForHp(hp, maxHp);
 }
 
 export function battlefieldPlacementForbiddenZones(stageZones = []) {
@@ -314,7 +322,7 @@ function enemySpawnClass(kind) {
 }
 
 export function enemySpawnInterval({ kind, order = 0, wave = 1 }) {
-  const base = kind === "takuya" || kind === "gate-eater" ? .92
+  const base = enemySpawnClass(kind) === "boss" ? .92
     : kind === "abomination" ? .78
       : kind === "crusher" ? .64
           : kind === "spitter" || kind === "shade" || kind === "ooze" ? .5
@@ -331,7 +339,7 @@ export function enemyGateSpawnPosition({ kind, order = 0, wave = 1, entryId = 1 
   const verticalSlot = (verticalBand + slot * 2 + wave) % ENEMY_GATE_SPAWN.interiorY.length;
   const spawnClass = enemySpawnClass(kind);
   const clearance = spawnClass === "boss" ? 49 : spawnClass === "heavy" ? 43 : 31;
-  const entrySpeed = kind === "takuya" || kind === "gate-eater" ? 29
+  const entrySpeed = spawnClass === "boss" ? 29
     : kind === "abomination" ? 32
       : kind === "crusher" ? 36
         : kind === "spitter" || kind === "shade" || kind === "ooze" ? 46
@@ -392,19 +400,59 @@ export function phaseAt(time) {
   return 3;
 }
 
-export function advanceCommand(command, seconds) {
-  return Math.min(COMMAND_MAX, command + Math.max(0, seconds) * COMMAND_REGEN);
+export function advanceCommand(command, seconds, regenPerSecond = COMMAND_REGEN) {
+  return Math.min(
+    COMMAND_MAX,
+    command + Math.max(0, seconds) * Math.max(0, Number(regenPerSecond) || 0),
+  );
 }
 
 export function canDeploy({ running, paused, over, command, cost, cooldown }) {
   return Boolean(running && !paused && !over && command >= cost && cooldown <= 0);
 }
 
-export function supportGaugeReward(kind) {
-  return ({ walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20, takuya: 25, turned: 7, grappler: 13, ooze: 11, sprinter: 8, "gate-eater": 30 })[kind] ?? 4;
+const STANDARD_SUPPORT_GAUGE_REWARDS = Object.freeze({
+  walker: 3, runner: 4, spitter: 7, crusher: 12, shade: 19, abomination: 17,
+  takuya: 22, turned: 6, grappler: 11, ooze: 9, sprinter: 7, "gate-eater": 26,
+});
+const FULL_SUPPORT_GAUGE_REWARDS = Object.freeze({
+  walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20,
+  takuya: 25, turned: 7, grappler: 13, ooze: 11, sprinter: 8, "gate-eater": 30,
+});
+
+export function supportGaugeReward(kind, mode = "standard") {
+  const rewards = mode === "full"
+    ? FULL_SUPPORT_GAUGE_REWARDS
+    : STANDARD_SUPPORT_GAUGE_REWARDS;
+  return rewards[kind] ?? (mode === "full" ? 4 : 3);
 }
 
 export const rageReward = supportGaugeReward;
+
+export function createBattlefieldSupplyCooldowns() {
+  return Object.fromEntries(
+    Object.keys(BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS).map((kind) => [kind, 0]),
+  );
+}
+
+export function advanceBattlefieldSupplyCooldowns(cooldowns = {}, seconds = 0) {
+  const step = Math.max(0, Number(seconds) || 0);
+  return Object.fromEntries(
+    Object.keys(BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS).map((kind) => [
+      kind,
+      Math.max(0, (Number(cooldowns[kind]) || 0) - step),
+    ]),
+  );
+}
+
+export function beginBattlefieldSupplyCooldown(cooldowns = {}, kind) {
+  if (!(kind in BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS)) return { ...cooldowns };
+  return {
+    ...createBattlefieldSupplyCooldowns(),
+    ...cooldowns,
+    [kind]: BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS[kind],
+  };
+}
 
 export function scrapReward(kind) {
   return ({ walker: 6, runner: 7, spitter: 10, crusher: 18, shade: 24, abomination: 40, takuya: 80, turned: 9, grappler: 18, ooze: 15, sprinter: 11, "gate-eater": 96 })[kind] ?? 6;
@@ -493,12 +541,14 @@ function supplyStillPresent(supply) {
  * @param {{
  *   running: boolean, paused: boolean, over: boolean, scrap: number,
  *   kind?: string, supplyKind?: string, lane?: number, x: number, y?: number,
+ *   cooldown?: number,
  *   supplies?: RuleSupply[], objects?: RuleSupply[], supports?: RuleSupply[],
  *   forbiddenZones?: ForbiddenZone[], laneCenters?: readonly number[],
  * }} input
  */
 export function battlefieldSupplyPlacementCheck({
   running, paused, over, scrap, kind, supplyKind, lane, x, y,
+  cooldown = 0,
   supplies = [], objects = [], supports = [], forbiddenZones = [], laneCenters = LANE_Y,
 }) {
   const selectedKind = supplyKind ?? kind;
@@ -507,6 +557,7 @@ export function battlefieldSupplyPlacementCheck({
   if (!running) return { ok: false, reason: "作戦開始後に配置できます" };
   if (paused) return { ok: false, reason: "一時停止中は配置できません" };
   if (over) return { ok: false, reason: "作戦終了後は配置できません" };
+  if (cooldown > 0) return { ok: false, reason: `戦場物資を再準備中です（${Math.ceil(cooldown)}秒）` };
   if (scrap < def.cost) return { ok: false, reason: "スクラップが不足しています" };
   const internalLane = normalizedInternalLane(lane, y, laneCenters);
   const placementY = Number.isFinite(y) ? y : internalLane === null ? Number.NaN : laneCenters[internalLane];
@@ -969,7 +1020,7 @@ export function resolveCrawlerBarrage({ runtime, fighters = [] }) {
   const hits = [];
   const nextFighters = fighters.map((fighter) => {
     if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.combatReady === false || !CRAWLER_BARRAGE_DEF.lanes.includes(fighter.lane)) return fighter;
-    const boss = fighter.kind === "takuya" || fighter.kind === "gate-eater" || fighter.boss === true;
+    const boss = isBossEnemyKind(fighter.kind) || fighter.boss === true;
     const damage = Math.round(CRAWLER_BARRAGE_DEF.damage * (boss ? CRAWLER_BARRAGE_DEF.bossDamageMultiplier : 1));
     hits.push({ id: fighter.id, lane: fighter.lane, damage, boss });
     return { ...fighter, hp: Math.max(0, fighter.hp - damage) };
@@ -1178,6 +1229,7 @@ export function roleTargetBias(attackerKind, targetKind) {
   if (attackerKind === "crazy-king" && (targetKind === "walker" || targetKind === "runner" || targetKind === "turned")) return -24;
   if (attackerKind === "kumaverson" && (targetKind === "runner" || targetKind === "crusher")) return -28;
   if (attackerKind === "babayaga" && isBabayagaPriorityTarget(targetKind)) return -48;
+  if (attackerKind === "mayo-chan" && ["runner", "turned", "sprinter", "walker"].includes(targetKind)) return -52;
   return 0;
 }
 

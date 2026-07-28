@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ALLY_AI_INTENTS, decideAllyIntent, destinationWithinRange } from "../app/allyAi.js";
+import {
+  ALLY_AI_INTENTS,
+  decideAllyIntent,
+  destinationWithinRange,
+  mayoBossFlankLane,
+} from "../app/allyAi.js";
 import { createBattleDefinition } from "../app/battleDefinitions.js";
 import { CAMPAIGN_STAGES } from "../app/campaign.js";
 import { COMBAT_ROLE_RULES, canNormalAttackTarget, combatHitboxesOverlap } from "../app/combatLifecycle.js";
@@ -21,6 +26,40 @@ function seededRandom(seed) {
     return state / 0x100000000;
   };
 }
+
+test("Mayo approaches a giant boss from a deterministic adjacent flank instead of its front lane", () => {
+  assert.equal(mayoBossFlankLane({ unitId: "mayo-a", unitLane: 1, assignedLane: 1, bossLane: 1 }), 0);
+  assert.equal(mayoBossFlankLane({ unitId: "mayo-a", unitLane: 1, assignedLane: 1, bossLane: 1 }), 0);
+  assert.equal(mayoBossFlankLane({ unitId: "mayo-b", unitLane: 2, assignedLane: 2, bossLane: 1 }), 2);
+  assert.equal(mayoBossFlankLane({ unitId: "mayo-c", unitLane: 0, assignedLane: 0, bossLane: 0 }), 1);
+
+  const intent = decideAllyIntent({
+    unit: {
+      id: "mayo-a",
+      kind: "mayo-chan",
+      x: 320,
+      y: LANE_Y[1],
+      lane: 1,
+      assignedLane: 1,
+      range: 31,
+      allowAdjacentLaneTargets: true,
+    },
+    assignedLane: 1,
+    enemies: [{
+      id: "giant-boss",
+      kind: "gate-eater",
+      boss: true,
+      x: 560,
+      y: LANE_Y[1],
+      lane: 1,
+      hp: 1800,
+      bodyRadius: 32,
+    }],
+  });
+  assert.equal(intent.targetId, "giant-boss");
+  assert.notEqual(intent.destinationLane, 1);
+  assert.ok(intent.destinationLane === 0 || intent.destinationLane === 2);
+});
 
 test("timed defense returns to its lane anchor and never advances into an empty enemy side", () => {
   let unit = { id: "defender", x: 520, lane: 1, range: 42, ranged: false };
@@ -735,7 +774,7 @@ test("same-lane Y drift reacquires on the next aligned tick without advancing th
   assert.equal(aligned.moveDirection, 0);
 });
 
-test("all eleven playable roles keep search and real attack eligibility aligned across all three lanes", () => {
+test("all sixteen playable roles keep search and real attack eligibility aligned across all three lanes", () => {
   for (const lane of [0, 1, 2]) for (const card of UNIT_CARDS) {
     const rule = COMBAT_ROLE_RULES[card.kind];
     const role = {

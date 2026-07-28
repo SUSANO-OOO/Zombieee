@@ -14,6 +14,11 @@ export const UNIT_CONTENT = deepFreeze([
   { id: "babayaga", kind: "babayaga", displayName: "ババヤガ", name: "ババヤガ", aliases: ["unit-babayaga"], aiProfile: "marksman", cost: 58, key: "9", desc: "精密射撃・特殊排除", deployCooldown: 16, hp: 76, speed: 19, damage: 31, range: 158, attackEvery: 1.04, bodyRadius: 11, laneSpeed: 62 },
   { id: "guardian", kind: "guardian", displayName: "ガンテツ", name: "ガンテツ", aliases: ["unit-gantetsu"], aiProfile: "heavy", cost: 48, key: "0", desc: "重装盾・被害肩代わり", deployCooldown: 16, hp: 240, speed: 11, damage: 12, range: 32, attackEvery: 1.25, bodyRadius: 18, laneSpeed: 36 },
   { id: "engineer", kind: "engineer", displayName: "モンキー", name: "モンキー", aliases: ["unit-monkey"], aiProfile: "engineer", cost: 42, key: "-", desc: "工兵・自動足止め", deployCooldown: 13, hp: 88, speed: 17, damage: 14, range: 104, attackEvery: .9, bodyRadius: 11, laneSpeed: 56 },
+  { id: "zakimiya", kind: "zakimiya", displayName: "ザキミヤ", name: "ザキミヤ", aliases: ["unit-zakimiya"], aiProfile: "frontline", cost: 52, key: "^", desc: "火酒使い・密集焼却", deployCooldown: 14, hp: 105, speed: 18, damage: 21, range: 30, attackEvery: .9, bodyRadius: 12, laneSpeed: 54 },
+  { id: "tky", kind: "tky", displayName: "TKY", name: "TKY", aliases: ["unit-tky"], aiProfile: "skirmisher", cost: 64, key: "Q", desc: "光刃剣士・前方群体処理", deployCooldown: 15, hp: 92, speed: 24, damage: 24, range: 48, attackEvery: .58, bodyRadius: 11, laneSpeed: 72 },
+  { id: "mrs-chiha", kind: "mrs-chiha", displayName: "Mrs.チハ", name: "Mrs.チハ", aliases: ["unit-mrs-chiha"], aiProfile: "suppression", cost: 68, key: "W", desc: "擲弾手・多地点制圧", deployCooldown: 17, hp: 80, speed: 17, damage: 18, range: 155, attackEvery: 1.18, bodyRadius: 11, laneSpeed: 52 },
+  { id: "miyamoto-musashi", kind: "miyamoto-musashi", displayName: "宮本武蔵", name: "宮本武蔵", aliases: ["unit-miyamoto-musashi"], aiProfile: "frontline", cost: 72, key: "E", desc: "二刀剣豪・対強敵受け流し", deployCooldown: 18, hp: 135, speed: 21, damage: 31, range: 38, attackEvery: .72, bodyRadius: 13, laneSpeed: 60 },
+  { id: "mayo-chan", kind: "mayo-chan", displayName: "マヨちゃん", name: "マヨちゃん", aliases: ["unit-mayo-chan"], aiProfile: "skirmisher", cost: 46, key: "R", desc: "高速遊撃・小型感染体足止め", deployCooldown: 24, hp: 64, speed: 33, damage: 13, range: 22, attackEvery: .48, bodyRadius: 7, laneSpeed: 96 },
 ]);
 
 export const UNIT_CONTENT_BY_ID = deepFreeze(Object.fromEntries(

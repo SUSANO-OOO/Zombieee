@@ -8,6 +8,7 @@ import {
   CAMPAIGN_GUIDE,
   CAMPAIGN_GUIDE_ID,
   CAMPAIGN_RECRUITMENT_COSTS,
+  CAMPAIGN_RECRUITMENT_MILESTONES,
   CAMPAIGN_SAVE_SCHEMA_VERSION,
   CAMPAIGN_STAGE_BY_ID,
   CAMPAIGN_STAGE_IDS,
@@ -55,6 +56,11 @@ import {
   verifyCampaignSaveIntegrity,
   withCampaignSaveIntegrity,
 } from "../app/campaign.js";
+import {
+  V090_CAPS_MIGRATION_BASE,
+  V090_CAPS_MIGRATION_ID,
+  reorganizeLegacyCaps,
+} from "../app/campaignEconomy.js";
 
 const STAGE_1 = CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET;
 const STAGE_2 = CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE;
@@ -74,9 +80,15 @@ const EXPANSION_STAGE_IDS = [
   CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE,
   CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL,
 ];
+const V090_STAGE_IDS = [
+  CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE,
+  CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE,
+  CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE,
+  CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL,
+];
 
-test("campaign preserves Stage 1-6 and defines ten ordered Version 0.8.0 stages", () => {
-  assert.equal(CAMPAIGN_STAGES.length, 16);
+test("campaign preserves Stage 1-16 and appends four ordered Version 0.9.0 stages", () => {
+  assert.equal(CAMPAIGN_STAGES.length, 20);
   assert.deepEqual(CAMPAIGN_STAGES.map((stage) => stage.id), [
     STAGE_1,
     STAGE_2,
@@ -85,6 +97,7 @@ test("campaign preserves Stage 1-6 and defines ten ordered Version 0.8.0 stages"
     STAGE_5,
     STAGE_6,
     ...EXPANSION_STAGE_IDS,
+    ...V090_STAGE_IDS,
   ]);
   assert.deepEqual(CAMPAIGN_STAGES.slice(0, 6).map((stage) => stage.displayName), [
     "西新商店街",
@@ -94,7 +107,7 @@ test("campaign preserves Stage 1-6 and defines ten ordered Version 0.8.0 stages"
     "西新駅・ホーム／線路区域",
     "西新駅・保守トンネル／封鎖区域",
   ]);
-  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.id)).size, 16);
+  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.id)).size, 20);
 
   for (const [index, stage] of CAMPAIGN_STAGES.entries()) {
     assert.equal(CAMPAIGN_STAGE_BY_ID[stage.id], stage);
@@ -137,7 +150,7 @@ test("campaign preserves Stage 1-6 and defines ten ordered Version 0.8.0 stages"
     "background-nishijin-station-platform-v1",
     "background-nishijin-station-tunnel-v1",
   ]);
-  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.theme.backgroundId)).size, 16);
+  assert.equal(new Set(CAMPAIGN_STAGES.map((stage) => stage.theme.backgroundId)).size, 20);
 });
 
 test("each stage has a unique multi-layer visual signature", () => {
@@ -146,7 +159,7 @@ test("each stage has a unique multi-layer visual signature", () => {
     CAMPAIGN_STAGES.map(({ id }) => id).sort(),
   );
   const signatures = Object.values(STAGE_VISUAL_SIGNATURES);
-  assert.equal(new Set(signatures.map(({ kind }) => kind)).size, 16);
+  assert.equal(new Set(signatures.map(({ kind }) => kind)).size, 20);
   for (const signature of signatures) {
     assert.equal(typeof signature.background, "string");
     assert.equal(typeof signature.landmark, "string");
@@ -252,7 +265,7 @@ test("Stage 1-6 objectives, prerequisites, recruits, and forward unlocks match t
 });
 
 test("Stage 7-16 use four new regions, five objective patterns, and a strict forward chain", () => {
-  const expansion = CAMPAIGN_STAGES.slice(6);
+  const expansion = CAMPAIGN_STAGES.slice(6, 16);
   assert.deepEqual(expansion.map(({ id }) => id), EXPANSION_STAGE_IDS);
   assert.equal(new Set(expansion.map(({ regionId }) => regionId)).size, 4);
   assert.deepEqual(
@@ -269,7 +282,12 @@ test("Stage 7-16 use four new regions, five objective patterns, and a strict for
     assert.deepEqual(stage.prerequisiteStageIds, [
       index === 0 ? STAGE_6 : expansion[index - 1].id,
     ]);
-    assert.deepEqual(stage.nextUnlocks.stageIds, index === expansion.length - 1 ? [] : [expansion[index + 1].id]);
+    assert.deepEqual(
+      stage.nextUnlocks.stageIds,
+      index === expansion.length - 1
+        ? [CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE]
+        : [expansion[index + 1].id],
+    );
     assert.ok(stage.waves.length >= 7 && stage.waves.length <= 12, stage.id);
     assert.equal(stage.preBattleEventId, null);
     assert.equal(stage.postBattleEventId, null);
@@ -290,6 +308,41 @@ test("Stage 7-16 use four new regions, five objective patterns, and a strict for
       `three consecutive objective patterns at Stage ${index + 7}`,
     );
   }
+});
+
+test("Stage 17-20 introduce six body-plan-distinct infected and end in a boss-gated Kurome assault", () => {
+  const stages = V090_STAGE_IDS.map((stageId) => CAMPAIGN_STAGE_BY_ID[stageId]);
+  assert.deepEqual(stages.map(({ stageNumber }) => stageNumber), [17, 18, 19, 20]);
+  assert.deepEqual(stages.map(({ missionType }) => missionType), [
+    "assault",
+    "timed-defense",
+    "escort",
+    "boss-assault",
+  ]);
+  assert.deepEqual(stages.map(({ objectivePattern }) => objectivePattern), [
+    "relay-destruction",
+    "perimeter-hold",
+    "mobile-objective-escort",
+    "boss-gated-assault",
+  ]);
+  for (const [index, stage] of stages.entries()) {
+    assert.deepEqual(stage.prerequisiteStageIds, [
+      index === 0 ? CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL : stages[index - 1].id,
+    ]);
+    assert.deepEqual(stage.nextUnlocks.stageIds, index === stages.length - 1 ? [] : [stages[index + 1].id]);
+    assert.ok(stage.waves.length >= 9 && stage.waves.length <= 13, stage.id);
+  }
+  assert.deepEqual(
+    new Set(stages.flatMap(({ enemyKinds }) => enemyKinds).filter((kind) => (
+      ["resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom"].includes(kind)
+    ))),
+    new Set(["resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom"]),
+  );
+  assert.equal(stages[1].objectiveConfig.durationSeconds, 210);
+  assert.equal(stages[2].objectiveConfig.durationSeconds, 195);
+  assert.equal(stages[3].boss.enemyKind, "kurome");
+  assert.equal(stages[3].boss.displayName, "クロメ");
+  assert.equal(stages[3].waves.some((wave) => wave.units?.includes("kurome")), true);
 });
 
 test("Stage 1-3 increase pressure through bounded cadence and mixed compositions", () => {
@@ -341,9 +394,9 @@ test("Stage 4-6 introduce each station enemy through bounded mission-specific wa
   );
 });
 
-test("eleven canonical playable units and guide-ikura use approved player-facing identities", () => {
-  assert.equal(CAMPAIGN_UNITS.length, 11);
-  assert.equal(CAMPAIGN_CHARACTERS.length, 12);
+test("sixteen canonical playable units and guide-ikura use approved player-facing identities", () => {
+  assert.equal(CAMPAIGN_UNITS.length, 16);
+  assert.equal(CAMPAIGN_CHARACTERS.length, 17);
   assert.deepEqual(INITIAL_UNIT_IDS, [
     CAMPAIGN_UNIT_IDS.PAISEN,
     CAMPAIGN_UNIT_IDS.HACHI,
@@ -364,8 +417,43 @@ test("eleven canonical playable units and guide-ikura use approved player-facing
     [CAMPAIGN_UNIT_IDS.RAIDER, "レイダー"],
     [CAMPAIGN_UNIT_IDS.GANTETSU, "ガンテツ"],
     [CAMPAIGN_UNIT_IDS.MONKEY, "モンキー"],
+    [CAMPAIGN_UNIT_IDS.ZAKIMIYA, "ザキミヤ"],
+    [CAMPAIGN_UNIT_IDS.TKY, "TKY"],
+    [CAMPAIGN_UNIT_IDS.MRS_CHIHA, "Mrs.チハ"],
+    [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, "宮本武蔵"],
+    [CAMPAIGN_UNIT_IDS.MAYO_CHAN, "マヨちゃん"],
   ]);
-  assert.equal(new Set(CAMPAIGN_UNITS.map(({ id }) => id)).size, 11);
+  assert.equal(new Set(CAMPAIGN_UNITS.map(({ id }) => id)).size, 16);
+  for (const [stageNumber, unitId, costCaps] of [
+    [17, CAMPAIGN_UNIT_IDS.ZAKIMIYA, 240],
+    [18, CAMPAIGN_UNIT_IDS.TKY, 280],
+    [19, CAMPAIGN_UNIT_IDS.MRS_CHIHA, 300],
+    [20, CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, 340],
+    [20, CAMPAIGN_UNIT_IDS.MAYO_CHAN, 260],
+  ]) {
+    assert.deepEqual(CAMPAIGN_UNIT_BY_ID[unitId].unlock, {
+      type: "recruitment",
+      stageNumber,
+      costCaps,
+    });
+  }
+  for (const [stageNumber, unitId] of [
+    [17, CAMPAIGN_UNIT_IDS.ZAKIMIYA],
+    [18, CAMPAIGN_UNIT_IDS.TKY],
+    [19, CAMPAIGN_UNIT_IDS.MRS_CHIHA],
+  ]) {
+    assert.deepEqual(CAMPAIGN_RECRUITMENT_MILESTONES[stageNumber], {
+      storyJoinUnitIds: [],
+      discoveredUnitIds: [unitId],
+      recruitableUnitIds: [unitId],
+    });
+  }
+  assert.deepEqual(CAMPAIGN_RECRUITMENT_MILESTONES[20], {
+    storyJoinUnitIds: [],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+  });
+  assert.equal(CAMPAIGN_RECRUITMENT_MILESTONES[7], undefined);
   assert.equal(CAMPAIGN_UNIT_BY_ID.brawler.id, CAMPAIGN_UNIT_IDS.PAISEN);
   assert.equal(CAMPAIGN_UNIT_BY_ID.brute.id, CAMPAIGN_UNIT_IDS.TATARA);
   assert.equal(CAMPAIGN_UNIT_BY_ID["unit-rokka"].id, CAMPAIGN_UNIT_IDS.RAIDER);
@@ -384,7 +472,7 @@ test("eleven canonical playable units and guide-ikura use approved player-facing
   );
 });
 
-test("all eleven units separate canonical IDs from combat kinds and use formal runtime art", () => {
+test("all sixteen units separate canonical IDs from combat kinds and use formal runtime art", () => {
   for (const unit of CAMPAIGN_UNITS) {
     assert.match(unit.id, /^unit-/);
     assert.equal(unit.unitId, unit.id);
@@ -653,7 +741,7 @@ test("Stage 4 and Stage 6 story joins are free while Stage 5 only discovers Monk
 test("default save is versioned and contains initial progression, selection, and settings", () => {
   const save = createDefaultCampaignSave();
   assert.equal(save.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
-  assert.equal(save.schemaVersion, 7);
+  assert.equal(save.schemaVersion, 13);
   assert.equal(save.revision, 0);
   assert.equal(save.updatedAt, "");
   assert.equal(save.integrity, "");
@@ -664,12 +752,18 @@ test("default save is versioned and contains initial progression, selection, and
   assert.deepEqual(save.processedResultIds, []);
   assert.deepEqual(save.processedAcquisitionIds, []);
   assert.deepEqual(save.processedUpgradeIds, []);
+  assert.deepEqual(save.processedEquipmentTransactionIds, []);
+  assert.deepEqual(save.processedMigrationIds, []);
+  assert.deepEqual(save.migrationNotices, []);
+  assert.deepEqual(Object.values(save.unitLevels), Array(CAMPAIGN_UNITS.length).fill(1));
   assert.deepEqual(Object.values(save.unitRanks), Array(CAMPAIGN_UNITS.length).fill(0));
   assert.deepEqual(save.completedStageIds, []);
   assert.deepEqual(save.bestStarsByStage, {});
   assert.deepEqual(save.claimedStarRewardsByStage, {});
-  assert.equal(save.caps, 0);
+  assert.equal(save.caps, V090_CAPS_MIGRATION_BASE);
   assert.equal(save.supplies, save.caps);
+  assert.deepEqual(save.equipmentInventory, []);
+  assert.deepEqual(save.equipmentEnhancementLevels, {});
   assert.deepEqual(save.unlockedStageIds, [INITIAL_STAGE_ID]);
   assert.deepEqual(save.ownership, INITIAL_UNIT_IDS);
   assert.deepEqual(save.discovery, INITIAL_UNIT_IDS);
@@ -684,6 +778,7 @@ test("default save is versioned and contains initial progression, selection, and
   assert.equal(save.selectedPresetId, save.selectedFormationPresetId);
   assert.equal(CAMPAIGN_FORMATION_MAX_SLOTS, 7);
   assert.equal(save.lastSelectedStageId, INITIAL_STAGE_ID);
+  assert.deepEqual(save.outbreaks.survivalBossKinds, ["takuya", "gate-eater"]);
   assert.deepEqual(save.settings, {
     bgmEnabled: true,
     sfxEnabled: true,
@@ -816,8 +911,9 @@ test("migration accepts schema-less and v0 aliases, derives unlocks, and tolerat
   assert.deepEqual(migrated.completedStageIds, [STAGE_1]);
   assert.equal(migrated.bestStarsByStage[STAGE_1], 2);
   assert.deepEqual(migrated.claimedStarRewardsByStage[STAGE_1], [1]);
-  assert.equal(migrated.caps, 345);
-  assert.equal(migrated.supplies, 345);
+  assert.equal(migrated.caps, reorganizeLegacyCaps(345).nextCaps);
+  assert.equal(migrated.supplies, migrated.caps);
+  assert.deepEqual(migrated.processedMigrationIds, [V090_CAPS_MIGRATION_ID]);
   assert.equal(migrated.unlockedStageIds.includes(STAGE_2), true);
   assert.equal(migrated.ownership.includes(CAMPAIGN_UNIT_IDS.TATARA), true);
   assert.equal(migrated.unlockedUnitIds.includes(CAMPAIGN_UNIT_IDS.CRAZY_KING), true);
@@ -851,7 +947,7 @@ test("migration repairs malformed fields without crashing or removing mandatory 
   assert.equal(repaired.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
   assert.equal(repaired.bestStarsByStage[STAGE_1], 3);
   assert.deepEqual(repaired.claimedStarRewardsByStage[STAGE_1], [1, 2]);
-  assert.equal(repaired.supplies, 0);
+  assert.equal(repaired.supplies, reorganizeLegacyCaps(0).nextCaps);
   assert.equal(repaired.unlockedStageIds.includes(STAGE_1), true);
   assert.deepEqual(INITIAL_UNIT_IDS.every((id) => repaired.unlockedUnitIds.includes(id)), true);
   assert.equal(repaired.lastSelectedStageId, INITIAL_STAGE_ID);
@@ -898,14 +994,14 @@ test("schema v2 to v4 migration is idempotent and preserves progress, receipts, 
   };
   const migrated = migrateCampaignSave(schema2);
 
-  assert.equal(migrated.schemaVersion, 7);
+  assert.equal(migrated.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
   assert.equal(migrated.storyScriptVersion, "outbreak-origin-v8");
   assert.deepEqual(migrated.processedResultIds, schema2.processedResultIds);
   assert.deepEqual(migrated.completedStageIds, schema2.completedStageIds);
   assert.deepEqual(migrated.bestStarsByStage, schema2.bestStarsByStage);
   assert.deepEqual(migrated.claimedStarRewardsByStage, schema2.claimedStarRewardsByStage);
-  assert.equal(migrated.caps, schema2.supplies);
-  assert.equal(migrated.supplies, schema2.supplies);
+  assert.equal(migrated.caps, reorganizeLegacyCaps(schema2.supplies).nextCaps);
+  assert.equal(migrated.supplies, migrated.caps);
   assert.equal(migrated.lastSelectedStageId, schema2.lastSelectedStageId);
   assert.deepEqual(migrated.settings, { ...schema2.settings, battleEventMode: "first-time" });
   assert.deepEqual(migrated.readStoryEventIds, ["prologue-opening", "stage-nishijin-pre"]);
@@ -940,8 +1036,8 @@ test("v2, v3, and v4 migration preserves every formerly usable character and can
       unlockedUnitIds: ["brawler", "scout", "ranger", "medic", "brute", "crazy-king", "kumaverson", "babayaga", "gunner"],
       formationKinds: ["brawler", "medic", "gunner"],
     });
-    assert.equal(migrated.schemaVersion, 7);
-    assert.equal(migrated.caps, 432);
+    assert.equal(migrated.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
+    assert.equal(migrated.caps, reorganizeLegacyCaps(432).nextCaps);
     assert.deepEqual(migrated.processedResultIds, [`v${schemaVersion}-receipt`]);
     for (const unitId of [
       CAMPAIGN_UNIT_IDS.PAISEN,
@@ -1143,12 +1239,15 @@ test("caps recruitment and story joins are receipt-backed, free/paid as specifie
     baseHp: 1,
     baseMaxHp: 100,
   });
-  assert.equal(afterStage1.caps, CAMPAIGN_RECRUITMENT_COSTS[CAMPAIGN_UNIT_IDS.TATARA]);
+  assert.equal(
+    afterStage1.caps,
+    V090_CAPS_MIGRATION_BASE + CAMPAIGN_RECRUITMENT_COSTS[CAMPAIGN_UNIT_IDS.TATARA],
+  );
   const recruited = recruitCampaignUnit(afterStage1, "brute", { acquisitionId: "recruit-tatara-once" });
   assert.equal(recruited.result.applied, true);
   assert.equal(recruited.result.spentCaps, 150);
-  assert.equal(recruited.save.caps, 0);
-  assert.equal(recruited.save.supplies, 0);
+  assert.equal(recruited.save.caps, V090_CAPS_MIGRATION_BASE);
+  assert.equal(recruited.save.supplies, V090_CAPS_MIGRATION_BASE);
   assert.equal(isUnitOwned(recruited.save, CAMPAIGN_UNIT_IDS.TATARA), true);
   assert.equal(isUnitRecruitable(recruited.save, CAMPAIGN_UNIT_IDS.TATARA), false);
   assert.deepEqual(recruited.save.processedAcquisitionIds, ["recruit-tatara-once"]);
@@ -1202,7 +1301,7 @@ test("recruitment rejects undiscovered or underfunded units without consuming a 
   );
 });
 
-test("save integrity stamps canonical v7 data and strict inspection distinguishes missing, legacy, valid, and corrupt", () => {
+test("save integrity stamps canonical v8 data and strict inspection distinguishes missing, legacy, valid, and corrupt", () => {
   const save = applyStageResult(createDefaultCampaignSave(), STAGE_1, {
     resultId: "integrity-stage-1",
     won: true,
@@ -1244,7 +1343,7 @@ test("save integrity stamps canonical v7 data and strict inspection distinguishe
   }));
   assert.equal(legacy.status, "valid");
   assert.equal(legacy.reason, "migrated");
-  assert.equal(legacy.save.caps, 77);
+  assert.equal(legacy.save.caps, reorganizeLegacyCaps(77).nextCaps);
   assert.equal(legacy.save.ownership.includes(CAMPAIGN_UNIT_IDS.NAO), true);
   assert.equal(legacy.save.ownership.includes(CAMPAIGN_UNIT_IDS.RAIDER), true);
 });
@@ -1294,7 +1393,7 @@ test("v0.7.1 schema v5 integrity is verified before migration and rejects tamper
   assert.equal(valid.status, "valid");
   assert.equal(valid.sourceSchemaVersion, 5);
   assert.equal(valid.reason, "migrated");
-  assert.equal(valid.save.caps, 987);
+  assert.equal(valid.save.caps, reorganizeLegacyCaps(987).nextCaps);
 
   const tampered = { ...release071, caps: 1_987, revision: 42 };
   const rejected = inspectCampaignSaveCandidate(JSON.stringify(tampered));
@@ -1389,6 +1488,83 @@ test("the same result receipt applies rewards, stars, and unlocks exactly once",
   assert.deepEqual(duplicate.result.newlyUnlockedUnitIds, []);
   assert.deepEqual(duplicate.result.newlyRecruitableUnitIds, []);
   assert.equal(JSON.stringify(duplicate.save), snapshot);
+});
+
+test("stage settlement atomically records encounters, defeat counts, and per-unit totals once", () => {
+  const input = {
+    stageId: STAGE_1,
+    resultId: "campaign-record-stage-1",
+    won: true,
+    baseHp: 90,
+    baseMaxHp: 100,
+    battleSeconds: 71,
+    kills: 4,
+    unitsLost: 1,
+    encounteredEnemyKinds: ["walker", "runner"],
+    enemyDefeatsByKind: { walker: 3, runner: 1 },
+    unitStats: {
+      damageByUnit: { hachi: 420 },
+      damageTakenByUnit: { hachi: 60 },
+      healingByUnit: { nao: 80 },
+    },
+    completedAt: "2026-07-27T07:00:00.000Z",
+  };
+  const first = resolveStageResult(createDefaultCampaignSave(), input);
+  assert.equal(first.save.records.totals.battles, 1);
+  assert.equal(first.save.records.totals.victories, 1);
+  assert.equal(first.save.records.totals.capsEarned, first.result.totalReward);
+  assert.equal(first.save.records.defeatCountsByEnemy.walker, 3);
+  assert.equal(first.save.records.encountersByEnemy.runner.firstOperationId, STAGE_1);
+  assert.equal(first.save.records.unitStats.damageByUnit.hachi, 420);
+  assert.equal(first.save.records.unitStats.healingByUnit.nao, 80);
+
+  const duplicate = resolveStageResult(first.save, input);
+  assert.equal(duplicate.result.alreadyProcessed, true);
+  assert.deepEqual(duplicate.save.records, first.save.records);
+});
+
+test("schema 12 migration seeds only exact legacy kill totals and starts receipt outcomes at zero", () => {
+  const defaults = createDefaultCampaignSave();
+  const legacy = {
+    ...defaults,
+    schemaVersion: 12,
+    records: undefined,
+    processedResultIds: ["legacy-result-a", "legacy-result-b"],
+    completedStageIds: [STAGE_3],
+    survival: {
+      ...defaults.survival,
+      totalRuns: 4,
+      totalKills: 100,
+      totalBossKills: 3,
+    },
+    outbreaks: {
+      ...defaults.outbreaks,
+      clearedMissionIds: ["outbreak-mother-brood-vault"],
+      bossDefeatCounts: { mother: 2 },
+    },
+  };
+  const migrated = migrateCampaignSave(legacy);
+
+  assert.equal(migrated.records.totals.battles, 0);
+  assert.equal(migrated.records.totals.victories, 0);
+  assert.equal(migrated.records.totals.defeats, 0);
+  assert.equal(migrated.records.totals.kills, 100);
+  assert.equal(migrated.records.totals.bossKills, 6);
+  assert.equal(migrated.records.defeatCountsByEnemy.takuya, 1);
+  assert.equal(migrated.records.defeatCountsByEnemy.mother, 2);
+
+  const current = resolveStageResult(migrated, {
+    stageId: STAGE_1,
+    resultId: "schema-13-confirmed-result",
+    won: true,
+    baseHp: 100,
+    baseMaxHp: 100,
+    kills: 5,
+  }).save;
+  assert.equal(current.records.totals.battles, 1);
+  assert.equal(current.records.totals.victories, 1);
+  assert.equal(current.records.totals.kills, 105);
+  assert.equal(current.records.totals.bossKills, 6);
 });
 
 test("a persisted receipt remains idempotent after serialization and more than 200 later battles", () => {

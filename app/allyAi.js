@@ -40,6 +40,22 @@ function validLane(value) {
   return Number.isInteger(value) && value >= 0 && value <= 2;
 }
 
+export function mayoBossFlankLane({
+  unitId,
+  unitLane,
+  assignedLane,
+  bossLane,
+} = {}) {
+  if (!validLane(bossLane)) return validLane(assignedLane) ? assignedLane : validLane(unitLane) ? unitLane : 1;
+  const flanks = [bossLane - 1, bossLane + 1].filter(validLane);
+  if (flanks.includes(unitLane)) return unitLane;
+  if (flanks.includes(assignedLane)) return assignedLane;
+  if (flanks.length === 1) return flanks[0];
+  const stableKey = String(unitId ?? "");
+  const parity = [...stableKey].reduce((sum, character) => sum + character.codePointAt(0), 0) % flanks.length;
+  return flanks[parity];
+}
+
 function assignedLaneFor(unit, assignedLane) {
   for (const candidate of [assignedLane, unit?.assignedLane, unit?.anchorLane, unit?.lane]) {
     if (validLane(candidate)) return candidate;
@@ -317,6 +333,19 @@ export function decideAllyIntent({
   });
 
   if (selected) {
+    const selectedLane = selected.attackingCrawler && validLane(selected.enemy.assignedLane)
+      ? selected.enemy.assignedLane
+      : validLane(selected.enemy.lane)
+        ? selected.enemy.lane
+        : deploymentLane;
+    const destinationLane = unit.kind === "mayo-chan" && selected.enemy.boss === true
+      ? mayoBossFlankLane({
+        unitId: unit.id,
+        unitLane: unit.lane,
+        assignedLane: deploymentLane,
+        bossLane: selectedLane,
+      })
+      : selectedLane;
     const verticalDistance = Number.isFinite(selected.enemy.verticalDistance)
       ? selected.enemy.verticalDistance
       : Number.isFinite(unit.y) && Number.isFinite(selected.enemy.y)
@@ -358,11 +387,7 @@ export function decideAllyIntent({
       deadband,
       target: selected.enemy,
       assignedLane: deploymentLane,
-      destinationLane: selected.attackingCrawler && validLane(selected.enemy.assignedLane)
-        ? selected.enemy.assignedLane
-        : validLane(selected.enemy.lane)
-          ? selected.enemy.lane
-          : deploymentLane,
+      destinationLane,
       claimGranted: !selected.local
         && !selected.isPrevious
         && !selected.urgentDefense

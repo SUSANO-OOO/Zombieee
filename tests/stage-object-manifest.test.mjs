@@ -18,7 +18,7 @@ function publicFile(assetPath) {
   return path.join(ROOT, "public", assetPath.replace(/^\//, ""));
 }
 
-test("all six campaign stages expose audited production imagery and mission-object sources", async () => {
+test("campaign stages with dynamic objectives expose audited production imagery and mission-object sources", async () => {
   assert.deepEqual(stageObjectStageIds, [
     "stage-nishijin-shopping-street",
     "stage-sawara-ward-office",
@@ -26,14 +26,26 @@ test("all six campaign stages expose audited production imagery and mission-obje
     "stage-nishijin-station-gate",
     "stage-nishijin-station-platform",
     "stage-nishijin-station-tunnel-seal",
+    "stage-coastal-link-bridge",
   ]);
   const ids = new Set();
   for (const stageId of stageObjectStageIds) {
     const stage = STAGE_OBJECT_MANIFEST[stageId];
     const stationStage = stageId.includes("-station-");
-    assert.ok(stage.objects.length >= (stationStage ? 1 : 7), `${stageId} overlay count`);
-    assert.equal(stage.staticTreatment, stationStage ? "authored-background+cropped-mission-source" : "authored-in-production-background");
-    assert.ok(stage.productionInventory.length >= (stationStage ? 4 : 22), `${stageId} production inventory count`);
+    const dedicatedMissionStage = stageId === "stage-coastal-link-bridge";
+    assert.ok(stage.objects.length >= (stationStage || dedicatedMissionStage ? 1 : 7), `${stageId} overlay count`);
+    assert.equal(
+      stage.staticTreatment,
+      stationStage
+        ? "authored-background+cropped-mission-source"
+        : dedicatedMissionStage
+          ? "authored-background+dedicated-mission-source"
+          : "authored-in-production-background",
+    );
+    assert.ok(
+      stage.productionInventory.length >= (dedicatedMissionStage ? 1 : stationStage ? 4 : 22),
+      `${stageId} production inventory count`,
+    );
     assert.equal(new Set(stage.productionInventory.map((item) => item.id)).size, stage.productionInventory.length);
     for (const item of stage.productionInventory) {
       assert.ok(item.label.length > 0);
@@ -47,14 +59,14 @@ test("all six campaign stages expose audited production imagery and mission-obje
       assert.equal(ids.has(object.id), false, `duplicate overlay id: ${object.id}`);
       ids.add(object.id);
       assert.equal(object.productionTreatment, "generated-transparent-overlay-v1");
-      assert.match(object.path, /^\/art\/v0(?:60\/stage-objects|70\/stages\/objects)\/.+-v1\.png$/);
+      assert.match(object.path, /^\/art\/v0(?:60\/stage-objects|70\/stages\/objects|90\/stages)\/.+-v1\.png$/);
       assert.ok(object.placement.width > 0);
       const decoded = decodeRgbaPng(await readFile(publicFile(object.path)));
       assert.ok(alphaBounds(decoded), `${object.id} has visible RGBA content`);
       assert.equal(hasTransparentPerimeter(decoded, { x: 0, y: 0, w: decoded.width, h: decoded.height }, 12), true, `${object.id} transparent gutter`);
     }
   }
-  assert.equal(ids.size, 28);
+  assert.equal(ids.size, 29);
 });
 
 test("stageObjectsFor returns one default per mutable slot and exact requested states", () => {
@@ -84,6 +96,7 @@ test("required mutable production slots preserve the runtime gate and align obje
   assert.deepEqual(slotsFor("stage-nishijin-station-gate"), new Set(["mission-art-source"]));
   assert.deepEqual(slotsFor("stage-nishijin-station-platform"), new Set(["mission-art-source"]));
   assert.deepEqual(slotsFor("stage-nishijin-station-tunnel-seal"), new Set(["mission-art-source"]));
+  assert.deepEqual(slotsFor("stage-coastal-link-bridge"), new Set(["mission-art-source"]));
 
   const baseOverlays = stageObjectStageIds.flatMap((stageId) => STAGE_OBJECT_MANIFEST[stageId].objects)
     .filter((entry) => entry.replacesRuntimeSprite === "/infected-checkpoint-v1.png");
@@ -117,6 +130,7 @@ test("stage objects declare rear, objective, or foreground depth intent", () => 
     "station-gate-mission-art-source",
     "station-platform-mission-art-source",
     "station-tunnel-mission-art-source",
+    "coastal-power-rig",
   ]);
   const objectiveIds = new Set([
     "nishijin-infection-node-active",

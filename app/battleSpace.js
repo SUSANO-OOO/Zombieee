@@ -6,6 +6,15 @@ import {
   nearestLogicalLane,
   stageGeometryFor,
 } from "./stageGeometry.js";
+import { combatPresentationFor } from "./combatPresentation.js";
+import {
+  COMPACT_BATTLE_SPRITE_SCALE,
+  SPRITE_DIRECTIONS,
+  fitSpriteBattleDisplaySize,
+  spriteBattleDisplaySizeFor,
+  spriteFrameFor,
+  spriteStatesFor,
+} from "./spriteManifest.js";
 
 const TAU = Math.PI * 2;
 const SEARCH_ANGLE_COUNT = 24;
@@ -282,38 +291,139 @@ export function nearestValidBattlefieldPlacement({
   });
 }
 
+export function enemyRenderedVisualHalfWidth(kind) {
+  try {
+    const displaySize = spriteBattleDisplaySizeFor(kind);
+    const maximumBodyScale = Math.max(
+      ...Object.values(combatPresentationFor(kind).clips)
+        .map(({ bodyScale }) => nonNegative(bodyScale, 1)),
+    );
+    const maximumRenderedWidth = Math.max(
+      ...spriteStatesFor(kind).flatMap((state) => SPRITE_DIRECTIONS.map((direction) => (
+        fitSpriteBattleDisplaySize(
+          kind,
+          spriteFrameFor(kind, state, direction),
+          displaySize,
+        ).w
+      ))),
+    );
+    return maximumRenderedWidth * COMPACT_BATTLE_SPRITE_SCALE * maximumBodyScale / 2;
+  } catch {
+    return 0;
+  }
+}
+
 function spawnClassGeometry(kind) {
   const enemy = enemyContentFor(kind);
   const spawnClass = enemy?.spawnClass ?? "normal";
+  const bodyRadius = nonNegative(enemy?.bodyRadius, 11);
   const clearance = spawnClass === "boss" ? 49 : spawnClass === "heavy" ? 43 : 31;
+  const estimatedVisualHalfWidth = spawnClass === "boss"
+    ? Math.max(58, bodyRadius * 2.45)
+    : spawnClass === "heavy"
+      ? Math.max(36, bodyRadius * 1.9)
+      : Math.max(26, bodyRadius * 1.75);
+  const visualHalfWidth = Math.max(
+    estimatedVisualHalfWidth,
+    enemyRenderedVisualHalfWidth(kind),
+  );
   const entrySpeed = spawnClass === "boss" ? 29
     : spawnClass === "heavy" ? 38
       : ["runner", "sprinter"].includes(kind) ? 62
         : 52;
-  return { clearance, entrySpeed };
+  return { bodyRadius, clearance, entrySpeed, visualHalfWidth, spawnClass };
+}
+
+export const MISSION_SPAWN_PROFILES = deepFreeze({
+  assault: {
+    id: "infected-base-gate",
+    entryMode: "base-interior",
+    outsideMargin: 0,
+    readyPadding: 0,
+  },
+  "boss-assault": {
+    id: "boss-right-edge",
+    entryMode: "right-edge-outside",
+    outsideMargin: 18,
+    readyPadding: 10,
+  },
+  "timed-defense": {
+    id: "defense-right-edge",
+    entryMode: "right-edge-outside",
+    outsideMargin: 14,
+    readyPadding: 8,
+  },
+  escort: {
+    id: "escort-right-edge",
+    entryMode: "right-edge",
+    outsideMargin: 4,
+    readyPadding: 6,
+  },
+  "sequential-seal": {
+    id: "containment-right-edge",
+    entryMode: "right-edge",
+    outsideMargin: 6,
+    readyPadding: 8,
+  },
+  survival: {
+    id: "survival-infection-breach",
+    entryMode: "right-edge-outside",
+    outsideMargin: 32,
+    readyPadding: 14,
+  },
+});
+
+export function enemySpawnProfileFor(missionType) {
+  return MISSION_SPAWN_PROFILES[missionType] ?? MISSION_SPAWN_PROFILES.assault;
 }
 
 export function enemySpawnPortalPoint({
   stageId,
   entryId = 1,
   kind = "walker",
+  missionType = "assault",
   viewport = STAGE_VIEWPORT_IDS.STANDARD,
 } = {}) {
   const space = battleSpaceFor(stageId, viewport);
   const portals = space.spawnPortals.enemy;
   const slot = Math.abs(Math.trunc(finite(entryId, 1)) * 7 + kind.length * 3) % portals.length;
   const portal = portals[slot];
-  const { clearance, entrySpeed } = spawnClassGeometry(kind);
+  const {
+    bodyRadius,
+    clearance,
+    entrySpeed,
+    visualHalfWidth,
+    spawnClass,
+  } = spawnClassGeometry(kind);
+  const profile = enemySpawnProfileFor(missionType);
   const internalRoute = nearestLogicalLane(stageId, portal.entry.y, space.viewportId);
+  const usesRightEdge = profile.entryMode !== "base-interior";
+  const x = usesRightEdge
+    ? space.world.width + visualHalfWidth + profile.outsideMargin
+    : portal.hidden.x;
+  const combatReadyX = usesRightEdge
+    ? Math.min(
+      space.world.width - visualHalfWidth - profile.readyPadding,
+      space.walkableArea.maxX - (spawnClass === "boss" ? visualHalfWidth : bodyRadius),
+    )
+    : portal.entry.x - clearance;
   return deepFreeze({
     portalId: portal.id,
+    spawnProfileId: profile.id,
+    entryMode: profile.entryMode,
     routeId: `internal-route-${internalRoute.index + 1}`,
     legacyLane: internalRoute.index,
-    x: portal.hidden.x,
+    x,
     y: portal.hidden.y,
-    combatReadyX: portal.entry.x - clearance,
+    combatReadyX,
     combatReadyY: portal.entry.y,
     entrySpeed,
+    bodyRadius,
+    visualHalfWidth,
+    spawnClass,
+    targetableDuringEntry: false,
+    canAttackDuringEntry: false,
+    collisionDuringEntry: false,
   });
 }
 
@@ -332,8 +442,10 @@ export function friendlyDeploymentPoint({
     y: portal.hidden.y,
     rampFootX: portal.rampFoot.x,
     rampFootY: portal.rampFoot.y,
-    combatReadyX: portal.entry.x,
-    combatReadyY: portal.entry.y,
+    // Combat begins at the authored ramp foot. A second invisible transit to
+    // the lane entry made units appear to float out of the CRAWLER door.
+    combatReadyX: portal.rampFoot.x,
+    combatReadyY: portal.rampFoot.y,
   });
 }
 

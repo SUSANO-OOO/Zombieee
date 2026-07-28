@@ -8,7 +8,8 @@ import {
 import {
   COMMAND_INITIAL,
   COMMAND_MAX,
-  COMMAND_REGEN,
+  STANDARD_COMMAND_REGEN,
+  STAGE_20_COMMAND_REGEN,
   UNIT_CARDS,
 } from "../app/gameRules.js";
 import {
@@ -21,8 +22,8 @@ import {
 } from "../app/stageBalanceSimulation.js";
 import { applyUnitProgression } from "../app/unitProgression.js";
 
-test("balance facts are derived from all sixteen canonical wave schedules", () => {
-  assert.equal(CAMPAIGN_STAGES.length, 16);
+test("balance facts are derived from all twenty canonical wave schedules", () => {
+  assert.equal(CAMPAIGN_STAGES.length, 20);
   for (const stage of CAMPAIGN_STAGES) {
     const facts = stageBalanceWaveFacts(stage.id);
     const expectedEnemyCount = stage.waves.reduce((total, wave) => (
@@ -47,7 +48,10 @@ test("reference simulations use the seven-slot limit and current COMMAND economy
     assert.ok(result.slotCount >= 1 && result.slotCount <= CAMPAIGN_FORMATION_MAX_SLOTS, stage.id);
     assert.equal(result.command.initial, COMMAND_INITIAL);
     assert.equal(result.command.maximum, COMMAND_MAX);
-    assert.equal(result.command.regenPerSecond, COMMAND_REGEN);
+    assert.equal(
+      result.command.regenPerSecond,
+      stage.stageNumber === 20 ? STAGE_20_COMMAND_REGEN : STANDARD_COMMAND_REGEN,
+    );
     assert.equal(result.command.deployments.length, formation.length, stage.id);
     assert.ok(result.command.deployments.every(({ commandAfter }) => commandAfter >= 0 && commandAfter <= COMMAND_MAX));
     assert.equal(
@@ -101,7 +105,7 @@ test("Stage 4-6 each have three successful formations with no mandatory unit", (
 });
 
 test("Stage 7-16 each clear with three non-mandatory reference formations", () => {
-  for (const stage of CAMPAIGN_STAGES.slice(6)) {
+  for (const stage of CAMPAIGN_STAGES.slice(6, 16)) {
     const formations = P4_BALANCE_FORMATIONS[stage.id];
     assert.equal(formations.length, 3, stage.id);
     assert.deepEqual(formationIntersection(formations), [], `${stage.id} has a hidden mandatory pick`);
@@ -115,6 +119,27 @@ test("Stage 7-16 each clear with three non-mandatory reference formations", () =
       assert.equal(result.outcome, "won", `${stage.id}/${index}: ${JSON.stringify(result)}`);
       assert.ok(result.baseHp > 0, `${stage.id}/${index}`);
       assert.equal(result.waves.spawned, result.waves.scheduled, `${stage.id}/${index}`);
+    }
+  }
+});
+
+test("Stage 17-20 clear with three non-mandatory formations and resolve every new infected wave", () => {
+  for (const stage of CAMPAIGN_STAGES.slice(16)) {
+    const formations = P4_BALANCE_FORMATIONS[stage.id];
+    assert.equal(formations.length, 3, stage.id);
+    assert.deepEqual(formationIntersection(formations), [], `${stage.id} has a hidden mandatory pick`);
+    for (const [index, formation] of formations.entries()) {
+      const result = simulateStageBalance({
+        stageId: stage.id,
+        formation,
+        seed: `v090-${stage.stageNumber}-${index}`,
+      });
+      assert.equal(result.outcome, "won", `${stage.id}/${index}: ${JSON.stringify(result)}`);
+      assert.ok(result.baseHp > 0, `${stage.id}/${index}`);
+      assert.equal(result.waves.spawned, result.waves.scheduled, `${stage.id}/${index}`);
+      if (stage.id === CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL) {
+        assert.equal(result.waves.defeatedKinds.includes("kurome"), true, `${stage.id}/${index}`);
+      }
     }
   }
 });

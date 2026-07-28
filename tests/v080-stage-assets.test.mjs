@@ -11,7 +11,7 @@ import { PRODUCTION_VISUALS } from "../app/productionVisuals.js";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputRoot = path.join(root, "public", "art", "v080", "stages");
 const sourceRoot = path.join(root, "assets", "source", "v080", "stages");
-const expansionStages = CAMPAIGN_STAGES.slice(6);
+const expansionStages = CAMPAIGN_STAGES.slice(6, 16);
 
 test("Version 0.8.0 ships ten distinct 1600x900 stage variants from five source masters", async () => {
   const stagePaths = expansionStages.map(({ id }) => PRODUCTION_VISUALS.stages[id]);

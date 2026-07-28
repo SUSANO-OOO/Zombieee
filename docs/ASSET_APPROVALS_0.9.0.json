@@ -1,0 +1,651 @@
+{
+  "schemaVersion": 1,
+  "version": "0.9.0",
+  "reviewedAt": "2026-07-28",
+  "status": "active-partial",
+  "scope": [
+    "assets/source/v090/characters/",
+    "public/art/v090/characters/"
+  ],
+  "rightsProvenance": {
+    "producerProvidedInputs": [
+      {
+        "unitId": "unit-zakimiya",
+        "messageReference": "producer-message-2026-07-26-image-1",
+        "path": "assets/source/v090/characters/zakimiya-identity-master-r1.png",
+        "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7",
+        "approval": "The producer directly supplied this image and explicitly fixed it as Zakimiya's sole formal identity master for derivative production, repository inclusion, and game use."
+      },
+      {
+        "unitId": "unit-tky",
+        "messageReference": "producer-message-2026-07-26-image-2",
+        "path": "assets/source/v090/characters/tky-identity-master-r1.png",
+        "sha256": "6897a7406bcb6fc36b3e376f0f6db8c9240c83641e71e013a6252458531917c8",
+        "approval": "The producer directly supplied this image and explicitly fixed it as TKY's sole formal identity master for derivative production, repository inclusion, and game use."
+      },
+      {
+        "unitId": "unit-mrs-chiha",
+        "messageReference": "producer-message-2026-07-26-image-3",
+        "path": "assets/source/v090/characters/mrs-chiha-identity-master-r1.png",
+        "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83",
+        "approval": "The producer directly supplied this image and explicitly fixed it as Mrs. Chiha's sole formal identity master for derivative production, repository inclusion, and game use."
+      },
+      {
+        "unitId": "unit-miyamoto-musashi",
+        "messageReference": "producer-message-2026-07-26-image-4",
+        "path": "assets/source/v090/characters/miyamoto-musashi-identity-master-r1.png",
+        "sha256": "9d2a1ee6e8dd56b5993a1386bcecaa89c219b83cd77a0aaadab080553f6182e9",
+        "approval": "The producer directly supplied this image and explicitly fixed it as Miyamoto Musashi's sole formal identity master for derivative production, repository inclusion, and game use."
+      },
+      {
+        "unitId": "unit-mayo-chan",
+        "messageReference": "producer-message-2026-07-26-image-5",
+        "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+        "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c",
+        "approval": "The producer directly supplied this image and explicitly fixed it as Mayo-chan's sole formal identity master, and authorized a feral ability-state derivative of the same individual for repository inclusion and game use."
+      }
+    ],
+    "thirdPartyDownloadedVisuals": false,
+    "publicRedistribution": "The producer directly authorized repository and game use of the supplied master and its derivatives. OpenAI image-generation outputs are retained under the applicable OpenAI Content terms and producer direction. This record does not grant a separate CC0 or standalone reuse license.",
+    "identityIsolation": "Every character derivative in this ledger uses only that character's approved identity master or a ledger-recorded derivative from it; no other character portrait or battle sprite is an input."
+  },
+  "assets": [
+    {
+      "assetId": "V090-ZAKIMIYA-IDENTITY@r1",
+      "kind": "producer-identity-master",
+      "path": "assets/source/v090/characters/zakimiya-identity-master-r1.png",
+      "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7",
+      "bytes": 1619883,
+      "width": 1024,
+      "height": 1536,
+      "sourceAssetIds": [],
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-CUTOUT-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/zakimiya-cutout-source-r1.png",
+      "sha256": "50c0e3bd0ff028a700c5051353f8d5d2a3e28c23ec0fda2c5f0cba63d5ed4259",
+      "bytes": 1676770,
+      "width": 1024,
+      "height": 1536,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-IDENTITY@r1"
+      ],
+      "processing": "OpenAI image generation referenced only the approved identity master to create a blue-screen action cutout while preserving face, age, build, clothing, bottle loadout, and weapon.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-COMBAT-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/zakimiya-combat-poses-source-r1.png",
+      "sha256": "3413bb6050ecc712254e5250eab452f7f13e506c35fc3f9150fe24d8710170c9",
+      "bytes": 1550436,
+      "width": 1536,
+      "height": 1024,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-IDENTITY@r1"
+      ],
+      "processing": "OpenAI image generation referenced only the approved identity master to create seven combat poses with the same person, intact whisky bottle, clothing, proportions, and grounded footwear.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-REFERENCE@r1",
+      "kind": "runtime-reference-copy",
+      "path": "public/art/v090/characters/reference/zakimiya-identity-master-r1.png",
+      "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7",
+      "bytes": 1619883,
+      "width": 1024,
+      "height": 1536,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-IDENTITY@r1"
+      ],
+      "processing": "Byte-identical versioned repository copy.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-EVENT-PORTRAIT@r1",
+      "kind": "event-portrait",
+      "path": "public/art/v090/characters/portraits/zakimiya-event-portrait-r1.webp",
+      "sha256": "146b8681604425b3384ffa6100e1d2b94d59d8e5f7b41f7c2dbd48cb2755945a",
+      "bytes": 63906,
+      "width": 512,
+      "height": 640,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-IDENTITY@r1"
+      ],
+      "processing": "build-v090-zakimiya-assets.mjs edge-connected background removal, identity-preserving upper-body crop on transparent canvas, resize, and WebP encode.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-FORMATION-CARD@r1",
+      "kind": "formation-and-personnel-card",
+      "path": "public/art/v090/characters/cards/zakimiya-formation-card-r1.webp",
+      "sha256": "f3593435bddd9b5a65d9b5c8fb2a4a48f913ba88b03808a221cbd3cc08fb357f",
+      "bytes": 44056,
+      "width": 512,
+      "height": 512,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-IDENTITY@r1"
+      ],
+      "processing": "build-v090-zakimiya-assets.mjs alpha upper-body crop plus project-authored whisky motif, dark card backdrop, and role frame.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-BATTLE@r1",
+      "kind": "battle-atlas",
+      "path": "public/art/v090/characters/zakimiya-battle-r1.png",
+      "sha256": "9fcf28a4575d2757a94f7f6791e06ea95e13fbd7b3ceba40fd1d9fd515745b7c",
+      "bytes": 1228231,
+      "width": 3360,
+      "height": 896,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-COMBAT-SOURCE@r1"
+      ],
+      "processing": "build-v090-zakimiya-assets.mjs chroma removal, component isolation, seven grounded poses, and mirrored directions.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-ZAKIMIYA-FIRE-WHISKY-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/zakimiya-fire-whiskey-ready-r1.svg",
+      "sha256": "37e9681292537af1de84193a491f21159bfaed692a19acc559072fe394ef32df",
+      "bytes": 1310,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [
+        "V090-ZAKIMIYA-IDENTITY@r1"
+      ],
+      "processing": "Project-authored SVG using the approved intact whisky bottle and flame motif; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-TKY-IDENTITY@r1",
+      "kind": "producer-identity-master",
+      "path": "assets/source/v090/characters/tky-identity-master-r1.png",
+      "sha256": "6897a7406bcb6fc36b3e376f0f6db8c9240c83641e71e013a6252458531917c8",
+      "bytes": 1723689,
+      "width": 1122,
+      "height": 1402,
+      "sourceAssetIds": [],
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-TKY-COMBAT-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/tky-combat-poses-source-r1.png",
+      "sha256": "30aac55739f7e13ceb5d026b8fc2ea24d1cb194e737c9fb06e9cfa9a73acdc43",
+      "bytes": 1465318,
+      "width": 1774,
+      "height": 887,
+      "sourceAssetIds": ["V090-TKY-IDENTITY@r1"],
+      "processing": "OpenAI image generation referenced only the approved TKY identity master to author seven grounded combat poses while preserving face, hair, clothing, build, and plasma blade.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-TKY-REFERENCE@r1",
+      "kind": "runtime-reference-copy",
+      "path": "public/art/v090/characters/reference/tky-identity-master-r1.png",
+      "sha256": "6897a7406bcb6fc36b3e376f0f6db8c9240c83641e71e013a6252458531917c8",
+      "bytes": 1723689,
+      "width": 1122,
+      "height": 1402,
+      "sourceAssetIds": ["V090-TKY-IDENTITY@r1"],
+      "processing": "Byte-identical versioned repository copy.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-TKY-EVENT-PORTRAIT@r1",
+      "kind": "event-portrait",
+      "path": "public/art/v090/characters/portraits/tky-event-portrait-r1.webp",
+      "sha256": "1250070d3898bf3c05a8d71996a32b3f73249fe47b984dd00986355e1cf75de9",
+      "bytes": 69208,
+      "width": 512,
+      "height": 640,
+      "sourceAssetIds": ["V090-TKY-IDENTITY@r1"],
+      "processing": "build-v090-new-playable-human-assets.mjs edge-connected background removal, identity-preserving upper-body crop on transparent canvas, resize, and WebP encode.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-TKY-FORMATION-CARD@r1",
+      "kind": "formation-and-personnel-card",
+      "path": "public/art/v090/characters/cards/tky-formation-card-r1.webp",
+      "sha256": "2777b377a159be05a88e3c5ce5bf142812e009fafe055dc165350903f31d3be9",
+      "bytes": 45244,
+      "width": 512,
+      "height": 512,
+      "sourceAssetIds": ["V090-TKY-IDENTITY@r1"],
+      "processing": "build-v090-new-playable-human-assets.mjs alpha upper-body crop plus project-authored plasma-blade motif, dark card backdrop, and role frame.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-TKY-BATTLE@r1",
+      "kind": "battle-atlas",
+      "path": "public/art/v090/characters/tky-battle-r1.png",
+      "sha256": "1d1eeaa8915c1e510109d7731d9ae50235baaf047f809933d16e5edcf8e178dc",
+      "bytes": 1634385,
+      "width": 3360,
+      "height": 896,
+      "sourceAssetIds": ["V090-TKY-COMBAT-SOURCE@r1"],
+      "processing": "build-v090-new-playable-human-assets.mjs background removal, component isolation, seven grounded poses, and mirrored directions.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-TKY-LIGHT-BLADE-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/tky-light-blade-ready-r1.svg",
+      "sha256": "5650a963a0d87a3e03d59e72e750d4348e62d811e0552b9759f02debda19274c",
+      "bytes": 1125,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": ["V090-TKY-IDENTITY@r1"],
+      "processing": "Project-authored SVG using the approved magenta plasma blade and horizontal arc motif; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MRS-CHIHA-IDENTITY@r1",
+      "kind": "producer-identity-master",
+      "path": "assets/source/v090/characters/mrs-chiha-identity-master-r1.png",
+      "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83",
+      "bytes": 1731340,
+      "width": 1086,
+      "height": 1448,
+      "sourceAssetIds": [],
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MRS-CHIHA-COMBAT-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/mrs-chiha-combat-poses-source-r1.png",
+      "sha256": "7c65486d12449639d919dea2a2306eb01602ffbb0d0f5a826189affa59396304",
+      "bytes": 1573769,
+      "width": 1774,
+      "height": 887,
+      "sourceAssetIds": ["V090-MRS-CHIHA-IDENTITY@r1"],
+      "processing": "OpenAI image generation referenced only the approved Mrs. Chiha identity master to author seven grounded combat poses while preserving face, hair, clothing, build, and rotary grenade launcher.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MRS-CHIHA-REFERENCE@r1",
+      "kind": "runtime-reference-copy",
+      "path": "public/art/v090/characters/reference/mrs-chiha-identity-master-r1.png",
+      "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83",
+      "bytes": 1731340,
+      "width": 1086,
+      "height": 1448,
+      "sourceAssetIds": ["V090-MRS-CHIHA-IDENTITY@r1"],
+      "processing": "Byte-identical versioned repository copy.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MRS-CHIHA-EVENT-PORTRAIT@r1",
+      "kind": "event-portrait",
+      "path": "public/art/v090/characters/portraits/mrs-chiha-event-portrait-r1.webp",
+      "sha256": "2efe8461e8d38ee27404bd5c15717a06f076ff251c8ecbda4cf1d6d3da736337",
+      "bytes": 65184,
+      "width": 512,
+      "height": 640,
+      "sourceAssetIds": ["V090-MRS-CHIHA-IDENTITY@r1"],
+      "processing": "build-v090-new-playable-human-assets.mjs edge-connected background removal, identity-preserving upper-body crop on transparent canvas, resize, and WebP encode.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MRS-CHIHA-FORMATION-CARD@r1",
+      "kind": "formation-and-personnel-card",
+      "path": "public/art/v090/characters/cards/mrs-chiha-formation-card-r1.webp",
+      "sha256": "ae25ec0426c8fece2ee85bf191a3c52bdf5d22f6361e2ac0143f603c0be50e1f",
+      "bytes": 46200,
+      "width": 512,
+      "height": 512,
+      "sourceAssetIds": ["V090-MRS-CHIHA-IDENTITY@r1"],
+      "processing": "build-v090-new-playable-human-assets.mjs alpha upper-body crop plus project-authored rotary-cylinder motif, dark card backdrop, and role frame.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MRS-CHIHA-BATTLE@r1",
+      "kind": "battle-atlas",
+      "path": "public/art/v090/characters/mrs-chiha-battle-r1.png",
+      "sha256": "0cb818f6bd68b276eb74b661b7a312019b22de8a25755ff0a3be25d48abd2135",
+      "bytes": 1609973,
+      "width": 3360,
+      "height": 896,
+      "sourceAssetIds": ["V090-MRS-CHIHA-COMBAT-SOURCE@r1"],
+      "processing": "build-v090-new-playable-human-assets.mjs background removal, adjacent-source-fragment erasure, seven grounded poses, and mirrored directions.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MRS-CHIHA-FULL-SALVO-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/mrs-chiha-full-salvo-ready-r1.svg",
+      "sha256": "3ab5bc198379381f7b8fe3b3ca1a5f735fb9c67a641d5764045761fd67a41f39",
+      "bytes": 1002,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": ["V090-MRS-CHIHA-IDENTITY@r1"],
+      "processing": "Project-authored SVG using a rotary cylinder and multiple impact points; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MIYAMOTO-MUSASHI-IDENTITY@r1",
+      "kind": "producer-identity-master",
+      "path": "assets/source/v090/characters/miyamoto-musashi-identity-master-r1.png",
+      "sha256": "9d2a1ee6e8dd56b5993a1386bcecaa89c219b83cd77a0aaadab080553f6182e9",
+      "bytes": 1911543,
+      "width": 1024,
+      "height": 1536,
+      "sourceAssetIds": [],
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MIYAMOTO-MUSASHI-COMBAT-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/miyamoto-musashi-combat-poses-source-r1.png",
+      "sha256": "8e3b9f08faf1ff7d5cf2eaabc85ca6c4cdd2b80eaa7fb8718f338afeedb17af5",
+      "bytes": 1600645,
+      "width": 1536,
+      "height": 1024,
+      "sourceAssetIds": ["V090-MIYAMOTO-MUSASHI-IDENTITY@r1"],
+      "processing": "OpenAI image generation referenced only the approved Miyamoto Musashi identity master to author seven grounded combat poses while preserving face, topknot, clothing, build, and both katana.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MIYAMOTO-MUSASHI-REFERENCE@r1",
+      "kind": "runtime-reference-copy",
+      "path": "public/art/v090/characters/reference/miyamoto-musashi-identity-master-r1.png",
+      "sha256": "9d2a1ee6e8dd56b5993a1386bcecaa89c219b83cd77a0aaadab080553f6182e9",
+      "bytes": 1911543,
+      "width": 1024,
+      "height": 1536,
+      "sourceAssetIds": ["V090-MIYAMOTO-MUSASHI-IDENTITY@r1"],
+      "processing": "Byte-identical versioned repository copy.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MIYAMOTO-MUSASHI-EVENT-PORTRAIT@r1",
+      "kind": "event-portrait",
+      "path": "public/art/v090/characters/portraits/miyamoto-musashi-event-portrait-r1.webp",
+      "sha256": "4ae18e2c96f2ef647dabc1518b1316b23c572fecd1b6230f163f7cea44d2bb64",
+      "bytes": 89478,
+      "width": 512,
+      "height": 640,
+      "sourceAssetIds": ["V090-MIYAMOTO-MUSASHI-IDENTITY@r1"],
+      "processing": "build-v090-new-playable-human-assets.mjs edge-connected background removal, identity-preserving upper-body crop on transparent canvas, resize, and WebP encode.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MIYAMOTO-MUSASHI-FORMATION-CARD@r1",
+      "kind": "formation-and-personnel-card",
+      "path": "public/art/v090/characters/cards/miyamoto-musashi-formation-card-r1.webp",
+      "sha256": "a706f50e43d96bcee9967435c12ce5e71b9057cb8eba53ef83f2572bae64997f",
+      "bytes": 52204,
+      "width": 512,
+      "height": 512,
+      "sourceAssetIds": ["V090-MIYAMOTO-MUSASHI-IDENTITY@r1"],
+      "processing": "build-v090-new-playable-human-assets.mjs alpha upper-body crop plus project-authored crossed-katana motif, dark card backdrop, and role frame.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MIYAMOTO-MUSASHI-BATTLE@r1",
+      "kind": "battle-atlas",
+      "path": "public/art/v090/characters/miyamoto-musashi-battle-r1.png",
+      "sha256": "e05b1eedcdae7371b6b4fac63e09c492e907593c4951aaec63a642b9e36637e6",
+      "bytes": 1791434,
+      "width": 3360,
+      "height": 896,
+      "sourceAssetIds": ["V090-MIYAMOTO-MUSASHI-COMBAT-SOURCE@r1"],
+      "processing": "build-v090-new-playable-human-assets.mjs background removal, component isolation, seven grounded poses, and mirrored directions.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MIYAMOTO-MUSASHI-MUKU-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/miyamoto-musashi-muku-ready-r1.svg",
+      "sha256": "f274e0517cff918af864b3ae7d11bbcc37d284402e20d796f800e9cf1c7a82eb",
+      "bytes": 910,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": ["V090-MIYAMOTO-MUSASHI-IDENTITY@r1"],
+      "processing": "Project-authored SVG using two katana and a hollow center circle; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-IDENTITY@r1",
+      "kind": "producer-identity-master",
+      "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+      "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c",
+      "bytes": 1705766,
+      "width": 1122,
+      "height": 1402,
+      "sourceAssetIds": [],
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-COMBAT-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/mayo-chan-combat-poses-source-r1.png",
+      "sha256": "fe9c29393e8da17ba6f72be33498a96b6ea3212ffb0125f738ab10aac453ff63",
+      "bytes": 1246638,
+      "width": 2172,
+      "height": 724,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "OpenAI image generation referenced only the approved Mayo-chan identity master to author seven grounded Chihuahua combat poses while preserving face, cream coat, ears, curled tail, yellow bandana, harness, medical pouches, and small body.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-FERAL-SOURCE@r1",
+      "kind": "openai-generated-identity-derivative",
+      "path": "assets/source/v090/characters/mayo-chan-feral-poses-source-r1.png",
+      "sha256": "b6e86d70fcd761ed80197a20c0ee386eeab45ea3820815bc25db8856b2e5aa74",
+      "bytes": 1411304,
+      "width": 2153,
+      "height": 730,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "Producer-authorized OpenAI derivative of the same Mayo-chan individual in the feral ability state; Chihuahua breed, face, coat, ears, tail, size, bandana, harness, and equipment remain recognizable while infection anomaly, split mouth, and tendrils are added without excessive gore.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-REFERENCE@r1",
+      "kind": "runtime-reference-copy",
+      "path": "public/art/v090/characters/reference/mayo-chan-identity-master-r1.png",
+      "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c",
+      "bytes": 1705766,
+      "width": 1122,
+      "height": 1402,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "Byte-identical versioned repository copy.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-EVENT-PORTRAIT@r1",
+      "kind": "event-portrait",
+      "path": "public/art/v090/characters/portraits/mayo-chan-event-portrait-r1.webp",
+      "sha256": "1d8dae611c7c78de0f3ec5afd0914fbd33dc7e7126fd219402790de3d9d65990",
+      "bytes": 107848,
+      "width": 512,
+      "height": 640,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "build-v090-mayo-assets.mjs edge-connected background removal, identity-preserving normal-state crop on transparent canvas, resize, and WebP encode.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-FORMATION-CARD@r1",
+      "kind": "formation-and-personnel-card",
+      "path": "public/art/v090/characters/cards/mayo-chan-formation-card-r1.webp",
+      "sha256": "911cfc0587cc5de1d125ffd5ab5d5e04f3dcdd08003c905e0499c20598b145d4",
+      "bytes": 74184,
+      "width": 512,
+      "height": 512,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "build-v090-mayo-assets.mjs alpha normal-state crop plus project-authored Chihuahua and medical-harness motif, dark card backdrop, and role frame.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-BATTLE@r1",
+      "kind": "battle-atlas",
+      "path": "public/art/v090/characters/mayo-chan-battle-r1.png",
+      "sha256": "9b22480d26b1ad892a086817eea15c993c4af24d8df5c4fb33a4a8d71a33c86c",
+      "bytes": 2789017,
+      "width": 3360,
+      "height": 896,
+      "sourceAssetIds": ["V090-MAYO-CHAN-COMBAT-SOURCE@r1"],
+      "processing": "build-v090-mayo-assets.mjs background removal, seven grounded Chihuahua poses, and mirrored directions.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-FERAL-BATTLE@r1",
+      "kind": "battle-atlas",
+      "path": "public/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c",
+      "bytes": 3550255,
+      "width": 3360,
+      "height": 896,
+      "sourceAssetIds": ["V090-MAYO-CHAN-FERAL-SOURCE@r1"],
+      "processing": "build-v090-mayo-assets.mjs background removal and seven grounded feral-state poses; same-individual identity locks remain visible.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MAYO-CHAN-FERAL-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/mayo-chan-feral-ready-r1.svg",
+      "sha256": "f53be2c561956295ef732e0d7747e7493a130d972cd927f03b2a8e88af70054c",
+      "bytes": 1454,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
+      "processing": "Project-authored SVG using the approved Chihuahua face, yellow bandana, and red feral-speed accent; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-PAISEN-KIAI-COMBO-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/paisen-kiai-combo-ready-r1.svg",
+      "sha256": "58631e79195c6d9d0c88d46ce83f3a9498644953feb256d2a8b73736a42008f2",
+      "bytes": 985,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using the canonical chained-fist silhouette and final impact burst; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-HACHI-INTERCEPT-DASH-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/hachi-intercept-dash-ready-r1.svg",
+      "sha256": "cd3286320fc34e2569c1c816f29646841ce1dacfbcf5261411ec34476582dd32",
+      "bytes": 834,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using Hachi's canonical crowbar hook and three-speed-line intercept silhouette; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MIZUCHI-PRECISION-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/mizuchi-precision-ready-r1.svg",
+      "sha256": "67b93616401000a96dcb770fd4754105ef4103e63fcdefef764d846fec9ca165",
+      "bytes": 939,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using Mizuchi's canonical rifle and precision reticle silhouette; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-NAO-EMERGENCY-TREATMENT-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/nao-emergency-treatment-ready-r1.svg",
+      "sha256": "95b1a2031e6d3e1b2c9939c97d2e5e36b9953ec9d12209a500c4e3c469d32021",
+      "bytes": 996,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using Nao's emergency medical pouch, cross, and treatment pulse silhouette; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-TATARA-GROUND-BREAK-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/tatara-ground-break-ready-r1.svg",
+      "sha256": "26efc74445c9262476fe731077b4e6d5d6eaa9b80c347099e3edec34582c52fa",
+      "bytes": 829,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using Tatara's canonical hammer and radial ground-fracture silhouette; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-CRAZY-KING-OVERDRIVE-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/crazy-king-overdrive-ready-r1.svg",
+      "sha256": "6a4de045b969f01e2656882fff6f28f7aecccf09c776ced95cb0f268a5b4f734",
+      "bytes": 909,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using Crazy King's canonical chainsaw teeth and broken crown overdrive silhouette; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-KUMAVERSON-PAN-STAND-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/kumaverson-pan-stand-ready-r1.svg",
+      "sha256": "e13c92e90ef178e40e50116a423c7808837584cd770adc8072e28ea194986394",
+      "bytes": 1019,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using Kumaverson's canonical iron pan, anchored stance, and guard rays; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-BABAYAGA-WEAKNESS-AUDIT-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/babayaga-weakness-audit-ready-r1.svg",
+      "sha256": "00984ced88605eb9607fa22879f0dc7522b953efc4ca3dd5f4c943bad5cdb7fb",
+      "bytes": 897,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using Babayaga's canonical audit ledger and weak-point reticle silhouette; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-RAIDER-SUPPRESSION-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/raider-suppression-ready-r1.svg",
+      "sha256": "0daa2bf5c5a8aac7497eb298a2fdf8bc11871e8ece648f1ff8bc26f0c46e23c2",
+      "bytes": 889,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using Raider's canonical machine gun, burst rounds, and parallel suppression lanes; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-GANTETSU-SHIELD-DEPLOY-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/gantetsu-shield-deploy-ready-r1.svg",
+      "sha256": "98d6269bcbf99679074d09f945495bf2b41a32c77a63d252eb7e2c6f0ed089b8",
+      "bytes": 963,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using Gantetsu's canonical segmented shield-wall and protected-center silhouette; no external icon source.",
+      "status": "approved"
+    },
+    {
+      "assetId": "V090-MONKEY-BINDING-TRAP-READY@r1",
+      "kind": "manual-ability-icon",
+      "path": "public/art/v090/characters/abilities/monkey-binding-trap-ready-r1.svg",
+      "sha256": "489155a2b0b5c757f5572ce9f73c8ea99635a2a76a4e853096a96d59564c09a9",
+      "bytes": 972,
+      "width": 96,
+      "height": 96,
+      "sourceAssetIds": [],
+      "processing": "Project-authored SVG using Monkey's canonical tripwire, opposing trap jaws, and binding teeth; no external icon source.",
+      "status": "approved"
+    }
+  ]
+}

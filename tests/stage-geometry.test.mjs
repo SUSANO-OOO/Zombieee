@@ -7,6 +7,7 @@ import {
   STAGE_GEOMETRY_STAGE_IDS,
   STAGE_VIEWPORT_IDS,
   STAGE_VIEWPORT_PROFILES,
+  battlefieldDepthScale,
   bodyCircleGrounding,
   clampToWalkable,
   combatReadyGroundingAudit,
@@ -16,10 +17,16 @@ import {
   resolveStageViewportProfile,
   stageDebugPrimitives,
   stageGeometryFor,
+  visualGroundingFor,
 } from "../app/stageGeometry.js";
 
 const ALL_STAGE_IDS = CAMPAIGN_STAGES.map(({ id }) => id);
-
+const V090_STAGE_IDS = [
+  CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE,
+  CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE,
+  CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE,
+  CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL,
+];
 const ALL_VIEWPORT_IDS = Object.values(STAGE_VIEWPORT_IDS);
 
 function close(actual, expected, tolerance = 1e-9) {
@@ -70,6 +77,37 @@ test("uses the fixed world with standard and exact 844x390/844x340 cover transfo
   assert.equal(resolveStageViewportProfile({ width: 844, height: 390 }), mobile390);
   assert.equal(resolveStageViewportProfile({ width: 844, height: 340 }), mobile340);
   assert.equal(resolveStageViewportProfile({ width: 1280, height: 720 }), standard);
+});
+
+test("Stage 17-20 use an authored perspective floor instead of placing full-size fighters on the skyline", () => {
+  const expectedLaneCenters = {
+    [STAGE_VIEWPORT_IDS.STANDARD]: [250, 306, 362],
+    [STAGE_VIEWPORT_IDS.MOBILE_844_390]: [250, 292, 334],
+    [STAGE_VIEWPORT_IDS.MOBILE_844_340]: [250, 292, 334],
+  };
+  for (const stageId of V090_STAGE_IDS) {
+    for (const viewportId of ALL_VIEWPORT_IDS) {
+      const geometry = stageGeometryFor(stageId, viewportId);
+      assert.deepEqual(geometry.lanes.map(({ y }) => y), expectedLaneCenters[viewportId]);
+      assert.equal(geometry.floor.visual.authored, true);
+      const scales = geometry.lanes.map(({ y }) => battlefieldDepthScale(geometry, y));
+      assert.ok(scales[0] < scales[1] && scales[1] < scales[2], `${stageId}/${viewportId}/depth`);
+      for (const lane of geometry.lanes) {
+        const visual = visualGroundingFor(geometry, { y: lane.y });
+        assert.equal(visual.grounded, true, `${stageId}/${viewportId}/lane-${lane.index}`);
+        assert.ok(visual.depthScale >= geometry.floor.visual.farScale);
+        assert.ok(visual.depthScale <= geometry.floor.visual.nearScale);
+      }
+      assert.equal(
+        visualGroundingFor(geometry, { y: geometry.floor.visual.horizonY - 1 }).reason,
+        "above-visual-floor",
+      );
+    }
+  }
+  const legacy = stageGeometryFor(CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET);
+  assert.deepEqual(legacy.lanes.map(({ y }) => y), LANE_Y);
+  assert.equal(legacy.floor.visual.authored, false);
+  assert.equal(battlefieldDepthScale(legacy, legacy.lanes[0].y), 1);
 });
 
 test("keeps all logical lanes, spawn anchors, and fixed objectives on walkable floor", () => {
@@ -225,7 +263,9 @@ test("combat-ready audit reports only live active fighters whose body leaves the
   });
   assert.equal(audit.checkedCount, 2);
   assert.equal(audit.offFloorCount, 1);
+  assert.equal(audit.visuallyOffFloorCount, 1);
   assert.equal(audit.offFloor[0].id, "ready-off-floor");
+  assert.equal(audit.visuallyOffFloor[0].id, "ready-off-floor");
   assert.equal(audit.offFloor[0].grounding.reason, "anchor-outside-floor");
   assert.equal(Object.isFrozen(audit), true);
 });

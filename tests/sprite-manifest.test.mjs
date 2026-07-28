@@ -42,6 +42,7 @@ const EXPLICIT_ATLAS_KINDS = Object.freeze([
   ...V070_REDESIGNED_COMBAT_KINDS,
   ...V070_STATION_ENEMY_KINDS,
   "crazy-king", "kumaverson", "babayaga",
+  "tky", "mrs-chiha", "miyamoto-musashi",
 ]);
 const V070_PORTRAIT_KINDS = new Set(V070_REDESIGNED_COMBAT_KINDS);
 
@@ -87,14 +88,16 @@ async function sha256(filename) {
   return createHash("sha256").update(await readFile(filename)).digest("hex");
 }
 
-test("sprite manifest enumerates all eleven playable kinds and twelve enemy kinds", () => {
+test("sprite manifest enumerates all playable units, Mayo's feral atlas, bosses, and six Version 0.9.0 infected", () => {
   assert.deepEqual(spriteKinds, [
-    "brawler", "scout", "ranger", "medic", "brute", "gunner", "guardian", "engineer",
+    "brawler", "scout", "ranger", "medic", "brute", "gunner", "guardian", "engineer", "zakimiya",
+    "tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan", "mayo-chan-feral",
     "walker", "runner", "turned", "spitter", "shade", "crusher", "abomination", "takuya",
-    "grappler", "ooze", "sprinter", "gate-eater",
+    "grappler", "ooze", "sprinter", "gate-eater", "kurome", "mother", "ooguchi", "gairen", "futago",
+    "resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom",
     "crazy-king", "kumaverson", "babayaga",
   ]);
-  assert.equal(spriteKinds.length, 23);
+  assert.equal(spriteKinds.length, 40);
   for (const kind of spriteKinds) {
     assert.deepEqual(spriteStatesFor(kind), SPRITE_STATES);
     assert.equal(spriteSheetPath(kind), SPRITE_MANIFEST[kind].path);
@@ -252,13 +255,38 @@ test("every redesigned 0.7.0 playable atlas has an authored death pose and measu
   }
 });
 
-test("all twelve people use independent portrait files and radio remains a separate non-person asset", async () => {
+test("Mrs. Chiha walk frames contain one isolated pose with no runtime masking fragments", async () => {
+  const decoded = await decodeRgbaPng(
+    await readFile(path.join(ROOT, "public", "art", "v090", "characters", "mrs-chiha-battle-r1.png")),
+  );
+  const expectedBounds = {
+    "walk-a/right": { x: 132, y: 16, w: 194, h: 416 },
+    "walk-a/left": { x: 154, y: 464, w: 195, h: 416 },
+    "walk-b/right": { x: 174, y: 16, w: 181, h: 416 },
+    "walk-b/left": { x: 126, y: 464, w: 181, h: 416 },
+  };
+  for (const [key, expected] of Object.entries(expectedBounds)) {
+    const [state, direction] = key.split("/");
+    const frame = spriteFrameFor("mrs-chiha", state, direction);
+    assert.equal(frame.drawSlices, undefined, `${key} must draw one clean authored cell`);
+    assert.deepEqual(frame.contentRect, {
+      x: frame.sourceRect.x + expected.x,
+      y: expected.y,
+      w: expected.w,
+      h: expected.h,
+    });
+    assert.deepEqual(alphaBounds(decoded, frame.sourceRect), frame.contentRect, key);
+  }
+});
+
+test("all seventeen people use independent portrait files and radio remains a separate non-person asset", async () => {
   const expectedPeople = [
     "brawler", "scout", "ranger", "medic", "brute", "gunner",
-    "crazy-king", "kumaverson", "babayaga", "guardian", "engineer", "guide",
+    "crazy-king", "kumaverson", "babayaga", "guardian", "engineer", "zakimiya",
+    "tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan", "guide",
   ];
   assert.deepEqual(Object.keys(CHARACTER_PORTRAIT_ART), expectedPeople);
-  assert.equal(new Set(Object.values(CHARACTER_PORTRAIT_ART)).size, 12);
+  assert.equal(new Set(Object.values(CHARACTER_PORTRAIT_ART)).size, 17);
   assert.equal(PORTRAIT_ART.radio, RADIO_PORTRAIT_ART);
   assert.notEqual(RADIO_PORTRAIT_ART, CHARACTER_PORTRAIT_ART.guide);
 
@@ -269,6 +297,10 @@ test("all twelve people use independent portrait files and radio remains a separ
       assert.equal(assetPath, "/art/v075/characters/portraits/ikura-event-portrait-v4.webp");
     } else if (kind === "engineer") {
       assert.equal(assetPath, "/art/v080/characters/portraits/monkey-event-portrait-r2.webp");
+    } else if (kind === "zakimiya") {
+      assert.equal(assetPath, "/art/v090/characters/portraits/zakimiya-event-portrait-r1.webp");
+    } else if (["tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan"].includes(kind)) {
+      assert.equal(assetPath, `/art/v090/characters/portraits/${kind}-event-portrait-r1.webp`);
     } else if (V070_PORTRAIT_KINDS.has(kind)) {
       assert.equal(assetPath, `/art/v070/characters/portraits/${kind}-portrait-v1.webp`);
     } else {
@@ -305,7 +337,7 @@ test("every production WebP passes an actual image decoder", async () => {
     ...Object.values(PRODUCTION_VISUALS.stages),
     ...Object.values(PRODUCTION_VISUALS.eventCuts),
   ])];
-  assert.equal(productionWebps.length, 34);
+  assert.equal(productionWebps.length, 43);
 
   for (const assetPath of productionWebps) {
     assert.match(assetPath, /\.webp$/);

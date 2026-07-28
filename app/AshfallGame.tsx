@@ -43,6 +43,7 @@ import { BattleBarkAuditScreen } from "./BattleBarkAuditScreen";
 import {
   battleSpaceFor,
   battleSpaceLineOfSight,
+  enemyRenderedVisualHalfWidth,
   enemySpawnPortalPoint,
   friendlyDeploymentPoint,
   nearestValidBattlefieldPlacement,
@@ -69,6 +70,11 @@ import {
   CampaignScreens,
   type CampaignResultView,
   type CampaignScreen,
+  type BossCompendiumView,
+  type EnemyCompendiumView,
+  type OutbreakMissionScreenView,
+  type OutbreakResultView,
+  type RecordsSummaryView,
   type StageScreenView,
   type SupplyScreenView,
   type UnitScreenView,
@@ -83,9 +89,14 @@ import {
   CAMPAIGN_RECRUITMENT_COSTS,
   CAMPAIGN_UNITS,
   INITIAL_STAGE_ID,
-  campaignUnitUpgradeQuote,
+  acknowledgeCampaignMigrationNotice,
+  campaignUnitIdToCombatKind,
+  campaignUnitLevelUpgradeQuote,
+  checkpointSurvivalCampaignSave,
   createDefaultCampaignSave,
-  getCampaignUnitRank,
+  getCampaignLevelCap,
+  getCampaignUnitLevel,
+  getFormationPresetEquipmentSnapshot,
   getSelectedFormationCombatKinds,
   getSelectedFormationUnitIds,
   inspectCampaignSaveCandidate,
@@ -95,6 +106,8 @@ import {
   isStageUnlocked,
   markCampaignStarted,
   markStoryEventRead,
+  persistOutbreakCampaignSettlement,
+  persistSurvivalCampaignSettlement,
   recruitCampaignUnit,
   reviseCampaignSave,
   resolveStageResult,
@@ -106,13 +119,84 @@ import {
   updateStoryPlaybackSettings,
   upgradeCampaignUnit,
 } from "./campaign.js";
+import { EQUIPMENT_BY_ID, aggregateEquipmentEffects } from "./equipment.js";
 import {
+  OUTBREAK_MISSIONS,
+  OUTBREAK_MISSION_BY_ID,
+  isOutbreakMissionUnlocked,
+} from "./outbreakMissions.js";
+import {
+  SURVIVAL_END_REASONS,
+  SURVIVAL_RUN_PHASES,
+  SURVIVAL_UPGRADE_BY_ID,
+  beginSurvivalWave,
+  completeSurvivalWave,
+  createDefaultSurvivalProgress,
+  createSurvivalRun,
+  endSurvivalRun,
+  resumeSurvivalCheckpoint,
+  saveSurvivalCheckpoint,
+  setSurvivalRunSpeed,
+} from "./survival.js";
+import {
+  advanceSurvivalCombat,
+  captureUnfinishedSurvivalCombatStats,
+  chooseSurvivalCombatUpgrade,
+  createSurvivalCombatRuntime,
+  survivalCombatEndReason,
+  survivalDefenseDestination,
+  survivalHudSnapshot,
+  survivalUpgradeEffects,
+  survivalWaveReward,
+} from "./survivalBattleRuntime.js";
+import {
+  ENEMY_CONTENT,
   enemyBodyRadiusFor,
   enemyContentFor,
   enemyInitialAbilityCooldownFor,
   enemyLaneSpeedFor,
   enemyStatsForWave,
 } from "./content/enemyCatalog.js";
+import {
+  BOSS_DEFINITIONS,
+  bossDefinitionForEnemyKind,
+  bossHudSnapshot,
+  bossPhaseForHp,
+  bossTelegraphSnapshot,
+  enforceBossBodyBarrier,
+  isBossEnemyKind,
+} from "./bossFoundation.js";
+import {
+  BOSS_ANOMALY_TUNING,
+  advanceBossAnomalyAbility,
+  beginBossAnomalyAbility,
+  bossAnomalyAreaTargetIds,
+  createBossAnomalyRuntime,
+  gairenIncomingDamageMultiplier,
+  isBossAnomalyKind,
+  motherBroodSummonPlan,
+  ooguchiChargeStep,
+} from "./bossAnomalies.js";
+import {
+  KUROME_PROTOTYPE_TUNING,
+  advanceKuromeTracking,
+  beginKuromeTracking,
+  createKuromeTrackingRuntime,
+  kuromeEmergencyEvadePlan,
+  resolveKuromeBeam,
+} from "./kuromeBoss.js";
+import {
+  advanceV090InfectedAbility,
+  anchorBloomReinforcement,
+  beginV090InfectedAbility,
+  cagewalkerFrontDamageMultiplier,
+  createV090InfectedRuntime,
+  isV090InfectedKind,
+  pallMantaProjectileMultiplier,
+  resonatorHowlTargets,
+  spindleLandingPoint,
+  v090InfectedDefinition,
+} from "./v090Infected.js";
 import {
   advanceBattleStoryFlow,
   createBattleStoryFlowState,
@@ -152,8 +236,12 @@ import {
 import {
   advancePendingWeaponHits,
   attackPresentationDuration,
+  combatFacingDirection,
+  combatWeaponAnchor,
+  mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
+  sampleMrsChihaLauncherBash,
   weaponDamageEventsFor,
   weaponProfileForAction,
   weaponProfileForUnit,
@@ -161,10 +249,20 @@ import {
 import { allyCorpseVisualCue } from "./corpseVisuals.js";
 import { resolveLocalQaMode, resolveLocalQaSafeArea, resolveLocalQaScenario } from "./localQa.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
-import { FORMATION_CARD_ART, PORTRAIT_ART, fitSpriteBattleDisplaySize, spriteFrameFor, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
+import {
+  COMPACT_BATTLE_SPRITE_SCALE,
+  FORMATION_CARD_ART,
+  PORTRAIT_ART,
+  fitSpriteBattleDisplaySize,
+  spriteBattleDisplaySizeFor,
+  spriteFrameFor,
+  spriteKinds,
+  spriteSheetPath,
+} from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST, stageObjectsFor } from "./stageObjectManifest.js";
 import {
   STAGE_VIEWPORT_IDS,
+  battlefieldDepthScale,
   clampToWalkable,
   combatReadyGroundingAudit,
   resolveStageViewportProfile,
@@ -195,15 +293,19 @@ import {
   AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
   BATTLEFIELD_SUPPLY_DEFS,
+  BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS,
   CAMERA_SHAKE_EVENTS,
   COMMAND_INITIAL,
   COMMAND_MAX,
+  COMMAND_REGEN,
   ENEMY_GATE_SPAWN,
   ENEMY_BASE_COLLAPSE_SECONDS,
   LANE_Y,
   MISSION_EVENTS,
   PREP_SECONDS,
   RENDER_ARRAY_LIMITS,
+  STANDARD_COMMAND_REGEN,
+  STAGE_20_COMMAND_REGEN,
   SUPPORT_GAUGE_MAX,
   UNIT_CARDS,
   WORLD_GEOMETRY,
@@ -212,6 +314,7 @@ import {
   advanceBleedDamage,
   advanceConvoyEvacuation,
   advanceBattlefieldSupply,
+  advanceBattlefieldSupplyCooldowns,
   advanceCameraShakeRuntime,
   advanceCrawlerAbilityRuntime,
   advanceEmergencySupportRuntime,
@@ -226,12 +329,13 @@ import {
   barricadeState,
   battlefieldPlacementForbiddenZones,
   battlefieldSupplyPlacementCheck,
-  bossPhaseForHp,
   cameraShakeAmplitude,
   canvasPointerToWorld,
   canDeploy,
   capRenderArray,
+  beginBattlefieldSupplyCooldown,
   createCameraShakeRuntime,
+  createBattlefieldSupplyCooldowns,
   createCrawlerAbilityRuntime,
   createEmergencySupportRuntime,
   createEnemySpawnRuntime,
@@ -247,7 +351,6 @@ import {
   isBabayagaPriorityTarget,
   isCrawlerRouteBlocker,
   keyboardInputGate,
-  laneCentersForViewport,
   newcomerAttackPayload,
   objectiveFor,
   requestAirstrike,
@@ -279,7 +382,6 @@ import {
   coolRaiderHeat,
   crazyKingAttackInterval,
   createMonkeyTrap,
-  naoDamageAfterProtection,
   raiderCanFire,
   resolveGantetsuInterception,
   resolveGantetsuSteadfastDamage,
@@ -327,21 +429,41 @@ import {
   stationSpatialSnapshot,
 } from "./stationSpatialMechanics.js";
 import {
-  UNIT_PROGRESSION_MAX_RANK,
-  applyUnitProgression,
+  UNIT_LEVEL_MAX,
+  applyUnitLevelProgression,
   damageAfterUnitDefense,
-  unitProgressionMilestones,
+  unitLevelMilestones,
 } from "./unitProgression.js";
+import {
+  MANUAL_ABILITY_REGISTRY,
+  advanceManualAbility,
+  beginManualAbility,
+  canActivateManualAbility,
+  createManualAbilityRuntime,
+  layoutManualAbilityIcons,
+  manualAbilityCheckpointCooldown,
+  manualAbilityLocksNormalAction,
+  mayoAbilityHpStep,
+  restoreManualAbilityCooldown,
+  selectManualAbilityTarget,
+  triggerMusashiCounter,
+} from "./manualAbilities.js";
+import {
+  advanceMayoRetreat,
+  createMayoRetreatRuntime,
+  mayoRetreatBlocksDamage,
+  mayoRetreatSpriteState,
+} from "./mayoLifecycle.js";
 
 const W = 960;
 const H = 540;
 
 type Lane = 0 | 1 | 2;
-type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer";
-type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater";
+type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
+type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater" | "kurome" | "resonator" | "cagewalker" | "spindle" | "choir-knot" | "pall-manta" | "anchor-bloom";
 type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "danger" | "boss";
-type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
+type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "mayo" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
 type EventDestination = "map" | "battle" | "battle-resume" | "result";
 type PauseAction = "restart" | "loadout" | "withdraw";
@@ -353,6 +475,15 @@ const MUSTER_LANE = 2 as Lane;
 type LaneCenters = readonly [number, number, number];
 let activeLaneCenters = LANE_Y as unknown as LaneCenters;
 let activeStageViewportId = STAGE_VIEWPORT_IDS.STANDARD;
+let activeStageGeometry = stageGeometryFor(INITIAL_STAGE_ID, STAGE_VIEWPORT_IDS.STANDARD);
+
+function compactBattleViewport() {
+  return activeStageViewportId !== STAGE_VIEWPORT_IDS.STANDARD;
+}
+
+function activeBattlefieldDepthScale(y: number) {
+  return battlefieldDepthScale(activeStageGeometry, y);
+}
 
 function activeLaneForY(y: number, fallback: Lane = 1) {
   let closest = fallback;
@@ -426,6 +557,7 @@ type UnitCard = {
   damage: number;
   range: number;
   attackEvery: number;
+  progressionLevel?: number;
   progressionRank?: number;
   defense?: number;
   healingMultiplier?: number;
@@ -435,14 +567,17 @@ type UnitCard = {
 type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; units: string[] };
 type BattleDefinition = {
   stageId: string;
+  operationId: string;
+  operationCategory: "campaign" | "outbreak";
   displayName: string;
-  missionType: "assault" | "timed-defense" | "boss-assault" | "escort" | "sequential-seal";
+  missionType: "assault" | "timed-defense" | "boss-assault" | "escort" | "sequential-seal" | "survival";
   prepSeconds: number;
   baseMaxHp: number;
   enemyBaseMaxHp: number;
   enemyBaseMode: "target" | "scenery";
   startsEnemyBaseVulnerable: boolean;
   bossUnlocksEnemyBase: boolean;
+  bossEnemyKind: string | null;
   timeline: MissionEvent[];
   defenseEndAt: number | null;
   phaseSchedule: { at: number; phase: 1 | 2 | 3; label: string; objective: string }[] | null;
@@ -462,10 +597,11 @@ type CampaignUnitData = {
   recruitmentCostCaps?: number;
   unlock: { type: string; stageId?: string; stageNumber?: number; costCaps?: number };
 };
+type EnemyEntryMode = "base-interior" | "right-edge" | "right-edge-outside";
 type EnemySpawnEntry = {
   entryId: number; kind: string; lane: Lane; wave: number; order: number; delay: number;
   x: number; y: number; combatReadyX: number; combatReadyY?: number; entrySpeed: number; slot: number;
-  portalId?: string; routeId?: string;
+  portalId?: string; routeId?: string; entryMode?: EnemyEntryMode;
 };
 type EnemySpawnRuntime = { pending: EnemySpawnEntry[]; cooldown: number; nextEntryId: number };
 
@@ -490,9 +626,11 @@ function placementReasonLabel(reason: string) {
     "既存物資に近すぎます": "物資に近すぎます",
     "スクラップが不足しています": "スクラップ不足",
     "支援ゲージが不足しています": "支援ゲージ不足",
+    "戦場物資を再準備中です": "戦場物資 再準備中",
     "航空支援の有効範囲外です": "航空支援範囲外",
   };
-  return shortReasons[reason] ?? reason.replace(/です$/, "");
+  const normalized = reason.replace(/（\d+秒）$/, "");
+  return shortReasons[normalized] ?? reason.replace(/です$/, "");
 }
 
 function placementIndicatorFor(action: SelectedAction, lane: Lane, x: number, y: number, valid: boolean, reason: string): PlacementIndicator {
@@ -533,6 +671,7 @@ type Fighter = {
   flash: number;
   step: number;
   attack: number;
+  attackVariant?: "launcher-bash" | null;
   knock: number;
   variant: number;
   targetId: number | null;
@@ -543,11 +682,13 @@ type Fighter = {
   bodyRadius: number;
   laneSpeed: number;
   spawnGrace: number;
+  targetable?: boolean;
   combatReady: boolean;
   contained: boolean;
   gateEntering: boolean;
   entryDirection?: -1 | 1;
   spawnPortalId?: string | null;
+  spawnEntryMode?: EnemyEntryMode;
   entryStepDistance?: number;
   gateEntrySpeed: number;
   combatReadyX: number;
@@ -593,17 +734,27 @@ type Fighter = {
   engineerTrapX: number;
   engineerTrapLane: Lane | null;
   engineerTrapCooldown: number;
+  engineerTrapManual: boolean;
   armorBreakStacks: number;
   armorBrokenRemaining: number;
   burning?: boolean;
   slowMultiplier?: number;
   stationAbility: StationAbilityRuntime;
+  progressionLevel?: number;
   progressionRank?: number;
+  manualAbility?: ManualAbilityRuntime | null;
+  mayoBiteSlowRemaining?: number;
+  mayoRetreat?: ReturnType<typeof createMayoRetreatRuntime> | null;
+  visionDisruptedRemaining?: number;
+  summonOwnerId?: number | null;
+  summonSource?: string | null;
 };
 type StationAbilityRuntime = {
+  kind?: string | null;
   phase: string;
   remainingSeconds: number;
   targetId?: string | null;
+  targetIds?: readonly string[];
   lane?: Lane | null;
   lockedLane?: Lane | null;
   zoneId?: string | number | null;
@@ -612,7 +763,13 @@ type StationAbilityRuntime = {
   centerX?: number | null;
   centerY?: number | null;
   targetX?: number | null;
+  targetY?: number | null;
   direction?: number;
+  originX?: number | null;
+  originY?: number | null;
+  resolved?: boolean;
+  guarded?: boolean;
+  split?: boolean;
 };
 type StationHazard = {
   id: string | number | null;
@@ -685,7 +842,7 @@ type Shot = {
 type PendingWeaponHit = {
   eventKind: "muzzle" | "impact";
   targetKind: "fighter" | "enemy-base";
-  damageMode?: "direct" | "containment";
+  damageMode?: "direct" | "containment" | "grenade";
   raiderLineHit?: boolean;
   raiderSecondary?: boolean;
   sourceId: number;
@@ -705,6 +862,47 @@ type PendingWeaponHit = {
   applyDamage: boolean;
 };
 type DamageText = { x: number; y: number; value: string; life: number; color: string };
+type ManualAbilityRuntime = NonNullable<ReturnType<typeof createManualAbilityRuntime>>;
+type ManualAbilityVfx = {
+  ownerId: number;
+  activationId: number;
+  kind: string;
+  originX: number;
+  originY: number;
+  targetX: number;
+  targetY: number;
+  elapsed: number;
+  duration: number;
+  points?: readonly { x: number; y: number }[];
+  windupSeconds?: number;
+  salvoIntervalSeconds?: number;
+  projectileTravelSeconds?: number;
+};
+type ManualAbilityReceipt = {
+  ownerId: number;
+  activationId: number;
+  kind: string;
+  eventType: string;
+  at: number;
+  salvoIndex?: number;
+  mode?: string;
+  attackSequence?: number;
+};
+type PendingAbilityAudioCue = {
+  cueId: string;
+  x: number;
+  dedupeKey: string;
+  remainingSeconds?: number;
+};
+type ManualAbilityIconView = {
+  fighterId: number;
+  kind: UnitKind;
+  x: number;
+  y: number;
+  hitSize: number;
+  anchorX: number;
+  anchorY: number;
+};
 type Corpse = {
   id: number;
   x: number;
@@ -781,6 +979,13 @@ type RoleMetrics = {
   monkeyTrapTriggers: number;
 };
 
+type CombatMetrics = {
+  damageByUnit: Record<string, number>;
+  damageTakenByUnit: Record<string, number>;
+  healingByUnit: Record<string, number>;
+  enemyDefeatsByKind: Record<string, number>;
+};
+
 type StationMetrics = {
   aiRecoveries: number;
   karamiteBinds: number;
@@ -798,7 +1003,10 @@ type Game = {
   definition: BattleDefinition;
   resultId: string;
   formationKinds: UnitKind[];
-  unitRanksByKind: Record<string, number>;
+  unitLevelsByKind: Record<string, number>;
+  personalEquipmentByKind: Record<string, string[]>;
+  tacticalEquipmentIds: string[];
+  equipmentEnhancementLevels: Record<string, number>;
   running: boolean;
   paused: boolean;
   over: boolean;
@@ -807,6 +1015,7 @@ type Game = {
   last: number;
   energy: number;
   supportGauge: number;
+  supportItemCooldowns: Record<SupplyKind, number>;
   scrap: number;
   kills: number;
   wave: number;
@@ -875,13 +1084,21 @@ type Game = {
   bossDefeatPending: boolean;
   qaBarks: boolean;
   roleMetrics: RoleMetrics;
+  combatMetrics: CombatMetrics;
   stationMetrics: StationMetrics;
+  survivalRun: ReturnType<typeof createSurvivalRun> | null;
+  survivalRuntime: ReturnType<typeof createSurvivalCombatRuntime> | null;
+  survivalCheckpointReceipt: string | null;
+  manualAbilityVfx: ManualAbilityVfx[];
+  manualAbilityReceipts: ManualAbilityReceipt[];
+  pendingAbilityAudioCues: PendingAbilityAudioCue[];
 };
 
 type Hud = {
   missionType: BattleDefinition["missionType"];
   energy: number;
   supportGauge: number;
+  supportItemCooldowns: Record<SupplyKind, number>;
   scrap: number;
   kills: number;
   wave: number;
@@ -899,12 +1116,15 @@ type Hud = {
   combo: number;
   bossHp: number;
   bossMax: number;
+  bossKind: string | null;
+  bossWorldX: number | null;
   takuyaEntranceAudioActive: boolean;
   crawlerHitFlash: number;
   threat: number;
   objective: string;
   deployCooldowns: Record<UnitKind, number>;
   battleBarks: BattleBark[];
+  manualAbilityIcons: ManualAbilityIconView[];
 };
 
 type BattleResult = {
@@ -921,8 +1141,28 @@ type BattleResult = {
   unitsLost: number;
   bossDefeated: boolean;
   enemyBaseDestroyed: boolean;
+  encounteredEnemyKinds: readonly string[];
+  enemyDefeatsByKind: Readonly<Record<string, number>>;
+  unitStats: Readonly<Pick<CombatMetrics, "damageByUnit" | "damageTakenByUnit" | "healingByUnit">>;
   missionRuntime?: StageMissionRuntime;
 };
+
+function preservesAcceptedSupportTempo(game: Game) {
+  return Boolean(game.survivalRun)
+    || (
+      game.definition.operationCategory === "campaign"
+      && game.definition.stageId === CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL
+    );
+}
+
+function commandRegenForGame(game: Game) {
+  if (game.survivalRun) return COMMAND_REGEN;
+  if (game.definition.operationCategory === "campaign"
+    && game.definition.stageId === CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL) {
+    return STAGE_20_COMMAND_REGEN;
+  }
+  return STANDARD_COMMAND_REGEN;
+}
 
 type SavePersistenceState = "checking" | "saved" | "recovered" | "unavailable";
 type CampaignPersistResult = {
@@ -957,6 +1197,35 @@ type PendingResultCommit = {
   save: CampaignSave;
   view: CampaignResultView;
   storyEventIds: readonly string[];
+};
+type SurvivalResultView = {
+  endReason: string;
+  reachedWave: number;
+  kills: number;
+  bossKills: number;
+  earnedCaps: number;
+  earnedEquipmentGrants: readonly { equipmentId: string; displayName: string; quantity: number }[];
+  unitStats: readonly {
+    kind: string;
+    displayName: string;
+    damage: number;
+    damageTaken: number;
+    healing: number;
+  }[];
+  newHighestWave: boolean;
+  capsAfter: number;
+};
+type PendingSurvivalSettlement = {
+  run: ReturnType<typeof createSurvivalRun>;
+  endedAt: string;
+};
+type PendingSurvivalCheckpoint = {
+  run: ReturnType<typeof createSurvivalRun>;
+  checkpointId: string;
+};
+type PendingOutbreakSettlement = {
+  end: BattleResult;
+  completedAt: string;
 };
 const CAMPAIGN_SAVE_KEY = "nishijin-campaign-v1";
 type AudioUnlockUiState = "idle" | "pending" | "success" | "failed";
@@ -1067,6 +1336,26 @@ const emptyRoleMetrics = (): RoleMetrics => ({
   gantetsuRedirectedDamage: 0,
   monkeyTrapTriggers: 0,
 });
+const emptyCombatMetrics = (): CombatMetrics => ({
+  damageByUnit: {},
+  damageTakenByUnit: {},
+  healingByUnit: {},
+  enemyDefeatsByKind: {},
+});
+function addCombatMetric(record: Record<string, number>, key: string, amount: number) {
+  const applied = Math.max(0, Number(amount) || 0);
+  if (!key || applied <= 0) return;
+  record[key] = Math.min(Number.MAX_SAFE_INTEGER, (record[key] ?? 0) + applied);
+}
+function recordUnitDamage(g: Game, unitKind: string, amount: number) {
+  addCombatMetric(g.combatMetrics.damageByUnit, unitKind, amount);
+}
+function recordUnitDamageTaken(g: Game, unitKind: string, amount: number) {
+  addCombatMetric(g.combatMetrics.damageTakenByUnit, unitKind, amount);
+}
+function recordUnitHealing(g: Game, unitKind: string, amount: number) {
+  addCombatMetric(g.combatMetrics.healingByUnit, unitKind, amount);
+}
 const emptyStationMetrics = (): StationMetrics => ({
   aiRecoveries: 0,
   karamiteBinds: 0,
@@ -1085,6 +1374,9 @@ function createStationAbilityRuntime(kind: string): StationAbilityRuntime {
   if (kind === "ooze") return createLeakMudRuntime() as StationAbilityRuntime;
   if (kind === "sprinter") return createSoukiRuntime() as StationAbilityRuntime;
   if (kind === "gate-eater") return createTicketGateEaterRuntime() as StationAbilityRuntime;
+  if (kind === "kurome") return createKuromeTrackingRuntime() as StationAbilityRuntime;
+  if (isBossAnomalyKind(kind)) return createBossAnomalyRuntime(kind) as StationAbilityRuntime;
+  if (isV090InfectedKind(kind)) return createV090InfectedRuntime(kind) as StationAbilityRuntime;
   return { phase: "idle", remainingSeconds: 0 };
 }
 
@@ -1094,24 +1386,47 @@ const initialGame = (
   formationKinds: UnitKind[] = cards.slice(0, 7).map((card) => card.kind),
   resultId = createBattleResultId(stageId),
   storyBattleReadEventIds: string[] = [],
-  unitRanks: Record<string, number> = {},
+  unitLevels: Record<string, number> = {},
+  equipmentSnapshot: {
+    personalEquipmentByUnit?: Record<string, readonly (string | null)[]>;
+    tacticalEquipmentIds?: readonly (string | null)[];
+    equipmentEnhancementLevels?: Record<string, number>;
+  } = {},
 ): Game => {
   const definition = createBattleDefinition(stageId) as BattleDefinition;
-  const unitRanksByKind = Object.fromEntries((CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
-    .map((unit) => [unit.combatKind, unitRanks[unit.id] ?? 0]));
+  const campaignUnits = CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[];
+  const unitLevelsByKind = Object.fromEntries(campaignUnits
+    .map((unit) => [unit.combatKind, unitLevels[unit.id] ?? 1]));
+  const personalEquipmentByKind = Object.fromEntries(campaignUnits.map((unit) => [
+    unit.combatKind,
+    (equipmentSnapshot.personalEquipmentByUnit?.[unit.id] ?? [])
+      .filter((equipmentId): equipmentId is string => typeof equipmentId === "string"),
+  ]));
+  const tacticalEquipmentIds = (equipmentSnapshot.tacticalEquipmentIds ?? [])
+    .filter((equipmentId): equipmentId is string => typeof equipmentId === "string");
+  const equipmentEnhancementLevels = { ...(equipmentSnapshot.equipmentEnhancementLevels ?? {}) };
+  const tacticalEffects = aggregateEquipmentEffects(
+    tacticalEquipmentIds,
+    equipmentEnhancementLevels,
+  );
+  const adjustedBaseMaxHp = Math.round(definition.baseMaxHp * tacticalEffects.baseHpMultiplier);
   return ({
   definition,
   resultId,
   formationKinds: [...formationKinds],
-  unitRanksByKind,
+  unitLevelsByKind,
+  personalEquipmentByKind,
+  tacticalEquipmentIds,
+  equipmentEnhancementLevels,
   running: false,
   paused: false,
   over: false,
   won: false,
   time: 0,
   last: 0,
-  energy: COMMAND_INITIAL,
-  supportGauge: 0,
+  energy: Math.min(COMMAND_MAX, COMMAND_INITIAL + tacticalEffects.startingEnergyFlat),
+  supportGauge: Math.min(SUPPORT_GAUGE_MAX, tacticalEffects.supportGaugeFlat),
+  supportItemCooldowns: createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>,
   scrap: 0,
   kills: 0,
   wave: 1,
@@ -1120,8 +1435,8 @@ const initialGame = (
   convoyProgress: 0,
   civiliansEvacuated: 0,
   enemySpawn: createEnemySpawnRuntime() as EnemySpawnRuntime,
-  baseHp: definition.baseMaxHp,
-  baseMaxHp: definition.baseMaxHp,
+  baseHp: adjustedBaseMaxHp,
+  baseMaxHp: adjustedBaseMaxHp,
   barricadeHp: definition.enemyBaseMaxHp,
   barricadeMaxHp: definition.enemyBaseMaxHp,
   barricadeVulnerable: definition.startsEnemyBaseVulnerable,
@@ -1172,7 +1487,9 @@ const initialGame = (
   takuyaEntranceAudioRemaining: 0,
   battleBarks: createBattleBarkRuntime(),
   barkFlags: [],
-  storyFlowState: createBattleStoryFlowState(stageId),
+  // Outbreak operations reuse the prerequisite campaign battlefield and its
+  // authored battle-bark flow; the operation ID itself is not a story stage.
+  storyFlowState: createBattleStoryFlowState(definition.stageId),
   storyBattleBarkState: createStoryBattleBarkState(),
   storyBattleReadEventIds: [...storyBattleReadEventIds],
   storyBattleReceiptEventIds: [],
@@ -1182,8 +1499,70 @@ const initialGame = (
   bossDefeatPending: false,
   qaBarks: false,
   roleMetrics: emptyRoleMetrics(),
+  combatMetrics: emptyCombatMetrics(),
   stationMetrics: emptyStationMetrics(),
+  survivalRun: null,
+  survivalRuntime: null,
+  survivalCheckpointReceipt: null,
+  manualAbilityVfx: [],
+  manualAbilityReceipts: [],
+  pendingAbilityAudioCues: [],
   });
+};
+
+const initialSurvivalGame = ({
+  selectedSupply,
+  run,
+  formationKinds,
+  unitLevels,
+}: {
+  selectedSupply: SupplyKind;
+  run: ReturnType<typeof createSurvivalRun>;
+  formationKinds: UnitKind[];
+  unitLevels: Record<string, number>;
+}): Game => {
+  const stageId = CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL;
+  const game = initialGame(
+    selectedSupply,
+    stageId,
+    formationKinds,
+    run.runId,
+    [],
+    unitLevels,
+    run.formation,
+  );
+  game.definition = {
+    ...game.definition,
+    displayName: "感染防衛前線",
+    missionType: "survival",
+    prepSeconds: 0,
+    enemyBaseMode: "scenery",
+    startsEnemyBaseVulnerable: false,
+    bossUnlocksEnemyBase: false,
+    timeline: [],
+    defenseEndAt: null,
+    phaseSchedule: null,
+    objective: "CRAWLER防衛・無限wave",
+    missionConfig: {
+      spawnProfile: "survival-infection-breach",
+      defenseFrontX: 646,
+    },
+    rescueCount: 0,
+  };
+  game.survivalRun = run;
+  game.survivalRuntime = createSurvivalCombatRuntime(run);
+  game.survivalCheckpointReceipt = null;
+  game.baseHp = run.crawler.hp;
+  game.baseMaxHp = run.crawler.maxHp;
+  game.barricadeHp = 1;
+  game.barricadeMaxHp = 1;
+  game.barricadeVulnerable = false;
+  game.wave = run.currentWave;
+  game.phase = 1;
+  game.eventIndex = 0;
+  game.banner = `SURVIVAL // WAVE ${run.currentWave}`;
+  game.bannerTime = 2.2;
+  return game;
 };
 
 function addParticles(g: Game, x: number, y: number, color: string, count = 8) {
@@ -1243,8 +1622,182 @@ function fighterDistance(a: Pick<Fighter, "x" | "y">, b: Pick<Fighter, "x" | "y"
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
+function weaponAnchorForTarget(
+  fighter: Pick<Fighter, "kind" | "x" | "y">,
+  target: Pick<Fighter, "x" | "y">,
+  shotIndex = 0,
+  recoil = 0,
+) {
+  return combatWeaponAnchor({
+    kind: fighter.kind,
+    x: fighter.x,
+    y: fighter.y,
+    direction: target.x < fighter.x ? -1 : 1,
+    shotIndex,
+    recoil,
+  });
+}
+
+function scheduleMrsChihaLauncherAudio(
+  g: Game,
+  fighter: Pick<Fighter, "id" | "kind" | "x" | "attackSequence">,
+  sequence: "normal" | "structure" | "ability",
+) {
+  if (fighter.kind !== "mrs-chiha") return;
+  const activationKey = `${sequence}:${fighter.id}:${fighter.attackSequence}`;
+  const entries = [
+    { event: "retrieve", delay: .02 },
+    { event: "aim", delay: .16 },
+  ];
+  for (const entry of entries) {
+    const cueId = unitAudioCueFor(fighter.kind, "weapon", entry.event);
+    if (!cueId) continue;
+    g.pendingAbilityAudioCues.push({
+      cueId,
+      x: fighter.x,
+      remainingSeconds: entry.delay,
+      dedupeKey: `mrs-chiha:${activationKey}:${entry.event}`,
+    });
+  }
+  g.pendingAbilityAudioCues = g.pendingAbilityAudioCues.slice(-16);
+}
+
+function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y">) {
+  const compactScale = compactBattleViewport() ? 1.1 : 1;
+  const depthScale = activeBattlefieldDepthScale(fighter.y);
+  const bossDefinition = bossDefinitionForEnemyKind(fighter.kind);
+  const height = bossDefinition
+    ? !compactBattleViewport()
+      ? bossDefinition.display.standardBodyHeight
+      : bossDefinition.display.compactBodyHeight
+    : (fighter.kind === "abomination"
+      ? 115
+      : ["crusher", "grappler", "brute", "guardian"].includes(fighter.kind)
+        ? 94
+        : 80) * compactScale;
+  return fighter.y - height * depthScale - (compactScale > 1 ? 2 : 0);
+}
+
+function battleBannerRect() {
+  const compact = compactBattleViewport();
+  const width = compact ? 234 : 316;
+  const height = compact ? 28 : 42;
+  return {
+    x: (W - width) / 2,
+    y: compact ? 50 : 58,
+    width,
+    height,
+  };
+}
+
 function effectDistance(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, (a.y - b.y) * 2);
+}
+
+function manualAbilityTargetCandidates(g: Game, owner: Fighter) {
+  if (owner.kind !== "brute"
+    || !g.barricadeVulnerable
+    || g.barricadeHp <= 0
+    || g.definition.enemyBaseMode === "scenery") {
+    return g.fighters;
+  }
+  const target = enemyBaseTargetPoint(owner.lane, activeLaneCenters);
+  return [...g.fighters, {
+    id: "manual-structure:enemy-base",
+    kind: "infected-base",
+    side: "zombie",
+    x: target.x,
+    y: target.y,
+    lane: owner.lane,
+    hp: g.barricadeHp,
+    maxHp: g.barricadeMaxHp,
+    combatReady: true,
+    contained: false,
+    targetable: true,
+    isStructure: true,
+  }];
+}
+
+function snapshotManualAbilityCooldowns(fighters: readonly Fighter[]) {
+  const byKind: Record<string, number[]> = {};
+  const living = fighters
+    .filter((fighter) => fighter.side === "human" && fighter.hp > 0 && fighter.manualAbility)
+    .sort((left, right) => left.id - right.id);
+  for (const fighter of living) {
+    const values = byKind[fighter.kind] ?? [];
+    values.push(manualAbilityCheckpointCooldown(fighter.manualAbility));
+    byKind[fighter.kind] = values;
+  }
+  return byKind;
+}
+
+function consumeSurvivalManualAbilityCooldown(g: Game, kind: UnitKind) {
+  const run = g.survivalRun;
+  const queue = run?.manualAbilityCooldownsByKind?.[kind];
+  if (!run || !Array.isArray(queue) || queue.length === 0) {
+    return restoreManualAbilityCooldown(kind, 0) as ManualAbilityRuntime | null;
+  }
+  const [cooldown, ...remaining] = queue;
+  const nextCooldowns = { ...run.manualAbilityCooldownsByKind };
+  if (remaining.length > 0) nextCooldowns[kind] = remaining;
+  else delete nextCooldowns[kind];
+  g.survivalRun = {
+    ...run,
+    manualAbilityCooldownsByKind: nextCooldowns,
+  };
+  return restoreManualAbilityCooldown(kind, cooldown) as ManualAbilityRuntime | null;
+}
+
+function v090EnemyIncomingDamageMultiplier(
+  g: Game,
+  attacker: Fighter | null,
+  target: Fighter,
+  attackKind: "melee" | "ranged",
+) {
+  if (target.side !== "zombie") return 1;
+  let multiplier = target.kind === "cagewalker" && attacker
+    ? cagewalkerFrontDamageMultiplier({
+      phase: target.stationAbility.phase,
+      attackerX: attacker.x,
+      targetX: target.x,
+    })
+    : 1;
+  if (target.kind === "gairen" && attacker) {
+    multiplier *= gairenIncomingDamageMultiplier({
+      runtime: target.stationAbility,
+      attackerX: attacker.x,
+      bossX: target.x,
+      verticalDistance: attacker.y - target.y,
+    });
+  }
+  for (const anchor of g.fighters) {
+    if (anchor.kind !== "anchor-bloom" || anchor.hp <= 0 || !anchor.combatReady) continue;
+    const reinforcement = anchorBloomReinforcement({
+      phase: anchor.stationAbility.phase,
+      anchor,
+      target,
+    });
+    if (reinforcement.active) {
+      multiplier *= reinforcement.incomingDamageMultiplier;
+      break;
+    }
+  }
+  if (attackKind === "ranged" && attacker) {
+    for (const manta of g.fighters) {
+      if (manta.kind !== "pall-manta" || manta.hp <= 0 || !manta.combatReady) continue;
+      const canopyMultiplier = pallMantaProjectileMultiplier({
+        phase: manta.stationAbility.phase,
+        shooter: attacker,
+        target,
+        manta,
+      });
+      if (canopyMultiplier < 1) {
+        multiplier *= canopyMultiplier;
+        break;
+      }
+    }
+  }
+  return multiplier;
 }
 
 function createUnitRoleRuntime({
@@ -1273,8 +1826,20 @@ function createUnitRoleRuntime({
     engineerTrapX: 0,
     engineerTrapLane: null,
     engineerTrapCooldown: 0,
+    engineerTrapManual: false,
     armorBreakStacks: 0,
     armorBrokenRemaining: 0,
+  };
+}
+
+function damageAfterRoleProtection(target: Fighter, damage: number) {
+  const incoming = Math.max(0, damage);
+  const multiplier = target.damageReductionRemaining > 0
+    ? Math.max(0, Math.min(1, target.damageReductionMultiplier))
+    : 1;
+  return {
+    damage: incoming * multiplier,
+    prevented: incoming * (1 - multiplier),
   };
 }
 
@@ -1282,36 +1847,136 @@ function applyIncomingHumanDamage(
   g: Game,
   target: Fighter,
   incomingDamage: number,
-  { attackKind = "melee" }: { attackKind?: "melee" | "ranged" } = {},
+  { attackKind = "melee", attacker = null }: { attackKind?: "melee" | "ranged"; attacker?: Fighter | null } = {},
 ) {
   const incoming = Math.max(0, incomingDamage);
-  let targetDamage = incoming;
+  const targetHpBefore = target.hp;
+  if (target.kind === "mayo-chan" && mayoRetreatBlocksDamage(target.mayoRetreat)) {
+    return Object.freeze({
+      targetDamage: 0,
+      redirectedDamage: 0,
+      preventedDamage: incoming,
+    });
+  }
+  if (target.kind === "miyamoto-musashi" && attackKind === "melee" && target.manualAbility) {
+    const counter = triggerMusashiCounter(target.manualAbility);
+    if (counter.ok) {
+      const storedTargetId = counter.event?.target?.targetId;
+      const counterTarget = attacker?.side === "zombie" && attacker.hp > 0
+        ? attacker
+        : g.fighters.find((candidate) => (
+          candidate.id === storedTargetId
+          && candidate.side === "zombie"
+          && candidate.hp > 0
+          && candidate.combatReady
+        )) ?? null;
+      target.manualAbility = counter.runtime as ManualAbilityRuntime;
+      target.flash = Math.max(target.flash, .32);
+      target.attack = Math.max(target.attack, .42);
+      target.cooldown = Math.max(target.cooldown, .42);
+      g.manualAbilityReceipts.push({
+        ownerId: target.id,
+        activationId: counter.event?.activationId ?? target.manualAbility.activationId,
+        kind: target.kind,
+        eventType: "impact",
+        mode: "counter",
+        at: g.time,
+      });
+      g.manualAbilityReceipts = g.manualAbilityReceipts.slice(-32);
+      g.pendingAbilityAudioCues.push({
+        cueId: "ability-musashi-counter",
+        x: counterTarget?.x ?? target.x,
+        dedupeKey: `manual-ability:${target.id}:${counter.event?.activationId ?? target.manualAbility.activationId}:counter`,
+      });
+      g.pendingAbilityAudioCues = g.pendingAbilityAudioCues.slice(-8);
+      g.manualAbilityVfx = g.manualAbilityVfx
+        .filter((effect) => effect.ownerId !== target.id)
+        .concat({
+          ownerId: target.id,
+          activationId: counter.event?.activationId ?? target.manualAbility.activationId,
+          kind: target.kind,
+          originX: target.x,
+          originY: target.y,
+          targetX: counterTarget?.x ?? target.x + 42,
+          targetY: counterTarget?.y ?? target.y,
+          elapsed: 0,
+          duration: .46,
+        })
+        .slice(-8);
+      addDamageText(g, {
+        x: target.x,
+        y: target.y - 72,
+        value: "受け流し",
+        life: .9,
+        color: "#c5e7ff",
+      });
+      if (counterTarget) {
+        const definition = MANUAL_ABILITY_REGISTRY["miyamoto-musashi"];
+        const strikeDamage = definition.counterDamage * (isBossEnemyKind(counterTarget.kind) ? definition.bossDamageMultiplier : 1);
+        const applied = Math.min(counterTarget.hp, strikeDamage);
+        counterTarget.hp = Math.max(0, counterTarget.hp - strikeDamage);
+        recordUnitDamage(g, target.kind, applied);
+        counterTarget.stunned = Math.max(counterTarget.stunned, definition.counterStunSeconds);
+        counterTarget.flash = Math.max(counterTarget.flash, .3);
+        counterTarget.knock = Math.max(counterTarget.knock, isBossEnemyKind(counterTarget.kind) ? 5 : 14);
+        addDamageText(g, {
+          x: counterTarget.x,
+          y: counterTarget.y - 58,
+          value: `無空 -${Math.round(applied)}`,
+          life: .92,
+          color: "#d7efff",
+        });
+        addParticles(g, counterTarget.x, counterTarget.y - 30, "#c7e4ef", 18);
+      }
+      return Object.freeze({
+        targetDamage: 0,
+        redirectedDamage: 0,
+        preventedDamage: incoming,
+      });
+    }
+  }
+  const activeGuardian = g.fighters
+    .filter((candidate) => (
+      candidate.side === "human"
+      && candidate.kind === "guardian"
+      && candidate.hp > 0
+      && candidate.manualAbility?.phase === "active"
+      && fighterDistance(candidate, target) <= MANUAL_ABILITY_REGISTRY.guardian.protectionRadius
+      && target.x <= candidate.x + 12
+    ))
+    .sort((left, right) => fighterDistance(left, target) - fighterDistance(right, target) || left.id - right.id)[0] ?? null;
+  const manualProtectionMultiplier = target.kind === "kumaverson" && target.manualAbility?.phase === "active"
+    ? MANUAL_ABILITY_REGISTRY.kumaverson.damageTakenMultiplier
+    : target.kind === "guardian" && target.manualAbility?.phase === "active"
+      ? MANUAL_ABILITY_REGISTRY.guardian.selfDamageTakenMultiplier
+      : activeGuardian
+        ? MANUAL_ABILITY_REGISTRY.guardian.allyDamageTakenMultiplier
+        : 1;
+  let targetDamage = incoming * manualProtectionMultiplier;
   let redirectedDamage = 0;
-  let preventedDamage = 0;
+  let preventedDamage = incoming - targetDamage;
   const guardian = g.fighters
     .filter((candidate) => candidate.side === "human" && candidate.kind === "guardian" && candidate.hp > 0)
     .sort((left, right) => fighterDistance(left, target) - fighterDistance(right, target) || left.id - right.id)
     .find((candidate) => resolveGantetsuInterception({
       guardian: candidate,
       target,
-      incomingDamage: incoming,
+      incomingDamage: targetDamage,
       attackKind,
       steadfast: { remainingSeconds: candidate.guardStandRemaining, available: candidate.guardStandAvailable },
     }).eligible);
 
   if (guardian) {
+    const guardianHpBefore = guardian.hp;
     const rawInterception = resolveGantetsuInterception({
       guardian,
       target,
-      incomingDamage: incoming,
+      incomingDamage: targetDamage,
       attackKind,
       steadfast: { remainingSeconds: guardian.guardStandRemaining, available: guardian.guardStandAvailable },
     });
     const armoredGuardianDamage = damageAfterUnitDefense(rawInterception.guardianDamage, guardian.defense);
-    const guardedDamage = naoDamageAfterProtection({
-      damage: armoredGuardianDamage.damage,
-      protectionSeconds: guardian.damageReductionRemaining,
-    });
+    const guardedDamage = damageAfterRoleProtection(guardian, armoredGuardianDamage.damage);
     const protectedGuardian = {
       ...guardian,
       hp: guardian.hp + armoredGuardianDamage.prevented + guardedDamage.prevented,
@@ -1319,13 +1984,14 @@ function applyIncomingHumanDamage(
     const appliedInterception = resolveGantetsuInterception({
       guardian: protectedGuardian,
       target,
-      incomingDamage: incoming,
+      incomingDamage: targetDamage,
       attackKind,
       steadfast: { remainingSeconds: guardian.guardStandRemaining, available: guardian.guardStandAvailable },
     });
     guardian.hp = appliedInterception.guardianHp;
     guardian.guardStandRemaining = appliedInterception.steadfast.remainingSeconds;
     guardian.guardStandAvailable = appliedInterception.steadfast.available;
+    recordUnitDamageTaken(g, guardian.kind, Math.max(0, guardianHpBefore - guardian.hp));
     guardian.flash = Math.max(guardian.flash, .12);
     redirectedDamage = rawInterception.guardianDamage;
     targetDamage = rawInterception.targetDamage;
@@ -1342,10 +2008,7 @@ function applyIncomingHumanDamage(
   }
 
   const armoredTargetDamage = damageAfterUnitDefense(targetDamage, target.defense);
-  const protectedTarget = naoDamageAfterProtection({
-    damage: armoredTargetDamage.damage,
-    protectionSeconds: target.damageReductionRemaining,
-  });
+  const protectedTarget = damageAfterRoleProtection(target, armoredTargetDamage.damage);
   let appliedTargetDamage = protectedTarget.damage;
   if (target.kind === "guardian") {
     const steadfastDamage = resolveGantetsuSteadfastDamage({
@@ -1373,6 +2036,7 @@ function applyIncomingHumanDamage(
   } else {
     target.hp -= protectedTarget.damage;
   }
+  recordUnitDamageTaken(g, target.kind, Math.max(0, targetHpBefore - target.hp));
   preventedDamage += armoredTargetDamage.prevented + protectedTarget.prevented;
   g.roleMetrics.naoPreventedDamage += protectedTarget.prevented;
   return Object.freeze({
@@ -1386,6 +2050,60 @@ function bodyRadiusFor(kind: string) {
   return UNIT_CARDS.find((unit) => unit.kind === kind)?.bodyRadius
     ?? enemyBodyRadiusFor(kind)
     ?? 11;
+}
+
+const ENEMY_RECORD_PROFILE_LABELS: Readonly<Record<string, string>> = Object.freeze({
+  nearest: "正面の対象へ接近し、近距離で攻撃する。",
+  "crawler-priority": "高速で防衛線を抜け、移動拠点を優先する。",
+  ranged: "距離を保ちながら遠隔攻撃を行う。",
+  "support-object": "高耐久で支援物資や防衛対象を破壊する。",
+  backline: "前衛を抜け、後衛の隊員を狙う。",
+  area: "広い攻撃範囲で密集した部隊を崩す。",
+  grab: "拘束予告後に隊員を引き寄せる。",
+  contamination: "床面へ持続汚染を残し、移動を制限する。",
+  charge: "直線予告後に高速突進する。",
+  "sonic-cone": "前方へ拡大する音圧攻撃で部隊を崩す。",
+  "living-barricade": "味方感染体の前面を覆う生体防壁となる。",
+  "vault-backline": "前衛を跳び越えて後衛へ着地する。",
+  "mimic-taunt": "擬態音声で標的選択を撹乱する。",
+  "projectile-canopy": "皮膜を展開し、遠隔攻撃を減衰させる。",
+  "root-support": "地面へ根を張り、周囲の感染体を補強する。",
+});
+
+function spriteCompendiumStyle(
+  kind: string,
+  box = { width: 160, height: 118 },
+): CSSProperties {
+  const frame = spriteFrameFor(kind, "idle", "left");
+  const content = frame.contentRect ?? frame.sourceRect ?? { x: frame.x, y: frame.y, w: frame.w, h: frame.h };
+  const source = frame.sourceRect ?? { x: frame.x, y: frame.y, w: frame.w, h: frame.h };
+  const boxWidth = box.width;
+  const boxHeight = box.height;
+  const scale = Math.min((boxWidth - 16) / Math.max(1, content.w), (boxHeight - 12) / Math.max(1, content.h));
+  const contentCenterX = (content.x - source.x + content.w / 2) * scale;
+  const contentCenterY = (content.y - source.y + content.h / 2) * scale;
+  return {
+    position: "absolute",
+    width: `${source.w * scale}px`,
+    height: `${source.h * scale}px`,
+    left: `${boxWidth / 2 - contentCenterX}px`,
+    top: `${boxHeight / 2 - contentCenterY}px`,
+    backgroundImage: `url('${frame.path}')`,
+    backgroundRepeat: "no-repeat",
+    backgroundSize: `${frame.sheetWidth * scale}px ${frame.sheetHeight * scale}px`,
+    backgroundPosition: `${-source.x * scale}px ${-source.y * scale}px`,
+  };
+}
+
+function fullCompendiumStyle(path: string): CSSProperties {
+  return {
+    position: "absolute",
+    inset: 0,
+    backgroundImage: `url('${path}')`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center",
+    backgroundSize: "contain",
+  };
 }
 
 function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: EnemySpawnEntry | null = null) {
@@ -1423,6 +2141,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     gateEntering,
     entryDirection: -1,
     spawnPortalId: gateEntry?.portalId ?? null,
+    spawnEntryMode: gateEntry?.entryMode,
     entryStepDistance: 0,
     gateEntrySpeed: gateEntry?.entrySpeed ?? 0,
     combatReadyX: gateEntry?.combatReadyX ?? 0,
@@ -1447,10 +2166,42 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
   return g.fighters[g.fighters.length - 1];
 }
 
-function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
+function equippedCardForGame(g: Game, kind: UnitKind) {
   const baseCard = cards.find((item) => item.kind === kind);
   if (!baseCard) return null;
-  const card = applyUnitProgression(baseCard, g.unitRanksByKind[kind] ?? 0) as UnitCard & { progressionRank: number };
+  const progressedCard = applyUnitLevelProgression(baseCard, g.unitLevelsByKind[kind] ?? 1) as UnitCard & { progressionLevel: number; progressionRank: number };
+  const equipmentEffects = aggregateEquipmentEffects([
+    ...(g.personalEquipmentByKind[kind] ?? []),
+    ...g.tacticalEquipmentIds,
+  ], g.equipmentEnhancementLevels);
+  const survivalEffects = survivalUpgradeEffects(g.survivalRun);
+  return {
+    ...progressedCard,
+    hp: Math.max(1, Math.round(progressedCard.hp * equipmentEffects.hpMultiplier)),
+    damage: progressedCard.damage
+      * survivalEffects.attackMultiplier
+      * equipmentEffects.damageMultiplier,
+    range: progressedCard.range
+      * survivalEffects.rangeMultiplier
+      * equipmentEffects.rangeMultiplier,
+    speed: progressedCard.speed * equipmentEffects.speedMultiplier,
+    laneSpeed: progressedCard.laneSpeed * equipmentEffects.speedMultiplier,
+    attackEvery: progressedCard.attackEvery * equipmentEffects.attackEveryMultiplier,
+    defense: Math.min(
+      .75,
+      1 - (1 - Math.min(.75, (progressedCard.defense ?? 0) + equipmentEffects.defenseFlat))
+        * survivalEffects.defenseMultiplier,
+    ),
+    healingMultiplier: (progressedCard.healingMultiplier ?? 1)
+      * survivalEffects.healingMultiplier
+      * equipmentEffects.healingMultiplier,
+    deployCooldown: progressedCard.deployCooldown * equipmentEffects.redeployMultiplier,
+  } as UnitCard & { progressionLevel: number; progressionRank: number };
+}
+
+function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
+  const card = equippedCardForGame(g, kind);
+  if (!card) return null;
   const id = g.nextId++;
   const laneCounts = [0, 0, 0];
   for (const ally of g.fighters) {
@@ -1474,6 +2225,9 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
       combatReadyX: MUSTER_X,
       combatReadyY: activeMusterY(),
     };
+  const manualAbility = g.survivalRun
+    ? consumeSurvivalManualAbilityCooldown(g, kind)
+    : createManualAbilityRuntime(kind) as ManualAbilityRuntime | null;
   g.fighters.push({
     id, side: "human", kind, aiProfile: card.aiProfile, lane: deployment.legacyLane as Lane, anchorLane: assignedLane, x: deployment.x, y: deployment.y, hp: card.hp, maxHp: card.hp,
     speed: card.speed, damage: card.damage, range: card.range, cooldown: 0, supportCooldown: 0,
@@ -1489,6 +2243,10 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     navigationRecovery: createNavigationRecoveryState({ x: deployment.x, y: deployment.y, lane: assignedLane }),
     abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
+    manualAbility,
+    mayoBiteSlowRemaining: 0,
+    mayoRetreat: null,
+    progressionLevel: card.progressionLevel,
     progressionRank: card.progressionRank,
     ...createUnitRoleRuntime(card),
   });
@@ -1496,6 +2254,30 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
   g.banner = `${card.name} // 移動拠点から出撃`;
   g.bannerTime = .8;
   return card;
+}
+
+function beginMayoRetreat(g: Game, fighter: Fighter, reason: "ability" | "injury") {
+  if (fighter.kind !== "mayo-chan" || fighter.mayoRetreat) return false;
+  fighter.hp = Math.max(1, fighter.hp);
+  fighter.targetable = false;
+  fighter.combatReady = false;
+  fighter.gateEntering = false;
+  fighter.contained = false;
+  fighter.targetId = null;
+  fighter.targetObjectId = null;
+  fighter.aiMoveDirection = -1;
+  fighter.cooldown = Number.POSITIVE_INFINITY;
+  fighter.manualAbility = fighter.manualAbility
+    ? ({ ...fighter.manualAbility, phase: "retreat", activeRemaining: 0, target: null } as ManualAbilityRuntime)
+    : null;
+  fighter.mayoRetreat = createMayoRetreatRuntime({ reason });
+  g.manualAbilityVfx = g.manualAbilityVfx.filter((effect) => effect.ownerId !== fighter.id);
+  const redeploy = Math.max(36, (cards.find((card) => card.kind === "mayo-chan")?.deployCooldown ?? 24) * 1.75);
+  g.deployCooldowns["mayo-chan"] = Math.max(g.deployCooldowns["mayo-chan"] ?? 0, redeploy);
+  g.banner = reason === "injury" ? "マヨちゃん // 負傷退避" : "マヨちゃん // 退避";
+  g.bannerTime = 1.35;
+  addParticles(g, fighter.x, fighter.y - 10, reason === "injury" ? "#e6c97a" : "#b05268", 9);
+  return true;
 }
 
 function prepareEndgameQa(g: Game) {
@@ -1661,6 +2443,149 @@ function prepareRolesQa(g: Game) {
   if (breaker && heldEnemy) heldEnemy.targetId = breaker.id;
   g.banner = "QA ROLES // ELEVEN UNIT LIVE FIRE";
   g.bannerTime = 2.2;
+}
+
+function prepareZakimiyaQa(g: Game) {
+  g.time = 60;
+  g.phase = 2;
+  g.wave = 4;
+  g.eventIndex = missionEvents.length;
+  g.baseHp = g.baseMaxHp;
+  g.barricadeVulnerable = true;
+  g.barricadeMaxHp = Math.max(BARRICADE_MAX_HP, 5000);
+  g.barricadeHp = g.barricadeMaxHp;
+  g.energy = COMMAND_MAX;
+  g.scrap = 150;
+  g.fighters = [];
+  g.corpses = [];
+  g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+
+  spawnHuman(g, "zakimiya");
+  const zakimiya = g.fighters[g.fighters.length - 1];
+  zakimiya.lane = 1;
+  zakimiya.anchorLane = 1;
+  zakimiya.x = 380;
+  zakimiya.y = laneY(1, zakimiya.id);
+  zakimiya.spawnGrace = 0;
+  zakimiya.combatReady = true;
+  zakimiya.gateEntering = false;
+
+  for (const [index, x] of [425, 555, 580, 605].entries()) {
+    const target = spawnEnemy(g, index === 3 ? "crusher" : "walker", 1);
+    target.x = x;
+    target.y = laneY(1, target.id);
+    target.maxHp = index === 0 ? 900 : 520;
+    target.hp = target.maxHp;
+    target.speed = 0;
+    target.laneSpeed = 0;
+    target.damage = 0;
+    target.cooldown = 99;
+    target.combatReady = true;
+    target.gateEntering = false;
+  }
+  g.banner = "QA ZAKIMIYA // NORMAL ATTACK + 火酒投擲";
+  g.bannerTime = 1.25;
+}
+
+function prepareNewPlayablesQa(g: Game) {
+  g.time = 60;
+  g.phase = 2;
+  g.wave = 4;
+  g.eventIndex = missionEvents.length;
+  g.baseHp = g.baseMaxHp;
+  g.barricadeVulnerable = true;
+  g.barricadeMaxHp = Math.max(BARRICADE_MAX_HP, 8000);
+  g.barricadeHp = g.barricadeMaxHp;
+  g.energy = COMMAND_MAX;
+  g.scrap = 200;
+  g.fighters = [];
+  g.corpses = [];
+  g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+
+  const lineup: readonly [UnitKind, Lane, number][] = [
+    ["tky", 0, 350],
+    ["mrs-chiha", 1, 295],
+    ["miyamoto-musashi", 2, 370],
+  ];
+  for (const [kind, lane, x] of lineup) {
+    spawnHuman(g, kind);
+    const fighter = g.fighters[g.fighters.length - 1];
+    fighter.lane = lane;
+    fighter.anchorLane = lane;
+    fighter.x = x;
+    fighter.y = laneY(lane, fighter.id);
+    fighter.spawnGrace = 0;
+    fighter.combatReady = true;
+    fighter.gateEntering = false;
+    fighter.cooldown = 0;
+  }
+
+  const enemies: readonly [EnemyKind, Lane, number][] = [
+    ["walker", 0, 470], ["walker", 0, 510], ["crusher", 0, 550],
+    ["walker", 1, 500], ["walker", 1, 555], ["crusher", 1, 610],
+    ["crusher", 2, 470],
+  ];
+  for (const [kind, lane, x] of enemies) {
+    const target = spawnEnemy(g, kind, lane);
+    target.x = x;
+    target.y = laneY(lane, target.id);
+    target.maxHp = 1600;
+    target.hp = target.maxHp;
+    target.speed = 0;
+    target.laneSpeed = 0;
+    target.damage = 0;
+    target.cooldown = 99;
+    target.combatReady = true;
+    target.gateEntering = false;
+  }
+  g.banner = "QA NEW PLAYABLES // TKY + Mrs.チハ + 宮本武蔵";
+  g.bannerTime = 1.4;
+}
+
+function prepareMayoQa(g: Game) {
+  g.time = 60;
+  g.phase = 2;
+  g.wave = 4;
+  g.eventIndex = missionEvents.length;
+  g.baseHp = g.baseMaxHp;
+  g.barricadeVulnerable = true;
+  g.barricadeMaxHp = Math.max(BARRICADE_MAX_HP, 8000);
+  g.barricadeHp = g.barricadeMaxHp;
+  g.energy = COMMAND_MAX;
+  g.scrap = 200;
+  g.fighters = [];
+  g.corpses = [];
+  g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+  g.manualAbilityReceipts = [];
+  g.manualAbilityVfx = [];
+  g.resolvedDefeatIds = new Set();
+
+  spawnHuman(g, "mayo-chan");
+  const mayo = g.fighters[g.fighters.length - 1];
+  mayo.lane = 1;
+  mayo.anchorLane = 1;
+  mayo.x = 320;
+  mayo.y = laneY(1, mayo.id);
+  mayo.spawnGrace = 0;
+  mayo.combatReady = true;
+  mayo.gateEntering = false;
+  mayo.cooldown = 0;
+
+  for (const [index, x] of [410, 485, 560].entries()) {
+    const target = spawnEnemy(g, index === 0 ? "runner" : "walker", 1);
+    target.x = x;
+    target.y = laneY(1, target.id);
+    target.maxHp = 2400;
+    target.hp = target.maxHp;
+    target.speed = 0;
+    target.laneSpeed = 0;
+    target.damage = 0;
+    target.cooldown = 99;
+    target.combatReady = true;
+    target.gateEntering = false;
+  }
+  g.banner = "QA MAYO-CHAN // NORMAL + 凶暴マヨ + 負傷退避";
+  g.bannerTime = 1.4;
 }
 
 function emitBattleBark(g: Game, trigger: string, speakerKind: string, speakerId?: number | string) {
@@ -2152,6 +3077,9 @@ function prepareStationQa(g: Game, state: "start" | "near-win" | "near-loss" | "
 function prepareQaMode(g: Game, qaMode: QaMode | null) {
   g.qaBarks = qaMode !== null && qaMode !== "loadout";
   if (qaMode === "roles" || qaMode === "dialogue") prepareRolesQa(g);
+  else if (qaMode === "zakimiya") prepareZakimiyaQa(g);
+  else if (qaMode === "new-playables") prepareNewPlayablesQa(g);
+  else if (qaMode === "mayo") prepareMayoQa(g);
   else if (qaMode === "takuya-entrance") prepareTakuyaEntranceQa(g);
   else if (qaMode === "endgame") prepareEndgameQa(g);
   else if (qaMode === "ai-reacquire") prepareAiReacquireQa(g);
@@ -2166,20 +3094,164 @@ function prepareQaMode(g: Game, qaMode: QaMode | null) {
   }
 }
 
-const SPRITE_DISPLAY_SIZES: Record<string, { w: number; h: number }> = {
-  scout: { w: 58, h: 98 }, ranger: { w: 58, h: 98 }, brute: { w: 72, h: 108 },
-  brawler: { w: 62, h: 99 }, gunner: { w: 60, h: 100 }, medic: { w: 60, h: 100 },
-  "crazy-king": { w: 72, h: 104 }, kumaverson: { w: 64, h: 102 }, babayaga: { w: 62, h: 103 },
-  guardian: { w: 78, h: 108 }, engineer: { w: 60, h: 100 },
-  walker: { w: 58, h: 96 }, runner: { w: 53, h: 90 }, turned: { w: 58, h: 96 },
-  shade: { w: 64, h: 101 }, spitter: { w: 62, h: 101 }, crusher: { w: 80, h: 112 },
-  abomination: { w: 101, h: 132 }, takuya: { w: 94, h: 128 },
-  grappler: { w: 78, h: 108 }, ooze: { w: 70, h: 94 }, sprinter: { w: 58, h: 96 },
-  "gate-eater": { w: 126, h: 142 },
-};
+function prepareManualAbilityProof(g: Game, requestedKinds: readonly UnitKind[]) {
+  const kinds = requestedKinds.filter((kind) => (
+    MANUAL_ABILITY_REGISTRY[kind]?.runtimeStatus === "integrated"
+  ));
+  if (kinds.length === 0) throw new Error("Manual ability proof requires at least one integrated unit");
+  g.time = 60;
+  g.phase = 2;
+  g.wave = 4;
+  g.eventIndex = g.definition.timeline.length;
+  g.running = true;
+  g.over = false;
+  g.won = false;
+  g.survivalRun = null;
+  g.survivalRuntime = null;
+  g.survivalCheckpointReceipt = null;
+  g.baseHp = g.baseMaxHp;
+  g.barricadeVulnerable = true;
+  g.barricadeMaxHp = Math.max(BARRICADE_MAX_HP, 12000);
+  g.barricadeHp = g.barricadeMaxHp;
+  g.energy = COMMAND_MAX;
+  g.scrap = 200;
+  g.fighters = [];
+  g.corpses = [];
+  g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+  g.deployQueue = [];
+  g.pendingWeaponHits = [];
+  g.areaEffects = [];
+  g.manualAbilityVfx = [];
+  g.manualAbilityReceipts = [];
+  g.pendingAbilityAudioCues = [];
+  g.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
+  g.qaBarks = false;
+  g.banner = "";
+  g.bannerTime = 0;
+
+  const owners: Fighter[] = [];
+  const rosterProof = kinds.length > 4;
+  for (const [index, kind] of kinds.entries()) {
+    const lane = (index % 3) as Lane;
+    const column = Math.floor(index / 3);
+    const x = rosterProof ? 260 + column * 78 : 300;
+    spawnHuman(g, kind);
+    const fighter = g.fighters[g.fighters.length - 1];
+    fighter.lane = lane;
+    fighter.anchorLane = lane;
+    fighter.x = x;
+    fighter.y = laneY(lane, fighter.id);
+    fighter.spawnGrace = 0;
+    fighter.combatReady = true;
+    fighter.gateEntering = false;
+    fighter.speed = 0;
+    fighter.laneSpeed = 0;
+    fighter.cooldown = 99;
+    fighter.supportCooldown = 99;
+    fighter.aiMoveDirection = 1;
+    fighter.manualAbility = createManualAbilityRuntime(kind) as ManualAbilityRuntime;
+    owners.push(fighter);
+
+    if (!rosterProof && kind !== "medic") {
+      const targetKind: EnemyKind = kind === "scout"
+        ? "runner"
+        : kind === "engineer"
+          ? "runner"
+          : kind === "ranger" || kind === "babayaga"
+            ? "spitter"
+            : kind === "brute"
+              ? "crusher"
+              : "walker";
+      const target = spawnEnemy(g, targetKind, lane);
+      target.x = Math.min(825, x + 92);
+      target.y = fighter.y;
+      target.maxHp = 2400;
+      target.hp = target.maxHp;
+      target.speed = 0;
+      target.laneSpeed = 0;
+      target.damage = 0;
+      target.cooldown = 99;
+      target.abilityCooldown = 99;
+      target.combatReady = true;
+      target.gateEntering = false;
+      target.targetId = null;
+      target.retargetIn = 99;
+      if (kind === "brawler" || kind === "engineer") {
+        const nearby = spawnEnemy(g, "walker", lane);
+        nearby.x = Math.min(825, x + (kind === "engineer" ? 58 : 72));
+        nearby.y = fighter.y;
+        nearby.maxHp = 2400;
+        nearby.hp = nearby.maxHp;
+        nearby.speed = 0;
+        nearby.laneSpeed = 0;
+        nearby.damage = 0;
+        nearby.cooldown = 99;
+        nearby.abilityCooldown = 99;
+        nearby.combatReady = true;
+        nearby.gateEntering = false;
+        nearby.targetId = null;
+        nearby.retargetIn = 99;
+      }
+    }
+  }
+
+  if (rosterProof) {
+    for (const lane of [0, 1, 2] as const) {
+      for (const [targetKind, x] of [["runner", 350], ["spitter", 500], ["crusher", 650]] as const) {
+        const target = spawnEnemy(g, targetKind, lane);
+        target.x = x;
+        target.y = activeLaneCenters[lane];
+        target.maxHp = 7200;
+        target.hp = target.maxHp;
+        target.speed = 0;
+        target.laneSpeed = 0;
+        target.damage = 0;
+        target.cooldown = 99;
+        target.abilityCooldown = 99;
+        target.combatReady = true;
+        target.gateEntering = false;
+        target.targetId = null;
+        target.retargetIn = 99;
+      }
+    }
+  }
+
+  const medic = owners.find((fighter) => fighter.kind === "medic");
+  if (medic) {
+    let wounded = owners
+      .filter((fighter) => fighter.id !== medic.id)
+      .sort((left, right) => fighterDistance(left, medic) - fighterDistance(right, medic) || left.id - right.id)[0];
+    if (!wounded) {
+      spawnHuman(g, "scout");
+      wounded = g.fighters[g.fighters.length - 1];
+      wounded.lane = medic.lane;
+      wounded.anchorLane = medic.lane;
+      wounded.x = medic.x + 54;
+      wounded.y = medic.y;
+      wounded.spawnGrace = 0;
+      wounded.combatReady = true;
+      wounded.gateEntering = false;
+      wounded.speed = 0;
+      wounded.laneSpeed = 0;
+      wounded.cooldown = 99;
+    }
+    wounded.hp = Math.max(1, wounded.maxHp * .24);
+  }
+  g.banner = "";
+  g.bannerTime = 0;
+  return {
+    ownerIds: owners.map(({ id }) => id),
+    kinds: owners.map(({ kind }) => kind as UnitKind),
+  };
+}
 
 function spriteDisplaySize(kind: string) {
-  return SPRITE_DISPLAY_SIZES[kind] ?? { w: 58, h: 96 };
+  return spriteBattleDisplaySizeFor(kind);
+}
+
+function compactSpriteScale(kind: string) {
+  if (!compactBattleViewport()) return 1;
+  return kind === "mother" ? 1.06 : COMPACT_BATTLE_SPRITE_SCALE;
 }
 
 // Asset-load diagnostic fallback only. Normal production rendering resolves
@@ -2292,38 +3364,118 @@ function drawMonkeyTrap(ctx: CanvasRenderingContext2D, fighter: Fighter) {
 }
 
 function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: SpriteMap) {
-  const sprite = sprites[f.kind];
+  const mayoFeral = f.kind === "mayo-chan"
+    && (f.manualAbility?.phase === "feral" || f.mayoRetreat?.reason === "ability");
+  const renderKind = mayoFeral ? "mayo-chan-feral" : f.kind;
+  const sprite = sprites[renderKind];
   if (!sprite?.complete || !sprite.naturalWidth) {
     drawDiagnosticRoleFighter(ctx, f);
     drawDiagnosticStationEnemy(ctx, f);
     return;
   }
-  const moving = f.gateEntering || f.side === "zombie" || Math.abs(f.aiMoveDirection) > .05;
-  const attackDuration = attackPresentationDuration(f.kind);
-  const animationSample = f.flash > 0
+  const moving = f.mayoRetreat?.phase === "run"
+    || f.gateEntering
+    || f.side === "zombie"
+    || Math.abs(f.aiMoveDirection) > .05;
+  const attackDuration = f.kind === "mrs-chiha" && f.attackVariant === "launcher-bash"
+    ? mrsChihaLauncherBashDuration()
+    : attackPresentationDuration(f.kind);
+  const manualAbilityActive = f.side === "human" && manualAbilityLocksNormalAction(f.manualAbility);
+  const manualAbilityDefinition = manualAbilityActive ? MANUAL_ABILITY_REGISTRY[f.kind] : null;
+  const manualAbilityElapsed = !manualAbilityActive || !manualAbilityDefinition
+    ? 0
+    : f.manualAbility?.phase === "windup"
+      ? Math.max(0, manualAbilityDefinition.windupSeconds - f.manualAbility.windupRemaining)
+      : f.kind === "mrs-chiha"
+        ? Math.max(0, f.manualAbility?.abilityElapsed ?? 0)
+        : f.kind === "miyamoto-musashi" && f.manualAbility?.phase === "guard"
+          ? manualAbilityDefinition.windupSeconds
+            + ((manualAbilityDefinition.guardSeconds - f.manualAbility.guardRemaining) % .36)
+          : f.step;
+  const anomalyTuning = isBossAnomalyKind(f.kind)
+    ? BOSS_ANOMALY_TUNING[f.kind as keyof typeof BOSS_ANOMALY_TUNING]
+    : null;
+  const animationSample = f.mayoRetreat
+    ? sampleAnimationClip("mayo-chan", mayoRetreatSpriteState(f.mayoRetreat), f.mayoRetreat.phaseElapsed)
+    : manualAbilityActive
+    ? sampleAnimationClip(f.kind, "special", manualAbilityElapsed)
+    : f.kind === "kurome" && ["tracking", "locked"].includes(f.stationAbility.phase)
+      ? sampleAnimationClip(f.kind, "wind-up", KUROME_PROTOTYPE_TUNING.warningSeconds - f.stationAbility.remainingSeconds)
+      : f.kind === "kurome" && f.stationAbility.phase === "firing"
+        ? sampleAnimationClip(f.kind, "active", KUROME_PROTOTYPE_TUNING.fireSeconds - f.stationAbility.remainingSeconds)
+    : f.kind === "kurome" && f.stationAbility.phase === "recovery"
+      ? sampleAnimationClip(f.kind, "recovery", KUROME_PROTOTYPE_TUNING.recoverySeconds - f.stationAbility.remainingSeconds)
+    : anomalyTuning && f.stationAbility.phase === "warning"
+      ? sampleAnimationClip(
+        f.kind,
+        "wind-up",
+        anomalyTuning.warningSeconds - f.stationAbility.remainingSeconds,
+      )
+    : anomalyTuning && f.stationAbility.phase === "active"
+      ? sampleAnimationClip(
+        f.kind,
+        "active",
+        anomalyTuning.activeSeconds - f.stationAbility.remainingSeconds,
+      )
+    : anomalyTuning && f.stationAbility.phase === "recovery"
+      ? sampleAnimationClip(
+        f.kind,
+        "recovery",
+        anomalyTuning.recoverySeconds - f.stationAbility.remainingSeconds,
+      )
+    : isV090InfectedKind(f.kind) && f.stationAbility.phase === "warning"
+      ? sampleAnimationClip(
+        f.kind,
+        "wind-up",
+        Math.max(0, (v090InfectedDefinition(f.kind)?.warningSeconds ?? 0) - f.stationAbility.remainingSeconds),
+      )
+      : isV090InfectedKind(f.kind) && f.stationAbility.phase === "active"
+        ? sampleAnimationClip(
+          f.kind,
+          "active",
+          Math.max(0, (v090InfectedDefinition(f.kind)?.activeSeconds ?? 0) - f.stationAbility.remainingSeconds),
+        )
+        : isV090InfectedKind(f.kind) && f.stationAbility.phase === "recovery"
+          ? sampleAnimationClip(
+            f.kind,
+            "recovery",
+            Math.max(0, (v090InfectedDefinition(f.kind)?.recoverySeconds ?? 0) - f.stationAbility.remainingSeconds),
+          )
+    : f.flash > 0
     ? sampleAnimationClip(f.kind, "hit", Math.max(0, .12 - f.flash))
     : f.abilityWindup > 0
       ? sampleAnimationClip(f.kind, "wind-up", Math.max(0, .24 - f.abilityWindup))
       : f.attack > 0
-        ? sampleAttackPresentation(f.kind, Math.max(0, attackDuration - f.attack))
+        ? f.kind === "mrs-chiha" && f.attackVariant === "launcher-bash"
+          ? sampleMrsChihaLauncherBash(Math.max(0, attackDuration - f.attack))
+          : sampleAttackPresentation(f.kind, Math.max(0, attackDuration - f.attack))
         : moving
           ? sampleAnimationClip(f.kind, "move", f.step)
           : sampleAnimationClip(f.kind, "idle", f.step);
   const state = animationSample.spriteState;
-  const direction = f.side === "human" ? (f.aiMoveDirection < -.05 ? "left" : "right") : "left";
-  const frame = spriteFrameFor(f.kind, state, direction);
-  const authoredSize = fitSpriteBattleDisplaySize(f.kind, frame, spriteDisplaySize(f.kind));
-  const compactScale = activeLaneCenters === LANE_Y ? 1 : 1.1;
+  const lockedDirection = Number(f.manualAbility?.target?.direction);
+  const direction = combatFacingDirection({
+    side: f.side,
+    aiMoveDirection: f.aiMoveDirection,
+    entryDirection: f.entryDirection,
+    manualDirection: lockedDirection,
+    manualAbilityActive,
+  });
+  const frame = spriteFrameFor(renderKind, state, direction);
+  const authoredSize = fitSpriteBattleDisplaySize(renderKind, frame, spriteDisplaySize(renderKind));
+  const compactScale = compactSpriteScale(renderKind);
+  const depthScale = activeBattlefieldDepthScale(f.y);
   const size = {
-    w: authoredSize.w * compactScale * animationSample.bodyScale,
-    h: authoredSize.h * compactScale * animationSample.bodyScale,
+    w: authoredSize.w * compactScale * depthScale * animationSample.bodyScale,
+    h: authoredSize.h * compactScale * depthScale * animationSample.bodyScale,
   };
   const bob = animationSample.movement ? Math.abs(Math.sin(f.step * 7)) * 1.1 : 0;
   ctx.save();
   if (f.side === "human"
     && f.gateEntering
     && f.spawnPortalId === "crawler-door"
-    && f.entryRampCleared !== true) {
+    && f.entryRampCleared !== true
+    && f.x < WORLD_GEOMETRY.crawler.doorX + 8) {
     const revealLeft = WORLD_GEOMETRY.crawler.doorX - 24;
     const revealRight = Math.max(
       WORLD_GEOMETRY.crawler.doorX + 25,
@@ -2341,13 +3493,17 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     );
     ctx.clip();
   } else if (f.side === "zombie" && f.gateEntering) {
+    const revealRight = f.spawnEntryMode === "right-edge"
+      || f.spawnEntryMode === "right-edge-outside"
+      ? W
+      : ENEMY_GATE_SPAWN.revealX;
     ctx.beginPath();
-    ctx.rect(0, 0, ENEMY_GATE_SPAWN.revealX, H);
+    ctx.rect(0, 0, revealRight, H);
     ctx.clip();
   }
   ctx.fillStyle = "rgba(0,0,0,.42)";
   ctx.beginPath();
-  ctx.ellipse(f.x, f.y + 8, size.w * .27, 4.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(f.x, f.y + 5 * depthScale, size.w * .27, 4.5 * depthScale, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.imageSmoothingEnabled = true;
   if (f.flash > 0) {
@@ -2361,17 +3517,25 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   }
   ctx.translate(f.x, f.y - bob);
   if (frame.flipX) ctx.scale(-1, 1);
-  ctx.drawImage(
-    sprite,
-    frame.sourceRect.x,
-    frame.sourceRect.y,
-    frame.sourceRect.w,
-    frame.sourceRect.h,
-    -size.w * frame.anchorX,
-    -size.h * frame.anchorY,
-    size.w,
-    size.h,
-  );
+  const drawSlices = frame.drawSlices ?? [{
+    x: 0,
+    y: 0,
+    w: frame.sourceRect.w,
+    h: frame.sourceRect.h,
+  }];
+  for (const slice of drawSlices) {
+    ctx.drawImage(
+      sprite,
+      frame.sourceRect.x + slice.x,
+      frame.sourceRect.y + slice.y,
+      slice.w,
+      slice.h,
+      -size.w * frame.anchorX + size.w * slice.x / frame.sourceRect.w,
+      -size.h * frame.anchorY + size.h * slice.y / frame.sourceRect.h,
+      size.w * slice.w / frame.sourceRect.w,
+      size.h * slice.h / frame.sourceRect.h,
+    );
+  }
   ctx.restore();
 }
 
@@ -2395,6 +3559,475 @@ function drawAreaEffect(ctx: CanvasRenderingContext2D, effect: AreaEffect, time:
       ctx.beginPath(); ctx.arc(fx, fy, 4 + (i % 3), 0, Math.PI * 2); ctx.fill();
     }
   }
+  ctx.restore();
+}
+
+function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbilityVfx) {
+  const progress = Math.max(0, Math.min(1, effect.elapsed / Math.max(.001, effect.duration)));
+  const windup = Math.max(.001, effect.windupSeconds ?? effect.duration);
+  const charge = Math.max(0, Math.min(1, effect.elapsed / windup));
+  const impactAge = Math.max(0, effect.elapsed - windup);
+  if (effect.kind === "brawler") {
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
+    for (let index = 0; index < 5; index += 1) {
+      const local = Math.max(0, Math.min(1, charge * 1.55 - index * .13));
+      if (local <= 0) continue;
+      const startX = effect.originX + direction * (10 + index * 3);
+      const startY = effect.originY + (index % 2 ? 13 : -9);
+      const endX = effect.targetX - direction * (8 - index * 2);
+      const endY = effect.targetY + (index % 2 ? -11 : 10);
+      ctx.globalAlpha = .32 + local * .58;
+      ctx.strokeStyle = index === 4 ? "#fff1a8" : "#f3a943";
+      ctx.shadowColor = "#d96b26";
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = index === 4 ? 5 : 2.5;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(
+        (startX + endX) / 2,
+        (startY + endY) / 2 + (index % 2 ? -20 : 20),
+        startX + (endX - startX) * local,
+        startY + (endY - startY) * local,
+      );
+      ctx.stroke();
+    }
+    if (impactAge > 0) {
+      const tail = Math.max(0, 1 - impactAge / .52);
+      ctx.globalAlpha = tail;
+      ctx.translate(effect.targetX, effect.targetY);
+      ctx.strokeStyle = "#ffd36d";
+      ctx.lineWidth = 3;
+      for (let ray = 0; ray < 10; ray += 1) {
+        const angle = ray / 10 * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(angle) * 8, Math.sin(angle) * 8);
+        ctx.lineTo(Math.cos(angle) * (25 + impactAge * 38), Math.sin(angle) * (16 + impactAge * 22));
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "scout") {
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    const dashX = effect.originX + (effect.targetX - effect.originX) * charge;
+    const dashY = effect.originY + (effect.targetY - effect.originY) * charge;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
+    for (let trail = 0; trail < 4; trail += 1) {
+      ctx.globalAlpha = .7 - trail * .13;
+      ctx.strokeStyle = trail % 2 ? "#9cf4ec" : "#36b8b5";
+      ctx.lineWidth = 5 - trail * .8;
+      ctx.beginPath();
+      ctx.moveTo(dashX - direction * (18 + trail * 14), dashY + trail * 6 - 10);
+      ctx.lineTo(dashX - direction * (2 + trail * 3), dashY - trail * 2);
+      ctx.stroke();
+    }
+    ctx.translate(effect.targetX, effect.targetY);
+    ctx.strokeStyle = "#c9fff5";
+    ctx.shadowColor = "#42d8d0";
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(-direction * 3, -8, 25 + impactAge * 18, direction > 0 ? -1.6 : Math.PI - 1.6, direction > 0 ? .8 : Math.PI + .8);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(direction * 16, -26);
+    ctx.lineTo(direction * 29, -12);
+    ctx.lineTo(direction * 20, -4);
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "ranger") {
+    const tail = Math.max(0, 1 - impactAge / .5);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.translate(effect.targetX, effect.targetY);
+    ctx.strokeStyle = "#bdeaff";
+    ctx.shadowColor = "#62b9d6";
+    ctx.shadowBlur = 9;
+    ctx.lineWidth = 2;
+    const radius = 24 - charge * 8 + impactAge * 26;
+    ctx.globalAlpha = impactAge > 0 ? tail : .45 + charge * .5;
+    ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.stroke();
+    for (const angle of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * (radius + 5), Math.sin(angle) * (radius + 5));
+      ctx.lineTo(Math.cos(angle) * (radius + 16), Math.sin(angle) * (radius + 16));
+      ctx.stroke();
+    }
+    if (impactAge > 0) {
+      ctx.restore();
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = tail;
+      ctx.strokeStyle = "#f7fbff";
+      ctx.shadowColor = "#8bd9f0";
+      ctx.shadowBlur = 12;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(effect.originX, effect.originY);
+      ctx.lineTo(effect.targetX, effect.targetY);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "medic") {
+    const tail = Math.max(0, 1 - impactAge / .55);
+    ctx.save();
+    ctx.translate(effect.targetX, effect.targetY);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = impactAge > 0 ? tail : .4 + charge * .55;
+    ctx.strokeStyle = "#89efb4";
+    ctx.fillStyle = "rgba(68,181,119,.2)";
+    ctx.shadowColor = "#48c485";
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 3;
+    const ring = 18 + (impactAge > 0 ? impactAge * 58 : (1 - charge) * 20);
+    ctx.beginPath(); ctx.ellipse(0, 18, ring, ring * .32, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#d7ffe6";
+    ctx.fillRect(-5, -31, 10, 34);
+    ctx.fillRect(-17, -19, 34, 10);
+    ctx.strokeStyle = "#b1ffd1";
+    ctx.beginPath();
+    for (let turn = 0; turn <= 22; turn += 1) {
+      const angle = turn * .45 + effect.elapsed * 5;
+      const x = Math.cos(angle) * (12 + turn * .35);
+      const y = 19 - turn * 2.3;
+      if (turn === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "brute") {
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    const tail = Math.max(0, 1 - impactAge / .55);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = "#e3b477";
+    ctx.shadowColor = "#9f653e";
+    ctx.shadowBlur = 9;
+    ctx.lineWidth = 5;
+    ctx.globalAlpha = impactAge > 0 ? tail : .45 + charge * .45;
+    ctx.beginPath();
+    ctx.arc(effect.originX, effect.originY, 52, direction > 0 ? -2.4 : -.74, direction > 0 ? .25 : Math.PI + 2.9);
+    ctx.stroke();
+    if (impactAge > 0) {
+      ctx.translate(effect.targetX, effect.targetY);
+      ctx.lineWidth = 3;
+      for (let crack = 0; crack < 8; crack += 1) {
+        const angle = Math.PI + crack / 7 * Math.PI;
+        const length = 38 + (crack % 3) * 14 + impactAge * 42;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(angle) * length * .45, Math.sin(angle) * length * .18);
+        ctx.lineTo(Math.cos(angle) * length, Math.sin(angle) * length * .35);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "crazy-king") {
+    ctx.save();
+    ctx.translate(effect.originX, effect.originY + 34);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = "#ff803d";
+    ctx.shadowColor = "#d43a20";
+    ctx.shadowBlur = 14;
+    ctx.lineWidth = 4;
+    const radius = 34 + Math.sin(effect.elapsed * 15) * 4;
+    ctx.beginPath();
+    for (let tooth = 0; tooth <= 24; tooth += 1) {
+      const angle = tooth / 24 * Math.PI * 2 + effect.elapsed * 2.4;
+      const toothRadius = radius + (tooth % 2 ? 9 : 0);
+      const x = Math.cos(angle) * toothRadius;
+      const y = Math.sin(angle) * toothRadius * .34;
+      if (tooth === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath(); ctx.stroke();
+    ctx.strokeStyle = "#ffd26a";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-18, -48); ctx.lineTo(-9, -61); ctx.lineTo(0, -48); ctx.lineTo(10, -64); ctx.lineTo(20, -48);
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "kumaverson") {
+    ctx.save();
+    ctx.translate(effect.originX, effect.originY + 28);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = "#f0bd61";
+    ctx.fillStyle = "rgba(66,90,98,.18)";
+    ctx.shadowColor = "#cf8d38";
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, -24, 33, Math.PI, Math.PI * 2);
+    ctx.lineTo(33, 2); ctx.lineTo(-33, 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, -24, 20, 7, 0, 0, Math.PI * 2); ctx.stroke();
+    for (const angle of [-.75, -.25, .25, .75]) {
+      ctx.beginPath();
+      ctx.moveTo(Math.sin(angle) * 30, -19);
+      ctx.lineTo(Math.sin(angle) * (47 + Math.sin(effect.elapsed * 7) * 3), 9);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "babayaga") {
+    const tail = Math.max(0, 1 - impactAge / .5);
+    ctx.save();
+    ctx.translate(effect.targetX, effect.targetY);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = impactAge > 0 ? tail : .4 + charge * .55;
+    ctx.strokeStyle = "#f2d46d";
+    ctx.shadowColor = "#9d7f27";
+    ctx.shadowBlur = 9;
+    ctx.lineWidth = 2.5;
+    const size = 31 - charge * 8 + impactAge * 22;
+    for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      ctx.beginPath();
+      ctx.moveTo(sx * size, sy * (size - 9));
+      ctx.lineTo(sx * size, sy * size);
+      ctx.lineTo(sx * (size - 9), sy * size);
+      ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(18, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(0, 18); ctx.stroke();
+    ctx.fillStyle = "#fff0a3";
+    for (let row = 0; row < 3; row += 1) ctx.fillRect(20, -15 + row * 8, 13 - row * 3, 2);
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "gunner") {
+    const tail = Math.max(0, 1 - impactAge / .5);
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = impactAge > 0 ? tail : .25 + charge * .42;
+    ctx.lineCap = "round";
+    for (let shot = 0; shot < 5; shot += 1) {
+      const offset = (shot - 2) * 7;
+      ctx.strokeStyle = shot % 2 ? "#ffd67b" : "#f09d3f";
+      ctx.shadowColor = "#e2782d";
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = shot === 2 ? 3.5 : 2;
+      ctx.beginPath();
+      ctx.moveTo(effect.originX + direction * 12, effect.originY + offset);
+      ctx.lineTo(effect.targetX + direction * (38 + shot * 8), effect.targetY + offset * 1.25);
+      ctx.stroke();
+      ctx.fillStyle = "#f8c35f";
+      ctx.beginPath();
+      ctx.arc(effect.targetX + direction * (shot * 8 - 16), effect.targetY + offset, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "guardian") {
+    ctx.save();
+    ctx.translate(effect.originX + 18, effect.originY + 30);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = "#9bc8cf";
+    ctx.fillStyle = "rgba(77,121,132,.2)";
+    ctx.shadowColor = "#4f8e9a";
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 3;
+    for (let panel = -1; panel <= 1; panel += 1) {
+      const x = panel * 27;
+      ctx.beginPath();
+      ctx.moveTo(x - 13, -52); ctx.lineTo(x + 13, -52);
+      ctx.lineTo(x + 17, -6); ctx.lineTo(x, 8); ctx.lineTo(x - 17, -6); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - 7, -25); ctx.lineTo(x, -34); ctx.lineTo(x + 7, -25);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "engineer") {
+    const tail = Math.max(0, 1 - impactAge / .55);
+    ctx.save();
+    ctx.translate(effect.targetX, effect.targetY + 8);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = impactAge > 0 ? tail : .35 + charge * .55;
+    ctx.strokeStyle = "#ddc66c";
+    ctx.shadowColor = "#9e8735";
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(0, 0, 35 + impactAge * 20, 11 + impactAge * 6, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-30, 0); ctx.lineTo(-18, -17); ctx.lineTo(-7, -3);
+    ctx.moveTo(30, 0); ctx.lineTo(18, -17); ctx.lineTo(7, -3);
+    ctx.stroke();
+    for (let hook = -2; hook <= 2; hook += 1) {
+      ctx.beginPath();
+      ctx.moveTo(hook * 9 - 4, 0);
+      ctx.lineTo(hook * 9, -11 - Math.abs(hook) * 2);
+      ctx.lineTo(hook * 9 + 4, 0);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "mayo-chan") {
+    const pulse = .72 + Math.sin(effect.elapsed * 13) * .16;
+    ctx.save();
+    ctx.translate(effect.originX, effect.originY + 52);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(206,57,92,${pulse})`;
+    ctx.shadowColor = "#b11f4c";
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 30 + Math.sin(effect.elapsed * 8) * 4, 10, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    for (let index = 0; index < 4; index += 1) {
+      const offset = index * 8;
+      ctx.globalAlpha = Math.max(.15, .7 - index * .13);
+      ctx.beginPath();
+      ctx.moveTo(-direction * (10 + offset), -18 + index * 8);
+      ctx.lineTo(-direction * (42 + offset + Math.sin(effect.elapsed * 14 + index) * 7), -18 + index * 8);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "tky") {
+    const charge = Math.min(1, progress / .42);
+    const release = Math.max(0, (progress - .38) / .62);
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    ctx.save();
+    ctx.translate(effect.originX, effect.originY);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(255,83,208,${.36 + charge * .44})`;
+    ctx.shadowColor = "#ff42c8";
+    ctx.shadowBlur = 14;
+    ctx.lineCap = "round";
+    ctx.lineWidth = 3 + charge * 5;
+    ctx.beginPath();
+    ctx.moveTo(direction * 8, -45);
+    ctx.lineTo(direction * (34 + charge * 52), -54);
+    ctx.stroke();
+    if (release > 0) {
+      ctx.globalAlpha = Math.max(.16, .7 - release * .48);
+      const sweepRadius = 52 + release * 26;
+      ctx.strokeStyle = "rgba(255,54,195,.24)";
+      ctx.lineWidth = 17 - release * 7;
+      ctx.beginPath();
+      ctx.arc(direction * 8, -28, sweepRadius, direction > 0 ? -1.02 : Math.PI - 1.02, direction > 0 ? .72 : Math.PI + .72);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,239,252,.78)";
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "mrs-chiha") {
+    const points = effect.points?.length ? effect.points : [{ x: effect.targetX, y: effect.targetY }];
+    const windupSeconds = effect.windupSeconds ?? 1.05;
+    const salvoIntervalSeconds = effect.salvoIntervalSeconds ?? .22;
+    const projectileTravelSeconds = effect.projectileTravelSeconds ?? .18;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (let index = 0; index < points.length; index += 1) {
+      const launchAt = windupSeconds + salvoIntervalSeconds * index;
+      const impactAt = launchAt + projectileTravelSeconds;
+      const local = Math.max(0, Math.min(1, (effect.elapsed - launchAt) / projectileTravelSeconds));
+      const impactAge = effect.elapsed - impactAt;
+      if (local <= 0 || impactAge > .24) continue;
+      const point = points[index];
+      const x = effect.originX + (point.x - effect.originX) * local;
+      const y = effect.originY + (point.y - effect.originY) * local - Math.sin(local * Math.PI) * (52 + index * 5);
+      ctx.strokeStyle = `rgba(226,172,90,${.3 + local * .55})`;
+      ctx.lineWidth = index === points.length - 1 ? 3 : 2;
+      ctx.beginPath();
+      ctx.moveTo(effect.originX, effect.originY);
+      ctx.quadraticCurveTo((effect.originX + point.x) / 2, Math.min(effect.originY, point.y) - 68, x, y);
+      ctx.stroke();
+      ctx.fillStyle = "#d4a45c";
+      ctx.shadowColor = "#ffb252";
+      ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(x, y, index === points.length - 1 ? 5 : 3.5, 0, Math.PI * 2); ctx.fill();
+      if (impactAge >= 0) {
+        ctx.globalAlpha = Math.max(.08, 1 - impactAge / .24);
+        ctx.strokeStyle = index === points.length - 1 ? "#ffd28b" : "#e6a455";
+        ctx.lineWidth = index === points.length - 1 ? 6 : 3;
+        const impactScale = 1 + Math.min(1, impactAge / .18) * .55;
+        ctx.beginPath(); ctx.ellipse(point.x, point.y, (26 + index * 4) * impactScale, (11 + index * 2) * impactScale, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.restore();
+    return;
+  }
+  if (effect.kind === "miyamoto-musashi") {
+    const pulse = .72 + Math.sin(effect.elapsed * 11) * .12;
+    ctx.save();
+    ctx.translate(effect.originX, effect.originY - 38);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(167,202,226,${pulse})`;
+    ctx.shadowColor = "#88aecb";
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0, 0, 25 + Math.sin(effect.elapsed * 6) * 2, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(-19, 19); ctx.lineTo(19, -19); ctx.moveTo(-19, -19); ctx.lineTo(19, 19); ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  if (effect.kind !== "zakimiya") return;
+  const x = effect.originX + (effect.targetX - effect.originX) * progress;
+  const linearY = effect.originY + (effect.targetY - effect.originY) * progress;
+  const y = linearY - Math.sin(progress * Math.PI) * 72;
+  const angle = Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX) + progress * Math.PI * 5;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.shadowColor = "#ff8a35";
+  ctx.shadowBlur = 11;
+  ctx.strokeStyle = "#f2c06d";
+  ctx.fillStyle = "#6e3c1e";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(-4, -11, 8, 21, 3);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#e7d2a1";
+  ctx.fillRect(-2.5, -15, 5, 6);
+  ctx.fillStyle = "#ff8a35";
+  ctx.beginPath();
+  ctx.moveTo(-4, -15);
+  ctx.quadraticCurveTo(-7, -23, 0, -27);
+  ctx.quadraticCurveTo(7, -22, 3, -14);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.globalAlpha = .5;
+  ctx.strokeStyle = "#ffae4f";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(effect.originX, effect.originY);
+  ctx.quadraticCurveTo(
+    (effect.originX + effect.targetX) / 2,
+    Math.min(effect.originY, effect.targetY) - 72,
+    x,
+    y,
+  );
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -2428,11 +4061,18 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
     ctx.translate(x, y);
     ctx.fillStyle = "rgba(0,0,0,.45)";
     ctx.beginPath(); ctx.ellipse(0, 6, 32, 6, 0, 0, Math.PI * 2); ctx.fill();
-    const cartSprite = stageObjects["station-platform-mission-art-source"];
+    const isCoastalPowerRig = g.definition.stageId === CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE;
+    const cartSprite = isCoastalPowerRig
+      ? stageObjects["coastal-power-rig"]
+      : stageObjects["station-platform-mission-art-source"];
     if (cartSprite?.complete && cartSprite.naturalWidth) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(cartSprite, 90, 260, 1400, 520, -60, -51, 120, 45);
+      if (isCoastalPowerRig) {
+        ctx.drawImage(cartSprite, -72, -59, 144, 72);
+      } else {
+        ctx.drawImage(cartSprite, 90, 260, 1400, 520, -60, -51, 120, 45);
+      }
     } else {
       ctx.fillStyle = "#5f665f"; ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0"; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.roundRect(-28, -27, 56, 30, 5); ctx.fill(); ctx.stroke();
@@ -2440,11 +4080,15 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
       ctx.fillStyle = "#81735a"; ctx.fillRect(2, -20, 20, 12);
       ctx.fillStyle = "#171b1a"; ctx.beginPath(); ctx.arc(-18, 5, 6, 0, Math.PI * 2); ctx.arc(18, 5, 6, 0, Math.PI * 2); ctx.fill();
     }
-    ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(-60, -51, 120, 45);
-    ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillRect(-60, -61, 120, 6);
-    ctx.fillStyle = "#d5b85e"; ctx.fillRect(-59, -60, 118 * integrity / maxIntegrity, 4);
+    const objectiveHalfWidth = isCoastalPowerRig ? 72 : 60;
+    const objectiveGlow = ctx.createRadialGradient(0, -17, 4, 0, -17, objectiveHalfWidth);
+    objectiveGlow.addColorStop(0, g.stageMission.stalled ? "rgba(225,155,94,.18)" : "rgba(174,187,176,.13)");
+    objectiveGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = objectiveGlow;
+    ctx.fillRect(-objectiveHalfWidth, -52, objectiveHalfWidth * 2, 55);
+    ctx.fillStyle = "rgba(0,0,0,.72)"; ctx.fillRect(-objectiveHalfWidth, -59, objectiveHalfWidth * 2, 5);
+    ctx.fillStyle = "#d5b85e";
+    ctx.fillRect(-objectiveHalfWidth, -59, objectiveHalfWidth * 2 * integrity / maxIntegrity, 3);
     ctx.restore();
   }
   if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
@@ -2478,12 +4122,19 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
         ctx.fillStyle = active ? "#596d58" : "#3b4240";
         ctx.fillRect(-13, -33, 26, 35);
       }
-      ctx.strokeStyle = active ? "#b8df83" : current ? "#e1aa5f" : "#707872";
-      ctx.lineWidth = current ? 3 : 2;
-      ctx.strokeRect(-23, -92, 46, 94);
-      ctx.fillStyle = active ? "#c9f09a" : "#7a6d57";
-      ctx.font = "900 12px monospace"; ctx.textAlign = "center";
-      ctx.fillText(String(index + 1), 0, -6);
+      if (active || current) {
+        const panelGlow = ctx.createRadialGradient(0, -42, 3, 0, -42, 42);
+        panelGlow.addColorStop(0, active ? "rgba(184,223,131,.28)" : "rgba(225,170,95,.3)");
+        panelGlow.addColorStop(.55, active ? "rgba(126,174,102,.08)" : "rgba(194,117,64,.08)");
+        panelGlow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = panelGlow;
+        ctx.fillRect(-44, -90, 88, 96);
+        ctx.fillStyle = active ? "#b8df83" : "#e1aa5f";
+        ctx.globalAlpha = .82 + Math.sin(g.time * 7 + index) * .12;
+        ctx.beginPath();
+        ctx.ellipse(0, 4, current ? 20 : 14, current ? 4 : 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     }
     if (g.researchContainer?.exposed) {
@@ -2503,29 +4154,423 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
         ctx.beginPath(); ctx.roundRect(-22, -35, 44, 39, 5); ctx.fill();
         ctx.fillStyle = "#181b1a"; ctx.fillRect(-14, -28, 28, 15);
       }
-      ctx.strokeStyle = container.contained ? "#b8dc97" : "#d3b56e";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(-23, -54, 46, 66);
+      const containerGlow = ctx.createRadialGradient(0, -22, 2, 0, -22, 38);
+      containerGlow.addColorStop(0, container.contained ? "rgba(184,220,151,.25)" : "rgba(211,181,110,.24)");
+      containerGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = containerGlow;
+      ctx.fillRect(-42, -59, 84, 70);
       ctx.fillStyle = container.contained ? "#b8dc97" : "#e1c272";
-      ctx.font = "900 11px monospace"; ctx.textAlign = "center";
-      ctx.fillText("研究", 0, 8);
+      ctx.globalAlpha = .78;
+      ctx.beginPath();
+      ctx.ellipse(0, 8, 18, 3.5, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
     const sealDoorX = Number(g.definition.missionConfig.sealDoorX ?? 867);
     ctx.save();
     const doorClosed = g.stageMission.completed === true;
     const returnWindowOpen = g.stageMission.sealed === true && !doorClosed;
-    ctx.fillStyle = doorClosed
-      ? "rgba(54,75,62,.85)"
-      : returnWindowOpen
-        ? "rgba(82,57,37,.82)"
-        : "rgba(52,46,42,.82)";
-    ctx.strokeStyle = doorClosed ? "#b6d38f" : returnWindowOpen ? "#e0a15e" : "#b2875a";
-    ctx.lineWidth = 4;
-    ctx.fillRect(sealDoorX - 39, activeLaneCenters[0] - 68, 78, activeLaneCenters[2] - activeLaneCenters[0] + 92);
-    ctx.strokeRect(sealDoorX - 39, activeLaneCenters[0] - 68, 78, activeLaneCenters[2] - activeLaneCenters[0] + 92);
+    const doorTop = activeLaneCenters[0] - 68;
+    const doorBottom = activeLaneCenters[2] + 24;
+    const doorGlow = ctx.createLinearGradient(sealDoorX - 42, 0, sealDoorX + 42, 0);
+    doorGlow.addColorStop(0, "rgba(0,0,0,0)");
+    doorGlow.addColorStop(.5, doorClosed
+      ? "rgba(117,157,119,.23)"
+      : returnWindowOpen ? "rgba(181,105,57,.22)" : "rgba(116,85,58,.15)");
+    doorGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = doorGlow;
+    ctx.fillRect(sealDoorX - 42, doorTop, 84, doorBottom - doorTop);
+    ctx.strokeStyle = doorClosed ? "rgba(182,211,143,.76)" : returnWindowOpen ? "rgba(224,161,94,.72)" : "rgba(178,135,90,.5)";
+    ctx.lineWidth = 2;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(sealDoorX + side * 30, doorTop + 8);
+      ctx.lineTo(sealDoorX + side * 30, doorBottom - 8);
+      ctx.stroke();
+    }
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.globalAlpha = .68 + Math.sin(g.time * 6) * .14;
+    ctx.beginPath();
+    ctx.ellipse(sealDoorX, doorBottom - 2, 34, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
+}
+
+function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+  const telegraph = bossTelegraphSnapshot(f, { fallbackTargetX: BASE_X + 48 });
+  if (!telegraph) return;
+  ctx.save();
+  ctx.lineWidth = 3;
+  ctx.setLineDash([9, 6]);
+  ctx.strokeStyle = telegraph.color;
+  if (telegraph.kind === "ground-ellipse") {
+    const pulse = (telegraph.radius ?? 0) + Math.sin(g.time * 18) * 4;
+    ctx.globalAlpha = .72 + Math.sin(g.time * 14) * .14;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y + 2, pulse, pulse / 2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (telegraph.kind === "brood-radial") {
+    const radius = telegraph.radius ?? 0;
+    const pulse = .5 + .5 * Math.sin(g.time * 10);
+    const gradient = ctx.createRadialGradient(f.x, f.y, radius * .08, f.x, f.y, radius);
+    gradient.addColorStop(0, "rgba(119,39,32,.34)");
+    gradient.addColorStop(.58, "rgba(123,63,48,.18)");
+    gradient.addColorStop(1, "rgba(158,104,85,0)");
+    ctx.globalAlpha = .82;
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y + 2, radius, radius * .5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = .7 + pulse * .22;
+    for (let ring = 0; ring < 3; ring += 1) {
+      const ringRadius = radius * (.46 + ring * .23) + pulse * (3 + ring * 2);
+      ctx.lineWidth = 2.4 - ring * .35;
+      ctx.beginPath();
+      ctx.ellipse(f.x, f.y + 2, ringRadius, ringRadius * .5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    for (let lobe = 0; lobe < 8; lobe += 1) {
+      const angle = lobe / 8 * Math.PI * 2 + g.time * .12;
+      const lobeRadius = radius * (.68 + .05 * Math.sin(g.time * 7 + lobe));
+      const x = f.x + Math.cos(angle) * lobeRadius;
+      const y = f.y + Math.sin(angle) * lobeRadius * .5;
+      ctx.globalAlpha = .52 + pulse * .2;
+      ctx.fillStyle = lobe % 2 ? "#7d4338" : "#b0765c";
+      ctx.beginPath();
+      ctx.ellipse(x, y, 5 + pulse * 2, 3 + pulse, angle, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (telegraph.kind === "lane-rectangle") {
+    const targetX = telegraph.targetX ?? BASE_X + 48;
+    const targetY = telegraph.targetY ?? f.y;
+    const halfHeight = telegraph.laneHalfHeight ?? 31;
+    const width = Math.max(0, f.x - targetX);
+    const laneGlow = ctx.createLinearGradient(targetX, 0, f.x, 0);
+    laneGlow.addColorStop(0, "rgba(0,0,0,0)");
+    laneGlow.addColorStop(.58, telegraph.color);
+    laneGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.globalAlpha = .13;
+    ctx.fillStyle = laneGlow;
+    ctx.beginPath();
+    ctx.moveTo(targetX, targetY);
+    ctx.lineTo(f.x, targetY - halfHeight);
+    ctx.lineTo(f.x, targetY + halfHeight);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = .72;
+    ctx.setLineDash([]);
+    ctx.lineWidth = 2;
+    for (const edge of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(targetX + width * .28, targetY + edge * halfHeight * .42);
+      ctx.quadraticCurveTo(targetX + width * .7, targetY + edge * halfHeight, f.x - 12, targetY + edge * halfHeight * .72);
+      ctx.stroke();
+    }
+  } else if (telegraph.kind === "shell-sweep") {
+    const radius = telegraph.radius ?? 0;
+    const halfHeight = BOSS_ANOMALY_TUNING.gairen.sweepHalfHeight;
+    const pulse = .5 + .5 * Math.sin(g.time * 11);
+    ctx.setLineDash([]);
+    ctx.globalAlpha = .18;
+    ctx.fillStyle = telegraph.color;
+    ctx.beginPath();
+    ctx.moveTo(f.x, f.y);
+    ctx.ellipse(f.x, f.y, radius, halfHeight, 0, Math.PI * .5, Math.PI * 1.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = .76 + pulse * .18;
+    for (let shell = 0; shell < 5; shell += 1) {
+      const angle = Math.PI * (.62 + shell * .19);
+      const reach = radius * (.72 + shell % 2 * .2);
+      ctx.lineWidth = 5 - shell * .55;
+      ctx.beginPath();
+      ctx.moveTo(f.x - 18, f.y - 15);
+      ctx.quadraticCurveTo(
+        f.x + Math.cos(angle) * reach * .55,
+        f.y + Math.sin(angle) * reach * .25 - 22,
+        f.x + Math.cos(angle) * reach,
+        f.y + Math.sin(angle) * reach * .5,
+      );
+      ctx.stroke();
+    }
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(
+      f.x,
+      f.y,
+      radius + pulse * 5,
+      halfHeight + pulse * 2,
+      0,
+      Math.PI * .5,
+      Math.PI * 1.5,
+    );
+    ctx.stroke();
+  } else if (telegraph.kind === "cross-strike") {
+    const radius = telegraph.radius ?? 0;
+    const targetX = telegraph.targetX ?? f.x;
+    const targetY = telegraph.targetY ?? f.y;
+    const halfWidth = BOSS_ANOMALY_TUNING.futago.crossStrikeHalfWidth;
+    const pulse = 2 + Math.sin(g.time * 16) * 2;
+    ctx.setLineDash([]);
+    ctx.translate(targetX, targetY);
+    ctx.globalAlpha = .14;
+    ctx.strokeStyle = telegraph.color;
+    for (const angle of [
+      -BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
+      BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
+    ]) {
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.lineWidth = (halfWidth + pulse) * 2;
+      ctx.beginPath();
+      ctx.moveTo(-radius, 0);
+      ctx.lineTo(radius, 0);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.globalAlpha = .8;
+    ctx.lineWidth = 2.5;
+    for (const angle of [
+      -BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
+      BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
+    ]) {
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(-radius, 0);
+      ctx.lineTo(-halfWidth * 1.8, 0);
+      ctx.moveTo(halfWidth * 1.8, 0);
+      ctx.lineTo(radius, 0);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.translate(-targetX, -targetY);
+  } else if (telegraph.kind === "tracking-ray") {
+    const targetX = telegraph.targetX ?? BASE_X + 48;
+    const targetY = telegraph.targetY ?? f.y;
+    const originY = f.y - 64;
+    const pulse = .58 + Math.sin(g.time * 22) * .18;
+    ctx.globalAlpha = telegraph.locked ? .94 : pulse;
+    ctx.lineWidth = telegraph.locked ? 5 : 3;
+    ctx.beginPath();
+    ctx.moveTo(f.x - 4, originY);
+    ctx.lineTo(targetX, targetY - 38);
+    ctx.stroke();
+    ctx.globalAlpha = telegraph.locked ? .22 : .1;
+    ctx.lineWidth = Math.max(8, (telegraph.beamHalfWidth ?? 18) * 2);
+    ctx.stroke();
+    ctx.globalAlpha = .92;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 38, telegraph.locked ? 12 : 8, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.globalAlpha = .95;
+  ctx.fillStyle = "#f4dfb8";
+  ctx.font = "900 10px monospace";
+  ctx.textAlign = "center";
+  const compactLabels: Record<string, string> = {
+    "brood-radial": "増殖域 // 範囲外へ退避",
+    "lane-rectangle": "捕食突進 // 上下へ退避",
+    "shell-sweep": "外殻展開 // 側面攻撃",
+    "cross-strike": "交差中心 // 離脱",
+  };
+  const label = compactBattleViewport() && compactLabels[telegraph.kind]
+    ? compactLabels[telegraph.kind]
+    : `${telegraph.displayName} // ${telegraph.counterplay}`;
+  const labelY = ["brood-radial", "shell-sweep", "cross-strike"].includes(telegraph.kind)
+    ? f.y + Math.min(82, (telegraph.radius ?? 0) * .5 + 18)
+    : telegraph.kind === "lane-rectangle"
+      ? (telegraph.targetY ?? f.y) + (telegraph.laneHalfHeight ?? 31) + 18
+      : f.y - 142;
+  ctx.fillText(label, f.x, labelY);
+  ctx.restore();
+}
+
+function drawMotherCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+  if (f.kind !== "mother" || !["active", "recovery"].includes(f.stationAbility.phase)) return;
+  const active = f.stationAbility.phase === "active";
+  const tuning = BOSS_ANOMALY_TUNING.mother;
+  const elapsed = active
+    ? tuning.activeSeconds - f.stationAbility.remainingSeconds
+    : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
+  const intensity = active
+    ? Math.min(1, elapsed / .2)
+    : Math.max(0, 1 - elapsed / tuning.recoverySeconds);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  const gradient = ctx.createRadialGradient(f.x, f.y - 24, 8, f.x, f.y - 18, 118);
+  gradient.addColorStop(0, `rgba(255,210,146,${.3 * intensity})`);
+  gradient.addColorStop(.34, `rgba(169,67,49,${.28 * intensity})`);
+  gradient.addColorStop(1, "rgba(90,26,24,0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.ellipse(f.x, f.y - 14, 122, 68, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineCap = "round";
+  for (let strand = 0; strand < 11; strand += 1) {
+    const angle = -Math.PI + strand / 10 * Math.PI;
+    const reach = 78 + (strand % 3) * 18 + Math.sin(g.time * 8 + strand) * 7;
+    ctx.strokeStyle = strand % 2
+      ? `rgba(220,118,76,${.38 * intensity})`
+      : `rgba(255,194,125,${.28 * intensity})`;
+    ctx.lineWidth = 2 + (strand % 3);
+    ctx.beginPath();
+    ctx.moveTo(f.x + Math.cos(angle) * 28, f.y - 28 + Math.sin(angle) * 11);
+    ctx.quadraticCurveTo(
+      f.x + Math.cos(angle) * reach * .55,
+      f.y - 62 - Math.sin(g.time * 5 + strand) * 14,
+      f.x + Math.cos(angle) * reach,
+      f.y - 6 + Math.sin(angle) * 35,
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+  if (!["ooguchi", "gairen", "futago"].includes(f.kind)
+    || !["active", "recovery"].includes(f.stationAbility.phase)) return;
+  const tuning = BOSS_ANOMALY_TUNING[f.kind as "ooguchi" | "gairen" | "futago"];
+  const active = f.stationAbility.phase === "active";
+  const elapsed = active
+    ? tuning.activeSeconds - f.stationAbility.remainingSeconds
+    : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
+  const intensity = active
+    ? Math.min(1, elapsed / .16)
+    : Math.max(0, 1 - elapsed / tuning.recoverySeconds);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  if (f.kind === "ooguchi") {
+    const gradient = ctx.createRadialGradient(f.x - 42, f.y - 28, 5, f.x - 30, f.y - 20, 94);
+    gradient.addColorStop(0, `rgba(255,194,116,${.46 * intensity})`);
+    gradient.addColorStop(.42, `rgba(172,61,43,${.3 * intensity})`);
+    gradient.addColorStop(1, "rgba(72,20,16,0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(f.x - 34, f.y - 20, 98, 46, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineCap = "round";
+    for (let streak = 0; streak < 8; streak += 1) {
+      const y = f.y - 56 + streak * 9;
+      const reach = 54 + streak % 3 * 18;
+      ctx.strokeStyle = streak % 2
+        ? `rgba(221,120,72,${.34 * intensity})`
+        : `rgba(255,213,151,${.25 * intensity})`;
+      ctx.lineWidth = 2 + streak % 2;
+      ctx.beginPath();
+      ctx.moveTo(f.x + 42, y);
+      ctx.bezierCurveTo(f.x + reach, y - 4, f.x + reach + 22, y + 5, f.x + reach + 42, y);
+      ctx.stroke();
+    }
+  } else if (f.kind === "gairen") {
+    const gradient = ctx.createRadialGradient(f.x, f.y - 66, 4, f.x, f.y - 58, 88);
+    gradient.addColorStop(0, `rgba(255,210,143,${.58 * intensity})`);
+    gradient.addColorStop(.34, `rgba(154,55,48,${.38 * intensity})`);
+    gradient.addColorStop(1, "rgba(82,42,30,0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y - 54, 72, 82, 0, 0, Math.PI * 2);
+    ctx.fill();
+    for (let shell = 0; shell < 5; shell += 1) {
+      const angle = -Math.PI * .9 + shell * Math.PI * .45;
+      const reach = 64 + shell % 2 * 18;
+      ctx.strokeStyle = shell % 2
+        ? `rgba(213,174,102,${.42 * intensity})`
+        : `rgba(255,226,168,${.28 * intensity})`;
+      ctx.lineWidth = 3.2;
+      ctx.beginPath();
+      ctx.moveTo(f.x + Math.cos(angle) * 24, f.y - 54 + Math.sin(angle) * 18);
+      ctx.quadraticCurveTo(
+        f.x + Math.cos(angle) * reach * .65,
+        f.y - 62 + Math.sin(angle) * reach * .25,
+        f.x + Math.cos(angle) * reach,
+        f.y - 26 + Math.sin(angle) * reach * .45,
+      );
+      ctx.stroke();
+    }
+  } else {
+    const split = f.hp / Math.max(1, f.maxHp) <= BOSS_ANOMALY_TUNING.futago.splitThreshold;
+    const separation = split ? 31 : 18;
+    for (const direction of [-1, 1]) {
+      const centerX = f.x + direction * separation;
+      const gradient = ctx.createRadialGradient(centerX, f.y - 54, 4, centerX, f.y - 46, 72);
+      gradient.addColorStop(0, `rgba(255,198,184,${.45 * intensity})`);
+      gradient.addColorStop(.42, `rgba(154,60,74,${.32 * intensity})`);
+      gradient.addColorStop(1, "rgba(70,22,34,0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.ellipse(centerX, f.y - 44, 64, 76, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = `rgba(246,171,158,${.48 * intensity})`;
+    ctx.lineWidth = 2.5;
+    for (let filament = 0; filament < 7; filament += 1) {
+      const y = f.y - 82 + filament * 12;
+      ctx.beginPath();
+      ctx.moveTo(f.x - separation, y);
+      ctx.bezierCurveTo(
+        f.x - 6,
+        y - 12 + Math.sin(g.time * 7 + filament) * 6,
+        f.x + 6,
+        y + 12 - Math.sin(g.time * 7 + filament) * 6,
+        f.x + separation,
+        y,
+      );
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawKuromeCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+  if (f.kind !== "kurome" || f.stationAbility.phase !== "firing") return;
+  const targetX = Number(f.stationAbility.targetX);
+  const targetY = Number(f.stationAbility.targetY);
+  if (!Number.isFinite(targetX) || !Number.isFinite(targetY)) return;
+  const phaseRatio = f.hp / Math.max(1, f.maxHp);
+  const halfWidth = phaseRatio <= .3
+    ? KUROME_PROTOTYPE_TUNING.finalPhaseBeamHalfWidth
+    : KUROME_PROTOTYPE_TUNING.beamHalfWidth;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.lineCap = "round";
+  ctx.shadowColor = "#54f4ff";
+  ctx.shadowBlur = 18;
+  ctx.strokeStyle = "rgba(68,225,242,.32)";
+  ctx.lineWidth = halfWidth * 2;
+  ctx.beginPath();
+  ctx.moveTo(f.x - 4, f.y - 64);
+  ctx.lineTo(targetX, targetY - 38);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(232,253,255,.96)";
+  ctx.lineWidth = 4 + Math.sin(g.time * 70) * 1.2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawKuromeVisionInterference(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
+  const remaining = Math.max(0, Number(f.visionDisruptedRemaining) || 0);
+  if (f.side !== "human" || remaining <= 0) return;
+  const alpha = Math.min(.38, .12 + remaining * .18);
+  ctx.save();
+  const gradient = ctx.createRadialGradient(f.x, f.y - 35, 8, f.x, f.y - 35, 72);
+  gradient.addColorStop(0, `rgba(74,226,238,${alpha * .55})`);
+  gradient.addColorStop(.48, `rgba(32,15,53,${alpha})`);
+  gradient.addColorStop(1, "rgba(8,4,18,0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.ellipse(f.x, f.y - 35, 72, 48, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = `rgba(104,233,241,${.4 + Math.sin(g.time * 18) * .16})`;
+  ctx.setLineDash([5, 8]);
+  ctx.beginPath();
+  ctx.ellipse(f.x, f.y - 35, 49, 32, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
@@ -2545,16 +4590,183 @@ function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g:
     ctx.ellipse(f.stationAbility.centerX ?? f.x, f.stationAbility.centerY ?? f.y, STATION_ENEMY_TUNING.leakMud.radiusX, STATION_ENEMY_TUNING.leakMud.radiusY, 0, 0, Math.PI * 2);
     ctx.stroke();
   } else if (f.kind === "sprinter" && f.stationAbility.phase === "telegraph") {
-    ctx.fillStyle = "rgba(225,153,88,.16)";
-    ctx.fillRect(BASE_X + 28, f.y - 18, Math.max(0, f.x - BASE_X - 28), 36);
+    const targetX = BASE_X + 28;
+    const width = Math.max(0, f.x - targetX);
+    const dashGlow = ctx.createLinearGradient(targetX, 0, f.x, 0);
+    dashGlow.addColorStop(0, "rgba(225,153,88,0)");
+    dashGlow.addColorStop(.72, "rgba(225,153,88,.22)");
+    dashGlow.addColorStop(1, "rgba(225,153,88,0)");
+    ctx.fillStyle = dashGlow;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(targetX, f.y);
+    ctx.lineTo(f.x, f.y - 16);
+    ctx.lineTo(f.x, f.y + 16);
+    ctx.closePath();
+    ctx.fill();
     ctx.strokeStyle = "rgba(230,164,103,.85)";
-    ctx.strokeRect(BASE_X + 28, f.y - 18, Math.max(0, f.x - BASE_X - 28), 36);
-  } else if (f.kind === "gate-eater" && f.stationAbility.phase === "windup") {
-    const targetX = f.stationAbility.targetX ?? BASE_X + 48;
-    ctx.fillStyle = "rgba(224,166,83,.16)";
-    ctx.fillRect(targetX, f.y - 31, Math.max(0, f.x - targetX), 62);
-    ctx.strokeStyle = "rgba(231,178,91,.9)";
-    ctx.strokeRect(targetX, f.y - 31, Math.max(0, f.x - targetX), 62);
+    ctx.lineWidth = 2;
+    for (const edge of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(targetX + width * .38, f.y + edge * 7);
+      ctx.quadraticCurveTo(targetX + width * .7, f.y + edge * 16, f.x - 8, f.y + edge * 12);
+      ctx.stroke();
+    }
+  } else if (f.kind === "resonator") {
+    const reach = 168;
+    const halfHeight = 34 + reach * .22;
+    const pulse = 4 + Math.sin(g.time * 18) * 2;
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "rgba(144,104,94,.78)";
+    ctx.fillStyle = "rgba(91,61,57,.12)";
+    ctx.beginPath();
+    ctx.moveTo(f.x - 8, f.y - 38);
+    ctx.lineTo(f.x - reach, f.y - halfHeight);
+    ctx.lineTo(f.x - reach, f.y + halfHeight);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    for (let index = 0; index < 3; index += 1) {
+      const x = f.x - 42 - index * 39;
+      ctx.globalAlpha = .72 - index * .16;
+      ctx.beginPath();
+      ctx.ellipse(x, f.y - 22, 10 + index * 5 + pulse, 22 + index * 8, 0, Math.PI * .58, Math.PI * 1.42);
+      ctx.stroke();
+    }
+  } else if (f.kind === "cagewalker") {
+    ctx.setLineDash([]);
+    const cageGlow = ctx.createRadialGradient(f.x, f.y + 6, 4, f.x, f.y + 6, 58);
+    cageGlow.addColorStop(0, "rgba(126,91,76,.24)");
+    cageGlow.addColorStop(.7, "rgba(70,48,43,.12)");
+    cageGlow.addColorStop(1, "rgba(40,27,26,0)");
+    ctx.fillStyle = cageGlow;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y + 6, 56, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(183,154,116,.62)";
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y + 6, 53, 11, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    for (const offset of [-42, -21, 0, 22, 43]) {
+      const ribHeight = 13 + (1 - Math.abs(offset) / 50) * 9;
+      ctx.beginPath();
+      ctx.moveTo(f.x + offset, f.y + 8);
+      ctx.quadraticCurveTo(
+        f.x + offset * .9,
+        f.y - ribHeight * .55,
+        f.x + offset * .72,
+        f.y - ribHeight,
+      );
+      ctx.stroke();
+    }
+  } else if (f.kind === "spindle") {
+    const targetX = Number(f.stationAbility.targetX);
+    const targetY = Number(f.stationAbility.targetY);
+    if (Number.isFinite(targetX) && Number.isFinite(targetY)) {
+      const landingX = Math.min(BARRICADE_X - 12, targetX + 38);
+      ctx.setLineDash([]);
+      ctx.strokeStyle = "rgba(113,76,94,.24)";
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(f.x, f.y - 16);
+      ctx.quadraticCurveTo((f.x + landingX) / 2, Math.min(f.y, targetY) - 108, landingX, targetY);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(203,154,177,.62)";
+      ctx.lineWidth = 1.7;
+      ctx.stroke();
+      const landingGlow = ctx.createRadialGradient(landingX, targetY + 4, 2, landingX, targetY + 4, 44);
+      landingGlow.addColorStop(0, "rgba(136,72,101,.22)");
+      landingGlow.addColorStop(1, "rgba(68,31,49,0)");
+      ctx.fillStyle = landingGlow;
+      ctx.beginPath();
+      ctx.ellipse(landingX, targetY + 4, 42, 13, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(199,145,169,.72)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  } else if (f.kind === "choir-knot") {
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "rgba(151,111,126,.82)";
+    ctx.lineWidth = 2;
+    for (let index = 0; index < (f.stationAbility.targetIds?.length ?? 0); index += 1) {
+      const target = g.fighters.find((candidate) => (
+        String(candidate.id) === String(f.stationAbility.targetIds?.[index])
+      ));
+      if (!target) continue;
+      const sourceOffset = (index - .5) * 13;
+      ctx.strokeStyle = "rgba(96,53,72,.22)";
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(f.x + sourceOffset, f.y - 44);
+      ctx.bezierCurveTo(
+        f.x - 30,
+        f.y - 74 - index * 8,
+        target.x + 36,
+        target.y - 66,
+        target.x,
+        target.y - 46,
+      );
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(196,139,163,.62)";
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+    }
+  } else if (f.kind === "pall-manta") {
+    const active = f.stationAbility.phase === "active";
+    ctx.setLineDash([]);
+    const canopy = ctx.createLinearGradient(f.x - 32, f.y, f.x + 118, f.y);
+    canopy.addColorStop(0, "rgba(50,34,44,0)");
+    canopy.addColorStop(.35, active ? "rgba(70,47,60,.3)" : "rgba(70,47,60,.16)");
+    canopy.addColorStop(1, "rgba(50,34,44,0)");
+    ctx.fillStyle = canopy;
+    ctx.strokeStyle = "rgba(137,102,116,.58)";
+    ctx.lineWidth = active ? 2.8 : 1.6;
+    ctx.beginPath();
+    ctx.ellipse(f.x + 38, f.y + 6, 82, active ? 17 : 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    for (const offset of [-18, 14, 46, 78]) {
+      ctx.beginPath();
+      ctx.arc(f.x + offset, f.y + 5, 14, .18, Math.PI - .18);
+      ctx.stroke();
+    }
+  } else if (f.kind === "anchor-bloom") {
+    const active = f.stationAbility.phase === "active";
+    ctx.setLineDash([]);
+    ctx.strokeStyle = active ? "rgba(154,92,92,.7)" : "rgba(126,89,84,.52)";
+    ctx.fillStyle = active ? "rgba(100,48,54,.16)" : "rgba(80,48,46,.1)";
+    ctx.lineWidth = active ? 2.8 : 1.8;
+    for (let index = 0; index < 5; index += 1) {
+      const angle = index * Math.PI * .4 + Math.sin(g.time * 2) * .03;
+      const reach = 58 + (index % 2) * 17;
+      ctx.beginPath();
+      ctx.moveTo(f.x, f.y + 5);
+      ctx.quadraticCurveTo(
+        f.x + Math.cos(angle + .24) * reach * .58,
+        f.y + Math.sin(angle + .24) * reach * .2,
+        f.x + Math.cos(angle) * reach,
+        f.y + Math.sin(angle) * reach * .32,
+      );
+      ctx.quadraticCurveTo(
+        f.x + Math.cos(angle - .22) * reach * .58,
+        f.y + Math.sin(angle - .22) * reach * .2,
+        f.x,
+        f.y + 5,
+      );
+      ctx.fill();
+      ctx.stroke();
+    }
+    for (const targetId of f.stationAbility.targetIds ?? []) {
+      const target = g.fighters.find((candidate) => String(candidate.id) === String(targetId));
+      if (!target) continue;
+      ctx.globalAlpha = .56;
+      ctx.beginPath();
+      ctx.moveTo(f.x, f.y);
+      ctx.lineTo(target.x, target.y + 4);
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }
@@ -2754,15 +4966,35 @@ function drawCrawler(ctx: CanvasRenderingContext2D, g: Game, sprites: SpriteMap)
   const weaponActive = ["deploying", "firing", "recovering"].includes(g.crawlerAbility.phase);
   const weaponLift = g.crawlerAbility.phase === "deploying" ? 7 : g.crawlerAbility.phase === "recovering" ? 4 : weaponActive ? 10 : 0;
   ctx.globalAlpha = 1;
-  ctx.fillStyle = "rgba(13,18,18,.88)";
-  ctx.fillRect(crawler.commandDeckX - 13, crawler.commandDeckY - 20, 26, 18);
-  ctx.fillStyle = g.airstrike.phase === "idle" ? "#5b8274" : "#ffb95d";
-  ctx.fillRect(crawler.commandDeckX - 8, crawler.commandDeckY - 16, 5, 4);
+  // The command cupola and fixed gun are rendered as recognizable machinery.
+  // Avoid free-standing debug-looking rectangles over the authored crawler art.
+  ctx.save();
+  ctx.translate(crawler.commandDeckX, crawler.commandDeckY - 10);
+  ctx.fillStyle = "rgba(18,24,23,.92)";
+  ctx.beginPath();
+  ctx.moveTo(-12, 7); ctx.lineTo(-9, -5); ctx.lineTo(7, -9); ctx.lineTo(13, 5);
+  ctx.lineTo(9, 10); ctx.lineTo(-8, 10); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "#5e6b63"; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.strokeStyle = g.airstrike.phase === "idle" ? "#75a898" : "#ffb95d";
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0, -1, 5, -.88, 1.15); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(2, -6); ctx.lineTo(8, -16); ctx.stroke();
+  ctx.restore();
   drawAirstrikeObserver(ctx, g);
-  ctx.fillStyle = "#161b1b";
-  ctx.fillRect(crawler.commandDeckX - 10, crawler.commandDeckY - 6, 22, 5);
-  ctx.fillStyle = "#252d2d"; ctx.fillRect(crawler.weaponX - 20, crawler.weaponY - 12 - weaponLift, 40, 8);
-  ctx.fillStyle = "#85704f"; ctx.fillRect(crawler.weaponX + 11, crawler.weaponY - 10 - weaponLift, 34, 4);
+  ctx.save();
+  ctx.translate(crawler.weaponX, crawler.weaponY - 8 - weaponLift);
+  ctx.fillStyle = "#202827";
+  ctx.strokeStyle = "#6e7468";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#88785a";
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(5, -1); ctx.lineTo(43, -3); ctx.stroke();
+  ctx.strokeStyle = "#302f2a";
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(9, -1); ctx.lineTo(43, -3); ctx.stroke();
+  ctx.restore();
   if (g.crawlerAbility.phase === "firing") {
     const muzzle = 12 + Math.sin(g.time * 45) * 5;
     ctx.fillStyle = "rgba(255,221,121,.9)";
@@ -3165,13 +5397,33 @@ function drawStageObjectOverlays(
 }
 
 function drawStageBackground(ctx: CanvasRenderingContext2D, g: Game, background: HTMLImageElement) {
-  const compact = activeLaneCenters[0] !== LANE_Y[0];
+  const compact = compactBattleViewport();
   ctx.save();
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.fillStyle = "#111617";
   ctx.fillRect(0, 0, W, H);
-  if (compact && g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET) {
+  if ([
+    CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE,
+    CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
+    CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL,
+  ].includes(g.definition.stageId)) {
+    // The authored station plates reserve their upper half for architecture.
+    // Crop to the actual floor plane so lane baselines never read as walking
+    // across wall panels at either mobile landscape reference height.
+    const cropTop = Math.round(background.naturalHeight * .44);
+    ctx.drawImage(
+      background,
+      0,
+      cropTop,
+      background.naturalWidth,
+      background.naturalHeight - cropTop,
+      0,
+      0,
+      W,
+      H,
+    );
+  } else if (compact && g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET) {
     ctx.drawImage(background, 0, 0, background.naturalWidth, background.naturalHeight, 0, -73, W, 500);
   } else if (compact && g.definition.stageId === CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE) {
     const cropTop = Math.round(background.naturalHeight * .24);
@@ -3187,6 +5439,16 @@ function drawStageBackground(ctx: CanvasRenderingContext2D, g: Game, background:
     ctx.drawImage(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
   } else if (g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE) {
     const cropTop = Math.round(background.naturalHeight * .17);
+    ctx.drawImage(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
+  } else if ([
+    CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE,
+    CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE,
+    CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE,
+  ].includes(g.definition.stageId)) {
+    const cropTop = Math.round(background.naturalHeight * .12);
+    ctx.drawImage(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
+  } else if (g.definition.stageId === CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL) {
+    const cropTop = Math.round(background.naturalHeight * .18);
     ctx.drawImage(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
   } else {
     ctx.drawImage(background, 0, 0, W, H);
@@ -3336,6 +5598,7 @@ function drawWorld(
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"]);
 
   for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time);
+  for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
   drawStationMission(ctx, g, stageObjects);
   drawEmergencySupport(ctx, g);
@@ -3348,7 +5611,11 @@ function drawWorld(
     const sprite = sprites[corpse.kind];
     if (sprite?.complete && sprite.naturalWidth) {
       const frame = spriteFrameFor(corpse.kind, "death", corpse.side === "human" ? "right" : "left");
-      const { w: width, h: height } = fitSpriteBattleDisplaySize(corpse.kind, frame, spriteDisplaySize(corpse.kind));
+      const authoredSize = fitSpriteBattleDisplaySize(corpse.kind, frame, spriteDisplaySize(corpse.kind));
+      const compactScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
+      const depthScale = activeBattlefieldDepthScale(corpse.y);
+      const width = authoredSize.w * compactScale * depthScale;
+      const height = authoredSize.h * compactScale * depthScale;
       const authoredDeathPose = frame.derivedFrom !== "hit";
       const timing = ENEMY_DEATH_CONFIG.timings[corpse.deathClass ?? "normal"];
       const dyingProgress = corpse.side === "zombie"
@@ -3458,26 +5725,37 @@ function drawWorld(
   for (const renderable of renderables) {
     if (renderable.type === "object") { drawBattlefieldSupply(ctx, renderable.object, sprites); continue; }
     const f = renderable.fighter;
-    if (f.combatReady && f.kind === "takuya" && f.abilityWindup > 0) {
-      const slamRadius = f.hp / f.maxHp <= .5 ? 145 : 118;
-      const pulse = slamRadius + Math.sin(g.time * 18) * 4;
-      ctx.strokeStyle = `rgba(255,94,56,${.55 + Math.sin(g.time * 14) * .18})`;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.ellipse(f.x, f.y + 2, pulse, pulse / 2, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    if (f.combatReady) drawBossTelegraph(ctx, f, g);
     if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g);
     drawSpriteFighter(ctx, f, sprites);
+    if (f.combatReady) drawMotherCombatVfx(ctx, f, g);
+    if (f.combatReady) drawAnomalyBossCombatVfx(ctx, f, g);
+    if (f.combatReady) drawKuromeCombatVfx(ctx, f, g);
+    drawKuromeVisionInterference(ctx, f, g);
     if (!f.combatReady) continue;
-    const compactScale = activeLaneCenters === LANE_Y ? 1 : 1.1;
-    const barW = (f.kind === "takuya" || f.kind === "gate-eater" ? 52 : f.kind === "crusher" || f.kind === "grappler" || f.kind === "brute" || f.kind === "guardian" ? 38 : f.kind === "abomination" ? 52 : 28) * compactScale;
-    const height = (f.kind === "takuya" || f.kind === "gate-eater" ? 111 : f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "grappler" || f.kind === "brute" || f.kind === "guardian" ? 94 : 80) * compactScale;
+    const compactScale = compactBattleViewport() ? 1.1 : 1;
+    const depthScale = activeBattlefieldDepthScale(f.y);
+    const bossDefinition = bossDefinitionForEnemyKind(f.kind);
+    const barW = (bossDefinition ? 58 : f.kind === "crusher" || f.kind === "grappler" || f.kind === "brute" || f.kind === "guardian" ? 38 : f.kind === "abomination" ? 52 : 28) * compactScale * depthScale;
     const barHeight = compactScale > 1 ? 6 : 4;
-    const barY = f.y - height - (compactScale > 1 ? 2 : 0);
-    ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(f.x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
-    ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
-    ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), barHeight);
+    const barY = fighterHealthBarWorldY(f);
+    const highPriorityEnemyKinds = new Set([
+      "abomination", "crusher", "grappler", "resonator", "choir-knot",
+      "ooze", "spitter", "cagewalker", "anchor-bloom", "pall-manta",
+    ]);
+    const activelyTargeted = f.side === "zombie"
+      && g.fighters.some((candidate) => candidate.side === "human" && candidate.hp > 0 && candidate.targetId === f.id);
+    const showHealthBar = f.side === "human"
+      || Boolean(bossDefinition)
+      || highPriorityEnemyKinds.has(f.kind)
+      || activelyTargeted
+      || f.marked > 0
+      || f.flash > 0;
+    if (showHealthBar) {
+      ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(f.x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
+      ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
+      ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), barHeight);
+    }
     if (f.side === "zombie" && f.marked > 0) {
       ctx.save();
       ctx.translate(f.x, barY - 10);
@@ -3687,6 +5965,32 @@ export function AshfallGame() {
   const eventQueueRef = useRef<string[]>([]);
   const eventCompletionLockRef = useRef(false);
   const finalizedEndRef = useRef<BattleResult | null>(null);
+  const survivalCheckpointSaveLocksRef = useRef(new Set<string>());
+  const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
+  const outbreakSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
+  const bossFoundationQaRef = useRef<{
+    entranceCounts: Record<string, number>;
+    lastEntrance: { kind: string; cueId: string; warningLabel: string } | null;
+    lastCounterplay: {
+      kind: string;
+      input: string;
+      targetId: number;
+      destinationLane: number;
+    } | null;
+    barrierChallenge: {
+      bossId: number;
+      humanId: number;
+      targetX: number;
+      attempted: boolean;
+      blocked: boolean;
+      resultingX: number | null;
+    } | null;
+  }>({
+    entranceCounts: {},
+    lastEntrance: null,
+    lastCounterplay: null,
+    barrierChallenge: null,
+  });
   const qaScenarioAppliedRef = useRef(false);
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -3710,6 +6014,11 @@ export function AshfallGame() {
   const [storyAudioPosition, setStoryAudioPosition] = useState<{ eventId: string | null; lineIndex: number }>({ eventId: null, lineIndex: 0 });
   const [forceStoryReplay, setForceStoryReplay] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState(INITIAL_STAGE_ID);
+  const [selectedOutbreakMissionId, setSelectedOutbreakMissionId] = useState<string | null>(null);
+  const activeOperationId = selectedOutbreakMissionId ?? selectedStageId;
+  const activeBattlefieldStageId = selectedOutbreakMissionId
+    ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.prerequisiteStageId ?? selectedStageId
+    : selectedStageId;
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
   const campaignSaveRef = useRef(campaignSave);
   useEffect(() => {
@@ -3731,13 +6040,24 @@ export function AshfallGame() {
   const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
   const formationKindKey = formationKinds.join("|");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
+  const [outbreakResult, setOutbreakResult] = useState<OutbreakResultView | null>(null);
+  const [pendingOutbreakSettlement, setPendingOutbreakSettlement] = useState<PendingOutbreakSettlement | null>(null);
+  const [outbreakSavePending, setOutbreakSavePending] = useState(false);
+  const [selectedSurvivalStartWave, setSelectedSurvivalStartWave] = useState(1);
+  const [survivalHud, setSurvivalHud] = useState<ReturnType<typeof survivalHudSnapshot>>(null);
+  const [survivalResult, setSurvivalResult] = useState<SurvivalResultView | null>(null);
+  const [survivalSavePending, setSurvivalSavePending] = useState(false);
+  const [survivalSettlementAwaitingRetry, setSurvivalSettlementAwaitingRetry] = useState(false);
+  const [pendingSurvivalCheckpoint, setPendingSurvivalCheckpoint] = useState<PendingSurvivalCheckpoint | null>(null);
+  const [pendingSurvivalSettlement, setPendingSurvivalSettlement] = useState<PendingSurvivalSettlement | null>(null);
   const [hud, setHud] = useState<Hud>({
     missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
+    supportItemCooldowns: createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>,
     barricadeHp: BARRICADE_MAX_HP, barricadeMaxHp: BARRICADE_MAX_HP, barricadeVulnerable: true, barricadeHitFlash: 0,
-    deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0,
+    deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null, bossWorldX: null,
     takuyaEntranceAudioActive: false,
     crawlerHitFlash: 0, threat: 0,
-    objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), battleBarks: [],
+    objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), battleBarks: [], manualAbilityIcons: [],
   });
   const [end, setEnd] = useState<BattleResult | null>(null);
 
@@ -4071,6 +6391,7 @@ export function AshfallGame() {
           PRODUCTION_VISUALS.command,
           PRODUCTION_VISUALS.guide,
           ...Object.values(PRODUCTION_VISUALS.stages),
+          ...Object.values(PRODUCTION_VISUALS.missionObjects),
         ])];
         root.dataset.assetDecodeStatus = "running";
         root.dataset.assetDecodeAudioRequested = String(qaBridge.assetPaths.length);
@@ -4233,6 +6554,598 @@ export function AshfallGame() {
       __ASHFALL_RUNTIME_PERFORMANCE__?: unknown;
     };
     const bridge = {
+      prepareManualAbilityProof: (kind: UnitKind | readonly UnitKind[] | "all" = "all") => {
+        const availableKinds = Object.keys(MANUAL_ABILITY_REGISTRY) as UnitKind[];
+        const requestedKinds = kind === "all" ? availableKinds : Array.isArray(kind) ? [...kind] : [kind];
+        if (requestedKinds.some((requestedKind) => !availableKinds.includes(requestedKind))) {
+          throw new RangeError(`Unknown manual ability proof kind: ${String(kind)}`);
+        }
+        const proof = prepareManualAbilityProof(
+          gameRef.current,
+          requestedKinds,
+        );
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return proof;
+      },
+      prepareManualAbilitySurvivalProof: (kind: UnitKind = "brawler") => {
+        const definition = MANUAL_ABILITY_REGISTRY[kind];
+        if (!definition) throw new RangeError(`Unknown manual ability proof kind: ${String(kind)}`);
+        const proof = prepareManualAbilityProof(gameRef.current, [kind]);
+        const g = gameRef.current;
+        const run = beginSurvivalWave(createSurvivalRun({
+          runId: `qa-manual-speed-${kind}`,
+          formation: {
+            unitIds: [definition.unitId],
+            unitLevelsByUnit: { [definition.unitId]: 1 },
+          },
+        }));
+        g.definition = {
+          ...g.definition,
+          displayName: "感染防衛前線",
+          missionType: "survival",
+          enemyBaseMode: "scenery",
+          missionConfig: {
+            ...g.definition.missionConfig,
+            spawnProfile: "survival-infection-breach",
+            defenseFrontX: 646,
+          },
+        };
+        g.survivalRun = run;
+        g.survivalRuntime = createSurvivalCombatRuntime(run);
+        g.baseHp = run.crawler.hp;
+        g.baseMaxHp = run.crawler.maxHp;
+        g.barricadeVulnerable = false;
+        setSurvivalHud(survivalHudSnapshot(run));
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return proof;
+      },
+      primeManualAbilityCooldown: (ownerId: number, seconds = .5) => {
+        const fighter = gameRef.current.fighters.find((candidate) => (
+          candidate.id === ownerId
+          && candidate.side === "human"
+          && candidate.hp > 0
+        ));
+        if (!fighter) return null;
+        fighter.manualAbility = restoreManualAbilityCooldown(
+          fighter.kind,
+          seconds,
+        ) as ManualAbilityRuntime | null;
+        return fighter.manualAbility ? {
+          ownerId: fighter.id,
+          kind: fighter.kind,
+          phase: fighter.manualAbility.phase,
+          cooldownRemaining: fighter.manualAbility.cooldownRemaining,
+        } : null;
+      },
+      rearmManualAbilityTarget: (ownerId: number) => {
+        const g = gameRef.current;
+        const owner = g.fighters.find((fighter) => (
+          fighter.id === ownerId
+          && fighter.side === "human"
+          && fighter.hp > 0
+        ));
+        if (!owner) return false;
+        if (owner.kind === "medic") {
+          const ally = g.fighters.find((fighter) => (
+            fighter.side === "human"
+            && fighter.id !== owner.id
+            && fighter.hp > 0
+          ));
+          if (!ally) return false;
+          ally.hp = Math.max(1, ally.maxHp * .24);
+        }
+        return selectManualAbilityTarget({
+          owner,
+          fighters: manualAbilityTargetCandidates(g, owner),
+        }) !== null;
+      },
+      persistManualAbilityCheckpointProof: async (kind: UnitKind = "brawler", cooldownSeconds = 9.5) => {
+        const definition = MANUAL_ABILITY_REGISTRY[kind];
+        if (!definition) throw new RangeError(`Unknown manual ability checkpoint kind: ${String(kind)}`);
+        let run = createSurvivalRun({
+          runId: `qa-manual-checkpoint-${kind}`,
+          formation: {
+            unitIds: [definition.unitId],
+            unitLevelsByUnit: { [definition.unitId]: 1 },
+          },
+        });
+        for (let wave = 1; wave <= 5; wave += 1) {
+          run = beginSurvivalWave(run);
+          run = completeSurvivalWave(run, {
+            bossKills: wave === 5 ? 1 : 0,
+            crawlerHp: run.crawler.hp,
+          });
+        }
+        run = {
+          ...run,
+          manualAbilityCooldownsByKind: {
+            [kind]: [Math.max(0, Number(cooldownSeconds) || 0)],
+          },
+        };
+        const checkpointBaseSave = campaignSaveRef.current.campaignStarted
+          ? campaignSaveRef.current
+          : markCampaignStarted(campaignSaveRef.current) as CampaignSave;
+        const checkpoint = checkpointSurvivalCampaignSave(checkpointBaseSave, run, {
+          savedAt: new Date().toISOString(),
+        });
+        const persisted = await persistCampaignSave(checkpoint.save as CampaignSave);
+        if (persisted.durable) setCampaignSave(checkpoint.save as CampaignSave);
+        return {
+          durable: persisted.durable,
+          checkpointId: checkpoint.checkpointId,
+          cooldownSeconds: run.manualAbilityCooldownsByKind[kind][0],
+        };
+      },
+      deployManualAbilityCheckpointProof: (kind: UnitKind = "brawler") => {
+        const g = gameRef.current;
+        if (!g.survivalRun) return null;
+        const card = spawnHuman(g, kind);
+        if (!card) return null;
+        const fighter = g.fighters[g.fighters.length - 1];
+        fighter.lane = 1;
+        fighter.anchorLane = 1;
+        fighter.x = 300;
+        fighter.y = activeLaneCenters[1];
+        fighter.spawnGrace = 0;
+        fighter.combatReady = true;
+        fighter.gateEntering = false;
+        fighter.speed = 0;
+        fighter.laneSpeed = 0;
+        fighter.cooldown = 99;
+        const target = spawnEnemy(g, "walker", 1);
+        target.x = 392;
+        target.y = fighter.y;
+        target.maxHp = 2400;
+        target.hp = target.maxHp;
+        target.speed = 0;
+        target.laneSpeed = 0;
+        target.damage = 0;
+        target.cooldown = 99;
+        target.combatReady = true;
+        target.gateEntering = false;
+        return {
+          ownerId: fighter.id,
+          phase: fighter.manualAbility?.phase ?? null,
+          cooldownRemaining: fighter.manualAbility?.cooldownRemaining ?? null,
+        };
+      },
+      stabilizeNewPlayableProof: () => {
+        if (qaMode !== "new-playables") return false;
+        for (const fighter of gameRef.current.fighters) {
+          if (fighter.side !== "human"
+            || !["tky", "mrs-chiha", "miyamoto-musashi"].includes(fighter.kind)) continue;
+          fighter.speed = 0;
+          fighter.laneSpeed = 0;
+          fighter.aiMoveDirection = 0;
+        }
+        return true;
+      },
+      stabilizeMayoProof: () => {
+        if (qaMode !== "mayo") return false;
+        const g = gameRef.current;
+        for (const fighter of g.fighters) {
+          if (fighter.side === "zombie") {
+            fighter.speed = 0;
+            fighter.laneSpeed = 0;
+            fighter.damage = 0;
+            fighter.cooldown = 99;
+          }
+        }
+        return g.fighters.some((fighter) => fighter.kind === "mayo-chan" && fighter.side === "human");
+      },
+      resetMayoProof: () => {
+        if (qaMode !== "mayo") return false;
+        prepareMayoQa(gameRef.current);
+        return true;
+      },
+      forceMayoIncapacitation: () => {
+        if (qaMode !== "mayo") return false;
+        const mayo = gameRef.current.fighters.find((fighter) => (
+          fighter.kind === "mayo-chan"
+          && fighter.side === "human"
+          && !fighter.mayoRetreat
+        ));
+        if (!mayo) return false;
+        mayo.hp = 0;
+        return true;
+      },
+      probeMayoRetreatDamage: () => {
+        if (qaMode !== "mayo") return null;
+        const g = gameRef.current;
+        const mayo = g.fighters.find((fighter) => (
+          fighter.kind === "mayo-chan"
+          && fighter.side === "human"
+          && fighter.mayoRetreat
+        ));
+        if (!mayo) return null;
+        const beforeHp = mayo.hp;
+        const hazard = applyIncomingHumanDamage(g, mayo, 12, { attackKind: "ranged" });
+        const bossArea = applyIncomingHumanDamage(g, mayo, 34, { attackKind: "melee" });
+        return {
+          beforeHp,
+          afterHp: mayo.hp,
+          targetable: mayo.targetable !== false,
+          hazardDamage: hazard.targetDamage,
+          bossAreaDamage: bossArea.targetDamage,
+        };
+      },
+      prepareBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother" | "ooguchi" | "gairen" | "futago") => {
+        const g = gameRef.current;
+        if (!isBossEnemyKind(kind)) throw new RangeError(`Unknown boss proof kind: ${String(kind)}`);
+        const prototypeRoute = kind === "kurome" || isBossAnomalyKind(kind);
+        const missionIndex = prototypeRoute
+          ? -1
+          : g.definition.timeline.findIndex((mission) => mission.units.includes(kind));
+        if (!prototypeRoute && missionIndex < 0) {
+          throw new Error(`Boss proof route ${g.definition.stageId} does not contain ${kind}`);
+        }
+        const mission = prototypeRoute
+          ? { id: "qa-kurome-prototype", at: 0, wave: 1 }
+          : g.definition.timeline[missionIndex];
+        g.fighters = [];
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = prototypeRoute ? g.definition.timeline.length : missionIndex;
+        g.time = mission.at;
+        g.wave = mission.wave;
+        g.deployQueue = [];
+        g.battlefieldObjects = [];
+        g.signalIds = [];
+        g.banner = "";
+        g.bannerTime = 0;
+        g.running = true;
+        g.paused = false;
+        g.over = false;
+        g.won = false;
+        bossFoundationQaRef.current = {
+          entranceCounts: {},
+          lastEntrance: null,
+          lastCounterplay: null,
+          barrierChallenge: null,
+        };
+        const proofLane: Lane = 1;
+        spawnHuman(g, "scout");
+        const human = g.fighters.find((fighter) => fighter.side === "human");
+        if (!human) throw new Error("Boss foundation proof requires one human");
+        human.x = 300;
+        human.y = activeLaneCenters[proofLane];
+        human.lane = proofLane;
+        human.anchorLane = proofLane;
+        human.combatReady = true;
+        human.gateEntering = false;
+        human.spawnGrace = 0;
+        human.speed = 0;
+        human.laneSpeed = 0;
+        human.cooldown = 99;
+        human.damage = 0;
+        if (prototypeRoute) {
+          const portal = enemySpawnPortalPoint({
+            stageId: g.definition.operationId,
+            viewport: activeStageViewportId,
+            entryId: 1,
+            kind,
+            missionType: "boss-assault",
+          });
+          const entry = {
+            entryId: 1,
+            kind,
+            wave: 1,
+            order: 0,
+            delay: 0,
+            ...portal,
+            lane: portal.legacyLane as Lane,
+          } as EnemySpawnEntry;
+          spawnEnemy(g, kind, entry.lane, 0, entry);
+          const definition = bossDefinitionForEnemyKind(kind);
+          if (!definition) throw new Error(`${kind} boss contract missing`);
+          bossFoundationQaRef.current.entranceCounts[kind] = 1;
+          bossFoundationQaRef.current.lastEntrance = {
+            kind,
+            cueId: definition.entrance.cueId,
+            warningLabel: definition.entrance.warningLabel,
+          };
+          g.banner = definition.entrance.warningLabel;
+          g.bannerTime = 3.2;
+        }
+        setPaused(false);
+        return {
+          kind,
+          humanId: human.id,
+          missionId: mission.id,
+          warningLabel: bossDefinitionForEnemyKind(kind)?.entrance.warningLabel ?? null,
+        };
+      },
+      getBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother" | "ooguchi" | "gairen" | "futago") => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => fighter.kind === kind && fighter.side === "zombie");
+        const human = g.fighters.find((fighter) => fighter.side === "human");
+        const definition = bossDefinitionForEnemyKind(kind);
+        const idleFrame = spriteFrameFor(kind, "idle", "left");
+        const authoredSize = fitSpriteBattleDisplaySize(kind, idleFrame, spriteDisplaySize(kind));
+        const renderScale = compactSpriteScale(kind);
+        const depthScale = activeBattlefieldDepthScale(boss?.y ?? activeLaneCenters[1]);
+        const visibleHeightRatio = idleFrame.contentRect.h / idleFrame.sourceRect.h;
+        const idleBodyScale = sampleAnimationClip(kind, "idle", 0).bodyScale;
+        const renderedWidth = authoredSize.w * renderScale * depthScale * idleBodyScale;
+        const renderedHeight = authoredSize.h * renderScale * depthScale * idleBodyScale;
+        const renderedBodyHeight = renderedHeight * visibleHeightRatio;
+        const renderedVisibleRect = boss ? {
+          left: boss.x - renderedWidth * idleFrame.anchorX
+            + renderedWidth * (idleFrame.contentRect.x - idleFrame.sourceRect.x) / idleFrame.sourceRect.w,
+          top: boss.y - renderedHeight * idleFrame.anchorY
+            + renderedHeight * (idleFrame.contentRect.y - idleFrame.sourceRect.y) / idleFrame.sourceRect.h,
+          right: boss.x - renderedWidth * idleFrame.anchorX
+            + renderedWidth * (
+              idleFrame.contentRect.x - idleFrame.sourceRect.x + idleFrame.contentRect.w
+            ) / idleFrame.sourceRect.w,
+          bottom: boss.y - renderedHeight * idleFrame.anchorY
+            + renderedHeight * (
+              idleFrame.contentRect.y - idleFrame.sourceRect.y + idleFrame.contentRect.h
+            ) / idleFrame.sourceRect.h,
+        } : null;
+        const banner = battleBannerRect();
+        return {
+          kind,
+          bossId: boss?.id ?? null,
+          humanId: human?.id ?? null,
+          bossX: boss?.x ?? null,
+          bossY: boss?.y ?? null,
+          bossBodyRadius: boss?.bodyRadius ?? null,
+          combatReadyX: boss?.combatReadyX ?? null,
+          combatReady: boss?.combatReady ?? false,
+          gateEntering: boss?.gateEntering ?? false,
+          entryMode: boss?.spawnEntryMode ?? null,
+          bossAttack: boss?.attack ?? 0,
+          bossTargetId: boss?.targetId ?? null,
+          bossHp: boss?.hp ?? null,
+          bossMaxHp: boss?.maxHp ?? null,
+          humanX: human?.x ?? null,
+          humanY: human?.y ?? null,
+          humanBodyRadius: human?.bodyRadius ?? null,
+          humanHp: human?.hp ?? null,
+          hud: boss ? bossHudSnapshot(boss) : null,
+          telegraph: boss ? bossTelegraphSnapshot(boss, { fallbackTargetX: BASE_X + 48 }) : null,
+          stationPhase: boss?.stationAbility.phase ?? null,
+          stationTargetIds: boss?.stationAbility.targetIds ?? [],
+          stationSplit: boss?.stationAbility.split ?? false,
+          trackingTarget: boss ? {
+            targetId: boss.stationAbility.targetId ?? null,
+            targetX: boss.stationAbility.targetX ?? null,
+            targetY: boss.stationAbility.targetY ?? null,
+          } : null,
+          visionDisruptedRemaining: human?.visionDisruptedRemaining ?? 0,
+          prototypeStatus: definition?.prototypeStatus ?? null,
+          spriteLoadedWidth: spriteRefs.current[kind]?.naturalWidth ?? 0,
+          renderedBodyHeight,
+          renderedVisibleRect,
+          footAnchorDelta: renderedVisibleRect && boss
+            ? renderedVisibleRect.bottom - boss.y
+            : null,
+          display: definition?.display ?? null,
+          entranceCount: bossFoundationQaRef.current.entranceCounts[kind] ?? 0,
+          lastEntrance: bossFoundationQaRef.current.lastEntrance,
+          lastCounterplay: bossFoundationQaRef.current.lastCounterplay,
+          barrier: bossFoundationQaRef.current.barrierChallenge,
+          banner: g.bannerTime > 0 ? {
+            text: g.banner,
+            remainingSeconds: g.bannerTime,
+            rect: {
+              left: banner.x,
+              top: banner.y,
+              right: banner.x + banner.width,
+              bottom: banner.y + banner.height,
+            },
+          } : null,
+          battleBarkCount: g.battleBarks.active.length,
+          broodCount: kind === "mother"
+            ? g.fighters.filter((fighter) => (
+              fighter.side === "zombie"
+              && fighter.hp > 0
+              && fighter.summonSource === "mother-brood"
+              && fighter.summonOwnerId === boss?.id
+            )).length
+            : 0,
+        };
+      },
+      accelerateBossFoundationEntry: (bossId: number) => {
+        const boss = gameRef.current.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
+        if (!boss || !boss.gateEntering) return false;
+        boss.gateEntrySpeed = Math.max(boss.gateEntrySpeed, 96);
+        boss.speed = 0;
+        boss.laneSpeed = 0;
+        boss.cooldown = 99;
+        boss.abilityCooldown = 99;
+        return true;
+      },
+      startBossFoundationBarrierChallenge: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
+        const human = g.fighters.find((fighter) => fighter.id === humanId && fighter.side === "human");
+        if (!boss || !human || !boss.combatReady) return null;
+        const separation = boss.bodyRadius + human.bodyRadius + 2;
+        boss.speed = 0;
+        boss.laneSpeed = 0;
+        boss.cooldown = 99;
+        boss.abilityCooldown = 99;
+        human.x = boss.x - separation - 6;
+        human.y = boss.y;
+        human.lane = boss.lane;
+        human.anchorLane = boss.lane;
+        human.speed = 0;
+        human.laneSpeed = 0;
+        human.cooldown = 99;
+        bossFoundationQaRef.current.barrierChallenge = {
+          bossId,
+          humanId,
+          targetX: boss.x + separation + 24,
+          attempted: false,
+          blocked: false,
+          resultingX: null,
+        };
+        return { separation, startX: human.x };
+      },
+      armBossFoundationTelegraph: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
+        const human = g.fighters.find((fighter) => fighter.id === humanId && fighter.side === "human");
+        if (!boss || !human || !boss.combatReady) return null;
+        boss.speed = 0;
+        boss.laneSpeed = 0;
+        if (["ooguchi", "gairen", "futago"].includes(boss.kind)) {
+          boss.x = boss.combatReadyX ?? boss.x;
+        }
+        boss.hp = Math.ceil(boss.maxHp * (boss.kind === "futago" ? .55 : .72));
+        boss.abilityCooldown = 0;
+        boss.abilityWindup = 0;
+        boss.stationAbility = createStationAbilityRuntime(boss.kind);
+        if (boss.kind === "mother") {
+          g.fighters = g.fighters.filter((fighter) => (
+            fighter.summonSource !== "mother-brood"
+            || fighter.summonOwnerId !== boss.id
+          ));
+        }
+        if (boss.kind === "kurome" || boss.kind === "mother") boss.x = Math.min(boss.x, 560);
+        human.x = boss.x - (boss.kind === "kurome" ? 210 : boss.kind === "mother" ? 72 : 90);
+        const proofLane = boss.kind === "ooguchi"
+          ? (boss.lane === 0 ? 1 : 0)
+          : boss.lane;
+        human.y = activeLaneCenters[proofLane];
+        human.lane = proofLane;
+        human.anchorLane = proofLane;
+        human.hp = human.maxHp;
+        human.cooldown = 99;
+        return {
+          warningSeconds: bossDefinitionForEnemyKind(boss.kind)?.attackTelegraph.warningSeconds ?? 0,
+        };
+      },
+      armMotherNormalAttack: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => (
+          fighter.id === bossId
+          && fighter.kind === "mother"
+          && fighter.side === "zombie"
+        ));
+        const human = g.fighters.find((fighter) => (
+          fighter.id === humanId
+          && fighter.side === "human"
+        ));
+        if (!boss || !human || !boss.combatReady) return null;
+        boss.stationAbility = createStationAbilityRuntime("mother");
+        boss.abilityCooldown = 99;
+        boss.cooldown = 0;
+        boss.speed = 0;
+        boss.laneSpeed = 0;
+        human.hp = human.maxHp;
+        human.x = boss.x - boss.bodyRadius - human.bodyRadius - 8;
+        human.y = boss.y;
+        human.lane = boss.lane;
+        human.anchorLane = boss.lane;
+        human.speed = 0;
+        human.laneSpeed = 0;
+        human.cooldown = 99;
+        return { bossId, humanId, humanHp: human.hp };
+      },
+      armAnomalyBossNormalAttack: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => (
+          fighter.id === bossId
+          && ["ooguchi", "gairen", "futago"].includes(fighter.kind)
+          && fighter.side === "zombie"
+        ));
+        const human = g.fighters.find((fighter) => (
+          fighter.id === humanId
+          && fighter.side === "human"
+        ));
+        if (!boss || !human || !boss.combatReady) return null;
+        boss.stationAbility = createStationAbilityRuntime(boss.kind);
+        boss.abilityCooldown = 99;
+        boss.cooldown = 0;
+        boss.speed = 0;
+        boss.laneSpeed = 0;
+        human.hp = human.maxHp;
+        human.x = boss.x - boss.bodyRadius - human.bodyRadius - 8;
+        human.y = boss.y;
+        human.lane = boss.lane;
+        human.anchorLane = boss.lane;
+        human.speed = 0;
+        human.laneSpeed = 0;
+        human.cooldown = 99;
+        return { bossId, humanId, humanHp: human.hp };
+      },
+      moveMotherProofHumanOutsideBrood: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => (
+          fighter.id === bossId
+          && fighter.kind === "mother"
+          && fighter.side === "zombie"
+        ));
+        const human = g.fighters.find((fighter) => (
+          fighter.id === humanId
+          && fighter.side === "human"
+        ));
+        if (!boss || !human || boss.stationAbility.phase !== "warning") return null;
+        const lane = boss.lane === 0 ? 2 : 0;
+        human.x = Math.max(BASE_X + 42, boss.x - BOSS_ANOMALY_TUNING.mother.controlRadius - 72);
+        human.y = activeLaneCenters[lane];
+        human.lane = lane;
+        human.anchorLane = lane;
+        return {
+          x: human.x,
+          y: human.y,
+          lane,
+          distance: fighterDistance(boss, human),
+        };
+      },
+      moveAnomalyProofHumanOutsideTelegraph: (bossId: number, humanId: number) => {
+        const g = gameRef.current;
+        const boss = g.fighters.find((fighter) => (
+          fighter.id === bossId
+          && ["ooguchi", "gairen", "futago"].includes(fighter.kind)
+          && fighter.side === "zombie"
+        ));
+        const human = g.fighters.find((fighter) => (
+          fighter.id === humanId
+          && fighter.side === "human"
+        ));
+        if (!boss || !human || boss.stationAbility.phase !== "warning") return null;
+        if (boss.kind === "ooguchi") {
+          const lockedLane = boss.stationAbility.lane ?? boss.lane;
+          const safeLane = lockedLane === 0 ? 2 : 0;
+          human.y = activeLaneCenters[safeLane];
+          human.lane = safeLane;
+          human.anchorLane = safeLane;
+        } else if (boss.kind === "gairen") {
+          human.x = boss.x + BOSS_ANOMALY_TUNING.gairen.sweepRadius + 36;
+          human.y = boss.y;
+          human.lane = boss.lane;
+          human.anchorLane = boss.lane;
+        } else {
+          human.x = BASE_X + 42;
+          human.y = activeLaneCenters[boss.lane];
+          human.lane = boss.lane;
+          human.anchorLane = boss.lane;
+        }
+        return { x: human.x, y: human.y, lane: human.lane };
+      },
+      moveBossFoundationHumanToLane: (humanId: number, lane: Lane) => {
+        const human = gameRef.current.fighters.find((fighter) => (
+          fighter.id === humanId
+          && fighter.side === "human"
+        ));
+        if (!human || !([0, 1, 2] as const).includes(lane)) return false;
+        human.lane = lane;
+        human.anchorLane = lane;
+        human.y = activeLaneCenters[lane];
+        return true;
+      },
       prepareCrawlerDefenseProof: (
         input: EnemyKind | {
           attackerKind?: EnemyKind;
@@ -4447,8 +7360,350 @@ export function AshfallGame() {
           initialTargetHp: proofTarget?.hp ?? g.barricadeHp,
         };
       },
+      prepareSurvivalUpgradeProof: () => {
+        const g = gameRef.current;
+        if (!g.survivalRun || !g.survivalRuntime || g.over) {
+          throw new Error("Survival upgrade proof requires an active run");
+        }
+        let checkpointOwner = g.fighters.find((fighter) => (
+          fighter.side === "human"
+          && fighter.hp > 0
+          && fighter.manualAbility
+        ));
+        if (!checkpointOwner) {
+          spawnHuman(g, "brawler");
+          checkpointOwner = g.fighters[g.fighters.length - 1];
+        }
+        if (!checkpointOwner?.manualAbility) {
+          throw new Error("Survival upgrade proof requires a manual ability owner");
+        }
+        checkpointOwner.manualAbility = restoreManualAbilityCooldown(
+          checkpointOwner.kind,
+          9.5,
+        ) as ManualAbilityRuntime;
+        const bossWave = beginSurvivalWave({
+          ...g.survivalRun,
+          phase: SURVIVAL_RUN_PHASES.WAVE_READY,
+          currentWave: 5,
+          lastCompletedWave: 4,
+          speed: 1,
+          bossEntrancePending: false,
+          pendingUpgradeChoices: [],
+        });
+        const checkpointRun = completeSurvivalWave(bossWave, {
+          kills: 1,
+          bossKills: 1,
+          crawlerHp: g.baseHp,
+          reward: survivalWaveReward(5),
+        });
+        if (!checkpointRun || checkpointRun.phase !== SURVIVAL_RUN_PHASES.UPGRADE_SELECTION) {
+          throw new Error("Could not prepare Survival upgrade checkpoint");
+        }
+        const checkpointWithCooldowns = {
+          ...checkpointRun,
+          manualAbilityCooldownsByKind: snapshotManualAbilityCooldowns(g.fighters),
+        };
+        const checkpointId = `survival:${checkpointWithCooldowns.runId}:wave:${checkpointWithCooldowns.lastCompletedWave}`;
+        g.survivalRun = checkpointWithCooldowns;
+        g.survivalRuntime = createSurvivalCombatRuntime(checkpointWithCooldowns);
+        g.survivalCheckpointReceipt = checkpointId;
+        g.wave = checkpointRun.currentWave;
+        g.paused = true;
+        g.enemySpawn = createEnemySpawnRuntime();
+        g.fighters = g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0);
+        setPaused(true);
+        setSurvivalHud(survivalHudSnapshot(checkpointWithCooldowns));
+        setPendingSurvivalCheckpoint({ run: checkpointWithCooldowns, checkpointId });
+        return {
+          checkpointId,
+          choices: [...checkpointWithCooldowns.pendingUpgradeChoices],
+          cooldownKind: checkpointOwner.kind,
+          cooldownOwnerId: checkpointOwner.id,
+          cooldownSeconds: checkpointOwner.manualAbility.cooldownRemaining,
+        };
+      },
+      deploySurvivalLiveContinuationProof: (kind: UnitKind, cooldownOwnerId: number) => {
+        const g = gameRef.current;
+        if (!g.survivalRun || g.survivalRun.phase !== SURVIVAL_RUN_PHASES.WAVE_READY) {
+          throw new Error("Survival continuation proof requires a selected checkpoint upgrade");
+        }
+        const cooldownOwner = g.fighters.find((fighter) => (
+          fighter.id === cooldownOwnerId
+          && fighter.side === "human"
+          && fighter.hp > 0
+        ));
+        const card = spawnHuman(g, kind);
+        if (!card) throw new Error(`Could not deploy Survival continuation proof for ${kind}`);
+        const deployed = g.fighters[g.fighters.length - 1];
+        return {
+          cooldownOwner: cooldownOwner?.manualAbility ? {
+            id: cooldownOwner.id,
+            phase: cooldownOwner.manualAbility.phase,
+            cooldownRemaining: cooldownOwner.manualAbility.cooldownRemaining,
+          } : null,
+          deployed: deployed.manualAbility ? {
+            id: deployed.id,
+            phase: deployed.manualAbility.phase,
+            cooldownRemaining: deployed.manualAbility.cooldownRemaining,
+          } : null,
+          remainingCooldowns: [
+            ...(g.survivalRun.manualAbilityCooldownsByKind?.[kind] ?? []),
+          ],
+        };
+      },
+      prepareSurvivalEntryVisibilityProof: () => {
+        const g = gameRef.current;
+        const enteringEnemy = g.fighters.find((fighter) => (
+          fighter.side === "zombie"
+          && fighter.hp > 0
+          && fighter.gateEntering
+          && !fighter.combatReady
+          && (fighter.spawnEntryMode === "right-edge" || fighter.spawnEntryMode === "right-edge-outside")
+        ));
+        if (!enteringEnemy) {
+          throw new Error("Survival entry visibility proof requires a right-edge entering enemy");
+        }
+        g.paused = true;
+        enteringEnemy.x = Math.max(
+          enteringEnemy.combatReadyX + 12,
+          W - Math.max(12, enteringEnemy.bodyRadius),
+        );
+        enteringEnemy.spawnEntryMode = "right-edge-outside";
+        return {
+          fighterId: enteringEnemy.id,
+          x: enteringEnemy.x,
+          combatReadyX: enteringEnemy.combatReadyX,
+          entryMode: enteringEnemy.spawnEntryMode,
+        };
+      },
+      advanceOutbreakTimeline: () => {
+        const g = gameRef.current;
+        if (g.definition.operationCategory !== "outbreak" || g.over) return null;
+        const nextEvent = g.definition.timeline[g.eventIndex];
+        if (!nextEvent) {
+          return {
+            eventIndex: g.eventIndex,
+            timelineLength: g.definition.timeline.length,
+            exhausted: true,
+          };
+        }
+        g.time = Math.max(g.time, nextEvent.at + .05);
+        return {
+          eventIndex: g.eventIndex,
+          timelineLength: g.definition.timeline.length,
+          nextEventAt: nextEvent.at,
+          exhausted: false,
+        };
+      },
+      accelerateOutbreakEntries: () => {
+        const g = gameRef.current;
+        if (g.definition.operationCategory !== "outbreak" || g.over) return 0;
+        let accelerated = 0;
+        for (const fighter of g.fighters) {
+          if (fighter.side !== "zombie" || !fighter.gateEntering || fighter.combatReady) continue;
+          fighter.gateEntrySpeed = Math.max(fighter.gateEntrySpeed, 260);
+          accelerated += 1;
+        }
+        return accelerated;
+      },
+      defeatOutbreakEnemies: () => {
+        const g = gameRef.current;
+        if (g.definition.operationCategory !== "outbreak"
+          || g.over
+          || g.eventIndex < g.definition.timeline.length
+          || g.enemySpawn.pending.length > 0
+          || g.fighters.some((fighter) => (
+            fighter.side === "zombie"
+            && fighter.hp > 0
+            && (!fighter.combatReady || fighter.gateEntering)
+          ))) return 0;
+        let defeated = 0;
+        for (const fighter of g.fighters) {
+          if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.contained) continue;
+          fighter.hp = 0;
+          defeated += 1;
+        }
+        return defeated;
+      },
+      defeatOutbreakBoss: () => {
+        const g = gameRef.current;
+        if (g.definition.operationCategory !== "outbreak" || g.over) return null;
+        const boss = g.fighters.find((fighter) => (
+          fighter.side === "zombie"
+          && fighter.kind === g.definition.bossEnemyKind
+          && fighter.hp > 0
+          && fighter.combatReady
+          && !fighter.gateEntering
+        ));
+        if (!boss) return null;
+        const before = {
+          bossId: boss.id,
+          barricadeHp: g.barricadeHp,
+          barricadeVulnerable: g.barricadeVulnerable,
+        };
+        boss.hp = 0;
+        return before;
+      },
+      defeatOutbreakRemainingEnemies: () => {
+        const g = gameRef.current;
+        if (g.definition.operationCategory !== "outbreak"
+          || g.over
+          || !g.bossDefeated
+          || g.eventIndex < g.definition.timeline.length
+          || g.enemySpawn.pending.length > 0) return 0;
+        let defeated = 0;
+        for (const fighter of g.fighters) {
+          if (fighter.side !== "zombie" || fighter.hp <= 0 || fighter.contained) continue;
+          fighter.hp = 0;
+          defeated += 1;
+        }
+        return defeated;
+      },
+      failNextOutbreakSettlementSave: () => {
+        outbreakSettlementPersistenceQaRef.current.failuresRemaining += 1;
+        return outbreakSettlementPersistenceQaRef.current.attempts;
+      },
+      setSurvivalEntryVisibilityMode: (fighterId: number, entryMode: EnemyEntryMode) => {
+        const fighter = gameRef.current.fighters.find((candidate) => candidate.id === fighterId);
+        if (!fighter || fighter.side !== "zombie" || !fighter.gateEntering) return false;
+        fighter.spawnEntryMode = entryMode;
+        return true;
+      },
+      failNextSurvivalSettlementSave: () => {
+        survivalSettlementPersistenceQaRef.current.failuresRemaining += 1;
+        return survivalSettlementPersistenceQaRef.current.attempts;
+      },
+      prepareEquipmentRuntimeProof: ({
+        mode = "standard",
+        equipped = true,
+        profile = "offense",
+      }: {
+        mode?: "standard" | "survival-new" | "survival-resume";
+        equipped?: boolean;
+        profile?: "offense" | "durability";
+      } = {}) => {
+        const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])[0];
+        if (!unit) throw new Error("Equipment runtime proof requires a campaign unit");
+        const personalEquipmentIds = profile === "durability"
+          ? ["boss-ossified-core", "quick-loader"]
+          : ["boss-muscle-fiber", "boss-rail-spine"];
+        const personalEquipmentByUnit = equipped
+          ? { [unit.id]: personalEquipmentIds }
+          : {};
+        const tacticalEquipmentIds = equipped
+          ? ["boss-resonance-gland", "tactical-barricade-kit"]
+          : [];
+        const equipmentEnhancementLevels = equipped
+          ? Object.fromEntries([
+            ...personalEquipmentIds,
+            "boss-resonance-gland",
+            "tactical-barricade-kit",
+          ].map((equipmentId) => [equipmentId, 3]))
+          : {};
+        const formation = {
+          presetId: "formation-preset-1",
+          unitIds: [unit.id],
+          unitLevelsByUnit: { [unit.id]: 1 },
+          personalEquipmentByUnit,
+          tacticalEquipmentIds,
+          equipmentEnhancementLevels,
+        };
+        let fresh: Game;
+        let serializedResume = false;
+        if (mode === "standard") {
+          fresh = initialGame(
+            "pod",
+            CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET,
+            [unit.combatKind as UnitKind],
+            createBattleResultId(`equipment-runtime-${equipped ? "equipped" : "control"}`),
+            [],
+            formation.unitLevelsByUnit,
+            formation,
+          );
+        } else {
+          const tacticalEffects = aggregateEquipmentEffects(
+            tacticalEquipmentIds,
+            equipmentEnhancementLevels,
+          );
+          const createdRun = createSurvivalRun({
+            runId: `equipment-runtime-${mode}-${equipped ? "equipped" : "control"}`,
+            formation,
+            crawlerMaxHp: Math.round(700 * tacticalEffects.baseHpMultiplier),
+          });
+          const checkpointRun = {
+            ...createdRun,
+            phase: SURVIVAL_RUN_PHASES.UPGRADE_SELECTION,
+            currentWave: 6,
+            lastCompletedWave: 5,
+          };
+          const serializedProgress = mode === "survival-resume"
+            ? JSON.parse(JSON.stringify(saveSurvivalCheckpoint(
+              createDefaultSurvivalProgress(),
+              checkpointRun,
+              "2026-07-26T00:00:00.000Z",
+            )))
+            : null;
+          const run = serializedProgress
+            ? resumeSurvivalCheckpoint(serializedProgress)
+            : createdRun;
+          if (!run) throw new Error("Equipment runtime proof could not resume checkpoint");
+          serializedResume = mode === "survival-resume";
+          fresh = initialSurvivalGame({
+            selectedSupply: "pod",
+            run,
+            formationKinds: [unit.combatKind as UnitKind],
+            unitLevels: formation.unitLevelsByUnit,
+          });
+        }
+        fresh.running = true;
+        const deployed = spawnHuman(fresh, unit.combatKind as UnitKind);
+        const fighter = deployed ? fresh.fighters.at(-1) : null;
+        if (!fighter) throw new Error("Equipment runtime proof could not deploy a fighter");
+        gameRef.current = fresh;
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return {
+          mode,
+          equipped,
+          profile,
+          serializedResume,
+          unitId: unit.id,
+          kind: fighter.kind,
+          baseHp: fresh.baseHp,
+          baseMaxHp: fresh.baseMaxHp,
+          energy: fresh.energy,
+          supportGauge: fresh.supportGauge,
+          fighter: {
+            hp: fighter.hp,
+            maxHp: fighter.maxHp,
+            damage: fighter.damage,
+            range: fighter.range,
+            speed: fighter.speed,
+            laneSpeed: fighter.laneSpeed,
+            attackEvery: fighter.attackEvery,
+            defense: fighter.defense,
+            deployCooldown: deployed.deployCooldown,
+          },
+          formation: fresh.survivalRun ? {
+            personalEquipmentByUnit: { ...fresh.survivalRun.formation.personalEquipmentByUnit },
+            tacticalEquipmentIds: [...fresh.survivalRun.formation.tacticalEquipmentIds],
+            equipmentEnhancementLevels: {
+              ...fresh.survivalRun.formation.equipmentEnhancementLevels,
+            },
+          } : null,
+        };
+      },
+      clearSupportItemCooldown: (kind: SupplyKind) => {
+        const g = gameRef.current;
+        if (!(kind in BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS)) return false;
+        g.supportItemCooldowns[kind] = 0;
+        return true;
+      },
       getSnapshot: () => {
         const g = gameRef.current;
+        const currentCampaignSave = campaignSaveRef.current;
         const geometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
         const battleSpace = battleSpaceFor(g.definition.stageId, activeStageViewportId);
         const grounding = combatReadyGroundingAudit({ geometry, fighters: g.fighters });
@@ -4456,19 +7711,53 @@ export function AshfallGame() {
           screen,
           resultId: g.resultId,
           stageId: g.definition.stageId,
+          operationId: g.definition.operationId,
+          operationCategory: g.definition.operationCategory,
           time: g.time,
           running: g.running,
           paused: g.paused,
           over: g.over,
           won: g.won,
+          survivalRun: g.survivalRun ? {
+            ...g.survivalRun,
+            formation: {
+              ...g.survivalRun.formation,
+              unitIds: [...g.survivalRun.formation.unitIds],
+              unitLevelsByUnit: { ...g.survivalRun.formation.unitLevelsByUnit },
+              personalEquipmentByUnit: { ...g.survivalRun.formation.personalEquipmentByUnit },
+              tacticalEquipmentIds: [...g.survivalRun.formation.tacticalEquipmentIds],
+              equipmentEnhancementLevels: { ...g.survivalRun.formation.equipmentEnhancementLevels },
+            },
+            crawler: { ...g.survivalRun.crawler },
+            manualAbilityCooldownsByKind: Object.fromEntries(
+              Object.entries(g.survivalRun.manualAbilityCooldownsByKind ?? {})
+                .map(([kind, cooldowns]) => [kind, [...cooldowns]]),
+            ),
+            temporaryUpgradeStacks: { ...g.survivalRun.temporaryUpgradeStacks },
+            pendingUpgradeChoices: [...g.survivalRun.pendingUpgradeChoices],
+            stats: { ...g.survivalRun.stats },
+            checkpointRewards: [...g.survivalRun.checkpointRewards],
+            pendingReward: { ...g.survivalRun.pendingReward },
+          } : null,
+          survivalProgress: {
+            ...currentCampaignSave.survival,
+            unlockedStartWaves: [...currentCampaignSave.survival.unlockedStartWaves],
+            processedRunIds: [...currentCampaignSave.survival.processedRunIds],
+            claimedRewardIds: [...currentCampaignSave.survival.claimedRewardIds],
+          },
+          equipmentInventory: [...currentCampaignSave.equipmentInventory],
+          survivalSettlementPersistenceAttempts: survivalSettlementPersistenceQaRef.current.attempts,
+          outbreakSettlementPersistenceAttempts: outbreakSettlementPersistenceQaRef.current.attempts,
           bossDefeated: g.bossDefeated,
           bossDefeatPending: g.bossDefeatPending,
           baseHp: g.baseHp,
           baseMaxHp: g.baseMaxHp,
           barricadeHp: g.barricadeHp,
           barricadeMaxHp: g.barricadeMaxHp,
+          barricadeVulnerable: g.barricadeVulnerable,
           wave: g.wave,
           eventIndex: g.eventIndex,
+          timelineLength: g.definition.timeline.length,
           pendingSpawnCount: g.enemySpawn.pending.length,
           takuyaEntranceAudioRemaining: g.takuyaEntranceAudioRemaining,
           crawlerFootstepCount: g.crawlerFootstepCount,
@@ -4477,6 +7766,7 @@ export function AshfallGame() {
           energy: g.energy,
           scrap: g.scrap,
           supportGauge: g.supportGauge,
+          supportItemCooldowns: { ...g.supportItemCooldowns },
           storyBattleReadEventIds: [...g.storyBattleReadEventIds],
           storyBattleReceiptEventIds: [...g.storyBattleReceiptEventIds],
           storyBattleEvaluatedCueKeys: [...g.storyBattleBarkState.evaluatedCueKeys],
@@ -4496,6 +7786,10 @@ export function AshfallGame() {
             checkedCount: grounding.checkedCount,
             offFloorCount: grounding.offFloorCount,
             offFloorIds: grounding.offFloor.map(({ id }) => id),
+            visuallyOffFloorCount: grounding.visuallyOffFloorCount,
+            visuallyOffFloorIds: grounding.visuallyOffFloor.map(({ id }) => id),
+            visualFloor: { ...geometry.floor.visual },
+            laneCenters: geometry.lanes.map(({ y }) => y),
             debugPrimitiveCount: geometry.debugPrimitives.length,
           },
           battleSpace: {
@@ -4536,11 +7830,13 @@ export function AshfallGame() {
             assignedLane: fighter.anchorLane,
             x: fighter.x,
             y: fighter.y,
+            renderDepthScale: activeBattlefieldDepthScale(fighter.y),
             hp: fighter.hp,
             maxHp: fighter.maxHp,
             damage: fighter.damage,
             cooldown: fighter.cooldown,
             attack: fighter.attack,
+            attackSequence: fighter.attackSequence,
             speed: fighter.speed,
             laneSpeed: fighter.laneSpeed,
             range: fighter.range,
@@ -4548,6 +7844,7 @@ export function AshfallGame() {
             defense: fighter.defense,
             healingMultiplier: fighter.healingMultiplier,
             trapDurationMultiplier: fighter.trapDurationMultiplier,
+            progressionLevel: fighter.progressionLevel ?? 1,
             progressionRank: fighter.progressionRank ?? 0,
             bodyRadius: fighter.bodyRadius,
             targetId: fighter.targetId,
@@ -4555,17 +7852,21 @@ export function AshfallGame() {
             crawlerDefenseTargetId: fighter.crawlerDefenseTargetId ?? null,
             aiDestinationX: fighter.aiDestinationX,
             aiMoveDirection: fighter.aiMoveDirection,
+            targetable: fighter.targetable !== false,
             combatReady: fighter.combatReady,
             gateEntering: fighter.gateEntering,
             entryDirection: fighter.entryDirection ?? -1,
             spawnPortalId: fighter.spawnPortalId ?? null,
+            spawnEntryMode: fighter.spawnEntryMode ?? null,
             combatReadyX: fighter.combatReadyX,
             combatReadyY: fighter.combatReadyY ?? fighter.y,
             entryRampX: fighter.entryRampX ?? null,
             entryRampY: fighter.entryRampY ?? null,
             entryRampCleared: fighter.entryRampCleared ?? true,
             contained: fighter.contained,
+            stunned: fighter.stunned,
             damageReductionRemaining: fighter.damageReductionRemaining,
+            damageReductionMultiplier: fighter.damageReductionMultiplier,
             comboHits: fighter.comboHits,
             weaponHeat: fighter.weaponHeat,
             overheated: fighter.overheated,
@@ -4576,14 +7877,24 @@ export function AshfallGame() {
             guardStandAvailable: fighter.guardStandAvailable,
             engineerTrapReady: fighter.engineerTrapReady,
             engineerTrapX: fighter.engineerTrapX,
+            engineerTrapManual: fighter.engineerTrapManual,
             armorBreakStacks: fighter.armorBreakStacks,
             navigationRecovery: { ...fighter.navigationRecovery },
             stationAbility: { ...fighter.stationAbility },
+            manualAbility: fighter.manualAbility ? { ...fighter.manualAbility } : null,
+            mayoBiteSlowRemaining: fighter.mayoBiteSlowRemaining ?? 0,
+            mayoRetreat: fighter.mayoRetreat ? { ...fighter.mayoRetreat } : null,
+            visionDisruptedRemaining: fighter.visionDisruptedRemaining ?? 0,
           })),
+          corpses: g.corpses.map((corpse) => ({ ...corpse })),
+          manualAbilityVfx: g.manualAbilityVfx.map((effect) => ({ ...effect })),
+          manualAbilityReceipts: g.manualAbilityReceipts.map((receipt) => ({ ...receipt })),
+          areaEffects: g.areaEffects.map((effect) => ({ ...effect })),
           completedStageIds: [...campaignSave.completedStageIds],
           unlockedStageIds: [...campaignSave.unlockedStageIds],
           processedResultIds: [...campaignSave.processedResultIds],
           caps: campaignSave.caps,
+          unitLevels: { ...campaignSave.unitLevels },
           unitRanks: { ...campaignSave.unitRanks },
           settings: { ...campaignSave.settings },
         };
@@ -4599,7 +7910,7 @@ export function AshfallGame() {
         delete qaWindow.__ASHFALL_RUNTIME_PERFORMANCE__;
       }
     };
-  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.settings, campaignSave.unitRanks, campaignSave.unlockedStageIds, screen]);
+  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, persistCampaignSave, qaMode, screen]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -4682,9 +7993,14 @@ export function AshfallGame() {
       image.removeAttribute("src");
     };
     const selectedFormationKinds = formationKindKey.split("|").filter(Boolean) as UnitKind[];
-    const stageEnemyKinds = Array.isArray(CAMPAIGN_STAGE_BY_ID[selectedStageId]?.enemyKinds)
-      ? CAMPAIGN_STAGE_BY_ID[selectedStageId].enemyKinds as UnitKind[]
+    const activeOutbreakEnemyKinds = selectedOutbreakMissionId
+      ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
       : [];
+    const stageEnemyKinds = activeOutbreakEnemyKinds.length > 0
+      ? activeOutbreakEnemyKinds as UnitKind[]
+      : Array.isArray(CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds)
+        ? CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId].enemyKinds as UnitKind[]
+        : [];
     // QA galleries intentionally exercise every atlas. Production only retains
     // the selected formation and the current stage's enemy roster, preventing
     // all 23 high-resolution atlases from occupying mobile memory at once.
@@ -4699,7 +8015,7 @@ export function AshfallGame() {
       pod: "/tactical-drop-pod-v1.png",
       drum: "/explosive-drum-v1.png", medical: "/medical-supply-station-v1.png",
     };
-    const stageObjectAssets = STAGE_OBJECT_MANIFEST[selectedStageId]?.objects ?? [];
+    const stageObjectAssets = STAGE_OBJECT_MANIFEST[activeBattlefieldStageId]?.objects ?? [];
     const retainedSpriteKeys = new Set([...Object.keys(persistentPaths), ...requiredSpriteKinds]);
     for (const [key, image] of Object.entries(spriteRefs.current)) {
       if (retainedSpriteKeys.has(key)) continue;
@@ -4713,15 +8029,15 @@ export function AshfallGame() {
       delete stageObjectRefs.current[id];
     }
     for (const [stageId, image] of Object.entries(backgroundCacheRef.current)) {
-      if (stageId === selectedStageId) continue;
+      if (stageId === activeBattlefieldStageId) continue;
       releaseImage(image);
       delete backgroundCacheRef.current[stageId];
     }
-    if (!backgroundCacheRef.current[selectedStageId]) backgroundRef.current = null;
-    const currentBackground = backgroundCacheRef.current[selectedStageId];
+    if (!backgroundCacheRef.current[activeBattlefieldStageId]) backgroundRef.current = null;
+    const currentBackground = backgroundCacheRef.current[activeBattlefieldStageId];
     const criticalJobs = [
-      ensureImageLoaded(currentBackground, stageVisualFor(selectedStageId), (image) => {
-        backgroundCacheRef.current[selectedStageId] = image;
+      ensureImageLoaded(currentBackground, stageVisualFor(activeBattlefieldStageId), (image) => {
+        backgroundCacheRef.current[activeBattlefieldStageId] = image;
         backgroundRef.current = image;
       }),
       ensureImageLoaded(enemyBaseSpriteRef.current, V075_VISUAL_PROFILES.enemyBase.intact.path, (image) => { enemyBaseSpriteRef.current = image; }),
@@ -4739,14 +8055,14 @@ export function AshfallGame() {
       if (cancelled) return;
       const root = document.documentElement;
       root.dataset.assetResidentScope = qaMode || qaScenario ? "all-local-qa" : "stage-and-formation";
-      root.dataset.assetResidentStage = selectedStageId;
+      root.dataset.assetResidentStage = activeOperationId;
       root.dataset.assetResidentSprites = String(Object.keys(spriteRefs.current).length);
       root.dataset.assetResidentStageObjects = String(Object.keys(stageObjectRefs.current).length);
       root.dataset.assetResidentBackgrounds = String(Object.keys(backgroundCacheRef.current).length);
       setAssetsReady(true);
     }).catch(() => { if (!cancelled) setAssetError(true); });
     return () => { cancelled = true; };
-  }, [formationKindKey, qaMode, qaScenario, selectedStageId]);
+  }, [activeBattlefieldStageId, activeOperationId, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId]);
 
   useEffect(() => {
     const configureCanvas = () => {
@@ -4755,11 +8071,16 @@ export function AshfallGame() {
       const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
       const rect = canvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
-      const nextLaneCenters = laneCentersForViewport(rect.width, rect.height) as LaneCenters;
-      activeStageViewportId = resolveStageViewportProfile({
+      const viewportProfile = resolveStageViewportProfile({
         width: Math.round(rect.width),
         height: Math.round(rect.height),
-      }).id;
+      });
+      activeStageViewportId = viewportProfile.id;
+      const geometryStageId = screen === "battle"
+        ? gameRef.current.definition.stageId
+        : activeBattlefieldStageId;
+      const nextStageGeometry = stageGeometryFor(geometryStageId, viewportProfile.id);
+      const nextLaneCenters = nextStageGeometry.lanes.map(({ y }) => y) as LaneCenters;
       if (nextLaneCenters.some((center, lane) => center !== activeLaneCenters[lane])) {
         const previousLaneCenters = activeLaneCenters;
         const shiftForLane = (lane: Lane) => nextLaneCenters[lane] - previousLaneCenters[lane];
@@ -4780,10 +8101,12 @@ export function AshfallGame() {
         ), 1 as Lane);
         g.barricadeHitY += shiftForLane(hitLane);
         g.shots = [];
+        g.manualAbilityVfx = [];
         g.particles = [];
         g.damageTexts = [];
         activeLaneCenters = nextLaneCenters;
       }
+      activeStageGeometry = nextStageGeometry;
       const pixelWidth = Math.max(1, Math.round(rect.width * dpr));
       const pixelHeight = Math.max(1, Math.round(rect.height * dpr));
       if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
@@ -4798,7 +8121,10 @@ export function AshfallGame() {
       canvas.dataset.worldScale = scale.toFixed(6);
       canvas.dataset.worldOffsetX = offsetX.toFixed(2);
       canvas.dataset.worldOffsetY = offsetY.toFixed(2);
-      canvas.dataset.laneLayout = nextLaneCenters === LANE_Y ? "standard" : "compact-landscape";
+      canvas.dataset.laneLayout = compactBattleViewport() ? "compact-landscape" : "standard";
+      canvas.dataset.visualFloorAuthored = String(nextStageGeometry.floor.visual.authored);
+      canvas.dataset.visualFloorHorizonY = String(nextStageGeometry.floor.visual.horizonY);
+      canvas.dataset.visualFloorNearEdgeY = String(nextStageGeometry.floor.visual.nearEdgeY);
       const ctx = canvas.getContext("2d");
       ctx?.setTransform(scale * dpr, 0, 0, scale * dpr, offsetX * dpr, offsetY * dpr);
     };
@@ -4816,7 +8142,7 @@ export function AshfallGame() {
       window.visualViewport?.removeEventListener("resize", configureCanvas);
       window.visualViewport?.removeEventListener("scroll", configureCanvas);
     };
-  }, []);
+  }, [activeBattlefieldStageId, screen]);
 
   const ensureAudio = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -4930,6 +8256,47 @@ export function AshfallGame() {
     return true;
   }, []);
 
+  const announceBossEntrance = useCallback((
+    g: Game,
+    kind: string,
+    { activateTakuyaScene = false }: { activateTakuyaScene?: boolean } = {},
+  ) => {
+    const definition = bossDefinitionForEnemyKind(kind);
+    if (!definition) return false;
+    const receiptId = `boss-entrance:${kind}:wave-${g.wave}`;
+    if (g.signalIds.includes(receiptId)) return false;
+    g.signalIds.push(receiptId);
+    g.banner = definition.entrance.warningLabel;
+    g.bannerTime = 3.2;
+    g.flashOverlay = Math.max(g.flashOverlay, .18);
+    g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
+    playProductionCue(definition.entrance.cueId, W / 2, {
+      priority: 104,
+      cooldownMs: 0,
+      volume: .92,
+      maxInstances: 1,
+      fallbackCue: "boss-warning",
+      dedupeKey: receiptId,
+    });
+    if (kind === "takuya") {
+      if (activateTakuyaScene) {
+        g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
+        setHud((current) => ({ ...current, takuyaEntranceAudioActive: true }));
+      }
+      emitBattleBark(g, "takuya-entrance", "ranger", receiptId);
+    } else {
+      emitBattleBark(g, "wave-contact", "guide", receiptId);
+    }
+    const qaState = bossFoundationQaRef.current;
+    qaState.entranceCounts[kind] = (qaState.entranceCounts[kind] ?? 0) + 1;
+    qaState.lastEntrance = {
+      kind,
+      cueId: definition.entrance.cueId,
+      warningLabel: definition.entrance.warningLabel,
+    };
+    return true;
+  }, [playProductionCue]);
+
   const resumeBattleAudioLoops = useCallback((g: Game) => {
     const productionMixer = productionMixerRef.current;
     const burningCorpses = g.corpses.filter((corpse) => corpse.state === "burning").slice(0, 3);
@@ -4978,9 +8345,122 @@ export function AshfallGame() {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return;
     if (selectedActionRef.current === action) return;
+    if (action?.startsWith("supply:")) {
+      const kind = action.slice("supply:".length) as SupplyKind;
+      const cooldown = g.supportItemCooldowns[kind] ?? 0;
+      if (cooldown > 0) {
+        g.banner = `戦場物資 // 再準備 ${Math.ceil(cooldown)}秒`;
+        g.bannerTime = .8;
+        playCue("denied");
+        return;
+      }
+    }
     chooseAction(action);
     playCue(action ? "ui-confirm" : "ui-cancel");
   }, [chooseAction, playCue]);
+
+  const activateManualAbility = useCallback((fighterId: number) => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over || selectedActionRef.current) return false;
+    const fighter = g.fighters.find((candidate) => (
+      candidate.id === fighterId
+      && candidate.side === "human"
+      && candidate.hp > 0
+    ));
+    const targetCandidates = fighter ? manualAbilityTargetCandidates(g, fighter) : g.fighters;
+    if (!fighter?.manualAbility || !canActivateManualAbility({ fighter, fighters: targetCandidates })) {
+      playCue("denied");
+      return false;
+    }
+    const target = selectManualAbilityTarget({ owner: fighter, fighters: targetCandidates });
+    const startedAbility = beginManualAbility(fighter.manualAbility, target);
+    if (!startedAbility.ok || !target) {
+      playCue("denied");
+      return false;
+    }
+    const definition = MANUAL_ABILITY_REGISTRY[fighter.kind];
+    if (!definition || definition.runtimeStatus !== "integrated") {
+      playCue("denied");
+      return false;
+    }
+    fighter.manualAbility = startedAbility.runtime as ManualAbilityRuntime;
+    g.manualAbilityReceipts.push({
+      ownerId: fighter.id,
+      activationId: startedAbility.activationId,
+      kind: fighter.kind,
+      eventType: "start",
+      at: g.time,
+      attackSequence: fighter.attackSequence,
+    });
+    g.manualAbilityReceipts = g.manualAbilityReceipts.slice(-32);
+    fighter.attack = Math.max(fighter.attack, definition.windupSeconds);
+    fighter.cooldown = Math.max(fighter.cooldown, definition.windupSeconds);
+    fighter.flash = Math.max(fighter.flash, .26);
+    g.manualAbilityVfx = [...g.manualAbilityVfx, {
+      ownerId: fighter.id,
+      activationId: startedAbility.activationId,
+      kind: fighter.kind,
+      originX: fighter.x + 8,
+      originY: fighter.y - 62,
+      targetX: target.x,
+      targetY: target.y - 8,
+      elapsed: 0,
+      duration: fighter.kind === "miyamoto-musashi"
+        ? definition.windupSeconds + definition.guardSeconds
+        : fighter.kind === "mayo-chan"
+          ? definition.windupSeconds + definition.activeSeconds
+        : ["crazy-king", "kumaverson", "guardian"].includes(fighter.kind)
+          ? definition.windupSeconds + definition.activeSeconds
+        : fighter.kind === "mrs-chiha"
+          ? definition.windupSeconds
+            + definition.salvoIntervalSeconds * (definition.salvoCount - 1)
+            + definition.projectileTravelSeconds
+            + definition.recoverySeconds
+        : ["brawler", "scout", "ranger", "medic", "brute", "babayaga", "gunner", "engineer"].includes(fighter.kind)
+          ? definition.windupSeconds + .55
+        : definition.windupSeconds,
+      points: target.points?.map((point: { x: number; y: number }) => ({ x: point.x, y: point.y - 8 })),
+      windupSeconds: definition.windupSeconds,
+      salvoIntervalSeconds: definition.salvoIntervalSeconds,
+      projectileTravelSeconds: definition.projectileTravelSeconds,
+    }].slice(-8);
+    g.banner = `${cards.find((card) => card.kind === fighter.kind)?.name ?? fighter.kind} // ${definition.displayName}`;
+    g.bannerTime = 1.15;
+    setHud((current) => ({
+      ...current,
+      manualAbilityIcons: current.manualAbilityIcons.filter((icon) => icon.fighterId !== fighter.id),
+    }));
+    playCue("ui-confirm");
+    if (fighter.kind === "zakimiya") playCue("burn-start");
+    if (fighter.kind === "mrs-chiha") {
+      scheduleMrsChihaLauncherAudio(g, fighter, "ability");
+    }
+    const abilityStartCue = fighter.kind === "tky"
+      ? unitAudioCueFor(fighter.kind, "weapon", "abilityCharge")
+      : fighter.kind === "mrs-chiha"
+        ? unitAudioCueFor(fighter.kind, "weapon", "abilityReady")
+        : fighter.kind === "miyamoto-musashi"
+          ? unitAudioCueFor(fighter.kind, "weapon", "abilityGuard")
+          : fighter.kind === "mayo-chan"
+            ? unitAudioCueFor(fighter.kind, "weapon", "abilityStart")
+          : fighter.kind === "crazy-king"
+            ? unitAudioCueFor(fighter.kind, "weapon", "attack")
+            : fighter.kind === "kumaverson"
+              ? unitAudioCueFor(fighter.kind, "weapon", "swing")
+              : fighter.kind === "babayaga"
+                ? unitAudioCueFor(fighter.kind, "weapon", "shot")
+                : weaponCueForUnit(fighter.kind);
+    if (abilityStartCue) {
+      playProductionCue(abilityStartCue, fighter.x, {
+        priority: 82,
+        cooldownMs: 240,
+        maxInstances: 1,
+        fallbackCue: fighter.kind === "mrs-chiha" ? "ranged-shot" : "melee-hit",
+        dedupeKey: `manual-ability:${fighter.id}:${startedAbility.activationId}:start`,
+      });
+    }
+    return true;
+  }, [playCue, playProductionCue]);
 
   const stopSfx = useCallback(() => {
     sfxRequestGateRef.current.cancelPending();
@@ -5211,7 +8691,7 @@ export function AshfallGame() {
       ? sceneIdForStoryEvent("stage-takuya-final-v070")
       : takuyaEntranceAudioActive
         ? TAKUYA_ENTRANCE_AUDIO.silenceSceneId
-        : sceneIdForScreen(screen, selectedStageId, musicState);
+        : sceneIdForScreen(screen, activeBattlefieldStageId, musicState);
     desiredProductionSceneRef.current = sceneId;
     if (document.documentElement.dataset.audioMixer === "production") {
       document.documentElement.dataset.audioScene = sceneId ?? "none";
@@ -5226,7 +8706,7 @@ export function AshfallGame() {
       if (desiredProductionSceneRef.current !== sceneId) return;
       setMusicActive(Boolean(state?.bgmAssetId) && !bgmMuted);
     }).catch(() => setMusicActive(false));
-  }, [bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, selectedStageId, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, storyFinalCutAudioActive, takuyaEntranceAudioActive]);
+  }, [activeBattlefieldStageId, bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, storyFinalCutAudioActive, takuyaEntranceAudioActive]);
 
   useEffect(() => {
     const active = screen === "battle" && hud.battleBarks.length > 0;
@@ -5243,14 +8723,15 @@ export function AshfallGame() {
   const deployHuman = useCallback((kind: UnitKind) => {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return false;
-    const card = cards.find((item) => item.kind === kind);
+    const card = equippedCardForGame(g, kind);
     if (!card || !g.formationKinds.includes(kind) || g.deployQueue.length >= 3 || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
       playCue("denied");
       if (g.deployQueue.length >= 3) { g.banner = "格納庫満員 // 3"; g.bannerTime = .9; }
       return false;
     }
     g.energy -= card.cost;
-    g.deployCooldowns[kind] = card.deployCooldown;
+    g.deployCooldowns[kind] = card.deployCooldown
+      * survivalUpgradeEffects(g.survivalRun).redeployMultiplier;
     g.deployQueue.push(kind);
     g.banner = `${card.name} // 出撃待機 ${g.deployQueue.length}/3`;
     g.bannerTime = .7;
@@ -5272,6 +8753,7 @@ export function AshfallGame() {
     }
     const result = resolveBattlefieldSupplyPlacement({
       running: g.running, paused: g.paused, over: g.over, scrap: g.scrap, supplyKind: kind, lane, x: target.x, y: target.y,
+      cooldown: preservesAcceptedSupportTempo(g) ? 0 : g.supportItemCooldowns[kind],
       supplies: g.battlefieldObjects, objects: [], supports: [], areaEffects: g.areaEffects,
       nextId: g.nextId, nextAreaEffectId: g.nextAreaEffectId,
       laneCenters: activeLaneCenters,
@@ -5291,6 +8773,12 @@ export function AshfallGame() {
     g.areaEffects = result.areaEffects as AreaEffect[];
     g.nextId = result.nextId;
     g.nextAreaEffectId = result.nextAreaEffectId;
+    if (!preservesAcceptedSupportTempo(g)) {
+      g.supportItemCooldowns = beginBattlefieldSupplyCooldown(
+        g.supportItemCooldowns,
+        kind,
+      ) as Record<SupplyKind, number>;
+    }
     g.banner = placement.adjusted
       ? `${supplyDefs[kind].name} // 最寄りの配置可能地点へ補正`
       : `${supplyDefs[kind].name} // 戦場配置`;
@@ -5351,6 +8839,47 @@ export function AshfallGame() {
     return true;
   }, [playCue]);
 
+  const triggerKuromeEmergencyEvadeAt = useCallback((x: number, y: number) => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over) return false;
+    for (const boss of g.fighters.filter((fighter) => (
+      fighter.kind === "kurome"
+      && fighter.side === "zombie"
+      && fighter.combatReady
+      && ["tracking", "locked"].includes(fighter.stationAbility.phase)
+    ))) {
+      const target = g.fighters.find((fighter) => (
+        fighter.side === "human"
+        && String(fighter.id) === String(boss.stationAbility.targetId)
+      ));
+      const plan = kuromeEmergencyEvadePlan({
+        runtime: boss.stationAbility,
+        target,
+        tap: { x, y },
+        laneCenters: activeLaneCenters,
+      });
+      if (!plan.ok || !target || !Number.isInteger(plan.lane)) continue;
+      boss.stationAbility = plan.runtime as StationAbilityRuntime;
+      target.lane = plan.lane as Lane;
+      target.anchorLane = plan.lane as Lane;
+      target.y = activeLaneCenters[plan.lane as Lane];
+      target.targetId = null;
+      target.targetObjectId = null;
+      target.aiMoveDirection = 0;
+      g.banner = "緊急回避 // 照準線を離脱";
+      g.bannerTime = .85;
+      bossFoundationQaRef.current.lastCounterplay = {
+        kind: "kurome-emergency-evade",
+        input: "battlefield-pointer",
+        targetId: target.id,
+        destinationLane: plan.lane,
+      };
+      playCue("deploy-light");
+      return true;
+    }
+    return false;
+  }, [playCue]);
+
   const executeSelected = useCallback((x: number, y: number) => {
     const action = selectedActionRef.current;
     if (!action) return;
@@ -5386,6 +8915,7 @@ export function AshfallGame() {
       : kind
         ? battlefieldSupplyPlacementCheck({
           running: g.running, paused: g.paused, over: g.over, scrap: g.scrap,
+          cooldown: preservesAcceptedSupportTempo(g) ? 0 : g.supportItemCooldowns[kind],
           supplyKind: kind, lane: targetLane, x: target.x, y: target.y, supplies: g.battlefieldObjects,
           laneCenters: activeLaneCenters,
           forbiddenZones: battlefieldPlacementForbiddenZones(stageObjectForbiddenZonesForGame(g)),
@@ -5411,9 +8941,13 @@ export function AshfallGame() {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return;
     const { x, y } = pointerWorldPosition(event);
-    if (!selectedActionRef.current) { triggerDrumAt(x, y); return; }
+    if (!selectedActionRef.current) {
+      if (triggerKuromeEmergencyEvadeAt(x, y)) return;
+      triggerDrumAt(x, y);
+      return;
+    }
     executeSelected(x, y);
-  }, [executeSelected, pointerWorldPosition, triggerDrumAt]);
+  }, [executeSelected, pointerWorldPosition, triggerDrumAt, triggerKuromeEmergencyEvadeAt]);
 
   const handleBattlefieldPointerCancel = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -5472,24 +9006,190 @@ export function AshfallGame() {
     };
   }), [campaignSave, qaMode, qaScenario]);
   const selectedStageView = stageViews.find((stage) => stage.id === selectedStageId) ?? stageViews[0];
+  const outbreakMissionViews = useMemo<OutbreakMissionScreenView[]>(() => OUTBREAK_MISSIONS.map((mission) => {
+    const boss = bossDefinitionForEnemyKind(mission.boss.enemyKind);
+    const equipmentId = mission.firstClearEquipmentGrant?.equipmentId ?? "";
+    return {
+      id: mission.id,
+      displayName: mission.displayName,
+      location: mission.location,
+      objective: mission.objective,
+      bossName: boss?.displayName ?? mission.boss.enemyKind,
+      bossClassification: boss?.classification ?? "異常発生個体",
+      bossImagePath: boss?.compendium?.assetPath ?? "",
+      prerequisiteLabel: CAMPAIGN_STAGE_BY_ID[mission.prerequisiteStageId]?.displayName ?? mission.prerequisiteStageId,
+      unlocked: Boolean(qaMode || qaScenario) || isOutbreakMissionUnlocked(
+        campaignSave.outbreaks,
+        campaignSave.completedStageIds,
+        mission.id,
+      ),
+      cleared: campaignSave.outbreaks.clearedMissionIds.includes(mission.id),
+      defeatCount: campaignSave.outbreaks.bossDefeatCounts[mission.boss.enemyKind] ?? 0,
+      baseRewardCaps: mission.baseRewardCaps,
+      equipmentName: EQUIPMENT_BY_ID[equipmentId]?.displayName ?? equipmentId,
+    };
+  }), [campaignSave.completedStageIds, campaignSave.outbreaks, qaMode, qaScenario]);
+  const selectedOutbreakMissionView = outbreakMissionViews.find(({ id }) => id === selectedOutbreakMissionId)
+    ?? outbreakMissionViews.find(({ unlocked }) => unlocked)
+    ?? outbreakMissionViews[0];
+  const selectedOperationView = selectedOutbreakMissionId && selectedOutbreakMissionView
+    ? {
+      id: selectedOutbreakMissionView.id,
+      stageNumber: 0,
+      regionId: "region-outbreak",
+      regionLabel: "異常発生",
+      regionName: selectedOutbreakMissionView.location,
+      displayName: selectedOutbreakMissionView.displayName,
+      chapterName: "異常発生任務",
+      objective: selectedOutbreakMissionView.objective,
+      missionLabel: "異常発生個体制圧作戦",
+      threat: `危険度 極高 / ${selectedOutbreakMissionView.bossName}`,
+      unlocked: selectedOutbreakMissionView.unlocked,
+      completed: selectedOutbreakMissionView.cleared,
+      bestStars: 0,
+      baseReward: selectedOutbreakMissionView.baseRewardCaps,
+      nextStarReward: 0,
+      mapPosition: { x: 50, y: 50 },
+      starCriteria: ["異常発生個体を撃破", "残存感染体を掃討", "移動拠点を防衛"],
+    } satisfies StageScreenView
+    : selectedStageView;
+  const recordOperationLabel = useCallback((operationId: string) => {
+    if (CAMPAIGN_STAGE_BY_ID[operationId]) return CAMPAIGN_STAGE_BY_ID[operationId].displayName;
+    if (OUTBREAK_MISSION_BY_ID[operationId]) return OUTBREAK_MISSION_BY_ID[operationId].displayName;
+    if (operationId.startsWith("survival-wave-")) {
+      return `Survival WAVE ${operationId.slice("survival-wave-".length)}開始`;
+    }
+    return operationId;
+  }, []);
+  const enemyCompendiumViews = useMemo<EnemyCompendiumView[]>(() => ENEMY_CONTENT
+    .filter((enemy) => !isBossEnemyKind(enemy.id))
+    .map((enemy) => {
+      const record = campaignSave.records.encountersByEnemy[enemy.id] ?? null;
+      const legacyStage = CAMPAIGN_STAGES.find((stage) => (
+        campaignSave.completedStageIds.includes(stage.id)
+        && (stage.enemyKinds.includes(enemy.id) || stage.boss?.enemyKind === enemy.id)
+      )) ?? null;
+      const encountered = Boolean(record || legacyStage);
+      const firstOperationId = record?.firstOperationId ?? legacyStage?.id ?? "";
+      return {
+        id: enemy.id,
+        displayName: enemy.displayName,
+        classification: enemy.runtimeGenerated
+          ? "戦闘不能者由来・転化感染体"
+          : enemy.spawnClass === "heavy"
+            ? "重装通常感染体"
+            : "通常感染体",
+        encountered,
+        firstEncounterLabel: firstOperationId
+          ? recordOperationLabel(firstOperationId)
+          : "未確認",
+        encounterCount: record?.encounterCount ?? (legacyStage ? 1 : 0),
+        defeatCount: campaignSave.records.defeatCountsByEnemy[enemy.id] ?? 0,
+        attackProfile: ENEMY_RECORD_PROFILE_LABELS[enemy.aiProfile] ?? "固有の行動規則で部隊へ接近する。",
+        artStyle: spriteCompendiumStyle(enemy.id),
+      };
+    }), [campaignSave.completedStageIds, campaignSave.records, recordOperationLabel]);
+  const bossCompendiumViews = useMemo<BossCompendiumView[]>(() => BOSS_DEFINITIONS.map((boss) => {
+    const record = campaignSave.records.encountersByEnemy[boss.enemyKind] ?? null;
+    const legacyStage = CAMPAIGN_STAGES.find((stage) => (
+      campaignSave.completedStageIds.includes(stage.id)
+      && (stage.enemyKinds.includes(boss.enemyKind) || stage.boss?.enemyKind === boss.enemyKind)
+    )) ?? null;
+    const outbreakMission = OUTBREAK_MISSIONS.find((mission) => mission.boss.enemyKind === boss.enemyKind) ?? null;
+    const outbreakDefeatCount = campaignSave.outbreaks.bossDefeatCounts[boss.enemyKind] ?? 0;
+    const outbreakEncountered = Boolean(
+      outbreakMission
+      && campaignSave.outbreaks.clearedMissionIds.includes(outbreakMission.id),
+    );
+    const encountered = Boolean(record || legacyStage || outbreakEncountered);
+    const firstOperationId = record?.firstOperationId
+      ?? legacyStage?.id
+      ?? (outbreakEncountered ? outbreakMission?.id : "")
+      ?? "";
+    const defeatCount = Math.max(
+      campaignSave.records.defeatCountsByEnemy[boss.enemyKind] ?? 0,
+      outbreakDefeatCount,
+      legacyStage ? 1 : 0,
+    );
+    return {
+      id: boss.id,
+      displayName: boss.displayName,
+      classification: boss.classification,
+      encountered,
+      firstEncounterLabel: firstOperationId ? recordOperationLabel(firstOperationId) : "未確認",
+      defeatCount,
+      attackName: boss.attackTelegraph.displayName,
+      attackSummary: boss.compendium.summary,
+      weakness: boss.attackTelegraph.counterplay,
+      equipmentName: EQUIPMENT_BY_ID[boss.reward.equipmentId]?.displayName ?? boss.reward.equipmentId,
+      artStyle: boss.compendium.assetPath
+        ? fullCompendiumStyle(boss.compendium.assetPath)
+        : spriteCompendiumStyle(boss.enemyKind, { width: 190, height: 168 }),
+    };
+  }), [campaignSave.completedStageIds, campaignSave.outbreaks, campaignSave.records, recordOperationLabel]);
+  const recordsSummaryView = useMemo<RecordsSummaryView>(() => {
+    const records = campaignSave.records;
+    const unitKinds = [...new Set([
+      ...Object.keys(records.unitStats.damageByUnit),
+      ...Object.keys(records.unitStats.damageTakenByUnit),
+      ...Object.keys(records.unitStats.healingByUnit),
+    ])];
+    return {
+      battles: records.totals.battles,
+      victories: records.totals.victories,
+      defeats: records.totals.defeats,
+      withdrawals: records.totals.withdrawals,
+      battleSeconds: records.totals.battleSeconds,
+      kills: records.totals.kills,
+      bossKills: records.totals.bossKills,
+      unitsLost: records.totals.unitsLost,
+      capsEarned: records.totals.capsEarned,
+      clearedStages: CAMPAIGN_STAGES.filter((stage) => (
+        campaignSave.completedStageIds.includes(stage.id)
+      )).length,
+      totalStages: CAMPAIGN_STAGES.length,
+      collectedStars: Object.values(campaignSave.bestStarsByStage)
+        .reduce((total: number, stars) => total + Number(stars || 0), 0),
+      highestSurvivalWave: campaignSave.survival.highestWave,
+      survivalRuns: campaignSave.survival.totalRuns,
+      outbreakClears: campaignSave.outbreaks.clearedMissionIds.length,
+      recentResults: [...records.recentResults].reverse().map((result) => ({
+        resultId: result.resultId,
+        operationLabel: recordOperationLabel(result.operationId),
+        categoryLabel: result.category === "survival" ? "SURVIVAL" : result.category === "outbreak" ? "異常発生" : "本編",
+        outcomeLabel: result.outcome === "won" ? "勝利" : result.outcome === "withdrawn" ? "撤退" : "敗北",
+        kills: result.kills,
+        reachedWave: result.reachedWave,
+        completedAt: result.completedAt,
+      })),
+      unitStats: unitKinds.map((kind) => ({
+        kind,
+        displayName: cards.find((card) => card.kind === kind)?.name ?? kind,
+        damage: records.unitStats.damageByUnit[kind] ?? 0,
+        damageTaken: records.unitStats.damageTakenByUnit[kind] ?? 0,
+        healing: records.unitStats.healingByUnit[kind] ?? 0,
+      })).sort((left, right) => right.damage - left.damage || left.displayName.localeCompare(right.displayName)),
+    };
+  }, [campaignSave, recordOperationLabel]);
+  const campaignLevelCap = getCampaignLevelCap(campaignSave);
   const unitViews = useMemo<UnitScreenView[]>(() => (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => {
-    const rank = getCampaignUnitRank(campaignSave, unit.id);
-    const quote = campaignUnitUpgradeQuote(campaignSave, unit.id);
+    const level = getCampaignUnitLevel(campaignSave, unit.id);
+    const quote = campaignUnitLevelUpgradeQuote(campaignSave, unit.id);
     const baseCard = cards.find((card) => card.kind === unit.combatKind) ?? cards[0];
     const aiProfile = baseCard.aiProfile;
-    const milestones = unitProgressionMilestones(aiProfile, rank);
-    const nextMilestones = quote.nextRank === null
+    const milestones = unitLevelMilestones(aiProfile, level);
+    const nextMilestones = quote.nextLevel === null
       ? []
-      : unitProgressionMilestones(aiProfile, quote.nextRank).filter((milestone) => !milestones.includes(milestone));
-    const statSummaryFor = (targetRank: number) => {
-      if (targetRank <= 0) return "基礎ステータス";
-      const progressed = applyUnitProgression(baseCard, targetRank);
+      : unitLevelMilestones(aiProfile, quote.nextLevel).filter((milestone) => !milestones.includes(milestone));
+    const statSummaryFor = (targetLevel: number) => {
+      if (targetLevel <= 1) return "基礎ステータス";
+      const progressed = applyUnitLevelProgression(baseCard, targetLevel);
       const increase = (current: number, base: number) => Math.round((current / base - 1) * 100);
       return `HP +${increase(progressed.hp, baseCard.hp)}%・攻撃 +${increase(progressed.damage, baseCard.damage)}%・防御 ${Math.round(progressed.defense * 1000) / 10}%軽減・機動 +${increase(progressed.speed, baseCard.speed)}%・攻撃速度 +${increase(baseCard.attackEvery, progressed.attackEvery)}%`;
     };
-    const compactStatSummaryFor = (targetRank: number) => {
-      if (targetRank <= 0) return "基礎";
-      const progressed = applyUnitProgression(baseCard, targetRank);
+    const compactStatSummaryFor = (targetLevel: number) => {
+      if (targetLevel <= 1) return "基礎";
+      const progressed = applyUnitLevelProgression(baseCard, targetLevel);
       const increase = (current: number, base: number) => Math.round((current / base - 1) * 100);
       return `HP+${increase(progressed.hp, baseCard.hp)} 攻+${increase(progressed.damage, baseCard.damage)} 防${Math.round(progressed.defense * 1000) / 10}% 機+${increase(progressed.speed, baseCard.speed)} 速+${increase(baseCard.attackEvery, progressed.attackEvery)}%`;
     };
@@ -5514,19 +9214,21 @@ export function AshfallGame() {
         : unit.unlock.type === "recruitment"
           ? `${CAMPAIGN_STAGE_BY_ID[unit.unlock.stageId ?? ""]?.displayName ?? `Stage ${unit.unlock.stageNumber ?? "?"}`}後に調達`
           : `Stage ${unit.unlock.stageNumber ?? "?"}で加入`,
-      rank,
-      maxRank: UNIT_PROGRESSION_MAX_RANK,
-      nextUpgradeCost: quote.nextRank === null ? null : quote.costCaps,
+      level,
+      maxLevel: UNIT_LEVEL_MAX,
+      levelCap: campaignLevelCap,
+      nextUpgradeCost: quote.nextLevel === null ? null : quote.costCaps,
+      upgradeBlockedReason: quote.reason,
       upgradeBaseCost: quote.baseCostCaps,
       upgradeDiscount: quote.discountCaps,
       catchUp: quote.catchUp,
       milestones,
       nextMilestones,
-      statSummary: statSummaryFor(rank),
-      nextStatSummary: statSummaryFor(quote.nextRank ?? rank),
-      nextStatCompact: compactStatSummaryFor(quote.nextRank ?? rank),
+      statSummary: statSummaryFor(level),
+      nextStatSummary: statSummaryFor(quote.nextLevel ?? level),
+      nextStatCompact: compactStatSummaryFor(quote.nextLevel ?? level),
     };
-  }), [campaignSave, qaMode, qaScenario]);
+  }), [campaignLevelCap, campaignSave, qaMode, qaScenario]);
   const supplyViews = useMemo<SupplyScreenView[]>(() => (Object.keys(supplyDefs) as SupplyKind[]).map((kind) => ({
     kind,
     name: supplyDefs[kind].name,
@@ -5588,7 +9290,7 @@ export function AshfallGame() {
   }) => {
     const retrying = gameRef.current.over;
     const qaAllUnlocked = Boolean(qaMode || qaScenario);
-    const battleStageId = qaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : sessionOverride?.stageId ?? selectedStageId;
+    const battleStageId = qaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : sessionOverride?.stageId ?? activeOperationId;
     const requestedFormation = sessionOverride?.formationKinds ?? formationKinds;
     const permittedFormation = qaAllUnlocked
       ? requestedFormation.slice(0, 7)
@@ -5603,7 +9305,8 @@ export function AshfallGame() {
       permittedFormation.length > 0 ? permittedFormation : fallbackFormation,
       sessionOverride?.resultId ?? createBattleResultId(battleStageId),
       campaignSave.readStoryEventIds,
-      campaignSave.unitRanks,
+      campaignSave.unitLevels,
+      getFormationPresetEquipmentSnapshot(campaignSave),
     );
     fresh.running = true;
     prepareQaMode(fresh, qaMode);
@@ -5627,26 +9330,102 @@ export function AshfallGame() {
       prepareStationQa(fresh, retrying ? "start" : qaScenario.state);
     }
     gameRef.current = fresh;
-    const boss = fresh.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
+    const bossHud = fresh.fighters
+      .map((fighter) => bossHudSnapshot(fighter))
+      .find((snapshot) => snapshot !== null);
     desiredMusicModeRef.current = "normal";
     finalizedEndRef.current = null;
-    setStarted(true); setPaused(false); setEnd(null); setCampaignResult(null); setScreen("battle"); chooseAction(null);
+    setStarted(true); setPaused(false); setEnd(null); setCampaignResult(null); setOutbreakResult(null); setPendingOutbreakSettlement(null); setScreen("battle"); chooseAction(null);
     setHud({ missionType: fresh.definition.missionType, energy: Math.floor(fresh.energy), supportGauge: Math.floor(fresh.supportGauge), scrap: fresh.scrap, kills: fresh.kills,
+      supportItemCooldowns: { ...fresh.supportItemCooldowns },
       wave: fresh.wave, phase: fresh.phase, baseHp: fresh.baseHp, baseMaxHp: fresh.baseMaxHp,
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
       deployQueue: fresh.deployQueue.length, airstrikePhase: fresh.airstrike.phase,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
-      bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
+      bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
       takuyaEntranceAudioActive: false,
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
-      deployCooldowns: { ...fresh.deployCooldowns }, battleBarks: [...fresh.battleBarks.active] });
+      deployCooldowns: { ...fresh.deployCooldowns }, battleBarks: [...fresh.battleBarks.active], manualAbilityIcons: [] });
     disposeBattleRuntime(); if (!bgmMuted) startMusic();
     if (retrying) playCue("retry");
     else {
       playCue("start-low");
       startCueTimerRef.current = window.setTimeout(() => { startCueTimerRef.current = null; playCue("start-high"); }, 90);
     }
-  }, [bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, playCue, qaMode, qaScenario, selectedStageId, selectedSupply, startMusic]);
+  }, [activeOperationId, bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, playCue, qaMode, qaScenario, selectedSupply, startMusic]);
+
+  const startSurvivalGame = useCallback((run: ReturnType<typeof createSurvivalRun>) => {
+    const requestedKinds = run.formation.unitIds.flatMap((unitId: string) => {
+      const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
+        .find((candidate) => candidate.id === unitId);
+      return unit ? [unit.combatKind] : [];
+    }) as UnitKind[];
+    const activeKinds = requestedKinds.length > 0 ? requestedKinds : formationKinds;
+    const fresh = initialSurvivalGame({
+      selectedSupply,
+      run,
+      formationKinds: activeKinds,
+      unitLevels: { ...run.formation.unitLevelsByUnit },
+    });
+    fresh.running = true;
+    gameRef.current = fresh;
+    finalizedEndRef.current = null;
+    setStarted(true);
+    setPaused(run.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION);
+    fresh.paused = run.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
+    setEnd(null);
+    setCampaignResult(null);
+    setSurvivalResult(null);
+    setSelectedOutbreakMissionId(null);
+    setOutbreakResult(null);
+    setPendingOutbreakSettlement(null);
+    setPendingSurvivalSettlement(null);
+    setSurvivalSettlementAwaitingRetry(false);
+    setSurvivalHud(survivalHudSnapshot(run));
+    setSelectedStageId(CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL);
+    setScreen("battle");
+    chooseAction(null);
+    disposeBattleRuntime();
+    desiredMusicModeRef.current = "normal";
+    if (!bgmMuted) startMusic();
+    playCue("start-low");
+  }, [bgmMuted, chooseAction, disposeBattleRuntime, formationKinds, playCue, selectedSupply, startMusic]);
+
+  const openSurvival = useCallback(() => {
+    const unlocked = campaignSave.survival.unlockedStartWaves;
+    setSelectedSurvivalStartWave(unlocked.includes(selectedSurvivalStartWave)
+      ? selectedSurvivalStartWave
+      : unlocked[unlocked.length - 1] ?? 1);
+    setSelectedStageId(CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL);
+    setSelectedOutbreakMissionId(null);
+    setSurvivalResult(null);
+    setScreen("survival");
+  }, [campaignSave.survival.unlockedStartWaves, selectedSurvivalStartWave]);
+
+  const startNewSurvival = useCallback(() => {
+    const formationSnapshot = getFormationPresetEquipmentSnapshot(campaignSave);
+    const tacticalEffects = aggregateEquipmentEffects(
+      formationSnapshot.tacticalEquipmentIds.filter(
+        (equipmentId): equipmentId is string => typeof equipmentId === "string",
+      ),
+      formationSnapshot.equipmentEnhancementLevels,
+    );
+    const run = createSurvivalRun({
+      runId: createBattleResultId("survival"),
+      startWave: selectedSurvivalStartWave,
+      unlockedStartWaves: campaignSave.survival.unlockedStartWaves,
+      formation: formationSnapshot,
+      crawlerMaxHp: Math.round(700 * tacticalEffects.baseHpMultiplier),
+      bossPool: campaignSave.outbreaks.survivalBossKinds,
+    });
+    startSurvivalGame(run);
+  }, [campaignSave, selectedSurvivalStartWave, startSurvivalGame]);
+
+  const resumeSurvival = useCallback(() => {
+    const run = resumeSurvivalCheckpoint(campaignSave.survival);
+    if (!run) return;
+    startSurvivalGame(run);
+  }, [campaignSave.survival, startSurvivalGame]);
 
   const returnToMap = useCallback((sessionOverride?: {
     stageId: string;
@@ -5660,12 +9439,14 @@ export function AshfallGame() {
       sessionOverride?.formationKinds ?? formationKinds,
       createBattleResultId(sessionOverride?.stageId ?? selectedStageId),
       campaignSave.readStoryEventIds,
-      campaignSave.unitRanks,
+      campaignSave.unitLevels,
+      getFormationPresetEquipmentSnapshot(campaignSave),
     );
     gameRef.current = fresh;
     finalizedEndRef.current = null;
-    setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setScreen("map"); chooseAction(null);
-  }, [campaignSave.readStoryEventIds, campaignSave.unitRanks, chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
+    setSelectedOutbreakMissionId(null);
+    setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setOutbreakResult(null); setPendingOutbreakSettlement(null); setSurvivalHud(null); setSurvivalResult(null); setPendingSurvivalSettlement(null); setSurvivalSettlementAwaitingRetry(false); setScreen("map"); chooseAction(null);
+  }, [campaignSave, chooseAction, disposeBattleRuntime, formationKinds, selectedStageId, selectedSupply]);
 
   const handleEventComplete = useCallback(() => {
     const completion = resolveStoryEventCompletion({
@@ -5756,24 +9537,24 @@ export function AshfallGame() {
     upgradeLocksRef.current.add(unitId);
     setUpgradePendingUnitIds([...upgradeLocksRef.current]);
     const currentSave = campaignSaveRef.current;
-    const currentRank = getCampaignUnitRank(currentSave, unitId);
-    const upgradeId = `upgrade:${unitId}:rank-${currentRank + 1}`;
+    const currentLevel = getCampaignUnitLevel(currentSave, unitId);
+    const upgradeId = `upgrade:${unitId}:level-${currentLevel + 1}`;
     const transaction = upgradeCampaignUnit(currentSave, { unitId, upgradeId });
     if (transaction.result.applied) {
-      const nextRank = transaction.result.nextRank ?? currentRank;
+      const nextLevel = transaction.result.nextLevel ?? currentLevel;
       const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === unitId);
       const baseCard = cards.find((candidate) => candidate.kind === unit?.combatKind) ?? cards[0];
-      const before = applyUnitProgression(baseCard, currentRank);
-      const after = applyUnitProgression(baseCard, nextRank);
-      const milestones = unitProgressionMilestones(baseCard.aiProfile, nextRank)
-        .filter((milestone) => !unitProgressionMilestones(baseCard.aiProfile, currentRank).includes(milestone));
+      const before = applyUnitLevelProgression(baseCard, currentLevel);
+      const after = applyUnitLevelProgression(baseCard, nextLevel);
+      const milestones = unitLevelMilestones(baseCard.aiProfile, nextLevel)
+        .filter((milestone) => !unitLevelMilestones(baseCard.aiProfile, currentLevel).includes(milestone));
       const defensePercent = (value: number) => Math.round(value * 1000) / 10;
       campaignSaveRef.current = transaction.save as CampaignSave;
       setCampaignSave(transaction.save as CampaignSave);
       setUpgradeFeedback({
         unitId,
-        rank: nextRank,
-        reachedMax: nextRank >= UNIT_PROGRESSION_MAX_RANK,
+        level: nextLevel,
+        reachedMax: nextLevel >= UNIT_LEVEL_MAX,
         spentCaps: transaction.result.spentCaps,
         statDelta: `HP ${before.hp}→${after.hp} / 攻撃 ${before.damage}→${after.damage} / 防御 ${defensePercent(before.defense)}→${defensePercent(after.defense)}%`,
         milestones,
@@ -5787,12 +9568,12 @@ export function AshfallGame() {
         dedupeKey: `${upgradeId}:currency`,
       });
       playProductionCue(
-        nextRank >= UNIT_PROGRESSION_MAX_RANK ? UPGRADE_AUDIO_CUE_IDS.MAX : UPGRADE_AUDIO_CUE_IDS.SUCCESS,
+        nextLevel >= UNIT_LEVEL_MAX ? UPGRADE_AUDIO_CUE_IDS.MAX : UPGRADE_AUDIO_CUE_IDS.SUCCESS,
         W / 2,
         {
-          priority: nextRank >= UNIT_PROGRESSION_MAX_RANK ? 82 : 74,
+          priority: nextLevel >= UNIT_LEVEL_MAX ? 82 : 74,
           cooldownMs: 60,
-          volume: nextRank >= UNIT_PROGRESSION_MAX_RANK ? .9 : .78,
+          volume: nextLevel >= UNIT_LEVEL_MAX ? .9 : .78,
           maxInstances: 1,
           dedupeKey: `${upgradeId}:result`,
         },
@@ -5801,7 +9582,7 @@ export function AshfallGame() {
       upgradeFeedbackTimerRef.current = window.setTimeout(() => {
         setUpgradeFeedback((current) => current?.receipt === transaction.result.upgradeId ? null : current);
         upgradeFeedbackTimerRef.current = null;
-      }, nextRank >= UNIT_PROGRESSION_MAX_RANK ? 1700 : 1350);
+      }, nextLevel >= UNIT_LEVEL_MAX ? 1700 : 1350);
     }
     window.setTimeout(() => {
       upgradeLocksRef.current.delete(unitId);
@@ -5823,7 +9604,51 @@ export function AshfallGame() {
   }, [openEvents]);
   const openPersonnel = useCallback(() => setScreen("personnel"), []);
   const openLoadout = useCallback(() => setScreen("loadout"), []);
+  const openRecords = useCallback(() => setScreen("records"), []);
+  const openOutbreak = useCallback(() => {
+    const selected = outbreakMissionViews.find(({ id }) => id === selectedOutbreakMissionId && isOutbreakMissionUnlocked(
+      campaignSave.outbreaks,
+      campaignSave.completedStageIds,
+      id,
+    )) ?? outbreakMissionViews.find(({ unlocked }) => unlocked) ?? outbreakMissionViews[0];
+    setSelectedOutbreakMissionId(selected?.id ?? null);
+    setOutbreakResult(null);
+    setScreen("outbreak");
+  }, [campaignSave.completedStageIds, campaignSave.outbreaks, outbreakMissionViews, selectedOutbreakMissionId]);
+  const selectOutbreakMission = useCallback((missionId: string) => {
+    if (!isOutbreakMissionUnlocked(
+      campaignSave.outbreaks,
+      campaignSave.completedStageIds,
+      missionId,
+    ) && !qaMode && !qaScenario) return;
+    setSelectedOutbreakMissionId(missionId);
+  }, [campaignSave.completedStageIds, campaignSave.outbreaks, qaMode, qaScenario]);
+  const prepareOutbreak = useCallback(() => {
+    if (!selectedOutbreakMissionId) return;
+    if (!isOutbreakMissionUnlocked(
+      campaignSave.outbreaks,
+      campaignSave.completedStageIds,
+      selectedOutbreakMissionId,
+    ) && !qaMode && !qaScenario) return;
+    setScreen("loadout");
+  }, [campaignSave.completedStageIds, campaignSave.outbreaks, qaMode, qaScenario, selectedOutbreakMissionId]);
+  const returnFromLoadout = useCallback(() => {
+    if (selectedOutbreakMissionId) {
+      setScreen("outbreak");
+      return;
+    }
+    returnToMap();
+  }, [returnToMap, selectedOutbreakMissionId]);
   const requestBattle = useCallback(() => {
+    if (selectedOutbreakMissionId) {
+      startGame({
+        stageId: selectedOutbreakMissionId,
+        formationKinds,
+        selectedSupply,
+        resultId: createBattleResultId(selectedOutbreakMissionId),
+      });
+      return;
+    }
     const nextEventIds = getStageEntryStoryEventIds({
       stageId: selectedStageId,
       completedStageIds: campaignSave.completedStageIds,
@@ -5831,18 +9656,37 @@ export function AshfallGame() {
     });
     if (nextEventIds.length > 0) openEvents(nextEventIds, "battle");
     else startGame();
-  }, [campaignSave.completedStageIds, campaignSave.readStoryEventIds, openEvents, selectedStageId, startGame]);
+  }, [campaignSave.completedStageIds, campaignSave.readStoryEventIds, formationKinds, openEvents, selectedOutbreakMissionId, selectedStageId, selectedSupply, startGame]);
   const retryBattle = useCallback(() => {
+    if (selectedOutbreakMissionId) {
+      startGame({
+        stageId: selectedOutbreakMissionId,
+        formationKinds,
+        selectedSupply,
+        resultId: createBattleResultId(selectedOutbreakMissionId),
+      });
+      return;
+    }
     const nextEventId = getStageNextAttemptStoryEventId({
       stageId: selectedStageId,
       previousWon: campaignResult?.won === true,
     });
     if (nextEventId) openEvent(nextEventId, "battle");
     else startGame();
-  }, [campaignResult?.won, openEvent, selectedStageId, startGame]);
+  }, [campaignResult?.won, formationKinds, openEvent, selectedOutbreakMissionId, selectedStageId, selectedSupply, startGame]);
   const continueResult = useCallback(() => {
     returnToMap();
   }, [returnToMap]);
+  const continueOutbreakResult = useCallback(() => {
+    setStarted(false);
+    setPaused(false);
+    setEnd(null);
+    setOutbreakResult(null);
+    setScreen("outbreak");
+  }, []);
+  const acknowledgeMigrationNotice = useCallback((noticeId: string) => {
+    setCampaignSave((current) => acknowledgeCampaignMigrationNotice(current, noticeId) as CampaignSave);
+  }, []);
   const downloadCampaignText = useCallback((filename: string, text: string) => {
     const url = URL.createObjectURL(new Blob([text], { type: "application/json;charset=utf-8" }));
     const anchor = document.createElement("a");
@@ -6164,16 +10008,248 @@ export function AshfallGame() {
   }, [downloadCampaignText, pendingResultCommit]);
 
   useEffect(() => {
+    if (!pendingSurvivalCheckpoint) return;
+    const { run, checkpointId } = pendingSurvivalCheckpoint;
+    if (survivalCheckpointSaveLocksRef.current.has(checkpointId)) return;
+    survivalCheckpointSaveLocksRef.current.add(checkpointId);
+    setSurvivalSavePending(true);
+    let cancelled = false;
+    void (async () => {
+      const checkpoint = checkpointSurvivalCampaignSave(campaignSaveRef.current, run, {
+        savedAt: new Date().toISOString(),
+      });
+      if (!checkpoint.applied) {
+        if (!cancelled) {
+          setPendingSurvivalCheckpoint(null);
+          setSurvivalSavePending(false);
+        }
+        return;
+      }
+      const persisted = await persistCampaignSave(checkpoint.save as CampaignSave);
+      if (cancelled) return;
+      if (!persisted.durable) {
+        survivalCheckpointSaveLocksRef.current.delete(checkpointId);
+        setSavePersistence("unavailable");
+        setSurvivalSavePending(false);
+        return;
+      }
+      const liveGame = gameRef.current;
+      if (liveGame.survivalRun?.runId === run.runId
+        && liveGame.survivalRun.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION
+        && liveGame.survivalCheckpointReceipt === checkpointId) {
+        const continuedRun = {
+          ...liveGame.survivalRun,
+          manualAbilityCooldownsByKind: {},
+        };
+        liveGame.survivalRun = continuedRun;
+        setSurvivalHud(survivalHudSnapshot(continuedRun));
+      }
+      setCampaignSave(checkpoint.save as CampaignSave);
+      setPendingSurvivalCheckpoint(null);
+      setSurvivalSavePending(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingSurvivalCheckpoint, persistCampaignSave]);
+
+  const retrySurvivalCheckpointSave = useCallback(() => {
+    if (!pendingSurvivalCheckpoint || survivalSavePending) return;
+    survivalCheckpointSaveLocksRef.current.delete(pendingSurvivalCheckpoint.checkpointId);
+    setPendingSurvivalCheckpoint({ ...pendingSurvivalCheckpoint });
+  }, [pendingSurvivalCheckpoint, survivalSavePending]);
+
+  const commitSurvivalSettlement = useCallback((pending: PendingSurvivalSettlement) => {
+    if (survivalSavePending) return;
+    setSurvivalSavePending(true);
+    void (async () => {
+      const result = await persistSurvivalCampaignSettlement(
+        campaignSaveRef.current,
+        pending.run,
+        {
+          endedAt: pending.endedAt,
+          persist: async (candidate) => {
+            survivalSettlementPersistenceQaRef.current.attempts += 1;
+            if (survivalSettlementPersistenceQaRef.current.failuresRemaining > 0) {
+              survivalSettlementPersistenceQaRef.current.failuresRemaining -= 1;
+              return { durable: false };
+            }
+            return persistCampaignSave(candidate as CampaignSave);
+          },
+        },
+      );
+      if (!result.committed) {
+        setSavePersistence("unavailable");
+        setSurvivalSettlementAwaitingRetry(true);
+        setSurvivalSavePending(false);
+        return;
+      }
+      const nextSave = result.save as CampaignSave;
+      const lastResult = nextSave.survival.lastResult;
+      setCampaignSave(nextSave);
+      setPendingSurvivalSettlement(null);
+      setSurvivalSettlementAwaitingRetry(false);
+      setSurvivalSavePending(false);
+      setStarted(false);
+      setPaused(false);
+      setSurvivalHud(null);
+      if (lastResult) {
+        setSurvivalResult({
+          endReason: lastResult.endReason,
+          reachedWave: lastResult.reachedWave,
+          kills: lastResult.stats.kills,
+          bossKills: lastResult.stats.bossKills,
+          earnedCaps: lastResult.earnedCaps,
+          earnedEquipmentGrants: lastResult.earnedEquipmentGrants.map((grant: { equipmentId: string; quantity: number }) => ({
+            ...grant,
+            displayName: EQUIPMENT_BY_ID[grant.equipmentId]?.displayName ?? grant.equipmentId,
+          })),
+          unitStats: [...new Set([
+            ...lastResult.formation.unitIds
+              .map((unitId: string) => campaignUnitIdToCombatKind(unitId))
+              .filter((kind: string | null): kind is string => Boolean(kind)),
+            ...Object.keys(lastResult.stats.damageByUnit),
+            ...Object.keys(lastResult.stats.damageTakenByUnit),
+            ...Object.keys(lastResult.stats.healingByUnit),
+          ])].map((kind) => ({
+            kind,
+            displayName: cards.find((card) => card.kind === kind)?.name ?? kind,
+            damage: lastResult.stats.damageByUnit[kind] ?? 0,
+            damageTaken: lastResult.stats.damageTakenByUnit[kind] ?? 0,
+            healing: lastResult.stats.healingByUnit[kind] ?? 0,
+          })).sort((left, right) => right.damage - left.damage || left.displayName.localeCompare(right.displayName)),
+          newHighestWave: lastResult.newHighestWave,
+          capsAfter: nextSave.caps,
+        });
+      }
+      setScreen("survival-result");
+    })();
+  }, [persistCampaignSave, survivalSavePending]);
+
+  useEffect(() => {
+    if (!pendingSurvivalSettlement || survivalSavePending || survivalSettlementAwaitingRetry) return;
+    const timer = window.setTimeout(() => {
+      commitSurvivalSettlement(pendingSurvivalSettlement);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [
+    commitSurvivalSettlement,
+    pendingSurvivalSettlement,
+    survivalSavePending,
+    survivalSettlementAwaitingRetry,
+  ]);
+
+  const retrySurvivalSettlementSave = useCallback(() => {
+    if (!pendingSurvivalSettlement || survivalSavePending) return;
+    setSurvivalSettlementAwaitingRetry(false);
+    commitSurvivalSettlement(pendingSurvivalSettlement);
+  }, [commitSurvivalSettlement, pendingSurvivalSettlement, survivalSavePending]);
+
+  const commitOutbreakSettlement = useCallback(async (pending: PendingOutbreakSettlement) => {
+    if (outbreakSavePending) return false;
+    const mission = OUTBREAK_MISSION_BY_ID[pending.end.stageId];
+    if (!mission) return false;
+    setOutbreakSavePending(true);
+    const settlement = await persistOutbreakCampaignSettlement(
+      campaignSaveRef.current,
+      {
+        resultId: pending.end.resultId,
+        missionId: mission.id,
+        won: pending.end.won,
+        completedAt: pending.completedAt,
+        stats: {
+          kills: pending.end.kills,
+          unitsLost: pending.end.unitsLost,
+          battleSeconds: pending.end.time,
+        },
+        encounteredEnemyKinds: pending.end.encounteredEnemyKinds,
+        enemyDefeatsByKind: pending.end.enemyDefeatsByKind,
+        unitStats: pending.end.unitStats,
+      },
+      {
+        completedAt: pending.completedAt,
+        persist: async (candidate: CampaignSave) => {
+          outbreakSettlementPersistenceQaRef.current.attempts += 1;
+          if (outbreakSettlementPersistenceQaRef.current.failuresRemaining > 0) {
+            outbreakSettlementPersistenceQaRef.current.failuresRemaining -= 1;
+            return { durable: false };
+          }
+          return persistCampaignSave(candidate);
+        },
+      },
+    );
+    if (!settlement.committed) {
+      setPendingOutbreakSettlement(pending);
+      setSavePersistence("unavailable");
+      setOutbreakSavePending(false);
+      return false;
+    }
+    const nextSave = settlement.save as CampaignSave;
+    const lastResult = nextSave.outbreaks.lastResult;
+    const boss = bossDefinitionForEnemyKind(mission.boss.enemyKind);
+    setCampaignSave(nextSave);
+    setPendingOutbreakSettlement(null);
+    setOutbreakSavePending(false);
+    setStarted(false);
+    setPaused(false);
+    if (lastResult) {
+      setOutbreakResult({
+        missionId: mission.id,
+        displayName: mission.displayName,
+        bossName: boss?.displayName ?? mission.boss.enemyKind,
+        won: lastResult.won,
+        firstClear: lastResult.firstClear,
+        time: lastResult.stats.battleSeconds,
+        kills: lastResult.stats.kills,
+        unitsLost: lastResult.stats.unitsLost,
+        earnedCaps: lastResult.earnedCaps,
+        equipmentGrants: lastResult.equipmentGrants.map((grant: { equipmentId: string; quantity: number }) => ({
+          ...grant,
+          displayName: EQUIPMENT_BY_ID[grant.equipmentId]?.displayName ?? grant.equipmentId,
+        })),
+        survivalUnlocked: lastResult.firstClear
+          && nextSave.outbreaks.survivalBossKinds.includes(lastResult.bossKind),
+        capsAfter: nextSave.caps,
+      });
+    }
+    setScreen("outbreak-result");
+    return true;
+  }, [outbreakSavePending, persistCampaignSave]);
+
+  const retryOutbreakSettlementSave = useCallback(() => {
+    if (!pendingOutbreakSettlement || outbreakSavePending) return;
+    void commitOutbreakSettlement(pendingOutbreakSettlement);
+  }, [commitOutbreakSettlement, outbreakSavePending, pendingOutbreakSettlement]);
+
+  useEffect(() => {
     if (!end || finalizedEndRef.current === end) return;
     const timer = window.setTimeout(async () => {
       if (finalizedEndRef.current === end) return;
       finalizedEndRef.current = end;
+      const completedAt = new Date().toISOString();
+      if (OUTBREAK_MISSION_BY_ID[end.stageId]) {
+        const pending = {
+          end,
+          completedAt,
+        };
+        setPendingOutbreakSettlement(pending);
+        await commitOutbreakSettlement(pending);
+        return;
+      }
       const resolved = resolveStageResult(campaignSave, {
         resultId: end.resultId,
         stageId: end.stageId,
         won: end.won,
         baseHp: end.baseHp,
         baseMaxHp: end.baseMaxHp,
+        battleSeconds: end.time,
+        kills: end.kills,
+        unitsLost: end.unitsLost,
+        bossKills: end.bossDefeated ? 1 : 0,
+        encounteredEnemyKinds: end.encounteredEnemyKinds,
+        enemyDefeatsByKind: end.enemyDefeatsByKind,
+        unitStats: end.unitStats,
+        completedAt,
       });
       const view: CampaignResultView = {
         won: end.won,
@@ -6229,7 +10305,7 @@ export function AshfallGame() {
       publishPendingResult(pending);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [campaignSave, end, persistCampaignSave, publishPendingResult]);
+  }, [campaignSave, commitOutbreakSettlement, end, persistCampaignSave, publishPendingResult]);
 
   useEffect(() => {
     if (!saveHydrated || !qaScenario || qaScenarioAppliedRef.current) return;
@@ -6257,9 +10333,9 @@ export function AshfallGame() {
           caps: 2500,
           supplies: 2500,
           completedStageIds: CAMPAIGN_STAGES.slice(0, 3).map((stage) => stage.id),
-          unitRanks: Object.fromEntries(qaUnitIds.map((unitId, index) => [
+          unitLevels: Object.fromEntries(qaUnitIds.map((unitId, index) => [
             unitId,
-            Math.min(UNIT_PROGRESSION_MAX_RANK, Math.floor(index / 2)),
+            Math.min(5, Math.floor(index / 2) + 1),
           ])),
         } : {}),
       } as CampaignSave;
@@ -6336,6 +10412,7 @@ export function AshfallGame() {
   const togglePause = useCallback(() => {
     const g = gameRef.current;
     if (!g.running || g.over) return;
+    if (g.survivalRun?.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION) return;
     const transition = resolvePauseAction(g.paused ? "resume" : "pause");
     if (!transition) return;
     g.paused = transition.paused; setPaused(g.paused);
@@ -6364,6 +10441,60 @@ export function AshfallGame() {
     }
   }, [bgmMuted, playProductionCue, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
 
+  const changeSurvivalSpeed = useCallback((speed: 1 | 2) => {
+    const g = gameRef.current;
+    if (!g.survivalRun || g.over || g.paused) return;
+    const nextRun = setSurvivalRunSpeed(g.survivalRun, speed);
+    g.survivalRun = nextRun;
+    const boss = g.fighters.find((fighter) => (
+      isBossEnemyKind(fighter.kind)
+      && fighter.hp > 0
+      && fighter.combatReady
+      && fighter.contained !== true
+    ));
+    setSurvivalHud(survivalHudSnapshot(nextRun, {
+      bossKind: boss?.kind ?? null,
+      bossHp: boss?.hp ?? 0,
+      bossMaxHp: boss?.maxHp ?? 0,
+    }));
+  }, []);
+
+  const selectSurvivalUpgrade = useCallback((upgradeId: string) => {
+    const g = gameRef.current;
+    if (!g.survivalRun
+      || !g.survivalRuntime
+      || pendingSurvivalCheckpoint
+      || survivalSavePending) return;
+    const previousEffects = survivalUpgradeEffects(g.survivalRun);
+    const selection = chooseSurvivalCombatUpgrade(g.survivalRuntime, g.survivalRun, upgradeId);
+    if (!selection.selected || !selection.run || !selection.runtime) return;
+    const nextEffects = survivalUpgradeEffects(selection.run);
+    for (const fighter of g.fighters) {
+      if (fighter.side !== "human" || fighter.hp <= 0) continue;
+      const remainingDamageFraction = 1 - fighter.defense;
+      Object.assign(fighter, {
+        damage: fighter.damage * (nextEffects.attackMultiplier / previousEffects.attackMultiplier),
+        range: fighter.range * (nextEffects.rangeMultiplier / previousEffects.rangeMultiplier),
+        healingMultiplier: fighter.healingMultiplier
+          * (nextEffects.healingMultiplier / previousEffects.healingMultiplier),
+        defense: 1 - remainingDamageFraction
+          * (nextEffects.defenseMultiplier / previousEffects.defenseMultiplier),
+      });
+    }
+    for (const kind of Object.keys(g.deployCooldowns) as UnitKind[]) {
+      g.deployCooldowns[kind] *= nextEffects.redeployMultiplier / previousEffects.redeployMultiplier;
+    }
+    g.survivalRun = selection.run;
+    g.survivalRuntime = selection.runtime;
+    g.baseHp = selection.run.crawler.hp;
+    g.baseMaxHp = selection.run.crawler.maxHp;
+    g.paused = false;
+    setPaused(false);
+    setSurvivalHud(survivalHudSnapshot(selection.run));
+    if (!bgmMuted) startMusic();
+    playCue("ui-confirm");
+  }, [bgmMuted, pendingSurvivalCheckpoint, playCue, startMusic, survivalSavePending]);
+
   const requestPauseAction = useCallback((action: PauseAction) => {
     if (!gameRef.current.running || gameRef.current.over) return;
     setPauseConfirm(action);
@@ -6372,7 +10503,7 @@ export function AshfallGame() {
   const cancelPauseAction = useCallback(() => {
     const transition = createBattleSessionTransition({
       action: "cancel",
-      stageId: selectedStageId,
+      stageId: activeOperationId,
       formationKinds,
       selectedSupply,
       campaignSave,
@@ -6381,14 +10512,43 @@ export function AshfallGame() {
     if (transition?.destination === "pause" && !transition.discardBattleState && !transition.commitResult) {
       setPauseConfirm(null);
     }
-  }, [campaignSave, formationKinds, selectedStageId, selectedSupply]);
+  }, [activeOperationId, campaignSave, formationKinds, selectedSupply]);
 
   const confirmPauseAction = useCallback(() => {
     const action = pauseConfirm;
     if (!action) return;
+    const activeGame = gameRef.current;
+    if (activeGame.survivalRun) {
+      if (action !== "withdraw" || activeGame.over) return;
+      const endedAt = new Date().toISOString();
+      const recordedRun = captureUnfinishedSurvivalCombatStats(
+        activeGame.survivalRuntime,
+        activeGame.survivalRun,
+        {
+          totalKills: activeGame.kills,
+          combatStats: {
+            ...activeGame.combatMetrics,
+            encounteredEnemyKinds: activeGame.enemyKindsSeen,
+          },
+          updatedAt: endedAt,
+        },
+      );
+      const endedRun = endSurvivalRun(recordedRun, SURVIVAL_END_REASONS.WITHDRAWAL, endedAt);
+      if (!endedRun) return;
+      activeGame.survivalRun = endedRun;
+      activeGame.over = true;
+      activeGame.paused = true;
+      setPauseConfirm(null);
+      setPaused(true);
+      setPendingSurvivalSettlement({ run: endedRun, endedAt });
+      chooseAction(null);
+      stopMusic();
+      stopSfx();
+      return;
+    }
     const transition = createBattleSessionTransition({
       action,
-      stageId: selectedStageId,
+      stageId: activeOperationId,
       formationKinds,
       selectedSupply,
       campaignSave,
@@ -6414,19 +10574,34 @@ export function AshfallGame() {
         transition.formationKinds as UnitKind[],
         createBattleResultId(transition.stageId),
         campaignSave.readStoryEventIds,
-        campaignSave.unitRanks,
+        campaignSave.unitLevels,
+        getFormationPresetEquipmentSnapshot(campaignSave),
       );
       gameRef.current = fresh;
       finalizedEndRef.current = null;
       setStarted(false); setPaused(false); setEnd(null); setCampaignResult(null); setScreen("loadout"); chooseAction(null);
       return;
     }
-    if (transition.destination === "map") returnToMap(transition as {
-      stageId: string;
-      formationKinds: UnitKind[];
-      selectedSupply: SupplyKind;
-    });
-  }, [campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, returnToMap, selectedStageId, selectedSupply, startGame]);
+    if (transition.destination === "map") {
+      if (selectedOutbreakMissionId) {
+        disposeBattleRuntime();
+        finalizedEndRef.current = null;
+        setStarted(false);
+        setPaused(false);
+        setEnd(null);
+        setCampaignResult(null);
+        setOutbreakResult(null);
+        setScreen("outbreak");
+        chooseAction(null);
+        return;
+      }
+      returnToMap(transition as {
+        stageId: string;
+        formationKinds: UnitKind[];
+        selectedSupply: SupplyKind;
+      });
+    }
+  }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
 
   const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
@@ -6698,7 +10873,8 @@ export function AshfallGame() {
       }
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
-      const dt = Math.min(.033, g.last ? (now - g.last) / 1000 : 0);
+      const frameDt = Math.min(.033, g.last ? (now - g.last) / 1000 : 0);
+      const dt = frameDt * (g.survivalRun?.speed ?? 1);
       g.last = now;
       g.shake = advanceCameraShakeRuntime(g.shake, dt);
       if (g.running && !g.paused) g.battleBarks = advanceBattleBarkRuntime(g.battleBarks, dt) as BattleBarkRuntime;
@@ -6706,6 +10882,577 @@ export function AshfallGame() {
       if (g.running && !g.paused && !g.over) {
         performanceCounters.simulationTicks += 1;
         g.time += dt;
+        g.manualAbilityVfx = g.manualAbilityVfx
+          .map((effect) => ({ ...effect, elapsed: effect.elapsed + dt }))
+          .filter((effect) => effect.elapsed < effect.duration);
+        const pendingAbilityAudioCues = g.pendingAbilityAudioCues.splice(0);
+        for (const pendingCue of pendingAbilityAudioCues) {
+          const remainingSeconds = Math.max(0, (pendingCue.remainingSeconds ?? 0) - dt);
+          if (remainingSeconds > 0) {
+            g.pendingAbilityAudioCues.push({ ...pendingCue, remainingSeconds });
+            continue;
+          }
+          playProductionCue(pendingCue.cueId, pendingCue.x, {
+            priority: 88,
+            cooldownMs: 80,
+            maxInstances: 2,
+            fallbackCue: "melee-hit",
+            dedupeKey: pendingCue.dedupeKey,
+          });
+        }
+        for (const owner of g.fighters) {
+          if (owner.side !== "human" || !owner.manualAbility) continue;
+          if (owner.kind === "mayo-chan" && owner.manualAbility.phase === "feral" && !owner.mayoRetreat) {
+            const hpStep = mayoAbilityHpStep({ hp: owner.hp, maxHp: owner.maxHp, seconds: dt });
+            owner.hp = hpStep.hp;
+            if (hpStep.forceRetreat && beginMayoRetreat(g, owner, "ability")) {
+              g.manualAbilityReceipts.push({
+                ownerId: owner.id,
+                activationId: owner.manualAbility?.activationId ?? 0,
+                kind: owner.kind,
+                eventType: "retreat-safe-floor",
+                at: g.time,
+              });
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityEnd"), owner.x, {
+                priority: 82,
+                cooldownMs: 400,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+              });
+            }
+            if (owner.mayoRetreat) continue;
+          }
+          const abilityStep = advanceManualAbility(owner.manualAbility, dt);
+          owner.manualAbility = abilityStep.runtime as ManualAbilityRuntime;
+          for (const event of abilityStep.events) {
+            g.manualAbilityReceipts.push({
+              ownerId: owner.id,
+              activationId: event.activationId,
+              kind: event.kind,
+              eventType: event.type,
+              at: g.time,
+              salvoIndex: event.salvoIndex,
+              mode: event.mode,
+            });
+            g.manualAbilityReceipts = g.manualAbilityReceipts.slice(-32);
+            if (event.type === "active-start"
+              && ["crazy-king", "kumaverson", "guardian"].includes(event.kind)
+              && event.target) {
+              const targetIds = new Set((event.target.targetIds ?? []).map(String));
+              if (event.kind === "crazy-king") {
+                owner.comboHits = Math.max(owner.comboHits, 3);
+                owner.comboWindow = MANUAL_ABILITY_REGISTRY["crazy-king"].activeSeconds;
+                owner.cooldown = 0;
+                owner.retargetIn = 0;
+                addParticles(g, owner.x, owner.y - 28, "#f06835", 24);
+                addDamageText(g, {
+                  x: owner.x,
+                  y: owner.y - 72,
+                  value: "狂王暴走",
+                  life: 1,
+                  color: "#ffb14f",
+                });
+              } else {
+                for (const enemy of g.fighters) {
+                  if (enemy.side !== "zombie"
+                    || enemy.hp <= 0
+                    || !enemy.combatReady
+                    || !targetIds.has(String(enemy.id))) continue;
+                  enemy.targetId = owner.id;
+                  enemy.retargetIn = Math.max(
+                    enemy.retargetIn,
+                    event.kind === "guardian"
+                      ? MANUAL_ABILITY_REGISTRY.guardian.activeSeconds
+                      : MANUAL_ABILITY_REGISTRY.kumaverson.activeSeconds,
+                  );
+                }
+                owner.cooldown = 0;
+                addParticles(
+                  g,
+                  owner.x,
+                  owner.y - 28,
+                  event.kind === "guardian" ? "#82a8b2" : "#d9a04c",
+                  22,
+                );
+                addDamageText(g, {
+                  x: owner.x,
+                  y: owner.y - 72,
+                  value: event.kind === "guardian" ? "鉄壁展開" : "仁王立ち",
+                  life: 1,
+                  color: event.kind === "guardian" ? "#c4e8ec" : "#ffd07a",
+                });
+              }
+              g.flashOverlay = Math.max(g.flashOverlay, .08);
+              playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
+                priority: 84,
+                cooldownMs: 180,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:active`,
+              });
+              continue;
+            }
+            if (event.type === "feral-start" && event.kind === "mayo-chan") {
+              owner.retargetIn = 0;
+              owner.targetId = null;
+              owner.cooldown = 0;
+              g.banner = "マヨちゃん // 凶暴マヨ";
+              g.bannerTime = 1.05;
+              addParticles(g, owner.x, owner.y - 20, "#b52c52", 16);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityRush"), owner.x, {
+                priority: 80,
+                cooldownMs: 160,
+                maxInstances: 2,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:feral`,
+              });
+              continue;
+            }
+            if (event.type === "retreat" && event.kind === "mayo-chan") {
+              if (beginMayoRetreat(g, owner, "ability")) {
+                playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityEnd"), owner.x, {
+                  priority: 82,
+                  cooldownMs: 400,
+                  maxInstances: 1,
+                  fallbackCue: "melee-hit",
+                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:retreat`,
+                });
+              }
+              continue;
+            }
+            if (event.type === "guard-start" && event.kind === "miyamoto-musashi") {
+              g.banner = "宮本武蔵 // 受け流し構え";
+              g.bannerTime = 1;
+              addParticles(g, owner.x, owner.y - 38, "#9ec7db", 10);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityGuard"), owner.x, {
+                priority: 82,
+                cooldownMs: 220,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:guard`,
+              });
+              continue;
+            }
+            if (event.type === "launch" && event.kind === "mrs-chiha") {
+              owner.flash = Math.max(owner.flash, .08);
+              addParticles(g, owner.x + 18, owner.y - 36, "#d4a45c", 5);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityCylinder"), owner.x, {
+                priority: 76,
+                cooldownMs: 60,
+                maxInstances: 4,
+                fallbackCue: "ranged-shot",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:cylinder:${event.salvoIndex}`,
+              });
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityShot"), owner.x, {
+                priority: 82,
+                cooldownMs: 70,
+                maxInstances: 4,
+                fallbackCue: "ranged-shot",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:shot:${event.salvoIndex}`,
+              });
+              g.pendingAbilityAudioCues.push({
+                cueId: unitAudioCueFor(owner.kind, "weapon", "flight"),
+                x: event.target?.x ?? owner.x,
+                remainingSeconds: .07,
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:flight:${event.salvoIndex}`,
+              });
+              continue;
+            }
+            if (event.type !== "impact" || !event.target) continue;
+            if (event.kind === "brawler") {
+              const definition = MANUAL_ABILITY_REGISTRY.brawler;
+              const target = g.fighters.find((candidate) => (
+                String(candidate.id) === String(event.target.targetId)
+                && candidate.side === "zombie"
+                && candidate.hp > 0
+                && candidate.combatReady
+              ));
+              if (!target) continue;
+              const totalDamage = definition.impactDamage * definition.hitCount;
+              const damage = Math.min(target.hp, totalDamage);
+              target.hp = Math.max(0, target.hp - totalDamage);
+              target.flash = Math.max(target.flash, .3);
+              for (const nearby of g.fighters) {
+                if (nearby.side !== "zombie"
+                  || nearby.hp <= 0
+                  || !nearby.combatReady
+                  || effectDistance(nearby, target) > definition.finalKnockbackRadius) continue;
+                nearby.knock = Math.max(
+                  nearby.knock,
+                  nearby.id === target.id ? definition.finalKnockback : definition.finalKnockback * .72,
+                );
+                nearby.flash = Math.max(nearby.flash, nearby.id === target.id ? .3 : .14);
+              }
+              recordUnitDamage(g, owner.kind, damage);
+              addDamageText(g, { x: target.x, y: target.y - 52, value: `連打×${definition.hitCount} -${Math.round(damage)}`, life: .9, color: "#ffd16d" });
+              addParticles(g, target.x, target.y - 30, "#ffb34f", 24);
+              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.weaponHeavy);
+              playProductionCue(weaponCueForUnit(owner.kind), target.x, {
+                priority: 84, cooldownMs: 80, maxInstances: 2, fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:combo`,
+              });
+              continue;
+            }
+            if (event.kind === "scout") {
+              const definition = MANUAL_ABILITY_REGISTRY.scout;
+              const target = g.fighters.find((candidate) => (
+                String(candidate.id) === String(event.target.targetId)
+                && candidate.side === "zombie"
+                && candidate.hp > 0
+                && candidate.combatReady
+              ));
+              if (!target) continue;
+              const direction = Math.sign(target.x - owner.x) || 1;
+              owner.x = target.x - direction * (target.bodyRadius + definition.stopDistance);
+              owner.y = target.y;
+              owner.lane = target.lane;
+              const damage = Math.min(target.hp, definition.impactDamage);
+              target.hp = Math.max(0, target.hp - definition.impactDamage);
+              target.stunned = Math.max(target.stunned, definition.stunSeconds);
+              target.flash = Math.max(target.flash, .28);
+              target.knock = Math.max(target.knock, 11);
+              recordUnitDamage(g, owner.kind, damage);
+              addDamageText(g, { x: target.x, y: target.y - 52, value: `迎撃 -${Math.round(damage)}`, life: .86, color: "#7ee7e4" });
+              addParticles(g, target.x, target.y - 30, "#73d8d5", 18);
+              playProductionCue(weaponCueForUnit(owner.kind), target.x, {
+                priority: 84, cooldownMs: 80, maxInstances: 1, fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:intercept`,
+              });
+              continue;
+            }
+            if (event.kind === "ranger") {
+              const definition = MANUAL_ABILITY_REGISTRY.ranger;
+              const targetIds = event.target.targetIds ?? [event.target.targetId];
+              let appliedCount = 0;
+              for (const targetId of targetIds) {
+                const target = g.fighters.find((candidate) => (
+                  String(candidate.id) === String(targetId)
+                  && candidate.side === "zombie"
+                  && candidate.hp > 0
+                  && candidate.combatReady
+                ));
+                if (!target) continue;
+                const strike = definition.impactDamage * (appliedCount === 0 ? 1 : definition.penetrationMultiplier);
+                const damage = Math.min(target.hp, strike);
+                target.hp = Math.max(0, target.hp - strike);
+                target.flash = Math.max(target.flash, .24);
+                recordUnitDamage(g, owner.kind, damage);
+                addDamageText(g, { x: target.x, y: target.y - 50, value: `精密 -${Math.round(damage)}`, life: .82, color: "#d8f2ff" });
+                addParticles(g, target.x, target.y - 30, "#b9e5f2", appliedCount === 0 ? 15 : 8);
+                appliedCount += 1;
+              }
+              if (appliedCount > 0) {
+                g.flashOverlay = Math.max(g.flashOverlay, .08);
+                playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
+                  priority: 86, cooldownMs: 100, maxInstances: 1, fallbackCue: "ranged-shot",
+                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:precision`,
+                });
+              }
+              continue;
+            }
+            if (event.kind === "medic") {
+              const definition = MANUAL_ABILITY_REGISTRY.medic;
+              const target = g.fighters.find((candidate) => (
+                String(candidate.id) === String(event.target.targetId)
+                && candidate.side === "human"
+                && candidate.hp > 0
+              ));
+              if (!target) continue;
+              const healing = Math.min(target.maxHp - target.hp, target.maxHp * definition.healRatio * owner.healingMultiplier);
+              target.hp = Math.min(target.maxHp, target.hp + healing);
+              recordUnitHealing(g, owner.kind, healing);
+              target.slowMultiplier = 1;
+              target.suppressionStacks = 0;
+              target.suppressedRemaining = 0;
+              target.suppressionMultiplier = 1;
+              target.damageReductionRemaining = Math.max(target.damageReductionRemaining, definition.protectionSeconds);
+              target.damageReductionMultiplier = Math.min(target.damageReductionMultiplier, definition.protectionMultiplier);
+              addDamageText(g, { x: target.x, y: target.y - 54, value: `緊急処置 +${Math.round(healing)}`, life: .95, color: "#76e5a6" });
+              addParticles(g, target.x, target.y - 28, "#72dca0", 20);
+              playProductionCue("support-heal", target.x, {
+                priority: 82, cooldownMs: 120, maxInstances: 1, fallbackCue: "medical-heal",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:treatment`,
+              });
+              continue;
+            }
+            if (event.kind === "brute") {
+              const definition = MANUAL_ABILITY_REGISTRY.brute;
+              const targetIds = new Set((event.target.targetIds ?? [event.target.targetId]).map(String));
+              for (const target of g.fighters) {
+                if (target.side !== "zombie"
+                  || target.hp <= 0
+                  || !target.combatReady
+                  || !targetIds.has(String(target.id))) continue;
+                const damage = Math.min(target.hp, definition.impactDamage);
+                target.hp = Math.max(0, target.hp - definition.impactDamage);
+                target.stunned = Math.max(target.stunned, definition.stunSeconds);
+                target.armorBrokenRemaining = Math.max(target.armorBrokenRemaining, definition.armorBreakSeconds);
+                target.armorBreakStacks = 0;
+                target.flash = Math.max(target.flash, .3);
+                target.knock = Math.max(target.knock, 14);
+                recordUnitDamage(g, owner.kind, damage);
+                addDamageText(g, { x: target.x, y: target.y - 48, value: `地砕 -${Math.round(damage)}`, life: .84, color: "#e6b06b" });
+              }
+              if (targetIds.has("manual-structure:enemy-base")
+                && g.barricadeVulnerable
+                && g.barricadeHp > 0) {
+                const baseTarget = enemyBaseTargetPoint(owner.lane, activeLaneCenters);
+                const structureDamage = Math.min(
+                  g.barricadeHp,
+                  resolveTataraStrikeDamage(
+                    definition.impactDamage * definition.structureImpactMultiplier,
+                    { targetType: "infected-base" },
+                  ),
+                );
+                g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
+                g.barricadeHitFlash = Math.max(g.barricadeHitFlash, .28);
+                g.barricadeHitY = baseTarget.y;
+                g.roleMetrics.tataraStructureDamage += structureDamage;
+                addDamageText(g, {
+                  x: baseTarget.x,
+                  y: baseTarget.y - 18,
+                  value: `地砕 -${Math.round(structureDamage)}`,
+                  life: .9,
+                  color: "#ffd06b",
+                });
+                addParticles(g, baseTarget.x, baseTarget.y, "#e78b45", 18);
+              }
+              addParticles(g, event.target.x, event.target.y, "#b88a58", 30);
+              g.flashOverlay = Math.max(g.flashOverlay, .13);
+              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
+              playProductionCue(weaponCueForUnit(owner.kind), event.target.x, {
+                priority: 88, cooldownMs: 120, maxInstances: 1, fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:ground`,
+              });
+              continue;
+            }
+            if (event.kind === "babayaga") {
+              const definition = MANUAL_ABILITY_REGISTRY.babayaga;
+              const target = g.fighters.find((candidate) => (
+                String(candidate.id) === String(event.target.targetId)
+                && candidate.side === "zombie"
+                && candidate.hp > 0
+                && candidate.combatReady
+              ));
+              if (!target) continue;
+              const damage = Math.min(target.hp, definition.impactDamage);
+              target.hp = Math.max(0, target.hp - definition.impactDamage);
+              target.marked = Math.max(target.marked, definition.markSeconds);
+              target.flash = Math.max(target.flash, .22);
+              recordUnitDamage(g, owner.kind, damage);
+              addDamageText(g, { x: target.x, y: target.y - 54, value: `弱点査定 -${Math.round(damage)}`, life: .92, color: "#f0d36f" });
+              addParticles(g, target.x, target.y - 34, "#e2c756", 14);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "hit") || weaponCueForUnit(owner.kind), target.x, {
+                priority: 84, cooldownMs: 100, maxInstances: 1, fallbackCue: "ranged-shot",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:audit`,
+              });
+              continue;
+            }
+            if (event.kind === "gunner") {
+              const definition = MANUAL_ABILITY_REGISTRY.gunner;
+              const targetIds = new Set((event.target.targetIds ?? []).map(String));
+              for (const target of g.fighters) {
+                if (target.side !== "zombie"
+                  || target.hp <= 0
+                  || !target.combatReady
+                  || !targetIds.has(String(target.id))) continue;
+                const strike = definition.impactDamage * definition.burstCount;
+                const damage = Math.min(target.hp, strike);
+                target.hp = Math.max(0, target.hp - strike);
+                target.suppressionStacks = Math.max(target.suppressionStacks, UNIT_ROLE_TUNING.raider.maximumSuppressionStacks);
+                target.suppressedRemaining = Math.max(target.suppressedRemaining, definition.suppressionSeconds);
+                target.flash = Math.max(target.flash, .25);
+                target.knock = Math.max(target.knock, 9);
+                recordUnitDamage(g, owner.kind, damage);
+                addDamageText(g, { x: target.x, y: target.y - 48, value: `制圧 -${Math.round(damage)}`, life: .84, color: "#f4c66d" });
+                addParticles(g, target.x, target.y - 28, "#d7ae58", 12);
+              }
+              g.flashOverlay = Math.max(g.flashOverlay, .1);
+              playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
+                priority: 88, cooldownMs: 60, maxInstances: 2, fallbackCue: "ranged-shot",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:suppress`,
+              });
+              continue;
+            }
+            if (event.kind === "engineer") {
+              owner.engineerTrapReady = true;
+              owner.engineerTrapX = Number(event.target.trapX ?? event.target.x);
+              owner.engineerTrapLane = (event.target.trapLane ?? event.target.lane) as Lane;
+              owner.engineerTrapManual = true;
+              owner.engineerTrapCooldown = 0;
+              addDamageText(g, { x: owner.engineerTrapX, y: activeLaneCenters[owner.engineerTrapLane] - 30, value: "捕縛罠", life: .9, color: "#e3ce77" });
+              addParticles(g, owner.engineerTrapX, activeLaneCenters[owner.engineerTrapLane] - 6, "#c8b158", 16);
+              playProductionCue(weaponCueForUnit(owner.kind), owner.engineerTrapX, {
+                priority: 80, cooldownMs: 100, maxInstances: 1, fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:trap`,
+              });
+              continue;
+            }
+            if (event.kind === "zakimiya") {
+              const definition = MANUAL_ABILITY_REGISTRY.zakimiya;
+              const affected = g.fighters.filter((candidate) => (
+                candidate.side === "zombie"
+                && candidate.hp > 0
+                && candidate.combatReady
+                && candidate.contained !== true
+                && effectDistance(candidate, event.target) <= definition.effectRadius
+              ));
+              for (const target of affected) {
+                const damage = Math.min(target.hp, definition.impactDamage);
+                target.hp = Math.max(0, target.hp - definition.impactDamage);
+                recordUnitDamage(g, owner.kind, damage);
+                target.flash = Math.max(target.flash, .2);
+                target.knock = Math.max(target.knock, 8);
+                addDamageText(g, {
+                  x: target.x,
+                  y: target.y - 48,
+                  value: `火酒 -${Math.round(damage)}`,
+                  life: .82,
+                  color: "#ffb15a",
+                });
+              }
+              g.areaEffects.push({
+                id: g.nextAreaEffectId++,
+                kind: "burn",
+                sourceSupplyId: -(100000 + owner.id),
+                lane: (event.target.lane ?? activeLaneForY(event.target.y)) as Lane,
+                x: event.target.x,
+                y: event.target.y,
+                radius: definition.effectRadius,
+                amountPerSecond: definition.burnDamagePerSecond,
+                remaining: definition.burnSeconds,
+                phase: "active",
+                slowMultiplier: .86,
+              });
+              addParticles(g, event.target.x, event.target.y - 12, "#f26a35", 28);
+              addParticles(g, event.target.x, event.target.y - 16, "#f2c06d", 14);
+              g.flashOverlay = Math.max(g.flashOverlay, .16);
+              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
+              playProductionCue("weapon-pan-hit", event.target.x, {
+                priority: 82,
+                cooldownMs: 80,
+                volume: .7,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}`,
+              });
+              playCue("drum-blast");
+              playCue("burn-start");
+              continue;
+            }
+            if (event.kind === "tky") {
+              const definition = MANUAL_ABILITY_REGISTRY.tky;
+              const direction = Number(event.target.direction) < 0 ? -1 : 1;
+              const originX = Number(event.target.originX);
+              const originY = Number(event.target.originY);
+              const affected = g.fighters.filter((candidate) => {
+                const forward = (candidate.x - originX) * direction;
+                return candidate.side === "zombie"
+                  && candidate.hp > 0
+                  && candidate.combatReady
+                  && candidate.contained !== true
+                  && forward >= -8
+                  && forward <= definition.reach
+                  && Math.abs(candidate.y - originY) <= definition.effectHalfHeight;
+              });
+              for (const target of affected) {
+                const damage = Math.min(target.hp, definition.impactDamage);
+                target.hp = Math.max(0, target.hp - definition.impactDamage);
+                recordUnitDamage(g, owner.kind, damage);
+                target.flash = Math.max(target.flash, .28);
+                target.knock = Math.max(target.knock, definition.knockback);
+                target.stunned = Math.max(target.stunned, definition.stunSeconds);
+                addDamageText(g, { x: target.x, y: target.y - 50, value: `光刃 -${Math.round(damage)}`, life: .82, color: "#ff70d4" });
+                addParticles(g, target.x, target.y - 34, "#ff42c8", 11);
+              }
+              g.flashOverlay = Math.max(g.flashOverlay, .12);
+              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityRelease"), owner.x, {
+                priority: 88,
+                cooldownMs: 200,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:release`,
+              });
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityImpact"), event.target.x, {
+                priority: 86,
+                cooldownMs: 80,
+                maxInstances: 2,
+                fallbackCue: "airstrike-impact",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:impact`,
+              });
+              continue;
+            }
+            if (event.kind === "mrs-chiha") {
+              const definition = MANUAL_ABILITY_REGISTRY["mrs-chiha"];
+              const finalRound = event.finalRound === true;
+              const impactDamage = definition.impactDamage * (finalRound ? definition.finalDamageMultiplier : 1);
+              for (const target of g.fighters) {
+                if (target.side !== "zombie"
+                  || target.hp <= 0
+                  || !target.combatReady
+                  || target.contained === true
+                  || effectDistance(target, event.target) > definition.effectRadius) continue;
+                const damage = Math.min(target.hp, impactDamage);
+                target.hp = Math.max(0, target.hp - impactDamage);
+                recordUnitDamage(g, owner.kind, damage);
+                target.flash = Math.max(target.flash, finalRound ? .3 : .18);
+                target.knock = Math.max(target.knock, finalRound ? definition.finalKnockback : 7);
+                addDamageText(g, { x: target.x, y: target.y - 48, value: `榴弾 -${Math.round(damage)}`, life: .78, color: finalRound ? "#ffd08a" : "#d9aa63" });
+              }
+              addParticles(g, event.target.x, event.target.y - 14, finalRound ? "#ffd08a" : "#d48a42", finalRound ? 28 : 16);
+              g.flashOverlay = Math.max(g.flashOverlay, .18);
+              g.shake = triggerCameraShake(g.shake, finalRound ? CAMERA_SHAKE_EVENTS.airstrikeImpact : CAMERA_SHAKE_EVENTS.weaponHeavy);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", finalRound ? "abilityFinal" : "abilityImpact"), event.target.x, {
+                priority: finalRound ? 92 : 85,
+                cooldownMs: 70,
+                maxInstances: 4,
+                fallbackCue: "drum-blast",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:impact:${event.salvoIndex}`,
+              });
+              if (finalRound) {
+                g.pendingAbilityAudioCues.push({
+                  cueId: unitAudioCueFor(owner.kind, "weapon", "stow"),
+                  x: owner.x,
+                  remainingSeconds: .08,
+                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:stow`,
+                });
+              }
+              continue;
+            }
+            if (event.kind === "miyamoto-musashi") {
+              const definition = MANUAL_ABILITY_REGISTRY["miyamoto-musashi"];
+              const target = g.fighters.find((candidate) => (
+                candidate.id === event.target.targetId
+                && candidate.side === "zombie"
+                && candidate.hp > 0
+                && candidate.combatReady
+              )) ?? g.fighters
+                .filter((candidate) => candidate.side === "zombie" && candidate.hp > 0 && candidate.combatReady)
+                .sort((left, right) => fighterDistance(owner, left) - fighterDistance(owner, right) || left.id - right.id)
+                .find((candidate) => fighterDistance(owner, candidate) <= definition.fallbackRange);
+              g.manualAbilityVfx = g.manualAbilityVfx.filter((effect) => effect.ownerId !== owner.id);
+              if (!target) continue;
+              const strikeDamage = definition.counterDamage * (isBossEnemyKind(target.kind) ? definition.bossDamageMultiplier : 1);
+              const damage = Math.min(target.hp, strikeDamage);
+              target.hp = Math.max(0, target.hp - strikeDamage);
+              recordUnitDamage(g, owner.kind, damage);
+              target.flash = Math.max(target.flash, .3);
+              target.stunned = Math.max(target.stunned, definition.counterStunSeconds);
+              target.knock = Math.max(target.knock, isBossEnemyKind(target.kind) ? 4 : 13);
+              owner.x += Math.sign(target.x - owner.x) * Math.min(26, Math.max(0, Math.abs(target.x - owner.x) - owner.range));
+              addDamageText(g, { x: target.x, y: target.y - 54, value: `無空 -${Math.round(damage)}`, life: .9, color: "#d7efff" });
+              addParticles(g, target.x, target.y - 34, "#c7e4ef", 18);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityCounter"), target.x, {
+                priority: 88,
+                cooldownMs: 180,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:${event.mode ?? "fallback"}`,
+              });
+            }
+          }
+        }
         const pendingWeaponStep = advancePendingWeaponHits(g.pendingWeaponHits, dt);
         g.pendingWeaponHits = [...pendingWeaponStep.pending] as PendingWeaponHit[];
         for (const hit of pendingWeaponStep.due as readonly PendingWeaponHit[]) {
@@ -6718,12 +11465,27 @@ export function AshfallGame() {
               && candidate.contained !== true
             )) ?? null;
           if (hit.eventKind === "muzzle") {
+            const locksGrenadeLandingPoint = hit.weapon === "mrs-chiha";
             addWeaponShot(g, {
               ...hit,
-              targetX: target?.x ?? hit.targetX,
-              targetY: target ? target.y - 28 : hit.targetY,
+              targetX: locksGrenadeLandingPoint ? hit.targetX : target?.x ?? hit.targetX,
+              targetY: locksGrenadeLandingPoint ? hit.targetY : target ? target.y - 28 : hit.targetY,
             });
-            if (hit.shotIndex > 0 && !productionMixerRef.current) {
+            if (hit.weapon === "mrs-chiha") {
+              playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "shot"), hit.originX, {
+                priority: 72,
+                cooldownMs: 100,
+                maxInstances: 2,
+                fallbackCue: "ranged-shot",
+              });
+              playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "flight"), (hit.originX + hit.targetX) / 2, {
+                priority: 70,
+                cooldownMs: 70,
+                maxInstances: 4,
+                fallbackCue: "ranged-shot",
+              });
+              if (!productionMixerRef.current) playCue("ranged-shot", { frequency: 350 });
+            } else if (hit.shotIndex > 0 && !productionMixerRef.current) {
               playCue("ranged-shot", { frequency: 335 + hit.shotIndex * 18 });
             }
             continue;
@@ -6742,7 +11504,21 @@ export function AshfallGame() {
               life: .62,
               color: "#ffd06b",
             });
-            addParticles(g, hit.targetX, hit.targetY, "#e8c56c", 2);
+            addParticles(g, hit.targetX, hit.targetY, "#e8c56c", hit.weapon === "mrs-chiha" ? 13 : 2);
+            if (hit.weapon === "mrs-chiha") {
+              playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "hit"), hit.targetX, {
+                priority: 78,
+                cooldownMs: 90,
+                maxInstances: 3,
+                fallbackCue: "drum-blast",
+              });
+              playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "stow"), hit.originX, {
+                priority: 64,
+                cooldownMs: 90,
+                maxInstances: 2,
+              });
+              if (!productionMixerRef.current) playCue("drum-blast");
+            }
             if (!g.barricadeBucklingAnnounced
               && beforeHit > g.barricadeMaxHp * .7
               && g.barricadeHp <= g.barricadeMaxHp * .7) {
@@ -6760,6 +11536,76 @@ export function AshfallGame() {
               g.flashOverlay = Math.max(g.flashOverlay, .12);
               playCue("base-critical");
             }
+            continue;
+          }
+          if (hit.damageMode === "grenade") {
+            const grenadeDefinition = MANUAL_ABILITY_REGISTRY["mrs-chiha"];
+            const impactPoint = { x: hit.targetX, y: hit.targetY + 28 };
+            for (const splashTarget of g.fighters) {
+              if (splashTarget.side !== "zombie"
+                || splashTarget.hp <= 0
+                || !splashTarget.combatReady
+                || splashTarget.contained === true
+                || effectDistance(splashTarget, impactPoint) > grenadeDefinition.grenadeRadius) continue;
+              const primaryTarget = splashTarget.id === hit.targetId;
+              const grenadeDamage = primaryTarget
+                ? hit.damage
+                : hit.damage * grenadeDefinition.grenadeSplashMultiplier;
+              let appliedSplash;
+              if (primaryTarget
+                && splashTarget.kind === "gate-eater"
+                && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
+                && g.researchContainer) {
+                const hpBeforeStrike = splashTarget.hp;
+                const containerWasExposed = g.researchContainer.exposed;
+                const containment = resolveContainmentStrike({
+                  boss: splashTarget,
+                  researchContainer: g.researchContainer,
+                  attackDamage: grenadeDamage,
+                  powerActivated: g.stageMission.powerActivated ?? 0,
+                  sealDoorX: Number(g.definition.missionConfig.sealDoorX ?? 867),
+                });
+                Object.assign(splashTarget, containment.boss);
+                g.researchContainer = containment.researchContainer as ResearchContainerRuntime;
+                appliedSplash = Math.max(0, hpBeforeStrike - splashTarget.hp);
+                if (!containerWasExposed && g.researchContainer.exposed) {
+                  if (!g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.RESEARCH_CONTAINER_EXPOSED)) {
+                    g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.RESEARCH_CONTAINER_EXPOSED);
+                  }
+                  g.banner = "研究容器露出 // 改札喰いと共に押し込め";
+                  g.bannerTime = 2;
+                }
+                if (containment.bossDefeated && g.stageMission.gateEaterDefeated !== true) {
+                  g.banner = "改札喰い撃破 // 研究容器を確保";
+                  g.bannerTime = 1.8;
+                }
+              } else {
+                appliedSplash = Math.min(splashTarget.hp, grenadeDamage);
+                splashTarget.hp = Math.max(0, splashTarget.hp - grenadeDamage);
+              }
+              recordUnitDamage(g, hit.weapon, appliedSplash);
+              splashTarget.flash = Math.max(splashTarget.flash, .16);
+              splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
+              addDamageText(g, {
+                x: splashTarget.x,
+                y: splashTarget.y - 43,
+                value: `${primaryTarget ? "榴弾" : "爆風"} -${Math.round(appliedSplash)}`,
+                life: .66,
+                color: "#e4b46c",
+              });
+            }
+            addParticles(g, impactPoint.x, impactPoint.y - 12, "#d7924f", 13);
+            playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "hit"), impactPoint.x, {
+              priority: 78,
+              cooldownMs: 90,
+              maxInstances: 3,
+              fallbackCue: "drum-blast",
+            });
+            playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "stow"), hit.originX, {
+              priority: 64,
+              cooldownMs: 90,
+              maxInstances: 2,
+            });
             continue;
           }
           if (!target) continue;
@@ -6792,6 +11638,7 @@ export function AshfallGame() {
           } else {
             target.hp -= hit.damage;
           }
+          recordUnitDamage(g, hit.weapon, Math.max(0, beforeHit - target.hp));
           if (hit.raiderLineHit && hit.shotIndex === 0) {
             const suppression = applyRaiderSuppression(target.suppressionStacks, 1);
             target.suppressionStacks = suppression.stacks;
@@ -6911,7 +11758,14 @@ export function AshfallGame() {
             g.civiliansEvacuated = Math.min(5, Math.floor((nextMission.progress ?? 0) * 5));
           }
         }
-        g.energy = advanceCommand(g.energy, dt);
+        g.energy = advanceCommand(g.energy, dt, commandRegenForGame(g));
+        if (!preservesAcceptedSupportTempo(g)
+          && Object.values(g.supportItemCooldowns).some((cooldown) => cooldown > 0)) {
+          g.supportItemCooldowns = advanceBattlefieldSupplyCooldowns(
+            g.supportItemCooldowns,
+            dt,
+          ) as Record<SupplyKind, number>;
+        }
         g.bannerTime = Math.max(0, g.bannerTime - dt);
         g.flashOverlay = Math.max(0, g.flashOverlay - dt * 2.2);
         g.crawlerHitFlash = Math.max(0, g.crawlerHitFlash - dt);
@@ -7009,44 +11863,149 @@ export function AshfallGame() {
           g.bannerTime = 3; g.flashOverlay = .15;
         }
 
-        while (g.eventIndex < g.definition.timeline.length && g.time >= g.definition.timeline[g.eventIndex].at) {
-          const mission = g.definition.timeline[g.eventIndex++] as MissionEvent;
-          const bossAlive = g.fighters.some((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
-          if (mission.bossOnly && !bossAlive) continue;
-          g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
-          if (mission.label.includes("警告")) g.flashOverlay = .12;
-          const firstNewEntryId = g.enemySpawn.nextEntryId;
-          g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
-          g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {
-            if (entry.entryId < firstNewEntryId) return entry;
-            const portal = enemySpawnPortalPoint({
-              stageId: g.definition.stageId,
-              viewport: activeStageViewportId,
-              entryId: entry.entryId,
-              kind: entry.kind,
-            });
-            return {
-              ...entry,
-              ...portal,
-              lane: portal.legacyLane as Lane,
-            };
+        if (g.survivalRun && g.survivalRuntime) {
+          g.survivalRun = {
+            ...g.survivalRun,
+            crawler: {
+              ...g.survivalRun.crawler,
+              hp: Math.max(0, Math.min(g.survivalRun.crawler.maxHp, Math.round(g.baseHp))),
+            },
+          };
+          const activeSurvivalEnemies = g.fighters.filter((fighter) => (
+            fighter.side === "zombie"
+            && fighter.hp > 0
+            && fighter.contained !== true
+          ));
+          const survivalBoss = activeSurvivalEnemies.find((fighter) => isBossEnemyKind(fighter.kind));
+          const survivalStep = advanceSurvivalCombat(g.survivalRuntime, g.survivalRun, {
+            seconds: dt,
+            activeEnemyCount: activeSurvivalEnemies.length,
+            pendingSpawnCount: g.enemySpawn.pending.length,
+            totalKills: g.kills,
+            crawlerHp: g.baseHp,
+            bossCombatReady: Boolean(survivalBoss?.combatReady),
+            livingHumanCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
+            queuedHumanCount: g.deployQueue.length,
+            combatStats: {
+              ...g.combatMetrics,
+              encounteredEnemyKinds: g.enemyKindsSeen,
+            },
           });
-          if (mission.units.length) {
-            const includesTakuya = mission.units.includes("takuya");
-            if (includesTakuya) {
-              g.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO.durationSeconds;
-              setHud((current) => ({ ...current, takuyaEntranceAudioActive: true }));
-              playProductionCue(TAKUYA_ENTRANCE_AUDIO.cueId, W / 2, {
-                priority: 104,
-                cooldownMs: 0,
-                volume: .92,
-                maxInstances: 1,
+          if (survivalStep.run && survivalStep.runtime) {
+            g.survivalRun = survivalStep.run;
+            g.survivalRuntime = survivalStep.runtime;
+            g.wave = survivalStep.run.currentWave;
+            g.baseHp = survivalStep.run.crawler.hp;
+            g.baseMaxHp = survivalStep.run.crawler.maxHp;
+          }
+          for (const event of survivalStep.events) {
+            if (event.type === "queue-wave") {
+              const firstNewEntryId = g.enemySpawn.nextEntryId;
+              g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(
+                g.enemySpawn,
+                { units: [...event.plan.units], wave: event.plan.wave },
+              );
+              g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {
+                if (entry.entryId < firstNewEntryId) return entry;
+                const portal = enemySpawnPortalPoint({
+                  stageId: g.definition.stageId,
+                  viewport: activeStageViewportId,
+                  entryId: entry.entryId,
+                  kind: entry.kind,
+                  missionType: "survival",
+                });
+                return { ...entry, ...portal, lane: portal.legacyLane as Lane };
               });
-              g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
-              emitBattleBark(g, "takuya-entrance", "ranger", "takuya-entrance");
-            } else {
+              g.banner = `WAVE ${event.plan.wave}`;
+              g.bannerTime = 1.8;
               playCue("wave-contact");
-              emitBattleBark(g, "wave-contact", "guide", `wave-${mission.wave}`);
+              emitBattleBark(g, "wave-contact", "guide", `survival-wave-${event.plan.wave}`);
+            } else if (event.type === "boss-warning") {
+              announceBossEntrance(g, event.bossKind);
+            } else if (event.type === "boss-combat-ready") {
+              g.banner = "BOSS COMBAT READY";
+              g.bannerTime = 1.6;
+            } else if (event.type === "checkpoint" && g.survivalRun) {
+              const checkpointId = `survival:${g.survivalRun.runId}:wave:${event.completedWave}`;
+              if (g.survivalCheckpointReceipt !== checkpointId) {
+                g.survivalRun = {
+                  ...g.survivalRun,
+                  manualAbilityCooldownsByKind: snapshotManualAbilityCooldowns(g.fighters),
+                };
+                g.survivalCheckpointReceipt = checkpointId;
+                g.paused = true;
+                setPaused(true);
+                setPendingSurvivalCheckpoint({ run: g.survivalRun, checkpointId });
+              }
+            }
+          }
+          const survivalEndReason = survivalStep.terminalReason
+            ?? survivalCombatEndReason(g.survivalRuntime, g.survivalRun, {
+              crawlerHp: g.baseHp,
+            });
+          if (survivalEndReason) {
+            const endedAt = new Date().toISOString();
+            const recordedRun = captureUnfinishedSurvivalCombatStats(
+              g.survivalRuntime,
+              g.survivalRun,
+              {
+                totalKills: g.kills,
+                combatStats: {
+                  ...g.combatMetrics,
+                  encounteredEnemyKinds: g.enemyKindsSeen,
+                },
+                updatedAt: endedAt,
+              },
+            );
+            const endedRun = endSurvivalRun(recordedRun, survivalEndReason, endedAt);
+            if (endedRun) {
+              g.survivalRun = endedRun;
+              g.over = true;
+              g.paused = true;
+              setPaused(true);
+              setPendingSurvivalCheckpoint(null);
+              setSurvivalSettlementAwaitingRetry(false);
+              setPendingSurvivalSettlement({ run: endedRun, endedAt });
+              chooseAction(null);
+              stopMusic();
+              stopSfx();
+              playCue("defeat");
+            }
+          }
+        } else {
+          while (g.eventIndex < g.definition.timeline.length && g.time >= g.definition.timeline[g.eventIndex].at) {
+            const mission = g.definition.timeline[g.eventIndex++] as MissionEvent;
+            const bossAlive = g.fighters.some((fighter) => isBossEnemyKind(fighter.kind) && fighter.hp > 0);
+            if (mission.bossOnly && !bossAlive) continue;
+            g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
+            if (mission.label.includes("警告")) g.flashOverlay = .12;
+            const firstNewEntryId = g.enemySpawn.nextEntryId;
+            g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
+            g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {
+              if (entry.entryId < firstNewEntryId) return entry;
+              const portal = enemySpawnPortalPoint({
+                stageId: g.definition.stageId,
+                viewport: activeStageViewportId,
+                entryId: entry.entryId,
+                kind: entry.kind,
+                missionType: g.definition.missionType,
+              });
+              return {
+                ...entry,
+                ...portal,
+                lane: portal.legacyLane as Lane,
+              };
+            });
+            if (mission.units.length) {
+              const incomingBossKind = mission.units.find((kind) => isBossEnemyKind(kind)) ?? null;
+              if (incomingBossKind) {
+                announceBossEntrance(g, incomingBossKind, {
+                  activateTakuyaScene: incomingBossKind === "takuya",
+                });
+              } else {
+                playCue("wave-contact");
+                emitBattleBark(g, "wave-contact", "guide", `wave-${mission.wave}`);
+              }
             }
           }
         }
@@ -7281,30 +12240,57 @@ export function AshfallGame() {
           fighter.nextLaneDecisionAt = assignment.nextLaneDecisionAt;
         }
 
+        const movementStageGeometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
         for (const f of g.fighters) {
           if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
             && f.kind === "gate-eater") {
             Object.assign(f, enforceGateEaterContainmentInvariant(f));
           }
+          if (f.kind === "mayo-chan" && f.mayoRetreat) {
+            const retreatStep = advanceMayoRetreat(f.mayoRetreat, dt, {
+              x: f.x,
+              baseX: BASE_X + 18,
+            });
+            f.mayoRetreat = retreatStep.runtime as Fighter["mayoRetreat"];
+            f.x = retreatStep.x;
+            f.y += Math.sign(activeMusterY() - f.y) * Math.min(Math.abs(activeMusterY() - f.y), 90 * dt);
+            f.aiMoveDirection = f.mayoRetreat?.phase === "run" ? -1 : 0;
+            f.step += dt;
+            continue;
+          }
           if (f.hp <= 0) continue;
+          f.mayoBiteSlowRemaining = Math.max(0, (f.mayoBiteSlowRemaining ?? 0) - dt);
+          f.visionDisruptedRemaining = Math.max(0, (f.visionDisruptedRemaining ?? 0) - dt);
+          const mayoFeralMultiplier = f.kind === "mayo-chan" && f.manualAbility?.phase === "feral"
+            ? MANUAL_ABILITY_REGISTRY["mayo-chan"].moveSpeedMultiplier
+            : 1;
+          const manualMovementMultiplier = f.kind === "crazy-king" && f.manualAbility?.phase === "active"
+            ? MANUAL_ABILITY_REGISTRY["crazy-king"].moveSpeedMultiplier
+            : f.kind === "guardian" && f.manualAbility?.phase === "active"
+              ? 0
+              : 1;
+          const mayoBiteSlowMultiplier = (f.mayoBiteSlowRemaining ?? 0) > 0
+            ? MANUAL_ABILITY_REGISTRY["mayo-chan"].biteSlowMultiplier
+            : 1;
+          const movementStartX = f.x;
           const humanMovementSpeed = f.side === "human"
             ? stationHumanMoveSpeed({
-              baseSpeed: f.speed,
+              baseSpeed: f.speed * mayoFeralMultiplier * manualMovementMultiplier,
               slowMultiplier: f.slowMultiplier ?? 1,
               runtime: g.stageMission,
               missionType: g.definition.missionType,
               config: g.definition.missionConfig,
             })
-            : f.speed;
+            : f.speed * mayoBiteSlowMultiplier;
           const humanLaneSpeed = f.side === "human"
             ? stationHumanMoveSpeed({
-              baseSpeed: f.laneSpeed,
+              baseSpeed: f.laneSpeed * mayoFeralMultiplier * manualMovementMultiplier,
               slowMultiplier: f.slowMultiplier ?? 1,
               runtime: g.stageMission,
               missionType: g.definition.missionType,
               config: g.definition.missionConfig,
             })
-            : f.laneSpeed;
+            : f.laneSpeed * mayoBiteSlowMultiplier;
           f.cooldown = advanceAttackCooldown(f.cooldown, dt); f.supportCooldown -= dt; f.retargetIn = Math.max(0, f.retargetIn - dt); f.spawnGrace = Math.max(0, f.spawnGrace - dt);
           f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.marked = Math.max(0, f.marked - dt); f.step += dt;
           f.stunned = Math.max(0, f.stunned - dt);
@@ -7330,6 +12316,14 @@ export function AshfallGame() {
           f.engineerTrapCooldown = Math.max(0, f.engineerTrapCooldown - dt);
           f.armorBrokenRemaining = Math.max(0, f.armorBrokenRemaining - dt);
           if (f.armorBrokenRemaining <= 0) f.armorBreakStacks = 0;
+          if (f.kind === "kumaverson" && f.manualAbility?.phase === "active") {
+            const hpBeforeHealing = f.hp;
+            f.hp = Math.min(
+              f.maxHp,
+              f.hp + f.maxHp * MANUAL_ABILITY_REGISTRY.kumaverson.healRatioPerSecond * dt,
+            );
+            recordUnitHealing(g, f.kind, Math.max(0, f.hp - hpBeforeHealing));
+          }
           if (f.bleedRemaining > 0) {
             Object.assign(f, advanceBleedDamage(f, dt));
             if (f.hp <= 0) continue;
@@ -7341,7 +12335,13 @@ export function AshfallGame() {
             f.knock = 0;
             continue;
           }
-          if (Math.abs(f.knock) > .1) { f.x += (f.side === "human" ? -1 : 1) * f.knock * dt * 6; f.knock *= .9; }
+          if (Math.abs(f.knock) > .1) {
+            const knockResistance = f.kind === "crazy-king" && f.manualAbility?.phase === "active"
+              ? MANUAL_ABILITY_REGISTRY["crazy-king"].knockResistanceMultiplier
+              : 1;
+            f.x += (f.side === "human" ? -1 : 1) * f.knock * knockResistance * dt * 6;
+            f.knock *= .9;
+          }
 
           if (f.gateEntering) {
             f.targetId = null;
@@ -7371,13 +12371,6 @@ export function AshfallGame() {
               if (f.entryStepDistance >= 18) {
                 f.entryStepDistance %= 18;
                 g.crawlerFootstepCount += 1;
-                playProductionCue("weapon-melee-impact", f.x, {
-                  priority: 44,
-                  cooldownMs: 40,
-                  volume: f.kind === "brute" || f.kind === "guardian" ? .24 : .16,
-                  playbackRate: f.kind === "brute" || f.kind === "guardian" ? .78 : 1.24,
-                  maxInstances: 2,
-                });
               }
             }
             const reachedEntryPoint = entryDistance <= entryStep + .01;
@@ -7385,6 +12378,9 @@ export function AshfallGame() {
               f.x = targetX;
               f.y = targetY;
               f.entryRampCleared = true;
+              f.gateEntering = false;
+              f.combatReady = true;
+              f.cooldown = Math.max(f.cooldown, .18);
             } else if (reachedEntryPoint) {
               f.x = f.combatReadyX;
               f.y = targetY;
@@ -7406,11 +12402,21 @@ export function AshfallGame() {
           if (f.stunned > 0) {
             f.targetId = null;
             f.targetObjectId = null;
-            if (["grappler", "ooze", "sprinter", "gate-eater"].includes(f.kind)
+            if ((["grappler", "ooze", "sprinter", "gate-eater", "kurome"].includes(f.kind)
+              || isBossAnomalyKind(f.kind)
+              || isV090InfectedKind(f.kind))
               && f.stationAbility.phase !== "idle") {
               f.stationAbility = createStationAbilityRuntime(f.kind);
               f.abilityCooldown = Math.max(f.abilityCooldown, 1.8);
             }
+            continue;
+          }
+
+          if (f.side === "human" && manualAbilityLocksNormalAction(f.manualAbility)) {
+            f.targetId = null;
+            f.targetObjectId = null;
+            f.aiDestinationX = f.x;
+            f.aiMoveDirection = 0;
             continue;
           }
 
@@ -7539,6 +12545,534 @@ export function AshfallGame() {
             }
           }
 
+          if (isV090InfectedKind(f.kind)) {
+            const definition = v090InfectedDefinition(f.kind);
+            let abilityFrame = f.stationAbility.phase !== "idle";
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+              const started = beginV090InfectedAbility({
+                kind: f.kind,
+                attacker: f,
+                candidates: g.fighters,
+              });
+              if (started.ok) {
+                f.stationAbility = started.runtime as StationAbilityRuntime;
+                abilityFrame = true;
+                g.banner = `${definition?.displayName ?? enemyContentFor(f.kind)?.displayName ?? "異形"} // ${
+                  f.kind === "resonator"
+                    ? "胸郭共鳴"
+                    : f.kind === "cagewalker"
+                      ? "骨檻展開"
+                      : f.kind === "spindle"
+                        ? "脊柱圧縮"
+                        : f.kind === "choir-knot"
+                          ? "擬声斉唱"
+                          : f.kind === "pall-manta"
+                            ? "皮膜展開"
+                            : "五肢定着"
+                }`;
+                g.bannerTime = Math.max(g.bannerTime, Math.min(.86, definition?.warningSeconds ?? .7));
+                playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
+                  priority: 68,
+                  cooldownMs: 140,
+                  volume: .42,
+                  playbackRate: f.kind === "spindle" ? 1.34 : f.kind === "cagewalker" ? .74 : .96,
+                  fallbackCue: "melee-hit",
+                });
+              }
+            }
+            if (f.stationAbility.phase !== "idle") {
+              const step = advanceV090InfectedAbility(f.stationAbility, dt);
+              f.stationAbility = step.runtime as StationAbilityRuntime;
+              if (step.events.includes("activate")) {
+                if (f.kind === "resonator") {
+                  const hitIds = resonatorHowlTargets({ attacker: f, candidates: g.fighters });
+                  for (const victimId of hitIds) {
+                    const victim = g.fighters.find((candidate) => String(candidate.id) === victimId);
+                    if (!victim) continue;
+                    const damage = applyIncomingHumanDamage(g, victim, 21, {
+                      attackKind: "ranged",
+                      attacker: f,
+                    }).targetDamage;
+                    victim.stunned = Math.max(victim.stunned, .34);
+                    victim.knock = Math.max(victim.knock, 8);
+                    addDamageText(g, {
+                      x: victim.x,
+                      y: victim.y - 56,
+                      value: `共鳴 -${Math.round(damage)}`,
+                      life: .82,
+                      color: "#d79a86",
+                    });
+                  }
+                  addParticles(g, f.x - 46, f.y - 38, "#896a62", 18);
+                  g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+                } else if (f.kind === "cagewalker") {
+                  for (const victim of g.fighters) {
+                    if (victim.side !== "human" || victim.hp <= 0 || fighterDistance(victim, f) > 82) continue;
+                    victim.x = Math.max(BASE_X + 32, victim.x - 24);
+                    victim.knock = Math.max(victim.knock, 10);
+                    victim.stunned = Math.max(victim.stunned, .22);
+                  }
+                  addParticles(g, f.x, f.y + 6, "#8e806b", 14);
+                } else if (f.kind === "spindle") {
+                  const victim = g.fighters.find((candidate) => (
+                    String(candidate.id) === String(f.stationAbility.targetIds?.[0])
+                    && candidate.side === "human"
+                    && candidate.hp > 0
+                  ));
+                  const landing = spindleLandingPoint({
+                    attacker: f,
+                    target: victim,
+                    minimumX: BASE_X + 48,
+                    maximumX: BARRICADE_X - 12,
+                  });
+                  if (landing) {
+                    f.x = landing.x;
+                    f.y = landing.y;
+                    f.lane = (victim?.anchorLane ?? victim?.lane ?? f.lane) as Lane;
+                    f.anchorLane = f.lane;
+                  }
+                  for (const impacted of g.fighters) {
+                    if (impacted.side !== "human" || impacted.hp <= 0 || fighterDistance(impacted, f) > 58) continue;
+                    const damage = applyIncomingHumanDamage(g, impacted, 26, {
+                      attackKind: "melee",
+                      attacker: f,
+                    }).targetDamage;
+                    impacted.stunned = Math.max(impacted.stunned, .42);
+                    addDamageText(g, {
+                      x: impacted.x,
+                      y: impacted.y - 50,
+                      value: `着地 -${Math.round(damage)}`,
+                      life: .78,
+                      color: "#b9978e",
+                    });
+                  }
+                  addParticles(g, f.x, f.y + 4, "#766a63", 22);
+                  g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+                } else if (f.kind === "choir-knot") {
+                  for (const victimId of f.stationAbility.targetIds ?? []) {
+                    const victim = g.fighters.find((candidate) => (
+                      String(candidate.id) === victimId
+                      && candidate.side === "human"
+                      && candidate.hp > 0
+                    ));
+                    if (!victim) continue;
+                    victim.targetId = f.id;
+                    victim.targetObjectId = null;
+                    victim.retargetIn = Math.max(victim.retargetIn, 1.25);
+                    addDamageText(g, {
+                      x: victim.x,
+                      y: victim.y - 60,
+                      value: "擬声誘導",
+                      life: .88,
+                      color: "#c7a4ad",
+                    });
+                  }
+                } else if (f.kind === "anchor-bloom") {
+                  addParticles(g, f.x, f.y + 8, "#705552", 16);
+                }
+                playProductionCue("enemy-takuya-attack", f.x, {
+                  priority: 74,
+                  cooldownMs: 160,
+                  volume: .5,
+                  playbackRate: f.kind === "resonator" ? .66 : f.kind === "spindle" ? 1.42 : .88,
+                  fallbackCue: "melee-hit",
+                });
+              }
+              if (f.kind === "anchor-bloom" && f.stationAbility.phase === "active") {
+                for (const targetId of f.stationAbility.targetIds ?? []) {
+                  const target = g.fighters.find((candidate) => (
+                    String(candidate.id) === targetId
+                    && candidate.side === "zombie"
+                    && candidate.hp > 0
+                  ));
+                  if (!target) continue;
+                  const reinforcement = anchorBloomReinforcement({
+                    phase: f.stationAbility.phase,
+                    anchor: f,
+                    target,
+                  });
+                  if (reinforcement.active) {
+                    target.hp = Math.min(target.maxHp, target.hp + reinforcement.healingPerSecond * dt);
+                  }
+                }
+              }
+              if (step.events.includes("finish")) {
+                f.abilityCooldown = definition?.cooldownSeconds ?? 7;
+              }
+              continue;
+            }
+            if (abilityFrame) continue;
+          }
+
+          if (f.kind === "mother") {
+            let abilityFrame = f.stationAbility.phase !== "idle";
+            if (f.stationAbility.phase !== "idle") {
+              const step = advanceBossAnomalyAbility(f.stationAbility, dt);
+              f.stationAbility = step.runtime as StationAbilityRuntime;
+              if (step.events.includes("activate")) {
+                const hitIds = bossAnomalyAreaTargetIds({
+                  kind: "mother",
+                  boss: f,
+                  candidates: g.fighters,
+                });
+                for (const victimId of hitIds) {
+                  const victim = g.fighters.find((candidate) => (
+                    candidate.side === "human"
+                    && String(candidate.id) === victimId
+                  ));
+                  if (!victim) continue;
+                  const damage = applyIncomingHumanDamage(
+                    g,
+                    victim,
+                    BOSS_ANOMALY_TUNING.mother.controlDamage,
+                    { attackKind: "melee", attacker: f },
+                  ).targetDamage;
+                  victim.stunned = Math.max(victim.stunned, .42);
+                  victim.knock = Math.max(victim.knock, 14);
+                  addDamageText(g, {
+                    x: victim.x,
+                    y: victim.y - 58,
+                    value: `増殖圧 -${Math.round(damage)}`,
+                    life: .92,
+                    color: "#d6a078",
+                  });
+                }
+                const summonPlan = motherBroodSummonPlan({
+                  boss: f,
+                  candidates: g.fighters,
+                  attackSequence: f.attackSequence,
+                });
+                for (let index = 0; index < summonPlan.length; index += 1) {
+                  const planned = summonPlan[index];
+                  const lane = Math.max(0, Math.min(2, f.lane + planned.laneOffset)) as Lane;
+                  const summoned = spawnEnemy(g, planned.kind, lane, index);
+                  summoned.x = Math.max(
+                    BASE_X + 90,
+                    Math.min(BARRICADE_X - 28, f.x + planned.xOffset),
+                  );
+                  summoned.y = activeLaneCenters[lane];
+                  summoned.anchorLane = lane;
+                  summoned.summonOwnerId = f.id;
+                  summoned.summonSource = "mother-brood";
+                  summoned.combatReady = true;
+                  summoned.gateEntering = false;
+                  summoned.spawnGrace = Math.max(summoned.spawnGrace, .62);
+                  summoned.cooldown = Math.max(summoned.cooldown, .48);
+                  addParticles(g, summoned.x, summoned.y - 18, index % 2 ? "#8a5344" : "#c08a62", 12);
+                }
+                f.attackSequence += 1;
+                g.flashOverlay = Math.max(g.flashOverlay, .08);
+                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+                g.banner = "マザー // 増殖室離床";
+                g.bannerTime = .8;
+                playProductionCue("boss-mother-brood-eruption", f.x, {
+                  priority: 98,
+                  cooldownMs: 300,
+                  volume: .78,
+                  fallbackCue: "boss-warning",
+                });
+              }
+              if (step.events.includes("complete")) {
+                f.abilityCooldown = BOSS_ANOMALY_TUNING.mother.cooldownSeconds;
+              }
+              continue;
+            }
+            if (f.abilityCooldown <= 0) {
+              const started = beginBossAnomalyAbility({
+                boss: f,
+                candidates: g.fighters,
+              });
+              if (started.ok) {
+                f.stationAbility = started.runtime as StationAbilityRuntime;
+                abilityFrame = true;
+                g.banner = "マザー // 増殖兆候";
+                g.bannerTime = .72;
+                playProductionCue("boss-mother-brood-warning", f.x, {
+                  priority: 90,
+                  cooldownMs: 600,
+                  volume: .62,
+                  fallbackCue: "boss-warning",
+                });
+              }
+            }
+            if (abilityFrame || f.stationAbility.phase !== "idle") continue;
+          }
+
+          if (["ooguchi", "gairen", "futago"].includes(f.kind)) {
+            const anomalyKind = f.kind as "ooguchi" | "gairen" | "futago";
+            const tuning = BOSS_ANOMALY_TUNING[anomalyKind];
+            let abilityFrame = f.stationAbility.phase !== "idle";
+            if (f.stationAbility.phase !== "idle") {
+              const previousX = f.x;
+              const step = advanceBossAnomalyAbility(f.stationAbility, dt);
+              f.stationAbility = step.runtime as StationAbilityRuntime;
+
+              if (anomalyKind === "ooguchi"
+                && (f.stationAbility.phase === "active" || step.events.includes("activate"))) {
+                const charge = ooguchiChargeStep({
+                  runtime: f.stationAbility,
+                  boss: f,
+                  elapsedSeconds: dt,
+                  minimumX: BASE_X + 54,
+                });
+                if (charge.active) {
+                  f.x = charge.boss.x;
+                  if (Number.isInteger(charge.lane)) {
+                    f.lane = charge.lane as Lane;
+                    f.anchorLane = f.lane;
+                    f.y = Number.isFinite(Number(f.stationAbility.targetY))
+                      ? Number(f.stationAbility.targetY)
+                      : activeLaneCenters[f.lane];
+                  }
+                  const hitIds = new Set(f.stationAbility.targetIds ?? []);
+                  for (const victim of g.fighters) {
+                    if (victim.side !== "human"
+                      || victim.hp <= 0
+                      || victim.targetable === false
+                      || hitIds.has(String(victim.id))
+                      || Math.abs(victim.y - f.y) > tuning.chargeHalfHeight
+                      || victim.x < f.x - f.bodyRadius - victim.bodyRadius
+                      || victim.x > previousX + f.bodyRadius + victim.bodyRadius) continue;
+                    const resolved = applyIncomingHumanDamage(
+                      g,
+                      victim,
+                      tuning.chargeDamage,
+                      { attackKind: "melee", attacker: f },
+                    );
+                    hitIds.add(String(victim.id));
+                    victim.flash = Math.max(victim.flash, .2);
+                    victim.knock = Math.max(victim.knock, 22);
+                    addDamageText(g, {
+                      x: victim.x,
+                      y: victim.y - 58,
+                      value: `捕食突進 -${Math.round(resolved.targetDamage)}`,
+                      life: .92,
+                      color: "#e5a06d",
+                    });
+                  }
+                  f.stationAbility = {
+                    ...f.stationAbility,
+                    targetIds: [...hitIds],
+                  };
+                }
+              }
+
+              if (step.events.includes("activate")) {
+                if (anomalyKind === "ooguchi") {
+                  g.banner = "オオグチ // 捕食突進";
+                  addParticles(g, f.x - 38, f.y - 18, "#c4784e", 18);
+                  playProductionCue("boss-ooguchi-charge-impact", f.x, {
+                    priority: 99,
+                    cooldownMs: 260,
+                    volume: .82,
+                    fallbackCue: "boss-warning",
+                  });
+                } else {
+                  const areaBoss = anomalyKind === "futago"
+                    ? {
+                      ...f,
+                      x: Number(f.stationAbility.targetX) || f.x,
+                      y: Number(f.stationAbility.targetY) || f.y,
+                    }
+                    : f;
+                  const hitIds = bossAnomalyAreaTargetIds({
+                    kind: anomalyKind,
+                    boss: areaBoss,
+                    candidates: g.fighters,
+                  });
+                  const splitMultiplier = anomalyKind === "futago" && f.stationAbility.split
+                    ? 1.2
+                    : 1;
+                  const abilityDamage = anomalyKind === "gairen"
+                    ? BOSS_ANOMALY_TUNING.gairen.sweepDamage
+                    : BOSS_ANOMALY_TUNING.futago.crossStrikeDamage * splitMultiplier;
+                  for (const victimId of hitIds) {
+                    const victim = g.fighters.find((candidate) => (
+                      candidate.side === "human"
+                      && String(candidate.id) === victimId
+                    ));
+                    if (!victim) continue;
+                    const resolved = applyIncomingHumanDamage(
+                      g,
+                      victim,
+                      abilityDamage,
+                      { attackKind: "melee", attacker: f },
+                    );
+                    victim.flash = Math.max(victim.flash, .18);
+                    victim.knock = Math.max(victim.knock, anomalyKind === "gairen" ? 18 : 14);
+                    addDamageText(g, {
+                      x: victim.x,
+                      y: victim.y - 58,
+                      value: anomalyKind === "gairen"
+                        ? `外殻掃討 -${Math.round(resolved.targetDamage)}`
+                        : `融合交差撃 -${Math.round(resolved.targetDamage)}`,
+                      life: .92,
+                      color: anomalyKind === "gairen" ? "#d3b77c" : "#d59a9d",
+                    });
+                  }
+                  addParticles(
+                    g,
+                    areaBoss.x,
+                    areaBoss.y - 20,
+                    anomalyKind === "gairen" ? "#b79a68" : "#ba777d",
+                    24,
+                  );
+                  g.banner = anomalyKind === "gairen"
+                    ? "ガイレン // 外殻掃討・中枢露出"
+                    : f.stationAbility.split
+                      ? "フタゴ // 裂開・融合交差撃"
+                      : "フタゴ // 融合交差撃";
+                  playProductionCue(
+                    anomalyKind === "gairen"
+                      ? "boss-gairen-shell-sweep"
+                      : "boss-futago-cross-impact",
+                    f.x,
+                    {
+                      priority: 99,
+                      cooldownMs: 260,
+                      volume: .8,
+                      fallbackCue: "boss-warning",
+                    },
+                  );
+                }
+                f.attackSequence += 1;
+                g.bannerTime = .82;
+                g.flashOverlay = Math.max(g.flashOverlay, .09);
+                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+              }
+
+              if (step.events.includes("complete")) {
+                const splitSpeed = anomalyKind === "futago"
+                  && f.hp / Math.max(1, f.maxHp) <= BOSS_ANOMALY_TUNING.futago.splitThreshold
+                  ? BOSS_ANOMALY_TUNING.futago.splitSpeedMultiplier
+                  : 1;
+                f.abilityCooldown = tuning.cooldownSeconds / splitSpeed;
+              }
+            }
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+              const started = beginBossAnomalyAbility({
+                boss: f,
+                candidates: g.fighters,
+              });
+              if (started.ok) {
+                f.stationAbility = started.runtime as StationAbilityRuntime;
+                abilityFrame = true;
+                g.banner = anomalyKind === "ooguchi"
+                  ? "オオグチ // 捕食突進予告"
+                  : anomalyKind === "gairen"
+                    ? "ガイレン // 外殻掃討予告"
+                    : "フタゴ // 融合交差撃予告";
+                g.bannerTime = .68;
+                playProductionCue(
+                  anomalyKind === "ooguchi"
+                    ? "boss-ooguchi-charge-warning"
+                    : anomalyKind === "gairen"
+                      ? "boss-gairen-shell-warning"
+                      : "boss-futago-cross-warning",
+                  f.x,
+                  {
+                    priority: 90,
+                    cooldownMs: 600,
+                    volume: .64,
+                    fallbackCue: "boss-warning",
+                  },
+                );
+              }
+            }
+            if (abilityFrame || f.stationAbility.phase !== "idle") continue;
+          }
+
+          if (f.kind === "kurome") {
+            let abilityFrame = f.stationAbility.phase !== "idle";
+            if (f.stationAbility.phase !== "idle") {
+              const liveTarget = g.fighters.find((candidate) => (
+                candidate.side === "human"
+                && String(candidate.id) === String(f.stationAbility.targetId)
+              ));
+              const step = advanceKuromeTracking(f.stationAbility, dt, liveTarget);
+              f.stationAbility = step.runtime as StationAbilityRuntime;
+              if (step.fired) {
+                const finalPhase = f.hp / Math.max(1, f.maxHp) <= .3;
+                const beam = resolveKuromeBeam({
+                  boss: f,
+                  runtime: f.stationAbility,
+                  candidates: g.fighters,
+                  beamHalfWidth: finalPhase
+                    ? KUROME_PROTOTYPE_TUNING.finalPhaseBeamHalfWidth
+                    : KUROME_PROTOTYPE_TUNING.beamHalfWidth,
+                });
+                const damage = finalPhase
+                  ? KUROME_PROTOTYPE_TUNING.finalPhaseDamage
+                  : KUROME_PROTOTYPE_TUNING.damage;
+                for (const victimId of beam.hits) {
+                  const victim = g.fighters.find((candidate) => String(candidate.id) === victimId);
+                  if (!victim) continue;
+                  const resolved = applyIncomingHumanDamage(g, victim, damage, {
+                    attackKind: "ranged",
+                    attacker: f,
+                  });
+                  victim.flash = Math.max(victim.flash, .16);
+                  victim.visionDisruptedRemaining = Math.max(
+                    victim.visionDisruptedRemaining ?? 0,
+                    KUROME_PROTOTYPE_TUNING.interferenceSeconds,
+                  );
+                  addDamageText(g, {
+                    x: victim.x,
+                    y: victim.y - 64,
+                    value: `視界撹乱 -${Math.round(resolved.targetDamage)}`,
+                    life: .95,
+                    color: "#6ceaf1",
+                  });
+                }
+                if (beam.target) addParticles(g, beam.target.x, beam.target.y, "#62e8ef", 22);
+                g.flashOverlay = Math.max(g.flashOverlay, .12);
+                g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
+                g.banner = finalPhase
+                  ? "クロメ // 追跡眼・過励起"
+                  : "クロメ // 追跡眼";
+                g.bannerTime = .82;
+                playProductionCue("enemy-takuya-attack", f.x, {
+                  priority: 94,
+                  cooldownMs: 200,
+                  volume: .84,
+                  playbackRate: 1.28,
+                  fallbackCue: "boss-warning",
+                });
+              }
+              if (step.recovered) {
+                f.abilityCooldown = f.hp / Math.max(1, f.maxHp) <= .3
+                  ? KUROME_PROTOTYPE_TUNING.finalPhaseCooldownSeconds
+                  : KUROME_PROTOTYPE_TUNING.cooldownSeconds;
+              }
+            }
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+              const victim = g.fighters
+                .filter((candidate) => candidate.side === "human"
+                  && candidate.hp > 0
+                  && candidate.combatReady
+                  && candidate.targetable !== false
+                  && fighterDistance(candidate, f) <= f.range)
+                .sort((left, right) => left.x - right.x || fighterDistance(left, f) - fighterDistance(right, f))[0];
+              const started = beginKuromeTracking(victim);
+              if (started.ok) {
+                f.stationAbility = started.runtime as StationAbilityRuntime;
+                abilityFrame = true;
+                g.banner = "クロメ // 追跡照準";
+                // The ray itself owns the full warning window. Keep the global
+                // banner brief so compact screens do not cover this tall boss.
+                g.bannerTime = .68;
+                playProductionCue("enemy-takuya-attack", f.x, {
+                  priority: 90,
+                  cooldownMs: 250,
+                  volume: .52,
+                  playbackRate: 1.65,
+                  fallbackCue: "boss-warning",
+                });
+              }
+            }
+            if (abilityFrame || f.stationAbility.phase !== "idle") continue;
+          }
+
           if (f.kind === "gate-eater") {
             if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
               const victim = g.fighters
@@ -7549,7 +13083,10 @@ export function AshfallGame() {
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
                 g.banner = "改札喰い // 突進予告";
-                g.bannerTime = Math.max(g.bannerTime, 1.05);
+                g.bannerTime = Math.max(
+                  g.bannerTime,
+                  bossDefinitionForEnemyKind("gate-eater")?.attackTelegraph.warningSeconds ?? 0,
+                );
               }
             }
             if (f.stationAbility.phase !== "idle") {
@@ -7575,7 +13112,7 @@ export function AshfallGame() {
               if (charge.chargeEnded) {
                 for (const victim of g.fighters) {
                   if (victim.side !== "human" || victim.hp <= 0 || fighterDistance(victim, f) > 92) continue;
-                  const damage = applyIncomingHumanDamage(g, victim, 34, { attackKind: "melee" }).targetDamage;
+                  const damage = applyIncomingHumanDamage(g, victim, 34, { attackKind: "melee", attacker: f }).targetDamage;
                   victim.flash = Math.max(victim.flash, .18);
                   victim.knock = Math.max(victim.knock, 14);
                   addDamageText(g, { x: victim.x, y: victim.y - 54, value: `突進 -${Math.round(damage)}`, life: .85, color: "#e2a65e" });
@@ -7599,7 +13136,7 @@ export function AshfallGame() {
                 for (const victim of g.fighters) {
                   // Perspective-scaled distance matches the on-ground warning ellipse.
                   if (victim.side !== "human" || victim.hp <= 0 || effectDistance(victim, f) > radius) continue;
-                  const resolved = applyIncomingHumanDamage(g, victim, damage, { attackKind: "melee" });
+                  const resolved = applyIncomingHumanDamage(g, victim, damage, { attackKind: "melee", attacker: f });
                   victim.flash = .16; victim.knock = Math.max(victim.knock, 12);
                   g.damageTexts.push({ x: victim.x, y: victim.y - 48, value: String(Math.round(resolved.targetDamage)), life: .8, color: "#ff7658" });
                 }
@@ -7610,10 +13147,10 @@ export function AshfallGame() {
               }
             } else if (f.abilityCooldown <= 0 && g.fighters.some((human) => human.side === "human" && human.hp > 0 && fighterDistance(human, f) <= 150)) {
               abilityFrame = true;
-              f.abilityWindup = .85;
+              f.abilityWindup = bossDefinitionForEnemyKind("takuya")?.attackTelegraph.warningSeconds ?? 0;
               f.abilityCooldown = f.hp / f.maxHp <= .5 ? 4.8 : 6.5;
               g.banner = "TAKUYA // 鉄槌強襲予告";
-              g.bannerTime = .9;
+              g.bannerTime = f.abilityWindup + .05;
             }
             if (abilityFrame) continue;
           }
@@ -7632,6 +13169,7 @@ export function AshfallGame() {
                 f.engineerTrapReady = true;
                 f.engineerTrapX = placement.trap.x;
                 f.engineerTrapLane = placement.trap.lane as Lane;
+                f.engineerTrapManual = false;
               }
             }
             if (f.engineerTrapReady && f.engineerTrapLane !== null) {
@@ -7643,18 +13181,48 @@ export function AshfallGame() {
                 x: f.engineerTrapX,
                 active: true,
                 used: false,
-                triggerRadius: UNIT_ROLE_TUNING.monkey.triggerRadius,
-                stopSeconds: UNIT_ROLE_TUNING.monkey.stopSeconds * f.trapDurationMultiplier,
+                triggerRadius: f.engineerTrapManual
+                  ? MANUAL_ABILITY_REGISTRY.engineer.effectRadius
+                  : UNIT_ROLE_TUNING.monkey.triggerRadius,
+                stopSeconds: (f.engineerTrapManual
+                  ? MANUAL_ABILITY_REGISTRY.engineer.bindSeconds
+                  : UNIT_ROLE_TUNING.monkey.stopSeconds) * f.trapDurationMultiplier,
               };
               const trigger = triggerMonkeyTrap(trap, g.fighters.filter((candidate) => candidate.side === "zombie"));
               if (trigger.triggered) {
-                const trapped = g.fighters.find((candidate) => candidate.id === trigger.targetId && candidate.side === "zombie" && candidate.hp > 0);
-                if (trapped) {
+                const trappedTargets = f.engineerTrapManual
+                  ? g.fighters.filter((candidate) => (
+                    candidate.side === "zombie"
+                    && candidate.hp > 0
+                    && candidate.combatReady
+                    && candidate.lane === trap.lane
+                    && Math.abs(candidate.x - trap.x) <= trap.triggerRadius
+                  ))
+                  : g.fighters.filter((candidate) => (
+                    candidate.id === trigger.targetId
+                    && candidate.side === "zombie"
+                    && candidate.hp > 0
+                  ));
+                if (trappedTargets.length > 0) {
+                  for (const trapped of trappedTargets) {
                   trapped.stunned = Math.max(trapped.stunned, trigger.stopSeconds);
+                  if (f.engineerTrapManual) {
+                    trapped.suppressionStacks = Math.max(
+                      trapped.suppressionStacks,
+                      UNIT_ROLE_TUNING.raider.maximumSuppressionStacks,
+                    );
+                    trapped.suppressedRemaining = Math.max(
+                      trapped.suppressedRemaining,
+                      MANUAL_ABILITY_REGISTRY.engineer.bindSeconds
+                        + MANUAL_ABILITY_REGISTRY.engineer.slowSeconds,
+                    );
+                  }
+                    addDamageText(g, { x: trapped.x, y: trapped.y - 60, value: "足止め", life: .8, color: "#e1c978" });
+                  }
                   f.engineerTrapReady = false;
                   f.engineerTrapCooldown = UNIT_ROLE_TUNING.monkey.placementIntervalSeconds;
+                  f.engineerTrapManual = false;
                   g.roleMetrics.monkeyTrapTriggers += 1;
-                  addDamageText(g, { x: trapped.x, y: trapped.y - 60, value: "足止め", life: .8, color: "#e1c978" });
                 }
               }
             }
@@ -7682,6 +13250,7 @@ export function AshfallGame() {
               const healed = healing.amount;
               const roleEffect = roleEffectForAction({ unitKind: f.kind, action: "heal", targetKind: wounded.kind }) as RoleEffect | null;
               wounded.hp = healing.hp;
+              recordUnitHealing(g, f.kind, healed);
               wounded.damageReductionRemaining = healing.protectionSeconds;
               wounded.damageReductionMultiplier = 1 - healing.damageReduction;
               f.healFocusTargetId = wounded.id;
@@ -7757,6 +13326,8 @@ export function AshfallGame() {
                 y: enemy.y,
                 lane: enemy.lane,
                 assignedLane: enemy.anchorLane ?? enemy.lane,
+                kind: enemy.kind,
+                boss: isBossEnemyKind(enemy.kind),
                 hp: enemy.hp,
                 combatReady: enemy.combatReady,
                 bodyRadius: enemy.bodyRadius,
@@ -7798,11 +13369,14 @@ export function AshfallGame() {
             const takuyaAlive = enemies.some((enemy) => enemy.kind === "takuya");
             const containmentBossAlive = enemies.some((enemy) => enemy.kind === "gate-eater" && enemy.contained !== true);
             const objectiveX = g.definition.missionType === "timed-defense"
+              || g.definition.missionType === "survival"
               ? null
               : g.barricadeVulnerable
                 ? BARRICADE_X
                 : advanceLimitFor(g.phase, g.barricadeVulnerable);
-            const defenseFrontX = 555;
+            const defenseFrontX = g.survivalRun
+              ? survivalDefenseDestination({ aiProfile: f.aiProfile })
+              : 555;
             allyIntent = decideAllyIntent({
               missionType: g.definition.missionType,
               unit: {
@@ -7845,6 +13419,21 @@ export function AshfallGame() {
                 desiredX: stationObjective.x,
                 destinationLane: stationObjective.lane,
                 moveDirection: Math.sign(stationObjective.x - f.x),
+              };
+            }
+            if (g.survivalRun && allyIntent.reason !== "crawler-under-attack") {
+              const survivalTarget = tacticalEnemies.find((enemy) => enemy.id === allyIntent?.targetId);
+              const destinationX = survivalDefenseDestination({
+                aiProfile: f.aiProfile,
+                desiredX: allyIntent.destinationX,
+                emergencyDefense: allyIntent.emergencyDefense,
+                activeThreatX: survivalTarget?.x ?? null,
+              });
+              allyIntent = {
+                ...allyIntent,
+                destinationX,
+                desiredX: destinationX,
+                moveDirection: Math.sign(destinationX - f.x),
               };
             }
             const holdAtMuster = stagingForAssignedLane
@@ -8067,6 +13656,9 @@ export function AshfallGame() {
             desiredX: allyIntent?.destinationX,
             hasEnemyTarget: f.side === "human" && Boolean(target),
           });
+          const humanMaxX = g.survivalRun
+            ? survivalDefenseDestination({ aiProfile: f.aiProfile, desiredX: 9999 })
+            : BARRICADE_X;
           const zombieTargetX = f.side === "zombie" ? (target?.x ?? objectTarget?.x) : undefined;
           const zombieTargetFloor = zombieTargetX !== undefined && zombieTargetX <= f.x ? zombieTargetX : null;
           const enemyBaseTarget = enemyBaseTargetPoint(f.lane, activeLaneCenters);
@@ -8088,7 +13680,10 @@ export function AshfallGame() {
                 });
                 g.damageTexts.push({ x: objectTarget.x, y: objectTarget.y - 58, value: `-${Math.round(f.damage)}`, life: .65, color: "#ff9a70" });
                 addParticles(g, objectTarget.x + 24, objectTarget.y - 18, "#9aa58d", f.kind === "takuya" || f.kind === "gate-eater" || f.kind === "crusher" ? 9 : 4);
-                if (f.kind === "spitter" || f.kind === "ooze") g.shots.push({ x: f.x - 14, y: f.y - 32, tx: objectTarget.x, ty: objectTarget.y - 22, life: .2, duration: .2, side: "zombie", style: "projectile", weapon: "spitter" });
+                if (f.kind === "spitter" || f.kind === "ooze") {
+                  const origin = weaponAnchorForTarget(f, objectTarget);
+                  g.shots.push({ x: origin.x, y: origin.y, tx: objectTarget.x, ty: objectTarget.y - 22, life: .2, duration: .2, side: "zombie", style: "projectile", weapon: f.kind });
+                }
                 if (result.detonationRequested) {
                   f.targetObjectId = null;
                   g.banner = "爆薬ドラム損壊・起爆 // 戦場"; g.bannerTime = 1.05;
@@ -8100,10 +13695,10 @@ export function AshfallGame() {
               }
             } else {
               const stopX = objectTarget.x + stoppingDistance;
-              f.x = Math.max(stopX, f.x - f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier) * dt);
+              f.x = Math.max(stopX, f.x - f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier) * dt);
               const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
               const dy = routeY - f.y;
-              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
+              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * mayoBiteSlowMultiplier * dt);
               f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
               f.lane = activeLaneForY(f.y, f.lane);
             }
@@ -8140,7 +13735,29 @@ export function AshfallGame() {
                   attackVector: Math.abs(f.y - target.y) > 24 ? "flank" : "front",
                 })
                 : { multiplier: 1 };
-              const attackDamage = baseAttackDamage * gateEaterProfile.multiplier;
+              const bossDamageMultiplier = g.survivalRun
+                && f.side === "human"
+                && ["takuya", "gate-eater"].includes(target.kind)
+                ? survivalUpgradeEffects(g.survivalRun).bossDamageMultiplier
+                : 1;
+              const mrsLauncherBash = f.side === "human"
+                && f.kind === "mrs-chiha"
+                && distance <= MANUAL_ABILITY_REGISTRY["mrs-chiha"].launcherBashRange + target.bodyRadius;
+              const humanAttackKind = f.range > 64 && !mrsLauncherBash ? "ranged" : "melee";
+              const v090DamageMultiplier = f.side === "human"
+                ? v090EnemyIncomingDamageMultiplier(g, f, target, humanAttackKind)
+                : 1;
+              const manualDamageMultiplier = f.side === "human"
+                && f.kind === "crazy-king"
+                && f.manualAbility?.phase === "active"
+                ? MANUAL_ABILITY_REGISTRY["crazy-king"].damageMultiplier
+                : 1;
+              const attackDamage = baseAttackDamage
+                * gateEaterProfile.multiplier
+                * bossDamageMultiplier
+                * (mrsLauncherBash ? MANUAL_ABILITY_REGISTRY["mrs-chiha"].launcherBashDamageMultiplier : 1)
+                * v090DamageMultiplier
+                * manualDamageMultiplier;
               const weaponDamageEvents = f.side === "human"
                 ? weaponDamageEventsFor(f.kind, attackDamage)
                 : null;
@@ -8151,6 +13768,52 @@ export function AshfallGame() {
               const immediateAttackDamage = attackDamage;
               let appliedAttack: { targetDamage: number };
               if (splitMachineGunBurst) {
+                appliedAttack = { targetDamage: 0 };
+              } else if (f.side === "zombie" && target.side === "human") {
+                appliedAttack = applyIncomingHumanDamage(g, target, immediateAttackDamage, { attackKind: f.range > 64 ? "ranged" : "melee", attacker: f });
+              } else if (f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash && weaponDamageEvents) {
+                const grenadeRound = weaponDamageEvents[0];
+                const grenadeMuzzle = weaponAnchorForTarget(f, target, grenadeRound.shotIndex, grenadeRound.recoil);
+                scheduleMrsChihaLauncherAudio(g, f, "normal");
+                g.pendingWeaponHits.push({
+                  eventKind: "muzzle",
+                  targetKind: "fighter",
+                  sourceId: f.id,
+                  targetId: target.id,
+                  targetX: target.x,
+                  targetY: target.y - 28,
+                  originX: grenadeMuzzle.x,
+                  originY: grenadeMuzzle.y,
+                  remainingSeconds: grenadeRound.offsetSeconds,
+                  damage: 0,
+                  weapon: f.kind,
+                  shotIndex: grenadeRound.shotIndex,
+                  recoil: grenadeRound.recoil,
+                  casing: grenadeRound.casing,
+                  hitStopSeconds: grenadeRound.hitStopSeconds,
+                  impactDelaySeconds: grenadeRound.travelSeconds,
+                  applyDamage: false,
+                }, {
+                  eventKind: "impact",
+                  targetKind: "fighter",
+                  damageMode: "grenade",
+                  sourceId: f.id,
+                  targetId: target.id,
+                  targetX: target.x,
+                  targetY: target.y - 28,
+                  originX: grenadeMuzzle.x,
+                  originY: grenadeMuzzle.y,
+                  remainingSeconds: grenadeRound.hitOffsetSeconds,
+                  damage: immediateAttackDamage,
+                  weapon: f.kind,
+                  shotIndex: grenadeRound.shotIndex,
+                  recoil: grenadeRound.recoil,
+                  casing: grenadeRound.casing,
+                  hitStopSeconds: grenadeRound.hitStopSeconds,
+                  impactDelaySeconds: grenadeRound.travelSeconds,
+                  applyDamage: true,
+                });
+                g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
                 appliedAttack = { targetDamage: 0 };
               } else if (f.side === "human"
                 && target.kind === "gate-eater"
@@ -8179,15 +13842,17 @@ export function AshfallGame() {
                   g.banner = "改札喰い撃破 // 研究容器を確保";
                   g.bannerTime = 1.8;
                 }
-              } else if (f.side === "zombie" && target.side === "human") {
-                appliedAttack = applyIncomingHumanDamage(g, target, immediateAttackDamage, { attackKind: f.range > 64 ? "ranged" : "melee" });
               } else {
                 target.hp -= immediateAttackDamage;
                 appliedAttack = { targetDamage: immediateAttackDamage };
               }
+              if (f.side === "human" && appliedAttack.targetDamage > 0) {
+                recordUnitDamage(g, f.kind, appliedAttack.targetDamage);
+              }
               if (splitMachineGunBurst) {
                 const weaponProfile = weaponProfileForUnit(f.kind);
                 for (const event of weaponDamageEvents) {
+                  const muzzle = weaponAnchorForTarget(f, target, event.shotIndex, event.recoil);
                   const sharedEvent = {
                     targetKind: "fighter" as const,
                     damageMode: target.kind === "gate-eater"
@@ -8200,8 +13865,8 @@ export function AshfallGame() {
                     targetId: target.id,
                     targetX: target.x,
                     targetY: target.y - 28,
-                    originX: f.x + 14 - event.recoil * event.shotIndex * 2,
-                    originY: f.y - 32 + event.shotIndex * 1.5,
+                    originX: muzzle.x,
+                    originY: muzzle.y,
                     weapon: f.kind as UnitKind,
                     shotIndex: event.shotIndex,
                     recoil: event.recoil,
@@ -8242,7 +13907,9 @@ export function AshfallGame() {
                 });
                 f.comboHits = momentum.hitCount;
                 f.comboWindow = UNIT_ROLE_TUNING.crazyKing.comboWindowSeconds;
-                crazyKingRadius = momentum.radius;
+                crazyKingRadius = f.manualAbility?.phase === "active"
+                  ? Math.max(momentum.radius, MANUAL_ABILITY_REGISTRY["crazy-king"].areaRadius)
+                  : momentum.radius;
                 g.roleMetrics.crazyKingMaxTier = Math.max(g.roleMetrics.crazyKingMaxTier, momentum.tier);
               }
               if (f.side === "human" && f.kind === "brute") {
@@ -8280,6 +13947,7 @@ export function AshfallGame() {
                   if (lineTarget.id === target.id) continue;
                   const pierceDamage = attackDamage * .58;
                   for (const event of weaponDamageEventsFor(f.kind, pierceDamage)) {
+                    const muzzle = weaponAnchorForTarget(f, lineTarget, event.shotIndex, event.recoil);
                     const sharedEvent = {
                       targetKind: "fighter" as const,
                       damageMode: lineTarget.kind === "gate-eater"
@@ -8292,8 +13960,8 @@ export function AshfallGame() {
                       targetId: lineTarget.id,
                       targetX: lineTarget.x,
                       targetY: lineTarget.y - 28,
-                      originX: f.x + 14 - event.recoil * event.shotIndex * 2,
-                      originY: f.y - 32 + event.shotIndex * 1.5,
+                      originX: muzzle.x,
+                      originY: muzzle.y,
                       weapon: f.kind as UnitKind,
                       shotIndex: event.shotIndex,
                       recoil: event.recoil,
@@ -8350,7 +14018,9 @@ export function AshfallGame() {
                 for (const nextSecondary of newcomerEffects.secondaryTargets) {
                   const secondary = g.fighters.find((candidate) => candidate.id === nextSecondary.id && candidate.side === "zombie" && candidate.hp > 0);
                   if (!secondary) continue;
+                  const secondaryHpBefore = secondary.hp;
                   Object.assign(secondary, nextSecondary);
+                  recordUnitDamage(g, f.kind, Math.max(0, secondaryHpBefore - secondary.hp));
                   if (f.kind === "crazy-king") g.roleMetrics.crazyKingSecondaryHits += 1;
                   g.damageTexts.push({ x: secondary.x, y: secondary.y - 43, value: String(Math.round(newcomerEffects.secondaryDamage)), life: .58, color: "#efb95f" });
                 }
@@ -8362,15 +14032,32 @@ export function AshfallGame() {
               if (f.side === "human") {
                 emitBattleBarkOnce(g, `contact:${f.kind}`, RANDOM_BATTLE_BARK_TRIGGER_IDS.CONTACT, f.kind as UnitKind);
                 const targetIsHeavy = ["crusher", "abomination", "takuya", "grappler", "gate-eater"].includes(target.kind);
-                const weaponEvent = f.kind === "crazy-king" ? "attack" : f.kind === "kumaverson" ? "swing" : f.kind === "babayaga" ? "shot" : null;
+                const weaponEvent = f.kind === "crazy-king"
+                  ? "attack"
+                  : f.kind === "kumaverson"
+                    ? "swing"
+                    : f.kind === "babayaga"
+                      ? "shot"
+                      : f.kind === "mrs-chiha"
+                        ? mrsLauncherBash ? "bash" : "shot"
+                        : f.kind === "tky" || f.kind === "miyamoto-musashi"
+                          ? "attack"
+                          : f.kind === "mayo-chan"
+                            ? "bite"
+                          : null;
                 const contactAudioX = f.kind === "crazy-king" || f.kind === "kumaverson" ? (f.x + target.x) / 2 : f.x;
-                playProductionCue((weaponEvent && unitAudioCueFor(f.kind, "weapon", weaponEvent)) || weaponCueForUnit(f.kind), contactAudioX, {
-                  priority: f.kind === "gunner" || f.kind === "brute" || f.kind === "crazy-king" ? 74 : 64,
-                  cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 70,
-                  volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
-                  maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
-                  fallbackCue: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "ranged-shot" : "melee-hit",
-                });
+                const defersMrsLauncherAudio = f.kind === "mrs-chiha" && !mrsLauncherBash;
+                if (!defersMrsLauncherAudio) {
+                  playProductionCue((weaponEvent && unitAudioCueFor(f.kind, "weapon", weaponEvent)) || weaponCueForUnit(f.kind), contactAudioX, {
+                    priority: f.kind === "gunner" || f.kind === "brute" || f.kind === "crazy-king" ? 74 : 64,
+                    cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 70,
+                    volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
+                    maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
+                    fallbackCue: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)
+                      ? "ranged-shot"
+                      : "melee-hit",
+                  });
+                }
                 if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), contactAudioX, { priority: targetIsHeavy ? 76 : 67, cooldownMs: 110, volume: targetIsHeavy ? .62 : .54, maxInstances: 1 });
                 if (f.kind === "kumaverson") {
                   playProductionCue(unitAudioCueFor(f.kind, "weapon", targetIsHeavy ? "heavyHit" : "hit"), contactAudioX, { priority: targetIsHeavy ? 76 : 68, cooldownMs: 125, volume: targetIsHeavy ? .56 : .48, maxInstances: 1 });
@@ -8382,6 +14069,23 @@ export function AshfallGame() {
                     playProductionCue(unitAudioCueFor(f.kind, "weapon", "specialKill"), target.x, { priority: 86, maxInstances: 1 });
                   } else if (f.attackSequence % 6 === 0) {
                     playProductionCue(unitAudioCueFor(f.kind, "weapon", "reload"), f.x, { priority: 52, maxInstances: 1 });
+                  }
+                }
+                if (f.kind === "mayo-chan" && target.side === "zombie") {
+                  target.mayoBiteSlowRemaining = Math.max(
+                    target.mayoBiteSlowRemaining ?? 0,
+                    MANUAL_ABILITY_REGISTRY["mayo-chan"].biteSlowSeconds,
+                  );
+                  addParticles(g, target.x, target.y - 18, f.manualAbility?.phase === "feral" ? "#b72d52" : "#e4ca76", 5);
+                  if (f.manualAbility?.phase === "feral") {
+                    f.targetId = null;
+                    f.retargetIn = 0;
+                    playProductionCue(unitAudioCueFor(f.kind, "weapon", "abilityRush"), f.x, {
+                      priority: 72,
+                      cooldownMs: 130,
+                      maxInstances: 2,
+                      fallbackCue: "melee-hit",
+                    });
                   }
                 }
                 if (Math.random() < .34) playProductionCue(humanVoiceCueForUnit(f.kind, "attack"), f.x, {
@@ -8414,13 +14118,23 @@ export function AshfallGame() {
                 target.knock = Math.max(target.knock, f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" || f.kind === "gate-eater" ? 9 : 3);
               }
               f.attack = .18;
-              if (f.side === "human") f.attack = attackPresentationDuration(f.kind);
+              f.attackVariant = f.kind === "mrs-chiha" && mrsLauncherBash ? "launcher-bash" : null;
+              if (f.side === "human") {
+                f.attack = f.attackVariant === "launcher-bash"
+                  ? mrsChihaLauncherBashDuration()
+                  : attackPresentationDuration(f.kind);
+              }
               f.cooldown = enragedTakuya
                 ? .9
                 : f.kind === "crazy-king"
                   ? crazyKingAttackInterval(f.attackEvery, f.comboHits)
+                    * (f.manualAbility?.phase === "active"
+                      ? MANUAL_ABILITY_REGISTRY["crazy-king"].attackIntervalMultiplier
+                      : 1)
+                  : f.kind === "mayo-chan" && f.manualAbility?.phase === "feral"
+                    ? f.attackEvery * MANUAL_ABILITY_REGISTRY["mayo-chan"].attackIntervalMultiplier
                   : f.attackEvery;
-              if (!splitMachineGunBurst) {
+              if (!splitMachineGunBurst && !(f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash)) {
                 g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(appliedAttack.targetDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
               }
               if (roleEffect && f.abilityCooldown <= 0) {
@@ -8439,15 +14153,17 @@ export function AshfallGame() {
               }
               if (f.side === "human") {
                 const emphasized = roleEffect === "brawler" || roleEffect === "gunner" || roleEffect === "crazy-king" || roleEffect === "kumaverson" || roleEffect === "babayaga";
-                const ranged = ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind);
+                const ranged = ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)
+                  || (f.kind === "mrs-chiha" && !mrsLauncherBash);
                 if (f.kind === "gunner" && weaponDamageEvents) {
                   if (!splitMachineGunBurst) {
                     const firstRound = weaponDamageEvents[0];
+                    const firstMuzzle = weaponAnchorForTarget(f, target, firstRound.shotIndex, firstRound.recoil);
                     addWeaponShot(g, {
                       sourceId: f.id,
                       targetId: target.id,
-                      originX: f.x + 14,
-                      originY: f.y - 32,
+                      originX: firstMuzzle.x,
+                      originY: firstMuzzle.y,
                       targetX: target.x,
                       targetY: target.y - 28,
                       weapon: f.kind,
@@ -8458,6 +14174,7 @@ export function AshfallGame() {
                       impactDelaySeconds: firstRound.travelSeconds,
                     });
                     for (const event of weaponDamageEvents.slice(1)) {
+                      const muzzle = weaponAnchorForTarget(f, target, event.shotIndex, event.recoil);
                       g.pendingWeaponHits.push({
                         eventKind: "muzzle",
                         targetKind: "fighter",
@@ -8465,8 +14182,8 @@ export function AshfallGame() {
                         targetId: target.id,
                         targetX: target.x,
                         targetY: target.y - 28,
-                        originX: f.x + 14 - event.recoil * event.shotIndex * 2,
-                        originY: f.y - 32 + event.shotIndex * 1.5,
+                        originX: muzzle.x,
+                        originY: muzzle.y,
                         remainingSeconds: event.offsetSeconds,
                         damage: 0,
                         weapon: f.kind,
@@ -8479,8 +14196,9 @@ export function AshfallGame() {
                       });
                     }
                   }
-                } else {
-                  g.shots.push({ x: f.x + 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", sourceId: f.id, targetId: target.id, damageTargetId: target.id, effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee", weapon: f.kind });
+                } else if (!(f.kind === "mrs-chiha" && !mrsLauncherBash)) {
+                  const muzzle = weaponAnchorForTarget(f, target);
+                  g.shots.push({ x: muzzle.x, y: muzzle.y, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", sourceId: f.id, targetId: target.id, damageTargetId: target.id, effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee", weapon: f.kind });
                 }
                 if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) playCue(`role-${roleEffect}` as SfxCueId);
                 if (!productionMixerRef.current) {
@@ -8488,7 +14206,8 @@ export function AshfallGame() {
                   else playCue("melee-hit");
                 }
               } else if (f.kind === "spitter" || f.kind === "ooze") {
-                g.shots.push({ x: f.x - 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .2, duration: .2, side: "zombie", sourceId: f.id, targetId: target.id, damageTargetId: target.id, style: "projectile", weapon: "spitter" });
+                const muzzle = weaponAnchorForTarget(f, target);
+                g.shots.push({ x: muzzle.x, y: muzzle.y, tx: target.x, ty: target.y - 28, life: .2, duration: .2, side: "zombie", sourceId: f.id, targetId: target.id, damageTargetId: target.id, style: "projectile", weapon: f.kind });
                 if (!productionMixerRef.current) playCue("ranged-shot", { frequency: 205 });
               } else {
                 addParticles(g, target.x, target.y - 18, target.kind === "takuya" || target.kind === "shade" ? "#b98a62" : target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
@@ -8508,7 +14227,8 @@ export function AshfallGame() {
                   ? resolveTataraStrikeDamage(f.damage, { targetType: "infected-base" })
                   : f.damage * structureDamageMultiplier(f.kind);
                 const structureWeaponEvents = weaponDamageEventsFor(f.kind, structureDamage);
-                if (f.kind !== "gunner") g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
+                const deferredStructureImpact = f.kind === "gunner" || f.kind === "mrs-chiha";
+                if (!deferredStructureImpact) g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
                 if (f.kind === "brute") g.roleMetrics.tataraStructureDamage += structureDamage;
                 if (f.kind === "gunner") {
                   const wasOverheated = f.overheated;
@@ -8524,23 +14244,26 @@ export function AshfallGame() {
                 emitBattleBarkOnce(g, `enemy-base-attack:${f.kind}`, RANDOM_BATTLE_BARK_TRIGGER_IDS.ENEMY_BASE_ATTACK, f.kind as UnitKind);
                 const structureWeaponEvent = f.kind === "crazy-king" ? "attack" : f.kind === "kumaverson" ? "swing" : f.kind === "babayaga" ? "shot" : null;
                 const structureAudioX = f.kind === "crazy-king" || f.kind === "kumaverson" ? (f.x + enemyBaseTarget.x) / 2 : f.x;
-                playProductionCue((structureWeaponEvent && unitAudioCueFor(f.kind, "weapon", structureWeaponEvent)) || weaponCueForUnit(f.kind), structureAudioX, {
-                  priority: f.kind === "brute" || f.kind === "gunner" || f.kind === "crazy-king" ? 76 : 64,
-                  cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 125 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 75,
-                  volume: f.kind === "crazy-king" ? .64 : f.kind === "kumaverson" ? .5 : undefined,
-                  maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
-                  fallbackCue: f.kind === "brute" ? "structure-heavy" : "structure-light",
-                });
+                if (f.kind !== "mrs-chiha") {
+                  playProductionCue((structureWeaponEvent && unitAudioCueFor(f.kind, "weapon", structureWeaponEvent)) || weaponCueForUnit(f.kind), structureAudioX, {
+                    priority: f.kind === "brute" || f.kind === "gunner" || f.kind === "crazy-king" ? 76 : 64,
+                    cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 125 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 75,
+                    volume: f.kind === "crazy-king" ? .64 : f.kind === "kumaverson" ? .5 : undefined,
+                    maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
+                    fallbackCue: f.kind === "brute" ? "structure-heavy" : "structure-light",
+                  });
+                }
                 if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), structureAudioX, { priority: 74, volume: .56, cooldownMs: 110, maxInstances: 1 });
                 if (f.kind === "kumaverson") playProductionCue(unitAudioCueFor(f.kind, "weapon", "heavyHit"), structureAudioX, { priority: 74, volume: .54, cooldownMs: 130, maxInstances: 1 });
                 if (f.kind === "babayaga" && f.attackSequence % 6 === 0) playProductionCue(unitAudioCueFor(f.kind, "weapon", "reload"), f.x, { priority: 52, maxInstances: 1 });
                 if (f.kind === "gunner") {
                   const firstRound = structureWeaponEvents[0];
+                  const firstOrigin = weaponAnchorForTarget(f, enemyBaseTarget, firstRound.shotIndex, firstRound.recoil);
                   addWeaponShot(g, {
                     sourceId: f.id,
                     targetId: null,
-                    originX: f.x + 14,
-                    originY: f.y - 32,
+                    originX: firstOrigin.x,
+                    originY: firstOrigin.y,
                     targetX: enemyBaseTarget.x,
                     targetY: enemyBaseTarget.y,
                     weapon: f.kind,
@@ -8551,14 +14274,15 @@ export function AshfallGame() {
                     impactDelaySeconds: firstRound.travelSeconds,
                   });
                   for (const event of structureWeaponEvents) {
+                    const origin = weaponAnchorForTarget(f, enemyBaseTarget, event.shotIndex, event.recoil);
                     const sharedEvent = {
                       targetKind: "enemy-base" as const,
                       sourceId: f.id,
                       targetId: null,
                       targetX: enemyBaseTarget.x,
                       targetY: enemyBaseTarget.y,
-                      originX: f.x + 14 - event.recoil * event.shotIndex * 2,
-                      originY: f.y - 32 + event.shotIndex * 1.5,
+                      originX: origin.x,
+                      originY: origin.y,
                       weapon: f.kind as UnitKind,
                       shotIndex: event.shotIndex,
                       recoil: event.recoil,
@@ -8584,30 +14308,65 @@ export function AshfallGame() {
                     });
                   }
                   g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
+                } else if (f.kind === "mrs-chiha") {
+                  const grenadeRound = structureWeaponEvents[0];
+                  const grenadeOrigin = weaponAnchorForTarget(f, enemyBaseTarget, grenadeRound.shotIndex, grenadeRound.recoil);
+                  scheduleMrsChihaLauncherAudio(g, f, "structure");
+                  const sharedGrenadeEvent = {
+                    targetKind: "enemy-base" as const,
+                    sourceId: f.id,
+                    targetId: null,
+                    targetX: enemyBaseTarget.x,
+                    targetY: enemyBaseTarget.y,
+                    originX: grenadeOrigin.x,
+                    originY: grenadeOrigin.y,
+                    weapon: f.kind as UnitKind,
+                    shotIndex: grenadeRound.shotIndex,
+                    recoil: grenadeRound.recoil,
+                    casing: grenadeRound.casing,
+                    hitStopSeconds: grenadeRound.hitStopSeconds,
+                    impactDelaySeconds: grenadeRound.travelSeconds,
+                  };
+                  g.pendingWeaponHits.push({
+                    ...sharedGrenadeEvent,
+                    eventKind: "muzzle",
+                    remainingSeconds: grenadeRound.offsetSeconds,
+                    damage: 0,
+                    applyDamage: false,
+                  }, {
+                    ...sharedGrenadeEvent,
+                    eventKind: "impact",
+                    remainingSeconds: grenadeRound.hitOffsetSeconds,
+                    damage: grenadeRound.damage,
+                    applyDamage: true,
+                  });
+                  g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
                 } else {
                   g.barricadeHitFlash = .2;
                   g.barricadeHitY = f.y;
                   g.damageTexts.push({ x: enemyBaseTarget.x, y: enemyBaseTarget.y - 14, value: `-${Math.round(structureDamage)}`, life: .7, color: "#ffd06b" });
                   addParticles(g, enemyBaseTarget.x, enemyBaseTarget.y, "#e78b45", f.kind === "brute" ? 10 : 5);
                   if (!roleEffect && ["ranger", "medic", "babayaga", "engineer"].includes(f.kind)) {
-                    g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .2, duration: .2, side: "human", style: "projectile", weapon: f.kind });
+                    const origin = weaponAnchorForTarget(f, enemyBaseTarget);
+                    g.shots.push({ x: origin.x, y: origin.y, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .2, duration: .2, side: "human", style: "projectile", weapon: f.kind });
                   }
                 }
-                if (roleEffect && f.kind !== "gunner") {
-                  g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "projectile" : "melee", weapon: f.kind });
+                if (roleEffect && !deferredStructureImpact) {
+                  const origin = weaponAnchorForTarget(f, enemyBaseTarget);
+                  g.shots.push({ x: origin.x, y: origin.y, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "projectile" : "melee", weapon: f.kind });
                   if (!productionMixerRef.current && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) {
                     playCue(`role-${roleEffect}` as SfxCueId);
                   }
                 } else if (roleEffect === "gunner" && !productionMixerRef.current) {
                   playCue("role-gunner");
                 }
-                if (f.kind !== "gunner" && !g.barricadeBucklingAnnounced && beforeHit > g.barricadeMaxHp * .7 && g.barricadeHp <= g.barricadeMaxHp * .7) {
+                if (!deferredStructureImpact && !g.barricadeBucklingAnnounced && beforeHit > g.barricadeMaxHp * .7 && g.barricadeHp <= g.barricadeMaxHp * .7) {
                   g.barricadeBucklingAnnounced = true; g.banner = "感染拠点 // 損傷"; g.bannerTime = 1.5; playCue("base-damaged");
                 }
-                if (f.kind !== "gunner" && !g.barricadeCriticalAnnounced && beforeHit > g.barricadeMaxHp * .35 && g.barricadeHp <= g.barricadeMaxHp * .35) {
+                if (!deferredStructureImpact && !g.barricadeCriticalAnnounced && beforeHit > g.barricadeMaxHp * .35 && g.barricadeHp <= g.barricadeMaxHp * .35) {
                   g.barricadeCriticalAnnounced = true; g.banner = "感染拠点 // 大破"; g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("base-critical");
                 }
-                if (!productionMixerRef.current) playCue(f.kind === "brute" ? "structure-heavy" : "structure-light");
+                if (!productionMixerRef.current && f.kind !== "mrs-chiha") playCue(f.kind === "brute" ? "structure-heavy" : "structure-light");
               } else {
                 const beforeHit = g.baseHp;
                 const siegeDamage = crawlerSiegeDamage(f.damage, g.phase);
@@ -8633,6 +14392,7 @@ export function AshfallGame() {
                 }
               }
               const enragedSiege = f.kind === "takuya" && f.hp / f.maxHp <= .5;
+              f.attackVariant = null;
               f.attack = f.side === "human" ? attackPresentationDuration(f.kind) : .18;
               f.cooldown = enragedSiege ? 1 : f.attackEvery;
             }
@@ -8642,7 +14402,7 @@ export function AshfallGame() {
             const desiredX = allyIntent?.destinationX ?? (target.x - Math.sign(dx || 1) * stoppingDistance);
             if (Math.abs(desiredX - f.x) > 2) {
               f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), humanMovementSpeed * dt);
-              f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
+              f.x = Math.max(humanMinX, Math.min(humanMaxX, f.x));
             }
             const destinationLane = (f.navigationRecovery.recoveryLane ?? (f.range > 64
               ? f.anchorLane ?? f.lane
@@ -8661,10 +14421,10 @@ export function AshfallGame() {
             f.lane = laneStep.lane as Lane;
           } else if (target && f.side === "zombie") {
             // The CRAWLER remains the objective: enemies advance on their route and only stop for a physical blocker.
-            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
+            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
             const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
-            if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
+            if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * mayoBiteSlowMultiplier * dt);
             f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
             f.lane = activeLaneForY(f.y, f.lane);
           } else {
@@ -8672,7 +14432,7 @@ export function AshfallGame() {
               const desiredX = allyIntent?.destinationX ?? f.x;
               if (Math.abs(desiredX - f.x) > 2) {
                 f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), humanMovementSpeed * dt);
-                f.x = Math.max(humanMinX, Math.min(BARRICADE_X, f.x));
+                f.x = Math.max(humanMinX, Math.min(humanMaxX, f.x));
               }
               const laneStep = advanceTowardLane({
                 y: f.y,
@@ -8687,17 +14447,18 @@ export function AshfallGame() {
               f.y = laneStep.y;
               f.lane = laneStep.lane as Lane;
             } else {
-              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false });
+              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false });
             }
             if (f.side === "zombie" && f.anchorLane !== null) {
               const dy = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane] - f.y;
-              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * dt);
+              if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * mayoBiteSlowMultiplier * dt);
               f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
               f.lane = activeLaneForY(f.y, f.lane);
             }
           }
 
           if (f.side === "human" || f.side === "zombie") {
+            let appliedSeparation = false;
             for (const other of g.fighters) {
               if (other.side !== f.side || other.id >= f.id || other.hp <= 0 || !other.combatReady) continue;
               const separationStep = sameSideSeparationStep({
@@ -8713,25 +14474,69 @@ export function AshfallGame() {
                 laneMinY: activeLaneCenters[0],
                 laneMaxY: activeLaneCenters[2],
               });
+              appliedSeparation ||= separationStep.dx !== 0 || separationStep.dy !== 0;
               f.x += separationStep.dx;
               f.y += separationStep.dy;
             }
             if (f.side === "human") f.x = Math.max(humanMinX, f.x);
             else if (zombieTargetFloor !== null) f.x = Math.max(zombieTargetFloor, f.x);
             f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
+            // Pair separation is a constrained solver step: project that step
+            // onto the walkable floor here, then leave the frame-level audit
+            // below independent so other movement sources remain detectable.
+            if (appliedSeparation) {
+              const separatedPosition = clampToWalkable(movementStageGeometry, {
+                x: f.x,
+                y: f.y,
+                bodyRadius: f.bodyRadius,
+              });
+              f.x = separatedPosition.x;
+              f.y = separatedPosition.y;
+            }
             f.lane = activeLaneForY(f.y, f.lane);
+          }
+          if (f.side === "human" && f.combatReady && f.hp > 0) {
+            const qaBarrier = bossFoundationQaRef.current.barrierChallenge;
+            if (qaBarrier
+              && qaBarrier.humanId === f.id
+              && qaBarrier.attempted === false) {
+              f.x = qaBarrier.targetX;
+              qaBarrier.attempted = true;
+            }
+            for (const boss of g.fighters) {
+              const barrier = enforceBossBodyBarrier({
+                mover: f,
+                boss,
+                padding: 2,
+                previousX: movementStartX,
+              });
+              if (barrier.blocked) {
+                f.x = Math.min(f.x, barrier.x);
+                if (qaBarrier
+                  && qaBarrier.humanId === f.id
+                  && qaBarrier.bossId === boss.id) {
+                  qaBarrier.blocked = true;
+                }
+              }
+            }
+            if (qaBarrier && qaBarrier.humanId === f.id && qaBarrier.attempted) {
+              qaBarrier.resultingX = f.x;
+            }
           }
         }
 
-        const stageGeometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
+        const stageGeometry = movementStageGeometry;
         for (const fighter of g.fighters) {
           if (!fighter.combatReady || fighter.hp <= 0) continue;
           const laneAnchorError = Math.abs(fighter.y - activeLaneCenters[fighter.lane]);
           g.stationMetrics.maxLaneAnchorError = Math.max(g.stationMetrics.maxLaneAnchorError, laneAnchorError);
+          const renderedHalfWidth = fighter.side === "zombie" && isBossEnemyKind(fighter.kind)
+            ? enemyRenderedVisualHalfWidth(fighter.kind)
+            : fighter.bodyRadius;
           const grounded = clampToWalkable(stageGeometry, {
             x: fighter.x,
             y: fighter.y,
-            bodyRadius: fighter.bodyRadius,
+            bodyRadius: Math.max(fighter.bodyRadius, renderedHalfWidth),
           });
           if (grounded.clamped) g.stationMetrics.offFloorSteps += 1;
           fighter.x = grounded.x;
@@ -8790,6 +14595,25 @@ export function AshfallGame() {
         const dead = g.fighters.filter((fighter) => fighter.hp <= 0);
         for (const fighter of dead) {
           if (!claimDefeatResolution(g.resolvedDefeatIds, fighter.id)) continue;
+          if (fighter.side === "human" && fighter.kind === "mayo-chan") {
+            if (beginMayoRetreat(g, fighter, "injury")) {
+              g.unitsLost++;
+              emitBattleBark(g, "ally-down", "medic", `mayo-retreat-${fighter.id}`);
+              playProductionCue(unitAudioCueFor("mayo-chan", "voice", "hurt"), fighter.x, {
+                priority: 88,
+                cooldownMs: 300,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+              });
+              playProductionCue(unitAudioCueFor("mayo-chan", "voice", "retreat"), fighter.x, {
+                priority: 86,
+                cooldownMs: 1000,
+                maxInstances: 1,
+                fallbackCue: "melee-hit",
+              });
+            }
+            continue;
+          }
           addParticles(g, fighter.x, fighter.y - 15, fighter.kind === "takuya" || fighter.kind === "gate-eater" || fighter.kind === "shade" ? "#c08d62" : fighter.side === "zombie" ? "#7e965e" : "#b0614e", fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 20 : 11);
           if (fighter.side === "human") playProductionCue(humanVoiceCueForUnit(fighter.kind, "death"), fighter.x, {
             priority: 88,
@@ -8825,15 +14649,40 @@ export function AshfallGame() {
           } as Corpse);
           if (fighter.side === "zombie") {
             g.kills++; g.combo++; g.comboTime = 2.3;
+            addCombatMetric(g.combatMetrics.enemyDefeatsByKind, fighter.kind, 1);
             g.maxCombo = Math.max(g.maxCombo, g.combo);
             g.scrap += scrapReward(fighter.kind);
-            g.supportGauge = Math.min(SUPPORT_GAUGE_MAX, g.supportGauge + supportGaugeReward(fighter.kind));
-            if (fighter.kind === "takuya" && g.definition.bossUnlocksEnemyBase) {
+            g.supportGauge = Math.min(
+              SUPPORT_GAUGE_MAX,
+              g.supportGauge + supportGaugeReward(
+                fighter.kind,
+                preservesAcceptedSupportTempo(g) ? "full" : "standard",
+              ),
+            );
+            const isOutbreakBoss = g.definition.operationCategory === "outbreak"
+              && fighter.kind === g.definition.bossEnemyKind;
+            if (isOutbreakBoss
+              || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase)) {
               g.bossDefeatPending = true;
-              g.barricadeVulnerable = true; g.banner = "TAKUYA撃破 — 感染拠点が露出"; g.bannerTime = 3.4; g.flashOverlay = .3;
+              if (!isOutbreakBoss) g.barricadeVulnerable = true;
+              const defeatedBossName = bossDefinitionForEnemyKind(fighter.kind)?.displayName
+                ?? enemyContentFor(fighter.kind)?.displayName
+                ?? "大型感染体";
+              g.banner = g.definition.operationCategory === "outbreak"
+                ? `${defeatedBossName}撃破 — 残存感染体を掃討`
+                : fighter.kind === "takuya"
+                ? "TAKUYA撃破 — 感染拠点が露出"
+                : `${defeatedBossName}撃破 — 感染核が露出`;
+              g.bannerTime = 3.4; g.flashOverlay = .3;
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaDefeat);
-              playCue("takuya-down");
-              if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
+              if (g.definition.operationCategory === "outbreak") {
+                emitBattleBark(g, "victory", "guide", `outbreak-boss-down-${fighter.kind}`);
+              } else if (fighter.kind === "takuya") {
+                playCue("takuya-down");
+                if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
+              } else {
+                emitBattleBark(g, "base-exposed", "crawler", "tactical");
+              }
             } else if (fighter.kind === "gate-eater"
               && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
               g.bossDefeated = true;
@@ -8864,7 +14713,7 @@ export function AshfallGame() {
             emitBattleBark(g, "ally-down", "medic", `ally-down-${fighter.id}`);
           }
         }
-        g.fighters = g.fighters.filter((fighter) => fighter.hp > 0);
+        g.fighters = g.fighters.filter((fighter) => fighter.hp > 0 && fighter.mayoRetreat?.complete !== true);
 
         const beforeFireStates = new Map(g.corpses.map((corpse) => [corpse.id, corpse.state]));
         const ignition = (igniteAllyCorpsesInFire as unknown as (input: {
@@ -8944,10 +14793,10 @@ export function AshfallGame() {
         g.damageTexts = capRenderArray(g.damageTexts, "damageTexts") as DamageText[];
 
         dispatchSituationalBattleBarks(g);
-        dispatchBattleStoryEvents(g);
-        const bossActiveOrIncoming = g.fighters.some((fighter) => ["takuya", "gate-eater"].includes(fighter.kind)
+        if (!g.survivalRun) dispatchBattleStoryEvents(g);
+        const bossActiveOrIncoming = g.fighters.some((fighter) => isBossEnemyKind(fighter.kind)
             && fighter.hp > 0 && fighter.contained !== true)
-          || g.enemySpawn.pending.some((entry) => ["takuya", "gate-eater"].includes(entry.kind));
+          || g.enemySpawn.pending.some((entry) => isBossEnemyKind(entry.kind));
         const enragedTakuya = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0 && fighter.hp / fighter.maxHp <= .5);
         if (enragedTakuya && !g.takuyaEnragedAnnounced) {
           g.takuyaEnragedAnnounced = true;
@@ -8971,7 +14820,7 @@ export function AshfallGame() {
           ...g,
           wavesResolved: stationResolution.wavesResolved,
         });
-        if (outcome) {
+        if (outcome && !g.survivalRun) {
           // A simultaneous collapse is a loss: protecting the crawler always remains mandatory.
           g.won = outcome === "won";
           const enemyBaseDestroyed = g.barricadeHp <= 0;
@@ -8982,7 +14831,7 @@ export function AshfallGame() {
           g.resultPresented = !enemyBaseDestroyed;
           if (!enemyBaseDestroyed) setEnd({
             resultId: g.resultId,
-            stageId: g.definition.stageId,
+            stageId: g.definition.operationId,
             won: g.won,
             time: g.time,
             wave: g.wave,
@@ -8994,6 +14843,13 @@ export function AshfallGame() {
             unitsLost: g.unitsLost,
             bossDefeated: g.bossDefeated,
             enemyBaseDestroyed,
+            encounteredEnemyKinds: [...g.enemyKindsSeen],
+            enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
+            unitStats: {
+              damageByUnit: { ...g.combatMetrics.damageByUnit },
+              damageTakenByUnit: { ...g.combatMetrics.damageTakenByUnit },
+              healingByUnit: { ...g.combatMetrics.healingByUnit },
+            },
             missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
               ? { ...g.stageMission }
               : undefined,
@@ -9006,14 +14862,14 @@ export function AshfallGame() {
         }
       }
 
-      if (g.over && !g.resultPresented) {
+      if (g.over && !g.resultPresented && !g.survivalRun) {
         const collapseStep = advanceEnemyBaseCollapse({ barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt, duration: ENEMY_BASE_COLLAPSE_SECONDS });
         g.enemyBaseCollapse = collapseStep.elapsed;
         if (collapseStep.complete) {
           g.resultPresented = true;
           setEnd({
             resultId: g.resultId,
-            stageId: g.definition.stageId,
+            stageId: g.definition.operationId,
             won: g.won,
             time: g.time,
             wave: g.wave,
@@ -9025,6 +14881,13 @@ export function AshfallGame() {
             unitsLost: g.unitsLost,
             bossDefeated: g.bossDefeated,
             enemyBaseDestroyed: g.barricadeHp <= 0,
+            encounteredEnemyKinds: [...g.enemyKindsSeen],
+            enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
+            unitStats: {
+              damageByUnit: { ...g.combatMetrics.damageByUnit },
+              damageTakenByUnit: { ...g.combatMetrics.damageTakenByUnit },
+              healingByUnit: { ...g.combatMetrics.healingByUnit },
+            },
           });
         }
       }
@@ -9036,50 +14899,131 @@ export function AshfallGame() {
         spriteRefs.current,
         stageObjectRefs.current,
         enemyBaseSpriteRef.current,
-        qaScenario?.mode === "station",
+        false,
       );
       performanceCounters.renderFrames += 1;
       if (g.bannerTime > 0 && g.running) {
-        const compact = activeLaneCenters !== LANE_Y;
-        const bannerWidth = compact ? 268 : 356;
-        const bannerHeight = compact ? 32 : 54;
-        const bannerX = (W - bannerWidth) / 2;
-        const bannerY = compact ? 132 : 70;
-        ctx.fillStyle = "rgba(15,14,14,.82)"; ctx.fillRect(bannerX, bannerY, bannerWidth, bannerHeight);
-        ctx.strokeStyle = "#d79647"; ctx.strokeRect(bannerX + .5, bannerY + .5, bannerWidth - 1, bannerHeight - 1);
-        ctx.fillStyle = "#f0d2a3"; ctx.font = `bold ${compact ? 12 : 19}px monospace`; ctx.textAlign = "center";
-        ctx.fillText(g.banner, W / 2, bannerY + (compact ? 21 : 34)); ctx.textAlign = "left";
+        const compact = compactBattleViewport();
+        const banner = battleBannerRect();
+        const gradient = ctx.createLinearGradient(banner.x, banner.y, banner.x + banner.width, banner.y);
+        gradient.addColorStop(0, "rgba(15,18,18,.48)");
+        gradient.addColorStop(.14, "rgba(15,14,14,.91)");
+        gradient.addColorStop(.86, "rgba(15,14,14,.91)");
+        gradient.addColorStop(1, "rgba(15,18,18,.48)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(banner.x, banner.y, banner.width, banner.height);
+        ctx.strokeStyle = "rgba(215,150,71,.82)";
+        ctx.strokeRect(banner.x + .5, banner.y + .5, banner.width - 1, banner.height - 1);
+        ctx.fillStyle = "#f0d2a3"; ctx.font = `bold ${compact ? 11 : 17}px monospace`; ctx.textAlign = "center";
+        ctx.fillText(g.banner, W / 2, banner.y + (compact ? 19 : 28)); ctx.textAlign = "left";
       }
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
-        const boss = g.fighters.find((fighter) => ["takuya", "gate-eater"].includes(fighter.kind)
-          && fighter.hp > 0 && fighter.combatReady && fighter.contained !== true);
+        const bossHud = g.fighters
+          .map((fighter) => bossHudSnapshot(fighter))
+          .find((snapshot) => snapshot !== null);
         const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);
+        const canvasRect = canvas.getBoundingClientRect();
+        const transform = canvasTransformRef.current;
+        const frameElement = canvas.closest(".game-frame");
+        const obstacleRects = [...(frameElement?.querySelectorAll(
+          ".top-hud,.survival-hud,.boss-hud,.crawler-alert,.bottom-hud,.stats-strip",
+        ) ?? [])].map((element) => {
+          const rect = element.getBoundingClientRect();
+          return {
+            ownerId: null,
+            x: rect.left - canvasRect.left,
+            y: rect.top - canvasRect.top,
+            width: rect.width,
+            height: rect.height,
+          };
+        });
+        const readyAbilityFighters = g.running && !g.paused && !g.over && !selectedActionRef.current
+          ? g.fighters.filter((fighter) => canActivateManualAbility({
+            fighter,
+            fighters: manualAbilityTargetCandidates(g, fighter),
+          }))
+            .map((fighter) => {
+              return {
+                id: fighter.id,
+                kind: fighter.kind,
+                x: fighter.x,
+                y: fighter.y,
+                screenX: transform.offsetX + fighter.x * transform.scale,
+                screenY: transform.offsetY + (fighterHealthBarWorldY(fighter) - 10) * transform.scale,
+              };
+            })
+          : [];
+        const rootStyle = getComputedStyle(document.documentElement);
+        const safeInsets = Object.fromEntries(["top", "right", "bottom", "left"].map((edge) => [
+          edge,
+          Math.max(0, Number.parseFloat(rootStyle.getPropertyValue(`--app-viewport-safe-${edge}`)) || 0) + 6,
+        ]));
+        const manualAbilityIcons = layoutManualAbilityIcons({
+          fighters: readyAbilityFighters,
+          obstacles: obstacleRects,
+          displayWidth: canvasRect.width,
+          displayHeight: canvasRect.height,
+          safeInsets,
+        }).map((icon) => ({
+          fighterId: Number(icon.fighterId),
+          kind: icon.kind as UnitKind,
+          x: icon.x,
+          y: icon.y,
+          hitSize: icon.hitSize,
+          anchorX: icon.anchorX,
+          anchorY: icon.anchorY,
+        }));
+        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+          document.documentElement.dataset.manualAbilityLayoutDebug = JSON.stringify({
+            fighters: readyAbilityFighters,
+            obstacles: obstacleRects,
+            icons: manualAbilityIcons,
+            width: canvasRect.width,
+            height: canvasRect.height,
+            safeInsets,
+          });
+        }
         setHud({
           missionType: g.definition.missionType, energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
+          supportItemCooldowns: { ...g.supportItemCooldowns },
           wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp), baseMaxHp: g.baseMaxHp,
           barricadeHp: Math.max(0, g.barricadeHp), barricadeMaxHp: g.barricadeMaxHp, barricadeVulnerable: g.barricadeVulnerable, barricadeHitFlash: g.barricadeHitFlash,
           deployQueue: g.deployQueue.length,
           airstrikePhase: g.airstrike.phase, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
-          combo: g.combo, bossHp: boss?.hp ?? 0, bossMax: boss?.maxHp ?? 0,
+          combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
           takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
           objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns },
           battleBarks: g.paused ? [] : [...g.battleBarks.active],
+          manualAbilityIcons,
         });
+        if (g.survivalRun) {
+          setSurvivalHud(survivalHudSnapshot({
+            ...g.survivalRun,
+            crawler: {
+              ...g.survivalRun.crawler,
+              hp: Math.max(0, Math.min(g.survivalRun.crawler.maxHp, Math.round(g.baseHp))),
+            },
+          }, {
+            bossKind: bossHud?.enemyKind ?? null,
+            bossHp: bossHud?.hp ?? 0,
+            bossMaxHp: bossHud?.maxHp ?? 0,
+          }));
+        }
       }
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
-  }, [chooseAction, dispatchBattleStoryEvents, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, stopMusic, stopSfx, syncMusicMode]);
+  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
   const barricadeCondition = barricadeState(hud.barricadeHp) === "BREACHED" ? "破壊" : barricadeState(hud.barricadeHp) === "BREACH IMMINENT" ? "大破" : barricadeState(hud.barricadeHp) === "BUCKLING" ? "損傷" : "健全";
   const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
-  const bossPhase = bossPhaseForHp(hud.bossHp, hud.bossMax);
-  const isStationPlatformAssault = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";
+  const bossPhase = bossPhaseForHp(hud.bossHp, hud.bossMax, hud.bossKind);
+  const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";
   const phaseName = hud.missionType === "escort"
     ? hud.phase === 1 ? "発進" : hud.phase === 2 ? "突破" : "護送"
     : hud.missionType === "sequential-seal"
@@ -9090,19 +15034,50 @@ export function AshfallGame() {
           ? hud.phase === 1 ? "侵入" : hud.phase === 2 ? "前進" : "総攻撃"
           : hud.phase === 1 ? "防衛" : hud.phase === 2 ? "前進" : "総攻撃";
   const stationMissionHud = hud.missionType === "escort" || hud.missionType === "sequential-seal";
-  const enemyBaseLabel = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
-  const bossLabel = selectedStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL ? "改札喰い" : "TAKUYA";
-  const selectedName = selectedAction?.startsWith("supply:")
-    ? SUPPORT_DISPLAY_NAMES[selectedAction.slice("supply:".length) as SupplyKind]
-    : selectedAction === "airstrike" ? "航空支援" : null;
+  const isSurvivalBattle = screen === "battle" && survivalHud !== null;
+  const survivalUpgradeOpen = isSurvivalBattle
+    && survivalHud.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
+  const enemyBaseLabel = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
+  const selectedStageBossKind = selectedOutbreakMissionId
+    ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.boss?.enemyKind ?? null
+    : CAMPAIGN_STAGE_BY_ID[selectedStageId]?.boss?.enemyKind ?? null;
+  const activeBossKind = survivalHud?.bossKind ?? hud.bossKind ?? selectedStageBossKind;
+  const activeBossLabel = activeBossKind
+    ? bossDefinitionForEnemyKind(activeBossKind)?.displayName ?? enemyContentFor(activeBossKind).displayName
+    : "BOSS";
+  const bossHudSide = (hud.bossWorldX ?? 0) >= W * .64 ? "boss-hud-left" : "boss-hud-right";
   const combatLocked = !!end || hud.baseHp <= 0 || hud.barricadeHp <= 0;
   const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
   const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
 
   return (
-    <main className="game-shell" data-screen={screen} data-stage-id={selectedStageId} data-release-version={RELEASE_VERSION}>
-      <section className="game-frame" style={{ "--battlefield-art": `url('${stageVisualFor(selectedStageId)}')` } as CSSProperties} aria-label="西新世紀末物語 ゲーム">
+    <main className="game-shell" data-screen={screen} data-stage-id={activeOperationId} data-battlefield-stage-id={activeBattlefieldStageId} data-release-version={RELEASE_VERSION}>
+      <section className="game-frame" style={{ "--battlefield-art": `url('${stageVisualFor(activeBattlefieldStageId)}')` } as CSSProperties} aria-label="西新世紀末物語 ゲーム">
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
+        {screen === "battle" && !selectedAction && hud.manualAbilityIcons.map((icon) => {
+          const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
+          if (!ability) return null;
+          return <button
+            key={icon.fighterId}
+            type="button"
+            className="manual-ability-ready"
+            data-fighter-id={icon.fighterId}
+            data-ability-kind={icon.kind}
+            data-owner-anchor-x={icon.anchorX}
+            data-owner-anchor-y={icon.anchorY}
+            style={{ left: icon.x, top: icon.y, width: icon.hitSize, height: icon.hitSize }}
+            aria-label={`${cards.find((card) => card.kind === icon.kind)?.name ?? icon.kind}：${ability.displayName}`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onPointerUp={(event) => event.stopPropagation()}
+            onPointerCancel={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
+              activateManualAbility(icon.fighterId);
+            }}
+          >
+            <span aria-hidden="true"><b className={`manual-ability-ready-icon ability-${icon.kind}`} /></span>
+          </button>;
+        })}
         {(qaMode || qaScenario) && (
           <div className={`qa-badge ${screen === "battle" ? "" : "campaign-qa-badge"}`} role="status">
             {"LOCAL QA // "}{(qaMode ?? qaScenario?.mode ?? "flow").toUpperCase()}{" // 通常セーブ非反映"}
@@ -9121,27 +15096,36 @@ export function AshfallGame() {
           <small>{audioUnlockUi === "success" ? "確認音を再生しました（聞こえない場合は端末・タブのミュートを確認）" : audioUnlockUi === "failed" ? "音源または再生処理を確認して、タップで再試行" : "タップしてBGM・環境音・効果音・戦闘ボイスを開始"}</small>
         </button>}
         {screen === "battle" && <>
-        {hud.battleBarks.length > 0 && <div className="battle-barks" aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
+        {hud.battleBarks.length > 0 && <div className={`battle-barks ${bossHudSide === "boss-hud-left" ? "battle-barks-right" : ""}`} aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
 
-        <div className="top-hud">
-          <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedStageView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
-          <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
-          <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
-          <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
-          <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
-        </div>
+        {isSurvivalBattle ? <div className="survival-hud" role="region" aria-label="Survival戦闘情報">
+          <div className="survival-wave"><small>WAVE</small><strong>{survivalHud.wave}</strong></div>
+          <div className="survival-next-boss"><small>NEXT BOSS</small><b>WAVE {survivalHud.nextBossWave}</b></div>
+          <div className={`survival-crawler-health ${healthPct <= 25 ? "critical" : ""}`}>
+            <span>CRAWLER HP</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b>
+            <i><em style={{ width: `${healthPct}%` }} /></i>
+          </div>
+          <div className="survival-speed" aria-label="戦闘速度">
+            <button className={survivalHud.speed === 1 ? "active" : ""} disabled={paused || survivalSavePending} onClick={() => changeSurvivalSpeed(1)}>1倍</button>
+            <button className={survivalHud.speed === 2 ? "active" : ""} disabled={paused || survivalHud.speedLocked || survivalSavePending} onClick={() => changeSurvivalSpeed(2)}>2倍</button>
+          </div>
+          <button className="survival-pause" onClick={togglePause} disabled={survivalUpgradeOpen || survivalSavePending} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
+        </div> : <>
+          <div className="top-hud">
+            <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedOperationView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
+            <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
+            <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
+            <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
+            <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
+          </div>
 
-        <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>移動拠点</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
-        {stationMissionHud
-          ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{hud.objective}</b></div></div>
-          : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
-        {hud.bossMax > 0 && <div className="boss-hud"><div><span>{bossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
-        {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
-
-        {selectedAction && started && !paused && !end && <div className="placement-hint" role="status" aria-live="polite">
-          <span className="placement-copy"><b>{selectedName}</b><span>戦場をタップ</span></span>
-          <button className="placement-cancel" onClick={() => chooseActionWithCue(null)} aria-label={`${selectedName}の配置をキャンセル`}>キャンセル</button>
-        </div>}
+          <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>移動拠点</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
+          {stationMissionHud || selectedOutbreakMissionId
+            ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{hud.objective}</b></div></div>
+            : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
+          {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
+        </>}
+        {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
 
         <div className="bottom-hud">
           <div className="resource-stack">
@@ -9156,9 +15140,12 @@ export function AshfallGame() {
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 return (
                   <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
-                    <span className="keycap">{card.key}</span><span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
+                    <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
-                    {cooldown > 0 && <span className="cooldown-mask"><b>{cooldown}</b><small>秒待ち</small></span>}
+                    {cooldown > 0 && <span
+                      className="cooldown-mask"
+                      style={{ "--cooldown-progress": `${Math.min(100, cooldown / Math.max(1, card.deployCooldown) * 100)}%` } as CSSProperties}
+                    ><small>再準備中</small></span>}
                   </button>
                 );
               })}
@@ -9166,12 +15153,18 @@ export function AshfallGame() {
             <div className="support-row" aria-label="戦場物資・航空支援・移動拠点一斉掃射">
               <span className="support-label">物資<br />支援</span>
               <button
-                className={`support-btn ${selectedSupply} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
-                disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || combatLocked}
+                className={`support-btn ${selectedSupply} ${hud.supportItemCooldowns[selectedSupply] > 0 ? "cooling" : ""} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
+                data-cooldown={Math.ceil(hud.supportItemCooldowns[selectedSupply])}
+                disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || hud.supportItemCooldowns[selectedSupply] > 0 || combatLocked}
                 onClick={() => chooseActionWithCue(selectedAction === `supply:${selectedSupply}` ? null : `supply:${selectedSupply}`)}
-                aria-label={`${supplyDefs[selectedSupply].name} ${supplyDefs[selectedSupply].cost}スクラップ`}
+                aria-label={hud.supportItemCooldowns[selectedSupply] > 0
+                  ? `${supplyDefs[selectedSupply].name} 再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
+                  : `${supplyDefs[selectedSupply].name} ${supplyDefs[selectedSupply].cost}スクラップ`}
               >
-                <span className="support-key">{supplyDefs[selectedSupply].key}</span><b>{SUPPORT_DISPLAY_NAMES[selectedSupply]}</b><small>{selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復"}</small><em>▰{supplyDefs[selectedSupply].cost}</em>
+                <span className="support-key">{supplyDefs[selectedSupply].key}</span>
+                <b>{hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : SUPPORT_DISPLAY_NAMES[selectedSupply]}</b>
+                <small>{hud.supportItemCooldowns[selectedSupply] > 0 ? "使用済み・自動補充中" : selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復"}</small>
+                <em>{hud.supportItemCooldowns[selectedSupply] > 0 ? "↻" : `▰${supplyDefs[selectedSupply].cost}`}</em>
               </button>
               <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
                 <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>通信・照準・飛来・着弾・帰投</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
@@ -9183,13 +15176,36 @@ export function AshfallGame() {
           </div>
         </div>
 
-        <div className="stats-strip"><span>☠ 撃破 {hud.kills}</span><span>▰ スクラップ {hud.scrap}</span><span className="bay-status">格納庫 {hud.deployQueue}/3</span>{hud.combo > 1 && <span className="combo">×{hud.combo} 連続</span>}<span className="objective">目標：{hud.objective}</span></div>
-        {paused && started && !end && <div className="pause-screen" role="dialog" aria-modal="true" aria-label="一時停止メニュー"><div className="pause-panel">
+        {isSurvivalBattle
+          ? <div className="stats-strip survival-stats"><span>☠ 撃破 {hud.kills}</span><span>BOSS {survivalHud.bossKills}</span><span className="bay-status">格納庫 {hud.deployQueue}/3</span>{hud.combo > 1 && <span className="combo">×{hud.combo} 連続</span>}<span className="objective">防衛前線を維持</span></div>
+          : <div className="stats-strip"><span>☠ 撃破 {hud.kills}</span><span>▰ スクラップ {hud.scrap}</span><span className="bay-status">格納庫 {hud.deployQueue}/3</span>{hud.combo > 1 && <span className="combo">×{hud.combo} 連続</span>}<span className="objective">目標：{hud.objective}</span></div>}
+        {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
+          <small>BOSS CHECKPOINT // WAVE {survivalHud.lastCompletedWave}</small>
+          <h2>3択強化を選択</h2>
+          <p>{pendingSurvivalCheckpoint || survivalSavePending ? "checkpointを保存しています。保存完了後に選択できます。" : "このrun中だけ有効です。1つ選ぶと次waveへ進みます。"}</p>
+          <div className="survival-upgrade-choices">
+            {survivalHud.pendingUpgradeChoices.map((upgradeId) => {
+              const upgrade = SURVIVAL_UPGRADE_BY_ID[upgradeId];
+              if (!upgrade) return null;
+              const stack = survivalHud.upgradeStacks[upgradeId] ?? 0;
+              return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)}>
+                <small>{upgrade.category.toUpperCase()}</small>
+                <b>{upgrade.displayName}</b>
+                <span>1段階あたり +{Math.round(upgrade.effectPerStack * 100)}%</span>
+                <em>現在 {stack} / 選択後 {stack + 1}</em>
+              </button>;
+            })}
+          </div>
+          {pendingSurvivalCheckpoint && !survivalSavePending && savePersistence === "unavailable" && <div className="survival-save-retry" role="alert">
+            <b>checkpointを保存できませんでした</b><button onClick={retrySurvivalCheckpointSave}>保存を再試行</button>
+          </div>}
+        </section></div>}
+        {paused && started && !end && !survivalUpgradeOpen && !pendingSurvivalSettlement && <div className="pause-screen" role="dialog" aria-modal="true" aria-label="一時停止メニュー"><div className="pause-panel">
           <small>作戦一時停止</small><h2>一時停止</h2>
           <div className="pause-actions">
             <button className="primary" onClick={togglePause}>作戦を再開</button>
-            <button onClick={() => requestPauseAction("restart")}>ステージを最初からやり直す</button>
-            <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>
+            {!isSurvivalBattle && <button onClick={() => requestPauseAction("restart")}>ステージを最初からやり直す</button>}
+            {!isSurvivalBattle && <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>}
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>エリアマップへ撤退</button>
           </div>
           <section className="pause-volume" aria-label="音量設定"><h3>音量設定</h3>
@@ -9198,15 +15214,55 @@ export function AshfallGame() {
             <div><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit)}>テスト音を鳴らす</button></div>
             <p className="audio-troubleshooting">成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。</p>
           </section>
-          <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>
-          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
+          {!isSurvivalBattle && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
+          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>{isSurvivalBattle ? "完了済みwaveの報酬を一括保存してrunを終了します。" : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
         </div></div>}
         </>}
+        {screen === "survival" && <div className="survival-lobby campaign-overlay"><section>
+          <header><div><small>ENDLESS DEFENSE</small><h1>Survival Mode</h1><p>感染防衛前線でCRAWLERを守り、5waveごとのboss checkpointを突破してください。</p></div><button onClick={() => returnToMap()}>エリアマップへ戻る</button></header>
+          <div className="survival-lobby-grid">
+            <article>
+              <small>FORMATION SNAPSHOT</small><h2>出撃部隊</h2>
+              <ul>{formationUnitIds.map((unitId) => {
+                const unit = unitViews.find((candidate) => candidate.id === unitId);
+                return <li key={unitId}><b>{unit?.name ?? unitId}</b><span>Level {Math.max(1, Number(campaignSave.unitLevels[unitId] ?? 1))}</span></li>;
+              })}</ul>
+              <p>開始時のLevelと装備をsnapshotへ固定し、checkpoint再開時も同じ値を使用します。</p>
+            </article>
+            <article>
+              <small>START WAVE</small><h2>開始wave</h2>
+              <div className="survival-start-waves">{campaignSave.survival.unlockedStartWaves.map((wave) => <button key={wave} className={selectedSurvivalStartWave === wave ? "active" : ""} onClick={() => setSelectedSurvivalStartWave(wave)}>WAVE {wave}</button>)}</div>
+              <p>最高到達wave {campaignSave.survival.highestWave} / 累計run {campaignSave.survival.totalRuns}</p>
+              <button className="survival-start" disabled={formationUnitIds.length === 0 || saveMutationPending} onClick={startNewSurvival}>新しいrunを開始</button>
+            </article>
+            {campaignSave.survival.activeCheckpoint && <article className="survival-resume-card">
+              <small>CHECKPOINT FOUND</small><h2>WAVE {campaignSave.survival.activeCheckpoint.checkpointWave}から再開</h2>
+              <p>保存済みの部隊Level・装備・一時強化・CRAWLER HPを復元します。</p>
+              <button disabled={saveMutationPending} onClick={resumeSurvival}>checkpointから再開</button>
+            </article>}
+          </div>
+        </section></div>}
+        {screen === "survival-result" && survivalResult && <div className="survival-result campaign-overlay"><section>
+          <small>RUN SETTLED // ATOMIC SAVE COMPLETE</small>
+          <h1>{survivalResult.endReason === SURVIVAL_END_REASONS.WITHDRAWAL ? "撤退完了" : survivalResult.endReason === SURVIVAL_END_REASONS.CRAWLER_DESTROYED ? "CRAWLER大破" : "部隊壊滅"}</h1>
+          <div className="survival-result-grid">
+            <article><small>到達</small><b>WAVE {survivalResult.reachedWave}</b>{survivalResult.newHighestWave && <em>NEW RECORD</em>}</article>
+            <article><small>撃破</small><b>{survivalResult.kills}</b><span>BOSS {survivalResult.bossKills}</span></article>
+            <article><small>獲得CAPS</small><b>+{survivalResult.earnedCaps}</b><span>所持 {survivalResult.capsAfter}</span></article>
+          </div>
+          <div className="survival-unit-result"><h2>隊員別戦闘記録</h2>{survivalResult.unitStats.length > 0
+            ? <table><thead><tr><th>隊員</th><th>与damage</th><th>被damage</th><th>回復</th></tr></thead><tbody>{survivalResult.unitStats.map((unit) => <tr key={unit.kind}><th>{unit.displayName}</th><td>{unit.damage.toLocaleString("ja-JP")}</td><td>{unit.damageTaken.toLocaleString("ja-JP")}</td><td>{unit.healing.toLocaleString("ja-JP")}</td></tr>)}</tbody></table>
+            : <p>このrunでは隊員別damage記録がありません。</p>}</div>
+          <div className="survival-equipment-result"><h2>装備報酬</h2>{survivalResult.earnedEquipmentGrants.length > 0
+            ? <ul>{survivalResult.earnedEquipmentGrants.map((grant) => <li key={grant.equipmentId}><b>{grant.displayName}</b><span>×{grant.quantity}</span></li>)}</ul>
+            : <p>今回の装備報酬はありません。</p>}</div>
+          <div className="survival-result-actions"><button onClick={openSurvival}>次のrunへ</button><button onClick={() => returnToMap()}>エリアマップへ戻る</button></div>
+        </section></div>}
         {qaMode === "barks" ? <BattleBarkAuditScreen /> : qaMode === "sprites" ? <SpriteAuditScreen /> : <CampaignScreens
           screen={screen}
           eventId={eventId}
           stages={stageViews}
-          selectedStage={selectedStageView}
+          selectedStage={selectedOperationView}
           units={unitViews}
           formationUnitIds={formationUnitIds}
           formationPresets={campaignSave.formationPresets.map((preset) => ({ id: preset.id, name: preset.displayName, unitIds: preset.unitIds }))}
@@ -9216,6 +15272,13 @@ export function AshfallGame() {
           supplyCurrency={campaignSave.caps}
           caps={campaignSave.caps}
           result={campaignResult}
+          outbreakMissions={outbreakMissionViews}
+          selectedOutbreakMissionId={selectedOutbreakMissionId}
+          outbreakResult={outbreakResult}
+          recordsSummary={recordsSummaryView}
+          enemyCompendium={enemyCompendiumViews}
+          bossCompendium={bossCompendiumViews}
+          loadoutReturnLabel={selectedOutbreakMissionId ? "異常発生任務" : "地図へ"}
           assetsReady={assetsReady}
           assetError={assetError}
           hasCampaignSave={campaignSave.campaignStarted}
@@ -9243,9 +15306,15 @@ export function AshfallGame() {
           onSetAutoSkipReadStory={setAutoSkipReadStory}
           onReplayPrologue={replayPrologue}
           onSelectStage={selectStage}
+          onOpenSurvival={openSurvival}
+          onOpenOutbreak={openOutbreak}
+          onOpenRecords={openRecords}
+          onSelectOutbreakMission={selectOutbreakMission}
+          onPrepareOutbreak={prepareOutbreak}
           onOpenPersonnel={openPersonnel}
           onOpenLoadout={openLoadout}
           onReturnToMap={returnToMap}
+          onReturnFromLoadout={returnFromLoadout}
           onSelectFormationPreset={selectFormation}
           onToggleFormation={toggleFormation}
           onRecruitUnit={recruitUnit}
@@ -9254,12 +15323,28 @@ export function AshfallGame() {
           onStartBattle={requestBattle}
           onRetry={retryBattle}
           onContinueResult={continueResult}
+          onContinueOutbreakResult={continueOutbreakResult}
           onResetSave={resetCampaign}
           onReloadAssets={() => window.location.reload()}
         />}
+        {screen !== "battle" && campaignSave.migrationNotices[0] && <div className="migration-notice" role="alertdialog" aria-modal="true" aria-label="Version 0.9.0キャップ経済再編">
+          <section>
+            <small>MIGRATION RECEIPT</small>
+            <h2>{campaignSave.migrationNotices[0].title}</h2>
+            <p>{campaignSave.migrationNotices[0].body}</p>
+            <dl><div><dt>旧残高</dt><dd>{campaignSave.migrationNotices[0].previousCaps}</dd></div><div><dt>新開始資金</dt><dd>{campaignSave.migrationNotices[0].nextCaps}</dd></div></dl>
+            <button onClick={() => acknowledgeMigrationNotice(campaignSave.migrationNotices[0].id)}>内容を確認</button>
+          </section>
+        </div>}
       </section>
       {pendingResultCommit && <div className="result-save-blocker" role="alertdialog" aria-modal="true" aria-label="作戦結果の保存失敗">
         <section><small>SAVE REQUIRED</small><h2>作戦結果を保存できません</h2><p>報酬や加入の二重適用を防ぐため、結果画面へ進まず停止しています。保存を再試行するか、結果を含むバックアップを書き出してください。</p><div><button disabled={resultSaveRetrying} onClick={retryPendingResultSave}>{resultSaveRetrying ? "保存を再試行中" : "保存を再試行"}</button><button disabled={resultSaveRetrying} onClick={exportPendingResultSave}>結果バックアップを書き出す</button></div></section>
+      </div>}
+      {pendingSurvivalSettlement && <div className="result-save-blocker survival-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="Survival結果の保存">
+        <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{survivalSavePending ? "Survival結果を保存しています" : "Survival結果を保存できません"}</h2><p>進行、receipt、CAPS、装備数量、last result、checkpoint削除、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={survivalSavePending} onClick={retrySurvivalSettlementSave}>{survivalSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
+      </div>}
+      {pendingOutbreakSettlement && <div className="result-save-blocker outbreak-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="異常発生任務結果の保存">
+        <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{outbreakSavePending ? "異常発生任務の結果を保存しています" : "異常発生任務の結果を保存できません"}</h2><p>撃破記録、Survival解放、receipt、キャップ、装備数量、last result、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={outbreakSavePending} onClick={retryOutbreakSettlementSave}>{outbreakSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
       </div>}
       {savePersistence === "unavailable" && <div className="save-persistence-warning" role="alert">
         <b>セーブを端末へ保存できません</b>

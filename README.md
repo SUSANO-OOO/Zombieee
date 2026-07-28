@@ -10,28 +10,28 @@
 
 主対象はスマートフォン横画面です。844×390、844×340、iPhone Safariのsafe areaとブラウザUI表示状態を優先し、PC横画面も正式対応します。
 
-## 公開中
-
-**Version 0.8.0**
-
-- Stage 1〜16
-- プレイアブル11名
-- 最大7枠、3編成preset
-- 連続battle spaceとprofile-driven AI
-- Rank 0〜4 progressionとcaps economy
-- Stageごとの背景、mission、grounding、objective
-- BGM／SE独立volume
-- unit card、upgrade／MAX feedback
-
-正確なrelease SHA、tag、Issue、公開metadataは[PROJECT_STATE](docs/PROJECT_STATE.md)を確認してください。
-
-## 次の開発
+## Version 0.9.0 release source
 
 **Version 0.9.0**
 
+- Stage 1〜20と異常発生任務
+- 無限wave、checkpoint、3択強化を備えたSurvival Mode
+- プレイアブル16名と、全16体の個体別手動アビリティ
+- 通常感染体6種、boss共通基盤、既存boss改修、新boss5体
+- Level 1〜50基盤と、Stage 20時点でLv25までの通常解放
+- 個人equipment2枠、編成preset別の戦術equipment2枠、約20種の装備
+- caps経済再編、詳細result、敵／boss図鑑、戦績記録
+- smartphone横画面向けの出撃・部隊・補給所・記録UI
+
+このsourceは、プロデューサー受入済みのVersion 0.9.0 release candidateです。正式公開の成否は、[正式URL](https://susano-ooo.github.io/Zombieee/)のmetadata、annotated tag、GitHub Release、Actions、[Issue #68](https://github.com/SUSANO-OOO/Zombieee/issues/68)を照合して判断してください。
+
+正確なrelease SHA、tag、Issue、公開metadataは[PROJECT_STATE](docs/PROJECT_STATE.md)を確認してください。
+
+## Version 0.9.0の実行記録
+
 実行台帳：[Issue #68](https://github.com/SUSANO-OOO/Zombieee/issues/68)
 
-主対象：
+主な統合内容：
 
 - Stage 17〜20
 - Survival Mode
@@ -47,7 +47,7 @@
 - 出撃、部隊、補給所、記録へのUI再構成
 - 詳細result、敵／boss図鑑、survival記録
 
-新プレイアブル5名のidentity master portraitはプロデューサーが各1枚制作し、Codexへ直接提供します。Codexは受領portraitからevent、card、battle sprite等を派生制作します。
+新プレイアブル5名のidentity master portraitはプロデューサー提供の正式画像を使用し、event、card、battle sprite等へ展開しています。
 
 0.9.0の正式製品判断は[プロデューサー決定台帳](docs/PRODUCER_DECISIONS_0.9.0.md)、プレイアブル側の個別能力と頭上UIは[手動アビリティ仕様](docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md)を参照してください。
 
@@ -94,7 +94,7 @@ git diff --check
 - `app/campaign.js`：stage、unit、reward、save
 - `app/battleDefinitions.js`：mission、wave、勝敗
 - `app/combatLifecycle.js`：target、死亡、感染、焼却
-- `app/unitProgression.js`：現行Rank progression
+- `app/unitProgression.js`：Level progression
 - `app/storyEvents.js`：会話event
 - `app/gameRules.js`：戦闘rule
 - `public/`：画像・音声asset

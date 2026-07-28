@@ -1,6 +1,6 @@
 # 西新世紀末物語 — 企画・仕様引き継ぎ
 
-更新日：2026-07-26
+更新日：2026-07-29
 
 ## 1. 文書の役割
 
@@ -46,25 +46,27 @@ Codexの実行場所はIssueごとにLocalまたはCloudを選ぶ。同一作業
 - 見た目の気持ち悪さだけでなく、silhouette、動き、攻撃、音、counterplayで個性を作る
 - 作品世界を壊すだけの露悪表現や、全敵を同じ肉塊にする量産を避ける
 
-## 5. 現行Version 0.8.0
+## 5. 現行Version 0.9.0
 
 ### Campaign
 
-- Stage 1〜16
-- 5つの作戦区域
+- Stage 1〜20
+- Survival Modeと異常発生任務
 - 感染拠点攻略、防衛、護衛、封鎖、順序制御等の複数mission pattern
 - Stageごとの背景、床面、walkable、objective anchor
 - 星、初回報酬、再戦報酬、順番解放、local save
 
 ### Playable units
 
-- 11名
+- 16名
 - 最大7枠
 - 3編成preset
 - 同一unit cardから複数回出撃可能
 - 各unitに役割、コスト、再出撃、武器、AI profile、battle voice
-- Rank 0〜4 progression
-- capsによる取得・強化
+- 全16体の個体別手動アビリティと頭上ready icon
+- Level 1〜50基盤。Stage 20時点の通常解放上限はLv25
+- capsによる取得、Level、equipment強化
+- 個人equipment2枠、preset別の戦術equipment2枠
 - identity master、event portrait、formation／personnel card、battle spriteを用途別profileとして管理
 
 ### Battle
@@ -73,19 +75,23 @@ Codexの実行場所はIssueごとにLocalまたはCloudを選ぶ。同一作業
 - player-facing固定3laneを廃止した連続battle space
 - 内部navigation、route、anchor等は性能・制御目的で使用可能
 - CRAWLERから味方がdoor／rampを通って出撃
-- 敵は敵側入口から段階的に侵入
+- 敵はmission別の右端・右端外spawnから段階的に侵入
+- 全身侵入後にcombat-readyとなり、出現中は攻撃・被弾・collisionを行わない
+- Survivalでは専用防衛前線を使用
 - 座標、距離、範囲、line-of-sight、contactによるcombat
 - profile-driven ally／enemy AI
 - weapon-specific animation、VFX、SE、damage event
 - 戦場物資、航空支援、CRAWLER一斉掃射
 - 味方死亡、感染、汎用ゾンビ化、焼却
+- 通常感染体6種
 
 ### Boss
 
 - TAKUYA
 - 改札喰い
+- Version 0.9.0新boss5体
 
-既存bossは通常敵と同じ表示基盤の延長が残り、size、重量感、登場、攻撃予告が弱い。Version 0.9.0でboss共通基盤へ移行する。
+全bossは共通data、全身侵入後のcombat-ready、大型表示、専用HP、登場、攻撃予告を持つ共通基盤へ統合済み。TAKUYAと改札喰いも同基盤へ改修済み。
 
 ## 6. 対応プラットフォーム
 
@@ -117,7 +123,7 @@ Codexの実行場所はIssueごとにLocalまたはCloudを選ぶ。同一作業
 ## 8. Campaign長期構造
 
 - 0.8.0公開時：Stage 1〜16
-- 0.9.0公開目標：Stage 1〜20
+- 0.9.0公開時：Stage 1〜20
 - Version 1.0基準：Stage 50
 - Stage 50は固定上限ではなく、Stage 100、150以上へ追加可能
 - Stage数、Level上限、save schema、map UIを同じ固定値へ結合しない
@@ -179,15 +185,14 @@ Version 0.9.0では通常感染体designを6種増やす。
 
 ### Version 0.9.0新unitのidentity
 
-新プレイアブル5名の正式portraitは、プロデューサーが各1枚制作し、Codexへ直接渡す。
+新プレイアブル5名の正式identity masterはプロデューサーから受領済みで、Version 0.9.0の派生assetへ統合済み。
 
 - 受領portraitが唯一の人物identity master
 - Codexは別人物、別顔、別衣装で穴埋めしない
 - Codexはevent portrait、formation／personnel card、battle sprite／atlas、thumbnail等を派生制作する
 - 顔、髪、体格、肌、衣装、装備、武器、配色、傷、アクセサリーを一致させる
-- 最初の1名で派生基準を確認後、残り4名へ展開する
-- 未提出unitを仮人物で埋めて0.9.0完成扱いにしない
-- 画像待ち中も画像非依存工程を進める
+- 最初の1名で派生基準を確認後、同じ品質基準を残り4名へ適用
+- 仮人物、既存人物の色違い、別人portraitを使用しない
 
 ## 12. Levelと進行
 

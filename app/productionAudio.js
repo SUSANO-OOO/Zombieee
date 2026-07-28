@@ -4,6 +4,14 @@ import { CAMPAIGN_STAGE_IDS } from "./campaign.js";
 const V060_AUDIO_ROOT = "/audio/v060";
 const V070_AUDIO_ROOT = "/audio/v070";
 const V080_AUDIO_ROOT = "/audio/v080";
+const V090_AUDIO_ROOT = "/audio/v090";
+const V090_WAV_ONLY_CUE_IDS = new Set([
+  "weapon-mrs-chiha-launcher-retrieve",
+  "weapon-mrs-chiha-launcher-aim",
+  "weapon-mrs-chiha-grenade-flight",
+  "weapon-mrs-chiha-launcher-stow",
+  "ability-mrs-chiha-salvo-cylinder",
+]);
 const V080_SUPPRESSED_CARBINE_CUE_ID = "weapon-suppressed-carbine";
 
 const MUSIC_TRACKS = Object.freeze([
@@ -61,6 +69,17 @@ const ENEMY_VOICE_PROFILE_BY_KIND = Object.freeze({
   ooze: "spitter",
   sprinter: "runner",
   "gate-eater": "takuya",
+  kurome: "takuya",
+  mother: "abomination",
+  ooguchi: "abomination",
+  gairen: "crusher",
+  futago: "turned",
+  resonator: "spitter",
+  cagewalker: "crusher",
+  spindle: "shade",
+  "choir-knot": "turned",
+  "pall-manta": "crusher",
+  "anchor-bloom": "abomination",
 });
 const ENEMY_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
 
@@ -99,6 +118,51 @@ const NEW_UNIT_AUDIO_CUES = Object.freeze([
   { id: "voice-babayaga-attack", category: "humanVoices", cooldownMs: 220, maxInstances: 2, gain: 0.70, priority: 68 },
   { id: "voice-babayaga-hurt", category: "humanVoices", cooldownMs: 300, maxInstances: 2, gain: 0.74, priority: 76 },
   { id: "voice-babayaga-death", category: "humanVoices", cooldownMs: 1000, maxInstances: 1, gain: 0.78, priority: 88 },
+]);
+
+const V090_PLAYABLE_AUDIO_CUES = Object.freeze([
+  { id: "weapon-tky-plasma-blade", category: "melee", gain: .68, priority: 72, cooldownMs: 80 },
+  { id: "ability-tky-light-blade-charge", category: "weapons", gain: .66, priority: 78, cooldownMs: 300 },
+  { id: "ability-tky-light-blade-release", category: "weapons", gain: .76, priority: 86, cooldownMs: 300 },
+  { id: "ability-tky-light-blade-impact", category: "melee", gain: .72, priority: 84, cooldownMs: 90 },
+  { id: "weapon-mrs-chiha-grenade-launcher", category: "weapons", gain: .72, priority: 72, cooldownMs: 120 },
+  { id: "weapon-mrs-chiha-grenade-impact", category: "weapons", gain: .72, priority: 78, cooldownMs: 90, maxInstances: 3 },
+  { id: "weapon-mrs-chiha-launcher-bash", category: "melee", gain: .68, priority: 70, cooldownMs: 120 },
+  { id: "weapon-mrs-chiha-launcher-retrieve", category: "weapons", gain: .48, priority: 68, cooldownMs: 80 },
+  { id: "weapon-mrs-chiha-launcher-aim", category: "weapons", gain: .42, priority: 68, cooldownMs: 80 },
+  { id: "weapon-mrs-chiha-grenade-flight", category: "weapons", gain: .48, priority: 74, cooldownMs: 70, maxInstances: 4 },
+  { id: "weapon-mrs-chiha-launcher-stow", category: "weapons", gain: .46, priority: 66, cooldownMs: 100 },
+  { id: "ability-mrs-chiha-salvo-ready", category: "weapons", gain: .68, priority: 78, cooldownMs: 400 },
+  { id: "ability-mrs-chiha-salvo-cylinder", category: "weapons", gain: .52, priority: 76, cooldownMs: 70, maxInstances: 4 },
+  { id: "ability-mrs-chiha-salvo-shot", category: "weapons", gain: .74, priority: 82, cooldownMs: 90, maxInstances: 4 },
+  { id: "ability-mrs-chiha-salvo-impact", category: "weapons", gain: .72, priority: 84, cooldownMs: 80, maxInstances: 4 },
+  { id: "ability-mrs-chiha-salvo-final", category: "weapons", gain: .82, priority: 90, cooldownMs: 200 },
+  { id: "weapon-musashi-dual-katana", category: "melee", gain: .68, priority: 72, cooldownMs: 80 },
+  { id: "ability-musashi-cross-guard", category: "melee", gain: .62, priority: 78, cooldownMs: 300 },
+  { id: "ability-musashi-counter", category: "melee", gain: .78, priority: 88, cooldownMs: 180 },
+  { id: "weapon-mayo-bite", category: "melee", gain: .62, priority: 68, cooldownMs: 80, maxInstances: 3 },
+  { id: "ability-mayo-feral-start", category: "monsters", gain: .62, priority: 82, cooldownMs: 400 },
+  { id: "ability-mayo-feral-rush", category: "monsters", gain: .56, priority: 72, cooldownMs: 120, maxInstances: 2 },
+  { id: "ability-mayo-feral-end", category: "monsters", gain: .58, priority: 78, cooldownMs: 400 },
+  { id: "voice-mayo-deploy", category: "humanVoices", gain: .58, priority: 70, cooldownMs: 500 },
+  { id: "voice-mayo-attack", category: "humanVoices", gain: .56, priority: 68, cooldownMs: 220, maxInstances: 2 },
+  { id: "voice-mayo-hurt", category: "humanVoices", gain: .62, priority: 76, cooldownMs: 300, maxInstances: 2 },
+  { id: "voice-mayo-retreat", category: "humanVoices", gain: .6, priority: 88, cooldownMs: 1000 },
+]);
+
+const V090_BOSS_AUDIO_CUES = Object.freeze([
+  { id: "boss-mother-entrance", category: "monsters", gain: .74, priority: 104, cooldownMs: 3000, maxInstances: 1 },
+  { id: "boss-mother-brood-warning", category: "monsters", gain: .62, priority: 90, cooldownMs: 600, maxInstances: 1 },
+  { id: "boss-mother-brood-eruption", category: "monsters", gain: .78, priority: 98, cooldownMs: 300, maxInstances: 2 },
+  { id: "boss-ooguchi-entrance", category: "monsters", gain: .78, priority: 104, cooldownMs: 3000, maxInstances: 1 },
+  { id: "boss-ooguchi-charge-warning", category: "monsters", gain: .64, priority: 90, cooldownMs: 600, maxInstances: 1 },
+  { id: "boss-ooguchi-charge-impact", category: "monsters", gain: .82, priority: 99, cooldownMs: 260, maxInstances: 2 },
+  { id: "boss-gairen-entrance", category: "monsters", gain: .8, priority: 104, cooldownMs: 3000, maxInstances: 1 },
+  { id: "boss-gairen-shell-warning", category: "monsters", gain: .65, priority: 90, cooldownMs: 600, maxInstances: 1 },
+  { id: "boss-gairen-shell-sweep", category: "monsters", gain: .8, priority: 99, cooldownMs: 260, maxInstances: 2 },
+  { id: "boss-futago-entrance", category: "monsters", gain: .76, priority: 104, cooldownMs: 3000, maxInstances: 1 },
+  { id: "boss-futago-cross-warning", category: "monsters", gain: .63, priority: 90, cooldownMs: 600, maxInstances: 1 },
+  { id: "boss-futago-cross-impact", category: "monsters", gain: .79, priority: 99, cooldownMs: 260, maxInstances: 2 },
 ]);
 
 const V070_AUDIO_ASSET_SPECS = Object.freeze([
@@ -206,6 +270,22 @@ function v080SuppressedCarbineAsset(variation) {
   };
 }
 
+function v090PlayableAsset(spec) {
+  return {
+    id: spec.id,
+    category: spec.category,
+    sources: spec.id.includes("mayo") || spec.id.startsWith("boss-") || V090_WAV_ONLY_CUE_IDS.has(spec.id)
+      ? [{ src: `${V090_AUDIO_ROOT}/sfx/${spec.id}.wav`, type: "audio/wav" }]
+      : sourceFor(V090_AUDIO_ROOT, "sfx", spec.id),
+    preload: "lazy",
+    loop: false,
+    gain: spec.gain,
+    priority: spec.priority,
+    cooldownMs: spec.cooldownMs,
+    maxInstances: spec.maxInstances ?? 2,
+  };
+}
+
 function variationAssets(baseId, category, options = {}) {
   return [1, 2].map((variation) => sfxAsset(
     `${baseId}-${String(variation).padStart(2, "0")}`,
@@ -286,6 +366,8 @@ const assets = [
   ...NEW_UNIT_AUDIO_CUES.map(({ id, category, ...options }) => sfxAsset(id, category, options)),
   ...V070_AUDIO_ASSET_SPECS.map(v070Asset),
   ...[1, 2].map(v080SuppressedCarbineAsset),
+  ...V090_PLAYABLE_AUDIO_CUES.map(v090PlayableAsset),
+  ...V090_BOSS_AUDIO_CUES.map(v090PlayableAsset),
 ];
 
 const pools = [
@@ -307,6 +389,8 @@ const COMBAT_PRELOAD = Object.freeze([
   "radio-close",
   V080_SUPPRESSED_CARBINE_CUE_ID,
   ...NEW_UNIT_AUDIO_CUES.map(({ id }) => id),
+  ...V090_PLAYABLE_AUDIO_CUES.map(({ id }) => id),
+  ...V090_BOSS_AUDIO_CUES.map(({ id }) => id),
 ]);
 
 export const STORY_AUDIO_MIX = Object.freeze({
@@ -459,6 +543,10 @@ const STAGE_SCENE_BY_ID = Object.freeze({
   [CAMPAIGN_STAGE_IDS.EVACUATION_FREIGHT_YARD]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_2,
   [CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
   [CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL]: PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL,
+  [CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_2,
+  [CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE]: PRODUCTION_AUDIO_SCENE_IDS.STATION_GATE,
+  [CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
+  [CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL]: PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL,
 });
 
 const UNIT_WEAPON_CUES = Object.freeze({
@@ -472,6 +560,11 @@ const UNIT_WEAPON_CUES = Object.freeze({
   kumaverson: "weapon-pan-swing",
   babayaga: "weapon-suppressed-pistol",
   engineer: V080_SUPPRESSED_CARBINE_CUE_ID,
+  zakimiya: "weapon-pan-hit",
+  tky: "weapon-tky-plasma-blade",
+  "mrs-chiha": "weapon-mrs-chiha-grenade-launcher",
+  "miyamoto-musashi": "weapon-musashi-dual-katana",
+  "mayo-chan": "weapon-mayo-bite",
 });
 
 const UNIT_VOICE_PROFILES = Object.freeze({
@@ -486,6 +579,10 @@ const UNIT_VOICE_PROFILES = Object.freeze({
   babayaga: "male-light",
   guardian: "male-heavy",
   engineer: "male-light",
+  zakimiya: "male-light",
+  tky: "male-light",
+  "mrs-chiha": "female",
+  "miyamoto-musashi": "male-heavy",
 });
 
 const newUnitContract = ({ weapon, voiceProfile, weaponEvents, voicePrefix }) => Object.freeze({
@@ -536,6 +633,61 @@ export const UNIT_AUDIO_CUE_CONTRACTS = Object.freeze({
       specialKill: "weapon-special-kill",
     },
   }),
+  "mayo-chan": Object.freeze({
+    weapon: "weapon-mayo-bite",
+    voiceProfile: "chihuahua",
+    weaponEvents: Object.freeze({
+      attack: "weapon-mayo-bite",
+      bite: "weapon-mayo-bite",
+      abilityStart: "ability-mayo-feral-start",
+      abilityRush: "ability-mayo-feral-rush",
+      abilityEnd: "ability-mayo-feral-end",
+    }),
+    voiceEvents: Object.freeze({
+      deploy: "voice-mayo-deploy",
+      attack: "voice-mayo-attack",
+      hurt: "voice-mayo-hurt",
+      death: "voice-mayo-retreat",
+      retreat: "voice-mayo-retreat",
+    }),
+  }),
+});
+
+export const V090_PLAYABLE_WEAPON_CUE_CONTRACTS = Object.freeze({
+  tky: Object.freeze({
+    weapon: "weapon-tky-plasma-blade",
+    weaponEvents: Object.freeze({
+      attack: "weapon-tky-plasma-blade",
+      abilityCharge: "ability-tky-light-blade-charge",
+      abilityRelease: "ability-tky-light-blade-release",
+      abilityImpact: "ability-tky-light-blade-impact",
+    }),
+  }),
+  "mrs-chiha": Object.freeze({
+    weapon: "weapon-mrs-chiha-grenade-launcher",
+    weaponEvents: Object.freeze({
+      shot: "weapon-mrs-chiha-grenade-launcher",
+      hit: "weapon-mrs-chiha-grenade-impact",
+      bash: "weapon-mrs-chiha-launcher-bash",
+      retrieve: "weapon-mrs-chiha-launcher-retrieve",
+      aim: "weapon-mrs-chiha-launcher-aim",
+      flight: "weapon-mrs-chiha-grenade-flight",
+      stow: "weapon-mrs-chiha-launcher-stow",
+      abilityReady: "ability-mrs-chiha-salvo-ready",
+      abilityCylinder: "ability-mrs-chiha-salvo-cylinder",
+      abilityShot: "ability-mrs-chiha-salvo-shot",
+      abilityImpact: "ability-mrs-chiha-salvo-impact",
+      abilityFinal: "ability-mrs-chiha-salvo-final",
+    }),
+  }),
+  "miyamoto-musashi": Object.freeze({
+    weapon: "weapon-musashi-dual-katana",
+    weaponEvents: Object.freeze({
+      attack: "weapon-musashi-dual-katana",
+      abilityGuard: "ability-musashi-cross-guard",
+      abilityCounter: "ability-musashi-counter",
+    }),
+  }),
 });
 
 export const BATTLE_AUDIO_LOOP_CONTRACTS = Object.freeze({
@@ -562,16 +714,18 @@ export function weaponCueForUnit(kind) {
 export function humanVoiceCueForUnit(kind, event) {
   const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];
   if (contractCue) return contractCue;
+  // Deployment must never borrow an attack or hurt performance. Units without
+  // a dedicated deploy line use the CRAWLER door/mechanical launch cue only.
+  if (event === "deploy") return null;
   const profile = ownValue(UNIT_VOICE_PROFILES, kind);
-  const profileEvent = event === "deploy" ? "attack" : event;
-  return profile && HUMAN_VOICE_EVENTS.includes(profileEvent) ? `human-${profile}-${profileEvent}` : null;
+  return profile && HUMAN_VOICE_EVENTS.includes(event) ? `human-${profile}-${event}` : null;
 }
 
 export function unitAudioCueFor(kind, group, event) {
   const contract = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind);
-  if (!contract) return null;
-  if (group === "weapon") return ownValue(contract.weaponEvents, event);
-  if (group === "voice") return ownValue(contract.voiceEvents, event);
+  const weaponContract = contract ?? ownValue(V090_PLAYABLE_WEAPON_CUE_CONTRACTS, kind);
+  if (group === "weapon") return weaponContract ? ownValue(weaponContract.weaponEvents, event) : null;
+  if (group === "voice") return contract ? ownValue(contract.voiceEvents, event) : null;
   return null;
 }
 

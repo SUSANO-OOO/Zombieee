@@ -1,18 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFile } from "node:fs/promises";
 
 import {
   COMBAT_CLIP_STATES,
   COMBAT_PRESENTATION_PROFILES,
+  COMBAT_WEAPON_ANCHORS,
   UNIT_WEAPON_PROFILE,
   WEAPON_PROFILE_IDS,
   WEAPON_PROFILES,
   advancePendingWeaponHits,
   animationClipFor,
   attackPresentationDuration,
+  combatFacingDirection,
+  combatWeaponAnchor,
   combatClipEventsFor,
+  mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
+  sampleMrsChihaLauncherBash,
   weaponDamageEventsFor,
   weaponProfileForAction,
 } from "../app/combatPresentation.js";
@@ -54,6 +60,24 @@ test("clip sampling loops movement and clamps one-shot recovery", () => {
   assert.equal(final.bodyScale, 1.12);
 });
 
+test("manual abilities recover to an active pose and enemy movement selects the authored facing", () => {
+  for (const kind of Object.keys(UNIT_WEAPON_PROFILE)) {
+    const specialStates = animationClipFor(kind, "special").frames.map(({ spriteState }) => spriteState);
+    assert.equal(specialStates.includes("hit"), false, `${kind} ability cannot use the hurt pose`);
+    assert.equal(specialStates.includes("death"), false, `${kind} ability cannot use the defeated pose`);
+  }
+  assert.equal(combatFacingDirection({ side: "zombie", aiMoveDirection: 1 }), "right");
+  assert.equal(combatFacingDirection({ side: "zombie", aiMoveDirection: -1 }), "left");
+  assert.equal(combatFacingDirection({ side: "zombie", entryDirection: 1 }), "right");
+  assert.equal(combatFacingDirection({ side: "zombie", entryDirection: -1 }), "left");
+  assert.equal(combatFacingDirection({
+    side: "human",
+    aiMoveDirection: 1,
+    manualDirection: -1,
+    manualAbilityActive: true,
+  }), "left");
+});
+
 test("machine-gun active clip and damage timeline share three synchronized rounds", () => {
   const active = animationClipFor("gunner", "active");
   assert.equal(active.frames.length, 3);
@@ -88,9 +112,9 @@ test("machine-gun active clip and damage timeline share three synchronized round
   assert.equal(sampleAttackPresentation("gunner", .2).state, "recovery");
 });
 
-test("ten weapon profiles cover all eleven playable units without generic missing VFX", () => {
+test("fourteen weapon profiles cover all sixteen playable units without generic missing VFX", () => {
   assert.deepEqual(Object.keys(WEAPON_PROFILES), WEAPON_PROFILE_IDS);
-  assert.equal(Object.keys(UNIT_WEAPON_PROFILE).length, 11);
+  assert.equal(Object.keys(UNIT_WEAPON_PROFILE).length, 16);
   for (const [kind, profileId] of Object.entries(UNIT_WEAPON_PROFILE)) {
     const profile = WEAPON_PROFILES[profileId];
     assert.ok(profile, `${kind} profile`);
@@ -104,6 +128,85 @@ test("ten weapon profiles cover all eleven playable units without generic missin
   assert.equal(weaponProfileForAction("engineer", "attack").casing, true);
   assert.equal(weaponProfileForAction("engineer", "deploy").id, "deployable");
   assert.equal(weaponProfileForAction("medic", "heal").id, "heal-support");
+  assert.equal(weaponProfileForAction("tky", "attack").id, "plasma-blade");
+  assert.equal(weaponProfileForAction("mrs-chiha", "attack").id, "grenade");
+  assert.equal(weaponProfileForAction("miyamoto-musashi", "attack").id, "dual-katana");
+  assert.equal(weaponProfileForAction("mayo-chan", "attack").id, "bite");
+});
+
+test("all sixteen playable units and every projectile enemy use directional weapon anchors above the lower body", () => {
+  const playableKinds = Object.keys(UNIT_WEAPON_PROFILE);
+  assert.equal(playableKinds.length, 16);
+  for (const kind of playableKinds) assert.ok(COMBAT_WEAPON_ANCHORS[kind], `${kind} weapon anchor`);
+  for (const kind of ["spitter", "ooze", "choir-knot", "resonator"]) {
+    assert.ok(COMBAT_WEAPON_ANCHORS[kind], `${kind} projectile organ anchor`);
+  }
+  for (const kind of [...playableKinds, "spitter", "ooze", "choir-knot", "resonator"]) {
+    const right = combatWeaponAnchor({ kind, x: 400, y: 220, direction: 1 });
+    const left = combatWeaponAnchor({ kind, x: 400, y: 220, direction: -1 });
+    assert.equal(right.y, left.y, `${kind} vertical anchor mirrors exactly`);
+    assert.ok(right.y <= 196, `${kind} origin cannot be at the waist or feet`);
+    assert.equal(Number((right.x - 400).toFixed(6)), Number((400 - left.x).toFixed(6)), `${kind} horizontal anchor mirrors`);
+  }
+});
+
+test("new playable special clips preserve authored body phases and Mrs. Chiha's normal launcher cycle", () => {
+  assert.deepEqual(
+    combatClipEventsFor("tky", "special").map(({ type }) => type),
+    ["light-blade-charge", "light-blade-extend", "light-blade-release"],
+  );
+  assert.deepEqual(
+    combatClipEventsFor("mrs-chiha", "special")
+      .filter(({ type }) => type === "salvo-shot")
+      .map(({ at }) => Number(at.toFixed(2))),
+    [1.05, 1.27, 1.49, 1.71],
+  );
+  assert.equal(
+    Number(combatClipEventsFor("mrs-chiha", "special").find(({ type }) => type === "launcher-stow").at.toFixed(2)),
+    1.73,
+  );
+  assert.deepEqual(
+    combatClipEventsFor("miyamoto-musashi", "special").map(({ type }) => type),
+    ["cross-guard-ready", "cross-guard-hold"],
+  );
+  assert.deepEqual(
+    combatClipEventsFor("mrs-chiha", "active").map(({ type }) => type),
+    ["launcher-retrieve", "launcher-aim", "muzzle", "grenade-launch"],
+  );
+  assert.deepEqual(
+    combatClipEventsFor("mrs-chiha", "recovery").map(({ type }) => type),
+    ["launcher-stow"],
+  );
+});
+
+test("Mrs. Chiha's normal grenade uses a locked impact point, delayed AoE, and minimum-range bash", async () => {
+  const [grenadeRound] = weaponDamageEventsFor("mrs-chiha", 24);
+  assert.equal(Number(grenadeRound.offsetSeconds.toFixed(2)), .32);
+  assert.equal(Number(grenadeRound.travelSeconds.toFixed(2)), .28);
+  assert.equal(Number(grenadeRound.hitOffsetSeconds.toFixed(2)), .6);
+  assert.equal(sampleMrsChihaLauncherBash(.02).spriteState, "attack-b");
+  assert.equal(sampleMrsChihaLauncherBash(.14).spriteState, "attack-a");
+  assert.equal(Number(mrsChihaLauncherBashDuration().toFixed(2)), .27);
+  const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  assert.match(source, /mrsLauncherBash[\s\S]{0,240}launcherBashRange/);
+  assert.match(source, /eventKind: "muzzle"[\s\S]{0,500}remainingSeconds: grenadeRound\.offsetSeconds[\s\S]{0,500}eventKind: "impact"[\s\S]{0,500}remainingSeconds: grenadeRound\.hitOffsetSeconds/);
+  assert.match(source, /hit\.damageMode === "grenade"[\s\S]{0,900}effectDistance\(splashTarget, impactPoint\)[\s\S]{0,600}grenadeSplashMultiplier/);
+  assert.match(source, /f\.kind === "mrs-chiha"[\s\S]{0,250}mrsLauncherBash \? "bash" : "shot"/);
+  assert.match(source, /attackVariant = f\.kind === "mrs-chiha" && mrsLauncherBash \? "launcher-bash" : null/);
+  assert.match(source, /locksGrenadeLandingPoint[\s\S]{0,260}hit\.targetX/);
+  const scheduledGrenadeIndex = source.indexOf('else if (f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash');
+  const immediateContainmentIndex = source.indexOf('&& target.kind === "gate-eater"', scheduledGrenadeIndex);
+  assert.ok(scheduledGrenadeIndex >= 0 && immediateContainmentIndex > scheduledGrenadeIndex,
+    "Mrs. Chiha grenade must schedule before the immediate containment path");
+  assert.match(source, /primaryTarget[\s\S]{0,300}splashTarget\.kind === "gate-eater"[\s\S]{0,700}resolveContainmentStrike/);
+  assert.match(source, /deferredStructureImpact = f\.kind === "gunner" \|\| f\.kind === "mrs-chiha"/);
+  const structureGrenadeIndex = source.indexOf('} else if (f.kind === "mrs-chiha") {', source.indexOf("deferredStructureImpact"));
+  const enemyBaseTargetIndex = source.indexOf('targetKind: "enemy-base"', structureGrenadeIndex);
+  const structureImpactIndex = source.indexOf("remainingSeconds: grenadeRound.hitOffsetSeconds", enemyBaseTargetIndex);
+  assert.ok(structureGrenadeIndex >= 0
+    && enemyBaseTargetIndex > structureGrenadeIndex
+    && structureImpactIndex > enemyBaseTargetIndex,
+  "Mrs. Chiha must schedule a delayed grenade impact against the infected base");
 });
 
 test("pending burst hits become due in stable shot order", () => {

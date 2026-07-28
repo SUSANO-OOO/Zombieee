@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { installInfectedAbilityPhaseObserver } from "./infected-ability-phase-observer.mjs";
 
 const baseUrl = new URL(process.env.AI_MISSION_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) {
@@ -16,12 +17,28 @@ const engines = (process.env.AI_MISSION_QA_ENGINES ?? "chromium,webkit")
   .map((engine) => engine.trim())
   .filter(Boolean);
 const unknownEngines = engines.filter((engine) => !browserTypes[engine]);
-if (unknownEngines.length > 0) throw new Error(`Unknown AI_MISSION_QA_ENGINES: ${unknownEngines.join(", ")}`);
+if (engines.length === 0 || unknownEngines.length > 0) {
+  throw new Error(`Unknown or empty AI_MISSION_QA_ENGINES: ${unknownEngines.join(", ") || "(empty)"}`);
+}
 
-const viewports = [
+const viewportCandidates = [
+  { width: 1280, height: 720 },
   { width: 844, height: 390 },
   { width: 844, height: 340 },
 ];
+const requestedViewportIds = (process.env.AI_MISSION_QA_VIEWPORTS ?? "1280x720,844x390,844x340")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+const viewports = viewportCandidates.filter(({ width, height }) => (
+  requestedViewportIds.includes(`${width}x${height}`)
+));
+const unknownViewportIds = requestedViewportIds.filter((id) => (
+  !viewportCandidates.some(({ width, height }) => id === `${width}x${height}`)
+));
+if (viewports.length === 0 || unknownViewportIds.length > 0) {
+  throw new Error(`Unknown AI_MISSION_QA_VIEWPORTS: ${unknownViewportIds.join(", ") || "(empty)"}`);
+}
 const allStages = [
   { number: 1, id: "stage-nishijin-shopping-street" },
   { number: 2, id: "stage-sawara-ward-office" },
@@ -29,6 +46,26 @@ const allStages = [
   { number: 4, id: "stage-nishijin-station-gate" },
   { number: 5, id: "stage-nishijin-station-platform" },
   { number: 6, id: "stage-nishijin-station-tunnel-seal" },
+  {
+    number: 17,
+    id: "stage-bay-tower-service",
+    expectedEnemyKinds: ["resonator", "cagewalker"],
+  },
+  {
+    number: 18,
+    id: "stage-civic-archive-route",
+    expectedEnemyKinds: ["spindle", "choir-knot"],
+  },
+  {
+    number: 19,
+    id: "stage-coastal-link-bridge",
+    expectedEnemyKinds: ["pall-manta"],
+  },
+  {
+    number: 20,
+    id: "stage-estuary-floodgate-seal",
+    expectedEnemyKinds: ["anchor-bloom"],
+  },
 ];
 const requestedStageNumbers = (process.env.AI_MISSION_QA_STAGES ?? "1,2,3,4,5,6")
   .split(",")
@@ -40,7 +77,13 @@ if (stages.length === 0 || unknownStageNumbers.length > 0) {
   throw new Error(`Unknown AI_MISSION_QA_STAGES: ${unknownStageNumbers.join(", ") || "(empty)"}`);
 }
 const evidenceDir = path.resolve(process.env.AI_MISSION_QA_EVIDENCE_DIR ?? "outputs/ai-mission-browser-smoke");
-const timeout = Math.max(8_000, Number(process.env.AI_MISSION_QA_TIMEOUT_MS) || 24_000);
+const configuredTimeout = process.env.AI_MISSION_QA_TIMEOUT_MS;
+const parsedTimeout = configuredTimeout === undefined ? 38_000 : Number(configuredTimeout);
+if (!Number.isFinite(parsedTimeout) || parsedTimeout <= 0) {
+  throw new Error(`AI_MISSION_QA_TIMEOUT_MS must be finite and positive: ${configuredTimeout}`);
+}
+const timeout = Math.min(2 * 60_000, Math.max(8_000, parsedTimeout));
+const requireInfectedAbilityLifecycle = process.env.AI_MISSION_QA_INFECTED_ABILITIES === "1";
 const results = [];
 
 await mkdir(evidenceDir, { recursive: true });
@@ -53,7 +96,7 @@ function caseUrl(stage) {
   const url = new URL(baseUrl);
   url.search = new URLSearchParams({
     qa: "mission",
-    stage: String(stage.number),
+    stage: stage.id,
     state: "start",
     safe: "iphone-landscape",
   }).toString();
@@ -92,6 +135,25 @@ function assertDiagnostics(diagnostics) {
   for (const [kind, entries] of Object.entries(normalized)) {
     invariant(entries.length === 0, `${kind}: ${JSON.stringify(entries)}`);
   }
+}
+
+async function startInfectedAbilityObserver(page, expectedKinds) {
+  await page.evaluate(installInfectedAbilityPhaseObserver, expectedKinds);
+}
+
+async function waitForInfectedAbilityLifecycle(page, expectedKinds) {
+  await page.waitForFunction(
+    (kinds) => kinds.every((kind) => {
+      const activations = window.__ASHFALL_INFECTED_PHASE_OBSERVER__
+        ?.observed?.[kind]?.completedActivations ?? [];
+      return activations.some(({ warningAt, activeAt }) => (
+        Number.isFinite(warningAt) && Number.isFinite(activeAt) && warningAt < activeAt
+      ));
+    }),
+    expectedKinds,
+    { timeout },
+  );
+  return page.evaluate(() => structuredClone(window.__ASHFALL_INFECTED_PHASE_OBSERVER__.observed));
 }
 
 async function readViewportEvidence(page) {
@@ -149,6 +211,9 @@ for (const engine of engines) {
             stage.id,
             { timeout },
           );
+          if (requireInfectedAbilityLifecycle && stage.expectedEnemyKinds?.length) {
+            await startInfectedAbilityObserver(page, stage.expectedEnemyKinds);
+          }
 
           const energyBeforeDeployment = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().energy);
           await page.locator('button.unit-card[data-kind="scout"]').click({ timeout });
@@ -175,14 +240,61 @@ for (const engine of engines) {
             { timeout },
           );
           await page.waitForTimeout(1_200);
+          if (stage.expectedEnemyKinds?.length) {
+            await page.waitForFunction(
+              (expectedKinds) => {
+                const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+                if (!snapshot) return false;
+                const seenKinds = new Set([
+                  ...snapshot.fighters.map(({ kind }) => kind),
+                  ...snapshot.corpses.map(({ kind }) => kind),
+                ]);
+                return expectedKinds.every((kind) => seenKinds.has(kind));
+              },
+              stage.expectedEnemyKinds,
+              { timeout },
+            );
+          }
+          const infectedAbilityLifecycle = requireInfectedAbilityLifecycle && stage.expectedEnemyKinds?.length
+            ? await waitForInfectedAbilityLifecycle(page, stage.expectedEnemyKinds)
+            : null;
 
           const snapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
           const dimensions = await readViewportEvidence(page);
           const activeFighters = snapshot.fighters.filter((fighter) => fighter.hp > 0 && fighter.combatReady);
           const fighterById = new Map(snapshot.fighters.map((fighter) => [fighter.id, fighter]));
           invariant(snapshot.screen === "battle" && snapshot.running && !snapshot.over, "battle did not remain live");
-          invariant(snapshot.geometry?.viewportId === `${viewport.width}x${viewport.height}`, `viewport geometry mismatch: ${snapshot.geometry?.viewportId}`);
+          const expectedViewportId = viewport.width === 1280 && viewport.height === 720
+            ? "standard"
+            : `${viewport.width}x${viewport.height}`;
+          invariant(snapshot.geometry?.viewportId === expectedViewportId, `viewport geometry mismatch: ${snapshot.geometry?.viewportId}`);
           invariant(snapshot.geometry?.offFloorCount === 0, `off-floor fighters: ${JSON.stringify(snapshot.geometry?.offFloorIds)}`);
+          invariant(snapshot.geometry?.visuallyOffFloorCount === 0,
+            `fighters outside authored visual floor: ${JSON.stringify(snapshot.geometry?.visuallyOffFloorIds)}`);
+          if (stage.number < 17) {
+            invariant(snapshot.geometry?.visualFloor?.authored === false,
+              "legacy stage unexpectedly inherited a Version 0.9.0 visual floor");
+            invariant(activeFighters.every((fighter) => fighter.renderDepthScale === 1),
+              `legacy stage inherited perspective depth: ${JSON.stringify(activeFighters)}`);
+          } else {
+            invariant(snapshot.geometry?.visualFloor?.authored === true, "Version 0.9.0 visual floor profile missing");
+            const scalesByLane = [0, 1, 2].map((lane) => (
+              activeFighters
+                .filter((fighter) => fighter.lane === lane)
+                .map((fighter) => fighter.renderDepthScale)
+            )).filter((samples) => samples.length > 0);
+            invariant(activeFighters.every((fighter) => (
+              Number.isFinite(fighter.renderDepthScale)
+              && fighter.renderDepthScale >= snapshot.geometry.visualFloor.farScale
+              && fighter.renderDepthScale <= snapshot.geometry.visualFloor.nearScale
+            )), "fighter perspective scale left the authored floor range");
+            for (let index = 1; index < scalesByLane.length; index += 1) {
+              invariant(
+                Math.max(...scalesByLane[index - 1]) < Math.min(...scalesByLane[index]),
+                `near lane was not rendered larger than far lane: ${JSON.stringify(scalesByLane)}`,
+              );
+            }
+          }
           invariant(snapshot.stationMetrics?.offFloorSteps === 0, `runtime grounding clamps: ${snapshot.stationMetrics?.offFloorSteps}`);
           invariant(activeFighters.every((fighter) => typeof fighter.aiProfile === "string" && fighter.aiProfile.length > 0),
             "an active fighter had no AI profile");
@@ -216,6 +328,8 @@ for (const engine of engines) {
               enemyProfiles: [...new Set(activeFighters.filter(({ side }) => side === "zombie").map(({ aiProfile }) => aiProfile))],
               aiRecoveries: snapshot.stationMetrics.aiRecoveries,
               attackIdentitySamples: snapshot.attackIdentity.length,
+              expectedEnemyKinds: stage.expectedEnemyKinds ?? [],
+              infectedAbilityLifecycle,
             },
             dimensions,
             diagnostics: { ...diagnostics, warnings: unexpectedWarnings(diagnostics.warnings) },
@@ -224,7 +338,26 @@ for (const engine of engines) {
           result.error = String(error);
           result.diagnostics = { ...diagnostics, warnings: unexpectedWarnings(diagnostics.warnings) };
           try {
-            result.failureSnapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null);
+            result.failureSnapshot = await page.evaluate(() => {
+              const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+              return snapshot ? {
+                screen: snapshot.screen,
+                stageId: snapshot.stageId,
+                time: snapshot.time,
+                wave: snapshot.wave,
+                running: snapshot.running,
+                over: snapshot.over,
+                fighters: snapshot.fighters.map((fighter) => ({
+                  id: fighter.id,
+                  kind: fighter.kind,
+                  side: fighter.side,
+                  hp: fighter.hp,
+                  combatReady: fighter.combatReady,
+                  stationAbility: fighter.stationAbility,
+                })),
+                infectedAbilityLifecycle: window.__ASHFALL_INFECTED_PHASE_OBSERVER__?.observed ?? null,
+              } : null;
+            });
           } catch {
             // Navigation can fail before the QA bridge exists.
           }

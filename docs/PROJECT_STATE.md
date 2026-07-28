@@ -1,141 +1,131 @@
 # 西新世紀末物語 — プロジェクト状態
 
-更新日：2026-07-26
+更新日：2026-07-29
 
 ## 1. 正式公開
 
 唯一の正式公開先：**GitHub Pages**
 
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
-- 公開中version：**Version 0.8.0**
+- release-prep作成時の公開中version：**Version 0.8.0**
 - Version 0.8.0 game release commit：`dbc4bd7edea94fdadce094526384ea4a0f181587`
-- GitHub Release tag：`v0.8.0`
-- release ledger：Issue #61、completed／closed
-- release PR：#67、merged／closed
+- Version 0.9.0：**RC受入済み・正式公開工程中**
+- Version 0.9.0 release ledger：Issue #68、open
+- 予定request ID：`v0.9.0-formal-release-20260729`
+- 予定request方式：tag／Release作成後、`main`からの明示的`workflow_dispatch`
 - deployment workflow：`.github/workflows/github-pages-release.yml`
 - public QA workflow：`.github/workflows/github-pages-public-qa.yml`
 
-公開中の正確なversion、release SHA、request ID、Issue metadataは、作業開始時とrelease操作前後に正式URLの公開HTML metadata、tag、Release、Actionsと再照合する。
+公開中の正確なversion、release SHA、request ID、Issue metadataは、作業開始時とrelease操作前後に正式URLの公開HTML metadata、tag、Release、Actionsと再照合する。本書のrelease-prep snapshotより、公開後のlive metadataとIssue #68最終記録を優先する。
 
 ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、復旧に使用しない。
 
 ## 2. 現在のGitHub基準
 
 - Version 0.8.0 game release baseline：`dbc4bd7edea94fdadce094526384ea4a0f181587`
+- Version 0.9.0 integration release-prep baseline：`ec6b25706e234d4c916c7d90730eaba35344243b`
 - repository visibility：`public`
 - default branch：`main`
 - Version 0.7.1 Issue #43：completed／closed
 - Version 0.7.5 Issue #44：completed／closed
 - Version 0.8.0 Issue #61：completed／closed
-- Version 0.9.0 Issue #68：open
+- Version 0.9.0 Issue #68：formal release approved／open
 - save key：`nishijin-campaign-v1`
-- 現行save schema：v7を基準とし、Codex開始時にコードから再確認する
+- 現行save schema：v13
 
 `main`はdocs、ops、hotfix等でも進むため、現在SHAを本書へ永久固定しない。作業開始時、PR操作直前、merge直前、release直前にGitHubの現在値を再取得する。正式公開game sourceは、単なる最新`main`ではなく公開HTML metadata、tag、GitHub Release、release requestと照合する。
 
-## 3. 現行Version 0.8.0
+## 3. Version 0.9.0 release candidate
 
 ### Campaign／content
 
-- Stage 1〜16
-- 5つの作戦区域
-- Stage 7〜16の10battle stage
-- 最低5種類のmission／objective pattern
+- Stage 1〜20
+- Survival Mode
+- 異常発生任務5件
+- mission別の右端・右端外spawn profile
 - Stageごとの背景variant、床面、walkable、objective anchor
 - 既存Stage 1〜6のsave・解放・星・報酬を維持
 
 ### Playable units／progression
 
-- プレイアブル11名
+- プレイアブル16名
 - 最大7枠
 - 3 formation presets
-- 全11名のRank 0〜4 progression
-- capsによるunit取得・強化
-- 全11名のidentity master、event、formation／personnel card、battle用途別visual profile
+- 全16体の個体別手動アビリティと頭上ready icon
+- Level 1〜50のdata／UI基盤。Stage 20時点の通常解放上限はLv25
+- 個人equipment2枠、preset別の戦術equipment2枠
+- 約20種・5段階強化のequipment inventory
+- capsによるunit取得、Level、equipment強化
+- 新5名を含む全16名の正式identityとplayer-facing visual
 
 ### Battle
 
 - player-facing固定3laneを撤廃した連続battle space
 - profile-driven ally／enemy AI
 - CRAWLER door／ramp deployment
+- 出現完了まで攻撃・被弾・collisionを禁止するcombat-ready契約
+- Survival専用防衛前線
 - weapon-specific animation、VFX、SE、damage event
 - machine gunの複数発砲・複数damage
 - Stage／missionごとのgrounding、navigation、objective interaction
+- boss共通基盤、TAKUYA／改札喰い改修、新boss5体
+- 通常感染体6種
 
 ### Audio／UI／QA
 
+- 出撃、部隊、補給所、記録へ主要UIを再構成
+- 詳細result、敵図鑑、boss図鑑、Survival記録、戦績
 - BGM／SE独立volume slider
-- upgrade／MAX Rank feedback
-- player-facing Version identity 0.8.0統一
+- player-facing Version identity 0.9.0統一
 - Chromium／WebKit、1280×720、844×390、844×340
 - 15分Chromium 844×390 performance gate
 - 物理iPhoneは未確認。WebKit iPhone相当、safe area、frame time、heap／memory proxyが代替証拠
 
-## 4. Version 0.9.0で解決する体験課題
+## 4. Version 0.9.0 release candidateで統合した体験
 
 ### 戦場
 
-- 敵が戦場中央寄りから見え始め、mapが狭く感じる
-- 敵拠点、spawn、combat-ready地点、射程、sprite実表示幅を右端構図へ再整合する必要がある
-- survivalでは味方が侵入口へ張り付かない防衛前線が必要
+- 敵の出現位置、combat-ready、射程、sprite実表示幅を右端構図へ再整合
+- Survivalで味方が侵入口へ張り付かない防衛前線を導入
+- Stage背景とgroundingを整合し、空中歩行や扉付近の不自然な透過を修正
 
 ### Boss
 
-- TAKUYA、改札喰いを含むbossの表示size・重量感・登場・攻撃予告が弱い
-- 通常敵と一目で区別できるboss共通基盤が必要
-- 新規boss5体を追加する
+- 通常敵と一目で区別できるboss共通基盤を導入
+- TAKUYA、改札喰いの表示、登場、攻撃予告を改修
+- 新boss5体と異常発生任務を追加
 
 ### Content量
 
-- 本編をStage 20まで拡張する
-- 新プレイアブル5名を追加し、合計16名とする
-- 通常感染体designを6種追加する
-- survival、異常発生任務、図鑑、詳細resultを追加する
+- 本編をStage 20まで拡張
+- 新プレイアブル5名を追加し合計16名へ拡張
+- 通常感染体6種、Survival、異常発生任務、図鑑、詳細resultを追加
 
 ### 育成・経済
 
-- Rank 0〜4ではcapsの使い道と長期成長が不足
-- Level 1〜50、Stage進行によるlevel cap、個人equipment2枠、戦術equipment2枠へ拡張する
-- 0.9.0公開時はStage 20 clearに対応するLv25まで通常解放可能とする
-- 旧caps残高は新経済用の共通開始資金へ一度だけ再編する
+- Rank 0〜4をLevel 1〜50へ移行
+- Stage進行によるlevel cap、個人equipment2枠、戦術equipment2枠へ拡張
+- Stage 20 clearでLv25まで通常解放
+- 旧caps残高を新経済用の共通開始資金へ一度だけ再編
 
 ### UI
 
-- `調達`を含む現在の機能分類が分かりにくい
-- 出撃、部隊、補給所、記録へ再構成する
-- 軍事端末70%、生体汚染ホラー30%を基準とする
+- 出撃、部隊、補給所、記録へ再構成
+- 本編、Survival、異常発生任務の入口を分離
+- 軍事端末70%、生体汚染ホラー30%の基準を維持
 
 ## 5. 次の正式作業
 
-### Version 0.9.0
+Version 0.9.0の正式公開工程：
 
-Issue：#68  
-状態：**プロデューサー承認済み・正本整備完了・Codex実装開始可能**
+1. release branchを`integration/0.9.0`へ通常merge
+2. `integration/0.9.0`を`main`へ通常merge
+3. merge result SHAへannotated `v0.9.0` tagとGitHub Releaseを固定
+4. 5項目の明示的requestでGitHub Pagesへdeployment
+5. 公開metadata、主要asset、fresh save、Version 0.8.0 save migration、主要game loopをQA
+6. 全項目成功後だけIssue #68へ最終記録しclose
 
-最上位正本：
-
-1. `docs/PRODUCER_DECISIONS_0.9.0.md`
-2. Issue #68
-3. `AGENTS.md`
-4. 最新`main`のコード、tests、QA記録
-
-主対象：
-
-- Stage 17〜20
-- survival mode
-- 戦場右端spawnとsurvival防衛前線
-- boss共通基盤、既存boss改修、新boss5体
-- 通常感染体6種
-- 新プレイアブル5名
-- Rank→Level 1〜50
-- caps経済再編
-- equipment約20種、5段階強化
-- UI再構成、詳細result、boss図鑑、記録
-- save migration、performance、mobile QA
-
-新プレイアブル5名のidentity masterはプロデューサーが各1枚制作し、Codexへ直接提供する。Codexは受領portraitからcard、event portrait、battle sprite等を派生制作する。
-
-release candidateの最終実プレイ合格前に、`integration/0.9.0 → main`のReady化、merge、`v0.9.0` tag、GitHub Release、Pages正式deployment、Issue #68 closeを行わない。
+Version 0.9.0の正式公開後に着手する次Versionは未決定。新しいIssueとプロデューサー判断なしに、Version 0.9.1／1.0の実装範囲を推測して開始しない。
 
 ## 6. 長期方向
 

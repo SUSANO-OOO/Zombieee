@@ -1,8 +1,8 @@
 import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS, INITIAL_STAGE_ID } from "./campaign.js";
-import { COMMAND_INITIAL, COMMAND_MAX, COMMAND_REGEN } from "./gameRules.js";
+import { COMMAND_INITIAL, COMMAND_MAX, STANDARD_COMMAND_REGEN } from "./gameRules.js";
 import { STORY_EVENT_IDS } from "./storyEvents.js";
 
-export const LOCAL_QA_MODES = Object.freeze(["endgame", "takuya-entrance", "ai-reacquire", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
+export const LOCAL_QA_MODES = Object.freeze(["endgame", "takuya-entrance", "ai-reacquire", "roles", "zakimiya", "new-playables", "mayo", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
 
 export function resolveLocalQaMode(hostname, search = "") {
   if (hostname !== "localhost" && hostname !== "127.0.0.1") return null;
@@ -21,7 +21,7 @@ export function measureCommandEconomy({
   deployments = [],
   initialCommand = COMMAND_INITIAL,
   commandMax = COMMAND_MAX,
-  regenPerSecond = COMMAND_REGEN,
+  regenPerSecond = STANDARD_COMMAND_REGEN,
 } = {}) {
   const duration = Math.max(0, Number(durationSeconds) || 0);
   const maximum = Math.max(0, Number(commandMax) || 0);

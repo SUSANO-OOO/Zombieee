@@ -4,7 +4,9 @@ import { CAMPAIGN_STAGE_IDS, CAMPAIGN_STAGES } from "../app/campaign.js";
 import {
   battleSpaceFor,
   battleSpaceLineOfSight,
+  enemyRenderedVisualHalfWidth,
   enemySpawnPortalPoint,
+  enemySpawnProfileFor,
   friendlyDeploymentPoint,
   nearestValidBattlefieldPlacement,
 } from "../app/battleSpace.js";
@@ -155,6 +157,76 @@ test("enemy spawns use deterministic internal portals across the base instead of
   }
 });
 
+test("mission spawn profiles place applicable enemies at or beyond the right edge", () => {
+  const stageId = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
+  for (const missionType of ["timed-defense", "escort", "sequential-seal", "boss-assault", "survival"]) {
+    const profile = enemySpawnProfileFor(missionType);
+    const point = enemySpawnPortalPoint({
+      stageId,
+      entryId: 17,
+      kind: missionType === "boss-assault" || missionType === "survival" ? "takuya" : "walker",
+      missionType,
+    });
+    assert.equal(point.spawnProfileId, profile.id);
+    assert.ok(point.x > 960);
+    assert.equal(point.targetableDuringEntry, false);
+    assert.equal(point.canAttackDuringEntry, false);
+    assert.equal(point.collisionDuringEntry, false);
+    assert.ok(point.combatReadyX + point.visualHalfWidth <= 960);
+    assert.equal(isWalkable(stageId, {
+      x: point.combatReadyX,
+      y: point.combatReadyY,
+      radius: point.bodyRadius,
+    }), true);
+  }
+});
+
+test("boss combat-ready point guarantees the full display body has entered", () => {
+  for (const viewport of VIEWPORTS) {
+    const point = enemySpawnPortalPoint({
+      stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
+      viewport,
+      entryId: 1,
+      kind: "gate-eater",
+      missionType: "survival",
+    });
+    assert.equal(point.spawnClass, "boss");
+    assert.equal(point.entryMode, "right-edge-outside");
+    assert.equal(point.visualHalfWidth, enemyRenderedVisualHalfWidth("gate-eater"));
+    assert.ok(point.x - point.visualHalfWidth >= 960);
+    assert.ok(point.combatReadyX + point.visualHalfWidth <= 960);
+  }
+});
+
+test("right-edge combat-ready boundaries include the renderer's compact atlas width", () => {
+  for (const kind of [
+    "walker",
+    "ooze",
+    "sprinter",
+    "crusher",
+    "abomination",
+    "takuya",
+    "gate-eater",
+  ]) {
+    const renderedHalfWidth = enemyRenderedVisualHalfWidth(kind);
+    assert.ok(renderedHalfWidth > 0, `${kind} owns a renderer-derived half width`);
+    const point = enemySpawnPortalPoint({
+      stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,
+      entryId: 31,
+      kind,
+      missionType: "survival",
+    });
+    assert.ok(
+      point.visualHalfWidth >= renderedHalfWidth,
+      `${kind} spawn clearance covers its maximum compact render width`,
+    );
+    assert.ok(
+      point.combatReadyX + renderedHalfWidth <= 960,
+      `${kind} full rendered body enters before combat-ready`,
+    );
+  }
+});
+
 test("friendly deployment owns one lit CRAWLER door and a walkable run-out point", () => {
   for (const stage of CAMPAIGN_STAGES) {
     for (const viewport of VIEWPORTS) {
@@ -167,7 +239,7 @@ test("friendly deployment owns one lit CRAWLER door and a walkable run-out point
       );
       assert.ok(point.x < point.combatReadyX);
       assert.ok(point.x < point.rampFootX);
-      assert.ok(point.rampFootX < point.combatReadyX);
+      assert.equal(point.rampFootX, point.combatReadyX);
       assert.ok(point.y < point.rampFootY);
       assert.equal(point.rampFootY, point.combatReadyY);
       assert.equal(isWalkable(stage.id, {

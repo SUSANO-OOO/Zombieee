@@ -12,6 +12,22 @@ const FLOOR_MIN_X = WORLD_GEOMETRY.baseX - 2;
 const FLOOR_MAX_X = WORLD_GEOMETRY.enemyBase.attackX + 33;
 const LANE_EDGE_MARGIN = 36;
 const BODY_ANCHOR_TOLERANCE = 4;
+const V090_STANDARD_LANE_CENTERS = Object.freeze([250, 306, 362]);
+const V090_COMPACT_LANE_CENTERS = Object.freeze([250, 292, 334]);
+const V090_VISUAL_FLOOR = Object.freeze({
+  standard: Object.freeze({
+    horizonY: 206,
+    nearEdgeY: 374,
+    farScale: .78,
+    nearScale: 1,
+  }),
+  compact: Object.freeze({
+    horizonY: 222,
+    nearEdgeY: 372,
+    farScale: .84,
+    nearScale: 1,
+  }),
+});
 
 function deepFreeze(value) {
   if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
@@ -95,6 +111,32 @@ function contentYPoint(laneCenters, y, x, extra = {}) {
     y: laneCenters[lane] + numericY - LANE_Y[lane],
     lane,
     ...extra,
+  };
+}
+
+function laneCentersForLayout(layout, viewport) {
+  if (layout.stageNumber < 17) return [...viewport.laneCenters];
+  return viewport.id === STAGE_VIEWPORT_IDS.STANDARD
+    ? [...V090_STANDARD_LANE_CENTERS]
+    : [...V090_COMPACT_LANE_CENTERS];
+}
+
+function visualFloorForLayout(layout, viewport, corridor) {
+  if (layout.stageNumber < 17) {
+    return {
+      authored: false,
+      horizonY: corridor.minY,
+      nearEdgeY: corridor.maxY,
+      farScale: 1,
+      nearScale: 1,
+    };
+  }
+  const profile = viewport.id === STAGE_VIEWPORT_IDS.STANDARD
+    ? V090_VISUAL_FLOOR.standard
+    : V090_VISUAL_FLOOR.compact;
+  return {
+    authored: true,
+    ...profile,
   };
 }
 
@@ -330,7 +372,7 @@ function debugPrimitivesFor(geometry) {
 }
 
 function createStageGeometry(layout, viewport) {
-  const laneCenters = [...viewport.laneCenters];
+  const laneCenters = laneCentersForLayout(layout, viewport);
   const corridor = {
     minX: FLOOR_MIN_X,
     maxX: FLOOR_MAX_X,
@@ -359,6 +401,7 @@ function createStageGeometry(layout, viewport) {
     floor: {
       corridor,
       platformEdgeY,
+      visual: visualFloorForLayout(layout, viewport, corridor),
     },
     lanes: laneCenters.map((y, index) => ({ index, y })),
     spawns: spawnGeometry(laneCenters),
@@ -394,6 +437,36 @@ export function stageGeometryFor(stageId, viewport = STAGE_VIEWPORT_IDS.STANDARD
   const geometry = GEOMETRY_BY_STAGE_AND_VIEWPORT[stageId]?.[profile.id];
   if (!geometry) throw new RangeError(`Unknown campaign stage geometry: ${String(stageId)}`);
   return geometry;
+}
+
+export function stageLaneCentersFor(stageId, viewport = STAGE_VIEWPORT_IDS.STANDARD) {
+  return stageGeometryFor(stageId, viewport).lanes.map(({ y }) => y);
+}
+
+export function battlefieldDepthScale(stageOrGeometry, y, viewport = STAGE_VIEWPORT_IDS.STANDARD) {
+  const geometry = resolveGeometry(stageOrGeometry, viewport);
+  const visual = geometry.floor.visual;
+  if (!visual.authored || visual.nearEdgeY <= visual.horizonY) return 1;
+  const progress = Math.max(0, Math.min(
+    1,
+    (finite(y, geometry.lanes[1].y) - visual.horizonY) / (visual.nearEdgeY - visual.horizonY),
+  ));
+  return visual.farScale + (visual.nearScale - visual.farScale) * progress;
+}
+
+export function visualGroundingFor(stageOrGeometry, fighter, viewport = STAGE_VIEWPORT_IDS.STANDARD) {
+  const geometry = resolveGeometry(stageOrGeometry, viewport);
+  const y = finite(fighter?.y, Number.NaN);
+  const visual = geometry.floor.visual;
+  const grounded = Number.isFinite(y) && y >= visual.horizonY && y <= visual.nearEdgeY;
+  return deepFreeze({
+    grounded,
+    reason: grounded ? null : y < visual.horizonY ? "above-visual-floor" : "below-visual-floor",
+    y,
+    horizonY: visual.horizonY,
+    nearEdgeY: visual.nearEdgeY,
+    depthScale: battlefieldDepthScale(geometry, y),
+  });
 }
 
 function resolveGeometry(stageOrGeometry, viewport) {
@@ -520,20 +593,30 @@ export function combatReadyGroundingAudit({
   const resolved = geometry ?? stageGeometryFor(stageId, viewport);
   const checked = [];
   const offFloor = [];
+  const visuallyOffFloor = [];
   for (const fighter of Array.isArray(fighters) ? fighters : []) {
     if (fighter?.combatReady !== true || finite(fighter?.hp, 0) <= 0) continue;
     const grounding = bodyCircleGrounding(resolved, fighter);
-    const entry = deepFreeze({ id: fighter.id ?? null, side: fighter.side ?? null, grounding });
+    const visualGrounding = visualGroundingFor(resolved, fighter);
+    const entry = deepFreeze({
+      id: fighter.id ?? null,
+      side: fighter.side ?? null,
+      grounding,
+      visualGrounding,
+    });
     checked.push(entry);
     if (!grounding.grounded) offFloor.push(entry);
+    if (!visualGrounding.grounded) visuallyOffFloor.push(entry);
   }
   return deepFreeze({
     stageId: resolved.stageId,
     viewportId: resolved.viewport.id,
     checkedCount: checked.length,
     offFloorCount: offFloor.length,
+    visuallyOffFloorCount: visuallyOffFloor.length,
     checked,
     offFloor,
+    visuallyOffFloor,
   });
 }
 

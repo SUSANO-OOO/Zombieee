@@ -27,6 +27,10 @@ export const WEAPON_PROFILE_IDS = Object.freeze([
   "suppressed-carbine",
   "deployable",
   "heal-support",
+  "plasma-blade",
+  "grenade",
+  "dual-katana",
+  "bite",
 ]);
 
 const frame = (spriteState, durationSeconds, events = []) => ({
@@ -86,9 +90,27 @@ const STANDARD_CLIPS = {
   special: clip([
     frame("attack-a", .08, [{ type: "special-ready", at: 0 }]),
     frame("attack-b", .11, [{ type: "special-active", at: 0 }]),
-    frame("hit", .08),
+    frame("idle", .08),
   ]),
 };
+
+export function combatFacingDirection({
+  side,
+  aiMoveDirection = 0,
+  entryDirection = 0,
+  manualDirection = 0,
+  manualAbilityActive = false,
+} = {}) {
+  if (side === "human") {
+    if (manualAbilityActive && Number(manualDirection) !== 0) {
+      return Number(manualDirection) < 0 ? "left" : "right";
+    }
+    return Number(aiMoveDirection) < -.05 ? "left" : "right";
+  }
+  if (Number(aiMoveDirection) > .05) return "right";
+  if (Number(aiMoveDirection) < -.05) return "left";
+  return Number(entryDirection) > 0 ? "right" : "left";
+}
 
 const MACHINE_GUN_ACTIVE = clip([
   frame("attack-a", .055, [
@@ -113,6 +135,50 @@ const MACHINE_GUN_RECOVERY = clip([
   frame("idle", .065),
 ], { recovery: true });
 
+const MRS_CHIHA_ATTACK_ACTIVE = clip([
+  frame("attack-a", .12, [{ type: "launcher-retrieve", at: .02 }]),
+  frame("attack-b", .18, [{ type: "launcher-aim", at: .04 }]),
+  frame("attack-b", .08, [{ type: "muzzle", at: .02, shotIndex: 0 }, { type: "grenade-launch", at: .02 }]),
+]);
+
+const MRS_CHIHA_ATTACK_RECOVERY = clip([
+  frame("attack-a", .14, [{ type: "launcher-stow", at: .02 }]),
+  frame("idle", .08),
+], { recovery: true });
+
+const MRS_CHIHA_LAUNCHER_BASH = clip([
+  frame("attack-b", .1, [{ type: "launcher-bash-windup", at: .01 }]),
+  frame("attack-a", .08, [{ type: "launcher-bash-contact", at: .03 }]),
+  frame("idle", .09, [{ type: "launcher-bash-recover", at: .01 }]),
+]);
+
+const MANUAL_ABILITY_SPECIAL_CLIPS = {
+  tky: clip([
+    frame("attack-a", .2, [{ type: "light-blade-charge", at: 0 }]),
+    frame("attack-b", .28, [{ type: "light-blade-extend", at: 0 }]),
+    frame("attack-b", .14, [{ type: "light-blade-release", at: .14 }]),
+  ]),
+  "mrs-chiha": clip([
+    frame("attack-a", .28, [{ type: "launcher-retrieve", at: .02 }]),
+    frame("attack-b", .55, [{ type: "launcher-aim", at: .04 }]),
+    frame("attack-a", .22, [{ type: "salvo-rotate", at: 0 }, { type: "salvo-shot", at: .22, shotIndex: 0 }]),
+    frame("attack-b", .22, [{ type: "salvo-shot", at: .22, shotIndex: 1 }]),
+    frame("attack-a", .22, [{ type: "salvo-shot", at: .22, shotIndex: 2 }]),
+    frame("attack-b", .22, [{ type: "salvo-shot", at: .22, shotIndex: 3 }]),
+    frame("attack-a", .18, [{ type: "launcher-stow", at: .02 }]),
+    frame("idle", .12),
+  ]),
+  "miyamoto-musashi": clip([
+    frame("attack-a", .22, [{ type: "cross-guard-ready", at: .02 }]),
+    frame("attack-b", .36, [{ type: "cross-guard-hold", at: 0 }]),
+  ]),
+  "mayo-chan": clip([
+    frame("attack-a", .12, [{ type: "feral-surge", at: 0 }]),
+    frame("attack-b", .16, [{ type: "infection-bloom", at: .04 }]),
+    frame("walk-a", .08, [{ type: "feral-rush", at: 0 }]),
+  ], { movement: true }),
+};
+
 const PRESENTATION_KINDS = Object.freeze([
   "brawler",
   "scout",
@@ -122,6 +188,12 @@ const PRESENTATION_KINDS = Object.freeze([
   "gunner",
   "guardian",
   "engineer",
+  "zakimiya",
+  "tky",
+  "mrs-chiha",
+  "miyamoto-musashi",
+  "mayo-chan",
+  "mayo-chan-feral",
   "walker",
   "runner",
   "turned",
@@ -134,6 +206,17 @@ const PRESENTATION_KINDS = Object.freeze([
   "ooze",
   "sprinter",
   "gate-eater",
+  "kurome",
+  "mother",
+  "ooguchi",
+  "gairen",
+  "futago",
+  "resonator",
+  "cagewalker",
+  "spindle",
+  "choir-knot",
+  "pall-manta",
+  "anchor-bloom",
   "crazy-king",
   "kumaverson",
   "babayaga",
@@ -148,8 +231,15 @@ const BODY_SCALE_BY_KIND = Object.freeze({
   kumaverson: 1.08,
   crusher: 1.1,
   abomination: 1.13,
-  takuya: 1.2,
-  "gate-eater": 1.16,
+  takuya: 1.3,
+  "gate-eater": 1.67,
+  kurome: 1.95,
+  mother: 2.38,
+  ooguchi: 1.89,
+  gairen: 2.45,
+  futago: 2.36,
+  "mayo-chan": .82,
+  "mayo-chan-feral": .82,
 });
 
 function clipsForKind(kind) {
@@ -159,6 +249,12 @@ function clipsForKind(kind) {
       ? MACHINE_GUN_ACTIVE
       : kind === "gunner" && state === "recovery"
         ? MACHINE_GUN_RECOVERY
+        : kind === "mrs-chiha" && state === "active"
+          ? MRS_CHIHA_ATTACK_ACTIVE
+          : kind === "mrs-chiha" && state === "recovery"
+            ? MRS_CHIHA_ATTACK_RECOVERY
+            : state === "special" && MANUAL_ABILITY_SPECIAL_CLIPS[kind]
+              ? MANUAL_ABILITY_SPECIAL_CLIPS[kind]
         : STANDARD_CLIPS[state];
     return [state, {
       ...source,
@@ -304,6 +400,55 @@ export const WEAPON_PROFILES = deepFreeze({
     damageWeights: [1],
     shotOffsetsSeconds: [0],
   },
+  "plasma-blade": {
+    id: "plasma-blade",
+    trail: "energy-arc",
+    trailColor: "#ff4dca",
+    impact: "energy-burst",
+    impactRadius: 13,
+    hitStopSeconds: .03,
+    recoil: 0,
+    casing: false,
+    damageWeights: [.56, .44],
+    shotOffsetsSeconds: [0, .08],
+  },
+  grenade: {
+    id: "grenade",
+    trail: "ballistic-arc",
+    trailColor: "#d4a85b",
+    impact: "explosive-burst",
+    impactRadius: 20,
+    hitStopSeconds: .038,
+    recoil: .48,
+    casing: false,
+    damageWeights: [1],
+    shotOffsetsSeconds: [0],
+    projectileTravelSeconds: .28,
+  },
+  "dual-katana": {
+    id: "dual-katana",
+    trail: "cross-cut",
+    trailColor: "#d9e4ed",
+    impact: "precision-burst",
+    impactRadius: 12,
+    hitStopSeconds: .04,
+    recoil: 0,
+    casing: false,
+    damageWeights: [.52, .48],
+    shotOffsetsSeconds: [0, .07],
+  },
+  bite: {
+    id: "bite",
+    trail: "bite-lunge",
+    trailColor: "#f0cd77",
+    impact: "infection-snap",
+    impactRadius: 8,
+    hitStopSeconds: .024,
+    recoil: 0,
+    casing: false,
+    damageWeights: [1],
+    shotOffsetsSeconds: [0],
+  },
 });
 
 export const UNIT_WEAPON_PROFILE = deepFreeze({
@@ -318,7 +463,52 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   babayaga: "sniper",
   guardian: "blunt",
   engineer: "suppressed-carbine",
+  zakimiya: "blunt",
+  tky: "plasma-blade",
+  "mrs-chiha": "grenade",
+  "miyamoto-musashi": "dual-katana",
+  "mayo-chan": "bite",
 });
+
+export const COMBAT_WEAPON_ANCHORS = deepFreeze({
+  brawler: { forward: 13, up: 34 },
+  scout: { forward: 18, up: 39 },
+  ranger: { forward: 22, up: 42 },
+  medic: { forward: 18, up: 38 },
+  brute: { forward: 18, up: 31 },
+  gunner: { forward: 25, up: 39 },
+  guardian: { forward: 16, up: 34 },
+  engineer: { forward: 20, up: 39 },
+  "crazy-king": { forward: 20, up: 29 },
+  kumaverson: { forward: 18, up: 32 },
+  babayaga: { forward: 23, up: 43 },
+  zakimiya: { forward: 17, up: 32 },
+  tky: { forward: 23, up: 43 },
+  "mrs-chiha": { forward: 23, up: 43 },
+  "miyamoto-musashi": { forward: 19, up: 34 },
+  "mayo-chan": { forward: 13, up: 24 },
+  spitter: { forward: 18, up: 30 },
+  ooze: { forward: 20, up: 27 },
+  "choir-knot": { forward: 22, up: 36 },
+  resonator: { forward: 18, up: 38 },
+});
+
+export function combatWeaponAnchor({
+  kind,
+  x = 0,
+  y = 0,
+  direction = 1,
+  shotIndex = 0,
+  recoil = 0,
+} = {}) {
+  const anchor = COMBAT_WEAPON_ANCHORS[kind] ?? { forward: 14, up: 32 };
+  const facing = Number(direction) < 0 ? -1 : 1;
+  const index = Math.max(0, Number(shotIndex) || 0);
+  return Object.freeze({
+    x: Number(x) + facing * (anchor.forward - Math.max(0, Number(recoil) || 0) * index * 2),
+    y: Number(y) - anchor.up + index * 1.5,
+  });
+}
 
 export function combatPresentationFor(kind) {
   return COMBAT_PRESENTATION_PROFILES[kind] ?? COMBAT_PRESENTATION_PROFILES.walker;
@@ -416,7 +606,7 @@ export function weaponDamageEventsFor(kind, damage = 0) {
       ?? profile.shotOffsetsSeconds[index]
       ?? 0;
     const hitOffsetSeconds = hitEvents.find((event) => event.shotIndex === index)?.at
-      ?? offsetSeconds;
+      ?? offsetSeconds + Math.max(0, Number(profile.projectileTravelSeconds) || 0);
     return Object.freeze({
       shotIndex: index,
       offsetSeconds,
@@ -432,6 +622,38 @@ export function weaponDamageEventsFor(kind, damage = 0) {
       recoil: profile.recoil,
     });
   }));
+}
+
+export function sampleMrsChihaLauncherBash(elapsedSeconds = 0) {
+  const elapsed = Math.max(0, Number(elapsedSeconds) || 0);
+  const local = Math.min(elapsed, Math.max(0, MRS_CHIHA_LAUNCHER_BASH.durationSeconds - Number.EPSILON));
+  let cursor = 0;
+  for (let index = 0; index < MRS_CHIHA_LAUNCHER_BASH.frames.length; index += 1) {
+    const currentFrame = MRS_CHIHA_LAUNCHER_BASH.frames[index];
+    const end = cursor + currentFrame.durationSeconds;
+    if (local < end || index === MRS_CHIHA_LAUNCHER_BASH.frames.length - 1) {
+      return Object.freeze({
+        state: "launcher-bash",
+        frameIndex: index,
+        spriteState: currentFrame.spriteState,
+        frameElapsedSeconds: local - cursor,
+        frameDurationSeconds: currentFrame.durationSeconds,
+        clipDurationSeconds: MRS_CHIHA_LAUNCHER_BASH.durationSeconds,
+        events: currentFrame.events,
+        movement: false,
+        recovery: index === MRS_CHIHA_LAUNCHER_BASH.frames.length - 1,
+        directional: true,
+        groundAnchor: 1,
+        bodyScale: BODY_SCALE_BY_KIND["mrs-chiha"] ?? 1,
+      });
+    }
+    cursor = end;
+  }
+  throw new RangeError("Mrs. Chiha launcher bash clip has no frames");
+}
+
+export function mrsChihaLauncherBashDuration() {
+  return MRS_CHIHA_LAUNCHER_BASH.durationSeconds;
 }
 
 export function advancePendingWeaponHits(events = [], elapsedSeconds = 0) {

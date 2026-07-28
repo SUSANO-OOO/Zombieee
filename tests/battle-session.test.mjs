@@ -94,12 +94,12 @@ test("the runtime routes destructive pause actions through the no-result contrac
   assert.match(source, /!transition\.discardBattleState \|\| transition\.commitResult/);
   assert.match(source, /transition\.destination === "battle" && transition\.startFreshBattle/);
   assert.match(source, /transition\.destination === "loadout"/);
-  assert.match(source, /transition\.destination === "map"\) returnToMap\(transition/);
-  assert.match(source, /const battleStageId = qaMode \? CAMPAIGN_STAGE_IDS\.NISHIJIN_DEFENSE_LINE : sessionOverride\?\.stageId \?\? selectedStageId/);
+  assert.match(source, /transition\.destination === "map"[\s\S]*selectedOutbreakMissionId[\s\S]*setScreen\("outbreak"\)[\s\S]*returnToMap\(transition/);
+  assert.match(source, /const battleStageId = qaMode \? CAMPAIGN_STAGE_IDS\.NISHIJIN_DEFENSE_LINE : sessionOverride\?\.stageId \?\? activeOperationId/);
   assert.match(source, /const requestedFormation = sessionOverride\?\.formationKinds \?\? formationKinds/);
   assert.match(source, /const battleSupply = sessionOverride\?\.selectedSupply \?\? selectedSupply/);
   assert.match(source, /sessionOverride\?\.resultId \?\? createBattleResultId\(battleStageId\)/);
-  assert.match(source, /initialGame\(\s*transition\.selectedSupply,\s*transition\.stageId,\s*transition\.formationKinds as UnitKind\[\],[\s\S]*?campaignSave\.unitRanks/);
+  assert.match(source, /initialGame\(\s*transition\.selectedSupply,\s*transition\.stageId,\s*transition\.formationKinds as UnitKind\[\],[\s\S]*?campaignSave\.unitLevels/);
   const returnToMapBody = source.match(/const returnToMap = useCallback\(\(sessionOverride\?: \{[\s\S]*?\n  \}\) => \{([\s\S]*?)\n  \}, \[/)?.[1] ?? "";
   assert.notEqual(returnToMapBody, "", "returnToMap source extraction must remain live");
   assert.match(returnToMapBody, /sessionOverride\?\.selectedSupply \?\? selectedSupply/);

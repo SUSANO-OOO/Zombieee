@@ -1,4 +1,4 @@
-import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
+import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 
 /**
  * Audited sprite source geometry for the 0.6.0 renderer and localhost QA.
@@ -21,6 +21,54 @@ export const SPRITE_STATES = Object.freeze([
 ]);
 
 export const SPRITE_DIRECTIONS = Object.freeze(["left", "right"]);
+export const COMPACT_BATTLE_SPRITE_SCALE = 1.1;
+
+export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
+  scout: Object.freeze({ w: 58, h: 98 }),
+  ranger: Object.freeze({ w: 58, h: 98 }),
+  brute: Object.freeze({ w: 72, h: 108 }),
+  brawler: Object.freeze({ w: 62, h: 99 }),
+  gunner: Object.freeze({ w: 60, h: 100 }),
+  medic: Object.freeze({ w: 60, h: 100 }),
+  "crazy-king": Object.freeze({ w: 72, h: 104 }),
+  kumaverson: Object.freeze({ w: 64, h: 102 }),
+  babayaga: Object.freeze({ w: 62, h: 103 }),
+  guardian: Object.freeze({ w: 78, h: 108 }),
+  engineer: Object.freeze({ w: 60, h: 100 }),
+  zakimiya: Object.freeze({ w: 62, h: 102 }),
+  tky: Object.freeze({ w: 61, h: 102 }),
+  "mrs-chiha": Object.freeze({ w: 63, h: 103 }),
+  "miyamoto-musashi": Object.freeze({ w: 67, h: 106 }),
+  "mayo-chan": Object.freeze({ w: 70, h: 62 }),
+  "mayo-chan-feral": Object.freeze({ w: 76, h: 67 }),
+  walker: Object.freeze({ w: 58, h: 96 }),
+  runner: Object.freeze({ w: 53, h: 90 }),
+  turned: Object.freeze({ w: 58, h: 96 }),
+  shade: Object.freeze({ w: 64, h: 101 }),
+  spitter: Object.freeze({ w: 62, h: 101 }),
+  crusher: Object.freeze({ w: 80, h: 112 }),
+  abomination: Object.freeze({ w: 101, h: 132 }),
+  takuya: Object.freeze({ w: 94, h: 128 }),
+  grappler: Object.freeze({ w: 78, h: 108 }),
+  ooze: Object.freeze({ w: 70, h: 94 }),
+  sprinter: Object.freeze({ w: 58, h: 96 }),
+  "gate-eater": Object.freeze({ w: 126, h: 142 }),
+  kurome: Object.freeze({ w: 150, h: 170 }),
+  mother: Object.freeze({ w: 205, h: 170 }),
+  ooguchi: Object.freeze({ w: 218, h: 148 }),
+  gairen: Object.freeze({ w: 184, h: 176 }),
+  futago: Object.freeze({ w: 164, h: 178 }),
+  resonator: Object.freeze({ w: 70, h: 106 }),
+  cagewalker: Object.freeze({ w: 112, h: 92 }),
+  spindle: Object.freeze({ w: 118, h: 68 }),
+  "choir-knot": Object.freeze({ w: 88, h: 92 }),
+  "pall-manta": Object.freeze({ w: 126, h: 72 }),
+  "anchor-bloom": Object.freeze({ w: 112, h: 62 }),
+});
+
+export function spriteBattleDisplaySizeFor(kind) {
+  return SPRITE_BATTLE_DISPLAY_SIZES[kind] ?? Object.freeze({ w: 58, h: 96 });
+}
 
 const STATE_FRAME_INDEX = Object.freeze({
   idle: 0,
@@ -104,6 +152,30 @@ const LEGACY_PADDED_CELL = Object.freeze({
 });
 
 const NEWCOMER_VISIBLE = Object.freeze({
+  zakimiya: {
+    right: [[160, 16, 321, 432], [142, 16, 329, 432], [136, 16, 354, 432], [119, 16, 311, 421], [160, 16, 397, 426], [140, 16, 329, 432], [220, 327, 426, 432]],
+    left: [[160, 16, 321, 432], [142, 16, 329, 432], [136, 16, 354, 432], [169, 16, 368, 421], [100, 16, 329, 426], [140, 16, 329, 432], [55, 327, 260, 432]],
+  },
+  tky: {
+    right: [[157, 16, 323, 432], [120, 16, 360, 432], [117, 16, 364, 432], [110, 40, 401, 432], [159, 16, 362, 432], [108, 16, 373, 432], [16, 244, 464, 432]],
+    left: [[157, 16, 323, 432], [120, 16, 360, 432], [117, 16, 364, 432], [79, 40, 370, 432], [118, 16, 321, 432], [108, 16, 373, 432], [16, 244, 464, 432]],
+  },
+  "mrs-chiha": {
+    right: [[171, 16, 309, 432], [132, 16, 326, 432], [174, 16, 355, 432], [135, 16, 345, 432], [42, 16, 439, 432], [67, 16, 414, 432], [70, 176, 410, 432]],
+    left: [[171, 16, 309, 432], [154, 16, 349, 432], [126, 16, 307, 432], [135, 16, 345, 432], [42, 16, 439, 432], [67, 16, 414, 432], [70, 176, 410, 432]],
+  },
+  "miyamoto-musashi": {
+    right: [[78, 16, 402, 432], [114, 16, 366, 432], [133, 16, 348, 432], [90, 16, 390, 432], [106, 16, 374, 432], [89, 16, 392, 432], [120, 300, 455, 432]],
+    left: [[78, 16, 402, 432], [114, 16, 366, 432], [133, 16, 348, 432], [90, 16, 390, 432], [106, 16, 374, 432], [89, 16, 392, 432], [26, 300, 360, 432]],
+  },
+  "mayo-chan": {
+    right: [[50, 16, 430, 432], [16, 95, 464, 432], [16, 75, 464, 432], [16, 185, 464, 432], [48, 16, 433, 432], [54, 16, 427, 432], [16, 171, 464, 432]],
+    left: [[50, 16, 430, 432], [16, 95, 464, 432], [16, 75, 464, 432], [16, 185, 464, 432], [48, 16, 433, 432], [54, 16, 427, 432], [16, 171, 464, 432]],
+  },
+  "mayo-chan-feral": {
+    right: [[40, 16, 441, 432], [16, 47, 464, 432], [16, 87, 464, 432], [66, 16, 414, 432], [39, 16, 442, 432], [16, 43, 464, 432], [16, 53, 464, 432]],
+    left: [[40, 16, 441, 432], [16, 47, 464, 432], [16, 87, 464, 432], [66, 16, 414, 432], [39, 16, 442, 432], [16, 43, 464, 432], [16, 53, 464, 432]],
+  },
   scout: {
     right: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
     left: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
@@ -160,9 +232,65 @@ const NEWCOMER_VISIBLE = Object.freeze({
     right: [[122, 16, 358, 432], [111, 16, 368, 432], [108, 16, 372, 432], [103, 16, 377, 432], [54, 65, 425, 432], [88, 37, 392, 432], [51, 265, 428, 432]],
     left: [[122, 16, 358, 432], [111, 16, 368, 432], [108, 16, 372, 432], [103, 16, 377, 432], [54, 65, 425, 432], [88, 37, 392, 432], [51, 265, 428, 432]],
   },
+  kurome: {
+    right: [[111, 16, 370, 432], [84, 16, 397, 432], [102, 16, 378, 432], [89, 16, 391, 432], [71, 16, 410, 432], [82, 16, 398, 432], [16, 181, 464, 432]],
+    left: [[111, 16, 370, 432], [84, 16, 397, 432], [102, 16, 378, 432], [89, 16, 391, 432], [71, 16, 410, 432], [82, 16, 398, 432], [16, 181, 464, 432]],
+  },
+  mother: {
+    right: [[16, 93, 464, 432], [16, 83, 464, 432], [16, 80, 464, 432], [16, 85, 464, 432], [16, 82, 464, 432], [16, 112, 464, 432], [16, 228, 464, 432]],
+    left: [[16, 93, 464, 432], [16, 83, 464, 432], [16, 80, 464, 432], [16, 85, 464, 432], [16, 82, 464, 432], [16, 112, 464, 432], [16, 228, 464, 432]],
+  },
+  ooguchi: {
+    right: [[16, 245, 464, 432], [16, 252, 464, 432], [16, 253, 464, 432], [16, 234, 464, 432], [16, 272, 464, 432], [16, 197, 464, 432], [16, 293, 464, 432]],
+    left: [[16, 245, 464, 432], [16, 252, 464, 432], [16, 253, 464, 432], [16, 234, 464, 432], [16, 272, 464, 432], [16, 197, 464, 432], [16, 293, 464, 432]],
+  },
+  gairen: {
+    right: [[16, 31, 464, 432], [40, 16, 440, 432], [16, 45, 464, 432], [16, 19, 464, 432], [16, 24, 464, 432], [21, 16, 459, 432], [16, 233, 464, 432]],
+    left: [[16, 31, 464, 432], [40, 16, 440, 432], [16, 45, 464, 432], [16, 19, 464, 432], [16, 24, 464, 432], [21, 16, 459, 432], [16, 233, 464, 432]],
+  },
+  futago: {
+    right: [[17, 16, 463, 432], [63, 16, 418, 432], [35, 16, 445, 432], [16, 28, 464, 432], [25, 16, 456, 432], [27, 16, 454, 432], [16, 204, 464, 432]],
+    left: [[17, 16, 463, 432], [63, 16, 418, 432], [35, 16, 445, 432], [16, 28, 464, 432], [25, 16, 456, 432], [27, 16, 454, 432], [16, 204, 464, 432]],
+  },
+  resonator: {
+    right: [[137, 58, 344, 432], [111, 58, 359, 432], [123, 58, 371, 432], [84, 58, 397, 432], [84, 58, 397, 432], [128, 58, 353, 432], [39, 244, 442, 432]],
+    left: [[137, 58, 344, 432], [111, 58, 359, 432], [123, 58, 371, 432], [84, 58, 397, 432], [84, 58, 397, 432], [128, 58, 353, 432], [39, 244, 442, 432]],
+  },
+  cagewalker: {
+    right: [[54, 49, 427, 432], [29, 75, 441, 432], [41, 75, 453, 432], [34, 169, 446, 432], [38, 49, 442, 432], [69, 49, 426, 431], [34, 223, 442, 432]],
+    left: [[54, 49, 427, 432], [29, 75, 441, 432], [41, 75, 453, 432], [34, 169, 446, 432], [38, 49, 442, 432], [55, 49, 412, 431], [38, 223, 446, 432]],
+  },
+  spindle: {
+    right: [[34, 231, 446, 432], [29, 156, 441, 432], [41, 156, 453, 432], [52, 49, 429, 432], [34, 123, 446, 432], [35, 129, 446, 430], [34, 304, 446, 432]],
+    left: [[34, 231, 446, 432], [29, 156, 441, 432], [41, 156, 453, 432], [52, 49, 429, 432], [34, 123, 446, 432], [34, 129, 445, 430], [34, 304, 446, 432]],
+  },
+  "choir-knot": {
+    right: [[76, 53, 405, 432], [75, 53, 395, 432], [87, 53, 407, 432], [75, 53, 405, 432], [64, 53, 416, 432], [73, 53, 408, 432], [36, 242, 442, 432]],
+    left: [[76, 53, 405, 432], [75, 53, 395, 432], [87, 53, 407, 432], [75, 53, 405, 432], [64, 53, 416, 432], [72, 53, 407, 432], [38, 242, 444, 432]],
+  },
+  "pall-manta": {
+    right: [[30, 283, 451, 432], [25, 216, 446, 432], [37, 216, 458, 432], [30, 83, 451, 432], [30, 66, 451, 432], [32, 141, 449, 432], [30, 275, 451, 432]],
+    left: [[30, 283, 451, 432], [25, 216, 446, 432], [37, 216, 458, 432], [30, 83, 451, 432], [30, 66, 451, 432], [32, 141, 449, 432], [30, 275, 451, 432]],
+  },
+  "anchor-bloom": {
+    right: [[32, 74, 449, 432], [27, 105, 444, 432], [39, 105, 456, 432], [32, 165, 449, 432], [32, 145, 449, 422], [36, 45, 445, 429], [32, 225, 449, 427]],
+    left: [[32, 74, 449, 432], [27, 105, 444, 432], [39, 105, 456, 432], [32, 165, 449, 432], [32, 145, 449, 422], [36, 45, 445, 429], [32, 225, 449, 427]],
+  },
 });
 
-function frameRecord({ path, sheetWidth, sheetHeight, source, visible, nativeDirection, direction, derivedFrom, authoredCell, anchorX = 0.5 }) {
+function frameRecord({
+  path,
+  sheetWidth,
+  sheetHeight,
+  source,
+  visible,
+  nativeDirection,
+  direction,
+  derivedFrom,
+  authoredCell,
+  drawSlices,
+  anchorX = 0.5,
+}) {
   const [left, top, right, bottom] = visible;
   // Anchor the sprite on the measured bottom-most authored pixel.  Legacy
   // sheets intentionally keep a large transparent strip below the feet, so a
@@ -195,6 +323,9 @@ function frameRecord({ path, sheetWidth, sheetHeight, source, visible, nativeDir
     anchorY,
     anchor: Object.freeze({ x: anchorX, y: anchorY }),
     flipX: nativeDirection !== direction,
+    ...(drawSlices ? {
+      drawSlices: Object.freeze(drawSlices.map((slice) => Object.freeze({ ...slice }))),
+    } : {}),
     ...(authoredCell ? { authoredCell: Object.freeze({ ...authoredCell }) } : {}),
     ...(derivedFrom ? { derivedFrom } : {}),
   });
@@ -311,6 +442,12 @@ export const SPRITE_MANIFEST = Object.freeze({
   gunner: explicitAtlasManifestEntry("gunner", "/art/v070/characters/gunner-battle-v1.png"),
   guardian: explicitAtlasManifestEntry("guardian", "/art/v070/characters/guardian-battle-v1.png"),
   engineer: explicitAtlasManifestEntry("engineer", "/art/v080/characters/monkey-battle-r2.png"),
+  zakimiya: explicitAtlasManifestEntry("zakimiya", "/art/v090/characters/zakimiya-battle-r1.png"),
+  tky: explicitAtlasManifestEntry("tky", "/art/v090/characters/tky-battle-r1.png"),
+  "mrs-chiha": explicitAtlasManifestEntry("mrs-chiha", "/art/v090/characters/mrs-chiha-battle-r1.png"),
+  "miyamoto-musashi": explicitAtlasManifestEntry("miyamoto-musashi", "/art/v090/characters/miyamoto-musashi-battle-r1.png"),
+  "mayo-chan": explicitAtlasManifestEntry("mayo-chan", "/art/v090/characters/mayo-chan-battle-r1.png"),
+  "mayo-chan-feral": explicitAtlasManifestEntry("mayo-chan-feral", "/art/v090/characters/mayo-chan-feral-battle-r1.png"),
   walker: legacyManifestEntry("infected", "left"),
   runner: legacyManifestEntry("infected", "left"),
   turned: legacyManifestEntry("infected", "left"),
@@ -323,6 +460,17 @@ export const SPRITE_MANIFEST = Object.freeze({
   ooze: explicitAtlasManifestEntry("ooze", "/art/v070/characters/ooze-battle-v1.png"),
   sprinter: explicitAtlasManifestEntry("sprinter", "/art/v070/characters/sprinter-battle-v1.png"),
   "gate-eater": explicitAtlasManifestEntry("gate-eater", "/art/v070/characters/gate-eater-battle-v1.png"),
+  kurome: explicitAtlasManifestEntry("kurome", "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png"),
+  mother: explicitAtlasManifestEntry("mother", "/art/v090/bosses/mother-battle-r1.png"),
+  ooguchi: explicitAtlasManifestEntry("ooguchi", "/art/v090/bosses/ooguchi-battle-r1.png"),
+  gairen: explicitAtlasManifestEntry("gairen", "/art/v090/bosses/gairen-battle-r1.png"),
+  futago: explicitAtlasManifestEntry("futago", "/art/v090/bosses/futago-battle-r1.png"),
+  resonator: explicitAtlasManifestEntry("resonator", "/art/v090/enemies/resonator-battle-v1.png"),
+  cagewalker: explicitAtlasManifestEntry("cagewalker", "/art/v090/enemies/cagewalker-battle-v1.png"),
+  spindle: explicitAtlasManifestEntry("spindle", "/art/v090/enemies/spindle-battle-v1.png"),
+  "choir-knot": explicitAtlasManifestEntry("choir-knot", "/art/v090/enemies/choir-knot-battle-v1.png"),
+  "pall-manta": explicitAtlasManifestEntry("pall-manta", "/art/v090/enemies/pall-manta-battle-v1.png"),
+  "anchor-bloom": explicitAtlasManifestEntry("anchor-bloom", "/art/v090/enemies/anchor-bloom-battle-v1.png"),
   "crazy-king": explicitAtlasManifestEntry("crazy-king", "/art/v060/characters/crazy-king-battle-v1.png"),
   kumaverson: explicitAtlasManifestEntry("kumaverson", "/art/v060/characters/kumaverson-battle-v1.png"),
   babayaga: explicitAtlasManifestEntry("babayaga", "/art/v060/characters/babayaga-battle-v1.png"),
@@ -397,16 +545,18 @@ export function fitSpriteBattleDisplaySize(kind, frame, maximum = {}) {
 export const CHARACTER_PORTRAIT_ART = Object.freeze({
   ...Object.fromEntries(Object.entries(V080_UNIT_VISUAL_PROFILES)
     .map(([kind, profile]) => [kind, profile.eventPortrait.path])),
+  ...Object.fromEntries(Object.entries(V090_UNIT_VISUAL_PROFILES)
+    .map(([kind, profile]) => [kind, profile.eventPortrait.path])),
   guide: V075_VISUAL_PROFILES.ikura.eventPortrait.path,
 });
 
 export const FORMATION_CARD_ART = Object.freeze(Object.fromEntries(
-  Object.entries(V080_UNIT_VISUAL_PROFILES)
+  [...Object.entries(V080_UNIT_VISUAL_PROFILES), ...Object.entries(V090_UNIT_VISUAL_PROFILES)]
     .map(([kind, profile]) => [kind, profile.formationCard.path]),
 ));
 
 export const PERSONNEL_CARD_ART = Object.freeze(Object.fromEntries(
-  Object.entries(V080_UNIT_VISUAL_PROFILES)
+  [...Object.entries(V080_UNIT_VISUAL_PROFILES), ...Object.entries(V090_UNIT_VISUAL_PROFILES)]
     .map(([kind, profile]) => [kind, profile.personnelCard.path]),
 ));
 

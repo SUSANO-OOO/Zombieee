@@ -1,0 +1,663 @@
+{
+  "version": 1,
+  "generator": "scripts/build-v090-playable-audio.py",
+  "sampleRate": 44100,
+  "policy": "Dedicated weapon, manual ability, synthesized Chihuahua battle cues, and boss combat cues authored in-repository without sampled recordings or human voice.",
+  "cues": [
+    {
+      "id": "weapon-tky-plasma-blade",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-tky-plasma-blade.wav",
+        "sha256": "85ba934043d49238961069b9f29b91607a0e0b3dfadab565104e391ee281fba0"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-tky-plasma-blade.mp3",
+          "sha256": "6638a5ea6d1b055426470848c9fe8a6c261bc88ec8b16d173d5eaf441202bfc0",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/weapon-tky-plasma-blade.ogg",
+          "sha256": "d0ccafcfd5b755897a188db543e41950e1f8b987d2d12119d74865bd5c0fb77e",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-tky-light-blade-charge",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-tky-light-blade-charge.wav",
+        "sha256": "aef25cb498cebdaf1d2bff7cb2ba00fb98b4b2700b95676812651a1bd994d4b1"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-charge.mp3",
+          "sha256": "354388f06b4676aec33966ec757e9def78c8c0838abd040995d976fff2978bc2",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-charge.ogg",
+          "sha256": "2308e6c7da021564d7d26d48f8afe7d8a98567a550f01fe537b01b77a43ac71b",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-tky-light-blade-release",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-tky-light-blade-release.wav",
+        "sha256": "9dff84140bb14649a54e203042ebd128d23647cafb45f752829647d984705f84"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-release.mp3",
+          "sha256": "ef800ad1516eaa6ac1c9937e05d428e129a3469da0799317782d42a45dd0af68",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-release.ogg",
+          "sha256": "a91ce3f94db1302029062fbd6846e3a965a8fa39f9aede06065d86cace25c88f",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-tky-light-blade-impact",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-tky-light-blade-impact.wav",
+        "sha256": "3aa2067f48c3b27783d70214ae891377369fe5772d489cd322a5ad67b1e939f3"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-impact.mp3",
+          "sha256": "6a8a1255b4a7b2b40b97ea50c576959a25cfef18b49e0788868603a0458a3666",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-tky-light-blade-impact.ogg",
+          "sha256": "67d46fedc70dfe18f6f0c234c846faa5c1b119457c1902cdc9339e6ae8228fc3",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-grenade-launcher",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-grenade-launcher.wav",
+        "sha256": "0f1f3bc4789f71ee0422b0b6c152afc1891b4ba34b529ef35265ca11dcd922ea"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-grenade-launcher.mp3",
+          "sha256": "07a7b1a00f32112e27bd28dafaf80c158bacfd4d7e85a4c4ea5a5561985f2c78",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-grenade-launcher.ogg",
+          "sha256": "4a1b7c12eda33e369405487fbe18d2f6e50469142ae08be1e7a7c50eab0c9ba9",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-grenade-impact",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-grenade-impact.wav",
+        "sha256": "ae49b5b080bddf92992b2d2073c0ebbf19360ab123240a555e3fb0d057cce3c1"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-grenade-impact.mp3",
+          "sha256": "575b87fbcade80b995c315719ffdcf12ffee7465bff617146185a56adf8ab667",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-grenade-impact.ogg",
+          "sha256": "ddd61c40b503020e9e2d0ecdda9e941f9966320a8c7b79a20c85fe242110e084",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-launcher-bash",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-launcher-bash.wav",
+        "sha256": "166dbcd1a16665e27cc597f888146ad35dd2adbe0ec89c8fed214aa7ef51e6ae"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-launcher-bash.mp3",
+          "sha256": "11adffce5413e17382ad0604dd3e8d3ccbba587e7b6042c16d2c7ad20001364f",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-launcher-bash.ogg",
+          "sha256": "8eb0b47c361b35d93f19239f1772f5492b3c20559525f90c29277a25f030c16e",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-launcher-retrieve",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-launcher-retrieve.wav",
+        "sha256": "beb555765254614fb48569aa5f680bc6a3dad085ec45c52dc9cd7ce58caa43c9"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-launcher-retrieve.wav",
+          "sha256": "beb555765254614fb48569aa5f680bc6a3dad085ec45c52dc9cd7ce58caa43c9",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-launcher-aim",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-launcher-aim.wav",
+        "sha256": "d81a84939054d3e9fd8c23ff2b6222f29bc72785b4d33591d466e46239d64e47"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-launcher-aim.wav",
+          "sha256": "d81a84939054d3e9fd8c23ff2b6222f29bc72785b4d33591d466e46239d64e47",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-grenade-flight",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-grenade-flight.wav",
+        "sha256": "b0254b017c03abc6b8fb53e4065e910899bbfd8a08da2d27c7bc375903c1e70c"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-grenade-flight.wav",
+          "sha256": "b0254b017c03abc6b8fb53e4065e910899bbfd8a08da2d27c7bc375903c1e70c",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-launcher-stow",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-launcher-stow.wav",
+        "sha256": "9b7e6283122db86af68d47c2abd5bc4037979c8f4606fad258a458ddbdb36ea3"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-launcher-stow.wav",
+          "sha256": "9b7e6283122db86af68d47c2abd5bc4037979c8f4606fad258a458ddbdb36ea3",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-ready",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mrs-chiha-salvo-ready.wav",
+        "sha256": "8d67096a3983753773373dae38ae413cbf47e0a0034adb6706a58e59774ef5c5"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-ready.mp3",
+          "sha256": "6234f7c9fada43eb74ad91f3cb53a1ddc4e6d0fadd39127ec1069f536e115278",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-ready.ogg",
+          "sha256": "ca7f1cd2eab945cef48bf9537c521274412eeec51561c843ef9c040746ecd1ec",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-cylinder",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mrs-chiha-salvo-cylinder.wav",
+        "sha256": "eab54b76ec61e52453b8e12bff25d70cbd647b528b8918516d45ca8966497c28"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-cylinder.wav",
+          "sha256": "eab54b76ec61e52453b8e12bff25d70cbd647b528b8918516d45ca8966497c28",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-shot",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mrs-chiha-salvo-shot.wav",
+        "sha256": "f1c448ffcf371bae603fabb739ecbda9003d58c5cb10db4adca4e8d7eeb8ef99"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-shot.mp3",
+          "sha256": "bd7aeec317ab32fb2eb31324b53bc9ef50f3ef5e8292028866b5c1ebd511e3ce",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-shot.ogg",
+          "sha256": "ff1de64634b8e1173a05c5092fba869122d8b38846a477b7e49c72bf174e9478",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-impact",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mrs-chiha-salvo-impact.wav",
+        "sha256": "507e02387f3fca2ec0aab36a5f40947e026aac03b64508ad14cdd6f4a0407d6c"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-impact.mp3",
+          "sha256": "ddbb98f7e896df55264452cdeefc1b196d91bef2bcc033e28016c13285b2d294",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-impact.ogg",
+          "sha256": "80d7815a96c65972cff58cbba918161cc5968965c457c42fdc1f7cc808d63684",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-final",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mrs-chiha-salvo-final.wav",
+        "sha256": "b615f8fc54d903ddc1a737265dd039689bb36a3a98c20fbf18348f244eac6e5a"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-final.mp3",
+          "sha256": "19c4fc2d4ecbf6c5785b0bee640c527927e68efd41f5c418c3fe009dc87c20af",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-final.ogg",
+          "sha256": "c7745a75b898bfb85f2a89c1dd9293febfa7efe6abd0332fa7b26522708e16d6",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-musashi-dual-katana",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-musashi-dual-katana.wav",
+        "sha256": "95b9f4b2f8393221bbd6eea607112d9df6b4282a472d94e9a1c8c587c495bd69"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-musashi-dual-katana.mp3",
+          "sha256": "8fdb67649c71b332cdeaea2147d3080d0852075e6e67c607c3c28c752b92639f",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/weapon-musashi-dual-katana.ogg",
+          "sha256": "9ab5c90fd17846392f96eff9d82df6483472e7ef594108c7019b878f8524f30b",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-musashi-cross-guard",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-musashi-cross-guard.wav",
+        "sha256": "21bcf8642a8b57f00ebf941eaa9dc1b64296e28da964afbe0882883c9f3739b3"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-musashi-cross-guard.mp3",
+          "sha256": "c2044abf8c01331a23b1868ef8352d3b3c1ef5ea5f4082d105ed99b56583c55a",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-musashi-cross-guard.ogg",
+          "sha256": "983b2cbb068500a8e9ba2f8cbfa17e988e68f32f6ac62a4b71a32445ba052d4c",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-musashi-counter",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-musashi-counter.wav",
+        "sha256": "49674dc3700d61fb74abfd526bd16c099b5e3356eda8737be15c30b8953b5814"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-musashi-counter.mp3",
+          "sha256": "56b85be8f9ea0bec1fc2c91d217f868450484bd588ecf65c9ab081d59f534e39",
+          "type": "audio/mpeg"
+        },
+        {
+          "path": "public/audio/v090/sfx/ability-musashi-counter.ogg",
+          "sha256": "3a129b1f53b0f94639484146ea12514431d43a620f6f0c43c4ef748fb420db16",
+          "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mayo-bite",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mayo-bite.wav",
+        "sha256": "157f39cf34c382bcdb5bae58cdca07295cbdaddd6c01032d1340d16ba11f89e0"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mayo-bite.wav",
+          "sha256": "157f39cf34c382bcdb5bae58cdca07295cbdaddd6c01032d1340d16ba11f89e0",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "ability-mayo-feral-start",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mayo-feral-start.wav",
+        "sha256": "2ad06f5e3365a7c0352461a2107a0447e797bb6dc841b636dce24e0662a11fc3"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mayo-feral-start.wav",
+          "sha256": "2ad06f5e3365a7c0352461a2107a0447e797bb6dc841b636dce24e0662a11fc3",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "ability-mayo-feral-rush",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mayo-feral-rush.wav",
+        "sha256": "9f89cac333dbd2dab618ad9fb1c70db816ffb0613d61c9aafa9556c2126e0d6f"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mayo-feral-rush.wav",
+          "sha256": "9f89cac333dbd2dab618ad9fb1c70db816ffb0613d61c9aafa9556c2126e0d6f",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "ability-mayo-feral-end",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mayo-feral-end.wav",
+        "sha256": "c4ec39b8d0e4da8a81f90b2d5f1b09135c5066b1c3d6cfef1b1dead5e0b529f7"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mayo-feral-end.wav",
+          "sha256": "c4ec39b8d0e4da8a81f90b2d5f1b09135c5066b1c3d6cfef1b1dead5e0b529f7",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "voice-mayo-deploy",
+      "origin": "project-original deterministic Chihuahua synthesis; no sampled recording or human voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/voice-mayo-deploy.wav",
+        "sha256": "cef61b5b831d33b47beb6723e0b2900fea5ef225826a14d40a9887fa1077c2c8"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/voice-mayo-deploy.wav",
+          "sha256": "cef61b5b831d33b47beb6723e0b2900fea5ef225826a14d40a9887fa1077c2c8",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "voice-mayo-attack",
+      "origin": "project-original deterministic Chihuahua synthesis; no sampled recording or human voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/voice-mayo-attack.wav",
+        "sha256": "986cd711a2ef1ecdad4ffe5a4664f76e85f46c7628c169d0fef65d73e6937fc4"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/voice-mayo-attack.wav",
+          "sha256": "986cd711a2ef1ecdad4ffe5a4664f76e85f46c7628c169d0fef65d73e6937fc4",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "voice-mayo-hurt",
+      "origin": "project-original deterministic Chihuahua synthesis; no sampled recording or human voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/voice-mayo-hurt.wav",
+        "sha256": "108b9a0e2a5e857fb4bef27a287b20db9e1cfbe53e79fb502e0147d76be85a5b"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/voice-mayo-hurt.wav",
+          "sha256": "108b9a0e2a5e857fb4bef27a287b20db9e1cfbe53e79fb502e0147d76be85a5b",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "voice-mayo-retreat",
+      "origin": "project-original deterministic Chihuahua synthesis; no sampled recording or human voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/voice-mayo-retreat.wav",
+        "sha256": "26314ae62434645e2cfc3206c89474e946a8ac690c2ec835b2bd7014744d99bf"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/voice-mayo-retreat.wav",
+          "sha256": "26314ae62434645e2cfc3206c89474e946a8ac690c2ec835b2bd7014744d99bf",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-mother-entrance",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-mother-entrance.wav",
+        "sha256": "8671efdcee9487b7f9af402e57b3310cfb540feefe85298a9387d8f6fae14133"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-mother-entrance.wav",
+          "sha256": "8671efdcee9487b7f9af402e57b3310cfb540feefe85298a9387d8f6fae14133",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-mother-brood-warning",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-mother-brood-warning.wav",
+        "sha256": "70beeb5d8cb514b6d945c6bd8c49e10b2dc7147eb5e9087cdedf38b8c06dbd7a"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-mother-brood-warning.wav",
+          "sha256": "70beeb5d8cb514b6d945c6bd8c49e10b2dc7147eb5e9087cdedf38b8c06dbd7a",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-mother-brood-eruption",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-mother-brood-eruption.wav",
+        "sha256": "65105ef5702f1f92a2b2079356873d4d9017e504b898c5091dbd6dd990fb24a7"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-mother-brood-eruption.wav",
+          "sha256": "65105ef5702f1f92a2b2079356873d4d9017e504b898c5091dbd6dd990fb24a7",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-ooguchi-entrance",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-ooguchi-entrance.wav",
+        "sha256": "4176cd47299a83014e808ab40cd0f55731059da5f414e34bf7dac80d3eed641d"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-ooguchi-entrance.wav",
+          "sha256": "4176cd47299a83014e808ab40cd0f55731059da5f414e34bf7dac80d3eed641d",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-ooguchi-charge-warning",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-ooguchi-charge-warning.wav",
+        "sha256": "8922cf6b3d58453e82a8ea1187a00d958da4f325ff2abe7db395f43f4f9472a6"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-ooguchi-charge-warning.wav",
+          "sha256": "8922cf6b3d58453e82a8ea1187a00d958da4f325ff2abe7db395f43f4f9472a6",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-ooguchi-charge-impact",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-ooguchi-charge-impact.wav",
+        "sha256": "52529e29a39e611d389a919a94eac35136565088f566dc15e2fd5b87141cdcf8"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-ooguchi-charge-impact.wav",
+          "sha256": "52529e29a39e611d389a919a94eac35136565088f566dc15e2fd5b87141cdcf8",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-gairen-entrance",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-gairen-entrance.wav",
+        "sha256": "b5280cd14112ad3dc4078ff2d204b4500bfd22c4cfb14c3681ef101283bd9d83"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-gairen-entrance.wav",
+          "sha256": "b5280cd14112ad3dc4078ff2d204b4500bfd22c4cfb14c3681ef101283bd9d83",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-gairen-shell-warning",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-gairen-shell-warning.wav",
+        "sha256": "6017e8e9b4708f63ac789351e9a5aeb2db5015049ad04437794c8078c4ff0188"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-gairen-shell-warning.wav",
+          "sha256": "6017e8e9b4708f63ac789351e9a5aeb2db5015049ad04437794c8078c4ff0188",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-gairen-shell-sweep",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-gairen-shell-sweep.wav",
+        "sha256": "86d20522bb230bc2664e23dd0f594956e7f2b3a2cd18ba64fa4634c856df7aee"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-gairen-shell-sweep.wav",
+          "sha256": "86d20522bb230bc2664e23dd0f594956e7f2b3a2cd18ba64fa4634c856df7aee",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-futago-entrance",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-futago-entrance.wav",
+        "sha256": "076680b947fe6d9434ff72c352e9310d778309af40c96909fd5d6a300d03a380"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-futago-entrance.wav",
+          "sha256": "076680b947fe6d9434ff72c352e9310d778309af40c96909fd5d6a300d03a380",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-futago-cross-warning",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-futago-cross-warning.wav",
+        "sha256": "53fed1ea45dd23fa1f2a8392ec29e1d804831f1ea60a3265697d4f4bf395dafd"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-futago-cross-warning.wav",
+          "sha256": "53fed1ea45dd23fa1f2a8392ec29e1d804831f1ea60a3265697d4f4bf395dafd",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "boss-futago-cross-impact",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/boss-futago-cross-impact.wav",
+        "sha256": "1cc67d793b899b08fadd67681ff1ab2026b5daf72a3cb887595f8515a5c250ce"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/boss-futago-cross-impact.wav",
+          "sha256": "1cc67d793b899b08fadd67681ff1ab2026b5daf72a3cb887595f8515a5c250ce",
+          "type": "audio/wav"
+        }
+      ]
+    }
+  ]
+}

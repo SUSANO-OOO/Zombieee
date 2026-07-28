@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "version": "0.9.0",
+  "status": "producer-review-required",
+  "reviewGate": "Producer identity gallery for all five new bosses, six normal infected, and equipment icons.",
+  "rightsProvenance": {
+    "source": "OpenAI image generation under producer direction",
+    "thirdPartyDownloadedVisuals": false
+  },
+  "infected": [
+    {
+      "kind": "resonator",
+      "displayName": "裂声体",
+      "bodyPlan": "upright-throat-rib-resonator",
+      "source": {
+        "path": "assets/source/v090/enemies/resonator-infected-pose-sheet-r1.png",
+        "sha256": "30d49ba1eab97a2434852ab5a2ade2f3aab9a2255a1182305715d0abe0595804"
+      },
+      "atlas": {
+        "path": "public/art/v090/enemies/resonator-battle-v1.png",
+        "sha256": "aeec266cb2245ae8112f2e1854c10a96ff10bd68c7d90b56f1b5d27e813557fc",
+        "bytes": 1724661,
+        "dimensions": [3360, 896]
+      },
+      "compendium": {
+        "path": "public/art/v090/enemies/resonator-compendium-v1.webp",
+        "sha256": "d614c6b973ab67b371d0d2226271067961b26e76500aee65a2cf246cb7ca1895",
+        "bytes": 29568,
+        "dimensions": [512, 512]
+      }
+    },
+    {
+      "kind": "cagewalker",
+      "displayName": "骨檻",
+      "bodyPlan": "rib-cage-multi-bone-locomotion",
+      "source": {
+        "path": "assets/source/v090/enemies/cagewalker-infected-pose-sheet-r1.png",
+        "sha256": "bb43044102625b259ce16d9c06eedac6a286a87887ad4c047087e3fcfa53c11a"
+      },
+      "atlas": {
+        "path": "public/art/v090/enemies/cagewalker-battle-v1.png",
+        "sha256": "f631ebdea0bd307ad46e21a8a6ed683b91b1d956235edb71c511fa1e4856bf74",
+        "bytes": 2299141,
+        "dimensions": [3360, 896]
+      },
+      "compendium": {
+        "path": "public/art/v090/enemies/cagewalker-compendium-v1.webp",
+        "sha256": "bb6e6add4fef49bbc40689a685055f1b04eac499f198193382c1f3faf121af1d",
+        "bytes": 47458,
+        "dimensions": [512, 512]
+      }
+    },
+    {
+      "kind": "spindle",
+      "displayName": "脊走り",
+      "bodyPlan": "spine-tendon-centipede",
+      "source": {
+        "path": "assets/source/v090/enemies/spindle-infected-pose-sheet-r1.png",
+        "sha256": "4d8084728b0e57c48834481e683aecaa6390ec286736b4d70e9950d49eb2d005"
+      },
+      "atlas": {
+        "path": "public/art/v090/enemies/spindle-battle-v1.png",
+        "sha256": "fab1a5d5cc9bf0f5b3f88a5e15e2e886cf609b6c282ab9d2f29d2232345ab24c",
+        "bytes": 2053370,
+        "dimensions": [3360, 896]
+      },
+      "compendium": {
+        "path": "public/art/v090/enemies/spindle-compendium-v1.webp",
+        "sha256": "73e786ee4bc3bb31224adeafd847daa411a19567e9d8a5c75c4edde823f29987",
+        "bytes": 26860,
+        "dimensions": [512, 512]
+      }
+    },
+    {
+      "kind": "choir-knot",
+      "displayName": "百面瘤",
+      "bodyPlan": "many-faced-mass-on-spine-legs",
+      "source": {
+        "path": "assets/source/v090/enemies/choir-knot-infected-pose-sheet-r1.png",
+        "sha256": "9ac9508b475b10ef7af7992d500e102ef8d87f8c49ccdaeb49a1d7c763daad29"
+      },
+      "atlas": {
+        "path": "public/art/v090/enemies/choir-knot-battle-v1.png",
+        "sha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+        "bytes": 2272044,
+        "dimensions": [3360, 896]
+      },
+      "compendium": {
+        "path": "public/art/v090/enemies/choir-knot-compendium-v1.webp",
+        "sha256": "2fbb48d5662f1230e750b5678a87b9670fef5c63dd716f49f8af0d37ceb3cd0e",
+        "bytes": 36800,
+        "dimensions": [512, 512]
+      }
+    },
+    {
+      "kind": "pall-manta",
+      "displayName": "皮幕",
+      "bodyPlan": "low-dermal-canopy-quadruped",
+      "source": {
+        "path": "assets/source/v090/enemies/pall-manta-infected-pose-sheet-r1.png",
+        "sha256": "88c849a296e5f3df115d1797b1a5388bb5807803bf53ac80a8b8e4b012eec651"
+      },
+      "atlas": {
+        "path": "public/art/v090/enemies/pall-manta-battle-v1.png",
+        "sha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+        "bytes": 1836088,
+        "dimensions": [3360, 896]
+      },
+      "compendium": {
+        "path": "public/art/v090/enemies/pall-manta-compendium-v1.webp",
+        "sha256": "0221097fb4ed4f62b104b488333d5a68c8295a18cc39a13bb96d1016e337cf00",
+        "bytes": 20734,
+        "dimensions": [512, 512]
+      }
+    },
+    {
+      "kind": "anchor-bloom",
+      "displayName": "掌根",
+      "bodyPlan": "radial-palm-foot-root-organism",
+      "source": {
+        "path": "assets/source/v090/enemies/anchor-bloom-infected-pose-sheet-r1.png",
+        "sha256": "a149c3952d78e3b9dd855c35c44eae3af1da1d243e6b7bd1f219d346292ac6a3"
+      },
+      "atlas": {
+        "path": "public/art/v090/enemies/anchor-bloom-battle-v1.png",
+        "sha256": "b01a5193114a09eca2aa82699a87601b5907baef0e76702aee4115fd3f4f7066",
+        "bytes": 2365020,
+        "dimensions": [3360, 896]
+      },
+      "compendium": {
+        "path": "public/art/v090/enemies/anchor-bloom-compendium-v1.webp",
+        "sha256": "8bd93ef3bf2a512a208aa0eefe01b0f97485fc0aff344cfed72733917918f256",
+        "bytes": 39366,
+        "dimensions": [512, 512]
+      }
+    }
+  ]
+}

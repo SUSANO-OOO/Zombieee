@@ -81,7 +81,7 @@ export function runCapsEconomyAudit() {
     });
     const upgradeQuote = campaignUnitUpgradeQuote(recruited.save, unitId);
     const upgraded = upgradeCampaignUnit(recruited.save, unitId, {
-      upgradeId: `content-pipeline:upgrade:${unitId}:rank-${upgradeQuote.nextRank}`,
+      upgradeId: `content-pipeline:upgrade:${unitId}:level-${upgradeQuote.nextLevel}`,
     });
     steps.push({
       stageId,
@@ -122,7 +122,7 @@ function migrationFixtures() {
         currency: 111,
       },
     },
-    ...[1, 2, 3, 4, 5, 6].map((schemaVersion) => ({
+    ...Array.from({ length: CAMPAIGN_SAVE_SCHEMA_VERSION - 1 }, (_, index) => index + 1).map((schemaVersion) => ({
       label: `schema-v${schemaVersion}`,
       source: {
         schemaVersion,

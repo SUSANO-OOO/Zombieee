@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">制圧掃射 ready</title>
+  <defs><linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3d352c"/><stop offset=".55" stop-color="#19140f"/><stop offset="1" stop-color="#090705"/></linearGradient></defs>
+  <path d="M15 9h66l8 8v62l-8 8H15l-8-8V17z" fill="url(#m)" stroke="#9ea8ad" stroke-width="4"/>
+  <path d="M16 41h52l13 8-13 8H16z" fill="#51575a" stroke="#eed08a" stroke-width="4"/>
+  <path d="m43 57 19 4-4 14H42zM27 40l8-13h25l5 14" fill="#353a3d" stroke="#b6c0c2" stroke-width="3"/>
+  <path d="M21 66h62M26 73h54M35 80h43" stroke="#f0a948" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="25" cy="49" r="5" fill="#f8c760"/><circle cx="39" cy="49" r="5" fill="#f8c760"/>
+  <path d="M14 17h14M69 79h14" stroke="#dc963b" stroke-width="3"/>
+</svg>

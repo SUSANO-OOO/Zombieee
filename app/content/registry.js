@@ -11,13 +11,14 @@ import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS } from "../productionVisua
 import { PORTRAIT_ART, SPRITE_MANIFEST } from "../spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST } from "../stageObjectManifest.js";
 import { STORY_EVENTS } from "../storyEvents.js";
-import { UNIT_PROGRESSION_MAX_RANK, UNIT_PROGRESSION_RANKS } from "../unitProgression.js";
+import { UNIT_LEVEL_COSTS, UNIT_LEVEL_MAX } from "../unitProgression.js";
 import { ENEMY_CONTENT, ENEMY_CONTENT_BY_ID } from "./enemyCatalog.js";
 import { deepFreeze } from "./freeze.js";
 import { createContentLoader } from "./loader.js";
 import { CONTENT_SCHEMA_VERSION } from "./schema.js";
 import { UNIT_CONTENT_BY_ID } from "./unitCatalog.js";
 import { EVENT_FOUNDATION_CONTENT } from "../eventFoundation.js";
+import { EQUIPMENT_CATALOG, EQUIPMENT_MAX_ENHANCEMENT } from "../equipment.js";
 
 function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((left, right) => left.localeCompare(right, "en"));
@@ -130,8 +131,14 @@ const upgrades = CAMPAIGN_UNITS.map((unit) => ({
   id: `upgrade:${unit.id}`,
   unitId: unit.id,
   displayName: `${unit.displayName} 強化`,
-  maxLevel: UNIT_PROGRESSION_MAX_RANK,
-  ranks: UNIT_PROGRESSION_RANKS,
+  maxLevel: UNIT_LEVEL_MAX,
+  levels: UNIT_LEVEL_COSTS,
+}));
+
+const equipment = EQUIPMENT_CATALOG.map((entry) => ({
+  ...entry,
+  aliases: [entry.displayName],
+  maxEnhancement: EQUIPMENT_MAX_ENHANCEMENT,
 }));
 
 const events = [
@@ -202,6 +209,7 @@ export const CONTENT_REGISTRY = deepFreeze({
   rewards,
   acquisition,
   upgrades,
+  equipment,
   events,
   sideEvents: EVENT_FOUNDATION_CONTENT.sideEvents,
   challenges: EVENT_FOUNDATION_CONTENT.challenges,

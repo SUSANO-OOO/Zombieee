@@ -9,11 +9,50 @@ import {
   startEventRun,
 } from "./eventFoundation.js";
 import {
-  UNIT_PROGRESSION_MAX_RANK,
+  legacyRankToLevel,
+  normalizeUnitLevels,
   normalizeUnitRanks,
-  unitRankFor,
-  unitUpgradeQuote,
+  unitLevelCapForHighestStage,
+  unitLevelFor,
+  unitLevelUpgradeQuote,
 } from "./unitProgression.js";
+import {
+  V090_CAPS_MIGRATION_BASE,
+  V090_CAPS_MIGRATION_ID,
+  capsMigrationNotice,
+  reorganizeLegacyCaps,
+} from "./campaignEconomy.js";
+import {
+  SURVIVAL_END_REASONS,
+  createDefaultSurvivalProgress,
+  normalizeSurvivalRun,
+  normalizeSurvivalProgress,
+  saveSurvivalCheckpoint,
+  settleSurvivalRun,
+} from "./survival.js";
+import {
+  EQUIPMENT_MAX_ENHANCEMENT,
+  EQUIPMENT_SLOT_TYPES,
+  EQUIPMENT_SOURCES,
+  PERSONAL_EQUIPMENT_SLOTS,
+  TACTICAL_EQUIPMENT_SLOTS,
+  equipmentDefinition,
+  equipmentEnhancementCost,
+  equipmentEnhancementLevel,
+  normalizeEquipmentEnhancementLevels,
+} from "./equipment.js";
+import { bossCampaignEntry } from "./bossFoundation.js";
+import {
+  createDefaultOutbreakProgress,
+  isOutbreakMissionUnlocked,
+  normalizeOutbreakProgress,
+  resolveOutbreakProgress,
+} from "./outbreakMissions.js";
+import {
+  createDefaultCampaignRecords,
+  normalizeCampaignRecords,
+  recordCampaignOperation,
+} from "./campaignRecords.js";
 
 /**
  * Pure, data-driven campaign progression for the 0.7.0 unit-collection release.
@@ -69,6 +108,10 @@ export const CAMPAIGN_STAGE_IDS = deepFreeze({
   EVACUATION_FREIGHT_YARD: "stage-evacuation-freight-yard",
   T_PLAN_OUTER_CORE: "stage-t-plan-outer-core",
   T_PLAN_CENTRAL_SEAL: "stage-t-plan-central-seal",
+  BAY_TOWER_SERVICE: "stage-bay-tower-service",
+  CIVIC_ARCHIVE_ROUTE: "stage-civic-archive-route",
+  COASTAL_LINK_BRIDGE: "stage-coastal-link-bridge",
+  ESTUARY_FLOODGATE_SEAL: "stage-estuary-floodgate-seal",
 });
 
 export const CAMPAIGN_REGION_IDS = deepFreeze({
@@ -77,6 +120,7 @@ export const CAMPAIGN_REGION_IDS = deepFreeze({
   UNDERGROUND_RESEARCH: "region-underground-research",
   LOGISTICS_LINE: "region-logistics-line",
   T_PLAN_CORE: "region-t-plan-core",
+  BAY_QUARANTINE: "region-bay-quarantine",
 });
 
 export const CAMPAIGN_REGIONS = deepFreeze([
@@ -109,6 +153,12 @@ export const CAMPAIGN_REGIONS = deepFreeze([
     shortLabel: "T計画",
     displayName: "T計画中枢",
     description: "地下最深部の封鎖区域。感染流出を止める最終作戦。",
+  },
+  {
+    id: CAMPAIGN_REGION_IDS.BAY_QUARANTINE,
+    shortLabel: "湾岸",
+    displayName: "湾岸封鎖区",
+    description: "T計画中枢から地上へ流出した異形群を追い、海側の防潮線を再封鎖する。",
   },
 ]);
 
@@ -241,6 +291,38 @@ export const STAGE_VISUAL_SIGNATURES = deepFreeze({
     lighting: "white-seal-lamps-and-red-core",
     battleScars: ["collapsed-observation-deck", "open-infection-fissure"],
   },
+  [CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE]: {
+    kind: "bay-tower-service-plaza",
+    background: "storm-damaged-bay-tower",
+    landmark: "sunken-emergency-service-ramp",
+    environment: ["mobile-base-approach", "ruptured-ventilation-throat"],
+    lighting: "cold-late-afternoon-floodlights",
+    battleScars: ["salt-wet-plaza", "organic-vent-breach"],
+  },
+  [CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE]: {
+    kind: "civic-archive-transfer-yard",
+    background: "shattered-coastal-library",
+    landmark: "covered-casualty-transfer-ramp",
+    environment: ["collapsed-archive-shelves", "freight-aperture"],
+    lighting: "cold-rain-and-amber-backup-lamps",
+    battleScars: ["paper-drift", "infected-storage-breach"],
+  },
+  [CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE]: {
+    kind: "storm-coastal-link-bridge",
+    background: "damaged-waterfront-bridge",
+    landmark: "armored-evacuation-carrier",
+    environment: ["marina-silhouette", "organic-skin-canopy-breach"],
+    lighting: "storm-dusk-emergency-beacons",
+    battleScars: ["exposed-expansion-joints", "torn-bridge-end"],
+  },
+  [CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL]: {
+    kind: "estuary-storm-surge-floodgate",
+    background: "three-tower-floodgate-complex",
+    landmark: "jammed-central-tidal-gate",
+    environment: ["seal-control-pylons", "maintenance-return-lane"],
+    lighting: "pre-dawn-searchlights-and-lightning",
+    battleScars: ["deep-earth-infection-fissure", "ruptured-concrete-throat"],
+  },
 });
 
 export const CAMPAIGN_UNIT_IDS = deepFreeze({
@@ -255,6 +337,11 @@ export const CAMPAIGN_UNIT_IDS = deepFreeze({
   RAIDER: "unit-raider",
   GANTETSU: "unit-gantetsu",
   MONKEY: "unit-monkey",
+  ZAKIMIYA: "unit-zakimiya",
+  TKY: "unit-tky",
+  MRS_CHIHA: "unit-mrs-chiha",
+  MIYAMOTO_MUSASHI: "unit-miyamoto-musashi",
+  MAYO_CHAN: "unit-mayo-chan",
   // Deprecated property names remain import-compatible. Their values are the
   // canonical 0.7.0 IDs; old names are never player-facing.
   TACHIBANA_JIN: "unit-hachi",
@@ -298,6 +385,10 @@ export const PROVISIONAL_BASE_REWARDS = deepFreeze({
   [CAMPAIGN_STAGE_IDS.EVACUATION_FREIGHT_YARD]: 700,
   [CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE]: 750,
   [CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL]: 820,
+  [CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE]: 900,
+  [CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE]: 960,
+  [CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE]: 1040,
+  [CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL]: 1200,
 });
 
 function firstStarRewards(baseReward) {
@@ -483,13 +574,9 @@ export const CAMPAIGN_STAGES = deepFreeze([
       { id: "takuya-wave-10", atSeconds: 169, waveNumber: 10, label: "TAKUYA — 激昂", bossOnly: true, units: ["crusher", "runner", "runner", "crusher", "spitter"] },
       { id: "takuya-wave-final", atSeconds: 196, waveNumber: 11, label: "最終機会 — 感染拠点を破壊", units: ["runner", "spitter", "runner", "crusher", "walker", "runner", "spitter"] },
     ],
-    boss: {
-      id: "boss-takuya",
-      enemyKind: "takuya",
-      displayName: "TAKUYA",
-      classification: "正体不明の変異種・異常感染者",
+    boss: bossCampaignEntry("takuya", {
       entranceEventId: "event-prologue-takuya-entrance",
-    },
+    }),
     baseHp: 520,
     starThresholds: DEFAULT_STAR_THRESHOLDS,
     baseReward: takuyaBaseReward,
@@ -650,13 +737,9 @@ export const CAMPAIGN_STAGES = deepFreeze([
       { id: "station-tunnel-wave-09", atSeconds: 172, groups: [{ kind: "ooze", count: 3 }, { kind: "crusher", count: 2 }] },
       { id: "station-tunnel-wave-10", atSeconds: 198, groups: [{ kind: "sprinter", count: 4 }, { kind: "grappler", count: 2 }, { kind: "walker", count: 3 }] },
     ],
-    boss: {
-      id: "boss-gate-eater",
-      enemyKind: "gate-eater",
-      displayName: "改札喰い",
-      classification: "駅設備・研究容器融合大型特殊個体",
+    boss: bossCampaignEntry("gate-eater", {
       entranceEventId: "stage-station-tunnel-gate-eater-v070",
-    },
+    }),
     baseHp: 720,
     starThresholds: DEFAULT_STAR_THRESHOLDS,
     baseReward: stationTunnelBaseReward,
@@ -989,7 +1072,7 @@ export const CAMPAIGN_STAGES = deepFreeze([
     regionId: CAMPAIGN_REGION_IDS.T_PLAN_CORE,
     mapPosition: { x: 72, y: 40, unit: "percent" },
     previousStageId: CAMPAIGN_STAGE_IDS.T_PLAN_OUTER_CORE,
-    nextStageId: null,
+    nextStageId: CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE,
     missionType: "sequential-seal",
     objectivePattern: "sequential-containment",
     objective: "三つの封鎖端末を起動し、中央感染裂孔を完全封鎖",
@@ -1038,14 +1121,171 @@ export const CAMPAIGN_STAGES = deepFreeze([
       { id: "t-plan-seal-wave-11", atSeconds: 210, groups: [{ kind: "abomination", count: 1 }, { kind: "crusher", count: 3 }, { kind: "sprinter", count: 5 }] },
       { id: "t-plan-seal-wave-12", atSeconds: 238, groups: [{ kind: "grappler", count: 4 }, { kind: "shade", count: 3 }, { kind: "runner", count: 5 }, { kind: "spitter", count: 3 }] },
     ],
-    boss: {
-      id: "boss-gate-eater-central",
-      enemyKind: "gate-eater",
+    boss: bossCampaignEntry("gate-eater", {
+      encounterId: "boss-gate-eater-central",
       displayName: "改札喰い・再活性体",
       classification: "中央感染裂孔に再接続した大型特殊個体",
       entranceEventId: null,
-    },
+    }),
     baseHp: 700,
+  }),
+  operationStage({
+    id: CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE,
+    stageNumber: 17,
+    displayName: "湾岸タワー・非常回廊",
+    regionId: CAMPAIGN_REGION_IDS.BAY_QUARANTINE,
+    mapPosition: { x: 16, y: 62, unit: "percent" },
+    previousStageId: CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL,
+    nextStageId: CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE,
+    missionType: "assault",
+    objectivePattern: "relay-destruction",
+    objective: "非常回廊を塞ぐ感染中継点を破壊",
+    objectiveConfig: { target: "infected-relay" },
+    theme: {
+      id: "theme-bay-tower-service",
+      backgroundId: "background-bay-tower-service-v1",
+      tags: ["湾岸タワー", "非常回廊", "暴風雨"],
+    },
+    enemyKinds: ["walker", "runner", "spitter", "crusher", "resonator", "cagewalker"],
+    waves: [
+      { id: "bay-tower-wave-01", atSeconds: 2, groups: [{ kind: "resonator", count: 1 }, { kind: "walker", count: 5 }] },
+      { id: "bay-tower-wave-02", atSeconds: 18, groups: [{ kind: "cagewalker", count: 1 }, { kind: "runner", count: 4 }] },
+      { id: "bay-tower-wave-03", atSeconds: 37, groups: [{ kind: "spitter", count: 3 }, { kind: "runner", count: 4 }] },
+      { id: "bay-tower-wave-04", atSeconds: 57, groups: [{ kind: "cagewalker", count: 1 }, { kind: "walker", count: 5 }] },
+      { id: "bay-tower-wave-05", atSeconds: 79, groups: [{ kind: "resonator", count: 2 }, { kind: "runner", count: 4 }] },
+      { id: "bay-tower-wave-06", atSeconds: 102, groups: [{ kind: "crusher", count: 2 }, { kind: "cagewalker", count: 1 }, { kind: "spitter", count: 3 }] },
+      { id: "bay-tower-wave-07", atSeconds: 126, groups: [{ kind: "resonator", count: 2 }, { kind: "runner", count: 5 }, { kind: "walker", count: 3 }] },
+      { id: "bay-tower-wave-08", atSeconds: 151, groups: [{ kind: "cagewalker", count: 2 }, { kind: "crusher", count: 2 }, { kind: "spitter", count: 3 }] },
+      { id: "bay-tower-wave-09", atSeconds: 178, groups: [{ kind: "resonator", count: 3 }, { kind: "cagewalker", count: 2 }, { kind: "runner", count: 5 }] },
+    ],
+    baseHp: 680,
+  }),
+  operationStage({
+    id: CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE,
+    stageNumber: 18,
+    displayName: "市民資料館・搬送路",
+    regionId: CAMPAIGN_REGION_IDS.BAY_QUARANTINE,
+    mapPosition: { x: 38, y: 38, unit: "percent" },
+    previousStageId: CAMPAIGN_STAGE_IDS.BAY_TOWER_SERVICE,
+    nextStageId: CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE,
+    missionType: "timed-defense",
+    objectivePattern: "perimeter-hold",
+    objective: "避難記録搬送班を210秒防衛",
+    objectiveConfig: {
+      target: "archive-transfer-team",
+      targetLabel: "記録搬送班",
+      hudLabel: "記録搬送完了",
+      durationSeconds: 210,
+    },
+    theme: {
+      id: "theme-civic-archive-route",
+      backgroundId: "background-civic-archive-route-v1",
+      tags: ["市民資料館", "搬送車列", "浸水路"],
+    },
+    enemyKinds: ["walker", "runner", "spitter", "resonator", "cagewalker", "spindle", "choir-knot"],
+    waves: [
+      { id: "archive-route-wave-01", atSeconds: 3, groups: [{ kind: "spindle", count: 2 }, { kind: "walker", count: 5 }] },
+      { id: "archive-route-wave-02", atSeconds: 21, groups: [{ kind: "choir-knot", count: 1 }, { kind: "runner", count: 4 }] },
+      { id: "archive-route-wave-03", atSeconds: 41, groups: [{ kind: "resonator", count: 2 }, { kind: "spitter", count: 3 }] },
+      { id: "archive-route-wave-04", atSeconds: 62, groups: [{ kind: "choir-knot", count: 1 }, { kind: "walker", count: 5 }] },
+      { id: "archive-route-wave-05", atSeconds: 84, groups: [{ kind: "cagewalker", count: 2 }, { kind: "spindle", count: 3 }] },
+      { id: "archive-route-wave-06", atSeconds: 107, groups: [{ kind: "resonator", count: 2 }, { kind: "choir-knot", count: 2 }, { kind: "runner", count: 4 }] },
+      { id: "archive-route-wave-07", atSeconds: 131, groups: [{ kind: "spindle", count: 4 }, { kind: "spitter", count: 3 }] },
+      { id: "archive-route-wave-08", atSeconds: 156, groups: [{ kind: "cagewalker", count: 2 }, { kind: "choir-knot", count: 2 }, { kind: "walker", count: 4 }] },
+      { id: "archive-route-wave-09", atSeconds: 181, groups: [{ kind: "resonator", count: 3 }, { kind: "spindle", count: 4 }, { kind: "runner", count: 4 }] },
+      { id: "archive-route-wave-10", atSeconds: 204, groups: [{ kind: "cagewalker", count: 3 }, { kind: "choir-knot", count: 3 }, { kind: "spitter", count: 4 }] },
+    ],
+    baseHp: 660,
+  }),
+  operationStage({
+    id: CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE,
+    stageNumber: 19,
+    displayName: "海浜連絡橋",
+    regionId: CAMPAIGN_REGION_IDS.BAY_QUARANTINE,
+    mapPosition: { x: 63, y: 61, unit: "percent" },
+    previousStageId: CAMPAIGN_STAGE_IDS.CIVIC_ARCHIVE_ROUTE,
+    nextStageId: CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL,
+    missionType: "escort",
+    objectivePattern: "mobile-objective-escort",
+    objective: "防潮門用の非常電源車を対岸まで護送",
+    objectiveConfig: {
+      target: "floodgate-power-rig",
+      targetLabel: "非常電源車",
+      durationSeconds: 195,
+      maxIntegrity: 760,
+      repairSeconds: 20,
+      startX: 242,
+      endX: 798,
+      cartLane: 1,
+    },
+    theme: {
+      id: "theme-coastal-link-bridge",
+      backgroundId: "background-coastal-link-bridge-v1",
+      tags: ["海浜連絡橋", "非常電源車", "横殴りの雨"],
+    },
+    enemyKinds: ["runner", "spitter", "crusher", "resonator", "cagewalker", "spindle", "choir-knot", "pall-manta"],
+    waves: [
+      { id: "coastal-bridge-wave-01", atSeconds: 2, groups: [{ kind: "pall-manta", count: 1 }, { kind: "runner", count: 5 }] },
+      { id: "coastal-bridge-wave-02", atSeconds: 19, groups: [{ kind: "pall-manta", count: 1 }, { kind: "spitter", count: 3 }] },
+      { id: "coastal-bridge-wave-03", atSeconds: 39, groups: [{ kind: "cagewalker", count: 2 }, { kind: "runner", count: 4 }] },
+      { id: "coastal-bridge-wave-04", atSeconds: 60, groups: [{ kind: "resonator", count: 2 }, { kind: "pall-manta", count: 2 }] },
+      { id: "coastal-bridge-wave-05", atSeconds: 82, groups: [{ kind: "choir-knot", count: 2 }, { kind: "spindle", count: 4 }] },
+      { id: "coastal-bridge-wave-06", atSeconds: 105, groups: [{ kind: "crusher", count: 2 }, { kind: "pall-manta", count: 2 }, { kind: "spitter", count: 3 }] },
+      { id: "coastal-bridge-wave-07", atSeconds: 129, groups: [{ kind: "resonator", count: 3 }, { kind: "cagewalker", count: 2 }, { kind: "runner", count: 4 }] },
+      { id: "coastal-bridge-wave-08", atSeconds: 154, groups: [{ kind: "pall-manta", count: 3 }, { kind: "choir-knot", count: 2 }, { kind: "spindle", count: 4 }] },
+      { id: "coastal-bridge-wave-09", atSeconds: 180, groups: [{ kind: "cagewalker", count: 3 }, { kind: "resonator", count: 3 }, { kind: "spitter", count: 4 }] },
+      { id: "coastal-bridge-wave-10", atSeconds: 207, groups: [{ kind: "pall-manta", count: 3 }, { kind: "choir-knot", count: 3 }, { kind: "runner", count: 5 }] },
+    ],
+    baseHp: 640,
+  }),
+  operationStage({
+    id: CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL,
+    stageNumber: 20,
+    displayName: "河口防潮門・最終封鎖",
+    regionId: CAMPAIGN_REGION_IDS.BAY_QUARANTINE,
+    mapPosition: { x: 87, y: 38, unit: "percent" },
+    previousStageId: CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE,
+    nextStageId: null,
+    missionType: "boss-assault",
+    objectivePattern: "boss-gated-assault",
+    objective: "クロメを撃破し、防潮門の感染核を破壊",
+    objectiveConfig: { target: "infected-base" },
+    theme: {
+      id: "theme-estuary-floodgate-seal",
+      backgroundId: "background-estuary-floodgate-seal-v1",
+      tags: ["河口防潮門", "感染核", "高潮"],
+    },
+    enemyKinds: [
+      "resonator",
+      "cagewalker",
+      "spindle",
+      "choir-knot",
+      "pall-manta",
+      "anchor-bloom",
+      "kurome",
+    ],
+    waves: [
+      { id: "floodgate-seal-wave-01", atSeconds: 0, groups: [{ kind: "anchor-bloom", count: 1 }, { kind: "spindle", count: 3 }, { kind: "resonator", count: 2 }] },
+      { id: "floodgate-seal-wave-02", atSeconds: 17, groups: [{ kind: "cagewalker", count: 2 }, { kind: "choir-knot", count: 1 }] },
+      { id: "floodgate-seal-wave-03", atSeconds: 36, groups: [{ kind: "pall-manta", count: 2 }, { kind: "spindle", count: 3 }] },
+      { id: "floodgate-seal-wave-04", atSeconds: 56, groups: [{ kind: "anchor-bloom", count: 1 }, { kind: "resonator", count: 2 }] },
+      { id: "floodgate-seal-wave-05", atSeconds: 77, groups: [{ kind: "cagewalker", count: 2 }, { kind: "choir-knot", count: 2 }, { kind: "spindle", count: 3 }] },
+      { id: "floodgate-seal-wave-06", atSeconds: 99, groups: [{ kind: "pall-manta", count: 2 }, { kind: "anchor-bloom", count: 2 }] },
+      { id: "floodgate-seal-wave-07", atSeconds: 122, groups: [{ kind: "resonator", count: 3 }, { kind: "spindle", count: 4 }, { kind: "choir-knot", count: 2 }] },
+      { id: "floodgate-seal-warning", atSeconds: 145, waveNumber: 8, label: "河口側水路 // 超大型反応", units: [] },
+      { id: "floodgate-seal-kurome", atSeconds: 154, waveNumber: 9, label: "クロメ // 防潮門へ侵入", units: ["kurome", "anchor-bloom", "pall-manta"] },
+      { id: "floodgate-seal-wave-10", atSeconds: 179, groups: [{ kind: "cagewalker", count: 2 }, { kind: "resonator", count: 3 }] },
+      { id: "floodgate-seal-wave-11", atSeconds: 205, groups: [{ kind: "anchor-bloom", count: 1 }, { kind: "choir-knot", count: 3 }, { kind: "spindle", count: 4 }] },
+      { id: "floodgate-seal-wave-12", atSeconds: 232, groups: [{ kind: "pall-manta", count: 2 }, { kind: "cagewalker", count: 3 }, { kind: "resonator", count: 4 }] },
+      { id: "floodgate-seal-wave-13", atSeconds: 260, groups: [{ kind: "anchor-bloom", count: 2 }, { kind: "choir-knot", count: 3 }, { kind: "spindle", count: 4 }] },
+    ],
+    boss: bossCampaignEntry("kurome", {
+      encounterId: "boss-kurome-floodgate",
+      displayName: "クロメ",
+      classification: "河口防潮門を覆う超大型感染中枢",
+      entranceEventId: null,
+    }),
+    baseHp: 620,
   }),
 ]);
 
@@ -1345,6 +1585,140 @@ export const CAMPAIGN_UNITS = deepFreeze([
     },
     unlock: { type: "story-join", stageNumber: 6, costCaps: 0 },
   },
+  {
+    id: CAMPAIGN_UNIT_IDS.ZAKIMIYA,
+    unitId: CAMPAIGN_UNIT_IDS.ZAKIMIYA,
+    aliases: ["zakimiya", "ザキミヤ"],
+    combatKind: "zakimiya",
+    displayName: "ザキミヤ",
+    primaryClassId: "class-frontline",
+    roleTags: ["近接", "範囲炎上", "対密集", "継続損害"],
+    roleName: "火酒使い",
+    roleIcon: "酒",
+    weaponName: "ウイスキーボトル",
+    attackMode: "瓶打撃・火炎瓶投擲",
+    rangeBand: "近距離",
+    primaryTarget: "密集した感染者",
+    deploymentHint: "敵が密集する前線へ配備",
+    description: "割れない瓶で前線を支え、火酒投擲で密集群を焼く",
+    recruitmentCostCaps: 240,
+    spritePath: "/art/v090/characters/zakimiya-battle-r1.png",
+    assetStatus: "approved",
+    appearanceAudit: {
+      presentation: "Producer承認済みidentity masterに基づく、痩身で疲労感のある中年男性表現",
+      weaponMatch: "手持ちのウイスキーボトルと腰部の複数ボトルを通常攻撃・火酒投擲へ接続",
+      result: "0.9.0正式identity masterから派生したportrait／card／battle atlasで同一性を固定",
+    },
+    unlock: {
+      type: "recruitment",
+      stageNumber: 17,
+      costCaps: 240,
+    },
+  },
+  {
+    id: CAMPAIGN_UNIT_IDS.TKY,
+    unitId: CAMPAIGN_UNIT_IDS.TKY,
+    aliases: ["tky", "TKY"],
+    combatKind: "tky",
+    displayName: "TKY",
+    primaryClassId: "class-skirmisher",
+    roleTags: ["近接", "高速", "前方範囲", "押し戻し"],
+    roleName: "光刃剣士",
+    roleIcon: "光",
+    weaponName: "プラズマブレード",
+    attackMode: "高速連続斬撃・巨大光刃薙ぎ払い",
+    rangeBand: "近～中距離",
+    primaryTarget: "前方の小～中型群",
+    deploymentHint: "敵群の向きを固定できる前線へ配備",
+    description: "高速の光刃剣技で小集団を崩し、光刃解放で前方を薙ぎ払う",
+    recruitmentCostCaps: 280,
+    spritePath: "/art/v090/characters/tky-battle-r1.png",
+    assetStatus: "approved",
+    appearanceAudit: {
+      presentation: "Producer承認済みidentity masterに基づく、黒髪で端正な30代男性と黒・暗赤の軽装表現",
+      weaponMatch: "白い高輝度coreとpink〜magenta外縁を持つ片手用プラズマブレード",
+      result: "0.9.0正式identity masterから派生したportrait／card／battle atlasで同一性を固定",
+    },
+    unlock: { type: "recruitment", stageNumber: 18, costCaps: 280 },
+  },
+  {
+    id: CAMPAIGN_UNIT_IDS.MRS_CHIHA,
+    unitId: CAMPAIGN_UNIT_IDS.MRS_CHIHA,
+    aliases: ["mrs-chiha", "Mrs.チハ", "チハ"],
+    combatKind: "mrs-chiha",
+    displayName: "Mrs.チハ",
+    primaryClassId: "class-marksman",
+    roleTags: ["遠距離", "範囲爆発", "多地点", "押し戻し"],
+    roleName: "制圧擲弾手",
+    roleIcon: "榴",
+    weaponName: "回転弾倉式グレネードランチャー",
+    attackMode: "榴弾射撃・連続多地点爆撃",
+    rangeBand: "中～遠距離",
+    primaryTarget: "複数の敵密集地点",
+    deploymentHint: "最低射程を保てる後列へ配備",
+    description: "回転弾倉式ランチャーをスマートに運用し、全弾制圧で複数地点を爆撃する",
+    recruitmentCostCaps: 300,
+    spritePath: "/art/v090/characters/mrs-chiha-battle-r1.png",
+    assetStatus: "approved",
+    appearanceAudit: {
+      presentation: "Producer承認済みidentity masterに基づく、知的な女性と黒の長衣・白いフリルブラウス表現",
+      weaponMatch: "背面収納と両手射撃を使い分ける大型回転弾倉式グレネードランチャー",
+      result: "0.9.0正式identity masterから派生したportrait／card／battle atlasで同一性を固定",
+    },
+    unlock: { type: "recruitment", stageNumber: 19, costCaps: 300 },
+  },
+  {
+    id: CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI,
+    unitId: CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI,
+    aliases: ["miyamoto-musashi", "宮本武蔵", "武蔵"],
+    combatKind: "miyamoto-musashi",
+    displayName: "宮本武蔵",
+    primaryClassId: "class-frontline",
+    roleTags: ["近接", "二刀流", "受け流し", "対boss"],
+    roleName: "二刀剣豪",
+    roleIcon: "双",
+    weaponName: "二刀",
+    attackMode: "二刀連続斬り・受け流し反撃",
+    rangeBand: "近距離",
+    primaryTarget: "大型・boss",
+    deploymentHint: "強敵の攻撃を受けられる前線へ配備",
+    description: "二刀の技量で強敵を削り、二天一流・無空で近接攻撃を受け流す",
+    recruitmentCostCaps: 340,
+    spritePath: "/art/v090/characters/miyamoto-musashi-battle-r1.png",
+    assetStatus: "approved",
+    appearanceAudit: {
+      presentation: "Producer承認済みidentity masterに基づく、髷・無精髭・古い和装と補修装備を持つ男性表現",
+      weaponMatch: "常に識別可能な二本の日本刀と、技量重視の構え・交差斬り",
+      result: "0.9.0正式identity masterから派生したportrait／card／battle atlasで同一性を固定",
+    },
+    unlock: { type: "recruitment", stageNumber: 20, costCaps: 340 },
+  },
+  {
+    id: CAMPAIGN_UNIT_IDS.MAYO_CHAN,
+    unitId: CAMPAIGN_UNIT_IDS.MAYO_CHAN,
+    aliases: ["mayo-chan", "マヨちゃん", "マヨ"],
+    combatKind: "mayo-chan",
+    displayName: "マヨちゃん",
+    primaryClassId: "class-skirmisher",
+    roleTags: ["高速", "小型優先", "減速", "負傷退避"],
+    roleName: "高速遊撃犬",
+    roleIcon: "犬",
+    weaponName: "噛みつき・タクティカル医療ハーネス",
+    attackMode: "高速接近・足元噛みつき・短時間減速",
+    rangeBand: "近距離",
+    primaryTarget: "小型・高速感染体",
+    deploymentHint: "高速敵が抜ける側面へ配備",
+    description: "小さな体で敵の側面へ駆け込み、凶暴マヨで連続襲撃して負傷前に退避する",
+    recruitmentCostCaps: 260,
+    spritePath: "/art/v090/characters/mayo-chan-battle-r1.png",
+    assetStatus: "approved",
+    appearanceAudit: {
+      presentation: "Producer承認済みidentity masterに基づく、長毛cream Chihuahuaの顔・耳・尾・小型体格を維持した愛犬表現",
+      weaponMatch: "黄色bandana、黒いtactical medical harness、medical pouchとcanisterを通常・凶暴状態で維持",
+      result: "0.9.0正式identity masterからportrait／card／通常・凶暴battle atlasを派生し、同一個体として固定",
+    },
+    unlock: { type: "recruitment", stageNumber: 20, costCaps: 260 },
+  },
 ]);
 
 export const CAMPAIGN_GUIDE = deepFreeze({
@@ -1438,11 +1812,36 @@ export const CAMPAIGN_RECRUITMENT_MILESTONES = deepFreeze({
     discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MONKEY],
     recruitableUnitIds: [],
   },
+  17: {
+    storyJoinUnitIds: [],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.ZAKIMIYA],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.ZAKIMIYA],
+  },
+  18: {
+    storyJoinUnitIds: [],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.TKY],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.TKY],
+  },
+  19: {
+    storyJoinUnitIds: [],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MRS_CHIHA],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.MRS_CHIHA],
+  },
+  20: {
+    storyJoinUnitIds: [],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+  },
 });
 
 export const CAMPAIGN_RECRUITMENT_COSTS = deepFreeze({
   [CAMPAIGN_UNIT_IDS.TATARA]: 150,
   [CAMPAIGN_UNIT_IDS.RAIDER]: 200,
+  [CAMPAIGN_UNIT_IDS.ZAKIMIYA]: 240,
+  [CAMPAIGN_UNIT_IDS.TKY]: 280,
+  [CAMPAIGN_UNIT_IDS.MRS_CHIHA]: 300,
+  [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI]: 340,
+  [CAMPAIGN_UNIT_IDS.MAYO_CHAN]: 260,
 });
 
 /**
@@ -1505,7 +1904,8 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 
 export const calculateBattleRewards = calculateStageRewards;
 
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 7;
+const V090_LEVEL_ECONOMY_SCHEMA_VERSION = 10;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 13;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
 const CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION = 5;
 
@@ -1533,6 +1933,54 @@ export const DEFAULT_CAMPAIGN_SETTINGS = deepFreeze({
   battleEventMode: "first-time",
 });
 
+export function normalizeEquipmentInventory(value) {
+  const quantities = new Map();
+  const add = (equipmentId, quantity) => {
+    const id = typeof equipmentId === "string" ? equipmentId.trim().slice(0, 160) : "";
+    const numeric = Number(quantity);
+    if (!id
+      || id === "prototype"
+      || Object.hasOwn(Object.prototype, id)
+      || !Number.isFinite(numeric)
+      || numeric <= 0) {
+      return;
+    }
+    const normalizedQuantity = clampInteger(numeric, 1, Number.MAX_SAFE_INTEGER, 1);
+    quantities.set(
+      id,
+      Math.min(Number.MAX_SAFE_INTEGER, (quantities.get(id) ?? 0) + normalizedQuantity),
+    );
+  };
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      if (isRecord(entry)) add(entry.equipmentId ?? entry.id, entry.quantity);
+      else if (typeof entry === "string") add(entry, 1);
+    }
+  } else if (isRecord(value)) {
+    for (const [equipmentId, quantity] of Object.entries(value)) add(equipmentId, quantity);
+  }
+  return [...quantities.entries()]
+    .map(([equipmentId, quantity]) => ({ equipmentId, quantity }))
+    .sort((left, right) => left.equipmentId.localeCompare(right.equipmentId));
+}
+
+function addEquipmentInventory(inventory, grants) {
+  return normalizeEquipmentInventory([
+    ...normalizeEquipmentInventory(inventory),
+    ...normalizeEquipmentInventory(grants),
+  ]);
+}
+
+function equipmentQuantityMap(inventory) {
+  return new Map(normalizeEquipmentInventory(inventory)
+    .map(({ equipmentId, quantity }) => [equipmentId, quantity]));
+}
+
+export function campaignEquipmentQuantity(save, equipmentId) {
+  const current = migrateCampaignSave(save);
+  return equipmentQuantityMap(current.equipmentInventory).get(equipmentId) ?? 0;
+}
+
 export function createDefaultCampaignSave() {
   const ownership = [...INITIAL_UNIT_IDS];
   const formationUnitIds = [...INITIAL_UNIT_IDS].slice(0, CAMPAIGN_FORMATION_MAX_SLOTS);
@@ -1540,6 +1988,8 @@ export function createDefaultCampaignSave() {
     id,
     displayName: CAMPAIGN_FORMATION_PRESET_LABELS[id],
     unitIds: [...formationUnitIds],
+    personalEquipmentByUnit: {},
+    tacticalEquipmentIds: Array.from({ length: TACTICAL_EQUIPMENT_SLOTS }, () => null),
   }));
   return {
     schemaVersion: CAMPAIGN_SAVE_SCHEMA_VERSION,
@@ -1553,17 +2003,24 @@ export function createDefaultCampaignSave() {
     processedResultIds: [],
     processedAcquisitionIds: [],
     processedUpgradeIds: [],
+    processedEquipmentTransactionIds: [],
+    processedMigrationIds: [],
+    migrationNotices: [],
     eventFoundation: createEventFoundationProgress(),
     completedStageIds: [],
     bestStarsByStage: {},
     claimedStarRewardsByStage: {},
-    caps: 0,
+    caps: V090_CAPS_MIGRATION_BASE,
     // Deprecated 0.6.x currency field retained as a synchronized read alias.
-    supplies: 0,
+    supplies: V090_CAPS_MIGRATION_BASE,
+    equipmentInventory: [],
+    equipmentEnhancementLevels: {},
     unlockedStageIds: [INITIAL_STAGE_ID],
     ownership,
     discovery: [...ownership],
     recruitable: [],
+    unitLevels: normalizeUnitLevels({}, CAMPAIGN_UNITS.map((unit) => unit.id)),
+    // Deprecated pre-0.9 progression alias. Values remain Level - 1.
     unitRanks: normalizeUnitRanks({}, CAMPAIGN_UNITS.map((unit) => unit.id)),
     // Deprecated 0.6.x roster field retained as a canonical-ID mirror.
     unlockedUnitIds: [...ownership],
@@ -1571,6 +2028,9 @@ export function createDefaultCampaignSave() {
     selectedFormationPresetId: CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_1,
     selectedPresetId: CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_1,
     lastSelectedStageId: INITIAL_STAGE_ID,
+    survival: createDefaultSurvivalProgress(),
+    outbreaks: createDefaultOutbreakProgress(),
+    records: createDefaultCampaignRecords(),
     settings: { ...DEFAULT_CAMPAIGN_SETTINGS },
   };
 }
@@ -1600,6 +2060,28 @@ function normalizeClaimedRewards(value) {
     if (claimed.length > 0) normalized[stageId] = claimed;
   }
   return normalized;
+}
+
+function normalizeMigrationNotices(value) {
+  if (!Array.isArray(value)) return [];
+  const notices = [];
+  const seen = new Set();
+  for (const entry of value) {
+    if (!isRecord(entry)) continue;
+    const id = typeof entry.id === "string" ? entry.id.trim().slice(0, 160) : "";
+    const title = typeof entry.title === "string" ? entry.title.trim().slice(0, 160) : "";
+    const body = typeof entry.body === "string" ? entry.body.trim().slice(0, 1_200) : "";
+    if (!id || !title || !body || seen.has(id) || Object.hasOwn(Object.prototype, id)) continue;
+    seen.add(id);
+    notices.push({
+      id,
+      title,
+      body,
+      previousCaps: clampInteger(entry.previousCaps, 0, Number.MAX_SAFE_INTEGER, 0),
+      nextCaps: clampInteger(entry.nextCaps, 0, Number.MAX_SAFE_INTEGER, 0),
+    });
+  }
+  return notices;
 }
 
 function normalizeSettings(value, { recoverLegacySilence = false } = {}) {
@@ -1716,7 +2198,7 @@ function deriveRoster({
     }
   }
 
-  if (!Number.isFinite(sourceSchemaVersion) || sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION) {
+  if (!Number.isFinite(sourceSchemaVersion) || sourceSchemaVersion < V090_LEVEL_ECONOMY_SCHEMA_VERSION) {
     for (const stageId of completedStageIds) {
       for (const unitId of LEGACY_STAGE_OWNERSHIP[stageId] ?? []) ownership.add(unitId);
     }
@@ -1760,7 +2242,53 @@ function normalizeFormationUnitIds(value, ownership) {
   return candidates.slice(0, CAMPAIGN_FORMATION_MAX_SLOTS);
 }
 
-function normalizeFormationPresets(value, ownership, legacyFormation) {
+function normalizePresetEquipment(source, unitIds, inventory) {
+  const available = equipmentQuantityMap(inventory);
+  const usage = new Map();
+  const reserve = (equipmentId, slotType, seen) => {
+    const entry = equipmentDefinition(equipmentId);
+    if (!entry || entry.slotType !== slotType || seen.has(equipmentId)) return false;
+    const nextUsage = (usage.get(equipmentId) ?? 0) + 1;
+    if (nextUsage > (available.get(equipmentId) ?? 0)) return false;
+    usage.set(equipmentId, nextUsage);
+    seen.add(equipmentId);
+    return true;
+  };
+  const personalSource = isRecord(source)
+    ? firstDefined(source, ["personalEquipmentByUnit", "personalEquipment", "unitEquipment"], {})
+    : {};
+  const personalEquipmentByUnit = {};
+  if (isRecord(personalSource)) {
+    for (const unitId of unitIds) {
+      const seen = new Set();
+      const equipmentIds = Array.isArray(personalSource[unitId]) ? personalSource[unitId] : [];
+      const normalized = Array.from({ length: PERSONAL_EQUIPMENT_SLOTS }, () => null);
+      for (let slotIndex = 0; slotIndex < PERSONAL_EQUIPMENT_SLOTS; slotIndex += 1) {
+        const equipmentId = equipmentIds[slotIndex];
+        if (typeof equipmentId !== "string") continue;
+        if (reserve(equipmentId, EQUIPMENT_SLOT_TYPES.PERSONAL, seen)) {
+          normalized[slotIndex] = equipmentId;
+        }
+      }
+      if (normalized.some(Boolean)) personalEquipmentByUnit[unitId] = normalized;
+    }
+  }
+  const tacticalSource = isRecord(source)
+    ? firstDefined(source, ["tacticalEquipmentIds", "tacticalEquipment", "teamEquipmentIds"], [])
+    : [];
+  const tacticalEquipmentIds = Array.from({ length: TACTICAL_EQUIPMENT_SLOTS }, () => null);
+  const tacticalSeen = new Set();
+  for (let slotIndex = 0; slotIndex < TACTICAL_EQUIPMENT_SLOTS; slotIndex += 1) {
+    const equipmentId = Array.isArray(tacticalSource) ? tacticalSource[slotIndex] : null;
+    if (typeof equipmentId !== "string") continue;
+    if (reserve(equipmentId, EQUIPMENT_SLOT_TYPES.TACTICAL, tacticalSeen)) {
+      tacticalEquipmentIds[slotIndex] = equipmentId;
+    }
+  }
+  return { personalEquipmentByUnit, tacticalEquipmentIds };
+}
+
+function normalizeFormationPresets(value, ownership, legacyFormation, equipmentInventory = []) {
   const ownedKnownIds = ownership.filter((unitId) => CAMPAIGN_UNIT_BY_CANONICAL_ID[unitId]);
   const defaultUnitIds = normalizeFormationUnitIds(
     Array.isArray(legacyFormation) && legacyFormation.length > 0 ? legacyFormation : ownedKnownIds,
@@ -1790,10 +2318,13 @@ function normalizeFormationPresets(value, ownership, legacyFormation) {
       ? firstDefined(source, ["unitIds", "units", "formationUnitIds", "formationKinds"], [])
       : [];
     const unitIds = normalizeFormationUnitIds(requested, ownership);
+    const selectedUnitIds = unitIds.length > 0 ? unitIds : [...safeDefault];
+    const equipment = normalizePresetEquipment(source, selectedUnitIds, equipmentInventory);
     return {
       id,
       displayName: CAMPAIGN_FORMATION_PRESET_LABELS[id],
-      unitIds: unitIds.length > 0 ? unitIds : [...safeDefault],
+      unitIds: selectedUnitIds,
+      ...equipment,
     };
   });
 }
@@ -1860,6 +2391,21 @@ export function migrateCampaignSave(
     ["processedUpgradeIds", "appliedUpgradeIds"],
     [],
   ));
+  const processedEquipmentTransactionIds = uniqueStrings(firstDefined(
+    source,
+    ["processedEquipmentTransactionIds", "appliedEquipmentTransactionIds"],
+    [],
+  ));
+  const sourceProcessedMigrationIds = uniqueStrings(firstDefined(
+    source,
+    ["processedMigrationIds", "migrationReceipts"],
+    [],
+  ));
+  const sourceMigrationNotices = normalizeMigrationNotices(firstDefined(
+    source,
+    ["migrationNotices", "pendingMigrationNotices"],
+    [],
+  ));
   const eventFoundation = normalizeEventFoundationProgress(firstDefined(
     source,
     ["eventFoundation", "eventProgress"],
@@ -1915,7 +2461,7 @@ export function migrateCampaignSave(
   const qaHasExactlyLegacyRoster = explicitOwnership.length === legacyQaAllUnitIds.length
     && legacyQaAllUnitIds.every((unitId) => explicitOwnership.includes(unitId));
   const repairQaAllUnlockLeak = completedStageIds.length === 0
-    && (!Number.isFinite(sourceSchemaVersion) || sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION)
+    && (!Number.isFinite(sourceSchemaVersion) || sourceSchemaVersion < V090_LEVEL_ECONOMY_SCHEMA_VERSION)
     && !source.ownership
     && qaHasExactlyAllKnownStages
     && (qaHasExactlyCurrentRoster || qaHasExactlyLegacyRoster);
@@ -1930,39 +2476,120 @@ export function migrateCampaignSave(
     sourceSchemaVersion,
     repairQaAllUnlockLeak,
   });
-  const sourceUnitRanks = firstDefined(source, ["unitRanks", "unitLevels", "upgrades"], {});
-  const canonicalUnitRanks = isRecord(sourceUnitRanks)
-    ? Object.fromEntries(Object.entries(sourceUnitRanks).flatMap(([candidateId, rank]) => {
+  const sourceProgression = Number.isFinite(sourceSchemaVersion)
+    && sourceSchemaVersion >= V090_LEVEL_ECONOMY_SCHEMA_VERSION
+    ? firstDefined(source, ["unitLevels", "unitRanks", "upgrades"], {})
+    : firstDefined(source, ["unitRanks", "unitLevels", "upgrades"], {});
+  const canonicalProgression = isRecord(sourceProgression)
+    ? Object.fromEntries(Object.entries(sourceProgression).flatMap(([candidateId, value]) => {
       const canonicalId = normalizeCampaignUnitId(candidateId);
-      return canonicalId ? [[canonicalId, rank]] : [];
+      if (!canonicalId) return [];
+      const level = Number.isFinite(sourceSchemaVersion) && sourceSchemaVersion >= V090_LEVEL_ECONOMY_SCHEMA_VERSION
+        ? value
+        : legacyRankToLevel(value);
+      return [[canonicalId, level]];
     }))
     : {};
-  const unitRanks = normalizeUnitRanks(canonicalUnitRanks, knownUnitIds);
+  const unitLevels = normalizeUnitLevels(canonicalProgression, knownUnitIds);
+  const unitRanks = Object.freeze(Object.fromEntries(
+    knownUnitIds.map((unitId) => [unitId, unitLevels[unitId] - 1]),
+  ));
   const legacyFormation = firstDefined(
     source,
     ["formationUnitIds", "formationKinds", "selectedUnitIds", "loadoutUnitIds"],
     [],
   );
+  const equipmentInventory = normalizeEquipmentInventory(firstDefined(
+    source,
+    ["equipmentInventory", "equipment", "inventoryEquipment"],
+    [],
+  ));
+  const equipmentEnhancementLevels = normalizeEquipmentEnhancementLevels(firstDefined(
+    source,
+    ["equipmentEnhancementLevels", "equipmentLevelsById", "equipmentUpgradeLevels"],
+    {},
+  ));
   const formationPresets = normalizeFormationPresets(
     firstDefined(source, ["formationPresets", "presets", "formations"], []),
     roster.ownership,
     legacyFormation,
+    equipmentInventory,
   );
   const selectedFormationPresetId = normalizeFormationPresetId(firstDefined(
     source,
     ["selectedFormationPresetId", "selectedPresetId", "selectedFormationPreset", "selectedPreset"],
     CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_1,
   )) ?? CAMPAIGN_FORMATION_PRESET_IDS.SQUAD_1;
-  const caps = clampInteger(
+  const sourceCaps = clampInteger(
     firstDefined(source, ["caps", "supplies", "supply", "currency"], 0),
     0,
     Number.MAX_SAFE_INTEGER,
     0,
   );
-  const revision = clampInteger(source.revision, 0, Number.MAX_SAFE_INTEGER, 0);
-  const updatedAt = typeof source.updatedAt === "string" && Number.isFinite(Date.parse(source.updatedAt))
+  const requiresEconomyMigration = (!Number.isFinite(sourceSchemaVersion)
+      || sourceSchemaVersion < V090_LEVEL_ECONOMY_SCHEMA_VERSION)
+    && !sourceProcessedMigrationIds.includes(V090_CAPS_MIGRATION_ID);
+  const capsMigration = requiresEconomyMigration ? reorganizeLegacyCaps(sourceCaps) : null;
+  const caps = capsMigration?.nextCaps ?? sourceCaps;
+  const processedMigrationIds = capsMigration
+    ? [...sourceProcessedMigrationIds, V090_CAPS_MIGRATION_ID]
+    : sourceProcessedMigrationIds;
+  const migrationNotices = capsMigration
+    ? [
+      ...sourceMigrationNotices.filter(({ id }) => id !== V090_CAPS_MIGRATION_ID),
+      capsMigrationNotice(capsMigration),
+    ]
+    : sourceMigrationNotices;
+  const migratesSchema = !Number.isFinite(sourceSchemaVersion)
+    || sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION;
+  const sourceRevision = clampInteger(source.revision, 0, Number.MAX_SAFE_INTEGER, 0);
+  const revision = migratesSchema
+    ? Math.min(Number.MAX_SAFE_INTEGER, sourceRevision + 1)
+    : sourceRevision;
+  const sourceUpdatedAt = typeof source.updatedAt === "string" && Number.isFinite(Date.parse(source.updatedAt))
     ? new Date(source.updatedAt).toISOString()
     : "";
+  const updatedAt = migratesSchema
+    ? new Date((sourceUpdatedAt ? Date.parse(sourceUpdatedAt) : 0) + 1).toISOString()
+    : sourceUpdatedAt;
+  const survival = normalizeSurvivalProgress(firstDefined(
+    source,
+    ["survival", "survivalProgress"],
+    null,
+  ));
+  const outbreaks = normalizeOutbreakProgress(firstDefined(
+    source,
+    ["outbreaks", "outbreakProgress"],
+    null,
+  ));
+  const sourceRecords = firstDefined(source, ["records", "campaignRecords"], null);
+  let records = normalizeCampaignRecords(sourceRecords);
+  if (sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION && !isRecord(sourceRecords)) {
+    const legacyDefeatCountsByEnemy = { ...outbreaks.bossDefeatCounts };
+    for (const stage of CAMPAIGN_STAGES) {
+      const bossKind = stage.boss?.enemyKind;
+      if (!bossKind || !completedStageIds.includes(stage.id)) continue;
+      legacyDefeatCountsByEnemy[bossKind] = Math.min(
+        Number.MAX_SAFE_INTEGER,
+        (legacyDefeatCountsByEnemy[bossKind] ?? 0) + 1,
+      );
+    }
+    const knownBossKills = Math.min(
+      Number.MAX_SAFE_INTEGER,
+      survival.totalBossKills
+        + Object.values(legacyDefeatCountsByEnemy)
+          .reduce((total, count) => total + Number(count || 0), 0),
+    );
+    records = normalizeCampaignRecords({
+      ...records,
+      defeatCountsByEnemy: legacyDefeatCountsByEnemy,
+      totals: {
+        ...records.totals,
+        kills: survival.totalKills,
+        bossKills: knownBossKills,
+      },
+    });
+  }
 
   return {
     schemaVersion: CAMPAIGN_SAVE_SCHEMA_VERSION,
@@ -1976,20 +2603,29 @@ export function migrateCampaignSave(
     processedResultIds,
     processedAcquisitionIds,
     processedUpgradeIds,
+    processedEquipmentTransactionIds,
+    processedMigrationIds,
+    migrationNotices,
     eventFoundation,
     completedStageIds,
     bestStarsByStage,
     claimedStarRewardsByStage,
     caps,
     supplies: caps,
+    equipmentInventory,
+    equipmentEnhancementLevels,
     ...effectiveUnlocks,
     ...roster,
+    unitLevels,
     unitRanks,
     unlockedUnitIds: [...roster.ownership],
     formationPresets,
     selectedFormationPresetId,
     selectedPresetId: selectedFormationPresetId,
     lastSelectedStageId,
+    survival,
+    outbreaks,
+    records,
     settings: normalizeSettings(rawSettings, {
       recoverLegacySilence: !Number.isFinite(sourceSchemaVersion)
         || sourceSchemaVersion < 4,
@@ -2111,6 +2747,267 @@ export function withCampaignSaveIntegrity(
     ...normalized,
     integrity: computeCampaignSaveIntegrity(normalized),
   };
+}
+
+export function checkpointSurvivalCampaignSave(
+  save,
+  run,
+  {
+    savedAt = new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry });
+  const survival = saveSurvivalCheckpoint(current.survival, run, savedAt);
+  const currentCheckpointId = current.survival.activeCheckpoint?.checkpointId ?? null;
+  const nextCheckpointId = survival.activeCheckpoint?.checkpointId ?? null;
+  if (!nextCheckpointId || nextCheckpointId === currentCheckpointId) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      applied: false,
+      checkpointId: nextCheckpointId,
+    };
+  }
+  const revised = reviseCampaignSave(
+    { ...current, survival },
+    { updatedAt: savedAt, eventRegistry },
+  );
+  return {
+    save: withCampaignSaveIntegrity(revised, { eventRegistry }),
+    applied: true,
+    checkpointId: nextCheckpointId,
+  };
+}
+
+export function settleSurvivalCampaignSave(
+  save,
+  run,
+  {
+    endedAt = new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry });
+  const endedRun = normalizeSurvivalRun(run);
+  const settlement = settleSurvivalRun(current.survival, run, { endedAt });
+  if (settlement.duplicate) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      payout: settlement.payout,
+      applied: false,
+      duplicate: true,
+    };
+  }
+  if (!settlement.progress.processedRunIds.includes(run?.runId)) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      payout: settlement.payout,
+      applied: false,
+      duplicate: false,
+    };
+  }
+  const caps = Math.min(Number.MAX_SAFE_INTEGER, current.caps + settlement.payout.caps);
+  const records = recordCampaignOperation(current.records, {
+    resultId: endedRun.runId,
+    operationId: `survival-wave-${endedRun.startWave}`,
+    category: "survival",
+    outcome: endedRun.endReason === SURVIVAL_END_REASONS.WITHDRAWAL ? "withdrawn" : "lost",
+    battleSeconds: endedRun.stats.battleSeconds,
+    kills: endedRun.stats.kills,
+    bossKills: endedRun.stats.bossKills,
+    reachedWave: endedRun.lastCompletedWave,
+    capsEarned: settlement.payout.caps,
+    encounteredEnemyKinds: endedRun.stats.encounteredEnemyKinds,
+    enemyDefeatsByKind: endedRun.stats.enemyDefeatsByKind,
+    unitStats: endedRun.stats,
+    completedAt: endedAt,
+  });
+  const revised = reviseCampaignSave({
+    ...current,
+    caps,
+    supplies: caps,
+    equipmentInventory: addEquipmentInventory(
+      current.equipmentInventory,
+      settlement.payout.equipmentGrants,
+    ),
+    survival: settlement.progress,
+    records,
+  }, {
+    updatedAt: endedAt,
+    eventRegistry,
+  });
+  return {
+    save: withCampaignSaveIntegrity(revised, { eventRegistry }),
+    payout: settlement.payout,
+    applied: true,
+    duplicate: false,
+  };
+}
+
+export async function persistSurvivalCampaignSettlement(
+  save,
+  run,
+  {
+    persist,
+    endedAt = new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  if (typeof persist !== "function") throw new TypeError("A campaign persistence function is required");
+  const settlement = settleSurvivalCampaignSave(save, run, { endedAt, eventRegistry });
+  if (!settlement.applied) {
+    return {
+      ...settlement,
+      committed: settlement.duplicate,
+      persistCalls: 0,
+    };
+  }
+  try {
+    const result = await persist(settlement.save);
+    const durable = result === true || result?.durable === true;
+    return {
+      ...settlement,
+      save: durable ? settlement.save : save,
+      candidateSave: settlement.save,
+      committed: durable,
+      persistCalls: 1,
+    };
+  } catch (error) {
+    return {
+      ...settlement,
+      save,
+      candidateSave: settlement.save,
+      committed: false,
+      persistCalls: 1,
+      error,
+    };
+  }
+}
+
+export function settleOutbreakCampaignSave(
+  save,
+  result,
+  {
+    completedAt = result?.completedAt ?? new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry });
+  if (!isOutbreakMissionUnlocked(
+    current.outbreaks,
+    current.completedStageIds,
+    result?.missionId,
+  )) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      payout: { caps: 0, equipmentGrants: [] },
+      applied: false,
+      duplicate: false,
+      reason: "mission-locked",
+    };
+  }
+  const settlement = resolveOutbreakProgress(current.outbreaks, {
+    ...result,
+    completedAt,
+  });
+  const resultId = typeof result?.resultId === "string" ? result.resultId.trim() : "";
+  if (settlement.duplicate || current.processedResultIds.includes(resultId)) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      payout: { caps: 0, equipmentGrants: [] },
+      applied: false,
+      duplicate: true,
+    };
+  }
+  const caps = Math.min(Number.MAX_SAFE_INTEGER, current.caps + settlement.reward.caps);
+  const missionBossKind = settlement.progress.lastResult?.bossKind ?? "";
+  const records = recordCampaignOperation(current.records, {
+    resultId,
+    operationId: result?.missionId,
+    category: "outbreak",
+    won: result?.won === true,
+    battleSeconds: result?.stats?.battleSeconds,
+    kills: result?.stats?.kills,
+    unitsLost: result?.stats?.unitsLost,
+    bossKills: result?.won === true ? 1 : 0,
+    capsEarned: settlement.reward.caps,
+    encounteredEnemyKinds: [
+      ...(Array.isArray(result?.encounteredEnemyKinds) ? result.encounteredEnemyKinds : []),
+      ...(missionBossKind ? [missionBossKind] : []),
+    ],
+    enemyDefeatsByKind: {
+      ...(isRecord(result?.enemyDefeatsByKind) ? result.enemyDefeatsByKind : {}),
+      ...(result?.won === true && missionBossKind
+        ? { [missionBossKind]: Math.max(1, Number(result?.enemyDefeatsByKind?.[missionBossKind]) || 0) }
+        : {}),
+    },
+    unitStats: result?.unitStats,
+    completedAt,
+  });
+  const revised = reviseCampaignSave({
+    ...current,
+    processedResultIds: [...new Set([...current.processedResultIds, resultId])],
+    caps,
+    supplies: caps,
+    equipmentInventory: addEquipmentInventory(
+      current.equipmentInventory,
+      settlement.reward.equipmentGrants,
+    ),
+    outbreaks: settlement.progress,
+    records,
+  }, {
+    updatedAt: completedAt,
+    eventRegistry,
+  });
+  return {
+    save: withCampaignSaveIntegrity(revised, { eventRegistry }),
+    payout: settlement.reward,
+    applied: true,
+    duplicate: false,
+  };
+}
+
+export async function persistOutbreakCampaignSettlement(
+  save,
+  result,
+  {
+    persist,
+    completedAt = result?.completedAt ?? new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  if (typeof persist !== "function") throw new TypeError("A campaign persistence function is required");
+  const settlement = settleOutbreakCampaignSave(save, result, {
+    completedAt,
+    eventRegistry,
+  });
+  if (!settlement.applied) {
+    return {
+      ...settlement,
+      committed: settlement.duplicate,
+      persistCalls: 0,
+    };
+  }
+  try {
+    const persisted = await persist(settlement.save);
+    const durable = persisted === true || persisted?.durable === true;
+    return {
+      ...settlement,
+      save: durable ? settlement.save : save,
+      candidateSave: settlement.save,
+      committed: durable,
+      persistCalls: 1,
+    };
+  } catch (error) {
+    return {
+      ...settlement,
+      save,
+      candidateSave: settlement.save,
+      committed: false,
+      persistCalls: 1,
+      error,
+    };
+  }
 }
 
 export function verifyCampaignSaveIntegrity(rawSave) {
@@ -2442,6 +3339,282 @@ export function setFormationPresetUnits(save, presetId, unitIds) {
   return reviseCampaignSave({ ...current, formationPresets });
 }
 
+export function getFormationPresetEquipmentSnapshot(save, presetId = null) {
+  const current = migrateCampaignSave(save);
+  const normalizedPresetId = presetId === null
+    ? current.selectedFormationPresetId
+    : requireFormationPresetId(presetId);
+  const preset = current.formationPresets.find(({ id }) => id === normalizedPresetId);
+  if (!preset) throw new RangeError(`Unknown formation preset: ${String(normalizedPresetId)}`);
+  return deepFreeze({
+    presetId: preset.id,
+    unitIds: [...preset.unitIds],
+    unitLevelsByUnit: Object.fromEntries(preset.unitIds.map((unitId) => [
+      unitId,
+      current.unitLevels[unitId] ?? 1,
+    ])),
+    personalEquipmentByUnit: Object.fromEntries(Object.entries(preset.personalEquipmentByUnit)
+      .map(([unitId, equipmentIds]) => [unitId, [...equipmentIds]])),
+    tacticalEquipmentIds: [...preset.tacticalEquipmentIds],
+    equipmentEnhancementLevels: { ...current.equipmentEnhancementLevels },
+  });
+}
+
+function equipmentTransactionInput(equipmentIdOrInput, maybeInput) {
+  if (isRecord(equipmentIdOrInput)) return equipmentIdOrInput;
+  return {
+    ...(isRecord(maybeInput) ? maybeInput : {}),
+    equipmentId: equipmentIdOrInput,
+  };
+}
+
+function equipmentTransactionId(input) {
+  return typeof input.transactionId === "string"
+    ? input.transactionId.trim()
+    : typeof input.receiptId === "string"
+      ? input.receiptId.trim()
+      : "";
+}
+
+export function purchaseCampaignEquipment(save, equipmentIdOrInput, maybeInput) {
+  const input = equipmentTransactionInput(equipmentIdOrInput, maybeInput);
+  const equipmentId = typeof input.equipmentId === "string" ? input.equipmentId.trim() : "";
+  const transactionId = equipmentTransactionId(input);
+  if (!transactionId) throw new TypeError("A non-empty equipment transactionId is required");
+  const current = migrateCampaignSave(save);
+  const entry = equipmentDefinition(equipmentId);
+  const costCaps = entry?.source === EQUIPMENT_SOURCES.SUPPLY_SHOP
+    ? Number(entry.purchaseCaps)
+    : 0;
+  const baseResult = {
+    transactionId,
+    equipmentId,
+    costCaps,
+    spentCaps: 0,
+    quantityAfter: campaignEquipmentQuantity(current, equipmentId),
+    applied: false,
+    alreadyProcessed: false,
+    reason: "",
+  };
+  if (current.processedEquipmentTransactionIds.includes(transactionId)) {
+    return {
+      save: current,
+      result: { ...baseResult, alreadyProcessed: true, reason: "already-processed" },
+    };
+  }
+  if (!entry) return { save: current, result: { ...baseResult, reason: "unknown-equipment" } };
+  if (entry.source !== EQUIPMENT_SOURCES.SUPPLY_SHOP || !Number.isFinite(entry.purchaseCaps)) {
+    return { save: current, result: { ...baseResult, reason: "not-purchasable" } };
+  }
+  if (current.caps < costCaps) {
+    return { save: current, result: { ...baseResult, reason: "insufficient-caps" } };
+  }
+  const caps = current.caps - costCaps;
+  const equipmentInventory = addEquipmentInventory(current.equipmentInventory, [
+    { equipmentId, quantity: 1 },
+  ]);
+  return {
+    save: reviseCampaignSave({
+      ...current,
+      processedEquipmentTransactionIds: [
+        ...current.processedEquipmentTransactionIds,
+        transactionId,
+      ],
+      caps,
+      supplies: caps,
+      equipmentInventory,
+    }),
+    result: {
+      ...baseResult,
+      spentCaps: costCaps,
+      quantityAfter: campaignEquipmentQuantity({ ...current, equipmentInventory }, equipmentId),
+      applied: true,
+      reason: "applied",
+    },
+  };
+}
+
+export function enhanceCampaignEquipment(save, equipmentIdOrInput, maybeInput) {
+  const input = equipmentTransactionInput(equipmentIdOrInput, maybeInput);
+  const equipmentId = typeof input.equipmentId === "string" ? input.equipmentId.trim() : "";
+  const transactionId = equipmentTransactionId(input);
+  if (!transactionId) throw new TypeError("A non-empty equipment transactionId is required");
+  const current = migrateCampaignSave(save);
+  const entry = equipmentDefinition(equipmentId);
+  const currentLevel = equipmentEnhancementLevel(current.equipmentEnhancementLevels, equipmentId);
+  const costCaps = equipmentEnhancementCost(equipmentId, currentLevel) ?? 0;
+  const baseResult = {
+    transactionId,
+    equipmentId,
+    currentLevel,
+    nextLevel: currentLevel >= EQUIPMENT_MAX_ENHANCEMENT ? null : currentLevel + 1,
+    costCaps,
+    spentCaps: 0,
+    applied: false,
+    alreadyProcessed: false,
+    reason: "",
+  };
+  if (current.processedEquipmentTransactionIds.includes(transactionId)) {
+    return {
+      save: current,
+      result: { ...baseResult, alreadyProcessed: true, reason: "already-processed" },
+    };
+  }
+  if (!entry) return { save: current, result: { ...baseResult, reason: "unknown-equipment" } };
+  if (campaignEquipmentQuantity(current, equipmentId) < 1) {
+    return { save: current, result: { ...baseResult, reason: "not-owned" } };
+  }
+  if (baseResult.nextLevel === null) {
+    return { save: current, result: { ...baseResult, reason: "max-enhancement" } };
+  }
+  if (current.caps < costCaps) {
+    return { save: current, result: { ...baseResult, reason: "insufficient-caps" } };
+  }
+  const caps = current.caps - costCaps;
+  return {
+    save: reviseCampaignSave({
+      ...current,
+      processedEquipmentTransactionIds: [
+        ...current.processedEquipmentTransactionIds,
+        transactionId,
+      ],
+      caps,
+      supplies: caps,
+      equipmentEnhancementLevels: {
+        ...current.equipmentEnhancementLevels,
+        [equipmentId]: baseResult.nextLevel,
+      },
+    }),
+    result: {
+      ...baseResult,
+      spentCaps: costCaps,
+      applied: true,
+      reason: "applied",
+    },
+  };
+}
+
+function setFormationEquipmentSlot(save, {
+  presetId,
+  unitId = null,
+  slotIndex,
+  equipmentId = null,
+  slotType,
+}) {
+  const current = migrateCampaignSave(save);
+  const normalizedPresetId = requireFormationPresetId(presetId);
+  const maximumSlots = slotType === EQUIPMENT_SLOT_TYPES.PERSONAL
+    ? PERSONAL_EQUIPMENT_SLOTS
+    : TACTICAL_EQUIPMENT_SLOTS;
+  const normalizedSlotIndex = Number(slotIndex);
+  if (!Number.isInteger(normalizedSlotIndex)
+    || normalizedSlotIndex < 0
+    || normalizedSlotIndex >= maximumSlots) {
+    throw new RangeError(`Equipment slot index must be 0-${maximumSlots - 1}`);
+  }
+  const preset = current.formationPresets.find(({ id }) => id === normalizedPresetId);
+  if (!preset) throw new RangeError(`Unknown formation preset: ${String(presetId)}`);
+  const canonicalEquipmentId = equipmentId === null || equipmentId === ""
+    ? null
+    : typeof equipmentId === "string" ? equipmentId.trim() : "";
+  if (canonicalEquipmentId) {
+    const entry = equipmentDefinition(canonicalEquipmentId);
+    if (!entry) throw new RangeError(`Unknown equipment: ${String(equipmentId)}`);
+    if (entry.slotType !== slotType) {
+      throw new RangeError(`Equipment cannot be assigned to ${slotType}: ${canonicalEquipmentId}`);
+    }
+    const personalOccurrences = Object.entries(preset.personalEquipmentByUnit)
+      .flatMap(([candidateUnitId, equipmentIds]) => equipmentIds.map((candidateEquipmentId, candidateSlotIndex) => ({
+        unitId: candidateUnitId,
+        slotIndex: candidateSlotIndex,
+        equipmentId: candidateEquipmentId,
+        slotType: EQUIPMENT_SLOT_TYPES.PERSONAL,
+      })));
+    const tacticalOccurrences = preset.tacticalEquipmentIds.map((candidateEquipmentId, candidateSlotIndex) => ({
+      unitId: null,
+      slotIndex: candidateSlotIndex,
+      equipmentId: candidateEquipmentId,
+      slotType: EQUIPMENT_SLOT_TYPES.TACTICAL,
+    }));
+    const occupiedElsewhere = [...personalOccurrences, ...tacticalOccurrences].filter((occurrence) => (
+      occurrence.equipmentId === canonicalEquipmentId
+      && !(occurrence.slotType === slotType
+        && occurrence.slotIndex === normalizedSlotIndex
+        && (slotType !== EQUIPMENT_SLOT_TYPES.PERSONAL
+          || occurrence.unitId === normalizeCampaignUnitId(unitId)))
+    ));
+    if (slotType === EQUIPMENT_SLOT_TYPES.TACTICAL
+      && occupiedElsewhere.some((occurrence) => occurrence.slotType === slotType)) {
+      throw new RangeError(`Tactical equipment cannot stack with itself: ${canonicalEquipmentId}`);
+    }
+    if (slotType === EQUIPMENT_SLOT_TYPES.PERSONAL
+      && occupiedElsewhere.some((occurrence) => (
+        occurrence.slotType === slotType
+        && occurrence.unitId === normalizeCampaignUnitId(unitId)
+      ))) {
+      throw new RangeError(`A unit cannot equip duplicate equipment: ${canonicalEquipmentId}`);
+    }
+    if (occupiedElsewhere.length >= campaignEquipmentQuantity(current, canonicalEquipmentId)) {
+      throw new RangeError(`Equipment quantity is already allocated in preset: ${canonicalEquipmentId}`);
+    }
+  }
+  let nextPreset;
+  if (slotType === EQUIPMENT_SLOT_TYPES.PERSONAL) {
+    const canonicalUnitId = normalizeCampaignUnitId(unitId);
+    if (!canonicalUnitId || !preset.unitIds.includes(canonicalUnitId)) {
+      throw new RangeError(`Unit is not deployed in formation preset: ${String(unitId)}`);
+    }
+    const slots = [...(preset.personalEquipmentByUnit[canonicalUnitId]
+      ?? Array.from({ length: PERSONAL_EQUIPMENT_SLOTS }, () => null))];
+    slots[normalizedSlotIndex] = canonicalEquipmentId;
+    nextPreset = {
+      ...preset,
+      personalEquipmentByUnit: {
+        ...preset.personalEquipmentByUnit,
+        [canonicalUnitId]: slots,
+      },
+    };
+  } else {
+    const slots = [...preset.tacticalEquipmentIds];
+    slots[normalizedSlotIndex] = canonicalEquipmentId;
+    nextPreset = { ...preset, tacticalEquipmentIds: slots };
+  }
+  const normalizedPreset = normalizeFormationPresets(
+    [nextPreset],
+    current.ownership,
+    [],
+    current.equipmentInventory,
+  ).find(({ id }) => id === normalizedPresetId);
+  const requestedStillAssigned = canonicalEquipmentId === null
+    || (slotType === EQUIPMENT_SLOT_TYPES.PERSONAL
+      ? normalizedPreset?.personalEquipmentByUnit[normalizeCampaignUnitId(unitId)]?.[normalizedSlotIndex]
+      : normalizedPreset?.tacticalEquipmentIds[normalizedSlotIndex]) === canonicalEquipmentId;
+  if (!requestedStillAssigned) {
+    throw new RangeError(`Equipment quantity is already allocated in preset: ${canonicalEquipmentId}`);
+  }
+  const formationPresets = current.formationPresets.map((candidate) => (
+    candidate.id === normalizedPresetId ? normalizedPreset : candidate
+  ));
+  if (JSON.stringify(current.formationPresets) === JSON.stringify(formationPresets)) return current;
+  return reviseCampaignSave({ ...current, formationPresets });
+}
+
+export function setFormationPersonalEquipmentSlot(save, input) {
+  if (!isRecord(input)) throw new TypeError("Personal equipment assignment is required");
+  return setFormationEquipmentSlot(save, {
+    ...input,
+    slotType: EQUIPMENT_SLOT_TYPES.PERSONAL,
+  });
+}
+
+export function setFormationTacticalEquipmentSlot(save, input) {
+  if (!isRecord(input)) throw new TypeError("Tactical equipment assignment is required");
+  return setFormationEquipmentSlot(save, {
+    ...input,
+    slotType: EQUIPMENT_SLOT_TYPES.TACTICAL,
+  });
+}
+
 function normalizeAcquisitionInput(unitIdOrInput, maybeInput) {
   if (isRecord(unitIdOrInput)) return unitIdOrInput;
   return {
@@ -2535,25 +3708,55 @@ export function grantStoryCampaignUnit(save, unitIdOrInput, maybeInput) {
 }
 
 export function getCampaignUnitRank(save, unitId) {
-  const canonicalId = normalizeCampaignUnitId(unitId);
-  if (!canonicalId) throw new RangeError(`Unknown campaign unit: ${String(unitId)}`);
-  return unitRankFor(migrateCampaignSave(save).unitRanks, canonicalId);
+  return getCampaignUnitLevel(save, unitId) - 1;
 }
 
-export function campaignUnitUpgradeQuote(save, unitId) {
+export function getCampaignUnitLevel(save, unitId) {
+  const canonicalId = normalizeCampaignUnitId(unitId);
+  if (!canonicalId) throw new RangeError(`Unknown campaign unit: ${String(unitId)}`);
+  return unitLevelFor(migrateCampaignSave(save).unitLevels, canonicalId);
+}
+
+export function getCampaignLevelCap(save) {
+  const current = migrateCampaignSave(save);
+  const highestStage = current.completedStageIds.reduce(
+    (highest, stageId) => Math.max(highest, stageNumberForId(stageId) ?? 0),
+    0,
+  );
+  return unitLevelCapForHighestStage(highestStage);
+}
+
+export function campaignUnitLevelUpgradeQuote(save, unitId) {
   const canonicalId = normalizeCampaignUnitId(unitId);
   if (!canonicalId) throw new RangeError(`Unknown campaign unit: ${String(unitId)}`);
   const current = migrateCampaignSave(save);
-  return unitUpgradeQuote({
+  return unitLevelUpgradeQuote({
     unitId: canonicalId,
-    ranks: current.unitRanks,
+    levels: current.unitLevels,
     ownedUnitIds: current.ownership,
     completedStageCount: current.completedStageIds.length,
+    levelCap: getCampaignLevelCap(current),
+  });
+}
+
+export function campaignUnitUpgradeQuote(save, unitId) {
+  const quote = campaignUnitLevelUpgradeQuote(save, unitId);
+  return Object.freeze({
+    currentRank: quote.currentLevel - 1,
+    nextRank: quote.nextLevel === null ? null : quote.nextLevel - 1,
+    currentLevel: quote.currentLevel,
+    nextLevel: quote.nextLevel,
+    levelCap: quote.levelCap,
+    baseCostCaps: quote.baseCostCaps,
+    discountCaps: quote.discountCaps,
+    costCaps: quote.costCaps,
+    catchUp: quote.catchUp,
+    reason: quote.reason,
   });
 }
 
 /**
- * Pays for exactly one rank on one stable campaign-unit ID. A rank-specific
+ * Pays for exactly one Level on one stable campaign-unit ID. A Level-specific
  * receipt makes touch retries idempotent without blocking a later upgrade.
  */
 export function upgradeCampaignUnit(save, unitIdOrInput, maybeInput) {
@@ -2568,17 +3771,21 @@ export function upgradeCampaignUnit(save, unitIdOrInput, maybeInput) {
   if (!upgradeId) throw new TypeError("A non-empty upgradeId is required");
 
   const current = migrateCampaignSave(save);
-  const quote = unitUpgradeQuote({
+  const quote = unitLevelUpgradeQuote({
     unitId,
-    ranks: current.unitRanks,
+    levels: current.unitLevels,
     ownedUnitIds: current.ownership,
     completedStageCount: current.completedStageIds.length,
+    levelCap: getCampaignLevelCap(current),
   });
   const baseResult = {
     upgradeId,
     unitId,
-    currentRank: quote.currentRank,
-    nextRank: quote.nextRank,
+    currentLevel: quote.currentLevel,
+    nextLevel: quote.nextLevel,
+    levelCap: quote.levelCap,
+    currentRank: quote.currentLevel - 1,
+    nextRank: quote.nextLevel === null ? null : quote.nextLevel - 1,
     costCaps: quote.costCaps,
     baseCostCaps: quote.baseCostCaps,
     discountCaps: quote.discountCaps,
@@ -2597,8 +3804,8 @@ export function upgradeCampaignUnit(save, unitIdOrInput, maybeInput) {
   if (!current.ownership.includes(unitId)) {
     return { save: current, result: { ...baseResult, reason: "not-owned" } };
   }
-  if (quote.currentRank >= UNIT_PROGRESSION_MAX_RANK || quote.nextRank === null) {
-    return { save: current, result: { ...baseResult, reason: "max-rank" } };
+  if (quote.nextLevel === null) {
+    return { save: current, result: { ...baseResult, reason: quote.reason } };
   }
   if (current.caps < quote.costCaps) {
     return { save: current, result: { ...baseResult, reason: "insufficient-caps" } };
@@ -2610,9 +3817,13 @@ export function upgradeCampaignUnit(save, unitIdOrInput, maybeInput) {
     processedUpgradeIds: [...current.processedUpgradeIds, upgradeId],
     caps,
     supplies: caps,
+    unitLevels: {
+      ...current.unitLevels,
+      [unitId]: quote.nextLevel,
+    },
     unitRanks: {
       ...current.unitRanks,
-      [unitId]: quote.nextRank,
+      [unitId]: quote.nextLevel - 1,
     },
   });
   return {
@@ -2651,6 +3862,16 @@ export function updateStoryPlaybackSettings(save, changes = {}) {
     ...current,
     autoSkipReadStory,
     settings: { ...current.settings, battleEventMode },
+  });
+}
+
+export function acknowledgeCampaignMigrationNotice(save, noticeId) {
+  const current = migrateCampaignSave(save);
+  const normalizedId = typeof noticeId === "string" ? noticeId.trim() : "";
+  if (!normalizedId || !current.migrationNotices.some(({ id }) => id === normalizedId)) return current;
+  return reviseCampaignSave({
+    ...current,
+    migrationNotices: current.migrationNotices.filter(({ id }) => id !== normalizedId),
   });
 }
 
@@ -2714,6 +3935,21 @@ export function resolveStageResult(save, stageIdOrResult, maybeResult) {
     ? [...new Set([...current.completedStageIds, stage.id])]
     : [...current.completedStageIds];
   const caps = current.caps + rewards.totalReward;
+  const records = recordCampaignOperation(current.records, {
+    resultId,
+    operationId: stage.id,
+    category: "campaign",
+    won,
+    battleSeconds: input.battleSeconds,
+    kills: input.kills,
+    unitsLost: input.unitsLost,
+    bossKills: input.bossKills,
+    capsEarned: rewards.totalReward,
+    encounteredEnemyKinds: input.encounteredEnemyKinds,
+    enemyDefeatsByKind: input.enemyDefeatsByKind,
+    unitStats: input.unitStats,
+    completedAt: input.completedAt,
+  });
   const draftSave = migrateCampaignSave({
     ...current,
     campaignStarted: true,
@@ -2724,6 +3960,7 @@ export function resolveStageResult(save, stageIdOrResult, maybeResult) {
     caps,
     supplies: caps,
     lastSelectedStageId: stage.id,
+    records,
   });
   const nextSave = reviseCampaignSave(draftSave);
   const newlyUnlockedStageIds = nextSave.unlockedStageIds.filter((id) => !current.unlockedStageIds.includes(id));

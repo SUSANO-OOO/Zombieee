@@ -22,7 +22,7 @@ const STAGE_5 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM;
 const STAGE_6 = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL;
 
 test("local battle QA modes remain host-gated and include lifecycle evidence", () => {
-  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "takuya-entrance", "ai-reacquire", "roles", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
+  assert.deepEqual(LOCAL_QA_MODES, ["endgame", "takuya-entrance", "ai-reacquire", "roles", "zakimiya", "new-playables", "mayo", "supplies", "airstrike", "crawler", "loadout", "dialogue", "stress", "lifecycle", "barks", "sprites"]);
   for (const mode of LOCAL_QA_MODES) {
     assert.equal(resolveLocalQaMode("localhost", `?qa=${mode}`), mode);
     assert.equal(resolveLocalQaMode("127.0.0.1", `?qa=${mode}`), mode);
@@ -247,7 +247,7 @@ test("command economy measurement preserves the opening and regeneration while m
     deployments: [{ id: "opening-heavy", at: 0, cost: 70 }],
   });
   assert.equal(immediate.initialCommand, 70);
-  assert.equal(immediate.regenPerSecond, 3.5);
+  assert.equal(immediate.regenPerSecond, 3);
   assert.equal(immediate.commandMax, 150);
   assert.equal(immediate.firstDeploymentSeconds, 0);
   assert.equal(immediate.successfulDeployments, 1);
@@ -255,12 +255,12 @@ test("command economy measurement preserves the opening and regeneration while m
 
   const noSpend = measureCommandEconomy({ durationSeconds: 60 });
   assert.equal(noSpend.finalCommand, 150);
-  assert.ok(Math.abs(noSpend.cappedSeconds - (60 - 80 / 3.5)) < 1e-9);
-  assert.ok(Math.abs(noSpend.overflowCommand - 130) < 1e-9);
-  assert.ok(Math.abs(noSpend.overflowRate - 130 / 210) < 1e-9);
+  assert.ok(Math.abs(noSpend.cappedSeconds - (60 - 80 / 3)) < 1e-9);
+  assert.ok(Math.abs(noSpend.overflowCommand - 100) < 1e-9);
+  assert.ok(Math.abs(noSpend.overflowRate - 100 / 180) < 1e-9);
 });
 
-test("command economy measurement proves planned medium-pair and low-triple bursts fit under the cap", () => {
+test("command economy measurement prevents an immediate medium-pair and low-triple burst", () => {
   const measured = measureCommandEconomy({
     durationSeconds: 60,
     deployments: [
@@ -272,18 +272,18 @@ test("command economy measurement proves planned medium-pair and low-triple burs
     ],
   });
 
-  assert.equal(measured.successfulDeployments, 5);
-  assert.equal(measured.failedDeployments, 0);
-  assert.equal(measured.spentCommand, 255);
+  assert.equal(measured.successfulDeployments, 4);
+  assert.equal(measured.failedDeployments, 1);
+  assert.equal(measured.spentCommand, 205);
   assert.equal(measured.firstDeploymentSeconds, 23);
-  assert.ok(Math.abs(measured.finalCommand - 24.5) < 1e-9);
-  assert.ok(Math.abs(measured.cappedSeconds - (23 - 80 / 3.5)) < 1e-9);
-  assert.ok(Math.abs(measured.overflowCommand - .5) < 1e-9);
+  assert.ok(Math.abs(measured.finalCommand - 45) < 1e-9);
+  assert.equal(measured.cappedSeconds, 0);
+  assert.equal(measured.overflowCommand, 0);
   assert.deepEqual(measured.attempts.map(({ id, deployed }) => [id, deployed]), [
     ["medium-1", true],
     ["medium-2", true],
     ["low-1", true],
     ["low-2", true],
-    ["low-3", true],
+    ["low-3", false],
   ]);
 });

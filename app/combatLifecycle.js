@@ -1,4 +1,5 @@
 import { LANE_Y, UNIT_CARDS, WORLD_GEOMETRY, pointInGroundEffectEllipse } from "./gameRules.js";
+import { isBossEnemyKind } from "./bossFoundation.js";
 
 const freeze = (value) => Object.freeze(value);
 
@@ -54,6 +55,12 @@ export const COMBAT_ROLE_RULES = freeze({
   ooze: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
   sprinter: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   "gate-eater": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  resonator: freeze({ attackType: "melee", allowAdjacentLaneTargets: true }),
+  cagewalker: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  spindle: freeze({ attackType: "melee", allowAdjacentLaneTargets: true }),
+  "choir-knot": freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
+  "pall-manta": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  "anchor-bloom": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   turned: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   ranger: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
   gunner: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
@@ -64,6 +71,11 @@ export const COMBAT_ROLE_RULES = freeze({
   babayaga: freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
   guardian: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   engineer: freeze({ attackType: "ranged", allowAdjacentLaneTargets: false }),
+  zakimiya: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  tky: freeze({ attackType: "melee", allowAdjacentLaneTargets: true }),
+  "mrs-chiha": freeze({ attackType: "ranged", allowAdjacentLaneTargets: true }),
+  "miyamoto-musashi": freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
+  "mayo-chan": freeze({ attackType: "melee", allowAdjacentLaneTargets: true }),
 });
 
 const NON_TARGETABLE_STATES = new Set([
@@ -333,8 +345,8 @@ export const ENEMY_DEATH_CONFIG = freeze({
 
 export function enemyDeathClassFor(enemy = {}) {
   if (enemy.deathClass && ENEMY_DEATH_CONFIG.timings[enemy.deathClass]) return enemy.deathClass;
-  if (enemy.boss || enemy.kind === "takuya" || enemy.kind === "gate-eater") return "boss";
-  if (["crusher", "abomination", "grappler", "heavy"].includes(enemy.kind)) return "heavy";
+  if (enemy.boss || isBossEnemyKind(enemy.kind)) return "boss";
+  if (["crusher", "abomination", "grappler", "cagewalker", "pall-manta", "anchor-bloom", "heavy"].includes(enemy.kind)) return "heavy";
   return "normal";
 }
 
