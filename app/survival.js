@@ -26,6 +26,12 @@ function clampInteger(value, minimum, maximum, fallback = minimum) {
   return Math.max(minimum, Math.min(maximum, Math.floor(numeric)));
 }
 
+function clampSeconds(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, Math.round(numeric * 1_000) / 1_000));
+}
+
 function uniqueStrings(value, maximum = Number.MAX_SAFE_INTEGER) {
   if (!Array.isArray(value)) return [];
   return [...new Set(value
@@ -134,9 +140,12 @@ function normalizeRunStats(value) {
   return {
     kills: clampInteger(source.kills, 0, Number.MAX_SAFE_INTEGER, 0),
     bossKills: clampInteger(source.bossKills, 0, Number.MAX_SAFE_INTEGER, 0),
+    battleSeconds: clampSeconds(source.battleSeconds),
     damageByUnit: normalizeStatRecord(source.damageByUnit),
     damageTakenByUnit: normalizeStatRecord(source.damageTakenByUnit),
     healingByUnit: normalizeStatRecord(source.healingByUnit),
+    encounteredEnemyKinds: uniqueStrings(source.encounteredEnemyKinds, 64),
+    enemyDefeatsByKind: normalizeStatRecord(source.enemyDefeatsByKind),
   };
 }
 
@@ -531,9 +540,12 @@ export function setSurvivalRunSpeed(run, speed) {
 export function completeSurvivalWave(run, {
   kills = 0,
   bossKills,
+  battleSeconds = 0,
   damageByUnit = {},
   damageTakenByUnit = {},
   healingByUnit = {},
+  encounteredEnemyKinds = [],
+  enemyDefeatsByKind = {},
   crawlerHp,
   reward = {},
 } = {}) {
@@ -550,9 +562,15 @@ export function completeSurvivalWave(run, {
   const stats = {
     kills: Math.min(Number.MAX_SAFE_INTEGER, current.stats.kills + clampInteger(kills, 0, Number.MAX_SAFE_INTEGER, 0)),
     bossKills: Math.min(Number.MAX_SAFE_INTEGER, current.stats.bossKills + waveBossKills),
+    battleSeconds: Math.min(Number.MAX_SAFE_INTEGER, current.stats.battleSeconds + clampSeconds(battleSeconds)),
     damageByUnit: addStatRecords(current.stats.damageByUnit, damageByUnit),
     damageTakenByUnit: addStatRecords(current.stats.damageTakenByUnit, damageTakenByUnit),
     healingByUnit: addStatRecords(current.stats.healingByUnit, healingByUnit),
+    encounteredEnemyKinds: uniqueStrings([
+      ...current.stats.encounteredEnemyKinds,
+      ...uniqueStrings(encounteredEnemyKinds, 64),
+    ], 64),
+    enemyDefeatsByKind: addStatRecords(current.stats.enemyDefeatsByKind, enemyDefeatsByKind),
   };
   const pendingReward = addRewards(current.pendingReward, reward);
   const completed = {
@@ -585,6 +603,43 @@ export function completeSurvivalWave(run, {
       },
     ],
     pendingReward: normalizeReward(null),
+  };
+}
+
+/**
+ * Adds combat evidence from an unfinished wave without advancing the wave or
+ * creating rewards. This is used immediately before defeat/withdrawal so the
+ * detailed result stays truthful while checkpoint economics remain unchanged.
+ */
+export function recordSurvivalRunCombatStats(run, {
+  kills = 0,
+  bossKills = 0,
+  battleSeconds = 0,
+  damageByUnit = {},
+  damageTakenByUnit = {},
+  healingByUnit = {},
+  encounteredEnemyKinds = [],
+  enemyDefeatsByKind = {},
+  updatedAt = new Date().toISOString(),
+} = {}) {
+  const current = normalizeSurvivalRun(run);
+  if (!current || current.phase !== SURVIVAL_RUN_PHASES.IN_WAVE) return current;
+  return {
+    ...current,
+    stats: {
+      kills: Math.min(Number.MAX_SAFE_INTEGER, current.stats.kills + clampInteger(kills, 0, Number.MAX_SAFE_INTEGER, 0)),
+      bossKills: Math.min(Number.MAX_SAFE_INTEGER, current.stats.bossKills + clampInteger(bossKills, 0, Number.MAX_SAFE_INTEGER, 0)),
+      battleSeconds: Math.min(Number.MAX_SAFE_INTEGER, current.stats.battleSeconds + clampSeconds(battleSeconds)),
+      damageByUnit: addStatRecords(current.stats.damageByUnit, damageByUnit),
+      damageTakenByUnit: addStatRecords(current.stats.damageTakenByUnit, damageTakenByUnit),
+      healingByUnit: addStatRecords(current.stats.healingByUnit, healingByUnit),
+      encounteredEnemyKinds: uniqueStrings([
+        ...current.stats.encounteredEnemyKinds,
+        ...uniqueStrings(encounteredEnemyKinds, 64),
+      ], 64),
+      enemyDefeatsByKind: addStatRecords(current.stats.enemyDefeatsByKind, enemyDefeatsByKind),
+    },
+    updatedAt: normalizedTimestamp(updatedAt, current.updatedAt),
   };
 }
 

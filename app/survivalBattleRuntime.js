@@ -8,9 +8,11 @@ import {
   completeSurvivalWave,
   normalizeSurvivalBossPool,
   normalizeSurvivalRun,
+  recordSurvivalRunCombatStats,
   selectSurvivalUpgrade,
   survivalWaveDescriptor,
 } from "./survival.js";
+import { isBossEnemyKind } from "./bossFoundation.js";
 
 const MAX_SURVIVAL_SPAWNS_PER_WAVE = 32;
 const INTERMISSION_SECONDS = 1.5;
@@ -30,6 +32,79 @@ function deepFreeze(value) {
   if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
   for (const child of Object.values(value)) deepFreeze(child);
   return Object.freeze(value);
+}
+
+function normalizeMetricRecord(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value)
+    .filter(([key]) => typeof key === "string" && key.trim().length > 0)
+    .map(([key, amount]) => [
+      key.trim(),
+      clampInteger(amount, 0, Number.MAX_SAFE_INTEGER, 0),
+    ])
+    .filter(([, amount]) => amount > 0));
+}
+
+function normalizeCombatStats(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  return {
+    damageByUnit: normalizeMetricRecord(source.damageByUnit),
+    damageTakenByUnit: normalizeMetricRecord(source.damageTakenByUnit),
+    healingByUnit: normalizeMetricRecord(source.healingByUnit),
+    encounteredEnemyKinds: Array.isArray(source.encounteredEnemyKinds)
+      ? [...new Set(source.encounteredEnemyKinds
+        .filter((kind) => typeof kind === "string")
+        .map((kind) => kind.trim())
+        .filter(Boolean))]
+      : [],
+    enemyDefeatsByKind: normalizeMetricRecord(source.enemyDefeatsByKind),
+  };
+}
+
+function metricDelta(current, start) {
+  const currentRecord = normalizeMetricRecord(current);
+  const startRecord = normalizeMetricRecord(start);
+  return Object.fromEntries(Object.entries(currentRecord)
+    .map(([key, amount]) => [key, Math.max(0, amount - (startRecord[key] ?? 0))])
+    .filter(([, amount]) => amount > 0));
+}
+
+function combatStatsDelta(current, start) {
+  const currentStats = normalizeCombatStats(current);
+  const startStats = normalizeCombatStats(start);
+  const encounteredAtStart = new Set(startStats.encounteredEnemyKinds);
+  return {
+    damageByUnit: metricDelta(currentStats.damageByUnit, startStats.damageByUnit),
+    damageTakenByUnit: metricDelta(currentStats.damageTakenByUnit, startStats.damageTakenByUnit),
+    healingByUnit: metricDelta(currentStats.healingByUnit, startStats.healingByUnit),
+    encounteredEnemyKinds: currentStats.encounteredEnemyKinds.filter((kind) => !encounteredAtStart.has(kind)),
+    enemyDefeatsByKind: metricDelta(currentStats.enemyDefeatsByKind, startStats.enemyDefeatsByKind),
+  };
+}
+
+export function captureUnfinishedSurvivalCombatStats(runtime, run, {
+  totalKills = 0,
+  combatStats = null,
+  updatedAt = new Date().toISOString(),
+} = {}) {
+  const currentRun = normalizeSurvivalRun(run);
+  if (!currentRun) return null;
+  const currentRuntime = normalizeCombatRuntime(runtime, currentRun);
+  if (currentRun.phase !== SURVIVAL_RUN_PHASES.IN_WAVE || !currentRuntime.waveQueued) return currentRun;
+  const delta = combatStatsDelta(combatStats, currentRuntime.waveCombatStatsStart);
+  const bossKills = Object.entries(delta.enemyDefeatsByKind)
+    .filter(([kind]) => isBossEnemyKind(kind))
+    .reduce((total, [, count]) => total + count, 0);
+  return recordSurvivalRunCombatStats(currentRun, {
+    ...delta,
+    kills: Math.max(
+      0,
+      clampInteger(totalKills, 0, Number.MAX_SAFE_INTEGER, 0) - currentRuntime.waveKillsStart,
+    ),
+    bossKills,
+    battleSeconds: currentRuntime.waveActiveSeconds,
+    updatedAt,
+  });
 }
 
 export const SURVIVAL_DEFENSE_FRONT = deepFreeze({
@@ -168,6 +243,8 @@ export function createSurvivalCombatRuntime(run) {
       ? INTERMISSION_SECONDS
       : 0,
     waveKillsStart: current.stats.kills,
+    waveCombatStatsStart: normalizeCombatStats(null),
+    waveActiveSeconds: 0,
     hadLivingHuman: false,
     noHumanSeconds: 0,
   };
@@ -184,6 +261,8 @@ function normalizeCombatRuntime(value, run) {
       run.phase === SURVIVAL_RUN_PHASES.WAVE_READY ? INTERMISSION_SECONDS : 0,
     )),
     waveKillsStart: clampInteger(current.waveKillsStart, 0, Number.MAX_SAFE_INTEGER, run.stats.kills),
+    waveCombatStatsStart: normalizeCombatStats(current.waveCombatStatsStart),
+    waveActiveSeconds: Math.max(0, finite(current.waveActiveSeconds, 0)),
     hadLivingHuman: current.hadLivingHuman === true,
     noHumanSeconds: Math.max(0, finite(current.noHumanSeconds, 0)),
   };
@@ -198,6 +277,7 @@ export function advanceSurvivalCombat(runtime, run, {
   bossCombatReady = false,
   livingHumanCount = 0,
   queuedHumanCount = 0,
+  combatStats = null,
 } = {}) {
   const currentRun = normalizeSurvivalRun(run);
   if (!currentRun) return { run: null, runtime: null, events: [] };
@@ -212,6 +292,12 @@ export function advanceSurvivalCombat(runtime, run, {
     nextRuntime.noHumanSeconds = 0;
   } else if (nextRuntime.hadLivingHuman && currentRun.phase === SURVIVAL_RUN_PHASES.IN_WAVE) {
     nextRuntime.noHumanSeconds += elapsed;
+  }
+  if (currentRun.phase === SURVIVAL_RUN_PHASES.IN_WAVE && nextRuntime.waveQueued) {
+    nextRuntime.waveActiveSeconds = Math.min(
+      Number.MAX_SAFE_INTEGER,
+      nextRuntime.waveActiveSeconds + elapsed,
+    );
   }
 
   const terminalReason = survivalCombatEndReason(nextRuntime, currentRun, { crawlerHp });
@@ -238,6 +324,8 @@ export function advanceSurvivalCombat(runtime, run, {
         wave: nextRun.currentWave,
         waveQueued: true,
         waveKillsStart: clampInteger(totalKills, 0, Number.MAX_SAFE_INTEGER, currentRun.stats.kills),
+        waveCombatStatsStart: normalizeCombatStats(combatStats),
+        waveActiveSeconds: 0,
       };
       events.push({ type: "queue-wave", plan });
       if (plan.bossKind) events.push({ type: "boss-warning", bossKind: plan.bossKind });
@@ -267,6 +355,8 @@ export function advanceSurvivalCombat(runtime, run, {
     nextRun = completeSurvivalWave(nextRun, {
       kills: waveKills,
       bossKills: descriptor.isBoss ? 1 : 0,
+      battleSeconds: nextRuntime.waveActiveSeconds,
+      ...combatStatsDelta(combatStats, nextRuntime.waveCombatStatsStart),
       crawlerHp,
       reward: survivalWaveReward(nextRun.currentWave),
     });
@@ -276,6 +366,8 @@ export function advanceSurvivalCombat(runtime, run, {
       waveQueued: false,
       intermissionRemaining: INTERMISSION_SECONDS,
       waveKillsStart: clampInteger(totalKills, 0, Number.MAX_SAFE_INTEGER, 0),
+      waveCombatStatsStart: normalizeCombatStats(combatStats),
+      waveActiveSeconds: 0,
     };
     events.push({
       type: descriptor.isBoss ? "checkpoint" : "wave-complete",

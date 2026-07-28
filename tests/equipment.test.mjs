@@ -96,7 +96,7 @@ test("fixed effects are deterministic, bounded, and same-ID buffs never stack", 
   assert.equal(equipmentEnhancementCost("field-machete", EQUIPMENT_MAX_ENHANCEMENT), null);
 });
 
-test("schema 10 Level/economy saves migrate once to schema 12 without a second caps grant", () => {
+test("schema 10 Level/economy saves migrate once to schema 13 without a second caps grant", () => {
   const schema10 = {
     ...createDefaultCampaignSave(),
     schemaVersion: 10,
@@ -120,8 +120,8 @@ test("schema 10 Level/economy saves migrate once to schema 12 without a second c
     ],
   };
   const migrated = migrateCampaignSave(schema10);
-  assert.equal(CAMPAIGN_SAVE_SCHEMA_VERSION, 12);
-  assert.equal(migrated.schemaVersion, 12);
+  assert.equal(CAMPAIGN_SAVE_SCHEMA_VERSION, 13);
+  assert.equal(migrated.schemaVersion, 13);
   assert.equal(migrated.revision, 10);
   assert.equal(migrated.caps, 613);
   assert.equal(migrated.unitLevels[UNIT_1], 5);

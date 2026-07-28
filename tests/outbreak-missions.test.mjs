@@ -135,6 +135,13 @@ test("campaign settlement atomically applies receipt, caps, equipment quantity, 
     won: true,
     completedAt: "2026-07-27T06:05:00.000Z",
     stats: { kills: 12, unitsLost: 1, battleSeconds: 88.5 },
+    encounteredEnemyKinds: ["walker"],
+    enemyDefeatsByKind: { walker: 11, mother: 1 },
+    unitStats: {
+      damageByUnit: { hachi: 1_200 },
+      damageTakenByUnit: { hachi: 90 },
+      healingByUnit: { nao: 160 },
+    },
   };
   const first = settleOutbreakCampaignSave(current, result);
   assert.equal(first.applied, true);
@@ -148,6 +155,13 @@ test("campaign settlement atomically applies receipt, caps, equipment quantity, 
   assert.equal(first.save.outbreaks.processedResultIds.includes(result.resultId), true);
   assert.equal(first.save.outbreaks.claimedRewardIds.length, 1);
   assert.equal(first.save.outbreaks.survivalBossKinds.includes("mother"), true);
+  assert.equal(first.save.records.totals.battles, 1);
+  assert.equal(first.save.records.totals.victories, 1);
+  assert.equal(first.save.records.totals.bossKills, 1);
+  assert.equal(first.save.records.totals.capsEarned, mission.baseRewardCaps);
+  assert.equal(first.save.records.encountersByEnemy.mother.firstOperationId, MOTHER_MISSION);
+  assert.equal(first.save.records.defeatCountsByEnemy.mother, 1);
+  assert.equal(first.save.records.unitStats.damageByUnit.hachi, 1_200);
   assert.equal(verifyCampaignSaveIntegrity(first.save), true);
 
   const reloaded = deserializeCampaignSave(serializeCampaignSave(first.save));
@@ -157,6 +171,7 @@ test("campaign settlement atomically applies receipt, caps, equipment quantity, 
   assert.equal(duplicate.save.revision, first.save.revision);
   assert.equal(duplicate.save.caps, first.save.caps);
   assert.deepEqual(duplicate.save.equipmentInventory, first.save.equipmentInventory);
+  assert.deepEqual(duplicate.save.records, first.save.records);
   assert.equal(verifyCampaignSaveIntegrity(duplicate.save), true);
 
   const crossLedgerDuplicate = settleOutbreakCampaignSave({
@@ -172,7 +187,7 @@ test("campaign settlement atomically applies receipt, caps, equipment quantity, 
   assert.equal(crossLedgerDuplicate.save.caps, current.caps);
 });
 
-test("schema 11 saves migrate once to schema 12 with default outbreak progress", () => {
+test("schema 11 saves migrate once to schema 13 with default outbreak progress", () => {
   const legacy = {
     ...createDefaultCampaignSave(),
     schemaVersion: 11,
@@ -187,7 +202,7 @@ test("schema 11 saves migrate once to schema 12 with default outbreak progress",
   assert.equal(inspected.status, "valid");
   assert.equal(inspected.reason, "migrated");
   assert.equal(inspected.sourceSchemaVersion, 11);
-  assert.equal(inspected.save.schemaVersion, 12);
+  assert.equal(inspected.save.schemaVersion, 13);
   assert.equal(inspected.save.revision, 5);
   assert.deepEqual(inspected.save.outbreaks, createDefaultOutbreakProgress());
   assert.deepEqual(migrateCampaignSave(inspected.save), inspected.save);
