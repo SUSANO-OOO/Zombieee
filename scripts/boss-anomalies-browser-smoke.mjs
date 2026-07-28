@@ -35,16 +35,16 @@ const bossCases = [
     name: "ガイレン",
     stageId: "stage-coastal-link-bridge",
     telegraphKind: "shell-sweep",
-    standardBodyHeight: 143,
-    compactBodyHeight: 156,
+    standardBodyHeight: 152,
+    compactBodyHeight: 168,
   },
   {
     kind: "futago",
     name: "フタゴ",
     stageId: "stage-estuary-floodgate-seal",
     telegraphKind: "cross-strike",
-    standardBodyHeight: 138,
-    compactBodyHeight: 151,
+    standardBodyHeight: 146,
+    compactBodyHeight: 161,
   },
 ];
 const evidenceDir = path.resolve(

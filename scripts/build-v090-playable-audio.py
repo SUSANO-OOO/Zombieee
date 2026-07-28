@@ -34,7 +34,12 @@ CUES = (
     "weapon-mrs-chiha-grenade-launcher",
     "weapon-mrs-chiha-grenade-impact",
     "weapon-mrs-chiha-launcher-bash",
+    "weapon-mrs-chiha-launcher-retrieve",
+    "weapon-mrs-chiha-launcher-aim",
+    "weapon-mrs-chiha-grenade-flight",
+    "weapon-mrs-chiha-launcher-stow",
     "ability-mrs-chiha-salvo-ready",
+    "ability-mrs-chiha-salvo-cylinder",
     "ability-mrs-chiha-salvo-shot",
     "ability-mrs-chiha-salvo-impact",
     "ability-mrs-chiha-salvo-final",
@@ -109,6 +114,12 @@ def cue_duration(cue_id: str) -> float:
         return .58
     if cue_id.endswith("release") or cue_id.endswith("counter") or cue_id.endswith("salvo-final"):
         return .46
+    if cue_id.endswith("retrieve") or cue_id.endswith("stow"):
+        return .24
+    if cue_id.endswith("aim") or cue_id.endswith("cylinder"):
+        return .20
+    if cue_id.endswith("flight"):
+        return .34
     if cue_id.endswith("impact"):
         return .38
     if cue_id.endswith("retreat") or cue_id.endswith("feral-end"):
@@ -200,11 +211,32 @@ def synthesize(cue_id: str) -> list[float]:
             transient = body_noise[index] * math.exp(-time / (.055 if "impact" in cue_id else .12))
             signal = .52 * carrier + .18 * shimmer + .32 * transient
         elif family == "launcher":
-            thump = math.sin(2 * math.pi * (76 + 42 * progress) * time) * math.exp(-time / .11)
-            mechanism = math.sin(2 * math.pi * 1_480 * time) * math.exp(-max(0, time - .07) / .035)
-            rotation = math.sin(2 * math.pi * (18 + progress * 6) * time * 2 * math.pi)
-            blast = body_noise[index] * math.exp(-time / (.07 if "impact" in cue_id or "final" in cue_id else .035))
-            signal = .44 * thump + .22 * mechanism + .14 * rotation + .42 * blast
+            if cue_id.endswith("retrieve") or cue_id.endswith("stow"):
+                direction = -1 if cue_id.endswith("stow") else 1
+                slide = math.sin(2 * math.pi * (520 + direction * 260 * progress) * time)
+                latch = math.sin(2 * math.pi * 1_680 * time) * (
+                    math.exp(-((time - .035) / .012) ** 2)
+                    + .65 * math.exp(-((time - .15) / .016) ** 2)
+                )
+                signal = .42 * slide + .48 * latch + .16 * shell_noise[index]
+            elif cue_id.endswith("aim"):
+                ratchet = max(0.0, math.sin(2 * math.pi * 18 * time))
+                servo = math.sin(2 * math.pi * (330 + 240 * progress) * time)
+                signal = .34 * servo + .38 * ratchet * shell_noise[index]
+            elif cue_id.endswith("cylinder"):
+                click_gate = max(0.0, math.sin(2 * math.pi * 27 * time)) ** 7
+                rotation = math.sin(2 * math.pi * (112 + 38 * progress) * time)
+                signal = .38 * rotation + .58 * click_gate * shell_noise[index]
+            elif cue_id.endswith("flight"):
+                whistle = math.sin(2 * math.pi * (1_180 - 470 * progress) * time)
+                air = body_noise[index] * (.35 + .65 * math.sin(math.pi * progress))
+                signal = .3 * whistle + .62 * air
+            else:
+                thump = math.sin(2 * math.pi * (76 + 42 * progress) * time) * math.exp(-time / .11)
+                mechanism = math.sin(2 * math.pi * 1_480 * time) * math.exp(-max(0, time - .07) / .035)
+                rotation = math.sin(2 * math.pi * (18 + progress * 6) * time * 2 * math.pi)
+                blast = body_noise[index] * math.exp(-time / (.07 if "impact" in cue_id or "final" in cue_id else .035))
+                signal = .44 * thump + .22 * mechanism + .14 * rotation + .42 * blast
         elif family == "katana":
             sweep_frequency = 2_900 - 2_050 * progress
             blade = math.sin(2 * math.pi * sweep_frequency * time)

@@ -180,6 +180,7 @@ async function rosterLayoutProof(page, engine, viewport) {
     return {
       canvas: canvas?.getBoundingClientRect().toJSON() ?? null,
       snapshot: window.__ASHFALL_BATTLE_QA__.getSnapshot(),
+      layoutDebug: JSON.parse(document.documentElement.dataset.manualAbilityLayoutDebug ?? "null"),
       obstacles,
       buttons: expectedKinds.map((kind) => {
         const button = document.querySelector(`.manual-ability-ready[data-ability-kind='${kind}']`);
@@ -210,11 +211,11 @@ async function rosterLayoutProof(page, engine, viewport) {
         `${engine}/${viewport.height}/${button.kind}: dedicated icon missing`);
       for (const obstacle of layout.obstacles) {
         invariant(!overlaps(button.visualRect, obstacle),
-          `${engine}/${viewport.height}/${button.kind}: icon overlaps HUD`);
+          `${engine}/${viewport.height}/${button.kind}: icon overlaps HUD ${JSON.stringify({ visualRect: button.visualRect, obstacle, layoutDebug: layout.layoutDebug })}`);
       }
       for (const other of layout.buttons.slice(index + 1)) {
         invariant(!overlaps(button.rect, other.rect),
-          `${engine}/${viewport.height}/${button.kind}/${other.kind}: icons overlap`);
+          `${engine}/${viewport.height}/${button.kind}/${other.kind}: icons overlap ${JSON.stringify({ button, other, layoutDebug: layout.layoutDebug })}`);
       }
     }
     const baseName = `${engine}-${viewport.width}x${viewport.height}`;

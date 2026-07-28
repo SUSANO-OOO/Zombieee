@@ -500,14 +500,15 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
       <section className="nishijin-map" data-region={activeRegionId} aria-label={`${activeRegion?.name ?? "作戦区域"} エリアマップ`}>
         <div className="map-water" /><div className="map-road road-a" /><div className="map-road road-b" /><div className="map-road road-c" />
         {landmarks.map((landmark) => <div key={landmark.label} className={`map-landmark ${landmark.className}`}><span>{landmark.label}<small>{landmark.status}</small></span></div>)}
-        {visibleStages.map((stage) => <button
-          key={stage.id}
-          className={`stage-node ${stage.unlocked ? "open" : "locked"} ${displayedStage.id === stage.id ? "selected" : ""}`}
-          style={{ left: `${stage.mapPosition.x}%`, top: `${stage.mapPosition.y}%` }}
-          disabled={!stage.unlocked}
-          onClick={() => onSelectStage(stage.id)}
-          aria-label={`${stage.displayName} ${stage.unlocked ? stars(stage.bestStars) : "封鎖中"}`}
-        ><span>{stage.stageNumber}</span><b>{stage.displayName}</b><em>{stage.unlocked ? stars(stage.bestStars) : "封鎖"}</em></button>)}
+        <div className="stage-node-grid">
+          {visibleStages.map((stage) => <button
+            key={stage.id}
+            className={`stage-node ${stage.unlocked ? "open" : "locked"} ${displayedStage.id === stage.id ? "selected" : ""}`}
+            disabled={!stage.unlocked}
+            onClick={() => onSelectStage(stage.id)}
+            aria-label={`${stage.displayName} ${stage.unlocked ? stars(stage.bestStars) : "封鎖中"}`}
+          ><span>{stage.stageNumber}</span><b>{stage.displayName}</b><em>{stage.unlocked ? stars(stage.bestStars) : "封鎖"}</em></button>)}
+        </div>
       </section>
       <aside className="stage-detail" aria-label="選択中のステージ詳細">
         <div className="stage-preview" style={artStyle(stageVisualFor(displayedStage.id))} role="img" aria-label={`${displayedStage.displayName}の作戦区域`} />
@@ -517,7 +518,10 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
         <div className="star-criteria"><b>星判定</b>{displayedStage.starCriteria.map((criterion) => <span key={criterion}>{criterion}</span>)}</div>
       </aside>
     </div>
-    <footer className="map-footer"><span>固定4場面のプロローグは進行を変えず再視聴できます</span><button disabled={saveMutationPending} onClick={onReplayPrologue}>プロローグを回想</button><button disabled={saveMutationPending} onClick={onResetSave}>{saveMutationPending ? "保存処理中" : "セーブデータを初期化"}</button></footer>
+    <details className="map-maintenance">
+      <summary>管理</summary>
+      <div><button disabled={saveMutationPending} onClick={onReplayPrologue}>プロローグを回想</button><button disabled={saveMutationPending} onClick={onResetSave}>{saveMutationPending ? "保存処理中" : "セーブデータを初期化"}</button></div>
+    </details>
   </div>;
 }
 
@@ -533,7 +537,7 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
         const ability = MANUAL_ABILITY_REGISTRY[unit.kind as keyof typeof MANUAL_ABILITY_REGISTRY];
         return <article key={unit.id} className="formation-unit-card" data-state="owned" data-selected={selected}>
           <button className="formation-unit-select" data-kind={unit.kind} data-unit-id={unit.id} data-selected={selected} disabled={atCapacity} onClick={() => onToggleFormation(unit.id)} aria-pressed={selected} aria-label={`${unit.name}、Level ${unit.level}、${unit.role}、${unit.weaponName}、${unit.deploymentHint}`} title={`${ability?.displayName ?? "能力未登録"}：${ability?.summary ?? ""}`} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>
-            <span className="formation-portrait" /><span><b>{unit.name}</b><em><i>{unit.roleIcon}</i>{unit.role}</em><small className="unit-combat">{unit.weaponName}・{unit.rangeBand}・{unit.primaryTarget}</small><small className="unit-ability">能力：{ability?.displayName ?? "未登録"}</small></span><i>Lv {unit.level} / 上限 {unit.levelCap}</i><strong className="formation-selection-mark" aria-hidden="true">{selected ? "出撃" : ""}</strong>
+            <span className="formation-portrait" /><span><b>{unit.name}</b><em><i>{unit.roleIcon}</i>{unit.role}</em><small className="unit-combat">{unit.weaponName}・{unit.rangeBand}・{unit.primaryTarget}</small><small className="unit-ability">能力：{ability?.displayName ?? "未登録"}</small></span><i>Lv {unit.level} / 上限 {unit.levelCap}</i>
           </button>
         </article>;
       })}</div></section>

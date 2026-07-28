@@ -239,7 +239,7 @@ test("friendly deployment owns one lit CRAWLER door and a walkable run-out point
       );
       assert.ok(point.x < point.combatReadyX);
       assert.ok(point.x < point.rampFootX);
-      assert.ok(point.rampFootX < point.combatReadyX);
+      assert.equal(point.rampFootX, point.combatReadyX);
       assert.ok(point.y < point.rampFootY);
       assert.equal(point.rampFootY, point.combatReadyY);
       assert.equal(isWalkable(stage.id, {

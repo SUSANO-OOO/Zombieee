@@ -3,6 +3,7 @@ import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import sharp from "sharp";
+import { buildFormationCard, buildIdentityPortrait } from "./v090-identity-derivatives.mjs";
 
 const root = process.cwd();
 const sourceDir = path.join(root, "assets/source/v090/characters");
@@ -115,30 +116,25 @@ async function keepLargestAlphaComponent(input) {
 async function buildPortraitAndCard(identityPath) {
   const portraitPath = path.join(publicDir, "portraits/mayo-chan-event-portrait-r1.webp");
   const cardPath = path.join(publicDir, "cards/mayo-chan-formation-card-r1.webp");
-  await sharp(identityPath)
-    .resize(512, 640, { fit: "cover", position: "centre", kernel: sharp.kernel.lanczos3 })
-    .webp({ quality: 94, effort: 6 })
-    .toFile(portraitPath);
-  const cardSubject = await sharp(identityPath)
-    .resize(512, 512, { fit: "cover", position: "centre", kernel: sharp.kernel.lanczos3 })
-    .png()
-    .toBuffer();
-  const overlay = Buffer.from(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
-      <rect x="16" y="16" width="10" height="480" rx="5" fill="#e2ba4b"/>
-      <path d="M286 332h210v164H258l28-164z" fill="#090d12" fill-opacity=".9" stroke="#e2ba4b" stroke-width="5"/>
+  await buildIdentityPortrait({
+    inputPath: identityPath,
+    outputPath: portraitPath,
+    upperRatio: .92,
+  });
+  await buildFormationCard({
+    inputPath: identityPath,
+    outputPath: cardPath,
+    accent: "#e2ba4b",
+    roleLabel: "FERAL RESCUE",
+    upperRatio: .9,
+    motif: `
       <path d="M335 395c0-35 25-64 56-64s56 29 56 64c0 31-25 51-56 51s-56-20-56-51z" fill="none" stroke="#f4df9a" stroke-width="10"/>
       <path d="m347 354-18-29 39 14m67 15 18-29-39 14" fill="none" stroke="#f4df9a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
       <circle cx="372" cy="387" r="6" fill="#cb593d"/><circle cx="410" cy="387" r="6" fill="#cb593d"/>
       <path d="M381 407h20M391 397v20" stroke="#e2ba4b" stroke-width="7" stroke-linecap="round"/>
       <path d="M327 443h128" stroke="#cb593d" stroke-width="7" stroke-linecap="round"/>
-      <text x="474" y="480" text-anchor="end" font-family="Arial,sans-serif" font-weight="900" font-size="22" letter-spacing="1.5" fill="#fff">FERAL RESCUE</text>
-    </svg>
-  `);
-  await sharp(cardSubject)
-    .composite([{ input: overlay }])
-    .webp({ quality: 93, effort: 6 })
-    .toFile(cardPath);
+    `,
+  });
   return Object.freeze({ portraitPath, cardPath });
 }
 

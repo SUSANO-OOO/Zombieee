@@ -4,6 +4,8 @@ import path from "node:path";
 
 import sharp from "sharp";
 
+import { buildFormationCard, buildIdentityPortrait } from "./v090-identity-derivatives.mjs";
+
 const root = process.cwd();
 const sourceDir = path.join(root, "assets/source/v090/characters");
 const publicDir = path.join(root, "public/art/v090/characters");
@@ -112,40 +114,25 @@ async function keepLargestAlphaComponent(input) {
   return sharp(decoded.data, { raw: { width, height, channels: 4 } }).png().toBuffer();
 }
 
-const cutout = await blueScreenCutout(cutoutSource);
-if (cutout.info.width !== 1024 || cutout.info.height !== 1536) {
-  throw new Error(`Unexpected Zakimiya cutout geometry ${cutout.info.width}x${cutout.info.height}`);
-}
-
-await cutout.image
-  .clone()
-  .extract({ left: 142, top: 34, width: 740, height: 930 })
-  .resize(512, 640, { fit: "cover", position: "north", kernel: sharp.kernel.lanczos3 })
-  .webp({ quality: 93, alphaQuality: 100, effort: 6 })
-  .toFile(output.portrait);
-
-const cardSubject = await cutout.image
-  .clone()
-  .extract({ left: 176, top: 46, width: 680, height: 680 })
-  .resize(512, 512, { fit: "cover", position: "north", kernel: sharp.kernel.lanczos3 })
-  .png()
-  .toBuffer();
-const cardOverlay = Buffer.from(`
-  <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
-    <rect x="16" y="16" width="10" height="480" rx="5" fill="#e2a64b"/>
-    <path d="M300 340h196v156H276l24-156z" fill="#090d12" fill-opacity=".9" stroke="#e2a64b" stroke-width="5"/>
+await buildIdentityPortrait({
+  inputPath: identityMaster,
+  outputPath: output.portrait,
+  upperRatio: .8,
+});
+await buildFormationCard({
+  inputPath: identityMaster,
+  outputPath: output.card,
+  accent: "#e2a64b",
+  roleLabel: "WHISKEY",
+  upperRatio: .78,
+  motif: `
     <g fill="none" stroke="#e2a64b" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
       <path d="M346 382 390 426"/>
       <path d="m378 364 58 58-32 32-58-58z"/>
       <path d="m427 362 14-29 13 21 19-7-8 26"/>
     </g>
-    <text x="474" y="480" text-anchor="end" font-family="Arial,sans-serif" font-weight="900" font-size="25" letter-spacing="2" fill="#fff">WHISKEY</text>
-  </svg>
-`);
-await sharp(cardSubject)
-  .composite([{ input: cardOverlay }])
-  .webp({ quality: 92, alphaQuality: 100, effort: 6 })
-  .toFile(output.card);
+  `,
+});
 
 const poses = await blueScreenCutout(poseSource);
 if (poses.info.width !== 1536 || poses.info.height !== 1024) {

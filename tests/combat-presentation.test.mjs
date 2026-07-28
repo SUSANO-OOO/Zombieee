@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import {
   COMBAT_CLIP_STATES,
   COMBAT_PRESENTATION_PROFILES,
+  COMBAT_WEAPON_ANCHORS,
   UNIT_WEAPON_PROFILE,
   WEAPON_PROFILE_IDS,
   WEAPON_PROFILES,
@@ -12,6 +13,7 @@ import {
   animationClipFor,
   attackPresentationDuration,
   combatFacingDirection,
+  combatWeaponAnchor,
   combatClipEventsFor,
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
@@ -130,6 +132,22 @@ test("fourteen weapon profiles cover all sixteen playable units without generic 
   assert.equal(weaponProfileForAction("mrs-chiha", "attack").id, "grenade");
   assert.equal(weaponProfileForAction("miyamoto-musashi", "attack").id, "dual-katana");
   assert.equal(weaponProfileForAction("mayo-chan", "attack").id, "bite");
+});
+
+test("all sixteen playable units and every projectile enemy use directional weapon anchors above the lower body", () => {
+  const playableKinds = Object.keys(UNIT_WEAPON_PROFILE);
+  assert.equal(playableKinds.length, 16);
+  for (const kind of playableKinds) assert.ok(COMBAT_WEAPON_ANCHORS[kind], `${kind} weapon anchor`);
+  for (const kind of ["spitter", "ooze", "choir-knot", "resonator"]) {
+    assert.ok(COMBAT_WEAPON_ANCHORS[kind], `${kind} projectile organ anchor`);
+  }
+  for (const kind of [...playableKinds, "spitter", "ooze", "choir-knot", "resonator"]) {
+    const right = combatWeaponAnchor({ kind, x: 400, y: 220, direction: 1 });
+    const left = combatWeaponAnchor({ kind, x: 400, y: 220, direction: -1 });
+    assert.equal(right.y, left.y, `${kind} vertical anchor mirrors exactly`);
+    assert.ok(right.y <= 196, `${kind} origin cannot be at the waist or feet`);
+    assert.equal(Number((right.x - 400).toFixed(6)), Number((400 - left.x).toFixed(6)), `${kind} horizontal anchor mirrors`);
+  }
 });
 
 test("new playable special clips preserve authored body phases and Mrs. Chiha's normal launcher cycle", () => {

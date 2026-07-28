@@ -470,6 +470,46 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   "mayo-chan": "bite",
 });
 
+export const COMBAT_WEAPON_ANCHORS = deepFreeze({
+  brawler: { forward: 13, up: 34 },
+  scout: { forward: 18, up: 39 },
+  ranger: { forward: 22, up: 42 },
+  medic: { forward: 18, up: 38 },
+  brute: { forward: 18, up: 31 },
+  gunner: { forward: 25, up: 39 },
+  guardian: { forward: 16, up: 34 },
+  engineer: { forward: 20, up: 39 },
+  "crazy-king": { forward: 20, up: 29 },
+  kumaverson: { forward: 18, up: 32 },
+  babayaga: { forward: 23, up: 43 },
+  zakimiya: { forward: 17, up: 32 },
+  tky: { forward: 23, up: 43 },
+  "mrs-chiha": { forward: 23, up: 43 },
+  "miyamoto-musashi": { forward: 19, up: 34 },
+  "mayo-chan": { forward: 13, up: 24 },
+  spitter: { forward: 18, up: 30 },
+  ooze: { forward: 20, up: 27 },
+  "choir-knot": { forward: 22, up: 36 },
+  resonator: { forward: 18, up: 38 },
+});
+
+export function combatWeaponAnchor({
+  kind,
+  x = 0,
+  y = 0,
+  direction = 1,
+  shotIndex = 0,
+  recoil = 0,
+} = {}) {
+  const anchor = COMBAT_WEAPON_ANCHORS[kind] ?? { forward: 14, up: 32 };
+  const facing = Number(direction) < 0 ? -1 : 1;
+  const index = Math.max(0, Number(shotIndex) || 0);
+  return Object.freeze({
+    x: Number(x) + facing * (anchor.forward - Math.max(0, Number(recoil) || 0) * index * 2),
+    y: Number(y) - anchor.up + index * 1.5,
+  });
+}
+
 export function combatPresentationFor(kind) {
   return COMBAT_PRESENTATION_PROFILES[kind] ?? COMBAT_PRESENTATION_PROFILES.walker;
 }

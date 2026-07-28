@@ -539,6 +539,39 @@ test("screen-space ready icons clamp to safe areas and avoid HUD, bodies, and ea
   }
 });
 
+test("seven ready icons sharing a top-edge HP anchor remain independently tappable in a local crown", () => {
+  const fighters = Array.from({ length: 7 }, (_, index) => ({
+    id: index + 1,
+    kind: "zakimiya",
+    screenX: 440,
+    screenY: 86,
+  }));
+  const icons = layoutManualAbilityIcons({
+    fighters,
+    obstacles: [{ x: 0, y: 0, width: 844, height: 54 }],
+    displayWidth: 844,
+    displayHeight: 340,
+    safeInsets: { top: 6, right: 50, bottom: 27, left: 50 },
+  });
+  assert.equal(icons.length, 7);
+  assert.equal(new Set(icons.map(({ x, y }) => `${x}:${y}`)).size, 7);
+  for (let leftIndex = 0; leftIndex < icons.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < icons.length; rightIndex += 1) {
+      const left = icons[leftIndex];
+      const right = icons[rightIndex];
+      assert.ok(
+        left.x + left.hitSize + 2 <= right.x
+          || right.x + right.hitSize + 2 <= left.x
+          || left.y + left.hitSize + 2 <= right.y
+          || right.y + right.hitSize + 2 <= left.y,
+        `ready controls ${left.fighterId} and ${right.fighterId} must not overlap`,
+      );
+    }
+  }
+  assert.ok(icons.every((icon) => Math.abs(icon.x + icon.hitSize / 2 - icon.anchorX) <= 69));
+  assert.ok(icons.every((icon) => icon.y <= icon.anchorY + 18));
+});
+
 test("runtime renders only ready buttons and never a cooldown ring or number above a unit", async () => {
   const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

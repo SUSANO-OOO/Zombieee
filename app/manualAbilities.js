@@ -1264,49 +1264,40 @@ function overlaps(left, right, gap = 4) {
 }
 
 const ICON_OFFSETS = Object.freeze([
-  Object.freeze([0, -6]),
-  Object.freeze([-48, -6]),
-  Object.freeze([48, -6]),
-  Object.freeze([-24, -52]),
-  Object.freeze([24, -52]),
-  Object.freeze([-72, -52]),
-  Object.freeze([72, -52]),
-  Object.freeze([-88, -6]),
-  Object.freeze([88, -6]),
-  Object.freeze([-110, -6]),
-  Object.freeze([110, -6]),
-  Object.freeze([-110, -2]),
-  Object.freeze([110, -2]),
-  Object.freeze([0, -98]),
-  Object.freeze([-48, -98]),
-  Object.freeze([48, -98]),
-  Object.freeze([-110, -52]),
-  Object.freeze([110, -52]),
-  Object.freeze([-110, -98]),
-  Object.freeze([110, -98]),
-  Object.freeze([-160, -6]),
-  Object.freeze([160, -6]),
-  Object.freeze([-160, -52]),
-  Object.freeze([160, -52]),
-  Object.freeze([-160, -98]),
-  Object.freeze([160, -98]),
-  Object.freeze([-210, -6]),
-  Object.freeze([210, -6]),
-  Object.freeze([-210, -52]),
-  Object.freeze([210, -52]),
-  Object.freeze([-210, -98]),
-  Object.freeze([210, -98]),
-  Object.freeze([-230, -6]),
-  Object.freeze([230, -6]),
-  // If a head is immediately below the top HUD, stay beside its crown rather
-  // than sending a connector across the battlefield.
-  Object.freeze([-72, 16]),
-  Object.freeze([72, 16]),
-  Object.freeze([-24, 16]),
-  Object.freeze([24, 16]),
-  Object.freeze([0, 56]),
-  Object.freeze([-48, 56]),
-  Object.freeze([48, 56]),
+  // The ready control belongs to the fighter's HP bar. Crowding may move it
+  // within this small local crown only; passive banners must never send it
+  // across the battlefield.
+  Object.freeze([0, 8]),
+  Object.freeze([-46, 8]),
+  Object.freeze([46, 8]),
+  Object.freeze([-23, -38]),
+  Object.freeze([23, -38]),
+  Object.freeze([-69, -38]),
+  Object.freeze([69, -38]),
+  // A fighter pressed against the top HUD cannot use the upper crown. These
+  // lower rows keep every duplicate-instance control independently tappable
+  // without the former ±92px horizontal drift.
+  Object.freeze([-23, 58]),
+  Object.freeze([23, 58]),
+  Object.freeze([-69, 58]),
+  Object.freeze([69, 58]),
+  Object.freeze([0, -84]),
+  Object.freeze([-46, -84]),
+  Object.freeze([46, -84]),
+  Object.freeze([0, 104]),
+  Object.freeze([-46, 104]),
+  Object.freeze([46, 104]),
+  Object.freeze([-23, -130]),
+  Object.freeze([23, -130]),
+  Object.freeze([-69, -130]),
+  Object.freeze([69, -130]),
+  Object.freeze([0, 150]),
+  Object.freeze([-46, 150]),
+  Object.freeze([46, 150]),
+  Object.freeze([-23, 196]),
+  Object.freeze([23, 196]),
+  Object.freeze([-69, 196]),
+  Object.freeze([69, 196]),
 ]);
 
 export function layoutManualAbilityIcons({
@@ -1326,6 +1317,13 @@ export function layoutManualAbilityIcons({
   const topInset = Math.max(0, Number(safeInsets.top) || 0);
   const bottomInset = Math.max(0, Number(safeInsets.bottom) || 0);
   const staticBlocked = obstacles.map(normalizeRect);
+  const placementTopInset = staticBlocked.reduce((inset, obstacle) => (
+    obstacle.y <= topInset + 4
+      && obstacle.x <= leftInset
+      && obstacle.x + obstacle.width >= width - rightInset
+      ? Math.max(inset, obstacle.y + obstacle.height)
+      : inset
+  ), topInset);
   const visibleInset = Math.max(0, (hitSize - 28) / 2);
   const visibleRect = (rect) => ({
     x: rect.x + visibleInset,
@@ -1345,81 +1343,35 @@ export function layoutManualAbilityIcons({
     const anchor = anchorFor(fighter);
     return ICON_OFFSETS.map(([offsetX, offsetY]) => ({
       x: Math.max(leftInset, Math.min(width - rightInset - hitSize, anchor.x - hitSize / 2 + offsetX)),
-      y: Math.max(topInset, Math.min(height - bottomInset - hitSize, anchor.y - hitSize + offsetY)),
+      y: Math.max(placementTopInset, Math.min(height - bottomInset - hitSize, anchor.y - hitSize + offsetY)),
       width: hitSize,
       height: hitSize,
     }));
   };
   const candidateRectsFor = (fighter) => {
-    const anchor = anchorFor(fighter);
-    const anchorX = anchor.x;
-    const anchorY = anchor.y;
-    const candidates = [...offsetCandidatesFor(fighter)];
-    const gap = 6;
-    const bandTop = Math.max(topInset, anchorY - hitSize * 3.5);
-    const bandBottom = Math.min(height - bottomInset - hitSize, anchorY + 18);
-    const bandLeft = Math.max(leftInset, anchorX - hitSize / 2 - 230);
-    const bandRight = Math.min(width - rightInset - hitSize, anchorX - hitSize / 2 + 230);
-    for (let y = bandTop; y <= bandBottom; y += hitSize + gap) {
-      for (let x = bandLeft; x <= bandRight; x += hitSize + gap) {
-        candidates.push({ x, y, width: hitSize, height: hitSize });
-      }
-    }
-    const unique = new Map();
-    for (const rect of candidates) {
-      const key = `${rect.x.toFixed(3)}:${rect.y.toFixed(3)}`;
-      if (!unique.has(key)) unique.set(key, rect);
-    }
-    return [...unique.values()]
-      .filter((rect) => !staticBlocked.some((obstacle) => (
+    const localCandidates = offsetCandidatesFor(fighter);
+    const unblocked = localCandidates.filter((rect) => !staticBlocked.some((obstacle) => (
         (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
         && overlaps(visibleRect(rect), obstacle)
-      )))
-      .sort((left, right) => (
-        Math.hypot(left.x + hitSize / 2 - anchorX, left.y + hitSize / 2 - anchorY)
-          - Math.hypot(right.x + hitSize / 2 - anchorX, right.y + hitSize / 2 - anchorY)
-        || left.y - right.y
-        || left.x - right.x
-      ));
+      )));
+    // If the fighter is pressed against a HUD edge, the ready control still
+    // owns input priority. Keep every fallback in the same local crown rather
+    // than teleporting it elsewhere or stacking duplicate-instance controls.
+    return [...unblocked, ...localCandidates.filter((rect) => !unblocked.includes(rect))];
   };
   const pending = [...fighters]
-    .map((fighter) => ({ fighter, candidates: candidateRectsFor(fighter) }))
     .sort((left, right) => (
-      left.candidates.length - right.candidates.length
-      || String(left.fighter.id).localeCompare(String(right.fighter.id))
-    ));
+      anchorFor(left).x - anchorFor(right).x
+      || anchorFor(left).y - anchorFor(right).y
+      || String(left.id).localeCompare(String(right.id))
+    ))
+    .map((fighter) => ({ fighter, candidates: candidateRectsFor(fighter) }));
   const assigned = new Map();
-  const solve = (remaining) => {
-    if (remaining.length === 0) return true;
-    const ranked = remaining
-      .map((entry) => ({
-        entry,
-        available: entry.candidates.filter((rect) => (
-          ![...assigned.values()].some((placed) => overlaps(rect, placed))
-        )),
-      }))
-      .sort((left, right) => (
-        left.available.length - right.available.length
-        || String(left.entry.fighter.id).localeCompare(String(right.entry.fighter.id))
-      ));
-    const [{ entry, available }] = ranked;
-    if (available.length === 0) return false;
-    const rest = remaining.filter((candidate) => candidate !== entry);
-    for (const rect of available) {
-      assigned.set(entry.fighter.id, rect);
-      if (solve(rest)) return true;
-      assigned.delete(entry.fighter.id);
-    }
-    return false;
-  };
-  if (!solve(pending)) {
-    assigned.clear();
-    for (const { fighter, candidates } of pending) {
-      const placed = candidates.find((rect) => (
-        ![...assigned.values()].some((other) => overlaps(rect, other))
-      ));
-      if (placed) assigned.set(fighter.id, placed);
-    }
+  for (const { fighter, candidates } of pending) {
+    const placed = candidates.find((rect) => (
+      ![...assigned.values()].some((other) => overlaps(rect, other, 2))
+    )) ?? candidates[0] ?? offsetCandidatesFor(fighter)[0];
+    assigned.set(fighter.id, placed);
   }
   const result = [];
   for (const { fighter } of pending) {

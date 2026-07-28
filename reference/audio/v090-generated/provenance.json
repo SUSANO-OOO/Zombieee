@@ -145,6 +145,66 @@
       ]
     },
     {
+      "id": "weapon-mrs-chiha-launcher-retrieve",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-launcher-retrieve.wav",
+        "sha256": "beb555765254614fb48569aa5f680bc6a3dad085ec45c52dc9cd7ce58caa43c9"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-launcher-retrieve.wav",
+          "sha256": "beb555765254614fb48569aa5f680bc6a3dad085ec45c52dc9cd7ce58caa43c9",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-launcher-aim",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-launcher-aim.wav",
+        "sha256": "d81a84939054d3e9fd8c23ff2b6222f29bc72785b4d33591d466e46239d64e47"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-launcher-aim.wav",
+          "sha256": "d81a84939054d3e9fd8c23ff2b6222f29bc72785b4d33591d466e46239d64e47",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-grenade-flight",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-grenade-flight.wav",
+        "sha256": "b0254b017c03abc6b8fb53e4065e910899bbfd8a08da2d27c7bc375903c1e70c"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-grenade-flight.wav",
+          "sha256": "b0254b017c03abc6b8fb53e4065e910899bbfd8a08da2d27c7bc375903c1e70c",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
+      "id": "weapon-mrs-chiha-launcher-stow",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/weapon-mrs-chiha-launcher-stow.wav",
+        "sha256": "9b7e6283122db86af68d47c2abd5bc4037979c8f4606fad258a458ddbdb36ea3"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/weapon-mrs-chiha-launcher-stow.wav",
+          "sha256": "9b7e6283122db86af68d47c2abd5bc4037979c8f4606fad258a458ddbdb36ea3",
+          "type": "audio/wav"
+        }
+      ]
+    },
+    {
       "id": "ability-mrs-chiha-salvo-ready",
       "origin": "project-original deterministic synthesis; no sampled recording or voice",
       "source": {
@@ -161,6 +221,21 @@
           "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-ready.ogg",
           "sha256": "ca7f1cd2eab945cef48bf9537c521274412eeec51561c843ef9c040746ecd1ec",
           "type": "audio/ogg"
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-cylinder",
+      "origin": "project-original deterministic synthesis; no sampled recording or voice",
+      "source": {
+        "path": "reference/audio/v090-generated/masters/ability-mrs-chiha-salvo-cylinder.wav",
+        "sha256": "eab54b76ec61e52453b8e12bff25d70cbd647b528b8918516d45ca8966497c28"
+      },
+      "finals": [
+        {
+          "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-cylinder.wav",
+          "sha256": "eab54b76ec61e52453b8e12bff25d70cbd647b528b8918516d45ca8966497c28",
+          "type": "audio/wav"
         }
       ]
     },

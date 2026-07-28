@@ -151,3 +151,36 @@ test("each active character resolves only to its producer master and both builds
     assert.match(buildScripts, new RegExp(record.sha256));
   }
 });
+
+test("all five newcomer portraits and formation cards remove the identity-master white field", async () => {
+  const kinds = ["zakimiya", "tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan"];
+  for (const kind of kinds) {
+    const profile = V090_UNIT_VISUAL_PROFILES[kind];
+    for (const assetPath of [profile.eventPortrait.path, profile.formationCard.path]) {
+      const image = await sharp(path.join(ROOT, "public", ...assetPath.split("/").filter(Boolean)))
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      let visiblePixels = 0;
+      for (let offset = 0; offset < image.data.length; offset += 4) {
+        const alpha = image.data[offset + 3];
+        if (alpha < 220) continue;
+        visiblePixels += 1;
+      }
+      assert.ok(visiblePixels > image.info.width * image.info.height * .28, `${kind}: ${assetPath} has readable subject coverage`);
+      for (const [x, y] of [
+        [0, 0],
+        [image.info.width - 1, 0],
+        [0, image.info.height - 1],
+        [image.info.width - 1, image.info.height - 1],
+      ]) {
+        const offset = (y * image.info.width + x) * 4;
+        const opaqueWhite = image.data[offset + 3] > 220
+          && image.data[offset] > 240
+          && image.data[offset + 1] > 240
+          && image.data[offset + 2] > 240;
+        assert.equal(opaqueWhite, false, `${kind}: ${assetPath} retains the white rectangular master background`);
+      }
+    }
+  }
+});

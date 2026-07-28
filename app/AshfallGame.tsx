@@ -237,6 +237,7 @@ import {
   advancePendingWeaponHits,
   attackPresentationDuration,
   combatFacingDirection,
+  combatWeaponAnchor,
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
@@ -891,6 +892,7 @@ type PendingAbilityAudioCue = {
   cueId: string;
   x: number;
   dedupeKey: string;
+  remainingSeconds?: number;
 };
 type ManualAbilityIconView = {
   fighterId: number;
@@ -1618,6 +1620,74 @@ function laneY(lane: Lane, id = 0) {
 
 function fighterDistance(a: Pick<Fighter, "x" | "y">, b: Pick<Fighter, "x" | "y">) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function weaponAnchorForTarget(
+  fighter: Pick<Fighter, "kind" | "x" | "y">,
+  target: Pick<Fighter, "x" | "y">,
+  shotIndex = 0,
+  recoil = 0,
+) {
+  return combatWeaponAnchor({
+    kind: fighter.kind,
+    x: fighter.x,
+    y: fighter.y,
+    direction: target.x < fighter.x ? -1 : 1,
+    shotIndex,
+    recoil,
+  });
+}
+
+function scheduleMrsChihaLauncherAudio(
+  g: Game,
+  fighter: Pick<Fighter, "id" | "kind" | "x" | "attackSequence">,
+  sequence: "normal" | "structure" | "ability",
+) {
+  if (fighter.kind !== "mrs-chiha") return;
+  const activationKey = `${sequence}:${fighter.id}:${fighter.attackSequence}`;
+  const entries = [
+    { event: "retrieve", delay: .02 },
+    { event: "aim", delay: .16 },
+  ];
+  for (const entry of entries) {
+    const cueId = unitAudioCueFor(fighter.kind, "weapon", entry.event);
+    if (!cueId) continue;
+    g.pendingAbilityAudioCues.push({
+      cueId,
+      x: fighter.x,
+      remainingSeconds: entry.delay,
+      dedupeKey: `mrs-chiha:${activationKey}:${entry.event}`,
+    });
+  }
+  g.pendingAbilityAudioCues = g.pendingAbilityAudioCues.slice(-16);
+}
+
+function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y">) {
+  const compactScale = compactBattleViewport() ? 1.1 : 1;
+  const depthScale = activeBattlefieldDepthScale(fighter.y);
+  const bossDefinition = bossDefinitionForEnemyKind(fighter.kind);
+  const height = bossDefinition
+    ? !compactBattleViewport()
+      ? bossDefinition.display.standardBodyHeight
+      : bossDefinition.display.compactBodyHeight
+    : (fighter.kind === "abomination"
+      ? 115
+      : ["crusher", "grappler", "brute", "guardian"].includes(fighter.kind)
+        ? 94
+        : 80) * compactScale;
+  return fighter.y - height * depthScale - (compactScale > 1 ? 2 : 0);
+}
+
+function battleBannerRect() {
+  const compact = compactBattleViewport();
+  const width = compact ? 234 : 316;
+  const height = compact ? 28 : 42;
+  return {
+    x: (W - width) / 2,
+    y: compact ? 50 : 58,
+    width,
+    height,
+  };
 }
 
 function effectDistance(a: { x: number; y: number }, b: { x: number; y: number }) {
@@ -3841,23 +3911,25 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     ctx.save();
     ctx.translate(effect.originX, effect.originY);
     ctx.globalCompositeOperation = "lighter";
-    ctx.strokeStyle = `rgba(255,62,205,${.45 + charge * .5})`;
+    ctx.strokeStyle = `rgba(255,83,208,${.36 + charge * .44})`;
     ctx.shadowColor = "#ff42c8";
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = 14;
     ctx.lineCap = "round";
-    ctx.lineWidth = 4 + charge * 6;
+    ctx.lineWidth = 3 + charge * 5;
     ctx.beginPath();
     ctx.moveTo(direction * 8, -45);
-    ctx.lineTo(direction * (34 + charge * 62), -56);
+    ctx.lineTo(direction * (34 + charge * 52), -54);
     ctx.stroke();
     if (release > 0) {
-      ctx.globalAlpha = 1 - release * .55;
-      ctx.lineWidth = 12 - release * 5;
+      ctx.globalAlpha = Math.max(.16, .7 - release * .48);
+      const sweepRadius = 52 + release * 26;
+      ctx.strokeStyle = "rgba(255,54,195,.24)";
+      ctx.lineWidth = 17 - release * 7;
       ctx.beginPath();
-      ctx.arc(direction * 10, -34, 92 + release * 62, direction > 0 ? -1.1 : Math.PI - 1.1, direction > 0 ? .9 : Math.PI + .9);
+      ctx.arc(direction * 8, -28, sweepRadius, direction > 0 ? -1.02 : Math.PI - 1.02, direction > 0 ? .72 : Math.PI + .72);
       ctx.stroke();
-      ctx.strokeStyle = "rgba(255,255,255,.9)";
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(255,239,252,.78)";
+      ctx.lineWidth = 2.4;
       ctx.stroke();
     }
     ctx.restore();
@@ -4563,16 +4635,29 @@ function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g:
     }
   } else if (f.kind === "cagewalker") {
     ctx.setLineDash([]);
-    ctx.strokeStyle = "rgba(166,144,109,.8)";
-    ctx.fillStyle = "rgba(45,35,30,.22)";
-    ctx.lineWidth = 4;
+    const cageGlow = ctx.createRadialGradient(f.x, f.y + 6, 4, f.x, f.y + 6, 58);
+    cageGlow.addColorStop(0, "rgba(126,91,76,.24)");
+    cageGlow.addColorStop(.7, "rgba(70,48,43,.12)");
+    cageGlow.addColorStop(1, "rgba(40,27,26,0)");
+    ctx.fillStyle = cageGlow;
     ctx.beginPath();
     ctx.ellipse(f.x, f.y + 6, 56, 13, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = "rgba(183,154,116,.62)";
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y + 6, 53, 11, 0, 0, Math.PI * 2);
+    ctx.stroke();
     for (const offset of [-42, -21, 0, 22, 43]) {
+      const ribHeight = 13 + (1 - Math.abs(offset) / 50) * 9;
       ctx.beginPath();
-      ctx.moveTo(f.x + offset, f.y + 9);
-      ctx.quadraticCurveTo(f.x + offset * .82, f.y - 18, f.x + offset * .58, f.y - 42);
+      ctx.moveTo(f.x + offset, f.y + 8);
+      ctx.quadraticCurveTo(
+        f.x + offset * .9,
+        f.y - ribHeight * .55,
+        f.x + offset * .72,
+        f.y - ribHeight,
+      );
       ctx.stroke();
     }
   } else if (f.kind === "spindle") {
@@ -4580,20 +4665,25 @@ function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g:
     const targetY = Number(f.stationAbility.targetY);
     if (Number.isFinite(targetX) && Number.isFinite(targetY)) {
       const landingX = Math.min(BARRICADE_X - 12, targetX + 38);
-      ctx.setLineDash([4, 5]);
-      ctx.strokeStyle = "rgba(143,108,124,.86)";
-      ctx.lineWidth = 2.5;
+      ctx.setLineDash([]);
+      ctx.strokeStyle = "rgba(113,76,94,.24)";
+      ctx.lineWidth = 7;
       ctx.beginPath();
       ctx.moveTo(f.x, f.y - 16);
       ctx.quadraticCurveTo((f.x + landingX) / 2, Math.min(f.y, targetY) - 108, landingX, targetY);
       ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.strokeStyle = "rgba(203,154,177,.62)";
+      ctx.lineWidth = 1.7;
+      ctx.stroke();
+      const landingGlow = ctx.createRadialGradient(landingX, targetY + 4, 2, landingX, targetY + 4, 44);
+      landingGlow.addColorStop(0, "rgba(136,72,101,.22)");
+      landingGlow.addColorStop(1, "rgba(68,31,49,0)");
+      ctx.fillStyle = landingGlow;
       ctx.beginPath();
       ctx.ellipse(landingX, targetY + 4, 42, 13, 0, 0, Math.PI * 2);
-      ctx.moveTo(landingX - 24, targetY - 7);
-      ctx.lineTo(landingX + 24, targetY + 11);
-      ctx.moveTo(landingX + 24, targetY - 7);
-      ctx.lineTo(landingX - 24, targetY + 11);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(199,145,169,.72)";
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
   } else if (f.kind === "choir-knot") {
@@ -4606,6 +4696,8 @@ function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g:
       ));
       if (!target) continue;
       const sourceOffset = (index - .5) * 13;
+      ctx.strokeStyle = "rgba(96,53,72,.22)";
+      ctx.lineWidth = 7;
       ctx.beginPath();
       ctx.moveTo(f.x + sourceOffset, f.y - 44);
       ctx.bezierCurveTo(
@@ -4617,32 +4709,35 @@ function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g:
         target.y - 46,
       );
       ctx.stroke();
+      ctx.strokeStyle = "rgba(196,139,163,.62)";
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
     }
   } else if (f.kind === "pall-manta") {
     const active = f.stationAbility.phase === "active";
     ctx.setLineDash([]);
-    ctx.fillStyle = active ? "rgba(47,37,44,.28)" : "rgba(74,54,63,.16)";
-    ctx.strokeStyle = "rgba(118,89,101,.82)";
-    ctx.lineWidth = active ? 4 : 2;
+    const canopy = ctx.createLinearGradient(f.x - 32, f.y, f.x + 118, f.y);
+    canopy.addColorStop(0, "rgba(50,34,44,0)");
+    canopy.addColorStop(.35, active ? "rgba(70,47,60,.3)" : "rgba(70,47,60,.16)");
+    canopy.addColorStop(1, "rgba(50,34,44,0)");
+    ctx.fillStyle = canopy;
+    ctx.strokeStyle = "rgba(137,102,116,.58)";
+    ctx.lineWidth = active ? 2.8 : 1.6;
     ctx.beginPath();
-    ctx.moveTo(f.x - 28, f.y - 12);
-    ctx.lineTo(f.x + 32, f.y - 12);
-    ctx.lineTo(f.x + 118, f.y + 17);
-    ctx.lineTo(f.x - 32, f.y + 17);
-    ctx.closePath();
+    ctx.ellipse(f.x + 38, f.y + 6, 82, active ? 17 : 13, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    for (const offset of [4, 36, 68, 100]) {
+    for (const offset of [-18, 14, 46, 78]) {
       ctx.beginPath();
-      ctx.moveTo(f.x + offset, f.y - 10);
-      ctx.lineTo(f.x + offset + 9, f.y + 15);
+      ctx.arc(f.x + offset, f.y + 5, 14, .18, Math.PI - .18);
       ctx.stroke();
     }
   } else if (f.kind === "anchor-bloom") {
     const active = f.stationAbility.phase === "active";
     ctx.setLineDash([]);
-    ctx.strokeStyle = active ? "rgba(128,75,79,.88)" : "rgba(116,79,76,.7)";
-    ctx.lineWidth = active ? 4 : 2.5;
+    ctx.strokeStyle = active ? "rgba(154,92,92,.7)" : "rgba(126,89,84,.52)";
+    ctx.fillStyle = active ? "rgba(100,48,54,.16)" : "rgba(80,48,46,.1)";
+    ctx.lineWidth = active ? 2.8 : 1.8;
     for (let index = 0; index < 5; index += 1) {
       const angle = index * Math.PI * .4 + Math.sin(g.time * 2) * .03;
       const reach = 58 + (index % 2) * 17;
@@ -4654,6 +4749,13 @@ function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g:
         f.x + Math.cos(angle) * reach,
         f.y + Math.sin(angle) * reach * .32,
       );
+      ctx.quadraticCurveTo(
+        f.x + Math.cos(angle - .22) * reach * .58,
+        f.y + Math.sin(angle - .22) * reach * .2,
+        f.x,
+        f.y + 5,
+      );
+      ctx.fill();
       ctx.stroke();
     }
     for (const targetId of f.stationAbility.targetIds ?? []) {
@@ -4864,15 +4966,35 @@ function drawCrawler(ctx: CanvasRenderingContext2D, g: Game, sprites: SpriteMap)
   const weaponActive = ["deploying", "firing", "recovering"].includes(g.crawlerAbility.phase);
   const weaponLift = g.crawlerAbility.phase === "deploying" ? 7 : g.crawlerAbility.phase === "recovering" ? 4 : weaponActive ? 10 : 0;
   ctx.globalAlpha = 1;
-  ctx.fillStyle = "rgba(13,18,18,.88)";
-  ctx.fillRect(crawler.commandDeckX - 13, crawler.commandDeckY - 20, 26, 18);
-  ctx.fillStyle = g.airstrike.phase === "idle" ? "#5b8274" : "#ffb95d";
-  ctx.fillRect(crawler.commandDeckX - 8, crawler.commandDeckY - 16, 5, 4);
+  // The command cupola and fixed gun are rendered as recognizable machinery.
+  // Avoid free-standing debug-looking rectangles over the authored crawler art.
+  ctx.save();
+  ctx.translate(crawler.commandDeckX, crawler.commandDeckY - 10);
+  ctx.fillStyle = "rgba(18,24,23,.92)";
+  ctx.beginPath();
+  ctx.moveTo(-12, 7); ctx.lineTo(-9, -5); ctx.lineTo(7, -9); ctx.lineTo(13, 5);
+  ctx.lineTo(9, 10); ctx.lineTo(-8, 10); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "#5e6b63"; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.strokeStyle = g.airstrike.phase === "idle" ? "#75a898" : "#ffb95d";
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0, -1, 5, -.88, 1.15); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(2, -6); ctx.lineTo(8, -16); ctx.stroke();
+  ctx.restore();
   drawAirstrikeObserver(ctx, g);
-  ctx.fillStyle = "#161b1b";
-  ctx.fillRect(crawler.commandDeckX - 10, crawler.commandDeckY - 6, 22, 5);
-  ctx.fillStyle = "#252d2d"; ctx.fillRect(crawler.weaponX - 20, crawler.weaponY - 12 - weaponLift, 40, 8);
-  ctx.fillStyle = "#85704f"; ctx.fillRect(crawler.weaponX + 11, crawler.weaponY - 10 - weaponLift, 34, 4);
+  ctx.save();
+  ctx.translate(crawler.weaponX, crawler.weaponY - 8 - weaponLift);
+  ctx.fillStyle = "#202827";
+  ctx.strokeStyle = "#6e7468";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#88785a";
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(5, -1); ctx.lineTo(43, -3); ctx.stroke();
+  ctx.strokeStyle = "#302f2a";
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(9, -1); ctx.lineTo(43, -3); ctx.stroke();
+  ctx.restore();
   if (g.crawlerAbility.phase === "firing") {
     const muzzle = 12 + Math.sin(g.time * 45) * 5;
     ctx.fillStyle = "rgba(255,221,121,.9)";
@@ -5615,17 +5737,25 @@ function drawWorld(
     const depthScale = activeBattlefieldDepthScale(f.y);
     const bossDefinition = bossDefinitionForEnemyKind(f.kind);
     const barW = (bossDefinition ? 58 : f.kind === "crusher" || f.kind === "grappler" || f.kind === "brute" || f.kind === "guardian" ? 38 : f.kind === "abomination" ? 52 : 28) * compactScale * depthScale;
-    const height = bossDefinition
-      ? !compactBattleViewport()
-        ? bossDefinition.display.standardBodyHeight
-        : bossDefinition.display.compactBodyHeight
-      : (f.kind === "abomination" ? 115 : f.kind === "crusher" || f.kind === "grappler" || f.kind === "brute" || f.kind === "guardian" ? 94 : 80) * compactScale;
-    const depthHeight = height * depthScale;
     const barHeight = compactScale > 1 ? 6 : 4;
-    const barY = f.y - depthHeight - (compactScale > 1 ? 2 : 0);
-    ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(f.x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
-    ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
-    ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), barHeight);
+    const barY = fighterHealthBarWorldY(f);
+    const highPriorityEnemyKinds = new Set([
+      "abomination", "crusher", "grappler", "resonator", "choir-knot",
+      "ooze", "spitter", "cagewalker", "anchor-bloom", "pall-manta",
+    ]);
+    const activelyTargeted = f.side === "zombie"
+      && g.fighters.some((candidate) => candidate.side === "human" && candidate.hp > 0 && candidate.targetId === f.id);
+    const showHealthBar = f.side === "human"
+      || Boolean(bossDefinition)
+      || highPriorityEnemyKinds.has(f.kind)
+      || activelyTargeted
+      || f.marked > 0
+      || f.flash > 0;
+    if (showHealthBar) {
+      ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(f.x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
+      ctx.fillStyle = f.side === "human" ? "#e9c65a" : "#cb5037";
+      ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), barHeight);
+    }
     if (f.side === "zombie" && f.marked > 0) {
       ctx.save();
       ctx.translate(f.x, barY - 10);
@@ -6761,11 +6891,7 @@ export function AshfallGame() {
               idleFrame.contentRect.y - idleFrame.sourceRect.y + idleFrame.contentRect.h
             ) / idleFrame.sourceRect.h,
         } : null;
-        const compact = compactBattleViewport();
-        const bannerWidth = compact ? 268 : 356;
-        const bannerHeight = compact ? 32 : 54;
-        const bannerX = (W - bannerWidth) / 2;
-        const bannerY = compact ? 132 : 70;
+        const banner = battleBannerRect();
         return {
           kind,
           bossId: boss?.id ?? null,
@@ -6812,10 +6938,10 @@ export function AshfallGame() {
             text: g.banner,
             remainingSeconds: g.bannerTime,
             rect: {
-              left: bannerX,
-              top: bannerY,
-              right: bannerX + bannerWidth,
-              bottom: bannerY + bannerHeight,
+              left: banner.x,
+              top: banner.y,
+              right: banner.x + banner.width,
+              bottom: banner.y + banner.height,
             },
           } : null,
           battleBarkCount: g.battleBarks.active.length,
@@ -8306,6 +8432,9 @@ export function AshfallGame() {
     }));
     playCue("ui-confirm");
     if (fighter.kind === "zakimiya") playCue("burn-start");
+    if (fighter.kind === "mrs-chiha") {
+      scheduleMrsChihaLauncherAudio(g, fighter, "ability");
+    }
     const abilityStartCue = fighter.kind === "tky"
       ? unitAudioCueFor(fighter.kind, "weapon", "abilityCharge")
       : fighter.kind === "mrs-chiha"
@@ -10758,6 +10887,11 @@ export function AshfallGame() {
           .filter((effect) => effect.elapsed < effect.duration);
         const pendingAbilityAudioCues = g.pendingAbilityAudioCues.splice(0);
         for (const pendingCue of pendingAbilityAudioCues) {
+          const remainingSeconds = Math.max(0, (pendingCue.remainingSeconds ?? 0) - dt);
+          if (remainingSeconds > 0) {
+            g.pendingAbilityAudioCues.push({ ...pendingCue, remainingSeconds });
+            continue;
+          }
           playProductionCue(pendingCue.cueId, pendingCue.x, {
             priority: 88,
             cooldownMs: 80,
@@ -10902,12 +11036,25 @@ export function AshfallGame() {
             if (event.type === "launch" && event.kind === "mrs-chiha") {
               owner.flash = Math.max(owner.flash, .08);
               addParticles(g, owner.x + 18, owner.y - 36, "#d4a45c", 5);
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityCylinder"), owner.x, {
+                priority: 76,
+                cooldownMs: 60,
+                maxInstances: 4,
+                fallbackCue: "ranged-shot",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:cylinder:${event.salvoIndex}`,
+              });
               playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityShot"), owner.x, {
                 priority: 82,
                 cooldownMs: 70,
                 maxInstances: 4,
                 fallbackCue: "ranged-shot",
                 dedupeKey: `manual-ability:${owner.id}:${event.activationId}:shot:${event.salvoIndex}`,
+              });
+              g.pendingAbilityAudioCues.push({
+                cueId: unitAudioCueFor(owner.kind, "weapon", "flight"),
+                x: event.target?.x ?? owner.x,
+                remainingSeconds: .07,
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:flight:${event.salvoIndex}`,
               });
               continue;
             }
@@ -11263,6 +11410,14 @@ export function AshfallGame() {
                 fallbackCue: "drum-blast",
                 dedupeKey: `manual-ability:${owner.id}:${event.activationId}:impact:${event.salvoIndex}`,
               });
+              if (finalRound) {
+                g.pendingAbilityAudioCues.push({
+                  cueId: unitAudioCueFor(owner.kind, "weapon", "stow"),
+                  x: owner.x,
+                  remainingSeconds: .08,
+                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:stow`,
+                });
+              }
               continue;
             }
             if (event.kind === "miyamoto-musashi") {
@@ -11323,6 +11478,12 @@ export function AshfallGame() {
                 maxInstances: 2,
                 fallbackCue: "ranged-shot",
               });
+              playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "flight"), (hit.originX + hit.targetX) / 2, {
+                priority: 70,
+                cooldownMs: 70,
+                maxInstances: 4,
+                fallbackCue: "ranged-shot",
+              });
               if (!productionMixerRef.current) playCue("ranged-shot", { frequency: 350 });
             } else if (hit.shotIndex > 0 && !productionMixerRef.current) {
               playCue("ranged-shot", { frequency: 335 + hit.shotIndex * 18 });
@@ -11350,6 +11511,11 @@ export function AshfallGame() {
                 cooldownMs: 90,
                 maxInstances: 3,
                 fallbackCue: "drum-blast",
+              });
+              playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "stow"), hit.originX, {
+                priority: 64,
+                cooldownMs: 90,
+                maxInstances: 2,
               });
               if (!productionMixerRef.current) playCue("drum-blast");
             }
@@ -11434,6 +11600,11 @@ export function AshfallGame() {
               cooldownMs: 90,
               maxInstances: 3,
               fallbackCue: "drum-blast",
+            });
+            playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "stow"), hit.originX, {
+              priority: 64,
+              cooldownMs: 90,
+              maxInstances: 2,
             });
             continue;
           }
@@ -12200,13 +12371,6 @@ export function AshfallGame() {
               if (f.entryStepDistance >= 18) {
                 f.entryStepDistance %= 18;
                 g.crawlerFootstepCount += 1;
-                playProductionCue("weapon-melee-impact", f.x, {
-                  priority: 44,
-                  cooldownMs: 40,
-                  volume: f.kind === "brute" || f.kind === "guardian" ? .24 : .16,
-                  playbackRate: f.kind === "brute" || f.kind === "guardian" ? .78 : 1.24,
-                  maxInstances: 2,
-                });
               }
             }
             const reachedEntryPoint = entryDistance <= entryStep + .01;
@@ -12214,6 +12378,9 @@ export function AshfallGame() {
               f.x = targetX;
               f.y = targetY;
               f.entryRampCleared = true;
+              f.gateEntering = false;
+              f.combatReady = true;
+              f.cooldown = Math.max(f.cooldown, .18);
             } else if (reachedEntryPoint) {
               f.x = f.combatReadyX;
               f.y = targetY;
@@ -13513,7 +13680,10 @@ export function AshfallGame() {
                 });
                 g.damageTexts.push({ x: objectTarget.x, y: objectTarget.y - 58, value: `-${Math.round(f.damage)}`, life: .65, color: "#ff9a70" });
                 addParticles(g, objectTarget.x + 24, objectTarget.y - 18, "#9aa58d", f.kind === "takuya" || f.kind === "gate-eater" || f.kind === "crusher" ? 9 : 4);
-                if (f.kind === "spitter" || f.kind === "ooze") g.shots.push({ x: f.x - 14, y: f.y - 32, tx: objectTarget.x, ty: objectTarget.y - 22, life: .2, duration: .2, side: "zombie", style: "projectile", weapon: "spitter" });
+                if (f.kind === "spitter" || f.kind === "ooze") {
+                  const origin = weaponAnchorForTarget(f, objectTarget);
+                  g.shots.push({ x: origin.x, y: origin.y, tx: objectTarget.x, ty: objectTarget.y - 22, life: .2, duration: .2, side: "zombie", style: "projectile", weapon: f.kind });
+                }
                 if (result.detonationRequested) {
                   f.targetObjectId = null;
                   g.banner = "爆薬ドラム損壊・起爆 // 戦場"; g.bannerTime = 1.05;
@@ -13603,6 +13773,8 @@ export function AshfallGame() {
                 appliedAttack = applyIncomingHumanDamage(g, target, immediateAttackDamage, { attackKind: f.range > 64 ? "ranged" : "melee", attacker: f });
               } else if (f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash && weaponDamageEvents) {
                 const grenadeRound = weaponDamageEvents[0];
+                const grenadeMuzzle = weaponAnchorForTarget(f, target, grenadeRound.shotIndex, grenadeRound.recoil);
+                scheduleMrsChihaLauncherAudio(g, f, "normal");
                 g.pendingWeaponHits.push({
                   eventKind: "muzzle",
                   targetKind: "fighter",
@@ -13610,8 +13782,8 @@ export function AshfallGame() {
                   targetId: target.id,
                   targetX: target.x,
                   targetY: target.y - 28,
-                  originX: f.x + 14,
-                  originY: f.y - 32,
+                  originX: grenadeMuzzle.x,
+                  originY: grenadeMuzzle.y,
                   remainingSeconds: grenadeRound.offsetSeconds,
                   damage: 0,
                   weapon: f.kind,
@@ -13629,8 +13801,8 @@ export function AshfallGame() {
                   targetId: target.id,
                   targetX: target.x,
                   targetY: target.y - 28,
-                  originX: f.x + 14,
-                  originY: f.y - 32,
+                  originX: grenadeMuzzle.x,
+                  originY: grenadeMuzzle.y,
                   remainingSeconds: grenadeRound.hitOffsetSeconds,
                   damage: immediateAttackDamage,
                   weapon: f.kind,
@@ -13680,6 +13852,7 @@ export function AshfallGame() {
               if (splitMachineGunBurst) {
                 const weaponProfile = weaponProfileForUnit(f.kind);
                 for (const event of weaponDamageEvents) {
+                  const muzzle = weaponAnchorForTarget(f, target, event.shotIndex, event.recoil);
                   const sharedEvent = {
                     targetKind: "fighter" as const,
                     damageMode: target.kind === "gate-eater"
@@ -13692,8 +13865,8 @@ export function AshfallGame() {
                     targetId: target.id,
                     targetX: target.x,
                     targetY: target.y - 28,
-                    originX: f.x + 14 - event.recoil * event.shotIndex * 2,
-                    originY: f.y - 32 + event.shotIndex * 1.5,
+                    originX: muzzle.x,
+                    originY: muzzle.y,
                     weapon: f.kind as UnitKind,
                     shotIndex: event.shotIndex,
                     recoil: event.recoil,
@@ -13774,6 +13947,7 @@ export function AshfallGame() {
                   if (lineTarget.id === target.id) continue;
                   const pierceDamage = attackDamage * .58;
                   for (const event of weaponDamageEventsFor(f.kind, pierceDamage)) {
+                    const muzzle = weaponAnchorForTarget(f, lineTarget, event.shotIndex, event.recoil);
                     const sharedEvent = {
                       targetKind: "fighter" as const,
                       damageMode: lineTarget.kind === "gate-eater"
@@ -13786,8 +13960,8 @@ export function AshfallGame() {
                       targetId: lineTarget.id,
                       targetX: lineTarget.x,
                       targetY: lineTarget.y - 28,
-                      originX: f.x + 14 - event.recoil * event.shotIndex * 2,
-                      originY: f.y - 32 + event.shotIndex * 1.5,
+                      originX: muzzle.x,
+                      originY: muzzle.y,
                       weapon: f.kind as UnitKind,
                       shotIndex: event.shotIndex,
                       recoil: event.recoil,
@@ -13984,11 +14158,12 @@ export function AshfallGame() {
                 if (f.kind === "gunner" && weaponDamageEvents) {
                   if (!splitMachineGunBurst) {
                     const firstRound = weaponDamageEvents[0];
+                    const firstMuzzle = weaponAnchorForTarget(f, target, firstRound.shotIndex, firstRound.recoil);
                     addWeaponShot(g, {
                       sourceId: f.id,
                       targetId: target.id,
-                      originX: f.x + 14,
-                      originY: f.y - 32,
+                      originX: firstMuzzle.x,
+                      originY: firstMuzzle.y,
                       targetX: target.x,
                       targetY: target.y - 28,
                       weapon: f.kind,
@@ -13999,6 +14174,7 @@ export function AshfallGame() {
                       impactDelaySeconds: firstRound.travelSeconds,
                     });
                     for (const event of weaponDamageEvents.slice(1)) {
+                      const muzzle = weaponAnchorForTarget(f, target, event.shotIndex, event.recoil);
                       g.pendingWeaponHits.push({
                         eventKind: "muzzle",
                         targetKind: "fighter",
@@ -14006,8 +14182,8 @@ export function AshfallGame() {
                         targetId: target.id,
                         targetX: target.x,
                         targetY: target.y - 28,
-                        originX: f.x + 14 - event.recoil * event.shotIndex * 2,
-                        originY: f.y - 32 + event.shotIndex * 1.5,
+                        originX: muzzle.x,
+                        originY: muzzle.y,
                         remainingSeconds: event.offsetSeconds,
                         damage: 0,
                         weapon: f.kind,
@@ -14021,7 +14197,8 @@ export function AshfallGame() {
                     }
                   }
                 } else if (!(f.kind === "mrs-chiha" && !mrsLauncherBash)) {
-                  g.shots.push({ x: f.x + 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", sourceId: f.id, targetId: target.id, damageTargetId: target.id, effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee", weapon: f.kind });
+                  const muzzle = weaponAnchorForTarget(f, target);
+                  g.shots.push({ x: muzzle.x, y: muzzle.y, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", sourceId: f.id, targetId: target.id, damageTargetId: target.id, effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee", weapon: f.kind });
                 }
                 if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) playCue(`role-${roleEffect}` as SfxCueId);
                 if (!productionMixerRef.current) {
@@ -14029,7 +14206,8 @@ export function AshfallGame() {
                   else playCue("melee-hit");
                 }
               } else if (f.kind === "spitter" || f.kind === "ooze") {
-                g.shots.push({ x: f.x - 14, y: f.y - 32, tx: target.x, ty: target.y - 28, life: .2, duration: .2, side: "zombie", sourceId: f.id, targetId: target.id, damageTargetId: target.id, style: "projectile", weapon: "spitter" });
+                const muzzle = weaponAnchorForTarget(f, target);
+                g.shots.push({ x: muzzle.x, y: muzzle.y, tx: target.x, ty: target.y - 28, life: .2, duration: .2, side: "zombie", sourceId: f.id, targetId: target.id, damageTargetId: target.id, style: "projectile", weapon: f.kind });
                 if (!productionMixerRef.current) playCue("ranged-shot", { frequency: 205 });
               } else {
                 addParticles(g, target.x, target.y - 18, target.kind === "takuya" || target.kind === "shade" ? "#b98a62" : target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
@@ -14080,11 +14258,12 @@ export function AshfallGame() {
                 if (f.kind === "babayaga" && f.attackSequence % 6 === 0) playProductionCue(unitAudioCueFor(f.kind, "weapon", "reload"), f.x, { priority: 52, maxInstances: 1 });
                 if (f.kind === "gunner") {
                   const firstRound = structureWeaponEvents[0];
+                  const firstOrigin = weaponAnchorForTarget(f, enemyBaseTarget, firstRound.shotIndex, firstRound.recoil);
                   addWeaponShot(g, {
                     sourceId: f.id,
                     targetId: null,
-                    originX: f.x + 14,
-                    originY: f.y - 32,
+                    originX: firstOrigin.x,
+                    originY: firstOrigin.y,
                     targetX: enemyBaseTarget.x,
                     targetY: enemyBaseTarget.y,
                     weapon: f.kind,
@@ -14095,14 +14274,15 @@ export function AshfallGame() {
                     impactDelaySeconds: firstRound.travelSeconds,
                   });
                   for (const event of structureWeaponEvents) {
+                    const origin = weaponAnchorForTarget(f, enemyBaseTarget, event.shotIndex, event.recoil);
                     const sharedEvent = {
                       targetKind: "enemy-base" as const,
                       sourceId: f.id,
                       targetId: null,
                       targetX: enemyBaseTarget.x,
                       targetY: enemyBaseTarget.y,
-                      originX: f.x + 14 - event.recoil * event.shotIndex * 2,
-                      originY: f.y - 32 + event.shotIndex * 1.5,
+                      originX: origin.x,
+                      originY: origin.y,
                       weapon: f.kind as UnitKind,
                       shotIndex: event.shotIndex,
                       recoil: event.recoil,
@@ -14130,14 +14310,16 @@ export function AshfallGame() {
                   g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
                 } else if (f.kind === "mrs-chiha") {
                   const grenadeRound = structureWeaponEvents[0];
+                  const grenadeOrigin = weaponAnchorForTarget(f, enemyBaseTarget, grenadeRound.shotIndex, grenadeRound.recoil);
+                  scheduleMrsChihaLauncherAudio(g, f, "structure");
                   const sharedGrenadeEvent = {
                     targetKind: "enemy-base" as const,
                     sourceId: f.id,
                     targetId: null,
                     targetX: enemyBaseTarget.x,
                     targetY: enemyBaseTarget.y,
-                    originX: f.x + 14,
-                    originY: f.y - 32,
+                    originX: grenadeOrigin.x,
+                    originY: grenadeOrigin.y,
                     weapon: f.kind as UnitKind,
                     shotIndex: grenadeRound.shotIndex,
                     recoil: grenadeRound.recoil,
@@ -14165,11 +14347,13 @@ export function AshfallGame() {
                   g.damageTexts.push({ x: enemyBaseTarget.x, y: enemyBaseTarget.y - 14, value: `-${Math.round(structureDamage)}`, life: .7, color: "#ffd06b" });
                   addParticles(g, enemyBaseTarget.x, enemyBaseTarget.y, "#e78b45", f.kind === "brute" ? 10 : 5);
                   if (!roleEffect && ["ranger", "medic", "babayaga", "engineer"].includes(f.kind)) {
-                    g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .2, duration: .2, side: "human", style: "projectile", weapon: f.kind });
+                    const origin = weaponAnchorForTarget(f, enemyBaseTarget);
+                    g.shots.push({ x: origin.x, y: origin.y, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .2, duration: .2, side: "human", style: "projectile", weapon: f.kind });
                   }
                 }
                 if (roleEffect && !deferredStructureImpact) {
-                  g.shots.push({ x: f.x + 14, y: f.y - 32, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "projectile" : "melee", weapon: f.kind });
+                  const origin = weaponAnchorForTarget(f, enemyBaseTarget);
+                  g.shots.push({ x: origin.x, y: origin.y, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "projectile" : "melee", weapon: f.kind });
                   if (!productionMixerRef.current && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) {
                     playCue(`role-${roleEffect}` as SfxCueId);
                   }
@@ -14720,14 +14904,18 @@ export function AshfallGame() {
       performanceCounters.renderFrames += 1;
       if (g.bannerTime > 0 && g.running) {
         const compact = compactBattleViewport();
-        const bannerWidth = compact ? 268 : 356;
-        const bannerHeight = compact ? 32 : 54;
-        const bannerX = (W - bannerWidth) / 2;
-        const bannerY = compact ? 132 : 70;
-        ctx.fillStyle = "rgba(15,14,14,.82)"; ctx.fillRect(bannerX, bannerY, bannerWidth, bannerHeight);
-        ctx.strokeStyle = "#d79647"; ctx.strokeRect(bannerX + .5, bannerY + .5, bannerWidth - 1, bannerHeight - 1);
-        ctx.fillStyle = "#f0d2a3"; ctx.font = `bold ${compact ? 12 : 19}px monospace`; ctx.textAlign = "center";
-        ctx.fillText(g.banner, W / 2, bannerY + (compact ? 21 : 34)); ctx.textAlign = "left";
+        const banner = battleBannerRect();
+        const gradient = ctx.createLinearGradient(banner.x, banner.y, banner.x + banner.width, banner.y);
+        gradient.addColorStop(0, "rgba(15,18,18,.48)");
+        gradient.addColorStop(.14, "rgba(15,14,14,.91)");
+        gradient.addColorStop(.86, "rgba(15,14,14,.91)");
+        gradient.addColorStop(1, "rgba(15,18,18,.48)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(banner.x, banner.y, banner.width, banner.height);
+        ctx.strokeStyle = "rgba(215,150,71,.82)";
+        ctx.strokeRect(banner.x + .5, banner.y + .5, banner.width - 1, banner.height - 1);
+        ctx.fillStyle = "#f0d2a3"; ctx.font = `bold ${compact ? 11 : 17}px monospace`; ctx.textAlign = "center";
+        ctx.fillText(g.banner, W / 2, banner.y + (compact ? 19 : 28)); ctx.textAlign = "left";
       }
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
@@ -14737,18 +14925,9 @@ export function AshfallGame() {
         const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);
         const canvasRect = canvas.getBoundingClientRect();
         const transform = canvasTransformRef.current;
-        const fighterScreenSize = (fighter: Fighter) => {
-          const authored = spriteBattleDisplaySizeFor(fighter.kind);
-          const compactScale = compactBattleViewport() ? COMPACT_BATTLE_SPRITE_SCALE : 1;
-          const depthScale = activeBattlefieldDepthScale(fighter.y);
-          return {
-            w: authored.w * compactScale * depthScale,
-            h: authored.h * compactScale * depthScale,
-          };
-        };
         const frameElement = canvas.closest(".game-frame");
         const obstacleRects = [...(frameElement?.querySelectorAll(
-          ".top-hud,.survival-hud,.boss-hud,.crawler-alert,.battle-barks,.bottom-hud,.stats-strip",
+          ".top-hud,.survival-hud,.boss-hud,.crawler-alert,.bottom-hud,.stats-strip",
         ) ?? [])].map((element) => {
           const rect = element.getBoundingClientRect();
           return {
@@ -14759,48 +14938,19 @@ export function AshfallGame() {
             height: rect.height,
           };
         });
-        for (const fighter of g.fighters) {
-          if (fighter.hp <= 0) continue;
-          const size = fighterScreenSize(fighter);
-          // Atlas cells include transparent gutters and long weapon trails. Use
-          // the visible torso/body footprint for collision so a crowded lane
-          // does not incorrectly suppress another ready icon.
-          const visualBodyWidth = Math.max(22, size.w * .62);
-          const visualBodyHeight = Math.max(34, size.h * .82);
-          obstacleRects.push({
-            ownerId: fighter.id,
-            x: transform.offsetX + fighter.x * transform.scale - visualBodyWidth * transform.scale * .5,
-            y: transform.offsetY + fighter.y * transform.scale - visualBodyHeight * transform.scale,
-            width: visualBodyWidth * transform.scale,
-            height: visualBodyHeight * transform.scale,
-          });
-        }
-        if (g.bannerTime > 0 && g.running) {
-          const compact = compactBattleViewport();
-          const bannerWidth = compact ? 268 : 356;
-          const bannerHeight = compact ? 32 : 54;
-          obstacleRects.push({
-            ownerId: null,
-            x: transform.offsetX + (W - bannerWidth) / 2 * transform.scale,
-            y: transform.offsetY + (compact ? 132 : 70) * transform.scale,
-            width: bannerWidth * transform.scale,
-            height: bannerHeight * transform.scale,
-          });
-        }
         const readyAbilityFighters = g.running && !g.paused && !g.over && !selectedActionRef.current
           ? g.fighters.filter((fighter) => canActivateManualAbility({
             fighter,
             fighters: manualAbilityTargetCandidates(g, fighter),
           }))
             .map((fighter) => {
-              const size = fighterScreenSize(fighter);
               return {
                 id: fighter.id,
                 kind: fighter.kind,
                 x: fighter.x,
                 y: fighter.y,
                 screenX: transform.offsetX + fighter.x * transform.scale,
-                screenY: transform.offsetY + (fighter.y - size.h - 6) * transform.scale,
+                screenY: transform.offsetY + (fighterHealthBarWorldY(fighter) - 10) * transform.scale,
               };
             })
           : [];
@@ -14992,7 +15142,10 @@ export function AshfallGame() {
                   <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
-                    {cooldown > 0 && <span className="cooldown-mask"><b>{cooldown}</b><small>秒待ち</small></span>}
+                    {cooldown > 0 && <span
+                      className="cooldown-mask"
+                      style={{ "--cooldown-progress": `${Math.min(100, cooldown / Math.max(1, card.deployCooldown) * 100)}%` } as CSSProperties}
+                    ><small>再準備中</small></span>}
                   </button>
                 );
               })}

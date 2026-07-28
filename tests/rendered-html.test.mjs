@@ -185,7 +185,8 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(screens, /className="map-operation-tabs"/);
   assert.match(screens, /防衛継続作戦/);
   assert.match(screens, /この作戦を編成/);
-  assert.match(screens, /formation-selection-mark/);
+  assert.match(screens, /aria-pressed=\{selected\}/);
+  assert.doesNotMatch(screens, /formation-selection-mark/);
   const loadoutBlock = screens.slice(screens.indexOf("function LoadoutScreen"), screens.indexOf("function PersonnelScreen"));
   assert.doesNotMatch(loadoutBlock, /mode === "acquisition"|mode === "upgrade"|onRecruitUnit|onUpgradeUnit/);
   assert.match(screens, /mode === "acquisition" && unit\.recruitable && !unit\.owned[\s\S]*unit\.recruitCost}キャップで調達/);
@@ -418,8 +419,9 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /activeBattlefieldDepthScale\(f\.y\)/);
   assert.match(game, /const drawSlices = frame\.drawSlices \?\?/);
   assert.match(game, /fighter\.side === "zombie" && isBossEnemyKind\(fighter\.kind\)[\s\S]*enemyRenderedVisualHalfWidth\(fighter\.kind\)[\s\S]*Math\.max\(fighter\.bodyRadius, renderedHalfWidth\)/);
-  assert.match(game, /const visualBodyWidth = Math\.max\(22, size\.w \* \.62\)/);
-  assert.match(game, /const visualBodyHeight = Math\.max\(34, size\.h \* \.82\)/);
+  assert.match(game, /const authoredSize = fitSpriteBattleDisplaySize\(renderKind, frame, spriteDisplaySize\(renderKind\)\)/);
+  assert.match(game, /w: authoredSize\.w \* compactScale \* depthScale \* animationSample\.bodyScale/);
+  assert.match(game, /h: authoredSize\.h \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL,[\s\S]*background\.naturalHeight \* \.44/);
   assert.match(game, /enemyBaseSpriteRef\.current,\s*false,\s*\);/);
   assert.match(game, /canvasPointerToWorld\(\{ clientX: event\.clientX, clientY: event\.clientY, rect, transform, worldWidth: W, worldHeight: H \}\)/);
@@ -480,7 +482,7 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(indicatorDraw, /ctx\.lineWidth = 1\.4[\s\S]*ctx\.moveTo\(-9, 0\)[\s\S]*labelX = Math\.max/);
   assert.match(game, /g\.banner = placementReasonLabel\(result\.reason\); g\.bannerTime = \.75/);
   assert.match(game, /const compactScale = compactBattleViewport\(\) \? 1\.1 : 1/);
-  assert.match(game, /const bannerY = compact \? 132 : 70/);
+  assert.match(game, /function battleBannerRect\(\)[\s\S]*width = compact \? 234 : 316[\s\S]*height = compact \? 28 : 42[\s\S]*y: compact \? 50 : 58/);
   for (const label of ["投下ポッド", "爆薬ドラム", "救護所", "航空支援", "一斉掃射"]) assert.match(game, new RegExp(label));
   assert.match(css, /battle-nishijin-shopping-street-v1\.webp/);
   for (const edge of ["top", "right", "bottom", "left"]) {
@@ -493,7 +495,7 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(css, /\.game-frame \{ position:relative; width:100%; height:100%/);
   assert.match(css, /\.bottom-hud \{[^}]*var\(--app-viewport-safe-bottom\)[^}]*var\(--app-viewport-safe-right\)[^}]*var\(--app-viewport-safe-left\)/);
   assert.match(css, /\.crawler-alert \{[^}]*left:calc\(2% \+ var\(--app-viewport-safe-left\)\)/);
-  assert.match(css, /\.battle-barks \{[^}]*left:calc\(2% \+ var\(--app-viewport-safe-left\)\)/);
+  assert.match(css, /\.battle-barks \{[^}]*left:50%;[^}]*pointer-events:none;/);
   assert.match(css, /\.qa-badge \{[^}]*right:calc\(1\.5% \+ var\(--app-viewport-safe-right\)\)/);
   assert.doesNotMatch(css, /height:100vh/);
   assert.match(layout, /viewportFit: "cover"/);
@@ -1570,7 +1572,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(game, /g\.wave = 8/);
   for (const kind of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) assert.match(game, new RegExp(`\\["${kind}",`));
   assert.match(game, /aria-live="polite" aria-label="戦闘台詞"/);
-  assert.match(css, /\.battle-barks \{ position:absolute; z-index:16; top:32%; left:calc\(2% \+ var\(--app-viewport-safe-left\)\); width:min\(270px,29%\);/);
+  assert.match(css, /\.battle-barks \{ position:absolute; z-index:16; top:calc\(20px \+ var\(--app-viewport-safe-top\)\); left:50%; width:min\(330px,42%\);[^}]*pointer-events:none;/);
   assert.match(css, /\.start-screen,\.pause-screen,\.end-screen \{ position:absolute; z-index:15;/);
   assert.match(css, /\.game-frame:has\(\.start-screen\) \.qa-badge \{ top:4%; left:50%; right:auto; bottom:auto; transform:translateX\(-100%\); \}/);
   assert.match(css, /\.game-frame:has\(\.pause-screen\) \.battle-barks \{ display:none; \}/);
@@ -1580,12 +1582,12 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.unit-cards \{ gap:2px; scrollbar-width:none; \}\.unit-cards::-webkit-scrollbar \{ display:none; \}\.unit-card \{[^}]*flex-basis:78px; min-width:78px; height:100%; min-height:44px; \}/);
   assert.match(css, /\.bottom-hud \{ height:60px; min-height:60px; max-height:60px;/);
   assert.match(css, /\.combat-deck \{ display:grid; grid-template-columns:minmax\(300px,1\.35fr\) minmax\(260px,1fr\); grid-template-rows:minmax\(0,1fr\)/);
-  assert.match(css, /\.support-btn small \{ display:none; \}/);
+  assert.match(css, /\.support-btn small,\.support-key \{ display:none; \}/);
   assert.match(css, /\.card-copy small \{ display:none; \}/);
   assert.doesNotMatch(css, /\.placement-(?:hint|copy|cancel)\b/);
   assert.match(css, /\.crawler-alert \{ position:absolute; z-index:17;/);
-  assert.match(css, /\.battle-barks \{ top:calc\(104px \+ var\(--app-viewport-safe-top\)\);/);
-  assert.match(css, /\.cooldown-mask small \{ display:block;[^}]*font-size:6px;/);
+  assert.match(css, /\.battle-barks \{ position:absolute;[^}]*top:calc\(20px \+ var\(--app-viewport-safe-top\)\);/);
+  assert.match(css, /\.cooldown-mask small \{[^}]*font:800 clamp\(5px,.48vw,7px\)\/1 monospace;/);
   assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
   assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax, hud\.bossKind\)/);
   assert.match(game, /bossHudSnapshot\(fighter\)/);
@@ -1652,7 +1654,7 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   const deployAudio = game.slice(deployAudioStart, game.indexOf("const crawlerStep =", deployAudioStart));
   assert.match(deployAudio, /playProductionCue\("support-pod-deploy", deploymentX,[\s\S]*volume: kind === "brute" \? \.42 : \.32[\s\S]*maxInstances: 1/);
   assert.doesNotMatch(deployAudio, /playProductionCue\("weapon-melee-impact"/);
-  assert.match(game, /if \(f\.gateEntering\)[\s\S]*entryStepDistance[\s\S]*crawlerFootstepCount \+= 1[\s\S]*playProductionCue\("weapon-melee-impact", f\.x,[\s\S]*playbackRate:/);
+  assert.doesNotMatch(game, /if \(f\.gateEntering\)[\s\S]{0,1800}playProductionCue\("weapon-melee-impact"/);
   assert.doesNotMatch(deployAudio, /weaponCueForUnit\(kind\)/);
   const newcomerAudio = game.slice(game.indexOf("const weaponEvent ="), game.indexOf('if (f.kind === "scout"'));
   assert.match(newcomerAudio, /const contactAudioX = f\.kind === "crazy-king" \|\| f\.kind === "kumaverson" \? \(f\.x \+ target\.x\) \/ 2 : f\.x/);
@@ -1762,7 +1764,8 @@ test("integrates the enemy gate queue without changing direct QA or turned place
   assert.match(game, /g\.enemySpawn = \(enqueueEnemyWave as unknown as \(runtime: EnemySpawnRuntime, input: \{ units: string\[\]; wave: number \}\) => EnemySpawnRuntime\)\(g\.enemySpawn, \{ units: mission\.units, wave: mission\.wave \}\)/);
   assert.doesNotMatch(game, /mission\.units\.forEach\(\(\[kind, lane\]/);
   assert.match(game, /advanceEnemySpawnRuntime\(g\.enemySpawn, dt, g\.paused\)/);
-  assert.match(game, /if \(f\.gateEntering\)[\s\S]*entryStepDistance[\s\S]*crawlerFootstepCount \+= 1[\s\S]*playProductionCue\("weapon-melee-impact"[\s\S]*f\.combatReady = true;[\s\S]*continue;/);
+  assert.match(game, /if \(f\.gateEntering\)[\s\S]*entryStepDistance[\s\S]*f\.combatReady = true;[\s\S]*continue;/);
+  assert.doesNotMatch(game, /if \(f\.gateEntering\)[\s\S]{0,1800}playProductionCue\("weapon-melee-impact"/);
   assert.match(game, /fighterById = new Map\(g\.fighters\.filter\(\(fighter\) => fighter\.hp > 0 && fighter\.combatReady\)/);
   assert.match(game, /enemy\.side === "zombie" && enemy\.hp > 0 && enemy\.combatReady/);
   assert.match(game, /other\.hp <= 0 \|\| !other\.combatReady/);
