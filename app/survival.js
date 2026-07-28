@@ -209,6 +209,19 @@ function normalizeUpgradeStacks(value) {
     .filter(([, stacks]) => stacks > 0));
 }
 
+function normalizeManualAbilityCooldownsByKind(value) {
+  if (!isRecord(value)) return {};
+  return Object.fromEntries(Object.entries(value)
+    .filter(([kind]) => isSafeDictionaryKey(kind))
+    .map(([kind, cooldowns]) => [
+      kind.trim(),
+      (Array.isArray(cooldowns) ? cooldowns : [])
+        .slice(0, 24)
+        .map((seconds) => Math.min(3_600, clampSeconds(seconds))),
+    ])
+    .filter(([, cooldowns]) => cooldowns.length > 0));
+}
+
 function checkpointRewardId(runId, checkpointWave) {
   return `survival:${runId}:checkpoint:${checkpointWave}`;
 }
@@ -218,7 +231,7 @@ function partialRewardId(runId, lastCompletedWave) {
 }
 
 export const SURVIVAL_PROGRESS_SCHEMA_VERSION = 1;
-export const SURVIVAL_RUN_SCHEMA_VERSION = 2;
+export const SURVIVAL_RUN_SCHEMA_VERSION = 3;
 export const SURVIVAL_BLOCK_WAVES = 5;
 export const SURVIVAL_START_SKIP_WAVES = 10;
 export const SURVIVAL_SPEED_OPTIONS = deepFreeze([1, 2]);
@@ -454,6 +467,9 @@ export function normalizeSurvivalRun(value) {
       hp: clampInteger(source.crawler?.hp, 0, crawlerMaxHp, crawlerMaxHp),
       maxHp: crawlerMaxHp,
     },
+    manualAbilityCooldownsByKind: normalizeManualAbilityCooldownsByKind(
+      source.manualAbilityCooldownsByKind,
+    ),
     temporaryUpgradeStacks: normalizeUpgradeStacks(source.temporaryUpgradeStacks),
     pendingUpgradeChoices,
     stats: normalizeRunStats(source.stats),
@@ -499,6 +515,7 @@ export function createSurvivalRun({
     lastBossKind: null,
     formation: normalizeFormationSnapshot(formation),
     crawler: { hp: maxHp, maxHp },
+    manualAbilityCooldownsByKind: {},
     temporaryUpgradeStacks: survivalLateStartUpgradeStacks(requestedStartWave),
     pendingUpgradeChoices: [],
     stats: normalizeRunStats(null),

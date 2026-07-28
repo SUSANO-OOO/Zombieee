@@ -288,6 +288,28 @@ for (const engine of engines) {
           const run = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().survivalRun;
           return run?.phase === "wave-ready" && Object.keys(run.temporaryUpgradeStacks).length > 0;
         }, undefined, { timeout });
+        const liveContinuation = await page.evaluate(
+          ({ kind, ownerId }) => window.__ASHFALL_BATTLE_QA__
+            .deploySurvivalLiveContinuationProof(kind, ownerId),
+          {
+            kind: checkpoint.cooldownKind,
+            ownerId: checkpoint.cooldownOwnerId,
+          },
+        );
+        invariant(
+          liveContinuation.cooldownOwner?.phase === "cooldown"
+            && liveContinuation.cooldownOwner.cooldownRemaining > 8,
+          `live checkpoint owner lost its cooldown: ${JSON.stringify(liveContinuation)}`,
+        );
+        invariant(
+          liveContinuation.deployed?.phase === "ready"
+            && liveContinuation.deployed.cooldownRemaining === 0,
+          `new same-kind deployment inherited checkpoint cooldown: ${JSON.stringify(liveContinuation)}`,
+        );
+        invariant(
+          liveContinuation.remainingCooldowns.length === 0,
+          `resume-only cooldown queue leaked into live continuation: ${JSON.stringify(liveContinuation)}`,
+        );
 
         const settlementAttemptsBeforeFailure = await page.evaluate(() => (
           window.__ASHFALL_BATTLE_QA__.failNextSurvivalSettlementSave()
@@ -370,6 +392,7 @@ for (const engine of engines) {
           inputMode: viewport.safeArea ? "touch" : "mouse",
           touchActivationCount,
           checkpointId: checkpoint.checkpointId,
+          liveContinuation,
           processedRunId: runId,
           equipmentInventory: settlementSnapshot.equipmentInventory,
           layout,

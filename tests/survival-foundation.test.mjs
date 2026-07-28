@@ -11,6 +11,7 @@ import {
 } from "../app/campaign.js";
 import {
   SURVIVAL_END_REASONS,
+  SURVIVAL_RUN_SCHEMA_VERSION,
   SURVIVAL_RUN_PHASES,
   SURVIVAL_SPEED_OPTIONS,
   SURVIVAL_UPGRADES,
@@ -237,6 +238,41 @@ test("saves only boss-boundary checkpoints and resumes pending upgrade selection
   const updatedProgress = saveSurvivalCheckpoint(progress, selected, "2026-07-26T09:31:00.000Z");
   assert.equal(updatedProgress.activeCheckpoint.run.phase, SURVIVAL_RUN_PHASES.WAVE_READY);
   assert.equal(updatedProgress.activeCheckpoint.checkpointWave, 5);
+});
+
+test("checkpoint serialization preserves ordered per-instance manual ability cooldown debt", () => {
+  let run = createSurvivalRun({ runId: "manual-ability-cooldown-run" });
+  run = {
+    ...run,
+    manualAbilityCooldownsByKind: {
+      brawler: [0, 7.25, 12],
+      guardian: [28.45],
+    },
+  };
+  run = playThrough(run, 5);
+  const progress = saveSurvivalCheckpoint(createDefaultSurvivalProgress(), run);
+  const resumed = resumeSurvivalCheckpoint(JSON.parse(JSON.stringify(progress)));
+  assert.equal(resumed.schemaVersion, SURVIVAL_RUN_SCHEMA_VERSION);
+  assert.deepEqual(resumed.manualAbilityCooldownsByKind, {
+    brawler: [0, 7.25, 12],
+    guardian: [28.45],
+  });
+  assert.deepEqual(
+    normalizeSurvivalProgress({
+      ...progress,
+      activeCheckpoint: {
+        ...progress.activeCheckpoint,
+        run: {
+          ...progress.activeCheckpoint.run,
+          manualAbilityCooldownsByKind: {
+            brawler: [-5, "4.2", Number.POSITIVE_INFINITY],
+            __proto__: [999],
+          },
+        },
+      },
+    }).activeCheckpoint.run.manualAbilityCooldownsByKind,
+    { brawler: [0, 4.2, 0] },
+  );
 });
 
 test("preserves duplicate equipment quantities within and across checkpoints through settlement", () => {

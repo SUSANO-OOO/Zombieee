@@ -9,8 +9,11 @@ import {
   canActivateManualAbility,
   createManualAbilityRuntime,
   layoutManualAbilityIcons,
+  manualAbilityCheckpointCooldown,
   manualAbilityLocksNormalAction,
   mayoAbilityHpStep,
+  restoreManualAbilityCooldown,
+  selectManualAbilityTarget,
   selectMayoAbilityTarget,
   selectMrsChihaAbilityTarget,
   selectMusashiAbilityTarget,
@@ -58,6 +61,99 @@ test("all sixteen canonical manual abilities retain exact player-facing names", 
     new Set(Object.values(MANUAL_ABILITY_REGISTRY).map(({ iconMotif }) => iconMotif)).size,
     16,
   );
+  for (const [kind, definition] of Object.entries(MANUAL_ABILITY_REGISTRY)) {
+    assert.equal(definition.runtimeStatus, "integrated", `${kind} is runtime-integrated`);
+    assert.ok(definition.cooldownSeconds > 0, `${kind} has a positive cooldown`);
+    assert.ok(definition.windupSeconds > 0, `${kind} has an authored windup`);
+  }
+});
+
+test("the existing eleven units use deterministic ability-specific auto targeting and ready gates", () => {
+  const kinds = [
+    "brawler",
+    "scout",
+    "ranger",
+    "medic",
+    "brute",
+    "crazy-king",
+    "kumaverson",
+    "babayaga",
+    "gunner",
+    "guardian",
+    "engineer",
+  ];
+  for (const [index, kind] of kinds.entries()) {
+    const fighter = {
+      ...owner(100 + index, kind),
+      lane: 1,
+      maxHp: 100,
+      speed: 20,
+      aiMoveDirection: 1,
+      engineerTrapReady: false,
+    };
+    const wounded = {
+      ...owner(700, "scout"),
+      lane: 1,
+      maxHp: 100,
+      hp: 22,
+      x: 245,
+      y: 280,
+    };
+    const fast = {
+      ...enemy("fast", 310, 280, 75),
+      kind: "runner",
+      speed: 55,
+      maxHp: 75,
+    };
+    const special = {
+      ...enemy("special", 350, 288, 180),
+      kind: "spitter",
+      speed: 12,
+      maxHp: 180,
+    };
+    const boss = {
+      ...enemy("boss", 375, 280, 600),
+      kind: "takuya",
+      isBoss: true,
+      speed: 8,
+      maxHp: 600,
+    };
+    const fighters = kind === "medic"
+      ? [fighter, wounded]
+      : [fighter, fast, special, boss];
+    const selected = selectManualAbilityTarget({ owner: fighter, fighters });
+    assert.ok(selected, `${kind} receives an automatic valid target`);
+    assert.deepEqual(
+      selectManualAbilityTarget({ owner: fighter, fighters: [...fighters].reverse() }),
+      selected,
+      `${kind} target selection is order-independent`,
+    );
+    assert.equal(canActivateManualAbility({ fighter, fighters }), true, `${kind} shows ready only with a valid target`);
+  }
+
+  const nao = { ...owner(900, "medic"), lane: 1, maxHp: 100 };
+  const healthy = { ...owner(901, "scout"), lane: 1, x: 230, maxHp: 100, hp: 100 };
+  assert.equal(selectManualAbilityTarget({ owner: nao, fighters: [nao, healthy] }), null);
+  assert.equal(canActivateManualAbility({ fighter: nao, fighters: [nao, healthy] }), false);
+});
+
+test("sustained manual abilities emit exactly one start and end then cool down", () => {
+  for (const kind of ["crazy-king", "kumaverson", "guardian"]) {
+    const fighter = { ...owner(950, kind), lane: 1, maxHp: 100, aiMoveDirection: 1 };
+    const target = selectManualAbilityTarget({ owner: fighter, fighters: [fighter, enemy("threat", 285)] });
+    const started = beginManualAbility(fighter.manualAbility, target);
+    const active = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY[kind].windupSeconds);
+    assert.equal(active.runtime.phase, "active", kind);
+    assert.deepEqual(active.events.map(({ type }) => type), ["active-start"], kind);
+    const cooldown = advanceManualAbility(active.runtime, MANUAL_ABILITY_REGISTRY[kind].activeSeconds);
+    assert.equal(cooldown.runtime.phase, "cooldown", kind);
+    assert.deepEqual(cooldown.events.map(({ type }) => type), ["active-end"], kind);
+    assert.deepEqual(advanceManualAbility(cooldown.runtime, 0).events, [], kind);
+
+    const oversized = advanceManualAbility(started.runtime, 100);
+    assert.equal(oversized.runtime.phase, "ready", kind);
+    assert.deepEqual(oversized.events.map(({ type }) => type), ["active-start", "active-end"], kind);
+  }
 });
 
 test("Zakimiya targets the densest valid group instead of wasting the throw on the nearest lone enemy", () => {
@@ -104,6 +200,82 @@ test("duplicate deployments own independent activation and cooldown state", () =
   const cooling = advanceManualAbility(first.manualAbility, 2);
   assert.ok(cooling.runtime.cooldownRemaining < first.manualAbility.cooldownRemaining);
   assert.equal(advanceManualAbility(cooling.runtime, 20).runtime.phase, "ready");
+});
+
+test("checkpoint debt conservatively preserves every non-ready manual ability phase", () => {
+  const brawler = createManualAbilityRuntime("brawler");
+  const started = beginManualAbility(brawler, { targetId: "target", x: 260, y: 280 });
+  const windupDebt = manualAbilityCheckpointCooldown(started.runtime);
+  assert.equal(
+    windupDebt,
+    MANUAL_ABILITY_REGISTRY.brawler.windupSeconds
+      + MANUAL_ABILITY_REGISTRY.brawler.cooldownSeconds,
+  );
+  const cooling = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY.brawler.windupSeconds);
+  assert.equal(
+    manualAbilityCheckpointCooldown(cooling.runtime),
+    MANUAL_ABILITY_REGISTRY.brawler.cooldownSeconds,
+  );
+  const restored = restoreManualAbilityCooldown("brawler", windupDebt);
+  assert.equal(restored.phase, "cooldown");
+  assert.equal(restored.cooldownRemaining, windupDebt);
+  assert.equal(manualAbilityCheckpointCooldown(createManualAbilityRuntime("brawler")), 0);
+  for (const kind of Object.keys(MANUAL_ABILITY_REGISTRY)) {
+    const restoredKind = restoreManualAbilityCooldown(kind, .1);
+    assert.equal(advanceManualAbility(restoredKind, .2).runtime.phase, "ready", kind);
+  }
+
+  const sustained = beginManualAbility(
+    createManualAbilityRuntime("guardian"),
+    { targetId: "target", x: 260, y: 280 },
+  );
+  assert.equal(
+    manualAbilityCheckpointCooldown(sustained.runtime),
+    MANUAL_ABILITY_REGISTRY.guardian.windupSeconds
+      + MANUAL_ABILITY_REGISTRY.guardian.activeSeconds
+      + MANUAL_ABILITY_REGISTRY.guardian.cooldownSeconds,
+  );
+
+  const mayo = beginManualAbility(
+    createManualAbilityRuntime("mayo-chan"),
+    { targetId: "target", x: 260, y: 280 },
+  );
+  assert.equal(
+    manualAbilityCheckpointCooldown(mayo.runtime),
+    MANUAL_ABILITY_REGISTRY["mayo-chan"].windupSeconds
+      + MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds
+      + MANUAL_ABILITY_REGISTRY["mayo-chan"].cooldownSeconds,
+  );
+
+  const mrsChiha = beginManualAbility(
+    createManualAbilityRuntime("mrs-chiha"),
+    { points: Array.from({ length: 4 }, (_, index) => ({ targetId: index, x: 260 + index, y: 280 })) },
+  );
+  assert.equal(
+    manualAbilityCheckpointCooldown(mrsChiha.runtime),
+    MANUAL_ABILITY_REGISTRY["mrs-chiha"].windupSeconds
+      + MANUAL_ABILITY_REGISTRY["mrs-chiha"].salvoIntervalSeconds
+        * (MANUAL_ABILITY_REGISTRY["mrs-chiha"].salvoCount - 1)
+      + MANUAL_ABILITY_REGISTRY["mrs-chiha"].projectileTravelSeconds
+      + MANUAL_ABILITY_REGISTRY["mrs-chiha"].recoverySeconds
+      + MANUAL_ABILITY_REGISTRY["mrs-chiha"].cooldownSeconds,
+  );
+});
+
+test("Musashi fallback recognizes every Version 0.9.0 boss before a closer normal enemy", () => {
+  const musashi = owner(70, "miyamoto-musashi");
+  for (const kind of ["kurome", "mother", "ooguchi", "gairen", "futago"]) {
+    const selected = selectMusashiAbilityTarget({
+      owner: musashi,
+      fighters: [
+        musashi,
+        enemy("near-walker", 230),
+        { ...enemy(`boss-${kind}`, 330, 280, 500), kind },
+      ],
+    });
+    assert.equal(selected.targetId, `boss-${kind}`, kind);
+    assert.equal(selected.isBoss, true, kind);
+  }
 });
 
 test("one activation emits one impact receipt even with oversized time steps", () => {
@@ -375,6 +547,67 @@ test("runtime renders only ready buttons and never a cooldown ring or number abo
   assert.doesNotMatch(source, /manualAbilityIcons[\s\S]{0,800}cooldownRemaining/);
   assert.match(source, /manualAbilityLocksNormalAction\(f\.manualAbility\)[\s\S]{0,220}f\.aiMoveDirection = 0;[\s\S]{0,40}continue;/);
   assert.match(source, /manualAbilityActive[\s\S]{0,900}sampleAnimationClip\(f\.kind, "special", manualAbilityElapsed\)/);
+});
+
+test("all sixteen ready icons map to distinct authored silhouettes", async () => {
+  const iconFiles = {
+    brawler: "paisen-kiai-combo-ready-r1.svg",
+    scout: "hachi-intercept-dash-ready-r1.svg",
+    ranger: "mizuchi-precision-ready-r1.svg",
+    medic: "nao-emergency-treatment-ready-r1.svg",
+    brute: "tatara-ground-break-ready-r1.svg",
+    "crazy-king": "crazy-king-overdrive-ready-r1.svg",
+    kumaverson: "kumaverson-pan-stand-ready-r1.svg",
+    babayaga: "babayaga-weakness-audit-ready-r1.svg",
+    gunner: "raider-suppression-ready-r1.svg",
+    guardian: "gantetsu-shield-deploy-ready-r1.svg",
+    engineer: "monkey-binding-trap-ready-r1.svg",
+    zakimiya: "zakimiya-fire-whiskey-ready-r1.svg",
+    tky: "tky-light-blade-ready-r1.svg",
+    "mrs-chiha": "mrs-chiha-full-salvo-ready-r1.svg",
+    "miyamoto-musashi": "miyamoto-musashi-muku-ready-r1.svg",
+    "mayo-chan": "mayo-chan-feral-ready-r1.svg",
+  };
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const iconSources = await Promise.all(Object.entries(iconFiles).map(async ([kind, file]) => {
+    assert.match(css, new RegExp(`ability-${kind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^}]*${file}`));
+    const source = await readFile(new URL(`../public/art/v090/characters/abilities/${file}`, import.meta.url), "utf8");
+    assert.match(source, /viewBox="0 0 96 96"/);
+    assert.match(source, /<title id="title">[^<]+ ready<\/title>/);
+    return source.replace(/\s+/g, " ");
+  }));
+  assert.equal(new Set(iconSources).size, 16, "no unit reuses another unit's icon artwork");
+});
+
+test("existing eleven abilities connect unique combat mechanics, canvas VFX, and weapon audio", async () => {
+  const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  for (const kind of [
+    "brawler",
+    "scout",
+    "ranger",
+    "medic",
+    "brute",
+    "crazy-king",
+    "kumaverson",
+    "babayaga",
+    "gunner",
+    "guardian",
+    "engineer",
+  ]) {
+    assert.match(source, new RegExp(`effect\\.kind === "${kind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`), `${kind} has dedicated VFX`);
+  }
+  assert.match(source, /event\.kind === "brawler"[\s\S]{0,1600}definition\.hitCount/);
+  assert.match(source, /event\.kind === "brawler"[\s\S]{0,2200}finalKnockbackRadius/);
+  assert.match(source, /event\.kind === "scout"[\s\S]{0,1800}definition\.stunSeconds/);
+  assert.match(source, /event\.kind === "ranger"[\s\S]{0,1900}penetrationMultiplier/);
+  assert.match(source, /event\.kind === "medic"[\s\S]{0,1900}protectionSeconds/);
+  assert.match(source, /event\.kind === "brute"[\s\S]{0,3000}manual-structure:enemy-base/);
+  assert.match(source, /manualDamageMultiplier[\s\S]{0,260}crazy-king/);
+  assert.match(source, /event\.kind === "babayaga"[\s\S]{0,1200}markSeconds/);
+  assert.match(source, /event\.kind === "gunner"[\s\S]{0,1600}suppressionSeconds/);
+  assert.match(source, /activeGuardian[\s\S]{0,900}allyDamageTakenMultiplier/);
+  assert.match(source, /engineerTrapManual[\s\S]{0,1800}trappedTargets[\s\S]{0,1000}slowSeconds/);
+  assert.match(source, /playProductionCue\(weaponCueForUnit\(owner\.kind\)/);
 });
 
 test("Mayo-chan incapacitation branches to injury retreat before corpse, infection, zombie, or burning lifecycles", async () => {
