@@ -18,8 +18,17 @@ const engines = (process.env.SURVIVAL_WAVE_QA_ENGINES ?? "chromium,webkit")
   .split(",")
   .map((engine) => engine.trim())
   .filter(Boolean);
+const unknownEngines = engines.filter((engine) => !browserTypes[engine]);
+if (engines.length === 0 || unknownEngines.length > 0) {
+  throw new Error(`Unknown or empty SURVIVAL_WAVE_QA_ENGINES: ${unknownEngines.join(", ") || "(empty)"}`);
+}
 const viewport = { width: 844, height: 390 };
-const timeout = Math.max(30_000, Number(process.env.SURVIVAL_WAVE_QA_TIMEOUT_MS) || 5 * 60_000);
+const configuredTimeout = process.env.SURVIVAL_WAVE_QA_TIMEOUT_MS;
+const parsedTimeout = configuredTimeout === undefined ? 5 * 60_000 : Number(configuredTimeout);
+if (!Number.isFinite(parsedTimeout) || parsedTimeout <= 0) {
+  throw new Error(`SURVIVAL_WAVE_QA_TIMEOUT_MS must be finite and positive: ${configuredTimeout}`);
+}
+const timeout = Math.min(10 * 60_000, Math.max(30_000, parsedTimeout));
 const evidenceDir = path.resolve(
   process.env.SURVIVAL_WAVE_QA_EVIDENCE_DIR ?? "outputs/survival-wave-progression",
 );
@@ -105,6 +114,7 @@ for (const engine of engines) {
         waveTimeline.push({
           wave: run.currentWave,
           phase: run.phase,
+          lastCompletedWave: run.lastCompletedWave,
           gameTime: snapshot.time,
           kills: run.stats.kills,
           bossKills: run.stats.bossKills,
@@ -139,9 +149,17 @@ for (const engine of engines) {
       `${engine}: wave 5 boss was not defeated`);
     invariant(final.survivalRun.stats.kills > 0,
       `${engine}: no actual kills were recorded`);
-    invariant(waveTimeline.some(({ wave }) => wave === 1)
-      && waveTimeline.some(({ wave }) => wave === 5),
-    `${engine}: wave timeline skipped observed endpoints: ${JSON.stringify(waveTimeline)}`);
+    invariant(JSON.stringify(waveTimeline.map(({ wave }) => wave)) === JSON.stringify([1, 2, 3, 4, 5, 6]),
+      `${engine}: wave timeline skipped or reordered a wave: ${JSON.stringify(waveTimeline)}`);
+    invariant(waveTimeline.every((entry, index) => (
+      entry.lastCompletedWave === entry.wave - 1
+      && (index === 0 || (
+        entry.gameTime >= waveTimeline[index - 1].gameTime
+        && entry.wallTimeMs >= waveTimeline[index - 1].wallTimeMs
+        && entry.kills >= waveTimeline[index - 1].kills
+        && entry.lastCompletedWave >= waveTimeline[index - 1].lastCompletedWave
+      ))
+    )), `${engine}: wave progress was not monotonic: ${JSON.stringify(waveTimeline)}`);
     invariant(await page.locator(".survival-upgrade-choices button").count() === 3,
       `${engine}: boss reward did not expose three upgrades`);
     invariant(deploymentCount > 0, `${engine}: no player-facing deployment occurred`);

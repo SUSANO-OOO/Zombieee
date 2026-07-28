@@ -16,7 +16,9 @@ const engines = (process.env.AI_MISSION_QA_ENGINES ?? "chromium,webkit")
   .map((engine) => engine.trim())
   .filter(Boolean);
 const unknownEngines = engines.filter((engine) => !browserTypes[engine]);
-if (unknownEngines.length > 0) throw new Error(`Unknown AI_MISSION_QA_ENGINES: ${unknownEngines.join(", ")}`);
+if (engines.length === 0 || unknownEngines.length > 0) {
+  throw new Error(`Unknown or empty AI_MISSION_QA_ENGINES: ${unknownEngines.join(", ") || "(empty)"}`);
+}
 
 const viewportCandidates = [
   { width: 1280, height: 720 },
@@ -74,7 +76,12 @@ if (stages.length === 0 || unknownStageNumbers.length > 0) {
   throw new Error(`Unknown AI_MISSION_QA_STAGES: ${unknownStageNumbers.join(", ") || "(empty)"}`);
 }
 const evidenceDir = path.resolve(process.env.AI_MISSION_QA_EVIDENCE_DIR ?? "outputs/ai-mission-browser-smoke");
-const timeout = Math.max(8_000, Number(process.env.AI_MISSION_QA_TIMEOUT_MS) || 38_000);
+const configuredTimeout = process.env.AI_MISSION_QA_TIMEOUT_MS;
+const parsedTimeout = configuredTimeout === undefined ? 38_000 : Number(configuredTimeout);
+if (!Number.isFinite(parsedTimeout) || parsedTimeout <= 0) {
+  throw new Error(`AI_MISSION_QA_TIMEOUT_MS must be finite and positive: ${configuredTimeout}`);
+}
+const timeout = Math.min(2 * 60_000, Math.max(8_000, parsedTimeout));
 const requireInfectedAbilityLifecycle = process.env.AI_MISSION_QA_INFECTED_ABILITIES === "1";
 const results = [];
 
@@ -135,6 +142,8 @@ async function startInfectedAbilityObserver(page, expectedKinds) {
       phases: [],
       firstWarningAt: null,
       firstActiveAt: null,
+      completedActivations: [],
+      fighters: {},
     }]));
     const sample = () => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -144,8 +153,31 @@ async function startInfectedAbilityObserver(page, expectedKinds) {
           const phase = fighter.stationAbility?.phase ?? "idle";
           const entry = observed[fighter.kind];
           if (!entry.phases.includes(phase)) entry.phases.push(phase);
-          if (phase === "warning" && entry.firstWarningAt === null) entry.firstWarningAt = snapshot.time;
-          if (phase === "active" && entry.firstActiveAt === null) entry.firstActiveAt = snapshot.time;
+          const fighterId = String(fighter.id);
+          const fighterEntry = entry.fighters[fighterId] ?? {
+            phase: "missing",
+            warningAt: null,
+            activeAt: null,
+          };
+          if (phase === "warning" && fighterEntry.phase !== "warning") {
+            fighterEntry.warningAt = snapshot.time;
+            fighterEntry.activeAt = null;
+            if (entry.firstWarningAt === null) entry.firstWarningAt = snapshot.time;
+          }
+          if (phase === "active"
+            && fighterEntry.phase !== "active"
+            && fighterEntry.warningAt !== null
+            && snapshot.time > fighterEntry.warningAt) {
+            fighterEntry.activeAt = snapshot.time;
+            entry.completedActivations.push({
+              fighterId,
+              warningAt: fighterEntry.warningAt,
+              activeAt: snapshot.time,
+            });
+            if (entry.firstActiveAt === null) entry.firstActiveAt = snapshot.time;
+          }
+          fighterEntry.phase = phase;
+          entry.fighters[fighterId] = fighterEntry;
         }
       }
       window.requestAnimationFrame(sample);
@@ -158,8 +190,11 @@ async function startInfectedAbilityObserver(page, expectedKinds) {
 async function waitForInfectedAbilityLifecycle(page, expectedKinds) {
   await page.waitForFunction(
     (kinds) => kinds.every((kind) => {
-      const phases = window.__ASHFALL_INFECTED_PHASE_OBSERVER__?.observed?.[kind]?.phases ?? [];
-      return phases.includes("warning") && phases.includes("active");
+      const activations = window.__ASHFALL_INFECTED_PHASE_OBSERVER__
+        ?.observed?.[kind]?.completedActivations ?? [];
+      return activations.some(({ warningAt, activeAt }) => (
+        Number.isFinite(warningAt) && Number.isFinite(activeAt) && warningAt < activeAt
+      ));
     }),
     expectedKinds,
     { timeout },
