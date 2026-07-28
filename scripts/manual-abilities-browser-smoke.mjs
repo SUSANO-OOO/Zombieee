@@ -546,8 +546,15 @@ async function checkpointReloadProof(page, engine) {
   await page.getByRole("button", { name: "checkpointから再開", exact: true }).click();
   await page.waitForFunction(() => (
     Boolean(document.querySelector("canvas.battlefield.active"))
-    && window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().survivalRun?.currentWave === 6
+    && window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().survivalRun?.phase === "upgrade-selection"
   ));
+  const upgradeChoice = page.locator(".survival-upgrade-choices button:not(:disabled)").first();
+  await upgradeChoice.waitFor({ state: "visible" });
+  await upgradeChoice.click();
+  await page.waitForFunction(() => {
+    const run = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().survivalRun;
+    return run?.phase === "wave-ready" && run.currentWave === 6;
+  });
   const deployed = await page.evaluate(() => (
     window.__ASHFALL_BATTLE_QA__.deployManualAbilityCheckpointProof("brawler")
   ));

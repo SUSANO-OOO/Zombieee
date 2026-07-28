@@ -135,7 +135,6 @@ import {
   endSurvivalRun,
   resumeSurvivalCheckpoint,
   saveSurvivalCheckpoint,
-  selectSurvivalUpgrade as applySurvivalUpgrade,
   setSurvivalRunSpeed,
 } from "./survival.js";
 import {
@@ -6402,7 +6401,6 @@ export function AshfallGame() {
             crawlerHp: run.crawler.hp,
           });
         }
-        run = applySurvivalUpgrade(run, run.pendingUpgradeChoices[0]);
         run = {
           ...run,
           manualAbilityCooldownsByKind: {
@@ -9745,6 +9743,17 @@ export function AshfallGame() {
         setSurvivalSavePending(false);
         return;
       }
+      const liveGame = gameRef.current;
+      if (liveGame.survivalRun?.runId === run.runId
+        && liveGame.survivalRun.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION
+        && liveGame.survivalCheckpointReceipt === checkpointId) {
+        const continuedRun = {
+          ...liveGame.survivalRun,
+          manualAbilityCooldownsByKind: {},
+        };
+        liveGame.survivalRun = continuedRun;
+        setSurvivalHud(survivalHudSnapshot(continuedRun));
+      }
       setCampaignSave(checkpoint.save as CampaignSave);
       setPendingSurvivalCheckpoint(null);
       setSurvivalSavePending(false);
@@ -10185,17 +10194,13 @@ export function AshfallGame() {
     for (const kind of Object.keys(g.deployCooldowns) as UnitKind[]) {
       g.deployCooldowns[kind] *= nextEffects.redeployMultiplier / previousEffects.redeployMultiplier;
     }
-    const continuedRun = {
-      ...selection.run,
-      manualAbilityCooldownsByKind: {},
-    };
-    g.survivalRun = continuedRun;
+    g.survivalRun = selection.run;
     g.survivalRuntime = selection.runtime;
-    g.baseHp = continuedRun.crawler.hp;
-    g.baseMaxHp = continuedRun.crawler.maxHp;
+    g.baseHp = selection.run.crawler.hp;
+    g.baseMaxHp = selection.run.crawler.maxHp;
     g.paused = false;
     setPaused(false);
-    setSurvivalHud(survivalHudSnapshot(continuedRun));
+    setSurvivalHud(survivalHudSnapshot(selection.run));
     if (!bgmMuted) startMusic();
     playCue("ui-confirm");
   }, [bgmMuted, pendingSurvivalCheckpoint, playCue, startMusic, survivalSavePending]);
