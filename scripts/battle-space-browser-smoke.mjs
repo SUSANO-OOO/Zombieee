@@ -106,7 +106,12 @@ async function clickWorldPoint(page, point) {
 async function placementCase(page) {
   await openBattle(page, qaUrl({ qa: "supplies" }));
   const before = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
-  await page.locator("button.support-btn.pod").click();
+  const podButton = page.locator("button.support-btn.pod");
+  await podButton.click();
+  invariant(await podButton.evaluate((button) => button.classList.contains("selected")), "pod did not enter placement selection");
+  await podButton.click();
+  invariant(!await podButton.evaluate((button) => button.classList.contains("selected")), "re-tap did not cancel support selection");
+  await podButton.click();
   const requested = { x: 720, y: 245.25 };
   const client = await clientPointForWorld(page, requested);
   await page.mouse.move(client.x, client.y);
@@ -132,8 +137,25 @@ async function placementCase(page) {
   invariant(preview.valid === true, "valid placement preview was not shown");
   invariant(Math.abs(preview.y - requested.y) < 0.75, `placement preview Y snapped: ${preview.y}`);
   invariant(!String(preview.reason).includes("レーン"), "placement reason exposed a lane");
+  invariant(snapshot.supportItemCooldowns.pod > 0, "pod placement did not begin its post-use cooldown");
+  await page.waitForFunction(
+    () => document.querySelector("button.support-btn.pod")?.hasAttribute("disabled")
+      && Number(document.querySelector("button.support-btn.pod")?.getAttribute("data-cooldown")) > 0,
+    null,
+    { timeout },
+  );
+  invariant(
+    await page.locator(".selected-support,.placement-popup,.support-popup").count() === 0,
+    "support selection popup returned",
+  );
 
-  await page.locator("button.support-btn.pod").click();
+  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.clearSupportItemCooldown("pod"));
+  await page.waitForFunction(
+    () => !document.querySelector("button.support-btn.pod")?.hasAttribute("disabled"),
+    null,
+    { timeout },
+  );
+  await podButton.click();
   const correctionRequested = { x: 250, y: 325 };
   const correctionClient = await clientPointForWorld(page, correctionRequested);
   await page.mouse.move(correctionClient.x, correctionClient.y);
@@ -167,6 +189,7 @@ async function placementCase(page) {
     requested,
     placed,
     placementIndicator: preview,
+    cooldownStartedAt: snapshot.supportItemCooldowns.pod,
     correction: {
       requested: correctionRequested,
       placed: correctedPlaced,
