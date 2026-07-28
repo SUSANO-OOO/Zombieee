@@ -75,6 +75,7 @@ if (stages.length === 0 || unknownStageNumbers.length > 0) {
 }
 const evidenceDir = path.resolve(process.env.AI_MISSION_QA_EVIDENCE_DIR ?? "outputs/ai-mission-browser-smoke");
 const timeout = Math.max(8_000, Number(process.env.AI_MISSION_QA_TIMEOUT_MS) || 38_000);
+const requireInfectedAbilityLifecycle = process.env.AI_MISSION_QA_INFECTED_ABILITIES === "1";
 const results = [];
 
 await mkdir(evidenceDir, { recursive: true });
@@ -126,6 +127,44 @@ function assertDiagnostics(diagnostics) {
   for (const [kind, entries] of Object.entries(normalized)) {
     invariant(entries.length === 0, `${kind}: ${JSON.stringify(entries)}`);
   }
+}
+
+async function startInfectedAbilityObserver(page, expectedKinds) {
+  await page.evaluate((kinds) => {
+    const observed = Object.fromEntries(kinds.map((kind) => [kind, {
+      phases: [],
+      firstWarningAt: null,
+      firstActiveAt: null,
+    }]));
+    const sample = () => {
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      if (snapshot) {
+        for (const fighter of snapshot.fighters) {
+          if (!observed[fighter.kind]) continue;
+          const phase = fighter.stationAbility?.phase ?? "idle";
+          const entry = observed[fighter.kind];
+          if (!entry.phases.includes(phase)) entry.phases.push(phase);
+          if (phase === "warning" && entry.firstWarningAt === null) entry.firstWarningAt = snapshot.time;
+          if (phase === "active" && entry.firstActiveAt === null) entry.firstActiveAt = snapshot.time;
+        }
+      }
+      window.requestAnimationFrame(sample);
+    };
+    window.__ASHFALL_INFECTED_PHASE_OBSERVER__ = { observed };
+    window.requestAnimationFrame(sample);
+  }, expectedKinds);
+}
+
+async function waitForInfectedAbilityLifecycle(page, expectedKinds) {
+  await page.waitForFunction(
+    (kinds) => kinds.every((kind) => {
+      const phases = window.__ASHFALL_INFECTED_PHASE_OBSERVER__?.observed?.[kind]?.phases ?? [];
+      return phases.includes("warning") && phases.includes("active");
+    }),
+    expectedKinds,
+    { timeout },
+  );
+  return page.evaluate(() => structuredClone(window.__ASHFALL_INFECTED_PHASE_OBSERVER__.observed));
 }
 
 async function readViewportEvidence(page) {
@@ -183,6 +222,9 @@ for (const engine of engines) {
             stage.id,
             { timeout },
           );
+          if (requireInfectedAbilityLifecycle && stage.expectedEnemyKinds?.length) {
+            await startInfectedAbilityObserver(page, stage.expectedEnemyKinds);
+          }
 
           const energyBeforeDeployment = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().energy);
           await page.locator('button.unit-card[data-kind="scout"]').click({ timeout });
@@ -224,6 +266,9 @@ for (const engine of engines) {
               { timeout },
             );
           }
+          const infectedAbilityLifecycle = requireInfectedAbilityLifecycle && stage.expectedEnemyKinds?.length
+            ? await waitForInfectedAbilityLifecycle(page, stage.expectedEnemyKinds)
+            : null;
 
           const snapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
           const dimensions = await readViewportEvidence(page);
@@ -295,6 +340,7 @@ for (const engine of engines) {
               aiRecoveries: snapshot.stationMetrics.aiRecoveries,
               attackIdentitySamples: snapshot.attackIdentity.length,
               expectedEnemyKinds: stage.expectedEnemyKinds ?? [],
+              infectedAbilityLifecycle,
             },
             dimensions,
             diagnostics: { ...diagnostics, warnings: unexpectedWarnings(diagnostics.warnings) },
@@ -303,7 +349,26 @@ for (const engine of engines) {
           result.error = String(error);
           result.diagnostics = { ...diagnostics, warnings: unexpectedWarnings(diagnostics.warnings) };
           try {
-            result.failureSnapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null);
+            result.failureSnapshot = await page.evaluate(() => {
+              const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+              return snapshot ? {
+                screen: snapshot.screen,
+                stageId: snapshot.stageId,
+                time: snapshot.time,
+                wave: snapshot.wave,
+                running: snapshot.running,
+                over: snapshot.over,
+                fighters: snapshot.fighters.map((fighter) => ({
+                  id: fighter.id,
+                  kind: fighter.kind,
+                  side: fighter.side,
+                  hp: fighter.hp,
+                  combatReady: fighter.combatReady,
+                  stationAbility: fighter.stationAbility,
+                })),
+                infectedAbilityLifecycle: window.__ASHFALL_INFECTED_PHASE_OBSERVER__?.observed ?? null,
+              } : null;
+            });
           } catch {
             // Navigation can fail before the QA bridge exists.
           }
