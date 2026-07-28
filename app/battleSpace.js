@@ -404,7 +404,7 @@ export function enemySpawnPortalPoint({
   const combatReadyX = usesRightEdge
     ? Math.min(
       space.world.width - visualHalfWidth - profile.readyPadding,
-      space.walkableArea.maxX - bodyRadius,
+      space.walkableArea.maxX - (spawnClass === "boss" ? visualHalfWidth : bodyRadius),
     )
     : portal.entry.x - clearance;
   return deepFreeze({

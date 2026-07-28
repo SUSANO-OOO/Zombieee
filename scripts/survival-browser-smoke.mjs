@@ -159,7 +159,7 @@ for (const engine of engines) {
         let touchActivationCount = 0;
         if (await activate(
           page,
-          page.getByRole("button", { name: "サバイバル", exact: true }),
+          page.getByRole("button", { name: /防衛継続作戦/ }),
           viewport.safeArea,
         ) === "touch") touchActivationCount += 1;
         await page.locator('.game-shell[data-screen="survival"]').waitFor({ timeout });

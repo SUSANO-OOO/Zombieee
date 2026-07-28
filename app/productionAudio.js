@@ -697,9 +697,11 @@ export function weaponCueForUnit(kind) {
 export function humanVoiceCueForUnit(kind, event) {
   const contractCue = ownValue(UNIT_AUDIO_CUE_CONTRACTS, kind)?.voiceEvents?.[event];
   if (contractCue) return contractCue;
+  // Deployment must never borrow an attack or hurt performance. Units without
+  // a dedicated deploy line use the CRAWLER door/mechanical launch cue only.
+  if (event === "deploy") return null;
   const profile = ownValue(UNIT_VOICE_PROFILES, kind);
-  const profileEvent = event === "deploy" ? "attack" : event;
-  return profile && HUMAN_VOICE_EVENTS.includes(profileEvent) ? `human-${profile}-${profileEvent}` : null;
+  return profile && HUMAN_VOICE_EVENTS.includes(event) ? `human-${profile}-${event}` : null;
 }
 
 export function unitAudioCueFor(kind, group, event) {

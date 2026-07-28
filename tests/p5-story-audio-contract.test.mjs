@@ -707,12 +707,19 @@ test("P5 preserves battle voices while authored story dialogue has no voiceover 
   assert.ok(battleVoicePools.length > 0, "existing generic battle voice pools remain in the manifest");
   const existingBattleVoiceKinds = [...new Set(campaign.CAMPAIGN_UNITS.map(({ combatKind }) => combatKind))];
   for (const kind of existingBattleVoiceKinds) {
-    for (const event of ["deploy", "attack", "hurt", "death"]) {
+    for (const event of ["attack", "hurt", "death"]) {
       const cueId = productionAudio.humanVoiceCueForUnit(kind, event);
       assert.ok(cueId, `${kind}/${event} battle voice cue remains`);
       const cue = productionAudio.PRODUCTION_AUDIO_MANIFEST.assetById[cueId]
         ?? productionAudio.PRODUCTION_AUDIO_MANIFEST.poolById[cueId];
       assert.equal(cue?.category, "humanVoices", `${kind}/${event} resolves a battle voice asset or pool`);
+    }
+    const deployCue = productionAudio.humanVoiceCueForUnit(kind, "deploy");
+    if (productionAudio.UNIT_AUDIO_CUE_CONTRACTS[kind]) {
+      assert.equal(deployCue, productionAudio.unitAudioCueFor(kind, "voice", "deploy"));
+      assert.equal(productionAudio.PRODUCTION_AUDIO_MANIFEST.assetById[deployCue]?.category, "humanVoices");
+    } else {
+      assert.equal(deployCue, null, `${kind} cannot reuse attack/hurt audio during deployment`);
     }
     assert.equal(productionAudio.humanVoiceCueForUnit(kind, "speech"), null, `${kind} has no story speech cue`);
     assert.equal(productionAudio.humanVoiceCueForUnit(kind, "voiceover"), null, `${kind} has no story voiceover cue`);

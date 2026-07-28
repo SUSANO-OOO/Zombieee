@@ -300,7 +300,8 @@ for (const engine of engines) {
           invariant(finalEvidence.bossHudText.includes(bossCase.name), `${name}: boss name absent from HUD`);
           invariant(finalEvidence.bossHudText.includes("第2段階"), `${name}: phase absent from HUD`);
           invariant(snapshot.geometry?.offFloorCount === 0, `${name}: combat-ready body was off floor`);
-          invariant(proof.groundedAtY === proof.bossY, `${name}: boss foot anchor changed`);
+          invariant(Math.abs(proof.footAnchorDelta ?? Number.POSITIVE_INFINITY) <= .01,
+            `${name}: boss foot anchor changed (${proof.footAnchorDelta})`);
           if (viewport.width === 844) {
             invariant(
               proof.renderedBodyHeight >= 110 && proof.renderedBodyHeight <= 135,

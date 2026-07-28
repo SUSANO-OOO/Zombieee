@@ -43,6 +43,7 @@ import { BattleBarkAuditScreen } from "./BattleBarkAuditScreen";
 import {
   battleSpaceFor,
   battleSpaceLineOfSight,
+  enemyRenderedVisualHalfWidth,
   enemySpawnPortalPoint,
   friendlyDeploymentPoint,
   nearestValidBattlefieldPlacement,
@@ -235,6 +236,7 @@ import {
 import {
   advancePendingWeaponHits,
   attackPresentationDuration,
+  combatFacingDirection,
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
@@ -889,8 +891,6 @@ type ManualAbilityIconView = {
   hitSize: number;
   anchorX: number;
   anchorY: number;
-  pointerLength: number;
-  pointerAngle: number;
 };
 type Corpse = {
   id: number;
@@ -3355,9 +3355,13 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
           : sampleAnimationClip(f.kind, "idle", f.step);
   const state = animationSample.spriteState;
   const lockedDirection = Number(f.manualAbility?.target?.direction);
-  const direction = f.side === "human"
-    ? (manualAbilityActive && lockedDirection < 0) || (!manualAbilityActive && f.aiMoveDirection < -.05) ? "left" : "right"
-    : "left";
+  const direction = combatFacingDirection({
+    side: f.side,
+    aiMoveDirection: f.aiMoveDirection,
+    entryDirection: f.entryDirection,
+    manualDirection: lockedDirection,
+    manualAbilityActive,
+  });
   const frame = spriteFrameFor(renderKind, state, direction);
   const authoredSize = fitSpriteBattleDisplaySize(renderKind, frame, spriteDisplaySize(renderKind));
   const compactScale = compactSpriteScale(renderKind);
@@ -3371,7 +3375,8 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   if (f.side === "human"
     && f.gateEntering
     && f.spawnPortalId === "crawler-door"
-    && f.entryRampCleared !== true) {
+    && f.entryRampCleared !== true
+    && f.x < WORLD_GEOMETRY.crawler.doorX + 8) {
     const revealLeft = WORLD_GEOMETRY.crawler.doorX - 24;
     const revealRight = Math.max(
       WORLD_GEOMETRY.crawler.doorX + 25,
@@ -3413,17 +3418,25 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   }
   ctx.translate(f.x, f.y - bob);
   if (frame.flipX) ctx.scale(-1, 1);
-  ctx.drawImage(
-    sprite,
-    frame.sourceRect.x,
-    frame.sourceRect.y,
-    frame.sourceRect.w,
-    frame.sourceRect.h,
-    -size.w * frame.anchorX,
-    -size.h * frame.anchorY,
-    size.w,
-    size.h,
-  );
+  const drawSlices = frame.drawSlices ?? [{
+    x: 0,
+    y: 0,
+    w: frame.sourceRect.w,
+    h: frame.sourceRect.h,
+  }];
+  for (const slice of drawSlices) {
+    ctx.drawImage(
+      sprite,
+      frame.sourceRect.x + slice.x,
+      frame.sourceRect.y + slice.y,
+      slice.w,
+      slice.h,
+      -size.w * frame.anchorX + size.w * slice.x / frame.sourceRect.w,
+      -size.h * frame.anchorY + size.h * slice.y / frame.sourceRect.h,
+      size.w * slice.w / frame.sourceRect.w,
+      size.h * slice.h / frame.sourceRect.h,
+    );
+  }
   ctx.restore();
 }
 
@@ -3966,13 +3979,15 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
       ctx.fillStyle = "#81735a"; ctx.fillRect(2, -20, 20, 12);
       ctx.fillStyle = "#171b1a"; ctx.beginPath(); ctx.arc(-18, 5, 6, 0, Math.PI * 2); ctx.arc(18, 5, 6, 0, Math.PI * 2); ctx.fill();
     }
-    ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0";
-    ctx.lineWidth = 1.5;
     const objectiveHalfWidth = isCoastalPowerRig ? 72 : 60;
-    ctx.strokeRect(-objectiveHalfWidth, -51, objectiveHalfWidth * 2, 45);
-    ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillRect(-objectiveHalfWidth, -61, objectiveHalfWidth * 2, 6);
+    const objectiveGlow = ctx.createRadialGradient(0, -17, 4, 0, -17, objectiveHalfWidth);
+    objectiveGlow.addColorStop(0, g.stageMission.stalled ? "rgba(225,155,94,.18)" : "rgba(174,187,176,.13)");
+    objectiveGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = objectiveGlow;
+    ctx.fillRect(-objectiveHalfWidth, -52, objectiveHalfWidth * 2, 55);
+    ctx.fillStyle = "rgba(0,0,0,.72)"; ctx.fillRect(-objectiveHalfWidth, -59, objectiveHalfWidth * 2, 5);
     ctx.fillStyle = "#d5b85e";
-    ctx.fillRect(-objectiveHalfWidth + 1, -60, (objectiveHalfWidth * 2 - 2) * integrity / maxIntegrity, 4);
+    ctx.fillRect(-objectiveHalfWidth, -59, objectiveHalfWidth * 2 * integrity / maxIntegrity, 3);
     ctx.restore();
   }
   if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
@@ -4006,12 +4021,19 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
         ctx.fillStyle = active ? "#596d58" : "#3b4240";
         ctx.fillRect(-13, -33, 26, 35);
       }
-      ctx.strokeStyle = active ? "#b8df83" : current ? "#e1aa5f" : "#707872";
-      ctx.lineWidth = current ? 3 : 2;
-      ctx.strokeRect(-23, -92, 46, 94);
-      ctx.fillStyle = active ? "#c9f09a" : "#7a6d57";
-      ctx.font = "900 12px monospace"; ctx.textAlign = "center";
-      ctx.fillText(String(index + 1), 0, -6);
+      if (active || current) {
+        const panelGlow = ctx.createRadialGradient(0, -42, 3, 0, -42, 42);
+        panelGlow.addColorStop(0, active ? "rgba(184,223,131,.28)" : "rgba(225,170,95,.3)");
+        panelGlow.addColorStop(.55, active ? "rgba(126,174,102,.08)" : "rgba(194,117,64,.08)");
+        panelGlow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = panelGlow;
+        ctx.fillRect(-44, -90, 88, 96);
+        ctx.fillStyle = active ? "#b8df83" : "#e1aa5f";
+        ctx.globalAlpha = .82 + Math.sin(g.time * 7 + index) * .12;
+        ctx.beginPath();
+        ctx.ellipse(0, 4, current ? 20 : 14, current ? 4 : 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     }
     if (g.researchContainer?.exposed) {
@@ -4031,27 +4053,45 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
         ctx.beginPath(); ctx.roundRect(-22, -35, 44, 39, 5); ctx.fill();
         ctx.fillStyle = "#181b1a"; ctx.fillRect(-14, -28, 28, 15);
       }
-      ctx.strokeStyle = container.contained ? "#b8dc97" : "#d3b56e";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(-23, -54, 46, 66);
+      const containerGlow = ctx.createRadialGradient(0, -22, 2, 0, -22, 38);
+      containerGlow.addColorStop(0, container.contained ? "rgba(184,220,151,.25)" : "rgba(211,181,110,.24)");
+      containerGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = containerGlow;
+      ctx.fillRect(-42, -59, 84, 70);
       ctx.fillStyle = container.contained ? "#b8dc97" : "#e1c272";
-      ctx.font = "900 11px monospace"; ctx.textAlign = "center";
-      ctx.fillText("研究", 0, 8);
+      ctx.globalAlpha = .78;
+      ctx.beginPath();
+      ctx.ellipse(0, 8, 18, 3.5, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
     const sealDoorX = Number(g.definition.missionConfig.sealDoorX ?? 867);
     ctx.save();
     const doorClosed = g.stageMission.completed === true;
     const returnWindowOpen = g.stageMission.sealed === true && !doorClosed;
-    ctx.fillStyle = doorClosed
-      ? "rgba(54,75,62,.85)"
-      : returnWindowOpen
-        ? "rgba(82,57,37,.82)"
-        : "rgba(52,46,42,.82)";
-    ctx.strokeStyle = doorClosed ? "#b6d38f" : returnWindowOpen ? "#e0a15e" : "#b2875a";
-    ctx.lineWidth = 4;
-    ctx.fillRect(sealDoorX - 39, activeLaneCenters[0] - 68, 78, activeLaneCenters[2] - activeLaneCenters[0] + 92);
-    ctx.strokeRect(sealDoorX - 39, activeLaneCenters[0] - 68, 78, activeLaneCenters[2] - activeLaneCenters[0] + 92);
+    const doorTop = activeLaneCenters[0] - 68;
+    const doorBottom = activeLaneCenters[2] + 24;
+    const doorGlow = ctx.createLinearGradient(sealDoorX - 42, 0, sealDoorX + 42, 0);
+    doorGlow.addColorStop(0, "rgba(0,0,0,0)");
+    doorGlow.addColorStop(.5, doorClosed
+      ? "rgba(117,157,119,.23)"
+      : returnWindowOpen ? "rgba(181,105,57,.22)" : "rgba(116,85,58,.15)");
+    doorGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = doorGlow;
+    ctx.fillRect(sealDoorX - 42, doorTop, 84, doorBottom - doorTop);
+    ctx.strokeStyle = doorClosed ? "rgba(182,211,143,.76)" : returnWindowOpen ? "rgba(224,161,94,.72)" : "rgba(178,135,90,.5)";
+    ctx.lineWidth = 2;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(sealDoorX + side * 30, doorTop + 8);
+      ctx.lineTo(sealDoorX + side * 30, doorBottom - 8);
+      ctx.stroke();
+    }
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.globalAlpha = .68 + Math.sin(g.time * 6) * .14;
+    ctx.beginPath();
+    ctx.ellipse(sealDoorX, doorBottom - 2, 34, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 }
@@ -4106,11 +4146,27 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
     const targetY = telegraph.targetY ?? f.y;
     const halfHeight = telegraph.laneHalfHeight ?? 31;
     const width = Math.max(0, f.x - targetX);
-    ctx.globalAlpha = .2;
-    ctx.fillStyle = telegraph.color;
-    ctx.fillRect(targetX, targetY - halfHeight, width, halfHeight * 2);
-    ctx.globalAlpha = .9;
-    ctx.strokeRect(targetX, targetY - halfHeight, width, halfHeight * 2);
+    const laneGlow = ctx.createLinearGradient(targetX, 0, f.x, 0);
+    laneGlow.addColorStop(0, "rgba(0,0,0,0)");
+    laneGlow.addColorStop(.58, telegraph.color);
+    laneGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.globalAlpha = .13;
+    ctx.fillStyle = laneGlow;
+    ctx.beginPath();
+    ctx.moveTo(targetX, targetY);
+    ctx.lineTo(f.x, targetY - halfHeight);
+    ctx.lineTo(f.x, targetY + halfHeight);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = .72;
+    ctx.setLineDash([]);
+    ctx.lineWidth = 2;
+    for (const edge of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(targetX + width * .28, targetY + edge * halfHeight * .42);
+      ctx.quadraticCurveTo(targetX + width * .7, targetY + edge * halfHeight, f.x - 12, targetY + edge * halfHeight * .72);
+      ctx.stroke();
+    }
   } else if (telegraph.kind === "shell-sweep") {
     const radius = telegraph.radius ?? 0;
     const halfHeight = BOSS_ANOMALY_TUNING.gairen.sweepHalfHeight;
@@ -4158,26 +4214,35 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
     const pulse = 2 + Math.sin(g.time * 16) * 2;
     ctx.setLineDash([]);
     ctx.translate(targetX, targetY);
-    ctx.globalAlpha = .18;
-    ctx.fillStyle = telegraph.color;
+    ctx.globalAlpha = .14;
+    ctx.strokeStyle = telegraph.color;
     for (const angle of [
       -BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
       BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
     ]) {
       ctx.save();
       ctx.rotate(angle);
-      ctx.fillRect(-radius, -halfWidth - pulse, radius * 2, (halfWidth + pulse) * 2);
+      ctx.lineWidth = (halfWidth + pulse) * 2;
+      ctx.beginPath();
+      ctx.moveTo(-radius, 0);
+      ctx.lineTo(radius, 0);
+      ctx.stroke();
       ctx.restore();
     }
-    ctx.globalAlpha = .86;
-    ctx.lineWidth = 3;
+    ctx.globalAlpha = .8;
+    ctx.lineWidth = 2.5;
     for (const angle of [
       -BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
       BOSS_ANOMALY_TUNING.futago.crossStrikeAngleRadians,
     ]) {
       ctx.save();
       ctx.rotate(angle);
-      ctx.strokeRect(-radius, -halfWidth - pulse, radius * 2, (halfWidth + pulse) * 2);
+      ctx.beginPath();
+      ctx.moveTo(-radius, 0);
+      ctx.lineTo(-halfWidth * 1.8, 0);
+      ctx.moveTo(halfWidth * 1.8, 0);
+      ctx.lineTo(radius, 0);
+      ctx.stroke();
       ctx.restore();
     }
     ctx.translate(-targetX, -targetY);
@@ -4424,10 +4489,28 @@ function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g:
     ctx.ellipse(f.stationAbility.centerX ?? f.x, f.stationAbility.centerY ?? f.y, STATION_ENEMY_TUNING.leakMud.radiusX, STATION_ENEMY_TUNING.leakMud.radiusY, 0, 0, Math.PI * 2);
     ctx.stroke();
   } else if (f.kind === "sprinter" && f.stationAbility.phase === "telegraph") {
-    ctx.fillStyle = "rgba(225,153,88,.16)";
-    ctx.fillRect(BASE_X + 28, f.y - 18, Math.max(0, f.x - BASE_X - 28), 36);
+    const targetX = BASE_X + 28;
+    const width = Math.max(0, f.x - targetX);
+    const dashGlow = ctx.createLinearGradient(targetX, 0, f.x, 0);
+    dashGlow.addColorStop(0, "rgba(225,153,88,0)");
+    dashGlow.addColorStop(.72, "rgba(225,153,88,.22)");
+    dashGlow.addColorStop(1, "rgba(225,153,88,0)");
+    ctx.fillStyle = dashGlow;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(targetX, f.y);
+    ctx.lineTo(f.x, f.y - 16);
+    ctx.lineTo(f.x, f.y + 16);
+    ctx.closePath();
+    ctx.fill();
     ctx.strokeStyle = "rgba(230,164,103,.85)";
-    ctx.strokeRect(BASE_X + 28, f.y - 18, Math.max(0, f.x - BASE_X - 28), 36);
+    ctx.lineWidth = 2;
+    for (const edge of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(targetX + width * .38, f.y + edge * 7);
+      ctx.quadraticCurveTo(targetX + width * .7, f.y + edge * 16, f.x - 8, f.y + edge * 12);
+      ctx.stroke();
+    }
   } else if (f.kind === "resonator") {
     const reach = 168;
     const halfHeight = 34 + reach * .22;
@@ -5169,7 +5252,27 @@ function drawStageBackground(ctx: CanvasRenderingContext2D, g: Game, background:
   ctx.imageSmoothingQuality = "high";
   ctx.fillStyle = "#111617";
   ctx.fillRect(0, 0, W, H);
-  if (compact && g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET) {
+  if ([
+    CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE,
+    CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
+    CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL,
+  ].includes(g.definition.stageId)) {
+    // The authored station plates reserve their upper half for architecture.
+    // Crop to the actual floor plane so lane baselines never read as walking
+    // across wall panels at either mobile landscape reference height.
+    const cropTop = Math.round(background.naturalHeight * .44);
+    ctx.drawImage(
+      background,
+      0,
+      cropTop,
+      background.naturalWidth,
+      background.naturalHeight - cropTop,
+      0,
+      0,
+      W,
+      H,
+    );
+  } else if (compact && g.definition.stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET) {
     ctx.drawImage(background, 0, 0, background.naturalWidth, background.naturalHeight, 0, -73, W, 500);
   } else if (compact && g.definition.stageId === CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE) {
     const cropTop = Math.round(background.naturalHeight * .24);
@@ -6700,6 +6803,8 @@ export function AshfallGame() {
         const boss = gameRef.current.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
         if (!boss || !boss.gateEntering) return false;
         boss.gateEntrySpeed = Math.max(boss.gateEntrySpeed, 96);
+        boss.speed = 0;
+        boss.laneSpeed = 0;
         boss.cooldown = 99;
         boss.abilityCooldown = 99;
         return true;
@@ -14178,10 +14283,13 @@ export function AshfallGame() {
           if (!fighter.combatReady || fighter.hp <= 0) continue;
           const laneAnchorError = Math.abs(fighter.y - activeLaneCenters[fighter.lane]);
           g.stationMetrics.maxLaneAnchorError = Math.max(g.stationMetrics.maxLaneAnchorError, laneAnchorError);
+          const renderedHalfWidth = fighter.side === "zombie" && isBossEnemyKind(fighter.kind)
+            ? enemyRenderedVisualHalfWidth(fighter.kind)
+            : fighter.bodyRadius;
           const grounded = clampToWalkable(stageGeometry, {
             x: fighter.x,
             y: fighter.y,
-            bodyRadius: fighter.bodyRadius,
+            bodyRadius: Math.max(fighter.bodyRadius, renderedHalfWidth),
           });
           if (grounded.clamped) g.stationMetrics.offFloorSteps += 1;
           fighter.x = grounded.x;
@@ -14538,7 +14646,7 @@ export function AshfallGame() {
         spriteRefs.current,
         stageObjectRefs.current,
         enemyBaseSpriteRef.current,
-        qaScenario?.mode === "station",
+        false,
       );
       performanceCounters.renderFrames += 1;
       if (g.bannerTime > 0 && g.running) {
@@ -14571,7 +14679,7 @@ export function AshfallGame() {
         };
         const frameElement = canvas.closest(".game-frame");
         const obstacleRects = [...(frameElement?.querySelectorAll(
-          ".top-hud,.survival-hud,.boss-hud,.crawler-alert,.battle-barks,.placement-hint,.bottom-hud,.stats-strip",
+          ".top-hud,.survival-hud,.boss-hud,.crawler-alert,.battle-barks,.bottom-hud,.stats-strip",
         ) ?? [])].map((element) => {
           const rect = element.getBoundingClientRect();
           return {
@@ -14585,12 +14693,17 @@ export function AshfallGame() {
         for (const fighter of g.fighters) {
           if (fighter.hp <= 0) continue;
           const size = fighterScreenSize(fighter);
+          // Atlas cells include transparent gutters and long weapon trails. Use
+          // the visible torso/body footprint for collision so a crowded lane
+          // does not incorrectly suppress another ready icon.
+          const visualBodyWidth = Math.max(22, size.w * .62);
+          const visualBodyHeight = Math.max(34, size.h * .82);
           obstacleRects.push({
             ownerId: fighter.id,
-            x: transform.offsetX + fighter.x * transform.scale - size.w * transform.scale * .5,
-            y: transform.offsetY + fighter.y * transform.scale - size.h * transform.scale,
-            width: size.w * transform.scale,
-            height: size.h * transform.scale,
+            x: transform.offsetX + fighter.x * transform.scale - visualBodyWidth * transform.scale * .5,
+            y: transform.offsetY + fighter.y * transform.scale - visualBodyHeight * transform.scale,
+            width: visualBodyWidth * transform.scale,
+            height: visualBodyHeight * transform.scale,
           });
         }
         if (g.bannerTime > 0 && g.running) {
@@ -14641,15 +14754,17 @@ export function AshfallGame() {
           hitSize: icon.hitSize,
           anchorX: icon.anchorX,
           anchorY: icon.anchorY,
-          pointerLength: Math.hypot(
-            icon.anchorX - icon.x - icon.hitSize / 2,
-            icon.anchorY - icon.y - icon.hitSize / 2,
-          ),
-          pointerAngle: Math.atan2(
-            icon.anchorY - icon.y - icon.hitSize / 2,
-            icon.anchorX - icon.x - icon.hitSize / 2,
-          ) * 180 / Math.PI - 90,
         }));
+        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+          document.documentElement.dataset.manualAbilityLayoutDebug = JSON.stringify({
+            fighters: readyAbilityFighters,
+            obstacles: obstacleRects,
+            icons: manualAbilityIcons,
+            width: canvasRect.width,
+            height: canvasRect.height,
+            safeInsets,
+          });
+        }
         setHud({
           missionType: g.definition.missionType, energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
           wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp), baseMaxHp: g.baseMaxHp,
@@ -14711,9 +14826,6 @@ export function AshfallGame() {
     ? bossDefinitionForEnemyKind(activeBossKind)?.displayName ?? enemyContentFor(activeBossKind).displayName
     : "BOSS";
   const bossHudSide = (hud.bossWorldX ?? 0) >= W * .64 ? "boss-hud-left" : "boss-hud-right";
-  const selectedName = selectedAction?.startsWith("supply:")
-    ? SUPPORT_DISPLAY_NAMES[selectedAction.slice("supply:".length) as SupplyKind]
-    : selectedAction === "airstrike" ? "航空支援" : null;
   const combatLocked = !!end || hud.baseHp <= 0 || hud.barricadeHp <= 0;
   const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
   const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
@@ -14744,10 +14856,6 @@ export function AshfallGame() {
             }}
           >
             <span aria-hidden="true"><b className={`manual-ability-ready-icon ability-${icon.kind}`} /></span>
-            <i
-              aria-hidden="true"
-              style={{ height: icon.pointerLength, transform: `rotate(${icon.pointerAngle}deg)` }}
-            />
           </button>;
         })}
         {(qaMode || qaScenario) && (
@@ -14799,11 +14907,6 @@ export function AshfallGame() {
         </>}
         {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
 
-        {selectedAction && started && !paused && !end && <div className="placement-hint" role="status" aria-live="polite">
-          <span className="placement-copy"><b>{selectedName}</b><span>戦場をタップ</span></span>
-          <button className="placement-cancel" onClick={() => chooseActionWithCue(null)} aria-label={`${selectedName}の配置をキャンセル`}>キャンセル</button>
-        </div>}
-
         <div className="bottom-hud">
           <div className="resource-stack">
             <div className="resource command"><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
@@ -14817,7 +14920,7 @@ export function AshfallGame() {
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 return (
                   <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
-                    <span className="keycap">{card.key}</span><span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
+                    <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
                     {cooldown > 0 && <span className="cooldown-mask"><b>{cooldown}</b><small>秒待ち</small></span>}
                   </button>

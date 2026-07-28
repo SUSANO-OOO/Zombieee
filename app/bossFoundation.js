@@ -433,6 +433,7 @@ export function bossHudSnapshot(fighter) {
   if (!definition
     || fighter?.side !== "zombie"
     || fighter?.combatReady === false
+    || fighter?.gateEntering === true
     || fighter?.contained === true
     || Number(fighter?.hp) <= 0) return null;
   const hp = Math.max(0, Number(fighter.hp) || 0);

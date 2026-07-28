@@ -11,6 +11,7 @@ import {
   advancePendingWeaponHits,
   animationClipFor,
   attackPresentationDuration,
+  combatFacingDirection,
   combatClipEventsFor,
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
@@ -55,6 +56,24 @@ test("clip sampling loops movement and clamps one-shot recovery", () => {
   const final = sampleAnimationClip("brute", "recovery", recovery.durationSeconds + 10);
   assert.equal(final.frameIndex, recovery.frames.length - 1);
   assert.equal(final.bodyScale, 1.12);
+});
+
+test("manual abilities recover to an active pose and enemy movement selects the authored facing", () => {
+  for (const kind of Object.keys(UNIT_WEAPON_PROFILE)) {
+    const specialStates = animationClipFor(kind, "special").frames.map(({ spriteState }) => spriteState);
+    assert.equal(specialStates.includes("hit"), false, `${kind} ability cannot use the hurt pose`);
+    assert.equal(specialStates.includes("death"), false, `${kind} ability cannot use the defeated pose`);
+  }
+  assert.equal(combatFacingDirection({ side: "zombie", aiMoveDirection: 1 }), "right");
+  assert.equal(combatFacingDirection({ side: "zombie", aiMoveDirection: -1 }), "left");
+  assert.equal(combatFacingDirection({ side: "zombie", entryDirection: 1 }), "right");
+  assert.equal(combatFacingDirection({ side: "zombie", entryDirection: -1 }), "left");
+  assert.equal(combatFacingDirection({
+    side: "human",
+    aiMoveDirection: 1,
+    manualDirection: -1,
+    manualAbilityActive: true,
+  }), "left");
 });
 
 test("machine-gun active clip and damage timeline share three synchronized rounds", () => {

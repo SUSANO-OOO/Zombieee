@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { isBossEnemyKind } from "../app/bossFoundation.js";
 
 if (!process.env.SURVIVAL_QA_BASE_URL) {
   throw new Error("SURVIVAL_QA_BASE_URL is required; use the isolated QA runner");
@@ -71,7 +72,7 @@ async function enterSurvival(page) {
   const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout: 30_000 });
   invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
   await page.locator('.game-shell[data-screen="map"]').waitFor();
-  await page.getByRole("button", { name: "サバイバル", exact: true }).click();
+  await page.getByRole("button", { name: /防衛継続作戦/ }).click();
   await page.locator('.game-shell[data-screen="survival"]').waitFor();
   await page.getByRole("button", { name: "新しいrunを開始", exact: true }).click();
   await page.locator('.game-shell[data-screen="battle"] .survival-hud').waitFor();
@@ -98,6 +99,7 @@ for (const engine of engines) {
   let lastRecordedWave = null;
   let deploymentCount = 0;
   let manualActivationCount = 0;
+  let bossVisibilityProof = null;
   try {
     page.setDefaultTimeout(30_000);
     await enterSurvival(page);
@@ -109,6 +111,41 @@ for (const engine of engines) {
       const run = snapshot.survivalRun;
       invariant(run, `${engine}: active Survival run missing`);
       for (const kind of snapshot.fighters.map(({ kind }) => kind)) encounteredKinds.add(kind);
+      const activeBoss = snapshot.fighters.find((fighter) => (
+        fighter.side === "zombie"
+        && fighter.hp > 0
+        && fighter.combatReady
+        && isBossEnemyKind(fighter.kind)
+      ));
+      if (activeBoss && !bossVisibilityProof) {
+        const renderProof = await page.evaluate(
+          (kind) => window.__ASHFALL_BATTLE_QA__?.getBossFoundationProof?.(kind) ?? null,
+          activeBoss.kind,
+        );
+        invariant(renderProof?.bossId === activeBoss.id,
+          `${engine}: active wave boss render proof mismatched ${JSON.stringify(renderProof)}`);
+        invariant(renderProof.combatReady === true && renderProof.gateEntering === false,
+          `${engine}: boss HUD became active before full-body entry ${JSON.stringify(renderProof)}`);
+        invariant(renderProof.spriteLoadedWidth > 0 && renderProof.renderedBodyHeight > 0,
+          `${engine}: active wave boss sprite did not decode ${JSON.stringify(renderProof)}`);
+        invariant(renderProof.renderedVisibleRect
+          && renderProof.renderedVisibleRect.left >= 0
+          && renderProof.renderedVisibleRect.right <= 960
+          && renderProof.renderedVisibleRect.bottom <= 540,
+        `${engine}: active wave boss body left the visible battlefield ${JSON.stringify(renderProof)}`);
+        bossVisibilityProof = {
+          kind: activeBoss.kind,
+          bossId: activeBoss.id,
+          hp: activeBoss.hp,
+          x: activeBoss.x,
+          renderedBodyHeight: renderProof.renderedBodyHeight,
+          renderedVisibleRect: renderProof.renderedVisibleRect,
+          spriteLoadedWidth: renderProof.spriteLoadedWidth,
+        };
+        await page.screenshot({
+          path: path.join(evidenceDir, `${engine}-${viewport.width}x${viewport.height}-wave5-boss-active.png`),
+        });
+      }
       if (run.currentWave !== lastRecordedWave) {
         lastRecordedWave = run.currentWave;
         waveTimeline.push({
@@ -147,6 +184,8 @@ for (const engine of engines) {
       `${engine}: last completed wave was ${final.survivalRun.lastCompletedWave}`);
     invariant(final.survivalRun.stats.bossKills >= 1,
       `${engine}: wave 5 boss was not defeated`);
+    invariant(bossVisibilityProof,
+      `${engine}: actual wave 5 never produced a visible combat-ready boss`);
     invariant(final.survivalRun.stats.kills > 0,
       `${engine}: no actual kills were recorded`);
     invariant(JSON.stringify(waveTimeline.map(({ wave }) => wave)) === JSON.stringify([1, 2, 3, 4, 5, 6]),
@@ -176,6 +215,7 @@ for (const engine of engines) {
       wallTimeMs: Date.now() - startedAt,
       deploymentCount,
       manualActivationCount,
+      bossVisibilityProof,
       waveTimeline,
       final: {
         phase: final.survivalRun.phase,
@@ -197,6 +237,7 @@ for (const engine of engines) {
       wallTimeMs: Date.now() - startedAt,
       deploymentCount,
       manualActivationCount,
+      bossVisibilityProof,
       waveTimeline,
       diagnostics,
       failureSnapshot: await readSnapshot(page)
