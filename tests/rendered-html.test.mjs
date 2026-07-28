@@ -7,6 +7,7 @@ import {
   airstrikePlacementCheck,
   BARRICADE_MAX_HP,
   BATTLEFIELD_SUPPLY_DEFS,
+  BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS,
   CAMERA_SHAKE_EVENTS,
   COMMAND_INITIAL,
   COMMAND_MAX,
@@ -23,12 +24,15 @@ import {
   PREP_SECONDS,
   RAGE_MAX,
   RENDER_ARRAY_LIMITS,
+  STANDARD_COMMAND_REGEN,
+  STAGE_20_COMMAND_REGEN,
   SUPPORT_GAUGE_MAX,
   SUPPORT_DEFS,
   UNIT_CARDS,
   WORLD_GEOMETRY,
   advanceAreaEffects,
   advanceBattlefieldSupply,
+  advanceBattlefieldSupplyCooldowns,
   advanceCameraShakeRuntime,
   advanceCrawlerAbilityRuntime,
   advanceEmergencySupportRuntime,
@@ -50,9 +54,11 @@ import {
   canvasPointerToWorld,
   canDeploy,
   capRenderArray,
+  beginBattlefieldSupplyCooldown,
   containerBlocksEnemy,
   containerPlacementCheck,
   createCameraShakeRuntime,
+  createBattlefieldSupplyCooldowns,
   createCrawlerAbilityRuntime,
   createEmergencySupportRuntime,
   createEnemySpawnRuntime,
@@ -531,11 +537,14 @@ test("applies the COMMAND economy, deployment gates, and shared world geometry",
   assert.equal(COMMAND_MAX, 150);
   assert.equal(COMMAND_INITIAL, 70);
   assert.equal(COMMAND_REGEN, 3.5);
+  assert.equal(STANDARD_COMMAND_REGEN, 3);
+  assert.equal(STAGE_20_COMMAND_REGEN, 3.65);
   assert.equal(SUPPORT_GAUGE_MAX, 100);
   assert.equal(RAGE_MAX, 100);
   assert.equal(BARRICADE_MAX_HP, 1000);
   assert.equal(advanceCommand(55, 10), 90);
   assert.equal(advanceCommand(95, 10), 130);
+  assert.equal(advanceCommand(55, 10, STANDARD_COMMAND_REGEN), 85);
   assert.equal(advanceCommand(140, 10), 150);
   assert.equal(advanceCommand(40, -5), 40);
 
@@ -734,22 +743,29 @@ test("returns phases, new objectives, siege scaling, rewards, and support costs"
   assert.equal(crawlerThreatLevel(175), 1);
 
   const gaugeRewards = {
-    walker: 4,
-    runner: 5,
-    spitter: 8,
-    crusher: 14,
-    shade: 22,
-    abomination: 20,
-    takuya: 25,
-    turned: 7,
-    grappler: 13,
-    ooze: 11,
-    sprinter: 8,
-    "gate-eater": 30,
+    walker: 3,
+    runner: 4,
+    spitter: 7,
+    crusher: 12,
+    shade: 19,
+    abomination: 17,
+    takuya: 22,
+    turned: 6,
+    grappler: 11,
+    ooze: 9,
+    sprinter: 7,
+    "gate-eater": 26,
   };
   assert.deepEqual(
     Object.fromEntries(Object.keys(gaugeRewards).map((kind) => [kind, supportGaugeReward(kind)])),
     gaugeRewards,
+  );
+  assert.deepEqual(
+    Object.fromEntries(Object.keys(gaugeRewards).map((kind) => [kind, supportGaugeReward(kind, "full")])),
+    {
+      walker: 4, runner: 5, spitter: 8, crusher: 14, shade: 22, abomination: 20,
+      takuya: 25, turned: 7, grappler: 13, ooze: 11, sprinter: 8, "gate-eater": 30,
+    },
   );
   assert.equal(rageReward("crusher"), supportGaugeReward("crusher"));
   assert.deepEqual(Object.values(BATTLEFIELD_SUPPLY_DEFS).map(({ kind, cost }) => [kind, cost]), [
@@ -792,6 +808,10 @@ test("models all three battlefield supplies without fixed pod count or lane caps
     nextId: 10, nextAreaEffectId: 30,
   };
   assert.deepEqual(battlefieldSupplyPlacementCheck(base), { ok: true, reason: "配置できます" });
+  assert.equal(
+    battlefieldSupplyPlacementCheck({ ...base, cooldown: 2.2 }).reason,
+    "戦場物資を再準備中です（3秒）",
+  );
   assert.equal(battlefieldSupplyPlacementCheck({ ...base, running: false }).ok, false);
   assert.equal(battlefieldSupplyPlacementCheck({ ...base, scrap: 49 }).reason, "スクラップが不足しています");
   assert.equal(battlefieldSupplyPlacementCheck({ ...base, x: 234 }).reason, "配置可能範囲外です");
@@ -918,6 +938,36 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), false);
   assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 480, enemyY: LANE_Y[1], attackRange: 20 }), true);
   assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyY: LANE_Y[0], attackRange: 20 }), false);
+});
+
+test("keeps battlefield supply cooldowns deterministic, independent, and pause-safe at the runtime boundary", () => {
+  const idle = createBattlefieldSupplyCooldowns();
+  assert.deepEqual(idle, { pod: 0, drum: 0, medical: 0 });
+  assert.deepEqual(BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS, { pod: 14, drum: 12, medical: 18 });
+
+  const podCooling = beginBattlefieldSupplyCooldown(idle, "pod");
+  assert.deepEqual(podCooling, { pod: 14, drum: 0, medical: 0 });
+  assert.deepEqual(
+    beginBattlefieldSupplyCooldown(podCooling, "medical"),
+    { pod: 14, drum: 0, medical: 18 },
+  );
+  assert.deepEqual(
+    advanceBattlefieldSupplyCooldowns({ pod: 14, drum: 4, medical: 1 }, 2.5),
+    { pod: 11.5, drum: 1.5, medical: 0 },
+  );
+  assert.deepEqual(
+    advanceBattlefieldSupplyCooldowns({ pod: 14, drum: 4, medical: 1 }, 0),
+    { pod: 14, drum: 4, medical: 1 },
+  );
+});
+
+test("keeps the accepted Survival resource tempo while applying RC tuning to standard operations", async () => {
+  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  assert.match(game, /function commandRegenForGame\(game: Game\)[\s\S]*?if \(game\.survivalRun\) return COMMAND_REGEN/);
+  assert.match(game, /CAMPAIGN_STAGE_IDS\.ESTUARY_FLOODGATE_SEAL\)[\s\S]*?return STAGE_20_COMMAND_REGEN/);
+  assert.match(game, /preservesAcceptedSupportTempo\(g\) \? "full" : "standard"/);
+  assert.match(game, /cooldown: preservesAcceptedSupportTempo\(g\) \? 0 : g\.supportItemCooldowns\[kind\]/);
+  assert.match(game, /if \(!preservesAcceptedSupportTempo\(g\)\) \{\s*g\.supportItemCooldowns = beginBattlefieldSupplyCooldown/);
 });
 
 test("keeps supplies, area effects, and airstrikes aligned and lane-isolated in standard and compact layouts", () => {

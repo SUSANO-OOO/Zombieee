@@ -8,7 +8,8 @@ import {
 import {
   COMMAND_INITIAL,
   COMMAND_MAX,
-  COMMAND_REGEN,
+  STANDARD_COMMAND_REGEN,
+  STAGE_20_COMMAND_REGEN,
   UNIT_CARDS,
 } from "../app/gameRules.js";
 import {
@@ -47,7 +48,10 @@ test("reference simulations use the seven-slot limit and current COMMAND economy
     assert.ok(result.slotCount >= 1 && result.slotCount <= CAMPAIGN_FORMATION_MAX_SLOTS, stage.id);
     assert.equal(result.command.initial, COMMAND_INITIAL);
     assert.equal(result.command.maximum, COMMAND_MAX);
-    assert.equal(result.command.regenPerSecond, COMMAND_REGEN);
+    assert.equal(
+      result.command.regenPerSecond,
+      stage.stageNumber === 20 ? STAGE_20_COMMAND_REGEN : STANDARD_COMMAND_REGEN,
+    );
     assert.equal(result.command.deployments.length, formation.length, stage.id);
     assert.ok(result.command.deployments.every(({ commandAfter }) => commandAfter >= 0 && commandAfter <= COMMAND_MAX));
     assert.equal(

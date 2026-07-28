@@ -8,7 +8,8 @@ import {
   BARRICADE_MAX_HP,
   COMMAND_INITIAL,
   COMMAND_MAX,
-  COMMAND_REGEN,
+  STANDARD_COMMAND_REGEN,
+  STAGE_20_COMMAND_REGEN,
   LANE_Y,
   PREP_SECONDS,
   UNIT_CARDS,
@@ -346,6 +347,9 @@ export function simulateStageBalance({
   unitRanks = {},
 } = {}) {
   const stage = resolveStage(stageId);
+  const commandRegen = stage.id === CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL
+    ? STAGE_20_COMMAND_REGEN
+    : STANDARD_COMMAND_REGEN;
   const normalizedFormation = normalizeFormation(formation);
   const facts = stageBalanceWaveFacts(stage.id);
   const random = seededRandom(`${seed}:${stage.id}:${normalizedFormation.join(",")}`);
@@ -387,7 +391,7 @@ export function simulateStageBalance({
   }));
 
   while (currentTime <= maxTime && outcome === null) {
-    command = Math.min(COMMAND_MAX, command + (currentTime === 0 ? 0 : COMMAND_REGEN * SIMULATION_STEP_SECONDS));
+    command = Math.min(COMMAND_MAX, command + (currentTime === 0 ? 0 : commandRegen * SIMULATION_STEP_SECONDS));
 
     if (deploymentQueue.length > 0 && activeUnits.length < CAMPAIGN_FORMATION_MAX_SLOTS) {
       const affordableIndex = deploymentQueue.findIndex((kind) => UNIT_BY_KIND[kind].cost <= command);
@@ -652,7 +656,7 @@ export function simulateStageBalance({
     command: freeze({
       initial: COMMAND_INITIAL,
       maximum: COMMAND_MAX,
-      regenPerSecond: COMMAND_REGEN,
+      regenPerSecond: commandRegen,
       spent: commandSpent,
       remaining: Number(command.toFixed(3)),
       deployments: freeze(deploymentLog),
