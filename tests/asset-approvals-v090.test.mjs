@@ -65,7 +65,7 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
     ...await filesBelow(path.join(ROOT, "public", "art", "v090", "characters")),
   ].map(repositoryPath).sort();
   const records = ledger.assets;
-  assert.equal(records.length, 38);
+  assert.equal(records.length, 49);
   assert.equal(new Set(records.map(({ assetId }) => assetId)).size, records.length);
   assert.equal(new Set(records.map(({ path: assetPath }) => assetPath)).size, records.length);
   assert.deepEqual(records.map(({ path: assetPath }) => assetPath).sort(), activeFiles);

@@ -32,6 +32,7 @@
     "qa:mayo": "node scripts/run-browser-qa-with-server.mjs scripts/mayo-vertical-slice-browser-smoke.mjs",
     "qa:outbreak": "node scripts/run-browser-qa-with-server.mjs scripts/outbreak-runtime-browser-smoke.mjs",
     "qa:records": "node scripts/run-browser-qa-with-server.mjs scripts/records-browser-smoke.mjs",
+    "qa:manual-abilities": "node scripts/run-browser-qa-with-server.mjs scripts/manual-abilities-browser-smoke.mjs",
     "qa:economy": "node scripts/economy-simulation.mjs",
     "art:v080:characters": "node scripts/build-v080-character-assets.mjs",
     "art:v080": "node scripts/build-v080-stage-assets.mjs",

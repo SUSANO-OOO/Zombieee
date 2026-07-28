@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">緊急処置 ready</title>
+  <defs><linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#303c3a"/><stop offset=".55" stop-color="#101917"/><stop offset="1" stop-color="#050a08"/></linearGradient><linearGradient id="m2" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#33885e"/><stop offset=".55" stop-color="#71d79c"/><stop offset="1" stop-color="#dbffe8"/></linearGradient></defs>
+  <path d="M15 9h66l8 8v62l-8 8H15l-8-8V17z" fill="url(#m)" stroke="#9ea8ad" stroke-width="4"/>
+  <path d="M31 20h34l9 10v46H22V30z" fill="#273b34" stroke="#9be5ba" stroke-width="4"/>
+  <path d="M41 31h14v12h12v14H55v12H41V57H29V43h12z" fill="url(#m2)" stroke="#e2ffec" stroke-width="2"/>
+  <path d="M22 68c12-9 18-1 27-9 10-9 15-1 25-10" fill="none" stroke="#b5f4ce" stroke-width="3" stroke-dasharray="4 4"/>
+  <path d="M14 17h14M69 79h14" stroke="#68c890" stroke-width="3"/>
+</svg>
