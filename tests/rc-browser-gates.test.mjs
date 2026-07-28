@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { installInfectedAbilityPhaseObserver } from "../scripts/infected-ability-phase-observer.mjs";
 
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 const survivalGate = await readFile(
@@ -13,6 +14,10 @@ const infectedGate = await readFile(
 );
 const infectedWrapper = await readFile(
   new URL("../scripts/v090-infected-browser-smoke.mjs", import.meta.url),
+  "utf8",
+);
+const infectedObserver = await readFile(
+  new URL("../scripts/infected-ability-phase-observer.mjs", import.meta.url),
   "utf8",
 );
 
@@ -39,10 +44,51 @@ test("Survival RC gate progresses wave 1-5 without the completion QA hook", () =
 test("infected RC gate observes ordered same-fighter activations on Stage 17-20", () => {
   assert.match(infectedWrapper, /AI_MISSION_QA_STAGES \?\?= "17,18,19,20"/);
   assert.match(infectedWrapper, /AI_MISSION_QA_INFECTED_ABILITIES = "1"/);
-  assert.match(infectedGate, /requestAnimationFrame\(sample\)/);
-  assert.match(infectedGate, /completedActivations\.push\(/);
-  assert.match(infectedGate, /fighterEntry\.warningAt/);
+  assert.match(infectedObserver, /requestAnimationFrame\(sample\)/);
+  assert.match(infectedObserver, /completedActivations\.push\(/);
+  assert.match(infectedObserver, /fighterEntry\.phase === "warning"/);
   assert.match(infectedGate, /warningAt < activeAt/);
+});
+
+test("infected observer rejects a cancelled warning before a later active phase", () => {
+  const frames = [];
+  let time = 1;
+  let phase = "warning";
+  globalThis.window = {
+    __ASHFALL_BATTLE_QA__: {
+      getSnapshot: () => ({
+        time,
+        fighters: [{ id: 7, kind: "resonator", stationAbility: { phase } }],
+      }),
+    },
+    requestAnimationFrame: (callback) => frames.push(callback),
+  };
+  try {
+    installInfectedAbilityPhaseObserver(["resonator"]);
+    frames.shift()();
+    time = 2;
+    phase = "idle";
+    frames.shift()();
+    time = 3;
+    phase = "active";
+    frames.shift()();
+    const observed = window.__ASHFALL_INFECTED_PHASE_OBSERVER__.observed.resonator;
+    assert.deepEqual(observed.completedActivations, []);
+
+    time = 4;
+    phase = "warning";
+    frames.shift()();
+    time = 5;
+    phase = "active";
+    frames.shift()();
+    assert.deepEqual(observed.completedActivations, [{
+      fighterId: "7",
+      warningAt: 4,
+      activeAt: 5,
+    }]);
+  } finally {
+    delete globalThis.window;
+  }
 });
 
 test("RC browser gates reject empty engine lists and unbounded timeouts", () => {

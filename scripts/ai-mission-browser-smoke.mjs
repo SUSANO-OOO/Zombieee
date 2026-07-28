@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { installInfectedAbilityPhaseObserver } from "./infected-ability-phase-observer.mjs";
 
 const baseUrl = new URL(process.env.AI_MISSION_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) {
@@ -137,54 +138,7 @@ function assertDiagnostics(diagnostics) {
 }
 
 async function startInfectedAbilityObserver(page, expectedKinds) {
-  await page.evaluate((kinds) => {
-    const observed = Object.fromEntries(kinds.map((kind) => [kind, {
-      phases: [],
-      firstWarningAt: null,
-      firstActiveAt: null,
-      completedActivations: [],
-      fighters: {},
-    }]));
-    const sample = () => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
-      if (snapshot) {
-        for (const fighter of snapshot.fighters) {
-          if (!observed[fighter.kind]) continue;
-          const phase = fighter.stationAbility?.phase ?? "idle";
-          const entry = observed[fighter.kind];
-          if (!entry.phases.includes(phase)) entry.phases.push(phase);
-          const fighterId = String(fighter.id);
-          const fighterEntry = entry.fighters[fighterId] ?? {
-            phase: "missing",
-            warningAt: null,
-            activeAt: null,
-          };
-          if (phase === "warning" && fighterEntry.phase !== "warning") {
-            fighterEntry.warningAt = snapshot.time;
-            fighterEntry.activeAt = null;
-            if (entry.firstWarningAt === null) entry.firstWarningAt = snapshot.time;
-          }
-          if (phase === "active"
-            && fighterEntry.phase !== "active"
-            && fighterEntry.warningAt !== null
-            && snapshot.time > fighterEntry.warningAt) {
-            fighterEntry.activeAt = snapshot.time;
-            entry.completedActivations.push({
-              fighterId,
-              warningAt: fighterEntry.warningAt,
-              activeAt: snapshot.time,
-            });
-            if (entry.firstActiveAt === null) entry.firstActiveAt = snapshot.time;
-          }
-          fighterEntry.phase = phase;
-          entry.fighters[fighterId] = fighterEntry;
-        }
-      }
-      window.requestAnimationFrame(sample);
-    };
-    window.__ASHFALL_INFECTED_PHASE_OBSERVER__ = { observed };
-    window.requestAnimationFrame(sample);
-  }, expectedKinds);
+  await page.evaluate(installInfectedAbilityPhaseObserver, expectedKinds);
 }
 
 async function waitForInfectedAbilityLifecycle(page, expectedKinds) {
