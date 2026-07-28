@@ -311,7 +311,13 @@ export function manualAbilityCheckpointCooldown(runtime) {
     } else if (runtime.kind === "miyamoto-musashi") {
       remaining += Math.max(0, Number(definition.guardSeconds) || 0);
     } else if (runtime.kind === "mayo-chan") {
-      remaining += Math.max(0, Number(definition.feralSeconds) || 0);
+      remaining += Math.max(0, Number(definition.activeSeconds) || 0);
+    } else if (runtime.kind === "mrs-chiha") {
+      remaining += Math.max(0,
+        Number(definition.salvoIntervalSeconds) * Math.max(0, Number(definition.salvoCount) - 1)
+        + Number(definition.projectileTravelSeconds)
+        + Number(definition.recoverySeconds),
+      );
     }
   } else if (["active", "feral"].includes(runtime.phase)) {
     remaining += Math.max(0, Number(runtime.activeRemaining) || 0);

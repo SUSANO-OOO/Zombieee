@@ -7106,6 +7106,22 @@ export function AshfallGame() {
         if (!g.survivalRun || !g.survivalRuntime || g.over) {
           throw new Error("Survival upgrade proof requires an active run");
         }
+        let checkpointOwner = g.fighters.find((fighter) => (
+          fighter.side === "human"
+          && fighter.hp > 0
+          && fighter.manualAbility
+        ));
+        if (!checkpointOwner) {
+          spawnHuman(g, "brawler");
+          checkpointOwner = g.fighters[g.fighters.length - 1];
+        }
+        if (!checkpointOwner?.manualAbility) {
+          throw new Error("Survival upgrade proof requires a manual ability owner");
+        }
+        checkpointOwner.manualAbility = restoreManualAbilityCooldown(
+          checkpointOwner.kind,
+          9.5,
+        ) as ManualAbilityRuntime;
         const bossWave = beginSurvivalWave({
           ...g.survivalRun,
           phase: SURVIVAL_RUN_PHASES.WAVE_READY,
@@ -7142,6 +7158,38 @@ export function AshfallGame() {
         return {
           checkpointId,
           choices: [...checkpointWithCooldowns.pendingUpgradeChoices],
+          cooldownKind: checkpointOwner.kind,
+          cooldownOwnerId: checkpointOwner.id,
+          cooldownSeconds: checkpointOwner.manualAbility.cooldownRemaining,
+        };
+      },
+      deploySurvivalLiveContinuationProof: (kind: UnitKind, cooldownOwnerId: number) => {
+        const g = gameRef.current;
+        if (!g.survivalRun || g.survivalRun.phase !== SURVIVAL_RUN_PHASES.WAVE_READY) {
+          throw new Error("Survival continuation proof requires a selected checkpoint upgrade");
+        }
+        const cooldownOwner = g.fighters.find((fighter) => (
+          fighter.id === cooldownOwnerId
+          && fighter.side === "human"
+          && fighter.hp > 0
+        ));
+        const card = spawnHuman(g, kind);
+        if (!card) throw new Error(`Could not deploy Survival continuation proof for ${kind}`);
+        const deployed = g.fighters[g.fighters.length - 1];
+        return {
+          cooldownOwner: cooldownOwner?.manualAbility ? {
+            id: cooldownOwner.id,
+            phase: cooldownOwner.manualAbility.phase,
+            cooldownRemaining: cooldownOwner.manualAbility.cooldownRemaining,
+          } : null,
+          deployed: deployed.manualAbility ? {
+            id: deployed.id,
+            phase: deployed.manualAbility.phase,
+            cooldownRemaining: deployed.manualAbility.cooldownRemaining,
+          } : null,
+          remainingCooldowns: [
+            ...(g.survivalRun.manualAbilityCooldownsByKind?.[kind] ?? []),
+          ],
         };
       },
       prepareSurvivalEntryVisibilityProof: () => {
@@ -10137,13 +10185,17 @@ export function AshfallGame() {
     for (const kind of Object.keys(g.deployCooldowns) as UnitKind[]) {
       g.deployCooldowns[kind] *= nextEffects.redeployMultiplier / previousEffects.redeployMultiplier;
     }
-    g.survivalRun = selection.run;
+    const continuedRun = {
+      ...selection.run,
+      manualAbilityCooldownsByKind: {},
+    };
+    g.survivalRun = continuedRun;
     g.survivalRuntime = selection.runtime;
-    g.baseHp = selection.run.crawler.hp;
-    g.baseMaxHp = selection.run.crawler.maxHp;
+    g.baseHp = continuedRun.crawler.hp;
+    g.baseMaxHp = continuedRun.crawler.maxHp;
     g.paused = false;
     setPaused(false);
-    setSurvivalHud(survivalHudSnapshot(selection.run));
+    setSurvivalHud(survivalHudSnapshot(continuedRun));
     if (!bgmMuted) startMusic();
     playCue("ui-confirm");
   }, [bgmMuted, pendingSurvivalCheckpoint, playCue, startMusic, survivalSavePending]);

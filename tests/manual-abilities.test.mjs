@@ -235,6 +235,31 @@ test("checkpoint debt conservatively preserves every non-ready manual ability ph
       + MANUAL_ABILITY_REGISTRY.guardian.activeSeconds
       + MANUAL_ABILITY_REGISTRY.guardian.cooldownSeconds,
   );
+
+  const mayo = beginManualAbility(
+    createManualAbilityRuntime("mayo-chan"),
+    { targetId: "target", x: 260, y: 280 },
+  );
+  assert.equal(
+    manualAbilityCheckpointCooldown(mayo.runtime),
+    MANUAL_ABILITY_REGISTRY["mayo-chan"].windupSeconds
+      + MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds
+      + MANUAL_ABILITY_REGISTRY["mayo-chan"].cooldownSeconds,
+  );
+
+  const mrsChiha = beginManualAbility(
+    createManualAbilityRuntime("mrs-chiha"),
+    { points: Array.from({ length: 4 }, (_, index) => ({ targetId: index, x: 260 + index, y: 280 })) },
+  );
+  assert.equal(
+    manualAbilityCheckpointCooldown(mrsChiha.runtime),
+    MANUAL_ABILITY_REGISTRY["mrs-chiha"].windupSeconds
+      + MANUAL_ABILITY_REGISTRY["mrs-chiha"].salvoIntervalSeconds
+        * (MANUAL_ABILITY_REGISTRY["mrs-chiha"].salvoCount - 1)
+      + MANUAL_ABILITY_REGISTRY["mrs-chiha"].projectileTravelSeconds
+      + MANUAL_ABILITY_REGISTRY["mrs-chiha"].recoverySeconds
+      + MANUAL_ABILITY_REGISTRY["mrs-chiha"].cooldownSeconds,
+  );
 });
 
 test("Musashi fallback recognizes every Version 0.9.0 boss before a closer normal enemy", () => {
