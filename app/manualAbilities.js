@@ -1,17 +1,143 @@
 import { deepFreeze } from "./content/freeze.js";
 
 export const MANUAL_ABILITY_REGISTRY = deepFreeze({
-  brawler: { unitId: "unit-paisen", displayName: "気合連打", iconMotif: "fist-combo", runtimeStatus: "foundation" },
-  scout: { unitId: "unit-hachi", displayName: "疾駆迎撃", iconMotif: "crowbar-dash", runtimeStatus: "foundation" },
-  ranger: { unitId: "unit-mizuchi", displayName: "精密排除", iconMotif: "rifle-crosshair", runtimeStatus: "foundation" },
-  medic: { unitId: "unit-nao", displayName: "緊急処置", iconMotif: "medical-cross", runtimeStatus: "foundation" },
-  brute: { unitId: "unit-tatara", displayName: "地砕衝", iconMotif: "hammer-impact", runtimeStatus: "foundation" },
-  "crazy-king": { unitId: "unit-crazy-king", displayName: "狂王暴走", iconMotif: "chainsaw-crown", runtimeStatus: "foundation" },
-  kumaverson: { unitId: "unit-kumaverson", displayName: "鉄鍋仁王立ち", iconMotif: "pan-guard", runtimeStatus: "foundation" },
-  babayaga: { unitId: "unit-babayaga", displayName: "弱点査定", iconMotif: "weak-point-ledger", runtimeStatus: "foundation" },
-  gunner: { unitId: "unit-raider", displayName: "制圧掃射", iconMotif: "machine-gun-fan", runtimeStatus: "foundation" },
-  guardian: { unitId: "unit-gantetsu", displayName: "鉄壁展開", iconMotif: "shield-wall", runtimeStatus: "foundation" },
-  engineer: { unitId: "unit-monkey", displayName: "即席捕縛罠", iconMotif: "tripwire-trap", runtimeStatus: "foundation" },
+  brawler: {
+    unitId: "unit-paisen",
+    displayName: "気合連打",
+    iconMotif: "fist-combo",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 12,
+    windupSeconds: .26,
+    range: 150,
+    impactDamage: 56,
+    hitCount: 5,
+    finalKnockback: 19,
+  },
+  scout: {
+    unitId: "unit-hachi",
+    displayName: "疾駆迎撃",
+    iconMotif: "crowbar-dash",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 13,
+    windupSeconds: .24,
+    maxRange: 300,
+    impactDamage: 58,
+    stunSeconds: 1.2,
+    stopDistance: 34,
+  },
+  ranger: {
+    unitId: "unit-mizuchi",
+    displayName: "精密排除",
+    iconMotif: "rifle-crosshair",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 16,
+    windupSeconds: .5,
+    maxRange: 390,
+    effectHalfHeight: 34,
+    impactDamage: 92,
+    penetrationMultiplier: .65,
+  },
+  medic: {
+    unitId: "unit-nao",
+    displayName: "緊急処置",
+    iconMotif: "medical-cross",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 15,
+    windupSeconds: .35,
+    range: 240,
+    healRatio: .32,
+    protectionSeconds: 4,
+    protectionMultiplier: .72,
+  },
+  brute: {
+    unitId: "unit-tatara",
+    displayName: "地砕衝",
+    iconMotif: "hammer-impact",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 18,
+    windupSeconds: .55,
+    range: 115,
+    effectRadius: 102,
+    impactDamage: 78,
+    stunSeconds: 1.1,
+    armorBreakSeconds: 5,
+  },
+  "crazy-king": {
+    unitId: "unit-crazy-king",
+    displayName: "狂王暴走",
+    iconMotif: "chainsaw-crown",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 22,
+    windupSeconds: .45,
+    range: 210,
+    activeSeconds: 5.2,
+    damageMultiplier: 1.35,
+    moveSpeedMultiplier: 1.45,
+    attackIntervalMultiplier: .62,
+    areaRadius: 70,
+    knockResistanceMultiplier: .22,
+  },
+  kumaverson: {
+    unitId: "unit-kumaverson",
+    displayName: "鉄鍋仁王立ち",
+    iconMotif: "pan-guard",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 20,
+    windupSeconds: .35,
+    activeSeconds: 6,
+    tauntRadius: 180,
+    damageTakenMultiplier: .55,
+    healRatioPerSecond: .025,
+  },
+  babayaga: {
+    unitId: "unit-babayaga",
+    displayName: "弱点査定",
+    iconMotif: "weak-point-ledger",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 17,
+    windupSeconds: .4,
+    maxRange: 360,
+    impactDamage: 65,
+    markSeconds: 6,
+  },
+  gunner: {
+    unitId: "unit-raider",
+    displayName: "制圧掃射",
+    iconMotif: "machine-gun-fan",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 18,
+    windupSeconds: .55,
+    range: 330,
+    effectHalfHeight: 35,
+    impactDamage: 22,
+    burstCount: 5,
+    suppressionSeconds: 3,
+    suppressionMultiplier: .55,
+  },
+  guardian: {
+    unitId: "unit-gantetsu",
+    displayName: "鉄壁展開",
+    iconMotif: "shield-wall",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 22,
+    windupSeconds: .45,
+    activeSeconds: 6,
+    tauntRadius: 190,
+    protectionRadius: 170,
+    selfDamageTakenMultiplier: .42,
+    allyDamageTakenMultiplier: .68,
+  },
+  engineer: {
+    unitId: "unit-monkey",
+    displayName: "即席捕縛罠",
+    iconMotif: "tripwire-trap",
+    runtimeStatus: "integrated",
+    cooldownSeconds: 16,
+    windupSeconds: .35,
+    range: 280,
+    bindSeconds: 1.35,
+    slowSeconds: 3.2,
+  },
   zakimiya: {
     unitId: "unit-zakimiya",
     displayName: "火酒投擲",
@@ -119,8 +245,312 @@ function livingTarget(candidate) {
     && candidate.targetable !== false;
 }
 
+function livingAlly(candidate) {
+  return candidate?.side === "human"
+    && Number(candidate.hp) > 0
+    && candidate.combatReady === true
+    && candidate.targetable !== false
+    && !candidate.mayoRetreat;
+}
+
 function distance(left, right) {
   return Math.hypot(Number(left.x) - Number(right.x), Number(left.y) - Number(right.y));
+}
+
+function stableId(left, right) {
+  return String(left).localeCompare(String(right));
+}
+
+function bossTarget(candidate) {
+  return candidate?.isBoss === true
+    || candidate?.boss === true
+    || ["takuya", "gate-eater", "kurome", "mother", "ooguchi", "gairen", "futago"].includes(candidate?.kind);
+}
+
+const FAST_ENEMY_KINDS = Object.freeze(["runner", "sprinter", "turned", "spindle", "pall-manta"]);
+const RANGED_SPECIAL_KINDS = Object.freeze([
+  "spitter",
+  "ooze",
+  "shade",
+  "resonator",
+  "choir-knot",
+  "anchor-bloom",
+]);
+
+function threatPriority(candidate) {
+  if (bossTarget(candidate)) return 4;
+  if (RANGED_SPECIAL_KINDS.includes(candidate?.kind)) return 3;
+  if (FAST_ENEMY_KINDS.includes(candidate?.kind)) return 2;
+  return ["crusher", "abomination", "grappler", "cagewalker"].includes(candidate?.kind) ? 1 : 0;
+}
+
+function forwardCandidates(owner, fighters, range, effectHalfHeight = Infinity) {
+  const direction = facingDirection(owner);
+  return fighters.filter(livingTarget).filter((candidate) => {
+    const forward = (Number(candidate.x) - Number(owner.x)) * direction;
+    return forward >= -8
+      && forward <= range
+      && Math.abs(Number(candidate.y) - Number(owner.y)) <= effectHalfHeight;
+  });
+}
+
+function targetSnapshot(candidate, owner, extra = {}) {
+  return {
+    targetId: candidate.id,
+    x: Number(candidate.x),
+    y: Number(candidate.y),
+    lane: candidate.lane,
+    direction: Number(candidate.x) < Number(owner.x) ? -1 : 1,
+    ownerDistance: distance(owner, candidate),
+    ...extra,
+  };
+}
+
+export function selectBrawlerAbilityTarget({
+  owner,
+  fighters = [],
+  range = MANUAL_ABILITY_REGISTRY.brawler.range,
+} = {}) {
+  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
+  const candidates = forwardCandidates(owner, fighters, range)
+    .map((candidate) => targetSnapshot(candidate, owner))
+    .sort((left, right) => left.ownerDistance - right.ownerDistance || stableId(left.targetId, right.targetId));
+  return candidates.length > 0 ? Object.freeze(candidates[0]) : null;
+}
+
+export function selectScoutAbilityTarget({
+  owner,
+  fighters = [],
+  maxRange = MANUAL_ABILITY_REGISTRY.scout.maxRange,
+} = {}) {
+  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
+  const candidates = fighters
+    .filter(livingTarget)
+    .filter((candidate) => distance(owner, candidate) <= maxRange)
+    .map((candidate) => targetSnapshot(candidate, owner, {
+      fast: FAST_ENEMY_KINDS.includes(candidate.kind),
+      breachDistance: Number(candidate.x),
+      speed: Math.max(0, Number(candidate.speed) || 0),
+    }))
+    .sort((left, right) => (
+      Number(right.fast) - Number(left.fast)
+      || right.speed - left.speed
+      || left.breachDistance - right.breachDistance
+      || left.ownerDistance - right.ownerDistance
+      || stableId(left.targetId, right.targetId)
+    ));
+  return candidates.length > 0 ? Object.freeze(candidates[0]) : null;
+}
+
+export function selectRangerAbilityTarget({
+  owner,
+  fighters = [],
+  maxRange = MANUAL_ABILITY_REGISTRY.ranger.maxRange,
+  effectHalfHeight = MANUAL_ABILITY_REGISTRY.ranger.effectHalfHeight,
+} = {}) {
+  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
+  const candidates = fighters
+    .filter(livingTarget)
+    .filter((candidate) => distance(owner, candidate) <= maxRange);
+  if (candidates.length === 0) return null;
+  const ranked = candidates.map((candidate) => targetSnapshot(candidate, owner, {
+    priority: threatPriority(candidate),
+    hp: Math.max(0, Number(candidate.hp) || 0),
+  })).sort((left, right) => (
+    right.priority - left.priority
+    || right.hp - left.hp
+    || left.ownerDistance - right.ownerDistance
+    || stableId(left.targetId, right.targetId)
+  ));
+  const primary = ranked[0];
+  const direction = primary.direction;
+  const lineTargetIds = candidates
+    .filter((candidate) => {
+      const forward = (Number(candidate.x) - Number(owner.x)) * direction;
+      return forward >= -8
+        && forward <= maxRange
+        && Math.abs(Number(candidate.y) - primary.y) <= effectHalfHeight;
+    })
+    .sort((left, right) => (
+      (Number(left.x) - Number(owner.x)) * direction - (Number(right.x) - Number(owner.x)) * direction
+      || stableId(left.id, right.id)
+    ))
+    .map(({ id }) => id);
+  return Object.freeze({
+    ...primary,
+    targetIds: Object.freeze(lineTargetIds),
+  });
+}
+
+export function selectMedicAbilityTarget({
+  owner,
+  fighters = [],
+  range = MANUAL_ABILITY_REGISTRY.medic.range,
+} = {}) {
+  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
+  const candidates = fighters
+    .filter(livingAlly)
+    .filter((candidate) => Number(candidate.hp) < Number(candidate.maxHp))
+    .filter((candidate) => distance(owner, candidate) <= range)
+    .map((candidate) => targetSnapshot(candidate, owner, {
+      hpRatio: Number(candidate.hp) / Math.max(1, Number(candidate.maxHp) || 1),
+      missingHp: Math.max(0, Number(candidate.maxHp) - Number(candidate.hp)),
+    }))
+    .sort((left, right) => (
+      left.hpRatio - right.hpRatio
+      || right.missingHp - left.missingHp
+      || left.ownerDistance - right.ownerDistance
+      || stableId(left.targetId, right.targetId)
+    ));
+  return candidates.length > 0 ? Object.freeze(candidates[0]) : null;
+}
+
+export function selectBruteAbilityTarget({
+  owner,
+  fighters = [],
+  range = MANUAL_ABILITY_REGISTRY.brute.range,
+  effectRadius = MANUAL_ABILITY_REGISTRY.brute.effectRadius,
+} = {}) {
+  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
+  const candidates = forwardCandidates(owner, fighters, range);
+  if (candidates.length === 0) return null;
+  const ranked = candidates.map((candidate) => {
+    const hits = fighters.filter(livingTarget).filter((other) => distance(candidate, other) <= effectRadius);
+    return targetSnapshot(candidate, owner, {
+      targetIds: hits.map(({ id }) => id).sort(stableId),
+      hitCount: hits.length,
+      heavyCount: hits.filter((target) => threatPriority(target) > 0).length,
+    });
+  }).sort((left, right) => (
+    right.hitCount - left.hitCount
+    || right.heavyCount - left.heavyCount
+    || left.ownerDistance - right.ownerDistance
+    || stableId(left.targetId, right.targetId)
+  ));
+  return Object.freeze({
+    ...ranked[0],
+    targetIds: Object.freeze(ranked[0].targetIds),
+  });
+}
+
+function selectSustainedFrontTarget({ owner, fighters, range, targetMode }) {
+  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
+  const candidates = fighters
+    .filter(livingTarget)
+    .filter((candidate) => distance(owner, candidate) <= range)
+    .map((candidate) => targetSnapshot(candidate, owner, { priority: threatPriority(candidate) }))
+    .sort((left, right) => (
+      right.priority - left.priority
+      || left.ownerDistance - right.ownerDistance
+      || stableId(left.targetId, right.targetId)
+    ));
+  if (candidates.length === 0) return null;
+  return Object.freeze({
+    ...candidates[0],
+    mode: targetMode,
+    targetIds: Object.freeze(candidates.map(({ targetId }) => targetId)),
+  });
+}
+
+export function selectCrazyKingAbilityTarget({
+  owner,
+  fighters = [],
+  range = MANUAL_ABILITY_REGISTRY["crazy-king"].range,
+} = {}) {
+  return selectSustainedFrontTarget({ owner, fighters, range, targetMode: "overdrive" });
+}
+
+export function selectKumaversonAbilityTarget({
+  owner,
+  fighters = [],
+  tauntRadius = MANUAL_ABILITY_REGISTRY.kumaverson.tauntRadius,
+} = {}) {
+  return selectSustainedFrontTarget({ owner, fighters, range: tauntRadius, targetMode: "taunt" });
+}
+
+export function selectBabayagaAbilityTarget({
+  owner,
+  fighters = [],
+  maxRange = MANUAL_ABILITY_REGISTRY.babayaga.maxRange,
+} = {}) {
+  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
+  const candidates = fighters
+    .filter(livingTarget)
+    .filter((candidate) => distance(owner, candidate) <= maxRange)
+    .map((candidate) => targetSnapshot(candidate, owner, {
+      priority: threatPriority(candidate),
+      hp: Math.max(0, Number(candidate.hp) || 0),
+    }))
+    .sort((left, right) => (
+      right.priority - left.priority
+      || right.hp - left.hp
+      || left.ownerDistance - right.ownerDistance
+      || stableId(left.targetId, right.targetId)
+    ));
+  return candidates.length > 0 ? Object.freeze(candidates[0]) : null;
+}
+
+export function selectGunnerAbilityTarget({
+  owner,
+  fighters = [],
+  range = MANUAL_ABILITY_REGISTRY.gunner.range,
+  effectHalfHeight = MANUAL_ABILITY_REGISTRY.gunner.effectHalfHeight,
+} = {}) {
+  if (!owner || Number(owner.hp) <= 0 || owner.combatReady !== true) return null;
+  const direction = facingDirection(owner);
+  const targets = forwardCandidates(owner, fighters, range, effectHalfHeight)
+    .sort((left, right) => (
+      (Number(left.x) - Number(owner.x)) * direction - (Number(right.x) - Number(owner.x)) * direction
+      || stableId(left.id, right.id)
+    ));
+  if (targets.length === 0) return null;
+  return Object.freeze({
+    ...targetSnapshot(targets[0], owner),
+    originX: Number(owner.x),
+    originY: Number(owner.y),
+    direction,
+    targetIds: Object.freeze(targets.map(({ id }) => id)),
+  });
+}
+
+export function selectGuardianAbilityTarget({
+  owner,
+  fighters = [],
+  tauntRadius = MANUAL_ABILITY_REGISTRY.guardian.tauntRadius,
+} = {}) {
+  return selectSustainedFrontTarget({ owner, fighters, range: tauntRadius, targetMode: "shield-wall" });
+}
+
+export function selectEngineerAbilityTarget({
+  owner,
+  fighters = [],
+  range = MANUAL_ABILITY_REGISTRY.engineer.range,
+} = {}) {
+  if (!owner
+    || Number(owner.hp) <= 0
+    || owner.combatReady !== true) return null;
+  const candidates = fighters
+    .filter(livingTarget)
+    .filter((candidate) => distance(owner, candidate) <= range)
+    .map((candidate) => targetSnapshot(candidate, owner, {
+      fast: FAST_ENEMY_KINDS.includes(candidate.kind),
+      speed: Math.max(0, Number(candidate.speed) || 0),
+    }))
+    .sort((left, right) => (
+      Number(right.fast) - Number(left.fast)
+      || right.speed - left.speed
+      || left.x - right.x
+      || left.ownerDistance - right.ownerDistance
+      || stableId(left.targetId, right.targetId)
+    ));
+  if (candidates.length === 0) return null;
+  const target = candidates[0];
+  return Object.freeze({
+    ...target,
+    x: target.x - target.direction * 34,
+    trapX: target.x - target.direction * 34,
+    trapLane: target.lane,
+  });
 }
 
 export function selectZakimiyaAbilityTarget({
@@ -283,6 +713,17 @@ export function selectMayoAbilityTarget({ owner, fighters = [] } = {}) {
 }
 
 export function selectManualAbilityTarget({ owner, fighters = [] } = {}) {
+  if (owner?.kind === "brawler") return selectBrawlerAbilityTarget({ owner, fighters });
+  if (owner?.kind === "scout") return selectScoutAbilityTarget({ owner, fighters });
+  if (owner?.kind === "ranger") return selectRangerAbilityTarget({ owner, fighters });
+  if (owner?.kind === "medic") return selectMedicAbilityTarget({ owner, fighters });
+  if (owner?.kind === "brute") return selectBruteAbilityTarget({ owner, fighters });
+  if (owner?.kind === "crazy-king") return selectCrazyKingAbilityTarget({ owner, fighters });
+  if (owner?.kind === "kumaverson") return selectKumaversonAbilityTarget({ owner, fighters });
+  if (owner?.kind === "babayaga") return selectBabayagaAbilityTarget({ owner, fighters });
+  if (owner?.kind === "gunner") return selectGunnerAbilityTarget({ owner, fighters });
+  if (owner?.kind === "guardian") return selectGuardianAbilityTarget({ owner, fighters });
+  if (owner?.kind === "engineer") return selectEngineerAbilityTarget({ owner, fighters });
   if (owner?.kind === "zakimiya") return selectZakimiyaAbilityTarget({ owner, fighters });
   if (owner?.kind === "tky") return selectTkyAbilityTarget({ owner, fighters });
   if (owner?.kind === "mrs-chiha") return selectMrsChihaAbilityTarget({ owner, fighters });
@@ -342,6 +783,9 @@ export function advanceManualAbility(runtime, seconds) {
   }
   if (runtime.kind === "mayo-chan") {
     return advanceMayoAbility(runtime, elapsed);
+  }
+  if (["crazy-king", "kumaverson", "guardian"].includes(runtime.kind)) {
+    return advanceSustainedAbility(runtime, elapsed);
   }
   if (runtime.phase === "windup") {
     const remaining = runtime.windupRemaining - elapsed;
@@ -431,6 +875,93 @@ export function advanceManualAbility(runtime, seconds) {
     });
   }
   const cooldownRemaining = Math.max(0, runtime.cooldownRemaining - elapsed);
+  return Object.freeze({
+    runtime: Object.freeze({
+      ...runtime,
+      phase: cooldownRemaining > 0 ? "cooldown" : "ready",
+      cooldownRemaining,
+    }),
+    events: Object.freeze([]),
+  });
+}
+
+function advanceSustainedAbility(runtime, elapsedSeconds) {
+  const definition = MANUAL_ABILITY_REGISTRY[runtime.kind];
+  if (runtime.phase === "windup") {
+    const remaining = runtime.windupRemaining - elapsedSeconds;
+    if (remaining > 0) {
+      return Object.freeze({
+        runtime: Object.freeze({ ...runtime, windupRemaining: remaining }),
+        events: Object.freeze([]),
+      });
+    }
+    const overflow = Math.max(0, -remaining);
+    const startEvent = Object.freeze({
+      type: "active-start",
+      kind: runtime.kind,
+      activationId: runtime.activationId,
+      target: runtime.target,
+    });
+    if (overflow < definition.activeSeconds) {
+      return Object.freeze({
+        runtime: Object.freeze({
+          ...runtime,
+          phase: "active",
+          windupRemaining: 0,
+          activeRemaining: definition.activeSeconds - overflow,
+        }),
+        events: Object.freeze([startEvent]),
+      });
+    }
+    const cooldownOverflow = overflow - definition.activeSeconds;
+    const cooldownRemaining = Math.max(0, definition.cooldownSeconds - cooldownOverflow);
+    return Object.freeze({
+      runtime: Object.freeze({
+        ...runtime,
+        phase: cooldownRemaining > 0 ? "cooldown" : "ready",
+        windupRemaining: 0,
+        activeRemaining: 0,
+        cooldownRemaining,
+        target: null,
+      }),
+      events: Object.freeze([
+        startEvent,
+        Object.freeze({
+          type: "active-end",
+          kind: runtime.kind,
+          activationId: runtime.activationId,
+          target: runtime.target,
+        }),
+      ]),
+    });
+  }
+  if (runtime.phase === "active") {
+    const remaining = runtime.activeRemaining - elapsedSeconds;
+    if (remaining > 0) {
+      return Object.freeze({
+        runtime: Object.freeze({ ...runtime, activeRemaining: remaining }),
+        events: Object.freeze([]),
+      });
+    }
+    const overflow = Math.max(0, -remaining);
+    const cooldownRemaining = Math.max(0, definition.cooldownSeconds - overflow);
+    return Object.freeze({
+      runtime: Object.freeze({
+        ...runtime,
+        phase: cooldownRemaining > 0 ? "cooldown" : "ready",
+        activeRemaining: 0,
+        cooldownRemaining,
+        target: null,
+      }),
+      events: Object.freeze([Object.freeze({
+        type: "active-end",
+        kind: runtime.kind,
+        activationId: runtime.activationId,
+        target: runtime.target,
+      })]),
+    });
+  }
+  const cooldownRemaining = Math.max(0, runtime.cooldownRemaining - elapsedSeconds);
   return Object.freeze({
     runtime: Object.freeze({
       ...runtime,
@@ -643,7 +1174,7 @@ function normalizeRect(rect) {
   const y = Number(rect?.y ?? rect?.top) || 0;
   const width = Math.max(0, Number(rect?.width ?? (Number(rect?.right) - x)) || 0);
   const height = Math.max(0, Number(rect?.height ?? (Number(rect?.bottom) - y)) || 0);
-  return Object.freeze({ x, y, width, height });
+  return Object.freeze({ x, y, width, height, ownerId: rect?.ownerId ?? null });
 }
 
 function overlaps(left, right, gap = 4) {
@@ -659,6 +1190,12 @@ const ICON_OFFSETS = Object.freeze([
   Object.freeze([36, -12]),
   Object.freeze([-62, -4]),
   Object.freeze([62, -4]),
+  Object.freeze([-72, 32]),
+  Object.freeze([72, 32]),
+  Object.freeze([-102, 34]),
+  Object.freeze([102, 34]),
+  Object.freeze([-72, 70]),
+  Object.freeze([72, 70]),
   Object.freeze([-36, -54]),
   Object.freeze([36, -54]),
   Object.freeze([0, -70]),
@@ -704,7 +1241,10 @@ export function layoutManualAbilityIcons({
       const x = Math.max(leftInset, Math.min(width - rightInset - hitSize, anchorX - hitSize / 2 + offsetX));
       const y = Math.max(topInset, Math.min(height - bottomInset - hitSize, anchorY - hitSize + offsetY));
       const rect = { x, y, width: hitSize, height: hitSize };
-      if (blocked.some((obstacle) => overlaps(rect, obstacle))) continue;
+      if (blocked.some((obstacle) => (
+        (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
+        && overlaps(rect, obstacle)
+      ))) continue;
       placed = rect;
       break;
     }
@@ -723,7 +1263,10 @@ export function layoutManualAbilityIcons({
         }
       }
       grid.sort((left, right) => left.distance - right.distance || left.y - right.y || left.x - right.x);
-      const fallback = grid.find((rect) => !blocked.some((obstacle) => overlaps(rect, obstacle)));
+      const fallback = grid.find((rect) => !blocked.some((obstacle) => (
+        (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
+        && overlaps(rect, obstacle)
+      )));
       if (fallback) placed = {
         x: fallback.x,
         y: fallback.y,
