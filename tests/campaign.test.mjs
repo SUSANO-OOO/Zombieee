@@ -741,7 +741,7 @@ test("Stage 4 and Stage 6 story joins are free while Stage 5 only discovers Monk
 test("default save is versioned and contains initial progression, selection, and settings", () => {
   const save = createDefaultCampaignSave();
   assert.equal(save.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
-  assert.equal(save.schemaVersion, 12);
+  assert.equal(save.schemaVersion, 13);
   assert.equal(save.revision, 0);
   assert.equal(save.updatedAt, "");
   assert.equal(save.integrity, "");
@@ -1488,6 +1488,83 @@ test("the same result receipt applies rewards, stars, and unlocks exactly once",
   assert.deepEqual(duplicate.result.newlyUnlockedUnitIds, []);
   assert.deepEqual(duplicate.result.newlyRecruitableUnitIds, []);
   assert.equal(JSON.stringify(duplicate.save), snapshot);
+});
+
+test("stage settlement atomically records encounters, defeat counts, and per-unit totals once", () => {
+  const input = {
+    stageId: STAGE_1,
+    resultId: "campaign-record-stage-1",
+    won: true,
+    baseHp: 90,
+    baseMaxHp: 100,
+    battleSeconds: 71,
+    kills: 4,
+    unitsLost: 1,
+    encounteredEnemyKinds: ["walker", "runner"],
+    enemyDefeatsByKind: { walker: 3, runner: 1 },
+    unitStats: {
+      damageByUnit: { hachi: 420 },
+      damageTakenByUnit: { hachi: 60 },
+      healingByUnit: { nao: 80 },
+    },
+    completedAt: "2026-07-27T07:00:00.000Z",
+  };
+  const first = resolveStageResult(createDefaultCampaignSave(), input);
+  assert.equal(first.save.records.totals.battles, 1);
+  assert.equal(first.save.records.totals.victories, 1);
+  assert.equal(first.save.records.totals.capsEarned, first.result.totalReward);
+  assert.equal(first.save.records.defeatCountsByEnemy.walker, 3);
+  assert.equal(first.save.records.encountersByEnemy.runner.firstOperationId, STAGE_1);
+  assert.equal(first.save.records.unitStats.damageByUnit.hachi, 420);
+  assert.equal(first.save.records.unitStats.healingByUnit.nao, 80);
+
+  const duplicate = resolveStageResult(first.save, input);
+  assert.equal(duplicate.result.alreadyProcessed, true);
+  assert.deepEqual(duplicate.save.records, first.save.records);
+});
+
+test("schema 12 migration seeds only exact legacy kill totals and starts receipt outcomes at zero", () => {
+  const defaults = createDefaultCampaignSave();
+  const legacy = {
+    ...defaults,
+    schemaVersion: 12,
+    records: undefined,
+    processedResultIds: ["legacy-result-a", "legacy-result-b"],
+    completedStageIds: [STAGE_3],
+    survival: {
+      ...defaults.survival,
+      totalRuns: 4,
+      totalKills: 100,
+      totalBossKills: 3,
+    },
+    outbreaks: {
+      ...defaults.outbreaks,
+      clearedMissionIds: ["outbreak-mother-brood-vault"],
+      bossDefeatCounts: { mother: 2 },
+    },
+  };
+  const migrated = migrateCampaignSave(legacy);
+
+  assert.equal(migrated.records.totals.battles, 0);
+  assert.equal(migrated.records.totals.victories, 0);
+  assert.equal(migrated.records.totals.defeats, 0);
+  assert.equal(migrated.records.totals.kills, 100);
+  assert.equal(migrated.records.totals.bossKills, 6);
+  assert.equal(migrated.records.defeatCountsByEnemy.takuya, 1);
+  assert.equal(migrated.records.defeatCountsByEnemy.mother, 2);
+
+  const current = resolveStageResult(migrated, {
+    stageId: STAGE_1,
+    resultId: "schema-13-confirmed-result",
+    won: true,
+    baseHp: 100,
+    baseMaxHp: 100,
+    kills: 5,
+  }).save;
+  assert.equal(current.records.totals.battles, 1);
+  assert.equal(current.records.totals.victories, 1);
+  assert.equal(current.records.totals.kills, 105);
+  assert.equal(current.records.totals.bossKills, 6);
 });
 
 test("a persisted receipt remains idempotent after serialization and more than 200 later battles", () => {

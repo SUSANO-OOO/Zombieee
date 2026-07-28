@@ -69,8 +69,11 @@ import {
   CampaignScreens,
   type CampaignResultView,
   type CampaignScreen,
+  type BossCompendiumView,
+  type EnemyCompendiumView,
   type OutbreakMissionScreenView,
   type OutbreakResultView,
+  type RecordsSummaryView,
   type StageScreenView,
   type SupplyScreenView,
   type UnitScreenView,
@@ -86,6 +89,7 @@ import {
   CAMPAIGN_UNITS,
   INITIAL_STAGE_ID,
   acknowledgeCampaignMigrationNotice,
+  campaignUnitIdToCombatKind,
   campaignUnitLevelUpgradeQuote,
   checkpointSurvivalCampaignSave,
   createDefaultCampaignSave,
@@ -135,6 +139,7 @@ import {
 } from "./survival.js";
 import {
   advanceSurvivalCombat,
+  captureUnfinishedSurvivalCombatStats,
   chooseSurvivalCombatUpgrade,
   createSurvivalCombatRuntime,
   survivalCombatEndReason,
@@ -144,6 +149,7 @@ import {
   survivalWaveReward,
 } from "./survivalBattleRuntime.js";
 import {
+  ENEMY_CONTENT,
   enemyBodyRadiusFor,
   enemyContentFor,
   enemyInitialAbilityCooldownFor,
@@ -151,6 +157,7 @@ import {
   enemyStatsForWave,
 } from "./content/enemyCatalog.js";
 import {
+  BOSS_DEFINITIONS,
   bossDefinitionForEnemyKind,
   bossHudSnapshot,
   bossPhaseForHp,
@@ -959,6 +966,13 @@ type RoleMetrics = {
   monkeyTrapTriggers: number;
 };
 
+type CombatMetrics = {
+  damageByUnit: Record<string, number>;
+  damageTakenByUnit: Record<string, number>;
+  healingByUnit: Record<string, number>;
+  enemyDefeatsByKind: Record<string, number>;
+};
+
 type StationMetrics = {
   aiRecoveries: number;
   karamiteBinds: number;
@@ -1056,6 +1070,7 @@ type Game = {
   bossDefeatPending: boolean;
   qaBarks: boolean;
   roleMetrics: RoleMetrics;
+  combatMetrics: CombatMetrics;
   stationMetrics: StationMetrics;
   survivalRun: ReturnType<typeof createSurvivalRun> | null;
   survivalRuntime: ReturnType<typeof createSurvivalCombatRuntime> | null;
@@ -1111,6 +1126,9 @@ type BattleResult = {
   unitsLost: number;
   bossDefeated: boolean;
   enemyBaseDestroyed: boolean;
+  encounteredEnemyKinds: readonly string[];
+  enemyDefeatsByKind: Readonly<Record<string, number>>;
+  unitStats: Readonly<Pick<CombatMetrics, "damageByUnit" | "damageTakenByUnit" | "healingByUnit">>;
   missionRuntime?: StageMissionRuntime;
 };
 
@@ -1154,7 +1172,14 @@ type SurvivalResultView = {
   kills: number;
   bossKills: number;
   earnedCaps: number;
-  earnedEquipmentGrants: readonly { equipmentId: string; quantity: number }[];
+  earnedEquipmentGrants: readonly { equipmentId: string; displayName: string; quantity: number }[];
+  unitStats: readonly {
+    kind: string;
+    displayName: string;
+    damage: number;
+    damageTaken: number;
+    healing: number;
+  }[];
   newHighestWave: boolean;
   capsAfter: number;
 };
@@ -1279,6 +1304,26 @@ const emptyRoleMetrics = (): RoleMetrics => ({
   gantetsuRedirectedDamage: 0,
   monkeyTrapTriggers: 0,
 });
+const emptyCombatMetrics = (): CombatMetrics => ({
+  damageByUnit: {},
+  damageTakenByUnit: {},
+  healingByUnit: {},
+  enemyDefeatsByKind: {},
+});
+function addCombatMetric(record: Record<string, number>, key: string, amount: number) {
+  const applied = Math.max(0, Number(amount) || 0);
+  if (!key || applied <= 0) return;
+  record[key] = Math.min(Number.MAX_SAFE_INTEGER, (record[key] ?? 0) + applied);
+}
+function recordUnitDamage(g: Game, unitKind: string, amount: number) {
+  addCombatMetric(g.combatMetrics.damageByUnit, unitKind, amount);
+}
+function recordUnitDamageTaken(g: Game, unitKind: string, amount: number) {
+  addCombatMetric(g.combatMetrics.damageTakenByUnit, unitKind, amount);
+}
+function recordUnitHealing(g: Game, unitKind: string, amount: number) {
+  addCombatMetric(g.combatMetrics.healingByUnit, unitKind, amount);
+}
 const emptyStationMetrics = (): StationMetrics => ({
   aiRecoveries: 0,
   karamiteBinds: 0,
@@ -1421,6 +1466,7 @@ const initialGame = (
   bossDefeatPending: false,
   qaBarks: false,
   roleMetrics: emptyRoleMetrics(),
+  combatMetrics: emptyCombatMetrics(),
   stationMetrics: emptyStationMetrics(),
   survivalRun: null,
   survivalRuntime: null,
@@ -1637,6 +1683,7 @@ function applyIncomingHumanDamage(
   { attackKind = "melee", attacker = null }: { attackKind?: "melee" | "ranged"; attacker?: Fighter | null } = {},
 ) {
   const incoming = Math.max(0, incomingDamage);
+  const targetHpBefore = target.hp;
   if (target.kind === "mayo-chan" && mayoRetreatBlocksDamage(target.mayoRetreat)) {
     return Object.freeze({
       targetDamage: 0,
@@ -1701,6 +1748,7 @@ function applyIncomingHumanDamage(
         const strikeDamage = definition.counterDamage * (isBossEnemyKind(counterTarget.kind) ? definition.bossDamageMultiplier : 1);
         const applied = Math.min(counterTarget.hp, strikeDamage);
         counterTarget.hp = Math.max(0, counterTarget.hp - strikeDamage);
+        recordUnitDamage(g, target.kind, applied);
         counterTarget.stunned = Math.max(counterTarget.stunned, definition.counterStunSeconds);
         counterTarget.flash = Math.max(counterTarget.flash, .3);
         counterTarget.knock = Math.max(counterTarget.knock, isBossEnemyKind(counterTarget.kind) ? 5 : 14);
@@ -1735,6 +1783,7 @@ function applyIncomingHumanDamage(
     }).eligible);
 
   if (guardian) {
+    const guardianHpBefore = guardian.hp;
     const rawInterception = resolveGantetsuInterception({
       guardian,
       target,
@@ -1761,6 +1810,7 @@ function applyIncomingHumanDamage(
     guardian.hp = appliedInterception.guardianHp;
     guardian.guardStandRemaining = appliedInterception.steadfast.remainingSeconds;
     guardian.guardStandAvailable = appliedInterception.steadfast.available;
+    recordUnitDamageTaken(g, guardian.kind, Math.max(0, guardianHpBefore - guardian.hp));
     guardian.flash = Math.max(guardian.flash, .12);
     redirectedDamage = rawInterception.guardianDamage;
     targetDamage = rawInterception.targetDamage;
@@ -1808,6 +1858,7 @@ function applyIncomingHumanDamage(
   } else {
     target.hp -= protectedTarget.damage;
   }
+  recordUnitDamageTaken(g, target.kind, Math.max(0, targetHpBefore - target.hp));
   preventedDamage += armoredTargetDamage.prevented + protectedTarget.prevented;
   g.roleMetrics.naoPreventedDamage += protectedTarget.prevented;
   return Object.freeze({
@@ -1821,6 +1872,60 @@ function bodyRadiusFor(kind: string) {
   return UNIT_CARDS.find((unit) => unit.kind === kind)?.bodyRadius
     ?? enemyBodyRadiusFor(kind)
     ?? 11;
+}
+
+const ENEMY_RECORD_PROFILE_LABELS: Readonly<Record<string, string>> = Object.freeze({
+  nearest: "正面の対象へ接近し、近距離で攻撃する。",
+  "crawler-priority": "高速で防衛線を抜け、移動拠点を優先する。",
+  ranged: "距離を保ちながら遠隔攻撃を行う。",
+  "support-object": "高耐久で支援物資や防衛対象を破壊する。",
+  backline: "前衛を抜け、後衛の隊員を狙う。",
+  area: "広い攻撃範囲で密集した部隊を崩す。",
+  grab: "拘束予告後に隊員を引き寄せる。",
+  contamination: "床面へ持続汚染を残し、移動を制限する。",
+  charge: "直線予告後に高速突進する。",
+  "sonic-cone": "前方へ拡大する音圧攻撃で部隊を崩す。",
+  "living-barricade": "味方感染体の前面を覆う生体防壁となる。",
+  "vault-backline": "前衛を跳び越えて後衛へ着地する。",
+  "mimic-taunt": "擬態音声で標的選択を撹乱する。",
+  "projectile-canopy": "皮膜を展開し、遠隔攻撃を減衰させる。",
+  "root-support": "地面へ根を張り、周囲の感染体を補強する。",
+});
+
+function spriteCompendiumStyle(
+  kind: string,
+  box = { width: 160, height: 118 },
+): CSSProperties {
+  const frame = spriteFrameFor(kind, "idle", "left");
+  const content = frame.contentRect ?? frame.sourceRect ?? { x: frame.x, y: frame.y, w: frame.w, h: frame.h };
+  const source = frame.sourceRect ?? { x: frame.x, y: frame.y, w: frame.w, h: frame.h };
+  const boxWidth = box.width;
+  const boxHeight = box.height;
+  const scale = Math.min((boxWidth - 16) / Math.max(1, content.w), (boxHeight - 12) / Math.max(1, content.h));
+  const contentCenterX = (content.x - source.x + content.w / 2) * scale;
+  const contentCenterY = (content.y - source.y + content.h / 2) * scale;
+  return {
+    position: "absolute",
+    width: `${source.w * scale}px`,
+    height: `${source.h * scale}px`,
+    left: `${boxWidth / 2 - contentCenterX}px`,
+    top: `${boxHeight / 2 - contentCenterY}px`,
+    backgroundImage: `url('${frame.path}')`,
+    backgroundRepeat: "no-repeat",
+    backgroundSize: `${frame.sheetWidth * scale}px ${frame.sheetHeight * scale}px`,
+    backgroundPosition: `${-source.x * scale}px ${-source.y * scale}px`,
+  };
+}
+
+function fullCompendiumStyle(path: string): CSSProperties {
+  return {
+    position: "absolute",
+    inset: 0,
+    backgroundImage: `url('${path}')`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center",
+    backgroundSize: "contain",
+  };
 }
 
 function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: EnemySpawnEntry | null = null) {
@@ -7877,6 +7982,124 @@ export function AshfallGame() {
       starCriteria: ["異常発生個体を撃破", "残存感染体を掃討", "移動拠点を防衛"],
     } satisfies StageScreenView
     : selectedStageView;
+  const recordOperationLabel = useCallback((operationId: string) => {
+    if (CAMPAIGN_STAGE_BY_ID[operationId]) return CAMPAIGN_STAGE_BY_ID[operationId].displayName;
+    if (OUTBREAK_MISSION_BY_ID[operationId]) return OUTBREAK_MISSION_BY_ID[operationId].displayName;
+    if (operationId.startsWith("survival-wave-")) {
+      return `Survival WAVE ${operationId.slice("survival-wave-".length)}開始`;
+    }
+    return operationId;
+  }, []);
+  const enemyCompendiumViews = useMemo<EnemyCompendiumView[]>(() => ENEMY_CONTENT
+    .filter((enemy) => !isBossEnemyKind(enemy.id))
+    .map((enemy) => {
+      const record = campaignSave.records.encountersByEnemy[enemy.id] ?? null;
+      const legacyStage = CAMPAIGN_STAGES.find((stage) => (
+        campaignSave.completedStageIds.includes(stage.id)
+        && (stage.enemyKinds.includes(enemy.id) || stage.boss?.enemyKind === enemy.id)
+      )) ?? null;
+      const encountered = Boolean(record || legacyStage);
+      const firstOperationId = record?.firstOperationId ?? legacyStage?.id ?? "";
+      return {
+        id: enemy.id,
+        displayName: enemy.displayName,
+        classification: enemy.runtimeGenerated
+          ? "戦闘不能者由来・転化感染体"
+          : enemy.spawnClass === "heavy"
+            ? "重装通常感染体"
+            : "通常感染体",
+        encountered,
+        firstEncounterLabel: firstOperationId
+          ? recordOperationLabel(firstOperationId)
+          : "未確認",
+        encounterCount: record?.encounterCount ?? (legacyStage ? 1 : 0),
+        defeatCount: campaignSave.records.defeatCountsByEnemy[enemy.id] ?? 0,
+        attackProfile: ENEMY_RECORD_PROFILE_LABELS[enemy.aiProfile] ?? "固有の行動規則で部隊へ接近する。",
+        artStyle: spriteCompendiumStyle(enemy.id),
+      };
+    }), [campaignSave.completedStageIds, campaignSave.records, recordOperationLabel]);
+  const bossCompendiumViews = useMemo<BossCompendiumView[]>(() => BOSS_DEFINITIONS.map((boss) => {
+    const record = campaignSave.records.encountersByEnemy[boss.enemyKind] ?? null;
+    const legacyStage = CAMPAIGN_STAGES.find((stage) => (
+      campaignSave.completedStageIds.includes(stage.id)
+      && (stage.enemyKinds.includes(boss.enemyKind) || stage.boss?.enemyKind === boss.enemyKind)
+    )) ?? null;
+    const outbreakMission = OUTBREAK_MISSIONS.find((mission) => mission.boss.enemyKind === boss.enemyKind) ?? null;
+    const outbreakDefeatCount = campaignSave.outbreaks.bossDefeatCounts[boss.enemyKind] ?? 0;
+    const outbreakEncountered = Boolean(
+      outbreakMission
+      && campaignSave.outbreaks.clearedMissionIds.includes(outbreakMission.id),
+    );
+    const encountered = Boolean(record || legacyStage || outbreakEncountered);
+    const firstOperationId = record?.firstOperationId
+      ?? legacyStage?.id
+      ?? (outbreakEncountered ? outbreakMission?.id : "")
+      ?? "";
+    const defeatCount = Math.max(
+      campaignSave.records.defeatCountsByEnemy[boss.enemyKind] ?? 0,
+      outbreakDefeatCount,
+      legacyStage ? 1 : 0,
+    );
+    return {
+      id: boss.id,
+      displayName: boss.displayName,
+      classification: boss.classification,
+      encountered,
+      firstEncounterLabel: firstOperationId ? recordOperationLabel(firstOperationId) : "未確認",
+      defeatCount,
+      attackName: boss.attackTelegraph.displayName,
+      attackSummary: boss.compendium.summary,
+      weakness: boss.attackTelegraph.counterplay,
+      equipmentName: EQUIPMENT_BY_ID[boss.reward.equipmentId]?.displayName ?? boss.reward.equipmentId,
+      artStyle: boss.compendium.assetPath
+        ? fullCompendiumStyle(boss.compendium.assetPath)
+        : spriteCompendiumStyle(boss.enemyKind, { width: 190, height: 168 }),
+    };
+  }), [campaignSave.completedStageIds, campaignSave.outbreaks, campaignSave.records, recordOperationLabel]);
+  const recordsSummaryView = useMemo<RecordsSummaryView>(() => {
+    const records = campaignSave.records;
+    const unitKinds = [...new Set([
+      ...Object.keys(records.unitStats.damageByUnit),
+      ...Object.keys(records.unitStats.damageTakenByUnit),
+      ...Object.keys(records.unitStats.healingByUnit),
+    ])];
+    return {
+      battles: records.totals.battles,
+      victories: records.totals.victories,
+      defeats: records.totals.defeats,
+      withdrawals: records.totals.withdrawals,
+      battleSeconds: records.totals.battleSeconds,
+      kills: records.totals.kills,
+      bossKills: records.totals.bossKills,
+      unitsLost: records.totals.unitsLost,
+      capsEarned: records.totals.capsEarned,
+      clearedStages: CAMPAIGN_STAGES.filter((stage) => (
+        campaignSave.completedStageIds.includes(stage.id)
+      )).length,
+      totalStages: CAMPAIGN_STAGES.length,
+      collectedStars: Object.values(campaignSave.bestStarsByStage)
+        .reduce((total: number, stars) => total + Number(stars || 0), 0),
+      highestSurvivalWave: campaignSave.survival.highestWave,
+      survivalRuns: campaignSave.survival.totalRuns,
+      outbreakClears: campaignSave.outbreaks.clearedMissionIds.length,
+      recentResults: [...records.recentResults].reverse().map((result) => ({
+        resultId: result.resultId,
+        operationLabel: recordOperationLabel(result.operationId),
+        categoryLabel: result.category === "survival" ? "SURVIVAL" : result.category === "outbreak" ? "異常発生" : "本編",
+        outcomeLabel: result.outcome === "won" ? "勝利" : result.outcome === "withdrawn" ? "撤退" : "敗北",
+        kills: result.kills,
+        reachedWave: result.reachedWave,
+        completedAt: result.completedAt,
+      })),
+      unitStats: unitKinds.map((kind) => ({
+        kind,
+        displayName: cards.find((card) => card.kind === kind)?.name ?? kind,
+        damage: records.unitStats.damageByUnit[kind] ?? 0,
+        damageTaken: records.unitStats.damageTakenByUnit[kind] ?? 0,
+        healing: records.unitStats.healingByUnit[kind] ?? 0,
+      })).sort((left, right) => right.damage - left.damage || left.displayName.localeCompare(right.displayName)),
+    };
+  }, [campaignSave, recordOperationLabel]);
   const campaignLevelCap = getCampaignLevelCap(campaignSave);
   const unitViews = useMemo<UnitScreenView[]>(() => (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => {
     const level = getCampaignUnitLevel(campaignSave, unit.id);
@@ -8309,6 +8532,7 @@ export function AshfallGame() {
   }, [openEvents]);
   const openPersonnel = useCallback(() => setScreen("personnel"), []);
   const openLoadout = useCallback(() => setScreen("loadout"), []);
+  const openRecords = useCallback(() => setScreen("records"), []);
   const openOutbreak = useCallback(() => {
     const selected = outbreakMissionViews.find(({ id }) => id === selectedOutbreakMissionId && isOutbreakMissionUnlocked(
       campaignSave.outbreaks,
@@ -8793,7 +9017,24 @@ export function AshfallGame() {
           kills: lastResult.stats.kills,
           bossKills: lastResult.stats.bossKills,
           earnedCaps: lastResult.earnedCaps,
-          earnedEquipmentGrants: lastResult.earnedEquipmentGrants,
+          earnedEquipmentGrants: lastResult.earnedEquipmentGrants.map((grant: { equipmentId: string; quantity: number }) => ({
+            ...grant,
+            displayName: EQUIPMENT_BY_ID[grant.equipmentId]?.displayName ?? grant.equipmentId,
+          })),
+          unitStats: [...new Set([
+            ...lastResult.formation.unitIds
+              .map((unitId: string) => campaignUnitIdToCombatKind(unitId))
+              .filter((kind: string | null): kind is string => Boolean(kind)),
+            ...Object.keys(lastResult.stats.damageByUnit),
+            ...Object.keys(lastResult.stats.damageTakenByUnit),
+            ...Object.keys(lastResult.stats.healingByUnit),
+          ])].map((kind) => ({
+            kind,
+            displayName: cards.find((card) => card.kind === kind)?.name ?? kind,
+            damage: lastResult.stats.damageByUnit[kind] ?? 0,
+            damageTaken: lastResult.stats.damageTakenByUnit[kind] ?? 0,
+            healing: lastResult.stats.healingByUnit[kind] ?? 0,
+          })).sort((left, right) => right.damage - left.damage || left.displayName.localeCompare(right.displayName)),
           newHighestWave: lastResult.newHighestWave,
           capsAfter: nextSave.caps,
         });
@@ -8838,6 +9079,9 @@ export function AshfallGame() {
           unitsLost: pending.end.unitsLost,
           battleSeconds: pending.end.time,
         },
+        encounteredEnemyKinds: pending.end.encounteredEnemyKinds,
+        enemyDefeatsByKind: pending.end.enemyDefeatsByKind,
+        unitStats: pending.end.unitStats,
       },
       {
         completedAt: pending.completedAt,
@@ -8899,10 +9143,11 @@ export function AshfallGame() {
     const timer = window.setTimeout(async () => {
       if (finalizedEndRef.current === end) return;
       finalizedEndRef.current = end;
+      const completedAt = new Date().toISOString();
       if (OUTBREAK_MISSION_BY_ID[end.stageId]) {
         const pending = {
           end,
-          completedAt: new Date().toISOString(),
+          completedAt,
         };
         setPendingOutbreakSettlement(pending);
         await commitOutbreakSettlement(pending);
@@ -8914,6 +9159,14 @@ export function AshfallGame() {
         won: end.won,
         baseHp: end.baseHp,
         baseMaxHp: end.baseMaxHp,
+        battleSeconds: end.time,
+        kills: end.kills,
+        unitsLost: end.unitsLost,
+        bossKills: end.bossDefeated ? 1 : 0,
+        encounteredEnemyKinds: end.encounteredEnemyKinds,
+        enemyDefeatsByKind: end.enemyDefeatsByKind,
+        unitStats: end.unitStats,
+        completedAt,
       });
       const view: CampaignResultView = {
         won: end.won,
@@ -9185,7 +9438,19 @@ export function AshfallGame() {
     if (activeGame.survivalRun) {
       if (action !== "withdraw" || activeGame.over) return;
       const endedAt = new Date().toISOString();
-      const endedRun = endSurvivalRun(activeGame.survivalRun, SURVIVAL_END_REASONS.WITHDRAWAL, endedAt);
+      const recordedRun = captureUnfinishedSurvivalCombatStats(
+        activeGame.survivalRuntime,
+        activeGame.survivalRun,
+        {
+          totalKills: activeGame.kills,
+          combatStats: {
+            ...activeGame.combatMetrics,
+            encounteredEnemyKinds: activeGame.enemyKindsSeen,
+          },
+          updatedAt: endedAt,
+        },
+      );
+      const endedRun = endSurvivalRun(recordedRun, SURVIVAL_END_REASONS.WITHDRAWAL, endedAt);
       if (!endedRun) return;
       activeGame.survivalRun = endedRun;
       activeGame.over = true;
@@ -9648,6 +9913,7 @@ export function AshfallGame() {
               for (const target of affected) {
                 const damage = Math.min(target.hp, definition.impactDamage);
                 target.hp = Math.max(0, target.hp - definition.impactDamage);
+                recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, .2);
                 target.knock = Math.max(target.knock, 8);
                 addDamageText(g, {
@@ -9705,6 +9971,7 @@ export function AshfallGame() {
               for (const target of affected) {
                 const damage = Math.min(target.hp, definition.impactDamage);
                 target.hp = Math.max(0, target.hp - definition.impactDamage);
+                recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, .28);
                 target.knock = Math.max(target.knock, definition.knockback);
                 target.stunned = Math.max(target.stunned, definition.stunSeconds);
@@ -9741,6 +10008,7 @@ export function AshfallGame() {
                   || effectDistance(target, event.target) > definition.effectRadius) continue;
                 const damage = Math.min(target.hp, impactDamage);
                 target.hp = Math.max(0, target.hp - impactDamage);
+                recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, finalRound ? .3 : .18);
                 target.knock = Math.max(target.knock, finalRound ? definition.finalKnockback : 7);
                 addDamageText(g, { x: target.x, y: target.y - 48, value: `榴弾 -${Math.round(damage)}`, life: .78, color: finalRound ? "#ffd08a" : "#d9aa63" });
@@ -9773,6 +10041,7 @@ export function AshfallGame() {
               const strikeDamage = definition.counterDamage * (isBossEnemyKind(target.kind) ? definition.bossDamageMultiplier : 1);
               const damage = Math.min(target.hp, strikeDamage);
               target.hp = Math.max(0, target.hp - strikeDamage);
+              recordUnitDamage(g, owner.kind, damage);
               target.flash = Math.max(target.flash, .3);
               target.stunned = Math.max(target.stunned, definition.counterStunSeconds);
               target.knock = Math.max(target.knock, isBossEnemyKind(target.kind) ? 4 : 13);
@@ -9908,6 +10177,7 @@ export function AshfallGame() {
                 appliedSplash = Math.min(splashTarget.hp, grenadeDamage);
                 splashTarget.hp = Math.max(0, splashTarget.hp - grenadeDamage);
               }
+              recordUnitDamage(g, hit.weapon, appliedSplash);
               splashTarget.flash = Math.max(splashTarget.flash, .16);
               splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
               addDamageText(g, {
@@ -9957,6 +10227,7 @@ export function AshfallGame() {
           } else {
             target.hp -= hit.damage;
           }
+          recordUnitDamage(g, hit.weapon, Math.max(0, beforeHit - target.hp));
           if (hit.raiderLineHit && hit.shotIndex === 0) {
             const suppression = applyRaiderSuppression(target.suppressionStacks, 1);
             target.suppressionStacks = suppression.stacks;
@@ -10197,6 +10468,10 @@ export function AshfallGame() {
             bossCombatReady: Boolean(survivalBoss?.combatReady),
             livingHumanCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
             queuedHumanCount: g.deployQueue.length,
+            combatStats: {
+              ...g.combatMetrics,
+              encounteredEnemyKinds: g.enemyKindsSeen,
+            },
           });
           if (survivalStep.run && survivalStep.runtime) {
             g.survivalRun = survivalStep.run;
@@ -10248,7 +10523,19 @@ export function AshfallGame() {
             });
           if (survivalEndReason) {
             const endedAt = new Date().toISOString();
-            const endedRun = endSurvivalRun(g.survivalRun, survivalEndReason, endedAt);
+            const recordedRun = captureUnfinishedSurvivalCombatStats(
+              g.survivalRuntime,
+              g.survivalRun,
+              {
+                totalKills: g.kills,
+                combatStats: {
+                  ...g.combatMetrics,
+                  encounteredEnemyKinds: g.enemyKindsSeen,
+                },
+                updatedAt: endedAt,
+              },
+            );
+            const endedRun = endSurvivalRun(recordedRun, survivalEndReason, endedAt);
             if (endedRun) {
               g.survivalRun = endedRun;
               g.over = true;
@@ -11495,6 +11782,7 @@ export function AshfallGame() {
               const healed = healing.amount;
               const roleEffect = roleEffectForAction({ unitKind: f.kind, action: "heal", targetKind: wounded.kind }) as RoleEffect | null;
               wounded.hp = healing.hp;
+              recordUnitHealing(g, f.kind, healed);
               wounded.damageReductionRemaining = healing.protectionSeconds;
               wounded.damageReductionMultiplier = 1 - healing.damageReduction;
               f.healFocusTargetId = wounded.id;
@@ -12079,6 +12367,9 @@ export function AshfallGame() {
                 target.hp -= immediateAttackDamage;
                 appliedAttack = { targetDamage: immediateAttackDamage };
               }
+              if (f.side === "human" && appliedAttack.targetDamage > 0) {
+                recordUnitDamage(g, f.kind, appliedAttack.targetDamage);
+              }
               if (splitMachineGunBurst) {
                 const weaponProfile = weaponProfileForUnit(f.kind);
                 for (const event of weaponDamageEvents) {
@@ -12244,7 +12535,9 @@ export function AshfallGame() {
                 for (const nextSecondary of newcomerEffects.secondaryTargets) {
                   const secondary = g.fighters.find((candidate) => candidate.id === nextSecondary.id && candidate.side === "zombie" && candidate.hp > 0);
                   if (!secondary) continue;
+                  const secondaryHpBefore = secondary.hp;
                   Object.assign(secondary, nextSecondary);
+                  recordUnitDamage(g, f.kind, Math.max(0, secondaryHpBefore - secondary.hp));
                   if (f.kind === "crazy-king") g.roleMetrics.crazyKingSecondaryHits += 1;
                   g.damageTexts.push({ x: secondary.x, y: secondary.y - 43, value: String(Math.round(newcomerEffects.secondaryDamage)), life: .58, color: "#efb95f" });
                 }
@@ -12857,6 +13150,7 @@ export function AshfallGame() {
           } as Corpse);
           if (fighter.side === "zombie") {
             g.kills++; g.combo++; g.comboTime = 2.3;
+            addCombatMetric(g.combatMetrics.enemyDefeatsByKind, fighter.kind, 1);
             g.maxCombo = Math.max(g.maxCombo, g.combo);
             g.scrap += scrapReward(fighter.kind);
             g.supportGauge = Math.min(SUPPORT_GAUGE_MAX, g.supportGauge + supportGaugeReward(fighter.kind));
@@ -13044,6 +13338,13 @@ export function AshfallGame() {
             unitsLost: g.unitsLost,
             bossDefeated: g.bossDefeated,
             enemyBaseDestroyed,
+            encounteredEnemyKinds: [...g.enemyKindsSeen],
+            enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
+            unitStats: {
+              damageByUnit: { ...g.combatMetrics.damageByUnit },
+              damageTakenByUnit: { ...g.combatMetrics.damageTakenByUnit },
+              healingByUnit: { ...g.combatMetrics.healingByUnit },
+            },
             missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
               ? { ...g.stageMission }
               : undefined,
@@ -13075,6 +13376,13 @@ export function AshfallGame() {
             unitsLost: g.unitsLost,
             bossDefeated: g.bossDefeated,
             enemyBaseDestroyed: g.barricadeHp <= 0,
+            encounteredEnemyKinds: [...g.enemyKindsSeen],
+            enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
+            unitStats: {
+              damageByUnit: { ...g.combatMetrics.damageByUnit },
+              damageTakenByUnit: { ...g.combatMetrics.damageTakenByUnit },
+              healingByUnit: { ...g.combatMetrics.healingByUnit },
+            },
           });
         }
       }
@@ -13460,8 +13768,11 @@ export function AshfallGame() {
             <article><small>撃破</small><b>{survivalResult.kills}</b><span>BOSS {survivalResult.bossKills}</span></article>
             <article><small>獲得CAPS</small><b>+{survivalResult.earnedCaps}</b><span>所持 {survivalResult.capsAfter}</span></article>
           </div>
+          <div className="survival-unit-result"><h2>隊員別戦闘記録</h2>{survivalResult.unitStats.length > 0
+            ? <table><thead><tr><th>隊員</th><th>与damage</th><th>被damage</th><th>回復</th></tr></thead><tbody>{survivalResult.unitStats.map((unit) => <tr key={unit.kind}><th>{unit.displayName}</th><td>{unit.damage.toLocaleString("ja-JP")}</td><td>{unit.damageTaken.toLocaleString("ja-JP")}</td><td>{unit.healing.toLocaleString("ja-JP")}</td></tr>)}</tbody></table>
+            : <p>このrunでは隊員別damage記録がありません。</p>}</div>
           <div className="survival-equipment-result"><h2>装備報酬</h2>{survivalResult.earnedEquipmentGrants.length > 0
-            ? <ul>{survivalResult.earnedEquipmentGrants.map((grant) => <li key={grant.equipmentId}><b>{grant.equipmentId}</b><span>×{grant.quantity}</span></li>)}</ul>
+            ? <ul>{survivalResult.earnedEquipmentGrants.map((grant) => <li key={grant.equipmentId}><b>{grant.displayName}</b><span>×{grant.quantity}</span></li>)}</ul>
             : <p>今回の装備報酬はありません。</p>}</div>
           <div className="survival-result-actions"><button onClick={openSurvival}>次のrunへ</button><button onClick={() => returnToMap()}>エリアマップへ戻る</button></div>
         </section></div>}
@@ -13482,6 +13793,9 @@ export function AshfallGame() {
           outbreakMissions={outbreakMissionViews}
           selectedOutbreakMissionId={selectedOutbreakMissionId}
           outbreakResult={outbreakResult}
+          recordsSummary={recordsSummaryView}
+          enemyCompendium={enemyCompendiumViews}
+          bossCompendium={bossCompendiumViews}
           loadoutReturnLabel={selectedOutbreakMissionId ? "異常発生任務" : "地図へ"}
           assetsReady={assetsReady}
           assetError={assetError}
@@ -13512,6 +13826,7 @@ export function AshfallGame() {
           onSelectStage={selectStage}
           onOpenSurvival={openSurvival}
           onOpenOutbreak={openOutbreak}
+          onOpenRecords={openRecords}
           onSelectOutbreakMission={selectOutbreakMission}
           onPrepareOutbreak={prepareOutbreak}
           onOpenPersonnel={openPersonnel}

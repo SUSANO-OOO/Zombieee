@@ -23,7 +23,9 @@ import {
   reorganizeLegacyCaps,
 } from "./campaignEconomy.js";
 import {
+  SURVIVAL_END_REASONS,
   createDefaultSurvivalProgress,
+  normalizeSurvivalRun,
   normalizeSurvivalProgress,
   saveSurvivalCheckpoint,
   settleSurvivalRun,
@@ -46,6 +48,11 @@ import {
   normalizeOutbreakProgress,
   resolveOutbreakProgress,
 } from "./outbreakMissions.js";
+import {
+  createDefaultCampaignRecords,
+  normalizeCampaignRecords,
+  recordCampaignOperation,
+} from "./campaignRecords.js";
 
 /**
  * Pure, data-driven campaign progression for the 0.7.0 unit-collection release.
@@ -1898,7 +1905,7 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 export const calculateBattleRewards = calculateStageRewards;
 
 const V090_LEVEL_ECONOMY_SCHEMA_VERSION = 10;
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 12;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 13;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
 const CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION = 5;
 
@@ -2023,6 +2030,7 @@ export function createDefaultCampaignSave() {
     lastSelectedStageId: INITIAL_STAGE_ID,
     survival: createDefaultSurvivalProgress(),
     outbreaks: createDefaultOutbreakProgress(),
+    records: createDefaultCampaignRecords(),
     settings: { ...DEFAULT_CAMPAIGN_SETTINGS },
   };
 }
@@ -2544,6 +2552,44 @@ export function migrateCampaignSave(
   const updatedAt = migratesSchema
     ? new Date((sourceUpdatedAt ? Date.parse(sourceUpdatedAt) : 0) + 1).toISOString()
     : sourceUpdatedAt;
+  const survival = normalizeSurvivalProgress(firstDefined(
+    source,
+    ["survival", "survivalProgress"],
+    null,
+  ));
+  const outbreaks = normalizeOutbreakProgress(firstDefined(
+    source,
+    ["outbreaks", "outbreakProgress"],
+    null,
+  ));
+  const sourceRecords = firstDefined(source, ["records", "campaignRecords"], null);
+  let records = normalizeCampaignRecords(sourceRecords);
+  if (sourceSchemaVersion < CAMPAIGN_SAVE_SCHEMA_VERSION && !isRecord(sourceRecords)) {
+    const legacyDefeatCountsByEnemy = { ...outbreaks.bossDefeatCounts };
+    for (const stage of CAMPAIGN_STAGES) {
+      const bossKind = stage.boss?.enemyKind;
+      if (!bossKind || !completedStageIds.includes(stage.id)) continue;
+      legacyDefeatCountsByEnemy[bossKind] = Math.min(
+        Number.MAX_SAFE_INTEGER,
+        (legacyDefeatCountsByEnemy[bossKind] ?? 0) + 1,
+      );
+    }
+    const knownBossKills = Math.min(
+      Number.MAX_SAFE_INTEGER,
+      survival.totalBossKills
+        + Object.values(legacyDefeatCountsByEnemy)
+          .reduce((total, count) => total + Number(count || 0), 0),
+    );
+    records = normalizeCampaignRecords({
+      ...records,
+      defeatCountsByEnemy: legacyDefeatCountsByEnemy,
+      totals: {
+        ...records.totals,
+        kills: survival.totalKills,
+        bossKills: knownBossKills,
+      },
+    });
+  }
 
   return {
     schemaVersion: CAMPAIGN_SAVE_SCHEMA_VERSION,
@@ -2577,16 +2623,9 @@ export function migrateCampaignSave(
     selectedFormationPresetId,
     selectedPresetId: selectedFormationPresetId,
     lastSelectedStageId,
-    survival: normalizeSurvivalProgress(firstDefined(
-      source,
-      ["survival", "survivalProgress"],
-      null,
-    )),
-    outbreaks: normalizeOutbreakProgress(firstDefined(
-      source,
-      ["outbreaks", "outbreakProgress"],
-      null,
-    )),
+    survival,
+    outbreaks,
+    records,
     settings: normalizeSettings(rawSettings, {
       recoverLegacySilence: !Number.isFinite(sourceSchemaVersion)
         || sourceSchemaVersion < 4,
@@ -2749,6 +2788,7 @@ export function settleSurvivalCampaignSave(
   } = {},
 ) {
   const current = migrateCampaignSave(save, { eventRegistry });
+  const endedRun = normalizeSurvivalRun(run);
   const settlement = settleSurvivalRun(current.survival, run, { endedAt });
   if (settlement.duplicate) {
     return {
@@ -2767,6 +2807,21 @@ export function settleSurvivalCampaignSave(
     };
   }
   const caps = Math.min(Number.MAX_SAFE_INTEGER, current.caps + settlement.payout.caps);
+  const records = recordCampaignOperation(current.records, {
+    resultId: endedRun.runId,
+    operationId: `survival-wave-${endedRun.startWave}`,
+    category: "survival",
+    outcome: endedRun.endReason === SURVIVAL_END_REASONS.WITHDRAWAL ? "withdrawn" : "lost",
+    battleSeconds: endedRun.stats.battleSeconds,
+    kills: endedRun.stats.kills,
+    bossKills: endedRun.stats.bossKills,
+    reachedWave: endedRun.lastCompletedWave,
+    capsEarned: settlement.payout.caps,
+    encounteredEnemyKinds: endedRun.stats.encounteredEnemyKinds,
+    enemyDefeatsByKind: endedRun.stats.enemyDefeatsByKind,
+    unitStats: endedRun.stats,
+    completedAt: endedAt,
+  });
   const revised = reviseCampaignSave({
     ...current,
     caps,
@@ -2776,6 +2831,7 @@ export function settleSurvivalCampaignSave(
       settlement.payout.equipmentGrants,
     ),
     survival: settlement.progress,
+    records,
   }, {
     updatedAt: endedAt,
     eventRegistry,
@@ -2864,6 +2920,30 @@ export function settleOutbreakCampaignSave(
     };
   }
   const caps = Math.min(Number.MAX_SAFE_INTEGER, current.caps + settlement.reward.caps);
+  const missionBossKind = settlement.progress.lastResult?.bossKind ?? "";
+  const records = recordCampaignOperation(current.records, {
+    resultId,
+    operationId: result?.missionId,
+    category: "outbreak",
+    won: result?.won === true,
+    battleSeconds: result?.stats?.battleSeconds,
+    kills: result?.stats?.kills,
+    unitsLost: result?.stats?.unitsLost,
+    bossKills: result?.won === true ? 1 : 0,
+    capsEarned: settlement.reward.caps,
+    encounteredEnemyKinds: [
+      ...(Array.isArray(result?.encounteredEnemyKinds) ? result.encounteredEnemyKinds : []),
+      ...(missionBossKind ? [missionBossKind] : []),
+    ],
+    enemyDefeatsByKind: {
+      ...(isRecord(result?.enemyDefeatsByKind) ? result.enemyDefeatsByKind : {}),
+      ...(result?.won === true && missionBossKind
+        ? { [missionBossKind]: Math.max(1, Number(result?.enemyDefeatsByKind?.[missionBossKind]) || 0) }
+        : {}),
+    },
+    unitStats: result?.unitStats,
+    completedAt,
+  });
   const revised = reviseCampaignSave({
     ...current,
     processedResultIds: [...new Set([...current.processedResultIds, resultId])],
@@ -2874,6 +2954,7 @@ export function settleOutbreakCampaignSave(
       settlement.reward.equipmentGrants,
     ),
     outbreaks: settlement.progress,
+    records,
   }, {
     updatedAt: completedAt,
     eventRegistry,
@@ -3854,6 +3935,21 @@ export function resolveStageResult(save, stageIdOrResult, maybeResult) {
     ? [...new Set([...current.completedStageIds, stage.id])]
     : [...current.completedStageIds];
   const caps = current.caps + rewards.totalReward;
+  const records = recordCampaignOperation(current.records, {
+    resultId,
+    operationId: stage.id,
+    category: "campaign",
+    won,
+    battleSeconds: input.battleSeconds,
+    kills: input.kills,
+    unitsLost: input.unitsLost,
+    bossKills: input.bossKills,
+    capsEarned: rewards.totalReward,
+    encounteredEnemyKinds: input.encounteredEnemyKinds,
+    enemyDefeatsByKind: input.enemyDefeatsByKind,
+    unitStats: input.unitStats,
+    completedAt: input.completedAt,
+  });
   const draftSave = migrateCampaignSave({
     ...current,
     campaignStarted: true,
@@ -3864,6 +3960,7 @@ export function resolveStageResult(save, stageIdOrResult, maybeResult) {
     caps,
     supplies: caps,
     lastSelectedStageId: stage.id,
+    records,
   });
   const nextSave = reviseCampaignSave(draftSave);
   const newlyUnlockedStageIds = nextSave.unlockedStageIds.filter((id) => !current.unlockedStageIds.includes(id));

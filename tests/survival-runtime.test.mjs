@@ -24,6 +24,7 @@ import {
 import {
   SURVIVAL_DEFENSE_FRONT,
   advanceSurvivalCombat,
+  captureUnfinishedSurvivalCombatStats,
   chooseSurvivalCombatUpgrade,
   createSurvivalCombatRuntime,
   survivalCombatEndReason,
@@ -213,6 +214,125 @@ test("terminal loss wins atomically over boss completion and emits no checkpoint
   assert.equal(step.run.pendingUpgradeChoices.length, 0);
 });
 
+test("defeat or withdrawal flushes unfinished-wave combat records without granting wave progress or rewards", () => {
+  const run = newRun("unfinished-wave-records");
+  const runtime = createSurvivalCombatRuntime(run);
+  const queued = advanceSurvivalCombat(runtime, run, {
+    seconds: 2,
+    crawlerHp: 700,
+    activeEnemyCount: 0,
+    pendingSpawnCount: 0,
+    totalKills: 10,
+    livingHumanCount: 2,
+    combatStats: {
+      damageByUnit: { hachi: 100 },
+      encounteredEnemyKinds: ["walker"],
+      enemyDefeatsByKind: { walker: 10 },
+    },
+  });
+  assert.equal(queued.runtime.waveQueued, true);
+  const engaged = advanceSurvivalCombat(queued.runtime, queued.run, {
+    seconds: 3.25,
+    crawlerHp: 700,
+    activeEnemyCount: 2,
+    pendingSpawnCount: 0,
+    totalKills: 13,
+    livingHumanCount: 2,
+    combatStats: {
+      damageByUnit: { hachi: 450 },
+      damageTakenByUnit: { hachi: 120 },
+      healingByUnit: { nao: 90 },
+      encounteredEnemyKinds: ["walker", "mother"],
+      enemyDefeatsByKind: { walker: 12, mother: 1 },
+    },
+  });
+  const recorded = captureUnfinishedSurvivalCombatStats(engaged.runtime, engaged.run, {
+    totalKills: 13,
+    combatStats: {
+      damageByUnit: { hachi: 450 },
+      damageTakenByUnit: { hachi: 120 },
+      healingByUnit: { nao: 90 },
+      encounteredEnemyKinds: ["walker", "mother"],
+      enemyDefeatsByKind: { walker: 12, mother: 1 },
+    },
+    updatedAt: "2026-07-26T10:00:30.000Z",
+  });
+  assert.equal(recorded.lastCompletedWave, 0);
+  assert.equal(recorded.pendingReward.caps, 0);
+  assert.equal(recorded.checkpointRewards.length, 0);
+  assert.equal(recorded.stats.kills, 3);
+  assert.equal(recorded.stats.bossKills, 1);
+  assert.equal(recorded.stats.battleSeconds, 3.25);
+  assert.equal(recorded.stats.damageByUnit.hachi, 350);
+  assert.equal(recorded.stats.damageTakenByUnit.hachi, 120);
+  assert.equal(recorded.stats.healingByUnit.nao, 90);
+  assert.deepEqual(recorded.stats.encounteredEnemyKinds, ["mother"]);
+  assert.deepEqual(recorded.stats.enemyDefeatsByKind, { mother: 1, walker: 2 });
+
+  const ended = endSurvivalRun(
+    recorded,
+    SURVIVAL_END_REASONS.WITHDRAWAL,
+    "2026-07-26T10:00:30.000Z",
+  );
+  const settlement = settleSurvivalCampaignSave(createDefaultCampaignSave(), ended, {
+    endedAt: "2026-07-26T10:00:30.000Z",
+  });
+  assert.equal(settlement.payout.caps, 0);
+  assert.deepEqual(settlement.payout.equipmentGrants, []);
+  assert.equal(settlement.save.records.totals.kills, 3);
+  assert.equal(settlement.save.records.totals.bossKills, 1);
+  assert.equal(settlement.save.records.totals.battleSeconds, 3);
+  assert.equal(settlement.save.records.unitStats.damageByUnit.hachi, 350);
+  assert.equal(settlement.save.records.defeatCountsByEnemy.mother, 1);
+});
+
+test("Survival battle time counts active simulation only and excludes intermission waits", () => {
+  const run = newRun("active-battle-seconds");
+  const runtime = createSurvivalCombatRuntime(run);
+  const queued = advanceSurvivalCombat(runtime, run, {
+    seconds: 20,
+    crawlerHp: 700,
+    activeEnemyCount: 0,
+    pendingSpawnCount: 0,
+    totalKills: 0,
+    livingHumanCount: 2,
+  });
+  assert.equal(queued.runtime.waveQueued, true);
+  assert.equal(queued.runtime.waveActiveSeconds, 0);
+
+  const engaged = advanceSurvivalCombat(queued.runtime, queued.run, {
+    seconds: 4.75,
+    crawlerHp: 700,
+    activeEnemyCount: 1,
+    pendingSpawnCount: 0,
+    totalKills: 0,
+    livingHumanCount: 2,
+  });
+  assert.equal(engaged.runtime.waveActiveSeconds, 4.75);
+
+  const completed = advanceSurvivalCombat(engaged.runtime, engaged.run, {
+    seconds: 1.25,
+    crawlerHp: 700,
+    activeEnemyCount: 0,
+    pendingSpawnCount: 0,
+    totalKills: 1,
+    livingHumanCount: 2,
+  });
+  assert.equal(completed.run.stats.battleSeconds, 6);
+  assert.equal(completed.runtime.waveActiveSeconds, 0);
+
+  const waiting = advanceSurvivalCombat(completed.runtime, completed.run, {
+    seconds: 1,
+    crawlerHp: 700,
+    activeEnemyCount: 0,
+    pendingSpawnCount: 0,
+    totalKills: 1,
+    livingHumanCount: 2,
+  });
+  assert.equal(waiting.run.stats.battleSeconds, 6);
+  assert.equal(waiting.runtime.waveActiveSeconds, 0);
+});
+
 test("squad terminal grace wins over an otherwise empty boss wave", () => {
   let run = completeThroughWave(newRun("squad-terminal-before-checkpoint"), 4);
   let runtime = createSurvivalCombatRuntime(run);
@@ -344,6 +464,17 @@ test("atomic settlement updates progress, receipts, caps, equipment, checkpoint 
     equipmentInventory: [{ equipmentId: "survival-field-kit", quantity: 2 }],
     survival: progressWithCheckpoint,
   };
+  run = {
+    ...run,
+    stats: {
+      ...run.stats,
+      encounteredEnemyKinds: ["walker", "carrier"],
+      enemyDefeatsByKind: { walker: 20, carrier: 5 },
+      damageByUnit: { hachi: 1_400 },
+      damageTakenByUnit: { hachi: 230 },
+      healingByUnit: { nao: 390 },
+    },
+  };
   run = endSurvivalRun(run, SURVIVAL_END_REASONS.WITHDRAWAL, "2026-07-26T10:11:00.000Z");
   const result = settleSurvivalCampaignSave(current, run, {
     endedAt: "2026-07-26T10:11:00.000Z",
@@ -360,6 +491,11 @@ test("atomic settlement updates progress, receipts, caps, equipment, checkpoint 
   assert.equal(result.save.survival.claimedRewardIds.length, 2);
   assert.equal(result.save.survival.activeCheckpoint, null);
   assert.equal(result.save.survival.lastResult.earnedCaps, 55);
+  assert.equal(result.save.records.totals.withdrawals, 1);
+  assert.equal(result.save.records.totals.kills, run.stats.kills);
+  assert.equal(result.save.records.encountersByEnemy.carrier.firstOperationId, "survival-wave-1");
+  assert.equal(result.save.records.defeatCountsByEnemy.walker, 20);
+  assert.equal(result.save.records.unitStats.damageByUnit.hachi, 1_400);
 });
 
 test("serialized settlement reload cannot award caps, equipment, or receipts twice", () => {

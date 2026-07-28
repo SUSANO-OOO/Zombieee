@@ -460,9 +460,9 @@ test("a late start, defeat, or withdrawal never pays rewards for skipped or unfi
   assert.deepEqual(rejected.progress.claimedRewardIds, []);
 });
 
-test("campaign schema 12 persists survival checkpoints and migrates a stamped schema 7 save", () => {
+test("campaign schema 13 persists survival checkpoints and migrates a stamped schema 7 save", () => {
   const fresh = createDefaultCampaignSave();
-  assert.equal(CAMPAIGN_SAVE_SCHEMA_VERSION, 12);
+  assert.equal(CAMPAIGN_SAVE_SCHEMA_VERSION, 13);
   assert.deepEqual(fresh.survival, createDefaultSurvivalProgress());
 
   const checkpointBossPool = ["takuya", "gate-eater", "mother", "gairen"];
