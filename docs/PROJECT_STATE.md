@@ -7,16 +7,16 @@
 唯一の正式公開先：**GitHub Pages**
 
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
-- 公開中version：**Version 0.9.0**
-- game release commit：annotated tag `v0.9.0^{commit}`とGitHub Release targetを正本として都度再取得
-- GitHub Release tag：`v0.9.0`
-- release ledger：Issue #68、completed／closed
-- release request ID：`v0.9.0-formal-release-20260729`
-- release request方式：`main`からの明示的`workflow_dispatch`
+- release-prep作成時の公開中version：**Version 0.8.0**
+- Version 0.8.0 game release commit：`dbc4bd7edea94fdadce094526384ea4a0f181587`
+- Version 0.9.0：**RC受入済み・正式公開工程中**
+- Version 0.9.0 release ledger：Issue #68、open
+- 予定request ID：`v0.9.0-formal-release-20260729`
+- 予定request方式：tag／Release作成後、`main`からの明示的`workflow_dispatch`
 - deployment workflow：`.github/workflows/github-pages-release.yml`
 - public QA workflow：`.github/workflows/github-pages-public-qa.yml`
 
-公開中の正確なversion、release SHA、request ID、Issue metadataは、作業開始時とrelease操作前後に正式URLの公開HTML metadata、tag、Release、Actionsと再照合する。
+公開中の正確なversion、release SHA、request ID、Issue metadataは、作業開始時とrelease操作前後に正式URLの公開HTML metadata、tag、Release、Actionsと再照合する。本書のrelease-prep snapshotより、公開後のlive metadataとIssue #68最終記録を優先する。
 
 ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、復旧に使用しない。
 
@@ -29,13 +29,13 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 - Version 0.7.1 Issue #43：completed／closed
 - Version 0.7.5 Issue #44：completed／closed
 - Version 0.8.0 Issue #61：completed／closed
-- Version 0.9.0 Issue #68：completed／closed
+- Version 0.9.0 Issue #68：formal release approved／open
 - save key：`nishijin-campaign-v1`
 - 現行save schema：v13
 
 `main`はdocs、ops、hotfix等でも進むため、現在SHAを本書へ永久固定しない。作業開始時、PR操作直前、merge直前、release直前にGitHubの現在値を再取得する。正式公開game sourceは、単なる最新`main`ではなく公開HTML metadata、tag、GitHub Release、release requestと照合する。
 
-## 3. 現行Version 0.9.0
+## 3. Version 0.9.0 release candidate
 
 ### Campaign／content
 
@@ -81,7 +81,7 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 - 15分Chromium 844×390 performance gate
 - 物理iPhoneは未確認。WebKit iPhone相当、safe area、frame time、heap／memory proxyが代替証拠
 
-## 4. Version 0.9.0で統合した体験
+## 4. Version 0.9.0 release candidateで統合した体験
 
 ### 戦場
 
@@ -116,9 +116,16 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 
 ## 5. 次の正式作業
 
-Version 0.9.0の正式公開後に着手する次Versionは未決定。新しいIssueとプロデューサー判断なしに、Version 0.9.1／1.0の実装範囲を推測して開始しない。
+Version 0.9.0の正式公開工程：
 
-公開後の作業は、公開metadata、主要asset、fresh save、Version 0.8.0 save migration、主要game loopの監視と、確認された不具合に対する通常PRに限定する。
+1. release branchを`integration/0.9.0`へ通常merge
+2. `integration/0.9.0`を`main`へ通常merge
+3. merge result SHAへannotated `v0.9.0` tagとGitHub Releaseを固定
+4. 5項目の明示的requestでGitHub Pagesへdeployment
+5. 公開metadata、主要asset、fresh save、Version 0.8.0 save migration、主要game loopをQA
+6. 全項目成功後だけIssue #68へ最終記録しclose
+
+Version 0.9.0の正式公開後に着手する次Versionは未決定。新しいIssueとプロデューサー判断なしに、Version 0.9.1／1.0の実装範囲を推測して開始しない。
 
 ## 6. 長期方向
 

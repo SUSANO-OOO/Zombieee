@@ -10,7 +10,7 @@
 
 主対象はスマートフォン横画面です。844×390、844×340、iPhone Safariのsafe areaとブラウザUI表示状態を優先し、PC横画面も正式対応します。
 
-## 公開中
+## Version 0.9.0 release source
 
 **Version 0.9.0**
 
@@ -22,6 +22,8 @@
 - 個人equipment2枠、編成preset別の戦術equipment2枠、約20種の装備
 - caps経済再編、詳細result、敵／boss図鑑、戦績記録
 - smartphone横画面向けの出撃・部隊・補給所・記録UI
+
+このsourceは、プロデューサー受入済みのVersion 0.9.0 release candidateです。正式公開の成否は、[正式URL](https://susano-ooo.github.io/Zombieee/)のmetadata、annotated tag、GitHub Release、Actions、[Issue #68](https://github.com/SUSANO-OOO/Zombieee/issues/68)を照合して判断してください。
 
 正確なrelease SHA、tag、Issue、公開metadataは[PROJECT_STATE](docs/PROJECT_STATE.md)を確認してください。
 

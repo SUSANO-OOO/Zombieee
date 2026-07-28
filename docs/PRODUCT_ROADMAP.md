@@ -97,11 +97,11 @@
 - 出撃、部隊、補給所、記録のUIと、詳細result、図鑑、戦績
 - save schema v13、旧save migration、mobile／performance QA
 
-## 4. Version 0.9.0 — 戦闘・育成・サバイバル統合（完了）
+## 4. Version 0.9.0 — 戦闘・育成・サバイバル統合（RC受入済み）
 
 Issue：#68
 
-状態：**実装・RC受入・正式公開承認済み**
+状態：**実装・RC受入・正式公開承認済み。公開結果はlive metadataとIssue #68で確定**
 
 最上位正本：`docs/PRODUCER_DECISIONS_0.9.0.md`
 
