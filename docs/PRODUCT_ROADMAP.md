@@ -1,6 +1,6 @@
 # 西新世紀末物語 — PRODUCT ROADMAP
 
-更新日：2026-07-26
+更新日：2026-07-29
 
 ## 1. 役割
 
@@ -84,9 +84,24 @@
 - player-facing Version identity統一
 - 15分mobile performance gate
 
-## 4. Version 0.9.0 — 戦闘・育成・サバイバル統合
+### Version 0.9.0
+
+- Stage 17〜20、Survival Mode、異常発生任務5件
+- mission別の右端・右端外spawnとSurvival防衛前線
+- boss共通基盤、TAKUYA／改札喰い改修、新boss5体
+- 通常感染体6種
+- 新プレイアブル5名を追加し合計16名へ拡張
+- 全16体の個体別手動アビリティと頭上ready icon
+- Level 1〜50基盤、Stage進行によるlevel cap、Stage 20時点でLv25解放
+- caps経済再編、個人equipment2枠、戦術equipment2枠、約20種の装備
+- 出撃、部隊、補給所、記録のUIと、詳細result、図鑑、戦績
+- save schema v13、旧save migration、mobile／performance QA
+
+## 4. Version 0.9.0 — 戦闘・育成・サバイバル統合（完了）
 
 Issue：#68
+
+状態：**実装・RC受入・正式公開承認済み**
 
 最上位正本：`docs/PRODUCER_DECISIONS_0.9.0.md`
 
