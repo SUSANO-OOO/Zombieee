@@ -275,6 +275,8 @@ for (const engine of engines) {
                 && stageActionRect.bottom <= stageDetailRect.bottom
                 && stageActionRect.top >= 0
                 && stageActionRect.bottom <= window.innerHeight),
+              stageDetailText: stageDetail?.innerText ?? "",
+              stageDetailScrollable: (stageDetail?.scrollHeight ?? 0) > (stageDetail?.clientHeight ?? 0),
               specialLabels: specialOperations.map((button) => button.textContent?.trim() ?? ""),
               stageActionLabels: stageActions.map((button) => button.textContent?.trim() ?? ""),
               documentWidth: document.documentElement.scrollWidth,
@@ -295,6 +297,30 @@ for (const engine of engines) {
             && mapNavigation.stageActionLabels[0].includes("この作戦を編成")
             && mapNavigation.stageActionVisible,
           `stage detail still mixes global operations: ${JSON.stringify(mapNavigation)}`);
+          invariant(["目的", "基本報酬", "次の未取得星報酬", "星判定"]
+            .every((label) => mapNavigation.stageDetailText.includes(label)),
+          `stage detail information became inaccessible: ${JSON.stringify(mapNavigation)}`);
+          const compactDetailScrollProof = await page.evaluate(() => {
+            const detail = document.querySelector(".stage-detail");
+            const criteria = document.querySelector(".stage-detail .star-criteria");
+            const action = document.querySelector(".stage-actions button");
+            if (!detail || !criteria || !action) return null;
+            detail.scrollTop = detail.scrollHeight;
+            const detailRect = detail.getBoundingClientRect();
+            const criteriaRect = criteria.getBoundingClientRect();
+            const actionRect = action.getBoundingClientRect();
+            const proof = {
+              criteriaVisible: getComputedStyle(criteria).display !== "none"
+                && criteriaRect.bottom > detailRect.top
+                && criteriaRect.top < detailRect.bottom,
+              stickyActionVisible: actionRect.top >= detailRect.top && actionRect.bottom <= detailRect.bottom,
+            };
+            detail.scrollTop = 0;
+            return proof;
+          });
+          invariant(!mapNavigation.stageDetailScrollable
+            || (compactDetailScrollProof?.criteriaVisible && compactDetailScrollProof?.stickyActionVisible),
+          `compact stage detail cannot expose information while retaining its CTA: ${JSON.stringify(compactDetailScrollProof)}`);
           invariant(mapNavigation.documentWidth <= viewport.width && mapNavigation.documentHeight <= viewport.height,
             `map viewport overflow: ${JSON.stringify(mapNavigation)}`);
           await page.screenshot({ path: path.join(evidenceDir, `${name}-map-navigation.png`) });
