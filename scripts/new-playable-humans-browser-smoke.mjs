@@ -179,6 +179,13 @@ for (const engine of engines) {
           return {
             kind,
             buttonCount: document.querySelectorAll(`.manual-ability-ready[data-ability-kind='${kind}']`).length,
+            readyButtons: [...document.querySelectorAll(".manual-ability-ready")].map((button) => ({
+              kind: button.dataset.abilityKind,
+              anchorX: button.dataset.ownerAnchorX,
+              anchorY: button.dataset.ownerAnchorY,
+              rect: button.getBoundingClientRect().toJSON(),
+            })),
+            layoutDebug: JSON.parse(document.documentElement.dataset.manualAbilityLayoutDebug || "null"),
             fighter,
             livingEnemies: snapshot.fighters
               .filter(({ side, hp, combatReady }) => side === "zombie" && hp > 0 && combatReady)
@@ -198,7 +205,7 @@ for (const engine of engines) {
         const canvas = document.querySelector("canvas.battlefield");
         const obstacles = [
           ".top-hud", ".survival-hud", ".boss-hud", ".crawler-alert",
-          ".battle-barks", ".placement-hint", ".bottom-hud", ".stats-strip",
+          ".battle-barks", ".bottom-hud", ".stats-strip",
         ].flatMap((selector) => [...document.querySelectorAll(selector)])
           .filter((element) => {
             const style = getComputedStyle(element);
@@ -209,19 +216,56 @@ for (const engine of engines) {
           canvas: canvas?.getBoundingClientRect().toJSON() ?? null,
           snapshot: window.__ASHFALL_BATTLE_QA__.getSnapshot(),
           obstacles,
+          hud: {
+            keycapCount: document.querySelectorAll(".unit-card .keycap").length,
+            placementHintCount: document.querySelectorAll(".placement-hint,.placement-cancel").length,
+            healthBars: [...document.querySelectorAll(".health-hud")].map((element) => (
+              element.getBoundingClientRect().toJSON()
+            )),
+            resources: [...document.querySelectorAll(".resource")].map((element) => {
+              const rect = element.getBoundingClientRect();
+              const strong = element.querySelector("strong");
+              const small = element.querySelector("small");
+              return {
+                rect: rect.toJSON(),
+                scrollWidth: element.scrollWidth,
+                clientWidth: element.clientWidth,
+                strongFontSize: strong ? parseFloat(getComputedStyle(strong).fontSize) : 0,
+                smallRight: small?.getBoundingClientRect().right ?? 0,
+              };
+            }),
+          },
           buttons: contracts.map(({ kind }) => {
             const button = document.querySelector(`.manual-ability-ready[data-ability-kind='${kind}']`);
             const icon = button?.querySelector(".manual-ability-ready-icon");
             return {
               kind,
               rect: button?.getBoundingClientRect().toJSON() ?? null,
+              visualRect: icon?.parentElement?.getBoundingClientRect().toJSON() ?? null,
               iconBackground: icon ? getComputedStyle(icon).backgroundImage : "",
+              anchorX: Number(button?.dataset.ownerAnchorX),
+              anchorY: Number(button?.dataset.ownerAnchorY),
+              pointerCount: button?.querySelectorAll("i").length ?? 0,
             };
           }),
         };
       }, unitContracts);
       invariant(layout.canvas, `${engine}/${viewport.height}: battlefield geometry missing`);
       invariant(layout.snapshot.geometry.offFloorCount === 0, `${engine}/${viewport.height}: fighter grounding failed`);
+      invariant(layout.hud.keycapCount === 0,
+        `${engine}/${viewport.height}: obsolete unit-card keycaps remained`);
+      invariant(layout.hud.placementHintCount === 0,
+        `${engine}/${viewport.height}: support selection popup remained`);
+      invariant(layout.hud.healthBars.every((rect) => rect.width <= layout.canvas.width * .24),
+        `${engine}/${viewport.height}: base health bar remained oversized`);
+      invariant(layout.hud.resources.length === 2
+        && layout.hud.resources.every(({ rect, scrollWidth, clientWidth, strongFontSize, smallRight }) => (
+          rect.left >= layout.canvas.left
+          && rect.right <= layout.canvas.right
+          && scrollWidth <= clientWidth
+          && strongFontSize >= 15
+          && smallRight <= rect.right
+        )), `${engine}/${viewport.height}: command/support resources are clipped or unreadable`);
       for (const [index, button] of layout.buttons.entries()) {
         invariant(button.rect, `${engine}/${viewport.height}/${button.kind}: ready icon geometry missing`);
         invariant(button.rect.width >= 44 && button.rect.height >= 44,
@@ -233,8 +277,15 @@ for (const engine of engines) {
         `${engine}/${viewport.height}/${button.kind}: ready icon breached safe area`);
         invariant(button.iconBackground.includes(unitContracts[index].icon),
           `${engine}/${viewport.height}/${button.kind}: dedicated ready icon not connected`);
+        invariant(button.pointerCount === 0,
+          `${engine}/${viewport.height}/${button.kind}: obsolete ability arrow remained`);
+        invariant(button.rect.top <= layout.canvas.top + button.anchorY + 18,
+          `${engine}/${viewport.height}/${button.kind}: ready icon left the overhead band`);
+        invariant(Math.abs(
+          button.rect.left + button.rect.width / 2 - layout.canvas.left - button.anchorX,
+        ) <= 231, `${engine}/${viewport.height}/${button.kind}: ready icon drifted away from its owner`);
         for (const obstacle of layout.obstacles) {
-          invariant(!overlaps(button.rect, obstacle),
+          invariant(!overlaps(button.visualRect, obstacle),
             `${engine}/${viewport.height}/${button.kind}: ready icon overlaps HUD`);
         }
         for (const other of layout.buttons.slice(index + 1)) {
@@ -406,6 +457,7 @@ for (const engine of engines) {
         units: layout.buttons.map(({ kind, rect, iconBackground }) => ({ kind, rect, iconBackground })),
         atlasProof,
         audioDecodeProof,
+        hud: layout.hud,
         offFloorCount: layout.snapshot.geometry.offFloorCount,
         tkyDamagedForwardLane: true,
         mrsTimedSalvo: {

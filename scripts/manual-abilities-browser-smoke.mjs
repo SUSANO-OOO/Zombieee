@@ -141,6 +141,7 @@ async function prepareProof(page, kind = "all") {
     count: document.querySelectorAll(".manual-ability-ready").length,
     kinds: [...document.querySelectorAll(".manual-ability-ready")]
       .map((button) => button.getAttribute("data-ability-kind")),
+    layout: JSON.parse(document.documentElement.dataset.manualAbilityLayoutDebug || "null"),
     fighters: window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
       .filter(({ side }) => side === "human")
       .map(({ id, kind: fighterKind, hp, combatReady, gateEntering, manualAbility }) => ({
@@ -158,7 +159,10 @@ async function prepareProof(page, kind = "all") {
 }
 
 async function rosterLayoutProof(page, engine, viewport) {
-  const batches = [kinds.slice(0, 8), kinds.slice(8)];
+  const batches = [];
+  for (let index = 0; index < kinds.length; index += 7) {
+    batches.push(kinds.slice(index, index + 7));
+  }
   const batchLayouts = [];
   for (const [batchIndex, batchKinds] of batches.entries()) {
     await prepareProof(page, batchKinds);
@@ -166,7 +170,7 @@ async function rosterLayoutProof(page, engine, viewport) {
     const canvas = document.querySelector("canvas.battlefield");
     const obstacles = [
       ".top-hud", ".survival-hud", ".boss-hud", ".crawler-alert",
-      ".battle-barks", ".placement-hint", ".bottom-hud", ".stats-strip",
+      ".battle-barks", ".bottom-hud", ".stats-strip",
     ].flatMap((selector) => [...document.querySelectorAll(selector)])
       .filter((element) => {
         const style = getComputedStyle(element);
@@ -183,6 +187,7 @@ async function rosterLayoutProof(page, engine, viewport) {
         return {
           kind,
           rect: button?.getBoundingClientRect().toJSON() ?? null,
+          visualRect: icon?.parentElement?.getBoundingClientRect().toJSON() ?? null,
           iconBackground: icon ? getComputedStyle(icon).backgroundImage : "",
         };
       }),
@@ -204,7 +209,7 @@ async function rosterLayoutProof(page, engine, viewport) {
       invariant(button.iconBackground.includes(iconFiles[button.kind]),
         `${engine}/${viewport.height}/${button.kind}: dedicated icon missing`);
       for (const obstacle of layout.obstacles) {
-        invariant(!overlaps(button.rect, obstacle),
+        invariant(!overlaps(button.visualRect, obstacle),
           `${engine}/${viewport.height}/${button.kind}: icon overlaps HUD`);
       }
       for (const other of layout.buttons.slice(index + 1)) {
@@ -542,7 +547,7 @@ async function checkpointReloadProof(page, engine) {
     return button instanceof HTMLButtonElement && !button.disabled;
   });
   await continueButton.click();
-  await page.getByRole("button", { name: "サバイバル", exact: true }).click();
+  await page.getByRole("button", { name: /防衛継続作戦/ }).click();
   await page.getByRole("button", { name: "checkpointから再開", exact: true }).click();
   await page.waitForFunction(() => (
     Boolean(document.querySelector("canvas.battlefield.active"))

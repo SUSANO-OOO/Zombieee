@@ -534,6 +534,8 @@ test("screen-space ready icons clamp to safe areas and avoid HUD, bodies, and ea
     assert.ok(icon.y >= 6 && icon.y + icon.hitSize <= 313);
     assert.equal(icon.anchorX, 440);
     assert.equal(icon.anchorY, 86);
+    assert.ok(icon.y <= icon.anchorY + 18, "ready icon stays in its owner's overhead band");
+    assert.ok(Math.abs(icon.x + icon.hitSize / 2 - icon.anchorX) <= 230, "ready icon stays near its owner");
   }
 });
 
@@ -544,6 +546,8 @@ test("runtime renders only ready buttons and never a cooldown ring or number abo
   assert.match(source, /canActivateManualAbility/);
   assert.match(source, /onPointerDown=\{\(event\) => event\.stopPropagation\(\)\}/);
   assert.doesNotMatch(css, /\.manual-ability-(?:cooldown|ring|countdown)/);
+  assert.doesNotMatch(css, /\.manual-ability-ready > i/);
+  assert.doesNotMatch(source, /pointer(?:Length|Angle)/);
   assert.doesNotMatch(source, /manualAbilityIcons[\s\S]{0,800}cooldownRemaining/);
   assert.match(source, /manualAbilityLocksNormalAction\(f\.manualAbility\)[\s\S]{0,220}f\.aiMoveDirection = 0;[\s\S]{0,40}continue;/);
   assert.match(source, /manualAbilityActive[\s\S]{0,900}sampleAnimationClip\(f\.kind, "special", manualAbilityElapsed\)/);

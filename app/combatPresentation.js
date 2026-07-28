@@ -90,9 +90,27 @@ const STANDARD_CLIPS = {
   special: clip([
     frame("attack-a", .08, [{ type: "special-ready", at: 0 }]),
     frame("attack-b", .11, [{ type: "special-active", at: 0 }]),
-    frame("hit", .08),
+    frame("idle", .08),
   ]),
 };
+
+export function combatFacingDirection({
+  side,
+  aiMoveDirection = 0,
+  entryDirection = 0,
+  manualDirection = 0,
+  manualAbilityActive = false,
+} = {}) {
+  if (side === "human") {
+    if (manualAbilityActive && Number(manualDirection) !== 0) {
+      return Number(manualDirection) < 0 ? "left" : "right";
+    }
+    return Number(aiMoveDirection) < -.05 ? "left" : "right";
+  }
+  if (Number(aiMoveDirection) > .05) return "right";
+  if (Number(aiMoveDirection) < -.05) return "left";
+  return Number(entryDirection) > 0 ? "right" : "left";
+}
 
 const MACHINE_GUN_ACTIVE = clip([
   frame("attack-a", .055, [

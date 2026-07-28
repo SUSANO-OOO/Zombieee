@@ -1264,29 +1264,49 @@ function overlaps(left, right, gap = 4) {
 }
 
 const ICON_OFFSETS = Object.freeze([
-  Object.freeze([0, -14]),
-  Object.freeze([-36, -12]),
-  Object.freeze([36, -12]),
-  Object.freeze([-62, -4]),
-  Object.freeze([62, -4]),
-  Object.freeze([-72, 32]),
-  Object.freeze([72, 32]),
-  Object.freeze([-102, 34]),
-  Object.freeze([102, 34]),
-  Object.freeze([-72, 70]),
-  Object.freeze([72, 70]),
-  Object.freeze([-36, -54]),
-  Object.freeze([36, -54]),
-  Object.freeze([0, -70]),
-  Object.freeze([-90, 20]),
-  Object.freeze([90, 20]),
-  Object.freeze([-90, -34]),
-  Object.freeze([90, -34]),
-  Object.freeze([-118, -8]),
-  Object.freeze([118, -8]),
-  Object.freeze([-76, -88]),
-  Object.freeze([76, -88]),
-  Object.freeze([0, -108]),
+  Object.freeze([0, -6]),
+  Object.freeze([-48, -6]),
+  Object.freeze([48, -6]),
+  Object.freeze([-24, -52]),
+  Object.freeze([24, -52]),
+  Object.freeze([-72, -52]),
+  Object.freeze([72, -52]),
+  Object.freeze([-88, -6]),
+  Object.freeze([88, -6]),
+  Object.freeze([-110, -6]),
+  Object.freeze([110, -6]),
+  Object.freeze([-110, -2]),
+  Object.freeze([110, -2]),
+  Object.freeze([0, -98]),
+  Object.freeze([-48, -98]),
+  Object.freeze([48, -98]),
+  Object.freeze([-110, -52]),
+  Object.freeze([110, -52]),
+  Object.freeze([-110, -98]),
+  Object.freeze([110, -98]),
+  Object.freeze([-160, -6]),
+  Object.freeze([160, -6]),
+  Object.freeze([-160, -52]),
+  Object.freeze([160, -52]),
+  Object.freeze([-160, -98]),
+  Object.freeze([160, -98]),
+  Object.freeze([-210, -6]),
+  Object.freeze([210, -6]),
+  Object.freeze([-210, -52]),
+  Object.freeze([210, -52]),
+  Object.freeze([-210, -98]),
+  Object.freeze([210, -98]),
+  Object.freeze([-230, -6]),
+  Object.freeze([230, -6]),
+  // If a head is immediately below the top HUD, stay beside its crown rather
+  // than sending a connector across the battlefield.
+  Object.freeze([-72, 16]),
+  Object.freeze([72, 16]),
+  Object.freeze([-24, 16]),
+  Object.freeze([24, 16]),
+  Object.freeze([0, 56]),
+  Object.freeze([-48, 56]),
+  Object.freeze([48, 56]),
 ]);
 
 export function layoutManualAbilityIcons({
@@ -1305,56 +1325,107 @@ export function layoutManualAbilityIcons({
   const rightInset = Math.max(0, Number(safeInsets.right) || 0);
   const topInset = Math.max(0, Number(safeInsets.top) || 0);
   const bottomInset = Math.max(0, Number(safeInsets.bottom) || 0);
-  const blocked = obstacles.map(normalizeRect);
-  const result = [];
-  const ordered = [...fighters].sort((left, right) => String(left.id).localeCompare(String(right.id)));
-  for (const fighter of ordered) {
-    const anchorX = Number.isFinite(Number(fighter.screenX))
+  const staticBlocked = obstacles.map(normalizeRect);
+  const visibleInset = Math.max(0, (hitSize - 28) / 2);
+  const visibleRect = (rect) => ({
+    x: rect.x + visibleInset,
+    y: rect.y + visibleInset,
+    width: Math.max(1, rect.width - visibleInset * 2),
+    height: Math.max(1, rect.height - visibleInset * 2),
+  });
+  const anchorFor = (fighter) => ({
+    x: Number.isFinite(Number(fighter.screenX))
       ? Number(fighter.screenX)
-      : Number(fighter.x) / worldWidth * width;
-    const anchorY = Number.isFinite(Number(fighter.screenY))
+      : Number(fighter.x) / worldWidth * width,
+    y: Number.isFinite(Number(fighter.screenY))
       ? Number(fighter.screenY)
-      : Number(fighter.headY ?? fighter.y) / worldHeight * height;
-    let placed = null;
-    for (const [offsetX, offsetY] of ICON_OFFSETS) {
-      const x = Math.max(leftInset, Math.min(width - rightInset - hitSize, anchorX - hitSize / 2 + offsetX));
-      const y = Math.max(topInset, Math.min(height - bottomInset - hitSize, anchorY - hitSize + offsetY));
-      const rect = { x, y, width: hitSize, height: hitSize };
-      if (blocked.some((obstacle) => (
-        (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
-        && overlaps(rect, obstacle)
-      ))) continue;
-      placed = rect;
-      break;
-    }
-    if (!placed) {
-      const grid = [];
-      const gap = 6;
-      for (let y = topInset; y <= height - bottomInset - hitSize; y += hitSize + gap) {
-        for (let x = leftInset; x <= width - rightInset - hitSize; x += hitSize + gap) {
-          grid.push({
-            x,
-            y,
-            width: hitSize,
-            height: hitSize,
-            distance: Math.hypot(x + hitSize / 2 - anchorX, y + hitSize / 2 - anchorY),
-          });
-        }
+      : Number(fighter.headY ?? fighter.y) / worldHeight * height,
+  });
+  const offsetCandidatesFor = (fighter) => {
+    const anchor = anchorFor(fighter);
+    return ICON_OFFSETS.map(([offsetX, offsetY]) => ({
+      x: Math.max(leftInset, Math.min(width - rightInset - hitSize, anchor.x - hitSize / 2 + offsetX)),
+      y: Math.max(topInset, Math.min(height - bottomInset - hitSize, anchor.y - hitSize + offsetY)),
+      width: hitSize,
+      height: hitSize,
+    }));
+  };
+  const candidateRectsFor = (fighter) => {
+    const anchor = anchorFor(fighter);
+    const anchorX = anchor.x;
+    const anchorY = anchor.y;
+    const candidates = [...offsetCandidatesFor(fighter)];
+    const gap = 6;
+    const bandTop = Math.max(topInset, anchorY - hitSize * 3.5);
+    const bandBottom = Math.min(height - bottomInset - hitSize, anchorY + 18);
+    const bandLeft = Math.max(leftInset, anchorX - hitSize / 2 - 230);
+    const bandRight = Math.min(width - rightInset - hitSize, anchorX - hitSize / 2 + 230);
+    for (let y = bandTop; y <= bandBottom; y += hitSize + gap) {
+      for (let x = bandLeft; x <= bandRight; x += hitSize + gap) {
+        candidates.push({ x, y, width: hitSize, height: hitSize });
       }
-      grid.sort((left, right) => left.distance - right.distance || left.y - right.y || left.x - right.x);
-      const fallback = grid.find((rect) => !blocked.some((obstacle) => (
-        (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
-        && overlaps(rect, obstacle)
-      )));
-      if (fallback) placed = {
-        x: fallback.x,
-        y: fallback.y,
-        width: fallback.width,
-        height: fallback.height,
-      };
     }
+    const unique = new Map();
+    for (const rect of candidates) {
+      const key = `${rect.x.toFixed(3)}:${rect.y.toFixed(3)}`;
+      if (!unique.has(key)) unique.set(key, rect);
+    }
+    return [...unique.values()]
+      .filter((rect) => !staticBlocked.some((obstacle) => (
+        (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
+        && overlaps(visibleRect(rect), obstacle)
+      )))
+      .sort((left, right) => (
+        Math.hypot(left.x + hitSize / 2 - anchorX, left.y + hitSize / 2 - anchorY)
+          - Math.hypot(right.x + hitSize / 2 - anchorX, right.y + hitSize / 2 - anchorY)
+        || left.y - right.y
+        || left.x - right.x
+      ));
+  };
+  const pending = [...fighters]
+    .map((fighter) => ({ fighter, candidates: candidateRectsFor(fighter) }))
+    .sort((left, right) => (
+      left.candidates.length - right.candidates.length
+      || String(left.fighter.id).localeCompare(String(right.fighter.id))
+    ));
+  const assigned = new Map();
+  const solve = (remaining) => {
+    if (remaining.length === 0) return true;
+    const ranked = remaining
+      .map((entry) => ({
+        entry,
+        available: entry.candidates.filter((rect) => (
+          ![...assigned.values()].some((placed) => overlaps(rect, placed))
+        )),
+      }))
+      .sort((left, right) => (
+        left.available.length - right.available.length
+        || String(left.entry.fighter.id).localeCompare(String(right.entry.fighter.id))
+      ));
+    const [{ entry, available }] = ranked;
+    if (available.length === 0) return false;
+    const rest = remaining.filter((candidate) => candidate !== entry);
+    for (const rect of available) {
+      assigned.set(entry.fighter.id, rect);
+      if (solve(rest)) return true;
+      assigned.delete(entry.fighter.id);
+    }
+    return false;
+  };
+  if (!solve(pending)) {
+    assigned.clear();
+    for (const { fighter, candidates } of pending) {
+      const placed = candidates.find((rect) => (
+        ![...assigned.values()].some((other) => overlaps(rect, other))
+      ));
+      if (placed) assigned.set(fighter.id, placed);
+    }
+  }
+  const result = [];
+  for (const { fighter } of pending) {
+    const placed = assigned.get(fighter.id);
     if (!placed) continue;
-    blocked.push(placed);
+    const { x: anchorX, y: anchorY } = anchorFor(fighter);
     result.push(Object.freeze({
       fighterId: fighter.id,
       kind: fighter.kind,

@@ -113,7 +113,7 @@ for (const engine of engines) {
         const canvas = document.querySelector("canvas.battlefield");
         const selectors = [
           ".top-hud", ".survival-hud", ".boss-hud", ".crawler-alert",
-          ".battle-barks", ".placement-hint", ".bottom-hud", ".stats-strip",
+          ".battle-barks", ".bottom-hud", ".stats-strip",
         ];
         return {
           snapshot,

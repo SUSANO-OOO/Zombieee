@@ -278,7 +278,19 @@ const NEWCOMER_VISIBLE = Object.freeze({
   },
 });
 
-function frameRecord({ path, sheetWidth, sheetHeight, source, visible, nativeDirection, direction, derivedFrom, authoredCell, anchorX = 0.5 }) {
+function frameRecord({
+  path,
+  sheetWidth,
+  sheetHeight,
+  source,
+  visible,
+  nativeDirection,
+  direction,
+  derivedFrom,
+  authoredCell,
+  drawSlices,
+  anchorX = 0.5,
+}) {
   const [left, top, right, bottom] = visible;
   // Anchor the sprite on the measured bottom-most authored pixel.  Legacy
   // sheets intentionally keep a large transparent strip below the feet, so a
@@ -311,6 +323,9 @@ function frameRecord({ path, sheetWidth, sheetHeight, source, visible, nativeDir
     anchorY,
     anchor: Object.freeze({ x: anchorX, y: anchorY }),
     flipX: nativeDirection !== direction,
+    ...(drawSlices ? {
+      drawSlices: Object.freeze(drawSlices.map((slice) => Object.freeze({ ...slice }))),
+    } : {}),
     ...(authoredCell ? { authoredCell: Object.freeze({ ...authoredCell }) } : {}),
     ...(derivedFrom ? { derivedFrom } : {}),
   });
@@ -400,6 +415,15 @@ function explicitAtlasManifestEntry(kind, path) {
         visible: NEWCOMER_VISIBLE[kind][direction][index],
         nativeDirection: direction,
         direction,
+        drawSlices: kind === "mrs-chiha" && state === "walk-a"
+          ? direction === "right"
+            ? [{ x: 0, y: 0, w: 480, h: 244 }, { x: 0, y: 244, w: 330, h: 204 }]
+            : [{ x: 0, y: 0, w: 480, h: 244 }, { x: 150, y: 244, w: 330, h: 204 }]
+          : kind === "mrs-chiha" && state === "walk-b"
+            ? direction === "right"
+              ? [{ x: 0, y: 0, w: 480, h: 244 }, { x: 175, y: 244, w: 305, h: 204 }]
+              : [{ x: 0, y: 0, w: 480, h: 244 }, { x: 0, y: 244, w: 315, h: 204 }]
+            : undefined,
       });
     }
     Object.freeze(frames[state]);

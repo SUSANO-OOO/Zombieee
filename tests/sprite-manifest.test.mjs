@@ -255,6 +255,22 @@ test("every redesigned 0.7.0 playable atlas has an authored death pose and measu
   }
 });
 
+test("Mrs. Chiha walk frames exclude adjacent-pose fragments without changing her approved atlas", () => {
+  const expected = {
+    "walk-a/right": [{ x: 0, y: 0, w: 480, h: 244 }, { x: 0, y: 244, w: 330, h: 204 }],
+    "walk-a/left": [{ x: 0, y: 0, w: 480, h: 244 }, { x: 150, y: 244, w: 330, h: 204 }],
+    "walk-b/right": [{ x: 0, y: 0, w: 480, h: 244 }, { x: 175, y: 244, w: 305, h: 204 }],
+    "walk-b/left": [{ x: 0, y: 0, w: 480, h: 244 }, { x: 0, y: 244, w: 315, h: 204 }],
+  };
+  for (const [key, slices] of Object.entries(expected)) {
+    const [state, direction] = key.split("/");
+    const frame = spriteFrameFor("mrs-chiha", state, direction);
+    assert.deepEqual(frame.drawSlices, slices, key);
+    assert.equal(Object.isFrozen(frame.drawSlices), true);
+    assert.equal(Object.isFrozen(frame.drawSlices[0]), true);
+  }
+});
+
 test("all seventeen people use independent portrait files and radio remains a separate non-person asset", async () => {
   const expectedPeople = [
     "brawler", "scout", "ranger", "medic", "brute", "gunner",

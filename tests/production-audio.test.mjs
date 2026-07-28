@@ -652,16 +652,37 @@ test("all weapon-mapped units retain production weapons and all sixteen units re
     const deployCue = humanVoiceCueForUnit(kind, "deploy");
     const expectedDeployCue = expectedVoicePrefix.startsWith("voice-")
       ? `${expectedVoicePrefix}-deploy`
-      : `${expectedVoicePrefix}-attack`;
+      : null;
     assert.equal(deployCue, expectedDeployCue);
-    assert.equal(
-      (PRODUCTION_AUDIO_MANIFEST.assetById[deployCue] ?? PRODUCTION_AUDIO_MANIFEST.poolById[deployCue])?.category,
-      "humanVoices",
-    );
+    if (deployCue) {
+      assert.equal(
+        (PRODUCTION_AUDIO_MANIFEST.assetById[deployCue] ?? PRODUCTION_AUDIO_MANIFEST.poolById[deployCue])?.category,
+        "humanVoices",
+      );
+    }
     assert.equal(humanVoiceCueForUnit(kind, "speech"), null);
   }
   assert.equal(weaponCueForUnit("unknown"), null);
   assert.equal(humanVoiceCueForUnit("unknown", "attack"), null);
+});
+
+test("deployment never falls back to a generic attack or hurt voice", () => {
+  const dedicatedDeployKinds = new Set(Object.keys(UNIT_AUDIO_CUE_CONTRACTS));
+  for (const kind of [
+    "scout", "ranger", "brute", "brawler", "gunner", "medic",
+    "crazy-king", "kumaverson", "babayaga", "guardian", "engineer",
+    "zakimiya", "tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan",
+  ]) {
+    const deployCue = humanVoiceCueForUnit(kind, "deploy");
+    if (dedicatedDeployKinds.has(kind)) {
+      assert.equal(deployCue, unitAudioCueFor(kind, "voice", "deploy"));
+      assert.match(deployCue, /-deploy$/);
+    } else {
+      assert.equal(deployCue, null, `${kind} uses mechanical deployment audio only`);
+    }
+    assert.notEqual(deployCue, humanVoiceCueForUnit(kind, "attack"));
+    assert.notEqual(deployCue, humanVoiceCueForUnit(kind, "hurt"));
+  }
 });
 
 test("new-unit contracts resolve to dedicated original production assets and expose stoppable battle loops", () => {

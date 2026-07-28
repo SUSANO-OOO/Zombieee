@@ -164,6 +164,7 @@ test("boss HUD is dedicated, phased, and hidden until full-body combat-ready", (
     assert.equal(hud.hpRatio, .75);
     assert.equal(Object.isFrozen(hud), true);
     assert.equal(bossHudSnapshot({ ...base, combatReady: false }), null);
+    assert.equal(bossHudSnapshot({ ...base, gateEntering: true }), null);
     assert.equal(bossHudSnapshot({ ...base, contained: true }), null);
     assert.equal(bossHudSnapshot({ ...base, hp: 0 }), null);
   }
