@@ -114,7 +114,7 @@
       "sourceAssetIds": [
         "V090-ZAKIMIYA-IDENTITY@r1"
       ],
-      "processing": "build-v090-zakimiya-assets.mjs edge-connected background removal, identity-preserving upper-body crop, formal dark event backdrop, resize, and WebP encode.",
+      "processing": "build-v090-zakimiya-assets.mjs edge-connected background removal, identity-preserving upper-body crop on transparent canvas, resize, and WebP encode.",
       "status": "approved"
     },
     {
@@ -203,7 +203,7 @@
       "width": 512,
       "height": 640,
       "sourceAssetIds": ["V090-TKY-IDENTITY@r1"],
-      "processing": "build-v090-new-playable-human-assets.mjs edge-connected background removal, identity-preserving upper-body crop, formal dark event backdrop, resize, and WebP encode.",
+      "processing": "build-v090-new-playable-human-assets.mjs edge-connected background removal, identity-preserving upper-body crop on transparent canvas, resize, and WebP encode.",
       "status": "approved"
     },
     {
@@ -286,7 +286,7 @@
       "width": 512,
       "height": 640,
       "sourceAssetIds": ["V090-MRS-CHIHA-IDENTITY@r1"],
-      "processing": "build-v090-new-playable-human-assets.mjs edge-connected background removal, identity-preserving upper-body crop, formal dark event backdrop, resize, and WebP encode.",
+      "processing": "build-v090-new-playable-human-assets.mjs edge-connected background removal, identity-preserving upper-body crop on transparent canvas, resize, and WebP encode.",
       "status": "approved"
     },
     {
@@ -369,7 +369,7 @@
       "width": 512,
       "height": 640,
       "sourceAssetIds": ["V090-MIYAMOTO-MUSASHI-IDENTITY@r1"],
-      "processing": "build-v090-new-playable-human-assets.mjs edge-connected background removal, identity-preserving upper-body crop, formal dark event backdrop, resize, and WebP encode.",
+      "processing": "build-v090-new-playable-human-assets.mjs edge-connected background removal, identity-preserving upper-body crop on transparent canvas, resize, and WebP encode.",
       "status": "approved"
     },
     {
@@ -464,7 +464,7 @@
       "width": 512,
       "height": 640,
       "sourceAssetIds": ["V090-MAYO-CHAN-IDENTITY@r1"],
-      "processing": "build-v090-mayo-assets.mjs edge-connected background removal, identity-preserving normal-state crop, formal dark event backdrop, resize, and WebP encode.",
+      "processing": "build-v090-mayo-assets.mjs edge-connected background removal, identity-preserving normal-state crop on transparent canvas, resize, and WebP encode.",
       "status": "approved"
     },
     {

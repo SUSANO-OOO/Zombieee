@@ -131,10 +131,16 @@ test("Stage 20 keeps the infection core sealed until Kurome is defeated", () => 
 test("Stage 20 eases only the post-Kurome reinforcement density", () => {
   const stage = CAMPAIGN_STAGE_BY_ID[CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL];
   const bossWave = stage.waves.find(({ id }) => id === "floodgate-seal-kurome");
+  const preBossWave = stage.waves.find(({ id }) => id === "floodgate-seal-wave-07");
   const postBossReinforcements = stage.waves
     .filter(({ atSeconds }) => atSeconds > bossWave.atSeconds)
     .flatMap(({ groups = [] }) => groups);
 
+  assert.equal(
+    preBossWave.groups.find(({ kind }) => kind === "resonator")?.count,
+    3,
+    "the small RC reduction starts after Kurome rather than weakening the pre-boss approach",
+  );
   assert.deepEqual(bossWave.units, ["kurome", "anchor-bloom", "pall-manta"]);
   assert.equal(postBossReinforcements.reduce((total, group) => total + group.count, 0), 31);
   assert.equal(stage.baseHp, 620);

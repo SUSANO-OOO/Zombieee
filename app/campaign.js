@@ -1271,7 +1271,7 @@ export const CAMPAIGN_STAGES = deepFreeze([
       { id: "floodgate-seal-wave-04", atSeconds: 56, groups: [{ kind: "anchor-bloom", count: 1 }, { kind: "resonator", count: 2 }] },
       { id: "floodgate-seal-wave-05", atSeconds: 77, groups: [{ kind: "cagewalker", count: 2 }, { kind: "choir-knot", count: 2 }, { kind: "spindle", count: 3 }] },
       { id: "floodgate-seal-wave-06", atSeconds: 99, groups: [{ kind: "pall-manta", count: 2 }, { kind: "anchor-bloom", count: 2 }] },
-      { id: "floodgate-seal-wave-07", atSeconds: 122, groups: [{ kind: "resonator", count: 2 }, { kind: "spindle", count: 4 }, { kind: "choir-knot", count: 2 }] },
+      { id: "floodgate-seal-wave-07", atSeconds: 122, groups: [{ kind: "resonator", count: 3 }, { kind: "spindle", count: 4 }, { kind: "choir-knot", count: 2 }] },
       { id: "floodgate-seal-warning", atSeconds: 145, waveNumber: 8, label: "河口側水路 // 超大型反応", units: [] },
       { id: "floodgate-seal-kurome", atSeconds: 154, waveNumber: 9, label: "クロメ // 防潮門へ侵入", units: ["kurome", "anchor-bloom", "pall-manta"] },
       { id: "floodgate-seal-wave-10", atSeconds: 179, groups: [{ kind: "cagewalker", count: 2 }, { kind: "resonator", count: 3 }] },

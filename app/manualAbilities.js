@@ -1270,18 +1270,34 @@ const ICON_OFFSETS = Object.freeze([
   Object.freeze([0, 8]),
   Object.freeze([-46, 8]),
   Object.freeze([46, 8]),
-  Object.freeze([-92, 8]),
-  Object.freeze([92, 8]),
-  Object.freeze([0, -8]),
-  Object.freeze([-46, -8]),
-  Object.freeze([46, -8]),
-  Object.freeze([-92, -8]),
-  Object.freeze([92, -8]),
-  Object.freeze([0, -38]),
-  Object.freeze([-46, -38]),
-  Object.freeze([46, -38]),
-  Object.freeze([-92, -38]),
-  Object.freeze([92, -38]),
+  Object.freeze([-23, -38]),
+  Object.freeze([23, -38]),
+  Object.freeze([-69, -38]),
+  Object.freeze([69, -38]),
+  // A fighter pressed against the top HUD cannot use the upper crown. These
+  // lower rows keep every duplicate-instance control independently tappable
+  // without the former ±92px horizontal drift.
+  Object.freeze([-23, 58]),
+  Object.freeze([23, 58]),
+  Object.freeze([-69, 58]),
+  Object.freeze([69, 58]),
+  Object.freeze([0, -84]),
+  Object.freeze([-46, -84]),
+  Object.freeze([46, -84]),
+  Object.freeze([0, 104]),
+  Object.freeze([-46, 104]),
+  Object.freeze([46, 104]),
+  Object.freeze([-23, -130]),
+  Object.freeze([23, -130]),
+  Object.freeze([-69, -130]),
+  Object.freeze([69, -130]),
+  Object.freeze([0, 150]),
+  Object.freeze([-46, 150]),
+  Object.freeze([46, 150]),
+  Object.freeze([-23, 196]),
+  Object.freeze([23, 196]),
+  Object.freeze([-69, 196]),
+  Object.freeze([69, 196]),
 ]);
 
 export function layoutManualAbilityIcons({
@@ -1333,13 +1349,7 @@ export function layoutManualAbilityIcons({
     }));
   };
   const candidateRectsFor = (fighter) => {
-    const anchor = anchorFor(fighter);
-    const localCandidates = offsetCandidatesFor(fighter).sort((left, right) => (
-      Math.hypot(left.x + hitSize / 2 - anchor.x, left.y + hitSize - anchor.y)
-        - Math.hypot(right.x + hitSize / 2 - anchor.x, right.y + hitSize - anchor.y)
-      || left.y - right.y
-      || left.x - right.x
-    ));
+    const localCandidates = offsetCandidatesFor(fighter);
     const unblocked = localCandidates.filter((rect) => !staticBlocked.some((obstacle) => (
         (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
         && overlaps(visibleRect(rect), obstacle)
