@@ -4,6 +4,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   brawler: {
     unitId: "unit-paisen",
     displayName: "気合連打",
+    summary: "最寄りの敵へ踏み込み連続拳打。最終打で周囲を押し戻す。",
     iconMotif: "fist-combo",
     runtimeStatus: "integrated",
     cooldownSeconds: 12,
@@ -17,6 +18,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   scout: {
     unitId: "unit-hachi",
     displayName: "疾駆迎撃",
+    summary: "高速型や突破中の敵を優先して急接近し、バールで怯ませる。",
     iconMotif: "crowbar-dash",
     runtimeStatus: "integrated",
     cooldownSeconds: 13,
@@ -29,6 +31,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   ranger: {
     unitId: "unit-mizuchi",
     displayName: "精密排除",
+    summary: "遠距離・特殊・高HPの敵を自動選択し、高威力の貫通射撃を行う。",
     iconMotif: "rifle-crosshair",
     runtimeStatus: "integrated",
     cooldownSeconds: 16,
@@ -41,6 +44,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   medic: {
     unitId: "unit-nao",
     displayName: "緊急処置",
+    summary: "射程内でHP割合が最も低い味方を回復し、短時間守る。",
     iconMotif: "medical-cross",
     runtimeStatus: "integrated",
     cooldownSeconds: 15,
@@ -53,6 +57,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   brute: {
     unitId: "unit-tatara",
     displayName: "地砕衝",
+    summary: "前方へ踏み込み地面を叩き、範囲ダメージ・怯み・装甲低下を与える。",
     iconMotif: "hammer-impact",
     runtimeStatus: "integrated",
     cooldownSeconds: 18,
@@ -67,6 +72,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   "crazy-king": {
     unitId: "unit-crazy-king",
     displayName: "狂王暴走",
+    summary: "短時間、移動と攻撃を高速化し、近接範囲を切り裂き続ける。",
     iconMotif: "chainsaw-crown",
     runtimeStatus: "integrated",
     cooldownSeconds: 22,
@@ -82,6 +88,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   kumaverson: {
     unitId: "unit-kumaverson",
     displayName: "鉄鍋仁王立ち",
+    summary: "周囲の敵を引きつけ、被ダメージを抑えながら徐々に回復する。",
     iconMotif: "pan-guard",
     runtimeStatus: "integrated",
     cooldownSeconds: 20,
@@ -94,6 +101,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   babayaga: {
     unitId: "unit-babayaga",
     displayName: "弱点査定",
+    summary: "危険な敵を自動査定して狙撃し、一定時間弱点を露出させる。",
     iconMotif: "weak-point-ledger",
     runtimeStatus: "integrated",
     cooldownSeconds: 17,
@@ -105,6 +113,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   gunner: {
     unitId: "unit-raider",
     displayName: "制圧掃射",
+    summary: "前方の敵群を連続射撃し、移動と攻撃の勢いを抑える。",
     iconMotif: "machine-gun-fan",
     runtimeStatus: "integrated",
     cooldownSeconds: 18,
@@ -119,6 +128,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   guardian: {
     unitId: "unit-gantetsu",
     displayName: "鉄壁展開",
+    summary: "敵を引きつけ、自身と周囲の味方の被ダメージを軽減する。",
     iconMotif: "shield-wall",
     runtimeStatus: "integrated",
     cooldownSeconds: 22,
@@ -132,6 +142,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   engineer: {
     unitId: "unit-monkey",
     displayName: "即席捕縛罠",
+    summary: "敵の進路へ罠を自動設置し、捕縛後も移動を鈍らせる。",
     iconMotif: "tripwire-trap",
     runtimeStatus: "integrated",
     cooldownSeconds: 16,
@@ -144,6 +155,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   zakimiya: {
     unitId: "unit-zakimiya",
     displayName: "火酒投擲",
+    summary: "敵が最も密集する地点へ火酒を投げ、炎上領域を残す。",
     iconMotif: "burning-whisky-bottle-arc",
     runtimeStatus: "integrated",
     cooldownSeconds: 14,
@@ -157,6 +169,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   tky: {
     unitId: "unit-tky",
     displayName: "光刃解放",
+    summary: "光刃を巨大化して前方を薙ぎ払い、群体を押し戻して怯ませる。",
     iconMotif: "released-light-blade",
     runtimeStatus: "integrated",
     cooldownSeconds: 16,
@@ -170,6 +183,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   "mrs-chiha": {
     unitId: "unit-mrs-chiha",
     displayName: "全弾制圧",
+    summary: "複数の敵密集地点へ榴弾を連射し、最終弾で強く押し戻す。",
     iconMotif: "rotary-gun-sweep",
     runtimeStatus: "integrated",
     cooldownSeconds: 19,
@@ -192,6 +206,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   "miyamoto-musashi": {
     unitId: "unit-miyamoto-musashi",
     displayName: "二天一流・無空",
+    summary: "近接・予告攻撃を受け流して交差斬り。未被弾時は踏み込み斬り。",
     iconMotif: "crossed-dual-blades",
     runtimeStatus: "integrated",
     cooldownSeconds: 20,
@@ -205,6 +220,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   "mayo-chan": {
     unitId: "unit-mayo-chan",
     displayName: "凶暴マヨ",
+    summary: "HPを消耗しながら高速化して敵を連続攻撃し、安全下限で退避する。",
     iconMotif: "chihuahua-infection-bloom",
     runtimeStatus: "integrated",
     cooldownSeconds: 34,
