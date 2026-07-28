@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { installInfectedAbilityPhaseObserver } from "./infected-ability-phase-observer.mjs";
 
 const baseUrl = new URL(process.env.AI_MISSION_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) {
@@ -16,7 +17,9 @@ const engines = (process.env.AI_MISSION_QA_ENGINES ?? "chromium,webkit")
   .map((engine) => engine.trim())
   .filter(Boolean);
 const unknownEngines = engines.filter((engine) => !browserTypes[engine]);
-if (unknownEngines.length > 0) throw new Error(`Unknown AI_MISSION_QA_ENGINES: ${unknownEngines.join(", ")}`);
+if (engines.length === 0 || unknownEngines.length > 0) {
+  throw new Error(`Unknown or empty AI_MISSION_QA_ENGINES: ${unknownEngines.join(", ") || "(empty)"}`);
+}
 
 const viewportCandidates = [
   { width: 1280, height: 720 },
@@ -74,7 +77,13 @@ if (stages.length === 0 || unknownStageNumbers.length > 0) {
   throw new Error(`Unknown AI_MISSION_QA_STAGES: ${unknownStageNumbers.join(", ") || "(empty)"}`);
 }
 const evidenceDir = path.resolve(process.env.AI_MISSION_QA_EVIDENCE_DIR ?? "outputs/ai-mission-browser-smoke");
-const timeout = Math.max(8_000, Number(process.env.AI_MISSION_QA_TIMEOUT_MS) || 38_000);
+const configuredTimeout = process.env.AI_MISSION_QA_TIMEOUT_MS;
+const parsedTimeout = configuredTimeout === undefined ? 38_000 : Number(configuredTimeout);
+if (!Number.isFinite(parsedTimeout) || parsedTimeout <= 0) {
+  throw new Error(`AI_MISSION_QA_TIMEOUT_MS must be finite and positive: ${configuredTimeout}`);
+}
+const timeout = Math.min(2 * 60_000, Math.max(8_000, parsedTimeout));
+const requireInfectedAbilityLifecycle = process.env.AI_MISSION_QA_INFECTED_ABILITIES === "1";
 const results = [];
 
 await mkdir(evidenceDir, { recursive: true });
@@ -126,6 +135,25 @@ function assertDiagnostics(diagnostics) {
   for (const [kind, entries] of Object.entries(normalized)) {
     invariant(entries.length === 0, `${kind}: ${JSON.stringify(entries)}`);
   }
+}
+
+async function startInfectedAbilityObserver(page, expectedKinds) {
+  await page.evaluate(installInfectedAbilityPhaseObserver, expectedKinds);
+}
+
+async function waitForInfectedAbilityLifecycle(page, expectedKinds) {
+  await page.waitForFunction(
+    (kinds) => kinds.every((kind) => {
+      const activations = window.__ASHFALL_INFECTED_PHASE_OBSERVER__
+        ?.observed?.[kind]?.completedActivations ?? [];
+      return activations.some(({ warningAt, activeAt }) => (
+        Number.isFinite(warningAt) && Number.isFinite(activeAt) && warningAt < activeAt
+      ));
+    }),
+    expectedKinds,
+    { timeout },
+  );
+  return page.evaluate(() => structuredClone(window.__ASHFALL_INFECTED_PHASE_OBSERVER__.observed));
 }
 
 async function readViewportEvidence(page) {
@@ -183,6 +211,9 @@ for (const engine of engines) {
             stage.id,
             { timeout },
           );
+          if (requireInfectedAbilityLifecycle && stage.expectedEnemyKinds?.length) {
+            await startInfectedAbilityObserver(page, stage.expectedEnemyKinds);
+          }
 
           const energyBeforeDeployment = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().energy);
           await page.locator('button.unit-card[data-kind="scout"]').click({ timeout });
@@ -224,6 +255,9 @@ for (const engine of engines) {
               { timeout },
             );
           }
+          const infectedAbilityLifecycle = requireInfectedAbilityLifecycle && stage.expectedEnemyKinds?.length
+            ? await waitForInfectedAbilityLifecycle(page, stage.expectedEnemyKinds)
+            : null;
 
           const snapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
           const dimensions = await readViewportEvidence(page);
@@ -295,6 +329,7 @@ for (const engine of engines) {
               aiRecoveries: snapshot.stationMetrics.aiRecoveries,
               attackIdentitySamples: snapshot.attackIdentity.length,
               expectedEnemyKinds: stage.expectedEnemyKinds ?? [],
+              infectedAbilityLifecycle,
             },
             dimensions,
             diagnostics: { ...diagnostics, warnings: unexpectedWarnings(diagnostics.warnings) },
@@ -303,7 +338,26 @@ for (const engine of engines) {
           result.error = String(error);
           result.diagnostics = { ...diagnostics, warnings: unexpectedWarnings(diagnostics.warnings) };
           try {
-            result.failureSnapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null);
+            result.failureSnapshot = await page.evaluate(() => {
+              const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+              return snapshot ? {
+                screen: snapshot.screen,
+                stageId: snapshot.stageId,
+                time: snapshot.time,
+                wave: snapshot.wave,
+                running: snapshot.running,
+                over: snapshot.over,
+                fighters: snapshot.fighters.map((fighter) => ({
+                  id: fighter.id,
+                  kind: fighter.kind,
+                  side: fighter.side,
+                  hp: fighter.hp,
+                  combatReady: fighter.combatReady,
+                  stationAbility: fighter.stationAbility,
+                })),
+                infectedAbilityLifecycle: window.__ASHFALL_INFECTED_PHASE_OBSERVER__?.observed ?? null,
+              } : null;
+            });
           } catch {
             // Navigation can fail before the QA bridge exists.
           }
