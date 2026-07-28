@@ -135,6 +135,7 @@ import {
   endSurvivalRun,
   resumeSurvivalCheckpoint,
   saveSurvivalCheckpoint,
+  selectSurvivalUpgrade as applySurvivalUpgrade,
   setSurvivalRunSpeed,
 } from "./survival.js";
 import {
@@ -431,8 +432,10 @@ import {
   canActivateManualAbility,
   createManualAbilityRuntime,
   layoutManualAbilityIcons,
+  manualAbilityCheckpointCooldown,
   manualAbilityLocksNormalAction,
   mayoAbilityHpStep,
+  restoreManualAbilityCooldown,
   selectManualAbilityTarget,
   triggerMusashiCounter,
 } from "./manualAbilities.js";
@@ -1593,6 +1596,60 @@ function effectDistance(a: { x: number; y: number }, b: { x: number; y: number }
   return Math.hypot(a.x - b.x, (a.y - b.y) * 2);
 }
 
+function manualAbilityTargetCandidates(g: Game, owner: Fighter) {
+  if (owner.kind !== "brute"
+    || !g.barricadeVulnerable
+    || g.barricadeHp <= 0
+    || g.definition.enemyBaseMode === "scenery") {
+    return g.fighters;
+  }
+  const target = enemyBaseTargetPoint(owner.lane, activeLaneCenters);
+  return [...g.fighters, {
+    id: "manual-structure:enemy-base",
+    kind: "infected-base",
+    side: "zombie",
+    x: target.x,
+    y: target.y,
+    lane: owner.lane,
+    hp: g.barricadeHp,
+    maxHp: g.barricadeMaxHp,
+    combatReady: true,
+    contained: false,
+    targetable: true,
+    isStructure: true,
+  }];
+}
+
+function snapshotManualAbilityCooldowns(fighters: readonly Fighter[]) {
+  const byKind: Record<string, number[]> = {};
+  const living = fighters
+    .filter((fighter) => fighter.side === "human" && fighter.hp > 0 && fighter.manualAbility)
+    .sort((left, right) => left.id - right.id);
+  for (const fighter of living) {
+    const values = byKind[fighter.kind] ?? [];
+    values.push(manualAbilityCheckpointCooldown(fighter.manualAbility));
+    byKind[fighter.kind] = values;
+  }
+  return byKind;
+}
+
+function consumeSurvivalManualAbilityCooldown(g: Game, kind: UnitKind) {
+  const run = g.survivalRun;
+  const queue = run?.manualAbilityCooldownsByKind?.[kind];
+  if (!run || !Array.isArray(queue) || queue.length === 0) {
+    return restoreManualAbilityCooldown(kind, 0) as ManualAbilityRuntime | null;
+  }
+  const [cooldown, ...remaining] = queue;
+  const nextCooldowns = { ...run.manualAbilityCooldownsByKind };
+  if (remaining.length > 0) nextCooldowns[kind] = remaining;
+  else delete nextCooldowns[kind];
+  g.survivalRun = {
+    ...run,
+    manualAbilityCooldownsByKind: nextCooldowns,
+  };
+  return restoreManualAbilityCooldown(kind, cooldown) as ManualAbilityRuntime | null;
+}
+
 function v090EnemyIncomingDamageMultiplier(
   g: Game,
   attacker: Fighter | null,
@@ -2070,6 +2127,9 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
       combatReadyX: MUSTER_X,
       combatReadyY: activeMusterY(),
     };
+  const manualAbility = g.survivalRun
+    ? consumeSurvivalManualAbilityCooldown(g, kind)
+    : createManualAbilityRuntime(kind) as ManualAbilityRuntime | null;
   g.fighters.push({
     id, side: "human", kind, aiProfile: card.aiProfile, lane: deployment.legacyLane as Lane, anchorLane: assignedLane, x: deployment.x, y: deployment.y, hp: card.hp, maxHp: card.hp,
     speed: card.speed, damage: card.damage, range: card.range, cooldown: 0, supportCooldown: 0,
@@ -2085,7 +2145,7 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     navigationRecovery: createNavigationRecoveryState({ x: deployment.x, y: deployment.y, lane: assignedLane }),
     abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
-    manualAbility: createManualAbilityRuntime(kind) as ManualAbilityRuntime | null,
+    manualAbility,
     mayoBiteSlowRemaining: 0,
     mayoRetreat: null,
     progressionLevel: card.progressionLevel,
@@ -2937,9 +2997,8 @@ function prepareQaMode(g: Game, qaMode: QaMode | null) {
 }
 
 function prepareManualAbilityProof(g: Game, requestedKinds: readonly UnitKind[]) {
-  const kinds = requestedKinds.filter((kind, index) => (
+  const kinds = requestedKinds.filter((kind) => (
     MANUAL_ABILITY_REGISTRY[kind]?.runtimeStatus === "integrated"
-    && requestedKinds.indexOf(kind) === index
   ));
   if (kinds.length === 0) throw new Error("Manual ability proof requires at least one integrated unit");
   g.time = 60;
@@ -2949,6 +3008,9 @@ function prepareManualAbilityProof(g: Game, requestedKinds: readonly UnitKind[])
   g.running = true;
   g.over = false;
   g.won = false;
+  g.survivalRun = null;
+  g.survivalRuntime = null;
+  g.survivalCheckpointReceipt = null;
   g.baseHp = g.baseMaxHp;
   g.barricadeVulnerable = true;
   g.barricadeMaxHp = Math.max(BARRICADE_MAX_HP, 12000);
@@ -2995,11 +3057,13 @@ function prepareManualAbilityProof(g: Game, requestedKinds: readonly UnitKind[])
     if (!rosterProof && kind !== "medic") {
       const targetKind: EnemyKind = kind === "scout"
         ? "runner"
-        : kind === "ranger" || kind === "babayaga"
-          ? "spitter"
-          : kind === "brute"
-            ? "crusher"
-            : "walker";
+        : kind === "engineer"
+          ? "runner"
+          : kind === "ranger" || kind === "babayaga"
+            ? "spitter"
+            : kind === "brute"
+              ? "crusher"
+              : "walker";
       const target = spawnEnemy(g, targetKind, lane);
       target.x = Math.min(825, x + 92);
       target.y = fighter.y;
@@ -3014,6 +3078,22 @@ function prepareManualAbilityProof(g: Game, requestedKinds: readonly UnitKind[])
       target.gateEntering = false;
       target.targetId = null;
       target.retargetIn = 99;
+      if (kind === "brawler" || kind === "engineer") {
+        const nearby = spawnEnemy(g, "walker", lane);
+        nearby.x = Math.min(825, x + (kind === "engineer" ? 58 : 72));
+        nearby.y = fighter.y;
+        nearby.maxHp = 2400;
+        nearby.hp = nearby.maxHp;
+        nearby.speed = 0;
+        nearby.laneSpeed = 0;
+        nearby.damage = 0;
+        nearby.cooldown = 99;
+        nearby.abilityCooldown = 99;
+        nearby.combatReady = true;
+        nearby.gateEntering = false;
+        nearby.targetId = null;
+        nearby.retargetIn = 99;
+      }
     }
   }
 
@@ -6230,6 +6310,152 @@ export function AshfallGame() {
         setScreen("battle");
         return proof;
       },
+      prepareManualAbilitySurvivalProof: (kind: UnitKind = "brawler") => {
+        const definition = MANUAL_ABILITY_REGISTRY[kind];
+        if (!definition) throw new RangeError(`Unknown manual ability proof kind: ${String(kind)}`);
+        const proof = prepareManualAbilityProof(gameRef.current, [kind]);
+        const g = gameRef.current;
+        const run = beginSurvivalWave(createSurvivalRun({
+          runId: `qa-manual-speed-${kind}`,
+          formation: {
+            unitIds: [definition.unitId],
+            unitLevelsByUnit: { [definition.unitId]: 1 },
+          },
+        }));
+        g.definition = {
+          ...g.definition,
+          displayName: "感染防衛前線",
+          missionType: "survival",
+          enemyBaseMode: "scenery",
+          missionConfig: {
+            ...g.definition.missionConfig,
+            spawnProfile: "survival-infection-breach",
+            defenseFrontX: 646,
+          },
+        };
+        g.survivalRun = run;
+        g.survivalRuntime = createSurvivalCombatRuntime(run);
+        g.baseHp = run.crawler.hp;
+        g.baseMaxHp = run.crawler.maxHp;
+        g.barricadeVulnerable = false;
+        setSurvivalHud(survivalHudSnapshot(run));
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return proof;
+      },
+      primeManualAbilityCooldown: (ownerId: number, seconds = .5) => {
+        const fighter = gameRef.current.fighters.find((candidate) => (
+          candidate.id === ownerId
+          && candidate.side === "human"
+          && candidate.hp > 0
+        ));
+        if (!fighter) return null;
+        fighter.manualAbility = restoreManualAbilityCooldown(
+          fighter.kind,
+          seconds,
+        ) as ManualAbilityRuntime | null;
+        return fighter.manualAbility ? {
+          ownerId: fighter.id,
+          kind: fighter.kind,
+          phase: fighter.manualAbility.phase,
+          cooldownRemaining: fighter.manualAbility.cooldownRemaining,
+        } : null;
+      },
+      rearmManualAbilityTarget: (ownerId: number) => {
+        const g = gameRef.current;
+        const owner = g.fighters.find((fighter) => (
+          fighter.id === ownerId
+          && fighter.side === "human"
+          && fighter.hp > 0
+        ));
+        if (!owner) return false;
+        if (owner.kind === "medic") {
+          const ally = g.fighters.find((fighter) => (
+            fighter.side === "human"
+            && fighter.id !== owner.id
+            && fighter.hp > 0
+          ));
+          if (!ally) return false;
+          ally.hp = Math.max(1, ally.maxHp * .24);
+        }
+        return selectManualAbilityTarget({
+          owner,
+          fighters: manualAbilityTargetCandidates(g, owner),
+        }) !== null;
+      },
+      persistManualAbilityCheckpointProof: async (kind: UnitKind = "brawler", cooldownSeconds = 9.5) => {
+        const definition = MANUAL_ABILITY_REGISTRY[kind];
+        if (!definition) throw new RangeError(`Unknown manual ability checkpoint kind: ${String(kind)}`);
+        let run = createSurvivalRun({
+          runId: `qa-manual-checkpoint-${kind}`,
+          formation: {
+            unitIds: [definition.unitId],
+            unitLevelsByUnit: { [definition.unitId]: 1 },
+          },
+        });
+        for (let wave = 1; wave <= 5; wave += 1) {
+          run = beginSurvivalWave(run);
+          run = completeSurvivalWave(run, {
+            bossKills: wave === 5 ? 1 : 0,
+            crawlerHp: run.crawler.hp,
+          });
+        }
+        run = applySurvivalUpgrade(run, run.pendingUpgradeChoices[0]);
+        run = {
+          ...run,
+          manualAbilityCooldownsByKind: {
+            [kind]: [Math.max(0, Number(cooldownSeconds) || 0)],
+          },
+        };
+        const checkpointBaseSave = campaignSaveRef.current.campaignStarted
+          ? campaignSaveRef.current
+          : markCampaignStarted(campaignSaveRef.current) as CampaignSave;
+        const checkpoint = checkpointSurvivalCampaignSave(checkpointBaseSave, run, {
+          savedAt: new Date().toISOString(),
+        });
+        const persisted = await persistCampaignSave(checkpoint.save as CampaignSave);
+        if (persisted.durable) setCampaignSave(checkpoint.save as CampaignSave);
+        return {
+          durable: persisted.durable,
+          checkpointId: checkpoint.checkpointId,
+          cooldownSeconds: run.manualAbilityCooldownsByKind[kind][0],
+        };
+      },
+      deployManualAbilityCheckpointProof: (kind: UnitKind = "brawler") => {
+        const g = gameRef.current;
+        if (!g.survivalRun) return null;
+        const card = spawnHuman(g, kind);
+        if (!card) return null;
+        const fighter = g.fighters[g.fighters.length - 1];
+        fighter.lane = 1;
+        fighter.anchorLane = 1;
+        fighter.x = 300;
+        fighter.y = activeLaneCenters[1];
+        fighter.spawnGrace = 0;
+        fighter.combatReady = true;
+        fighter.gateEntering = false;
+        fighter.speed = 0;
+        fighter.laneSpeed = 0;
+        fighter.cooldown = 99;
+        const target = spawnEnemy(g, "walker", 1);
+        target.x = 392;
+        target.y = fighter.y;
+        target.maxHp = 2400;
+        target.hp = target.maxHp;
+        target.speed = 0;
+        target.laneSpeed = 0;
+        target.damage = 0;
+        target.cooldown = 99;
+        target.combatReady = true;
+        target.gateEntering = false;
+        return {
+          ownerId: fighter.id,
+          phase: fighter.manualAbility?.phase ?? null,
+          cooldownRemaining: fighter.manualAbility?.cooldownRemaining ?? null,
+        };
+      },
       stabilizeNewPlayableProof: () => {
         if (qaMode !== "new-playables") return false;
         for (const fighter of gameRef.current.fighters) {
@@ -6898,20 +7124,24 @@ export function AshfallGame() {
         if (!checkpointRun || checkpointRun.phase !== SURVIVAL_RUN_PHASES.UPGRADE_SELECTION) {
           throw new Error("Could not prepare Survival upgrade checkpoint");
         }
-        const checkpointId = `survival:${checkpointRun.runId}:wave:${checkpointRun.lastCompletedWave}`;
-        g.survivalRun = checkpointRun;
-        g.survivalRuntime = createSurvivalCombatRuntime(checkpointRun);
+        const checkpointWithCooldowns = {
+          ...checkpointRun,
+          manualAbilityCooldownsByKind: snapshotManualAbilityCooldowns(g.fighters),
+        };
+        const checkpointId = `survival:${checkpointWithCooldowns.runId}:wave:${checkpointWithCooldowns.lastCompletedWave}`;
+        g.survivalRun = checkpointWithCooldowns;
+        g.survivalRuntime = createSurvivalCombatRuntime(checkpointWithCooldowns);
         g.survivalCheckpointReceipt = checkpointId;
         g.wave = checkpointRun.currentWave;
         g.paused = true;
         g.enemySpawn = createEnemySpawnRuntime();
         g.fighters = g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0);
         setPaused(true);
-        setSurvivalHud(survivalHudSnapshot(checkpointRun));
-        setPendingSurvivalCheckpoint({ run: checkpointRun, checkpointId });
+        setSurvivalHud(survivalHudSnapshot(checkpointWithCooldowns));
+        setPendingSurvivalCheckpoint({ run: checkpointWithCooldowns, checkpointId });
         return {
           checkpointId,
-          choices: [...checkpointRun.pendingUpgradeChoices],
+          choices: [...checkpointWithCooldowns.pendingUpgradeChoices],
         };
       },
       prepareSurvivalEntryVisibilityProof: () => {
@@ -7186,6 +7416,10 @@ export function AshfallGame() {
               equipmentEnhancementLevels: { ...g.survivalRun.formation.equipmentEnhancementLevels },
             },
             crawler: { ...g.survivalRun.crawler },
+            manualAbilityCooldownsByKind: Object.fromEntries(
+              Object.entries(g.survivalRun.manualAbilityCooldownsByKind ?? {})
+                .map(([kind, cooldowns]) => [kind, [...cooldowns]]),
+            ),
             temporaryUpgradeStacks: { ...g.survivalRun.temporaryUpgradeStacks },
             pendingUpgradeChoices: [...g.survivalRun.pendingUpgradeChoices],
             stats: { ...g.survivalRun.stats },
@@ -7316,6 +7550,7 @@ export function AshfallGame() {
             entryRampY: fighter.entryRampY ?? null,
             entryRampCleared: fighter.entryRampCleared ?? true,
             contained: fighter.contained,
+            stunned: fighter.stunned,
             damageReductionRemaining: fighter.damageReductionRemaining,
             damageReductionMultiplier: fighter.damageReductionMultiplier,
             comboHits: fighter.comboHits,
@@ -7361,7 +7596,7 @@ export function AshfallGame() {
         delete qaWindow.__ASHFALL_RUNTIME_PERFORMANCE__;
       }
     };
-  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, qaMode, screen]);
+  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, persistCampaignSave, qaMode, screen]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -7808,11 +8043,12 @@ export function AshfallGame() {
       && candidate.side === "human"
       && candidate.hp > 0
     ));
-    if (!fighter?.manualAbility || !canActivateManualAbility({ fighter, fighters: g.fighters })) {
+    const targetCandidates = fighter ? manualAbilityTargetCandidates(g, fighter) : g.fighters;
+    if (!fighter?.manualAbility || !canActivateManualAbility({ fighter, fighters: targetCandidates })) {
       playCue("denied");
       return false;
     }
-    const target = selectManualAbilityTarget({ owner: fighter, fighters: g.fighters });
+    const target = selectManualAbilityTarget({ owner: fighter, fighters: targetCandidates });
     const startedAbility = beginManualAbility(fighter.manualAbility, target);
     if (!startedAbility.ok || !target) {
       playCue("denied");
@@ -10471,7 +10707,17 @@ export function AshfallGame() {
               const damage = Math.min(target.hp, totalDamage);
               target.hp = Math.max(0, target.hp - totalDamage);
               target.flash = Math.max(target.flash, .3);
-              target.knock = Math.max(target.knock, definition.finalKnockback);
+              for (const nearby of g.fighters) {
+                if (nearby.side !== "zombie"
+                  || nearby.hp <= 0
+                  || !nearby.combatReady
+                  || effectDistance(nearby, target) > definition.finalKnockbackRadius) continue;
+                nearby.knock = Math.max(
+                  nearby.knock,
+                  nearby.id === target.id ? definition.finalKnockback : definition.finalKnockback * .72,
+                );
+                nearby.flash = Math.max(nearby.flash, nearby.id === target.id ? .3 : .14);
+              }
               recordUnitDamage(g, owner.kind, damage);
               addDamageText(g, { x: target.x, y: target.y - 52, value: `連打×${definition.hitCount} -${Math.round(damage)}`, life: .9, color: "#ffd16d" });
               addParticles(g, target.x, target.y - 30, "#ffb34f", 24);
@@ -10581,6 +10827,30 @@ export function AshfallGame() {
                 target.knock = Math.max(target.knock, 14);
                 recordUnitDamage(g, owner.kind, damage);
                 addDamageText(g, { x: target.x, y: target.y - 48, value: `地砕 -${Math.round(damage)}`, life: .84, color: "#e6b06b" });
+              }
+              if (targetIds.has("manual-structure:enemy-base")
+                && g.barricadeVulnerable
+                && g.barricadeHp > 0) {
+                const baseTarget = enemyBaseTargetPoint(owner.lane, activeLaneCenters);
+                const structureDamage = Math.min(
+                  g.barricadeHp,
+                  resolveTataraStrikeDamage(
+                    definition.impactDamage * definition.structureImpactMultiplier,
+                    { targetType: "infected-base" },
+                  ),
+                );
+                g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
+                g.barricadeHitFlash = Math.max(g.barricadeHitFlash, .28);
+                g.barricadeHitY = baseTarget.y;
+                g.roleMetrics.tataraStructureDamage += structureDamage;
+                addDamageText(g, {
+                  x: baseTarget.x,
+                  y: baseTarget.y - 18,
+                  value: `地砕 -${Math.round(structureDamage)}`,
+                  life: .9,
+                  color: "#ffd06b",
+                });
+                addParticles(g, baseTarget.x, baseTarget.y, "#e78b45", 18);
               }
               addParticles(g, event.target.x, event.target.y, "#b88a58", 30);
               g.flashOverlay = Math.max(g.flashOverlay, .13);
@@ -11262,6 +11532,10 @@ export function AshfallGame() {
             } else if (event.type === "checkpoint" && g.survivalRun) {
               const checkpointId = `survival:${g.survivalRun.runId}:wave:${event.completedWave}`;
               if (g.survivalCheckpointReceipt !== checkpointId) {
+                g.survivalRun = {
+                  ...g.survivalRun,
+                  manualAbilityCooldownsByKind: snapshotManualAbilityCooldowns(g.fighters),
+                };
                 g.survivalCheckpointReceipt = checkpointId;
                 g.paused = true;
                 setPaused(true);
@@ -12515,15 +12789,30 @@ export function AshfallGame() {
                 x: f.engineerTrapX,
                 active: true,
                 used: false,
-                triggerRadius: UNIT_ROLE_TUNING.monkey.triggerRadius,
+                triggerRadius: f.engineerTrapManual
+                  ? MANUAL_ABILITY_REGISTRY.engineer.effectRadius
+                  : UNIT_ROLE_TUNING.monkey.triggerRadius,
                 stopSeconds: (f.engineerTrapManual
                   ? MANUAL_ABILITY_REGISTRY.engineer.bindSeconds
                   : UNIT_ROLE_TUNING.monkey.stopSeconds) * f.trapDurationMultiplier,
               };
               const trigger = triggerMonkeyTrap(trap, g.fighters.filter((candidate) => candidate.side === "zombie"));
               if (trigger.triggered) {
-                const trapped = g.fighters.find((candidate) => candidate.id === trigger.targetId && candidate.side === "zombie" && candidate.hp > 0);
-                if (trapped) {
+                const trappedTargets = f.engineerTrapManual
+                  ? g.fighters.filter((candidate) => (
+                    candidate.side === "zombie"
+                    && candidate.hp > 0
+                    && candidate.combatReady
+                    && candidate.lane === trap.lane
+                    && Math.abs(candidate.x - trap.x) <= trap.triggerRadius
+                  ))
+                  : g.fighters.filter((candidate) => (
+                    candidate.id === trigger.targetId
+                    && candidate.side === "zombie"
+                    && candidate.hp > 0
+                  ));
+                if (trappedTargets.length > 0) {
+                  for (const trapped of trappedTargets) {
                   trapped.stunned = Math.max(trapped.stunned, trigger.stopSeconds);
                   if (f.engineerTrapManual) {
                     trapped.suppressionStacks = Math.max(
@@ -12532,14 +12821,16 @@ export function AshfallGame() {
                     );
                     trapped.suppressedRemaining = Math.max(
                       trapped.suppressedRemaining,
-                      MANUAL_ABILITY_REGISTRY.engineer.slowSeconds,
+                      MANUAL_ABILITY_REGISTRY.engineer.bindSeconds
+                        + MANUAL_ABILITY_REGISTRY.engineer.slowSeconds,
                     );
+                  }
+                    addDamageText(g, { x: trapped.x, y: trapped.y - 60, value: "足止め", life: .8, color: "#e1c978" });
                   }
                   f.engineerTrapReady = false;
                   f.engineerTrapCooldown = UNIT_ROLE_TUNING.monkey.placementIntervalSeconds;
                   f.engineerTrapManual = false;
                   g.roleMetrics.monkeyTrapTriggers += 1;
-                  addDamageText(g, { x: trapped.x, y: trapped.y - 60, value: "足止め", life: .8, color: "#e1c978" });
                 }
               }
             }
@@ -14258,7 +14549,10 @@ export function AshfallGame() {
           });
         }
         const readyAbilityFighters = g.running && !g.paused && !g.over && !selectedActionRef.current
-          ? g.fighters.filter((fighter) => canActivateManualAbility({ fighter, fighters: g.fighters }))
+          ? g.fighters.filter((fighter) => canActivateManualAbility({
+            fighter,
+            fighters: manualAbilityTargetCandidates(g, fighter),
+          }))
             .map((fighter) => {
               const size = fighterScreenSize(fighter);
               return {

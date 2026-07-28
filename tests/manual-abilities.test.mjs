@@ -9,8 +9,10 @@ import {
   canActivateManualAbility,
   createManualAbilityRuntime,
   layoutManualAbilityIcons,
+  manualAbilityCheckpointCooldown,
   manualAbilityLocksNormalAction,
   mayoAbilityHpStep,
+  restoreManualAbilityCooldown,
   selectManualAbilityTarget,
   selectMayoAbilityTarget,
   selectMrsChihaAbilityTarget,
@@ -198,6 +200,57 @@ test("duplicate deployments own independent activation and cooldown state", () =
   const cooling = advanceManualAbility(first.manualAbility, 2);
   assert.ok(cooling.runtime.cooldownRemaining < first.manualAbility.cooldownRemaining);
   assert.equal(advanceManualAbility(cooling.runtime, 20).runtime.phase, "ready");
+});
+
+test("checkpoint debt conservatively preserves every non-ready manual ability phase", () => {
+  const brawler = createManualAbilityRuntime("brawler");
+  const started = beginManualAbility(brawler, { targetId: "target", x: 260, y: 280 });
+  const windupDebt = manualAbilityCheckpointCooldown(started.runtime);
+  assert.equal(
+    windupDebt,
+    MANUAL_ABILITY_REGISTRY.brawler.windupSeconds
+      + MANUAL_ABILITY_REGISTRY.brawler.cooldownSeconds,
+  );
+  const cooling = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY.brawler.windupSeconds);
+  assert.equal(
+    manualAbilityCheckpointCooldown(cooling.runtime),
+    MANUAL_ABILITY_REGISTRY.brawler.cooldownSeconds,
+  );
+  const restored = restoreManualAbilityCooldown("brawler", windupDebt);
+  assert.equal(restored.phase, "cooldown");
+  assert.equal(restored.cooldownRemaining, windupDebt);
+  assert.equal(manualAbilityCheckpointCooldown(createManualAbilityRuntime("brawler")), 0);
+  for (const kind of Object.keys(MANUAL_ABILITY_REGISTRY)) {
+    const restoredKind = restoreManualAbilityCooldown(kind, .1);
+    assert.equal(advanceManualAbility(restoredKind, .2).runtime.phase, "ready", kind);
+  }
+
+  const sustained = beginManualAbility(
+    createManualAbilityRuntime("guardian"),
+    { targetId: "target", x: 260, y: 280 },
+  );
+  assert.equal(
+    manualAbilityCheckpointCooldown(sustained.runtime),
+    MANUAL_ABILITY_REGISTRY.guardian.windupSeconds
+      + MANUAL_ABILITY_REGISTRY.guardian.activeSeconds
+      + MANUAL_ABILITY_REGISTRY.guardian.cooldownSeconds,
+  );
+});
+
+test("Musashi fallback recognizes every Version 0.9.0 boss before a closer normal enemy", () => {
+  const musashi = owner(70, "miyamoto-musashi");
+  for (const kind of ["kurome", "mother", "ooguchi", "gairen", "futago"]) {
+    const selected = selectMusashiAbilityTarget({
+      owner: musashi,
+      fighters: [
+        musashi,
+        enemy("near-walker", 230),
+        { ...enemy(`boss-${kind}`, 330, 280, 500), kind },
+      ],
+    });
+    assert.equal(selected.targetId, `boss-${kind}`, kind);
+    assert.equal(selected.isBoss, true, kind);
+  }
 });
 
 test("one activation emits one impact receipt even with oversized time steps", () => {
@@ -519,15 +572,16 @@ test("existing eleven abilities connect unique combat mechanics, canvas VFX, and
     assert.match(source, new RegExp(`effect\\.kind === "${kind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`), `${kind} has dedicated VFX`);
   }
   assert.match(source, /event\.kind === "brawler"[\s\S]{0,1600}definition\.hitCount/);
+  assert.match(source, /event\.kind === "brawler"[\s\S]{0,2200}finalKnockbackRadius/);
   assert.match(source, /event\.kind === "scout"[\s\S]{0,1800}definition\.stunSeconds/);
   assert.match(source, /event\.kind === "ranger"[\s\S]{0,1900}penetrationMultiplier/);
   assert.match(source, /event\.kind === "medic"[\s\S]{0,1900}protectionSeconds/);
-  assert.match(source, /event\.kind === "brute"[\s\S]{0,1900}armorBreakSeconds/);
+  assert.match(source, /event\.kind === "brute"[\s\S]{0,3000}manual-structure:enemy-base/);
   assert.match(source, /manualDamageMultiplier[\s\S]{0,260}crazy-king/);
   assert.match(source, /event\.kind === "babayaga"[\s\S]{0,1200}markSeconds/);
   assert.match(source, /event\.kind === "gunner"[\s\S]{0,1600}suppressionSeconds/);
   assert.match(source, /activeGuardian[\s\S]{0,900}allyDamageTakenMultiplier/);
-  assert.match(source, /event\.kind === "engineer"[\s\S]{0,800}engineerTrapManual = true/);
+  assert.match(source, /engineerTrapManual[\s\S]{0,1800}trappedTargets[\s\S]{0,1000}slowSeconds/);
   assert.match(source, /playProductionCue\(weaponCueForUnit\(owner\.kind\)/);
 });
 

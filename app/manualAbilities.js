@@ -12,6 +12,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
     impactDamage: 56,
     hitCount: 5,
     finalKnockback: 19,
+    finalKnockbackRadius: 82,
   },
   scout: {
     unitId: "unit-hachi",
@@ -61,6 +62,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
     impactDamage: 78,
     stunSeconds: 1.1,
     armorBreakSeconds: 5,
+    structureImpactMultiplier: .65,
   },
   "crazy-king": {
     unitId: "unit-crazy-king",
@@ -135,6 +137,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
     cooldownSeconds: 16,
     windupSeconds: .35,
     range: 280,
+    effectRadius: 58,
     bindSeconds: 1.35,
     slowSeconds: 3.2,
   },
@@ -291,6 +294,49 @@ function forwardCandidates(owner, fighters, range, effectHalfHeight = Infinity) 
     return forward >= -8
       && forward <= range
       && Math.abs(Number(candidate.y) - Number(owner.y)) <= effectHalfHeight;
+  });
+}
+
+export function manualAbilityCheckpointCooldown(runtime) {
+  const definition = manualAbilityDefinitionFor(runtime?.kind);
+  if (!definition || runtime?.phase === "ready") return 0;
+  if (runtime.phase === "cooldown") {
+    return Math.max(0, Number(runtime.cooldownRemaining) || 0);
+  }
+  let remaining = Math.max(0, Number(definition.cooldownSeconds) || 0);
+  if (runtime.phase === "windup") {
+    remaining += Math.max(0, Number(runtime.windupRemaining) || 0);
+    if (["crazy-king", "kumaverson", "guardian"].includes(runtime.kind)) {
+      remaining += Math.max(0, Number(definition.activeSeconds) || 0);
+    } else if (runtime.kind === "miyamoto-musashi") {
+      remaining += Math.max(0, Number(definition.guardSeconds) || 0);
+    } else if (runtime.kind === "mayo-chan") {
+      remaining += Math.max(0, Number(definition.feralSeconds) || 0);
+    }
+  } else if (["active", "feral"].includes(runtime.phase)) {
+    remaining += Math.max(0, Number(runtime.activeRemaining) || 0);
+  } else if (runtime.phase === "guard") {
+    remaining += Math.max(0, Number(runtime.guardRemaining) || 0);
+  } else if (runtime.kind === "mrs-chiha" && ["salvo", "recovery"].includes(runtime.phase)) {
+    const finalImpactAt = definition.windupSeconds
+      + definition.salvoIntervalSeconds * Math.max(0, definition.salvoCount - 1)
+      + definition.projectileTravelSeconds
+      + definition.recoverySeconds;
+    remaining += Math.max(0, finalImpactAt - (Number(runtime.abilityElapsed) || 0));
+  }
+  return Math.round(Math.min(3_600, remaining) * 1_000) / 1_000;
+}
+
+export function restoreManualAbilityCooldown(kind, seconds) {
+  const runtime = createManualAbilityRuntime(kind);
+  if (!runtime) return null;
+  const cooldownRemaining = Math.max(0, Math.min(3_600, Number(seconds) || 0));
+  if (cooldownRemaining <= 0) return runtime;
+  return Object.freeze({
+    ...runtime,
+    phase: "cooldown",
+    cooldownRemaining,
+    target: null,
   });
 }
 
@@ -678,7 +724,7 @@ export function selectMusashiAbilityTarget({
       x: Number(candidate.x),
       y: Number(candidate.y),
       lane: candidate.lane,
-      isBoss: candidate.isBoss === true || candidate.boss === true || ["takuya", "gate-eater"].includes(candidate.kind),
+      isBoss: bossTarget(candidate),
       ownerDistance: distance(owner, candidate),
     }))
     .sort((left, right) => (
@@ -974,6 +1020,17 @@ function advanceSustainedAbility(runtime, elapsedSeconds) {
 
 function advanceMayoAbility(runtime, elapsedSeconds) {
   const definition = MANUAL_ABILITY_REGISTRY["mayo-chan"];
+  if (runtime.phase === "cooldown") {
+    const cooldownRemaining = Math.max(0, runtime.cooldownRemaining - elapsedSeconds);
+    return Object.freeze({
+      runtime: Object.freeze({
+        ...runtime,
+        phase: cooldownRemaining > 0 ? "cooldown" : "ready",
+        cooldownRemaining,
+      }),
+      events: Object.freeze([]),
+    });
+  }
   if (runtime.phase === "windup") {
     const remaining = runtime.windupRemaining - elapsedSeconds;
     if (remaining > 0) {

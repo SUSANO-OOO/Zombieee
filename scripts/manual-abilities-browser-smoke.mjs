@@ -276,6 +276,9 @@ async function abilityActivationProof(page, engine) {
     const allyHpBefore = before.fighters
       .filter(({ side }) => side === "human")
       .reduce((sum, fighter) => sum + fighter.hp, 0);
+    const enemyXBefore = new Map(before.fighters
+      .filter(({ side }) => side === "zombie")
+      .map(({ id, x }) => [id, x]));
     await page.locator(`.manual-ability-ready[data-ability-kind='${kind}']`).click();
     const immediate = await page.evaluate((id) => {
       const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
@@ -301,8 +304,16 @@ async function abilityActivationProof(page, engine) {
       await page.screenshot({ path: path.join(evidenceDir, `chromium-844x390-${kind}-vfx.png`) });
     }
     await waitForAbilitySettlement(page, kind, ownerId);
-    const after = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
-    const ownerAfter = after.fighters.find(({ id }) => id === ownerId);
+    let after = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    if (kind === "engineer") {
+      await page.waitForFunction(() => (
+        window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
+          .filter(({ side, stunned, suppressedRemaining }) => (
+            side === "zombie" && (stunned > 0 || suppressedRemaining > 0)
+          )).length >= 2
+      ));
+      after = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    }
     const enemyHpAfter = after.fighters
       .filter(({ side }) => side === "zombie")
       .reduce((sum, fighter) => sum + fighter.hp, 0);
@@ -318,6 +329,15 @@ async function abilityActivationProof(page, engine) {
       invariant(enemyHpAfter < enemyHpBefore,
         `${engine}/${kind}: authored damage did not reach a target`);
     }
+    if (kind === "brawler") {
+      const displaced = after.fighters.filter(({ id, side, x }) => (
+        side === "zombie"
+        && enemyXBefore.has(id)
+        && x > enemyXBefore.get(id) + .5
+      ));
+      invariant(displaced.length >= 2,
+        `${engine}/brawler: final hit did not push the surrounding group`);
+    }
     if (kind === "medic") {
       invariant(allyHpAfter > allyHpBefore, `${engine}/medic: emergency treatment did not heal`);
       const treated = after.fighters.find(({ side, id, damageReductionRemaining }) => (
@@ -331,13 +351,40 @@ async function abilityActivationProof(page, engine) {
         `${engine}/${kind}: taunt did not redirect a threat`);
     }
     if (kind === "engineer") {
-      invariant(ownerAfter.engineerTrapReady === true && ownerAfter.engineerTrapManual === true,
-        `${engine}/engineer: manual binding trap was not placed`);
+      const trapped = after.fighters.filter(({ side, stunned, suppressedRemaining }) => (
+        side === "zombie" && stunned > 0 && suppressedRemaining > 0
+      ));
+      invariant(trapped.length >= 2,
+        `${engine}/engineer: manual binding trap did not bind and slow the group`);
     }
+    invariant(await page.evaluate(
+      (id) => window.__ASHFALL_BATTLE_QA__.rearmManualAbilityTarget(id),
+      ownerId,
+    ), `${engine}/${kind}: proof target could not be restored for cooldown completion`);
+    const startReceiptCount = after.manualAbilityReceipts
+      .filter(({ ownerId: receiptOwnerId, eventType }) => (
+        receiptOwnerId === ownerId && eventType === "start"
+      )).length;
+    const primed = await page.evaluate(
+      ({ id, seconds }) => window.__ASHFALL_BATTLE_QA__.primeManualAbilityCooldown(id, seconds),
+      { id: ownerId, seconds: .14 },
+    );
+    invariant(primed?.phase === "cooldown", `${engine}/${kind}: cooldown proof could not be primed`);
+    invariant(await page.locator(`.manual-ability-ready[data-fighter-id='${ownerId}']`).count() === 0,
+      `${engine}/${kind}: cooldown proof rendered an overhead icon`);
+    await page.waitForFunction((id) => (
+      document.querySelector(`.manual-ability-ready[data-fighter-id='${id}']`) !== null
+    ), ownerId);
+    const rearmed = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    invariant(rearmed.manualAbilityReceipts
+      .filter(({ ownerId: receiptOwnerId, eventType }) => (
+        receiptOwnerId === ownerId && eventType === "start"
+      )).length === startReceiptCount,
+    `${engine}/${kind}: cooldown completion duplicated activation`);
     proofs.push({
       kind,
       ownerId,
-      phase: ownerAfter.manualAbility.phase,
+      phase: rearmed.fighters.find(({ id }) => id === ownerId)?.manualAbility?.phase ?? null,
       enemyDamage: enemyHpBefore - enemyHpAfter,
       allyHealing: allyHpAfter - allyHpBefore,
       receiptTypes: after.manualAbilityReceipts
@@ -346,6 +393,181 @@ async function abilityActivationProof(page, engine) {
     });
   }
   return proofs;
+}
+
+async function duplicateInstanceProof(page, engine) {
+  const proof = await prepareProof(page, ["brawler", "brawler"]);
+  const [firstId, secondId] = proof.ownerIds;
+  await page.locator(`.manual-ability-ready[data-fighter-id='${firstId}']`).click();
+  await page.waitForFunction((id) => {
+    const owner = window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
+      .find(({ id: candidateId }) => candidateId === id);
+    return owner?.manualAbility?.phase !== "ready";
+  }, firstId);
+  invariant(await page.locator(`.manual-ability-ready[data-fighter-id='${firstId}']`).count() === 0,
+    `${engine}/duplicate: used instance kept its icon`);
+  invariant(await page.locator(`.manual-ability-ready[data-fighter-id='${secondId}']`).count() === 1,
+    `${engine}/duplicate: ready sibling lost its icon`);
+  await page.locator(`.manual-ability-ready[data-fighter-id='${secondId}']`).click();
+  await Promise.all([
+    waitForAbilitySettlement(page, "brawler", firstId),
+    waitForAbilitySettlement(page, "brawler", secondId),
+  ]);
+  const snapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+  for (const ownerId of [firstId, secondId]) {
+    invariant(snapshot.manualAbilityReceipts.filter(({ ownerId: receiptOwnerId, eventType }) => (
+      receiptOwnerId === ownerId && eventType === "start"
+    )).length === 1, `${engine}/duplicate/${ownerId}: activation was not independent and singular`);
+  }
+  return { firstId, secondId };
+}
+
+async function speedPauseVisibilityProof(page, engine) {
+  const proof = await page.evaluate(() => (
+    window.__ASHFALL_BATTLE_QA__.prepareManualAbilitySurvivalProof("medic")
+  ));
+  const ownerId = proof.ownerIds[0];
+  await page.waitForFunction(() => (
+    document.querySelector(".survival-hud")
+    && document.querySelector(".manual-ability-ready[data-ability-kind='medic']")
+  ));
+  invariant(await page.getByRole("button", { name: "1倍", exact: true }).getAttribute("class")
+    .then((value) => value?.includes("active")), `${engine}/speed: Survival did not begin at 1x`);
+  await page.locator(`.manual-ability-ready[data-fighter-id='${ownerId}']`).click();
+  await waitForAbilitySettlement(page, "medic", ownerId);
+  await page.evaluate(
+    ({ id, seconds }) => window.__ASHFALL_BATTLE_QA__.primeManualAbilityCooldown(id, seconds),
+    { id: ownerId, seconds: .8 },
+  );
+  await page.locator(".survival-pause").click();
+  await page.getByRole("dialog", { name: "一時停止メニュー" }).waitFor({ state: "visible" });
+  const pausedBefore = await page.evaluate((id) => (
+    window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
+      .find(({ id: candidateId }) => candidateId === id)?.manualAbility?.cooldownRemaining
+  ), ownerId);
+  await page.waitForTimeout(450);
+  const pausedAfter = await page.evaluate((id) => (
+    window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
+      .find(({ id: candidateId }) => candidateId === id)?.manualAbility?.cooldownRemaining
+  ), ownerId);
+  invariant(Math.abs(pausedAfter - pausedBefore) <= .03,
+    `${engine}/pause: cooldown advanced while paused (${pausedBefore} -> ${pausedAfter})`);
+  await page.getByRole("button", { name: "作戦を再開", exact: true }).click();
+  await page.getByRole("button", { name: "2倍", exact: true }).click();
+  await page.waitForFunction(() => (
+    window.__ASHFALL_BATTLE_QA__.getSnapshot().survivalRun?.speed === 2
+  ));
+  await page.evaluate(
+    ({ id, seconds }) => window.__ASHFALL_BATTLE_QA__.primeManualAbilityCooldown(id, seconds),
+    { id: ownerId, seconds: .5 },
+  );
+  await page.waitForFunction((id) => (
+    document.querySelector(`.manual-ability-ready[data-fighter-id='${id}']`) !== null
+  ), ownerId);
+  await page.locator(`.manual-ability-ready[data-fighter-id='${ownerId}']`).click();
+  await waitForAbilitySettlement(page, "medic", ownerId);
+  const receiptsAfterTwoSpeeds = await page.evaluate((id) => (
+    window.__ASHFALL_BATTLE_QA__.getSnapshot().manualAbilityReceipts
+      .filter(({ ownerId, eventType }) => ownerId === id && eventType === "start").length
+  ), ownerId);
+  invariant(receiptsAfterTwoSpeeds === 2,
+    `${engine}/speed: 1x/2x taps produced ${receiptsAfterTwoSpeeds} starts`);
+
+  const targetRearmed = await page.evaluate((id) => (
+    window.__ASHFALL_BATTLE_QA__.rearmManualAbilityTarget(id)
+  ), ownerId);
+  invariant(targetRearmed, `${engine}/visibility: no valid target after prior activations`);
+  await page.evaluate(
+    ({ id, seconds }) => window.__ASHFALL_BATTLE_QA__.primeManualAbilityCooldown(id, seconds),
+    { id: ownerId, seconds: .7 },
+  );
+  await page.evaluate(() => {
+    let syntheticVisibilityState = document.visibilityState;
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => syntheticVisibilityState,
+    });
+    window.__MANUAL_ABILITY_SET_VISIBILITY__ = (state) => {
+      syntheticVisibilityState = state;
+      document.dispatchEvent(new Event("visibilitychange"));
+    };
+    window.__MANUAL_ABILITY_SET_VISIBILITY__("hidden");
+  });
+  const hiddenBefore = await page.evaluate((id) => (
+    window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
+      .find(({ id: candidateId }) => candidateId === id)?.manualAbility?.cooldownRemaining
+  ), ownerId);
+  await page.waitForTimeout(450);
+  const hiddenAfter = await page.evaluate((id) => (
+    window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
+      .find(({ id: candidateId }) => candidateId === id)?.manualAbility?.cooldownRemaining
+  ), ownerId);
+  invariant(Math.abs(hiddenAfter - hiddenBefore) <= .03,
+    `${engine}/visibility: cooldown advanced while hidden (${hiddenBefore} -> ${hiddenAfter})`);
+  await page.evaluate(() => {
+    window.__MANUAL_ABILITY_SET_VISIBILITY__("visible");
+  });
+  await page.waitForFunction((id) => (
+    document.querySelector(`.manual-ability-ready[data-fighter-id='${id}']`) !== null
+  ), ownerId);
+  await page.evaluate(() => {
+    delete window.__MANUAL_ABILITY_SET_VISIBILITY__;
+    delete document.visibilityState;
+  });
+  const finalSnapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+  invariant(finalSnapshot.manualAbilityReceipts.filter(({ ownerId: receiptOwnerId, eventType }) => (
+    receiptOwnerId === ownerId && eventType === "start"
+  )).length === 2, `${engine}/visibility: foreground return duplicated activation`);
+  return {
+    ownerId,
+    receipts: 2,
+    pausedCooldownDelta: pausedAfter - pausedBefore,
+    hiddenCooldownDelta: hiddenAfter - hiddenBefore,
+    visibilityMode: "synthetic-headless-visibility",
+  };
+}
+
+async function checkpointReloadProof(page, engine) {
+  const persisted = await page.evaluate(() => (
+    window.__ASHFALL_BATTLE_QA__.persistManualAbilityCheckpointProof("brawler", 9.5)
+  ));
+  invariant(persisted?.durable, `${engine}/reload: checkpoint fixture was not durable`);
+  const reloadUrl = new URL(baseUrl);
+  reloadUrl.search = new URLSearchParams({ safe: "iphone-landscape" }).toString();
+  await page.goto(String(reloadUrl), { waitUntil: "domcontentloaded" });
+  const continueButton = page.locator(".title-start");
+  await continueButton.waitFor({ state: "visible" });
+  await page.waitForFunction(() => {
+    const button = document.querySelector(".title-start");
+    return button instanceof HTMLButtonElement && !button.disabled;
+  });
+  await continueButton.click();
+  await page.getByRole("button", { name: "サバイバル", exact: true }).click();
+  await page.getByRole("button", { name: "checkpointから再開", exact: true }).click();
+  await page.waitForFunction(() => (
+    Boolean(document.querySelector("canvas.battlefield.active"))
+    && window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().survivalRun?.currentWave === 6
+  ));
+  const deployed = await page.evaluate(() => (
+    window.__ASHFALL_BATTLE_QA__.deployManualAbilityCheckpointProof("brawler")
+  ));
+  invariant(deployed?.phase === "cooldown", `${engine}/reload: resumed instance was free-ready`);
+  invariant(deployed.cooldownRemaining >= 9.35,
+    `${engine}/reload: cooldown debt was shortened (${deployed.cooldownRemaining})`);
+  invariant(await page.locator(`.manual-ability-ready[data-fighter-id='${deployed.ownerId}']`).count() === 0,
+    `${engine}/reload: resumed cooldown rendered a ready icon`);
+  await page.waitForTimeout(250);
+  const after = await page.evaluate((id) => (
+    window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
+      .find(({ id: candidateId }) => candidateId === id)?.manualAbility
+  ), deployed.ownerId);
+  invariant(after?.phase === "cooldown" && after.cooldownRemaining > 8.5,
+    `${engine}/reload: resumed cooldown did not continue normally`);
+  return {
+    ownerId: deployed.ownerId,
+    checkpointId: persisted.checkpointId,
+    restoredCooldown: deployed.cooldownRemaining,
+  };
 }
 
 for (const engine of engines) {
@@ -359,8 +581,14 @@ for (const engine of engines) {
       await enterBattle(page);
       const layout = await rosterLayoutProof(page, engine, viewport);
       let activations = null;
+      let duplicateInstances = null;
+      let lifecycle = null;
+      let checkpointReload = null;
       if (viewport.width === 844 && viewport.height === 390) {
         activations = await abilityActivationProof(page, engine);
+        duplicateInstances = await duplicateInstanceProof(page, engine);
+        lifecycle = await speedPauseVisibilityProof(page, engine);
+        checkpointReload = await checkpointReloadProof(page, engine);
       }
       invariant(diagnostics.consoleErrors.length === 0,
         `${engine}/${viewport.height}: console errors ${diagnostics.consoleErrors}`);
@@ -375,6 +603,9 @@ for (const engine of engines) {
         viewport,
         readyIcons: layout.buttons.map(({ kind, rect, iconBackground }) => ({ kind, rect, iconBackground })),
         activations,
+        duplicateInstances,
+        lifecycle,
+        checkpointReload,
         offFloorCount: layout.offFloorCount,
         diagnostics,
       });
