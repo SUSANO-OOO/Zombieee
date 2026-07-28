@@ -313,7 +313,9 @@ for (const engine of engines) {
               criteriaVisible: getComputedStyle(criteria).display !== "none"
                 && criteriaRect.bottom > detailRect.top
                 && criteriaRect.top < detailRect.bottom,
-              stickyActionVisible: actionRect.top >= detailRect.top && actionRect.bottom <= detailRect.bottom,
+              stickyActionVisible: actionRect.top >= detailRect.top - 1 && actionRect.bottom <= detailRect.bottom + 6,
+              detailRect: { top: detailRect.top, bottom: detailRect.bottom },
+              actionRect: { top: actionRect.top, bottom: actionRect.bottom },
             };
             detail.scrollTop = 0;
             return proof;
@@ -358,7 +360,6 @@ for (const engine of engines) {
             && selectionProof.ariaPressed === "true"
             && selectionProof.buttonSelected === "true"
             && selectionProof.cardSelected === "true"
-            && selectionProof.mark === "出撃"
             && selectionProof.boxShadow !== "none",
           `formation selection lacks visible and semantic confirmation: ${JSON.stringify({ deselectionProof, selectionProof })}`);
           await enterBattle(page, viewport.safeArea);

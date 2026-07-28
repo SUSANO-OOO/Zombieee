@@ -38,7 +38,9 @@ test("exposes all canonical manual abilities in formation, personnel, and unit r
 
 test("makes formation membership visually explicit", () => {
   assert.match(screens, /data-selected=\{selected\}/);
-  assert.match(screens, /formation-selection-mark/);
+  assert.match(screens, /aria-pressed=\{selected\}/);
+  assert.doesNotMatch(screens, /formation-selection-mark/);
   assert.match(campaignCss, /\.formation-unit-card\[data-selected="false"\]/);
   assert.match(campaignCss, /\.formation-unit-card\[data-selected="true"\]/);
+  assert.match(campaignCss, /\.formation-unit-select\[data-selected="true"\][^}]*background:/);
 });

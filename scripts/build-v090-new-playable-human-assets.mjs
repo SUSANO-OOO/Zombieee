@@ -3,6 +3,7 @@ import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import sharp from "sharp";
+import { buildFormationCard, buildIdentityPortrait } from "./v090-identity-derivatives.mjs";
 
 const root = process.cwd();
 const sourceDir = path.join(root, "assets/source/v090/characters");
@@ -38,6 +39,8 @@ const characters = Object.freeze([
     ],
     accent: "#ff42c8",
     roleLabel: "LIGHT BLADE",
+    portraitUpperRatio: .76,
+    cardUpperRatio: .72,
     cardMotif: `
       <path d="M343 390 448 285" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
       <path d="M343 390 448 285" stroke="#ff42c8" stroke-width="27" stroke-linecap="round" opacity=".72"/>
@@ -64,6 +67,8 @@ const characters = Object.freeze([
     ],
     accent: "#cf9f50",
     roleLabel: "FULL SALVO",
+    portraitUpperRatio: .78,
+    cardUpperRatio: .76,
     cardMotif: `
       <circle cx="390" cy="374" r="54" fill="none" stroke="#cf9f50" stroke-width="12"/>
       <circle cx="390" cy="374" r="21" fill="none" stroke="#fff" stroke-width="9"/>
@@ -90,6 +95,8 @@ const characters = Object.freeze([
     ],
     accent: "#6b90b2",
     roleLabel: "NITEN ICHIRYU",
+    portraitUpperRatio: .83,
+    cardUpperRatio: .82,
     cardMotif: `
       <circle cx="397" cy="375" r="43" fill="none" stroke="#6b90b2" stroke-width="9"/>
       <path d="M327 435 459 303M330 306l130 130" stroke="#fff" stroke-width="11" stroke-linecap="round"/>
@@ -181,26 +188,19 @@ async function keepLargestAlphaComponent(input) {
 async function buildPortraitAndCard(character, identityPath) {
   const portraitPath = path.join(publicDir, `portraits/${character.kind}-event-portrait-r1.webp`);
   const cardPath = path.join(publicDir, `cards/${character.kind}-formation-card-r1.webp`);
-  await sharp(identityPath)
-    .resize(512, 640, { fit: "cover", position: "north", kernel: sharp.kernel.lanczos3 })
-    .webp({ quality: 94, effort: 6 })
-    .toFile(portraitPath);
-  const cardSubject = await sharp(identityPath)
-    .resize(512, 512, { fit: "cover", position: "north", kernel: sharp.kernel.lanczos3 })
-    .png()
-    .toBuffer();
-  const overlay = Buffer.from(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
-      <rect x="16" y="16" width="10" height="480" rx="5" fill="${character.accent}"/>
-      <path d="M292 330h204v166H264l28-166z" fill="#090d12" fill-opacity=".9" stroke="${character.accent}" stroke-width="5"/>
-      ${character.cardMotif}
-      <text x="474" y="480" text-anchor="end" font-family="Arial,sans-serif" font-weight="900" font-size="22" letter-spacing="1.5" fill="#fff">${character.roleLabel}</text>
-    </svg>
-  `);
-  await sharp(cardSubject)
-    .composite([{ input: overlay }])
-    .webp({ quality: 93, effort: 6 })
-    .toFile(cardPath);
+  await buildIdentityPortrait({
+    inputPath: identityPath,
+    outputPath: portraitPath,
+    upperRatio: character.portraitUpperRatio,
+  });
+  await buildFormationCard({
+    inputPath: identityPath,
+    outputPath: cardPath,
+    accent: character.accent,
+    roleLabel: character.roleLabel,
+    motif: character.cardMotif,
+    upperRatio: character.cardUpperRatio,
+  });
   return Object.freeze({ portraitPath, cardPath });
 }
 
@@ -267,7 +267,12 @@ async function buildBattleAtlas(character, posesPath) {
               || mirroredX > 400
             )) || (column === 4 && mirroredX < 220 && y > 170 && y < 225)
             : character.kind === "mrs-chiha"
-              ? (column === 5 && mirroredX > 275 && y > 340)
+              ? (column === 1 && (
+                (mirroredX > 300 && y > 220 && y < 380)
+                || (mirroredX > 325 && y >= 380)
+              ))
+                || (column === 2 && mirroredX < 175 && y > 220)
+                || (column === 5 && mirroredX > 275 && y > 340)
                 || (column === 6 && (
                   (mirroredX < 170 && y < 350)
                   || (mirroredX >= 80 && mirroredX < 140 && y >= 350)

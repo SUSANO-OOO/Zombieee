@@ -128,6 +128,18 @@ test("Stage 20 keeps the infection core sealed until Kurome is defeated", () => 
   }), "感染核を破壊");
 });
 
+test("Stage 20 eases only the post-Kurome reinforcement density", () => {
+  const stage = CAMPAIGN_STAGE_BY_ID[CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL];
+  const bossWave = stage.waves.find(({ id }) => id === "floodgate-seal-kurome");
+  const postBossReinforcements = stage.waves
+    .filter(({ atSeconds }) => atSeconds > bossWave.atSeconds)
+    .flatMap(({ groups = [] }) => groups);
+
+  assert.deepEqual(bossWave.units, ["kurome", "anchor-bloom", "pall-manta"]);
+  assert.equal(postBossReinforcements.reduce((total, group) => total + group.count, 0), 31);
+  assert.equal(stage.baseHp, 620);
+});
+
 test("stage 4 destroys the relay, rescues seven survivors, and keeps an assault outcome", () => {
   const definition = createBattleDefinition(STAGE_4);
   assert.equal(definition.missionType, "assault");

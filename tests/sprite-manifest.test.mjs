@@ -255,19 +255,27 @@ test("every redesigned 0.7.0 playable atlas has an authored death pose and measu
   }
 });
 
-test("Mrs. Chiha walk frames exclude adjacent-pose fragments without changing her approved atlas", () => {
-  const expected = {
-    "walk-a/right": [{ x: 0, y: 0, w: 480, h: 244 }, { x: 0, y: 244, w: 330, h: 204 }],
-    "walk-a/left": [{ x: 0, y: 0, w: 480, h: 244 }, { x: 150, y: 244, w: 330, h: 204 }],
-    "walk-b/right": [{ x: 0, y: 0, w: 480, h: 244 }, { x: 175, y: 244, w: 305, h: 204 }],
-    "walk-b/left": [{ x: 0, y: 0, w: 480, h: 244 }, { x: 0, y: 244, w: 315, h: 204 }],
+test("Mrs. Chiha walk frames contain one isolated pose with no runtime masking fragments", async () => {
+  const decoded = await decodeRgbaPng(
+    await readFile(path.join(ROOT, "public", "art", "v090", "characters", "mrs-chiha-battle-r1.png")),
+  );
+  const expectedBounds = {
+    "walk-a/right": { x: 132, y: 16, w: 194, h: 416 },
+    "walk-a/left": { x: 154, y: 464, w: 195, h: 416 },
+    "walk-b/right": { x: 174, y: 16, w: 181, h: 416 },
+    "walk-b/left": { x: 126, y: 464, w: 181, h: 416 },
   };
-  for (const [key, slices] of Object.entries(expected)) {
+  for (const [key, expected] of Object.entries(expectedBounds)) {
     const [state, direction] = key.split("/");
     const frame = spriteFrameFor("mrs-chiha", state, direction);
-    assert.deepEqual(frame.drawSlices, slices, key);
-    assert.equal(Object.isFrozen(frame.drawSlices), true);
-    assert.equal(Object.isFrozen(frame.drawSlices[0]), true);
+    assert.equal(frame.drawSlices, undefined, `${key} must draw one clean authored cell`);
+    assert.deepEqual(frame.contentRect, {
+      x: frame.sourceRect.x + expected.x,
+      y: expected.y,
+      w: expected.w,
+      h: expected.h,
+    });
+    assert.deepEqual(alphaBounds(decoded, frame.sourceRect), frame.contentRect, key);
   }
 });
 

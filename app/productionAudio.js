@@ -5,6 +5,13 @@ const V060_AUDIO_ROOT = "/audio/v060";
 const V070_AUDIO_ROOT = "/audio/v070";
 const V080_AUDIO_ROOT = "/audio/v080";
 const V090_AUDIO_ROOT = "/audio/v090";
+const V090_WAV_ONLY_CUE_IDS = new Set([
+  "weapon-mrs-chiha-launcher-retrieve",
+  "weapon-mrs-chiha-launcher-aim",
+  "weapon-mrs-chiha-grenade-flight",
+  "weapon-mrs-chiha-launcher-stow",
+  "ability-mrs-chiha-salvo-cylinder",
+]);
 const V080_SUPPRESSED_CARBINE_CUE_ID = "weapon-suppressed-carbine";
 
 const MUSIC_TRACKS = Object.freeze([
@@ -121,7 +128,12 @@ const V090_PLAYABLE_AUDIO_CUES = Object.freeze([
   { id: "weapon-mrs-chiha-grenade-launcher", category: "weapons", gain: .72, priority: 72, cooldownMs: 120 },
   { id: "weapon-mrs-chiha-grenade-impact", category: "weapons", gain: .72, priority: 78, cooldownMs: 90, maxInstances: 3 },
   { id: "weapon-mrs-chiha-launcher-bash", category: "melee", gain: .68, priority: 70, cooldownMs: 120 },
+  { id: "weapon-mrs-chiha-launcher-retrieve", category: "weapons", gain: .48, priority: 68, cooldownMs: 80 },
+  { id: "weapon-mrs-chiha-launcher-aim", category: "weapons", gain: .42, priority: 68, cooldownMs: 80 },
+  { id: "weapon-mrs-chiha-grenade-flight", category: "weapons", gain: .48, priority: 74, cooldownMs: 70, maxInstances: 4 },
+  { id: "weapon-mrs-chiha-launcher-stow", category: "weapons", gain: .46, priority: 66, cooldownMs: 100 },
   { id: "ability-mrs-chiha-salvo-ready", category: "weapons", gain: .68, priority: 78, cooldownMs: 400 },
+  { id: "ability-mrs-chiha-salvo-cylinder", category: "weapons", gain: .52, priority: 76, cooldownMs: 70, maxInstances: 4 },
   { id: "ability-mrs-chiha-salvo-shot", category: "weapons", gain: .74, priority: 82, cooldownMs: 90, maxInstances: 4 },
   { id: "ability-mrs-chiha-salvo-impact", category: "weapons", gain: .72, priority: 84, cooldownMs: 80, maxInstances: 4 },
   { id: "ability-mrs-chiha-salvo-final", category: "weapons", gain: .82, priority: 90, cooldownMs: 200 },
@@ -262,7 +274,7 @@ function v090PlayableAsset(spec) {
   return {
     id: spec.id,
     category: spec.category,
-    sources: spec.id.includes("mayo") || spec.id.startsWith("boss-")
+    sources: spec.id.includes("mayo") || spec.id.startsWith("boss-") || V090_WAV_ONLY_CUE_IDS.has(spec.id)
       ? [{ src: `${V090_AUDIO_ROOT}/sfx/${spec.id}.wav`, type: "audio/wav" }]
       : sourceFor(V090_AUDIO_ROOT, "sfx", spec.id),
     preload: "lazy",
@@ -657,7 +669,12 @@ export const V090_PLAYABLE_WEAPON_CUE_CONTRACTS = Object.freeze({
       shot: "weapon-mrs-chiha-grenade-launcher",
       hit: "weapon-mrs-chiha-grenade-impact",
       bash: "weapon-mrs-chiha-launcher-bash",
+      retrieve: "weapon-mrs-chiha-launcher-retrieve",
+      aim: "weapon-mrs-chiha-launcher-aim",
+      flight: "weapon-mrs-chiha-grenade-flight",
+      stow: "weapon-mrs-chiha-launcher-stow",
       abilityReady: "ability-mrs-chiha-salvo-ready",
+      abilityCylinder: "ability-mrs-chiha-salvo-cylinder",
       abilityShot: "ability-mrs-chiha-salvo-shot",
       abilityImpact: "ability-mrs-chiha-salvo-impact",
       abilityFinal: "ability-mrs-chiha-salvo-final",

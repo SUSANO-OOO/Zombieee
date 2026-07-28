@@ -442,8 +442,10 @@ export function friendlyDeploymentPoint({
     y: portal.hidden.y,
     rampFootX: portal.rampFoot.x,
     rampFootY: portal.rampFoot.y,
-    combatReadyX: portal.entry.x,
-    combatReadyY: portal.entry.y,
+    // Combat begins at the authored ramp foot. A second invisible transit to
+    // the lane entry made units appear to float out of the CRAWLER door.
+    combatReadyX: portal.rampFoot.x,
+    combatReadyY: portal.rampFoot.y,
   });
 }
 
