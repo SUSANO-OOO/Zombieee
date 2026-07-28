@@ -43,6 +43,12 @@ test("Survival settlement is connected as one atomic persistence boundary", () =
   assert.match(ashfallSource, /failuresRemaining > 0[\s\S]*return \{ durable: false \}/);
 });
 
+test("Survival detailed result keeps every deployed unit even when its metrics are zero", () => {
+  assert.match(ashfallSource, /lastResult\.formation\.unitIds/);
+  assert.match(ashfallSource, /campaignUnitIdToCombatKind/);
+  assert.match(ashfallSource, /\.map\(\(unitId: string\) => campaignUnitIdToCombatKind\(unitId\)\)/);
+});
+
 test("Survival overlays retain 44px controls and compact landscape rules", () => {
   assert.match(styles, /\.survival-speed button,\.survival-pause \{[^}]*min-height:44px/);
   assert.match(styles, /\.campaign-overlay button \{[^}]*min-height:44px/);

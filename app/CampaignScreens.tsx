@@ -7,7 +7,7 @@ import { PROLOGUE_SYNOPSIS, getStoryEvent, storyEventLog } from "./storyEvents.j
 import { CAMPAIGN_IMPORT_MAX_BYTES } from "./campaignStorage.js";
 import { RELEASE_LABEL } from "./releaseIdentity.js";
 
-export type CampaignScreen = "title" | "event" | "map" | "personnel" | "loadout" | "battle" | "result" | "survival" | "survival-result" | "outbreak" | "outbreak-result";
+export type CampaignScreen = "title" | "event" | "map" | "personnel" | "loadout" | "battle" | "result" | "survival" | "survival-result" | "outbreak" | "outbreak-result" | "records";
 
 export type StageScreenView = {
   id: string;
@@ -167,6 +167,66 @@ export type OutbreakResultView = {
   capsAfter: number;
 };
 
+export type RecordsSummaryView = {
+  battles: number;
+  victories: number;
+  defeats: number;
+  withdrawals: number;
+  battleSeconds: number;
+  kills: number;
+  bossKills: number;
+  unitsLost: number;
+  capsEarned: number;
+  clearedStages: number;
+  totalStages: number;
+  collectedStars: number;
+  highestSurvivalWave: number;
+  survivalRuns: number;
+  outbreakClears: number;
+  recentResults: readonly {
+    resultId: string;
+    operationLabel: string;
+    categoryLabel: string;
+    outcomeLabel: string;
+    kills: number;
+    reachedWave: number;
+    completedAt: string;
+  }[];
+  unitStats: readonly {
+    kind: string;
+    displayName: string;
+    damage: number;
+    damageTaken: number;
+    healing: number;
+  }[];
+};
+
+export type EnemyCompendiumView = {
+  id: string;
+  displayName: string;
+  classification: string;
+  encountered: boolean;
+  firstEncounterLabel: string;
+  encounterCount: number;
+  defeatCount: number;
+  attackProfile: string;
+  artStyle: CSSProperties;
+};
+
+export type BossCompendiumView = {
+  id: string;
+  displayName: string;
+  classification: string;
+  encountered: boolean;
+  firstEncounterLabel: string;
+  defeatCount: number;
+  attackName: string;
+  attackSummary: string;
+  weakness: string;
+  equipmentName: string;
+  artStyle: CSSProperties;
+};
+
 type Props = {
   screen: CampaignScreen;
   eventId: string | null;
@@ -184,6 +244,9 @@ type Props = {
   outbreakMissions: readonly OutbreakMissionScreenView[];
   selectedOutbreakMissionId: string | null;
   outbreakResult: OutbreakResultView | null;
+  recordsSummary: RecordsSummaryView;
+  enemyCompendium: readonly EnemyCompendiumView[];
+  bossCompendium: readonly BossCompendiumView[];
   loadoutReturnLabel: string;
   assetsReady: boolean;
   assetError: boolean;
@@ -216,6 +279,7 @@ type Props = {
   onOpenLoadout: () => void;
   onOpenSurvival: () => void;
   onOpenOutbreak: () => void;
+  onOpenRecords: () => void;
   onSelectOutbreakMission: (missionId: string) => void;
   onPrepareOutbreak: () => void;
   onReturnToMap: () => void;
@@ -386,7 +450,7 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   </div>;
 }
 
-function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPending, onSelectStage, onOpenPersonnel, onOpenLoadout, onOpenSurvival, onOpenOutbreak, onReplayPrologue, onResetSave }: Pick<Props, "stages" | "selectedStage" | "supplyCurrency" | "saveMutationPending" | "onSelectStage" | "onOpenPersonnel" | "onOpenLoadout" | "onOpenSurvival" | "onOpenOutbreak" | "onReplayPrologue" | "onResetSave">) {
+function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPending, onSelectStage, onOpenPersonnel, onOpenLoadout, onOpenSurvival, onOpenOutbreak, onOpenRecords, onReplayPrologue, onResetSave }: Pick<Props, "stages" | "selectedStage" | "supplyCurrency" | "saveMutationPending" | "onSelectStage" | "onOpenPersonnel" | "onOpenLoadout" | "onOpenSurvival" | "onOpenOutbreak" | "onOpenRecords" | "onReplayPrologue" | "onResetSave">) {
   const [activeRegionId, setActiveRegionId] = useState(selectedStage.regionId);
   const regions = useMemo(() => {
     const seen = new Set<string>();
@@ -443,7 +507,7 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
         <header><small>{displayedStage.missionLabel}</small><h2>{displayedStage.displayName}</h2><p>{displayedStage.threat}</p></header>
         <dl><div><dt>目的</dt><dd>{displayedStage.objective}</dd></div><div><dt>過去最高星</dt><dd className="star-text">{stars(displayedStage.bestStars)}</dd></div><div><dt>基本報酬</dt><dd>{displayedStage.baseReward} キャップ</dd></div><div><dt>次の未取得星報酬</dt><dd>{displayedStage.nextStarReward ? `${displayedStage.nextStarReward} キャップ` : "取得済み"}</dd></div></dl>
         <div className="star-criteria"><b>星判定</b>{displayedStage.starCriteria.map((criterion) => <span key={criterion}>{criterion}</span>)}</div>
-        <div className="stage-actions"><button className="campaign-secondary survival-entry" onClick={onOpenSurvival}>サバイバル</button><button className="campaign-secondary outbreak-entry" onClick={onOpenOutbreak}>異常発生任務</button><button className="campaign-secondary" onClick={onOpenPersonnel}>人員管理</button><button className="campaign-primary" disabled={!displayedStage.unlocked} onClick={onOpenLoadout}>編成へ進む</button></div>
+        <div className="stage-actions"><button className="campaign-secondary survival-entry" onClick={onOpenSurvival}>サバイバル</button><button className="campaign-secondary outbreak-entry" onClick={onOpenOutbreak}>異常発生任務</button><button className="campaign-secondary records-entry" onClick={onOpenRecords}>記録</button><button className="campaign-secondary" onClick={onOpenPersonnel}>部隊</button><button className="campaign-primary" disabled={!displayedStage.unlocked} onClick={onOpenLoadout}>編成へ進む</button></div>
       </aside>
     </div>
     <footer className="map-footer"><span>固定4場面のプロローグは進行を変えず再視聴できます</span><button disabled={saveMutationPending} onClick={onReplayPrologue}>プロローグを回想</button><button disabled={saveMutationPending} onClick={onResetSave}>{saveMutationPending ? "保存処理中" : "セーブデータを初期化"}</button></footer>
@@ -564,14 +628,47 @@ function OutbreakResultScreen({ outbreakResult, onRetry, onContinueOutbreakResul
   </div>;
 }
 
+function formatRecordTime(seconds: number) {
+  const total = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  return hours > 0 ? `${hours}時間 ${minutes}分` : `${minutes}分`;
+}
+
+function RecordsScreen({
+  recordsSummary,
+  enemyCompendium,
+  bossCompendium,
+  onReturnToMap,
+}: Pick<Props, "recordsSummary" | "enemyCompendium" | "bossCompendium" | "onReturnToMap">) {
+  const [section, setSection] = useState<"summary" | "enemy" | "boss">("summary");
+  const tabs = [
+    { id: "summary" as const, label: "戦績" },
+    { id: "enemy" as const, label: "敵図鑑" },
+    { id: "boss" as const, label: "BOSS図鑑" },
+  ];
+  return <div className="campaign-overlay records-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="記録">
+    <header className="campaign-header"><button className="campaign-back" onClick={onReturnToMap}>← 出撃へ</button><div><small>ARCHIVE // FIELD INTELLIGENCE</small><h1>記録</h1></div><p>交戦記録から感染体の情報と部隊戦績を更新します。</p></header>
+    <nav className="records-tabs" aria-label="記録分類">{tabs.map((tab) => <button key={tab.id} aria-pressed={section === tab.id} onClick={() => setSection(tab.id)}>{tab.label}</button>)}</nav>
+    {section === "summary" && <main className="records-summary">
+      <section className="records-totals"><article><small>本編制圧</small><b>{recordsSummary.clearedStages}/{recordsSummary.totalStages}</b><span>★ {recordsSummary.collectedStars}</span></article><article><small>SURVIVAL最高</small><b>WAVE {recordsSummary.highestSurvivalWave}</b><span>{recordsSummary.survivalRuns} runs</span></article><article><small>異常発生制圧</small><b>{recordsSummary.outbreakClears}/5</b><span>BOSS累計 {recordsSummary.bossKills}</span></article><article><small>0.9.0戦闘記録</small><b>{recordsSummary.victories}勝 / {recordsSummary.defeats}敗</b><span>撤退 {recordsSummary.withdrawals}</span></article><article><small>交戦時間</small><b>{formatRecordTime(recordsSummary.battleSeconds)}</b><span>撃破 {recordsSummary.kills}</span></article><article><small>獲得CAPS</small><b>{recordsSummary.capsEarned.toLocaleString("ja-JP")}</b><span>戦闘不能 {recordsSummary.unitsLost}</span></article></section>
+      <section className="records-unit-stats"><h2>隊員別累計</h2>{recordsSummary.unitStats.length > 0 ? <table><thead><tr><th>隊員</th><th>与damage</th><th>被damage</th><th>回復</th></tr></thead><tbody>{recordsSummary.unitStats.map((unit) => <tr key={unit.kind}><th>{unit.displayName}</th><td>{unit.damage.toLocaleString("ja-JP")}</td><td>{unit.damageTaken.toLocaleString("ja-JP")}</td><td>{unit.healing.toLocaleString("ja-JP")}</td></tr>)}</tbody></table> : <p>0.9.0で確定した隊員別記録はまだありません。</p>}</section>
+      <section className="records-recent"><h2>最近の作戦</h2>{recordsSummary.recentResults.length > 0 ? recordsSummary.recentResults.map((result) => <article key={result.resultId}><div><small>{result.categoryLabel}</small><b>{result.operationLabel}</b></div><strong data-outcome={result.outcomeLabel}>{result.outcomeLabel}</strong><span>撃破 {result.kills}{result.reachedWave > 0 ? ` / WAVE ${result.reachedWave}` : ""}</span></article>) : <p>0.9.0で確定した作戦記録はまだありません。</p>}</section>
+    </main>}
+    {section === "enemy" && <main className="compendium-grid enemy-compendium">{enemyCompendium.map((enemy) => <article key={enemy.id} data-locked={!enemy.encountered}><div className="compendium-art" aria-label={enemy.encountered ? `${enemy.displayName}戦闘記録` : "未確認感染体"}><i style={enemy.artStyle} aria-hidden="true" /></div><section><small>{enemy.encountered ? enemy.classification : "UNIDENTIFIED"}</small><h2>{enemy.encountered ? enemy.displayName : "未確認感染体"}</h2>{enemy.encountered ? <><p>{enemy.attackProfile}</p><dl><div><dt>初回遭遇</dt><dd>{enemy.firstEncounterLabel}</dd></div><div><dt>交戦</dt><dd>{enemy.encounterCount}回</dd></div><div><dt>撃破</dt><dd>{enemy.defeatCount}</dd></div></dl></> : <p>実戦で遭遇すると記録が解禁されます。</p>}</section></article>)}</main>}
+    {section === "boss" && <main className="compendium-grid boss-compendium">{bossCompendium.map((boss) => <article key={boss.id} data-locked={!boss.encountered}><div className="compendium-art" aria-label={boss.encountered ? `${boss.displayName}図鑑画像` : "未確認BOSS"}><i style={boss.artStyle} aria-hidden="true" /></div><section><small>{boss.encountered ? boss.classification : "CLASSIFIED"}</small><h2>{boss.encountered ? boss.displayName : "未確認BOSS"}</h2>{boss.encountered ? <><p><b>{boss.attackName}</b>{boss.attackSummary}</p><dl><div><dt>初回遭遇</dt><dd>{boss.firstEncounterLabel}</dd></div><div><dt>撃破</dt><dd>{boss.defeatCount}</dd></div><div><dt>発見済み弱点</dt><dd>{boss.defeatCount > 0 ? boss.weakness : "未発見"}</dd></div><div><dt>固有装備</dt><dd>{boss.defeatCount > 0 ? boss.equipmentName : "解析中"}</dd></div></dl></> : <p>初遭遇前は攻撃特性と弱点を開示しません。</p>}</section></article>)}</main>}
+  </div>;
+}
+
 export function CampaignScreens(props: Props) {
   if (props.saveRecoveryRequired) return <SaveRecoveryScreen saveRecoveryReason={props.saveRecoveryReason} saveRecoveryCandidateSources={props.saveRecoveryCandidateSources} saveRecoveryCanExport={props.saveRecoveryCanExport} saveMutationPending={props.saveMutationPending} onExportCorruptSave={props.onExportCorruptSave} onImportSave={props.onImportSave} onUseRecoveryCandidate={props.onUseRecoveryCandidate} onResetCorruptSave={props.onResetCorruptSave} />;
   if (props.screen === "battle" || props.screen === "survival" || props.screen === "survival-result") return null;
   if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} savePersistence={props.savePersistence} saveMutationPending={props.saveMutationPending} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} onExportSave={props.onExportSave} onImportSave={props.onImportSave} />;
   if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} forceStoryReplay={props.forceStoryReplay} onEventComplete={props.onEventComplete} onEventSkip={props.onEventSkip} onStoryAudioPositionChange={props.onStoryAudioPositionChange} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />;
-  if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} onSelectStage={props.onSelectStage} onOpenPersonnel={props.onOpenPersonnel} onOpenLoadout={props.onOpenLoadout} onOpenSurvival={props.onOpenSurvival} onOpenOutbreak={props.onOpenOutbreak} onReplayPrologue={props.onReplayPrologue} onResetSave={props.onResetSave} />;
+  if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} onSelectStage={props.onSelectStage} onOpenPersonnel={props.onOpenPersonnel} onOpenLoadout={props.onOpenLoadout} onOpenSurvival={props.onOpenSurvival} onOpenOutbreak={props.onOpenOutbreak} onOpenRecords={props.onOpenRecords} onReplayPrologue={props.onReplayPrologue} onResetSave={props.onResetSave} />;
   if (props.screen === "outbreak") return <OutbreakMissionScreen outbreakMissions={props.outbreakMissions} selectedOutbreakMissionId={props.selectedOutbreakMissionId} onSelectOutbreakMission={props.onSelectOutbreakMission} onPrepareOutbreak={props.onPrepareOutbreak} onReturnToMap={props.onReturnToMap} />;
   if (props.screen === "outbreak-result") return <OutbreakResultScreen outbreakResult={props.outbreakResult} onRetry={props.onRetry} onContinueOutbreakResult={props.onContinueOutbreakResult} />;
+  if (props.screen === "records") return <RecordsScreen recordsSummary={props.recordsSummary} enemyCompendium={props.enemyCompendium} bossCompendium={props.bossCompendium} onReturnToMap={props.onReturnToMap} />;
   if (props.screen === "personnel") return <PersonnelScreen units={props.units} caps={props.caps} upgradePendingUnitIds={props.upgradePendingUnitIds} upgradeFeedback={props.upgradeFeedback} onReturnToMap={props.onReturnToMap} onRecruitUnit={props.onRecruitUnit} onUpgradeUnit={props.onUpgradeUnit} />;
   if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} loadoutReturnLabel={props.loadoutReturnLabel} onReturnFromLoadout={props.onReturnFromLoadout} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
   return <ResultScreen selectedStage={props.selectedStage} result={props.result} onRetry={props.onRetry} onContinueResult={props.onContinueResult} />;
