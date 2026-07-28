@@ -101,6 +101,8 @@ const seededSave = reviseCampaignSave({
   campaignStarted: true,
   completedStageIds: CAMPAIGN_STAGES.map(({ id }) => id),
   unlockedStageIds: CAMPAIGN_STAGES.map(({ id }) => id),
+  ownership: CAMPAIGN_UNITS.map(({ id }) => id),
+  discovery: CAMPAIGN_UNITS.map(({ id }) => id),
   bestStarsByStage: Object.fromEntries(CAMPAIGN_STAGES.map(({ id }) => [id, 3])),
   records,
   survival: {
@@ -240,6 +242,21 @@ for (const engine of engines) {
         const summaryPath = path.join(evidenceDir, `${name}-summary.png`);
         await page.screenshot({ path: summaryPath, fullPage: false });
 
+        await page.getByRole("button", { name: "ユニット図鑑" }).click();
+        await page.locator(".unit-compendium").waitFor({ state: "visible", timeout });
+        invariant(await page.locator(".unit-compendium > article").count() === CAMPAIGN_UNITS.length,
+          `${name}: unit compendium count mismatch`);
+        const unitText = await page.locator(".unit-compendium").innerText();
+        invariant(unitText.includes("光刃解放") && unitText.includes("全弾制圧") && unitText.includes("凶暴マヨ"),
+          `${name}: canonical manual ability explanations missing`);
+        invariant(unitText.includes("プラズマブレード") && unitText.includes("回転弾倉式グレネードランチャー"),
+          `${name}: canonical newcomer weapon information missing`);
+        const unitLayout = await layoutEvidence(page, ".unit-compendium");
+        invariant(unitLayout.document.width <= viewport.width && unitLayout.document.height <= viewport.height,
+          `${name}: unit compendium document overflow`);
+        const unitPath = path.join(evidenceDir, `${name}-unit.png`);
+        await page.screenshot({ path: unitPath, fullPage: false });
+
         await page.getByRole("button", { name: "敵図鑑" }).click();
         await page.locator(".enemy-compendium").waitFor({ state: "visible", timeout });
         const enemyArt = await artEvidence(page, ".enemy-compendium > article");
@@ -273,7 +290,7 @@ for (const engine of engines) {
         invariant(diagnostics.pageErrors.length === 0, `${name}: page ${diagnostics.pageErrors}`);
         invariant(diagnostics.requestFailures.length === 0, `${name}: request ${diagnostics.requestFailures}`);
         invariant(diagnostics.httpErrors.length === 0, `${name}: HTTP ${diagnostics.httpErrors}`);
-        results.push({ name, status: "passed", summaryPath, enemyPath, bossPath });
+        results.push({ name, status: "passed", summaryPath, unitPath, enemyPath, bossPath });
       } catch (error) {
         results.push({ name, status: "failed", error: String(error), diagnostics });
       } finally {

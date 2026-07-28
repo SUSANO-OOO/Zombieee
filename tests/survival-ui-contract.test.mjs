@@ -9,7 +9,7 @@ const styles = await readFile(new URL("../app/globals.css", import.meta.url), "u
 test("campaign navigation exposes Survival lobby and result screens", () => {
   assert.match(campaignScreensSource, /"survival" \| "survival-result"/);
   assert.match(campaignScreensSource, /onOpenSurvival/);
-  assert.match(campaignScreensSource, />サバイバル</);
+  assert.match(campaignScreensSource, /className="special-operation survival-entry"[\s\S]*>防衛継続作戦</);
   assert.match(ashfallSource, /screen === "survival"/);
   assert.match(ashfallSource, /screen === "survival-result"/);
   assert.match(ashfallSource, /checkpointから再開/);

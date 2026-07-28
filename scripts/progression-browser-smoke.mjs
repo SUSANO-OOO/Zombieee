@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 
 import { UNIT_CARDS } from "../app/gameRules.js";
 import { applyUnitLevelProgression } from "../app/unitProgression.js";
+import { CAMPAIGN_UNITS } from "../app/campaign.js";
 
 if (!process.env.PROGRESSION_QA_BASE_URL) {
   throw new Error("PROGRESSION_QA_BASE_URL is required; use the isolated QA runner");
@@ -126,27 +127,31 @@ for (const engine of engines) {
           url.search = search.toString();
           const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
-          await page.waitForFunction(() => (
+          await page.waitForFunction((expectedCount) => (
             document.querySelector(".game-shell")?.getAttribute("data-screen") === "personnel"
-            && document.querySelectorAll(".formation-unit-card").length === 11
-          ), undefined, { timeout });
+            && document.querySelectorAll(".formation-unit-card").length === expectedCount
+          ), CAMPAIGN_UNITS.length, { timeout });
           const visualCards = await page.evaluate(() => {
             const portraits = [...document.querySelectorAll(".formation-portrait")];
             return {
               total: portraits.length,
-              withArt: portraits.filter((portrait) => (
-                getComputedStyle(portrait).backgroundImage.includes("/art/v080/characters/cards/")
-              )).length,
+              withArt: portraits.filter((portrait) => {
+                const image = getComputedStyle(portrait).backgroundImage;
+                return image.includes("/art/v080/characters/cards/")
+                  || image.includes("/art/v090/characters/cards/");
+              }).length,
               minimumWidth: Math.min(...portraits.map((portrait) => portrait.getBoundingClientRect().width)),
               minimumHeight: Math.min(...portraits.map((portrait) => portrait.getBoundingClientRect().height)),
             };
           });
-          invariant(visualCards.total === 11 && visualCards.withArt === 11,
+          invariant(visualCards.total === CAMPAIGN_UNITS.length && visualCards.withArt === CAMPAIGN_UNITS.length,
             `purpose-specific visual cards missing: ${JSON.stringify(visualCards)}`);
           invariant(visualCards.minimumWidth >= 64 && visualCards.minimumHeight >= 64,
             `visual cards are too small to identify: ${JSON.stringify(visualCards)}`);
           invariant(await page.locator('.formation-unit-select[style*="-r2.webp"]').count() === 11,
             "upper-body r2 formation/personnel card set is not active");
+          invariant(await page.locator('.formation-unit-select[style*="/art/v090/characters/cards/"]').count() === 5,
+            "approved 0.9.0 identity-master derivatives are not active");
           const rosterScroller = page.locator(".personnel-units > div");
           await page.screenshot({ path: path.join(evidenceDir, `${name}-cards-top.png`) });
           await rosterScroller.evaluate((element) => {
@@ -159,7 +164,8 @@ for (const engine of engines) {
           });
 
           await activate(page, page.getByRole("button", { name: "Level", exact: true }), viewport.safeArea);
-          await page.waitForFunction(() => document.querySelectorAll(".formation-unit-upgrade").length === 11, undefined, { timeout });
+          await page.waitForFunction((expectedCount) => document.querySelectorAll(".formation-unit-upgrade").length === expectedCount,
+            CAMPAIGN_UNITS.length, { timeout });
           const before = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
           const firstUpgrade = page.locator(".formation-unit-upgrade:not(:disabled)").first();
           const costLabel = await firstUpgrade.locator("b").innerText();
@@ -246,7 +252,38 @@ for (const engine of engines) {
           await page.screenshot({ path: path.join(evidenceDir, `${name}-upgrade.png`) });
 
           await activate(page, page.getByRole("button", { name: "← 地図へ", exact: true }), viewport.safeArea);
-          await activate(page, page.getByRole("button", { name: "編成へ進む", exact: true }), viewport.safeArea);
+          const mapNavigation = await page.evaluate(() => {
+            const regions = [...document.querySelectorAll(".map-region-tabs button")];
+            const regionStrip = document.querySelector(".map-region-tabs");
+            const operationStrip = document.querySelector(".map-operation-tabs");
+            const specialOperations = [...document.querySelectorAll(".map-operation-tabs .special-operation")];
+            const stageActions = [...document.querySelectorAll(".stage-actions button")];
+            const topValues = regions.map((button) => Math.round(button.getBoundingClientRect().top));
+            return {
+              regionCount: regions.length,
+              uniqueRegionRows: [...new Set(topValues)].length,
+              stripScrollable: (regionStrip?.scrollWidth ?? 0) >= (regionStrip?.clientWidth ?? 0),
+              operationHeight: operationStrip?.getBoundingClientRect().height ?? 0,
+              specialLabels: specialOperations.map((button) => button.textContent?.trim() ?? ""),
+              stageActionLabels: stageActions.map((button) => button.textContent?.trim() ?? ""),
+              documentWidth: document.documentElement.scrollWidth,
+              documentHeight: document.documentElement.scrollHeight,
+            };
+          });
+          invariant(mapNavigation.regionCount === 6 && mapNavigation.uniqueRegionRows === 1,
+            `region strip wrapped: ${JSON.stringify(mapNavigation)}`);
+          invariant(mapNavigation.stripScrollable && mapNavigation.operationHeight >= 44,
+            `map navigation is not touch-safe: ${JSON.stringify(mapNavigation)}`);
+          invariant(mapNavigation.specialLabels.some((label) => label.includes("SURVIVAL"))
+            && mapNavigation.specialLabels.some((label) => label.includes("OUTBREAK")),
+          `special operations are not separated: ${JSON.stringify(mapNavigation)}`);
+          invariant(mapNavigation.stageActionLabels.length === 1
+            && mapNavigation.stageActionLabels[0].includes("この作戦を編成"),
+          `stage detail still mixes global operations: ${JSON.stringify(mapNavigation)}`);
+          invariant(mapNavigation.documentWidth <= viewport.width && mapNavigation.documentHeight <= viewport.height,
+            `map viewport overflow: ${JSON.stringify(mapNavigation)}`);
+          await page.screenshot({ path: path.join(evidenceDir, `${name}-map-navigation.png`) });
+          await activate(page, page.getByRole("button", { name: "この作戦を編成", exact: true }), viewport.safeArea);
           await enterBattle(page, viewport.safeArea);
           const brawlerButton = page.locator('button.unit-card[data-kind="brawler"]');
           await brawlerButton.waitFor({ state: "visible", timeout });

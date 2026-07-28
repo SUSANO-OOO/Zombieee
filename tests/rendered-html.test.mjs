@@ -174,6 +174,12 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(screens, /所有一覧/);
   assert.match(screens, /新規調達/);
   assert.match(screens, /Level強化/);
+  assert.match(screens, /ユニット図鑑/);
+  assert.match(screens, /ability\?\.displayName/);
+  assert.match(screens, /className="map-operation-tabs"/);
+  assert.match(screens, /防衛継続作戦/);
+  assert.match(screens, /この作戦を編成/);
+  assert.match(screens, /formation-selection-mark/);
   const loadoutBlock = screens.slice(screens.indexOf("function LoadoutScreen"), screens.indexOf("function PersonnelScreen"));
   assert.doesNotMatch(loadoutBlock, /mode === "acquisition"|mode === "upgrade"|onRecruitUnit|onUpgradeUnit/);
   assert.match(screens, /mode === "acquisition" && unit\.recruitable && !unit\.owned[\s\S]*unit\.recruitCost}キャップで調達/);
