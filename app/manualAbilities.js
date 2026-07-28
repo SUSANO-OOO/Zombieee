@@ -57,7 +57,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   brute: {
     unitId: "unit-tatara",
     displayName: "地砕衝",
-    summary: "前方へ踏み込み地面を叩き、範囲damage・怯み・装甲低下を与える。",
+    summary: "前方へ踏み込み地面を叩き、範囲ダメージ・怯み・装甲低下を与える。",
     iconMotif: "hammer-impact",
     runtimeStatus: "integrated",
     cooldownSeconds: 18,
@@ -88,7 +88,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   kumaverson: {
     unitId: "unit-kumaverson",
     displayName: "鉄鍋仁王立ち",
-    summary: "周囲の敵を引きつけ、受けるdamageを抑えながら徐々に回復する。",
+    summary: "周囲の敵を引きつけ、被ダメージを抑えながら徐々に回復する。",
     iconMotif: "pan-guard",
     runtimeStatus: "integrated",
     cooldownSeconds: 20,
@@ -128,7 +128,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   guardian: {
     unitId: "unit-gantetsu",
     displayName: "鉄壁展開",
-    summary: "敵を引きつけ、自身と周囲の味方が受けるdamageを軽減する。",
+    summary: "敵を引きつけ、自身と周囲の味方の被ダメージを軽減する。",
     iconMotif: "shield-wall",
     runtimeStatus: "integrated",
     cooldownSeconds: 22,

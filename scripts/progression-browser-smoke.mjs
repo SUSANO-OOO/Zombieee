@@ -258,12 +258,23 @@ for (const engine of engines) {
             const operationStrip = document.querySelector(".map-operation-tabs");
             const specialOperations = [...document.querySelectorAll(".map-operation-tabs .special-operation")];
             const stageActions = [...document.querySelectorAll(".stage-actions button")];
+            const stageDetail = document.querySelector(".stage-detail");
+            const stageDetailRect = stageDetail?.getBoundingClientRect();
+            const stageActionRect = stageActions[0]?.getBoundingClientRect();
             const topValues = regions.map((button) => Math.round(button.getBoundingClientRect().top));
             return {
               regionCount: regions.length,
               uniqueRegionRows: [...new Set(topValues)].length,
               stripScrollable: (regionStrip?.scrollWidth ?? 0) >= (regionStrip?.clientWidth ?? 0),
               operationHeight: operationStrip?.getBoundingClientRect().height ?? 0,
+              regionButtonHeights: regions.map((button) => button.getBoundingClientRect().height),
+              operationButtonHeights: [...document.querySelectorAll(".map-operation-tabs button")]
+                .map((button) => button.getBoundingClientRect().height),
+              stageActionVisible: Boolean(stageDetailRect && stageActionRect
+                && stageActionRect.top >= stageDetailRect.top
+                && stageActionRect.bottom <= stageDetailRect.bottom
+                && stageActionRect.top >= 0
+                && stageActionRect.bottom <= window.innerHeight),
               specialLabels: specialOperations.map((button) => button.textContent?.trim() ?? ""),
               stageActionLabels: stageActions.map((button) => button.textContent?.trim() ?? ""),
               documentWidth: document.documentElement.scrollWidth,
@@ -274,16 +285,56 @@ for (const engine of engines) {
             `region strip wrapped: ${JSON.stringify(mapNavigation)}`);
           invariant(mapNavigation.stripScrollable && mapNavigation.operationHeight >= 44,
             `map navigation is not touch-safe: ${JSON.stringify(mapNavigation)}`);
+          invariant(mapNavigation.regionButtonHeights.every((height) => height >= 44)
+            && mapNavigation.operationButtonHeights.every((height) => height >= 44),
+          `map navigation buttons are below the 44px touch gate: ${JSON.stringify(mapNavigation)}`);
           invariant(mapNavigation.specialLabels.some((label) => label.includes("SURVIVAL"))
             && mapNavigation.specialLabels.some((label) => label.includes("OUTBREAK")),
           `special operations are not separated: ${JSON.stringify(mapNavigation)}`);
           invariant(mapNavigation.stageActionLabels.length === 1
-            && mapNavigation.stageActionLabels[0].includes("この作戦を編成"),
+            && mapNavigation.stageActionLabels[0].includes("この作戦を編成")
+            && mapNavigation.stageActionVisible,
           `stage detail still mixes global operations: ${JSON.stringify(mapNavigation)}`);
           invariant(mapNavigation.documentWidth <= viewport.width && mapNavigation.documentHeight <= viewport.height,
             `map viewport overflow: ${JSON.stringify(mapNavigation)}`);
           await page.screenshot({ path: path.join(evidenceDir, `${name}-map-navigation.png`) });
           await activate(page, page.getByRole("button", { name: "この作戦を編成", exact: true }), viewport.safeArea);
+          await page.waitForFunction(() => document.querySelector(".game-shell")?.getAttribute("data-screen") === "loadout",
+            undefined, { timeout });
+          const selectedUnit = page.locator('.formation-unit-select[aria-pressed="true"]').first();
+          const unselectedUnit = page.locator('.formation-unit-select[aria-pressed="false"]').first();
+          await selectedUnit.waitFor({ state: "visible", timeout });
+          await unselectedUnit.waitFor({ state: "visible", timeout });
+          const deselectionProof = await unselectedUnit.evaluate((button) => ({
+            ariaPressed: button.getAttribute("aria-pressed"),
+            buttonSelected: button.getAttribute("data-selected"),
+            cardSelected: button.closest(".formation-unit-card")?.getAttribute("data-selected"),
+            mark: button.querySelector(".formation-selection-mark")?.textContent?.trim() ?? "",
+            cardOpacity: getComputedStyle(button.closest(".formation-unit-card")).opacity,
+          }));
+          const selectionProof = await selectedUnit.evaluate((button) => {
+            const card = button.closest(".formation-unit-card");
+            const style = getComputedStyle(button);
+            return {
+              ariaPressed: button.getAttribute("aria-pressed"),
+              buttonSelected: button.getAttribute("data-selected"),
+              cardSelected: card?.getAttribute("data-selected"),
+              mark: button.querySelector(".formation-selection-mark")?.textContent?.trim() ?? "",
+              boxShadow: style.boxShadow,
+              cardOpacity: getComputedStyle(card).opacity,
+            };
+          });
+          invariant(deselectionProof.ariaPressed === "false"
+            && deselectionProof.buttonSelected === "false"
+            && deselectionProof.cardSelected === "false"
+            && deselectionProof.mark === ""
+            && Number(deselectionProof.cardOpacity) < Number(selectionProof.cardOpacity)
+            && selectionProof.ariaPressed === "true"
+            && selectionProof.buttonSelected === "true"
+            && selectionProof.cardSelected === "true"
+            && selectionProof.mark === "出撃"
+            && selectionProof.boxShadow !== "none",
+          `formation selection lacks visible and semantic confirmation: ${JSON.stringify({ deselectionProof, selectionProof })}`);
           await enterBattle(page, viewport.safeArea);
           const brawlerButton = page.locator('button.unit-card[data-kind="brawler"]');
           await brawlerButton.waitFor({ state: "visible", timeout });
