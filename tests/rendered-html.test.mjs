@@ -423,7 +423,10 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /w: authoredSize\.w \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /h: authoredSize\.h \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL,[\s\S]*background\.naturalHeight \* \.44/);
-  assert.match(game, /enemyBaseSpriteRef\.current,\s*false,\s*\);/);
+  assert.match(
+    game,
+    /enemyBaseSpriteRef\.current,\s*staticBattlefieldCacheRef\.current,\s*graphicsProfile,\s*false,\s*\);/,
+  );
   assert.match(game, /canvasPointerToWorld\(\{ clientX: event\.clientX, clientY: event\.clientY, rect, transform, worldWidth: W, worldHeight: H \}\)/);
   assert.doesNotMatch(game, /placement-hint|placement-cancel|戦場をタップ/);
   assert.doesNotMatch(css, /\.placement-(?:hint|copy|cancel)\b/);
@@ -1145,8 +1148,8 @@ test("renders causal weapon tracers and vehicle-origin Crawler fire without scre
   const barrageResolution = game.slice(barrageStart, game.indexOf("for (const object of g.battlefieldObjects)", barrageStart));
   assert.match(barrageResolution, /const visualHitsByLane = \[0, 0, 0\]/);
   assert.match(barrageResolution, /visualHitsByLane\[fighter\.lane\] < 3/);
-  assert.match(barrageResolution, /x: WORLD_GEOMETRY\.crawler\.weaponX \+ 45[\s\S]*tx: fighter\.x[\s\S]*ty: fighter\.y - 24/);
-  assert.match(barrageResolution, /style: "crawler",\s*weapon: "crawler"/);
+  assert.match(barrageResolution, /addShot\(g, WORLD_GEOMETRY\.crawler\.weaponX \+ 45, WORLD_GEOMETRY\.crawler\.weaponY - 18, fighter\.x, fighter\.y - 24/);
+  assert.match(barrageResolution, /"human", \.36, "crawler", "crawler"/);
   assert.match(barrageResolution, /addParticles\(g, fighter\.x, fighter\.y - 22/);
 
   const shotDraw = game.slice(game.indexOf("for (const shot of g.shots)"), game.indexOf("ctx.shadowBlur = 0;", game.indexOf("for (const shot of g.shots)")));
@@ -1405,10 +1408,10 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /対装甲破砕/);
   assert.match(game, /フィニッシュ/);
   assert.match(game, /直線制圧/);
-  assert.match(game, /value: "救護"/);
+  assert.match(game, /addDamageText\(g, f\.x, f\.y - 64, "救護", \.7, "#9bf0ba"\)/);
   assert.doesNotMatch(game, /effect: f\.kind as RoleEffect/);
   assert.match(game, /roleEffectForAction\(\{[\s\S]*targetAlreadyMarked: target\.marked > 0[\s\S]*holdingFrontline: f\.kind === "brute" && target\.targetId === f\.id/);
-  assert.match(game, /effect: roleEffect \?\? undefined, emphasized, style: ranged \? "projectile" : "melee", weapon: f\.kind/);
+  assert.match(game, /addShot\(g, muzzle\.x, muzzle\.y, target\.x, target\.y - 28, \.26, "human", \.26, ranged \? "projectile" : "melee", f\.kind, roleEffect \?\? undefined, f\.id, target\.id, target\.id, emphasized/);
   assert.match(game, /roleEffect === "brawler" \? "フィニッシュ"/);
   assert.match(game, /action: "structure"[\s\S]*if \(roleEffect && !deferredStructureImpact\)[\s\S]*playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
   assert.match(game, /roleEffect === "gunner"[\s\S]*playCue\("role-gunner"\)/);

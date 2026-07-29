@@ -272,6 +272,22 @@ import {
 import { stageResultFacts } from "./stageResultFacts.js";
 import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import {
+  GRAPHICS_QUALITY_ORDER,
+  advanceRuntimeFrameSchedule,
+  createRuntimeFrameSchedule,
+  graphicsProfileDataset,
+  resetRuntimeFrameSchedule,
+  resolveGraphicsProfile,
+} from "./renderPerformance.js";
+import {
+  acquireRenderObject,
+  capRenderObjectsInPlace,
+  clearRenderObjects,
+  compactActiveRenderObjects,
+  createRenderObjectPool,
+  renderObjectPoolSnapshot,
+} from "./renderObjectPool.js";
+import {
   BATTLE_AUDIO_LOOP_CONTRACTS,
   LEGACY_SFX_CUE_MAP,
   PRODUCTION_AUDIO_MANIFEST,
@@ -332,7 +348,6 @@ import {
   cameraShakeAmplitude,
   canvasPointerToWorld,
   canDeploy,
-  capRenderArray,
   beginBattlefieldSupplyCooldown,
   createCameraShakeRuntime,
   createBattlefieldSupplyCooldowns,
@@ -862,6 +877,13 @@ type PendingWeaponHit = {
   applyDamage: boolean;
 };
 type DamageText = { x: number; y: number; value: string; life: number; color: string };
+const PARTICLE_POOL_KEYS = ["x", "y", "vx", "vy", "life", "color", "size"] as const;
+const DAMAGE_TEXT_POOL_KEYS = ["x", "y", "value", "life", "color"] as const;
+const SHOT_POOL_KEYS = [
+  "x", "y", "tx", "ty", "life", "side", "sourceId", "targetId",
+  "damageTargetId", "effect", "emphasized", "duration", "style", "weapon",
+  "shotIndex", "recoil", "casing", "hitStopSeconds", "impactDelaySeconds",
+] as const;
 type ManualAbilityRuntime = NonNullable<ReturnType<typeof createManualAbilityRuntime>>;
 type ManualAbilityVfx = {
   ownerId: number;
@@ -1092,6 +1114,12 @@ type Game = {
   manualAbilityVfx: ManualAbilityVfx[];
   manualAbilityReceipts: ManualAbilityReceipt[];
   pendingAbilityAudioCues: PendingAbilityAudioCue[];
+  graphicsEffectDensity: number;
+  renderObjectPools: {
+    particles: ReturnType<typeof createRenderObjectPool>;
+    shots: ReturnType<typeof createRenderObjectPool>;
+    damageTexts: ReturnType<typeof createRenderObjectPool>;
+  };
 };
 
 type Hud = {
@@ -1507,6 +1535,12 @@ const initialGame = (
   manualAbilityVfx: [],
   manualAbilityReceipts: [],
   pendingAbilityAudioCues: [],
+  graphicsEffectDensity: 1,
+  renderObjectPools: {
+    particles: createRenderObjectPool(RENDER_ARRAY_LIMITS.particles),
+    shots: createRenderObjectPool(RENDER_ARRAY_LIMITS.shots),
+    damageTexts: createRenderObjectPool(RENDER_ARRAY_LIMITS.damageTexts),
+  },
   });
 };
 
@@ -1566,24 +1600,116 @@ const initialSurvivalGame = ({
 };
 
 function addParticles(g: Game, x: number, y: number, color: string, count = 8) {
-  for (let i = 0; i < count; i++) {
-    g.particles.push({
-      x,
-      y,
-      vx: (Math.random() - .5) * 120,
-      vy: -Math.random() * 110 - 20,
-      life: .4 + Math.random() * .5,
-      color,
-      size: 2 + Math.random() * 4,
-    });
+  const density = Math.max(.25, Math.min(1, g.graphicsEffectDensity || 1));
+  const visualCount = Math.max(1, Math.round(count * density));
+  for (let i = 0; i < visualCount; i++) {
+    const particle = acquireRenderObject(
+      g.renderObjectPools.particles,
+      PARTICLE_POOL_KEYS,
+    ) as Particle;
+    particle.x = x;
+    particle.y = y;
+    particle.vx = (Math.random() - .5) * 120;
+    particle.vy = -Math.random() * 110 - 20;
+    particle.life = .4 + Math.random() * .5;
+    particle.color = color;
+    particle.size = 2 + Math.random() * 4;
+    g.particles.push(particle);
   }
-  g.particles = capRenderArray(g.particles, RENDER_ARRAY_LIMITS.particles) as Particle[];
+  capRenderObjectsInPlace(
+    g.particles,
+    g.renderObjectPools.particles,
+    Math.max(96, Math.round(RENDER_ARRAY_LIMITS.particles * density)),
+  );
 }
 
-function addDamageText(g: Game, text: DamageText) {
+function addDamageText(
+  g: Game,
+  x: number,
+  y: number,
+  value: string,
+  life: number,
+  color: string,
+) {
+  const text = acquireRenderObject(
+    g.renderObjectPools.damageTexts,
+    DAMAGE_TEXT_POOL_KEYS,
+  ) as DamageText;
+  text.x = x;
+  text.y = y;
+  text.value = value;
+  text.life = life;
+  text.color = color;
   g.damageTexts.push(text);
-  g.damageTexts = capRenderArray(g.damageTexts, RENDER_ARRAY_LIMITS.damageTexts) as DamageText[];
+  capRenderObjectsInPlace(
+    g.damageTexts,
+    g.renderObjectPools.damageTexts,
+    RENDER_ARRAY_LIMITS.damageTexts,
+  );
 }
+
+function addShot(
+  g: Game,
+  x: number,
+  y: number,
+  tx: number,
+  ty: number,
+  life: number,
+  side: Shot["side"],
+  duration?: number,
+  style?: Shot["style"],
+  weapon?: string,
+  effect?: RoleEffect,
+  sourceId?: number,
+  targetId?: number,
+  damageTargetId?: number,
+  emphasized?: boolean,
+  shotIndex?: number,
+  recoil?: number,
+  casing?: boolean,
+  hitStopSeconds?: number,
+  impactDelaySeconds?: number,
+) {
+  const shot = acquireRenderObject(
+    g.renderObjectPools.shots,
+    SHOT_POOL_KEYS,
+  ) as Shot;
+  shot.x = x;
+  shot.y = y;
+  shot.tx = tx;
+  shot.ty = ty;
+  shot.life = life;
+  shot.side = side;
+  shot.duration = duration;
+  shot.style = style;
+  shot.weapon = weapon;
+  shot.effect = effect;
+  shot.sourceId = sourceId;
+  shot.targetId = targetId;
+  shot.damageTargetId = damageTargetId;
+  shot.emphasized = emphasized;
+  shot.shotIndex = shotIndex;
+  shot.recoil = recoil;
+  shot.casing = casing;
+  shot.hitStopSeconds = hitStopSeconds;
+  shot.impactDelaySeconds = impactDelaySeconds;
+  g.shots.push(shot);
+  capRenderObjectsInPlace(
+    g.shots,
+    g.renderObjectPools.shots,
+    RENDER_ARRAY_LIMITS.shots,
+  );
+}
+
+function clearTransientRenderObjects(g: Game) {
+  clearRenderObjects(g.particles, g.renderObjectPools.particles);
+  clearRenderObjects(g.shots, g.renderObjectPools.shots);
+  clearRenderObjects(g.damageTexts, g.renderObjectPools.damageTexts);
+}
+
+const particleIsActive = (particle: Particle) => particle.life > 0;
+const damageTextIsActive = (damageText: DamageText) => damageText.life > 0;
+const shotIsActive = (shot: Shot) => shot.life > 0;
 
 function addWeaponShot(g: Game, hit: Pick<PendingWeaponHit,
   "sourceId" | "targetId" | "originX" | "originY" | "targetX" | "targetY"
@@ -1591,24 +1717,28 @@ function addWeaponShot(g: Game, hit: Pick<PendingWeaponHit,
   // Keep the fading impact trace resident long enough for low-frequency
   // mobile WebKit frames to show the complete three-round burst together.
   const duration = Math.max(.01, hit.impactDelaySeconds) + hit.hitStopSeconds + .16;
-  g.shots.push({
-    x: hit.originX,
-    y: hit.originY,
-    tx: hit.targetX,
-    ty: hit.targetY,
-    life: duration,
+  addShot(
+    g,
+    hit.originX,
+    hit.originY,
+    hit.targetX,
+    hit.targetY,
     duration,
-    side: "human",
-    sourceId: hit.sourceId,
-    ...(hit.targetId === null ? {} : { targetId: hit.targetId, damageTargetId: hit.targetId }),
-    style: "projectile",
-    weapon: hit.weapon,
-    shotIndex: hit.shotIndex,
-    recoil: hit.recoil,
-    casing: hit.casing,
-    hitStopSeconds: hit.hitStopSeconds,
-    impactDelaySeconds: hit.impactDelaySeconds,
-  });
+    "human",
+    duration,
+    "projectile",
+    hit.weapon,
+    undefined,
+    hit.sourceId,
+    hit.targetId ?? undefined,
+    hit.targetId ?? undefined,
+    undefined,
+    hit.shotIndex,
+    hit.recoil,
+    hit.casing,
+    hit.hitStopSeconds,
+    hit.impactDelaySeconds,
+  );
   if (hit.casing) {
     addParticles(g, hit.originX - 3 - hit.shotIndex * 2, hit.originY - 4, "#d8a94f", 1);
   }
@@ -1903,13 +2033,7 @@ function applyIncomingHumanDamage(
           duration: .46,
         })
         .slice(-8);
-      addDamageText(g, {
-        x: target.x,
-        y: target.y - 72,
-        value: "受け流し",
-        life: .9,
-        color: "#c5e7ff",
-      });
+      addDamageText(g, target.x, target.y - 72, "受け流し", .9, "#c5e7ff");
       if (counterTarget) {
         const definition = MANUAL_ABILITY_REGISTRY["miyamoto-musashi"];
         const strikeDamage = definition.counterDamage * (isBossEnemyKind(counterTarget.kind) ? definition.bossDamageMultiplier : 1);
@@ -1919,13 +2043,7 @@ function applyIncomingHumanDamage(
         counterTarget.stunned = Math.max(counterTarget.stunned, definition.counterStunSeconds);
         counterTarget.flash = Math.max(counterTarget.flash, .3);
         counterTarget.knock = Math.max(counterTarget.knock, isBossEnemyKind(counterTarget.kind) ? 5 : 14);
-        addDamageText(g, {
-          x: counterTarget.x,
-          y: counterTarget.y - 58,
-          value: `無空 -${Math.round(applied)}`,
-          life: .92,
-          color: "#d7efff",
-        });
+        addDamageText(g, counterTarget.x, counterTarget.y - 58, `無空 -${Math.round(applied)}`, .92, "#d7efff");
         addParticles(g, counterTarget.x, counterTarget.y - 30, "#c7e4ef", 18);
       }
       return Object.freeze({
@@ -1998,13 +2116,7 @@ function applyIncomingHumanDamage(
     preventedDamage += armoredGuardianDamage.prevented + guardedDamage.prevented;
     g.roleMetrics.gantetsuRedirectedDamage += redirectedDamage;
     g.roleMetrics.naoPreventedDamage += guardedDamage.prevented;
-    addDamageText(g, {
-      x: guardian.x,
-      y: guardian.y - 72,
-      value: `盾 -${Math.round(guardedDamage.damage)}`,
-      life: .7,
-      color: "#bcd5d5",
-    });
+    addDamageText(g, guardian.x, guardian.y - 72, `盾 -${Math.round(guardedDamage.damage)}`, .7, "#bcd5d5");
   }
 
   const armoredTargetDamage = damageAfterUnitDefense(targetDamage, target.defense);
@@ -2025,13 +2137,7 @@ function applyIncomingHumanDamage(
     appliedTargetDamage = steadfastDamage.damage;
     preventedDamage += Math.max(0, protectedTarget.damage - steadfastDamage.damage);
     if (steadfastDamage.steadfast.triggered) {
-      addDamageText(g, {
-        x: target.x,
-        y: target.y - 78,
-        value: "踏みとどまる",
-        life: .95,
-        color: "#d7ecec",
-      });
+      addDamageText(g, target.x, target.y - 78, "踏みとどまる", .95, "#d7ecec");
     }
   } else {
     target.hp -= protectedTarget.damage;
@@ -5558,6 +5664,57 @@ function drawStageGeometryDebug(ctx: CanvasRenderingContext2D, g: Game) {
   ctx.restore();
 }
 
+type GraphicsProfile = ReturnType<typeof resolveGraphicsProfile>;
+type StaticBattlefieldCache = {
+  key: string;
+  canvas: HTMLCanvasElement | null;
+  hits: number;
+  rebuilds: number;
+};
+
+function drawCachedStageBackground(
+  ctx: CanvasRenderingContext2D,
+  g: Game,
+  background: HTMLImageElement,
+  cache: StaticBattlefieldCache,
+  profile: GraphicsProfile,
+) {
+  const key = [
+    g.definition.stageId,
+    activeStageViewportId,
+    background.currentSrc || background.src,
+    background.naturalWidth,
+    background.naturalHeight,
+    profile.smoothingQuality,
+  ].join("|");
+  if (!cache.canvas) {
+    cache.canvas = document.createElement("canvas");
+    cache.canvas.width = W;
+    cache.canvas.height = H;
+  }
+  if (cache.key !== key) {
+    const cacheContext = cache.canvas.getContext("2d");
+    if (!cacheContext) {
+      drawStageBackground(ctx, g, background);
+      return;
+    }
+    cacheContext.setTransform(1, 0, 0, 1, 0, 0);
+    cacheContext.clearRect(0, 0, W, H);
+    cacheContext.imageSmoothingEnabled = true;
+    cacheContext.imageSmoothingQuality = profile.smoothingQuality as ImageSmoothingQuality;
+    drawStageBackground(cacheContext, g, background);
+    cache.key = key;
+    cache.rebuilds += 1;
+  } else {
+    cache.hits += 1;
+  }
+  ctx.drawImage(cache.canvas, 0, 0, W, H);
+}
+
+function visibleRenderPoint(x: number, y: number, margin: number) {
+  return x >= -margin && x <= W + margin && y >= -margin && y <= H + margin;
+}
+
 function drawWorld(
   ctx: CanvasRenderingContext2D,
   g: Game,
@@ -5565,6 +5722,8 @@ function drawWorld(
   sprites: SpriteMap,
   stageObjects: SpriteMap,
   enemyBaseSprite: HTMLImageElement | null,
+  staticBackgroundCache: StaticBattlefieldCache,
+  graphicsProfile: GraphicsProfile,
   debugGeometry = false,
 ) {
   const shakeAmplitude = cameraShakeAmplitude(g.shake);
@@ -5575,7 +5734,7 @@ function drawWorld(
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.restore();
   if (background?.complete && background.naturalWidth) {
-    drawStageBackground(ctx, g, background);
+    drawCachedStageBackground(ctx, g, background, staticBackgroundCache, graphicsProfile);
   } else drawDiagnosticStationBackground(ctx, g);
   ctx.save();
   ctx.translate(sx, sy);
@@ -5776,6 +5935,8 @@ function drawWorld(
   drawCrawlerBarrage(ctx, g);
 
   for (const shot of g.shots) {
+    if (!visibleRenderPoint(shot.x, shot.y, graphicsProfile.cullingMargin)
+      && !visibleRenderPoint(shot.tx, shot.ty, graphicsProfile.cullingMargin)) continue;
     const duration = shot.duration ?? .12;
     const elapsed = Math.max(0, duration - shot.life);
     const impactDelay = Math.max(.001, shot.impactDelaySeconds ?? duration * .62);
@@ -5885,10 +6046,12 @@ function drawWorld(
   }
   ctx.shadowBlur = 0;
   for (const p of g.particles) {
+    if (!visibleRenderPoint(p.x, p.y, graphicsProfile.cullingMargin)) continue;
     ctx.globalAlpha = Math.max(0, p.life * 1.6); ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
   }
   ctx.globalAlpha = 1;
   for (const d of g.damageTexts) {
+    if (!visibleRenderPoint(d.x, d.y, graphicsProfile.cullingMargin)) continue;
     ctx.globalAlpha = Math.min(1, d.life * 2); ctx.fillStyle = d.color; ctx.font = "bold 14px monospace"; ctx.textAlign = "center";
     ctx.shadowColor = "#000"; ctx.shadowBlur = 3; ctx.fillText(d.value, d.x, d.y);
   }
@@ -5921,6 +6084,13 @@ function drawWorld(
 export function AshfallGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTransformRef = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
+  const graphicsProfileRef = useRef<GraphicsProfile>(resolveGraphicsProfile("auto"));
+  const staticBattlefieldCacheRef = useRef<StaticBattlefieldCache>({
+    key: "",
+    canvas: null,
+    hits: 0,
+    rebuilds: 0,
+  });
   const backgroundRef = useRef<HTMLImageElement | null>(null);
   const backgroundCacheRef = useRef<Record<string, HTMLImageElement>>({});
   const spriteRefs = useRef<SpriteMap>({});
@@ -5958,6 +6128,10 @@ export function AshfallGame() {
     visibilityTransitions: 0,
     backgroundDurationMs: 0,
     backgroundStartedAt: null as number | null,
+    droppedSimulationSeconds: 0,
+    scheduledSimulationSteps: 0,
+    rafRequests: 0,
+    rafCancellations: 0,
   });
   const lastHudRef = useRef(0);
   const selectedActionRef = useRef<SelectedAction>(null);
@@ -6021,9 +6195,37 @@ export function AshfallGame() {
     : selectedStageId;
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
   const campaignSaveRef = useRef(campaignSave);
+  const [graphicsProfileView, setGraphicsProfileView] = useState<GraphicsProfile>(() => resolveGraphicsProfile("auto"));
   useEffect(() => {
     campaignSaveRef.current = campaignSave;
   }, [campaignSave]);
+  useEffect(() => {
+    const updateGraphicsProfile = () => {
+      const navigatorWithMemory = navigator as Navigator & { deviceMemory?: number };
+      const nextProfile = resolveGraphicsProfile(campaignSave.settings.graphicsQuality, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        deviceMemory: navigatorWithMemory.deviceMemory,
+        hardwareConcurrency: navigator.hardwareConcurrency,
+        mobile: Math.min(window.innerWidth, window.innerHeight) <= 500,
+      }) as GraphicsProfile;
+      graphicsProfileRef.current = nextProfile;
+      const root = document.documentElement;
+      for (const [key, value] of Object.entries(graphicsProfileDataset(nextProfile))) {
+        root.dataset[key] = value;
+      }
+      setGraphicsProfileView((current) => (
+        JSON.stringify(current) === JSON.stringify(nextProfile) ? current : nextProfile
+      ));
+    };
+    updateGraphicsProfile();
+    window.addEventListener("resize", updateGraphicsProfile, { passive: true });
+    window.addEventListener("orientationchange", updateGraphicsProfile, { passive: true });
+    return () => {
+      window.removeEventListener("resize", updateGraphicsProfile);
+      window.removeEventListener("orientationchange", updateGraphicsProfile);
+    };
+  }, [campaignSave.settings.graphicsQuality]);
   const [saveHydrated, setSaveHydrated] = useState(false);
   const [savePersistence, setSavePersistence] = useState<SavePersistenceState>("checking");
   const [saveRecovery, setSaveRecovery] = useState<SaveRecoveryState | null>(null);
@@ -7338,9 +7540,7 @@ export function AshfallGame() {
           ? [gunner, primaryTarget, secondaryTarget].filter(Boolean) as Fighter[]
           : [gunner];
         g.pendingWeaponHits = [];
-        g.shots = [];
-        g.damageTexts = [];
-        g.particles = [];
+        clearTransientRenderObjects(g);
         const gateEaterMultiplier = primaryTarget?.kind === "gate-eater"
           ? ticketGateEaterDamageProfile({
             runtime: primaryTarget.stationAbility,
@@ -7899,7 +8099,37 @@ export function AshfallGame() {
           settings: { ...campaignSave.settings },
         };
       },
-      getPerformanceSnapshot: () => ({ ...runtimePerformanceRef.current }),
+      setGraphicsQuality: (requestedMode: string) => {
+        if (!GRAPHICS_QUALITY_ORDER.includes(requestedMode)) {
+          throw new RangeError(`Unknown graphics quality: ${requestedMode}`);
+        }
+        setCampaignSave((current) => updateCampaignSettings(current, {
+          graphicsQuality: requestedMode,
+        }) as CampaignSave);
+      },
+      getPerformanceSnapshot: () => ({
+        ...runtimePerformanceRef.current,
+        graphicsProfile: { ...graphicsProfileRef.current },
+        staticBackgroundCache: {
+          hits: staticBattlefieldCacheRef.current.hits,
+          rebuilds: staticBattlefieldCacheRef.current.rebuilds,
+          ready: staticBattlefieldCacheRef.current.canvas !== null,
+        },
+        renderObjectPools: {
+          particles: {
+            ...renderObjectPoolSnapshot(gameRef.current.renderObjectPools.particles),
+            active: gameRef.current.particles.length,
+          },
+          shots: {
+            ...renderObjectPoolSnapshot(gameRef.current.renderObjectPools.shots),
+            active: gameRef.current.shots.length,
+          },
+          damageTexts: {
+            ...renderObjectPoolSnapshot(gameRef.current.renderObjectPools.damageTexts),
+            active: gameRef.current.damageTexts.length,
+          },
+        },
+      }),
     };
     qaWindow.__ASHFALL_BATTLE_QA__ = bridge;
     const runtimePerformanceBridge = runtimePerformanceRef.current;
@@ -8068,7 +8298,11 @@ export function AshfallGame() {
     const configureCanvas = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+      const graphicsProfile = graphicsProfileRef.current;
+      const dpr = Math.min(
+        graphicsProfile.dprCap,
+        Math.max(1, window.devicePixelRatio || 1),
+      );
       const rect = canvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
       const viewportProfile = resolveStageViewportProfile({
@@ -8100,10 +8334,8 @@ export function AshfallGame() {
           Math.abs(g.barricadeHitY - previousLaneCenters[lane]) < Math.abs(g.barricadeHitY - previousLaneCenters[nearest]) ? lane : nearest
         ), 1 as Lane);
         g.barricadeHitY += shiftForLane(hitLane);
-        g.shots = [];
+        clearTransientRenderObjects(g);
         g.manualAbilityVfx = [];
-        g.particles = [];
-        g.damageTexts = [];
         activeLaneCenters = nextLaneCenters;
       }
       activeStageGeometry = nextStageGeometry;
@@ -8114,6 +8346,8 @@ export function AshfallGame() {
         canvas.height = pixelHeight;
       }
       canvas.dataset.dpr = String(dpr);
+      canvas.dataset.graphicsQuality = graphicsProfile.resolvedMode;
+      canvas.dataset.renderHz = String(graphicsProfile.renderHz);
       const scale = Math.max(rect.width / W, rect.height / H);
       const offsetX = (rect.width - W * scale) / 2;
       const offsetY = (rect.height - H * scale) / 2;
@@ -8126,6 +8360,10 @@ export function AshfallGame() {
       canvas.dataset.visualFloorHorizonY = String(nextStageGeometry.floor.visual.horizonY);
       canvas.dataset.visualFloorNearEdgeY = String(nextStageGeometry.floor.visual.nearEdgeY);
       const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = graphicsProfile.smoothingQuality as ImageSmoothingQuality;
+      }
       ctx?.setTransform(scale * dpr, 0, 0, scale * dpr, offsetX * dpr, offsetY * dpr);
     };
     configureCanvas();
@@ -8142,7 +8380,7 @@ export function AshfallGame() {
       window.visualViewport?.removeEventListener("resize", configureCanvas);
       window.visualViewport?.removeEventListener("scroll", configureCanvas);
     };
-  }, [activeBattlefieldStageId, screen]);
+  }, [activeBattlefieldStageId, graphicsProfileView.dprCap, graphicsProfileView.renderHz, screen]);
 
   const ensureAudio = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -10678,6 +10916,16 @@ export function AshfallGame() {
     });
   }, []);
 
+  const cycleGraphicsQuality = useCallback(() => {
+    setCampaignSave((current) => {
+      const currentIndex = GRAPHICS_QUALITY_ORDER.indexOf(current.settings.graphicsQuality);
+      const nextMode = GRAPHICS_QUALITY_ORDER[
+        (Math.max(0, currentIndex) + 1) % GRAPHICS_QUALITY_ORDER.length
+      ];
+      return updateCampaignSettings(current, { graphicsQuality: nextMode }) as CampaignSave;
+    });
+  }, []);
+
   const toggleBgm = useCallback(() => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
     const next = !bgmMuted; setBgmMuted(next);
@@ -10858,28 +11106,41 @@ export function AshfallGame() {
   }, [chooseActionWithCue, deployHuman, selectedSupply, togglePause, triggerCrawlerBarrage]);
 
   useEffect(() => {
-    let frame = 0;
+    let frame: number | null = null;
+    let frameSchedule = createRuntimeFrameSchedule();
+    let active = true;
+    const requestFrame = () => {
+      if (!active
+        || frame !== null
+        || pageHiddenRef.current
+        || document.visibilityState === "hidden") return;
+      runtimePerformanceRef.current.rafRequests += 1;
+      frame = requestAnimationFrame(loop);
+    };
     const loop = (now: number) => {
+      frame = null;
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext("2d");
       const g = gameRef.current;
-      if (!ctx) { frame = requestAnimationFrame(loop); return; }
+      if (!ctx) { requestFrame(); return; }
       const performanceCounters = runtimePerformanceRef.current;
       if (pageHiddenRef.current || document.visibilityState === "hidden") {
         performanceCounters.hiddenFrameCallbacks += 1;
         g.last = now;
-        frame = requestAnimationFrame(loop);
         return;
       }
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      const frameDt = Math.min(.033, g.last ? (now - g.last) / 1000 : 0);
-      const dt = frameDt * (g.survivalRun?.speed ?? 1);
+      const graphicsProfile = graphicsProfileRef.current;
+      const cadence = advanceRuntimeFrameSchedule(frameSchedule, now, graphicsProfile);
+      performanceCounters.scheduledSimulationSteps += cadence.simulationStepCount;
+      performanceCounters.droppedSimulationSeconds += cadence.droppedSimulationSeconds;
+      g.graphicsEffectDensity = graphicsProfile.effectDensity;
       g.last = now;
-      g.shake = advanceCameraShakeRuntime(g.shake, dt);
-      if (g.running && !g.paused) g.battleBarks = advanceBattleBarkRuntime(g.battleBarks, dt) as BattleBarkRuntime;
+      for (let step = 0; step < cadence.simulationStepCount; step += 1) {
+        const dt = cadence.simulationStepSeconds * (g.survivalRun?.speed ?? 1);
+        g.shake = advanceCameraShakeRuntime(g.shake, dt);
+        if (g.running && !g.paused) g.battleBarks = advanceBattleBarkRuntime(g.battleBarks, dt) as BattleBarkRuntime;
 
-      if (g.running && !g.paused && !g.over) {
+        if (g.running && !g.paused && !g.over) {
         performanceCounters.simulationTicks += 1;
         g.time += dt;
         g.manualAbilityVfx = g.manualAbilityVfx
@@ -10945,13 +11206,7 @@ export function AshfallGame() {
                 owner.cooldown = 0;
                 owner.retargetIn = 0;
                 addParticles(g, owner.x, owner.y - 28, "#f06835", 24);
-                addDamageText(g, {
-                  x: owner.x,
-                  y: owner.y - 72,
-                  value: "狂王暴走",
-                  life: 1,
-                  color: "#ffb14f",
-                });
+                addDamageText(g, owner.x, owner.y - 72, "狂王暴走", 1, "#ffb14f");
               } else {
                 for (const enemy of g.fighters) {
                   if (enemy.side !== "zombie"
@@ -10974,13 +11229,7 @@ export function AshfallGame() {
                   event.kind === "guardian" ? "#82a8b2" : "#d9a04c",
                   22,
                 );
-                addDamageText(g, {
-                  x: owner.x,
-                  y: owner.y - 72,
-                  value: event.kind === "guardian" ? "鉄壁展開" : "仁王立ち",
-                  life: 1,
-                  color: event.kind === "guardian" ? "#c4e8ec" : "#ffd07a",
-                });
+                addDamageText(g, owner.x, owner.y - 72, event.kind === "guardian" ? "鉄壁展開" : "仁王立ち", 1, event.kind === "guardian" ? "#c4e8ec" : "#ffd07a");
               }
               g.flashOverlay = Math.max(g.flashOverlay, .08);
               playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
@@ -11084,7 +11333,7 @@ export function AshfallGame() {
                 nearby.flash = Math.max(nearby.flash, nearby.id === target.id ? .3 : .14);
               }
               recordUnitDamage(g, owner.kind, damage);
-              addDamageText(g, { x: target.x, y: target.y - 52, value: `連打×${definition.hitCount} -${Math.round(damage)}`, life: .9, color: "#ffd16d" });
+              addDamageText(g, target.x, target.y - 52, `連打×${definition.hitCount} -${Math.round(damage)}`, .9, "#ffd16d");
               addParticles(g, target.x, target.y - 30, "#ffb34f", 24);
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.weaponHeavy);
               playProductionCue(weaponCueForUnit(owner.kind), target.x, {
@@ -11112,7 +11361,7 @@ export function AshfallGame() {
               target.flash = Math.max(target.flash, .28);
               target.knock = Math.max(target.knock, 11);
               recordUnitDamage(g, owner.kind, damage);
-              addDamageText(g, { x: target.x, y: target.y - 52, value: `迎撃 -${Math.round(damage)}`, life: .86, color: "#7ee7e4" });
+              addDamageText(g, target.x, target.y - 52, `迎撃 -${Math.round(damage)}`, .86, "#7ee7e4");
               addParticles(g, target.x, target.y - 30, "#73d8d5", 18);
               playProductionCue(weaponCueForUnit(owner.kind), target.x, {
                 priority: 84, cooldownMs: 80, maxInstances: 1, fallbackCue: "melee-hit",
@@ -11137,7 +11386,7 @@ export function AshfallGame() {
                 target.hp = Math.max(0, target.hp - strike);
                 target.flash = Math.max(target.flash, .24);
                 recordUnitDamage(g, owner.kind, damage);
-                addDamageText(g, { x: target.x, y: target.y - 50, value: `精密 -${Math.round(damage)}`, life: .82, color: "#d8f2ff" });
+                addDamageText(g, target.x, target.y - 50, `精密 -${Math.round(damage)}`, .82, "#d8f2ff");
                 addParticles(g, target.x, target.y - 30, "#b9e5f2", appliedCount === 0 ? 15 : 8);
                 appliedCount += 1;
               }
@@ -11167,7 +11416,7 @@ export function AshfallGame() {
               target.suppressionMultiplier = 1;
               target.damageReductionRemaining = Math.max(target.damageReductionRemaining, definition.protectionSeconds);
               target.damageReductionMultiplier = Math.min(target.damageReductionMultiplier, definition.protectionMultiplier);
-              addDamageText(g, { x: target.x, y: target.y - 54, value: `緊急処置 +${Math.round(healing)}`, life: .95, color: "#76e5a6" });
+              addDamageText(g, target.x, target.y - 54, `緊急処置 +${Math.round(healing)}`, .95, "#76e5a6");
               addParticles(g, target.x, target.y - 28, "#72dca0", 20);
               playProductionCue("support-heal", target.x, {
                 priority: 82, cooldownMs: 120, maxInstances: 1, fallbackCue: "medical-heal",
@@ -11191,7 +11440,7 @@ export function AshfallGame() {
                 target.flash = Math.max(target.flash, .3);
                 target.knock = Math.max(target.knock, 14);
                 recordUnitDamage(g, owner.kind, damage);
-                addDamageText(g, { x: target.x, y: target.y - 48, value: `地砕 -${Math.round(damage)}`, life: .84, color: "#e6b06b" });
+                addDamageText(g, target.x, target.y - 48, `地砕 -${Math.round(damage)}`, .84, "#e6b06b");
               }
               if (targetIds.has("manual-structure:enemy-base")
                 && g.barricadeVulnerable
@@ -11208,13 +11457,7 @@ export function AshfallGame() {
                 g.barricadeHitFlash = Math.max(g.barricadeHitFlash, .28);
                 g.barricadeHitY = baseTarget.y;
                 g.roleMetrics.tataraStructureDamage += structureDamage;
-                addDamageText(g, {
-                  x: baseTarget.x,
-                  y: baseTarget.y - 18,
-                  value: `地砕 -${Math.round(structureDamage)}`,
-                  life: .9,
-                  color: "#ffd06b",
-                });
+                addDamageText(g, baseTarget.x, baseTarget.y - 18, `地砕 -${Math.round(structureDamage)}`, .9, "#ffd06b");
                 addParticles(g, baseTarget.x, baseTarget.y, "#e78b45", 18);
               }
               addParticles(g, event.target.x, event.target.y, "#b88a58", 30);
@@ -11240,7 +11483,7 @@ export function AshfallGame() {
               target.marked = Math.max(target.marked, definition.markSeconds);
               target.flash = Math.max(target.flash, .22);
               recordUnitDamage(g, owner.kind, damage);
-              addDamageText(g, { x: target.x, y: target.y - 54, value: `弱点査定 -${Math.round(damage)}`, life: .92, color: "#f0d36f" });
+              addDamageText(g, target.x, target.y - 54, `弱点査定 -${Math.round(damage)}`, .92, "#f0d36f");
               addParticles(g, target.x, target.y - 34, "#e2c756", 14);
               playProductionCue(unitAudioCueFor(owner.kind, "weapon", "hit") || weaponCueForUnit(owner.kind), target.x, {
                 priority: 84, cooldownMs: 100, maxInstances: 1, fallbackCue: "ranged-shot",
@@ -11264,7 +11507,7 @@ export function AshfallGame() {
                 target.flash = Math.max(target.flash, .25);
                 target.knock = Math.max(target.knock, 9);
                 recordUnitDamage(g, owner.kind, damage);
-                addDamageText(g, { x: target.x, y: target.y - 48, value: `制圧 -${Math.round(damage)}`, life: .84, color: "#f4c66d" });
+                addDamageText(g, target.x, target.y - 48, `制圧 -${Math.round(damage)}`, .84, "#f4c66d");
                 addParticles(g, target.x, target.y - 28, "#d7ae58", 12);
               }
               g.flashOverlay = Math.max(g.flashOverlay, .1);
@@ -11280,7 +11523,7 @@ export function AshfallGame() {
               owner.engineerTrapLane = (event.target.trapLane ?? event.target.lane) as Lane;
               owner.engineerTrapManual = true;
               owner.engineerTrapCooldown = 0;
-              addDamageText(g, { x: owner.engineerTrapX, y: activeLaneCenters[owner.engineerTrapLane] - 30, value: "捕縛罠", life: .9, color: "#e3ce77" });
+              addDamageText(g, owner.engineerTrapX, activeLaneCenters[owner.engineerTrapLane] - 30, "捕縛罠", .9, "#e3ce77");
               addParticles(g, owner.engineerTrapX, activeLaneCenters[owner.engineerTrapLane] - 6, "#c8b158", 16);
               playProductionCue(weaponCueForUnit(owner.kind), owner.engineerTrapX, {
                 priority: 80, cooldownMs: 100, maxInstances: 1, fallbackCue: "melee-hit",
@@ -11303,13 +11546,7 @@ export function AshfallGame() {
                 recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, .2);
                 target.knock = Math.max(target.knock, 8);
-                addDamageText(g, {
-                  x: target.x,
-                  y: target.y - 48,
-                  value: `火酒 -${Math.round(damage)}`,
-                  life: .82,
-                  color: "#ffb15a",
-                });
+                addDamageText(g, target.x, target.y - 48, `火酒 -${Math.round(damage)}`, .82, "#ffb15a");
               }
               g.areaEffects.push({
                 id: g.nextAreaEffectId++,
@@ -11362,7 +11599,7 @@ export function AshfallGame() {
                 target.flash = Math.max(target.flash, .28);
                 target.knock = Math.max(target.knock, definition.knockback);
                 target.stunned = Math.max(target.stunned, definition.stunSeconds);
-                addDamageText(g, { x: target.x, y: target.y - 50, value: `光刃 -${Math.round(damage)}`, life: .82, color: "#ff70d4" });
+                addDamageText(g, target.x, target.y - 50, `光刃 -${Math.round(damage)}`, .82, "#ff70d4");
                 addParticles(g, target.x, target.y - 34, "#ff42c8", 11);
               }
               g.flashOverlay = Math.max(g.flashOverlay, .12);
@@ -11398,7 +11635,7 @@ export function AshfallGame() {
                 recordUnitDamage(g, owner.kind, damage);
                 target.flash = Math.max(target.flash, finalRound ? .3 : .18);
                 target.knock = Math.max(target.knock, finalRound ? definition.finalKnockback : 7);
-                addDamageText(g, { x: target.x, y: target.y - 48, value: `榴弾 -${Math.round(damage)}`, life: .78, color: finalRound ? "#ffd08a" : "#d9aa63" });
+                addDamageText(g, target.x, target.y - 48, `榴弾 -${Math.round(damage)}`, .78, finalRound ? "#ffd08a" : "#d9aa63");
               }
               addParticles(g, event.target.x, event.target.y - 14, finalRound ? "#ffd08a" : "#d48a42", finalRound ? 28 : 16);
               g.flashOverlay = Math.max(g.flashOverlay, .18);
@@ -11441,7 +11678,7 @@ export function AshfallGame() {
               target.stunned = Math.max(target.stunned, definition.counterStunSeconds);
               target.knock = Math.max(target.knock, isBossEnemyKind(target.kind) ? 4 : 13);
               owner.x += Math.sign(target.x - owner.x) * Math.min(26, Math.max(0, Math.abs(target.x - owner.x) - owner.range));
-              addDamageText(g, { x: target.x, y: target.y - 54, value: `無空 -${Math.round(damage)}`, life: .9, color: "#d7efff" });
+              addDamageText(g, target.x, target.y - 54, `無空 -${Math.round(damage)}`, .9, "#d7efff");
               addParticles(g, target.x, target.y - 34, "#c7e4ef", 18);
               playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityCounter"), target.x, {
                 priority: 88,
@@ -11497,13 +11734,7 @@ export function AshfallGame() {
             g.barricadeHp = Math.max(0, g.barricadeHp - hit.damage);
             g.barricadeHitFlash = .2;
             g.barricadeHitY = hit.targetY;
-            addDamageText(g, {
-              x: hit.targetX + (hit.shotIndex - 1) * 7,
-              y: hit.targetY - 14 - hit.shotIndex * 3,
-              value: `-${Math.round(Math.min(beforeHit, hit.damage))}`,
-              life: .62,
-              color: "#ffd06b",
-            });
+            addDamageText(g, hit.targetX + (hit.shotIndex - 1) * 7, hit.targetY - 14 - hit.shotIndex * 3, `-${Math.round(Math.min(beforeHit, hit.damage))}`, .62, "#ffd06b");
             addParticles(g, hit.targetX, hit.targetY, "#e8c56c", hit.weapon === "mrs-chiha" ? 13 : 2);
             if (hit.weapon === "mrs-chiha") {
               playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "hit"), hit.targetX, {
@@ -11586,13 +11817,7 @@ export function AshfallGame() {
               recordUnitDamage(g, hit.weapon, appliedSplash);
               splashTarget.flash = Math.max(splashTarget.flash, .16);
               splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
-              addDamageText(g, {
-                x: splashTarget.x,
-                y: splashTarget.y - 43,
-                value: `${primaryTarget ? "榴弾" : "爆風"} -${Math.round(appliedSplash)}`,
-                life: .66,
-                color: "#e4b46c",
-              });
+              addDamageText(g, splashTarget.x, splashTarget.y - 43, `${primaryTarget ? "榴弾" : "爆風"} -${Math.round(appliedSplash)}`, .66, "#e4b46c");
             }
             addParticles(g, impactPoint.x, impactPoint.y - 12, "#d7924f", 13);
             playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "hit"), impactPoint.x, {
@@ -11649,13 +11874,7 @@ export function AshfallGame() {
           }
           target.flash = Math.max(target.flash, .12);
           target.knock = Math.max(target.knock, 2 + hit.recoil * 4);
-          addDamageText(g, {
-            x: target.x + (hit.shotIndex - 1) * 7,
-            y: target.y - 45 - hit.shotIndex * 3,
-            value: String(Math.round(Math.max(0, beforeHit - target.hp))),
-            life: .62,
-            color: hit.raiderSecondary ? "#e8cc72" : "#f6d278",
-          });
+          addDamageText(g, target.x + (hit.shotIndex - 1) * 7, target.y - 45 - hit.shotIndex * 3, String(Math.round(Math.max(0, beforeHit - target.hp))), .62, hit.raiderSecondary ? "#e8cc72" : "#f6d278");
           addParticles(g, target.x, target.y - 26, "#e8c56c", 2);
           if (hit.shotIndex === 0 && Math.random() < .48) {
             playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
@@ -12024,7 +12243,7 @@ export function AshfallGame() {
           g.fighters = impact.fighters as Fighter[];
           for (const hit of impact.hits) {
             const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
-            if (fighter) { fighter.flash = .2; fighter.knock = Math.max(fighter.knock, 18); addDamageText(g, { x: fighter.x, y: fighter.y - 54, value: `航空 -${hit.damage}`, life: .85, color: "#fff0a0" }); }
+            if (fighter) { fighter.flash = .2; fighter.knock = Math.max(fighter.knock, 18); addDamageText(g, fighter.x, fighter.y - 54, `航空 -${hit.damage}`, .85, "#fff0a0"); }
           }
           addParticles(
             g,
@@ -12049,21 +12268,11 @@ export function AshfallGame() {
             const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
             if (fighter) {
               fighter.flash = .16;
-              addDamageText(g, { x: fighter.x, y: fighter.y - 48, value: `掃射 -${hit.damage}`, life: .75, color: "#ffd36d" });
+              addDamageText(g, fighter.x, fighter.y - 48, `掃射 -${hit.damage}`, .75, "#ffd36d");
               addParticles(g, fighter.x, fighter.y - 22, "#e8b354", 5);
               if (visualHitsByLane[fighter.lane] < 3) {
                 visualHitsByLane[fighter.lane] += 1;
-                g.shots.push({
-                  x: WORLD_GEOMETRY.crawler.weaponX + 45,
-                  y: WORLD_GEOMETRY.crawler.weaponY - 18,
-                  tx: fighter.x,
-                  ty: fighter.y - 24,
-                  life: .32 + visualHitsByLane[fighter.lane] * .035,
-                  duration: .36,
-                  side: "human",
-                  style: "crawler",
-                  weapon: "crawler",
-                });
+                addShot(g, WORLD_GEOMETRY.crawler.weaponX + 45, WORLD_GEOMETRY.crawler.weaponY - 18, fighter.x, fighter.y - 24, .32 + visualHitsByLane[fighter.lane] * .035, "human", .36, "crawler", "crawler", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
               }
             }
           }
@@ -12088,7 +12297,7 @@ export function AshfallGame() {
                 }
                 fighter.flash = .2;
                 fighter.knock = Math.max(fighter.knock, 10);
-                addDamageText(g, { x: fighter.x, y: fighter.y - 56, value: `着地 -${Math.round(appliedDamage)}`, life: .9, color: hit.side === "zombie" ? "#ffd06b" : "#ff8a70" });
+                addDamageText(g, fighter.x, fighter.y - 56, `着地 -${Math.round(appliedDamage)}`, .9, hit.side === "zombie" ? "#ffd06b" : "#ff8a70");
               }
             }
             addParticles(g, object.x, object.y + 4, "#d7aa63", 26);
@@ -12102,7 +12311,7 @@ export function AshfallGame() {
             g.nextAreaEffectId = detonation.nextAreaEffectId;
             for (const hit of detonation.hits) {
               const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
-              if (fighter) { fighter.flash = .18; fighter.knock = Math.max(fighter.knock, 13); addDamageText(g, { x: fighter.x, y: fighter.y - 52, value: `爆発 -${hit.damage}`, life: .82, color: "#ffbd59" }); }
+              if (fighter) { fighter.flash = .18; fighter.knock = Math.max(fighter.knock, 13); addDamageText(g, fighter.x, fighter.y - 52, `爆発 -${hit.damage}`, .82, "#ffbd59"); }
             }
             addParticles(g, object.x, object.y - 8, "#f26a35", 28); g.flashOverlay = Math.max(g.flashOverlay, .23); playCue("drum-blast"); playCue("burn-start");
           }
@@ -12132,7 +12341,7 @@ export function AshfallGame() {
           const damage = applyIncomingHumanDamage(g, target, effect.damage, { attackKind: "ranged" }).targetDamage;
           target.flash = Math.max(target.flash, .12);
           target.slowMultiplier = Math.min(target.slowMultiplier ?? 1, effect.speedMultiplier);
-          addDamageText(g, { x: target.x, y: target.y - 52, value: `汚染 -${Math.round(damage)}`, life: .72, color: "#a9bf70" });
+          addDamageText(g, target.x, target.y - 52, `汚染 -${Math.round(damage)}`, .72, "#a9bf70");
         }
         for (const slow of hazardFrame.slowEffects) {
           const fighter = g.fighters.find((candidate) => String(candidate.id) === slow.targetId
@@ -12435,7 +12644,7 @@ export function AshfallGame() {
                 if (!g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.GRAPPLER_GRAB)) {
                   g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.GRAPPLER_GRAB);
                 }
-                addDamageText(g, { x: victim.x, y: victim.y - 64, value: "拘束", life: .9, color: "#d98f6f" });
+                addDamageText(g, victim.x, victim.y - 64, "拘束", .9, "#d98f6f");
               } else {
                 f.abilityCooldown = Math.max(f.abilityCooldown, 2);
               }
@@ -12484,7 +12693,7 @@ export function AshfallGame() {
                 g.stationHazards.push(resolved.zone as StationHazard);
                 g.stationMetrics.leakMudZones += 1;
                 f.abilityCooldown = 7.5;
-                addDamageText(g, { x: resolved.zone.centerX, y: resolved.zone.centerY - 18, value: "床汚染", life: .9, color: "#a9bf70" });
+                addDamageText(g, resolved.zone.centerX, resolved.zone.centerY - 18, "床汚染", .9, "#a9bf70");
               }
             }
             if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
@@ -12595,13 +12804,7 @@ export function AshfallGame() {
                     }).targetDamage;
                     victim.stunned = Math.max(victim.stunned, .34);
                     victim.knock = Math.max(victim.knock, 8);
-                    addDamageText(g, {
-                      x: victim.x,
-                      y: victim.y - 56,
-                      value: `共鳴 -${Math.round(damage)}`,
-                      life: .82,
-                      color: "#d79a86",
-                    });
+                    addDamageText(g, victim.x, victim.y - 56, `共鳴 -${Math.round(damage)}`, .82, "#d79a86");
                   }
                   addParticles(g, f.x - 46, f.y - 38, "#896a62", 18);
                   g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
@@ -12638,13 +12841,7 @@ export function AshfallGame() {
                       attacker: f,
                     }).targetDamage;
                     impacted.stunned = Math.max(impacted.stunned, .42);
-                    addDamageText(g, {
-                      x: impacted.x,
-                      y: impacted.y - 50,
-                      value: `着地 -${Math.round(damage)}`,
-                      life: .78,
-                      color: "#b9978e",
-                    });
+                    addDamageText(g, impacted.x, impacted.y - 50, `着地 -${Math.round(damage)}`, .78, "#b9978e");
                   }
                   addParticles(g, f.x, f.y + 4, "#766a63", 22);
                   g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
@@ -12659,13 +12856,7 @@ export function AshfallGame() {
                     victim.targetId = f.id;
                     victim.targetObjectId = null;
                     victim.retargetIn = Math.max(victim.retargetIn, 1.25);
-                    addDamageText(g, {
-                      x: victim.x,
-                      y: victim.y - 60,
-                      value: "擬声誘導",
-                      life: .88,
-                      color: "#c7a4ad",
-                    });
+                    addDamageText(g, victim.x, victim.y - 60, "擬声誘導", .88, "#c7a4ad");
                   }
                 } else if (f.kind === "anchor-bloom") {
                   addParticles(g, f.x, f.y + 8, "#705552", 16);
@@ -12729,13 +12920,7 @@ export function AshfallGame() {
                   ).targetDamage;
                   victim.stunned = Math.max(victim.stunned, .42);
                   victim.knock = Math.max(victim.knock, 14);
-                  addDamageText(g, {
-                    x: victim.x,
-                    y: victim.y - 58,
-                    value: `増殖圧 -${Math.round(damage)}`,
-                    life: .92,
-                    color: "#d6a078",
-                  });
+                  addDamageText(g, victim.x, victim.y - 58, `増殖圧 -${Math.round(damage)}`, .92, "#d6a078");
                 }
                 const summonPlan = motherBroodSummonPlan({
                   boss: f,
@@ -12842,13 +13027,7 @@ export function AshfallGame() {
                     hitIds.add(String(victim.id));
                     victim.flash = Math.max(victim.flash, .2);
                     victim.knock = Math.max(victim.knock, 22);
-                    addDamageText(g, {
-                      x: victim.x,
-                      y: victim.y - 58,
-                      value: `捕食突進 -${Math.round(resolved.targetDamage)}`,
-                      life: .92,
-                      color: "#e5a06d",
-                    });
+                    addDamageText(g, victim.x, victim.y - 58, `捕食突進 -${Math.round(resolved.targetDamage)}`, .92, "#e5a06d");
                   }
                   f.stationAbility = {
                     ...f.stationAbility,
@@ -12900,15 +13079,9 @@ export function AshfallGame() {
                     );
                     victim.flash = Math.max(victim.flash, .18);
                     victim.knock = Math.max(victim.knock, anomalyKind === "gairen" ? 18 : 14);
-                    addDamageText(g, {
-                      x: victim.x,
-                      y: victim.y - 58,
-                      value: anomalyKind === "gairen"
+                    addDamageText(g, victim.x, victim.y - 58, anomalyKind === "gairen"
                         ? `外殻掃討 -${Math.round(resolved.targetDamage)}`
-                        : `融合交差撃 -${Math.round(resolved.targetDamage)}`,
-                      life: .92,
-                      color: anomalyKind === "gairen" ? "#d3b77c" : "#d59a9d",
-                    });
+                        : `融合交差撃 -${Math.round(resolved.targetDamage)}`, .92, anomalyKind === "gairen" ? "#d3b77c" : "#d59a9d");
                   }
                   addParticles(
                     g,
@@ -13016,13 +13189,7 @@ export function AshfallGame() {
                     victim.visionDisruptedRemaining ?? 0,
                     KUROME_PROTOTYPE_TUNING.interferenceSeconds,
                   );
-                  addDamageText(g, {
-                    x: victim.x,
-                    y: victim.y - 64,
-                    value: `視界撹乱 -${Math.round(resolved.targetDamage)}`,
-                    life: .95,
-                    color: "#6ceaf1",
-                  });
+                  addDamageText(g, victim.x, victim.y - 64, `視界撹乱 -${Math.round(resolved.targetDamage)}`, .95, "#6ceaf1");
                 }
                 if (beam.target) addParticles(g, beam.target.x, beam.target.y, "#62e8ef", 22);
                 g.flashOverlay = Math.max(g.flashOverlay, .12);
@@ -13115,7 +13282,7 @@ export function AshfallGame() {
                   const damage = applyIncomingHumanDamage(g, victim, 34, { attackKind: "melee", attacker: f }).targetDamage;
                   victim.flash = Math.max(victim.flash, .18);
                   victim.knock = Math.max(victim.knock, 14);
-                  addDamageText(g, { x: victim.x, y: victim.y - 54, value: `突進 -${Math.round(damage)}`, life: .85, color: "#e2a65e" });
+                  addDamageText(g, victim.x, victim.y - 54, `突進 -${Math.round(damage)}`, .85, "#e2a65e");
                 }
               }
               if (f.stationAbility.phase === "idle") f.abilityCooldown = 7;
@@ -13138,7 +13305,7 @@ export function AshfallGame() {
                   if (victim.side !== "human" || victim.hp <= 0 || effectDistance(victim, f) > radius) continue;
                   const resolved = applyIncomingHumanDamage(g, victim, damage, { attackKind: "melee", attacker: f });
                   victim.flash = .16; victim.knock = Math.max(victim.knock, 12);
-                  g.damageTexts.push({ x: victim.x, y: victim.y - 48, value: String(Math.round(resolved.targetDamage)), life: .8, color: "#ff7658" });
+                  addDamageText(g, victim.x, victim.y - 48, String(Math.round(resolved.targetDamage)), .8, "#ff7658");
                 }
                 addParticles(g, f.x, f.y - 4, "#e7653d", 28);
                 g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy); g.flashOverlay = Math.max(g.flashOverlay, .22);
@@ -13217,7 +13384,7 @@ export function AshfallGame() {
                         + MANUAL_ABILITY_REGISTRY.engineer.slowSeconds,
                     );
                   }
-                    addDamageText(g, { x: trapped.x, y: trapped.y - 60, value: "足止め", life: .8, color: "#e1c978" });
+                    addDamageText(g, trapped.x, trapped.y - 60, "足止め", .8, "#e1c978");
                   }
                   f.engineerTrapReady = false;
                   f.engineerTrapCooldown = UNIT_ROLE_TUNING.monkey.placementIntervalSeconds;
@@ -13257,9 +13424,9 @@ export function AshfallGame() {
               f.healFocusRemaining = 1.55;
               f.supportCooldown = 1.55;
               g.roleMetrics.naoHealing += healed;
-              g.damageTexts.push({ x: wounded.x, y: wounded.y - 70, value: `+${Math.ceil(healed)}`, life: .8, color: "#83e0a2" });
-              g.damageTexts.push({ x: f.x, y: f.y - 64, value: "救護", life: .7, color: "#9bf0ba" });
-              g.shots.push({ x: f.x + 8, y: f.y - 34, tx: wounded.x, ty: wounded.y - 28, life: .32, duration: .32, side: "human", effect: roleEffect ?? undefined });
+              addDamageText(g, wounded.x, wounded.y - 70, `+${Math.ceil(healed)}`, .8, "#83e0a2");
+              addDamageText(g, f.x, f.y - 64, "救護", .7, "#9bf0ba");
+              addShot(g, f.x + 8, f.y - 34, wounded.x, wounded.y - 28, .32, "human", .32, undefined, undefined, roleEffect ?? undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
               addParticles(g, wounded.x, wounded.y - 30, "#69d993", 7);
               if (roleEffect) playCue("role-medic");
               emitBattleBark(g, "role-cue", f.kind, f.id);
@@ -13678,11 +13845,11 @@ export function AshfallGame() {
                   maxInstances: 3,
                   fallbackCue: f.kind === "takuya" || f.kind === "gate-eater" ? "takuya-slam" : "melee-hit",
                 });
-                g.damageTexts.push({ x: objectTarget.x, y: objectTarget.y - 58, value: `-${Math.round(f.damage)}`, life: .65, color: "#ff9a70" });
+                addDamageText(g, objectTarget.x, objectTarget.y - 58, `-${Math.round(f.damage)}`, .65, "#ff9a70");
                 addParticles(g, objectTarget.x + 24, objectTarget.y - 18, "#9aa58d", f.kind === "takuya" || f.kind === "gate-eater" || f.kind === "crusher" ? 9 : 4);
                 if (f.kind === "spitter" || f.kind === "ooze") {
                   const origin = weaponAnchorForTarget(f, objectTarget);
-                  g.shots.push({ x: origin.x, y: origin.y, tx: objectTarget.x, ty: objectTarget.y - 22, life: .2, duration: .2, side: "zombie", style: "projectile", weapon: f.kind });
+                  addShot(g, origin.x, origin.y, objectTarget.x, objectTarget.y - 22, .2, "zombie", .2, "projectile", f.kind, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
                 }
                 if (result.detonationRequested) {
                   f.targetObjectId = null;
@@ -13921,7 +14088,7 @@ export function AshfallGame() {
                     target.armorBreakStacks = 0;
                     target.armorBrokenRemaining = Math.max(target.armorBrokenRemaining, 3.2);
                     target.stunned = Math.max(target.stunned, .75);
-                    addDamageText(g, { x: target.x, y: target.y - 66, value: "装甲破砕", life: .85, color: "#ffba70" });
+                    addDamageText(g, target.x, target.y - 66, "装甲破砕", .85, "#ffba70");
                   }
                 }
               }
@@ -14022,7 +14189,7 @@ export function AshfallGame() {
                   Object.assign(secondary, nextSecondary);
                   recordUnitDamage(g, f.kind, Math.max(0, secondaryHpBefore - secondary.hp));
                   if (f.kind === "crazy-king") g.roleMetrics.crazyKingSecondaryHits += 1;
-                  g.damageTexts.push({ x: secondary.x, y: secondary.y - 43, value: String(Math.round(newcomerEffects.secondaryDamage)), life: .58, color: "#efb95f" });
+                  addDamageText(g, secondary.x, secondary.y - 43, String(Math.round(newcomerEffects.secondaryDamage)), .58, "#efb95f");
                 }
               }
               if (target.kind === "gate-eater"
@@ -14135,18 +14302,18 @@ export function AshfallGame() {
                     ? f.attackEvery * MANUAL_ABILITY_REGISTRY["mayo-chan"].attackIntervalMultiplier
                   : f.attackEvery;
               if (!splitMachineGunBurst && !(f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash)) {
-                g.damageTexts.push({ x: target.x + (Math.random() - .5) * 10, y: target.y - 45, value: String(Math.round(appliedAttack.targetDamage)), life: .65, color: f.side === "human" ? "#f6d278" : "#e98a72" });
+                addDamageText(g, target.x + (Math.random() - .5) * 10, target.y - 45, String(Math.round(appliedAttack.targetDamage)), .65, f.side === "human" ? "#f6d278" : "#e98a72");
               }
               if (roleEffect && f.abilityCooldown <= 0) {
                 const roleCue = roleEffect === "scout" ? "索敵マーク" : roleEffect === "ranger" ? "対・毒吐き" : roleEffect === "brute" ? "対装甲破砕" : roleEffect === "brawler" ? "フィニッシュ" : roleEffect === "gunner" ? "直線制圧" : roleEffect === "crazy-king" ? "密集切断" : roleEffect === "kumaverson" ? "打撃・足止め" : roleEffect === "babayaga" ? "特殊個体分析" : null;
-                if (roleCue) { g.damageTexts.push({ x: f.x, y: f.y - 66, value: roleCue, life: .75, color: "#ffe078" }); f.abilityCooldown = 1.8; emitBattleBark(g, "role-cue", f.kind, f.id); }
+                if (roleCue) { addDamageText(g, f.x, f.y - 66, roleCue, .75, "#ffe078"); f.abilityCooldown = 1.8; emitBattleBark(g, "role-cue", f.kind, f.id); }
               }
               if (f.kind === "takuya") {
                 for (const splash of g.fighters) {
                   if (splash.side === "human" && splash.id !== target.id && splash.hp > 0 && fighterDistance(splash, target) < 58) {
                     const resolved = applyIncomingHumanDamage(g, splash, 22, { attackKind: "melee" });
                     splash.flash = .12; splash.knock = 6;
-                    g.damageTexts.push({ x: splash.x, y: splash.y - 46, value: String(Math.round(resolved.targetDamage)), life: .65, color: "#e98a72" });
+                    addDamageText(g, splash.x, splash.y - 46, String(Math.round(resolved.targetDamage)), .65, "#e98a72");
                   }
                 }
                 addParticles(g, target.x, target.y + 2, "#b78656", 13); playCue("takuya-hit");
@@ -14198,7 +14365,7 @@ export function AshfallGame() {
                   }
                 } else if (!(f.kind === "mrs-chiha" && !mrsLauncherBash)) {
                   const muzzle = weaponAnchorForTarget(f, target);
-                  g.shots.push({ x: muzzle.x, y: muzzle.y, tx: target.x, ty: target.y - 28, life: .26, duration: .26, side: "human", sourceId: f.id, targetId: target.id, damageTargetId: target.id, effect: roleEffect ?? undefined, emphasized, style: ranged ? "projectile" : "melee", weapon: f.kind });
+                  addShot(g, muzzle.x, muzzle.y, target.x, target.y - 28, .26, "human", .26, ranged ? "projectile" : "melee", f.kind, roleEffect ?? undefined, f.id, target.id, target.id, emphasized, undefined, undefined, undefined, undefined, undefined);
                 }
                 if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) playCue(`role-${roleEffect}` as SfxCueId);
                 if (!productionMixerRef.current) {
@@ -14207,7 +14374,7 @@ export function AshfallGame() {
                 }
               } else if (f.kind === "spitter" || f.kind === "ooze") {
                 const muzzle = weaponAnchorForTarget(f, target);
-                g.shots.push({ x: muzzle.x, y: muzzle.y, tx: target.x, ty: target.y - 28, life: .2, duration: .2, side: "zombie", sourceId: f.id, targetId: target.id, damageTargetId: target.id, style: "projectile", weapon: f.kind });
+                addShot(g, muzzle.x, muzzle.y, target.x, target.y - 28, .2, "zombie", .2, "projectile", f.kind, undefined, f.id, target.id, target.id, undefined, undefined, undefined, undefined, undefined, undefined);
                 if (!productionMixerRef.current) playCue("ranged-shot", { frequency: 205 });
               } else {
                 addParticles(g, target.x, target.y - 18, target.kind === "takuya" || target.kind === "shade" ? "#b98a62" : target.side === "zombie" ? "#8aa66a" : "#c06d51", 3);
@@ -14344,16 +14511,16 @@ export function AshfallGame() {
                 } else {
                   g.barricadeHitFlash = .2;
                   g.barricadeHitY = f.y;
-                  g.damageTexts.push({ x: enemyBaseTarget.x, y: enemyBaseTarget.y - 14, value: `-${Math.round(structureDamage)}`, life: .7, color: "#ffd06b" });
+                  addDamageText(g, enemyBaseTarget.x, enemyBaseTarget.y - 14, `-${Math.round(structureDamage)}`, .7, "#ffd06b");
                   addParticles(g, enemyBaseTarget.x, enemyBaseTarget.y, "#e78b45", f.kind === "brute" ? 10 : 5);
                   if (!roleEffect && ["ranger", "medic", "babayaga", "engineer"].includes(f.kind)) {
                     const origin = weaponAnchorForTarget(f, enemyBaseTarget);
-                    g.shots.push({ x: origin.x, y: origin.y, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .2, duration: .2, side: "human", style: "projectile", weapon: f.kind });
+                    addShot(g, origin.x, origin.y, enemyBaseTarget.x, enemyBaseTarget.y, .2, "human", .2, "projectile", f.kind, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
                   }
                 }
                 if (roleEffect && !deferredStructureImpact) {
                   const origin = weaponAnchorForTarget(f, enemyBaseTarget);
-                  g.shots.push({ x: origin.x, y: origin.y, tx: enemyBaseTarget.x, ty: enemyBaseTarget.y, life: .26, duration: .26, side: "human", effect: roleEffect, emphasized: true, style: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "projectile" : "melee", weapon: f.kind });
+                  addShot(g, origin.x, origin.y, enemyBaseTarget.x, enemyBaseTarget.y, .26, "human", .26, ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind) ? "projectile" : "melee", f.kind, roleEffect, undefined, undefined, undefined, true, undefined, undefined, undefined, undefined, undefined);
                   if (!productionMixerRef.current && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) {
                     playCue(`role-${roleEffect}` as SfxCueId);
                   }
@@ -14383,7 +14550,7 @@ export function AshfallGame() {
                   g.crawlerHitSfxCooldown = .28;
                   playCue("crawler-hit");
                   addParticles(g, BASE_X + 5, f.y - 10, "#d76a45", 5);
-                  g.damageTexts.push({ x: BASE_X + 12, y: f.y - 36, value: `移動拠点 -${siegeDamage}`, life: .7, color: "#ff7658" });
+                  addDamageText(g, BASE_X + 12, f.y - 36, `移動拠点 -${siegeDamage}`, .7, "#ff7658");
                 }
                 if (!g.criticalAnnounced && beforeHit > 130 && g.baseHp <= 130 && g.baseHp > 0) {
                   g.criticalAnnounced = true; g.banner = "移動拠点 危険状態"; g.bannerTime = 1.6; g.flashOverlay = Math.max(g.flashOverlay, .12);
@@ -14783,14 +14950,34 @@ export function AshfallGame() {
         resumeBattleAudioLoops(g);
 
         for (const p of g.particles) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 180 * dt; }
-        g.particles = g.particles.filter((p) => p.life > 0);
+        compactActiveRenderObjects(
+          g.particles,
+          g.renderObjectPools.particles,
+          particleIsActive,
+        );
         for (const d of g.damageTexts) { d.life -= dt; d.y -= dt * 23; }
-        g.damageTexts = g.damageTexts.filter((d) => d.life > 0);
+        compactActiveRenderObjects(
+          g.damageTexts,
+          g.renderObjectPools.damageTexts,
+          damageTextIsActive,
+        );
         for (const shot of g.shots) shot.life -= dt;
-        g.shots = g.shots.filter((shot) => shot.life > 0);
-        g.particles = capRenderArray(g.particles, "particles") as Particle[];
-        g.shots = capRenderArray(g.shots, "shots") as Shot[];
-        g.damageTexts = capRenderArray(g.damageTexts, "damageTexts") as DamageText[];
+        compactActiveRenderObjects(
+          g.shots,
+          g.renderObjectPools.shots,
+          shotIsActive,
+        );
+        capRenderObjectsInPlace(
+          g.particles,
+          g.renderObjectPools.particles,
+          Math.max(96, Math.round(RENDER_ARRAY_LIMITS.particles * g.graphicsEffectDensity)),
+        );
+        capRenderObjectsInPlace(g.shots, g.renderObjectPools.shots, RENDER_ARRAY_LIMITS.shots);
+        capRenderObjectsInPlace(
+          g.damageTexts,
+          g.renderObjectPools.damageTexts,
+          RENDER_ARRAY_LIMITS.damageTexts,
+        );
 
         dispatchSituationalBattleBarks(g);
         if (!g.survivalRun) dispatchBattleStoryEvents(g);
@@ -14891,6 +15078,13 @@ export function AshfallGame() {
           });
         }
       }
+      }
+      if (!cadence.shouldRender) {
+        requestFrame();
+        return;
+      }
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = graphicsProfile.smoothingQuality as ImageSmoothingQuality;
 
       drawWorld(
         ctx,
@@ -14899,6 +15093,8 @@ export function AshfallGame() {
         spriteRefs.current,
         stageObjectRefs.current,
         enemyBaseSpriteRef.current,
+        staticBattlefieldCacheRef.current,
+        graphicsProfile,
         false,
       );
       performanceCounters.renderFrames += 1;
@@ -15012,11 +15208,40 @@ export function AshfallGame() {
           }));
         }
       }
-      frame = requestAnimationFrame(loop);
+      requestFrame();
     };
-    frame = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(frame);
-  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, stopMusic, stopSfx, syncMusicMode]);
+    const suspendFrames = () => {
+      resetRuntimeFrameSchedule(frameSchedule);
+      if (frame === null) return;
+      cancelAnimationFrame(frame);
+      runtimePerformanceRef.current.rafCancellations += 1;
+      frame = null;
+    };
+    const resumeFrames = () => {
+      if (pageHiddenRef.current || document.visibilityState === "hidden") return;
+      const now = performance.now();
+      frameSchedule = resetRuntimeFrameSchedule(frameSchedule, now);
+      gameRef.current.last = now;
+      requestFrame();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") suspendFrames();
+      else resumeFrames();
+    };
+    const onPageHide = () => suspendFrames();
+    const onPageShow = () => resumeFrames();
+    document.addEventListener("visibilitychange", onVisibilityChange, { passive: true });
+    window.addEventListener("pagehide", onPageHide, { passive: true });
+    window.addEventListener("pageshow", onPageShow, { passive: true });
+    requestFrame();
+    return () => {
+      active = false;
+      suspendFrames();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
@@ -15213,6 +15438,23 @@ export function AshfallGame() {
             <label><span>SE・戦闘ボイス <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} data-volume-kind="sfx" data-audio-unlock-control="true" aria-label="SE・戦闘ボイス音量" aria-valuetext={`${Math.round(campaignSave.settings.sfxVolume * 100)}%${campaignSave.settings.sfxVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit)} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
             <div><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit)}>テスト音を鳴らす</button></div>
             <p className="audio-troubleshooting">成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。</p>
+          </section>
+          <section className="pause-graphics" aria-label="描画品質設定">
+            <span><b>描画品質</b><small>戦闘結果は変えず、描画負荷だけを調整</small></span>
+            <button
+              data-graphics-quality-control="true"
+              data-graphics-quality-requested={campaignSave.settings.graphicsQuality}
+              onClick={cycleGraphicsQuality}
+            >
+              {campaignSave.settings.graphicsQuality === "high"
+                ? "High"
+                : campaignSave.settings.graphicsQuality === "power-save"
+                  ? "省電力"
+                  : "Auto"}
+              <small>
+                {graphicsProfileView.renderHz}fps上限 / DPR {graphicsProfileView.dprCap}
+              </small>
+            </button>
           </section>
           {!isSurvivalBattle && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
           {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "作戦から撤退しますか？"}</h3><p>{isSurvivalBattle ? "完了済みwaveの報酬を一括保存してrunを終了します。" : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}

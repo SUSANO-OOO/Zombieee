@@ -786,6 +786,7 @@ test("default save is versioned and contains initial progression, selection, and
     sfxVolume: 0.8,
     reducedMotion: false,
     battleEventMode: "first-time",
+    graphicsQuality: "auto",
   });
 });
 
@@ -928,6 +929,7 @@ test("migration accepts schema-less and v0 aliases, derives unlocks, and tolerat
     sfxVolume: 0.6,
     reducedMotion: true,
     battleEventMode: "first-time",
+    graphicsQuality: "auto",
   });
 });
 
@@ -958,6 +960,7 @@ test("migration repairs malformed fields without crashing or removing mandatory 
     sfxVolume: 0,
     reducedMotion: false,
     battleEventMode: "first-time",
+    graphicsQuality: "auto",
   });
 });
 
@@ -1003,7 +1006,11 @@ test("schema v2 to v4 migration is idempotent and preserves progress, receipts, 
   assert.equal(migrated.caps, reorganizeLegacyCaps(schema2.supplies).nextCaps);
   assert.equal(migrated.supplies, migrated.caps);
   assert.equal(migrated.lastSelectedStageId, schema2.lastSelectedStageId);
-  assert.deepEqual(migrated.settings, { ...schema2.settings, battleEventMode: "first-time" });
+  assert.deepEqual(migrated.settings, {
+    ...schema2.settings,
+    battleEventMode: "first-time",
+    graphicsQuality: "auto",
+  });
   assert.deepEqual(migrated.readStoryEventIds, ["prologue-opening", "stage-nishijin-pre"]);
   assert.equal(migrated.autoSkipReadStory, true);
   assert.deepEqual(migrated.ownership, [
@@ -1073,6 +1080,7 @@ test("schema v3 migrates a fully silent legacy audio configuration once, while v
     sfxVolume: 0.8,
     reducedMotion: false,
     battleEventMode: "first-time",
+    graphicsQuality: "auto",
   });
 
   const currentSilent = migrateCampaignSave({
@@ -1086,6 +1094,7 @@ test("schema v3 migrates a fully silent legacy audio configuration once, while v
     sfxVolume: 0,
     reducedMotion: false,
     battleEventMode: "first-time",
+    graphicsQuality: "auto",
   });
 });
 
@@ -1155,7 +1164,11 @@ test("serialization round-trips stars, rewards, unlocks, selection, and settings
   let save = applyStageResult(createDefaultCampaignSave(), STAGE_1, { resultId: "roundtrip-stage-1", won: true, baseHp: 90, baseMaxHp: 100 });
   save = selectCampaignStage(save, STAGE_2);
   const revisionBeforeSettings = save.revision;
-  save = updateCampaignSettings(save, { bgmEnabled: false, sfxVolume: 0.25 });
+  save = updateCampaignSettings(save, {
+    bgmEnabled: false,
+    sfxVolume: 0.25,
+    graphicsQuality: "power-save",
+  });
   const serialized = serializeCampaignSave(save);
   const restored = deserializeCampaignSave(serialized);
 
@@ -1171,6 +1184,7 @@ test("serialization round-trips stars, rewards, unlocks, selection, and settings
   assert.equal(restored.lastSelectedStageId, STAGE_2);
   assert.equal(restored.settings.bgmEnabled, false);
   assert.equal(restored.settings.sfxVolume, 0.25);
+  assert.equal(restored.settings.graphicsQuality, "power-save");
   assert.equal(restored.revision, revisionBeforeSettings + 1);
   assert.equal(Number.isFinite(Date.parse(restored.updatedAt)), true);
 });
@@ -1198,6 +1212,7 @@ test("battle event mode migrates safely and round-trips without touching progres
   assert.equal(deserializeCampaignSave(serializeCampaignSave(showAll)).settings.battleEventMode, "all");
   assert.equal(updateStoryPlaybackSettings(showAll, { battleEventMode: "invalid" }).settings.battleEventMode, "all");
   assert.equal(migrateCampaignSave({ schemaVersion: 4, settings: { battleEventMode: "invalid" } }).settings.battleEventMode, "first-time");
+  assert.equal(migrateCampaignSave({ schemaVersion: 13, settings: { graphicsQuality: "invalid" } }).settings.graphicsQuality, "auto");
 });
 
 test("read tracking and read-only auto-skip preferences update without erasing campaign progress", () => {
