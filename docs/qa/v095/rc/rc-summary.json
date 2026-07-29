@@ -1,9 +1,9 @@
 {
   "evidenceVersion": 1,
   "version": "0.9.5-rc",
-  "generatedAt": "2026-07-29T22:54:26.624Z",
+  "generatedAt": "2026-07-29T22:58:27.208Z",
   "branch": "codex/0.9.5-rc",
-  "sourceHeadSha": "9c576b1acb89c5b05a47213fa0c8f450b8d6136c",
+  "sourceHeadSha": "277047e89db423523c5547d57c3aca4de087b3e9",
   "integrationBaseSha": "9c576b1acb89c5b05a47213fa0c8f450b8d6136c",
   "animationEvidence": {
     "units": [
