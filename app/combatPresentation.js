@@ -54,6 +54,7 @@ export const COMBAT_CLIP_FALLBACKS = Object.freeze({
 export const WEAPON_PROFILE_IDS = Object.freeze([
   "unarmed",
   "blunt",
+  "crowbar",
   "chainsaw",
   "handgun",
   "rifle",
@@ -66,6 +67,15 @@ export const WEAPON_PROFILE_IDS = Object.freeze([
   "grenade",
   "dual-katana",
   "bite",
+]);
+
+export const REPRESENTATIVE_SIX_KINDS = Object.freeze([
+  "scout",
+  "gunner",
+  "crazy-king",
+  "tky",
+  "mrs-chiha",
+  "mayo-chan",
 ]);
 
 const frame = (spriteState, durationSeconds, events = []) => ({
@@ -244,10 +254,52 @@ const MRS_CHIHA_LAUNCHER_BASH = clip([
 ]);
 
 const MANUAL_ABILITY_SPECIAL_CLIPS = {
+  scout: clip([
+    frame("attack-a", .09, [{ type: "intercept-brace", at: 0 }]),
+    frame("walk-a", .06, [{ type: "intercept-dash", at: 0 }]),
+    frame("attack-b", .09, [{ type: "intercept-impact", at: .09 }]),
+    frame("attack-a", .08, [{ type: "intercept-recover", at: .02 }]),
+    frame("idle", .06, [{ type: "intercept-ready", at: .06 }]),
+  ], { movement: true }),
+  gunner: clip([
+    frame("attack-a", .18, [{ type: "suppression-aim", at: .02 }]),
+    frame("attack-b", .074, [
+      { type: "suppression-muzzle", at: 0, shotIndex: 0 },
+      { type: "suppression-hit", at: .055, shotIndex: 0 },
+    ]),
+    frame("attack-a", .074, [
+      { type: "suppression-muzzle", at: 0, shotIndex: 1 },
+      { type: "suppression-hit", at: .055, shotIndex: 1 },
+    ]),
+    frame("attack-b", .074, [
+      { type: "suppression-muzzle", at: 0, shotIndex: 2 },
+      { type: "suppression-hit", at: .055, shotIndex: 2 },
+    ]),
+    frame("attack-a", .074, [
+      { type: "suppression-muzzle", at: 0, shotIndex: 3 },
+      { type: "suppression-hit", at: .055, shotIndex: 3 },
+    ]),
+    frame("attack-b", .074, [
+      { type: "suppression-muzzle", at: 0, shotIndex: 4 },
+      { type: "suppression-hit", at: .055, shotIndex: 4 },
+    ]),
+    frame("attack-a", .07, [{ type: "suppression-recover", at: .02 }]),
+    frame("idle", .09, [{ type: "suppression-ready", at: .09 }]),
+  ]),
+  "crazy-king": clip([
+    frame("attack-a", .14, [{ type: "chainsaw-prime", at: .02 }]),
+    frame("attack-b", .16, [{ type: "chainsaw-rev", at: .03 }]),
+    frame("attack-a", .15, [{ type: "chainsaw-engage", at: .15 }]),
+    frame("attack-b", .08, [{ type: "chainsaw-recover", at: .02 }]),
+    frame("idle", .1, [{ type: "chainsaw-overdrive-ready", at: .1 }]),
+  ]),
   tky: clip([
-    frame("attack-a", .2, [{ type: "light-blade-charge", at: 0 }]),
-    frame("attack-b", .28, [{ type: "light-blade-extend", at: 0 }]),
-    frame("attack-b", .14, [{ type: "light-blade-release", at: .14 }]),
+    frame("attack-a", .18, [{ type: "light-blade-charge", at: 0 }]),
+    frame("attack-b", .18, [{ type: "light-blade-extend", at: 0 }]),
+    frame("attack-a", .14, [{ type: "light-blade-sweep", at: .02 }]),
+    frame("attack-b", .12, [{ type: "light-blade-release", at: .12 }]),
+    frame("attack-a", .07, [{ type: "light-blade-recover", at: .02 }]),
+    frame("idle", .09, [{ type: "light-blade-ready", at: .09 }]),
   ]),
   "mrs-chiha": clip([
     frame("attack-a", .28, [{ type: "launcher-retrieve", at: .02 }]),
@@ -256,18 +308,157 @@ const MANUAL_ABILITY_SPECIAL_CLIPS = {
     frame("attack-b", .22, [{ type: "salvo-shot", at: .22, shotIndex: 1 }]),
     frame("attack-a", .22, [{ type: "salvo-shot", at: .22, shotIndex: 2 }]),
     frame("attack-b", .22, [{ type: "salvo-shot", at: .22, shotIndex: 3 }]),
+    frame("attack-b", .18, [{ type: "salvo-final-impact", at: .18 }]),
     frame("attack-a", .18, [{ type: "launcher-stow", at: .02 }]),
-    frame("idle", .12),
+    frame("idle", .12, [{ type: "launcher-ready", at: .12 }]),
   ]),
   "miyamoto-musashi": clip([
     frame("attack-a", .22, [{ type: "cross-guard-ready", at: .02 }]),
     frame("attack-b", .36, [{ type: "cross-guard-hold", at: 0 }]),
   ]),
   "mayo-chan": clip([
-    frame("attack-a", .12, [{ type: "feral-surge", at: 0 }]),
-    frame("attack-b", .16, [{ type: "infection-bloom", at: .04 }]),
-    frame("walk-a", .08, [{ type: "feral-rush", at: 0 }]),
+    frame("attack-a", .1, [{ type: "feral-surge", at: 0 }]),
+    frame("attack-b", .12, [{ type: "infection-bloom", at: .04 }]),
+    frame("walk-a", .08, [{ type: "feral-rush", at: .08 }]),
+    frame("attack-b", .07, [{ type: "feral-recover", at: .02 }]),
+    frame("idle", .09, [{ type: "feral-ready", at: .09 }]),
   ], { movement: true }),
+};
+
+const REPRESENTATIVE_CLIP_OVERRIDES = {
+  scout: {
+    idle: clip([
+      frame("idle", .2),
+      frame("idle", .16, [{ type: "ready-shift", at: .08 }]),
+    ], { loop: true }),
+    move: clip([
+      frame("walk-a", .075, [{ type: "footstep", at: .055 }]),
+      frame("walk-b", .075),
+      frame("walk-a", .065, [{ type: "gear-rattle", at: .04 }]),
+    ], { loop: true, movement: true }),
+    "wind-up": clip([
+      frame("attack-a", .105, [{ type: "crowbar-ready", at: .015 }]),
+    ]),
+    active: clip([
+      frame("attack-b", .075, [{ type: "crowbar-impact", at: 0 }, { type: "weapon-vfx", at: 0 }]),
+    ]),
+    recovery: clip([
+      frame("attack-a", .06),
+      frame("idle", .065, [{ type: "reacquire", at: .03 }]),
+    ], { recovery: true }),
+  },
+  gunner: {
+    idle: clip([
+      frame("idle", .28),
+      frame("idle", .24, [{ type: "aim-check", at: .1 }]),
+    ], { loop: true }),
+    move: clip([
+      frame("walk-a", .13, [{ type: "footstep", at: .095 }]),
+      frame("walk-b", .14),
+      frame("walk-a", .12),
+    ], { loop: true, movement: true }),
+    "wind-up": clip([
+      frame("attack-a", .11, [{ type: "machine-gun-shoulder", at: .02 }]),
+    ]),
+    active: MACHINE_GUN_ACTIVE,
+    recovery: MACHINE_GUN_RECOVERY,
+    reload: clip([
+      frame("attack-a", .13, [{ type: "feed-cover-open", at: .025 }]),
+      frame("attack-b", .18, [{ type: "belt-seat", at: .08 }]),
+      frame("attack-a", .13, [{ type: "feed-cover-lock", at: .055 }]),
+      frame("idle", .1, [{ type: "reload-ready", at: .045 }]),
+    ], { recovery: true }),
+  },
+  "crazy-king": {
+    idle: clip([
+      frame("idle", .2),
+      frame("idle", .18, [{ type: "engine-idle", at: .06 }]),
+    ], { loop: true }),
+    move: clip([
+      frame("walk-a", .105, [{ type: "footstep-heavy", at: .075 }]),
+      frame("walk-b", .115),
+      frame("walk-a", .095),
+    ], { loop: true, movement: true }),
+    "wind-up": clip([
+      frame("attack-a", .12, [{ type: "chainsaw-lift", at: .015 }]),
+    ]),
+    active: clip([
+      frame("attack-b", .09, [
+        { type: "chainsaw-contact", at: 0 },
+        { type: "weapon-vfx", at: 0 },
+      ]),
+    ]),
+    recovery: clip([
+      frame("attack-b", .055, [{ type: "chainsaw-extract", at: .025 }]),
+      frame("attack-a", .065),
+      frame("idle", .065, [{ type: "engine-settle", at: .03 }]),
+    ], { recovery: true }),
+  },
+  tky: {
+    idle: clip([
+      frame("idle", .3),
+      frame("idle", .22, [{ type: "blade-hum", at: .08 }]),
+    ], { loop: true }),
+    move: clip([
+      frame("walk-a", .105, [{ type: "footstep", at: .075 }]),
+      frame("walk-b", .115),
+      frame("walk-a", .1),
+    ], { loop: true, movement: true }),
+    "wind-up": clip([
+      frame("attack-a", .12, [{ type: "plasma-guard", at: .02 }]),
+    ]),
+    active: clip([
+      frame("attack-b", .08, [{ type: "blade-first-contact", at: 0 }, { type: "weapon-vfx", at: 0 }]),
+      frame("attack-a", .08, [{ type: "blade-second-contact", at: .08 }]),
+    ]),
+    recovery: clip([
+      frame("attack-b", .08, [{ type: "blade-decelerate", at: .02 }]),
+      frame("idle", .09),
+    ], { recovery: true }),
+  },
+  "mrs-chiha": {
+    idle: clip([
+      frame("idle", .31),
+      frame("idle", .25, [{ type: "launcher-balance", at: .08 }]),
+    ], { loop: true }),
+    move: clip([
+      frame("walk-a", .14, [{ type: "footstep", at: .1 }]),
+      frame("walk-b", .15),
+      frame("walk-a", .13),
+    ], { loop: true, movement: true }),
+    active: MRS_CHIHA_ATTACK_ACTIVE,
+    recovery: MRS_CHIHA_ATTACK_RECOVERY,
+    "weapon-cycle": clip([
+      frame("attack-b", .14, [{ type: "cylinder-index", at: .04 }]),
+      frame("attack-a", .12, [{ type: "launcher-check", at: .055 }]),
+      frame("idle", .1),
+    ], { recovery: true }),
+  },
+  "mayo-chan": {
+    idle: clip([
+      frame("idle", .18),
+      frame("idle", .14, [{ type: "alert-sniff", at: .055 }]),
+    ], { loop: true }),
+    move: clip([
+      frame("walk-a", .075, [{ type: "paw-contact", at: .05 }]),
+      frame("walk-b", .08),
+      frame("walk-a", .07, [{ type: "paw-contact", at: .05 }]),
+    ], { loop: true, movement: true }),
+    "wind-up": clip([
+      frame("attack-a", .075, [{ type: "bite-crouch", at: .015 }]),
+    ]),
+    active: clip([
+      frame("attack-b", .08, [{ type: "bite-contact", at: 0 }, { type: "weapon-vfx", at: 0 }]),
+    ]),
+    recovery: clip([
+      frame("walk-a", .055),
+      frame("idle", .075, [{ type: "bite-reset", at: .03 }]),
+    ], { recovery: true }),
+    retreat: clip([
+      frame("walk-a", .065, [{ type: "retreat-paw", at: .045 }]),
+      frame("walk-b", .07),
+    ], { loop: true, movement: true }),
+  },
 };
 
 const PRESENTATION_KINDS = Object.freeze([
@@ -336,19 +527,12 @@ const BODY_SCALE_BY_KIND = Object.freeze({
 function clipsForKind(kind) {
   const bodyScale = BODY_SCALE_BY_KIND[kind] ?? 1;
   return Object.fromEntries(COMBAT_ANIMATION_STATES.map((state) => {
-    const source = kind === "gunner" && state === "active"
-      ? MACHINE_GUN_ACTIVE
-      : kind === "gunner" && state === "recovery"
-        ? MACHINE_GUN_RECOVERY
-        : kind === "mrs-chiha" && state === "active"
-          ? MRS_CHIHA_ATTACK_ACTIVE
-          : kind === "mrs-chiha" && state === "recovery"
-            ? MRS_CHIHA_ATTACK_RECOVERY
-            : state === "special" && MANUAL_ABILITY_SPECIAL_CLIPS[kind]
-              ? MANUAL_ABILITY_SPECIAL_CLIPS[kind]
-              : OPTIONAL_CLIPS[state]
-                ?? STANDARD_CLIPS[COMBAT_CLIP_FALLBACKS[state]]
-                ?? STANDARD_CLIPS[state];
+    const source = REPRESENTATIVE_CLIP_OVERRIDES[kind]?.[state]
+      ?? (state === "special" && MANUAL_ABILITY_SPECIAL_CLIPS[kind]
+        ? MANUAL_ABILITY_SPECIAL_CLIPS[kind]
+        : OPTIONAL_CLIPS[state]
+          ?? STANDARD_CLIPS[COMBAT_CLIP_FALLBACKS[state]]
+          ?? STANDARD_CLIPS[state]);
     return [state, {
       ...source,
       bodyScale,
@@ -392,6 +576,18 @@ export const WEAPON_PROFILES = deepFreeze({
     impact: "debris-burst",
     impactRadius: 15,
     hitStopSeconds: .052,
+    recoil: 0,
+    casing: false,
+    damageWeights: [1],
+    shotOffsetsSeconds: [0],
+  },
+  crowbar: {
+    id: "crowbar",
+    trail: "hooked-crowbar-arc",
+    trailColor: "#7ee7e4",
+    impact: "crowbar-snap",
+    impactRadius: 11,
+    hitStopSeconds: .038,
     recoil: 0,
     casing: false,
     damageWeights: [1],
@@ -546,7 +742,7 @@ export const WEAPON_PROFILES = deepFreeze({
 
 export const UNIT_WEAPON_PROFILE = deepFreeze({
   brawler: "unarmed",
-  scout: "handgun",
+  scout: "crowbar",
   ranger: "rifle",
   brute: "blunt",
   gunner: "machine-gun",
@@ -565,21 +761,21 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
 
 export const COMBAT_WEAPON_ANCHORS = deepFreeze({
   brawler: { forward: 13, up: 34 },
-  scout: { forward: 18, up: 39 },
+  scout: { forward: 25, up: 34 },
   ranger: { forward: 22, up: 42 },
   medic: { forward: 18, up: 38 },
   brute: { forward: 18, up: 31 },
-  gunner: { forward: 25, up: 39 },
+  gunner: { forward: 31, up: 40 },
   guardian: { forward: 16, up: 34 },
   engineer: { forward: 20, up: 39 },
-  "crazy-king": { forward: 20, up: 29 },
+  "crazy-king": { forward: 31, up: 28 },
   kumaverson: { forward: 18, up: 32 },
   babayaga: { forward: 23, up: 43 },
   zakimiya: { forward: 17, up: 32 },
-  tky: { forward: 23, up: 43 },
-  "mrs-chiha": { forward: 23, up: 43 },
+  tky: { forward: 32, up: 44 },
+  "mrs-chiha": { forward: 34, up: 42 },
   "miyamoto-musashi": { forward: 19, up: 34 },
-  "mayo-chan": { forward: 13, up: 24 },
+  "mayo-chan": { forward: 18, up: 24 },
   spitter: { forward: 18, up: 30 },
   ooze: { forward: 20, up: 27 },
   "choir-knot": { forward: 22, up: 36 },
@@ -617,7 +813,7 @@ export function animationClipFor(kind, state) {
     ?? profile.clips.idle;
 }
 
-function combatProceduralPose(state, progress) {
+function semanticProceduralPose(state, progress) {
   const p = Math.max(0, Math.min(1, Number(progress) || 0));
   const pulse = Math.sin(Math.PI * p);
   switch (state) {
@@ -649,6 +845,75 @@ function combatProceduralPose(state, progress) {
   }
 }
 
+function representativeProceduralPose(kind, state, progress) {
+  if (!REPRESENTATIVE_SIX_KINDS.includes(kind)) return null;
+  const p = Math.max(0, Math.min(1, Number(progress) || 0));
+  const pulse = Math.sin(Math.PI * p);
+  const stride = Math.sin(Math.PI * p * 2);
+  const rapid = Math.sin(Math.PI * p * 10);
+  if (kind === "scout") {
+    if (state === "idle") return { offsetX: -.35 * pulse, offsetY: 0, rotationRadians: -.008 * pulse, scaleX: 1 + .008 * pulse, scaleY: 1 - .012 * pulse, opacity: 1 };
+    if (state === "move") return { offsetX: 2.2 * stride, offsetY: 0, rotationRadians: .042 + .012 * stride, scaleX: 1.035, scaleY: .965, opacity: 1 };
+    if (state === "wind-up") return { offsetX: -2.8 * pulse, offsetY: 0, rotationRadians: -.07 * pulse, scaleX: 1.02, scaleY: .98, opacity: 1 };
+    if (state === "active") return { offsetX: 5.4 * (1 - p), offsetY: 0, rotationRadians: .09 * (1 - p), scaleX: 1.055, scaleY: .95, opacity: 1 };
+    if (state === "recovery") return { offsetX: 1.8 * (1 - p), offsetY: 0, rotationRadians: .035 * (1 - p), scaleX: 1.015, scaleY: .985, opacity: 1 };
+    if (state === "special") return { offsetX: 6.5 * pulse, offsetY: 0, rotationRadians: .08 * pulse, scaleX: 1.065, scaleY: .94, opacity: 1 };
+  }
+  if (kind === "gunner") {
+    if (state === "idle") return { offsetX: 0, offsetY: 0, rotationRadians: -.006 * pulse, scaleX: 1, scaleY: 1 - .008 * pulse, opacity: 1 };
+    if (state === "move") return { offsetX: .65 * stride, offsetY: 0, rotationRadians: .012 * stride, scaleX: 1.005, scaleY: .995, opacity: 1 };
+    if (state === "wind-up") return { offsetX: -1.2 * (1 - p), offsetY: 0, rotationRadians: -.02 * (1 - p), scaleX: 1, scaleY: 1, opacity: 1 };
+    if (state === "active") return { offsetX: -3.4 * Math.max(0, rapid), offsetY: 0, rotationRadians: -.035 * Math.max(0, rapid), scaleX: 1.012, scaleY: .988, opacity: 1 };
+    if (state === "recovery") return { offsetX: -1.5 * (1 - p), offsetY: 0, rotationRadians: -.018 * (1 - p), scaleX: 1, scaleY: 1, opacity: 1 };
+    if (state === "special") return { offsetX: -3.8 * Math.max(0, rapid), offsetY: 0, rotationRadians: -.04 * Math.max(0, rapid), scaleX: 1.018, scaleY: .982, opacity: 1 };
+  }
+  if (kind === "crazy-king") {
+    if (state === "idle") return { offsetX: .35 * rapid, offsetY: 0, rotationRadians: .008 * rapid, scaleX: 1.005, scaleY: .995, opacity: 1 };
+    if (state === "move") return { offsetX: 1.45 * stride, offsetY: 0, rotationRadians: .025 + .016 * stride, scaleX: 1.025, scaleY: .975, opacity: 1 };
+    if (state === "wind-up") return { offsetX: -2.2 * pulse, offsetY: 0, rotationRadians: -.065 * pulse, scaleX: 1.025, scaleY: .975, opacity: 1 };
+    if (state === "active") return { offsetX: 4.6 * (1 - p), offsetY: 0, rotationRadians: .075 * (1 - p), scaleX: 1.045, scaleY: .955, opacity: 1 };
+    if (state === "recovery") return { offsetX: 2 * (1 - p), offsetY: 0, rotationRadians: .035 * (1 - p), scaleX: 1.02, scaleY: .98, opacity: 1 };
+    if (state === "special") return { offsetX: .8 * rapid + 2.4 * p, offsetY: 0, rotationRadians: .018 * rapid + .035 * p, scaleX: 1.025 + .02 * pulse, scaleY: .975, opacity: 1 };
+  }
+  if (kind === "tky") {
+    if (state === "idle") return { offsetX: 0, offsetY: 0, rotationRadians: -.006 * pulse, scaleX: 1 + .008 * pulse, scaleY: 1 - .01 * pulse, opacity: 1 };
+    if (state === "move") return { offsetX: 1.1 * stride, offsetY: 0, rotationRadians: .018 * stride, scaleX: 1.012, scaleY: .988, opacity: 1 };
+    if (state === "wind-up") return { offsetX: -2.1 * pulse, offsetY: 0, rotationRadians: -.055 * pulse, scaleX: 1.02, scaleY: .98, opacity: 1 };
+    if (state === "active") return { offsetX: 4.2 * pulse, offsetY: 0, rotationRadians: .11 * stride, scaleX: 1.045, scaleY: .955, opacity: 1 };
+    if (state === "recovery") return { offsetX: 1.5 * (1 - p), offsetY: 0, rotationRadians: .045 * (1 - p), scaleX: 1.015, scaleY: .985, opacity: 1 };
+    if (state === "special") {
+      const release = Math.max(0, (p - .55) / .45);
+      return { offsetX: 5.2 * release, offsetY: 0, rotationRadians: .115 * release, scaleX: 1 + .065 * pulse, scaleY: 1 - .045 * pulse, opacity: 1 };
+    }
+  }
+  if (kind === "mrs-chiha") {
+    if (state === "idle") return { offsetX: 0, offsetY: 0, rotationRadians: -.004 * pulse, scaleX: 1, scaleY: 1 - .008 * pulse, opacity: 1 };
+    if (state === "move") return { offsetX: .7 * stride, offsetY: 0, rotationRadians: .012 * stride, scaleX: 1.005, scaleY: .995, opacity: 1 };
+    if (state === "wind-up") return { offsetX: -1.8 * pulse, offsetY: 0, rotationRadians: -.025 * pulse, scaleX: 1.012, scaleY: .988, opacity: 1 };
+    if (state === "active") return { offsetX: -3.8 * Math.max(0, Math.sin(Math.PI * p * 2)), offsetY: 0, rotationRadians: -.04 * pulse, scaleX: 1.02, scaleY: .98, opacity: 1 };
+    if (state === "recovery") return { offsetX: -1.6 * (1 - p), offsetY: 0, rotationRadians: -.02 * (1 - p), scaleX: 1.008, scaleY: .992, opacity: 1 };
+    if (state === "special") {
+      const salvoPulse = Math.max(0, Math.sin(Math.PI * p * 8));
+      return { offsetX: -3.6 * salvoPulse, offsetY: 0, rotationRadians: -.038 * salvoPulse, scaleX: 1.015, scaleY: .985, opacity: 1 };
+    }
+  }
+  if (kind === "mayo-chan") {
+    if (state === "idle") return { offsetX: .25 * pulse, offsetY: 0, rotationRadians: .006 * pulse, scaleX: 1 + .018 * pulse, scaleY: 1 - .018 * pulse, opacity: 1 };
+    if (state === "move") return { offsetX: 2.7 * stride, offsetY: 0, rotationRadians: .055 * stride, scaleX: 1.065, scaleY: .94, opacity: 1 };
+    if (state === "wind-up") return { offsetX: -2.4 * pulse, offsetY: 0, rotationRadians: -.075 * pulse, scaleX: 1.04, scaleY: .91, opacity: 1 };
+    if (state === "active") return { offsetX: 5.6 * (1 - p), offsetY: 0, rotationRadians: .08 * (1 - p), scaleX: 1.08, scaleY: .91, opacity: 1 };
+    if (state === "recovery") return { offsetX: 1.4 * (1 - p), offsetY: 0, rotationRadians: .035 * (1 - p), scaleX: 1.025, scaleY: .975, opacity: 1 };
+    if (state === "special") return { offsetX: 3.8 * pulse, offsetY: 0, rotationRadians: .07 * pulse, scaleX: 1.09, scaleY: .9, opacity: 1 };
+    if (state === "retreat") return { offsetX: -2.8 * stride, offsetY: 0, rotationRadians: -.06 + .025 * stride, scaleX: 1.07, scaleY: .93, opacity: 1 };
+  }
+  return null;
+}
+
+function combatProceduralPose(kind, state, progress) {
+  return representativeProceduralPose(kind, state, progress)
+    ?? semanticProceduralPose(state, progress);
+}
+
 export function sampleAnimationClip(kind, state, elapsedSeconds = 0) {
   const current = animationClipFor(kind, state);
   const elapsed = Math.max(0, Number(elapsedSeconds) || 0);
@@ -678,6 +943,7 @@ export function sampleAnimationClip(kind, state, elapsedSeconds = 0) {
           ? state
           : COMBAT_CLIP_FALLBACKS[state] ?? "idle",
         pose: Object.freeze(combatProceduralPose(
+          kind,
           state,
           current.durationSeconds > 0 ? local / current.durationSeconds : 0,
         )),

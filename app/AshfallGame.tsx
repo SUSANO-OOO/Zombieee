@@ -234,8 +234,10 @@ import {
   supportCohesion,
 } from "./combatLifecycle.js";
 import {
+  REPRESENTATIVE_SIX_KINDS,
   advanceCombatAnimationRuntime,
   advancePendingWeaponHits,
+  animationClipFor,
   attackPresentationDuration,
   combatFacingDirection,
   combatWeaponAnchor,
@@ -457,6 +459,7 @@ import {
   beginManualAbility,
   canActivateManualAbility,
   createManualAbilityRuntime,
+  gunnerSuppressionVfxRounds,
   layoutManualAbilityIcons,
   manualAbilityCheckpointCooldown,
   manualAbilityLocksNormalAction,
@@ -731,6 +734,8 @@ type Fighter = {
   };
   abilityCooldown: number;
   abilityWindup: number;
+  attackWindup: number;
+  attackWindupTargetId: string | number | null;
   attackSequence: number;
   damageReductionRemaining: number;
   damageReductionMultiplier: number;
@@ -1771,6 +1776,21 @@ function weaponAnchorForTarget(
   });
 }
 
+function beginRepresentativeNormalAttackWindup(
+  fighter: Fighter,
+  targetId: string | number,
+) {
+  if (fighter.side !== "human" || !REPRESENTATIVE_SIX_KINDS.includes(fighter.kind)) return false;
+  if (fighter.attackWindupTargetId === targetId) {
+    fighter.attackWindupTargetId = null;
+    return false;
+  }
+  fighter.attackWindup = animationClipFor(fighter.kind, "wind-up").durationSeconds;
+  fighter.attackWindupTargetId = targetId;
+  fighter.aiMoveDirection = 0;
+  return true;
+}
+
 function scheduleMrsChihaLauncherAudio(
   g: Game,
   fighter: Pick<Fighter, "id" | "kind" | "x" | "attackSequence">,
@@ -2283,6 +2303,8 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     }),
     abilityCooldown: enemyInitialAbilityCooldownFor(kind),
     abilityWindup: 0,
+    attackWindup: 0,
+    attackWindupTargetId: null,
     attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
     ...createUnitRoleRuntime(),
@@ -2371,7 +2393,7 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
       y: deployment.y,
     }),
     navigationRecovery: createNavigationRecoveryState({ x: deployment.x, y: deployment.y, lane: assignedLane }),
-    abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
+    abilityCooldown: 0, abilityWindup: 0, attackWindup: 0, attackWindupTargetId: null, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
     manualAbility,
     mayoBiteSlowRemaining: 0,
@@ -3515,7 +3537,7 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     ? 0
     : f.manualAbility?.phase === "windup"
       ? Math.max(0, manualAbilityDefinition.windupSeconds - f.manualAbility.windupRemaining)
-      : f.kind === "mrs-chiha"
+      : f.manualAbility?.phase === "recovery" || f.kind === "mrs-chiha"
         ? Math.max(0, f.manualAbility?.abilityElapsed ?? 0)
         : f.kind === "miyamoto-musashi" && f.manualAbility?.phase === "guard"
           ? manualAbilityDefinition.windupSeconds
@@ -3588,6 +3610,12 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
       f.knock >= 12 ? "hit-heavy" : "hit-light",
       Math.max(0, .12 - f.flash),
     )
+    : f.attackWindup > 0
+      ? sampleAnimationClip(
+        f.kind,
+        "wind-up",
+        Math.max(0, animationClipFor(f.kind, "wind-up").durationSeconds - f.attackWindup),
+      )
     : f.abilityWindup > 0
       ? sampleAnimationClip(f.kind, "wind-up", Math.max(0, .24 - f.abilityWindup))
       : f.attack > 0
@@ -3891,7 +3919,7 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   }
   if (effect.kind === "crazy-king") {
     ctx.save();
-    ctx.translate(effect.originX, effect.originY + 34);
+    ctx.translate(effect.originX, effect.originY);
     ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = "#ff803d";
     ctx.shadowColor = "#d43a20";
@@ -3963,26 +3991,45 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     return;
   }
   if (effect.kind === "gunner") {
-    const tail = Math.max(0, 1 - impactAge / .5);
     const direction = effect.targetX >= effect.originX ? 1 : -1;
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    ctx.globalAlpha = impactAge > 0 ? tail : .25 + charge * .42;
     ctx.lineCap = "round";
-    for (let shot = 0; shot < 5; shot += 1) {
-      const offset = (shot - 2) * 7;
-      ctx.strokeStyle = shot % 2 ? "#ffd67b" : "#f09d3f";
+    for (const round of gunnerSuppressionVfxRounds(effect.elapsed)) {
+      if (!round.visible) continue;
+      const offset = (round.salvoIndex - 2) * 7;
+      const tail = Math.max(0, 1 - round.impactAge / .5);
+      ctx.globalAlpha = round.impactAge > 0
+        ? tail * (.54 + round.travelProgress * .38)
+        : .18 + round.travelProgress * .62;
+      ctx.strokeStyle = round.salvoIndex % 2 ? "#ffd67b" : "#f09d3f";
       ctx.shadowColor = "#e2782d";
       ctx.shadowBlur = 8;
-      ctx.lineWidth = shot === 2 ? 3.5 : 2;
+      ctx.lineWidth = round.salvoIndex === 2 ? 3.5 : 2;
       ctx.beginPath();
       ctx.moveTo(effect.originX + direction * 12, effect.originY + offset);
-      ctx.lineTo(effect.targetX + direction * (38 + shot * 8), effect.targetY + offset * 1.25);
+      ctx.lineTo(
+        effect.originX
+          + (effect.targetX - effect.originX + direction * (38 + round.salvoIndex * 8))
+          * round.travelProgress,
+        effect.originY
+          + (effect.targetY - effect.originY + offset * 1.25)
+          * round.travelProgress,
+      );
       ctx.stroke();
-      ctx.fillStyle = "#f8c35f";
-      ctx.beginPath();
-      ctx.arc(effect.targetX + direction * (shot * 8 - 16), effect.targetY + offset, 2.2, 0, Math.PI * 2);
-      ctx.fill();
+      if (round.muzzleFlash > 0) {
+        ctx.globalAlpha = round.muzzleFlash;
+        ctx.fillStyle = "#f8c35f";
+        ctx.beginPath();
+        ctx.arc(
+          effect.originX + direction * (6 + round.travelProgress * 18),
+          effect.originY - 3 + offset * .28,
+          1.8 + round.travelProgress * 1.7,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
     }
     ctx.restore();
     return;
@@ -4037,7 +4084,7 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   if (effect.kind === "mayo-chan") {
     const pulse = .72 + Math.sin(effect.elapsed * 13) * .16;
     ctx.save();
-    ctx.translate(effect.originX, effect.originY + 52);
+    ctx.translate(effect.originX, effect.originY);
     ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = `rgba(206,57,92,${pulse})`;
     ctx.shadowColor = "#b11f4c";
@@ -4071,8 +4118,8 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     ctx.lineCap = "round";
     ctx.lineWidth = 3 + charge * 5;
     ctx.beginPath();
-    ctx.moveTo(direction * 8, -45);
-    ctx.lineTo(direction * (34 + charge * 52), -54);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(direction * (34 + charge * 52), -9);
     ctx.stroke();
     if (release > 0) {
       ctx.globalAlpha = Math.max(.16, .7 - release * .48);
@@ -4080,7 +4127,7 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
       ctx.strokeStyle = "rgba(255,54,195,.24)";
       ctx.lineWidth = 17 - release * 7;
       ctx.beginPath();
-      ctx.arc(direction * 8, -28, sweepRadius, direction > 0 ? -1.02 : Math.PI - 1.02, direction > 0 ? .72 : Math.PI + .72);
+      ctx.arc(0, 8, sweepRadius, direction > 0 ? -1.02 : Math.PI - 1.02, direction > 0 ? .72 : Math.PI + .72);
       ctx.stroke();
       ctx.strokeStyle = "rgba(255,239,252,.78)";
       ctx.lineWidth = 2.4;
@@ -6146,6 +6193,12 @@ export function AshfallGame() {
   const enemyBaseSpriteRef = useRef<HTMLImageElement | null>(null);
   const gameRef = useRef<Game>(initialGame("pod", INITIAL_STAGE_ID, ["brawler", "scout", "ranger", "medic"]));
   const productionMixerRef = useRef<ReturnType<typeof createAudioMixer> | null>(null);
+  const productionCueQaLogRef = useRef<Array<{
+    cueId: string;
+    at: number;
+    x: number;
+    dedupeKey: string | null;
+  }>>([]);
   const sfxRequestGateRef = useRef(createAudioRequestGate());
   const desiredProductionSceneRef = useRef<string | null>("title");
   const battleRadioActiveRef = useRef(false);
@@ -6914,6 +6967,236 @@ export function AshfallGame() {
           y: fighter.y,
           ...fighter.animationPresentation,
         };
+      },
+      prepareRepresentativeSixProof: (kind: UnitKind) => {
+        const representativeKinds: UnitKind[] = [
+          "scout",
+          "gunner",
+          "crazy-king",
+          "tky",
+          "mrs-chiha",
+          "mayo-chan",
+        ];
+        if (!representativeKinds.includes(kind)) {
+          throw new RangeError(`Unknown representative-six proof kind: ${String(kind)}`);
+        }
+        const proof = prepareManualAbilityProof(gameRef.current, [kind]);
+        const g = gameRef.current;
+        const owner = g.fighters.find((fighter) => fighter.id === proof.ownerIds[0]);
+        const target = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.hp > 0);
+        if (!owner || !target) throw new Error(`Representative-six proof fixture unavailable: ${kind}`);
+        const proofLane: Lane = 1;
+        owner.x = 330;
+        owner.y = activeLaneCenters[proofLane];
+        owner.lane = proofLane;
+        owner.anchorLane = proofLane;
+        owner.aiMoveDirection = 0;
+        owner.cooldown = 99;
+        owner.attack = 0;
+        owner.animationPresentation = createCombatAnimationRuntime({
+          direction: "right",
+          x: owner.x,
+          y: owner.y,
+        });
+        target.x = kind === "gunner" || kind === "mrs-chiha" ? 570 : 445;
+        target.y = owner.y;
+        target.lane = proofLane;
+        target.anchorLane = proofLane;
+        target.speed = 0;
+        target.laneSpeed = 0;
+        target.damage = 0;
+        target.cooldown = 99;
+        target.combatReady = true;
+        target.gateEntering = false;
+        g.paused = false;
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        const anchor = weaponAnchorForTarget(owner, target);
+        return {
+          kind,
+          ownerId: owner.id,
+          targetId: target.id,
+          owner: { x: owner.x, y: owner.y },
+          target: { x: target.x, y: target.y },
+          anchor,
+          weaponProfile: weaponProfileForUnit(kind).id,
+        };
+      },
+      armRepresentativeSixRuntimeAttackProof: (ownerId: number) => {
+        const g = gameRef.current;
+        const owner = g.fighters.find((fighter) => (
+          fighter.id === ownerId
+          && fighter.side === "human"
+          && fighter.hp > 0
+        ));
+        const target = g.fighters.find((fighter) => fighter.side === "zombie" && fighter.hp > 0);
+        if (!owner || !target) return null;
+        g.paused = true;
+        clearRenderObjects(g.particles, g.renderObjectPools.particles);
+        clearRenderObjects(g.shots, g.renderObjectPools.shots);
+        clearRenderObjects(g.damageTexts, g.renderObjectPools.damageTexts);
+        g.pendingWeaponHits = [];
+        g.pendingAbilityAudioCues = [];
+        productionCueQaLogRef.current = [];
+        for (const candidate of g.fighters) {
+          if (candidate.side !== "zombie" || candidate.id === target.id) continue;
+          candidate.targetable = false;
+          candidate.combatReady = false;
+        }
+        const maximumDistance = Math.max(12, owner.range + target.bodyRadius - 4);
+        const minimumDistance = owner.kind === "mrs-chiha"
+          ? MANUAL_ABILITY_REGISTRY["mrs-chiha"].launcherBashRange + target.bodyRadius + 10
+          : 12;
+        const proofDistance = Math.min(
+          maximumDistance,
+          Math.max(minimumDistance, owner.range > 64 ? 145 : Math.min(30, maximumDistance)),
+        );
+        target.x = owner.x + proofDistance;
+        target.y = owner.y;
+        target.lane = owner.lane;
+        target.anchorLane = owner.lane;
+        target.maxHp = 2400;
+        target.hp = target.maxHp;
+        target.speed = 0;
+        target.laneSpeed = 0;
+        target.damage = 0;
+        target.cooldown = 99;
+        target.combatReady = true;
+        target.gateEntering = false;
+        target.targetable = true;
+        target.contained = false;
+        target.stunned = 0;
+        target.targetId = null;
+        target.retargetIn = 99;
+        owner.targetId = target.id;
+        owner.targetObjectId = null;
+        owner.retargetIn = 0;
+        owner.cooldown = 0;
+        owner.attack = 0;
+        owner.attackWindup = 0;
+        owner.attackWindupTargetId = null;
+        owner.attackVariant = null;
+        owner.weaponHeat = 0;
+        owner.overheated = false;
+        owner.aiMoveDirection = 0;
+        const anchor = weaponAnchorForTarget(owner, target);
+        const profile = weaponProfileForUnit(owner.kind);
+        const weaponEvent = owner.kind === "crazy-king" || owner.kind === "tky"
+          ? "attack"
+          : owner.kind === "mayo-chan"
+            ? "bite"
+            : owner.kind === "mrs-chiha"
+              ? "shot"
+              : null;
+        const expectedAudioCueIds = owner.kind === "mrs-chiha"
+          ? ["retrieve", "aim", "shot", "flight", "hit"]
+            .map((event) => unitAudioCueFor(owner.kind, "weapon", event))
+            .filter((cueId): cueId is string => Boolean(cueId))
+          : [
+              (weaponEvent && unitAudioCueFor(owner.kind, "weapon", weaponEvent))
+                || weaponCueForUnit(owner.kind),
+            ].filter((cueId): cueId is string => Boolean(cueId));
+        return {
+          ownerId: owner.id,
+          targetId: target.id,
+          initialAttackSequence: owner.attackSequence,
+          initialTargetHp: target.hp,
+          anchor,
+          weaponProfile: profile.id,
+          expectedAudioCueIds,
+        };
+      },
+      sampleRepresentativeSixRuntimeAttackProof: (ownerId: number) => {
+        const g = gameRef.current;
+        const owner = g.fighters.find((fighter) => (
+          fighter.id === ownerId
+          && fighter.side === "human"
+          && fighter.hp > 0
+        ));
+        const target = owner
+          ? g.fighters.find((fighter) => fighter.id === owner.targetId)
+            ?? g.fighters.find((fighter) => fighter.side === "zombie" && fighter.hp > 0)
+          : null;
+        if (!owner || !target) return null;
+        const activeClip = animationClipFor(owner.kind, "active");
+        const total = attackPresentationDuration(owner.kind);
+        const phase = owner.attackWindup > 0
+          ? "wind-up"
+          : owner.attack > 0
+            ? Math.max(0, total - owner.attack) < activeClip.durationSeconds
+              ? "active"
+              : "recovery"
+            : "idle";
+        const elapsed = phase === "wind-up"
+          ? Math.max(0, animationClipFor(owner.kind, "wind-up").durationSeconds - owner.attackWindup)
+          : phase === "active" || phase === "recovery"
+            ? Math.max(0, total - owner.attack)
+            : 0;
+        const sample = phase === "wind-up"
+          ? sampleAnimationClip(owner.kind, "wind-up", elapsed)
+          : phase === "active" || phase === "recovery"
+            ? sampleAttackPresentation(owner.kind, elapsed)
+            : sampleAnimationClip(owner.kind, "idle", 0);
+        return {
+          ownerId: owner.id,
+          targetId: target.id,
+          phase,
+          elapsed,
+          sample,
+          attackSequence: owner.attackSequence,
+          targetHp: target.hp,
+          anchor: weaponAnchorForTarget(owner, target),
+          weaponProfile: weaponProfileForUnit(owner.kind).id,
+          shots: g.shots
+            .filter((shot) => shot.sourceId === owner.id)
+            .map((shot) => ({
+              weapon: shot.weapon ?? null,
+              targetId: shot.targetId ?? null,
+              shotIndex: shot.shotIndex ?? null,
+            })),
+          pendingHits: g.pendingWeaponHits
+            .filter((hit) => hit.sourceId === owner.id)
+            .map((hit) => ({
+              eventKind: hit.eventKind,
+              targetId: hit.targetId ?? null,
+              shotIndex: hit.shotIndex ?? null,
+              applyDamage: hit.applyDamage === true,
+            })),
+          audioCueRequests: productionCueQaLogRef.current.map((entry) => ({ ...entry })),
+        };
+      },
+      sampleRepresentativeSixSpecialProof: (ownerId: number) => {
+        const owner = gameRef.current.fighters.find((fighter) => (
+          fighter.id === ownerId
+          && fighter.side === "human"
+          && fighter.hp > 0
+        ));
+        const definition = owner ? MANUAL_ABILITY_REGISTRY[owner.kind] : null;
+        if (!owner?.manualAbility || !definition || !manualAbilityLocksNormalAction(owner.manualAbility)) {
+          return null;
+        }
+        const elapsed = owner.manualAbility.phase === "windup"
+          ? Math.max(0, definition.windupSeconds - owner.manualAbility.windupRemaining)
+          : owner.manualAbility.phase === "recovery" || owner.kind === "mrs-chiha"
+            ? Math.max(0, owner.manualAbility.abilityElapsed ?? 0)
+            : owner.step;
+        return {
+          ownerId: owner.id,
+          kind: owner.kind,
+          phase: owner.manualAbility.phase,
+          elapsed,
+          sample: sampleAnimationClip(owner.kind, "special", elapsed),
+        };
+      },
+      setRepresentativeSixProofPaused: (requestedPaused = true) => {
+        const g = gameRef.current;
+        g.last = performance.now();
+        g.paused = Boolean(requestedPaused);
+        return g.paused;
       },
       prepareManualAbilityProof: (kind: UnitKind | readonly UnitKind[] | "all" = "all") => {
         const availableKinds = Object.keys(MANUAL_ABILITY_REGISTRY) as UnitKind[];
@@ -8213,6 +8496,8 @@ export function AshfallGame() {
             damage: fighter.damage,
             cooldown: fighter.cooldown,
             attack: fighter.attack,
+            attackWindup: fighter.attackWindup,
+            attackWindupTargetId: fighter.attackWindupTargetId,
             attackSequence: fighter.attackSequence,
             speed: fighter.speed,
             laneSpeed: fighter.laneSpeed,
@@ -8665,6 +8950,18 @@ export function AshfallGame() {
     } = {},
   ) => {
     if (!cueId || sfxMutedRef.current) return false;
+    if (typeof window !== "undefined"
+      && ["127.0.0.1", "localhost"].includes(window.location.hostname)) {
+      productionCueQaLogRef.current = [
+        ...productionCueQaLogRef.current,
+        {
+          cueId,
+          at: performance.now(),
+          x,
+          dedupeKey: options.dedupeKey ?? null,
+        },
+      ].slice(-128);
+    }
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return false;
     const fallback = options.fallbackCue ? () => {
@@ -8825,6 +9122,9 @@ export function AshfallGame() {
       playCue("denied");
       return false;
     }
+    const abilityOrigin = weaponAnchorForTarget(fighter, target);
+    fighter.attackWindup = 0;
+    fighter.attackWindupTargetId = null;
     fighter.manualAbility = startedAbility.runtime as ManualAbilityRuntime;
     g.manualAbilityReceipts.push({
       ownerId: fighter.id,
@@ -8842,24 +9142,24 @@ export function AshfallGame() {
       ownerId: fighter.id,
       activationId: startedAbility.activationId,
       kind: fighter.kind,
-      originX: fighter.x + 8,
-      originY: fighter.y - 62,
+      originX: abilityOrigin.x,
+      originY: abilityOrigin.y,
       targetX: target.x,
       targetY: target.y - 8,
       elapsed: 0,
       duration: fighter.kind === "miyamoto-musashi"
         ? definition.windupSeconds + definition.guardSeconds
         : fighter.kind === "mayo-chan"
-          ? definition.windupSeconds + definition.activeSeconds
+          ? definition.windupSeconds + definition.recoverySeconds + definition.activeSeconds
         : ["crazy-king", "kumaverson", "guardian"].includes(fighter.kind)
-          ? definition.windupSeconds + definition.activeSeconds
+          ? definition.windupSeconds + (definition.recoverySeconds ?? 0) + definition.activeSeconds
         : fighter.kind === "mrs-chiha"
           ? definition.windupSeconds
             + definition.salvoIntervalSeconds * (definition.salvoCount - 1)
             + definition.projectileTravelSeconds
             + definition.recoverySeconds
-        : ["brawler", "scout", "ranger", "medic", "brute", "babayaga", "gunner", "engineer"].includes(fighter.kind)
-          ? definition.windupSeconds + .55
+        : ["brawler", "scout", "ranger", "medic", "brute", "babayaga", "gunner", "engineer", "tky"].includes(fighter.kind)
+          ? definition.windupSeconds + (definition.recoverySeconds ?? 0) + .55
         : definition.windupSeconds,
       points: target.points?.map((point: { x: number; y: number }) => ({ x: point.x, y: point.y - 8 })),
       windupSeconds: definition.windupSeconds,
@@ -8879,6 +9179,8 @@ export function AshfallGame() {
     }
     const abilityStartCue = fighter.kind === "tky"
       ? unitAudioCueFor(fighter.kind, "weapon", "abilityCharge")
+      : fighter.kind === "gunner"
+        ? null
       : fighter.kind === "mrs-chiha"
         ? unitAudioCueFor(fighter.kind, "weapon", "abilityReady")
         : fighter.kind === "miyamoto-musashi"
@@ -11348,7 +11650,24 @@ export function AshfallGame() {
         performanceCounters.simulationTicks += 1;
         g.time += dt;
         g.manualAbilityVfx = g.manualAbilityVfx
-          .map((effect) => ({ ...effect, elapsed: effect.elapsed + dt }))
+          .map((effect) => {
+            const owner = ["crazy-king", "mayo-chan"].includes(effect.kind)
+              ? g.fighters.find((fighter) => fighter.id === effect.ownerId && fighter.hp > 0)
+              : null;
+            if (!owner) return { ...effect, elapsed: effect.elapsed + dt };
+            const anchor = combatWeaponAnchor({
+              kind: owner.kind,
+              x: owner.x,
+              y: owner.y,
+              direction: effect.targetX < owner.x ? -1 : 1,
+            });
+            return {
+              ...effect,
+              elapsed: effect.elapsed + dt,
+              originX: anchor.x,
+              originY: anchor.y,
+            };
+          })
           .filter((effect) => effect.elapsed < effect.duration);
         const pendingAbilityAudioCues = g.pendingAbilityAudioCues.splice(0);
         for (const pendingCue of pendingAbilityAudioCues) {
@@ -11698,27 +12017,46 @@ export function AshfallGame() {
             if (event.kind === "gunner") {
               const definition = MANUAL_ABILITY_REGISTRY.gunner;
               const targetIds = new Set((event.target.targetIds ?? []).map(String));
+              const salvoIndex = Number.isInteger(event.salvoIndex) ? event.salvoIndex : null;
+              if (event.type === "muzzle") {
+                playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
+                  priority: 88,
+                  cooldownMs: 45,
+                  maxInstances: 3,
+                  fallbackCue: "ranged-shot",
+                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:muzzle:${salvoIndex ?? "legacy"}`,
+                });
+                addParticles(g, owner.x + 26, owner.y - 38, "#f8c35f", 3);
+                continue;
+              }
+              const strike = salvoIndex === null
+                ? definition.impactDamage * definition.burstCount
+                : definition.impactDamage;
               for (const target of g.fighters) {
                 if (target.side !== "zombie"
                   || target.hp <= 0
                   || !target.combatReady
                   || !targetIds.has(String(target.id))) continue;
-                const strike = definition.impactDamage * definition.burstCount;
                 const damage = Math.min(target.hp, strike);
                 target.hp = Math.max(0, target.hp - strike);
                 target.suppressionStacks = Math.max(target.suppressionStacks, UNIT_ROLE_TUNING.raider.maximumSuppressionStacks);
                 target.suppressedRemaining = Math.max(target.suppressedRemaining, definition.suppressionSeconds);
                 target.flash = Math.max(target.flash, .25);
-                target.knock = Math.max(target.knock, 9);
+                target.knock = Math.max(target.knock, event.finalRound ? 9 : 3);
                 recordUnitDamage(g, owner.kind, damage);
-                addDamageText(g, target.x, target.y - 48, `制圧 -${Math.round(damage)}`, .84, "#f4c66d");
-                addParticles(g, target.x, target.y - 28, "#d7ae58", 12);
+                addDamageText(
+                  g,
+                  target.x,
+                  target.y - 48,
+                  salvoIndex === null
+                    ? `制圧 -${Math.round(damage)}`
+                    : `制圧 ${salvoIndex + 1}/${definition.burstCount} -${Math.round(damage)}`,
+                  .84,
+                  "#f4c66d",
+                );
+                addParticles(g, target.x, target.y - 28, "#d7ae58", event.finalRound ? 12 : 5);
               }
-              g.flashOverlay = Math.max(g.flashOverlay, .1);
-              playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
-                priority: 88, cooldownMs: 60, maxInstances: 2, fallbackCue: "ranged-shot",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:suppress`,
-              });
+              g.flashOverlay = Math.max(g.flashOverlay, event.finalRound ? .1 : .045);
               continue;
             }
             if (event.kind === "engineer") {
@@ -12706,6 +13044,7 @@ export function AshfallGame() {
             : f.laneSpeed * mayoBiteSlowMultiplier;
           f.cooldown = advanceAttackCooldown(f.cooldown, dt); f.supportCooldown -= dt; f.retargetIn = Math.max(0, f.retargetIn - dt); f.spawnGrace = Math.max(0, f.spawnGrace - dt);
           f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.marked = Math.max(0, f.marked - dt); f.step += dt;
+          f.attackWindup = Math.max(0, f.attackWindup - dt);
           f.stunned = Math.max(0, f.stunned - dt);
           f.damageReductionRemaining = advanceNaoProtection(f.damageReductionRemaining, dt);
           if (f.damageReductionRemaining <= 0) f.damageReductionMultiplier = 1;
@@ -12746,6 +13085,10 @@ export function AshfallGame() {
             f.targetId = null;
             f.targetObjectId = null;
             f.knock = 0;
+            continue;
+          }
+          if (f.attackWindup > 0) {
+            f.aiMoveDirection = 0;
             continue;
           }
           if (Math.abs(f.knock) > .1) {
@@ -14075,6 +14418,7 @@ export function AshfallGame() {
             }
           } else if (target && distance <= f.range + target.bodyRadius) {
             if (f.cooldown <= 0) {
+              if (beginRepresentativeNormalAttackWindup(f, target.id)) continue;
               if (f.side === "human" && f.kind === "gunner" && !raiderCanFire({ heat: f.weaponHeat, overheated: f.overheated })) {
                 f.cooldown = .1;
                 continue;
@@ -14588,6 +14932,7 @@ export function AshfallGame() {
           } else if (!target && baseDistance <= f.range + 10) {
             if (f.cooldown <= 0) {
               if (f.side === "human") {
+                if (beginRepresentativeNormalAttackWindup(f, "enemy-base")) continue;
                 if (f.kind === "gunner" && !raiderCanFire({ heat: f.weaponHeat, overheated: f.overheated })) {
                   f.cooldown = .1;
                   continue;
@@ -15180,7 +15525,7 @@ export function AshfallGame() {
                  y: generic.y,
                }),
                navigationRecovery: createNavigationRecoveryState({ x: generic.x, y: generic.y, lane: generic.lane }),
-               abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
+               abilityCooldown: 0, abilityWindup: 0, attackWindup: 0, attackWindupTargetId: null, attackSequence: 0,
                stationAbility: createStationAbilityRuntime("turned"),
                ...createUnitRoleRuntime(),
             });

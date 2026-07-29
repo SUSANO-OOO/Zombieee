@@ -9,6 +9,7 @@ import {
   COMBAT_OPTIONAL_CLIP_STATES,
   COMBAT_PRESENTATION_PROFILES,
   COMBAT_WEAPON_ANCHORS,
+  REPRESENTATIVE_SIX_KINDS,
   UNIT_WEAPON_PROFILE,
   WEAPON_PROFILE_IDS,
   WEAPON_PROFILES,
@@ -27,7 +28,9 @@ import {
   sampleMrsChihaLauncherBash,
   weaponDamageEventsFor,
   weaponProfileForAction,
+  weaponProfileForUnit,
 } from "../app/combatPresentation.js";
+import { manualAbilityDefinitionFor } from "../app/manualAbilities.js";
 import { spriteKinds } from "../app/spriteManifest.js";
 
 test("every runtime sprite kind owns all core and optional variable-frame combat clips", () => {
@@ -249,7 +252,7 @@ test("machine-gun active clip and damage timeline share three synchronized round
   assert.equal(sampleAttackPresentation("gunner", .2).state, "recovery");
 });
 
-test("fourteen weapon profiles cover all sixteen playable units without generic missing VFX", () => {
+test("fifteen weapon profiles cover all sixteen playable units without generic missing VFX", () => {
   assert.deepEqual(Object.keys(WEAPON_PROFILES), WEAPON_PROFILE_IDS);
   assert.equal(Object.keys(UNIT_WEAPON_PROFILE).length, 16);
   for (const [kind, profileId] of Object.entries(UNIT_WEAPON_PROFILE)) {
@@ -265,6 +268,9 @@ test("fourteen weapon profiles cover all sixteen playable units without generic 
   assert.equal(weaponProfileForAction("engineer", "attack").casing, true);
   assert.equal(weaponProfileForAction("engineer", "deploy").id, "deployable");
   assert.equal(weaponProfileForAction("medic", "heal").id, "heal-support");
+  assert.equal(weaponProfileForUnit("scout").id, "crowbar");
+  assert.equal(weaponProfileForUnit("scout").casing, false);
+  assert.equal(weaponProfileForUnit("scout").trail, "hooked-crowbar-arc");
   assert.equal(weaponProfileForAction("tky", "attack").id, "plasma-blade");
   assert.equal(weaponProfileForAction("mrs-chiha", "attack").id, "grenade");
   assert.equal(weaponProfileForAction("miyamoto-musashi", "attack").id, "dual-katana");
@@ -290,7 +296,14 @@ test("all sixteen playable units and every projectile enemy use directional weap
 test("new playable special clips preserve authored body phases and Mrs. Chiha's normal launcher cycle", () => {
   assert.deepEqual(
     combatClipEventsFor("tky", "special").map(({ type }) => type),
-    ["light-blade-charge", "light-blade-extend", "light-blade-release"],
+    [
+      "light-blade-charge",
+      "light-blade-extend",
+      "light-blade-sweep",
+      "light-blade-release",
+      "light-blade-recover",
+      "light-blade-ready",
+    ],
   );
   assert.deepEqual(
     combatClipEventsFor("mrs-chiha", "special")
@@ -300,7 +313,7 @@ test("new playable special clips preserve authored body phases and Mrs. Chiha's 
   );
   assert.equal(
     Number(combatClipEventsFor("mrs-chiha", "special").find(({ type }) => type === "launcher-stow").at.toFixed(2)),
-    1.73,
+    1.91,
   );
   assert.deepEqual(
     combatClipEventsFor("miyamoto-musashi", "special").map(({ type }) => type),
@@ -313,6 +326,68 @@ test("new playable special clips preserve authored body phases and Mrs. Chiha's 
   assert.deepEqual(
     combatClipEventsFor("mrs-chiha", "recovery").map(({ type }) => type),
     ["launcher-stow"],
+  );
+});
+
+test("the representative six own distinct motion, attack, and manual-ability timelines", () => {
+  assert.deepEqual(REPRESENTATIVE_SIX_KINDS, [
+    "scout", "gunner", "crazy-king", "tky", "mrs-chiha", "mayo-chan",
+  ]);
+  const expectedSpecialDurations = {
+    scout: .38,
+    gunner: .71,
+    "crazy-king": .63,
+    tky: .78,
+    "mrs-chiha": 2.19,
+    "mayo-chan": .46,
+  };
+  const signatures = new Set();
+  for (const kind of REPRESENTATIVE_SIX_KINDS) {
+    const definition = manualAbilityDefinitionFor(kind);
+    const special = animationClipFor(kind, "special");
+    const move = animationClipFor(kind, "move");
+    const active = animationClipFor(kind, "active");
+    assert.ok(definition, `${kind} manual ability`);
+    assert.equal(Number(special.durationSeconds.toFixed(2)), expectedSpecialDurations[kind], `${kind} special duration`);
+    assert.ok(special.durationSeconds >= definition.windupSeconds, `${kind} covers ability wind-up`);
+    assert.ok(move.movement, `${kind} move must be locomotion`);
+    assert.ok(active.frames.some(({ spriteState }) => spriteState.startsWith("attack")), `${kind} attack pose`);
+    signatures.add(combatClipEventsFor(kind, "special").map(({ type }) => type).join("|"));
+    for (const state of ["idle", "move", "wind-up", "active", "recovery", "special"]) {
+      const current = animationClipFor(kind, state);
+      const sample = sampleAnimationClip(kind, state, current.durationSeconds * .55);
+      assert.equal(sample.groundAnchor, 1, `${kind}/${state} ground anchor`);
+      assert.equal(sample.pose.offsetY, 0, `${kind}/${state} procedural pose cannot lift the feet`);
+      assert.ok(sample.pose.scaleX >= .8 && sample.pose.scaleX <= 1.12, `${kind}/${state} scaleX`);
+      assert.ok(sample.pose.scaleY >= .8 && sample.pose.scaleY <= 1.12, `${kind}/${state} scaleY`);
+      assert.ok(Math.abs(sample.pose.rotationRadians) <= .13, `${kind}/${state} rotation`);
+    }
+  }
+  assert.equal(signatures.size, REPRESENTATIVE_SIX_KINDS.length);
+});
+
+test("representative-six weapon anchors mirror at the authored weapon or attack point", () => {
+  for (const kind of REPRESENTATIVE_SIX_KINDS) {
+    const right = combatWeaponAnchor({ kind, x: 420, y: 260, direction: 1 });
+    const left = combatWeaponAnchor({ kind, x: 420, y: 260, direction: -1 });
+    assert.ok(Math.abs(right.x - 420) >= 18, `${kind} origin is not the sprite center`);
+    assert.ok(right.y <= 241, `${kind} origin is not the lower body`);
+    assert.equal(right.y, left.y, `${kind} vertical anchor mirror`);
+    assert.equal(right.x - 420, 420 - left.x, `${kind} horizontal anchor mirror`);
+  }
+});
+
+test("Raider manual muzzle and damage markers share the five-round suppression timeline", () => {
+  const specialEvents = combatClipEventsFor("gunner", "special");
+  assert.deepEqual(
+    specialEvents.filter(({ type }) => type === "suppression-muzzle").map(({ shotIndex }) => shotIndex),
+    [0, 1, 2, 3, 4],
+  );
+  assert.deepEqual(
+    specialEvents
+      .filter(({ type }) => type === "suppression-hit")
+      .map(({ at }) => Number(at.toFixed(3))),
+    [.235, .309, .383, .457, .531],
   );
 });
 

@@ -23,6 +23,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
     runtimeStatus: "integrated",
     cooldownSeconds: 13,
     windupSeconds: .24,
+    recoverySeconds: .14,
     maxRange: 300,
     impactDamage: 58,
     stunSeconds: 1.2,
@@ -77,6 +78,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
     runtimeStatus: "integrated",
     cooldownSeconds: 22,
     windupSeconds: .45,
+    recoverySeconds: .18,
     range: 210,
     activeSeconds: 5.2,
     damageMultiplier: 1.35,
@@ -118,10 +120,14 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
     runtimeStatus: "integrated",
     cooldownSeconds: 18,
     windupSeconds: .55,
+    recoverySeconds: .16,
     range: 330,
     effectHalfHeight: 35,
     impactDamage: 22,
     burstCount: 5,
+    aimSeconds: .18,
+    burstIntervalSeconds: .074,
+    projectileTravelSeconds: .055,
     suppressionSeconds: 3,
     suppressionMultiplier: .55,
   },
@@ -174,6 +180,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
     runtimeStatus: "integrated",
     cooldownSeconds: 16,
     windupSeconds: .62,
+    recoverySeconds: .16,
     reach: 190,
     effectHalfHeight: 76,
     impactDamage: 70,
@@ -225,6 +232,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
     runtimeStatus: "integrated",
     cooldownSeconds: 34,
     windupSeconds: .3,
+    recoverySeconds: .16,
     activeSeconds: 6.2,
     moveSpeedMultiplier: 1.75,
     attackIntervalMultiplier: .48,
@@ -237,6 +245,26 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
 
 export function manualAbilityDefinitionFor(kind) {
   return MANUAL_ABILITY_REGISTRY[kind] ?? null;
+}
+
+export function gunnerSuppressionVfxRounds(elapsedSeconds) {
+  const definition = MANUAL_ABILITY_REGISTRY.gunner;
+  const elapsed = Math.max(0, Number(elapsedSeconds) || 0);
+  return Object.freeze(Array.from({ length: definition.burstCount }, (_, salvoIndex) => {
+    const muzzleAt = definition.aimSeconds + definition.burstIntervalSeconds * salvoIndex;
+    const impactAt = muzzleAt + definition.projectileTravelSeconds;
+    const shotAge = elapsed - muzzleAt;
+    const impactAge = Math.max(0, elapsed - impactAt);
+    return Object.freeze({
+      salvoIndex,
+      muzzleAt,
+      impactAt,
+      visible: shotAge >= 0 && impactAge <= .5,
+      travelProgress: Math.max(0, Math.min(1, shotAge / definition.projectileTravelSeconds)),
+      muzzleFlash: Math.max(0, Math.min(1, 1 - shotAge / .08)),
+      impactAge,
+    });
+  }));
 }
 
 export function createManualAbilityRuntime(kind) {
@@ -322,6 +350,7 @@ export function manualAbilityCheckpointCooldown(runtime) {
   let remaining = Math.max(0, Number(definition.cooldownSeconds) || 0);
   if (runtime.phase === "windup") {
     remaining += Math.max(0, Number(runtime.windupRemaining) || 0);
+    remaining += Math.max(0, Number(definition.recoverySeconds) || 0);
     if (["crazy-king", "kumaverson", "guardian"].includes(runtime.kind)) {
       remaining += Math.max(0, Number(definition.activeSeconds) || 0);
     } else if (runtime.kind === "miyamoto-musashi") {
@@ -331,8 +360,7 @@ export function manualAbilityCheckpointCooldown(runtime) {
     } else if (runtime.kind === "mrs-chiha") {
       remaining += Math.max(0,
         Number(definition.salvoIntervalSeconds) * Math.max(0, Number(definition.salvoCount) - 1)
-        + Number(definition.projectileTravelSeconds)
-        + Number(definition.recoverySeconds),
+        + Number(definition.projectileTravelSeconds),
       );
     }
   } else if (["active", "feral"].includes(runtime.phase)) {
@@ -345,6 +373,11 @@ export function manualAbilityCheckpointCooldown(runtime) {
       + definition.projectileTravelSeconds
       + definition.recoverySeconds;
     remaining += Math.max(0, finalImpactAt - (Number(runtime.abilityElapsed) || 0));
+  } else if (runtime.phase === "recovery") {
+    remaining += Math.max(0, Number(runtime.windupRemaining) || 0);
+    if (["crazy-king", "mayo-chan"].includes(runtime.kind)) {
+      remaining += Math.max(0, Number(definition.activeSeconds) || 0);
+    }
   }
   return Math.round(Math.min(3_600, remaining) * 1_000) / 1_000;
 }
@@ -849,6 +882,9 @@ export function advanceManualAbility(runtime, seconds) {
   if (runtime.kind === "mrs-chiha") {
     return advanceMrsChihaAbility(runtime, elapsed);
   }
+  if (runtime.kind === "gunner") {
+    return advanceGunnerAbility(runtime, elapsed);
+  }
   if (runtime.kind === "mayo-chan") {
     return advanceMayoAbility(runtime, elapsed);
   }
@@ -859,7 +895,11 @@ export function advanceManualAbility(runtime, seconds) {
     const remaining = runtime.windupRemaining - elapsed;
     if (remaining > 0) {
       return Object.freeze({
-        runtime: Object.freeze({ ...runtime, windupRemaining: remaining }),
+        runtime: Object.freeze({
+          ...runtime,
+          windupRemaining: remaining,
+          abilityElapsed: definition.windupSeconds - remaining,
+        }),
         events: Object.freeze([]),
       });
     }
@@ -900,13 +940,24 @@ export function advanceManualAbility(runtime, seconds) {
         })]),
       });
     }
+    const recoverySeconds = Math.max(0, Number(definition.recoverySeconds) || 0);
+    const cooldownOverflow = Math.max(0, overflow - recoverySeconds);
     return Object.freeze({
       runtime: Object.freeze({
         ...runtime,
-        phase: overflow >= definition.cooldownSeconds ? "ready" : "cooldown",
-        windupRemaining: 0,
-        cooldownRemaining: Math.max(0, definition.cooldownSeconds - overflow),
-        target: null,
+        phase: recoverySeconds > 0 && overflow < recoverySeconds
+          ? "recovery"
+          : cooldownOverflow >= definition.cooldownSeconds
+            ? "ready"
+            : "cooldown",
+        windupRemaining: recoverySeconds > 0 && overflow < recoverySeconds
+          ? recoverySeconds - overflow
+          : 0,
+        cooldownRemaining: recoverySeconds > 0 && overflow < recoverySeconds
+          ? 0
+          : Math.max(0, definition.cooldownSeconds - cooldownOverflow),
+        abilityElapsed: definition.windupSeconds + Math.min(recoverySeconds, overflow),
+        target: recoverySeconds > 0 && overflow < recoverySeconds ? runtime.target : null,
       }),
       events: Object.freeze([Object.freeze({
         type: "impact",
@@ -914,6 +965,34 @@ export function advanceManualAbility(runtime, seconds) {
         activationId: runtime.activationId,
         target: runtime.target,
       })]),
+    });
+  }
+  if (runtime.phase === "recovery" && Number(definition.recoverySeconds) > 0) {
+    const remaining = runtime.windupRemaining - elapsed;
+    if (remaining > 0) {
+      return Object.freeze({
+        runtime: Object.freeze({
+          ...runtime,
+          windupRemaining: remaining,
+          abilityElapsed: definition.windupSeconds + definition.recoverySeconds - remaining,
+        }),
+        events: Object.freeze([]),
+      });
+    }
+    const overflow = Math.max(0, -remaining);
+    const cooldownRemaining = Math.max(0, definition.cooldownSeconds - overflow);
+    return Object.freeze({
+      runtime: Object.freeze({
+        ...runtime,
+        phase: cooldownRemaining > 0 ? "cooldown" : "ready",
+        windupRemaining: 0,
+        cooldownRemaining,
+        abilityElapsed: cooldownRemaining > 0
+          ? definition.windupSeconds + definition.recoverySeconds
+          : 0,
+        target: null,
+      }),
+      events: Object.freeze([]),
     });
   }
   if (runtime.phase === "guard") {
@@ -953,17 +1032,84 @@ export function advanceManualAbility(runtime, seconds) {
   });
 }
 
+function advanceGunnerAbility(runtime, elapsedSeconds) {
+  const definition = MANUAL_ABILITY_REGISTRY.gunner;
+  if (runtime.phase === "cooldown") {
+    const cooldownRemaining = Math.max(0, runtime.cooldownRemaining - elapsedSeconds);
+    return Object.freeze({
+      runtime: Object.freeze({
+        ...runtime,
+        phase: cooldownRemaining > 0 ? "cooldown" : "ready",
+        cooldownRemaining,
+        abilityElapsed: cooldownRemaining > 0 ? runtime.abilityElapsed : 0,
+      }),
+      events: Object.freeze([]),
+    });
+  }
+  if (!["windup", "recovery"].includes(runtime.phase)) {
+    return Object.freeze({ runtime, events: Object.freeze([]) });
+  }
+  const currentElapsed = Math.max(0, Number(runtime.abilityElapsed) || 0);
+  const nextElapsed = currentElapsed + elapsedSeconds;
+  const timeline = Array.from({ length: definition.burstCount }, (_, salvoIndex) => {
+    const muzzleAt = definition.aimSeconds + definition.burstIntervalSeconds * salvoIndex;
+    return [
+      { type: "muzzle", at: muzzleAt, salvoIndex },
+      { type: "impact", at: muzzleAt + definition.projectileTravelSeconds, salvoIndex },
+    ];
+  }).flat().sort((left, right) => left.at - right.at || left.type.localeCompare(right.type));
+  const events = timeline
+    .filter(({ at }) => at > currentElapsed + Number.EPSILON && at <= nextElapsed + Number.EPSILON)
+    .map(({ type, at, salvoIndex }) => Object.freeze({
+      type,
+      kind: runtime.kind,
+      activationId: runtime.activationId,
+      salvoIndex,
+      finalRound: type === "impact" && salvoIndex === definition.burstCount - 1,
+      timelineAt: at,
+      target: runtime.target,
+    }));
+  if (runtime.phase === "windup" && nextElapsed < definition.windupSeconds) {
+    return Object.freeze({
+      runtime: Object.freeze({
+        ...runtime,
+        windupRemaining: definition.windupSeconds - nextElapsed,
+        abilityElapsed: nextElapsed,
+      }),
+      events: Object.freeze(events),
+    });
+  }
+  const recoveryEndAt = definition.windupSeconds + definition.recoverySeconds;
+  if (nextElapsed < recoveryEndAt) {
+    return Object.freeze({
+      runtime: Object.freeze({
+        ...runtime,
+        phase: "recovery",
+        windupRemaining: recoveryEndAt - nextElapsed,
+        abilityElapsed: nextElapsed,
+      }),
+      events: Object.freeze(events),
+    });
+  }
+  const cooldownOverflow = nextElapsed - recoveryEndAt;
+  const cooldownRemaining = Math.max(0, definition.cooldownSeconds - cooldownOverflow);
+  return Object.freeze({
+    runtime: Object.freeze({
+      ...runtime,
+      phase: cooldownRemaining > 0 ? "cooldown" : "ready",
+      windupRemaining: 0,
+      cooldownRemaining,
+      abilityElapsed: cooldownRemaining > 0 ? recoveryEndAt : 0,
+      target: null,
+    }),
+    events: Object.freeze(events),
+  });
+}
+
 function advanceSustainedAbility(runtime, elapsedSeconds) {
   const definition = MANUAL_ABILITY_REGISTRY[runtime.kind];
-  if (runtime.phase === "windup") {
-    const remaining = runtime.windupRemaining - elapsedSeconds;
-    if (remaining > 0) {
-      return Object.freeze({
-        runtime: Object.freeze({ ...runtime, windupRemaining: remaining }),
-        events: Object.freeze([]),
-      });
-    }
-    const overflow = Math.max(0, -remaining);
+  const recoverySeconds = Math.max(0, Number(definition.recoverySeconds) || 0);
+  const advanceIntoActive = (overflow) => {
     const startEvent = Object.freeze({
       type: "active-start",
       kind: runtime.kind,
@@ -977,6 +1123,7 @@ function advanceSustainedAbility(runtime, elapsedSeconds) {
           phase: "active",
           windupRemaining: 0,
           activeRemaining: definition.activeSeconds - overflow,
+          abilityElapsed: definition.windupSeconds + recoverySeconds,
         }),
         events: Object.freeze([startEvent]),
       });
@@ -990,6 +1137,9 @@ function advanceSustainedAbility(runtime, elapsedSeconds) {
         windupRemaining: 0,
         activeRemaining: 0,
         cooldownRemaining,
+        abilityElapsed: cooldownRemaining > 0
+          ? definition.windupSeconds + recoverySeconds
+          : 0,
         target: null,
       }),
       events: Object.freeze([
@@ -1002,6 +1152,46 @@ function advanceSustainedAbility(runtime, elapsedSeconds) {
         }),
       ]),
     });
+  };
+  if (runtime.phase === "windup") {
+    const remaining = runtime.windupRemaining - elapsedSeconds;
+    if (remaining > 0) {
+      return Object.freeze({
+        runtime: Object.freeze({
+          ...runtime,
+          windupRemaining: remaining,
+          abilityElapsed: definition.windupSeconds - remaining,
+        }),
+        events: Object.freeze([]),
+      });
+    }
+    const overflow = Math.max(0, -remaining);
+    if (recoverySeconds > 0 && overflow < recoverySeconds) {
+      return Object.freeze({
+        runtime: Object.freeze({
+          ...runtime,
+          phase: "recovery",
+          windupRemaining: recoverySeconds - overflow,
+          abilityElapsed: definition.windupSeconds + overflow,
+        }),
+        events: Object.freeze([]),
+      });
+    }
+    return advanceIntoActive(Math.max(0, overflow - recoverySeconds));
+  }
+  if (runtime.phase === "recovery" && recoverySeconds > 0) {
+    const remaining = runtime.windupRemaining - elapsedSeconds;
+    if (remaining > 0) {
+      return Object.freeze({
+        runtime: Object.freeze({
+          ...runtime,
+          windupRemaining: remaining,
+          abilityElapsed: definition.windupSeconds + recoverySeconds - remaining,
+        }),
+        events: Object.freeze([]),
+      });
+    }
+    return advanceIntoActive(Math.max(0, -remaining));
   }
   if (runtime.phase === "active") {
     const remaining = runtime.activeRemaining - elapsedSeconds;
@@ -1042,6 +1232,44 @@ function advanceSustainedAbility(runtime, elapsedSeconds) {
 
 function advanceMayoAbility(runtime, elapsedSeconds) {
   const definition = MANUAL_ABILITY_REGISTRY["mayo-chan"];
+  const advanceIntoFeral = (overflow) => {
+    const feralStart = Object.freeze({
+      type: "feral-start",
+      kind: runtime.kind,
+      activationId: runtime.activationId,
+      target: runtime.target,
+    });
+    if (overflow < definition.activeSeconds) {
+      return Object.freeze({
+        runtime: Object.freeze({
+          ...runtime,
+          phase: "feral",
+          windupRemaining: 0,
+          activeRemaining: definition.activeSeconds - overflow,
+          abilityElapsed: definition.windupSeconds + definition.recoverySeconds,
+        }),
+        events: Object.freeze([feralStart]),
+      });
+    }
+    return Object.freeze({
+      runtime: Object.freeze({
+        ...runtime,
+        phase: "retreat",
+        windupRemaining: 0,
+        activeRemaining: 0,
+        abilityElapsed: definition.windupSeconds + definition.recoverySeconds,
+      }),
+      events: Object.freeze([
+        feralStart,
+        Object.freeze({
+          type: "retreat",
+          kind: runtime.kind,
+          activationId: runtime.activationId,
+          target: runtime.target,
+        }),
+      ]),
+    });
+  };
   if (runtime.phase === "cooldown") {
     const cooldownRemaining = Math.max(0, runtime.cooldownRemaining - elapsedSeconds);
     return Object.freeze({
@@ -1057,49 +1285,41 @@ function advanceMayoAbility(runtime, elapsedSeconds) {
     const remaining = runtime.windupRemaining - elapsedSeconds;
     if (remaining > 0) {
       return Object.freeze({
-        runtime: Object.freeze({ ...runtime, windupRemaining: remaining }),
+        runtime: Object.freeze({
+          ...runtime,
+          windupRemaining: remaining,
+          abilityElapsed: definition.windupSeconds - remaining,
+        }),
         events: Object.freeze([]),
       });
     }
     const overflow = Math.max(0, -remaining);
-    if (overflow < definition.activeSeconds) {
+    if (overflow < definition.recoverySeconds) {
       return Object.freeze({
         runtime: Object.freeze({
           ...runtime,
-          phase: "feral",
-          windupRemaining: 0,
-          activeRemaining: definition.activeSeconds - overflow,
+          phase: "recovery",
+          windupRemaining: definition.recoverySeconds - overflow,
+          abilityElapsed: definition.windupSeconds + overflow,
         }),
-        events: Object.freeze([Object.freeze({
-          type: "feral-start",
-          kind: runtime.kind,
-          activationId: runtime.activationId,
-          target: runtime.target,
-        })]),
+        events: Object.freeze([]),
       });
     }
-    return Object.freeze({
-      runtime: Object.freeze({
-        ...runtime,
-        phase: "retreat",
-        windupRemaining: 0,
-        activeRemaining: 0,
-      }),
-      events: Object.freeze([
-        Object.freeze({
-          type: "feral-start",
-          kind: runtime.kind,
-          activationId: runtime.activationId,
-          target: runtime.target,
+    return advanceIntoFeral(overflow - definition.recoverySeconds);
+  }
+  if (runtime.phase === "recovery") {
+    const remaining = runtime.windupRemaining - elapsedSeconds;
+    if (remaining > 0) {
+      return Object.freeze({
+        runtime: Object.freeze({
+          ...runtime,
+          windupRemaining: remaining,
+          abilityElapsed: definition.windupSeconds + definition.recoverySeconds - remaining,
         }),
-        Object.freeze({
-          type: "retreat",
-          kind: runtime.kind,
-          activationId: runtime.activationId,
-          target: runtime.target,
-        }),
-      ]),
-    });
+        events: Object.freeze([]),
+      });
+    }
+    return advanceIntoFeral(Math.max(0, -remaining));
   }
   if (runtime.phase === "feral") {
     const remaining = runtime.activeRemaining - elapsedSeconds;
