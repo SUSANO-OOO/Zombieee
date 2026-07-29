@@ -11,8 +11,9 @@
 - 恒久運用・権限・QA：[`AGENTS.md`](../AGENTS.md)
 - 現在のrelease・GitHub状態：[`PROJECT_STATE.md`](PROJECT_STATE.md)
 - 長期ロードマップ：[`PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md)
-- Version 0.9.0製品判断：[`PRODUCER_DECISIONS_0.9.0.md`](PRODUCER_DECISIONS_0.9.0.md)
-- Version 0.9.0実行台帳：Issue #68
+- Version 0.9.5製品判断：[`PRODUCER_DECISIONS_0.9.5.md`](PRODUCER_DECISIONS_0.9.5.md)
+- Version 0.9.5実行台帳：Issue #96
+- Version 0.9.0製品判断・公開履歴：[`PRODUCER_DECISIONS_0.9.0.md`](PRODUCER_DECISIONS_0.9.0.md)、Issue #68
 - 公開・復元：[`RELEASE_BACKUP_RECOVERY.md`](RELEASE_BACKUP_RECOVERY.md)
 - 人物・物語の既存履歴：`CHARACTERS_0.7.0.md`、`STORY_BIBLE_0.7.0.md`
 
@@ -47,6 +48,8 @@ Codexの実行場所はIssueごとにLocalまたはCloudを選ぶ。同一作業
 - 作品世界を壊すだけの露悪表現や、全敵を同じ肉塊にする量産を避ける
 
 ## 5. 現行Version 0.9.0
+
+Version 0.9.0はrelease SHA `f2633c538756385f13d166d3adbcdd39b3a08b21`をannotated `v0.9.0`、GitHub Release、GitHub Pagesへ正式公開済み。公開request IDは`v0.9.0-formal-release-20260729`。
 
 ### Campaign
 
@@ -93,7 +96,42 @@ Codexの実行場所はIssueごとにLocalまたはCloudを選ぶ。同一作業
 
 全bossは共通data、全身侵入後のcombat-ready、大型表示、専用HP、登場、攻撃予告を持つ共通基盤へ統合済み。TAKUYAと改札喰いも同基盤へ改修済み。
 
-## 6. 対応プラットフォーム
+## 6. 開発中Version 0.9.5
+
+Version 0.9.5は新しいStage、unit、bossを増やすVersionではない。正式公開中の0.9.0を基準に、smartphone性能、全16体animation、VFX、敵／boss／CRAWLER表現、残存不具合、雇用UX、saveを一つの品質更新として完成させる。
+
+### Mobile
+
+- smartphone横画面全般を対象にrender DPR、cadence、static cache、offscreen culling、object pool、bounded effectsを整える
+- hidden、pause、lock、BFCache相当の復帰でsimulation、render、audioを二重生成しない
+- 自動、高画質、省電力の3段階を持ち、gameplay結果は変えない
+- 0.9.0と同条件のframe time、memory proxy、object countを比較する
+- 物理smartphone未確認なら発熱解消済みと断定しない
+
+### Animation／VFX
+
+- 全16体で呼吸、重心、移動開始／停止／turn、接地、weapon anchor、recoil、被弾、戦闘不能を改善する
+- 全16 manual abilityで通常攻撃と異なるwind-up、active、recovery、VFX、SE、damage timingを維持または強化する
+- ハチ、レイダー、クレイジーキング、TKY、Mrs.チハ、マヨちゃんを代表6体のvertical sliceとし、品質確定後に残り10体へ展開する
+- enemy、boss、CRAWLER、telegraph、muzzle、projectile、impact、smoke等をplayer-facingで改善する
+- debug primitive、placeholder、意味不明なbox／bar／矢印を残さない
+
+### 雇用／unlock／save
+
+- 人間・動物unitのcaps取得は「雇用」、自動加入は「加入」と表現する
+- 初回だけsafe screenで雇用可能popupを表示し、receiptとnotice seen stateで重複を防ぐ
+- マヨちゃんはSurvival Wave 20へ入った時点で雇用可能にし、既存owned／recruitable saveを再lockしない
+- 宮本武蔵のStage 20解放は維持する
+- LAN、localhost、GitHub Pagesは別originであり、save共有がないことをQA／開発表示で明示する
+- 必要ならv13→v14 migrationを行い、既存progress、caps、equipment、records、settings、recovery経路を保持する
+
+### Release境界
+
+docs-only PRを`main`へ通常mergeした結果から`integration/0.9.5`を作成し、工程branch／Draft PRを段階統合する。`integration/0.9.5 → main`、`v0.9.5` tag、GitHub Release、GitHub Pages正式deployment、Issue #96 closeは別承認まで禁止する。
+
+PWA、Service Worker、offline／installはVersion 0.9.6へ分離する。
+
+## 7. 対応プラットフォーム
 
 - 主対象：smartphone横画面
 - PC横画面も正式対応
@@ -104,7 +142,7 @@ Codexの実行場所はIssueごとにLocalまたはCloudを選ぶ。同一作業
 - touch target、可読性、押しやすさ、回転、tab／lock復帰を確認する
 - 物理iPhone未使用時に、実機、発熱、speaker聴感を確認済みと断定しない
 
-## 7. 中心ゲームループ
+## 8. 中心ゲームループ
 
 **戦闘  
 → 報酬・caps獲得  
@@ -120,7 +158,7 @@ Codexの実行場所はIssueごとにLocalまたはCloudを選ぶ。同一作業
 - 支援ゲージ：航空支援等
 - caps：unit取得、Level、equipment、恒久解放
 
-## 8. Campaign長期構造
+## 9. Campaign長期構造
 
 - 0.8.0公開時：Stage 1〜16
 - 0.9.0公開時：Stage 1〜20
@@ -132,7 +170,7 @@ Codexの実行場所はIssueごとにLocalまたはCloudを選ぶ。同一作業
 - threat categoryは事前表示可能だが、全敵・数・弱点を完全公開しない
 - 通常戦闘、boss戦、防衛、護衛、救助、封鎖、異常発生任務等を共通battle foundationで構成する
 
-## 9. Boss方針
+## 10. Boss方針
 
 - 通常敵より明確に大きく、初見でbossと認識できる
 - ただしsmartphone戦場を覆い、味方、足元、telegraphを隠す大きさにはしない
@@ -149,13 +187,13 @@ Version 0.9.0の新boss作業名：
 - ガイレン
 - フタゴ
 
-`クロメ`と`ガイレン`を優先候補とし、全5体の正式表示名はidentity確認時にプロデューサーが固定する。
+Version 0.9.0では上記5体のidentityと表示名をプロデューサー承認済みとして正式統合した。将来の派生assetも承認済みidentityを維持する。
 
-## 10. 通常感染体
+## 11. 通常感染体
 
 現行にはwalker、runner、spitter、crusher、shade、abomination、grappler、ooze、sprinter等がある。
 
-Version 0.9.0では通常感染体designを6種増やす。
+Version 0.9.0で通常感染体designを6種追加済み。今後も次の量産基準を維持する。
 
 - 色替えや服替えだけで別種扱いにしない
 - 顔、体格、姿勢、歩行、損傷、攻撃部位を変える
@@ -165,7 +203,7 @@ Version 0.9.0では通常感染体designを6種増やす。
 - 初登場後にSurvivalと適合する後半Stageへ追加
 - 漢字、カタカナ、現場通称を使い分けられる
 
-## 11. Playable units
+## 12. Playable units
 
 ### 長期
 
@@ -189,14 +227,14 @@ Version 0.9.0では通常感染体designを6種増やす。
 
 - 受領portraitが唯一の人物identity master
 - Codexは別人物、別顔、別衣装で穴埋めしない
-- Codexはevent portrait、formation／personnel card、battle sprite／atlas、thumbnail等を派生制作する
+- event portrait、formation／personnel card、battle sprite／atlas、thumbnail等へ派生統合済み
 - 顔、髪、体格、肌、衣装、装備、武器、配色、傷、アクセサリーを一致させる
-- 最初の1名で派生基準を確認後、同じ品質基準を残り4名へ適用
+- 最初の1名で派生基準を確認後、同じ品質基準を残り4名へ適用済み
 - 仮人物、既存人物の色違い、別人portraitを使用しない
 
-## 12. Levelと進行
+## 13. Levelと進行
 
-Version 0.9.0でRank 0〜4をLevel 1〜50へ統合する。
+Version 0.9.0でRank 0〜4をLevel 1〜50へ統合済み。
 
 - Rank 0 → Lv1
 - Rank 1 → Lv2
@@ -204,7 +242,7 @@ Version 0.9.0でRank 0〜4をLevel 1〜50へ統合する。
 - Rank 3 → Lv4
 - Rank 4 → Lv5
 
-既存unitを弱体化せず、能力と投入capsを考慮してmigrationする。
+既存unitを弱体化せず、能力と投入capsを考慮してmigration済み。
 
 Level cap：
 
@@ -219,9 +257,9 @@ Level cap：
 - Stage 40：Lv45
 - Stage 50：Lv50
 
-0.9.0ではLv50まで扱えるdataとUIを作るが、公開時の通常解放上限はStage 20対応のLv25。Survival waveではLevel capを解放しない。Level 50以降はequipment、編成、新unit、敵対策等の横成長を使う。
+0.9.0はLv50まで扱えるdataとUIを備え、通常解放上限はStage 20対応のLv25。Survival waveではLevel capを解放しない。Level 50以降はequipment、編成、新unit、敵対策等の横成長を使う。
 
-## 13. Equipment
+## 14. Equipment
 
 Version 0.9.0：
 
@@ -239,7 +277,7 @@ Version 0.9.0：
 
 個人equipmentの割当と戦術equipmentは各presetへ保存する。所持数以上に同じ一品物を同時装備しない。
 
-## 14. Survival Mode
+## 15. Survival Mode
 
 - 無限wave
 - 5waveごとにboss
@@ -254,7 +292,7 @@ Version 0.9.0：
 - 破壊対象の敵拠点を置かず、右端外の感染流入口から侵入
 - 味方が入口へ張り付かない防衛前線を使用
 
-## 15. UI
+## 16. UI
 
 Version 0.9.0の主要分類：
 
@@ -272,7 +310,7 @@ Version 0.9.0の主要分類：
 
 操作構造は軍事端末70%、装飾は生体汚染ホラー30%。機能を小さいbuttonへ詰め込み、意味のない発光やgradientで豪華に見せるだけのUIを避ける。
 
-## 16. CRAWLER
+## 17. CRAWLER
 
 - 生存者が暮らしながら移動する大型装甲拠点
 - 本編では一台の主役CRAWLERを使用
@@ -283,7 +321,7 @@ Version 0.9.0の主要分類：
 - 将来、装甲、火力、指揮・支援の横成長を追加可能
 - 画像サイズの偶然で敗北判定・性能差を生まない
 
-## 17. Save
+## 18. Save
 
 - localStorageとIndexedDB
 - stable ID
@@ -297,7 +335,11 @@ Version 0.9.0の主要分類：
 
 Version 0.9.0では、所有unit、Stage、星、既読、編成、設定、移行Levelを維持し、旧未使用capsだけを新経済用の共通開始資金へ一度だけ再編する。開始資金を0にせず、内容をplayerへ明示する。
 
-## 18. Audio
+Version 0.9.5では、マヨちゃんのSurvival Wave 20到達entitlement、unlock receipt、notice seen stateを必要に応じて追加する。migrationは一度だけ適用し、owned、discovered、recruitable、Stage、星、caps、Level、equipment、presets、records、Survival progress、settings、audio settings、backup／recoveryを保持する。
+
+LAN、localhost、GitHub Pagesは別originであり、localStorage／IndexedDBを共有しない。別originのfresh saveを正式URL上のsave消失と誤認しない。
+
+## 19. Audio
 
 - BGMとSEを独立制御
 - story全文読み上げは実装しない
@@ -307,12 +349,13 @@ Version 0.9.0では、所有unit、Stage、星、既読、編成、設定、移�
 - background／tab復帰後のloop・voice二重化0
 - physical iPhone、speaker、earphoneが未確認ならその事実を明記する
 
-## 19. 開発・公開原則
+## 20. 開発・公開原則
 
 - 正式コードはGitHub `main`のrelease SHA
 - feature／integration branchは候補状態
 - `main`直接push、force push、共有履歴rebase・amend禁止
 - 正式公開はGitHub Pagesのみ
-- release candidateの最終実プレイ合格前に、最終PR Ready化、main merge、tag、Release、正式deploymentを行わない
+- Version 0.9.5はdocs-only merge resultから`integration/0.9.5`を作成し、工程PRを段階統合する
+- Version 0.9.5の物理smartphone確認・別承認前に、`integration/0.9.5 → main`、tag、Release、正式deploymentを行わない
 - 公開後に重大不具合があればrevert PRまたはimmutable release再deploymentで復旧する
 - 未確認・失敗を成功報告しない

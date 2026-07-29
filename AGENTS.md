@@ -17,10 +17,10 @@
 5. 最新`main`のコード、tests、QA記録
 6. 工程別Issue、PR、実装・QA記録
 
-Version 0.9.0では次を使用する。
+Version 0.9.5では次を使用する。
 
-1. `docs/PRODUCER_DECISIONS_0.9.0.md`
-2. Issue #68
+1. `docs/PRODUCER_DECISIONS_0.9.5.md`
+2. Issue #96
 3. 本書
 4. 最新`main`のコード、tests、QA記録
 
@@ -85,7 +85,7 @@ Codexは、固定済み製品判断と安全境界を守る限り、内部構造
 
 対象Versionでintegration branchが指定されている場合、工程branchをintegration向けPRとして段階統合できる。最終`integration/<version> → main`のReady化・mergeは、対象Version正本のrelease境界に従う。
 
-Version 0.9.0では`integration/0.9.0`を使用し、release candidate最終実プレイ合格前に最終PRをReady化・`main` mergeしない。
+Version 0.9.5では、docs-only PRを`main`へ通常mergeした結果から`integration/0.9.5`を作成する。工程branchは`integration/0.9.5`向けPRとして段階統合し、別承認前に`integration/0.9.5 → main`の最終merge、`v0.9.5` tag、GitHub Release、GitHub Pages正式deployment、Issue #96 closeを行わない。
 
 ## 6. 公開契約
 
