@@ -420,15 +420,15 @@ async function waitForSpecialSettlement(page, kind, ownerId) {
       const owner = snapshot.fighters.find(({ id: candidateId }) => candidateId === id);
       if (!owner) return false;
       const receipts = snapshot.manualAbilityReceipts.filter(({ ownerId }) => ownerId === id);
-      if (requestedKind === "crazy-king") {
-        return owner.manualAbility?.phase === "active"
-          && receipts.some(({ eventType }) => eventType === "active-start");
-      }
       if (requestedKind === "mayo-chan") {
         return owner.manualAbility?.phase === "feral"
           && receipts.some(({ eventType }) => eventType === "feral-start");
       }
-      if (requestedKind === "kumaverson" || requestedKind === "guardian") {
+      if (
+        requestedKind === "crazy-king"
+        || requestedKind === "kumaverson"
+        || requestedKind === "guardian"
+      ) {
         return owner.manualAbility?.phase === "cooldown"
           && receipts.some(({ eventType }) => eventType === "active-start")
           && receipts.some(({ eventType }) => eventType === "active-end");
@@ -499,6 +499,11 @@ async function activateSpecial(page, caseName, kind, speed) {
     );
   }
   await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+  const phasePauseArmed = await page.evaluate(
+    (ownerId) => window.__ASHFALL_BATTLE_QA__.armRepresentativeSixPhasePause(ownerId, "recovery"),
+    prepared.ownerId,
+  );
+  invariant(phasePauseArmed, `${kind}/${speed}x: recovery phase pause could not be armed`);
   await page.locator(`.manual-ability-ready[data-fighter-id='${prepared.ownerId}']`).click();
   await page.waitForFunction(
     (ownerId) => {

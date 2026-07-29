@@ -1,0 +1,316 @@
+{
+  "evidenceVersion": 1,
+  "version": "0.9.5-rc",
+  "generatedAt": "2026-07-29T22:54:26.624Z",
+  "branch": "codex/0.9.5-rc",
+  "sourceHeadSha": "9c576b1acb89c5b05a47213fa0c8f450b8d6136c",
+  "integrationBaseSha": "9c576b1acb89c5b05a47213fa0c8f450b8d6136c",
+  "animationEvidence": {
+    "units": [
+      "scout",
+      "gunner",
+      "crazy-king",
+      "tky",
+      "mrs-chiha",
+      "mayo-chan",
+      "brawler",
+      "ranger",
+      "medic",
+      "brute",
+      "kumaverson",
+      "babayaga",
+      "guardian",
+      "engineer",
+      "zakimiya",
+      "miyamoto-musashi"
+    ],
+    "unitCount": 16,
+    "sourceBrowserCases": 8,
+    "sourceCaptures": 708,
+    "normalAttackRuntimeProofs": 144,
+    "specialRecoveryProofs": 100,
+    "failures": {
+      "browser": 0,
+      "groundAnchor": 0,
+      "visualOffFloor": 0,
+      "weaponCues": 0
+    },
+    "contactSheet": "docs/qa/v095/rc/all-sixteen-animation-evidence.png",
+    "contactSheetSha256": "d8cf489de670d805e7757bdf7ae222f4ae04d2d390e6cf7096fefa8d039262fe"
+  },
+  "vfxEvidence": {
+    "ordinaryEnemyKinds": 12,
+    "projectileKinds": 4,
+    "crawlerStates": 6,
+    "bossFoundationCases": 12,
+    "bossAnomalyCases": 18,
+    "productionProjectileTransactions": 24,
+    "productionCrawlerTransactions": 6,
+    "continuousSequences": 24,
+    "contactSheet": "docs/qa/v095/rc/vfx-enemy-boss-crawler-evidence.png",
+    "contactSheetSha256": "9e7332cf098ad4bb3408a3a48cb366dbaedb54ec125497d7080b76a3f894b923"
+  },
+  "performanceComparison": {
+    "baseline": {
+      "version": "0.9.0",
+      "releaseSha": "f2633c538756385f13d166d3adbcdd39b3a08b21",
+      "medianFrameMs": 16.7,
+      "p95FrameMs": 16.7,
+      "maxFrameGapMs": 50,
+      "retainedHeapGrowthPercent": 3.27,
+      "memoryProxyGrowthPercent": 0,
+      "effectiveRenderHz": 59.904444444444444
+    },
+    "rcNormalStressAuto": {
+      "medianFrameMs": 16.7,
+      "p95FrameMs": 16.8,
+      "maxFrameGapMs": 66.7,
+      "retainedHeapGrowthPercent": 2.21,
+      "memoryProxyGrowthPercent": 0,
+      "effectiveSimulationHz": 60.01,
+      "effectiveRenderHz": 44.93,
+      "gatePassed": true
+    },
+    "rcSurvivalWave20Auto": {
+      "medianFrameMs": 33.3,
+      "p95FrameMs": 33.4,
+      "maxFrameGapMs": 100,
+      "retainedHeapGrowthPercent": 3.61,
+      "memoryProxyGrowthPercent": -16.91,
+      "effectiveSimulationHz": 60.01,
+      "effectiveRenderHz": 32.64,
+      "gatePassed": true,
+      "scenarioRepreparations": 0,
+      "renderWorkProxy": 47592.36
+    },
+    "rcSurvivalWave20PowerSave": {
+      "medianFrameMs": 16.7,
+      "p95FrameMs": 16.8,
+      "maxFrameGapMs": 66.7,
+      "retainedHeapGrowthPercent": 14.15,
+      "memoryProxyGrowthPercent": -17.33,
+      "effectiveSimulationHz": 60.01,
+      "effectiveRenderHz": 30,
+      "renderToSimulationRatio": 0.4999,
+      "gatePassed": true,
+      "scenarioRepreparations": 0,
+      "renderWorkProxy": 12958.08
+    },
+    "sameScenarioAutoToPowerSaveRenderWorkProxyReductionPercent": 72.77,
+    "sameScenarioGameplayOutcomeMatched": true
+  },
+  "finalBrowserQa": {
+    "representativeSix": {
+      "passed": 4,
+      "failed": 0
+    },
+    "remainingTen": {
+      "passed": 4,
+      "failed": 0
+    },
+    "enemyVfx": {
+      "passed": 6,
+      "failed": 0,
+      "diagnostics": 0
+    },
+    "residualBugs": {
+      "passed": 96,
+      "failed": 0,
+      "diagnostics": 0
+    },
+    "employmentAndMayo": {
+      "passed": 8,
+      "failed": 0,
+      "diagnostics": 0
+    },
+    "saveMigrationAndOrigin": {
+      "matrixRowsPassed": 6,
+      "matrixRowsFailed": 0,
+      "casesPassed": 78,
+      "casesFailed": 0
+    },
+    "mobileLifecycle": {
+      "runMode": "diagnostic",
+      "passed": 0,
+      "passedWithCapabilityGaps": 4,
+      "failed": 0,
+      "coverageGaps": [
+        "native-visibility-transition-unavailable",
+        "native-bfcache-not-observed",
+        "non-bfcache-reload-requires-new-audio-gesture",
+        "headless-audio-context-unavailable"
+      ],
+      "diagnostics": 0
+    },
+    "assetDecode": {
+      "audioDecoded": 399,
+      "portraitsDecoded": 34,
+      "imagesDecoded": 57,
+      "failures": 0,
+      "diagnostics": 0
+    },
+    "crawlerDefense": {
+      "passed": 240,
+      "failed": 0,
+      "passThroughs": 0,
+      "objectiveDirects": 0,
+      "diagnostics": 0
+    },
+    "battleSpace": {
+      "passed": 4,
+      "failed": 0,
+      "diagnostics": 0
+    },
+    "bossFoundation": {
+      "passed": 12,
+      "failed": 0
+    },
+    "bossAnomalies": {
+      "passed": 18,
+      "failed": 0
+    },
+    "survivalWaves": {
+      "passed": 2,
+      "failed": 0,
+      "diagnostics": 0
+    },
+    "outbreak": {
+      "passed": 6,
+      "failed": 0,
+      "fullRuntimeSettlements": 1
+    },
+    "combatPresentation": {
+      "passed": 4,
+      "failed": 0,
+      "diagnostics": 0
+    }
+  },
+  "rawEvidence": {
+    "normalPerformance": {
+      "path": "outputs/v095-rc/performance-normal-stress-auto-15m.json",
+      "sha256": "a52fed07cf03669ea328472496ff318924958deaacce79fc0923d38fdf1e8f55"
+    },
+    "survivalAutoPerformance": {
+      "path": "outputs/v095-rc/performance-survival-wave20-auto-15m.json",
+      "sha256": "772f46e7b8d49a43c86ad72975e9ae17c32a466d4045b5fdef05cab6f9563abc"
+    },
+    "powerSavePerformance": {
+      "path": "outputs/v095-rc/performance-survival-wave20-power-save-15m.json",
+      "sha256": "bf1cd0bef5e0b62bcdbf4389def36da38e26da29f9cc1f135140c97efeda6397"
+    },
+    "finalBrowserQa": {
+      "representativeSix": {
+        "path": "outputs/v095-representative-six/summary.json",
+        "sha256": "44ae658484e8ea7dc183b9aeda891d18b608e088b2b93c47bb9778b33e8897c8"
+      },
+      "remainingTen": {
+        "path": "outputs/v095-remaining-ten/summary.json",
+        "sha256": "0c9867d4a820e9d6ddc45803cf7edf703e3b11cf7ad3b99ed0e8717a09591896"
+      },
+      "enemyVfx": {
+        "path": "outputs/v095-enemy-vfx-browser-smoke/summary.json",
+        "sha256": "e9bc3fdf4f18b2b94cc38eff3dd1ef467de8af5ad331d70c4df816ccf958da49"
+      },
+      "residualBugs": {
+        "path": "outputs/v095-residual-bugs-browser-smoke/summary.json",
+        "sha256": "ccd2a45c6f293e07d5f507a65a9ab0c3440bc5a0ee12f531e40bbfd3de48604a"
+      },
+      "employmentUnlock": {
+        "path": "outputs/v095-employment-unlock/summary.json",
+        "sha256": "e8752a26b4b8dd4af5b69e6a4830919f7ee217796710783f76ba133797509532"
+      },
+      "saveMigration": {
+        "path": "outputs/save-migration-browser-matrix/summary.json",
+        "sha256": "c9a06858307805343b4b7c6c9e12233c59099cade3603509ca356915427748f5"
+      },
+      "mobileLifecycle": {
+        "path": "outputs/v095-rc/mobile-lifecycle/summary.json",
+        "sha256": "7c0612d6ede219026c529da0080102673dd09787855e716c1261ff4409d15709"
+      },
+      "assetDecode": {
+        "path": "outputs/v095-rc/asset-decode/summary.json",
+        "sha256": "88f3369480a5b06b6e0fac31265e49cabcd920ded712e1ad09ae85dc1b311fbb"
+      },
+      "crawlerDefense": {
+        "path": "outputs/v095-rc/crawler-defense/summary.json",
+        "sha256": "0f75dc64e9e9bddaad861c7e1333cc85d0b23c1616769d7a3bc1f010d6463c0b"
+      },
+      "battleSpace": {
+        "path": "outputs/battle-space-browser-smoke/summary.json",
+        "sha256": "0ed9fab31e2707fe6b18feb69b630a46d91d3c2e321968701f91eab0855ba811"
+      },
+      "bossFoundation": {
+        "path": "outputs/boss-foundation-browser-smoke/report.json",
+        "sha256": "96ae3b095e006092e34b089c66666fbb7a47e13931fa0a48017b7a98f8fa0581"
+      },
+      "bossAnomalies": {
+        "path": "outputs/v095-rc/boss-anomalies/report.json",
+        "sha256": "b5fcad51b05040a17a01a9866f8ba49ce3f98a3de4e1f79b97e77bf3c42694ba"
+      },
+      "survivalWaves": {
+        "path": "outputs/v095-rc/survival-wave-progression-final/summary.json",
+        "sha256": "487aa337ac8af87323b005aaac5b8ea32f8a2e54b6a4ab356ea4d14e70436e2f"
+      },
+      "outbreak": {
+        "path": "outputs/outbreak-runtime-browser-smoke/report.json",
+        "sha256": "5a93e0f8a18dd8f15e88ce6b127fa997d866438337f74cc16e7f2c809b0ee1a9"
+      },
+      "combatPresentation": {
+        "path": "outputs/combat-presentation-browser-smoke/summary.json",
+        "sha256": "95683a9a97a8a857c27a563e63d6a80182580ad62e2e7d2cbac349b242fdd73c"
+      }
+    },
+    "sourceFrameSha256": {
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-scout-05-attack-active.png": "ba91d825f7d47cb17fc8c7c5afb6f362c403acc217466ca98b16af6c921b66a6",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-scout-special-1x.png": "1b2409948d1911f6234a9521f5ead6c74b22896f2cba5e16bbd6a6865986292b",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-gunner-05-attack-active.png": "ba65cbfd25a5ab1a5721976741b37593d9f197ef6d454da6d114139baf6315fe",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-gunner-special-1x.png": "9dcf0b746231874803f5347e519c96fe72511287f2748811fce5fb19bcf97dc4",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-crazy-king-05-attack-active.png": "83a0b76565d909729044e774e28eb7a7d443d9f6e7ad54fc20eb6775d8903b2b",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-crazy-king-special-1x.png": "17705d6e64d4160bdb1f49e3560529c52083616d9ec82585c6d8a44545994918",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-tky-05-attack-active.png": "038c3a65cfbbe0f7a02779cf389f28ddfabb62b7a4ef6efab24c5973e23a1a0b",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-tky-special-1x.png": "dc4c8969c5cc5da2be4889316e7dda6b702bdc14b77d381d6d243b810f62fb8b",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-mrs-chiha-05-attack-active.png": "cfd59736ccddbaa86b2cfa24e792f576804e74baa06375ecd177d3ba2d99ad99",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-mrs-chiha-special-1x.png": "91ce98a032d4c0d9cccab0654b867247b38fa1ee4473fd0e107a4f0c254f5cdb",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-mayo-chan-05-attack-active.png": "37f9e34386c0d035e86b27a220427e85280afc42174997c297ec089dc9d9b4e2",
+      "outputs/v095-representative-six/chromium-844x390-dpr3-auto-mayo-chan-special-1x.png": "390ea0a09ababb3635566900fc9839dc20be3916832cb4eab1355ae494e3c560",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-brawler-05-attack-active.png": "c47fc778f24735a2f508348229a633e18ac311e6dbde11f41ea63dabfd09ba98",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-brawler-special-1x.png": "19df56e44df599bc7469272bafdfb08229c59aaf16bfa78afe553ca189f9ffe9",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-ranger-05-attack-active.png": "e26d1008ff22d55a87517c5f69cdb8a4382cf0260dd6ec135c30e39f8c2075af",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-ranger-special-1x.png": "0c8b4a3db054a0126895bfa727de13e210aa7f2a3b1b5151e730a43dce03e0cb",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-medic-05-attack-active.png": "b2a1b9f721d03df65e7926160b9f04f12317a128d5e9925bfb35d7df69e602c6",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-medic-special-1x.png": "a6d18c3009c7c1db968d57ee085d1c231b0221a80ca0206168017224bce236bf",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-brute-05-attack-active.png": "aef1c8374ab87795b47284c4b6bea00f4fe0a45b9a80fd8872aaf79a3caf9709",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-brute-special-1x.png": "1275b9eff90013de7ab95763f67beee13a52eeb0f75b8ea15d419f1205200f40",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-kumaverson-05-attack-active.png": "e14926012e1e4841bd802d7ed4e12867ff13ee3ea74a160ec8b4a400fc1ef2d3",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-kumaverson-special-1x.png": "5deba3e24f3dee88e8f5156eeeefe44dfdb9e1ceb1f899a2d4b2d71ab6713c43",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-babayaga-05-attack-active.png": "250ea166a429840cf9a9f6bf49457c59f48d99393e035df27b5f53985c7a834a",
+      "outputs/v095-remaining-ten/webkit-844x390-dpr3-auto-babayaga-special-1x.png": "cefeb46ed7b21c1b87158758ce0baa93c65afbb367d07ac6c63032ae19bec7f8",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-guardian-05-attack-active.png": "633647f2059af1ff8d341c691076b1f87009db7f276e1d38edcbf6ffa0f38ba5",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-guardian-special-1x.png": "d709008a9e5670591ccea8ff9391c83a5d07c875baed9f0a4d8b030b6432b177",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-engineer-05-attack-active.png": "9ee533cededa16bf8fb2de2a695537f177ad0171ff606b46f3791519eebdc19c",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-engineer-special-1x.png": "81a5d1aff6065828cfac9fa0a00b04512a2ddd5d2ee8799b1e7745901bd25fc3",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-zakimiya-05-attack-active.png": "9d301f506c63b976b7673e07f9bd9a34a553a65543da922cb872be5c47c8fc34",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-zakimiya-special-1x.png": "31528ac22519ab3285c97845435427455439f8ce23f09dc40ff4062f09bf009c",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-miyamoto-musashi-05-attack-active.png": "f44083c599e264e48b81676d33051dbe3ca9925792eff377d3d9189fdf281163",
+      "outputs/v095-remaining-ten/chromium-844x390-dpr3-auto-miyamoto-musashi-special-1x.png": "f867438f6e621f9ee135d3f3e59f40afa25233eb58dfe8b6c284055f72927a45",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-ordinary-walker-warning-low-hp-frame-0.png": "f1dbb1b928fbda7e4d21476a526089289182d3239c9aa9b702ca5d5ca4d4d7fa",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-enemy-spitter-frame-0.png": "404256640435de1d56856e20f7bcaa71b91563ecfb4c7d8bfb1923fa488817bf",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-enemy-ooze-frame-0.png": "4b578a3638643b9ce0f2da36739ff602280934c47045ec10c103721692db7e9e",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-enemy-resonator-frame-1.png": "722ca8ecc961c48b7d3ed4757336120fee40563565297eb99f167f1ace62795b",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-enemy-choir-knot-frame-0.png": "4848d04dd4aa4db7bb00a8715b41e0242f300e6871978c5cfd4d5f6c56166a34",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-boss-mother-warning-frame-1.png": "d9ab68d388025330e89e25ceef82210b7e053316f58b140f0eaa5fe2a5636dd0",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-boss-gairen-low-hp-frame-1.png": "81567ddd5c8638302a832899ae3ac08ade87d821a72311bae35872a7d696df65",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-crawler-door-frame-0.png": "ecff09aec6f0379029a4d33d67e3a9d717e3bf28c74fdc2621c328276c68569e",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-crawler-firing-frame-1.png": "7daebd57a5ccc2a5b20e685b63672908085d95d4a3dae1fc07ca9ca3f412d76a",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-crawler-hit-frame-0.png": "8f0fef143ed4b347831c63f2e192f334a7a6954c07856dc111e5b27f02a6dac2",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-crawler-critical-frame-0.png": "9cb1bed2abc14891cbe69fab5e379270279c9b04eec57a388d5bfec21c6c99d7",
+      "outputs/v095-enemy-vfx-browser-smoke/chromium-1280x720-crawler-repair-frame-0.png": "138cb6c70bdbb012f290383af91928fcb3243d4e439c87a3fad6f56b60be99a4"
+    }
+  },
+  "capabilityBoundary": {
+    "physicalSmartphoneHeatVerified": false,
+    "nativeSafariVerified": false,
+    "physicalSpeakerVerified": false,
+    "physicalTouchRotationLockRecoveryVerified": false
+  }
+}

@@ -204,6 +204,11 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(waveEntitlementQa, /entryMode: "production-runtime-queue-wave"/);
   assert.doesNotMatch(waveEntitlementQa, /beginSurvivalWave\(/);
   assert.doesNotMatch(waveEntitlementQa, /setPendingSurvivalWaveEntitlement\(\{/);
+  assert.match(waveEntitlementQa, /prepareSurvivalWave20StressProof:[\s\S]*initialSurvivalGame\(/);
+  assert.match(waveEntitlementQa, /prepareSurvivalWave20StressProof:[\s\S]*prepareStressQa\(fresh\)/);
+  assert.match(waveEntitlementQa, /fresh-production-survival-runtime-with-dense-fixture/);
+  assert.match(game, /armRepresentativeSixPhasePause:[\s\S]*representativeSixPhasePauseRef\.current/);
+  assert.match(game, /requestedPhasePause\?\.ownerId === owner\.id[\s\S]*g\.paused = true/);
   assert.match(game, /acknowledgeEmploymentNotice[\s\S]*persistCampaignSave\(nextSave\)[\s\S]*setPersonnelInitialMode\("acquisition"\)/);
   assert.doesNotMatch(`${game}\n${screens}`, /調達/);
   assert.match(screens, /mode === "upgrade" && unit\.owned[\s\S]*`Lv\$\{unit\.level \+ 1}へ：\$\{unit\.nextUpgradeCost}キャップ`/);
@@ -1274,12 +1279,51 @@ test("performance and lifecycle gates fail closed when browser capabilities are 
     new URL("../scripts/mobile-lifecycle-browser-smoke.mjs", import.meta.url),
     "utf8",
   );
+  const rcEvidence = await readFile(
+    new URL("../scripts/v095-rc-evidence.mjs", import.meta.url),
+    "utf8",
+  );
+  const representativeSix = await readFile(
+    new URL("../scripts/v095-representative-six-browser-smoke.mjs", import.meta.url),
+    "utf8",
+  );
   assert.match(performance, /cdp-retained-heap-after-gc-and-bounded-runtime-proxy/);
   assert.match(performance, /memoryGrowthAtMost25Percent: memoryBudgetPassed/);
   assert.match(performance, /simulationUpdatesSufficient/);
   assert.match(performance, /renderUpdatesSufficient/);
+  assert.match(performance, /PERF_QA_SCENARIO/);
+  assert.match(performance, /survival-wave20-stress/);
+  assert.match(performance, /prepareSurvivalWave20StressProof/);
+  assert.match(performance, /!\['wave-ready', 'in-wave'\]\.includes\(survivalState\.phase\)/);
+  assert.match(performance, /scenarioRepreparations === 0/);
+  assert.match(performance, /survivalWave20GameplayStayedActive/);
+  assert.match(performance, /humanAttackSequences > 0/);
+  assert.match(performance, /enemyAttackSequences > 0/);
+  assert.match(performance, /powerSave30FpsLoadReductionObserved/);
+  assert.match(performance, /renderCadenceMatchesProfile/);
+  assert.match(performance, /denseSurvivalAuto/);
+  assert.match(performance, /medianFpsMeetsScenarioMinimum/);
+  assert.match(performance, /denseSurvivalAuto[\s\S]*\? 67/);
+  assert.match(performance, /p95FrameWithinQualityBudget/);
   assert.match(performance, /noUnexpectedNavigationOrReload/);
   assert.match(performance, /Object\.values\(gateChecks\)\.every\(\(check\) => check === true\)/);
+  assert.match(rcEvidence, /all-sixteen-animation-evidence\.png/);
+  assert.match(rcEvidence, /vfx-enemy-boss-crawler-evidence\.png/);
+  assert.match(rcEvidence, /renderLoadReductionPercent >= 25/);
+  assert.match(rcEvidence, /physicalSmartphoneHeatVerified: false/);
+  assert.match(rcEvidence, /finalSaveMigration\.passed === 6/);
+  assert.match(rcEvidence, /savePassedCases === 78/);
+  assert.match(rcEvidence, /finalCrawlerDefense\.total === 240/);
+  assert.match(rcEvidence, /finalOutbreak\.length === 6/);
+  assert.match(rcEvidence, /finalMobileLifecycle\.runMode === "diagnostic"/);
+  assert.match(
+    representativeSix,
+    /requestedKind === "crazy-king"[\s\S]*owner\.manualAbility\?\.phase === "cooldown"[\s\S]*eventType.*"active-end"/,
+  );
+  assert.doesNotMatch(
+    representativeSix,
+    /requestedKind === "crazy-king"\) \{[\s\S]{0,160}manualAbility\?\.phase === "active"/,
+  );
   assert.match(lifecycle, /MOBILE_LIFECYCLE_QA_MODE \?\? "gate"/);
   assert.match(lifecycle, /runMode === "gate" && summary\.passedWithCapabilityGaps > 0/);
 });

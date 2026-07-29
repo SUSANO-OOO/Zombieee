@@ -12,6 +12,10 @@ const infectedGate = await readFile(
   new URL("../scripts/ai-mission-browser-smoke.mjs", import.meta.url),
   "utf8",
 );
+const outbreakGate = await readFile(
+  new URL("../scripts/outbreak-runtime-browser-smoke.mjs", import.meta.url),
+  "utf8",
+);
 const infectedWrapper = await readFile(
   new URL("../scripts/v090-infected-browser-smoke.mjs", import.meta.url),
   "utf8",
@@ -39,6 +43,10 @@ test("Survival RC gate progresses wave 1-5 without the completion QA hook", () =
   assert.match(survivalGate, /JSON\.stringify\(\[1, 2, 3, 4, 5, 6\]\)/);
   assert.match(survivalGate, /entry\.lastCompletedWave === entry\.wave - 1/);
   assert.match(survivalGate, /\.unit-card:not\(:disabled\)/);
+  assert.match(
+    survivalGate,
+    /document\.querySelectorAll\("\.survival-upgrade-choices button"\)\.length === 3/,
+  );
 });
 
 test("infected RC gate observes ordered same-fighter activations on Stage 17-20", () => {
@@ -96,4 +104,13 @@ test("RC browser gates reject empty engine lists and unbounded timeouts", () => 
   assert.match(survivalGate, /Number\.isFinite\(parsedTimeout\)/);
   assert.match(infectedGate, /engines\.length === 0/);
   assert.match(infectedGate, /Number\.isFinite\(parsedTimeout\)/);
+});
+
+test("Outbreak RC gate acknowledges the employment notice before map navigation", () => {
+  assert.match(outbreakGate, /\.employment-available-popup/);
+  assert.match(outbreakGate, /getByRole\("button", \{ name: "あとで", exact: true \}\)/);
+  assert.match(outbreakGate, /index < 16/);
+  assert.match(outbreakGate, /current\.getAttribute\("aria-label"\) !== previousLabel/);
+  assert.match(outbreakGate, /Employment popup queue exceeded the sixteen-unit safety bound/);
+  assert.match(outbreakGate, /persisted\.revision === settlementBaseline\.revision \+ 1/);
 });
