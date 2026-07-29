@@ -9,7 +9,12 @@ import {
 } from "../app/allyAi.js";
 import { createBattleDefinition } from "../app/battleDefinitions.js";
 import { CAMPAIGN_STAGES } from "../app/campaign.js";
-import { COMBAT_ROLE_RULES, canNormalAttackTarget, combatHitboxesOverlap } from "../app/combatLifecycle.js";
+import {
+  COMBAT_ROLE_RULES,
+  NORMAL_ATTACK_REACH_TOLERANCE,
+  canNormalAttackTarget,
+  combatHitboxesOverlap,
+} from "../app/combatLifecycle.js";
 import { LANE_Y, UNIT_CARDS, WORLD_GEOMETRY, advanceZombieX, humanCombatMinX, isCrawlerRouteBlocker } from "../app/gameRules.js";
 
 function advance(unit, intent, speed = 40) {
@@ -426,7 +431,7 @@ test("an exact CRAWLER attacker outranks a broad base-zone threat", () => {
 test("all campaign stages and melee allies reach a CRAWLER attacker instead of sticking at the muster line", () => {
   const enemy = {
     id: "breach-walker",
-    x: WORLD_GEOMETRY.baseX + 25 + 10,
+    x: WORLD_GEOMETRY.baseX + 9,
     lane: 1,
     hp: 100,
     bodyRadius: 11,
@@ -457,11 +462,13 @@ test("all campaign stages and melee allies reach a CRAWLER attacker instead of s
       });
       unit = { ...unit, x: Math.max(minX, nextX) };
       previousIntent = intent;
-      if (Math.abs(unit.x - enemy.x) <= unit.range + enemy.bodyRadius) break;
+      if (Math.abs(unit.x - enemy.x)
+        <= unit.range + enemy.bodyRadius + NORMAL_ATTACK_REACH_TOLERANCE) break;
     }
 
     assert.ok(
-      Math.abs(unit.x - enemy.x) <= unit.range + enemy.bodyRadius,
+      Math.abs(unit.x - enemy.x)
+        <= unit.range + enemy.bodyRadius + NORMAL_ATTACK_REACH_TOLERANCE,
       `${stage.id}/${card.kind} stopped at x=${unit.x} before reaching the CRAWLER attacker`,
     );
   }

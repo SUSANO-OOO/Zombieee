@@ -42,6 +42,7 @@ process.env.V095_VISUAL_BASELINE_QA_BASE_URL = origin;
 process.env.V095_ANIMATION_FOUNDATION_QA_BASE_URL = origin;
 process.env.V095_REPRESENTATIVE_SIX_QA_BASE_URL = origin;
 process.env.V095_ENEMY_VFX_QA_BASE_URL = origin;
+process.env.V095_RESIDUAL_BUGS_QA_BASE_URL = origin;
 process.env.STATION_QA_BASE_URL = origin;
 process.env.P5_QA_BASE_URL = origin;
 process.env.PROGRESSION_QA_BASE_URL = origin;

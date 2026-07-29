@@ -71,11 +71,16 @@ function diagnosticsFor(page) {
 }
 
 function normalizedDiagnostics(diagnostics) {
+  const knownHeadlessAutoplayWarnings = diagnostics.warnings.filter(
+    (warning) => warning.includes("The AudioContext was not allowed to start"),
+  );
   return {
     ...diagnostics,
     warnings: diagnostics.warnings.filter(
-      (warning) => !warning.includes("was preloaded using link preload but not used"),
+      (warning) => !warning.includes("was preloaded using link preload but not used")
+        && !warning.includes("The AudioContext was not allowed to start"),
     ),
+    knownHeadlessAutoplayWarnings,
   };
 }
 
@@ -326,6 +331,7 @@ for (const engine of engines) {
         invariant(canvasEvidence.nonDarkRatio > .18, `battle canvas remained blank/dark: ${JSON.stringify(canvasEvidence)}`);
         const cleanDiagnostics = normalizedDiagnostics(diagnostics);
         for (const [kind, entries] of Object.entries(cleanDiagnostics)) {
+          if (kind === "knownHeadlessAutoplayWarnings") continue;
           invariant(entries.length === 0, `${kind}: ${JSON.stringify(entries)}`);
         }
         await page.screenshot({ path: path.join(evidenceDir, `${name}-enemy-base.png`) });

@@ -1106,7 +1106,7 @@ export function advanceZombieX({ enemyX, speed, seconds, burning = false, target
 export function humanCombatMinX({ desiredX = null, hasEnemyTarget = false } = {}) {
   const musterFloor = WORLD_GEOMETRY.musterX - 8;
   if (!hasEnemyTarget || !Number.isFinite(desiredX)) return musterFloor;
-  const doorwayFloor = WORLD_GEOMETRY.crawler.exitX - 56;
+  const doorwayFloor = WORLD_GEOMETRY.crawler.rampFootX;
   return Math.max(doorwayFloor, Math.min(musterFloor, desiredX));
 }
 

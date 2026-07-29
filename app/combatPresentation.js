@@ -222,6 +222,7 @@ export function combatFacingDirection({
   side,
   aiMoveDirection = 0,
   entryDirection = 0,
+  targetDirection = 0,
   manualDirection = 0,
   manualAbilityActive = false,
 } = {}) {
@@ -229,10 +230,18 @@ export function combatFacingDirection({
     if (manualAbilityActive && Number(manualDirection) !== 0) {
       return Number(manualDirection) < 0 ? "left" : "right";
     }
-    return Number(aiMoveDirection) < -.05 ? "left" : "right";
+    if (Number(aiMoveDirection) > .05) return "right";
+    if (Number(aiMoveDirection) < -.05) return "left";
+    if (Number(targetDirection) !== 0) {
+      return Number(targetDirection) < 0 ? "left" : "right";
+    }
+    return "right";
   }
   if (Number(aiMoveDirection) > .05) return "right";
   if (Number(aiMoveDirection) < -.05) return "left";
+  if (Number(targetDirection) !== 0) {
+    return Number(targetDirection) < 0 ? "left" : "right";
+  }
   return Number(entryDirection) > 0 ? "right" : "left";
 }
 
