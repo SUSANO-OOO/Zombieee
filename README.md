@@ -23,7 +23,7 @@
 - caps経済再編、詳細result、敵／boss図鑑、戦績記録
 - smartphone横画面向けの出撃・部隊・補給所・記録UI
 
-このsourceは、プロデューサー受入済みのVersion 0.9.0 release candidateです。正式公開の成否は、[正式URL](https://susano-ooo.github.io/Zombieee/)のmetadata、annotated tag、GitHub Release、Actions、[Issue #68](https://github.com/SUSANO-OOO/Zombieee/issues/68)を照合して判断してください。
+Version 0.9.0はrelease SHA `f2633c538756385f13d166d3adbcdd39b3a08b21`をannotated `v0.9.0`、GitHub Release、GitHub Pagesへ正式公開済みです。公開request IDは`v0.9.0-formal-release-20260729`です。
 
 正確なrelease SHA、tag、Issue、公開metadataは[PROJECT_STATE](docs/PROJECT_STATE.md)を確認してください。
 
@@ -51,6 +51,14 @@
 
 0.9.0の正式製品判断は[プロデューサー決定台帳](docs/PRODUCER_DECISIONS_0.9.0.md)、プレイアブル側の個別能力と頭上UIは[手動アビリティ仕様](docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md)を参照してください。
 
+## Version 0.9.5の開発
+
+Version 0.9.5は[Issue #96](https://github.com/SUSANO-OOO/Zombieee/issues/96)を実行台帳とし、smartphone性能、全16体の戦闘アニメーション、VFX、敵／boss／CRAWLER、0.9.0残存不具合、雇用UX、マヨちゃん解放、save migrationを一つの品質更新として進めます。
+
+最上位の製品判断は[Version 0.9.5プロデューサー決定台帳](docs/PRODUCER_DECISIONS_0.9.5.md)です。docs-only PRを`main`へ通常mergeした結果から`integration/0.9.5`を作成し、工程branch／Draft PRを段階統合します。
+
+`integration/0.9.5 → main`、`v0.9.5` tag、GitHub Release、GitHub Pages正式deployment、Issue #96 closeは別承認まで行いません。PWA、Service Worker、offline／install対応はVersion 0.9.6へ分離します。
+
 ## 文書
 
 | 文書 | 役割 |
@@ -58,7 +66,8 @@
 | [AGENTS.md](AGENTS.md) | 恒久的な実装・検証・GitHub・release原則 |
 | [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | 現在のrelease、SHA、公開、次の正式作業 |
 | [docs/PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md) | 長期目標、Version順、Stage／unit拡張方針 |
-| [docs/PRODUCER_DECISIONS_0.9.0.md](docs/PRODUCER_DECISIONS_0.9.0.md) | Version 0.9.0の製品判断と境界 |
+| [docs/PRODUCER_DECISIONS_0.9.5.md](docs/PRODUCER_DECISIONS_0.9.5.md) | Version 0.9.5の製品判断とrelease境界 |
+| [docs/PRODUCER_DECISIONS_0.9.0.md](docs/PRODUCER_DECISIONS_0.9.0.md) | Version 0.9.0の製品判断と公開履歴 |
 | [docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md](docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md) | 全16体の手動アビリティ、ready icon、個体別cooldown、新5体の戦闘仕様 |
 | [docs/RELEASE_BACKUP_RECOVERY.md](docs/RELEASE_BACKUP_RECOVERY.md) | GitHub Pages公開、tag、Release、rollback、bundle |
 | [docs/CHARACTERS_0.7.0.md](docs/CHARACTERS_0.7.0.md) | 既存人物、役割、加入、内部IDの履歴基準 |

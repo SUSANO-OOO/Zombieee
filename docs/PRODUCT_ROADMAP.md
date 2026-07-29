@@ -9,11 +9,11 @@
 詳細の所有元：
 
 - 現在状態：`docs/PROJECT_STATE.md`
-- Version 0.9.0製品判断：`docs/PRODUCER_DECISIONS_0.9.0.md`
-- Version 0.9.0実行台帳：Issue #68
+- Version 0.9.5製品判断：`docs/PRODUCER_DECISIONS_0.9.5.md`
+- Version 0.9.5実行台帳：Issue #96
 - 恒久運用：`AGENTS.md`
 - 公開・復元：`docs/RELEASE_BACKUP_RECOVERY.md`
-- 過去Version判断：各`PRODUCER_DECISIONS_*`、Issue、PR
+- 過去Version判断：`docs/PRODUCER_DECISIONS_0.9.0.md`を含む各`PRODUCER_DECISIONS_*`、Issue、PR
 
 本書は現在SHAや詳細実装を重複して所有しない。個別Versionの正本と衝突する場合は、個別正本を優先する。
 
@@ -96,103 +96,58 @@
 - caps経済再編、個人equipment2枠、戦術equipment2枠、約20種の装備
 - 出撃、部隊、補給所、記録のUIと、詳細result、図鑑、戦績
 - save schema v13、旧save migration、mobile／performance QA
+- release SHA `f2633c538756385f13d166d3adbcdd39b3a08b21`をannotated `v0.9.0`、GitHub Release、GitHub Pagesへ正式公開
+- GitHub Pages Release #150、Public QA #116成功
 
-## 4. Version 0.9.0 — 戦闘・育成・サバイバル統合（RC受入済み）
+## 4. Version 0.9.5 — Mobile・animation・VFX・雇用品質更新
 
-Issue：#68
+Issue：#96
 
-状態：**実装・RC受入・正式公開承認済み。公開結果はlive metadataとIssue #68で確定**
+状態：**製品判断承認済み・docs-only工程中**
 
-最上位正本：`docs/PRODUCER_DECISIONS_0.9.0.md`
+最上位正本：`docs/PRODUCER_DECISIONS_0.9.5.md`
 
 ### 目的
 
-- 本編、育成、装備、boss、survivalを一つの反復ループへ接続する
-- Stage 20、16 playable units、通常感染体6種、boss追加によってbattle量と編成幅を増やす
-- capsを継続的に使う理由を作る
-- smartphoneで戦場を広く、bossを大きく、UIを明確に見せる
+- smartphone横画面全般で長時間遊びやすいrender、lifecycle、memory特性へ改善する
+- 全16体の通常戦闘とmanual abilityを、接地、方向、weapon anchor、VFX、SE、damage timingまで含めて刷新する
+- enemy、boss、CRAWLER、戦場描画とVersion 0.9.0残存不具合を横断修正する
+- unit取得を「雇用」体験として統一し、解放の発見性とsave安全性を改善する
 
 ### 固定範囲
 
-#### Campaign
-
-- Stage 17〜20を4件追加
-- Stage 16 clearから順番に解放
-- 最低3種類のmission／objective pattern
-- Stage 20を0.9.0追加分の締めとする
-
-#### Survival
-
-- 無限wave
-- 5waveごとにboss
-- 5wave約3〜4分
-- boss撃破ごとのcheckpoint
-- 敗北・撤退でも完了分の報酬を持ち帰る
-- 10waveごとの開始地点短縮
-- 1倍／2倍
-- boss撃破後の3択一時強化
-- 専用map 1種類と段階的環境変化
-
-#### Battlefield／Boss
-
-- mission別の右端・右端外spawn profile
-- survival用の防衛前線
-- boss共通dataと大型表示
-- TAKUYA、改札喰い改修
-- 新boss5体
-- bossごとの異常発生任務5件
-
-#### Enemies
-
-- 通常感染体design 6種
-- 少なくとも3つの新behavior profile
-- Stage 17〜20で段階的に初登場
-- 初登場後にsurvivalと適合する後半stageへ展開
-
-#### Playable units
-
-- 新unit5名、合計16名
-- 新5名のidentity master portraitはプロデューサーが各1枚制作しCodexへ直接提供
-- Codexは受領portraitからevent、card、battle sprite等を派生制作
-- 未提出unitを別人物で埋めない
-
-#### Progression／Economy
-
-- Rank 0〜4をLevel 1〜50へ統合
-- 0.9.0公開時はStage 20 clearに対応するLv25まで通常解放可能
-- Stage 50 clearでLv50を将来解放
-- Level 50をstage数へ無制限追随させない
-- 旧未使用capsを新経済用の共通開始資金へ一度だけ再編
-
-#### Equipment
-
-- 各unitに個人equipment 2枠
-- 各presetに戦術equipment 2枠
-- equipment約20種
-- 最大5段階強化
-- random option、rarity厳選、gacha、合成、分解なし
-- 全equipmentへ正式icon
-
-#### UI／Record
-
-- 出撃、部隊、補給所、記録
-- survival専用HUD
-- 詳細result
-- 敵図鑑、boss図鑑、survival最高記録
+- 自動／高画質／省電力の3段階とgameplay不変契約
+- 代表6体vertical sliceから全16体へ展開するanimation品質基準
+- 通常攻撃、manual ability、telegraph、impact、hit stop、camera shakeのVFX／SE同期
+- 通常敵、boss、CRAWLER、door／ramp、戦場backgroundのplayer-facing改善
+- 連続frame captureを使う0.9.0残存不具合のroot cause修正
+- 「調達」から「雇用」へのcopy変更
+- safe screenで一度だけ表示する雇用可能popup
+- マヨちゃんのSurvival Wave 20到達解放
+- 必要に応じたv13→v14 migrationとorigin別save調査
+- 0.9.0とのperformance／memory比較、全16体animation証拠、VFX証拠、LAN試遊URL
 
 ### 非対象
 
-- Stage 21〜50の一括制作
-- Stage 100／150の実制作
-- 長尺story量産
-- online ranking
-- PvP、guild、daily mission
-- 新恒久通貨
-- random equipment、rarity、gacha、覚醒、限界突破
-- cloud save
-- 無目的なengine全面書き直し
+- PWA、manifest、Service Worker、offline／install
+- App Store／Google Play／Capacitor
+- 新Stage、新unit、新boss、新通貨
+- cloud save、account、online ranking
+- economy／difficultyの感覚的再調整
+- Spine／DragonBones／全面bone化
+- engine全面書き直し
 
-## 5. Version 0.9.0以降
+### Release境界
+
+docs-only merge resultから`integration/0.9.5`を作成し、工程branch／Draft PRを段階統合する。`integration/0.9.5 → main`、`v0.9.5` tag、GitHub Release、GitHub Pages正式deployment、Issue #96 closeは別承認まで行わない。
+
+## 5. Version 0.9.5以降
+
+### Version 0.9.6候補
+
+- PWA、manifest、Service Worker、offline cache、install prompt
+- 0.9.5のmobile performance／save／lifecycle結果を前提に別Issue・別正本で扱う
+- App Store／Google Play／Capacitorを自動的に同一scopeへ含めない
 
 ### 本編拡張
 
@@ -218,7 +173,7 @@ Challenge Modeは本編と別枠とする。
 - 本編と同じunits、enemies、maps、missions、difficulty、rewards、saveを再利用
 - Challenge専用の別battle engineを作らない
 - 連戦、特殊rule、撤退判断、報酬を共通event foundationから構成
-- boss rushはsurvival完成後の派生候補とし、0.9.0へ混在させない
+- boss rushは0.9.0で未実装のSurvival派生候補であり、Version 0.9.5にも混在させない
 
 ## 6. Version 1.0
 
@@ -245,7 +200,9 @@ Version 1.0では、次を一つの完成ループとして統合する。
 6. Level、equipment、economy
 7. UI、result、図鑑、record
 8. Stage 20、16unit、通常感染体6種、新boss5体を含む0.9.0統合
-9. Stage 21〜50、30unitを含むVersion 1.0統合
-10. Stage 100、150以降の継続拡張
+9. mobile performance、全16体animation、VFX、雇用、saveを含む0.9.5品質更新
+10. PWA／offline／installを扱う場合は0.9.6で分離
+11. Stage 21〜50、30unitを含むVersion 1.0統合
+12. Stage 100、150以降の継続拡張
 
 番号を守ること自体を目的にせず、完成体験、安全なmigration、プレイヤー受入を優先する。
