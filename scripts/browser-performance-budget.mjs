@@ -27,8 +27,16 @@ if (isGate && durationMs < 15 * 60_000) {
 }
 const [width, height] = (process.env.PERF_QA_VIEWPORT ?? '844x390').split('x').map(Number);
 if (!Number.isFinite(width) || !Number.isFinite(height)) throw new Error('PERF_QA_VIEWPORT must use WIDTHxHEIGHT');
+const deviceScaleFactor = Math.max(
+  1,
+  Math.min(4, Number(process.env.PERF_QA_DEVICE_SCALE_FACTOR) || 1),
+);
 const outputPath = path.resolve(process.env.PERF_QA_OUTPUT ?? `outputs/performance/${engineName}-${width}x${height}.json`);
 const resultVersion = process.env.PERF_QA_VERSION ?? '0.9.0';
+const requestedGraphicsQuality = process.env.PERF_QA_GRAPHICS_QUALITY?.trim() || null;
+if (requestedGraphicsQuality && !['auto', 'high', 'power-save'].includes(requestedGraphicsQuality)) {
+  throw new Error(`Unsupported PERF_QA_GRAPHICS_QUALITY: ${requestedGraphicsQuality}`);
+}
 
 function percentile(values, ratio) {
   if (values.length === 0) return null;
@@ -162,7 +170,7 @@ try {
     headless: true,
     ...(engineName === 'chromium' ? { args: ['--enable-precise-memory-info'] } : {}),
   });
-  context = await browser.newContext({ viewport: { width, height } });
+  context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor });
   await context.addInitScript(({ frameCapacity }) => {
     const state = {
       startedAt: 0,
@@ -341,6 +349,16 @@ try {
   if (!response?.ok()) throw new Error(`Navigation failed with HTTP ${response?.status()}`);
   await page.locator('.game-shell').waitFor({ state: 'attached', timeout: 120_000 });
   await advanceToBattle(page);
+  if (requestedGraphicsQuality) {
+    await page.evaluate((quality) => {
+      window.__ASHFALL_BATTLE_QA__?.setGraphicsQuality?.(quality);
+    }, requestedGraphicsQuality);
+    await page.waitForFunction(
+      (quality) => document.documentElement.dataset.graphicsQualityRequested === quality,
+      requestedGraphicsQuality,
+      { timeout: 30_000 },
+    );
+  }
   await page.evaluate(() => window.__ASHFALL_PERFORMANCE_QA__.beginMeasurement());
   const navigationCountAtMeasurementStart = topLevelNavigations;
   const runtimePerformanceBefore = await page.evaluate(
@@ -464,6 +482,17 @@ try {
   const renderFrameDelta = runtimePerformanceBefore && runtimePerformanceAfter
     ? runtimePerformanceAfter.renderFrames - runtimePerformanceBefore.renderFrames
     : null;
+  const renderObjectPools = runtimePerformanceAfter?.renderObjectPools ?? null;
+  const renderObjectPoolEntries = renderObjectPools ? Object.values(renderObjectPools) : [];
+  const renderObjectPoolsBounded = renderObjectPoolEntries.length === 3
+    && renderObjectPoolEntries.every((pool) => (
+      pool.active >= 0
+      && pool.active <= pool.capacity
+      && pool.available >= 0
+      && pool.available <= pool.capacity
+    ));
+  const renderObjectPoolReuseObserved = renderObjectPoolEntries.length === 3
+    && renderObjectPoolEntries.reduce((sum, pool) => sum + pool.reused, 0) > 0;
   const memoryProxyBudgetPassed = memoryProxyGrowthPercent !== null
     && warmupMemoryProxySamples.length > 0
     && finalMemoryProxySamples.length > 0
@@ -483,6 +512,8 @@ try {
     frameSamplesSufficient: frameTimes.length >= minimumFrameSamples,
     simulationUpdatesSufficient: simulationTickDelta !== null && simulationTickDelta >= minimumFrameSamples,
     renderUpdatesSufficient: renderFrameDelta !== null && renderFrameDelta >= minimumFrameSamples,
+    renderObjectPoolsBounded,
+    renderObjectPoolReuseObserved,
     noFrameSampleOverflow: raw.frameSamplesDropped === 0,
     maxFrameGapAtMost1000Ms: raw.maxFrameGapMs <= 1_000,
     unaccountedFrameGapAtMost1Percent: unaccountedFrameGapPercent <= 1,
@@ -503,6 +534,8 @@ try {
     runMode,
     engine: engineName,
     viewport: { width, height },
+    deviceScaleFactor,
+    requestedGraphicsQuality: requestedGraphicsQuality ?? 'save-default',
     durationMs,
     battleActiveMs: round(raw.battleActiveMs),
     battleCoveragePercent: round(battleCoveragePercent),

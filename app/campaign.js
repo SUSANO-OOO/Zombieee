@@ -1931,6 +1931,7 @@ export const DEFAULT_CAMPAIGN_SETTINGS = deepFreeze({
   sfxVolume: 0.8,
   reducedMotion: false,
   battleEventMode: "first-time",
+  graphicsQuality: "auto",
 });
 
 export function normalizeEquipmentInventory(value) {
@@ -2097,6 +2098,9 @@ function normalizeSettings(value, { recoverLegacySilence = false } = {}) {
     battleEventMode: ["first-time", "compact", "all"].includes(source.battleEventMode)
       ? source.battleEventMode
       : DEFAULT_CAMPAIGN_SETTINGS.battleEventMode,
+    graphicsQuality: ["auto", "high", "power-save"].includes(source.graphicsQuality)
+      ? source.graphicsQuality
+      : DEFAULT_CAMPAIGN_SETTINGS.graphicsQuality,
   };
   const fullySilent = (!normalized.bgmEnabled || normalized.bgmVolume <= 0)
     && (!normalized.sfxEnabled || normalized.sfxVolume <= 0);
