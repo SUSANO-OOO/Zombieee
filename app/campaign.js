@@ -1717,7 +1717,7 @@ export const CAMPAIGN_UNITS = deepFreeze([
       weaponMatch: "黄色bandana、黒いtactical medical harness、medical pouchとcanisterを通常・凶暴状態で維持",
       result: "0.9.0正式identity masterからportrait／card／通常・凶暴battle atlasを派生し、同一個体として固定",
     },
-    unlock: { type: "recruitment", stageNumber: 20, costCaps: 260 },
+    unlock: { type: "survival", waveNumber: 20, costCaps: 260 },
   },
 ]);
 
@@ -1829,8 +1829,8 @@ export const CAMPAIGN_RECRUITMENT_MILESTONES = deepFreeze({
   },
   20: {
     storyJoinUnitIds: [],
-    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
-    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI],
   },
 });
 
@@ -1843,6 +1843,26 @@ export const CAMPAIGN_RECRUITMENT_COSTS = deepFreeze({
   [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI]: 340,
   [CAMPAIGN_UNIT_IDS.MAYO_CHAN]: 260,
 });
+
+export const EMPLOYMENT_NOTICE_PREFIX = "employment-available:";
+
+export function employmentNoticeIdForUnit(unitIdOrAlias) {
+  const unitId = normalizeCampaignUnitId(unitIdOrAlias);
+  if (!unitId) throw new RangeError(`Unknown campaign unit: ${String(unitIdOrAlias)}`);
+  return `${EMPLOYMENT_NOTICE_PREFIX}${unitId}`;
+}
+
+function employmentNoticeUnitId(noticeId) {
+  if (typeof noticeId !== "string" || !noticeId.startsWith(EMPLOYMENT_NOTICE_PREFIX)) return null;
+  return normalizeCampaignUnitId(noticeId.slice(EMPLOYMENT_NOTICE_PREFIX.length));
+}
+
+function normalizeEmploymentNoticeIds(value) {
+  return uniqueStrings(value)
+    .map((noticeId) => employmentNoticeUnitId(noticeId))
+    .filter(Boolean)
+    .map((unitId) => employmentNoticeIdForUnit(unitId));
+}
 
 /**
  * Stars depend only on victory and the surviving base-HP ratio.
@@ -1905,7 +1925,7 @@ export function calculateStageRewards({ stageId, stars = 0, claimedStarRewards =
 export const calculateBattleRewards = calculateStageRewards;
 
 const V090_LEVEL_ECONOMY_SCHEMA_VERSION = 10;
-export const CAMPAIGN_SAVE_SCHEMA_VERSION = 13;
+export const CAMPAIGN_SAVE_SCHEMA_VERSION = 14;
 export const SAVE_SCHEMA_VERSION = CAMPAIGN_SAVE_SCHEMA_VERSION;
 const CAMPAIGN_INTEGRITY_REQUIRED_FROM_SCHEMA_VERSION = 5;
 
@@ -2007,6 +2027,8 @@ export function createDefaultCampaignSave() {
     processedEquipmentTransactionIds: [],
     processedMigrationIds: [],
     migrationNotices: [],
+    employmentNoticeReceipts: [],
+    seenEmploymentNoticeIds: [],
     eventFoundation: createEventFoundationProgress(),
     completedStageIds: [],
     bestStarsByStage: {},
@@ -2186,6 +2208,7 @@ function deriveRoster({
   explicitOwnership,
   explicitDiscovery,
   explicitRecruitable,
+  highestSurvivalWave,
   sourceSchemaVersion,
   repairQaAllUnlockLeak = false,
 }) {
@@ -2214,6 +2237,11 @@ function deriveRoster({
     for (const unitId of milestone.storyJoinUnitIds) ownership.add(unitId);
     for (const unitId of milestone.discoveredUnitIds) discovery.add(unitId);
     for (const unitId of milestone.recruitableUnitIds) recruitable.add(unitId);
+  }
+
+  if (highestSurvivalWave >= 20 && !ownership.has(CAMPAIGN_UNIT_IDS.MAYO_CHAN)) {
+    discovery.add(CAMPAIGN_UNIT_IDS.MAYO_CHAN);
+    recruitable.add(CAMPAIGN_UNIT_IDS.MAYO_CHAN);
   }
 
   for (const unitId of ownership) {
@@ -2446,6 +2474,11 @@ export function migrateCampaignSave(
     ["recruitable", "recruitableUnitIds", "availableRecruitmentUnitIds"],
     [],
   ));
+  const survival = normalizeSurvivalProgress(firstDefined(
+    source,
+    ["survival", "survivalProgress"],
+    null,
+  ));
   const knownUnitIds = CAMPAIGN_UNITS.map((unit) => unit.id);
   const legacyQaAllUnitIds = [
     CAMPAIGN_UNIT_IDS.PAISEN,
@@ -2477,9 +2510,24 @@ export function migrateCampaignSave(
     explicitOwnership,
     explicitDiscovery,
     explicitRecruitable,
+    highestSurvivalWave: survival.highestReachedWave,
     sourceSchemaVersion,
     repairQaAllUnlockLeak,
   });
+  const sourceEmploymentNoticeReceipts = normalizeEmploymentNoticeIds(firstDefined(
+    source,
+    ["employmentNoticeReceipts", "employmentAvailableReceipts"],
+    [],
+  ));
+  const employmentNoticeReceipts = uniqueStrings([
+    ...sourceEmploymentNoticeReceipts,
+    ...roster.recruitable.map((unitId) => employmentNoticeIdForUnit(unitId)),
+  ]);
+  const seenEmploymentNoticeIds = normalizeEmploymentNoticeIds(firstDefined(
+    source,
+    ["seenEmploymentNoticeIds", "acknowledgedEmploymentNoticeIds"],
+    [],
+  )).filter((noticeId) => employmentNoticeReceipts.includes(noticeId));
   const sourceProgression = Number.isFinite(sourceSchemaVersion)
     && sourceSchemaVersion >= V090_LEVEL_ECONOMY_SCHEMA_VERSION
     ? firstDefined(source, ["unitLevels", "unitRanks", "upgrades"], {})
@@ -2556,11 +2604,6 @@ export function migrateCampaignSave(
   const updatedAt = migratesSchema
     ? new Date((sourceUpdatedAt ? Date.parse(sourceUpdatedAt) : 0) + 1).toISOString()
     : sourceUpdatedAt;
-  const survival = normalizeSurvivalProgress(firstDefined(
-    source,
-    ["survival", "survivalProgress"],
-    null,
-  ));
   const outbreaks = normalizeOutbreakProgress(firstDefined(
     source,
     ["outbreaks", "outbreakProgress"],
@@ -2610,6 +2653,8 @@ export function migrateCampaignSave(
     processedEquipmentTransactionIds,
     processedMigrationIds,
     migrationNotices,
+    employmentNoticeReceipts,
+    seenEmploymentNoticeIds,
     eventFoundation,
     completedStageIds,
     bestStarsByStage,
@@ -2783,6 +2828,39 @@ export function checkpointSurvivalCampaignSave(
   };
 }
 
+export function recordSurvivalWaveReachedCampaignSave(
+  save,
+  run,
+  {
+    reachedAt = new Date().toISOString(),
+    eventRegistry = EVENT_FOUNDATION_REGISTRY,
+  } = {},
+) {
+  const current = migrateCampaignSave(save, { eventRegistry });
+  const activeRun = normalizeSurvivalRun(run);
+  const reachedWave = activeRun?.reachedWave ?? 0;
+  if (!activeRun || reachedWave <= current.survival.highestReachedWave) {
+    return {
+      save: withCampaignSaveIntegrity(current, { eventRegistry }),
+      applied: false,
+      reachedWave: current.survival.highestReachedWave,
+    };
+  }
+  const survival = normalizeSurvivalProgress({
+    ...current.survival,
+    highestReachedWave: reachedWave,
+  });
+  const revised = reviseCampaignSave(
+    { ...current, survival },
+    { updatedAt: reachedAt, eventRegistry },
+  );
+  return {
+    save: withCampaignSaveIntegrity(revised, { eventRegistry }),
+    applied: true,
+    reachedWave,
+  };
+}
+
 export function settleSurvivalCampaignSave(
   save,
   run,
@@ -2819,7 +2897,7 @@ export function settleSurvivalCampaignSave(
     battleSeconds: endedRun.stats.battleSeconds,
     kills: endedRun.stats.kills,
     bossKills: endedRun.stats.bossKills,
-    reachedWave: endedRun.lastCompletedWave,
+    reachedWave: endedRun.reachedWave,
     capsEarned: settlement.payout.caps,
     encounteredEnemyKinds: endedRun.stats.encounteredEnemyKinds,
     enemyDefeatsByKind: endedRun.stats.enemyDefeatsByKind,
@@ -3677,6 +3755,7 @@ export function resolveCampaignUnitAcquisition(save, unitIdOrInput, maybeInput) 
   const discovery = orderCampaignUnitIds([...current.discovery, unitId]);
   const recruitable = current.recruitable.filter((candidate) => candidate !== unitId);
   const caps = current.caps - costCaps;
+  const employmentNoticeId = employmentNoticeIdForUnit(unitId);
   const nextSave = reviseCampaignSave({
     ...current,
     processedAcquisitionIds: [...current.processedAcquisitionIds, acquisitionId],
@@ -3685,6 +3764,9 @@ export function resolveCampaignUnitAcquisition(save, unitIdOrInput, maybeInput) 
     ownership,
     discovery,
     recruitable,
+    seenEmploymentNoticeIds: current.seenEmploymentNoticeIds.includes(employmentNoticeId)
+      ? current.seenEmploymentNoticeIds
+      : [...current.seenEmploymentNoticeIds, employmentNoticeId],
     unlockedUnitIds: [...ownership],
   });
   return {
@@ -3876,6 +3958,30 @@ export function acknowledgeCampaignMigrationNotice(save, noticeId) {
   return reviseCampaignSave({
     ...current,
     migrationNotices: current.migrationNotices.filter(({ id }) => id !== normalizedId),
+  });
+}
+
+export function pendingEmploymentNoticeUnitIds(save) {
+  const current = migrateCampaignSave(save);
+  return current.employmentNoticeReceipts
+    .filter((noticeId) => !current.seenEmploymentNoticeIds.includes(noticeId))
+    .map((noticeId) => employmentNoticeUnitId(noticeId))
+    .filter((unitId) => unitId && current.recruitable.includes(unitId));
+}
+
+export function acknowledgeEmploymentNotice(save, noticeIdOrUnitId) {
+  const current = migrateCampaignSave(save);
+  const noticeId = typeof noticeIdOrUnitId === "string"
+    && noticeIdOrUnitId.startsWith(EMPLOYMENT_NOTICE_PREFIX)
+    ? noticeIdOrUnitId
+    : employmentNoticeIdForUnit(noticeIdOrUnitId);
+  if (!current.employmentNoticeReceipts.includes(noticeId)
+    || current.seenEmploymentNoticeIds.includes(noticeId)) {
+    return current;
+  }
+  return reviseCampaignSave({
+    ...current,
+    seenEmploymentNoticeIds: [...current.seenEmploymentNoticeIds, noticeId],
   });
 }
 

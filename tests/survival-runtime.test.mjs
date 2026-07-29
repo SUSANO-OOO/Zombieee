@@ -2,12 +2,16 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  CAMPAIGN_UNIT_IDS,
   checkpointSurvivalCampaignSave,
   createDefaultCampaignSave,
   deserializeCampaignSave,
   persistSurvivalCampaignSettlement,
+  pendingEmploymentNoticeUnitIds,
+  recordSurvivalWaveReachedCampaignSave,
   serializeCampaignSave,
   settleSurvivalCampaignSave,
+  isUnitRecruitable,
   verifyCampaignSaveIntegrity,
 } from "../app/campaign.js";
 import {
@@ -496,6 +500,74 @@ test("atomic settlement updates progress, receipts, caps, equipment, checkpoint 
   assert.equal(result.save.records.encountersByEnemy.carrier.firstOperationId, "survival-wave-1");
   assert.equal(result.save.records.defeatCountsByEnemy.walker, 20);
   assert.equal(result.save.records.unitStats.damageByUnit.hachi, 1_400);
+});
+
+test("entering Survival Wave 20 unlocks Mayo employment without requiring the Wave 20 boss clear", () => {
+  let run = completeThroughWave(newRun("mayo-wave-20-entry"), 19);
+  run = beginSurvivalWave(run);
+  assert.equal(run.currentWave, 20);
+  assert.equal(run.lastCompletedWave, 19);
+  assert.equal(run.reachedWave, 20);
+  run = endSurvivalRun(
+    run,
+    SURVIVAL_END_REASONS.WITHDRAWAL,
+    "2026-07-26T10:19:20.000Z",
+  );
+  const result = settleSurvivalCampaignSave(createDefaultCampaignSave(), run, {
+    endedAt: "2026-07-26T10:19:20.000Z",
+  });
+  assert.equal(result.save.survival.highestWave, 19);
+  assert.equal(result.save.survival.highestReachedWave, 20);
+  assert.deepEqual(result.save.survival.unlockedStartWaves, [1, 11]);
+  assert.equal(result.save.survival.lastResult.reachedWave, 20);
+  assert.equal(result.save.records.lastResult.reachedWave, 20);
+  assert.equal(result.save.records.recentResults.at(-1).reachedWave, 20);
+  assert.equal(run.lastCompletedWave, 19);
+  assert.equal(
+    result.save.survival.claimedRewardIds.some((id) => /:(?:checkpoint|partial):20$/.test(id)),
+    false,
+  );
+  assert.equal(
+    result.save.survival.claimedRewardIds.some((id) => id.endsWith(":partial:19")),
+    true,
+  );
+  assert.equal(isUnitRecruitable(result.save, CAMPAIGN_UNIT_IDS.MAYO_CHAN), true);
+  assert.deepEqual(pendingEmploymentNoticeUnitIds(result.save), [
+    CAMPAIGN_UNIT_IDS.MAYO_CHAN,
+  ]);
+});
+
+test("Wave 20 entry persists Mayo entitlement before settlement without granting unfinished rewards", () => {
+  const current = createDefaultCampaignSave();
+  const entered = beginSurvivalWave(
+    completeThroughWave(newRun("mayo-wave-20-entitlement"), 19),
+  );
+  const result = recordSurvivalWaveReachedCampaignSave(current, entered, {
+    reachedAt: "2026-07-26T10:19:19.000Z",
+  });
+  assert.equal(result.applied, true);
+  assert.equal(result.reachedWave, 20);
+  assert.equal(result.save.revision, current.revision + 1);
+  assert.equal(result.save.survival.highestWave, 0);
+  assert.equal(result.save.survival.highestReachedWave, 20);
+  assert.deepEqual(result.save.survival.unlockedStartWaves, [1]);
+  assert.equal(result.save.survival.processedRunIds.length, 0);
+  assert.equal(result.save.survival.claimedRewardIds.length, 0);
+  assert.equal(result.save.survival.lastResult, null);
+  assert.equal(result.save.records.recentResults.length, 0);
+  assert.equal(result.save.caps, current.caps);
+  assert.equal(isUnitRecruitable(result.save, CAMPAIGN_UNIT_IDS.MAYO_CHAN), true);
+  assert.deepEqual(pendingEmploymentNoticeUnitIds(result.save), [
+    CAMPAIGN_UNIT_IDS.MAYO_CHAN,
+  ]);
+  assert.equal(verifyCampaignSaveIntegrity(result.save), true);
+
+  const duplicate = recordSurvivalWaveReachedCampaignSave(result.save, entered, {
+    reachedAt: "2026-07-26T10:19:20.000Z",
+  });
+  assert.equal(duplicate.applied, false);
+  assert.equal(duplicate.save.revision, result.save.revision);
+  assert.deepEqual(duplicate.save.employmentNoticeReceipts, result.save.employmentNoticeReceipts);
 });
 
 test("serialized settlement reload cannot award caps, equipment, or receipts twice", () => {

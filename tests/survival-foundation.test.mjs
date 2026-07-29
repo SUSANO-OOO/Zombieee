@@ -228,6 +228,7 @@ test("saves only boss-boundary checkpoints and resumes pending upgrade selection
 
   const progress = saveSurvivalCheckpoint(initialProgress, run, "2026-07-26T09:30:00.000Z");
   assert.equal(progress.highestWave, 5);
+  assert.equal(progress.highestReachedWave, 5);
   assert.equal(progress.activeCheckpoint.checkpointId, "survival:checkpoint-run:wave:5");
   const resumed = resumeSurvivalCheckpoint(normalizeSurvivalProgress(JSON.parse(JSON.stringify(progress))));
   assert.equal(resumed.runId, run.runId);
@@ -448,7 +449,7 @@ test("settles completed checkpoint and partial-wave rewards exactly once", () =>
   assert.deepEqual(duplicate.progress.claimedRewardIds, progress.claimedRewardIds);
 });
 
-test("a late start, defeat, or withdrawal never pays rewards for skipped or unfinished waves", () => {
+test("a late start, defeat, or withdrawal pays no unfinished-wave rewards while tracking the highest entered wave", () => {
   let run = createSurvivalRun({
     runId: "late-defeat",
     startWave: 11,
@@ -458,8 +459,9 @@ test("a late start, defeat, or withdrawal never pays rewards for skipped or unfi
   run = endSurvivalRun(run, SURVIVAL_END_REASONS.CRAWLER_DESTROYED);
   const settled = settleSurvivalRun(createDefaultSurvivalProgress(), run);
   assert.equal(settled.payout.caps, 0);
-  assert.equal(settled.progress.lastResult.reachedWave, 10);
+  assert.equal(settled.progress.lastResult.reachedWave, 11);
   assert.equal(settled.progress.highestWave, 10);
+  assert.equal(settled.progress.highestReachedWave, 11);
   assert.deepEqual(settled.progress.unlockedStartWaves, [1, 11]);
 
   let forged = createSurvivalRun({
@@ -496,9 +498,9 @@ test("a late start, defeat, or withdrawal never pays rewards for skipped or unfi
   assert.deepEqual(rejected.progress.claimedRewardIds, []);
 });
 
-test("campaign schema 13 persists survival checkpoints and migrates a stamped schema 7 save", () => {
+test("campaign schema 14 persists survival checkpoints and migrates a stamped schema 7 save", () => {
   const fresh = createDefaultCampaignSave();
-  assert.equal(CAMPAIGN_SAVE_SCHEMA_VERSION, 13);
+  assert.equal(CAMPAIGN_SAVE_SCHEMA_VERSION, 14);
   assert.deepEqual(fresh.survival, createDefaultSurvivalProgress());
 
   const checkpointBossPool = ["takuya", "gate-eater", "mother", "gairen"];

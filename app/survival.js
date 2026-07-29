@@ -230,7 +230,7 @@ function partialRewardId(runId, lastCompletedWave) {
   return `survival:${runId}:partial:${lastCompletedWave}`;
 }
 
-export const SURVIVAL_PROGRESS_SCHEMA_VERSION = 1;
+export const SURVIVAL_PROGRESS_SCHEMA_VERSION = 2;
 export const SURVIVAL_RUN_SCHEMA_VERSION = 3;
 export const SURVIVAL_BLOCK_WAVES = 5;
 export const SURVIVAL_START_SKIP_WAVES = 10;
@@ -410,6 +410,12 @@ export function normalizeSurvivalRun(value) {
   const phase = phases.includes(source.phase)
     ? source.phase
     : SURVIVAL_RUN_PHASES.WAVE_READY;
+  const reachedWave = clampInteger(
+    source.reachedWave,
+    lastCompletedWave,
+    Math.max(lastCompletedWave, currentWave),
+    phase === SURVIVAL_RUN_PHASES.IN_WAVE ? currentWave : lastCompletedWave,
+  );
   const bossEntrancePending = phase === SURVIVAL_RUN_PHASES.IN_WAVE
     && survivalWaveDescriptor(currentWave).isBoss
     && source.bossEntrancePending === true;
@@ -456,6 +462,7 @@ export function normalizeSurvivalRun(value) {
     startWave: normalizedStartWave,
     currentWave,
     lastCompletedWave,
+    reachedWave,
     speed: bossEntrancePending
       ? 1
       : SURVIVAL_SPEED_OPTIONS.includes(Number(source.speed)) ? Number(source.speed) : 1,
@@ -509,6 +516,7 @@ export function createSurvivalRun({
     startWave: requestedStartWave,
     currentWave: requestedStartWave,
     lastCompletedWave: requestedStartWave - 1,
+    reachedWave: requestedStartWave - 1,
     speed: 1,
     bossEntrancePending: false,
     bossPool: normalizeSurvivalBossPool(bossPool),
@@ -531,6 +539,7 @@ export function beginSurvivalWave(run) {
   return {
     ...current,
     phase: SURVIVAL_RUN_PHASES.IN_WAVE,
+    reachedWave: Math.max(current.reachedWave, current.currentWave),
     speed: bossEntrancePending ? 1 : current.speed,
     bossEntrancePending,
   };
@@ -741,6 +750,7 @@ export function createDefaultSurvivalProgress() {
   return {
     schemaVersion: SURVIVAL_PROGRESS_SCHEMA_VERSION,
     highestWave: 0,
+    highestReachedWave: 0,
     highestKills: 0,
     highestBossKills: 0,
     totalRuns: 0,
@@ -761,9 +771,14 @@ export function normalizeSurvivalProgress(value) {
     clampInteger(source.highestWave, 0, SURVIVAL_MAX_SAFE_WAVE, 0),
     activeCheckpoint?.checkpointWave ?? 0,
   );
+  const highestReachedWave = Math.max(
+    highestWave,
+    clampInteger(source.highestReachedWave, 0, SURVIVAL_MAX_SAFE_WAVE, highestWave),
+  );
   return {
     schemaVersion: SURVIVAL_PROGRESS_SCHEMA_VERSION,
     highestWave,
+    highestReachedWave,
     highestKills: clampInteger(source.highestKills, 0, Number.MAX_SAFE_INTEGER, 0),
     highestBossKills: clampInteger(source.highestBossKills, 0, Number.MAX_SAFE_INTEGER, 0),
     totalRuns: clampInteger(source.totalRuns, 0, Number.MAX_SAFE_INTEGER, 0),
@@ -782,9 +797,11 @@ export function saveSurvivalCheckpoint(progress, run, savedAt = new Date().toISO
   const activeCheckpoint = createSurvivalCheckpoint(run, savedAt);
   if (!activeCheckpoint) return current;
   const highestWave = Math.max(current.highestWave, activeCheckpoint.checkpointWave);
+  const highestReachedWave = Math.max(current.highestReachedWave, activeCheckpoint.checkpointWave);
   return {
     ...current,
     highestWave,
+    highestReachedWave,
     unlockedStartWaves: survivalUnlockedStartWaves(highestWave),
     activeCheckpoint,
   };
@@ -836,11 +853,13 @@ export function settleSurvivalRun(progress, run, { endedAt = new Date().toISOStr
   const payable = rewardEntries.filter(({ rewardId }) => !current.claimedRewardIds.includes(rewardId));
   const payout = payable.reduce((total, entry) => addRewards(total, entry.reward), normalizeReward(null));
   const rewardIds = payable.map(({ rewardId }) => rewardId);
-  const newHighestWave = endedRun.lastCompletedWave > current.highestWave;
+  const newHighestWave = endedRun.reachedWave > current.highestReachedWave;
   const highestWave = Math.max(current.highestWave, endedRun.lastCompletedWave);
+  const highestReachedWave = Math.max(current.highestReachedWave, endedRun.reachedWave);
   const nextProgress = {
     ...current,
     highestWave,
+    highestReachedWave,
     highestKills: Math.max(current.highestKills, endedRun.stats.kills),
     highestBossKills: Math.max(current.highestBossKills, endedRun.stats.bossKills),
     totalRuns: Math.min(Number.MAX_SAFE_INTEGER, current.totalRuns + 1),
@@ -856,7 +875,7 @@ export function settleSurvivalRun(progress, run, { endedAt = new Date().toISOStr
       runId: endedRun.runId,
       endReason: endedRun.endReason,
       startWave: endedRun.startWave,
-      reachedWave: endedRun.lastCompletedWave,
+      reachedWave: endedRun.reachedWave,
       stats: endedRun.stats,
       formation: endedRun.formation,
       earnedCaps: payout.caps,
