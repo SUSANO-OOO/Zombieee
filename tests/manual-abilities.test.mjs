@@ -8,6 +8,7 @@ import {
   beginManualAbility,
   canActivateManualAbility,
   createManualAbilityRuntime,
+  gunnerSuppressionVfxRounds,
   layoutManualAbilityIcons,
   manualAbilityCheckpointCooldown,
   manualAbilityLocksNormalAction,
@@ -142,7 +143,12 @@ test("sustained manual abilities emit exactly one start and end then cool down",
     const fighter = { ...owner(950, kind), lane: 1, maxHp: 100, aiMoveDirection: 1 };
     const target = selectManualAbilityTarget({ owner: fighter, fighters: [fighter, enemy("threat", 285)] });
     const started = beginManualAbility(fighter.manualAbility, target);
-    const active = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY[kind].windupSeconds);
+    let active = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY[kind].windupSeconds);
+    if (MANUAL_ABILITY_REGISTRY[kind].recoverySeconds) {
+      assert.equal(active.runtime.phase, "recovery", kind);
+      assert.deepEqual(active.events, [], kind);
+      active = advanceManualAbility(active.runtime, MANUAL_ABILITY_REGISTRY[kind].recoverySeconds);
+    }
     assert.equal(active.runtime.phase, "active", kind);
     assert.deepEqual(active.events.map(({ type }) => type), ["active-start"], kind);
     const cooldown = advanceManualAbility(active.runtime, MANUAL_ABILITY_REGISTRY[kind].activeSeconds);
@@ -202,6 +208,97 @@ test("duplicate deployments own independent activation and cooldown state", () =
   assert.equal(advanceManualAbility(cooling.runtime, 20).runtime.phase, "ready");
 });
 
+test("Raider suppression emits five ordered impact receipts before cooldown", () => {
+  const target = {
+    targetIds: ["runner", "walker"],
+    x: 360,
+    y: 280,
+    direction: 1,
+  };
+  const started = beginManualAbility(createManualAbilityRuntime("gunner"), target);
+  assert.equal(started.ok, true);
+  const first = advanceManualAbility(started.runtime, .24);
+  assert.deepEqual(first.events.map(({ type, salvoIndex }) => [type, salvoIndex]), [
+    ["muzzle", 0],
+    ["impact", 0],
+  ]);
+  assert.equal(first.runtime.phase, "windup");
+  const second = advanceManualAbility(first.runtime, .08);
+  assert.deepEqual(second.events.map(({ type, salvoIndex }) => [type, salvoIndex]), [
+    ["muzzle", 1],
+    ["impact", 1],
+  ]);
+  const final = advanceManualAbility(second.runtime, .23);
+  assert.deepEqual(final.events.map(({ type, salvoIndex }) => [type, salvoIndex]), [
+    ["muzzle", 2],
+    ["impact", 2],
+    ["muzzle", 3],
+    ["impact", 3],
+    ["muzzle", 4],
+    ["impact", 4],
+  ]);
+  assert.equal(final.events.at(-1).finalRound, true);
+  assert.equal(final.runtime.phase, "recovery");
+  assert.equal(
+    Number(final.events.at(-1).timelineAt.toFixed(3)),
+    .531,
+  );
+  const cooldown = advanceManualAbility(final.runtime, MANUAL_ABILITY_REGISTRY.gunner.recoverySeconds);
+  assert.equal(cooldown.runtime.phase, "cooldown");
+});
+
+test("Raider suppression VFX stays hidden through aim then follows each muzzle and impact", () => {
+  const definition = MANUAL_ABILITY_REGISTRY.gunner;
+  const beforeAim = gunnerSuppressionVfxRounds(definition.aimSeconds - Number.EPSILON);
+  assert.equal(beforeAim.filter(({ visible }) => visible).length, 0);
+
+  const firstMuzzle = gunnerSuppressionVfxRounds(definition.aimSeconds);
+  assert.equal(firstMuzzle[0].visible, true);
+  assert.equal(firstMuzzle[0].travelProgress, 0);
+  assert.equal(firstMuzzle.slice(1).filter(({ visible }) => visible).length, 0);
+
+  const firstImpact = gunnerSuppressionVfxRounds(
+    definition.aimSeconds + definition.projectileTravelSeconds,
+  );
+  assert.ok(Math.abs(firstImpact[0].travelProgress - 1) < 1e-9);
+  assert.equal(firstImpact[0].impactAge, 0);
+
+  const finalMuzzleAt = definition.aimSeconds
+    + definition.burstIntervalSeconds * (definition.burstCount - 1);
+  const finalMuzzle = gunnerSuppressionVfxRounds(finalMuzzleAt);
+  assert.equal(finalMuzzle.at(-1).visible, true);
+  assert.equal(finalMuzzle.at(-1).travelProgress, 0);
+});
+
+test("all five reviewed specials expose a real locked recovery phase before normal action resumes", () => {
+  const expectedAfterRecovery = {
+    scout: "cooldown",
+    gunner: "cooldown",
+    "crazy-king": "active",
+    tky: "cooldown",
+    "mayo-chan": "feral",
+  };
+  for (const kind of Object.keys(expectedAfterRecovery)) {
+    const definition = MANUAL_ABILITY_REGISTRY[kind];
+    const target = kind === "gunner"
+      ? { targetIds: ["target"], targetId: "target", x: 320, y: 280, direction: 1 }
+      : { targetId: "target", targetIds: ["target"], x: 320, y: 280, direction: 1 };
+    const started = beginManualAbility(createManualAbilityRuntime(kind), target);
+    const recovering = advanceManualAbility(started.runtime, definition.windupSeconds);
+    assert.equal(recovering.runtime.phase, "recovery", kind);
+    assert.equal(manualAbilityLocksNormalAction(recovering.runtime), true, kind);
+    assert.equal(
+      Number(recovering.runtime.abilityElapsed.toFixed(3)),
+      Number(definition.windupSeconds.toFixed(3)),
+      kind,
+    );
+    const halfway = advanceManualAbility(recovering.runtime, definition.recoverySeconds / 2);
+    assert.equal(halfway.runtime.phase, "recovery", kind);
+    const finished = advanceManualAbility(halfway.runtime, definition.recoverySeconds / 2 + 1e-9);
+    assert.equal(finished.runtime.phase, expectedAfterRecovery[kind], kind);
+  }
+});
+
 test("checkpoint debt conservatively preserves every non-ready manual ability phase", () => {
   const brawler = createManualAbilityRuntime("brawler");
   const started = beginManualAbility(brawler, { targetId: "target", x: 260, y: 280 });
@@ -243,6 +340,7 @@ test("checkpoint debt conservatively preserves every non-ready manual ability ph
   assert.equal(
     manualAbilityCheckpointCooldown(mayo.runtime),
     MANUAL_ABILITY_REGISTRY["mayo-chan"].windupSeconds
+      + MANUAL_ABILITY_REGISTRY["mayo-chan"].recoverySeconds
       + MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds
       + MANUAL_ABILITY_REGISTRY["mayo-chan"].cooldownSeconds,
   );
@@ -449,6 +547,9 @@ test("Mayo-chan deterministically prioritizes small fast infected and every depl
   assert.equal(second.manualAbility.phase, "ready");
 
   let step = advanceManualAbility(first.manualAbility, MANUAL_ABILITY_REGISTRY["mayo-chan"].windupSeconds);
+  assert.equal(step.runtime.phase, "recovery");
+  assert.deepEqual(step.events, []);
+  step = advanceManualAbility(step.runtime, MANUAL_ABILITY_REGISTRY["mayo-chan"].recoverySeconds);
   assert.equal(step.runtime.phase, "feral");
   assert.deepEqual(step.events.map(({ type }) => type), ["feral-start"]);
   step = advanceManualAbility(step.runtime, MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds);
