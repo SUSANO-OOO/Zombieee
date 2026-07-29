@@ -38,6 +38,7 @@ process.env.SAVE_MIGRATION_QA_BASE_URL = origin;
 process.env.BATTLE_SPACE_QA_BASE_URL = origin;
 process.env.AI_MISSION_QA_BASE_URL = origin;
 process.env.CRAWLER_DEFENSE_QA_BASE_URL = origin;
+process.env.V095_VISUAL_BASELINE_QA_BASE_URL = origin;
 process.env.STATION_QA_BASE_URL = origin;
 process.env.P5_QA_BASE_URL = origin;
 process.env.PROGRESSION_QA_BASE_URL = origin;

@@ -1,0 +1,46 @@
+{
+  "evidenceVersion": 1,
+  "baselineVersion": "0.9.0",
+  "baselineReleaseSha": "f2633c538756385f13d166d3adbcdd39b3a08b21",
+  "measuredFromIntegrationSha": "76b9168d03109fbb473df7632f0f201d9612f13d",
+  "runtimeDifferenceFromRelease": "docs-only",
+  "generatedAt": "2026-07-29T00:37:56.455Z",
+  "rawReportSha256": "ff033d44fe2d2bd25f7f889c96adb0a0e79ebd9510bc9b258b13da130f8438fb",
+  "engines": [
+    "chromium",
+    "webkit"
+  ],
+  "viewports": [
+    "844x390",
+    "844x340"
+  ],
+  "scenarioCountPerCombination": 11,
+  "combinationCount": 4,
+  "totalScenarios": 44,
+  "passed": 44,
+  "failed": 0,
+  "diagnostics": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "requestFailures": [],
+    "httpErrors": []
+  },
+  "covered": [
+    "fresh save",
+    "release 0.7.1 localStorage fixture",
+    "release 0.7.1 IndexedDB fixture",
+    "schema 10 equipment fixture",
+    "partial migration",
+    "one corrupt replica in each direction",
+    "tampered payload",
+    "both replicas corrupt without automatic reset",
+    "manual release import",
+    "manual current import"
+  ],
+  "notYetCovered": [
+    "Version 0.9.0 origin-by-origin transfer",
+    "production Pages to LAN or localhost origin transfer",
+    "Version 0.9.5 schema migration"
+  ],
+  "rawEvidence": "outputs/save-migration-browser-matrix/summary.json"
+}
