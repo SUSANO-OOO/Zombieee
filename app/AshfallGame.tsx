@@ -6623,6 +6623,10 @@ export function AshfallGame() {
   const survivalCheckpointSaveLocksRef = useRef(new Set<string>());
   const survivalWaveEntitlementSaveLocksRef = useRef(new Set<string>());
   const survivalWaveEntitlementReceiptRef = useRef("");
+  const representativeSixPhasePauseRef = useRef<{
+    ownerId: number;
+    phase: ManualAbilityRuntime["phase"];
+  } | null>(null);
   const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const outbreakSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const bossFoundationQaRef = useRef<{
@@ -7586,6 +7590,19 @@ export function AshfallGame() {
         g.paused = Boolean(requestedPaused);
         return g.paused;
       },
+      armRepresentativeSixPhasePause: (
+        ownerId: number,
+        phase: ManualAbilityRuntime["phase"] = "recovery",
+      ) => {
+        const owner = gameRef.current.fighters.find((fighter) => (
+          fighter.id === ownerId
+          && fighter.side === "human"
+          && fighter.manualAbility
+        ));
+        if (!owner) return false;
+        representativeSixPhasePauseRef.current = { ownerId, phase };
+        return true;
+      },
       prepareManualAbilityProof: (kind: UnitKind | readonly UnitKind[] | "all" = "all") => {
         const availableKinds = Object.keys(MANUAL_ABILITY_REGISTRY) as UnitKind[];
         const requestedKinds = kind === "all" ? availableKinds : Array.isArray(kind) ? [...kind] : [kind];
@@ -8458,6 +8475,12 @@ export function AshfallGame() {
       },
       getSurvivalWaveEntitlementProof: () => {
         const g = gameRef.current;
+        const livingHumans = g.fighters.filter((fighter) => (
+          fighter.side === "human" && fighter.hp > 0
+        ));
+        const livingEnemies = g.fighters.filter((fighter) => (
+          fighter.side === "zombie" && fighter.hp > 0
+        ));
         return {
           runId: g.survivalRun?.runId ?? null,
           phase: g.survivalRun?.phase ?? null,
@@ -8467,6 +8490,106 @@ export function AshfallGame() {
           runtimeWaveQueued: g.survivalRuntime?.waveQueued === true,
           receiptId: survivalWaveEntitlementReceiptRef.current || null,
           paused: g.paused,
+          over: g.over,
+          won: g.won,
+          baseHp: g.baseHp,
+          baseMaxHp: g.baseMaxHp,
+          livingHumanFighters: livingHumans.length,
+          livingEnemyFighters: livingEnemies.length,
+          humanAttackSequences: livingHumans.reduce(
+            (total, fighter) => total + fighter.attackSequence,
+            0,
+          ),
+          enemyAttackSequences: livingEnemies.reduce(
+            (total, fighter) => total + fighter.attackSequence,
+            0,
+          ),
+        };
+      },
+      prepareSurvivalWave20StressProof: () => {
+        const qaStressHitPoints = 1_000_000_000;
+        const stressKinds: UnitKind[] = [
+          "scout",
+          "gunner",
+          "crazy-king",
+          "tky",
+          "mrs-chiha",
+          "mayo-chan",
+          "guardian",
+        ];
+        const stressUnits = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
+          .filter((unit) => stressKinds.includes(unit.combatKind as UnitKind));
+        const unitLevelsByUnit = Object.fromEntries(
+          stressUnits.map((unit) => [unit.id, 1]),
+        );
+        const createdRun = createSurvivalRun({
+          runId: "qa-performance-survival-wave-20-stress",
+          formation: {
+            unitIds: stressUnits.map((unit) => unit.id),
+            unitLevelsByUnit,
+          },
+        });
+        const readyRun = {
+          ...createdRun,
+          phase: SURVIVAL_RUN_PHASES.WAVE_READY,
+          currentWave: 20,
+          lastCompletedWave: 19,
+          reachedWave: 19,
+          crawler: {
+            ...createdRun.crawler,
+            hp: qaStressHitPoints,
+            maxHp: qaStressHitPoints,
+          },
+        };
+        const fresh = initialSurvivalGame({
+          selectedSupply: "pod",
+          run: readyRun,
+          formationKinds: stressKinds,
+          unitLevels: unitLevelsByUnit,
+        });
+        fresh.running = true;
+        prepareStressQa(fresh);
+        for (const fighter of fresh.fighters) {
+          fighter.hp = qaStressHitPoints;
+          fighter.maxHp = qaStressHitPoints;
+        }
+        fresh.survivalRun = readyRun;
+        fresh.survivalRuntime = {
+          ...createSurvivalCombatRuntime(readyRun),
+          intermissionRemaining: 0,
+        };
+        fresh.wave = 20;
+        fresh.baseHp = readyRun.crawler.hp;
+        fresh.baseMaxHp = readyRun.crawler.maxHp;
+        fresh.over = false;
+        fresh.paused = false;
+        fresh.last = performance.now();
+        gameRef.current = fresh;
+        survivalWaveEntitlementReceiptRef.current = "";
+        finalizedEndRef.current = null;
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setCampaignResult(null);
+        setSurvivalResult(null);
+        setPendingSurvivalSettlement(null);
+        setSurvivalSettlementAwaitingRetry(false);
+        setScreen("battle");
+        setSurvivalHud(survivalHudSnapshot(readyRun));
+        setPendingSurvivalWaveEntitlement(null);
+        selectedActionRef.current = null;
+        fresh.placementIndicator = null;
+        setSelectedAction(null);
+        return {
+          runId: readyRun.runId,
+          targetWave: readyRun.currentWave,
+          reachedWaveBeforeQueue: readyRun.reachedWave,
+          lastCompletedWave: readyRun.lastCompletedWave,
+          entryMode: "fresh-production-survival-runtime-with-dense-fixture",
+          initialHumanFighters: fresh.fighters.filter((fighter) => fighter.side === "human").length,
+          initialEnemyFighters: fresh.fighters.filter((fighter) => fighter.side === "zombie").length,
+          initialBattlefieldObjects: fresh.battlefieldObjects.length,
+          qaStressHitPoints,
         };
       },
       prepareSurvivalUpgradeProof: () => {
@@ -13291,6 +13414,15 @@ export function AshfallGame() {
                 dedupeKey: `manual-ability:${owner.id}:${event.activationId}:${event.mode ?? "fallback"}`,
               });
             }
+          }
+          const requestedPhasePause = representativeSixPhasePauseRef.current;
+          if (
+            requestedPhasePause?.ownerId === owner.id
+            && requestedPhasePause.phase === owner.manualAbility.phase
+          ) {
+            representativeSixPhasePauseRef.current = null;
+            g.paused = true;
+            setPaused(true);
           }
         }
         const pendingWeaponStep = advancePendingWeaponHits(g.pendingWeaponHits, dt);

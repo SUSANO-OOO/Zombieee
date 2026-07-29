@@ -1,6 +1,6 @@
 # 西新世紀末物語 — プロジェクト状態
 
-更新日：2026-07-29
+更新日：2026-07-30
 
 ## 1. 正式公開
 
@@ -26,14 +26,15 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 - repository：`SUSANO-OOO/Zombieee`
 - repository visibility：`public`
 - default branch：`main`
-- Version 0.9.0 release／docs開始時latest `main`：`f2633c538756385f13d166d3adbcdd39b3a08b21`
-- Version 0.9.5 docs branch：`docs/0.9.5-product-lock`
-- Version 0.9.5 integration branch：docs-only merge resultから作成予定
+- Version 0.9.5 docs-only merge result／latest `main`：`76b9168d03109fbb473df7632f0f201d9612f13d`
+- Version 0.9.5 integration branch：`integration/0.9.5`
+- RC開始時integration SHA：`9c576b1acb89c5b05a47213fa0c8f450b8d6136c`
+- docs-only PR：#97、工程PR：#98〜#106、通常merge済み
+- Version 0.9.5 RC branch：`codex/0.9.5-rc`
 - Version 0.9.5 ledger：Issue #96、open
 - Version 0.9.5最上位製品正本：`docs/PRODUCER_DECISIONS_0.9.5.md`
-- open PR：docs-only開始時0件
 - save key：`nishijin-campaign-v1`
-- 現行save schema：v13
+- Version 0.9.5 save schema：v14
 
 `main`はdocs、ops、hotfix等でも進むため、現在SHAを本書へ永久固定しない。作業開始時、PR操作直前、merge直前、release直前にGitHubの現在値を再取得する。正式公開game sourceは、単なる最新`main`ではなく公開HTML metadata、tag、GitHub Release、release requestと照合する。
 
@@ -80,9 +81,9 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 - Chromium／WebKit、1280×720、844×390、844×340
 - 物理iPhoneは未確認。WebKit iPhone相当、safe area、frame time、heap／memory proxyが代替証拠
 
-## 4. Version 0.9.5開始状態
+## 4. Version 0.9.5 RC状態
 
-状態：**製品判断承認済み・docs-only工程中**
+状態：**RC候補完成・integration統合前**
 
 目的：
 
@@ -93,7 +94,7 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 - 「雇用」、雇用可能popup、マヨちゃんSurvival Wave 20到達解放を統合
 - save migrationとorigin別saveを検証
 
-開始時baseline：
+Version 0.9.0 baseline：
 
 - `npm.cmd test`：695 tests pass、production build pass
 - `npm.cmd run lint`：pass
@@ -103,7 +104,21 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 - Version 0.9.0 release-prep記録：asset decode 399/399 audio、34/34 portraits、57/57 images
 - Version 0.9.0 release-prep記録：save migration matrix 44/44、progression browser matrix 6/6
 
-docs-only PRをCI、文書整合、独立read-only review High／Medium／Low未解消0で`main`へ通常mergeした後、そのmerge resultから`integration/0.9.5`を作成する。
+RC候補：
+
+- `npm.cmd test`：734 tests pass、production build pass
+- `npm.cmd run lint`、`npm.cmd run content:validate`、`git diff --check`：pass
+- 全16体：8 browser case、708 continuous-frame captures、通常攻撃runtime proof 144、manual ability recovery proof 100、browser failure 0
+- 残存不具合：96/96 pass、unit／enemyの接地・方向・攻撃timing failure 0、composited CRAWLER transparency failure 0
+- enemy／VFX：6/6 browser case、通常enemy 12種、projectile 4種、CRAWLER 6状態、continuous sequence 24
+- CRAWLER defense：240/240、pass-through 0、objective direct 0
+- save migration／origin：78/78、6 matrix row pass
+- asset decode：399/399 audio、34/34 portraits、57/57 images
+- 15分performance gate：通常Auto pass、Survival Wave 20省電力 pass
+- 物理smartphone、実Safari、実speaker、物理touch／回転／lock復帰：未確認
+- RC証拠正本：`docs/qa/v095/rc/README.md`、`docs/qa/v095/rc/rc-summary.json`
+
+物理端末未確認項目を正式release前のproducer acceptanceとして残しつつ、RCのコード、QA、review、`integration/0.9.5`統合は停止しない。
 
 ## 5. Version 0.9.5の実装順
 
