@@ -86,12 +86,18 @@ async function runBurstProof(page, targetKind, proofTimeout) {
     if (!prepared) throw new Error(`machine-gun ${proofTargetKind} proof fixture unavailable`);
     const shotIndexes = new Set();
     const shotTimings = {};
+    const shotImpactDelays = {};
     const pendingIndexes = new Set();
+    const pendingRemainingSeconds = {};
     const hpSamples = [{ at: 0, hp: prepared.initialTargetHp }];
     const startedAt = performance.now();
     let lastHp = prepared.initialTargetHp;
     let peakConcurrentShots = 0;
     let finalSnapshot = null;
+    let burstLocked = false;
+    if (bridge.resumeMachineGunBurstProof?.() !== true) {
+      throw new Error("machine-gun proof could not resume from its synchronized start");
+    }
 
     await new Promise((resolve, reject) => {
       const sample = () => {
@@ -105,9 +111,20 @@ async function runBurstProof(page, targetKind, proofTimeout) {
           if (Number.isInteger(attack.shotIndex)) {
             shotIndexes.add(attack.shotIndex);
             shotTimings[attack.shotIndex] ??= elapsed;
+            shotImpactDelays[attack.shotIndex] ??= attack.impactDelaySeconds;
           }
-          if (!attack.casing || !(attack.recoil > 0) || !(attack.hitStopSeconds > 0)) {
+          if (!attack.casing
+            || !(attack.recoil > 0)
+            || !(attack.hitStopSeconds > 0)
+            || !(attack.impactDelaySeconds >= .05)) {
             reject(new Error(`unsynchronized shot metadata: ${JSON.stringify(attack)}`));
+            return;
+          }
+        }
+        if (!burstLocked && shotIndexes.size === 3) {
+          burstLocked = bridge.freezeMachineGunBurstProof?.(prepared.gunnerId) === true;
+          if (!burstLocked) {
+            reject(new Error("machine-gun proof could not prevent a second burst"));
             return;
           }
         }
@@ -117,6 +134,10 @@ async function runBurstProof(page, targetKind, proofTimeout) {
             && hit.targetId === prepared.targetId,
         )) {
           pendingIndexes.add(pending.shotIndex);
+          pendingRemainingSeconds[pending.shotIndex] = Math.max(
+            pendingRemainingSeconds[pending.shotIndex] ?? 0,
+            pending.remainingSeconds,
+          );
         }
         const target = prepared.targetKind === "enemy-base"
           ? null
@@ -131,7 +152,12 @@ async function runBurstProof(page, targetKind, proofTimeout) {
           lastHp = currentHp;
         }
         finalSnapshot = snapshot;
-        if (shotIndexes.size === 3 && hpSamples.length >= 4) {
+        const pendingForSource = snapshot.pendingWeaponHits.filter(
+          (hit) => hit.sourceId === prepared.gunnerId,
+        );
+        if (shotIndexes.size === 3
+          && Math.abs(prepared.initialTargetHp - lastHp - prepared.expectedDamage) < .001
+          && pendingForSource.length === 0) {
           resolve();
           return;
         }
@@ -153,7 +179,9 @@ async function runBurstProof(page, targetKind, proofTimeout) {
       ...prepared,
       shotIndexes: [...shotIndexes].sort((left, right) => left - right),
       shotTimings,
+      shotImpactDelays,
       pendingIndexes: [...pendingIndexes].sort((left, right) => left - right),
+      pendingRemainingSeconds,
       hpSamples,
       totalDamage: prepared.initialTargetHp - lastHp,
       peakConcurrentShots,
@@ -169,19 +197,24 @@ function assertBurstProof(proof, viewport) {
   invariant(JSON.stringify(proof.shotIndexes) === "[0,1,2]", `shot indexes: ${JSON.stringify(proof.shotIndexes)}`);
   invariant(proof.pendingIndexes.includes(1) && proof.pendingIndexes.includes(2),
     `pending rounds not observed: ${JSON.stringify(proof.pendingIndexes)}`);
-  invariant(proof.hpSamples.length >= 4, `damage was not split into three events: ${JSON.stringify(proof.hpSamples)}`);
+  invariant(
+    [1, 2].every((index) => proof.pendingRemainingSeconds[index] > 0),
+    `later rounds were not observed in a deferred state: ${JSON.stringify(proof.pendingRemainingSeconds)}`,
+  );
+  invariant(proof.hpSamples.length >= 2, `no deferred damage was observed: ${JSON.stringify(proof.hpSamples)}`);
   invariant(Math.abs(proof.totalDamage - proof.expectedDamage) < .001,
     `damage total ${proof.totalDamage} did not equal ${proof.expectedDamage}`);
   invariant(proof.peakConcurrentShots >= 3, `burst never rendered three concurrent projectiles: ${proof.peakConcurrentShots}`);
-  for (let index = 0; index < 3; index += 1) {
-    invariant(
-      proof.hpSamples[index + 1].at - proof.shotTimings[index] >= 20,
-      `round ${index} applied before visible travel: ${JSON.stringify({
-        muzzleAt: proof.shotTimings[index],
-        damageAt: proof.hpSamples[index + 1].at,
-      })}`,
-    );
-  }
+  invariant(
+    [0, 1, 2].every((index) => proof.shotImpactDelays[index] >= .05),
+    `runtime projectile travel contract missing: ${JSON.stringify(proof.shotImpactDelays)}`,
+  );
+  invariant(
+    proof.hpSamples.slice(1).every((sample, index, samples) => (
+      index === 0 || sample.at >= samples[index - 1].at
+    )),
+    `damage observations are out of order: ${JSON.stringify(proof.hpSamples)}`,
+  );
   invariant(proof.viewportId === `${viewport.width}x${viewport.height}`,
     `viewport geometry mismatch: ${proof.viewportId}`);
 }

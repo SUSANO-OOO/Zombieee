@@ -1,0 +1,83 @@
+{
+  "version": "0.9.5",
+  "phase": "animation-foundation",
+  "integrationBase": "9694e624227a6840a859ad2f06d92e8ac3335a54",
+  "branch": "codex/0.9.5-animation-foundation",
+  "coreStatesPreserved": 9,
+  "optionalStatesAdded": 12,
+  "runtimeSpriteKindsCovered": 40,
+  "validation": {
+    "focusedTests": 16,
+    "allTests": 712,
+    "productionBuild": "passed",
+    "lint": "passed",
+    "contentValidator": "passed",
+    "gitDiffCheck": "passed"
+  },
+  "browserMatrix": {
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "viewports": [
+      "844x390",
+      "844x340"
+    ],
+    "deviceScaleFactor": 3,
+    "cases": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "capturedStateSequence": [
+    "deploy",
+    "move",
+    "stop-move",
+    "start-move",
+    "move",
+    "turn",
+    "hit-heavy",
+    "reload"
+  ],
+  "combatPresentationRegression": {
+    "cases": 4,
+    "passed": 4,
+    "failed": 0,
+    "targetProofsPerCase": 4,
+    "roundsPerBurst": 3,
+    "projectileTravelSeconds": 0.055,
+    "diagnostics": 0
+  },
+  "mayoRetreatRegression": {
+    "cases": 4,
+    "passed": 4,
+    "failed": 0,
+    "preservesIncapacitationPhases": true,
+    "semanticRetreatRun": true
+  },
+  "independentReadOnlyReview": {
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "priorGateSlideFindingResolved": true
+  },
+  "invariants": {
+    "minimumDistinctCanvasCapturesPerCase": 7,
+    "gateEntryContinuesAfterDeploy": true,
+    "gateEntryMovingSpritePattern": "walk-*",
+    "groundAnchor": 1,
+    "poseOffsetY": 0,
+    "logicalOffFloorCount": 0,
+    "visuallyOffFloorCount": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "requestFailures": 0,
+    "httpErrors": 0
+  },
+  "deferred": [
+    "representative-six vertical slice",
+    "remaining-ten playable-unit pass",
+    "all-sixteen continuous-frame proof",
+    "complete VFX and SE timing pass",
+    "physical-smartphone acceptance"
+  ]
+}

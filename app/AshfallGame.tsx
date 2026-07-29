@@ -234,10 +234,12 @@ import {
   supportCohesion,
 } from "./combatLifecycle.js";
 import {
+  advanceCombatAnimationRuntime,
   advancePendingWeaponHits,
   attackPresentationDuration,
   combatFacingDirection,
   combatWeaponAnchor,
+  createCombatAnimationRuntime,
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
@@ -717,6 +719,7 @@ type Fighter = {
   bleedDamagePerSecond: number;
   aiDestinationX: number;
   aiMoveDirection: number;
+  animationPresentation: ReturnType<typeof createCombatAnimationRuntime>;
   navigationRecovery: {
     lastX: number;
     lastY: number;
@@ -2217,6 +2220,15 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
   if (!g.enemyKindsSeen.includes(kind)) g.enemyKindsSeen.push(kind);
   const id = g.nextId++;
   const gateEntering = kind !== "turned" && gateEntry !== null;
+  const spawnX = gateEntering
+    ? gateEntry.x
+    : kind === "turned"
+      ? 0
+      : Math.min(
+        WORLD_GEOMETRY.barricade.enemySpawnMaxX,
+        WORLD_GEOMETRY.barricade.enemySpawnMinX + order * 16,
+      );
+  const spawnY = gateEntering ? gateEntry.y : laneY(lane, id);
   g.fighters.push({
     id,
     side: "zombie",
@@ -2224,8 +2236,8 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     aiProfile: enemyContentFor(kind)?.aiProfile ?? "nearest",
     lane,
     anchorLane: lane,
-    x: gateEntering ? gateEntry.x : kind === "turned" ? 0 : Math.min(WORLD_GEOMETRY.barricade.enemySpawnMaxX, WORLD_GEOMETRY.barricade.enemySpawnMinX + order * 16),
-    y: gateEntering ? gateEntry.y : laneY(lane, id),
+    x: spawnX,
+    y: spawnY,
     maxHp: data.hp,
     ...data,
     cooldown: order * .18,
@@ -2258,9 +2270,15 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     bleedDamagePerSecond: 0,
     aiDestinationX: 0,
     aiMoveDirection: 0,
+    animationPresentation: createCombatAnimationRuntime({
+      deploying: gateEntering,
+      direction: "left",
+      x: spawnX,
+      y: spawnY,
+    }),
     navigationRecovery: createNavigationRecoveryState({
-      x: gateEntering ? gateEntry.x : kind === "turned" ? 0 : Math.min(WORLD_GEOMETRY.barricade.enemySpawnMaxX, WORLD_GEOMETRY.barricade.enemySpawnMinX + order * 16),
-      y: gateEntering ? gateEntry.y : laneY(lane, id),
+      x: spawnX,
+      y: spawnY,
       lane,
     }),
     abilityCooldown: enemyInitialAbilityCooldownFor(kind),
@@ -2346,6 +2364,12 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
     entryRampCleared: !runOutFromCrawler,
     contained: false,
     marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: MUSTER_X, aiMoveDirection: 0,
+    animationPresentation: createCombatAnimationRuntime({
+      deploying: runOutFromCrawler,
+      direction: "right",
+      x: deployment.x,
+      y: deployment.y,
+    }),
     navigationRecovery: createNavigationRecoveryState({ x: deployment.x, y: deployment.y, lane: assignedLane }),
     abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
@@ -3481,7 +3505,6 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
   }
   const moving = f.mayoRetreat?.phase === "run"
     || f.gateEntering
-    || f.side === "zombie"
     || Math.abs(f.aiMoveDirection) > .05;
   const attackDuration = f.kind === "mrs-chiha" && f.attackVariant === "launcher-bash"
     ? mrsChihaLauncherBashDuration()
@@ -3498,11 +3521,23 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
           ? manualAbilityDefinition.windupSeconds
             + ((manualAbilityDefinition.guardSeconds - f.manualAbility.guardRemaining) % .36)
           : f.step;
+  const lockedDirection = Number(f.manualAbility?.target?.direction);
+  const direction = combatFacingDirection({
+    side: f.side,
+    aiMoveDirection: f.aiMoveDirection,
+    entryDirection: f.entryDirection,
+    manualDirection: lockedDirection,
+    manualAbilityActive,
+  });
   const anomalyTuning = isBossAnomalyKind(f.kind)
     ? BOSS_ANOMALY_TUNING[f.kind as keyof typeof BOSS_ANOMALY_TUNING]
     : null;
   const animationSample = f.mayoRetreat
-    ? sampleAnimationClip("mayo-chan", mayoRetreatSpriteState(f.mayoRetreat), f.mayoRetreat.phaseElapsed)
+    ? sampleAnimationClip(
+      "mayo-chan",
+      f.mayoRetreat.phase === "run" ? "retreat" : mayoRetreatSpriteState(f.mayoRetreat),
+      f.mayoRetreat.phaseElapsed,
+    )
     : manualAbilityActive
     ? sampleAnimationClip(f.kind, "special", manualAbilityElapsed)
     : f.kind === "kurome" && ["tracking", "locked"].includes(f.stationAbility.phase)
@@ -3548,25 +3583,23 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
             Math.max(0, (v090InfectedDefinition(f.kind)?.recoverySeconds ?? 0) - f.stationAbility.remainingSeconds),
           )
     : f.flash > 0
-    ? sampleAnimationClip(f.kind, "hit", Math.max(0, .12 - f.flash))
+    ? sampleAnimationClip(
+      f.kind,
+      f.knock >= 12 ? "hit-heavy" : "hit-light",
+      Math.max(0, .12 - f.flash),
+    )
     : f.abilityWindup > 0
       ? sampleAnimationClip(f.kind, "wind-up", Math.max(0, .24 - f.abilityWindup))
       : f.attack > 0
         ? f.kind === "mrs-chiha" && f.attackVariant === "launcher-bash"
           ? sampleMrsChihaLauncherBash(Math.max(0, attackDuration - f.attack))
           : sampleAttackPresentation(f.kind, Math.max(0, attackDuration - f.attack))
-        : moving
-          ? sampleAnimationClip(f.kind, "move", f.step)
-          : sampleAnimationClip(f.kind, "idle", f.step);
+        : sampleAnimationClip(
+          f.kind,
+          f.animationPresentation?.state ?? (moving ? "move" : "idle"),
+          f.animationPresentation?.elapsedSeconds ?? f.step,
+        );
   const state = animationSample.spriteState;
-  const lockedDirection = Number(f.manualAbility?.target?.direction);
-  const direction = combatFacingDirection({
-    side: f.side,
-    aiMoveDirection: f.aiMoveDirection,
-    entryDirection: f.entryDirection,
-    manualDirection: lockedDirection,
-    manualAbilityActive,
-  });
   const frame = spriteFrameFor(renderKind, state, direction);
   const authoredSize = fitSpriteBattleDisplaySize(renderKind, frame, spriteDisplaySize(renderKind));
   const compactScale = compactSpriteScale(renderKind);
@@ -3621,7 +3654,22 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     ctx.shadowBlur = 4;
     ctx.shadowOffsetY = 1;
   }
-  ctx.translate(f.x, f.y - bob);
+  const pose = animationSample.pose ?? {
+    offsetX: 0,
+    offsetY: 0,
+    rotationRadians: 0,
+    scaleX: 1,
+    scaleY: 1,
+    opacity: 1,
+  };
+  const facingSign = direction === "left" ? -1 : 1;
+  ctx.globalAlpha *= pose.opacity;
+  ctx.translate(
+    f.x + pose.offsetX * depthScale * facingSign,
+    f.y - bob + pose.offsetY * depthScale,
+  );
+  ctx.rotate(pose.rotationRadians * facingSign);
+  ctx.scale(pose.scaleX, pose.scaleY);
   if (frame.flipX) ctx.scale(-1, 1);
   const drawSlices = frame.drawSlices ?? [{
     x: 0,
@@ -6756,6 +6804,117 @@ export function AshfallGame() {
       __ASHFALL_RUNTIME_PERFORMANCE__?: unknown;
     };
     const bridge = {
+      prepareAnimationFoundationProof: (
+        kind: UnitKind | EnemyKind = "scout",
+        side: "human" | "zombie" = "human",
+      ) => {
+        const g = gameRef.current;
+        g.fighters = [];
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.deployQueue = [];
+        g.running = true;
+        g.paused = true;
+        g.over = false;
+        g.won = false;
+        const proofLane: Lane = 1;
+        const spawned = side === "human"
+          ? spawnHuman(g, kind as UnitKind, true)
+          : spawnEnemy(g, kind, proofLane);
+        const fighter = side === "human"
+          ? g.fighters.find((candidate) => candidate.side === "human" && candidate.kind === kind)
+          : spawned;
+        if (!fighter || (side === "human" && !spawned)) {
+          throw new Error(`Animation foundation proof fixture unavailable: ${side}/${kind}`);
+        }
+        fighter.x = side === "human" ? 330 : 630;
+        fighter.y = activeLaneCenters[proofLane];
+        fighter.lane = proofLane;
+        fighter.anchorLane = proofLane;
+        fighter.combatReady = false;
+        fighter.gateEntering = true;
+        fighter.entryDirection = side === "human" ? 1 : -1;
+        fighter.speed = 0;
+        fighter.laneSpeed = 0;
+        fighter.damage = 0;
+        fighter.cooldown = 99;
+        fighter.aiMoveDirection = 0;
+        fighter.animationPresentation = createCombatAnimationRuntime({
+          deploying: true,
+          direction: side === "human" ? "right" : "left",
+          x: fighter.x,
+          y: fighter.y,
+        });
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return {
+          fighterId: fighter.id,
+          kind: fighter.kind,
+          side: fighter.side,
+          state: fighter.animationPresentation.state,
+        };
+      },
+      stepAnimationFoundationProof: (
+        fighterId: number,
+        action: "deploy" | "deploy-move-right" | "move-right" | "move-left" | "stop" | "hit-light" | "hit-heavy" | "reload",
+        seconds = .05,
+      ) => {
+        const g = gameRef.current;
+        const fighter = g.fighters.find((candidate) => candidate.id === fighterId);
+        if (!fighter) return null;
+        const dt = Math.max(.001, Math.min(.5, Number(seconds) || .05));
+        let direction = fighter.animationPresentation.direction;
+        let state: string | null = null;
+        let deploying = false;
+        if (action === "deploy" || action === "deploy-move-right") {
+          deploying = true;
+          fighter.gateEntering = true;
+          fighter.combatReady = false;
+          if (action === "deploy-move-right") {
+            fighter.x += Math.max(4, 90 * dt);
+            fighter.aiMoveDirection = 1;
+            direction = "right";
+          }
+        } else {
+          fighter.gateEntering = false;
+          fighter.combatReady = true;
+          if (action === "move-right") {
+            fighter.x += Math.max(4, 90 * dt);
+            fighter.aiMoveDirection = 1;
+            direction = "right";
+          } else if (action === "move-left") {
+            fighter.x -= Math.max(4, 90 * dt);
+            fighter.aiMoveDirection = -1;
+            direction = "left";
+          } else {
+            fighter.aiMoveDirection = 0;
+          }
+          if (["hit-light", "hit-heavy", "reload"].includes(action)) state = action;
+        }
+        fighter.animationPresentation = advanceCombatAnimationRuntime(
+          fighter.animationPresentation,
+          {
+            kind: fighter.kind,
+            state,
+            deploying,
+            direction,
+            x: fighter.x,
+            y: fighter.y,
+          },
+          dt,
+        );
+        return {
+          fighterId: fighter.id,
+          action,
+          x: fighter.x,
+          y: fighter.y,
+          ...fighter.animationPresentation,
+        };
+      },
       prepareManualAbilityProof: (kind: UnitKind | readonly UnitKind[] | "all" = "all") => {
         const availableKinds = Object.keys(MANUAL_ABILITY_REGISTRY) as UnitKind[];
         const requestedKinds = kind === "all" ? availableKinds : Array.isArray(kind) ? [...kind] : [kind];
@@ -7473,6 +7632,7 @@ export function AshfallGame() {
         proofKind: "fighter" | "enemy-base" | "gate-eater" | "pierce" = "fighter",
       ) => {
         const g = gameRef.current;
+        g.paused = true;
         let gunner = g.fighters.find((fighter) => fighter.side === "human" && fighter.kind === "gunner");
         if (!gunner) {
           const spawned = spawnHuman(g, "gunner");
@@ -7559,6 +7719,22 @@ export function AshfallGame() {
               : gunner.damage * gateEaterMultiplier,
           initialTargetHp: proofTarget?.hp ?? g.barricadeHp,
         };
+      },
+      resumeMachineGunBurstProof: () => {
+        const g = gameRef.current;
+        g.last = performance.now();
+        g.paused = false;
+        return true;
+      },
+      freezeMachineGunBurstProof: (gunnerId: number) => {
+        const gunner = gameRef.current.fighters.find((fighter) => (
+          fighter.id === gunnerId
+          && fighter.side === "human"
+          && fighter.kind === "gunner"
+        ));
+        if (!gunner) return false;
+        gunner.cooldown = 99;
+        return true;
       },
       prepareSurvivalUpgradeProof: () => {
         const g = gameRef.current;
@@ -8020,6 +8196,7 @@ export function AshfallGame() {
               recoil: shot.recoil ?? null,
               casing: shot.casing ?? false,
               hitStopSeconds: shot.hitStopSeconds ?? 0,
+              impactDelaySeconds: shot.impactDelaySeconds ?? 0,
             })),
           fighters: g.fighters.map((fighter) => ({
             id: fighter.id,
@@ -8052,6 +8229,33 @@ export function AshfallGame() {
             crawlerDefenseTargetId: fighter.crawlerDefenseTargetId ?? null,
             aiDestinationX: fighter.aiDestinationX,
             aiMoveDirection: fighter.aiMoveDirection,
+            animationPresentation: {
+              state: fighter.animationPresentation.state,
+              elapsedSeconds: fighter.animationPresentation.elapsedSeconds,
+              direction: fighter.animationPresentation.direction,
+              moving: fighter.animationPresentation.moving,
+              deployCompleted: fighter.animationPresentation.deployCompleted,
+              transitionCount: fighter.animationPresentation.transitionCount,
+              eventCount: fighter.animationPresentation.eventCount,
+              lastEvents: fighter.animationPresentation.lastEvents.map((event) => ({ ...event })),
+              sampledSpriteState: sampleAnimationClip(
+                fighter.kind,
+                fighter.animationPresentation.state,
+                fighter.animationPresentation.elapsedSeconds,
+              ).spriteState,
+              groundAnchor: sampleAnimationClip(
+                fighter.kind,
+                fighter.animationPresentation.state,
+                fighter.animationPresentation.elapsedSeconds,
+              ).groundAnchor,
+              pose: {
+                ...sampleAnimationClip(
+                  fighter.kind,
+                  fighter.animationPresentation.state,
+                  fighter.animationPresentation.elapsedSeconds,
+                ).pose,
+              },
+            },
             targetable: fighter.targetable !== false,
             combatReady: fighter.combatReady,
             gateEntering: fighter.gateEntering,
@@ -14880,6 +15084,44 @@ export function AshfallGame() {
             emitBattleBark(g, "ally-down", "medic", `ally-down-${fighter.id}`);
           }
         }
+        for (const fighter of g.fighters) {
+          if (fighter.hp <= 0) continue;
+          const manualAbilityActive = fighter.side === "human"
+            && manualAbilityLocksNormalAction(fighter.manualAbility);
+          const direction = combatFacingDirection({
+            side: fighter.side,
+            aiMoveDirection: fighter.aiMoveDirection,
+            entryDirection: fighter.entryDirection,
+            manualDirection: Number(fighter.manualAbility?.target?.direction),
+            manualAbilityActive,
+          });
+          const presentationState = fighter.mayoRetreat
+            ? fighter.mayoRetreat.phase === "run"
+              ? "retreat"
+              : mayoRetreatSpriteState(fighter.mayoRetreat)
+            : fighter.flash > 0
+              ? fighter.knock >= 12 ? "hit-heavy" : "hit-light"
+              : fighter.kind === "gunner" && fighter.overheated && fighter.attack <= 0
+                ? "reload"
+                : null;
+          fighter.animationPresentation = advanceCombatAnimationRuntime(
+            fighter.animationPresentation ?? createCombatAnimationRuntime({
+              deploying: fighter.gateEntering,
+              direction,
+              x: fighter.x,
+              y: fighter.y,
+            }),
+            {
+              kind: fighter.kind,
+              state: presentationState,
+              deploying: fighter.gateEntering,
+              direction,
+              x: fighter.x,
+              y: fighter.y,
+            },
+            dt,
+          );
+        }
         g.fighters = g.fighters.filter((fighter) => fighter.hp > 0 && fighter.mayoRetreat?.complete !== true);
 
         const beforeFireStates = new Map(g.corpses.map((corpse) => [corpse.id, corpse.state]));
@@ -14932,6 +15174,11 @@ export function AshfallGame() {
               targetId: null, targetObjectId: null, retargetIn: 0, nextLaneDecisionAt: g.time + .8, bodyRadius: bodyRadiusFor("turned"), laneSpeed: enemyLaneSpeedFor("turned"), spawnGrace: generic.riseLockRemaining,
                combatReady: true, gateEntering: false, gateEntrySpeed: 0, combatReadyX: 0, contained: false,
                marked: 0, stunned: 0, bleedRemaining: 0, bleedDamagePerSecond: 0, aiDestinationX: corpse.x, aiMoveDirection: 0,
+               animationPresentation: createCombatAnimationRuntime({
+                 direction: "left",
+                 x: generic.x,
+                 y: generic.y,
+               }),
                navigationRecovery: createNavigationRecoveryState({ x: generic.x, y: generic.y, lane: generic.lane }),
                abilityCooldown: 0, abilityWindup: 0, attackSequence: 0,
                stationAbility: createStationAbilityRuntime("turned"),

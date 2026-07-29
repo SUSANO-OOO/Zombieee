@@ -3,18 +3,24 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 
 import {
+  COMBAT_ANIMATION_STATES,
+  COMBAT_CLIP_FALLBACKS,
   COMBAT_CLIP_STATES,
+  COMBAT_OPTIONAL_CLIP_STATES,
   COMBAT_PRESENTATION_PROFILES,
   COMBAT_WEAPON_ANCHORS,
   UNIT_WEAPON_PROFILE,
   WEAPON_PROFILE_IDS,
   WEAPON_PROFILES,
+  advanceCombatAnimationRuntime,
   advancePendingWeaponHits,
   animationClipFor,
   attackPresentationDuration,
   combatFacingDirection,
   combatWeaponAnchor,
+  combatClipEventsBetween,
   combatClipEventsFor,
+  createCombatAnimationRuntime,
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
@@ -24,14 +30,14 @@ import {
 } from "../app/combatPresentation.js";
 import { spriteKinds } from "../app/spriteManifest.js";
 
-test("every runtime sprite kind owns all variable-frame combat clips", () => {
+test("every runtime sprite kind owns all core and optional variable-frame combat clips", () => {
   assert.deepEqual(Object.keys(COMBAT_PRESENTATION_PROFILES), spriteKinds);
   const frameCounts = new Set();
   for (const kind of spriteKinds) {
     const profile = COMBAT_PRESENTATION_PROFILES[kind];
     assert.ok(["small", "standard", "large"].includes(profile.bodyClass));
-    assert.deepEqual(Object.keys(profile.clips), COMBAT_CLIP_STATES);
-    for (const state of COMBAT_CLIP_STATES) {
+    assert.deepEqual(Object.keys(profile.clips), COMBAT_ANIMATION_STATES);
+    for (const state of COMBAT_ANIMATION_STATES) {
       const clip = animationClipFor(kind, state);
       assert.ok(clip.durationSeconds > 0, `${kind}/${state} duration`);
       assert.ok(clip.frames.length > 0, `${kind}/${state} frames`);
@@ -46,6 +52,137 @@ test("every runtime sprite kind owns all variable-frame combat clips", () => {
     }
   }
   assert.ok(frameCounts.size >= 3, "clips must not collapse to one fixed frame count");
+});
+
+test("optional clip fallbacks preserve hurt, down, and death semantics", () => {
+  assert.deepEqual(COMBAT_CLIP_STATES, [
+    "idle", "move", "wind-up", "active", "recovery", "hit", "incapacitated", "death", "special",
+  ]);
+  assert.equal(COMBAT_OPTIONAL_CLIP_STATES.length, 12);
+  assert.equal(COMBAT_CLIP_FALLBACKS["hit-light"], "hit");
+  assert.equal(COMBAT_CLIP_FALLBACKS["hit-heavy"], "hit");
+  assert.equal(COMBAT_CLIP_FALLBACKS.down, "incapacitated");
+  for (const kind of spriteKinds) {
+    for (const state of ["hit-light", "hit-heavy", "down"]) {
+      const spriteStates = animationClipFor(kind, state).frames.map(({ spriteState }) => spriteState);
+      assert.equal(spriteStates.some((spriteState) => spriteState.startsWith("attack")), false, `${kind}/${state}`);
+    }
+    assert.deepEqual(
+      animationClipFor(kind, "death").frames.map(({ spriteState }) => spriteState),
+      ["death"],
+      `${kind}/death`,
+    );
+  }
+});
+
+test("semantic pose transforms keep the authored ground anchor fixed", () => {
+  for (const state of COMBAT_OPTIONAL_CLIP_STATES) {
+    const current = animationClipFor("walker", state);
+    for (const elapsed of [0, current.durationSeconds / 2, current.durationSeconds]) {
+      const sample = sampleAnimationClip("walker", state, elapsed);
+      assert.equal(sample.groundAnchor, 1, `${state} ground anchor`);
+      assert.equal(sample.pose.offsetY, 0, `${state} cannot lift the contact point`);
+      assert.ok(sample.pose.scaleX >= .8 && sample.pose.scaleX <= 1.12, `${state} scaleX`);
+      assert.ok(sample.pose.scaleY >= .8 && sample.pose.scaleY <= 1.12, `${state} scaleY`);
+      assert.ok(Math.abs(sample.pose.rotationRadians) <= .13, `${state} rotation`);
+      assert.ok(sample.pose.opacity >= .7 && sample.pose.opacity <= 1, `${state} opacity`);
+    }
+  }
+});
+
+test("event cursor consumes transition and loop events exactly once", () => {
+  const started = combatClipEventsBetween("scout", "start-move", 0, .13);
+  assert.deepEqual(started.map(({ type }) => type), ["locomotion-start", "footstep"]);
+  assert.equal(combatClipEventsBetween("scout", "start-move", .08, .08).length, 0);
+  const move = animationClipFor("scout", "move");
+  const crossed = combatClipEventsBetween("scout", "move", move.durationSeconds - .01, move.durationSeconds + .08);
+  assert.deepEqual(crossed.map(({ type }) => type), ["footstep"]);
+  assert.equal(crossed[0].cycle, 1);
+});
+
+test("locomotion runtime exposes deploy, start, stop, and turn transitions from real motion", () => {
+  let runtime = createCombatAnimationRuntime({ deploying: true, direction: "right", x: 100, y: 200 });
+  assert.equal(runtime.state, "deploy");
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", deploying: false, direction: "right", x: 102, y: 200,
+  }, .05);
+  assert.equal(runtime.state, "start-move");
+  assert.equal(runtime.moving, true);
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "right", moving: true, x: 108, y: 200,
+  }, .2);
+  assert.equal(runtime.state, "move");
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "left", moving: true, x: 104, y: 200,
+  }, .02);
+  assert.equal(runtime.state, "turn");
+  assert.equal(runtime.direction, "left");
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "left", moving: false, x: 104, y: 200,
+  }, .2);
+  assert.equal(runtime.state, "stop-move");
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "left", moving: false, x: 104, y: 200,
+  }, .2);
+  assert.equal(runtime.state, "idle");
+  assert.ok(runtime.transitionCount >= 5);
+  assert.ok(runtime.eventCount >= 1);
+});
+
+test("runtime event cursor never repeats a state-entry event on the following tick", () => {
+  let runtime = createCombatAnimationRuntime({ direction: "right", x: 10, y: 20 });
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "right", x: 14, y: 20,
+  }, .01);
+  assert.equal(runtime.state, "start-move");
+  assert.equal(runtime.eventCount, 1);
+  assert.deepEqual(runtime.lastEvents.map(({ type }) => type), ["locomotion-start"]);
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "right", x: 18, y: 20,
+  }, .13);
+  assert.equal(runtime.state, "start-move");
+  assert.equal(runtime.eventCount, 2);
+  assert.deepEqual(runtime.lastEvents.map(({ type }) => type), ["footstep"]);
+});
+
+test("an initially active deploy clip emits its entry event once", () => {
+  let runtime = createCombatAnimationRuntime({
+    deploying: true,
+    direction: "right",
+    x: 10,
+    y: 20,
+  });
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", deploying: true, direction: "right", x: 10, y: 20,
+  }, .02);
+  assert.equal(runtime.eventCount, 1);
+  assert.deepEqual(runtime.lastEvents.map(({ type }) => type), ["deploy-brace"]);
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", deploying: true, direction: "right", x: 10, y: 20,
+  }, .02);
+  assert.equal(runtime.eventCount, 1);
+  assert.deepEqual(runtime.lastEvents, []);
+});
+
+test("a moving gate entrant completes deploy once and continues with movement instead of sliding idle", () => {
+  let runtime = createCombatAnimationRuntime({
+    deploying: true,
+    direction: "right",
+    x: 96,
+    y: 285,
+  });
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", deploying: true, direction: "right", x: 111, y: 285,
+  }, .16);
+  assert.equal(runtime.state, "deploy");
+  assert.equal(runtime.deployCompleted, false);
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", deploying: true, direction: "right", x: 128, y: 285,
+  }, .17);
+  assert.equal(runtime.state, "move");
+  assert.equal(runtime.deployCompleted, true);
+  assert.equal(runtime.moving, true);
+  assert.match(sampleAnimationClip("scout", runtime.state, runtime.elapsedSeconds).spriteState, /^walk-/);
 });
 
 test("clip sampling loops movement and clamps one-shot recovery", () => {
