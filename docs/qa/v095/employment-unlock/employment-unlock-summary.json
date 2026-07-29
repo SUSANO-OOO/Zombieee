@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-29T13:27:38.989Z",
+  "issue": 96,
+  "baseline": {
+    "version": "0.9.0",
+    "releaseSha": "f2633c538756385f13d166d3adbcdd39b3a08b21",
+    "sourceSaveSchemaVersion": 13
+  },
+  "phaseBaseSha": "2797a18bef859755e012c81d54496b6f60452b39",
+  "targetSaveSchemaVersion": 14,
+  "contracts": {
+    "playerFacingTerm": "雇用",
+    "mayoUnlock": {
+      "unitId": "unit-mayo-chan",
+      "condition": "Survival Wave 20 entered",
+      "bossClearRequired": false,
+      "costCaps": 260,
+      "stage20MiyamotoPreserved": true,
+      "legacyOwnedDiscoveredRecruitablePreserved": true,
+      "highestCompletedWaveField": "highestWave",
+      "highestReachedWaveField": "highestReachedWave",
+      "wave21StartRequiresWave20Clear": true
+    },
+    "notice": {
+      "id": "employment-available:unit-mayo-chan",
+      "receiptField": "employmentNoticeReceipts",
+      "seenField": "seenEmploymentNoticeIds",
+      "multiNoticeQueue": true,
+      "durableBeforeDismiss": true,
+      "retryUnlockedAfterPersistenceFailure": true,
+      "dedicatedCueId": "employment-dossier-reveal",
+      "reducedMotionSupported": true
+    }
+  },
+  "employmentBrowserMatrix": {
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "viewports": [
+      "1280x720",
+      "844x390",
+      "844x340"
+    ],
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "touchInput": true,
+    "cardDecoded": "6/6",
+    "cardPixels": "512x512",
+    "minimumButtonHeightPixels": 44,
+    "cueRequestExactlyOnce": "6/6",
+    "persisted": {
+      "initialCaps": 900,
+      "finalCaps": 640,
+      "owned": true,
+      "recruitable": false,
+      "employmentReceiptCount": 1,
+      "noticeReceipt": true,
+      "noticeSeen": true,
+      "popupAfterReload": 0,
+      "duplicateReceiptAfterReload": 0
+    },
+    "audio": {
+      "chromiumAudioContextRunning": "3/3",
+      "chromiumWarnings": 0,
+      "webkitCueRequests": "3/3",
+      "webkitPlaybackClaim": false,
+      "webkitLimitation": "Known headless gesture block before AudioContext creation"
+    },
+    "reveal": {
+      "standardMotionThreeAnimationsCompleted": "5/5",
+      "reducedMotionAnimationsAbsent": "1/1"
+    },
+    "persistenceFailure": {
+      "inlineErrorAndPopupRetained": "6/6",
+      "retrySucceeded": "6/6"
+    },
+    "diagnostics": {
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "requestFailures": 0,
+      "httpErrors": 0,
+      "duplicateAudioLoops": 0
+    },
+    "rawSummarySha256": "6028330564d068f3fdf7bedc3ae21c51abede66fe067149b0d6004082acc7f24"
+  },
+  "wave20RuntimeEntryMatrix": {
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "viewport": "844x390",
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "entryMode": "production-runtime-queue-wave",
+    "runtimeReadback": {
+      "phase": "in-wave",
+      "currentWave": 20,
+      "reachedWave": 20,
+      "lastCompletedWave": 19,
+      "runtimeWaveQueued": true,
+      "pausedForDurability": true
+    },
+    "persistenceFailure": {
+      "blockerVisible": "2/2",
+      "ordinaryPauseBypass": 0,
+      "retrySucceeded": "2/2"
+    },
+    "durableResult": {
+      "highestCompletedWave": 19,
+      "highestReachedWave": 20,
+      "wave21StartUnlocked": false,
+      "processedRunCount": 0,
+      "claimedRewardCount": 0,
+      "noticeReceipt": true
+    },
+    "diagnosticErrors": 0
+  },
+  "representativeEvidence": [
+    {
+      "path": "outputs/v095-employment-unlock/chromium-844x390-mayo-employment-popup.png",
+      "sha256": "617baf39ceb02e06415a52ecd6313c2fd2079e4aa5ad2d119d89b48e3d811c31"
+    },
+    {
+      "path": "outputs/v095-employment-unlock/chromium-844x390-employment-screen.png",
+      "sha256": "6e45bec9e049a2a5952bcfe034142c8a2c8b8c8508fce402f52a1bd34701236c"
+    },
+    {
+      "path": "outputs/v095-employment-unlock/webkit-844x340-mayo-employment-popup.png",
+      "sha256": "ad8045117c4e9d656d8d08b507cbb1d547382ab427759e7825f6fbbd96a760d6"
+    },
+    {
+      "path": "outputs/v095-employment-unlock/webkit-844x390-employment-screen.png",
+      "sha256": "1b1b8d2608af01ff607324552daf78db480f31244429727887eee53ca21ae9ea"
+    }
+  ],
+  "crossChecks": {
+    "survivalWaveBrowser": {
+      "passed": 2,
+      "total": 2,
+      "bossWaveCompleted": 5,
+      "nextPhase": "upgrade-selection",
+      "diagnosticErrors": 0,
+      "rawSummarySha256": "bd0571b2dffdde1dad7a85d389060794abfa2619fe01fda00ae7db64404784db"
+    },
+    "saveMigrationBrowser": {
+      "matricesPassed": 4,
+      "matricesTotal": 4,
+      "casesPassed": 44,
+      "casesTotal": 44,
+      "targetSchemaVersion": 14,
+      "diagnosticErrors": 0,
+      "rawSummarySha256": "4f8a258c23295da2c99d8dfff17d76ac7c738a011333db7ec4bbffa7b4f61f01"
+    }
+  },
+  "gates": {
+    "focusedTests": "143/143",
+    "allTests": "731/731",
+    "productionBuild": "passed",
+    "lint": "passed",
+    "gitDiffCheck": "passed"
+  },
+  "limitations": [
+    "No physical-smartphone temperature claim.",
+    "No physical-speaker quality claim.",
+    "Headless WebKit cue request is not a playback claim.",
+    "Final physical-smartphone acceptance remains an RC gate."
+  ]
+}

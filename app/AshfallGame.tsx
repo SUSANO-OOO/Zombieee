@@ -68,6 +68,7 @@ import {
 import { claimDefeatResolution } from "./defeatLedger.js";
 import {
   CampaignScreens,
+  EmploymentAvailablePopup,
   type CampaignResultView,
   type CampaignScreen,
   type BossCompendiumView,
@@ -87,13 +88,16 @@ import {
   CAMPAIGN_STAGE_IDS,
   CAMPAIGN_STAGES,
   CAMPAIGN_RECRUITMENT_COSTS,
+  CAMPAIGN_UNIT_IDS,
   CAMPAIGN_UNITS,
   INITIAL_STAGE_ID,
   acknowledgeCampaignMigrationNotice,
+  acknowledgeEmploymentNotice,
   campaignUnitIdToCombatKind,
   campaignUnitLevelUpgradeQuote,
   checkpointSurvivalCampaignSave,
   createDefaultCampaignSave,
+  employmentNoticeIdForUnit,
   getCampaignLevelCap,
   getCampaignUnitLevel,
   getFormationPresetEquipmentSnapshot,
@@ -108,6 +112,8 @@ import {
   markStoryEventRead,
   persistOutbreakCampaignSettlement,
   persistSurvivalCampaignSettlement,
+  pendingEmploymentNoticeUnitIds,
+  recordSurvivalWaveReachedCampaignSave,
   recruitCampaignUnit,
   reviseCampaignSave,
   resolveStageResult,
@@ -625,7 +631,7 @@ type CampaignUnitData = {
   id: string; combatKind: UnitKind; displayName: string; roleName: string; description: string;
   roleIcon: string; weaponName: string; attackMode: string; rangeBand: string; primaryTarget: string; deploymentHint: string;
   recruitmentCostCaps?: number;
-  unlock: { type: string; stageId?: string; stageNumber?: number; costCaps?: number };
+  unlock: { type: string; stageId?: string; stageNumber?: number; waveNumber?: number; costCaps?: number };
 };
 type EnemyEntryMode = "base-interior" | "right-edge" | "right-edge-outside";
 type EnemySpawnEntry = {
@@ -1272,6 +1278,11 @@ type PendingSurvivalCheckpoint = {
   run: ReturnType<typeof createSurvivalRun>;
   checkpointId: string;
 };
+type PendingSurvivalWaveEntitlement = {
+  run: ReturnType<typeof createSurvivalRun>;
+  waveNumber: number;
+  receiptId: string;
+};
 type PendingOutbreakSettlement = {
   end: BattleResult;
   completedAt: string;
@@ -1309,6 +1320,7 @@ const SFX_CUES = {
   queue: { category: "ui", frequency: 170, duration: .05, type: "square", volume: .055, cooldown: .04, priority: 15 },
   "ui-confirm": { category: "ui", frequency: 240, duration: .05, type: "square", volume: .045, cooldown: .06, priority: 15 },
   "ui-cancel": { category: "ui", frequency: 125, duration: .06, type: "square", volume: .04, cooldown: .08, priority: 15 },
+  "employment-dossier-reveal": { category: "ui", frequency: 520, duration: .18, type: "triangle", volume: .05, cooldown: .9, priority: 78 },
   "supply-pod": { category: "ui", frequency: 118, duration: .11, type: "square", volume: .055, cooldown: .08, priority: 20 },
   "supply-drum": { category: "ui", frequency: 92, duration: .11, type: "square", volume: .055, cooldown: .08, priority: 20 },
   "supply-medical": { category: "ui", frequency: 210, duration: .11, type: "square", volume: .055, cooldown: .08, priority: 20 },
@@ -6608,6 +6620,8 @@ export function AshfallGame() {
   const eventCompletionLockRef = useRef(false);
   const finalizedEndRef = useRef<BattleResult | null>(null);
   const survivalCheckpointSaveLocksRef = useRef(new Set<string>());
+  const survivalWaveEntitlementSaveLocksRef = useRef(new Set<string>());
+  const survivalWaveEntitlementReceiptRef = useRef("");
   const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const outbreakSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const bossFoundationQaRef = useRef<{
@@ -6649,6 +6663,11 @@ export function AshfallGame() {
   const [selectedSupply, setSelectedSupply] = useState<SupplyKind>("pod");
   const [selectedAction, setSelectedAction] = useState<SelectedAction>(null);
   const [screen, setScreen] = useState<CampaignScreen>("title");
+  const [personnelInitialMode, setPersonnelInitialMode] = useState<"roster" | "acquisition">("roster");
+  const [employmentNoticePending, setEmploymentNoticePending] = useState(false);
+  const [employmentNoticeSaveError, setEmploymentNoticeSaveError] = useState(false);
+  const employmentNoticeSoundRef = useRef("");
+  const employmentNoticeLockRef = useRef(false);
   const upgradeLocksRef = useRef(new Set<string>());
   const [upgradePendingUnitIds, setUpgradePendingUnitIds] = useState<readonly string[]>([]);
   const [upgradeFeedback, setUpgradeFeedback] = useState<UpgradeFeedbackView | null>(null);
@@ -6719,6 +6738,7 @@ export function AshfallGame() {
   const [survivalSavePending, setSurvivalSavePending] = useState(false);
   const [survivalSettlementAwaitingRetry, setSurvivalSettlementAwaitingRetry] = useState(false);
   const [pendingSurvivalCheckpoint, setPendingSurvivalCheckpoint] = useState<PendingSurvivalCheckpoint | null>(null);
+  const [pendingSurvivalWaveEntitlement, setPendingSurvivalWaveEntitlement] = useState<PendingSurvivalWaveEntitlement | null>(null);
   const [pendingSurvivalSettlement, setPendingSurvivalSettlement] = useState<PendingSurvivalSettlement | null>(null);
   const [hud, setHud] = useState<Hud>({
     missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
@@ -6998,6 +7018,7 @@ export function AshfallGame() {
       pools: qaPools,
       cueIds: [...qaAssets.map((asset) => asset.id), ...qaPools.map((pool) => pool.id), ...PRODUCTION_AUDIO_MANIFEST.aliases.map((alias) => alias.id)],
       sceneIds: PRODUCTION_AUDIO_MANIFEST.scenes.map((scene) => scene.id),
+      getCueRequests: () => productionCueQaLogRef.current.map((entry) => ({ ...entry })),
       getDiagnostics: () => mixer.getDiagnostics(),
       getSceneState: () => mixer.getSceneState(),
       unlock: () => mixer.unlock(),
@@ -8383,6 +8404,68 @@ export function AshfallGame() {
         gunner.cooldown = 99;
         return true;
       },
+      prepareSurvivalWaveEntitlementProof: () => {
+        const receiptId = employmentNoticeIdForUnit(CAMPAIGN_UNIT_IDS.MAYO_CHAN);
+        const readyRun = {
+          ...createSurvivalRun({
+            runId: "qa-mayo-wave-20-entitlement",
+            formation: {
+              unitIds: ["unit-hachi"],
+              unitLevelsByUnit: { "unit-hachi": 1 },
+            },
+          }),
+          phase: SURVIVAL_RUN_PHASES.WAVE_READY,
+          currentWave: 20,
+          lastCompletedWave: 19,
+          reachedWave: 19,
+        };
+        const g = gameRef.current;
+        g.definition = {
+          ...g.definition,
+          displayName: "感染防衛前線",
+          missionType: "survival",
+          enemyBaseMode: "scenery",
+        };
+        g.survivalRun = readyRun;
+        g.survivalRuntime = {
+          ...createSurvivalCombatRuntime(readyRun),
+          intermissionRemaining: 0,
+        };
+        g.wave = 20;
+        g.baseHp = readyRun.crawler.hp;
+        g.baseMaxHp = readyRun.crawler.maxHp;
+        g.running = true;
+        g.over = false;
+        g.paused = false;
+        g.last = performance.now();
+        survivalWaveEntitlementReceiptRef.current = "";
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        setSurvivalHud(survivalHudSnapshot(readyRun));
+        setPendingSurvivalWaveEntitlement(null);
+        return {
+          receiptId,
+          targetWave: readyRun.currentWave,
+          reachedWaveBeforeQueue: readyRun.reachedWave,
+          lastCompletedWave: readyRun.lastCompletedWave,
+          entryMode: "production-runtime-queue-wave",
+        };
+      },
+      getSurvivalWaveEntitlementProof: () => {
+        const g = gameRef.current;
+        return {
+          runId: g.survivalRun?.runId ?? null,
+          phase: g.survivalRun?.phase ?? null,
+          currentWave: g.survivalRun?.currentWave ?? null,
+          reachedWave: g.survivalRun?.reachedWave ?? null,
+          lastCompletedWave: g.survivalRun?.lastCompletedWave ?? null,
+          runtimeWaveQueued: g.survivalRuntime?.waveQueued === true,
+          receiptId: survivalWaveEntitlementReceiptRef.current || null,
+          paused: g.paused,
+        };
+      },
       prepareSurvivalUpgradeProof: () => {
         const g = gameRef.current;
         if (!g.survivalRun || !g.survivalRuntime || g.over) {
@@ -9708,11 +9791,24 @@ export function AshfallGame() {
     return runtime;
   }, []);
 
-  const playCue = useCallback((cueId: SfxCueId, options?: { frequency?: number }) => {
+  const playCue = useCallback((cueId: SfxCueId, options?: { frequency?: number; dedupeKey?: string }) => {
     if (sfxMutedRef.current) return false;
     const productionMixer = productionMixerRef.current;
     const productionCue = LEGACY_SFX_CUE_MAP[cueId];
     if (!productionMixer) return false;
+    if (productionCue
+      && typeof window !== "undefined"
+      && ["127.0.0.1", "localhost"].includes(window.location.hostname)) {
+      productionCueQaLogRef.current = [
+        ...productionCueQaLogRef.current,
+        {
+          cueId: productionCue,
+          at: performance.now(),
+          x: W / 2,
+          dedupeKey: options?.dedupeKey ?? null,
+        },
+      ].slice(-128);
+    }
     const cue = SFX_CUES[cueId];
     const fallback = () => productionMixer.playTestTone({
       frequency: options?.frequency ?? cue.frequency,
@@ -10703,7 +10799,7 @@ export function AshfallGame() {
       totalStages: CAMPAIGN_STAGES.length,
       collectedStars: Object.values(campaignSave.bestStarsByStage)
         .reduce((total: number, stars) => total + Number(stars || 0), 0),
-      highestSurvivalWave: campaignSave.survival.highestWave,
+      highestSurvivalWave: campaignSave.survival.highestReachedWave,
       survivalRuns: campaignSave.survival.totalRuns,
       outbreakClears: campaignSave.outbreaks.clearedMissionIds.length,
       recentResults: [...records.recentResults].reverse().map((result) => ({
@@ -10765,8 +10861,10 @@ export function AshfallGame() {
       unlockHint: unit.unlock.type === "initial"
         ? "初期加入"
         : unit.unlock.type === "recruitment"
-          ? `${CAMPAIGN_STAGE_BY_ID[unit.unlock.stageId ?? ""]?.displayName ?? `Stage ${unit.unlock.stageNumber ?? "?"}`}後に調達`
-          : `Stage ${unit.unlock.stageNumber ?? "?"}で加入`,
+          ? `${CAMPAIGN_STAGE_BY_ID[unit.unlock.stageId ?? ""]?.displayName ?? `Stage ${unit.unlock.stageNumber ?? "?"}`}後に雇用可能`
+          : unit.unlock.type === "survival"
+            ? `Survival Wave ${unit.unlock.waveNumber ?? "?"}到達`
+            : `Stage ${unit.unlock.stageNumber ?? "?"}で加入`,
       level,
       maxLevel: UNIT_LEVEL_MAX,
       levelCap: campaignLevelCap,
@@ -10782,6 +10880,27 @@ export function AshfallGame() {
       nextStatCompact: compactStatSummaryFor(quote.nextLevel ?? level),
     };
   }), [campaignLevelCap, campaignSave, qaMode, qaScenario]);
+  const pendingEmploymentUnitIds = useMemo(
+    () => pendingEmploymentNoticeUnitIds(campaignSave) as string[],
+    [campaignSave],
+  );
+  const employmentNoticeUnit = unitViews.find(({ id }) => id === pendingEmploymentUnitIds[0]) ?? null;
+  const employmentNoticeSafeScreen = Boolean(
+    saveHydrated
+    && employmentNoticeUnit
+    && campaignSave.migrationNotices.length === 0
+    && !saveRecovery
+    && !["title", "event", "battle"].includes(screen),
+  );
+  useEffect(() => {
+    if (!employmentNoticeSafeScreen || !employmentNoticeUnit) return;
+    const noticeKey = `employment-available:${employmentNoticeUnit.id}`;
+    if (employmentNoticeSoundRef.current === noticeKey) return;
+    employmentNoticeSoundRef.current = noticeKey;
+    playCue("employment-dossier-reveal", {
+      dedupeKey: noticeKey,
+    });
+  }, [employmentNoticeSafeScreen, employmentNoticeUnit, playCue]);
   const supplyViews = useMemo<SupplyScreenView[]>(() => (Object.keys(supplyDefs) as SupplyKind[]).map((kind) => ({
     kind,
     name: supplyDefs[kind].name,
@@ -11085,6 +11204,38 @@ export function AshfallGame() {
       acquisitionId: `recruit:${unitId}`,
     }).save as CampaignSave);
   }, []);
+  const acknowledgeEmploymentAvailability = useCallback((openEmployment: boolean) => {
+    if (!employmentNoticeUnit || employmentNoticeLockRef.current) return;
+    employmentNoticeLockRef.current = true;
+    setEmploymentNoticePending(true);
+    setEmploymentNoticeSaveError(false);
+    void (async () => {
+      try {
+        const nextSave = acknowledgeEmploymentNotice(
+          campaignSaveRef.current,
+          employmentNoticeUnit.id,
+        ) as CampaignSave;
+        const persisted = await persistCampaignSave(nextSave);
+        if (!persisted.durable) {
+          setSavePersistence("unavailable");
+          setEmploymentNoticeSaveError(true);
+          return;
+        }
+        campaignSaveRef.current = nextSave;
+        setCampaignSave(nextSave);
+        if (openEmployment) {
+          setPersonnelInitialMode("acquisition");
+          setScreen("personnel");
+        }
+      } catch {
+        setSavePersistence("unavailable");
+        setEmploymentNoticeSaveError(true);
+      } finally {
+        employmentNoticeLockRef.current = false;
+        setEmploymentNoticePending(false);
+      }
+    })();
+  }, [employmentNoticeUnit, persistCampaignSave]);
   const upgradeUnit = useCallback((unitId: string) => {
     if (upgradeLocksRef.current.has(unitId)) return;
     upgradeLocksRef.current.add(unitId);
@@ -11145,17 +11296,26 @@ export function AshfallGame() {
 
   const beginCampaign = useCallback(() => {
     if (campaignSave.campaignStarted) {
+      const pendingEmploymentUnitId = pendingEmploymentUnitIds[0];
+      if (pendingEmploymentUnitId && campaignSave.migrationNotices.length === 0) {
+        const noticeKey = `employment-available:${pendingEmploymentUnitId}`;
+        employmentNoticeSoundRef.current = noticeKey;
+        playCue("employment-dossier-reveal", { dedupeKey: noticeKey });
+      }
       setSelectedStageId(campaignSave.lastSelectedStageId);
       setScreen("map");
       return;
     }
     setCampaignSave((current) => markCampaignStarted(current) as CampaignSave);
     openEvents(getPrologueOpeningEventIds(), "map");
-  }, [campaignSave.campaignStarted, campaignSave.lastSelectedStageId, openEvents]);
+  }, [campaignSave.campaignStarted, campaignSave.lastSelectedStageId, campaignSave.migrationNotices.length, openEvents, pendingEmploymentUnitIds, playCue]);
   const replayPrologue = useCallback(() => {
     openEvents(getPrologueReplayEventIds(), "map", { forceReplay: true });
   }, [openEvents]);
-  const openPersonnel = useCallback(() => setScreen("personnel"), []);
+  const openPersonnel = useCallback(() => {
+    setPersonnelInitialMode("roster");
+    setScreen("personnel");
+  }, []);
   const openLoadout = useCallback(() => setScreen("loadout"), []);
   const openRecords = useCallback(() => setScreen("records"), []);
   const openOutbreak = useCallback(() => {
@@ -11238,8 +11398,21 @@ export function AshfallGame() {
     setScreen("outbreak");
   }, []);
   const acknowledgeMigrationNotice = useCallback((noticeId: string) => {
-    setCampaignSave((current) => acknowledgeCampaignMigrationNotice(current, noticeId) as CampaignSave);
-  }, []);
+    const nextSave = acknowledgeCampaignMigrationNotice(
+      campaignSaveRef.current,
+      noticeId,
+    ) as CampaignSave;
+    const pendingEmploymentUnitId = nextSave.migrationNotices.length === 0
+      ? pendingEmploymentNoticeUnitIds(nextSave)[0]
+      : null;
+    if (pendingEmploymentUnitId) {
+      const noticeKey = `employment-available:${pendingEmploymentUnitId}`;
+      employmentNoticeSoundRef.current = noticeKey;
+      playCue("employment-dossier-reveal", { dedupeKey: noticeKey });
+    }
+    campaignSaveRef.current = nextSave;
+    setCampaignSave(nextSave);
+  }, [playCue]);
   const downloadCampaignText = useCallback((filename: string, text: string) => {
     const url = URL.createObjectURL(new Blob([text], { type: "application/json;charset=utf-8" }));
     const anchor = document.createElement("a");
@@ -11559,6 +11732,61 @@ export function AshfallGame() {
       metadata: { revision: pendingResultCommit.save.revision, updatedAt: pendingResultCommit.save.updatedAt },
     }));
   }, [downloadCampaignText, pendingResultCommit]);
+
+  useEffect(() => {
+    if (!pendingSurvivalWaveEntitlement) return;
+    const { run, waveNumber, receiptId } = pendingSurvivalWaveEntitlement;
+    if (survivalWaveEntitlementSaveLocksRef.current.has(receiptId)) return;
+    survivalWaveEntitlementSaveLocksRef.current.add(receiptId);
+    setSurvivalSavePending(true);
+    let cancelled = false;
+    void (async () => {
+      try {
+        const entitlement = recordSurvivalWaveReachedCampaignSave(
+          campaignSaveRef.current,
+          run,
+          { reachedAt: new Date().toISOString() },
+        );
+        const persisted = entitlement.applied
+          ? await persistCampaignSave(entitlement.save as CampaignSave)
+          : { durable: true };
+        if (cancelled) return;
+        if (!persisted.durable) {
+          survivalWaveEntitlementSaveLocksRef.current.delete(receiptId);
+          setSavePersistence("unavailable");
+          setSurvivalSavePending(false);
+          return;
+        }
+        campaignSaveRef.current = entitlement.save as CampaignSave;
+        setCampaignSave(entitlement.save as CampaignSave);
+        const liveGame = gameRef.current;
+        if (liveGame.survivalRun?.runId === run.runId
+          && liveGame.survivalRun.reachedWave >= waveNumber
+          && survivalWaveEntitlementReceiptRef.current === receiptId) {
+          liveGame.paused = false;
+          setPaused(false);
+          setSurvivalHud(survivalHudSnapshot(liveGame.survivalRun));
+          resumeBattleAudioLoopsRef.current(liveGame);
+        }
+        setPendingSurvivalWaveEntitlement(null);
+        setSurvivalSavePending(false);
+      } catch {
+        if (cancelled) return;
+        survivalWaveEntitlementSaveLocksRef.current.delete(receiptId);
+        setSavePersistence("unavailable");
+        setSurvivalSavePending(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingSurvivalWaveEntitlement, persistCampaignSave]);
+
+  const retrySurvivalWaveEntitlementSave = useCallback(() => {
+    if (!pendingSurvivalWaveEntitlement || survivalSavePending) return;
+    survivalWaveEntitlementSaveLocksRef.current.delete(pendingSurvivalWaveEntitlement.receiptId);
+    setPendingSurvivalWaveEntitlement({ ...pendingSurvivalWaveEntitlement });
+  }, [pendingSurvivalWaveEntitlement, survivalSavePending]);
 
   useEffect(() => {
     if (!pendingSurvivalCheckpoint) return;
@@ -13604,6 +13832,21 @@ export function AshfallGame() {
               g.bannerTime = 1.8;
               playCue("wave-contact");
               emitBattleBark(g, "wave-contact", "guide", `survival-wave-${event.plan.wave}`);
+              if (event.plan.wave === 20
+                && g.survivalRun?.reachedWave >= 20
+                && campaignSaveRef.current.survival.highestReachedWave < 20) {
+                const receiptId = employmentNoticeIdForUnit(CAMPAIGN_UNIT_IDS.MAYO_CHAN);
+                if (survivalWaveEntitlementReceiptRef.current !== receiptId) {
+                  survivalWaveEntitlementReceiptRef.current = receiptId;
+                  g.paused = true;
+                  setPaused(true);
+                  setPendingSurvivalWaveEntitlement({
+                    run: g.survivalRun,
+                    waveNumber: 20,
+                    receiptId,
+                  });
+                }
+              }
             } else if (event.type === "boss-warning") {
               announceBossEntrance(g, event.bossKind);
             } else if (event.type === "boss-combat-ready") {
@@ -17076,7 +17319,15 @@ export function AshfallGame() {
             <b>checkpointを保存できませんでした</b><button onClick={retrySurvivalCheckpointSave}>保存を再試行</button>
           </div>}
         </section></div>}
-        {paused && started && !end && !survivalUpgradeOpen && !pendingSurvivalSettlement && <div className="pause-screen" role="dialog" aria-modal="true" aria-label="一時停止メニュー"><div className="pause-panel">
+        {pendingSurvivalWaveEntitlement && <div className="result-save-blocker survival-wave-entitlement-blocker" role="alertdialog" aria-modal="true" aria-label="Survival到達記録の保存">
+          <section>
+            <small>WAVE REACH RECEIPT // MAYO EMPLOYMENT</small>
+            <h2>{survivalSavePending ? "Wave 20到達を保存しています" : "Wave 20到達を保存できません"}</h2>
+            <p>マヨちゃんの雇用解放と通知receiptを端末へ保存しています。未完了Wave 20の報酬やWave 21開始権は付与しません。保存完了まで戦闘を停止します。</p>
+            <div><button disabled={survivalSavePending} onClick={retrySurvivalWaveEntitlementSave}>{survivalSavePending ? "保存中" : "保存を再試行"}</button></div>
+          </section>
+        </div>}
+        {paused && started && !end && !survivalUpgradeOpen && !pendingSurvivalSettlement && !pendingSurvivalWaveEntitlement && <div className="pause-screen" role="dialog" aria-modal="true" aria-label="一時停止メニュー"><div className="pause-panel">
           <small>作戦一時停止</small><h2>一時停止</h2>
           <div className="pause-actions">
             <button className="primary" onClick={togglePause}>作戦を再開</button>
@@ -17125,7 +17376,7 @@ export function AshfallGame() {
             <article>
               <small>START WAVE</small><h2>開始wave</h2>
               <div className="survival-start-waves">{campaignSave.survival.unlockedStartWaves.map((wave) => <button key={wave} className={selectedSurvivalStartWave === wave ? "active" : ""} onClick={() => setSelectedSurvivalStartWave(wave)}>WAVE {wave}</button>)}</div>
-              <p>最高到達wave {campaignSave.survival.highestWave} / 累計run {campaignSave.survival.totalRuns}</p>
+              <p>最高到達wave {campaignSave.survival.highestReachedWave} / 累計run {campaignSave.survival.totalRuns}</p>
               <button className="survival-start" disabled={formationUnitIds.length === 0 || saveMutationPending} onClick={startNewSurvival}>新しいrunを開始</button>
             </article>
             {campaignSave.survival.activeCheckpoint && <article className="survival-resume-card">
@@ -17182,6 +17433,7 @@ export function AshfallGame() {
           saveMutationPending={saveMutationPending}
           upgradePendingUnitIds={upgradePendingUnitIds}
           upgradeFeedback={upgradeFeedback}
+          personnelInitialMode={personnelInitialMode}
           savePersistence={savePersistence}
           readStoryEventIds={campaignSave.readStoryEventIds}
           autoSkipReadStory={campaignSave.autoSkipReadStory}
@@ -17229,6 +17481,13 @@ export function AshfallGame() {
             <button onClick={() => acknowledgeMigrationNotice(campaignSave.migrationNotices[0].id)}>内容を確認</button>
           </section>
         </div>}
+        {employmentNoticeSafeScreen && employmentNoticeUnit && <EmploymentAvailablePopup
+          unit={employmentNoticeUnit}
+          pending={employmentNoticePending}
+          saveError={employmentNoticeSaveError}
+          onOpenEmployment={() => acknowledgeEmploymentAvailability(true)}
+          onDismiss={() => acknowledgeEmploymentAvailability(false)}
+        />}
       </section>
       {pendingResultCommit && <div className="result-save-blocker" role="alertdialog" aria-modal="true" aria-label="作戦結果の保存失敗">
         <section><small>SAVE REQUIRED</small><h2>作戦結果を保存できません</h2><p>報酬や加入の二重適用を防ぐため、結果画面へ進まず停止しています。保存を再試行するか、結果を含むバックアップを書き出してください。</p><div><button disabled={resultSaveRetrying} onClick={retryPendingResultSave}>{resultSaveRetrying ? "保存を再試行中" : "保存を再試行"}</button><button disabled={resultSaveRetrying} onClick={exportPendingResultSave}>結果バックアップを書き出す</button></div></section>

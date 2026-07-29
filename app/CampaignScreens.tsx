@@ -259,6 +259,7 @@ type Props = {
   saveMutationPending: boolean;
   upgradePendingUnitIds: readonly string[];
   upgradeFeedback: UpgradeFeedbackView | null;
+  personnelInitialMode: "roster" | "acquisition";
   savePersistence: "checking" | "saved" | "recovered" | "unavailable";
   readStoryEventIds: readonly string[];
   autoSkipReadStory: boolean;
@@ -302,6 +303,39 @@ const portraitArt = PORTRAIT_ART as Record<string, string>;
 const formationCardArt = FORMATION_CARD_ART as Record<string, string>;
 const personnelCardArt = PERSONNEL_CARD_ART as Record<string, string>;
 const v090IdentityMasterKinds = new Set(["zakimiya", "tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan"]);
+
+export function EmploymentAvailablePopup({
+  unit,
+  pending,
+  saveError,
+  onOpenEmployment,
+  onDismiss,
+}: {
+  unit: UnitScreenView;
+  pending: boolean;
+  saveError: boolean;
+  onOpenEmployment: () => void;
+  onDismiss: () => void;
+}) {
+  const portrait = personnelCardArt[unit.kind] ?? "";
+  return <div className="employment-available-popup" role="alertdialog" aria-modal="true" aria-label={`${unit.name}が雇用可能`}>
+    <section>
+      <small>NEW EMPLOYMENT DOSSIER</small>
+      <div className="employment-dossier">
+        <div className="employment-dossier-art" data-kind={unit.kind} style={portrait ? { backgroundImage: `url('${portrait}')` } : undefined} role="img" aria-label={`${unit.name}正式人物カード`} />
+        <div>
+          <em>雇用可能</em>
+          <h2>{unit.name}</h2>
+          <b>{unit.role}{" // "}{unit.weaponName}</b>
+          <p>{unit.description}</p>
+          <dl><div><dt>解放理由</dt><dd>{unit.unlockHint}</dd></div><div><dt>雇用費</dt><dd>{unit.recruitCost} キャップ</dd></div></dl>
+        </div>
+      </div>
+      {saveError && <p className="employment-save-error" role="alert">通知確認を端末へ保存できませんでした。通常ブラウザの保存設定を確認して、もう一度お試しください。</p>}
+      <footer><button className="campaign-primary" disabled={pending} onClick={onOpenEmployment}>{pending ? "保存中" : "雇用画面へ"}</button><button disabled={pending} onClick={onDismiss}>あとで</button></footer>
+    </section>
+  </div>;
+}
 
 function stars(value: number) {
   return `${"★".repeat(Math.max(0, Math.min(3, value)))}${"☆".repeat(Math.max(0, 3 - value))}`;
@@ -547,14 +581,14 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
   </div>;
 }
 
-function PersonnelScreen({ units, caps, upgradePendingUnitIds, upgradeFeedback, onReturnToMap, onRecruitUnit, onUpgradeUnit }: Pick<Props, "units" | "caps" | "upgradePendingUnitIds" | "upgradeFeedback" | "onReturnToMap" | "onRecruitUnit" | "onUpgradeUnit">) {
-  const [mode, setMode] = useState<"roster" | "acquisition" | "upgrade">("roster");
+function PersonnelScreen({ units, caps, upgradePendingUnitIds, upgradeFeedback, personnelInitialMode, onReturnToMap, onRecruitUnit, onUpgradeUnit }: Pick<Props, "units" | "caps" | "upgradePendingUnitIds" | "upgradeFeedback" | "personnelInitialMode" | "onReturnToMap" | "onRecruitUnit" | "onUpgradeUnit">) {
+  const [mode, setMode] = useState<"roster" | "acquisition" | "upgrade">(personnelInitialMode);
   const visibleUnits = units.filter((unit) => mode === "acquisition" ? !unit.owned : unit.owned);
   return <div className="campaign-overlay personnel-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="人員管理">
-    <header className="campaign-header"><button className="campaign-back" onClick={onReturnToMap}>← 地図へ</button><div><small>人員管理</small><h1>所有・調達・強化</h1></div><div className="map-resource"><small>キャップ</small><b>{caps}</b></div></header>
+    <header className="campaign-header"><button className="campaign-back" onClick={onReturnToMap}>← 地図へ</button><div><small>人員管理</small><h1>所有・雇用・強化</h1></div><div className="map-resource"><small>キャップ</small><b>{caps}</b></div></header>
     <main className="personnel-layout">
-      <section className="formation-units personnel-units" data-mode={mode} aria-label={mode === "roster" ? "所有ユニット一覧" : mode === "upgrade" ? "ユニットを強化" : "ユニットを調達"}>
-        <header className="formation-roster-header"><div><h2>{mode === "roster" ? "所有一覧" : mode === "upgrade" ? "Level強化" : "新規調達"} <small>{mode === "roster" ? `${visibleUnits.length}/${units.length}名` : `所持 ${caps}キャップ`}</small></h2><nav className="formation-mode-tabs" aria-label="人員管理メニュー"><button data-active={mode === "roster"} onClick={() => setMode("roster")}>所有一覧</button><button data-active={mode === "acquisition"} onClick={() => setMode("acquisition")}>調達</button><button data-active={mode === "upgrade"} onClick={() => setMode("upgrade")}>Level</button></nav></div></header>
+      <section className="formation-units personnel-units" data-mode={mode} aria-label={mode === "roster" ? "所有ユニット一覧" : mode === "upgrade" ? "ユニットを強化" : "ユニットを雇用"}>
+        <header className="formation-roster-header"><div><h2>{mode === "roster" ? "所有一覧" : mode === "upgrade" ? "Level強化" : "雇用候補"} <small>{mode === "roster" ? `${visibleUnits.length}/${units.length}名` : `所持 ${caps}キャップ`}</small></h2><nav className="formation-mode-tabs" aria-label="人員管理メニュー"><button data-active={mode === "roster"} onClick={() => setMode("roster")}>所有一覧</button><button data-active={mode === "acquisition"} onClick={() => setMode("acquisition")}>雇用</button><button data-active={mode === "upgrade"} onClick={() => setMode("upgrade")}>Level</button></nav></div></header>
         <div>{visibleUnits.map((unit) => {
           const portrait = unit.discovered ? personnelCardArt[unit.kind] : "";
           const ability = MANUAL_ABILITY_REGISTRY[unit.kind as keyof typeof MANUAL_ABILITY_REGISTRY];
@@ -562,9 +596,9 @@ function PersonnelScreen({ units, caps, upgradePendingUnitIds, upgradeFeedback, 
           const feedback = upgradeFeedback?.unitId === unit.id ? upgradeFeedback : null;
           return <article key={unit.id} className="formation-unit-card" data-state={state} data-upgrade-effect={feedback ? feedback.reachedMax ? "max" : "normal" : undefined}>
             <div className="formation-unit-select personnel-unit-summary" data-kind={unit.kind} data-unit-id={unit.id} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>
-              <span className="formation-portrait" /><span><b>{unit.discovered ? unit.name : "未発見"}</b><em>{unit.discovered && <><i>{unit.roleIcon}</i>{unit.role}</>}</em><small className="unit-combat">{unit.discovered ? `${unit.weaponName}・${unit.rangeBand}・${unit.primaryTarget}` : "物語を進めると情報が明らかになります"}</small><small className="unit-ability">{unit.discovered ? `能力：${ability?.displayName ?? "未登録"} — ${ability?.summary ?? ""}` : "能力情報未解禁"}</small><small className="unit-intent">{unit.owned ? `${unit.statSummary}${unit.milestones.length ? ` / ${unit.milestones.join("・")}` : ""}` : unit.unlockHint}</small></span><i>{unit.owned ? `Lv ${unit.level} / 上限 ${unit.levelCap}` : unit.recruitable ? "調達可能" : unit.discovered ? "加入条件未達" : "未発見"}</i>
+              <span className="formation-portrait" /><span><b>{unit.discovered ? unit.name : "未発見"}</b><em>{unit.discovered && <><i>{unit.roleIcon}</i>{unit.role}</>}</em><small className="unit-combat">{unit.discovered ? `${unit.weaponName}・${unit.rangeBand}・${unit.primaryTarget}` : "物語を進めると情報が明らかになります"}</small><small className="unit-ability">{unit.discovered ? `能力：${ability?.displayName ?? "未登録"} — ${ability?.summary ?? ""}` : "能力情報未解禁"}</small><small className="unit-intent">{unit.owned ? `${unit.statSummary}${unit.milestones.length ? ` / ${unit.milestones.join("・")}` : ""}` : unit.unlockHint}</small></span><i>{unit.owned ? `Lv ${unit.level} / 上限 ${unit.levelCap}` : unit.recruitable ? "雇用可能" : unit.discovered ? "加入条件未達" : "未発見"}</i>
             </div>
-            {mode === "acquisition" && unit.recruitable && !unit.owned && <button className="formation-unit-recruit" disabled={caps < unit.recruitCost} onClick={() => onRecruitUnit(unit.id)}><b>{unit.recruitCost}キャップで調達</b><small>所持 {caps}</small></button>}
+            {mode === "acquisition" && unit.recruitable && !unit.owned && <button className="formation-unit-recruit" disabled={caps < unit.recruitCost} onClick={() => onRecruitUnit(unit.id)}><b>{unit.recruitCost}キャップで雇用</b><small>所持 {caps}</small></button>}
             {mode === "upgrade" && unit.owned && (feedback
               ? <div className="upgrade-feedback" data-level={feedback.reachedMax ? "max" : "normal"} role="status" aria-live="polite">
                 <b>{feedback.reachedMax ? "Lv50 到達" : `Lv${feedback.level} 強化完了`}</b>
@@ -573,7 +607,7 @@ function PersonnelScreen({ units, caps, upgradePendingUnitIds, upgradeFeedback, 
               </div>
               : <button className="formation-unit-upgrade" disabled={upgradePendingUnitIds.includes(unit.id) || unit.nextUpgradeCost === null || caps < unit.nextUpgradeCost} onClick={() => onUpgradeUnit(unit.id)}><b>{upgradePendingUnitIds.includes(unit.id) ? "強化処理中" : unit.nextUpgradeCost === null ? unit.upgradeBlockedReason === "level-cap" ? `Level上限 ${unit.levelCap}` : "Lv50到達済み" : `Lv${unit.level + 1}へ：${unit.nextUpgradeCost}キャップ`}</b><small>{unit.nextUpgradeCost === null ? unit.upgradeBlockedReason === "level-cap" ? "本編Stage進行でLevel上限が解放されます" : unit.statSummary : `${unit.catchUp ? `追いつき割引 -${unit.upgradeDiscount} / ` : ""}${unit.nextMilestones.length ? `${unit.nextMilestones.join("・")} / ` : ""}${unit.nextStatCompact}`}</small></button>)}
           </article>;
-        })}{visibleUnits.length === 0 && <p className="formation-empty">{mode === "acquisition" ? "現在調達できる候補はいません。物語を進めると候補が増えます。" : "対象ユニットがいません。"}</p>}</div>
+        })}{visibleUnits.length === 0 && <p className="formation-empty">{mode === "acquisition" ? "現在雇用できる候補はいません。物語やSurvivalを進めると候補が増えます。" : "対象ユニットがいません。"}</p>}</div>
       </section>
     </main>
   </div>;
@@ -689,7 +723,7 @@ export function CampaignScreens(props: Props) {
   if (props.screen === "outbreak") return <OutbreakMissionScreen outbreakMissions={props.outbreakMissions} selectedOutbreakMissionId={props.selectedOutbreakMissionId} onSelectOutbreakMission={props.onSelectOutbreakMission} onPrepareOutbreak={props.onPrepareOutbreak} onReturnToMap={props.onReturnToMap} />;
   if (props.screen === "outbreak-result") return <OutbreakResultScreen outbreakResult={props.outbreakResult} onRetry={props.onRetry} onContinueOutbreakResult={props.onContinueOutbreakResult} />;
   if (props.screen === "records") return <RecordsScreen recordsSummary={props.recordsSummary} enemyCompendium={props.enemyCompendium} bossCompendium={props.bossCompendium} units={props.units} onReturnToMap={props.onReturnToMap} />;
-  if (props.screen === "personnel") return <PersonnelScreen units={props.units} caps={props.caps} upgradePendingUnitIds={props.upgradePendingUnitIds} upgradeFeedback={props.upgradeFeedback} onReturnToMap={props.onReturnToMap} onRecruitUnit={props.onRecruitUnit} onUpgradeUnit={props.onUpgradeUnit} />;
+  if (props.screen === "personnel") return <PersonnelScreen key={props.personnelInitialMode} units={props.units} caps={props.caps} upgradePendingUnitIds={props.upgradePendingUnitIds} upgradeFeedback={props.upgradeFeedback} personnelInitialMode={props.personnelInitialMode} onReturnToMap={props.onReturnToMap} onRecruitUnit={props.onRecruitUnit} onUpgradeUnit={props.onUpgradeUnit} />;
   if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} loadoutReturnLabel={props.loadoutReturnLabel} onReturnFromLoadout={props.onReturnFromLoadout} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
   return <ResultScreen selectedStage={props.selectedStage} result={props.result} onRetry={props.onRetry} onContinueResult={props.onContinueResult} />;
 }

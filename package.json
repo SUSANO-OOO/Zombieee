@@ -23,6 +23,7 @@
     "qa:v095-representative-six": "node scripts/run-browser-qa-with-server.mjs scripts/v095-representative-six-browser-smoke.mjs",
     "qa:v095-enemy-vfx": "node scripts/run-browser-qa-with-server.mjs scripts/v095-enemy-vfx-browser-smoke.mjs",
     "qa:v095-residual-bugs": "node scripts/run-browser-qa-with-server.mjs scripts/v095-residual-bugs-browser-smoke.mjs",
+    "qa:v095-employment": "node scripts/run-browser-qa-with-server.mjs scripts/v095-employment-unlock-browser-smoke.mjs",
     "qa:combat-presentation": "node scripts/run-browser-qa-with-server.mjs scripts/combat-presentation-browser-smoke.mjs",
     "qa:mobile-lifecycle": "node scripts/run-browser-qa-with-server.mjs scripts/mobile-lifecycle-browser-smoke.mjs",
     "qa:v095-mobile-performance": "node scripts/run-browser-qa-with-server.mjs scripts/mobile-lifecycle-browser-smoke.mjs",

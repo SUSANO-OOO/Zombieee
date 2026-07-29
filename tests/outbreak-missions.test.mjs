@@ -187,7 +187,7 @@ test("campaign settlement atomically applies receipt, caps, equipment quantity, 
   assert.equal(crossLedgerDuplicate.save.caps, current.caps);
 });
 
-test("schema 11 saves migrate once to schema 13 with default outbreak progress", () => {
+test("schema 11 saves migrate once to schema 14 with default outbreak progress", () => {
   const legacy = {
     ...createDefaultCampaignSave(),
     schemaVersion: 11,
@@ -202,7 +202,7 @@ test("schema 11 saves migrate once to schema 13 with default outbreak progress",
   assert.equal(inspected.status, "valid");
   assert.equal(inspected.reason, "migrated");
   assert.equal(inspected.sourceSchemaVersion, 11);
-  assert.equal(inspected.save.schemaVersion, 13);
+  assert.equal(inspected.save.schemaVersion, 14);
   assert.equal(inspected.save.revision, 5);
   assert.deepEqual(inspected.save.outbreaks, createDefaultOutbreakProgress());
   assert.deepEqual(migrateCampaignSave(inspected.save), inspected.save);
