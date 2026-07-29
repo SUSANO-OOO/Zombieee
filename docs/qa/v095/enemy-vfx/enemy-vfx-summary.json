@@ -1,0 +1,136 @@
+{
+  "evidenceVersion": 1,
+  "scope": "enemy-boss-crawler-battlefield-vfx",
+  "integrationBaseSha": "de56596e65e4eeb5457ed4762ca5df25200a9b8a",
+  "phaseBranch": "codex/0.9.5-enemy-vfx",
+  "validation": {
+    "fullTests": {
+      "passed": 726,
+      "failed": 0
+    },
+    "lintPassed": true,
+    "productionBuildPassed": true,
+    "diffCheckPassed": true
+  },
+  "browserQa": {
+    "enemyVfx": {
+      "passed": 6,
+      "failed": 0,
+      "engines": [
+        "chromium",
+        "webkit"
+      ],
+      "viewports": [
+        "1280x720",
+        "844x390",
+        "844x340"
+      ],
+      "projectileKinds": [
+        "spitter",
+        "ooze",
+        "resonator",
+        "choir-knot"
+      ],
+      "ordinaryEnemyKinds": [
+        "walker",
+        "runner",
+        "crusher",
+        "shade",
+        "abomination",
+        "turned",
+        "grappler",
+        "sprinter",
+        "cagewalker",
+        "spindle",
+        "pall-manta",
+        "anchor-bloom"
+      ],
+      "crawlerStates": [
+        "door",
+        "firing",
+        "hit",
+        "repair",
+        "critical",
+        "stored"
+      ],
+      "productionProjectileTransactions": 24,
+      "productionCrawlerTransactions": 6,
+      "continuousSequences": 24,
+      "diagnostics": {
+        "consoleErrors": 0,
+        "pageErrors": 0,
+        "requestFailures": 0,
+        "httpErrors": 0
+      }
+    },
+    "bossFoundation": {
+      "passed": 12,
+      "failed": 0
+    },
+    "bossAnomalies": {
+      "passed": 18,
+      "failed": 0
+    },
+    "battleSpace": {
+      "passed": 4,
+      "failed": 0
+    },
+    "crawlerDefense": {
+      "passed": 240,
+      "failed": 0,
+      "passThroughs": 0,
+      "objectiveDirects": 0
+    }
+  },
+  "performanceGate": {
+    "version": "0.9.5-enemy-vfx",
+    "engine": "chromium",
+    "viewport": "844x390",
+    "graphicsQuality": "auto",
+    "durationMs": 900000,
+    "battleCoveragePercent": 100,
+    "frameSamples": 53931,
+    "frameSamplesDropped": 0,
+    "medianFrameMs": 16.7,
+    "medianFps": 59.88,
+    "p95FrameMs": 16.7,
+    "maxFrameGapMs": 49.9,
+    "longTasksOver100Ms": 0,
+    "rafStallsOver100Ms": 0,
+    "retainedHeapGrowthPercent": 3.21,
+    "memoryProxyGrowthPercent": 0,
+    "simulationTickDelta": 54004,
+    "renderFrameDelta": 40468,
+    "poolDiscards": 0,
+    "gatePassed": true,
+    "baselineComparison": {
+      "baselineVersion": "0.9.0",
+      "baselineReleaseSha": "f2633c538756385f13d166d3adbcdd39b3a08b21",
+      "baselineMedianFrameMs": 16.7,
+      "baselineP95FrameMs": 16.7,
+      "baselineMaxFrameGapMs": 50,
+      "baselineRetainedHeapGrowthPercent": 3.27,
+      "baselineMemoryProxyGrowthPercent": 0,
+      "retainedHeapGrowthDeltaPoints": -0.06
+    }
+  },
+  "capabilityBoundary": {
+    "physicalSmartphoneHeatVerified": false,
+    "nativeSafariVerified": false,
+    "physicalTouchRotationLockRecoveryVerified": false
+  },
+  "rawEvidence": {
+    "enemyVfxReport": "outputs/v095-enemy-vfx-browser-smoke/summary.json",
+    "enemyVfxReportSha256": "404b4b19b3936c5048588f120a4cc4b21a6f375e0ebf01a6a3783120489ff90b",
+    "performanceReport": "outputs/v095-enemy-vfx-browser-smoke/performance-chromium-844x390-15m.json",
+    "performanceReportSha256": "36dfee8c0789a93cf63d118b7e1ac7217eda1e4c890b4c10615b826046eaefa5",
+    "bossFoundationReport": "outputs/boss-foundation-browser-smoke/report.json",
+    "bossFoundationReportSha256": "b92460c2c481c38383dca333326d91e0c67d6d8a49e0c83c51bb35fe52c53b10",
+    "bossAnomaliesReport": "outputs/boss-anomalies-browser-smoke/report.json",
+    "bossAnomaliesReportSha256": "efcce87169c156b337136cad1313f4bc1b284c1e4fb2568a043e36f4318f0782",
+    "battleSpaceReport": "outputs/battle-space-browser-smoke/summary.json",
+    "battleSpaceReportSha256": "5b93b28b3e0425f3811506aa72e5d75ba7c383b32404836aa50b22abb5e74ec9",
+    "crawlerDefenseReport": "outputs/crawler-defense-browser-smoke/summary.json",
+    "crawlerDefenseReportSha256": "547be8f18c347d3a892c434c4fe70bd0905f0978edbba1bf8738aeeeba9e0896"
+  }
+}
