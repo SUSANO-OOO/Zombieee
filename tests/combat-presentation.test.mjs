@@ -9,7 +9,10 @@ import {
   COMBAT_OPTIONAL_CLIP_STATES,
   COMBAT_PRESENTATION_PROFILES,
   COMBAT_WEAPON_ANCHORS,
+  PLAYABLE_COMBAT_KINDS,
+  REMAINING_TEN_KINDS,
   REPRESENTATIVE_SIX_KINDS,
+  attackCooldownAfterPresentationWindup,
   UNIT_WEAPON_PROFILE,
   WEAPON_PROFILE_IDS,
   WEAPON_PROFILES,
@@ -317,7 +320,13 @@ test("new playable special clips preserve authored body phases and Mrs. Chiha's 
   );
   assert.deepEqual(
     combatClipEventsFor("miyamoto-musashi", "special").map(({ type }) => type),
-    ["cross-guard-ready", "cross-guard-hold"],
+    [
+      "cross-guard-ready",
+      "cross-guard-hold",
+      "cross-cut-release",
+      "cross-cut-impact",
+      "cross-cut-ready",
+    ],
   );
   assert.deepEqual(
     combatClipEventsFor("mrs-chiha", "active").map(({ type }) => type),
@@ -364,6 +373,65 @@ test("the representative six own distinct motion, attack, and manual-ability tim
     }
   }
   assert.equal(signatures.size, REPRESENTATIVE_SIX_KINDS.length);
+});
+
+test("the remaining ten complete distinct grounded attack and manual-ability timelines", () => {
+  assert.deepEqual(REMAINING_TEN_KINDS, [
+    "brawler",
+    "ranger",
+    "medic",
+    "brute",
+    "kumaverson",
+    "babayaga",
+    "guardian",
+    "engineer",
+    "zakimiya",
+    "miyamoto-musashi",
+  ]);
+  assert.equal(new Set(PLAYABLE_COMBAT_KINDS).size, 16);
+  const specialSignatures = new Set();
+  const attackSignatures = new Set();
+  for (const kind of REMAINING_TEN_KINDS) {
+    const definition = manualAbilityDefinitionFor(kind);
+    const special = animationClipFor(kind, "special");
+    assert.ok(definition, `${kind} manual ability`);
+    assert.ok(
+      special.durationSeconds + 1e-9 >= definition.windupSeconds + definition.recoverySeconds,
+      `${kind} full ability body`,
+    );
+    specialSignatures.add(combatClipEventsFor(kind, "special").map(({ type }) => type).join("|"));
+    attackSignatures.add([
+      ...combatClipEventsFor(kind, "wind-up"),
+      ...combatClipEventsFor(kind, "active"),
+      ...combatClipEventsFor(kind, "recovery"),
+    ].map(({ type }) => type).join("|"));
+    for (const state of ["idle", "move", "wind-up", "active", "recovery", "special"]) {
+      const current = animationClipFor(kind, state);
+      for (const elapsed of [0, current.durationSeconds * .55, current.durationSeconds]) {
+        const sample = sampleAnimationClip(kind, state, elapsed);
+        assert.equal(sample.groundAnchor, 1, `${kind}/${state} ground anchor`);
+        assert.equal(sample.pose.offsetY, 0, `${kind}/${state} feet remain planted`);
+        assert.ok(sample.pose.scaleX >= .8 && sample.pose.scaleX <= 1.12, `${kind}/${state} scaleX`);
+        assert.ok(sample.pose.scaleY >= .8 && sample.pose.scaleY <= 1.12, `${kind}/${state} scaleY`);
+        assert.ok(Math.abs(sample.pose.rotationRadians) <= .13, `${kind}/${state} rotation`);
+      }
+    }
+  }
+  assert.equal(specialSignatures.size, REMAINING_TEN_KINDS.length);
+  assert.equal(attackSignatures.size, REMAINING_TEN_KINDS.length);
+});
+
+test("all sixteen normal attacks preserve their authored hit-to-hit cadence after adding wind-up", () => {
+  const intendedCooldown = 1.2;
+  for (const kind of PLAYABLE_COMBAT_KINDS) {
+    const windup = animationClipFor(kind, "wind-up").durationSeconds;
+    const postImpactCooldown = attackCooldownAfterPresentationWindup(kind, intendedCooldown);
+    assert.ok(postImpactCooldown >= 0, `${kind} cooldown remains non-negative`);
+    assert.ok(
+      Math.abs(windup + postImpactCooldown - intendedCooldown) < 1e-9,
+      `${kind} wind-up does not reduce DPS`,
+    );
+  }
 });
 
 test("representative-six weapon anchors mirror at the authored weapon or attack point", () => {

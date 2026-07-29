@@ -559,6 +559,7 @@ const UNIT_WEAPON_CUES = Object.freeze({
   "crazy-king": "weapon-chainsaw-attack",
   kumaverson: "weapon-pan-swing",
   babayaga: "weapon-suppressed-pistol",
+  guardian: "weapon-pan-heavy-hit",
   engineer: V080_SUPPRESSED_CARBINE_CUE_ID,
   zakimiya: "weapon-pan-hit",
   tky: "weapon-tky-plasma-blade",

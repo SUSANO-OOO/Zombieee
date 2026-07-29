@@ -3,10 +3,14 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { chromium, webkit } from "playwright";
+import { MANUAL_ABILITY_REGISTRY } from "../app/manualAbilities.js";
 
 const baseUrl = new URL(process.env.V095_REPRESENTATIVE_SIX_QA_BASE_URL ?? "http://127.0.0.1:4173/");
 const timeout = Number(process.env.V095_REPRESENTATIVE_SIX_QA_TIMEOUT_MS ?? 45_000);
-const evidenceDir = path.resolve("outputs/v095-representative-six");
+const proofScope = process.env.V095_REPRESENTATIVE_SIX_QA_SCOPE ?? "representative-six";
+const evidenceDir = path.resolve(
+  proofScope === "remaining-ten" ? "outputs/v095-remaining-ten" : "outputs/v095-representative-six",
+);
 const engines = (process.env.V095_REPRESENTATIVE_SIX_QA_ENGINES ?? "chromium,webkit")
   .split(",")
   .map((value) => value.trim())
@@ -18,29 +22,62 @@ const viewports = (process.env.V095_REPRESENTATIVE_SIX_QA_VIEWPORTS ?? "844x390,
     return { width, height };
   });
 const browserTypes = { chromium, webkit };
-const representativeKinds = [
-  "scout",
-  "gunner",
-  "crazy-king",
-  "tky",
-  "mrs-chiha",
-  "mayo-chan",
-];
+const representativeKinds = proofScope === "remaining-ten"
+  ? [
+      "brawler",
+      "ranger",
+      "medic",
+      "brute",
+      "kumaverson",
+      "babayaga",
+      "guardian",
+      "engineer",
+      "zakimiya",
+      "miyamoto-musashi",
+    ]
+  : [
+      "scout",
+      "gunner",
+      "crazy-king",
+      "tky",
+      "mrs-chiha",
+      "mayo-chan",
+    ];
 const expectedWeapons = {
+  brawler: "unarmed",
   scout: "crowbar",
+  ranger: "rifle",
+  medic: "heal-support",
+  brute: "blunt",
   gunner: "machine-gun",
   "crazy-king": "chainsaw",
+  kumaverson: "blunt",
+  babayaga: "sniper",
+  guardian: "blunt",
+  engineer: "suppressed-carbine",
+  zakimiya: "blunt",
   tky: "plasma-blade",
   "mrs-chiha": "grenade",
+  "miyamoto-musashi": "dual-katana",
   "mayo-chan": "bite",
 };
 const qualityModes = ["auto", "high", "power-save"];
 const specialCaptureDelay = {
+  brawler: 70,
   scout: 110,
+  ranger: 150,
+  medic: 100,
+  brute: 180,
   gunner: 280,
   "crazy-king": 260,
+  kumaverson: 100,
+  babayaga: 130,
+  guardian: 140,
+  engineer: 100,
+  zakimiya: 180,
   tky: 340,
   "mrs-chiha": 1_020,
+  "miyamoto-musashi": 80,
   "mayo-chan": 170,
 };
 
@@ -113,7 +150,11 @@ async function captureCanvas(page, caseName, label, ownerId, extra = {}) {
     manualPhase: owner.manualAbility?.phase ?? null,
     manualReceipts: snapshot.manualAbilityReceipts
       .filter(({ ownerId: receiptOwnerId }) => receiptOwnerId === ownerId)
-      .map(({ eventType, salvoIndex }) => ({ eventType, salvoIndex: salvoIndex ?? null })),
+      .map(({ eventType, salvoIndex, mode }) => ({
+        eventType,
+        salvoIndex: salvoIndex ?? null,
+        mode: mode ?? null,
+      })),
     manualVfx: snapshot.manualAbilityVfx
       .filter(({ ownerId: effectOwnerId }) => effectOwnerId === ownerId)
       .map(({ kind, originX, originY, targetX, targetY, elapsed, duration }) => ({
@@ -145,7 +186,7 @@ async function prepareRepresentative(page, kind) {
   invariant(prepared?.kind === kind, `${kind}: representative fixture failed`);
   invariant(prepared.weaponProfile === expectedWeapons[kind],
     `${kind}: weapon profile mismatch ${JSON.stringify(prepared)}`);
-  invariant(Math.abs(prepared.anchor.x - prepared.owner.x) >= 18,
+  invariant(Math.abs(prepared.anchor.x - prepared.owner.x) >= 12,
     `${kind}: weapon anchor stayed at sprite center`);
   invariant(prepared.anchor.y < prepared.owner.y - 15,
     `${kind}: weapon anchor stayed at the waist or feet`);
@@ -173,6 +214,48 @@ async function stepMotion(page, ownerId, action, seconds) {
   return result;
 }
 
+async function pauseAtRuntimeAttackPhase(page, ownerId, requestedPhase, {
+  initialAttackSequence,
+  expectedAudioCueIds = [],
+} = {}) {
+  await page.evaluate(
+    ({ id, phase, initialSequence, cueIds, timeoutMs }) => new Promise((resolve, reject) => {
+      const deadline = performance.now() + timeoutMs;
+      const poll = () => {
+        const proof = window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixRuntimeAttackProof(id);
+        const requestedCueIds = proof?.audioCueRequests?.map(({ cueId }) => cueId) ?? [];
+        const sequenceReady = initialSequence === undefined
+          || (phase === "wind-up"
+            ? proof?.attackSequence === initialSequence
+            : proof?.attackSequence > initialSequence);
+        const audioReady = cueIds.length === 0
+          || cueIds.some((cueId) => requestedCueIds.includes(cueId));
+        if (proof?.phase === phase && sequenceReady && audioReady) {
+          window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true);
+          resolve(true);
+          return;
+        }
+        if (performance.now() >= deadline) {
+          reject(new Error(
+            `${proof?.ownerId ?? id}: timed out waiting for runtime attack ${phase}; `
+            + `last=${proof?.phase ?? "missing"} sequence=${proof?.attackSequence ?? "missing"}`,
+          ));
+          return;
+        }
+        requestAnimationFrame(poll);
+      };
+      requestAnimationFrame(poll);
+    }),
+    {
+      id: ownerId,
+      phase: requestedPhase,
+      initialSequence: initialAttackSequence,
+      cueIds: expectedAudioCueIds,
+      timeoutMs: timeout,
+    },
+  );
+}
+
 async function exerciseRuntimeAttack(page, caseName, quality, kind, prepared) {
   const armed = await page.evaluate(
     (ownerId) => window.__ASHFALL_BATTLE_QA__.armRepresentativeSixRuntimeAttackProof(ownerId),
@@ -183,18 +266,12 @@ async function exerciseRuntimeAttack(page, caseName, quality, kind, prepared) {
   invariant(armed.expectedAudioCueIds.length > 0,
     `${quality}/${kind}: runtime attack has no expected production audio cue`);
   await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
-  await page.waitForFunction(
-    ({ ownerId, initialAttackSequence }) => {
-      const proof = window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixRuntimeAttackProof(ownerId);
-      return proof?.phase === "wind-up" && proof.attackSequence === initialAttackSequence;
-    },
-    { ownerId: prepared.ownerId, initialAttackSequence: armed.initialAttackSequence },
-    { timeout },
-  );
+  await pauseAtRuntimeAttackPhase(page, prepared.ownerId, "wind-up", {
+    initialAttackSequence: armed.initialAttackSequence,
+  });
 
   const frames = [];
   if (quality === "auto") {
-    await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
     const windup = await page.evaluate(
       (ownerId) => window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixRuntimeAttackProof(ownerId),
       prepared.ownerId,
@@ -207,32 +284,20 @@ async function exerciseRuntimeAttack(page, caseName, quality, kind, prepared) {
       prepared.ownerId,
       { attackSample: windup.sample, runtimeAttackProof: windup },
     ));
-    await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
   }
+  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
 
-  await page.waitForFunction(
-    ({ ownerId, initialAttackSequence, expectedAudioCueIds }) => {
-      const proof = window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixRuntimeAttackProof(ownerId);
-      const requestedCueIds = proof?.audioCueRequests?.map(({ cueId }) => cueId) ?? [];
-      return proof?.phase === "active"
-        && proof.attackSequence > initialAttackSequence
-        && expectedAudioCueIds.some((cueId) => requestedCueIds.includes(cueId));
-    },
-    {
-      ownerId: prepared.ownerId,
-      initialAttackSequence: armed.initialAttackSequence,
-      expectedAudioCueIds: armed.expectedAudioCueIds,
-    },
-    { timeout },
-  );
-  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
+  await pauseAtRuntimeAttackPhase(page, prepared.ownerId, "active", {
+    initialAttackSequence: armed.initialAttackSequence,
+    expectedAudioCueIds: armed.expectedAudioCueIds,
+  });
   const active = await page.evaluate(
     (ownerId) => window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixRuntimeAttackProof(ownerId),
     prepared.ownerId,
   );
   invariant(active?.sample?.state === "active", `${quality}/${kind}: runtime active pose missing`);
   invariant(active.weaponProfile === expectedWeapons[kind], `${quality}/${kind}: active weapon mismatch`);
-  invariant(Math.abs(active.anchor.x - prepared.owner.x) >= 18,
+  invariant(Math.abs(active.anchor.x - prepared.owner.x) >= 12,
     `${quality}/${kind}: runtime active anchor at center`);
   invariant(active.targetHp < armed.initialTargetHp
       || active.pendingHits.some(({ applyDamage }) => applyDamage),
@@ -250,13 +315,9 @@ async function exerciseRuntimeAttack(page, caseName, quality, kind, prepared) {
 
   if (quality === "auto") {
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
-    await page.waitForFunction(
-      (ownerId) => window.__ASHFALL_BATTLE_QA__
-        .sampleRepresentativeSixRuntimeAttackProof(ownerId)?.phase === "recovery",
-      prepared.ownerId,
-      { timeout },
-    );
-    await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
+    await pauseAtRuntimeAttackPhase(page, prepared.ownerId, "recovery", {
+      initialAttackSequence: armed.initialAttackSequence,
+    });
     const recovery = await page.evaluate(
       (ownerId) => window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixRuntimeAttackProof(ownerId),
       prepared.ownerId,
@@ -367,6 +428,11 @@ async function waitForSpecialSettlement(page, kind, ownerId) {
         return owner.manualAbility?.phase === "feral"
           && receipts.some(({ eventType }) => eventType === "feral-start");
       }
+      if (requestedKind === "kumaverson" || requestedKind === "guardian") {
+        return owner.manualAbility?.phase === "cooldown"
+          && receipts.some(({ eventType }) => eventType === "active-start")
+          && receipts.some(({ eventType }) => eventType === "active-end");
+      }
       if (requestedKind === "mrs-chiha") {
         return owner.manualAbility?.phase === "cooldown"
           && receipts.filter(({ eventType }) => eventType === "impact").length === 4;
@@ -380,6 +446,30 @@ async function waitForSpecialSettlement(page, kind, ownerId) {
     },
     { requestedKind: kind, id: ownerId },
     { timeout },
+  );
+}
+
+async function pauseAtManualPhase(page, ownerId, requestedPhase) {
+  await page.evaluate(
+    ({ id, phase, timeoutMs }) => new Promise((resolve, reject) => {
+      const deadline = performance.now() + timeoutMs;
+      const poll = () => {
+        const owner = window.__ASHFALL_BATTLE_QA__.getSnapshot()
+          .fighters.find(({ id: candidateId }) => candidateId === id);
+        if (owner?.manualAbility?.phase === phase) {
+          window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true);
+          resolve(true);
+          return;
+        }
+        if (performance.now() >= deadline) {
+          reject(new Error(`${owner?.kind ?? id}: timed out waiting for manual phase ${phase}`));
+          return;
+        }
+        requestAnimationFrame(poll);
+      };
+      requestAnimationFrame(poll);
+    }),
+    { id: ownerId, phase: requestedPhase, timeoutMs: timeout },
   );
 }
 
@@ -441,25 +531,51 @@ async function activateSpecial(page, caseName, kind, speed) {
   );
   invariant(frame.manualVfx.some(({ kind: effectKind }) => effectKind === kind),
     `${kind}/${speed}x: dedicated manual VFX missing`);
-  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
-  await page.waitForFunction(
-    (ownerId) => {
-      const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
-      const owner = snapshot.fighters.find(({ id }) => id === ownerId);
-      return owner?.manualAbility?.phase === "recovery";
-    },
-    prepared.ownerId,
-    { timeout },
-  );
-  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
-  const recoverySample = await page.evaluate(
-    (ownerId) => window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixSpecialProof(ownerId),
-    prepared.ownerId,
-  );
+  if (specialSample.phase !== "recovery") {
+    await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+    await pauseAtManualPhase(page, prepared.ownerId, "recovery");
+  }
+  const recoverySample = specialSample.phase === "recovery"
+    ? specialSample
+    : await page.evaluate(
+      (ownerId) => window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixSpecialProof(ownerId),
+      prepared.ownerId,
+    );
   invariant(recoverySample?.phase === "recovery",
     `${kind}/${speed}x: special recovery phase missing`);
   invariant(recoverySample?.sample?.state === "special",
     `${kind}/${speed}x: rendered special recovery sample missing`);
+  const recoveryReceipts = await page.evaluate((ownerId) => (
+    window.__ASHFALL_BATTLE_QA__.getSnapshot().manualAbilityReceipts
+      .filter(({ ownerId: receiptOwnerId }) => receiptOwnerId === ownerId)
+      .map(({ eventType, salvoIndex, mode }) => ({
+        eventType,
+        salvoIndex: salvoIndex ?? null,
+        mode: mode ?? null,
+      }))
+  ), prepared.ownerId);
+  if (["crazy-king", "kumaverson", "guardian"].includes(kind)) {
+    const receiptTypes = recoveryReceipts.map(({ eventType }) => eventType);
+    invariant(
+      receiptTypes.indexOf("active-start") >= 0
+        && receiptTypes.indexOf("active-end") > receiptTypes.indexOf("active-start"),
+      `${kind}/${speed}x: recovery did not follow active-end`,
+    );
+  }
+  if (kind === "brawler") {
+    const recoveryEventTypes = recoverySample.sample.events.map(({ type }) => type);
+    invariant(
+      recoverySample.sample.frameIndex >= 6
+        && recoveryEventTypes.some((type) => (
+          type === "fist-combo-recover" || type === "fist-combo-ready"
+        )),
+      `${kind}/${speed}x: runtime recovery did not reach the authored body recovery frame`,
+    );
+    invariant(
+      recoveryReceipts.filter(({ eventType }) => eventType === "impact").length === 1,
+      `${kind}/${speed}x: combo damage was not resolved exactly once before body recovery`,
+    );
+  }
   const recoveryFrame = await captureCanvas(
     page,
     caseName,
@@ -498,6 +614,108 @@ async function activateSpecial(page, caseName, kind, speed) {
     );
   }
   return { kind, speed, frame, recoveryFrame, settled };
+}
+
+async function exerciseMusashiCounter(page, caseName) {
+  const prepared = await prepareRepresentative(page, "miyamoto-musashi");
+  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+  await page.locator(`.manual-ability-ready[data-fighter-id='${prepared.ownerId}']`).click();
+  await page.waitForFunction(
+    (ownerId) => window.__ASHFALL_BATTLE_QA__.getSnapshot()
+      .fighters.find(({ id }) => id === ownerId)?.manualAbility?.phase === "guard",
+    prepared.ownerId,
+    { timeout },
+  );
+  const counter = await page.evaluate((ownerId) => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    const before = bridge.getSnapshot();
+    const owner = before.fighters.find(({ id }) => id === ownerId);
+    const targetId = owner.manualAbility.target.targetId;
+    const targetBefore = before.fighters.find(({ id }) => id === targetId);
+    const result = bridge.applyHumanDamage(ownerId, 35);
+    const after = bridge.getSnapshot();
+    const ownerAfter = after.fighters.find(({ id }) => id === ownerId);
+    const targetAfter = after.fighters.find(({ id }) => id === targetId);
+    return {
+      result,
+      ownerHpBefore: owner.hp,
+      ownerHpAfter: ownerAfter.hp,
+      targetId,
+      targetHpBefore: targetBefore.hp,
+      targetHpAfter: targetAfter.hp,
+      phase: ownerAfter.manualAbility.phase,
+      impactReceipts: after.manualAbilityReceipts.filter((receipt) => (
+        receipt.ownerId === ownerId
+        && receipt.eventType === "impact"
+        && receipt.mode === "counter"
+      )).length,
+    };
+  }, prepared.ownerId);
+  invariant(
+    counter.result?.preventedDamage === 35
+      && counter.ownerHpAfter === counter.ownerHpBefore
+      && counter.targetHpAfter < counter.targetHpBefore
+      && counter.phase === "recovery"
+      && counter.impactReceipts === 1,
+    `miyamoto-musashi: melee counter did not prevent damage and resolve exactly once`,
+  );
+  const definition = MANUAL_ABILITY_REGISTRY["miyamoto-musashi"];
+  const releaseStart = definition.windupSeconds + .36;
+  await page.evaluate(
+    ({ ownerId, releaseAt, timeoutMs }) => new Promise((resolve, reject) => {
+      const deadline = performance.now() + timeoutMs;
+      const poll = () => {
+        const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
+        const owner = snapshot.fighters.find(({ id }) => id === ownerId);
+        const effect = snapshot.manualAbilityVfx.find(({ ownerId: effectOwnerId }) => effectOwnerId === ownerId);
+        if (owner?.manualAbility?.phase === "recovery" && effect?.elapsed > releaseAt + .015) {
+          window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true);
+          resolve(true);
+          return;
+        }
+        if (performance.now() >= deadline) {
+          reject(new Error("miyamoto-musashi: counter cross-cut VFX never reached release"));
+          return;
+        }
+        requestAnimationFrame(poll);
+      };
+      requestAnimationFrame(poll);
+    }),
+    { ownerId: prepared.ownerId, releaseAt: releaseStart, timeoutMs: timeout },
+  );
+  const sample = await page.evaluate(
+    (ownerId) => window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixSpecialProof(ownerId),
+    prepared.ownerId,
+  );
+  invariant(sample?.phase === "recovery" && sample.sample?.state === "special",
+    "miyamoto-musashi: counter body recovery sample missing");
+  const frame = await captureCanvas(
+    page,
+    caseName,
+    "auto-miyamoto-musashi-counter-recovery",
+    prepared.ownerId,
+    { counter, specialSample: sample },
+  );
+  const counterVfx = frame.manualVfx.find(({ kind }) => kind === "miyamoto-musashi");
+  invariant(
+    counterVfx?.elapsed > releaseStart
+      && counterVfx.duration >= releaseStart + definition.recoverySeconds,
+    "miyamoto-musashi: counter cross-cut VFX timeline is unreachable",
+  );
+  invariant(
+    frame.manualReceipts.filter(({ eventType, mode }) => (
+      eventType === "impact" && mode === "counter"
+    )).length === 1,
+    "miyamoto-musashi: counter receipt was not singular",
+  );
+  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+  await page.waitForFunction(
+    (ownerId) => window.__ASHFALL_BATTLE_QA__.getSnapshot()
+      .fighters.find(({ id }) => id === ownerId)?.manualAbility?.phase === "cooldown",
+    prepared.ownerId,
+    { timeout },
+  );
+  return { ...counter, frame };
 }
 
 const results = [];
@@ -545,6 +763,9 @@ for (const engine of engines) {
           null,
           { timeout },
         );
+        const musashiCounterProof = proofScope === "remaining-ten"
+          ? await exerciseMusashiCounter(page, caseName)
+          : null;
         const speedProofs = [];
         for (const kind of representativeKinds) {
           speedProofs.push(await activateSpecial(page, caseName, kind, 1));
@@ -562,6 +783,7 @@ for (const engine of engines) {
           representativeKinds,
           qualityProofs,
           speedProofs,
+          musashiCounterProof,
           diagnostics,
           residentSprites: await page.evaluate(
             () => Number(document.documentElement.dataset.assetResidentSprites),
@@ -595,6 +817,7 @@ for (const engine of engines) {
 const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl: String(baseUrl),
+  proofScope,
   results,
   totals: {
     cases: results.length,

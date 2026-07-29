@@ -78,6 +78,29 @@ export const REPRESENTATIVE_SIX_KINDS = Object.freeze([
   "mayo-chan",
 ]);
 
+export const REMAINING_TEN_KINDS = Object.freeze([
+  "brawler",
+  "ranger",
+  "medic",
+  "brute",
+  "kumaverson",
+  "babayaga",
+  "guardian",
+  "engineer",
+  "zakimiya",
+  "miyamoto-musashi",
+]);
+
+export const PLAYABLE_COMBAT_KINDS = Object.freeze([
+  ...REPRESENTATIVE_SIX_KINDS,
+  ...REMAINING_TEN_KINDS,
+]);
+
+export function attackCooldownAfterPresentationWindup(kind, intendedCooldown) {
+  const cooldown = Math.max(0, Number(intendedCooldown) || 0);
+  return Math.max(0, cooldown - animationClipFor(kind, "wind-up").durationSeconds);
+}
+
 const frame = (spriteState, durationSeconds, events = []) => ({
   spriteState,
   durationSeconds,
@@ -315,6 +338,9 @@ const MANUAL_ABILITY_SPECIAL_CLIPS = {
   "miyamoto-musashi": clip([
     frame("attack-a", .22, [{ type: "cross-guard-ready", at: .02 }]),
     frame("attack-b", .36, [{ type: "cross-guard-hold", at: 0 }]),
+    frame("attack-a", .08, [{ type: "cross-cut-release", at: .02 }]),
+    frame("attack-b", .06, [{ type: "cross-cut-impact", at: .04 }]),
+    frame("idle", .04, [{ type: "cross-cut-ready", at: .04 }]),
   ]),
   "mayo-chan": clip([
     frame("attack-a", .1, [{ type: "feral-surge", at: 0 }]),
@@ -323,6 +349,141 @@ const MANUAL_ABILITY_SPECIAL_CLIPS = {
     frame("attack-b", .07, [{ type: "feral-recover", at: .02 }]),
     frame("idle", .09, [{ type: "feral-ready", at: .09 }]),
   ], { movement: true }),
+};
+
+const REMAINING_MANUAL_ABILITY_SPECIAL_CLIPS = {
+  brawler: clip([
+    frame("attack-a", .08, [{ type: "fist-combo-brace", at: .02 }]),
+    frame("attack-b", .035, [{ type: "fist-combo-hit", at: .025, hitIndex: 0 }]),
+    frame("attack-a", .035, [{ type: "fist-combo-hit", at: .025, hitIndex: 1 }]),
+    frame("attack-b", .035, [{ type: "fist-combo-hit", at: .025, hitIndex: 2 }]),
+    frame("attack-a", .035, [{ type: "fist-combo-hit", at: .025, hitIndex: 3 }]),
+    frame("attack-b", .04, [{ type: "fist-combo-finish", at: .035, hitIndex: 4 }]),
+    frame("attack-a", .06, [{ type: "fist-combo-recover", at: .02 }]),
+    frame("idle", .08, [{ type: "fist-combo-ready", at: .08 }]),
+  ], { movement: true }),
+  ranger: clip([
+    frame("attack-a", .28, [{ type: "precision-kneel", at: .02 }]),
+    frame("attack-b", .22, [{ type: "precision-lock", at: .11 }]),
+    frame("attack-b", .06, [{ type: "precision-shot", at: .01 }]),
+    frame("attack-a", .08, [{ type: "precision-bolt", at: .03 }]),
+    frame("idle", .1, [{ type: "precision-ready", at: .1 }]),
+  ]),
+  medic: clip([
+    frame("attack-a", .19, [{ type: "triage-scan", at: .02 }]),
+    frame("attack-b", .16, [{ type: "triage-apply", at: .14 }]),
+    frame("attack-a", .07, [{ type: "triage-stow", at: .02 }]),
+    frame("idle", .09, [{ type: "triage-ready", at: .09 }]),
+  ]),
+  brute: clip([
+    frame("attack-a", .3, [{ type: "ground-breaker-lift", at: .02 }]),
+    frame("walk-a", .12, [{ type: "ground-breaker-step", at: .05 }]),
+    frame("attack-b", .13, [{ type: "ground-breaker-impact", at: .12 }]),
+    frame("attack-a", .1, [{ type: "ground-breaker-extract", at: .03 }]),
+    frame("idle", .12, [{ type: "ground-breaker-ready", at: .12 }]),
+  ], { movement: true }),
+  kumaverson: clip([
+    frame("attack-a", .18, [{ type: "pan-guard-plant", at: .02 }]),
+    frame("attack-b", .17, [{ type: "pan-guard-lock", at: .15 }]),
+    frame("attack-b", .1, [{ type: "pan-guard-flare", at: .02 }]),
+    frame("attack-a", .08, [{ type: "pan-guard-recover", at: .02 }]),
+    frame("idle", .1, [{ type: "pan-guard-ready", at: .1 }]),
+  ]),
+  babayaga: clip([
+    frame("attack-a", .22, [{ type: "audit-sight", at: .02 }]),
+    frame("attack-b", .18, [{ type: "audit-lock", at: .16 }]),
+    frame("attack-b", .055, [{ type: "audit-shot", at: .01 }]),
+    frame("attack-a", .07, [{ type: "audit-cycle", at: .025 }]),
+    frame("idle", .09, [{ type: "audit-ready", at: .09 }]),
+  ]),
+  guardian: clip([
+    frame("attack-a", .22, [{ type: "shield-wall-brace", at: .02 }]),
+    frame("walk-a", .1, [{ type: "shield-wall-step", at: .06 }]),
+    frame("attack-b", .13, [{ type: "shield-wall-lock", at: .11 }]),
+    frame("attack-a", .09, [{ type: "shield-wall-recover", at: .025 }]),
+    frame("idle", .11, [{ type: "shield-wall-ready", at: .11 }]),
+  ]),
+  engineer: clip([
+    frame("attack-a", .18, [{ type: "trap-prime", at: .02 }]),
+    frame("walk-a", .08, [{ type: "trap-step", at: .04 }]),
+    frame("attack-b", .09, [{ type: "trap-deploy", at: .08 }]),
+    frame("attack-a", .07, [{ type: "trap-check", at: .02 }]),
+    frame("idle", .09, [{ type: "trap-ready", at: .09 }]),
+  ], { movement: true }),
+  zakimiya: clip([
+    frame("attack-a", .29, [{ type: "fire-bottle-light", at: .03 }]),
+    frame("walk-a", .11, [{ type: "fire-bottle-step", at: .06 }]),
+    frame("attack-b", .16, [{ type: "fire-bottle-throw", at: .14 }]),
+    frame("attack-a", .09, [{ type: "fire-bottle-follow", at: .025 }]),
+    frame("idle", .11, [{ type: "fire-bottle-ready", at: .11 }]),
+  ], { movement: true }),
+};
+
+const authoredPlayableClips = ({
+  prefix,
+  idle = .24,
+  stride = .1,
+  windup = .12,
+  active = .08,
+  recovery = .15,
+  heavy = false,
+  movement = false,
+}) => ({
+  idle: clip([
+    frame("idle", idle),
+    frame("idle", idle * .78, [{ type: `${prefix}-ready-shift`, at: idle * .31 }]),
+  ], { loop: true }),
+  move: clip([
+    frame("walk-a", stride, [{ type: heavy ? "footstep-heavy" : "footstep", at: stride * .7 }]),
+    frame("walk-b", stride * 1.08),
+    frame("walk-a", stride * .9, [{ type: `${prefix}-gear`, at: stride * .44 }]),
+  ], { loop: true, movement: true }),
+  "wind-up": clip([
+    frame("attack-a", windup, [{ type: `${prefix}-ready`, at: Math.min(.02, windup * .2) }]),
+  ]),
+  active: clip([
+    frame("attack-b", active, [
+      { type: `${prefix}-contact`, at: 0 },
+      { type: "weapon-vfx", at: 0 },
+    ]),
+  ], { movement }),
+  recovery: clip([
+    frame("attack-a", recovery * .48, [{ type: `${prefix}-recover`, at: recovery * .14 }]),
+    frame("idle", recovery * .52, [{ type: `${prefix}-reacquire`, at: recovery * .36 }]),
+  ], { recovery: true }),
+});
+
+const REMAINING_TEN_CLIP_OVERRIDES = {
+  brawler: authoredPlayableClips({
+    prefix: "fist", idle: .2, stride: .08, windup: .085, active: .08, recovery: .11, movement: true,
+  }),
+  ranger: authoredPlayableClips({
+    prefix: "rifle", idle: .31, stride: .125, windup: .15, active: .1, recovery: .18,
+  }),
+  medic: authoredPlayableClips({
+    prefix: "medical-rifle", idle: .27, stride: .11, windup: .13, active: .1, recovery: .16,
+  }),
+  brute: authoredPlayableClips({
+    prefix: "hammer", idle: .3, stride: .14, windup: .19, active: .11, recovery: .22, heavy: true, movement: true,
+  }),
+  kumaverson: authoredPlayableClips({
+    prefix: "iron-pan", idle: .25, stride: .12, windup: .15, active: .09, recovery: .18, heavy: true,
+  }),
+  babayaga: authoredPlayableClips({
+    prefix: "suppressed-pistol", idle: .33, stride: .115, windup: .14, active: .09, recovery: .16,
+  }),
+  guardian: authoredPlayableClips({
+    prefix: "shield", idle: .32, stride: .145, windup: .18, active: .1, recovery: .2, heavy: true, movement: true,
+  }),
+  engineer: authoredPlayableClips({
+    prefix: "carbine", idle: .26, stride: .105, windup: .115, active: .09, recovery: .15,
+  }),
+  zakimiya: authoredPlayableClips({
+    prefix: "pan", idle: .22, stride: .1, windup: .12, active: .1, recovery: .19, movement: true,
+  }),
+  "miyamoto-musashi": authoredPlayableClips({
+    prefix: "dual-katana", idle: .29, stride: .095, windup: .13, active: .1, recovery: .18, movement: true,
+  }),
 };
 
 const REPRESENTATIVE_CLIP_OVERRIDES = {
@@ -527,9 +688,12 @@ const BODY_SCALE_BY_KIND = Object.freeze({
 function clipsForKind(kind) {
   const bodyScale = BODY_SCALE_BY_KIND[kind] ?? 1;
   return Object.fromEntries(COMBAT_ANIMATION_STATES.map((state) => {
-    const source = REPRESENTATIVE_CLIP_OVERRIDES[kind]?.[state]
-      ?? (state === "special" && MANUAL_ABILITY_SPECIAL_CLIPS[kind]
-        ? MANUAL_ABILITY_SPECIAL_CLIPS[kind]
+    const manualSpecial = MANUAL_ABILITY_SPECIAL_CLIPS[kind]
+      ?? REMAINING_MANUAL_ABILITY_SPECIAL_CLIPS[kind];
+    const source = REMAINING_TEN_CLIP_OVERRIDES[kind]?.[state]
+      ?? REPRESENTATIVE_CLIP_OVERRIDES[kind]?.[state]
+      ?? (state === "special" && manualSpecial
+        ? manualSpecial
         : OPTIONAL_CLIPS[state]
           ?? STANDARD_CLIPS[COMBAT_CLIP_FALLBACKS[state]]
           ?? STANDARD_CLIPS[state]);
@@ -845,12 +1009,89 @@ function semanticProceduralPose(state, progress) {
   }
 }
 
-function representativeProceduralPose(kind, state, progress) {
-  if (!REPRESENTATIVE_SIX_KINDS.includes(kind)) return null;
+const REMAINING_TEN_POSE_TUNING = Object.freeze({
+  brawler: { stride: 2.5, lean: .075, recoil: 3.8, brace: .065, special: 5.2 },
+  ranger: { stride: .8, lean: .018, recoil: -3.6, brace: .028, special: -4.4 },
+  medic: { stride: 1, lean: .022, recoil: -2.2, brace: .032, special: 1.2 },
+  brute: { stride: 1.4, lean: .052, recoil: 4.7, brace: .09, special: 5.8 },
+  kumaverson: { stride: 1.1, lean: .038, recoil: -1.2, brace: .055, special: -2.8 },
+  babayaga: { stride: .72, lean: .014, recoil: -3, brace: .02, special: -3.6 },
+  guardian: { stride: .9, lean: .032, recoil: 2.2, brace: .07, special: 3.1 },
+  engineer: { stride: 1.15, lean: .028, recoil: -2.7, brace: .035, special: 3.8 },
+  zakimiya: { stride: 1.75, lean: .045, recoil: 4.1, brace: .06, special: 5 },
+  "miyamoto-musashi": { stride: 1.9, lean: .055, recoil: 4.8, brace: .072, special: 6.2 },
+});
+
+function playableProceduralPose(kind, state, progress) {
+  if (!PLAYABLE_COMBAT_KINDS.includes(kind)) return null;
   const p = Math.max(0, Math.min(1, Number(progress) || 0));
   const pulse = Math.sin(Math.PI * p);
   const stride = Math.sin(Math.PI * p * 2);
   const rapid = Math.sin(Math.PI * p * 10);
+  const tuning = REMAINING_TEN_POSE_TUNING[kind];
+  if (tuning) {
+    if (state === "idle") {
+      return {
+        offsetX: .22 * tuning.stride * pulse,
+        offsetY: 0,
+        rotationRadians: -.006 * tuning.lean / .05 * pulse,
+        scaleX: 1 + .007 * pulse,
+        scaleY: 1 - .009 * pulse,
+        opacity: 1,
+      };
+    }
+    if (state === "move") {
+      return {
+        offsetX: tuning.stride * stride,
+        offsetY: 0,
+        rotationRadians: tuning.lean + tuning.lean * .28 * stride,
+        scaleX: 1.015 + Math.abs(tuning.lean) * .18,
+        scaleY: .985 - Math.abs(tuning.lean) * .12,
+        opacity: 1,
+      };
+    }
+    if (state === "wind-up") {
+      return {
+        offsetX: -Math.abs(tuning.recoil) * .62 * pulse,
+        offsetY: 0,
+        rotationRadians: -tuning.brace * pulse,
+        scaleX: 1.018,
+        scaleY: .982,
+        opacity: 1,
+      };
+    }
+    if (state === "active") {
+      return {
+        offsetX: tuning.recoil * (1 - p),
+        offsetY: 0,
+        rotationRadians: tuning.lean * 1.35 * (1 - p),
+        scaleX: 1.035,
+        scaleY: .965,
+        opacity: 1,
+      };
+    }
+    if (state === "recovery") {
+      return {
+        offsetX: tuning.recoil * .38 * (1 - p),
+        offsetY: 0,
+        rotationRadians: tuning.lean * .55 * (1 - p),
+        scaleX: 1.012,
+        scaleY: .988,
+        opacity: 1,
+      };
+    }
+    if (state === "special") {
+      const release = Math.max(0, (p - .45) / .55);
+      return {
+        offsetX: tuning.special * (pulse * .55 + release * .45),
+        offsetY: 0,
+        rotationRadians: tuning.brace * (pulse + release * .45),
+        scaleX: 1 + .045 * pulse,
+        scaleY: 1 - .035 * pulse,
+        opacity: 1,
+      };
+    }
+  }
   if (kind === "scout") {
     if (state === "idle") return { offsetX: -.35 * pulse, offsetY: 0, rotationRadians: -.008 * pulse, scaleX: 1 + .008 * pulse, scaleY: 1 - .012 * pulse, opacity: 1 };
     if (state === "move") return { offsetX: 2.2 * stride, offsetY: 0, rotationRadians: .042 + .012 * stride, scaleX: 1.035, scaleY: .965, opacity: 1 };
@@ -910,7 +1151,7 @@ function representativeProceduralPose(kind, state, progress) {
 }
 
 function combatProceduralPose(kind, state, progress) {
-  return representativeProceduralPose(kind, state, progress)
+  return playableProceduralPose(kind, state, progress)
     ?? semanticProceduralPose(state, progress);
 }
 
