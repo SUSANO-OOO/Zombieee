@@ -16,6 +16,41 @@ export const COMBAT_CLIP_STATES = Object.freeze([
   "special",
 ]);
 
+export const COMBAT_OPTIONAL_CLIP_STATES = Object.freeze([
+  "deploy",
+  "start-move",
+  "stop-move",
+  "turn",
+  "reload",
+  "weapon-cycle",
+  "hit-light",
+  "hit-heavy",
+  "down",
+  "get-up",
+  "retreat",
+  "phase-change",
+]);
+
+export const COMBAT_ANIMATION_STATES = Object.freeze([
+  ...COMBAT_CLIP_STATES,
+  ...COMBAT_OPTIONAL_CLIP_STATES,
+]);
+
+export const COMBAT_CLIP_FALLBACKS = Object.freeze({
+  deploy: "idle",
+  "start-move": "move",
+  "stop-move": "idle",
+  turn: "idle",
+  reload: "recovery",
+  "weapon-cycle": "recovery",
+  "hit-light": "hit",
+  "hit-heavy": "hit",
+  down: "incapacitated",
+  "get-up": "incapacitated",
+  retreat: "move",
+  "phase-change": "special",
+});
+
 export const WEAPON_PROFILE_IDS = Object.freeze([
   "unarmed",
   "blunt",
@@ -91,6 +126,62 @@ const STANDARD_CLIPS = {
     frame("attack-a", .08, [{ type: "special-ready", at: 0 }]),
     frame("attack-b", .11, [{ type: "special-active", at: 0 }]),
     frame("idle", .08),
+  ]),
+};
+
+const OPTIONAL_CLIPS = {
+  deploy: clip([
+    frame("idle", .08, [{ type: "deploy-brace", at: 0 }]),
+    frame("walk-a", .12, [{ type: "deploy-step", at: .06 }]),
+    frame("idle", .12, [{ type: "deploy-settle", at: .08 }]),
+  ]),
+  "start-move": clip([
+    frame("idle", .055, [{ type: "locomotion-start", at: 0 }]),
+    frame("walk-a", .09, [{ type: "footstep", at: .065 }]),
+  ], { movement: true }),
+  "stop-move": clip([
+    frame("walk-b", .075),
+    frame("idle", .105, [{ type: "locomotion-stop", at: .035 }]),
+  ]),
+  turn: clip([
+    frame("walk-a", .075, [{ type: "turn-cross", at: .04 }]),
+    frame("idle", .075, [{ type: "turn-settle", at: .04 }]),
+  ]),
+  reload: clip([
+    frame("attack-a", .14, [{ type: "reload-open", at: .03 }]),
+    frame("attack-b", .16, [{ type: "reload-cycle", at: .08 }]),
+    frame("idle", .1, [{ type: "reload-ready", at: .05 }]),
+  ], { recovery: true }),
+  "weapon-cycle": clip([
+    frame("attack-b", .11, [{ type: "weapon-cycle", at: .05 }]),
+    frame("attack-a", .1),
+    frame("idle", .08, [{ type: "weapon-ready", at: .03 }]),
+  ], { recovery: true }),
+  "hit-light": clip([
+    frame("hit", .105, [{ type: "hit-reaction-light", at: 0 }]),
+  ]),
+  "hit-heavy": clip([
+    frame("hit", .13, [{ type: "hit-reaction-heavy", at: 0 }]),
+    frame("hit", .08, [{ type: "knockback-settle", at: .035 }]),
+  ]),
+  down: clip([
+    frame("hit", .12, [{ type: "down-start", at: 0 }]),
+    frame("death", .24, [{ type: "down-contact", at: .08 }]),
+  ]),
+  "get-up": clip([
+    frame("death", .12, [{ type: "get-up-start", at: 0 }]),
+    frame("hit", .14),
+    frame("idle", .12, [{ type: "get-up-ready", at: .07 }]),
+  ]),
+  retreat: clip([
+    frame("walk-a", .085, [{ type: "retreat-step", at: .055 }]),
+    frame("walk-b", .095),
+  ], { loop: true, movement: true }),
+  "phase-change": clip([
+    frame("idle", .11, [{ type: "phase-change-warning", at: 0 }]),
+    frame("attack-a", .16, [{ type: "phase-change-active", at: .04 }]),
+    frame("attack-b", .18),
+    frame("idle", .12, [{ type: "phase-change-complete", at: .07 }]),
   ]),
 };
 
@@ -244,7 +335,7 @@ const BODY_SCALE_BY_KIND = Object.freeze({
 
 function clipsForKind(kind) {
   const bodyScale = BODY_SCALE_BY_KIND[kind] ?? 1;
-  return Object.fromEntries(COMBAT_CLIP_STATES.map((state) => {
+  return Object.fromEntries(COMBAT_ANIMATION_STATES.map((state) => {
     const source = kind === "gunner" && state === "active"
       ? MACHINE_GUN_ACTIVE
       : kind === "gunner" && state === "recovery"
@@ -255,7 +346,9 @@ function clipsForKind(kind) {
             ? MRS_CHIHA_ATTACK_RECOVERY
             : state === "special" && MANUAL_ABILITY_SPECIAL_CLIPS[kind]
               ? MANUAL_ABILITY_SPECIAL_CLIPS[kind]
-        : STANDARD_CLIPS[state];
+              : OPTIONAL_CLIPS[state]
+                ?? STANDARD_CLIPS[COMBAT_CLIP_FALLBACKS[state]]
+                ?? STANDARD_CLIPS[state];
     return [state, {
       ...source,
       bodyScale,
@@ -515,10 +608,45 @@ export function combatPresentationFor(kind) {
 }
 
 export function animationClipFor(kind, state) {
-  if (!COMBAT_CLIP_STATES.includes(state)) {
+  if (!COMBAT_ANIMATION_STATES.includes(state)) {
     throw new RangeError(`Unknown combat clip state: ${String(state)}`);
   }
-  return combatPresentationFor(kind).clips[state];
+  const profile = combatPresentationFor(kind);
+  return profile.clips[state]
+    ?? profile.clips[COMBAT_CLIP_FALLBACKS[state]]
+    ?? profile.clips.idle;
+}
+
+function combatProceduralPose(state, progress) {
+  const p = Math.max(0, Math.min(1, Number(progress) || 0));
+  const pulse = Math.sin(Math.PI * p);
+  switch (state) {
+    case "deploy":
+      return { offsetX: -2.2 * (1 - p), offsetY: 0, rotationRadians: -.035 * (1 - p), scaleX: .96 + .04 * p, scaleY: .88 + .12 * p, opacity: .72 + .28 * p };
+    case "start-move":
+      return { offsetX: 1.8 * pulse, offsetY: 0, rotationRadians: .045 * pulse, scaleX: 1.02, scaleY: 1 - .035 * pulse, opacity: 1 };
+    case "stop-move":
+      return { offsetX: .8 * (1 - p), offsetY: 0, rotationRadians: -.035 * pulse, scaleX: 1, scaleY: 1 - .025 * pulse, opacity: 1 };
+    case "turn":
+      return { offsetX: 0, offsetY: 0, rotationRadians: 0, scaleX: .84 + .16 * Math.abs(2 * p - 1), scaleY: 1, opacity: .92 + .08 * Math.abs(2 * p - 1) };
+    case "reload":
+    case "weapon-cycle":
+      return { offsetX: -1.2 * pulse, offsetY: 0, rotationRadians: -.025 * pulse, scaleX: 1, scaleY: 1 - .02 * pulse, opacity: 1 };
+    case "hit-light":
+      return { offsetX: -2.4 * (1 - p), offsetY: 0, rotationRadians: -.055 * (1 - p), scaleX: 1.025, scaleY: .975, opacity: 1 };
+    case "hit-heavy":
+      return { offsetX: -4.8 * (1 - p), offsetY: 0, rotationRadians: -.095 * (1 - p), scaleX: 1.04, scaleY: .93 + .07 * p, opacity: .94 + .06 * p };
+    case "down":
+      return { offsetX: -3 * p, offsetY: 0, rotationRadians: -.12 * p, scaleX: 1.06, scaleY: 1 - .16 * p, opacity: 1 };
+    case "get-up":
+      return { offsetX: -2 * (1 - p), offsetY: 0, rotationRadians: -.1 * (1 - p), scaleX: 1.04 - .04 * p, scaleY: .84 + .16 * p, opacity: 1 };
+    case "retreat":
+      return { offsetX: -1.8 * pulse, offsetY: 0, rotationRadians: -.055, scaleX: 1.025, scaleY: .975, opacity: 1 };
+    case "phase-change":
+      return { offsetX: 0, offsetY: 0, rotationRadians: .018 * Math.sin(p * Math.PI * 4), scaleX: 1 + .055 * pulse, scaleY: 1 + .055 * pulse, opacity: .9 + .1 * Math.abs(Math.cos(p * Math.PI * 2)) };
+    default:
+      return { offsetX: 0, offsetY: 0, rotationRadians: 0, scaleX: 1, scaleY: 1, opacity: 1 };
+  }
 }
 
 export function sampleAnimationClip(kind, state, elapsedSeconds = 0) {
@@ -545,6 +673,14 @@ export function sampleAnimationClip(kind, state, elapsedSeconds = 0) {
         directional: current.directional,
         groundAnchor: current.groundAnchor,
         bodyScale: current.bodyScale,
+        requestedState: state,
+        resolvedState: combatPresentationFor(kind).clips[state]
+          ? state
+          : COMBAT_CLIP_FALLBACKS[state] ?? "idle",
+        pose: Object.freeze(combatProceduralPose(
+          state,
+          current.durationSeconds > 0 ? local / current.durationSeconds : 0,
+        )),
       });
     }
     cursor = end;
@@ -578,6 +714,141 @@ export function combatClipEventsFor(kind, state) {
     frameStart += currentFrame.durationSeconds;
   }
   return Object.freeze(events);
+}
+
+export function combatClipEventsBetween(kind, state, fromSeconds = 0, toSeconds = 0) {
+  const current = animationClipFor(kind, state);
+  const start = Math.max(0, Number(fromSeconds) || 0);
+  const end = Math.max(start, Number(toSeconds) || 0);
+  if (end <= start && start > 0) return Object.freeze([]);
+  const timeline = combatClipEventsFor(kind, state);
+  if (!current.loop || current.durationSeconds <= 0) {
+    return Object.freeze(timeline
+      .filter((event) => (start === 0 ? event.at >= 0 : event.at > start) && event.at <= end)
+      .map((event) => Object.freeze({ ...event, cycle: 0, absoluteAt: event.at })));
+  }
+  const firstCycle = Math.floor(start / current.durationSeconds);
+  const lastCycle = Math.floor(end / current.durationSeconds);
+  const events = [];
+  for (let cycle = firstCycle; cycle <= lastCycle; cycle += 1) {
+    for (const event of timeline) {
+      const absoluteAt = cycle * current.durationSeconds + event.at;
+      if ((start === 0 ? absoluteAt >= 0 : absoluteAt > start) && absoluteAt <= end) {
+        events.push(Object.freeze({ ...event, cycle, absoluteAt }));
+      }
+    }
+  }
+  return Object.freeze(events);
+}
+
+const TRANSIENT_LOCOMOTION_STATES = new Set([
+  "start-move",
+  "stop-move",
+  "turn",
+]);
+
+function normalizedDirection(direction, fallback = "right") {
+  if (direction === "left" || Number(direction) < 0) return "left";
+  if (direction === "right" || Number(direction) > 0) return "right";
+  return fallback === "left" ? "left" : "right";
+}
+
+export function createCombatAnimationRuntime({
+  direction = "right",
+  deploying = false,
+  x = 0,
+  y = 0,
+} = {}) {
+  return {
+    state: deploying ? "deploy" : "idle",
+    elapsedSeconds: 0,
+    direction: normalizedDirection(direction),
+    moving: false,
+    deployCompleted: false,
+    transitionCount: 0,
+    eventCount: 0,
+    eventCursorInitialized: false,
+    lastEvents: [],
+    lastX: Number(x) || 0,
+    lastY: Number(y) || 0,
+  };
+}
+
+export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsedSeconds = 0) {
+  const previous = runtime ?? createCombatAnimationRuntime(observation);
+  const dt = Math.max(0, Number(elapsedSeconds) || 0);
+  const x = Number.isFinite(Number(observation.x)) ? Number(observation.x) : previous.lastX;
+  const y = Number.isFinite(Number(observation.y)) ? Number(observation.y) : previous.lastY;
+  const movedDistance = Math.hypot(x - previous.lastX, y - previous.lastY);
+  const moving = observation.moving === undefined
+    ? movedDistance > Math.max(.05, dt * 2)
+    : Boolean(observation.moving) || movedDistance > Math.max(.05, dt * 2);
+  const direction = normalizedDirection(observation.direction, previous.direction);
+  const requestedState = COMBAT_ANIMATION_STATES.includes(observation.state)
+    ? observation.state
+    : null;
+  const deploying = Boolean(observation.deploying);
+  const directionChanged = direction !== previous.direction;
+  const deployCompleted = previous.deployCompleted === true
+    || (previous.state === "deploy"
+      && previous.elapsedSeconds + dt >= animationClipFor("walker", "deploy").durationSeconds);
+  const wantsDeploy = deploying && !deployCompleted;
+  let desiredState = requestedState
+    ?? (wantsDeploy
+      ? "deploy"
+      : moving && !previous.moving
+        ? "start-move"
+        : !moving && previous.moving
+          ? "stop-move"
+          : directionChanged
+            ? "turn"
+            : moving
+              ? "move"
+              : "idle");
+  let state = previous.state;
+  let stateElapsed = previous.elapsedSeconds + dt;
+  const previousClip = animationClipFor("walker", state);
+  const transientActive = TRANSIENT_LOCOMOTION_STATES.has(state)
+    && stateElapsed < previousClip.durationSeconds;
+  if (requestedState || wantsDeploy || !transientActive) {
+    if (state !== desiredState) {
+      state = desiredState;
+      stateElapsed = 0;
+    }
+  } else {
+    desiredState = state;
+  }
+  if (!requestedState && !wantsDeploy
+    && TRANSIENT_LOCOMOTION_STATES.has(state)
+    && stateElapsed >= animationClipFor("walker", state).durationSeconds) {
+    state = moving ? "move" : "idle";
+    stateElapsed = 0;
+  }
+  const stateChanged = state !== previous.state;
+  const eventStart = stateChanged || previous.eventCursorInitialized !== true
+    ? 0
+    : previous.elapsedSeconds === 0
+      ? Number.EPSILON
+      : previous.elapsedSeconds;
+  const lastEvents = combatClipEventsBetween(
+    observation.kind ?? "walker",
+    state,
+    eventStart,
+    stateElapsed,
+  );
+  return {
+    state,
+    elapsedSeconds: stateElapsed,
+    direction,
+    moving,
+    deployCompleted,
+    transitionCount: previous.transitionCount + (stateChanged ? 1 : 0),
+    eventCount: previous.eventCount + lastEvents.length,
+    eventCursorInitialized: true,
+    lastEvents: lastEvents.map(({ type, absoluteAt }) => ({ type, at: absoluteAt })),
+    lastX: x,
+    lastY: y,
+  };
 }
 
 export function weaponProfileForUnit(kind) {
