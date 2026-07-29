@@ -1,0 +1,30 @@
+{
+  "version": "0.9.5",
+  "scope": "all-sixteen-playable-animation",
+  "sourcePhases": [
+    "representative-six",
+    "remaining-ten"
+  ],
+  "units": 16,
+  "browserCases": 8,
+  "passedBrowserCases": 8,
+  "failedBrowserCases": 0,
+  "normalAttackRuntimeProofs": 144,
+  "manualSpecialRecoveryProofs": 96,
+  "musashiCounterRecoveryProofs": 4,
+  "totalSpecialRecoveryProofs": 100,
+  "captures": 708,
+  "groundAnchorFailures": 0,
+  "poseOffsetYFailures": 0,
+  "logicalOffFloorFailures": 0,
+  "visualOffFloorFailures": 0,
+  "missingProductionWeaponCues": 0,
+  "consoleErrors": 0,
+  "pageErrors": 0,
+  "requestFailures": 0,
+  "httpErrors": 0,
+  "evidence": [
+    "docs/qa/v095/representative-six/representative-six-summary.json",
+    "docs/qa/v095/remaining-ten/remaining-ten-summary.json"
+  ]
+}

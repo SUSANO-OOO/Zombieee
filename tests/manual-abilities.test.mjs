@@ -143,17 +143,18 @@ test("sustained manual abilities emit exactly one start and end then cool down",
     const fighter = { ...owner(950, kind), lane: 1, maxHp: 100, aiMoveDirection: 1 };
     const target = selectManualAbilityTarget({ owner: fighter, fighters: [fighter, enemy("threat", 285)] });
     const started = beginManualAbility(fighter.manualAbility, target);
-    let active = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY[kind].windupSeconds);
-    if (MANUAL_ABILITY_REGISTRY[kind].recoverySeconds) {
-      assert.equal(active.runtime.phase, "recovery", kind);
-      assert.deepEqual(active.events, [], kind);
-      active = advanceManualAbility(active.runtime, MANUAL_ABILITY_REGISTRY[kind].recoverySeconds);
-    }
+    const active = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY[kind].windupSeconds);
     assert.equal(active.runtime.phase, "active", kind);
     assert.deepEqual(active.events.map(({ type }) => type), ["active-start"], kind);
-    const cooldown = advanceManualAbility(active.runtime, MANUAL_ABILITY_REGISTRY[kind].activeSeconds);
+    const recovering = advanceManualAbility(active.runtime, MANUAL_ABILITY_REGISTRY[kind].activeSeconds);
+    assert.equal(recovering.runtime.phase, "recovery", kind);
+    assert.deepEqual(recovering.events.map(({ type }) => type), ["active-end"], kind);
+    const cooldown = advanceManualAbility(
+      recovering.runtime,
+      MANUAL_ABILITY_REGISTRY[kind].recoverySeconds,
+    );
     assert.equal(cooldown.runtime.phase, "cooldown", kind);
-    assert.deepEqual(cooldown.events.map(({ type }) => type), ["active-end"], kind);
+    assert.deepEqual(cooldown.events, [], kind);
     assert.deepEqual(advanceManualAbility(cooldown.runtime, 0).events, [], kind);
 
     const oversized = advanceManualAbility(started.runtime, 100);
@@ -198,13 +199,15 @@ test("duplicate deployments own independent activation and cooldown state", () =
   const impact = advanceManualAbility(first.manualAbility, MANUAL_ABILITY_REGISTRY.zakimiya.windupSeconds);
   first.manualAbility = impact.runtime;
   assert.equal(impact.events.length, 1);
-  assert.equal(first.manualAbility.phase, "cooldown");
+  assert.equal(first.manualAbility.phase, "recovery");
   assert.equal(second.manualAbility.phase, "ready");
 
   const paused = advanceManualAbility(first.manualAbility, 0);
-  assert.equal(paused.runtime.cooldownRemaining, first.manualAbility.cooldownRemaining);
-  const cooling = advanceManualAbility(first.manualAbility, 2);
-  assert.ok(cooling.runtime.cooldownRemaining < first.manualAbility.cooldownRemaining);
+  assert.equal(paused.runtime.windupRemaining, first.manualAbility.windupRemaining);
+  const recovered = advanceManualAbility(first.manualAbility, MANUAL_ABILITY_REGISTRY.zakimiya.recoverySeconds);
+  assert.equal(recovered.runtime.phase, "cooldown");
+  const cooling = advanceManualAbility(recovered.runtime, 2);
+  assert.ok(cooling.runtime.cooldownRemaining < recovered.runtime.cooldownRemaining);
   assert.equal(advanceManualAbility(cooling.runtime, 20).runtime.phase, "ready");
 });
 
@@ -274,7 +277,7 @@ test("all five reviewed specials expose a real locked recovery phase before norm
   const expectedAfterRecovery = {
     scout: "cooldown",
     gunner: "cooldown",
-    "crazy-king": "active",
+    "crazy-king": "cooldown",
     tky: "cooldown",
     "mayo-chan": "feral",
   };
@@ -284,12 +287,18 @@ test("all five reviewed specials expose a real locked recovery phase before norm
       ? { targetIds: ["target"], targetId: "target", x: 320, y: 280, direction: 1 }
       : { targetId: "target", targetIds: ["target"], x: 320, y: 280, direction: 1 };
     const started = beginManualAbility(createManualAbilityRuntime(kind), target);
-    const recovering = advanceManualAbility(started.runtime, definition.windupSeconds);
+    const afterWindup = advanceManualAbility(started.runtime, definition.windupSeconds);
+    const recovering = kind === "crazy-king"
+      ? advanceManualAbility(afterWindup.runtime, definition.activeSeconds)
+      : afterWindup;
     assert.equal(recovering.runtime.phase, "recovery", kind);
     assert.equal(manualAbilityLocksNormalAction(recovering.runtime), true, kind);
     assert.equal(
       Number(recovering.runtime.abilityElapsed.toFixed(3)),
-      Number(definition.windupSeconds.toFixed(3)),
+      Number((
+        definition.windupSeconds
+        + (kind === "crazy-king" ? definition.activeSeconds : 0)
+      ).toFixed(3)),
       kind,
     );
     const halfway = advanceManualAbility(recovering.runtime, definition.recoverySeconds / 2);
@@ -306,12 +315,14 @@ test("checkpoint debt conservatively preserves every non-ready manual ability ph
   assert.equal(
     windupDebt,
     MANUAL_ABILITY_REGISTRY.brawler.windupSeconds
+      + MANUAL_ABILITY_REGISTRY.brawler.recoverySeconds
       + MANUAL_ABILITY_REGISTRY.brawler.cooldownSeconds,
   );
-  const cooling = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY.brawler.windupSeconds);
+  const recovering = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY.brawler.windupSeconds);
   assert.equal(
-    manualAbilityCheckpointCooldown(cooling.runtime),
-    MANUAL_ABILITY_REGISTRY.brawler.cooldownSeconds,
+    manualAbilityCheckpointCooldown(recovering.runtime),
+    MANUAL_ABILITY_REGISTRY.brawler.recoverySeconds
+      + MANUAL_ABILITY_REGISTRY.brawler.cooldownSeconds,
   );
   const restored = restoreManualAbilityCooldown("brawler", windupDebt);
   assert.equal(restored.phase, "cooldown");
@@ -329,6 +340,7 @@ test("checkpoint debt conservatively preserves every non-ready manual ability ph
   assert.equal(
     manualAbilityCheckpointCooldown(sustained.runtime),
     MANUAL_ABILITY_REGISTRY.guardian.windupSeconds
+      + MANUAL_ABILITY_REGISTRY.guardian.recoverySeconds
       + MANUAL_ABILITY_REGISTRY.guardian.activeSeconds
       + MANUAL_ABILITY_REGISTRY.guardian.cooldownSeconds,
   );
@@ -513,8 +525,14 @@ test("Miyamoto Musashi prioritizes a boss, counters one melee hit, and falls bac
   const counter = triggerMusashiCounter(guard.runtime);
   assert.equal(counter.ok, true);
   assert.equal(counter.event.mode, "counter");
-  assert.equal(counter.runtime.phase, "cooldown");
+  assert.equal(counter.runtime.phase, "recovery");
+  assert.equal(counter.runtime.windupRemaining, MANUAL_ABILITY_REGISTRY["miyamoto-musashi"].recoverySeconds);
   assert.equal(triggerMusashiCounter(counter.runtime).ok, false, "one activation cannot counter twice");
+  const counterRecovered = advanceManualAbility(
+    counter.runtime,
+    MANUAL_ABILITY_REGISTRY["miyamoto-musashi"].recoverySeconds,
+  );
+  assert.equal(counterRecovered.runtime.phase, "cooldown");
 
   const fallbackGuard = advanceManualAbility(
     beginManualAbility(createManualAbilityRuntime("miyamoto-musashi"), selected).runtime,
@@ -526,7 +544,12 @@ test("Miyamoto Musashi prioritizes a boss, counters one melee hit, and falls bac
   );
   assert.equal(fallback.events.length, 1);
   assert.equal(fallback.events[0].mode, "fallback");
-  assert.equal(fallback.runtime.phase, "cooldown");
+  assert.equal(fallback.runtime.phase, "recovery");
+  const fallbackRecovered = advanceManualAbility(
+    fallback.runtime,
+    MANUAL_ABILITY_REGISTRY["miyamoto-musashi"].recoverySeconds,
+  );
+  assert.equal(fallbackRecovered.runtime.phase, "cooldown");
 });
 
 test("Mayo-chan deterministically prioritizes small fast infected and every deployment owns its own feral timer", () => {

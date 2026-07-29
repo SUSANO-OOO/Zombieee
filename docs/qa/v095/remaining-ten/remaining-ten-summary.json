@@ -1,0 +1,90 @@
+{
+  "version": "0.9.5",
+  "phase": "remaining-ten",
+  "integrationBase": "925370ec5c558946a9f0394761c768166eb0eeac",
+  "branch": "codex/0.9.5-remaining-ten",
+  "units": [
+    "brawler",
+    "ranger",
+    "medic",
+    "brute",
+    "kumaverson",
+    "babayaga",
+    "guardian",
+    "engineer",
+    "zakimiya",
+    "miyamoto-musashi"
+  ],
+  "validation": {
+    "focusedTests": 71,
+    "allTests": 720,
+    "productionBuild": "passed",
+    "lint": "passed",
+    "contentValidator": "passed-no-errors-no-warnings",
+    "gitDiffCheck": "passed"
+  },
+  "browserMatrix": {
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "viewports": [
+      "844x390",
+      "844x340"
+    ],
+    "deviceScaleFactor": 3,
+    "cases": 4,
+    "passed": 4,
+    "failed": 0,
+    "normalAttackRuntimeProofs": 120,
+    "manualSpecialRecoveryProofs": 60,
+    "musashiCounterRecoveryProofs": 4,
+    "oneTimesActivations": 40,
+    "twoTimesActivations": 20,
+    "captures": 444,
+    "uniqueCanvasHashes": 444,
+    "capturesPer844x390Case": 121,
+    "capturesPer844x340Case": 101,
+    "residentSpritesPerCase": 45
+  },
+  "graphicsProfiles": {
+    "auto": {
+      "resolved": "balanced",
+      "renderHz": 45,
+      "dprCap": 1.5
+    },
+    "high": {
+      "resolved": "high",
+      "renderHz": 60,
+      "dprCap": 2
+    },
+    "power-save": {
+      "resolved": "power-save",
+      "renderHz": 30,
+      "dprCap": 1
+    }
+  },
+  "invariants": {
+    "groundAnchor": 1,
+    "poseOffsetY": 0,
+    "logicalOffFloorCount": 0,
+    "visuallyOffFloorCount": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "requestFailures": 0,
+    "httpErrors": 0,
+    "normalAttackRuntimeFailures": 0,
+    "missingExpectedProductionWeaponCues": 0,
+    "missingSpecialRecoveryPhases": 0,
+    "sustainedRecoveryBeforeActiveEndFailures": 0,
+    "musashiCounterFailures": 0,
+    "normalAttackCadenceDriftFailures": 0
+  },
+  "regressions": {
+    "combatPresentationCases": 4,
+    "manualAbilityCases": 6,
+    "manualAbilityActivations": 32,
+    "newPlayableHumanCases": 4
+  },
+  "independentReadOnlyReview": "passed-high-0-medium-0-low-0"
+}
