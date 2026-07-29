@@ -281,7 +281,7 @@ test("draws three unmistakably different stage environments", async () => {
   const worldDraw = game.slice(game.indexOf("function drawWorld"), game.indexOf("export function AshfallGame"));
   const drawOrder = [
     'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"])',
-    "drawCrawler(ctx, g, sprites)",
+    "drawCrawler(ctx, g, sprites, graphicsProfile)",
     "drawEnemyBase(ctx, g, enemyBaseSprite, stageObjects)",
     'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"])',
     "const renderables = [",
@@ -1140,17 +1140,28 @@ test("renders causal weapon tracers and vehicle-origin Crawler fire without scre
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   const crawlerMuzzle = game.slice(game.indexOf("function drawCrawlerBarrage"), game.indexOf("function stageObjectStatesForGame"));
   assert.match(crawlerMuzzle, /WORLD_GEOMETRY\.crawler/);
-  assert.match(crawlerMuzzle, /const muzzleX = crawler\.weaponX \+ 45/);
+  assert.match(crawlerMuzzle, /activeCrawlerShot\?\.x \?\? fallbackPose\.muzzleX/);
   assert.match(crawlerMuzzle, /createRadialGradient\(muzzleX, muzzleY/);
   assert.doesNotMatch(crawlerMuzzle, /scanline|repeating|for \(const lane/);
 
   const barrageStart = game.indexOf('if (crawlerStep.events.includes("fire"))');
   const barrageResolution = game.slice(barrageStart, game.indexOf("for (const object of g.battlefieldObjects)", barrageStart));
+  const pendingResolutionStart = game.indexOf("const pendingWeaponStep = advancePendingWeaponHits");
+  const pendingResolution = game.slice(
+    pendingResolutionStart,
+    game.indexOf("if (g.definition.stageId ===", pendingResolutionStart),
+  );
   assert.match(barrageResolution, /const visualHitsByLane = \[0, 0, 0\]/);
-  assert.match(barrageResolution, /visualHitsByLane\[fighter\.lane\] < 3/);
-  assert.match(barrageResolution, /addShot\(g, WORLD_GEOMETRY\.crawler\.weaponX \+ 45, WORLD_GEOMETRY\.crawler\.weaponY - 18, fighter\.x, fighter\.y - 24/);
-  assert.match(barrageResolution, /"human", \.36, "crawler", "crawler"/);
-  assert.match(barrageResolution, /addParticles\(g, fighter\.x, fighter\.y - 22/);
+  assert.match(barrageResolution, /visualHitsByLane\[fighter\.lane\] <= 3/);
+  assert.match(barrageResolution, /const visualShotIndex = Math\.min\(laneHitIndex, 2\)/);
+  assert.match(barrageResolution, /const impactDelaySeconds = \.2 \+ visualShotIndex \* \.018/);
+  assert.match(barrageResolution, /const crawlerMuzzle = crawlerWeaponPose\([\s\S]*targetX: fighter\.x[\s\S]*targetY: fighter\.y - 24/);
+  assert.match(barrageResolution, /damageMode: "crawler-barrage"/);
+  assert.match(barrageResolution, /weapon: "crawler" as const/);
+  assert.match(barrageResolution, /addWeaponShot\(g, sharedImpact\)/);
+  assert.match(barrageResolution, /g\.pendingWeaponHits\.push\([\s\S]*eventKind: "impact"[\s\S]*applyDamage: true/);
+  assert.match(pendingResolution, /hit\.damageMode === "crawler-barrage"[\s\S]*target\.hp = Math\.max\(0, target\.hp - hit\.damage\)/);
+  assert.match(pendingResolution, /hit\.damageMode === "crawler-barrage"[\s\S]*addParticles\(g, target\.x, target\.y - 22/);
 
   const shotDraw = game.slice(game.indexOf("for (const shot of g.shots)"), game.indexOf("ctx.shadowBlur = 0;", game.indexOf("for (const shot of g.shots)")));
   assert.match(shotDraw, /const weapon = shot\.weapon \?\? shot\.effect/);
