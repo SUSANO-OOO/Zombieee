@@ -215,6 +215,22 @@ test("manual abilities recover to an active pose and enemy movement selects the 
   assert.equal(combatFacingDirection({ side: "zombie", entryDirection: -1 }), "left");
   assert.equal(combatFacingDirection({
     side: "human",
+    aiMoveDirection: 0,
+    targetDirection: -1,
+  }), "left");
+  assert.equal(combatFacingDirection({
+    side: "zombie",
+    aiMoveDirection: 0,
+    entryDirection: -1,
+    targetDirection: 1,
+  }), "right");
+  assert.equal(combatFacingDirection({
+    side: "human",
+    aiMoveDirection: 1,
+    targetDirection: -1,
+  }), "right");
+  assert.equal(combatFacingDirection({
+    side: "human",
     aiMoveDirection: 1,
     manualDirection: -1,
     manualAbilityActive: true,

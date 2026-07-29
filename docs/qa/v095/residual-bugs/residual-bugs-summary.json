@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-29T11:42:39.901Z",
+  "issue": 96,
+  "baseline": {
+    "version": "0.9.0",
+    "releaseSha": "f2633c538756385f13d166d3adbcdd39b3a08b21",
+    "crawlerResponderCases": 16,
+    "crawlerResponderDamagePasses": 15,
+    "confirmedFailure": {
+      "unitKind": "scout",
+      "targetSelected": true,
+      "aiMoveDirection": -1,
+      "attackSequence": 0,
+      "centerDistance": 39
+    }
+  },
+  "phaseBaseSha": "743f08583667f39875f61a7b663c7168f0fc3d1f",
+  "fixes": [
+    "shared-normal-attack-reach",
+    "crawler-ramp-foot-retreat-boundary",
+    "locked-target-facing-during-windup",
+    "composited-screenshot-alpha-audit"
+  ],
+  "matrix": {
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "viewports": [
+      "1280x720",
+      "844x390",
+      "844x340"
+    ],
+    "unitKinds": [
+      "scout",
+      "ranger",
+      "brute",
+      "brawler",
+      "gunner",
+      "medic",
+      "crazy-king",
+      "kumaverson",
+      "babayaga",
+      "guardian",
+      "engineer",
+      "zakimiya",
+      "tky",
+      "mrs-chiha",
+      "miyamoto-musashi",
+      "mayo-chan"
+    ],
+    "statesPerCase": [
+      "entry",
+      "ramp",
+      "ready",
+      "attack"
+    ],
+    "total": 96,
+    "passed": 96,
+    "failed": 0,
+    "frames": 384,
+    "distinctFrameHashes": 384,
+    "savedRepresentativeScreenshots": 32,
+    "actualDamageObserved": 96,
+    "leftFacingAttacks": 96,
+    "entryToReadyMs": {
+      "minimum": 500,
+      "maximum": 1133.3
+    },
+    "readyToDamageMs": {
+      "minimum": 283.3,
+      "maximum": 4016.7
+    },
+    "minimumCrawlerRegionColorBins": 177,
+    "compositedTransparentPixels": 0,
+    "logicalOffFloorCount": 0,
+    "visualOffFloorCount": 0,
+    "groundAnchorFailures": 0,
+    "verticalContactOffsetFailures": 0,
+    "debugGeometryRenderedCount": 0,
+    "keyboardLabelCount": 0,
+    "debugLabelCount": 0,
+    "browserDiagnostics": {
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "requestFailures": 0,
+      "httpErrors": 0
+    }
+  },
+  "crossChecks": {
+    "crawlerDefense": {
+      "passed": 240,
+      "total": 240,
+      "passThroughs": 0,
+      "objectiveDirects": 0,
+      "sha256": "547be8f18c347d3a892c434c4fe70bd0905f0978edbba1bf8738aeeeba9e0896"
+    },
+    "battleSpace": {
+      "passed": 4,
+      "total": 4,
+      "sha256": "5b93b28b3e0425f3811506aa72e5d75ba7c383b32404836aa50b22abb5e74ec9"
+    },
+    "combatPresentation": {
+      "passed": 4,
+      "total": 4,
+      "sha256": "c46f40ff7193d62b2c1546bac55131a7cff0cbfcf18442eecbe8a3060cee7b66"
+    },
+    "assetDecode": {
+      "audio": "399/399",
+      "portraits": "34/34",
+      "images": "57/57",
+      "carbinePlayback": true,
+      "sha256": "f109f7d79d68aecc751593d487acffd80d0c2a2ba15741485ae5e5c77c4b95cd"
+    }
+  },
+  "rawResidualSummarySha256": "78fa7903b149c0b35875742c72f60d12713f2d40fc14886abfdd32e650bb39af",
+  "representativeEvidence": [
+    {
+      "path": "outputs/v095-residual-bugs-browser-smoke/webkit-1280x720-scout-entry.png",
+      "sha256": "57c7a9bfb067522f7cffc81eef0708b404d791247fac76121704f8f80d058d98"
+    },
+    {
+      "path": "outputs/v095-residual-bugs-browser-smoke/webkit-844x340-mayo-chan-ramp.png",
+      "sha256": "a54753a30887dc2a48d08820e1f69464f249b2acbd121c5e5f1543f1c1a587bd"
+    },
+    {
+      "path": "outputs/v095-residual-bugs-browser-smoke/chromium-844x390-scout-attack.png",
+      "sha256": "1f6ed7ca30cf4f327a82e8f415f6a65bbcaac1ad9189435beb23f7d4ba72f9d6"
+    },
+    {
+      "path": "outputs/v095-residual-bugs-browser-smoke/chromium-844x390-mayo-chan-attack.png",
+      "sha256": "c3bec31865ef624cce964b9e92957da4bcfcb6b6543060e1762524e91c192c85"
+    }
+  ],
+  "gates": {
+    "focusedTests": "passed",
+    "allTests": "727/727",
+    "productionBuild": "passed",
+    "lint": "passed",
+    "gitDiffCheck": "passed"
+  },
+  "limitations": [
+    "No physical-smartphone temperature claim.",
+    "No physical-speaker quality claim.",
+    "Final physical-smartphone acceptance remains an RC gate."
+  ]
+}

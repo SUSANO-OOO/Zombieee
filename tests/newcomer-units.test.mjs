@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 import {
   COMBAT_GEOMETRY,
+  NORMAL_ATTACK_REACH_TOLERANCE,
   createAttackTransaction,
 } from "../app/combatLifecycle.js";
 
@@ -122,14 +123,14 @@ test("each newcomer attacks only within its configured range and observes both c
       side: "zombie",
       kind: "walker",
       lane: 1,
-      x: 300 + card.range + 11,
+      x: 300 + card.range + 12 + NORMAL_ATTACK_REACH_TOLERANCE,
       y: COMBAT_GEOMETRY.laneY[1],
       range: 24,
       bodyRadius: 12,
       hp: 100,
       combatReady: true,
     };
-    const outOfRange = { ...inRange, id: `${card.kind}-far`, x: 300 + card.range + 13 };
+    const outOfRange = { ...inRange, id: `${card.kind}-far`, x: inRange.x + .01 };
     const attack = createAttackTransaction({ attacker, candidates: [inRange], damage: card.damage });
     assert.equal(attack?.targetId, inRange.id, `${card.kind} in-range attack`);
     assert.equal(attack?.damage.amount, card.damage, `${card.kind} configured damage`);

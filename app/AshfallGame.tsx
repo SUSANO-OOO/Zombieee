@@ -231,6 +231,7 @@ import {
   ENEMY_DEATH_CONFIG,
   enforceEnemyCorpseCaps,
   igniteAllyCorpsesInFire,
+  normalAttackReach,
   supportCohesion,
 } from "./combatLifecycle.js";
 import {
@@ -15286,7 +15287,7 @@ export function AshfallGame() {
             f.targetObjectId = objectTarget?.id ?? null;
           }
           distance = target ? fighterDistance(f, target) : Infinity;
-          if (target && distance <= f.range + target.bodyRadius) {
+          if (target && distance <= normalAttackReach(f, target)) {
             const transaction = (createAttackTransaction as unknown as (input: {
               attacker: Fighter; candidates: Fighter[]; damage: number; hasLineOfSight: (attacker: Fighter, target: Fighter) => boolean;
               targetPriority: (candidate: Fighter) => number;
@@ -15398,7 +15399,7 @@ export function AshfallGame() {
               f.y = Math.max(activeLaneCenters[0], Math.min(activeLaneCenters[2], f.y));
               f.lane = activeLaneForY(f.y, f.lane);
             }
-          } else if (target && distance <= f.range + target.bodyRadius) {
+          } else if (target && distance <= normalAttackReach(f, target)) {
             if (f.cooldown <= 0) {
               if (beginCombatNormalAttackWindup(f, target.id)) continue;
               if (f.side === "human" && f.kind === "gunner" && !raiderCanFire({ heat: f.weaponHeat, overheated: f.overheated })) {
@@ -16315,7 +16316,7 @@ export function AshfallGame() {
             ? undefined
             : g.battlefieldObjects.find((object) => object.id === fighter.targetObjectId);
           const targetEngaged = Boolean(lockedTarget
-            && fighterDistance(fighter, lockedTarget) <= fighter.range + lockedTarget.bodyRadius + 2);
+            && fighterDistance(fighter, lockedTarget) <= normalAttackReach(fighter, lockedTarget));
           const objectEngaged = Boolean(lockedObject
             && Math.hypot(fighter.x - lockedObject.x, fighter.y - lockedObject.y) <= fighter.range + 34);
           const crawlerEngaged = fighter.side === "zombie" && isCrawlerAttackThreat({
@@ -16485,10 +16486,16 @@ export function AshfallGame() {
           if (fighter.hp <= 0) continue;
           const manualAbilityActive = fighter.side === "human"
             && manualAbilityLocksNormalAction(fighter.manualAbility);
+          const facingTarget = fighter.targetId === null
+            ? undefined
+            : fighterById.get(fighter.targetId);
           const direction = combatFacingDirection({
             side: fighter.side,
             aiMoveDirection: fighter.aiMoveDirection,
             entryDirection: fighter.entryDirection,
+            targetDirection: facingTarget
+              ? Math.sign(facingTarget.x - fighter.x)
+              : 0,
             manualDirection: Number(fighter.manualAbility?.target?.direction),
             manualAbilityActive,
           });
