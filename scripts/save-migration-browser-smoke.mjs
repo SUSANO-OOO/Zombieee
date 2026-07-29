@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 import {
   CAMPAIGN_SAVE_SCHEMA_VERSION,
   computeCampaignSaveIntegrity,
@@ -147,6 +148,143 @@ delete schema10Fixture.processedEquipmentTransactionIds;
 delete schema10Fixture.equipmentEnhancementLevels;
 schema10Fixture.integrity = computeCampaignSaveIntegrity(schema10Fixture);
 const schema10Serialized = JSON.stringify(schema10Fixture);
+// The top-level field order and the absence of employment notice fields,
+// graphicsQuality, and highestReachedWave are copied from
+// v0.9.0:f2633c538756385f13d166d3adbcdd39b3a08b21. Current defaults are used
+// only for nested registries whose schema did not change, then the release
+// schema is asserted below before its integrity stamp is created.
+const release090Defaults = createDefaultCampaignSave();
+const release090Fixture = {
+  schemaVersion: 13,
+  revision: 95,
+  updatedAt: "2026-07-29T01:23:45.000Z",
+  integrity: "",
+  campaignStarted: true,
+  storyScriptVersion: release090Defaults.storyScriptVersion,
+  readStoryEventIds: ["prologue-opening-v070", "stage-nishijin-pre-v070"],
+  autoSkipReadStory: true,
+  processedResultIds: ["v090-stage-result"],
+  processedAcquisitionIds: ["v090-employment"],
+  processedUpgradeIds: ["v090-level-up"],
+  processedEquipmentTransactionIds: ["v090-equipment"],
+  processedMigrationIds: [V090_CAPS_MIGRATION_ID],
+  migrationNotices: [],
+  eventFoundation: release090Defaults.eventFoundation,
+  completedStageIds: stageIds,
+  bestStarsByStage: Object.fromEntries(stageIds.map((stageId, index) => [stageId, (index % 3) + 1])),
+  claimedStarRewardsByStage: Object.fromEntries(stageIds.map((stageId) => [stageId, [1]])),
+  caps: 3210,
+  supplies: 3210,
+  equipmentInventory: [
+    { equipmentId: "field-machete", quantity: 2 },
+    { equipmentId: "tactical-field-radio", quantity: 1 },
+    { equipmentId: "future-preserved-id", quantity: 4 },
+  ],
+  equipmentEnhancementLevels: { "field-machete": 2 },
+  unlockedStageIds: [...stageIds, "stage-university-hospital-approach"],
+  ownership: unitIds,
+  discovery: [...unitIds, "unit-mayo-chan"],
+  recruitable: ["unit-mayo-chan"],
+  unitLevels: {
+    ...release090Defaults.unitLevels,
+    "unit-hachi": 7,
+    "unit-mayo-chan": 4,
+  },
+  unitRanks: {
+    ...release090Defaults.unitRanks,
+    "unit-hachi": 6,
+    "unit-mayo-chan": 3,
+  },
+  unlockedUnitIds: unitIds,
+  formationPresets: release090Defaults.formationPresets.map((preset, index) => ({
+    ...preset,
+    unitIds: unitIds.slice(index, index + 7),
+    personalEquipmentByUnit: index === 0 ? { "unit-hachi": ["field-machete", null] } : {},
+    tacticalEquipmentIds: index === 0 ? ["tactical-field-radio", null] : [null, null],
+  })),
+  selectedFormationPresetId: "formation-preset-2",
+  selectedPresetId: "formation-preset-2",
+  lastSelectedStageId: stageIds.at(-1),
+  survival: {
+    ...release090Defaults.survival,
+    schemaVersion: 1,
+    highestWave: 20,
+    highestKills: 333,
+    highestBossKills: 5,
+    totalRuns: 12,
+    totalKills: 999,
+    totalBossKills: 18,
+    processedRunIds: ["v090-survival-run"],
+    claimedRewardIds: ["v090-survival-reward"],
+  },
+  outbreaks: {
+    ...release090Defaults.outbreaks,
+    encounteredBossKinds: ["mother"],
+    clearedMissionIds: ["outbreak-mother-brood-vault"],
+    bossDefeatCounts: { mother: 2 },
+    processedResultIds: ["v090-outbreak-result"],
+    claimedRewardIds: ["v090-outbreak-reward"],
+  },
+  records: {
+    ...release090Defaults.records,
+    processedRecordIds: ["v090-record"],
+    encountersByEnemy: {
+      walker: {
+        firstOperationId: "v090-stage-result",
+        firstEncounteredAt: "2026-07-29T01:00:00.000Z",
+        encounterCount: 40,
+      },
+    },
+    defeatCountsByEnemy: { walker: 35 },
+    totals: {
+      battles: 14,
+      victories: 9,
+      defeats: 3,
+      withdrawals: 2,
+      battleSeconds: 4200,
+      kills: 700,
+      bossKills: 16,
+      unitsLost: 8,
+      capsEarned: 2400,
+    },
+    unitStats: {
+      damageByUnit: { "unit-hachi": 12345 },
+      damageTakenByUnit: { "unit-hachi": 678 },
+      healingByUnit: { "unit-nao": 456 },
+    },
+  },
+  settings: {
+    bgmEnabled: false,
+    sfxEnabled: true,
+    bgmVolume: 0.25,
+    sfxVolume: 0.55,
+    reducedMotion: true,
+    battleEventMode: "compact",
+  },
+};
+delete release090Fixture.survival.highestReachedWave;
+const release090Schema13TopLevelFields = [
+  "schemaVersion", "revision", "updatedAt", "integrity", "campaignStarted",
+  "storyScriptVersion", "readStoryEventIds", "autoSkipReadStory",
+  "processedResultIds", "processedAcquisitionIds", "processedUpgradeIds",
+  "processedEquipmentTransactionIds", "processedMigrationIds", "migrationNotices",
+  "eventFoundation", "completedStageIds", "bestStarsByStage",
+  "claimedStarRewardsByStage", "caps", "supplies", "equipmentInventory",
+  "equipmentEnhancementLevels", "unlockedStageIds", "ownership", "discovery",
+  "recruitable", "unitLevels", "unitRanks", "unlockedUnitIds",
+  "formationPresets", "selectedFormationPresetId", "selectedPresetId",
+  "lastSelectedStageId", "survival", "outbreaks", "records", "settings",
+];
+invariant(
+  JSON.stringify(Object.keys(release090Fixture)) === JSON.stringify(release090Schema13TopLevelFields),
+  "Version 0.9.0 fixture no longer matches the release schema 13 top-level field order",
+);
+invariant(release090Fixture.survival.schemaVersion === 1,
+  "Version 0.9.0 fixture no longer uses the release Survival schema");
+invariant(!Object.hasOwn(release090Fixture.settings, "graphicsQuality"),
+  "Version 0.9.0 fixture contains a post-release graphics setting");
+release090Fixture.integrity = computeCampaignSaveIntegrity(release090Fixture);
+const release090Serialized = JSON.stringify(release090Fixture);
 const corruptLocal = "{\"schemaVersion\":5,\"caps\":";
 const corruptIndexed = "not-json-indexed";
 
@@ -156,8 +294,12 @@ function invariant(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-async function seedPage(page, { local = null, indexed = null } = {}) {
-  const seedUrl = new URL("__save_seed__", baseUrl);
+function invariantDeepEqual(actual, expected, message) {
+  invariant(isDeepStrictEqual(actual, expected), message);
+}
+
+async function seedPage(page, { local = null, indexed = null } = {}, targetBaseUrl = baseUrl) {
+  const seedUrl = new URL("__save_seed__", targetBaseUrl);
   await page.route(String(seedUrl), (route) => route.fulfill({
     status: 200,
     contentType: "text/html",
@@ -367,6 +509,54 @@ function assertMigratedSave(
     `${label} current integrity stamp missing`);
 }
 
+function assertRelease090Migrated(save, label, { imported = false } = {}) {
+  invariant(save.schemaVersion === CURRENT_SCHEMA_VERSION, `${label} schema mismatch`);
+  invariant(
+    imported ? save.revision > release090Fixture.revision : save.revision === release090Fixture.revision + 1,
+    `${label} revision was not advanced exactly as expected`,
+  );
+  const release090WithoutIntegrity = { ...release090Fixture };
+  delete release090WithoutIntegrity.integrity;
+  const migratedWithoutIntegrity = { ...save };
+  delete migratedWithoutIntegrity.integrity;
+  const expected = {
+    ...release090WithoutIntegrity,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    revision: imported ? save.revision : release090Fixture.revision + 1,
+    updatedAt: imported
+      ? save.updatedAt
+      : new Date(Date.parse(release090Fixture.updatedAt) + 1).toISOString(),
+    employmentNoticeReceipts: ["employment-available:unit-mayo-chan"],
+    seenEmploymentNoticeIds: [],
+    equipmentInventory: [
+      { equipmentId: "field-machete", quantity: 2 },
+      { equipmentId: "future-preserved-id", quantity: 4 },
+      { equipmentId: "tactical-field-radio", quantity: 1 },
+    ],
+    survival: {
+      ...release090Fixture.survival,
+      schemaVersion: 2,
+      highestReachedWave: release090Fixture.survival.highestWave,
+      unlockedStartWaves: [1, 11, 21],
+    },
+    outbreaks: {
+      ...release090Fixture.outbreaks,
+      survivalBossKinds: ["takuya", "gate-eater", "mother"],
+    },
+    settings: {
+      ...release090Fixture.settings,
+      graphicsQuality: "auto",
+    },
+  };
+  invariantDeepEqual(
+    migratedWithoutIntegrity,
+    expected,
+    `${label} did not preserve the full Version 0.9.0 save payload`,
+  );
+  invariant(typeof save.integrity === "string" && save.integrity.startsWith("fnv1a32:"),
+    `${label} integrity stamp missing`);
+}
+
 async function waitForTitleReady(page, expectedLabel) {
   await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout });
   await page.waitForFunction(
@@ -478,12 +668,22 @@ async function runCase(name, seed, verify) {
       innerHeight: window.innerHeight,
       documentWidth: document.documentElement.scrollWidth,
       documentHeight: document.documentElement.scrollHeight,
+      saveEnvironmentKind: document.querySelector("[data-save-environment]")?.getAttribute("data-save-environment") ?? "",
+      saveOrigin: document.querySelector("[data-save-environment]")?.getAttribute("data-save-origin") ?? "",
+      saveIsolationNotice: document.querySelector("[data-save-environment]")?.textContent ?? "",
     }));
     invariant(environment.inputMode === "touch", `${name} did not expose a coarse touch pointer`);
     invariant(environment.safeAreaSource === "local-qa-iphone-landscape",
       `${name} safe-area fixture was not active`);
     invariant(environment.documentWidth <= viewportWidth && environment.documentHeight <= viewportHeight,
       `${name} viewport overflow: ${JSON.stringify(environment)}`);
+    const expectedEnvironmentKind = baseUrl.hostname === "localhost" ? "localhost" : "loopback";
+    invariant(environment.saveEnvironmentKind === expectedEnvironmentKind,
+      `${name} save environment kind mismatch: ${JSON.stringify(environment)}`);
+    invariant(environment.saveOrigin === baseUrl.origin,
+      `${name} save origin mismatch: ${JSON.stringify(environment)}`);
+    invariant(environment.saveIsolationNotice.includes("自動共有されません"),
+      `${name} save isolation notice missing`);
     await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 5_000) }).catch(() => undefined);
     await page.waitForTimeout(100);
     assertDiagnostics(diagnostics, name);
@@ -604,6 +804,40 @@ try {
       unitLevel: local.unitLevels[unitIds[0]],
       equipmentQuantity: local.equipmentInventory[0].quantity,
       unknownInventoryPreserved: true,
+    };
+  });
+
+  await runCase("release-090-v13-full-preservation", {
+    local: release090Serialized,
+    indexed: null,
+  }, async (page) => {
+    await waitForTitleReady(page, "物語を続ける");
+    const storage = await waitForMigratedReplicas(page);
+    const local = parseSave(storage.local[SAVE_KEY], "v0.9.0 migrated localStorage");
+    const indexed = parseSave(storage.indexed[SAVE_KEY], "v0.9.0 migrated IndexedDB");
+    assertRelease090Migrated(local, "v0.9.0 localStorage");
+    assertRelease090Migrated(indexed, "v0.9.0 IndexedDB");
+    invariant(storage.local[PRE_MIGRATION_KEY] === release090Serialized,
+      "v0.9.0 local pre-migration snapshot changed");
+    invariant(storage.indexed[PRE_MIGRATION_KEY] === release090Serialized,
+      "v0.9.0 IndexedDB pre-migration snapshot changed");
+    invariant(storage.local[LAST_KNOWN_GOOD_KEY] === release090Serialized,
+      "v0.9.0 local last-known-good snapshot changed");
+    invariant(storage.indexed[LAST_KNOWN_GOOD_KEY] === release090Serialized,
+      "v0.9.0 IndexedDB last-known-good snapshot changed");
+    const migratedOnce = serializeCampaignSave(inspectCampaignSaveCandidate(storage.local[SAVE_KEY]).save);
+    invariant(JSON.parse(migratedOnce).revision === local.revision,
+      "v0.9.0 migration was applied more than once");
+    return {
+      sourceSchemaVersion: 13,
+      targetSchemaVersion: local.schemaVersion,
+      preservedCategories: [
+        "owned", "discovered", "recruitable", "stages", "stars", "caps", "levels",
+        "equipment", "presets", "records", "survival", "settings", "audio", "receipts",
+      ],
+      preMigrationSnapshotPreserved: true,
+      lastKnownGoodPreserved: true,
+      idempotent: true,
     };
   });
 
@@ -738,6 +972,81 @@ try {
       },
     });
   }
+
+  await runCase("origin-isolation-and-manual-transfer", {
+    local: release090Serialized,
+    indexed: null,
+  }, async (page) => {
+    await waitForTitleReady(page, "物語を続ける");
+    const sourceStorage = await waitForMigratedReplicas(page);
+    const sourceSave = parseSave(sourceStorage.local[SAVE_KEY], "source-origin save");
+    assertRelease090Migrated(sourceSave, "source-origin save");
+
+    const downloadPromise = page.waitForEvent("download", { timeout });
+    await tap(page, page.getByRole("button", { name: "バックアップを書き出す", exact: true }));
+    const download = await downloadPromise;
+    const transferEnvelope = await download.createReadStream().then(async (stream) => {
+      const chunks = [];
+      for await (const chunk of stream) chunks.push(chunk);
+      return Buffer.concat(chunks).toString("utf8");
+    });
+
+    const targetBaseUrl = new URL(baseUrl);
+    targetBaseUrl.hostname = baseUrl.hostname === "localhost" ? "127.0.0.1" : "localhost";
+    invariant(targetBaseUrl.origin !== baseUrl.origin, "origin transfer did not select a distinct origin");
+    const targetPage = await page.context().newPage();
+    const targetDiagnostics = createDiagnostics(targetPage);
+    try {
+      await seedPage(targetPage, {}, targetBaseUrl);
+      const targetUrl = new URL(targetBaseUrl);
+      targetUrl.searchParams.set("safe", "iphone-landscape");
+      const response = await targetPage.goto(String(targetUrl), { waitUntil: "domcontentloaded", timeout });
+      invariant(response?.ok(), `target origin navigation failed: HTTP ${response?.status()}`);
+      await waitForTitleReady(targetPage, "物語を始める");
+      const targetFreshStorage = await waitForMigratedReplicas(targetPage);
+      const targetFresh = parseSave(targetFreshStorage.local[SAVE_KEY], "target-origin fresh save");
+      invariant(targetFresh.campaignStarted === false,
+        "distinct origin silently acquired the source origin save");
+      const targetEnvironment = await targetPage.locator("[data-save-environment]").evaluate((element) => ({
+        kind: element.getAttribute("data-save-environment"),
+        origin: element.getAttribute("data-save-origin"),
+        text: element.textContent,
+      }));
+      invariant(targetEnvironment.origin === targetBaseUrl.origin,
+        `target origin label mismatch: ${JSON.stringify(targetEnvironment)}`);
+      invariant(targetEnvironment.text.includes("自動共有されません"),
+        "target origin isolation notice missing");
+
+      await targetPage.locator("input.campaign-save-file").setInputFiles({
+        name: `nishijin-campaign-v${CURRENT_SCHEMA_VERSION}-backup.json`,
+        mimeType: "application/json",
+        buffer: Buffer.from(transferEnvelope, "utf8"),
+      });
+      await waitForTitleReady(targetPage, "物語を続ける");
+      const importedStorage = await waitForMigratedReplicas(targetPage);
+      const imported = parseSave(importedStorage.local[SAVE_KEY], "target-origin imported save");
+      assertRelease090Migrated(imported, "target-origin imported save", { imported: true });
+      invariant(imported.integrity === parseSave(
+        importedStorage.indexed[SAVE_KEY],
+        "target-origin imported IndexedDB",
+      ).integrity, "target-origin imported replicas diverged");
+
+      const sourceAfterTransfer = await readStorage(page);
+      invariant(sourceAfterTransfer.local[SAVE_KEY] === sourceStorage.local[SAVE_KEY],
+        "manual transfer mutated the source origin");
+      assertDiagnostics(targetDiagnostics, "origin-isolation target");
+      return {
+        sourceOrigin: baseUrl.origin,
+        targetOrigin: targetBaseUrl.origin,
+        targetStartedFresh: true,
+        automaticCrossOriginTransfer: false,
+        manualExportImportTransfer: true,
+        sourceOriginUnchanged: true,
+      };
+    } finally {
+      await targetPage.close();
+    }
+  });
 } finally {
   await browser.close();
 }
@@ -750,6 +1059,11 @@ const summary = {
     tag: "v0.7.1",
     releaseSha: RELEASE_071_SHA,
     sourceSchemaVersion: release071Fixture.schemaVersion,
+    targetSchemaVersion: CURRENT_SCHEMA_VERSION,
+  },
+  version090Fixture: {
+    releaseSha: "f2633c538756385f13d166d3adbcdd39b3a08b21",
+    sourceSchemaVersion: release090Fixture.schemaVersion,
     targetSchemaVersion: CURRENT_SCHEMA_VERSION,
   },
   viewport: { width: viewportWidth, height: viewportHeight },

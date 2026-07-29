@@ -1,0 +1,87 @@
+{
+  "version": "0.9.5",
+  "baseline": {
+    "version": "0.9.0",
+    "releaseSha": "f2633c538756385f13d166d3adbcdd39b3a08b21",
+    "saveKey": "nishijin-campaign-v1",
+    "sourceSchemaVersion": 13
+  },
+  "targetSchemaVersion": 14,
+  "playerFacingEnvironmentLabels": [
+    "github-pages",
+    "localhost",
+    "loopback",
+    "lan",
+    "preview"
+  ],
+  "migration": {
+    "revisionAdvancedOnce": true,
+    "idempotent": true,
+    "preMigrationSnapshotPreserved": true,
+    "lastKnownGoodPreserved": true,
+    "replicas": [
+      "localStorage",
+      "indexedDB"
+    ],
+    "preservedCategories": [
+      "owned",
+      "discovered",
+      "recruitable",
+      "stages",
+      "stars",
+      "caps",
+      "levels",
+      "equipment",
+      "presets",
+      "records",
+      "survival",
+      "outbreak",
+      "settings",
+      "audio",
+      "receipts",
+      "backup",
+      "recovery",
+      "export-import"
+    ]
+  },
+  "origin": {
+    "exercised": [
+      "127.0.0.1",
+      "localhost"
+    ],
+    "automaticCrossOriginTransfer": false,
+    "manualExportImportTransfer": true,
+    "sourceOriginUnchanged": true,
+    "formalPagesPlayerStorageAccessed": false
+  },
+  "browserMatrix": {
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "viewports": [
+      "1280x720",
+      "844x390",
+      "844x340"
+    ],
+    "passed": 78,
+    "failed": 0,
+    "diagnostics": {
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "requestFailures": 0,
+      "httpErrors": 0,
+      "overflow": 0
+    },
+    "rawSummary": "outputs/save-migration-browser-matrix/summary.json",
+    "runId": "2026-07-29T14-28-56-859Z-15796",
+    "runEvidenceDir": "outputs/save-migration-browser-matrix/run-2026-07-29T14-28-56-859Z-15796",
+    "rawSummarySha256": "1df609f2a6e7a00842f3ccfd509590c62788c3746c04c4cd1239169ea7b579b4",
+    "staleFailureArtifacts": 0
+  },
+  "limitations": [
+    "physical smartphone storage was not exercised",
+    "formal GitHub Pages player storage was not read or modified",
+    "no thermal or physical-device claim"
+  ]
+}

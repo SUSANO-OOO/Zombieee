@@ -325,6 +325,7 @@ import {
   weaponCueForUnit,
 } from "./productionAudio.js";
 import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
+import { describeSaveEnvironment } from "./saveEnvironment.js";
 import {
   AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
@@ -6714,6 +6715,7 @@ export function AshfallGame() {
     };
   }, [campaignSave.settings.graphicsQuality]);
   const [saveHydrated, setSaveHydrated] = useState(false);
+  const [saveEnvironment, setSaveEnvironment] = useState(() => describeSaveEnvironment(null));
   const [savePersistence, setSavePersistence] = useState<SavePersistenceState>("checking");
   const [saveRecovery, setSaveRecovery] = useState<SaveRecoveryState | null>(null);
   const [saveMutationPending, setSaveMutationPending] = useState(false);
@@ -6832,6 +6834,7 @@ export function AshfallGame() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      setSaveEnvironment(describeSaveEnvironment(window.location));
       setQaMode(resolveLocalQaMode(window.location.hostname, window.location.search) as QaMode | null);
       setQaScenario(resolveLocalQaScenario(window.location.hostname, window.location.search));
     }, 0);
@@ -17435,6 +17438,7 @@ export function AshfallGame() {
           upgradeFeedback={upgradeFeedback}
           personnelInitialMode={personnelInitialMode}
           savePersistence={savePersistence}
+          saveEnvironment={saveEnvironment}
           readStoryEventIds={campaignSave.readStoryEventIds}
           autoSkipReadStory={campaignSave.autoSkipReadStory}
           forceStoryReplay={forceStoryReplay}
