@@ -801,6 +801,7 @@ export const WEAPON_PROFILES = deepFreeze({
     casing: true,
     damageWeights: [1],
     shotOffsetsSeconds: [0],
+    projectileTravelSeconds: .12,
   },
   sniper: {
     id: "sniper",
@@ -813,6 +814,7 @@ export const WEAPON_PROFILES = deepFreeze({
     casing: true,
     damageWeights: [1],
     shotOffsetsSeconds: [0],
+    projectileTravelSeconds: .12,
   },
   "machine-gun": {
     id: "machine-gun",
@@ -837,6 +839,7 @@ export const WEAPON_PROFILES = deepFreeze({
     casing: true,
     damageWeights: [1],
     shotOffsetsSeconds: [0],
+    projectileTravelSeconds: .12,
   },
   deployable: {
     id: "deployable",
@@ -861,6 +864,7 @@ export const WEAPON_PROFILES = deepFreeze({
     casing: false,
     damageWeights: [1],
     shotOffsetsSeconds: [0],
+    projectileTravelSeconds: .12,
   },
   "plasma-blade": {
     id: "plasma-blade",
@@ -991,7 +995,9 @@ function semanticProceduralPose(state, progress) {
   const pulse = Math.sin(Math.PI * p);
   switch (state) {
     case "deploy":
-      return { offsetX: -2.2 * (1 - p), offsetY: 0, rotationRadians: -.035 * (1 - p), scaleX: .96 + .04 * p, scaleY: .88 + .12 * p, opacity: .72 + .28 * p };
+      // Door and ramp geometry own deployment occlusion. Fading the sprite
+      // here makes the revealed body blend through the CRAWLER and stage.
+      return { offsetX: -2.2 * (1 - p), offsetY: 0, rotationRadians: -.035 * (1 - p), scaleX: .96 + .04 * p, scaleY: .88 + .12 * p, opacity: 1 };
     case "start-move":
       return { offsetX: 1.8 * pulse, offsetY: 0, rotationRadians: .045 * pulse, scaleX: 1.02, scaleY: 1 - .035 * pulse, opacity: 1 };
     case "stop-move":
@@ -1031,12 +1037,62 @@ const REMAINING_TEN_POSE_TUNING = Object.freeze({
   "miyamoto-musashi": { stride: 1.9, lean: .055, recoil: 4.8, brace: .072, special: 6.2 },
 });
 
+const LOCOMOTION_POSE_TUNING = Object.freeze({
+  scout: { stride: 2.4, lean: .046 },
+  ranger: { stride: 1.75, lean: .031 },
+  brute: { stride: 1.8, lean: .052 },
+  brawler: { stride: 2.7, lean: .068 },
+  gunner: { stride: 1.9, lean: .036 },
+  medic: { stride: 1.85, lean: .034 },
+  "crazy-king": { stride: 2.05, lean: .043 },
+  kumaverson: { stride: 1.75, lean: .044 },
+  babayaga: { stride: 1.8, lean: .032 },
+  guardian: { stride: 1.7, lean: .041 },
+  engineer: { stride: 1.85, lean: .036 },
+  zakimiya: { stride: 2.05, lean: .049 },
+  tky: { stride: 2.15, lean: .047 },
+  "mrs-chiha": { stride: 1.8, lean: .034 },
+  "miyamoto-musashi": { stride: 2.25, lean: .058 },
+  "mayo-chan": { stride: 2.9, lean: .064 },
+});
+
+const LOCOMOTION_STRIDE_DISTANCE = Object.freeze({
+  scout: 12,
+  ranger: 14,
+  brute: 17,
+  brawler: 13,
+  gunner: 16,
+  medic: 15,
+  "crazy-king": 14,
+  kumaverson: 17,
+  babayaga: 15,
+  guardian: 17,
+  engineer: 15,
+  zakimiya: 14,
+  tky: 13,
+  "mrs-chiha": 16,
+  "miyamoto-musashi": 13,
+  "mayo-chan": 9,
+});
+
 function playableProceduralPose(kind, state, progress) {
   if (!PLAYABLE_COMBAT_KINDS.includes(kind)) return null;
   const p = Math.max(0, Math.min(1, Number(progress) || 0));
   const pulse = Math.sin(Math.PI * p);
   const stride = Math.sin(Math.PI * p * 2);
   const rapid = Math.sin(Math.PI * p * 10);
+  const locomotion = LOCOMOTION_POSE_TUNING[kind];
+  if (state === "move" && locomotion) {
+    const contact = Math.abs(Math.cos(Math.PI * p * 2));
+    return {
+      offsetX: locomotion.stride * stride,
+      offsetY: 0,
+      rotationRadians: locomotion.lean * stride,
+      scaleX: 1.012 + (1 - contact) * .018,
+      scaleY: .988 - (1 - contact) * .018,
+      opacity: 1,
+    };
+  }
   const tuning = REMAINING_TEN_POSE_TUNING[kind];
   if (tuning) {
     if (state === "idle") {
@@ -1160,8 +1216,10 @@ function playableProceduralPose(kind, state, progress) {
 }
 
 function combatProceduralPose(kind, state, progress) {
-  return playableProceduralPose(kind, state, progress)
+  const pose = playableProceduralPose(kind, state, progress)
     ?? semanticProceduralPose(state, progress);
+  if (!PLAYABLE_COMBAT_KINDS.includes(kind) || pose.opacity === 1) return pose;
+  return { ...pose, opacity: 1 };
 }
 
 export function sampleAnimationClip(kind, state, elapsedSeconds = 0) {
@@ -1182,6 +1240,8 @@ export function sampleAnimationClip(kind, state, elapsedSeconds = 0) {
         frameElapsedSeconds: local - cursor,
         frameDurationSeconds: currentFrame.durationSeconds,
         clipDurationSeconds: current.durationSeconds,
+        clipElapsedSeconds: local,
+        clipProgress: current.durationSeconds > 0 ? local / current.durationSeconds : 0,
         events: currentFrame.events,
         movement: current.movement,
         recovery: current.recovery,
@@ -1287,6 +1347,7 @@ export function createCombatAnimationRuntime({
     lastEvents: [],
     lastX: Number(x) || 0,
     lastY: Number(y) || 0,
+    stateTravelDistance: 0,
   };
 }
 
@@ -1341,6 +1402,19 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
     stateElapsed = 0;
   }
   const stateChanged = state !== previous.state;
+  const stateTravelDistance = state === "move"
+    ? stateChanged
+      ? movedDistance
+      : Math.max(0, Number(previous.stateTravelDistance) || 0) + movedDistance
+    : 0;
+  if (state === "move") {
+    const current = animationClipFor(observation.kind ?? "walker", state);
+    const strideDistance = LOCOMOTION_STRIDE_DISTANCE[observation.kind]
+      ?? Math.max(10, current.durationSeconds * 44);
+    stateElapsed = strideDistance > 0
+      ? stateTravelDistance / strideDistance * current.durationSeconds
+      : 0;
+  }
   const eventStart = stateChanged || previous.eventCursorInitialized !== true
     ? 0
     : previous.elapsedSeconds === 0
@@ -1364,6 +1438,7 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
     lastEvents: lastEvents.map(({ type, absoluteAt }) => ({ type, at: absoluteAt })),
     lastX: x,
     lastY: y,
+    stateTravelDistance,
   };
 }
 
@@ -1441,6 +1516,54 @@ export function sampleMrsChihaLauncherBash(elapsedSeconds = 0) {
 
 export function mrsChihaLauncherBashDuration() {
   return MRS_CHIHA_LAUNCHER_BASH.durationSeconds;
+}
+
+export function linkedWeaponTransactionId({
+  sourceId,
+  attackSequence,
+  targetKind,
+  targetId = null,
+  targetObjectId = null,
+  shotIndex = 0,
+} = {}) {
+  return [
+    Math.floor(Number(sourceId) || 0),
+    Math.floor(Number(attackSequence) || 0),
+    String(targetKind ?? "unknown"),
+    targetId ?? targetObjectId ?? "none",
+    Math.floor(Number(shotIndex) || 0),
+  ].join(":");
+}
+
+export function cancelPendingWeaponTransaction(events = [], transactionId = null) {
+  if (!transactionId) return Object.freeze([...(Array.isArray(events) ? events : [])]);
+  return Object.freeze((Array.isArray(events) ? events : []).filter(
+    (event) => event?.transactionId !== transactionId,
+  ));
+}
+
+export function capPendingWeaponTransactions(events = [], maximumEvents = 64) {
+  const source = Array.isArray(events) ? events : [];
+  const limit = Math.max(0, Math.floor(Number(maximumEvents) || 0));
+  if (source.length <= limit) return Object.freeze([...source]);
+  if (limit === 0) return Object.freeze([]);
+  const selectedIndexes = new Set();
+  const selectedTransactions = new Set();
+  for (let index = source.length - 1; index >= 0 && selectedIndexes.size < limit; index -= 1) {
+    const transactionId = source[index]?.transactionId;
+    if (!transactionId) {
+      selectedIndexes.add(index);
+      continue;
+    }
+    if (selectedTransactions.has(transactionId)) continue;
+    const transactionIndexes = source
+      .map((event, eventIndex) => event?.transactionId === transactionId ? eventIndex : -1)
+      .filter((eventIndex) => eventIndex >= 0);
+    if (selectedIndexes.size > 0 && selectedIndexes.size + transactionIndexes.length > limit) continue;
+    for (const transactionIndex of transactionIndexes) selectedIndexes.add(transactionIndex);
+    selectedTransactions.add(transactionId);
+  }
+  return Object.freeze(source.filter((_event, index) => selectedIndexes.has(index)));
 }
 
 export function advancePendingWeaponHits(events = [], elapsedSeconds = 0) {

@@ -4,12 +4,19 @@ import path from "node:path";
 
 import { chromium, webkit } from "playwright";
 import { MANUAL_ABILITY_REGISTRY } from "../app/manualAbilities.js";
+import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
 const baseUrl = new URL(process.env.V095_REPRESENTATIVE_SIX_QA_BASE_URL ?? "http://127.0.0.1:4173/");
 const timeout = Number(process.env.V095_REPRESENTATIVE_SIX_QA_TIMEOUT_MS ?? 45_000);
 const proofScope = process.env.V095_REPRESENTATIVE_SIX_QA_SCOPE ?? "representative-six";
+if (!["representative-six", "remaining-ten"].includes(proofScope)) {
+  throw new Error(`Unsupported V095_REPRESENTATIVE_SIX_QA_SCOPE: ${proofScope}`);
+}
 const evidenceDir = path.resolve(
-  proofScope === "remaining-ten" ? "outputs/v095-remaining-ten" : "outputs/v095-representative-six",
+  process.env.V095_REPRESENTATIVE_SIX_QA_EVIDENCE_DIR
+    ?? (proofScope === "remaining-ten"
+      ? "outputs/v095-remaining-ten"
+      : "outputs/v095-representative-six"),
 );
 const engines = (process.env.V095_REPRESENTATIVE_SIX_QA_ENGINES ?? "chromium,webkit")
   .split(",")
@@ -82,6 +89,7 @@ const specialCaptureDelay = {
 };
 
 await mkdir(evidenceDir, { recursive: true });
+const buildIdentityAtStart = await productionBuildIdentity();
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
@@ -140,14 +148,17 @@ async function captureCanvas(page, caseName, label, ownerId, extra = {}) {
     label,
     ownerId,
     kind: owner.kind,
+    battleTime: snapshot.time,
     x: owner.x,
     y: owner.y,
+    speed: owner.speed,
     animationState: owner.animationPresentation.state,
     animationDirection: owner.animationPresentation.direction,
     animationSpriteState: owner.animationPresentation.sampledSpriteState,
     animationPose: owner.animationPresentation.pose,
     attackSequence: owner.attackSequence,
     manualPhase: owner.manualAbility?.phase ?? null,
+    crazyKingAbilityIndicatorCount: snapshot.crazyKingAbilityIndicatorCount,
     manualReceipts: snapshot.manualAbilityReceipts
       .filter(({ ownerId: receiptOwnerId }) => receiptOwnerId === ownerId)
       .map(({ eventType, salvoIndex, mode }) => ({
@@ -256,10 +267,19 @@ async function pauseAtRuntimeAttackPhase(page, ownerId, requestedPhase, {
   );
 }
 
-async function exerciseRuntimeAttack(page, caseName, quality, kind, prepared) {
+async function exerciseRuntimeAttack(
+  page,
+  caseName,
+  quality,
+  kind,
+  prepared,
+  armOptions = {},
+) {
   const armed = await page.evaluate(
-    (ownerId) => window.__ASHFALL_BATTLE_QA__.armRepresentativeSixRuntimeAttackProof(ownerId),
-    prepared.ownerId,
+    ({ ownerId, options }) => (
+      window.__ASHFALL_BATTLE_QA__.armRepresentativeSixRuntimeAttackProof(ownerId, options)
+    ),
+    { ownerId: prepared.ownerId, options: armOptions },
   );
   invariant(armed?.weaponProfile === expectedWeapons[kind],
     `${quality}/${kind}: runtime attack fixture weapon mismatch`);
@@ -351,6 +371,178 @@ async function exerciseRuntimeAttack(page, caseName, quality, kind, prepared) {
   return { armed, frames };
 }
 
+async function exerciseRaiderRetarget(page, caseName, prepared, runtimeAttack) {
+  const { armed } = runtimeAttack;
+  invariant(Number.isInteger(armed.alternateTargetId),
+    "gunner: alternate retarget fixture missing");
+  const beforeRemoval = await page.evaluate(({ ownerId, alternateTargetId }) => {
+    const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
+    const owner = snapshot.fighters.find(({ id }) => id === ownerId);
+    const alternate = snapshot.fighters.find(({ id }) => id === alternateTargetId);
+    return {
+      time: snapshot.time,
+      owner,
+      alternate,
+      cueCount: window.__ASHFALL_BATTLE_QA__
+        .sampleRepresentativeSixRuntimeAttackProof(ownerId)?.audioCueRequests.length ?? 0,
+    };
+  }, { ownerId: prepared.ownerId, alternateTargetId: armed.alternateTargetId });
+  invariant(beforeRemoval.owner && beforeRemoval.alternate,
+    "gunner: retarget participants disappeared");
+  const removal = await page.evaluate(
+    (targetId) => window.__ASHFALL_BATTLE_QA__.removeManualAbilityProofTarget(targetId),
+    armed.targetId,
+  );
+  invariant(removal?.removed === true, "gunner: first target removal failed");
+  const alternateActivated = await page.evaluate(
+    (targetId) => window.__ASHFALL_BATTLE_QA__.activateRepresentativeSixAlternateTarget(targetId),
+    armed.alternateTargetId,
+  );
+  invariant(alternateActivated === true, "gunner: alternate target activation failed");
+  const afterRemoval = await page.evaluate((ownerId) => {
+    const owner = window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(
+      ({ id }) => id === ownerId,
+    );
+    return owner ? {
+      x: owner.x,
+      y: owner.y,
+      targetId: owner.targetId,
+      attackSequence: owner.attackSequence,
+    } : null;
+  }, prepared.ownerId);
+  invariant(
+    afterRemoval
+      && afterRemoval.x === beforeRemoval.owner.x
+      && afterRemoval.y === beforeRemoval.owner.y
+      && afterRemoval.targetId === null,
+    `gunner: target removal teleported or preselected the owner ${JSON.stringify({
+      before: beforeRemoval.owner,
+      afterRemoval,
+    })}`,
+  );
+
+  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+  await pauseAtRuntimeAttackPhase(page, prepared.ownerId, "wind-up", {
+    initialAttackSequence: afterRemoval.attackSequence,
+  });
+  const windupSample = await page.evaluate(
+    (ownerId) => window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixRuntimeAttackProof(ownerId),
+    prepared.ownerId,
+  );
+  const windupFrame = await captureCanvas(
+    page,
+    caseName,
+    "auto-gunner-07-retarget-wind-up-left",
+    prepared.ownerId,
+    { runtimeAttackProof: windupSample },
+  );
+  invariant(
+    windupSample?.targetId === armed.alternateTargetId
+      && windupFrame.animationDirection === "left",
+    `gunner: second aim did not retarget left ${JSON.stringify({ windupSample, windupFrame })}`,
+  );
+  const maximumTravel = windupFrame.speed
+    * Math.max(0, windupFrame.battleTime - beforeRemoval.time)
+    + 8;
+  invariant(
+    windupFrame.x <= beforeRemoval.owner.x
+      && windupFrame.x >= armed.alternateTargetX
+      && beforeRemoval.owner.x - windupFrame.x <= maximumTravel,
+    `gunner: retarget movement exceeded runtime speed ${JSON.stringify({
+      beforeX: beforeRemoval.owner.x,
+      windupX: windupFrame.x,
+      alternateTargetX: armed.alternateTargetX,
+      maximumTravel,
+    })}`,
+  );
+
+  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+  await pauseAtRuntimeAttackPhase(page, prepared.ownerId, "active", {
+    initialAttackSequence: afterRemoval.attackSequence,
+    expectedAudioCueIds: armed.expectedAudioCueIds,
+  });
+  const activeSample = await page.evaluate(
+    (ownerId) => window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixRuntimeAttackProof(ownerId),
+    prepared.ownerId,
+  );
+  const activeFrame = await captureCanvas(
+    page,
+    caseName,
+    "auto-gunner-08-retarget-active-left",
+    prepared.ownerId,
+    { runtimeAttackProof: activeSample },
+  );
+  invariant(
+    activeSample?.targetId === armed.alternateTargetId
+      && activeSample.attackSequence > afterRemoval.attackSequence
+      && activeFrame.animationDirection === "left",
+    "gunner: second left-facing attack did not start",
+  );
+  invariant(
+    activeSample.targetHp < armed.initialAlternateTargetHp
+      || activeSample.pendingHits.some(({ targetId, applyDamage }) => (
+        targetId === armed.alternateTargetId && applyDamage
+      )),
+    "gunner: second target received neither damage nor a pending damage event",
+  );
+  invariant(activeSample.audioCueRequests.length > beforeRemoval.cueCount,
+    "gunner: second attack did not request a fresh production SE");
+  invariant(activeFrame.shots.some(({ targetId, casing, recoil }) => (
+    targetId === armed.alternateTargetId && casing === true && recoil > 0
+  )), "gunner: second attack lost projectile/casing/recoil identity");
+
+  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+  await pauseAtRuntimeAttackPhase(page, prepared.ownerId, "recovery", {
+    initialAttackSequence: afterRemoval.attackSequence,
+  });
+  const recoveryFrame = await captureCanvas(
+    page,
+    caseName,
+    "auto-gunner-09-retarget-recovery-left",
+    prepared.ownerId,
+  );
+  invariant(recoveryFrame.animationDirection === "left",
+    "gunner: recovery flipped away from the second target");
+
+  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+  await page.waitForFunction(
+    ({ ownerId, alternateTargetId, initialSequence, initialHp }) => {
+      const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
+      const owner = snapshot.fighters.find(({ id }) => id === ownerId);
+      const alternate = snapshot.fighters.find(({ id }) => id === alternateTargetId);
+      const proof = window.__ASHFALL_BATTLE_QA__
+        .sampleRepresentativeSixRuntimeAttackProof(ownerId);
+      return owner?.attackSequence > initialSequence
+        && alternate?.hp < initialHp
+        && proof?.phase === "idle";
+    },
+    {
+      ownerId: prepared.ownerId,
+      alternateTargetId: armed.alternateTargetId,
+      initialSequence: afterRemoval.attackSequence,
+      initialHp: armed.initialAlternateTargetHp,
+    },
+    { timeout },
+  );
+  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
+  const settled = await page.evaluate(({ ownerId, alternateTargetId }) => {
+    const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
+    return {
+      owner: snapshot.fighters.find(({ id }) => id === ownerId) ?? null,
+      alternate: snapshot.fighters.find(({ id }) => id === alternateTargetId) ?? null,
+    };
+  }, { ownerId: prepared.ownerId, alternateTargetId: armed.alternateTargetId });
+  return {
+    removal,
+    beforeRemoval,
+    afterRemoval,
+    windupFrame,
+    activeFrame,
+    recoveryFrame,
+    settled,
+  };
+}
+
 async function exerciseStaticVisuals(page, caseName) {
   const qualityProofs = [];
   for (const quality of qualityModes) {
@@ -376,8 +568,26 @@ async function exerciseStaticVisuals(page, caseName) {
         await stepMotion(page, prepared.ownerId, "move-left", .07);
         frames.push(await captureCanvas(page, caseName, `${quality}-${kind}-03-turn-left`, prepared.ownerId));
       }
-      const runtimeAttack = await exerciseRuntimeAttack(page, caseName, quality, kind, prepared);
+      const raiderRetargetRequired = quality === "auto" && kind === "gunner";
+      const runtimeAttack = await exerciseRuntimeAttack(
+        page,
+        caseName,
+        quality,
+        kind,
+        prepared,
+        raiderRetargetRequired ? { alternateTarget: true } : {},
+      );
       frames.push(...runtimeAttack.frames);
+      const raiderRetargetProof = raiderRetargetRequired
+        ? await exerciseRaiderRetarget(page, caseName, prepared, runtimeAttack)
+        : null;
+      if (raiderRetargetProof) {
+        frames.push(
+          raiderRetargetProof.windupFrame,
+          raiderRetargetProof.activeFrame,
+          raiderRetargetProof.recoveryFrame,
+        );
+      }
       if (quality === "auto") {
         invariant(new Set(frames.map(({ canvasSha256 }) => canvasSha256)).size >= 5,
           `${kind}: player-facing phases collapsed to the same Canvas image`);
@@ -389,6 +599,7 @@ async function exerciseStaticVisuals(page, caseName) {
         weaponProfile: prepared.weaponProfile,
         anchor: prepared.anchor,
         runtimeAttack: runtimeAttack.armed,
+        raiderRetargetProof,
         frames,
       });
     }
@@ -515,8 +726,29 @@ async function activateSpecial(page, caseName, kind, speed) {
     prepared.ownerId,
     { timeout },
   );
-  await page.waitForTimeout(Math.max(70, Math.round(specialCaptureDelay[kind] / speed)));
-  await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
+  await page.waitForFunction(
+    ({ ownerId, minimumElapsedSeconds }) => {
+      const qa = window.__ASHFALL_BATTLE_QA__;
+      const snapshot = qa.getSnapshot();
+      const effect = snapshot.manualAbilityVfx.find(
+        ({ ownerId: effectOwnerId }) => effectOwnerId === ownerId,
+      );
+      const sample = qa.sampleRepresentativeSixSpecialProof(ownerId);
+      if ((effect?.elapsed ?? 0) < minimumElapsedSeconds
+        || sample?.sample?.state !== "special") {
+        return false;
+      }
+      // Freeze on the authored player-facing sample in the same polling turn.
+      // A separate wall-clock delay can overshoot short clips at 2x speed.
+      qa.setRepresentativeSixProofPaused(true);
+      return true;
+    },
+    {
+      ownerId: prepared.ownerId,
+      minimumElapsedSeconds: specialCaptureDelay[kind] / 1_000,
+    },
+    { timeout, polling: 10 },
+  );
   const specialSample = await page.evaluate(
     (ownerId) => window.__ASHFALL_BATTLE_QA__.sampleRepresentativeSixSpecialProof(ownerId),
     prepared.ownerId,
@@ -536,6 +768,10 @@ async function activateSpecial(page, caseName, kind, speed) {
   );
   invariant(frame.manualVfx.some(({ kind: effectKind }) => effectKind === kind),
     `${kind}/${speed}x: dedicated manual VFX missing`);
+  invariant(
+    frame.crazyKingAbilityIndicatorCount === (kind === "crazy-king" ? 1 : 0),
+    `${kind}/${speed}x: windup/active indicator count ${frame.crazyKingAbilityIndicatorCount}`,
+  );
   if (specialSample.phase !== "recovery") {
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
     await pauseAtManualPhase(page, prepared.ownerId, "recovery");
@@ -588,6 +824,8 @@ async function activateSpecial(page, caseName, kind, speed) {
     prepared.ownerId,
     { speed, specialSample: recoverySample },
   );
+  invariant(recoveryFrame.crazyKingAbilityIndicatorCount === 0,
+    `${kind}/${speed}x: indicator remained after active-end`);
   await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
   await waitForSpecialSettlement(page, kind, prepared.ownerId);
   const settled = await page.evaluate((ownerId) => {
@@ -596,6 +834,7 @@ async function activateSpecial(page, caseName, kind, speed) {
     return {
       phase: owner?.manualAbility?.phase ?? null,
       speed: snapshot.survivalRun?.speed ?? 1,
+      crazyKingAbilityIndicatorCount: snapshot.crazyKingAbilityIndicatorCount,
       receipts: snapshot.manualAbilityReceipts
         .filter(({ ownerId: receiptOwnerId }) => receiptOwnerId === ownerId)
         .map(({ eventType, salvoIndex }) => ({ eventType, salvoIndex: salvoIndex ?? null })),
@@ -604,6 +843,8 @@ async function activateSpecial(page, caseName, kind, speed) {
   invariant(settled.speed === speed, `${kind}: requested ${speed}x but observed ${settled.speed}x`);
   invariant(settled.receipts.filter(({ eventType }) => eventType === "start").length === 1,
     `${kind}/${speed}x: activation receipt was not singular`);
+  invariant(settled.crazyKingAbilityIndicatorCount === 0,
+    `${kind}/${speed}x: indicator remained in cooldown`);
   if (kind === "gunner") {
     invariant(
       JSON.stringify(settled.receipts
@@ -819,10 +1060,16 @@ for (const engine of engines) {
   }
 }
 
+const buildIdentityAtEnd = await productionBuildIdentity();
 const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl: String(baseUrl),
   proofScope,
+  buildIdentity: buildIdentityAtEnd,
+  buildIdentityAtStart,
+  buildIdentityStable: (
+    buildIdentityAtStart.combinedSha256 === buildIdentityAtEnd.combinedSha256
+  ),
   results,
   totals: {
     cases: results.length,
@@ -836,6 +1083,9 @@ await writeFile(
   "utf8",
 );
 
+if (!summary.buildIdentityStable) {
+  throw new Error("Production dist changed while representative animation QA was running");
+}
 if (summary.totals.failed > 0) {
   console.error(JSON.stringify(summary, null, 2));
   process.exitCode = 1;

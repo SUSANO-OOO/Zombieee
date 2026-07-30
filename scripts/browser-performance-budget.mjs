@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
 const configuredBaseUrl = process.env.PERF_QA_BASE_URL?.trim() || null;
 let baseUrl = new URL(configuredBaseUrl ?? "http://127.0.0.1/");
@@ -179,6 +180,7 @@ async function prepareRequestedScenario(page) {
 }
 
 const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] };
+const buildIdentityAtStart = await productionBuildIdentity(projectRoot);
 const server = await ensureLocalServer();
 const target = new URL(baseUrl);
 target.search = new URLSearchParams({ qa: 'stress', safe: 'iphone-landscape' }).toString();
@@ -610,7 +612,14 @@ try {
     : maxConsecutiveRafStallsOver100Ms <= 1
       && raw.maxFrameGapMs <= 1_000
       && unaccountedFrameGapPercent <= 1;
+  const buildIdentityAtEnd = await productionBuildIdentity(projectRoot);
+  const buildIdentityStable = (
+    buildIdentityAtStart.scope === "dist-recursive"
+    && buildIdentityAtEnd.scope === "dist-recursive"
+    && buildIdentityAtStart.combinedSha256 === buildIdentityAtEnd.combinedSha256
+  );
   const gateChecks = {
+    productionBuildIdentityStable: buildIdentityStable,
     durationAtLeast15Minutes: durationMs >= 15 * 60_000,
     battleActiveAtLeast95Percent: battleCoveragePercent >= 95,
     frameSamplesSufficient: frameTimes.length >= minimumFrameSamples,
@@ -645,6 +654,9 @@ try {
   const summary = {
     resultVersion,
     runMode,
+    buildIdentity: buildIdentityAtEnd,
+    buildIdentityAtStart,
+    buildIdentityStable,
     engine: engineName,
     viewport: { width, height },
     deviceScaleFactor,

@@ -1,0 +1,100 @@
+{
+  "lockVersion": "0.9.5-acceptance-report-lock-v1",
+  "generatedAt": "2026-07-30T22:47:07.187Z",
+  "productSourceCommitSha": "dcf8fbc0baa665c9c7563b559385d1fa97e34ea1",
+  "finalProductionBuildSha256": "2d88fb68d12d8592c44f33f98fd2410c8b241720fbcf690c6bd53dbcf7e4507b",
+  "reports": {
+    "residualAttack": {
+      "path": "outputs/acceptance-final/residual-attack-full-final/summary.json",
+      "sha256": "a83a040028427d574223293309f227f21c5b2906b6ce546f993df9f91e97f0f2"
+    },
+    "residualDeployment": {
+      "path": "outputs/acceptance-final/residual-deployment-full-final/summary.json",
+      "sha256": "404cd0d83763c858c53c7a07243ae9f81bfe2117b2e1d299cc846e63a06cb46e"
+    },
+    "deploymentSequence": {
+      "path": "outputs/acceptance-final/deployment-sequence-final/summary.json",
+      "sha256": "0a01023e8cf17bff144137f9086908e3217ba3b24a85cb55d08b55fc71c489a8"
+    },
+    "deploymentSequenceBefore": {
+      "path": "outputs/acceptance-final/deployment-sequence-before-final/summary.json",
+      "sha256": "7a4e9a5e3cacd1d5df311adcfd8a04a921b658c7a42e41a927ac1e4c6409fbe8"
+    },
+    "manualAbilities": {
+      "path": "outputs/acceptance-final/manual-abilities-final/results.json",
+      "sha256": "1e3f499f29ad06cc611dc08b49bfcac3dc4c1f0b15df06d0d22d7dd0aee175c1"
+    },
+    "representativeSix": {
+      "path": "outputs/acceptance-final/representative-six-final/summary.json",
+      "sha256": "cbd530e333c9ff1566cfce2573ad9b885b27d12b3dd9d12abe51a30f1590e1b8"
+    },
+    "remainingTen": {
+      "path": "outputs/acceptance-final/remaining-ten-final/summary.json",
+      "sha256": "4191536d41e534f1bd0e54ff9fa4ffaa2af7d4138d2c297e752ffd5a4a3c73c9"
+    },
+    "aiMission": {
+      "path": "outputs/acceptance-final/ai-mission-final/summary.json",
+      "sha256": "4ab54c56aaaabec3eef20134b2603e7fa0ff2ec958e41a55d0cbf4fc8a4b7cdd"
+    },
+    "routeCart": {
+      "path": "outputs/acceptance-final/route-cart-final/summary.json",
+      "sha256": "e0f646adde474e271b6f9bc8c438d9eeb45392a2e76c94e820d73b4d5e896f1b"
+    },
+    "survival": {
+      "path": "outputs/acceptance-final/survival-final/results.json",
+      "sha256": "75047db9963fbb4988e26019825ae35b5c0640aaca33692f94870a277a439473"
+    },
+    "outbreak": {
+      "path": "outputs/acceptance-final/outbreak-final/report.json",
+      "sha256": "e83347ea23f96a5c06789b94a0e08fd5f6a6b129ade428a99889065cc1275a1e"
+    },
+    "enemyVfx": {
+      "path": "outputs/acceptance-final/enemy-vfx-final/summary.json",
+      "sha256": "e9304ab314a44bb3038e20098100594bcecbdc33207e0148b55878dd7b1e860c"
+    },
+    "crawlerDefense": {
+      "path": "outputs/acceptance-final/crawler-defense-final/summary.json",
+      "sha256": "e050aaacc46fd2dfe24120ed5e7d6edbe93053e0e797f6b251ca46532fa43a91"
+    },
+    "battleSpace": {
+      "path": "outputs/acceptance-final/battle-space-final/summary.json",
+      "sha256": "0493f5b8a6d8fcbd46eb5576b849356b9e14995a232a7441a010467e3b5cb810"
+    },
+    "combatPresentation": {
+      "path": "outputs/acceptance-final/combat-presentation-final/summary.json",
+      "sha256": "fd9f7be1b779fbe95d4d7f096039353ce981d6568210e36048c42f0efb2d8189"
+    },
+    "mobileLifecycle": {
+      "path": "outputs/acceptance-final/mobile-lifecycle-final/summary.json",
+      "sha256": "13d419f8aaa22f2ef1866ee92c9e5778f70c340c17971e093f778f77ba672bef"
+    },
+    "assetDecodeAudio": {
+      "path": "outputs/acceptance-final/asset-decode-audio-final/summary.json",
+      "sha256": "17ea27938952c42cd4bee95affa588a5d84235025a4d43c1b112b784aeffb3b7"
+    },
+    "saveOrigin": {
+      "path": "docs/qa/v095/save-origin/save-origin-summary.json",
+      "sha256": "2e0a39662a3b8728fc778c1410f048d44184a0306d5fe43b07c593509b82f00f"
+    },
+    "employmentUnlock": {
+      "path": "docs/qa/v095/employment-unlock/employment-unlock-summary.json",
+      "sha256": "d073b7f8d0be6e132a99b831e947430efd057d5d38947e1a7741a14b1ad5beb9"
+    },
+    "priorRc": {
+      "path": "docs/qa/v095/rc/rc-summary.json",
+      "sha256": "5928e9373e943b6c810a32f7f41d0e83ac20e9970bb6fc09b3004dfc5bcc77bf"
+    },
+    "performanceNormal": {
+      "path": "outputs/acceptance-final/performance-normal-auto-15m-final.json",
+      "sha256": "442d6ebe365dac659b9c5d1a34be453522b6cadd2199738eeb25da8425d1b50f"
+    },
+    "performanceSurvivalAuto": {
+      "path": "outputs/acceptance-final/performance-survival-auto-15m-final.json",
+      "sha256": "91fe44d44f27e6455eba67627bbc8c735fa143ff700eb03489bf03610ff1a3bf"
+    },
+    "performanceSurvivalPowerSave": {
+      "path": "outputs/acceptance-final/performance-survival-power-save-15m-final.json",
+      "sha256": "19b5b17d04d039850719b58f2c616d5d8e8e15031211cb4be5a99a8d702e1dee"
+    }
+  }
+}

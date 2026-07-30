@@ -1219,7 +1219,10 @@ test("machinegun burst damage is deferred to visual impact for fighters and the 
   assert.match(pendingResolution, /if \(hit\.eventKind === "muzzle"\)[\s\S]*addWeaponShot/);
   assert.match(pendingResolution, /if \(!hit\.applyDamage\) continue/);
   assert.match(pendingResolution, /if \(hit\.targetKind === "enemy-base"\)[\s\S]*g\.barricadeHp = Math\.max\(0, g\.barricadeHp - hit\.damage\)/);
-  assert.match(pendingResolution, /target\.hp -= hit\.damage[\s\S]*target\.flash = Math\.max/);
+  assert.match(
+    pendingResolution,
+    /target\.hp = Math\.max\(0, target\.hp - hit\.damage\)[\s\S]*target\.flash = Math\.max/,
+  );
   assert.match(fighterBurst, /eventKind: "muzzle"[\s\S]*eventKind: "impact"/);
   assert.match(fighterBurst, /remainingSeconds: event\.hitOffsetSeconds[\s\S]*damage: event\.damage/);
   assert.match(structureBurst, /eventKind: "muzzle"[\s\S]*eventKind: "impact"/);

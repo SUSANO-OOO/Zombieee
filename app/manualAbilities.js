@@ -848,13 +848,19 @@ export function selectManualAbilityTarget({ owner, fighters = [] } = {}) {
 }
 
 export function canActivateManualAbility({ fighter, fighters = [] } = {}) {
-  if (!fighter?.manualAbility
-    || fighter.manualAbility.phase !== "ready"
-    || fighter.side !== "human"
-    || Number(fighter.hp) <= 0
-    || fighter.combatReady !== true
-    || fighter.gateEntering === true) return false;
+  if (!isManualAbilityReady(fighter)) return false;
   return selectManualAbilityTarget({ owner: fighter, fighters }) !== null;
+}
+
+export function isManualAbilityReady(fighter) {
+  return Boolean(fighter?.manualAbility
+    && fighter.manualAbility.phase === "ready"
+    && fighter.side === "human"
+    && Number(fighter.hp) > 0
+    && fighter.combatReady === true
+    && fighter.gateEntering !== true
+    && (Number(fighter.stunned) || 0) <= 0
+    && fighter.contained !== true);
 }
 
 export function manualAbilityLocksNormalAction(runtime) {
@@ -1614,10 +1620,38 @@ export function layoutManualAbilityIcons({
         (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
         && overlaps(visibleRect(rect), obstacle)
       )));
-    // If the fighter is pressed against a HUD edge, the ready control still
-    // owns input priority. Keep every fallback in the same local crown rather
-    // than teleporting it elsewhere or stacking duplicate-instance controls.
-    return [...unblocked, ...localCandidates.filter((rect) => !unblocked.includes(rect))];
+    const anchor = anchorFor(fighter);
+    const globalCandidates = [];
+    const spacing = hitSize + 2;
+    for (let y = placementTopInset; y <= height - bottomInset - hitSize; y += spacing) {
+      for (let x = leftInset; x <= width - rightInset - hitSize; x += spacing) {
+        const rect = { x, y, width: hitSize, height: hitSize };
+        if (staticBlocked.some((obstacle) => (
+          (obstacle.ownerId === null || String(obstacle.ownerId) !== String(fighter.id))
+          && overlaps(visibleRect(rect), obstacle)
+        ))) continue;
+        globalCandidates.push(rect);
+      }
+    }
+    globalCandidates.sort((left, right) => {
+      const leftDistance = Math.hypot(
+        left.x + hitSize / 2 - anchor.x,
+        left.y + hitSize / 2 - anchor.y,
+      );
+      const rightDistance = Math.hypot(
+        right.x + hitSize / 2 - anchor.x,
+        right.y + hitSize / 2 - anchor.y,
+      );
+      return leftDistance - rightDistance || left.y - right.y || left.x - right.x;
+    });
+    const blockedLocalCandidates = localCandidates.filter((rect) => !unblocked.includes(rect));
+    const seen = new Set();
+    return [...unblocked, ...globalCandidates, ...blockedLocalCandidates].filter((rect) => {
+      const key = `${rect.x.toFixed(3)}:${rect.y.toFixed(3)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   };
   const pending = [...fighters]
     .sort((left, right) => (
@@ -1630,8 +1664,8 @@ export function layoutManualAbilityIcons({
   for (const { fighter, candidates } of pending) {
     const placed = candidates.find((rect) => (
       ![...assigned.values()].some((other) => overlaps(rect, other, 2))
-    )) ?? candidates[0] ?? offsetCandidatesFor(fighter)[0];
-    assigned.set(fighter.id, placed);
+    ));
+    if (placed) assigned.set(fighter.id, placed);
   }
   const result = [];
   for (const { fighter } of pending) {

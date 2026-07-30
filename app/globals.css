@@ -48,6 +48,7 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .manual-ability-ready-icon.ability-mayo-chan { background-image:url('/art/v090/characters/abilities/mayo-chan-feral-ready-r1.svg'); }
 .manual-ability-ready:focus-visible > span { outline:2px solid #fff5cc; outline-offset:3px; }
 .manual-ability-ready:active > span { transform:scale(.92); }
+.manual-ability-ready.awaiting-target > span,.manual-ability-ready:disabled > span { filter:saturate(.45); opacity:.72; box-shadow:0 0 0 2px rgba(10,12,12,.86),0 0 8px rgba(242,151,55,.34); }
 @keyframes manual-ready-arrive { from { opacity:0; transform:translateY(5px) scale(.86); } to { opacity:1; transform:none; } }
 .qa-badge { position:absolute; z-index:17; right:calc(1.5% + var(--app-viewport-safe-right)); bottom:29%; padding:4px 7px; border:1px solid rgba(103,199,207,.55); border-left:3px solid #67c7cf; background:rgba(8,18,21,.88); color:#9ce1e5; font:800 clamp(8px,.7vw,10px)/1 monospace; letter-spacing:.06em; pointer-events:none; }
 .campaign-qa-badge { z-index:30; top:calc(6px + var(--app-viewport-safe-top)); right:calc(8px + var(--app-viewport-safe-right)); bottom:auto!important; left:auto!important; transform:none!important; }

@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
 const baseUrl = new URL(process.env.COMBAT_PRESENTATION_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) {
@@ -31,6 +32,7 @@ const timeout = Math.max(8_000, Number(process.env.COMBAT_PRESENTATION_QA_TIMEOU
 const results = [];
 
 await mkdir(evidenceDir, { recursive: true });
+const buildIdentityAtStart = await productionBuildIdentity();
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
@@ -224,6 +226,200 @@ function assertBurstProof(proof, viewport) {
     `viewport geometry mismatch: ${proof.viewportId}`);
 }
 
+async function runDeferredProjectileProof(
+  page,
+  unitKind,
+  targetKind,
+  proofTimeout,
+  lethal = false,
+) {
+  return page.evaluate(async ({
+    unitKind: proofUnitKind,
+    targetKind: proofTargetKind,
+    proofTimeout: timeoutMs,
+    lethal: lethalProof,
+  }) => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    const prepared = bridge?.prepareDeferredHumanProjectileProof?.(
+      proofUnitKind,
+      proofTargetKind,
+      lethalProof,
+    );
+    if (!prepared) {
+      throw new Error(`${proofUnitKind}/${proofTargetKind} projectile proof fixture unavailable`);
+    }
+    const startedAt = performance.now();
+    const hpSamples = [{ at: 0, hp: prepared.initialTargetHp }];
+    let lastHp = prepared.initialTargetHp;
+    let launch = null;
+    let finalSnapshot = null;
+    if (bridge.resumeMachineGunBurstProof?.() !== true) {
+      throw new Error("deferred projectile proof could not resume");
+    }
+
+    await new Promise((resolve, reject) => {
+      const sample = () => {
+        const snapshot = bridge.getSnapshot();
+        const elapsed = performance.now() - startedAt;
+        const shooter = snapshot.fighters.find(({ id }) => id === prepared.shooterId);
+        const target = snapshot.fighters.find(({ id }) => id === prepared.targetId);
+        const attacks = snapshot.attackIdentity.filter(
+          ({ sourceId }) => sourceId === prepared.shooterId,
+        );
+        const pending = snapshot.pendingWeaponHits.filter((hit) => (
+          hit.sourceId === prepared.shooterId
+          && hit.targetKind === prepared.targetKind
+          && hit.eventKind === "impact"
+          && hit.applyDamage === true
+        ));
+        const currentHp = prepared.targetKind === "enemy-base"
+          ? snapshot.barricadeHp
+          : target?.hp ?? 0;
+        if (!launch && attacks.length > 0 && pending.length > 0) {
+          if (bridge.freezeDeferredHumanProjectileProof?.(prepared.shooterId) !== true) {
+            reject(new Error("deferred projectile proof could not freeze after launch"));
+            return;
+          }
+          const attackSequence = shooter?.attackSequence ?? 0;
+          const babaHitDedupeKey = prepared.targetKind === "enemy-base"
+            ? `babayaga-structure-hit:${prepared.shooterId}:${attackSequence}`
+            : `babayaga-hit:${prepared.shooterId}:${attackSequence}`;
+          const babaSpecialKillDedupeKey =
+            `babayaga-special-kill:${prepared.shooterId}:${attackSequence}`;
+          launch = {
+            at: elapsed,
+            hp: currentHp,
+            marked: target?.marked ?? 0,
+            targetFlash: target?.flash ?? 0,
+            targetKnock: target?.knock ?? 0,
+            barricadeHitFlash: snapshot.barricadeHitFlash,
+            numericDamageTexts: snapshot.damageTexts.filter(({ value }) => (
+              /^-?\d/.test(value)
+            )),
+            babaHitCueCount: proofUnitKind === "babayaga"
+              ? (window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [])
+                .filter(({ dedupeKey }) => dedupeKey === babaHitDedupeKey).length
+              : 0,
+            babaSpecialKillCueCount: proofUnitKind === "babayaga"
+              ? (window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [])
+                .filter(({ dedupeKey }) => dedupeKey === babaSpecialKillDedupeKey).length
+              : 0,
+            attackSequence,
+            pending: pending.map((hit) => ({ ...hit })),
+            attacks: attacks.map((attack) => ({ ...attack })),
+          };
+        }
+        if (currentHp !== lastHp) {
+          hpSamples.push({ at: elapsed, hp: currentHp, damage: lastHp - currentHp });
+          lastHp = currentHp;
+        }
+        finalSnapshot = snapshot;
+        const pendingForSource = snapshot.pendingWeaponHits.filter(
+          (hit) => hit.sourceId === prepared.shooterId,
+        );
+        if (launch
+          && Math.abs(prepared.initialTargetHp - lastHp - prepared.expectedDamage) < .001
+          && pendingForSource.length === 0) {
+          resolve();
+          return;
+        }
+        if (elapsed >= timeoutMs) {
+          reject(new Error(`deferred projectile proof timed out: ${JSON.stringify({
+            prepared,
+            launch,
+            hpSamples,
+            pendingForSource,
+          })}`));
+          return;
+        }
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    });
+
+    const finalTarget = finalSnapshot.fighters.find(({ id }) => id === prepared.targetId);
+    const babaHitDedupeKey = prepared.targetKind === "enemy-base"
+      ? `babayaga-structure-hit:${prepared.shooterId}:${launch.attackSequence}`
+      : `babayaga-hit:${prepared.shooterId}:${launch.attackSequence}`;
+    const babaSpecialKillDedupeKey =
+      `babayaga-special-kill:${prepared.shooterId}:${launch.attackSequence}`;
+    return {
+      ...prepared,
+      launch,
+      hpSamples,
+      totalDamage: prepared.initialTargetHp - lastHp,
+      finalMarked: finalTarget?.marked ?? 0,
+      finalTargetFlash: finalTarget?.flash ?? 0,
+      finalTargetKnock: finalTarget?.knock ?? 0,
+      finalBarricadeHitFlash: finalSnapshot.barricadeHitFlash,
+      finalNumericDamageTexts: finalSnapshot.damageTexts.filter(({ value }) => (
+        /^-?\d/.test(value)
+      )),
+      finalBabaHitCueCount: proofUnitKind === "babayaga"
+        ? (window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [])
+          .filter(({ dedupeKey }) => dedupeKey === babaHitDedupeKey).length
+        : 0,
+      finalBabaSpecialKillCueCount: proofUnitKind === "babayaga"
+        ? (window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [])
+          .filter(({ dedupeKey }) => dedupeKey === babaSpecialKillDedupeKey).length
+        : 0,
+      pendingAfterProof: finalSnapshot.pendingWeaponHits.filter(
+        (hit) => hit.sourceId === prepared.shooterId,
+      ).length,
+      viewportId: finalSnapshot.geometry.viewportId,
+    };
+  }, { unitKind, targetKind, proofTimeout, lethal });
+}
+
+function assertDeferredProjectileProof(proof, viewport) {
+  invariant(proof.launch, `${proof.unitKind}/${proof.targetKind}: launch was not observed`);
+  invariant(proof.launch.hp === proof.initialTargetHp,
+    `${proof.unitKind}/${proof.targetKind}: HP changed before impact`);
+  invariant(proof.launch.numericDamageTexts.length === 0,
+    `${proof.unitKind}/${proof.targetKind}: numeric damage text appeared before impact`);
+  if (proof.targetKind === "fighter") {
+    if (!proof.lethal) {
+      invariant(proof.launch.targetFlash === 0 && proof.launch.targetKnock === 0,
+        `${proof.unitKind}/${proof.targetKind}: target hit feedback appeared before impact`);
+      invariant(proof.finalTargetFlash > 0 && proof.finalTargetKnock > 0,
+        `${proof.unitKind}/${proof.targetKind}: target hit feedback did not land at impact`);
+    }
+  } else {
+    invariant(proof.launch.barricadeHitFlash === 0,
+      `${proof.unitKind}/${proof.targetKind}: base hit flash appeared before impact`);
+    invariant(proof.finalBarricadeHitFlash > 0,
+      `${proof.unitKind}/${proof.targetKind}: base hit flash did not land at impact`);
+  }
+  invariant(proof.launch.pending.length >= 1,
+    `${proof.unitKind}/${proof.targetKind}: pending impact was not observed`);
+  invariant(proof.launch.attacks.some(({ impactDelaySeconds }) => impactDelaySeconds >= .1),
+    `${proof.unitKind}/${proof.targetKind}: projectile travel metadata missing`);
+  invariant(proof.hpSamples.length >= 2,
+    `${proof.unitKind}/${proof.targetKind}: no impact damage was observed`);
+  invariant(Math.abs(proof.totalDamage - proof.expectedDamage) < .001,
+    `${proof.unitKind}/${proof.targetKind}: ${proof.totalDamage} != ${proof.expectedDamage}`);
+  invariant(proof.finalNumericDamageTexts.length > 0,
+    `${proof.unitKind}/${proof.targetKind}: numeric damage text did not land at impact`);
+  invariant(proof.pendingAfterProof === 0,
+    `${proof.unitKind}/${proof.targetKind}: pending impact remained`);
+  if (proof.unitKind === "babayaga") {
+    invariant(proof.launch.babaHitCueCount === 0,
+      `${proof.unitKind}/${proof.targetKind}: hit cue played before impact`);
+    invariant(proof.finalBabaHitCueCount === 1,
+      `${proof.unitKind}/${proof.targetKind}: hit cue did not play exactly once at impact`);
+    invariant(proof.launch.babaSpecialKillCueCount === 0,
+      `${proof.unitKind}/${proof.targetKind}: special-kill cue played before impact`);
+    invariant(proof.finalBabaSpecialKillCueCount === (proof.lethal ? 1 : 0),
+      `${proof.unitKind}/${proof.targetKind}: special-kill cue count did not match impact lethality`);
+  }
+  if (proof.unitKind === "babayaga" && proof.targetKind === "fighter" && !proof.lethal) {
+    invariant(proof.launch.marked === 0, "babayaga: mark applied before projectile impact");
+    invariant(proof.finalMarked > 0, "babayaga: mark did not apply with projectile impact");
+  }
+  invariant(proof.viewportId === `${viewport.width}x${viewport.height}`,
+    `viewport geometry mismatch: ${proof.viewportId}`);
+}
+
 for (const engine of engines) {
   let browser;
   try {
@@ -279,6 +475,28 @@ for (const engine of engines) {
         assertBurstProof(baseProof, viewport);
         const pierceProof = await runBurstProof(page, "pierce", Math.min(timeout, 8_000));
         assertBurstProof(pierceProof, viewport);
+        const deferredProjectileProofs = [];
+        for (const unitKind of ["ranger", "medic", "babayaga", "engineer"]) {
+          for (const targetKind of ["fighter", "enemy-base"]) {
+            const proof = await runDeferredProjectileProof(
+              page,
+              unitKind,
+              targetKind,
+              Math.min(timeout, 8_000),
+            );
+            assertDeferredProjectileProof(proof, viewport);
+            deferredProjectileProofs.push(proof);
+          }
+        }
+        const babaSpecialKillProof = await runDeferredProjectileProof(
+          page,
+          "babayaga",
+          "fighter",
+          Math.min(timeout, 8_000),
+          true,
+        );
+        assertDeferredProjectileProof(babaSpecialKillProof, viewport);
+        deferredProjectileProofs.push(babaSpecialKillProof);
         await page.screenshot({ path: path.join(evidenceDir, `${name}-pierce.png`) });
 
         const stageSixResponse = await page.goto(caseUrl(6), { waitUntil: "domcontentloaded", timeout });
@@ -340,6 +558,7 @@ for (const engine of engines) {
           fighterProof,
           baseProof,
           pierceProof,
+          deferredProjectileProofs,
           gateEaterProof,
           assetEvidence,
           canvasEvidence,
@@ -370,9 +589,15 @@ for (const engine of engines) {
   }
 }
 
+const buildIdentityAtEnd = await productionBuildIdentity();
 const summary = {
   baseUrl: String(baseUrl),
   generatedAt: new Date().toISOString(),
+  buildIdentity: buildIdentityAtEnd,
+  buildIdentityAtStart,
+  buildIdentityStable: (
+    buildIdentityAtStart.combinedSha256 === buildIdentityAtEnd.combinedSha256
+  ),
   passed: results.filter(({ status }) => status === "passed").length,
   failed: results.filter(({ status }) => status === "failed").length,
   results,
@@ -380,6 +605,9 @@ const summary = {
 await writeFile(path.join(evidenceDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`, "utf8");
 console.log(JSON.stringify(summary, null, 2));
 
+if (!summary.buildIdentityStable) {
+  throw new Error("Production dist changed while combat presentation QA was running");
+}
 if (summary.failed > 0) {
   throw new Error(
     `Combat presentation browser smoke failed ${summary.failed}/${results.length}; see ${path.join(evidenceDir, "summary.json")}`,
