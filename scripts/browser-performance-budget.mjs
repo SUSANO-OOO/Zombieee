@@ -33,7 +33,7 @@ const deviceScaleFactor = Math.max(
   Math.min(4, Number(process.env.PERF_QA_DEVICE_SCALE_FACTOR) || 1),
 );
 const outputPath = path.resolve(process.env.PERF_QA_OUTPUT ?? `outputs/performance/${engineName}-${width}x${height}.json`);
-const resultVersion = process.env.PERF_QA_VERSION ?? '0.9.0';
+const resultVersion = process.env.PERF_QA_VERSION ?? '0.9.5';
 const requestedGraphicsQuality = process.env.PERF_QA_GRAPHICS_QUALITY?.trim() || null;
 if (requestedGraphicsQuality && !['auto', 'high', 'power-save'].includes(requestedGraphicsQuality)) {
   throw new Error(`Unsupported PERF_QA_GRAPHICS_QUALITY: ${requestedGraphicsQuality}`);

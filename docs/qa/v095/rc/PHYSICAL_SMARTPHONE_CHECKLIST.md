@@ -1,8 +1,19 @@
 # Version 0.9.5 RC physical-smartphone acceptance checklist
 
-This checklist is for the producer acceptance that follows RC integration.
-Completing the automated RC does not mark any item below as physically
-verified.
+This checklist records the physical-smartphone boundary used by the Version
+0.9.5 producer acceptance. Automated evidence never marks a physical-only item
+as verified.
+
+## Acceptance record
+
+- The producer physically played Stages 1-13 before the audited release
+  authorization in Issue #96 comment `5124971857`.
+- Stage 14-20 are covered by the correction browser regression and AI mission
+  matrix, not claimed as physical-device play.
+- Native Safari, physical speaker listening, sustained device temperature, and
+  physical touch/rotation/lock-return remain explicitly unverified by Codex.
+- Heat optimization is shipped as a measured render-work reduction, not a
+  claim that every physical smartphone no longer heats up.
 
 ## Connect
 
@@ -46,10 +57,10 @@ verified.
   Separately confirm manual export/import if that transfer is part of the
   acceptance session.
 
-## Record
+## Future physical record
 
 Record pass/fail, a short observation, and any screenshot or video filename for
-each failed item. A physical failure blocks formal release approval even when
-the automated RC gates remain green. It does not authorize an
-`integration/0.9.5 -> main` merge, tag, Release, or Pages deployment without a
-separate producer instruction.
+each failed item. Any newly observed release-blocking failure must be recorded
+on Issue #96 before publication proceeds. The audited Issue #96 comment
+`5124971857` is the formal instruction for the current release sequence;
+GitHub Pages Public QA must succeed before Issue #96 is closed.

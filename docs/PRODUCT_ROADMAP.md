@@ -103,7 +103,7 @@
 
 Issue：#96
 
-状態：**製品判断承認済み・docs-only工程中**
+状態：**RC・Producer acceptance correction統合済み・正式公開工程**
 
 最上位正本：`docs/PRODUCER_DECISIONS_0.9.5.md`
 
@@ -139,7 +139,7 @@ Issue：#96
 
 ### Release境界
 
-docs-only merge resultから`integration/0.9.5`を作成し、工程branch／Draft PRを段階統合する。`integration/0.9.5 → main`、`v0.9.5` tag、GitHub Release、GitHub Pages正式deployment、Issue #96 closeは別承認まで行わない。
+docs-only merge resultから`integration/0.9.5`を作成し、工程branch／Draft PRを段階統合した。Issue #96の監査改訂済み最新コメント（issue comment `5124971857`）が、release preparation、`integration/0.9.5 → main`の通常PR、annotated `v0.9.5`、GitHub Release、Pages manual dispatch、自動Public QA、Issue #96 completed closeまでを承認する。Public QA成功前にIssueをcloseせず、各release artifactをfinal main PRのmerge result SHAへ固定する。
 
 ## 5. Version 0.9.5以降
 

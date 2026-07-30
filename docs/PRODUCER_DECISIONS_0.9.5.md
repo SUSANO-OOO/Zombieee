@@ -1,7 +1,7 @@
 # 西新世紀末物語 — Version 0.9.5 プロデューサー決定台帳
 
-更新日：2026-07-29  
-状態：**製品判断ロック済み・docs-only工程開始**
+更新日：2026-07-31  
+状態：**製品判断ロック済み・Producer acceptance correction完了・正式公開承認済み**
 
 ## 1. 正式な目的
 
@@ -119,7 +119,9 @@ RCでは次を`integration/0.9.5`へ揃える。
 - LAN試遊URL、物理smartphone確認手順
 - 未解決High／Medium／Low 0
 
-通常の技術方式はCodexが自律決定する。停止するのは、新しい重大な製品判断、人物identity変更、外部credential不足、正式release承認が必要な場合だけとする。
+通常の技術方式はCodexが自律決定する。Issue #96の監査改訂済み最新コメント（issue comment `5124971857`）は、P0-1〜P0-9、横断監査、修正QA、release preparation、final main PR、annotated tag、GitHub Release、Pages manual dispatch、Public QA、Issue closeまでの実行正本かつ正式release承認である。
+
+Producer acceptance correctionはP0-1〜P0-9をplayer-facing実装と実画面証拠で満たし、全tests 758/758、production build、Lint、content validator、`git diff --check`、対象browser QA、独立read-only review High／Medium／Low 0で`integration/0.9.5`へ統合済みである。以降は同コメントの順序と停止条件に従い、通常の技術問題では停止しない。
 
 ## 7. 非対象と禁止
 
@@ -135,10 +137,11 @@ RCでは次を`integration/0.9.5`へ揃える。
 
 PWA／offline／install対応はVersion 0.9.6へ分離する。
 
-別承認まで禁止する。
+Issue comment `5124971857`の承認後も、次の順序と安全境界を守る。
 
-- `integration/0.9.5 → main`の最終merge
-- `v0.9.5` tag、GitHub Release、GitHub Pages正式deployment
-- Issue #96 close
-- force push、rebase、amend、branch cleanup
-- 既存tag移動・上書き、save全体の自動初期化、ChatGPT Sites deployment
+- release preparationと全gate成功前に`integration/0.9.5 → main`をmergeしない
+- final main PRのmerge result以外へ`v0.9.5`、GitHub Release、Pages requestを向けない
+- GitHub Pages Releaseと自動Public QA成功前にIssue #96をcloseしない
+- `.github/pages-release-request.json`を変更しない
+- force push、rebase、amend、branch cleanupを行わない
+- 既存tag移動・上書き、save全体の自動初期化、ChatGPT Sites deploymentを行わない
