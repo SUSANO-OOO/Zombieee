@@ -1372,8 +1372,8 @@ const summary = {
     ],
     directRunPolicy:
       "The named directStableReportKeys embed matching start/end recursive dist hashes. AI mission and feature-specific browser matrices are direct unmerged reports from the same frozen-dist QA window, but their legacy schemas do not independently embed that recursive hash; no stronger cryptographic claim is made.",
-    historicalBaselinePolicy:
-      "deploymentSequenceBefore is a non-gating visual capture from exact integration commit 5bc0d6b with its own stable recursive dist identity. It is never counted as corrected acceptance evidence.",
+    historicalEvidencePolicy:
+      "deploymentSequenceBefore is a non-gating visual capture from exact integration commit 5bc0d6b with its own stable recursive dist identity. priorRc is historical technical-RC/performance context from source 277047e. Neither is counted as corrected acceptance evidence.",
     substitutedEvidence: [
       "Headless Chromium/WebKit lifecycle diagnostics substitute for physical smartphone visibility, rotation-lock, speaker, and heat checks.",
       "Stages 14-20 were verified in browser QA; physical smartphone play remains pending.",

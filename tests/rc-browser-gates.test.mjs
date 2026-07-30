@@ -202,7 +202,7 @@ test("acceptance evidence is bound to one stable recursive production build", ()
   );
   assert.match(
     acceptanceEvidence,
-    /It is never counted as corrected acceptance evidence/,
+    /Neither is counted as corrected acceptance evidence/,
   );
 });
 
