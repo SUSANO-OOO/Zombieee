@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { CAMPAIGN_STAGES } from "../app/campaign.js";
 import { installInfectedAbilityPhaseObserver } from "./infected-ability-phase-observer.mjs";
 
 const baseUrl = new URL(process.env.AI_MISSION_QA_BASE_URL ?? "http://127.0.0.1:4177/");
@@ -39,34 +40,17 @@ const unknownViewportIds = requestedViewportIds.filter((id) => (
 if (viewports.length === 0 || unknownViewportIds.length > 0) {
   throw new Error(`Unknown AI_MISSION_QA_VIEWPORTS: ${unknownViewportIds.join(", ") || "(empty)"}`);
 }
-const allStages = [
-  { number: 1, id: "stage-nishijin-shopping-street" },
-  { number: 2, id: "stage-sawara-ward-office" },
-  { number: 3, id: "stage-nishijin-defense-line-takuya" },
-  { number: 4, id: "stage-nishijin-station-gate" },
-  { number: 5, id: "stage-nishijin-station-platform" },
-  { number: 6, id: "stage-nishijin-station-tunnel-seal" },
-  {
-    number: 17,
-    id: "stage-bay-tower-service",
-    expectedEnemyKinds: ["resonator", "cagewalker"],
-  },
-  {
-    number: 18,
-    id: "stage-civic-archive-route",
-    expectedEnemyKinds: ["spindle", "choir-knot"],
-  },
-  {
-    number: 19,
-    id: "stage-coastal-link-bridge",
-    expectedEnemyKinds: ["pall-manta"],
-  },
-  {
-    number: 20,
-    id: "stage-estuary-floodgate-seal",
-    expectedEnemyKinds: ["anchor-bloom"],
-  },
-];
+const expectedEnemyKindsByStage = new Map([
+  [17, ["resonator", "cagewalker"]],
+  [18, ["spindle", "choir-knot"]],
+  [19, ["pall-manta"]],
+  [20, ["anchor-bloom"]],
+]);
+const allStages = CAMPAIGN_STAGES.map((stage, index) => ({
+  number: index + 1,
+  id: stage.id,
+  expectedEnemyKinds: expectedEnemyKindsByStage.get(index + 1),
+}));
 const requestedStageNumbers = (process.env.AI_MISSION_QA_STAGES ?? "1,2,3,4,5,6")
   .split(",")
   .map((stage) => Number(stage.trim()))
@@ -174,6 +158,62 @@ async function readViewportEvidence(page) {
   });
 }
 
+async function observeDynamicAi(page, durationMs = 2_500) {
+  return page.evaluate(async (requestedDurationMs) => {
+    const deadline = performance.now() + requestedDurationMs;
+    const previousById = new Map();
+    let samples = 0;
+    let attackIdentitySamples = 0;
+    let attackIdentityMismatches = 0;
+    let invalidTargetSamples = 0;
+    let movementReversals = 0;
+    let maximumRecoveryCount = 0;
+    let terminalFallbackSamples = 0;
+    while (performance.now() < deadline) {
+      const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
+      const active = snapshot.fighters.filter((fighter) => fighter.hp > 0 && fighter.combatReady);
+      const fighterById = new Map(active.map((fighter) => [fighter.id, fighter]));
+      samples += 1;
+      attackIdentitySamples += snapshot.attackIdentity.length;
+      attackIdentityMismatches += snapshot.attackIdentity.filter(
+        (attack) => attack.targetId !== attack.damageTargetId,
+      ).length;
+      for (const fighter of active) {
+        maximumRecoveryCount = Math.max(
+          maximumRecoveryCount,
+          Number(fighter.navigationRecovery?.recoveryCount) || 0,
+        );
+        if ((fighter.navigationRecovery?.terminalFallbackSeconds ?? 0) > 0) {
+          terminalFallbackSamples += 1;
+        }
+        if (fighter.targetId !== null) {
+          const target = fighterById.get(fighter.targetId);
+          if (!target || target.side === fighter.side || target.hp <= 0) invalidTargetSamples += 1;
+        }
+        if (fighter.side !== "human") continue;
+        const previous = previousById.get(fighter.id);
+        const dx = previous ? fighter.x - previous.x : 0;
+        const direction = Math.abs(dx) > .25 ? Math.sign(dx) : previous?.direction ?? 0;
+        if (previous?.direction && direction && previous.direction !== direction) {
+          movementReversals += 1;
+        }
+        previousById.set(fighter.id, { x: fighter.x, direction });
+      }
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+    return {
+      durationMs: requestedDurationMs,
+      samples,
+      attackIdentitySamples,
+      attackIdentityMismatches,
+      invalidTargetSamples,
+      movementReversals,
+      maximumRecoveryCount,
+      terminalFallbackSamples,
+    };
+  }, durationMs);
+}
+
 for (const engine of engines) {
   let browser;
   try {
@@ -240,6 +280,12 @@ for (const engine of engines) {
             { timeout },
           );
           await page.waitForTimeout(1_200);
+          if ([9, 12, 19].includes(stage.number)) {
+            await page.waitForFunction(() => {
+              const formation = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().escortFormation;
+              return formation?.units.some(({ x }) => x > formation.cartX + 2);
+            }, null, { timeout });
+          }
           if (stage.expectedEnemyKinds?.length) {
             await page.waitForFunction(
               (expectedKinds) => {
@@ -258,6 +304,10 @@ for (const engine of engines) {
           const infectedAbilityLifecycle = requireInfectedAbilityLifecycle && stage.expectedEnemyKinds?.length
             ? await waitForInfectedAbilityLifecycle(page, stage.expectedEnemyKinds)
             : null;
+          const dynamicAi = await observeDynamicAi(
+            page,
+            stage.number === 1 ? 20_000 : 2_500,
+          );
 
           const snapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
           const dimensions = await readViewportEvidence(page);
@@ -305,8 +355,44 @@ for (const engine of engines) {
           invariant(activeFighters.every((fighter) => fighter.targetId === null
             || (fighterById.has(fighter.targetId) && fighterById.get(fighter.targetId).side !== fighter.side)),
           "target identity pointed to a missing or friendly fighter");
+          if ([9, 12, 19].includes(stage.number)) {
+            const formation = snapshot.escortFormation;
+            invariant(formation?.units.some(({ duty }) => duty === "escort-anchor"),
+              `escort anchor missing: ${JSON.stringify(formation)}`);
+            invariant(formation.units.some(({ duty, destinationX }) => (
+              duty !== "escort-anchor" && destinationX > formation.cartX
+            )), `escort front destination missing: ${JSON.stringify(formation)}`);
+            invariant(formation.units.some(({ x }) => x > formation.cartX + 2),
+              `no ally moved ahead of escort object: ${JSON.stringify(formation)}`);
+            invariant(new Set(formation.units.map(({ destinationX }) => destinationX)).size > 1,
+              `escort roles collapsed to one destination: ${JSON.stringify(formation)}`);
+          }
+          if ([9, 12].includes(stage.number)) {
+            const missionObject = snapshot.escortMissionObject;
+            invariant(missionObject?.assetId === "maintenance-cart"
+              && missionObject.assetPath === "/art/v095/mission-objects/maintenance-cart-v1.png",
+            `maintenance cart identity mismatch: ${JSON.stringify(missionObject)}`);
+            invariant(missionObject.assetLoaded === true
+              && missionObject.naturalWidth === 480
+              && missionObject.naturalHeight === 168,
+            `maintenance cart production asset unavailable: ${JSON.stringify(missionObject)}`);
+            invariant(missionObject.geometricFallbackAllowed === false,
+              "maintenance cart geometric fallback must stay disabled");
+            invariant(["start", "moving", "damaged", "stalled"].includes(missionObject.visualState),
+              `maintenance cart runtime state missing: ${JSON.stringify(missionObject)}`);
+          }
           invariant(snapshot.attackIdentity.every((attack) => attack.targetId === attack.damageTargetId),
             `projectile/damage identity mismatch: ${JSON.stringify(snapshot.attackIdentity)}`);
+          if (stage.number === 1) {
+            invariant(dynamicAi.attackIdentitySamples > 0,
+              `no live attack identity was observed: ${JSON.stringify(dynamicAi)}`);
+          }
+          invariant(dynamicAi.attackIdentityMismatches === 0,
+            `live projectile/damage identity mismatch: ${JSON.stringify(dynamicAi)}`);
+          invariant(dynamicAi.invalidTargetSamples === 0,
+            `live target pointed to a dead, missing, or friendly fighter: ${JSON.stringify(dynamicAi)}`);
+          invariant(dynamicAi.movementReversals <= 8,
+            `excessive short-window AI oscillation: ${JSON.stringify(dynamicAi)}`);
           invariant(dimensions.innerWidth === viewport.width && dimensions.innerHeight === viewport.height,
             `layout viewport mismatch: ${dimensions.innerWidth}x${dimensions.innerHeight}`);
           invariant(dimensions.documentWidth <= viewport.width && dimensions.documentHeight <= viewport.height,
@@ -327,7 +413,10 @@ for (const engine of engines) {
               humanProfiles: [...new Set(activeFighters.filter(({ side }) => side === "human").map(({ aiProfile }) => aiProfile))],
               enemyProfiles: [...new Set(activeFighters.filter(({ side }) => side === "zombie").map(({ aiProfile }) => aiProfile))],
               aiRecoveries: snapshot.stationMetrics.aiRecoveries,
-              attackIdentitySamples: snapshot.attackIdentity.length,
+              attackIdentitySamples: dynamicAi.attackIdentitySamples,
+              dynamicAi,
+              escortFormation: snapshot.escortFormation,
+              escortMissionObject: snapshot.escortMissionObject,
               expectedEnemyKinds: stage.expectedEnemyKinds ?? [],
               infectedAbilityLifecycle,
             },

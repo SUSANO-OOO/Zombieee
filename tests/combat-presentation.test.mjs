@@ -3,35 +3,50 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 
 import {
+  COMBAT_ANIMATION_STATES,
+  COMBAT_CLIP_FALLBACKS,
   COMBAT_CLIP_STATES,
+  COMBAT_OPTIONAL_CLIP_STATES,
   COMBAT_PRESENTATION_PROFILES,
   COMBAT_WEAPON_ANCHORS,
+  PLAYABLE_COMBAT_KINDS,
+  REMAINING_TEN_KINDS,
+  REPRESENTATIVE_SIX_KINDS,
+  attackCooldownAfterPresentationWindup,
   UNIT_WEAPON_PROFILE,
   WEAPON_PROFILE_IDS,
   WEAPON_PROFILES,
+  advanceCombatAnimationRuntime,
   advancePendingWeaponHits,
   animationClipFor,
   attackPresentationDuration,
+  cancelPendingWeaponTransaction,
+  capPendingWeaponTransactions,
   combatFacingDirection,
   combatWeaponAnchor,
+  combatClipEventsBetween,
   combatClipEventsFor,
+  createCombatAnimationRuntime,
+  linkedWeaponTransactionId,
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
   sampleMrsChihaLauncherBash,
   weaponDamageEventsFor,
   weaponProfileForAction,
+  weaponProfileForUnit,
 } from "../app/combatPresentation.js";
+import { manualAbilityDefinitionFor } from "../app/manualAbilities.js";
 import { spriteKinds } from "../app/spriteManifest.js";
 
-test("every runtime sprite kind owns all variable-frame combat clips", () => {
+test("every runtime sprite kind owns all core and optional variable-frame combat clips", () => {
   assert.deepEqual(Object.keys(COMBAT_PRESENTATION_PROFILES), spriteKinds);
   const frameCounts = new Set();
   for (const kind of spriteKinds) {
     const profile = COMBAT_PRESENTATION_PROFILES[kind];
     assert.ok(["small", "standard", "large"].includes(profile.bodyClass));
-    assert.deepEqual(Object.keys(profile.clips), COMBAT_CLIP_STATES);
-    for (const state of COMBAT_CLIP_STATES) {
+    assert.deepEqual(Object.keys(profile.clips), COMBAT_ANIMATION_STATES);
+    for (const state of COMBAT_ANIMATION_STATES) {
       const clip = animationClipFor(kind, state);
       assert.ok(clip.durationSeconds > 0, `${kind}/${state} duration`);
       assert.ok(clip.frames.length > 0, `${kind}/${state} frames`);
@@ -46,6 +61,176 @@ test("every runtime sprite kind owns all variable-frame combat clips", () => {
     }
   }
   assert.ok(frameCounts.size >= 3, "clips must not collapse to one fixed frame count");
+});
+
+test("optional clip fallbacks preserve hurt, down, and death semantics", () => {
+  assert.deepEqual(COMBAT_CLIP_STATES, [
+    "idle", "move", "wind-up", "active", "recovery", "hit", "incapacitated", "death", "special",
+  ]);
+  assert.equal(COMBAT_OPTIONAL_CLIP_STATES.length, 12);
+  assert.equal(COMBAT_CLIP_FALLBACKS["hit-light"], "hit");
+  assert.equal(COMBAT_CLIP_FALLBACKS["hit-heavy"], "hit");
+  assert.equal(COMBAT_CLIP_FALLBACKS.down, "incapacitated");
+  for (const kind of spriteKinds) {
+    for (const state of ["hit-light", "hit-heavy", "down"]) {
+      const spriteStates = animationClipFor(kind, state).frames.map(({ spriteState }) => spriteState);
+      assert.equal(spriteStates.some((spriteState) => spriteState.startsWith("attack")), false, `${kind}/${state}`);
+    }
+    assert.deepEqual(
+      animationClipFor(kind, "death").frames.map(({ spriteState }) => spriteState),
+      ["death"],
+      `${kind}/death`,
+    );
+  }
+});
+
+test("semantic pose transforms keep the authored ground anchor fixed", () => {
+  for (const state of COMBAT_OPTIONAL_CLIP_STATES) {
+    const current = animationClipFor("walker", state);
+    for (const elapsed of [0, current.durationSeconds / 2, current.durationSeconds]) {
+      const sample = sampleAnimationClip("walker", state, elapsed);
+      assert.equal(sample.groundAnchor, 1, `${state} ground anchor`);
+      assert.equal(sample.pose.offsetY, 0, `${state} cannot lift the contact point`);
+      assert.ok(sample.pose.scaleX >= .8 && sample.pose.scaleX <= 1.12, `${state} scaleX`);
+      assert.ok(sample.pose.scaleY >= .8 && sample.pose.scaleY <= 1.12, `${state} scaleY`);
+      assert.ok(Math.abs(sample.pose.rotationRadians) <= .13, `${state} rotation`);
+      assert.ok(sample.pose.opacity >= .7 && sample.pose.opacity <= 1, `${state} opacity`);
+    }
+  }
+  for (const kind of PLAYABLE_COMBAT_KINDS) {
+    for (const state of COMBAT_ANIMATION_STATES) {
+      const clip = animationClipFor(kind, state);
+      for (const elapsed of [0, clip.durationSeconds / 4, clip.durationSeconds / 2, clip.durationSeconds]) {
+        assert.equal(
+          sampleAnimationClip(kind, state, elapsed).pose.opacity,
+          1,
+          `${kind}/${state} keeps the player-visible body opaque`,
+        );
+      }
+    }
+  }
+});
+
+test("event cursor consumes transition and loop events exactly once", () => {
+  const started = combatClipEventsBetween("scout", "start-move", 0, .13);
+  assert.deepEqual(started.map(({ type }) => type), ["locomotion-start", "footstep"]);
+  assert.equal(combatClipEventsBetween("scout", "start-move", .08, .08).length, 0);
+  const move = animationClipFor("scout", "move");
+  const crossed = combatClipEventsBetween("scout", "move", move.durationSeconds - .01, move.durationSeconds + .08);
+  assert.deepEqual(crossed.map(({ type }) => type), ["footstep"]);
+  assert.equal(crossed[0].cycle, 1);
+});
+
+test("locomotion runtime exposes deploy, start, stop, and turn transitions from real motion", () => {
+  let runtime = createCombatAnimationRuntime({ deploying: true, direction: "right", x: 100, y: 200 });
+  assert.equal(runtime.state, "deploy");
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", deploying: false, direction: "right", x: 102, y: 200,
+  }, .05);
+  assert.equal(runtime.state, "start-move");
+  assert.equal(runtime.moving, true);
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "right", moving: true, x: 108, y: 200,
+  }, .2);
+  assert.equal(runtime.state, "move");
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "left", moving: true, x: 104, y: 200,
+  }, .02);
+  assert.equal(runtime.state, "turn");
+  assert.equal(runtime.direction, "left");
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "left", moving: false, x: 104, y: 200,
+  }, .2);
+  assert.equal(runtime.state, "stop-move");
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "left", moving: false, x: 104, y: 200,
+  }, .2);
+  assert.equal(runtime.state, "idle");
+  assert.ok(runtime.transitionCount >= 5);
+  assert.ok(runtime.eventCount >= 1);
+});
+
+test("runtime event cursor never repeats a state-entry event on the following tick", () => {
+  let runtime = createCombatAnimationRuntime({ direction: "right", x: 10, y: 20 });
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "right", x: 14, y: 20,
+  }, .01);
+  assert.equal(runtime.state, "start-move");
+  assert.equal(runtime.eventCount, 1);
+  assert.deepEqual(runtime.lastEvents.map(({ type }) => type), ["locomotion-start"]);
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", direction: "right", x: 18, y: 20,
+  }, .13);
+  assert.equal(runtime.state, "start-move");
+  assert.equal(runtime.eventCount, 2);
+  assert.deepEqual(runtime.lastEvents.map(({ type }) => type), ["footstep"]);
+});
+
+test("an initially active deploy clip emits its entry event once", () => {
+  let runtime = createCombatAnimationRuntime({
+    deploying: true,
+    direction: "right",
+    x: 10,
+    y: 20,
+  });
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", deploying: true, direction: "right", x: 10, y: 20,
+  }, .02);
+  assert.equal(runtime.eventCount, 1);
+  assert.deepEqual(runtime.lastEvents.map(({ type }) => type), ["deploy-brace"]);
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", deploying: true, direction: "right", x: 10, y: 20,
+  }, .02);
+  assert.equal(runtime.eventCount, 1);
+  assert.deepEqual(runtime.lastEvents, []);
+});
+
+test("a moving gate entrant completes deploy once and continues with movement instead of sliding idle", () => {
+  let runtime = createCombatAnimationRuntime({
+    deploying: true,
+    direction: "right",
+    x: 96,
+    y: 285,
+  });
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", deploying: true, direction: "right", x: 111, y: 285,
+  }, .16);
+  assert.equal(runtime.state, "deploy");
+  assert.equal(runtime.deployCompleted, false);
+  runtime = advanceCombatAnimationRuntime(runtime, {
+    kind: "scout", deploying: true, direction: "right", x: 128, y: 285,
+  }, .17);
+  assert.equal(runtime.state, "move");
+  assert.equal(runtime.deployCompleted, true);
+  assert.equal(runtime.moving, true);
+  assert.match(sampleAnimationClip("scout", runtime.state, runtime.elapsedSeconds).spriteState, /^walk-/);
+});
+
+test("all sixteen walking cycles advance from real travel distance rather than wall-clock time", () => {
+  for (const kind of PLAYABLE_COMBAT_KINDS) {
+    let slowTick = createCombatAnimationRuntime({ direction: "right", x: 100, y: 280 });
+    slowTick = advanceCombatAnimationRuntime(slowTick, {
+      kind, state: "move", direction: "right", moving: true, x: 104, y: 280,
+    }, .2);
+    slowTick = advanceCombatAnimationRuntime(slowTick, {
+      kind, state: "move", direction: "right", moving: true, x: 111, y: 280,
+    }, .2);
+
+    let fastTick = createCombatAnimationRuntime({ direction: "right", x: 100, y: 280 });
+    fastTick = advanceCombatAnimationRuntime(fastTick, {
+      kind, state: "move", direction: "right", moving: true, x: 104, y: 280,
+    }, .02);
+    fastTick = advanceCombatAnimationRuntime(fastTick, {
+      kind, state: "move", direction: "right", moving: true, x: 111, y: 280,
+    }, .02);
+
+    assert.equal(slowTick.state, "move", kind);
+    assert.equal(fastTick.state, "move", kind);
+    assert.equal(slowTick.stateTravelDistance, fastTick.stateTravelDistance, kind);
+    assert.equal(slowTick.elapsedSeconds, fastTick.elapsedSeconds, kind);
+    const pose = sampleAnimationClip(kind, "move", slowTick.elapsedSeconds).pose;
+    assert.ok(Math.abs(pose.offsetX) >= .1 || Math.abs(pose.rotationRadians) >= .005, `${kind} readable gait`);
+  }
 });
 
 test("clip sampling loops movement and clamps one-shot recovery", () => {
@@ -70,6 +255,22 @@ test("manual abilities recover to an active pose and enemy movement selects the 
   assert.equal(combatFacingDirection({ side: "zombie", aiMoveDirection: -1 }), "left");
   assert.equal(combatFacingDirection({ side: "zombie", entryDirection: 1 }), "right");
   assert.equal(combatFacingDirection({ side: "zombie", entryDirection: -1 }), "left");
+  assert.equal(combatFacingDirection({
+    side: "human",
+    aiMoveDirection: 0,
+    targetDirection: -1,
+  }), "left");
+  assert.equal(combatFacingDirection({
+    side: "zombie",
+    aiMoveDirection: 0,
+    entryDirection: -1,
+    targetDirection: 1,
+  }), "right");
+  assert.equal(combatFacingDirection({
+    side: "human",
+    aiMoveDirection: 1,
+    targetDirection: -1,
+  }), "right");
   assert.equal(combatFacingDirection({
     side: "human",
     aiMoveDirection: 1,
@@ -112,7 +313,7 @@ test("machine-gun active clip and damage timeline share three synchronized round
   assert.equal(sampleAttackPresentation("gunner", .2).state, "recovery");
 });
 
-test("fourteen weapon profiles cover all sixteen playable units without generic missing VFX", () => {
+test("fifteen weapon profiles cover all sixteen playable units without generic missing VFX", () => {
   assert.deepEqual(Object.keys(WEAPON_PROFILES), WEAPON_PROFILE_IDS);
   assert.equal(Object.keys(UNIT_WEAPON_PROFILE).length, 16);
   for (const [kind, profileId] of Object.entries(UNIT_WEAPON_PROFILE)) {
@@ -128,10 +329,41 @@ test("fourteen weapon profiles cover all sixteen playable units without generic 
   assert.equal(weaponProfileForAction("engineer", "attack").casing, true);
   assert.equal(weaponProfileForAction("engineer", "deploy").id, "deployable");
   assert.equal(weaponProfileForAction("medic", "heal").id, "heal-support");
+  assert.equal(weaponProfileForUnit("scout").id, "crowbar");
+  assert.equal(weaponProfileForUnit("scout").casing, false);
+  assert.equal(weaponProfileForUnit("scout").trail, "hooked-crowbar-arc");
   assert.equal(weaponProfileForAction("tky", "attack").id, "plasma-blade");
   assert.equal(weaponProfileForAction("mrs-chiha", "attack").id, "grenade");
   assert.equal(weaponProfileForAction("miyamoto-musashi", "attack").id, "dual-katana");
   assert.equal(weaponProfileForAction("mayo-chan", "attack").id, "bite");
+});
+
+test("single-shot human projectiles defer their full damage until a positive visual impact offset", () => {
+  const cases = [
+    ["ranger", "rifle"],
+    ["medic", "heal-support"],
+    ["babayaga", "sniper"],
+    ["engineer", "suppressed-carbine"],
+  ];
+
+  for (const [kind, profileId] of cases) {
+    const damage = 37;
+    const profile = weaponProfileForUnit(kind);
+    const events = weaponDamageEventsFor(kind, damage);
+
+    assert.equal(profile.id, profileId, kind);
+    assert.equal(profile.projectileTravelSeconds, .12, kind);
+    assert.equal(events.length, 1, kind);
+    assert.ok(events[0].travelSeconds > 0, kind);
+    assert.ok(events[0].hitOffsetSeconds > events[0].offsetSeconds, kind);
+    assert.equal(events[0].travelSeconds, .12, kind);
+    assert.equal(events[0].hitOffsetSeconds, events[0].offsetSeconds + .12, kind);
+    assert.equal(
+      events.reduce((total, event) => total + event.damage, 0),
+      damage,
+      kind
+    );
+  }
 });
 
 test("all sixteen playable units and every projectile enemy use directional weapon anchors above the lower body", () => {
@@ -153,7 +385,14 @@ test("all sixteen playable units and every projectile enemy use directional weap
 test("new playable special clips preserve authored body phases and Mrs. Chiha's normal launcher cycle", () => {
   assert.deepEqual(
     combatClipEventsFor("tky", "special").map(({ type }) => type),
-    ["light-blade-charge", "light-blade-extend", "light-blade-release"],
+    [
+      "light-blade-charge",
+      "light-blade-extend",
+      "light-blade-sweep",
+      "light-blade-release",
+      "light-blade-recover",
+      "light-blade-ready",
+    ],
   );
   assert.deepEqual(
     combatClipEventsFor("mrs-chiha", "special")
@@ -163,11 +402,17 @@ test("new playable special clips preserve authored body phases and Mrs. Chiha's 
   );
   assert.equal(
     Number(combatClipEventsFor("mrs-chiha", "special").find(({ type }) => type === "launcher-stow").at.toFixed(2)),
-    1.73,
+    1.91,
   );
   assert.deepEqual(
     combatClipEventsFor("miyamoto-musashi", "special").map(({ type }) => type),
-    ["cross-guard-ready", "cross-guard-hold"],
+    [
+      "cross-guard-ready",
+      "cross-guard-hold",
+      "cross-cut-release",
+      "cross-cut-impact",
+      "cross-cut-ready",
+    ],
   );
   assert.deepEqual(
     combatClipEventsFor("mrs-chiha", "active").map(({ type }) => type),
@@ -176,6 +421,127 @@ test("new playable special clips preserve authored body phases and Mrs. Chiha's 
   assert.deepEqual(
     combatClipEventsFor("mrs-chiha", "recovery").map(({ type }) => type),
     ["launcher-stow"],
+  );
+});
+
+test("the representative six own distinct motion, attack, and manual-ability timelines", () => {
+  assert.deepEqual(REPRESENTATIVE_SIX_KINDS, [
+    "scout", "gunner", "crazy-king", "tky", "mrs-chiha", "mayo-chan",
+  ]);
+  const expectedSpecialDurations = {
+    scout: .38,
+    gunner: .71,
+    "crazy-king": .63,
+    tky: .78,
+    "mrs-chiha": 2.19,
+    "mayo-chan": .46,
+  };
+  const signatures = new Set();
+  for (const kind of REPRESENTATIVE_SIX_KINDS) {
+    const definition = manualAbilityDefinitionFor(kind);
+    const special = animationClipFor(kind, "special");
+    const move = animationClipFor(kind, "move");
+    const active = animationClipFor(kind, "active");
+    assert.ok(definition, `${kind} manual ability`);
+    assert.equal(Number(special.durationSeconds.toFixed(2)), expectedSpecialDurations[kind], `${kind} special duration`);
+    assert.ok(special.durationSeconds >= definition.windupSeconds, `${kind} covers ability wind-up`);
+    assert.ok(move.movement, `${kind} move must be locomotion`);
+    assert.ok(active.frames.some(({ spriteState }) => spriteState.startsWith("attack")), `${kind} attack pose`);
+    signatures.add(combatClipEventsFor(kind, "special").map(({ type }) => type).join("|"));
+    for (const state of ["idle", "move", "wind-up", "active", "recovery", "special"]) {
+      const current = animationClipFor(kind, state);
+      const sample = sampleAnimationClip(kind, state, current.durationSeconds * .55);
+      assert.equal(sample.groundAnchor, 1, `${kind}/${state} ground anchor`);
+      assert.equal(sample.pose.offsetY, 0, `${kind}/${state} procedural pose cannot lift the feet`);
+      assert.ok(sample.pose.scaleX >= .8 && sample.pose.scaleX <= 1.12, `${kind}/${state} scaleX`);
+      assert.ok(sample.pose.scaleY >= .8 && sample.pose.scaleY <= 1.12, `${kind}/${state} scaleY`);
+      assert.ok(Math.abs(sample.pose.rotationRadians) <= .13, `${kind}/${state} rotation`);
+    }
+  }
+  assert.equal(signatures.size, REPRESENTATIVE_SIX_KINDS.length);
+});
+
+test("the remaining ten complete distinct grounded attack and manual-ability timelines", () => {
+  assert.deepEqual(REMAINING_TEN_KINDS, [
+    "brawler",
+    "ranger",
+    "medic",
+    "brute",
+    "kumaverson",
+    "babayaga",
+    "guardian",
+    "engineer",
+    "zakimiya",
+    "miyamoto-musashi",
+  ]);
+  assert.equal(new Set(PLAYABLE_COMBAT_KINDS).size, 16);
+  const specialSignatures = new Set();
+  const attackSignatures = new Set();
+  for (const kind of REMAINING_TEN_KINDS) {
+    const definition = manualAbilityDefinitionFor(kind);
+    const special = animationClipFor(kind, "special");
+    assert.ok(definition, `${kind} manual ability`);
+    assert.ok(
+      special.durationSeconds + 1e-9 >= definition.windupSeconds + definition.recoverySeconds,
+      `${kind} full ability body`,
+    );
+    specialSignatures.add(combatClipEventsFor(kind, "special").map(({ type }) => type).join("|"));
+    attackSignatures.add([
+      ...combatClipEventsFor(kind, "wind-up"),
+      ...combatClipEventsFor(kind, "active"),
+      ...combatClipEventsFor(kind, "recovery"),
+    ].map(({ type }) => type).join("|"));
+    for (const state of ["idle", "move", "wind-up", "active", "recovery", "special"]) {
+      const current = animationClipFor(kind, state);
+      for (const elapsed of [0, current.durationSeconds * .55, current.durationSeconds]) {
+        const sample = sampleAnimationClip(kind, state, elapsed);
+        assert.equal(sample.groundAnchor, 1, `${kind}/${state} ground anchor`);
+        assert.equal(sample.pose.offsetY, 0, `${kind}/${state} feet remain planted`);
+        assert.ok(sample.pose.scaleX >= .8 && sample.pose.scaleX <= 1.12, `${kind}/${state} scaleX`);
+        assert.ok(sample.pose.scaleY >= .8 && sample.pose.scaleY <= 1.12, `${kind}/${state} scaleY`);
+        assert.ok(Math.abs(sample.pose.rotationRadians) <= .13, `${kind}/${state} rotation`);
+      }
+    }
+  }
+  assert.equal(specialSignatures.size, REMAINING_TEN_KINDS.length);
+  assert.equal(attackSignatures.size, REMAINING_TEN_KINDS.length);
+});
+
+test("all sixteen normal attacks preserve their authored hit-to-hit cadence after adding wind-up", () => {
+  const intendedCooldown = 1.2;
+  for (const kind of PLAYABLE_COMBAT_KINDS) {
+    const windup = animationClipFor(kind, "wind-up").durationSeconds;
+    const postImpactCooldown = attackCooldownAfterPresentationWindup(kind, intendedCooldown);
+    assert.ok(postImpactCooldown >= 0, `${kind} cooldown remains non-negative`);
+    assert.ok(
+      Math.abs(windup + postImpactCooldown - intendedCooldown) < 1e-9,
+      `${kind} wind-up does not reduce DPS`,
+    );
+  }
+});
+
+test("representative-six weapon anchors mirror at the authored weapon or attack point", () => {
+  for (const kind of REPRESENTATIVE_SIX_KINDS) {
+    const right = combatWeaponAnchor({ kind, x: 420, y: 260, direction: 1 });
+    const left = combatWeaponAnchor({ kind, x: 420, y: 260, direction: -1 });
+    assert.ok(Math.abs(right.x - 420) >= 18, `${kind} origin is not the sprite center`);
+    assert.ok(right.y <= 241, `${kind} origin is not the lower body`);
+    assert.equal(right.y, left.y, `${kind} vertical anchor mirror`);
+    assert.equal(right.x - 420, 420 - left.x, `${kind} horizontal anchor mirror`);
+  }
+});
+
+test("Raider manual muzzle and damage markers share the five-round suppression timeline", () => {
+  const specialEvents = combatClipEventsFor("gunner", "special");
+  assert.deepEqual(
+    specialEvents.filter(({ type }) => type === "suppression-muzzle").map(({ shotIndex }) => shotIndex),
+    [0, 1, 2, 3, 4],
+  );
+  assert.deepEqual(
+    specialEvents
+      .filter(({ type }) => type === "suppression-hit")
+      .map(({ at }) => Number(at.toFixed(3))),
+    [.235, .309, .383, .457, .531],
   );
 });
 
@@ -199,7 +565,7 @@ test("Mrs. Chiha's normal grenade uses a locked impact point, delayed AoE, and m
   assert.ok(scheduledGrenadeIndex >= 0 && immediateContainmentIndex > scheduledGrenadeIndex,
     "Mrs. Chiha grenade must schedule before the immediate containment path");
   assert.match(source, /primaryTarget[\s\S]{0,300}splashTarget\.kind === "gate-eater"[\s\S]{0,700}resolveContainmentStrike/);
-  assert.match(source, /deferredStructureImpact = f\.kind === "gunner" \|\| f\.kind === "mrs-chiha"/);
+  assert.match(source, /deferredStructureImpact = f\.kind === "gunner"[\s\S]{0,180}f\.kind === "mrs-chiha"[\s\S]{0,180}DEFERRED_HUMAN_PROJECTILE_KINDS/);
   const structureGrenadeIndex = source.indexOf('} else if (f.kind === "mrs-chiha") {', source.indexOf("deferredStructureImpact"));
   const enemyBaseTargetIndex = source.indexOf('targetKind: "enemy-base"', structureGrenadeIndex);
   const structureImpactIndex = source.indexOf("remainingSeconds: grenadeRound.hitOffsetSeconds", enemyBaseTargetIndex);
@@ -220,4 +586,64 @@ test("pending burst hits become due in stable shot order", () => {
   const second = advancePendingWeaponHits(first.pending, .06);
   assert.deepEqual(second.due.map(({ id }) => id), ["round-2"]);
   assert.equal(second.pending.length, 0);
+});
+
+test("single-shot human projectile transactions own enemy and infected-base damage timing", async () => {
+  const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  for (const kind of ["ranger", "medic", "babayaga", "engineer"]) {
+    assert.match(source, new RegExp(`DEFERRED_HUMAN_PROJECTILE_KINDS[\\s\\S]{0,180}"${kind}"`));
+  }
+  const fighterScheduleIndex = source.indexOf("if (deferredHumanProjectile) {");
+  const fighterImpactIndex = source.indexOf('eventKind: "impact"', fighterScheduleIndex);
+  const fighterHitOffsetIndex = source.indexOf("remainingSeconds: event.hitOffsetSeconds", fighterImpactIndex);
+  assert.ok(fighterScheduleIndex >= 0
+    && fighterImpactIndex > fighterScheduleIndex
+    && fighterHitOffsetIndex > fighterImpactIndex,
+  "single-shot fighters must schedule damage through their impact offset");
+  assert.match(source, /splitMachineGunBurst \|\| deferredHumanProjectile \|\| deferredEnemyProjectile[\s\S]{0,120}targetDamage: 0/);
+  const structureScheduleIndex = source.indexOf(
+    "} else if (DEFERRED_HUMAN_PROJECTILE_KINDS.has(f.kind as UnitKind)) {",
+  );
+  const structureTargetIndex = source.indexOf('targetKind: "enemy-base"', structureScheduleIndex);
+  const structureHitOffsetIndex = source.indexOf(
+    "remainingSeconds: event.hitOffsetSeconds",
+    structureTargetIndex,
+  );
+  assert.ok(structureScheduleIndex >= 0
+    && structureTargetIndex > structureScheduleIndex
+    && structureHitOffsetIndex > structureTargetIndex,
+  "single-shot fighters must defer infected-base damage to impact");
+  assert.match(source, /hit\.weapon === "babayaga"[\s\S]{0,900}resolveNewcomerAttackEffects[\s\S]{0,900}babayaga-hit/);
+});
+
+test("linked muzzle and impact transactions cancel and cap atomically", () => {
+  const transactionId = linkedWeaponTransactionId({
+    sourceId: 7,
+    attackSequence: 3,
+    targetKind: "fighter",
+    targetId: 11,
+    shotIndex: 2,
+  });
+  assert.equal(transactionId, "7:3:fighter:11:2");
+  const linked = [
+    { eventKind: "muzzle", transactionId, remainingSeconds: .05 },
+    { eventKind: "impact", transactionId, remainingSeconds: .12 },
+  ];
+  assert.deepEqual(cancelPendingWeaponTransaction(linked, transactionId), []);
+  const capped = capPendingWeaponTransactions([
+    { eventKind: "impact", remainingSeconds: .01 },
+    ...linked,
+  ], 2);
+  assert.deepEqual(capped, linked);
+});
+
+test("runtime cancels an unfired burst transaction instead of applying its orphan impact", async () => {
+  const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  assert.match(source, /canceledWeaponTransactions\.has\(hit\.transactionId\)/);
+  assert.match(source, /!sourceStillAlive[\s\S]{0,500}cancelPendingWeaponTransaction/);
+  const burstStart = source.indexOf("if (splitMachineGunBurst)");
+  const burstEnd = source.indexOf("if (deferredEnemyProjectile)", burstStart);
+  const burstSource = source.slice(burstStart, burstEnd);
+  assert.match(burstSource, /transactionId: linkedWeaponTransactionId\(/);
+  assert.match(burstSource, /eventKind: "muzzle"[\s\S]*eventKind: "impact"/);
 });

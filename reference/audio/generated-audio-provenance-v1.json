@@ -489,17 +489,17 @@
       "origin": "project-original deterministic synthesis; no sampled recording",
       "source": {
         "path": "reference/audio/generated-masters-v1/weapon-suppressed-pistol.wav",
-        "sha256": "dd4a8f319a51cdf9d45ffac3a187c24305ecd0fa88b2bc5605d5a0c15dd452d9"
+        "sha256": "451be96a60025fe94997a37c4457847e59307cb3565dcee658284e6a1e1e2300"
       },
       "finals": [
         {
           "path": "public/audio/v060/sfx/weapon-suppressed-pistol.mp3",
-          "sha256": "ea47b216562fcfe2e743181f07e1f7854fce64d974235e86ac966525307965da",
+          "sha256": "e5064d53d45d37738bcac876c9f53a96fa2a4b0fceaac000a03ee059b82af2ec",
           "type": "audio/mpeg"
         },
         {
           "path": "public/audio/v060/sfx/weapon-suppressed-pistol.ogg",
-          "sha256": "3651d16711dcca0c247aa37dd29d50f9ba8adb0024766cf6588fe3f577fcbeaa",
+          "sha256": "27d2f9e3933207086031584b1bc75cd17aa06dcc0fcb488731e3adc798fb50d6",
           "type": "audio/ogg"
         }
       ]

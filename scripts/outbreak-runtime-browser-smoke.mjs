@@ -27,11 +27,22 @@ const engines = (process.env.OUTBREAK_QA_ENGINES ?? "chromium,webkit")
   .map((value) => value.trim())
   .filter(Boolean);
 const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit };
-const viewports = [
+const viewportCandidates = [
   { width: 1280, height: 720 },
   { width: 844, height: 390 },
   { width: 844, height: 340 },
 ];
+const requestedViewportIds = (process.env.OUTBREAK_QA_VIEWPORTS
+  ?? "1280x720,844x390,844x340")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+const viewports = viewportCandidates.filter(({ width, height }) => (
+  requestedViewportIds.includes(`${width}x${height}`)
+));
+if (viewports.length !== requestedViewportIds.length) {
+  throw new Error(`Unknown OUTBREAK_QA_VIEWPORTS: ${requestedViewportIds.join(",")}`);
+}
 const timeout = Math.max(12_000, Number(process.env.OUTBREAK_QA_TIMEOUT_MS) || 45_000);
 const evidenceDir = path.resolve(
   process.env.OUTBREAK_QA_EVIDENCE_DIR ?? "outputs/outbreak-runtime-browser-smoke",
@@ -77,6 +88,39 @@ async function openOutbreakDossier(page) {
   await page.locator("button.title-start").waitFor({ state: "visible", timeout });
   await page.locator("button.title-start").click();
   await page.locator(".map-screen").waitFor({ state: "visible", timeout });
+  const employmentPopup = page.locator(".employment-available-popup");
+  const employmentPopupVisible = await employmentPopup
+    .waitFor({ state: "visible", timeout: 2_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (employmentPopupVisible) {
+    const acknowledgedEmploymentLabels = new Set();
+    for (let index = 0; index < 16 && await employmentPopup.isVisible().catch(() => false); index += 1) {
+      const label = await employmentPopup.getAttribute("aria-label");
+      invariant(
+        label?.includes("雇用可能"),
+        "Employment popup did not expose its player-facing availability label",
+      );
+      invariant(
+        !acknowledgedEmploymentLabels.has(label),
+        `Employment popup repeated without advancing: ${label}`,
+      );
+      acknowledgedEmploymentLabels.add(label);
+      await employmentPopup.getByRole("button", { name: "あとで", exact: true }).click();
+      await page.waitForFunction(
+        (previousLabel) => {
+          const current = document.querySelector(".employment-available-popup");
+          return !current || current.getAttribute("aria-label") !== previousLabel;
+        },
+        label,
+        { timeout },
+      );
+    }
+    invariant(
+      !await employmentPopup.isVisible().catch(() => false),
+      "Employment popup queue exceeded the sixteen-unit safety bound",
+    );
+  }
   await page.locator("button.outbreak-entry").click();
   await page.locator(".outbreak-screen").waitFor({ state: "visible", timeout });
 }
@@ -138,6 +182,8 @@ async function accelerateAllEntries(page) {
 
 async function runFullOutbreak(page, name) {
   const mission = OUTBREAK_MISSIONS[0];
+  const settlementBaselineRaw = await page.evaluate((key) => localStorage.getItem(key), saveKey);
+  const settlementBaseline = deserializeCampaignSave(settlementBaselineRaw);
   const selected = page.locator(".outbreak-mission-list button").filter({ hasText: mission.displayName });
   await selected.click();
   await page.locator(".outbreak-intel .campaign-primary").click();
@@ -246,9 +292,16 @@ async function runFullOutbreak(page, name) {
   );
   const failedRaw = await page.evaluate((key) => localStorage.getItem(key), saveKey);
   const failedSave = deserializeCampaignSave(failedRaw);
-  invariant(failedSave.caps === seededSave.caps, `${name}: failed save leaked caps`);
-  invariant(failedSave.outbreaks.processedResultIds.length === 0, `${name}: failed save leaked receipt`);
-  invariant(failedSave.equipmentInventory.length === 0, `${name}: failed save leaked equipment`);
+  invariant(failedSave.caps === settlementBaseline.caps, `${name}: failed save leaked caps`);
+  invariant(
+    failedSave.outbreaks.processedResultIds.length
+      === settlementBaseline.outbreaks.processedResultIds.length,
+    `${name}: failed save leaked receipt`,
+  );
+  invariant(
+    failedSave.equipmentInventory.length === settlementBaseline.equipmentInventory.length,
+    `${name}: failed save leaked equipment`,
+  );
   await page.getByRole("button", { name: "一括保存を再試行" }).click();
   await page.locator(".outbreak-result-screen").waitFor({ state: "visible", timeout });
   await page.waitForFunction(() => !document.querySelector(".outbreak-settlement-blocker"), undefined, { timeout });
@@ -270,16 +323,26 @@ async function runFullOutbreak(page, name) {
   const expectedGrant = mission.firstClearEquipmentGrant;
   invariant(persisted.outbreaks.clearedMissionIds.includes(mission.id), `${name}: mission clear not persisted`);
   invariant(persisted.outbreaks.survivalBossKinds.includes(mission.boss.enemyKind), `${name}: Survival boss not unlocked`);
-  invariant(persisted.outbreaks.processedResultIds.length === 1, `${name}: receipt count mismatch`);
+  invariant(
+    persisted.outbreaks.processedResultIds.length
+      === settlementBaseline.outbreaks.processedResultIds.length + 1,
+    `${name}: receipt count mismatch`,
+  );
   invariant(persisted.outbreaks.bossDefeatCounts[mission.boss.enemyKind] === 1, `${name}: defeat count mismatch`);
-  invariant(persisted.caps === seededSave.caps + mission.baseRewardCaps, `${name}: caps settlement mismatch`);
+  invariant(
+    persisted.caps === settlementBaseline.caps + mission.baseRewardCaps,
+    `${name}: caps settlement mismatch`,
+  );
   invariant(
     persisted.equipmentInventory.some(({ equipmentId, quantity }) => (
       equipmentId === expectedGrant.equipmentId && quantity === expectedGrant.quantity
     )),
     `${name}: equipment quantity settlement mismatch`,
   );
-  invariant(persisted.revision === seededSave.revision + 1, `${name}: settlement used more than one revision`);
+  invariant(
+    persisted.revision === settlementBaseline.revision + 1,
+    `${name}: settlement used more than one revision`,
+  );
   invariant(
     typeof persistedEnvelope.integrity === "string" && persistedEnvelope.integrity.length > 0,
     `${name}: integrity missing`,

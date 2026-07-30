@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
 const configuredBaseUrl = process.env.PERF_QA_BASE_URL?.trim() || null;
 let baseUrl = new URL(configuredBaseUrl ?? "http://127.0.0.1/");
@@ -27,8 +28,20 @@ if (isGate && durationMs < 15 * 60_000) {
 }
 const [width, height] = (process.env.PERF_QA_VIEWPORT ?? '844x390').split('x').map(Number);
 if (!Number.isFinite(width) || !Number.isFinite(height)) throw new Error('PERF_QA_VIEWPORT must use WIDTHxHEIGHT');
+const deviceScaleFactor = Math.max(
+  1,
+  Math.min(4, Number(process.env.PERF_QA_DEVICE_SCALE_FACTOR) || 1),
+);
 const outputPath = path.resolve(process.env.PERF_QA_OUTPUT ?? `outputs/performance/${engineName}-${width}x${height}.json`);
-const resultVersion = process.env.PERF_QA_VERSION ?? '0.9.0';
+const resultVersion = process.env.PERF_QA_VERSION ?? '0.9.5';
+const requestedGraphicsQuality = process.env.PERF_QA_GRAPHICS_QUALITY?.trim() || null;
+if (requestedGraphicsQuality && !['auto', 'high', 'power-save'].includes(requestedGraphicsQuality)) {
+  throw new Error(`Unsupported PERF_QA_GRAPHICS_QUALITY: ${requestedGraphicsQuality}`);
+}
+const requestedScenario = process.env.PERF_QA_SCENARIO?.trim() || 'normal-stress';
+if (!['normal-stress', 'survival-wave20-stress'].includes(requestedScenario)) {
+  throw new Error(`Unsupported PERF_QA_SCENARIO: ${requestedScenario}`);
+}
 
 function percentile(values, ratio) {
   if (values.length === 0) return null;
@@ -151,7 +164,23 @@ async function advanceToBattle(page, timeoutMs = 60_000) {
   throw new Error('Performance QA could not enter battle');
 }
 
+async function prepareRequestedScenario(page) {
+  if (requestedScenario === 'normal-stress') return null;
+  await page.waitForFunction(
+    () => typeof window.__ASHFALL_BATTLE_QA__?.prepareSurvivalWave20StressProof === 'function',
+    null,
+    { timeout: 30_000 },
+  );
+  return page.evaluate(() => {
+    const bridge = window.__ASHFALL_BATTLE_QA__;
+    const preparation = bridge.prepareSurvivalWave20StressProof();
+    const state = bridge.getSurvivalWaveEntitlementProof();
+    return { preparation, state };
+  });
+}
+
 const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] };
+const buildIdentityAtStart = await productionBuildIdentity(projectRoot);
 const server = await ensureLocalServer();
 const target = new URL(baseUrl);
 target.search = new URLSearchParams({ qa: 'stress', safe: 'iphone-landscape' }).toString();
@@ -162,7 +191,7 @@ try {
     headless: true,
     ...(engineName === 'chromium' ? { args: ['--enable-precise-memory-info'] } : {}),
   });
-  context = await browser.newContext({ viewport: { width, height } });
+  context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor });
   await context.addInitScript(({ frameCapacity }) => {
     const state = {
       startedAt: 0,
@@ -341,6 +370,17 @@ try {
   if (!response?.ok()) throw new Error(`Navigation failed with HTTP ${response?.status()}`);
   await page.locator('.game-shell').waitFor({ state: 'attached', timeout: 120_000 });
   await advanceToBattle(page);
+  if (requestedGraphicsQuality) {
+    await page.evaluate((quality) => {
+      window.__ASHFALL_BATTLE_QA__?.setGraphicsQuality?.(quality);
+    }, requestedGraphicsQuality);
+    await page.waitForFunction(
+      (quality) => document.documentElement.dataset.graphicsQualityRequested === quality,
+      requestedGraphicsQuality,
+      { timeout: 30_000 },
+    );
+  }
+  const initialScenarioProof = await prepareRequestedScenario(page);
   await page.evaluate(() => window.__ASHFALL_PERFORMANCE_QA__.beginMeasurement());
   const navigationCountAtMeasurementStart = topLevelNavigations;
   const runtimePerformanceBefore = await page.evaluate(
@@ -355,6 +395,7 @@ try {
   let warmupRetainedHeapBytes = null;
   let warmupRetainedHeapGcDurationMs = null;
   let warmupRetainedHeapCollected = false;
+  let scenarioRepreparations = 0;
   while (Date.now() - measurementStartedAt - excludedHarnessDurationMs < durationMs) {
     const elapsed = Date.now() - measurementStartedAt - excludedHarnessDurationMs;
     if (!warmupRetainedHeapCollected && elapsed >= warmupEnd) {
@@ -366,7 +407,26 @@ try {
     }
     const screen = await page.locator('.game-shell').getAttribute('data-screen');
     if (screen === 'result') retries += 1;
-    if (screen !== 'battle') await advanceToBattle(page, 30_000);
+    if (screen !== 'battle') {
+      if (requestedScenario === 'survival-wave20-stress') {
+        await prepareRequestedScenario(page);
+        scenarioRepreparations += 1;
+      } else {
+        await advanceToBattle(page, 30_000);
+      }
+    } else if (requestedScenario === 'survival-wave20-stress') {
+      const survivalState = await page.evaluate(
+        () => window.__ASHFALL_BATTLE_QA__?.getSurvivalWaveEntitlementProof?.() ?? null,
+      );
+      if (
+        !survivalState
+        || survivalState.currentWave !== 20
+        || !['wave-ready', 'in-wave'].includes(survivalState.phase)
+      ) {
+        await prepareRequestedScenario(page);
+        scenarioRepreparations += 1;
+      }
+    }
     const remaining = durationMs - (Date.now() - measurementStartedAt - excludedHarnessDurationMs);
     await page.waitForTimeout(Math.min(1_000, Math.max(1, remaining)));
   }
@@ -376,6 +436,11 @@ try {
   const finalRetainedCheckpoint = await collectRetainedHeap();
   const finalRetainedHeapBytes = finalRetainedCheckpoint.bytes;
   const finalRetainedHeapGcDurationMs = finalRetainedCheckpoint.durationMs;
+  const finalScenarioProof = requestedScenario === 'survival-wave20-stress'
+    ? await page.evaluate(
+      () => window.__ASHFALL_BATTLE_QA__?.getSurvivalWaveEntitlementProof?.() ?? null,
+    )
+    : null;
 
   const raw = await page.evaluate(() => {
     const state = window.__ASHFALL_PERFORMANCE_QA__;
@@ -453,6 +518,14 @@ try {
   });
   const medianFrameMs = median(frameTimes);
   const p95FrameMs = percentile(frameTimes, 0.95);
+  const denseSurvivalAuto = requestedScenario === 'survival-wave20-stress'
+    && requestedGraphicsQuality === 'auto';
+  const p95FrameBudgetMs = requestedGraphicsQuality === 'power-save'
+    ? 50
+    : denseSurvivalAuto
+      ? 67
+      : 33;
+  const medianFpsMinimum = denseSurvivalAuto ? 25 : 50;
   const battleCoveragePercent = Math.min(100, raw.battleActiveMs / durationMs * 100);
   const minimumFrameSamples = Math.floor(durationMs / 1_000 * 10);
   const unexpectedNavigationCount = Math.max(0, topLevelNavigations - navigationCountAtMeasurementStart);
@@ -464,6 +537,68 @@ try {
   const renderFrameDelta = runtimePerformanceBefore && runtimePerformanceAfter
     ? runtimePerformanceAfter.renderFrames - runtimePerformanceBefore.renderFrames
     : null;
+  const measuredSeconds = durationMs / 1_000;
+  const effectiveSimulationHz = simulationTickDelta === null
+    ? null
+    : simulationTickDelta / measuredSeconds;
+  const effectiveRenderHz = renderFrameDelta === null
+    ? null
+    : renderFrameDelta / measuredSeconds;
+  const renderToSimulationRatio = simulationTickDelta && renderFrameDelta !== null
+    ? renderFrameDelta / simulationTickDelta
+    : null;
+  const expectedRenderHz = runtimePerformanceAfter?.graphicsProfile?.renderHz ?? null;
+  const renderCadenceToleranceHz = expectedRenderHz === null
+    ? null
+    : Math.max(3, expectedRenderHz * .1);
+  const renderCadenceMatchesProfile = effectiveRenderHz !== null
+    && expectedRenderHz !== null
+    && renderCadenceToleranceHz !== null
+    && (
+      denseSurvivalAuto
+        ? effectiveRenderHz >= 24
+          && effectiveRenderHz <= expectedRenderHz + renderCadenceToleranceHz
+        : Math.abs(effectiveRenderHz - expectedRenderHz) <= renderCadenceToleranceHz
+    );
+  const powerSaveLoadReductionObserved = requestedGraphicsQuality !== 'power-save'
+    || (
+      effectiveRenderHz !== null
+      && effectiveRenderHz >= 27
+      && effectiveRenderHz <= 33
+      && renderToSimulationRatio !== null
+      && renderToSimulationRatio >= .4
+      && renderToSimulationRatio <= .6
+    );
+  const survivalWave20ScenarioStayedActive = requestedScenario !== 'survival-wave20-stress'
+    || (
+      initialScenarioProof?.preparation?.targetWave === 20
+      && finalScenarioProof?.currentWave === 20
+      && finalScenarioProof?.paused === false
+      && finalScenarioProof?.over === false
+      && scenarioRepreparations === 0
+    );
+  const survivalWave20GameplayStayedActive = requestedScenario !== 'survival-wave20-stress'
+    || (
+      finalScenarioProof?.phase === 'in-wave'
+      && finalScenarioProof?.livingHumanFighters
+        >= initialScenarioProof?.preparation?.initialHumanFighters
+      && finalScenarioProof?.livingEnemyFighters
+        >= initialScenarioProof?.preparation?.initialEnemyFighters
+      && finalScenarioProof?.baseHp === finalScenarioProof?.baseMaxHp
+      && finalScenarioProof?.humanAttackSequences > 0
+      && finalScenarioProof?.enemyAttackSequences > 0
+    );
+  const renderObjectPools = runtimePerformanceAfter?.renderObjectPools ?? null;
+  const renderObjectPoolEntries = renderObjectPools ? Object.values(renderObjectPools) : [];
+  const renderObjectPoolsBounded = renderObjectPoolEntries.length === 3
+    && renderObjectPoolEntries.every((pool) => (
+      pool.active >= 0
+      && pool.active <= pool.capacity
+      && pool.available >= 0
+      && pool.available <= pool.capacity
+    ));
+  const renderObjectPoolReuseObserved = renderObjectPoolEntries.length === 3
+    && renderObjectPoolEntries.reduce((sum, pool) => sum + pool.reused, 0) > 0;
   const memoryProxyBudgetPassed = memoryProxyGrowthPercent !== null
     && warmupMemoryProxySamples.length > 0
     && finalMemoryProxySamples.length > 0
@@ -477,18 +612,36 @@ try {
     : maxConsecutiveRafStallsOver100Ms <= 1
       && raw.maxFrameGapMs <= 1_000
       && unaccountedFrameGapPercent <= 1;
+  const buildIdentityAtEnd = await productionBuildIdentity(projectRoot);
+  const buildIdentityStable = (
+    buildIdentityAtStart.scope === "dist-recursive"
+    && buildIdentityAtEnd.scope === "dist-recursive"
+    && buildIdentityAtStart.combinedSha256 === buildIdentityAtEnd.combinedSha256
+  );
   const gateChecks = {
+    productionBuildIdentityStable: buildIdentityStable,
     durationAtLeast15Minutes: durationMs >= 15 * 60_000,
     battleActiveAtLeast95Percent: battleCoveragePercent >= 95,
     frameSamplesSufficient: frameTimes.length >= minimumFrameSamples,
     simulationUpdatesSufficient: simulationTickDelta !== null && simulationTickDelta >= minimumFrameSamples,
     renderUpdatesSufficient: renderFrameDelta !== null && renderFrameDelta >= minimumFrameSamples,
+    simulationRateWithin55To65Hz: effectiveSimulationHz !== null
+      && effectiveSimulationHz >= 55
+      && effectiveSimulationHz <= 65,
+    renderCadenceMatchesProfile,
+    powerSave30FpsLoadReductionObserved: powerSaveLoadReductionObserved,
+    survivalWave20ScenarioStayedActive,
+    survivalWave20GameplayStayedActive,
+    noScenarioRepreparations: scenarioRepreparations === 0,
+    renderObjectPoolsBounded,
+    renderObjectPoolReuseObserved,
     noFrameSampleOverflow: raw.frameSamplesDropped === 0,
     maxFrameGapAtMost1000Ms: raw.maxFrameGapMs <= 1_000,
     unaccountedFrameGapAtMost1Percent: unaccountedFrameGapPercent <= 1,
     noUnexpectedNavigationOrReload: unexpectedNavigationCount === 0,
-    medianFpsAtLeast50: medianFrameMs !== null && 1_000 / medianFrameMs >= 50,
-    p95FrameAtMost33Ms: p95FrameMs !== null && p95FrameMs <= 33,
+    medianFpsMeetsScenarioMinimum:
+      medianFrameMs !== null && 1_000 / medianFrameMs >= medianFpsMinimum,
+    p95FrameWithinQualityBudget: p95FrameMs !== null && p95FrameMs <= p95FrameBudgetMs,
     degradationAtMost10Percent: frameTimeDegradationPercent !== null && frameTimeDegradationPercent <= 10,
     memoryGrowthAtMost25Percent: memoryBudgetPassed,
     noConsecutiveLongTasks: longTaskBudgetPassed,
@@ -501,8 +654,14 @@ try {
   const summary = {
     resultVersion,
     runMode,
+    buildIdentity: buildIdentityAtEnd,
+    buildIdentityAtStart,
+    buildIdentityStable,
     engine: engineName,
     viewport: { width, height },
+    deviceScaleFactor,
+    requestedGraphicsQuality: requestedGraphicsQuality ?? 'save-default',
+    requestedScenario,
     durationMs,
     battleActiveMs: round(raw.battleActiveMs),
     battleCoveragePercent: round(battleCoveragePercent),
@@ -516,7 +675,9 @@ try {
     minimumFrameSamples,
     medianFrameMs: round(medianFrameMs),
     medianFps: round(medianFrameMs ? 1_000 / medianFrameMs : null),
+    medianFpsMinimum,
     p95FrameMs: round(p95FrameMs),
+    p95FrameBudgetMs,
     frameTimeDegradationPercent: round(frameTimeDegradationPercent),
     memorySamples: raw.memory.length,
     warmupMemorySamples: warmupMemorySamples.length,
@@ -552,6 +713,16 @@ try {
       after: runtimePerformanceAfter,
       simulationTickDelta,
       renderFrameDelta,
+      effectiveSimulationHz: round(effectiveSimulationHz),
+      effectiveRenderHz: round(effectiveRenderHz),
+      expectedRenderHz: round(expectedRenderHz),
+      renderToSimulationRatio: round(renderToSimulationRatio, 4),
+      renderCadenceToleranceHz: round(renderCadenceToleranceHz),
+    },
+    scenario: {
+      initialProof: initialScenarioProof,
+      finalProof: finalScenarioProof,
+      repreparations: scenarioRepreparations,
     },
     harness: {
       measurementStartsAfterBattleEntry: true,

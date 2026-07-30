@@ -83,3 +83,23 @@ test("story and battle screens resolve the same location-specific art", () => {
   assert.equal(STORY_BACKGROUND_VISUALS["station-tunnel-containment-cut"], PRODUCTION_VISUALS.eventCuts["station-tunnel-containment-cut"]);
   assert.equal(stageVisualFor("unknown-stage"), "/battlefield-v4.png");
 });
+
+test("escort missions use the approved derived maintenance cart asset", async () => {
+  const path = PRODUCTION_VISUALS.missionObjects["maintenance-cart"];
+  assert.equal(path, "/art/v095/mission-objects/maintenance-cart-v1.png");
+  const bytes = await readFile(repoAsset(path));
+  assert.equal(
+    createHash("sha256").update(bytes).digest("hex"),
+    "1523b6347d5f1e66fb7065338602c1621bac5f2f90d37ec62059830d3b69b3fb",
+  );
+  const metadata = await sharp(bytes).metadata();
+  assert.deepEqual(
+    {
+      format: metadata.format,
+      width: metadata.width,
+      height: metadata.height,
+      hasAlpha: metadata.hasAlpha,
+    },
+    { format: "png", width: 480, height: 168, hasAlpha: true },
+  );
+});

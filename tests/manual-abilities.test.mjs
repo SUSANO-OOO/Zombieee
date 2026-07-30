@@ -8,6 +8,8 @@ import {
   beginManualAbility,
   canActivateManualAbility,
   createManualAbilityRuntime,
+  gunnerSuppressionVfxRounds,
+  isManualAbilityReady,
   layoutManualAbilityIcons,
   manualAbilityCheckpointCooldown,
   manualAbilityLocksNormalAction,
@@ -128,12 +130,14 @@ test("the existing eleven units use deterministic ability-specific auto targetin
       selected,
       `${kind} target selection is order-independent`,
     );
-    assert.equal(canActivateManualAbility({ fighter, fighters }), true, `${kind} shows ready only with a valid target`);
+    assert.equal(isManualAbilityReady(fighter), true, `${kind} exposes its cooldown-ready state`);
+    assert.equal(canActivateManualAbility({ fighter, fighters }), true, `${kind} can activate with a valid target`);
   }
 
   const nao = { ...owner(900, "medic"), lane: 1, maxHp: 100 };
   const healthy = { ...owner(901, "scout"), lane: 1, x: 230, maxHp: 100, hp: 100 };
   assert.equal(selectManualAbilityTarget({ owner: nao, fighters: [nao, healthy] }), null);
+  assert.equal(isManualAbilityReady(nao), true);
   assert.equal(canActivateManualAbility({ fighter: nao, fighters: [nao, healthy] }), false);
 });
 
@@ -145,9 +149,15 @@ test("sustained manual abilities emit exactly one start and end then cool down",
     const active = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY[kind].windupSeconds);
     assert.equal(active.runtime.phase, "active", kind);
     assert.deepEqual(active.events.map(({ type }) => type), ["active-start"], kind);
-    const cooldown = advanceManualAbility(active.runtime, MANUAL_ABILITY_REGISTRY[kind].activeSeconds);
+    const recovering = advanceManualAbility(active.runtime, MANUAL_ABILITY_REGISTRY[kind].activeSeconds);
+    assert.equal(recovering.runtime.phase, "recovery", kind);
+    assert.deepEqual(recovering.events.map(({ type }) => type), ["active-end"], kind);
+    const cooldown = advanceManualAbility(
+      recovering.runtime,
+      MANUAL_ABILITY_REGISTRY[kind].recoverySeconds,
+    );
     assert.equal(cooldown.runtime.phase, "cooldown", kind);
-    assert.deepEqual(cooldown.events.map(({ type }) => type), ["active-end"], kind);
+    assert.deepEqual(cooldown.events, [], kind);
     assert.deepEqual(advanceManualAbility(cooldown.runtime, 0).events, [], kind);
 
     const oversized = advanceManualAbility(started.runtime, 100);
@@ -174,8 +184,9 @@ test("Zakimiya targets the densest valid group instead of wasting the throw on t
   );
 });
 
-test("no valid target means no ready icon contract", () => {
+test("no valid target keeps the ready state visible but disables activation", () => {
   const zakimiya = owner();
+  assert.equal(isManualAbilityReady(zakimiya), true);
   assert.equal(canActivateManualAbility({ fighter: zakimiya, fighters: [zakimiya] }), false);
   assert.equal(selectZakimiyaAbilityTarget({ owner: zakimiya, fighters: [enemy("far", 700)] }), null);
 });
@@ -192,14 +203,113 @@ test("duplicate deployments own independent activation and cooldown state", () =
   const impact = advanceManualAbility(first.manualAbility, MANUAL_ABILITY_REGISTRY.zakimiya.windupSeconds);
   first.manualAbility = impact.runtime;
   assert.equal(impact.events.length, 1);
-  assert.equal(first.manualAbility.phase, "cooldown");
+  assert.equal(first.manualAbility.phase, "recovery");
   assert.equal(second.manualAbility.phase, "ready");
 
   const paused = advanceManualAbility(first.manualAbility, 0);
-  assert.equal(paused.runtime.cooldownRemaining, first.manualAbility.cooldownRemaining);
-  const cooling = advanceManualAbility(first.manualAbility, 2);
-  assert.ok(cooling.runtime.cooldownRemaining < first.manualAbility.cooldownRemaining);
+  assert.equal(paused.runtime.windupRemaining, first.manualAbility.windupRemaining);
+  const recovered = advanceManualAbility(first.manualAbility, MANUAL_ABILITY_REGISTRY.zakimiya.recoverySeconds);
+  assert.equal(recovered.runtime.phase, "cooldown");
+  const cooling = advanceManualAbility(recovered.runtime, 2);
+  assert.ok(cooling.runtime.cooldownRemaining < recovered.runtime.cooldownRemaining);
   assert.equal(advanceManualAbility(cooling.runtime, 20).runtime.phase, "ready");
+});
+
+test("Raider suppression emits five ordered impact receipts before cooldown", () => {
+  const target = {
+    targetIds: ["runner", "walker"],
+    x: 360,
+    y: 280,
+    direction: 1,
+  };
+  const started = beginManualAbility(createManualAbilityRuntime("gunner"), target);
+  assert.equal(started.ok, true);
+  const first = advanceManualAbility(started.runtime, .24);
+  assert.deepEqual(first.events.map(({ type, salvoIndex }) => [type, salvoIndex]), [
+    ["muzzle", 0],
+    ["impact", 0],
+  ]);
+  assert.equal(first.runtime.phase, "windup");
+  const second = advanceManualAbility(first.runtime, .08);
+  assert.deepEqual(second.events.map(({ type, salvoIndex }) => [type, salvoIndex]), [
+    ["muzzle", 1],
+    ["impact", 1],
+  ]);
+  const final = advanceManualAbility(second.runtime, .23);
+  assert.deepEqual(final.events.map(({ type, salvoIndex }) => [type, salvoIndex]), [
+    ["muzzle", 2],
+    ["impact", 2],
+    ["muzzle", 3],
+    ["impact", 3],
+    ["muzzle", 4],
+    ["impact", 4],
+  ]);
+  assert.equal(final.events.at(-1).finalRound, true);
+  assert.equal(final.runtime.phase, "recovery");
+  assert.equal(
+    Number(final.events.at(-1).timelineAt.toFixed(3)),
+    .531,
+  );
+  const cooldown = advanceManualAbility(final.runtime, MANUAL_ABILITY_REGISTRY.gunner.recoverySeconds);
+  assert.equal(cooldown.runtime.phase, "cooldown");
+});
+
+test("Raider suppression VFX stays hidden through aim then follows each muzzle and impact", () => {
+  const definition = MANUAL_ABILITY_REGISTRY.gunner;
+  const beforeAim = gunnerSuppressionVfxRounds(definition.aimSeconds - Number.EPSILON);
+  assert.equal(beforeAim.filter(({ visible }) => visible).length, 0);
+
+  const firstMuzzle = gunnerSuppressionVfxRounds(definition.aimSeconds);
+  assert.equal(firstMuzzle[0].visible, true);
+  assert.equal(firstMuzzle[0].travelProgress, 0);
+  assert.equal(firstMuzzle.slice(1).filter(({ visible }) => visible).length, 0);
+
+  const firstImpact = gunnerSuppressionVfxRounds(
+    definition.aimSeconds + definition.projectileTravelSeconds,
+  );
+  assert.ok(Math.abs(firstImpact[0].travelProgress - 1) < 1e-9);
+  assert.equal(firstImpact[0].impactAge, 0);
+
+  const finalMuzzleAt = definition.aimSeconds
+    + definition.burstIntervalSeconds * (definition.burstCount - 1);
+  const finalMuzzle = gunnerSuppressionVfxRounds(finalMuzzleAt);
+  assert.equal(finalMuzzle.at(-1).visible, true);
+  assert.equal(finalMuzzle.at(-1).travelProgress, 0);
+});
+
+test("all five reviewed specials expose a real locked recovery phase before normal action resumes", () => {
+  const expectedAfterRecovery = {
+    scout: "cooldown",
+    gunner: "cooldown",
+    "crazy-king": "cooldown",
+    tky: "cooldown",
+    "mayo-chan": "feral",
+  };
+  for (const kind of Object.keys(expectedAfterRecovery)) {
+    const definition = MANUAL_ABILITY_REGISTRY[kind];
+    const target = kind === "gunner"
+      ? { targetIds: ["target"], targetId: "target", x: 320, y: 280, direction: 1 }
+      : { targetId: "target", targetIds: ["target"], x: 320, y: 280, direction: 1 };
+    const started = beginManualAbility(createManualAbilityRuntime(kind), target);
+    const afterWindup = advanceManualAbility(started.runtime, definition.windupSeconds);
+    const recovering = kind === "crazy-king"
+      ? advanceManualAbility(afterWindup.runtime, definition.activeSeconds)
+      : afterWindup;
+    assert.equal(recovering.runtime.phase, "recovery", kind);
+    assert.equal(manualAbilityLocksNormalAction(recovering.runtime), true, kind);
+    assert.equal(
+      Number(recovering.runtime.abilityElapsed.toFixed(3)),
+      Number((
+        definition.windupSeconds
+        + (kind === "crazy-king" ? definition.activeSeconds : 0)
+      ).toFixed(3)),
+      kind,
+    );
+    const halfway = advanceManualAbility(recovering.runtime, definition.recoverySeconds / 2);
+    assert.equal(halfway.runtime.phase, "recovery", kind);
+    const finished = advanceManualAbility(halfway.runtime, definition.recoverySeconds / 2 + 1e-9);
+    assert.equal(finished.runtime.phase, expectedAfterRecovery[kind], kind);
+  }
 });
 
 test("checkpoint debt conservatively preserves every non-ready manual ability phase", () => {
@@ -209,12 +319,14 @@ test("checkpoint debt conservatively preserves every non-ready manual ability ph
   assert.equal(
     windupDebt,
     MANUAL_ABILITY_REGISTRY.brawler.windupSeconds
+      + MANUAL_ABILITY_REGISTRY.brawler.recoverySeconds
       + MANUAL_ABILITY_REGISTRY.brawler.cooldownSeconds,
   );
-  const cooling = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY.brawler.windupSeconds);
+  const recovering = advanceManualAbility(started.runtime, MANUAL_ABILITY_REGISTRY.brawler.windupSeconds);
   assert.equal(
-    manualAbilityCheckpointCooldown(cooling.runtime),
-    MANUAL_ABILITY_REGISTRY.brawler.cooldownSeconds,
+    manualAbilityCheckpointCooldown(recovering.runtime),
+    MANUAL_ABILITY_REGISTRY.brawler.recoverySeconds
+      + MANUAL_ABILITY_REGISTRY.brawler.cooldownSeconds,
   );
   const restored = restoreManualAbilityCooldown("brawler", windupDebt);
   assert.equal(restored.phase, "cooldown");
@@ -232,6 +344,7 @@ test("checkpoint debt conservatively preserves every non-ready manual ability ph
   assert.equal(
     manualAbilityCheckpointCooldown(sustained.runtime),
     MANUAL_ABILITY_REGISTRY.guardian.windupSeconds
+      + MANUAL_ABILITY_REGISTRY.guardian.recoverySeconds
       + MANUAL_ABILITY_REGISTRY.guardian.activeSeconds
       + MANUAL_ABILITY_REGISTRY.guardian.cooldownSeconds,
   );
@@ -243,6 +356,7 @@ test("checkpoint debt conservatively preserves every non-ready manual ability ph
   assert.equal(
     manualAbilityCheckpointCooldown(mayo.runtime),
     MANUAL_ABILITY_REGISTRY["mayo-chan"].windupSeconds
+      + MANUAL_ABILITY_REGISTRY["mayo-chan"].recoverySeconds
       + MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds
       + MANUAL_ABILITY_REGISTRY["mayo-chan"].cooldownSeconds,
   );
@@ -415,8 +529,14 @@ test("Miyamoto Musashi prioritizes a boss, counters one melee hit, and falls bac
   const counter = triggerMusashiCounter(guard.runtime);
   assert.equal(counter.ok, true);
   assert.equal(counter.event.mode, "counter");
-  assert.equal(counter.runtime.phase, "cooldown");
+  assert.equal(counter.runtime.phase, "recovery");
+  assert.equal(counter.runtime.windupRemaining, MANUAL_ABILITY_REGISTRY["miyamoto-musashi"].recoverySeconds);
   assert.equal(triggerMusashiCounter(counter.runtime).ok, false, "one activation cannot counter twice");
+  const counterRecovered = advanceManualAbility(
+    counter.runtime,
+    MANUAL_ABILITY_REGISTRY["miyamoto-musashi"].recoverySeconds,
+  );
+  assert.equal(counterRecovered.runtime.phase, "cooldown");
 
   const fallbackGuard = advanceManualAbility(
     beginManualAbility(createManualAbilityRuntime("miyamoto-musashi"), selected).runtime,
@@ -428,7 +548,12 @@ test("Miyamoto Musashi prioritizes a boss, counters one melee hit, and falls bac
   );
   assert.equal(fallback.events.length, 1);
   assert.equal(fallback.events[0].mode, "fallback");
-  assert.equal(fallback.runtime.phase, "cooldown");
+  assert.equal(fallback.runtime.phase, "recovery");
+  const fallbackRecovered = advanceManualAbility(
+    fallback.runtime,
+    MANUAL_ABILITY_REGISTRY["miyamoto-musashi"].recoverySeconds,
+  );
+  assert.equal(fallbackRecovered.runtime.phase, "cooldown");
 });
 
 test("Mayo-chan deterministically prioritizes small fast infected and every deployment owns its own feral timer", () => {
@@ -449,6 +574,9 @@ test("Mayo-chan deterministically prioritizes small fast infected and every depl
   assert.equal(second.manualAbility.phase, "ready");
 
   let step = advanceManualAbility(first.manualAbility, MANUAL_ABILITY_REGISTRY["mayo-chan"].windupSeconds);
+  assert.equal(step.runtime.phase, "recovery");
+  assert.deepEqual(step.events, []);
+  step = advanceManualAbility(step.runtime, MANUAL_ABILITY_REGISTRY["mayo-chan"].recoverySeconds);
   assert.equal(step.runtime.phase, "feral");
   assert.deepEqual(step.events.map(({ type }) => type), ["feral-start"]);
   step = advanceManualAbility(step.runtime, MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds);
@@ -572,6 +700,83 @@ test("seven ready icons sharing a top-edge HP anchor remain independently tappab
   assert.ok(icons.every((icon) => icon.y <= icon.anchorY + 18));
 });
 
+test("eighteen clustered ready controls remain unique and tappable at 844x340", () => {
+  const fighters = Array.from({ length: 18 }, (_, index) => ({
+    id: index + 1,
+    kind: "zakimiya",
+    screenX: 422,
+    screenY: 288,
+  }));
+  const icons = layoutManualAbilityIcons({
+    fighters,
+    obstacles: [
+      { x: 0, y: 0, width: 844, height: 54 },
+      { x: 0, y: 286, width: 844, height: 54 },
+      { x: 600, y: 58, width: 220, height: 46 },
+    ],
+    displayWidth: 844,
+    displayHeight: 340,
+    safeInsets: { top: 6, right: 50, bottom: 0, left: 50 },
+  });
+  assert.equal(icons.length, 18);
+  assert.equal(new Set(icons.map(({ x, y }) => `${x}:${y}`)).size, 18);
+  for (let leftIndex = 0; leftIndex < icons.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < icons.length; rightIndex += 1) {
+      const left = icons[leftIndex];
+      const right = icons[rightIndex];
+      assert.ok(
+        left.x + left.hitSize + 2 <= right.x
+          || right.x + right.hitSize + 2 <= left.x
+          || left.y + left.hitSize + 2 <= right.y
+          || right.y + right.hitSize + 2 <= left.y,
+        `${left.fighterId}/${right.fighterId}`,
+      );
+    }
+  }
+});
+
+test("a blocked local crown uses an unblocked global ready-control slot before HUD overlap", () => {
+  const obstacle = { x: 300, y: 50, width: 240, height: 290 };
+  const [icon] = layoutManualAbilityIcons({
+    fighters: [{
+      id: 1,
+      kind: "scout",
+      screenX: 422,
+      screenY: 200,
+    }],
+    obstacles: [obstacle],
+    displayWidth: 844,
+    displayHeight: 340,
+    safeInsets: { top: 6, right: 50, bottom: 0, left: 50 },
+  });
+  assert.ok(icon);
+  const visibleInset = (icon.hitSize - 28) / 2;
+  const visibleIcon = {
+    x: icon.x + visibleInset,
+    y: icon.y + visibleInset,
+    width: 28,
+    height: 28,
+  };
+  const overlapsHud = visibleIcon.x < obstacle.x + obstacle.width + 4
+    && visibleIcon.x + visibleIcon.width + 4 > obstacle.x
+    && visibleIcon.y < obstacle.y + obstacle.height + 4
+    && visibleIcon.y + visibleIcon.height + 4 > obstacle.y;
+  assert.equal(overlapsHud, false);
+});
+
+test("incapacitation hides activation eligibility and restores one ready state", () => {
+  for (const kind of Object.keys(MANUAL_ABILITY_REGISTRY)) {
+    const fighter = { ...owner(1, kind), stunned: 2 };
+    assert.equal(isManualAbilityReady(fighter), false, kind);
+    assert.equal(canActivateManualAbility({
+      fighter,
+      fighters: [fighter, enemy("target", 260)],
+    }), false, kind);
+    fighter.stunned = 0;
+    assert.equal(isManualAbilityReady(fighter), true, kind);
+  }
+});
+
 test("runtime renders only ready buttons and never a cooldown ring or number above a unit", async () => {
   const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
@@ -659,7 +864,7 @@ test("Mayo-chan incapacitation branches to injury retreat before corpse, infecti
     deathResolution.indexOf('fighter.kind === "mayo-chan"') < deathResolution.indexOf("beginAllyDeath"),
     "Mayo retreat must resolve before the generic ally corpse path",
   );
-  assert.match(source, /fighter\.mayoRetreat\?\.complete !== true/);
+  assert.match(source, /fighter\.mayoRetreat\?\.complete === true/);
   assert.match(source, /mayo-chan-feral/);
 });
 
@@ -671,6 +876,7 @@ test("support placement owns input until it is cancelled or completed", async ()
   );
   assert.match(activation, /g\.over \|\| selectedActionRef\.current/);
   assert.doesNotMatch(activation, /chooseAction\(null\)/);
-  assert.match(source, /g\.running && !g\.paused && !g\.over && !selectedActionRef\.current/);
-  assert.match(source, /screen === "battle" && !selectedAction && hud\.manualAbilityIcons\.map/);
+  assert.match(source, /g\.running && !g\.over/);
+  assert.match(source, /screen === "battle" && hud\.manualAbilityIcons\.map/);
+  assert.match(source, /abilityDisabled = !icon\.available \|\| paused \|\| Boolean\(selectedAction\)/);
 });

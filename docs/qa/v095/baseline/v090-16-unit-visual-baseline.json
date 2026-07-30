@@ -1,0 +1,6428 @@
+{
+  "evidenceVersion": 1,
+  "baselineVersion": "0.9.0",
+  "baselineReleaseSha": "f2633c538756385f13d166d3adbcdd39b3a08b21",
+  "measuredFromIntegrationSha": "76b9168d03109fbb473df7632f0f201d9612f13d",
+  "measuredFromGitHead": "76b9168d03109fbb473df7632f0f201d9612f13d",
+  "verifiedDifferencePaths": [
+    "AGENTS.md",
+    "README.md",
+    "docs/CHATGPT_HANDOFF.md",
+    "docs/PRODUCER_DECISIONS_0.9.5.md",
+    "docs/PRODUCT_ROADMAP.md",
+    "docs/PROJECT_STATE.md",
+    "docs/qa/v095/baseline/README.md",
+    "docs/qa/v095/baseline/v090-16-unit-continuous-frame-baseline.png",
+    "docs/qa/v095/baseline/v090-16-unit-visual-baseline.json",
+    "docs/qa/v095/baseline/v090-performance-baseline.json",
+    "docs/qa/v095/baseline/v090-save-migration-baseline.json",
+    "package.json",
+    "scripts/run-browser-qa-with-server.mjs",
+    "scripts/v095-visual-baseline.mjs",
+    "tests/v095-baseline-contract.test.mjs"
+  ],
+  "generatedAt": "2026-07-29T01:10:06.306Z",
+  "engine": "chromium",
+  "viewport": {
+    "width": 844,
+    "height": 390
+  },
+  "unitCount": 16,
+  "framesPerUnit": 6,
+  "totalFrames": 96,
+  "phases": [
+    "entry",
+    "ready",
+    "attack-probe-0",
+    "attack-probe-1",
+    "attack-probe-2",
+    "attack-probe-3"
+  ],
+  "contactSheet": "docs/qa/v095/baseline/v090-16-unit-continuous-frame-baseline.png",
+  "diagnostics": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "requestFailures": [],
+    "httpErrors": []
+  },
+  "groundingPassed": true,
+  "firstDamageObservedCount": 15,
+  "firstDamageMissingUnits": [
+    "scout"
+  ],
+  "timingMs": {
+    "queuedToEntry": {
+      "samples": 16,
+      "minimum": 662.3,
+      "median": 672.9,
+      "p95": 683.7,
+      "maximum": 683.7
+    },
+    "entryToReady": {
+      "samples": 16,
+      "minimum": 535.4,
+      "median": 909.8,
+      "p95": 1077.7,
+      "maximum": 1077.7
+    },
+    "readyToFirstDamage": {
+      "samples": 15,
+      "minimum": 184.2,
+      "median": 618.4,
+      "p95": 3436,
+      "maximum": 3436
+    }
+  },
+  "attackIdentityObservedCount": 15,
+  "continuousAttackProbeFrameTimingMs": {
+    "samples": 48,
+    "minimum": 17.4,
+    "median": 18.8,
+    "p95": 20.7,
+    "maximum": 23
+  },
+  "units": [
+    {
+      "unitKind": "scout",
+      "fighterId": 3,
+      "attackerId": 1,
+      "queuedAt": 703.0999999940395,
+      "entryToReadyMs": 679.9,
+      "queuedToEntryMs": 662.3,
+      "readyToStrikeMs": 4149.3,
+      "firstDamageObserved": false,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 0
+      },
+      "attackIdentityObserved": false,
+      "continuousAttackProbeFrameDeltasMs": [
+        17.7,
+        18.5,
+        19.2
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/01-scout-entry.png",
+          "capturedAt": 1365.3999999761581,
+          "fighter": {
+            "id": 3,
+            "kind": "scout",
+            "side": "human",
+            "x": 97.2498018583978,
+            "y": 295.72103953369106,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 1,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.32069999999999965,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/01-scout-ready.png",
+          "capturedAt": 2045.2999999821186,
+          "fighter": {
+            "id": 3,
+            "kind": "scout",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 1,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.6699999999999998,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/01-scout-attack-probe-0.png",
+          "capturedAt": 6194.5999999940395,
+          "fighter": {
+            "id": 3,
+            "kind": "scout",
+            "side": "human",
+            "x": 158,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 1,
+            "crawlerDefenseTargetId": 1,
+            "aiDestinationX": 142.7012,
+            "aiMoveDirection": -1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 1,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 3,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/01-scout-attack-probe-1.png",
+          "capturedAt": 6212.299999982119,
+          "fighter": {
+            "id": 3,
+            "kind": "scout",
+            "side": "human",
+            "x": 158,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 1,
+            "crawlerDefenseTargetId": 1,
+            "aiDestinationX": 142.6994,
+            "aiMoveDirection": -1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 1,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 3,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/01-scout-attack-probe-2.png",
+          "capturedAt": 6230.799999982119,
+          "fighter": {
+            "id": 3,
+            "kind": "scout",
+            "side": "human",
+            "x": 158,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 1,
+            "crawlerDefenseTargetId": 1,
+            "aiDestinationX": 142.6994,
+            "aiMoveDirection": -1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 1,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 3,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/01-scout-attack-probe-3.png",
+          "capturedAt": 6250,
+          "fighter": {
+            "id": 3,
+            "kind": "scout",
+            "side": "human",
+            "x": 158,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 1,
+            "crawlerDefenseTargetId": 1,
+            "aiDestinationX": 142.7012,
+            "aiMoveDirection": -1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 1,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 3,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "ranger",
+      "fighterId": 6,
+      "attackerId": 4,
+      "queuedAt": 6325.5,
+      "entryToReadyMs": 909.8,
+      "queuedToEntryMs": 674.6,
+      "readyToStrikeMs": 187.3,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        19.2,
+        19,
+        18.7
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/02-ranger-entry.png",
+          "capturedAt": 7000.0999999940395,
+          "fighter": {
+            "id": 6,
+            "kind": "ranger",
+            "side": "human",
+            "x": 97.84601472098679,
+            "y": 296.065008492877,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 70,
+            "maxHp": 70
+          },
+          "attacker": {
+            "id": 4,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.3533999999999993,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/02-ranger-ready.png",
+          "capturedAt": 7909.899999976158,
+          "fighter": {
+            "id": 6,
+            "kind": "ranger",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 70,
+            "maxHp": 70
+          },
+          "attacker": {
+            "id": 4,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.4700999999999999,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/02-ranger-attack-probe-0.png",
+          "capturedAt": 8097.199999988079,
+          "fighter": {
+            "id": 6,
+            "kind": "ranger",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 4,
+            "crawlerDefenseTargetId": 4,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 0.82,
+            "hp": 70,
+            "maxHp": 70
+          },
+          "attacker": {
+            "id": 4,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.2866999999999994,
+            "hp": 71,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 6,
+              "targetId": 4,
+              "damageTargetId": 4,
+              "weapon": "ranger",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/02-ranger-attack-probe-1.png",
+          "capturedAt": 8116.399999976158,
+          "fighter": {
+            "id": 6,
+            "kind": "ranger",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 4,
+            "crawlerDefenseTargetId": 4,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.20340000000000058,
+            "attackSequence": 1,
+            "cooldown": 0.8034000000000004,
+            "hp": 70,
+            "maxHp": 70
+          },
+          "attacker": {
+            "id": 4,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130.2988,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.27009999999999995,
+            "hp": 71,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 6,
+              "targetId": 4,
+              "damageTargetId": 4,
+              "weapon": "ranger",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/02-ranger-attack-probe-2.png",
+          "capturedAt": 8135.399999976158,
+          "fighter": {
+            "id": 6,
+            "kind": "ranger",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 4,
+            "crawlerDefenseTargetId": 4,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.18670000000000075,
+            "attackSequence": 1,
+            "cooldown": 0.7867000000000006,
+            "hp": 70,
+            "maxHp": 70
+          },
+          "attacker": {
+            "id": 4,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130.56934,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.2534000000000001,
+            "hp": 71,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 6,
+              "targetId": 4,
+              "damageTargetId": 4,
+              "weapon": "ranger",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/02-ranger-attack-probe-3.png",
+          "capturedAt": 8154.0999999940395,
+          "fighter": {
+            "id": 6,
+            "kind": "ranger",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 4,
+            "crawlerDefenseTargetId": 4,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.17000000000000004,
+            "attackSequence": 1,
+            "cooldown": 0.7699999999999999,
+            "hp": 70,
+            "maxHp": 70
+          },
+          "attacker": {
+            "id": 4,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130.81282600000003,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.2366999999999994,
+            "hp": 71,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 6,
+              "targetId": 4,
+              "damageTargetId": 4,
+              "weapon": "ranger",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "brute",
+      "fighterId": 9,
+      "attackerId": 7,
+      "queuedAt": 8215.899999976158,
+      "entryToReadyMs": 1077.4,
+      "queuedToEntryMs": 665.8,
+      "readyToStrikeMs": 3072.7,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        19,
+        20.6,
+        19.5
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/03-brute-entry.png",
+          "capturedAt": 8881.699999988079,
+          "fighter": {
+            "id": 9,
+            "kind": "brute",
+            "side": "human",
+            "x": 97.56225232299724,
+            "y": 295.90129941711376,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 175,
+            "maxHp": 175
+          },
+          "attacker": {
+            "id": 7,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.36999999999999966,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/03-brute-ready.png",
+          "capturedAt": 9959.09999999404,
+          "fighter": {
+            "id": 9,
+            "kind": "brute",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 175,
+            "maxHp": 175
+          },
+          "attacker": {
+            "id": 7,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.32000000000000034,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/03-brute-attack-probe-0.png",
+          "capturedAt": 13031.799999982119,
+          "fighter": {
+            "id": 9,
+            "kind": "brute",
+            "side": "human",
+            "x": 158,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 7,
+            "crawlerDefenseTargetId": 7,
+            "aiDestinationX": 157.80277633999998,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 1.05,
+            "hp": 160,
+            "maxHp": 175
+          },
+          "attacker": {
+            "id": 7,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 9,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.11329999999999928,
+            "attackSequence": 1,
+            "cooldown": 0.9532999999999991,
+            "hp": 61,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 9,
+              "targetId": 7,
+              "damageTargetId": 7,
+              "weapon": "brute",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/03-brute-attack-probe-1.png",
+          "capturedAt": 13050.799999982119,
+          "fighter": {
+            "id": 9,
+            "kind": "brute",
+            "side": "human",
+            "x": 158,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 7,
+            "crawlerDefenseTargetId": 7,
+            "aiDestinationX": 157.82356158800002,
+            "aiMoveDirection": 0,
+            "attack": 0.20340000000000147,
+            "attackSequence": 1,
+            "cooldown": 1.0334000000000014,
+            "hp": 160,
+            "maxHp": 175
+          },
+          "attacker": {
+            "id": 7,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119.89639999999991,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 9,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.09670000000000073,
+            "attackSequence": 1,
+            "cooldown": 0.9367000000000006,
+            "hp": 61,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 9,
+              "targetId": 7,
+              "damageTargetId": 7,
+              "weapon": "brute",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/03-brute-attack-probe-2.png",
+          "capturedAt": 13071.399999976158,
+          "fighter": {
+            "id": 9,
+            "kind": "brute",
+            "side": "human",
+            "x": 158,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 7,
+            "crawlerDefenseTargetId": 7,
+            "aiDestinationX": 157.8392922416,
+            "aiMoveDirection": 0,
+            "attack": 0.18660000000000038,
+            "attackSequence": 1,
+            "cooldown": 1.0166000000000004,
+            "hp": 160,
+            "maxHp": 175
+          },
+          "attacker": {
+            "id": 7,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 120.71287999999997,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 9,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.07989999999999964,
+            "attackSequence": 1,
+            "cooldown": 0.9198999999999995,
+            "hp": 61,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 9,
+              "targetId": 7,
+              "damageTargetId": 7,
+              "weapon": "brute",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/03-brute-attack-probe-3.png",
+          "capturedAt": 13090.899999976158,
+          "fighter": {
+            "id": 9,
+            "kind": "brute",
+            "side": "human",
+            "x": 158,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 7,
+            "crawlerDefenseTargetId": 7,
+            "aiDestinationX": 157.7158916414,
+            "aiMoveDirection": 0,
+            "attack": 0.15360000000000038,
+            "attackSequence": 1,
+            "cooldown": 0.9836000000000004,
+            "hp": 160,
+            "maxHp": 175
+          },
+          "attacker": {
+            "id": 7,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 122.15629999999997,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 9,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.046899999999999636,
+            "attackSequence": 1,
+            "cooldown": 0.8868999999999995,
+            "hp": 61,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 9,
+              "targetId": 7,
+              "damageTargetId": 7,
+              "weapon": "brute",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "brawler",
+      "fighterId": 12,
+      "attackerId": 10,
+      "queuedAt": 13149.09999999404,
+      "entryToReadyMs": 760.1,
+      "queuedToEntryMs": 683.7,
+      "readyToStrikeMs": 1818.6,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        17.6,
+        18.4,
+        17.9
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/04-brawler-entry.png",
+          "capturedAt": 13832.799999982119,
+          "fighter": {
+            "id": 12,
+            "kind": "brawler",
+            "side": "human",
+            "x": 99.1811878307455,
+            "y": 296.8353006715839,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 10,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.3534999999999998,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/04-brawler-ready.png",
+          "capturedAt": 14592.899999976158,
+          "fighter": {
+            "id": 12,
+            "kind": "brawler",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 10,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.62,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/04-brawler-attack-probe-0.png",
+          "capturedAt": 16411.5,
+          "fighter": {
+            "id": 12,
+            "kind": "brawler",
+            "side": "human",
+            "x": 159.43640000000067,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 10,
+            "crawlerDefenseTargetId": 10,
+            "aiDestinationX": 159.43640000000067,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 0.72,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 10,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 12,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 65,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 12,
+              "targetId": 10,
+              "damageTargetId": 10,
+              "weapon": "brawler",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/04-brawler-attack-probe-1.png",
+          "capturedAt": 16429.09999999404,
+          "fighter": {
+            "id": 12,
+            "kind": "brawler",
+            "side": "human",
+            "x": 159.43640000000067,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 10,
+            "crawlerDefenseTargetId": 10,
+            "aiDestinationX": 159.43640000000067,
+            "aiMoveDirection": 0,
+            "attack": 0.20330000000000295,
+            "attackSequence": 1,
+            "cooldown": 0.7033000000000029,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 10,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 12,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 65,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 12,
+              "targetId": 10,
+              "damageTargetId": 10,
+              "weapon": "brawler",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/04-brawler-attack-probe-2.png",
+          "capturedAt": 16447.5,
+          "fighter": {
+            "id": 12,
+            "kind": "brawler",
+            "side": "human",
+            "x": 159.43640000000067,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 10,
+            "crawlerDefenseTargetId": 10,
+            "aiDestinationX": 159.43640000000067,
+            "aiMoveDirection": 0,
+            "attack": 0.1866000000000022,
+            "attackSequence": 1,
+            "cooldown": 0.6866000000000022,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 10,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 12,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 65,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 12,
+              "targetId": 10,
+              "damageTargetId": 10,
+              "weapon": "brawler",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/04-brawler-attack-probe-3.png",
+          "capturedAt": 16465.399999976158,
+          "fighter": {
+            "id": 12,
+            "kind": "brawler",
+            "side": "human",
+            "x": 159.43640000000067,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 10,
+            "crawlerDefenseTargetId": 10,
+            "aiDestinationX": 159.43640000000067,
+            "aiMoveDirection": 0,
+            "attack": 0.1701000000000022,
+            "attackSequence": 1,
+            "cooldown": 0.6701000000000022,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 10,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 12,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 65,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 12,
+              "targetId": 10,
+              "damageTargetId": 10,
+              "weapon": "brawler",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "gunner",
+      "fighterId": 15,
+      "attackerId": 13,
+      "queuedAt": 16519.29999998212,
+      "entryToReadyMs": 1006.8,
+      "queuedToEntryMs": 682.8,
+      "readyToStrikeMs": 468.5,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        19.5,
+        19.5,
+        21.1
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/05-gunner-entry.png",
+          "capturedAt": 17202.09999999404,
+          "fighter": {
+            "id": 15,
+            "kind": "gunner",
+            "side": "human",
+            "x": 97.66141324888807,
+            "y": 295.9585076435893,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 90,
+            "maxHp": 90
+          },
+          "attacker": {
+            "id": 13,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.3532999999999999,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/05-gunner-ready.png",
+          "capturedAt": 18208.899999976158,
+          "fighter": {
+            "id": 15,
+            "kind": "gunner",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 90,
+            "maxHp": 90
+          },
+          "attacker": {
+            "id": 13,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.37010000000000287,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/05-gunner-attack-probe-0.png",
+          "capturedAt": 18677.399999976158,
+          "fighter": {
+            "id": 15,
+            "kind": "gunner",
+            "side": "human",
+            "x": 197,
+            "y": 304.30179999999996,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 13,
+            "crawlerDefenseTargetId": 13,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.20829999999999932,
+            "attackSequence": 1,
+            "cooldown": 0.2732999999999993,
+            "hp": 90,
+            "maxHp": 90
+          },
+          "attacker": {
+            "id": 13,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 128.85350800000003,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 15,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.09659999999999855,
+            "attackSequence": 0,
+            "cooldown": 0.9365999999999985,
+            "hp": 86.58,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 15,
+              "targetId": 13,
+              "damageTargetId": 13,
+              "weapon": "gunner",
+              "shotIndex": 0,
+              "recoil": 0.34,
+              "casing": true,
+              "hitStopSeconds": 0.014
+            },
+            {
+              "sourceId": 15,
+              "targetId": 13,
+              "damageTargetId": 13,
+              "weapon": "gunner",
+              "shotIndex": 1,
+              "recoil": 0.34,
+              "casing": true,
+              "hitStopSeconds": 0.014
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/05-gunner-attack-probe-1.png",
+          "capturedAt": 18696.899999976158,
+          "fighter": {
+            "id": 15,
+            "kind": "gunner",
+            "side": "human",
+            "x": 197,
+            "y": 304.30179999999996,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 13,
+            "crawlerDefenseTargetId": 13,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.19170000000000076,
+            "attackSequence": 1,
+            "cooldown": 0.25670000000000076,
+            "hp": 90,
+            "maxHp": 90
+          },
+          "attacker": {
+            "id": 13,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 128.8738264,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 15,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.08,
+            "attackSequence": 0,
+            "cooldown": 0.92,
+            "hp": 86.58,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 15,
+              "targetId": 13,
+              "damageTargetId": 13,
+              "weapon": "gunner",
+              "shotIndex": 0,
+              "recoil": 0.34,
+              "casing": true,
+              "hitStopSeconds": 0.014
+            },
+            {
+              "sourceId": 15,
+              "targetId": 13,
+              "damageTargetId": 13,
+              "weapon": "gunner",
+              "shotIndex": 1,
+              "recoil": 0.34,
+              "casing": true,
+              "hitStopSeconds": 0.014
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/05-gunner-attack-probe-2.png",
+          "capturedAt": 18716.399999976158,
+          "fighter": {
+            "id": 15,
+            "kind": "gunner",
+            "side": "human",
+            "x": 197,
+            "y": 304.30179999999996,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 13,
+            "crawlerDefenseTargetId": 13,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.17500000000000004,
+            "attackSequence": 1,
+            "cooldown": 0.24000000000000005,
+            "hp": 90,
+            "maxHp": 90
+          },
+          "attacker": {
+            "id": 13,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 128.86396672,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 15,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.06329999999999927,
+            "attackSequence": 0,
+            "cooldown": 0.9032999999999993,
+            "hp": 86.58,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 15,
+              "targetId": 13,
+              "damageTargetId": 13,
+              "weapon": "gunner",
+              "shotIndex": 0,
+              "recoil": 0.34,
+              "casing": true,
+              "hitStopSeconds": 0.014
+            },
+            {
+              "sourceId": 15,
+              "targetId": 13,
+              "damageTargetId": 13,
+              "weapon": "gunner",
+              "shotIndex": 1,
+              "recoil": 0.34,
+              "casing": true,
+              "hitStopSeconds": 0.014
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/05-gunner-attack-probe-3.png",
+          "capturedAt": 18737.5,
+          "fighter": {
+            "id": 15,
+            "kind": "gunner",
+            "side": "human",
+            "x": 197,
+            "y": 304.30179999999996,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 13,
+            "crawlerDefenseTargetId": 13,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.15829999999999933,
+            "attackSequence": 1,
+            "cooldown": 0.22329999999999933,
+            "hp": 90,
+            "maxHp": 90
+          },
+          "attacker": {
+            "id": 13,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 128.91807472000002,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 15,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.046599999999998545,
+            "attackSequence": 0,
+            "cooldown": 0.8865999999999986,
+            "hp": 82.28999999999999,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 15,
+              "targetId": 13,
+              "damageTargetId": 13,
+              "weapon": "gunner",
+              "shotIndex": 0,
+              "recoil": 0.34,
+              "casing": true,
+              "hitStopSeconds": 0.014
+            },
+            {
+              "sourceId": 15,
+              "targetId": 13,
+              "damageTargetId": 13,
+              "weapon": "gunner",
+              "shotIndex": 1,
+              "recoil": 0.34,
+              "casing": true,
+              "hitStopSeconds": 0.014
+            },
+            {
+              "sourceId": 15,
+              "targetId": 13,
+              "damageTargetId": 13,
+              "weapon": "gunner",
+              "shotIndex": 2,
+              "recoil": 0.34,
+              "casing": true,
+              "hitStopSeconds": 0.014
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "medic",
+      "fighterId": 18,
+      "attackerId": 16,
+      "queuedAt": 18795.59999999404,
+      "entryToReadyMs": 908.3,
+      "queuedToEntryMs": 672.4,
+      "readyToStrikeMs": 351.7,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        20,
+        19.1,
+        18.1
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/06-medic-entry.png",
+          "capturedAt": 19468,
+          "fighter": {
+            "id": 18,
+            "kind": "medic",
+            "side": "human",
+            "x": 97.85155830873737,
+            "y": 296.0682067165792,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 68,
+            "maxHp": 68
+          },
+          "attacker": {
+            "id": 16,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.3700000000000006,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/06-medic-ready.png",
+          "capturedAt": 20376.29999998212,
+          "fighter": {
+            "id": 18,
+            "kind": "medic",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 68,
+            "maxHp": 68
+          },
+          "attacker": {
+            "id": 16,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.4866999999999977,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/06-medic-attack-probe-0.png",
+          "capturedAt": 20728,
+          "fighter": {
+            "id": 18,
+            "kind": "medic",
+            "side": "human",
+            "x": 197,
+            "y": 304.99599999999975,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 16,
+            "crawlerDefenseTargetId": 16,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 1.05,
+            "hp": 68,
+            "maxHp": 68
+          },
+          "attacker": {
+            "id": 16,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 129.70119999999997,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 18,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.13669999999999777,
+            "hp": 84,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 18,
+              "targetId": 16,
+              "damageTargetId": 16,
+              "weapon": "medic",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/06-medic-attack-probe-1.png",
+          "capturedAt": 20748,
+          "fighter": {
+            "id": 18,
+            "kind": "medic",
+            "side": "human",
+            "x": 197,
+            "y": 304.99599999999975,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 16,
+            "crawlerDefenseTargetId": 16,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.20340000000000147,
+            "attackSequence": 1,
+            "cooldown": 1.0334000000000014,
+            "hp": 68,
+            "maxHp": 68
+          },
+          "attacker": {
+            "id": 16,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 129.70119999999997,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 18,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.12009999999999922,
+            "hp": 84,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 18,
+              "targetId": 16,
+              "damageTargetId": 16,
+              "weapon": "medic",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/06-medic-attack-probe-2.png",
+          "capturedAt": 20767.09999999404,
+          "fighter": {
+            "id": 18,
+            "kind": "medic",
+            "side": "human",
+            "x": 197,
+            "y": 304.99599999999975,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 16,
+            "crawlerDefenseTargetId": 16,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.18670000000000075,
+            "attackSequence": 1,
+            "cooldown": 1.0167000000000006,
+            "hp": 68,
+            "maxHp": 68
+          },
+          "attacker": {
+            "id": 16,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 129.67113999999998,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 18,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.1033999999999985,
+            "hp": 84,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 18,
+              "targetId": 16,
+              "damageTargetId": 16,
+              "weapon": "medic",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/06-medic-attack-probe-3.png",
+          "capturedAt": 20785.19999998808,
+          "fighter": {
+            "id": 18,
+            "kind": "medic",
+            "side": "human",
+            "x": 197,
+            "y": 304.99599999999975,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 16,
+            "crawlerDefenseTargetId": 16,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.17000000000000004,
+            "attackSequence": 1,
+            "cooldown": 0.9999999999999999,
+            "hp": 68,
+            "maxHp": 68
+          },
+          "attacker": {
+            "id": 16,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 129.614026,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 18,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.08669999999999776,
+            "hp": 84,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 18,
+              "targetId": 16,
+              "damageTargetId": 16,
+              "weapon": "medic",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "crazy-king",
+      "fighterId": 21,
+      "attackerId": 19,
+      "queuedAt": 20844.09999999404,
+      "entryToReadyMs": 908.7,
+      "queuedToEntryMs": 673.3,
+      "readyToStrikeMs": 1703.1,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        19.1,
+        19.2,
+        18.8
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/07-crazy-king-entry.png",
+          "capturedAt": 21517.399999976158,
+          "fighter": {
+            "id": 21,
+            "kind": "crazy-king",
+            "side": "human",
+            "x": 97.8404711332359,
+            "y": 296.06181026917454,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 124,
+            "maxHp": 124
+          },
+          "attacker": {
+            "id": 19,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.35340000000000216,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/07-crazy-king-ready.png",
+          "capturedAt": 22426.09999999404,
+          "fighter": {
+            "id": 21,
+            "kind": "crazy-king",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 124,
+            "maxHp": 124
+          },
+          "attacker": {
+            "id": 19,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.4700000000000006,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/07-crazy-king-attack-probe-0.png",
+          "capturedAt": 24129.19999998808,
+          "fighter": {
+            "id": 21,
+            "kind": "crazy-king",
+            "side": "human",
+            "x": 163.6680000000004,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 19,
+            "crawlerDefenseTargetId": 19,
+            "aiDestinationX": 163.6680000000004,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 0.82,
+            "hp": 124,
+            "maxHp": 124
+          },
+          "attacker": {
+            "id": 19,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 21,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 71,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 21,
+              "targetId": 19,
+              "damageTargetId": 19,
+              "weapon": "crazy-king",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/07-crazy-king-attack-probe-1.png",
+          "capturedAt": 24148.29999998212,
+          "fighter": {
+            "id": 21,
+            "kind": "crazy-king",
+            "side": "human",
+            "x": 163.6680000000004,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 19,
+            "crawlerDefenseTargetId": 19,
+            "aiDestinationX": 163.6680000000004,
+            "aiMoveDirection": 0,
+            "attack": 0.20329999999999931,
+            "attackSequence": 1,
+            "cooldown": 0.8032999999999992,
+            "hp": 124,
+            "maxHp": 124
+          },
+          "attacker": {
+            "id": 19,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119.40080000000002,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 21,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 70.8664,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 21,
+              "targetId": 19,
+              "damageTargetId": 19,
+              "weapon": "crazy-king",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/07-crazy-king-attack-probe-2.png",
+          "capturedAt": 24167.5,
+          "fighter": {
+            "id": 21,
+            "kind": "crazy-king",
+            "side": "human",
+            "x": 163.6680000000004,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 19,
+            "crawlerDefenseTargetId": 19,
+            "aiDestinationX": 163.6680000000004,
+            "aiMoveDirection": 0,
+            "attack": 0.18660000000000224,
+            "attackSequence": 1,
+            "cooldown": 0.7866000000000022,
+            "hp": 124,
+            "maxHp": 124
+          },
+          "attacker": {
+            "id": 19,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119.73145999999996,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 21,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 70.73280000000003,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 21,
+              "targetId": 19,
+              "damageTargetId": 19,
+              "weapon": "crazy-king",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/07-crazy-king-attack-probe-3.png",
+          "capturedAt": 24186.29999998212,
+          "fighter": {
+            "id": 21,
+            "kind": "crazy-king",
+            "side": "human",
+            "x": 163.6680000000004,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 19,
+            "crawlerDefenseTargetId": 19,
+            "aiDestinationX": 163.6680000000004,
+            "aiMoveDirection": 0,
+            "attack": 0.17000000000000004,
+            "attackSequence": 1,
+            "cooldown": 0.77,
+            "hp": 124,
+            "maxHp": 124
+          },
+          "attacker": {
+            "id": 19,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119.99739199999999,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 21,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 70.60000000000001,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 21,
+              "targetId": 19,
+              "damageTargetId": 19,
+              "weapon": "crazy-king",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "kumaverson",
+      "fighterId": 24,
+      "attackerId": 22,
+      "queuedAt": 24245.59999999404,
+      "entryToReadyMs": 1077.7,
+      "queuedToEntryMs": 670.7,
+      "readyToStrikeMs": 2366.7,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        18.2,
+        18.5,
+        18.2
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/08-kumaverson-entry.png",
+          "capturedAt": 24916.29999998212,
+          "fighter": {
+            "id": 24,
+            "kind": "kumaverson",
+            "side": "human",
+            "x": 97.57382456242675,
+            "y": 295.9079757090924,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 152,
+            "maxHp": 152
+          },
+          "attacker": {
+            "id": 22,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.3700000000000006,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/08-kumaverson-ready.png",
+          "capturedAt": 25994,
+          "fighter": {
+            "id": 24,
+            "kind": "kumaverson",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 152,
+            "maxHp": 152
+          },
+          "attacker": {
+            "id": 22,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.32010000000000277,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/08-kumaverson-attack-probe-0.png",
+          "capturedAt": 28360.69999998808,
+          "fighter": {
+            "id": 24,
+            "kind": "kumaverson",
+            "side": "human",
+            "x": 160.44999999999908,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 22,
+            "crawlerDefenseTargetId": 22,
+            "aiDestinationX": 160.44999999999908,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 1.02,
+            "hp": 152,
+            "maxHp": 152
+          },
+          "attacker": {
+            "id": 22,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 24,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 64,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 24,
+              "targetId": 22,
+              "damageTargetId": 22,
+              "weapon": "kumaverson",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/08-kumaverson-attack-probe-1.png",
+          "capturedAt": 28378.899999976158,
+          "fighter": {
+            "id": 24,
+            "kind": "kumaverson",
+            "side": "human",
+            "x": 160.44999999999908,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 22,
+            "crawlerDefenseTargetId": 22,
+            "aiDestinationX": 160.44999999999908,
+            "aiMoveDirection": 0,
+            "attack": 0.20330000000000295,
+            "attackSequence": 1,
+            "cooldown": 1.003300000000003,
+            "hp": 152,
+            "maxHp": 152
+          },
+          "attacker": {
+            "id": 22,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 120.80359999999969,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 64,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 24,
+              "targetId": 22,
+              "damageTargetId": 22,
+              "weapon": "kumaverson",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/08-kumaverson-attack-probe-2.png",
+          "capturedAt": 28397.399999976158,
+          "fighter": {
+            "id": 24,
+            "kind": "kumaverson",
+            "side": "human",
+            "x": 160.44999999999908,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 22,
+            "crawlerDefenseTargetId": 22,
+            "aiDestinationX": 160.44999999999908,
+            "aiMoveDirection": 0,
+            "attack": 0.1866000000000022,
+            "attackSequence": 1,
+            "cooldown": 0.9866000000000023,
+            "hp": 152,
+            "maxHp": 152
+          },
+          "attacker": {
+            "id": 22,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 122.42683999999976,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 64,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 24,
+              "targetId": 22,
+              "damageTargetId": 22,
+              "weapon": "kumaverson",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/08-kumaverson-attack-probe-3.png",
+          "capturedAt": 28415.59999999404,
+          "fighter": {
+            "id": 24,
+            "kind": "kumaverson",
+            "side": "human",
+            "x": 160.44999999999908,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 22,
+            "crawlerDefenseTargetId": 22,
+            "aiDestinationX": 160.44999999999908,
+            "aiMoveDirection": 0,
+            "attack": 0.17000000000000004,
+            "attackSequence": 1,
+            "cooldown": 0.9700000000000001,
+            "hp": 152,
+            "maxHp": 152
+          },
+          "attacker": {
+            "id": 22,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 123.87900799999994,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 64,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 24,
+              "targetId": 22,
+              "damageTargetId": 22,
+              "weapon": "kumaverson",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "babayaga",
+      "fighterId": 27,
+      "attackerId": 25,
+      "queuedAt": 28474.399999976158,
+      "entryToReadyMs": 960.3,
+      "queuedToEntryMs": 674.7,
+      "readyToStrikeMs": 184.3,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        19.2,
+        19.4,
+        18.8
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/09-babayaga-entry.png",
+          "capturedAt": 29149.09999999404,
+          "fighter": {
+            "id": 27,
+            "kind": "babayaga",
+            "side": "human",
+            "x": 97.7589803933005,
+            "y": 296.01479638075034,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 76,
+            "maxHp": 76
+          },
+          "attacker": {
+            "id": 25,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.3533,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/09-babayaga-ready.png",
+          "capturedAt": 30109.399999976158,
+          "fighter": {
+            "id": 27,
+            "kind": "babayaga",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 76,
+            "maxHp": 76
+          },
+          "attacker": {
+            "id": 25,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.4198999999999984,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/09-babayaga-attack-probe-0.png",
+          "capturedAt": 30293.69999998808,
+          "fighter": {
+            "id": 27,
+            "kind": "babayaga",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 25,
+            "crawlerDefenseTargetId": 25,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 1.04,
+            "hp": 76,
+            "maxHp": 76
+          },
+          "attacker": {
+            "id": 25,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.2367000000000013,
+            "hp": 60,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 27,
+              "targetId": 25,
+              "damageTargetId": 25,
+              "weapon": "babayaga",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/09-babayaga-attack-probe-1.png",
+          "capturedAt": 30312.899999976158,
+          "fighter": {
+            "id": 27,
+            "kind": "babayaga",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 25,
+            "crawlerDefenseTargetId": 25,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.20329999999999931,
+            "attackSequence": 1,
+            "cooldown": 1.0232999999999992,
+            "hp": 76,
+            "maxHp": 76
+          },
+          "attacker": {
+            "id": 25,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130.3006,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.22000000000000058,
+            "hp": 60,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 27,
+              "targetId": 25,
+              "damageTargetId": 25,
+              "weapon": "babayaga",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/09-babayaga-attack-probe-2.png",
+          "capturedAt": 30332.29999998212,
+          "fighter": {
+            "id": 27,
+            "kind": "babayaga",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 25,
+            "crawlerDefenseTargetId": 25,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.1865999999999986,
+            "attackSequence": 1,
+            "cooldown": 1.0065999999999984,
+            "hp": 76,
+            "maxHp": 76
+          },
+          "attacker": {
+            "id": 25,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130.57114,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.20329999999999987,
+            "hp": 60,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 27,
+              "targetId": 25,
+              "damageTargetId": 25,
+              "weapon": "babayaga",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/09-babayaga-attack-probe-3.png",
+          "capturedAt": 30351.09999999404,
+          "fighter": {
+            "id": 27,
+            "kind": "babayaga",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 25,
+            "crawlerDefenseTargetId": 25,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.16989999999999789,
+            "attackSequence": 1,
+            "cooldown": 0.9898999999999977,
+            "hp": 76,
+            "maxHp": 76
+          },
+          "attacker": {
+            "id": 25,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130.81462600000003,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18659999999999916,
+            "hp": 60,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 27,
+              "targetId": 25,
+              "damageTargetId": 25,
+              "weapon": "babayaga",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "guardian",
+      "fighterId": 30,
+      "attackerId": 28,
+      "queuedAt": 30413.09999999404,
+      "entryToReadyMs": 1073.8,
+      "queuedToEntryMs": 671.4,
+      "readyToStrikeMs": 3436,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        18.1,
+        19.9,
+        23
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/10-guardian-entry.png",
+          "capturedAt": 31084.5,
+          "fighter": {
+            "id": 30,
+            "kind": "guardian",
+            "side": "human",
+            "x": 97.55757492083256,
+            "y": 295.8986009158649,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 240,
+            "maxHp": 240
+          },
+          "attacker": {
+            "id": 28,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.37000000000000066,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/10-guardian-ready.png",
+          "capturedAt": 32158.29999998212,
+          "fighter": {
+            "id": 30,
+            "kind": "guardian",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 240,
+            "maxHp": 240
+          },
+          "attacker": {
+            "id": 28,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.32009999999999916,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/10-guardian-attack-probe-0.png",
+          "capturedAt": 35594.29999998212,
+          "fighter": {
+            "id": 30,
+            "kind": "guardian",
+            "side": "human",
+            "x": 161.68420000000086,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 28,
+            "crawlerDefenseTargetId": 28,
+            "aiDestinationX": 161.68420000000086,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 1.25,
+            "hp": 225,
+            "maxHp": 240
+          },
+          "attacker": {
+            "id": 28,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 30,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.18,
+            "attackSequence": 1,
+            "cooldown": 1.02,
+            "hp": 79,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 30,
+              "targetId": 28,
+              "damageTargetId": 28,
+              "weapon": "guardian",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/10-guardian-attack-probe-1.png",
+          "capturedAt": 35612.39999997616,
+          "fighter": {
+            "id": 30,
+            "kind": "guardian",
+            "side": "human",
+            "x": 161.4136600000009,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 28,
+            "crawlerDefenseTargetId": 28,
+            "aiDestinationX": 161.4136600000009,
+            "aiMoveDirection": 0,
+            "attack": 0.20330000000000295,
+            "attackSequence": 1,
+            "cooldown": 1.233300000000003,
+            "hp": 225,
+            "maxHp": 240
+          },
+          "attacker": {
+            "id": 28,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119.30059999999995,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 30,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.16330000000000292,
+            "attackSequence": 1,
+            "cooldown": 1.003300000000003,
+            "hp": 79,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 30,
+              "targetId": 28,
+              "damageTargetId": 28,
+              "weapon": "guardian",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/10-guardian-attack-probe-2.png",
+          "capturedAt": 35632.29999998212,
+          "fighter": {
+            "id": 30,
+            "kind": "guardian",
+            "side": "human",
+            "x": 161.1716320000008,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 28,
+            "crawlerDefenseTargetId": 28,
+            "aiDestinationX": 161.1716320000008,
+            "aiMoveDirection": 0,
+            "attack": 0.18669999999999712,
+            "attackSequence": 1,
+            "cooldown": 1.2166999999999972,
+            "hp": 225,
+            "maxHp": 240
+          },
+          "attacker": {
+            "id": 28,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119.56952000000004,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 30,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.14669999999999708,
+            "attackSequence": 1,
+            "cooldown": 0.9866999999999971,
+            "hp": 79,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 30,
+              "targetId": 28,
+              "damageTargetId": 28,
+              "weapon": "guardian",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/10-guardian-attack-probe-3.png",
+          "capturedAt": 35655.29999998212,
+          "fighter": {
+            "id": 30,
+            "kind": "guardian",
+            "side": "human",
+            "x": 160.95249460000085,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 28,
+            "crawlerDefenseTargetId": 28,
+            "aiDestinationX": 160.95249460000085,
+            "aiMoveDirection": 0,
+            "attack": 0.17000000000000004,
+            "attackSequence": 1,
+            "cooldown": 1.2000000000000002,
+            "hp": 225,
+            "maxHp": 240
+          },
+          "attacker": {
+            "id": 28,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119.813006,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 30,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.13,
+            "attackSequence": 1,
+            "cooldown": 0.9700000000000001,
+            "hp": 79,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 30,
+              "targetId": 28,
+              "damageTargetId": 28,
+              "weapon": "guardian",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "engineer",
+      "fighterId": 33,
+      "attackerId": 31,
+      "queuedAt": 35738.89999997616,
+      "entryToReadyMs": 1074.6,
+      "queuedToEntryMs": 679,
+      "readyToStrikeMs": 385.2,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        20.1,
+        19.3,
+        18.6
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/11-engineer-entry.png",
+          "capturedAt": 36417.89999997616,
+          "fighter": {
+            "id": 33,
+            "kind": "engineer",
+            "side": "human",
+            "x": 97.56911251283854,
+            "y": 295.90525721894534,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 88,
+            "maxHp": 88
+          },
+          "attacker": {
+            "id": 31,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.35340000000000205,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/11-engineer-ready.png",
+          "capturedAt": 37492.5,
+          "fighter": {
+            "id": 33,
+            "kind": "engineer",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 88,
+            "maxHp": 88
+          },
+          "attacker": {
+            "id": 31,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.3034000000000019,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/11-engineer-attack-probe-0.png",
+          "capturedAt": 37877.69999998808,
+          "fighter": {
+            "id": 33,
+            "kind": "engineer",
+            "side": "human",
+            "x": 197,
+            "y": 304.4704,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 31,
+            "crawlerDefenseTargetId": 31,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 0.9,
+            "hp": 88,
+            "maxHp": 88
+          },
+          "attacker": {
+            "id": 31,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 129.69940000000005,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 33,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.11330000000000291,
+            "attackSequence": 0,
+            "cooldown": 0.953300000000003,
+            "hp": 77,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 33,
+              "targetId": 31,
+              "damageTargetId": 31,
+              "weapon": "engineer",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/11-engineer-attack-probe-1.png",
+          "capturedAt": 37897.79999998212,
+          "fighter": {
+            "id": 33,
+            "kind": "engineer",
+            "side": "human",
+            "x": 197,
+            "y": 304.4704,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 31,
+            "crawlerDefenseTargetId": 31,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.20329999999999565,
+            "attackSequence": 1,
+            "cooldown": 0.8832999999999956,
+            "hp": 88,
+            "maxHp": 88
+          },
+          "attacker": {
+            "id": 31,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 129.69940000000005,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 33,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.09659999999999855,
+            "attackSequence": 0,
+            "cooldown": 0.9365999999999987,
+            "hp": 77,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 33,
+              "targetId": 31,
+              "damageTargetId": 31,
+              "weapon": "engineer",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/11-engineer-attack-probe-2.png",
+          "capturedAt": 37917.09999999404,
+          "fighter": {
+            "id": 33,
+            "kind": "engineer",
+            "side": "human",
+            "x": 197,
+            "y": 304.4704,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 31,
+            "crawlerDefenseTargetId": 31,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.18659999999999857,
+            "attackSequence": 1,
+            "cooldown": 0.8665999999999986,
+            "hp": 88,
+            "maxHp": 88
+          },
+          "attacker": {
+            "id": 31,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 129.66934000000006,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 33,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.07990000000000146,
+            "attackSequence": 0,
+            "cooldown": 0.9199000000000016,
+            "hp": 77,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 33,
+              "targetId": 31,
+              "damageTargetId": 31,
+              "weapon": "engineer",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/11-engineer-attack-probe-3.png",
+          "capturedAt": 37935.69999998808,
+          "fighter": {
+            "id": 33,
+            "kind": "engineer",
+            "side": "human",
+            "x": 197,
+            "y": 304.4704,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 31,
+            "crawlerDefenseTargetId": 31,
+            "aiDestinationX": 197,
+            "aiMoveDirection": 0,
+            "attack": 0.17000000000000004,
+            "attackSequence": 1,
+            "cooldown": 0.8500000000000001,
+            "hp": 88,
+            "maxHp": 88
+          },
+          "attacker": {
+            "id": 31,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 129.61256800000007,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 33,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.06330000000000291,
+            "attackSequence": 0,
+            "cooldown": 0.9033000000000031,
+            "hp": 77,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 33,
+              "targetId": 31,
+              "damageTargetId": 31,
+              "weapon": "engineer",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "zakimiya",
+      "fighterId": 36,
+      "attackerId": 34,
+      "queuedAt": 38004.39999997616,
+      "entryToReadyMs": 1007.2,
+      "queuedToEntryMs": 682.1,
+      "readyToStrikeMs": 2317.7,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        18.1,
+        18.7,
+        18.8
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/12-zakimiya-entry.png",
+          "capturedAt": 38686.5,
+          "fighter": {
+            "id": 36,
+            "kind": "zakimiya",
+            "side": "human",
+            "x": 97.66141324888788,
+            "y": 295.9585076435892,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 105,
+            "maxHp": 105
+          },
+          "attacker": {
+            "id": 34,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.3533000000000035,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/12-zakimiya-ready.png",
+          "capturedAt": 39693.69999998808,
+          "fighter": {
+            "id": 36,
+            "kind": "zakimiya",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 105,
+            "maxHp": 105
+          },
+          "attacker": {
+            "id": 34,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.37009999999999904,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/12-zakimiya-attack-probe-0.png",
+          "capturedAt": 42011.39999997616,
+          "fighter": {
+            "id": 36,
+            "kind": "zakimiya",
+            "side": "human",
+            "x": 159.50059999999985,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 34,
+            "crawlerDefenseTargetId": 34,
+            "aiDestinationX": 159.50059999999985,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 0.9,
+            "hp": 105,
+            "maxHp": 105
+          },
+          "attacker": {
+            "id": 34,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 36,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 70,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 36,
+              "targetId": 34,
+              "damageTargetId": 34,
+              "weapon": "zakimiya",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/12-zakimiya-attack-probe-1.png",
+          "capturedAt": 42029.5,
+          "fighter": {
+            "id": 36,
+            "kind": "zakimiya",
+            "side": "human",
+            "x": 159.50059999999985,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 34,
+            "crawlerDefenseTargetId": 34,
+            "aiDestinationX": 159.50059999999985,
+            "aiMoveDirection": 0,
+            "attack": 0.20330000000000295,
+            "attackSequence": 1,
+            "cooldown": 0.883300000000003,
+            "hp": 105,
+            "maxHp": 105
+          },
+          "attacker": {
+            "id": 34,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 36,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 70,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 36,
+              "targetId": 34,
+              "damageTargetId": 34,
+              "weapon": "zakimiya",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/12-zakimiya-attack-probe-2.png",
+          "capturedAt": 42048.19999998808,
+          "fighter": {
+            "id": 36,
+            "kind": "zakimiya",
+            "side": "human",
+            "x": 159.50059999999985,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 34,
+            "crawlerDefenseTargetId": 34,
+            "aiDestinationX": 159.50059999999985,
+            "aiMoveDirection": 0,
+            "attack": 0.18670000000000442,
+            "attackSequence": 1,
+            "cooldown": 0.8667000000000045,
+            "hp": 105,
+            "maxHp": 105
+          },
+          "attacker": {
+            "id": 34,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 36,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 70,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 36,
+              "targetId": 34,
+              "damageTargetId": 34,
+              "weapon": "zakimiya",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/12-zakimiya-attack-probe-3.png",
+          "capturedAt": 42067,
+          "fighter": {
+            "id": 36,
+            "kind": "zakimiya",
+            "side": "human",
+            "x": 159.50059999999985,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 34,
+            "crawlerDefenseTargetId": 34,
+            "aiDestinationX": 159.50059999999985,
+            "aiMoveDirection": 0,
+            "attack": 0.17000000000000004,
+            "attackSequence": 1,
+            "cooldown": 0.8500000000000001,
+            "hp": 105,
+            "maxHp": 105
+          },
+          "attacker": {
+            "id": 34,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 36,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 70,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 36,
+              "targetId": 34,
+              "damageTargetId": 34,
+              "weapon": "zakimiya",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "tky",
+      "fighterId": 39,
+      "attackerId": 37,
+      "queuedAt": 42126.09999999404,
+      "entryToReadyMs": 742.6,
+      "queuedToEntryMs": 672.9,
+      "readyToStrikeMs": 618.4,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        20.7,
+        20.5,
+        19.2
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/13-tky-entry.png",
+          "capturedAt": 42799,
+          "fighter": {
+            "id": 39,
+            "kind": "tky",
+            "side": "human",
+            "x": 98.22186997048459,
+            "y": 296.28184805989497,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 92,
+            "maxHp": 92
+          },
+          "attacker": {
+            "id": 37,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.3533000000000035,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/13-tky-ready.png",
+          "capturedAt": 43541.59999999404,
+          "fighter": {
+            "id": 39,
+            "kind": "tky",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 92,
+            "maxHp": 92
+          },
+          "attacker": {
+            "id": 37,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.6368000000000034,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/13-tky-attack-probe-0.png",
+          "capturedAt": 44160,
+          "fighter": {
+            "id": 39,
+            "kind": "tky",
+            "side": "human",
+            "x": 183.00080000000025,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 37,
+            "crawlerDefenseTargetId": 37,
+            "aiDestinationX": 183.00080000000025,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 0.58,
+            "hp": 92,
+            "maxHp": 92
+          },
+          "attacker": {
+            "id": 37,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 124.00240000000008,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 39,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.020200000000004756,
+            "hp": 67,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 39,
+              "targetId": 37,
+              "damageTargetId": 37,
+              "weapon": "tky",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/13-tky-attack-probe-1.png",
+          "capturedAt": 44180.69999998808,
+          "fighter": {
+            "id": 39,
+            "kind": "tky",
+            "side": "human",
+            "x": 183.00080000000025,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 37,
+            "crawlerDefenseTargetId": 37,
+            "aiDestinationX": 183.00080000000025,
+            "aiMoveDirection": 0,
+            "attack": 0.20329999999999565,
+            "attackSequence": 1,
+            "cooldown": 0.5632999999999956,
+            "hp": 92,
+            "maxHp": 92
+          },
+          "attacker": {
+            "id": 37,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 124.00240000000008,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 39,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.0035000000000003917,
+            "hp": 67,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 39,
+              "targetId": 37,
+              "damageTargetId": 37,
+              "weapon": "tky",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/13-tky-attack-probe-2.png",
+          "capturedAt": 44201.19999998808,
+          "fighter": {
+            "id": 39,
+            "kind": "tky",
+            "side": "human",
+            "x": 182.60000000000034,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 37,
+            "crawlerDefenseTargetId": 37,
+            "aiDestinationX": 147.9723400000001,
+            "aiMoveDirection": -1,
+            "attack": 0.18659999999999857,
+            "attackSequence": 1,
+            "cooldown": 0.5465999999999985,
+            "hp": 92,
+            "maxHp": 92
+          },
+          "attacker": {
+            "id": 37,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 123.97234000000009,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 39,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 67,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 39,
+              "targetId": 37,
+              "damageTargetId": 37,
+              "weapon": "tky",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/13-tky-attack-probe-3.png",
+          "capturedAt": 44220.39999997616,
+          "fighter": {
+            "id": 39,
+            "kind": "tky",
+            "side": "human",
+            "x": 182.60000000000034,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 37,
+            "crawlerDefenseTargetId": 37,
+            "aiDestinationX": 182.60000000000034,
+            "aiMoveDirection": 0,
+            "attack": 0.16989999999999422,
+            "attackSequence": 1,
+            "cooldown": 0.5298999999999942,
+            "hp": 92,
+            "maxHp": 92
+          },
+          "attacker": {
+            "id": 37,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 123.91522600000008,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 39,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 67,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 39,
+              "targetId": 37,
+              "damageTargetId": 37,
+              "weapon": "tky",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "mrs-chiha",
+      "fighterId": 42,
+      "attackerId": 40,
+      "queuedAt": 44282.09999999404,
+      "entryToReadyMs": 1075.4,
+      "queuedToEntryMs": 668.3,
+      "readyToStrikeMs": 184.2,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        19,
+        18.6,
+        18.7
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/14-mrs-chiha-entry.png",
+          "capturedAt": 44950.39999997616,
+          "fighter": {
+            "id": 42,
+            "kind": "mrs-chiha",
+            "side": "human",
+            "x": 97.56911251283854,
+            "y": 295.90525721894534,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 40,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.3700000000000006,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/14-mrs-chiha-ready.png",
+          "capturedAt": 46025.79999998212,
+          "fighter": {
+            "id": 42,
+            "kind": "mrs-chiha",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 40,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.32000000000000045,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/14-mrs-chiha-attack-probe-0.png",
+          "capturedAt": 46210,
+          "fighter": {
+            "id": 42,
+            "kind": "mrs-chiha",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 40,
+            "crawlerDefenseTargetId": 40,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.27,
+            "attackSequence": 1,
+            "cooldown": 1.18,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 40,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.13670000000000482,
+            "hp": 78.04,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 42,
+              "targetId": 40,
+              "damageTargetId": 40,
+              "weapon": "mrs-chiha",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/14-mrs-chiha-attack-probe-1.png",
+          "capturedAt": 46229,
+          "fighter": {
+            "id": 42,
+            "kind": "mrs-chiha",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 40,
+            "crawlerDefenseTargetId": 40,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.25329999999999564,
+            "attackSequence": 1,
+            "cooldown": 1.1632999999999956,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 40,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130.3006000000001,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.12000000000000045,
+            "hp": 78.04,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 42,
+              "targetId": 40,
+              "damageTargetId": 40,
+              "weapon": "mrs-chiha",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/14-mrs-chiha-attack-probe-2.png",
+          "capturedAt": 46247.59999999404,
+          "fighter": {
+            "id": 42,
+            "kind": "mrs-chiha",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 40,
+            "crawlerDefenseTargetId": 40,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.23659999999999856,
+            "attackSequence": 1,
+            "cooldown": 1.1465999999999985,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 40,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130.57114000000004,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.10330000000000336,
+            "hp": 78.04,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 42,
+              "targetId": 40,
+              "damageTargetId": 40,
+              "weapon": "mrs-chiha",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/14-mrs-chiha-attack-probe-3.png",
+          "capturedAt": 46266.29999998212,
+          "fighter": {
+            "id": 42,
+            "kind": "mrs-chiha",
+            "side": "human",
+            "x": 158,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 40,
+            "crawlerDefenseTargetId": 40,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 1.13,
+            "hp": 80,
+            "maxHp": 80
+          },
+          "attacker": {
+            "id": 40,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130.81316800000002,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.08670000000000481,
+            "hp": 78.04,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 42,
+              "targetId": 40,
+              "damageTargetId": 40,
+              "weapon": "mrs-chiha",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "miyamoto-musashi",
+      "fighterId": 45,
+      "attackerId": 43,
+      "queuedAt": 46316.59999999404,
+      "entryToReadyMs": 856.9,
+      "queuedToEntryMs": 668.8,
+      "readyToStrikeMs": 1433.3,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        18.7,
+        18.1,
+        18.6
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/15-miyamoto-musashi-entry.png",
+          "capturedAt": 46985.39999997616,
+          "fighter": {
+            "id": 45,
+            "kind": "miyamoto-musashi",
+            "side": "human",
+            "x": 97.93831545703628,
+            "y": 296.1182589175209,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 43,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.37009999999999904,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/15-miyamoto-musashi-ready.png",
+          "capturedAt": 47842.29999998212,
+          "fighter": {
+            "id": 45,
+            "kind": "miyamoto-musashi",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 43,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.5365999999999992,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/15-miyamoto-musashi-attack-probe-0.png",
+          "capturedAt": 49275.59999999404,
+          "fighter": {
+            "id": 45,
+            "kind": "miyamoto-musashi",
+            "side": "human",
+            "x": 167.59999999999968,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 43,
+            "crawlerDefenseTargetId": 43,
+            "aiDestinationX": 167.59999999999968,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 0.72,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 43,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 45,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 60,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 45,
+              "targetId": 43,
+              "damageTargetId": 43,
+              "weapon": "miyamoto-musashi",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/15-miyamoto-musashi-attack-probe-1.png",
+          "capturedAt": 49294.29999998212,
+          "fighter": {
+            "id": 45,
+            "kind": "miyamoto-musashi",
+            "side": "human",
+            "x": 167.59999999999968,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 43,
+            "crawlerDefenseTargetId": 43,
+            "aiDestinationX": 167.59999999999968,
+            "aiMoveDirection": 0,
+            "attack": 0.20340000000000147,
+            "attackSequence": 1,
+            "cooldown": 0.7034000000000015,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 43,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 45,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 60,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 45,
+              "targetId": 43,
+              "damageTargetId": 43,
+              "weapon": "miyamoto-musashi",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/15-miyamoto-musashi-attack-probe-2.png",
+          "capturedAt": 49312.39999997616,
+          "fighter": {
+            "id": 45,
+            "kind": "miyamoto-musashi",
+            "side": "human",
+            "x": 167.59999999999968,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 43,
+            "crawlerDefenseTargetId": 43,
+            "aiDestinationX": 167.59999999999968,
+            "aiMoveDirection": 0,
+            "attack": 0.1868000000000029,
+            "attackSequence": 1,
+            "cooldown": 0.686800000000003,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 43,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 45,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 60,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 45,
+              "targetId": 43,
+              "damageTargetId": 43,
+              "weapon": "miyamoto-musashi",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/15-miyamoto-musashi-attack-probe-3.png",
+          "capturedAt": 49331,
+          "fighter": {
+            "id": 45,
+            "kind": "miyamoto-musashi",
+            "side": "human",
+            "x": 167.59999999999968,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 43,
+            "crawlerDefenseTargetId": 43,
+            "aiDestinationX": 167.59999999999968,
+            "aiMoveDirection": 0,
+            "attack": 0.17010000000000583,
+            "attackSequence": 1,
+            "cooldown": 0.6701000000000059,
+            "hp": 135,
+            "maxHp": 135
+          },
+          "attacker": {
+            "id": 43,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 119,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 45,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 60,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 45,
+              "targetId": 43,
+              "damageTargetId": 43,
+              "weapon": "miyamoto-musashi",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitKind": "mayo-chan",
+      "fighterId": 48,
+      "attackerId": 46,
+      "queuedAt": 49384.59999999404,
+      "entryToReadyMs": 535.4,
+      "queuedToEntryMs": 674.1,
+      "readyToStrikeMs": 281.1,
+      "firstDamageObserved": true,
+      "entryDirection": 1,
+      "assignedLane": 1,
+      "combatReadyPosition": {
+        "x": 148,
+        "y": 325,
+        "expectedX": 148,
+        "expectedY": 325
+      },
+      "attackSequence": {
+        "ready": 0,
+        "strike": 1
+      },
+      "attackIdentityObserved": true,
+      "continuousAttackProbeFrameDeltasMs": [
+        17.4,
+        18.6,
+        18.4
+      ],
+      "frames": [
+        {
+          "phase": "entry",
+          "file": "outputs/v095-visual-baseline/16-mayo-chan-entry.png",
+          "capturedAt": 50058.69999998808,
+          "fighter": {
+            "id": 48,
+            "kind": "mayo-chan",
+            "side": "human",
+            "x": 100.54601913497032,
+            "y": 297.62270334709825,
+            "lane": 2,
+            "combatReady": false,
+            "gateEntering": true,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0,
+            "hp": 64,
+            "maxHp": 64
+          },
+          "attacker": {
+            "id": 46,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.353700000000005,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 2,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "ready",
+          "file": "outputs/v095-visual-baseline/16-mayo-chan-ready.png",
+          "capturedAt": 50594.09999999404,
+          "fighter": {
+            "id": 48,
+            "kind": "mayo-chan",
+            "side": "human",
+            "x": 148,
+            "y": 325,
+            "lane": 2,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 205,
+            "aiMoveDirection": 1,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.18,
+            "hp": 64,
+            "maxHp": 64
+          },
+          "attacker": {
+            "id": 46,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 130,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": null,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0.013299999999995638,
+            "attackSequence": 0,
+            "cooldown": 0.853299999999996,
+            "hp": 91,
+            "maxHp": 91
+          },
+          "attackIdentity": [],
+          "geometry": {
+            "viewportId": "844x390",
+            "checkedCount": 3,
+            "offFloorCount": 0,
+            "offFloorIds": [],
+            "visuallyOffFloorCount": 0,
+            "visuallyOffFloorIds": [],
+            "visualFloor": {
+              "authored": false,
+              "horizonY": 204,
+              "nearEdgeY": 361,
+              "farScale": 1,
+              "nearScale": 1
+            },
+            "laneCenters": [
+              240,
+              285,
+              325
+            ],
+            "debugPrimitiveCount": 15
+          }
+        },
+        {
+          "phase": "attack-probe-0",
+          "file": "outputs/v095-visual-baseline/16-mayo-chan-attack-probe-0.png",
+          "capturedAt": 50875.19999998808,
+          "fighter": {
+            "id": 48,
+            "kind": "mayo-chan",
+            "side": "human",
+            "x": 158,
+            "y": 299.4064000000001,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 46,
+            "crawlerDefenseTargetId": 46,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.22000000000000003,
+            "attackSequence": 1,
+            "cooldown": 0.48,
+            "hp": 64,
+            "maxHp": 64
+          },
+          "attacker": {
+            "id": 46,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 128.79940000000005,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 48,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.5700000000000007,
+            "hp": 78,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 48,
+              "targetId": 46,
+              "damageTargetId": 46,
+              "weapon": "mayo-chan",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-1",
+          "file": "outputs/v095-visual-baseline/16-mayo-chan-attack-probe-1.png",
+          "capturedAt": 50892.59999999404,
+          "fighter": {
+            "id": 48,
+            "kind": "mayo-chan",
+            "side": "human",
+            "x": 158,
+            "y": 299.4064000000001,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 46,
+            "crawlerDefenseTargetId": 46,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.2033999999999942,
+            "attackSequence": 1,
+            "cooldown": 0.46339999999999415,
+            "hp": 64,
+            "maxHp": 64
+          },
+          "attacker": {
+            "id": 46,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 128.88306400000008,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 48,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.5533999999999949,
+            "hp": 78,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 48,
+              "targetId": 46,
+              "damageTargetId": 46,
+              "weapon": "mayo-chan",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-2",
+          "file": "outputs/v095-visual-baseline/16-mayo-chan-attack-probe-2.png",
+          "capturedAt": 50911.19999998808,
+          "fighter": {
+            "id": 48,
+            "kind": "mayo-chan",
+            "side": "human",
+            "x": 158,
+            "y": 299.4064000000001,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 46,
+            "crawlerDefenseTargetId": 46,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.18659999999999857,
+            "attackSequence": 1,
+            "cooldown": 0.4465999999999985,
+            "hp": 64,
+            "maxHp": 64
+          },
+          "attacker": {
+            "id": 46,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 128.93749600000007,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 48,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.5365999999999993,
+            "hp": 78,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 48,
+              "targetId": 46,
+              "damageTargetId": 46,
+              "weapon": "mayo-chan",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        },
+        {
+          "phase": "attack-probe-3",
+          "file": "outputs/v095-visual-baseline/16-mayo-chan-attack-probe-3.png",
+          "capturedAt": 50929.59999999404,
+          "fighter": {
+            "id": 48,
+            "kind": "mayo-chan",
+            "side": "human",
+            "x": 158,
+            "y": 299.4064000000001,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 46,
+            "crawlerDefenseTargetId": 46,
+            "aiDestinationX": 158,
+            "aiMoveDirection": 0,
+            "attack": 0.17000000000000004,
+            "attackSequence": 1,
+            "cooldown": 0.42999999999999994,
+            "hp": 64,
+            "maxHp": 64
+          },
+          "attacker": {
+            "id": 46,
+            "kind": "walker",
+            "side": "zombie",
+            "x": 128.96438800000007,
+            "y": 285,
+            "lane": 1,
+            "combatReady": true,
+            "gateEntering": false,
+            "targetId": 48,
+            "crawlerDefenseTargetId": null,
+            "aiDestinationX": 0,
+            "aiMoveDirection": 0,
+            "attack": 0,
+            "attackSequence": 0,
+            "cooldown": 0.5200000000000008,
+            "hp": 78,
+            "maxHp": 91
+          },
+          "attackIdentity": [
+            {
+              "sourceId": 48,
+              "targetId": 46,
+              "damageTargetId": 46,
+              "weapon": "mayo-chan",
+              "shotIndex": null,
+              "recoil": null,
+              "casing": false,
+              "hitStopSeconds": 0
+            }
+          ],
+          "geometry": {
+            "offFloorCount": 0,
+            "visuallyOffFloorCount": 0
+          }
+        }
+      ]
+    }
+  ]
+}

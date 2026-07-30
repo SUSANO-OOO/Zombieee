@@ -10,6 +10,7 @@ import { CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
 import { STORY_EVENT_IDS, STORY_EVENTS } from "../app/storyEvents.js";
 import {
   BATTLE_AUDIO_LOOP_CONTRACTS,
+  EMPLOYMENT_AUDIO_CUE_IDS,
   LEGACY_SFX_CUE_MAP,
   PRODUCTION_AUDIO_MANIFEST,
   PRODUCTION_AUDIO_SCENE_IDS,
@@ -189,7 +190,7 @@ test("all 26 existing newcomer weapon and battle-voice cues remain active", () =
   assert.equal(provenance.version, 1);
   assert.equal(provenance.generator, "scripts/build-v060-audio.py");
   assert.equal(provenance.cues.length, 26);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.aliases.length, 0);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.aliases.length, 1);
   const cueIds = new Set(provenance.cues.map(({ id }) => id));
   assert.equal(cueIds.size, 26);
   for (const record of provenance.cues) {
@@ -390,7 +391,12 @@ test("all 43 battle and authored story scenes resolve with intentional limited s
   for (const scene of PRODUCTION_AUDIO_MANIFEST.scenes) {
     if (scene.bgm) assert.ok(PRODUCTION_AUDIO_MANIFEST.assetById[scene.bgm], `${scene.id}: ${scene.bgm}`);
     for (const cueId of [...scene.ambience, ...scene.preload]) {
-      assert.ok(PRODUCTION_AUDIO_MANIFEST.assetById[cueId] || PRODUCTION_AUDIO_MANIFEST.poolById[cueId], `${scene.id}: ${cueId}`);
+      assert.ok(
+        PRODUCTION_AUDIO_MANIFEST.assetById[cueId]
+          || PRODUCTION_AUDIO_MANIFEST.poolById[cueId]
+          || PRODUCTION_AUDIO_MANIFEST.aliasById[cueId],
+        `${scene.id}: ${cueId}`,
+      );
     }
   }
   const battleSceneIds = ["stage1", "stage2", "stage3", "station-gate", "station-platform", "station-tunnel", "boss"];
@@ -666,6 +672,12 @@ test("all weapon-mapped units retain production weapons and all sixteen units re
   assert.equal(humanVoiceCueForUnit("unknown", "attack"), null);
 });
 
+test("Baba Yaga's suppressed pistol keeps the accepted relative mix gain", () => {
+  const pistol = PRODUCTION_AUDIO_MANIFEST.assetById["weapon-suppressed-pistol"];
+  assert.equal(pistol?.gain, 0.95);
+  assert.equal(pistol?.category, "weapons");
+});
+
 test("deployment never falls back to a generic attack or hurt voice", () => {
   const dedicatedDeployKinds = new Set(Object.keys(UNIT_AUDIO_CUE_CONTRACTS));
   for (const kind of [
@@ -686,7 +698,7 @@ test("deployment never falls back to a generic attack or hurt voice", () => {
 });
 
 test("new-unit contracts resolve to dedicated original production assets and expose stoppable battle loops", () => {
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.aliases.length, 0);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.aliases.length, 1);
   assert.equal(Object.keys(UNIT_AUDIO_CUE_CONTRACTS).length, 4);
   const dedicatedCueIds = Object.values(UNIT_AUDIO_CUE_CONTRACTS).flatMap((contract) => [
     ...Object.values(contract.weaponEvents),
@@ -758,7 +770,7 @@ test("legacy SFX mapping covers every current SFX_CUES key and only targets prod
   const cueBlock = source.slice(start, end);
   const currentCueIds = [...cueBlock.matchAll(/^\s*(?:"([^"]+)"|([a-z][a-z0-9-]*)):\s*\{\s*category:/gm)]
     .map((match) => match[1] ?? match[2]);
-  assert.equal(currentCueIds.length, 55);
+  assert.equal(currentCueIds.length, 56);
   assert.deepEqual(Object.keys(LEGACY_SFX_CUE_MAP).sort(), currentCueIds.sort());
   for (const removedCueId of ["tactic-defend", "tactic-balanced", "tactic-assault"]) {
     assert.equal(Object.hasOwn(LEGACY_SFX_CUE_MAP, removedCueId), false);
@@ -773,8 +785,22 @@ test("legacy SFX mapping covers every current SFX_CUES key and only targets prod
   }
   assert.equal(LEGACY_SFX_CUE_MAP.victory, "ui-confirm");
   assert.equal(LEGACY_SFX_CUE_MAP.defeat, "ui-cancel");
+  assert.equal(LEGACY_SFX_CUE_MAP["employment-dossier-reveal"], EMPLOYMENT_AUDIO_CUE_IDS.DOSSIER_REVEAL);
   assert.notEqual(LEGACY_SFX_CUE_MAP.victory, "music-victory");
   assert.notEqual(LEGACY_SFX_CUE_MAP.defeat, "music-defeat");
+});
+
+test("employment dossier reveal uses a dedicated one-shot cue contract", () => {
+  assert.equal(EMPLOYMENT_AUDIO_CUE_IDS.DOSSIER_REVEAL, "employment-dossier-reveal");
+  const alias = PRODUCTION_AUDIO_MANIFEST.aliasById[EMPLOYMENT_AUDIO_CUE_IDS.DOSSIER_REVEAL];
+  assert.ok(alias);
+  assert.equal(alias.targetId, STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM);
+  assert.equal(alias.category, "ui");
+  assert.equal(alias.instanceKey, EMPLOYMENT_AUDIO_CUE_IDS.DOSSIER_REVEAL);
+  assert.equal(alias.priority, 78);
+  assert.equal(alias.cooldownMs, 900);
+  assert.equal(alias.maxInstances, 1);
+  assert.notEqual(alias.targetId, "ui-confirm");
 });
 
 test("gameplay routes scenes, combat identity, and procedural fallback through the production mixer", () => {

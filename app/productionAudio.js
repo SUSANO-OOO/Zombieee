@@ -13,6 +13,7 @@ const V090_WAV_ONLY_CUE_IDS = new Set([
   "ability-mrs-chiha-salvo-cylinder",
 ]);
 const V080_SUPPRESSED_CARBINE_CUE_ID = "weapon-suppressed-carbine";
+const EMPLOYMENT_DOSSIER_REVEAL_CUE_ID = "employment-dossier-reveal";
 
 const MUSIC_TRACKS = Object.freeze([
   "title",
@@ -102,7 +103,7 @@ const NEW_UNIT_AUDIO_CUES = Object.freeze([
   { id: "weapon-pan-hit", category: "melee", cooldownMs: 120, maxInstances: 2, gain: 0.58, priority: 68 },
   { id: "weapon-pan-heavy-hit", category: "melee", cooldownMs: 150, maxInstances: 2, gain: 0.62, priority: 74 },
   { id: "weapon-pan-stun", category: "melee", cooldownMs: 240, maxInstances: 1, gain: 0.54, priority: 78 },
-  { id: "weapon-suppressed-pistol", category: "weapons", cooldownMs: 90, maxInstances: 4, gain: 0.72, priority: 70 },
+  { id: "weapon-suppressed-pistol", category: "weapons", cooldownMs: 90, maxInstances: 4, gain: 0.95, priority: 70 },
   { id: "weapon-suppressed-hit", category: "weapons", cooldownMs: 70, maxInstances: 4, gain: 0.66, priority: 64 },
   { id: "weapon-suppressed-reload", category: "weapons", cooldownMs: 280, maxInstances: 1, gain: 0.62, priority: 60 },
   { id: "weapon-special-kill", category: "weapons", cooldownMs: 500, maxInstances: 1, gain: 0.76, priority: 82 },
@@ -380,7 +381,24 @@ const pools = [
   ...humanVoicePools,
   ...enemyVoicePools,
 ];
-const COMMON_UI_PRELOAD = Object.freeze(["ui-cancel", "ui-confirm", "ui-error", "ui-hover", "ui-select"]);
+const aliases = [
+  {
+    id: EMPLOYMENT_DOSSIER_REVEAL_CUE_ID,
+    targetId: "sfx-v070-terminal-confirm",
+    instanceKey: EMPLOYMENT_DOSSIER_REVEAL_CUE_ID,
+    priority: 78,
+    cooldownMs: 900,
+    maxInstances: 1,
+  },
+];
+const COMMON_UI_PRELOAD = Object.freeze([
+  "ui-cancel",
+  "ui-confirm",
+  "ui-error",
+  "ui-hover",
+  "ui-select",
+  EMPLOYMENT_DOSSIER_REVEAL_CUE_ID,
+]);
 const COMBAT_PRELOAD = Object.freeze([
   ...COMMON_UI_PRELOAD,
   ...SUPPORT_CUES,
@@ -416,6 +434,10 @@ export const UPGRADE_AUDIO_CUE_IDS = Object.freeze({
   CURRENCY: "ui-select",
   SUCCESS: "ui-confirm",
   MAX: STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM,
+});
+
+export const EMPLOYMENT_AUDIO_CUE_IDS = Object.freeze({
+  DOSSIER_REVEAL: EMPLOYMENT_DOSSIER_REVEAL_CUE_ID,
 });
 
 export const TAKUYA_ENTRANCE_AUDIO = Object.freeze({
@@ -476,7 +498,7 @@ export const PRODUCTION_AUDIO_MANIFEST = createAudioManifest({
   version: 2,
   assets,
   pools,
-  aliases: [],
+  aliases,
   scenes,
 });
 
@@ -559,6 +581,7 @@ const UNIT_WEAPON_CUES = Object.freeze({
   "crazy-king": "weapon-chainsaw-attack",
   kumaverson: "weapon-pan-swing",
   babayaga: "weapon-suppressed-pistol",
+  guardian: "weapon-pan-heavy-hit",
   engineer: V080_SUPPRESSED_CARBINE_CUE_ID,
   zakimiya: "weapon-pan-hit",
   tky: "weapon-tky-plasma-blade",
@@ -858,6 +881,7 @@ export const LEGACY_SFX_CUE_MAP = Object.freeze({
   queue: "ui-select",
   "ui-confirm": "ui-confirm",
   "ui-cancel": "ui-cancel",
+  "employment-dossier-reveal": EMPLOYMENT_AUDIO_CUE_IDS.DOSSIER_REVEAL,
   "supply-pod": "support-pod-deploy",
   "supply-drum": "ui-confirm",
   "supply-medical": "support-heal",

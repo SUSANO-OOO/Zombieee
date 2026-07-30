@@ -233,7 +233,7 @@ test("Stage 1 through 6 include pre, combat communication, post, result, defeat,
       prefix: "stage-sawara",
       combat: "stage-sawara-alert-v070",
       result: "stage-sawara-post-v070",
-      expectedResults: ["T計画の研究記録を回収", "レイダーの情報判明・調達可能"],
+      expectedResults: ["T計画の研究記録を回収", "レイダーの情報判明・雇用可能"],
       barkLines: 7,
     },
     {

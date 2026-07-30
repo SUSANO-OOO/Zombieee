@@ -458,6 +458,14 @@ export function createNavigationRecoveryState({ x = 0, y = 0, lane = 1 } = {}) {
     recoveryLane: null,
     originalLane: Math.max(0, Math.floor(finite(lane, 1))),
     recoveryCount: 0,
+    consecutiveRecoveryAttempts: 0,
+    recoveryExhausted: false,
+    terminalFallbackSeconds: 0,
+    routeReleaseRequested: false,
+    routeReleaseCount: 0,
+    bestDestinationDistance: Number.POSITIVE_INFINITY,
+    lastDesiredX: finite(x),
+    lastDesiredY: finite(y),
   });
 }
 
@@ -477,6 +485,10 @@ export function advanceNavigationRecovery({
   destinationTolerance = 3,
   stuckThresholdSeconds = .72,
   recoveryDurationSeconds = .95,
+  maximumRecoveryAttempts = 3,
+  terminalFallbackDurationSeconds = 1.8,
+  destinationChangeTolerance = 8,
+  progressEpsilon = 1.5,
 } = {}) {
   const previous = state ?? createNavigationRecoveryState({ x, y, lane });
   const safeSeconds = Math.max(0, finite(seconds));
@@ -489,23 +501,95 @@ export function advanceNavigationRecovery({
   let stuckSeconds = finite(previous.stuckSeconds);
   let recoveryCount = Math.max(0, Math.floor(finite(previous.recoveryCount)));
   let originalLane = Math.max(0, Math.floor(finite(previous.originalLane, lane)));
+  let consecutiveRecoveryAttempts = Math.max(
+    0,
+    Math.floor(finite(previous.consecutiveRecoveryAttempts)),
+  );
+  let recoveryExhausted = previous.recoveryExhausted === true;
+  let terminalFallbackSeconds = Math.max(
+    0,
+    finite(previous.terminalFallbackSeconds) - safeSeconds,
+  );
+  let routeReleaseRequested = false;
+  let routeReleaseCount = Math.max(
+    0,
+    Math.floor(finite(previous.routeReleaseCount)),
+  );
+  let bestDestinationDistance = finite(
+    previous.bestDestinationDistance,
+    Number.POSITIVE_INFINITY,
+  );
+  const previousDesiredX = finite(previous.lastDesiredX, desiredX);
+  const previousDesiredY = finite(previous.lastDesiredY, desiredY);
+  const destinationChanged = Math.hypot(
+    finite(desiredX, currentX) - previousDesiredX,
+    finite(desiredY, currentY) - previousDesiredY,
+  ) > Math.max(0, finite(destinationChangeTolerance, 8));
+  const madeObjectiveProgress = destinationDistance
+    < bestDestinationDistance - Math.max(0, finite(progressEpsilon, 1.5));
 
   if (!moving || engaged || destinationDistance <= Math.max(0, finite(destinationTolerance, 3))) {
     stuckSeconds = 0;
     recoverySeconds = 0;
     recoveryLane = null;
     originalLane = Math.max(0, Math.floor(finite(lane, 1)));
+    consecutiveRecoveryAttempts = 0;
+    recoveryExhausted = false;
+    terminalFallbackSeconds = 0;
+    bestDestinationDistance = destinationDistance;
+  } else if (destinationChanged || madeObjectiveProgress) {
+    stuckSeconds = displacement <= Math.max(0, finite(displacementEpsilon, .05))
+      ? stuckSeconds + safeSeconds
+      : 0;
+    recoverySeconds = 0;
+    recoveryLane = null;
+    consecutiveRecoveryAttempts = 0;
+    recoveryExhausted = false;
+    terminalFallbackSeconds = 0;
+    bestDestinationDistance = destinationDistance;
   } else if (recoverySeconds > 0) {
     stuckSeconds = 0;
+  } else if (recoveryExhausted) {
+    // The terminal detour is bounded. If it still makes no progress, ask the
+    // caller to release target/route reservations for one frame so normal AI
+    // selection can choose a fresh route instead of becoming permanently
+    // dormant on the same objective.
+    stuckSeconds = 0;
+    recoveryLane = terminalFallbackSeconds > 0 ? previous.recoveryLane : null;
+    if (finite(previous.terminalFallbackSeconds) > 0 && terminalFallbackSeconds <= 0) {
+      routeReleaseRequested = true;
+      routeReleaseCount += 1;
+      recoverySeconds = 0;
+      recoveryLane = null;
+      consecutiveRecoveryAttempts = 0;
+      recoveryExhausted = false;
+      bestDestinationDistance = Number.POSITIVE_INFINITY;
+    }
   } else {
     stuckSeconds = displacement <= Math.max(0, finite(displacementEpsilon, .05))
       ? stuckSeconds + safeSeconds
       : 0;
     if (stuckSeconds + 1e-9 >= Math.max(0, finite(stuckThresholdSeconds, .72))) {
-      originalLane = Math.max(0, Math.floor(finite(lane, 1)));
-      recoveryLane = recoveryLaneFor(originalLane, Math.max(1, Math.floor(finite(laneCount, 3))), finite(seed) + recoveryCount);
-      recoverySeconds = Math.max(0, finite(recoveryDurationSeconds, .95));
-      recoveryCount += 1;
+      const attemptLimit = Math.max(1, Math.floor(finite(maximumRecoveryAttempts, 3)));
+      if (consecutiveRecoveryAttempts >= attemptLimit) {
+        recoveryExhausted = true;
+        recoveryLane = recoveryLaneFor(
+          originalLane,
+          Math.max(1, Math.floor(finite(laneCount, 3))),
+          finite(seed) + recoveryCount + 1,
+        );
+        recoverySeconds = Math.max(
+          0,
+          finite(terminalFallbackDurationSeconds, 1.8),
+        );
+        terminalFallbackSeconds = recoverySeconds;
+      } else {
+        originalLane = Math.max(0, Math.floor(finite(lane, 1)));
+        recoveryLane = recoveryLaneFor(originalLane, Math.max(1, Math.floor(finite(laneCount, 3))), finite(seed) + recoveryCount);
+        recoverySeconds = Math.max(0, finite(recoveryDurationSeconds, .95));
+        recoveryCount += 1;
+        consecutiveRecoveryAttempts += 1;
+      }
       stuckSeconds = 0;
     }
   }
@@ -518,5 +602,13 @@ export function advanceNavigationRecovery({
     recoveryLane,
     originalLane,
     recoveryCount,
+    consecutiveRecoveryAttempts,
+    recoveryExhausted,
+    terminalFallbackSeconds,
+    routeReleaseRequested,
+    routeReleaseCount,
+    bestDestinationDistance,
+    lastDesiredX: finite(desiredX, currentX),
+    lastDesiredY: finite(desiredY, currentY),
   });
 }

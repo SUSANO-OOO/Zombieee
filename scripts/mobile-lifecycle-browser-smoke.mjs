@@ -35,6 +35,10 @@ const backgroundHoldMs = Math.max(
   800,
   Math.min(5_000, Number(process.env.MOBILE_LIFECYCLE_QA_BACKGROUND_MS) || 1_200),
 );
+const deviceScaleFactor = Math.max(
+  1,
+  Math.min(4, Number(process.env.MOBILE_LIFECYCLE_QA_DEVICE_SCALE_FACTOR) || 3),
+);
 const evidenceDir = path.resolve(
   process.env.MOBILE_LIFECYCLE_QA_EVIDENCE_DIR ?? "outputs/mobile-lifecycle-browser-smoke",
 );
@@ -97,6 +101,88 @@ async function readRuntime(page) {
     battle: window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null,
     audio: window.__ASHFALL_AUDIO_QA__?.getDiagnostics?.() ?? null,
   }));
+}
+
+async function exerciseGraphicsQuality(page, label) {
+  await page.keyboard.press("p");
+  const control = page.locator("[data-graphics-quality-control='true']");
+  await control.waitFor({ state: "visible", timeout });
+  invariant(await control.getAttribute("data-graphics-quality-requested") === "auto",
+    `${label} player-facing graphics control did not start at Auto`);
+  await control.click();
+  await page.waitForFunction(
+    () => document.documentElement.dataset.graphicsQualityRequested === "high",
+    undefined,
+    { timeout },
+  );
+  await page.keyboard.press("p");
+  await page.waitForFunction(
+    () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().paused === false,
+    undefined,
+    { timeout },
+  );
+
+  const samples = [];
+  for (const requestedMode of ["high", "power-save", "auto"]) {
+    await page.evaluate((mode) => {
+      window.__ASHFALL_BATTLE_QA__?.setGraphicsQuality?.(mode);
+    }, requestedMode);
+    await page.waitForFunction(
+      (mode) => document.documentElement.dataset.graphicsQualityRequested === mode,
+      requestedMode,
+      { timeout },
+    );
+    const before = await readRuntime(page);
+    await page.waitForTimeout(700);
+    const after = await readRuntime(page);
+    const canvas = await page.locator("canvas").evaluate((element) => ({
+      dpr: Number(element.dataset.dpr),
+      graphicsQuality: element.dataset.graphicsQuality,
+      renderHz: Number(element.dataset.renderHz),
+    }));
+    const profile = after.performance.graphicsProfile;
+    const simulationDelta = after.performance.simulationTicks - before.performance.simulationTicks;
+    const renderDelta = after.performance.renderFrames - before.performance.renderFrames;
+    invariant(profile.requestedMode === requestedMode,
+      `${label} ${requestedMode} request resolved from stale settings`);
+    invariant(profile.simulationHz === 60,
+      `${label} ${requestedMode} changed simulation cadence to ${profile.simulationHz}`);
+    invariant(profile.renderHz <= 60,
+      `${label} ${requestedMode} exceeded the 60fps render ceiling`);
+    invariant(canvas.dpr <= profile.dprCap,
+      `${label} ${requestedMode} canvas DPR ${canvas.dpr} exceeded ${profile.dprCap}`);
+    invariant(simulationDelta > 0 && renderDelta > 0,
+      `${label} ${requestedMode} did not advance simulation/render`);
+    invariant(renderDelta <= simulationDelta + 2,
+      `${label} ${requestedMode} rendered ${renderDelta} frames for ${simulationDelta} simulation ticks`);
+    const renderObjectPools = after.performance.renderObjectPools;
+    invariant(renderObjectPools && Object.values(renderObjectPools).every((pool) => (
+      pool.active >= 0
+      && pool.active <= pool.capacity
+      && pool.available >= 0
+      && pool.available <= pool.capacity
+    )), `${label} ${requestedMode} render object pool exceeded its bound`);
+    if (requestedMode === "power-save") {
+      invariant(profile.renderHz === 30 && profile.dprCap === 1,
+        `${label} power-save profile was not bounded to 30fps/DPR1`);
+      invariant(simulationDelta >= renderDelta * 1.55,
+        `${label} power-save did not decouple 60Hz simulation from rendering (${simulationDelta}/${renderDelta})`);
+    }
+    samples.push({
+      requestedMode,
+      profile,
+      canvas,
+      simulationDelta,
+      renderDelta,
+      staticBackgroundCache: after.performance.staticBackgroundCache,
+      renderObjectPools,
+    });
+  }
+  invariant(samples.at(-1).staticBackgroundCache.ready === true,
+    `${label} static battlefield cache was not created`);
+  invariant(samples.at(-1).staticBackgroundCache.hits > 0,
+    `${label} static battlefield cache had no reuse hits`);
+  return samples;
 }
 
 async function unlockAudio(page) {
@@ -366,12 +452,13 @@ for (const engine of engines) {
   try {
     for (const viewport of viewports) {
       const label = `${engine}-${viewport.width}x${viewport.height}`;
-      const context = await browser.newContext({ viewport });
+      const context = await browser.newContext({ viewport, deviceScaleFactor });
       const page = await context.newPage();
       const diagnostics = diagnosticsFor(page);
       const result = {
         engine,
         viewport,
+        deviceScaleFactor,
         url: caseUrl(),
         status: "failed",
       };
@@ -394,6 +481,7 @@ for (const engine of engines) {
         await page.waitForTimeout(250);
         const before = await readRuntime(page);
         invariant(before.performance && before.battle && before.audio, "QA diagnostics unavailable");
+        const graphicsQuality = await exerciseGraphicsQuality(page, label);
 
         const backgroundState = await enterBackground(page, context, { requireAudio });
         const hiddenStart = backgroundState.hiddenStart;
@@ -479,6 +567,7 @@ for (const engine of engines) {
             resumedBattleTimeDelta,
             backgroundDurationDelta,
           },
+          graphicsQuality,
           pageTransition: pageTransition.deltas,
           backForward,
           audio: {

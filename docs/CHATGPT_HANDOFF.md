@@ -96,7 +96,7 @@ Version 0.9.0はrelease SHA `f2633c538756385f13d166d3adbcdd39b3a08b21`をannotat
 
 全bossは共通data、全身侵入後のcombat-ready、大型表示、専用HP、登場、攻撃予告を持つ共通基盤へ統合済み。TAKUYAと改札喰いも同基盤へ改修済み。
 
-## 6. 開発中Version 0.9.5
+## 6. 正式公開工程中Version 0.9.5
 
 Version 0.9.5は新しいStage、unit、bossを増やすVersionではない。正式公開中の0.9.0を基準に、smartphone性能、全16体animation、VFX、敵／boss／CRAWLER表現、残存不具合、雇用UX、saveを一つの品質更新として完成させる。
 
@@ -127,7 +127,7 @@ Version 0.9.5は新しいStage、unit、bossを増やすVersionではない。�
 
 ### Release境界
 
-docs-only PRを`main`へ通常mergeした結果から`integration/0.9.5`を作成し、工程branch／Draft PRを段階統合する。`integration/0.9.5 → main`、`v0.9.5` tag、GitHub Release、GitHub Pages正式deployment、Issue #96 closeは別承認まで禁止する。
+docs-only PRを`main`へ通常mergeした結果から`integration/0.9.5`を作成し、工程branch／Draft PRを段階統合した。Issue #96の監査改訂済み最新コメント（issue comment `5124971857`）を唯一の実行正本として、release preparation、final main PR、annotated `v0.9.5`、GitHub Release、Pages manual dispatch、自動Public QA、Issue #96 completed closeまで進める。Public QA成功前にIssueをcloseしない。
 
 PWA、Service Worker、offline／installはVersion 0.9.6へ分離する。
 
@@ -356,6 +356,7 @@ LAN、localhost、GitHub Pagesは別originであり、localStorage／IndexedDB�
 - `main`直接push、force push、共有履歴rebase・amend禁止
 - 正式公開はGitHub Pagesのみ
 - Version 0.9.5はdocs-only merge resultから`integration/0.9.5`を作成し、工程PRを段階統合する
-- Version 0.9.5の物理smartphone確認・別承認前に、`integration/0.9.5 → main`、tag、Release、正式deploymentを行わない
+- Version 0.9.5の正式公開はIssue comment `5124971857`の承認順に行い、final main merge resultへtag、Release、Pages requestを固定する
+- Pages公開metadata一致と自動Public QA成功前にIssue #96をcloseしない
 - 公開後に重大不具合があればrevert PRまたはimmutable release再deploymentで復旧する
 - 未確認・失敗を成功報告しない

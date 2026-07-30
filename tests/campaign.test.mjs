@@ -22,6 +22,7 @@ import {
   INITIAL_UNIT_IDS,
   PROVISIONAL_BASE_REWARDS,
   STAGE_VISUAL_SIGNATURES,
+  acknowledgeEmploymentNotice,
   applyStageResult,
   campaignUnitIdToCombatKind,
   calculateStageRewards,
@@ -30,6 +31,7 @@ import {
   computeCampaignSaveIntegrity,
   createDefaultCampaignSave,
   deserializeCampaignSave,
+  employmentNoticeIdForUnit,
   formationUnitIdsToCombatKinds,
   getSelectedFormationCombatKinds,
   getSelectedFormationUnitIds,
@@ -45,6 +47,7 @@ import {
   migrateCampaignSave,
   normalizeCampaignCharacterId,
   normalizeCampaignUnitId,
+  pendingEmploymentNoticeUnitIds,
   recruitCampaignUnit,
   resolveStageResult,
   selectCampaignStage,
@@ -429,7 +432,6 @@ test("sixteen canonical playable units and guide-ikura use approved player-facin
     [18, CAMPAIGN_UNIT_IDS.TKY, 280],
     [19, CAMPAIGN_UNIT_IDS.MRS_CHIHA, 300],
     [20, CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, 340],
-    [20, CAMPAIGN_UNIT_IDS.MAYO_CHAN, 260],
   ]) {
     assert.deepEqual(CAMPAIGN_UNIT_BY_ID[unitId].unlock, {
       type: "recruitment",
@@ -437,6 +439,11 @@ test("sixteen canonical playable units and guide-ikura use approved player-facin
       costCaps,
     });
   }
+  assert.deepEqual(CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.MAYO_CHAN].unlock, {
+    type: "survival",
+    waveNumber: 20,
+    costCaps: 260,
+  });
   for (const [stageNumber, unitId] of [
     [17, CAMPAIGN_UNIT_IDS.ZAKIMIYA],
     [18, CAMPAIGN_UNIT_IDS.TKY],
@@ -450,8 +457,8 @@ test("sixteen canonical playable units and guide-ikura use approved player-facin
   }
   assert.deepEqual(CAMPAIGN_RECRUITMENT_MILESTONES[20], {
     storyJoinUnitIds: [],
-    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
-    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+    discoveredUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI],
+    recruitableUnitIds: [CAMPAIGN_UNIT_IDS.MIYAMOTO_MUSASHI],
   });
   assert.equal(CAMPAIGN_RECRUITMENT_MILESTONES[7], undefined);
   assert.equal(CAMPAIGN_UNIT_BY_ID.brawler.id, CAMPAIGN_UNIT_IDS.PAISEN);
@@ -741,7 +748,7 @@ test("Stage 4 and Stage 6 story joins are free while Stage 5 only discovers Monk
 test("default save is versioned and contains initial progression, selection, and settings", () => {
   const save = createDefaultCampaignSave();
   assert.equal(save.schemaVersion, CAMPAIGN_SAVE_SCHEMA_VERSION);
-  assert.equal(save.schemaVersion, 13);
+  assert.equal(save.schemaVersion, 14);
   assert.equal(save.revision, 0);
   assert.equal(save.updatedAt, "");
   assert.equal(save.integrity, "");
@@ -755,6 +762,9 @@ test("default save is versioned and contains initial progression, selection, and
   assert.deepEqual(save.processedEquipmentTransactionIds, []);
   assert.deepEqual(save.processedMigrationIds, []);
   assert.deepEqual(save.migrationNotices, []);
+  assert.deepEqual(save.employmentNoticeReceipts, []);
+  assert.deepEqual(save.seenEmploymentNoticeIds, []);
+  assert.equal(save.survival.highestReachedWave, 0);
   assert.deepEqual(Object.values(save.unitLevels), Array(CAMPAIGN_UNITS.length).fill(1));
   assert.deepEqual(Object.values(save.unitRanks), Array(CAMPAIGN_UNITS.length).fill(0));
   assert.deepEqual(save.completedStageIds, []);
@@ -786,6 +796,7 @@ test("default save is versioned and contains initial progression, selection, and
     sfxVolume: 0.8,
     reducedMotion: false,
     battleEventMode: "first-time",
+    graphicsQuality: "auto",
   });
 });
 
@@ -928,6 +939,7 @@ test("migration accepts schema-less and v0 aliases, derives unlocks, and tolerat
     sfxVolume: 0.6,
     reducedMotion: true,
     battleEventMode: "first-time",
+    graphicsQuality: "auto",
   });
 });
 
@@ -958,6 +970,7 @@ test("migration repairs malformed fields without crashing or removing mandatory 
     sfxVolume: 0,
     reducedMotion: false,
     battleEventMode: "first-time",
+    graphicsQuality: "auto",
   });
 });
 
@@ -1003,7 +1016,11 @@ test("schema v2 to v4 migration is idempotent and preserves progress, receipts, 
   assert.equal(migrated.caps, reorganizeLegacyCaps(schema2.supplies).nextCaps);
   assert.equal(migrated.supplies, migrated.caps);
   assert.equal(migrated.lastSelectedStageId, schema2.lastSelectedStageId);
-  assert.deepEqual(migrated.settings, { ...schema2.settings, battleEventMode: "first-time" });
+  assert.deepEqual(migrated.settings, {
+    ...schema2.settings,
+    battleEventMode: "first-time",
+    graphicsQuality: "auto",
+  });
   assert.deepEqual(migrated.readStoryEventIds, ["prologue-opening", "stage-nishijin-pre"]);
   assert.equal(migrated.autoSkipReadStory, true);
   assert.deepEqual(migrated.ownership, [
@@ -1073,6 +1090,7 @@ test("schema v3 migrates a fully silent legacy audio configuration once, while v
     sfxVolume: 0.8,
     reducedMotion: false,
     battleEventMode: "first-time",
+    graphicsQuality: "auto",
   });
 
   const currentSilent = migrateCampaignSave({
@@ -1086,6 +1104,7 @@ test("schema v3 migrates a fully silent legacy audio configuration once, while v
     sfxVolume: 0,
     reducedMotion: false,
     battleEventMode: "first-time",
+    graphicsQuality: "auto",
   });
 });
 
@@ -1155,7 +1174,11 @@ test("serialization round-trips stars, rewards, unlocks, selection, and settings
   let save = applyStageResult(createDefaultCampaignSave(), STAGE_1, { resultId: "roundtrip-stage-1", won: true, baseHp: 90, baseMaxHp: 100 });
   save = selectCampaignStage(save, STAGE_2);
   const revisionBeforeSettings = save.revision;
-  save = updateCampaignSettings(save, { bgmEnabled: false, sfxVolume: 0.25 });
+  save = updateCampaignSettings(save, {
+    bgmEnabled: false,
+    sfxVolume: 0.25,
+    graphicsQuality: "power-save",
+  });
   const serialized = serializeCampaignSave(save);
   const restored = deserializeCampaignSave(serialized);
 
@@ -1171,6 +1194,7 @@ test("serialization round-trips stars, rewards, unlocks, selection, and settings
   assert.equal(restored.lastSelectedStageId, STAGE_2);
   assert.equal(restored.settings.bgmEnabled, false);
   assert.equal(restored.settings.sfxVolume, 0.25);
+  assert.equal(restored.settings.graphicsQuality, "power-save");
   assert.equal(restored.revision, revisionBeforeSettings + 1);
   assert.equal(Number.isFinite(Date.parse(restored.updatedAt)), true);
 });
@@ -1198,6 +1222,72 @@ test("battle event mode migrates safely and round-trips without touching progres
   assert.equal(deserializeCampaignSave(serializeCampaignSave(showAll)).settings.battleEventMode, "all");
   assert.equal(updateStoryPlaybackSettings(showAll, { battleEventMode: "invalid" }).settings.battleEventMode, "all");
   assert.equal(migrateCampaignSave({ schemaVersion: 4, settings: { battleEventMode: "invalid" } }).settings.battleEventMode, "first-time");
+  assert.equal(migrateCampaignSave({ schemaVersion: 13, settings: { graphicsQuality: "invalid" } }).settings.graphicsQuality, "auto");
+});
+
+test("Mayo employment unlocks on Survival Wave 20 with a durable one-shot notice and never relocks 0.9.0 roster state", () => {
+  const fresh = createDefaultCampaignSave();
+  const wave19 = migrateCampaignSave({
+    ...fresh,
+    survival: { ...fresh.survival, highestWave: 19 },
+  });
+  assert.equal(isUnitDiscovered(wave19, CAMPAIGN_UNIT_IDS.MAYO_CHAN), false);
+  assert.equal(isUnitRecruitable(wave19, CAMPAIGN_UNIT_IDS.MAYO_CHAN), false);
+  assert.deepEqual(pendingEmploymentNoticeUnitIds(wave19), []);
+
+  const wave20 = migrateCampaignSave({
+    ...wave19,
+    survival: { ...wave19.survival, highestWave: 20 },
+  });
+  const mayoNoticeId = employmentNoticeIdForUnit(CAMPAIGN_UNIT_IDS.MAYO_CHAN);
+  assert.equal(isUnitDiscovered(wave20, CAMPAIGN_UNIT_IDS.MAYO_CHAN), true);
+  assert.equal(isUnitRecruitable(wave20, CAMPAIGN_UNIT_IDS.MAYO_CHAN), true);
+  assert.equal(isUnitOwned(wave20, CAMPAIGN_UNIT_IDS.MAYO_CHAN), false);
+  assert.equal(CAMPAIGN_RECRUITMENT_COSTS[CAMPAIGN_UNIT_IDS.MAYO_CHAN], 260);
+  assert.deepEqual(wave20.employmentNoticeReceipts, [mayoNoticeId]);
+  assert.deepEqual(pendingEmploymentNoticeUnitIds(wave20), [CAMPAIGN_UNIT_IDS.MAYO_CHAN]);
+
+  const acknowledged = acknowledgeEmploymentNotice(wave20, CAMPAIGN_UNIT_IDS.MAYO_CHAN);
+  assert.deepEqual(acknowledged.employmentNoticeReceipts, [mayoNoticeId]);
+  assert.deepEqual(acknowledged.seenEmploymentNoticeIds, [mayoNoticeId]);
+  assert.deepEqual(pendingEmploymentNoticeUnitIds(acknowledged), []);
+  const restored = deserializeCampaignSave(serializeCampaignSave(acknowledged));
+  assert.deepEqual(pendingEmploymentNoticeUnitIds(restored), []);
+
+  const publishedOwned = migrateCampaignSave({
+    ...fresh,
+    schemaVersion: 13,
+    ownership: [...fresh.ownership, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+    discovery: [...fresh.discovery, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+    unlockedUnitIds: [...fresh.unlockedUnitIds, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+  });
+  assert.equal(isUnitOwned(publishedOwned, CAMPAIGN_UNIT_IDS.MAYO_CHAN), true);
+  assert.equal(isUnitRecruitable(publishedOwned, CAMPAIGN_UNIT_IDS.MAYO_CHAN), false);
+
+  const publishedRecruitable = migrateCampaignSave({
+    ...fresh,
+    schemaVersion: 13,
+    discovery: [...fresh.discovery, CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+    recruitable: [CAMPAIGN_UNIT_IDS.MAYO_CHAN],
+  });
+  assert.equal(isUnitRecruitable(publishedRecruitable, CAMPAIGN_UNIT_IDS.MAYO_CHAN), true);
+  assert.deepEqual(pendingEmploymentNoticeUnitIds(publishedRecruitable), [
+    CAMPAIGN_UNIT_IDS.MAYO_CHAN,
+  ]);
+
+  const queued = migrateCampaignSave({
+    ...fresh,
+    discovery: [...fresh.discovery, CAMPAIGN_UNIT_IDS.TATARA, CAMPAIGN_UNIT_IDS.RAIDER],
+    recruitable: [CAMPAIGN_UNIT_IDS.TATARA, CAMPAIGN_UNIT_IDS.RAIDER],
+  });
+  assert.deepEqual(pendingEmploymentNoticeUnitIds(queued), [
+    CAMPAIGN_UNIT_IDS.TATARA,
+    CAMPAIGN_UNIT_IDS.RAIDER,
+  ]);
+  assert.deepEqual(
+    pendingEmploymentNoticeUnitIds(acknowledgeEmploymentNotice(queued, CAMPAIGN_UNIT_IDS.TATARA)),
+    [CAMPAIGN_UNIT_IDS.RAIDER],
+  );
 });
 
 test("read tracking and read-only auto-skip preferences update without erasing campaign progress", () => {
@@ -1251,6 +1341,9 @@ test("caps recruitment and story joins are receipt-backed, free/paid as specifie
   assert.equal(isUnitOwned(recruited.save, CAMPAIGN_UNIT_IDS.TATARA), true);
   assert.equal(isUnitRecruitable(recruited.save, CAMPAIGN_UNIT_IDS.TATARA), false);
   assert.deepEqual(recruited.save.processedAcquisitionIds, ["recruit-tatara-once"]);
+  assert.deepEqual(recruited.save.seenEmploymentNoticeIds, [
+    employmentNoticeIdForUnit(CAMPAIGN_UNIT_IDS.TATARA),
+  ]);
 
   const duplicateReceipt = recruitCampaignUnit(recruited.save, CAMPAIGN_UNIT_IDS.TATARA, {
     acquisitionId: "recruit-tatara-once",

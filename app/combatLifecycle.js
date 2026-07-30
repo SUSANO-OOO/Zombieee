@@ -41,6 +41,8 @@ export const COMBAT_CONFIG = freeze({
   ranges: freeze(Object.fromEntries(UNIT_CARDS.map(({ kind, range }) => [kind, range]))),
 });
 
+export const NORMAL_ATTACK_REACH_TOLERANCE = 2;
+
 export const COMBAT_ROLE_RULES = freeze({
   scout: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
   brute: freeze({ attackType: "melee", allowAdjacentLaneTargets: false }),
@@ -181,8 +183,13 @@ export function canAcquireCombatTarget({ attacker, target, roleRules, hasLineOfS
 export function canNormalAttackTarget({ attacker, target, roleRules, hasLineOfSight } = {}) {
   if (!canAcquireCombatTarget({ attacker, target, roleRules, hasLineOfSight })) return false;
   if (combatHitboxesOverlap({ left: attacker, right: target })) return true;
-  const reach = Math.max(0, finiteNumber(attacker.range)) + Math.max(0, finiteNumber(target.bodyRadius));
-  return combatDistance(attacker, target) <= reach;
+  return combatDistance(attacker, target) <= normalAttackReach(attacker, target);
+}
+
+export function normalAttackReach(attacker, target) {
+  return Math.max(0, finiteNumber(attacker?.range))
+    + Math.max(0, finiteNumber(target?.bodyRadius))
+    + NORMAL_ATTACK_REACH_TOLERANCE;
 }
 
 /** True only while the two rendered combat body circles physically overlap. */

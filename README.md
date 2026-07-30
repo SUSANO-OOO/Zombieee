@@ -10,20 +10,22 @@
 
 主対象はスマートフォン横画面です。844×390、844×340、iPhone Safariのsafe areaとブラウザUI表示状態を優先し、PC横画面も正式対応します。
 
-## Version 0.9.0 release source
+## Version 0.9.5 release candidate
 
-**Version 0.9.0**
+**Version 0.9.5**
 
 - Stage 1〜20と異常発生任務
 - 無限wave、checkpoint、3択強化を備えたSurvival Mode
-- プレイアブル16名と、全16体の個体別手動アビリティ
-- 通常感染体6種、boss共通基盤、既存boss改修、新boss5体
+- プレイアブル16名の通常攻撃、移動、方向転換、manual abilityをplayer-facingで刷新
+- 通常感染体、boss、CRAWLER、projectile、VFX、戦場描画を改善
+- CRAWLER出撃時の意図しない透過、接地、向き、攻撃timing等の0.9.0残存不具合を横断修正
+- 自動／高画質／省電力の3描画modeと、スマートフォン向けrender・memory・lifecycle最適化
+- 「雇用」への表現統一、雇用可能popup、マヨちゃんのSurvival Wave 20到達解放
+- save schema v14と、v13既存save・origin別saveの保全
 - Level 1〜50基盤と、Stage 20時点でLv25までの通常解放
 - 個人equipment2枠、編成preset別の戦術equipment2枠、約20種の装備
-- caps経済再編、詳細result、敵／boss図鑑、戦績記録
-- smartphone横画面向けの出撃・部隊・補給所・記録UI
 
-Version 0.9.0はrelease SHA `f2633c538756385f13d166d3adbcdd39b3a08b21`をannotated `v0.9.0`、GitHub Release、GitHub Pagesへ正式公開済みです。公開request IDは`v0.9.0-formal-release-20260729`です。
+Version 0.9.5はIssue #96のProducer acceptance correctionとrelease preparationを完了後、`integration/0.9.5 → main`の通常PR、annotated `v0.9.5`、GitHub Release、GitHub Pages manual dispatchの順で正式公開します。release SHAはfinal main PRのmerge resultへ固定します。
 
 正確なrelease SHA、tag、Issue、公開metadataは[PROJECT_STATE](docs/PROJECT_STATE.md)を確認してください。
 
@@ -51,13 +53,13 @@ Version 0.9.0はrelease SHA `f2633c538756385f13d166d3adbcdd39b3a08b21`をannotat
 
 0.9.0の正式製品判断は[プロデューサー決定台帳](docs/PRODUCER_DECISIONS_0.9.0.md)、プレイアブル側の個別能力と頭上UIは[手動アビリティ仕様](docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md)を参照してください。
 
-## Version 0.9.5の開発
+## Version 0.9.5の実行記録
 
 Version 0.9.5は[Issue #96](https://github.com/SUSANO-OOO/Zombieee/issues/96)を実行台帳とし、smartphone性能、全16体の戦闘アニメーション、VFX、敵／boss／CRAWLER、0.9.0残存不具合、雇用UX、マヨちゃん解放、save migrationを一つの品質更新として進めます。
 
-最上位の製品判断は[Version 0.9.5プロデューサー決定台帳](docs/PRODUCER_DECISIONS_0.9.5.md)です。docs-only PRを`main`へ通常mergeした結果から`integration/0.9.5`を作成し、工程branch／Draft PRを段階統合します。
+最上位の製品判断は[Version 0.9.5プロデューサー決定台帳](docs/PRODUCER_DECISIONS_0.9.5.md)、releaseの変更点と既知の物理端末境界は[Release Notes](docs/RELEASE_NOTES_0.9.5.md)です。
 
-`integration/0.9.5 → main`、`v0.9.5` tag、GitHub Release、GitHub Pages正式deployment、Issue #96 closeは別承認まで行いません。PWA、Service Worker、offline／install対応はVersion 0.9.6へ分離します。
+Issue #96の監査改訂済み最新コメントがformal releaseまでを承認しています。Public QA成功前にIssue #96をcloseしません。PWA、Service Worker、offline／install対応はVersion 0.9.6へ分離します。
 
 ## 文書
 
@@ -67,6 +69,7 @@ Version 0.9.5は[Issue #96](https://github.com/SUSANO-OOO/Zombieee/issues/96)を
 | [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | 現在のrelease、SHA、公開、次の正式作業 |
 | [docs/PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md) | 長期目標、Version順、Stage／unit拡張方針 |
 | [docs/PRODUCER_DECISIONS_0.9.5.md](docs/PRODUCER_DECISIONS_0.9.5.md) | Version 0.9.5の製品判断とrelease境界 |
+| [docs/RELEASE_NOTES_0.9.5.md](docs/RELEASE_NOTES_0.9.5.md) | Version 0.9.5の変更点、save互換、QA、既知の物理端末境界 |
 | [docs/PRODUCER_DECISIONS_0.9.0.md](docs/PRODUCER_DECISIONS_0.9.0.md) | Version 0.9.0の製品判断と公開履歴 |
 | [docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md](docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md) | 全16体の手動アビリティ、ready icon、個体別cooldown、新5体の戦闘仕様 |
 | [docs/RELEASE_BACKUP_RECOVERY.md](docs/RELEASE_BACKUP_RECOVERY.md) | GitHub Pages公開、tag、Release、rollback、bundle |

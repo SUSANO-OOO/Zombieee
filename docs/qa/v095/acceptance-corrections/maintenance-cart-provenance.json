@@ -1,0 +1,39 @@
+{
+  "assetId": "maintenance-cart-v1",
+  "purpose": "Version 0.9.5 escort mission player-facing objective",
+  "source": {
+    "path": "public/art/v070/stages/objects/station-platform-objects-v1.png",
+    "sha256": "ef316203647e73995714543e87b960441ef029490c1a5b8c270b3d945eb168cb",
+    "approvalLedger": "docs/ASSET_APPROVALS_0.7.0.json",
+    "approvalLedgerLines": "2052-2088"
+  },
+  "derivation": {
+    "script": "scripts/generate-v095-maintenance-cart.mjs",
+    "crop": {
+      "left": 90,
+      "top": 260,
+      "width": 1400,
+      "height": 520
+    },
+    "trim": "transparent bounds",
+    "resizeWidth": 480,
+    "kernel": "lanczos3",
+    "format": "png",
+    "compressionLevel": 9
+  },
+  "output": {
+    "path": "public/art/v095/mission-objects/maintenance-cart-v1.png",
+    "sha256": "1523b6347d5f1e66fb7065338602c1621bac5f2f90d37ec62059830d3b69b3fb",
+    "width": 480,
+    "height": 168,
+    "bytes": 159608
+  },
+  "runtime": {
+    "registry": "PRODUCTION_VISUALS.missionObjects[\"maintenance-cart\"]",
+    "campaignStages": [
+      "stage-hospital-evacuation-route",
+      "stage-research-freight-passage"
+    ],
+    "primitiveFallbackAllowed": false
+  }
+}

@@ -435,8 +435,13 @@ for (const engine of engines) {
       invariant(counterProof.result.preventedDamage === 35
         && counterProof.ownerHpAfter === counterProof.ownerHpBefore
         && counterProof.targetHpAfter < counterProof.targetHpBefore
-        && counterProof.phase === "cooldown",
+        && counterProof.phase === "recovery",
       `${engine}/${viewport.height}: 二天一流・無空 did not parry and counter exactly once`);
+      await page.waitForFunction(() => {
+        const fighter = window.__ASHFALL_BATTLE_QA__.getSnapshot()
+          .fighters.find(({ kind }) => kind === "miyamoto-musashi");
+        return fighter?.manualAbility?.phase === "cooldown";
+      });
       invariant(await page.locator(".manual-ability-ready[data-ability-kind='miyamoto-musashi']").count() === 0,
         `${engine}/${viewport.height}/miyamoto-musashi: cooldown rendered a persistent overhead icon`);
       if (viewport.height === 390) {

@@ -1,0 +1,96 @@
+{
+  "sourceBaseSha": "6f65672059b9e75c3a31fb6cf1630c4a11d44fd1",
+  "branch": "codex/0.9.5-mobile-performance",
+  "deviceScaleFactor": 3,
+  "viewports": [
+    "844x390",
+    "844x340"
+  ],
+  "qualityProfiles": {
+    "high": {
+      "simulationHz": 60,
+      "renderHz": 60,
+      "dprCap": 2,
+      "effectDensity": 1
+    },
+    "autoMobile": {
+      "simulationHz": 60,
+      "renderHz": 45,
+      "dprCap": 1.5,
+      "effectDensity": 0.72
+    },
+    "powerSave": {
+      "simulationHz": 60,
+      "renderHz": 30,
+      "dprCap": 1,
+      "effectDensity": 0.48
+    }
+  },
+  "lifecycleMatrix": {
+    "cases": 4,
+    "functionalFailures": 0,
+    "hiddenSimulationDeltaMax": 0,
+    "hiddenRenderDeltaMax": 0,
+    "hiddenBattleTimeDeltaMax": 0,
+    "duplicateAudioLoopKeys": 0,
+    "diagnosticErrors": 0,
+    "capabilityGaps": [
+      "native-visibility-transition-unavailable",
+      "native-bfcache-not-observed",
+      "headless-webkit-audio-context-unavailable"
+    ]
+  },
+  "chromium844x390Dpr3Stress30s": {
+    "high": {
+      "battleCoveragePercent": 99.83,
+      "frameSamples": 759,
+      "medianFrameMs": 33.3,
+      "p95FrameMs": 83.4,
+      "maxFrameGapMs": 133.3,
+      "longTasksOver100Ms": 9,
+      "simulationTickDelta": 1785,
+      "renderFrameDelta": 767,
+      "retainedHeapGrowthPercent": -5.81,
+      "memoryProxyGrowthPercent": -22.85,
+      "diagnosticErrors": 0
+    },
+    "auto": {
+      "battleCoveragePercent": 100,
+      "frameSamples": 1371,
+      "medianFrameMs": 16.7,
+      "p95FrameMs": 50,
+      "maxFrameGapMs": 83.4,
+      "longTasksOver100Ms": 0,
+      "simulationTickDelta": 1810,
+      "renderFrameDelta": 1107,
+      "retainedHeapGrowthPercent": -1.03,
+      "memoryProxyGrowthPercent": -18.9,
+      "diagnosticErrors": 0,
+      "renderObjectPools": {
+        "particles": {
+          "capacity": 420,
+          "created": 310,
+          "reused": 704,
+          "available": 310,
+          "discarded": 0
+        },
+        "shots": {
+          "capacity": 180,
+          "created": 46,
+          "reused": 232,
+          "available": 46,
+          "discarded": 0
+        },
+        "damageTexts": {
+          "capacity": 140,
+          "created": 102,
+          "reused": 284,
+          "available": 102,
+          "discarded": 0
+        }
+      }
+    }
+  },
+  "physicalDeviceHeatVerified": false,
+  "formalV090ToV095ComparisonDeferredToRc": true
+}

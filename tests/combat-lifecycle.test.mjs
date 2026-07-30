@@ -26,6 +26,8 @@ import {
   igniteAllyCorpsesInFire,
   isCombatBlocking,
   isCombatTargetable,
+  normalAttackReach,
+  NORMAL_ATTACK_REACH_TOLERANCE,
   selectCombatTarget,
   supportCohesion,
 } from "../app/combatLifecycle.js";
@@ -73,6 +75,25 @@ test("allows melee attacks only against close targets in the same lane", () => {
   assert.equal(canNormalAttackTarget({ attacker, target: closerAdjacent }), false);
   assert.equal(canNormalAttackTarget({ attacker, target: farSameLane }), false);
   assert.equal(selectCombatTarget({ attacker, candidates: [closerAdjacent, closeSameLane] }), closeSameLane);
+});
+
+test("uses one tolerant normal-attack boundary for navigation and real damage", () => {
+  const attacker = fighter({ x: 300, range: 28 });
+  const exactBoundary = fighter({
+    id: 2,
+    side: "zombie",
+    x: 300 + 28 + 11 + NORMAL_ATTACK_REACH_TOLERANCE,
+    bodyRadius: 11,
+  });
+  const outsideBoundary = fighter({
+    ...exactBoundary,
+    id: 3,
+    x: exactBoundary.x + .01,
+  });
+
+  assert.equal(normalAttackReach(attacker, exactBoundary), 41);
+  assert.equal(canNormalAttackTarget({ attacker, target: exactBoundary }), true);
+  assert.equal(canNormalAttackTarget({ attacker, target: outsideBoundary }), false);
 });
 
 test("pursuit and firing share lifecycle, side, lane, role, and line-of-sight rules", () => {

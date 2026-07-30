@@ -16,20 +16,20 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: RELEASE_TITLE,
   description:
-    "Stage 20、Survival Mode、16名の固有アビリティを収録。移動拠点CRAWLERと生存者部隊を率いるリアルタイム戦略・防衛ゲーム。",
+    "全16名の戦闘アニメーション、VFX、スマートフォン描画、雇用導線を刷新。移動拠点CRAWLERと生存者部隊を率いるリアルタイム戦略・防衛ゲーム。",
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     shortcut: "/favicon.svg",
   },
   openGraph: {
     title: "西新世紀末物語",
-    description: "Stage 20、Survival Mode、16名の固有アビリティを収録したアーリーアクセス版。",
+    description: "全16名の戦闘表現とスマートフォン描画を刷新したVersion 0.9.5。",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "西新世紀末物語",
-    description: "Stage 20、Survival Mode、16名の固有アビリティを収録したアーリーアクセス版。",
+    description: "全16名の戦闘表現とスマートフォン描画を刷新したVersion 0.9.5。",
   },
 };
 

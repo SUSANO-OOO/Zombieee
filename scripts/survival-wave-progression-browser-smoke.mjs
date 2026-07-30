@@ -199,6 +199,11 @@ for (const engine of engines) {
         && entry.lastCompletedWave >= waveTimeline[index - 1].lastCompletedWave
       ))
     )), `${engine}: wave progress was not monotonic: ${JSON.stringify(waveTimeline)}`);
+    await page.waitForFunction(
+      () => document.querySelectorAll(".survival-upgrade-choices button").length === 3,
+      null,
+      { timeout: 5_000 },
+    );
     invariant(await page.locator(".survival-upgrade-choices button").count() === 3,
       `${engine}: boss reward did not expose three upgrades`);
     invariant(deploymentCount > 0, `${engine}: no player-facing deployment occurred`);

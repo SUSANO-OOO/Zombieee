@@ -321,3 +321,55 @@ test("slow boss movement at 60 fps is progress rather than a false stuck signal"
   assert.equal(state.recoveryLane, null);
   assert.equal(state.stuckSeconds, 0);
 });
+
+test("an immobile unit releases a failed route after bounded corrections without becoming dormant", () => {
+  let state = createNavigationRecoveryState({ x: 600, y: 220, lane: 1 });
+  let observedTerminalFallback = false;
+  let observedRouteReleases = 0;
+  for (let tick = 0; tick < 800; tick += 1) {
+    state = advanceNavigationRecovery({
+      state,
+      x: 600,
+      y: 220,
+      desiredX: 500,
+      desiredY: 220,
+      lane: 1,
+      seed: 4,
+      moving: true,
+      seconds: .2,
+    });
+    if (state.terminalFallbackSeconds > 0) {
+      observedTerminalFallback = true;
+      assert.notEqual(state.recoveryLane, null);
+    }
+    if (state.routeReleaseRequested) {
+      observedRouteReleases += 1;
+      assert.equal(state.recoveryExhausted, false);
+      assert.equal(state.consecutiveRecoveryAttempts, 0);
+      assert.equal(state.recoveryLane, null);
+    }
+    assert.equal(
+      state.recoveryExhausted && state.terminalFallbackSeconds <= 0,
+      false,
+      "a failed terminal detour must not leave navigation permanently dormant",
+    );
+  }
+  assert.equal(observedTerminalFallback, true);
+  assert.ok(observedRouteReleases >= 2);
+  assert.equal(state.routeReleaseCount, observedRouteReleases);
+  assert.ok(state.recoveryCount >= observedRouteReleases * 3);
+
+  const newObjective = advanceNavigationRecovery({
+    state,
+    x: 600,
+    y: 220,
+    desiredX: 700,
+    desiredY: 360,
+    lane: 1,
+    seed: 4,
+    moving: true,
+    seconds: .2,
+  });
+  assert.equal(newObjective.recoveryExhausted, false);
+  assert.equal(newObjective.consecutiveRecoveryAttempts, 0);
+});

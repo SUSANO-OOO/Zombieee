@@ -129,25 +129,25 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.9.0 campaign title as the formal entry point", async () => {
+test("server-renders the 0.9.5 campaign title as the formal entry point", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.0<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.5<\/title>/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
   assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"/);
   await access(new URL("../public/favicon.svg", import.meta.url));
-  assert.match(html, /<main class="game-shell" data-screen="title" data-stage-id="stage-nishijin-shopping-street" data-battlefield-stage-id="stage-nishijin-shopping-street" data-release-version="0\.9\.0">/);
+  assert.match(html, /<main class="game-shell" data-screen="title" data-stage-id="stage-nishijin-shopping-street" data-battlefield-stage-id="stage-nishijin-shopping-street" data-release-version="0\.9\.5">/);
   assert.match(html, /aria-label="西新世紀末物語 ゲーム"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /class="battlefield  inactive" aria-label="連続座標の戦場" aria-hidden="true"/);
   assert.match(html, /class="campaign-overlay title-screen-v060"[^>]*title-key-visual-v1\.webp[^>]*aria-label="西新世紀末物語 タイトル画面"/);
   assert.match(html, /<small>にしじんせいきまつものがたり<\/small>/);
   assert.match(html, /<h1><span>西新<\/span><b>世紀末物語<\/b><\/h1>/);
-  assert.match(html, /<p>アーリーアクセス版　(?:<!-- -->)?Version 0\.9\.0<\/p>/);
+  assert.match(html, /<p>アーリーアクセス版　(?:<!-- -->)?Version 0\.9\.5<\/p>/);
   assert.match(html, /<span>セーブ確認中<\/span><small>PROLOGUE　西新が終わった夜<\/small>/);
   assert.doesNotMatch(html, /百道浜|新たな世界の始まり/);
   assert.doesNotMatch(html, /BOSS STAGE LOADOUT|CRAWLER SYSTEM CHECK|Three-lane wasteland battlefield/);
@@ -173,12 +173,12 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(campaign, /INITIAL_UNIT_IDS = deepFreeze\(CAMPAIGN_UNITS\.filter\(\(unit\) => unit\.unlock\.type === "initial"\)/);
   assert.match(game, /getSelectedFormationCombatKinds\(campaignSave\)[\s\S]*isUnitOwned\(campaignSave, kind\)[\s\S]*slice\(0, 7\)/);
   assert.match(screens, /unit\.discovered \? `\$\{unit\.weaponName\}・\$\{unit\.rangeBand\}・\$\{unit\.primaryTarget\}` : "物語を進めると情報が明らかになります"/);
-  assert.match(screens, /unit\.owned \? `Lv \$\{unit\.level} \/ 上限 \$\{unit\.levelCap}` : unit\.recruitable \? "調達可能"/);
+  assert.match(screens, /unit\.owned \? `Lv \$\{unit\.level} \/ 上限 \$\{unit\.levelCap}` : unit\.recruitable \? "雇用可能"/);
   assert.match(screens, /formationUnitIds\.length}\/7名選択中[\s\S]*formationPresets\.map[\s\S]*preset\.name/);
   assert.match(screens, /screen === "personnel"[\s\S]*<PersonnelScreen/);
   assert.match(screens, /人員管理/);
   assert.match(screens, /所有一覧/);
-  assert.match(screens, /新規調達/);
+  assert.match(screens, /雇用候補/);
   assert.match(screens, /Level強化/);
   assert.match(screens, /ユニット図鑑/);
   assert.match(screens, /ability\?\.displayName/);
@@ -189,7 +189,28 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.doesNotMatch(screens, /formation-selection-mark/);
   const loadoutBlock = screens.slice(screens.indexOf("function LoadoutScreen"), screens.indexOf("function PersonnelScreen"));
   assert.doesNotMatch(loadoutBlock, /mode === "acquisition"|mode === "upgrade"|onRecruitUnit|onUpgradeUnit/);
-  assert.match(screens, /mode === "acquisition" && unit\.recruitable && !unit\.owned[\s\S]*unit\.recruitCost}キャップで調達/);
+  assert.match(screens, /mode === "acquisition" && unit\.recruitable && !unit\.owned[\s\S]*unit\.recruitCost}キャップで雇用/);
+  assert.match(screens, /NEW EMPLOYMENT DOSSIER[\s\S]*解放理由[\s\S]*雇用費[\s\S]*雇用画面へ[\s\S]*あとで/);
+  assert.match(screens, /employment-save-error[\s\S]*通知確認を端末へ保存できませんでした/);
+  assert.match(game, /pendingEmploymentNoticeUnitIds\(campaignSave\)[\s\S]*employmentNoticeSafeScreen/);
+  assert.match(game, /playCue\("employment-dossier-reveal", \{[\s\S]*dedupeKey: noticeKey/);
+  const waveEntitlementQaStart = game.indexOf("prepareSurvivalWaveEntitlementProof:");
+  const waveEntitlementQaEnd = game.indexOf("prepareSurvivalUpgradeProof:", waveEntitlementQaStart);
+  assert.notEqual(waveEntitlementQaStart, -1);
+  assert.notEqual(waveEntitlementQaEnd, -1);
+  const waveEntitlementQa = game.slice(waveEntitlementQaStart, waveEntitlementQaEnd);
+  assert.match(waveEntitlementQa, /phase: SURVIVAL_RUN_PHASES\.WAVE_READY/);
+  assert.match(waveEntitlementQa, /createSurvivalCombatRuntime\(readyRun\)[\s\S]*intermissionRemaining: 0/);
+  assert.match(waveEntitlementQa, /entryMode: "production-runtime-queue-wave"/);
+  assert.doesNotMatch(waveEntitlementQa, /beginSurvivalWave\(/);
+  assert.doesNotMatch(waveEntitlementQa, /setPendingSurvivalWaveEntitlement\(\{/);
+  assert.match(waveEntitlementQa, /prepareSurvivalWave20StressProof:[\s\S]*initialSurvivalGame\(/);
+  assert.match(waveEntitlementQa, /prepareSurvivalWave20StressProof:[\s\S]*prepareStressQa\(fresh\)/);
+  assert.match(waveEntitlementQa, /fresh-production-survival-runtime-with-dense-fixture/);
+  assert.match(game, /armRepresentativeSixPhasePause:[\s\S]*representativeSixPhasePauseRef\.current/);
+  assert.match(game, /requestedPhasePause\?\.ownerId === owner\.id[\s\S]*g\.paused = true/);
+  assert.match(game, /acknowledgeEmploymentNotice[\s\S]*persistCampaignSave\(nextSave\)[\s\S]*setPersonnelInitialMode\("acquisition"\)/);
+  assert.doesNotMatch(`${game}\n${screens}`, /調達/);
   assert.match(screens, /mode === "upgrade" && unit\.owned[\s\S]*`Lv\$\{unit\.level \+ 1}へ：\$\{unit\.nextUpgradeCost}キャップ`/);
   assert.match(screens, /className="result-unlocks"[\s\S]*新たな戦力を解放/);
   assert.match(game, /newlyUnlockedUnitIds\.map/);
@@ -281,7 +302,7 @@ test("draws three unmistakably different stage environments", async () => {
   const worldDraw = game.slice(game.indexOf("function drawWorld"), game.indexOf("export function AshfallGame"));
   const drawOrder = [
     'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"])',
-    "drawCrawler(ctx, g, sprites)",
+    "drawCrawler(ctx, g, sprites, graphicsProfile)",
     "drawEnemyBase(ctx, g, enemyBaseSprite, stageObjects)",
     'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"])',
     "const renderables = [",
@@ -423,7 +444,10 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /w: authoredSize\.w \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /h: authoredSize\.h \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL,[\s\S]*background\.naturalHeight \* \.44/);
-  assert.match(game, /enemyBaseSpriteRef\.current,\s*false,\s*\);/);
+  assert.match(
+    game,
+    /enemyBaseSpriteRef\.current,\s*staticBattlefieldCacheRef\.current,\s*graphicsProfile,\s*false,\s*\);/,
+  );
   assert.match(game, /canvasPointerToWorld\(\{ clientX: event\.clientX, clientY: event\.clientY, rect, transform, worldWidth: W, worldHeight: H \}\)/);
   assert.doesNotMatch(game, /placement-hint|placement-cancel|戦場をタップ/);
   assert.doesNotMatch(css, /\.placement-(?:hint|copy|cancel)\b/);
@@ -1137,17 +1161,28 @@ test("renders causal weapon tracers and vehicle-origin Crawler fire without scre
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   const crawlerMuzzle = game.slice(game.indexOf("function drawCrawlerBarrage"), game.indexOf("function stageObjectStatesForGame"));
   assert.match(crawlerMuzzle, /WORLD_GEOMETRY\.crawler/);
-  assert.match(crawlerMuzzle, /const muzzleX = crawler\.weaponX \+ 45/);
+  assert.match(crawlerMuzzle, /activeCrawlerShot\?\.x \?\? fallbackPose\.muzzleX/);
   assert.match(crawlerMuzzle, /createRadialGradient\(muzzleX, muzzleY/);
   assert.doesNotMatch(crawlerMuzzle, /scanline|repeating|for \(const lane/);
 
   const barrageStart = game.indexOf('if (crawlerStep.events.includes("fire"))');
   const barrageResolution = game.slice(barrageStart, game.indexOf("for (const object of g.battlefieldObjects)", barrageStart));
+  const pendingResolutionStart = game.indexOf("const pendingWeaponStep = advancePendingWeaponHits");
+  const pendingResolution = game.slice(
+    pendingResolutionStart,
+    game.indexOf("if (g.definition.stageId ===", pendingResolutionStart),
+  );
   assert.match(barrageResolution, /const visualHitsByLane = \[0, 0, 0\]/);
-  assert.match(barrageResolution, /visualHitsByLane\[fighter\.lane\] < 3/);
-  assert.match(barrageResolution, /x: WORLD_GEOMETRY\.crawler\.weaponX \+ 45[\s\S]*tx: fighter\.x[\s\S]*ty: fighter\.y - 24/);
-  assert.match(barrageResolution, /style: "crawler",\s*weapon: "crawler"/);
-  assert.match(barrageResolution, /addParticles\(g, fighter\.x, fighter\.y - 22/);
+  assert.match(barrageResolution, /visualHitsByLane\[fighter\.lane\] <= 3/);
+  assert.match(barrageResolution, /const visualShotIndex = Math\.min\(laneHitIndex, 2\)/);
+  assert.match(barrageResolution, /const impactDelaySeconds = \.2 \+ visualShotIndex \* \.018/);
+  assert.match(barrageResolution, /const crawlerMuzzle = crawlerWeaponPose\([\s\S]*targetX: fighter\.x[\s\S]*targetY: fighter\.y - 24/);
+  assert.match(barrageResolution, /damageMode: "crawler-barrage"/);
+  assert.match(barrageResolution, /weapon: "crawler" as const/);
+  assert.match(barrageResolution, /addWeaponShot\(g, sharedImpact\)/);
+  assert.match(barrageResolution, /g\.pendingWeaponHits\.push\([\s\S]*eventKind: "impact"[\s\S]*applyDamage: true/);
+  assert.match(pendingResolution, /hit\.damageMode === "crawler-barrage"[\s\S]*target\.hp = Math\.max\(0, target\.hp - hit\.damage\)/);
+  assert.match(pendingResolution, /hit\.damageMode === "crawler-barrage"[\s\S]*addParticles\(g, target\.x, target\.y - 22/);
 
   const shotDraw = game.slice(game.indexOf("for (const shot of g.shots)"), game.indexOf("ctx.shadowBlur = 0;", game.indexOf("for (const shot of g.shots)")));
   assert.match(shotDraw, /const weapon = shot\.weapon \?\? shot\.effect/);
@@ -1184,7 +1219,10 @@ test("machinegun burst damage is deferred to visual impact for fighters and the 
   assert.match(pendingResolution, /if \(hit\.eventKind === "muzzle"\)[\s\S]*addWeaponShot/);
   assert.match(pendingResolution, /if \(!hit\.applyDamage\) continue/);
   assert.match(pendingResolution, /if \(hit\.targetKind === "enemy-base"\)[\s\S]*g\.barricadeHp = Math\.max\(0, g\.barricadeHp - hit\.damage\)/);
-  assert.match(pendingResolution, /target\.hp -= hit\.damage[\s\S]*target\.flash = Math\.max/);
+  assert.match(
+    pendingResolution,
+    /target\.hp = Math\.max\(0, target\.hp - hit\.damage\)[\s\S]*target\.flash = Math\.max/,
+  );
   assert.match(fighterBurst, /eventKind: "muzzle"[\s\S]*eventKind: "impact"/);
   assert.match(fighterBurst, /remainingSeconds: event\.hitOffsetSeconds[\s\S]*damage: event\.damage/);
   assert.match(structureBurst, /eventKind: "muzzle"[\s\S]*eventKind: "impact"/);
@@ -1244,12 +1282,51 @@ test("performance and lifecycle gates fail closed when browser capabilities are 
     new URL("../scripts/mobile-lifecycle-browser-smoke.mjs", import.meta.url),
     "utf8",
   );
+  const rcEvidence = await readFile(
+    new URL("../scripts/v095-rc-evidence.mjs", import.meta.url),
+    "utf8",
+  );
+  const representativeSix = await readFile(
+    new URL("../scripts/v095-representative-six-browser-smoke.mjs", import.meta.url),
+    "utf8",
+  );
   assert.match(performance, /cdp-retained-heap-after-gc-and-bounded-runtime-proxy/);
   assert.match(performance, /memoryGrowthAtMost25Percent: memoryBudgetPassed/);
   assert.match(performance, /simulationUpdatesSufficient/);
   assert.match(performance, /renderUpdatesSufficient/);
+  assert.match(performance, /PERF_QA_SCENARIO/);
+  assert.match(performance, /survival-wave20-stress/);
+  assert.match(performance, /prepareSurvivalWave20StressProof/);
+  assert.match(performance, /!\['wave-ready', 'in-wave'\]\.includes\(survivalState\.phase\)/);
+  assert.match(performance, /scenarioRepreparations === 0/);
+  assert.match(performance, /survivalWave20GameplayStayedActive/);
+  assert.match(performance, /humanAttackSequences > 0/);
+  assert.match(performance, /enemyAttackSequences > 0/);
+  assert.match(performance, /powerSave30FpsLoadReductionObserved/);
+  assert.match(performance, /renderCadenceMatchesProfile/);
+  assert.match(performance, /denseSurvivalAuto/);
+  assert.match(performance, /medianFpsMeetsScenarioMinimum/);
+  assert.match(performance, /denseSurvivalAuto[\s\S]*\? 67/);
+  assert.match(performance, /p95FrameWithinQualityBudget/);
   assert.match(performance, /noUnexpectedNavigationOrReload/);
   assert.match(performance, /Object\.values\(gateChecks\)\.every\(\(check\) => check === true\)/);
+  assert.match(rcEvidence, /all-sixteen-animation-evidence\.png/);
+  assert.match(rcEvidence, /vfx-enemy-boss-crawler-evidence\.png/);
+  assert.match(rcEvidence, /renderLoadReductionPercent >= 25/);
+  assert.match(rcEvidence, /physicalSmartphoneHeatVerified: false/);
+  assert.match(rcEvidence, /finalSaveMigration\.passed === 6/);
+  assert.match(rcEvidence, /savePassedCases === 78/);
+  assert.match(rcEvidence, /finalCrawlerDefense\.total === 240/);
+  assert.match(rcEvidence, /finalOutbreak\.length === 6/);
+  assert.match(rcEvidence, /finalMobileLifecycle\.runMode === "diagnostic"/);
+  assert.match(
+    representativeSix,
+    /requestedKind === "crazy-king"[\s\S]*owner\.manualAbility\?\.phase === "cooldown"[\s\S]*eventType.*"active-end"/,
+  );
+  assert.doesNotMatch(
+    representativeSix,
+    /requestedKind === "crazy-king"\) \{[\s\S]{0,160}manualAbility\?\.phase === "active"/,
+  );
   assert.match(lifecycle, /MOBILE_LIFECYCLE_QA_MODE \?\? "gate"/);
   assert.match(lifecycle, /runMode === "gate" && summary\.passedWithCapabilityGaps > 0/);
 });
@@ -1405,10 +1482,10 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /対装甲破砕/);
   assert.match(game, /フィニッシュ/);
   assert.match(game, /直線制圧/);
-  assert.match(game, /value: "救護"/);
+  assert.match(game, /addDamageText\(g, f\.x, f\.y - 64, "救護", \.7, "#9bf0ba"\)/);
   assert.doesNotMatch(game, /effect: f\.kind as RoleEffect/);
   assert.match(game, /roleEffectForAction\(\{[\s\S]*targetAlreadyMarked: target\.marked > 0[\s\S]*holdingFrontline: f\.kind === "brute" && target\.targetId === f\.id/);
-  assert.match(game, /effect: roleEffect \?\? undefined, emphasized, style: ranged \? "projectile" : "melee", weapon: f\.kind/);
+  assert.match(game, /addShot\(g, muzzle\.x, muzzle\.y, target\.x, target\.y - 28, \.26, "human", \.26, ranged \? "projectile" : "melee", f\.kind, roleEffect \?\? undefined, f\.id, target\.id, target\.id, emphasized/);
   assert.match(game, /roleEffect === "brawler" \? "フィニッシュ"/);
   assert.match(game, /action: "structure"[\s\S]*if \(roleEffect && !deferredStructureImpact\)[\s\S]*playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
   assert.match(game, /roleEffect === "gunner"[\s\S]*playCue\("role-gunner"\)/);
