@@ -124,6 +124,26 @@ if (qaScope === "full") {
     })}`);
   }
 }
+const continuousDeploymentSequence = (
+  process.env.V095_RESIDUAL_BUGS_QA_CONTINUOUS_SEQUENCE === "1"
+);
+if (continuousDeploymentSequence) {
+  const exactSequenceAxes = (
+    qaMode === "deployment-matrix"
+    && qaScope === "focused"
+    && sameAxis(engines, ["chromium"])
+    && sameAxis(configuredViewportNames, ["844x390"])
+    && sameAxis(unitKinds, defaultUnitKinds)
+    && sameAxis(qualities, ["auto"])
+    && sameAxis(speeds, [1])
+  );
+  if (!exactSequenceAxes) {
+    throw new Error(
+      "Continuous deployment sequence capture requires the focused "
+      + "Chromium 844x390 / Auto / 1x / all-sixteen matrix",
+    );
+  }
+}
 const timeout = Math.max(
   8_000,
   Number(process.env.V095_RESIDUAL_BUGS_QA_TIMEOUT_MS) || 24_000,
@@ -593,16 +613,17 @@ for (const engine of engines) {
               () => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true),
             );
 
+            const entryPhase = continuousDeploymentSequence ? "door" : "entry";
             const entry = await captureState(
               page,
               captureContext,
               unitKind,
               fighterId,
               prepared.attackerId,
-              "entry",
+              entryPhase,
             );
             unitResult.frames.push(entry);
-            validateCapturedState(entry, `${caseLabel}/${unitKind}/entry`);
+            validateCapturedState(entry, `${caseLabel}/${unitKind}/${entryPhase}`);
             invariant(entry.fighter.gateEntering === true && entry.fighter.combatReady === false,
               `${caseLabel}/${unitKind}: CRAWLER entry state missing`);
             invariant(entry.fighter.animationPresentation.direction === "right",
@@ -610,6 +631,78 @@ for (const engine of engines) {
             await page.evaluate(
               () => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false),
             );
+
+            if (continuousDeploymentSequence) {
+              const sequencePhases = [
+                ["boundary", .18],
+                ["ramp", .38],
+                ["exit", .60],
+                ["landing", .82],
+              ];
+              for (const [phase, minimumProgress] of sequencePhases) {
+                const transition = await page.evaluate(async ({
+                  id,
+                  entryX,
+                  progress,
+                  maxMs,
+                }) => {
+                  const startedAt = performance.now();
+                  while (performance.now() - startedAt < maxMs) {
+                    const qa = window.__ASHFALL_BATTLE_QA__;
+                    const snapshot = qa.getSnapshot();
+                    const fighter = snapshot.fighters.find((candidate) => candidate.id === id);
+                    const travel = Math.max(1, (fighter?.combatReadyX ?? entryX + 1) - entryX);
+                    const actualProgress = fighter ? (fighter.x - entryX) / travel : -1;
+                    if (
+                      fighter?.gateEntering === true
+                      && fighter.combatReady === false
+                      && actualProgress >= progress
+                    ) {
+                      qa.setRepresentativeSixProofPaused(true);
+                      return {
+                        x: fighter.x,
+                        y: fighter.y,
+                        actualProgress,
+                        spriteState: fighter.animationPresentation.sampledSpriteState,
+                      };
+                    }
+                    await new Promise((resolve) => requestAnimationFrame(resolve));
+                  }
+                  throw new Error(`deployment sequence ${progress} timed out`);
+                }, {
+                  id: fighterId,
+                  entryX: entry.fighter.x,
+                  progress: minimumProgress,
+                  maxMs: timeout,
+                });
+                const sequenceFrame = await captureState(
+                  page,
+                  captureContext,
+                  unitKind,
+                  fighterId,
+                  prepared.attackerId,
+                  phase,
+                );
+                unitResult.frames.push(sequenceFrame);
+                validateCapturedState(
+                  sequenceFrame,
+                  `${caseLabel}/${unitKind}/${phase}`,
+                );
+                invariant(
+                  sequenceFrame.fighter.gateEntering === true
+                    && sequenceFrame.fighter.combatReady === false,
+                  `${caseLabel}/${unitKind}/${phase}: deployment sequence left the ramp early`,
+                );
+                invariant(
+                  transition.actualProgress >= minimumProgress
+                    && sequenceFrame.fighter.x >= entry.fighter.x,
+                  `${caseLabel}/${unitKind}/${phase}: deployment sequence did not advance`,
+                );
+                await page.evaluate(
+                  () => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false),
+                );
+              }
+            }
 
             const readyTransition = await page.evaluate(async ({ id, maxMs }) => {
               const startedAt = performance.now();
@@ -1053,6 +1146,7 @@ const summary = {
   mode: qaMode,
   scope: qaScope,
   canonicalAxes: qaScope === "full",
+  continuousDeploymentSequence,
   buildFreshness: {
     sentinel: path.relative(process.cwd(), buildSentinelPath).replaceAll("\\", "/"),
     buildMtime: new Date(buildMtimeMs).toISOString(),
@@ -1166,6 +1260,45 @@ if (qaScope === "full") {
     invariant(summary.unitLayerAuditFrameCount === expectedUnitLayerAuditCases * 2,
       `Canonical deployment matrix produced ${summary.unitLayerAuditFrameCount}/${expectedUnitLayerAuditCases * 2} unit-layer audit frames`);
   }
+}
+if (continuousDeploymentSequence) {
+  const expectedPhases = ["door", "boundary", "ramp", "exit", "landing", "ready"];
+  invariant(
+    summary.total === defaultUnitKinds.length
+      && summary.passed === defaultUnitKinds.length
+      && summary.failed === 0,
+    `Continuous deployment sequence produced ${summary.passed}/${defaultUnitKinds.length} passes`,
+  );
+  for (const result of summary.results) {
+    invariant(
+      JSON.stringify(result.frames.map(({ phase }) => phase))
+        === JSON.stringify(expectedPhases),
+      `${result.unitKind}: continuous deployment phases were incomplete`,
+    );
+    const frameXs = result.frames.map(({ fighter }) => fighter.x);
+    invariant(
+      frameXs.every((value, index) => index === 0 || value >= frameXs[index - 1]),
+      `${result.unitKind}: continuous deployment position moved backwards`,
+    );
+    invariant(
+      result.frames.every(({ fighter }) => (
+        fighter.renderAudit.poseOpacity === 1
+        && fighter.renderAudit.effectiveOpacity === 1
+        && fighter.animationPresentation.pose.opacity === 1
+      )),
+      `${result.unitKind}: continuous deployment contained a translucent frame`,
+    );
+    invariant(
+      result.locomotionSprites.includes("walk-a")
+        && result.locomotionSprites.includes("walk-b"),
+      `${result.unitKind}: continuous deployment missed a locomotion frame`,
+    );
+  }
+  invariant(
+    summary.unitLayerAuditCaseCount === defaultUnitKinds.length
+      && summary.unitLayerAuditFrameCount === defaultUnitKinds.length * expectedPhases.length,
+    "Continuous deployment sequence did not audit every player-facing frame",
+  );
 }
 if (summary.diagnosticFailures.length > 0) {
   throw new Error(

@@ -99,8 +99,13 @@ function validateSummary(source, expectedScope) {
   invariant(summary.scope === expectedScope, `${absolutePath}: scope mismatch`);
   invariant(summary.buildFreshness?.fresh === true, `${absolutePath}: stale build evidence`);
   invariant(
-    /^[a-f0-9]{64}$/u.test(summary.buildIdentity?.combinedSha256 ?? ""),
-    `${absolutePath}: build identity missing`,
+    summary.buildIdentityStable === true
+      && summary.buildIdentity?.scope === "dist-recursive"
+      && summary.buildIdentityAtStart?.scope === "dist-recursive"
+      && /^[a-f0-9]{64}$/u.test(summary.buildIdentity?.combinedSha256 ?? "")
+      && summary.buildIdentityAtStart.combinedSha256
+        === summary.buildIdentity.combinedSha256,
+    `${absolutePath}: stable start/end build identity missing`,
   );
   invariant(Array.isArray(summary.results) && summary.results.length > 0,
     `${absolutePath}: empty result set`);
@@ -199,7 +204,9 @@ const output = {
     sha256: baseline.sha256,
     generatedAt: baseline.summary.generatedAt,
     buildFreshness: baseline.summary.buildFreshness,
+    buildIdentityAtStart: baseline.summary.buildIdentityAtStart,
     buildIdentity: baseline.summary.buildIdentity,
+    buildIdentityStable: baseline.summary.buildIdentityStable,
     passed: baseline.summary.passed,
     failed: baseline.summary.failed,
   },
@@ -208,7 +215,9 @@ const output = {
     sha256: retry.sha256,
     generatedAt: retry.summary.generatedAt,
     buildFreshness: retry.summary.buildFreshness,
+    buildIdentityAtStart: retry.summary.buildIdentityAtStart,
     buildIdentity: retry.summary.buildIdentity,
+    buildIdentityStable: retry.summary.buildIdentityStable,
     passed: retry.summary.passed,
     failed: retry.summary.failed,
   },

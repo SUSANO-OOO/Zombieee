@@ -48,6 +48,15 @@ async function readSummary(argument) {
 function validate(source, expectedCaseCount = null) {
   const { absolutePath, summary } = source;
   invariant(summary.proofScope === proofScope, `${absolutePath}: proofScope mismatch`);
+  invariant(
+    summary.buildIdentityStable === true
+      && summary.buildIdentity?.scope === "dist-recursive"
+      && summary.buildIdentityAtStart?.scope === "dist-recursive"
+      && /^[a-f0-9]{64}$/u.test(summary.buildIdentity?.combinedSha256 ?? "")
+      && summary.buildIdentityAtStart.combinedSha256
+        === summary.buildIdentity.combinedSha256,
+    `${absolutePath}: stable start/end build identity missing`,
+  );
   invariant(Array.isArray(summary.results) && summary.results.length > 0,
     `${absolutePath}: empty results`);
   if (expectedCaseCount !== null) {
@@ -62,10 +71,6 @@ function validate(source, expectedCaseCount = null) {
   )), `${absolutePath}: non-canonical case`);
   invariant(summary.results.every((result) => diagnosticCount(result) === 0),
     `${absolutePath}: browser diagnostics were not clean`);
-  invariant(
-    /^[a-f0-9]{64}$/u.test(summary.buildIdentity?.combinedSha256 ?? ""),
-    `${absolutePath}: build identity missing`,
-  );
 }
 
 const baseline = await readSummary(baselineArgument);
@@ -126,7 +131,9 @@ const output = {
     generatedAt: baseline.summary.generatedAt,
     passed: baseline.summary.totals?.passed ?? null,
     failed: baseline.summary.totals?.failed ?? null,
+    buildIdentityAtStart: baseline.summary.buildIdentityAtStart,
     buildIdentity: baseline.summary.buildIdentity,
+    buildIdentityStable: baseline.summary.buildIdentityStable,
   },
   focusedRetry: {
     path: path.relative(process.cwd(), retry.absolutePath).replaceAll("\\", "/"),
@@ -134,7 +141,9 @@ const output = {
     generatedAt: retry.summary.generatedAt,
     passed: retry.summary.totals?.passed ?? null,
     failed: retry.summary.totals?.failed ?? null,
+    buildIdentityAtStart: retry.summary.buildIdentityAtStart,
     buildIdentity: retry.summary.buildIdentity,
+    buildIdentityStable: retry.summary.buildIdentityStable,
   },
   baselineFailureKeys: baselineFailures,
   revalidatedBaselineFailureCount: baselineFailures.length,

@@ -4,6 +4,7 @@ import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import sharp from "sharp";
+import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
 const root = process.cwd();
 const execFileAsync = promisify(execFile);
@@ -14,6 +15,8 @@ const sourcePaths = {
     "outputs/acceptance-final/residual-attack-full-final/summary.json",
   residualDeployment:
     "outputs/acceptance-final/residual-deployment-full-final/summary.json",
+  deploymentSequence:
+    "outputs/acceptance-final/deployment-sequence-final/summary.json",
   manualAbilities:
     "outputs/acceptance-final/manual-abilities-final/results.json",
   representativeSix:
@@ -83,6 +86,14 @@ const unitLabels = new Map([
   ["miyamoto-musashi", "MUSASHI"],
   ["mayo-chan", "MAYO"],
 ]);
+const representativeUnitKinds = new Set([
+  "scout",
+  "gunner",
+  "crazy-king",
+  "tky",
+  "mrs-chiha",
+  "mayo-chan",
+]);
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
@@ -137,6 +148,10 @@ function relativeDifference(left, right) {
   return Math.abs(left - right) / maximum;
 }
 
+function sameJson(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 function escapeXml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -165,19 +180,23 @@ async function resizedFrame(source, width, height) {
 
 async function buildDeploymentSequenceSheet() {
   const sourceDir = absolute(
-    "outputs/acceptance-final/residual-deployment-full-final",
+    "outputs/acceptance-final/deployment-sequence-final",
   );
   const phases = [
-    ["entry", "ENTRY"],
+    ["door", "DOOR / INSIDE"],
+    ["boundary", "BOUNDARY"],
+    ["ramp", "RAMP"],
+    ["exit", "EXIT"],
+    ["landing", "LANDING"],
     ["ready", "READY"],
   ];
-  const columns = 4;
-  const cardWidth = 420;
-  const cardHeight = 166;
+  const columns = 2;
+  const cardWidth = 960;
+  const cardHeight = 138;
   const headerHeight = 28;
-  const frameWidth = 204;
-  const frameHeight = 108;
-  const frameLabelHeight = 26;
+  const frameWidth = 154;
+  const frameHeight = 84;
+  const frameLabelHeight = 24;
   const gap = 4;
   const composites = [];
   const sources = [];
@@ -234,6 +253,80 @@ async function buildDeploymentSequenceSheet() {
   return { outputPath, sources };
 }
 
+async function buildWalkBeforeAfterSheet() {
+  const columns = 4;
+  const cardWidth = 420;
+  const cardHeight = 166;
+  const headerHeight = 28;
+  const frameWidth = 204;
+  const frameHeight = 108;
+  const frameLabelHeight = 26;
+  const gap = 4;
+  const composites = [];
+  const sources = [];
+
+  for (let index = 0; index < unitKinds.length; index += 1) {
+    const unitKind = unitKinds[index];
+    const proofDirectory = representativeUnitKinds.has(unitKind)
+      ? "representative-six"
+      : "remaining-ten";
+    const frames = [
+      [
+        `outputs/v095-${proofDirectory}/chromium-844x390-dpr3-auto-${unitKind}-02-move-right.png`,
+        "TECHNICAL RC / BEFORE",
+      ],
+      [
+        `outputs/acceptance-final/${proofDirectory}-final/chromium-844x390-dpr3-auto-${unitKind}-02-move-right.png`,
+        "CORRECTED / AFTER",
+      ],
+    ];
+    const left = (index % columns) * cardWidth;
+    const top = Math.floor(index / columns) * cardHeight;
+    composites.push({
+      input: labelSvg(
+        cardWidth - gap,
+        headerHeight,
+        `${String(index + 1).padStart(2, "0")}  ${unitLabels.get(unitKind)}`,
+      ),
+      left,
+      top,
+    });
+    for (let frameIndex = 0; frameIndex < frames.length; frameIndex += 1) {
+      const [relativePath, label] = frames[frameIndex];
+      const source = await requireFile(absolute(relativePath));
+      sources.push(source);
+      const frameLeft = left + frameIndex * (frameWidth + gap);
+      composites.push({
+        input: await resizedFrame(source, frameWidth, frameHeight),
+        left: frameLeft,
+        top: top + headerHeight,
+      });
+      composites.push({
+        input: labelSvg(
+          frameWidth,
+          frameLabelHeight,
+          label,
+          "#29323a",
+          10,
+        ),
+        left: frameLeft,
+        top: top + headerHeight + frameHeight,
+      });
+    }
+  }
+
+  const outputPath = path.join(outputDir, "all-sixteen-walk-before-after.png");
+  await sharp({
+    create: {
+      width: columns * cardWidth,
+      height: Math.ceil(unitKinds.length / columns) * cardHeight,
+      channels: 4,
+      background: "#0b0f12",
+    },
+  }).composite(composites).png().toFile(outputPath);
+  return { outputPath, sources };
+}
+
 async function buildPlayerFacingCorrectionsSheet() {
   const frames = [
     [
@@ -246,7 +339,11 @@ async function buildPlayerFacingCorrectionsSheet() {
     ],
     [
       "outputs/acceptance-final/representative-six-final/chromium-844x390-dpr3-auto-crazy-king-special-recovery-1x.png",
-      "CRAZY KING RECOVERY",
+      "CRAZY KING PAUSE CONTINUITY",
+    ],
+    [
+      "outputs/acceptance-final/representative-six-final/chromium-844x390-dpr3-auto-crazy-king-06-attack-recovery.png",
+      "CRAZY KING BATTLE RECOVERY",
     ],
     [
       "outputs/acceptance-final/representative-six-final/chromium-844x390-dpr3-auto-gunner-05-attack-active.png",
@@ -333,10 +430,76 @@ const reports = Object.fromEntries(await Promise.all(
     await readJson(relativePath),
   ]),
 ));
+const sourceHashes = Object.fromEntries(await Promise.all(
+  Object.entries(sourcePaths).map(async ([key, relativePath]) => [
+    key,
+    {
+      path: relativePath,
+      sha256: await sha256(absolute(relativePath)),
+    },
+  ]),
+));
+const reportLockPath =
+  "docs/qa/v095/acceptance-corrections/report-lock.json";
+const reportLock = await readJson(reportLockPath);
+const sourceHeadSha = await gitOutput("rev-parse", "HEAD");
+const sourceBranch = await gitOutput("branch", "--show-current");
+const lockedProductMergeBase = await gitOutput(
+  "merge-base",
+  sourceHeadSha,
+  reportLock.productSourceCommitSha,
+);
+invariant(
+  reportLock.lockVersion === "0.9.5-acceptance-report-lock-v1"
+    && /^[a-f0-9]{40}$/u.test(reportLock.productSourceCommitSha ?? "")
+    && lockedProductMergeBase === reportLock.productSourceCommitSha,
+  "Acceptance report lock is not an ancestor of the evidence source",
+);
+const productDiffPaths = (
+  await gitOutput(
+    "diff",
+    "--name-only",
+    `${reportLock.productSourceCommitSha}..${sourceHeadSha}`,
+  )
+).split(/\r?\n/u).filter(Boolean);
+const allowedPostProductPaths = [
+  /^docs\/qa\/v095\/acceptance-corrections\//u,
+  /^docs\/qa\/v095\/rc\/README\.md$/u,
+  /^scripts\/v095-acceptance-correction-evidence\.mjs$/u,
+  /^scripts\/v095-merge-(?:representative|residual)-qa-evidence\.mjs$/u,
+  /^scripts\/v095-residual-bugs-browser-smoke\.mjs$/u,
+  /^tests\/rc-browser-gates\.test\.mjs$/u,
+];
+invariant(
+  productDiffPaths.every((filePath) => (
+    allowedPostProductPaths.some((pattern) => pattern.test(filePath))
+  )),
+  `Product files changed after the locked source commit: ${productDiffPaths
+    .filter((filePath) => (
+      !allowedPostProductPaths.some((pattern) => pattern.test(filePath))
+    ))
+    .join(", ")}`,
+);
+for (const [key, lockedReport] of Object.entries(reportLock.reports ?? {})) {
+  invariant(sourceHashes[key], `Locked report key is unknown: ${key}`);
+  invariant(
+    sourceHashes[key].path === lockedReport.path
+      && sourceHashes[key].sha256 === lockedReport.sha256,
+    `${key} no longer matches the committed acceptance report lock`,
+  );
+}
+const unlockedLegacyKeys = Object.keys(sourcePaths).filter((key) => (
+  key !== "deploymentSequence" && !reportLock.reports?.[key]
+));
+invariant(
+  unlockedLegacyKeys.length === 0,
+  `Acceptance report lock omitted source reports: ${unlockedLegacyKeys.join(", ")}`,
+);
 
 const buildBoundReportKeys = [
   "residualAttack",
   "residualDeployment",
+  "deploymentSequence",
   "representativeSix",
   "remainingTen",
   "combatPresentation",
@@ -346,7 +509,14 @@ const buildBoundReportKeys = [
   "performanceSurvivalPowerSave",
 ];
 const finalBuildIdentity = reports.residualAttack.buildIdentity?.combinedSha256;
-invariant(finalBuildIdentity, "Final build identity is missing");
+const currentBuildIdentity = await productionBuildIdentity(root);
+invariant(
+  finalBuildIdentity
+    && currentBuildIdentity.scope === "dist-recursive"
+    && currentBuildIdentity.combinedSha256 === finalBuildIdentity
+    && reportLock.finalProductionBuildSha256 === finalBuildIdentity,
+  "Current dist does not match the locked final production build",
+);
 for (const key of buildBoundReportKeys) {
   const report = reports[key];
   invariant(
@@ -387,6 +557,42 @@ invariant(
       (sprites) => sprites.has("walk-a") && sprites.has("walk-b"),
     ),
   "P0 deployment evidence is not a direct canonical 576/576 all-sixteen matrix",
+);
+const deploymentSequencePhases = [
+  "door",
+  "boundary",
+  "ramp",
+  "exit",
+  "landing",
+  "ready",
+];
+invariant(
+  reports.deploymentSequence.mode === "deployment-matrix"
+    && reports.deploymentSequence.scope === "focused"
+    && reports.deploymentSequence.continuousDeploymentSequence === true
+    && reports.deploymentSequence.expectedTotal === 16
+    && reports.deploymentSequence.total === 16
+    && reports.deploymentSequence.passed === 16
+    && reports.deploymentSequence.failed === 0
+    && reports.deploymentSequence.unitLayerAuditCaseCount === 16
+    && reports.deploymentSequence.unitLayerAuditFrameCount === 96
+    && JSON.stringify(reports.deploymentSequence.engines) === JSON.stringify(["chromium"])
+    && JSON.stringify(reports.deploymentSequence.viewports)
+      === JSON.stringify([{ width: 844, height: 390 }])
+    && JSON.stringify(reports.deploymentSequence.qualities) === JSON.stringify(["auto"])
+    && JSON.stringify(reports.deploymentSequence.speeds) === JSON.stringify([1])
+    && reports.deploymentSequence.results.every((result) => (
+      JSON.stringify(result.frames.map(({ phase }) => phase))
+        === JSON.stringify(deploymentSequencePhases)
+      && result.frames.every(({ fighter }) => (
+        fighter.renderAudit.poseOpacity === 1
+        && fighter.renderAudit.effectiveOpacity === 1
+        && fighter.animationPresentation.pose.opacity === 1
+      ))
+      && result.locomotionSprites.includes("walk-a")
+      && result.locomotionSprites.includes("walk-b")
+    )),
+  "P0 deployment sequence is not a direct six-phase all-sixteen proof",
 );
 
 const manualRows = reports.manualAbilities.results ?? [];
@@ -652,14 +858,37 @@ invariant(
     && performanceSurvivalPowerSave.requestedGraphicsQuality === "power-save",
   "Survival performance scenario mismatch",
 );
+const stableHarnessKeys = [
+  "measurementStartsAfterBattleEntry",
+  "frameCapacity",
+  "animationFrameDomProbe",
+  "runtimeDiagnosticsPollMs",
+  "retainedHeapGcCheckpoints",
+];
+const stableHarnessConfiguration = (report) => Object.fromEntries(
+  stableHarnessKeys.map((key) => [key, report.harness?.[key]]),
+);
+const sameScenarioConditionsMatched = (
+  performanceSurvivalAuto.runMode === performanceSurvivalPowerSave.runMode
+  && performanceSurvivalAuto.engine === "chromium"
+  && performanceSurvivalAuto.engine === performanceSurvivalPowerSave.engine
+  && performanceSurvivalAuto.durationMs === performanceSurvivalPowerSave.durationMs
+  && sameJson(performanceSurvivalAuto.viewport, performanceSurvivalPowerSave.viewport)
+  && performanceSurvivalAuto.deviceScaleFactor
+    === performanceSurvivalPowerSave.deviceScaleFactor
+  && performanceSurvivalAuto.requestedScenario
+    === performanceSurvivalPowerSave.requestedScenario
+  && sameJson(
+    performanceSurvivalAuto.scenario?.initialProof,
+    performanceSurvivalPowerSave.scenario?.initialProof,
+  )
+  && sameJson(
+    stableHarnessConfiguration(performanceSurvivalAuto),
+    stableHarnessConfiguration(performanceSurvivalPowerSave),
+  )
+);
 invariant(
-  performanceSurvivalAuto.durationMs === performanceSurvivalPowerSave.durationMs
-    && performanceSurvivalAuto.viewport.width
-      === performanceSurvivalPowerSave.viewport.width
-    && performanceSurvivalAuto.viewport.height
-      === performanceSurvivalPowerSave.viewport.height
-    && performanceSurvivalAuto.deviceScaleFactor
-      === performanceSurvivalPowerSave.deviceScaleFactor,
+  sameScenarioConditionsMatched,
   "Survival Auto and Power-save reports are not same-condition evidence",
 );
 for (const [label, report] of [
@@ -675,24 +904,56 @@ for (const [label, report] of [
     `${label} did not preserve one continuous active Wave 20 battle`,
   );
 }
-invariant(
+const attackActivityMatched = (
   relativeDifference(
     performanceSurvivalAuto.scenario.finalProof.humanAttackSequences,
     performanceSurvivalPowerSave.scenario.finalProof.humanAttackSequences,
   ) <= .02
-    && relativeDifference(
-      performanceSurvivalAuto.scenario.finalProof.enemyAttackSequences,
-      performanceSurvivalPowerSave.scenario.finalProof.enemyAttackSequences,
-    ) <= .02,
+  && relativeDifference(
+    performanceSurvivalAuto.scenario.finalProof.enemyAttackSequences,
+    performanceSurvivalPowerSave.scenario.finalProof.enemyAttackSequences,
+  ) <= .02
+);
+invariant(
+  attackActivityMatched,
   "Auto and Power-save changed combat activity by more than 2%",
+);
+const outcomeKeys = [
+  "runId",
+  "phase",
+  "currentWave",
+  "reachedWave",
+  "lastCompletedWave",
+  "runtimeWaveQueued",
+  "receiptId",
+  "paused",
+  "over",
+  "won",
+  "baseHp",
+  "baseMaxHp",
+  "livingHumanFighters",
+  "livingEnemyFighters",
+];
+const gameplayOutcome = (report) => Object.fromEntries(
+  outcomeKeys.map((key) => [key, report.scenario?.finalProof?.[key]]),
+);
+const sameScenarioGameplayOutcomeMatched = (
+  sameScenarioConditionsMatched
+  && attackActivityMatched
+  && sameJson(
+    gameplayOutcome(performanceSurvivalAuto),
+    gameplayOutcome(performanceSurvivalPowerSave),
+  )
+);
+invariant(
+  sameScenarioGameplayOutcomeMatched,
+  "Auto and Power-save did not preserve the same gameplay outcome",
 );
 invariant(
   performanceSurvivalPowerSave.runtimePerformance?.effectiveRenderHz <= 33,
   "Power-save did not reach the intended 30 fps render band",
 );
 
-const sourceHeadSha = await gitOutput("rev-parse", "HEAD");
-const sourceBranch = await gitOutput("branch", "--show-current");
 const integrationBaseSha = await gitOutput(
   "merge-base",
   "HEAD",
@@ -703,18 +964,16 @@ invariant(
   `Unexpected evidence branch: ${sourceBranch}`,
 );
 const deploymentSheet = await buildDeploymentSequenceSheet();
+const walkBeforeAfterSheet = await buildWalkBeforeAfterSheet();
 const correctionsSheet = await buildPlayerFacingCorrectionsSheet();
-const sourceHashes = Object.fromEntries(await Promise.all(
-  Object.entries(sourcePaths).map(async ([key, relativePath]) => [
-    key,
-    {
-      path: relativePath,
-      sha256: await sha256(absolute(relativePath)),
-    },
-  ]),
-));
 const deploymentFrameHashes = Object.fromEntries(await Promise.all(
   deploymentSheet.sources.map(async (filePath) => [
+    relative(filePath),
+    await sha256(filePath),
+  ]),
+));
+const walkBeforeAfterFrameHashes = Object.fromEntries(await Promise.all(
+  walkBeforeAfterSheet.sources.map(async (filePath) => [
     relative(filePath),
     await sha256(filePath),
   ]),
@@ -779,6 +1038,10 @@ const summary = {
       casesFailed: reports.residualDeployment.failed,
       unitLayerAuditCases: reports.residualDeployment.unitLayerAuditCaseCount,
       unitLayerAuditFrames: reports.residualDeployment.unitLayerAuditFrameCount,
+      continuousSequenceCases: reports.deploymentSequence.passed,
+      continuousSequenceFrames:
+        reports.deploymentSequence.unitLayerAuditFrameCount,
+      continuousSequencePhases: deploymentSequencePhases,
       effectiveOpacity: 1,
     },
     p0_2CrazyKingActiveIndicator: {
@@ -819,6 +1082,9 @@ const summary = {
         [...locomotionSpritesByUnit.values()].filter(
           (sprites) => sprites.has("walk-a") && sprites.has("walk-b"),
         ).length,
+      continuousSequenceCases: reports.deploymentSequence.passed,
+      continuousSequenceFrames:
+        reports.deploymentSequence.unitLayerAuditFrameCount,
       normalAttackCasesPassed: reports.residualAttack.passed,
       normalAttackCasesFailed: reports.residualAttack.failed,
       representativeCasesPassed: reports.representativeSix.totals.passed,
@@ -946,13 +1212,21 @@ const summary = {
       },
     sameScenarioAutoToPowerSaveRenderWorkProxyReductionPercent:
       Number(renderWorkReductionPercent.toFixed(2)),
-    sameScenarioGameplayOutcomeMatched: true,
+    sameScenarioConditionsMatched,
+    sameScenarioGameplayOutcomeMatched,
   },
   evidenceImages: {
     allSixteenDeploymentSequence: {
       path: relative(deploymentSheet.outputPath),
       sha256: await sha256(deploymentSheet.outputPath),
       sourceFrames: deploymentSheet.sources.length,
+    },
+    allSixteenWalkBeforeAfter: {
+      path: relative(walkBeforeAfterSheet.outputPath),
+      sha256: await sha256(walkBeforeAfterSheet.outputPath),
+      sourceFrames: walkBeforeAfterSheet.sources.length,
+      historicalBeforeScope:
+        "Technical RC visual context only; corrected after frames are final-build evidence.",
     },
     playerFacingCorrections: {
       path: relative(correctionsSheet.outputPath),
@@ -963,12 +1237,21 @@ const summary = {
   rawEvidence: {
     reports: sourceHashes,
     deploymentFrameSha256: deploymentFrameHashes,
+    walkBeforeAfterFrameSha256: walkBeforeAfterFrameHashes,
     correctionFrameSha256: correctionFrameHashes,
   },
   evidencePolicy: {
+    reportLock: {
+      path: reportLockPath,
+      productSourceCommitSha: reportLock.productSourceCommitSha,
+      finalProductionBuildSha256: reportLock.finalProductionBuildSha256,
+      lockedReportCount: Object.keys(reportLock.reports).length,
+      postProductChangedPaths: productDiffPaths,
+    },
     finalProductionBuild: {
       identityScope: "dist-recursive",
       combinedSha256: finalBuildIdentity,
+      currentDistVerified: currentBuildIdentity.combinedSha256 === finalBuildIdentity,
       directStableReportKeys: buildBoundReportKeys,
       crossBuildMergedEvidenceAccepted: false,
     },
@@ -998,6 +1281,7 @@ await writeFile(summaryPath, `${JSON.stringify(summary, null, 2)}\n`, "utf8");
 console.log(JSON.stringify({
   summary: relative(summaryPath),
   allSixteenDeploymentSequence: relative(deploymentSheet.outputPath),
+  allSixteenWalkBeforeAfter: relative(walkBeforeAfterSheet.outputPath),
   playerFacingCorrections: relative(correctionsSheet.outputPath),
   p0Passed: 9,
   p0Failed: 0,

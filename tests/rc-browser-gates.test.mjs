@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { installInfectedAbilityPhaseObserver } from "../scripts/infected-ability-phase-observer.mjs";
 
+const execFileAsync = promisify(execFile);
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 const survivalGate = await readFile(
   new URL("../scripts/survival-wave-progression-browser-smoke.mjs", import.meta.url),
@@ -36,12 +42,16 @@ const performanceGate = await readFile(
   new URL("../scripts/browser-performance-budget.mjs", import.meta.url),
   "utf8",
 );
+const residualMergeUrl =
+  new URL("../scripts/v095-merge-residual-qa-evidence.mjs", import.meta.url);
 const residualMerge = await readFile(
-  new URL("../scripts/v095-merge-residual-qa-evidence.mjs", import.meta.url),
+  residualMergeUrl,
   "utf8",
 );
+const representativeMergeUrl =
+  new URL("../scripts/v095-merge-representative-qa-evidence.mjs", import.meta.url);
 const representativeMerge = await readFile(
-  new URL("../scripts/v095-merge-representative-qa-evidence.mjs", import.meta.url),
+  representativeMergeUrl,
   "utf8",
 );
 const acceptanceEvidence = await readFile(
@@ -172,4 +182,94 @@ test("acceptance evidence is bound to one stable recursive production build", ()
     acceptanceEvidence,
     /legacy schemas do not independently embed that recursive hash/,
   );
+});
+
+test("evidence merge helpers reject reports without a stable start/end build identity", async () => {
+  const tempRoot = await mkdtemp(path.join(tmpdir(), "v095-evidence-merge-"));
+  const buildIdentity = {
+    scope: "dist-recursive",
+    combinedSha256: "a".repeat(64),
+  };
+  const differentStartIdentity = {
+    scope: "dist-recursive",
+    combinedSha256: "b".repeat(64),
+  };
+  const residualSummary = {
+    mode: "attack",
+    scope: "full",
+    buildFreshness: { fresh: true },
+    buildIdentity,
+    buildIdentityAtStart: differentStartIdentity,
+    buildIdentityStable: false,
+    diagnosticFailures: [],
+    results: [{
+      engine: "chromium",
+      viewport: { width: 1280, height: 720 },
+      quality: "auto",
+      speed: 1,
+      unitKind: "scout",
+      status: "passed",
+    }],
+  };
+  const representativeSummary = {
+    proofScope: "representative-six",
+    buildIdentity,
+    buildIdentityAtStart: differentStartIdentity,
+    buildIdentityStable: false,
+    results: [{
+      engine: "chromium",
+      viewport: { width: 844, height: 390 },
+      status: "passed",
+      diagnostics: {},
+    }],
+  };
+  const residualBaseline = path.join(tempRoot, "residual-baseline.json");
+  const residualRetry = path.join(tempRoot, "residual-retry.json");
+  const representativeBaseline = path.join(tempRoot, "representative-baseline.json");
+  const representativeRetry = path.join(tempRoot, "representative-retry.json");
+  await Promise.all([
+    writeFile(residualBaseline, JSON.stringify(residualSummary)),
+    writeFile(residualRetry, JSON.stringify({
+      ...residualSummary,
+      scope: "focused",
+    })),
+    writeFile(representativeBaseline, JSON.stringify(representativeSummary)),
+    writeFile(representativeRetry, JSON.stringify(representativeSummary)),
+  ]);
+  try {
+    for (const invocation of [
+      {
+        script: residualMergeUrl,
+        args: [
+          "attack",
+          residualBaseline,
+          residualRetry,
+          path.join(tempRoot, "residual-output.json"),
+        ],
+      },
+      {
+        script: representativeMergeUrl,
+        args: [
+          "representative-six",
+          representativeBaseline,
+          representativeRetry,
+          path.join(tempRoot, "representative-output.json"),
+        ],
+      },
+    ]) {
+      await assert.rejects(
+        execFileAsync(
+          process.execPath,
+          [fileURLToPath(invocation.script), ...invocation.args],
+          { cwd: path.resolve(fileURLToPath(new URL("..", import.meta.url))) },
+        ),
+        (error) => {
+          assert.match(String(error.stderr), /stable start\/end build identity missing/u);
+          return true;
+        },
+      );
+    }
+  } finally {
+    await rm(tempRoot, { recursive: true, force: true });
+  }
 });
