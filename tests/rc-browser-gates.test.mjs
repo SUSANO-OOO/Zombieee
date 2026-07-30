@@ -58,6 +58,10 @@ const acceptanceEvidence = await readFile(
   new URL("../scripts/v095-acceptance-correction-evidence.mjs", import.meta.url),
   "utf8",
 );
+const deploymentBaselineCapture = await readFile(
+  new URL("../scripts/v095-deployment-baseline-browser-capture.mjs", import.meta.url),
+  "utf8",
+);
 
 test("RC package scripts expose actual Survival wave and infected ability gates", () => {
   assert.equal(
@@ -181,6 +185,24 @@ test("acceptance evidence is bound to one stable recursive production build", ()
   assert.match(
     acceptanceEvidence,
     /legacy schemas do not independently embed that recursive hash/,
+  );
+  assert.match(
+    deploymentBaselineCapture,
+    /5bc0d6b26dbad46501e7f1677af9a3d409dd20dc/,
+  );
+  assert.match(
+    deploymentBaselineCapture,
+    /purpose: "technical-rc-before-visual-context"/,
+  );
+  assert.match(deploymentBaselineCapture, /acceptanceGate: false/);
+  assert.match(deploymentBaselineCapture, /buildIdentityStable/);
+  assert.match(
+    deploymentBaselineCapture,
+    /baseline capture is local-only; refusing/,
+  );
+  assert.match(
+    acceptanceEvidence,
+    /It is never counted as corrected acceptance evidence/,
   );
 });
 

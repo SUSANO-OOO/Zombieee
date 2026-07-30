@@ -9,6 +9,8 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 const root = process.cwd();
 const execFileAsync = promisify(execFile);
 const outputDir = path.resolve(root, "docs/qa/v095/acceptance-corrections");
+const expectedIntegrationBaseSha =
+  "5bc0d6b26dbad46501e7f1677af9a3d409dd20dc";
 
 const sourcePaths = {
   residualAttack:
@@ -17,6 +19,8 @@ const sourcePaths = {
     "outputs/acceptance-final/residual-deployment-full-final/summary.json",
   deploymentSequence:
     "outputs/acceptance-final/deployment-sequence-final/summary.json",
+  deploymentSequenceBefore:
+    "outputs/acceptance-final/deployment-sequence-before-final/summary.json",
   manualAbilities:
     "outputs/acceptance-final/manual-abilities-final/results.json",
   representativeSix:
@@ -179,7 +183,10 @@ async function resizedFrame(source, width, height) {
 }
 
 async function buildDeploymentSequenceSheet() {
-  const sourceDir = absolute(
+  const beforeSourceDir = absolute(
+    "outputs/acceptance-final/deployment-sequence-before-final",
+  );
+  const afterSourceDir = absolute(
     "outputs/acceptance-final/deployment-sequence-final",
   );
   const phases = [
@@ -192,12 +199,13 @@ async function buildDeploymentSequenceSheet() {
   ];
   const columns = 2;
   const cardWidth = 960;
-  const cardHeight = 138;
+  const cardHeight = 250;
   const headerHeight = 28;
   const frameWidth = 154;
   const frameHeight = 84;
   const frameLabelHeight = 24;
   const gap = 4;
+  const sequenceGap = 6;
   const composites = [];
   const sources = [];
 
@@ -214,30 +222,44 @@ async function buildDeploymentSequenceSheet() {
       left,
       top,
     });
-    for (let phaseIndex = 0; phaseIndex < phases.length; phaseIndex += 1) {
-      const [phase, phaseLabel] = phases[phaseIndex];
-      const source = await requireFile(path.join(
-        sourceDir,
-        `deployment-matrix-chromium-844x390-auto-1x-${unitKind}-${phase}.png`,
-      ));
-      sources.push(source);
-      const frameLeft = left + phaseIndex * (frameWidth + gap);
-      composites.push({
-        input: await resizedFrame(source, frameWidth, frameHeight),
-        left: frameLeft,
-        top: top + headerHeight,
-      });
-      composites.push({
-        input: labelSvg(
-          frameWidth,
-          frameLabelHeight,
-          phaseLabel,
-          "#29323a",
-          11,
+    for (const [sequenceIndex, sequence] of [
+      {
+        label: "BEFORE",
+        pathFor: (phase) => path.join(beforeSourceDir, `${unitKind}-${phase}.png`),
+      },
+      {
+        label: "AFTER",
+        pathFor: (phase) => path.join(
+          afterSourceDir,
+          `deployment-matrix-chromium-844x390-auto-1x-${unitKind}-${phase}.png`,
         ),
-        left: frameLeft,
-        top: top + headerHeight + frameHeight,
-      });
+      },
+    ].entries()) {
+      const frameTop = top
+        + headerHeight
+        + sequenceIndex * (frameHeight + frameLabelHeight + sequenceGap);
+      for (let phaseIndex = 0; phaseIndex < phases.length; phaseIndex += 1) {
+        const [phase, phaseLabel] = phases[phaseIndex];
+        const source = await requireFile(sequence.pathFor(phase));
+        sources.push(source);
+        const frameLeft = left + phaseIndex * (frameWidth + gap);
+        composites.push({
+          input: await resizedFrame(source, frameWidth, frameHeight),
+          left: frameLeft,
+          top: frameTop,
+        });
+        composites.push({
+          input: labelSvg(
+            frameWidth,
+            frameLabelHeight,
+            `${sequence.label} / ${phaseLabel}`,
+            sequence.label === "BEFORE" ? "#55362f" : "#214b3d",
+            9,
+          ),
+          left: frameLeft,
+          top: frameTop + frameHeight,
+        });
+      }
     }
   }
 
@@ -254,14 +276,23 @@ async function buildDeploymentSequenceSheet() {
 }
 
 async function buildWalkBeforeAfterSheet() {
-  const columns = 4;
-  const cardWidth = 420;
-  const cardHeight = 166;
+  const phases = [
+    ["01-idle", "IDLE"],
+    ["02-move-right", "WALK RIGHT"],
+    ["03-turn-left", "TURN LEFT"],
+    ["04-attack-wind-up", "WIND-UP"],
+    ["05-attack-active", "ACTIVE"],
+    ["06-attack-recovery", "RECOVERY"],
+  ];
+  const columns = 2;
+  const cardWidth = 960;
+  const cardHeight = 250;
   const headerHeight = 28;
-  const frameWidth = 204;
-  const frameHeight = 108;
-  const frameLabelHeight = 26;
+  const frameWidth = 154;
+  const frameHeight = 84;
+  const frameLabelHeight = 24;
   const gap = 4;
+  const sequenceGap = 6;
   const composites = [];
   const sources = [];
 
@@ -270,16 +301,6 @@ async function buildWalkBeforeAfterSheet() {
     const proofDirectory = representativeUnitKinds.has(unitKind)
       ? "representative-six"
       : "remaining-ten";
-    const frames = [
-      [
-        `outputs/v095-${proofDirectory}/chromium-844x390-dpr3-auto-${unitKind}-02-move-right.png`,
-        "TECHNICAL RC / BEFORE",
-      ],
-      [
-        `outputs/acceptance-final/${proofDirectory}-final/chromium-844x390-dpr3-auto-${unitKind}-02-move-right.png`,
-        "CORRECTED / AFTER",
-      ],
-    ];
     const left = (index % columns) * cardWidth;
     const top = Math.floor(index / columns) * cardHeight;
     composites.push({
@@ -291,27 +312,43 @@ async function buildWalkBeforeAfterSheet() {
       left,
       top,
     });
-    for (let frameIndex = 0; frameIndex < frames.length; frameIndex += 1) {
-      const [relativePath, label] = frames[frameIndex];
-      const source = await requireFile(absolute(relativePath));
-      sources.push(source);
-      const frameLeft = left + frameIndex * (frameWidth + gap);
-      composites.push({
-        input: await resizedFrame(source, frameWidth, frameHeight),
-        left: frameLeft,
-        top: top + headerHeight,
-      });
-      composites.push({
-        input: labelSvg(
-          frameWidth,
-          frameLabelHeight,
-          label,
-          "#29323a",
-          10,
-        ),
-        left: frameLeft,
-        top: top + headerHeight + frameHeight,
-      });
+    for (const [sequenceIndex, sequence] of [
+      {
+        label: "BEFORE",
+        sourceRoot: `outputs/v095-${proofDirectory}`,
+      },
+      {
+        label: "AFTER",
+        sourceRoot: `outputs/acceptance-final/${proofDirectory}-final`,
+      },
+    ].entries()) {
+      const frameTop = top
+        + headerHeight
+        + sequenceIndex * (frameHeight + frameLabelHeight + sequenceGap);
+      for (let phaseIndex = 0; phaseIndex < phases.length; phaseIndex += 1) {
+        const [phase, phaseLabel] = phases[phaseIndex];
+        const source = await requireFile(absolute(
+          `${sequence.sourceRoot}/chromium-844x390-dpr3-auto-${unitKind}-${phase}.png`,
+        ));
+        sources.push(source);
+        const frameLeft = left + phaseIndex * (frameWidth + gap);
+        composites.push({
+          input: await resizedFrame(source, frameWidth, frameHeight),
+          left: frameLeft,
+          top: frameTop,
+        });
+        composites.push({
+          input: labelSvg(
+            frameWidth,
+            frameLabelHeight,
+            `${sequence.label} / ${phaseLabel}`,
+            sequence.label === "BEFORE" ? "#55362f" : "#214b3d",
+            9,
+          ),
+          left: frameLeft,
+          top: frameTop + frameHeight,
+        });
+      }
     }
   }
 
@@ -466,6 +503,7 @@ const allowedPostProductPaths = [
   /^docs\/qa\/v095\/acceptance-corrections\//u,
   /^docs\/qa\/v095\/rc\/README\.md$/u,
   /^scripts\/v095-acceptance-correction-evidence\.mjs$/u,
+  /^scripts\/v095-deployment-baseline-browser-capture\.mjs$/u,
   /^scripts\/v095-merge-(?:representative|residual)-qa-evidence\.mjs$/u,
   /^scripts\/v095-residual-bugs-browser-smoke\.mjs$/u,
   /^tests\/rc-browser-gates\.test\.mjs$/u,
@@ -488,9 +526,9 @@ for (const [key, lockedReport] of Object.entries(reportLock.reports ?? {})) {
     `${key} no longer matches the committed acceptance report lock`,
   );
 }
-const unlockedLegacyKeys = Object.keys(sourcePaths).filter((key) => (
-  key !== "deploymentSequence" && !reportLock.reports?.[key]
-));
+const unlockedLegacyKeys = Object.keys(sourcePaths).filter(
+  (key) => !reportLock.reports?.[key],
+);
 invariant(
   unlockedLegacyKeys.length === 0,
   `Acceptance report lock omitted source reports: ${unlockedLegacyKeys.join(", ")}`,
@@ -566,6 +604,52 @@ const deploymentSequencePhases = [
   "landing",
   "ready",
 ];
+const baselineDeploymentFrames = (
+  reports.deploymentSequenceBefore.results ?? []
+).flatMap(({ frames = [] }) => frames);
+const baselineTranslucentFrames = baselineDeploymentFrames.filter(
+  ({ fighter }) => (
+    Number(fighter?.animationPresentation?.pose?.opacity) < 1
+    || Number(fighter?.renderAudit?.poseOpacity) < 1
+    || Number(fighter?.renderAudit?.effectiveOpacity) < 1
+  ),
+);
+invariant(
+  reports.deploymentSequenceBefore.purpose
+      === "technical-rc-before-visual-context"
+    && reports.deploymentSequenceBefore.acceptanceGate === false
+    && reports.deploymentSequenceBefore.sourceCommit
+      === expectedIntegrationBaseSha
+    && reports.deploymentSequenceBefore.expectedSourceCommit
+      === expectedIntegrationBaseSha
+    && reports.deploymentSequenceBefore.engine === "chromium"
+    && JSON.stringify(reports.deploymentSequenceBefore.viewport)
+      === JSON.stringify({ width: 844, height: 390 })
+    && reports.deploymentSequenceBefore.quality === "auto"
+    && reports.deploymentSequenceBefore.speed === 1
+    && reports.deploymentSequenceBefore.expectedCases === unitKinds.length
+    && reports.deploymentSequenceBefore.capturedCases === unitKinds.length
+    && reports.deploymentSequenceBefore.expectedFrames
+      === unitKinds.length * deploymentSequencePhases.length
+    && reports.deploymentSequenceBefore.capturedFrames
+      === unitKinds.length * deploymentSequencePhases.length
+    && reports.deploymentSequenceBefore.buildIdentityStable === true
+    && reports.deploymentSequenceBefore.buildIdentityAtStart?.scope
+      === "dist-recursive"
+    && reports.deploymentSequenceBefore.buildIdentityAtStart?.combinedSha256
+      === reports.deploymentSequenceBefore.buildIdentityAtEnd?.combinedSha256
+    && reports.deploymentSequenceBefore.diagnosticCount === 0
+    && reports.deploymentSequenceBefore.results.every((result) => (
+      result.status === "captured"
+      && JSON.stringify(result.frames.map(({ phase }) => phase))
+        === JSON.stringify(deploymentSequencePhases)
+      && result.frames.every((frame, index) => (
+        index === 0 || frame.fighter.x >= result.frames[index - 1].fighter.x
+      ))
+    ))
+    && baselineTranslucentFrames.length > 0,
+  "Technical RC deployment baseline is not an exact, stable all-sixteen sequence",
+);
 invariant(
   reports.deploymentSequence.mode === "deployment-matrix"
     && reports.deploymentSequence.scope === "focused"
@@ -963,6 +1047,10 @@ invariant(
   sourceBranch === "codex/0.9.5-acceptance-corrections",
   `Unexpected evidence branch: ${sourceBranch}`,
 );
+invariant(
+  integrationBaseSha === expectedIntegrationBaseSha,
+  `Unexpected integration base: ${integrationBaseSha}`,
+);
 const deploymentSheet = await buildDeploymentSequenceSheet();
 const walkBeforeAfterSheet = await buildWalkBeforeAfterSheet();
 const correctionsSheet = await buildPlayerFacingCorrectionsSheet();
@@ -1042,6 +1130,19 @@ const summary = {
       continuousSequenceFrames:
         reports.deploymentSequence.unitLayerAuditFrameCount,
       continuousSequencePhases: deploymentSequencePhases,
+      beforeSequenceSourceCommit:
+        reports.deploymentSequenceBefore.sourceCommit,
+      beforeSequenceBuildSha256:
+        reports.deploymentSequenceBefore.buildIdentityAtEnd.combinedSha256,
+      beforeSequenceFrames: reports.deploymentSequenceBefore.capturedFrames,
+      beforeTranslucentFrames: baselineTranslucentFrames.length,
+      beforeMinimumPoseOpacity: Math.min(
+        ...baselineDeploymentFrames.map(
+          ({ fighter }) => fighter.animationPresentation.pose.opacity,
+        ),
+      ),
+      correctedSequenceFrames:
+        reports.deploymentSequence.unitLayerAuditFrameCount,
       effectiveOpacity: 1,
     },
     p0_2CrazyKingActiveIndicator: {
@@ -1085,6 +1186,9 @@ const summary = {
       continuousSequenceCases: reports.deploymentSequence.passed,
       continuousSequenceFrames:
         reports.deploymentSequence.unitLayerAuditFrameCount,
+      alignedBeforeAfterSequenceFrames:
+        reports.deploymentSequenceBefore.capturedFrames
+        + reports.deploymentSequence.unitLayerAuditFrameCount,
       normalAttackCasesPassed: reports.residualAttack.passed,
       normalAttackCasesFailed: reports.residualAttack.failed,
       representativeCasesPassed: reports.representativeSix.totals.passed,
@@ -1216,17 +1320,23 @@ const summary = {
     sameScenarioGameplayOutcomeMatched,
   },
   evidenceImages: {
-    allSixteenDeploymentSequence: {
+    allSixteenDeploymentBeforeAfterSequence: {
       path: relative(deploymentSheet.outputPath),
       sha256: await sha256(deploymentSheet.outputPath),
       sourceFrames: deploymentSheet.sources.length,
+      historicalBeforeScope:
+        "Exact integration base 5bc0d6b technical-RC capture; comparison context only.",
+      correctedAfterScope:
+        "Final frozen corrected build; all six phases have effective opacity 1.",
     },
     allSixteenWalkBeforeAfter: {
       path: relative(walkBeforeAfterSheet.outputPath),
       sha256: await sha256(walkBeforeAfterSheet.outputPath),
       sourceFrames: walkBeforeAfterSheet.sources.length,
       historicalBeforeScope:
-        "Technical RC visual context only; corrected after frames are final-build evidence.",
+        "Technical RC visual context only; six aligned motion/attack phases per unit.",
+      correctedAfterScope:
+        "Final frozen corrected build; six aligned motion/attack phases per unit.",
     },
     playerFacingCorrections: {
       path: relative(correctionsSheet.outputPath),
@@ -1262,6 +1372,8 @@ const summary = {
     ],
     directRunPolicy:
       "The named directStableReportKeys embed matching start/end recursive dist hashes. AI mission and feature-specific browser matrices are direct unmerged reports from the same frozen-dist QA window, but their legacy schemas do not independently embed that recursive hash; no stronger cryptographic claim is made.",
+    historicalBaselinePolicy:
+      "deploymentSequenceBefore is a non-gating visual capture from exact integration commit 5bc0d6b with its own stable recursive dist identity. It is never counted as corrected acceptance evidence.",
     substitutedEvidence: [
       "Headless Chromium/WebKit lifecycle diagnostics substitute for physical smartphone visibility, rotation-lock, speaker, and heat checks.",
       "Stages 14-20 were verified in browser QA; physical smartphone play remains pending.",

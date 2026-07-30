@@ -1,6 +1,6 @@
 {
   "lockVersion": "0.9.5-acceptance-report-lock-v1",
-  "generatedAt": "2026-07-30T11:08:34.416Z",
+  "generatedAt": "2026-07-30T22:47:07.187Z",
   "productSourceCommitSha": "dcf8fbc0baa665c9c7563b559385d1fa97e34ea1",
   "finalProductionBuildSha256": "2d88fb68d12d8592c44f33f98fd2410c8b241720fbcf690c6bd53dbcf7e4507b",
   "reports": {
@@ -11,6 +11,14 @@
     "residualDeployment": {
       "path": "outputs/acceptance-final/residual-deployment-full-final/summary.json",
       "sha256": "404cd0d83763c858c53c7a07243ae9f81bfe2117b2e1d299cc846e63a06cb46e"
+    },
+    "deploymentSequence": {
+      "path": "outputs/acceptance-final/deployment-sequence-final/summary.json",
+      "sha256": "0a01023e8cf17bff144137f9086908e3217ba3b24a85cb55d08b55fc71c489a8"
+    },
+    "deploymentSequenceBefore": {
+      "path": "outputs/acceptance-final/deployment-sequence-before-final/summary.json",
+      "sha256": "7a4e9a5e3cacd1d5df311adcfd8a04a921b658c7a42e41a927ac1e4c6409fbe8"
     },
     "manualAbilities": {
       "path": "outputs/acceptance-final/manual-abilities-final/results.json",
