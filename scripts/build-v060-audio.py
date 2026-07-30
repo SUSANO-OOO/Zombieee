@@ -170,9 +170,24 @@ def build_cues() -> dict[str, np.ndarray]:
     cues["weapon-pan-stun"] = pan_stun
 
     shot_t = time_axis(0.20)
-    suppressed = noise(rng, len(shot_t), low=180, high=4_500) * exp_decay(len(shot_t), 0.024) * 0.48
-    suppressed += np.sin(2.0 * math.pi * np.linspace(118, 58, len(shot_t)) * shot_t) * exp_decay(len(shot_t), 0.055) * 0.60
-    cues["weapon-suppressed-pistol"] = suppressed * envelope(len(shot_t), 0.001, 0.035)
+    # Preserve the original suppressed waveform for the existing special-kill
+    # cue while the acceptance correction gives only the normal pistol shot a
+    # dedicated seed and brighter phone-speaker presence.
+    legacy_suppressed = noise(rng, len(shot_t), low=180, high=4_500) * exp_decay(len(shot_t), 0.024) * 0.48
+    legacy_suppressed += np.sin(2.0 * math.pi * np.linspace(118, 58, len(shot_t)) * shot_t) * exp_decay(len(shot_t), 0.055) * 0.60
+    pistol_rng = np.random.default_rng(0xBABA095)
+    suppressed = noise(pistol_rng, len(shot_t), low=280, high=5_200) * exp_decay(len(shot_t), 0.035) * 0.50
+    presence = noise(pistol_rng, len(shot_t), low=850, high=4_800)
+    suppressed += presence * (
+        exp_decay(len(shot_t), 0.090)
+        + exp_decay(len(shot_t), 0.160) * 0.35
+    )
+    suppressed += np.sin(2.0 * math.pi * np.linspace(235, 145, len(shot_t)) * shot_t) * exp_decay(len(shot_t), 0.065) * 0.18
+    suppressed += (
+        np.sin(2.0 * math.pi * 1_550 * shot_t)
+        + 0.45 * np.sin(2.0 * math.pi * 2_950 * shot_t)
+    ) * exp_decay(len(shot_t), 0.040) * 0.12
+    cues["weapon-suppressed-pistol"] = suppressed * envelope(len(shot_t), 0.001, 0.08)
     suppressed_hit_t = time_axis(0.24)
     cues["weapon-suppressed-hit"] = (
         noise(rng, len(suppressed_hit_t), low=120, high=1_900) * exp_decay(len(suppressed_hit_t), 0.045) * 0.48
@@ -187,7 +202,7 @@ def build_cues() -> dict[str, np.ndarray]:
         reload_signal += burst(reload_length, at, 0.075, click) * strength
     cues["weapon-suppressed-reload"] = reload_signal
     kill = np.zeros(len(time_axis(0.64)), dtype=np.float64)
-    kill[: len(suppressed)] += suppressed * 0.82
+    kill[: len(legacy_suppressed)] += legacy_suppressed * 0.82
     tail_t = time_axis(0.52)
     tail = (np.sin(2.0 * math.pi * 410 * tail_t) + 0.55 * np.sin(2.0 * math.pi * 615 * tail_t)) * exp_decay(len(tail_t), 0.20)
     kill += burst(len(kill), 0.11, 0.52, tail) * 0.20
@@ -224,8 +239,8 @@ def normalize(signal: np.ndarray, peak: float = 0.92) -> np.ndarray:
     return np.clip(signal * (peak / current), -1.0, 1.0)
 
 
-def write_wav(path: Path, signal: np.ndarray) -> None:
-    pcm = (normalize(signal) * 32_767).astype("<i2")
+def write_wav(path: Path, signal: np.ndarray, peak: float = 0.92) -> None:
+    pcm = (normalize(signal, peak=peak) * 32_767).astype("<i2")
     path.parent.mkdir(parents=True, exist_ok=True)
     with wave.open(str(path), "wb") as target:
         target.setnchannels(1)
@@ -264,15 +279,25 @@ def sha256(path: Path) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--ffmpeg", help="Path to ffmpeg.exe when it is not on PATH")
+    parser.add_argument(
+        "--cue",
+        action="append",
+        help="Rebuild only the named cue and its derived dependants; may be repeated",
+    )
     args = parser.parse_args()
     ffmpeg = find_ffmpeg(args.ffmpeg)
     cues = build_cues()
+    selected_cues = set(args.cue or cues)
+    unknown_cues = selected_cues.difference(cues)
+    if unknown_cues:
+        raise SystemExit(f"Unknown cue(s): {', '.join(sorted(unknown_cues))}")
     records = []
-    for cue_id, signal in sorted(cues.items()):
+    for cue_id in sorted(selected_cues):
+        signal = cues[cue_id]
         master = MASTER_DIR / f"{cue_id}.wav"
         mp3 = OUTPUT_DIR / f"{cue_id}.mp3"
         ogg = OUTPUT_DIR / f"{cue_id}.ogg"
-        write_wav(master, signal)
+        write_wav(master, signal, peak=0.78 if cue_id == "weapon-suppressed-pistol" else 0.92)
         encode(ffmpeg, master, mp3, "mp3")
         encode(ffmpeg, master, ogg, "ogg")
         records.append({
@@ -284,13 +309,22 @@ def main() -> None:
                 {"path": ogg.relative_to(ROOT).as_posix(), "sha256": sha256(ogg), "type": "audio/ogg"},
             ],
         })
-    payload = {
-        "version": 1,
-        "generator": "scripts/build-v060-audio.py",
-        "sampleRate": SAMPLE_RATE,
-        "policy": "Every newcomer cue has a dedicated project-original WAV master and dedicated MP3/OGG finals.",
-        "cues": records,
-    }
+    if args.cue and PROVENANCE_PATH.is_file():
+        payload = json.loads(PROVENANCE_PATH.read_text(encoding="utf-8"))
+        replacement_by_id = {record["id"]: record for record in records}
+        payload["cues"] = [
+            replacement_by_id.pop(record["id"], record)
+            for record in payload.get("cues", [])
+        ]
+        payload["cues"].extend(replacement_by_id[cue_id] for cue_id in sorted(replacement_by_id))
+    else:
+        payload = {
+            "version": 1,
+            "generator": "scripts/build-v060-audio.py",
+            "sampleRate": SAMPLE_RATE,
+            "policy": "Every newcomer cue has a dedicated project-original WAV master and dedicated MP3/OGG finals.",
+            "cues": records,
+        }
     PROVENANCE_PATH.parent.mkdir(parents=True, exist_ok=True)
     PROVENANCE_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"built {len(records)} dedicated newcomer cues with {ffmpeg}")

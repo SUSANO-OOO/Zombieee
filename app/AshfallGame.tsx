@@ -31,6 +31,7 @@ import {
   CRAWLER_DOOR_PHASES,
   advanceCrawlerDoorRuntime,
   createCrawlerDoorRuntime,
+  friendlyCrawlerRevealRect,
 } from "./crawlerDeployment.js";
 import {
   crawlerDefenseResponderCapacity,
@@ -247,9 +248,12 @@ import {
   animationClipFor,
   attackCooldownAfterPresentationWindup,
   attackPresentationDuration,
+  cancelPendingWeaponTransaction,
+  capPendingWeaponTransactions,
   combatFacingDirection,
   combatWeaponAnchor,
   createCombatAnimationRuntime,
+  linkedWeaponTransactionId,
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
@@ -470,6 +474,7 @@ import {
   damageAfterUnitDefense,
   unitLevelMilestones,
 } from "./unitProgression.js";
+import { escortFormationDestination } from "./escortFormation.js";
 import {
   MANUAL_ABILITY_REGISTRY,
   advanceManualAbility,
@@ -477,6 +482,7 @@ import {
   canActivateManualAbility,
   createManualAbilityRuntime,
   gunnerSuppressionVfxRounds,
+  isManualAbilityReady,
   layoutManualAbilityIcons,
   manualAbilityCheckpointCooldown,
   manualAbilityLocksNormalAction,
@@ -547,16 +553,20 @@ function stationObjectiveDestination(g: Game, fighter: Fighter) {
     const lane = ([0, 1, 2].includes(Number(g.definition.missionConfig.cartLane))
       ? Number(g.definition.missionConfig.cartLane)
       : 1) as Lane;
-    return {
-      x: escortCartX(g.stageMission, g.definition.missionConfig) - 18 - (fighter.id % 3) * 18,
-      lane,
-    };
+    return escortFormationDestination({
+      unit: fighter,
+      humans: g.fighters,
+      cartX: escortCartX(g.stageMission, g.definition.missionConfig),
+      cartLane: lane,
+      laneCount: activeLaneCenters.length,
+    }) as { x: number; lane: Lane; duty: string };
   }
   if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) return null;
   if (g.stageMission.sealed) {
     return {
       x: Number(g.definition.missionConfig.returnX ?? MUSTER_X),
       lane: fighter.anchorLane ?? fighter.lane,
+      duty: "objective",
     };
   }
   if (g.stageMission.gateEaterDefeated && g.stageMission.researchContainerContained) return null;
@@ -565,6 +575,7 @@ function stationObjectiveDestination(g: Game, fighter: Fighter) {
     return {
       x: powerNode.x - 12 - (fighter.id % 3) * 15,
       lane: powerNode.lane as Lane,
+      duty: "objective",
     };
   }
   const gateEater = g.fighters.find((candidate) => candidate.kind === "gate-eater"
@@ -576,6 +587,7 @@ function stationObjectiveDestination(g: Game, fighter: Fighter) {
   return {
     x: Math.max(MUSTER_X, containmentX - Math.max(28, fighter.range * .72)),
     lane: (gateEater?.lane ?? g.researchContainer?.lane ?? 1) as Lane,
+    duty: "objective",
   };
 }
 
@@ -748,11 +760,20 @@ type Fighter = {
     recoveryLane: number | null;
     originalLane: number;
     recoveryCount: number;
+    consecutiveRecoveryAttempts: number;
+    recoveryExhausted: boolean;
+    terminalFallbackSeconds: number;
+    routeReleaseRequested: boolean;
+    routeReleaseCount: number;
+    bestDestinationDistance: number;
+    lastDesiredX: number;
+    lastDesiredY: number;
   };
   abilityCooldown: number;
   abilityWindup: number;
   attackWindup: number;
   attackWindupTargetId: string | number | null;
+  attackFacingDirection: "left" | "right" | null;
   attackSequence: number;
   damageReductionRemaining: number;
   damageReductionMultiplier: number;
@@ -881,10 +902,14 @@ type Shot = {
 };
 type PendingWeaponHit = {
   eventKind: "muzzle" | "impact";
+  transactionId?: string;
   targetKind: "fighter" | "enemy-base" | "battlefield-object" | "crawler";
   targetSide?: "human" | "zombie";
   targetObjectId?: number;
   damageMode?: "direct" | "containment" | "grenade" | "enemy-projectile" | "crawler-barrage" | "enemy-object" | "enemy-siege";
+  effect?: RoleEffect;
+  emphasized?: boolean;
+  attackSequence?: number;
   raiderLineHit?: boolean;
   raiderSecondary?: boolean;
   sourceId: number;
@@ -903,6 +928,12 @@ type PendingWeaponHit = {
   impactDelaySeconds: number;
   applyDamage: boolean;
 };
+const DEFERRED_HUMAN_PROJECTILE_KINDS = new Set<UnitKind>([
+  "ranger",
+  "medic",
+  "babayaga",
+  "engineer",
+]);
 type DamageText = { x: number; y: number; value: string; life: number; color: string };
 const PARTICLE_POOL_KEYS = ["x", "y", "vx", "vy", "life", "color", "size"] as const;
 const DAMAGE_TEXT_POOL_KEYS = ["x", "y", "value", "life", "color"] as const;
@@ -942,6 +973,11 @@ type PendingAbilityAudioCue = {
   x: number;
   dedupeKey: string;
   remainingSeconds?: number;
+  priority?: number;
+  cooldownMs?: number;
+  volume?: number;
+  maxInstances?: number;
+  fallbackCue?: SfxCueId | null;
 };
 type ManualAbilityIconView = {
   fighterId: number;
@@ -951,6 +987,7 @@ type ManualAbilityIconView = {
   hitSize: number;
   anchorX: number;
   anchorY: number;
+  available: boolean;
 };
 type Corpse = {
   id: number;
@@ -1748,7 +1785,8 @@ const shotIsActive = (shot: Shot) => shot.life > 0;
 
 function addWeaponShot(g: Game, hit: Pick<PendingWeaponHit,
   "sourceId" | "targetId" | "originX" | "originY" | "targetX" | "targetY"
-  | "weapon" | "shotIndex" | "recoil" | "casing" | "hitStopSeconds" | "impactDelaySeconds">) {
+  | "weapon" | "effect" | "emphasized" | "shotIndex" | "recoil" | "casing"
+  | "hitStopSeconds" | "impactDelaySeconds">) {
   // Keep the fading impact trace resident long enough for low-frequency
   // mobile WebKit frames to show the complete three-round burst together.
   const duration = Math.max(.01, hit.impactDelaySeconds) + hit.hitStopSeconds + .16;
@@ -1765,11 +1803,11 @@ function addWeaponShot(g: Game, hit: Pick<PendingWeaponHit,
     duration,
     crawlerBarrage ? "crawler" : "projectile",
     hit.weapon,
-    undefined,
+    hit.effect,
     hit.sourceId,
     hit.targetId ?? undefined,
     hit.targetId ?? undefined,
-    undefined,
+    hit.emphasized,
     hit.shotIndex,
     hit.recoil,
     hit.casing,
@@ -1808,6 +1846,7 @@ function weaponAnchorForTarget(
 function beginCombatNormalAttackWindup(
   fighter: Fighter,
   targetId: string | number,
+  targetX: number,
 ) {
   const playableHuman = fighter.side === "human" && PLAYABLE_COMBAT_KINDS.includes(fighter.kind);
   const enemy = fighter.side === "zombie";
@@ -1818,6 +1857,7 @@ function beginCombatNormalAttackWindup(
   }
   fighter.attackWindup = combatNormalAttackWindupDuration(fighter);
   fighter.attackWindupTargetId = targetId;
+  fighter.attackFacingDirection = targetX < fighter.x ? "left" : "right";
   fighter.aiMoveDirection = 0;
   return true;
 }
@@ -2367,6 +2407,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     abilityWindup: 0,
     attackWindup: 0,
     attackWindupTargetId: null,
+    attackFacingDirection: null,
     attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
     ...createUnitRoleRuntime(),
@@ -2455,7 +2496,7 @@ function spawnHuman(g: Game, kind: UnitKind, runOutFromCrawler = false) {
       y: deployment.y,
     }),
     navigationRecovery: createNavigationRecoveryState({ x: deployment.x, y: deployment.y, lane: assignedLane }),
-    abilityCooldown: 0, abilityWindup: 0, attackWindup: 0, attackWindupTargetId: null, attackSequence: 0,
+    abilityCooldown: 0, abilityWindup: 0, attackWindup: 0, attackWindupTargetId: null, attackFacingDirection: null, attackSequence: 0,
     stationAbility: createStationAbilityRuntime(kind),
     manualAbility,
     mayoBiteSlowRemaining: 0,
@@ -3577,12 +3618,73 @@ function drawMonkeyTrap(ctx: CanvasRenderingContext2D, fighter: Fighter) {
   ctx.restore();
 }
 
-function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: SpriteMap) {
+type FighterRenderAudit = {
+  drawCount: number;
+  renderSequence: number;
+  assetReady: boolean;
+  x: number;
+  y: number;
+  spriteState: string | null;
+  requestedState: string | null;
+  resolvedState: string | null;
+  poseOpacity: number | null;
+  effectiveOpacity: number | null;
+  clipRect: { x: number; y: number; w: number; h: number } | null;
+};
+type FighterDrawOptions = {
+  applyDeploymentClip?: boolean;
+  forceOpaque?: boolean;
+  includeGroundShadow?: boolean;
+  recordAudit?: boolean;
+};
+
+const fighterRenderAudit = new WeakMap<Fighter, FighterRenderAudit>();
+const fighterRenderAuditHistory = new Map<number, FighterRenderAudit[]>();
+const fighterRenderAuditEnabled = typeof window !== "undefined"
+  && ["localhost", "127.0.0.1"].includes(window.location.hostname);
+let fighterRenderSequence = 0;
+
+function recordFighterRenderAudit(fighter: Fighter, audit: FighterRenderAudit) {
+  fighterRenderAudit.set(fighter, audit);
+  const history = fighterRenderAuditHistory.get(fighter.id) ?? [];
+  history.push(audit);
+  if (history.length > 128) history.splice(0, history.length - 128);
+  fighterRenderAuditHistory.set(fighter.id, history);
+}
+
+function drawSpriteFighter(
+  ctx: CanvasRenderingContext2D,
+  f: Fighter,
+  sprites: SpriteMap,
+  options: FighterDrawOptions = {},
+) {
+  const {
+    applyDeploymentClip = true,
+    forceOpaque = false,
+    includeGroundShadow = true,
+    recordAudit = true,
+  } = options;
   const mayoFeral = f.kind === "mayo-chan"
     && (f.manualAbility?.phase === "feral" || f.mayoRetreat?.reason === "ability");
   const renderKind = mayoFeral ? "mayo-chan-feral" : f.kind;
   const sprite = sprites[renderKind];
   if (!sprite?.complete || !sprite.naturalWidth) {
+    if (fighterRenderAuditEnabled && recordAudit) {
+      const previousAudit = fighterRenderAudit.get(f);
+      recordFighterRenderAudit(f, {
+        drawCount: (previousAudit?.drawCount ?? 0) + 1,
+        renderSequence: ++fighterRenderSequence,
+        assetReady: false,
+        x: f.x,
+        y: f.y,
+        spriteState: null,
+        requestedState: null,
+        resolvedState: null,
+        poseOpacity: null,
+        effectiveOpacity: null,
+        clipRect: null,
+      });
+    }
     drawDiagnosticRoleFighter(ctx, f);
     drawDiagnosticStationEnemy(ctx, f);
     return;
@@ -3606,13 +3708,16 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
             + ((manualAbilityDefinition.guardSeconds - f.manualAbility.guardRemaining) % .36)
           : f.step;
   const lockedDirection = Number(f.manualAbility?.target?.direction);
-  const direction = combatFacingDirection({
+  const fallbackDirection = combatFacingDirection({
     side: f.side,
     aiMoveDirection: f.aiMoveDirection,
     entryDirection: f.entryDirection,
     manualDirection: lockedDirection,
     manualAbilityActive,
   });
+  const direction = manualAbilityActive
+    ? fallbackDirection
+    : f.animationPresentation?.direction ?? fallbackDirection;
   const anomalyTuning = isBossAnomalyKind(f.kind)
     ? BOSS_ANOMALY_TUNING[f.kind as keyof typeof BOSS_ANOMALY_TUNING]
     : null;
@@ -3698,27 +3803,31 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     w: authoredSize.w * compactScale * depthScale * animationSample.bodyScale,
     h: authoredSize.h * compactScale * depthScale * animationSample.bodyScale,
   };
-  const bob = animationSample.movement ? Math.abs(Math.sin(f.step * 7)) * 1.1 : 0;
+  const locomotionPhase = Number(animationSample.clipProgress) || 0;
+  const contactLift = animationSample.movement
+    ? Math.abs(Math.sin(locomotionPhase * Math.PI * 2))
+    : 0;
+  const bob = contactLift * (renderKind === "mayo-chan" ? 2.4 : 1.8);
+  const friendlyClipRect = friendlyCrawlerRevealRect({
+    side: f.side,
+    gateEntering: f.gateEntering,
+    spawnPortalId: f.spawnPortalId,
+    entryRampCleared: f.entryRampCleared,
+    fighterX: f.x,
+    entryRampX: f.entryRampX,
+    spriteWidth: size.w,
+    doorX: WORLD_GEOMETRY.crawler.doorX,
+    rampFootX: WORLD_GEOMETRY.crawler.rampFootX,
+    musterY: activeMusterY(),
+  });
   ctx.save();
-  if (f.side === "human"
-    && f.gateEntering
-    && f.spawnPortalId === "crawler-door"
-    && f.entryRampCleared !== true
-    && f.x < WORLD_GEOMETRY.crawler.doorX + 8) {
-    const revealLeft = WORLD_GEOMETRY.crawler.doorX - 24;
-    const revealRight = Math.max(
-      WORLD_GEOMETRY.crawler.doorX + 25,
-      Math.min(
-        (f.entryRampX ?? WORLD_GEOMETRY.crawler.rampFootX) + size.w * .55,
-        f.x + size.w * .55,
-      ),
-    );
+  if (applyDeploymentClip && friendlyClipRect) {
     ctx.beginPath();
     ctx.rect(
-      revealLeft,
-      activeMusterY() - 108,
-      revealRight - revealLeft,
-      128,
+      friendlyClipRect.x,
+      friendlyClipRect.y,
+      friendlyClipRect.w,
+      friendlyClipRect.h,
     );
     ctx.clip();
   } else if (f.side === "zombie" && f.gateEntering) {
@@ -3730,13 +3839,23 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     ctx.rect(0, 0, revealRight, H);
     ctx.clip();
   }
-  ctx.fillStyle = "rgba(0,0,0,.42)";
-  ctx.beginPath();
-  ctx.ellipse(f.x, f.y + 5 * depthScale, size.w * .27, 4.5 * depthScale, 0, 0, Math.PI * 2);
-  ctx.fill();
+  if (includeGroundShadow) {
+    ctx.fillStyle = "rgba(0,0,0,.42)";
+    ctx.beginPath();
+    ctx.ellipse(
+      f.x,
+      f.y + 5 * depthScale,
+      size.w * .27 * (1 - contactLift * .08),
+      4.5 * depthScale * (1 + contactLift * .12),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
   ctx.imageSmoothingEnabled = true;
   if (f.flash > 0) {
-    ctx.globalAlpha = .7;
+    if (f.side !== "human") ctx.globalAlpha = .7;
     ctx.shadowColor = "#fff1ad";
     ctx.shadowBlur = 16;
   } else if (compactScale > 1) {
@@ -3753,7 +3872,24 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     opacity: 1,
   };
   const facingSign = direction === "left" ? -1 : 1;
-  ctx.globalAlpha *= pose.opacity;
+  const effectivePoseOpacity = forceOpaque ? 1 : pose.opacity;
+  if (fighterRenderAuditEnabled && recordAudit) {
+    const previousAudit = fighterRenderAudit.get(f);
+    recordFighterRenderAudit(f, {
+      drawCount: (previousAudit?.drawCount ?? 0) + 1,
+      renderSequence: ++fighterRenderSequence,
+      assetReady: true,
+      x: f.x,
+      y: f.y,
+      spriteState: animationSample.spriteState,
+      requestedState: animationSample.requestedState,
+      resolvedState: animationSample.resolvedState,
+      poseOpacity: pose.opacity,
+      effectiveOpacity: ctx.globalAlpha * effectivePoseOpacity,
+      clipRect: friendlyClipRect ? { ...friendlyClipRect } : null,
+    });
+  }
+  ctx.globalAlpha *= effectivePoseOpacity;
   ctx.translate(
     f.x + pose.offsetX * depthScale * facingSign,
     f.y - bob + pose.offsetY * depthScale,
@@ -3781,6 +3917,131 @@ function drawSpriteFighter(ctx: CanvasRenderingContext2D, f: Fighter, sprites: S
     );
   }
   ctx.restore();
+  return {
+    clipRect: friendlyClipRect ? { ...friendlyClipRect } : null,
+  };
+}
+
+function fighterUnitLayerPixelAudit(fighter: Fighter, sprites: SpriteMap) {
+  const left = Math.max(0, Math.floor(Math.min(
+    fighter.x - 120,
+    WORLD_GEOMETRY.crawler.doorX - 48,
+  )));
+  const top = Math.max(0, Math.floor(fighter.y - 170));
+  const right = Math.min(W, Math.ceil(Math.max(
+    fighter.x + 120,
+    WORLD_GEOMETRY.crawler.doorX + 96,
+  )));
+  const bottom = Math.min(H, Math.ceil(fighter.y + 36));
+  const width = Math.max(1, right - left);
+  const height = Math.max(1, bottom - top);
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("Unit-layer audit canvas unavailable");
+
+  const capture = (options: FighterDrawOptions) => {
+    ctx.clearRect(0, 0, W, H);
+    const drawResult = drawSpriteFighter(ctx, fighter, sprites, {
+      ...options,
+      includeGroundShadow: false,
+      recordAudit: false,
+    });
+    return {
+      data: ctx.getImageData(left, top, width, height).data,
+      clipRect: drawResult?.clipRect ?? null,
+    };
+  };
+  const actualClipped = capture({ applyDeploymentClip: true });
+  const actualFull = capture({ applyDeploymentClip: false });
+  const opaqueFull = capture({ applyDeploymentClip: false, forceOpaque: true });
+  const expectedClippedAlpha = new Uint8ClampedArray(width * height);
+  const clipRect = actualClipped.clipRect;
+  for (let pixel = 0; pixel < expectedClippedAlpha.length; pixel += 1) {
+    const x = left + (pixel % width) + .5;
+    const y = top + Math.floor(pixel / width) + .5;
+    const insideClip = !clipRect || (
+      x >= clipRect.x
+      && x < clipRect.x + clipRect.w
+      && y >= clipRect.y
+      && y < clipRect.y + clipRect.h
+    );
+    expectedClippedAlpha[pixel] = insideClip ? opaqueFull.data[pixel * 4 + 3] : 0;
+  }
+
+  const metrics = (rgba: Uint8ClampedArray) => {
+    let alphaMass = 0;
+    let nonzeroPixels = 0;
+    let minX = width;
+    let minY = height;
+    let maxX = -1;
+    let maxY = -1;
+    for (let pixel = 0; pixel < width * height; pixel += 1) {
+      const alpha = rgba[pixel * 4 + 3];
+      alphaMass += alpha / 255;
+      if (alpha <= 0) continue;
+      nonzeroPixels += 1;
+      const x = pixel % width;
+      const y = Math.floor(pixel / width);
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+    return {
+      alphaMass,
+      nonzeroPixels,
+      bounds: nonzeroPixels > 0
+        ? {
+          x: left + minX,
+          y: top + minY,
+          w: maxX - minX + 1,
+          h: maxY - minY + 1,
+        }
+        : null,
+    };
+  };
+  const compareAlpha = (
+    actualRgba: Uint8ClampedArray,
+    expectedRgba: Uint8ClampedArray | null,
+    expectedAlpha: Uint8ClampedArray | null = null,
+  ) => {
+    let intersection = 0;
+    let union = 0;
+    let absoluteDifference = 0;
+    for (let pixel = 0; pixel < width * height; pixel += 1) {
+      const actual = actualRgba[pixel * 4 + 3];
+      const expected = expectedAlpha
+        ? expectedAlpha[pixel]
+        : expectedRgba?.[pixel * 4 + 3] ?? 0;
+      if (actual > 0 && expected > 0) intersection += 1;
+      if (actual > 0 || expected > 0) union += 1;
+      absoluteDifference += Math.abs(actual - expected);
+    }
+    return {
+      maskIoU: union > 0 ? intersection / union : 0,
+      normalizedAlphaL1: absoluteDifference / (255 * Math.max(1, union)),
+    };
+  };
+  const actualClipMetrics = metrics(actualClipped.data);
+  const fullMetrics = metrics(actualFull.data);
+  const opaqueFullMetrics = metrics(opaqueFull.data);
+  return {
+    region: { x: left, y: top, w: width, h: height },
+    clipRect,
+    actualClip: actualClipMetrics,
+    actualFull: fullMetrics,
+    opaqueFull: opaqueFullMetrics,
+    fullOpacityComparison: compareAlpha(actualFull.data, opaqueFull.data),
+    clipComparison: compareAlpha(actualClipped.data, null, expectedClippedAlpha),
+    visibleCoverage: opaqueFullMetrics.alphaMass > 0
+      ? actualClipMetrics.alphaMass / opaqueFullMetrics.alphaMass
+      : 0,
+    verticalSilhouetteRetention: opaqueFullMetrics.bounds && actualClipMetrics.bounds
+      ? actualClipMetrics.bounds.h / opaqueFullMetrics.bounds.h
+      : 0,
+  };
 }
 
 function drawEnemyCombatReadabilityVfx(
@@ -4134,32 +4395,9 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     ctx.restore();
     return;
   }
-  if (effect.kind === "crazy-king") {
-    ctx.save();
-    ctx.translate(effect.originX, effect.originY);
-    ctx.globalCompositeOperation = "lighter";
-    ctx.strokeStyle = "#ff803d";
-    ctx.shadowColor = "#d43a20";
-    ctx.shadowBlur = 14;
-    ctx.lineWidth = 4;
-    const radius = 34 + Math.sin(effect.elapsed * 15) * 4;
-    ctx.beginPath();
-    for (let tooth = 0; tooth <= 24; tooth += 1) {
-      const angle = tooth / 24 * Math.PI * 2 + effect.elapsed * 2.4;
-      const toothRadius = radius + (tooth % 2 ? 9 : 0);
-      const x = Math.cos(angle) * toothRadius;
-      const y = Math.sin(angle) * toothRadius * .34;
-      if (tooth === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.closePath(); ctx.stroke();
-    ctx.strokeStyle = "#ffd26a";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(-18, -48); ctx.lineTo(-9, -61); ctx.lineTo(0, -48); ctx.lineTo(10, -64); ctx.lineTo(20, -48);
-    ctx.stroke();
-    ctx.restore();
-    return;
-  }
+  // Crazy King's sustained state is rendered directly from the owning
+  // fighter below. The capped decorative VFX queue must never own lifecycle.
+  if (effect.kind === "crazy-king") return;
   if (effect.kind === "kumaverson") {
     ctx.save();
     ctx.translate(effect.originX, effect.originY + 28);
@@ -4468,6 +4706,51 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   ctx.restore();
 }
 
+function crazyKingAbilityIndicatorVisible(fighter: Fighter) {
+  return fighter.kind === "crazy-king"
+    && fighter.hp > 0
+    && fighter.combatReady === true
+    && ["windup", "active"].includes(fighter.manualAbility?.phase ?? "");
+}
+
+function drawCrazyKingAbilityIndicator(
+  ctx: CanvasRenderingContext2D,
+  fighter: Fighter,
+  time: number,
+) {
+  if (!crazyKingAbilityIndicatorVisible(fighter)) return;
+  const active = fighter.manualAbility?.phase === "active";
+  const pulse = Math.sin(time * (active ? 15 : 8));
+  const radius = (active ? 34 : 28) + pulse * (active ? 4 : 2);
+  ctx.save();
+  ctx.translate(fighter.x, fighter.y);
+  ctx.globalCompositeOperation = "lighter";
+  ctx.strokeStyle = active ? "#ff803d" : "#ffd26a";
+  ctx.shadowColor = active ? "#d43a20" : "#b66b2f";
+  ctx.shadowBlur = active ? 14 : 8;
+  ctx.lineWidth = active ? 4 : 3;
+  ctx.beginPath();
+  for (let tooth = 0; tooth <= 24; tooth += 1) {
+    const angle = tooth / 24 * Math.PI * 2 + time * (active ? 2.4 : 1.2);
+    const toothRadius = radius + (tooth % 2 ? (active ? 9 : 5) : 0);
+    const x = Math.cos(angle) * toothRadius;
+    const y = Math.sin(angle) * toothRadius * .34;
+    if (tooth === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.strokeStyle = "#ffd26a";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-18, -48);
+  ctx.lineTo(-9, -61);
+  ctx.lineTo(0, -48);
+  ctx.lineTo(10, -64);
+  ctx.lineTo(20, -48);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawStationHazard(ctx: CanvasRenderingContext2D, hazard: StationHazard, time: number) {
   if (!hazard.active) return;
   ctx.save();
@@ -4501,31 +4784,27 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
     const isCoastalPowerRig = g.definition.stageId === CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE;
     const cartSprite = isCoastalPowerRig
       ? stageObjects["coastal-power-rig"]
-      : stageObjects["station-platform-mission-art-source"];
+      : stageObjects["maintenance-cart"];
     if (cartSprite?.complete && cartSprite.naturalWidth) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       if (isCoastalPowerRig) {
         ctx.drawImage(cartSprite, -72, -59, 144, 72);
       } else {
-        ctx.drawImage(cartSprite, 90, 260, 1400, 520, -60, -51, 120, 45);
+        ctx.drawImage(cartSprite, -60, -51, 120, 42);
       }
-    } else {
-      ctx.fillStyle = "#5f665f"; ctx.strokeStyle = g.stageMission.stalled ? "#e19b5e" : "#aebbb0"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.roundRect(-28, -27, 56, 30, 5); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = "#bfc8bb"; ctx.fillRect(-22, -20, 18, 12);
-      ctx.fillStyle = "#81735a"; ctx.fillRect(2, -20, 20, 12);
-      ctx.fillStyle = "#171b1a"; ctx.beginPath(); ctx.arc(-18, 5, 6, 0, Math.PI * 2); ctx.arc(18, 5, 6, 0, Math.PI * 2); ctx.fill();
     }
-    const objectiveHalfWidth = isCoastalPowerRig ? 72 : 60;
-    const objectiveGlow = ctx.createRadialGradient(0, -17, 4, 0, -17, objectiveHalfWidth);
-    objectiveGlow.addColorStop(0, g.stageMission.stalled ? "rgba(225,155,94,.18)" : "rgba(174,187,176,.13)");
-    objectiveGlow.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = objectiveGlow;
-    ctx.fillRect(-objectiveHalfWidth, -52, objectiveHalfWidth * 2, 55);
-    ctx.fillStyle = "rgba(0,0,0,.72)"; ctx.fillRect(-objectiveHalfWidth, -59, objectiveHalfWidth * 2, 5);
-    ctx.fillStyle = "#d5b85e";
-    ctx.fillRect(-objectiveHalfWidth, -59, objectiveHalfWidth * 2 * integrity / maxIntegrity, 3);
+    if (!g.over) {
+      const objectiveHalfWidth = isCoastalPowerRig ? 72 : 60;
+      const objectiveGlow = ctx.createRadialGradient(0, -17, 4, 0, -17, objectiveHalfWidth);
+      objectiveGlow.addColorStop(0, g.stageMission.stalled ? "rgba(225,155,94,.18)" : "rgba(174,187,176,.13)");
+      objectiveGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = objectiveGlow;
+      ctx.fillRect(-objectiveHalfWidth, -52, objectiveHalfWidth * 2, 55);
+      ctx.fillStyle = "rgba(0,0,0,.72)"; ctx.fillRect(-objectiveHalfWidth, -59, objectiveHalfWidth * 2, 5);
+      ctx.fillStyle = "#d5b85e";
+      ctx.fillRect(-objectiveHalfWidth, -59, objectiveHalfWidth * 2 * integrity / maxIntegrity, 3);
+    }
     ctx.restore();
   }
   if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
@@ -6204,6 +6483,7 @@ function drawWorld(
 
   for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time);
   for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect);
+  for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
   drawStationMission(ctx, g, stageObjects);
   drawEmergencySupport(ctx, g);
@@ -6629,6 +6909,49 @@ export function AshfallGame() {
   } | null>(null);
   const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const outbreakSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
+  const navigationRouteReleaseAuditRef = useRef<Array<{
+    fighterId: number;
+    stageId: string;
+    time: number;
+    routeReleaseCount: number;
+    before: {
+      targetId: number | null;
+      targetObjectId: number | null;
+      crawlerDefenseTargetId: number | null;
+      attackWindup: number;
+      attackWindupTargetId: number | null;
+      attackFacingDirection: "left" | "right" | null;
+      retargetIn: number;
+      nextLaneDecisionAt: number;
+      anchorLane: Lane | null;
+      aiDestinationX: number;
+      aiMoveDirection: number;
+    };
+    after: {
+      targetId: number | null;
+      targetObjectId: number | null;
+      crawlerDefenseTargetId: number | null;
+      attackWindup: number;
+      attackWindupTargetId: number | null;
+      attackFacingDirection: "left" | "right" | null;
+      retargetIn: number;
+      nextLaneDecisionAt: number;
+      anchorLane: Lane | null;
+      aiDestinationX: number;
+      aiMoveDirection: number;
+      recoveryExhausted: boolean;
+      recoveryLane: number | null;
+      routeReleaseRequested: boolean;
+    };
+  }>>([]);
+  const navigationRouteReleaseProofRef = useRef<{
+    fighterId: number;
+    threatId: number;
+    originalSpeed: number;
+    originalLaneSpeed: number;
+    initialThreatHp: number;
+    cleanupChallengePending: boolean;
+  } | null>(null);
   const bossFoundationQaRef = useRef<{
     entranceCounts: Record<string, number>;
     lastEntrance: { kind: string; cueId: string; warningLabel: string } | null;
@@ -7418,7 +7741,10 @@ export function AshfallGame() {
           weaponProfile: weaponProfileForUnit(kind).id,
         };
       },
-      armRepresentativeSixRuntimeAttackProof: (ownerId: number) => {
+      armRepresentativeSixRuntimeAttackProof: (
+        ownerId: number,
+        options: { alternateTarget?: boolean } = {},
+      ) => {
         const g = gameRef.current;
         const owner = g.fighters.find((fighter) => (
           fighter.id === ownerId
@@ -7464,6 +7790,33 @@ export function AshfallGame() {
         target.stunned = 0;
         target.targetId = null;
         target.retargetIn = 99;
+        let alternateTarget: Fighter | null = null;
+        if (options.alternateTarget === true) {
+          alternateTarget = spawnEnemy(g, "walker", owner.lane);
+          alternateTarget.x = owner.x
+            - Math.max(150, owner.range + alternateTarget.bodyRadius + 40);
+          alternateTarget.y = owner.y;
+          alternateTarget.lane = owner.lane;
+          alternateTarget.anchorLane = owner.lane;
+          alternateTarget.maxHp = 2400;
+          alternateTarget.hp = alternateTarget.maxHp;
+          alternateTarget.speed = 0;
+          alternateTarget.laneSpeed = 0;
+          alternateTarget.damage = 0;
+          alternateTarget.cooldown = 99;
+          alternateTarget.combatReady = false;
+          alternateTarget.gateEntering = false;
+          alternateTarget.targetable = false;
+          alternateTarget.contained = false;
+          alternateTarget.stunned = 0;
+          alternateTarget.targetId = null;
+          alternateTarget.retargetIn = 99;
+          const card = equippedCardForGame(g, owner.kind);
+          if (card) {
+            owner.speed = card.speed;
+            owner.laneSpeed = card.laneSpeed;
+          }
+        }
         owner.targetId = target.id;
         owner.targetObjectId = null;
         owner.retargetIn = 0;
@@ -7471,6 +7824,7 @@ export function AshfallGame() {
         owner.attack = 0;
         owner.attackWindup = 0;
         owner.attackWindupTargetId = null;
+        owner.attackFacingDirection = null;
         owner.attackVariant = null;
         owner.weaponHeat = 0;
         owner.overheated = false;
@@ -7497,10 +7851,31 @@ export function AshfallGame() {
           targetId: target.id,
           initialAttackSequence: owner.attackSequence,
           initialTargetHp: target.hp,
+          alternateTargetId: alternateTarget?.id ?? null,
+          initialAlternateTargetHp: alternateTarget?.hp ?? null,
+          alternateTargetX: alternateTarget?.x ?? null,
+          ownerStart: { x: owner.x, y: owner.y },
           anchor,
           weaponProfile: profile.id,
           expectedAudioCueIds,
         };
+      },
+      activateRepresentativeSixAlternateTarget: (targetId: number) => {
+        const g = gameRef.current;
+        const target = g.fighters.find((fighter) => (
+          fighter.id === targetId
+          && fighter.side === "zombie"
+          && fighter.hp > 0
+        ));
+        if (!target) return false;
+        target.targetable = true;
+        target.combatReady = true;
+        target.gateEntering = false;
+        for (const fighter of g.fighters) {
+          if (fighter.side !== "human" || fighter.hp <= 0) continue;
+          fighter.retargetIn = 0;
+        }
+        return true;
       },
       sampleRepresentativeSixRuntimeAttackProof: (ownerId: number) => {
         const g = gameRef.current;
@@ -7620,6 +7995,163 @@ export function AshfallGame() {
         setEnd(null);
         setScreen("battle");
         return proof;
+      },
+      prepareCrazyKingIndicatorContinuityProof: () => {
+        const g = gameRef.current;
+        const proof = prepareManualAbilityProof(g, ["crazy-king"]);
+        const owner = g.fighters.find((fighter) => fighter.id === proof.ownerIds[0]);
+        const primary = g.fighters.find((fighter) => (
+          fighter.side === "zombie"
+          && fighter.hp > 0
+        ));
+        const card = equippedCardForGame(g, "crazy-king");
+        if (!owner || !primary || !card) return null;
+        const proofLane: Lane = 1;
+        owner.x = 430;
+        owner.y = activeLaneCenters[proofLane];
+        owner.lane = proofLane;
+        owner.anchorLane = proofLane;
+        owner.speed = card.speed;
+        owner.laneSpeed = card.laneSpeed;
+        owner.cooldown = 99;
+        owner.targetId = null;
+        owner.retargetIn = 0;
+        owner.aiMoveDirection = 0;
+        primary.x = 600;
+        primary.y = owner.y;
+        primary.lane = proofLane;
+        primary.anchorLane = proofLane;
+        primary.speed = 0;
+        primary.laneSpeed = 0;
+        primary.damage = 0;
+        primary.cooldown = 99;
+        primary.combatReady = true;
+        primary.gateEntering = false;
+        primary.targetable = true;
+        const alternate = spawnEnemy(g, "walker", proofLane);
+        alternate.x = 230;
+        alternate.y = owner.y;
+        alternate.lane = proofLane;
+        alternate.anchorLane = proofLane;
+        alternate.maxHp = 2400;
+        alternate.hp = alternate.maxHp;
+        alternate.speed = 0;
+        alternate.laneSpeed = 0;
+        alternate.damage = 0;
+        alternate.cooldown = 99;
+        alternate.combatReady = false;
+        alternate.gateEntering = false;
+        alternate.targetable = false;
+        alternate.contained = false;
+        alternate.stunned = 0;
+        alternate.targetId = null;
+        alternate.retargetIn = 99;
+        g.paused = false;
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return {
+          ownerId: owner.id,
+          primaryTargetId: primary.id,
+          alternateTargetId: alternate.id,
+          ownerStart: { x: owner.x, y: owner.y },
+          primaryX: primary.x,
+          alternateX: alternate.x,
+          speed: owner.speed,
+        };
+      },
+      removeManualAbilityProofTarget: (targetId: number) => {
+        const g = gameRef.current;
+        const target = g.fighters.find((fighter) => (
+          fighter.id === targetId
+          && fighter.side === "zombie"
+        ));
+        if (!target) return { removed: false, targetId };
+        g.fighters = g.fighters.filter((fighter) => fighter.id !== targetId);
+        g.pendingWeaponHits = g.pendingWeaponHits.filter((hit) => hit.targetId !== targetId);
+        for (const fighter of g.fighters) {
+          if (fighter.targetId === targetId) fighter.targetId = null;
+          if (fighter.crawlerDefenseTargetId === targetId) fighter.crawlerDefenseTargetId = null;
+          if (fighter.attackWindupTargetId === targetId) {
+            fighter.attackWindup = 0;
+            fighter.attackWindupTargetId = null;
+            fighter.attackFacingDirection = null;
+          }
+          fighter.retargetIn = 0;
+        }
+        return {
+          removed: true,
+          targetId,
+          remaining: g.fighters.some((fighter) => fighter.id === targetId),
+        };
+      },
+      transitionManualAbilityStageProof: (
+        kind: UnitKind = "ranger",
+        nextStageId: string = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM,
+      ) => {
+        const definition = MANUAL_ABILITY_REGISTRY[kind];
+        if (!definition) throw new RangeError(`Unknown manual ability proof kind: ${String(kind)}`);
+        if (!CAMPAIGN_STAGE_BY_ID[nextStageId]) {
+          throw new RangeError(`Unknown stage transition proof target: ${nextStageId}`);
+        }
+        const previous = gameRef.current;
+        const previousStageId = previous.definition.stageId;
+        const previousKinds = previous.fighters
+          .filter((fighter) => fighter.side === "human" && fighter.hp > 0)
+          .map((fighter) => fighter.kind);
+        const fresh = initialGame(
+          previous.selectedSupply,
+          nextStageId,
+          [kind],
+          createBattleResultId(nextStageId),
+          campaignSave.readStoryEventIds,
+          campaignSave.unitLevels,
+          {},
+        );
+        const card = equippedCardForGame(fresh, kind);
+        if (!card) throw new Error(`Stage transition proof card unavailable: ${kind}`);
+        fresh.running = true;
+        fresh.energy = COMMAND_MAX;
+        fresh.deployQueue.push(kind);
+        fresh.energy -= card.cost;
+        fresh.deployCooldowns[kind] = card.deployCooldown;
+        gameRef.current = fresh;
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setSelectedStageId(nextStageId);
+        setSurvivalHud(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        setHud((current) => ({
+          ...current,
+          missionType: fresh.definition.missionType,
+          energy: Math.floor(fresh.energy),
+          supportGauge: Math.floor(fresh.supportGauge),
+          scrap: fresh.scrap,
+          kills: fresh.kills,
+          wave: fresh.wave,
+          phase: fresh.phase,
+          baseHp: fresh.baseHp,
+          baseMaxHp: fresh.baseMaxHp,
+          barricadeHp: fresh.barricadeHp,
+          barricadeMaxHp: fresh.barricadeMaxHp,
+          barricadeVulnerable: fresh.barricadeVulnerable,
+          deployQueue: fresh.deployQueue.length,
+          deployCooldowns: { ...fresh.deployCooldowns },
+          manualAbilityIcons: [],
+        }));
+        window.requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+        return {
+          previousStageId,
+          previousKinds,
+          nextStageId,
+          queuedKind: kind,
+        };
       },
       prepareManualAbilitySurvivalProof: (kind: UnitKind = "brawler") => {
         const definition = MANUAL_ABILITY_REGISTRY[kind];
@@ -8203,6 +8735,7 @@ export function AshfallGame() {
         } = "walker",
       ) => {
         const g = gameRef.current;
+        fighterRenderAuditHistory.clear();
         const options = typeof input === "string" ? { attackerKind: input } : input;
         const attackerKind = options.attackerKind ?? "walker";
         const proofLane = ([0, 1, 2] as const).includes(options.lane as Lane)
@@ -8292,6 +8825,239 @@ export function AshfallGame() {
         attacker.cooldown = 99;
         attacker.contained = true;
         return true;
+      },
+      prepareNavigationRouteReleaseProof: () => {
+        const g = gameRef.current;
+        if (g.definition.missionType !== STATION_MISSION_TYPES.ESCORT) return null;
+        const proofLane: Lane = 1;
+        let fighter = g.fighters.find((candidate) => (
+          candidate.side === "human"
+          && candidate.kind === "scout"
+          && candidate.hp > 0
+        ));
+        if (!fighter) {
+          const spawned = spawnHuman(g, "scout", true);
+          if (spawned) {
+            fighter = g.fighters.find((candidate) => (
+              candidate.side === "human"
+              && candidate.kind === "scout"
+              && candidate.hp > 0
+            ));
+          }
+        }
+        if (!fighter) return null;
+        const originalSpeed = Math.max(1, fighter.speed);
+        const originalLaneSpeed = Math.max(1, fighter.laneSpeed);
+        const threat = spawnEnemy(g, "walker", proofLane);
+        const threatX = BASE_X + 20;
+        const fighterX = threatX + 160;
+        threat.x = threatX;
+        threat.y = activeLaneCenters[proofLane];
+        threat.lane = proofLane;
+        threat.anchorLane = proofLane;
+        threat.speed = 0;
+        threat.laneSpeed = 0;
+        threat.damage = 0;
+        threat.maxHp = Math.max(2_000, threat.maxHp);
+        threat.hp = threat.maxHp;
+        threat.cooldown = 99;
+        threat.combatReady = true;
+        threat.gateEntering = false;
+        threat.contained = false;
+        threat.spawnGrace = 0;
+        threat.targetId = null;
+        threat.targetObjectId = null;
+        fighter.x = fighterX;
+        fighter.y = activeLaneCenters[proofLane];
+        fighter.lane = proofLane;
+        fighter.anchorLane = proofLane;
+        fighter.hp = fighter.maxHp;
+        fighter.speed = 0;
+        fighter.laneSpeed = 0;
+        fighter.cooldown = 0;
+        fighter.combatReady = true;
+        fighter.gateEntering = false;
+        fighter.spawnGrace = 0;
+        fighter.targetId = threat.id;
+        fighter.targetObjectId = 777_777;
+        fighter.crawlerDefenseTargetId = threat.id;
+        fighter.attackWindup = 99;
+        fighter.attackWindupTargetId = threat.id;
+        fighter.attackFacingDirection = "left";
+        fighter.retargetIn = 99;
+        fighter.nextLaneDecisionAt = g.time + 99;
+        fighter.aiDestinationX = threat.x;
+        fighter.aiMoveDirection = -1;
+        fighter.navigationRecovery = createNavigationRecoveryState({
+          x: fighter.x,
+          y: fighter.y,
+          lane: proofLane,
+        });
+        g.fighters = [fighter, threat];
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = g.definition.timeline.length;
+        g.deployQueue = [];
+        g.battlefieldObjects = [];
+        g.pendingWeaponHits = [];
+        clearTransientRenderObjects(g);
+        g.running = true;
+        g.paused = false;
+        g.over = false;
+        g.won = false;
+        g.baseHp = g.baseMaxHp;
+        g.last = performance.now();
+        navigationRouteReleaseAuditRef.current = [];
+        navigationRouteReleaseProofRef.current = {
+          fighterId: fighter.id,
+          threatId: threat.id,
+          originalSpeed,
+          originalLaneSpeed,
+          initialThreatHp: threat.hp,
+          cleanupChallengePending: true,
+        };
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return {
+          fighterId: fighter.id,
+          threatId: threat.id,
+          fighterX: fighter.x,
+          threatX: threat.x,
+          initialThreatHp: threat.hp,
+        };
+      },
+      resumeNavigationRouteReleaseProof: () => {
+        const g = gameRef.current;
+        const proof = navigationRouteReleaseProofRef.current;
+        if (!proof) return null;
+        const fighter = g.fighters.find((candidate) => candidate.id === proof.fighterId);
+        const threat = g.fighters.find((candidate) => candidate.id === proof.threatId);
+        if (!fighter || !threat) return null;
+        fighter.speed = proof.originalSpeed;
+        fighter.laneSpeed = proof.originalLaneSpeed;
+        fighter.cooldown = 0;
+        fighter.attackWindup = 0;
+        fighter.attackWindupTargetId = null;
+        fighter.attackFacingDirection = null;
+        fighter.retargetIn = 0;
+        g.paused = false;
+        g.last = performance.now();
+        setPaused(false);
+        return {
+          fighterId: fighter.id,
+          threatId: threat.id,
+          releaseX: fighter.x,
+          releaseAttackSequence: fighter.attackSequence,
+          initialThreatHp: proof.initialThreatHp,
+        };
+      },
+      prepareEscortMissionObjectState: (
+        state: "start" | "moving" | "stalled" | "damaged" | "result-won" | "result-lost",
+      ) => {
+        const g = gameRef.current;
+        if (g.definition.missionType !== STATION_MISSION_TYPES.ESCORT
+          || g.definition.stageId === CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE) {
+          return null;
+        }
+        const maxIntegrity = Math.max(1, Number(g.stageMission.maxIntegrity) || 100);
+        const proofState = {
+          start: {
+            progress: 0,
+            integrity: maxIntegrity,
+            stalled: false,
+            contaminated: false,
+            completed: false,
+            failed: false,
+            over: false,
+            won: false,
+          },
+          moving: {
+            progress: .34,
+            integrity: maxIntegrity,
+            stalled: false,
+            contaminated: false,
+            completed: false,
+            failed: false,
+            over: false,
+            won: false,
+          },
+          stalled: {
+            progress: .46,
+            integrity: maxIntegrity,
+            stalled: true,
+            contaminated: true,
+            completed: false,
+            failed: false,
+            over: false,
+            won: false,
+          },
+          damaged: {
+            progress: .62,
+            integrity: Math.max(1, Math.round(maxIntegrity * .42)),
+            stalled: false,
+            contaminated: false,
+            completed: false,
+            failed: false,
+            over: false,
+            won: false,
+          },
+          "result-won": {
+            progress: 1,
+            integrity: Math.max(1, Math.round(maxIntegrity * .72)),
+            stalled: false,
+            contaminated: false,
+            completed: true,
+            failed: false,
+            over: true,
+            won: true,
+          },
+          "result-lost": {
+            progress: .62,
+            integrity: 0,
+            stalled: true,
+            contaminated: true,
+            completed: false,
+            failed: true,
+            over: true,
+            won: false,
+          },
+        }[state];
+        if (!proofState) return null;
+        g.stageMission = {
+          ...g.stageMission,
+          progress: proofState.progress,
+          integrity: proofState.integrity,
+          maxIntegrity,
+          stalled: proofState.stalled,
+          contaminated: proofState.contaminated,
+          completed: proofState.completed,
+          failed: proofState.failed,
+        };
+        g.convoyProgress = proofState.progress;
+        g.running = true;
+        g.paused = true;
+        g.over = proofState.over;
+        g.won = proofState.won;
+        g.time += .1;
+        g.bannerTime = 0;
+        setStarted(true);
+        // Freeze the local proof frame without covering the player-facing
+        // canvas with the pause menu.
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return {
+          state,
+          progress: proofState.progress,
+          integrity: proofState.integrity,
+          maxIntegrity,
+          over: proofState.over,
+          won: proofState.won,
+        };
       },
       spawnHumanForDamageProof: (kind: UnitKind) => {
         const g = gameRef.current;
@@ -8408,6 +9174,87 @@ export function AshfallGame() {
           initialTargetHp: proofTarget?.hp ?? g.barricadeHp,
         };
       },
+      prepareDeferredHumanProjectileProof: (
+        kind: UnitKind,
+        proofKind: "fighter" | "enemy-base" = "fighter",
+        lethal = false,
+      ) => {
+        if (!DEFERRED_HUMAN_PROJECTILE_KINDS.has(kind)) return null;
+        const g = gameRef.current;
+        g.paused = true;
+        let shooter = g.fighters.find((fighter) => (
+          fighter.side === "human" && fighter.kind === kind
+        ));
+        if (!shooter) {
+          const spawned = spawnHuman(g, kind);
+          if (spawned) shooter = g.fighters.at(-1);
+        }
+        const enemyKind: EnemyKind = kind === "babayaga" ? "crusher" : "walker";
+        const target = proofKind === "fighter"
+          ? g.fighters.find((fighter) => (
+            fighter.side === "zombie" && fighter.kind === enemyKind
+          )) ?? spawnEnemy(g, enemyKind, 1)
+          : null;
+        if (!shooter || (proofKind === "fighter" && !target)) return null;
+        const proofLane: Lane = 1;
+        shooter.lane = proofLane;
+        shooter.anchorLane = proofLane;
+        shooter.x = proofKind === "enemy-base" ? BARRICADE_X - 70 : 430;
+        shooter.y = laneY(proofLane, shooter.id);
+        shooter.cooldown = 0;
+        shooter.attack = 0;
+        shooter.attackWindup = 0;
+        shooter.attackWindupTargetId = null;
+        shooter.spawnGrace = 0;
+        shooter.targetId = target?.id ?? null;
+        shooter.targetObjectId = null;
+        shooter.retargetIn = 99;
+        if (target) {
+          target.lane = proofLane;
+          target.anchorLane = proofLane;
+          target.x = 500;
+          target.y = shooter.y;
+          target.maxHp = lethal ? 1 : 1600;
+          target.hp = target.maxHp;
+          target.flash = 0;
+          target.knock = 0;
+          target.cooldown = 99;
+          target.spawnGrace = 0;
+          target.combatReady = true;
+          target.gateEntering = false;
+          target.contained = false;
+          target.targetId = null;
+          target.targetObjectId = null;
+          target.retargetIn = 99;
+          target.stunned = 20;
+          target.marked = 0;
+        }
+        g.barricadeVulnerable = true;
+        g.barricadeMaxHp = 1600;
+        g.barricadeHp = g.barricadeMaxHp;
+        g.barricadeHitFlash = 0;
+        g.barricadeBucklingAnnounced = false;
+        g.barricadeCriticalAnnounced = false;
+        g.fighters = target ? [shooter, target] : [shooter];
+        g.pendingWeaponHits = [];
+        clearTransientRenderObjects(g);
+        const rawExpectedDamage = proofKind === "enemy-base"
+          ? shooter.damage * structureDamageMultiplier(kind)
+          : shooter.damage * humanAttackMultiplier(kind, target?.kind, 1, false);
+        const expectedDamage = Math.min(
+          target?.hp ?? g.barricadeHp,
+          rawExpectedDamage,
+        );
+        return {
+          shooterId: shooter.id,
+          unitKind: kind,
+          targetId: target?.id ?? null,
+          targetKind: proofKind,
+          lethal,
+          expectedDamage,
+          initialTargetHp: target?.hp ?? g.barricadeHp,
+        };
+      },
       resumeMachineGunBurstProof: () => {
         const g = gameRef.current;
         g.last = performance.now();
@@ -8422,6 +9269,16 @@ export function AshfallGame() {
         ));
         if (!gunner) return false;
         gunner.cooldown = 99;
+        return true;
+      },
+      freezeDeferredHumanProjectileProof: (shooterId: number) => {
+        const shooter = gameRef.current.fighters.find((fighter) => (
+          fighter.id === shooterId
+          && fighter.side === "human"
+          && DEFERRED_HUMAN_PROJECTILE_KINDS.has(fighter.kind as UnitKind)
+        ));
+        if (!shooter) return false;
+        shooter.cooldown = 99;
         return true;
       },
       prepareSurvivalWaveEntitlementProof: () => {
@@ -8910,6 +9767,9 @@ export function AshfallGame() {
           fighter: {
             hp: fighter.hp,
             maxHp: fighter.maxHp,
+            flash: fighter.flash,
+            knock: fighter.knock,
+            marked: fighter.marked,
             damage: fighter.damage,
             range: fighter.range,
             speed: fighter.speed,
@@ -9346,12 +10206,73 @@ export function AshfallGame() {
           activeParticleCount: g.particles.length,
         };
       },
+      auditFighterUnitLayer: (fighterId: number) => {
+        const fighter = gameRef.current.fighters.find(({ id }) => id === fighterId);
+        if (!fighter) throw new Error(`Unknown fighter for unit-layer audit: ${fighterId}`);
+        return fighterUnitLayerPixelAudit(fighter, spriteRefs.current);
+      },
       getSnapshot: () => {
         const g = gameRef.current;
         const currentCampaignSave = campaignSaveRef.current;
         const geometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
         const battleSpace = battleSpaceFor(g.definition.stageId, activeStageViewportId);
         const grounding = combatReadyGroundingAudit({ geometry, fighters: g.fighters });
+        const escortFormation = g.definition.missionType === STATION_MISSION_TYPES.ESCORT
+          ? {
+              cartX: escortCartX(g.stageMission, g.definition.missionConfig),
+              cartLane: Number(g.definition.missionConfig.cartLane ?? 1),
+              units: g.fighters
+                .filter((fighter) => fighter.side === "human" && fighter.hp > 0)
+                .map((fighter) => {
+                  const destination = stationObjectiveDestination(g, fighter);
+                  return {
+                    id: fighter.id,
+                    kind: fighter.kind,
+                    x: fighter.x,
+                    lane: fighter.lane,
+                    destinationX: destination?.x ?? null,
+                    destinationLane: destination?.lane ?? null,
+                    duty: destination?.duty ?? null,
+                  };
+                }),
+            }
+          : null;
+        const escortMissionObject = g.definition.missionType === STATION_MISSION_TYPES.ESCORT
+          ? (() => {
+              const coastal = g.definition.stageId === CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE;
+              const assetId = coastal ? "coastal-power-rig" : "maintenance-cart";
+              const assetPath = coastal
+                ? PRODUCTION_VISUALS.missionObjects["coastal-power-rig"]
+                : PRODUCTION_VISUALS.missionObjects["maintenance-cart"];
+              const asset = stageObjectRefs.current[assetId];
+              const integrity = Math.max(0, Number(g.stageMission.integrity) || 0);
+              const maxIntegrity = Math.max(1, Number(g.stageMission.maxIntegrity) || 1);
+              const progress = Math.max(0, Number(g.stageMission.progress) || 0);
+              const visualState = g.over
+                ? g.won ? "result-won" : "result-lost"
+                : g.stageMission.stalled
+                  ? "stalled"
+                  : integrity < maxIntegrity
+                    ? "damaged"
+                    : progress > 0
+                      ? "moving"
+                      : "start";
+              return {
+                assetId,
+                assetPath,
+                assetLoaded: Boolean(asset?.complete && asset.naturalWidth > 0),
+                naturalWidth: asset?.naturalWidth ?? 0,
+                naturalHeight: asset?.naturalHeight ?? 0,
+                visualState,
+                progress,
+                integrity,
+                maxIntegrity,
+                stalled: g.stageMission.stalled === true,
+                objectiveMarkerVisible: !g.over,
+                geometricFallbackAllowed: false,
+              };
+            })()
+          : null;
         return {
           screen,
           resultId: g.resultId,
@@ -9399,6 +10320,7 @@ export function AshfallGame() {
           baseMaxHp: g.baseMaxHp,
           barricadeHp: g.barricadeHp,
           barricadeMaxHp: g.barricadeMaxHp,
+          barricadeHitFlash: g.barricadeHitFlash,
           barricadeVulnerable: g.barricadeVulnerable,
           wave: g.wave,
           eventIndex: g.eventIndex,
@@ -9421,6 +10343,7 @@ export function AshfallGame() {
             effectDensity: graphicsProfileRef.current.effectDensity,
           }),
           pendingWeaponHits: g.pendingWeaponHits.map((hit) => ({ ...hit })),
+          damageTexts: g.damageTexts.map((text) => ({ ...text })),
           energy: g.energy,
           scrap: g.scrap,
           supportGauge: g.supportGauge,
@@ -9436,7 +10359,14 @@ export function AshfallGame() {
           },
           roleMetrics: { ...g.roleMetrics },
           stationMetrics: { ...g.stationMetrics },
+          navigationRouteReleases: navigationRouteReleaseAuditRef.current.map((entry) => ({
+            ...entry,
+            before: { ...entry.before },
+            after: { ...entry.after },
+          })),
           stageMission: { ...g.stageMission },
+          escortFormation,
+          escortMissionObject,
           researchContainer: g.researchContainer ? { ...g.researchContainer } : null,
           stationHazards: g.stationHazards.map((hazard) => ({ ...hazard })),
           geometry: {
@@ -9485,6 +10415,10 @@ export function AshfallGame() {
               tx: shot.tx,
               ty: shot.ty,
             })),
+          pendingWeaponHits: g.pendingWeaponHits.map((hit) => ({ ...hit })),
+          crazyKingAbilityIndicatorCount: g.fighters
+            .filter(crazyKingAbilityIndicatorVisible)
+            .length,
           fighters: g.fighters.map((fighter) => ({
             id: fighter.id,
             side: fighter.side,
@@ -9497,11 +10431,15 @@ export function AshfallGame() {
             renderDepthScale: activeBattlefieldDepthScale(fighter.y),
             hp: fighter.hp,
             maxHp: fighter.maxHp,
+            flash: fighter.flash,
+            knock: fighter.knock,
+            marked: fighter.marked,
             damage: fighter.damage,
             cooldown: fighter.cooldown,
             attack: fighter.attack,
             attackWindup: fighter.attackWindup,
             attackWindupTargetId: fighter.attackWindupTargetId,
+            attackFacingDirection: fighter.attackFacingDirection,
             attackSequence: fighter.attackSequence,
             speed: fighter.speed,
             laneSpeed: fighter.laneSpeed,
@@ -9518,6 +10456,11 @@ export function AshfallGame() {
             crawlerDefenseTargetId: fighter.crawlerDefenseTargetId ?? null,
             aiDestinationX: fighter.aiDestinationX,
             aiMoveDirection: fighter.aiMoveDirection,
+            renderAudit: fighterRenderAudit.get(fighter)
+              ? { ...fighterRenderAudit.get(fighter)! }
+              : null,
+            renderAuditHistory: (fighterRenderAuditHistory.get(fighter.id) ?? [])
+              .map((audit) => ({ ...audit })),
             animationPresentation: {
               state: fighter.animationPresentation.state,
               elapsedSeconds: fighter.animationPresentation.elapsedSeconds,
@@ -9647,7 +10590,7 @@ export function AshfallGame() {
         delete qaWindow.__ASHFALL_RUNTIME_PERFORMANCE__;
       }
     };
-  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, persistCampaignSave, qaMode, screen]);
+  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.readStoryEventIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, persistCampaignSave, qaMode, screen]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -9752,7 +10695,17 @@ export function AshfallGame() {
       pod: "/tactical-drop-pod-v1.png",
       drum: "/explosive-drum-v1.png", medical: "/medical-supply-station-v1.png",
     };
-    const stageObjectAssets = STAGE_OBJECT_MANIFEST[activeBattlefieldStageId]?.objects ?? [];
+    const stageObjectAssets = [
+      ...(STAGE_OBJECT_MANIFEST[activeBattlefieldStageId]?.objects ?? []),
+      ...(!selectedOutbreakMissionId
+        && CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.missionType === STATION_MISSION_TYPES.ESCORT
+        && activeBattlefieldStageId !== CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE
+        ? [{
+            id: "maintenance-cart",
+            path: PRODUCTION_VISUALS.missionObjects["maintenance-cart"],
+          }]
+        : []),
+    ];
     const retainedSpriteKeys = new Set([...Object.keys(persistentPaths), ...requiredSpriteKinds]);
     for (const [key, image] of Object.entries(spriteRefs.current)) {
       if (retainedSpriteKeys.has(key)) continue;
@@ -10156,6 +11109,7 @@ export function AshfallGame() {
     const abilityOrigin = weaponAnchorForTarget(fighter, target);
     fighter.attackWindup = 0;
     fighter.attackWindupTargetId = null;
+    fighter.attackFacingDirection = null;
     fighter.manualAbility = startedAbility.runtime as ManualAbilityRuntime;
     g.manualAbilityReceipts.push({
       ownerId: fighter.id,
@@ -12780,6 +13734,9 @@ export function AshfallGame() {
   }, [chooseActionWithCue, deployHuman, selectedSupply, togglePause, triggerCrawlerBarrage]);
 
   useEffect(() => {
+    // Campaign overlays fully cover the canvas. Do not keep a hidden battle
+    // simulation and full-frame renderer alive on title/map/personnel screens.
+    if (screen !== "battle") return undefined;
     let frame: number | null = null;
     let frameSchedule = createRuntimeFrameSchedule();
     let active = true;
@@ -12837,6 +13794,9 @@ export function AshfallGame() {
             };
           })
           .filter((effect) => effect.elapsed < effect.duration);
+        if (g.pendingAbilityAudioCues.length > 64) {
+          g.pendingAbilityAudioCues.length = 64;
+        }
         const pendingAbilityAudioCues = g.pendingAbilityAudioCues.splice(0);
         for (const pendingCue of pendingAbilityAudioCues) {
           const remainingSeconds = Math.max(0, (pendingCue.remainingSeconds ?? 0) - dt);
@@ -12845,10 +13805,13 @@ export function AshfallGame() {
             continue;
           }
           playProductionCue(pendingCue.cueId, pendingCue.x, {
-            priority: 88,
-            cooldownMs: 80,
-            maxInstances: 2,
-            fallbackCue: "melee-hit",
+            priority: pendingCue.priority ?? 88,
+            cooldownMs: pendingCue.cooldownMs ?? 80,
+            volume: pendingCue.volume,
+            maxInstances: pendingCue.maxInstances ?? 2,
+            fallbackCue: pendingCue.fallbackCue === null
+              ? undefined
+              : pendingCue.fallbackCue ?? "melee-hit",
             dedupeKey: pendingCue.dedupeKey,
           });
         }
@@ -13176,9 +14139,19 @@ export function AshfallGame() {
               recordUnitDamage(g, owner.kind, damage);
               addDamageText(g, target.x, target.y - 54, `弱点査定 -${Math.round(damage)}`, .92, "#f0d36f");
               addParticles(g, target.x, target.y - 34, "#e2c756", 14);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "hit") || weaponCueForUnit(owner.kind), target.x, {
-                priority: 84, cooldownMs: 100, maxInstances: 1, fallbackCue: "ranged-shot",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:audit`,
+              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "shot") || weaponCueForUnit(owner.kind), owner.x, {
+                priority: 84, cooldownMs: 90, maxInstances: 4, fallbackCue: "ranged-shot",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:shot`,
+              });
+              g.pendingAbilityAudioCues.push({
+                cueId: unitAudioCueFor(owner.kind, "weapon", "hit"),
+                x: target.x,
+                remainingSeconds: .045,
+                priority: 80,
+                cooldownMs: 70,
+                maxInstances: 4,
+                fallbackCue: "ranged-shot",
+                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:hit`,
               });
               continue;
             }
@@ -13427,7 +14400,9 @@ export function AshfallGame() {
         }
         const pendingWeaponStep = advancePendingWeaponHits(g.pendingWeaponHits, dt);
         g.pendingWeaponHits = [...pendingWeaponStep.pending] as PendingWeaponHit[];
+        const canceledWeaponTransactions = new Set<string>();
         for (const hit of pendingWeaponStep.due as readonly PendingWeaponHit[]) {
+          if (hit.transactionId && canceledWeaponTransactions.has(hit.transactionId)) continue;
           const targetSide = hit.targetSide ?? "zombie";
           const target = hit.targetId === null
             ? null
@@ -13438,6 +14413,21 @@ export function AshfallGame() {
               && candidate.contained !== true
             )) ?? null;
           if (hit.eventKind === "muzzle") {
+            const sourceStillAlive = hit.sourceId === undefined
+              || g.fighters.some((candidate) => (
+                candidate.id === hit.sourceId
+                && candidate.hp > 0
+                && candidate.combatReady
+              ));
+            if (!sourceStillAlive) {
+              if (hit.transactionId) {
+                canceledWeaponTransactions.add(hit.transactionId);
+                g.pendingWeaponHits = [
+                  ...cancelPendingWeaponTransaction(g.pendingWeaponHits, hit.transactionId),
+                ] as PendingWeaponHit[];
+              }
+              continue;
+            }
             const locksGrenadeLandingPoint = hit.weapon === "mrs-chiha";
             addWeaponShot(g, {
               ...hit,
@@ -13539,6 +14529,21 @@ export function AshfallGame() {
                 maxInstances: 2,
               });
               if (!productionMixerRef.current) playCue("drum-blast");
+            }
+            if (hit.weapon === "babayaga") {
+              playProductionCue(unitAudioCueFor("babayaga", "weapon", "hit"), hit.targetX, {
+                priority: 65,
+                cooldownMs: 70,
+                maxInstances: 4,
+                fallbackCue: "structure-light",
+                dedupeKey: `babayaga-structure-hit:${hit.sourceId}:${hit.attackSequence ?? 0}`,
+              });
+              if ((hit.attackSequence ?? 0) > 0 && (hit.attackSequence ?? 0) % 6 === 0) {
+                playProductionCue(unitAudioCueFor("babayaga", "weapon", "reload"), hit.originX, {
+                  priority: 52,
+                  maxInstances: 1,
+                });
+              }
             }
             if (!g.barricadeBucklingAnnounced
               && beforeHit > g.barricadeMaxHp * .7
@@ -13688,9 +14693,38 @@ export function AshfallGame() {
               g.bannerTime = 1.8;
             }
           } else {
-            target.hp -= hit.damage;
+            target.hp = Math.max(0, target.hp - hit.damage);
           }
-          recordUnitDamage(g, hit.weapon as UnitKind, Math.max(0, beforeHit - target.hp));
+          const appliedDamage = Math.max(0, beforeHit - target.hp);
+          recordUnitDamage(g, hit.weapon as UnitKind, appliedDamage);
+          if (hit.weapon === "babayaga") {
+            const newcomerEffects = resolveNewcomerAttackEffects({
+              unitKind: "babayaga",
+              target,
+              attackDamage: hit.damage,
+              targetIsHeavy: ["crusher", "abomination", "takuya", "grappler", "gate-eater"].includes(target.kind),
+            });
+            Object.assign(target, newcomerEffects.target);
+            playProductionCue(unitAudioCueFor("babayaga", "weapon", "hit"), target.x, {
+              priority: 65,
+              cooldownMs: 70,
+              maxInstances: 4,
+              fallbackCue: "ranged-shot",
+              dedupeKey: `babayaga-hit:${hit.sourceId}:${hit.attackSequence ?? 0}`,
+            });
+            if (target.hp <= 0 && isBabayagaPriorityTarget(target.kind)) {
+              playProductionCue(unitAudioCueFor("babayaga", "weapon", "specialKill"), target.x, {
+                priority: 86,
+                maxInstances: 1,
+                dedupeKey: `babayaga-special-kill:${hit.sourceId}:${hit.attackSequence ?? 0}`,
+              });
+            } else if ((hit.attackSequence ?? 0) > 0 && (hit.attackSequence ?? 0) % 6 === 0) {
+              playProductionCue(unitAudioCueFor("babayaga", "weapon", "reload"), hit.originX, {
+                priority: 52,
+                maxInstances: 1,
+              });
+            }
+          }
           if (hit.raiderLineHit && hit.shotIndex === 0) {
             const suppression = applyRaiderSuppression(target.suppressionStacks, 1);
             target.suppressionStacks = suppression.stacks;
@@ -13701,7 +14735,7 @@ export function AshfallGame() {
           }
           target.flash = Math.max(target.flash, .12);
           target.knock = Math.max(target.knock, 2 + hit.recoil * 4);
-          addDamageText(g, target.x + (hit.shotIndex - 1) * 7, target.y - 45 - hit.shotIndex * 3, String(Math.round(Math.max(0, beforeHit - target.hp))), .62, hit.raiderSecondary ? "#e8cc72" : "#f6d278");
+          addDamageText(g, target.x + (hit.shotIndex - 1) * 7, target.y - 45 - hit.shotIndex * 3, String(Math.round(appliedDamage)), .62, hit.raiderSecondary ? "#e8cc72" : "#f6d278");
           addParticles(g, target.x, target.y - 26, "#e8c56c", 2);
           if (hit.shotIndex === 0 && Math.random() < .48) {
             playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
@@ -14223,6 +15257,61 @@ export function AshfallGame() {
         }
 
         const fighterById = new Map(g.fighters.filter((fighter) => fighter.hp > 0 && fighter.combatReady).map((fighter) => [fighter.id, fighter]));
+        const activeObjectIds = new Set(g.battlefieldObjects
+          .filter((object) => ["active", "impact"].includes(object.phase) && object.hp > 0)
+          .map((object) => object.id));
+        for (const fighter of g.fighters) {
+          const lockedTarget = fighter.targetId === null
+            ? null
+            : fighterById.get(fighter.targetId) ?? null;
+          const targetValid = Boolean(lockedTarget
+            && lockedTarget.side !== fighter.side
+            && lockedTarget.hp > 0
+            && lockedTarget.contained !== true);
+          if (fighter.targetId !== null && !targetValid) {
+            if (fighter.attackWindupTargetId === fighter.targetId) {
+              fighter.attackWindup = 0;
+              fighter.attackWindupTargetId = null;
+              fighter.attackFacingDirection = null;
+            }
+            fighter.targetId = null;
+            fighter.retargetIn = 0;
+          }
+          if (fighter.targetObjectId !== null && !activeObjectIds.has(fighter.targetObjectId)) {
+            if (fighter.attackWindupTargetId === `battlefield-object:${fighter.targetObjectId}`) {
+              fighter.attackWindup = 0;
+              fighter.attackWindupTargetId = null;
+              fighter.attackFacingDirection = null;
+            }
+            fighter.targetObjectId = null;
+          }
+          if (fighter.crawlerDefenseTargetId !== null
+            && fighter.crawlerDefenseTargetId !== undefined
+            && !fighterById.has(fighter.crawlerDefenseTargetId)) {
+            fighter.crawlerDefenseTargetId = null;
+          }
+          if (typeof fighter.attackWindupTargetId === "number") {
+            const windupTarget = fighterById.get(fighter.attackWindupTargetId);
+            const windupStillValid = Boolean(windupTarget
+              && fighter.targetId === fighter.attackWindupTargetId
+              && fighter.stunned <= 0
+              && fighterDistance(fighter, windupTarget) <= normalAttackReach(fighter, windupTarget)
+              && canAcquireCombatTarget({
+                attacker: fighter,
+                target: windupTarget,
+                hasLineOfSight: (attacker, candidate) => hasBattleSpaceLineOfSight(
+                  g,
+                  attacker as Fighter,
+                  candidate as Fighter,
+                ),
+              }));
+            if (!windupStillValid) {
+              fighter.attackWindup = 0;
+              fighter.attackWindupTargetId = null;
+              fighter.attackFacingDirection = null;
+            }
+          }
+        }
         const crawlerAttackThreatIds = new Set(g.fighters
           .filter((fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady)
           .filter((enemy) => {
@@ -14375,6 +15464,9 @@ export function AshfallGame() {
           f.cooldown = advanceAttackCooldown(f.cooldown, dt); f.supportCooldown -= dt; f.retargetIn = Math.max(0, f.retargetIn - dt); f.spawnGrace = Math.max(0, f.spawnGrace - dt);
           f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.marked = Math.max(0, f.marked - dt); f.step += dt;
           f.attackWindup = Math.max(0, f.attackWindup - dt);
+          if (f.attackWindup <= 0 && f.attack <= 0 && f.attackWindupTargetId === null) {
+            f.attackFacingDirection = null;
+          }
           f.stunned = Math.max(0, f.stunned - dt);
           f.damageReductionRemaining = advanceNaoProtection(f.damageReductionRemaining, dt);
           if (f.damageReductionRemaining <= 0) f.damageReductionMultiplier = 1;
@@ -15316,6 +16408,7 @@ export function AshfallGame() {
             y: f.y,
             laneCenters: activeLaneCenters,
           });
+          let medicCohesionDestination: { x: number; y: number; lane: Lane } | null = null;
           if (f.kind === "medic"
             && !returningToAssignedLane
             && crawlerAttackThreatIds.size === 0
@@ -15326,13 +16419,7 @@ export function AshfallGame() {
               needsRegroup: boolean; destination: { x: number; y: number; lane: Lane };
             } | null)({ support: f, allies: assignedPeers }) : null;
             if (cohesion?.needsRegroup) {
-              const dx = cohesion.destination.x - f.x;
-              const dy = cohesion.destination.y - f.y;
-              f.x += Math.sign(dx) * Math.min(Math.abs(dx), humanMovementSpeed * dt);
-              f.y += Math.sign(dy) * Math.min(Math.abs(dy), humanLaneSpeed * dt);
-              f.lane = activeLaneForY(f.y, cohesion.destination.lane);
-              f.targetId = null;
-              continue;
+              medicCohesionDestination = cohesion.destination;
             }
           }
 
@@ -15454,16 +16541,32 @@ export function AshfallGame() {
                 return actualTarget ? hasBattleSpaceLineOfSight(g, f, actualTarget) : false;
               },
             });
-            const stationObjective = stationObjectiveDestination(g, f);
-            if (stationObjective && allyIntent.reason !== "crawler-under-attack") {
-              f.anchorLane = stationObjective.lane;
+            if (medicCohesionDestination
+              && allyIntent.targetId === null
+              && allyIntent.reason !== "crawler-under-attack") {
               allyIntent = {
                 ...allyIntent,
-                destinationX: stationObjective.x,
-                desiredX: stationObjective.x,
-                destinationLane: stationObjective.lane,
-                moveDirection: Math.sign(stationObjective.x - f.x),
+                destinationX: medicCohesionDestination.x,
+                desiredX: medicCohesionDestination.x,
+                destinationLane: medicCohesionDestination.lane,
+                moveDirection: Math.sign(medicCohesionDestination.x - f.x),
               };
+            }
+            const stationObjective = stationObjectiveDestination(g, f);
+            if (stationObjective && allyIntent.reason !== "crawler-under-attack") {
+              const preservesThreatIntent = g.definition.missionType === STATION_MISSION_TYPES.ESCORT
+                && stationObjective.duty !== "escort-anchor"
+                && allyIntent.targetId !== null;
+              if (!preservesThreatIntent) {
+                f.anchorLane = stationObjective.lane;
+                allyIntent = {
+                  ...allyIntent,
+                  destinationX: stationObjective.x,
+                  desiredX: stationObjective.x,
+                  destinationLane: stationObjective.lane,
+                  moveDirection: Math.sign(stationObjective.x - f.x),
+                };
+              }
             }
             if (g.survivalRun && allyIntent.reason !== "crawler-under-attack") {
               const survivalTarget = tacticalEnemies.find((enemy) => enemy.id === allyIntent?.targetId);
@@ -15711,7 +16814,7 @@ export function AshfallGame() {
             const stoppingDistance = f.range + 30;
             if (objectDistance <= stoppingDistance) {
               if (f.cooldown <= 0) {
-                if (beginCombatNormalAttackWindup(f, `battlefield-object:${objectTarget.id}`)) continue;
+                if (beginCombatNormalAttackWindup(f, `battlefield-object:${objectTarget.id}`, objectTarget.x)) continue;
                 const deferredEnemyProjectile = ENEMY_PROJECTILE_KINDS.includes(f.kind);
                 f.attack = .18;
                 f.cooldown = attackCooldownAfterCombatWindup(
@@ -15779,7 +16882,7 @@ export function AshfallGame() {
             }
           } else if (target && distance <= normalAttackReach(f, target)) {
             if (f.cooldown <= 0) {
-              if (beginCombatNormalAttackWindup(f, target.id)) continue;
+              if (beginCombatNormalAttackWindup(f, target.id, target.x)) continue;
               if (f.side === "human" && f.kind === "gunner" && !raiderCanFire({ heat: f.weaponHeat, overheated: f.overheated })) {
                 f.cooldown = .1;
                 continue;
@@ -15841,21 +16944,34 @@ export function AshfallGame() {
                 && f.kind === "gunner"
                 && weaponDamageEvents
                 && weaponDamageEvents.length > 1;
+              const deferredHumanProjectile = f.side === "human"
+                && target.side === "zombie"
+                && DEFERRED_HUMAN_PROJECTILE_KINDS.has(f.kind as UnitKind)
+                && weaponDamageEvents
+                && weaponDamageEvents.length > 0;
               const deferredEnemyProjectile = f.side === "zombie"
                 && target.side === "human"
                 && ENEMY_PROJECTILE_KINDS.includes(f.kind);
               const immediateAttackDamage = attackDamage;
               let appliedAttack: { targetDamage: number };
-              if (splitMachineGunBurst || deferredEnemyProjectile) {
+              if (splitMachineGunBurst || deferredHumanProjectile || deferredEnemyProjectile) {
                 appliedAttack = { targetDamage: 0 };
               } else if (f.side === "zombie" && target.side === "human") {
                 appliedAttack = applyIncomingHumanDamage(g, target, immediateAttackDamage, { attackKind: f.range > 64 ? "ranged" : "melee", attacker: f });
               } else if (f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash && weaponDamageEvents) {
                 const grenadeRound = weaponDamageEvents[0];
                 const grenadeMuzzle = weaponAnchorForTarget(f, target, grenadeRound.shotIndex, grenadeRound.recoil);
+                const grenadeTransactionId = linkedWeaponTransactionId({
+                  sourceId: f.id,
+                  attackSequence: f.attackSequence,
+                  targetKind: "fighter",
+                  targetId: target.id,
+                  shotIndex: grenadeRound.shotIndex,
+                });
                 scheduleMrsChihaLauncherAudio(g, f, "normal");
                 g.pendingWeaponHits.push({
                   eventKind: "muzzle",
+                  transactionId: grenadeTransactionId,
                   targetKind: "fighter",
                   sourceId: f.id,
                   targetId: target.id,
@@ -15874,6 +16990,7 @@ export function AshfallGame() {
                   applyDamage: false,
                 }, {
                   eventKind: "impact",
+                  transactionId: grenadeTransactionId,
                   targetKind: "fighter",
                   damageMode: "grenade",
                   sourceId: f.id,
@@ -15892,7 +17009,9 @@ export function AshfallGame() {
                   impactDelaySeconds: grenadeRound.travelSeconds,
                   applyDamage: true,
                 });
-                g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
+                g.pendingWeaponHits = [
+                  ...capPendingWeaponTransactions(g.pendingWeaponHits, 64),
+                ] as PendingWeaponHit[];
                 appliedAttack = { targetDamage: 0 };
               } else if (f.side === "human"
                 && target.kind === "gate-eater"
@@ -15933,6 +17052,13 @@ export function AshfallGame() {
                 for (const event of weaponDamageEvents) {
                   const muzzle = weaponAnchorForTarget(f, target, event.shotIndex, event.recoil);
                   const sharedEvent = {
+                    transactionId: linkedWeaponTransactionId({
+                      sourceId: f.id,
+                      attackSequence: f.attackSequence,
+                      targetKind: "fighter",
+                      targetId: target.id,
+                      shotIndex: event.shotIndex,
+                    }),
                     targetKind: "fighter" as const,
                     damageMode: target.kind === "gate-eater"
                       && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
@@ -15972,8 +17098,65 @@ export function AshfallGame() {
                     applyDamage: true,
                   });
                 }
-                g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
+                g.pendingWeaponHits = [
+                  ...capPendingWeaponTransactions(g.pendingWeaponHits, 64),
+                ] as PendingWeaponHit[];
                 f.attack = Math.max(f.attack, weaponProfile.shotOffsetsSeconds.at(-1) ?? 0);
+              }
+              if (deferredHumanProjectile) {
+                for (const event of weaponDamageEvents ?? []) {
+                  const muzzle = weaponAnchorForTarget(f, target, event.shotIndex, event.recoil);
+                  const sharedEvent = {
+                    transactionId: linkedWeaponTransactionId({
+                      sourceId: f.id,
+                      attackSequence: f.attackSequence,
+                      targetKind: "fighter",
+                      targetId: target.id,
+                      shotIndex: event.shotIndex,
+                    }),
+                    targetKind: "fighter" as const,
+                    damageMode: target.kind === "gate-eater"
+                      && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
+                      ? "containment" as const
+                      : "direct" as const,
+                    sourceId: f.id,
+                    targetId: target.id,
+                    targetX: target.x,
+                    targetY: target.y - 28,
+                    originX: muzzle.x,
+                    originY: muzzle.y,
+                    weapon: f.kind as UnitKind,
+                    effect: roleEffect ?? undefined,
+                    emphasized: Boolean(roleEffect),
+                    attackSequence: f.attackSequence + 1,
+                    shotIndex: event.shotIndex,
+                    recoil: event.recoil,
+                    casing: event.casing,
+                    hitStopSeconds: event.hitStopSeconds,
+                    impactDelaySeconds: event.travelSeconds,
+                  };
+                  if (event.offsetSeconds <= 0) {
+                    addWeaponShot(g, sharedEvent);
+                  } else {
+                    g.pendingWeaponHits.push({
+                      ...sharedEvent,
+                      eventKind: "muzzle",
+                      remainingSeconds: event.offsetSeconds,
+                      damage: 0,
+                      applyDamage: false,
+                    });
+                  }
+                  g.pendingWeaponHits.push({
+                    ...sharedEvent,
+                    eventKind: "impact",
+                    remainingSeconds: event.hitOffsetSeconds,
+                    damage: event.damage,
+                    applyDamage: true,
+                  });
+                }
+                g.pendingWeaponHits = [
+                  ...capPendingWeaponTransactions(g.pendingWeaponHits, 64),
+                ] as PendingWeaponHit[];
               }
               if (deferredEnemyProjectile) {
                 const muzzle = weaponAnchorForTarget(f, target);
@@ -16004,7 +17187,9 @@ export function AshfallGame() {
                   applyDamage: true,
                 });
               }
-              if (!splitMachineGunBurst && !deferredEnemyProjectile) target.flash = .12;
+              if (!splitMachineGunBurst && !deferredHumanProjectile && !deferredEnemyProjectile) {
+                target.flash = .12;
+              }
               f.attackSequence += 1;
               let crazyKingRadius: number | null = null;
               if (f.side === "human" && f.kind === "crazy-king") {
@@ -16057,6 +17242,13 @@ export function AshfallGame() {
                   for (const event of weaponDamageEventsFor(f.kind, pierceDamage)) {
                     const muzzle = weaponAnchorForTarget(f, lineTarget, event.shotIndex, event.recoil);
                     const sharedEvent = {
+                      transactionId: linkedWeaponTransactionId({
+                        sourceId: f.id,
+                        attackSequence: f.attackSequence,
+                        targetKind: "fighter",
+                        targetId: lineTarget.id,
+                        shotIndex: event.shotIndex,
+                      }),
                       targetKind: "fighter" as const,
                       damageMode: lineTarget.kind === "gate-eater"
                         && g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
@@ -16097,9 +17289,13 @@ export function AshfallGame() {
                     });
                   }
                 }
-                g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
+                g.pendingWeaponHits = [
+                  ...capPendingWeaponTransactions(g.pendingWeaponHits, 64),
+                ] as PendingWeaponHit[];
               }
-              if (f.side === "human" && ["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) {
+              if (f.side === "human"
+                && ["crazy-king", "kumaverson", "babayaga"].includes(f.kind)
+                && !(f.kind === "babayaga" && deferredHumanProjectile)) {
                 const preview = newcomerAttackPayload({
                   unitKind: f.kind,
                   targetKind: target.kind,
@@ -16158,26 +17354,21 @@ export function AshfallGame() {
                 if (!defersMrsLauncherAudio) {
                   playProductionCue((weaponEvent && unitAudioCueFor(f.kind, "weapon", weaponEvent)) || weaponCueForUnit(f.kind), contactAudioX, {
                     priority: f.kind === "gunner" || f.kind === "brute" || f.kind === "crazy-king" ? 74 : 64,
-                    cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 70,
+                    cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "babayaga" ? 90 : f.kind === "gunner" ? 45 : 70,
                     volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
-                    maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
+                    maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : f.kind === "babayaga" ? 4 : 5,
                     fallbackCue: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)
                       ? "ranged-shot"
                       : "melee-hit",
+                    dedupeKey: f.kind === "babayaga"
+                      ? `babayaga-shot:${f.id}:${f.attackSequence}`
+                      : undefined,
                   });
                 }
                 if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), contactAudioX, { priority: targetIsHeavy ? 76 : 67, cooldownMs: 110, volume: targetIsHeavy ? .62 : .54, maxInstances: 1 });
                 if (f.kind === "kumaverson") {
                   playProductionCue(unitAudioCueFor(f.kind, "weapon", targetIsHeavy ? "heavyHit" : "hit"), contactAudioX, { priority: targetIsHeavy ? 76 : 68, cooldownMs: 125, volume: targetIsHeavy ? .56 : .48, maxInstances: 1 });
                   if (target.stunned > 0) playProductionCue(unitAudioCueFor(f.kind, "weapon", "stun"), contactAudioX, { priority: 75, cooldownMs: 220, volume: .45, maxInstances: 1 });
-                }
-                if (f.kind === "babayaga") {
-                  playProductionCue(unitAudioCueFor(f.kind, "weapon", "hit"), target.x, { priority: 65, maxInstances: 4 });
-                  if (target.hp <= 0 && isBabayagaPriorityTarget(target.kind)) {
-                    playProductionCue(unitAudioCueFor(f.kind, "weapon", "specialKill"), target.x, { priority: 86, maxInstances: 1 });
-                  } else if (f.attackSequence % 6 === 0) {
-                    playProductionCue(unitAudioCueFor(f.kind, "weapon", "reload"), f.x, { priority: 52, maxInstances: 1 });
-                  }
                 }
                 if (f.kind === "mayo-chan" && target.side === "zombie") {
                   target.mayoBiteSlowRemaining = Math.max(
@@ -16196,13 +17387,33 @@ export function AshfallGame() {
                     });
                   }
                 }
-                if (Math.random() < .34) playProductionCue(humanVoiceCueForUnit(f.kind, "attack"), f.x, {
-                  priority: 67,
-                  cooldownMs: 320,
-                  volume: f.kind === "brute" || f.kind === "brawler" || f.kind === "crazy-king" || f.kind === "kumaverson" ? .92 : .78,
-                  maxInstances: 2,
-                });
-                if (!splitMachineGunBurst && target.side === "zombie" && Math.random() < .48) playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
+                if (Math.random() < .34) {
+                  const attackVoice = humanVoiceCueForUnit(f.kind, "attack");
+                  if (f.kind === "babayaga" && attackVoice) {
+                    g.pendingAbilityAudioCues.push({
+                      cueId: attackVoice,
+                      x: f.x,
+                      remainingSeconds: .08,
+                      priority: 67,
+                      cooldownMs: 320,
+                      volume: .78,
+                      maxInstances: 2,
+                      fallbackCue: null,
+                      dedupeKey: `babayaga-voice:${f.id}:${f.attackSequence}`,
+                    });
+                  } else {
+                    playProductionCue(attackVoice, f.x, {
+                      priority: 67,
+                      cooldownMs: 320,
+                      volume: f.kind === "brute" || f.kind === "brawler" || f.kind === "crazy-king" || f.kind === "kumaverson" ? .92 : .78,
+                      maxInstances: 2,
+                    });
+                  }
+                }
+                if (!splitMachineGunBurst
+                  && !deferredHumanProjectile
+                  && target.side === "zombie"
+                  && Math.random() < .48) playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
                   priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
                   cooldownMs: 210,
                   maxInstances: 3,
@@ -16222,7 +17433,7 @@ export function AshfallGame() {
                 });
               }
               if (f.kind === "scout" && target.side === "zombie") target.marked = Math.max(target.marked, 3.2);
-              if (!splitMachineGunBurst && !deferredEnemyProjectile) {
+              if (!splitMachineGunBurst && !deferredHumanProjectile && !deferredEnemyProjectile) {
                 target.knock = Math.max(target.knock, f.kind === "brute" || f.kind === "abomination" || f.kind === "takuya" || f.kind === "gate-eater" ? 9 : 3);
               }
               f.attack = .18;
@@ -16244,6 +17455,7 @@ export function AshfallGame() {
                   : f.attackEvery;
               f.cooldown = attackCooldownAfterCombatWindup(f, nextAttackCooldown);
               if (!splitMachineGunBurst
+                && !deferredHumanProjectile
                 && !deferredEnemyProjectile
                 && !(f.side === "human" && f.kind === "mrs-chiha" && !mrsLauncherBash)) {
                 addDamageText(g, target.x + (Math.random() - .5) * 10, target.y - 45, String(Math.round(appliedAttack.targetDamage)), .65, f.side === "human" ? "#f6d278" : "#e98a72");
@@ -16307,7 +17519,7 @@ export function AshfallGame() {
                       });
                     }
                   }
-                } else if (!(f.kind === "mrs-chiha" && !mrsLauncherBash)) {
+                } else if (!deferredHumanProjectile && !(f.kind === "mrs-chiha" && !mrsLauncherBash)) {
                   const muzzle = weaponAnchorForTarget(f, target);
                   addShot(g, muzzle.x, muzzle.y, target.x, target.y - 28, .26, "human", .26, ranged ? "projectile" : "melee", f.kind, roleEffect ?? undefined, f.id, target.id, target.id, emphasized, undefined, undefined, undefined, undefined, undefined);
                 }
@@ -16326,7 +17538,7 @@ export function AshfallGame() {
           } else if (!target && baseDistance <= f.range + 10) {
             if (f.cooldown <= 0) {
               if (f.side === "human") {
-                if (beginCombatNormalAttackWindup(f, "enemy-base")) continue;
+                if (beginCombatNormalAttackWindup(f, "enemy-base", enemyBaseTarget.x)) continue;
                 if (f.kind === "gunner" && !raiderCanFire({ heat: f.weaponHeat, overheated: f.overheated })) {
                   f.cooldown = .1;
                   continue;
@@ -16337,7 +17549,9 @@ export function AshfallGame() {
                   ? resolveTataraStrikeDamage(f.damage, { targetType: "infected-base" })
                   : f.damage * structureDamageMultiplier(f.kind);
                 const structureWeaponEvents = weaponDamageEventsFor(f.kind, structureDamage);
-                const deferredStructureImpact = f.kind === "gunner" || f.kind === "mrs-chiha";
+                const deferredStructureImpact = f.kind === "gunner"
+                  || f.kind === "mrs-chiha"
+                  || DEFERRED_HUMAN_PROJECTILE_KINDS.has(f.kind as UnitKind);
                 if (!deferredStructureImpact) g.barricadeHp = Math.max(0, g.barricadeHp - structureDamage);
                 if (f.kind === "brute") g.roleMetrics.tataraStructureDamage += structureDamage;
                 if (f.kind === "gunner") {
@@ -16357,15 +17571,17 @@ export function AshfallGame() {
                 if (f.kind !== "mrs-chiha") {
                   playProductionCue((structureWeaponEvent && unitAudioCueFor(f.kind, "weapon", structureWeaponEvent)) || weaponCueForUnit(f.kind), structureAudioX, {
                     priority: f.kind === "brute" || f.kind === "gunner" || f.kind === "crazy-king" ? 76 : 64,
-                    cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 125 : f.kind === "gunner" || f.kind === "babayaga" ? 45 : 75,
+                    cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 125 : f.kind === "babayaga" ? 90 : f.kind === "gunner" ? 45 : 75,
                     volume: f.kind === "crazy-king" ? .64 : f.kind === "kumaverson" ? .5 : undefined,
-                    maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : 5,
+                    maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : f.kind === "babayaga" ? 4 : 5,
                     fallbackCue: f.kind === "brute" ? "structure-heavy" : "structure-light",
+                    dedupeKey: f.kind === "babayaga"
+                      ? `babayaga-structure-shot:${f.id}:${f.attackSequence}`
+                      : undefined,
                   });
                 }
                 if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), structureAudioX, { priority: 74, volume: .56, cooldownMs: 110, maxInstances: 1 });
                 if (f.kind === "kumaverson") playProductionCue(unitAudioCueFor(f.kind, "weapon", "heavyHit"), structureAudioX, { priority: 74, volume: .54, cooldownMs: 130, maxInstances: 1 });
-                if (f.kind === "babayaga" && f.attackSequence % 6 === 0) playProductionCue(unitAudioCueFor(f.kind, "weapon", "reload"), f.x, { priority: 52, maxInstances: 1 });
                 if (f.kind === "gunner") {
                   const firstRound = structureWeaponEvents[0];
                   const firstOrigin = weaponAnchorForTarget(f, enemyBaseTarget, firstRound.shotIndex, firstRound.recoil);
@@ -16386,6 +17602,12 @@ export function AshfallGame() {
                   for (const event of structureWeaponEvents) {
                     const origin = weaponAnchorForTarget(f, enemyBaseTarget, event.shotIndex, event.recoil);
                     const sharedEvent = {
+                      transactionId: linkedWeaponTransactionId({
+                        sourceId: f.id,
+                        attackSequence: f.attackSequence,
+                        targetKind: "enemy-base",
+                        shotIndex: event.shotIndex,
+                      }),
                       targetKind: "enemy-base" as const,
                       sourceId: f.id,
                       targetId: null,
@@ -16417,12 +17639,20 @@ export function AshfallGame() {
                       applyDamage: true,
                     });
                   }
-                  g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
+                  g.pendingWeaponHits = [
+                    ...capPendingWeaponTransactions(g.pendingWeaponHits, 64),
+                  ] as PendingWeaponHit[];
                 } else if (f.kind === "mrs-chiha") {
                   const grenadeRound = structureWeaponEvents[0];
                   const grenadeOrigin = weaponAnchorForTarget(f, enemyBaseTarget, grenadeRound.shotIndex, grenadeRound.recoil);
                   scheduleMrsChihaLauncherAudio(g, f, "structure");
                   const sharedGrenadeEvent = {
+                    transactionId: linkedWeaponTransactionId({
+                      sourceId: f.id,
+                      attackSequence: f.attackSequence,
+                      targetKind: "enemy-base",
+                      shotIndex: grenadeRound.shotIndex,
+                    }),
                     targetKind: "enemy-base" as const,
                     sourceId: f.id,
                     targetId: null,
@@ -16450,7 +17680,58 @@ export function AshfallGame() {
                     damage: grenadeRound.damage,
                     applyDamage: true,
                   });
-                  g.pendingWeaponHits = g.pendingWeaponHits.slice(-64);
+                  g.pendingWeaponHits = [
+                    ...capPendingWeaponTransactions(g.pendingWeaponHits, 64),
+                  ] as PendingWeaponHit[];
+                } else if (DEFERRED_HUMAN_PROJECTILE_KINDS.has(f.kind as UnitKind)) {
+                  for (const event of structureWeaponEvents) {
+                    const origin = weaponAnchorForTarget(f, enemyBaseTarget, event.shotIndex, event.recoil);
+                    const sharedEvent = {
+                      transactionId: linkedWeaponTransactionId({
+                        sourceId: f.id,
+                        attackSequence: f.attackSequence,
+                        targetKind: "enemy-base",
+                        shotIndex: event.shotIndex,
+                      }),
+                      targetKind: "enemy-base" as const,
+                      sourceId: f.id,
+                      targetId: null,
+                      targetX: enemyBaseTarget.x,
+                      targetY: enemyBaseTarget.y,
+                      originX: origin.x,
+                      originY: origin.y,
+                      weapon: f.kind as UnitKind,
+                      effect: roleEffect ?? undefined,
+                      emphasized: Boolean(roleEffect),
+                      attackSequence: f.attackSequence,
+                      shotIndex: event.shotIndex,
+                      recoil: event.recoil,
+                      casing: event.casing,
+                      hitStopSeconds: event.hitStopSeconds,
+                      impactDelaySeconds: event.travelSeconds,
+                    };
+                    if (event.offsetSeconds <= 0) {
+                      addWeaponShot(g, sharedEvent);
+                    } else {
+                      g.pendingWeaponHits.push({
+                        ...sharedEvent,
+                        eventKind: "muzzle",
+                        remainingSeconds: event.offsetSeconds,
+                        damage: 0,
+                        applyDamage: false,
+                      });
+                    }
+                    g.pendingWeaponHits.push({
+                      ...sharedEvent,
+                      eventKind: "impact",
+                      remainingSeconds: event.hitOffsetSeconds,
+                      damage: event.damage,
+                      applyDamage: true,
+                    });
+                  }
+                  g.pendingWeaponHits = [
+                    ...capPendingWeaponTransactions(g.pendingWeaponHits, 64),
+                  ] as PendingWeaponHit[];
                 } else {
                   g.barricadeHitFlash = .2;
                   g.barricadeHitY = f.y;
@@ -16476,9 +17757,11 @@ export function AshfallGame() {
                 if (!deferredStructureImpact && !g.barricadeCriticalAnnounced && beforeHit > g.barricadeMaxHp * .35 && g.barricadeHp <= g.barricadeMaxHp * .35) {
                   g.barricadeCriticalAnnounced = true; g.banner = "感染拠点 // 大破"; g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("base-critical");
                 }
-                if (!productionMixerRef.current && f.kind !== "mrs-chiha") playCue(f.kind === "brute" ? "structure-heavy" : "structure-light");
+                if (!deferredStructureImpact && !productionMixerRef.current && f.kind !== "mrs-chiha") {
+                  playCue(f.kind === "brute" ? "structure-heavy" : "structure-light");
+                }
               } else {
-                if (beginCombatNormalAttackWindup(f, "crawler")) continue;
+                if (beginCombatNormalAttackWindup(f, "crawler", BASE_X)) continue;
                 const beforeHit = g.baseHp;
                 const siegeDamage = crawlerSiegeDamage(f.damage, g.phase);
                 const deferredEnemyProjectile = ENEMY_PROJECTILE_KINDS.includes(f.kind);
@@ -16606,24 +17889,26 @@ export function AshfallGame() {
 
           if (f.side === "human" || f.side === "zombie") {
             let appliedSeparation = false;
-            for (const other of g.fighters) {
-              if (other.side !== f.side || other.id >= f.id || other.hp <= 0 || !other.combatReady) continue;
-              const separationStep = sameSideSeparationStep({
-                id: f.id,
-                side: f.side,
-                x: f.x,
-                y: f.y,
-                bodyRadius: f.bodyRadius,
-                otherX: other.x,
-                otherY: other.y,
-                otherBodyRadius: other.bodyRadius,
-                spawnGrace: f.spawnGrace,
-                laneMinY: activeLaneCenters[0],
-                laneMaxY: activeLaneCenters[2],
-              });
-              appliedSeparation ||= separationStep.dx !== 0 || separationStep.dy !== 0;
-              f.x += separationStep.dx;
-              f.y += separationStep.dy;
+            if (f.navigationRecovery.terminalFallbackSeconds <= 0) {
+              for (const other of g.fighters) {
+                if (other.side !== f.side || other.id >= f.id || other.hp <= 0 || !other.combatReady) continue;
+                const separationStep = sameSideSeparationStep({
+                  id: f.id,
+                  side: f.side,
+                  x: f.x,
+                  y: f.y,
+                  bodyRadius: f.bodyRadius,
+                  otherX: other.x,
+                  otherY: other.y,
+                  otherBodyRadius: other.bodyRadius,
+                  spawnGrace: f.spawnGrace,
+                  laneMinY: activeLaneCenters[0],
+                  laneMaxY: activeLaneCenters[2],
+                });
+                appliedSeparation ||= separationStep.dx !== 0 || separationStep.dy !== 0;
+                f.x += separationStep.dx;
+                f.y += separationStep.dy;
+              }
             }
             if (f.side === "human") f.x = Math.max(humanMinX, f.x);
             else if (zombieTargetFloor !== null) f.x = Math.max(zombieTargetFloor, f.x);
@@ -16706,7 +17991,9 @@ export function AshfallGame() {
             hp: fighter.hp,
             contained: fighter.contained,
           });
-          const desiredLane = fighter.navigationRecovery.recoveryLane ?? fighter.anchorLane ?? fighter.lane;
+          // Recovery may temporarily choose another physical lane, but stuck
+          // progress is measured against the real objective, not that detour.
+          const desiredLane = fighter.anchorLane ?? fighter.lane;
           const desiredX = fighter.side === "human"
             ? fighter.aiDestinationX
             : lockedTarget?.x ?? lockedObject?.x ?? BASE_X;
@@ -16726,6 +18013,74 @@ export function AshfallGame() {
             moving,
             engaged: targetEngaged || objectEngaged || crawlerEngaged,
           });
+          if (fighter.navigationRecovery.routeReleaseRequested) {
+            const routeReleaseProof = navigationRouteReleaseProofRef.current;
+            if (routeReleaseProof?.fighterId === fighter.id
+              && routeReleaseProof.cleanupChallengePending) {
+              fighter.targetId = routeReleaseProof.threatId;
+              fighter.targetObjectId = 777_777;
+              fighter.crawlerDefenseTargetId = routeReleaseProof.threatId;
+              fighter.attackWindup = .25;
+              fighter.attackWindupTargetId = routeReleaseProof.threatId;
+              fighter.attackFacingDirection = "left";
+              fighter.retargetIn = 99;
+              fighter.nextLaneDecisionAt = g.time + 99;
+              fighter.aiDestinationX = g.fighters.find(
+                (candidate) => candidate.id === routeReleaseProof.threatId,
+              )?.x ?? fighter.aiDestinationX;
+              fighter.aiMoveDirection = -1;
+              routeReleaseProof.cleanupChallengePending = false;
+            }
+            const beforeRouteRelease = {
+              targetId: fighter.targetId,
+              targetObjectId: fighter.targetObjectId,
+              crawlerDefenseTargetId: fighter.crawlerDefenseTargetId ?? null,
+              attackWindup: fighter.attackWindup,
+              attackWindupTargetId: fighter.attackWindupTargetId,
+              attackFacingDirection: fighter.attackFacingDirection,
+              retargetIn: fighter.retargetIn,
+              nextLaneDecisionAt: fighter.nextLaneDecisionAt,
+              anchorLane: fighter.anchorLane,
+              aiDestinationX: fighter.aiDestinationX,
+              aiMoveDirection: fighter.aiMoveDirection,
+            };
+            fighter.targetId = null;
+            fighter.targetObjectId = null;
+            fighter.crawlerDefenseTargetId = null;
+            fighter.attackWindup = 0;
+            fighter.attackWindupTargetId = null;
+            fighter.attackFacingDirection = null;
+            fighter.retargetIn = 0;
+            fighter.nextLaneDecisionAt = 0;
+            fighter.anchorLane = fighter.lane;
+            fighter.aiDestinationX = fighter.x;
+            fighter.aiMoveDirection = 0;
+            if (routeReleaseProof?.fighterId === fighter.id) {
+              navigationRouteReleaseAuditRef.current.push({
+                fighterId: fighter.id,
+                stageId: g.definition.stageId,
+                time: g.time,
+                routeReleaseCount: fighter.navigationRecovery.routeReleaseCount,
+                before: beforeRouteRelease,
+                after: {
+                  targetId: fighter.targetId,
+                  targetObjectId: fighter.targetObjectId,
+                  crawlerDefenseTargetId: fighter.crawlerDefenseTargetId ?? null,
+                  attackWindup: fighter.attackWindup,
+                  attackWindupTargetId: fighter.attackWindupTargetId,
+                  attackFacingDirection: fighter.attackFacingDirection,
+                  retargetIn: fighter.retargetIn,
+                  nextLaneDecisionAt: fighter.nextLaneDecisionAt,
+                  anchorLane: fighter.anchorLane,
+                  aiDestinationX: fighter.aiDestinationX,
+                  aiMoveDirection: fighter.aiMoveDirection,
+                  recoveryExhausted: fighter.navigationRecovery.recoveryExhausted,
+                  recoveryLane: fighter.navigationRecovery.recoveryLane,
+                  routeReleaseRequested: fighter.navigationRecovery.routeReleaseRequested,
+                },
+              });
+            }
+          }
           g.stationMetrics.aiRecoveries += Math.max(
             0,
             fighter.navigationRecovery.recoveryCount - previousRecoveryCount,
@@ -16871,9 +18226,11 @@ export function AshfallGame() {
             side: fighter.side,
             aiMoveDirection: fighter.aiMoveDirection,
             entryDirection: fighter.entryDirection,
-            targetDirection: facingTarget
-              ? Math.sign(facingTarget.x - fighter.x)
-              : 0,
+            targetDirection: fighter.attackFacingDirection
+              ? fighter.attackFacingDirection === "left" ? -1 : 1
+              : facingTarget
+                ? Math.sign(facingTarget.x - fighter.x)
+                : 0,
             manualDirection: Number(fighter.manualAbility?.target?.direction),
             manualAbilityActive,
           });
@@ -16904,7 +18261,29 @@ export function AshfallGame() {
             dt,
           );
         }
-        g.fighters = g.fighters.filter((fighter) => fighter.hp > 0 && fighter.mayoRetreat?.complete !== true);
+        const removedFighterIds = new Set(g.fighters
+          .filter((fighter) => fighter.hp <= 0 || fighter.mayoRetreat?.complete === true)
+          .map((fighter) => fighter.id));
+        if (removedFighterIds.size > 0) {
+          for (const fighter of g.fighters) {
+            if (removedFighterIds.has(fighter.id)) continue;
+            if (fighter.targetId !== null && removedFighterIds.has(fighter.targetId)) {
+              if (fighter.attackWindupTargetId === fighter.targetId) {
+                fighter.attackWindup = 0;
+                fighter.attackWindupTargetId = null;
+                fighter.attackFacingDirection = null;
+              }
+              fighter.targetId = null;
+              fighter.retargetIn = 0;
+            }
+            if (fighter.crawlerDefenseTargetId !== null
+              && fighter.crawlerDefenseTargetId !== undefined
+              && removedFighterIds.has(fighter.crawlerDefenseTargetId)) {
+              fighter.crawlerDefenseTargetId = null;
+            }
+          }
+        }
+        g.fighters = g.fighters.filter((fighter) => !removedFighterIds.has(fighter.id));
 
         const beforeFireStates = new Map(g.corpses.map((corpse) => [corpse.id, corpse.state]));
         const ignition = (igniteAllyCorpsesInFire as unknown as (input: {
@@ -16962,7 +18341,7 @@ export function AshfallGame() {
                  y: generic.y,
                }),
                navigationRecovery: createNavigationRecoveryState({ x: generic.x, y: generic.y, lane: generic.lane }),
-               abilityCooldown: 0, abilityWindup: 0, attackWindup: 0, attackWindupTargetId: null, attackSequence: 0,
+               abilityCooldown: 0, abilityWindup: 0, attackWindup: 0, attackWindupTargetId: null, attackFacingDirection: null, attackSequence: 0,
                stationAbility: createStationAbilityRuntime("turned"),
                ...createUnitRoleRuntime(),
             });
@@ -17163,15 +18542,17 @@ export function AshfallGame() {
             height: rect.height,
           };
         });
-        const readyAbilityFighters = g.running && !g.paused && !g.over && !selectedActionRef.current
-          ? g.fighters.filter((fighter) => canActivateManualAbility({
-            fighter,
-            fighters: manualAbilityTargetCandidates(g, fighter),
-          }))
+        const readyAbilityFighters = g.running && !g.over
+          ? g.fighters.filter((fighter) => isManualAbilityReady(fighter))
             .map((fighter) => {
+              const available = canActivateManualAbility({
+                fighter,
+                fighters: manualAbilityTargetCandidates(g, fighter),
+              });
               return {
                 id: fighter.id,
                 kind: fighter.kind,
+                available,
                 x: fighter.x,
                 y: fighter.y,
                 screenX: transform.offsetX + fighter.x * transform.scale,
@@ -17198,6 +18579,7 @@ export function AshfallGame() {
           hitSize: icon.hitSize,
           anchorX: icon.anchorX,
           anchorY: icon.anchorY,
+          available: Boolean(readyAbilityFighters.find((fighter) => fighter.id === icon.fighterId)?.available),
         }));
         if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
           document.documentElement.dataset.manualAbilityLayoutDebug = JSON.stringify({
@@ -17270,7 +18652,7 @@ export function AshfallGame() {
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("pageshow", onPageShow);
     };
-  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, stopMusic, stopSfx, syncMusicMode]);
+  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
@@ -17308,19 +18690,21 @@ export function AshfallGame() {
     <main className="game-shell" data-screen={screen} data-stage-id={activeOperationId} data-battlefield-stage-id={activeBattlefieldStageId} data-release-version={RELEASE_VERSION}>
       <section className="game-frame" style={{ "--battlefield-art": `url('${stageVisualFor(activeBattlefieldStageId)}')` } as CSSProperties} aria-label="西新世紀末物語 ゲーム">
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
-        {screen === "battle" && !selectedAction && hud.manualAbilityIcons.map((icon) => {
+        {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;
+          const abilityDisabled = !icon.available || paused || Boolean(selectedAction) || combatLocked;
           return <button
             key={icon.fighterId}
             type="button"
-            className="manual-ability-ready"
+            className={`manual-ability-ready ${icon.available ? "available" : "awaiting-target"}`}
             data-fighter-id={icon.fighterId}
             data-ability-kind={icon.kind}
             data-owner-anchor-x={icon.anchorX}
             data-owner-anchor-y={icon.anchorY}
             style={{ left: icon.x, top: icon.y, width: icon.hitSize, height: icon.hitSize }}
-            aria-label={`${cards.find((card) => card.kind === icon.kind)?.name ?? icon.kind}：${ability.displayName}`}
+            disabled={abilityDisabled}
+            aria-label={`${cards.find((card) => card.kind === icon.kind)?.name ?? icon.kind}：${ability.displayName}${icon.available ? "" : "（対象待ち）"}`}
             onPointerDown={(event) => event.stopPropagation()}
             onPointerUp={(event) => event.stopPropagation()}
             onPointerCancel={(event) => event.stopPropagation()}

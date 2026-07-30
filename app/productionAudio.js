@@ -103,7 +103,7 @@ const NEW_UNIT_AUDIO_CUES = Object.freeze([
   { id: "weapon-pan-hit", category: "melee", cooldownMs: 120, maxInstances: 2, gain: 0.58, priority: 68 },
   { id: "weapon-pan-heavy-hit", category: "melee", cooldownMs: 150, maxInstances: 2, gain: 0.62, priority: 74 },
   { id: "weapon-pan-stun", category: "melee", cooldownMs: 240, maxInstances: 1, gain: 0.54, priority: 78 },
-  { id: "weapon-suppressed-pistol", category: "weapons", cooldownMs: 90, maxInstances: 4, gain: 0.72, priority: 70 },
+  { id: "weapon-suppressed-pistol", category: "weapons", cooldownMs: 90, maxInstances: 4, gain: 0.95, priority: 70 },
   { id: "weapon-suppressed-hit", category: "weapons", cooldownMs: 70, maxInstances: 4, gain: 0.66, priority: 64 },
   { id: "weapon-suppressed-reload", category: "weapons", cooldownMs: 280, maxInstances: 1, gain: 0.62, priority: 60 },
   { id: "weapon-special-kill", category: "weapons", cooldownMs: 500, maxInstances: 1, gain: 0.76, priority: 82 },

@@ -9,6 +9,7 @@ import {
   canActivateManualAbility,
   createManualAbilityRuntime,
   gunnerSuppressionVfxRounds,
+  isManualAbilityReady,
   layoutManualAbilityIcons,
   manualAbilityCheckpointCooldown,
   manualAbilityLocksNormalAction,
@@ -129,12 +130,14 @@ test("the existing eleven units use deterministic ability-specific auto targetin
       selected,
       `${kind} target selection is order-independent`,
     );
-    assert.equal(canActivateManualAbility({ fighter, fighters }), true, `${kind} shows ready only with a valid target`);
+    assert.equal(isManualAbilityReady(fighter), true, `${kind} exposes its cooldown-ready state`);
+    assert.equal(canActivateManualAbility({ fighter, fighters }), true, `${kind} can activate with a valid target`);
   }
 
   const nao = { ...owner(900, "medic"), lane: 1, maxHp: 100 };
   const healthy = { ...owner(901, "scout"), lane: 1, x: 230, maxHp: 100, hp: 100 };
   assert.equal(selectManualAbilityTarget({ owner: nao, fighters: [nao, healthy] }), null);
+  assert.equal(isManualAbilityReady(nao), true);
   assert.equal(canActivateManualAbility({ fighter: nao, fighters: [nao, healthy] }), false);
 });
 
@@ -181,8 +184,9 @@ test("Zakimiya targets the densest valid group instead of wasting the throw on t
   );
 });
 
-test("no valid target means no ready icon contract", () => {
+test("no valid target keeps the ready state visible but disables activation", () => {
   const zakimiya = owner();
+  assert.equal(isManualAbilityReady(zakimiya), true);
   assert.equal(canActivateManualAbility({ fighter: zakimiya, fighters: [zakimiya] }), false);
   assert.equal(selectZakimiyaAbilityTarget({ owner: zakimiya, fighters: [enemy("far", 700)] }), null);
 });
@@ -696,6 +700,83 @@ test("seven ready icons sharing a top-edge HP anchor remain independently tappab
   assert.ok(icons.every((icon) => icon.y <= icon.anchorY + 18));
 });
 
+test("eighteen clustered ready controls remain unique and tappable at 844x340", () => {
+  const fighters = Array.from({ length: 18 }, (_, index) => ({
+    id: index + 1,
+    kind: "zakimiya",
+    screenX: 422,
+    screenY: 288,
+  }));
+  const icons = layoutManualAbilityIcons({
+    fighters,
+    obstacles: [
+      { x: 0, y: 0, width: 844, height: 54 },
+      { x: 0, y: 286, width: 844, height: 54 },
+      { x: 600, y: 58, width: 220, height: 46 },
+    ],
+    displayWidth: 844,
+    displayHeight: 340,
+    safeInsets: { top: 6, right: 50, bottom: 0, left: 50 },
+  });
+  assert.equal(icons.length, 18);
+  assert.equal(new Set(icons.map(({ x, y }) => `${x}:${y}`)).size, 18);
+  for (let leftIndex = 0; leftIndex < icons.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < icons.length; rightIndex += 1) {
+      const left = icons[leftIndex];
+      const right = icons[rightIndex];
+      assert.ok(
+        left.x + left.hitSize + 2 <= right.x
+          || right.x + right.hitSize + 2 <= left.x
+          || left.y + left.hitSize + 2 <= right.y
+          || right.y + right.hitSize + 2 <= left.y,
+        `${left.fighterId}/${right.fighterId}`,
+      );
+    }
+  }
+});
+
+test("a blocked local crown uses an unblocked global ready-control slot before HUD overlap", () => {
+  const obstacle = { x: 300, y: 50, width: 240, height: 290 };
+  const [icon] = layoutManualAbilityIcons({
+    fighters: [{
+      id: 1,
+      kind: "scout",
+      screenX: 422,
+      screenY: 200,
+    }],
+    obstacles: [obstacle],
+    displayWidth: 844,
+    displayHeight: 340,
+    safeInsets: { top: 6, right: 50, bottom: 0, left: 50 },
+  });
+  assert.ok(icon);
+  const visibleInset = (icon.hitSize - 28) / 2;
+  const visibleIcon = {
+    x: icon.x + visibleInset,
+    y: icon.y + visibleInset,
+    width: 28,
+    height: 28,
+  };
+  const overlapsHud = visibleIcon.x < obstacle.x + obstacle.width + 4
+    && visibleIcon.x + visibleIcon.width + 4 > obstacle.x
+    && visibleIcon.y < obstacle.y + obstacle.height + 4
+    && visibleIcon.y + visibleIcon.height + 4 > obstacle.y;
+  assert.equal(overlapsHud, false);
+});
+
+test("incapacitation hides activation eligibility and restores one ready state", () => {
+  for (const kind of Object.keys(MANUAL_ABILITY_REGISTRY)) {
+    const fighter = { ...owner(1, kind), stunned: 2 };
+    assert.equal(isManualAbilityReady(fighter), false, kind);
+    assert.equal(canActivateManualAbility({
+      fighter,
+      fighters: [fighter, enemy("target", 260)],
+    }), false, kind);
+    fighter.stunned = 0;
+    assert.equal(isManualAbilityReady(fighter), true, kind);
+  }
+});
+
 test("runtime renders only ready buttons and never a cooldown ring or number above a unit", async () => {
   const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
@@ -783,7 +864,7 @@ test("Mayo-chan incapacitation branches to injury retreat before corpse, infecti
     deathResolution.indexOf('fighter.kind === "mayo-chan"') < deathResolution.indexOf("beginAllyDeath"),
     "Mayo retreat must resolve before the generic ally corpse path",
   );
-  assert.match(source, /fighter\.mayoRetreat\?\.complete !== true/);
+  assert.match(source, /fighter\.mayoRetreat\?\.complete === true/);
   assert.match(source, /mayo-chan-feral/);
 });
 
@@ -795,6 +876,7 @@ test("support placement owns input until it is cancelled or completed", async ()
   );
   assert.match(activation, /g\.over \|\| selectedActionRef\.current/);
   assert.doesNotMatch(activation, /chooseAction\(null\)/);
-  assert.match(source, /g\.running && !g\.paused && !g\.over && !selectedActionRef\.current/);
-  assert.match(source, /screen === "battle" && !selectedAction && hud\.manualAbilityIcons\.map/);
+  assert.match(source, /g\.running && !g\.over/);
+  assert.match(source, /screen === "battle" && hud\.manualAbilityIcons\.map/);
+  assert.match(source, /abilityDisabled = !icon\.available \|\| paused \|\| Boolean\(selectedAction\)/);
 });

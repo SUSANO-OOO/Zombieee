@@ -18,11 +18,22 @@ const engines = (process.env.SURVIVAL_QA_ENGINES ?? "chromium,webkit")
   .split(",")
   .map((engine) => engine.trim())
   .filter(Boolean);
-const viewports = [
+const viewportCandidates = [
   { width: 1280, height: 720, safeArea: false },
   { width: 844, height: 390, safeArea: true },
   { width: 844, height: 340, safeArea: true },
 ];
+const requestedViewportIds = (process.env.SURVIVAL_QA_VIEWPORTS
+  ?? "1280x720,844x390,844x340")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+const viewports = viewportCandidates.filter(({ width, height }) => (
+  requestedViewportIds.includes(`${width}x${height}`)
+));
+if (viewports.length !== requestedViewportIds.length) {
+  throw new Error(`Unknown SURVIVAL_QA_VIEWPORTS: ${requestedViewportIds.join(",")}`);
+}
 const timeout = Math.max(10_000, Number(process.env.SURVIVAL_QA_TIMEOUT_MS) || 30_000);
 const evidenceDir = path.resolve(
   process.env.SURVIVAL_QA_EVIDENCE_DIR ?? "outputs/survival-browser-smoke",

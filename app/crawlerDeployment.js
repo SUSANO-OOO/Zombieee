@@ -16,6 +16,41 @@ export const CRAWLER_DOOR_TIMINGS = Object.freeze({
 
 const clamp01 = (value) => Math.max(0, Math.min(1, Number(value) || 0));
 
+export function friendlyCrawlerRevealRect({
+  side,
+  gateEntering,
+  spawnPortalId,
+  entryRampCleared,
+  fighterX,
+  entryRampX,
+  spriteWidth,
+  doorX,
+  rampFootX,
+  musterY,
+} = {}) {
+  if (side !== "human"
+    || !gateEntering
+    || spawnPortalId !== "crawler-door"
+    || entryRampCleared === true
+    || !(fighterX < doorX + 8)) {
+    return null;
+  }
+  const revealLeft = doorX - 24;
+  const revealRight = Math.max(
+    doorX + 25,
+    Math.min(
+      (entryRampX ?? rampFootX) + spriteWidth * .55,
+      fighterX + spriteWidth * .55,
+    ),
+  );
+  return Object.freeze({
+    x: revealLeft,
+    y: musterY - 108,
+    w: revealRight - revealLeft,
+    h: 128,
+  });
+}
+
 export function createCrawlerDoorRuntime() {
   return {
     phase: CRAWLER_DOOR_PHASES.CLOSED,

@@ -20,11 +20,14 @@ import {
   advancePendingWeaponHits,
   animationClipFor,
   attackPresentationDuration,
+  cancelPendingWeaponTransaction,
+  capPendingWeaponTransactions,
   combatFacingDirection,
   combatWeaponAnchor,
   combatClipEventsBetween,
   combatClipEventsFor,
   createCombatAnimationRuntime,
+  linkedWeaponTransactionId,
   mrsChihaLauncherBashDuration,
   sampleAnimationClip,
   sampleAttackPresentation,
@@ -92,6 +95,18 @@ test("semantic pose transforms keep the authored ground anchor fixed", () => {
       assert.ok(sample.pose.scaleY >= .8 && sample.pose.scaleY <= 1.12, `${state} scaleY`);
       assert.ok(Math.abs(sample.pose.rotationRadians) <= .13, `${state} rotation`);
       assert.ok(sample.pose.opacity >= .7 && sample.pose.opacity <= 1, `${state} opacity`);
+    }
+  }
+  for (const kind of PLAYABLE_COMBAT_KINDS) {
+    for (const state of COMBAT_ANIMATION_STATES) {
+      const clip = animationClipFor(kind, state);
+      for (const elapsed of [0, clip.durationSeconds / 4, clip.durationSeconds / 2, clip.durationSeconds]) {
+        assert.equal(
+          sampleAnimationClip(kind, state, elapsed).pose.opacity,
+          1,
+          `${kind}/${state} keeps the player-visible body opaque`,
+        );
+      }
     }
   }
 });
@@ -189,6 +204,33 @@ test("a moving gate entrant completes deploy once and continues with movement in
   assert.equal(runtime.deployCompleted, true);
   assert.equal(runtime.moving, true);
   assert.match(sampleAnimationClip("scout", runtime.state, runtime.elapsedSeconds).spriteState, /^walk-/);
+});
+
+test("all sixteen walking cycles advance from real travel distance rather than wall-clock time", () => {
+  for (const kind of PLAYABLE_COMBAT_KINDS) {
+    let slowTick = createCombatAnimationRuntime({ direction: "right", x: 100, y: 280 });
+    slowTick = advanceCombatAnimationRuntime(slowTick, {
+      kind, state: "move", direction: "right", moving: true, x: 104, y: 280,
+    }, .2);
+    slowTick = advanceCombatAnimationRuntime(slowTick, {
+      kind, state: "move", direction: "right", moving: true, x: 111, y: 280,
+    }, .2);
+
+    let fastTick = createCombatAnimationRuntime({ direction: "right", x: 100, y: 280 });
+    fastTick = advanceCombatAnimationRuntime(fastTick, {
+      kind, state: "move", direction: "right", moving: true, x: 104, y: 280,
+    }, .02);
+    fastTick = advanceCombatAnimationRuntime(fastTick, {
+      kind, state: "move", direction: "right", moving: true, x: 111, y: 280,
+    }, .02);
+
+    assert.equal(slowTick.state, "move", kind);
+    assert.equal(fastTick.state, "move", kind);
+    assert.equal(slowTick.stateTravelDistance, fastTick.stateTravelDistance, kind);
+    assert.equal(slowTick.elapsedSeconds, fastTick.elapsedSeconds, kind);
+    const pose = sampleAnimationClip(kind, "move", slowTick.elapsedSeconds).pose;
+    assert.ok(Math.abs(pose.offsetX) >= .1 || Math.abs(pose.rotationRadians) >= .005, `${kind} readable gait`);
+  }
 });
 
 test("clip sampling loops movement and clamps one-shot recovery", () => {
@@ -294,6 +336,34 @@ test("fifteen weapon profiles cover all sixteen playable units without generic m
   assert.equal(weaponProfileForAction("mrs-chiha", "attack").id, "grenade");
   assert.equal(weaponProfileForAction("miyamoto-musashi", "attack").id, "dual-katana");
   assert.equal(weaponProfileForAction("mayo-chan", "attack").id, "bite");
+});
+
+test("single-shot human projectiles defer their full damage until a positive visual impact offset", () => {
+  const cases = [
+    ["ranger", "rifle"],
+    ["medic", "heal-support"],
+    ["babayaga", "sniper"],
+    ["engineer", "suppressed-carbine"],
+  ];
+
+  for (const [kind, profileId] of cases) {
+    const damage = 37;
+    const profile = weaponProfileForUnit(kind);
+    const events = weaponDamageEventsFor(kind, damage);
+
+    assert.equal(profile.id, profileId, kind);
+    assert.equal(profile.projectileTravelSeconds, .12, kind);
+    assert.equal(events.length, 1, kind);
+    assert.ok(events[0].travelSeconds > 0, kind);
+    assert.ok(events[0].hitOffsetSeconds > events[0].offsetSeconds, kind);
+    assert.equal(events[0].travelSeconds, .12, kind);
+    assert.equal(events[0].hitOffsetSeconds, events[0].offsetSeconds + .12, kind);
+    assert.equal(
+      events.reduce((total, event) => total + event.damage, 0),
+      damage,
+      kind
+    );
+  }
 });
 
 test("all sixteen playable units and every projectile enemy use directional weapon anchors above the lower body", () => {
@@ -495,7 +565,7 @@ test("Mrs. Chiha's normal grenade uses a locked impact point, delayed AoE, and m
   assert.ok(scheduledGrenadeIndex >= 0 && immediateContainmentIndex > scheduledGrenadeIndex,
     "Mrs. Chiha grenade must schedule before the immediate containment path");
   assert.match(source, /primaryTarget[\s\S]{0,300}splashTarget\.kind === "gate-eater"[\s\S]{0,700}resolveContainmentStrike/);
-  assert.match(source, /deferredStructureImpact = f\.kind === "gunner" \|\| f\.kind === "mrs-chiha"/);
+  assert.match(source, /deferredStructureImpact = f\.kind === "gunner"[\s\S]{0,180}f\.kind === "mrs-chiha"[\s\S]{0,180}DEFERRED_HUMAN_PROJECTILE_KINDS/);
   const structureGrenadeIndex = source.indexOf('} else if (f.kind === "mrs-chiha") {', source.indexOf("deferredStructureImpact"));
   const enemyBaseTargetIndex = source.indexOf('targetKind: "enemy-base"', structureGrenadeIndex);
   const structureImpactIndex = source.indexOf("remainingSeconds: grenadeRound.hitOffsetSeconds", enemyBaseTargetIndex);
@@ -516,4 +586,64 @@ test("pending burst hits become due in stable shot order", () => {
   const second = advancePendingWeaponHits(first.pending, .06);
   assert.deepEqual(second.due.map(({ id }) => id), ["round-2"]);
   assert.equal(second.pending.length, 0);
+});
+
+test("single-shot human projectile transactions own enemy and infected-base damage timing", async () => {
+  const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  for (const kind of ["ranger", "medic", "babayaga", "engineer"]) {
+    assert.match(source, new RegExp(`DEFERRED_HUMAN_PROJECTILE_KINDS[\\s\\S]{0,180}"${kind}"`));
+  }
+  const fighterScheduleIndex = source.indexOf("if (deferredHumanProjectile) {");
+  const fighterImpactIndex = source.indexOf('eventKind: "impact"', fighterScheduleIndex);
+  const fighterHitOffsetIndex = source.indexOf("remainingSeconds: event.hitOffsetSeconds", fighterImpactIndex);
+  assert.ok(fighterScheduleIndex >= 0
+    && fighterImpactIndex > fighterScheduleIndex
+    && fighterHitOffsetIndex > fighterImpactIndex,
+  "single-shot fighters must schedule damage through their impact offset");
+  assert.match(source, /splitMachineGunBurst \|\| deferredHumanProjectile \|\| deferredEnemyProjectile[\s\S]{0,120}targetDamage: 0/);
+  const structureScheduleIndex = source.indexOf(
+    "} else if (DEFERRED_HUMAN_PROJECTILE_KINDS.has(f.kind as UnitKind)) {",
+  );
+  const structureTargetIndex = source.indexOf('targetKind: "enemy-base"', structureScheduleIndex);
+  const structureHitOffsetIndex = source.indexOf(
+    "remainingSeconds: event.hitOffsetSeconds",
+    structureTargetIndex,
+  );
+  assert.ok(structureScheduleIndex >= 0
+    && structureTargetIndex > structureScheduleIndex
+    && structureHitOffsetIndex > structureTargetIndex,
+  "single-shot fighters must defer infected-base damage to impact");
+  assert.match(source, /hit\.weapon === "babayaga"[\s\S]{0,900}resolveNewcomerAttackEffects[\s\S]{0,900}babayaga-hit/);
+});
+
+test("linked muzzle and impact transactions cancel and cap atomically", () => {
+  const transactionId = linkedWeaponTransactionId({
+    sourceId: 7,
+    attackSequence: 3,
+    targetKind: "fighter",
+    targetId: 11,
+    shotIndex: 2,
+  });
+  assert.equal(transactionId, "7:3:fighter:11:2");
+  const linked = [
+    { eventKind: "muzzle", transactionId, remainingSeconds: .05 },
+    { eventKind: "impact", transactionId, remainingSeconds: .12 },
+  ];
+  assert.deepEqual(cancelPendingWeaponTransaction(linked, transactionId), []);
+  const capped = capPendingWeaponTransactions([
+    { eventKind: "impact", remainingSeconds: .01 },
+    ...linked,
+  ], 2);
+  assert.deepEqual(capped, linked);
+});
+
+test("runtime cancels an unfired burst transaction instead of applying its orphan impact", async () => {
+  const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  assert.match(source, /canceledWeaponTransactions\.has\(hit\.transactionId\)/);
+  assert.match(source, /!sourceStillAlive[\s\S]{0,500}cancelPendingWeaponTransaction/);
+  const burstStart = source.indexOf("if (splitMachineGunBurst)");
+  const burstEnd = source.indexOf("if (deferredEnemyProjectile)", burstStart);
+  const burstSource = source.slice(burstStart, burstEnd);
+  assert.match(burstSource, /transactionId: linkedWeaponTransactionId\(/);
+  assert.match(burstSource, /eventKind: "muzzle"[\s\S]*eventKind: "impact"/);
 });

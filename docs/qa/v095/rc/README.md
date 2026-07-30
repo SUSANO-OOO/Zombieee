@@ -4,6 +4,15 @@
 対象branch：`codex/0.9.5-rc`  
 RC開始時integration SHA：`9c576b1acb89c5b05a47213fa0c8f450b8d6136c`
 
+> **Superseded acceptance judgment**
+>
+> 本書はtechnical RC時点の履歴証拠である。出撃時の`opacity 0.72 → 1`を
+> 意図した演出として許容した判断は、Issue #96の最新実行正本
+> [comment 5124971857](https://github.com/SUSANO-OOO/Zombieee/issues/96#issuecomment-5124971857)
+> により撤回された。正式受入は
+> `docs/qa/v095/acceptance-corrections/README.md`の完全不透明・geometry
+> occlusion証拠を正とする。
+
 ## 結論
 
 Version 0.9.5 RC候補は、全16体の通常攻撃とmanual ability、VFX、
@@ -38,9 +47,10 @@ false positiveと、CRAWLERの合成境界を分離して修正・再検証し�
 player-facingの最終合成画面では、combat-ready後のunit／CRAWLERは
 完全表示、接地、正しい方向、visible cue後のdamageを満たす。
 
-unitの出撃演出そのものは意図した表現としてpose opacityを
-およそ0.72から1へ遷移させる。これは戦闘中に意図せず半透明のまま
-残る不具合とは区別する。
+technical RC時点では、unitの出撃演出を`pose opacity 0.72 → 1`とする
+判断を記録した。しかしProducer acceptance後、この判断は撤回された。
+correctionではplayerから見える全16体の全animation stateをopacity 1とし、
+車体背後だけをdraw order／clipによるgeometry occlusionで隠す。
 
 ## Performance比較
 

@@ -672,6 +672,12 @@ test("all weapon-mapped units retain production weapons and all sixteen units re
   assert.equal(humanVoiceCueForUnit("unknown", "attack"), null);
 });
 
+test("Baba Yaga's suppressed pistol keeps the accepted relative mix gain", () => {
+  const pistol = PRODUCTION_AUDIO_MANIFEST.assetById["weapon-suppressed-pistol"];
+  assert.equal(pistol?.gain, 0.95);
+  assert.equal(pistol?.category, "weapons");
+});
+
 test("deployment never falls back to a generic attack or hurt voice", () => {
   const dedicatedDeployKinds = new Set(Object.keys(UNIT_AUDIO_CUE_CONTRACTS));
   for (const kind of [

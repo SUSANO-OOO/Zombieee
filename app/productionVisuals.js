@@ -33,6 +33,7 @@ export const PRODUCTION_VISUALS = Object.freeze({
   }),
   missionObjects: Object.freeze({
     "coastal-power-rig": "/art/v090/stages/coastal-power-rig-v1.png",
+    "maintenance-cart": "/art/v095/mission-objects/maintenance-cart-v1.png",
   }),
 });
 

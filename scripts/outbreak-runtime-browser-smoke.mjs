@@ -27,11 +27,22 @@ const engines = (process.env.OUTBREAK_QA_ENGINES ?? "chromium,webkit")
   .map((value) => value.trim())
   .filter(Boolean);
 const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit };
-const viewports = [
+const viewportCandidates = [
   { width: 1280, height: 720 },
   { width: 844, height: 390 },
   { width: 844, height: 340 },
 ];
+const requestedViewportIds = (process.env.OUTBREAK_QA_VIEWPORTS
+  ?? "1280x720,844x390,844x340")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+const viewports = viewportCandidates.filter(({ width, height }) => (
+  requestedViewportIds.includes(`${width}x${height}`)
+));
+if (viewports.length !== requestedViewportIds.length) {
+  throw new Error(`Unknown OUTBREAK_QA_VIEWPORTS: ${requestedViewportIds.join(",")}`);
+}
 const timeout = Math.max(12_000, Number(process.env.OUTBREAK_QA_TIMEOUT_MS) || 45_000);
 const evidenceDir = path.resolve(
   process.env.OUTBREAK_QA_EVIDENCE_DIR ?? "outputs/outbreak-runtime-browser-smoke",
