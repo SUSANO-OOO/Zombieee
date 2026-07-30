@@ -9,11 +9,11 @@ import {
 } from "../scripts/release-contract.mjs";
 
 const validContract = Object.freeze({
-  version: "0.7.1",
-  release_ref: "v0.7.1",
+  version: "0.9.5",
+  release_ref: "v0.9.5",
   release_sha: "1".repeat(40),
-  issue_number: 43,
-  request_id: "v0.7.1-release-20260722",
+  issue_number: 96,
+  request_id: "v0.9.5-formal-release-20260730",
 });
 
 test("release contract normalizes the five exact immutable release fields", () => {
@@ -27,7 +27,7 @@ test("release contract normalizes the five exact immutable release fields", () =
 test("release contract rejects missing, extra, mutable, and unsafe identities", () => {
   assert.throws(() => normalizeReleaseContract({ ...validContract, request_id: undefined }), /request_id/u);
   assert.throws(() => normalizeReleaseContract({ ...validContract, extra: true }), /unknown: extra/u);
-  assert.throws(() => normalizeReleaseContract({ ...validContract, version: "v0.7.1" }), /semantic version/u);
+  assert.throws(() => normalizeReleaseContract({ ...validContract, version: "v0.9.5" }), /semantic version/u);
   assert.throws(() => normalizeReleaseContract({ ...validContract, release_ref: "main" }), /release_ref/u);
   assert.throws(() => normalizeReleaseContract({ ...validContract, release_sha: "A".repeat(40) }), /lowercase/u);
   assert.throws(() => normalizeReleaseContract({ ...validContract, issue_number: 0 }), /positive integer/u);
