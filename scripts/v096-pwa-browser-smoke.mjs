@@ -327,6 +327,13 @@ record("an ordinary browser tab renders the game without an install gate", (
 
 // --- Console hygiene --------------------------------------------------------
 
+// Let whatever the game started loading finish before judging it. Against the
+// published origin the largest battle art is still in flight when the earlier
+// cases end, and closing the page then cancels those requests: an abort this
+// harness caused is not a fault in the site. A request that genuinely fails
+// still surfaces, because it fails rather than stays pending.
+await page.waitForLoadState("networkidle", { timeout: 60000 }).catch(() => {});
+
 const offlineNoise = requestFailures.filter((entry) => !entry.includes("net::ERR_INTERNET_DISCONNECTED"));
 record("no console errors, page errors, or unexpected request failures", (
   consoleErrors.length === 0 && pageErrors.length === 0 && offlineNoise.length === 0

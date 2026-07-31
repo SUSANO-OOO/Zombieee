@@ -154,9 +154,11 @@ test("committing a manifest warms the shell so a first install can boot offline"
     serviceWorkerSource.indexOf('case "pwa:rollback"'),
   );
   assert.match(commitCase, /await warmShell\(/, "commit must warm the shell");
+  // Warming reaches the network. The page is told its install succeeded first,
+  // so a slow prefetch cannot time out the commit reply it is waiting on.
   assert.ok(
-    commitCase.indexOf("warmShell(") < commitCase.indexOf("collectGarbage("),
-    "the shell must be warmed before old generations are collected",
+    commitCase.indexOf("reply(event") < commitCase.indexOf("warmShell("),
+    "the commit must be acknowledged before the shell is warmed",
   );
 });
 
