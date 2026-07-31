@@ -28,6 +28,23 @@ const eslintConfig = defineConfig([
       "react-hooks/gating": "off",
     },
   },
+  {
+    // The service worker runs outside the document: it has no `window`, and its
+    // globals come from the ServiceWorkerGlobalScope rather than the DOM lib.
+    files: ["public/sw.js"],
+    languageOptions: {
+      globals: {
+        caches: "readonly",
+        clients: "readonly",
+        fetch: "readonly",
+        self: "readonly",
+        MessageChannel: "readonly",
+        Request: "readonly",
+        Response: "readonly",
+        URL: "readonly",
+      },
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

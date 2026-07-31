@@ -1,6 +1,3 @@
-/* eslint-env serviceworker */
-/* global clients */
-//
 // Version 0.9.6 PWA service worker.
 //
 // Design notes for Issue #114 section 7:
@@ -162,7 +159,7 @@ async function respondForAsset(request, asset) {
     const response = await fetch(request);
     await storeAsset(asset, response);
     return response;
-  } catch (error) {
+  } catch {
     // Offline and not yet downloaded. A 504 lets the app report a missing
     // asset precisely instead of hanging until a timeout.
     return new Response("Asset not available offline", {
