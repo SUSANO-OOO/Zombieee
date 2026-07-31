@@ -273,13 +273,22 @@ try {
     if (!(await prepareButton.isEnabled())) throw new Error("Stage prepare button is disabled");
     await prepareButton.click();
     await page.locator(".formation-screen").waitFor({ state: "visible", timeout: 30_000 });
+    // Must outlast ASSET_LOAD_SESSION_DEADLINE_MS, or this waits less time than
+    // the app is entitled to take and reports a timeout of its own making. The
+    // critical unit sheets are 14.1MB from the published origin.
     await page.locator('.game-shell[data-assets-state="ready"], .game-shell[data-assets-state="error"]').waitFor({
       state: "visible",
-      timeout: 30_000,
+      timeout: 150_000,
     });
     const assetState = await page.locator(".game-shell").getAttribute("data-assets-state");
     if (assetState !== "ready") throw new Error(`Published critical assets did not become ready: ${assetState}`);
     const deployButton = page.locator(".formation-footer .campaign-primary");
+    // The button enables on the same state change this just awaited, so give
+    // React its render rather than sampling the instant the attribute flips.
+    await page.waitForFunction(() => {
+      const button = document.querySelector(".formation-footer .campaign-primary");
+      return Boolean(button) && !button.disabled;
+    }, null, { timeout: 30_000 }).catch(() => {});
     if (!(await deployButton.isEnabled())) throw new Error("Published deploy button stayed disabled");
     await page.screenshot({
       path: path.join(evidenceDir, `github-pages-public-loadout-${viewport.width}x${viewport.height}-${scenario}.png`),
