@@ -24,13 +24,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "西新世紀末物語",
-    description: "ホーム画面へ追加して遊べるPWA版。ゲームデータを端末へ保存し、オフラインでもプレイできるVersion 0.9.6.2。",
+    description: "ホーム画面へ追加して遊べるPWA版。ゲームデータを端末へ保存し、オフラインでもプレイできるVersion 0.9.6.3。",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "西新世紀末物語",
-    description: "ホーム画面へ追加して遊べるPWA版。ゲームデータを端末へ保存し、オフラインでもプレイできるVersion 0.9.6.2。",
+    description: "ホーム画面へ追加して遊べるPWA版。ゲームデータを端末へ保存し、オフラインでもプレイできるVersion 0.9.6.3。",
   },
 };
 
