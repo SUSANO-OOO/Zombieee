@@ -188,6 +188,16 @@ try {
     }
     if (!navigation?.ok()) throw new Error(`Published document failed after retries: ${String(lastError)}`);
 
+    // Since 0.9.6.4 a first visit meets the download entry screen before the
+    // title. These scenarios are about the published game itself, and each one
+    // starts from empty storage, so decline the download and play from the
+    // network. This has to happen before the title is awaited, because the
+    // entry screen is what stands in its place. The entry flow has its own
+    // coverage in the PWA matrix.
+    const declineDownload = page.getByRole("button", { name: "ダウンロードせずに遊ぶ" });
+    await declineDownload.waitFor({ state: "visible", timeout: 60_000 }).catch(() => {});
+    if (await declineDownload.isVisible().catch(() => false)) await declineDownload.click();
+
     await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout: 120_000 });
     const pageTitle = await page.title();
     if (!pageTitle.includes(expectedVersion)) {
@@ -209,14 +219,6 @@ try {
     if (issueMeta !== expectedIssueNumber) {
       throw new Error(`Published issue metadata is ${issueMeta ?? "missing"}, expected ${expectedIssueNumber}`);
     }
-
-    // Since 0.9.6.4 a first visit meets the download entry screen before the
-    // title. These scenarios are about the published game itself, and each one
-    // starts from empty storage, so decline the download and play from the
-    // network. The entry flow has its own coverage in the PWA matrix.
-    const declineDownload = page.getByRole("button", { name: "ダウンロードせずに遊ぶ" });
-    await declineDownload.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
-    if (await declineDownload.isVisible().catch(() => false)) await declineDownload.click();
 
     const startButton = page.locator(".title-start");
     await startButton.waitFor({ state: "visible", timeout: 30_000 });
