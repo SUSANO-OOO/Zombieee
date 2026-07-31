@@ -2,11 +2,31 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  ASSET_LOAD_SESSION_DEADLINE_MS,
+  OPTIONAL_ASSET_LOAD_DEADLINE_MS,
   runAssetLoadSession,
   selectRetryAssetJobs,
 } from "../app/assetLoadSession.js";
+import { IMAGE_LOAD_TIMEOUT_MS } from "../app/boundedImageLoader.js";
 
 const job = (path, run, category = "unit") => ({ path, category, run });
+
+test("the session budget outlasts the per-image timeout it supervises", () => {
+  // These were 12s and 15s, so the session abandoned every job before a single
+  // image was allowed to reach its own timeout. On the published origin the
+  // eleven critical unit sheets are 14.1MB and took 28.5s at this concurrency,
+  // which left the deploy button disabled on a healthy connection.
+  assert.ok(
+    ASSET_LOAD_SESSION_DEADLINE_MS > IMAGE_LOAD_TIMEOUT_MS,
+    `session budget ${ASSET_LOAD_SESSION_DEADLINE_MS}ms must exceed the image timeout ${IMAGE_LOAD_TIMEOUT_MS}ms`,
+  );
+  // Enough headroom for the measured public transfer, so a slow-but-working
+  // network is not reported as a failure.
+  assert.ok(ASSET_LOAD_SESSION_DEADLINE_MS >= 60_000);
+  // Optional assets never gate play, but they still must not wait forever.
+  assert.ok(OPTIONAL_ASSET_LOAD_DEADLINE_MS < ASSET_LOAD_SESSION_DEADLINE_MS);
+  assert.ok(OPTIONAL_ASSET_LOAD_DEADLINE_MS >= 20_000);
+});
 
 test("asset sessions deduplicate paths and cap mobile load concurrency", async () => {
   let active = 0;

@@ -1,5 +1,26 @@
-export const ASSET_LOAD_SESSION_DEADLINE_MS = 12_000;
-export const OPTIONAL_ASSET_LOAD_DEADLINE_MS = 6_000;
+// Budgets for preparing battle assets.
+//
+// These exist to guarantee a terminal state: Issue #113 was an asset session
+// that could wait forever, so every session must finish, succeed or fail, and
+// offer a retry. The budget only has to be generous enough that a healthy
+// connection is not mistaken for a broken one.
+//
+// The original 12s whole-session budget was measured on a LAN candidate. It is
+// far too small for the published origin: the eleven critical unit sheets are
+// 14.1MB, and at the concurrency below they took 28.5s to transfer from
+// GitHub Pages on an ordinary home connection, with a single 1.75MB sheet
+// taking 11.5s on its own. The public site therefore reported "戦闘アセットの
+// 準備に失敗" and left the deploy button disabled on a perfectly good network.
+//
+// The session budget must also exceed the per-image timeout in
+// boundedImageLoader.js, or the session gives up before any one image is even
+// allowed to time out. `tests/asset-load-session.test.mjs` enforces that.
+//
+// Concurrency deliberately stays at 2. It bounds decode memory on phones, which
+// is what Issue #113 was about, and raising it is not a change to make without
+// device evidence.
+export const ASSET_LOAD_SESSION_DEADLINE_MS = 90_000;
+export const OPTIONAL_ASSET_LOAD_DEADLINE_MS = 20_000;
 export const ASSET_LOAD_MAX_CONCURRENCY = 2;
 
 function normalizedJobs(jobs) {
