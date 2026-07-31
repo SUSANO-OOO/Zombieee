@@ -60,6 +60,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [safety, setSafety] = useState<Record<string, unknown>>({});
   const [error, setError] = useState<string | null>(null);
+  const [manifestUnreachable, setManifestUnreachable] = useState(false);
 
   const baseUrl = useMemo(
     () => (typeof window === "undefined" ? "/" : new URL("./", window.location.href).toString()),
@@ -74,6 +75,24 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     if (!store) return;
     setStoredHashes(await store.storedHashes());
   }, []);
+
+  /**
+   * Loads the published release metadata. Separated so the first-run screen can
+   * offer a retry: a home-screen launch with no connection and nothing installed
+   * has no manifest to plan from, and must say so instead of showing an empty
+   * panel with no way forward.
+   */
+  const loadPublishedManifest = useCallback(async () => {
+    setError(null);
+    try {
+      const published = await fetchPublishedManifest({ baseUrl });
+      setPublishedManifest(published as Manifest);
+      return true;
+    } catch {
+      setManifestUnreachable(true);
+      return false;
+    }
+  }, [baseUrl]);
 
   // Boot: register the worker, learn what is installed, and look for a release.
   useEffect(() => {
@@ -93,23 +112,25 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
       const state = await requestFromServiceWorker(registrationRef.current, { type: "pwa:get-state" });
       if (cancelled) return;
-      if (state?.active) setInstalledManifest(state.active as Manifest);
+      // Only accept a manifest that carries its asset list: everything below
+      // plans repairs and update diffs from it, and a summary would both crash
+      // the plan and make an update look like a full reinstall.
+      if (Array.isArray(state?.active?.assets) && state.active.assets.length > 0) {
+        setInstalledManifest(state.active as Manifest);
+      }
 
       setStoredHashes(await store.storedHashes());
       setStorage(await import("./pwaAssetStore.js").then((m) => m.estimateStorage(window.navigator)));
 
-      try {
-        const published = await fetchPublishedManifest({ baseUrl });
-        if (!cancelled) setPublishedManifest(published as Manifest);
-      } catch {
-        // Offline, or the release metadata is unreachable. Play continues from
-        // whatever is already stored; no update is offered.
-      }
+      // Offline, or the release metadata is unreachable: play continues from
+      // whatever is already stored and no update is offered. A first run with
+      // nothing stored gets an explicit retry instead of a blank panel.
+      if (!cancelled) await loadPublishedManifest();
     })().catch((cause) => {
       if (!cancelled) setError(String(cause?.message ?? cause));
     });
     return () => { cancelled = true; };
-  }, [baseUrl]);
+  }, [baseUrl, loadPublishedManifest]);
 
   // The game publishes activation-safety facts on the root element.
   useEffect(() => {
@@ -126,8 +147,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
   const installPlan = useMemo(() => {
     if (!targetManifest) return null;
+    const entries = (targetManifest.assets ?? []) as Array<{ path: string; hash: string }>;
+    if (entries.length === 0) return null;
     const byPath = new Map<string, string>();
-    for (const entry of targetManifest.assets as Array<{ path: string; hash: string }>) {
+    for (const entry of entries) {
       if (storedHashes.has(entry.hash)) byPath.set(entry.path, entry.hash);
     }
     return planInstall(targetManifest, { storedHashesByPath: byPath });
@@ -206,6 +229,24 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         <section className="pwa-gate" role="dialog" aria-label="ゲームデータの準備" aria-live="polite">
           <div className="pwa-gate-panel">
             <h1>西新世紀末物語</h1>
+
+            {phase === "install-required" && !installCopy && (
+              <>
+                <h2>ゲームデータを準備できません</h2>
+                <p className="pwa-warning" role="alert">
+                  {manifestUnreachable
+                    ? "配信データに接続できませんでした。通信環境を確認してください。"
+                    : "配信データを確認しています。"}
+                </p>
+                <button type="button" className="pwa-primary" onClick={() => {
+                  // Retries in place: no navigation, no reload.
+                  void (async () => {
+                    setManifestUnreachable(false);
+                    await loadPublishedManifest();
+                  })();
+                }}>再試行</button>
+              </>
+            )}
 
             {phase === "install-required" && installCopy && (
               <>

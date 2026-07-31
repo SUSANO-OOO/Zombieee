@@ -110,6 +110,55 @@ test("the service worker retains a rollback generation when collecting caches", 
   assert.match(serviceWorkerSource, /\[state\.active, state\.previous\]\.filter\(Boolean\)/);
 });
 
+test("the service worker verifies the digest, not just the size, before storing", () => {
+  // The asset cache is content-addressed and served cache-first forever, so a
+  // same-length corrupted body accepted here would be pinned under a hash it
+  // does not match, with no repair path on the device.
+  const storeAsset = serviceWorkerSource.slice(
+    serviceWorkerSource.indexOf("async function storeAsset"),
+    serviceWorkerSource.indexOf("async function respondForAsset"),
+  );
+  assert.match(storeAsset, /byteLength !== asset\.bytes/, "size must still be checked");
+  assert.match(storeAsset, /await sha256\(buffer\) !== asset\.hash/, "the digest must be checked");
+  assert.ok(
+    storeAsset.indexOf("sha256(buffer)") < storeAsset.indexOf("cache.put"),
+    "the digest must be verified before anything is written",
+  );
+});
+
+test("committing a manifest warms the shell so a first install can boot offline", () => {
+  // Without this the shell cache is only ever filled by a navigation that
+  // happens after a commit. On a first install the only navigation happens
+  // before it, so a fully downloaded app taken offline would fail to start.
+  assert.match(serviceWorkerSource, /async function warmShell\(generation\)/);
+  const commitCase = serviceWorkerSource.slice(
+    serviceWorkerSource.indexOf('case "pwa:commit-manifest"'),
+    serviceWorkerSource.indexOf('case "pwa:rollback"'),
+  );
+  assert.match(commitCase, /await warmShell\(/, "commit must warm the shell");
+  assert.ok(
+    commitCase.indexOf("warmShell(") < commitCase.indexOf("collectGarbage("),
+    "the shell must be warmed before old generations are collected",
+  );
+});
+
+test("the reported state carries the installed asset list, not a summary", () => {
+  // The page plans repairs and diffs updates from the installed manifest.
+  // Summarising it to version and SHA would make every update look like a full
+  // reinstall, and would break the install plan outright.
+  const getState = serviceWorkerSource.slice(
+    serviceWorkerSource.indexOf('case "pwa:get-state"'),
+    serviceWorkerSource.indexOf('case "pwa:commit-manifest"'),
+  );
+  assert.match(getState, /active: state\.active \?\? null/);
+  assert.match(getState, /previous: state\.previous \?\? null/);
+  assert.doesNotMatch(
+    getState,
+    /active: state\.active \? \{ version/,
+    "the installed manifest must not be reduced to version and releaseSha",
+  );
+});
+
 // --- Key derivation -------------------------------------------------------
 
 test("asset keys are content-addressed and scope-relative", () => {

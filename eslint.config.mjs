@@ -36,6 +36,7 @@ const eslintConfig = defineConfig([
       globals: {
         caches: "readonly",
         clients: "readonly",
+        crypto: "readonly",
         fetch: "readonly",
         self: "readonly",
         MessageChannel: "readonly",
@@ -52,6 +53,9 @@ const eslintConfig = defineConfig([
     ".vinext/**",
     ".wrangler/**",
     "dist/**",
+    // GitHub Pages build output: generated, gitignored, and mostly minified
+    // vendor code. Linting it reports thousands of findings that are not ours.
+    "_site/**",
     "out/**",
     "outputs/**",
     "work/**",

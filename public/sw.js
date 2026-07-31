@@ -129,15 +129,31 @@ function isHtmlResponse(response) {
   return type.includes("text/html");
 }
 
+function hex(buffer) {
+  let out = "";
+  for (const byte of new Uint8Array(buffer)) out += byte.toString(16).padStart(2, "0");
+  return out;
+}
+
+async function sha256(buffer) {
+  return `sha256-${hex(await crypto.subtle.digest("SHA-256", buffer))}`;
+}
+
 /**
  * Stores a verified asset body under its content hash. Rejects HTML bodies so a
  * soft-404 page can never be cached as an image or an audio file.
+ *
+ * Size alone is not enough: the cache is content-addressed and served
+ * cache-first forever, so a same-length but corrupted body would be pinned
+ * under a hash it does not match with no repair path. The digest is checked
+ * before anything is written, exactly as the page-side download session does.
  */
 async function storeAsset(asset, response) {
   if (!response.ok || response.status !== 200) return false;
   if (isHtmlResponse(response)) return false;
   const buffer = await response.clone().arrayBuffer();
   if (buffer.byteLength !== asset.bytes) return false;
+  if (await sha256(buffer) !== asset.hash) return false;
   const cache = await caches.open(ASSET_CACHE);
   await cache.put(assetCacheKey(asset.hash), new Response(buffer, {
     headers: {
@@ -205,6 +221,54 @@ async function respondForNavigation(request) {
       if (cached) return cached;
     }
     throw error;
+  }
+}
+
+/**
+ * Fetches the shell of a generation up front so the app can boot with no
+ * network at all.
+ *
+ * Without this, the shell cache is only ever filled by a navigation that
+ * happens AFTER a manifest has been committed. On a first install the only
+ * navigation happens before the commit, so an app that downloaded every byte
+ * and was then taken offline would still fail to start. Warming at commit time
+ * is what makes "offline relaunch plays what was downloaded" true on the very
+ * first run.
+ *
+ * Best effort by design: a shell that cannot be warmed must never fail the
+ * commit, because the assets are already verified and stored.
+ */
+async function warmShell(generation) {
+  const cache = await caches.open(shellCacheName(generation));
+  const indexUrl = new URL("index.html", scopeUrl).toString();
+  try {
+    const response = await fetch(new URL("./", scopeUrl).toString(), { cache: "no-store" });
+    if (!response.ok) return { warmed: 0 };
+    const html = await response.clone().text();
+    await cache.put(indexUrl, response);
+
+    // Cache the hashed build output the shell references, so the boot path is
+    // complete offline rather than only partly cached.
+    const references = new Set();
+    for (const match of html.matchAll(/(?:src|href)="([^"?#]+\.(?:js|mjs|css))["?#]/g)) {
+      references.add(new URL(match[1], scopeUrl).toString());
+    }
+    let warmed = 1;
+    for (const reference of references) {
+      if (new URL(reference).origin !== scopeUrl.origin) continue;
+      try {
+        const asset = await fetch(reference, { cache: "no-store" });
+        if (asset.ok && asset.status === 200) {
+          await cache.put(reference, asset);
+          warmed += 1;
+        }
+      } catch {
+        // One missing shell file must not abandon the rest.
+      }
+    }
+    return { warmed };
+  } catch {
+    return { warmed: 0 };
   }
 }
 
@@ -305,13 +369,23 @@ async function storedHashes() {
   return hashes;
 }
 
-async function usageBytes() {
-  const cache = await caches.open(ASSET_CACHE);
+/**
+ * Bytes held for the retained generations.
+ *
+ * Derived from the manifests rather than by reading every cache entry: the pack
+ * is over 500 files, and this runs at boot, so opening each stored response
+ * just to read its content-length made startup pay hundreds of cache reads.
+ * Each hash is counted once, which matches how the download is sized.
+ */
+function usageBytesFor(state, present) {
+  const counted = new Set();
   let bytes = 0;
-  for (const request of await cache.keys()) {
-    const response = await cache.match(request);
-    const length = Number(response?.headers.get("content-length") ?? 0);
-    if (Number.isFinite(length)) bytes += length;
+  for (const manifest of [state.active, state.previous].filter(Boolean)) {
+    for (const asset of manifest.assets ?? []) {
+      if (!present.has(asset.hash) || counted.has(asset.hash)) continue;
+      counted.add(asset.hash);
+      bytes += Number(asset.bytes) || 0;
+    }
   }
   return bytes;
 }
@@ -327,14 +401,18 @@ self.addEventListener("message", (event) => {
 
       case "pwa:get-state": {
         const state = await readState();
+        const present = await storedHashes();
+        // The whole manifest, assets included. The page needs the installed
+        // asset list to plan a repair and to diff an update; summarising it to
+        // version and SHA would make every update look like a full reinstall.
         return reply(event, {
           type: "pwa:state",
-          active: state.active ? { version: state.active.version, releaseSha: state.active.releaseSha } : null,
-          previous: state.previous
-            ? { version: state.previous.version, releaseSha: state.previous.releaseSha }
-            : null,
-          storedHashes: [...await storedHashes()],
-          usageBytes: await usageBytes(),
+          active: state.active ?? null,
+          previous: state.previous ?? null,
+          activeGeneration: state.active ? generationOf(state.active) : null,
+          previousGeneration: state.previous ? generationOf(state.previous) : null,
+          storedHashes: [...present],
+          usageBytes: usageBytesFor(state, present),
         });
       }
 
@@ -354,10 +432,14 @@ self.addEventListener("message", (event) => {
         await writeState(next);
         invalidateManifestMemo();
         assetIndexMemo = null;
+        // Warm before collecting, so the new generation can boot offline the
+        // moment it becomes active.
+        const shell = await warmShell(generationOf(manifest));
         const collected = await collectGarbage(next);
         return reply(event, {
           type: "pwa:committed",
           generation: generationOf(manifest),
+          shellWarmed: shell.warmed,
           ...collected,
         });
       }
