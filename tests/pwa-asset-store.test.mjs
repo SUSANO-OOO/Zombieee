@@ -96,6 +96,24 @@ test("the service worker never calls skipWaiting outside an explicit message", (
   assert.doesNotMatch(installHandler, /skipWaiting\s*\(/, "install and activate must not skip waiting");
 });
 
+test("the service worker holds no root-absolute path the Pages build would rewrite", () => {
+  // scripts/build-github-pages.mjs rewrites every `/foo` reference to
+  // `/Zombieee/foo` inside shipped .js files, and sw.js is one of them. A
+  // root-absolute literal here would be edited at publish time without anyone
+  // noticing, so every path must be derived from the registration scope.
+  // A bare "/" is a path separator for split and join, never a rewrite target:
+  // the build only substitutes `/name` and `/name/` references.
+  const literals = [...serviceWorkerSource.matchAll(/"(\/[^"\s]*)"/g)]
+    .map((match) => match[1])
+    .filter((literal) => literal !== "/");
+  assert.deepEqual(
+    literals,
+    [],
+    `sw.js must not contain root-absolute string literals: ${literals.join(", ")}`,
+  );
+  assert.match(serviceWorkerSource, /new URL\("asset-manifest\.json", scopeUrl\)\.pathname/);
+});
+
 test("the service worker restricts itself to its own scope", () => {
   assert.match(serviceWorkerSource, /url\.origin !== scopeUrl\.origin/);
   assert.match(serviceWorkerSource, /url\.pathname\.startsWith\(scopeUrl\.pathname\)/);

@@ -35,6 +35,14 @@ function assetCacheKey(hash) {
   return new URL(`${ASSET_KEY_PREFIX}/${hash}`, scopeUrl).toString();
 }
 
+// Derived from the scope rather than written as root-absolute literals. The
+// GitHub Pages build rewrites root-absolute references to sit under the base
+// path inside every shipped .js file, including this one, so spelling these
+// paths out with a leading slash would let the publish step silently edit them.
+// Deriving from the scope stays correct at any base path.
+const MANIFEST_PATH = new URL("asset-manifest.json", scopeUrl).pathname;
+const RELEASE_PATH = new URL("release.json", scopeUrl).pathname;
+
 function shellCacheName(generation) {
   return `${SHELL_PREFIX}${generation}`;
 }
@@ -300,7 +308,7 @@ self.addEventListener("fetch", (event) => {
 
   const withoutQuery = `${url.origin}${url.pathname}`;
 
-  if (url.pathname.endsWith("/asset-manifest.json") || url.pathname.endsWith("/release.json")) {
+  if (url.pathname === MANIFEST_PATH || url.pathname === RELEASE_PATH) {
     event.respondWith(respondNetworkFirst(request, META_CACHE));
     return;
   }

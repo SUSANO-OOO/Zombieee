@@ -45,6 +45,26 @@ test("every shipped asset extension is exempt from end-of-line conversion", asyn
   }
 });
 
+test("the Pages build stamps the release SHA and verifies the published pack", async () => {
+  // The manifest ships with a placeholder because the release commit does not
+  // exist until the merge that creates it. The Pages build is the only place
+  // that knows the real SHA, and the device compares hash, version, and release
+  // SHA together, so an unstamped manifest would make that check vacuous.
+  const build = await readFile(new URL("../scripts/build-github-pages.mjs", import.meta.url), "utf8");
+
+  assert.match(build, /distribution\.releaseSha = releaseSha/, "the release SHA must be stamped in");
+  assert.match(build, /was not stamped with the release SHA/, "the stamp must be read back and confirmed");
+  assert.match(
+    build,
+    /distribution\.version !== releaseVersion/,
+    "a manifest built for another version must fail the release",
+  );
+  // Bytes and digests must be checked against what will actually be served: a
+  // mismatch is unrepairable on the device, so it has to fail the build.
+  assert.match(build, /createHash\("sha256"\)/);
+  assert.match(build, /does not match asset-manifest\.json/);
+});
+
 test("every pack carries assets and every first-install pack is represented", () => {
   const packs = new Set(manifest.assets.map((asset) => asset.pack));
   for (const pack of ASSET_PACK_IDS) assert.ok(packs.has(pack), `pack ${pack} has no assets`);
