@@ -152,7 +152,17 @@ try {
       if (message.type() === "warning") diagnostics.warnings.push(message.text());
     });
     page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
-    page.on("requestfailed", (request) => diagnostics.requestFailures.push(`${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`));
+    page.on("requestfailed", (request) => {
+      // ERR_ABORTED is a cancellation, not a fault. The game keeps pulling
+      // battle art for as long as the page lives, so against the published
+      // origin there is always something in flight when a scenario ends, and
+      // which asset gets cancelled is pure timing. Excluding it is safe because
+      // the response watcher below catches anything genuinely missing or broken
+      // as an HTTP error, which a cancelled request never becomes.
+      const reason = request.failure()?.errorText ?? "unknown";
+      if (reason.includes("net::ERR_ABORTED")) return;
+      diagnostics.requestFailures.push(`${request.url()} :: ${reason}`);
+    });
     page.on("response", (response) => {
       if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
     });
