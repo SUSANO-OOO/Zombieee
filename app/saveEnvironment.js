@@ -20,6 +20,15 @@ function isPrivateIpv4(hostname) {
 }
 
 export function describeSaveEnvironment(locationLike) {
+  if (!locationLike) {
+    return Object.freeze({
+      kind: "checking",
+      label: "保存環境を確認中",
+      origin: "確認中",
+      storageScope: "保存先を確認しています",
+      isolationNotice: "正式なoriginは画面表示前に確定します。",
+    });
+  }
   const hostname = String(locationLike?.hostname ?? "").toLowerCase();
   const pathname = String(locationLike?.pathname ?? "/");
   const origin = normalizedOrigin(locationLike);

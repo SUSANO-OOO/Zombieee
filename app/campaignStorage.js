@@ -1,6 +1,7 @@
 const inMemoryCampaignSaves = new Map();
 const CAMPAIGN_BACKUP_DATABASE = "nishijin-campaign-backup";
 const CAMPAIGN_BACKUP_STORE = "saves";
+export const CAMPAIGN_STORAGE_TIMEOUT_MS = 6_000;
 
 export const CAMPAIGN_STORAGE_SOURCES = Object.freeze({
   LOCAL_STORAGE: "localStorage",
@@ -72,59 +73,129 @@ export function indexedDbFor(windowLike) {
   }
 }
 
-function openCampaignBackupDatabase(indexedDb) {
+function storageOperationError(name, message) {
+  const error = new Error(message);
+  error.name = name;
+  return error;
+}
+
+function normalizeStorageTimeoutMs(timeoutMs) {
+  const numeric = Number(timeoutMs);
+  return Number.isFinite(numeric) && numeric >= 0
+    ? Math.trunc(numeric)
+    : CAMPAIGN_STORAGE_TIMEOUT_MS;
+}
+
+function openCampaignBackupDatabase(indexedDb, timeoutMs = CAMPAIGN_STORAGE_TIMEOUT_MS) {
   return new Promise((resolve, reject) => {
     if (!indexedDb?.open) {
       reject(new Error("IndexedDB is unavailable"));
       return;
     }
-    const request = indexedDb.open(CAMPAIGN_BACKUP_DATABASE, 1);
+    let request;
+    let settled = false;
+    const finish = (callback, value) => {
+      if (settled) {
+        if (callback === resolve) value?.close?.();
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      callback(value);
+    };
+    const timer = setTimeout(() => {
+      finish(reject, storageOperationError(
+        "TimeoutError",
+        `IndexedDB open timed out after ${timeoutMs}ms`,
+      ));
+    }, timeoutMs);
+    try {
+      request = indexedDb.open(CAMPAIGN_BACKUP_DATABASE, 1);
+    } catch (error) {
+      finish(reject, error);
+      return;
+    }
     request.onupgradeneeded = () => {
       const database = request.result;
       if (!database.objectStoreNames.contains(CAMPAIGN_BACKUP_STORE)) {
         database.createObjectStore(CAMPAIGN_BACKUP_STORE);
       }
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("Could not open campaign backup"));
-    request.onblocked = () => reject(new Error("Campaign backup database is blocked"));
+    request.onsuccess = () => finish(resolve, request.result);
+    request.onerror = () => finish(reject, request.error ?? new Error("Could not open campaign backup"));
+    request.onblocked = () => finish(reject, storageOperationError(
+      "BlockedError",
+      "Campaign backup database is blocked",
+    ));
   });
 }
 
-function runCampaignBackupRequest(indexedDb, mode, operation) {
-  return openCampaignBackupDatabase(indexedDb).then((database) => new Promise((resolve, reject) => {
+function runCampaignBackupRequest(indexedDb, mode, operation, timeoutMs = CAMPAIGN_STORAGE_TIMEOUT_MS) {
+  return openCampaignBackupDatabase(indexedDb, timeoutMs).then((database) => new Promise((resolve, reject) => {
     let transaction;
+    let settled = false;
+    let timer = null;
+    let requestResult;
+    const close = () => {
+      clearTimeout(timer);
+      database.close();
+    };
+    const finish = (callback, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      callback(value);
+    };
     try {
       transaction = database.transaction(CAMPAIGN_BACKUP_STORE, mode);
       const store = transaction.objectStore(CAMPAIGN_BACKUP_STORE);
       const request = operation(store);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error ?? new Error("Campaign backup request failed"));
-      transaction.onabort = () => reject(transaction.error ?? new Error("Campaign backup transaction aborted"));
+      timer = setTimeout(() => {
+        try {
+          transaction.abort();
+        } catch {
+          // A transaction that already settled cannot be aborted.
+        }
+        finish(reject, storageOperationError(
+          "TimeoutError",
+          `IndexedDB ${mode} request timed out after ${timeoutMs}ms`,
+        ));
+        close();
+      }, timeoutMs);
+      request.onsuccess = () => {
+        requestResult = request.result;
+      };
+      request.onerror = () => finish(reject, request.error ?? new Error("Campaign backup request failed"));
+      transaction.onabort = () => finish(reject, transaction.error ?? new Error("Campaign backup transaction aborted"));
+      transaction.onerror = () => finish(reject, transaction.error ?? new Error("Campaign backup transaction failed"));
     } catch (error) {
-      reject(error);
+      finish(reject, error);
+      close();
     } finally {
-      transaction?.addEventListener?.("complete", () => database.close());
-      transaction?.addEventListener?.("abort", () => database.close());
-      transaction?.addEventListener?.("error", () => database.close());
+      transaction?.addEventListener?.("complete", () => {
+        finish(resolve, requestResult);
+        close();
+      });
+      transaction?.addEventListener?.("abort", close);
+      transaction?.addEventListener?.("error", close);
     }
   }));
 }
 
-export async function readCampaignBackup(indexedDb, key) {
+export async function readCampaignBackup(indexedDb, key, { timeoutMs = CAMPAIGN_STORAGE_TIMEOUT_MS } = {}) {
   try {
-    const stored = await runCampaignBackupRequest(indexedDb, "readonly", (store) => store.get(key));
+    const stored = await runCampaignBackupRequest(indexedDb, "readonly", (store) => store.get(key), timeoutMs);
     return typeof stored === "string" ? stored : "";
   } catch {
     return "";
   }
 }
 
-export async function writeCampaignBackup(indexedDb, key, serialized) {
+export async function writeCampaignBackup(indexedDb, key, serialized, { timeoutMs = CAMPAIGN_STORAGE_TIMEOUT_MS } = {}) {
   const value = typeof serialized === "string" ? serialized : String(serialized ?? "");
   try {
-    await runCampaignBackupRequest(indexedDb, "readwrite", (store) => store.put(value, key));
-    const verified = await readCampaignBackup(indexedDb, key);
+    await runCampaignBackupRequest(indexedDb, "readwrite", (store) => store.put(value, key), timeoutMs);
+    const verified = await readCampaignBackup(indexedDb, key, { timeoutMs });
     return verified === value;
   } catch {
     return false;
@@ -143,6 +214,7 @@ export async function writeCampaignSaveReplicas({
   serialized,
   blockedSources = [],
   alreadySavedSources = [],
+  timeoutMs = CAMPAIGN_STORAGE_TIMEOUT_MS,
 }) {
   const blocked = new Set(blockedSources);
   const alreadySaved = new Set(alreadySavedSources);
@@ -155,7 +227,7 @@ export async function writeCampaignSaveReplicas({
     ? false
     : alreadySaved.has(CAMPAIGN_STORAGE_SOURCES.INDEXED_DB)
       ? true
-      : await writeCampaignBackup(indexedDb, key, serialized);
+      : await writeCampaignBackup(indexedDb, key, serialized, { timeoutMs });
   return {
     localSaved,
     backupSaved,
@@ -185,7 +257,9 @@ function createRawCandidate(source, key, state, raw = "", error = null) {
  * Reads only localStorage. Unlike readCampaignSave, this never substitutes the
  * in-memory mirror, so callers can independently judge the durable candidate.
  */
-export function readLocalCampaignCandidate(storage, key) {
+export async function readLocalCampaignCandidate(storage, key, {
+  timeoutMs = CAMPAIGN_STORAGE_TIMEOUT_MS,
+} = {}) {
   if (!storage?.getItem) {
     return createRawCandidate(
       CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE,
@@ -195,30 +269,51 @@ export function readLocalCampaignCandidate(storage, key) {
       { name: "UnavailableError", message: "localStorage is unavailable" },
     );
   }
-  try {
-    const stored = storage.getItem(key);
-    if (stored === null || stored === undefined || stored === "") {
-      return createRawCandidate(CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE, key, "missing");
-    }
-    if (typeof stored === "string") {
-      inMemoryCampaignSaves.set(key, stored);
-    }
-    return createRawCandidate(CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE, key, "present", stored);
-  } catch (error) {
-    return createRawCandidate(
-      CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE,
-      key,
-      "read-error",
-      "",
-      describeStorageError(error, "Could not read localStorage campaign save"),
-    );
-  }
+  const boundedTimeoutMs = normalizeStorageTimeoutMs(timeoutMs);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const startedAt = Date.now();
+      let candidate;
+      let storedForMirror = null;
+      try {
+        const stored = storage.getItem(key);
+        if (stored === null || stored === undefined || stored === "") {
+          candidate = createRawCandidate(CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE, key, "missing");
+        } else {
+          if (typeof stored === "string") storedForMirror = stored;
+          candidate = createRawCandidate(CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE, key, "present", stored);
+        }
+      } catch (error) {
+        candidate = createRawCandidate(
+          CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE,
+          key,
+          "read-error",
+          "",
+          describeStorageError(error, "Could not read localStorage campaign save"),
+        );
+      }
+      if (Date.now() - startedAt >= boundedTimeoutMs) {
+        resolve(createRawCandidate(
+          CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE,
+          key,
+          "timeout",
+          "",
+          { name: "TimeoutError", message: `localStorage read timed out after ${boundedTimeoutMs}ms` },
+        ));
+        return;
+      }
+      if (storedForMirror !== null) inMemoryCampaignSaves.set(key, storedForMirror);
+      resolve(candidate);
+    }, 0);
+  });
 }
 
 /**
  * Reads only IndexedDB and preserves read failures as structured state.
  */
-export async function readIndexedDbCampaignCandidate(indexedDb, key) {
+export async function readIndexedDbCampaignCandidate(indexedDb, key, {
+  timeoutMs = CAMPAIGN_STORAGE_TIMEOUT_MS,
+} = {}) {
   if (!indexedDb?.open) {
     return createRawCandidate(
       CAMPAIGN_STORAGE_SOURCES.INDEXED_DB,
@@ -229,25 +324,42 @@ export async function readIndexedDbCampaignCandidate(indexedDb, key) {
     );
   }
   try {
-    const stored = await runCampaignBackupRequest(indexedDb, "readonly", (store) => store.get(key));
+    const stored = await runCampaignBackupRequest(
+      indexedDb,
+      "readonly",
+      (store) => store.get(key),
+      timeoutMs,
+    );
     if (stored === null || stored === undefined || stored === "") {
       return createRawCandidate(CAMPAIGN_STORAGE_SOURCES.INDEXED_DB, key, "missing");
     }
     return createRawCandidate(CAMPAIGN_STORAGE_SOURCES.INDEXED_DB, key, "present", stored);
   } catch (error) {
+    const state = error?.name === "TimeoutError"
+      ? "timeout"
+      : error?.name === "BlockedError"
+        ? "blocked"
+        : "read-error";
     return createRawCandidate(
       CAMPAIGN_STORAGE_SOURCES.INDEXED_DB,
       key,
-      "read-error",
+      state,
       "",
       describeStorageError(error, "Could not read IndexedDB campaign save"),
     );
   }
 }
 
-export async function readCampaignStorageCandidates({ storage, indexedDb, key }) {
-  const localStorageCandidate = readLocalCampaignCandidate(storage, key);
-  const indexedDbCandidate = await readIndexedDbCampaignCandidate(indexedDb, key);
+export async function readCampaignStorageCandidates({
+  storage,
+  indexedDb,
+  key,
+  timeoutMs = CAMPAIGN_STORAGE_TIMEOUT_MS,
+}) {
+  const [localStorageCandidate, indexedDbCandidate] = await Promise.all([
+    readLocalCampaignCandidate(storage, key, { timeoutMs }),
+    readIndexedDbCampaignCandidate(indexedDb, key, { timeoutMs }),
+  ]);
   return {
     localStorage: localStorageCandidate,
     indexedDB: indexedDbCandidate,
@@ -493,8 +605,9 @@ export function resolveCampaignStorageCandidates(candidates, callbacks = {}) {
       reason: candidate.reason,
       metadata: candidate.metadata,
     }));
+  const unreadableStates = new Set(["unavailable", "read-error", "timeout", "blocked"]);
   const unreadableSources = inspected
-    .filter((candidate) => candidate.rawState === "unavailable" || candidate.rawState === "read-error")
+    .filter((candidate) => unreadableStates.has(candidate.rawState))
     .map((candidate) => candidate.source);
   const base = {
     source: null,
@@ -525,9 +638,7 @@ export function resolveCampaignStorageCandidates(candidates, callbacks = {}) {
       };
     }
     const allMissing = inspected.every((candidate) => candidate.rawState === "missing");
-    const hasUnreadableCandidate = inspected.some((candidate) => (
-      candidate.rawState === "unavailable" || candidate.rawState === "read-error"
-    ));
+    const hasUnreadableCandidate = inspected.some((candidate) => unreadableStates.has(candidate.rawState));
     return {
       ...base,
       status: allMissing ? "empty" : "unavailable",
@@ -569,7 +680,7 @@ export function resolveCampaignStorageCandidates(candidates, callbacks = {}) {
     .map((candidate) => candidate.source);
   return {
     ...base,
-    status: unreadableSources.length > 0 ? "recovery-needed" : "ready",
+    status: unreadableSources.length > 0 ? "degraded" : "ready",
     source: selected.source,
     serialized: selected.serialized,
     value: selected.value,
@@ -580,7 +691,7 @@ export function resolveCampaignStorageCandidates(candidates, callbacks = {}) {
     repairSources,
     recoveryNeeded: repairSources.length > 0 || unreadableSources.length > 0,
     recoveryReason: unreadableSources.length > 0
-      ? "replica-unreadable"
+      ? "replica-unreadable-degraded"
       : repairSources.length > 0
         ? "replica-missing-corrupt-or-stale"
         : "",
@@ -609,7 +720,7 @@ export async function preflightUnreadableCampaignRecovery({
     getMetadata,
   });
   const stillUnreadable = resolution.candidates.filter((candidate) => (
-    candidate.rawState === "unavailable" || candidate.rawState === "read-error"
+    ["unavailable", "read-error", "timeout", "blocked"].includes(candidate.rawState)
   ));
   if (stillUnreadable.length > 0) {
     return {
@@ -659,6 +770,7 @@ export async function writeCampaignRecoverySnapshot({
   key,
   kind,
   serialized,
+  blockedSources = [],
 }) {
   if (typeof serialized !== "string" || !serialized) {
     return {
@@ -672,14 +784,21 @@ export async function writeCampaignRecoverySnapshot({
     };
   }
   const snapshotKey = campaignSnapshotKey(key, kind);
-  const localSaved = writeCampaignSave(storage, snapshotKey, serialized);
-  const indexedDbSaved = await writeCampaignBackup(indexedDb, snapshotKey, serialized);
+  const blocked = new Set(blockedSources);
+  const localSkipped = blocked.has(CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE);
+  const indexedDbSkipped = blocked.has(CAMPAIGN_STORAGE_SOURCES.INDEXED_DB);
+  const localSaved = localSkipped ? false : writeCampaignSave(storage, snapshotKey, serialized);
+  const indexedDbSaved = indexedDbSkipped ? false : await writeCampaignBackup(indexedDb, snapshotKey, serialized);
   return {
     status: localSaved || indexedDbSaved ? "saved" : "unavailable",
     key: snapshotKey,
     kind,
     localStorage: localSaved,
     indexedDB: indexedDbSaved,
+    skippedSources: [
+      ...(localSkipped ? [CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE] : []),
+      ...(indexedDbSkipped ? [CAMPAIGN_STORAGE_SOURCES.INDEXED_DB] : []),
+    ],
     saved: localSaved || indexedDbSaved,
     reason: localSaved || indexedDbSaved ? "" : "Could not persist campaign recovery snapshot",
   };
@@ -765,8 +884,14 @@ export async function reconcileCampaignStorage({
   getMetadata,
   repair = true,
   snapshotBeforeRepair = true,
+  timeoutMs = CAMPAIGN_STORAGE_TIMEOUT_MS,
 }) {
-  const candidates = await readCampaignStorageCandidates({ storage, indexedDb, key });
+  const candidates = await readCampaignStorageCandidates({
+    storage,
+    indexedDb,
+    key,
+    timeoutMs,
+  });
   const resolution = resolveCampaignStorageCandidates(candidates, {
     validate,
     deserialize,
@@ -1184,7 +1309,7 @@ export async function clearCampaignSaveEverywhere({
   const preflightEntries = await readExactCampaignStorageEntries({ storage, indexedDb, keys });
   const preflight = storageEntriesBySource(preflightEntries);
   const preflightFailures = preflightEntries
-    .filter((entry) => entry.state === "unavailable" || entry.state === "read-error")
+    .filter((entry) => ["unavailable", "read-error", "timeout", "blocked"].includes(entry.state))
     .map((entry) => ({
       source: entry.source,
       key: entry.key,

@@ -10,7 +10,13 @@
 
 主対象はスマートフォン横画面です。844×390、844×340、iPhone Safariのsafe areaとブラウザUI表示状態を優先し、PC横画面も正式対応します。
 
-## Version 0.9.5 release candidate
+## Version 0.9.5.1 emergency Hotfix
+
+**Version 0.9.5.1**
+
+正式公開版で発生したsave確認・IndexedDB・画像decode／load・asset準備の無期限待機を、Issue #111に従ってbounded化します。Public QAはtitle→map→loadout→battleまで検査します。詳細は[Hotfix Release Notes](docs/RELEASE_NOTES_0.9.5.1.md)を参照してください。
+
+## Version 0.9.5
 
 **Version 0.9.5**
 
@@ -70,6 +76,7 @@ Issue #96の監査改訂済み最新コメントがformal releaseまでを承認
 | [docs/PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md) | 長期目標、Version順、Stage／unit拡張方針 |
 | [docs/PRODUCER_DECISIONS_0.9.5.md](docs/PRODUCER_DECISIONS_0.9.5.md) | Version 0.9.5の製品判断とrelease境界 |
 | [docs/RELEASE_NOTES_0.9.5.md](docs/RELEASE_NOTES_0.9.5.md) | Version 0.9.5の変更点、save互換、QA、既知の物理端末境界 |
+| [docs/RELEASE_NOTES_0.9.5.1.md](docs/RELEASE_NOTES_0.9.5.1.md) | Issue #111の緊急Hotfix内容、save互換、Public QA契約 |
 | [docs/PRODUCER_DECISIONS_0.9.0.md](docs/PRODUCER_DECISIONS_0.9.0.md) | Version 0.9.0の製品判断と公開履歴 |
 | [docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md](docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md) | 全16体の手動アビリティ、ready icon、個体別cooldown、新5体の戦闘仕様 |
 | [docs/RELEASE_BACKUP_RECOVERY.md](docs/RELEASE_BACKUP_RECOVERY.md) | GitHub Pages公開、tag、Release、rollback、bundle |

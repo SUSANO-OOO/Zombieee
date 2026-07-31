@@ -437,7 +437,7 @@ function TitleScreen({ hasCampaignSave, savePersistence, saveMutationPending, sa
       <button className="campaign-primary title-start" disabled={saveUnavailable} onClick={onBegin}><span>{savePersistence === "checking" ? "セーブ確認中" : hasCampaignSave ? "物語を続ける" : "物語を始める"}</span><small>{savePersistence === "unavailable" ? "Safariの通常タブで開き直してください" : hasCampaignSave ? "保存した進行から再開" : "PROLOGUE　西新が終わった夜"}</small></button>
       {hasCampaignSave && <button className="campaign-secondary title-restart" disabled={saveUnavailable} onClick={onRestartCampaign}>{saveMutationPending ? "保存処理中" : "最初から始める"}</button>}
     </div>
-    <div className="title-save-tools" aria-label="セーブ管理">{hasCampaignSave && <button disabled={saveMutationPending} onClick={onExportSave}>バックアップを書き出す</button>}<SaveImportButton onImport={onImportSave} disabled={saveMutationPending} /></div>
+    <div className="title-save-tools" aria-label="セーブ管理">{hasCampaignSave && <button disabled={saveUnavailable} onClick={onExportSave}>バックアップを書き出す</button>}<SaveImportButton onImport={onImportSave} disabled={saveUnavailable} /></div>
   </div>;
 }
 

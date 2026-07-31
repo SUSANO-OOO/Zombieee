@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   RANDOM_BATTLE_BARK_TRIGGER_IDS,
   advanceBattleBarkRuntime,
@@ -330,6 +330,7 @@ import {
 } from "./productionAudio.js";
 import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
+import { loadImageWithTimeout } from "./boundedImageLoader.js";
 import {
   AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
@@ -1258,6 +1259,21 @@ function commandRegenForGame(game: Game) {
 }
 
 type SavePersistenceState = "checking" | "saved" | "recovered" | "unavailable";
+
+function savePersistenceMessageForResolution(resolution: {
+  candidates?: readonly { source?: string; rawState?: string; state?: string }[];
+  recoveryReason?: string;
+}) {
+  const indexedState = resolution.candidates?.find((candidate) => candidate.source === "indexedDB")?.rawState;
+  const localState = resolution.candidates?.find((candidate) => candidate.source === "localStorage")?.rawState;
+  if (localState === "timeout") return "端末保存（localStorage）の読込が時間切れになりました。読めない保存先は上書きせず、利用可能な予備保存だけを使います。";
+  if (indexedState === "timeout") return "予備保存（IndexedDB）の応答が時間切れになりました。読めない保存先は上書きせず、端末保存を使って開始できます。";
+  if (indexedState === "blocked") return "予備保存（IndexedDB）が他のタブにより停止しています。読めない保存先は上書きせず、端末保存を使って開始できます。";
+  if (indexedState === "unavailable") return "予備保存（IndexedDB）を利用できません。読めない保存先は上書きせず、利用可能な端末保存を使います。";
+  if (localState === "unavailable" || localState === "read-error") return "端末保存を読み取れません。読めない保存先は上書きせず、利用可能な予備保存を使います。";
+  if (resolution.recoveryReason === "unreadable-without-valid-candidate") return "端末内の保存先を読み取れませんでした。保存内容は変更していません。";
+  return "保存先の一部を確認できませんでした。読めない保存先は上書きしていません。";
+}
 type CampaignPersistResult = {
   durable: boolean;
   localSaved: boolean;
@@ -6986,6 +7002,7 @@ export function AshfallGame() {
   const [audioUnlockVisible, setAudioUnlockVisible] = useState(true);
   const [assetsReady, setAssetsReady] = useState(false);
   const [assetError, setAssetError] = useState(false);
+  const assetLoadGenerationRef = useRef(0);
   const [qaMode, setQaMode] = useState<QaMode | null>(null);
   const [qaScenario, setQaScenario] = useState<ReturnType<typeof resolveLocalQaScenario>>(null);
   const [selectedSupply, setSelectedSupply] = useState<SupplyKind>("pod");
@@ -7044,6 +7061,8 @@ export function AshfallGame() {
   const [saveHydrated, setSaveHydrated] = useState(false);
   const [saveEnvironment, setSaveEnvironment] = useState(() => describeSaveEnvironment(null));
   const [savePersistence, setSavePersistence] = useState<SavePersistenceState>("checking");
+  const [savePersistenceMessage, setSavePersistenceMessage] = useState("");
+  const [saveHydrationAttempt, setSaveHydrationAttempt] = useState(0);
   const [saveRecovery, setSaveRecovery] = useState<SaveRecoveryState | null>(null);
   const [saveMutationPending, setSaveMutationPending] = useState(false);
   const [pendingResultCommit, setPendingResultCommit] = useState<PendingResultCommit | null>(null);
@@ -7127,6 +7146,7 @@ export function AshfallGame() {
           key: CAMPAIGN_SAVE_KEY,
           kind: CAMPAIGN_SNAPSHOT_KINDS.LAST_KNOWN_GOOD,
           serialized: previous,
+          blockedSources: [...persistenceWriteBlockedSourcesRef.current],
         });
         if (!snapshot.saved) {
           setSavePersistence("unavailable");
@@ -7159,34 +7179,41 @@ export function AshfallGame() {
     });
   }, [enqueueCampaignStorageMutation]);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
+  useLayoutEffect(() => {
+    const syncEnvironment = () => {
       setSaveEnvironment(describeSaveEnvironment(window.location));
       setQaMode(resolveLocalQaMode(window.location.hostname, window.location.search) as QaMode | null);
       setQaScenario(resolveLocalQaScenario(window.location.hostname, window.location.search));
-    }, 0);
-    return () => window.clearTimeout(timer);
+    };
+    syncEnvironment();
+    window.addEventListener("pageshow", syncEnvironment);
+    return () => window.removeEventListener("pageshow", syncEnvironment);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
+    setSavePersistence("checking");
+    setSavePersistenceMessage("");
     const timer = window.setTimeout(async () => {
       const storage = campaignStorageFor(window);
       const indexedDb = indexedDbFor(window);
-      const reconciled = await reconcileCampaignStorage({
-        storage,
-        indexedDb,
-        key: CAMPAIGN_SAVE_KEY,
-        validate: (serialized: string, context: { source: string }) => inspectCampaignSaveCandidate(serialized, { source: context.source }),
-      });
+      const reconciled = await enqueueCampaignStorageMutation(() => reconcileCampaignStorage({
+          storage,
+          indexedDb,
+          key: CAMPAIGN_SAVE_KEY,
+          validate: (serialized: string, context: { source: string }) => inspectCampaignSaveCandidate(serialized, { source: context.source }),
+        }));
       if (cancelled) return;
       persistenceWriteBlockedSourcesRef.current = new Set(reconciled.writeBlockedSources ?? []);
       if (reconciled.status === "recovery-needed") {
         setSaveRecovery(reconciled as SaveRecoveryState);
+        setSavePersistenceMessage(savePersistenceMessageForResolution(reconciled));
         setSavePersistence("unavailable");
         return;
       }
       if (reconciled.status === "unavailable") {
+        setSaveRecovery(reconciled as SaveRecoveryState);
+        setSavePersistenceMessage(savePersistenceMessageForResolution(reconciled));
         setSavePersistence("unavailable");
         return;
       }
@@ -7217,6 +7244,7 @@ export function AshfallGame() {
           key: CAMPAIGN_SAVE_KEY,
           kind: CAMPAIGN_SNAPSHOT_KINDS.PRE_MIGRATION,
           serialized: reconciled.serialized,
+          blockedSources: reconciled.writeBlockedSources ?? [],
         });
         if (!snapshot.saved) {
           setSaveRecovery({
@@ -7252,12 +7280,15 @@ export function AshfallGame() {
       setBgmMuted(localQaAudio ? false : loadedBgmMuted);
       sfxMutedRef.current = localQaAudio ? false : loadedSfxMuted;
       setSfxMuted(localQaAudio ? false : loadedSfxMuted);
+      setSavePersistenceMessage(reconciled.status === "degraded"
+        ? savePersistenceMessageForResolution(reconciled)
+        : "");
       setSavePersistence(reconciled.status === "recovered" || reconciled.status === "degraded"
         ? "recovered"
         : reconciled.status === "unavailable"
           ? "unavailable"
           : reconciled.status === "empty"
-            ? "checking"
+            ? "recovered"
             : "saved");
       setSaveHydrated(true);
     }, 0);
@@ -7265,7 +7296,16 @@ export function AshfallGame() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, []);
+  }, [enqueueCampaignStorageMutation, saveHydrationAttempt]);
+
+  const retrySaveHydration = useCallback(() => {
+    if (savePersistence === "checking" || saveMutationPendingRef.current) return;
+    setSaveRecovery(null);
+    setSaveHydrated(false);
+    setSavePersistence("checking");
+    setSavePersistenceMessage("");
+    setSaveHydrationAttempt((current) => current + 1);
+  }, [savePersistence]);
 
   useEffect(() => {
     if (!saveHydrated) return;
@@ -10635,26 +10675,24 @@ export function AshfallGame() {
 
   useEffect(() => {
     let cancelled = false;
+    const generation = assetLoadGenerationRef.current + 1;
+    assetLoadGenerationRef.current = generation;
+    const controller = new AbortController();
+    const current = () => !cancelled && assetLoadGenerationRef.current === generation;
     queueMicrotask(() => {
-      if (cancelled) return;
+      if (!current()) return;
       setAssetsReady(false);
       setAssetError(false);
     });
-    const loadImage = (src: string, onReady: (image: HTMLImageElement) => void) => new Promise<void>((resolve, reject) => {
-      const image = new Image();
-      image.decoding = "async";
-      image.onload = () => {
-        const finish = () => {
-          if (!image.naturalWidth) { reject(new Error(`Image unavailable: ${src}`)); return; }
-          if (!cancelled) onReady(image);
-          resolve();
-        };
-        if (typeof image.decode === "function") void image.decode().catch(() => undefined).finally(finish);
-        else finish();
-      };
-      image.onerror = () => reject(new Error(`Image unavailable: ${src}`));
-      image.src = src;
-    });
+    const loadImage = (src: string, onReady: (image: HTMLImageElement) => void) => (
+      loadImageWithTimeout({
+        src,
+        signal: controller.signal,
+        onReady: (image: HTMLImageElement) => {
+          if (current()) onReady(image);
+        },
+      })
+    );
     const ensureImageLoaded = (
       current: HTMLImageElement | null | undefined,
       src: string,
@@ -10731,18 +10769,21 @@ export function AshfallGame() {
         backgroundRef.current = image;
       }),
       ensureImageLoaded(enemyBaseSpriteRef.current, V075_VISUAL_PROFILES.enemyBase.intact.path, (image) => { enemyBaseSpriteRef.current = image; }),
-      ...Object.entries(persistentPaths).map(([key, src]) => (
-        ensureImageLoaded(spriteRefs.current[key], src, (image) => { spriteRefs.current[key] = image; })
-      )),
       ...requiredSpriteKinds.map((kind) => (
         ensureImageLoaded(spriteRefs.current[kind], spriteSheetPath(kind), (image) => { spriteRefs.current[kind] = image; })
+      )),
+    ];
+    const optionalJobs = [
+      ...Object.entries(persistentPaths).map(([key, src]) => (
+        ensureImageLoaded(spriteRefs.current[key], src, (image) => { spriteRefs.current[key] = image; })
       )),
       ...stageObjectAssets.map((object) => (
         ensureImageLoaded(stageObjectRefs.current[object.id], object.path, (image) => { stageObjectRefs.current[object.id] = image; })
       )),
     ];
+    void Promise.allSettled(optionalJobs);
     void Promise.all(criticalJobs).then(() => {
-      if (cancelled) return;
+      if (!current()) return;
       const root = document.documentElement;
       root.dataset.assetResidentScope = qaMode || qaScenario ? "all-local-qa" : "stage-and-formation";
       root.dataset.assetResidentStage = activeOperationId;
@@ -10750,8 +10791,11 @@ export function AshfallGame() {
       root.dataset.assetResidentStageObjects = String(Object.keys(stageObjectRefs.current).length);
       root.dataset.assetResidentBackgrounds = String(Object.keys(backgroundCacheRef.current).length);
       setAssetsReady(true);
-    }).catch(() => { if (!cancelled) setAssetError(true); });
-    return () => { cancelled = true; };
+    }).catch(() => { if (current()) setAssetError(true); });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [activeBattlefieldStageId, activeOperationId, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId]);
 
   useEffect(() => {
@@ -12517,6 +12561,7 @@ export function AshfallGame() {
     downloadCampaignText("nishijin-campaign-recovery-candidates.json", createCorruptCampaignRawExport(candidates));
   }, [downloadCampaignText, saveRecovery]);
   const importCampaignSave = useCallback((text: string) => {
+    if (savePersistence === "checking") return;
     const imported = parseCampaignManualImport(text, {
       validate: (serialized: string, context: { source: string }) => inspectCampaignSaveCandidate(serialized, { source: context.source }),
     });
@@ -12532,7 +12577,10 @@ export function AshfallGame() {
         const outcome = await enqueueCampaignStorageMutation(async () => {
           const storage = campaignStorageFor(window);
           const indexedDb = indexedDbFor(window);
-          if (saveRecovery?.recoveryReason === "replica-unreadable") {
+          if (
+            (saveRecovery?.writeBlockedSources?.length ?? 0) > 0
+            || persistenceWriteBlockedSourcesRef.current.size > 0
+          ) {
             const preflight = await preflightUnreadableCampaignRecovery({
               storage,
               indexedDb,
@@ -12641,7 +12689,7 @@ export function AshfallGame() {
         finishSaveMutation();
       }
     })();
-  }, [beginSaveMutation, campaignSave, enqueueCampaignStorageMutation, finishSaveMutation, saveRecovery]);
+  }, [beginSaveMutation, campaignSave, enqueueCampaignStorageMutation, finishSaveMutation, savePersistence, saveRecovery]);
   const useRecoveryCandidate = useCallback((source: string) => {
     const candidate = saveRecovery?.candidates.find((entry) => (
       entry.source === source && entry.valid === true && typeof entry.raw === "string" && entry.raw.length > 0
@@ -18687,7 +18735,15 @@ export function AshfallGame() {
   const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
 
   return (
-    <main className="game-shell" data-screen={screen} data-stage-id={activeOperationId} data-battlefield-stage-id={activeBattlefieldStageId} data-release-version={RELEASE_VERSION}>
+    <main
+      className="game-shell"
+      data-screen={screen}
+      data-stage-id={activeOperationId}
+      data-battlefield-stage-id={activeBattlefieldStageId}
+      data-release-version={RELEASE_VERSION}
+      data-save-persistence={savePersistence}
+      data-assets-state={assetsReady ? "ready" : assetError ? "error" : "loading"}
+    >
       <section className="game-frame" style={{ "--battlefield-art": `url('${stageVisualFor(activeBattlefieldStageId)}')` } as CSSProperties} aria-label="西新世紀末物語 ゲーム">
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
@@ -19018,9 +19074,10 @@ export function AshfallGame() {
       {pendingOutbreakSettlement && <div className="result-save-blocker outbreak-settlement-blocker" role="alertdialog" aria-modal="true" aria-label="異常発生任務結果の保存">
         <section><small>ATOMIC SETTLEMENT REQUIRED</small><h2>{outbreakSavePending ? "異常発生任務の結果を保存しています" : "異常発生任務の結果を保存できません"}</h2><p>撃破記録、Survival解放、receipt、キャップ、装備数量、last result、revision、integrityを一度のcampaign save更新で確定します。保存完了までは報酬を画面へ反映しません。</p><div><button disabled={outbreakSavePending} onClick={retryOutbreakSettlementSave}>{outbreakSavePending ? "保存中" : "一括保存を再試行"}</button></div></section>
       </div>}
-      {savePersistence === "unavailable" && <div className="save-persistence-warning" role="alert">
-        <b>セーブを端末へ保存できません</b>
-        <span>進行すると再読み込み後に失われるため、Safariの通常タブで開き直してください。</span>
+      {screen !== "event" && screen !== "battle" && (savePersistence === "unavailable" || savePersistenceMessage) && <div className="save-persistence-warning" role="alert" data-save-persistence-reason={savePersistenceMessage ? "degraded" : "unavailable"}>
+        <b>{savePersistence === "unavailable" ? "セーブ保存先を確認できません" : "予備保存を縮退運転中"}</b>
+        <span>{savePersistenceMessage || "進行すると再読み込み後に失われるため、Safariの通常タブで開き直してください。"}</span>
+        <button type="button" disabled={savePersistence === "checking" || saveMutationPending} onClick={retrySaveHydration}>{savePersistence === "checking" ? "保存先を確認中" : "保存先を再確認"}</button>
       </div>}
       <div className="rotate-notice"><span>↻</span><b>スマホを横向きにしてください</b><small>この作戦は横画面に最適化されています</small></div>
     </main>

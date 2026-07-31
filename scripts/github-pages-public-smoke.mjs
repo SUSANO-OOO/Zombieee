@@ -1,6 +1,11 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
+import {
+  CAMPAIGN_STAGE_IDS,
+  computeCampaignSaveIntegrity,
+  createDefaultCampaignSave,
+} from "../app/campaign.js";
 
 const publicUrl = process.env.GITHUB_PAGES_PUBLIC_URL?.trim();
 const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION?.trim();
@@ -8,8 +13,8 @@ const expectedReleaseSha = process.env.GITHUB_PAGES_EXPECTED_RELEASE_SHA?.trim()
 const expectedRequestId = process.env.GITHUB_PAGES_EXPECTED_REQUEST_ID?.trim();
 const expectedIssueNumber = process.env.GITHUB_PAGES_EXPECTED_ISSUE_NUMBER?.trim();
 if (!publicUrl) throw new Error("GITHUB_PAGES_PUBLIC_URL is required");
-if (!expectedVersion || !/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/u.test(expectedVersion)) {
-  throw new Error("GITHUB_PAGES_EXPECTED_VERSION must be an unprefixed semantic version");
+if (!expectedVersion || !/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*))?(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/u.test(expectedVersion)) {
+  throw new Error("GITHUB_PAGES_EXPECTED_VERSION must be an unprefixed release version");
 }
 if (!expectedReleaseSha || !/^[0-9a-f]{40}$/u.test(expectedReleaseSha)) {
   throw new Error("GITHUB_PAGES_EXPECTED_RELEASE_SHA must be a 40-character lowercase SHA");
@@ -26,18 +31,120 @@ await mkdir(evidenceDir, { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
 const results = [];
+const saveKey = "nishijin-campaign-v1";
+const currentFixture = {
+  ...createDefaultCampaignSave(),
+  campaignStarted: true,
+  readStoryEventIds: ["prologue-opening-v070", "prologue-summary-v070"],
+  revision: 951,
+  updatedAt: "2026-07-31T00:00:00.000Z",
+};
+currentFixture.unlockedStageIds = [
+  ...new Set([...currentFixture.unlockedStageIds, CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE]),
+];
+currentFixture.integrity = computeCampaignSaveIntegrity(currentFixture);
+const release090Fixture = {
+  ...currentFixture,
+  survival: { ...currentFixture.survival },
+  schemaVersion: 13,
+  revision: 900,
+  updatedAt: "2026-07-29T00:00:00.000Z",
+};
+delete release090Fixture.employmentNoticeReceipts;
+delete release090Fixture.seenEmploymentNoticeIds;
+delete release090Fixture.survival.highestReachedWave;
+release090Fixture.integrity = computeCampaignSaveIntegrity(release090Fixture);
+const publicCases = [
+  { viewport: { width: 1280, height: 720 }, saveProfile: "fresh", scenario: "normal" },
+  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.0-schema13", scenario: "normal" },
+  { viewport: { width: 844, height: 340 }, saveProfile: "v0.9.5-schema14", scenario: "normal" },
+  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.5-schema14", scenario: "idb-delay" },
+  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.5-schema14", scenario: "idb-blocked" },
+  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.5-schema14", scenario: "decode-hang" },
+  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.5-schema14", scenario: "slow-network" },
+  { viewport: { width: 844, height: 390 }, saveProfile: "v0.9.5-schema14", scenario: "optional-hang" },
+];
+
+async function advanceToMap(page) {
+  for (let step = 0; step < 12; step += 1) {
+    if (await page.locator(".map-screen").isVisible()) return;
+    if (await page.locator(".event-screen").isVisible()) {
+      await page.getByRole("button", { name: "スキップ", exact: true }).click();
+      await page.getByRole("button", { name: "この会話をスキップ", exact: true }).click();
+      await page.waitForTimeout(100);
+      continue;
+    }
+    await page.waitForTimeout(100);
+  }
+  await page.locator(".map-screen").waitFor({ state: "visible", timeout: 30_000 });
+}
+
+async function advanceToBattle(page) {
+  for (let step = 0; step < 12; step += 1) {
+    if (await page.locator('.game-shell[data-screen="battle"]').isVisible()) return;
+    if (await page.locator(".event-screen").isVisible()) {
+      await page.getByRole("button", { name: "スキップ", exact: true }).click();
+      await page.getByRole("button", { name: "この会話をスキップ", exact: true }).click();
+      await page.waitForTimeout(100);
+      continue;
+    }
+    await page.waitForTimeout(100);
+  }
+  await page.locator('.game-shell[data-screen="battle"]').waitFor({ state: "visible", timeout: 30_000 });
+}
+
 try {
-  for (const viewport of [
-    { width: 1280, height: 720 },
-    { width: 844, height: 390 },
-    { width: 844, height: 340 },
-  ]) {
+  for (const { viewport, saveProfile, scenario } of publicCases) {
     const context = await browser.newContext({
       viewport,
       serviceWorkers: "block",
     });
+    if (saveProfile !== "fresh") {
+      await context.addInitScript(({ key, serialized }) => {
+        localStorage.setItem(key, serialized);
+      }, {
+        key: saveKey,
+        serialized: JSON.stringify(saveProfile === "v0.9.0-schema13" ? release090Fixture : currentFixture),
+      });
+    }
+    if (scenario === "idb-delay") {
+      await context.addInitScript(() => {
+        Object.defineProperty(window, "indexedDB", {
+          configurable: true,
+          value: { open: () => ({}) },
+        });
+      });
+    }
+    if (scenario === "idb-blocked") {
+      await context.addInitScript(() => {
+        Object.defineProperty(window, "indexedDB", {
+          configurable: true,
+          value: {
+            open() {
+              const request = {};
+              queueMicrotask(() => request.onblocked?.());
+              return request;
+            },
+          },
+        });
+      });
+    }
+    if (scenario === "decode-hang") {
+      await context.addInitScript(() => {
+        HTMLImageElement.prototype.decode = () => new Promise(() => {});
+      });
+    }
     const page = await context.newPage();
     await page.setExtraHTTPHeaders({ "cache-control": "no-cache" });
+    if (scenario === "slow-network") {
+      await page.route("**/*.{png,webp}", async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        await route.continue();
+      });
+    }
+    if (scenario === "optional-hang") {
+      await page.route("**/tactical-drop-pod-v1.png", () => {});
+    }
 
     const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [], warnings: [] };
     page.on("console", (message) => {
@@ -54,6 +161,7 @@ try {
     target.searchParams.set("qa_release", expectedReleaseSha);
     target.searchParams.set("qa_request", expectedRequestId);
     target.searchParams.set("qa_viewport", `${viewport.width}x${viewport.height}`);
+    target.searchParams.set("qa_scenario", scenario);
 
     let navigation = null;
     let lastError = null;
@@ -94,6 +202,40 @@ try {
 
     const startButton = page.locator(".title-start");
     await startButton.waitFor({ state: "visible", timeout: 30_000 });
+    await page.locator('.save-environment-badge:not([data-save-environment="checking"])').waitFor({
+      state: "visible",
+      timeout: 30_000,
+    });
+    await page.locator('.game-shell:not([data-save-persistence="checking"])').waitFor({
+      state: "visible",
+      timeout: 30_000,
+    });
+    const saveEnvironment = await page.locator(".save-environment-badge").evaluate((element) => ({
+      kind: element.getAttribute("data-save-environment"),
+      origin: element.getAttribute("data-save-origin"),
+    }));
+    if (saveEnvironment.kind !== "github-pages" || saveEnvironment.origin !== new URL(publicUrl).origin) {
+      throw new Error(`Published save environment is incorrect: ${JSON.stringify(saveEnvironment)}`);
+    }
+    if (!(await startButton.isEnabled())) {
+      throw new Error("Published title start button stayed disabled after save hydration");
+    }
+    const savePersistence = await page.locator(".game-shell").getAttribute("data-save-persistence");
+    if (scenario === "idb-delay" || scenario === "idb-blocked") {
+      if (savePersistence !== "recovered") {
+        throw new Error(`${scenario} did not settle as recovered: ${savePersistence}`);
+      }
+      if (!(await page.locator(".save-persistence-warning").isVisible())) {
+        throw new Error(`${scenario} did not expose a player-facing degraded-storage reason`);
+      }
+      if (!(await page.getByRole("button", { name: "保存先を再確認", exact: true }).isEnabled())) {
+        throw new Error(`${scenario} did not expose an enabled storage retry control`);
+      }
+    }
+    const migrationNotice = page.locator(".migration-notice");
+    if (await migrationNotice.isVisible()) {
+      await migrationNotice.getByRole("button", { name: "内容を確認", exact: true }).click();
+    }
 
     const dimensions = await page.evaluate(() => ({
       innerWidth: window.innerWidth,
@@ -108,11 +250,47 @@ try {
     }
 
     await page.screenshot({
-      path: path.join(evidenceDir, `github-pages-public-title-${viewport.width}x${viewport.height}.png`),
+      path: path.join(evidenceDir, `github-pages-public-title-${viewport.width}x${viewport.height}-${scenario}.png`),
       fullPage: true,
     });
     await startButton.click();
     await page.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 60_000 });
+    await advanceToMap(page);
+    const openStageNodes = page.locator(".stage-node.open");
+    const openStageCount = await openStageNodes.count();
+    if (openStageCount === 0) throw new Error("No selectable Stage was available on the published map");
+    if (saveProfile !== "fresh" && openStageCount < 2) {
+      throw new Error(`${saveProfile} fixture did not expose a second Stage for selection-change QA`);
+    }
+    const selectedStageNode = openStageNodes.nth(openStageCount > 1 ? 1 : 0);
+    const selectedStageName = (await selectedStageNode.locator("b").innerText()).trim();
+    await selectedStageNode.click();
+    await page.locator(".stage-detail h2").filter({ hasText: selectedStageName }).waitFor({
+      state: "visible",
+      timeout: 30_000,
+    });
+    const prepareButton = page.getByRole("button", { name: "この作戦を編成", exact: true });
+    if (!(await prepareButton.isEnabled())) throw new Error("Stage prepare button is disabled");
+    await prepareButton.click();
+    await page.locator(".formation-screen").waitFor({ state: "visible", timeout: 30_000 });
+    await page.locator('.game-shell[data-assets-state="ready"], .game-shell[data-assets-state="error"]').waitFor({
+      state: "visible",
+      timeout: 30_000,
+    });
+    const assetState = await page.locator(".game-shell").getAttribute("data-assets-state");
+    if (assetState !== "ready") throw new Error(`Published critical assets did not become ready: ${assetState}`);
+    const deployButton = page.locator(".formation-footer .campaign-primary");
+    if (!(await deployButton.isEnabled())) throw new Error("Published deploy button stayed disabled");
+    await page.screenshot({
+      path: path.join(evidenceDir, `github-pages-public-loadout-${viewport.width}x${viewport.height}-${scenario}.png`),
+      fullPage: true,
+    });
+    await deployButton.click();
+    await advanceToBattle(page);
+    await page.screenshot({
+      path: path.join(evidenceDir, `github-pages-public-battle-${viewport.width}x${viewport.height}-${scenario}.png`),
+      fullPage: true,
+    });
 
     const unexpectedWarnings = diagnostics.warnings.filter((warning) => !warning.includes("was preloaded using link preload but not used"));
     if (diagnostics.consoleErrors.length || diagnostics.pageErrors.length || diagnostics.requestFailures.length || diagnostics.httpErrors.length || unexpectedWarnings.length) {
@@ -121,11 +299,18 @@ try {
 
     results.push({
       viewport,
+      saveProfile,
+      scenario,
+      selectedStageName,
       title: pageTitle,
       versionMeta,
       releaseMeta,
       requestMeta,
       issueMeta,
+      saveEnvironment,
+      savePersistence,
+      assetState,
+      reachedBattle: true,
       dimensions,
       warningCount: diagnostics.warnings.length,
     });

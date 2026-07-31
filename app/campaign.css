@@ -136,8 +136,9 @@
   z-index:60;
   left:calc(8px + var(--app-viewport-safe-left));
   right:calc(8px + var(--app-viewport-safe-right));
-  bottom:calc(8px + var(--app-viewport-safe-bottom));
+  top:calc(8px + var(--app-viewport-safe-top));
   display:flex;
+  flex-wrap:wrap;
   align-items:center;
   justify-content:center;
   gap:10px;
@@ -153,6 +154,7 @@
 }
 .save-persistence-warning b { color:#ff9b70; white-space:nowrap; }
 .save-persistence-warning span { color:#f0d4bd; }
+.save-persistence-warning button { min-height:32px; padding:4px 9px; border:1px solid #e28154; background:#351713; color:#ffd5bd; cursor:pointer; font-weight:900; white-space:nowrap; }
 
 /* Area map */
 .map-screen { display:grid; grid-template-rows:auto auto auto minmax(0,1fr); background:linear-gradient(145deg,rgba(8,15,16,.9),rgba(23,17,14,.92)),var(--campaign-art) center/cover no-repeat; }

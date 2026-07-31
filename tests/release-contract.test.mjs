@@ -24,10 +24,26 @@ test("release contract normalizes the five exact immutable release fields", () =
   });
 });
 
+test("release contract accepts the approved four-component emergency Hotfix identity", () => {
+  assert.deepEqual(normalizeReleaseContract({
+    ...validContract,
+    version: "0.9.5.1",
+    release_ref: "v0.9.5.1",
+    issue_number: 111,
+    request_id: "v0.9.5.1-formal-release-20260731",
+  }), {
+    ...validContract,
+    version: "0.9.5.1",
+    release_ref: "v0.9.5.1",
+    issue_number: 111,
+    request_id: "v0.9.5.1-formal-release-20260731",
+  });
+});
+
 test("release contract rejects missing, extra, mutable, and unsafe identities", () => {
   assert.throws(() => normalizeReleaseContract({ ...validContract, request_id: undefined }), /request_id/u);
   assert.throws(() => normalizeReleaseContract({ ...validContract, extra: true }), /unknown: extra/u);
-  assert.throws(() => normalizeReleaseContract({ ...validContract, version: "v0.9.5" }), /semantic version/u);
+  assert.throws(() => normalizeReleaseContract({ ...validContract, version: "v0.9.5" }), /release version/u);
   assert.throws(() => normalizeReleaseContract({ ...validContract, release_ref: "main" }), /release_ref/u);
   assert.throws(() => normalizeReleaseContract({ ...validContract, release_sha: "A".repeat(40) }), /lowercase/u);
   assert.throws(() => normalizeReleaseContract({ ...validContract, issue_number: 0 }), /positive integer/u);

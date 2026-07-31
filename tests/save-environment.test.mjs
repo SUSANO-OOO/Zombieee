@@ -31,3 +31,13 @@ test("save environment does not label another GitHub Pages path as the formal re
   assert.equal(environment.kind, "preview");
   assert.equal(environment.origin, "https://susano-ooo.github.io");
 });
+
+test("server placeholder does not claim preview or an unknown origin", () => {
+  assert.deepEqual(describeSaveEnvironment(null), {
+    kind: "checking",
+    label: "保存環境を確認中",
+    origin: "確認中",
+    storageScope: "保存先を確認しています",
+    isolationNotice: "正式なoriginは画面表示前に確定します。",
+  });
+});
