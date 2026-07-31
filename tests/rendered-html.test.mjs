@@ -129,25 +129,25 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.9.6.2 campaign title as the release entry point", async () => {
+test("server-renders the 0.9.6.3 campaign title as the release entry point", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.6\.2<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.6\.3<\/title>/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
   assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"/);
   await access(new URL("../public/favicon.svg", import.meta.url));
-  assert.match(html, /<main class="game-shell"[^>]*data-screen="title"[^>]*data-release-version="0\.9\.6\.2"[^>]*data-save-persistence="checking"[^>]*data-assets-state="loading"/);
+  assert.match(html, /<main class="game-shell"[^>]*data-screen="title"[^>]*data-release-version="0\.9\.6\.3"[^>]*data-save-persistence="checking"[^>]*data-assets-state="loading"/);
   assert.match(html, /aria-label="西新世紀末物語 ゲーム"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /class="battlefield  inactive" aria-label="連続座標の戦場" aria-hidden="true"/);
   assert.match(html, /class="campaign-overlay title-screen-v060"[^>]*title-key-visual-v1\.webp[^>]*aria-label="西新世紀末物語 タイトル画面"/);
   assert.match(html, /<small>にしじんせいきまつものがたり<\/small>/);
   assert.match(html, /<h1><span>西新<\/span><b>世紀末物語<\/b><\/h1>/);
-  assert.match(html, /<p>アーリーアクセス版　(?:<!-- -->)?Version 0\.9\.6\.2<\/p>/);
+  assert.match(html, /<p>アーリーアクセス版　(?:<!-- -->)?Version 0\.9\.6\.3<\/p>/);
   assert.match(html, /<span>セーブ確認中<\/span><small>PROLOGUE　西新が終わった夜<\/small>/);
   assert.doesNotMatch(html, /百道浜|新たな世界の始まり/);
   assert.doesNotMatch(html, /BOSS STAGE LOADOUT|CRAWLER SYSTEM CHECK|Three-lane wasteland battlefield/);

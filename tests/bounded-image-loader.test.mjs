@@ -17,7 +17,14 @@ function imageFixture({ naturalWidth = 128, decode = () => Promise.resolve(), on
   };
 }
 
-test("decode timeout rejects with an explicit bounded decode error", async () => {
+test("a stalled decode falls back to the loaded image instead of failing", async () => {
+  // The bytes have already arrived by the time decode() runs, so a browser that
+  // stalls decoding must not turn a present asset into a missing one. The
+  // naturalWidth guard covered below is what makes the fallback safe.
+  //
+  // 0.9.5.2 briefly made this reject instead. That contradicted the behaviour
+  // 0.9.5.1 shipped and documented, and it failed the decode-hang scenario of
+  // the published-site QA, where every critical asset became an error.
   let readyImage = null;
   const image = imageFixture({
     decode: () => new Promise(() => {}),
@@ -25,37 +32,59 @@ test("decode timeout rejects with an explicit bounded decode error", async () =>
       queueMicrotask(() => candidate.onload?.());
     },
   });
-  await assert.rejects(
-    loadImageWithTimeout({
-      src: "/critical.webp",
-      createImage: () => image,
-      loadTimeoutMs: 50,
-      decodeTimeoutMs: 10,
-      onReady(candidate) {
-        readyImage = candidate;
-      },
-    }),
-    (error) => error?.name === "ImageDecodeError" && /critical\.webp/u.test(error.message),
-  );
-  assert.equal(readyImage, null);
+  const resolved = await loadImageWithTimeout({
+    src: "/critical.webp",
+    createImage: () => image,
+    loadTimeoutMs: 50,
+    decodeTimeoutMs: 10,
+    onReady(candidate) {
+      readyImage = candidate;
+    },
+  });
+  assert.equal(resolved, image);
+  assert.equal(readyImage, image);
 });
 
-test("decode rejection remains an explicit decode failure", async () => {
+test("a rejected decode also falls back to the loaded image", async () => {
+  let readyImage = null;
   const image = imageFixture({
     decode: () => Promise.reject(new Error("unsupported image")),
     onSource(candidate) {
       queueMicrotask(() => candidate.onload?.());
     },
   });
+  const resolved = await loadImageWithTimeout({
+    src: "/unsupported.webp",
+    createImage: () => image,
+    loadTimeoutMs: 50,
+    decodeTimeoutMs: 10,
+    onReady(candidate) {
+      readyImage = candidate;
+    },
+  });
+  assert.equal(resolved, image);
+  assert.equal(readyImage, image);
+});
+
+test("the decode fallback still refuses an image that carries no pixels", async () => {
+  // The guard that makes falling back safe: a stalled decode on an image that
+  // never actually loaded remains a failure.
+  const image = imageFixture({
+    naturalWidth: 0,
+    decode: () => new Promise(() => {}),
+    onSource(candidate) {
+      queueMicrotask(() => candidate.onload?.());
+    },
+  });
   await assert.rejects(
     loadImageWithTimeout({
-      src: "/unsupported.webp",
+      src: "/empty.webp",
       createImage: () => image,
       loadTimeoutMs: 50,
       decodeTimeoutMs: 10,
       onReady() {},
     }),
-    (error) => error?.name === "ImageDecodeError" && /unsupported\.webp/u.test(error.message),
+    (error) => error?.name === "ImageLoadError" && /empty\.webp/u.test(error.message),
   );
 });
 

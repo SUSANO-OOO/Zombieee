@@ -51,9 +51,6 @@ export function loadImageWithTimeout({
       image.removeAttribute?.("src");
       finish(reject, imageLoadError("AbortError", `Image load cancelled: ${src}`));
     };
-    const decodeFailed = () => {
-      finish(reject, imageLoadError("ImageDecodeError", `Image decode failed: ${src}`));
-    };
 
     image.decoding = "async";
     image.onload = () => {
@@ -62,16 +59,20 @@ export function loadImageWithTimeout({
         ready();
         return;
       }
-      decodeTimer = setTimeout(() => {
-        finish(reject, imageLoadError(
-          "ImageDecodeError",
-          `Image decode timed out after ${decodeTimeoutMs}ms: ${src}`,
-        ));
-      }, decodeTimeoutMs);
+      // A stalled or rejected decode() falls back to the load event rather than
+      // failing the image. The bytes have already arrived by this point, and
+      // ready() still refuses anything with no naturalWidth, so the fallback
+      // cannot let a broken image through - it only stops a browser that is
+      // slow or unwilling to decode from being treated as a missing asset.
+      //
+      // 0.9.5.2 changed both paths to reject instead. That contradicted the
+      // behaviour 0.9.5.1 shipped and documented, and it is what the
+      // decode-hang scenario in the published-site QA exists to catch.
+      decodeTimer = setTimeout(ready, decodeTimeoutMs);
       try {
-        void Promise.resolve(image.decode()).then(ready, decodeFailed);
+        void Promise.resolve(image.decode()).then(ready, ready);
       } catch {
-        decodeFailed();
+        ready();
       }
     };
     image.onerror = () => {
