@@ -44,3 +44,7 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# Local HTTPS candidate: contains a private key, never commit
+.https-candidate/
+_site/

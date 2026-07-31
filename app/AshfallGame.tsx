@@ -11172,6 +11172,19 @@ export function AshfallGame() {
     setAssetRetryNonce((nonce) => nonce + 1);
   }, []);
 
+  // Publishes the facts the PWA layer needs to decide whether a new release may
+  // activate. Activating during a battle, while a result is being written, or
+  // during any save mutation would discard the player's run, so the gate reads
+  // these instead of guessing. Kept as plain dataset attributes so the service
+  // worker bridge stays decoupled from this component.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.pwaScreen = screen;
+    root.dataset.pwaBattleActive = String(screen === "battle" || screen === "survival");
+    root.dataset.pwaResultSaving = String(screen === "result" || screen === "survival-result");
+    root.dataset.pwaSaveMutationPending = String(Boolean(saveMutationPending));
+  }, [saveMutationPending, screen]);
+
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.assetLoadState = assetReadiness.state;

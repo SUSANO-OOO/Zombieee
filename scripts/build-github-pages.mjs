@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -142,6 +143,69 @@ for (const reference of requiredReferences) {
 }
 if (missing.length) throw new Error(`Missing GitHub Pages assets: ${missing.join(", ")}`);
 
+// --- PWA distribution manifest -------------------------------------------
+//
+// The manifest is authored with a placeholder release SHA because the release
+// commit does not exist until the merge that produces it. This is the one place
+// that knows the real SHA, so it is stamped in here.
+//
+// Everything the PWA trusts is then verified against the bytes this build will
+// actually publish: the device rejects any asset whose size or digest differs
+// from the manifest, and it has no way to repair a mismatch, so a mismatch must
+// fail the release rather than reach a phone.
+
+const manifestPath = path.join(outputDir, "asset-manifest.json");
+const distribution = JSON.parse(await readFile(manifestPath, "utf8"));
+
+if (releaseVersion !== "preview" && distribution.version !== releaseVersion) {
+  throw new Error(
+    `asset-manifest.json declares version ${distribution.version}, but this release is ${releaseVersion}. `
+    + "Bump RELEASE_VERSION and regenerate the manifest.",
+  );
+}
+
+const PLACEHOLDER = "__ZOMBIEEE_RELEASE_SHA__";
+if (distribution.releaseSha !== PLACEHOLDER && distribution.releaseSha !== releaseSha) {
+  throw new Error(`asset-manifest.json already pins release SHA ${distribution.releaseSha}`);
+}
+distribution.releaseSha = releaseSha;
+
+const assetProblems = [];
+let verifiedBytes = 0;
+for (const asset of distribution.assets ?? []) {
+  const assetPath = path.join(outputDir, asset.path.replace(/^\/+/, ""));
+  let body;
+  try {
+    body = await readFile(assetPath);
+  } catch {
+    assetProblems.push(`${asset.path}: not published`);
+    continue;
+  }
+  if (body.byteLength !== asset.bytes) {
+    assetProblems.push(`${asset.path}: ${asset.bytes} bytes declared, ${body.byteLength} published`);
+    continue;
+  }
+  const digest = `sha256-${createHash("sha256").update(body).digest("hex")}`;
+  if (digest !== asset.hash) {
+    assetProblems.push(`${asset.path}: digest ${digest} does not match ${asset.hash}`);
+    continue;
+  }
+  verifiedBytes += body.byteLength;
+}
+if (assetProblems.length) {
+  throw new Error(
+    `The published pack does not match asset-manifest.json (${assetProblems.length} of `
+    + `${distribution.assets?.length ?? 0}):\n  ${assetProblems.slice(0, 20).join("\n  ")}`,
+  );
+}
+
+await writeFile(manifestPath, `${JSON.stringify(distribution, null, 2)}\n`, "utf8");
+
+const stamped = JSON.parse(await readFile(manifestPath, "utf8"));
+if (stamped.releaseSha !== releaseSha || stamped.releaseSha === PLACEHOLDER) {
+  throw new Error("asset-manifest.json was not stamped with the release SHA");
+}
+
 console.log(JSON.stringify({
   basePath: basePath || "/",
   outputDir,
@@ -152,4 +216,7 @@ console.log(JSON.stringify({
   releaseSha,
   releaseRequestId,
   releaseIssueNumber,
+  distributionAssets: distribution.assets?.length ?? 0,
+  distributionBytes: verifiedBytes,
+  distributionVersion: distribution.version,
 }, null, 2));

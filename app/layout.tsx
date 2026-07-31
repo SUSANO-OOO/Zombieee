@@ -11,6 +11,7 @@ export const viewport: Viewport = {
   width: "device-width, viewport-fit=cover" as "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#0b0d0d",
 };
 
 export const metadata: Metadata = {
@@ -23,13 +24,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "西新世紀末物語",
-    description: "実機のアセット再読込循環と音声の一括失敗を修正するVersion 0.9.5.2候補版。",
+    description: "ホーム画面へ追加して遊べるPWA版。ゲームデータを端末へ保存し、オフラインでもプレイできるVersion 0.9.6。",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "西新世紀末物語",
-    description: "実機のアセット再読込循環と音声の一括失敗を修正するVersion 0.9.5.2候補版。",
+    description: "ホーム画面へ追加して遊べるPWA版。ゲームデータを端末へ保存し、オフラインでもプレイできるVersion 0.9.6。",
   },
 };
 
@@ -41,6 +42,18 @@ export default function RootLayout({
       <head>
         <link rel="preload" as="image" href="/art/v060/title-key-visual-v1.webp" fetchPriority="high" />
         <link rel="preload" as="image" href={V075_VISUAL_PROFILES.ikura.eventPortrait.path} />
+        {/*
+          Absolute paths here on purpose: the GitHub Pages build rewrites
+          root-absolute references to the /Zombieee base path and then verifies
+          every one of them resolves to a real file. Runtime JS instead derives
+          its URLs from location, so both layers stay base-path correct.
+        */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="西新世紀末" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body>{children}</body>
     </html>

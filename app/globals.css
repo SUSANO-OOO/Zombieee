@@ -288,3 +288,30 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
   .game-frame .result-panel > footer { margin-top:4px; }
 }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; } }
+
+/* --- Version 0.9.6 PWA shell ------------------------------------------- */
+/* The gate only covers the screen during a first install that has not yet
+   finished. Notices sit above the game without blocking input to it. */
+.pwa-gate { position:fixed; inset:0; z-index:60; display:grid; place-items:center; padding:calc(16px + var(--app-viewport-safe-top,0px)) 16px; background:radial-gradient(ellipse at 50% 40%,#221d19,#07090a 72%); color:#f2e9dd; overflow:auto; }
+.pwa-gate-panel { width:min(560px,100%); display:flex; flex-direction:column; gap:10px; text-align:center; }
+.pwa-gate-panel h1 { margin:0; font-size:clamp(18px,4vw,26px); letter-spacing:.08em; color:#f0bb65; }
+.pwa-gate-panel h2 { margin:0; font-size:clamp(14px,3vw,18px); font-weight:600; }
+.pwa-gate-panel ul { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:4px; font-size:13px; }
+.pwa-hint { margin:0; font-size:12px; opacity:.72; }
+.pwa-warning { margin:0; font-size:12px; color:#f0a05a; }
+.pwa-progress-line { margin:0; font-variant-numeric:tabular-nums; font-size:14px; }
+.pwa-progress-track { width:100%; height:8px; border-radius:4px; background:#2a2521; overflow:hidden; }
+.pwa-progress-fill { height:100%; background:linear-gradient(90deg,#e7663f,#f0c56a); transition:width .2s ease-out; }
+.pwa-actions { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+.pwa-gate button, .pwa-notice button, .pwa-storage-toggle { min-height:40px; padding:0 14px; border:1px solid #4a3f36; border-radius:6px; background:#1b1815; color:#f2e9dd; cursor:pointer; }
+.pwa-gate button:disabled, .pwa-notice button:disabled { opacity:.45; cursor:not-allowed; }
+.pwa-primary { background:#e7663f !important; border-color:#e7663f !important; color:#140f0c !important; font-weight:700; }
+.pwa-notice { position:fixed; z-index:55; left:50%; transform:translateX(-50%); bottom:calc(12px + var(--app-viewport-safe-bottom,0px)); width:min(520px,calc(100% - 24px)); display:flex; flex-direction:column; gap:6px; padding:12px 14px; border:1px solid #4a3f36; border-radius:8px; background:rgba(12,11,10,.94); color:#f2e9dd; font-size:13px; box-shadow:0 8px 28px rgba(0,0,0,.55); }
+.pwa-notice p { margin:0; }
+.pwa-update-headline { font-weight:700; color:#f0bb65; }
+.pwa-storage dl { margin:0; display:flex; flex-direction:column; gap:3px; }
+.pwa-storage dl div { display:flex; justify-content:space-between; gap:12px; }
+.pwa-storage dt { opacity:.7; }
+.pwa-storage dd { margin:0; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.pwa-storage-toggle { position:fixed; z-index:54; right:calc(8px + var(--app-viewport-safe-right,0px)); bottom:calc(8px + var(--app-viewport-safe-bottom,0px)); min-height:32px; font-size:11px; opacity:.7; }
+@media (max-height:420px) { .pwa-gate-panel { gap:6px; } .pwa-gate-panel h1 { font-size:16px; } }

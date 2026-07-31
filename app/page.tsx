@@ -1,5 +1,10 @@
 import { AshfallGame } from "./AshfallGame";
+import { PwaGate } from "./PwaGate";
 
 export default function Home() {
-  return <AshfallGame />;
+  return (
+    <PwaGate>
+      <AshfallGame />
+    </PwaGate>
+  );
 }

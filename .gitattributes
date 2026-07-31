@@ -1,2 +1,17 @@
 # Markdown uses two trailing spaces for intentional hard line breaks.
 *.md whitespace=-blank-at-eol
+
+# Distributed PWA assets are hashed byte-for-byte in public/asset-manifest.json.
+# Any end-of-line conversion would change their size and sha256 on one platform
+# only, so the manifest generated on Windows would never match the bytes served
+# from a Linux build. Treat every shipped asset as binary.
+*.svg -text
+*.webp -text
+*.png -text
+*.ogg -text
+*.mp3 -text
+*.wav -text
+
+# The generated distribution manifest itself must stay byte-identical across
+# platforms so its drift check is meaningful.
+public/asset-manifest.json -text
