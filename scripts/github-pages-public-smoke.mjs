@@ -292,7 +292,19 @@ try {
       fullPage: true,
     });
 
-    const unexpectedWarnings = diagnostics.warnings.filter((warning) => !warning.includes("was preloaded using link preload but not used"));
+    // This run blocks service workers on purpose (see `serviceWorkers: "block"`
+    // above) so the published game flow is exercised straight from the network
+    // rather than from a worker cache. Since Version 0.9.6 the page registers
+    // one, so Chromium now reports that the harness refused it. That warning is
+    // this harness describing its own setting, not a fault in the site, and the
+    // worker itself is covered by the PWA browser matrix.
+    const ALLOWED_WARNINGS = [
+      "was preloaded using link preload but not used",
+      "Service Worker registration blocked by Playwright",
+    ];
+    const unexpectedWarnings = diagnostics.warnings.filter(
+      (warning) => !ALLOWED_WARNINGS.some((allowed) => warning.includes(allowed)),
+    );
     if (diagnostics.consoleErrors.length || diagnostics.pageErrors.length || diagnostics.requestFailures.length || diagnostics.httpErrors.length || unexpectedWarnings.length) {
       throw new Error(`Published browser diagnostics failed: ${JSON.stringify({ ...diagnostics, warnings: unexpectedWarnings })}`);
     }
