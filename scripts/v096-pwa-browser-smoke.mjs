@@ -51,6 +51,7 @@ const context = await browser.newContext({
 const consoleErrors = [];
 const pageErrors = [];
 const requestFailures = [];
+const httpErrors = [];
 
 context.on("console", (message) => {
   if (message.type() === "error") consoleErrors.push(message.text());
@@ -61,6 +62,12 @@ const page = await context.newPage();
 page.on("requestfailed", (request) => {
   // Deliberately blocked offline requests are recorded by their own case.
   requestFailures.push(`${request.url()} :: ${request.failure()?.errorText}`);
+});
+// A cancelled request is not an error the site produced, but a 404 or a 500 is,
+// and those complete successfully at the network layer so `requestfailed` never
+// sees them. Watch responses so real HTTP errors are actually caught.
+page.on("response", (response) => {
+  if (response.status() >= 400) httpErrors.push(`${response.url()} :: HTTP ${response.status()}`);
 });
 
 await page.addInitScript(PAGE_HELPERS);
@@ -327,17 +334,24 @@ record("an ordinary browser tab renders the game without an install gate", (
 
 // --- Console hygiene --------------------------------------------------------
 
-// Let whatever the game started loading finish before judging it. Against the
-// published origin the largest battle art is still in flight when the earlier
-// cases end, and closing the page then cancels those requests: an abort this
-// harness caused is not a fault in the site. A request that genuinely fails
-// still surfaces, because it fails rather than stays pending.
-await page.waitForLoadState("networkidle", { timeout: 60000 }).catch(() => {});
-
-const offlineNoise = requestFailures.filter((entry) => !entry.includes("net::ERR_INTERNET_DISCONNECTED"));
-record("no console errors, page errors, or unexpected request failures", (
-  consoleErrors.length === 0 && pageErrors.length === 0 && offlineNoise.length === 0
-), { consoleErrors, pageErrors, requestFailures: offlineNoise });
+// ERR_ABORTED is a cancellation, not a fault. The game keeps pulling battle art
+// for as long as the page lives, so against the published origin there is
+// always something in flight when the harness closes it, and which asset gets
+// cancelled is pure timing. Aborts are excluded deliberately, and the HTTP
+// status watcher above is what makes that safe: a genuinely missing or broken
+// asset returns 404 or 500 and is caught there, not silently dropped here.
+// ERR_INTERNET_DISCONNECTED comes from the offline case, which asserts its own
+// expectations.
+const IGNORED_FAILURES = ["net::ERR_INTERNET_DISCONNECTED", "net::ERR_ABORTED"];
+const offlineNoise = requestFailures.filter(
+  (entry) => !IGNORED_FAILURES.some((ignored) => entry.includes(ignored)),
+);
+record("no console errors, page errors, HTTP errors, or unexpected request failures", (
+  consoleErrors.length === 0
+  && pageErrors.length === 0
+  && offlineNoise.length === 0
+  && httpErrors.length === 0
+), { consoleErrors, pageErrors, httpErrors, requestFailures: offlineNoise });
 
 await context.close();
 await browser.close();
