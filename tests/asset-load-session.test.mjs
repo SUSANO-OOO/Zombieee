@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
@@ -10,6 +11,24 @@ import {
 import { IMAGE_LOAD_TIMEOUT_MS } from "../app/boundedImageLoader.js";
 
 const job = (path, run, category = "unit") => ({ path, category, run });
+
+test("only the asset session clears the readiness flag it owns", async () => {
+  // selectStage used to clear assetsReady directly. The session effect keys on
+  // activeOperationId and activeBattlefieldStageId, not on selectedStageId, so
+  // choosing a stage that resolves to the same asset set started no session and
+  // nothing set the flag back. The loadout then sat at assetReadiness "ready"
+  // with every asset loaded, the deploy button disabled, and no retry control
+  // rendered, because that state is neither an error nor retry-available.
+  const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const start = source.indexOf("const selectStage = useCallback(");
+  assert.ok(start > 0, "selectStage must exist");
+  const body = source.slice(start, source.indexOf("const selectFormation = useCallback(", start));
+  assert.doesNotMatch(
+    body,
+    /setAssetsReady\s*\(/,
+    "selectStage must leave assetsReady to the asset session, or it can never be set back",
+  );
+});
 
 test("the session budget outlasts the per-image timeout it supervises", () => {
   // These were 12s and 15s, so the session abandoned every job before a single
