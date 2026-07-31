@@ -4620,8 +4620,8 @@
     },
     {
       "path": "/favicon.svg",
-      "bytes": 287,
-      "hash": "sha256-e1a179125359c49e41c4133bffcaa5a792b2449a5904f4e61e4e93314cdf423d",
+      "bytes": 282,
+      "hash": "sha256-ebdcc69bb3ea7f27a2c5507a69a02b8675d4720830fec024f33c77fd709797eb",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"

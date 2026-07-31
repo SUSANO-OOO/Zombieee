@@ -27,6 +27,24 @@ test("the distribution manifest is regenerated from the game's own manifests", (
   execFileSync(process.execPath, ["scripts/build-asset-manifest.mjs", "--check"], { stdio: "pipe" });
 });
 
+test("every shipped asset extension is exempt from end-of-line conversion", async () => {
+  // A text-ish asset such as an SVG would otherwise be checked out with CRLF on
+  // Windows and LF on Linux. The manifest hashes bytes, so the pack generated
+  // on one platform would declare a size and sha256 the other never serves,
+  // and that asset would fail verification forever on the device.
+  const gitattributes = await readFile(new URL("../.gitattributes", import.meta.url), "utf8");
+  const extensions = new Set(
+    manifest.assets.map((asset) => /\.[a-z0-9]+$/i.exec(asset.path)?.[0]?.toLowerCase()).filter(Boolean),
+  );
+  for (const extension of extensions) {
+    assert.match(
+      gitattributes,
+      new RegExp(`^\\*\\${extension} -text$`, "m"),
+      `${extension} assets must be marked -text in .gitattributes`,
+    );
+  }
+});
+
 test("every pack carries assets and every first-install pack is represented", () => {
   const packs = new Set(manifest.assets.map((asset) => asset.pack));
   for (const pack of ASSET_PACK_IDS) assert.ok(packs.has(pack), `pack ${pack} has no assets`);
