@@ -129,26 +129,32 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.9.6.3 campaign title as the release entry point", async () => {
+test("server-renders the 0.9.6.4 release identity and the download entry point", async () => {
+  // Since 0.9.6.4 the first painted screen is the download entry point, not the
+  // title: a visitor must be able to save the game before anything decides to
+  // fetch it for them. The game shell therefore mounts on the client once the
+  // gate resolves, and the title screen's own markup is covered by the browser
+  // matrix, which reaches it through the entry screen.
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.6\.3<\/title>/);
+
+  // Release identity in the document head is unchanged, and the Pages release
+  // workflow greps exactly these.
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.6\.4<\/title>/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
   assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"/);
   await access(new URL("../public/favicon.svg", import.meta.url));
-  assert.match(html, /<main class="game-shell"[^>]*data-screen="title"[^>]*data-release-version="0\.9\.6\.3"[^>]*data-save-persistence="checking"[^>]*data-assets-state="loading"/);
-  assert.match(html, /aria-label="西新世紀末物語 ゲーム"/);
-  assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
-  assert.match(html, /class="battlefield  inactive" aria-label="連続座標の戦場" aria-hidden="true"/);
-  assert.match(html, /class="campaign-overlay title-screen-v060"[^>]*title-key-visual-v1\.webp[^>]*aria-label="西新世紀末物語 タイトル画面"/);
-  assert.match(html, /<small>にしじんせいきまつものがたり<\/small>/);
-  assert.match(html, /<h1><span>西新<\/span><b>世紀末物語<\/b><\/h1>/);
-  assert.match(html, /<p>アーリーアクセス版　(?:<!-- -->)?Version 0\.9\.6\.3<\/p>/);
-  assert.match(html, /<span>セーブ確認中<\/span><small>PROLOGUE　西新が終わった夜<\/small>/);
+  assert.match(html, /<link rel="manifest" href="\/manifest\.webmanifest"/);
+
+  // The entry screen is what the document actually paints first.
+  assert.match(html, /class="pwa-gate"/);
+  assert.match(html, /aria-label="ゲームデータの準備"/);
+  assert.doesNotMatch(html, /<main class="game-shell"/);
+
   assert.doesNotMatch(html, /百道浜|新たな世界の始まり/);
   assert.doesNotMatch(html, /BOSS STAGE LOADOUT|CRAWLER SYSTEM CHECK|Three-lane wasteland battlefield/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
