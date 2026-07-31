@@ -64,23 +64,23 @@ Chromium 844×390, touch, DPR 3, identical schema-v14 save, production builds. C
 
 | Metric | 0.9.5 | 0.9.5.1 | 0.9.5.2 candidate |
 |---|---:|---:|---:|
-| Cold HTML response end | 20 ms | 15 ms | 15 ms |
-| Cold title ready | 255 ms | 293 ms | 260 ms |
-| Cold map ready | 141 ms | 89 ms | 82 ms |
-| Cold loadout terminal | >15,000 ms timeout | 86 ms | 71 ms |
-| Cold total requests | 70 | 48 | 35 |
-| Cold transfer | 23.23 MB | 23.11 MB | 17.56 MB |
+| Cold HTML response end | 17 ms | 21 ms | 15 ms |
+| Cold title ready | 254 ms | 301 ms | 273 ms |
+| Cold map ready | 203 ms | 73 ms | 86 ms |
+| Cold loadout terminal | >15,000 ms timeout | 95 ms | 89 ms |
+| Cold total requests | 70 | 48 | 36 |
+| Cold transfer | 23.23 MB | 23.11 MB | 18.82 MB |
 | Cold JavaScript transfer | 1.35 MB | 1.35 MB | 1.36 MB |
-| Cold image requests | 34 | 34 | 21 |
-| Cold image transfer | 19.31 MB | 19.31 MB | 13.75 MB |
+| Cold image requests | 34 | 34 | 22 |
+| Cold image transfer | 19.31 MB | 19.31 MB | 15.01 MB |
 | Cold audio preload requests | 24 | 2 | 2 |
 | Candidate critical asset count | n/a | n/a | 9 |
-| Warm HTML response end | 20 ms | 20 ms | 19 ms |
-| Warm loadout terminal | >15,000 ms timeout | 52 ms | 63 ms |
+| Warm HTML response end | 20 ms | 19 ms | 17 ms |
+| Warm loadout terminal | >15,000 ms timeout | 51 ms | 41 ms |
 | Warm transfer | 3.88 KB | 3.89 KB | 4.02 KB |
 | Retained JS heap proxy | 14.3 MB | 12.7 MB | 12.7 MB |
 
-The candidate removes the 0.9.5 terminal failure, preserves the 0.9.5.1 heap proxy, and reduces cold image requests by 38% and cold image transfer by 29% versus 0.9.5.1. The 11 ms warm loadout difference versus 0.9.5.1 is within this single-run browser measurement and is not claimed as an improvement.
+The candidate removes the 0.9.5 terminal failure, preserves the 0.9.5.1 heap proxy, and reduces cold image requests by 35% and cold image transfer by 22% versus 0.9.5.1. The six-millisecond cold and ten-millisecond warm loadout differences versus 0.9.5.1 are within this single-run browser measurement and are not claimed as durable improvements.
 
 Raw local evidence is generated under `outputs/v0952-hotfix/` by:
 
