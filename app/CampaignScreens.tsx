@@ -236,6 +236,20 @@ export type SaveEnvironmentView = {
   isolationNotice: string;
 };
 
+export type AssetReadinessView = {
+  state: "loading" | "ready" | "degraded-ready" | "error";
+  generation: number;
+  reason: string;
+  completed: number;
+  total: number;
+  failed: number;
+  pending: number;
+  category: string;
+  retryAvailable: boolean;
+  retrying: boolean;
+  failureReason: string;
+};
+
 type Props = {
   screen: CampaignScreen;
   eventId: string | null;
@@ -259,6 +273,7 @@ type Props = {
   loadoutReturnLabel: string;
   assetsReady: boolean;
   assetError: boolean;
+  assetReadiness: AssetReadinessView;
   hasCampaignSave: boolean;
   saveRecoveryRequired: boolean;
   saveRecoveryReason: string;
@@ -582,8 +597,22 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
   </div>;
 }
 
-function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPresets, selectedFormationPresetId, supplies, selectedSupply, assetsReady, assetError, loadoutReturnLabel, onReturnFromLoadout, onSelectFormationPreset, onToggleFormation, onSelectSupply, onStartBattle, onReloadAssets }: Pick<Props, "selectedStage" | "units" | "formationUnitIds" | "formationPresets" | "selectedFormationPresetId" | "supplies" | "selectedSupply" | "assetsReady" | "assetError" | "loadoutReturnLabel" | "onReturnFromLoadout" | "onSelectFormationPreset" | "onToggleFormation" | "onSelectSupply" | "onStartBattle" | "onReloadAssets">) {
+function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPresets, selectedFormationPresetId, supplies, selectedSupply, assetsReady, assetError, assetReadiness, loadoutReturnLabel, onReturnFromLoadout, onSelectFormationPreset, onToggleFormation, onSelectSupply, onStartBattle, onReloadAssets }: Pick<Props, "selectedStage" | "units" | "formationUnitIds" | "formationPresets" | "selectedFormationPresetId" | "supplies" | "selectedSupply" | "assetsReady" | "assetError" | "assetReadiness" | "loadoutReturnLabel" | "onReturnFromLoadout" | "onSelectFormationPreset" | "onToggleFormation" | "onSelectSupply" | "onStartBattle" | "onReloadAssets">) {
   const visibleUnits = units.filter((unit) => unit.owned);
+  const categoryLabel = {
+    background: "戦場背景",
+    base: "移動拠点",
+    unit: "味方ユニット",
+    enemy: "敵ユニット",
+    optional: "任意演出",
+  }[assetReadiness.category] ?? "戦闘アセット";
+  const failureLabel = {
+    timeout: "応答時間を超過",
+    http: "ファイルを取得できません",
+    decode: "画像を展開できません",
+    cancelled: "前の読込を中止",
+    unknown: "原因不明の読込失敗",
+  }[assetReadiness.failureReason] ?? "";
   return <div className="campaign-overlay formation-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="出撃編成">
     <header className="campaign-header"><button className="campaign-back" onClick={onReturnFromLoadout}>← {loadoutReturnLabel}</button><div><small>出撃編成</small><h1>{selectedStage.displayName}</h1></div><p>{selectedStage.objective}</p></header>
     <div className="formation-layout">
@@ -600,7 +629,16 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
       })}</div></section>
       <section className="formation-support" aria-label="戦場物資を選択"><h2>戦場物資</h2>{supplies.map((supply) => <button key={supply.kind} data-supply={supply.kind} data-selected={selectedSupply === supply.kind} onClick={() => onSelectSupply(supply.kind)} aria-pressed={selectedSupply === supply.kind}><b>{supply.name}</b><small>{supply.description}</small><em>▰{supply.cost}</em></button>)}<div className="formation-note"><b>固定支援</b><span>緊急航空支援 / 移動拠点一斉掃射</span></div></section>
     </div>
-    <footer className="formation-footer"><p>1〜7名で出撃できます。同じ仲間は戦闘中に何度でも再召喚できます。</p><button className="campaign-primary" disabled={formationUnitIds.length === 0 || (!assetsReady && !assetError)} onClick={assetError ? onReloadAssets : onStartBattle}><span>{assetError ? "アセット再読込" : assetsReady ? "この編成で出撃" : "アセット準備中"}</span><small>{assetError ? "タップして再読込" : assetsReady ? selectedStage.missionLabel : "移動拠点を点検中"}</small></button></footer>
+    <footer className="formation-footer">
+      <div className="asset-readiness" data-state={assetReadiness.state} role="status" aria-live="polite">
+        <p><b>{assetReadiness.state === "degraded-ready" ? "戦闘準備完了（任意演出を一部省略）" : assetError ? "戦闘アセットの準備に失敗" : assetsReady ? "戦闘準備完了" : "戦闘アセットを準備中"}</b><span>{assetReadiness.completed} / {assetReadiness.total}</span></p>
+        {!assetsReady && <small>{categoryLabel}{assetReadiness.pending > 0 ? `・残り${assetReadiness.pending}件` : ""}{failureLabel ? `・${failureLabel}` : ""}</small>}
+        {assetReadiness.state === "degraded-ready" && <small>戦闘に必須でない画像のみ利用できません。出撃できます。</small>}
+        {(assetReadiness.retryAvailable || assetError) && !assetsReady && <button type="button" className="asset-retry" disabled={assetReadiness.retrying} onClick={onReloadAssets}>{assetReadiness.retrying ? "失敗項目を再試行中…" : "この画面で失敗・待機項目だけ再試行"}</button>}
+      </div>
+      <p>1〜7名で出撃できます。同じ仲間は戦闘中に何度でも再召喚できます。</p>
+      <button className="campaign-primary" disabled={formationUnitIds.length === 0 || !assetsReady} onClick={onStartBattle}><span>{assetsReady ? "この編成で出撃" : "アセット準備中"}</span><small>{assetsReady ? selectedStage.missionLabel : "移動拠点を点検中"}</small></button>
+    </footer>
   </div>;
 }
 
@@ -747,6 +785,6 @@ export function CampaignScreens(props: Props) {
   if (props.screen === "outbreak-result") return <OutbreakResultScreen outbreakResult={props.outbreakResult} onRetry={props.onRetry} onContinueOutbreakResult={props.onContinueOutbreakResult} />;
   if (props.screen === "records") return <RecordsScreen recordsSummary={props.recordsSummary} enemyCompendium={props.enemyCompendium} bossCompendium={props.bossCompendium} units={props.units} onReturnToMap={props.onReturnToMap} />;
   if (props.screen === "personnel") return <PersonnelScreen key={props.personnelInitialMode} units={props.units} caps={props.caps} upgradePendingUnitIds={props.upgradePendingUnitIds} upgradeFeedback={props.upgradeFeedback} personnelInitialMode={props.personnelInitialMode} onReturnToMap={props.onReturnToMap} onRecruitUnit={props.onRecruitUnit} onUpgradeUnit={props.onUpgradeUnit} />;
-  if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} loadoutReturnLabel={props.loadoutReturnLabel} onReturnFromLoadout={props.onReturnFromLoadout} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
+  if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} assetReadiness={props.assetReadiness} loadoutReturnLabel={props.loadoutReturnLabel} onReturnFromLoadout={props.onReturnFromLoadout} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
   return <ResultScreen selectedStage={props.selectedStage} result={props.result} onRetry={props.onRetry} onContinueResult={props.onContinueResult} />;
 }

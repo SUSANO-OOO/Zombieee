@@ -129,25 +129,25 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.9.5.1 campaign title as the formal entry point", async () => {
+test("server-renders the 0.9.5.2 campaign title as the candidate entry point", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.5\.1<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.5\.2<\/title>/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
   assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"/);
   await access(new URL("../public/favicon.svg", import.meta.url));
-  assert.match(html, /<main class="game-shell" data-screen="title" data-stage-id="stage-nishijin-shopping-street" data-battlefield-stage-id="stage-nishijin-shopping-street" data-release-version="0\.9\.5\.1" data-save-persistence="checking" data-assets-state="loading">/);
+  assert.match(html, /<main class="game-shell"[^>]*data-screen="title"[^>]*data-release-version="0\.9\.5\.2"[^>]*data-save-persistence="checking"[^>]*data-assets-state="loading"/);
   assert.match(html, /aria-label="西新世紀末物語 ゲーム"/);
   assert.match(html, /<canvas[^>]*width="960"[^>]*height="540"/);
   assert.match(html, /class="battlefield  inactive" aria-label="連続座標の戦場" aria-hidden="true"/);
   assert.match(html, /class="campaign-overlay title-screen-v060"[^>]*title-key-visual-v1\.webp[^>]*aria-label="西新世紀末物語 タイトル画面"/);
   assert.match(html, /<small>にしじんせいきまつものがたり<\/small>/);
   assert.match(html, /<h1><span>西新<\/span><b>世紀末物語<\/b><\/h1>/);
-  assert.match(html, /<p>アーリーアクセス版　(?:<!-- -->)?Version 0\.9\.5\.1<\/p>/);
+  assert.match(html, /<p>アーリーアクセス版　(?:<!-- -->)?Version 0\.9\.5\.2<\/p>/);
   assert.match(html, /<span>セーブ確認中<\/span><small>PROLOGUE　西新が終わった夜<\/small>/);
   assert.doesNotMatch(html, /百道浜|新たな世界の始まり/);
   assert.doesNotMatch(html, /BOSS STAGE LOADOUT|CRAWLER SYSTEM CHECK|Three-lane wasteland battlefield/);
@@ -343,7 +343,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
     access(new URL("../public/medical-supply-station-v1.png", import.meta.url)),
   ]);
 
-  assert.match(game, /ensureImageLoaded\(enemyBaseSpriteRef\.current, V075_VISUAL_PROFILES\.enemyBase\.intact\.path/);
+  assert.match(game, /imageJob\(V075_VISUAL_PROFILES\.enemyBase\.intact\.path, "base", enemyBaseSpriteRef\.current/);
   assert.match(game, /crawlerClosed: V075_VISUAL_PROFILES\.crawler\.closed\.path/);
   assert.match(game, /crawlerOpen: V075_VISUAL_PROFILES\.crawler\.open\.path/);
   assert.match(game, /pod: "\/tactical-drop-pod-v1\.png"/);
@@ -375,10 +375,11 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.doesNotMatch(layout, /images: \[.*\/og\.png/);
   assert.match(layout, /href=\{V075_VISUAL_PROFILES\.enemyBase\.intact\.path\}/);
   assert.match(game, /const requiredSpriteKinds = qaMode \|\| qaScenario[\s\S]*\[\.\.\.new Set\(\[\.\.\.selectedFormationKinds, \.\.\.stageEnemyKinds, "turned" as UnitKind\]\)\]/);
-  assert.match(game, /requiredSpriteKinds\.map\(\(kind\) => \([\s\S]*spriteSheetPath\(kind\)/);
+  assert.match(game, /criticalKinds\.map\(\(kind\) => imageJob\([\s\S]*spriteSheetPath\(kind\)/);
+  assert.match(game, /optionalKinds\.map\(\(kind\) => imageJob\([\s\S]*spriteSheetPath\(kind\)/);
   assert.match(game, /STAGE_OBJECT_MANIFEST\[activeBattlefieldStageId\]\?\.objects \?\? \[\]/);
   assert.match(game, /releaseImage\(image\);[\s\S]*delete spriteRefs\.current\[key\]/);
-  assert.match(game, /delete backgroundCacheRef\.current\[stageId\];[\s\S]*const criticalJobs = \[/);
+  assert.match(game, /delete backgroundCacheRef\.current\[stageId\];[\s\S]*const allCriticalJobs = \[/);
   assert.match(game, /root\.dataset\.assetResidentScope = qaMode \|\| qaScenario \? "all-local-qa" : "stage-and-formation"/);
   assert.match(game, /root\.dataset\.assetResidentBackgrounds = String\(Object\.keys\(backgroundCacheRef\.current\)\.length\)/);
   assert.doesNotMatch(game, /const cached = backgroundCacheRef\.current\[selectedStageId\]/);

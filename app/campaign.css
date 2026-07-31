@@ -245,6 +245,13 @@
 .formation-support { display:grid; grid-template-rows:auto repeat(3,minmax(44px,1fr)) auto; gap:4px; }.formation-support > button { position:relative; min-width:0; padding:5px 29px 5px 7px; border:1px solid rgba(135,124,105,.38); border-left:3px solid #756955; background:rgba(19,23,23,.85); color:#d5c3a3; cursor:pointer; text-align:left; }.formation-support > button[data-selected="true"] { border-color:#e4ad58; border-left-color:#d86943; background:rgba(73,48,31,.82); }.formation-support button b,.formation-support button small { display:block; }.formation-support button b { font:900 9px/1.1 sans-serif; }.formation-support button small { margin-top:3px; color:#8f8474; font:700 8px/1.1 sans-serif; }.formation-support button em { position:absolute; right:6px; top:7px; color:#dfa84f; font:900 8px monospace; font-style:normal; }
 .formation-note { padding:4px 6px; border-left:3px solid #4d7774; background:rgba(15,29,29,.7); font:700 8px/1.2 monospace; }.formation-note b,.formation-note span { display:block; }.formation-note b { color:#80aaa4; }.formation-note span { margin-top:2px; color:#8d8a7f; }
 .formation-footer { min-height:54px; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:5px 10px; border-top:1px solid rgba(216,186,141,.2); background:#0a0d0e; }.formation-footer p { max-width:58%; margin:0; color:#867a69; font:700 8px/1.25 monospace; }.formation-footer .campaign-primary { min-width:220px; padding:6px 14px; text-align:center; }
+.asset-readiness { min-width:250px; padding:5px 8px; border:1px solid rgba(216,186,141,.28); background:rgba(12,16,17,.92); color:#cfc2aa; font:700 8px/1.25 monospace; }
+.asset-readiness[data-state="ready"],.asset-readiness[data-state="degraded-ready"] { border-color:rgba(111,209,157,.52); }
+.asset-readiness[data-state="error"] { border-color:rgba(255,112,85,.7); }
+.asset-readiness p { display:flex!important; max-width:none!important; justify-content:space-between; gap:8px; color:inherit!important; }
+.asset-readiness small { display:block; margin-top:2px; color:#a99a82; }
+.asset-readiness .asset-retry { min-height:30px; margin-top:4px; padding:4px 8px; border:1px solid #d78b55; background:#542e24; color:#ffe0b8; font:800 8px monospace; cursor:pointer; }
+.asset-readiness .asset-retry:disabled { opacity:.65; cursor:wait; }
 
 /* Personnel management stays separate from battle formation. */
 .personnel-screen { display:grid; grid-template-rows:auto minmax(0,1fr); background:linear-gradient(135deg,rgba(8,14,15,.91),rgba(27,20,16,.92)),var(--campaign-art) center/cover no-repeat; }

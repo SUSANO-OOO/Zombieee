@@ -120,6 +120,8 @@ export class AudioMixer {
     gestureDedupeMs = 750,
     maxPreloadConcurrency = 4,
     unlockTimeoutMs = 2000,
+    assetLoadTimeoutMs = 8000,
+    assetDecodeTimeoutMs = 3000,
     clock = Date.now,
     onAssetFailure = null,
   } = {}) {
@@ -138,6 +140,12 @@ export class AudioMixer {
     )));
     this.unlockTimeoutMs = Math.max(1, Math.min(30000, Math.floor(
       Number.isFinite(unlockTimeoutMs) ? unlockTimeoutMs : 2000,
+    )));
+    this.assetLoadTimeoutMs = Math.max(1, Math.min(60000, Math.floor(
+      Number.isFinite(assetLoadTimeoutMs) ? assetLoadTimeoutMs : 8000,
+    )));
+    this.assetDecodeTimeoutMs = Math.max(1, Math.min(30000, Math.floor(
+      Number.isFinite(assetDecodeTimeoutMs) ? assetDecodeTimeoutMs : 3000,
     )));
     this.clock = typeof clock === "function" ? clock : Date.now;
     this.onAssetFailure = typeof onAssetFailure === "function" ? onAssetFailure : null;
@@ -692,10 +700,14 @@ export class AudioMixer {
   }
 
   #reportAssetFailure(assetId, phase, error) {
+    const asset = this.manifest.assetById[assetId];
     try {
       this.onAssetFailure?.(Object.freeze({
         assetId,
+        category: asset?.category ?? "unknown",
+        optional: asset?.preload === "lazy",
         phase,
+        reason: error?.name === "TimeoutError" ? "timeout" : phase,
         error: error instanceof Error ? error.message : error ? String(error) : "unknown audio source failure",
       }));
     } catch {
@@ -743,10 +755,26 @@ export class AudioMixer {
       for (let sourceIndex = entry.nextSourceIndex; sourceIndex < asset.sources.length; sourceIndex += 1) {
         const source = asset.sources[sourceIndex];
         entry.nextSourceIndex = sourceIndex + 1;
+        const controller = typeof AbortController === "function" ? new AbortController() : null;
+        let timeoutId = null;
         try {
-          const response = await this.fetcher(source.src, { credentials: "same-origin" });
+          const deadline = new Promise((_, reject) => {
+            timeoutId = globalThis.setTimeout(() => {
+              controller?.abort();
+              const timeoutError = new Error(`Audio load timed out after ${this.assetLoadTimeoutMs}ms: ${source.src}`);
+              timeoutError.name = "TimeoutError";
+              reject(timeoutError);
+            }, this.assetLoadTimeoutMs);
+          });
+          const response = await Promise.race([
+            this.fetcher(source.src, {
+              credentials: "same-origin",
+              ...(controller ? { signal: controller.signal } : {}),
+            }),
+            deadline,
+          ]);
           if (!response?.ok) throw new Error(`HTTP ${String(response?.status ?? "failure")}`);
-          const raw = await response.arrayBuffer();
+          const raw = await Promise.race([response.arrayBuffer(), deadline]);
           if (!(raw instanceof ArrayBuffer) || raw.byteLength === 0) throw new Error("empty audio response");
           entry.raw = raw;
           entry.source = source.src;
@@ -754,6 +782,8 @@ export class AudioMixer {
           return entry;
         } catch (error) {
           lastError = error;
+        } finally {
+          if (timeoutId !== null) globalThis.clearTimeout(timeoutId);
         }
       }
       entry.status = "failed";
@@ -770,14 +800,21 @@ export class AudioMixer {
     return new Promise((resolve, reject) => {
       try {
         let settled = false;
+        const timeoutId = globalThis.setTimeout(() => {
+          const timeoutError = new Error(`Audio decode timed out after ${this.assetDecodeTimeoutMs}ms`);
+          timeoutError.name = "TimeoutError";
+          fail(timeoutError);
+        }, this.assetDecodeTimeoutMs);
         const succeed = (buffer) => {
           if (settled) return;
           settled = true;
+          globalThis.clearTimeout(timeoutId);
           resolve(buffer);
         };
         const fail = (error) => {
           if (settled) return;
           settled = true;
+          globalThis.clearTimeout(timeoutId);
           reject(error);
         };
         const result = this.context.decodeAudioData(raw.slice(0), succeed, fail);
@@ -1374,7 +1411,22 @@ export class AudioMixer {
 
   getDiagnostics() {
     const cache = { loading: 0, fetched: 0, ready: 0, failed: 0, idle: 0 };
-    for (const entry of this.assetCache.values()) cache[entry.status] = (cache[entry.status] ?? 0) + 1;
+    const categoryCache = {};
+    const failedAssets = [];
+    for (const [assetId, entry] of this.assetCache.entries()) {
+      cache[entry.status] = (cache[entry.status] ?? 0) + 1;
+      const asset = this.manifest.assetById[assetId];
+      const category = asset?.category ?? "unknown";
+      categoryCache[category] ??= { loading: 0, fetched: 0, ready: 0, failed: 0, idle: 0 };
+      categoryCache[category][entry.status] = (categoryCache[category][entry.status] ?? 0) + 1;
+      if (entry.status === "failed") {
+        failedAssets.push({
+          assetId,
+          category,
+          optional: asset?.preload === "lazy",
+        });
+      }
+    }
     const active = [...this.activeVoices.values()].filter((voice) => !voice.cleaned && !voice.stopping);
     const loopInstanceCounts = new Map();
     for (const voice of active.filter((candidate) => candidate.loop)) {
@@ -1387,6 +1439,8 @@ export class AudioMixer {
       contextCreateCount: this.contextCreateCount,
       lifecycleHidden: this.lifecycleHidden,
       unlockTimeoutMs: this.unlockTimeoutMs,
+      assetLoadTimeoutMs: this.assetLoadTimeoutMs,
+      assetDecodeTimeoutMs: this.assetDecodeTimeoutMs,
       disposed: this.disposed,
       activeVoices: active.length,
       activeLoopVoices: active.filter((voice) => voice.loop).length,
@@ -1399,6 +1453,8 @@ export class AudioMixer {
       audioState: this.audioStatus.state,
       needsGesture: this.audioStatus.needsGesture,
       cache,
+      categoryCache,
+      failedAssets,
       maxPreloadConcurrency: this.maxPreloadConcurrency,
       activePreloads: this.activePreloads,
       queuedPreloads: this.preloadQueue.length,
