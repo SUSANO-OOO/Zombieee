@@ -12714,8 +12714,18 @@ export function AshfallGame() {
 
   const selectStage = useCallback((stageId: string) => {
     if (!qaMode && !qaScenario && !isStageUnlocked(campaignSave, stageId)) return;
-    setAssetsReady(false);
-    setAssetError(false);
+    // Deliberately does not clear assetsReady. Only the asset session owns that
+    // flag: it clears the flag when a session actually starts and sets it when
+    // one succeeds, which keeps it in step with assetReadiness.
+    //
+    // Clearing it here left the two disagreeing. The session effect keys on
+    // activeOperationId and activeBattlefieldStageId, not on selectedStageId,
+    // so selecting a stage that resolves to the same asset set starts no new
+    // session, and nothing ever set the flag back. The loadout then sat at
+    // assetReadiness "ready" with every asset loaded while the deploy button
+    // stayed disabled, and because that state is neither an error nor
+    // retry-available the retry control did not render either, leaving no way
+    // off the screen.
     setSelectedStageId(stageId);
     setCampaignSave((current) => selectCampaignStage(current, stageId) as CampaignSave);
   }, [campaignSave, qaMode, qaScenario]);
