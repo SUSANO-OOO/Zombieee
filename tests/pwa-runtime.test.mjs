@@ -6,7 +6,9 @@ import {
   canPlayOffline,
   createAssetFetcher,
   derivePwaPhase,
+  describeDownloadOffer,
   describeInstall,
+  describeInstallGuidance,
   describeProgress,
   fetchPublishedManifest,
   isPwaSupported,
@@ -24,6 +26,7 @@ const manifest = (assets) => ({
 
 const plan = (satisfied, pending) => ({
   satisfied, pending, complete: pending.length === 0, pendingCount: pending.length,
+  pendingBytes: pending.reduce((sum, entry) => sum + (entry.bytes ?? 0), 0),
 });
 
 test("an unsupported browser never enters an install flow", () => {
@@ -31,11 +34,113 @@ test("an unsupported browser never enters an install flow", () => {
 });
 
 test("an ordinary browser tab is never gated behind the install", () => {
+  // No plan yet, and a device that already holds the pack: both go straight to
+  // the game. The offer is only for a tab that would actually download.
   assert.equal(derivePwaPhase({ supported: true, standalone: false }), "browser");
   assert.equal(
-    derivePwaPhase({ supported: true, standalone: false, installedManifest: manifest([asset("/a", 1)]) }),
+    derivePwaPhase({
+      supported: true,
+      standalone: false,
+      installedManifest: manifest([asset("/a", 1)]),
+      installPlan: plan([asset("/a", 1)], []),
+    }),
     "browser",
   );
+});
+
+test("a first browser visit is offered the download before the title", () => {
+  assert.equal(
+    derivePwaPhase({
+      supported: true,
+      standalone: false,
+      installPlan: plan([], [asset("/a", 1), asset("/b", 2)]),
+    }),
+    "download-offer",
+  );
+});
+
+test("declining the download plays straight from the network", () => {
+  // The offer must not become a wall: dismissing it renders the game.
+  assert.equal(
+    derivePwaPhase({
+      supported: true,
+      standalone: false,
+      installPlan: plan([], [asset("/a", 1)]),
+      offerDismissed: true,
+    }),
+    "browser",
+  );
+});
+
+test("a finished browser download reports completion before starting the game", () => {
+  assert.equal(
+    derivePwaPhase({
+      supported: true,
+      standalone: false,
+      downloadState: "complete",
+      installPlan: plan([asset("/a", 1)], []),
+    }),
+    "download-complete",
+  );
+});
+
+test("the download offer counts and sizes come from the manifest and the plan", () => {
+  const assets = [asset("/a", 1), asset("/b", 2), asset("/c", 3)];
+  const offer = describeDownloadOffer(plan([], assets), manifest(assets), null);
+  assert.equal(offer.totalAssets, 3);
+  assert.equal(offer.pendingCount, 3);
+  assert.equal(offer.pendingBytes, 3 * 1048576);
+  assert.equal(offer.resuming, false);
+  assert.match(offer.actionLabel, /ゲームをダウンロード/);
+  assert.match(offer.lines[0], /3件/);
+  assert.match(offer.lines[0], /3\.0MB/);
+  // The offer must say plainly that nothing is fetched until it is accepted.
+  assert.match(offer.wifiHint, /開始するまで始まりません/);
+});
+
+test("a partly downloaded pack offers to resume and never recounts what is held", () => {
+  const assets = [asset("/a", 1), asset("/b", 2), asset("/c", 3)];
+  const offer = describeDownloadOffer(plan([assets[0], assets[1]], [assets[2]]), manifest(assets), null);
+  assert.equal(offer.resuming, true);
+  assert.equal(offer.pendingCount, 1);
+  assert.equal(offer.pendingBytes, 1048576);
+  assert.match(offer.actionLabel, /再開/);
+  assert.ok(offer.lines.some((line) => /保存済み 2 \/ 3件/.test(line)));
+});
+
+test("the download offer warns when the device may not have room", () => {
+  const assets = [asset("/a", 1)];
+  const roomy = describeDownloadOffer(plan([], assets), manifest(assets), { available: 999 * 1048576 });
+  assert.equal(roomy.shortOnSpace, false);
+  assert.equal(roomy.warning, null);
+  const tight = describeDownloadOffer(plan([], assets), manifest(assets), { available: 1024 });
+  assert.equal(tight.shortOnSpace, true);
+  assert.match(tight.warning, /空き容量/);
+});
+
+test("install guidance adapts to the browser instead of requiring one", () => {
+  // Chromium offers a real prompt.
+  const chromium = describeInstallGuidance({ promptAvailable: true, userAgent: "Chrome" });
+  assert.equal(chromium.mode, "prompt");
+  assert.ok(chromium.actionLabel);
+
+  // iOS has no prompt event, so it gets the manual route rather than nothing.
+  const ios = describeInstallGuidance({
+    promptAvailable: false,
+    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
+  });
+  assert.equal(ios.mode, "manual");
+  assert.ok(ios.steps.length > 0);
+  assert.ok(ios.steps.some((step) => step.includes("ホーム画面に追加")));
+
+  // Anything else still gets usable, browser-neutral wording.
+  const other = describeInstallGuidance({ promptAvailable: false, userAgent: "Firefox" });
+  assert.equal(other.mode, "manual");
+  assert.ok(other.steps.length > 0);
+  assert.doesNotMatch(other.body, /Safari|Chrome|Edge/);
+
+  // Already installed: nothing to suggest.
+  assert.equal(describeInstallGuidance({ standalone: true, promptAvailable: true }), null);
 });
 
 test("a fresh standalone launch asks for the first install", () => {

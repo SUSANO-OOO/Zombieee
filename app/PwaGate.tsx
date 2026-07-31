@@ -24,7 +24,9 @@ import {
   canPlayOffline,
   createAssetFetcher,
   derivePwaPhase,
+  describeDownloadOffer,
   describeInstall,
+  describeInstallGuidance,
   describeProgress,
   fetchPublishedManifest,
   isPwaSupported,
@@ -61,6 +63,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [safety, setSafety] = useState<Record<string, unknown>>({});
   const [error, setError] = useState<string | null>(null);
   const [manifestUnreachable, setManifestUnreachable] = useState(false);
+  // The player chose to play without saving the pack. Remembered for the visit
+  // only, so the offer is never nagged twice in one session.
+  const [offerDismissed, setOfferDismissed] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<{ prompt: () => Promise<unknown> } | null>(null);
+  const [installPromptUsed, setInstallPromptUsed] = useState(false);
+  const [booted, setBooted] = useState(false);
 
   const baseUrl = useMemo(
     () => (typeof window === "undefined" ? "/" : new URL("./", window.location.href).toString()),
@@ -85,8 +93,14 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const loadPublishedManifest = useCallback(async () => {
     setError(null);
     try {
-      const published = await fetchPublishedManifest({ baseUrl });
+      // Bounded: the title waits on this during boot, so an unanswered request
+      // must not hold the screen indefinitely.
+      const published = await fetchPublishedManifest({
+        baseUrl,
+        signal: typeof AbortSignal?.timeout === "function" ? AbortSignal.timeout(10_000) : undefined,
+      });
       setPublishedManifest(published as Manifest);
+      setManifestUnreachable(false);
       return true;
     } catch {
       setManifestUnreachable(true);
@@ -128,9 +142,28 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       if (!cancelled) await loadPublishedManifest();
     })().catch((cause) => {
       if (!cancelled) setError(String(cause?.message ?? cause));
+    }).finally(() => {
+      if (!cancelled) setBooted(true);
     });
     return () => { cancelled = true; };
   }, [baseUrl, loadPublishedManifest]);
+
+  // Chromium fires this instead of showing its own install affordance. Capturing
+  // it lets the page offer a real install button; browsers that never fire it
+  // get written instructions instead, so no engine is required.
+  useEffect(() => {
+    const onPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as unknown as { prompt: () => Promise<unknown> });
+    };
+    const onInstalled = () => { setInstallPrompt(null); setInstallPromptUsed(true); };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
 
   // The game publishes activation-safety facts on the root element.
   useEffect(() => {
@@ -168,6 +201,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     installPlan,
     downloadState,
     updateEvaluation,
+    offerDismissed,
   });
 
   const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" });
@@ -192,6 +226,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     if (final.state === "complete") {
       // Only a fully verified pack becomes the active generation.
       await requestFromServiceWorker(registrationRef.current, { type: "pwa:commit-manifest", manifest });
+      // Ask the browser to stop treating the pack as evictable cache, so a
+      // player who has finished the download is not asked to repeat it. Best
+      // effort: a refusal changes nothing else.
+      await import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator));
       setInstalledManifest(manifest);
       setUpdateDismissed(false);
     }
@@ -217,9 +255,38 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const playable = canPlayOffline({ phase, installPlan });
   const installCopy = describeInstall(installPlan, storage);
   const updateCopy = updateEvaluation ? describeUpdate(updateEvaluation, { formatBytes }) : null;
+  const offerCopy = describeDownloadOffer(installPlan, targetManifest, storage);
+  const guidance = describeInstallGuidance({
+    standalone,
+    promptAvailable: Boolean(installPrompt),
+    userAgent: typeof navigator === "undefined" ? "" : navigator.userAgent,
+  });
 
-  // A plain tab, or a fully installed app, renders the game untouched.
-  const blocking = !playable && (phase === "install-required" || phase === "installing");
+  const acceptInstallPrompt = useCallback(() => {
+    const prompt = installPrompt;
+    if (!prompt) return;
+    setInstallPromptUsed(true);
+    void Promise.resolve(prompt.prompt()).catch(() => {});
+  }, [installPrompt]);
+
+  // A fully installed app, or a tab whose player chose to skip, renders the game
+  // untouched. The download offer and its progress sit in front of the title so
+  // the entry point is the first thing a new visitor sees.
+  //
+  // While the release metadata is still arriving there is nothing to offer yet.
+  // Holding the title back for that moment avoids showing the title and then
+  // yanking it away when the offer resolves a beat later.
+  //
+  // `supported` is deliberately not part of this. It is only known once the boot
+  // effect has run, so including it left the very first render unblocked, and
+  // the game mounted and fetched title art and music before the player had
+  // agreed to download anything. A device that already holds the pack clears
+  // this as soon as the worker reports its manifest, which is a local lookup.
+  const settling = !booted && !standalone && !installedManifest;
+  const blocking = settling
+    || phase === "download-offer"
+    || phase === "download-complete"
+    || (!playable && (phase === "install-required" || phase === "installing"));
 
   return (
     <>
@@ -245,6 +312,68 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                     await loadPublishedManifest();
                   })();
                 }}>再試行</button>
+              </>
+            )}
+
+            {settling && (
+              <p className="pwa-hint" role="status">配信データを確認しています…</p>
+            )}
+
+            {!settling && phase === "download-offer" && offerCopy && (
+              <>
+                <h2>{offerCopy.headline}</h2>
+                <ul>{offerCopy.lines.map((line) => <li key={line}>{line}</li>)}</ul>
+                {offerCopy.warning && <p className="pwa-warning" role="alert">{offerCopy.warning}</p>}
+                <p className="pwa-hint">{offerCopy.wifiHint}</p>
+                <button type="button" className="pwa-primary" onClick={startInstall}>
+                  {offerCopy.actionLabel}
+                </button>
+                <div className="pwa-actions pwa-secondary-actions">
+                  <button type="button" onClick={() => setOfferDismissed(true)}>
+                    {offerCopy.skipLabel}
+                  </button>
+                </div>
+                <p className="pwa-hint">{offerCopy.skipHint}</p>
+                {guidance && (
+                  <aside className="pwa-install-guidance">
+                    <h3>{guidance.headline}</h3>
+                    <p className="pwa-hint">{guidance.body}</p>
+                    {guidance.mode === "prompt" && !installPromptUsed && (
+                      <button type="button" onClick={acceptInstallPrompt}>{guidance.actionLabel}</button>
+                    )}
+                    {guidance.steps.length > 0 && (
+                      <ol>{guidance.steps.map((step) => <li key={step}>{step}</li>)}</ol>
+                    )}
+                  </aside>
+                )}
+              </>
+            )}
+
+            {phase === "download-complete" && (
+              <>
+                <h2>ダウンロードが完了しました</h2>
+                <p className="pwa-progress-line">
+                  {installedManifest?.assets?.length ?? storedHashes.size}件・
+                  {formatBytes(
+                    ((installedManifest?.assets ?? []) as Array<{ bytes: number }>)
+                      .reduce((sum, asset) => sum + (Number(asset.bytes) || 0), 0),
+                  )}を保存しました
+                </p>
+                <button type="button" className="pwa-primary" onClick={() => setDownloadState(null)}>
+                  ゲームを起動
+                </button>
+                {guidance && (
+                  <aside className="pwa-install-guidance">
+                    <h3>{guidance.headline}</h3>
+                    <p className="pwa-hint">{guidance.body}</p>
+                    {guidance.mode === "prompt" && !installPromptUsed && (
+                      <button type="button" onClick={acceptInstallPrompt}>{guidance.actionLabel}</button>
+                    )}
+                    {guidance.steps.length > 0 && (
+                      <ol>{guidance.steps.map((step) => <li key={step}>{step}</li>)}</ol>
+                    )}
+                  </aside>
+                )}
               </>
             )}
 

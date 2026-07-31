@@ -16,6 +16,8 @@ import { evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js"
 export const PWA_PHASES = Object.freeze([
   "unsupported",
   "browser",
+  "download-offer",
+  "download-complete",
   "install-required",
   "installing",
   "install-incomplete",
@@ -37,6 +39,7 @@ export function derivePwaPhase({
   installPlan = null,
   downloadState = null,
   updateEvaluation = null,
+  offerDismissed = false,
 } = {}) {
   if (!supported) return "unsupported";
 
@@ -45,8 +48,16 @@ export function derivePwaPhase({
   }
 
   if (!standalone) {
+    // A tab that has just finished its download says so, and offers to start
+    // playing, rather than silently swapping the screen underneath the player.
+    if (downloadState === "complete") return "download-complete";
     // An ordinary tab may still run an update check, but never an install gate.
     if (installedManifest && updateEvaluation?.available) return "update-available";
+    // First visit, or a pack that never finished: the download entry point comes
+    // before the title so the offer is the first thing a new player sees. It is
+    // an offer, not a gate - dismissing it plays straight from the network, and
+    // a device that already holds the pack never sees it at all.
+    if (!offerDismissed && installPlan && !installPlan.complete) return "download-offer";
     return "browser";
   }
 
@@ -87,6 +98,88 @@ export function describeInstall(plan, storage) {
     shortOnSpace,
     warning: shortOnSpace ? "空き容量が不足している可能性があります" : null,
     wifiHint: "Wi-Fi接続を推奨します",
+  };
+}
+
+/**
+ * Copy for the download entry screen a first-time visitor sees.
+ *
+ * Every number comes from the published manifest and the install plan, so the
+ * screen cannot drift from what will actually be fetched. Nothing here is
+ * hard-coded: a pack that grows or shrinks changes this text automatically.
+ */
+export function describeDownloadOffer(plan, manifest, storage) {
+  if (!plan || !manifest) return null;
+  const totalAssets = manifest.assets?.length ?? 0;
+  const alreadyHeld = Math.max(0, totalAssets - plan.pendingCount);
+  const resuming = alreadyHeld > 0;
+
+  const lines = [
+    `${plan.pendingCount}件・${formatBytes(plan.pendingBytes)}をこの端末に保存します`,
+  ];
+  if (resuming) {
+    lines.push(`保存済み ${alreadyHeld} / ${totalAssets}件のぶんは再取得しません`);
+  }
+  if (storage?.available != null) {
+    lines.push(`空き容量の目安 ${formatBytes(storage.available)}`);
+  }
+
+  const shortOnSpace = storage?.available != null && storage.available < plan.pendingBytes * 1.1;
+  return {
+    headline: resuming ? "ダウンロードを再開します" : "ゲームをダウンロード",
+    actionLabel: resuming ? "ダウンロードを再開" : "ゲームをダウンロード",
+    lines,
+    totalAssets,
+    pendingCount: plan.pendingCount,
+    pendingBytes: plan.pendingBytes,
+    resuming,
+    shortOnSpace,
+    warning: shortOnSpace ? "空き容量が不足している可能性があります" : null,
+    wifiHint: "Wi-Fi接続を推奨します。ダウンロードは開始するまで始まりません。",
+    skipLabel: "ダウンロードせずに遊ぶ",
+    skipHint: "保存せずに遊ぶこともできます。その場合は毎回通信が必要です。",
+  };
+}
+
+/**
+ * Chooses how to explain installing to the home screen for whatever browser is
+ * in front of us.
+ *
+ * `beforeinstallprompt` is Chromium-only, so relying on it alone would make the
+ * app feel broken on iOS. When the browser offers no prompt we describe the
+ * manual route instead, and the generic wording is deliberately not tied to any
+ * one browser: no engine is required to play.
+ */
+export function describeInstallGuidance({ standalone = false, promptAvailable = false, userAgent = "" } = {}) {
+  if (standalone) return null;
+
+  const agent = String(userAgent);
+  const iOS = /iPad|iPhone|iPod/.test(agent) || (/Macintosh/.test(agent) && /Mobile/.test(agent));
+
+  if (promptAvailable) {
+    return {
+      mode: "prompt",
+      headline: "ホーム画面に追加",
+      body: "アプリのように全画面で起動できます。",
+      actionLabel: "ホーム画面に追加",
+      steps: [],
+    };
+  }
+  if (iOS) {
+    return {
+      mode: "manual",
+      headline: "ホーム画面に追加",
+      body: "アプリのように全画面で起動できます。",
+      actionLabel: null,
+      steps: ["共有ボタンを開く", "「ホーム画面に追加」を選ぶ", "「追加」を押す"],
+    };
+  }
+  return {
+    mode: "manual",
+    headline: "ホーム画面に追加",
+    body: "アプリのように全画面で起動できます。ブラウザのメニューから追加できます。",
+    actionLabel: null,
+    steps: ["ブラウザのメニューを開く", "「インストール」または「ホーム画面に追加」を選ぶ"],
   };
 }
 

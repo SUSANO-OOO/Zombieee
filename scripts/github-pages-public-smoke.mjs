@@ -210,6 +210,14 @@ try {
       throw new Error(`Published issue metadata is ${issueMeta ?? "missing"}, expected ${expectedIssueNumber}`);
     }
 
+    // Since 0.9.6.4 a first visit meets the download entry screen before the
+    // title. These scenarios are about the published game itself, and each one
+    // starts from empty storage, so decline the download and play from the
+    // network. The entry flow has its own coverage in the PWA matrix.
+    const declineDownload = page.getByRole("button", { name: "ダウンロードせずに遊ぶ" });
+    await declineDownload.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+    if (await declineDownload.isVisible().catch(() => false)) await declineDownload.click();
+
     const startButton = page.locator(".title-start");
     await startButton.waitFor({ state: "visible", timeout: 30_000 });
     await page.locator('.save-environment-badge:not([data-save-environment="checking"])').waitFor({

@@ -314,4 +314,8 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .pwa-storage dt { opacity:.7; }
 .pwa-storage dd { margin:0; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
 .pwa-storage-toggle { position:fixed; z-index:54; right:calc(8px + var(--app-viewport-safe-right,0px)); bottom:calc(8px + var(--app-viewport-safe-bottom,0px)); min-height:32px; font-size:11px; opacity:.7; }
-@media (max-height:420px) { .pwa-gate-panel { gap:6px; } .pwa-gate-panel h1 { font-size:16px; } }
+.pwa-secondary-actions button { background:transparent; border-color:#3a322c; opacity:.85; }
+.pwa-install-guidance { margin-top:4px; padding:10px 12px; border:1px solid #3a322c; border-radius:8px; background:rgba(255,255,255,.035); display:flex; flex-direction:column; gap:6px; align-items:center; }
+.pwa-install-guidance h3 { margin:0; font-size:13px; font-weight:600; color:#f0bb65; }
+.pwa-install-guidance ol { margin:0; padding-left:1.25em; text-align:left; font-size:12px; opacity:.8; display:flex; flex-direction:column; gap:3px; }
+@media (max-height:420px) { .pwa-gate-panel { gap:6px; } .pwa-gate-panel h1 { font-size:16px; } .pwa-install-guidance { padding:8px 10px; gap:4px; } }

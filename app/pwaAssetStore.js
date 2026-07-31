@@ -125,6 +125,24 @@ export function contentTypeFor(assetPath) {
 }
 
 /**
+ * Asks the browser to keep this origin's storage rather than treating it as
+ * evictable cache.
+ *
+ * Without this a browser is free to clear Cache Storage under pressure, and the
+ * player is asked to download the pack again despite having completed it. It is
+ * best effort by design: the request can be refused, and refusal is not an
+ * error, so the caller carries on either way.
+ */
+export async function persistStorage(navigatorRef) {
+  try {
+    if (await navigatorRef?.storage?.persisted?.()) return true;
+    return Boolean(await navigatorRef?.storage?.persist?.());
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Estimates free space so the download prompt can warn before a large install.
  * Returns null when the browser does not expose an estimate; the UI then omits
  * the free-space line rather than inventing a number.
