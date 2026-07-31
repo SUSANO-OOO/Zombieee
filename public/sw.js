@@ -440,16 +440,21 @@ self.addEventListener("message", (event) => {
         await writeState(next);
         invalidateManifestMemo();
         assetIndexMemo = null;
-        // Warm before collecting, so the new generation can boot offline the
-        // moment it becomes active.
-        const shell = await warmShell(generationOf(manifest));
+        // Collecting first is safe: the new generation is already active, so
+        // its shell cache name is retained even before anything is in it.
         const collected = await collectGarbage(next);
-        return reply(event, {
+
+        // Answer as soon as the generation is committed. Warming the shell
+        // reaches the network, and the page must not sit waiting on a prefetch
+        // to be told that its install succeeded. waitUntil keeps the worker
+        // alive until the warm finishes.
+        await reply(event, {
           type: "pwa:committed",
           generation: generationOf(manifest),
-          shellWarmed: shell.warmed,
           ...collected,
         });
+        await warmShell(generationOf(manifest));
+        return undefined;
       }
 
       // Explicit rollback to the retained previous generation.
