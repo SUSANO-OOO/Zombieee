@@ -1,4 +1,9 @@
-export const IMAGE_LOAD_TIMEOUT_MS = 15_000;
+// A single battle sheet is 1-2MB. From the published origin the largest one
+// measured 11.5s on an ordinary home connection, and a phone on mobile data is
+// slower still, so 15s was rejecting images that were merely large rather than
+// genuinely stuck. This still bounds the wait; it just no longer calls a slow
+// network a failure. Must stay below ASSET_LOAD_SESSION_DEADLINE_MS.
+export const IMAGE_LOAD_TIMEOUT_MS = 30_000;
 export const IMAGE_DECODE_TIMEOUT_MS = 2_000;
 
 function imageLoadError(name, message) {
