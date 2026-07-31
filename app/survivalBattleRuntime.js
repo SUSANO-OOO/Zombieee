@@ -141,7 +141,7 @@ export function survivalDefenseDestination({
   );
 }
 
-const NORMAL_ENEMY_ORDER = deepFreeze([
+export const SURVIVAL_NORMAL_ENEMY_KINDS = deepFreeze([
   "walker",
   "runner",
   "spitter",
@@ -174,7 +174,7 @@ export function survivalWaveSpawnPlan(waveNumber, {
 } = {}) {
   const descriptor = survivalWaveDescriptor(waveNumber);
   const unlockedKinds = Math.min(
-    NORMAL_ENEMY_ORDER.length,
+    SURVIVAL_NORMAL_ENEMY_KINDS.length,
     2 + Math.floor((descriptor.waveNumber - 1) / 2),
   );
   const normalCount = Math.min(
@@ -182,7 +182,7 @@ export function survivalWaveSpawnPlan(waveNumber, {
     4 + Math.floor(descriptor.waveNumber * 1.35),
   );
   const units = Array.from({ length: normalCount }, (_, index) => (
-    NORMAL_ENEMY_ORDER[
+    SURVIVAL_NORMAL_ENEMY_KINDS[
       (descriptor.waveNumber * 5 + descriptor.blockNumber * 3 + index * 7) % unlockedKinds
     ]
   ));

@@ -63,3 +63,29 @@ test("retry selection contains only failed or pending paths", () => {
     ["/unit", "/enemy"],
   );
 });
+
+test("deduplicated shared paths notify every image consumer", async () => {
+  let loadCount = 0;
+  let cachedImage = null;
+  const assigned = [];
+  const sharedRun = (kind) => async () => {
+    if (!cachedImage) {
+      loadCount += 1;
+      cachedImage = { src: "/shared-atlas.webp" };
+    }
+    assigned.push([kind, cachedImage]);
+  };
+  const result = await runAssetLoadSession({
+    jobs: [
+      { path: "/shared-atlas.webp", category: "enemy", run: sharedRun("walker") },
+      { path: "/shared-atlas.webp", category: "enemy", run: sharedRun("runner") },
+    ],
+    generation: 1,
+    reason: "shared-atlas",
+  });
+  assert.equal(result.status, "ready");
+  assert.equal(result.total, 1);
+  assert.equal(loadCount, 1);
+  assert.deepEqual(assigned.map(([kind]) => kind), ["walker", "runner"]);
+  assert.equal(assigned[0][1], assigned[1][1]);
+});

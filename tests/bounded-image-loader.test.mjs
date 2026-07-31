@@ -17,7 +17,7 @@ function imageFixture({ naturalWidth = 128, decode = () => Promise.resolve(), on
   };
 }
 
-test("decode timeout falls back to a completed image load with naturalWidth", async () => {
+test("decode timeout rejects with an explicit bounded decode error", async () => {
   let readyImage = null;
   const image = imageFixture({
     decode: () => new Promise(() => {}),
@@ -25,17 +25,38 @@ test("decode timeout falls back to a completed image load with naturalWidth", as
       queueMicrotask(() => candidate.onload?.());
     },
   });
-  const resolved = await loadImageWithTimeout({
-    src: "/critical.webp",
-    createImage: () => image,
-    loadTimeoutMs: 50,
-    decodeTimeoutMs: 10,
-    onReady(candidate) {
-      readyImage = candidate;
+  await assert.rejects(
+    loadImageWithTimeout({
+      src: "/critical.webp",
+      createImage: () => image,
+      loadTimeoutMs: 50,
+      decodeTimeoutMs: 10,
+      onReady(candidate) {
+        readyImage = candidate;
+      },
+    }),
+    (error) => error?.name === "ImageDecodeError" && /critical\.webp/u.test(error.message),
+  );
+  assert.equal(readyImage, null);
+});
+
+test("decode rejection remains an explicit decode failure", async () => {
+  const image = imageFixture({
+    decode: () => Promise.reject(new Error("unsupported image")),
+    onSource(candidate) {
+      queueMicrotask(() => candidate.onload?.());
     },
   });
-  assert.equal(resolved, image);
-  assert.equal(readyImage, image);
+  await assert.rejects(
+    loadImageWithTimeout({
+      src: "/unsupported.webp",
+      createImage: () => image,
+      loadTimeoutMs: 50,
+      decodeTimeoutMs: 10,
+      onReady() {},
+    }),
+    (error) => error?.name === "ImageDecodeError" && /unsupported\.webp/u.test(error.message),
+  );
 });
 
 test("image load timeout rejects with an explicit bounded error", async () => {

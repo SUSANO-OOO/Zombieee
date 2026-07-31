@@ -21,14 +21,18 @@ The player-facing retry button called `window.location.reload()`. A failed loado
 The candidate replaces that path with a generation-owned session:
 
 - 12-second outer deadline for critical work and six-second deadline for optional work
-- two-request mobile concurrency cap and path deduplication
-- minimal critical set: battlefield, CRAWLER enemy base, selected formation, and first-wave enemies
+- two-request mobile concurrency cap and path deduplication with fan-out to every kind sharing an atlas
+- one readiness owner for each battlefield background; preload, CSS, and map preview no longer race the loader
+- minimal critical set: battlefield, CRAWLER closed/open, enemy base, selected formation, and first-wave enemies
+- Mayo's normal and feral atlases are both critical whenever Mayo is selected
 - optional/background set: later-wave atlases, support objects, and stage objects
 - stale generation abort protection
 - same-loadout retry of failed/pending critical paths only
 - terminal `ready`, `degraded-ready`, or `error`; no unbounded `loading`
 - exact QA diagnostics for generation, reason, pending paths, failed paths, restart count, category, and failure reason
 - player-facing `n / total`, category/reason, separate retry control, and optional-degradation notice
+- critical recovery followed by optional background preload, without reopening the title screen
+- Survival start/resume gate covering its formation, normal enemy set, dynamic boss pool, and CRAWLER
 
 ### Audio
 
@@ -49,14 +53,16 @@ The candidate adds:
 | Gate | Result |
 |---|---:|
 | Focused asset/image/audio tests | pass |
-| Full tests | 773 / 773 pass |
+| Full tests | 776 / 776 pass |
 | Production build | pass |
 | ESLint | pass, 0 warnings |
 | Content validator | pass, 0 errors/warnings |
 | `git diff --check` | pass |
-| Chromium/WebKit hotfix browser matrix | 16 / 16 pass |
+| Chromium/WebKit hotfix browser matrix | 34 / 34 pass |
 
-The browser matrix covers 1280×720, 844×390, and 844×340; touch and DPR 3; Stage 1, 6, and 13; HTTP failure; critical request hang; image decode hang; optional request hang; same-screen retry; BGM-only failure with working SFX/voice; optional audio failure; AudioContext suspend/recovery; and title-to-battle flow. Intentional injected 503 responses are recorded as expected evidence. All ordinary scenarios have zero console error, page error, request failure, and HTTP error.
+The browser matrix covers 1280×720, 844×390, and 844×340; touch and DPR 3; Stage 1, 6, and 13; fresh save; v13-to-v14 save migration; HTTP failure; critical request hang; image decode hang; optional request hang; one initial critical-background request per generation; same-screen and rapid retry; shared-atlas fan-out; CRAWLER readiness; Mayo normal/feral critical readiness; Survival start; BGM failure and recovery while SFX/voice remain usable; BGM recovery while an unrelated optional asset remains failed; optional audio failure; AudioContext suspend/recovery; and title-to-battle flow. Intentional injected 503 responses are recorded as expected evidence. All ordinary scenarios have zero console error, page error, request failure, and HTTP error.
+
+Chromium audio cases use native Web Audio. This Windows Playwright WebKit build exposes no Web Audio constructor, so its audio state-machine cases use an explicitly marked deterministic substitute (`audioContextMode: simulated-webkit-capability`). Native iPhone speaker output remains part of the physical gate and is not claimed by this automation.
 
 ## Production-build comparison
 
@@ -64,23 +70,23 @@ Chromium 844×390, touch, DPR 3, identical schema-v14 save, production builds. C
 
 | Metric | 0.9.5 | 0.9.5.1 | 0.9.5.2 candidate |
 |---|---:|---:|---:|
-| Cold HTML response end | 17 ms | 21 ms | 15 ms |
-| Cold title ready | 254 ms | 301 ms | 273 ms |
-| Cold map ready | 203 ms | 73 ms | 86 ms |
-| Cold loadout terminal | >15,000 ms timeout | 95 ms | 89 ms |
-| Cold total requests | 70 | 48 | 36 |
-| Cold transfer | 23.23 MB | 23.11 MB | 18.82 MB |
-| Cold JavaScript transfer | 1.35 MB | 1.35 MB | 1.36 MB |
-| Cold image requests | 34 | 34 | 22 |
-| Cold image transfer | 19.31 MB | 19.31 MB | 15.01 MB |
+| Cold HTML response end | 18 ms | 15 ms | 16 ms |
+| Cold title ready | 242 ms | 291 ms | 301 ms |
+| Cold map ready | 168 ms | 98 ms | 108 ms |
+| Cold loadout terminal | >15,000 ms timeout | 97 ms | 166 ms |
+| Cold total requests | 70 | 48 | 37 |
+| Cold transfer | 23.23 MB | 23.11 MB | 19.07 MB |
+| Cold JavaScript transfer | 1.35 MB | 1.35 MB | 1.37 MB |
+| Cold image requests | 34 | 34 | 23 |
+| Cold image transfer | 19.31 MB | 19.31 MB | 15.26 MB |
 | Cold audio preload requests | 24 | 2 | 2 |
-| Candidate critical asset count | n/a | n/a | 9 |
-| Warm HTML response end | 20 ms | 19 ms | 17 ms |
-| Warm loadout terminal | >15,000 ms timeout | 51 ms | 41 ms |
-| Warm transfer | 3.88 KB | 3.89 KB | 4.02 KB |
-| Retained JS heap proxy | 14.3 MB | 12.7 MB | 12.7 MB |
+| Candidate critical asset count | n/a | n/a | 11 |
+| Warm HTML response end | 20 ms | 19 ms | 20 ms |
+| Warm loadout terminal | >15,000 ms timeout | 54 ms | 66 ms |
+| Warm transfer | 3.88 KB | 3.89 KB | 3.82 KB |
+| Retained JS heap proxy | 14.3 MB | 12.7 MB | 13.4 MB |
 
-The candidate removes the 0.9.5 terminal failure, preserves the 0.9.5.1 heap proxy, and reduces cold image requests by 35% and cold image transfer by 22% versus 0.9.5.1. The six-millisecond cold and ten-millisecond warm loadout differences versus 0.9.5.1 are within this single-run browser measurement and are not claimed as durable improvements.
+The candidate removes the 0.9.5 terminal failure and reduces cold image requests by 32% and cold image transfer by 21% versus 0.9.5.1. Its retained JS heap proxy is 0.7 MB above 0.9.5.1 and 0.9 MB below 0.9.5. Its measured 166 ms cold and 66 ms warm loadout terminals include the corrected CRAWLER-critical set and stay bounded; single-run timing differences versus 0.9.5.1 are not claimed as durable improvements.
 
 Raw local evidence is generated under `outputs/v0952-hotfix/` by:
 

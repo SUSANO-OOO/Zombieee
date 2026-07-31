@@ -629,6 +629,43 @@ test("a partially running scene starts its recovered BGM after explicit retry wi
   await mixer.dispose();
 });
 
+test("a recovered BGM restarts even while an unrelated optional failure remains", async () => {
+  const context = new FakeAudioContext();
+  const manifest = createAudioManifest({
+    assets: [
+      { id: "retry-bgm", category: "bgm", sources: [{ src: "/audio/retry-bgm.ogg" }], loop: true },
+      { id: "broken-optional", category: "ui", sources: [{ src: "/audio/broken-optional.ogg" }], preload: "lazy" },
+    ],
+    scenes: [{ id: "recoverable", bgm: "retry-bgm" }],
+  });
+  let bgmAvailable = false;
+  const fetcher = async (path) => {
+    if (path === "/audio/retry-bgm.ogg" && bgmAvailable) {
+      return { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([4]).buffer };
+    }
+    return { ok: false, status: 503, arrayBuffer: async () => new ArrayBuffer(0) };
+  };
+  const mixer = createAudioMixer({ manifest, contextFactory: () => context, fetcher, logger: { warn() {} } });
+  await mixer.unlock();
+  await mixer.setScene("recoverable");
+  await mixer.play("broken-optional");
+  assert.deepEqual(
+    mixer.getDiagnostics().failedAssets.map((asset) => asset.assetId).sort(),
+    ["broken-optional", "retry-bgm"],
+  );
+
+  bgmAvailable = true;
+  assert.equal(await mixer.retryFailedAudio(), false);
+  assert.equal(mixer.getSceneState().bgmAssetId, "retry-bgm");
+  assert.equal(mixer.getDiagnostics().activeSceneVoices, 1);
+  assert.deepEqual(mixer.getDiagnostics().failedAssets, [{
+    assetId: "broken-optional",
+    category: "ui",
+    optional: true,
+  }]);
+  await mixer.dispose();
+});
+
 test("different scenes sharing one BGM preserve the existing loop without self-crossfading", async () => {
   const context = new FakeAudioContext();
   const { fetcher } = makeFetcher();

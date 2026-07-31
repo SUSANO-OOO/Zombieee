@@ -959,12 +959,12 @@ export class AudioMixer {
     if (this.disposed) return false;
     if (this.getDiagnostics().cache.failed === 0) return true;
     const result = await this.retryFailedAssets(null, { priority });
-    if (result.failed.length > 0) return false;
     const desired = this.desiredScene;
-    if (!desired || !this.unlocked) return true;
+    if (!desired || !this.unlocked) return result.failed.length === 0;
     const state = await this.setScene(desired.sceneId, desired.options);
     const scene = this.manifest.sceneById[desired.sceneId];
-    return !scene?.bgm || Boolean(state?.bgmAssetId);
+    const criticalSceneReady = !scene?.bgm || Boolean(state?.bgmAssetId);
+    return criticalSceneReady && result.failed.length === 0;
   }
 
   async preloadScene(sceneId, { includeOptional = true } = {}) {
@@ -1452,6 +1452,11 @@ export class AudioMixer {
       desiredSceneId: this.desiredScene?.sceneId ?? null,
       audioState: this.audioStatus.state,
       needsGesture: this.audioStatus.needsGesture,
+      settings: this.getSettings(),
+      categoryVolumes: { ...this.categoryVolumes },
+      effectiveBusGains: Object.fromEntries(
+        AUDIO_CATEGORIES.map((category) => [category, this.buses[category]?.gain?.value ?? 0]),
+      ),
       cache,
       categoryCache,
       failedAssets,

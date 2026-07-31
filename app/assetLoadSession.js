@@ -6,7 +6,19 @@ function normalizedJobs(jobs) {
   const byPath = new Map();
   for (const job of Array.isArray(jobs) ? jobs : []) {
     if (!job || typeof job.path !== "string" || typeof job.run !== "function") continue;
-    if (!byPath.has(job.path)) byPath.set(job.path, job);
+    const previous = byPath.get(job.path);
+    if (!previous) {
+      byPath.set(job.path, job);
+      continue;
+    }
+    byPath.set(job.path, {
+      ...previous,
+      run: async (signal) => {
+        const result = await previous.run(signal);
+        await job.run(signal);
+        return result;
+      },
+    });
   }
   return [...byPath.values()];
 }
