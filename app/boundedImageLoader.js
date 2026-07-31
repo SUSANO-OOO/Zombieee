@@ -46,6 +46,9 @@ export function loadImageWithTimeout({
       image.removeAttribute?.("src");
       finish(reject, imageLoadError("AbortError", `Image load cancelled: ${src}`));
     };
+    const decodeFailed = () => {
+      finish(reject, imageLoadError("ImageDecodeError", `Image decode failed: ${src}`));
+    };
 
     image.decoding = "async";
     image.onload = () => {
@@ -54,11 +57,16 @@ export function loadImageWithTimeout({
         ready();
         return;
       }
-      decodeTimer = setTimeout(ready, decodeTimeoutMs);
+      decodeTimer = setTimeout(() => {
+        finish(reject, imageLoadError(
+          "ImageDecodeError",
+          `Image decode timed out after ${decodeTimeoutMs}ms: ${src}`,
+        ));
+      }, decodeTimeoutMs);
       try {
-        void Promise.resolve(image.decode()).then(ready, ready);
+        void Promise.resolve(image.decode()).then(ready, decodeFailed);
       } catch {
-        ready();
+        decodeFailed();
       }
     };
     image.onerror = () => {

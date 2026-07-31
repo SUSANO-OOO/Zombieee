@@ -23,13 +23,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "西新世紀末物語",
-    description: "正式公開版のセーブ確認とアセット準備停止を修正したVersion 0.9.5.1。",
+    description: "実機のアセット再読込循環と音声の一括失敗を修正するVersion 0.9.5.2候補版。",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "西新世紀末物語",
-    description: "正式公開版のセーブ確認とアセット準備停止を修正したVersion 0.9.5.1。",
+    description: "実機のアセット再読込循環と音声の一括失敗を修正するVersion 0.9.5.2候補版。",
   },
 };
 
@@ -41,10 +41,6 @@ export default function RootLayout({
       <head>
         <link rel="preload" as="image" href="/art/v060/title-key-visual-v1.webp" fetchPriority="high" />
         <link rel="preload" as="image" href={V075_VISUAL_PROFILES.ikura.eventPortrait.path} />
-        <link rel="preload" as="image" href="/art/v060/battle-nishijin-shopping-street-v1.webp" fetchPriority="high" />
-        <link rel="preload" as="image" href={V075_VISUAL_PROFILES.crawler.closed.path} fetchPriority="high" />
-        <link rel="preload" as="image" href={V075_VISUAL_PROFILES.crawler.open.path} />
-        <link rel="preload" as="image" href={V075_VISUAL_PROFILES.enemyBase.intact.path} fetchPriority="high" />
       </head>
       <body>{children}</body>
     </html>

@@ -72,6 +72,7 @@ import {
   EmploymentAvailablePopup,
   type CampaignResultView,
   type CampaignScreen,
+  type AssetReadinessView,
   type BossCompendiumView,
   type EnemyCompendiumView,
   type OutbreakMissionScreenView,
@@ -153,6 +154,7 @@ import {
   survivalCombatEndReason,
   survivalDefenseDestination,
   survivalHudSnapshot,
+  SURVIVAL_NORMAL_ENEMY_KINDS,
   survivalUpgradeEffects,
   survivalWaveReward,
 } from "./survivalBattleRuntime.js";
@@ -331,6 +333,11 @@ import {
 import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
 import { loadImageWithTimeout } from "./boundedImageLoader.js";
+import {
+  OPTIONAL_ASSET_LOAD_DEADLINE_MS,
+  runAssetLoadSession,
+  selectRetryAssetJobs,
+} from "./assetLoadSession.js";
 import {
   AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
@@ -1342,7 +1349,16 @@ type PendingOutbreakSettlement = {
   completedAt: string;
 };
 const CAMPAIGN_SAVE_KEY = "nishijin-campaign-v1";
-type AudioUnlockUiState = "idle" | "pending" | "success" | "failed";
+type AudioUnlockUiState = "idle" | "pending" | "success" | "partial" | "failed";
+type AudioChannelUiState = "idle" | "ready" | "failed" | "retrying";
+type AudioAvailability = {
+  context: AudioChannelUiState;
+  testTone: AudioChannelUiState;
+  bgm: AudioChannelUiState;
+  sfx: AudioChannelUiState;
+  voice: AudioChannelUiState;
+  optional: AudioChannelUiState;
+};
 
 type SpriteMap = Record<string, HTMLImageElement>;
 type MusicRuntime = {
@@ -6895,7 +6911,21 @@ export function AshfallGame() {
   const upgradeFeedbackTimerRef = useRef<number | null>(null);
   const volumePreviewLastAtRef = useRef(0);
   const audioActivationPendingRef = useRef(false);
-  const audioAssetFailureRef = useRef(false);
+  const audioAssetFailureRef = useRef(new Set<keyof AudioAvailability>());
+  const audioAvailabilityRef = useRef<AudioAvailability>({
+    context: "idle",
+    testTone: "idle",
+    bgm: "idle",
+    sfx: "idle",
+    voice: "idle",
+    optional: "idle",
+  });
+  const assetRetryPathsRef = useRef<Set<string> | null>(null);
+  const assetPendingPathsRef = useRef(new Set<string>());
+  const assetFailedPathsRef = useRef(new Set<string>());
+  const assetSessionControllerRef = useRef<AbortController | null>(null);
+  const assetSessionHistoryRef = useRef<Array<Record<string, unknown>>>([]);
+  const assetSessionRestartCountRef = useRef(0);
   const pageHiddenRef = useRef(false);
   const fallbackAudioSuspendedRef = useRef(false);
   const runtimePerformanceRef = useRef({
@@ -7000,9 +7030,24 @@ export function AshfallGame() {
   const [musicActive, setMusicActive] = useState(false);
   const [audioUnlockUi, setAudioUnlockUi] = useState<AudioUnlockUiState>("idle");
   const [audioUnlockVisible, setAudioUnlockVisible] = useState(true);
+  const [audioAvailability, setAudioAvailability] = useState<AudioAvailability>(audioAvailabilityRef.current);
   const [assetsReady, setAssetsReady] = useState(false);
   const [assetError, setAssetError] = useState(false);
   const assetLoadGenerationRef = useRef(0);
+  const [assetRetryNonce, setAssetRetryNonce] = useState(0);
+  const [assetReadiness, setAssetReadiness] = useState<AssetReadinessView>({
+    state: "loading",
+    generation: 0,
+    reason: "initial",
+    completed: 0,
+    total: 0,
+    failed: 0,
+    pending: 0,
+    category: "background",
+    retryAvailable: false,
+    retrying: false,
+    failureReason: "",
+  });
   const [qaMode, setQaMode] = useState<QaMode | null>(null);
   const [qaScenario, setQaScenario] = useState<ReturnType<typeof resolveLocalQaScenario>>(null);
   const [selectedSupply, setSelectedSupply] = useState<SupplyKind>("pod");
@@ -7316,6 +7361,17 @@ export function AshfallGame() {
     void persistCampaignSave(campaignSave);
   }, [campaignSave, persistCampaignSave, saveHydrated]);
 
+  const updateAudioAvailability = useCallback((
+    channel: keyof AudioAvailability,
+    state: AudioChannelUiState,
+  ) => {
+    setAudioAvailability((current) => {
+      const next = { ...current, [channel]: state };
+      audioAvailabilityRef.current = next;
+      return next;
+    });
+  }, []);
+
   useEffect(() => {
     const sfxRequestGate = sfxRequestGateRef.current;
     const mixer = createAudioMixer({
@@ -7323,14 +7379,31 @@ export function AshfallGame() {
       maxVoices: 28,
       maxWarningsTotal: 12,
       maxWarningsPerKey: 1,
-      onAssetFailure: () => {
-        audioAssetFailureRef.current = true;
+      onAssetFailure: (failure: { category?: string; optional?: boolean }) => {
+        if (failure.optional) {
+          audioAssetFailureRef.current.add("optional");
+          updateAudioAvailability("optional", "failed");
+          if (audioSuccessTimerRef.current !== null) {
+            window.clearTimeout(audioSuccessTimerRef.current);
+            audioSuccessTimerRef.current = null;
+          }
+          setAudioUnlockVisible(true);
+          if (productionMixerRef.current?.unlocked) setAudioUnlockUi("partial");
+          return;
+        }
+        const channel: keyof AudioAvailability = failure.category === "bgm"
+          ? "bgm"
+          : failure.category === "humanVoices"
+            ? "voice"
+            : "sfx";
+        audioAssetFailureRef.current.add(channel);
+        updateAudioAvailability(channel, "failed");
         if (audioSuccessTimerRef.current !== null) {
           window.clearTimeout(audioSuccessTimerRef.current);
           audioSuccessTimerRef.current = null;
         }
         setAudioUnlockVisible(true);
-        setAudioUnlockUi("failed");
+        if (productionMixerRef.current?.unlocked) setAudioUnlockUi("partial");
       },
       // Decode and gesture failures are exposed through the player-facing
       // audio state and localhost diagnostics instead of browser console noise.
@@ -7342,9 +7415,14 @@ export function AshfallGame() {
         setAudioUnlockVisible(true);
         setAudioUnlockUi("pending");
       } else if (status.state === "running") {
-        if (audioAssetFailureRef.current) {
+        updateAudioAvailability("context", "ready");
+        updateAudioAvailability("testTone", "ready");
+        for (const channel of ["bgm", "sfx", "voice", "optional"] as const) {
+          if (!audioAssetFailureRef.current.has(channel)) updateAudioAvailability(channel, "ready");
+        }
+        if (audioAssetFailureRef.current.size > 0) {
           setAudioUnlockVisible(true);
-          setAudioUnlockUi("failed");
+          setAudioUnlockUi("partial");
         } else if (!audioActivationPendingRef.current) {
           setAudioUnlockVisible(true);
           setAudioUnlockUi("success");
@@ -7355,9 +7433,11 @@ export function AshfallGame() {
           }, 1800);
         }
       } else if (status.state === "failed" || status.state === "recovery-needed") {
+        updateAudioAvailability("context", "failed");
         setAudioUnlockVisible(true);
         setAudioUnlockUi("failed");
       } else if (status.state === "locked") {
+        updateAudioAvailability("context", "idle");
         setAudioUnlockVisible(true);
         setAudioUnlockUi("idle");
       }
@@ -7390,6 +7470,7 @@ export function AshfallGame() {
       sceneIds: PRODUCTION_AUDIO_MANIFEST.scenes.map((scene) => scene.id),
       getCueRequests: () => productionCueQaLogRef.current.map((entry) => ({ ...entry })),
       getDiagnostics: () => mixer.getDiagnostics(),
+      getAvailability: () => ({ ...audioAvailabilityRef.current }),
       getSceneState: () => mixer.getSceneState(),
       unlock: () => mixer.unlock(),
       play: async (cueId: string, options: Record<string, unknown> = {}) => {
@@ -7529,7 +7610,7 @@ export function AshfallGame() {
     return () => {
       sfxRequestGate.cancelPending();
       audioActivationPendingRef.current = false;
-      audioAssetFailureRef.current = false;
+      audioAssetFailureRef.current.clear();
       assetAuditCancelled = true;
       if (assetAuditContext && assetAuditContext.state !== "closed") void assetAuditContext.close();
       detachUnlock();
@@ -7567,7 +7648,7 @@ export function AshfallGame() {
       if (productionMixerRef.current === mixer) productionMixerRef.current = null;
       void mixer.dispose();
     };
-  }, []);
+  }, [updateAudioAvailability]);
 
   useEffect(() => {
     const applyVisibility = (forcedHidden: boolean | null = null) => {
@@ -10673,16 +10754,44 @@ export function AshfallGame() {
     setSelectedAction(action);
   }, []);
 
+  const survivalAssetMode = screen === "survival" || (screen === "battle" && survivalHud !== null);
+  const survivalAssetBossKindKey = (
+    campaignSave.survival.activeCheckpoint?.run?.bossPool
+    ?? campaignSave.outbreaks.survivalBossKinds
+  ).join("|");
+
   useEffect(() => {
     let cancelled = false;
+    const sessionStartedAt = Date.now();
+    let activePhase = "critical";
+    let activePhaseTerminal = false;
+    let latestProgress = { completed: 0, total: 0, pending: 0, pendingPaths: [] as string[] };
     const generation = assetLoadGenerationRef.current + 1;
     assetLoadGenerationRef.current = generation;
     const controller = new AbortController();
+    assetSessionControllerRef.current?.abort();
+    assetSessionControllerRef.current = controller;
     const current = () => !cancelled && assetLoadGenerationRef.current === generation;
+    const retryPaths = assetRetryPathsRef.current;
+    const sessionReason = retryPaths ? "same-screen-retry" : "selection-change";
+    assetRetryPathsRef.current = null;
     queueMicrotask(() => {
       if (!current()) return;
       setAssetsReady(false);
       setAssetError(false);
+      setAssetReadiness({
+        state: "loading",
+        generation,
+        reason: sessionReason,
+        completed: 0,
+        total: 0,
+        failed: 0,
+        pending: 0,
+        category: "background",
+        retryAvailable: false,
+        retrying: Boolean(retryPaths),
+        failureReason: "",
+      });
     });
     const loadImage = (src: string, onReady: (image: HTMLImageElement) => void) => (
       loadImageWithTimeout({
@@ -10711,10 +10820,19 @@ export function AshfallGame() {
       image.removeAttribute("src");
     };
     const selectedFormationKinds = formationKindKey.split("|").filter(Boolean) as UnitKind[];
+    const selectedVariantKinds = selectedFormationKinds.includes("mayo-chan")
+      ? ["mayo-chan-feral" as UnitKind]
+      : [];
     const activeOutbreakEnemyKinds = selectedOutbreakMissionId
       ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
       : [];
-    const stageEnemyKinds = activeOutbreakEnemyKinds.length > 0
+    const survivalBossKinds = survivalAssetBossKindKey.split("|").filter(Boolean) as UnitKind[];
+    const survivalEnemyKinds = survivalAssetMode
+      ? [...new Set([...SURVIVAL_NORMAL_ENEMY_KINDS, ...survivalBossKinds])] as UnitKind[]
+      : [];
+    const stageEnemyKinds = survivalEnemyKinds.length > 0
+      ? survivalEnemyKinds
+      : activeOutbreakEnemyKinds.length > 0
       ? activeOutbreakEnemyKinds as UnitKind[]
       : Array.isArray(CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds)
         ? CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId].enemyKinds as UnitKind[]
@@ -10726,7 +10844,7 @@ export function AshfallGame() {
     // authored enemy roster, so its atlas must remain available in production.
     const requiredSpriteKinds = qaMode || qaScenario
       ? [...spriteKinds]
-      : [...new Set([...selectedFormationKinds, ...stageEnemyKinds, "turned" as UnitKind])];
+      : [...new Set([...selectedFormationKinds, ...selectedVariantKinds, ...stageEnemyKinds, "turned" as UnitKind])];
     const persistentPaths: Record<string, string> = {
       crawlerClosed: V075_VISUAL_PROFILES.crawler.closed.path,
       crawlerOpen: V075_VISUAL_PROFILES.crawler.open.path,
@@ -10745,10 +10863,20 @@ export function AshfallGame() {
         : []),
     ];
     const retainedSpriteKeys = new Set([...Object.keys(persistentPaths), ...requiredSpriteKinds]);
+    const retainedSpriteImages = new Set(
+      Object.entries(spriteRefs.current)
+        .filter(([key]) => retainedSpriteKeys.has(key))
+        .map(([, image]) => image)
+        .filter((image): image is HTMLImageElement => Boolean(image)),
+    );
+    const releasedSpriteImages = new Set<HTMLImageElement>();
     for (const [key, image] of Object.entries(spriteRefs.current)) {
       if (retainedSpriteKeys.has(key)) continue;
-      releaseImage(image);
       delete spriteRefs.current[key];
+      if (!retainedSpriteImages.has(image) && !releasedSpriteImages.has(image)) {
+        releaseImage(image);
+        releasedSpriteImages.add(image);
+      }
     }
     const retainedStageObjectIds = new Set(stageObjectAssets.map((object) => object.id));
     for (const [id, image] of Object.entries(stageObjectRefs.current)) {
@@ -10763,27 +10891,153 @@ export function AshfallGame() {
     }
     if (!backgroundCacheRef.current[activeBattlefieldStageId]) backgroundRef.current = null;
     const currentBackground = backgroundCacheRef.current[activeBattlefieldStageId];
-    const criticalJobs = [
-      ensureImageLoaded(currentBackground, stageVisualFor(activeBattlefieldStageId), (image) => {
+    const activeStage = CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId];
+    const firstWaveEnemyKinds = selectedOutbreakMissionId
+      ? stageEnemyKinds
+      : [...new Set((activeStage?.waves?.[0]?.groups ?? []).map((group) => group.kind))] as UnitKind[];
+    const criticalKinds = qaMode || qaScenario || survivalAssetMode
+      ? requiredSpriteKinds
+      : [...new Set([...selectedFormationKinds, ...selectedVariantKinds, ...firstWaveEnemyKinds])];
+    const optionalKinds = requiredSpriteKinds.filter((kind) => !criticalKinds.includes(kind));
+    const loadedImageByPath = new Map<string, HTMLImageElement>();
+    const imageJob = (
+      path: string,
+      category: string,
+      existing: HTMLImageElement | null | undefined,
+      onReady: (image: HTMLImageElement) => void,
+    ) => ({
+      path,
+      category,
+      run: () => ensureImageLoaded(loadedImageByPath.get(path) ?? existing, path, (image) => {
+        loadedImageByPath.set(path, image);
+        onReady(image);
+      }),
+    });
+    const criticalPersistentKeys = new Set(["crawlerClosed", "crawlerOpen"]);
+    const allCriticalJobs = [
+      imageJob(stageVisualFor(activeBattlefieldStageId), "background", currentBackground, (image) => {
         backgroundCacheRef.current[activeBattlefieldStageId] = image;
         backgroundRef.current = image;
       }),
-      ensureImageLoaded(enemyBaseSpriteRef.current, V075_VISUAL_PROFILES.enemyBase.intact.path, (image) => { enemyBaseSpriteRef.current = image; }),
-      ...requiredSpriteKinds.map((kind) => (
-        ensureImageLoaded(spriteRefs.current[kind], spriteSheetPath(kind), (image) => { spriteRefs.current[kind] = image; })
+      imageJob(V075_VISUAL_PROFILES.enemyBase.intact.path, "base", enemyBaseSpriteRef.current, (image) => { enemyBaseSpriteRef.current = image; }),
+      ...criticalKinds.map((kind) => imageJob(
+        spriteSheetPath(kind),
+        selectedFormationKinds.includes(kind) ? "unit" : "enemy",
+        spriteRefs.current[kind],
+        (image) => { spriteRefs.current[kind] = image; },
       )),
+      ...Object.entries(persistentPaths)
+        .filter(([key]) => criticalPersistentKeys.has(key))
+        .map(([key, src]) => imageJob(
+          src,
+          "crawler",
+          spriteRefs.current[key],
+          (image) => { spriteRefs.current[key] = image; },
+        )),
     ];
     const optionalJobs = [
-      ...Object.entries(persistentPaths).map(([key, src]) => (
-        ensureImageLoaded(spriteRefs.current[key], src, (image) => { spriteRefs.current[key] = image; })
+      ...optionalKinds.map((kind) => imageJob(
+        spriteSheetPath(kind),
+        "optional",
+        spriteRefs.current[kind],
+        (image) => { spriteRefs.current[kind] = image; },
       )),
-      ...stageObjectAssets.map((object) => (
-        ensureImageLoaded(stageObjectRefs.current[object.id], object.path, (image) => { stageObjectRefs.current[object.id] = image; })
+      ...Object.entries(persistentPaths)
+        .filter(([key]) => !criticalPersistentKeys.has(key))
+        .map(([key, src]) => imageJob(
+          src,
+          "optional",
+          spriteRefs.current[key],
+          (image) => { spriteRefs.current[key] = image; },
+        )),
+      ...stageObjectAssets.map((object) => imageJob(
+        object.path,
+        "optional",
+        stageObjectRefs.current[object.id],
+        (image) => { stageObjectRefs.current[object.id] = image; },
       )),
     ];
-    void Promise.allSettled(optionalJobs);
-    void Promise.all(criticalJobs).then(() => {
+    const criticalJobs = retryPaths
+      ? selectRetryAssetJobs(allCriticalJobs, retryPaths)
+      : allCriticalJobs;
+    const totalJobs = criticalJobs.length + (retryPaths ? 0 : optionalJobs.length);
+    const slowTimer = window.setTimeout(() => {
       if (!current()) return;
+      setAssetReadiness((view) => view.state === "loading"
+        ? { ...view, retryAvailable: view.pending > 0 }
+        : view);
+    }, 2500);
+    const recordSession = (record: Record<string, unknown>) => {
+      assetSessionHistoryRef.current = [...assetSessionHistoryRef.current.slice(-11), record];
+    };
+    const publishProgress = (snapshot: {
+      completed: number;
+      total: number;
+      failed: number;
+      pending: number;
+      activeCategory?: string | null;
+      pendingPaths: string[];
+    }) => {
+      latestProgress = {
+        completed: snapshot.completed,
+        total: snapshot.total,
+        pending: snapshot.pending,
+        pendingPaths: snapshot.pendingPaths,
+      };
+      if (!current()) return;
+      assetPendingPathsRef.current = new Set(snapshot.pendingPaths);
+      setAssetReadiness((view) => ({
+        ...view,
+        completed: snapshot.completed,
+        total: totalJobs,
+        failed: snapshot.failed,
+        pending: Math.max(0, totalJobs - snapshot.completed),
+        category: snapshot.activeCategory ?? view.category,
+      }));
+    };
+    void runAssetLoadSession({
+      jobs: criticalJobs,
+      generation,
+      reason: sessionReason,
+      signal: controller.signal,
+      abort: () => controller.abort(),
+      onProgress: publishProgress,
+    }).then(async (criticalResult) => {
+      if (!current()) return;
+      window.clearTimeout(slowTimer);
+      assetPendingPathsRef.current.clear();
+      assetFailedPathsRef.current = new Set(criticalResult.failures.map((failure) => failure.path));
+      recordSession({
+        generation,
+        reason: sessionReason,
+        phase: "critical",
+        status: criticalResult.status,
+        startedAt: new Date(sessionStartedAt).toISOString(),
+        elapsedMs: criticalResult.elapsedMs,
+        completed: criticalResult.completed,
+        total: criticalResult.total,
+        failures: criticalResult.failures,
+        deadlineReached: criticalResult.deadlineReached,
+      });
+      activePhaseTerminal = true;
+      if (criticalResult.status !== "ready") {
+        const firstFailure = criticalResult.failures[0];
+        setAssetError(true);
+        setAssetReadiness({
+          state: "error",
+          generation,
+          reason: sessionReason,
+          completed: criticalResult.completed,
+          total: criticalResult.total,
+          failed: criticalResult.failures.length,
+          pending: 0,
+          category: firstFailure?.category ?? "asset",
+          retryAvailable: true,
+          retrying: false,
+          failureReason: firstFailure?.reason ?? "unknown",
+        });
+        return;
+      }
       const root = document.documentElement;
       root.dataset.assetResidentScope = qaMode || qaScenario ? "all-local-qa" : "stage-and-formation";
       root.dataset.assetResidentStage = activeOperationId;
@@ -10791,12 +11045,161 @@ export function AshfallGame() {
       root.dataset.assetResidentStageObjects = String(Object.keys(stageObjectRefs.current).length);
       root.dataset.assetResidentBackgrounds = String(Object.keys(backgroundCacheRef.current).length);
       setAssetsReady(true);
-    }).catch(() => { if (current()) setAssetError(true); });
+      setAssetError(false);
+      setAssetReadiness({
+        state: "ready",
+        generation,
+        reason: sessionReason,
+        completed: criticalResult.completed,
+        total: criticalResult.total,
+        failed: 0,
+        pending: 0,
+        category: "asset",
+        retryAvailable: false,
+        retrying: false,
+        failureReason: "",
+      });
+      if (optionalJobs.length === 0) return;
+      activePhase = "optional";
+      activePhaseTerminal = false;
+      const optionalResult = await runAssetLoadSession({
+        jobs: optionalJobs,
+        generation,
+        reason: "optional-background",
+        signal: controller.signal,
+        abort: () => controller.abort(),
+        deadlineMs: OPTIONAL_ASSET_LOAD_DEADLINE_MS,
+        onProgress: (snapshot) => {
+          latestProgress = {
+            completed: snapshot.completed,
+            total: snapshot.total,
+            pending: snapshot.pending,
+            pendingPaths: snapshot.pendingPaths,
+          };
+        },
+      });
+      if (!current()) return;
+      recordSession({
+        generation,
+        reason: "optional-background",
+        phase: "optional",
+        status: optionalResult.status,
+        startedAt: new Date(sessionStartedAt).toISOString(),
+        elapsedMs: optionalResult.elapsedMs,
+        completed: optionalResult.completed,
+        total: optionalResult.total,
+        failures: optionalResult.failures,
+        deadlineReached: optionalResult.deadlineReached,
+      });
+      activePhaseTerminal = true;
+      if (optionalResult.status !== "ready") {
+        const firstFailure = optionalResult.failures[0];
+        setAssetReadiness({
+          state: "degraded-ready",
+          generation,
+          reason: "optional-background",
+          completed: criticalResult.total + optionalResult.completed,
+          total: criticalResult.total + optionalResult.total,
+          failed: optionalResult.failures.length,
+          pending: 0,
+          category: "optional",
+          retryAvailable: false,
+          retrying: false,
+          failureReason: firstFailure?.reason ?? "unknown",
+        });
+      } else {
+        setAssetReadiness((view) => ({
+          ...view,
+          completed: criticalResult.total + optionalResult.total,
+          total: criticalResult.total + optionalResult.total,
+        }));
+      }
+    }).catch((error) => {
+      if (!current()) return;
+      window.clearTimeout(slowTimer);
+      setAssetError(true);
+      setAssetReadiness((view) => ({
+        ...view,
+        state: "error",
+        failed: Math.max(1, view.failed),
+        pending: 0,
+        retryAvailable: true,
+        retrying: false,
+        failureReason: error?.name === "AbortError" ? "cancelled" : "unknown",
+      }));
+      activePhaseTerminal = true;
+    });
     return () => {
+      if (!activePhaseTerminal) {
+        recordSession({
+          generation,
+          reason: assetRetryPathsRef.current
+            ? "superseded-by-same-screen-retry"
+            : "superseded-by-selection-change",
+          phase: activePhase,
+          status: "cancelled",
+          startedAt: new Date(sessionStartedAt).toISOString(),
+          elapsedMs: Date.now() - sessionStartedAt,
+          ...latestProgress,
+          failures: [],
+          deadlineReached: false,
+        });
+      }
       cancelled = true;
+      window.clearTimeout(slowTimer);
       controller.abort();
     };
-  }, [activeBattlefieldStageId, activeOperationId, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId]);
+  }, [activeBattlefieldStageId, activeOperationId, assetRetryNonce, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
+
+  const retryAssets = useCallback(() => {
+    const retryPaths = new Set([
+      ...assetFailedPathsRef.current,
+      ...assetPendingPathsRef.current,
+    ]);
+    if (retryPaths.size === 0) return;
+    assetRetryPathsRef.current = retryPaths;
+    assetSessionRestartCountRef.current += 1;
+    assetSessionControllerRef.current?.abort();
+    setAssetsReady(false);
+    setAssetError(false);
+    setAssetReadiness((view) => ({
+      ...view,
+      state: "loading",
+      reason: "same-screen-retry",
+      retryAvailable: false,
+      retrying: true,
+    }));
+    setAssetRetryNonce((nonce) => nonce + 1);
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.assetLoadState = assetReadiness.state;
+    root.dataset.assetLoadGeneration = String(assetReadiness.generation);
+    root.dataset.assetLoadReason = assetReadiness.reason;
+    root.dataset.assetLoadCompleted = String(assetReadiness.completed);
+    root.dataset.assetLoadTotal = String(assetReadiness.total);
+    root.dataset.assetLoadFailed = String(assetReadiness.failed);
+    root.dataset.assetLoadPending = String(assetReadiness.pending);
+    root.dataset.assetLoadRestartCount = String(assetSessionRestartCountRef.current);
+    root.dataset.assetLoadFailureReason = assetReadiness.failureReason || "none";
+    const qaWindow = window as typeof window & { __ASHFALL_ASSET_QA__?: unknown };
+    const bridge = {
+      getState: () => ({ ...assetReadiness }),
+      getHistory: () => assetSessionHistoryRef.current.map((entry) => ({ ...entry })),
+      getPendingPaths: () => [...assetPendingPathsRef.current],
+      getFailedPaths: () => [...assetFailedPathsRef.current],
+      getLoadedSpriteKeys: () => Object.entries(spriteRefs.current)
+        .filter(([, image]) => Boolean(image?.naturalWidth))
+        .map(([key]) => key),
+      getRestartCount: () => assetSessionRestartCountRef.current,
+      retry: retryAssets,
+    };
+    qaWindow.__ASHFALL_ASSET_QA__ = bridge;
+    return () => {
+      if (qaWindow.__ASHFALL_ASSET_QA__ === bridge) delete qaWindow.__ASHFALL_ASSET_QA__;
+    };
+  }, [assetReadiness, retryAssets]);
 
   useEffect(() => {
     const configureCanvas = () => {
@@ -12151,6 +12554,7 @@ export function AshfallGame() {
   }, [activeOperationId, bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, playCue, qaMode, qaScenario, selectedSupply, startMusic]);
 
   const startSurvivalGame = useCallback((run: ReturnType<typeof createSurvivalRun>) => {
+    if (!assetsReady || assetError) return;
     const requestedKinds = run.formation.unitIds.flatMap((unitId: string) => {
       const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
         .find((candidate) => candidate.id === unitId);
@@ -12185,7 +12589,7 @@ export function AshfallGame() {
     desiredMusicModeRef.current = "normal";
     if (!bgmMuted) startMusic();
     playCue("start-low");
-  }, [bgmMuted, chooseAction, disposeBattleRuntime, formationKinds, playCue, selectedSupply, startMusic]);
+  }, [assetError, assetsReady, bgmMuted, chooseAction, disposeBattleRuntime, formationKinds, playCue, selectedSupply, startMusic]);
 
   const openSurvival = useCallback(() => {
     const unlocked = campaignSave.survival.unlockedStartWaves;
@@ -12195,6 +12599,8 @@ export function AshfallGame() {
     setSelectedStageId(CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL);
     setSelectedOutbreakMissionId(null);
     setSurvivalResult(null);
+    setAssetsReady(false);
+    setAssetError(false);
     setScreen("survival");
   }, [campaignSave.survival.unlockedStartWaves, selectedSurvivalStartWave]);
 
@@ -12295,6 +12701,8 @@ export function AshfallGame() {
 
   const selectStage = useCallback((stageId: string) => {
     if (!qaMode && !qaScenario && !isStageUnlocked(campaignSave, stageId)) return;
+    setAssetsReady(false);
+    setAssetError(false);
     setSelectedStageId(stageId);
     setCampaignSave((current) => selectCampaignStage(current, stageId) as CampaignSave);
   }, [campaignSave, qaMode, qaScenario]);
@@ -13658,27 +14066,62 @@ export function AshfallGame() {
       const played = mixer.unlocked && mixer.getAudioStatus().state === "running"
         ? mixer.playTestTone({ respectSettings: true })
         : await mixer.enableAudio();
-      if (!played) return false;
-      return mixer.retryFailedAudio();
+      return Boolean(played);
     })();
     void test.then((played: boolean) => {
       audioActivationPendingRef.current = false;
       if (!played) {
+        updateAudioAvailability("context", "failed");
+        updateAudioAvailability("testTone", "failed");
         setAudioUnlockUi("failed");
         return;
       }
-      audioAssetFailureRef.current = false;
-      setAudioUnlockUi("success");
+      updateAudioAvailability("context", "ready");
+      updateAudioAvailability("testTone", "ready");
+      for (const channel of audioAssetFailureRef.current) updateAudioAvailability(channel, "retrying");
+      setAudioUnlockUi(audioAssetFailureRef.current.size > 0 ? "partial" : "success");
       if (audioSuccessTimerRef.current !== null) window.clearTimeout(audioSuccessTimerRef.current);
       audioSuccessTimerRef.current = window.setTimeout(() => {
-        setAudioUnlockVisible(false);
+        if (audioAssetFailureRef.current.size === 0) setAudioUnlockVisible(false);
         audioSuccessTimerRef.current = null;
       }, 1800);
+      // Asset recovery is intentionally detached from AudioContext/test-tone
+      // acceptance. One broken BGM, SFX, voice, or optional file must not
+      // downgrade the working categories or trap the player in an audio gate.
+      void mixer.retryFailedAudio().then(() => {
+        const failedAssets = mixer.getDiagnostics().failedAssets as Array<{
+          category: string;
+          optional: boolean;
+        }>;
+        const failedChannels = new Set<keyof AudioAvailability>();
+        for (const failure of failedAssets) {
+          if (failure.optional) {
+            failedChannels.add("optional");
+            continue;
+          }
+          failedChannels.add(failure.category === "bgm"
+            ? "bgm"
+            : failure.category === "humanVoices"
+              ? "voice"
+              : "sfx");
+        }
+        audioAssetFailureRef.current = failedChannels;
+        for (const channel of ["bgm", "sfx", "voice", "optional"] as const) {
+          updateAudioAvailability(channel, failedChannels.has(channel) ? "failed" : "ready");
+        }
+        setAudioUnlockVisible(failedChannels.size > 0);
+        setAudioUnlockUi(failedChannels.size > 0 ? "partial" : "success");
+      }).catch(() => {
+        setAudioUnlockVisible(true);
+        setAudioUnlockUi("partial");
+      });
     }).catch(() => {
       audioActivationPendingRef.current = false;
+      updateAudioAvailability("context", "failed");
+      updateAudioAvailability("testTone", "failed");
       setAudioUnlockUi("failed");
     });
-  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end, pendingResultCommit]);
+  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end, pendingResultCommit, updateAudioAvailability]);
 
   const playAudioTestTone = useCallback(() => {
     enableAudio();
@@ -18731,8 +19174,14 @@ export function AshfallGame() {
     : "BOSS";
   const bossHudSide = (hud.bossWorldX ?? 0) >= W * .64 ? "boss-hud-left" : "boss-hud-right";
   const combatLocked = !!end || hud.baseHp <= 0 || hud.barricadeHp <= 0;
-  const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
-  const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
+  const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "partial" ? "一部音声を再試行できます" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
+  const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "partial" ? "一部再試行" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
+  const audioCategorySummary = ([
+    ["BGM", audioAvailability.bgm],
+    ["SE", audioAvailability.sfx],
+    ["VOICE", audioAvailability.voice],
+    ["OPTIONAL", audioAvailability.optional],
+  ] as const).map(([label, state]) => `${label}:${state === "ready" ? "OK" : state === "failed" ? "不可" : state === "retrying" ? "再試行中" : "待機"}`).join(" / ");
 
   return (
     <main
@@ -18742,9 +19191,26 @@ export function AshfallGame() {
       data-battlefield-stage-id={activeBattlefieldStageId}
       data-release-version={RELEASE_VERSION}
       data-save-persistence={savePersistence}
-      data-assets-state={assetsReady ? "ready" : assetError ? "error" : "loading"}
+      data-assets-state={assetReadiness.state}
+      data-asset-generation={assetReadiness.generation}
+      data-asset-reason={assetReadiness.reason}
+      data-asset-failed={assetReadiness.failed}
+      data-asset-pending={assetReadiness.pending}
+      data-asset-restart-count={assetSessionRestartCountRef.current}
+      data-audio-context={audioAvailability.context}
+      data-audio-test-tone={audioAvailability.testTone}
+      data-audio-bgm={audioAvailability.bgm}
+      data-audio-sfx={audioAvailability.sfx}
+      data-audio-voice={audioAvailability.voice}
+      data-audio-optional={audioAvailability.optional}
     >
-      <section className="game-frame" style={{ "--battlefield-art": `url('${stageVisualFor(activeBattlefieldStageId)}')` } as CSSProperties} aria-label="西新世紀末物語 ゲーム">
+      <section
+        className="game-frame"
+        style={screen === "battle" && assetsReady
+          ? { backgroundImage: `url('${stageVisualFor(activeBattlefieldStageId)}')` }
+          : undefined}
+        aria-label="西新世紀末物語 ゲーム"
+      >
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
@@ -18783,11 +19249,11 @@ export function AshfallGame() {
           data-audio-unlock-control="true"
           onClick={enableAudio}
           disabled={audioUnlockUi === "pending" || Boolean(end || pendingResultCommit)}
-          aria-label={audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする"}
+          aria-label={audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : audioUnlockUi === "partial" ? "利用できない音声だけ再試行" : "音声を有効にする"}
           aria-live="polite"
         >
           <b><span className="audio-unlock-long">{audioUnlockLabel}</span><span className="audio-unlock-short">{audioUnlockShortLabel}</span></b>
-          <small>{audioUnlockUi === "success" ? "確認音を再生しました（聞こえない場合は端末・タブのミュートを確認）" : audioUnlockUi === "failed" ? "音源または再生処理を確認して、タップで再試行" : "タップしてBGM・環境音・効果音・戦闘ボイスを開始"}</small>
+          <small>{audioUnlockUi === "success" ? "確認音を再生しました（聞こえない場合は端末・タブのミュートを確認）" : audioUnlockUi === "partial" ? audioCategorySummary : audioUnlockUi === "failed" ? "AudioContextまたは確認音を開始できません。タップで再試行" : "タップしてBGM・環境音・効果音・戦闘ボイスを開始"}</small>
         </button>}
         {screen === "battle" && <>
         {hud.battleBarks.length > 0 && <div className={`battle-barks ${bossHudSide === "boss-hud-left" ? "battle-barks-right" : ""}`} aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
@@ -18952,12 +19418,17 @@ export function AshfallGame() {
               <small>START WAVE</small><h2>開始wave</h2>
               <div className="survival-start-waves">{campaignSave.survival.unlockedStartWaves.map((wave) => <button key={wave} className={selectedSurvivalStartWave === wave ? "active" : ""} onClick={() => setSelectedSurvivalStartWave(wave)}>WAVE {wave}</button>)}</div>
               <p>最高到達wave {campaignSave.survival.highestReachedWave} / 累計run {campaignSave.survival.totalRuns}</p>
-              <button className="survival-start" disabled={formationUnitIds.length === 0 || saveMutationPending} onClick={startNewSurvival}>新しいrunを開始</button>
+              <button className="survival-start" disabled={formationUnitIds.length === 0 || saveMutationPending || !assetsReady || assetError} onClick={startNewSurvival}>{assetsReady ? "新しいrunを開始" : "戦闘アセットを準備中"}</button>
             </article>
             {campaignSave.survival.activeCheckpoint && <article className="survival-resume-card">
               <small>CHECKPOINT FOUND</small><h2>WAVE {campaignSave.survival.activeCheckpoint.checkpointWave}から再開</h2>
               <p>保存済みの部隊Level・装備・一時強化・CRAWLER HPを復元します。</p>
-              <button disabled={saveMutationPending} onClick={resumeSurvival}>checkpointから再開</button>
+              <button disabled={saveMutationPending || !assetsReady || assetError} onClick={resumeSurvival}>{assetsReady ? "checkpointから再開" : "戦闘アセットを準備中"}</button>
+            </article>}
+            {(!assetsReady || assetError) && <article className="survival-asset-status" role={assetError ? "alert" : "status"} aria-live="polite">
+              <small>ASSET CHECK</small><h2>{assetError ? "Survivalアセットを準備できません" : "Survivalアセットを準備中"}</h2>
+              <p>{assetReadiness.completed} / {assetReadiness.total}{assetReadiness.failed > 0 ? `・失敗${assetReadiness.failed}件` : ""}</p>
+              {assetError && <button className="asset-retry" disabled={assetReadiness.retrying} onClick={retryAssets}>{assetReadiness.retrying ? "再試行中…" : "この画面で失敗項目を再試行"}</button>}
             </article>}
           </div>
         </section></div>}
@@ -19000,6 +19471,7 @@ export function AshfallGame() {
           loadoutReturnLabel={selectedOutbreakMissionId ? "異常発生任務" : "地図へ"}
           assetsReady={assetsReady}
           assetError={assetError}
+          assetReadiness={assetReadiness}
           hasCampaignSave={campaignSave.campaignStarted}
           saveRecoveryRequired={saveRecovery !== null}
           saveRecoveryReason={saveRecovery?.recoveryReason ?? ""}
@@ -19046,7 +19518,7 @@ export function AshfallGame() {
           onContinueResult={continueResult}
           onContinueOutbreakResult={continueOutbreakResult}
           onResetSave={resetCampaign}
-          onReloadAssets={() => window.location.reload()}
+          onReloadAssets={retryAssets}
         />}
         {screen !== "battle" && campaignSave.migrationNotices[0] && <div className="migration-notice" role="alertdialog" aria-modal="true" aria-label="Version 0.9.0キャップ経済再編">
           <section>

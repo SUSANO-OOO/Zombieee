@@ -810,11 +810,11 @@ test("gameplay routes scenes, combat identity, and procedural fallback through t
   assert.match(source, /const fallback = \(\) => productionMixer\.playTestTone\(\{/);
   assert.match(source, /if \(!productionMixer\) return false/);
   assert.match(source, /if \(!productionCue\) return fallback\(\)/);
-  assert.match(source, /audioActivationPendingRef\.current = true[\s\S]*mixer\.playTestTone\(\{ respectSettings: true \}\)[\s\S]*await mixer\.enableAudio\(\)[\s\S]*mixer\.retryFailedAudio\(\)/);
-  assert.match(source, /onAssetFailure: \(\) => \{[\s\S]*setAudioUnlockUi\("failed"\)/);
+  assert.match(source, /audioActivationPendingRef\.current = true[\s\S]*mixer\.playTestTone\(\{ respectSettings: true \}\)[\s\S]*await mixer\.enableAudio\(\)[\s\S]*void mixer\.retryFailedAudio\(\)\.then/);
+  assert.match(source, /onAssetFailure: \(failure:[\s\S]*failure\.category === "bgm"[\s\S]*setAudioUnlockUi\("partial"\)/);
   assert.match(source, /className="audio-test-tone" data-audio-unlock-control="true" onClick=\{playAudioTestTone\}/);
   assert.match(source, /className="enable-audio-button"[\s\S]*data-audio-unlock-control="true"/);
-  for (const label of ["音声を有効にする", "音声を準備中…", "音声が有効になりました", "音声を開始できませんでした　もう一度試す"]) {
+  for (const label of ["音声を有効にする", "音声を準備中…", "音声が有効になりました", "一部音声を再試行できます", "音声を開始できませんでした　もう一度試す"]) {
     assert.match(source, new RegExp(label));
   }
   assert.match(source, /const audioUnlockShortLabel = [\s\S]*"音声開始"/);

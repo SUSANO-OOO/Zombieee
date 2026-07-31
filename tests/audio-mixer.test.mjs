@@ -629,6 +629,43 @@ test("a partially running scene starts its recovered BGM after explicit retry wi
   await mixer.dispose();
 });
 
+test("a recovered BGM restarts even while an unrelated optional failure remains", async () => {
+  const context = new FakeAudioContext();
+  const manifest = createAudioManifest({
+    assets: [
+      { id: "retry-bgm", category: "bgm", sources: [{ src: "/audio/retry-bgm.ogg" }], loop: true },
+      { id: "broken-optional", category: "ui", sources: [{ src: "/audio/broken-optional.ogg" }], preload: "lazy" },
+    ],
+    scenes: [{ id: "recoverable", bgm: "retry-bgm" }],
+  });
+  let bgmAvailable = false;
+  const fetcher = async (path) => {
+    if (path === "/audio/retry-bgm.ogg" && bgmAvailable) {
+      return { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([4]).buffer };
+    }
+    return { ok: false, status: 503, arrayBuffer: async () => new ArrayBuffer(0) };
+  };
+  const mixer = createAudioMixer({ manifest, contextFactory: () => context, fetcher, logger: { warn() {} } });
+  await mixer.unlock();
+  await mixer.setScene("recoverable");
+  await mixer.play("broken-optional");
+  assert.deepEqual(
+    mixer.getDiagnostics().failedAssets.map((asset) => asset.assetId).sort(),
+    ["broken-optional", "retry-bgm"],
+  );
+
+  bgmAvailable = true;
+  assert.equal(await mixer.retryFailedAudio(), false);
+  assert.equal(mixer.getSceneState().bgmAssetId, "retry-bgm");
+  assert.equal(mixer.getDiagnostics().activeSceneVoices, 1);
+  assert.deepEqual(mixer.getDiagnostics().failedAssets, [{
+    assetId: "broken-optional",
+    category: "ui",
+    optional: true,
+  }]);
+  await mixer.dispose();
+});
+
 test("different scenes sharing one BGM preserve the existing loop without self-crossfading", async () => {
   const context = new FakeAudioContext();
   const { fetcher } = makeFetcher();
@@ -783,10 +820,71 @@ test("load and decode failures stay silent, cache the failure, and emit only bou
   assert.equal(warnings.length, 2);
   assert.equal(mixer.getDiagnostics().warningTotal, 2);
   assert.equal(mixer.getDiagnostics().cache.failed, 1);
-  assert.deepEqual(assetFailures, [{ assetId: "broken", phase: "load", error: "HTTP 404" }]);
+  assert.deepEqual(assetFailures, [{
+    assetId: "broken",
+    category: "ui",
+    optional: true,
+    phase: "load",
+    reason: "load",
+    error: "HTTP 404",
+  }]);
+  assert.deepEqual(mixer.getDiagnostics().failedAssets, [{
+    assetId: "broken",
+    category: "ui",
+    optional: true,
+  }]);
   assert.ok(await mixer.play("healthy", { onLoadFailure: () => { healthyFallbacks += 1; } }));
   assert.equal(await mixer.play("healthy", { onLoadFailure: () => { healthyFallbacks += 1; } }), null);
   assert.equal(healthyFallbacks, 0);
+  await mixer.dispose();
+});
+
+test("a pending audio request reaches a bounded failed terminal without blocking other categories", async () => {
+  const manifest = createAudioManifest({
+    assets: [
+      { id: "hung-bgm", category: "bgm", sources: [{ src: "/audio/hung.ogg" }], preload: "scene" },
+      { id: "voice-ok", category: "humanVoices", sources: [{ src: "/audio/voice-ok.ogg" }] },
+    ],
+  });
+  const context = new FakeAudioContext();
+  const failures = [];
+  const mixer = createAudioMixer({
+    manifest,
+    contextFactory: () => context,
+    fetcher: async (path) => path.includes("hung")
+      ? new Promise(() => {})
+      : { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([8]).buffer },
+    assetLoadTimeoutMs: 10,
+    onAssetFailure: (failure) => failures.push(failure),
+    logger: null,
+  });
+  assert.equal(await mixer.unlock(), true);
+  assert.equal(await mixer.play("hung-bgm"), null);
+  assert.ok(await mixer.play("voice-ok"));
+  assert.equal(mixer.getDiagnostics().cache.failed, 1);
+  assert.equal(mixer.getDiagnostics().categoryCache.bgm.failed, 1);
+  assert.equal(mixer.getDiagnostics().categoryCache.humanVoices.ready, 1);
+  assert.equal(failures[0].reason, "timeout");
+  await mixer.dispose();
+});
+
+test("a pending audio decode reaches its own deadline and remains retryable", async () => {
+  const manifest = createAudioManifest({
+    assets: [{ id: "decode-hang", category: "weapons", sources: [{ src: "/audio/decode-hang.ogg" }] }],
+  });
+  const context = new FakeAudioContext();
+  context.decodeAudioData = () => new Promise(() => {});
+  const mixer = createAudioMixer({
+    manifest,
+    contextFactory: () => context,
+    fetcher: async () => ({ ok: true, status: 200, arrayBuffer: async () => new Uint8Array([9]).buffer }),
+    assetDecodeTimeoutMs: 10,
+    logger: null,
+  });
+  assert.equal(await mixer.unlock(), true);
+  assert.equal(await mixer.play("decode-hang"), null);
+  assert.equal(mixer.getDiagnostics().cache.failed, 1);
+  assert.equal(mixer.getDiagnostics().failedAssets[0].assetId, "decode-hang");
   await mixer.dispose();
 });
 
