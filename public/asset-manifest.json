@@ -1,0 +1,4654 @@
+{
+  "schema": "zombieee-asset-manifest/1",
+  "version": "0.9.5.2",
+  "releaseSha": "__ZOMBIEEE_RELEASE_SHA__",
+  "assets": [
+    {
+      "path": "/art/v060/battle-nishijin-defense-line-v1.webp",
+      "bytes": 172174,
+      "hash": "sha256-4bd351304b064f86a3b8c651433e3aba6560564df315beeea9c8678967948a89",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/battle-nishijin-shopping-street-v1.webp",
+      "bytes": 202546,
+      "hash": "sha256-ebf06a6c88b82bf66bd3656df53ba7ee173e61eb6a9fddff234869781c557b12",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/battle-sawara-ward-office-v1.webp",
+      "bytes": 161650,
+      "hash": "sha256-6e170fe465bac7e4c8b6bd7fc7604ab27d18839f90991b162c924a83d86ab9d8",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/campaign-operations-room-v1.webp",
+      "bytes": 86328,
+      "hash": "sha256-f4c31e5af846b5f8a78f68d6cc3bd0c99dbee5006d0b8d013874d5785326f983",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/babayaga-battle-v1.png",
+      "bytes": 1011150,
+      "hash": "sha256-0868e7eafc96ac495b7fa708411635ba2736f35b9bbd9b173a96570e00123b08",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/crazy-king-battle-v1.png",
+      "bytes": 1260920,
+      "hash": "sha256-8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/kumaverson-battle-v1.png",
+      "bytes": 1456630,
+      "hash": "sha256-b1fcca003c5635543b29ca9ca3e0b4f5a0b81a906a03ce22d2d6aa58ee49a346",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+      "bytes": 725523,
+      "hash": "sha256-f1b5149ad4d4a1cc94220b40cd336d18d38372cbe26aefbf27620ba808dee836",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/legacy/crusher-battle-gutter-v1.png",
+      "bytes": 1254543,
+      "hash": "sha256-41bf73592852dbb5e0ebe0a636a18220737dcbad170fb9b6b4985f6ab38ae8d9",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/legacy/infected-battle-gutter-v1.png",
+      "bytes": 837438,
+      "hash": "sha256-2b84bd0400bdd8ea1a8b4ba85e9bd5fedf508febd58a47264450fba468638e50",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/legacy/shade-battle-gutter-v1.png",
+      "bytes": 863278,
+      "hash": "sha256-9b32752942adf2b925812c0cbd7c730323518f79c1de22c4eb4eef13138fb2ce",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/legacy/spitter-battle-gutter-v1.png",
+      "bytes": 900461,
+      "hash": "sha256-45176212d2b319c17377f8e29ca2c02acc68410ae5456ff2ca9bcf007a20439a",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/legacy/takuya-battle-gutter-v1.png",
+      "bytes": 1074469,
+      "hash": "sha256-1755d54cb9433eae25cc8b9e072a442ae6279f20ea6d546b987584dc70561406",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/portraits/babayaga-portrait-v2.webp",
+      "bytes": 207802,
+      "hash": "sha256-fe45eab764d8ecb37381a9d8f5a0276ede6729bd1e8a4bae60e5730565d7bd8f",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/characters/portraits/brawler-portrait-v2.webp",
+      "bytes": 257624,
+      "hash": "sha256-9c4ea4d8bc5d2fd2bae10ea5bb455f45127d1d861edf2d3061866eb9c36df010",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/characters/portraits/crazy-king-portrait-v2.webp",
+      "bytes": 268064,
+      "hash": "sha256-9f88ded9e46f79fac93cb0ada89cea7917db4d738fd93d6c06721836c36f97f5",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/characters/portraits/kumaverson-portrait-v2.webp",
+      "bytes": 253270,
+      "hash": "sha256-7601771e3ffc55f69e5cd3429abf2a40293fe015a6d8420a82160c32324bb787",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/characters/portraits/radio-terminal-portrait-v1.webp",
+      "bytes": 213820,
+      "hash": "sha256-2d20e92b7876004b1690f3380c0cc297579152acb6ca7a7b951b5df8ba2b2f4d",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/defense-infection-nest-damaged-v1.png",
+      "bytes": 211334,
+      "hash": "sha256-59bbf0466d1511ecca49debbef3198d8e705e7d4a00ee5289cd6e3a9575dae59",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/defense-infection-nest-destroyed-v1.png",
+      "bytes": 122891,
+      "hash": "sha256-726217866dafb7ef16266b187236e075987c2ff5916db79c6bdc093328860768",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/defense-infection-nest-dormant-v1.png",
+      "bytes": 193405,
+      "hash": "sha256-550755a0b1957f3e3f237737c0bea002334c463ce751f03caa96d51e2c003e9a",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/defense-infection-nest-exposed-v1.png",
+      "bytes": 214678,
+      "hash": "sha256-3998739040c50370cf8b309ef03ec620e62aa65f90869ae1a32e98fb9f150e19",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/defense-spawn-marker-v1.png",
+      "bytes": 131410,
+      "hash": "sha256-3f43d466bebf23ced0d7b471353083ce6cf9c3bfa5939565a67428d758e48c5f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/defense-static-dressing-v1.png",
+      "bytes": 1341552,
+      "hash": "sha256-4a4312a0997fd6009098325440f7c1c225df20d51cbeb9ebe25f55446663a75c",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/defense-transmitter-active-v1.png",
+      "bytes": 109775,
+      "hash": "sha256-a83c1185cb2c80cf0f568f5299134cd37f4f38b6c7dbc0775299bc06e5988309",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/defense-transmitter-damaged-v1.png",
+      "bytes": 123225,
+      "hash": "sha256-50b341ec09f6faefe4c6ca3c419cc60c1891730450e624f122bb4264abde4f43",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/nishijin-fire-shutter-closed-v1.png",
+      "bytes": 236354,
+      "hash": "sha256-3110add057907d0b9e6339f051615651afad0674c6e1e06a3bfe53cf78e62c16",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/nishijin-fire-shutter-open-v1.png",
+      "bytes": 229360,
+      "hash": "sha256-39c9a199e055aa6a9486b1dc23c71a35dc9bea6c5d2136f5ef1836e2ba374718",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/nishijin-infection-node-active-v1.png",
+      "bytes": 139785,
+      "hash": "sha256-299d07325d1945d1a62b8c7a31da1e6500d310a1f9ac8624a0df66ece71a5ad7",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/nishijin-infection-node-destroyed-v1.png",
+      "bytes": 903372,
+      "hash": "sha256-ccace0c524c892cd0dbc342261cb5c6485d9a2e4d21305aad0c983f6a4b3d815",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/nishijin-sign-fallen-v1.png",
+      "bytes": 123729,
+      "hash": "sha256-efaf2a22b16048b634f5c44564bbe3b7219e735d8a3eefa6e6d685194e939c0a",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/nishijin-sign-intact-v1.png",
+      "bytes": 144271,
+      "hash": "sha256-45c6180616e27ed06a8b7075031933a027703633f34c6fcdb0c325767ed421b9",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/nishijin-static-dressing-v1.png",
+      "bytes": 1665442,
+      "hash": "sha256-d277726f8aefe8f100eae4873623a01a36d1e9c66e3a406e6fcdfb24fc675692",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/nishijin-wire-trap-intact-v1.png",
+      "bytes": 45758,
+      "hash": "sha256-aa161313c9cf55ac05b64a24be7d2317f4cc5b97d82ff5ee025510dfa72b67b4",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/nishijin-wire-trap-sprung-v1.png",
+      "bytes": 61366,
+      "hash": "sha256-a15e8c564eb00ebb0a35995f8177c9ebc3e8c49093af1240e93a6ed7bfd2add7",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/sawara-lunch-crate-open-v1.png",
+      "bytes": 142276,
+      "hash": "sha256-3ca89348e6c5a61e754ed36c628fd175dc858f79c68b599a72bcf8e435d5c79e",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/sawara-lunch-crate-sealed-v1.png",
+      "bytes": 131878,
+      "hash": "sha256-707fd92a82166ff2112ae79e1e4a14f8d74734735430daffdea29bac021d1ed2",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/sawara-rescue-van-blocked-v1.png",
+      "bytes": 168924,
+      "hash": "sha256-ac0d001cde7e027aa1ac0afd28c9e4d20b78bee3ae5884af6e68d68d83cbc024",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/sawara-rescue-van-ready-v1.png",
+      "bytes": 143006,
+      "hash": "sha256-0dc0b9d795dcde37bff8bc515beb097ff0d477c02708596682fd8054f62c7777",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/sawara-rubble-blocking-v1.png",
+      "bytes": 110066,
+      "hash": "sha256-d85ecf3dadbf91a306d7a97b84d371be1124891ab9665c595854587d8c703943",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/sawara-rubble-cleared-v1.png",
+      "bytes": 50498,
+      "hash": "sha256-d49c6c60869d6a9c28c5fd90b753bc4f7f9325f1f38bbe2803ac2a5f598247bf",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/sawara-shooting-window-lit-v1.png",
+      "bytes": 175639,
+      "hash": "sha256-560e226748f9fb4079b4a178b838005347276e6627612642e6fca6e6fb6358cf",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/stage-objects/sawara-static-dressing-v1.png",
+      "bytes": 628593,
+      "hash": "sha256-ea232de83c6c4d93ee023cbfdc85ca5d186f51c15762a225c46941a765f7fc5b",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v060/title-key-visual-v1.webp",
+      "bytes": 117610,
+      "hash": "sha256-21ba65a04fdfaa43c5f06a41eac882937c08c112e9f719cb6c4f47b0aadeab39",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/characters/brute-battle-v1.png",
+      "bytes": 1723312,
+      "hash": "sha256-8b51f82432280661d6bb35786ee74c8e583f4da22ac4805e80072750657a2b95",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/characters/gate-eater-battle-v1.png",
+      "bytes": 2563460,
+      "hash": "sha256-91b8de907ba276c390731ddbfee8e9e76fe4d870608168193a736af5f4c2d646",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/characters/grappler-battle-v1.png",
+      "bytes": 1793522,
+      "hash": "sha256-b92bd82d999ba66ab2bc6d1a80dc7ff9e2c54c80d14b47464149f6618762d108",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/characters/guardian-battle-v1.png",
+      "bytes": 1305729,
+      "hash": "sha256-df8f55392dbe96426684bc05a159c82558071c7dbba6db0d4119f2bcdeffb39e",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/characters/gunner-battle-v1.png",
+      "bytes": 1044247,
+      "hash": "sha256-b47f4ecfe80d2c8bd8dcbb42f71d76b9092a1506a5db6eeca4aefb584f6387a7",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/characters/medic-battle-v1.png",
+      "bytes": 1442669,
+      "hash": "sha256-af6334921739405e331d3ebdf578a2961c462c7f96a12a6328deda4d9b81801d",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/characters/ooze-battle-v1.png",
+      "bytes": 1628685,
+      "hash": "sha256-7f940e50ea8541b4b8f556c6a3aabd1723a1eb6bc5f6263b7b54decb1368406a",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/characters/portraits/brute-portrait-v1.webp",
+      "bytes": 262716,
+      "hash": "sha256-2793315bff2633cdc7640bd7423ab109a3a860524aba028c223e374d7a8127fe",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/characters/portraits/guardian-portrait-v1.webp",
+      "bytes": 214182,
+      "hash": "sha256-3c326404e28d94b22a5423e29d4d11d018f831009b16ed863bd5cdd96c41c65d",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/characters/portraits/gunner-portrait-v1.webp",
+      "bytes": 176122,
+      "hash": "sha256-5bb84bbcef3be0975fbd885dcec52114f3e4cf078d24b0f598abae45d2f5bac0",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/characters/portraits/medic-portrait-v1.webp",
+      "bytes": 197814,
+      "hash": "sha256-140593bbeae6e806bf0ad4807c14c921bd12e56459bfa9b2ca4db98f62172c1e",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/characters/portraits/ranger-portrait-v1.webp",
+      "bytes": 152942,
+      "hash": "sha256-26266877e8259c5555e102105886bc479417c1966d377cbac8ddb661d25e2d74",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/characters/portraits/scout-portrait-v1.webp",
+      "bytes": 256282,
+      "hash": "sha256-9a6be5026758014c9a2bdb95d4d80ea84eb33ec0922bc79f83afd1d0f5023187",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/characters/ranger-battle-v1.png",
+      "bytes": 1133801,
+      "hash": "sha256-185a9f6850c51da5bb4cf55374531ec210ac3a5a2182b21be91a336c098f0d6b",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/characters/scout-battle-v1.png",
+      "bytes": 1871571,
+      "hash": "sha256-902eadc217a2fca212f57abd079c021d4ea2a441d9bbb648699b19ab749a5762",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/characters/sprinter-battle-v1.png",
+      "bytes": 1350021,
+      "hash": "sha256-cc44afef194b518cee8d97f8be11e12fb44ac59dfe87b77cf11baf3a3d71b71d",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/events/station-gate-rescue-cut-v1.webp",
+      "bytes": 245740,
+      "hash": "sha256-941442b1c33b6756ac352e3b20941d137b56e2b0eecc6712c02dc8e9aa2d1c36",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/events/station-platform-escort-cut-v1.webp",
+      "bytes": 211744,
+      "hash": "sha256-b1ac6c906453ea41f6bb36b666ab9f1a1ad9777e5017c388aca9e0ece07779e9",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/events/station-tunnel-containment-cut-v1.webp",
+      "bytes": 297256,
+      "hash": "sha256-406cffe8c4233dfbf3ae0ca71b011f46d2cdd6d18b21499666275e0cd128b58f",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/stages/objects/station-gate-objects-v1.png",
+      "bytes": 959186,
+      "hash": "sha256-9923b7d850a613e133f928bdebfc0d2cca8af7d6150a1b1d759986fd948dda9b",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/stages/objects/station-platform-objects-v1.png",
+      "bytes": 910306,
+      "hash": "sha256-ef316203647e73995714543e87b960441ef029490c1a5b8c270b3d945eb168cb",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/stages/objects/station-tunnel-objects-v1.png",
+      "bytes": 1448618,
+      "hash": "sha256-81f14f358b30b5c80c6a8c2d7914e8c9b42e23b4f6944a879a7275b16e39b0be",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v070/stages/station-gate-background-v1.webp",
+      "bytes": 266840,
+      "hash": "sha256-7f0dd562e2ed1bcf6562c6091a195dc5f3da701009bd28b2d7a3516d2eb1bd8e",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/stages/station-platform-background-v1.webp",
+      "bytes": 202336,
+      "hash": "sha256-deb6f827f5013d349b46d348536bfc870774fd7c7712fba3ac1b819ed2deef89",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v070/stages/station-tunnel-background-v1.webp",
+      "bytes": 403052,
+      "hash": "sha256-81bb35761351f48c424ca56736ee3c68efc7d151a1276d6033aa11639f04983b",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v075/characters/portraits/ikura-event-portrait-v4.webp",
+      "bytes": 110740,
+      "hash": "sha256-9fdc78abe6f192235e433fb96221625a7082c3d0fa310868b7ea6b7bccba11c3",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v075/crawler/crawler-command-base-closed-v1.png",
+      "bytes": 1221889,
+      "hash": "sha256-d4ce35c5cdd09750fa8d4e2df0c926385b1ebceb04d0cb6dccd36e08928fd854",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v075/crawler/crawler-command-base-open-v2.png",
+      "bytes": 1207019,
+      "hash": "sha256-9e2ea0c4e5feb799a19a534859fad04f4323223cf147a6c6d715a65b3ecf408a",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v075/enemy-base/enemy-stronghold-intact-v2.png",
+      "bytes": 1108331,
+      "hash": "sha256-7819d1b8c803c0213309e885b745b4d1477ed589543e5795e6aaf9773ff73756",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/characters/cards/babayaga-formation-card-r2.webp",
+      "bytes": 43804,
+      "hash": "sha256-6af05149eb99e1880227578c134f9546150e9a662ead4adfe6f246a080bc88a0",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/brawler-formation-card-r2.webp",
+      "bytes": 42778,
+      "hash": "sha256-aa2f878ab5d83233938b645f1b80bf85e861afda0f0a0731e39d6f7094ece02f",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/brute-formation-card-r2.webp",
+      "bytes": 57724,
+      "hash": "sha256-f124ddf777cdd8f4430b08f4d91ef4d88f6dfcc0e21f00f7c6cdc366edcf9753",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/crazy-king-formation-card-r2.webp",
+      "bytes": 49302,
+      "hash": "sha256-b1e722fb14cd72a0dcaefdaea399a75275b014e414956eb29086cb2be50f0b90",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/guardian-formation-card-r2.webp",
+      "bytes": 35042,
+      "hash": "sha256-94b52abea738971148cd852509064bf86df5deeb71a747f0d21b686e0698e8c9",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/gunner-formation-card-r2.webp",
+      "bytes": 52308,
+      "hash": "sha256-f7f1032d756be3ca02e50e524c2df8ef5410f53bf92dcf81da6c7a32cc6b0f24",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/kumaverson-formation-card-r2.webp",
+      "bytes": 63232,
+      "hash": "sha256-5e7974c6c47739faa888af40be6954e765fea80801f301368a69da858d1b38b7",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/medic-formation-card-r2.webp",
+      "bytes": 65178,
+      "hash": "sha256-a9a1eac0599e34a1173f395d8ab3090a7265537307cabb6cbefbb60f49927730",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/monkey-formation-card-r2.webp",
+      "bytes": 60426,
+      "hash": "sha256-95b1704c0cb3ba9351bb16bebb4a27ef92e115d1d58861c53abbb5427213166f",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/ranger-formation-card-r2.webp",
+      "bytes": 40198,
+      "hash": "sha256-9c631d32c0f06c81ffea6ec4bda0918b0059c2e6e55ac16bab6333463caf9639",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/scout-formation-card-r2.webp",
+      "bytes": 56460,
+      "hash": "sha256-99bbaeca6e2ae498ae1a88504627254cacc5daf97a8db37cb10ef15830d3f92f",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/monkey-battle-r2.png",
+      "bytes": 1830197,
+      "hash": "sha256-67e7dc452309358c012322647096ae44ab03214b6bd796e38b1e87aef5796d8c",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/characters/portraits/monkey-event-portrait-r2.webp",
+      "bytes": 74444,
+      "hash": "sha256-183fdc1eceb4c2fb5d6be38e968598f4485943d3291d93881b378d1740d3b60f",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/stages/evacuation-freight-yard-background-v1.webp",
+      "bytes": 145240,
+      "hash": "sha256-45aaf5c6370575f257b65dbe209967f58d7783fd7460f8b9af61682b965ff57d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/stages/hospital-emergency-ward-background-v1.webp",
+      "bytes": 115218,
+      "hash": "sha256-d9d900e00d4eede807dd6e964bc561e9a5c296b60be0511fd1b98e051422d712",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/stages/hospital-evacuation-route-background-v1.webp",
+      "bytes": 169568,
+      "hash": "sha256-d0045bf4e4ad26e9b5a1b97312c2f940bb2a875fbe33aa1460176034fb39439b",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/stages/logistics-relay-background-v1.webp",
+      "bytes": 115002,
+      "hash": "sha256-b8439e21356b6f20072a4fb62fdb7bb4a7c86f3dcb551a9c3f291328ea5ffa4f",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/stages/research-access-background-v1.webp",
+      "bytes": 140924,
+      "hash": "sha256-bf73e4ce894a454fb8013f8c35774ed6e343c225d2a0d902c31cfb7e7b8477cd",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/stages/research-containment-background-v1.webp",
+      "bytes": 120936,
+      "hash": "sha256-4203c7dc98754a2795f4364e237b336e5ecaf7c0c74494451a73830eae8f31e0",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/stages/research-freight-passage-background-v1.webp",
+      "bytes": 133034,
+      "hash": "sha256-979760fe1a798a6d6301da2ca438ff754cbdb934b682f0091a08d951f8330e4b",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/stages/t-plan-central-seal-background-v1.webp",
+      "bytes": 155038,
+      "hash": "sha256-40cce9db29f84604392aba10ccbeff27e9164f838a14d41b122f131181159a67",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/stages/t-plan-outer-core-background-v1.webp",
+      "bytes": 124432,
+      "hash": "sha256-6556def1a12c3708c5842561d6edda7e1db6da4ba0543257417d80ff62fcd458",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v080/stages/university-hospital-approach-background-v1.webp",
+      "bytes": 188828,
+      "hash": "sha256-29ef54d2cb53f6e3cae806be252c8a987df300be03dd4df953671d0ebd9b6c91",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
+      "bytes": 2384701,
+      "hash": "sha256-6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "bytes": 3442611,
+      "hash": "sha256-b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/bosses/gairen-battle-r1.png",
+      "bytes": 3876191,
+      "hash": "sha256-d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/bosses/mother-battle-r1.png",
+      "bytes": 3085965,
+      "hash": "sha256-f3b1ba21300495058bdb3fbb445da90bd56fde4cb212eae69f12f4fefb826442",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/bosses/ooguchi-battle-r1.png",
+      "bytes": 1964744,
+      "hash": "sha256-02549dd1d2e70eed5cd6efd9478ca8029b4055844781ff379c4e677ba41891e7",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/characters/cards/mayo-chan-formation-card-r1.webp",
+      "bytes": 74184,
+      "hash": "sha256-911cfc0587cc5de1d125ffd5ab5d5e04f3dcdd08003c905e0499c20598b145d4",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/characters/cards/miyamoto-musashi-formation-card-r1.webp",
+      "bytes": 52204,
+      "hash": "sha256-a706f50e43d96bcee9967435c12ce5e71b9057cb8eba53ef83f2572bae64997f",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/characters/cards/mrs-chiha-formation-card-r1.webp",
+      "bytes": 46200,
+      "hash": "sha256-ae25ec0426c8fece2ee85bf191a3c52bdf5d22f6361e2ac0143f603c0be50e1f",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/characters/cards/tky-formation-card-r1.webp",
+      "bytes": 45244,
+      "hash": "sha256-2777b377a159be05a88e3c5ce5bf142812e009fafe055dc165350903f31d3be9",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/characters/cards/zakimiya-formation-card-r1.webp",
+      "bytes": 44056,
+      "hash": "sha256-f3593435bddd9b5a65d9b5c8fb2a4a48f913ba88b03808a221cbd3cc08fb357f",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/characters/mayo-chan-battle-r1.png",
+      "bytes": 2789017,
+      "hash": "sha256-9b22480d26b1ad892a086817eea15c993c4af24d8df5c4fb33a4a8d71a33c86c",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "bytes": 3550255,
+      "hash": "sha256-87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
+      "bytes": 1791434,
+      "hash": "sha256-e05b1eedcdae7371b6b4fac63e09c492e907593c4951aaec63a642b9e36637e6",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/characters/mrs-chiha-battle-r1.png",
+      "bytes": 1609973,
+      "hash": "sha256-0cb818f6bd68b276eb74b661b7a312019b22de8a25755ff0a3be25d48abd2135",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/characters/portraits/mayo-chan-event-portrait-r1.webp",
+      "bytes": 107848,
+      "hash": "sha256-1d8dae611c7c78de0f3ec5afd0914fbd33dc7e7126fd219402790de3d9d65990",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/characters/portraits/miyamoto-musashi-event-portrait-r1.webp",
+      "bytes": 89478,
+      "hash": "sha256-4ae18e2c96f2ef647dabc1518b1316b23c572fecd1b6230f163f7cea44d2bb64",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/characters/portraits/mrs-chiha-event-portrait-r1.webp",
+      "bytes": 65184,
+      "hash": "sha256-2efe8461e8d38ee27404bd5c15717a06f076ff251c8ecbda4cf1d6d3da736337",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/characters/portraits/tky-event-portrait-r1.webp",
+      "bytes": 69208,
+      "hash": "sha256-1250070d3898bf3c05a8d71996a32b3f73249fe47b984dd00986355e1cf75de9",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/characters/portraits/zakimiya-event-portrait-r1.webp",
+      "bytes": 63906,
+      "hash": "sha256-146b8681604425b3384ffa6100e1d2b94d59d8e5f7b41f7c2dbd48cb2755945a",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/characters/tky-battle-r1.png",
+      "bytes": 1634385,
+      "hash": "sha256-1d1eeaa8915c1e510109d7731d9ae50235baaf047f809933d16e5edcf8e178dc",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/characters/zakimiya-battle-r1.png",
+      "bytes": 1228231,
+      "hash": "sha256-9fcf28a4575d2757a94f7f6791e06ea95e13fbd7b3ceba40fd1d9fd515745b7c",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/enemies/anchor-bloom-battle-v1.png",
+      "bytes": 2365020,
+      "hash": "sha256-b01a5193114a09eca2aa82699a87601b5907baef0e76702aee4115fd3f4f7066",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/enemies/cagewalker-battle-v1.png",
+      "bytes": 2299141,
+      "hash": "sha256-f631ebdea0bd307ad46e21a8a6ed683b91b1d956235edb71c511fa1e4856bf74",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/enemies/choir-knot-battle-v1.png",
+      "bytes": 2272044,
+      "hash": "sha256-20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/enemies/pall-manta-battle-v1.png",
+      "bytes": 1836088,
+      "hash": "sha256-fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/enemies/resonator-battle-v1.png",
+      "bytes": 1724661,
+      "hash": "sha256-aeec266cb2245ae8112f2e1854c10a96ff10bd68c7d90b56f1b5d27e813557fc",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/enemies/spindle-battle-v1.png",
+      "bytes": 2053370,
+      "hash": "sha256-fab1a5d5cc9bf0f5b3f88a5e15e2e886cf609b6c282ab9d2f29d2232345ab24c",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/stages/bay-tower-service-background-v1.webp",
+      "bytes": 265428,
+      "hash": "sha256-a2ee399f05d60887005c1e8126c90709b6bca5030a76a83cb57ee67ebb36b63b",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/stages/civic-archive-route-background-v1.webp",
+      "bytes": 325458,
+      "hash": "sha256-441cf53730a3630bae8c6a2669c1e61f9ff5d364f4cc5a99edb7fe84b760719d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/stages/coastal-link-bridge-background-v1.webp",
+      "bytes": 220972,
+      "hash": "sha256-4b01df93f04c5da2edf103d48fd32714e19da94acc571c7074888680bec058ff",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/stages/coastal-power-rig-v1.png",
+      "bytes": 224189,
+      "hash": "sha256-9fa081695434e63c19deb4e658e810e5570c6a9a53c94308eec58a2b81ac334c",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v090/stages/estuary-floodgate-background-v1.webp",
+      "bytes": 274726,
+      "hash": "sha256-0ec7070894b8b398db0bbbab09ebb2ea2b0b36839e20664e7f61ae7214ce813d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/audio/v060/music/battle-stage1.mp3",
+      "bytes": 925037,
+      "hash": "sha256-71613b42c69632a6b6bb8db7a1bd8d92144eb217b147ebc0699e10f11f3514c9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/battle-stage1.ogg",
+      "bytes": 1169686,
+      "hash": "sha256-afcd9cb7212cebe4a70ae3b00878edf303f0c295df3229f041ef0b45d7aef27c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/battle-stage2.mp3",
+      "bytes": 617862,
+      "hash": "sha256-b8d003b59a8655586e3fb59ac40a150ef0f8550cc1d151620e61a4e66986750a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/battle-stage2.ogg",
+      "bytes": 1252007,
+      "hash": "sha256-3f24b19593ac5586797e6296801039604b7189addc48c160f67c59506fffc9db",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/battle-stage3.mp3",
+      "bytes": 941189,
+      "hash": "sha256-c1faaa822d12321a21970dd936a4310c3d74769055739759eb14b616e89695a9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/battle-stage3.ogg",
+      "bytes": 1345956,
+      "hash": "sha256-fcb916e5f161cf1ddf528505de6537ba51cd0ee2e2d21cc12268e78af1c4758b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/boss.mp3",
+      "bytes": 968316,
+      "hash": "sha256-d981a5cdc9cc01214473335fe33b69471e6c00a12e4a1d2796f934432fbfeda3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/boss.ogg",
+      "bytes": 1778440,
+      "hash": "sha256-929743a2164447e9523d6019914d90445ab75b47831e383b2fde0f79f7381d9e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/defeat.mp3",
+      "bytes": 317185,
+      "hash": "sha256-00a14209de5ec0c0a5d4dfd9f7c8c3de22d8db2699a88400d7f8590b2d762ff2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/defeat.ogg",
+      "bytes": 478440,
+      "hash": "sha256-bba54e47359ab513e32af5a786d56454766613fb8a22405b6b187c88a8e9eac8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/intro.mp3",
+      "bytes": 1129998,
+      "hash": "sha256-cb08472405d278f28414e1fdf949770f5b3dc93868c3a98b1744abc24389b6a5",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/intro.ogg",
+      "bytes": 1595098,
+      "hash": "sha256-526c0adc8432d26eb43cd2d4bc4e0d3aa61678c159d5290b06d4ed5d22e9cde2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/map.mp3",
+      "bytes": 1201327,
+      "hash": "sha256-a2014cef6f838c51d60e30058e268c7090505924c58960c584d2ad0f43e12639",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/map.ogg",
+      "bytes": 1624956,
+      "hash": "sha256-2cef13af92ba02e2c7873f87f3aa38d49fecc0f673c85051d40b2efca8cc2c6b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/title.mp3",
+      "bytes": 1115492,
+      "hash": "sha256-54a0324089a30fc5803c02ed9fbe0e6ea63ccad9a65878317c990fee54bff593",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/title.ogg",
+      "bytes": 1723458,
+      "hash": "sha256-450926601e42df7633a3e389aba7cbfc4b163907b3f14e82059f8b95e4bd6743",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/victory.mp3",
+      "bytes": 96724,
+      "hash": "sha256-5c6d2650d0ec264f6302ae7f0db8cf7280bd7ef0567e34ae73ce480d840535b4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/music/victory.ogg",
+      "bytes": 125399,
+      "hash": "sha256-9acf8d28c7335f21e14f9d2d9b67e870ecbc2c7e2f683113e7d613e8e5331b5e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v060/sfx/corpse-burn-loop.mp3",
+      "bytes": 28647,
+      "hash": "sha256-83be14f1a6ac3623b4ffe224bdffac6031f52f7cf38cb2956d011d7113936755",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/corpse-burn-loop.ogg",
+      "bytes": 29502,
+      "hash": "sha256-c777e1dfcb1e39924326618fcf6b73ea266df2bec9b16297e78cde6b320cf3ff",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/corpse-ignite.mp3",
+      "bytes": 5119,
+      "hash": "sha256-dc1a9ec3cec84fb88f782170b40f924c0b5d9e38ea33d8e6afc06554f1aaf924",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/corpse-ignite.ogg",
+      "bytes": 7532,
+      "hash": "sha256-9ad31a0b23313ae4ad29baf01dcea710ddded7cfd450e9b61a905715d2babf4f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-attack-01.mp3",
+      "bytes": 4319,
+      "hash": "sha256-604a9175bf739a0bc81cdebd705ab57950dd9edd5d989065839b871863766b99",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-attack-01.ogg",
+      "bytes": 6254,
+      "hash": "sha256-cd48c76a7d43d85db1ad47ea34750c7b4cbab1bb727fcd118f2ddb8f935c8ff9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-attack-02.mp3",
+      "bytes": 7952,
+      "hash": "sha256-09adf7d54d54848c1e6295056c97bf9b7ec05805425bf771e981591d110e0e92",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-attack-02.ogg",
+      "bytes": 10238,
+      "hash": "sha256-b3214f63a539c1c209fd27cc432ff8fa0fa4145bbd31c6ea922078d2b4409550",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-death-01.mp3",
+      "bytes": 10698,
+      "hash": "sha256-c280d5bfc90fb693bdbbb821fa2c700c7d12f8d9c1e424251646ea8e3f20a684",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-death-01.ogg",
+      "bytes": 12873,
+      "hash": "sha256-20caedfaa63dec2fd6d1a54455c68bb7e5bd56657f4f938e069638848d523a80",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-death-02.mp3",
+      "bytes": 5905,
+      "hash": "sha256-2ea7dabf236a767679f53f68099f4ce76bfbc2a7e9f8087ddeb0a2794e2e6da9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-death-02.ogg",
+      "bytes": 8576,
+      "hash": "sha256-5f5edb0f658dae8e6863f86eeb983baf7c85e65ff0436138d131f057ac8a92e6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-hurt-01.mp3",
+      "bytes": 6499,
+      "hash": "sha256-d61e02474b4d7e3324339635bb61ca64b4f99ce0193d8a1a8db7c449c50ebf74",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-hurt-01.ogg",
+      "bytes": 9370,
+      "hash": "sha256-ff7cf1a2a3fe9f85df8ee480762970dd8356d2aa7540487e1a476699988f2e1d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-hurt-02.mp3",
+      "bytes": 5988,
+      "hash": "sha256-38afea264123a0afc85189141450084b54daf2bfc835e085dc95be71da90f01e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-abomination-hurt-02.ogg",
+      "bytes": 8896,
+      "hash": "sha256-1d4ebc77afcb568a9a562169a47ebf49598701893a2108f884631c6666130b9c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-attack-01.mp3",
+      "bytes": 4790,
+      "hash": "sha256-27206411c8e7f7ec3ddbd5edf44819951657931782b2b2c5929de8d76ca7cf01",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-attack-01.ogg",
+      "bytes": 7186,
+      "hash": "sha256-e4fa04b198801bdc0082322909c94d60c119d06437b653758cd7b248811df671",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-attack-02.mp3",
+      "bytes": 6902,
+      "hash": "sha256-f2c4fa68e918ee3829504e07c183de686bb52fb7fb58becda0876c7286dc1df9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-attack-02.ogg",
+      "bytes": 8940,
+      "hash": "sha256-97bdd9adaff441184beebdc97d91a1bfea858e18f82418e17ab8c02e22f9e2a6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-death-01.mp3",
+      "bytes": 4006,
+      "hash": "sha256-c40f85ab3ccfde82fb121b613dab3e7893e6784e0330be637b5ae16cd353416d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-death-01.ogg",
+      "bytes": 6470,
+      "hash": "sha256-fe11ead4e86041e56d03506c9e5793348476504038e5f6fae15d5f6ae4c1162c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-death-02.mp3",
+      "bytes": 9415,
+      "hash": "sha256-b7c9384f3d63312df0235df6554f55470e5faf38c8b4a3ebe669a1f7c73ae059",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-death-02.ogg",
+      "bytes": 11903,
+      "hash": "sha256-4bf0a15f665ca2689662955b95e577ccf6fc932873e0982b7c0704bb8fc4352e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-hurt-01.mp3",
+      "bytes": 6668,
+      "hash": "sha256-f8389939296fcce9b0e0795f4c922724b42e57097a8b13653654e1028c86aec2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-hurt-01.ogg",
+      "bytes": 8686,
+      "hash": "sha256-d151ae9e571b0ab2a83ce46fc50c296e1a8c63848a563ceaa5e7fa46575d4cc4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-hurt-02.mp3",
+      "bytes": 7059,
+      "hash": "sha256-4a74c47b1349d0886559aff42143d2a3b376ebf62228d4f2070df395dbd8f835",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-crusher-hurt-02.ogg",
+      "bytes": 9135,
+      "hash": "sha256-ca7ac78d2bfd388f289f9e39eed6448d9ad432666b4515b958beb2225d4b4393",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-attack-01.mp3",
+      "bytes": 6901,
+      "hash": "sha256-ffe46b7806bb80d9c37098a64e834fe5e65c3a0fe779d259818e72b5e78e28ba",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-attack-01.ogg",
+      "bytes": 8638,
+      "hash": "sha256-3173f4f0aff6773e85dc55a47dff767451180fc2ef9954be0e409536ceea2a0d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-attack-02.mp3",
+      "bytes": 5416,
+      "hash": "sha256-7252946f1ce4a69e2e1b446e3bb83d555af9f77b4258148660051119bddbafb1",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-attack-02.ogg",
+      "bytes": 7799,
+      "hash": "sha256-6b6e1734317467bc08aa724cb91b653ba06d709df0086077f5b24d45991cd51d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-death-01.mp3",
+      "bytes": 8600,
+      "hash": "sha256-00adcaeaf0cfe6d5e1ec89081812a55d47ed9885381139381a99ffe7a99f8005",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-death-01.ogg",
+      "bytes": 11110,
+      "hash": "sha256-cfedfba9376c55b4d0d4cad4e4028c74ecfbd7aa635697dd1c70c8bb186dddcf",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-death-02.mp3",
+      "bytes": 10265,
+      "hash": "sha256-b8c361da8bef5b308fcba54cc2a2910ab789e9135e9830a7974ea71db44da73e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-death-02.ogg",
+      "bytes": 10877,
+      "hash": "sha256-76a59e4895eb9f3f88a251c49faa7eceada36e438eccb6dbda1dc292b2e4576c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-hurt-01.mp3",
+      "bytes": 4294,
+      "hash": "sha256-75e9443c44113044fc560c81f78ab95cb0d4c3c44e2d8d3a9c1d52cb02bf51b8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-hurt-01.ogg",
+      "bytes": 7008,
+      "hash": "sha256-56fdd2ed4af1d8c33716b318d0cfa78d0a69d4bda5d2f53048cafe4fef09f378",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-hurt-02.mp3",
+      "bytes": 5260,
+      "hash": "sha256-23cba4549edc6f2abc62c1a6a87fb2fb784e993105576d92523dbe9b43630e85",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-runner-hurt-02.ogg",
+      "bytes": 7407,
+      "hash": "sha256-c0cc30b68347a5b11a51e1d489279900b9d45f47c374e378d6d4243a96a39eb6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-attack-01.mp3",
+      "bytes": 5756,
+      "hash": "sha256-1496b79a2b6cc52e5cf067c7631bbed8fe83be3149ad51bb02a09971e4369fc2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-attack-01.ogg",
+      "bytes": 7958,
+      "hash": "sha256-cc49c9de3edbc6964cdeda5867e8cb3df5d709c797c37ed181f420d35f4314fa",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-attack-02.mp3",
+      "bytes": 5675,
+      "hash": "sha256-1020dfffc2422969b7ff4c1a614443a8b062a705496d5587b704a4c678b3326f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-attack-02.ogg",
+      "bytes": 8124,
+      "hash": "sha256-440e0a7c56b43c050555c4a4bb29e9b3433b9139c5fc06a5e523f2ef121c42c9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-death-01.mp3",
+      "bytes": 5753,
+      "hash": "sha256-deee0a5e0717a818ba65b73475d217a92395194cd3e31b9d8ebb6344122399c6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-death-01.ogg",
+      "bytes": 8264,
+      "hash": "sha256-f325479e82369c1dbb17ae008bf63f337dbdc5793f5c1eb7ad4cb641932fc8e8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-death-02.mp3",
+      "bytes": 6326,
+      "hash": "sha256-23f2dbcf3d944cc80523024fcc5d3b48d7b798451afbae91c065b82835bd2f68",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-death-02.ogg",
+      "bytes": 8817,
+      "hash": "sha256-575a22c4c11f1ff5289449dbd92f566bb5b86aa19011359e0b7034ccca4aa4d8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-hurt-01.mp3",
+      "bytes": 9505,
+      "hash": "sha256-42a8e8d6bb76ad3972af29ff555f3c49454db05d09571f8174e477dc559dab88",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-hurt-01.ogg",
+      "bytes": 12017,
+      "hash": "sha256-8daf88dc154eb00f197f2e7ead4d09e90d56a9dd38fc61995fa3911d4603e526",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-hurt-02.mp3",
+      "bytes": 9716,
+      "hash": "sha256-087d8cf5ed07e07e49eb887e765471763e6ab79a1e1787dee9360cd618853775",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-shade-hurt-02.ogg",
+      "bytes": 11925,
+      "hash": "sha256-ba216f28a209d0c2cbb9b547fda264cc5256cd5b8e3a9a67d70f139eb9b109e9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-attack-01.mp3",
+      "bytes": 5598,
+      "hash": "sha256-0d00770d4f88f817a5aca4bd7e2f7e596a01f8d620274dfc91b57f4a5f8f3c0d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-attack-01.ogg",
+      "bytes": 7988,
+      "hash": "sha256-135bf7ebb111abf122a75cc1eed28e4fc9cf1b854b8577f12e3ed50d845efdcb",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-attack-02.mp3",
+      "bytes": 6928,
+      "hash": "sha256-7f1c26b9e3d5e76cdd42d21f55e3b26e741d80a985b595a7f1dde0ce7c1340bf",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-attack-02.ogg",
+      "bytes": 8953,
+      "hash": "sha256-1aba72495fb8e3a53c3be660c975a4a88796101956a2125df83db1ae9034b0ca",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-death-01.mp3",
+      "bytes": 5679,
+      "hash": "sha256-552560eff1e5719edb857b3bac0856f297837b87970dc5fd9a7a44e259d930a1",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-death-01.ogg",
+      "bytes": 8262,
+      "hash": "sha256-813ee64c467d7467042605f4d173888b17bb8aba0b1601af8ddecde5abbdce8e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-death-02.mp3",
+      "bytes": 4035,
+      "hash": "sha256-8d765cdcc8723d39604c3f67c5ca1fa09be915b1590459515f67af0a97e406ac",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-death-02.ogg",
+      "bytes": 6824,
+      "hash": "sha256-a7517caa724eec23fce07a518178240f0ccffdd3a32bc3b8555a649169b1bbed",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-hurt-01.mp3",
+      "bytes": 2756,
+      "hash": "sha256-333c24d7f8797a6bafd2fb98120c35c1d06237de9c77239339f5806fdf1850ca",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-hurt-01.ogg",
+      "bytes": 5407,
+      "hash": "sha256-d5fd4c5a0657011a58ff4574f2a797b9324701e07606c57efebcfddb9b682aac",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-hurt-02.mp3",
+      "bytes": 3877,
+      "hash": "sha256-428427a4b552b337cccadbe45911168ad7a455f7412089dcbca2638f45c0fba2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-spitter-hurt-02.ogg",
+      "bytes": 6924,
+      "hash": "sha256-456e0dfccdb32eac57424caedc04fedce2588252e2dd8b0068acd7be5824fd57",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-attack-01.mp3",
+      "bytes": 9268,
+      "hash": "sha256-3436724caf990109773a5eebc1d5dd47dc7d3d562cc0282abf6c20ea2b596da1",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-attack-01.ogg",
+      "bytes": 11030,
+      "hash": "sha256-eaf696fb509ca8b10db9d75b971927b9be76eed7f8ee2fc426a50e84490e8d0e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-attack-02.mp3",
+      "bytes": 10070,
+      "hash": "sha256-bc775c1c898bf25c598e495ebad6cf7a28425220dd37883bd21cb6c48975c57d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-attack-02.ogg",
+      "bytes": 11992,
+      "hash": "sha256-685f739ff6030205699fa7ad2512764ca6d208c058ac5a220f73979d3e48732c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-death-01.mp3",
+      "bytes": 9707,
+      "hash": "sha256-141b035180dadc1b50a253cab084d4e6ebc09e0b863d1c81065ad5f21d4d9906",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-death-01.ogg",
+      "bytes": 11294,
+      "hash": "sha256-9a61c55f39bfc3d7482380bcda4887df4244ad08448c0b0ab0d79f4f4a4f2fd0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-death-02.mp3",
+      "bytes": 9392,
+      "hash": "sha256-d5975d822b851f4c707a301988f737892e6ec3436a4051b17b11e13f7864a7df",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-death-02.ogg",
+      "bytes": 11655,
+      "hash": "sha256-392a1e07cefd01085d6f5c89cc6c416830a4f60e8953f918ec9d9b3ae72e3952",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-hurt-01.mp3",
+      "bytes": 7572,
+      "hash": "sha256-24b0970cd1cd858272e7572673f5ce7bccab71d9e355123dfc943145f08220d4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-hurt-01.ogg",
+      "bytes": 10002,
+      "hash": "sha256-59775a77281e90a864587c0526a1e24c4b89711863d0323f380cfc677e94cff4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-hurt-02.mp3",
+      "bytes": 7804,
+      "hash": "sha256-9be496201aa80b3cf13db99364bc9675c870247a3a79ee12436d1682aaab0fbf",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-takuya-hurt-02.ogg",
+      "bytes": 10355,
+      "hash": "sha256-0f6e697c3e1902f037c48f7911bd8f3043e298a7bdbb36d6b4c65c00c2f53163",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-attack-01.mp3",
+      "bytes": 6459,
+      "hash": "sha256-08c508c43fac4675a6e3f92e423024feb6fe227af7b214c67e1348b22c3663dc",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-attack-01.ogg",
+      "bytes": 8809,
+      "hash": "sha256-c941e2db5182ac30f54bd516d35c01022a846ad1449db9af1c6b0e3f6a327d30",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-attack-02.mp3",
+      "bytes": 12561,
+      "hash": "sha256-b370a16d0d45832bc512695387cb5b1d1b35b456f62ecae11000d6d644eb4a5c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-attack-02.ogg",
+      "bytes": 14326,
+      "hash": "sha256-5793b9915adefa3a9da63f0593539abe9ed2a6c8f8e974e7c35a28fb6fbd29c2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-death-01.mp3",
+      "bytes": 16652,
+      "hash": "sha256-d0e21327e6a001ec28244d2904785686573cbd502c37d16064d9a78f1f16f10c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-death-01.ogg",
+      "bytes": 18072,
+      "hash": "sha256-783a9655a06d2e7346fba15c611dc22ce8ce1b37edabab465f18f85b6cecd5e8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-death-02.mp3",
+      "bytes": 20171,
+      "hash": "sha256-7d1712df4b43e2a560ddb4e0a190c3c4f4a0f353f67a51caf7ff07d1376bb610",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-death-02.ogg",
+      "bytes": 22355,
+      "hash": "sha256-941f50d5a35d65567ba5b6459e059c170e739069bf095a1bf48bf84427037f3d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-hurt-01.mp3",
+      "bytes": 9095,
+      "hash": "sha256-da320a391f3775fcb8b8b96d26fb76c0889e9f41fe2cc4cc02d7ad5fdcbc2ab5",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-hurt-01.ogg",
+      "bytes": 11276,
+      "hash": "sha256-9267e0222f8e2b44c059973f3ce5c84e54e0fe84d3f05f2b2ca0b53f1b017de0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-hurt-02.mp3",
+      "bytes": 14965,
+      "hash": "sha256-590f6146b10ac8e852e459a04b2ae82a483c114afd48b26c1c63522e56bc9d7b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-turned-hurt-02.ogg",
+      "bytes": 15722,
+      "hash": "sha256-fca95a4d3a670daa1e37c44225e716552b7046ba82cc61516368d8c9d15eec9e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-attack-01.mp3",
+      "bytes": 4346,
+      "hash": "sha256-beb7770fb80d0fc7836ade548d04c033dba033312428986b6978ae1cc28a2b9b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-attack-01.ogg",
+      "bytes": 6827,
+      "hash": "sha256-914c5ed9336dbfd567187e129548c4c9d7dc9611dba8cd87e957465df2f3e942",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-attack-02.mp3",
+      "bytes": 4424,
+      "hash": "sha256-b634d6fd8d955ad108c57c7479aad7d855aaf7e282d085cb1a8e41a7d8c305dd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-attack-02.ogg",
+      "bytes": 6919,
+      "hash": "sha256-231852591bbef3a895123876676436cc101eda31e0ad8596a167e972f627dbbb",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-death-01.mp3",
+      "bytes": 8023,
+      "hash": "sha256-7c8e067e46256ab4b18bac2c89e0c902fa9fe5b331ec1a2e0e86264858a60cc2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-death-01.ogg",
+      "bytes": 9747,
+      "hash": "sha256-e09d3e811b8e62d8feea0e2a3cc0cb903d5594ed3821e570c83de9accd5d2523",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-death-02.mp3",
+      "bytes": 4164,
+      "hash": "sha256-f6ef4aeca9815a6a2b16f5b46bc4cf443e30f4c7c7cbf0f2fae2b2bfc63ce651",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-death-02.ogg",
+      "bytes": 6625,
+      "hash": "sha256-6bd4ffc8ffaed03fe87283b2c60f06473bb0c547351503e04e947c93610300f7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-hurt-01.mp3",
+      "bytes": 6351,
+      "hash": "sha256-0756eb839cfddee11d380c83b6eea14132138620b885b7c0c9be910f07b34fe6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-hurt-01.ogg",
+      "bytes": 8778,
+      "hash": "sha256-0f0fb05d8c4357f20bd3ce0eee86d5eb22900dc64a77f3e2a79ba718087d9350",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-hurt-02.mp3",
+      "bytes": 9272,
+      "hash": "sha256-945ecbe2f61f2e639d1d51ea5b184bd563895ce4f99f91fb889bc5c8f355bc4e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/enemy-walker-hurt-02.ogg",
+      "bytes": 11230,
+      "hash": "sha256-d7c0e43d54810ee9aa582d2bb18604202d083d1603b47f8f46016157927baffa",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-attack-01.mp3",
+      "bytes": 3669,
+      "hash": "sha256-abce9cfc9d03ea308728d5129ac08f3d848cab0fbc95b24fb657a6059827f1f0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-attack-01.ogg",
+      "bytes": 6031,
+      "hash": "sha256-16f1845a22f165709f9b676a007fe040881e518e5b6edfda9cf14e2eb622ae35",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-attack-02.mp3",
+      "bytes": 4192,
+      "hash": "sha256-4175ff2bc44128e4a05e3414db5f14ec5eda3d2241d93e214bb1860b8d1a9c31",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-attack-02.ogg",
+      "bytes": 6784,
+      "hash": "sha256-ff7dabfa11b0051dfdb07722bcfa779f7b9f80c9892ea51d0cf918bc32e80bc2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-death-01.mp3",
+      "bytes": 17690,
+      "hash": "sha256-7471989ea8ad63774d70c935eaa94feaece55e6ac6bb5871bee6955e3ef37cbe",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-death-01.ogg",
+      "bytes": 19797,
+      "hash": "sha256-0995ac5341c60a8aed68beb410101ba2fae4ffd44bf85c7cfb3d31b52b4e95d3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-death-02.mp3",
+      "bytes": 7114,
+      "hash": "sha256-a567f96c932ffd3e63d6e0c01b6f6d31eb85c4c06166c2b7aefb563a132cede9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-death-02.ogg",
+      "bytes": 9031,
+      "hash": "sha256-3e8182ad96bc4fc787914afadd9d05d3b9a5f2ea81515c472ebd6363b74f626b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-hurt-01.mp3",
+      "bytes": 4973,
+      "hash": "sha256-c3637a5f0242f54f816c05ba08472e36a615bbb7215db263581b44fdcacbcc6e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-hurt-01.ogg",
+      "bytes": 7757,
+      "hash": "sha256-84a1d8cac4e4538e2371e4ead518fdb89cac7dad12be2786a0ffef4846187046",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-hurt-02.mp3",
+      "bytes": 4294,
+      "hash": "sha256-23b60b71216aaf38acd62d28e97d6bc242749b44985e1001b1a73405a1a6cf9a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-female-hurt-02.ogg",
+      "bytes": 6884,
+      "hash": "sha256-4ee5b21cff82c6619fbfa3a38ba3c6a73650471a02c5f8d1eda91f1f8c23934d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-attack-01.mp3",
+      "bytes": 6018,
+      "hash": "sha256-de4430c9b511f3f126645809642fdaf630e0ae5fd6e426e81151868bbff48184",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-attack-01.ogg",
+      "bytes": 8678,
+      "hash": "sha256-c5238e7b9506614443da17f58543e15f0f86b7ebcd5deb24c9fab69f5b8c3a15",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-attack-02.mp3",
+      "bytes": 3747,
+      "hash": "sha256-07b532ac1747f670bcc5270f995642489a317ee1b2ee3473a3fd816d8298da36",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-attack-02.ogg",
+      "bytes": 6372,
+      "hash": "sha256-f1b5ab104452edf5bfb0406e6666d835f682578d5cbae919b77107777f6bf94e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-death-01.mp3",
+      "bytes": 45354,
+      "hash": "sha256-6d4cce9f3f6469dfea409455fbbe9bc99a39a221127431678066870f0239b3a7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-death-01.ogg",
+      "bytes": 44697,
+      "hash": "sha256-24cb5e4338c068959858382726bd74981eee3225411fdc9f79bdabe43f65d5a9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-death-02.mp3",
+      "bytes": 33956,
+      "hash": "sha256-08ed92f32abf5090ef1d9cdeb20a1a4db04f94e20b015704d88e3f3abc5fea69",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-death-02.ogg",
+      "bytes": 32970,
+      "hash": "sha256-515170c91c6d0186e6bd746ef58d901b0f2def81c086557953e59d1dbc228d83",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-hurt-01.mp3",
+      "bytes": 9930,
+      "hash": "sha256-efa7706e80bed2f1ee1de17f5c1474e259c7e0ee4a6dec8ed23de85999188477",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-hurt-01.ogg",
+      "bytes": 12441,
+      "hash": "sha256-16c0ec9c115a7f1576f0b4fa41336839f620e89d8a3a2b19da017fdf72951ed8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-hurt-02.mp3",
+      "bytes": 10609,
+      "hash": "sha256-3ff23b2e20a1302751625676b9a61a1a178e2439eab475233a677d5e06f0127a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-heavy-hurt-02.ogg",
+      "bytes": 12838,
+      "hash": "sha256-a665591d633f8e35bc4e6313abcb6fe00ced070f36a7ca1d8a26658fd03d5158",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-attack-01.mp3",
+      "bytes": 8207,
+      "hash": "sha256-d178611e74229147baa4e8d8ce08c721c8eef8eccb5ca7462b6dcb3eabba58dc",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-attack-01.ogg",
+      "bytes": 9454,
+      "hash": "sha256-75963c8af435ea4eb2ebae521a4dfaf95682b145d85d1e22b18a922c888bd265",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-attack-02.mp3",
+      "bytes": 8836,
+      "hash": "sha256-8eb8aa6c8481028c415372fcb765d1a8983d9f68c0626fe84ee53d474bc8220b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-attack-02.ogg",
+      "bytes": 10933,
+      "hash": "sha256-e04c33a5dee6adfd82a209ec69da0e91d80bfcf8a1d1292fc9d3bf047f78e600",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-death-01.mp3",
+      "bytes": 10137,
+      "hash": "sha256-4614f491789a03a5e572c68c0c728d72afaea52cc67038444441642c1af1133b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-death-01.ogg",
+      "bytes": 12441,
+      "hash": "sha256-f82ec12ecc9c6d0dcd8460193bce87e7f364eac47481c0f194b921a7c719e9a8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-death-02.mp3",
+      "bytes": 7008,
+      "hash": "sha256-ad802388c2b3634fcaacdecbd6e0e2bab347c3103ea35175d40902ed9076a6dd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-death-02.ogg",
+      "bytes": 9653,
+      "hash": "sha256-068f277af9e94e0067e4aa8a48d96fb30f474e613c8b052eeaa17f48408f57c8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-hurt-01.mp3",
+      "bytes": 7297,
+      "hash": "sha256-01d42cfda670717d2c5b612ed5a5ee7d572a893dbf622d7da0549e6fcf37a6f7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-hurt-01.ogg",
+      "bytes": 9676,
+      "hash": "sha256-b6bc600e565214935bbe14c48c3bf3235cb4301ffe79be7f09f22d49970b84b2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-hurt-02.mp3",
+      "bytes": 7320,
+      "hash": "sha256-262566e6b0445b2cd6a65a782fae8be2dd2f15dcb9ca617e18c18cc8198cfc5a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/human-male-light-hurt-02.ogg",
+      "bytes": 9804,
+      "hash": "sha256-48ab420165e32411f6e7f5eb7be17e44fd4d8d7c6876562a488f29b61896d047",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/infection-twitch-01.mp3",
+      "bytes": 3956,
+      "hash": "sha256-19a41e85dd37dd0d80a1fc0ca27cdc488cada3400d7389fd15296b4d48ac4b60",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/infection-twitch-01.ogg",
+      "bytes": 6303,
+      "hash": "sha256-e9f445edb0975b7d0cb90a8af73b370a04ce1f5254ab8aa2c50231e29c7acb33",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/infection-warning-01.mp3",
+      "bytes": 6069,
+      "hash": "sha256-8a9563d32542872ca2cd039b87d739c522b5b8dccbeb2d4647eb99813a76fdd6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/infection-warning-01.ogg",
+      "bytes": 8085,
+      "hash": "sha256-d6e23f2dbc8da7b88b31be76aa2228920288e8fbc32d3f71bc26dbb8127191f5",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/radio-close.mp3",
+      "bytes": 4506,
+      "hash": "sha256-c8ab720255ce4a032dd64ef7e91b298985439d9cb6f495ecf0d98c49f98a0f0e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/radio-close.ogg",
+      "bytes": 7166,
+      "hash": "sha256-f032e8c6aa103100ed3c676fe46b13f1dbf05145b5a24439dfa6b0a85d205de2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/radio-open.mp3",
+      "bytes": 60051,
+      "hash": "sha256-ef77dd2305f009091aa52e87718d3f795c1b44d490654304b58d1cc891108826",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/radio-open.ogg",
+      "bytes": 49087,
+      "hash": "sha256-d0ceb1eca4a4bff7c60883ba5a3b4212246e9208be334acfa9df744ba67faec3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/radio-static-loop.mp3",
+      "bytes": 44534,
+      "hash": "sha256-aacac61b2f8f7e7b4d1044caf74c83f43ec32a8579842f92565de4f5b1442517",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/radio-static-loop.ogg",
+      "bytes": 46395,
+      "hash": "sha256-0746dda730ee8f09c32301f2361fc2a9864abd7fc4f7a8516477ea53dc844a4a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-airstrike.mp3",
+      "bytes": 39180,
+      "hash": "sha256-b67324d585533b6f2c50f5f96440d15865401fc2059cff6319305ad0b26f2af0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-airstrike.ogg",
+      "bytes": 29071,
+      "hash": "sha256-ffa3670e06b68a0f7125b68456eec1ac9a412bbf6507b743a2849c8556875522",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-barrier.mp3",
+      "bytes": 6765,
+      "hash": "sha256-70bcd5a42994e7cfe967e4f4bb1ab88abbbd419945f5d9084391d1b5f46734af",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-barrier.ogg",
+      "bytes": 10657,
+      "hash": "sha256-d66d96fbae8e1f379bf8976fb676c16c20a0065e3766c4acd6dbcb301c575333",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-explosion.mp3",
+      "bytes": 3479,
+      "hash": "sha256-544bcc9f9f49ddb25e8119cc3e8f875d24c093793482b84c977f3e7c9c1bb065",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-explosion.ogg",
+      "bytes": 5365,
+      "hash": "sha256-a6cf113b2f5e6e9973b1fc43eba4c58227271e9c6688cf442f0c26c780a4389b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-heal.mp3",
+      "bytes": 23326,
+      "hash": "sha256-33e32499980debf26e93fda9b617490d7801ff2cba0ff4922ec45ba3be8a1298",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-heal.ogg",
+      "bytes": 25044,
+      "hash": "sha256-b4e67dfe99f3e965c2cacff77feee6f7e9dff50793cda67a71053b1fc1b12cad",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-pod-deploy.mp3",
+      "bytes": 68772,
+      "hash": "sha256-f667f11e3da39cf3eba54f0fa162416af653285efc11d6b476b8c2ad2d29fdb2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-pod-deploy.ogg",
+      "bytes": 54524,
+      "hash": "sha256-c0e96faf998ac768a6a4dc00dd2d1f681a4556102baba21c2fe16cb962f47947",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-pod-impact.mp3",
+      "bytes": 17487,
+      "hash": "sha256-1d5a36fcde147f144b13cccec91a810676bb36d0698b532147e1412d584142d0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/support-pod-impact.ogg",
+      "bytes": 16720,
+      "hash": "sha256-0ad168f51196101fccfb0e8c4ca86b1505d0625f9c6a3677d3bd15e6731ced00",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/ui-cancel.mp3",
+      "bytes": 1922,
+      "hash": "sha256-ec7ef08d03057f5f52fbf9c9bcaf8e9d02840b9e6c32381809c48b2dc84c14b8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/ui-cancel.ogg",
+      "bytes": 4727,
+      "hash": "sha256-c1107201f8a0e5dc0ed1a3a94a2db2919589a0956ca7df9cf209655f2e3c203c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/ui-confirm.mp3",
+      "bytes": 3897,
+      "hash": "sha256-bd20502d1c1e8473a8068436316c3838ac10540acfef80fa88bc3652ebec5746",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/ui-confirm.ogg",
+      "bytes": 6060,
+      "hash": "sha256-6bb911d31445c99927b4ea9f8e37eaf5d093d452b275041acb4134472f3a69ba",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/ui-error.mp3",
+      "bytes": 4714,
+      "hash": "sha256-87a478b466f1185d3a1c21bc25e0c383a7e0d6e7ce5d5c95888a6e176d84b183",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/ui-error.ogg",
+      "bytes": 6918,
+      "hash": "sha256-06c831f524f04c50131eb5f71439b2354bd8b3dc65699ef48ccc98371dc58ecf",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/ui-hover.mp3",
+      "bytes": 6677,
+      "hash": "sha256-11299d0dd9bf24428d408f48e2fc63fd481b78fd588349db4db893ecd1d41b62",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/ui-hover.ogg",
+      "bytes": 6367,
+      "hash": "sha256-a744401d51977001a7b672917af4c63cb356b8c1b1992367b9909e45a7bcf637",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/ui-select.mp3",
+      "bytes": 3407,
+      "hash": "sha256-5777bbc1c106ffb30fc30ba0187d020e8f448b9c030bccaf064c95d077763d66",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/ui-select.ogg",
+      "bytes": 5803,
+      "hash": "sha256-8cbec471b11a979cf074345560f536002c2eaff2cdd3e6f623ee51df21555d08",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-babayaga-attack.mp3",
+      "bytes": 4432,
+      "hash": "sha256-0041d586f56deeef4dd2d13c69e3befb56f37d6d3eb171bcdf7522e6b0edad4b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-babayaga-attack.ogg",
+      "bytes": 6559,
+      "hash": "sha256-05a5f143fb6d852ead6ac7944775ca703f6ec0af19b6efdae7b025e2479e2c24",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-babayaga-death.mp3",
+      "bytes": 10702,
+      "hash": "sha256-4e034f2f8b60da4a5da729a3c36e706cc03fa14a46c77ffa5874454de49152fd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-babayaga-death.ogg",
+      "bytes": 11266,
+      "hash": "sha256-40082f02655a4134d47da4283aaf64338329db4ac9a3d99b2aa63da9bd04ff3c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-babayaga-deploy.mp3",
+      "bytes": 5999,
+      "hash": "sha256-93a93b586d6756beaf3cafad230967b72f68b88e88eb818ec6ce8886be23430f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-babayaga-deploy.ogg",
+      "bytes": 7665,
+      "hash": "sha256-7a07aeac21f6d44ab08abe1ac070fd2e11edfbb9c86836fb582f2bea748360f0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-babayaga-hurt.mp3",
+      "bytes": 5059,
+      "hash": "sha256-efeed4f7ea8850bb7daeef835a218f51abd8b04ec7ed43840e0e5f1adcb51311",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-babayaga-hurt.ogg",
+      "bytes": 6934,
+      "hash": "sha256-828deadaf532da170731a52d3cdd73c78e68e895ea6e20dd6cabf17c30c3bacb",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-crazy-king-attack.mp3",
+      "bytes": 4432,
+      "hash": "sha256-ef85a81fedf02b3a81400fd1f8edd5ac8d2322e111916e0176c8119b8e0ab0ee",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-crazy-king-attack.ogg",
+      "bytes": 6568,
+      "hash": "sha256-fe4d73bdeabefbef25d69ea33df0a0fe044393cf0d7498dfa56aa8ac42edc880",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-crazy-king-death.mp3",
+      "bytes": 10702,
+      "hash": "sha256-637fe076fd79d67bbaaf1d69eae8ae978c32aedb6b5ecc4d34502b3b18c1bd40",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-crazy-king-death.ogg",
+      "bytes": 11347,
+      "hash": "sha256-9b26985289a7470a8fe1d8cf77c51d5570e11cd5f3463cf01440176a130ed365",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-crazy-king-deploy.mp3",
+      "bytes": 5999,
+      "hash": "sha256-396acb354d0c155597d69dd8f1109ec5670ad209264ae4cf389baec0c1ca3ee1",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-crazy-king-deploy.ogg",
+      "bytes": 7774,
+      "hash": "sha256-342c5249c1b30333427d7ab36ec569d664d5af2d28881da1beb377ad3640e808",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-crazy-king-hurt.mp3",
+      "bytes": 5059,
+      "hash": "sha256-5d4eb4c329f83d0e264b42b4e1b5ccefe4c11544cf6db51a9725c72143f8c317",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-crazy-king-hurt.ogg",
+      "bytes": 6950,
+      "hash": "sha256-0acac5a1d4d47ce12426c6166350886539adc0e60046f57a83a550d6be3ca19c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-kumaverson-attack.mp3",
+      "bytes": 4432,
+      "hash": "sha256-3efcc28ad6d09da9f8408ddfb229fe1cf9e4e1d3620800f9a0f042d82a6f999f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-kumaverson-attack.ogg",
+      "bytes": 6537,
+      "hash": "sha256-608e9767fdbae26773dd6016cc692c02229e0aed7f6f20bfab54c599ab73e108",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-kumaverson-death.mp3",
+      "bytes": 10702,
+      "hash": "sha256-51efea4f39bc91e78d2bb53f3d434f528bd09cd809eefe0c058f7406777c21ad",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-kumaverson-death.ogg",
+      "bytes": 11312,
+      "hash": "sha256-eec0ab7f0d5659aa3bcee8853d9386505536a5271e5c0801bbfb86c18e8c7f8c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-kumaverson-deploy.mp3",
+      "bytes": 5999,
+      "hash": "sha256-5eb521cd03c5fe18cc1774f0b6e9159216fff1f120bf83a84203947cf31663f4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-kumaverson-deploy.ogg",
+      "bytes": 7664,
+      "hash": "sha256-5b35fa7112f1bd5c91a54b90d293d302ba2babc14b933fae77add5c38e7b4a42",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-kumaverson-hurt.mp3",
+      "bytes": 5059,
+      "hash": "sha256-50e221f71c36773ed5421823b1e7cdb81abfdbfd3a7281537d12c953c0790de7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/voice-kumaverson-hurt.ogg",
+      "bytes": 6962,
+      "hash": "sha256-d6ea9306de7982d8d548a75a35f2b01b328ed6d5bdfa1e2cd79acf1cf565ceed",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-barrage-01.mp3",
+      "bytes": 12605,
+      "hash": "sha256-66f6e93dc12a2d637ed8ff3dfa6a4c20451fff298a6cde310939101da31f642e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-barrage-01.ogg",
+      "bytes": 13108,
+      "hash": "sha256-37522b58d7b7ce5226b20ed6789c8270004750e8f2d993cd5fd059e6a5c4c27a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-barrage-02.mp3",
+      "bytes": 8230,
+      "hash": "sha256-0a2f4f584b5ad0100a941cc03789100e9105f3619f28e19c3c108612690de180",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-barrage-02.ogg",
+      "bytes": 9461,
+      "hash": "sha256-7a3ab5ee9e32d6723d0244a41a26f66b28e9e1658503d2e6fc151242e70027ec",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-attack.mp3",
+      "bytes": 6313,
+      "hash": "sha256-1f8da1d73be14d37b84a8a54d281c0db9c4c68a28f709044688c90717b0eb97f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-attack.ogg",
+      "bytes": 8157,
+      "hash": "sha256-17c81afa36dbed5b9113330788f1cf77133737b4717aa07fd236c20d22ef6c80",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-flesh-hit.mp3",
+      "bytes": 5059,
+      "hash": "sha256-92ced3bf6803e316f71b41be34d052921e887719e8899adb0b38a1d1b5e89906",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-flesh-hit.ogg",
+      "bytes": 6840,
+      "hash": "sha256-e4770cecc7d9fcf97beb63177a30483ee3fee3b5f31e4131eb5864231104abb8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-hard-hit.mp3",
+      "bytes": 6626,
+      "hash": "sha256-08fade7241eed45a4384f5d8d4398159c626d1e6de7123f6be06bb68f71f79e4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-hard-hit.ogg",
+      "bytes": 8483,
+      "hash": "sha256-44e227e16a2d850ea58a038cbf3de41efb8dfedacc4919c8dbbdd7cf298369ba",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-idle-loop.mp3",
+      "bytes": 10388,
+      "hash": "sha256-b0968a8f674cb864782e35f874e93dcd0b23fa2177ef01dddc38ffdf5cf407a5",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-idle-loop.ogg",
+      "bytes": 11587,
+      "hash": "sha256-9cf34cf01595467a2bcba4a306e5bc0e98c5b1c313f6077ec06ea89d8ddd11cd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-start.mp3",
+      "bytes": 13523,
+      "hash": "sha256-fcb37aace882865f8bd6a386fa98538a0b20f01410c7fbf03606d3ebe6cc5722",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-start.ogg",
+      "bytes": 13685,
+      "hash": "sha256-1acfc413c6d81dd29c6fa342480bf86b5e238becc56cf924238405868f20b039",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-stop.mp3",
+      "bytes": 10075,
+      "hash": "sha256-fcea4705d3fbeae4ae39928457403c307cdbf26f43980157a1eaf29d95395ac7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-chainsaw-stop.ogg",
+      "bytes": 10994,
+      "hash": "sha256-dcc991b19ebaf37bd3baf2fb380dbecde5421e429587e0e2bfcdb6aef31ff539",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-crowbar-01.mp3",
+      "bytes": 3409,
+      "hash": "sha256-2f0a54814eda0e4056d6e6f25bdc99ce8a0e67a37ebd8d3ece30f5de0564fd80",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-crowbar-01.ogg",
+      "bytes": 6191,
+      "hash": "sha256-6bb6aaa73ff5c6db7a1e332358386ad357e54f1fe4ab8dec509282660894d266",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-crowbar-02.mp3",
+      "bytes": 2934,
+      "hash": "sha256-320e3e02daf1c61b640a622b7efe1fefbed91beda8c6f0755c7c8453d1fd9c56",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-crowbar-02.ogg",
+      "bytes": 5492,
+      "hash": "sha256-14acbc451f574a3071c58a291e685449fdf789b1c24e71ec0b1b08076b41c9f2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-gunner-01.mp3",
+      "bytes": 9895,
+      "hash": "sha256-41508b19345b889acad9725e6b8f6060b6fe74632ef72ae4280560cfd086c1b6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-gunner-01.ogg",
+      "bytes": 11325,
+      "hash": "sha256-bd7b87751b5e31557fecf4d042b5fcb97d2ce1b431e3beda01d1d5c0eb6d587e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-gunner-02.mp3",
+      "bytes": 9790,
+      "hash": "sha256-536e70f41355c87dcb94935b07d167866e15a6f9f8ca92b7d8e91cc2a82b94d7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-gunner-02.ogg",
+      "bytes": 11312,
+      "hash": "sha256-4cc9a0e9bc39c0d5e24596a3df7bf4911590039d4c6e31135893ffe522d4a3fb",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-hammer-01.mp3",
+      "bytes": 2313,
+      "hash": "sha256-b0359b14bfc9163950c6e8089a8c80839115ee6d293210670734725e844b425d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-hammer-01.ogg",
+      "bytes": 5056,
+      "hash": "sha256-fc8a368c212de2ff1669492b77cba5481b7555efbfb64b45bc49a452460f34a3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-hammer-02.mp3",
+      "bytes": 1841,
+      "hash": "sha256-1f59df6e4c155931e7fb3aac727031d40c28dfced0a871b9f63cd2b87348de8d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-hammer-02.ogg",
+      "bytes": 4845,
+      "hash": "sha256-deb0b345ac902dfc65784f2fb78ec0b40385544ceaf66a00b5e6f04f45cc193b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-melee-impact-01.mp3",
+      "bytes": 2179,
+      "hash": "sha256-8a3a893dab57c2c009e2096b2d72e0262646e071f02113f5229b7918366baec0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-melee-impact-01.ogg",
+      "bytes": 5254,
+      "hash": "sha256-28c3737e71b93642d4724abeafae787928e018df392efca9695e3ad5030a37c5",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-melee-impact-02.mp3",
+      "bytes": 1997,
+      "hash": "sha256-a80700c0e2633eacd2bd0c7f860971f41ff86c4f179d1efa399e9e34ccb178a9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-melee-impact-02.ogg",
+      "bytes": 4998,
+      "hash": "sha256-cf2f044c0318e17394a6ed2facb747f72ba5de8605c4e6de46add8ebb99b571b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-melee-swing-01.mp3",
+      "bytes": 2339,
+      "hash": "sha256-fc64c1e007ac4cbb97198adfa5c9af57bfd110fd017585709a3601a605c7304b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-melee-swing-01.ogg",
+      "bytes": 5086,
+      "hash": "sha256-443c15bbf288c4d6cdcb7b0b2a26311cd5c2ff42659ba6913afdd46e10b4c062",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-melee-swing-02.mp3",
+      "bytes": 2184,
+      "hash": "sha256-06364fead5ebceb93149c48e0528c34d2f43cb254fa05fdb7473a457e610cd2c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-melee-swing-02.ogg",
+      "bytes": 4771,
+      "hash": "sha256-9a35310c6045bde172ec0b1532a5075ed6099df2ec83c3ac461d11837debe20c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-pan-heavy-hit.mp3",
+      "bytes": 9448,
+      "hash": "sha256-39d67fe97b77506918dff61535d5119138dbec0ced826eb2da852faa77fd6941",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-pan-heavy-hit.ogg",
+      "bytes": 7252,
+      "hash": "sha256-dab8cb5a8baf66038cde4cb8c955308a0b0df1f9d41cac7ab8e2991c4814301d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-pan-hit.mp3",
+      "bytes": 7880,
+      "hash": "sha256-1abb61531fb752ec350b26957533271da5249701763562292453117baa0db9fe",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-pan-hit.ogg",
+      "bytes": 6886,
+      "hash": "sha256-f1d816eef23bd2622a82d728e0ddeebc0b8ad18bfe75aabfc647fa2c8814aadb",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-pan-stun.mp3",
+      "bytes": 11015,
+      "hash": "sha256-05a06fb0d88960626d79b4a2c347ebe1ddb20d05e07db1054c424be0fbf663bb",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-pan-stun.ogg",
+      "bytes": 7303,
+      "hash": "sha256-e33743ea7be5442e0bbde8c1acabe66c089900ac107b2dd55bb9059d08534861",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-pan-swing.mp3",
+      "bytes": 4119,
+      "hash": "sha256-20a0e5b74d05772bf9feb7b2b4068338c597aba2e84452f3eba90220b3c1cbed",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-pan-swing.ogg",
+      "bytes": 6337,
+      "hash": "sha256-bbd3150b6040c308939838b3f1bc48c3fee432a235709f8278be0232723524f1",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-rifle-01.mp3",
+      "bytes": 11276,
+      "hash": "sha256-020e5ab222936fee414e7308b219565a41bdc4e4e854ddcb12f686a9fc59d880",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-rifle-01.ogg",
+      "bytes": 12427,
+      "hash": "sha256-4efe8015d41252b7d04df94e61cae10e9a60a087f2263dc8dd52adb674a1bfc0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-rifle-02.mp3",
+      "bytes": 11222,
+      "hash": "sha256-893dcfe06f5ec45aa66f06ff24d8d393b68fd6d20af276c405ae7b7d87b167cd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-rifle-02.ogg",
+      "bytes": 12297,
+      "hash": "sha256-3c7ade1e0b9e2229c25466d68d6cd3380175d4844f56eb6fafba4b33594b9a86",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-special-kill.mp3",
+      "bytes": 8507,
+      "hash": "sha256-d4dbe60d5897f105046da9b61c69e3132f2651640580bd1dccf950dc2445f2e0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-special-kill.ogg",
+      "bytes": 6758,
+      "hash": "sha256-3c9a16f97e0faf065cf154b8298551e4147f03e656eb72fff6ee6f46dad1596e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-suppressed-hit.mp3",
+      "bytes": 3805,
+      "hash": "sha256-437834ac17290bfa7fa82f9360aa601f99d403123dbc3c1cf8ad319dd3438c28",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-suppressed-hit.ogg",
+      "bytes": 6021,
+      "hash": "sha256-69c3adf7ec79e1cf07f9f3cf1a5ae6c18822a8bfe75e86a2b7738ed4c679e901",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-suppressed-pistol.mp3",
+      "bytes": 3179,
+      "hash": "sha256-e5064d53d45d37738bcac876c9f53a96fa2a4b0fceaac000a03ee059b82af2ec",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-suppressed-pistol.ogg",
+      "bytes": 5640,
+      "hash": "sha256-27d2f9e3933207086031584b1bc75cd17aa06dcc0fcb488731e3adc798fb50d6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-suppressed-reload.mp3",
+      "bytes": 8194,
+      "hash": "sha256-b71a49dfe2746e746dd7ddc8b190151b4829c547d68debfe78ced3a2d7445cc9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-suppressed-reload.ogg",
+      "bytes": 7034,
+      "hash": "sha256-b5ff9891b094150ff10ec239f0b83c3513b2b437d5d4678969d7d03d870aad70",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-unarmed-01.mp3",
+      "bytes": 3618,
+      "hash": "sha256-3ed843e8947dc53db53659903a1e5fdb4d38fbea630e6be916e94dffc940b2b8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-unarmed-01.ogg",
+      "bytes": 5868,
+      "hash": "sha256-9a291061221edc4d9af6fa0df91fe6995635222c3d2b1cc87367e0303cad3fb7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-unarmed-02.mp3",
+      "bytes": 3487,
+      "hash": "sha256-3893d16717611b7828bf1bd5ba782f8978e5d0c4c9a943f9775efb055eb13b03",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v060/sfx/weapon-unarmed-02.ogg",
+      "bytes": 5815,
+      "hash": "sha256-fe43c402a7861a43aa8ad3cf257012094647651393c0e6b8cdf262d6ef5abe4b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-collapse-city-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-439acbc125557e0eab4a98e2829d7100367a2738435888bcceda9ce39d420f0f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-collapse-city-loop.ogg",
+      "bytes": 40222,
+      "hash": "sha256-05797b2952964655ce1592f729e84f338b01d92de82a0d7e1cc89dfbf1ddae5c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-crawler-canteen-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-a7e400608815ab536139c235fe5c1dc7f7b9afa66b422528d904195bf658e7f6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-crawler-canteen-loop.ogg",
+      "bytes": 26999,
+      "hash": "sha256-762e5be0b35af0b4f6b0dee3d6cb4a750101d6297fb04530c30fba86d777d08b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-crawler-ops-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-89c620af59383657d10379d6418a4c3a850504d93309a4c2db25a87206b00ede",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-crawler-ops-loop.ogg",
+      "bytes": 33617,
+      "hash": "sha256-5660206bc48e0de9bc304ea92bd188083ec13315e543b11e300cc38f14786600",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-kumaya-crisis-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-09c0a4020af4f2130171936852f386970a7dffe1879ee4c6a88acccb3588a1ce",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-kumaya-crisis-loop.ogg",
+      "bytes": 52156,
+      "hash": "sha256-abd5035d34f82386ec3812b626a1bcca35a98a9c149f10a6dde2a9f32ed1ba9a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-kumaya-daily-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-605c6d046a5bda577aa1b994d9450ab5487c5b70c52d82d5887fc700c8b9b74e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-kumaya-daily-loop.ogg",
+      "bytes": 47625,
+      "hash": "sha256-a02bf0bfcfb511bc63a7d432c72f9f306a105e5d5a972a51ed0ad456e95fab3f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-medical-bay-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-ca8a39682e55e250853ac83f0726bac0d7688ca5589ac42efcf1d99e28798cd4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-medical-bay-loop.ogg",
+      "bytes": 36231,
+      "hash": "sha256-23c3268e70df953abe7d6184947eea7abbb2a10eac16957109dd7eb9c2903140",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-radio-signal-loop.mp3",
+      "bytes": 84500,
+      "hash": "sha256-d33e0b7c5683128ba29fe5daa6c9cddcb7ee05d9e8b438f8feeb84fe9d7343fa",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-radio-signal-loop.ogg",
+      "bytes": 49754,
+      "hash": "sha256-f1293e7f5c090415c81a952cf8f78b256268b3bc2b2d3fffd2d78d2ad3c57042",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-rain-street-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-3286faf0b0812d64706db5892c998eb0bf7a5e52efcc421b5186bfc7c50c38f3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-rain-street-loop.ogg",
+      "bytes": 52724,
+      "hash": "sha256-4da330cb57569fce3e09bc30b755c5974122bc2b867399671bc18918f033771a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-stage2-engine-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-9dbf61e02da73a67128c2b709a14acecd5e7cad6de2a5dbde211487b5e473297",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-stage2-engine-loop.ogg",
+      "bytes": 32009,
+      "hash": "sha256-33f076077d34bf5ad4a985b042e769562ae1ed98400017200b82f20acfd73aef",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-stage3-wind-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-a9a8a481d639f6687813ec645145f01e6026a99b823086b7679e719a2deaf9de",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-stage3-wind-loop.ogg",
+      "bytes": 31066,
+      "hash": "sha256-d775d1d7d599bf3f084a46ca6766fbeeaf1a1ab572bdd5dd0fe15b9c12ba15c9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-station-gate-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-f4500539aa7497ce8667a25a3fa45e020630a0eb5eeb448dd936a5d0fb080baa",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-station-gate-loop.ogg",
+      "bytes": 32090,
+      "hash": "sha256-834143a73ccc2aae35cbaed02c986d883f0d1718daec55aaea2dcba08c2c3d44",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-station-platform-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-13c383a5a7405ca969e01182b086f1abd6efba00ebd260e271d126115c4a0b16",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-station-platform-loop.ogg",
+      "bytes": 24769,
+      "hash": "sha256-058171b475bdaff3b4f5ca3e7e452a7a165b5e561a0c119dc31aa63dd578932c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-station-seal-aftermath-loop.mp3",
+      "bytes": 84500,
+      "hash": "sha256-21303f404f3a0d9cf11ab2bfde90800a4fcf565513395d2e111e80f0198ee649",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-station-seal-aftermath-loop.ogg",
+      "bytes": 19541,
+      "hash": "sha256-91a85983a6968c07a7a8c4d1d20fbee2e8ddc3004de220e9df75119192dea80b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-station-tunnel-loop.mp3",
+      "bytes": 112660,
+      "hash": "sha256-c9b91cb439b6c521b1ed140c27ab39a7740810177d22bd0bd6a1ce61f81e4ece",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/ambience/ambience-v070-station-tunnel-loop.ogg",
+      "bytes": 46316,
+      "hash": "sha256-0682f5bf0b3fdcfd68e68d720bd930062910ee607f0bfee2bc338dcac148ba87",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-collapse-montage.mp3",
+      "bytes": 112660,
+      "hash": "sha256-58baf17fa54c60dcbf5ceb383c0cc0743ef0afeb82be5a4405545d5a9d37ef14",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-collapse-montage.ogg",
+      "bytes": 39082,
+      "hash": "sha256-c6b8a8088b84a2866e24167678dfd56d5d63fe74199927f64442f40185986522",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-crawler-briefing.mp3",
+      "bytes": 112660,
+      "hash": "sha256-d6dde9a96c4ad013aeaf23d63a0c4cab8632c5de922c14a55ed93a7e1e63d126",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-crawler-briefing.ogg",
+      "bytes": 46427,
+      "hash": "sha256-ff2800e1229c8834f3231a463f75053f93890b2f3416ba4311bc96fd65f4e125",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-crawler-life.mp3",
+      "bytes": 112660,
+      "hash": "sha256-dcbac29b8249c8b1056ed76d8f91b02952d1f6b2052e33a95ab6dddfa4cccf42",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-crawler-life.ogg",
+      "bytes": 44787,
+      "hash": "sha256-039fcc96c07336cc28c1ca2cdef6d55f76c95b4f70003d4366d247786783a539",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-crawler-montage.mp3",
+      "bytes": 112660,
+      "hash": "sha256-e99fa247c4f51a2b6b0588adece8729369800b2edcd764b12efa61378230afd3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-crawler-montage.ogg",
+      "bytes": 41911,
+      "hash": "sha256-d63112c9aa36a942aa9a18dbd0f6686e7712d861be3dc69533b3a77d6ad7df4a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-crawler-morning.mp3",
+      "bytes": 112660,
+      "hash": "sha256-4044800b1bb697b94ce7f3ff2bfb499bd939d937a63d4909647f3e48dff1a2af",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-crawler-morning.ogg",
+      "bytes": 38573,
+      "hash": "sha256-c499449b9299d2c8fbbf6eecdf782b138a4dbdd868de9f63d3d086a4dcf75b24",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-kumaya-daily.mp3",
+      "bytes": 112660,
+      "hash": "sha256-44f15cd5b5a276a0b1d7378683d598f44b510cb5ecc01f6a8159f4dce732d737",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-kumaya-daily.ogg",
+      "bytes": 40355,
+      "hash": "sha256-abb885e697e65bd801035ef5f643eb322c591ba2ee01c8413f616954a076da7e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-rescue.mp3",
+      "bytes": 59265,
+      "hash": "sha256-b6c4a02232a4f6fbe31191ad6b1bcbed2c3cda9cf6d480d4e4dee28cae31a466",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-rescue.ogg",
+      "bytes": 19347,
+      "hash": "sha256-aab3447a7ef10c4506251d049b19bca9fdd689035957f47b534c408bf56bed4c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-return.mp3",
+      "bytes": 112660,
+      "hash": "sha256-dcb6619c9b0f8679906a2143eb8ed9eda40ad838093c8751a5a3f67cfd91d670",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-return.ogg",
+      "bytes": 37988,
+      "hash": "sha256-94758483ea3b2be388247060ec19eefb9e013b8e68c5ea3e992be45810a685dc",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-stage2-tension.mp3",
+      "bytes": 112660,
+      "hash": "sha256-86415604f568c8a64245e8b3cbbfa8a2a1dce9c339378991d59e5958276ebecc",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-stage2-tension.ogg",
+      "bytes": 40139,
+      "hash": "sha256-ab4994c3214025659c708ab82467812245e2c6bb53d384103aea2e6bb565d982",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-stage3-approach.mp3",
+      "bytes": 112660,
+      "hash": "sha256-f7eff5aae6ab581ce55cc36acf9f1a8beb853c287c8faf769b24ecd7f7999063",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-stage3-approach.ogg",
+      "bytes": 42812,
+      "hash": "sha256-bdfa92b71775360a1ba999092475f7e7554a485dc2051e82e1e7e98d0c263385",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-station-gate.mp3",
+      "bytes": 112660,
+      "hash": "sha256-e25846698a22d3f47395f49c5b5af5ff299a9c6f2a043f9b46983032cddf5a5a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-station-gate.ogg",
+      "bytes": 40272,
+      "hash": "sha256-a79cadefb2a1ab79a735054736a911c3292c0071d4961bfee70906b7925631b2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-station-platform.mp3",
+      "bytes": 112660,
+      "hash": "sha256-f2cd223e346c3d349b5dc41ee6d92426bb33eec8e05d59bdba7289b2ae19efa0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-station-platform.ogg",
+      "bytes": 49275,
+      "hash": "sha256-af07fb8b94ea2fb2ca9359fd7f7136a6fd03d7dad51cfb40180533840fbadce7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-station-tunnel.mp3",
+      "bytes": 112660,
+      "hash": "sha256-76695c051671555609264b401722f046314c8d8c4cf1394ec23c127e6dc9c671",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/music/music-v070-station-tunnel.ogg",
+      "bytes": 48377,
+      "hash": "sha256-6b70742bc5b2bd9f7d7cadcb5b10c76d09645729161758c612c5eaf7e08add85",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-cart-stall.mp3",
+      "bytes": 16111,
+      "hash": "sha256-19e5de76c36350e46df59e778328c1e131a0edfcf92a9688221435bd641cbbc2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-cart-stall.ogg",
+      "bytes": 9779,
+      "hash": "sha256-abc654f9e87e7748508151b880631ad6cb1c7efe5d509978028d3bd0cf1d0540",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-machine-stop.mp3",
+      "bytes": 20865,
+      "hash": "sha256-e7c632189db9751cefced3adab552e905549ba8071e23240ca98b3ad85b92fb8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-machine-stop.ogg",
+      "bytes": 8141,
+      "hash": "sha256-34e0760d7804efb976261e019d11416623903949bf277891e92765826ff94e3e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-power-switch.mp3",
+      "bytes": 12454,
+      "hash": "sha256-54343f68d400c11fe2165db44c6404bd37028d93e19e9d7494d7703a18a5e636",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-power-switch.ogg",
+      "bytes": 8873,
+      "hash": "sha256-c759f92d69fc5c93477fa04034fa0c6541a1477d029d93850d4ff5cca3929ba7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-rescue-confirm.mp3",
+      "bytes": 13917,
+      "hash": "sha256-cc18fc5b3fa7c6137e26876f6a79bf98c0c14c8d763978ce33b33f091ffac3cc",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-rescue-confirm.ogg",
+      "bytes": 8419,
+      "hash": "sha256-e4f1985f4e66bcc82aba69b8a9146615ca23962e103d8a7f1210ccb1b6ead83d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-return-marker.mp3",
+      "bytes": 10625,
+      "hash": "sha256-c63f66321e2af801eff0d70776653dbcc44abdafa263ea6ba57e6eb8fa0b83ab",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-return-marker.ogg",
+      "bytes": 8001,
+      "hash": "sha256-800faca0de8a4ee956d5f239669e9995bca0821fda48368d8ab64d2fbab97a2c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-seal-engage.mp3",
+      "bytes": 24523,
+      "hash": "sha256-183b4579ddbe80abf49c39cae548aa1a38d9fa1b6da70909f6d7e326e45d5b6a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-seal-engage.ogg",
+      "bytes": 11983,
+      "hash": "sha256-31ebcb4322907ba7217706f8a3954daa6918ce4703ed665ae7c83af889540190",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-station-warning.mp3",
+      "bytes": 17940,
+      "hash": "sha256-89c385c6164fa0c5f3f8a6980d240c65e0ea9b98a33f2ee4d6b12988b483bb00",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-station-warning.ogg",
+      "bytes": 10266,
+      "hash": "sha256-68dbf27b66171357632de1df61cba7b6e2b3895b5bcf41edc81cab6cf36127f2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-takuya-entrance.mp3",
+      "bytes": 48294,
+      "hash": "sha256-a0a47b109bc26d040edbbb032aa6a36b2e2c678185849683060eea775e05f36b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-takuya-entrance.ogg",
+      "bytes": 25846,
+      "hash": "sha256-8b49ac2f74c47ab2acddd5875721a2dfba11fc7ff2d418d843ad57080b328fd3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-terminal-confirm.mp3",
+      "bytes": 7700,
+      "hash": "sha256-c6499c0cc94b4f5890e97558c5da33f79f9c96d4f3885d9f7c7254e78dc06ad5",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v070/sfx/sfx-v070-terminal-confirm.ogg",
+      "bytes": 7092,
+      "hash": "sha256-a9ef656162d0448d3d52351c2d81ca7393eb57e0acf89823ee39be8dc66d717f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v080/sfx/weapon-suppressed-carbine-01.mp3",
+      "bytes": 5060,
+      "hash": "sha256-cf68d834d56341ca142ec82b8f18b798dde71e182f4f1babefcd8289ab651e95",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v080/sfx/weapon-suppressed-carbine-01.ogg",
+      "bytes": 6646,
+      "hash": "sha256-a665e9bcafa443b65bfefa81e6303bb1e7f1caa96b0436b74ca395f80e5fdf26",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v080/sfx/weapon-suppressed-carbine-02.mp3",
+      "bytes": 5060,
+      "hash": "sha256-6b5e81b007355375f12db9a9734df847454e6dcbc5e9fc6bf3ea0d2d02d63dae",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v080/sfx/weapon-suppressed-carbine-02.ogg",
+      "bytes": 6782,
+      "hash": "sha256-8dff657cf8afee479b8ede40f8707c607b47825f450b95ee050254064a43d130",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mayo-feral-end.wav",
+      "bytes": 37088,
+      "hash": "sha256-c4ec39b8d0e4da8a81f90b2d5f1b09135c5066b1c3d6cfef1b1dead5e0b529f7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mayo-feral-rush.wav",
+      "bytes": 26504,
+      "hash": "sha256-9f89cac333dbd2dab618ad9fb1c70db816ffb0613d61c9aafa9556c2126e0d6f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mayo-feral-start.wav",
+      "bytes": 26504,
+      "hash": "sha256-2ad06f5e3365a7c0352461a2107a0447e797bb6dc841b636dce24e0662a11fc3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-cylinder.wav",
+      "bytes": 17684,
+      "hash": "sha256-eab54b76ec61e52453b8e12bff25d70cbd647b528b8918516d45ca8966497c28",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-final.mp3",
+      "bytes": 6313,
+      "hash": "sha256-19c4fc2d4ecbf6c5785b0bee640c527927e68efd41f5c418c3fe009dc87c20af",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-final.ogg",
+      "bytes": 7775,
+      "hash": "sha256-c7745a75b898bfb85f2a89c1dd9293febfa7efe6abd0332fa7b26522708e16d6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-impact.mp3",
+      "bytes": 5373,
+      "hash": "sha256-ddbb98f7e896df55264452cdeefc1b196d91bef2bcc033e28016c13285b2d294",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-impact.ogg",
+      "bytes": 7134,
+      "hash": "sha256-80d7815a96c65972cff58cbba918161cc5968965c457c42fdc1f7cc808d63684",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-ready.mp3",
+      "bytes": 7880,
+      "hash": "sha256-6234f7c9fada43eb74ad91f3cb53a1ddc4e6d0fadd39127ec1069f536e115278",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-ready.ogg",
+      "bytes": 6712,
+      "hash": "sha256-ca7f1cd2eab945cef48bf9537c521274412eeec51561c843ef9c040746ecd1ec",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-shot.mp3",
+      "bytes": 4432,
+      "hash": "sha256-bd7aeec317ab32fb2eb31324b53bc9ef50f3ef5e8292028866b5c1ebd511e3ce",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-shot.ogg",
+      "bytes": 6228,
+      "hash": "sha256-ff1de64634b8e1173a05c5092fba869122d8b38846a477b7e49c72bf174e9478",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-musashi-counter.mp3",
+      "bytes": 6313,
+      "hash": "sha256-56b85be8f9ea0bec1fc2c91d217f868450484bd588ecf65c9ab081d59f534e39",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-musashi-counter.ogg",
+      "bytes": 7589,
+      "hash": "sha256-3a129b1f53b0f94639484146ea12514431d43a620f6f0c43c4ef748fb420db16",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-musashi-cross-guard.mp3",
+      "bytes": 4432,
+      "hash": "sha256-c2044abf8c01331a23b1868ef8352d3b3c1ef5ea5f4082d105ed99b56583c55a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-musashi-cross-guard.ogg",
+      "bytes": 6577,
+      "hash": "sha256-983b2cbb068500a8e9ba2f8cbfa17e988e68f32f6ac62a4b71a32445ba052d4c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-tky-light-blade-charge.mp3",
+      "bytes": 7880,
+      "hash": "sha256-354388f06b4676aec33966ec757e9def78c8c0838abd040995d976fff2978bc2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-tky-light-blade-charge.ogg",
+      "bytes": 8843,
+      "hash": "sha256-2308e6c7da021564d7d26d48f8afe7d8a98567a550f01fe537b01b77a43ac71b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-tky-light-blade-impact.mp3",
+      "bytes": 5373,
+      "hash": "sha256-6a8a1255b4a7b2b40b97ea50c576959a25cfef18b49e0788868603a0458a3666",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-tky-light-blade-impact.ogg",
+      "bytes": 6528,
+      "hash": "sha256-67d46fedc70dfe18f6f0c234c846faa5c1b119457c1902cdc9339e6ae8228fc3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-tky-light-blade-release.mp3",
+      "bytes": 6313,
+      "hash": "sha256-ef800ad1516eaa6ac1c9937e05d428e129a3469da0799317782d42a45dd0af68",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/ability-tky-light-blade-release.ogg",
+      "bytes": 7886,
+      "hash": "sha256-a91ce3f94db1302029062fbd6846e3a965a8fa39f9aede06065d86cace25c88f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-futago-cross-impact.wav",
+      "bytes": 63548,
+      "hash": "sha256-1cc67d793b899b08fadd67681ff1ab2026b5daf72a3cb887595f8515a5c250ce",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-futago-cross-warning.wav",
+      "bytes": 56492,
+      "hash": "sha256-53fed1ea45dd23fa1f2a8392ec29e1d804831f1ea60a3265697d4f4bf395dafd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-futago-entrance.wav",
+      "bytes": 75896,
+      "hash": "sha256-076680b947fe6d9434ff72c352e9310d778309af40c96909fd5d6a300d03a380",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-gairen-entrance.wav",
+      "bytes": 75896,
+      "hash": "sha256-b5280cd14112ad3dc4078ff2d204b4500bfd22c4cfb14c3681ef101283bd9d83",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-gairen-shell-sweep.wav",
+      "bytes": 63548,
+      "hash": "sha256-86d20522bb230bc2664e23dd0f594956e7f2b3a2cd18ba64fa4634c856df7aee",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-gairen-shell-warning.wav",
+      "bytes": 56492,
+      "hash": "sha256-6017e8e9b4708f63ac789351e9a5aeb2db5015049ad04437794c8078c4ff0188",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-mother-brood-eruption.wav",
+      "bytes": 63548,
+      "hash": "sha256-65105ef5702f1f92a2b2079356873d4d9017e504b898c5091dbd6dd990fb24a7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-mother-brood-warning.wav",
+      "bytes": 56492,
+      "hash": "sha256-70beeb5d8cb514b6d945c6bd8c49e10b2dc7147eb5e9087cdedf38b8c06dbd7a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-mother-entrance.wav",
+      "bytes": 75896,
+      "hash": "sha256-8671efdcee9487b7f9af402e57b3310cfb540feefe85298a9387d8f6fae14133",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-ooguchi-charge-impact.wav",
+      "bytes": 63548,
+      "hash": "sha256-52529e29a39e611d389a919a94eac35136565088f566dc15e2fd5b87141cdcf8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-ooguchi-charge-warning.wav",
+      "bytes": 56492,
+      "hash": "sha256-8922cf6b3d58453e82a8ea1187a00d958da4f325ff2abe7db395f43f4f9472a6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/boss-ooguchi-entrance.wav",
+      "bytes": 75896,
+      "hash": "sha256-4176cd47299a83014e808ab40cd0f55731059da5f414e34bf7dac80d3eed641d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/voice-mayo-attack.wav",
+      "bytes": 26504,
+      "hash": "sha256-986cd711a2ef1ecdad4ffe5a4664f76e85f46c7628c169d0fef65d73e6937fc4",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/voice-mayo-deploy.wav",
+      "bytes": 26504,
+      "hash": "sha256-cef61b5b831d33b47beb6723e0b2900fea5ef225826a14d40a9887fa1077c2c8",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/voice-mayo-hurt.wav",
+      "bytes": 26504,
+      "hash": "sha256-108b9a0e2a5e857fb4bef27a287b20db9e1cfbe53e79fb502e0147d76be85a5b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/voice-mayo-retreat.wav",
+      "bytes": 37088,
+      "hash": "sha256-26314ae62434645e2cfc3206c89474e946a8ac690c2ec835b2bd7014744d99bf",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "voice"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mayo-bite.wav",
+      "bytes": 26504,
+      "hash": "sha256-157f39cf34c382bcdb5bae58cdca07295cbdaddd6c01032d1340d16ba11f89e0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mrs-chiha-grenade-flight.wav",
+      "bytes": 30032,
+      "hash": "sha256-b0254b017c03abc6b8fb53e4065e910899bbfd8a08da2d27c7bc375903c1e70c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mrs-chiha-grenade-impact.mp3",
+      "bytes": 5373,
+      "hash": "sha256-575b87fbcade80b995c315719ffdcf12ffee7465bff617146185a56adf8ab667",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mrs-chiha-grenade-impact.ogg",
+      "bytes": 7085,
+      "hash": "sha256-ddd61c40b503020e9e2d0ecdda9e941f9966320a8c7b79a20c85fe242110e084",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mrs-chiha-grenade-launcher.mp3",
+      "bytes": 4432,
+      "hash": "sha256-07a7b1a00f32112e27bd28dafaf80c158bacfd4d7e85a4c4ea5a5561985f2c78",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mrs-chiha-grenade-launcher.ogg",
+      "bytes": 6221,
+      "hash": "sha256-4a1b7c12eda33e369405487fbe18d2f6e50469142ae08be1e7a7c50eab0c9ba9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mrs-chiha-launcher-aim.wav",
+      "bytes": 17684,
+      "hash": "sha256-d81a84939054d3e9fd8c23ff2b6222f29bc72785b4d33591d466e46239d64e47",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mrs-chiha-launcher-bash.mp3",
+      "bytes": 4432,
+      "hash": "sha256-11adffce5413e17382ad0604dd3e8d3ccbba587e7b6042c16d2c7ad20001364f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mrs-chiha-launcher-bash.ogg",
+      "bytes": 6223,
+      "hash": "sha256-8eb0b47c361b35d93f19239f1772f5492b3c20559525f90c29277a25f030c16e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mrs-chiha-launcher-retrieve.wav",
+      "bytes": 21212,
+      "hash": "sha256-beb555765254614fb48569aa5f680bc6a3dad085ec45c52dc9cd7ce58caa43c9",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-mrs-chiha-launcher-stow.wav",
+      "bytes": 21212,
+      "hash": "sha256-9b7e6283122db86af68d47c2abd5bc4037979c8f4606fad258a458ddbdb36ea3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-musashi-dual-katana.mp3",
+      "bytes": 4432,
+      "hash": "sha256-8fdb67649c71b332cdeaea2147d3080d0852075e6e67c607c3c28c752b92639f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-musashi-dual-katana.ogg",
+      "bytes": 6545,
+      "hash": "sha256-9ab5c90fd17846392f96eff9d82df6483472e7ef594108c7019b878f8524f30b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-tky-plasma-blade.mp3",
+      "bytes": 4432,
+      "hash": "sha256-6638a5ea6d1b055426470848c9fe8a6c261bc88ec8b16d173d5eaf441202bfc0",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/audio/v090/sfx/weapon-tky-plasma-blade.ogg",
+      "bytes": 6614,
+      "hash": "sha256-d0ccafcfd5b755897a188db543e41950e1f8b987d2d12119d74865bd5c0fb77e",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se"
+    },
+    {
+      "path": "/favicon.svg",
+      "bytes": 287,
+      "hash": "sha256-e1a179125359c49e41c4133bffcaa5a792b2449a5904f4e61e4e93314cdf423d",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
+      "path": "/icons/icon-192.png",
+      "bytes": 2122,
+      "hash": "sha256-37c196d53a9830ab52f017c896964c09091464927bc6c725339bbbe6f21bd562",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
+      "path": "/icons/icon-512.png",
+      "bytes": 6712,
+      "hash": "sha256-bc7c3090e96ac7526c1490b371fb82f034fd569c9a0d6dd6f2feae7334040242",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
+      "path": "/icons/icon-maskable-512.png",
+      "bytes": 4105,
+      "hash": "sha256-b37c3d6d24ccff4bb93c3aef9e06fbe94f57f9cdee0bb8972a2f829600d10ab8",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    }
+  ]
+}
