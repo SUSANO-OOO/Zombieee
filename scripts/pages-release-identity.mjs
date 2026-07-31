@@ -1,4 +1,4 @@
-const VERSIONED_PRODUCT_TITLE_PATTERN = /西新世紀末物語｜アーリーアクセス版 (?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?/gu;
+const VERSIONED_PRODUCT_TITLE_PATTERN = /西新世紀末物語｜アーリーアクセス版 (?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*))?(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?/gu;
 
 export function normalizeReleaseTitle(source, releaseVersion) {
   const expectedTitle = `西新世紀末物語｜アーリーアクセス版 ${releaseVersion}`;

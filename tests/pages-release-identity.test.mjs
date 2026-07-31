@@ -20,6 +20,12 @@ test("supports preview identity without weakening the one-title invariant", () =
   assert.equal(normalized, "<title>西新世紀末物語｜アーリーアクセス版 preview</title><script>\"西新世紀末物語｜アーリーアクセス版 preview\"</script>");
 });
 
+test("normalizes an emergency four-component Hotfix title without leaving a suffix", () => {
+  const hotfixTitle = "西新世紀末物語｜アーリーアクセス版 0.9.5.1";
+  const normalized = normalizeReleaseTitle(`<title>${hotfixTitle}</title><script>"${hotfixTitle}"</script>`, "0.9.5.1");
+  assert.equal(normalized, `<title>${hotfixTitle}</title><script>"${hotfixTitle}"</script>`);
+});
+
 test("fails closed for missing or ambiguous rendered titles", () => {
   assert.throws(() => normalizeReleaseTitle("<title>Unrelated</title>", "0.7.5"), /versioned product title/u);
   assert.throws(

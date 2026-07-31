@@ -7,17 +7,17 @@
 唯一の正式公開先：**GitHub Pages**
 
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
-- 公開中version：**Version 0.9.0**
-- release SHA：`f2633c538756385f13d166d3adbcdd39b3a08b21`
-- annotated tag：`v0.9.0`、同release SHA
-- GitHub Release：Version 0.9.0、同release SHA
-- request ID：`v0.9.0-formal-release-20260729`
-- release ledger：Issue #68、closed
-- deployment workflow：GitHub Pages Release #150、success
-- public QA workflow：GitHub Pages Public QA #116、success
-- 公開HTML metadata：version `0.9.0`、release SHA `f2633c538756385f13d166d3adbcdd39b3a08b21`、Issue `68`
+- 公開中version：**Version 0.9.5**
+- release SHA：`18e1fb349faa54602c956371d7224200acc17225`
+- annotated tag：`v0.9.5`、同release SHA
+- GitHub Release：Version 0.9.5、同release SHA
+- request ID：`v0.9.5-formal-release-20260730`
+- release ledger：Issue #96、closed
+- deployment workflow：GitHub Pages Release #164、success
+- public QA workflow：GitHub Pages Public QA #130、success
+- 公開HTML metadata：version `0.9.5`、release SHA `18e1fb349faa54602c956371d7224200acc17225`、Issue `96`
 
-上記は2026-07-29のVersion 0.9.5 docs-only開始時にlive再取得した値である。公開中の正確なversion、release SHA、request ID、Issue metadataは、作業開始時とrelease操作前後に正式URLの公開HTML metadata、tag、Release、Actionsと再照合する。
+上記は2026-07-31のIssue #111 Hotfix開始時にlive再取得した値である。正式公開版ではsave確認とasset準備が無期限停止するP0が確認され、Version 0.9.5.1で修正・再公開する。
 
 ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、復旧に使用しない。
 
@@ -26,12 +26,14 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 - repository：`SUSANO-OOO/Zombieee`
 - repository visibility：`public`
 - default branch：`main`
-- Version 0.9.5 docs-only merge result／latest `main`：`76b9168d03109fbb473df7632f0f201d9612f13d`
+- latest `main`／Version 0.9.5 release SHA：`18e1fb349faa54602c956371d7224200acc17225`
 - Version 0.9.5 integration branch：`integration/0.9.5`
 - RC開始時integration SHA：`9c576b1acb89c5b05a47213fa0c8f450b8d6136c`
 - docs-only PR：#97、工程PR：#98〜#106、通常merge済み
 - Version 0.9.5 RC branch：`codex/0.9.5-rc`
-- Version 0.9.5 ledger：Issue #96、open
+- Version 0.9.5 ledger：Issue #96、closed
+- Version 0.9.5.1 Hotfix ledger：Issue #111、open
+- Version 0.9.5.1 branch：`codex/0.9.5.1-hotfix`
 - Version 0.9.5最上位製品正本：`docs/PRODUCER_DECISIONS_0.9.5.md`
 - save key：`nishijin-campaign-v1`
 - Version 0.9.5 save schema：v14
@@ -83,13 +85,15 @@ ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、�
 
 ## 4. Version 0.9.5 release candidate状態
 
-状態：**RC・Producer acceptance correction統合済み・release preparation中**
+状態：**Version 0.9.5正式公開済み・Version 0.9.5.1緊急Hotfix中**
 
 - correction PR：#108、通常merge済み
 - correction統合SHA：`cca0b63cf5a83f6000b3a4599bf0912659f8ed98`
 - release identity：Version 0.9.5
-- release SHA：final `integration/0.9.5 → main` PRのmerge resultへ固定予定
+- release SHA：`18e1fb349faa54602c956371d7224200acc17225`
 - formal release authority：Issue #96監査改訂済み最新コメント（issue comment `5124971857`）
+
+Version 0.9.5.1はIssue #111を唯一の実行正本とし、Hotfix PRのmain merge resultをrelease SHAとしてannotated `v0.9.5.1`、GitHub Release、Pages manual dispatch、拡張Public QAへ固定する。既存`v0.9.5`は変更しない。
 
 目的：
 

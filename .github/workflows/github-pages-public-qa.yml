@@ -24,7 +24,7 @@ jobs:
       - name: Checkout public QA tooling
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
 
       - name: Set up Node
@@ -49,10 +49,11 @@ jobs:
           node scripts/release-contract.mjs \
             --file release-contract/release-contract.json \
             --output release-contract/validated-release-contract.json
+          release_sha="$(jq -er '.release_sha' release-contract/validated-release-contract.json)"
           {
             echo "version=$(jq -er '.version' release-contract/validated-release-contract.json)"
             echo "release_ref=$(jq -er '.release_ref' release-contract/validated-release-contract.json)"
-            echo "release_sha=$(jq -er '.release_sha' release-contract/validated-release-contract.json)"
+            echo "release_sha=$release_sha"
             echo "issue_number=$(jq -er '.issue_number' release-contract/validated-release-contract.json)"
             echo "request_id=$(jq -er '.request_id' release-contract/validated-release-contract.json)"
           } >> "$GITHUB_OUTPUT"
@@ -114,7 +115,10 @@ jobs:
             echo "- 1280×720: pass"
             echo "- 844×390: pass"
             echo "- 844×340: pass"
-            echo "- title表示・開始操作: pass"
+            echo "- 正式origin判定・save hydration完了・開始button enabled: pass"
+            echo "- title→map→loadout→assets ready→battle: pass"
+            echo "- fresh／Version 0.9.0 schema v13／Version 0.9.5 schema v14: pass"
+            echo "- Stage選択・IndexedDB delay／blocked・image.decode hang・低速network・optional asset hang fixture: pass"
             echo "- console error・page error・request failure・横スクロール: 0"
             echo "- deploy source run: $SOURCE_RUN"
             echo "- public QA run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

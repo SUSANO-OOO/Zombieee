@@ -23,13 +23,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "西新世紀末物語",
-    description: "全16名の戦闘表現とスマートフォン描画を刷新したVersion 0.9.5。",
+    description: "正式公開版のセーブ確認とアセット準備停止を修正したVersion 0.9.5.1。",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "西新世紀末物語",
-    description: "全16名の戦闘表現とスマートフォン描画を刷新したVersion 0.9.5。",
+    description: "正式公開版のセーブ確認とアセット準備停止を修正したVersion 0.9.5.1。",
   },
 };
 

@@ -10,7 +10,7 @@ const REQUIRED_FIELDS = Object.freeze([
   "request_id",
 ]);
 
-const VERSION_PATTERN = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/u;
+const VERSION_PATTERN = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*))?(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/u;
 const SHA_PATTERN = /^[0-9a-f]{40}$/u;
 const REQUEST_ID_PATTERN = /^[0-9A-Za-z][0-9A-Za-z._-]{7,127}$/u;
 
@@ -36,7 +36,7 @@ export function normalizeReleaseContract(input) {
 
   const version = requireString(input.version, "version");
   if (!VERSION_PATTERN.test(version)) {
-    throw new Error("version must be an unprefixed semantic version such as 0.7.1");
+    throw new Error("version must be an unprefixed release version such as 0.7.1 or 0.9.5.1");
   }
 
   const releaseSha = requireString(input.release_sha, "release_sha");

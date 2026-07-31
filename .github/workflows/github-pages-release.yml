@@ -25,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Unprefixed semantic version, for example 0.7.1"
+        description: "Unprefixed release version, for example 0.7.1 or 0.9.5.1"
         required: true
         type: string
       release_ref:

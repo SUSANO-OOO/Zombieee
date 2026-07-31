@@ -27,6 +27,7 @@ import {
   preMigrationCampaignSaveKey,
   preflightUnreadableCampaignRecovery,
   readCampaignBackup,
+  readIndexedDbCampaignCandidate,
   readCampaignRecoverySnapshot,
   readCampaignSave,
   readCampaignStorageCandidates,
@@ -270,6 +271,31 @@ test("an unreadable candidate plus a missing replica never becomes an empty fres
   assert.equal(resolution.serialized, "");
 });
 
+test("a slow localStorage read settles as timeout instead of accepting a late candidate", async () => {
+  const key = "slow-local";
+  const storage = {
+    getItem() {
+      const deadline = Date.now() + 20;
+      while (Date.now() < deadline) {
+        // Model a synchronous mobile storage bridge that returns after its deadline.
+      }
+      return serializedSave(4, "2026-07-17T01:00:00.000Z");
+    },
+  };
+
+  const candidates = await readCampaignStorageCandidates({
+    storage,
+    indexedDb: null,
+    key,
+    timeoutMs: 5,
+  });
+
+  assert.equal(candidates.localStorage.state, "timeout");
+  assert.equal(candidates.localStorage.error.name, "TimeoutError");
+  assert.equal(candidates.indexedDB.state, "unavailable");
+  assert.equal(readCampaignSave({ getItem() { throw new Error("unreadable"); } }, key), "");
+});
+
 test("foreign legacy JSON plus a missing replica requires recovery and is never replicated", async () => {
   const key = "foreign-plus-missing";
   const foreign = JSON.stringify({ foo: "bar" });
@@ -326,9 +352,9 @@ test("a temporarily unreadable replica is write-blocked through passive persiste
     validate: inspectSerializedSave,
   });
 
-  assert.equal(reconciled.status, "recovery-needed");
+  assert.equal(reconciled.status, "degraded");
   assert.equal(reconciled.source, "indexedDB");
-  assert.equal(reconciled.recoveryReason, "replica-unreadable");
+  assert.equal(reconciled.recoveryReason, "replica-unreadable-degraded");
   assert.deepEqual(reconciled.repairSources, []);
   assert.deepEqual(reconciled.writeBlockedSources, ["localStorage"]);
   assert.equal(primaryWrites, 0);
@@ -374,6 +400,68 @@ test("a temporarily unreadable replica is write-blocked through passive persiste
   assert.equal(localValues.get(key), hiddenNewer);
   assert.equal(localValues.get(localSnapshotKey), hiddenSnapshot);
   assert.equal(await readCampaignBackup(indexedDb, key), nextReadable);
+});
+
+test("an indefinitely pending IndexedDB open settles as timeout and keeps a valid local save usable", async () => {
+  const key = "indexed-timeout-local-valid";
+  const local = serializedSave(12, "2026-07-31T00:00:00.000Z", { marker: "local-safe" });
+  const storage = createFakeLocalStorage({ [key]: local });
+  const pendingIndexedDb = {
+    open() {
+      return {
+        result: undefined,
+        error: null,
+        onupgradeneeded: null,
+        onsuccess: null,
+        onerror: null,
+        onblocked: null,
+      };
+    },
+  };
+
+  const candidate = await readIndexedDbCampaignCandidate(
+    pendingIndexedDb,
+    key,
+    { timeoutMs: 15 },
+  );
+  assert.equal(candidate.state, "timeout");
+  assert.equal(candidate.error.name, "TimeoutError");
+
+  const reconciled = await reconcileCampaignStorage({
+    storage,
+    indexedDb: pendingIndexedDb,
+    key,
+    validate: inspectSerializedSave,
+    timeoutMs: 15,
+  });
+  assert.equal(reconciled.status, "degraded");
+  assert.equal(reconciled.source, "localStorage");
+  assert.equal(reconciled.serialized, local);
+  assert.deepEqual(reconciled.writeBlockedSources, ["indexedDB"]);
+});
+
+test("a blocked IndexedDB open settles explicitly instead of remaining pending", async () => {
+  const blockedIndexedDb = {
+    open() {
+      const request = {
+        result: undefined,
+        error: null,
+        onupgradeneeded: null,
+        onsuccess: null,
+        onerror: null,
+        onblocked: null,
+      };
+      queueMicrotask(() => request.onblocked?.());
+      return request;
+    },
+  };
+  const candidate = await readIndexedDbCampaignCandidate(
+    blockedIndexedDb,
+    "indexed-blocked",
+    { timeoutMs: 50 },
+  );
+  assert.equal(candidate.state, "blocked");
+  assert.equal(candidate.error.name, "BlockedError");
 });
 
 test("unreadable recovery preflight performs no trial write when verification reads still fail", async () => {
@@ -762,6 +850,29 @@ test("pre-migration and last-known-good snapshots use separate independently rea
   });
   assert.equal(snapshotCandidates.localStorage.serialized, legacy);
   assert.equal(snapshotCandidates.indexedDB.serialized, legacy);
+});
+
+test("recovery snapshots never write to a replica blocked by an unreadable hydration result", async () => {
+  const key = "blocked-snapshot";
+  const snapshotKey = lastKnownGoodCampaignSaveKey(key);
+  const hidden = serializedSave(8, "2026-07-17T08:00:00.000Z", { marker: "hidden" });
+  const selected = serializedSave(9, "2026-07-17T09:00:00.000Z", { marker: "selected" });
+  const storage = createFakeLocalStorage({ [snapshotKey]: hidden });
+  const indexedDb = createFakeIndexedDb();
+
+  const result = await writeCampaignRecoverySnapshot({
+    storage,
+    indexedDb,
+    key,
+    kind: CAMPAIGN_SNAPSHOT_KINDS.LAST_KNOWN_GOOD,
+    serialized: selected,
+    blockedSources: [CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE],
+  });
+
+  assert.equal(result.saved, true);
+  assert.deepEqual(result.skippedSources, [CAMPAIGN_STORAGE_SOURCES.LOCAL_STORAGE]);
+  assert.equal(storage.getItem(snapshotKey), hidden);
+  assert.equal(await readCampaignBackup(indexedDb, snapshotKey), selected);
 });
 
 test("manual export and import are pure and accept campaign inspection callbacks", () => {
