@@ -29,6 +29,7 @@
     "qa:v095-employment": "node scripts/run-browser-qa-with-server.mjs scripts/v095-employment-unlock-browser-smoke.mjs",
     "qa:v0951-hotfix": "node scripts/run-browser-qa-with-server.mjs scripts/v0951-hotfix-browser-smoke.mjs",
     "qa:v0952-hotfix": "node scripts/run-browser-qa-with-server.mjs scripts/v0952-hotfix-browser-smoke.mjs",
+    "qa:v096-pwa": "node scripts/run-browser-qa-with-server.mjs scripts/v096-pwa-browser-smoke.mjs",
     "qa:combat-presentation": "node scripts/run-browser-qa-with-server.mjs scripts/combat-presentation-browser-smoke.mjs",
     "qa:mobile-lifecycle": "node scripts/run-browser-qa-with-server.mjs scripts/mobile-lifecycle-browser-smoke.mjs",
     "qa:v095-mobile-performance": "node scripts/run-browser-qa-with-server.mjs scripts/mobile-lifecycle-browser-smoke.mjs",

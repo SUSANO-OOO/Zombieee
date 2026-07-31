@@ -47,6 +47,7 @@ process.env.V095_ROUTE_CART_QA_BASE_URL = origin;
 process.env.V095_EMPLOYMENT_QA_BASE_URL = origin;
 process.env.V0951_HOTFIX_QA_BASE_URL = origin;
 process.env.V0952_HOTFIX_QA_BASE_URL = origin;
+process.env.V096_PWA_QA_BASE_URL = origin;
 process.env.STATION_QA_BASE_URL = origin;
 process.env.P5_QA_BASE_URL = origin;
 process.env.PROGRESSION_QA_BASE_URL = origin;
