@@ -15,7 +15,7 @@
 // download is retried in place, which is the same rule Issue #113 established
 // for in-battle asset retry.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ASSET_CATEGORY_LABELS,
@@ -50,6 +50,35 @@ import {
 import { describeUpdate, evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js";
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
+
+export type PwaOperationRequest = {
+  stageId: string;
+  unitKinds: string[];
+};
+
+type PwaOperationState = "idle" | "running" | "paused" | "complete" | "failed" | "cancelled";
+
+type PwaAssetReadiness = {
+  state: PwaOperationState;
+  stageId: string | null;
+  unitKinds: string[];
+  progress: ReturnType<typeof describeProgress> | null;
+  ensureOperationReady: (request: PwaOperationRequest) => Promise<boolean>;
+};
+
+const PwaAssetReadinessContext = createContext<PwaAssetReadiness>({
+  state: "complete",
+  stageId: null,
+  unitKinds: [],
+  progress: null,
+  // AshfallGame is also rendered in isolated QA harnesses without PwaGate.
+  // Those harnesses retain their existing asset loader contract.
+  ensureOperationReady: async () => true,
+});
+
+export function usePwaAssetReadiness() {
+  return useContext(PwaAssetReadinessContext);
+}
 
 function readSafetyFromDocument() {
   if (typeof document === "undefined") return {};
@@ -153,6 +182,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [backgroundState, setBackgroundState] = useState<string | null>(null);
   const [onDemandProgress, setOnDemandProgress] = useState<ReturnType<typeof describeProgress> | null>(null);
   const [onDemandState, setOnDemandState] = useState<string | null>(null);
+  const [onDemandFailure, setOnDemandFailure] = useState<{
+    stageId: string;
+    unitKinds: string[];
+    reason: string;
+    failures: Array<Record<string, unknown>>;
+  } | null>(null);
   const [storage, setStorage] = useState<{ available: number } | null>(null);
   const [showStorage, setShowStorage] = useState(false);
   const [updateDismissed, setUpdateDismissed] = useState(false);
@@ -182,6 +217,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const sessionRef = useRef<ReturnType<typeof createAssetDownloadSession> | null>(null);
   const backgroundSessionRef = useRef<ReturnType<typeof createAssetDownloadSession> | null>(null);
   const onDemandSessionRef = useRef<ReturnType<typeof createAssetDownloadSession> | null>(null);
+  const onDemandRunRef = useRef<{ key: string; promise: Promise<boolean> } | null>(null);
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
   // Read inside the download callback, which must not be rebuilt every time one
   // of these changes or an in-flight session would be replaced mid-transfer.
@@ -191,10 +227,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
   const refreshStored = useCallback(async () => {
     const store = storeRef.current;
-    if (!store) return;
+    if (!store) return null;
     const hashes = await store.storedHashes();
     storedHashesRef.current = hashes;
     setStoredHashes(hashes);
+    return hashes;
   }, []);
 
   /**
@@ -330,14 +367,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const storedByPathFor = useCallback((manifest: Manifest | null) => {
+  const storedByPathForHashes = useCallback((manifest: Manifest | null, hashes: Set<string>) => {
     const entries = (manifest?.assets ?? []) as Array<{ path: string; hash: string }>;
     const byPath = new Map<string, string>();
     for (const entry of entries) {
-      if (storedHashes.has(entry.hash)) byPath.set(entry.path, entry.hash);
+      if (hashes.has(entry.hash)) byPath.set(entry.path, entry.hash);
     }
     return byPath;
-  }, [storedHashes]);
+  }, []);
+
+  const storedByPathFor = useCallback((manifest: Manifest | null) => (
+    storedByPathForHashes(manifest, storedHashes)
+  ), [storedByPathForHashes, storedHashes]);
 
   const installAssets = useMemo(() => (
     targetManifest ? assetsForInstall(targetManifest, { canPlayType }) : []
@@ -573,44 +614,149 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     void runBackgroundDownload(installedManifest, installPlan.pending as Array<Record<string, unknown>>);
   }, [downloadState, installPlan, installedManifest, playablePlan, runBackgroundDownload, safety, standalone, booted]);
 
-  const runOnDemandDownload = useCallback(async (stageId: string, formationKinds: string[]) => {
-    const store = storeRef.current;
-    if (!store || !targetManifest || !standalone) return;
-    const current = onDemandSessionRef.current?.getSnapshot().state;
-    if (current === "running" || current === "paused") return;
-    const dependencies = dependencySetForOperation({ stageId, unitKinds: formationKinds });
-    const assets = assetsForDependencySet(targetManifest, dependencies, { canPlayType });
-    const plan = planInstall({ ...targetManifest, assets }, { storedHashesByPath: storedByPathFor(targetManifest) });
-    if (plan.pending.length === 0) return;
+  const ensureOperationReady = useCallback(async ({ stageId, unitKinds }: PwaOperationRequest) => {
+    const normalizedStageId = String(stageId || INITIAL_STAGE_ID);
+    const normalizedUnitKinds = [...new Set((unitKinds ?? []).map(String).filter(Boolean))].sort();
+    // A browser tab deliberately remains playable without Cache Storage. The
+    // game-level asset loader still protects the tab; this gate is the stronger
+    // installed-app contract that must finish before a battle can start.
+    if (!standalone) return true;
 
-    backgroundSessionRef.current?.pause();
-    const session = createAssetDownloadSession({
-      assets: plan.pending,
-      store,
-      fetchAsset: createAssetFetcher({ baseUrl }),
-      concurrency: 1,
-      onProgress: (snapshot) => {
-        setOnDemandState(snapshot.state);
-        setOnDemandProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));
-      },
-    });
-    onDemandSessionRef.current = session;
-    const final = await session.start();
-    await refreshStored();
-    setOnDemandState(final.state);
-    setOnDemandProgress(describeProgress(final, ASSET_CATEGORY_LABELS));
-    const visible = typeof document === "undefined" || document.visibilityState === "visible";
-    const safeToResume = visible
-      && downloadState !== "running"
-      && safety.screen !== "battle"
-      && safety.screen !== "survival"
-      && safety.screen !== "result"
-      && safety.screen !== "survival-result"
-      && safety.battleActive !== true
-      && safety.resultSaving !== true
-      && safety.saveMutationPending !== true;
-    if (safeToResume) backgroundSessionRef.current?.resume();
-  }, [baseUrl, canPlayType, downloadState, refreshStored, safety, standalone, storedByPathFor, targetManifest]);
+    const key = `${normalizedStageId}|${normalizedUnitKinds.join("|")}`;
+    const existing = onDemandRunRef.current;
+    if (existing?.key === key) return existing.promise;
+
+    const promise = (async () => {
+      const store = storeRef.current;
+      if (!store || !targetManifest) {
+        const failure = { stageId: normalizedStageId, unitKinds: normalizedUnitKinds, reason: "manifest-unavailable", failures: [] };
+        setOnDemandFailure(failure);
+        setOnDemandState("failed");
+        setOnDemandProgress(null);
+        return false;
+      }
+
+      setOnDemandFailure(null);
+      setOnDemandProgress(null);
+      setOnDemandState("running");
+      const dependencies = dependencySetForOperation({
+        stageId: normalizedStageId,
+        unitKinds: normalizedUnitKinds,
+      });
+      const manifestAssets = targetManifest.assets ?? [];
+      const manifestPaths = new Set(manifestAssets.map((asset) => String(asset.path ?? "")));
+      const manifestAudioIds = new Set(manifestAssets.map((asset) => String(asset.audioId ?? "")));
+      const missingPaths = [...dependencies.paths].filter((path) => !manifestPaths.has(String(path)));
+      const missingAudioIds = [...dependencies.audioIds].filter((audioId) => !manifestAudioIds.has(String(audioId)));
+      if (missingPaths.length > 0 || missingAudioIds.length > 0) {
+        const failures = [
+          ...missingPaths.map((path) => ({ path: String(path), reason: "manifest-missing" })),
+          ...missingAudioIds.map((audioId) => ({ path: `audio:${String(audioId)}`, reason: "manifest-missing" })),
+        ];
+        setOnDemandFailure({
+          stageId: normalizedStageId,
+          unitKinds: normalizedUnitKinds,
+          reason: "manifest-missing",
+          failures,
+        });
+        setOnDemandState("failed");
+        return false;
+      }
+
+      let stored;
+      try {
+        stored = await store.storedHashes();
+      } catch {
+        setOnDemandFailure({
+          stageId: normalizedStageId,
+          unitKinds: normalizedUnitKinds,
+          reason: "cache-read",
+          failures: [{ path: "(cache)", reason: "cache-read" }],
+        });
+        setOnDemandState("failed");
+        return false;
+      }
+      storedHashesRef.current = stored;
+      setStoredHashes(stored);
+
+      const assets = assetsForDependencySet(targetManifest, dependencies, { canPlayType });
+      const plan = planInstall(
+        { ...targetManifest, assets },
+        { storedHashesByPath: storedByPathForHashes(targetManifest, stored) },
+      );
+      if (plan.pending.length === 0) {
+        setOnDemandState("complete");
+        return true;
+      }
+
+      backgroundSessionRef.current?.pause();
+      const session = createAssetDownloadSession({
+        assets: plan.pending,
+        store,
+        fetchAsset: createAssetFetcher({ baseUrl }),
+        concurrency: 1,
+        onProgress: (snapshot) => {
+          setOnDemandState(snapshot.state);
+          setOnDemandProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));
+        },
+      });
+      onDemandSessionRef.current = session;
+
+      let final = null;
+      try {
+        final = await session.start();
+      } catch (cause) {
+        setOnDemandFailure({
+          stageId: normalizedStageId,
+          unitKinds: normalizedUnitKinds,
+          reason: String((cause as Error)?.message ?? cause),
+          failures: [{ path: "(session)", reason: "session" }],
+        });
+        setOnDemandState("failed");
+        setOnDemandProgress(null);
+        return false;
+      } finally {
+        await refreshStored();
+      }
+
+      const storedAfter = storedHashesRef.current;
+      const cacheComplete = final.state === "complete"
+        && plan.pending.every((asset) => storedAfter.has(String(asset.hash)));
+      if (!cacheComplete) {
+        const failures = final.failures ?? [];
+        setOnDemandFailure({
+          stageId: normalizedStageId,
+          unitKinds: normalizedUnitKinds,
+          reason: final.state === "complete" ? "cache-commit-unconfirmed" : final.state,
+          failures,
+        });
+        setOnDemandState(final.state === "complete" ? "failed" : final.state);
+        setOnDemandProgress(describeProgress(final, ASSET_CATEGORY_LABELS));
+        return false;
+      }
+
+      setOnDemandState("complete");
+      setOnDemandProgress(describeProgress(final, ASSET_CATEGORY_LABELS));
+      return true;
+    })();
+    onDemandRunRef.current = { key, promise };
+    try {
+      return await promise;
+    } finally {
+      if (onDemandRunRef.current?.promise === promise) onDemandRunRef.current = null;
+      const visible = typeof document === "undefined" || document.visibilityState === "visible";
+      const safeToResume = visible
+        && downloadState !== "running"
+        && safety.screen !== "battle"
+        && safety.screen !== "survival"
+        && safety.screen !== "result"
+        && safety.screen !== "survival-result"
+        && safety.battleActive !== true
+        && safety.resultSaving !== true
+        && safety.saveMutationPending !== true;
+      if (safeToResume) backgroundSessionRef.current?.resume();
+    }
+  }, [baseUrl, canPlayType, downloadState, refreshStored, safety, standalone, storedByPathForHashes, targetManifest]);
 
   // AshfallGame publishes the selected stage and formation through the same
   // dataset bridge as activation safety. This request is differential and
@@ -618,8 +764,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!booted || !standalone || !targetManifest || !safety.stageId || safety.screen === "title") return;
     const formationKinds = String(safety.formationKinds ?? "").split("|").filter(Boolean);
-    void runOnDemandDownload(String(safety.stageId), formationKinds);
-  }, [booted, runOnDemandDownload, safety.formationKinds, safety.screen, safety.stageId, standalone, targetManifest]);
+    if (safety.screen === "battle") return;
+    void ensureOperationReady({ stageId: String(safety.stageId), unitKinds: formationKinds });
+  }, [booted, ensureOperationReady, safety.formationKinds, safety.screen, safety.stageId, standalone, targetManifest]);
 
   const startInstall = useCallback(() => {
     if (!targetManifest || !playablePlan) return;
@@ -711,8 +858,20 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     || phase === "download-incomplete"
     || (!playable && (phase === "install-required" || phase === "installing"));
 
+  const pwaReadiness = useMemo<PwaAssetReadiness>(() => ({
+    state: (onDemandState === "running" || onDemandState === "paused" || onDemandState === "complete"
+      || onDemandState === "failed" || onDemandState === "cancelled")
+      ? onDemandState
+      : "idle",
+    stageId: onDemandFailure?.stageId ?? null,
+    unitKinds: onDemandFailure?.unitKinds ?? [],
+    progress: onDemandProgress,
+    ensureOperationReady,
+  }), [ensureOperationReady, onDemandFailure, onDemandProgress, onDemandState]);
+
   return (
-    <>
+    <PwaAssetReadinessContext.Provider value={pwaReadiness}>
+      <>
       {!blocking && children}
 
       {blocking && (
@@ -930,10 +1089,44 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         </aside>
       )}
 
-      {!blocking && onDemandState === "running" && onDemandProgress && (
+      {!blocking && (onDemandState === "running" || onDemandState === "paused") && onDemandProgress && (
         <aside className="pwa-notice" role="status">
           <p>選択した作戦データを準備中：{onDemandProgress.countLine}・{onDemandProgress.byteLine}</p>
           {onDemandProgress.detailLine && <p className="pwa-hint"><code>{onDemandProgress.detailLine}</code></p>}
+          <div className="pwa-actions">
+            {onDemandState === "running" && (
+              <button type="button" onClick={() => onDemandSessionRef.current?.pause()}>一時停止</button>
+            )}
+            {onDemandState === "paused" && (
+              <button type="button" onClick={() => onDemandSessionRef.current?.resume()}>再開</button>
+            )}
+            <button type="button" onClick={() => onDemandSessionRef.current?.cancel()}>中断</button>
+          </div>
+        </aside>
+      )}
+
+      {!blocking && (onDemandState === "failed" || onDemandState === "cancelled") && onDemandFailure && (
+        <aside className="pwa-notice" role="alert">
+          <p>{onDemandState === "cancelled" ? "選択した作戦データの取得を中断しました" : "選択した作戦データを準備できませんでした"}</p>
+          <p className="pwa-hint">必要なデータがsize・hash検証とCache保存まで完了するまで、戦闘は開始していません。</p>
+          {onDemandFailure.failures.slice(0, 4).map((failure) => (
+            <p className="pwa-warning" key={String(failure.path)}>
+              <code>{String(failure.path)}</code>／{String(failure.reason ?? onDemandFailure.reason)}
+            </p>
+          ))}
+          <div className="pwa-actions">
+            <button
+              type="button"
+              className="pwa-primary"
+              onClick={() => void ensureOperationReady({
+                stageId: onDemandFailure.stageId,
+                unitKinds: onDemandFailure.unitKinds,
+              })}
+            >
+              取得を再試行
+            </button>
+            <button type="button" onClick={() => { setOnDemandFailure(null); setOnDemandState(null); }}>閉じる</button>
+          </div>
         </aside>
       )}
 
@@ -1013,6 +1206,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
           )}
         </>
       )}
-    </>
+      </>
+    </PwaAssetReadinessContext.Provider>
   );
 }

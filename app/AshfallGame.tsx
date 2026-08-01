@@ -333,6 +333,7 @@ import {
 import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
 import { loadImageWithTimeout } from "./boundedImageLoader.js";
+import { usePwaAssetReadiness } from "./PwaGate";
 import {
   OPTIONAL_ASSET_LOAD_DEADLINE_MS,
   runAssetLoadSession,
@@ -6869,6 +6870,7 @@ function drawWorld(
 }
 
 export function AshfallGame() {
+  const { ensureOperationReady } = usePwaAssetReadiness();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTransformRef = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
   const graphicsProfileRef = useRef<GraphicsProfile>(resolveGraphicsProfile("auto"));
@@ -12509,7 +12511,7 @@ export function AshfallGame() {
 
   const openEvent = useCallback((nextEventId: string, destination: EventDestination) => openEvents([nextEventId], destination), [openEvents]);
 
-  const startGame = useCallback((sessionOverride?: {
+  const startGameNow = useCallback((sessionOverride?: {
     stageId: string;
     formationKinds: UnitKind[];
     selectedSupply: SupplyKind;
@@ -12581,7 +12583,26 @@ export function AshfallGame() {
     }
   }, [activeOperationId, bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, playCue, qaMode, qaScenario, selectedSupply, startMusic]);
 
-  const startSurvivalGame = useCallback((run: ReturnType<typeof createSurvivalRun>) => {
+  const startGame = useCallback(async (sessionOverride?: {
+    stageId: string;
+    formationKinds: UnitKind[];
+    selectedSupply: SupplyKind;
+    resultId: string | null;
+  }) => {
+    const operationId = sessionOverride?.stageId ?? activeOperationId;
+    const pwaStageId = qaMode
+      ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE
+      : OUTBREAK_MISSION_BY_ID[operationId]?.prerequisiteStageId ?? activeBattlefieldStageId;
+    const ready = await ensureOperationReady({
+      stageId: pwaStageId,
+      unitKinds: sessionOverride?.formationKinds ?? formationKinds,
+    });
+    if (!ready) return false;
+    startGameNow(sessionOverride);
+    return true;
+  }, [activeBattlefieldStageId, activeOperationId, ensureOperationReady, formationKinds, qaMode, startGameNow]);
+
+  const startSurvivalGame = useCallback(async (run: ReturnType<typeof createSurvivalRun>) => {
     if (!assetsReady || assetError) return;
     const requestedKinds = run.formation.unitIds.flatMap((unitId: string) => {
       const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[])
@@ -12589,6 +12610,11 @@ export function AshfallGame() {
       return unit ? [unit.combatKind] : [];
     }) as UnitKind[];
     const activeKinds = requestedKinds.length > 0 ? requestedKinds : formationKinds;
+    const ready = await ensureOperationReady({
+      stageId: CAMPAIGN_STAGE_IDS.T_PLAN_CENTRAL_SEAL,
+      unitKinds: activeKinds,
+    });
+    if (!ready) return;
     const fresh = initialSurvivalGame({
       selectedSupply,
       run,
@@ -12617,7 +12643,7 @@ export function AshfallGame() {
     desiredMusicModeRef.current = "normal";
     if (!bgmMuted) startMusic();
     playCue("start-low");
-  }, [assetError, assetsReady, bgmMuted, chooseAction, disposeBattleRuntime, formationKinds, playCue, selectedSupply, startMusic]);
+  }, [assetError, assetsReady, bgmMuted, chooseAction, disposeBattleRuntime, ensureOperationReady, formationKinds, playCue, selectedSupply, startMusic]);
 
   const openSurvival = useCallback(() => {
     const unlocked = campaignSave.survival.unlockedStartWaves;
@@ -12657,6 +12683,31 @@ export function AshfallGame() {
     startSurvivalGame(run);
   }, [campaignSave.survival, startSurvivalGame]);
 
+  const startBattleFromEvent = useCallback(async () => {
+    const ready = await startGame();
+    if (!ready) return false;
+    setEventId(null);
+    setForceStoryReplay(false);
+    return true;
+  }, [startGame]);
+
+  const resumeBattleAfterEvent = useCallback(async () => {
+    const ready = await ensureOperationReady({
+      stageId: activeBattlefieldStageId,
+      unitKinds: formationKinds,
+    });
+    if (!ready) return false;
+    const g = gameRef.current;
+    g.paused = false;
+    setEventId(null);
+    setForceStoryReplay(false);
+    setPaused(false);
+    setScreen("battle");
+    if (!bgmMuted) startMusic();
+    resumeBattleAudioLoops(g);
+    return true;
+  }, [activeBattlefieldStageId, bgmMuted, ensureOperationReady, formationKinds, resumeBattleAudioLoops, startMusic]);
+
   const returnToMap = useCallback((sessionOverride?: {
     stageId: string;
     formationKinds: UnitKind[];
@@ -12695,19 +12746,19 @@ export function AshfallGame() {
       setEventId(completion.nextEventId);
       return;
     }
+    if (completion.destination === "battle") {
+      void startBattleFromEvent();
+      return;
+    }
+    if (completion.destination === "battle-resume") {
+      void resumeBattleAfterEvent();
+      return;
+    }
     setEventId(null);
     setForceStoryReplay(false);
-    if (completion.destination === "battle") startGame();
-    else if (completion.destination === "battle-resume") {
-      const g = gameRef.current;
-      g.paused = false;
-      setPaused(false);
-      setScreen("battle");
-      if (!bgmMuted) startMusic();
-      resumeBattleAudioLoops(g);
-    } else if (completion.destination === "result") setScreen("result");
+    if (completion.destination === "result") setScreen("result");
     else returnToMap();
-  }, [bgmMuted, eventId, resumeBattleAudioLoops, returnToMap, startGame, startMusic]);
+  }, [eventId, resumeBattleAfterEvent, returnToMap, startBattleFromEvent]);
 
   const handleEventSkip = useCallback(() => {
     if (eventId && isPrologueOpeningEventId(eventId)) {
