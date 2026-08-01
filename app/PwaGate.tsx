@@ -639,10 +639,25 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       setOnDemandFailure(null);
       setOnDemandProgress(null);
       setOnDemandState("running");
-      const dependencies = dependencySetForOperation({
+      const rawDependencies = dependencySetForOperation({
         stageId: normalizedStageId,
         unitKinds: normalizedUnitKinds,
       });
+      // Pages rewrites runtime absolute asset references to /Zombieee/...,
+      // while the distribution manifest deliberately keeps root-absolute
+      // paths. Compare one canonical form so a base path never turns a real
+      // asset into a false manifest-missing failure.
+      const basePathname = new URL(baseUrl).pathname.replace(/\/+$/, "");
+      const normalizeManifestPath = (value: unknown) => {
+        const path = String(value);
+        if (!basePathname || basePathname === "/") return path;
+        if (path === basePathname) return "/";
+        return path.startsWith(`${basePathname}/`) ? path.slice(basePathname.length) : path;
+      };
+      const dependencies = {
+        ...rawDependencies,
+        paths: new Set([...rawDependencies.paths].map(normalizeManifestPath)),
+      };
       const manifestAssets = targetManifest.assets ?? [];
       const manifestPaths = new Set(manifestAssets.map((asset) => String(asset.path ?? "")));
       const manifestAudioIds = new Set(manifestAssets.map((asset) => String(asset.audioId ?? "")));

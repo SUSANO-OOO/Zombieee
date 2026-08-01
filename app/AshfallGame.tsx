@@ -12592,7 +12592,8 @@ export function AshfallGame() {
     const operationId = sessionOverride?.stageId ?? activeOperationId;
     const pwaStageId = qaMode
       ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE
-      : OUTBREAK_MISSION_BY_ID[operationId]?.prerequisiteStageId ?? activeBattlefieldStageId;
+      : OUTBREAK_MISSION_BY_ID[operationId]?.prerequisiteStageId
+        ?? (CAMPAIGN_STAGE_BY_ID[operationId] ? operationId : activeBattlefieldStageId);
     const ready = await ensureOperationReady({
       stageId: pwaStageId,
       unitKinds: sessionOverride?.formationKinds ?? formationKinds,
