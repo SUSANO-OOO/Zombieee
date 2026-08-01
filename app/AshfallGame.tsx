@@ -11183,7 +11183,9 @@ export function AshfallGame() {
     root.dataset.pwaBattleActive = String(screen === "battle" || screen === "survival");
     root.dataset.pwaResultSaving = String(screen === "result" || screen === "survival-result");
     root.dataset.pwaSaveMutationPending = String(Boolean(saveMutationPending));
-  }, [saveMutationPending, screen]);
+    root.dataset.pwaStageId = activeBattlefieldStageId;
+    root.dataset.pwaFormationKinds = formationKindKey;
+  }, [activeBattlefieldStageId, formationKindKey, saveMutationPending, screen]);
 
   // The save environment is a maintenance fact, not a story beat, so it no
   // longer sits across the title screen. Publishing it here lets the data screen

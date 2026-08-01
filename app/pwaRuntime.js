@@ -150,6 +150,15 @@ export function describeFailureDiagnostics({
   pendingCount = 0,
   pendingBytes = 0,
   serviceWorkerState = null,
+  stage = null,
+  activePath = null,
+  activePhase = null,
+  activeAttempt = 0,
+  activeSpeedBps = null,
+  activeStalledForMs = null,
+  remainingBytes = null,
+  etaMs = null,
+  metrics = [],
 } = {}) {
   const entries = failures.map((failure) => ({
     path: failure.path,
@@ -179,6 +188,15 @@ export function describeFailureDiagnostics({
     pendingCount,
     pendingBytes,
     serviceWorkerState,
+    stage,
+    activePath,
+    activePhase,
+    activeAttempt,
+    activeSpeedBps,
+    activeStalledForMs,
+    remainingBytes,
+    etaMs,
+    metrics,
     at: new Date(now).toISOString(),
   };
 }
@@ -198,6 +216,9 @@ export function formatFailureDiagnostics(diagnostics) {
     `保存済み: ${diagnostics.storedCount}件 / ${diagnostics.storedBytes}B`,
     `未取得: ${diagnostics.pendingCount}件 / ${diagnostics.pendingBytes}B`,
     `経過: ${diagnostics.elapsedMs ?? "-"}ms / 最終進捗から: ${diagnostics.sinceProgressMs ?? "-"}ms`,
+    `現在: ${diagnostics.stage ?? "-"} / ${diagnostics.activePath ?? "-"} / ${diagnostics.activePhase ?? "-"} / 試行${diagnostics.activeAttempt ?? 0}`,
+    `速度: ${diagnostics.activeSpeedBps ?? "-"}B/s / 停滞: ${diagnostics.activeStalledForMs ?? "-"}ms / 残り: ${diagnostics.remainingBytes ?? "-"}B / ETA: ${diagnostics.etaMs ?? "-"}ms`,
+    `計測asset: ${diagnostics.metrics?.length ?? 0}件`,
     `失敗: ${diagnostics.failureCount}件`,
   ];
   for (const failure of diagnostics.failures) {
@@ -217,7 +238,7 @@ export function describeInstall(plan, storage) {
   }
   const shortOnSpace = storage?.available != null && storage.available < plan.pendingBytes * 1.1;
   return {
-    headline: "ゲームデータをダウンロードします",
+    headline: plan.scope === "first-play" ? "まずStage1をプレイできるデータを準備します" : "ゲームデータをダウンロードします",
     lines,
     shortOnSpace,
     warning: shortOnSpace ? "空き容量が不足している可能性があります" : null,
@@ -234,22 +255,28 @@ export function describeInstall(plan, storage) {
  * screen cannot promise a figure the download will not match, and reading a
  * manifest is not the same as fetching a pack: nothing is downloaded here.
  */
-export function describeInstallOffer(manifest, { promptAvailable = false } = {}) {
+export function describeInstallOffer(manifest, { promptAvailable = false, firstPlayAssets = null } = {}) {
   if (!manifest) return null;
   const assets = manifest.assets ?? [];
   const totalAssets = assets.length;
   const totalBytes = assets.reduce((sum, asset) => sum + (Number(asset?.bytes) || 0), 0);
+  const stagedAssets = Array.isArray(firstPlayAssets)
+    ? firstPlayAssets
+    : assets.filter((asset) => asset.installTier === "shell" || asset.installTier === "first-play");
+  const firstPlayBytes = stagedAssets.reduce((sum, asset) => sum + (Number(asset?.bytes) || 0), 0);
 
   return {
     headline: "西新世紀末物語をインストール",
     body: "ホーム画面に追加すると、アプリのように全画面で起動できます。",
     sizeLine: totalAssets > 0
-      ? `ゲームデータ ${totalAssets}件・${formatBytes(totalBytes)} は、追加したあと最初に起動したときに保存します`
+      ? `追加したあと最初に起動したとき、まずStage1用 ${stagedAssets.length > 0 ? stagedAssets.length : totalAssets}件・${formatBytes(firstPlayBytes > 0 ? firstPlayBytes : totalBytes)}を保存し、残りはあとから取得します`
       : null,
     noDownloadHint: "この画面ではゲームデータをダウンロードしません。",
     actionLabel: promptAvailable ? "インストール" : null,
     totalAssets,
     totalBytes,
+    firstPlayAssets: stagedAssets.length > 0 ? stagedAssets.length : totalAssets,
+    firstPlayBytes: firstPlayBytes > 0 ? firstPlayBytes : totalBytes,
     skipLabel: "ブラウザで遊ぶ",
     skipHint: "インストールせずに遊ぶこともできます。その場合は毎回通信が必要です。",
   };
@@ -311,15 +338,31 @@ export function describeInstallGuidance({ standalone = false, promptAvailable = 
   };
 }
 
-/** Progress caption naming the category currently being fetched. */
+/** Progress caption naming the exact stage, asset, and transfer phase. */
 export function describeProgress(snapshot, categoryLabels) {
   if (!snapshot) return null;
-  const label = snapshot.activeCategory ? categoryLabels[snapshot.activeCategory] ?? snapshot.activeCategory : null;
+  const labels = categoryLabels ?? {};
+  const label = snapshot.activeCategory ? labels[snapshot.activeCategory] ?? snapshot.activeCategory : null;
+  const phaseLabels = {
+    queue: "待機列",
+    network: "通信",
+    verify: "hash検証",
+    cache: "端末保存",
+  };
+  const phase = snapshot.activePhase ? phaseLabels[snapshot.activePhase] ?? snapshot.activePhase : null;
+  const speed = snapshot.activeSpeedBps != null ? `${formatBytes(snapshot.activeSpeedBps)}/秒` : "計算中";
+  const eta = snapshot.etaMs != null ? `${Math.ceil(snapshot.etaMs / 1000)}秒` : "計算中";
   return {
     countLine: `${snapshot.completedCount} / ${snapshot.totalCount}件`,
     byteLine: `${formatBytes(snapshot.completedBytes)} / ${formatBytes(snapshot.totalBytes)}`,
     categoryLine: label ? `${label}を取得中` : null,
     failedLine: snapshot.failedCount > 0 ? `失敗 ${snapshot.failedCount}件` : null,
+    detailLine: snapshot.activePath
+      ? `${phase ?? "処理中"}：${snapshot.activePath}／試行${snapshot.activeAttempt ?? 0}回／速度 ${speed}`
+      : null,
+    statusLine: snapshot.activePath
+      ? `この項目の残り ${formatBytes(Math.max(0, (snapshot.activeTotalBytes ?? 0) - (snapshot.activeBytes ?? 0)))}／全体残り ${formatBytes(snapshot.remainingBytes)}／ETA ${eta}`
+      : null,
     percent: Math.round(snapshot.ratio * 100),
   };
 }

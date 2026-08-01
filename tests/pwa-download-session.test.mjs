@@ -88,11 +88,36 @@ test("progress reports counts, bytes, and the active category", async () => {
     concurrency: 1,
     onProgress: (snapshot) => seen.push(snapshot),
   });
-  await session.start();
+  const final = await session.start();
 
   assert.ok(seen.some((snapshot) => snapshot.activeCategory === "audio"));
   assert.ok(seen.some((snapshot) => snapshot.completedCount === 1 && snapshot.completedBytes === 4));
-  assert.equal(seen.at(-1).completedCount, 2);
+  assert.equal(final.completedCount, 2);
+  assert.equal(final.metrics.length, 2);
+  assert.ok(final.metrics.every((metric) => metric.status === "complete"));
+  assert.ok(final.metrics.every((metric) => metric.attempts === 1));
+  assert.ok(final.metrics.every((metric) => typeof metric.queueWaitMs === "number"));
+  assert.ok(final.metrics.every((metric) => typeof metric.networkMs === "number"));
+});
+
+test("priority queue starts shell and first-play work before deferred work", async () => {
+  const assets = [
+    asset("/optional.webp", 1, { installTier: "optional", installPriority: 80 }),
+    asset("/shell.webp", 2, { installTier: "shell", installPriority: 0 }),
+    asset("/first-play.webp", 3, { installTier: "first-play", installPriority: 10 }),
+  ];
+  const seeds = new Map([["/optional.webp", 1], ["/shell.webp", 2], ["/first-play.webp", 3]]);
+  const { fetchAsset, calls } = createFetcher(seeds);
+  const session = createAssetDownloadSession({
+    assets,
+    fetchAsset,
+    store: createStore(),
+    digest,
+    concurrency: 1,
+  });
+
+  await session.start();
+  assert.deepEqual(calls, ["/shell.webp", "/first-play.webp", "/optional.webp"]);
 });
 
 test("concurrency never exceeds the configured mobile cap", async () => {

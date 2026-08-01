@@ -22,6 +22,12 @@ import {
   formatBytes,
   planInstall,
 } from "./pwaAssetManifest.js";
+import {
+  assetsForDependencySet,
+  assetsForInstall,
+  dependencySetForOperation,
+  INITIAL_STAGE_ID,
+} from "./pwaPlayablePack.js";
 import { createAssetStore } from "./pwaAssetStore.js";
 import { createAssetDownloadSession } from "./pwaDownloadSession.js";
 import {
@@ -53,6 +59,8 @@ function readSafetyFromDocument() {
     battleActive: data.pwaBattleActive === "true",
     resultSaving: data.pwaResultSaving === "true",
     saveMutationPending: data.pwaSaveMutationPending === "true",
+    stageId: data.pwaStageId ?? INITIAL_STAGE_ID,
+    formationKinds: data.pwaFormationKinds ?? "brawler|scout|ranger|medic",
   };
 }
 
@@ -141,6 +149,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [storedHashes, setStoredHashes] = useState<Set<string>>(() => new Set());
   const [progress, setProgress] = useState<ReturnType<typeof describeProgress> | null>(null);
   const [downloadState, setDownloadState] = useState<string | null>(null);
+  const [backgroundProgress, setBackgroundProgress] = useState<ReturnType<typeof describeProgress> | null>(null);
+  const [backgroundState, setBackgroundState] = useState<string | null>(null);
+  const [onDemandProgress, setOnDemandProgress] = useState<ReturnType<typeof describeProgress> | null>(null);
+  const [onDemandState, setOnDemandState] = useState<string | null>(null);
   const [storage, setStorage] = useState<{ available: number } | null>(null);
   const [showStorage, setShowStorage] = useState(false);
   const [updateDismissed, setUpdateDismissed] = useState(false);
@@ -168,17 +180,21 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   );
   const storeRef = useRef<ReturnType<typeof createAssetStore> | null>(null);
   const sessionRef = useRef<ReturnType<typeof createAssetDownloadSession> | null>(null);
+  const backgroundSessionRef = useRef<ReturnType<typeof createAssetDownloadSession> | null>(null);
+  const onDemandSessionRef = useRef<ReturnType<typeof createAssetDownloadSession> | null>(null);
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
   // Read inside the download callback, which must not be rebuilt every time one
   // of these changes or an in-flight session would be replaced mid-transfer.
-  const installPlanRef = useRef<{ pendingCount: number; pendingBytes: number; satisfiedBytes?: number } | null>(null);
+  const installPlanRef = useRef<{ pendingCount: number; pendingBytes: number; satisfiedBytes?: number; scope?: string } | null>(null);
   const installedManifestRef = useRef<Manifest | null>(null);
   const storedHashesRef = useRef<Set<string>>(new Set());
 
   const refreshStored = useCallback(async () => {
     const store = storeRef.current;
     if (!store) return;
-    setStoredHashes(await store.storedHashes());
+    const hashes = await store.storedHashes();
+    storedHashesRef.current = hashes;
+    setStoredHashes(hashes);
   }, []);
 
   /**
@@ -295,6 +311,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     const observer = new MutationObserver(read);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: [
       "data-pwa-screen", "data-pwa-battle-active", "data-pwa-result-saving", "data-pwa-save-mutation-pending",
+      "data-pwa-stage-id", "data-pwa-formation-kinds",
       "data-save-environment-kind", "data-save-environment-origin", "data-save-environment-scope",
       "data-save-environment-label", "data-save-environment-isolation",
     ] });
@@ -303,16 +320,45 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
   const targetManifest = (installedManifest ?? publishedManifest) as Manifest | null;
 
-  const installPlan = useMemo(() => {
-    if (!targetManifest) return null;
-    const entries = (targetManifest.assets ?? []) as Array<{ path: string; hash: string }>;
-    if (entries.length === 0) return null;
+  const canPlayType = useMemo(() => {
+    if (typeof document === "undefined") return undefined;
+    try {
+      const audio = document.createElement("audio");
+      return (type: string) => audio.canPlayType(type);
+    } catch {
+      return undefined;
+    }
+  }, []);
+
+  const storedByPathFor = useCallback((manifest: Manifest | null) => {
+    const entries = (manifest?.assets ?? []) as Array<{ path: string; hash: string }>;
     const byPath = new Map<string, string>();
     for (const entry of entries) {
       if (storedHashes.has(entry.hash)) byPath.set(entry.path, entry.hash);
     }
-    return planInstall(targetManifest, { storedHashesByPath: byPath });
-  }, [storedHashes, targetManifest]);
+    return byPath;
+  }, [storedHashes]);
+
+  const installAssets = useMemo(() => (
+    targetManifest ? assetsForInstall(targetManifest, { canPlayType }) : []
+  ), [canPlayType, targetManifest]);
+
+  const playableAssets = useMemo(() => (
+    targetManifest ? assetsForInstall(targetManifest, { firstPlayOnly: true, canPlayType }) : []
+  ), [canPlayType, targetManifest]);
+
+  const installPlan = useMemo(() => {
+    if (!targetManifest) return null;
+    if (installAssets.length === 0) return null;
+    const plan = planInstall({ ...targetManifest, assets: installAssets }, { storedHashesByPath: storedByPathFor(targetManifest) });
+    return { ...plan, scope: "full" };
+  }, [installAssets, storedByPathFor, targetManifest]);
+
+  const playablePlan = useMemo(() => {
+    if (!targetManifest || playableAssets.length === 0) return null;
+    const plan = planInstall({ ...targetManifest, assets: playableAssets }, { storedHashesByPath: storedByPathFor(targetManifest) });
+    return { ...plan, scope: "first-play" };
+  }, [playableAssets, storedByPathFor, targetManifest]);
 
   const updateEvaluation = useMemo(() => {
     if (!installedManifest || !publishedManifest) return null;
@@ -323,16 +369,16 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // without listing them as dependencies - rebuilding that callback mid-run
   // would swap the session out from under an in-flight transfer.
   useEffect(() => {
-    installPlanRef.current = installPlan;
+    installPlanRef.current = playablePlan;
     installedManifestRef.current = installedManifest;
     storedHashesRef.current = storedHashes;
-  }, [installPlan, installedManifest, storedHashes]);
+  }, [installedManifest, playablePlan, storedHashes]);
 
   const phase = derivePwaPhase({
     supported,
     standalone,
     installedManifest,
-    installPlan,
+    installPlan: playablePlan,
     downloadState,
     updateEvaluation,
     offerDismissed,
@@ -351,7 +397,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     setDiagnostics(null);
     const startedAt = Date.now();
     let lastProgressAt = startedAt;
-    let lastCompleted = -1;
+    let latestSnapshot: Record<string, unknown> | null = null;
 
     // An update must not run under a worker that answers asset requests from
     // the generation it is replacing. Promoting the waiting worker first is what
@@ -366,10 +412,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       store,
       fetchAsset: createAssetFetcher({ baseUrl }),
       onProgress: (snapshot) => {
-        if (snapshot.completedCount !== lastCompleted) {
-          lastCompleted = snapshot.completedCount;
-          lastProgressAt = Date.now();
-        }
+        latestSnapshot = snapshot;
+        lastProgressAt = Number(snapshot.lastProgressAt) || Date.now();
         setDownloadState(snapshot.state);
         setProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));
         setStalledSince(lastProgressAt);
@@ -398,6 +442,15 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         pendingCount: plan?.pendingCount ?? 0,
         pendingBytes: plan?.pendingBytes ?? 0,
         serviceWorkerState,
+        stage: safety.stageId ?? null,
+        activePath: latestSnapshot?.activePath ?? null,
+        activePhase: latestSnapshot?.activePhase ?? null,
+        activeAttempt: latestSnapshot?.activeAttempt ?? 0,
+        activeSpeedBps: latestSnapshot?.activeSpeedBps ?? null,
+        activeStalledForMs: latestSnapshot?.activeStalledForMs ?? null,
+        remainingBytes: latestSnapshot?.remainingBytes ?? null,
+        etaMs: latestSnapshot?.etaMs ?? null,
+        metrics: latestSnapshot?.metrics ?? [],
         ...overrides,
       }));
     };
@@ -451,18 +504,132 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     setInstalledManifest(manifest);
     setUpdateDismissed(false);
     setDiagnostics(null);
-    setDownloadState(final.state);
+    // Initial install and repair only need the first-play gate. The complete
+    // manifest is committed above, while the remaining selected variants and
+    // later stages continue in the background without holding the game title.
+    setDownloadState(kind === "update" ? final.state : null);
+  }, [baseUrl, refreshStored, safety.stageId]);
+
+  const runBackgroundDownload = useCallback(async (manifest: Manifest, assets: Array<Record<string, unknown>>) => {
+    const store = storeRef.current;
+    if (!store || assets.length === 0) return;
+    const existing = backgroundSessionRef.current?.getSnapshot().state;
+    if (existing === "running" || existing === "paused" || existing === "complete") return;
+    const session = createAssetDownloadSession({
+      assets,
+      store,
+      fetchAsset: createAssetFetcher({ baseUrl }),
+      concurrency: 1,
+      onProgress: (snapshot) => {
+        setBackgroundState(snapshot.state);
+        setBackgroundProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));
+      },
+    });
+    backgroundSessionRef.current = session;
+    const final = await session.start();
+    await refreshStored();
+    setBackgroundState(final.state);
+    setBackgroundProgress(describeProgress(final, ASSET_CATEGORY_LABELS));
   }, [baseUrl, refreshStored]);
 
+  // Optional and later-stage assets do not compete with foreground play. They
+  // run one request at a time and are paused on battle, save, hidden-tab, and
+  // memory-sensitive screens; the verified cache remains the resume point.
+  useEffect(() => {
+    const syncBackgroundSafety = () => {
+      const session = backgroundSessionRef.current;
+      if (!session) return;
+      const visible = typeof document === "undefined" || document.visibilityState === "visible";
+      const safe = visible
+        && downloadState !== "running"
+        && safety.screen !== "battle"
+        && safety.screen !== "survival"
+        && safety.screen !== "result"
+        && safety.screen !== "survival-result"
+        && safety.battleActive !== true
+        && safety.resultSaving !== true
+        && safety.saveMutationPending !== true;
+      if (safe) session.resume();
+      else session.pause();
+    };
+    syncBackgroundSafety();
+    document.addEventListener("visibilitychange", syncBackgroundSafety);
+    return () => document.removeEventListener("visibilitychange", syncBackgroundSafety);
+  }, [downloadState, safety]);
+
+  useEffect(() => {
+    if (!booted || !standalone || !installedManifest || !installPlan || !playablePlan?.complete) return;
+    if (downloadState === "running" || downloadState === "paused") return;
+    const visible = typeof document === "undefined" || document.visibilityState === "visible";
+    const safe = visible
+      && safety.screen !== "battle"
+      && safety.screen !== "survival"
+      && safety.screen !== "result"
+      && safety.screen !== "survival-result"
+      && safety.battleActive !== true
+      && safety.resultSaving !== true
+      && safety.saveMutationPending !== true;
+    if (!safe || installPlan.pending.length === 0) return;
+    void runBackgroundDownload(installedManifest, installPlan.pending as Array<Record<string, unknown>>);
+  }, [downloadState, installPlan, installedManifest, playablePlan, runBackgroundDownload, safety, standalone, booted]);
+
+  const runOnDemandDownload = useCallback(async (stageId: string, formationKinds: string[]) => {
+    const store = storeRef.current;
+    if (!store || !targetManifest || !standalone) return;
+    const current = onDemandSessionRef.current?.getSnapshot().state;
+    if (current === "running" || current === "paused") return;
+    const dependencies = dependencySetForOperation({ stageId, unitKinds: formationKinds });
+    const assets = assetsForDependencySet(targetManifest, dependencies, { canPlayType });
+    const plan = planInstall({ ...targetManifest, assets }, { storedHashesByPath: storedByPathFor(targetManifest) });
+    if (plan.pending.length === 0) return;
+
+    backgroundSessionRef.current?.pause();
+    const session = createAssetDownloadSession({
+      assets: plan.pending,
+      store,
+      fetchAsset: createAssetFetcher({ baseUrl }),
+      concurrency: 1,
+      onProgress: (snapshot) => {
+        setOnDemandState(snapshot.state);
+        setOnDemandProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));
+      },
+    });
+    onDemandSessionRef.current = session;
+    const final = await session.start();
+    await refreshStored();
+    setOnDemandState(final.state);
+    setOnDemandProgress(describeProgress(final, ASSET_CATEGORY_LABELS));
+    const visible = typeof document === "undefined" || document.visibilityState === "visible";
+    const safeToResume = visible
+      && downloadState !== "running"
+      && safety.screen !== "battle"
+      && safety.screen !== "survival"
+      && safety.screen !== "result"
+      && safety.screen !== "survival-result"
+      && safety.battleActive !== true
+      && safety.resultSaving !== true
+      && safety.saveMutationPending !== true;
+    if (safeToResume) backgroundSessionRef.current?.resume();
+  }, [baseUrl, canPlayType, downloadState, refreshStored, safety, standalone, storedByPathFor, targetManifest]);
+
+  // AshfallGame publishes the selected stage and formation through the same
+  // dataset bridge as activation safety. This request is differential and
+  // content-addressed: already stored paths/hashes are never fetched again.
+  useEffect(() => {
+    if (!booted || !standalone || !targetManifest || !safety.stageId || safety.screen === "title") return;
+    const formationKinds = String(safety.formationKinds ?? "").split("|").filter(Boolean);
+    void runOnDemandDownload(String(safety.stageId), formationKinds);
+  }, [booted, runOnDemandDownload, safety.formationKinds, safety.screen, safety.stageId, standalone, targetManifest]);
+
   const startInstall = useCallback(() => {
-    if (!targetManifest || !installPlan) return;
-    void runDownload(installPlan.pending, targetManifest, installedManifest ? "repair" : "install");
-  }, [installPlan, installedManifest, runDownload, targetManifest]);
+    if (!targetManifest || !playablePlan) return;
+    void runDownload(playablePlan.pending, targetManifest, installedManifest ? "repair" : "install");
+  }, [installedManifest, playablePlan, runDownload, targetManifest]);
 
   const startUpdate = useCallback(() => {
     if (!publishedManifest || !updateEvaluation?.available) return;
-    void runDownload(updateEvaluation.diff.downloadable, publishedManifest, "update");
-  }, [publishedManifest, runDownload, updateEvaluation]);
+    void runDownload(assetsForInstall({ ...publishedManifest, assets: updateEvaluation.diff.downloadable }, { canPlayType }), publishedManifest, "update");
+  }, [canPlayType, publishedManifest, runDownload, updateEvaluation]);
 
   /** Retries only what did not finish, never what already verified. */
   const retryFailed = useCallback(() => {
@@ -496,10 +663,13 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     return orphans;
   }, [installedManifest, previousManifest, storedHashes]);
 
-  const playable = canPlayOffline({ phase, installPlan });
-  const installCopy = describeInstall(installPlan, storage);
+  const playable = canPlayOffline({ phase, installPlan: playablePlan });
+  const installCopy = describeInstall(playablePlan, storage);
   const updateCopy = updateEvaluation ? describeUpdate(updateEvaluation, { formatBytes }) : null;
-  const offerCopy = describeInstallOffer(targetManifest, { promptAvailable: Boolean(installPrompt) });
+  const offerCopy = describeInstallOffer(targetManifest, {
+    promptAvailable: Boolean(installPrompt),
+    firstPlayAssets: playableAssets,
+  });
   const guidance = describeInstallGuidance({
     standalone,
     promptAvailable: Boolean(installPrompt),
@@ -646,6 +816,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                 <h2>ゲームデータをダウンロード中</h2>
                 <p className="pwa-progress-line">{progress.countLine}・{progress.byteLine}</p>
                 {progress.categoryLine && <p className="pwa-hint">{progress.categoryLine}</p>}
+                {progress.detailLine && <p className="pwa-hint"><code>{progress.detailLine}</code></p>}
+                {progress.statusLine && <p className="pwa-hint">{progress.statusLine}</p>}
                 {progress.failedLine && <p className="pwa-warning">{progress.failedLine}</p>}
                 {/*
                   Large assets take a long time to arrive, verify and store, and
@@ -747,6 +919,21 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
             </button>
             <button type="button" onClick={() => setUpdateDismissed(true)}>今はしない</button>
           </div>
+        </aside>
+      )}
+
+      {!blocking && backgroundState === "running" && backgroundProgress && (
+        <aside className="pwa-notice" role="status">
+          <p>残りのゲームデータを低優先度で取得中：{backgroundProgress.countLine}・{backgroundProgress.byteLine}</p>
+          {backgroundProgress.detailLine && <p className="pwa-hint"><code>{backgroundProgress.detailLine}</code></p>}
+          <button type="button" onClick={() => backgroundSessionRef.current?.pause()}>一時停止</button>
+        </aside>
+      )}
+
+      {!blocking && onDemandState === "running" && onDemandProgress && (
+        <aside className="pwa-notice" role="status">
+          <p>選択した作戦データを準備中：{onDemandProgress.countLine}・{onDemandProgress.byteLine}</p>
+          {onDemandProgress.detailLine && <p className="pwa-hint"><code>{onDemandProgress.detailLine}</code></p>}
         </aside>
       )}
 

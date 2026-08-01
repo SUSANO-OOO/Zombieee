@@ -7,9 +7,14 @@ import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import {
   ASSET_MANIFEST_SCHEMA,
   ASSET_PACK_IDS,
+  distinctDownloadBytes,
   RELEASE_SHA_PLACEHOLDER,
   validateAssetManifest,
 } from "../app/pwaAssetManifest.js";
+import {
+  assetsForInstall,
+  dependencySetForOperation,
+} from "../app/pwaPlayablePack.js";
 
 const manifest = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
 const webAppManifest = JSON.parse(await readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"));
@@ -119,16 +124,28 @@ test("every audio source the mixer can play is in the pack", async () => {
   }
 });
 
-test("battle-critical art is marked critical and audio never blocks play", () => {
+test("only the first-play dependency graph is critical, while later art stays deferred", () => {
   const byCategory = (category) => manifest.assets.filter((asset) => asset.category === category);
+  const firstPlayPaths = new Set(assetsForInstall(manifest, { firstPlayOnly: true }).map((asset) => asset.path));
 
   for (const asset of [...byCategory("unit"), ...byCategory("enemy"), ...byCategory("boss")]) {
-    assert.equal(asset.criticality, "critical", `${asset.path} must be critical`);
+    if (firstPlayPaths.has(asset.path)) assert.equal(asset.criticality, "critical", `${asset.path} must be critical`);
+    else assert.equal(asset.criticality, "optional", `${asset.path} must be deferred`);
   }
   for (const asset of byCategory("audio")) {
-    assert.equal(asset.criticality, "optional", `${asset.path} must not block play`);
+    assert.ok(["critical", "optional"].includes(asset.criticality));
+    assert.ok(typeof asset.audioId === "string");
+    assert.ok(typeof asset.audioType === "string");
     assert.ok(["bgm", "se", "voice"].includes(asset.audioChannel));
   }
+});
+
+test("the code-derived Stage1 first-play pack stays within the mobile target", () => {
+  const firstPlay = assetsForInstall(manifest, { firstPlayOnly: true });
+  assert.ok(firstPlay.length > 0);
+  assert.ok(distinctDownloadBytes(firstPlay) <= 25_000_000, `${distinctDownloadBytes(firstPlay)} bytes exceeds 25MB`);
+  const paths = new Set(manifest.assets.map((asset) => asset.path));
+  for (const path of dependencySetForOperation().paths) assert.ok(paths.has(path), `${path} is not in the manifest`);
 });
 
 test("the manifest covers playable units, enemies, bosses, backgrounds, and all audio channels", () => {

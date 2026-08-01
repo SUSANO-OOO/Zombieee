@@ -25,6 +25,11 @@ const ENGINES = { chromium, webkit };
 const engineName = process.env.V096_PWA_QA_BROWSER ?? "chromium";
 const engine = ENGINES[engineName];
 if (!engine) throw new Error(`Unknown V096_PWA_QA_BROWSER: ${engineName}`);
+const [viewportWidth, viewportHeight] = (process.env.V096_PWA_QA_VIEWPORT ?? "844x390")
+  .split("x").map((value) => Number(value));
+if (![viewportWidth, viewportHeight].every((value) => Number.isFinite(value) && value > 0)) {
+  throw new Error("V096_PWA_QA_VIEWPORT must look like 1280x720, 844x390, or 844x340");
+}
 
 const evidenceDir = process.env.V096_PWA_EVIDENCE_DIR
   ?? path.join(process.cwd(), "outputs", "v096-pwa");
@@ -51,7 +56,7 @@ window.__pwaQa = {
 
 const browser = await engine.launch();
 const context = await browser.newContext({
-  viewport: { width: 844, height: 390 },
+  viewport: { width: viewportWidth, height: viewportHeight },
   deviceScaleFactor: 3,
   hasTouch: true,
 });
@@ -355,7 +360,12 @@ record("clearing assets removes asset bytes and leaves save data intact", (
 
 const smallPack = await page.evaluate(async (base) => {
   const manifest = await (await fetch(new URL("asset-manifest.json", base).toString())).json();
-  const assets = [...manifest.assets].sort((a, b) => a.bytes - b.bytes).slice(0, 3);
+  // Mark the synthetic sample as the candidate's required slice so this QA
+  // exercises the staged gate rather than the deferred full-pack queue.
+  const assets = [...manifest.assets]
+    .sort((a, b) => a.bytes - b.bytes)
+    .slice(0, 3)
+    .map((asset) => ({ ...asset, installTier: "first-play", installPriority: 10, criticality: "critical" }));
   return { schema: manifest.schema, version: manifest.version, releaseSha: manifest.releaseSha, assets };
 }, baseUrl);
 
@@ -368,7 +378,7 @@ const routeSmallPack = (target) => target.route("**/asset-manifest.json", (route
 const IPHONE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 
 const entryContext = await browser.newContext({
-  viewport: { width: 844, height: 390 },
+  viewport: { width: viewportWidth, height: viewportHeight },
   deviceScaleFactor: 3,
   hasTouch: true,
   serviceWorkers: "block",
@@ -479,7 +489,7 @@ record("the invitation fits the shortest supported viewport without sideways scr
   && compactCase.buttonTapHeight >= 40
   && compactCase.stepsReadable
 ), compactCase);
-await entryPage.setViewportSize({ width: 844, height: 390 });
+await entryPage.setViewportSize({ width: viewportWidth, height: viewportHeight });
 
 // --- 11. Declining the invitation still plays -------------------------------
 //
@@ -554,7 +564,7 @@ await entryContext.close();
 // the real branch rather than a mock of it.
 
 const appContext = await browser.newContext({
-  viewport: { width: 844, height: 390 },
+  viewport: { width: viewportWidth, height: viewportHeight },
   deviceScaleFactor: 3,
   hasTouch: true,
   serviceWorkers: "block",
@@ -589,8 +599,7 @@ record("the first home-screen launch asks to download, stating the manifest's co
 ), firstRunCase);
 
 await startDownload.click();
-const beginButton = appPage.getByRole("button", { name: "ゲームを始める" });
-await beginButton.waitFor({ state: "visible", timeout: 120_000 }).catch(() => {});
+await appPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 120_000 }).catch(() => {});
 const completionCase = await appPage.evaluate(async () => {
   const cache = await caches.open("zombieee-assets-v1");
   return {
@@ -599,17 +608,15 @@ const completionCase = await appPage.evaluate(async () => {
     gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
   };
 });
-record("the download saves the manifest's assets and then offers to begin", (
-  completionCase.beginVisible
+record("the first-play download saves the required assets and then mounts the game", (
+  !completionCase.beginVisible
   && completionCase.storedEntries === smallPack.assets.length
-  && !completionCase.gameMounted
+  && completionCase.gameMounted
 ), { ...completionCase, expected: smallPack.assets.length });
 record("the first launch actually fetches game data", (
   appAssetRequests.length > 0
 ), { assetRequestsAfterConsent: appAssetRequests.length });
 
-await beginButton.click();
-await appPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
 const launchCase = await appPage.evaluate(() => ({
   gateVisible: Boolean(document.querySelector(".pwa-gate")),
   gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),

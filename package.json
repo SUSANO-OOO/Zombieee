@@ -13,6 +13,7 @@
     "lint": "node --max-old-space-size=8192 ./node_modules/eslint/bin/eslint.js . --ignore-pattern dist --ignore-pattern .next",
     "qa:performance:install": "playwright install chromium webkit",
     "qa:performance": "node scripts/browser-performance-budget.mjs",
+    "qa:pwa-staged": "node scripts/pwa-staged-install-measurement.mjs",
     "qa:v095-rc-evidence": "node scripts/v095-rc-evidence.mjs",
     "qa:v095-acceptance-evidence": "node scripts/v095-acceptance-correction-evidence.mjs",
     "qa:asset-decode": "node scripts/run-browser-qa-with-server.mjs scripts/asset-decode-browser-smoke.mjs",

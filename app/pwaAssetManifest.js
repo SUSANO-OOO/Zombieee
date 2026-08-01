@@ -22,6 +22,13 @@ export const ASSET_PACKS = Object.freeze([
 
 export const ASSET_PACK_IDS = Object.freeze(ASSET_PACKS.map((pack) => pack.id));
 
+export const ASSET_INSTALL_TIERS = Object.freeze([
+  "shell",
+  "first-play",
+  "on-demand",
+  "optional",
+]);
+
 /** Player-facing categories used by the download progress UI. */
 export const ASSET_CATEGORIES = Object.freeze([
   "app",
@@ -73,6 +80,7 @@ export function audioChannelFor(manifestCategory) {
 const packIdSet = new Set(ASSET_PACK_IDS);
 const categorySet = new Set(ASSET_CATEGORIES);
 const channelSet = new Set(AUDIO_CHANNELS);
+const installTierSet = new Set(ASSET_INSTALL_TIERS);
 
 function isRecord(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -110,10 +118,24 @@ function validateAsset(asset, index, errors) {
   if (asset.criticality !== "critical" && asset.criticality !== "optional") {
     errors.push(`${prefix}.criticality must be "critical" or "optional"`);
   }
+  if (asset.installTier !== undefined && !installTierSet.has(asset.installTier)) {
+    errors.push(`${prefix}.installTier must be shell, first-play, on-demand, or optional`);
+  }
+  if (asset.installPriority !== undefined && (!Number.isInteger(asset.installPriority) || asset.installPriority < 0 || asset.installPriority > 100)) {
+    errors.push(`${prefix}.installPriority must be an integer from 0 to 100`);
+  }
   if (asset.category === "audio") {
     if (!channelSet.has(asset.audioChannel)) errors.push(`${prefix}.audioChannel must be bgm, se, or voice`);
-  } else if (asset.audioChannel !== undefined) {
-    errors.push(`${prefix}.audioChannel is only valid on audio assets`);
+    if (asset.audioId !== undefined && (typeof asset.audioId !== "string" || asset.audioId.length === 0)) {
+      errors.push(`${prefix}.audioId must be a non-empty string when present`);
+    }
+    if (asset.audioType !== undefined && (typeof asset.audioType !== "string" || asset.audioType.length === 0)) {
+      errors.push(`${prefix}.audioType must be a non-empty MIME type when present`);
+    }
+  } else {
+    if (asset.audioChannel !== undefined) errors.push(`${prefix}.audioChannel is only valid on audio assets`);
+    if (asset.audioId !== undefined) errors.push(`${prefix}.audioId is only valid on audio assets`);
+    if (asset.audioType !== undefined) errors.push(`${prefix}.audioType is only valid on audio assets`);
   }
 }
 
@@ -166,6 +188,17 @@ export function assertAssetManifest(candidate) {
 /** Stable ordering so a regenerated manifest is byte-identical to a committed one. */
 export function sortManifestAssets(assets) {
   return [...assets].sort((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0));
+}
+
+/** Priority order used by downloads; manifest serialization remains path-stable. */
+export function sortDownloadAssets(assets) {
+  return [...assets].sort((left, right) => {
+    const leftPriority = Number.isInteger(left.installPriority) ? left.installPriority : 80;
+    const rightPriority = Number.isInteger(right.installPriority) ? right.installPriority : 80;
+    if (leftPriority !== rightPriority) return leftPriority - rightPriority;
+    if (left.criticality !== right.criticality) return left.criticality === "critical" ? -1 : 1;
+    return left.path < right.path ? -1 : left.path > right.path ? 1 : 0;
+  });
 }
 
 export function totalBytes(assets) {
