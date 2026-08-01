@@ -13,6 +13,7 @@ import {
   V090_CAPS_MIGRATION_ID,
   reorganizeLegacyCaps,
 } from "../app/campaignEconomy.js";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 const baseUrl = new URL(process.env.SAVE_MIGRATION_QA_BASE_URL
   ?? process.env.COMBAT_PRESENTATION_QA_BASE_URL
@@ -558,6 +559,10 @@ function assertRelease090Migrated(save, label, { imported = false } = {}) {
 }
 
 async function waitForTitleReady(page, expectedLabel) {
+  // Since 0.9.7 a browser tab is invited to install before it reaches the title,
+  // and every navigation in this suite starts a fresh visit, so the invitation
+  // is declined here rather than at each call site.
+  await dismissInstallOffer(page, { timeout });
   await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout });
   await page.waitForFunction(
     (label) => {

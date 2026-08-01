@@ -129,12 +129,12 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.9.6.4 release identity and the download entry point", async () => {
-  // Since 0.9.6.4 the first painted screen is the download entry point, not the
-  // title: a visitor must be able to save the game before anything decides to
-  // fetch it for them. The game shell therefore mounts on the client once the
-  // gate resolves, and the title screen's own markup is covered by the browser
-  // matrix, which reaches it through the entry screen.
+test("server-renders the 0.9.7 release identity and the PWA gate", async () => {
+  // Since 0.9.7 the first painted screen is the PWA gate, not the title: a
+  // visitor is invited to install before anything decides to fetch the game for
+  // them. The game shell therefore mounts on the client once the gate resolves,
+  // and the title screen's own markup is covered by the browser matrix, which
+  // reaches it through the gate.
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
@@ -142,7 +142,10 @@ test("server-renders the 0.9.6.4 release identity and the download entry point",
 
   // Release identity in the document head is unchanged, and the Pages release
   // workflow greps exactly these.
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.6\.4<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.7<\/title>/);
+  // Share copy is derived from the same constant, so it cannot advertise a
+  // version the build is not.
+  assert.match(html, /content="[^"]*Version 0\.9\.7。"/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
@@ -375,8 +378,10 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(css, /\.barrier-health/);
   assert.match(css, /\.barrier-health\.vulnerable/);
   assert.match(css, /\.barrier-health\.hit/);
-  assert.match(layout, /import \{ RELEASE_TITLE \} from "\.\/releaseIdentity\.js"/);
+  assert.match(layout, /import \{ RELEASE_TITLE, RELEASE_VERSION \} from "\.\/releaseIdentity\.js"/);
   assert.match(layout, /title: RELEASE_TITLE/);
+  // Share copy must be built from the version constant, never typed out.
+  assert.doesNotMatch(layout, /description: "[^"]*Version \d/);
   assert.match(layout, /viewportFit: "cover"/);
   assert.doesNotMatch(layout, /images: \[.*\/og\.png/);
   assert.doesNotMatch(layout, /battle-nishijin-shopping-street-v1\.webp/);

@@ -6,9 +6,9 @@ import {
   canPlayOffline,
   createAssetFetcher,
   derivePwaPhase,
-  describeDownloadOffer,
   describeInstall,
   describeInstallGuidance,
+  describeInstallOffer,
   describeProgress,
   fetchPublishedManifest,
   isPwaSupported,
@@ -33,10 +33,10 @@ test("an unsupported browser never enters an install flow", () => {
   assert.equal(derivePwaPhase({ supported: false, standalone: true }), "unsupported");
 });
 
-test("an ordinary browser tab is never gated behind the install", () => {
-  // No plan yet, and a device that already holds the pack: both go straight to
-  // the game. The offer is only for a tab that would actually download.
-  assert.equal(derivePwaPhase({ supported: true, standalone: false }), "browser");
+test("a browser tab is invited to install before it reaches the title", () => {
+  assert.equal(derivePwaPhase({ supported: true, standalone: false }), "install-offer");
+  // Even a tab that somehow holds a complete pack is still invited: the point is
+  // to get the player into the installed app, not to sell them a download.
   assert.equal(
     derivePwaPhase({
       supported: true,
@@ -44,23 +44,12 @@ test("an ordinary browser tab is never gated behind the install", () => {
       installedManifest: manifest([asset("/a", 1)]),
       installPlan: plan([asset("/a", 1)], []),
     }),
-    "browser",
+    "install-offer",
   );
 });
 
-test("a first browser visit is offered the download before the title", () => {
-  assert.equal(
-    derivePwaPhase({
-      supported: true,
-      standalone: false,
-      installPlan: plan([], [asset("/a", 1), asset("/b", 2)]),
-    }),
-    "download-offer",
-  );
-});
-
-test("declining the download plays straight from the network", () => {
-  // The offer must not become a wall: dismissing it renders the game.
+test("declining the invitation plays straight from the network", () => {
+  // The invitation must not become a wall: dismissing it renders the game.
   assert.equal(
     derivePwaPhase({
       supported: true,
@@ -72,50 +61,64 @@ test("declining the download plays straight from the network", () => {
   );
 });
 
-test("a finished browser download reports completion before starting the game", () => {
-  assert.equal(
-    derivePwaPhase({
-      supported: true,
-      standalone: false,
-      downloadState: "complete",
-      installPlan: plan([asset("/a", 1)], []),
-    }),
-    "download-complete",
-  );
+test("a browser tab is never sent into a download", () => {
+  // Nothing a browser tab can be in - no plan, a partial pack, an update waiting
+  // - may resolve to a phase that fetches the pack. The download belongs to the
+  // home-screen app.
+  const downloadingPhases = new Set(["install-required", "installing", "repair-required"]);
+  for (const installPlan of [null, plan([], [asset("/a", 1)]), plan([asset("/a", 1)], [asset("/b", 2)])]) {
+    for (const offerDismissed of [false, true]) {
+      const phase = derivePwaPhase({
+        supported: true,
+        standalone: false,
+        installedManifest: manifest([asset("/a", 1), asset("/b", 2)]),
+        installPlan,
+        offerDismissed,
+        updateEvaluation: { available: true },
+      });
+      assert.ok(!downloadingPhases.has(phase), `browser tab resolved to ${phase}`);
+    }
+  }
 });
 
-test("the download offer counts and sizes come from the manifest and the plan", () => {
+test("a finished download reports completion before starting the game", () => {
+  // The first home-screen launch is where this matters, and it is also where the
+  // phase used to fall straight through to "ready" and swap the screen without a
+  // word.
+  for (const standalone of [true, false]) {
+    assert.equal(
+      derivePwaPhase({
+        supported: true,
+        standalone,
+        installedManifest: manifest([asset("/a", 1)]),
+        downloadState: "complete",
+        installPlan: plan([asset("/a", 1)], []),
+      }),
+      "download-complete",
+    );
+  }
+});
+
+test("the install invitation states the size without fetching anything", () => {
   const assets = [asset("/a", 1), asset("/b", 2), asset("/c", 3)];
-  const offer = describeDownloadOffer(plan([], assets), manifest(assets), null);
+  const offer = describeInstallOffer(manifest(assets));
+  assert.match(offer.headline, /西新世紀末物語をインストール/);
   assert.equal(offer.totalAssets, 3);
-  assert.equal(offer.pendingCount, 3);
-  assert.equal(offer.pendingBytes, 3 * 1048576);
-  assert.equal(offer.resuming, false);
-  assert.match(offer.actionLabel, /ゲームをダウンロード/);
-  assert.match(offer.lines[0], /3件/);
-  assert.match(offer.lines[0], /3\.0MB/);
-  // The offer must say plainly that nothing is fetched until it is accepted.
-  assert.match(offer.wifiHint, /開始するまで始まりません/);
+  assert.equal(offer.totalBytes, 3 * 1048576);
+  assert.match(offer.sizeLine, /3件/);
+  assert.match(offer.sizeLine, /3\.0MB/);
+  // The size is a promise about later, not a description of now.
+  assert.match(offer.sizeLine, /最初に起動したとき/);
+  assert.match(offer.noDownloadHint, /ダウンロードしません/);
+  // Declining stays available and is described plainly.
+  assert.ok(offer.skipLabel);
+  assert.match(offer.skipHint, /インストールせずに/);
 });
 
-test("a partly downloaded pack offers to resume and never recounts what is held", () => {
-  const assets = [asset("/a", 1), asset("/b", 2), asset("/c", 3)];
-  const offer = describeDownloadOffer(plan([assets[0], assets[1]], [assets[2]]), manifest(assets), null);
-  assert.equal(offer.resuming, true);
-  assert.equal(offer.pendingCount, 1);
-  assert.equal(offer.pendingBytes, 1048576);
-  assert.match(offer.actionLabel, /再開/);
-  assert.ok(offer.lines.some((line) => /保存済み 2 \/ 3件/.test(line)));
-});
-
-test("the download offer warns when the device may not have room", () => {
+test("the install invitation offers a real button only when the browser has one", () => {
   const assets = [asset("/a", 1)];
-  const roomy = describeDownloadOffer(plan([], assets), manifest(assets), { available: 999 * 1048576 });
-  assert.equal(roomy.shortOnSpace, false);
-  assert.equal(roomy.warning, null);
-  const tight = describeDownloadOffer(plan([], assets), manifest(assets), { available: 1024 });
-  assert.equal(tight.shortOnSpace, true);
-  assert.match(tight.warning, /空き容量/);
+  assert.equal(describeInstallOffer(manifest(assets)).actionLabel, null);
+  assert.ok(describeInstallOffer(manifest(assets), { promptAvailable: true }).actionLabel);
 });
 
 test("install guidance adapts to the browser instead of requiring one", () => {
@@ -123,15 +126,35 @@ test("install guidance adapts to the browser instead of requiring one", () => {
   const chromium = describeInstallGuidance({ promptAvailable: true, userAgent: "Chrome" });
   assert.equal(chromium.mode, "prompt");
   assert.ok(chromium.actionLabel);
+  // A browser prompt can be raised once and then dismissed, so the written route
+  // is always available behind it rather than leaving a dead end.
+  assert.ok(chromium.steps.length > 0);
 
-  // iOS has no prompt event, so it gets the manual route rather than nothing.
-  const ios = describeInstallGuidance({
+  // iPhone has no prompt event, so it gets the manual route rather than nothing,
+  // and every step names the control the player is hunting for in brackets.
+  const iphone = describeInstallGuidance({
     promptAvailable: false,
     userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
   });
-  assert.equal(ios.mode, "manual");
-  assert.ok(ios.steps.length > 0);
-  assert.ok(ios.steps.some((step) => step.includes("ホーム画面に追加")));
+  assert.equal(iphone.mode, "manual");
+  assert.equal(iphone.platform, "iphone");
+  assert.equal(iphone.steps.length, 3);
+  assert.ok(iphone.steps.every((step) => /「.+」/.test(step.text)));
+  assert.equal(iphone.steps[0].icon, "share");
+  // The share control is at the bottom on iPhone, so the arrow points down.
+  assert.equal(iphone.steps[0].arrow, "down");
+  assert.match(iphone.steps[0].text, /画面下/);
+  assert.match(iphone.steps[1].text, /ホーム画面に追加/);
+  assert.match(iphone.steps[2].text, /追加/);
+
+  // iPad puts the same control at the top, and says so.
+  const ipad = describeInstallGuidance({
+    promptAvailable: false,
+    userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
+  });
+  assert.equal(ipad.platform, "ipad");
+  assert.equal(ipad.steps[0].arrow, "up");
+  assert.match(ipad.steps[0].text, /画面上/);
 
   // Anything else still gets usable, browser-neutral wording.
   const other = describeInstallGuidance({ promptAvailable: false, userAgent: "Firefox" });
@@ -145,6 +168,32 @@ test("install guidance adapts to the browser instead of requiring one", () => {
 
 test("a fresh standalone launch asks for the first install", () => {
   assert.equal(derivePwaPhase({ supported: true, standalone: true }), "install-required");
+});
+
+test("a standalone launch that already holds every asset is ready without a manifest", () => {
+  // The worker can lose its committed manifest while the pack survives. What
+  // the device actually holds is the stronger fact, and re-downloading a
+  // complete pack would cost the player the whole install for nothing.
+  assert.equal(
+    derivePwaPhase({
+      supported: true,
+      standalone: true,
+      installedManifest: null,
+      installPlan: plan([asset("/a", 1), asset("/b", 2)], []),
+    }),
+    "ready",
+  );
+  // A partial pack with no manifest is still a first install, not a repair:
+  // there is no committed generation to repair towards.
+  assert.equal(
+    derivePwaPhase({
+      supported: true,
+      standalone: true,
+      installedManifest: null,
+      installPlan: plan([asset("/a", 1)], [asset("/b", 2)]),
+    }),
+    "install-required",
+  );
 });
 
 test("a standalone launch with a complete pack is ready", () => {
@@ -195,10 +244,20 @@ test("an available update is surfaced in both standalone and tab contexts", () =
     }),
     "update-available",
   );
+  // In a tab the invitation to install comes first; the update notice is what
+  // remains once the player has declined it. Offering both at once would put two
+  // competing asks on one screen.
   assert.equal(
     derivePwaPhase({
       supported: true, standalone: false, installedManifest: installed,
       updateEvaluation: { available: true },
+    }),
+    "install-offer",
+  );
+  assert.equal(
+    derivePwaPhase({
+      supported: true, standalone: false, installedManifest: installed,
+      updateEvaluation: { available: true }, offerDismissed: true,
     }),
     "update-available",
   );

@@ -6,6 +6,7 @@ import {
   computeCampaignSaveIntegrity,
   createDefaultCampaignSave,
 } from "../app/campaign.js";
+import { dismissInstallOffer, readSaveEnvironment } from "./pwa-gate-qa.mjs";
 
 const baseUrl = new URL(process.env.V0951_HOTFIX_QA_BASE_URL ?? "");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) {
@@ -155,12 +156,9 @@ async function runCase(browser, engine, viewport, scenario) {
 
   try {
     await page.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+    await dismissInstallOffer(page, { timeout });
     await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout });
-    await page.locator('.save-environment-badge:not([data-save-environment="checking"])').waitFor({ state: "visible", timeout });
-    const environment = await page.locator(".save-environment-badge").evaluate((element) => ({
-      kind: element.getAttribute("data-save-environment"),
-      origin: element.getAttribute("data-save-origin"),
-    }));
+    const environment = await readSaveEnvironment(page, { timeout });
     invariant(environment.kind === "loopback", `${scenario}: wrong environment ${JSON.stringify(environment)}`);
     await reachLoadout(page);
     await page.locator('.game-shell[data-assets-state="ready"], .game-shell[data-assets-state="error"]').waitFor({ state: "visible", timeout });
@@ -198,10 +196,8 @@ async function runCase(browser, engine, viewport, scenario) {
       await page.reload({ waitUntil: "domcontentloaded", timeout });
       await page.locator('.game-shell:not([data-save-persistence="checking"])').waitFor({ state: "visible", timeout });
       await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
-      invariant(
-        await page.locator('.save-environment-badge[data-save-environment="loopback"]').isVisible(),
-        "reload/BFCache environment resync failed",
-      );
+      const resynced = await page.evaluate(() => document.documentElement.dataset.saveEnvironmentKind ?? null);
+      invariant(resynced === "loopback", `reload/BFCache environment resync failed: ${resynced}`);
     }
     const dimensions = await page.evaluate(() => ({
       width: innerWidth,

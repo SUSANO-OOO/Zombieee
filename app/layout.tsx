@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { RELEASE_TITLE } from "./releaseIdentity.js";
+import { RELEASE_TITLE, RELEASE_VERSION } from "./releaseIdentity.js";
 import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import "./globals.css";
 import "./campaign.css";
@@ -14,6 +14,11 @@ export const viewport: Viewport = {
   themeColor: "#0b0d0d",
 };
 
+// Derived rather than written out, because a hand-maintained version string in
+// share copy silently goes stale the moment it is not the thing being edited.
+const SHARE_DESCRIPTION =
+  `ホーム画面へ追加すると、ゲームデータを端末へ保存してオフラインでも遊べます。Version ${RELEASE_VERSION}。`;
+
 export const metadata: Metadata = {
   title: RELEASE_TITLE,
   description:
@@ -24,13 +29,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "西新世紀末物語",
-    description: "ホーム画面へ追加して遊べるPWA版。ゲームデータを端末へ保存し、オフラインでもプレイできるVersion 0.9.6.4。",
+    description: SHARE_DESCRIPTION,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "西新世紀末物語",
-    description: "ホーム画面へ追加して遊べるPWA版。ゲームデータを端末へ保存し、オフラインでもプレイできるVersion 0.9.6.4。",
+    description: SHARE_DESCRIPTION,
   },
 };
 

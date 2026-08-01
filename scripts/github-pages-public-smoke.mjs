@@ -6,6 +6,7 @@ import {
   computeCampaignSaveIntegrity,
   createDefaultCampaignSave,
 } from "../app/campaign.js";
+import { dismissInstallOffer, readSaveEnvironment } from "./pwa-gate-qa.mjs";
 
 const publicUrl = process.env.GITHUB_PAGES_PUBLIC_URL?.trim();
 const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION?.trim();
@@ -188,15 +189,12 @@ try {
     }
     if (!navigation?.ok()) throw new Error(`Published document failed after retries: ${String(lastError)}`);
 
-    // Since 0.9.6.4 a first visit meets the download entry screen before the
-    // title. These scenarios are about the published game itself, and each one
-    // starts from empty storage, so decline the download and play from the
-    // network. This has to happen before the title is awaited, because the
-    // entry screen is what stands in its place. The entry flow has its own
-    // coverage in the PWA matrix.
-    const declineDownload = page.getByRole("button", { name: "ダウンロードせずに遊ぶ" });
-    await declineDownload.waitFor({ state: "visible", timeout: 60_000 }).catch(() => {});
-    if (await declineDownload.isVisible().catch(() => false)) await declineDownload.click();
+    // Since 0.9.7 a browser tab meets the install invitation before the title.
+    // These scenarios are about the published game itself, so decline it and
+    // play from the network. This has to happen before the title is awaited,
+    // because the invitation is what stands in its place. The invitation has its
+    // own coverage in the PWA matrix.
+    await dismissInstallOffer(page);
 
     await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout: 120_000 });
     const pageTitle = await page.title();
@@ -222,18 +220,14 @@ try {
 
     const startButton = page.locator(".title-start");
     await startButton.waitFor({ state: "visible", timeout: 30_000 });
-    await page.locator('.save-environment-badge:not([data-save-environment="checking"])').waitFor({
-      state: "visible",
-      timeout: 30_000,
-    });
     await page.locator('.game-shell:not([data-save-persistence="checking"])').waitFor({
       state: "visible",
       timeout: 30_000,
     });
-    const saveEnvironment = await page.locator(".save-environment-badge").evaluate((element) => ({
-      kind: element.getAttribute("data-save-environment"),
-      origin: element.getAttribute("data-save-origin"),
-    }));
+    // Since 0.9.7 the save environment lives behind データ管理 rather than across
+    // the title. Reading it there keeps this assertion - that the published site
+    // stores under its own origin - exactly as strong as it was.
+    const saveEnvironment = await readSaveEnvironment(page);
     if (saveEnvironment.kind !== "github-pages" || saveEnvironment.origin !== new URL(publicUrl).origin) {
       throw new Error(`Published save environment is incorrect: ${JSON.stringify(saveEnvironment)}`);
     }
