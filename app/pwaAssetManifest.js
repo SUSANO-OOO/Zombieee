@@ -311,6 +311,9 @@ export function planInstall(manifest, { storedHashesByPath, corruptPaths } = {})
     complete: pending.length === 0,
     pendingCount: pending.length,
     pendingBytes: distinctDownloadBytes(pending),
+    // What this generation actually occupies on the device, counted once per
+    // distinct hash so assets that share bytes are not billed twice.
+    satisfiedBytes: distinctDownloadBytes(satisfied),
     totalCount: assets.length,
     totalBytes: totalBytes(assets),
     byCategory: summarizeByCategory(pending),

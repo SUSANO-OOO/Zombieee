@@ -18,6 +18,7 @@ export const PWA_PHASES = Object.freeze([
   "browser",
   "install-offer",
   "download-complete",
+  "download-incomplete",
   "install-required",
   "installing",
   "install-incomplete",
@@ -49,6 +50,16 @@ export function derivePwaPhase({
 
   if (downloadState === "running" || downloadState === "paused") {
     return "installing";
+  }
+
+  // A run that stopped short holds the screen until the player decides what to
+  // do with it. This used to fall straight through: an update that failed
+  // resolved back to "update-available", which is not a blocking phase, so the
+  // failure - and the retry that went with it - disappeared in the same frame
+  // that produced it, leaving the same button that had just failed. Pressing it
+  // again failed the same way, forever, with nothing on screen to say why.
+  if (downloadState === "failed" || downloadState === "cancelled" || downloadState === "commit-failed") {
+    return "download-incomplete";
   }
 
   // A finished download says so and hands the player a button, rather than
@@ -97,6 +108,102 @@ export function canPlayOffline({ phase, installPlan }) {
     return (installPlan?.pending ?? []).every((asset) => asset.criticality === "optional");
   }
   return false;
+}
+
+/** Every way a transfer can stop, in words a player and a log can both use. */
+export const FAILURE_REASON_LABELS = Object.freeze({
+  timeout: "応答がありませんでした（timeout）",
+  network: "通信が切れました（network）",
+  http: "サーバーが配信を拒否しました（HTTP）",
+  "size-mismatch": "受信したデータの大きさが一致しません（size mismatch）",
+  "hash-mismatch": "受信したデータの内容が一致しません（hash mismatch）",
+  "cache-write": "端末への保存に失敗しました（cache write）",
+  "manifest-commit": "保存は完了しましたが、Versionの切り替えに失敗しました（manifest commit）",
+  cancelled: "中断しました",
+  unknown: "原因を特定できませんでした",
+});
+
+/**
+ * Builds the record a player can hand back to us after a failure.
+ *
+ * This is the only view we get of a device we cannot inspect, so it names the
+ * stage that stopped rather than just saying the download failed - network,
+ * verification and storage fail for completely different reasons and need
+ * completely different answers. It deliberately carries no token, cookie, save
+ * content, account name or filesystem path: everything here is either a public
+ * URL, a release identifier, or a count.
+ */
+export function describeFailureDiagnostics({
+  kind = "install",
+  fromVersion = null,
+  toVersion = null,
+  releaseSha = null,
+  failures = [],
+  startedAt = null,
+  lastProgressAt = null,
+  now = Date.now(),
+  origin = null,
+  scope = null,
+  standalone = false,
+  storedCount = 0,
+  storedBytes = 0,
+  pendingCount = 0,
+  pendingBytes = 0,
+  serviceWorkerState = null,
+} = {}) {
+  const entries = failures.map((failure) => ({
+    path: failure.path,
+    reason: failure.reason ?? "unknown",
+    label: FAILURE_REASON_LABELS[failure.reason] ?? FAILURE_REASON_LABELS.unknown,
+    status: failure.status ?? 0,
+    attempts: failure.attempts ?? 0,
+  }));
+  const reasonCounts = {};
+  for (const entry of entries) reasonCounts[entry.reason] = (reasonCounts[entry.reason] ?? 0) + 1;
+
+  return {
+    kind,
+    fromVersion,
+    toVersion,
+    releaseSha,
+    failureCount: entries.length,
+    failures: entries,
+    reasonCounts,
+    elapsedMs: startedAt == null ? null : Math.max(0, now - startedAt),
+    sinceProgressMs: lastProgressAt == null ? null : Math.max(0, now - lastProgressAt),
+    origin,
+    scope,
+    standalone,
+    storedCount,
+    storedBytes,
+    pendingCount,
+    pendingBytes,
+    serviceWorkerState,
+    at: new Date(now).toISOString(),
+  };
+}
+
+/** Renders the diagnostics as the plain text the copy button puts on the clipboard. */
+export function formatFailureDiagnostics(diagnostics) {
+  if (!diagnostics) return "";
+  const lines = [
+    `西新世紀末物語 診断 ${diagnostics.at}`,
+    `処理: ${diagnostics.kind}`,
+    `Version: ${diagnostics.fromVersion ?? "-"} -> ${diagnostics.toVersion ?? "-"}`,
+    `release SHA: ${diagnostics.releaseSha ?? "-"}`,
+    `origin: ${diagnostics.origin ?? "-"}`,
+    `scope: ${diagnostics.scope ?? "-"}`,
+    `standalone: ${diagnostics.standalone}`,
+    `service worker: ${diagnostics.serviceWorkerState ?? "-"}`,
+    `保存済み: ${diagnostics.storedCount}件 / ${diagnostics.storedBytes}B`,
+    `未取得: ${diagnostics.pendingCount}件 / ${diagnostics.pendingBytes}B`,
+    `経過: ${diagnostics.elapsedMs ?? "-"}ms / 最終進捗から: ${diagnostics.sinceProgressMs ?? "-"}ms`,
+    `失敗: ${diagnostics.failureCount}件`,
+  ];
+  for (const failure of diagnostics.failures) {
+    lines.push(`  ${failure.path} :: ${failure.reason} status=${failure.status} attempts=${failure.attempts}`);
+  }
+  return lines.join("\n");
 }
 
 /** Player-facing copy for the first-install prompt. */
@@ -352,6 +459,53 @@ export async function assessPwaState({
     storage: await estimateStorage(windowRef?.navigator),
     canPlay: canPlayOffline({ phase, installPlan }),
   };
+}
+
+/**
+ * Puts the newest available worker in charge before an update downloads.
+ *
+ * A worker that serves assets cache-first cannot fetch a replacement for a path
+ * it already holds, so a device running an older worker can never download the
+ * assets an update changes - and the worker shipping that fix is, by design,
+ * sitting in `waiting` until someone asks for it. Asking here is safe: this runs
+ * from the update screen, which the activation-safety check has already found
+ * quiet, and it is the one moment where continuing to run the old worker
+ * guarantees failure.
+ *
+ * Best effort throughout. A browser with no waiting worker, or one that never
+ * changes controller, simply proceeds - the download then either works because
+ * the controller was already current, or reports precisely why it did not.
+ */
+export async function activateWaitingWorker(registration, { windowRef, timeoutMs = 4000 } = {}) {
+  if (!registration) return "no-registration";
+  try {
+    // Ask the network whether a newer worker exists at all. Without this a
+    // device that has not re-registered since the fix shipped has nothing
+    // waiting to promote.
+    await registration.update?.();
+  } catch { /* an update check failing must not block the download */ }
+
+  const waiting = registration.waiting;
+  if (!waiting) return "already-current";
+
+  const container = windowRef?.navigator?.serviceWorker;
+  const changed = container
+    ? new Promise((resolve) => {
+      const done = () => resolve("activated");
+      container.addEventListener("controllerchange", done, { once: true });
+      setTimeout(() => {
+        container.removeEventListener?.("controllerchange", done);
+        resolve("timeout");
+      }, timeoutMs);
+    })
+    : Promise.resolve("no-container");
+
+  try {
+    waiting.postMessage({ type: "pwa:activate-now" });
+  } catch {
+    return "post-failed";
+  }
+  return changed;
 }
 
 /** Sends one message to the active worker and waits for its reply. */

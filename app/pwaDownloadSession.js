@@ -109,6 +109,11 @@ export function createAssetDownloadSession({
       remainingBytes: Math.max(0, totalBytes - completedBytes),
       failedCount: failures.size,
       failedPaths: [...failures.keys()],
+      // The detail, not just the paths: which stage stopped and how often it
+      // was tried is the whole difference between "the network is bad" and
+      // "this device is being handed the wrong bytes", and it is the only thing
+      // we can get back from a device we cannot inspect.
+      failures: [...failures.entries()].map(([path, failure]) => ({ path, ...failure })),
       activeCategory,
       ratio: totalBytes > 0 ? Math.min(1, completedBytes / totalBytes) : (totalCount === 0 ? 1 : 0),
     };

@@ -338,3 +338,10 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
   .pwa-install-steps { gap:4px; }
   .pwa-install-steps li { font-size:12px; }
 }
+/* Failure detail on the gate and in the data screen. Paths are long and must
+   wrap rather than push the panel sideways on a phone. */
+.pwa-failure-list { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px; width:100%; text-align:left; font-size:12px; }
+.pwa-failure-list li { display:flex; flex-direction:column; gap:1px; padding:5px 8px; border-radius:6px; background:rgba(255,255,255,.04); }
+.pwa-failure-list code { color:#f0bb65; overflow-wrap:anywhere; font-size:11px; }
+.pwa-failure-list span { opacity:.8; }
+.pwa-failure-summary { display:flex; flex-direction:column; gap:6px; margin-top:2px; }
