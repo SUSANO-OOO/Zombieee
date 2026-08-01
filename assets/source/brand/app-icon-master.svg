@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!--
+    西新世紀末物語 - application icon master.
+
+    Original work for this project. No third-party artwork, fonts or traced
+    source is used; every shape is authored here as plain geometry, and the
+    palette is taken from the game's own title logo and shell
+    (app/campaign.css, app/globals.css).
+
+    The mark is the CRAWLER - the mobile base the whole game is built around -
+    read as one heavy silhouette lit from its own open door, standing on a dust
+    horizon. It is a silhouette with a warm rim light rather than an
+    illustration, because that is what survives being shrunk to a 48px
+    home-screen tile: one shape, one glow, one horizon.
+
+    Every gradient fades to transparency rather than stopping at an edge. A
+    rectangle of haze with a hard boundary reads as a rendering fault at icon
+    size, which is exactly what the first cut of this file did.
+
+    Safe area: the mark sits inside the centred circle of ~340px radius, well
+    within the 80% maskable safe zone (409px), so neither iOS's rounded square
+    nor Android's circle can cut it. scripts/build-app-icons.mjs measures this
+    from the rendered pixels rather than trusting these coordinates. The
+    backdrop deliberately bleeds to the full canvas so no mask exposes a corner.
+  -->
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="64%" r="82%">
+      <stop offset="0%" stop-color="#43231a"/>
+      <stop offset="38%" stop-color="#1d1614"/>
+      <stop offset="100%" stop-color="#0b0d0d"/>
+    </radialGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e7663f" stop-opacity=".62"/>
+      <stop offset="38%" stop-color="#b8452a" stop-opacity=".30"/>
+      <stop offset="72%" stop-color="#8d2c24" stop-opacity=".10"/>
+      <stop offset="100%" stop-color="#8d2c24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="groundGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e08a55" stop-opacity=".34"/>
+      <stop offset="100%" stop-color="#e08a55" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hull" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#232826"/>
+      <stop offset="62%" stop-color="#101413"/>
+      <stop offset="100%" stop-color="#080a0a"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff4d6"/>
+      <stop offset="26%" stop-color="#f0c56a" stop-opacity=".92"/>
+      <stop offset="62%" stop-color="#e7973f" stop-opacity=".34"/>
+      <stop offset="100%" stop-color="#e7973f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Backdrop bleeds edge to edge so any mask shape stays filled. It is
+       deliberately outside the safe zone: a mask cutting sky costs nothing. -->
+  <g id="backdrop">
+    <rect width="1024" height="1024" fill="url(#sky)"/>
+    <!-- Low sun burning through dust. Soft to its own transparency at every
+         edge, so it never draws a circle of its own. -->
+    <ellipse cx="512" cy="628" rx="470" ry="330" fill="url(#sun)"/>
+    <ellipse cx="512" cy="700" rx="430" ry="120" fill="url(#groundGlow)"/>
+  </g>
+
+  <g id="mark">
+    <!-- Ruined skyline: four blocks, no detail, just enough to say "city". -->
+    <g fill="#0c100f">
+      <path d="M232 690V512l44-24v202z"/>
+      <path d="M296 690V456l58 34v200z"/>
+      <path d="M714 690V478l50 28v184z"/>
+      <path d="M780 690V540l42 22v128z"/>
+    </g>
+
+    <!-- Ground the machine stands on, fading out well before the canvas edge. -->
+    <path d="M196 690h632" stroke="#e08a55" stroke-opacity=".26" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- CRAWLER: one wide wedge hull, a raised command block, track units. -->
+    <g>
+      <rect x="238" y="612" width="548" height="78" rx="39" fill="#080a0a"/>
+      <circle cx="312" cy="651" r="33" fill="#141110" stroke="#7a4a34" stroke-width="7"/>
+      <circle cx="512" cy="651" r="26" fill="#141110" stroke="#7a4a34" stroke-width="6"/>
+      <circle cx="712" cy="651" r="33" fill="#141110" stroke="#7a4a34" stroke-width="7"/>
+
+      <path d="M248 618 L282 430 L676 430 L800 524 L800 618 Z" fill="url(#hull)"/>
+      <!-- The rim light is the line that keeps the shape legible at 48px. -->
+      <path d="M282 430 L676 430 L800 524" fill="none" stroke="#f0bb65" stroke-width="17"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M248 618 L282 430" fill="none" stroke="#e6d1ab" stroke-opacity=".5"
+            stroke-width="9" stroke-linecap="round"/>
+
+      <path d="M386 430 L406 336 L572 336 L592 430 Z" fill="#141918"/>
+      <path d="M406 336 L572 336" fill="none" stroke="#f0bb65" stroke-width="14" stroke-linecap="round"/>
+      <rect x="428" y="368" width="122" height="22" rx="11" fill="#e7663f"/>
+
+      <!-- The open deployment door and its lamp: the focal point of the mark,
+           and the one thing in the icon that is actually about playing. -->
+      <rect x="694" y="512" width="82" height="106" rx="10" fill="#1c1310"/>
+      <circle cx="736" cy="562" r="74" fill="url(#lamp)"/>
+      <circle cx="736" cy="562" r="19" fill="#fff6e0"/>
+    </g>
+
+    <!-- Infection: three spores drifting through the light. Sparse, and never
+         over the silhouette, so they cannot muddy it when scaled down. -->
+    <g fill="#8fd6a8">
+      <circle cx="828" cy="452" r="13" opacity=".8"/>
+      <circle cx="846" cy="384" r="9" opacity=".55"/>
+      <circle cx="204" cy="430" r="10" opacity=".5"/>
+    </g>
+  </g>
+</svg>

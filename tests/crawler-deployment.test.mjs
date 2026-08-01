@@ -42,6 +42,40 @@ test("friendly CRAWLER reveal rect preserves the production doorway geometry", (
   assert.deepEqual(nullRampRect, rect, "null entry ramp falls back to the authored ramp foot");
 });
 
+test("a unit still inside the vehicle shows nothing, not its leading limbs", () => {
+  // At the authored geometry the opening starts at doorX - 24 = 72. A 60px
+  // sprite centred at 60 spans 30..90, so the old reveal put 72..90 on screen -
+  // the leading arm and leg, with the torso still hidden behind the edge.
+  const inside = friendlyCrawlerRevealRect({ ...FRIENDLY_REVEAL_FIXTURE, fighterX: 60 });
+  assert.equal(inside.w, 0, "an interior unit contributes no visible pixels");
+  assert.equal(inside.x, 72);
+  assert.equal(inside.y, 214);
+  assert.equal(inside.h, 128);
+  assert.equal(Object.isFrozen(inside), true);
+
+  // The torso leads by spriteWidth * 0.16 = 9.6px, so it reaches the opening at
+  // fighterX 62.4. Either side of that the reveal is empty, then non-empty.
+  assert.equal(friendlyCrawlerRevealRect({ ...FRIENDLY_REVEAL_FIXTURE, fighterX: 62.3 }).w, 0);
+  assert.ok(friendlyCrawlerRevealRect({ ...FRIENDLY_REVEAL_FIXTURE, fighterX: 62.5 }).w > 0);
+});
+
+test("the reveal only ever grows, from nothing to the whole body", () => {
+  // Width must never decrease as the unit walks out: a shrinking window is what
+  // a swinging limb crossing a fixed edge looks like, and it reads as flicker.
+  let previous = -1;
+  for (let fighterX = 40; fighterX < FRIENDLY_REVEAL_FIXTURE.doorX + 8; fighterX += 0.5) {
+    const rect = friendlyCrawlerRevealRect({ ...FRIENDLY_REVEAL_FIXTURE, fighterX });
+    assert.ok(rect, `expected a rect at ${fighterX}`);
+    assert.ok(rect.w >= previous, `reveal narrowed at ${fighterX}: ${rect.w} < ${previous}`);
+    // Whenever anything is visible, the torso is inside the window.
+    if (rect.w > 0) {
+      const torsoLead = fighterX + FRIENDLY_REVEAL_FIXTURE.spriteWidth * 0.16;
+      assert.ok(torsoLead > rect.x, `limbs shown without the torso at ${fighterX}`);
+    }
+    previous = rect.w;
+  }
+});
+
 test("friendly CRAWLER reveal remains monotonic until the doorway threshold", () => {
   const positions = [96, 98, 100, 103.999];
   const rightEdges = positions.map((fighterX) => {

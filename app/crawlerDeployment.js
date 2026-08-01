@@ -16,6 +16,12 @@ export const CRAWLER_DOOR_TIMINGS = Object.freeze({
 
 const clamp01 = (value) => Math.max(0, Math.min(1, Number(value) || 0));
 
+// How far ahead of its own centre a unit's torso reaches, as a fraction of the
+// full sprite width. The sprite is much wider than the body because a walk
+// cycle throws the leading arm and leg well clear of it; this is the body
+// itself, which is what the doorway must reveal first.
+const TORSO_HALF_WIDTH_RATIO = 0.16;
+
 export function friendlyCrawlerRevealRect({
   side,
   gateEntering,
@@ -36,6 +42,24 @@ export function friendlyCrawlerRevealRect({
     return null;
   }
   const revealLeft = doorX - 24;
+  const revealTop = musterY - 108;
+  const revealHeight = 128;
+
+  // The doorway reveals whatever lies to the right of a hard vertical edge. A
+  // unit still inside the vehicle has its torso to the left of that edge while
+  // its leading arm and leg already reach past it, so it would show as loose
+  // limbs with the body missing - and because the walk cycle swings those limbs
+  // across the edge, they would flicker there too.
+  //
+  // Nothing is shown until the torso itself reaches the opening. From that
+  // moment on the visible region always contains the torso, so what appears is
+  // one whole body growing continuously, never a detached limb. The clip is
+  // released again at doorX + 8, by which point the sprite already sits wholly
+  // inside the opening, so neither end of the reveal pops.
+  if (fighterX + spriteWidth * TORSO_HALF_WIDTH_RATIO <= revealLeft) {
+    return Object.freeze({ x: revealLeft, y: revealTop, w: 0, h: revealHeight });
+  }
+
   const revealRight = Math.max(
     doorX + 25,
     Math.min(
@@ -45,9 +69,9 @@ export function friendlyCrawlerRevealRect({
   );
   return Object.freeze({
     x: revealLeft,
-    y: musterY - 108,
+    y: revealTop,
     w: revealRight - revealLeft,
-    h: 128,
+    h: revealHeight,
   });
 }
 

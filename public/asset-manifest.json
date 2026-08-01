@@ -1,6 +1,6 @@
 {
   "schema": "zombieee-asset-manifest/1",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "releaseSha": "__ZOMBIEEE_RELEASE_SHA__",
   "assets": [
     {
@@ -4619,33 +4619,75 @@
       "audioChannel": "se"
     },
     {
+      "path": "/audio/v098/music/music-v098-loadout.mp3",
+      "bytes": 112685,
+      "hash": "sha256-fed5bb353a034821885071c4e576c280a74972e2f0df1df10a3d1b1aa4137aea",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
+      "path": "/audio/v098/music/music-v098-loadout.ogg",
+      "bytes": 69387,
+      "hash": "sha256-bbf555124a405e85f8d031f894d023dfe04dfcd7c93285b556618193dc9fc719",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "bgm"
+    },
+    {
       "path": "/favicon.svg",
-      "bytes": 282,
-      "hash": "sha256-ebdcc69bb3ea7f27a2c5507a69a02b8675d4720830fec024f33c77fd709797eb",
+      "bytes": 1202,
+      "hash": "sha256-6410db8b725042419ba8589b9e6915549002e19262270ef4b54317ed6d8a02a6",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
+      "path": "/icons/apple-touch-icon-180.png",
+      "bytes": 17414,
+      "hash": "sha256-ca6f97a44a68f478148bb555494b2d5dcb809c697e59d89365c772ea14ef76ff",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
+      "path": "/icons/icon-1024.png",
+      "bytes": 168327,
+      "hash": "sha256-c4feda1c95b5ed9f5a2c946159acc0863ccd4635d9ea0321d409320df7bd98a2",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"
     },
     {
       "path": "/icons/icon-192.png",
-      "bytes": 2122,
-      "hash": "sha256-37c196d53a9830ab52f017c896964c09091464927bc6c725339bbbe6f21bd562",
+      "bytes": 18738,
+      "hash": "sha256-fef38d39552b98817da2f7331fdb2a01205f94d62ebe43d4194e67ea162fb40b",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"
     },
     {
       "path": "/icons/icon-512.png",
-      "bytes": 6712,
-      "hash": "sha256-bc7c3090e96ac7526c1490b371fb82f034fd569c9a0d6dd6f2feae7334040242",
+      "bytes": 69236,
+      "hash": "sha256-83f67901a5cc2c14e660d9cc36e1fbcdc786b70e97fb234eb139ee8f037d8446",
+      "pack": "app-shell",
+      "category": "app",
+      "criticality": "critical"
+    },
+    {
+      "path": "/icons/icon-maskable-192.png",
+      "bytes": 18738,
+      "hash": "sha256-fef38d39552b98817da2f7331fdb2a01205f94d62ebe43d4194e67ea162fb40b",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"
     },
     {
       "path": "/icons/icon-maskable-512.png",
-      "bytes": 4105,
-      "hash": "sha256-b37c3d6d24ccff4bb93c3aef9e06fbe94f57f9cdee0bb8972a2f829600d10ab8",
+      "bytes": 69236,
+      "hash": "sha256-83f67901a5cc2c14e660d9cc36e1fbcdc786b70e97fb234eb139ee8f037d8446",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"

@@ -54,7 +54,9 @@ export default function RootLayout({
           its URLs from location, so both layers stay base-path correct.
         */}
         <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
+        {/* 180x180 is the size iOS actually asks for; anything else is rescaled
+            on the device and loses the rim light that carries the mark. */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="西新世紀末" />
