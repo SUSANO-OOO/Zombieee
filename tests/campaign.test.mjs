@@ -796,7 +796,7 @@ test("default save is versioned and contains initial progression, selection, and
     sfxVolume: 0.8,
     reducedMotion: false,
     battleEventMode: "first-time",
-    graphicsQuality: "auto",
+    graphicsQuality: "high",
   });
 });
 
@@ -939,7 +939,7 @@ test("migration accepts schema-less and v0 aliases, derives unlocks, and tolerat
     sfxVolume: 0.6,
     reducedMotion: true,
     battleEventMode: "first-time",
-    graphicsQuality: "auto",
+    graphicsQuality: "high",
   });
 });
 
@@ -970,7 +970,7 @@ test("migration repairs malformed fields without crashing or removing mandatory 
     sfxVolume: 0,
     reducedMotion: false,
     battleEventMode: "first-time",
-    graphicsQuality: "auto",
+    graphicsQuality: "high",
   });
 });
 
@@ -1019,7 +1019,7 @@ test("schema v2 to v4 migration is idempotent and preserves progress, receipts, 
   assert.deepEqual(migrated.settings, {
     ...schema2.settings,
     battleEventMode: "first-time",
-    graphicsQuality: "auto",
+    graphicsQuality: "high",
   });
   assert.deepEqual(migrated.readStoryEventIds, ["prologue-opening", "stage-nishijin-pre"]);
   assert.equal(migrated.autoSkipReadStory, true);
@@ -1090,7 +1090,7 @@ test("schema v3 migrates a fully silent legacy audio configuration once, while v
     sfxVolume: 0.8,
     reducedMotion: false,
     battleEventMode: "first-time",
-    graphicsQuality: "auto",
+    graphicsQuality: "high",
   });
 
   const currentSilent = migrateCampaignSave({
@@ -1104,7 +1104,7 @@ test("schema v3 migrates a fully silent legacy audio configuration once, while v
     sfxVolume: 0,
     reducedMotion: false,
     battleEventMode: "first-time",
-    graphicsQuality: "auto",
+    graphicsQuality: "high",
   });
 });
 
@@ -1199,6 +1199,23 @@ test("serialization round-trips stars, rewards, unlocks, selection, and settings
   assert.equal(Number.isFinite(Date.parse(restored.updatedAt)), true);
 });
 
+test("a fresh install starts at high quality without overwriting a saved choice", () => {
+  // New players see the real picture rather than the balanced downgrade "auto"
+  // applies to anything it reads as a small or modest device.
+  assert.equal(createDefaultCampaignSave().settings.graphicsQuality, "high");
+
+  // Every value a player can actually have stored survives migration untouched,
+  // including the previous default. Raising the default must never reach into a
+  // save that already expressed a preference.
+  for (const stored of ["auto", "high", "power-save"]) {
+    assert.equal(
+      migrateCampaignSave({ schemaVersion: 13, settings: { graphicsQuality: stored } }).settings.graphicsQuality,
+      stored,
+      stored,
+    );
+  }
+});
+
 test("battle event mode migrates safely and round-trips without touching progress or receipts", () => {
   let progressed = applyStageResult(createDefaultCampaignSave(), STAGE_1, {
     resultId: "battle-event-mode-receipt",
@@ -1222,7 +1239,7 @@ test("battle event mode migrates safely and round-trips without touching progres
   assert.equal(deserializeCampaignSave(serializeCampaignSave(showAll)).settings.battleEventMode, "all");
   assert.equal(updateStoryPlaybackSettings(showAll, { battleEventMode: "invalid" }).settings.battleEventMode, "all");
   assert.equal(migrateCampaignSave({ schemaVersion: 4, settings: { battleEventMode: "invalid" } }).settings.battleEventMode, "first-time");
-  assert.equal(migrateCampaignSave({ schemaVersion: 13, settings: { graphicsQuality: "invalid" } }).settings.graphicsQuality, "auto");
+  assert.equal(migrateCampaignSave({ schemaVersion: 13, settings: { graphicsQuality: "invalid" } }).settings.graphicsQuality, "high");
 });
 
 test("Mayo employment unlocks on Survival Wave 20 with a durable one-shot notice and never relocks 0.9.0 roster state", () => {

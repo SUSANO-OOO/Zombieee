@@ -139,8 +139,13 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   const activeV080Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v080/"));
   const activeV090Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v090/"));
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 212);
-  assert.equal(manifestPaths.length, 399);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 213);
+  // 0.9.8 adds one track: the loadout theme, as the usual MP3 + OGG pair.
+  assert.equal(manifestPaths.length, 401);
+  assert.equal(
+    manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v098/")).length,
+    2,
+  );
   assert.equal(new Set(manifestPaths).size, manifestPaths.length);
   assert.equal(activeV060Paths.length, 270);
   assert.equal(activeV070Paths.length, 72);
@@ -160,7 +165,7 @@ test("every referenced source is repository-local, nonempty, and has a complete 
     assert.equal(asset.sources.length, wavCue ? 1 : 2, asset.id);
     assert.deepEqual(asset.sources.map((source) => source.type), wavCue ? ["audio/wav"] : ["audio/mpeg", "audio/ogg"], asset.id);
     for (const source of asset.sources) {
-      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx)\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
+      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music)\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
       assert.doesNotMatch(source.src, /:\/\/|^\/\//);
       const filePath = publicFileFor(source.src);
       assert.equal(existsSync(filePath), true, `${asset.id}: ${source.src}`);
@@ -879,7 +884,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 254);
+  assert.equal(allCueIds.length, 255);
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(

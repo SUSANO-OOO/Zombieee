@@ -5,6 +5,7 @@ const V060_AUDIO_ROOT = "/audio/v060";
 const V070_AUDIO_ROOT = "/audio/v070";
 const V080_AUDIO_ROOT = "/audio/v080";
 const V090_AUDIO_ROOT = "/audio/v090";
+const V098_AUDIO_ROOT = "/audio/v098";
 const V090_WAV_ONLY_CUE_IDS = new Set([
   "weapon-mrs-chiha-launcher-retrieve",
   "weapon-mrs-chiha-launcher-aim",
@@ -256,6 +257,29 @@ function v070Asset(spec) {
   };
 }
 
+// The loadout screen used to borrow the map theme. Both are pre-sortie screens,
+// but the map is a decision made looking outward and the loadout is the quiet
+// minute inside the hull, so hearing no change on entering it made the two read
+// as one screen. This track sits a fifth below the map theme for that reason:
+// moving between them should read as descending into the CRAWLER.
+const V098_AUDIO_ASSET_SPECS = Object.freeze([
+  { id: "music-v098-loadout", folder: "music", category: "bgm", loop: true, gain: 0.52, priority: 900 },
+]);
+
+function v098Asset(spec) {
+  return {
+    id: spec.id,
+    category: spec.category,
+    sources: sourceFor(V098_AUDIO_ROOT, spec.folder, spec.id),
+    preload: "scene",
+    loop: spec.loop,
+    gain: spec.gain,
+    priority: spec.priority,
+    cooldownMs: 0,
+    maxInstances: 1,
+  };
+}
+
 function v080SuppressedCarbineAsset(variation) {
   const id = `${V080_SUPPRESSED_CARBINE_CUE_ID}-${String(variation).padStart(2, "0")}`;
   return {
@@ -366,6 +390,7 @@ const assets = [
   ...enemyVoiceAssets,
   ...NEW_UNIT_AUDIO_CUES.map(({ id, category, ...options }) => sfxAsset(id, category, options)),
   ...V070_AUDIO_ASSET_SPECS.map(v070Asset),
+  ...V098_AUDIO_ASSET_SPECS.map(v098Asset),
   ...[1, 2].map(v080SuppressedCarbineAsset),
   ...V090_PLAYABLE_AUDIO_CUES.map(v090PlayableAsset),
   ...V090_BOSS_AUDIO_CUES.map(v090PlayableAsset),
@@ -452,7 +477,7 @@ const scenes = [
   { id: "title", bgm: "music-title", preload: COMMON_UI_PRELOAD, crossfadeMs: 900 },
   { id: "intro", bgm: "music-intro", ambience: ["radio-static-loop"], preload: [...COMMON_UI_PRELOAD, ...RADIO_CUES], crossfadeMs: 700 },
   { id: "map", bgm: "music-map", preload: COMMON_UI_PRELOAD, crossfadeMs: 650 },
-  { id: "loadout", bgm: "music-map", preload: [...COMMON_UI_PRELOAD, ...Object.keys(WEAPON_POOL_CATEGORIES)], crossfadeMs: 350 },
+  { id: "loadout", bgm: "music-v098-loadout", preload: [...COMMON_UI_PRELOAD, ...Object.keys(WEAPON_POOL_CATEGORIES)], crossfadeMs: 900 },
   { id: "stage1", bgm: "music-battle-stage1", preload: COMBAT_PRELOAD, crossfadeMs: 800 },
   { id: "stage2", bgm: "music-battle-stage2", preload: COMBAT_PRELOAD, crossfadeMs: 800 },
   { id: "stage3", bgm: "music-battle-stage3", preload: [...COMBAT_PRELOAD, TAKUYA_ENTRANCE_AUDIO.cueId], crossfadeMs: 800 },

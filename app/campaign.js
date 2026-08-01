@@ -1951,7 +1951,12 @@ export const DEFAULT_CAMPAIGN_SETTINGS = deepFreeze({
   sfxVolume: 0.8,
   reducedMotion: false,
   battleEventMode: "first-time",
-  graphicsQuality: "auto",
+  // A new install starts at full quality. "auto" quietly drops to the balanced
+  // profile on anything it reads as a small or modest device, so a first-time
+  // player was shown a downgraded picture before ever seeing the real one. The
+  // safe fallbacks are unchanged and still reachable: "auto" and "power-save"
+  // stay selectable, and a stored choice of either is preserved as saved.
+  graphicsQuality: "high",
 });
 
 export function normalizeEquipmentInventory(value) {

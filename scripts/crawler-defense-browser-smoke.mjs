@@ -2,6 +2,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+
 const baseUrl = new URL(process.env.CRAWLER_DEFENSE_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) {
   throw new Error(`CRAWLER defense QA routes are local-only; refusing ${baseUrl}`);
@@ -95,6 +97,9 @@ for (const engine of engines) {
         try {
           const response = await page.goto(caseUrl(), { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
+          // Since 0.9.7 a browser tab is invited to install before the game
+          // mounts, so the QA bridge does not exist until that is answered.
+          await dismissInstallOffer(page, { timeout });
           await page.waitForFunction(
             () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running === true,
             null,

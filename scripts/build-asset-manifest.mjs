@@ -132,7 +132,17 @@ function categoryForKind(kind) {
 record(PRODUCTION_VISUALS.title, { pack: "app-shell", category: "app", criticality: "critical" });
 record(PRODUCTION_VISUALS.command, { pack: "app-shell", category: "app", criticality: "critical" });
 record("/favicon.svg", { pack: "app-shell", category: "app", criticality: "critical" });
-for (const icon of ["/icons/icon-192.png", "/icons/icon-512.png", "/icons/icon-maskable-512.png"]) {
+// Every icon the web app manifest or the document head points at. An icon that
+// is referenced but not registered here is absent from the offline pack, so an
+// installed app would go looking for it over a network it may not have.
+for (const icon of [
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/icon-1024.png",
+  "/icons/icon-maskable-192.png",
+  "/icons/icon-maskable-512.png",
+  "/icons/apple-touch-icon-180.png",
+]) {
   record(icon, { pack: "app-shell", category: "app", criticality: "critical" });
 }
 
