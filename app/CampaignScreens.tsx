@@ -436,7 +436,7 @@ function SaveRecoveryScreen({
   </div>;
 }
 
-function TitleScreen({ hasCampaignSave, savePersistence, saveMutationPending, saveEnvironment, onBegin, onRestartCampaign, onExportSave, onImportSave }: Pick<Props, "hasCampaignSave" | "savePersistence" | "saveMutationPending" | "saveEnvironment" | "onBegin" | "onRestartCampaign" | "onExportSave" | "onImportSave">) {
+function TitleScreen({ hasCampaignSave, savePersistence, saveMutationPending, onBegin, onRestartCampaign, onExportSave, onImportSave }: Pick<Props, "hasCampaignSave" | "savePersistence" | "saveMutationPending" | "onBegin" | "onRestartCampaign" | "onExportSave" | "onImportSave">) {
   const saveUnavailable = savePersistence === "checking" || savePersistence === "unavailable" || saveMutationPending;
   return <div className="campaign-overlay title-screen-v060" style={artStyle(PRODUCTION_VISUALS.title)} aria-label="西新世紀末物語 タイトル画面">
     <div className="title-atmosphere" aria-hidden="true"><i /><i /><i /><i /></div>
@@ -446,7 +446,12 @@ function TitleScreen({ hasCampaignSave, savePersistence, saveMutationPending, sa
       <p>アーリーアクセス版　{RELEASE_LABEL}</p>
     </div>
     <p className="title-copy">西新が終わった夜から四十三日。指揮官の作戦が、街の明日をつなぐ。</p>
-    <SaveEnvironmentBadge environment={saveEnvironment} />
+    {/*
+      The save environment badge used to sit here, showing the player an origin,
+      a storage scope and an isolation notice before they had pressed anything.
+      None of that is theirs to act on, so it now lives behind データ管理, which
+      is where someone would go looking for it.
+    */}
     <section className="title-synopsis" aria-label="物語のあらすじ"><b>物語のあらすじ</b><p>{PROLOGUE_SYNOPSIS.short}</p></section>
     <div className="title-actions">
       <button className="campaign-primary title-start" disabled={saveUnavailable} onClick={onBegin}><span>{savePersistence === "checking" ? "セーブ確認中" : hasCampaignSave ? "物語を続ける" : "物語を始める"}</span><small>{savePersistence === "unavailable" ? "Safariの通常タブで開き直してください" : hasCampaignSave ? "保存した進行から再開" : "PROLOGUE　西新が終わった夜"}</small></button>
@@ -779,7 +784,7 @@ function RecordsScreen({
 export function CampaignScreens(props: Props) {
   if (props.saveRecoveryRequired) return <SaveRecoveryScreen saveRecoveryReason={props.saveRecoveryReason} saveRecoveryCandidateSources={props.saveRecoveryCandidateSources} saveRecoveryCanExport={props.saveRecoveryCanExport} saveMutationPending={props.saveMutationPending} saveEnvironment={props.saveEnvironment} onExportCorruptSave={props.onExportCorruptSave} onImportSave={props.onImportSave} onUseRecoveryCandidate={props.onUseRecoveryCandidate} onResetCorruptSave={props.onResetCorruptSave} />;
   if (props.screen === "battle" || props.screen === "survival" || props.screen === "survival-result") return null;
-  if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} savePersistence={props.savePersistence} saveMutationPending={props.saveMutationPending} saveEnvironment={props.saveEnvironment} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} onExportSave={props.onExportSave} onImportSave={props.onImportSave} />;
+  if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} savePersistence={props.savePersistence} saveMutationPending={props.saveMutationPending} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} onExportSave={props.onExportSave} onImportSave={props.onImportSave} />;
   if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} forceStoryReplay={props.forceStoryReplay} onEventComplete={props.onEventComplete} onEventSkip={props.onEventSkip} onStoryAudioPositionChange={props.onStoryAudioPositionChange} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />;
   if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} assetsReady={props.assetsReady} assetError={props.assetError} onSelectStage={props.onSelectStage} onOpenPersonnel={props.onOpenPersonnel} onOpenLoadout={props.onOpenLoadout} onOpenSurvival={props.onOpenSurvival} onOpenOutbreak={props.onOpenOutbreak} onOpenRecords={props.onOpenRecords} onReplayPrologue={props.onReplayPrologue} onResetSave={props.onResetSave} />;
   if (props.screen === "outbreak") return <OutbreakMissionScreen outbreakMissions={props.outbreakMissions} selectedOutbreakMissionId={props.selectedOutbreakMissionId} onSelectOutbreakMission={props.onSelectOutbreakMission} onPrepareOutbreak={props.onPrepareOutbreak} onReturnToMap={props.onReturnToMap} />;

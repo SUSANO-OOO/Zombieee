@@ -4,6 +4,8 @@ import http from "node:http";
 import path from "node:path";
 import { chromium } from "playwright";
 
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+
 const root = path.resolve("_site");
 const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? "/Zombieee";
 const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION?.trim() || null;
@@ -78,13 +80,10 @@ try {
     const navigation = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
     if (!navigation?.ok()) throw new Error(`GitHub Pages document failed: ${navigation?.status()}`);
 
-    // Since 0.9.6.4 a visitor holding no pack meets the download entry screen
-    // before the title. This smoke checks that the built site renders and runs,
-    // and it starts from empty storage every time, so decline and carry on to
-    // the title. The entry flow has its own coverage in the PWA matrix.
-    const declineDownload = page.getByRole("button", { name: "ダウンロードせずに遊ぶ" });
-    await declineDownload.waitFor({ state: "visible", timeout: 60_000 }).catch(() => {});
-    if (await declineDownload.isVisible().catch(() => false)) await declineDownload.click();
+    // Since 0.9.7 a browser tab meets the install invitation before the title.
+    // This smoke checks that the built site renders and runs, so decline and
+    // carry on. The invitation has its own coverage in the PWA matrix.
+    await dismissInstallOffer(page);
 
     await page.locator(".title-screen-v060").waitFor({ state: "visible", timeout: 120_000 });
     const startButton = page.locator(".title-start");

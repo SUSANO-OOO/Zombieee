@@ -318,4 +318,23 @@ button:focus-visible { outline:2px solid #f0bb65; outline-offset:2px; }
 .pwa-install-guidance { margin-top:4px; padding:10px 12px; border:1px solid #3a322c; border-radius:8px; background:rgba(255,255,255,.035); display:flex; flex-direction:column; gap:6px; align-items:center; }
 .pwa-install-guidance h3 { margin:0; font-size:13px; font-weight:600; color:#f0bb65; }
 .pwa-install-guidance ol { margin:0; padding-left:1.25em; text-align:left; font-size:12px; opacity:.8; display:flex; flex-direction:column; gap:3px; }
-@media (max-height:420px) { .pwa-gate-panel { gap:6px; } .pwa-gate-panel h1 { font-size:16px; } .pwa-install-guidance { padding:8px 10px; gap:4px; } }
+/* Numbered install steps. A player who has never added a web app to a home
+   screen is looking for a glyph, not a sentence, so each step carries the icon
+   and the control's own label; step one also carries an arrow towards the edge
+   of the screen the button actually lives on. */
+.pwa-install-steps { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; width:100%; text-align:left; }
+.pwa-install-steps li { display:flex; align-items:center; gap:8px; font-size:13px; opacity:.92; }
+.pwa-step-number { flex:0 0 auto; width:20px; height:20px; border-radius:50%; background:#e7663f; color:#140f0c; font-size:12px; font-weight:700; display:grid; place-items:center; }
+.pwa-step-body { display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0; }
+.pwa-step-icon { flex:0 0 auto; display:inline-flex; }
+.pwa-step-icon svg { width:18px; height:18px; fill:none; stroke:#f0bb65; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; display:block; }
+.pwa-step-text { overflow-wrap:anywhere; }
+.pwa-step-arrow { flex:0 0 auto; color:#f0bb65; font-size:15px; line-height:1; }
+.pwa-storage .save-environment-badge { position:static; margin:0; width:100%; }
+@media (max-height:420px) {
+  .pwa-gate-panel { gap:6px; }
+  .pwa-gate-panel h1 { font-size:16px; }
+  .pwa-install-guidance { padding:8px 10px; gap:4px; }
+  .pwa-install-steps { gap:4px; }
+  .pwa-install-steps li { font-size:12px; }
+}

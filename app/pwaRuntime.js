@@ -1,7 +1,7 @@
-// Version 0.9.6 PWA runtime.
+// PWA runtime.
 //
-// `derivePwaPhase` is the single place that decides what the player is shown:
-// nothing at all in a plain browser tab, a first-install prompt in a freshly
+// `derivePwaPhase` is the single place that decides what the player is shown: an
+// invitation to install in a plain browser tab, the first download in a freshly
 // added home-screen app, a repair prompt after OS cache eviction, and an update
 // prompt on a safe screen. Keeping it pure means every branch is testable
 // without a browser.
@@ -16,7 +16,7 @@ import { evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js"
 export const PWA_PHASES = Object.freeze([
   "unsupported",
   "browser",
-  "download-offer",
+  "install-offer",
   "download-complete",
   "install-required",
   "installing",
@@ -28,9 +28,13 @@ export const PWA_PHASES = Object.freeze([
 ]);
 
 /**
- * Decides the phase from facts only. `standalone` distinguishes a home-screen
- * launch from an ordinary tab: a browser tab keeps working exactly as it does
- * today and is never forced through a 111MB install.
+ * Decides the phase from facts only.
+ *
+ * `standalone` is what separates the two halves of the journey. A browser tab is
+ * where the player is invited to install, and nothing is downloaded there: 111MB
+ * saved into a tab that is about to be replaced by a home-screen app is 111MB
+ * fetched twice. The download belongs to the first home-screen launch, where the
+ * bytes land in the app the player will actually keep using.
  */
 export function derivePwaPhase({
   supported = false,
@@ -47,21 +51,31 @@ export function derivePwaPhase({
     return "installing";
   }
 
+  // A finished download says so and hands the player a button, rather than
+  // swapping the screen underneath them. This sits above the standalone split
+  // because it is the end of the home-screen first-run just as much as it is the
+  // end of an update.
+  if (downloadState === "complete") return "download-complete";
+
   if (!standalone) {
-    // A tab that has just finished its download says so, and offers to start
-    // playing, rather than silently swapping the screen underneath the player.
-    if (downloadState === "complete") return "download-complete";
     // An ordinary tab may still run an update check, but never an install gate.
-    if (installedManifest && updateEvaluation?.available) return "update-available";
-    // First visit, or a pack that never finished: the download entry point comes
-    // before the title so the offer is the first thing a new player sees. It is
-    // an offer, not a gate - dismissing it plays straight from the network, and
-    // a device that already holds the pack never sees it at all.
-    if (!offerDismissed && installPlan && !installPlan.complete) return "download-offer";
+    if (offerDismissed && installedManifest && updateEvaluation?.available) return "update-available";
+    // The invitation to install is the first thing a browser visitor sees, and
+    // it is an offer rather than a wall: dismissing it plays straight from the
+    // network, exactly as a tab did before.
+    if (!offerDismissed) return "install-offer";
     return "browser";
   }
 
-  if (!installedManifest) return "install-required";
+  if (!installedManifest) {
+    // The worker is where the committed manifest normally lives, but it can be
+    // unregistered, replaced, or simply unavailable while the content-addressed
+    // pack itself survives untouched. Asking such a device to fetch a pack it
+    // demonstrably already holds - every hash in the published manifest present
+    // in the cache - would be a full re-download for nothing.
+    if (installPlan?.complete) return "ready";
+    return "install-required";
+  }
   if (installPlan && !installPlan.complete) {
     // Distinguish "never finished" from "the OS reclaimed our bytes", because
     // the two need different wording even though both re-fetch only the gap.
@@ -74,6 +88,9 @@ export function derivePwaPhase({
 /** True when the player may start playing from local assets. */
 export function canPlayOffline({ phase, installPlan }) {
   if (phase === "browser" || phase === "unsupported") return true;
+  // The install invitation covers the title, but it never takes play away: the
+  // tab behind it is as capable as it ever was.
+  if (phase === "install-offer") return true;
   if (phase === "ready" || phase === "update-available") return true;
   // A partially installed pack can still play if nothing critical is missing.
   if (phase === "repair-required") {
@@ -102,42 +119,32 @@ export function describeInstall(plan, storage) {
 }
 
 /**
- * Copy for the download entry screen a first-time visitor sees.
+ * Copy for the install invitation a browser visitor meets first.
  *
- * Every number comes from the published manifest and the install plan, so the
- * screen cannot drift from what will actually be fetched. Nothing here is
- * hard-coded: a pack that grows or shrinks changes this text automatically.
+ * The size line is informational only - it says what the app will save *after*
+ * it is installed, so the player knows what they are agreeing to before they
+ * agree to it. Every number still comes from the published manifest, so the
+ * screen cannot promise a figure the download will not match, and reading a
+ * manifest is not the same as fetching a pack: nothing is downloaded here.
  */
-export function describeDownloadOffer(plan, manifest, storage) {
-  if (!plan || !manifest) return null;
-  const totalAssets = manifest.assets?.length ?? 0;
-  const alreadyHeld = Math.max(0, totalAssets - plan.pendingCount);
-  const resuming = alreadyHeld > 0;
+export function describeInstallOffer(manifest, { promptAvailable = false } = {}) {
+  if (!manifest) return null;
+  const assets = manifest.assets ?? [];
+  const totalAssets = assets.length;
+  const totalBytes = assets.reduce((sum, asset) => sum + (Number(asset?.bytes) || 0), 0);
 
-  const lines = [
-    `${plan.pendingCount}件・${formatBytes(plan.pendingBytes)}をこの端末に保存します`,
-  ];
-  if (resuming) {
-    lines.push(`保存済み ${alreadyHeld} / ${totalAssets}件のぶんは再取得しません`);
-  }
-  if (storage?.available != null) {
-    lines.push(`空き容量の目安 ${formatBytes(storage.available)}`);
-  }
-
-  const shortOnSpace = storage?.available != null && storage.available < plan.pendingBytes * 1.1;
   return {
-    headline: resuming ? "ダウンロードを再開します" : "ゲームをダウンロード",
-    actionLabel: resuming ? "ダウンロードを再開" : "ゲームをダウンロード",
-    lines,
+    headline: "西新世紀末物語をインストール",
+    body: "ホーム画面に追加すると、アプリのように全画面で起動できます。",
+    sizeLine: totalAssets > 0
+      ? `ゲームデータ ${totalAssets}件・${formatBytes(totalBytes)} は、追加したあと最初に起動したときに保存します`
+      : null,
+    noDownloadHint: "この画面ではゲームデータをダウンロードしません。",
+    actionLabel: promptAvailable ? "インストール" : null,
     totalAssets,
-    pendingCount: plan.pendingCount,
-    pendingBytes: plan.pendingBytes,
-    resuming,
-    shortOnSpace,
-    warning: shortOnSpace ? "空き容量が不足している可能性があります" : null,
-    wifiHint: "Wi-Fi接続を推奨します。ダウンロードは開始するまで始まりません。",
-    skipLabel: "ダウンロードせずに遊ぶ",
-    skipHint: "保存せずに遊ぶこともできます。その場合は毎回通信が必要です。",
+    totalBytes,
+    skipLabel: "ブラウザで遊ぶ",
+    skipHint: "インストールせずに遊ぶこともできます。その場合は毎回通信が必要です。",
   };
 }
 
@@ -146,40 +153,54 @@ export function describeDownloadOffer(plan, manifest, storage) {
  * in front of us.
  *
  * `beforeinstallprompt` is Chromium-only, so relying on it alone would make the
- * app feel broken on iOS. When the browser offers no prompt we describe the
- * manual route instead, and the generic wording is deliberately not tied to any
- * one browser: no engine is required to play.
+ * app feel broken on iOS, where the route is real but entirely manual. Each
+ * manual step therefore carries the control's own label in brackets, the glyph
+ * the player is looking for, and which edge of the screen to look at - a player
+ * who has never installed a web app has no idea what "share" means here, and
+ * "share" on iPhone is at the bottom while on iPad it is at the top.
+ *
+ * The generic wording is deliberately not tied to any one browser: no engine is
+ * required to play.
  */
 export function describeInstallGuidance({ standalone = false, promptAvailable = false, userAgent = "" } = {}) {
   if (standalone) return null;
 
   const agent = String(userAgent);
-  const iOS = /iPad|iPhone|iPod/.test(agent) || (/Macintosh/.test(agent) && /Mobile/.test(agent));
+  const iPad = /iPad/.test(agent) || (/Macintosh/.test(agent) && /Mobile/.test(agent));
+  const iPhone = /iPhone|iPod/.test(agent);
 
-  if (promptAvailable) {
-    return {
-      mode: "prompt",
-      headline: "ホーム画面に追加",
-      body: "アプリのように全画面で起動できます。",
-      actionLabel: "ホーム画面に追加",
-      steps: [],
-    };
-  }
-  if (iOS) {
-    return {
-      mode: "manual",
-      headline: "ホーム画面に追加",
-      body: "アプリのように全画面で起動できます。",
-      actionLabel: null,
-      steps: ["共有ボタンを開く", "「ホーム画面に追加」を選ぶ", "「追加」を押す"],
-    };
-  }
+  // The manual steps are always computed, even where a prompt exists. A browser
+  // prompt can only be raised once, and the player may dismiss it; without a
+  // written route behind it that leaves a screen whose only remaining button is
+  // "play in the browser", which is a dead end for someone who wanted to install.
+  const platform = iPhone ? "iphone" : iPad ? "ipad" : "generic";
+  const steps = platform === "generic"
+    ? [
+      { icon: "menu", arrow: null, text: "ブラウザの「メニュー」を開く", label: "メニュー" },
+      { icon: "add", arrow: null, text: "「インストール」または「ホーム画面に追加」を押す", label: "ホーム画面に追加" },
+    ]
+    : [
+      {
+        icon: "share",
+        arrow: iPhone ? "down" : "up",
+        text: `${iPhone ? "画面下" : "画面上"}の「共有」ボタンを押す`,
+        label: "共有",
+      },
+      { icon: "add", arrow: null, text: "「ホーム画面に追加」を押す", label: "ホーム画面に追加" },
+      { icon: "confirm", arrow: null, text: "右上の「追加」を押す", label: "追加" },
+    ];
+
   return {
-    mode: "manual",
-    headline: "ホーム画面に追加",
-    body: "アプリのように全画面で起動できます。ブラウザのメニューから追加できます。",
-    actionLabel: null,
-    steps: ["ブラウザのメニューを開く", "「インストール」または「ホーム画面に追加」を選ぶ"],
+    mode: promptAvailable ? "prompt" : "manual",
+    platform,
+    headline: promptAvailable ? "ホーム画面に追加" : "ホーム画面に追加する手順",
+    body: promptAvailable
+      ? "この端末はインストール画面を開けます。"
+      : platform === "generic"
+        ? "ブラウザのメニューから追加できます。"
+        : "3ステップで終わります。",
+    actionLabel: promptAvailable ? "ホーム画面に追加" : null,
+    steps,
   };
 }
 

@@ -11185,6 +11185,19 @@ export function AshfallGame() {
     root.dataset.pwaSaveMutationPending = String(Boolean(saveMutationPending));
   }, [saveMutationPending, screen]);
 
+  // The save environment is a maintenance fact, not a story beat, so it no
+  // longer sits across the title screen. Publishing it here lets the data screen
+  // show it without threading props through a component tree it does not belong
+  // to, and reuses the bridge the activation-safety facts already ride.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.saveEnvironmentKind = saveEnvironment.kind;
+    root.dataset.saveEnvironmentLabel = saveEnvironment.label;
+    root.dataset.saveEnvironmentOrigin = saveEnvironment.origin;
+    root.dataset.saveEnvironmentScope = saveEnvironment.storageScope;
+    root.dataset.saveEnvironmentIsolation = saveEnvironment.isolationNotice;
+  }, [saveEnvironment]);
+
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.assetLoadState = assetReadiness.state;

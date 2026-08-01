@@ -341,16 +341,17 @@ record("clearing assets removes asset bytes and leaves save data intact", (
   separationCase.assetCacheGone && separationCase.saveSurvived
 ), separationCase);
 
-// --- 10. The download entry point in an ordinary browser tab ---------------
+// --- 10. The install invitation in an ordinary browser tab -----------------
 //
 // Runs in its own context with the manifest routed to a small synthetic pack
-// built from real shipped files, so the entire entry flow - offer, download,
-// completion, launch, and revisit - can finish inside a QA run while every byte
-// that is fetched and verified is still a genuine published asset.
+// built from real shipped files, so the whole journey - invitation, decline,
+// first home-screen download, launch and revisit - can finish inside a QA run
+// while every byte that is fetched and verified is still a genuine published
+// asset.
 //
-// Service workers are blocked here on purpose: this section is about the page's
-// entry UI, and the worker is covered by the cases above. Blocking it also lets
-// the manifest route apply, which a worker would otherwise serve around.
+// Service workers are blocked here on purpose: these sections are about the
+// page's own UI, and the worker is covered by the cases above. Blocking it also
+// lets the manifest route apply, which a worker would otherwise serve around.
 
 const smallPack = await page.evaluate(async (base) => {
   const manifest = await (await fetch(new URL("asset-manifest.json", base).toString())).json();
@@ -358,11 +359,22 @@ const smallPack = await page.evaluate(async (base) => {
   return { schema: manifest.schema, version: manifest.version, releaseSha: manifest.releaseSha, assets };
 }, baseUrl);
 
+const routeSmallPack = (target) => target.route("**/asset-manifest.json", (route) => route.fulfill({
+  status: 200,
+  contentType: "application/json; charset=utf-8",
+  body: JSON.stringify(smallPack),
+}));
+
+const IPHONE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+
 const entryContext = await browser.newContext({
   viewport: { width: 844, height: 390 },
   deviceScaleFactor: 3,
   hasTouch: true,
   serviceWorkers: "block",
+  // An iPhone user agent so the manual route is exercised: `beforeinstallprompt`
+  // never fires here, which is exactly the case that must not look broken.
+  userAgent: IPHONE_UA,
 });
 const entryPage = await entryContext.newPage();
 const entryAssetRequests = [];
@@ -370,119 +382,246 @@ entryPage.on("request", (request) => {
   const { pathname } = new URL(request.url());
   if (/\/(art|audio|icons)\//.test(pathname)) entryAssetRequests.push(pathname);
 });
-await entryContext.route("**/asset-manifest.json", (route) => route.fulfill({
-  status: 200,
-  contentType: "application/json; charset=utf-8",
-  body: JSON.stringify(smallPack),
-}));
+await routeSmallPack(entryContext);
 await entryPage.goto(baseUrl, { waitUntil: "domcontentloaded" });
 
-const downloadButton = entryPage.getByRole("button", { name: /ゲームをダウンロード|ダウンロードを再開/ });
-await downloadButton.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+const skipLabel = entryPage.getByRole("button", { name: "ブラウザで遊ぶ" });
+await skipLabel.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
 
-const offerCase = await entryPage.evaluate((expected) => {
+const offerCase = await entryPage.evaluate(() => {
   const gate = document.querySelector(".pwa-gate");
   const text = gate?.innerText ?? "";
+  const steps = [...document.querySelectorAll(".pwa-install-steps li")].map((li) => ({
+    number: li.querySelector(".pwa-step-number")?.textContent ?? "",
+    hasIcon: Boolean(li.querySelector(".pwa-step-icon svg")),
+    arrow: li.querySelector(".pwa-step-arrow")?.textContent ?? null,
+    text: li.querySelector(".pwa-step-text")?.textContent ?? "",
+  }));
   return {
     gateVisible: Boolean(gate),
     gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
-    mentionsCount: text.includes(`${expected}件`),
-    hasGuidance: Boolean(document.querySelector(".pwa-install-guidance")),
-    hasSkip: /ダウンロードせずに遊ぶ/.test(text),
-    text: text.slice(0, 200),
+    headline: document.querySelector(".pwa-gate-panel h2")?.textContent ?? "",
+    saysInstall: text.includes("西新世紀末物語をインストール"),
+    saysNoDownload: text.includes("ダウンロードしません"),
+    // No control on this screen may start a download.
+    downloadButtons: [...document.querySelectorAll(".pwa-gate button")]
+      .map((button) => button.textContent ?? "")
+      .filter((label) => /ダウンロードを開始|ダウンロードを再開/.test(label)),
+    steps,
   };
-}, smallPack.assets.length);
-record("a first visit is offered the download before the title", (
-  offerCase.gateVisible && !offerCase.gameMounted && offerCase.mentionsCount
+});
+record("a browser tab is invited to install before it reaches the title", (
+  offerCase.gateVisible && !offerCase.gameMounted && offerCase.saysInstall
 ), offerCase);
-record("the offer states counts from the manifest and explains home-screen install", (
-  offerCase.mentionsCount && offerCase.hasGuidance
-), { mentionsCount: offerCase.mentionsCount, hasGuidance: offerCase.hasGuidance });
+record("the invitation offers no way to start a download in the browser", (
+  offerCase.downloadButtons.length === 0 && offerCase.saysNoDownload
+), { downloadButtons: offerCase.downloadButtons, saysNoDownload: offerCase.saysNoDownload });
 
-// Nothing may be saved to the device before the player agrees, and the only
-// things fetched are the shell images the document itself declares for first
-// paint. Comparing against the document's own preload list rather than a fixed
-// number means any new unsolicited fetch fails this immediately.
+// The manual route is the one iOS players actually walk, so check it is a
+// numbered list, that each step carries the control's own label in brackets,
+// that the share step shows a glyph, and that it points at the right edge of
+// the screen.
+const stepText = offerCase.steps.map((step) => step.text);
+record("iOS gets numbered home-screen steps with the share glyph and bracketed labels", (
+  offerCase.steps.length === 3
+  && offerCase.steps.map((step) => step.number).join("") === "123"
+  && offerCase.steps.every((step) => /「.+」/.test(step.text))
+  && offerCase.steps[0].hasIcon
+  && offerCase.steps[0].arrow === "↓"
+  && /共有/.test(stepText[0])
+  && /ホーム画面に追加/.test(stepText[1])
+  && /追加/.test(stepText[2])
+), offerCase.steps);
+
+// Nothing may be saved to the device, and the only things fetched are the shell
+// images the document itself declares for first paint. Comparing against the
+// document's own preload list rather than a fixed number means any new
+// unsolicited fetch fails this immediately.
 const consentCase = await entryPage.evaluate(async () => {
   const preloads = [...document.querySelectorAll('link[rel="preload"]')]
     .map((link) => new URL(link.getAttribute("href"), location.href).pathname);
   const names = await caches.keys();
   const cache = names.includes("zombieee-assets-v1") ? await caches.open("zombieee-assets-v1") : null;
-  return { preloads, storedBeforeConsent: cache ? (await cache.keys()).length : 0 };
+  return { preloads, storedInBrowser: cache ? (await cache.keys()).length : 0 };
 });
 const unsolicited = entryAssetRequests.filter((path) => !consentCase.preloads.includes(path));
-record("no game data is saved before the download button is pressed", (
-  consentCase.storedBeforeConsent === 0
-), { storedBeforeConsent: consentCase.storedBeforeConsent });
-record("nothing beyond the document's own first-paint preloads is fetched before consent", (
+record("a browser tab saves no game data at all", (
+  consentCase.storedInBrowser === 0
+), { storedInBrowser: consentCase.storedInBrowser });
+record("nothing beyond the document's own first-paint preloads is fetched", (
   unsolicited.length === 0
 ), {
   unsolicited,
-  fetchedBeforeConsent: entryAssetRequests.length,
+  fetchedInBrowser: entryAssetRequests.length,
   declaredPreloads: consentCase.preloads.length,
 });
 
-// The entry screen carries the most content of any gate screen, so check the
-// shortest supported viewport: the primary action must stay reachable and the
+// The invitation carries the most content of any gate screen, so check the
+// shortest supported viewport: the decline action must stay reachable and the
 // page must never scroll sideways.
 await entryPage.setViewportSize({ width: 844, height: 340 });
 const compactCase = await entryPage.evaluate(() => {
   const button = [...document.querySelectorAll(".pwa-gate button")]
-    .find((candidate) => /ゲームをダウンロード|ダウンロードを再開/.test(candidate.textContent ?? ""));
+    .find((candidate) => /ブラウザで遊ぶ/.test(candidate.textContent ?? ""));
   const rect = button?.getBoundingClientRect();
   return {
     horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth
       || document.body.scrollWidth > window.innerWidth,
     buttonWidthWithinViewport: rect ? rect.right <= window.innerWidth + 1 && rect.left >= -1 : false,
     buttonTapHeight: rect ? Math.round(rect.height) : 0,
-    gateScrollable: (() => {
-      const gate = document.querySelector(".pwa-gate");
-      return gate ? gate.scrollHeight > gate.clientHeight : false;
-    })(),
+    stepsReadable: [...document.querySelectorAll(".pwa-install-steps li")]
+      .every((li) => li.getBoundingClientRect().right <= window.innerWidth + 1),
   };
 });
-record("the entry screen fits the shortest supported viewport without sideways scroll", (
+record("the invitation fits the shortest supported viewport without sideways scroll", (
   !compactCase.horizontalOverflow
   && compactCase.buttonWidthWithinViewport
   && compactCase.buttonTapHeight >= 40
+  && compactCase.stepsReadable
 ), compactCase);
 await entryPage.setViewportSize({ width: 844, height: 390 });
 
-await downloadButton.click();
-const launchButton = entryPage.getByRole("button", { name: "ゲームを起動" });
-await launchButton.waitFor({ state: "visible", timeout: 120_000 }).catch(() => {});
+// --- 11. Declining the invitation still plays -------------------------------
+//
+// The invitation is an offer, not a wall, and no particular browser is required
+// to get past it.
 
-const completionCase = await entryPage.evaluate(async () => {
+await skipLabel.click();
+await entryPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+const skipCase = await entryPage.evaluate(async () => {
+  const names = await caches.keys();
+  const cache = names.includes("zombieee-assets-v1") ? await caches.open("zombieee-assets-v1") : null;
+  return {
+    gateVisible: Boolean(document.querySelector(".pwa-gate")),
+    gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
+    storedAfterDecline: cache ? (await cache.keys()).length : 0,
+  };
+});
+record("declining the invitation still lets the player into the game", (
+  !skipCase.gateVisible && skipCase.gameMounted && skipCase.storedAfterDecline === 0
+), skipCase);
+
+// --- 12. データ管理 appears only where a player would look for it ------------
+//
+// It is a maintenance tool. On the title it belongs; over the map, the loadout,
+// dialogue, battle or the result it is developer furniture on a player's screen.
+
+const dataScreenCase = await entryPage.evaluate(() => {
+  const visible = () => [...document.querySelectorAll(".pwa-storage-toggle")].length > 0;
+  return { screen: document.documentElement.dataset.pwaScreen ?? null, toggleOnTitle: visible() };
+});
+record("データ管理 is offered on the title screen", (
+  dataScreenCase.screen === "title" && dataScreenCase.toggleOnTitle
+), dataScreenCase);
+
+// The save environment moved off the title and into this panel, which is the
+// only place it is now reachable.
+await entryPage.getByRole("button", { name: "データ管理" }).click();
+const panelCase = await entryPage.evaluate(() => {
+  const badge = document.querySelector(".pwa-storage .save-environment-badge");
+  return {
+    panelOpen: Boolean(document.querySelector(".pwa-storage")),
+    environmentKind: badge?.getAttribute("data-save-environment") ?? null,
+    environmentOrigin: badge?.getAttribute("data-save-origin") ?? null,
+    badgeOnTitle: Boolean(document.querySelector(".title-screen-v060 .save-environment-badge")),
+  };
+});
+record("the save environment is shown in データ管理 and no longer on the title", (
+  panelCase.panelOpen
+  && panelCase.environmentKind
+  && panelCase.environmentKind !== "checking"
+  && !panelCase.badgeOnTitle
+), panelCase);
+await entryPage.getByRole("button", { name: "閉じる" }).click();
+
+// Walk into the game and confirm the button is gone from a play screen.
+await entryPage.locator(".title-start").click();
+await entryPage.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+const playScreenCase = await entryPage.evaluate(() => ({
+  screen: document.documentElement.dataset.pwaScreen ?? null,
+  toggleVisible: [...document.querySelectorAll(".pwa-storage-toggle")].length > 0,
+}));
+record("データ管理 is hidden once the player leaves the title", (
+  playScreenCase.screen !== "title" && !playScreenCase.toggleVisible
+), playScreenCase);
+
+await entryContext.close();
+
+// --- 13. The first home-screen launch downloads, then hands over -------------
+//
+// A home-screen launch is where the pack belongs. `navigator.standalone` is the
+// flag iOS itself sets, and the runtime reads it, so setting it here exercises
+// the real branch rather than a mock of it.
+
+const appContext = await browser.newContext({
+  viewport: { width: 844, height: 390 },
+  deviceScaleFactor: 3,
+  hasTouch: true,
+  serviceWorkers: "block",
+  userAgent: IPHONE_UA,
+});
+await appContext.addInitScript(() => {
+  Object.defineProperty(window.navigator, "standalone", { value: true, configurable: true });
+});
+const appPage = await appContext.newPage();
+const appAssetRequests = [];
+appPage.on("request", (request) => {
+  const { pathname } = new URL(request.url());
+  if (/\/(art|audio|icons)\//.test(pathname)) appAssetRequests.push(pathname);
+});
+await routeSmallPack(appContext);
+await appPage.goto(baseUrl, { waitUntil: "domcontentloaded" });
+
+const startDownload = appPage.getByRole("button", { name: "ダウンロードを開始" });
+await startDownload.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+const firstRunCase = await appPage.evaluate((expected) => {
+  const text = document.querySelector(".pwa-gate")?.innerText ?? "";
+  return {
+    gateVisible: Boolean(document.querySelector(".pwa-gate")),
+    gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
+    mentionsCount: text.includes(`${expected}件`),
+    // The install invitation belongs to the browser, not to the installed app.
+    saysInstall: text.includes("西新世紀末物語をインストール"),
+  };
+}, smallPack.assets.length);
+record("the first home-screen launch asks to download, stating the manifest's counts", (
+  firstRunCase.gateVisible && !firstRunCase.gameMounted && firstRunCase.mentionsCount && !firstRunCase.saysInstall
+), firstRunCase);
+
+await startDownload.click();
+const beginButton = appPage.getByRole("button", { name: "ゲームを始める" });
+await beginButton.waitFor({ state: "visible", timeout: 120_000 }).catch(() => {});
+const completionCase = await appPage.evaluate(async () => {
   const cache = await caches.open("zombieee-assets-v1");
   return {
-    launchVisible: Boolean([...document.querySelectorAll("button")].find((b) => b.textContent?.includes("ゲームを起動"))),
+    beginVisible: Boolean([...document.querySelectorAll("button")].find((b) => b.textContent?.includes("ゲームを始める"))),
     storedEntries: (await cache.keys()).length,
     gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
   };
 });
-record("the download saves the manifest's assets and then offers to start", (
-  completionCase.launchVisible
+record("the download saves the manifest's assets and then offers to begin", (
+  completionCase.beginVisible
   && completionCase.storedEntries === smallPack.assets.length
   && !completionCase.gameMounted
 ), { ...completionCase, expected: smallPack.assets.length });
-record("pressing the download button actually fetches game data", (
-  entryAssetRequests.length > 0
-), { assetRequestsAfterConsent: entryAssetRequests.length });
+record("the first launch actually fetches game data", (
+  appAssetRequests.length > 0
+), { assetRequestsAfterConsent: appAssetRequests.length });
 
-await launchButton.click();
-await entryPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
-const launchCase = await entryPage.evaluate(() => ({
+await beginButton.click();
+await appPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+const launchCase = await appPage.evaluate(() => ({
   gateVisible: Boolean(document.querySelector(".pwa-gate")),
   gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
 }));
-record("starting the game leaves the entry screen and plays in the browser", (
+record("beginning the game leaves the gate and plays from the saved pack", (
   !launchCase.gateVisible && launchCase.gameMounted
 ), launchCase);
 
-// A device that already holds the pack must go straight to the game.
-await entryPage.reload({ waitUntil: "domcontentloaded" });
-await entryPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
-const revisitCase = await entryPage.evaluate(async () => {
+// A launch that already holds the pack must go straight to the game.
+await appPage.reload({ waitUntil: "domcontentloaded" });
+await appPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+const revisitCase = await appPage.evaluate(async () => {
   const names = await caches.keys();
   const cache = names.includes("zombieee-assets-v1") ? await caches.open("zombieee-assets-v1") : null;
   return {
@@ -497,47 +636,20 @@ const revisitCase = await entryPage.evaluate(async () => {
 });
 // Only meaningful while the device still holds the pack. Playwright's WebKit
 // contexts are ephemeral and drop Cache Storage across a reload, which leaves
-// the bucket present but empty; offering the download again is then the correct
-// behaviour, not a regression, so the rule is asserted against what the device
-// actually still has.
+// the bucket present but empty; asking again is then the correct behaviour, not
+// a regression, so the rule is asserted against what the device actually holds.
 const packSurvivedReload = revisitCase.storedAfterReload === smallPack.assets.length;
 record(
   packSurvivedReload
-    ? "a device that already holds the pack is never asked to download again"
-    : "a device whose browser evicted the pack is offered it again",
+    ? "an installed app that holds its pack is never asked to download again"
+    : "an installed app whose browser evicted the pack is asked again",
   packSurvivedReload
     ? (!revisitCase.gateVisible && revisitCase.gameMounted)
     : revisitCase.gateVisible,
   { ...revisitCase, packSurvivedReload, expected: smallPack.assets.length, engine: engineName },
 );
 
-await entryContext.close();
-
-// --- 11. Declining the download still plays ---------------------------------
-//
-// The entry screen is an offer, not a wall, and no particular browser is
-// required to get past it.
-
-const skipContext = await browser.newContext({ viewport: { width: 844, height: 390 }, serviceWorkers: "block" });
-const skipPage = await skipContext.newPage();
-await skipContext.route("**/asset-manifest.json", (route) => route.fulfill({
-  status: 200,
-  contentType: "application/json; charset=utf-8",
-  body: JSON.stringify(smallPack),
-}));
-await skipPage.goto(baseUrl, { waitUntil: "domcontentloaded" });
-const skipButton = skipPage.getByRole("button", { name: "ダウンロードせずに遊ぶ" });
-await skipButton.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
-await skipButton.click();
-await skipPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
-const skipCase = await skipPage.evaluate(() => ({
-  gateVisible: Boolean(document.querySelector(".pwa-gate")),
-  gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
-}));
-record("declining the download still lets the player into the game", (
-  !skipCase.gateVisible && skipCase.gameMounted
-), skipCase);
-await skipContext.close();
+await appContext.close();
 
 // --- Console hygiene --------------------------------------------------------
 

@@ -1,11 +1,15 @@
 "use client";
 
-// Version 0.9.6 PWA shell.
+// PWA shell.
 //
 // Wraps the game rather than editing it, so the 0.9.5.2 asset and audio
-// recovery paths stay exactly as they shipped. The gate only ever blocks play
-// on a home-screen launch that has not finished its first download; an ordinary
-// browser tab renders the game immediately, unchanged.
+// recovery paths stay exactly as they shipped.
+//
+// The gate stands in front of the title twice, and only twice: once in a browser
+// tab, to invite the player to install, and once on the first home-screen launch,
+// to download the pack into the app they will keep. Neither is a wall - the
+// invitation can be declined and the tab plays on - and an installed app that
+// already holds its pack sees neither.
 //
 // Recovery here never navigates and never reloads: a failed or interrupted
 // download is retried in place, which is the same rule Issue #113 established
@@ -24,9 +28,9 @@ import {
   canPlayOffline,
   createAssetFetcher,
   derivePwaPhase,
-  describeDownloadOffer,
   describeInstall,
   describeInstallGuidance,
+  describeInstallOffer,
   describeProgress,
   fetchPublishedManifest,
   isPwaSupported,
@@ -49,6 +53,79 @@ function readSafetyFromDocument() {
   };
 }
 
+/**
+ * The save environment the game has worked out for itself. It used to sit on the
+ * title screen, where an origin and a storage scope meant nothing to a player;
+ * it now lives in the data screen, and reaches this component through the same
+ * dataset bridge the activation-safety facts already use.
+ */
+function readSaveEnvironmentFromDocument() {
+  if (typeof document === "undefined") return null;
+  const data = document.documentElement.dataset;
+  if (!data.saveEnvironmentKind) return null;
+  return {
+    kind: data.saveEnvironmentKind,
+    label: data.saveEnvironmentLabel ?? "",
+    origin: data.saveEnvironmentOrigin ?? "",
+    storageScope: data.saveEnvironmentScope ?? "",
+    isolationNotice: data.saveEnvironmentIsolation ?? "",
+  };
+}
+
+/** Screens where a data-management entry point belongs. */
+const DATA_SCREENS = new Set(["title"]);
+
+const STEP_ICONS: Record<string, React.ReactNode> = {
+  // The iOS share glyph: a box with an arrow leaving the top of it.
+  share: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 3.5v10" />
+      <path d="M8.5 7 12 3.5 15.5 7" />
+      <path d="M6 11v8.5h12V11" />
+    </svg>
+  ),
+  add: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="4" y="4" width="16" height="16" rx="3.5" />
+      <path d="M12 8.5v7M8.5 12h7" />
+    </svg>
+  ),
+  confirm: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M5 12.5 10 17.5 19 7" />
+    </svg>
+  ),
+  menu: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  ),
+};
+
+const STEP_ARROWS: Record<string, string> = { down: "↓", up: "↑" };
+
+function InstallSteps({ steps }: { steps: Array<Record<string, unknown>> }) {
+  if (steps.length === 0) return null;
+  return (
+    <ol className="pwa-install-steps">
+      {steps.map((step, index) => {
+        const icon = typeof step.icon === "string" ? STEP_ICONS[step.icon] : null;
+        const arrow = typeof step.arrow === "string" ? STEP_ARROWS[step.arrow] : null;
+        return (
+          <li key={String(step.text)}>
+            <span className="pwa-step-number" aria-hidden="true">{index + 1}</span>
+            <span className="pwa-step-body">
+              {icon && <span className="pwa-step-icon">{icon}</span>}
+              <span className="pwa-step-text">{String(step.text)}</span>
+              {arrow && <span className="pwa-step-arrow" aria-hidden="true">{arrow}</span>}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 export function PwaGate({ children }: { children: React.ReactNode }) {
   const [supported, setSupported] = useState(false);
   const [standalone, setStandalone] = useState(false);
@@ -61,10 +138,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [showStorage, setShowStorage] = useState(false);
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [safety, setSafety] = useState<Record<string, unknown>>({});
+  const [saveEnvironment, setSaveEnvironment] = useState<Record<string, string> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [manifestUnreachable, setManifestUnreachable] = useState(false);
-  // The player chose to play without saving the pack. Remembered for the visit
-  // only, so the offer is never nagged twice in one session.
+  // The player chose to keep playing in the browser instead of installing.
+  // Remembered for the visit only, so the invitation is never nagged twice in
+  // one session.
   const [offerDismissed, setOfferDismissed] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<{ prompt: () => Promise<unknown> } | null>(null);
   const [installPromptUsed, setInstallPromptUsed] = useState(false);
@@ -136,9 +215,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       setStoredHashes(await store.storedHashes());
       setStorage(await import("./pwaAssetStore.js").then((m) => m.estimateStorage(window.navigator)));
 
-      // Offline, or the release metadata is unreachable: play continues from
-      // whatever is already stored and no update is offered. A first run with
-      // nothing stored gets an explicit retry instead of a blank panel.
+      // Boot is complete once the local facts are known. The published manifest
+      // is a network round trip, and waiting for it here would hold an installed
+      // app's title screen hostage to the connection for as long as the fetch
+      // takes - the exact opposite of what an offline-capable app should do. It
+      // arrives on its own and fills in the size line when it does.
+      if (!cancelled) setBooted(true);
       if (!cancelled) await loadPublishedManifest();
     })().catch((cause) => {
       if (!cancelled) setError(String(cause?.message ?? cause));
@@ -165,13 +247,19 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // The game publishes activation-safety facts on the root element.
+  // The game publishes activation-safety facts, and the save environment, on the
+  // root element.
   useEffect(() => {
-    const read = () => setSafety(readSafetyFromDocument());
+    const read = () => {
+      setSafety(readSafetyFromDocument());
+      setSaveEnvironment(readSaveEnvironmentFromDocument());
+    };
     read();
     const observer = new MutationObserver(read);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: [
       "data-pwa-screen", "data-pwa-battle-active", "data-pwa-result-saving", "data-pwa-save-mutation-pending",
+      "data-save-environment-kind", "data-save-environment-origin", "data-save-environment-scope",
+      "data-save-environment-label", "data-save-environment-isolation",
     ] });
     return () => observer.disconnect();
   }, []);
@@ -255,7 +343,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const playable = canPlayOffline({ phase, installPlan });
   const installCopy = describeInstall(installPlan, storage);
   const updateCopy = updateEvaluation ? describeUpdate(updateEvaluation, { formatBytes }) : null;
-  const offerCopy = describeDownloadOffer(installPlan, targetManifest, storage);
+  const offerCopy = describeInstallOffer(targetManifest, { promptAvailable: Boolean(installPrompt) });
   const guidance = describeInstallGuidance({
     standalone,
     promptAvailable: Boolean(installPrompt),
@@ -269,22 +357,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     void Promise.resolve(prompt.prompt()).catch(() => {});
   }, [installPrompt]);
 
-  // A fully installed app, or a tab whose player chose to skip, renders the game
-  // untouched. The download offer and its progress sit in front of the title so
-  // the entry point is the first thing a new visitor sees.
+  // A fully installed app, or a tab whose player chose to keep browsing, renders
+  // the game untouched. The install invitation and the first-run download sit in
+  // front of the title so they are the first thing a new visitor sees.
   //
-  // While the release metadata is still arriving there is nothing to offer yet.
-  // Holding the title back for that moment avoids showing the title and then
-  // yanking it away when the offer resolves a beat later.
-  //
-  // `supported` is deliberately not part of this. It is only known once the boot
-  // effect has run, so including it left the very first render unblocked, and
-  // the game mounted and fetched title art and music before the player had
-  // agreed to download anything. A device that already holds the pack clears
-  // this as soon as the worker reports its manifest, which is a local lookup.
-  const settling = !booted && !standalone && !installedManifest;
+  // `settling` covers the gap before the boot effect has established what this
+  // device is. Without it the very first render is unblocked, the game mounts,
+  // and title art and music are fetched before the player has been asked
+  // anything - which is precisely what a browser tab must not do here. It clears
+  // on local facts alone, so an installed app is not held up by the network.
+  const settling = !booted;
   const blocking = settling
-    || phase === "download-offer"
+    || phase === "install-offer"
     || phase === "download-complete"
     || (!playable && (phase === "install-required" || phase === "installing"));
 
@@ -319,33 +403,43 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               <p className="pwa-hint" role="status">配信データを確認しています…</p>
             )}
 
-            {!settling && phase === "download-offer" && offerCopy && (
+            {!settling && phase === "install-offer" && (
               <>
-                <h2>{offerCopy.headline}</h2>
-                <ul>{offerCopy.lines.map((line) => <li key={line}>{line}</li>)}</ul>
-                {offerCopy.warning && <p className="pwa-warning" role="alert">{offerCopy.warning}</p>}
-                <p className="pwa-hint">{offerCopy.wifiHint}</p>
-                <button type="button" className="pwa-primary" onClick={startInstall}>
-                  {offerCopy.actionLabel}
-                </button>
+                <h2>{offerCopy?.headline ?? "西新世紀末物語をインストール"}</h2>
+                <p>{offerCopy?.body ?? "ホーム画面に追加すると、アプリのように全画面で起動できます。"}</p>
+                {offerCopy?.sizeLine && <p className="pwa-hint">{offerCopy.sizeLine}</p>}
+                <p className="pwa-hint">{offerCopy?.noDownloadHint ?? "この画面ではゲームデータをダウンロードしません。"}</p>
+
+                {guidance?.mode === "prompt" && !installPromptUsed && (
+                  <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>
+                    {offerCopy?.actionLabel ?? guidance.actionLabel}
+                  </button>
+                )}
+
+                {/*
+                  The written route stands in whenever there is no button to
+                  press - either because the browser never offered one, or
+                  because its one-shot prompt has already been used and possibly
+                  dismissed. Without this, dismissing the prompt would leave the
+                  player no way to install at all.
+                */}
+                {guidance && (guidance.mode === "manual" || installPromptUsed) && (
+                  <div className="pwa-install-guidance" data-install-platform={guidance.platform}>
+                    <h3>ホーム画面に追加する手順</h3>
+                    {installPromptUsed && guidance.mode === "prompt" && (
+                      <p className="pwa-hint">インストール画面が出ないときは、この手順でも追加できます。</p>
+                    )}
+                    {!installPromptUsed && <p className="pwa-hint">{guidance.body}</p>}
+                    <InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} />
+                  </div>
+                )}
+
                 <div className="pwa-actions pwa-secondary-actions">
                   <button type="button" onClick={() => setOfferDismissed(true)}>
-                    {offerCopy.skipLabel}
+                    {offerCopy?.skipLabel ?? "ブラウザで遊ぶ"}
                   </button>
                 </div>
-                <p className="pwa-hint">{offerCopy.skipHint}</p>
-                {guidance && (
-                  <aside className="pwa-install-guidance">
-                    <h3>{guidance.headline}</h3>
-                    <p className="pwa-hint">{guidance.body}</p>
-                    {guidance.mode === "prompt" && !installPromptUsed && (
-                      <button type="button" onClick={acceptInstallPrompt}>{guidance.actionLabel}</button>
-                    )}
-                    {guidance.steps.length > 0 && (
-                      <ol>{guidance.steps.map((step) => <li key={step}>{step}</li>)}</ol>
-                    )}
-                  </aside>
-                )}
+                <p className="pwa-hint">{offerCopy?.skipHint ?? "インストールせずに遊ぶこともできます。"}</p>
               </>
             )}
 
@@ -359,21 +453,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                       .reduce((sum, asset) => sum + (Number(asset.bytes) || 0), 0),
                   )}を保存しました
                 </p>
+                <p className="pwa-hint">次回からはダウンロードなしで起動できます。</p>
                 <button type="button" className="pwa-primary" onClick={() => setDownloadState(null)}>
-                  ゲームを起動
+                  ゲームを始める
                 </button>
-                {guidance && (
-                  <aside className="pwa-install-guidance">
-                    <h3>{guidance.headline}</h3>
-                    <p className="pwa-hint">{guidance.body}</p>
-                    {guidance.mode === "prompt" && !installPromptUsed && (
-                      <button type="button" onClick={acceptInstallPrompt}>{guidance.actionLabel}</button>
-                    )}
-                    {guidance.steps.length > 0 && (
-                      <ol>{guidance.steps.map((step) => <li key={step}>{step}</li>)}</ol>
-                    )}
-                  </aside>
-                )}
               </>
             )}
 
@@ -462,7 +545,14 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         </aside>
       )}
 
-      {!blocking && supported && standalone && (
+      {/*
+        Data management is a maintenance tool, not part of playing. It used to
+        sit on every screen, which put a developer-facing button over the map,
+        the loadout, dialogue, battle and the result. It now appears only where
+        a player would go looking for it, and stays put while its own panel is
+        open so the close button never moves out from under the cursor.
+      */}
+      {!blocking && supported && (DATA_SCREENS.has(String(safety.screen ?? "title")) || showStorage) && (
         <>
           <button type="button" className="pwa-storage-toggle" onClick={() => setShowStorage((open) => !open)}>
             データ管理
@@ -478,6 +568,17 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                   <dd>{installPlan ? `${installPlan.pendingCount}件` : "-"}</dd>
                 </div>
               </dl>
+              {saveEnvironment && (
+                <aside
+                  className="save-environment-badge"
+                  data-save-environment={saveEnvironment.kind}
+                  data-save-origin={saveEnvironment.origin}
+                  aria-label="セーブ保存環境"
+                >
+                  <span><b>{saveEnvironment.label}</b><code>{saveEnvironment.origin}</code></span>
+                  <small>{saveEnvironment.storageScope}　{saveEnvironment.isolationNotice}</small>
+                </aside>
+              )}
               <p className="pwa-hint">アセットの削除はセーブデータに影響しません。</p>
               <div className="pwa-actions">
                 <button type="button" onClick={() => { void clearAssets(); }}>アセットを削除</button>
