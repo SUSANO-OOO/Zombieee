@@ -25,13 +25,16 @@ import {
 import { createAssetStore } from "./pwaAssetStore.js";
 import { createAssetDownloadSession } from "./pwaDownloadSession.js";
 import {
+  activateWaitingWorker,
   canPlayOffline,
   createAssetFetcher,
   derivePwaPhase,
+  describeFailureDiagnostics,
   describeInstall,
   describeInstallGuidance,
   describeInstallOffer,
   describeProgress,
+  formatFailureDiagnostics,
   fetchPublishedManifest,
   isPwaSupported,
   isStandaloneDisplay,
@@ -131,6 +134,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [standalone, setStandalone] = useState(false);
   const [installedManifest, setInstalledManifest] = useState<Manifest | null>(null);
   const [publishedManifest, setPublishedManifest] = useState<Manifest | null>(null);
+  // The rollback generation, kept so the data screen can account for every byte
+  // on the device rather than only the ones the active version uses.
+  const [previousManifest, setPreviousManifest] = useState<Manifest | null>(null);
+  const [registrationScope, setRegistrationScope] = useState<string | null>(null);
   const [storedHashes, setStoredHashes] = useState<Set<string>>(() => new Set());
   const [progress, setProgress] = useState<ReturnType<typeof describeProgress> | null>(null);
   const [downloadState, setDownloadState] = useState<string | null>(null);
@@ -145,6 +152,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // Remembered for the visit only, so the invitation is never nagged twice in
   // one session.
   const [offerDismissed, setOfferDismissed] = useState(false);
+  // The last failure, kept until the next success or an explicit dismissal, so
+  // a player can still read it after they have looked away from the screen.
+  const [diagnostics, setDiagnostics] = useState<ReturnType<typeof describeFailureDiagnostics> | null>(null);
+  const [stalledSince, setStalledSince] = useState<number | null>(null);
+  const [stalledSeconds, setStalledSeconds] = useState(0);
+  const [copied, setCopied] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<{ prompt: () => Promise<unknown> } | null>(null);
   const [installPromptUsed, setInstallPromptUsed] = useState(false);
   const [booted, setBooted] = useState(false);
@@ -156,6 +169,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const storeRef = useRef<ReturnType<typeof createAssetStore> | null>(null);
   const sessionRef = useRef<ReturnType<typeof createAssetDownloadSession> | null>(null);
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
+  // Read inside the download callback, which must not be rebuilt every time one
+  // of these changes or an in-flight session would be replaced mid-transfer.
+  const installPlanRef = useRef<{ pendingCount: number; pendingBytes: number; satisfiedBytes?: number } | null>(null);
+  const installedManifestRef = useRef<Manifest | null>(null);
+  const storedHashesRef = useRef<Set<string>>(new Set());
 
   const refreshStored = useCallback(async () => {
     const store = storeRef.current;
@@ -211,6 +229,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       if (Array.isArray(state?.active?.assets) && state.active.assets.length > 0) {
         setInstalledManifest(state.active as Manifest);
       }
+      if (Array.isArray(state?.previous?.assets) && state.previous.assets.length > 0) {
+        setPreviousManifest(state.previous as Manifest);
+      }
+      setRegistrationScope(registrationRef.current?.scope ?? null);
 
       setStoredHashes(await store.storedHashes());
       setStorage(await import("./pwaAssetStore.js").then((m) => m.estimateStorage(window.navigator)));
@@ -229,6 +251,21 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     });
     return () => { cancelled = true; };
   }, [baseUrl, loadPublishedManifest]);
+
+  // How long the counts have stood still. A stalled transfer produces no
+  // progress callbacks by definition, so the only way to notice one is to look
+  // at the clock on our own schedule rather than waiting to be told.
+  useEffect(() => {
+    const running = downloadState === "running" || downloadState === "paused";
+    if (stalledSince == null || !running) return undefined;
+    const timer = setInterval(
+      () => setStalledSeconds(Math.round((Date.now() - stalledSince) / 1000)),
+      1000,
+    );
+    // Cleared on the way out rather than on the way in, so the effect never
+    // sets state during the render that scheduled it.
+    return () => { clearInterval(timer); setStalledSeconds(0); };
+  }, [downloadState, stalledSince]);
 
   // Chromium fires this instead of showing its own install affordance. Capturing
   // it lets the page offer a real install button; browsers that never fire it
@@ -282,6 +319,15 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     return evaluateUpdate({ installedManifest, publishedManifest, storedHashes });
   }, [installedManifest, publishedManifest, storedHashes]);
 
+  // Mirrored into refs so the download callback can read the current values
+  // without listing them as dependencies - rebuilding that callback mid-run
+  // would swap the session out from under an in-flight transfer.
+  useEffect(() => {
+    installPlanRef.current = installPlan;
+    installedManifestRef.current = installedManifest;
+    storedHashesRef.current = storedHashes;
+  }, [installPlan, installedManifest, storedHashes]);
+
   const phase = derivePwaPhase({
     supported,
     standalone,
@@ -294,51 +340,161 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
   const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" });
 
-  const runDownload = useCallback(async (assets: Array<Record<string, unknown>>, manifest: Manifest) => {
+  const runDownload = useCallback(async (
+    assets: Array<Record<string, unknown>>,
+    manifest: Manifest,
+    kind: "install" | "repair" | "update",
+  ) => {
     const store = storeRef.current;
     if (!store) return;
     setError(null);
+    setDiagnostics(null);
+    const startedAt = Date.now();
+    let lastProgressAt = startedAt;
+    let lastCompleted = -1;
+
+    // An update must not run under a worker that answers asset requests from
+    // the generation it is replacing. Promoting the waiting worker first is what
+    // makes the download able to reach the network at all.
+    let serviceWorkerState: string | null = null;
+    if (kind === "update") {
+      serviceWorkerState = await activateWaitingWorker(registrationRef.current, { windowRef: window });
+    }
+
     const session = createAssetDownloadSession({
       assets,
       store,
       fetchAsset: createAssetFetcher({ baseUrl }),
       onProgress: (snapshot) => {
+        if (snapshot.completedCount !== lastCompleted) {
+          lastCompleted = snapshot.completedCount;
+          lastProgressAt = Date.now();
+        }
         setDownloadState(snapshot.state);
         setProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));
+        setStalledSince(lastProgressAt);
       },
     });
     sessionRef.current = session;
-    const final = await session.start();
+
+    const recordDiagnostics = (
+      failures: Array<Record<string, unknown>>,
+      overrides: Record<string, unknown> = {},
+    ) => {
+      const plan = installPlanRef.current;
+      setDiagnostics(describeFailureDiagnostics({
+        kind,
+        fromVersion: installedManifestRef.current?.version ?? null,
+        toVersion: manifest.version,
+        releaseSha: manifest.releaseSha,
+        failures,
+        startedAt,
+        lastProgressAt,
+        origin: window.location.origin,
+        scope: registrationRef.current?.scope ?? baseUrl,
+        standalone: isStandaloneDisplay(window),
+        storedCount: storedHashesRef.current.size,
+        storedBytes: plan?.satisfiedBytes ?? 0,
+        pendingCount: plan?.pendingCount ?? 0,
+        pendingBytes: plan?.pendingBytes ?? 0,
+        serviceWorkerState,
+        ...overrides,
+      }));
+    };
+
+    let final;
+    try {
+      final = await session.start();
+    } catch (cause) {
+      // A rejection here used to escape into an unhandled promise and leave the
+      // screen exactly as it was, which read as "nothing happened".
+      await refreshStored();
+      recordDiagnostics([{ path: "(session)", reason: "unknown", status: 0, attempts: 1 }]);
+      setError(String((cause as Error)?.message ?? cause));
+      setDownloadState("failed");
+      return;
+    }
     await refreshStored();
 
-    if (final.state === "complete") {
-      // Only a fully verified pack becomes the active generation.
-      await requestFromServiceWorker(registrationRef.current, { type: "pwa:commit-manifest", manifest });
-      // Ask the browser to stop treating the pack as evictable cache, so a
-      // player who has finished the download is not asked to repeat it. Best
-      // effort: a refusal changes nothing else.
-      await import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator));
-      setInstalledManifest(manifest);
-      setUpdateDismissed(false);
+    if (final.state !== "complete") {
+      recordDiagnostics(session.getSnapshot().failures ?? []);
+      setDownloadState(final.state);
+      return;
     }
+
+    // Only a fully verified pack becomes the active generation, and only if the
+    // worker confirms it. A commit that silently failed used to leave the app
+    // believing it had updated while the next launch disagreed.
+    // With no worker registered there is no generation to publish to, and the
+    // verified bytes in Cache Storage are the whole of what this device can
+    // hold. Reporting that as a commit failure would be wrong.
+    const registration = registrationRef.current;
+    const committed = registration
+      ? await requestFromServiceWorker(registration, { type: "pwa:commit-manifest", manifest })
+      : null;
+    // A worker that is registered and does not answer is a real failure: the
+    // bytes are on the device but nothing points at them, so the next launch
+    // would offer the same update again - silently, and forever.
+    if (registration && committed?.type !== "pwa:committed") {
+      recordDiagnostics(
+        [{ path: "(manifest)", reason: "manifest-commit", status: 0, attempts: 1 }],
+        { serviceWorkerState: serviceWorkerState ?? "commit-unconfirmed" },
+      );
+      setDownloadState("commit-failed");
+      return;
+    }
+
+    // Ask the browser to stop treating the pack as evictable cache, so a player
+    // who has finished the download is not asked to repeat it. Best effort: a
+    // refusal changes nothing else.
+    await import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator));
+    setInstalledManifest(manifest);
+    setUpdateDismissed(false);
+    setDiagnostics(null);
     setDownloadState(final.state);
   }, [baseUrl, refreshStored]);
 
   const startInstall = useCallback(() => {
     if (!targetManifest || !installPlan) return;
-    void runDownload(installPlan.pending, targetManifest);
-  }, [installPlan, runDownload, targetManifest]);
+    void runDownload(installPlan.pending, targetManifest, installedManifest ? "repair" : "install");
+  }, [installPlan, installedManifest, runDownload, targetManifest]);
 
   const startUpdate = useCallback(() => {
     if (!publishedManifest || !updateEvaluation?.available) return;
-    void runDownload(updateEvaluation.diff.downloadable, publishedManifest);
+    void runDownload(updateEvaluation.diff.downloadable, publishedManifest, "update");
   }, [publishedManifest, runDownload, updateEvaluation]);
+
+  /** Retries only what did not finish, never what already verified. */
+  const retryFailed = useCallback(() => {
+    void (async () => {
+      const session = sessionRef.current;
+      if (!session) return;
+      setDiagnostics(null);
+      const final = await session.retryFailed();
+      await refreshStored();
+      setDownloadState(final?.state ?? session.getSnapshot().state);
+    })();
+  }, [refreshStored]);
 
   const clearAssets = useCallback(async () => {
     await storeRef.current?.clearAssets();
     await requestFromServiceWorker(registrationRef.current, { type: "pwa:clear-assets" });
     await refreshStored();
   }, [refreshStored]);
+
+  // Bytes held that neither the active nor the rollback generation references.
+  // Null until both manifests are known, because guessing from a partial view
+  // would report every asset of an unknown generation as garbage.
+  const orphanCount = useMemo(() => {
+    if (!installedManifest) return null;
+    const retained = new Set<string>();
+    for (const manifest of [installedManifest, previousManifest]) {
+      for (const asset of (manifest?.assets ?? []) as Array<{ hash: string }>) retained.add(asset.hash);
+    }
+    let orphans = 0;
+    for (const hash of storedHashes) if (!retained.has(hash)) orphans += 1;
+    return orphans;
+  }, [installedManifest, previousManifest, storedHashes]);
 
   const playable = canPlayOffline({ phase, installPlan });
   const installCopy = describeInstall(installPlan, storage);
@@ -349,6 +505,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     promptAvailable: Boolean(installPrompt),
     userAgent: typeof navigator === "undefined" ? "" : navigator.userAgent,
   });
+
+  const copyDiagnostics = useCallback(() => {
+    const text = formatFailureDiagnostics(diagnostics);
+    if (!text) return;
+    void (async () => {
+      try {
+        await navigator.clipboard?.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2400);
+      } catch { /* a refused clipboard is not worth an error panel */ }
+    })();
+  }, [diagnostics]);
 
   const acceptInstallPrompt = useCallback(() => {
     const prompt = installPrompt;
@@ -370,6 +538,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const blocking = settling
     || phase === "install-offer"
     || phase === "download-complete"
+    || phase === "download-incomplete"
     || (!playable && (phase === "install-required" || phase === "installing"));
 
   return (
@@ -478,6 +647,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                 <p className="pwa-progress-line">{progress.countLine}・{progress.byteLine}</p>
                 {progress.categoryLine && <p className="pwa-hint">{progress.categoryLine}</p>}
                 {progress.failedLine && <p className="pwa-warning">{progress.failedLine}</p>}
+                {/*
+                  Large assets take a long time to arrive, verify and store, and
+                  during that the counts do not move. Saying so is the difference
+                  between "working" and "frozen"; without it the only honest
+                  reading of a still screen is that the app has died.
+                */}
+                {stalledSeconds >= 12 && (
+                  <p className="pwa-hint" role="status">
+                    大きなデータを取得・検証中です（最終進捗から{stalledSeconds}秒）。
+                    中断しても続きから再開できます。
+                  </p>
+                )}
                 <div className="pwa-progress-track" role="progressbar"
                   aria-valuenow={progress.percent} aria-valuemin={0} aria-valuemax={100}>
                   <div className="pwa-progress-fill" style={{ width: `${progress.percent}%` }} />
@@ -494,21 +675,45 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               </>
             )}
 
-            {(downloadState === "failed" || downloadState === "cancelled") && (
-              <div className="pwa-actions">
-                <p className="pwa-warning" role="alert">
-                  {downloadState === "failed" ? "一部のデータを取得できませんでした" : "ダウンロードを中断しました"}
-                  ・完了済みのデータは保持しています
+            {phase === "download-incomplete" && (
+              <>
+                <h2>
+                  {downloadState === "cancelled" ? "ダウンロードを中断しました"
+                    : downloadState === "commit-failed" ? "保存はできましたが、切り替えに失敗しました"
+                      : "データを取得できませんでした"}
+                </h2>
+                <p className="pwa-hint">
+                  {downloadState === "commit-failed"
+                    ? "取得したデータは端末に残っています。もう一度お試しください。"
+                    : "完了済みのデータは保持しています。失敗した分だけ取り直せます。"}
                 </p>
-                <button type="button" className="pwa-primary" onClick={() => {
-                  // Retries in place. No navigation, no reload.
-                  void (async () => {
-                    await sessionRef.current?.retryFailed();
-                    await refreshStored();
-                    setDownloadState(sessionRef.current?.getSnapshot().state ?? null);
-                  })();
-                }}>失敗した項目だけ再試行</button>
-              </div>
+                {diagnostics && diagnostics.failures.length > 0 && (
+                  <ul className="pwa-failure-list">
+                    {diagnostics.failures.slice(0, 6).map((failure) => (
+                      <li key={failure.path}>
+                        <code>{failure.path}</code>
+                        <span>{failure.label}{failure.status ? `／HTTP ${failure.status}` : ""}・{failure.attempts}回試行</span>
+                      </li>
+                    ))}
+                    {diagnostics.failures.length > 6 && (
+                      <li><span>ほか {diagnostics.failures.length - 6} 件</span></li>
+                    )}
+                  </ul>
+                )}
+                <div className="pwa-actions">
+                  <button type="button" className="pwa-primary" onClick={retryFailed}>
+                    失敗した項目だけ再試行
+                  </button>
+                  <button type="button" onClick={copyDiagnostics}>
+                    {copied ? "コピーしました" : "診断情報をコピー"}
+                  </button>
+                </div>
+                <div className="pwa-actions pwa-secondary-actions">
+                  {/* The old version keeps working while an update is unresolved. */}
+                  <button type="button" onClick={() => setDownloadState(null)}>あとにする</button>
+                </div>
+                {error && <p className="pwa-warning" role="alert">{error}</p>}
+              </>
             )}
 
             {error && <p className="pwa-warning" role="alert">{error}</p>}
@@ -561,13 +766,46 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
             <aside className="pwa-notice pwa-storage" role="dialog" aria-label="データ管理">
               <dl>
                 <div><dt>現在のVersion</dt><dd>{installedManifest?.version ?? "未インストール"}</dd></div>
+                <div><dt>ひとつ前のVersion</dt><dd>{previousManifest?.version ?? "-"}</dd></div>
                 <div><dt>release SHA</dt><dd>{installedManifest?.releaseSha ?? "-"}</dd></div>
+                <div><dt>origin</dt><dd>{typeof window === "undefined" ? "-" : window.location.origin}</dd></div>
+                <div><dt>scope</dt><dd>{registrationScope ?? baseUrl}</dd></div>
                 <div><dt>保存済みアセット</dt><dd>{storedHashes.size}件</dd></div>
                 <div>
+                  <dt>このVersionが使用中</dt>
+                  <dd>{installPlan ? `${installPlan.satisfied.length}件・${formatBytes(installPlan.satisfiedBytes ?? 0)}` : "-"}</dd>
+                </div>
+                <div>
                   <dt>不足・破損</dt>
-                  <dd>{installPlan ? `${installPlan.pendingCount}件` : "-"}</dd>
+                  <dd>{installPlan ? `${installPlan.pendingCount}件・${formatBytes(installPlan.pendingBytes)}` : "-"}</dd>
+                </div>
+                <div>
+                  {/*
+                    Bytes held that no retained generation references. Kept
+                    visible rather than swept silently: a number a player can
+                    watch is what tells us whether repeated version testing is
+                    accumulating anything, and clearing the cache wholesale is
+                    never the answer we want them reaching for.
+                  */}
+                  <dt>参照されていないデータ</dt>
+                  <dd>{orphanCount == null ? "確認中" : `${orphanCount}件`}</dd>
                 </div>
               </dl>
+
+              {diagnostics && (
+                <div className="pwa-failure-summary">
+                  <p className="pwa-warning">
+                    直近の失敗：{diagnostics.kind}／{diagnostics.failureCount}件
+                    {diagnostics.failures[0] ? `／${diagnostics.failures[0].reason}` : ""}
+                  </p>
+                  <div className="pwa-actions">
+                    <button type="button" onClick={copyDiagnostics}>
+                      {copied ? "コピーしました" : "診断情報をコピー"}
+                    </button>
+                    <button type="button" onClick={() => setDiagnostics(null)}>診断を消去</button>
+                  </div>
+                </div>
+              )}
               {saveEnvironment && (
                 <aside
                   className="save-environment-badge"

@@ -313,6 +313,25 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // A download that is going to verify what it receives must reach the network.
+  //
+  // Assets are served cache-first keyed by the ACTIVE generation's hash, which
+  // is correct for playing and catastrophic for updating: an update fetching a
+  // path whose content changed was handed back the very bytes it was trying to
+  // replace, hashed them, got the old hash, and failed. It never touched the
+  // network, so it failed instantly and identically every time - which is
+  // exactly what an update that "flashes and comes back" looks like. Every
+  // asset whose path stayed the same while its content changed was therefore
+  // impossible to update.
+  //
+  // `no-store` is the download session's own signal (createAssetFetcher sets
+  // it) and nothing that serves gameplay uses it, so this cannot make ordinary
+  // play go to the network.
+  if (request.cache === "no-store") {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   event.respondWith((async () => {
     const index = await assetIndex();
     const asset = index?.get(withoutQuery);
