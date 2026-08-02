@@ -145,8 +145,14 @@ function validateAsset(asset, index, errors) {
     if (!Number.isInteger(asset.bundleBytes) || asset.bundleBytes !== asset.bytes) {
       errors.push(`${prefix}.bundleBytes must equal bytes for a bundled asset`);
     }
-  } else if (asset.bundleOffset !== undefined || asset.bundleBytes !== undefined) {
-    errors.push(`${prefix}.bundleOffset and bundleBytes require bundlePath`);
+    if (!Number.isInteger(asset.bundleLength) || asset.bundleLength <= 0) {
+      errors.push(`${prefix}.bundleLength must be a positive integer for a bundled asset`);
+    } else if (Number.isInteger(asset.bundleOffset) && Number.isInteger(asset.bundleBytes)
+      && asset.bundleOffset + asset.bundleBytes > asset.bundleLength) {
+      errors.push(`${prefix} slice must fit inside bundleLength`);
+    }
+  } else if (asset.bundleOffset !== undefined || asset.bundleBytes !== undefined || asset.bundleLength !== undefined) {
+    errors.push(`${prefix}.bundleOffset, bundleBytes, and bundleLength require bundlePath`);
   }
   if (asset.category === "audio") {
     if (!channelSet.has(asset.audioChannel)) errors.push(`${prefix}.audioChannel must be bgm, se, or voice`);

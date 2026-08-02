@@ -5,10 +5,9 @@
 // 127.0.0.1 is a secure context, so worker registration behaves as it does over
 // HTTPS on a device.
 //
-// The full production pack is deliberately NOT downloaded here: these cases prove
-// the mechanism (verification, dedup, offline serving, diff updates, rollback)
-// over small synthetic manifests, and separately prove the real shipped
-// manifest is valid and complete. Bulk transfer belongs to the physical gate.
+// Synthetic manifests cover focused UI and differential-update branches. The
+// first installed-app case below downloads the complete shipped pack and waits
+// for the worker commit, so no game begins from a staged or on-demand subset.
 
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -145,6 +144,7 @@ const shipped = await page.evaluate(async (base) => {
     version: manifest.version,
     count: manifest.assets.length,
     bytes: manifest.assets.reduce((sum, asset) => sum + asset.bytes, 0),
+    distinctHashCount: new Set(manifest.assets.map((asset) => asset.hash)).size,
     categories,
     allHashed: manifest.assets.every((asset) => /^sha256-[0-9a-f]{64}$/.test(asset.hash)),
     noReference: manifest.assets.every((asset) => !asset.path.includes("/reference/")),
@@ -551,17 +551,19 @@ record("データ管理 is hidden once the player leaves the title", (
 
 await entryContext.close();
 
-// --- 13. The first home-screen launch downloads, then hands over -------------
+// --- 13. The first home-screen launch downloads the complete pack, then hands over
 //
-// A home-screen launch is where the pack belongs. `navigator.standalone` is the
-// flag iOS itself sets, and the runtime reads it, so setting it here exercises
-// the real branch rather than a mock of it.
+// A home-screen launch is where the complete pack belongs. `navigator.standalone`
+// is the flag iOS itself sets, and the runtime reads it, so setting it here
+// exercises the real branch rather than a mock of it. The active worker is kept
+// on: success requires its pwa:commit-manifest acknowledgement before the game
+// can start, and the content-addressed entry count therefore differs from the
+// manifest path count only for verified hash aliases.
 
 const appContext = await browser.newContext({
   viewport: { width: 844, height: 390 },
   deviceScaleFactor: 3,
   hasTouch: true,
-  serviceWorkers: "block",
   userAgent: IPHONE_UA,
 });
 await appContext.addInitScript(() => {
@@ -573,7 +575,6 @@ appPage.on("request", (request) => {
   const { pathname } = new URL(request.url());
   if (/\/(art|audio|icons)\//.test(pathname)) appAssetRequests.push(pathname);
 });
-await routeSmallPack(appContext);
 await appPage.goto(baseUrl, { waitUntil: "domcontentloaded" });
 
 const startDownload = appPage.getByRole("button", { name: "ダウンロードを開始" });
@@ -587,7 +588,7 @@ const firstRunCase = await appPage.evaluate((expected) => {
     // The install invitation belongs to the browser, not to the installed app.
     saysInstall: text.includes("西新世紀末物語をインストール"),
   };
-}, smallPack.assets.length);
+}, shipped.count);
 record("the first home-screen launch asks to download, stating the manifest's counts", (
   firstRunCase.gateVisible && !firstRunCase.gameMounted && firstRunCase.mentionsCount && !firstRunCase.saysInstall
 ), firstRunCase);
@@ -603,14 +604,75 @@ const completionCase = await appPage.evaluate(async () => {
     gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
   };
 });
+const shippedDistinctHashCount = shipped.distinctHashCount;
 record("the download saves the manifest's assets and then offers to begin", (
   completionCase.beginVisible
-  && completionCase.storedEntries === smallPack.assets.length
+  && completionCase.storedEntries === shippedDistinctHashCount
   && !completionCase.gameMounted
-), { ...completionCase, expected: smallPack.assets.length });
+), { ...completionCase, expectedManifestPaths: shipped.count, expectedDistinctHashes: shippedDistinctHashCount });
 record("the first launch actually fetches game data", (
   appAssetRequests.length > 0
 ), { assetRequestsAfterConsent: appAssetRequests.length });
+
+// The Sol completeness finding is player-visible only if these released UI
+// assets stay usable with no network. Chromium can observe worker-served
+// offline responses; WebKit headless cannot, so it verifies the exact same
+// content-addressed bytes in Cache Storage without claiming an iPhone result.
+if (engineName === "chromium") await appContext.setOffline(true);
+const offlineVisualCase = await appPage.evaluate(async (canObserveWorker) => {
+  const scope = new URL("./", location.href);
+  const manifest = await (await fetch(new URL("asset-manifest.json", scope), { cache: "no-store" })).json();
+  const paths = manifest.assets
+    .map((asset) => asset.path)
+    .filter((assetPath) => (
+      /\/abilities\/.*-ready-r1\.svg$/.test(assetPath)
+      || assetPath.endsWith("/maintenance-cart-v1.png")
+      || /\/bosses\/(kurome|mother|ooguchi|gairen|futago)-compendium.*\.(?:png|webp)$/.test(assetPath)
+    ));
+  const cache = await caches.open("zombieee-assets-v1");
+  const cacheKey = (hash) => new URL(`__pwa-asset__/${hash}`, scope).toString();
+  const byPath = new Map(manifest.assets.map((asset) => [asset.path, asset]));
+  const cacheStored = await Promise.all(paths.map(async (assetPath) => Boolean(
+    await cache.match(cacheKey(byPath.get(assetPath).hash)),
+  )));
+  if (!canObserveWorker) {
+    return { paths, cacheStored, displayedOffline: null };
+  }
+  const displayedOffline = await Promise.all(paths.map(async (assetPath) => {
+    try {
+      const response = await fetch(new URL(assetPath.replace(/^\/+/, ""), scope));
+      if (!response.ok) return false;
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      try {
+        const image = new Image();
+        image.src = url;
+        if (typeof image.decode === "function") await image.decode();
+        else await new Promise((resolve, reject) => {
+          image.onload = resolve;
+          image.onerror = reject;
+        });
+        return image.naturalWidth > 0 && image.naturalHeight > 0;
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      return false;
+    }
+  }));
+  return { paths, cacheStored, displayedOffline };
+}, engineName === "chromium");
+record(
+  engineName === "chromium"
+    ? "all 16 ability icons, maintenance cart, and five boss compendium images display offline from the verified pack"
+    : "all 16 ability icons, maintenance cart, and five boss compendium images are retained in Cache Storage",
+  offlineVisualCase.paths.filter((assetPath) => /\/abilities\//.test(assetPath)).length === 16
+    && offlineVisualCase.paths.length === 22
+    && offlineVisualCase.cacheStored.every(Boolean)
+    && (offlineVisualCase.displayedOffline == null || offlineVisualCase.displayedOffline.every(Boolean)),
+  { ...offlineVisualCase, engine: engineName, physicalIPhoneVerified: false },
+);
+if (engineName === "chromium") await appContext.setOffline(false);
 
 await beginButton.click();
 await appPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
@@ -642,7 +704,7 @@ const revisitCase = await appPage.evaluate(async () => {
 // contexts are ephemeral and drop Cache Storage across a reload, which leaves
 // the bucket present but empty; asking again is then the correct behaviour, not
 // a regression, so the rule is asserted against what the device actually holds.
-const packSurvivedReload = revisitCase.storedAfterReload === smallPack.assets.length;
+const packSurvivedReload = revisitCase.storedAfterReload === shippedDistinctHashCount;
 record(
   packSurvivedReload
     ? "an installed app that holds its pack is never asked to download again"
@@ -650,7 +712,7 @@ record(
   packSurvivedReload
     ? (!revisitCase.gateVisible && revisitCase.gameMounted)
     : revisitCase.gateVisible,
-  { ...revisitCase, packSurvivedReload, expected: smallPack.assets.length, engine: engineName },
+  { ...revisitCase, packSurvivedReload, expectedManifestPaths: shipped.count, expectedDistinctHashes: shippedDistinctHashCount, engine: engineName },
 );
 
 await appContext.close();

@@ -24,6 +24,7 @@ import {
 } from "./pwaAssetManifest.js";
 import { createAssetStore } from "./pwaAssetStore.js";
 import { createAssetDownloadSession } from "./pwaDownloadSession.js";
+import { finalizePwaDownload } from "./pwaInstallFinalize.js";
 import {
   activateWaitingWorker,
   canPlayOffline,
@@ -168,6 +169,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   );
   const storeRef = useRef<ReturnType<typeof createAssetStore> | null>(null);
   const sessionRef = useRef<ReturnType<typeof createAssetDownloadSession> | null>(null);
+  const finalizeSessionRef = useRef<((final: { state?: string } | null | undefined) => Promise<unknown>) | null>(null);
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
   // Read inside the download callback, which must not be rebuilt every time one
   // of these changes or an in-flight session would be replaced mid-transfer.
@@ -402,6 +404,55 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       }));
     };
 
+    let finalization: Promise<{ state: string; committed: boolean }> | null = null;
+    const finalize = async (final: { state?: string } | null | undefined) => {
+      // A double tap may join the same session promise. It must also join the
+      // same commit, otherwise one completed retry can publish twice.
+      if (finalization) return finalization;
+      const task = finalizePwaDownload({
+        final,
+        manifest,
+        registration: registrationRef.current,
+        refreshStored,
+        commitManifest: async (registration, candidate) => {
+          try {
+            return await requestFromServiceWorker(registration, { type: "pwa:commit-manifest", manifest: candidate });
+          } catch {
+            return null;
+          }
+        },
+        persistStorage: async () => import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator)),
+        onIncomplete: async (incomplete) => {
+          recordDiagnostics(session.getSnapshot().failures ?? []);
+          setDownloadState(incomplete?.state ?? "failed");
+        },
+        onCommitFailed: async () => {
+          recordDiagnostics(
+            [{ path: "(manifest)", reason: "manifest-commit", status: 0, attempts: 1 }],
+            { serviceWorkerState: serviceWorkerState ?? "commit-unconfirmed" },
+          );
+          setDownloadState("commit-failed");
+        },
+        onCommitted: async () => {
+          // Keep refs current synchronously: a player may immediately invoke a
+          // follow-up action before React has scheduled the mirroring effect.
+          installedManifestRef.current = manifest;
+          setInstalledManifest(manifest);
+          setUpdateDismissed(false);
+          setDiagnostics(null);
+          setDownloadState("complete");
+        },
+      });
+      finalization = task;
+      const outcome = await task;
+      // A failed commit is intentionally retryable without downloading the
+      // already verified pack again. A successful completion stays sealed for
+      // this session; the next install/update creates a new closure above.
+      if (!outcome.committed) finalization = null;
+      return outcome;
+    };
+    finalizeSessionRef.current = finalize;
+
     let final;
     try {
       final = await session.start();
@@ -414,44 +465,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       setDownloadState("failed");
       return;
     }
-    await refreshStored();
-
-    if (final.state !== "complete") {
-      recordDiagnostics(session.getSnapshot().failures ?? []);
-      setDownloadState(final.state);
-      return;
-    }
-
-    // Only a fully verified pack becomes the active generation, and only if the
-    // worker confirms it. A commit that silently failed used to leave the app
-    // believing it had updated while the next launch disagreed.
-    // With no worker registered there is no generation to publish to, and the
-    // verified bytes in Cache Storage are the whole of what this device can
-    // hold. Reporting that as a commit failure would be wrong.
-    const registration = registrationRef.current;
-    const committed = registration
-      ? await requestFromServiceWorker(registration, { type: "pwa:commit-manifest", manifest })
-      : null;
-    // A worker that is registered and does not answer is a real failure: the
-    // bytes are on the device but nothing points at them, so the next launch
-    // would offer the same update again - silently, and forever.
-    if (registration && committed?.type !== "pwa:committed") {
-      recordDiagnostics(
-        [{ path: "(manifest)", reason: "manifest-commit", status: 0, attempts: 1 }],
-        { serviceWorkerState: serviceWorkerState ?? "commit-unconfirmed" },
-      );
-      setDownloadState("commit-failed");
-      return;
-    }
-
-    // Ask the browser to stop treating the pack as evictable cache, so a player
-    // who has finished the download is not asked to repeat it. Best effort: a
-    // refusal changes nothing else.
-    await import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator));
-    setInstalledManifest(manifest);
-    setUpdateDismissed(false);
-    setDiagnostics(null);
-    setDownloadState(final.state);
+    await finalize(final);
   }, [baseUrl, refreshStored]);
 
   const startInstall = useCallback(() => {
@@ -468,13 +482,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const retryFailed = useCallback(() => {
     void (async () => {
       const session = sessionRef.current;
-      if (!session) return;
+      const finalize = finalizeSessionRef.current;
+      if (!session || !finalize) return;
       setDiagnostics(null);
-      const final = await session.retryFailed();
-      await refreshStored();
-      setDownloadState(final?.state ?? session.getSnapshot().state);
+      try {
+        const final = await session.retryFailed();
+        await finalize(final);
+      } catch (cause) {
+        setError(String((cause as Error)?.message ?? cause));
+        setDownloadState("failed");
+      }
     })();
-  }, [refreshStored]);
+  }, []);
 
   const clearAssets = useCallback(async () => {
     await storeRef.current?.clearAssets();

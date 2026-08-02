@@ -6,7 +6,7 @@
 // quality trade-off. The original PNGs remain available to ordinary browser
 // requests and authoring tools.
 
-import { readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import sharp from "sharp";
@@ -54,7 +54,10 @@ for (const asset of pngAssets) {
   try { current = await readFile(outputPath); } catch { /* generated below */ }
   if (!current || !current.equals(output)) {
     changed.push(`/pwa-optimized${asset.path.replace(/\.png$/i, ".webp")}`);
-    if (!checkOnly) await writeFile(outputPath, output);
+    if (!checkOnly) {
+      await mkdir(path.dirname(outputPath), { recursive: true });
+      await writeFile(outputPath, output);
+    }
   }
   generated += 1;
 }

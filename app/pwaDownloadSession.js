@@ -376,11 +376,12 @@ export function createAssetDownloadSession({
         }
         lastStatus = response.status ?? 0;
         if (!response.ok) {
-          lastReason = "http";
+          lastReason = response.reason ?? "http";
           publish();
           continue;
         }
         if (size !== asset.bytes) {
+          fetchAsset.invalidateBundle?.(asset, "size-mismatch");
           lastReason = "size-mismatch";
           publish();
           continue;
@@ -400,6 +401,7 @@ export function createAssetDownloadSession({
           verifyMs += elapsed;
         }
         if (actual !== asset.hash) {
+          fetchAsset.invalidateBundle?.(asset, "hash-mismatch");
           lastReason = "hash-mismatch";
           publish();
           continue;
@@ -532,6 +534,10 @@ export function createAssetDownloadSession({
     },
 
     retryFailed() {
+      // A second tap while a retry round is already draining must join that
+      // round. Starting another set of workers here would duplicate bundle
+      // transport and could make the same slice race into Cache Storage.
+      if (state === "running" || state === "paused") return runPromise;
       const targets = workQueue.filter((asset) => !completedPaths.has(asset.path));
       if (targets.length === 0) {
         setState("complete");

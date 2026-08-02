@@ -84,17 +84,64 @@ const result = await page.evaluate(async () => {
   const audio = document.createElement("audio");
   const audioCapability = audio.canPlayType("audio/mpeg");
   const audioAsset = manifest.assets.find((asset) => asset.category === "audio");
-  let audioDecode = { attempted: false, supported: Boolean(audioCapability), decoded: false, elementLoaded: false, durationSeconds: null, error: null };
-  if (audioAsset?.bundlePath) {
+  const AudioContextConstructor = window.AudioContext ?? window.webkitAudioContext;
+  const audioDecode = {
+    attempted: false,
+    supported: Boolean(audioCapability),
+    status: "not-attempted",
+    capability: {
+      audioContextConstructor: typeof AudioContextConstructor === "function",
+      decodeAudioData: false,
+    },
+    decoded: false,
+    elementLoaded: false,
+    durationSeconds: null,
+    failureReason: null,
+    error: null,
+  };
+  const sha256 = async (bytes) => {
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    return `sha256-${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+  };
+  if (!audioAsset?.bundlePath) {
+    audioDecode.status = "decode-failure";
+    audioDecode.failureReason = "missing-bundled-audio";
+  } else if (typeof AudioContextConstructor !== "function") {
+    // This is the only WebKit headless exemption: the required API is absent,
+    // so it is explicitly recorded as not executed rather than as a pass.
+    audioDecode.status = "capability-unavailable";
+    audioDecode.failureReason = "audio-context-unavailable";
+  } else {
     audioDecode.attempted = true;
+    let audioContext = null;
+    let audioUrl = null;
     try {
       const response = await fetch(transportUrl(audioAsset), { cache: "no-store" });
-      if (!response.ok) throw new Error(`${response.status} ${audioAsset.bundlePath}`);
+      if (!response.ok) throw Object.assign(new Error(`${response.status} ${audioAsset.bundlePath}`), { reason: "http" });
       const bundle = await response.arrayBuffer();
+      if (bundle.byteLength === 0) throw Object.assign(new Error("empty bundle"), { reason: "empty-body" });
+      if (Number.isInteger(audioAsset.bundleLength) && bundle.byteLength !== audioAsset.bundleLength) {
+        throw Object.assign(new Error(`bundle length ${bundle.byteLength} !== ${audioAsset.bundleLength}`), { reason: "bundle-length-mismatch" });
+      }
       const offset = Number(audioAsset.bundleOffset);
       const length = Number(audioAsset.bundleBytes ?? audioAsset.bytes);
-      const bytes = bundle.slice(offset, offset + length);
-      const audioUrl = URL.createObjectURL(new Blob([bytes], { type: "audio/mpeg" }));
+      const end = offset + length;
+      if (!Number.isInteger(offset) || !Number.isInteger(length) || offset < 0 || length <= 0 || end > bundle.byteLength) {
+        throw Object.assign(new Error("invalid audio slice bounds"), { reason: "slice-length-mismatch" });
+      }
+      const bytes = bundle.slice(offset, end);
+      if (bytes.byteLength === 0) throw Object.assign(new Error("empty audio slice"), { reason: "empty-body" });
+      if (bytes.byteLength !== audioAsset.bytes) {
+        throw Object.assign(new Error(`slice length ${bytes.byteLength} !== ${audioAsset.bytes}`), { reason: "slice-length-mismatch" });
+      }
+      if (audioAsset.audioType !== "audio/mpeg") {
+        throw Object.assign(new Error(`unexpected audio MIME ${audioAsset.audioType}`), { reason: "mime-mismatch" });
+      }
+      if (await sha256(bytes) !== audioAsset.hash) {
+        throw Object.assign(new Error("audio slice sha256 mismatch"), { reason: "hash-mismatch" });
+      }
+
+      audioUrl = URL.createObjectURL(new Blob([bytes], { type: audioAsset.audioType }));
       const probe = new Audio();
       probe.preload = "metadata";
       probe.src = audioUrl;
@@ -103,21 +150,31 @@ const result = await page.evaluate(async () => {
         probe.addEventListener("loadedmetadata", () => { clearTimeout(timer); resolve(probe.duration > 0); }, { once: true });
         probe.addEventListener("error", () => { clearTimeout(timer); resolve(false); }, { once: true });
       });
-      if (audioDecode.elementLoaded) {
-        audioDecode.decoded = true;
-        audioDecode.durationSeconds = probe.duration;
+      if (!audioDecode.elementLoaded) {
+        throw Object.assign(new Error("audio element metadata decode failed"), { reason: "decode-failure" });
       }
-      URL.revokeObjectURL(audioUrl);
-      const AudioContextConstructor = window.AudioContext ?? window.webkitAudioContext;
-      if (AudioContextConstructor) {
-        const audioContext = new AudioContextConstructor();
+
+      audioContext = new AudioContextConstructor();
+      audioDecode.capability.decodeAudioData = typeof audioContext.decodeAudioData === "function";
+      if (!audioDecode.capability.decodeAudioData) {
+        audioDecode.status = "capability-unavailable";
+        audioDecode.failureReason = "decode-api-unavailable";
+      } else {
         const decoded = await audioContext.decodeAudioData(bytes.slice(0));
-        audioDecode.decoded = decoded.duration > 0;
+        if (!decoded || !(decoded.duration > 0)) {
+          throw Object.assign(new Error("decoded audio has no duration"), { reason: "decode-failure" });
+        }
+        audioDecode.decoded = true;
         audioDecode.durationSeconds = decoded.duration;
-        await audioContext.close();
+        audioDecode.status = "decode-success";
       }
     } catch (error) {
+      audioDecode.status = "decode-failure";
+      audioDecode.failureReason = error?.reason ?? "exception";
       audioDecode.error = String(error?.message ?? error);
+    } finally {
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      try { await audioContext?.close?.(); } catch { /* diagnostic status is already set */ }
     }
   }
   const memoryAfter = memorySample();
@@ -138,9 +195,11 @@ const result = await page.evaluate(async () => {
 });
 
 const headlessWebKitAudioException = engineName === "webkit"
-  && result.audioDecode.supported
-  && !result.audioDecode.decoded;
-if (!result.pathsAreScoped || result.rasterDecoded !== result.rasterCount || (!result.audioDecode.decoded && !headlessWebKitAudioException) || Object.values(diagnostics).some((entries) => entries.length > 0)) {
+  && result.audioDecode.status === "capability-unavailable"
+  && ["audio-context-unavailable", "decode-api-unavailable"].includes(result.audioDecode.failureReason);
+if (!result.pathsAreScoped || result.rasterDecoded !== result.rasterCount
+  || (result.audioDecode.status !== "decode-success" && !headlessWebKitAudioException)
+  || Object.values(diagnostics).some((entries) => entries.length > 0)) {
   throw new Error(`PWA transport browser QA failed: ${JSON.stringify({ result, diagnostics })}`);
 }
 

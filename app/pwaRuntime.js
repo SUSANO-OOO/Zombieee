@@ -385,6 +385,10 @@ export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
   const bundlePromises = new Map();
   const clock = () => globalThis.performance?.now?.() ?? Date.now();
 
+  const evictBundle = (bundlePath, entry = bundlePromises.get(bundlePath)) => {
+    if (entry && bundlePromises.get(bundlePath) === entry) bundlePromises.delete(bundlePath);
+  };
+
   const fetchBundle = (bundlePath, signal) => {
     const requestStarted = clock();
     return fetchImpl(resolveAssetUrl(bundlePath, baseUrl), {
@@ -413,16 +417,20 @@ export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
     });
   };
 
-  return async (asset, { signal }) => {
+  const fetchAsset = async (asset, { signal } = {}) => {
     if (asset.bundlePath) {
       let entry = bundlePromises.get(asset.bundlePath);
       if (!entry) {
         const promise = fetchBundle(asset.bundlePath, signal);
         entry = { promise, reported: false };
         bundlePromises.set(asset.bundlePath, entry);
-        promise.catch(() => {
-          if (bundlePromises.get(asset.bundlePath) === entry) bundlePromises.delete(asset.bundlePath);
-        });
+        // A resolved failure is just as unsafe to reuse as a rejection. Keeping
+        // either one here made a manual retry slice the same HTTP error or bad
+        // bundle body forever without touching the network again.
+        promise.then(
+          (bundle) => { if (!bundle?.ok) evictBundle(asset.bundlePath, entry); },
+          () => evictBundle(asset.bundlePath, entry),
+        );
       }
       const bundle = await entry.promise;
       const ownsRequestMetrics = !entry.reported;
@@ -437,8 +445,18 @@ export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
       const offset = Number(asset.bundleOffset);
       const length = Number(asset.bundleBytes ?? asset.bytes);
       const end = offset + length;
-      if (!Number.isInteger(offset) || !Number.isInteger(length) || offset < 0 || length <= 0 || end > bundle.body.byteLength) {
-        return { ok: false, status: 422, networkRequestCount: ownsRequestMetrics ? 1 : 0, networkMs: 0 };
+      const expectedBundleLength = Number(asset.bundleLength);
+      if ((Number.isInteger(expectedBundleLength) && bundle.body.byteLength !== expectedBundleLength)
+        || !Number.isInteger(offset) || !Number.isInteger(length) || offset < 0 || length <= 0
+        || end > bundle.body.byteLength) {
+        evictBundle(asset.bundlePath, entry);
+        return {
+          ok: false,
+          status: 422,
+          reason: "size-mismatch",
+          networkRequestCount: ownsRequestMetrics ? 1 : 0,
+          networkMs: ownsRequestMetrics ? bundle.networkMs : 0,
+        };
       }
       return {
         ok: true,
@@ -489,6 +507,15 @@ export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
       networkRequestCount: 1,
     };
   };
+
+  // pwaDownloadSession verifies the slice hash after this transport layer has
+  // returned. Let that verifier evict the shared bundle before its next retry;
+  // cache-write errors deliberately do not call this because their bytes were
+  // already proven good and must not trigger a needless bundle re-fetch.
+  fetchAsset.invalidateBundle = (asset) => {
+    if (asset?.bundlePath) evictBundle(asset.bundlePath);
+  };
+  return fetchAsset;
 }
 
 /**
