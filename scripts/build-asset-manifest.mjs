@@ -1,4 +1,4 @@
-// Generates public/asset-manifest.json for the Version 0.9.6 PWA.
+// Generates public/asset-manifest.json for the Version 0.9.8.2 PWA.
 //
 // The distribution set is derived from the game's own sprite, visual,
 // stage-object, and audio manifests rather than from a directory walk, so
@@ -18,12 +18,13 @@ import {
   audioChannelFor,
   distinctDownloadBytes,
   formatBytes,
+  selectPreferredAudioSource,
   sortManifestAssets,
   summarizeByCategory,
   summarizeByPack,
 } from "../app/pwaAssetManifest.js";
 import { CAMPAIGN_UNITS } from "../app/campaign.js";
-import { isBossEnemyKind } from "../app/bossFoundation.js";
+import { BOSS_DEFINITIONS, isBossEnemyKind } from "../app/bossFoundation.js";
 import {
   CHARACTER_PORTRAIT_ART,
   FORMATION_CARD_ART,
@@ -46,8 +47,18 @@ const root = process.cwd();
 const publicDir = path.join(root, "public");
 const outputPath = path.join(publicDir, "asset-manifest.json");
 const checkOnly = process.argv.includes("--check");
+// The raster generator consumes the manifest, while a newly discovered PNG
+// needs its derivative before the final manifest may point at it. The first
+// pass of build:pwa-assets may therefore use the original PNG only; the final
+// pass always requires and records the lossless WebP derivative.
+const allowMissingDerivatives = process.argv.includes("--allow-missing-derivatives");
 
 const ASSET_EXTENSION = /\.(webp|png|svg|ogg|mp3|wav)$/i;
+
+function optimizedRasterPath(assetPath) {
+  if (!assetPath.endsWith(".png") || assetPath.startsWith("/icons/")) return null;
+  return `/pwa-optimized${assetPath.replace(/\.png$/i, ".webp")}`;
+}
 
 /**
  * `art/**\/reference/` holds the authoring identity masters that art direction
@@ -64,7 +75,13 @@ const EXCLUDED_PATH = /\/reference\//;
  */
 const EXCLUDED_PROFILE_KEYS = new Set(["identityMaster"]);
 
-/** path -> { pack, category, criticality, audioChannel? } */
+const audioBundleIndexPath = path.join(publicDir, "pwa-bundles", "audio-v1.json");
+const audioBundleIndex = JSON.parse(await readFile(audioBundleIndexPath, "utf8"));
+if (!Number.isInteger(audioBundleIndex.bytes) || audioBundleIndex.bytes <= 0) {
+  throw new Error("PWA audio bundle index is missing a positive bundle byte length");
+}
+
+/** path -> { pack, category, criticality, audioChannel?, sourcePath?, bundle? } */
 const entries = new Map();
 const excluded = new Set();
 
@@ -80,7 +97,11 @@ function record(assetPath, classification) {
     return;
   }
   if (entries.has(assetPath)) return;
-  entries.set(assetPath, classification);
+  const sourcePath = optimizedRasterPath(assetPath);
+  entries.set(assetPath, {
+    ...classification,
+    ...(sourcePath ? { sourcePath } : {}),
+  });
 }
 
 function collectExcluded(value, depth = 0) {
@@ -151,6 +172,19 @@ for (const icon of [
 sweep(PRODUCTION_VISUALS.stages, { pack: "campaign-core", category: "background", criticality: "critical" });
 sweep(STORY_BACKGROUND_VISUALS, { pack: "campaign-core", category: "background", criticality: "optional" });
 sweep(STAGE_OBJECT_MANIFEST, { pack: "campaign-core", category: "object", criticality: "optional" });
+// Some campaign missions render these overlays directly instead of looking
+// through STAGE_OBJECT_MANIFEST. They are still real gameplay assets.
+sweep(PRODUCTION_VISUALS.missionObjects, { pack: "campaign-core", category: "object", criticality: "critical" });
+// These three supplies are direct renderer dependencies rather than entries in
+// STAGE_OBJECT_MANIFEST. They are part of the full first-install pack because
+// the battle UI can request them on any supported campaign stage.
+for (const assetPath of [
+  "/tactical-drop-pod-v1.png",
+  "/explosive-drum-v1.png",
+  "/medical-supply-station-v1.png",
+]) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+}
 
 // --- Units, enemies, bosses ----------------------------------------------
 
@@ -176,20 +210,46 @@ record(RADIO_PORTRAIT_ART, { pack: "units", category: "portrait", criticality: "
 sweep(V075_VISUAL_PROFILES, { pack: "units", category: "portrait", criticality: "optional" });
 sweep(V080_UNIT_VISUAL_PROFILES, { pack: "units", category: "portrait", criticality: "optional" });
 sweep(V090_UNIT_VISUAL_PROFILES, { pack: "units", category: "portrait", criticality: "optional" });
+// A boss record switches to its full compendium art when that asset path is
+// present; keep those released runtime images offline with its battle atlas.
+for (const boss of BOSS_DEFINITIONS) {
+  record(boss.compendium?.assetPath, { pack: "units", category: "boss", criticality: "critical" });
+}
 
 // --- Audio ----------------------------------------------------------------
 
 for (const asset of PRODUCTION_AUDIO_MANIFEST.assets ?? []) {
   const audioChannel = audioChannelFor(asset.category);
-  for (const source of asset.sources ?? []) {
-    record(source.src, {
-      pack: "audio",
-      category: "audio",
-      // Audio never blocks play; the 0.9.5.2 hotfix keeps categories separate.
-      criticality: "optional",
-      audioChannel,
-    });
-  }
+  const source = selectPreferredAudioSource(asset.sources);
+  if (!source) continue;
+  const bundleEntry = audioBundleIndex.assets?.[source.src];
+  if (!bundleEntry) throw new Error(`Missing audio bundle entry for ${source.src}`);
+  record(source.src, {
+    pack: "audio",
+    category: "audio",
+    // Audio never blocks play; the 0.9.5.2 hotfix keeps categories separate.
+    criticality: "optional",
+    audioChannel,
+    audioId: asset.id,
+    audioType: source.type,
+        bundlePath: audioBundleIndex.bundlePath,
+        bundleOffset: bundleEntry.offset,
+        bundleBytes: bundleEntry.bytes,
+        bundleLength: audioBundleIndex.bytes,
+  });
+}
+
+/**
+ * CSS is runtime code too. Run this after the explicit game manifests so those
+ * classifications win; it then contributes only otherwise-unregistered CSS
+ * references. In particular, ability-ready icons are live battle controls.
+ */
+const runtimeCss = await readFile(path.join(root, "app", "globals.css"), "utf8");
+for (const match of runtimeCss.matchAll(/url\(\s*["']?(\/[A-Za-z0-9_@.+=~%:/-]+\.(?:webp|png|svg|ogg|mp3|wav))["']?\s*\)/gi)) {
+  const assetPath = match[1];
+  record(assetPath, assetPath.includes("/abilities/")
+    ? { pack: "units", category: "unit", criticality: "critical" }
+    : { pack: "units", category: "portrait", criticality: "optional" });
 }
 
 // --- Hash and size --------------------------------------------------------
@@ -198,9 +258,21 @@ const assets = [];
 const missing = [];
 
 for (const [assetPath, classification] of entries) {
-  const absolute = path.join(publicDir, assetPath.replace(/^\//, ""));
+  let transportPath = classification.sourcePath ?? assetPath;
+  let sourcePath = classification.sourcePath;
+  let absolute = path.join(publicDir, transportPath.replace(/^\//, ""));
   try {
-    const [stats, body] = await Promise.all([stat(absolute), readFile(absolute)]);
+    let stats;
+    let body;
+    try {
+      [stats, body] = await Promise.all([stat(absolute), readFile(absolute)]);
+    } catch (cause) {
+      if (!allowMissingDerivatives || !sourcePath) throw cause;
+      transportPath = assetPath;
+      sourcePath = undefined;
+      absolute = path.join(publicDir, transportPath.replace(/^\//, ""));
+      [stats, body] = await Promise.all([stat(absolute), readFile(absolute)]);
+    }
     assets.push({
       path: assetPath,
       bytes: stats.size,
@@ -209,6 +281,15 @@ for (const [assetPath, classification] of entries) {
       category: classification.category,
       criticality: classification.criticality,
       ...(classification.audioChannel ? { audioChannel: classification.audioChannel } : {}),
+      ...(classification.audioId ? { audioId: classification.audioId } : {}),
+      ...(classification.audioType ? { audioType: classification.audioType } : {}),
+      ...(sourcePath ? { sourcePath } : {}),
+      ...(classification.bundlePath ? {
+        bundlePath: classification.bundlePath,
+        bundleOffset: classification.bundleOffset,
+        bundleBytes: classification.bundleBytes,
+        bundleLength: classification.bundleLength,
+      } : {}),
     });
   } catch {
     missing.push(assetPath);

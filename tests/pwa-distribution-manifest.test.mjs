@@ -8,11 +8,42 @@ import {
   ASSET_MANIFEST_SCHEMA,
   ASSET_PACK_IDS,
   RELEASE_SHA_PLACEHOLDER,
+  selectPreferredAudioSource,
   validateAssetManifest,
 } from "../app/pwaAssetManifest.js";
 
 const manifest = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
 const webAppManifest = JSON.parse(await readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"));
+const serviceWorkerSource = await readFile(new URL("../public/sw.js", import.meta.url), "utf8");
+
+const ASSET_PATH = /\.(?:webp|png|svg|ogg|mp3|wav)$/i;
+
+function collectRuntimeAssetPaths(value, paths = new Set(), depth = 0) {
+  if (depth > 8 || value == null) return paths;
+  if (typeof value === "string") {
+    if (value.startsWith("/") && ASSET_PATH.test(value)) paths.add(value);
+    return paths;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) collectRuntimeAssetPaths(item, paths, depth + 1);
+    return paths;
+  }
+  if (typeof value === "object") {
+    for (const [key, item] of Object.entries(value)) {
+      // Identity masters are intentionally authoring-only and must stay out of
+      // the distribution pack even though their profile objects are imported at
+      // runtime for metadata.
+      if (key === "identityMaster" || key === "identityPath") continue;
+      collectRuntimeAssetPaths(item, paths, depth + 1);
+    }
+  }
+  return paths;
+}
+
+function cssRuntimeAssetPaths(source) {
+  return new Set([...source.matchAll(/url\(\s*["']?(\/[A-Za-z0-9_@.+=~%:/-]+\.(?:webp|png|svg|ogg|mp3|wav))["']?\s*\)/gi)]
+    .map((match) => match[1]));
+}
 
 test("the shipped distribution manifest is structurally valid", () => {
   assert.deepEqual(validateAssetManifest(manifest), { valid: true, errors: [] });
@@ -25,6 +56,59 @@ test("the distribution manifest is regenerated from the game's own manifests", (
   // Fails when a sprite, visual, stage-object, or audio manifest changes
   // without the distribution manifest being rebuilt.
   execFileSync(process.execPath, ["scripts/build-asset-manifest.mjs", "--check"], { stdio: "pipe" });
+});
+
+test("every public runtime reference is in the game manifest or an explicit shell cache", async () => {
+  const [
+    { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS },
+    { BOSS_DEFINITIONS },
+    { spriteKinds, spriteSheetPath },
+    { STAGE_OBJECT_MANIFEST },
+    { PRODUCTION_AUDIO_MANIFEST },
+    { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES },
+  ] = await Promise.all([
+    import("../app/productionVisuals.js"),
+    import("../app/bossFoundation.js"),
+    import("../app/spriteManifest.js"),
+    import("../app/stageObjectManifest.js"),
+    import("../app/productionAudio.js"),
+    import("../app/visualProfiles.js"),
+  ]);
+  const globalsCss = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const runtimePaths = new Set([
+    ...cssRuntimeAssetPaths(globalsCss),
+    ...collectRuntimeAssetPaths(PRODUCTION_VISUALS),
+    ...collectRuntimeAssetPaths(STORY_BACKGROUND_VISUALS),
+    ...collectRuntimeAssetPaths(STAGE_OBJECT_MANIFEST),
+    ...collectRuntimeAssetPaths(V075_VISUAL_PROFILES),
+    ...collectRuntimeAssetPaths(V080_UNIT_VISUAL_PROFILES),
+    ...collectRuntimeAssetPaths(V090_UNIT_VISUAL_PROFILES),
+    ...BOSS_DEFINITIONS.map((boss) => boss.compendium?.assetPath).filter(Boolean),
+    ...spriteKinds.map(spriteSheetPath),
+    "/favicon.svg",
+    "/icons/apple-touch-icon-180.png",
+    "/tactical-drop-pod-v1.png",
+    "/explosive-drum-v1.png",
+    "/medical-supply-station-v1.png",
+    ...webAppManifest.icons.map((icon) => `/${icon.src.replace(/^\/+/, "")}`),
+    ...(PRODUCTION_AUDIO_MANIFEST.assets ?? []).map((entry) => selectPreferredAudioSource(entry.sources)?.src).filter(Boolean),
+  ]);
+  // Browser shell metadata has a deliberately small explicit cache contract;
+  // all image/audio gameplay paths above must use the verified asset manifest.
+  const shellCached = new Set(["/manifest.webmanifest", "/asset-manifest.json", "/release.json"]);
+  assert.match(serviceWorkerSource, /const STATIC_SHELL_PATHS/);
+  assert.match(serviceWorkerSource, /STATIC_SHELL_PATHS\.includes\(relativeScopePath\)/);
+
+  const distributed = new Set(manifest.assets.map((asset) => asset.path));
+  const uncovered = [...runtimePaths].filter((runtimePath) => !distributed.has(runtimePath) && !shellCached.has(runtimePath));
+  assert.deepEqual(uncovered, [], `runtime paths outside verified cache: ${uncovered.join(", ")}`);
+
+  const readyIcons = [...runtimePaths].filter((runtimePath) => runtimePath.includes("/abilities/") && runtimePath.endsWith(".svg"));
+  assert.equal(readyIcons.length, 16, "all 16 manual ability-ready SVGs must remain covered");
+  assert.ok(distributed.has(PRODUCTION_VISUALS.missionObjects["maintenance-cart"]));
+  for (const boss of BOSS_DEFINITIONS.filter((entry) => entry.compendium?.assetPath)) {
+    assert.ok(distributed.has(boss.compendium.assetPath), `${boss.id} compendium art is missing`);
+  }
 });
 
 test("every shipped asset extension is exempt from end-of-line conversion", async () => {
@@ -65,7 +149,7 @@ test("the Pages build stamps the release SHA and verifies the published pack", a
   assert.match(build, /does not match asset-manifest\.json/);
 });
 
-test("every pack carries assets and every first-install pack is represented", () => {
+test("every pack carries assets for the complete first install", () => {
   const packs = new Set(manifest.assets.map((asset) => asset.pack));
   for (const pack of ASSET_PACK_IDS) assert.ok(packs.has(pack), `pack ${pack} has no assets`);
 });
@@ -109,13 +193,47 @@ test("every stage background reachable from the campaign is in the pack", async 
   }
 });
 
-test("every audio source the mixer can play is in the pack", async () => {
+test("the full install contains one preferred playable source for every audio cue", async () => {
   const { PRODUCTION_AUDIO_MANIFEST } = await import("../app/productionAudio.js");
-  const paths = new Set(manifest.assets.map((asset) => asset.path));
+  const audioAssets = manifest.assets.filter((asset) => asset.category === "audio");
+  const byId = new Map(audioAssets.map((asset) => [asset.audioId, asset]));
   for (const audioAsset of PRODUCTION_AUDIO_MANIFEST.assets ?? []) {
-    for (const source of audioAsset.sources ?? []) {
-      assert.ok(paths.has(source.src), `${source.src} (${audioAsset.id}) is missing from the pack`);
-    }
+    const preferred = selectPreferredAudioSource(audioAsset.sources);
+    const shipped = byId.get(audioAsset.id);
+    assert.ok(preferred, `${audioAsset.id} has no playable source`);
+    assert.ok(shipped, `${audioAsset.id} has no offline source`);
+    assert.equal(shipped.path, preferred.src);
+    assert.equal(shipped.audioType, preferred.type);
+  }
+});
+
+test("direct battle supply art is part of the complete install", () => {
+  const paths = new Set(manifest.assets.map((asset) => asset.path));
+  for (const path of [
+    "/tactical-drop-pod-v1.png",
+    "/explosive-drum-v1.png",
+    "/medical-supply-station-v1.png",
+  ]) {
+    assert.ok(paths.has(path), `${path} is a direct battle renderer dependency`);
+  }
+});
+
+test("transport optimizations preserve every runtime asset contract", async () => {
+  const optimized = manifest.assets.filter((asset) => asset.sourcePath);
+  assert.ok(optimized.length > 0);
+  for (const asset of optimized) {
+    assert.match(asset.path, /\.png$/i);
+    assert.match(asset.sourcePath, /\.webp$/i);
+    assert.notEqual(asset.path, asset.sourcePath);
+  }
+
+  const bundled = manifest.assets.filter((asset) => asset.bundlePath);
+  assert.equal(bundled.length, 213);
+  assert.ok(bundled.every((asset) => asset.bundlePath === "/pwa-bundles/audio-v1.bin"));
+  assert.ok(bundled.every((asset) => asset.bundleBytes === asset.bytes));
+  const bundle = await readFile(new URL("../public/pwa-bundles/audio-v1.bin", import.meta.url));
+  for (const asset of bundled.slice(0, 5)) {
+    assert.equal(bundle.subarray(asset.bundleOffset, asset.bundleOffset + asset.bundleBytes).byteLength, asset.bytes);
   }
 });
 

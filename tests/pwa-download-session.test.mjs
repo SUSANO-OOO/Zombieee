@@ -88,11 +88,36 @@ test("progress reports counts, bytes, and the active category", async () => {
     concurrency: 1,
     onProgress: (snapshot) => seen.push(snapshot),
   });
-  await session.start();
+  const final = await session.start();
 
   assert.ok(seen.some((snapshot) => snapshot.activeCategory === "audio"));
   assert.ok(seen.some((snapshot) => snapshot.completedCount === 1 && snapshot.completedBytes === 4));
-  assert.equal(seen.at(-1).completedCount, 2);
+  assert.equal(final.completedCount, 2);
+  assert.equal(final.metrics.length, 2);
+  assert.ok(final.metrics.every((metric) => metric.status === "complete"));
+  assert.ok(final.metrics.every((metric) => metric.attempts === 1));
+  assert.ok(final.metrics.every((metric) => typeof metric.queueWaitMs === "number"));
+  assert.ok(final.metrics.every((metric) => typeof metric.networkMs === "number"));
+});
+
+test("full-pack queue is path-stable and uses every manifest asset", async () => {
+  const assets = [
+    asset("/z-last.webp", 1),
+    asset("/a-first.webp", 2),
+    asset("/m-middle.webp", 3),
+  ];
+  const seeds = new Map([["/z-last.webp", 1], ["/a-first.webp", 2], ["/m-middle.webp", 3]]);
+  const { fetchAsset, calls } = createFetcher(seeds);
+  const session = createAssetDownloadSession({
+    assets,
+    fetchAsset,
+    store: createStore(),
+    digest,
+    concurrency: 1,
+  });
+
+  await session.start();
+  assert.deepEqual(calls, ["/a-first.webp", "/m-middle.webp", "/z-last.webp"]);
 });
 
 test("concurrency never exceeds the configured mobile cap", async () => {
@@ -285,6 +310,30 @@ test("assets sharing one content hash are fetched once and counted once", async 
   assert.equal(final.completedCount, 2);
   assert.equal(final.completedBytes, 4, "shared bytes are counted a single time");
   assert.equal(calls.length, 1, "shared bytes travel the network a single time");
+  assert.equal(final.dedupeCount, 1);
+  assert.equal(final.metrics.find((metric) => metric.path === "/b.webp")?.status, "deduped");
+});
+
+test("same-hash assets are deduplicated even when workers are concurrent", async () => {
+  const assets = [
+    asset("/a.webp", 7),
+    asset("/b.webp", 7),
+    asset("/c.webp", 8),
+  ];
+  const store = createStore();
+  const { fetchAsset, calls } = createFetcher(new Map([["/a.webp", 7], ["/b.webp", 7], ["/c.webp", 8]]), {
+    delayMs: 2,
+  });
+
+  const session = createAssetDownloadSession({
+    assets, fetchAsset, store, digest, concurrency: 3,
+  });
+  const final = await session.start();
+
+  assert.equal(final.state, "complete");
+  assert.deepEqual(calls.sort(), ["/a.webp", "/c.webp"]);
+  assert.equal(final.completedCount, 3);
+  assert.equal(final.dedupeCount, 1);
 });
 
 test("an already-stored asset is skipped without any request", async () => {

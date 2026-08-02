@@ -11,6 +11,7 @@
 
 import { detectEviction, estimateStorage, resolveAssetUrl } from "./pwaAssetStore.js";
 import { formatBytes, planInstall, validateAssetManifest } from "./pwaAssetManifest.js";
+import { assessCommitRecovery } from "./pwaManifestCommit.js";
 import { evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js";
 
 export const PWA_PHASES = Object.freeze([
@@ -19,6 +20,8 @@ export const PWA_PHASES = Object.freeze([
   "install-offer",
   "download-complete",
   "download-incomplete",
+  "commit-required",
+  "committing",
   "install-required",
   "installing",
   "install-incomplete",
@@ -32,7 +35,8 @@ export const PWA_PHASES = Object.freeze([
  * Decides the phase from facts only.
  *
  * `standalone` is what separates the two halves of the journey. A browser tab is
- * where the player is invited to install, and nothing is downloaded there: 111MB
+ * where the player is invited to install, and nothing is downloaded there: the
+ * complete release pack is saved only in the home-screen app that keeps using it.
  * saved into a tab that is about to be replaced by a home-screen app is 111MB
  * fetched twice. The download belongs to the first home-screen launch, where the
  * bytes land in the app the player will actually keep using.
@@ -45,12 +49,16 @@ export function derivePwaPhase({
   downloadState = null,
   updateEvaluation = null,
   offerDismissed = false,
+  commitRequired = false,
+  commitRecoveryBusy = false,
 } = {}) {
   if (!supported) return "unsupported";
 
   if (downloadState === "running" || downloadState === "paused") {
     return "installing";
   }
+
+  if (commitRequired && commitRecoveryBusy) return "committing";
 
   // A run that stopped short holds the screen until the player decides what to
   // do with it. This used to fall straight through: an update that failed
@@ -61,6 +69,11 @@ export function derivePwaPhase({
   if (downloadState === "failed" || downloadState === "cancelled" || downloadState === "commit-failed") {
     return "download-incomplete";
   }
+
+  // A fully verified Cache Storage pack must still be committed to the worker
+  // before play. Without this branch a reload after an acknowledgement failure
+  // could bypass the only durable generation pointer and fall through to ready.
+  if (commitRequired) return "commit-required";
 
   // A finished download says so and hands the player a button, rather than
   // swapping the screen underneath them. This sits above the standalone split
@@ -381,19 +394,140 @@ export async function fetchPublishedManifest({ baseUrl, fetchImpl = fetch, signa
  * cache so a verified download always reflects what the server actually has.
  */
 export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
-  return async (asset, { signal }) => {
-    const response = await fetchImpl(resolveAssetUrl(asset.path, baseUrl), {
+  const bundlePromises = new Map();
+  const clock = () => globalThis.performance?.now?.() ?? Date.now();
+
+  const evictBundle = (bundlePath, entry = bundlePromises.get(bundlePath)) => {
+    if (entry && bundlePromises.get(bundlePath) === entry) bundlePromises.delete(bundlePath);
+  };
+
+  const fetchBundle = (bundlePath, signal) => {
+    const requestStarted = clock();
+    return fetchImpl(resolveAssetUrl(bundlePath, baseUrl), {
+      cache: "no-store",
+      signal,
+    }).then(async (response) => {
+      const responseReceived = clock();
+      const requestWaitMs = Math.max(0, responseReceived - requestStarted);
+      if (!response.ok) {
+        return { ok: false, status: response.status, requestWaitMs, transferMs: 0, networkMs: requestWaitMs };
+      }
+      const type = response.headers.get("content-type") ?? "";
+      if (type.includes("text/html")) {
+        return { ok: false, status: response.status, requestWaitMs, transferMs: 0, networkMs: requestWaitMs };
+      }
+      const buffer = await response.arrayBuffer();
+      const transferMs = Math.max(0, clock() - responseReceived);
+      return {
+        ok: true,
+        status: response.status,
+        body: new Uint8Array(buffer),
+        requestWaitMs,
+        transferMs,
+        networkMs: Math.max(0, clock() - requestStarted),
+      };
+    });
+  };
+
+  const fetchAsset = async (asset, { signal } = {}) => {
+    if (asset.bundlePath) {
+      let entry = bundlePromises.get(asset.bundlePath);
+      if (!entry) {
+        const promise = fetchBundle(asset.bundlePath, signal);
+        entry = { promise, reported: false };
+        bundlePromises.set(asset.bundlePath, entry);
+        // A resolved failure is just as unsafe to reuse as a rejection. Keeping
+        // either one here made a manual retry slice the same HTTP error or bad
+        // bundle body forever without touching the network again.
+        promise.then(
+          (bundle) => { if (!bundle?.ok) evictBundle(asset.bundlePath, entry); },
+          () => evictBundle(asset.bundlePath, entry),
+        );
+      }
+      const bundle = await entry.promise;
+      const ownsRequestMetrics = !entry.reported;
+      entry.reported = true;
+      if (!bundle.ok) {
+        return {
+          ...bundle,
+          networkRequestCount: ownsRequestMetrics ? 1 : 0,
+          networkMs: ownsRequestMetrics ? bundle.networkMs : 0,
+        };
+      }
+      const offset = Number(asset.bundleOffset);
+      const length = Number(asset.bundleBytes ?? asset.bytes);
+      const end = offset + length;
+      const expectedBundleLength = Number(asset.bundleLength);
+      if ((Number.isInteger(expectedBundleLength) && bundle.body.byteLength !== expectedBundleLength)
+        || !Number.isInteger(offset) || !Number.isInteger(length) || offset < 0 || length <= 0
+        || end > bundle.body.byteLength) {
+        evictBundle(asset.bundlePath, entry);
+        return {
+          ok: false,
+          status: 422,
+          reason: "size-mismatch",
+          networkRequestCount: ownsRequestMetrics ? 1 : 0,
+          networkMs: ownsRequestMetrics ? bundle.networkMs : 0,
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        body: bundle.body.slice(offset, end),
+        requestWaitMs: ownsRequestMetrics ? bundle.requestWaitMs : 0,
+        transferMs: ownsRequestMetrics ? bundle.transferMs : 0,
+        networkMs: ownsRequestMetrics ? bundle.networkMs : 0,
+        networkRequestCount: ownsRequestMetrics ? 1 : 0,
+      };
+    }
+
+    const requestStarted = clock();
+    const requestPath = asset.sourcePath ?? asset.path;
+    const response = await fetchImpl(resolveAssetUrl(requestPath, baseUrl), {
       cache: "no-store",
       signal,
     });
-    if (!response.ok) return { ok: false, status: response.status };
+    const responseReceived = clock();
+    const requestWaitMs = Math.max(0, responseReceived - requestStarted);
+    if (!response.ok) return {
+      ok: false,
+      status: response.status,
+      requestWaitMs,
+      transferMs: 0,
+      networkMs: requestWaitMs,
+      networkRequestCount: 1,
+    };
     const type = response.headers.get("content-type") ?? "";
     // A soft 404 returns an HTML page with status 200; refuse it here so the
     // session records a real failure instead of storing a web page as art.
-    if (type.includes("text/html")) return { ok: false, status: response.status };
+    if (type.includes("text/html")) return {
+      ok: false,
+      status: response.status,
+      requestWaitMs,
+      transferMs: 0,
+      networkMs: requestWaitMs,
+      networkRequestCount: 1,
+    };
     const buffer = await response.arrayBuffer();
-    return { ok: true, status: response.status, body: new Uint8Array(buffer) };
+    return {
+      ok: true,
+      status: response.status,
+      body: new Uint8Array(buffer),
+      requestWaitMs,
+      transferMs: Math.max(0, clock() - responseReceived),
+      networkMs: Math.max(0, clock() - requestStarted),
+      networkRequestCount: 1,
+    };
   };
+
+  // pwaDownloadSession verifies the slice hash after this transport layer has
+  // returned. Let that verifier evict the shared bundle before its next retry;
+  // cache-write errors deliberately do not call this because their bytes were
+  // already proven good and must not trigger a needless bundle re-fetch.
+  fetchAsset.invalidateBundle = (asset) => {
+    if (asset?.bundlePath) evictBundle(asset.bundlePath);
+  };
+  return fetchAsset;
 }
 
 /**
@@ -431,6 +565,12 @@ export async function assessPwaState({
     ? evaluateUpdate({ installedManifest: activeManifest, publishedManifest, storedHashes })
     : null;
 
+  const commitRecovery = assessCommitRecovery({
+    activeManifest,
+    publishedManifest,
+    storedHashes,
+  });
+
   const phase = derivePwaPhase({
     supported,
     standalone,
@@ -438,6 +578,7 @@ export async function assessPwaState({
     installPlan,
     downloadState,
     updateEvaluation,
+    commitRequired: commitRecovery.required,
   });
 
   const activation = evaluateActivationSafety({
@@ -455,6 +596,7 @@ export async function assessPwaState({
     installPlan,
     eviction,
     updateEvaluation,
+    commitRecovery,
     activation,
     storage: await estimateStorage(windowRef?.navigator),
     canPlay: canPlayOffline({ phase, installPlan }),

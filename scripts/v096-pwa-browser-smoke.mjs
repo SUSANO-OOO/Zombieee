@@ -5,10 +5,9 @@
 // 127.0.0.1 is a secure context, so worker registration behaves as it does over
 // HTTPS on a device.
 //
-// The full 111MB pack is deliberately NOT downloaded here: these cases prove
-// the mechanism (verification, dedup, offline serving, diff updates, rollback)
-// over small synthetic manifests, and separately prove the real shipped
-// manifest is valid and complete. Bulk transfer belongs to the physical gate.
+// Synthetic manifests cover focused UI and differential-update branches. The
+// first installed-app case below downloads the complete shipped pack and waits
+// for the worker commit, so no game begins from a staged or on-demand subset.
 
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -143,15 +142,17 @@ const shipped = await page.evaluate(async (base) => {
   return {
     ok: response.ok,
     version: manifest.version,
+    releaseSha: manifest.releaseSha,
     count: manifest.assets.length,
     bytes: manifest.assets.reduce((sum, asset) => sum + asset.bytes, 0),
+    distinctHashCount: new Set(manifest.assets.map((asset) => asset.hash)).size,
     categories,
     allHashed: manifest.assets.every((asset) => /^sha256-[0-9a-f]{64}$/.test(asset.hash)),
     noReference: manifest.assets.every((asset) => !asset.path.includes("/reference/")),
   };
 }, baseUrl);
 record("the shipped manifest is complete, hashed, and free of authoring art", (
-  shipped.ok && shipped.count > 500 && shipped.allHashed && shipped.noReference
+  shipped.ok && shipped.count > 300 && shipped.allHashed && shipped.noReference
 ), shipped);
 
 // --- 4. Verified download, dedup, and offline serving ----------------------
@@ -170,8 +171,12 @@ const downloadCase = await page.evaluate(async (base) => {
 
   const stored = [];
   for (const asset of sample) {
-    const response = await fetch(new URL(asset.path.replace(/^\//, ""), scope).toString(), { cache: "no-store" });
-    const buffer = await response.arrayBuffer();
+    const transportPath = asset.bundlePath ?? asset.sourcePath ?? asset.path;
+    const response = await fetch(new URL(transportPath.replace(/^\//, ""), scope).toString(), { cache: "no-store" });
+    const transport = await response.arrayBuffer();
+    const start = Number(asset.bundleOffset ?? 0);
+    const end = asset.bundlePath ? start + Number(asset.bundleBytes ?? asset.bytes) : transport.byteLength;
+    const buffer = asset.bundlePath ? transport.slice(start, end) : transport;
     const actual = await window.__pwaQa.sha256(buffer);
     const sizeOk = buffer.byteLength === asset.bytes;
     if (actual === asset.hash && sizeOk) {
@@ -246,7 +251,7 @@ record("stored assets stay readable from the content-addressed cache", (
 ), { ...offlineCase, engine: engineName });
 if (canObserveWorkerOffline) {
   record("the worker serves release metadata with the network down", (
-    offlineCase.manifestOffline?.ok === true && offlineCase.manifestOffline.count > 500
+    offlineCase.manifestOffline?.ok === true && offlineCase.manifestOffline.count > 300
   ), offlineCase.manifestOffline ?? {});
   await context.setOffline(false);
 }
@@ -547,17 +552,19 @@ record("データ管理 is hidden once the player leaves the title", (
 
 await entryContext.close();
 
-// --- 13. The first home-screen launch downloads, then hands over -------------
+// --- 13. The first home-screen launch downloads the complete pack, then hands over
 //
-// A home-screen launch is where the pack belongs. `navigator.standalone` is the
-// flag iOS itself sets, and the runtime reads it, so setting it here exercises
-// the real branch rather than a mock of it.
+// A home-screen launch is where the complete pack belongs. `navigator.standalone`
+// is the flag iOS itself sets, and the runtime reads it, so setting it here
+// exercises the real branch rather than a mock of it. The active worker is kept
+// on: success requires its pwa:commit-manifest acknowledgement before the game
+// can start, and the content-addressed entry count therefore differs from the
+// manifest path count only for verified hash aliases.
 
 const appContext = await browser.newContext({
   viewport: { width: 844, height: 390 },
   deviceScaleFactor: 3,
   hasTouch: true,
-  serviceWorkers: "block",
   userAgent: IPHONE_UA,
 });
 await appContext.addInitScript(() => {
@@ -567,9 +574,8 @@ const appPage = await appContext.newPage();
 const appAssetRequests = [];
 appPage.on("request", (request) => {
   const { pathname } = new URL(request.url());
-  if (/\/(art|audio|icons)\//.test(pathname)) appAssetRequests.push(pathname);
+  if (/\/(art|audio|icons|pwa-bundles)\//.test(pathname)) appAssetRequests.push(pathname);
 });
-await routeSmallPack(appContext);
 await appPage.goto(baseUrl, { waitUntil: "domcontentloaded" });
 
 const startDownload = appPage.getByRole("button", { name: "ダウンロードを開始" });
@@ -583,7 +589,7 @@ const firstRunCase = await appPage.evaluate((expected) => {
     // The install invitation belongs to the browser, not to the installed app.
     saysInstall: text.includes("西新世紀末物語をインストール"),
   };
-}, smallPack.assets.length);
+}, shipped.count);
 record("the first home-screen launch asks to download, stating the manifest's counts", (
   firstRunCase.gateVisible && !firstRunCase.gameMounted && firstRunCase.mentionsCount && !firstRunCase.saysInstall
 ), firstRunCase);
@@ -599,14 +605,75 @@ const completionCase = await appPage.evaluate(async () => {
     gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
   };
 });
+const shippedDistinctHashCount = shipped.distinctHashCount;
 record("the download saves the manifest's assets and then offers to begin", (
   completionCase.beginVisible
-  && completionCase.storedEntries === smallPack.assets.length
+  && completionCase.storedEntries === shippedDistinctHashCount
   && !completionCase.gameMounted
-), { ...completionCase, expected: smallPack.assets.length });
+), { ...completionCase, expectedManifestPaths: shipped.count, expectedDistinctHashes: shippedDistinctHashCount });
 record("the first launch actually fetches game data", (
   appAssetRequests.length > 0
 ), { assetRequestsAfterConsent: appAssetRequests.length });
+
+// The Sol completeness finding is player-visible only if these released UI
+// assets stay usable with no network. Chromium can observe worker-served
+// offline responses; WebKit headless cannot, so it verifies the exact same
+// content-addressed bytes in Cache Storage without claiming an iPhone result.
+if (engineName === "chromium") await appContext.setOffline(true);
+const offlineVisualCase = await appPage.evaluate(async (canObserveWorker) => {
+  const scope = new URL("./", location.href);
+  const manifest = await (await fetch(new URL("asset-manifest.json", scope), { cache: "no-store" })).json();
+  const paths = manifest.assets
+    .map((asset) => asset.path)
+    .filter((assetPath) => (
+      /\/abilities\/.*-ready-r1\.svg$/.test(assetPath)
+      || assetPath.endsWith("/maintenance-cart-v1.png")
+      || /\/bosses\/(kurome|mother|ooguchi|gairen|futago)-compendium.*\.(?:png|webp)$/.test(assetPath)
+    ));
+  const cache = await caches.open("zombieee-assets-v1");
+  const cacheKey = (hash) => new URL(`__pwa-asset__/${hash}`, scope).toString();
+  const byPath = new Map(manifest.assets.map((asset) => [asset.path, asset]));
+  const cacheStored = await Promise.all(paths.map(async (assetPath) => Boolean(
+    await cache.match(cacheKey(byPath.get(assetPath).hash)),
+  )));
+  if (!canObserveWorker) {
+    return { paths, cacheStored, displayedOffline: null };
+  }
+  const displayedOffline = await Promise.all(paths.map(async (assetPath) => {
+    try {
+      const response = await fetch(new URL(assetPath.replace(/^\/+/, ""), scope));
+      if (!response.ok) return false;
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      try {
+        const image = new Image();
+        image.src = url;
+        if (typeof image.decode === "function") await image.decode();
+        else await new Promise((resolve, reject) => {
+          image.onload = resolve;
+          image.onerror = reject;
+        });
+        return image.naturalWidth > 0 && image.naturalHeight > 0;
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      return false;
+    }
+  }));
+  return { paths, cacheStored, displayedOffline };
+}, engineName === "chromium");
+record(
+  engineName === "chromium"
+    ? "all 16 ability icons, maintenance cart, and five boss compendium images display offline from the verified pack"
+    : "all 16 ability icons, maintenance cart, and five boss compendium images are retained in Cache Storage",
+  offlineVisualCase.paths.filter((assetPath) => /\/abilities\//.test(assetPath)).length === 16
+    && offlineVisualCase.paths.length === 22
+    && offlineVisualCase.cacheStored.every(Boolean)
+    && (offlineVisualCase.displayedOffline == null || offlineVisualCase.displayedOffline.every(Boolean)),
+  { ...offlineVisualCase, engine: engineName, physicalIPhoneVerified: false },
+);
+if (engineName === "chromium") await appContext.setOffline(false);
 
 await beginButton.click();
 await appPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
@@ -638,7 +705,7 @@ const revisitCase = await appPage.evaluate(async () => {
 // contexts are ephemeral and drop Cache Storage across a reload, which leaves
 // the bucket present but empty; asking again is then the correct behaviour, not
 // a regression, so the rule is asserted against what the device actually holds.
-const packSurvivedReload = revisitCase.storedAfterReload === smallPack.assets.length;
+const packSurvivedReload = revisitCase.storedAfterReload === shippedDistinctHashCount;
 record(
   packSurvivedReload
     ? "an installed app that holds its pack is never asked to download again"
@@ -646,8 +713,90 @@ record(
   packSurvivedReload
     ? (!revisitCase.gateVisible && revisitCase.gameMounted)
     : revisitCase.gateVisible,
-  { ...revisitCase, packSurvivedReload, expected: smallPack.assets.length, engine: engineName },
+  { ...revisitCase, packSurvivedReload, expectedManifestPaths: shipped.count, expectedDistinctHashes: shippedDistinctHashCount, engine: engineName },
 );
+
+// --- 14. Commit-only recovery after an acknowledged pack lost its pointer ---
+//
+// Simulate the precise failed-commit reload state without clearing the verified
+// pack: move the worker to a tiny old generation, retain the released pack as
+// its previous generation, then reload. The gate must not mount the game until
+// it writes the released generation back, and that recovery must not fetch or
+// save a single game asset body.
+const recoverySetup = await appPage.evaluate(async (base) => {
+  const registration = await navigator.serviceWorker.ready;
+  const ask = (message) => new Promise((resolve) => {
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => resolve(null), 5000);
+    channel.port1.onmessage = (event) => { clearTimeout(timer); resolve(event.data); };
+    registration.active.postMessage(message, [channel.port2]);
+  });
+  const manifest = await (await fetch(new URL("asset-manifest.json", base).toString(), { cache: "no-store" })).json();
+  const cache = await caches.open("zombieee-assets-v1");
+  const old = {
+    schema: manifest.schema,
+    version: "commit-recovery-old",
+    releaseSha: "old-generation",
+    // A valid but deliberately different active generation; `commit-manifest`
+    // retains the complete shipped generation as `previous`.
+    assets: [manifest.assets[0]],
+  };
+  localStorage.setItem("zombieee-qa-commit-recovery-save", JSON.stringify({ progress: 73 }));
+  const committedOld = await ask({ type: "pwa:commit-manifest", manifest: old });
+  return {
+    committedOld: committedOld?.type,
+    old,
+    cacheEntriesBeforeReload: (await cache.keys()).length,
+  };
+}, baseUrl);
+
+await appPage.reload({ waitUntil: "domcontentloaded" });
+const recoverCommitButton = appPage.getByRole("button", { name: "保存済みデータを反映" });
+await recoverCommitButton.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+const recoveryBlockedCase = await appPage.evaluate(() => ({
+  gateVisible: Boolean(document.querySelector(".pwa-gate")),
+  gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
+  text: document.querySelector(".pwa-gate")?.innerText ?? "",
+}));
+record("a complete pack with a mismatched worker generation is blocked pending commit", (
+  recoverySetup.committedOld === "pwa:committed"
+  && recoveryBlockedCase.gateVisible
+  && !recoveryBlockedCase.gameMounted
+  && recoveryBlockedCase.text.includes("データ本体は再取得しません")
+), { recoverySetup, recoveryBlockedCase });
+
+const recoveryRequestStart = appAssetRequests.length;
+await recoverCommitButton.click();
+await beginButton.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+const recoveryCase = await appPage.evaluate(async () => {
+  const registration = await navigator.serviceWorker.ready;
+  const state = await new Promise((resolve) => {
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => resolve(null), 5000);
+    channel.port1.onmessage = (event) => { clearTimeout(timer); resolve(event.data); };
+    registration.active.postMessage({ type: "pwa:get-state" }, [channel.port2]);
+  });
+  const cache = await caches.open("zombieee-assets-v1");
+  return {
+    beginVisible: Boolean([...document.querySelectorAll("button")].find((button) => button.textContent?.includes("ゲームを始める"))),
+    active: state?.active ?? null,
+    previous: state?.previous ?? null,
+    cacheEntries: (await cache.keys()).length,
+    saveSurvived: JSON.parse(localStorage.getItem("zombieee-qa-commit-recovery-save") ?? "null")?.progress === 73,
+  };
+});
+const recoveryAssetRequests = appAssetRequests.slice(recoveryRequestStart);
+record("commit-only recovery reactivates the published pack, retains rollback, and preserves save", (
+  recoveryCase.beginVisible
+  && recoveryCase.active?.version === shipped.version
+  && recoveryCase.active?.releaseSha === shipped.releaseSha
+  && recoveryCase.previous?.version === recoverySetup.old.version
+  && recoveryCase.cacheEntries === recoverySetup.cacheEntriesBeforeReload
+  && recoveryCase.saveSurvived
+), { recoveryCase, expected: { version: shipped.version, releaseSha: shipped.releaseSha } });
+record("commit-only recovery makes zero runtime asset or bundle requests", (
+  recoveryAssetRequests.length === 0
+), { recoveryAssetRequests });
 
 await appContext.close();
 

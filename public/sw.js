@@ -20,6 +20,14 @@
 const META_CACHE = "zombieee-meta-v1";
 const ASSET_CACHE = "zombieee-assets-v1";
 const SHELL_PREFIX = "zombieee-shell-";
+// Shell metadata is not a game-data manifest entry, but an installed app needs
+// it at the same scope as index/JS/CSS. Keep this explicit list small and
+// auditable instead of allowing arbitrary public files to fall through.
+const STATIC_SHELL_PATHS = Object.freeze([
+  "manifest.webmanifest",
+  "asset-manifest.json",
+  "release.json",
+]);
 
 /** Synthetic, content-addressed key space for game assets. */
 const ASSET_KEY_PREFIX = "__pwa-asset__";
@@ -180,7 +188,10 @@ async function respondForAsset(request, asset) {
   if (cached) return cached;
 
   try {
-    const response = await fetch(request);
+    const networkRequest = asset.sourcePath
+      ? new Request(resolveScoped(asset.sourcePath), request)
+      : request;
+    const response = await fetch(networkRequest);
     await storeAsset(asset, response);
     return response;
   } catch {
@@ -262,6 +273,19 @@ async function warmShell(generation) {
       references.add(new URL(match[1], scopeUrl).toString());
     }
     let warmed = 1;
+    for (const shellPath of STATIC_SHELL_PATHS) {
+      const shellUrl = new URL(shellPath, scopeUrl).toString();
+      try {
+        const shellAsset = await fetch(shellUrl, { cache: "no-store" });
+        if (shellAsset.ok && shellAsset.status === 200) {
+          await cache.put(shellUrl, shellAsset);
+          warmed += 1;
+        }
+      } catch {
+        // A deployment without optional release metadata may still have a
+        // fully valid game shell. Keep warming the rest of the assets.
+      }
+    }
     for (const reference of references) {
       if (new URL(reference).origin !== scopeUrl.origin) continue;
       try {
@@ -310,6 +334,15 @@ self.addEventListener("fetch", (event) => {
 
   if (url.pathname === MANIFEST_PATH || url.pathname === RELEASE_PATH) {
     event.respondWith(respondNetworkFirst(request, META_CACHE));
+    return;
+  }
+
+  const relativeScopePath = url.pathname.slice(scopeUrl.pathname.length);
+  if (STATIC_SHELL_PATHS.includes(relativeScopePath)) {
+    event.respondWith((async () => {
+      const manifest = await activeManifest();
+      return manifest ? respondForShell(request, generationOf(manifest)) : fetch(request);
+    })());
     return;
   }
 

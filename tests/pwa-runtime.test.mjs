@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { ASSET_CATEGORY_LABELS, ASSET_MANIFEST_SCHEMA } from "../app/pwaAssetManifest.js";
+import { assessCommitRecovery, manifestCacheComplete, manifestsEqual } from "../app/pwaManifestCommit.js";
 import {
+  assessPwaState,
   canPlayOffline,
   createAssetFetcher,
   derivePwaPhase,
@@ -170,19 +172,34 @@ test("a fresh standalone launch asks for the first install", () => {
   assert.equal(derivePwaPhase({ supported: true, standalone: true }), "install-required");
 });
 
-test("a standalone launch that already holds every asset is ready without a manifest", () => {
-  // The worker can lose its committed manifest while the pack survives. What
-  // the device actually holds is the stronger fact, and re-downloading a
-  // complete pack would cost the player the whole install for nothing.
+test("a complete pack without a matching worker generation requires a commit before play", () => {
+  const candidate = manifest([asset("/a", 1), asset("/b", 2)]);
+  const storedHashes = new Set(candidate.assets.map((entry) => entry.hash));
+  const recovery = assessCommitRecovery({
+    activeManifest: null,
+    publishedManifest: candidate,
+    storedHashes,
+  });
+  assert.equal(recovery.required, true);
+  assert.equal(recovery.reason, "active-missing");
+  assert.equal(manifestCacheComplete(candidate, storedHashes), true);
+  assert.equal(manifestsEqual(candidate, candidate), true);
   assert.equal(
     derivePwaPhase({
       supported: true,
       standalone: true,
       installedManifest: null,
       installPlan: plan([asset("/a", 1), asset("/b", 2)], []),
+      commitRequired: recovery.required,
     }),
-    "ready",
+    "commit-required",
   );
+  assert.equal(canPlayOffline({ phase: "commit-required" }), false);
+
+  // Without a published manifest we cannot identify a newer uncommitted pack.
+  // A previously installed generation remains usable offline instead.
+  assert.equal(assessCommitRecovery({ activeManifest: candidate, publishedManifest: null, storedHashes }).required, false);
+
   // A partial pack with no manifest is still a first install, not a repair:
   // there is no committed generation to repair towards.
   assert.equal(
@@ -194,6 +211,54 @@ test("a standalone launch that already holds every asset is ready without a mani
     }),
     "install-required",
   );
+});
+
+test("an active generation mismatch blocks an update until the complete cached candidate is committed", () => {
+  const old = { ...manifest([asset("/a", 1)]), version: "0.9.8.1", releaseSha: "old" };
+  const candidate = { ...manifest([asset("/a", 1)]), version: "0.9.8.2", releaseSha: "new" };
+  const storedHashes = new Set(candidate.assets.map((entry) => entry.hash));
+  const recovery = assessCommitRecovery({ activeManifest: old, publishedManifest: candidate, storedHashes });
+  assert.equal(recovery.required, true);
+  assert.equal(recovery.reason, "active-mismatch");
+  assert.equal(derivePwaPhase({
+    supported: true,
+    standalone: true,
+    installedManifest: old,
+    installPlan: plan(old.assets, []),
+    updateEvaluation: { available: true },
+    commitRequired: true,
+  }), "commit-required");
+  assert.equal(derivePwaPhase({
+    supported: true,
+    standalone: true,
+    installedManifest: old,
+    installPlan: plan(old.assets, []),
+    downloadState: "commit-failed",
+    commitRequired: true,
+  }), "download-incomplete");
+});
+
+test("the pure runtime state model also reports commit-required instead of a playable update", async () => {
+  const old = { ...manifest([asset("/a", 1)]), version: "0.9.8.1", releaseSha: "old" };
+  const candidate = { ...manifest([asset("/a", 1)]), version: "0.9.8.2", releaseSha: "new" };
+  const storedHashes = new Set(candidate.assets.map((entry) => entry.hash));
+  const state = await assessPwaState({
+    windowRef: {
+      isSecureContext: true,
+      caches: {},
+      navigator: { serviceWorker: {}, standalone: true },
+      matchMedia: () => ({ matches: true }),
+    },
+    store: {
+      storedHashes: async () => storedHashes,
+      storedHashesByPath: async () => new Map(old.assets.map((entry) => [entry.path, entry.hash])),
+    },
+    installedManifest: old,
+    publishedManifest: candidate,
+  });
+  assert.equal(state.commitRecovery.required, true);
+  assert.equal(state.phase, "commit-required");
+  assert.equal(state.canPlay, false);
 });
 
 test("a standalone launch with a complete pack is ready", () => {
@@ -439,4 +504,61 @@ test("the asset fetcher requests the scoped URL and returns raw bytes", async ()
   assert.equal(requested[0].cache, "no-store");
   assert.equal(result.ok, true);
   assert.equal(result.body.byteLength, 3);
+  assert.equal(result.networkRequestCount, 1);
+});
+
+test("the asset fetcher uses optimized source paths while preserving runtime paths", async () => {
+  const requested = [];
+  const fetcher = createAssetFetcher({
+    baseUrl: "https://example.test/Zombieee/",
+    fetchImpl: async (url) => {
+      requested.push(url);
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => "image/webp" },
+        arrayBuffer: async () => new Uint8Array([1, 2]).buffer,
+      };
+    },
+  });
+
+  const result = await fetcher({ ...asset("/art/a.png", 1), sourcePath: "/art/a.webp" }, {});
+  assert.equal(requested[0], "https://example.test/Zombieee/art/a.webp");
+  assert.equal(result.body.byteLength, 2);
+});
+
+test("the asset fetcher downloads an audio bundle once and slices each cue", async () => {
+  const requested = [];
+  const bundle = new Uint8Array([10, 11, 12, 13, 14, 15]);
+  const fetcher = createAssetFetcher({
+    baseUrl: "https://example.test/Zombieee/",
+    fetchImpl: async (url) => {
+      requested.push(url);
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => "application/octet-stream" },
+        arrayBuffer: async () => bundle.slice().buffer,
+      };
+    },
+  });
+
+  const first = await fetcher({
+    ...asset("/audio/a.mp3", 1),
+    bundlePath: "/pwa-bundles/audio-v1.bin",
+    bundleOffset: 1,
+    bundleBytes: 2,
+  }, {});
+  const second = await fetcher({
+    ...asset("/audio/b.mp3", 2),
+    bundlePath: "/pwa-bundles/audio-v1.bin",
+    bundleOffset: 4,
+    bundleBytes: 2,
+  }, {});
+
+  assert.deepEqual([...first.body], [11, 12]);
+  assert.deepEqual([...second.body], [14, 15]);
+  assert.equal(requested.length, 1);
+  assert.equal(first.networkRequestCount, 1);
+  assert.equal(second.networkRequestCount, 0);
 });

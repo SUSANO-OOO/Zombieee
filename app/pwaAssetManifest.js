@@ -70,6 +70,25 @@ export function audioChannelFor(manifestCategory) {
   return AUDIO_CHANNEL_BY_MANIFEST_CATEGORY[manifestCategory] ?? "se";
 }
 
+/**
+ * The production audio manifest keeps every source so the mixer can fall back
+ * when it is loading directly. The offline pack needs only one source per cue;
+ * the target browsers (Chromium, WebKit, and iPhone Safari) all support MPEG
+ * audio, so prefer it before the larger Ogg/WAV alternatives.
+ */
+export function selectPreferredAudioSource(sources) {
+  const candidates = Array.isArray(sources) ? sources.filter(Boolean) : [];
+  const preference = ["audio/mpeg", "audio/ogg", "audio/wav"];
+  return [...candidates].sort((left, right) => {
+    const leftScore = preference.indexOf(left?.type);
+    const rightScore = preference.indexOf(right?.type);
+    const normalizedLeft = leftScore < 0 ? preference.length : leftScore;
+    const normalizedRight = rightScore < 0 ? preference.length : rightScore;
+    if (normalizedLeft !== normalizedRight) return normalizedLeft - normalizedRight;
+    return String(left?.src ?? "").localeCompare(String(right?.src ?? ""));
+  })[0] ?? null;
+}
+
 const packIdSet = new Set(ASSET_PACK_IDS);
 const categorySet = new Set(ASSET_CATEGORIES);
 const channelSet = new Set(AUDIO_CHANNELS);
@@ -110,10 +129,43 @@ function validateAsset(asset, index, errors) {
   if (asset.criticality !== "critical" && asset.criticality !== "optional") {
     errors.push(`${prefix}.criticality must be "critical" or "optional"`);
   }
+  for (const field of ["sourcePath", "bundlePath"]) {
+    if (asset[field] !== undefined && !isDistributionPath(asset[field])) {
+      errors.push(`${prefix}.${field} must be a repository-local absolute path`);
+    }
+  }
+  const hasBundle = asset.bundlePath !== undefined;
+  if (asset.sourcePath !== undefined && hasBundle) {
+    errors.push(`${prefix} may use sourcePath or bundlePath, not both`);
+  }
+  if (hasBundle) {
+    if (!Number.isInteger(asset.bundleOffset) || asset.bundleOffset < 0) {
+      errors.push(`${prefix}.bundleOffset must be a non-negative integer`);
+    }
+    if (!Number.isInteger(asset.bundleBytes) || asset.bundleBytes !== asset.bytes) {
+      errors.push(`${prefix}.bundleBytes must equal bytes for a bundled asset`);
+    }
+    if (!Number.isInteger(asset.bundleLength) || asset.bundleLength <= 0) {
+      errors.push(`${prefix}.bundleLength must be a positive integer for a bundled asset`);
+    } else if (Number.isInteger(asset.bundleOffset) && Number.isInteger(asset.bundleBytes)
+      && asset.bundleOffset + asset.bundleBytes > asset.bundleLength) {
+      errors.push(`${prefix} slice must fit inside bundleLength`);
+    }
+  } else if (asset.bundleOffset !== undefined || asset.bundleBytes !== undefined || asset.bundleLength !== undefined) {
+    errors.push(`${prefix}.bundleOffset, bundleBytes, and bundleLength require bundlePath`);
+  }
   if (asset.category === "audio") {
     if (!channelSet.has(asset.audioChannel)) errors.push(`${prefix}.audioChannel must be bgm, se, or voice`);
+    if (asset.audioId !== undefined && (typeof asset.audioId !== "string" || asset.audioId.length === 0)) {
+      errors.push(`${prefix}.audioId must be a non-empty string when present`);
+    }
+    if (asset.audioType !== undefined && (typeof asset.audioType !== "string" || asset.audioType.length === 0)) {
+      errors.push(`${prefix}.audioType must be a non-empty MIME type when present`);
+    }
   } else if (asset.audioChannel !== undefined) {
     errors.push(`${prefix}.audioChannel is only valid on audio assets`);
+  } else if (asset.audioId !== undefined || asset.audioType !== undefined) {
+    errors.push(`${prefix}.audioId and audioType are only valid on audio assets`);
   }
 }
 
