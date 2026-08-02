@@ -6945,6 +6945,7 @@ export function AshfallGame() {
   });
   const lastHudRef = useRef(0);
   const selectedActionRef = useRef<SelectedAction>(null);
+  const pointerGestureStateRef = useRef(new Map<number, { blocked: boolean; rejected: boolean }>());
   const eventDestinationRef = useRef<EventDestination>("map");
   const eventQueueRef = useRef<string[]>([]);
   const eventCompletionLockRef = useRef(false);
@@ -7127,6 +7128,7 @@ export function AshfallGame() {
   const persistenceQueueRef = useRef<Promise<void>>(Promise.resolve());
   const campaignTransactionQueueRef = useRef<Promise<void>>(Promise.resolve());
   const saveMutationPendingRef = useRef(false);
+  const qaSavePersistenceHoldRef = useRef<{ promise: Promise<void>; release: () => void } | null>(null);
   const resultSaveRetryingRef = useRef(false);
   const formationUnitIds = useMemo(() => getSelectedFormationUnitIds(campaignSave), [campaignSave]);
   const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
@@ -7216,6 +7218,12 @@ export function AshfallGame() {
     }
     const serialized = serializeCampaignSave(nextSave);
     return enqueueCampaignStorageMutation(async () => {
+      // Local QA can hold the real persistence promise at the storage boundary
+      // so save-pending input tests exercise the same async path as a slow
+      // durable write. The hold is never created outside the localhost QA
+      // bridge below.
+      const qaHold = qaSavePersistenceHoldRef.current;
+      if (qaHold) await qaHold.promise;
       const replica = lastPersistedReplicaRef.current;
       if (serialized === replica.serialized && replica.localSaved && replica.backupSaved) {
         return { durable: true, localSaved: true, backupSaved: true };
@@ -7758,6 +7766,45 @@ export function AshfallGame() {
         );
         setHud((current) => ({ ...current }));
         return battleSaveBoundaryRef.current;
+      },
+      beginSaveBoundaryPersistence: () => {
+        if (!qaMode && !qaScenario) return false;
+        if (qaSavePersistenceHoldRef.current || saveMutationPendingRef.current) return false;
+        let releaseHold: () => void = () => undefined;
+        const holdPromise = new Promise<void>((resolve) => {
+          releaseHold = resolve;
+        });
+        const hold = { promise: holdPromise, release: releaseHold };
+        qaSavePersistenceHoldRef.current = hold;
+        // Start the real campaign persistence call before marking the save
+        // mutation pending. The queued storage callback then pauses on the
+        // explicit promise above, matching a slow durable-write boundary.
+        const persistence = persistCampaignSave(campaignSaveRef.current);
+        if (!beginSaveMutation()) {
+          hold.release();
+          if (qaSavePersistenceHoldRef.current === hold) qaSavePersistenceHoldRef.current = null;
+          return false;
+        }
+        void persistence.then(
+          () => {
+            if (qaSavePersistenceHoldRef.current === hold) qaSavePersistenceHoldRef.current = null;
+            finishSaveMutation();
+            setHud((current) => ({ ...current }));
+          },
+          () => {
+            if (qaSavePersistenceHoldRef.current === hold) qaSavePersistenceHoldRef.current = null;
+            finishSaveMutation();
+            setHud((current) => ({ ...current }));
+          },
+        );
+        setHud((current) => ({ ...current }));
+        return true;
+      },
+      releaseSaveBoundaryPersistence: () => {
+        const hold = qaSavePersistenceHoldRef.current;
+        if (!hold) return false;
+        hold.release();
+        return true;
       },
       prepareAnimationFoundationProof: (
         kind: UnitKind | EnemyKind = "scout",
@@ -10465,6 +10512,7 @@ export function AshfallGame() {
           operationCategory: g.definition.operationCategory,
           time: g.time,
           saveBoundaryPending: battleSaveBoundaryRef.current,
+          saveBoundaryPersistencePending: qaSavePersistenceHoldRef.current !== null,
           banner: g.banner,
           bannerTime: g.bannerTime,
           running: g.running,
@@ -10778,7 +10826,7 @@ export function AshfallGame() {
         delete qaWindow.__ASHFALL_RUNTIME_PERFORMANCE__;
       }
     };
-  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.readStoryEventIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, outbreakSavePending, pendingOutbreakSettlement, pendingResultCommit, pendingSurvivalCheckpoint, pendingSurvivalSettlement, pendingSurvivalWaveEntitlement, persistCampaignSave, qaMode, screen, survivalSavePending, survivalSettlementAwaitingRetry]);
+  }, [beginSaveMutation, campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.readStoryEventIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, finishSaveMutation, outbreakSavePending, pendingOutbreakSettlement, pendingResultCommit, pendingSurvivalCheckpoint, pendingSurvivalSettlement, pendingSurvivalWaveEntitlement, persistCampaignSave, qaMode, qaScenario, screen, survivalSavePending, survivalSettlementAwaitingRetry]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -12259,6 +12307,14 @@ export function AshfallGame() {
   }, []);
 
   const handleBattlefieldPointerMove = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
+    const gesture = pointerGestureStateRef.current.get(event.pointerId);
+    if (gesture?.blocked) return;
+    if (isBattleSaveBoundaryActive()) {
+      if (selectedActionRef.current) {
+        pointerGestureStateRef.current.set(event.pointerId, { blocked: true, rejected: false });
+      }
+      return;
+    }
     const action = selectedActionRef.current;
     if (!action) return;
     const { x, y, lane } = pointerWorldPosition(event);
@@ -12283,21 +12339,47 @@ export function AshfallGame() {
         });
     const reason = check.ok && placement.adjusted ? placement.reason : check.reason;
     g.placementIndicator = placementIndicatorFor(action, targetLane, target.x, target.y, check.ok, reason);
-  }, [pointerWorldPosition]);
+  }, [isBattleSaveBoundaryActive, pointerWorldPosition]);
 
   const handleBattlefieldPointerDown = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     event.preventDefault();
+    const existingGesture = pointerGestureStateRef.current.get(event.pointerId);
+    if (isBattleSaveBoundaryActive()) {
+      const gesture = existingGesture ?? { blocked: true, rejected: false };
+      gesture.blocked = true;
+      if (!gesture.rejected) {
+        gesture.rejected = rejectBattleSaveBoundary(`battlefield:pointer:${event.pointerId}:save-pending`);
+      }
+      pointerGestureStateRef.current.set(event.pointerId, gesture);
+      return;
+    }
+    // A gesture that began while persistence was pending remains rejected even
+    // if the boundary clears before its next pointer event.
+    if (existingGesture?.blocked) return;
     if (!selectedActionRef.current) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     handleBattlefieldPointerMove(event);
-  }, [handleBattlefieldPointerMove]);
+  }, [handleBattlefieldPointerMove, isBattleSaveBoundaryActive, rejectBattleSaveBoundary]);
 
   const handleBattlefieldPointerUp = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     event.preventDefault();
+    const gesture = pointerGestureStateRef.current.get(event.pointerId);
+    if (gesture?.blocked) {
+      if (!isBattleSaveBoundaryActive() && event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      pointerGestureStateRef.current.delete(event.pointerId);
+      return;
+    }
+    if (isBattleSaveBoundaryActive()) {
+      const blockedGesture = { blocked: true, rejected: false };
+      blockedGesture.rejected = rejectBattleSaveBoundary(`battlefield:pointer:${event.pointerId}:save-pending`);
+      pointerGestureStateRef.current.set(event.pointerId, blockedGesture);
+      return;
+    }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return;
-    if (rejectBattleSaveBoundary("battlefield:pointer:save-pending")) return;
     const { x, y } = pointerWorldPosition(event);
     if (!selectedActionRef.current) {
       if (triggerKuromeEmergencyEvadeAt(x, y)) return;
@@ -12305,12 +12387,24 @@ export function AshfallGame() {
       return;
     }
     executeSelected(x, y);
-  }, [executeSelected, pointerWorldPosition, rejectBattleSaveBoundary, triggerDrumAt, triggerKuromeEmergencyEvadeAt]);
+  }, [executeSelected, isBattleSaveBoundaryActive, pointerWorldPosition, rejectBattleSaveBoundary, triggerDrumAt, triggerKuromeEmergencyEvadeAt]);
 
   const handleBattlefieldPointerCancel = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
+    const gesture = pointerGestureStateRef.current.get(event.pointerId);
+    if (gesture?.blocked) {
+      if (!isBattleSaveBoundaryActive() && event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      pointerGestureStateRef.current.delete(event.pointerId);
+      return;
+    }
+    if (isBattleSaveBoundaryActive()) {
+      pointerGestureStateRef.current.set(event.pointerId, { blocked: true, rejected: false });
+      return;
+    }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     if (selectedActionRef.current) gameRef.current.placementIndicator = null;
-  }, []);
+  }, [isBattleSaveBoundaryActive]);
 
   const stageViews = useMemo<StageScreenView[]>(() => (CAMPAIGN_STAGES as unknown as readonly CampaignStageData[]).map((stage) => {
     const claimed = campaignSave.claimedStarRewardsByStage[stage.id] ?? [];

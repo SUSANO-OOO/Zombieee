@@ -8,6 +8,24 @@ export const EXPECTED_NAVIGATION_TEARDOWN_FAILURES = new Set([
   "Load request cancelled",
 ]);
 
+export function classifyRequestFailure({
+  failure,
+  occurredAt = Date.now(),
+  requestNavigationId = null,
+  navigationWindow = null,
+} = {}) {
+  if (!EXPECTED_NAVIGATION_TEARDOWN_FAILURES.has(String(failure ?? ""))) return "failure";
+  if (!navigationWindow || requestNavigationId === null || requestNavigationId !== navigationWindow.id) {
+    return "failure";
+  }
+  const startedAt = Number(navigationWindow.startedAt);
+  const endedAt = navigationWindow.endedAt === null || navigationWindow.endedAt === undefined
+    ? Number.POSITIVE_INFINITY
+    : Number(navigationWindow.endedAt);
+  if (!Number.isFinite(startedAt) || occurredAt < startedAt || occurredAt > endedAt) return "failure";
+  return "navigation-teardown";
+}
+
 // WebKit reports a fetch that is torn down by a real away/back-forward
 // navigation as a malformed-origin CORS pageerror. This exact browser string
 // is only eligible for causal classification when the lifecycle probe observed

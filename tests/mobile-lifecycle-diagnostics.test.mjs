@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   classifyAudioDiagnostic,
+  classifyRequestFailure,
   isExpectedNavigationTeardownPageError,
   normalizeLifecycleDiagnostics,
 } from "../scripts/mobile-lifecycle-diagnostics.mjs";
@@ -74,4 +75,54 @@ test("only the exact WebKit audio teardown pageerror is causal when navigation o
   });
   assert.deepEqual(ordinary.audioFailures, [teardownError]);
   assert.deepEqual(ordinary.pageErrors, [teardownError]);
+});
+
+test("only a matching explicit navigation window permits request cancellation", () => {
+  const navigationWindow = {
+    id: 7,
+    startedAt: 1_000,
+    endedAt: 2_000,
+  };
+  for (const resourceType of ["audio", "image", "script", "stylesheet"]) {
+    assert.equal(classifyRequestFailure({
+      failure: "Load request cancelled",
+      occurredAt: 1_500,
+      requestNavigationId: 7,
+      navigationWindow,
+    }), "navigation-teardown", resourceType);
+    assert.equal(classifyRequestFailure({
+      failure: "net::ERR_ABORTED",
+      occurredAt: 1_500,
+      requestNavigationId: null,
+      navigationWindow: null,
+    }), "failure", resourceType + " cancellation outside navigation");
+  }
+  assert.equal(classifyRequestFailure({
+    failure: "net::ERR_ABORTED",
+    occurredAt: 1_500,
+    requestNavigationId: 8,
+    navigationWindow,
+  }), "failure", "navigation ID mismatch must not be whitelisted");
+  assert.equal(classifyRequestFailure({
+    failure: "net::ERR_ABORTED",
+    occurredAt: 2_001,
+    requestNavigationId: 7,
+    navigationWindow,
+  }), "failure", "cancellation after the explicit window must fail");
+});
+
+test("non-cancellation transport, HTTP, CORS, and decode failures remain failures", () => {
+  for (const failure of [
+    "net::ERR_FAILED",
+    "HTTP 503",
+    "CORS access control checks",
+    "decodeAudioData failed",
+  ]) {
+    assert.equal(classifyRequestFailure({
+      failure,
+      occurredAt: 1_500,
+      requestNavigationId: 7,
+      navigationWindow: { id: 7, startedAt: 1_000, endedAt: 2_000 },
+    }), "failure", failure);
+  }
 });

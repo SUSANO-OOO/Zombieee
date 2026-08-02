@@ -3,7 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import {
-  EXPECTED_NAVIGATION_TEARDOWN_FAILURES,
+  classifyRequestFailure,
   isExpectedNavigationTeardownPageError,
   normalizeLifecycleDiagnostics,
 } from "./mobile-lifecycle-diagnostics.mjs";
@@ -73,10 +73,14 @@ function diagnosticsFor(page) {
     pageErrors: [],
     requestFailures: [],
     rawRequestFailures: [],
+    rawRequestFailureDetails: [],
+    navigationTeardownRequestFailures: [],
     httpErrors: [],
     warnings: [],
     rawWarnings: [],
     expectedNavigationTeardownPageErrors: [],
+    navigationWindows: [],
+    navigation: { nextId: 0, active: null },
   };
   page.on("console", (message) => {
     if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
@@ -89,17 +93,54 @@ function diagnosticsFor(page) {
   page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
   page.on("requestfailed", (request) => {
     const failure = request.failure()?.errorText ?? "unknown";
-    const entry = `${request.url()} :: ${failure}`;
+    const entry = String(request.url()) + " :: " + failure;
+    const occurredAt = Date.now();
+    const navigationWindow = diagnostics.navigation.active;
+    const details = {
+      url: request.url(),
+      failure,
+      resourceType: request.resourceType(),
+      occurredAt,
+      navigationId: navigationWindow?.id ?? null,
+    };
     diagnostics.rawRequestFailures.push(entry);
-    // Navigation-cancelled resources are retained above for audit but are not
-    // product request failures because the lifecycle probe intentionally tears
-    // down the document during the away/back-forward step.
-    if (!EXPECTED_NAVIGATION_TEARDOWN_FAILURES.has(failure)) diagnostics.requestFailures.push(entry);
+    diagnostics.rawRequestFailureDetails.push(details);
+    const classification = classifyRequestFailure({
+      failure,
+      occurredAt,
+      requestNavigationId: details.navigationId,
+      navigationWindow,
+    });
+    if (classification === "navigation-teardown") {
+      diagnostics.navigationTeardownRequestFailures.push(details);
+    } else {
+      diagnostics.requestFailures.push(entry);
+    }
   });
   page.on("response", (response) => {
     if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
   });
   return diagnostics;
+}
+
+function beginNavigationWindow(diagnostics, kind) {
+  const window = {
+    id: diagnostics.navigation.nextId + 1,
+    kind,
+    startedAt: Date.now(),
+    endedAt: null,
+  };
+  diagnostics.navigation.nextId = window.id;
+  diagnostics.navigation.active = window;
+  return window.id;
+}
+
+function endNavigationWindow(diagnostics, id) {
+  const active = diagnostics.navigation.active;
+  if (!active || active.id !== id) return;
+  active.endedAt = Date.now();
+  diagnostics.navigationWindows.push({ ...active });
+  diagnostics.navigation.active = null;
 }
 
 function normalizedDiagnostics(diagnostics, audioCapability = {}) {
@@ -417,6 +458,8 @@ async function exercisePageTransition(page, { requireAudio }) {
 async function exerciseRealBackForward(page, { requireAudio, diagnostics }) {
   const before = await readRuntime(page);
   const pageErrorsBeforeNavigation = diagnostics.pageErrors.length;
+  const navigationId = beginNavigationWindow(diagnostics, "away-back-forward");
+  try {
   const marker = `bfcache-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   await page.evaluate((value) => {
     window.__ASHFALL_BFCACHE_PROBE__ = {
@@ -477,6 +520,9 @@ async function exerciseRealBackForward(page, { requireAudio, diagnostics }) {
     navigationType: probe.navigationType,
     contextCreateDelta: after.audio.contextCreateCount - before.audio.contextCreateCount,
   };
+  } finally {
+    endNavigationWindow(diagnostics, navigationId);
+  }
 }
 
 for (const engine of engines) {
