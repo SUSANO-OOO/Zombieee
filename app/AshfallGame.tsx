@@ -323,7 +323,6 @@ import {
   STATION_AUDIO_CUE_IDS,
   STORY_AUDIO_MIX,
   TAKUYA_ENTRANCE_AUDIO,
-  UPGRADE_AUDIO_CUE_IDS,
   enemyVoiceCue,
   humanVoiceCueForUnit,
   sceneIdForScreen,
@@ -7062,6 +7061,10 @@ export function AshfallGame() {
   const [employmentNoticeSaveError, setEmploymentNoticeSaveError] = useState(false);
   const employmentNoticeSoundRef = useRef("");
   const employmentNoticeLockRef = useRef(false);
+  const mountedRef = useRef(true);
+  useEffect(() => () => {
+    mountedRef.current = false;
+  }, []);
   const recruitLocksRef = useRef(new Set<string>());
   const upgradeLocksRef = useRef(new Set<string>());
   const [upgradePendingUnitIds, setUpgradePendingUnitIds] = useState<readonly string[]>([]);
@@ -7122,6 +7125,7 @@ export function AshfallGame() {
   const lastPersistedReplicaRef = useRef<PersistedReplicaReceipt>({ serialized: "", localSaved: false, backupSaved: false });
   const persistenceWriteBlockedSourcesRef = useRef<Set<string>>(new Set());
   const persistenceQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const campaignTransactionQueueRef = useRef<Promise<void>>(Promise.resolve());
   const saveMutationPendingRef = useRef(false);
   const resultSaveRetryingRef = useRef(false);
   const formationUnitIds = useMemo(() => getSelectedFormationUnitIds(campaignSave), [campaignSave]);
@@ -7150,6 +7154,25 @@ export function AshfallGame() {
   });
   const [end, setEnd] = useState<BattleResult | null>(null);
 
+  // All battle operations must re-check the save boundary at handler time.
+  // React state can lag one render behind a save effect, so this ref is also
+  // consulted by the frame loop and keyboard/pointer handlers.
+  const battleSaveBoundaryRef = useRef(false);
+  const qaBattleSaveBoundaryPendingRef = useRef(false);
+  battleSaveBoundaryRef.current = Boolean(
+    saveMutationPendingRef.current
+    || pendingResultCommit
+    || resultSaveRetryingRef.current
+    || pendingOutbreakSettlement
+    || outbreakSavePending
+    || pendingSurvivalCheckpoint
+    || pendingSurvivalWaveEntitlement
+    || pendingSurvivalSettlement
+    || survivalSavePending
+    || survivalSettlementAwaitingRetry
+    || qaBattleSaveBoundaryPendingRef.current,
+  );
+
   const handleStoryAudioPositionChange = useCallback((nextEventId: string, lineIndex: number) => {
     const nextLineIndex = Number.isFinite(lineIndex) ? Math.max(0, Math.trunc(lineIndex)) : 0;
     setStoryAudioPosition((current) => (
@@ -7163,6 +7186,16 @@ export function AshfallGame() {
     const queued = persistenceQueueRef.current.then(mutation);
     persistenceQueueRef.current = queued.then(() => undefined, () => undefined);
     return queued;
+  }, []);
+
+  const enqueueCampaignTransaction = useCallback((transaction: (latestSave: CampaignSave) => Promise<void>) => {
+    const queued = campaignTransactionQueueRef.current.then(async () => {
+      if (!mountedRef.current) return;
+      await transaction(campaignSaveRef.current);
+    });
+    const settled = queued.then(() => undefined, () => undefined);
+    campaignTransactionQueueRef.current = settled;
+    return settled;
   }, []);
 
   const beginSaveMutation = useCallback(() => {
@@ -7364,8 +7397,13 @@ export function AshfallGame() {
     // conveniences into ordinary campaign progress.
     if (resolveLocalQaMode(window.location.hostname, window.location.search)
       || resolveLocalQaScenario(window.location.hostname, window.location.search)) return;
-    void persistCampaignSave(campaignSave);
-  }, [campaignSave, persistCampaignSave, saveHydrated]);
+    // Automatic persistence must share the same queue as recruit/upgrade
+    // transactions. Persisting the render-time `campaignSave` directly could
+    // enqueue a stale candidate after a newer queued transaction committed.
+    void enqueueCampaignTransaction(async (latestSave) => {
+      await persistCampaignSave(latestSave);
+    });
+  }, [campaignSave, enqueueCampaignTransaction, persistCampaignSave, saveHydrated]);
 
   const updateAudioAvailability = useCallback((
     channel: keyof AudioAvailability,
@@ -7702,6 +7740,25 @@ export function AshfallGame() {
       __ASHFALL_RUNTIME_PERFORMANCE__?: unknown;
     };
     const bridge = {
+      setSaveBoundaryPending: (pending: boolean) => {
+        const next = Boolean(pending);
+        qaBattleSaveBoundaryPendingRef.current = next;
+        battleSaveBoundaryRef.current = Boolean(
+          saveMutationPendingRef.current
+          || pendingResultCommit
+          || resultSaveRetryingRef.current
+          || pendingOutbreakSettlement
+          || outbreakSavePending
+          || pendingSurvivalCheckpoint
+          || pendingSurvivalWaveEntitlement
+          || pendingSurvivalSettlement
+          || survivalSavePending
+          || survivalSettlementAwaitingRetry
+          || next,
+        );
+        setHud((current) => ({ ...current }));
+        return battleSaveBoundaryRef.current;
+      },
       prepareAnimationFoundationProof: (
         kind: UnitKind | EnemyKind = "scout",
         side: "human" | "zombie" = "human",
@@ -10407,6 +10464,9 @@ export function AshfallGame() {
           operationId: g.definition.operationId,
           operationCategory: g.definition.operationCategory,
           time: g.time,
+          saveBoundaryPending: battleSaveBoundaryRef.current,
+          banner: g.banner,
+          bannerTime: g.bannerTime,
           running: g.running,
           paused: g.paused,
           over: g.over,
@@ -10523,6 +10583,7 @@ export function AshfallGame() {
             y: object.y,
             phase: object.phase,
           })),
+          deployQueue: g.deployQueue.map((entry) => ({ ...entry })),
           airstrike: { ...g.airstrike },
           placementIndicator: g.placementIndicator ? { ...g.placementIndicator } : null,
           attackIdentity: g.shots
@@ -10717,7 +10778,7 @@ export function AshfallGame() {
         delete qaWindow.__ASHFALL_RUNTIME_PERFORMANCE__;
       }
     };
-  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.readStoryEventIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, persistCampaignSave, qaMode, screen]);
+  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.readStoryEventIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, outbreakSavePending, pendingOutbreakSettlement, pendingResultCommit, pendingSurvivalCheckpoint, pendingSurvivalSettlement, pendingSurvivalWaveEntitlement, persistCampaignSave, qaMode, screen, survivalSavePending, survivalSettlementAwaitingRetry]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -11469,6 +11530,7 @@ export function AshfallGame() {
   }, [playProductionCue]);
 
   const showOperationFeedback = useCallback((feedback: OperationFeedbackView) => {
+    if (!mountedRef.current) return;
     if (operationFeedbackTimerRef.current !== null) {
       window.clearTimeout(operationFeedbackTimerRef.current);
     }
@@ -11478,6 +11540,19 @@ export function AshfallGame() {
       operationFeedbackTimerRef.current = null;
     }, feedback.kind === "reject" ? 1800 : 2200);
   }, []);
+
+  const isBattleSaveBoundaryActive = useCallback(() => battleSaveBoundaryRef.current, []);
+
+  const rejectBattleSaveBoundary = useCallback((dedupeKey: string) => {
+    if (!isBattleSaveBoundaryActive()) return false;
+    const g = gameRef.current;
+    if (g.running && !g.over) {
+      g.banner = "保存処理中 // 操作を待機";
+      g.bannerTime = Math.max(g.bannerTime, .9);
+    }
+    playUiOperationCue("reject", dedupeKey);
+    return true;
+  }, [isBattleSaveBoundaryActive, playUiOperationCue]);
 
   useEffect(() => () => {
     if (operationFeedbackTimerRef.current !== null) {
@@ -11577,6 +11652,7 @@ export function AshfallGame() {
       playUiOperationCue("reject", "support:inactive");
       return;
     }
+    if (rejectBattleSaveBoundary(`support:${action ?? "cancel"}:save-pending`)) return;
     if (selectedActionRef.current === action) return;
     if (action?.startsWith("supply:")) {
       const kind = action.slice("supply:".length) as SupplyKind;
@@ -11600,7 +11676,7 @@ export function AshfallGame() {
     }
     chooseAction(action);
     playUiOperationCue(action ? "confirm" : "back", `support:${action ?? "cancel"}`);
-  }, [chooseAction, playUiOperationCue]);
+  }, [chooseAction, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const activateManualAbility = useCallback((fighterId: number) => {
     const g = gameRef.current;
@@ -11608,6 +11684,7 @@ export function AshfallGame() {
       playUiOperationCue("reject", `ability:${fighterId}:condition`);
       return false;
     }
+    if (rejectBattleSaveBoundary(`ability:${fighterId}:save-pending`)) return false;
     const fighter = g.fighters.find((candidate) => (
       candidate.id === fighterId
       && candidate.side === "human"
@@ -11713,7 +11790,7 @@ export function AshfallGame() {
       playUiOperationCue("confirm", `ability:${fighter.id}:${startedAbility.activationId}`);
     }
     return true;
-  }, [playCue, playProductionCue, playUiOperationCue]);
+  }, [playCue, playProductionCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const stopSfx = useCallback(() => {
     sfxRequestGateRef.current.cancelPending();
@@ -11979,6 +12056,7 @@ export function AshfallGame() {
       playUiOperationCue("reject", `deploy:${kind}:inactive`);
       return false;
     }
+    if (rejectBattleSaveBoundary(`deploy:${kind}:save-pending`)) return false;
     const card = equippedCardForGame(g, kind);
     if (!card || !g.formationKinds.includes(kind) || g.deployQueue.length >= 3 || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
       playUiOperationCue("reject", `deploy:${kind}:unavailable`);
@@ -11993,7 +12071,7 @@ export function AshfallGame() {
     g.bannerTime = .7;
     playUiOperationCue("deploy", `deploy:${kind}:queue`);
     return true;
-  }, [playUiOperationCue]);
+  }, [playUiOperationCue, rejectBattleSaveBoundary]);
 
   const placeBattlefieldSupply = useCallback((kind: SupplyKind, requestedX: number, requestedY: number) => {
     const g = gameRef.current;
@@ -12001,6 +12079,7 @@ export function AshfallGame() {
       playUiOperationCue("reject", `supply:${kind}:inactive`);
       return false;
     }
+    if (rejectBattleSaveBoundary(`supply:${kind}:save-pending`)) return false;
     const stageObjectForbiddenZones = stageObjectForbiddenZonesForGame(g);
     const placement = correctedBattlefieldTargetForGame(g, { x: requestedX, y: requestedY }, kind);
     const target = placement.position ?? placement.requested;
@@ -12045,7 +12124,7 @@ export function AshfallGame() {
     emitBattleBark(g, kind === "pod" ? "support-pod" : kind === "drum" ? "support-drum" : "support-medical", kind === "drum" ? "gunner" : kind === "medical" ? "medic" : "guide", `support-${kind}`);
     if (kind === "pod") playCue("pod-descent");
     return true;
-  }, [playCue, playUiOperationCue]);
+  }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const deployAirstrike = useCallback((requestedX: number, requestedY: number) => {
     const g = gameRef.current;
@@ -12053,6 +12132,7 @@ export function AshfallGame() {
       playUiOperationCue("reject", "airstrike:inactive");
       return false;
     }
+    if (rejectBattleSaveBoundary("airstrike:save-pending")) return false;
     const placement = correctedBattlefieldTargetForGame(g, { x: requestedX, y: requestedY }, null);
     const target = placement.position ?? placement.requested;
     const lane = placement.legacyLane as Lane | null;
@@ -12074,7 +12154,7 @@ export function AshfallGame() {
     g.bannerTime = 1; playCue("airstrike-request");
     emitBattleBark(g, "airstrike-request", "guide", "airstrike");
     return true;
-  }, [playCue, playUiOperationCue]);
+  }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const triggerCrawlerBarrage = useCallback(() => {
     const g = gameRef.current;
@@ -12082,13 +12162,14 @@ export function AshfallGame() {
       playUiOperationCue("reject", "crawler-barrage:inactive");
       return false;
     }
+    if (rejectBattleSaveBoundary("crawler-barrage:save-pending")) return false;
     const result = requestCrawlerBarrage({ running: g.running, paused: g.paused, over: g.over, runtime: g.crawlerAbility });
     if (!result.ok) { g.banner = result.reason; g.bannerTime = 1; playUiOperationCue("reject", `crawler-barrage:${result.reason}`); return false; }
     g.crawlerAbility = result.runtime as CrawlerRuntime;
     g.banner = "移動拠点火器を展開"; g.bannerTime = 1.1; playCue("crawler-request");
     emitBattleBark(g, "crawler-barrage", "guide", "crawler-barrage");
     return true;
-  }, [playCue, playUiOperationCue]);
+  }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const triggerDrumAt = useCallback((x: number, y: number) => {
     const g = gameRef.current;
@@ -12096,6 +12177,7 @@ export function AshfallGame() {
       playUiOperationCue("reject", "drum:inactive");
       return false;
     }
+    if (rejectBattleSaveBoundary("drum:save-pending")) return false;
     const drum = g.battlefieldObjects
       .filter((supply) => supply.kind === "drum" && supply.phase === "active" && effectDistance(supply, { x, y }) <= 52)
       .sort((a, b) => effectDistance(a, { x, y }) - effectDistance(b, { x, y }))[0];
@@ -12111,11 +12193,12 @@ export function AshfallGame() {
     Object.assign(drum, result.supply);
     g.banner = "爆薬ドラム起爆 // 指定地点"; g.bannerTime = .85; playCue("drum-request");
     return true;
-  }, [playCue, playUiOperationCue]);
+  }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const triggerKuromeEmergencyEvadeAt = useCallback((x: number, y: number) => {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return false;
+    if (rejectBattleSaveBoundary("kurome-evade:save-pending")) return false;
     for (const boss of g.fighters.filter((fighter) => (
       fighter.kind === "kurome"
       && fighter.side === "zombie"
@@ -12152,7 +12235,7 @@ export function AshfallGame() {
       return true;
     }
     return false;
-  }, [playCue]);
+  }, [playCue, rejectBattleSaveBoundary]);
 
   const executeSelected = useCallback((x: number, y: number) => {
     const action = selectedActionRef.current;
@@ -12214,6 +12297,7 @@ export function AshfallGame() {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return;
+    if (rejectBattleSaveBoundary("battlefield:pointer:save-pending")) return;
     const { x, y } = pointerWorldPosition(event);
     if (!selectedActionRef.current) {
       if (triggerKuromeEmergencyEvadeAt(x, y)) return;
@@ -12221,7 +12305,7 @@ export function AshfallGame() {
       return;
     }
     executeSelected(x, y);
-  }, [executeSelected, pointerWorldPosition, triggerDrumAt, triggerKuromeEmergencyEvadeAt]);
+  }, [executeSelected, pointerWorldPosition, rejectBattleSaveBoundary, triggerDrumAt, triggerKuromeEmergencyEvadeAt]);
 
   const handleBattlefieldPointerCancel = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -12859,37 +12943,40 @@ export function AshfallGame() {
     if (recruitLocksRef.current.has(unitId)) return;
     recruitLocksRef.current.add(unitId);
     const acquisitionId = `recruit:${unitId}`;
-    const currentSave = campaignSaveRef.current;
-    const transaction = recruitCampaignUnit(currentSave, { unitId, acquisitionId });
     const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === unitId);
     const unitName = unit?.displayName ?? unitId;
-    if (!transaction.result.applied) {
-      const reason = String(transaction.result.reason || "rejected");
-      showOperationFeedback({ kind: "reject", message: operationRejectMessage(reason, `${unitName}の雇用`), key: acquisitionId });
-      playUiOperationCue("reject", `${acquisitionId}:${reason}`);
-      recruitLocksRef.current.delete(unitId);
-      return;
-    }
-    void (async () => {
+    void enqueueCampaignTransaction(async (latestSave) => {
+      if (!mountedRef.current) return;
       try {
+        // Read and calculate only when this transaction reaches the common
+        // queue. A different recruit/upgrade may have committed meanwhile.
+        const transaction = recruitCampaignUnit(latestSave, { unitId, acquisitionId });
+        if (!transaction.result.applied) {
+          const reason = String(transaction.result.reason || "rejected");
+          showOperationFeedback({ kind: "reject", message: operationRejectMessage(reason, `${unitName}の雇用`), key: acquisitionId });
+          playUiOperationCue("reject", `${acquisitionId}:${reason}`);
+          return;
+        }
         const persisted = await persistCampaignSave(transaction.save as CampaignSave);
         if (!persisted.durable) {
           showOperationFeedback({ kind: "reject", message: operationRejectMessage("save-failed", `${unitName}の雇用`), key: `${acquisitionId}:save-failed` });
           playUiOperationCue("reject", `${acquisitionId}:save-failed`);
           return;
         }
+        if (!mountedRef.current) return;
         campaignSaveRef.current = transaction.save as CampaignSave;
         setCampaignSave(transaction.save as CampaignSave);
         showOperationFeedback({ kind: "success", message: `${unitName}を雇用しました`, key: acquisitionId });
         playUiOperationCue("purchase", `${acquisitionId}:success`);
       } catch {
+        if (!mountedRef.current) return;
         showOperationFeedback({ kind: "reject", message: operationRejectMessage("save-failed", `${unitName}の雇用`), key: `${acquisitionId}:save-error` });
         playUiOperationCue("reject", `${acquisitionId}:save-error`);
-      } finally {
-        recruitLocksRef.current.delete(unitId);
       }
-    })();
-  }, [persistCampaignSave, playUiOperationCue, showOperationFeedback]);
+    }).finally(() => {
+      recruitLocksRef.current.delete(unitId);
+    });
+  }, [enqueueCampaignTransaction, persistCampaignSave, playUiOperationCue, showOperationFeedback]);
   const acknowledgeEmploymentAvailability = useCallback((openEmployment: boolean) => {
     if (!employmentNoticeUnit || employmentNoticeLockRef.current) {
       playUiOperationCue("reject", "employment-notice:busy");
@@ -12930,28 +13017,29 @@ export function AshfallGame() {
     if (upgradeLocksRef.current.has(unitId)) return;
     upgradeLocksRef.current.add(unitId);
     setUpgradePendingUnitIds([...upgradeLocksRef.current]);
-    const currentSave = campaignSaveRef.current;
-    const currentLevel = getCampaignUnitLevel(currentSave, unitId);
-    const upgradeId = `upgrade:${unitId}:level-${currentLevel + 1}`;
-    const transaction = upgradeCampaignUnit(currentSave, { unitId, upgradeId });
     const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === unitId);
     const unitName = unit?.displayName ?? unitId;
-    if (!transaction.result.applied) {
-      const reason = String(transaction.result.reason || "rejected");
-      showOperationFeedback({ kind: "reject", message: operationRejectMessage(reason, `${unitName}の強化`), key: upgradeId });
-      playUiOperationCue("reject", `${upgradeId}:${reason}`);
-      upgradeLocksRef.current.delete(unitId);
-      setUpgradePendingUnitIds([...upgradeLocksRef.current]);
-      return;
-    }
-    void (async () => {
+    void enqueueCampaignTransaction(async (latestSave) => {
+      if (!mountedRef.current) return;
+      const currentLevel = getCampaignUnitLevel(latestSave, unitId);
+      const upgradeId = `upgrade:${unitId}:level-${currentLevel + 1}`;
       try {
+        // The level and receipt are derived from the canonical save at queue
+        // execution time, never from a render-time snapshot.
+        const transaction = upgradeCampaignUnit(latestSave, { unitId, upgradeId });
+        if (!transaction.result.applied) {
+          const reason = String(transaction.result.reason || "rejected");
+          showOperationFeedback({ kind: "reject", message: operationRejectMessage(reason, `${unitName}の強化`), key: upgradeId });
+          playUiOperationCue("reject", `${upgradeId}:${reason}`);
+          return;
+        }
         const persisted = await persistCampaignSave(transaction.save as CampaignSave);
         if (!persisted.durable) {
           showOperationFeedback({ kind: "reject", message: operationRejectMessage("save-failed", `${unitName}の強化`), key: `${upgradeId}:save-failed` });
           playUiOperationCue("reject", `${upgradeId}:save-failed`);
           return;
         }
+        if (!mountedRef.current) return;
         const nextLevel = transaction.result.nextLevel ?? currentLevel;
         const baseCard = cards.find((candidate) => candidate.kind === unit?.combatKind) ?? cards[0];
         const before = applyUnitLevelProgression(baseCard, currentLevel);
@@ -12971,38 +13059,26 @@ export function AshfallGame() {
           receipt: transaction.result.upgradeId,
         });
         showOperationFeedback({ kind: "success", message: `${unitName}を強化しました`, key: upgradeId });
-        playProductionCue(UPGRADE_AUDIO_CUE_IDS.CURRENCY, W / 2, {
-          priority: 68,
-          cooldownMs: 60,
-          volume: .72,
-          maxInstances: 1,
-          dedupeKey: `${upgradeId}:currency`,
-        });
-        if (nextLevel >= UNIT_LEVEL_MAX) {
-          playProductionCue(UPGRADE_AUDIO_CUE_IDS.MAX, W / 2, {
-            priority: 82,
-            cooldownMs: 60,
-            volume: .9,
-            maxInstances: 1,
-            dedupeKey: `${upgradeId}:result`,
-          });
-        } else {
-          playUiOperationCue("upgrade", `${upgradeId}:result`);
-        }
+        // One durable semantic upgrade transaction produces one upgrade cue.
+        // Currency feedback is already represented by the success UI and must
+        // not add a second selection/currency cue.
+        playUiOperationCue("upgrade", `${upgradeId}:result`);
         if (upgradeFeedbackTimerRef.current !== null) window.clearTimeout(upgradeFeedbackTimerRef.current);
         upgradeFeedbackTimerRef.current = window.setTimeout(() => {
+          if (!mountedRef.current) return;
           setUpgradeFeedback((current) => current?.receipt === transaction.result.upgradeId ? null : current);
           upgradeFeedbackTimerRef.current = null;
         }, nextLevel >= UNIT_LEVEL_MAX ? 1700 : 1350);
       } catch {
+        if (!mountedRef.current) return;
         showOperationFeedback({ kind: "reject", message: operationRejectMessage("save-failed", `${unitName}の強化`), key: `${upgradeId}:save-error` });
         playUiOperationCue("reject", `${upgradeId}:save-error`);
-      } finally {
-        upgradeLocksRef.current.delete(unitId);
-        setUpgradePendingUnitIds([...upgradeLocksRef.current]);
       }
-    })();
-  }, [persistCampaignSave, playProductionCue, playUiOperationCue, showOperationFeedback]);
+    }).finally(() => {
+      upgradeLocksRef.current.delete(unitId);
+      if (mountedRef.current) setUpgradePendingUnitIds([...upgradeLocksRef.current]);
+    });
+  }, [enqueueCampaignTransaction, persistCampaignSave, playUiOperationCue, showOperationFeedback]);
 
   const beginCampaign = useCallback(() => {
     if (campaignSave.campaignStarted) {
@@ -13939,6 +14015,7 @@ export function AshfallGame() {
       playUiOperationCue("reject", "pause:inactive");
       return;
     }
+    if (rejectBattleSaveBoundary("pause:save-pending")) return;
     if (g.survivalRun?.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION) {
       playUiOperationCue("reject", "pause:upgrade-selection");
       return;
@@ -13973,7 +14050,7 @@ export function AshfallGame() {
       if (!bgmMuted) startMusic();
       resumeBattleAudioLoops(g);
     }
-  }, [bgmMuted, playProductionCue, playUiOperationCue, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
+  }, [bgmMuted, playProductionCue, playUiOperationCue, rejectBattleSaveBoundary, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
 
   const changeSurvivalSpeed = useCallback((speed: 1 | 2) => {
     const g = gameRef.current;
@@ -13981,6 +14058,7 @@ export function AshfallGame() {
       playUiOperationCue("reject", `speed:${speed}:unavailable`);
       return;
     }
+    if (rejectBattleSaveBoundary(`speed:${speed}:save-pending`)) return;
     const nextRun = setSurvivalRunSpeed(g.survivalRun, speed);
     if (nextRun === g.survivalRun) {
       playUiOperationCue("reject", `speed:${speed}:locked`);
@@ -13999,10 +14077,11 @@ export function AshfallGame() {
       bossMaxHp: boss?.maxHp ?? 0,
     }));
     playUiOperationCue("selection", `speed:${speed}`);
-  }, [playUiOperationCue]);
+  }, [playUiOperationCue, rejectBattleSaveBoundary]);
 
   const selectSurvivalUpgrade = useCallback((upgradeId: string) => {
     const g = gameRef.current;
+    if (rejectBattleSaveBoundary(`survival-upgrade:${upgradeId}:save-pending`)) return;
     if (!g.survivalRun
       || !g.survivalRuntime
       || pendingSurvivalCheckpoint
@@ -14043,16 +14122,17 @@ export function AshfallGame() {
     setSurvivalHud(survivalHudSnapshot(selection.run));
     if (!bgmMuted) startMusic();
     playUiOperationCue("upgrade", `survival-upgrade:${upgradeId}`);
-  }, [bgmMuted, pendingSurvivalCheckpoint, playUiOperationCue, startMusic, survivalSavePending]);
+  }, [bgmMuted, pendingSurvivalCheckpoint, playUiOperationCue, rejectBattleSaveBoundary, startMusic, survivalSavePending]);
 
   const requestPauseAction = useCallback((action: PauseAction) => {
     if (!gameRef.current.running || gameRef.current.over) {
       playUiOperationCue("reject", `pause-action:${action}:inactive`);
       return;
     }
+    if (rejectBattleSaveBoundary(`pause-action:${action}:save-pending`)) return;
     setPauseConfirm(action);
     playUiOperationCue("selection", `pause-action:${action}`);
-  }, [playUiOperationCue]);
+  }, [playUiOperationCue, rejectBattleSaveBoundary]);
 
   const cancelPauseAction = useCallback(() => {
     const transition = createBattleSessionTransition({
@@ -14072,6 +14152,7 @@ export function AshfallGame() {
   const confirmPauseAction = useCallback(() => {
     const action = pauseConfirm;
     if (!action) return;
+    if (rejectBattleSaveBoundary(`pause-confirm:${action}:save-pending`)) return;
     playUiOperationCue("confirm", `pause-confirm:${action}`);
     const activeGame = gameRef.current;
     if (activeGame.survivalRun) {
@@ -14157,7 +14238,7 @@ export function AshfallGame() {
         selectedSupply: SupplyKind;
       });
     }
-  }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, playUiOperationCue, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
+  }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, playUiOperationCue, rejectBattleSaveBoundary, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
 
   const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
@@ -14507,7 +14588,7 @@ export function AshfallGame() {
         g.shake = advanceCameraShakeRuntime(g.shake, dt);
         if (g.running && !g.paused) g.battleBarks = advanceBattleBarkRuntime(g.battleBarks, dt) as BattleBarkRuntime;
 
-        if (g.running && !g.paused && !g.over) {
+        if (g.running && !g.paused && !g.over && !battleSaveBoundaryRef.current) {
         performanceCounters.simulationTicks += 1;
         g.time += dt;
         g.manualAbilityVfx = g.manualAbilityVfx
@@ -19460,7 +19541,7 @@ export function AshfallGame() {
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;
-          const abilityDisabled = !icon.available || paused || Boolean(selectedAction) || combatLocked;
+          const abilityDisabled = !icon.available || paused || Boolean(selectedAction) || combatLocked || battleSaveBoundaryRef.current;
           return <button
             key={icon.fighterId}
             type="button"
@@ -19512,17 +19593,17 @@ export function AshfallGame() {
             <i><em style={{ width: `${healthPct}%` }} /></i>
           </div>
           <div className="survival-speed" aria-label="戦闘速度">
-            <button className={survivalHud.speed === 1 ? "active" : ""} aria-disabled={paused || survivalSavePending} onClick={() => changeSurvivalSpeed(1)}>1倍</button>
-            <button className={survivalHud.speed === 2 ? "active" : ""} aria-disabled={paused || survivalHud.speedLocked || survivalSavePending} onClick={() => changeSurvivalSpeed(2)}>2倍</button>
+            <button className={survivalHud.speed === 1 ? "active" : ""} aria-disabled={paused || survivalSavePending || battleSaveBoundaryRef.current} onClick={() => changeSurvivalSpeed(1)}>1倍</button>
+            <button className={survivalHud.speed === 2 ? "active" : ""} aria-disabled={paused || survivalHud.speedLocked || survivalSavePending || battleSaveBoundaryRef.current} onClick={() => changeSurvivalSpeed(2)}>2倍</button>
           </div>
-          <button className="survival-pause" onClick={togglePause} aria-disabled={survivalUpgradeOpen || survivalSavePending} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
+          <button className="survival-pause" onClick={togglePause} aria-disabled={survivalUpgradeOpen || survivalSavePending || battleSaveBoundaryRef.current} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
         </div> : <>
           <div className="top-hud">
             <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedOperationView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
             <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
-            <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
-            <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
-            <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
+            <button className="icon-btn" onClick={togglePause} aria-disabled={battleSaveBoundaryRef.current} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
+            <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
+            <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
           </div>
 
           <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>移動拠点</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
@@ -19545,7 +19626,7 @@ export function AshfallGame() {
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 return (
-                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} aria-disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} aria-disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked || battleSaveBoundaryRef.current} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
                     {cooldown > 0 && <span
@@ -19561,7 +19642,7 @@ export function AshfallGame() {
               <button
                 className={`support-btn ${selectedSupply} ${hud.supportItemCooldowns[selectedSupply] > 0 ? "cooling" : ""} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
                 data-cooldown={Math.ceil(hud.supportItemCooldowns[selectedSupply])}
-                aria-disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || hud.supportItemCooldowns[selectedSupply] > 0 || combatLocked}
+                aria-disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || hud.supportItemCooldowns[selectedSupply] > 0 || combatLocked || battleSaveBoundaryRef.current}
                 onClick={() => chooseActionWithCue(selectedAction === `supply:${selectedSupply}` ? null : `supply:${selectedSupply}`)}
                 aria-label={hud.supportItemCooldowns[selectedSupply] > 0
                   ? `${supplyDefs[selectedSupply].name} 再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
@@ -19572,10 +19653,10 @@ export function AshfallGame() {
                 <small>{hud.supportItemCooldowns[selectedSupply] > 0 ? "使用済み・自動補充中" : selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復"}</small>
                 <em>{hud.supportItemCooldowns[selectedSupply] > 0 ? "↻" : `▰${supplyDefs[selectedSupply].cost}`}</em>
               </button>
-              <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} aria-disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
+              <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} aria-disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked || battleSaveBoundaryRef.current} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
                 <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>通信・照準・飛来・着弾・帰投</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
               </button>
-              <button className="support-btn barrage" aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
+              <button className="support-btn barrage" aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked || battleSaveBoundaryRef.current} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
                 <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>戦場全域固定火器</small><em>⌁</em>
               </button>
             </div>

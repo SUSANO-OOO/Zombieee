@@ -1,0 +1,66 @@
+const CAPABILITY_MESSAGES = [
+  /\bAudioContext(?:\s+constructor)?\s+(?:is\s+)?unavailable\b/i,
+  /\b(?:decodeAudioData|audio\s+decode(?:\s+API)?)\s+(?:API\s+)?(?:is\s+)?unavailable\b/i,
+];
+
+export const EXPECTED_NAVIGATION_TEARDOWN_FAILURES = new Set([
+  "net::ERR_ABORTED",
+  "Load request cancelled",
+]);
+
+// WebKit reports a fetch that is torn down by a real away/back-forward
+// navigation as a malformed-origin CORS pageerror. This exact browser string
+// is only eligible for causal classification when the lifecycle probe observed
+// it during that intentional teardown; an ordinary CORS error remains a
+// product failure.
+const WEBKIT_NAVIGATION_TEARDOWN_PAGE_ERROR = /^Fetch API cannot load http: \/\S+\/audio\/\S+ due to access control checks\.$/i;
+
+export function isExpectedNavigationTeardownPageError(message) {
+  return WEBKIT_NAVIGATION_TEARDOWN_PAGE_ERROR.test(String(message ?? ""));
+}
+
+export function classifyAudioDiagnostic(message, {
+  audioContextConstructorAvailable = false,
+  decodeApiAvailable = false,
+} = {}) {
+  const text = String(message ?? "");
+  const capabilityMessage = CAPABILITY_MESSAGES.some((pattern) => pattern.test(text));
+  if (capabilityMessage && (!audioContextConstructorAvailable || !decodeApiAvailable)) {
+    return "capability-gap";
+  }
+  return "failure";
+}
+
+export function normalizeLifecycleDiagnostics(diagnostics, {
+  audioContextConstructorAvailable = false,
+  decodeApiAvailable = false,
+  expectedNavigationTeardownPageErrors = [],
+} = {}) {
+  const rawPageErrors = [...(diagnostics.pageErrors ?? [])];
+  const expectedTeardownErrors = new Set(expectedNavigationTeardownPageErrors);
+  const audioCapabilityGaps = [];
+  const audioFailures = [];
+  const pageErrors = [];
+  for (const error of rawPageErrors) {
+    if (expectedTeardownErrors.has(error)) continue;
+    const classification = classifyAudioDiagnostic(error, {
+      audioContextConstructorAvailable,
+      decodeApiAvailable,
+    });
+    if (classification === "capability-gap") {
+      audioCapabilityGaps.push(error);
+      continue;
+    }
+    if (/audio|AudioContext|decodeAudioData/i.test(error)) audioFailures.push(error);
+    pageErrors.push(error);
+  }
+  return {
+    ...diagnostics,
+    pageErrors,
+    rawPageErrors,
+    rawWarnings: [...(diagnostics.rawWarnings ?? diagnostics.warnings ?? [])],
+    expectedNavigationTeardownPageErrors: [...expectedTeardownErrors],
+    audioCapabilityGaps,
+    audioFailures,
+  };
+}

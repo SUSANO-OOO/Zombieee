@@ -2,6 +2,11 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import {
+  EXPECTED_NAVIGATION_TEARDOWN_FAILURES,
+  isExpectedNavigationTeardownPageError,
+  normalizeLifecycleDiagnostics,
+} from "./mobile-lifecycle-diagnostics.mjs";
 
 const baseUrl = new URL(process.env.MOBILE_LIFECYCLE_QA_BASE_URL
   ?? process.env.COMBAT_PRESENTATION_QA_BASE_URL
@@ -67,24 +72,29 @@ function diagnosticsFor(page) {
     consoleErrors: [],
     pageErrors: [],
     requestFailures: [],
+    rawRequestFailures: [],
     httpErrors: [],
     warnings: [],
+    rawWarnings: [],
+    expectedNavigationTeardownPageErrors: [],
   };
   page.on("console", (message) => {
     if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
-    if (message.type() === "warning") diagnostics.warnings.push(message.text());
+    if (message.type() === "warning") {
+      const text = message.text();
+      diagnostics.rawWarnings.push(text);
+      diagnostics.warnings.push(text);
+    }
   });
   page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
   page.on("requestfailed", (request) => {
     const failure = request.failure()?.errorText ?? "unknown";
-    // Chromium reports navigation-cancelled resources as ERR_ABORTED while
-    // WebKit reports the same teardown as Load request cancelled. Neither is
-    // a failed HTTP response; both are expected when the lifecycle probe
-    // navigates away from the active battle document.
-    if (![
-      "net::ERR_ABORTED",
-      "Load request cancelled",
-    ].includes(failure)) diagnostics.requestFailures.push(`${request.url()} :: ${failure}`);
+    const entry = `${request.url()} :: ${failure}`;
+    diagnostics.rawRequestFailures.push(entry);
+    // Navigation-cancelled resources are retained above for audit but are not
+    // product request failures because the lifecycle probe intentionally tears
+    // down the document during the away/back-forward step.
+    if (!EXPECTED_NAVIGATION_TEARDOWN_FAILURES.has(failure)) diagnostics.requestFailures.push(entry);
   });
   page.on("response", (response) => {
     if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
@@ -92,17 +102,15 @@ function diagnosticsFor(page) {
   return diagnostics;
 }
 
-function normalizedDiagnostics(diagnostics, { ignoreHeadlessWebkitAudio = false } = {}) {
+function normalizedDiagnostics(diagnostics, audioCapability = {}) {
+  const normalized = normalizeLifecycleDiagnostics(diagnostics, {
+    audioContextConstructorAvailable: audioCapability.constructorAvailable === true,
+    decodeApiAvailable: audioCapability.decodeApiAvailable === true,
+    expectedNavigationTeardownPageErrors: diagnostics.expectedNavigationTeardownPageErrors ?? [],
+  });
   return {
-    ...diagnostics,
-    pageErrors: ignoreHeadlessWebkitAudio
-      ? diagnostics.pageErrors.filter((error) => !(
-        error.includes("Fetch API cannot load")
-        && error.includes("/audio/")
-        && error.includes("access control checks")
-      ))
-      : diagnostics.pageErrors,
-    warnings: diagnostics.warnings.filter(
+    ...normalized,
+    warnings: normalized.warnings.filter(
       (warning) => !warning.includes("was preloaded using link preload but not used")
         && !warning.includes("The AudioContext was not allowed to start."),
     ),
@@ -204,14 +212,22 @@ async function exerciseGraphicsQuality(page, label) {
 
 async function unlockAudio(page) {
   const current = await readRuntime(page);
+  const capability = await page.evaluate(() => {
+    const AudioContextConstructor = window.AudioContext ?? window.webkitAudioContext;
+    return {
+      constructorType: typeof AudioContextConstructor,
+      constructorAvailable: typeof AudioContextConstructor === "function",
+      decodeApiAvailable: typeof AudioContextConstructor === "function"
+        && typeof AudioContextConstructor.prototype?.decodeAudioData === "function",
+    };
+  });
   if (current.audio?.audioState === "running" && current.audio?.contextState === "running") {
     return {
       available: true,
-      capability: await page.evaluate(() => typeof (window.AudioContext ?? window.webkitAudioContext)),
+      ...capability,
       diagnostics: current.audio,
     };
   }
-  const capability = await page.evaluate(() => typeof (window.AudioContext ?? window.webkitAudioContext));
   const button = page.locator(".enable-audio-button");
   await button.waitFor({ state: "visible", timeout });
   await button.click({ timeout });
@@ -232,7 +248,7 @@ async function unlockAudio(page) {
   const diagnostics = (await readRuntime(page)).audio;
   return {
     available: diagnostics?.audioState === "running" && diagnostics?.contextState === "running",
-    capability,
+    ...capability,
     diagnostics,
   };
 }
@@ -398,8 +414,9 @@ async function exercisePageTransition(page, { requireAudio }) {
   };
 }
 
-async function exerciseRealBackForward(page, { requireAudio }) {
+async function exerciseRealBackForward(page, { requireAudio, diagnostics }) {
   const before = await readRuntime(page);
+  const pageErrorsBeforeNavigation = diagnostics.pageErrors.length;
   const marker = `bfcache-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   await page.evaluate((value) => {
     window.__ASHFALL_BFCACHE_PROBE__ = {
@@ -437,6 +454,9 @@ async function exerciseRealBackForward(page, { requireAudio }) {
     navigationType: performance.getEntriesByType("navigation")[0]?.type ?? null,
   }), marker);
   const after = await readRuntime(page);
+  const navigationPageErrors = diagnostics.pageErrors.slice(pageErrorsBeforeNavigation)
+    .filter(isExpectedNavigationTeardownPageError);
+  diagnostics.expectedNavigationTeardownPageErrors.push(...navigationPageErrors);
   const persisted = probe.state?.pagehidePersisted === true
     && probe.state?.pageshowPersisted === true;
   if (persisted) {
@@ -508,7 +528,7 @@ for (const engine of engines) {
         const hidden = backgroundState.hiddenEnd;
         const after = await returnToForeground(page, backgroundState, { requireAudio });
         const pageTransition = await exercisePageTransition(page, { requireAudio });
-        const backForward = await exerciseRealBackForward(page, { requireAudio });
+        const backForward = await exerciseRealBackForward(page, { requireAudio, diagnostics });
 
         const hiddenSimulationDelta = hidden.performance.simulationTicks - hiddenStart.performance.simulationTicks;
         const hiddenRenderDelta = hidden.performance.renderFrames - hiddenStart.performance.renderFrames;
@@ -555,10 +575,9 @@ for (const engine of engines) {
         invariant(pageTransition.after.audio.duplicateLoopInstanceKeys.length === 0,
           `${label} pageshow duplicated audio loops`);
 
-        const cleanDiagnostics = normalizedDiagnostics(diagnostics, {
-          ignoreHeadlessWebkitAudio: engine === "webkit",
-        });
-        for (const [kind, entries] of Object.entries(cleanDiagnostics)) {
+        const cleanDiagnostics = normalizedDiagnostics(diagnostics, audioCapability);
+        for (const kind of ["consoleErrors", "pageErrors", "requestFailures", "httpErrors", "audioFailures"]) {
+          const entries = cleanDiagnostics[kind];
           invariant(entries.length === 0, `${label} ${kind}: ${JSON.stringify(entries)}`);
         }
         await page.screenshot({ path: path.join(evidenceDir, `${label}.png`) });
@@ -577,7 +596,9 @@ for (const engine of engines) {
           coverageGaps,
           backgroundHoldMs,
           audioCapability: {
-            constructorType: audioCapability.capability,
+            constructorType: audioCapability.constructorType,
+            constructorAvailable: audioCapability.constructorAvailable,
+            decodeApiAvailable: audioCapability.decodeApiAvailable,
             lifecycleExecutable: requireAudio,
             initialFailureState: requireAudio ? null : audioCapability.diagnostics,
           },
@@ -601,9 +622,7 @@ for (const engine of engines) {
         });
       } catch (error) {
         result.error = String(error);
-        result.diagnostics = normalizedDiagnostics(diagnostics, {
-          ignoreHeadlessWebkitAudio: engine === "webkit",
-        });
+        result.diagnostics = normalizedDiagnostics(diagnostics);
         try {
           result.failureState = await readRuntime(page);
           await page.screenshot({ path: path.join(evidenceDir, `${label}-FAILED.png`) });

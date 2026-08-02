@@ -40,6 +40,8 @@
     "qa:station": "node scripts/run-browser-qa-with-server.mjs scripts/station-browser-smoke.mjs",
     "qa:p5": "node scripts/run-browser-qa-with-server.mjs scripts/p5-browser-smoke.mjs",
     "qa:progression": "node scripts/run-browser-qa-with-server.mjs scripts/progression-browser-smoke.mjs",
+    "qa:pr1-transactions": "node scripts/run-browser-qa-with-server.mjs scripts/pr1-transaction-browser-smoke.mjs",
+    "qa:save-boundary": "node scripts/run-browser-qa-with-server.mjs scripts/save-boundary-browser-smoke.mjs",
     "qa:survival": "node scripts/run-browser-qa-with-server.mjs scripts/survival-browser-smoke.mjs",
     "qa:survival-waves": "node scripts/run-browser-qa-with-server.mjs scripts/survival-wave-progression-browser-smoke.mjs",
     "qa:equipment-runtime": "node scripts/run-browser-qa-with-server.mjs scripts/equipment-runtime-browser-smoke.mjs",

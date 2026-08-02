@@ -230,11 +230,14 @@ test("separates start, continue, confirmed reset, unlocks, and local-QA progress
   assert.match(game, /if \(resolveLocalQaMode\(window\.location\.hostname, window\.location\.search\)[\s\S]*resolveLocalQaScenario\(window\.location\.hostname, window\.location\.search\)\) return;/);
   assert.match(game, /owned: Boolean\(qaMode \|\| qaScenario\) \|\| isUnitOwned/);
   assert.match(game, /applyUnitLevelProgression\(baseCard, g\.unitLevelsByKind\[kind\] \?\? 1\)/);
-  assert.match(game, /const currentSave = campaignSaveRef\.current[\s\S]*upgradeCampaignUnit\(currentSave/);
+  assert.match(game, /enqueueCampaignTransaction[\s\S]*recruitCampaignUnit\(latestSave/);
   assert.match(game, /HP \+\$\{increase\(progressed\.hp, baseCard\.hp\)}%・攻撃[\s\S]*防御 \$\{Math\.round\(progressed\.defense/);
   assert.doesNotMatch(game, /射程 \+\$\{increase\(progressed\.range/);
   const upgradeBlock = game.slice(game.indexOf("const upgradeUnit"), game.indexOf("const beginCampaign"));
-  assert.match(upgradeBlock, /upgradeLocksRef\.current\.has\(unitId\)[\s\S]*const currentLevel = getCampaignUnitLevel\(currentSave, unitId\)[\s\S]*const upgradeId = `upgrade:\$\{unitId}:level-\$\{currentLevel \+ 1}`[\s\S]*upgradeCampaignUnit\(currentSave,[\s\S]*upgradeId/);
+  assert.match(upgradeBlock, /upgradeLocksRef\.current\.has\(unitId\)[\s\S]*enqueueCampaignTransaction[\s\S]*const currentLevel = getCampaignUnitLevel\(latestSave, unitId\)[\s\S]*const upgradeId = `upgrade:\$\{unitId}:level-\$\{currentLevel \+ 1}`[\s\S]*upgradeCampaignUnit\(latestSave,[\s\S]*upgradeId/);
+  assert.doesNotMatch(upgradeBlock, /UPGRADE_AUDIO_CUE_IDS|playProductionCue\(UPGRADE/);
+  assert.match(upgradeBlock, /playUiOperationCue\("upgrade", `\$\{upgradeId\}:result`\)/);
+  assert.match(game, /battleSaveBoundaryRef\.current[\s\S]*pendingSurvivalCheckpoint[\s\S]*pendingSurvivalSettlement/);
   assert.match(game, /damageAfterUnitDefense\(rawInterception\.guardianDamage, guardian\.defense\)[\s\S]*damageAfterUnitDefense\(targetDamage, target\.defense\)/);
   assert.match(screens, /追いつき割引/);
   assert.match(game, /if \(!qaMode && !qaScenario && !isUnitOwned\(current, unitId\)\) return current/);

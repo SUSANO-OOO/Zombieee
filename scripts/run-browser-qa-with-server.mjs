@@ -51,6 +51,7 @@ process.env.V096_PWA_QA_BASE_URL = origin;
 process.env.STATION_QA_BASE_URL = origin;
 process.env.P5_QA_BASE_URL = origin;
 process.env.PROGRESSION_QA_BASE_URL = origin;
+process.env.SAVE_BOUNDARY_QA_BASE_URL = origin;
 process.env.SURVIVAL_QA_BASE_URL = origin;
 process.env.EQUIPMENT_RUNTIME_QA_BASE_URL = origin;
 process.env.BOSS_QA_BASE_URL = origin;
