@@ -546,7 +546,7 @@ function assertRelease090Migrated(save, label, { imported = false } = {}) {
     },
     settings: {
       ...release090Fixture.settings,
-      graphicsQuality: "auto",
+      graphicsQuality: release090Defaults.settings.graphicsQuality,
     },
   };
   invariantDeepEqual(
@@ -673,9 +673,15 @@ async function runCase(name, seed, verify) {
       innerHeight: window.innerHeight,
       documentWidth: document.documentElement.scrollWidth,
       documentHeight: document.documentElement.scrollHeight,
-      saveEnvironmentKind: document.querySelector("[data-save-environment]")?.getAttribute("data-save-environment") ?? "",
-      saveOrigin: document.querySelector("[data-save-environment]")?.getAttribute("data-save-origin") ?? "",
-      saveIsolationNotice: document.querySelector("[data-save-environment]")?.textContent ?? "",
+      saveEnvironmentKind: document.documentElement.dataset.saveEnvironmentKind
+        ?? document.querySelector("[data-save-environment]")?.getAttribute("data-save-environment")
+        ?? "",
+      saveOrigin: document.documentElement.dataset.saveEnvironmentOrigin
+        ?? document.querySelector("[data-save-environment]")?.getAttribute("data-save-origin")
+        ?? "",
+      saveIsolationNotice: document.documentElement.dataset.saveEnvironmentIsolation
+        ?? document.querySelector("[data-save-environment]")?.textContent
+        ?? "",
     }));
     invariant(environment.inputMode === "touch", `${name} did not expose a coarse touch pointer`);
     invariant(environment.safeAreaSource === "local-qa-iphone-landscape",
@@ -906,6 +912,7 @@ try {
     local: corruptLocal,
     indexed: corruptIndexed,
   }, async (page) => {
+    await dismissInstallOffer(page, { timeout });
     await page.getByRole("alert", { name: "セーブデータ復旧" }).waitFor({ state: "visible", timeout });
     const storage = await readStorage(page);
     invariant(storage.local[SAVE_KEY] === corruptLocal, "both-corrupt localStorage was overwritten");
@@ -1012,10 +1019,16 @@ try {
       const targetFresh = parseSave(targetFreshStorage.local[SAVE_KEY], "target-origin fresh save");
       invariant(targetFresh.campaignStarted === false,
         "distinct origin silently acquired the source origin save");
-      const targetEnvironment = await targetPage.locator("[data-save-environment]").evaluate((element) => ({
-        kind: element.getAttribute("data-save-environment"),
-        origin: element.getAttribute("data-save-origin"),
-        text: element.textContent,
+      const targetEnvironment = await targetPage.evaluate(() => ({
+        kind: document.documentElement.dataset.saveEnvironmentKind
+          ?? document.querySelector("[data-save-environment]")?.getAttribute("data-save-environment")
+          ?? "",
+        origin: document.documentElement.dataset.saveEnvironmentOrigin
+          ?? document.querySelector("[data-save-environment]")?.getAttribute("data-save-origin")
+          ?? "",
+        text: document.documentElement.dataset.saveEnvironmentIsolation
+          ?? document.querySelector("[data-save-environment]")?.textContent
+          ?? "",
       }));
       invariant(targetEnvironment.origin === targetBaseUrl.origin,
         `target origin label mismatch: ${JSON.stringify(targetEnvironment)}`);

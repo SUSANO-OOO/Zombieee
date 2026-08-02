@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { UNIT_CARDS } from "../app/gameRules.js";
 import { applyUnitLevelProgression } from "../app/unitProgression.js";
 import { CAMPAIGN_UNITS } from "../app/campaign.js";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 if (!process.env.PROGRESSION_QA_BASE_URL) {
   throw new Error("PROGRESSION_QA_BASE_URL is required; use the isolated QA runner");
@@ -127,6 +128,7 @@ for (const engine of engines) {
           url.search = search.toString();
           const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
+          await dismissInstallOffer(page, { timeout: Math.min(timeout, 5_000) });
           await page.waitForFunction((expectedCount) => (
             document.querySelector(".game-shell")?.getAttribute("data-screen") === "personnel"
             && document.querySelectorAll(".formation-unit-card").length === expectedCount

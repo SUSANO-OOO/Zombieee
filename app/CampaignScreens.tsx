@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "./productionVisuals.js";
 import { FORMATION_CARD_ART, PERSONNEL_CARD_ART, PORTRAIT_ART } from "./spriteManifest.js";
 import { PROLOGUE_SYNOPSIS, getStoryEvent, storyEventLog } from "./storyEvents.js";
@@ -135,6 +135,14 @@ export type CampaignResultView = {
   missionFacts: readonly string[];
   newlyUnlockedUnits: readonly string[];
   newlyUnlockedStages: readonly string[];
+};
+
+export type CampaignUiAction = "selection" | "confirm" | "back" | "purchase" | "upgrade" | "reward" | "deploy" | "reject";
+
+export type OperationFeedbackView = {
+  kind: "success" | "reject";
+  message: string;
+  key: string;
 };
 
 export type OutbreakMissionScreenView = {
@@ -282,6 +290,7 @@ type Props = {
   saveMutationPending: boolean;
   upgradePendingUnitIds: readonly string[];
   upgradeFeedback: UpgradeFeedbackView | null;
+  operationFeedback: OperationFeedbackView | null;
   personnelInitialMode: "roster" | "acquisition";
   savePersistence: "checking" | "saved" | "recovered" | "unavailable";
   saveEnvironment: SaveEnvironmentView;
@@ -321,6 +330,7 @@ type Props = {
   onContinueOutbreakResult: () => void;
   onResetSave: () => void;
   onReloadAssets: () => void;
+  onUiAction: (action: CampaignUiAction, dedupeKey?: string) => void;
 };
 
 const portraitArt = PORTRAIT_ART as Record<string, string>;
@@ -348,9 +358,10 @@ export function EmploymentAvailablePopup({
       <div className="employment-dossier">
         <div className="employment-dossier-art" data-kind={unit.kind} style={portrait ? { backgroundImage: `url('${portrait}')` } : undefined} role="img" aria-label={`${unit.name}正式人物カード`} />
         <div>
-          <em>雇用可能</em>
+          <em>新ユニット解放</em>
           <h2>{unit.name}</h2>
           <b>{unit.role}{" // "}{unit.weaponName}</b>
+          <p className="employment-unlock-copy">{unit.name}が雇用可能になりました</p>
           <p>{unit.description}</p>
           <dl><div><dt>解放理由</dt><dd>{unit.unlockHint}</dd></div><div><dt>雇用費</dt><dd>{unit.recruitCost} キャップ</dd></div></dl>
         </div>
@@ -359,6 +370,24 @@ export function EmploymentAvailablePopup({
       <footer><button className="campaign-primary" disabled={pending} onClick={onOpenEmployment}>{pending ? "保存中" : "雇用画面へ"}</button><button disabled={pending} onClick={onDismiss}>あとで</button></footer>
     </section>
   </div>;
+}
+
+function CampaignUiSurface({ children, onUiAction }: { children: ReactNode; onUiAction: Props["onUiAction"] }) {
+  const handleClickCapture = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const button = target.closest("button");
+    if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+    const explicitRole = button.dataset.uiCue;
+    if (explicitRole === "none") return;
+    const role = explicitRole
+      ?? (button.classList.contains("campaign-back") ? "back" : null)
+      ?? (button.classList.contains("campaign-primary") || button.classList.contains("campaign-secondary") || button.classList.contains("special-operation") ? "confirm" : "selection");
+    if (["selection", "confirm", "back", "purchase", "upgrade", "reward", "deploy", "reject"].includes(role)) {
+      onUiAction(role as CampaignUiAction, button.dataset.uiCueKey ?? button.className);
+    }
+  }, [onUiAction]);
+  return <div className="campaign-ui-surface" onClickCapture={handleClickCapture}>{children}</div>;
 }
 
 function stars(value: number) {
@@ -568,7 +597,8 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
         key={region.id}
         type="button"
         data-active={region.id === activeRegionId}
-        disabled={!region.unlocked}
+        data-ui-cue={region.unlocked ? "none" : "reject"}
+        aria-disabled={!region.unlocked}
         onClick={() => selectRegion(region.id)}
         aria-pressed={region.id === activeRegionId}
       ><b>{region.label}</b><small>{region.unlocked ? region.name : "未到達"}</small></button>)}
@@ -581,7 +611,8 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
           {visibleStages.map((stage) => <button
             key={stage.id}
             className={`stage-node ${stage.unlocked ? "open" : "locked"} ${displayedStage.id === stage.id ? "selected" : ""}`}
-            disabled={!stage.unlocked}
+            data-ui-cue="none"
+            aria-disabled={!stage.unlocked}
             onClick={() => onSelectStage(stage.id)}
             aria-label={`${stage.displayName} ${stage.unlocked ? stars(stage.bestStars) : "封鎖中"}`}
           ><span>{stage.stageNumber}</span><b>{stage.displayName}</b><em>{stage.unlocked ? stars(stage.bestStars) : "封鎖"}</em></button>)}
@@ -590,7 +621,7 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
       <aside className="stage-detail" aria-label="選択中のステージ詳細">
         <div className="stage-preview" style={assetsReady && !assetError ? artStyle(stageVisualFor(displayedStage.id)) : undefined} role="img" aria-label={`${displayedStage.displayName}の作戦区域`} />
         <header><small>{displayedStage.missionLabel}</small><h2>{displayedStage.displayName}</h2><p>{displayedStage.threat}</p></header>
-        <div className="stage-actions"><button className="campaign-primary" disabled={!displayedStage.unlocked} onClick={onOpenLoadout}>この作戦を編成</button></div>
+        <div className="stage-actions"><button className="campaign-primary" data-ui-cue={displayedStage.unlocked ? "confirm" : "reject"} aria-disabled={!displayedStage.unlocked} onClick={() => { if (displayedStage.unlocked) onOpenLoadout(); }}>この作戦を編成</button></div>
         <dl><div><dt>目的</dt><dd>{displayedStage.objective}</dd></div><div><dt>過去最高星</dt><dd className="star-text">{stars(displayedStage.bestStars)}</dd></div><div><dt>基本報酬</dt><dd>{displayedStage.baseReward} キャップ</dd></div><div><dt>次の未取得星報酬</dt><dd>{displayedStage.nextStarReward ? `${displayedStage.nextStarReward} キャップ` : "取得済み"}</dd></div></dl>
         <div className="star-criteria"><b>星判定</b>{displayedStage.starCriteria.map((criterion) => <span key={criterion}>{criterion}</span>)}</div>
       </aside>
@@ -622,18 +653,18 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
   return <div className="campaign-overlay formation-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="出撃編成">
     <header className="campaign-header"><button className="campaign-back" onClick={onReturnFromLoadout}>← {loadoutReturnLabel}</button><div><small>出撃編成</small><h1>{selectedStage.displayName}</h1></div><p>{selectedStage.objective}</p></header>
     <div className="formation-layout">
-      <section className="formation-units" data-mode="roster" aria-label="使用ユニットを選択"><header className="formation-roster-header"><div><h2>出撃可能ユニット <small>{formationUnitIds.length}/7名選択中</small></h2></div><nav aria-label="部隊プリセット">{formationPresets.map((preset) => <button key={preset.id} data-active={preset.id === selectedFormationPresetId} onClick={() => onSelectFormationPreset(preset.id)} aria-pressed={preset.id === selectedFormationPresetId}><b>{preset.name}</b><small>{preset.unitIds.length}/7</small></button>)}</nav></header><div>{visibleUnits.map((unit) => {
+      <section className="formation-units" data-mode="roster" aria-label="使用ユニットを選択"><header className="formation-roster-header"><div><h2>出撃可能ユニット <small>{formationUnitIds.length}/7名選択中</small></h2></div><nav aria-label="部隊プリセット">{formationPresets.map((preset) => <button key={preset.id} data-active={preset.id === selectedFormationPresetId} data-ui-cue="none" onClick={() => onSelectFormationPreset(preset.id)} aria-pressed={preset.id === selectedFormationPresetId}><b>{preset.name}</b><small>{preset.unitIds.length}/7</small></button>)}</nav></header><div>{visibleUnits.map((unit) => {
         const selected = formationUnitIds.includes(unit.id);
         const atCapacity = formationUnitIds.length >= 7 && !selected;
         const portrait = unit.discovered ? formationCardArt[unit.kind] : "";
         const ability = MANUAL_ABILITY_REGISTRY[unit.kind as keyof typeof MANUAL_ABILITY_REGISTRY];
         return <article key={unit.id} className="formation-unit-card" data-state="owned" data-selected={selected}>
-          <button className="formation-unit-select" data-kind={unit.kind} data-unit-id={unit.id} data-selected={selected} disabled={atCapacity} onClick={() => onToggleFormation(unit.id)} aria-pressed={selected} aria-label={`${unit.name}、Level ${unit.level}、${unit.role}、${unit.weaponName}、${unit.deploymentHint}`} title={`${ability?.displayName ?? "能力未登録"}：${ability?.summary ?? ""}`} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>
+          <button className="formation-unit-select" data-kind={unit.kind} data-unit-id={unit.id} data-selected={selected} data-ui-cue="none" aria-disabled={atCapacity} onClick={() => onToggleFormation(unit.id)} aria-pressed={selected} aria-label={`${unit.name}、Level ${unit.level}、${unit.role}、${unit.weaponName}、${unit.deploymentHint}`} title={`${ability?.displayName ?? "能力未登録"}：${ability?.summary ?? ""}`} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>
             <span className="formation-portrait" /><span><b>{unit.name}</b><em><i>{unit.roleIcon}</i>{unit.role}</em><small className="unit-combat">{unit.weaponName}・{unit.rangeBand}・{unit.primaryTarget}</small><small className="unit-ability">能力：{ability?.displayName ?? "未登録"}</small></span><i>Lv {unit.level} / 上限 {unit.levelCap}</i>
           </button>
         </article>;
       })}</div></section>
-      <section className="formation-support" aria-label="戦場物資を選択"><h2>戦場物資</h2>{supplies.map((supply) => <button key={supply.kind} data-supply={supply.kind} data-selected={selectedSupply === supply.kind} onClick={() => onSelectSupply(supply.kind)} aria-pressed={selectedSupply === supply.kind}><b>{supply.name}</b><small>{supply.description}</small><em>▰{supply.cost}</em></button>)}<div className="formation-note"><b>固定支援</b><span>緊急航空支援 / 移動拠点一斉掃射</span></div></section>
+      <section className="formation-support" aria-label="戦場物資を選択"><h2>戦場物資</h2>{supplies.map((supply) => <button key={supply.kind} data-supply={supply.kind} data-selected={selectedSupply === supply.kind} data-ui-cue="none" onClick={() => onSelectSupply(supply.kind)} aria-pressed={selectedSupply === supply.kind}><b>{supply.name}</b><small>{supply.description}</small><em>▰{supply.cost}</em></button>)}<div className="formation-note"><b>固定支援</b><span>緊急航空支援 / 移動拠点一斉掃射</span></div></section>
     </div>
     <footer className="formation-footer">
       <div className="asset-readiness" data-state={assetReadiness.state} role="status" aria-live="polite">
@@ -643,16 +674,17 @@ function LoadoutScreen({ selectedStage, units, formationUnitIds, formationPreset
         {(assetReadiness.retryAvailable || assetError) && !assetsReady && <button type="button" className="asset-retry" disabled={assetReadiness.retrying} onClick={onReloadAssets}>{assetReadiness.retrying ? "失敗項目を再試行中…" : "この画面で失敗・待機項目だけ再試行"}</button>}
       </div>
       <p>1〜7名で出撃できます。同じ仲間は戦闘中に何度でも再召喚できます。</p>
-      <button className="campaign-primary" disabled={formationUnitIds.length === 0 || !assetsReady} onClick={onStartBattle}><span>{assetsReady ? "この編成で出撃" : "アセット準備中"}</span><small>{assetsReady ? selectedStage.missionLabel : "移動拠点を点検中"}</small></button>
+      <button className="campaign-primary" data-ui-cue="none" aria-disabled={formationUnitIds.length === 0 || !assetsReady} onClick={onStartBattle}><span>{assetsReady ? "この編成で出撃" : "アセット準備中"}</span><small>{assetsReady ? selectedStage.missionLabel : "移動拠点を点検中"}</small></button>
     </footer>
   </div>;
 }
 
-function PersonnelScreen({ units, caps, upgradePendingUnitIds, upgradeFeedback, personnelInitialMode, onReturnToMap, onRecruitUnit, onUpgradeUnit }: Pick<Props, "units" | "caps" | "upgradePendingUnitIds" | "upgradeFeedback" | "personnelInitialMode" | "onReturnToMap" | "onRecruitUnit" | "onUpgradeUnit">) {
+function PersonnelScreen({ units, caps, upgradePendingUnitIds, upgradeFeedback, operationFeedback, personnelInitialMode, onReturnToMap, onRecruitUnit, onUpgradeUnit }: Pick<Props, "units" | "caps" | "upgradePendingUnitIds" | "upgradeFeedback" | "operationFeedback" | "personnelInitialMode" | "onReturnToMap" | "onRecruitUnit" | "onUpgradeUnit">) {
   const [mode, setMode] = useState<"roster" | "acquisition" | "upgrade">(personnelInitialMode);
   const visibleUnits = units.filter((unit) => mode === "acquisition" ? !unit.owned : unit.owned);
   return <div className="campaign-overlay personnel-screen" style={artStyle(PRODUCTION_VISUALS.command)} aria-label="人員管理">
     <header className="campaign-header"><button className="campaign-back" onClick={onReturnToMap}>← 地図へ</button><div><small>人員管理</small><h1>所有・雇用・強化</h1></div><div className="map-resource"><small>キャップ</small><b>{caps}</b></div></header>
+    {operationFeedback && <div className="operation-feedback" data-kind={operationFeedback.kind} role={operationFeedback.kind === "reject" ? "alert" : "status"} aria-live="polite"><b>{operationFeedback.message}</b></div>}
     <main className="personnel-layout">
       <section className="formation-units personnel-units" data-mode={mode} aria-label={mode === "roster" ? "所有ユニット一覧" : mode === "upgrade" ? "ユニットを強化" : "ユニットを雇用"}>
         <header className="formation-roster-header"><div><h2>{mode === "roster" ? "所有一覧" : mode === "upgrade" ? "Level強化" : "雇用候補"} <small>{mode === "roster" ? `${visibleUnits.length}/${units.length}名` : `所持 ${caps}キャップ`}</small></h2><nav className="formation-mode-tabs" aria-label="人員管理メニュー"><button data-active={mode === "roster"} onClick={() => setMode("roster")}>所有一覧</button><button data-active={mode === "acquisition"} onClick={() => setMode("acquisition")}>雇用</button><button data-active={mode === "upgrade"} onClick={() => setMode("upgrade")}>Level</button></nav></div></header>
@@ -665,14 +697,14 @@ function PersonnelScreen({ units, caps, upgradePendingUnitIds, upgradeFeedback, 
             <div className="formation-unit-select personnel-unit-summary" data-kind={unit.kind} data-unit-id={unit.id} style={portrait ? { "--formation-art": `url('${portrait}')` } as CSSProperties : undefined}>
               <span className="formation-portrait" /><span><b>{unit.discovered ? unit.name : "未発見"}</b><em>{unit.discovered && <><i>{unit.roleIcon}</i>{unit.role}</>}</em><small className="unit-combat">{unit.discovered ? `${unit.weaponName}・${unit.rangeBand}・${unit.primaryTarget}` : "物語を進めると情報が明らかになります"}</small><small className="unit-ability">{unit.discovered ? `能力：${ability?.displayName ?? "未登録"} — ${ability?.summary ?? ""}` : "能力情報未解禁"}</small><small className="unit-intent">{unit.owned ? `${unit.statSummary}${unit.milestones.length ? ` / ${unit.milestones.join("・")}` : ""}` : unit.unlockHint}</small></span><i>{unit.owned ? `Lv ${unit.level} / 上限 ${unit.levelCap}` : unit.recruitable ? "雇用可能" : unit.discovered ? "加入条件未達" : "未発見"}</i>
             </div>
-            {mode === "acquisition" && unit.recruitable && !unit.owned && <button className="formation-unit-recruit" disabled={caps < unit.recruitCost} onClick={() => onRecruitUnit(unit.id)}><b>{unit.recruitCost}キャップで雇用</b><small>所持 {caps}</small></button>}
+            {mode === "acquisition" && unit.recruitable && !unit.owned && <button className="formation-unit-recruit" data-ui-cue="none" aria-disabled={caps < unit.recruitCost} onClick={() => onRecruitUnit(unit.id)}><b>{unit.recruitCost}キャップで雇用</b><small>所持 {caps}</small></button>}
             {mode === "upgrade" && unit.owned && (feedback
               ? <div className="upgrade-feedback" data-level={feedback.reachedMax ? "max" : "normal"} role="status" aria-live="polite">
                 <b>{feedback.reachedMax ? "Lv50 到達" : `Lv${feedback.level} 強化完了`}</b>
                 <span>{feedback.statDelta}</span>
                 <small>{feedback.milestones.length > 0 ? feedback.milestones.join("・") : `${feedback.spentCaps}キャップ使用`}</small>
               </div>
-              : <button className="formation-unit-upgrade" disabled={upgradePendingUnitIds.includes(unit.id) || unit.nextUpgradeCost === null || caps < unit.nextUpgradeCost} onClick={() => onUpgradeUnit(unit.id)}><b>{upgradePendingUnitIds.includes(unit.id) ? "強化処理中" : unit.nextUpgradeCost === null ? unit.upgradeBlockedReason === "level-cap" ? `Level上限 ${unit.levelCap}` : "Lv50到達済み" : `Lv${unit.level + 1}へ：${unit.nextUpgradeCost}キャップ`}</b><small>{unit.nextUpgradeCost === null ? unit.upgradeBlockedReason === "level-cap" ? "本編Stage進行でLevel上限が解放されます" : unit.statSummary : `${unit.catchUp ? `追いつき割引 -${unit.upgradeDiscount} / ` : ""}${unit.nextMilestones.length ? `${unit.nextMilestones.join("・")} / ` : ""}${unit.nextStatCompact}`}</small></button>)}
+              : <button className="formation-unit-upgrade" data-ui-cue="none" disabled={upgradePendingUnitIds.includes(unit.id)} aria-disabled={unit.nextUpgradeCost === null || caps < (unit.nextUpgradeCost ?? 0)} onClick={() => onUpgradeUnit(unit.id)}><b>{upgradePendingUnitIds.includes(unit.id) ? "強化処理中" : unit.nextUpgradeCost === null ? unit.upgradeBlockedReason === "level-cap" ? `Level上限 ${unit.levelCap}` : "Lv50到達済み" : `Lv${unit.level + 1}へ：${unit.nextUpgradeCost}キャップ`}</b><small>{unit.nextUpgradeCost === null ? unit.upgradeBlockedReason === "level-cap" ? "本編Stage進行でLevel上限が解放されます" : unit.statSummary : `${unit.catchUp ? `追いつき割引 -${unit.upgradeDiscount} / ` : ""}${unit.nextMilestones.length ? `${unit.nextMilestones.join("・")} / ` : ""}${unit.nextStatCompact}`}</small></button>)}
           </article>;
         })}{visibleUnits.length === 0 && <p className="formation-empty">{mode === "acquisition" ? "現在雇用できる候補はいません。物語やSurvivalを進めると候補が増えます。" : "対象ユニットがいません。"}</p>}</div>
       </section>
@@ -714,7 +746,8 @@ function OutbreakMissionScreen({
         type="button"
         data-selected={mission.id === selected.id}
         data-state={mission.cleared ? "cleared" : mission.unlocked ? "open" : "locked"}
-        disabled={!mission.unlocked}
+        data-ui-cue="none"
+        aria-disabled={!mission.unlocked}
         onClick={() => onSelectOutbreakMission(mission.id)}
         aria-pressed={mission.id === selected.id}
       ><small>{mission.cleared ? "制圧済み" : mission.unlocked ? "出撃可能" : "封鎖中"}</small><b>{mission.displayName}</b><span>{mission.location}</span></button>)}</nav>
@@ -723,7 +756,7 @@ function OutbreakMissionScreen({
         <div className="outbreak-intel">
           <small>{selected.bossClassification}</small><h2>{selected.bossName}</h2><p>{selected.objective}</p>
           <dl><div><dt>発生地点</dt><dd>{selected.location}</dd></div><div><dt>出撃条件</dt><dd>{selected.prerequisiteLabel}</dd></div><div><dt>撃破記録</dt><dd>{selected.defeatCount}回</dd></div><div><dt>基本報酬</dt><dd>{selected.baseRewardCaps} キャップ</dd></div><div><dt>初回固有装備</dt><dd>{selected.equipmentName}</dd></div></dl>
-          <button className="campaign-primary" disabled={!selected.unlocked} onClick={onPrepareOutbreak}>{selected.unlocked ? "この任務の編成へ" : `${selected.prerequisiteLabel}で解放`}</button>
+          <button className="campaign-primary" data-ui-cue="none" aria-disabled={!selected.unlocked} onClick={onPrepareOutbreak}>{selected.unlocked ? "この任務の編成へ" : `${selected.prerequisiteLabel}で解放`}</button>
         </div>
       </section>
     </main>
@@ -782,15 +815,16 @@ function RecordsScreen({
 }
 
 export function CampaignScreens(props: Props) {
-  if (props.saveRecoveryRequired) return <SaveRecoveryScreen saveRecoveryReason={props.saveRecoveryReason} saveRecoveryCandidateSources={props.saveRecoveryCandidateSources} saveRecoveryCanExport={props.saveRecoveryCanExport} saveMutationPending={props.saveMutationPending} saveEnvironment={props.saveEnvironment} onExportCorruptSave={props.onExportCorruptSave} onImportSave={props.onImportSave} onUseRecoveryCandidate={props.onUseRecoveryCandidate} onResetCorruptSave={props.onResetCorruptSave} />;
+  const surface = (content: ReactNode) => <CampaignUiSurface onUiAction={props.onUiAction}>{content}</CampaignUiSurface>;
+  if (props.saveRecoveryRequired) return surface(<SaveRecoveryScreen saveRecoveryReason={props.saveRecoveryReason} saveRecoveryCandidateSources={props.saveRecoveryCandidateSources} saveRecoveryCanExport={props.saveRecoveryCanExport} saveMutationPending={props.saveMutationPending} saveEnvironment={props.saveEnvironment} onExportCorruptSave={props.onExportCorruptSave} onImportSave={props.onImportSave} onUseRecoveryCandidate={props.onUseRecoveryCandidate} onResetCorruptSave={props.onResetCorruptSave} />);
   if (props.screen === "battle" || props.screen === "survival" || props.screen === "survival-result") return null;
-  if (props.screen === "title") return <TitleScreen hasCampaignSave={props.hasCampaignSave} savePersistence={props.savePersistence} saveMutationPending={props.saveMutationPending} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} onExportSave={props.onExportSave} onImportSave={props.onImportSave} />;
-  if (props.screen === "event") return <StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} forceStoryReplay={props.forceStoryReplay} onEventComplete={props.onEventComplete} onEventSkip={props.onEventSkip} onStoryAudioPositionChange={props.onStoryAudioPositionChange} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />;
-  if (props.screen === "map") return <AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} assetsReady={props.assetsReady} assetError={props.assetError} onSelectStage={props.onSelectStage} onOpenPersonnel={props.onOpenPersonnel} onOpenLoadout={props.onOpenLoadout} onOpenSurvival={props.onOpenSurvival} onOpenOutbreak={props.onOpenOutbreak} onOpenRecords={props.onOpenRecords} onReplayPrologue={props.onReplayPrologue} onResetSave={props.onResetSave} />;
-  if (props.screen === "outbreak") return <OutbreakMissionScreen outbreakMissions={props.outbreakMissions} selectedOutbreakMissionId={props.selectedOutbreakMissionId} onSelectOutbreakMission={props.onSelectOutbreakMission} onPrepareOutbreak={props.onPrepareOutbreak} onReturnToMap={props.onReturnToMap} />;
-  if (props.screen === "outbreak-result") return <OutbreakResultScreen outbreakResult={props.outbreakResult} onRetry={props.onRetry} onContinueOutbreakResult={props.onContinueOutbreakResult} />;
-  if (props.screen === "records") return <RecordsScreen recordsSummary={props.recordsSummary} enemyCompendium={props.enemyCompendium} bossCompendium={props.bossCompendium} units={props.units} onReturnToMap={props.onReturnToMap} />;
-  if (props.screen === "personnel") return <PersonnelScreen key={props.personnelInitialMode} units={props.units} caps={props.caps} upgradePendingUnitIds={props.upgradePendingUnitIds} upgradeFeedback={props.upgradeFeedback} personnelInitialMode={props.personnelInitialMode} onReturnToMap={props.onReturnToMap} onRecruitUnit={props.onRecruitUnit} onUpgradeUnit={props.onUpgradeUnit} />;
-  if (props.screen === "loadout") return <LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} assetReadiness={props.assetReadiness} loadoutReturnLabel={props.loadoutReturnLabel} onReturnFromLoadout={props.onReturnFromLoadout} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />;
-  return <ResultScreen selectedStage={props.selectedStage} result={props.result} onRetry={props.onRetry} onContinueResult={props.onContinueResult} />;
+  if (props.screen === "title") return surface(<TitleScreen hasCampaignSave={props.hasCampaignSave} savePersistence={props.savePersistence} saveMutationPending={props.saveMutationPending} onBegin={props.onBegin} onRestartCampaign={props.onRestartCampaign} onExportSave={props.onExportSave} onImportSave={props.onImportSave} />);
+  if (props.screen === "event") return surface(<StoryScreen key={props.eventId ?? "missing"} eventId={props.eventId} readStoryEventIds={props.readStoryEventIds} autoSkipReadStory={props.autoSkipReadStory} forceStoryReplay={props.forceStoryReplay} onEventComplete={props.onEventComplete} onEventSkip={props.onEventSkip} onStoryAudioPositionChange={props.onStoryAudioPositionChange} onSetAutoSkipReadStory={props.onSetAutoSkipReadStory} />);
+  if (props.screen === "map") return surface(<AreaMapScreen stages={props.stages} selectedStage={props.selectedStage} supplyCurrency={props.supplyCurrency} saveMutationPending={props.saveMutationPending} assetsReady={props.assetsReady} assetError={props.assetError} onSelectStage={props.onSelectStage} onOpenPersonnel={props.onOpenPersonnel} onOpenLoadout={props.onOpenLoadout} onOpenSurvival={props.onOpenSurvival} onOpenOutbreak={props.onOpenOutbreak} onOpenRecords={props.onOpenRecords} onReplayPrologue={props.onReplayPrologue} onResetSave={props.onResetSave} />);
+  if (props.screen === "outbreak") return surface(<OutbreakMissionScreen outbreakMissions={props.outbreakMissions} selectedOutbreakMissionId={props.selectedOutbreakMissionId} onSelectOutbreakMission={props.onSelectOutbreakMission} onPrepareOutbreak={props.onPrepareOutbreak} onReturnToMap={props.onReturnToMap} />);
+  if (props.screen === "outbreak-result") return surface(<OutbreakResultScreen outbreakResult={props.outbreakResult} onRetry={props.onRetry} onContinueOutbreakResult={props.onContinueOutbreakResult} />);
+  if (props.screen === "records") return surface(<RecordsScreen recordsSummary={props.recordsSummary} enemyCompendium={props.enemyCompendium} bossCompendium={props.bossCompendium} units={props.units} onReturnToMap={props.onReturnToMap} />);
+  if (props.screen === "personnel") return surface(<PersonnelScreen key={props.personnelInitialMode} units={props.units} caps={props.caps} upgradePendingUnitIds={props.upgradePendingUnitIds} upgradeFeedback={props.upgradeFeedback} operationFeedback={props.operationFeedback} personnelInitialMode={props.personnelInitialMode} onReturnToMap={props.onReturnToMap} onRecruitUnit={props.onRecruitUnit} onUpgradeUnit={props.onUpgradeUnit} />);
+  if (props.screen === "loadout") return surface(<LoadoutScreen selectedStage={props.selectedStage} units={props.units} formationUnitIds={props.formationUnitIds} formationPresets={props.formationPresets} selectedFormationPresetId={props.selectedFormationPresetId} supplies={props.supplies} selectedSupply={props.selectedSupply} assetsReady={props.assetsReady} assetError={props.assetError} assetReadiness={props.assetReadiness} loadoutReturnLabel={props.loadoutReturnLabel} onReturnFromLoadout={props.onReturnFromLoadout} onSelectFormationPreset={props.onSelectFormationPreset} onToggleFormation={props.onToggleFormation} onSelectSupply={props.onSelectSupply} onStartBattle={props.onStartBattle} onReloadAssets={props.onReloadAssets} />);
+  return surface(<ResultScreen selectedStage={props.selectedStage} result={props.result} onRetry={props.onRetry} onContinueResult={props.onContinueResult} />);
 }

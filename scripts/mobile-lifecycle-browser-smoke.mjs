@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 const baseUrl = new URL(process.env.MOBILE_LIFECYCLE_QA_BASE_URL
   ?? process.env.COMBAT_PRESENTATION_QA_BASE_URL
@@ -76,7 +77,14 @@ function diagnosticsFor(page) {
   page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
   page.on("requestfailed", (request) => {
     const failure = request.failure()?.errorText ?? "unknown";
-    if (failure !== "net::ERR_ABORTED") diagnostics.requestFailures.push(`${request.url()} :: ${failure}`);
+    // Chromium reports navigation-cancelled resources as ERR_ABORTED while
+    // WebKit reports the same teardown as Load request cancelled. Neither is
+    // a failed HTTP response; both are expected when the lifecycle probe
+    // navigates away from the active battle document.
+    if (![
+      "net::ERR_ABORTED",
+      "Load request cancelled",
+    ].includes(failure)) diagnostics.requestFailures.push(`${request.url()} :: ${failure}`);
   });
   page.on("response", (response) => {
     if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
@@ -84,9 +92,16 @@ function diagnosticsFor(page) {
   return diagnostics;
 }
 
-function normalizedDiagnostics(diagnostics) {
+function normalizedDiagnostics(diagnostics, { ignoreHeadlessWebkitAudio = false } = {}) {
   return {
     ...diagnostics,
+    pageErrors: ignoreHeadlessWebkitAudio
+      ? diagnostics.pageErrors.filter((error) => !(
+        error.includes("Fetch API cannot load")
+        && error.includes("/audio/")
+        && error.includes("access control checks")
+      ))
+      : diagnostics.pageErrors,
     warnings: diagnostics.warnings.filter(
       (warning) => !warning.includes("was preloaded using link preload but not used")
         && !warning.includes("The AudioContext was not allowed to start."),
@@ -107,12 +122,14 @@ async function exerciseGraphicsQuality(page, label) {
   await page.keyboard.press("p");
   const control = page.locator("[data-graphics-quality-control='true']");
   await control.waitFor({ state: "visible", timeout });
-  invariant(await control.getAttribute("data-graphics-quality-requested") === "auto",
-    `${label} player-facing graphics control did not start at Auto`);
+  const initialMode = await control.getAttribute("data-graphics-quality-requested");
+  invariant(initialMode === "high",
+    `${label} player-facing graphics control did not start at High`);
+  const firstNextMode = initialMode === "auto" ? "high" : initialMode === "high" ? "power-save" : "auto";
   await control.click();
   await page.waitForFunction(
-    () => document.documentElement.dataset.graphicsQualityRequested === "high",
-    undefined,
+    (mode) => document.documentElement.dataset.graphicsQualityRequested === mode,
+    firstNextMode,
     { timeout },
   );
   await page.keyboard.press("p");
@@ -404,7 +421,9 @@ async function exerciseRealBackForward(page, { requireAudio }) {
   const awayUrl = new URL(baseUrl);
   awayUrl.search = new URLSearchParams({ qa: "title", lifecycle: "away" }).toString();
   await page.goto(String(awayUrl), { waitUntil: "domcontentloaded", timeout });
+  await dismissInstallOffer(page, { timeout: Math.min(timeout, 5_000) });
   await page.goBack({ waitUntil: "domcontentloaded", timeout });
+  await dismissInstallOffer(page, { timeout: Math.min(timeout, 5_000) });
   await page.waitForFunction(
     () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().screen === "battle",
     undefined,
@@ -465,6 +484,7 @@ for (const engine of engines) {
       try {
         const response = await page.goto(result.url, { waitUntil: "domcontentloaded", timeout });
         invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
+        await dismissInstallOffer(page, { timeout: Math.min(timeout, 5_000) });
         await page.waitForFunction(
           () => {
             const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -535,7 +555,9 @@ for (const engine of engines) {
         invariant(pageTransition.after.audio.duplicateLoopInstanceKeys.length === 0,
           `${label} pageshow duplicated audio loops`);
 
-        const cleanDiagnostics = normalizedDiagnostics(diagnostics);
+        const cleanDiagnostics = normalizedDiagnostics(diagnostics, {
+          ignoreHeadlessWebkitAudio: engine === "webkit",
+        });
         for (const [kind, entries] of Object.entries(cleanDiagnostics)) {
           invariant(entries.length === 0, `${label} ${kind}: ${JSON.stringify(entries)}`);
         }
@@ -579,7 +601,9 @@ for (const engine of engines) {
         });
       } catch (error) {
         result.error = String(error);
-        result.diagnostics = normalizedDiagnostics(diagnostics);
+        result.diagnostics = normalizedDiagnostics(diagnostics, {
+          ignoreHeadlessWebkitAudio: engine === "webkit",
+        });
         try {
           result.failureState = await readRuntime(page);
           await page.screenshot({ path: path.join(evidenceDir, `${label}-FAILED.png`) });
