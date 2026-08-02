@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { ASSET_CATEGORY_LABELS, ASSET_MANIFEST_SCHEMA } from "../app/pwaAssetManifest.js";
+import { assessCommitRecovery, manifestCacheComplete, manifestsEqual } from "../app/pwaManifestCommit.js";
 import {
+  assessPwaState,
   canPlayOffline,
   createAssetFetcher,
   derivePwaPhase,
@@ -170,19 +172,34 @@ test("a fresh standalone launch asks for the first install", () => {
   assert.equal(derivePwaPhase({ supported: true, standalone: true }), "install-required");
 });
 
-test("a standalone launch that already holds every asset is ready without a manifest", () => {
-  // The worker can lose its committed manifest while the pack survives. What
-  // the device actually holds is the stronger fact, and re-downloading a
-  // complete pack would cost the player the whole install for nothing.
+test("a complete pack without a matching worker generation requires a commit before play", () => {
+  const candidate = manifest([asset("/a", 1), asset("/b", 2)]);
+  const storedHashes = new Set(candidate.assets.map((entry) => entry.hash));
+  const recovery = assessCommitRecovery({
+    activeManifest: null,
+    publishedManifest: candidate,
+    storedHashes,
+  });
+  assert.equal(recovery.required, true);
+  assert.equal(recovery.reason, "active-missing");
+  assert.equal(manifestCacheComplete(candidate, storedHashes), true);
+  assert.equal(manifestsEqual(candidate, candidate), true);
   assert.equal(
     derivePwaPhase({
       supported: true,
       standalone: true,
       installedManifest: null,
       installPlan: plan([asset("/a", 1), asset("/b", 2)], []),
+      commitRequired: recovery.required,
     }),
-    "ready",
+    "commit-required",
   );
+  assert.equal(canPlayOffline({ phase: "commit-required" }), false);
+
+  // Without a published manifest we cannot identify a newer uncommitted pack.
+  // A previously installed generation remains usable offline instead.
+  assert.equal(assessCommitRecovery({ activeManifest: candidate, publishedManifest: null, storedHashes }).required, false);
+
   // A partial pack with no manifest is still a first install, not a repair:
   // there is no committed generation to repair towards.
   assert.equal(
@@ -194,6 +211,54 @@ test("a standalone launch that already holds every asset is ready without a mani
     }),
     "install-required",
   );
+});
+
+test("an active generation mismatch blocks an update until the complete cached candidate is committed", () => {
+  const old = { ...manifest([asset("/a", 1)]), version: "0.9.8.1", releaseSha: "old" };
+  const candidate = { ...manifest([asset("/a", 1)]), version: "0.9.8.2", releaseSha: "new" };
+  const storedHashes = new Set(candidate.assets.map((entry) => entry.hash));
+  const recovery = assessCommitRecovery({ activeManifest: old, publishedManifest: candidate, storedHashes });
+  assert.equal(recovery.required, true);
+  assert.equal(recovery.reason, "active-mismatch");
+  assert.equal(derivePwaPhase({
+    supported: true,
+    standalone: true,
+    installedManifest: old,
+    installPlan: plan(old.assets, []),
+    updateEvaluation: { available: true },
+    commitRequired: true,
+  }), "commit-required");
+  assert.equal(derivePwaPhase({
+    supported: true,
+    standalone: true,
+    installedManifest: old,
+    installPlan: plan(old.assets, []),
+    downloadState: "commit-failed",
+    commitRequired: true,
+  }), "download-incomplete");
+});
+
+test("the pure runtime state model also reports commit-required instead of a playable update", async () => {
+  const old = { ...manifest([asset("/a", 1)]), version: "0.9.8.1", releaseSha: "old" };
+  const candidate = { ...manifest([asset("/a", 1)]), version: "0.9.8.2", releaseSha: "new" };
+  const storedHashes = new Set(candidate.assets.map((entry) => entry.hash));
+  const state = await assessPwaState({
+    windowRef: {
+      isSecureContext: true,
+      caches: {},
+      navigator: { serviceWorker: {}, standalone: true },
+      matchMedia: () => ({ matches: true }),
+    },
+    store: {
+      storedHashes: async () => storedHashes,
+      storedHashesByPath: async () => new Map(old.assets.map((entry) => [entry.path, entry.hash])),
+    },
+    installedManifest: old,
+    publishedManifest: candidate,
+  });
+  assert.equal(state.commitRecovery.required, true);
+  assert.equal(state.phase, "commit-required");
+  assert.equal(state.canPlay, false);
 });
 
 test("a standalone launch with a complete pack is ready", () => {

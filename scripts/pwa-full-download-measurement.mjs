@@ -3,7 +3,10 @@
 // This script measures the complete first-install pack. It never creates a
 // partial install subset and it never changes the browser's cache. The baseline is read
 // from the immutable 0.9.8.1 release tree; the candidate is the checked-out
-// code-derived manifest.
+// code-derived manifest. Measurements are deliberately sequential: one warm-up
+// per release, then five retained AB/BA alternating pairs. No baseline and
+// candidate run at the same time, so CPU, timer, and cache-write contention
+// cannot manufacture an apparent improvement.
 
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
@@ -28,6 +31,7 @@ const FIXTURE = Object.freeze({
   maxAttempts: 1,
 });
 const SWEEP_CONCURRENCIES = Object.freeze([2, 3, 4]);
+const MEASURED_PAIR_ORDERS = Object.freeze(["AB", "BA", "AB", "BA", "AB"]);
 const includeMetrics = process.argv.includes("--full");
 const includeSweep = process.argv.includes("--sweep");
 
@@ -277,14 +281,62 @@ async function measure(label, assets, { concurrency = FIXTURE.concurrency, maxAt
   };
 }
 
+function median(values) {
+  const sorted = [...values].filter(Number.isFinite).sort((left, right) => left - right);
+  if (sorted.length === 0) return null;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+const RETAINED_METRICS = Object.freeze([
+  "elapsedMs",
+  "requestCount",
+  "requestWaitMs",
+  "transferMs",
+  "verifyMs",
+  "cacheWriteMs",
+  "timeoutCount",
+  "retryCount",
+  "totalFetchedBytes",
+  "retryFetchedBytes",
+  "dedupeCount",
+  "distinctBytes",
+]);
+
+function summarizeRetainedRuns(runs) {
+  return {
+    count: runs.length,
+    values: runs.map((run) => Object.fromEntries(RETAINED_METRICS.map((metric) => [metric, run[metric]]))),
+    medians: Object.fromEntries(RETAINED_METRICS.map((metric) => [metric, median(runs.map((run) => run[metric]))])),
+  };
+}
+
 const currentManifest = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
 const baselineManifest = JSON.parse(execFileSync("git", ["show", `${BASELINE_SHA}:public/asset-manifest.json`], { encoding: "utf8" }));
-const [baseline, candidate] = await Promise.all([
-  measure("0.9.8.1 complete first-install pack", baselineManifest.assets),
-  measure("0.9.8.2 complete first-install pack", currentManifest.assets),
-]);
-const improvementPercent = baseline.elapsedMs > 0
-  ? ((baseline.elapsedMs - candidate.elapsedMs) / baseline.elapsedMs) * 100
+
+// Warm both paths first but do not mix these probes into the retained median.
+const warmup = [];
+warmup.push(await measure("warmup 0.9.8.1 complete first-install pack", baselineManifest.assets));
+warmup.push(await measure("warmup 0.9.8.2 complete first-install pack", currentManifest.assets));
+
+const pairedRuns = [];
+for (const [index, order] of MEASURED_PAIR_ORDERS.entries()) {
+  const pair = { run: index + 1, order, baseline: null, candidate: null };
+  for (const release of order) {
+    if (release === "A") {
+      pair.baseline = await measure(`0.9.8.1 complete first-install pack run ${index + 1}`, baselineManifest.assets);
+    } else {
+      pair.candidate = await measure(`0.9.8.2 complete first-install pack run ${index + 1}`, currentManifest.assets);
+    }
+  }
+  pairedRuns.push(pair);
+}
+const baselineRuns = pairedRuns.map((pair) => pair.baseline);
+const candidateRuns = pairedRuns.map((pair) => pair.candidate);
+const baselineSummary = summarizeRetainedRuns(baselineRuns);
+const candidateSummary = summarizeRetainedRuns(candidateRuns);
+const improvementPercent = baselineSummary.medians.elapsedMs > 0
+  ? ((baselineSummary.medians.elapsedMs - candidateSummary.medians.elapsedMs) / baselineSummary.medians.elapsedMs) * 100
   : 0;
 
 const retryProbe = await measure("candidate retry probe", currentManifest.assets.slice(0, 3), {
@@ -293,13 +345,12 @@ const retryProbe = await measure("candidate retry probe", currentManifest.assets
   failOnce: true,
 });
 
-const sweep = includeSweep
-  ? await Promise.all(SWEEP_CONCURRENCIES.map((concurrency) => measure(
-    `candidate concurrency ${concurrency}`,
-    currentManifest.assets,
-    { concurrency },
-  )))
-  : undefined;
+const sweep = [];
+if (includeSweep) {
+  for (const concurrency of SWEEP_CONCURRENCIES) {
+    sweep.push(await measure(`candidate concurrency ${concurrency}`, currentManifest.assets, { concurrency }));
+  }
+}
 
 console.log(JSON.stringify({
   fixture: FIXTURE,
@@ -307,14 +358,21 @@ console.log(JSON.stringify({
   candidate: manifestAnalysis(currentManifest),
   comparison: {
     fullDownloadElapsedMs: {
-      baseline: baseline.elapsedMs,
-      candidate: candidate.elapsedMs,
+      baselineMedian: baselineSummary.medians.elapsedMs,
+      candidateMedian: candidateSummary.medians.elapsedMs,
     },
     fullDownloadImprovementPercent: Number(improvementPercent.toFixed(2)),
-    passesFiftyPercentTarget: improvementPercent >= 50,
-    stageStartMetricUsed: false,
+    methodology: "one warm-up per release; five retained sequential AB/BA alternating runs; median comparison",
   },
-  measurements: { baseline, candidate, retryProbe, ...(sweep ? { sweep } : {}) },
+  measurements: {
+    warmup,
+    pairOrders: MEASURED_PAIR_ORDERS,
+    pairedRuns,
+    baseline: baselineSummary,
+    candidate: candidateSummary,
+    retryProbe,
+    ...(includeSweep ? { sweep } : {}),
+  },
   browserAndDeviceFollowUp: {
     serviceWorkerPath: "same-origin sw.js under the document base path; verified by browser QA",
     chromium: "run separately with the full-install browser smoke",

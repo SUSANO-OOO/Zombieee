@@ -24,7 +24,8 @@ import {
 } from "./pwaAssetManifest.js";
 import { createAssetStore } from "./pwaAssetStore.js";
 import { createAssetDownloadSession } from "./pwaDownloadSession.js";
-import { finalizePwaDownload } from "./pwaInstallFinalize.js";
+import { finalizePwaDownload, recoverVerifiedPwaManifest } from "./pwaInstallFinalize.js";
+import { assessCommitRecovery, manifestsEqual } from "./pwaManifestCommit.js";
 import {
   activateWaitingWorker,
   canPlayOffline,
@@ -142,6 +143,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [storedHashes, setStoredHashes] = useState<Set<string>>(() => new Set());
   const [progress, setProgress] = useState<ReturnType<typeof describeProgress> | null>(null);
   const [downloadState, setDownloadState] = useState<string | null>(null);
+  const [commitRecoveryBusy, setCommitRecoveryBusy] = useState(false);
   const [storage, setStorage] = useState<{ available: number } | null>(null);
   const [showStorage, setShowStorage] = useState(false);
   const [updateDismissed, setUpdateDismissed] = useState(false);
@@ -162,6 +164,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [installPrompt, setInstallPrompt] = useState<{ prompt: () => Promise<unknown> } | null>(null);
   const [installPromptUsed, setInstallPromptUsed] = useState(false);
   const [booted, setBooted] = useState(false);
+  // A standalone launch cannot decide whether a fully cached candidate still
+  // needs its generation pointer until the published manifest has either
+  // arrived or failed its bounded lookup. This closes the reload-time gap where
+  // an old active generation could briefly mount before commit recovery ran.
+  const [publishedChecked, setPublishedChecked] = useState(false);
 
   const baseUrl = useMemo(
     () => (typeof window === "undefined" ? "/" : new URL("./", window.location.href).toString()),
@@ -171,6 +178,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const sessionRef = useRef<ReturnType<typeof createAssetDownloadSession> | null>(null);
   const finalizeSessionRef = useRef<((final: { state?: string } | null | undefined) => Promise<unknown>) | null>(null);
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
+  const commitRecoveryRef = useRef<Promise<unknown> | null>(null);
   // Read inside the download callback, which must not be rebuilt every time one
   // of these changes or an in-flight session would be replaced mid-transfer.
   const installPlanRef = useRef<{ pendingCount: number; pendingBytes: number; satisfiedBytes?: number } | null>(null);
@@ -179,8 +187,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
   const refreshStored = useCallback(async () => {
     const store = storeRef.current;
-    if (!store) return;
-    setStoredHashes(await store.storedHashes());
+    if (!store) return new Set<string>();
+    const hashes = await store.storedHashes();
+    setStoredHashes(hashes);
+    return hashes;
   }, []);
 
   /**
@@ -204,6 +214,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     } catch {
       setManifestUnreachable(true);
       return false;
+    } finally {
+      setPublishedChecked(true);
     }
   }, [baseUrl]);
 
@@ -321,6 +333,16 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     return evaluateUpdate({ installedManifest, publishedManifest, storedHashes });
   }, [installedManifest, publishedManifest, storedHashes]);
 
+  // A complete candidate pack with no matching active generation is not
+  // playable. This is intentionally assessed only from the published manifest,
+  // the worker state learned during boot, and verified cache hashes; it never
+  // guesses while offline, so a committed rollback remains available.
+  const commitRecovery = useMemo(() => assessCommitRecovery({
+    activeManifest: installedManifest,
+    publishedManifest,
+    storedHashes,
+  }), [installedManifest, publishedManifest, storedHashes]);
+
   // Mirrored into refs so the download callback can read the current values
   // without listing them as dependencies - rebuilding that callback mid-run
   // would swap the session out from under an in-flight transfer.
@@ -338,6 +360,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     downloadState,
     updateEvaluation,
     offerDismissed,
+    commitRequired: commitRecovery.required,
+    commitRecoveryBusy,
   });
 
   const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" });
@@ -421,23 +445,26 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
             return null;
           }
         },
+        readActiveState: async (registration) => requestFromServiceWorker(registration, { type: "pwa:get-state" }),
         persistStorage: async () => import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator)),
         onIncomplete: async (incomplete) => {
           recordDiagnostics(session.getSnapshot().failures ?? []);
           setDownloadState(incomplete?.state ?? "failed");
         },
-        onCommitFailed: async () => {
+        onCommitFailed: async (response) => {
           recordDiagnostics(
             [{ path: "(manifest)", reason: "manifest-commit", status: 0, attempts: 1 }],
-            { serviceWorkerState: serviceWorkerState ?? "commit-unconfirmed" },
+            { serviceWorkerState: String(response?.reason ?? serviceWorkerState ?? "commit-unconfirmed") },
           );
           setDownloadState("commit-failed");
         },
-        onCommitted: async () => {
+        onCommitted: async (_candidate, _response, activeState) => {
           // Keep refs current synchronously: a player may immediately invoke a
           // follow-up action before React has scheduled the mirroring effect.
-          installedManifestRef.current = manifest;
-          setInstalledManifest(manifest);
+          const active = (activeState?.active ?? manifest) as Manifest;
+          installedManifestRef.current = active;
+          setInstalledManifest(active);
+          setPreviousManifest((activeState?.previous ?? null) as Manifest | null);
           setUpdateDismissed(false);
           setDiagnostics(null);
           setDownloadState("complete");
@@ -478,8 +505,101 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     void runDownload(updateEvaluation.diff.downloadable, publishedManifest, "update");
   }, [publishedManifest, runDownload, updateEvaluation]);
 
+  /**
+   * After a commit acknowledgement failed, a reload can find a complete,
+   * verified candidate pack before the worker has an active pointer to it. This
+   * path deliberately performs only the pointer recovery: no session, fetcher,
+   * asset write, cache clearing, or game/save mutation is involved.
+   */
+  const recoverCommittedPack = useCallback(() => {
+    if (commitRecoveryRef.current) return;
+    const candidate = publishedManifest as Manifest | null;
+    if (!candidate) return;
+
+    const task = (async () => {
+      setError(null);
+      setDiagnostics(null);
+      setCommitRecoveryBusy(true);
+      const startedAt = Date.now();
+      const record = (reason: string) => setDiagnostics(describeFailureDiagnostics({
+        kind: "commit-recovery",
+        fromVersion: installedManifestRef.current?.version ?? null,
+        toVersion: candidate.version,
+        releaseSha: candidate.releaseSha,
+        failures: [{ path: "(manifest)", reason, status: 0, attempts: 1 }],
+        startedAt,
+        lastProgressAt: startedAt,
+        origin: window.location.origin,
+        scope: registrationRef.current?.scope ?? baseUrl,
+        standalone: isStandaloneDisplay(window),
+        storedCount: storedHashesRef.current.size,
+        storedBytes: 0,
+        pendingCount: 0,
+        pendingBytes: 0,
+        serviceWorkerState: "commit-recovery",
+      }));
+
+      // Re-read the active state just before the write. If another context
+      // already completed the commit, reflect it and avoid a duplicate commit.
+      const before = await requestFromServiceWorker(registrationRef.current, { type: "pwa:get-state" });
+      if (Array.isArray(before?.active?.assets) && before.active.assets.length > 0) {
+        installedManifestRef.current = before.active as Manifest;
+        setInstalledManifest(before.active as Manifest);
+      }
+      if (Array.isArray(before?.previous?.assets)) setPreviousManifest(before.previous as Manifest);
+      if (manifestsEqual(before?.active, candidate)) {
+        setDownloadState(null);
+        return;
+      }
+
+      await recoverVerifiedPwaManifest({
+        manifest: candidate,
+        storedHashes: storedHashesRef.current,
+        refreshStored,
+        registration: registrationRef.current,
+        commitManifest: async (registration, manifest) => requestFromServiceWorker(
+          registration,
+          { type: "pwa:commit-manifest", manifest },
+        ),
+        readActiveState: async (registration) => requestFromServiceWorker(registration, { type: "pwa:get-state" }),
+        persistStorage: async () => import("./pwaAssetStore.js").then((m) => m.persistStorage(window.navigator)),
+        onIncomplete: async () => {
+          record("cache-incomplete");
+          setDownloadState("failed");
+        },
+        onCommitFailed: async (response) => {
+          record("manifest-commit");
+          setError(response?.reason === "active-mismatch"
+            ? "保存済みデータの切り替えを確認できませんでした。"
+            : null);
+          setDownloadState("commit-failed");
+        },
+        onCommitted: async (_manifest, _response, activeState) => {
+          const active = (activeState?.active ?? candidate) as Manifest;
+          installedManifestRef.current = active;
+          setInstalledManifest(active);
+          setPreviousManifest((activeState?.previous ?? null) as Manifest | null);
+          setUpdateDismissed(false);
+          setDiagnostics(null);
+          setDownloadState("complete");
+        },
+      });
+    })().catch((cause) => {
+      setError(String((cause as Error)?.message ?? cause));
+      setDownloadState("commit-failed");
+    }).finally(() => {
+      commitRecoveryRef.current = null;
+      setCommitRecoveryBusy(false);
+    });
+    commitRecoveryRef.current = task;
+  }, [baseUrl, publishedManifest, refreshStored]);
+
   /** Retries only what did not finish, never what already verified. */
   const retryFailed = useCallback(() => {
+    if (commitRecovery.required) {
+      recoverCommittedPack();
+      return;
+    }
     void (async () => {
       const session = sessionRef.current;
       const finalize = finalizeSessionRef.current;
@@ -493,7 +613,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         setDownloadState("failed");
       }
     })();
-  }, []);
+  }, [commitRecovery.required, recoverCommittedPack]);
 
   const clearAssets = useCallback(async () => {
     await storeRef.current?.clearAssets();
@@ -551,13 +671,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // `settling` covers the gap before the boot effect has established what this
   // device is. Without it the very first render is unblocked, the game mounts,
   // and title art and music are fetched before the player has been asked
-  // anything - which is precisely what a browser tab must not do here. It clears
-  // on local facts alone, so an installed app is not held up by the network.
-  const settling = !booted;
+  // anything - which is precisely what a browser tab must not do here. A
+  // standalone launch also waits for the bounded published-manifest lookup:
+  // otherwise a complete uncommitted candidate could slip through on reload.
+  // If the lookup fails offline, `publishedChecked` still releases the retained
+  // active generation rather than treating a network absence as data loss.
+  const settling = !booted || (standalone && !publishedChecked);
   const blocking = settling
     || phase === "install-offer"
     || phase === "download-complete"
     || phase === "download-incomplete"
+    || phase === "commit-required"
+    || phase === "committing"
     || (!playable && (phase === "install-required" || phase === "installing"));
 
   return (
@@ -648,6 +773,25 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               </>
             )}
 
+            {(phase === "commit-required" || phase === "committing") && (
+              <>
+                <h2>保存済みデータを反映しています</h2>
+                <p className="pwa-progress-line">
+                  取得・サイズ確認・SHA-256確認済みの{publishedManifest?.assets?.length ?? storedHashes.size}件を、
+                  この端末のゲームVersionとして確定します。
+                </p>
+                <p className="pwa-hint">
+                  データ本体は再取得しません。反映が完了するまでゲームは開始しません。
+                </p>
+                {phase === "commit-required" && (
+                  <button type="button" className="pwa-primary" onClick={recoverCommittedPack}>
+                    保存済みデータを反映
+                  </button>
+                )}
+                {phase === "committing" && <p className="pwa-hint" role="status">反映を確認しています…</p>}
+              </>
+            )}
+
             {phase === "install-required" && installCopy && (
               <>
                 <h2>{installCopy.headline}</h2>
@@ -721,7 +865,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                 )}
                 <div className="pwa-actions">
                   <button type="button" className="pwa-primary" onClick={retryFailed}>
-                    失敗した項目だけ再試行
+                    {commitRecovery.required ? "保存済みデータを反映し直す" : "失敗した項目だけ再試行"}
                   </button>
                   <button type="button" onClick={copyDiagnostics}>
                     {copied ? "コピーしました" : "診断情報をコピー"}

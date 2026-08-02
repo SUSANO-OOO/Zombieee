@@ -142,6 +142,7 @@ const shipped = await page.evaluate(async (base) => {
   return {
     ok: response.ok,
     version: manifest.version,
+    releaseSha: manifest.releaseSha,
     count: manifest.assets.length,
     bytes: manifest.assets.reduce((sum, asset) => sum + asset.bytes, 0),
     distinctHashCount: new Set(manifest.assets.map((asset) => asset.hash)).size,
@@ -573,7 +574,7 @@ const appPage = await appContext.newPage();
 const appAssetRequests = [];
 appPage.on("request", (request) => {
   const { pathname } = new URL(request.url());
-  if (/\/(art|audio|icons)\//.test(pathname)) appAssetRequests.push(pathname);
+  if (/\/(art|audio|icons|pwa-bundles)\//.test(pathname)) appAssetRequests.push(pathname);
 });
 await appPage.goto(baseUrl, { waitUntil: "domcontentloaded" });
 
@@ -714,6 +715,88 @@ record(
     : revisitCase.gateVisible,
   { ...revisitCase, packSurvivedReload, expectedManifestPaths: shipped.count, expectedDistinctHashes: shippedDistinctHashCount, engine: engineName },
 );
+
+// --- 14. Commit-only recovery after an acknowledged pack lost its pointer ---
+//
+// Simulate the precise failed-commit reload state without clearing the verified
+// pack: move the worker to a tiny old generation, retain the released pack as
+// its previous generation, then reload. The gate must not mount the game until
+// it writes the released generation back, and that recovery must not fetch or
+// save a single game asset body.
+const recoverySetup = await appPage.evaluate(async (base) => {
+  const registration = await navigator.serviceWorker.ready;
+  const ask = (message) => new Promise((resolve) => {
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => resolve(null), 5000);
+    channel.port1.onmessage = (event) => { clearTimeout(timer); resolve(event.data); };
+    registration.active.postMessage(message, [channel.port2]);
+  });
+  const manifest = await (await fetch(new URL("asset-manifest.json", base).toString(), { cache: "no-store" })).json();
+  const cache = await caches.open("zombieee-assets-v1");
+  const old = {
+    schema: manifest.schema,
+    version: "commit-recovery-old",
+    releaseSha: "old-generation",
+    // A valid but deliberately different active generation; `commit-manifest`
+    // retains the complete shipped generation as `previous`.
+    assets: [manifest.assets[0]],
+  };
+  localStorage.setItem("zombieee-qa-commit-recovery-save", JSON.stringify({ progress: 73 }));
+  const committedOld = await ask({ type: "pwa:commit-manifest", manifest: old });
+  return {
+    committedOld: committedOld?.type,
+    old,
+    cacheEntriesBeforeReload: (await cache.keys()).length,
+  };
+}, baseUrl);
+
+await appPage.reload({ waitUntil: "domcontentloaded" });
+const recoverCommitButton = appPage.getByRole("button", { name: "保存済みデータを反映" });
+await recoverCommitButton.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+const recoveryBlockedCase = await appPage.evaluate(() => ({
+  gateVisible: Boolean(document.querySelector(".pwa-gate")),
+  gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
+  text: document.querySelector(".pwa-gate")?.innerText ?? "",
+}));
+record("a complete pack with a mismatched worker generation is blocked pending commit", (
+  recoverySetup.committedOld === "pwa:committed"
+  && recoveryBlockedCase.gateVisible
+  && !recoveryBlockedCase.gameMounted
+  && recoveryBlockedCase.text.includes("データ本体は再取得しません")
+), { recoverySetup, recoveryBlockedCase });
+
+const recoveryRequestStart = appAssetRequests.length;
+await recoverCommitButton.click();
+await beginButton.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+const recoveryCase = await appPage.evaluate(async () => {
+  const registration = await navigator.serviceWorker.ready;
+  const state = await new Promise((resolve) => {
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => resolve(null), 5000);
+    channel.port1.onmessage = (event) => { clearTimeout(timer); resolve(event.data); };
+    registration.active.postMessage({ type: "pwa:get-state" }, [channel.port2]);
+  });
+  const cache = await caches.open("zombieee-assets-v1");
+  return {
+    beginVisible: Boolean([...document.querySelectorAll("button")].find((button) => button.textContent?.includes("ゲームを始める"))),
+    active: state?.active ?? null,
+    previous: state?.previous ?? null,
+    cacheEntries: (await cache.keys()).length,
+    saveSurvived: JSON.parse(localStorage.getItem("zombieee-qa-commit-recovery-save") ?? "null")?.progress === 73,
+  };
+});
+const recoveryAssetRequests = appAssetRequests.slice(recoveryRequestStart);
+record("commit-only recovery reactivates the published pack, retains rollback, and preserves save", (
+  recoveryCase.beginVisible
+  && recoveryCase.active?.version === shipped.version
+  && recoveryCase.active?.releaseSha === shipped.releaseSha
+  && recoveryCase.previous?.version === recoverySetup.old.version
+  && recoveryCase.cacheEntries === recoverySetup.cacheEntriesBeforeReload
+  && recoveryCase.saveSurvived
+), { recoveryCase, expected: { version: shipped.version, releaseSha: shipped.releaseSha } });
+record("commit-only recovery makes zero runtime asset or bundle requests", (
+  recoveryAssetRequests.length === 0
+), { recoveryAssetRequests });
 
 await appContext.close();
 

@@ -11,6 +11,7 @@
 
 import { detectEviction, estimateStorage, resolveAssetUrl } from "./pwaAssetStore.js";
 import { formatBytes, planInstall, validateAssetManifest } from "./pwaAssetManifest.js";
+import { assessCommitRecovery } from "./pwaManifestCommit.js";
 import { evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js";
 
 export const PWA_PHASES = Object.freeze([
@@ -19,6 +20,8 @@ export const PWA_PHASES = Object.freeze([
   "install-offer",
   "download-complete",
   "download-incomplete",
+  "commit-required",
+  "committing",
   "install-required",
   "installing",
   "install-incomplete",
@@ -46,12 +49,16 @@ export function derivePwaPhase({
   downloadState = null,
   updateEvaluation = null,
   offerDismissed = false,
+  commitRequired = false,
+  commitRecoveryBusy = false,
 } = {}) {
   if (!supported) return "unsupported";
 
   if (downloadState === "running" || downloadState === "paused") {
     return "installing";
   }
+
+  if (commitRequired && commitRecoveryBusy) return "committing";
 
   // A run that stopped short holds the screen until the player decides what to
   // do with it. This used to fall straight through: an update that failed
@@ -62,6 +69,11 @@ export function derivePwaPhase({
   if (downloadState === "failed" || downloadState === "cancelled" || downloadState === "commit-failed") {
     return "download-incomplete";
   }
+
+  // A fully verified Cache Storage pack must still be committed to the worker
+  // before play. Without this branch a reload after an acknowledgement failure
+  // could bypass the only durable generation pointer and fall through to ready.
+  if (commitRequired) return "commit-required";
 
   // A finished download says so and hands the player a button, rather than
   // swapping the screen underneath them. This sits above the standalone split
@@ -553,6 +565,12 @@ export async function assessPwaState({
     ? evaluateUpdate({ installedManifest: activeManifest, publishedManifest, storedHashes })
     : null;
 
+  const commitRecovery = assessCommitRecovery({
+    activeManifest,
+    publishedManifest,
+    storedHashes,
+  });
+
   const phase = derivePwaPhase({
     supported,
     standalone,
@@ -560,6 +578,7 @@ export async function assessPwaState({
     installPlan,
     downloadState,
     updateEvaluation,
+    commitRequired: commitRecovery.required,
   });
 
   const activation = evaluateActivationSafety({
@@ -577,6 +596,7 @@ export async function assessPwaState({
     installPlan,
     eviction,
     updateEvaluation,
+    commitRecovery,
     activation,
     storage: await estimateStorage(windowRef?.navigator),
     canPlay: canPlayOffline({ phase, installPlan }),
