@@ -439,4 +439,61 @@ test("the asset fetcher requests the scoped URL and returns raw bytes", async ()
   assert.equal(requested[0].cache, "no-store");
   assert.equal(result.ok, true);
   assert.equal(result.body.byteLength, 3);
+  assert.equal(result.networkRequestCount, 1);
+});
+
+test("the asset fetcher uses optimized source paths while preserving runtime paths", async () => {
+  const requested = [];
+  const fetcher = createAssetFetcher({
+    baseUrl: "https://example.test/Zombieee/",
+    fetchImpl: async (url) => {
+      requested.push(url);
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => "image/webp" },
+        arrayBuffer: async () => new Uint8Array([1, 2]).buffer,
+      };
+    },
+  });
+
+  const result = await fetcher({ ...asset("/art/a.png", 1), sourcePath: "/art/a.webp" }, {});
+  assert.equal(requested[0], "https://example.test/Zombieee/art/a.webp");
+  assert.equal(result.body.byteLength, 2);
+});
+
+test("the asset fetcher downloads an audio bundle once and slices each cue", async () => {
+  const requested = [];
+  const bundle = new Uint8Array([10, 11, 12, 13, 14, 15]);
+  const fetcher = createAssetFetcher({
+    baseUrl: "https://example.test/Zombieee/",
+    fetchImpl: async (url) => {
+      requested.push(url);
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => "application/octet-stream" },
+        arrayBuffer: async () => bundle.slice().buffer,
+      };
+    },
+  });
+
+  const first = await fetcher({
+    ...asset("/audio/a.mp3", 1),
+    bundlePath: "/pwa-bundles/audio-v1.bin",
+    bundleOffset: 1,
+    bundleBytes: 2,
+  }, {});
+  const second = await fetcher({
+    ...asset("/audio/b.mp3", 2),
+    bundlePath: "/pwa-bundles/audio-v1.bin",
+    bundleOffset: 4,
+    bundleBytes: 2,
+  }, {});
+
+  assert.deepEqual([...first.body], [11, 12]);
+  assert.deepEqual([...second.body], [14, 15]);
+  assert.equal(requested.length, 1);
+  assert.equal(first.networkRequestCount, 1);
+  assert.equal(second.networkRequestCount, 0);
 });

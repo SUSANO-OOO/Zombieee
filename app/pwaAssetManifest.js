@@ -22,13 +22,6 @@ export const ASSET_PACKS = Object.freeze([
 
 export const ASSET_PACK_IDS = Object.freeze(ASSET_PACKS.map((pack) => pack.id));
 
-export const ASSET_INSTALL_TIERS = Object.freeze([
-  "shell",
-  "first-play",
-  "on-demand",
-  "optional",
-]);
-
 /** Player-facing categories used by the download progress UI. */
 export const ASSET_CATEGORIES = Object.freeze([
   "app",
@@ -77,10 +70,28 @@ export function audioChannelFor(manifestCategory) {
   return AUDIO_CHANNEL_BY_MANIFEST_CATEGORY[manifestCategory] ?? "se";
 }
 
+/**
+ * The production audio manifest keeps every source so the mixer can fall back
+ * when it is loading directly. The offline pack needs only one source per cue;
+ * the target browsers (Chromium, WebKit, and iPhone Safari) all support MPEG
+ * audio, so prefer it before the larger Ogg/WAV alternatives.
+ */
+export function selectPreferredAudioSource(sources) {
+  const candidates = Array.isArray(sources) ? sources.filter(Boolean) : [];
+  const preference = ["audio/mpeg", "audio/ogg", "audio/wav"];
+  return [...candidates].sort((left, right) => {
+    const leftScore = preference.indexOf(left?.type);
+    const rightScore = preference.indexOf(right?.type);
+    const normalizedLeft = leftScore < 0 ? preference.length : leftScore;
+    const normalizedRight = rightScore < 0 ? preference.length : rightScore;
+    if (normalizedLeft !== normalizedRight) return normalizedLeft - normalizedRight;
+    return String(left?.src ?? "").localeCompare(String(right?.src ?? ""));
+  })[0] ?? null;
+}
+
 const packIdSet = new Set(ASSET_PACK_IDS);
 const categorySet = new Set(ASSET_CATEGORIES);
 const channelSet = new Set(AUDIO_CHANNELS);
-const installTierSet = new Set(ASSET_INSTALL_TIERS);
 
 function isRecord(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -118,11 +129,24 @@ function validateAsset(asset, index, errors) {
   if (asset.criticality !== "critical" && asset.criticality !== "optional") {
     errors.push(`${prefix}.criticality must be "critical" or "optional"`);
   }
-  if (asset.installTier !== undefined && !installTierSet.has(asset.installTier)) {
-    errors.push(`${prefix}.installTier must be shell, first-play, on-demand, or optional`);
+  for (const field of ["sourcePath", "bundlePath"]) {
+    if (asset[field] !== undefined && !isDistributionPath(asset[field])) {
+      errors.push(`${prefix}.${field} must be a repository-local absolute path`);
+    }
   }
-  if (asset.installPriority !== undefined && (!Number.isInteger(asset.installPriority) || asset.installPriority < 0 || asset.installPriority > 100)) {
-    errors.push(`${prefix}.installPriority must be an integer from 0 to 100`);
+  const hasBundle = asset.bundlePath !== undefined;
+  if (asset.sourcePath !== undefined && hasBundle) {
+    errors.push(`${prefix} may use sourcePath or bundlePath, not both`);
+  }
+  if (hasBundle) {
+    if (!Number.isInteger(asset.bundleOffset) || asset.bundleOffset < 0) {
+      errors.push(`${prefix}.bundleOffset must be a non-negative integer`);
+    }
+    if (!Number.isInteger(asset.bundleBytes) || asset.bundleBytes !== asset.bytes) {
+      errors.push(`${prefix}.bundleBytes must equal bytes for a bundled asset`);
+    }
+  } else if (asset.bundleOffset !== undefined || asset.bundleBytes !== undefined) {
+    errors.push(`${prefix}.bundleOffset and bundleBytes require bundlePath`);
   }
   if (asset.category === "audio") {
     if (!channelSet.has(asset.audioChannel)) errors.push(`${prefix}.audioChannel must be bgm, se, or voice`);
@@ -132,10 +156,10 @@ function validateAsset(asset, index, errors) {
     if (asset.audioType !== undefined && (typeof asset.audioType !== "string" || asset.audioType.length === 0)) {
       errors.push(`${prefix}.audioType must be a non-empty MIME type when present`);
     }
-  } else {
-    if (asset.audioChannel !== undefined) errors.push(`${prefix}.audioChannel is only valid on audio assets`);
-    if (asset.audioId !== undefined) errors.push(`${prefix}.audioId is only valid on audio assets`);
-    if (asset.audioType !== undefined) errors.push(`${prefix}.audioType is only valid on audio assets`);
+  } else if (asset.audioChannel !== undefined) {
+    errors.push(`${prefix}.audioChannel is only valid on audio assets`);
+  } else if (asset.audioId !== undefined || asset.audioType !== undefined) {
+    errors.push(`${prefix}.audioId and audioType are only valid on audio assets`);
   }
 }
 
@@ -188,17 +212,6 @@ export function assertAssetManifest(candidate) {
 /** Stable ordering so a regenerated manifest is byte-identical to a committed one. */
 export function sortManifestAssets(assets) {
   return [...assets].sort((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0));
-}
-
-/** Priority order used by downloads; manifest serialization remains path-stable. */
-export function sortDownloadAssets(assets) {
-  return [...assets].sort((left, right) => {
-    const leftPriority = Number.isInteger(left.installPriority) ? left.installPriority : 80;
-    const rightPriority = Number.isInteger(right.installPriority) ? right.installPriority : 80;
-    if (leftPriority !== rightPriority) return leftPriority - rightPriority;
-    if (left.criticality !== right.criticality) return left.criticality === "critical" ? -1 : 1;
-    return left.path < right.path ? -1 : left.path > right.path ? 1 : 0;
-  });
 }
 
 export function totalBytes(assets) {

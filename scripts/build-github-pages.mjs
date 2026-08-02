@@ -172,11 +172,25 @@ distribution.releaseSha = releaseSha;
 
 const assetProblems = [];
 let verifiedBytes = 0;
+const bundleBodies = new Map();
+async function readTransportBody(asset) {
+  if (asset.bundlePath) {
+    let bundle = bundleBodies.get(asset.bundlePath);
+    if (!bundle) {
+      bundle = await readFile(path.join(outputDir, asset.bundlePath.replace(/^\/+/, "")));
+      bundleBodies.set(asset.bundlePath, bundle);
+    }
+    const offset = Number(asset.bundleOffset);
+    const length = Number(asset.bundleBytes ?? asset.bytes);
+    return bundle.subarray(offset, offset + length);
+  }
+  const transportPath = asset.sourcePath ?? asset.path;
+  return readFile(path.join(outputDir, transportPath.replace(/^\/+/, "")));
+}
 for (const asset of distribution.assets ?? []) {
-  const assetPath = path.join(outputDir, asset.path.replace(/^\/+/, ""));
   let body;
   try {
-    body = await readFile(assetPath);
+    body = await readTransportBody(asset);
   } catch {
     assetProblems.push(`${asset.path}: not published`);
     continue;

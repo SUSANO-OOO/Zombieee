@@ -19,7 +19,14 @@ let result;
 await mkdir(evidenceDir, { recursive: true });
 const buildIdentityAtStart = await productionBuildIdentity();
 try {
+  // This smoke measures the game's runtime decoders, not the PWA install gate.
+  // Hide the PWA capability in this isolated harness so the full-pack gate is
+  // covered by qa:v096-pwa while this test can reach the decoder bridge.
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  await context.addInitScript(() => {
+    try { Object.defineProperty(navigator, "serviceWorker", { value: undefined, configurable: true }); } catch {}
+    try { Object.defineProperty(window, "caches", { value: undefined, configurable: true }); } catch {}
+  });
   const page = await context.newPage();
   page.on("console", (message) => {
     if (message.type() === "error") diagnostics.consoleErrors.push(message.text());

@@ -60,7 +60,7 @@ export function createAssetStore({ caches: cacheStorage, scope }) {
       const buffer = body instanceof Uint8Array ? body.slice().buffer : body;
       await cache.put(assetCacheKey(asset.hash, scope), new Response(buffer, {
         headers: {
-          "content-type": contentTypeFor(asset.path),
+          "content-type": contentTypeFor(asset.sourcePath ?? asset.path),
           "content-length": String(bodyLength(body)),
           "x-pwa-asset-hash": asset.hash,
         },

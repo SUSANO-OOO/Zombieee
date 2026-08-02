@@ -18,16 +18,11 @@ import {
   audioChannelFor,
   distinctDownloadBytes,
   formatBytes,
+  selectPreferredAudioSource,
   sortManifestAssets,
   summarizeByCategory,
   summarizeByPack,
 } from "../app/pwaAssetManifest.js";
-import {
-  PWA_INSTALL_PRIORITIES,
-  dependencyPathsForOperation,
-  tierForAudioId,
-  tierForPath,
-} from "../app/pwaPlayablePack.js";
 import { CAMPAIGN_UNITS } from "../app/campaign.js";
 import { isBossEnemyKind } from "../app/bossFoundation.js";
 import {
@@ -55,6 +50,11 @@ const checkOnly = process.argv.includes("--check");
 
 const ASSET_EXTENSION = /\.(webp|png|svg|ogg|mp3|wav)$/i;
 
+function optimizedRasterPath(assetPath) {
+  if (!assetPath.endsWith(".png") || assetPath.startsWith("/icons/")) return null;
+  return `/pwa-optimized${assetPath.replace(/\.png$/i, ".webp")}`;
+}
+
 /**
  * `art/**\/reference/` holds the authoring identity masters that art direction
  * compares against. They are never drawn at runtime and are several times the
@@ -70,7 +70,10 @@ const EXCLUDED_PATH = /\/reference\//;
  */
 const EXCLUDED_PROFILE_KEYS = new Set(["identityMaster"]);
 
-/** path -> { pack, category, criticality, installTier, installPriority, ... } */
+const audioBundleIndexPath = path.join(publicDir, "pwa-bundles", "audio-v1.json");
+const audioBundleIndex = JSON.parse(await readFile(audioBundleIndexPath, "utf8"));
+
+/** path -> { pack, category, criticality, audioChannel?, sourcePath?, bundle? } */
 const entries = new Map();
 const excluded = new Set();
 
@@ -86,7 +89,11 @@ function record(assetPath, classification) {
     return;
   }
   if (entries.has(assetPath)) return;
-  entries.set(assetPath, classification);
+  const sourcePath = optimizedRasterPath(assetPath);
+  entries.set(assetPath, {
+    ...classification,
+    ...(sourcePath ? { sourcePath } : {}),
+  });
 }
 
 function collectExcluded(value, depth = 0) {
@@ -101,23 +108,9 @@ function collectExcluded(value, depth = 0) {
   }
 }
 
-function resolveClassification(classification, assetPath) {
-  return typeof classification === "function" ? classification(assetPath) : classification;
-}
-
-function stagedClassification(assetPath, base) {
-  const installTier = tierForPath(assetPath);
-  return {
-    ...base,
-    criticality: installTier === "shell" || installTier === "first-play" ? "critical" : "optional",
-    installTier,
-    installPriority: PWA_INSTALL_PRIORITIES[installTier],
-  };
-}
-
 function sweep(value, classification, depth = 0) {
   if (depth > 8 || value == null) return;
-  if (typeof value === "string") return record(value, resolveClassification(classification, value));
+  if (typeof value === "string") return record(value, classification);
   if (Array.isArray(value)) return value.forEach((item) => sweep(item, classification, depth + 1));
   if (typeof value === "object") {
     for (const [key, item] of Object.entries(value)) {
@@ -149,9 +142,9 @@ function categoryForKind(kind) {
 
 // --- App shell ------------------------------------------------------------
 
-record(PRODUCTION_VISUALS.title, stagedClassification(PRODUCTION_VISUALS.title, { pack: "app-shell", category: "app" }));
-record(PRODUCTION_VISUALS.command, stagedClassification(PRODUCTION_VISUALS.command, { pack: "app-shell", category: "app" }));
-record("/favicon.svg", stagedClassification("/favicon.svg", { pack: "app-shell", category: "app" }));
+record(PRODUCTION_VISUALS.title, { pack: "app-shell", category: "app", criticality: "critical" });
+record(PRODUCTION_VISUALS.command, { pack: "app-shell", category: "app", criticality: "critical" });
+record("/favicon.svg", { pack: "app-shell", category: "app", criticality: "critical" });
 // Every icon the web app manifest or the document head points at. An icon that
 // is referenced but not registered here is absent from the offline pack, so an
 // installed app would go looking for it over a network it may not have.
@@ -163,62 +156,70 @@ for (const icon of [
   "/icons/icon-maskable-512.png",
   "/icons/apple-touch-icon-180.png",
 ]) {
-  record(icon, stagedClassification(icon, { pack: "app-shell", category: "app" }));
+  record(icon, { pack: "app-shell", category: "app", criticality: "critical" });
 }
 
 // --- Campaign core --------------------------------------------------------
 
-sweep(PRODUCTION_VISUALS.stages, (assetPath) => stagedClassification(assetPath, { pack: "campaign-core", category: "background" }));
-sweep(STORY_BACKGROUND_VISUALS, (assetPath) => stagedClassification(assetPath, { pack: "campaign-core", category: "background" }));
-sweep(STAGE_OBJECT_MANIFEST, (assetPath) => stagedClassification(assetPath, { pack: "campaign-core", category: "object" }));
-// These three battle supplies are direct renderer dependencies, not entries in
-// STAGE_OBJECT_MANIFEST, so register them explicitly after the generic sweeps.
-for (const assetPath of dependencyPathsForOperation()) {
-  if (!assetPath.startsWith("/art/")) {
-    record(assetPath, stagedClassification(assetPath, { pack: "campaign-core", category: "object" }));
-  }
+sweep(PRODUCTION_VISUALS.stages, { pack: "campaign-core", category: "background", criticality: "critical" });
+sweep(STORY_BACKGROUND_VISUALS, { pack: "campaign-core", category: "background", criticality: "optional" });
+sweep(STAGE_OBJECT_MANIFEST, { pack: "campaign-core", category: "object", criticality: "optional" });
+// These three supplies are direct renderer dependencies rather than entries in
+// STAGE_OBJECT_MANIFEST. They are part of the full first-install pack because
+// the battle UI can request them on any supported campaign stage.
+for (const assetPath of [
+  "/tactical-drop-pod-v1.png",
+  "/explosive-drum-v1.png",
+  "/medical-supply-station-v1.png",
+]) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
 }
 
 // --- Units, enemies, bosses ----------------------------------------------
 
 for (const kind of spriteKinds) {
   const category = categoryForKind(kind);
-  record(spriteSheetPath(kind), stagedClassification(spriteSheetPath(kind), {
+  record(spriteSheetPath(kind), {
     pack: "units",
     category,
-  }));
+    // Battle rendering cannot proceed without the atlases it draws.
+    criticality: "critical",
+  });
 }
 
 // CRAWLER and the infected base are persistent battlefield fixtures.
-sweep(V075_VISUAL_PROFILES.crawler, (assetPath) => stagedClassification(assetPath, { pack: "units", category: "unit" }));
-sweep(V075_VISUAL_PROFILES.enemyBase, (assetPath) => stagedClassification(assetPath, { pack: "units", category: "enemy" }));
+sweep(V075_VISUAL_PROFILES.crawler, { pack: "units", category: "unit", criticality: "critical" });
+sweep(V075_VISUAL_PROFILES.enemyBase, { pack: "units", category: "enemy", criticality: "critical" });
 
-sweep(CHARACTER_PORTRAIT_ART, (assetPath) => stagedClassification(assetPath, { pack: "units", category: "portrait" }));
-sweep(PORTRAIT_ART, (assetPath) => stagedClassification(assetPath, { pack: "units", category: "portrait" }));
-sweep(FORMATION_CARD_ART, (assetPath) => stagedClassification(assetPath, { pack: "units", category: "portrait" }));
-sweep(PERSONNEL_CARD_ART, (assetPath) => stagedClassification(assetPath, { pack: "units", category: "portrait" }));
-record(RADIO_PORTRAIT_ART, stagedClassification(RADIO_PORTRAIT_ART, { pack: "units", category: "portrait" }));
-sweep(V075_VISUAL_PROFILES, (assetPath) => stagedClassification(assetPath, { pack: "units", category: "portrait" }));
-sweep(V080_UNIT_VISUAL_PROFILES, (assetPath) => stagedClassification(assetPath, { pack: "units", category: "portrait" }));
-sweep(V090_UNIT_VISUAL_PROFILES, (assetPath) => stagedClassification(assetPath, { pack: "units", category: "portrait" }));
+sweep(CHARACTER_PORTRAIT_ART, { pack: "units", category: "portrait", criticality: "optional" });
+sweep(PORTRAIT_ART, { pack: "units", category: "portrait", criticality: "optional" });
+sweep(FORMATION_CARD_ART, { pack: "units", category: "portrait", criticality: "optional" });
+sweep(PERSONNEL_CARD_ART, { pack: "units", category: "portrait", criticality: "optional" });
+record(RADIO_PORTRAIT_ART, { pack: "units", category: "portrait", criticality: "optional" });
+sweep(V075_VISUAL_PROFILES, { pack: "units", category: "portrait", criticality: "optional" });
+sweep(V080_UNIT_VISUAL_PROFILES, { pack: "units", category: "portrait", criticality: "optional" });
+sweep(V090_UNIT_VISUAL_PROFILES, { pack: "units", category: "portrait", criticality: "optional" });
 
 // --- Audio ----------------------------------------------------------------
 
 for (const asset of PRODUCTION_AUDIO_MANIFEST.assets ?? []) {
   const audioChannel = audioChannelFor(asset.category);
-  for (const source of asset.sources ?? []) {
-    const installTier = tierForAudioId(asset.id);
-    record(source.src, {
-      pack: "audio",
-      category: "audio",
-      criticality: installTier === "first-play" ? "critical" : "optional",
-      installTier,
-      installPriority: PWA_INSTALL_PRIORITIES[installTier],
-      audioChannel,
-      audioId: asset.id,
-      audioType: source.type,
-    });
-  }
+  const source = selectPreferredAudioSource(asset.sources);
+  if (!source) continue;
+  const bundleEntry = audioBundleIndex.assets?.[source.src];
+  if (!bundleEntry) throw new Error(`Missing audio bundle entry for ${source.src}`);
+  record(source.src, {
+    pack: "audio",
+    category: "audio",
+    // Audio never blocks play; the 0.9.5.2 hotfix keeps categories separate.
+    criticality: "optional",
+    audioChannel,
+    audioId: asset.id,
+    audioType: source.type,
+    bundlePath: audioBundleIndex.bundlePath,
+    bundleOffset: bundleEntry.offset,
+    bundleBytes: bundleEntry.bytes,
+  });
 }
 
 // --- Hash and size --------------------------------------------------------
@@ -227,7 +228,8 @@ const assets = [];
 const missing = [];
 
 for (const [assetPath, classification] of entries) {
-  const absolute = path.join(publicDir, assetPath.replace(/^\//, ""));
+  const transportPath = classification.sourcePath ?? assetPath;
+  const absolute = path.join(publicDir, transportPath.replace(/^\//, ""));
   try {
     const [stats, body] = await Promise.all([stat(absolute), readFile(absolute)]);
     assets.push({
@@ -237,11 +239,15 @@ for (const [assetPath, classification] of entries) {
       pack: classification.pack,
       category: classification.category,
       criticality: classification.criticality,
-      installTier: classification.installTier,
-      installPriority: classification.installPriority,
       ...(classification.audioChannel ? { audioChannel: classification.audioChannel } : {}),
       ...(classification.audioId ? { audioId: classification.audioId } : {}),
       ...(classification.audioType ? { audioType: classification.audioType } : {}),
+      ...(classification.sourcePath ? { sourcePath: classification.sourcePath } : {}),
+      ...(classification.bundlePath ? {
+        bundlePath: classification.bundlePath,
+        bundleOffset: classification.bundleOffset,
+        bundleBytes: classification.bundleBytes,
+      } : {}),
     });
   } catch {
     missing.push(assetPath);

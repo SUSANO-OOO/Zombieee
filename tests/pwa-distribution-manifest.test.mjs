@@ -7,14 +7,10 @@ import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import {
   ASSET_MANIFEST_SCHEMA,
   ASSET_PACK_IDS,
-  distinctDownloadBytes,
   RELEASE_SHA_PLACEHOLDER,
+  selectPreferredAudioSource,
   validateAssetManifest,
 } from "../app/pwaAssetManifest.js";
-import {
-  assetsForInstall,
-  dependencySetForOperation,
-} from "../app/pwaPlayablePack.js";
 
 const manifest = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
 const webAppManifest = JSON.parse(await readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"));
@@ -70,7 +66,7 @@ test("the Pages build stamps the release SHA and verifies the published pack", a
   assert.match(build, /does not match asset-manifest\.json/);
 });
 
-test("every pack carries assets and every first-install pack is represented", () => {
+test("every pack carries assets for the complete first install", () => {
   const packs = new Set(manifest.assets.map((asset) => asset.pack));
   for (const pack of ASSET_PACK_IDS) assert.ok(packs.has(pack), `pack ${pack} has no assets`);
 });
@@ -114,38 +110,60 @@ test("every stage background reachable from the campaign is in the pack", async 
   }
 });
 
-test("every audio source the mixer can play is in the pack", async () => {
+test("the full install contains one preferred playable source for every audio cue", async () => {
   const { PRODUCTION_AUDIO_MANIFEST } = await import("../app/productionAudio.js");
-  const paths = new Set(manifest.assets.map((asset) => asset.path));
+  const audioAssets = manifest.assets.filter((asset) => asset.category === "audio");
+  const byId = new Map(audioAssets.map((asset) => [asset.audioId, asset]));
   for (const audioAsset of PRODUCTION_AUDIO_MANIFEST.assets ?? []) {
-    for (const source of audioAsset.sources ?? []) {
-      assert.ok(paths.has(source.src), `${source.src} (${audioAsset.id}) is missing from the pack`);
-    }
+    const preferred = selectPreferredAudioSource(audioAsset.sources);
+    const shipped = byId.get(audioAsset.id);
+    assert.ok(preferred, `${audioAsset.id} has no playable source`);
+    assert.ok(shipped, `${audioAsset.id} has no offline source`);
+    assert.equal(shipped.path, preferred.src);
+    assert.equal(shipped.audioType, preferred.type);
   }
 });
 
-test("only the first-play dependency graph is critical, while later art stays deferred", () => {
+test("direct battle supply art is part of the complete install", () => {
+  const paths = new Set(manifest.assets.map((asset) => asset.path));
+  for (const path of [
+    "/tactical-drop-pod-v1.png",
+    "/explosive-drum-v1.png",
+    "/medical-supply-station-v1.png",
+  ]) {
+    assert.ok(paths.has(path), `${path} is a direct battle renderer dependency`);
+  }
+});
+
+test("transport optimizations preserve every runtime asset contract", async () => {
+  const optimized = manifest.assets.filter((asset) => asset.sourcePath);
+  assert.ok(optimized.length > 0);
+  for (const asset of optimized) {
+    assert.match(asset.path, /\.png$/i);
+    assert.match(asset.sourcePath, /\.webp$/i);
+    assert.notEqual(asset.path, asset.sourcePath);
+  }
+
+  const bundled = manifest.assets.filter((asset) => asset.bundlePath);
+  assert.equal(bundled.length, 213);
+  assert.ok(bundled.every((asset) => asset.bundlePath === "/pwa-bundles/audio-v1.bin"));
+  assert.ok(bundled.every((asset) => asset.bundleBytes === asset.bytes));
+  const bundle = await readFile(new URL("../public/pwa-bundles/audio-v1.bin", import.meta.url));
+  for (const asset of bundled.slice(0, 5)) {
+    assert.equal(bundle.subarray(asset.bundleOffset, asset.bundleOffset + asset.bundleBytes).byteLength, asset.bytes);
+  }
+});
+
+test("battle-critical art is marked critical and audio never blocks play", () => {
   const byCategory = (category) => manifest.assets.filter((asset) => asset.category === category);
-  const firstPlayPaths = new Set(assetsForInstall(manifest, { firstPlayOnly: true }).map((asset) => asset.path));
 
   for (const asset of [...byCategory("unit"), ...byCategory("enemy"), ...byCategory("boss")]) {
-    if (firstPlayPaths.has(asset.path)) assert.equal(asset.criticality, "critical", `${asset.path} must be critical`);
-    else assert.equal(asset.criticality, "optional", `${asset.path} must be deferred`);
+    assert.equal(asset.criticality, "critical", `${asset.path} must be critical`);
   }
   for (const asset of byCategory("audio")) {
-    assert.ok(["critical", "optional"].includes(asset.criticality));
-    assert.ok(typeof asset.audioId === "string");
-    assert.ok(typeof asset.audioType === "string");
+    assert.equal(asset.criticality, "optional", `${asset.path} must not block play`);
     assert.ok(["bgm", "se", "voice"].includes(asset.audioChannel));
   }
-});
-
-test("the code-derived Stage1 first-play pack stays within the mobile target", () => {
-  const firstPlay = assetsForInstall(manifest, { firstPlayOnly: true });
-  assert.ok(firstPlay.length > 0);
-  assert.ok(distinctDownloadBytes(firstPlay) <= 25_000_000, `${distinctDownloadBytes(firstPlay)} bytes exceeds 25MB`);
-  const paths = new Set(manifest.assets.map((asset) => asset.path));
-  for (const path of dependencySetForOperation().paths) assert.ok(paths.has(path), `${path} is not in the manifest`);
 });
 
 test("the manifest covers playable units, enemies, bosses, backgrounds, and all audio channels", () => {

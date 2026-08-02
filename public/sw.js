@@ -180,7 +180,10 @@ async function respondForAsset(request, asset) {
   if (cached) return cached;
 
   try {
-    const response = await fetch(request);
+    const networkRequest = asset.sourcePath
+      ? new Request(resolveScoped(asset.sourcePath), request)
+      : request;
+    const response = await fetch(networkRequest);
     await storeAsset(asset, response);
     return response;
   } catch {

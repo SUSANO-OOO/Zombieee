@@ -1,10 +1,10 @@
-// Version 0.9.8.2 resumable, staged PWA download session.
+// Version 0.9.8.2 resumable full-pack download session.
 //
 // The session deliberately knows nothing about DOM or Cache Storage. Callers
-// inject fetch, digest, and storage operations, which keeps the same queue and
-// diagnostics testable in node:test and in a real browser.
+// inject fetch, digest, and storage operations, which keeps the same full-pack
+// queue and diagnostics testable in node:test and in a real browser.
 
-import { distinctDownloadBytes, sortDownloadAssets } from "./pwaAssetManifest.js";
+import { distinctDownloadBytes, sortManifestAssets } from "./pwaAssetManifest.js";
 
 export const DOWNLOAD_STATES = Object.freeze([
   "idle",
@@ -44,6 +44,10 @@ function byteLengthOf(payload) {
   return 0;
 }
 
+function finiteNumber(value, fallback = 0) {
+  return Number.isFinite(Number(value)) ? Number(value) : fallback;
+}
+
 class Deferred {
   constructor() {
     this.promise = new Promise((resolve) => { this.resolve = resolve; });
@@ -52,7 +56,7 @@ class Deferred {
 
 /**
  * @param {object} options
- * @param {Array} options.assets manifest entries to fetch
+ * @param {Array} options.assets manifest entries to fetch as one full pack
  * @param {(asset: object, context: {signal: AbortSignal}) => Promise<{ok: boolean, status?: number, body?: Uint8Array}>} options.fetchAsset
  * @param {{put: Function, has?: Function}} options.store
  * @param {(bytes: Uint8Array) => Promise<string>} [options.digest]
@@ -70,7 +74,20 @@ export function createAssetDownloadSession({
   heartbeatMs = DEFAULT_HEARTBEAT_MS,
   now = () => Date.now(),
 } = {}) {
-  const queue = sortDownloadAssets(Array.isArray(assets) ? assets : []);
+  const queue = sortManifestAssets(Array.isArray(assets) ? assets : []);
+  const membersByHash = new Map();
+  const workQueue = [];
+  for (const asset of queue) {
+    const key = asset.hash ?? asset.path;
+    const members = membersByHash.get(key);
+    if (members) {
+      members.push(asset);
+    } else {
+      membersByHash.set(key, [asset]);
+      workQueue.push(asset);
+    }
+  }
+
   const totalCount = queue.length;
   const totalBytes = distinctDownloadBytes(queue);
 
@@ -86,6 +103,16 @@ export function createAssetDownloadSession({
   let maxObservedConcurrency = 0;
   let totalFetchedBytes = 0;
   let retryFetchedBytes = 0;
+  let requestCount = 0;
+  let retryCount = 0;
+  let timeoutCount = 0;
+  let cacheHitCount = 0;
+  let dedupeCount = 0;
+  let networkMs = 0;
+  let requestWaitMs = 0;
+  let transferMs = 0;
+  let verifyMs = 0;
+  let cacheWriteMs = 0;
   let startedAt = null;
   let endedAt = null;
   let lastProgressAt = null;
@@ -100,10 +127,12 @@ export function createAssetDownloadSession({
     if (existing) return existing;
     const metric = {
       path: asset.path,
+      bytes: asset.bytes ?? 0,
+      hash: asset.hash ?? null,
+      transportPath: asset.bundlePath ?? asset.sourcePath ?? asset.path,
       category: asset.category ?? null,
       criticality: asset.criticality ?? null,
       pack: asset.pack ?? null,
-      installTier: asset.installTier ?? null,
       attempts: 0,
       status: "queued",
       reason: null,
@@ -111,9 +140,12 @@ export function createAssetDownloadSession({
       fetchedBytes: 0,
       retryFetchedBytes: 0,
       queueWaitMs: null,
+      requestWaitMs: 0,
+      transferMs: 0,
       networkMs: 0,
       verifyMs: 0,
       cacheWriteMs: 0,
+      deduplicatedFrom: null,
       startedAt: null,
       completedAt: null,
     };
@@ -162,9 +194,19 @@ export function createAssetDownloadSession({
       lastProgressAgeMs: lastProgressAt == null ? null : Math.max(0, currentTime - lastProgressAt),
       totalFetchedBytes,
       retryFetchedBytes,
+      requestCount,
+      retryCount,
+      timeoutCount,
+      cacheHitCount,
+      dedupeCount,
+      networkMs,
+      requestWaitMs,
+      transferMs,
+      verifyMs,
+      cacheWriteMs,
       maxObservedConcurrency,
       // Per-asset timing is intentionally PII-free and is the evidence needed
-      // to distinguish a network stall from hash or Cache Storage work.
+      // to distinguish request wait, transfer, hash, and Cache Storage work.
       metrics: [...metrics.values()].map((metric) => ({ ...metric })),
       ratio: totalBytes > 0 ? Math.min(1, completedBytes / totalBytes) : (totalCount === 0 ? 1 : 0),
     };
@@ -188,20 +230,49 @@ export function createAssetDownloadSession({
     while (pauseGate && !cancelled) await pauseGate.promise;
   }
 
-  function completeAsset(asset, metric, source = "network") {
-    completedPaths.add(asset.path);
-    metric.status = source === "cache" ? "cache-hit" : "complete";
-    metric.completedAt = now();
-    if (metric.queueWaitMs == null && metric.startedAt != null) {
-      metric.queueWaitMs = Math.max(0, metric.startedAt - (startedAt ?? metric.startedAt));
-    }
-    if (!completedHashes.has(asset.hash)) {
-      completedHashes.add(asset.hash);
+  function completeHash(asset, source = "network") {
+    const members = membersByHash.get(asset.hash ?? asset.path) ?? [asset];
+    const firstCompletion = !completedHashes.has(asset.hash ?? asset.path);
+    if (firstCompletion) {
+      completedHashes.add(asset.hash ?? asset.path);
       completedBytes += asset.bytes;
     }
-    failures.delete(asset.path);
+
+    for (const member of members) {
+      if (completedPaths.has(member.path)) continue;
+      const metric = metricFor(member);
+      const isPrimary = member.path === asset.path;
+      completedPaths.add(member.path);
+      metric.status = isPrimary
+        ? (source === "cache" ? "cache-hit" : "complete")
+        : "deduped";
+      if (!isPrimary) {
+        metric.deduplicatedFrom = asset.path;
+        dedupeCount += 1;
+      }
+      metric.completedAt = now();
+      if (metric.queueWaitMs == null && metric.startedAt != null) {
+        metric.queueWaitMs = Math.max(0, metric.startedAt - (startedAt ?? metric.startedAt));
+      }
+      failures.delete(member.path);
+    }
+    if (source === "cache") cacheHitCount += 1;
     markProgress();
     publish();
+  }
+
+  function failHash(asset, detail) {
+    const members = membersByHash.get(asset.hash ?? asset.path) ?? [asset];
+    for (const member of members) {
+      const metric = metricFor(member);
+      metric.status = "failed";
+      metric.reason = detail.reason;
+      metric.httpStatus = detail.status ?? 0;
+      failures.set(member.path, {
+        ...detail,
+        deduplicatedFrom: member.path === asset.path ? null : asset.path,
+      });
+    }
   }
 
   async function processOne(asset) {
@@ -227,9 +298,10 @@ export function createAssetDownloadSession({
 
     try {
       // A content hash completed by an earlier worker or session satisfies the
-      // path without a second request.
+      // path without a second request. Work items are hash-unique, and the
+      // explicit groups above also close the concurrent duplicate race.
       if (completedHashes.has(asset.hash) || (store.has && await store.has(asset))) {
-        completeAsset(asset, metric, "cache");
+        completeHash(asset, "cache");
         return;
       }
 
@@ -243,6 +315,7 @@ export function createAssetDownloadSession({
         job.startedAt = now();
         job.lastProgressAt = now();
         metric.status = "network";
+        if (metric.attempts > 1) retryCount += 1;
         markProgress();
         publish();
 
@@ -259,12 +332,37 @@ export function createAssetDownloadSession({
           if (cancelled) return;
           lastReason = error?.name === "AbortError" ? "timeout" : "network";
           lastStatus = 0;
+          if (lastReason === "timeout") timeoutCount += 1;
         } finally {
           clearTimeout(timer);
           outerSignal?.removeEventListener("abort", relay);
-          metric.networkMs += Math.max(0, now() - networkStarted);
+          const elapsed = Math.max(0, now() - networkStarted);
+          metric.networkMs += elapsed;
+          networkMs += elapsed;
         }
-        if (!response) continue;
+        if (!response) {
+          requestCount += 1;
+          continue;
+        }
+
+        const actualNetworkMs = Number.isFinite(Number(response.networkMs))
+          ? Math.max(0, Number(response.networkMs))
+          : null;
+        if (actualNetworkMs !== null) {
+          const measuredElapsed = Math.max(0, now() - networkStarted);
+          metric.networkMs += actualNetworkMs - measuredElapsed;
+          networkMs += actualNetworkMs - measuredElapsed;
+        }
+        requestCount += Number.isFinite(Number(response.networkRequestCount))
+          ? Math.max(0, Number(response.networkRequestCount))
+          : 1;
+
+        const responseRequestWaitMs = finiteNumber(response.requestWaitMs);
+        const responseTransferMs = finiteNumber(response.transferMs);
+        metric.requestWaitMs += responseRequestWaitMs;
+        metric.transferMs += responseTransferMs;
+        requestWaitMs += responseRequestWaitMs;
+        transferMs += responseTransferMs;
 
         const body = response.body;
         const size = byteLengthOf(body);
@@ -297,7 +395,9 @@ export function createAssetDownloadSession({
         } catch {
           lastReason = "hash-mismatch";
         } finally {
-          metric.verifyMs += Math.max(0, now() - verifyStarted);
+          const elapsed = Math.max(0, now() - verifyStarted);
+          metric.verifyMs += elapsed;
+          verifyMs += elapsed;
         }
         if (actual !== asset.hash) {
           lastReason = "hash-mismatch";
@@ -311,27 +411,27 @@ export function createAssetDownloadSession({
         try {
           await store.put(asset, body);
         } catch {
-          metric.cacheWriteMs += Math.max(0, now() - cacheStarted);
+          const elapsed = Math.max(0, now() - cacheStarted);
+          metric.cacheWriteMs += elapsed;
+          cacheWriteMs += elapsed;
           lastReason = "cache-write";
           publish();
           continue;
         }
-        metric.cacheWriteMs += Math.max(0, now() - cacheStarted);
-        completeAsset(asset, metric);
+        const elapsed = Math.max(0, now() - cacheStarted);
+        metric.cacheWriteMs += elapsed;
+        cacheWriteMs += elapsed;
+        completeHash(asset);
         return;
       }
 
       if (cancelled) return;
-      metric.status = "failed";
-      metric.reason = lastReason;
-      metric.httpStatus = lastStatus;
-      failures.set(asset.path, {
+      failHash(asset, {
         reason: lastReason,
         status: lastStatus,
         attempts: metric.attempts,
         at: now(),
         category: asset.category ?? null,
-        installTier: asset.installTier ?? null,
         phase: job.phase ?? "network",
       });
       markProgress();
@@ -343,7 +443,17 @@ export function createAssetDownloadSession({
   }
 
   async function drain(targets) {
-    const pending = targets.filter((asset) => !completedPaths.has(asset.path));
+    const pending = [];
+    const seenHashes = new Set();
+    for (const target of targets) {
+      const members = membersByHash.get(target.hash ?? target.path) ?? [target];
+      const primary = members[0];
+      if (completedPaths.has(primary.path)) continue;
+      const key = primary.hash ?? primary.path;
+      if (seenHashes.has(key)) continue;
+      seenHashes.add(key);
+      pending.push(primary);
+    }
     let cursor = 0;
     const workers = Array.from({ length: Math.max(1, Math.min(concurrency, pending.length || 1)) }, async () => {
       while (cursor < pending.length && !cancelled) {
@@ -390,7 +500,7 @@ export function createAssetDownloadSession({
         this.resume();
         return runPromise;
       }
-      runPromise = run(queue);
+      runPromise = run(workQueue);
       return runPromise;
     },
 
@@ -422,19 +532,22 @@ export function createAssetDownloadSession({
     },
 
     retryFailed() {
-      const targets = queue.filter((asset) => !completedPaths.has(asset.path));
+      const targets = workQueue.filter((asset) => !completedPaths.has(asset.path));
       if (targets.length === 0) {
         setState("complete");
         return Promise.resolve(snapshot());
       }
       for (const asset of targets) {
-        failures.delete(asset.path);
-        const metric = metrics.get(asset.path);
-        if (metric) {
-          metric.attempts = 0;
-          metric.status = "queued";
-          metric.reason = null;
-          metric.httpStatus = 0;
+        const members = membersByHash.get(asset.hash ?? asset.path) ?? [asset];
+        for (const member of members) {
+          failures.delete(member.path);
+          const metric = metrics.get(member.path);
+          if (metric) {
+            metric.attempts = 0;
+            metric.status = "queued";
+            metric.reason = null;
+            metric.httpStatus = 0;
+          }
         }
       }
       runPromise = run(targets);

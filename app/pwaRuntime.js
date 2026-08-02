@@ -32,7 +32,8 @@ export const PWA_PHASES = Object.freeze([
  * Decides the phase from facts only.
  *
  * `standalone` is what separates the two halves of the journey. A browser tab is
- * where the player is invited to install, and nothing is downloaded there: 111MB
+ * where the player is invited to install, and nothing is downloaded there: the
+ * complete release pack is saved only in the home-screen app that keeps using it.
  * saved into a tab that is about to be replaced by a home-screen app is 111MB
  * fetched twice. The download belongs to the first home-screen launch, where the
  * bytes land in the app the player will actually keep using.
@@ -150,15 +151,6 @@ export function describeFailureDiagnostics({
   pendingCount = 0,
   pendingBytes = 0,
   serviceWorkerState = null,
-  stage = null,
-  activePath = null,
-  activePhase = null,
-  activeAttempt = 0,
-  activeSpeedBps = null,
-  activeStalledForMs = null,
-  remainingBytes = null,
-  etaMs = null,
-  metrics = [],
 } = {}) {
   const entries = failures.map((failure) => ({
     path: failure.path,
@@ -188,15 +180,6 @@ export function describeFailureDiagnostics({
     pendingCount,
     pendingBytes,
     serviceWorkerState,
-    stage,
-    activePath,
-    activePhase,
-    activeAttempt,
-    activeSpeedBps,
-    activeStalledForMs,
-    remainingBytes,
-    etaMs,
-    metrics,
     at: new Date(now).toISOString(),
   };
 }
@@ -216,9 +199,6 @@ export function formatFailureDiagnostics(diagnostics) {
     `保存済み: ${diagnostics.storedCount}件 / ${diagnostics.storedBytes}B`,
     `未取得: ${diagnostics.pendingCount}件 / ${diagnostics.pendingBytes}B`,
     `経過: ${diagnostics.elapsedMs ?? "-"}ms / 最終進捗から: ${diagnostics.sinceProgressMs ?? "-"}ms`,
-    `現在: ${diagnostics.stage ?? "-"} / ${diagnostics.activePath ?? "-"} / ${diagnostics.activePhase ?? "-"} / 試行${diagnostics.activeAttempt ?? 0}`,
-    `速度: ${diagnostics.activeSpeedBps ?? "-"}B/s / 停滞: ${diagnostics.activeStalledForMs ?? "-"}ms / 残り: ${diagnostics.remainingBytes ?? "-"}B / ETA: ${diagnostics.etaMs ?? "-"}ms`,
-    `計測asset: ${diagnostics.metrics?.length ?? 0}件`,
     `失敗: ${diagnostics.failureCount}件`,
   ];
   for (const failure of diagnostics.failures) {
@@ -238,7 +218,7 @@ export function describeInstall(plan, storage) {
   }
   const shortOnSpace = storage?.available != null && storage.available < plan.pendingBytes * 1.1;
   return {
-    headline: plan.scope === "first-play" ? "まずStage1をプレイできるデータを準備します" : "ゲームデータをダウンロードします",
+    headline: "ゲームデータをダウンロードします",
     lines,
     shortOnSpace,
     warning: shortOnSpace ? "空き容量が不足している可能性があります" : null,
@@ -255,28 +235,22 @@ export function describeInstall(plan, storage) {
  * screen cannot promise a figure the download will not match, and reading a
  * manifest is not the same as fetching a pack: nothing is downloaded here.
  */
-export function describeInstallOffer(manifest, { promptAvailable = false, firstPlayAssets = null } = {}) {
+export function describeInstallOffer(manifest, { promptAvailable = false } = {}) {
   if (!manifest) return null;
   const assets = manifest.assets ?? [];
   const totalAssets = assets.length;
   const totalBytes = assets.reduce((sum, asset) => sum + (Number(asset?.bytes) || 0), 0);
-  const stagedAssets = Array.isArray(firstPlayAssets)
-    ? firstPlayAssets
-    : assets.filter((asset) => asset.installTier === "shell" || asset.installTier === "first-play");
-  const firstPlayBytes = stagedAssets.reduce((sum, asset) => sum + (Number(asset?.bytes) || 0), 0);
 
   return {
     headline: "西新世紀末物語をインストール",
     body: "ホーム画面に追加すると、アプリのように全画面で起動できます。",
     sizeLine: totalAssets > 0
-      ? `追加したあと最初に起動したとき、まずStage1用 ${stagedAssets.length > 0 ? stagedAssets.length : totalAssets}件・${formatBytes(firstPlayBytes > 0 ? firstPlayBytes : totalBytes)}を保存し、残りはあとから取得します`
+      ? `ゲームデータ ${totalAssets}件・${formatBytes(totalBytes)} は、追加したあと最初に起動したときに保存します`
       : null,
     noDownloadHint: "この画面ではゲームデータをダウンロードしません。",
     actionLabel: promptAvailable ? "インストール" : null,
     totalAssets,
     totalBytes,
-    firstPlayAssets: stagedAssets.length > 0 ? stagedAssets.length : totalAssets,
-    firstPlayBytes: firstPlayBytes > 0 ? firstPlayBytes : totalBytes,
     skipLabel: "ブラウザで遊ぶ",
     skipHint: "インストールせずに遊ぶこともできます。その場合は毎回通信が必要です。",
   };
@@ -338,31 +312,15 @@ export function describeInstallGuidance({ standalone = false, promptAvailable = 
   };
 }
 
-/** Progress caption naming the exact stage, asset, and transfer phase. */
+/** Progress caption naming the category currently being fetched. */
 export function describeProgress(snapshot, categoryLabels) {
   if (!snapshot) return null;
-  const labels = categoryLabels ?? {};
-  const label = snapshot.activeCategory ? labels[snapshot.activeCategory] ?? snapshot.activeCategory : null;
-  const phaseLabels = {
-    queue: "待機列",
-    network: "通信",
-    verify: "hash検証",
-    cache: "端末保存",
-  };
-  const phase = snapshot.activePhase ? phaseLabels[snapshot.activePhase] ?? snapshot.activePhase : null;
-  const speed = snapshot.activeSpeedBps != null ? `${formatBytes(snapshot.activeSpeedBps)}/秒` : "計算中";
-  const eta = snapshot.etaMs != null ? `${Math.ceil(snapshot.etaMs / 1000)}秒` : "計算中";
+  const label = snapshot.activeCategory ? categoryLabels[snapshot.activeCategory] ?? snapshot.activeCategory : null;
   return {
     countLine: `${snapshot.completedCount} / ${snapshot.totalCount}件`,
     byteLine: `${formatBytes(snapshot.completedBytes)} / ${formatBytes(snapshot.totalBytes)}`,
     categoryLine: label ? `${label}を取得中` : null,
     failedLine: snapshot.failedCount > 0 ? `失敗 ${snapshot.failedCount}件` : null,
-    detailLine: snapshot.activePath
-      ? `${phase ?? "処理中"}：${snapshot.activePath}／試行${snapshot.activeAttempt ?? 0}回／速度 ${speed}`
-      : null,
-    statusLine: snapshot.activePath
-      ? `この項目の残り ${formatBytes(Math.max(0, (snapshot.activeTotalBytes ?? 0) - (snapshot.activeBytes ?? 0)))}／全体残り ${formatBytes(snapshot.remainingBytes)}／ETA ${eta}`
-      : null,
     percent: Math.round(snapshot.ratio * 100),
   };
 }
@@ -424,18 +382,112 @@ export async function fetchPublishedManifest({ baseUrl, fetchImpl = fetch, signa
  * cache so a verified download always reflects what the server actually has.
  */
 export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
+  const bundlePromises = new Map();
+  const clock = () => globalThis.performance?.now?.() ?? Date.now();
+
+  const fetchBundle = (bundlePath, signal) => {
+    const requestStarted = clock();
+    return fetchImpl(resolveAssetUrl(bundlePath, baseUrl), {
+      cache: "no-store",
+      signal,
+    }).then(async (response) => {
+      const responseReceived = clock();
+      const requestWaitMs = Math.max(0, responseReceived - requestStarted);
+      if (!response.ok) {
+        return { ok: false, status: response.status, requestWaitMs, transferMs: 0, networkMs: requestWaitMs };
+      }
+      const type = response.headers.get("content-type") ?? "";
+      if (type.includes("text/html")) {
+        return { ok: false, status: response.status, requestWaitMs, transferMs: 0, networkMs: requestWaitMs };
+      }
+      const buffer = await response.arrayBuffer();
+      const transferMs = Math.max(0, clock() - responseReceived);
+      return {
+        ok: true,
+        status: response.status,
+        body: new Uint8Array(buffer),
+        requestWaitMs,
+        transferMs,
+        networkMs: Math.max(0, clock() - requestStarted),
+      };
+    });
+  };
+
   return async (asset, { signal }) => {
-    const response = await fetchImpl(resolveAssetUrl(asset.path, baseUrl), {
+    if (asset.bundlePath) {
+      let entry = bundlePromises.get(asset.bundlePath);
+      if (!entry) {
+        const promise = fetchBundle(asset.bundlePath, signal);
+        entry = { promise, reported: false };
+        bundlePromises.set(asset.bundlePath, entry);
+        promise.catch(() => {
+          if (bundlePromises.get(asset.bundlePath) === entry) bundlePromises.delete(asset.bundlePath);
+        });
+      }
+      const bundle = await entry.promise;
+      const ownsRequestMetrics = !entry.reported;
+      entry.reported = true;
+      if (!bundle.ok) {
+        return {
+          ...bundle,
+          networkRequestCount: ownsRequestMetrics ? 1 : 0,
+          networkMs: ownsRequestMetrics ? bundle.networkMs : 0,
+        };
+      }
+      const offset = Number(asset.bundleOffset);
+      const length = Number(asset.bundleBytes ?? asset.bytes);
+      const end = offset + length;
+      if (!Number.isInteger(offset) || !Number.isInteger(length) || offset < 0 || length <= 0 || end > bundle.body.byteLength) {
+        return { ok: false, status: 422, networkRequestCount: ownsRequestMetrics ? 1 : 0, networkMs: 0 };
+      }
+      return {
+        ok: true,
+        status: 200,
+        body: bundle.body.slice(offset, end),
+        requestWaitMs: ownsRequestMetrics ? bundle.requestWaitMs : 0,
+        transferMs: ownsRequestMetrics ? bundle.transferMs : 0,
+        networkMs: ownsRequestMetrics ? bundle.networkMs : 0,
+        networkRequestCount: ownsRequestMetrics ? 1 : 0,
+      };
+    }
+
+    const requestStarted = clock();
+    const requestPath = asset.sourcePath ?? asset.path;
+    const response = await fetchImpl(resolveAssetUrl(requestPath, baseUrl), {
       cache: "no-store",
       signal,
     });
-    if (!response.ok) return { ok: false, status: response.status };
+    const responseReceived = clock();
+    const requestWaitMs = Math.max(0, responseReceived - requestStarted);
+    if (!response.ok) return {
+      ok: false,
+      status: response.status,
+      requestWaitMs,
+      transferMs: 0,
+      networkMs: requestWaitMs,
+      networkRequestCount: 1,
+    };
     const type = response.headers.get("content-type") ?? "";
     // A soft 404 returns an HTML page with status 200; refuse it here so the
     // session records a real failure instead of storing a web page as art.
-    if (type.includes("text/html")) return { ok: false, status: response.status };
+    if (type.includes("text/html")) return {
+      ok: false,
+      status: response.status,
+      requestWaitMs,
+      transferMs: 0,
+      networkMs: requestWaitMs,
+      networkRequestCount: 1,
+    };
     const buffer = await response.arrayBuffer();
-    return { ok: true, status: response.status, body: new Uint8Array(buffer) };
+    return {
+      ok: true,
+      status: response.status,
+      body: new Uint8Array(buffer),
+      requestWaitMs,
+      transferMs: Math.max(0, clock() - responseReceived),
+      networkMs: Math.max(0, clock() - requestStarted),
+      networkRequestCount: 1,
+    };
   };
 }
 

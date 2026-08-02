@@ -11,6 +11,8 @@
 *.ogg -text
 *.mp3 -text
 *.wav -text
+*.bin -text
+public/pwa-bundles/*.json -text
 
 # The generated distribution manifest itself must stay byte-identical across
 # platforms so its drift check is meaningful.

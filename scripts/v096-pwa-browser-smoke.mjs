@@ -5,7 +5,7 @@
 // 127.0.0.1 is a secure context, so worker registration behaves as it does over
 // HTTPS on a device.
 //
-// The full 111MB pack is deliberately NOT downloaded here: these cases prove
+// The full production pack is deliberately NOT downloaded here: these cases prove
 // the mechanism (verification, dedup, offline serving, diff updates, rollback)
 // over small synthetic manifests, and separately prove the real shipped
 // manifest is valid and complete. Bulk transfer belongs to the physical gate.
@@ -25,11 +25,6 @@ const ENGINES = { chromium, webkit };
 const engineName = process.env.V096_PWA_QA_BROWSER ?? "chromium";
 const engine = ENGINES[engineName];
 if (!engine) throw new Error(`Unknown V096_PWA_QA_BROWSER: ${engineName}`);
-const [viewportWidth, viewportHeight] = (process.env.V096_PWA_QA_VIEWPORT ?? "844x390")
-  .split("x").map((value) => Number(value));
-if (![viewportWidth, viewportHeight].every((value) => Number.isFinite(value) && value > 0)) {
-  throw new Error("V096_PWA_QA_VIEWPORT must look like 1280x720, 844x390, or 844x340");
-}
 
 const evidenceDir = process.env.V096_PWA_EVIDENCE_DIR
   ?? path.join(process.cwd(), "outputs", "v096-pwa");
@@ -56,7 +51,7 @@ window.__pwaQa = {
 
 const browser = await engine.launch();
 const context = await browser.newContext({
-  viewport: { width: viewportWidth, height: viewportHeight },
+  viewport: { width: 844, height: 390 },
   deviceScaleFactor: 3,
   hasTouch: true,
 });
@@ -156,7 +151,7 @@ const shipped = await page.evaluate(async (base) => {
   };
 }, baseUrl);
 record("the shipped manifest is complete, hashed, and free of authoring art", (
-  shipped.ok && shipped.count > 500 && shipped.allHashed && shipped.noReference
+  shipped.ok && shipped.count > 300 && shipped.allHashed && shipped.noReference
 ), shipped);
 
 // --- 4. Verified download, dedup, and offline serving ----------------------
@@ -175,8 +170,12 @@ const downloadCase = await page.evaluate(async (base) => {
 
   const stored = [];
   for (const asset of sample) {
-    const response = await fetch(new URL(asset.path.replace(/^\//, ""), scope).toString(), { cache: "no-store" });
-    const buffer = await response.arrayBuffer();
+    const transportPath = asset.bundlePath ?? asset.sourcePath ?? asset.path;
+    const response = await fetch(new URL(transportPath.replace(/^\//, ""), scope).toString(), { cache: "no-store" });
+    const transport = await response.arrayBuffer();
+    const start = Number(asset.bundleOffset ?? 0);
+    const end = asset.bundlePath ? start + Number(asset.bundleBytes ?? asset.bytes) : transport.byteLength;
+    const buffer = asset.bundlePath ? transport.slice(start, end) : transport;
     const actual = await window.__pwaQa.sha256(buffer);
     const sizeOk = buffer.byteLength === asset.bytes;
     if (actual === asset.hash && sizeOk) {
@@ -251,7 +250,7 @@ record("stored assets stay readable from the content-addressed cache", (
 ), { ...offlineCase, engine: engineName });
 if (canObserveWorkerOffline) {
   record("the worker serves release metadata with the network down", (
-    offlineCase.manifestOffline?.ok === true && offlineCase.manifestOffline.count > 500
+    offlineCase.manifestOffline?.ok === true && offlineCase.manifestOffline.count > 300
   ), offlineCase.manifestOffline ?? {});
   await context.setOffline(false);
 }
@@ -360,12 +359,7 @@ record("clearing assets removes asset bytes and leaves save data intact", (
 
 const smallPack = await page.evaluate(async (base) => {
   const manifest = await (await fetch(new URL("asset-manifest.json", base).toString())).json();
-  // Mark the synthetic sample as the candidate's required slice so this QA
-  // exercises the staged gate rather than the deferred full-pack queue.
-  const assets = [...manifest.assets]
-    .sort((a, b) => a.bytes - b.bytes)
-    .slice(0, 3)
-    .map((asset) => ({ ...asset, installTier: "first-play", installPriority: 10, criticality: "critical" }));
+  const assets = [...manifest.assets].sort((a, b) => a.bytes - b.bytes).slice(0, 3);
   return { schema: manifest.schema, version: manifest.version, releaseSha: manifest.releaseSha, assets };
 }, baseUrl);
 
@@ -378,7 +372,7 @@ const routeSmallPack = (target) => target.route("**/asset-manifest.json", (route
 const IPHONE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 
 const entryContext = await browser.newContext({
-  viewport: { width: viewportWidth, height: viewportHeight },
+  viewport: { width: 844, height: 390 },
   deviceScaleFactor: 3,
   hasTouch: true,
   serviceWorkers: "block",
@@ -489,7 +483,7 @@ record("the invitation fits the shortest supported viewport without sideways scr
   && compactCase.buttonTapHeight >= 40
   && compactCase.stepsReadable
 ), compactCase);
-await entryPage.setViewportSize({ width: viewportWidth, height: viewportHeight });
+await entryPage.setViewportSize({ width: 844, height: 390 });
 
 // --- 11. Declining the invitation still plays -------------------------------
 //
@@ -564,7 +558,7 @@ await entryContext.close();
 // the real branch rather than a mock of it.
 
 const appContext = await browser.newContext({
-  viewport: { width: viewportWidth, height: viewportHeight },
+  viewport: { width: 844, height: 390 },
   deviceScaleFactor: 3,
   hasTouch: true,
   serviceWorkers: "block",
@@ -599,7 +593,8 @@ record("the first home-screen launch asks to download, stating the manifest's co
 ), firstRunCase);
 
 await startDownload.click();
-await appPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 120_000 }).catch(() => {});
+const beginButton = appPage.getByRole("button", { name: "ゲームを始める" });
+await beginButton.waitFor({ state: "visible", timeout: 120_000 }).catch(() => {});
 const completionCase = await appPage.evaluate(async () => {
   const cache = await caches.open("zombieee-assets-v1");
   return {
@@ -608,15 +603,17 @@ const completionCase = await appPage.evaluate(async () => {
     gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
   };
 });
-record("the first-play download saves the required assets and then mounts the game", (
-  !completionCase.beginVisible
+record("the download saves the manifest's assets and then offers to begin", (
+  completionCase.beginVisible
   && completionCase.storedEntries === smallPack.assets.length
-  && completionCase.gameMounted
+  && !completionCase.gameMounted
 ), { ...completionCase, expected: smallPack.assets.length });
 record("the first launch actually fetches game data", (
   appAssetRequests.length > 0
 ), { assetRequestsAfterConsent: appAssetRequests.length });
 
+await beginButton.click();
+await appPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
 const launchCase = await appPage.evaluate(() => ({
   gateVisible: Boolean(document.querySelector(".pwa-gate")),
   gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
