@@ -28,6 +28,15 @@ import {
 } from "./lanePlanner.js";
 import { createAudioMixer, createAudioRequestGate, runGuardedAudioRequest } from "./audioMixer.js";
 import {
+  battleAudioRuntimeSnapshot,
+  createBattleAudioRuntime,
+  resetBattleAudioRuntime,
+  scheduleDelayedBattleAudioCue,
+  stopBattleAudioRuntime,
+  takeDueBattleAudioCues,
+  tryConsumeSemanticReceipt,
+} from "./battleAudioRuntime.js";
+import {
   CRAWLER_DOOR_PHASES,
   advanceCrawlerDoorRuntime,
   createCrawlerDoorRuntime,
@@ -992,6 +1001,12 @@ type PendingAbilityAudioCue = {
   cueId: string;
   x: number;
   dedupeKey: string;
+  battleGeneration?: number;
+  ownerId?: number | string;
+  activationId?: number;
+  semantic?: string;
+  receiptId?: string;
+  dueSimulationTime?: number;
   remainingSeconds?: number;
   priority?: number;
   cooldownMs?: number;
@@ -6897,11 +6912,16 @@ export function AshfallGame() {
   const enemyBaseSpriteRef = useRef<HTMLImageElement | null>(null);
   const gameRef = useRef<Game>(initialGame("pod", INITIAL_STAGE_ID, ["brawler", "scout", "ranger", "medic"]));
   const productionMixerRef = useRef<ReturnType<typeof createAudioMixer> | null>(null);
+  const battleAudioRuntimeRef = useRef(createBattleAudioRuntime());
   const productionCueQaLogRef = useRef<Array<{
     cueId: string;
     at: number;
     x: number;
     dedupeKey: string | null;
+    semantic?: string;
+    receiptId?: string;
+    ownerId?: number | string;
+    activationId?: number;
   }>>([]);
   const sfxRequestGateRef = useRef(createAudioRequestGate());
   const desiredProductionSceneRef = useRef<string | null>("title");
@@ -7531,6 +7551,7 @@ export function AshfallGame() {
       cueIds: [...qaAssets.map((asset) => asset.id), ...qaPools.map((pool) => pool.id), ...PRODUCTION_AUDIO_MANIFEST.aliases.map((alias) => alias.id)],
       sceneIds: PRODUCTION_AUDIO_MANIFEST.scenes.map((scene) => scene.id),
       getCueRequests: () => productionCueQaLogRef.current.map((entry) => ({ ...entry })),
+      getBattleAudioRuntime: () => battleAudioRuntimeSnapshot(battleAudioRuntimeRef.current),
       resetCueRequests: () => {
         productionCueQaLogRef.current = [];
         return true;
@@ -11572,6 +11593,12 @@ export function AshfallGame() {
       durationSeconds?: number;
       fallbackCue?: SfxCueId;
       dedupeKey?: string;
+      battleGeneration?: number;
+      ownerId?: number | string;
+      activationId?: number;
+      semantic?: string;
+      receiptId?: string;
+      semanticReceiptConsumed?: boolean;
     } = {},
   ) => {
     if (!cueId || sfxMutedRef.current) return false;
@@ -11584,11 +11611,22 @@ export function AshfallGame() {
           at: performance.now(),
           x,
           dedupeKey: options.dedupeKey ?? null,
+          semantic: options.semantic,
+          receiptId: options.receiptId,
+          ownerId: options.ownerId,
+          activationId: options.activationId,
         },
       ].slice(-128);
     }
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return false;
+    if (options.semantic && options.receiptId && !options.semanticReceiptConsumed && !tryConsumeSemanticReceipt(battleAudioRuntimeRef.current, {
+      battleGeneration: options.battleGeneration,
+      semantic: options.semantic,
+      receiptId: options.receiptId,
+    })) {
+      return false;
+    }
     const fallback = options.fallbackCue ? () => {
       const definition = SFX_CUES[options.fallbackCue as SfxCueId];
       return productionMixer.playTestTone({
@@ -12795,6 +12833,7 @@ export function AshfallGame() {
     eventCompletionLockRef.current = false;
     setForceStoryReplay(false);
     gameRef.current.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
+    stopBattleAudioRuntime(battleAudioRuntimeRef.current, "battle-dispose");
     const mixer = productionMixerRef.current;
     if (mixer) void mixer.stopAll({ fadeMs: 80 });
     stopMusic();
@@ -12893,7 +12932,9 @@ export function AshfallGame() {
       takuyaEntranceAudioActive: false,
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
       deployCooldowns: { ...fresh.deployCooldowns }, battleBarks: [...fresh.battleBarks.active], manualAbilityIcons: [] });
-    disposeBattleRuntime(); if (!bgmMuted) startMusic();
+    disposeBattleRuntime();
+    resetBattleAudioRuntime(battleAudioRuntimeRef.current, retrying ? "retry" : "new-battle");
+    if (!bgmMuted) startMusic();
     if (retrying) playCue("retry");
     else {
       playCue("start-low");
@@ -12934,6 +12975,7 @@ export function AshfallGame() {
     setScreen("battle");
     chooseAction(null);
     disposeBattleRuntime();
+    resetBattleAudioRuntime(battleAudioRuntimeRef.current, "new-survival-battle");
     desiredMusicModeRef.current = "normal";
     if (!bgmMuted) startMusic();
     playCue("start-low");
@@ -14783,6 +14825,14 @@ export function AshfallGame() {
         const pendingAbilityAudioCues = g.pendingAbilityAudioCues.splice(0);
         for (const pendingCue of pendingAbilityAudioCues) {
           const remainingSeconds = Math.max(0, (pendingCue.remainingSeconds ?? 0) - dt);
+          if (pendingCue.semantic && pendingCue.receiptId && pendingCue.ownerId !== undefined) {
+            scheduleDelayedBattleAudioCue(battleAudioRuntimeRef.current, {
+              ...pendingCue,
+              battleGeneration: pendingCue.battleGeneration ?? battleAudioRuntimeRef.current.battleGeneration,
+              dueSimulationTime: pendingCue.dueSimulationTime ?? g.time + remainingSeconds,
+            });
+            continue;
+          }
           if (remainingSeconds > 0) {
             g.pendingAbilityAudioCues.push({ ...pendingCue, remainingSeconds });
             continue;
@@ -14795,6 +14845,35 @@ export function AshfallGame() {
             fallbackCue: pendingCue.fallbackCue === null
               ? undefined
               : pendingCue.fallbackCue ?? "melee-hit",
+            dedupeKey: pendingCue.dedupeKey,
+          });
+        }
+        const dueBattleAudioCues = takeDueBattleAudioCues(battleAudioRuntimeRef.current, {
+          simulationTime: g.time,
+          isBattleActive: g.running && !g.paused && !g.over && !battleSaveBoundaryRef.current,
+          resolveOwner: (ownerId) => {
+            const owner = g.fighters.find((fighter) => String(fighter.id) === String(ownerId));
+            if (!owner) return { alive: true, retreat: false, activationId: null, phase: null };
+            return {
+              alive: owner.hp > 0,
+              retreat: Boolean(owner.mayoRetreat),
+              activationId: owner.manualAbility?.activationId ?? null,
+              phase: owner.manualAbility?.phase ?? null,
+            };
+          },
+        });
+        for (const pendingCue of dueBattleAudioCues) {
+          playProductionCue(pendingCue.cueId, pendingCue.x, {
+            priority: pendingCue.priority ?? 88,
+            cooldownMs: pendingCue.cooldownMs ?? 80,
+            volume: pendingCue.volume,
+            maxInstances: pendingCue.maxInstances ?? 2,
+            semantic: pendingCue.semantic,
+            receiptId: pendingCue.receiptId,
+            battleGeneration: pendingCue.battleGeneration,
+            ownerId: pendingCue.ownerId,
+            activationId: pendingCue.activationId,
+            semanticReceiptConsumed: true,
             dedupeKey: pendingCue.dedupeKey,
           });
         }
