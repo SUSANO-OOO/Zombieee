@@ -206,7 +206,7 @@ test("all 26 existing newcomer weapon and battle-voice cues remain active", () =
   assert.equal(provenance.version, 1);
   assert.equal(provenance.generator, "scripts/build-v060-audio.py");
   assert.equal(provenance.cues.length, 26);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.aliases.length, 2);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.aliases.length, 6);
   const cueIds = new Set(provenance.cues.map(({ id }) => id));
   assert.equal(cueIds.size, 26);
   for (const record of provenance.cues) {
@@ -714,7 +714,7 @@ test("deployment never falls back to a generic attack or hurt voice", () => {
 });
 
 test("new-unit contracts resolve to dedicated original production assets and expose stoppable battle loops", () => {
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.aliases.length, 2);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.aliases.length, 6);
   assert.equal(Object.keys(UNIT_AUDIO_CUE_CONTRACTS).length, 4);
   const dedicatedCueIds = Object.values(UNIT_AUDIO_CUE_CONTRACTS).flatMap((contract) => [
     ...Object.values(contract.weaponEvents),

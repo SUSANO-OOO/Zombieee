@@ -47,6 +47,7 @@ export function resetBattleAudioRuntime(runtime, reason = "reset") {
   runtime.battleGeneration += 1;
   runtime.playedSemanticReceipts.clear();
   runtime.delayedCues.length = 0;
+  runtime.diagnosticKeys.clear();
   runtime.stopped = false;
   pushDiagnostic(runtime, "battle-audio-generation-reset", { reason });
   return runtime.battleGeneration;
@@ -54,8 +55,11 @@ export function resetBattleAudioRuntime(runtime, reason = "reset") {
 
 export function stopBattleAudioRuntime(runtime, reason = "stop") {
   if (!runtime || typeof runtime !== "object") return 0;
-  runtime.stopped = true;
+  runtime.battleGeneration += 1;
+  runtime.playedSemanticReceipts.clear();
   runtime.delayedCues.length = 0;
+  runtime.diagnosticKeys.clear();
+  runtime.stopped = true;
   pushDiagnostic(runtime, "battle-audio-stopped", { reason });
   return runtime.battleGeneration;
 }
@@ -136,7 +140,7 @@ export function scheduleDelayedBattleAudioCue(runtime, entry = {}) {
 export function takeDueBattleAudioCues(runtime, {
   simulationTime,
   isBattleActive = true,
-  resolveOwner = () => ({ alive: true, retreat: false, activationId: null, phase: null }),
+  resolveOwner = () => null,
 } = {}) {
   if (!runtime || runtime.stopped || !isBattleActive) return [];
   const now = Number(simulationTime);
@@ -148,8 +152,8 @@ export function takeDueBattleAudioCues(runtime, {
       pending.push(entry);
       continue;
     }
-    const owner = resolveOwner(entry.ownerId) ?? {};
-    const ownerActive = owner.alive !== false && owner.retreat !== true;
+    const owner = resolveOwner(entry.ownerId);
+    const ownerActive = owner?.alive === true && owner.retreat !== true;
     const activationActive = entry.activationId === 0
       || (Number(owner.activationId) === entry.activationId && owner.phase !== "retreat" && owner.phase !== "cooldown");
     if (!ownerActive || !activationActive) continue;

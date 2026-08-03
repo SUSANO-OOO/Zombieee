@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 const baseUrl = new URL(process.env.COMBAT_PRESENTATION_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) {
@@ -444,6 +445,7 @@ for (const engine of engines) {
       try {
         const response = await page.goto(result.url, { waitUntil: "domcontentloaded", timeout });
         invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
+        await dismissInstallOffer(page, { timeout });
         await page.waitForFunction(
           () => {
             const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -501,6 +503,7 @@ for (const engine of engines) {
 
         const stageSixResponse = await page.goto(caseUrl(6), { waitUntil: "domcontentloaded", timeout });
         invariant(stageSixResponse?.ok(), `Stage 6 navigation failed: HTTP ${stageSixResponse?.status()}`);
+        await dismissInstallOffer(page, { timeout });
         await page.waitForFunction(
           () => {
             const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();

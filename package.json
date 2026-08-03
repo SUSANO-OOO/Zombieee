@@ -53,6 +53,8 @@
     "qa:outbreak": "node scripts/run-browser-qa-with-server.mjs scripts/outbreak-runtime-browser-smoke.mjs",
     "qa:records": "node scripts/run-browser-qa-with-server.mjs scripts/records-browser-smoke.mjs",
     "qa:manual-abilities": "node scripts/run-browser-qa-with-server.mjs scripts/manual-abilities-browser-smoke.mjs",
+    "audio:v099:build": "node scripts/build-v099-battle-audio.mjs",
+    "audio:v099:verify": "node --test tests/v099-audio-signal.test.mjs tests/v099-audio-provenance.test.mjs tests/v099-audio-reproducibility.test.mjs",
     "qa:economy": "node scripts/economy-simulation.mjs",
     "art:v080:characters": "node scripts/build-v080-character-assets.mjs",
     "art:v080": "node scripts/build-v080-stage-assets.mjs",
@@ -74,6 +76,7 @@
     "react-dom": "19.2.6"
   },
   "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "1.1.0",
     "@cloudflare/vite-plugin": "1.37.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",

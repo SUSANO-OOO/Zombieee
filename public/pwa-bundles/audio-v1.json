@@ -1,7 +1,7 @@
 {
   "schema": "zombieee-pwa-audio-bundle/1",
   "bundlePath": "/pwa-bundles/audio-v1.bin",
-  "bytes": 18171288,
+  "bytes": 17604607,
   "assets": {
     "/audio/v060/music/title.mp3": {
       "id": "music-title",
@@ -1284,218 +1284,218 @@
     "/audio/v099/music/music-v099-pressure-surface.mp3": {
       "id": "music-v099-pressure-surface",
       "offset": 12914369,
-      "bytes": 1641057,
-      "hash": "sha256-c57c109bd80d6467015a7335b0581c58d3df776ccc2f4f200418a7c1d67d40ae"
+      "bytes": 1409089,
+      "hash": "sha256-02b7e4821026558bbed96fba67b58153d14e51a7322cdf715b6962406a22600f"
     },
     "/audio/v099/music/music-v099-pressure-station.mp3": {
       "id": "music-v099-pressure-station",
-      "offset": 14555426,
-      "bytes": 1641057,
-      "hash": "sha256-4dd4c90a800ff49e3bda76769bdfa895726d84364cb68648b6e7f29bb7818a01"
+      "offset": 14323458,
+      "bytes": 1452453,
+      "hash": "sha256-688921115fe21a4f37240a0805efea338d0642d27931377af32c4d1794dc76ae"
     },
     "/audio/v099/music/music-v099-boss.mp3": {
       "id": "music-v099-boss",
-      "offset": 16196483,
-      "bytes": 1641057,
-      "hash": "sha256-358def6d4fb403617faeec4ca9af358e9d30ddb823b9c4c2c1a6107657f8be83"
+      "offset": 15775911,
+      "bytes": 1456110,
+      "hash": "sha256-d4ef4c8cdd26bdbfbfdcf6628be1fc72aa001c6153a88b1f1670762cc20273ac"
     },
     "/audio/v099/sfx/ability-brawler-kiai-activate.mp3": {
       "id": "ability-brawler-kiai-activate",
-      "offset": 17837540,
-      "bytes": 13001,
-      "hash": "sha256-13565aeba2bed6f276460db7b7d409c658c70ed4bb85b182d3c7d5f925d6ea42"
+      "offset": 17232021,
+      "bytes": 14254,
+      "hash": "sha256-1d2126e45d3be14c46f428d472ba3058a5b4c5bbe5dc5d436d91e03be122bba2"
     },
     "/audio/v099/sfx/ability-scout-intercept-activate.mp3": {
       "id": "ability-scout-intercept-activate",
-      "offset": 17850541,
-      "bytes": 13001,
-      "hash": "sha256-10689f884cf1745a3b081a85ea385c067b5a7ba22332295e2efeab3c412c9a7e"
+      "offset": 17246275,
+      "bytes": 11746,
+      "hash": "sha256-507688dc9929237e19db5ed0babee6666df2274904b782765dd5992fe1ddb672"
     },
     "/audio/v099/sfx/ability-ranger-precision-activate.mp3": {
       "id": "ability-ranger-precision-activate",
-      "offset": 17863542,
-      "bytes": 13001,
-      "hash": "sha256-87a02f66c556108c4b57be6d5d3d9f347ea732face9fb7e94a1da8f2965e3a2f"
+      "offset": 17258021,
+      "bytes": 13000,
+      "hash": "sha256-3b4027fe75f77b351d79c5aa6b47b50887ee3bd24bfb9387f76e0d5a5d7c5964"
     },
     "/audio/v099/sfx/ability-medic-emergency-activate.mp3": {
       "id": "ability-medic-emergency-activate",
-      "offset": 17876543,
-      "bytes": 13001,
-      "hash": "sha256-4aa857a9bc3e84bf04d209839f897281b78ad6ac0e3b84dbe87879b325476909"
+      "offset": 17271021,
+      "bytes": 16344,
+      "hash": "sha256-c1f2e276243d7a9dc2d3f674440ef9c4bb372906d8b0b7ca33291eba2bbf07bf"
     },
     "/audio/v099/sfx/ability-brute-groundbreak-activate.mp3": {
       "id": "ability-brute-groundbreak-activate",
-      "offset": 17889544,
-      "bytes": 13001,
-      "hash": "sha256-634d73bb3ed60ed05af7b8ef74fead545bd5b330d5f3709f12ec434a363e19ec"
+      "offset": 17287365,
+      "bytes": 15926,
+      "hash": "sha256-ce2f495afc545a844a225eb0cf089780b9cde804df51c6f0ff2b11e091d08146"
     },
     "/audio/v099/sfx/ability-crazy-king-overdrive-activate.mp3": {
       "id": "ability-crazy-king-overdrive-activate",
-      "offset": 17902545,
-      "bytes": 13001,
-      "hash": "sha256-75feb231acfc20b24a99bf7f821355598ffd82106d7040c9c457e013636dc902"
+      "offset": 17303291,
+      "bytes": 18434,
+      "hash": "sha256-ea01bdeb24d9a9b5dd78f7126274af021754d046687e33c7fccec652ff8743a2"
     },
     "/audio/v099/sfx/ability-kumaverson-iron-pan-activate.mp3": {
       "id": "ability-kumaverson-iron-pan-activate",
-      "offset": 17915546,
-      "bytes": 13001,
-      "hash": "sha256-6bb08703d58e08b8cdd9b8d49d402b7e2b7dcc680ee89504cf3372550ecdaeeb"
+      "offset": 17321725,
+      "bytes": 15926,
+      "hash": "sha256-f3f08b262ba1a2fca74d80c9048edc173662d85cf24038095bb48cfcef174393"
     },
     "/audio/v099/sfx/ability-babayaga-appraise-activate.mp3": {
       "id": "ability-babayaga-appraise-activate",
-      "offset": 17928547,
-      "bytes": 13001,
-      "hash": "sha256-e2a37ebda4c3463345c9dab4b7d63d8d989371edf28fcb97f6bae9b56fa374e8"
+      "offset": 17337651,
+      "bytes": 13836,
+      "hash": "sha256-108e6f6f8ade6bda6e611fed2efe34030fc29a535fe2cdbc358571e26ce51a82"
     },
     "/audio/v099/sfx/ability-gunner-suppression-activate.mp3": {
       "id": "ability-gunner-suppression-activate",
-      "offset": 17941548,
-      "bytes": 13001,
-      "hash": "sha256-609255e9286ccaf58623c5851d1708e3c5b2610716441fb7778c328da5adece1"
+      "offset": 17351487,
+      "bytes": 15090,
+      "hash": "sha256-f9d63620f7cfbb5a68fd648565b94ae9deedf7666e275cf12bcc7732839e98c1"
     },
     "/audio/v099/sfx/ability-guardian-shieldwall-activate.mp3": {
       "id": "ability-guardian-shieldwall-activate",
-      "offset": 17954549,
-      "bytes": 13001,
-      "hash": "sha256-ed5f8f0758dfe136b987a2dc679a5b931a4be5beb7d0c44885ebf7a6f6041740"
+      "offset": 17366577,
+      "bytes": 17598,
+      "hash": "sha256-2904819a03e6ea2a227fb4d6a9590995e8f1fa114cfb3fe9a0a22ca59f667760"
     },
     "/audio/v099/sfx/ability-engineer-trap-arm-activate.mp3": {
       "id": "ability-engineer-trap-arm-activate",
-      "offset": 17967550,
-      "bytes": 13001,
-      "hash": "sha256-9b6fc0bdde878221d321aa76808ed643eba5e64ac8e58e16d2ba08965f1508d2"
+      "offset": 17384175,
+      "bytes": 14672,
+      "hash": "sha256-f66430248bb5fcc881e5ff6de24911e8e5bda693b86e67a3bbeaaa36520c36a0"
     },
     "/audio/v099/sfx/ability-zakimiya-molotov-activate.mp3": {
       "id": "ability-zakimiya-molotov-activate",
-      "offset": 17980551,
-      "bytes": 13001,
-      "hash": "sha256-838467c22e5e68e5848a70b73538f8213d4bc29e636ba657203038161a18de9a"
-    },
-    "/audio/v099/sfx/support-pod-inbound.mp3": {
-      "id": "support-pod-inbound",
-      "offset": 17993552,
-      "bytes": 14255,
-      "hash": "sha256-9c698cc141f98f8759aa9563dcc5619c173459bbec8688438803bc9513c75e1b"
-    },
-    "/audio/v099/sfx/support-pod-landing-impact.mp3": {
-      "id": "support-pod-landing-impact",
-      "offset": 18007807,
-      "bytes": 10911,
-      "hash": "sha256-e6d3443b9dc3585b799c55d5e5161812d0d5f441e1b0b74d1b4f7c393b3b0bb9"
-    },
-    "/audio/v099/sfx/support-pod-activation.mp3": {
-      "id": "support-pod-activation",
-      "offset": 18018718,
-      "bytes": 8404,
-      "hash": "sha256-e6a8fe5b81dcda814c4705c176bf5640865ceeb63f7e1c2e72e079d8bf89fb64"
-    },
-    "/audio/v099/sfx/support-pod-complete.mp3": {
-      "id": "support-pod-complete",
-      "offset": 18027122,
-      "bytes": 6732,
-      "hash": "sha256-deb56a50a46deef8cc6616447131db0ebbf70b6e420fa0de82620ebc7f1589f6"
+      "offset": 17398847,
+      "bytes": 15926,
+      "hash": "sha256-67914c6bdf252de63d2bf04c7bd6094a8354e1f268e5df2bd776e41b20724971"
     },
     "/audio/v099/sfx/ability-brawler-kiai-combo-impact.mp3": {
       "id": "ability-brawler-kiai-combo-impact",
-      "offset": 18033854,
-      "bytes": 8822,
-      "hash": "sha256-52723d64556fada441d093b0b806e7bb93e33f7653792d3c64a0634ce166456d"
+      "offset": 17414773,
+      "bytes": 8403,
+      "hash": "sha256-5c91c4c3685495f3c49b5c7e01443b290ee7e377e741d32e55ef4bb8129d4132"
     },
     "/audio/v099/sfx/ability-scout-intercept-impact.mp3": {
       "id": "ability-scout-intercept-impact",
-      "offset": 18042676,
-      "bytes": 8822,
-      "hash": "sha256-99f514df074eca91cba8e43688988289545558492693786464b863f30a1ce0f9"
+      "offset": 17423176,
+      "bytes": 7149,
+      "hash": "sha256-17a0286699a12bf53c628ec1465e12ffca7c15277c975503f254a5db724821f5"
     },
     "/audio/v099/sfx/ability-ranger-precision-shot.mp3": {
       "id": "ability-ranger-precision-shot",
-      "offset": 18051498,
-      "bytes": 8822,
-      "hash": "sha256-443f50b72eab29d0cbbb21ace5670c4975e8857f87897c94d45652d6a90726c5"
+      "offset": 17430325,
+      "bytes": 6313,
+      "hash": "sha256-9705e7ce9a41cb18473254be2355ee7a22034cd689e3ad5bf4ebe34f8326b195"
     },
     "/audio/v099/sfx/ability-ranger-precision-impact.mp3": {
       "id": "ability-ranger-precision-impact",
-      "offset": 18060320,
-      "bytes": 8822,
-      "hash": "sha256-469ad02c8dc7aa7edac8bc2e81ca5965d69ab09407d9715d60514b7e5cc3edaa"
+      "offset": 17436638,
+      "bytes": 7567,
+      "hash": "sha256-d4c5fc817caf74cf5ecb8f6b2d4d241cf58cd0f151fcba0dbe74522135ebbfe5"
+    },
+    "/audio/v099/sfx/ability-medic-treatment.mp3": {
+      "id": "ability-medic-treatment",
+      "offset": 17444205,
+      "bytes": 12582,
+      "hash": "sha256-a63caf5ac0c82e76fbbee3875069842d7e85864a4743a34a0e3cdc1dec10224d"
     },
     "/audio/v099/sfx/ability-brute-groundbreak-impact.mp3": {
       "id": "ability-brute-groundbreak-impact",
-      "offset": 18069142,
-      "bytes": 8822,
-      "hash": "sha256-738f15dbe0e8c166a11f14c869d3fd3fc45b92ce2a6d1c8e8a6b9b942336d172"
+      "offset": 17456787,
+      "bytes": 11328,
+      "hash": "sha256-a27fb9f4d773c5c0b67f19b14987fad319822081d277fa8ab3d77793080e5e80"
     },
     "/audio/v099/sfx/ability-crazy-king-overdrive-active.mp3": {
       "id": "ability-crazy-king-overdrive-active",
-      "offset": 18077964,
-      "bytes": 8822,
-      "hash": "sha256-30003b9c7445768a786f146e519726c2a38cce730c61ecf0e491aa25e67f50b4"
+      "offset": 17468115,
+      "bytes": 10493,
+      "hash": "sha256-0cd49e336d0282adf61a11d67c7c5a77d37fddbc95610665f3bd18fb1cd6fa9c"
     },
     "/audio/v099/sfx/ability-kumaverson-stance.mp3": {
       "id": "ability-kumaverson-stance",
-      "offset": 18086786,
-      "bytes": 8822,
-      "hash": "sha256-eafe173e16246393ffb29755fdd164934d83a1f4692c8212b3f8f392504e313b"
+      "offset": 17478608,
+      "bytes": 12164,
+      "hash": "sha256-9a0d8ee3421b7f1bc14c5322f027e5e9ddab4960104f3b690aa01676bb36994f"
     },
     "/audio/v099/sfx/ability-babayaga-appraise-shot.mp3": {
       "id": "ability-babayaga-appraise-shot",
-      "offset": 18095608,
-      "bytes": 8822,
-      "hash": "sha256-04535a45b51abc2194bd4f743fc32d17c6bb86f64449cbe2a7da6fb74a5caad3"
+      "offset": 17490772,
+      "bytes": 5895,
+      "hash": "sha256-d589e448b0c9b5e80ac451fe7d599add5eb55c67e586cf6f53b076ec46381c53"
     },
     "/audio/v099/sfx/ability-babayaga-appraise-mark.mp3": {
       "id": "ability-babayaga-appraise-mark",
-      "offset": 18104430,
-      "bytes": 8822,
-      "hash": "sha256-f735bfa95adf74740ee3a1f2a00b43544a689dee867bbadf7708f1cabab4beaa"
+      "offset": 17496667,
+      "bytes": 10911,
+      "hash": "sha256-8be4fa8cb2c57bb90b842b2c853d41068d2565e3a82ca3569d8e115c96abe1a9"
     },
     "/audio/v099/sfx/ability-gunner-suppression-muzzle.mp3": {
       "id": "ability-gunner-suppression-muzzle",
-      "offset": 18113252,
-      "bytes": 8822,
-      "hash": "sha256-db735b1d7e822eb8cec391e20da3ddabb7518cc48c622581995e37edcddd6074"
+      "offset": 17507578,
+      "bytes": 5059,
+      "hash": "sha256-5c24c5d2887c3767329de2ed5c761c3e29be212de2abaccdd9536c039a79e130"
     },
     "/audio/v099/sfx/ability-gunner-suppression-impact.mp3": {
       "id": "ability-gunner-suppression-impact",
-      "offset": 18122074,
-      "bytes": 8822,
-      "hash": "sha256-d1c2b9c461e69008fdd2c77c502c5b533ac0fed5bf0124f9a7ec56f79981d902"
+      "offset": 17512637,
+      "bytes": 6731,
+      "hash": "sha256-a5140530013f05cbdf19f34b3d8b3f79c72ff4bd4d2b987906d8052000a824ea"
+    },
+    "/audio/v099/sfx/ability-guardian-shieldwall-hold.mp3": {
+      "id": "ability-guardian-shieldwall-hold",
+      "offset": 17519368,
+      "bytes": 13418,
+      "hash": "sha256-a297d2aa15d9151dda8e2a068b8a9a7e34704ff8edd86398856ae1587bdfc044"
     },
     "/audio/v099/sfx/ability-engineer-trap-spring.mp3": {
       "id": "ability-engineer-trap-spring",
-      "offset": 18130896,
-      "bytes": 8822,
-      "hash": "sha256-2ffe23b0a6c7ba0be67bbd82b17e798069f089569567e2f97abefdc0d5673394"
+      "offset": 17532786,
+      "bytes": 7985,
+      "hash": "sha256-993123d7c96ec35a10407ee05d1d35fd690b141640a8a8d8aa25aa04175687ec"
     },
     "/audio/v099/sfx/ability-zakimiya-molotov-throw.mp3": {
       "id": "ability-zakimiya-molotov-throw",
-      "offset": 18139718,
-      "bytes": 8822,
-      "hash": "sha256-4bf5aab9773c299bf40252c9039080bbd260310413abbdb003aa3f9e0139e148"
+      "offset": 17540771,
+      "bytes": 8821,
+      "hash": "sha256-5ac052ffca8e6807ddbc51be58f90c92ffec5748e4e8c70891157cac717617c6"
+    },
+    "/audio/v099/sfx/ability-zakimiya-molotov-impact.mp3": {
+      "id": "ability-zakimiya-molotov-impact",
+      "offset": 17549592,
+      "bytes": 10075,
+      "hash": "sha256-41129ccea0a7fa339e8f0d1fd4dfe3c1b694d7d844faefe42e31d6f9273d9c9d"
+    },
+    "/audio/v099/sfx/ability-zakimiya-molotov-burn.mp3": {
+      "id": "ability-zakimiya-molotov-burn",
+      "offset": 17559667,
+      "bytes": 14254,
+      "hash": "sha256-26a2ba95ec12dc397a852c985e9662a02c25e0b74cfa140dc6e4ed8f4bc5c306"
     },
     "/audio/v099/sfx/ability-musashi-fallback-cross.mp3": {
       "id": "ability-musashi-fallback-cross",
-      "offset": 18148540,
-      "bytes": 8822,
-      "hash": "sha256-fe214d67981039b0c6495023dfcb67cb575d19355a41ea1de7d1e4e73dbc7dab"
+      "offset": 17573921,
+      "bytes": 10075,
+      "hash": "sha256-867332c8e6964c2807de708412e2df6b2055108136442a2af9bbf429c1febf4b"
     },
     "/audio/v099/sfx/ability-ready-melee.mp3": {
       "id": "ability-ready-melee",
-      "offset": 18157362,
-      "bytes": 4642,
-      "hash": "sha256-b63137792befc8552f030fd8511bfd778233ee2a4db7810ae9be5cf50c1a1b25"
+      "offset": 17583996,
+      "bytes": 5895,
+      "hash": "sha256-c5ea60a82a77a5145790ac91c702fdb67cea8717c6fca5d963de72bc542ce04f"
     },
     "/audio/v099/sfx/ability-ready-ranged.mp3": {
       "id": "ability-ready-ranged",
-      "offset": 18162004,
-      "bytes": 4642,
-      "hash": "sha256-c4ad610272d3f3e3a0a5ee47d95fed18c9f7237c4caa80cf84a00ad7eef95c58"
+      "offset": 17589891,
+      "bytes": 6731,
+      "hash": "sha256-0a2a5b6ea82ffecc50a7961e1d82a230d494f2d208913603e7c27ddb69e3a38d"
     },
     "/audio/v099/sfx/ability-ready-support.mp3": {
       "id": "ability-ready-support",
-      "offset": 18166646,
-      "bytes": 4642,
-      "hash": "sha256-0c96e8a6547b7bb33e3f8badf919cbf155497ede59d822653a5f726f1352d42d"
+      "offset": 17596622,
+      "bytes": 7985,
+      "hash": "sha256-41441e5e15a269df9473cc936c3161613f18122c5c14a607a64adfcca59e6eea"
     }
   }
 }

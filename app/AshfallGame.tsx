@@ -341,6 +341,7 @@ import {
   STATION_AUDIO_CUE_IDS,
   STORY_AUDIO_MIX,
   TAKUYA_ENTRANCE_AUDIO,
+  battleSceneTransitionCrossfadeMs,
   enemyVoiceCue,
   humanVoiceCueForUnit,
   sceneIdForScreen,
@@ -1006,22 +1007,30 @@ type ManualAbilityReceipt = {
   mode?: string;
   attackSequence?: number;
 };
-type PendingAbilityAudioCue = {
+type PendingWeaponAudioCue = {
   cueId: string;
   x: number;
   dedupeKey: string;
-  battleGeneration?: number;
-  ownerId?: number | string;
-  activationId?: number;
-  semantic?: string;
-  receiptId?: string;
-  dueSimulationTime?: number;
-  remainingSeconds?: number;
+  remainingSeconds: number;
   priority?: number;
   cooldownMs?: number;
   volume?: number;
   maxInstances?: number;
-  fallbackCue?: SfxCueId | null;
+};
+type PendingBattleAudioCue = {
+  cueId: string;
+  x: number;
+  dedupeKey: string;
+  battleGeneration: number;
+  ownerId: number | string;
+  activationId: number;
+  semantic: string;
+  receiptId: string;
+  dueSimulationTime: number;
+  priority?: number;
+  cooldownMs?: number;
+  volume?: number;
+  maxInstances?: number;
 };
 type ManualAbilityIconView = {
   fighterId: number;
@@ -1089,7 +1098,11 @@ type AreaEffect = {
   phase: "active" | "expired";
   slowMultiplier?: number;
 };
-type AirstrikeRuntime = ReturnType<typeof createEmergencySupportRuntime> & { targetLane: Lane | null; targetY?: number | null };
+type AirstrikeRuntime = ReturnType<typeof createEmergencySupportRuntime> & {
+  targetLane: Lane | null;
+  targetY?: number | null;
+  receiptId?: string;
+};
 type CrawlerRuntime = ReturnType<typeof createCrawlerAbilityRuntime>;
 type BattleBarkRuntime = ReturnType<typeof createBattleBarkRuntime>;
 type BattleBark = BattleBarkRuntime["active"][number];
@@ -1222,7 +1235,9 @@ type Game = {
   survivalCheckpointReceipt: string | null;
   manualAbilityVfx: ManualAbilityVfx[];
   manualAbilityReceipts: ManualAbilityReceipt[];
-  pendingAbilityAudioCues: PendingAbilityAudioCue[];
+  battleAudioGeneration: number;
+  pendingWeaponAudioCues: PendingWeaponAudioCue[];
+  pendingBattleAudioCues: PendingBattleAudioCue[];
   graphicsEffectDensity: number;
   renderObjectPools: {
     particles: ReturnType<typeof createRenderObjectPool>;
@@ -1674,7 +1689,9 @@ const initialGame = (
   survivalCheckpointReceipt: null,
   manualAbilityVfx: [],
   manualAbilityReceipts: [],
-  pendingAbilityAudioCues: [],
+  battleAudioGeneration: 0,
+  pendingWeaponAudioCues: [],
+  pendingBattleAudioCues: [],
   graphicsEffectDensity: 1,
   renderObjectPools: {
     particles: createRenderObjectPool(RENDER_ARRAY_LIMITS.particles),
@@ -1956,7 +1973,7 @@ function attackCooldownAfterCombatWindup(fighter: Fighter, intendedCooldown: num
 function scheduleMrsChihaLauncherAudio(
   g: Game,
   fighter: Pick<Fighter, "id" | "kind" | "x" | "attackSequence">,
-  sequence: "normal" | "structure" | "ability",
+  sequence: "normal" | "structure",
 ) {
   if (fighter.kind !== "mrs-chiha") return;
   const activationKey = `${sequence}:${fighter.id}:${fighter.attackSequence}`;
@@ -1967,14 +1984,14 @@ function scheduleMrsChihaLauncherAudio(
   for (const entry of entries) {
     const cueId = unitAudioCueFor(fighter.kind, "weapon", entry.event);
     if (!cueId) continue;
-    g.pendingAbilityAudioCues.push({
+    g.pendingWeaponAudioCues.push({
       cueId,
       x: fighter.x,
       remainingSeconds: entry.delay,
       dedupeKey: `mrs-chiha:${activationKey}:${entry.event}`,
     });
   }
-  g.pendingAbilityAudioCues = g.pendingAbilityAudioCues.slice(-16);
+  g.pendingWeaponAudioCues = g.pendingWeaponAudioCues.slice(-16);
 }
 
 function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y">) {
@@ -2198,9 +2215,10 @@ function applyIncomingHumanDamage(
         at: g.time,
       });
       g.manualAbilityReceipts = g.manualAbilityReceipts.slice(-32);
-      g.pendingAbilityAudioCues.push({
+      g.pendingBattleAudioCues.push({
         cueId: "ability-musashi-counter",
         x: counterTarget?.x ?? target.x,
+        battleGeneration: g.battleAudioGeneration,
         ownerId: target.id,
         activationId: counter.event?.activationId ?? target.manualAbility.activationId,
         semantic: "ability-timeline",
@@ -2211,7 +2229,7 @@ function applyIncomingHumanDamage(
         maxInstances: 1,
         dedupeKey: `manual-ability:${target.id}:${counter.event?.activationId ?? target.manualAbility.activationId}:counter`,
       });
-      g.pendingAbilityAudioCues = g.pendingAbilityAudioCues.slice(-8);
+      g.pendingBattleAudioCues = g.pendingBattleAudioCues.slice(-8);
       g.manualAbilityVfx = g.manualAbilityVfx
         .filter((effect) => effect.ownerId !== target.id)
         .concat({
@@ -3454,7 +3472,8 @@ function prepareManualAbilityProof(g: Game, requestedKinds: readonly UnitKind[])
   g.areaEffects = [];
   g.manualAbilityVfx = [];
   g.manualAbilityReceipts = [];
-  g.pendingAbilityAudioCues = [];
+  g.pendingWeaponAudioCues = [];
+  g.pendingBattleAudioCues = [];
   g.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
   g.qaBarks = false;
   g.banner = "";
@@ -8043,7 +8062,8 @@ export function AshfallGame() {
         clearRenderObjects(g.shots, g.renderObjectPools.shots);
         clearRenderObjects(g.damageTexts, g.renderObjectPools.damageTexts);
         g.pendingWeaponHits = [];
-        g.pendingAbilityAudioCues = [];
+        g.pendingWeaponAudioCues = [];
+        g.pendingBattleAudioCues = [];
         productionCueQaLogRef.current = [];
         for (const candidate of g.fighters) {
           if (candidate.side !== "zombie" || candidate.id === target.id) continue;
@@ -11610,6 +11630,7 @@ export function AshfallGame() {
       instanceKey?: string;
       maxInstances?: number;
       durationSeconds?: number;
+      duck?: { level: number; attackMs: number; holdMs: number; releaseMs: number };
       fallbackCue?: SfxCueId;
       dedupeKey?: string;
       battleGeneration?: number;
@@ -11620,7 +11641,27 @@ export function AshfallGame() {
       semanticReceiptConsumed?: boolean;
     } = {},
   ) => {
-    if (!cueId || sfxMutedRef.current) return false;
+    if (!cueId) return false;
+    const productionMixer = productionMixerRef.current;
+    if (!productionMixer) return false;
+    if (options.semantic && options.receiptId && !options.semanticReceiptConsumed && !tryConsumeSemanticReceipt(battleAudioRuntimeRef.current, {
+      battleGeneration: options.battleGeneration,
+      semantic: options.semantic,
+      receiptId: options.receiptId,
+    })) {
+      return false;
+    }
+    if (sfxMutedRef.current) return true;
+    const fallback = options.fallbackCue ? () => {
+      const definition = SFX_CUES[options.fallbackCue as SfxCueId];
+      return productionMixer.playTestTone({
+        frequency: definition.frequency,
+        duration: definition.duration,
+        volume: Math.min(.08, definition.volume),
+        respectSettings: true,
+      });
+    } : null;
+    const pan = Math.max(-.85, Math.min(.85, x / W * 2 - 1));
     if (typeof window !== "undefined"
       && ["127.0.0.1", "localhost"].includes(window.location.hostname)) {
       productionCueQaLogRef.current = [
@@ -11637,25 +11678,6 @@ export function AshfallGame() {
         },
       ].slice(-128);
     }
-    const productionMixer = productionMixerRef.current;
-    if (!productionMixer) return false;
-    if (options.semantic && options.receiptId && !options.semanticReceiptConsumed && !tryConsumeSemanticReceipt(battleAudioRuntimeRef.current, {
-      battleGeneration: options.battleGeneration,
-      semantic: options.semantic,
-      receiptId: options.receiptId,
-    })) {
-      return false;
-    }
-    const fallback = options.fallbackCue ? () => {
-      const definition = SFX_CUES[options.fallbackCue as SfxCueId];
-      return productionMixer.playTestTone({
-        frequency: definition.frequency,
-        duration: definition.duration,
-        volume: Math.min(.08, definition.volume),
-        respectSettings: true,
-      });
-    } : null;
-    const pan = Math.max(-.85, Math.min(.85, x / W * 2 - 1));
     void runGuardedAudioRequest({
       gate: sfxRequestGateRef.current,
       unlock: () => productionMixer.unlocked ? true : productionMixer.unlock(),
@@ -11670,6 +11692,7 @@ export function AshfallGame() {
         instanceKey: options.instanceKey,
         maxInstances: options.maxInstances,
         durationSeconds: options.durationSeconds,
+        duck: options.duck,
         dedupeKey: options.dedupeKey,
         onLoadFailure: fallback ? guardedFallback : undefined,
       }),
@@ -11688,7 +11711,9 @@ export function AshfallGame() {
       priority?: number;
       cooldownMs?: number;
       volume?: number;
+      playbackRate?: number;
       maxInstances?: number;
+      duck?: { level: number; attackMs: number; holdMs: number; releaseMs: number };
       dedupeKey?: string;
     },
   ) => playProductionCue(cueId, x, {
@@ -11727,10 +11752,10 @@ export function AshfallGame() {
     const cueId = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[owner.kind]?.timeline?.[eventKey];
     if (!cueId) return false;
     const activationId = owner.manualAbility?.activationId ?? 0;
-    g.pendingAbilityAudioCues.push({
+    g.pendingBattleAudioCues.push({
       cueId,
       x,
-      battleGeneration: battleAudioRuntimeRef.current.battleGeneration,
+      battleGeneration: g.battleAudioGeneration,
       ownerId: owner.id,
       activationId,
       semantic: "ability-timeline",
@@ -11801,12 +11826,14 @@ export function AshfallGame() {
     g.bannerTime = 3.2;
     g.flashOverlay = Math.max(g.flashOverlay, .18);
     g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
-    playProductionCue(definition.entrance.cueId, W / 2, {
+    playBattleSemanticCue(definition.entrance.cueId, W / 2, {
+      semantic: "boss-entrance",
+      receiptId,
+      ownerId: `boss:${kind}:wave-${g.wave}`,
       priority: 104,
       cooldownMs: 0,
       volume: .92,
       maxInstances: 1,
-      fallbackCue: "boss-warning",
       dedupeKey: receiptId,
     });
     if (kind === "takuya") {
@@ -11826,7 +11853,7 @@ export function AshfallGame() {
       warningLabel: definition.entrance.warningLabel,
     };
     return true;
-  }, [playProductionCue]);
+  }, [playBattleSemanticCue]);
 
   const resumeBattleAudioLoops = useCallback((g: Game) => {
     const productionMixer = productionMixerRef.current;
@@ -11983,9 +12010,6 @@ export function AshfallGame() {
       ...current,
       manualAbilityIcons: current.manualAbilityIcons.filter((icon) => icon.fighterId !== fighter.id),
     }));
-    if (fighter.kind === "mrs-chiha") {
-      scheduleMrsChihaLauncherAudio(g, fighter, "ability");
-    }
     const abilityAudioContract = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[fighter.kind];
     if (abilityAudioContract) {
       playBattleSemanticCue(abilityAudioContract.activationRoot, fighter.x, {
@@ -12044,10 +12068,24 @@ export function AshfallGame() {
     // while its entrance timer or fixed final lines remain active.
     if (battleSilenceSceneId(g)) return;
     const sceneId = sceneIdForScreen("battle", g.definition.stageId, { musicMode: mode });
+    if (!sceneId) {
+      desiredProductionSceneRef.current = null;
+      setMusicActive(false);
+      void productionMixer.stopScene({ fadeMs: 120 });
+      if (typeof document !== "undefined") {
+        document.documentElement.dataset.battleAudioSceneResolution = `failed:${g.definition.stageId}:${mode}`;
+      }
+      return;
+    }
     if (desiredProductionSceneRef.current === sceneId) return;
+    const previousSceneId = desiredProductionSceneRef.current;
     desiredProductionSceneRef.current = sceneId;
-    if (sceneId && productionMixer.getSettings().bgmEnabled) {
-      void productionMixer.setScene(sceneId).then((state) => {
+    if (typeof document !== "undefined") {
+      document.documentElement.dataset.battleAudioSceneResolution = `ok:${sceneId}`;
+    }
+    if (productionMixer.getSettings().bgmEnabled) {
+      const crossfadeMs = battleSceneTransitionCrossfadeMs(previousSceneId, sceneId);
+      void productionMixer.setScene(sceneId, crossfadeMs === null ? {} : { crossfadeMs }).then((state) => {
         if (desiredProductionSceneRef.current !== sceneId) return;
         setMusicActive(Boolean(state?.bgmAssetId));
       }).catch(() => setMusicActive(false));
@@ -12372,7 +12410,10 @@ export function AshfallGame() {
       g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playUiOperationCue("reject", `airstrike:${result.reason}`); return false;
     }
     g.supportGauge = result.supportGauge;
-    g.airstrike = result.runtime as AirstrikeRuntime;
+    g.airstrike = {
+      ...result.runtime,
+      receiptId: `airstrike:${g.battleAudioGeneration}:${g.time.toFixed(3)}`,
+    } as AirstrikeRuntime;
     g.banner = placement.adjusted ? "航空支援 // 最寄りの有効地点へ補正" : "航空支援要請 // 指定地点";
     g.bannerTime = 1; playCue("airstrike-request");
     emitBattleBark(g, "airstrike-request", "guide", "airstrike");
@@ -12918,7 +12959,9 @@ export function AshfallGame() {
     eventCompletionLockRef.current = false;
     setForceStoryReplay(false);
     gameRef.current.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
-    stopBattleAudioRuntime(battleAudioRuntimeRef.current, "battle-dispose");
+    gameRef.current.battleAudioGeneration = stopBattleAudioRuntime(battleAudioRuntimeRef.current, "battle-dispose");
+    gameRef.current.pendingBattleAudioCues = [];
+    gameRef.current.pendingWeaponAudioCues = [];
     resetPressureLatchRuntime(pressureLatchRef.current, "battle-dispose");
     manualAbilityReadyStateRef.current.clear();
     const mixer = productionMixerRef.current;
@@ -12941,6 +12984,10 @@ export function AshfallGame() {
     eventQueueRef.current = queue.slice(1);
     if (destination === "battle-resume") {
       const g = gameRef.current;
+      g.battleAudioGeneration = stopBattleAudioRuntime(battleAudioRuntimeRef.current, "battle-screen-leave");
+      g.pendingBattleAudioCues = [];
+      g.pendingWeaponAudioCues = [];
+      manualAbilityReadyStateRef.current.clear();
       g.paused = true;
       g.battleBarks = clearNonScriptedBattleBarks(g.battleBarks) as BattleBarkRuntime;
       setHud((current) => ({ ...current, battleBarks: [] }));
@@ -13020,7 +13067,7 @@ export function AshfallGame() {
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
       deployCooldowns: { ...fresh.deployCooldowns }, battleBarks: [...fresh.battleBarks.active], manualAbilityIcons: [] });
     disposeBattleRuntime();
-    resetBattleAudioRuntime(battleAudioRuntimeRef.current, retrying ? "retry" : "new-battle");
+    fresh.battleAudioGeneration = resetBattleAudioRuntime(battleAudioRuntimeRef.current, retrying ? "retry" : "new-battle");
     if (!bgmMuted) startMusic();
     if (retrying) playCue("retry");
     else {
@@ -13062,7 +13109,7 @@ export function AshfallGame() {
     setScreen("battle");
     chooseAction(null);
     disposeBattleRuntime();
-    resetBattleAudioRuntime(battleAudioRuntimeRef.current, "new-survival-battle");
+    fresh.battleAudioGeneration = resetBattleAudioRuntime(battleAudioRuntimeRef.current, "new-survival-battle");
     desiredMusicModeRef.current = "normal";
     if (!bgmMuted) startMusic();
     playCue("start-low");
@@ -13149,6 +13196,7 @@ export function AshfallGame() {
     if (completion.destination === "battle") startGame();
     else if (completion.destination === "battle-resume") {
       const g = gameRef.current;
+      g.battleAudioGeneration = resetBattleAudioRuntime(battleAudioRuntimeRef.current, "battle-screen-resume");
       g.paused = false;
       setPaused(false);
       setScreen("battle");
@@ -14117,7 +14165,9 @@ export function AshfallGame() {
 
   useEffect(() => {
     if (end) {
-      stopBattleAudioRuntime(battleAudioRuntimeRef.current, "result");
+      gameRef.current.battleAudioGeneration = stopBattleAudioRuntime(battleAudioRuntimeRef.current, "result");
+      gameRef.current.pendingBattleAudioCues = [];
+      gameRef.current.pendingWeaponAudioCues = [];
       resetPressureLatchRuntime(pressureLatchRef.current, "result");
       manualAbilityReadyStateRef.current.clear();
     }
@@ -14911,22 +14961,12 @@ export function AshfallGame() {
             };
           })
           .filter((effect) => effect.elapsed < effect.duration);
-        if (g.pendingAbilityAudioCues.length > 64) {
-          g.pendingAbilityAudioCues.length = 64;
-        }
-        const pendingAbilityAudioCues = g.pendingAbilityAudioCues.splice(0);
-        for (const pendingCue of pendingAbilityAudioCues) {
-          const remainingSeconds = Math.max(0, (pendingCue.remainingSeconds ?? 0) - dt);
-          if (pendingCue.semantic && pendingCue.receiptId && pendingCue.ownerId !== undefined) {
-            scheduleDelayedBattleAudioCue(battleAudioRuntimeRef.current, {
-              ...pendingCue,
-              battleGeneration: pendingCue.battleGeneration ?? battleAudioRuntimeRef.current.battleGeneration,
-              dueSimulationTime: pendingCue.dueSimulationTime ?? g.time + remainingSeconds,
-            });
-            continue;
-          }
+        if (g.pendingWeaponAudioCues.length > 32) g.pendingWeaponAudioCues.length = 32;
+        const pendingWeaponAudioCues = g.pendingWeaponAudioCues.splice(0);
+        for (const pendingCue of pendingWeaponAudioCues) {
+          const remainingSeconds = Math.max(0, pendingCue.remainingSeconds - dt);
           if (remainingSeconds > 0) {
-            g.pendingAbilityAudioCues.push({ ...pendingCue, remainingSeconds });
+            g.pendingWeaponAudioCues.push({ ...pendingCue, remainingSeconds });
             continue;
           }
           playProductionCue(pendingCue.cueId, pendingCue.x, {
@@ -14934,24 +14974,34 @@ export function AshfallGame() {
             cooldownMs: pendingCue.cooldownMs ?? 80,
             volume: pendingCue.volume,
             maxInstances: pendingCue.maxInstances ?? 2,
-            fallbackCue: pendingCue.fallbackCue === null
-              ? undefined
-              : pendingCue.fallbackCue,
             dedupeKey: pendingCue.dedupeKey,
           });
+        }
+        if (g.pendingBattleAudioCues.length > 64) g.pendingBattleAudioCues.length = 64;
+        for (const pendingCue of g.pendingBattleAudioCues.splice(0)) {
+          scheduleDelayedBattleAudioCue(battleAudioRuntimeRef.current, pendingCue);
         }
         const dueBattleAudioCues = takeDueBattleAudioCues(battleAudioRuntimeRef.current, {
           simulationTime: g.time,
           isBattleActive: g.running && !g.paused && !g.over && !battleSaveBoundaryRef.current,
           resolveOwner: (ownerId) => {
             const owner = g.fighters.find((fighter) => String(fighter.id) === String(ownerId));
-            if (!owner) return { alive: true, retreat: false, activationId: null, phase: null };
-            return {
+            if (owner) return {
               alive: owner.hp > 0,
               retreat: Boolean(owner.mayoRetreat),
               activationId: owner.manualAbility?.activationId ?? null,
               phase: owner.manualAbility?.phase ?? null,
             };
+            const podMatch = /^pod:(\d+)$/.exec(String(ownerId));
+            const pod = podMatch
+              ? g.battlefieldObjects.find((object) => object.kind === "pod" && object.id === Number(podMatch[1]))
+              : null;
+            return pod ? {
+              alive: pod.hp > 0 && pod.phase !== "expired",
+              retreat: false,
+              activationId: 0,
+              phase: pod.phase,
+            } : null;
           },
         });
         for (const pendingCue of dueBattleAudioCues) {
@@ -14972,8 +15022,8 @@ export function AshfallGame() {
         for (const owner of g.fighters) {
           if (owner.side !== "human" || !owner.manualAbility) continue;
           const readyNow = isManualAbilityReady(owner);
-          const wasReady = manualAbilityReadyStateRef.current.get(owner.id) === true;
-          if (readyNow && !wasReady) {
+          const previousReady = manualAbilityReadyStateRef.current.get(owner.id);
+          if (previousReady !== undefined && readyNow && previousReady === false) {
             const readyCue = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[owner.kind]?.readyCue;
             if (readyCue) {
               playBattleSemanticCue(readyCue, owner.x, {
@@ -15008,6 +15058,7 @@ export function AshfallGame() {
             }
             if (owner.mayoRetreat) continue;
           }
+          const previousAbilityPhase = owner.manualAbility.phase;
           const abilityStep = advanceManualAbility(owner.manualAbility, dt);
           owner.manualAbility = abilityStep.runtime as ManualAbilityRuntime;
           for (const event of abilityStep.events) {
@@ -15106,6 +15157,11 @@ export function AshfallGame() {
               });
               playManualAbilityTimelineCue(owner, "shot", owner.x, `shot:${event.salvoIndex}`, {
                 priority: 82,
+                cooldownMs: 70,
+                maxInstances: 4,
+              });
+              playManualAbilityTimelineCue(owner, "flight", owner.x + 28, `flight:${event.salvoIndex}`, {
+                priority: 74,
                 cooldownMs: 70,
                 maxInstances: 4,
               });
@@ -15520,6 +15576,15 @@ export function AshfallGame() {
               });
             }
           }
+          if (owner.kind === "mrs-chiha"
+            && previousAbilityPhase === "recovery"
+            && ["cooldown", "ready"].includes(owner.manualAbility.phase)) {
+            playManualAbilityTimelineCue(owner, "stow", owner.x, "stow", {
+              priority: 72,
+              cooldownMs: 100,
+              maxInstances: 1,
+            });
+          }
           const requestedPhasePause = representativeSixPhasePauseRef.current;
           if (
             requestedPhasePause?.ownerId === owner.id
@@ -15608,7 +15673,15 @@ export function AshfallGame() {
               g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`;
               g.bannerTime = 1.25;
               addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18);
-              playCue(objectTarget.kind === "pod" ? "pod-destroy" : "object-destroy");
+              playBattleSemanticCue("support-explosion", objectTarget.x, {
+                semantic: "object-destroy",
+                receiptId: `supply:${objectTarget.id}:destroy`,
+                ownerId: `supply:${objectTarget.id}`,
+                priority: 72,
+                cooldownMs: 0,
+                maxInstances: 2,
+                dedupeKey: `supply:${objectTarget.id}:destroy`,
+              });
             } else {
               playCue(objectTarget.kind === "pod" ? "pod-hit" : "object-hit");
             }
@@ -16261,7 +16334,19 @@ export function AshfallGame() {
             "#f28d46",
             34,
           );
-          g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact); g.flashOverlay = .4; playCue("airstrike-impact");
+          const airstrikeReceiptId = g.airstrike.receiptId ?? `airstrike:${g.battleAudioGeneration}:${g.time.toFixed(3)}`;
+          g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
+          g.flashOverlay = .4;
+          playBattleSemanticCue("support-explosion", g.airstrike.targetX ?? W / 2, {
+            semantic: "explosion-result",
+            receiptId: `${airstrikeReceiptId}:impact`,
+            ownerId: airstrikeReceiptId,
+            priority: 100,
+            cooldownMs: 0,
+            maxInstances: 2,
+            duck: { level: .2, attackMs: 24, holdMs: 650, releaseMs: 220 },
+            dedupeKey: `${airstrikeReceiptId}:impact`,
+          });
         }
         if (airstrikeStep.events.includes("returning")) playCue("airstrike-return");
         if (airstrikeStep.events.includes("complete")) { g.banner = "航空支援帰投"; g.bannerTime = .75; }
@@ -16383,7 +16468,19 @@ export function AshfallGame() {
               const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
               if (fighter) { fighter.flash = .18; fighter.knock = Math.max(fighter.knock, 13); addDamageText(g, fighter.x, fighter.y - 52, `爆発 -${hit.damage}`, .82, "#ffbd59"); }
             }
-            addParticles(g, object.x, object.y - 8, "#f26a35", 28); g.flashOverlay = Math.max(g.flashOverlay, .23); playCue("drum-blast"); playCue("burn-start");
+            addParticles(g, object.x, object.y - 8, "#f26a35", 28);
+            g.flashOverlay = Math.max(g.flashOverlay, .23);
+            playBattleSemanticCue("support-explosion", object.x, {
+              semantic: "explosion-result",
+              receiptId: `drum:${object.id}:detonation`,
+              ownerId: `drum:${object.id}`,
+              priority: 90,
+              cooldownMs: 0,
+              maxInstances: 2,
+              duck: { level: .3, attackMs: 24, holdMs: 500, releaseMs: 220 },
+              dedupeKey: `drum:${object.id}:detonation`,
+            });
+            playCue("burn-start");
           }
         }
         g.battlefieldObjects = g.battlefieldObjects.filter((object) => object.phase !== "expired");
@@ -16913,12 +17010,15 @@ export function AshfallGame() {
                             : "五肢定着"
                 }`;
                 g.bannerTime = Math.max(g.bannerTime, Math.min(.86, definition?.warningSeconds ?? .7));
-                playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
+                playBattleSemanticCue(enemyVoiceCue(f.kind, "attack"), f.x, {
+                  semantic: "enemy-ability-warning",
+                  receiptId: `${f.id}:${f.kind}:${g.time.toFixed(3)}:warning`,
+                  ownerId: f.id,
                   priority: 68,
                   cooldownMs: 140,
                   volume: .42,
                   playbackRate: f.kind === "spindle" ? 1.34 : f.kind === "cagewalker" ? .74 : .96,
-                  fallbackCue: "melee-hit",
+                  dedupeKey: `enemy-ability:${f.id}:${f.kind}:${g.time.toFixed(3)}:warning`,
                 });
               }
             }
@@ -16994,12 +17094,15 @@ export function AshfallGame() {
                 } else if (f.kind === "anchor-bloom") {
                   addParticles(g, f.x, f.y + 8, "#705552", 16);
                 }
-                playProductionCue("enemy-takuya-attack", f.x, {
+                playBattleSemanticCue("enemy-takuya-attack", f.x, {
+                  semantic: "enemy-ability-impact",
+                  receiptId: `${f.id}:${f.kind}:${g.time.toFixed(3)}:impact`,
+                  ownerId: f.id,
                   priority: 74,
                   cooldownMs: 160,
                   volume: .5,
                   playbackRate: f.kind === "resonator" ? .66 : f.kind === "spindle" ? 1.42 : .88,
-                  fallbackCue: "melee-hit",
+                  dedupeKey: `enemy-ability:${f.id}:${f.kind}:${g.time.toFixed(3)}:impact`,
                 });
               }
               if (f.kind === "anchor-bloom" && f.stationAbility.phase === "active") {
@@ -17083,11 +17186,14 @@ export function AshfallGame() {
                 g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
                 g.banner = "マザー // 増殖室離床";
                 g.bannerTime = .8;
-                playProductionCue("boss-mother-brood-eruption", f.x, {
+                playBattleSemanticCue("boss-mother-brood-eruption", f.x, {
+                  semantic: "boss-phase-impact",
+                  receiptId: `${f.id}:${f.attackSequence}:mother-brood-eruption`,
+                  ownerId: f.id,
                   priority: 98,
                   cooldownMs: 300,
                   volume: .78,
-                  fallbackCue: "boss-warning",
+                  dedupeKey: `boss:${f.id}:${f.attackSequence}:mother-brood-eruption`,
                 });
               }
               if (step.events.includes("complete")) {
@@ -17105,11 +17211,14 @@ export function AshfallGame() {
                 abilityFrame = true;
                 g.banner = "マザー // 増殖兆候";
                 g.bannerTime = .72;
-                playProductionCue("boss-mother-brood-warning", f.x, {
+                playBattleSemanticCue("boss-mother-brood-warning", f.x, {
+                  semantic: "boss-phase-warning",
+                  receiptId: `${f.id}:${f.attackSequence}:mother-brood-warning`,
+                  ownerId: f.id,
                   priority: 90,
                   cooldownMs: 600,
                   volume: .62,
-                  fallbackCue: "boss-warning",
+                  dedupeKey: `boss:${f.id}:${f.attackSequence}:mother-brood-warning`,
                 });
               }
             }
@@ -17173,11 +17282,14 @@ export function AshfallGame() {
                 if (anomalyKind === "ooguchi") {
                   g.banner = "オオグチ // 捕食突進";
                   addParticles(g, f.x - 38, f.y - 18, "#c4784e", 18);
-                  playProductionCue("boss-ooguchi-charge-impact", f.x, {
+                  playBattleSemanticCue("boss-ooguchi-charge-impact", f.x, {
+                    semantic: "boss-phase-impact",
+                    receiptId: `${f.id}:${f.attackSequence}:ooguchi-charge-impact`,
+                    ownerId: f.id,
                     priority: 99,
                     cooldownMs: 260,
                     volume: .82,
-                    fallbackCue: "boss-warning",
+                    dedupeKey: `boss:${f.id}:${f.attackSequence}:ooguchi-charge-impact`,
                   });
                 } else {
                   const areaBoss = anomalyKind === "futago"
@@ -17228,16 +17340,19 @@ export function AshfallGame() {
                     : f.stationAbility.split
                       ? "フタゴ // 裂開・融合交差撃"
                       : "フタゴ // 融合交差撃";
-                  playProductionCue(
+                  playBattleSemanticCue(
                     anomalyKind === "gairen"
                       ? "boss-gairen-shell-sweep"
                       : "boss-futago-cross-impact",
                     f.x,
                     {
+                      semantic: "boss-phase-impact",
+                      receiptId: `${f.id}:${f.attackSequence}:${anomalyKind}-impact`,
+                      ownerId: f.id,
                       priority: 99,
                       cooldownMs: 260,
                       volume: .8,
-                      fallbackCue: "boss-warning",
+                      dedupeKey: `boss:${f.id}:${f.attackSequence}:${anomalyKind}-impact`,
                     },
                   );
                 }
@@ -17269,7 +17384,7 @@ export function AshfallGame() {
                     ? "ガイレン // 外殻掃討予告"
                     : "フタゴ // 融合交差撃予告";
                 g.bannerTime = .68;
-                playProductionCue(
+                playBattleSemanticCue(
                   anomalyKind === "ooguchi"
                     ? "boss-ooguchi-charge-warning"
                     : anomalyKind === "gairen"
@@ -17277,10 +17392,13 @@ export function AshfallGame() {
                       : "boss-futago-cross-warning",
                   f.x,
                   {
+                    semantic: "boss-phase-warning",
+                    receiptId: `${f.id}:${f.attackSequence}:${anomalyKind}-warning`,
+                    ownerId: f.id,
                     priority: 90,
                     cooldownMs: 600,
                     volume: .64,
-                    fallbackCue: "boss-warning",
+                    dedupeKey: `boss:${f.id}:${f.attackSequence}:${anomalyKind}-warning`,
                   },
                 );
               }
@@ -17331,12 +17449,15 @@ export function AshfallGame() {
                   ? "クロメ // 追跡眼・過励起"
                   : "クロメ // 追跡眼";
                 g.bannerTime = .82;
-                playProductionCue("enemy-takuya-attack", f.x, {
+                playBattleSemanticCue("enemy-takuya-attack", f.x, {
+                  semantic: "boss-phase-impact",
+                  receiptId: `${f.id}:${g.time.toFixed(3)}:kurome-beam`,
+                  ownerId: f.id,
                   priority: 94,
                   cooldownMs: 200,
                   volume: .84,
                   playbackRate: 1.28,
-                  fallbackCue: "boss-warning",
+                  dedupeKey: `boss:${f.id}:${g.time.toFixed(3)}:kurome-beam`,
                 });
               }
               if (step.recovered) {
@@ -17361,12 +17482,15 @@ export function AshfallGame() {
                 // The ray itself owns the full warning window. Keep the global
                 // banner brief so compact screens do not cover this tall boss.
                 g.bannerTime = .68;
-                playProductionCue("enemy-takuya-attack", f.x, {
+                playBattleSemanticCue("enemy-takuya-attack", f.x, {
+                  semantic: "boss-phase-warning",
+                  receiptId: `${f.id}:${g.time.toFixed(3)}:kurome-warning`,
+                  ownerId: f.id,
                   priority: 90,
                   cooldownMs: 250,
                   volume: .52,
                   playbackRate: 1.65,
-                  fallbackCue: "boss-warning",
+                  dedupeKey: `boss:${f.id}:${g.time.toFixed(3)}:kurome-warning`,
                 });
               }
             }
@@ -18031,7 +18155,16 @@ export function AshfallGame() {
                   } else if (result.supply.phase === "destroying") {
                     f.targetObjectId = null;
                     g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`; g.bannerTime = 1.25;
-                    addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18); playCue(objectTarget.kind === "pod" ? "pod-destroy" : "object-destroy");
+                    addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18);
+                    playBattleSemanticCue("support-explosion", objectTarget.x, {
+                      semantic: "object-destroy",
+                      receiptId: `supply:${objectTarget.id}:destroy`,
+                      ownerId: `supply:${objectTarget.id}`,
+                      priority: 72,
+                      cooldownMs: 0,
+                      maxInstances: 2,
+                      dedupeKey: `supply:${objectTarget.id}:destroy`,
+                    });
                   } else playCue(objectTarget.kind === "pod" ? "pod-hit" : "object-hit");
                 }
               }
@@ -18554,7 +18687,7 @@ export function AshfallGame() {
                 if (Math.random() < .34) {
                   const attackVoice = humanVoiceCueForUnit(f.kind, "attack");
                   if (f.kind === "babayaga" && attackVoice) {
-                    g.pendingAbilityAudioCues.push({
+                    g.pendingWeaponAudioCues.push({
                       cueId: attackVoice,
                       x: f.x,
                       remainingSeconds: .08,
@@ -18562,7 +18695,6 @@ export function AshfallGame() {
                       cooldownMs: 320,
                       volume: .78,
                       maxInstances: 2,
-                      fallbackCue: null,
                       dedupeKey: `babayaga-voice:${f.id}:${f.attackSequence}`,
                     });
                   } else {
@@ -19265,33 +19397,44 @@ export function AshfallGame() {
             if (beginMayoRetreat(g, fighter, "injury")) {
               g.unitsLost++;
               emitBattleBark(g, "ally-down", "medic", `mayo-retreat-${fighter.id}`);
-              playProductionCue(unitAudioCueFor("mayo-chan", "voice", "hurt"), fighter.x, {
+              playBattleSemanticCue(unitAudioCueFor("mayo-chan", "voice", "hurt"), fighter.x, {
+                semantic: "fighter-retreat-hurt",
+                receiptId: `fighter:${fighter.id}:retreat-hurt`,
+                ownerId: fighter.id,
                 priority: 88,
                 cooldownMs: 300,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
+                dedupeKey: `fighter-retreat:${fighter.id}:hurt`,
               });
-              playProductionCue(unitAudioCueFor("mayo-chan", "voice", "retreat"), fighter.x, {
+              playBattleSemanticCue(unitAudioCueFor("mayo-chan", "voice", "retreat"), fighter.x, {
+                semantic: "fighter-retreat",
+                receiptId: `fighter:${fighter.id}:retreat`,
+                ownerId: fighter.id,
                 priority: 86,
                 cooldownMs: 1000,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
+                dedupeKey: `fighter-retreat:${fighter.id}:retreat`,
               });
             }
             continue;
           }
           addParticles(g, fighter.x, fighter.y - 15, fighter.kind === "takuya" || fighter.kind === "gate-eater" || fighter.kind === "shade" ? "#c08d62" : fighter.side === "zombie" ? "#7e965e" : "#b0614e", fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 20 : 11);
-          if (fighter.side === "human") playProductionCue(humanVoiceCueForUnit(fighter.kind, "death"), fighter.x, {
-            priority: 88,
-            cooldownMs: 220,
-            volume: fighter.kind === "brute" || fighter.kind === "brawler" ? .96 : .86,
-            maxInstances: 3,
-          });
-          else playProductionCue(enemyVoiceCue(fighter.kind, "death"), fighter.x, {
-            priority: fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 98 : 82,
-            cooldownMs: 180,
-            volume: fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 1 : .88,
-            maxInstances: 4,
+          const defeatCue = fighter.side === "human"
+            ? humanVoiceCueForUnit(fighter.kind, "death")
+            : enemyVoiceCue(fighter.kind, "death");
+          playBattleSemanticCue(defeatCue, fighter.x, {
+            semantic: isBossEnemyKind(fighter.kind) ? "boss-defeat" : "fighter-defeat",
+            receiptId: `fighter:${fighter.id}`,
+            ownerId: fighter.id,
+            priority: fighter.side === "human"
+              ? 88
+              : fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 98 : 82,
+            cooldownMs: fighter.side === "human" ? 220 : 180,
+            volume: fighter.side === "human"
+              ? fighter.kind === "brute" || fighter.kind === "brawler" ? .96 : .86
+              : fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 1 : .88,
+            maxInstances: fighter.side === "human" ? 3 : 4,
+            dedupeKey: `fighter-defeat:${fighter.id}`,
           });
           if (fighter.side === "human" && fighter.kind === "crazy-king"
             && !g.fighters.some((candidate) => candidate.id !== fighter.id && candidate.side === "human" && candidate.kind === "crazy-king" && candidate.hp > 0)) {
@@ -19344,7 +19487,6 @@ export function AshfallGame() {
               if (g.definition.operationCategory === "outbreak") {
                 emitBattleBark(g, "victory", "guide", `outbreak-boss-down-${fighter.kind}`);
               } else if (fighter.kind === "takuya") {
-                playCue("takuya-down");
                 if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else {
                 emitBattleBark(g, "base-exposed", "crawler", "tactical");
@@ -19621,7 +19763,18 @@ export function AshfallGame() {
           });
           chooseAction(null);
           stopMusic(); stopSfx();
-          if (enemyBaseDestroyed) playCue("base-collapse");
+          if (enemyBaseDestroyed) {
+            playBattleSemanticCue("support-explosion", BARRICADE_X, {
+              semantic: "explosion-result",
+              receiptId: `enemy-base:${g.resultId}:collapse`,
+              ownerId: `enemy-base:${g.resultId}`,
+              priority: 100,
+              cooldownMs: 0,
+              maxInstances: 1,
+              duck: { level: .2, attackMs: 24, holdMs: 700, releaseMs: 220 },
+              dedupeKey: `enemy-base:${g.resultId}:collapse`,
+            });
+          }
           playCue(g.won ? "victory" : "defeat");
           playEndJingle(g.won);
         }

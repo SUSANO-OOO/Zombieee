@@ -85,6 +85,35 @@ const iconFiles = {
   "mayo-chan": "mayo-chan-feral-ready-r1.svg",
 };
 const sustainedKinds = new Set(["crazy-king", "kumaverson", "guardian"]);
+const expectedTimelineCueGroups = {
+  brawler: [["ability-brawler-kiai-combo-impact"]],
+  scout: [["ability-scout-intercept-impact"]],
+  ranger: [["ability-ranger-precision-shot"], ["ability-ranger-precision-impact"]],
+  medic: [["ability-medic-treatment"]],
+  brute: [["ability-brute-groundbreak-impact"]],
+  "crazy-king": [["ability-crazy-king-overdrive-active"]],
+  kumaverson: [["ability-kumaverson-stance"]],
+  babayaga: [["ability-babayaga-appraise-shot"], ["ability-babayaga-appraise-mark"]],
+  gunner: [["ability-gunner-suppression-muzzle"], ["ability-gunner-suppression-impact"]],
+  guardian: [["ability-guardian-shieldwall-hold"]],
+  engineer: [["ability-engineer-trap-spring"]],
+  zakimiya: [
+    ["ability-zakimiya-molotov-throw"],
+    ["ability-zakimiya-molotov-impact"],
+    ["ability-zakimiya-molotov-burn"],
+  ],
+  tky: [["ability-tky-light-blade-release"], ["ability-tky-light-blade-impact"]],
+  "mrs-chiha": [
+    ["ability-mrs-chiha-salvo-cylinder"],
+    ["ability-mrs-chiha-salvo-shot"],
+    ["weapon-mrs-chiha-grenade-flight"],
+    ["ability-mrs-chiha-salvo-impact"],
+    ["ability-mrs-chiha-salvo-final"],
+    ["weapon-mrs-chiha-launcher-stow"],
+  ],
+  "miyamoto-musashi": [["ability-musashi-counter", "ability-musashi-fallback-cross"]],
+  "mayo-chan": [["ability-mayo-feral-rush"]],
+};
 const damageKinds = new Set([
   "brawler",
   "scout",
@@ -1008,6 +1037,11 @@ async function abilityActivationProof(page, engine) {
     const prepared = await prepareProof(page, kind);
     const ownerId = prepared.ownerIds[0];
     await page.waitForFunction(() => Boolean(window.__ASHFALL_AUDIO_QA__));
+    await page.waitForTimeout(120);
+    const initialReadyAudio = await page.evaluate((id) => window.__ASHFALL_AUDIO_QA__.getCueRequests()
+      .filter(({ ownerId, semantic }) => String(ownerId) === String(id) && semantic === "ability-ready"), ownerId);
+    invariant(initialReadyAudio.length === 0,
+      `${engine}/${kind}: initial ready hydration emitted ${initialReadyAudio.length} cue(s)`);
     await page.evaluate(() => window.__ASHFALL_AUDIO_QA__.resetCueRequests());
     const before = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
     const enemyHpBefore = before.fighters
@@ -1076,6 +1110,10 @@ async function abilityActivationProof(page, engine) {
       .filter(({ ownerId, semantic }) => String(ownerId) === String(id) && semantic === "ability-timeline"), ownerId);
     invariant(timelineAudio.length >= 1,
       `${engine}/${kind}: PR2 timeline cue missing`);
+    for (const acceptedCueIds of expectedTimelineCueGroups[kind]) {
+      invariant(timelineAudio.some(({ cueId }) => acceptedCueIds.includes(cueId)),
+        `${engine}/${kind}: expected timeline cue missing (${acceptedCueIds.join(" or ")})`);
+    }
     let after = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
     invariant(after.crazyKingAbilityIndicatorCount === (kind === "crazy-king" ? 1 : 0),
       `${engine}/${kind}: active indicator lifecycle ended early`);

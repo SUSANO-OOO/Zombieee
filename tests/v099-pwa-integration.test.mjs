@@ -24,7 +24,7 @@ test("v0.9.9.0 PR2 assets are present in the generated transport manifest", asyn
       && assetBundlePath === "/pwa-bundles/audio-v1.bin"
   )));
   assert.equal(new Set(v099.map(({ hash: assetHash }) => assetHash)).size, 36);
-  assert.equal(v099.reduce((sum, asset) => sum + asset.bytes, 0), 5_256_919);
+  assert.equal(v099.reduce((sum, asset) => sum + asset.bytes, 0), 4_690_238);
 });
 test("v0.9.9.0 PR2 audio slices match the PWA bundle index", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));

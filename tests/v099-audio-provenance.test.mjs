@@ -20,9 +20,25 @@ test("v0.9.9.0 PR2 provenance matches the manifest's 36 one-source outputs", asy
   assert.equal(provenance.designRevision, "v2");
   assert.equal(provenance.physicalAssetCount, 36);
   assert.equal(provenance.assets.length, 36);
+  assert.equal(provenance.generatorVersion, 2);
+  assert.equal(provenance.generator, "scripts/build-v099-battle-audio.mjs");
+  assert.equal(provenance.candidateId, "v099-pr2-audio-r2");
+  assert.equal(provenance.producerApproval, "Gate A pending");
+  assert.equal(provenance.ffmpeg.package, "@ffmpeg-installer/ffmpeg@1.1.0");
+  assert.match(provenance.ffmpeg.version, /^ffmpeg version N-92722-gf22fcd4483\b/);
   assert.equal(provenance.encoding.preferredSourceOnly, true);
   assert.ok(provenance.assets.every((asset) => asset.source === "project-original"));
   assert.ok(provenance.assets.every((asset) => asset.commercialUse && asset.modification && asset.redistribution));
+  assert.ok(provenance.assets.every((asset) => asset.candidateId === provenance.candidateId));
+  assert.ok(provenance.assets.every((asset) => asset.producerApproval === "Gate A pending"));
+  assert.equal(new Set(provenance.assets.map((asset) => asset.recipeId)).size, 36);
+  assert.deepEqual(
+    Object.fromEntries(["bgm", "weapons", "melee", "support", "ui"].map((category) => [
+      category,
+      provenance.assets.filter((asset) => asset.category === category).length,
+    ])),
+    { bgm: 3, weapons: 19, melee: 6, support: 5, ui: 3 },
+  );
 
   const manifestAssets = PRODUCTION_AUDIO_MANIFEST.assets.filter((asset) => asset.sources[0]?.src.startsWith("/audio/v099/"));
   assert.equal(manifestAssets.length, 36);

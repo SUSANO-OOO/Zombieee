@@ -63,6 +63,11 @@ test("delayed cue requires owner, activation, generation, and simulation time pr
     simulationTime: 3,
     resolveOwner: () => ({ alive: true, retreat: true, activationId: 5, phase: "active" }),
   }).length, 0);
+  assert.equal(scheduleDelayedBattleAudioCue(runtime, {
+    ownerId: "missing-owner", activationId: 0, semantic: "boss-phase", receiptId: "r3", cueId: "cue", dueSimulationTime: 4,
+  }), true);
+  assert.equal(takeDueBattleAudioCues(runtime, { simulationTime: 4 }).length, 0);
+  assert.equal(runtime.playedSemanticReceipts.size, 1);
 });
 
 test("pause, hidden, result, and disposal stop delayed requests", () => {
@@ -70,9 +75,13 @@ test("pause, hidden, result, and disposal stop delayed requests", () => {
   scheduleDelayedBattleAudioCue(runtime, {
     ownerId: "fighter-1", activationId: 0, semantic: "defeat", receiptId: "r1", cueId: "cue", dueSimulationTime: 1,
   });
+  tryConsumeSemanticReceipt(runtime, { semantic: "support-complete", receiptId: "consumed-before-stop" });
   assert.deepEqual(takeDueBattleAudioCues(runtime, { simulationTime: 1, isBattleActive: false }), []);
-  stopBattleAudioRuntime(runtime, "pagehide");
+  assert.equal(stopBattleAudioRuntime(runtime, "pagehide"), 1);
   assert.deepEqual(takeDueBattleAudioCues(runtime, { simulationTime: 1 }), []);
+  assert.equal(runtime.playedSemanticReceipts.size, 0);
+  assert.equal(runtime.delayedCues.length, 0);
+  assert.equal(tryConsumeSemanticReceipt(runtime, { semantic: "support-complete", receiptId: "after-stop" }), false);
   assert.equal(runtime.diagnostics.some(({ code }) => code === "battle-audio-stopped"), true);
 });
 

@@ -1760,7 +1760,7 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.doesNotMatch(newcomerAudio, /unitAudioCueFor\(f\.kind, "weapon", "hardHit"\)/);
   const chainsawLoopStarts = [...game.matchAll(/playProductionCue\(BATTLE_AUDIO_LOOP_CONTRACTS\.crazyKingChainsaw\.cueId, W \/ 2,/g)];
   assert.equal(chainsawLoopStarts.length, 2);
-  assert.match(game, /fighter\.kind === "takuya"[\s\S]*playCue\("takuya-down"\)/);
+  assert.match(game, /const defeatCue = fighter\.side === "human"[\s\S]*playBattleSemanticCue\(defeatCue,[\s\S]*semantic: isBossEnemyKind\(fighter\.kind\) \? "boss-defeat" : "fighter-defeat"/);
   assert.match(game, /const retrying = gameRef\.current\.over[\s\S]*if \(retrying\) playCue\("retry"\)/);
   assert.match(game, /keyboardInputGate\(\{ running: g\.running, paused: g\.paused, over: g\.over, key: event\.key, repeat: event\.repeat \}\)/);
   assert.match(game, /if \(inputGate === "ignore"\) return/);
@@ -1870,7 +1870,7 @@ test("integrates the enemy gate queue without changing direct QA or turned place
   assert.match(game, /combatReady: true, gateEntering: false/);
   assert.match(game, /f\.spawnEntryMode === "right-edge"[\s\S]*f\.spawnEntryMode === "right-edge-outside"[\s\S]*\? W[\s\S]*: ENEMY_GATE_SPAWN\.revealX;[\s\S]*ctx\.rect\(0, 0, revealRight, H\);[\s\S]*ctx\.clip\(\)/);
   assert.match(game, /const incomingBossKind = mission\.units\.find\(\(kind\) => isBossEnemyKind\(kind\)\) \?\? null;[\s\S]*announceBossEntrance\(g, incomingBossKind,[\s\S]*activateTakuyaScene: incomingBossKind === "takuya"/);
-  assert.match(game, /const announceBossEntrance = useCallback[\s\S]*definition\.entrance\.warningLabel[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance[\s\S]*playProductionCue\(definition\.entrance\.cueId[\s\S]*fallbackCue: "boss-warning"/);
+  assert.match(game, /const announceBossEntrance = useCallback[\s\S]*definition\.entrance\.warningLabel[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance[\s\S]*playBattleSemanticCue\(definition\.entrance\.cueId[\s\S]*semantic: "boss-entrance"[\s\S]*receiptId/);
   assert.match(game, /bossActiveOrIncoming[\s\S]*isBossEnemyKind\(entry\.kind\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);
   assert.match(game, /if \(battleSilenceSceneId\(g\)\) return/);
 });
