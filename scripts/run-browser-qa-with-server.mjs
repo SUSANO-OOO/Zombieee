@@ -33,6 +33,7 @@ const requestedPort = Number(process.env.LOCAL_QA_PORT) || 0;
 const port = await reserveQaPort(requestedPort);
 const origin = `http://127.0.0.1:${port}/`;
 process.env.COMBAT_PRESENTATION_QA_BASE_URL = origin;
+process.env.V099_PRESENTATION_QA_BASE_URL = origin;
 process.env.MOBILE_LIFECYCLE_QA_BASE_URL = origin;
 process.env.SAVE_MIGRATION_QA_BASE_URL = origin;
 process.env.BATTLE_SPACE_QA_BASE_URL = origin;

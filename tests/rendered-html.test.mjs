@@ -901,7 +901,18 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   assert.equal(advanceBattlefieldSupply(destroyedPod.supply, BATTLEFIELD_SUPPLY_DEFS.pod.destroySeconds).phase, "expired");
 
   const drumPlacement = resolveBattlefieldSupplyPlacement({ ...base, supplyKind: "drum", scrap: 100, nextId: 20 });
-  const manual = requestDrumDetonation(drumPlacement.supplies[0]);
+  assert.equal(drumPlacement.supplies[0].phase, "dropping");
+  assert.equal(drumPlacement.supplies[0].targetable, false);
+  assert.equal(requestDrumDetonation(drumPlacement.supplies[0]).ok, false);
+  const drumImpact = advanceBattlefieldSupply(drumPlacement.supplies[0], BATTLEFIELD_SUPPLY_DEFS.drum.dropSeconds);
+  assert.equal(drumImpact.phase, "impact");
+  assert.equal(drumImpact.targetable, false);
+  assert.equal(requestDrumDetonation(drumImpact).ok, false);
+  const activeDrum = advanceBattlefieldSupply(drumImpact, BATTLEFIELD_SUPPLY_DEFS.drum.impactSeconds);
+  assert.equal(activeDrum.phase, "active");
+  assert.equal(activeDrum.targetable, true);
+  assert.equal(activeDrum.hp, 90);
+  const manual = requestDrumDetonation(activeDrum);
   assert.equal(manual.ok, true);
   const explosion = resolveDrumDetonation({
     supply: manual.supply,
@@ -922,7 +933,7 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   assert.equal(burned.fighters[0].slowMultiplier, BATTLEFIELD_SUPPLY_DEFS.drum.slowMultiplier);
   assert.equal(advanceAreaEffects({ areaEffects: explosion.areaEffects, fighters: [], seconds: BATTLEFIELD_SUPPLY_DEFS.drum.burnSeconds }).areaEffects[0].phase, "expired");
 
-  const destroyedDrum = applyBattlefieldSupplyDamage(drumPlacement.supplies[0], 999);
+  const destroyedDrum = applyBattlefieldSupplyDamage(activeDrum, 999);
   assert.equal(destroyedDrum.detonationRequested, true);
   assert.equal(destroyedDrum.supply.phase, "detonating");
   assert.equal(destroyedDrum.supply.detonationReason, "destroyed");
@@ -981,8 +992,8 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   assert.equal(leftBurn.fighters[0].burning, false);
   assert.equal(leftBurn.fighters[0].slowMultiplier, 1);
   assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), true);
-  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), false);
-  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 480, enemyY: LANE_Y[1], attackRange: 20 }), true);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: activeDrum, enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), false);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: activeDrum, enemyX: 480, enemyY: LANE_Y[1], attackRange: 20 }), true);
   assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyY: LANE_Y[0], attackRange: 20 }), false);
 });
 
@@ -1039,8 +1050,12 @@ test("keeps supplies, area effects, and airstrikes aligned and lane-isolated in 
     assert.deepEqual(landed.hits.map(({ id }) => id), [100 + lane]);
 
     const drum = resolveBattlefieldSupplyPlacement({ ...base, supplyKind: "drum" });
+    const activeDrum = advanceBattlefieldSupply(
+      advanceBattlefieldSupply(drum.supplies[0], BATTLEFIELD_SUPPLY_DEFS.drum.dropSeconds),
+      BATTLEFIELD_SUPPLY_DEFS.drum.impactSeconds,
+    );
     const explosion = resolveDrumDetonation({
-      supply: requestDrumDetonation(drum.supplies[0]).supply,
+      supply: requestDrumDetonation(activeDrum).supply,
       fighters: fighters(200, "zombie"),
       laneCenters,
     });
