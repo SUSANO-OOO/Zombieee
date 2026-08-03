@@ -82,33 +82,91 @@ test("only a matching explicit navigation window permits request cancellation", 
     id: 7,
     startedAt: 1_000,
     endedAt: 2_000,
+    targetFrameId: "frame-main",
+    inFlightRequestIds: ["request-in-flight"],
+    startedRequestIds: ["request-started"],
   };
-  for (const resourceType of ["audio", "image", "script", "stylesheet"]) {
-    assert.equal(classifyRequestFailure({
-      failure: "Load request cancelled",
-      occurredAt: 1_500,
-      requestNavigationId: 7,
-      navigationWindow,
-    }), "navigation-teardown", resourceType);
+  assert.equal(classifyRequestFailure({
+    failure: "Load request cancelled",
+    occurredAt: 1_500,
+    requestId: "request-in-flight",
+    requestMetadata: {
+      requestId: "request-in-flight",
+      startedAt: 900,
+      navigationWindowIdAtStart: null,
+      frameId: "frame-main",
+    },
+    navigationWindow,
+  }), "navigation-teardown", "pre-existing in-flight request");
+  assert.equal(classifyRequestFailure({
+    failure: "net::ERR_ABORTED",
+    occurredAt: 1_500,
+    requestId: "request-started",
+    requestMetadata: {
+      requestId: "request-started",
+      startedAt: 1_100,
+      navigationWindowIdAtStart: 7,
+      frameId: "frame-main",
+    },
+    navigationWindow,
+  }), "navigation-teardown", "request started by navigation");
+  for (const resourceType of ["audio", "image"]) {
     assert.equal(classifyRequestFailure({
       failure: "net::ERR_ABORTED",
       occurredAt: 1_500,
-      requestNavigationId: null,
+      requestId: `request-outside-${resourceType}`,
+      requestMetadata: {
+        requestId: `request-outside-${resourceType}`,
+        startedAt: 900,
+        navigationWindowIdAtStart: null,
+        frameId: "frame-main",
+      },
       navigationWindow: null,
     }), "failure", resourceType + " cancellation outside navigation");
   }
   assert.equal(classifyRequestFailure({
     failure: "net::ERR_ABORTED",
     occurredAt: 1_500,
-    requestNavigationId: 8,
+    requestId: "request-started",
+    requestMetadata: {
+      requestId: "request-started",
+      startedAt: 1_100,
+      navigationWindowIdAtStart: 8,
+      frameId: "frame-main",
+    },
     navigationWindow,
   }), "failure", "navigation ID mismatch must not be whitelisted");
   assert.equal(classifyRequestFailure({
     failure: "net::ERR_ABORTED",
     occurredAt: 2_001,
-    requestNavigationId: 7,
+    requestId: "request-started",
+    requestMetadata: {
+      requestId: "request-started",
+      startedAt: 1_100,
+      navigationWindowIdAtStart: 7,
+      frameId: "frame-main",
+    },
     navigationWindow,
   }), "failure", "cancellation after the explicit window must fail");
+  assert.equal(classifyRequestFailure({
+    failure: "net::ERR_ABORTED",
+    occurredAt: 1_500,
+    requestId: "request-started",
+    requestMetadata: {
+      requestId: "request-started",
+      startedAt: 1_100,
+      navigationWindowIdAtStart: 7,
+      frameId: "frame-other",
+    },
+    navigationWindow,
+  }), "failure", "frame mismatch must fail");
+  assert.equal(classifyRequestFailure({
+    failure: "net::ERR_ABORTED",
+    occurredAt: 1_500,
+    requestId: "request-without-metadata",
+    requestMetadata: null,
+    navigationWindow,
+  }), "failure", "request metadata absence must fail");
 });
 
 test("non-cancellation transport, HTTP, CORS, and decode failures remain failures", () => {
@@ -121,8 +179,21 @@ test("non-cancellation transport, HTTP, CORS, and decode failures remain failure
     assert.equal(classifyRequestFailure({
       failure,
       occurredAt: 1_500,
-      requestNavigationId: 7,
-      navigationWindow: { id: 7, startedAt: 1_000, endedAt: 2_000 },
+      requestId: "request-transport",
+      requestMetadata: {
+        requestId: "request-transport",
+        startedAt: 1_100,
+        navigationWindowIdAtStart: 7,
+        frameId: "frame-main",
+      },
+      navigationWindow: {
+        id: 7,
+        startedAt: 1_000,
+        endedAt: 2_000,
+        targetFrameId: "frame-main",
+        inFlightRequestIds: [],
+        startedRequestIds: ["request-transport"],
+      },
     }), "failure", failure);
   }
 });

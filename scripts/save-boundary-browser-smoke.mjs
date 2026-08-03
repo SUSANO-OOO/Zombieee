@@ -98,6 +98,72 @@ function cueDelta(cues, start) {
   return cues.slice(start).map((cue) => cue.cueId);
 }
 
+function pointerGestureIds(snapshot) {
+  return (snapshot.pointerGestures ?? []).map(({ pointerId }) => pointerId).sort((a, b) => a - b);
+}
+
+function pointerMutationState(snapshot) {
+  const state = runtimeState(snapshot);
+  return {
+    scrap: state.scrap,
+    energy: state.energy,
+    supportGauge: state.supportGauge,
+    deployQueue: state.deployQueue,
+    battlefieldObjects: state.battlefieldObjects,
+    manualAbilityReceipts: state.manualAbilityReceipts,
+  };
+}
+
+async function dispatchPointer(page, type, pointerId, point) {
+  await page.evaluate(({ eventType, id, x, y }) => {
+    const canvas = document.querySelector("canvas.battlefield.active");
+    if (!(canvas instanceof HTMLCanvasElement)) throw new Error("active battlefield canvas is unavailable");
+    canvas.dispatchEvent(new PointerEvent(eventType, {
+      bubbles: true,
+      cancelable: true,
+      pointerId: id,
+      pointerType: "touch",
+      clientX: x,
+      clientY: y,
+      buttons: eventType === "pointerdown" ? 1 : 0,
+    }));
+  }, { eventType: type, id: pointerId, x: point.x, y: point.y });
+}
+
+async function setSyntheticVisibility(page, hidden) {
+  await page.evaluate((nextHidden) => {
+    const marker = "__ASHFALL_QA_VISIBILITY_DESCRIPTOR__";
+    const current = Object.getOwnPropertyDescriptor(document, "visibilityState");
+    if (nextHidden) {
+      if (!Object.prototype.hasOwnProperty.call(document, marker)) {
+        Object.defineProperty(document, marker, { configurable: true, value: current ?? null });
+      }
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        enumerable: current?.enumerable ?? true,
+        value: "hidden",
+      });
+    } else {
+      const original = document[marker];
+      if (original) Object.defineProperty(document, "visibilityState", original);
+      else delete document.visibilityState;
+      delete document[marker];
+    }
+    document.dispatchEvent(new Event("visibilitychange"));
+  }, hidden);
+}
+
+async function waitSaveBoundaryClear(page) {
+  await page.waitForFunction(
+    () => {
+      const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
+      return snapshot.saveBoundaryPending === false && snapshot.saveBoundaryPersistencePending === false;
+    },
+    null,
+    { timeout },
+  );
+}
+
 async function openBattle(page, viewport) {
   const url = new URL(baseUrl);
   url.search = new URLSearchParams({ qa: "roles", ...(viewport.safeArea ? { safe: "iphone-landscape" } : {}) }).toString();
@@ -128,6 +194,195 @@ async function openBattle(page, viewport) {
   }
   await page.locator("canvas.battlefield.active").waitFor({ state: "visible", timeout });
   await page.waitForFunction(() => typeof window.__ASHFALL_BATTLE_QA__?.getSnapshot === "function", null, { timeout });
+}
+
+async function assertPointerCancellationLifecycle(page, viewport) {
+  const label = "pointer-cancel-" + viewport.width + "x" + viewport.height;
+  const probe = await page.context().newPage();
+  const diagnostics = diagnosticsFor(probe);
+  try {
+    await openBattle(probe, viewport);
+    const support = probe.locator("button.support-btn.pod");
+    await support.click({ force: true });
+    await probe.waitForFunction(
+      () => document.querySelector("button.support-btn.pod.selected") !== null,
+      null,
+      { timeout },
+    );
+    const canvas = probe.locator("canvas.battlefield.active");
+    const box = await canvas.boundingBox();
+    invariant(box && box.width > 0 && box.height > 0, label + ": battlefield has no pointer bounds");
+    const point = { x: box.x + box.width * .52, y: box.y + box.height * .5 };
+    let before;
+    let saveBefore;
+
+    // A: a real captured pointer is cancelled after the real persistence
+    // promise becomes pending. Cancellation must release capture and leave no
+    // reject cue or gameplay/save mutation.
+    await probe.mouse.move(point.x, point.y);
+    await probe.mouse.down();
+    const afterDown = await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    invariant(await canvas.evaluate((element) => element.hasPointerCapture(1)), label + ": normal pointer did not capture before boundary");
+    invariant(pointerGestureIds(afterDown).includes(1), label + ": normal pointer gesture was not tracked before boundary");
+    await probe.getByRole("button", { name: "一時停止", exact: true }).first().evaluate((element) => element.click());
+    await probe.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().paused === true, null, { timeout });
+    before = await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    saveBefore = await readSave(probe);
+    invariant(await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.beginSaveBoundaryPersistence?.() === true), label + ": real pending persistence promise did not start for cancellation case");
+    await probe.waitForFunction(
+      () => {
+        const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
+        return snapshot.saveBoundaryPending === true && snapshot.saveBoundaryPersistencePending === true;
+      },
+      null,
+      { timeout },
+    );
+    const cueBeforeCancel = (await readCues(probe)).length;
+    await dispatchPointer(probe, "pointercancel", 1, point);
+    await probe.waitForTimeout(40);
+    const afterCancel = await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    const cancelCues = cueDelta(await readCues(probe), cueBeforeCancel);
+    invariant(!(await canvas.evaluate((element) => element.hasPointerCapture(1))), label + ": pointercancel left pointer capture active");
+    invariant(pointerGestureIds(afterCancel).length === 0, label + ": pointercancel left pointer gesture state: " + JSON.stringify(afterCancel.pointerGestures));
+    invariant(afterCancel.placementIndicator === null, label + ": pointercancel left a placement preview");
+    invariant(JSON.stringify(pointerMutationState(afterCancel)) === JSON.stringify(pointerMutationState(before)), label + ": pointercancel changed gameplay runtime: " + JSON.stringify({ before: pointerMutationState(before), after: pointerMutationState(afterCancel) }));
+    invariant(await readSave(probe) === saveBefore, label + ": pointercancel changed durable save bytes");
+    invariant(cancelCues.length === 0, label + ": pointercancel emitted a cue: " + JSON.stringify(cancelCues));
+
+    // The browser still needs its mouse button released after the synthetic
+    // cancellation so the next real gesture uses the same pointer id.
+    await probe.mouse.up();
+    await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.releaseSaveBoundaryPersistence?.());
+    await waitSaveBoundaryClear(probe);
+    await probe.getByRole("button", { name: "作戦を再開", exact: true }).click();
+    await probe.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().paused === false, null, { timeout });
+    await probe.evaluate(() => window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.());
+    await probe.mouse.move(point.x, point.y);
+    await probe.mouse.down();
+    await probe.mouse.up();
+    await probe.waitForFunction(
+      () => window.__ASHFALL_BATTLE_QA__.getSnapshot().battlefieldObjects.some((object) => object.kind === "pod"),
+      null,
+      { timeout },
+    );
+    const nextGesture = await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    const nextGestureCues = await readCues(probe);
+    const nextSuccessCues = nextGestureCues.map((cue) => cue.cueId);
+    const nextOperationCues = nextSuccessCues.filter((cueId) => operationCueIds.has(cueId));
+    invariant(nextOperationCues.filter((cueId) => cueId === "support-pod-deploy").length === 1, label + ": same-pointer next gesture did not emit exactly one success cue: " + JSON.stringify(nextSuccessCues));
+    invariant(nextOperationCues.length === 1, label + ": same-pointer next gesture emitted duplicate/extra operation cues: " + JSON.stringify(nextSuccessCues));
+    invariant(nextGesture.scrap < before.scrap, label + ": same-pointer next gesture did not execute after cancellation");
+
+    // B: pending pointerdown followed by pointercancel emits one reject cue
+    // from the input, and cancellation itself emits none.
+    await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.clearSupportItemCooldown?.("pod"));
+    await support.click({ force: true });
+    await probe.waitForFunction(() => document.querySelector("button.support-btn.pod.selected") !== null, null, { timeout });
+    await probe.evaluate(() => window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.());
+    invariant(await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.beginSaveBoundaryPersistence?.() === true), label + ": real pending persistence promise did not start for down/cancel case");
+    await probe.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().saveBoundaryPersistencePending === true, null, { timeout });
+    await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.setSaveBoundaryPending?.(true));
+    await probe.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().saveBoundaryPending === true, null, { timeout });
+    await probe.mouse.move(point.x, point.y);
+    await probe.mouse.down();
+    await dispatchPointer(probe, "pointercancel", 1, point);
+    await probe.mouse.up();
+    await probe.waitForTimeout(40);
+    const downCancelSnapshot = await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    const downCancelCues = (await readCues(probe)).map((cue) => cue.cueId);
+    const downCancelOperationCues = downCancelCues.filter((cueId) => operationCueIds.has(cueId));
+    invariant(pointerGestureIds(downCancelSnapshot).length === 0, label + ": down/cancel left pointer state");
+    invariant(downCancelOperationCues.length === 1 && downCancelOperationCues[0] === "ui-error", label + ": down/cancel operation cue count was not exactly one reject: " + JSON.stringify(downCancelCues));
+
+    // C: cancellation is per pointer; cancelling one touch must not delete
+    // the other pointer's tracked state or emit extra cues.
+    await probe.evaluate(() => window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.());
+    await dispatchPointer(probe, "pointerdown", 51, point);
+    await dispatchPointer(probe, "pointerdown", 52, point);
+    const twoPointers = await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    invariant(JSON.stringify(pointerGestureIds(twoPointers)) === JSON.stringify([51, 52]), label + ": two pointer gestures were not tracked independently");
+    await dispatchPointer(probe, "pointercancel", 51, point);
+    const onePointer = await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    invariant(JSON.stringify(pointerGestureIds(onePointer)) === JSON.stringify([52]), label + ": cancelling one pointer removed the other pointer state");
+    await dispatchPointer(probe, "pointercancel", 52, point);
+    const noPointers = await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    const multiPointerCues = (await readCues(probe)).map((cue) => cue.cueId);
+    const multiPointerOperationCues = multiPointerCues.filter((cueId) => operationCueIds.has(cueId));
+    invariant(pointerGestureIds(noPointers).length === 0, label + ": cancelling both pointers did not clean up all state");
+    invariant(multiPointerOperationCues.length === 2 && multiPointerOperationCues.every((cueId) => cueId === "ui-error"), label + ": multi-pointer cancel emitted unexpected operation cues: " + JSON.stringify(multiPointerCues));
+    await probe.evaluate(() => {
+      window.__ASHFALL_BATTLE_QA__.releaseSaveBoundaryPersistence?.();
+      window.__ASHFALL_BATTLE_QA__.setSaveBoundaryPending?.(false);
+    });
+    await waitSaveBoundaryClear(probe);
+
+    // D: screen leave and component unmount both occur while a real pointer
+    // is captured; no capture/state may survive the operation teardown.
+    await openBattle(probe, viewport);
+    const hiddenSupport = probe.locator("button.support-btn.pod");
+    await hiddenSupport.click({ force: true });
+    await probe.waitForFunction(() => document.querySelector("button.support-btn.pod.selected") !== null, null, { timeout });
+    const hiddenCanvas = probe.locator("canvas.battlefield.active");
+    const hiddenBox = await hiddenCanvas.boundingBox();
+    invariant(hiddenBox && hiddenBox.width > 0 && hiddenBox.height > 0, label + ": hidden test has no battlefield bounds");
+    await probe.mouse.move(hiddenBox.x + hiddenBox.width * .52, hiddenBox.y + hiddenBox.height * .5);
+    await probe.mouse.down();
+    invariant(await hiddenCanvas.evaluate((element) => element.hasPointerCapture(1)), label + ": hidden test did not capture pointer");
+    await setSyntheticVisibility(probe, true);
+    await probe.waitForTimeout(40);
+    const afterHidden = await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    invariant(!(await hiddenCanvas.evaluate((element) => element.hasPointerCapture(1))), label + ": visibilitychange hidden left pointer capture active");
+    invariant(pointerGestureIds(afterHidden).length === 0, label + ": visibilitychange hidden left pointer state");
+    await probe.mouse.up();
+    await setSyntheticVisibility(probe, false);
+
+    await openBattle(probe, viewport);
+    const leaveSupport = probe.locator("button.support-btn.pod");
+    await leaveSupport.click({ force: true });
+    await probe.waitForFunction(() => document.querySelector("button.support-btn.pod.selected") !== null, null, { timeout });
+    const leaveCanvas = probe.locator("canvas.battlefield.active");
+    const leaveBox = await leaveCanvas.boundingBox();
+    invariant(leaveBox && leaveBox.width > 0 && leaveBox.height > 0, label + ": leave test has no battlefield bounds");
+    await probe.mouse.move(leaveBox.x + leaveBox.width * .52, leaveBox.y + leaveBox.height * .5);
+    await probe.mouse.down();
+    invariant(await leaveCanvas.evaluate((element) => element.hasPointerCapture(1)), label + ": leave test did not capture pointer");
+    await probe.getByRole("button", { name: "一時停止", exact: true }).evaluate((element) => element.click());
+    await probe.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().paused === true, null, { timeout });
+    await probe.getByRole("button", { name: "編成画面へ戻る", exact: true }).evaluate((element) => element.click());
+    await probe.getByRole("button", { name: "実行する", exact: true }).evaluate((element) => element.click());
+    await probe.waitForFunction(() => document.querySelector("canvas.battlefield.active") === null, null, { timeout });
+    await probe.mouse.up();
+    const afterLeave = await probe.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+    invariant(!(await probe.locator("canvas.battlefield").evaluate((element) => element.hasPointerCapture(1))), label + ": screen leave left pointer capture active");
+    invariant(pointerGestureIds(afterLeave).length === 0, label + ": screen leave left pointer state");
+
+    await openBattle(probe, viewport);
+    const unmountSupport = probe.locator("button.support-btn.pod");
+    await unmountSupport.click({ force: true });
+    const unmountCanvas = probe.locator("canvas.battlefield.active");
+    const unmountBox = await unmountCanvas.boundingBox();
+    invariant(unmountBox && unmountBox.width > 0 && unmountBox.height > 0, label + ": unmount test has no battlefield bounds");
+    await probe.mouse.move(unmountBox.x + unmountBox.width * .52, unmountBox.y + unmountBox.height * .5);
+    await probe.mouse.down();
+    invariant(await unmountCanvas.evaluate((element) => element.hasPointerCapture(1)), label + ": unmount test did not capture pointer");
+    await probe.goto("about:blank", { waitUntil: "domcontentloaded", timeout });
+    return {
+      label,
+      realPendingPointerCancel: true,
+      pointerCaptureReleased: true,
+      pointerStateCleared: true,
+      cancelCueDelta: [],
+      samePointerNextGesture: { successCueCount: 1, duplicateCueCount: 0 },
+      pendingDownCancel: { rejectCueCount: 1, cancelCueCount: 0 },
+      multiPointer: { tracked: [51, 52], afterFirstCancel: [52], afterBothCancel: [], extraCueCount: 0 },
+      hiddenCleanup: true,
+      screenLeaveCleanup: true,
+      unmountCleanup: true,
+      diagnostics,
+    };
+  } finally {
+    await probe.close();
+  }
 }
 
 async function assertPointerSaveBoundary(page, viewport) {
@@ -209,7 +464,7 @@ async function assertPointerSaveBoundary(page, viewport) {
       saveBoundaryPersistencePending: preview.snapshot.saveBoundaryPersistencePending,
       selectedSupport: preview.selectedSupport,
     }));
-  const normalCueBefore = (await readCues(page)).length;
+  await page.evaluate(() => window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.());
   await page.mouse.down();
   await page.mouse.up();
   await page.waitForFunction(
@@ -218,10 +473,13 @@ async function assertPointerSaveBoundary(page, viewport) {
     { timeout },
   );
   const normal = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
-  const normalCues = cueDelta(await readCues(page), normalCueBefore);
+  const normalCues = cueDelta(await readCues(page), 0);
+  const normalOperationCues = normalCues.filter((cueId) => operationCueIds.has(cueId));
   invariant(normal.scrap < before.scrap, label + ": normal pointer placement did not spend scrap");
-  invariant(normalCues.includes("support-pod-deploy"),
-    label + ": normal pointer placement did not emit its success cue");
+  invariant(normalOperationCues.filter((cueId) => cueId === "support-pod-deploy").length === 1,
+    label + ": normal pointer placement did not emit exactly one success cue: " + JSON.stringify(normalCues));
+  invariant(normalOperationCues.length === 1,
+    label + ": normal pointer placement emitted duplicate/extra operation cues: " + JSON.stringify(normalCues));
   return {
     label,
     pendingPromise: true,
@@ -234,6 +492,7 @@ async function assertPointerSaveBoundary(page, viewport) {
     blockedSuccessCueDelta: delta.filter((cueId) => cueId === "support-pod-deploy"),
     normalPlacementRecovered: true,
     normalSuccessCueDelta: normalCues,
+    normalSuccessCueCount: normalOperationCues.filter((cueId) => cueId === "support-pod-deploy").length,
   };
 }
 
@@ -288,6 +547,50 @@ function assertVisualStateUnchanged(label, baseline, candidate, { allowFocusIndi
   invariant(baseline.root.cursor === "not-allowed", label + ": disabled cursor was not not-allowed");
 }
 
+function assertDisabledDecorationStopped(name, state) {
+  const visuals = [
+    state.root,
+    state.before,
+    state.after,
+    ...state.descendants.flatMap((child) => [child.visual, child.before, child.after]),
+  ];
+  invariant(visuals.every((visual) => (
+    visual.animationName === "none"
+    || visual.animationDuration === "0s"
+    || visual.animationPlayState === "paused"
+  )), name + ": disabled decoration still has an active animation: " + JSON.stringify(visuals));
+  if (name === "support") {
+    invariant(!state.root.boxShadow.includes("10px"), name + ": disabled selected support retained the outer glow: " + state.root.boxShadow);
+  }
+  if (name === "manual-ability") {
+    invariant(visuals.every((visual) => !visual.boxShadow.includes("12px")), name + ": disabled ready ability retained its glow: " + JSON.stringify(visuals));
+  }
+}
+
+async function assertEnabledDecorationRestored(page) {
+  const support = page.locator("button.support-btn.pod");
+  const ability = page.locator('.manual-ability-ready[data-ability-kind="scout"]');
+  await page.waitForFunction(() => document.querySelector("button.support-btn.pod")?.getAttribute("aria-disabled") === "false", null, { timeout });
+  const supportState = await readDisabledVisualState(support);
+  if (await page.locator("button.support-btn.pod.selected").count()) await support.click({ force: true });
+  await page.waitForFunction(() => document.querySelector('.manual-ability-ready[data-ability-kind="scout"]')?.getAttribute("aria-disabled") === "false", null, { timeout });
+  const abilityState = await readDisabledVisualState(ability);
+  invariant(supportState.root.boxShadow.includes("10px"), "enabled selected support did not restore its outer glow: " + supportState.root.boxShadow);
+  const abilityVisuals = [
+    abilityState.root,
+    abilityState.before,
+    abilityState.after,
+    ...abilityState.descendants.flatMap((child) => [child.visual, child.before, child.after]),
+  ];
+  invariant(abilityVisuals.some((visual) => visual.boxShadow.includes("12px")), "enabled ready ability did not restore its glow: " + JSON.stringify(abilityVisuals));
+  return {
+    supportOuterGlowRestored: true,
+    readyAbilityGlowRestored: true,
+    supportAnimation: supportState.root.animationName,
+    readyAbilityAnimation: abilityState.descendants.map((child) => child.visual.animationName),
+  };
+}
+
 async function assertAriaDisabledVisualMatrix(page) {
   const targets = [
     ["support", page.locator("button.support-btn.pod")],
@@ -311,6 +614,7 @@ async function assertAriaDisabledVisualMatrix(page) {
       name + ": target was not aria-disabled during visual matrix");
     await page.waitForTimeout(300);
     const normal = await readDisabledVisualState(locator);
+    assertDisabledDecorationStopped(name, normal);
     await locator.hover();
     const hover = await readDisabledVisualState(locator);
     const box = await locator.boundingBox();
@@ -330,6 +634,7 @@ async function assertAriaDisabledVisualMatrix(page) {
       ariaDisabled: normal.ariaDisabled,
       cursor: normal.root.cursor,
       hoverActiveFocusStable: true,
+      disabledDecorationStopped: true,
     });
   }
   return matrix;
@@ -376,13 +681,20 @@ for (const engine of engines) {
       const result = { engine, viewport, status: "failed" };
       try {
         await openBattle(page, viewport);
+        const support = page.locator("button.support-btn.pod");
         const pointerBoundary = await assertPointerSaveBoundary(page, viewport);
+        const pointerCancellation = await assertPointerCancellationLifecycle(page, viewport);
+        const pointerCancellationDiagnostics = pointerCancellation.diagnostics;
+        invariant(["consoleErrors", "pageErrors", "requestFailures", "httpErrors"].every((key) => pointerCancellationDiagnostics[key].length === 0),
+          `${name}: pointer cancellation probe diagnostics ${JSON.stringify(pointerCancellationDiagnostics)}`);
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.prepareManualAbilityProof("scout"));
         await page.waitForFunction(() => document.querySelector('.manual-ability-ready[data-ability-kind="scout"]') !== null, null, { timeout });
+        await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.clearSupportItemCooldown?.("pod"));
+        await support.click({ force: true });
+        await page.waitForFunction(() => document.querySelector("button.support-btn.pod.selected") !== null, null, { timeout });
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setSaveBoundaryPending(true));
         await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().saveBoundaryPending === true, null, { timeout });
         const ariaDisabledMatrix = await assertAriaDisabledVisualMatrix(page);
-        const boundaryCueStart = (await readCues(page)).length;
         const beforeSnapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
         const baseline = runtimeState(beforeSnapshot);
         const saveBefore = await readSave(page);
@@ -390,15 +702,15 @@ for (const engine of engines) {
         const pauseButton = page.getByRole("button", { name: "一時停止", exact: true }).first();
 
         const runAttempt = async (label, trigger) => {
-          const cueBefore = (await readCues(page)).length;
-          attempts.push(await assertBlocked(page, label, trigger, baseline, saveBefore, cueBefore));
+          await page.evaluate(() => window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.());
+          attempts.push(await assertBlocked(page, label, trigger, baseline, saveBefore, 0));
           await page.waitForTimeout(260);
         };
 
         await runAttempt("mouse-pause", async () => {
           const box = await pauseButton.boundingBox();
           invariant(box && box.width > 0 && box.height > 0, "pause button has no mouse bounds");
-          await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+          await pauseButton.click({ force: true });
         });
         if (viewport.safeArea) {
           await runAttempt("touch-pause", async () => {
@@ -415,14 +727,13 @@ for (const engine of engines) {
           await pauseButton.focus();
           await page.keyboard.press("Space");
         });
-        const support = page.locator("button.support-btn.pod");
         if (await support.count()) await runAttempt("mouse-support", () => support.click({ force: true }));
         const deploy = page.locator('button.unit-card[aria-disabled="false"]').first();
         if (await deploy.count()) await runAttempt("mouse-deploy", () => deploy.click({ force: true }));
         const ability = page.locator('.manual-ability-ready[data-ability-kind="scout"]');
         await runAttempt("mouse-ability", () => ability.click({ force: true }));
 
-        const pendingCues = (await readCues(page)).slice(boundaryCueStart);
+        const pendingCues = attempts.flatMap((attempt) => attempt.cueDelta.map((cueId) => ({ cueId })));
         const pendingOperationCues = pendingCues.filter((cue) => operationCueIds.has(cue.cueId));
         invariant(pendingOperationCues.filter((cue) => cue.cueId === "ui-error").length === attempts.length,
           `${name}: blocked attempts did not produce one reject cue each: ${JSON.stringify({ attempts, cues: pendingCues })}`);
@@ -438,9 +749,12 @@ for (const engine of engines) {
         const afterResume = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
         invariant(afterResume.saveBoundaryPending === false, `${name}: save boundary stayed active after clear`);
         invariant((await readSave(page)) === saveBefore, `${name}: save changed during normal pause/resume QA`);
+        const enabledDecorations = await assertEnabledDecorationRestored(page);
         result.status = "passed";
         result.pointerBoundary = pointerBoundary;
+        result.pointerCancellation = pointerCancellation;
         result.ariaDisabledMatrix = ariaDisabledMatrix;
+        result.ariaEnabledRestoration = enabledDecorations;
         result.attempts = attempts;
         result.pendingRuntimeUnchanged = true;
         result.durableSaveUnchanged = true;

@@ -518,8 +518,18 @@ type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "danger" | "boss";
 type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "mayo" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
+type PointerGestureState = { blocked: boolean; rejected: boolean; captureTarget: HTMLCanvasElement | null };
 type EventDestination = "map" | "battle" | "battle-resume" | "result";
 type PauseAction = "restart" | "loadout" | "withdraw";
+
+function releasePointerCaptureSafely(target: HTMLCanvasElement | null, pointerId: number) {
+  if (!target) return;
+  try {
+    if (target.hasPointerCapture(pointerId)) target.releasePointerCapture(pointerId);
+  } catch {
+    // Cleanup must continue even if the browser has already detached capture.
+  }
+}
 
 const BASE_X = WORLD_GEOMETRY.baseX;
 const BARRICADE_X = WORLD_GEOMETRY.barricade.attackX;
@@ -6945,7 +6955,7 @@ export function AshfallGame() {
   });
   const lastHudRef = useRef(0);
   const selectedActionRef = useRef<SelectedAction>(null);
-  const pointerGestureStateRef = useRef(new Map<number, { blocked: boolean; rejected: boolean }>());
+  const pointerGestureStateRef = useRef(new Map<number, PointerGestureState>());
   const eventDestinationRef = useRef<EventDestination>("map");
   const eventQueueRef = useRef<string[]>([]);
   const eventCompletionLockRef = useRef(false);
@@ -7521,6 +7531,10 @@ export function AshfallGame() {
       cueIds: [...qaAssets.map((asset) => asset.id), ...qaPools.map((pool) => pool.id), ...PRODUCTION_AUDIO_MANIFEST.aliases.map((alias) => alias.id)],
       sceneIds: PRODUCTION_AUDIO_MANIFEST.scenes.map((scene) => scene.id),
       getCueRequests: () => productionCueQaLogRef.current.map((entry) => ({ ...entry })),
+      resetCueRequests: () => {
+        productionCueQaLogRef.current = [];
+        return true;
+      },
       getDiagnostics: () => mixer.getDiagnostics(),
       getAvailability: () => ({ ...audioAvailabilityRef.current }),
       getSceneState: () => mixer.getSceneState(),
@@ -10513,6 +10527,11 @@ export function AshfallGame() {
           time: g.time,
           saveBoundaryPending: battleSaveBoundaryRef.current,
           saveBoundaryPersistencePending: qaSavePersistenceHoldRef.current !== null,
+          pointerGestures: [...pointerGestureStateRef.current.entries()].map(([pointerId, gesture]) => ({
+            pointerId,
+            blocked: gesture.blocked,
+            rejected: gesture.rejected,
+          })),
           banner: g.banner,
           bannerTime: g.bannerTime,
           running: g.running,
@@ -10863,11 +10882,44 @@ export function AshfallGame() {
     };
   }, []);
 
+  const cleanupBattlefieldPointerGesture = useCallback((pointerId: number, fallbackTarget: HTMLCanvasElement | null = null) => {
+    const gesture = pointerGestureStateRef.current.get(pointerId);
+    releasePointerCaptureSafely(gesture?.captureTarget ?? fallbackTarget ?? canvasRef.current, pointerId);
+    pointerGestureStateRef.current.delete(pointerId);
+    if (selectedActionRef.current) gameRef.current.placementIndicator = null;
+  }, []);
+
+  const cleanupAllBattlefieldPointerGestures = useCallback((fallbackTarget: HTMLCanvasElement | null = null) => {
+    for (const pointerId of [...pointerGestureStateRef.current.keys()]) {
+      cleanupBattlefieldPointerGesture(pointerId, fallbackTarget);
+    }
+    if (selectedActionRef.current) gameRef.current.placementIndicator = null;
+  }, [cleanupBattlefieldPointerGesture]);
+
   const chooseAction = useCallback((action: SelectedAction) => {
+    if (action === null) cleanupAllBattlefieldPointerGestures();
     selectedActionRef.current = action;
     gameRef.current.placementIndicator = null;
     setSelectedAction(action);
-  }, []);
+  }, [cleanupAllBattlefieldPointerGestures]);
+
+  useEffect(() => {
+    if (screen !== "battle") cleanupAllBattlefieldPointerGestures();
+    return () => cleanupAllBattlefieldPointerGestures();
+  }, [cleanupAllBattlefieldPointerGestures, screen]);
+
+  useEffect(() => {
+    const cleanupWhenHidden = () => {
+      if (document.visibilityState === "hidden") cleanupAllBattlefieldPointerGestures();
+    };
+    const cleanupOnPageHide = () => cleanupAllBattlefieldPointerGestures();
+    document.addEventListener("visibilitychange", cleanupWhenHidden, { passive: true });
+    window.addEventListener("pagehide", cleanupOnPageHide, { passive: true });
+    return () => {
+      document.removeEventListener("visibilitychange", cleanupWhenHidden);
+      window.removeEventListener("pagehide", cleanupOnPageHide);
+    };
+  }, [cleanupAllBattlefieldPointerGestures]);
 
   const survivalAssetMode = screen === "survival" || (screen === "battle" && survivalHud !== null);
   const survivalAssetBossKindKey = (
@@ -11422,13 +11474,14 @@ export function AshfallGame() {
     window.visualViewport?.addEventListener("resize", configureCanvas);
     window.visualViewport?.addEventListener("scroll", configureCanvas);
     return () => {
+      cleanupAllBattlefieldPointerGestures();
       observer?.disconnect();
       window.removeEventListener("resize", configureCanvas);
       window.removeEventListener("orientationchange", configureCanvas);
       window.visualViewport?.removeEventListener("resize", configureCanvas);
       window.visualViewport?.removeEventListener("scroll", configureCanvas);
     };
-  }, [activeBattlefieldStageId, graphicsProfileView.dprCap, graphicsProfileView.renderHz, screen]);
+  }, [activeBattlefieldStageId, cleanupAllBattlefieldPointerGestures, graphicsProfileView.dprCap, graphicsProfileView.renderHz, screen]);
 
   const ensureAudio = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -12170,7 +12223,6 @@ export function AshfallGame() {
       : `${supplyDefs[kind].name} // 戦場配置`;
     g.bannerTime = 1.2; playCue(kind === "pod" ? "supply-pod" : kind === "drum" ? "supply-drum" : "supply-medical");
     emitBattleBark(g, kind === "pod" ? "support-pod" : kind === "drum" ? "support-drum" : "support-medical", kind === "drum" ? "gunner" : kind === "medical" ? "medic" : "guide", `support-${kind}`);
-    if (kind === "pod") playCue("pod-descent");
     return true;
   }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
@@ -12311,7 +12363,11 @@ export function AshfallGame() {
     if (gesture?.blocked) return;
     if (isBattleSaveBoundaryActive()) {
       if (selectedActionRef.current) {
-        pointerGestureStateRef.current.set(event.pointerId, { blocked: true, rejected: false });
+        pointerGestureStateRef.current.set(event.pointerId, {
+          ...(gesture ?? { rejected: false, captureTarget: event.currentTarget }),
+          blocked: true,
+          captureTarget: gesture?.captureTarget ?? event.currentTarget,
+        });
       }
       return;
     }
@@ -12345,8 +12401,13 @@ export function AshfallGame() {
     event.preventDefault();
     const existingGesture = pointerGestureStateRef.current.get(event.pointerId);
     if (isBattleSaveBoundaryActive()) {
-      const gesture = existingGesture ?? { blocked: true, rejected: false };
+      const gesture: PointerGestureState = existingGesture ?? {
+        blocked: true,
+        rejected: false,
+        captureTarget: event.currentTarget,
+      };
       gesture.blocked = true;
+      gesture.captureTarget ??= event.currentTarget;
       if (!gesture.rejected) {
         gesture.rejected = rejectBattleSaveBoundary(`battlefield:pointer:${event.pointerId}:save-pending`);
       }
@@ -12357,54 +12418,64 @@ export function AshfallGame() {
     // if the boundary clears before its next pointer event.
     if (existingGesture?.blocked) return;
     if (!selectedActionRef.current) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    pointerGestureStateRef.current.set(event.pointerId, {
+      blocked: false,
+      rejected: false,
+      captureTarget: event.currentTarget,
+    });
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
+      return;
+    }
     handleBattlefieldPointerMove(event);
-  }, [handleBattlefieldPointerMove, isBattleSaveBoundaryActive, rejectBattleSaveBoundary]);
+  }, [cleanupBattlefieldPointerGesture, handleBattlefieldPointerMove, isBattleSaveBoundaryActive, rejectBattleSaveBoundary]);
 
   const handleBattlefieldPointerUp = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     event.preventDefault();
     const gesture = pointerGestureStateRef.current.get(event.pointerId);
     if (gesture?.blocked) {
-      if (!isBattleSaveBoundaryActive() && event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      }
-      pointerGestureStateRef.current.delete(event.pointerId);
+      cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
       return;
     }
     if (isBattleSaveBoundaryActive()) {
-      const blockedGesture = { blocked: true, rejected: false };
-      blockedGesture.rejected = rejectBattleSaveBoundary(`battlefield:pointer:${event.pointerId}:save-pending`);
+      if (!gesture) return;
+      const blockedGesture: PointerGestureState = gesture ?? {
+        blocked: true,
+        rejected: false,
+        captureTarget: event.currentTarget,
+      };
+      blockedGesture.blocked = true;
+      blockedGesture.captureTarget ??= event.currentTarget;
+      if (!blockedGesture.rejected) {
+        blockedGesture.rejected = rejectBattleSaveBoundary(`battlefield:pointer:${event.pointerId}:save-pending`);
+      }
       pointerGestureStateRef.current.set(event.pointerId, blockedGesture);
+      cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
       return;
     }
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    const { x, y } = pointerWorldPosition(event);
+    cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return;
-    const { x, y } = pointerWorldPosition(event);
     if (!selectedActionRef.current) {
       if (triggerKuromeEmergencyEvadeAt(x, y)) return;
       triggerDrumAt(x, y);
       return;
     }
     executeSelected(x, y);
-  }, [executeSelected, isBattleSaveBoundaryActive, pointerWorldPosition, rejectBattleSaveBoundary, triggerDrumAt, triggerKuromeEmergencyEvadeAt]);
+  }, [cleanupBattlefieldPointerGesture, executeSelected, isBattleSaveBoundaryActive, pointerWorldPosition, rejectBattleSaveBoundary, triggerDrumAt, triggerKuromeEmergencyEvadeAt]);
 
   const handleBattlefieldPointerCancel = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
-    const gesture = pointerGestureStateRef.current.get(event.pointerId);
-    if (gesture?.blocked) {
-      if (!isBattleSaveBoundaryActive() && event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      }
-      pointerGestureStateRef.current.delete(event.pointerId);
-      return;
-    }
-    if (isBattleSaveBoundaryActive()) {
-      pointerGestureStateRef.current.set(event.pointerId, { blocked: true, rejected: false });
-      return;
-    }
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-    if (selectedActionRef.current) gameRef.current.placementIndicator = null;
-  }, [isBattleSaveBoundaryActive]);
+    // Cancellation is always gesture cleanup. It must not create a blocked
+    // entry or emit a second reject cue while persistence is pending.
+    cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
+  }, [cleanupBattlefieldPointerGesture]);
+
+  const handleBattlefieldLostPointerCapture = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
+    cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
+  }, [cleanupBattlefieldPointerGesture]);
 
   const stageViews = useMemo<StageScreenView[]>(() => (CAMPAIGN_STAGES as unknown as readonly CampaignStageData[]).map((stage) => {
     const claimed = campaignSave.claimedStarRewardsByStage[stage.id] ?? [];
@@ -12716,6 +12787,7 @@ export function AshfallGame() {
       window.clearTimeout(startCueTimerRef.current);
       startCueTimerRef.current = null;
     }
+    cleanupAllBattlefieldPointerGestures();
     chooseAction(null);
     battleRadioActiveRef.current = false;
     desiredProductionSceneRef.current = null;
@@ -12728,7 +12800,7 @@ export function AshfallGame() {
     stopMusic();
     stopJingle();
     stopSfx();
-  }, [chooseAction, stopJingle, stopMusic, stopSfx]);
+  }, [chooseAction, cleanupAllBattlefieldPointerGestures, stopJingle, stopMusic, stopSfx]);
 
   const openEvents = useCallback((
     nextEventIds: readonly string[],
@@ -19631,7 +19703,7 @@ export function AshfallGame() {
           : undefined}
         aria-label="西新世紀末物語 ゲーム"
       >
-        <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
+        <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} onLostPointerCapture={handleBattlefieldLostPointerCapture} />
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;

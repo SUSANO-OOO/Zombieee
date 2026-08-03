@@ -1743,7 +1743,7 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
     "role-brute", "role-brawler", "role-gunner", "role-medic", "takuya-down", "base-damaged", "base-critical",
     "base-collapse", "victory", "defeat", "retry",
   ]) assert.match(game, new RegExp(`(?:"${cue}"|${cue}): \\{[^}]*cooldown: \\.?\\d+`));
-  assert.match(game, /if \(kind === "pod"\) playCue\("pod-descent"\)/);
+  assert.doesNotMatch(game, /if \(kind === "pod"\) playCue\("pod-descent"\)/);
   assert.match(game, /airstrikeStep\.events\.includes\("targeting"\)[\s\S]*playCue\("airstrike-targeting"\)/);
   assert.match(game, /areaStep\.changes\.some\(\(change\) => change\.kind === "healing"\)[\s\S]*playCue\("medical-heal"\)/);
   assert.match(game, /if \(roleEffect && !\["crazy-king", "kumaverson", "babayaga"\]\.includes\(f\.kind\)\) playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);

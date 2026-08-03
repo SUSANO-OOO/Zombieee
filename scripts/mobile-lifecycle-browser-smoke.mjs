@@ -80,8 +80,81 @@ function diagnosticsFor(page) {
     rawWarnings: [],
     expectedNavigationTeardownPageErrors: [],
     navigationWindows: [],
-    navigation: { nextId: 0, active: null },
+    navigation: {
+      nextId: 0,
+      nextGeneration: 0,
+      currentGeneration: 0,
+      active: null,
+      inFlightRequestIds: [],
+    },
   };
+  const requestMetadataByObject = new WeakMap();
+  const requestMetadataById = new Map();
+  const frameIds = new WeakMap();
+  const frameGenerations = new Map();
+  let nextRequestId = 0;
+  let nextFrameId = 0;
+  const frameIdFor = (frame) => {
+    if (!frame) return null;
+    const existing = frameIds.get(frame);
+    if (existing) return existing;
+    const id = `frame-${++nextFrameId}`;
+    frameIds.set(frame, id);
+    return id;
+  };
+  const frameForRequest = (request) => {
+    try {
+      return request.frame();
+    } catch {
+      return null;
+    }
+  };
+  const requestIsNavigation = (request) => {
+    try {
+      return request.isNavigationRequest() === true;
+    } catch {
+      return false;
+    }
+  };
+  const requestInitiator = (request) => {
+    try {
+      return typeof request.initiator === "function" ? request.initiator() : null;
+    } catch {
+      return null;
+    }
+  };
+  const syncInFlightRequestIds = () => {
+    diagnostics.navigation.inFlightRequestIds = [...requestMetadataById.values()]
+      .filter((metadata) => metadata.inFlight)
+      .map((metadata) => metadata.requestId);
+  };
+  const addStartedRequest = (navigationWindow, requestId) => {
+    if (!navigationWindow || !requestId || navigationWindow.startedRequestIds.includes(requestId)) return;
+    navigationWindow.startedRequestIds.push(requestId);
+  };
+  const markFrameNavigationCommit = (frame) => {
+    const frameId = frameIdFor(frame);
+    if (!frameId) return;
+    const active = diagnostics.navigation.active;
+    if (active && active.targetFrameId === frameId) {
+      frameGenerations.set(frameId, active.generation);
+      diagnostics.navigation.currentGeneration = active.generation;
+      for (const metadata of requestMetadataById.values()) {
+        if (metadata.inFlight
+          && metadata.navigationWindowIdAtStart === active.id
+          && metadata.frameId === frameId) {
+          addStartedRequest(active, metadata.requestId);
+        }
+      }
+      return;
+    }
+    const generation = diagnostics.navigation.nextGeneration + 1;
+    diagnostics.navigation.nextGeneration = generation;
+    diagnostics.navigation.currentGeneration = generation;
+    frameGenerations.set(frameId, generation);
+  };
+  Object.defineProperty(diagnostics, "frameIdFor", { value: frameIdFor });
+  page.on("framenavigated", markFrameNavigationCommit);
   page.on("console", (message) => {
     if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
     if (message.type() === "warning") {
@@ -91,31 +164,77 @@ function diagnosticsFor(page) {
     }
   });
   page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
+  page.on("request", (request) => {
+    const frame = frameForRequest(request);
+    const frameId = frameIdFor(frame);
+    const active = diagnostics.navigation.active;
+    const frameGenerationAtStart = frameId ? frameGenerations.get(frameId) ?? null : null;
+    const isNavigationRequest = requestIsNavigation(request);
+    const metadata = {
+      requestId: `request-${++nextRequestId}`,
+      url: request.url(),
+      resourceType: request.resourceType(),
+      startedAt: Date.now(),
+      navigationGeneration: active?.generation ?? frameGenerationAtStart ?? diagnostics.navigation.currentGeneration,
+      navigationWindowIdAtStart: active?.id ?? null,
+      frameId,
+      frameUrlAtStart: frame?.url?.() ?? null,
+      frameGenerationAtStart,
+      isNavigationRequest,
+      initiator: requestInitiator(request),
+      inFlight: true,
+    };
+    requestMetadataByObject.set(request, metadata);
+    requestMetadataById.set(metadata.requestId, metadata);
+    if (active
+      && active.targetFrameId === frameId
+      && (isNavigationRequest || frameGenerationAtStart === active.generation)) {
+      addStartedRequest(active, metadata.requestId);
+    }
+    syncInFlightRequestIds();
+  });
+  const markRequestSettled = (request) => {
+    const metadata = requestMetadataByObject.get(request);
+    if (!metadata) return;
+    metadata.inFlight = false;
+    syncInFlightRequestIds();
+  };
+  page.on("requestfinished", markRequestSettled);
   page.on("requestfailed", (request) => {
     const failure = request.failure()?.errorText ?? "unknown";
     const entry = String(request.url()) + " :: " + failure;
     const occurredAt = Date.now();
     const navigationWindow = diagnostics.navigation.active;
+    const metadata = requestMetadataByObject.get(request) ?? null;
     const details = {
+      requestId: metadata?.requestId ?? null,
       url: request.url(),
       failure,
       resourceType: request.resourceType(),
+      startedAt: metadata?.startedAt ?? null,
       occurredAt,
-      navigationId: navigationWindow?.id ?? null,
+      navigationGeneration: metadata?.navigationGeneration ?? null,
+      navigationIdAtStart: metadata?.navigationWindowIdAtStart ?? null,
+      frameId: metadata?.frameId ?? null,
+      frameUrlAtStart: metadata?.frameUrlAtStart ?? null,
+      isNavigationRequest: metadata?.isNavigationRequest ?? false,
+      initiator: metadata?.initiator ?? null,
     };
     diagnostics.rawRequestFailures.push(entry);
     diagnostics.rawRequestFailureDetails.push(details);
     const classification = classifyRequestFailure({
       failure,
       occurredAt,
-      requestNavigationId: details.navigationId,
+      requestId: details.requestId,
+      requestMetadata: metadata,
       navigationWindow,
     });
     if (classification === "navigation-teardown") {
-      diagnostics.navigationTeardownRequestFailures.push(details);
+      diagnostics.navigationTeardownRequestFailures.push({ ...details, classification });
     } else {
       diagnostics.requestFailures.push(entry);
     }
+    markRequestSettled(request);
   });
   page.on("response", (response) => {
     if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
@@ -123,14 +242,20 @@ function diagnosticsFor(page) {
   return diagnostics;
 }
 
-function beginNavigationWindow(diagnostics, kind) {
+function beginNavigationWindow(diagnostics, kind, { targetFrameId = null } = {}) {
   const window = {
     id: diagnostics.navigation.nextId + 1,
     kind,
+    generation: diagnostics.navigation.nextGeneration + 1,
     startedAt: Date.now(),
     endedAt: null,
+    targetFrameId,
+    inFlightRequestIds: [...diagnostics.navigation.inFlightRequestIds],
+    startedRequestIds: [],
   };
   diagnostics.navigation.nextId = window.id;
+  diagnostics.navigation.nextGeneration = window.generation;
+  diagnostics.navigation.currentGeneration = window.generation;
   diagnostics.navigation.active = window;
   return window.id;
 }
@@ -139,7 +264,11 @@ function endNavigationWindow(diagnostics, id) {
   const active = diagnostics.navigation.active;
   if (!active || active.id !== id) return;
   active.endedAt = Date.now();
-  diagnostics.navigationWindows.push({ ...active });
+  diagnostics.navigationWindows.push({
+    ...active,
+    inFlightRequestIds: [...active.inFlightRequestIds],
+    startedRequestIds: [...active.startedRequestIds],
+  });
   diagnostics.navigation.active = null;
 }
 
@@ -458,7 +587,8 @@ async function exercisePageTransition(page, { requireAudio }) {
 async function exerciseRealBackForward(page, { requireAudio, diagnostics }) {
   const before = await readRuntime(page);
   const pageErrorsBeforeNavigation = diagnostics.pageErrors.length;
-  const navigationId = beginNavigationWindow(diagnostics, "away-back-forward");
+  const targetFrameId = diagnostics.frameIdFor?.(page.mainFrame()) ?? null;
+  const navigationId = beginNavigationWindow(diagnostics, "away-back-forward", { targetFrameId });
   try {
   const marker = `bfcache-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   await page.evaluate((value) => {

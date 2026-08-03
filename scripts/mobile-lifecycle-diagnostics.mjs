@@ -11,13 +11,26 @@ export const EXPECTED_NAVIGATION_TEARDOWN_FAILURES = new Set([
 export function classifyRequestFailure({
   failure,
   occurredAt = Date.now(),
-  requestNavigationId = null,
+  requestId = null,
+  requestMetadata = null,
   navigationWindow = null,
 } = {}) {
   if (!EXPECTED_NAVIGATION_TEARDOWN_FAILURES.has(String(failure ?? ""))) return "failure";
-  if (!navigationWindow || requestNavigationId === null || requestNavigationId !== navigationWindow.id) {
+  if (!navigationWindow || !requestMetadata || requestMetadata.requestId !== requestId) {
     return "failure";
   }
+  const inFlightAtNavigationStart = navigationWindow.inFlightRequestIds?.includes(requestId) === true;
+  const startedByNavigation = navigationWindow.startedRequestIds?.includes(requestId) === true;
+  if (!inFlightAtNavigationStart && !startedByNavigation) {
+    return "failure";
+  }
+  if (requestMetadata.frameId === null || requestMetadata.frameId !== navigationWindow.targetFrameId) {
+    return "failure";
+  }
+  if (startedByNavigation && requestMetadata.navigationWindowIdAtStart !== navigationWindow.id) {
+    return "failure";
+  }
+  if (!Number.isFinite(Number(requestMetadata.startedAt))) return "failure";
   const startedAt = Number(navigationWindow.startedAt);
   const endedAt = navigationWindow.endedAt === null || navigationWindow.endedAt === undefined
     ? Number.POSITIVE_INFINITY
