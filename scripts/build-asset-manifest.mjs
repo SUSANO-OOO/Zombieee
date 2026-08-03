@@ -1,4 +1,4 @@
-// Generates public/asset-manifest.json for the Version 0.9.8.2 PWA.
+// Generates public/asset-manifest.json for the current release PWA.
 //
 // The distribution set is derived from the game's own sprite, visual,
 // stage-object, and audio manifests rather than from a directory walk, so
