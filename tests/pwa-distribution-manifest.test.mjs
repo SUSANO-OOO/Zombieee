@@ -11,6 +11,7 @@ import {
   selectPreferredAudioSource,
   validateAssetManifest,
 } from "../app/pwaAssetManifest.js";
+import { V099_APP_ICON_IDENTITY, V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
 
 const manifest = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
 const webAppManifest = JSON.parse(await readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"));
@@ -85,8 +86,8 @@ test("every public runtime reference is in the game manifest or an explicit shel
     ...collectRuntimeAssetPaths(V090_UNIT_VISUAL_PROFILES),
     ...BOSS_DEFINITIONS.map((boss) => boss.compendium?.assetPath).filter(Boolean),
     ...spriteKinds.map(spriteSheetPath),
-    "/favicon.svg",
-    "/icons/apple-touch-icon-180.png",
+    V099_APP_ICON_IDENTITY.paths.favicon48,
+    V099_APP_ICON_IDENTITY.paths.appleTouch180,
     "/tactical-drop-pod-v1.png",
     "/explosive-drum-v1.png",
     "/medical-supply-station-v1.png",
@@ -265,8 +266,11 @@ test("the manifest covers playable units, enemies, bosses, backgrounds, and all 
 
 test("the home-screen icons are part of the first install", () => {
   const paths = new Set(manifest.assets.map((asset) => asset.path));
-  for (const icon of ["/icons/icon-192.png", "/icons/icon-512.png", "/icons/icon-maskable-512.png"]) {
+  for (const icon of V099_APP_ICON_PATHS) {
     assert.ok(paths.has(icon), `${icon} must ship in the app shell pack`);
+  }
+  for (const legacy of ["/favicon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/icon-maskable-512.png"]) {
+    assert.ok(!paths.has(legacy), `${legacy} must not be re-downloaded by the Version 0.9.9.0 pack`);
   }
 });
 

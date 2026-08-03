@@ -5026,57 +5026,57 @@
       "sourcePath": "/pwa-optimized/explosive-drum-v1.webp"
     },
     {
-      "path": "/favicon.svg",
-      "bytes": 1202,
-      "hash": "sha256-6410db8b725042419ba8589b9e6915549002e19262270ef4b54317ed6d8a02a6",
+      "path": "/icons/v099/infected-face-a2-1024.png",
+      "bytes": 1906390,
+      "hash": "sha256-88b5b3aff7f8a026b3bd9d95433c9363804f4e838d224df4c6298073ea3be38e",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"
     },
     {
-      "path": "/icons/apple-touch-icon-180.png",
-      "bytes": 17414,
-      "hash": "sha256-ca6f97a44a68f478148bb555494b2d5dcb809c697e59d89365c772ea14ef76ff",
+      "path": "/icons/v099/infected-face-a2-192.png",
+      "bytes": 66052,
+      "hash": "sha256-877701faf78344906fdbcb83fccba6f7fe8f6277aa89ce3385a8fd9b32fd9738",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"
     },
     {
-      "path": "/icons/icon-1024.png",
-      "bytes": 168327,
-      "hash": "sha256-c4feda1c95b5ed9f5a2c946159acc0863ccd4635d9ea0321d409320df7bd98a2",
+      "path": "/icons/v099/infected-face-a2-48.png",
+      "bytes": 4659,
+      "hash": "sha256-c6e7a56614eaf407500efc4ebe3dc794847b8bad95838d848d4dac990b9c00ee",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"
     },
     {
-      "path": "/icons/icon-192.png",
-      "bytes": 18738,
-      "hash": "sha256-fef38d39552b98817da2f7331fdb2a01205f94d62ebe43d4194e67ea162fb40b",
+      "path": "/icons/v099/infected-face-a2-512.png",
+      "bytes": 473851,
+      "hash": "sha256-57e8b5d2691afa2b369597169868d8024514cdd3b00d2e018e6bb1ec1d83dd2a",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"
     },
     {
-      "path": "/icons/icon-512.png",
-      "bytes": 69236,
-      "hash": "sha256-83f67901a5cc2c14e660d9cc36e1fbcdc786b70e97fb234eb139ee8f037d8446",
+      "path": "/icons/v099/infected-face-a2-apple-touch-180.png",
+      "bytes": 58241,
+      "hash": "sha256-6d6e29694821cbdcb7bffb9dbd6fcee572141f21b486968d4e1f1b5d3888721e",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"
     },
     {
-      "path": "/icons/icon-maskable-192.png",
-      "bytes": 18738,
-      "hash": "sha256-fef38d39552b98817da2f7331fdb2a01205f94d62ebe43d4194e67ea162fb40b",
+      "path": "/icons/v099/infected-face-a2-maskable-192.png",
+      "bytes": 66052,
+      "hash": "sha256-877701faf78344906fdbcb83fccba6f7fe8f6277aa89ce3385a8fd9b32fd9738",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"
     },
     {
-      "path": "/icons/icon-maskable-512.png",
-      "bytes": 69236,
-      "hash": "sha256-83f67901a5cc2c14e660d9cc36e1fbcdc786b70e97fb234eb139ee8f037d8446",
+      "path": "/icons/v099/infected-face-a2-maskable-512.png",
+      "bytes": 473851,
+      "hash": "sha256-57e8b5d2691afa2b369597169868d8024514cdd3b00d2e018e6bb1ec1d83dd2a",
       "pack": "app-shell",
       "category": "app",
       "criticality": "critical"

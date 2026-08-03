@@ -1,6 +1,6 @@
 {
   "version": "0.9.9.0",
-  "status": "gate-a-icon-v2-candidates-only",
+  "status": "gate-a-icon-v2-a2-approved",
   "distribution": false,
   "runtimeReferences": 0,
   "publicFiles": 0,
@@ -8,7 +8,7 @@
     "audio": "approved",
     "vfx": "approved",
     "iconV1": "rejected",
-    "iconV2": "pending",
+    "iconV2": "approved",
     "decisionDate": "2026-08-04",
     "decisionSource": "Producer decision in the Sol Lead chat"
   },
@@ -24,14 +24,24 @@
     "generationPrompts": "generation-prompts.json",
     "commercialUse": "project-original generated raster and repository-local project source",
     "approvalIssue": "https://github.com/SUSANO-OOO/Zombieee/issues/136",
-    "approvedCandidateId": null,
-    "approvedMasterSha256": null,
-    "approvalCommentUrl": null
+    "approvedCandidateId": "v099-infected-face-a2",
+    "approvedMasterSha256": "88b5b3aff7f8a026b3bd9d95433c9363804f4e838d224df4c6298073ea3be38e",
+    "approvalCommentUrl": "https://github.com/SUSANO-OOO/Zombieee/issues/136#issuecomment-5166734506",
+    "approvalEvidence": "Producer explicitly replied A2承認 in the Sol Lead chat on 2026-08-04"
   },
   "maskable": {
     "canvas": 1024,
     "safeRadius": 409.6,
     "requiredFeatures": ["abnormalEye", "mouth"]
+  },
+  "productionSelection": {
+    "candidateId": "v099-infected-face-a2",
+    "master": "infected-face-a2-master.png",
+    "masterSha256": "88b5b3aff7f8a026b3bd9d95433c9363804f4e838d224df4c6298073ea3be38e",
+    "identityModule": "app/appIconIdentity.js",
+    "distribution": "approved-derivatives-only",
+    "publicDirectory": "public/icons/v099",
+    "legacyPathsDeleted": false
   },
   "candidates": [
     {

@@ -12,7 +12,8 @@ const report = JSON.parse(await readFile(path.join(sourceDir, "report.json"), "u
 const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
 const integrationSourceSha = "3e09b4c09cb1bc67cf1322bd539f5b0bc7e5d060";
 
-if (report.gateA.audio !== "approved" || report.gateA.vfx !== "approved" || report.gateA.iconV2 !== "pending") {
+if (report.gateA.audio !== "approved" || report.gateA.vfx !== "approved"
+  || !["pending", "approved"].includes(report.gateA.iconV2)) {
   throw new Error("Gate A decision state drift");
 }
 if (report.productionDistributionChanged || report.publicFiles || report.runtimeReferences) {
