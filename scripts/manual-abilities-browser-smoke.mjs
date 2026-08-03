@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 if (!process.env.MANUAL_ABILITIES_QA_BASE_URL) {
   throw new Error("MANUAL_ABILITIES_QA_BASE_URL is required; use the isolated QA runner");
@@ -130,6 +131,7 @@ async function enterBattle(page) {
   const url = new URL(baseUrl);
   url.search = new URLSearchParams({ qa: "roles", safe: "iphone-landscape" }).toString();
   await page.goto(String(url), { waitUntil: "domcontentloaded" });
+  await dismissInstallOffer(page);
   const migrationButton = page.getByRole("button", { name: "内容を確認" });
   if (await migrationButton.isVisible().catch(() => false)) await migrationButton.click();
   const start = page.locator(".formation-footer .campaign-primary");
@@ -1291,6 +1293,7 @@ async function checkpointReloadProof(page, engine) {
   const reloadUrl = new URL(baseUrl);
   reloadUrl.search = new URLSearchParams({ safe: "iphone-landscape" }).toString();
   await page.goto(String(reloadUrl), { waitUntil: "domcontentloaded" });
+  await dismissInstallOffer(page);
   const continueButton = page.locator(".title-start");
   await continueButton.waitFor({ state: "visible" });
   await page.waitForFunction(() => {

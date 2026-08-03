@@ -8,6 +8,7 @@ import {
   computeCampaignSaveIntegrity,
   createDefaultCampaignSave,
 } from "../app/campaign.js";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 if (!process.env.V095_EMPLOYMENT_QA_BASE_URL) {
   throw new Error("V095_EMPLOYMENT_QA_BASE_URL is required");
@@ -212,6 +213,7 @@ for (const engine of engines) {
           value: serializedFixture,
         });
         await page.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+        await dismissInstallOffer(page, { timeout });
         await page.locator("button.title-start").waitFor({ state: "visible", timeout });
         await page.locator("button.title-start").tap();
         await page.locator(".map-screen").waitFor({ state: "visible", timeout });
@@ -370,6 +372,7 @@ for (const engine of engines) {
 
         step = "reload";
         await page.reload({ waitUntil: "domcontentloaded", timeout });
+        await dismissInstallOffer(page, { timeout });
         await page.locator("button.title-start").waitFor({ state: "visible", timeout });
         await page.locator("button.title-start").tap();
         await page.locator(".map-screen").waitFor({ state: "visible", timeout });
@@ -437,6 +440,7 @@ for (const engine of engines) {
         value: serializedWaveEntryFixture,
       });
       await entryPage.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+      await dismissInstallOffer(entryPage, { timeout });
       await entryPage.locator("button.title-start").waitFor({ state: "visible", timeout });
       await entryPage.locator("button.title-start").tap();
       await entryPage.locator(".map-screen").waitFor({ state: "visible", timeout });
