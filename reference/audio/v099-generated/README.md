@@ -7,8 +7,10 @@ master recording, or alternate runtime source is used.
 ## Pinned encoder
 
 - npm package: `@ffmpeg-installer/ffmpeg@1.1.0`
+- production platform package: `@ffmpeg-installer/win32-x64@4.1.0`
+- production platform: Windows x64
 - required FFmpeg build: `N-92722-gf22fcd4483`
-- default executable: the platform binary resolved by the locked npm package
+- default production executable: the Windows x64 binary resolved by the locked npm package
 - optional override: `FFMPEG_PATH`, accepted only when `ffmpeg -version` reports
   the same required build
 
@@ -22,7 +24,11 @@ npm.cmd run build:pwa-assets
 ```
 
 The reproducibility test also generates into an isolated temporary output root and
-compares every WAV and MP3 SHA-256 with the checked-in provenance ledger. The
+compares every WAV SHA-256 on every platform. On the pinned Windows x64 production
+encoder it additionally regenerates and compares every MP3 SHA-256. Other platform
+binaries supplied by the umbrella npm package have different FFmpeg identities, so
+full MP3 generation fails closed there; CI still verifies checked-in MP3 hashes,
+decode, signal bounds, distinctness, and actual loop seams using its read-only decoder. The
 checked-in WAV masters stay under `reference/`; only one versioned MP3 per physical
 asset is placed under `public/audio/v099/` and included in the PWA audio bundle.
 

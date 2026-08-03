@@ -16,8 +16,10 @@
   "masterSampleRate": 44100,
   "ffmpeg": {
     "package": "@ffmpeg-installer/ffmpeg@1.1.0",
+    "productionPlatformPackage": "@ffmpeg-installer/win32-x64@4.1.0",
+    "productionPlatform": "win32-x64",
     "version": "ffmpeg version N-92722-gf22fcd4483 Copyright (c) 2000-2018 the FFmpeg developers",
-    "pathPolicy": "FFMPEG_PATH or locked package binary; exact version required"
+    "pathPolicy": "FFMPEG_PATH or locked win32-x64 package binary; exact production version required"
   },
   "encoding": {
     "format": "MP3",

@@ -96,9 +96,12 @@ function correlation(left, right) {
   return numerator / Math.max(Number.EPSILON, Math.sqrt(leftEnergy * rightEnergy));
 }
 
-test("v0.9.9.0 uses the pinned FFmpeg build for all distributed MP3 diagnostics", () => {
-  assert.match(ffmpegVersion, /N-92722-gf22fcd4483/);
+test("v0.9.9.0 pins its production encoder while allowing a read-only diagnostic decoder", () => {
+  assert.ok(ffmpegVersion.startsWith("ffmpeg version "));
+  assert.match(provenance.ffmpeg.version, /N-92722-gf22fcd4483/);
   assert.match(provenance.ffmpeg.package, /@ffmpeg-installer\/ffmpeg@1\.1\.0/);
+  assert.equal(provenance.ffmpeg.productionPlatformPackage, "@ffmpeg-installer/win32-x64@4.1.0");
+  assert.equal(provenance.ffmpeg.productionPlatform, "win32-x64");
   assert.equal(provenance.encoding.writeXing, true);
   assert.equal(provenance.encoding.bitexact, true);
 });

@@ -17,12 +17,14 @@ import { V099_BATTLE_AUDIO_ASSET_SPECS, V099_PHYSICAL_AUDIO_ASSET_COUNT } from "
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputRootArg = process.argv.find((argument) => argument.startsWith("--output-root="));
 const outputRoot = path.resolve(repoRoot, outputRootArg ? outputRootArg.slice("--output-root=".length) : ".");
+const mastersOnly = process.argv.includes("--masters-only");
 const sampleRate = 44_100;
 const seed = 0x0990BA77;
 const targetMinBytes = 3.97 * 1024 * 1024;
 const targetMaxBytes = 6.45 * 1024 * 1024;
 const tau = Math.PI * 2;
 const pinnedFfmpegPackage = "@ffmpeg-installer/ffmpeg@1.1.0";
+const pinnedFfmpegPlatformPackage = "@ffmpeg-installer/win32-x64@4.1.0";
 const pinnedFfmpegVersion = "N-92722-gf22fcd4483";
 
 function createRandom(inputSeed) {
@@ -257,7 +259,7 @@ async function sha256(filePath) {
   return createHash("sha256").update(await readFile(filePath)).digest("hex");
 }
 
-const ffmpeg = resolveFfmpeg();
+const ffmpeg = mastersOnly ? null : resolveFfmpeg();
 if (V099_BATTLE_AUDIO_ASSET_SPECS.length !== V099_PHYSICAL_AUDIO_ASSET_COUNT) {
   throw new Error(`Expected ${V099_PHYSICAL_AUDIO_ASSET_COUNT} v0.9.9.0 assets, got ${V099_BATTLE_AUDIO_ASSET_SPECS.length}.`);
 }
@@ -277,6 +279,15 @@ for (const [index, spec] of V099_BATTLE_AUDIO_ASSET_SPECS.entries()) {
   const outputPath = path.join(publicRoot, spec.folder, `${spec.id}.mp3`);
   const master = synthesize(spec, index);
   await writeFile(masterPath, toWav(master.samples));
+  if (mastersOnly) {
+    generated.push({
+      id: spec.id,
+      recipeId: master.recipe.recipeId,
+      master: path.relative(outputRoot, masterPath).replace(/\\/g, "/"),
+      masterSha256: await sha256(masterPath),
+    });
+    continue;
+  }
   execFileSync(ffmpeg.path, [
     "-y", "-hide_banner", "-loglevel", "error", "-fflags", "+bitexact",
     "-i", masterPath, "-map_metadata", "-1", "-codec:a", "libmp3lame",
@@ -309,6 +320,15 @@ for (const [index, spec] of V099_BATTLE_AUDIO_ASSET_SPECS.entries()) {
   });
 }
 
+if (mastersOnly) {
+  console.log(JSON.stringify({
+    physicalAssetCount: generated.length,
+    generatorSeed: `0x${seed.toString(16)}`,
+    masterRoot: path.relative(outputRoot, masterDir).replace(/\\/g, "/"),
+  }, null, 2));
+  process.exit(0);
+}
+
 const distinctBytes = generated.reduce((total, asset) => total + asset.outputBytes, 0);
 if (distinctBytes < targetMinBytes || distinctBytes > targetMaxBytes) {
   throw new Error(`v0.9.9.0 distinct audio bytes ${distinctBytes} is outside ${targetMinBytes}-${targetMaxBytes}.`);
@@ -331,7 +351,13 @@ await writeFile(provenancePath, `${JSON.stringify({
   modification: true,
   redistribution: true,
   masterSampleRate: sampleRate,
-  ffmpeg: { package: pinnedFfmpegPackage, version: ffmpeg.versionLine, pathPolicy: "FFMPEG_PATH or locked package binary; exact version required" },
+  ffmpeg: {
+    package: pinnedFfmpegPackage,
+    productionPlatformPackage: pinnedFfmpegPlatformPackage,
+    productionPlatform: "win32-x64",
+    version: ffmpeg.versionLine,
+    pathPolicy: "FFMPEG_PATH or locked win32-x64 package binary; exact production version required",
+  },
   encoding: { format: "MP3", preferredSourceOnly: true, bgmBitrate: "160k", sfxBitrate: "128k", mime: "audio/mpeg", writeXing: true, bitexact: true },
   physicalAssetCount: generated.length,
   distinctOutputBytes: distinctBytes,
