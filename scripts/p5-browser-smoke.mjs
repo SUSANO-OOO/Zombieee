@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 import { CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
 import {
@@ -69,7 +70,7 @@ const expectedStationStageId = CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE;
 const expectedStationSceneId = sceneIdForScreen("battle", expectedStationStageId, { musicMode: "normal" });
 const expectedTakuyaStageId = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
 const expectedTakuyaBossSceneId = sceneIdForScreen("battle", expectedTakuyaStageId, { musicMode: "boss" });
-const expectedTakuyaBattleSceneId = sceneIdForScreen("battle", expectedTakuyaStageId, { musicMode: "normal" });
+const expectedTakuyaPostBossSceneId = sceneIdForScreen("battle", expectedTakuyaStageId, { musicMode: "pressure" });
 const expectedTakuyaEntranceSceneId = TAKUYA_ENTRANCE_AUDIO.silenceSceneId;
 const expectedTakuyaFinalSceneId = sceneIdForStoryEvent("stage-takuya-final-v070");
 const takuyaEntranceCueId = TAKUYA_ENTRANCE_AUDIO.cueId;
@@ -347,6 +348,7 @@ async function auditStoryEvent({ page, diagnostics, engine, viewport, eventId })
   diagnostics.reset();
   const response = await page.goto(storyUrl(eventId), { waitUntil: "domcontentloaded", timeout });
   invariant(response?.ok(), `${label} navigation failed: ${response?.status() ?? "no response"}`);
+  await dismissInstallOffer(page, { timeout });
   const expectedSceneId = await waitForStoryScreen(page, eventId);
   const expectedLines = STORY_EVENTS[eventId].lines;
   invariant(expectedLines.length > 0, `${label} has no display lines`);
@@ -709,6 +711,7 @@ async function exerciseRetry({ page, diagnostics, engine, viewport }) {
   diagnostics.reset();
   const response = await page.goto(stationUrl("near-win"), { waitUntil: "domcontentloaded", timeout });
   invariant(response?.ok(), `${label} navigation failed: ${response?.status() ?? "no response"}`);
+  await dismissInstallOffer(page, { timeout });
   await page.waitForFunction(
     () => {
       const screen = document.querySelector(".game-shell")?.getAttribute("data-screen");
@@ -772,6 +775,7 @@ async function auditAudioLifecycle({ context, engine, viewport }) {
       timeout,
     });
     invariant(unlockResponse?.ok(), `${label} unlock-screen navigation failed: ${unlockResponse?.status() ?? "no response"}`);
+    await dismissInstallOffer(page, { timeout });
     await waitForStoryScreen(page, STORY_EVENT_IDS[0]);
     const webAudioCapability = await page.evaluate(() => ({
       audioContext: typeof (window.AudioContext ?? window.webkitAudioContext),
@@ -801,6 +805,7 @@ async function auditAudioLifecycle({ context, engine, viewport }) {
     diagnostics.reset();
     const response = await page.goto(stationUrl("start"), { waitUntil: "domcontentloaded", timeout });
     invariant(response?.ok(), `${label} navigation failed: ${response?.status() ?? "no response"}`);
+    await dismissInstallOffer(page, { timeout });
     await page.locator('.game-shell[data-screen="battle"]').waitFor({ state: "visible", timeout });
     await page.waitForFunction(
       ({ expectedSceneId }) => (
@@ -1066,6 +1071,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
       timeout,
     });
     invariant(response?.ok(), `${label} navigation failed: ${response?.status() ?? "no response"}`);
+    await dismissInstallOffer(page, { timeout });
     await enterLegacyQaBattle(page, label);
     await page.waitForFunction(
       () => Boolean(window.__ASHFALL_AUDIO_QA__) && Boolean(window.__ASHFALL_BATTLE_QA__),
@@ -1219,6 +1225,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
       timeout,
     });
     invariant(response?.ok(), `${label} navigation failed: ${response?.status() ?? "no response"}`);
+    await dismissInstallOffer(page, { timeout });
     await enterLegacyQaBattle(page, label);
     await page.waitForFunction(
       () => Boolean(window.__ASHFALL_AUDIO_QA__) && Boolean(window.__ASHFALL_BATTLE_QA__),
@@ -1309,19 +1316,19 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     }
     for (const line of expectedLines.slice(finalLines.length)) {
       invariant(samples.some((sample) => (
-        sample.audioScene === expectedTakuyaBattleSceneId
+        sample.audioScene === expectedTakuyaPostBossSceneId
         && sample.snapshot?.battleBarks?.active?.some((bark) => (
           bark.scripted === true && bark.text === line.text
         ))
-      )), `${label} base-remains line did not restore ${expectedTakuyaBattleSceneId}: ${line.text}`);
+      )), `${label} base-remains line did not restore ${expectedTakuyaPostBossSceneId}: ${line.text}`);
     }
     if (!audioBlocked) {
       invariant(samples.some((sample) => (
         sample.audioDesiredScene === expectedTakuyaFinalSceneId
         && sample.audioRuntimeScene === expectedTakuyaFinalSceneId
       )), `${label} production mixer never entered the final silence scene`);
-      invariant(samples.some((sample) => sample.audioRuntimeScene === expectedTakuyaBattleSceneId),
-        `${label} production mixer did not restore the Stage 3 battle scene`);
+      invariant(samples.some((sample) => sample.audioRuntimeScene === expectedTakuyaPostBossSceneId),
+        `${label} production mixer did not restore the current Stage 3 pressure scene`);
     }
     assertBattleRemainedNonblocking(samples, label);
     const current = await storyBattleSnapshot(page);
@@ -1383,6 +1390,7 @@ async function auditNonblockingBark({ browser, engine }) {
     diagnostics.reset();
     const response = await page.goto(stationUrl("start", 5), { waitUntil: "domcontentloaded", timeout });
     invariant(response?.ok(), `${label} navigation failed: ${response?.status() ?? "no response"}`);
+    await dismissInstallOffer(page, { timeout });
     await page.locator('.game-shell[data-screen="battle"]').waitFor({ state: "visible", timeout });
     await page.evaluate(() => {
       window.__P5_BARK_LOG__ = [];
