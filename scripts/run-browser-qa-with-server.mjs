@@ -64,6 +64,7 @@ process.env.OUTBREAK_QA_BASE_URL = origin;
 process.env.RECORDS_QA_BASE_URL = origin;
 process.env.MANUAL_ABILITIES_QA_BASE_URL = origin;
 process.env.PWA_TRANSPORT_QA_BASE_URL = origin;
+process.env.V099_ICON_QA_BASE_URL = origin;
 const server = spawn(process.execPath, [
   "scripts/run-vinext.mjs",
   "start",

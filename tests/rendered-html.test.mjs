@@ -149,8 +149,11 @@ test("server-renders the 0.9.8.2 release identity and the PWA gate", async () =>
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
-  assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"/);
-  await access(new URL("../public/favicon.svg", import.meta.url));
+  const iconLink = html.match(/<link rel="icon"[^>]*>/)?.[0] ?? "";
+  assert.match(iconLink, /href="\/icons\/v099\/infected-face-a2-48\.png"/);
+  assert.match(iconLink, /type="image\/png"/);
+  assert.match(iconLink, /sizes="48x48"/);
+  await access(new URL("../public/icons/v099/infected-face-a2-48.png", import.meta.url));
   assert.match(html, /<link rel="manifest" href="\/manifest\.webmanifest"/);
 
   // The entry screen is what the document actually paints first.

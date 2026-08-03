@@ -42,6 +42,7 @@ import {
 } from "../app/visualProfiles.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
+import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
 
 const root = process.cwd();
 const publicDir = path.join(root, "public");
@@ -152,18 +153,10 @@ function categoryForKind(kind) {
 
 record(PRODUCTION_VISUALS.title, { pack: "app-shell", category: "app", criticality: "critical" });
 record(PRODUCTION_VISUALS.command, { pack: "app-shell", category: "app", criticality: "critical" });
-record("/favicon.svg", { pack: "app-shell", category: "app", criticality: "critical" });
 // Every icon the web app manifest or the document head points at. An icon that
 // is referenced but not registered here is absent from the offline pack, so an
 // installed app would go looking for it over a network it may not have.
-for (const icon of [
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/icon-1024.png",
-  "/icons/icon-maskable-192.png",
-  "/icons/icon-maskable-512.png",
-  "/icons/apple-touch-icon-180.png",
-]) {
+for (const icon of V099_APP_ICON_PATHS) {
   record(icon, { pack: "app-shell", category: "app", criticality: "critical" });
 }
 

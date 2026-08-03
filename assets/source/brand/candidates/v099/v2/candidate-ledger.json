@@ -1,0 +1,96 @@
+{
+  "version": "0.9.9.0",
+  "status": "gate-a-icon-v2-a2-approved",
+  "distribution": false,
+  "runtimeReferences": 0,
+  "publicFiles": 0,
+  "gateA": {
+    "audio": "approved",
+    "vfx": "approved",
+    "iconV1": "rejected",
+    "iconV2": "approved",
+    "decisionDate": "2026-08-04",
+    "decisionSource": "Producer decision in the Sol Lead chat"
+  },
+  "provenance": {
+    "type": "project-original-generated-raster",
+    "creator": "OpenAI image generation tool / Sol Lead",
+    "thirdPartySources": [],
+    "externalFonts": [],
+    "tracedArtwork": false,
+    "referenceAssets": [
+      "assets/source/v090/enemies/resonator-infected-pose-sheet-r1.png"
+    ],
+    "generationPrompts": "generation-prompts.json",
+    "commercialUse": "project-original generated raster and repository-local project source",
+    "approvalIssue": "https://github.com/SUSANO-OOO/Zombieee/issues/136",
+    "approvedCandidateId": "v099-infected-face-a2",
+    "approvedMasterSha256": "88b5b3aff7f8a026b3bd9d95433c9363804f4e838d224df4c6298073ea3be38e",
+    "approvalCommentUrl": "https://github.com/SUSANO-OOO/Zombieee/issues/136#issuecomment-5166734506",
+    "approvalEvidence": "Producer explicitly replied A2承認 in the Sol Lead chat on 2026-08-04"
+  },
+  "maskable": {
+    "canvas": 1024,
+    "safeRadius": 409.6,
+    "requiredFeatures": ["abnormalEye", "mouth"]
+  },
+  "productionSelection": {
+    "candidateId": "v099-infected-face-a2",
+    "master": "infected-face-a2-master.png",
+    "masterSha256": "88b5b3aff7f8a026b3bd9d95433c9363804f4e838d224df4c6298073ea3be38e",
+    "identityModule": "app/appIconIdentity.js",
+    "distribution": "approved-derivatives-only",
+    "publicDirectory": "public/icons/v099",
+    "legacyPathsDeleted": false
+  },
+  "candidates": [
+    {
+      "id": "v099-infected-face-a2",
+      "direction": "realistic infection horror",
+      "source": "generated-originals/infected-face-a2-generated.png",
+      "master": "infected-face-a2-master.png",
+      "masterSha256": "88b5b3aff7f8a026b3bd9d95433c9363804f4e838d224df4c6298073ea3be38e",
+      "generatedSourceSha256": "be9e078e9d5ce0cd71ccc364205bf950049e04d3ac25d45fac79798561f62341",
+      "faceBounds": { "x": 72, "y": 80, "width": 790, "height": 825 },
+      "faceCoveragePercent": 80.6,
+      "featurePoints": {
+        "abnormalEye": { "x": 563, "y": 425 },
+        "mouth": { "x": 400, "y": 760 }
+      },
+      "primaryColors": ["#080a09", "#34312e", "#58463d", "#a56d28"],
+      "majorShapesAt48": ["single amber eye", "diagonal face split", "broken lower-jaw shadow"]
+    },
+    {
+      "id": "v099-infected-face-b2",
+      "direction": "graphic horror",
+      "source": "generated-originals/infected-face-b2-generated.png",
+      "master": "infected-face-b2-master.png",
+      "masterSha256": "9c541bd2961aa51d3d62199569c603425a605cf1a97b0a1689c9e838a2c4ddf1",
+      "generatedSourceSha256": "19093efcd77bcc0637d0ecff1713df6e261f5689a5d1f122cfa0a532bc45e904",
+      "faceBounds": { "x": 110, "y": 70, "width": 800, "height": 820 },
+      "faceCoveragePercent": 80.1,
+      "featurePoints": {
+        "abnormalEye": { "x": 678, "y": 392 },
+        "mouth": { "x": 694, "y": 616 }
+      },
+      "primaryColors": ["#070908", "#292b27", "#51372e", "#93652a"],
+      "majorShapesAt48": ["amber eye point", "bald profile crescent", "dark rust cheek mass"]
+    },
+    {
+      "id": "v099-infected-face-c2",
+      "direction": "tactical industrial infected worker",
+      "source": "generated-originals/infected-face-c2-generated.png",
+      "master": "infected-face-c2-master.png",
+      "masterSha256": "8e8c1abe874a98751bd93bbe4deba2dcd471074385e019890835fc4b04ade93e",
+      "generatedSourceSha256": "698847727e4482252dd45395ed9e57711c9b5d58a91f962f0f8194ec355f6837",
+      "faceBounds": { "x": 160, "y": 90, "width": 760, "height": 800 },
+      "faceCoveragePercent": 78.1,
+      "featurePoints": {
+        "abnormalEye": { "x": 315, "y": 475 },
+        "mouth": { "x": 424, "y": 735 }
+      },
+      "primaryColors": ["#080a09", "#35332f", "#5b3b26", "#68765b"],
+      "majorShapesAt48": ["paired sickly eyes", "opposite diagonal head", "reflective workwear slash"]
+    }
+  ]
+}
