@@ -1,0 +1,36 @@
+{
+  "version": "0.9.9.0",
+  "status": "gate-a-candidates-only",
+  "distribution": false,
+  "runtimeReferences": 0,
+  "publicFiles": 0,
+  "provenance": {
+    "type": "project-original",
+    "creator": "OpenAI Codex / Sol Lead",
+    "thirdPartySources": [],
+    "externalFonts": [],
+    "tracedArtwork": false,
+    "commercialUse": "project-owned original geometry",
+    "approvalIssue": "https://github.com/SUSANO-OOO/Zombieee/issues/136",
+    "approvedCandidateId": null,
+    "approvedMasterSha256": null,
+    "approvalCommentUrl": null
+  },
+  "candidates": [
+    {
+      "id": "v099-infected-face-a",
+      "master": "infected-face-a.svg",
+      "direction": "asymmetric commuter infection, amber eye, torn jaw, restrained station sign"
+    },
+    {
+      "id": "v099-infected-face-b",
+      "master": "infected-face-b.svg",
+      "direction": "punk maintenance infection, mechanical eye frame, cheek tag, station rails"
+    },
+    {
+      "id": "v099-infected-face-c",
+      "master": "infected-face-c.svg",
+      "direction": "screaming infected face, acid tongue, broken socket, minimal platform arc"
+    }
+  ]
+}

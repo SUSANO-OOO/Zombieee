@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" data-candidate-id="v099-infected-face-b">
+  <!-- Project-original Gate A candidate. No external artwork, font, or traced source. -->
+  <defs>
+    <radialGradient id="b-bg" cx="46%" cy="45%" r="78%">
+      <stop offset="0" stop-color="#26372f"/>
+      <stop offset=".5" stop-color="#131817"/>
+      <stop offset="1" stop-color="#070909"/>
+    </radialGradient>
+    <linearGradient id="b-skin" x1=".12" y1=".04" x2=".88" y2=".94">
+      <stop offset="0" stop-color="#b6ad76"/>
+      <stop offset=".44" stop-color="#737750"/>
+      <stop offset="1" stop-color="#25372e"/>
+    </linearGradient>
+    <linearGradient id="b-cap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#303936"/>
+      <stop offset="1" stop-color="#111615"/>
+    </linearGradient>
+    <radialGradient id="b-lens" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#f8ffd1"/>
+      <stop offset=".22" stop-color="#6fffd1"/>
+      <stop offset=".6" stop-color="#55c8a8" stop-opacity=".68"/>
+      <stop offset="1" stop-color="#55c8a8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="backdrop">
+    <rect width="1024" height="1024" fill="url(#b-bg)"/>
+    <circle cx="512" cy="512" r="402" fill="none" stroke="#63d4b2" stroke-width="16" stroke-opacity=".14"/>
+    <path d="M150 742L845 214M194 798L889 270" stroke="#d89537" stroke-width="18" stroke-opacity=".13"/>
+    <path d="M166 248h150v58H166z" fill="#0c1412" stroke="#5fd5b2" stroke-width="8" opacity=".76"/>
+    <path d="M194 277h94" stroke="#e3a13c" stroke-width="9"/>
+  </g>
+  <g id="mark" transform="translate(512 506) rotate(-8) translate(-512 -506) translate(35.8 35.8) scale(.93)">
+    <path d="M294 819Q350 734 429 702L637 711Q699 754 742 819Z" fill="#111615" stroke="#7a8a78" stroke-width="14"/>
+    <path d="M411 660L396 759Q503 814 620 752L610 650Z" fill="#53614e" stroke="#141817" stroke-width="18"/>
+    <!-- Three-quarter station worker silhouette: long broken cheek and one squared ear tag. -->
+    <path d="M316 420Q333 275 456 213Q581 150 690 259Q765 335 727 490L684 650Q652 737 560 766Q459 792 376 717Q303 651 316 420Z" fill="url(#b-skin)" stroke="#111614" stroke-width="24"/>
+    <path d="M304 423Q310 299 408 228Q350 219 303 260Q261 303 257 380L281 489Z" fill="#161b19"/>
+    <!-- Off-centre station cap keeps this candidate distinct without making the sign the subject. -->
+    <path d="M286 332Q367 191 579 190Q677 202 721 279L686 342Q506 291 312 374Z" fill="url(#b-cap)" stroke="#58675b" stroke-width="14"/>
+    <path d="M301 354Q487 276 700 326L656 373Q475 325 305 394Z" fill="#0f1413" stroke="#d7953b" stroke-width="11"/>
+    <path d="M435 227h125l38 67-190 17z" fill="#1f2925"/>
+    <path d="M455 253h112" stroke="#60d3af" stroke-width="14"/>
+    <!-- Left eye is a bolted broken lens; right eye is an infected socket. -->
+    <path d="M318 432Q384 380 463 418L448 509Q371 535 306 482Z" fill="#111513"/>
+    <circle cx="391" cy="463" r="60" fill="url(#b-lens)"/>
+    <circle cx="391" cy="463" r="29" fill="#101614" stroke="#d89b3d" stroke-width="12"/>
+    <circle cx="391" cy="463" r="8" fill="#86ffd5"/>
+    <path d="M352 414l-15-26M428 407l18-25M445 470l28 5M342 501l-20 24" stroke="#d89b3d" stroke-width="9" stroke-linecap="round"/>
+    <path d="M526 418Q611 372 694 433L676 513Q594 535 529 485Z" fill="#121513"/>
+    <path d="M565 440l39-26 28 17 32-6 17 31-30 39-61-3z" fill="#5bc7a7" opacity=".8"/>
+    <!-- Nose break and cheek staples form a readable asymmetric slash at 48px. -->
+    <path d="M491 450L465 565L539 584" fill="none" stroke="#35473a" stroke-width="25" stroke-linecap="round"/>
+    <path d="M457 493l40 10M450 531l42 7M462 566l41 3" stroke="#df7338" stroke-width="11" stroke-linecap="round"/>
+    <path d="M344 584Q451 548 654 572L628 696Q545 758 428 714Q368 686 344 584Z" fill="#471a14" stroke="#101412" stroke-width="18"/>
+    <path d="M372 593Q474 567 621 589L604 643Q493 674 389 635Z" fill="#e4d5aa"/>
+    <path d="M407 585l-4 64M449 578l-1 77M492 576l2 85M536 577l5 78M580 581l8 64" stroke="#473c30" stroke-width="10"/>
+    <path d="M416 674Q518 706 607 662Q584 721 523 737Q455 726 416 674Z" fill="#a84230"/>
+    <!-- Torn cheek tag: a small station-equipment detail, not a second focal point. -->
+    <path d="M641 516l70 26-31 79-62-38z" fill="#26362f" stroke="#62d3b0" stroke-width="9"/>
+    <path d="M673 538v64M646 570h51" stroke="#e0a03c" stroke-width="9"/>
+    <path d="M330 541l-53 9M341 570l-50 28M680 380l57-17" stroke="#d96f37" stroke-width="13" stroke-linecap="round" opacity=".76"/>
+  </g>
+</svg>
