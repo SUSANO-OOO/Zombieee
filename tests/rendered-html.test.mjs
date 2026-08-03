@@ -901,7 +901,18 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   assert.equal(advanceBattlefieldSupply(destroyedPod.supply, BATTLEFIELD_SUPPLY_DEFS.pod.destroySeconds).phase, "expired");
 
   const drumPlacement = resolveBattlefieldSupplyPlacement({ ...base, supplyKind: "drum", scrap: 100, nextId: 20 });
-  const manual = requestDrumDetonation(drumPlacement.supplies[0]);
+  assert.equal(drumPlacement.supplies[0].phase, "dropping");
+  assert.equal(drumPlacement.supplies[0].targetable, false);
+  assert.equal(requestDrumDetonation(drumPlacement.supplies[0]).ok, false);
+  const drumImpact = advanceBattlefieldSupply(drumPlacement.supplies[0], BATTLEFIELD_SUPPLY_DEFS.drum.dropSeconds);
+  assert.equal(drumImpact.phase, "impact");
+  assert.equal(drumImpact.targetable, false);
+  assert.equal(requestDrumDetonation(drumImpact).ok, false);
+  const activeDrum = advanceBattlefieldSupply(drumImpact, BATTLEFIELD_SUPPLY_DEFS.drum.impactSeconds);
+  assert.equal(activeDrum.phase, "active");
+  assert.equal(activeDrum.targetable, true);
+  assert.equal(activeDrum.hp, 90);
+  const manual = requestDrumDetonation(activeDrum);
   assert.equal(manual.ok, true);
   const explosion = resolveDrumDetonation({
     supply: manual.supply,
@@ -922,7 +933,7 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   assert.equal(burned.fighters[0].slowMultiplier, BATTLEFIELD_SUPPLY_DEFS.drum.slowMultiplier);
   assert.equal(advanceAreaEffects({ areaEffects: explosion.areaEffects, fighters: [], seconds: BATTLEFIELD_SUPPLY_DEFS.drum.burnSeconds }).areaEffects[0].phase, "expired");
 
-  const destroyedDrum = applyBattlefieldSupplyDamage(drumPlacement.supplies[0], 999);
+  const destroyedDrum = applyBattlefieldSupplyDamage(activeDrum, 999);
   assert.equal(destroyedDrum.detonationRequested, true);
   assert.equal(destroyedDrum.supply.phase, "detonating");
   assert.equal(destroyedDrum.supply.detonationReason, "destroyed");
@@ -981,8 +992,8 @@ test("models all three battlefield supplies without fixed pod count or lane caps
   assert.equal(leftBurn.fighters[0].burning, false);
   assert.equal(leftBurn.fighters[0].slowMultiplier, 1);
   assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), true);
-  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), false);
-  assert.equal(enemyCanTargetBattlefieldSupply({ supply: drumPlacement.supplies[0], enemyX: 480, enemyY: LANE_Y[1], attackRange: 20 }), true);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: activeDrum, enemyX: 600, enemyY: LANE_Y[1], attackRange: 20 }), false);
+  assert.equal(enemyCanTargetBattlefieldSupply({ supply: activeDrum, enemyX: 480, enemyY: LANE_Y[1], attackRange: 20 }), true);
   assert.equal(enemyCanTargetBattlefieldSupply({ supply: landing.supply, enemyX: 600, enemyY: LANE_Y[0], attackRange: 20 }), false);
 });
 
@@ -1039,8 +1050,12 @@ test("keeps supplies, area effects, and airstrikes aligned and lane-isolated in 
     assert.deepEqual(landed.hits.map(({ id }) => id), [100 + lane]);
 
     const drum = resolveBattlefieldSupplyPlacement({ ...base, supplyKind: "drum" });
+    const activeDrum = advanceBattlefieldSupply(
+      advanceBattlefieldSupply(drum.supplies[0], BATTLEFIELD_SUPPLY_DEFS.drum.dropSeconds),
+      BATTLEFIELD_SUPPLY_DEFS.drum.impactSeconds,
+    );
     const explosion = resolveDrumDetonation({
-      supply: requestDrumDetonation(drum.supplies[0]).supply,
+      supply: requestDrumDetonation(activeDrum).supply,
       fighters: fighters(200, "zombie"),
       laneCenters,
     });
@@ -1523,11 +1538,10 @@ test("validates, damages, and releases the battlefield container without changin
   assert.doesNotMatch(enemyBaseDraw, /LANE_Y/);
   assert.match(enemyBaseDraw, /const hitX = barrier\.attackX;[\s\S]*createRadialGradient\(hitX,[\s\S]*fillRect\(hitX - 55/);
   assert.match(enemyBaseDraw, /breached[\s\S]*感染拠点 破壊/);
-  assert.match(game, /const enemyBaseDestroyed = g\.barricadeHp <= 0[\s\S]*g\.resultPresented = !enemyBaseDestroyed/);
+  assert.match(game, /const enemyBaseDestroyed = g\.barricadeHp <= 0[\s\S]*const resultPresentationPending = battleResultPresentationPending\(g\.battlePresentation,[\s\S]*g\.resultPresented = !resultPresentationPending/);
   assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
-  assert.match(game, /g\.resultPresented = !enemyBaseDestroyed/);
-  assert.match(game, /if \(!enemyBaseDestroyed\) setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.operationId,[\s\S]*won: g\.won/);
-  assert.match(game, /if \(g\.over && !g\.resultPresented && !g\.survivalRun\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*if \(collapseStep\.complete\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.operationId,[\s\S]*won: g\.won/);
+  assert.match(game, /if \(!resultPresentationPending\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.operationId,[\s\S]*won: g\.won/);
+  assert.match(game, /if \(g\.over && !g\.resultPresented && !g\.survivalRun\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*battleResultPresentationPending\(g\.battlePresentation, \{ enemyBaseCollapsePending \}\)[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.operationId,[\s\S]*won: g\.won/);
   assert.match(game, /resolveStageResult\(campaignSave, \{[\s\S]*resultId: end\.resultId,[\s\S]*stageId: end\.stageId,[\s\S]*baseMaxHp: end\.baseMaxHp/);
   assert.match(game, /if \(!end \|\| finalizedEndRef\.current === end\) return;[\s\S]*window\.setTimeout\(async \(\) => \{[\s\S]*if \(finalizedEndRef\.current === end\) return;[\s\S]*finalizedEndRef\.current = end/);
   assert.match(game, /setCampaignSave\(resolved\.save as CampaignSave\)[\s\S]*setScreen\("result"\)/);
@@ -1727,7 +1741,8 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /productionMixer\.stopAll\(\{ category, fadeMs: 35 \}\)/);
   assert.match(game, /sfxMutedRef\.current = next/);
   assert.match(game, /if \(g\.paused\) \{[\s\S]*g\.battleBarks = clearNonScriptedBattleBarks\(g\.battleBarks\)[\s\S]*stopMusic\(\); stopJingle\(\); stopSfx\(\);/);
-  assert.match(game, /stopMusic\(\); stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
+  assert.match(game, /if \(!resultPresentationPending\) \{[\s\S]*stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
+  assert.match(game, /if \(!battleResultPresentationPending\(g\.battlePresentation, \{ enemyBaseCollapsePending \}\)\) \{[\s\S]*stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
   assert.match(game, /const disposeBattleRuntime = useCallback\(\(\) => \{[\s\S]*stopMusic\(\);[\s\S]*stopJingle\(\);[\s\S]*stopSfx\(\)/);
   const returnToMapBlock = game.slice(game.indexOf("const returnToMap"), game.indexOf("const handleEventComplete"));
   assert.notEqual(returnToMapBlock, "");

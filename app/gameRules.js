@@ -198,6 +198,7 @@ export const BATTLEFIELD_SUPPLY_DEFS = Object.freeze({
   drum: Object.freeze({
     kind: "drum", name: "爆薬ドラム", key: "B", cost: 40,
     maxHp: 90, minX: 235, maxX: 805, placementClearance: 64,
+    dropSeconds: .62, impactSeconds: .24,
     blastRadius: 112, blastDamage: 118,
     burnRadius: 88, burnDamagePerSecond: 15, burnSeconds: 4.5, slowMultiplier: .8,
     destroySeconds: .36, blocksEnemies: false,
@@ -626,14 +627,14 @@ export function resolveBattlefieldSupplyPlacement(input) {
     lane,
     x: input.x,
     y,
-    phase: kind === "pod" ? "dropping" : "active",
-    phaseTime: kind === "pod" ? def.dropSeconds : 0,
+    phase: kind === "pod" || kind === "drum" ? "dropping" : "active",
+    phaseTime: kind === "pod" || kind === "drum" ? def.dropSeconds : 0,
     remaining: kind === "medical" ? def.effectSeconds : null,
     hp: def.maxHp,
     maxHp: def.maxHp,
     blocksEnemies: kind === "pod" ? false : def.blocksEnemies,
-    targetable: kind !== "pod",
-    landingTriggered: kind !== "pod",
+    targetable: kind !== "pod" && kind !== "drum",
+    landingTriggered: kind !== "pod" && kind !== "drum",
     detonationTriggered: false,
   };
   const medicalEffect = kind === "medical" ? createMedicalAreaEffect(supply, nextAreaEffectId) : null;
@@ -675,11 +676,30 @@ export function advanceBattlefieldSupply(supply, seconds) {
   if (!def || elapsed === 0 || supply.phase === "expired") return supply;
   if (supply.phase === "dropping") {
     const phaseTime = Math.max(0, supply.phaseTime - elapsed);
-    return { ...supply, phaseTime, readyToLand: phaseTime === 0 };
+    if (phaseTime > 0) return { ...supply, phaseTime, readyToLand: false };
+    if (supply.kind === "drum") {
+      return {
+        ...supply,
+        phase: "impact",
+        phaseTime: def.impactSeconds,
+        readyToLand: false,
+        landingTriggered: true,
+        targetable: false,
+      };
+    }
+    return { ...supply, phaseTime: 0, readyToLand: true };
   }
   if (supply.phase === "impact") {
     const phaseTime = Math.max(0, supply.phaseTime - elapsed);
-    return phaseTime === 0 ? { ...supply, phase: "active", phaseTime: 0 } : { ...supply, phaseTime };
+    return phaseTime === 0
+      ? {
+        ...supply,
+        phase: "active",
+        phaseTime: 0,
+        targetable: true,
+        blocksEnemies: supply.kind === "pod" ? true : def.blocksEnemies,
+      }
+      : { ...supply, phaseTime };
   }
   if (supply.phase === "destroying") {
     const phaseTime = Math.max(0, supply.phaseTime - elapsed);
