@@ -354,6 +354,7 @@ import {
 import {
   V099_BOSS_DEFEAT_TIMELINE,
   advanceBattlePresentationRuntime,
+  battleResultPresentationPending,
   battlePresentationSnapshot,
   crawlerGroundingSnapshot,
   createBattlePresentationRuntime,
@@ -5739,34 +5740,54 @@ function drawAirstrikeObserver(ctx: CanvasRenderingContext2D, g: Game) {
   const pose = airstrikeObserverPose(g.airstrike);
   if (!pose.visible) return;
   const crawler = WORLD_GEOMETRY.crawler;
-  const x = crawler.commandDeckX + 4;
-  const deckY = crawler.commandDeckY - 4;
-  const y = deckY - pose.rise * 20;
+  const x = crawler.commandDeckX + 2;
+  const deckY = crawler.commandDeckY - 5;
+  const mastTopY = deckY - 9 - pose.rise * 22;
   ctx.save();
-  ctx.globalAlpha = .45 + pose.rise * .55;
-  // Abstract deck-observer cue only; it does not define a named character identity.
-  ctx.fillStyle = "#2b3130";
-  ctx.fillRect(x - 6, y + 3, 12, 17);
-  ctx.fillStyle = "#d1bd95";
-  ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = "#171b1b"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(x + 4, y - 2); ctx.lineTo(x + 10, y + 2); ctx.stroke();
+  ctx.globalAlpha = .55 + pose.rise * .45;
+  ctx.strokeStyle = "#171d1c";
+  ctx.lineWidth = 7;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x, deckY + 2);
+  ctx.lineTo(x, mastTopY);
+  ctx.stroke();
+  ctx.strokeStyle = "#7b8074";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, deckY + 2);
+  ctx.lineTo(x, mastTopY);
+  ctx.stroke();
+  ctx.fillStyle = "#222a29";
+  ctx.strokeStyle = "#8d8975";
+  ctx.lineWidth = 1.4;
+  ctx.fillRect(x - 8, mastTopY - 5, 16, 10);
+  ctx.strokeRect(x - 8, mastTopY - 5, 16, 10);
 
   if (pose.action === "radio") {
     const pulse = 8 + Math.sin(g.time * 18) * 2;
     ctx.strokeStyle = "rgba(255,193,88,.9)"; ctx.lineWidth = 2;
     for (const radius of [pulse, pulse + 7]) {
-      ctx.beginPath(); ctx.arc(x + 11, y + 1, radius, -.7, .7); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x + 6, mastTopY, radius, -.72, .72); ctx.stroke();
     }
   } else if (pose.action === "targeting") {
     ctx.strokeStyle = "#ffd36a"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(x + 16, y - 2, 8, 0, Math.PI * 2); ctx.moveTo(x + 16, y - 14); ctx.lineTo(x + 16, y + 10); ctx.moveTo(x + 4, y - 2); ctx.lineTo(x + 28, y - 2); ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + 9, mastTopY - 1, 7, -.95, .95);
+    ctx.moveTo(x + 4, mastTopY + 5);
+    ctx.lineTo(x + 13, mastTopY - 7);
+    ctx.stroke();
   } else if (pose.action === "inbound" || pose.action === "impact") {
     const signal = pose.action === "impact" ? 1 : .55 + Math.sin(g.time * 15) * .35;
     ctx.fillStyle = `rgba(255,112,54,${signal})`;
-    ctx.beginPath(); ctx.arc(x + 13, y - 10, pose.action === "impact" ? 7 : 5, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = "#e7d8ad"; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(x + 4, y + 7); ctx.lineTo(x + 12, y - 8); ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + 7, mastTopY - 7, pose.action === "impact" ? 5 : 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#e7d8ad"; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 5, mastTopY + 1);
+    ctx.lineTo(x + 6, mastTopY - 6);
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -5916,22 +5937,33 @@ function drawCrawler(
     ctx.fillRect(crawler.x + 18, crawler.y + 45, crawler.width - 36, crawler.height - 50);
   }
   ctx.globalAlpha = 1;
-  // The command cupola and fixed gun are rendered as recognizable machinery.
-  // Avoid free-standing debug-looking rectangles over the authored crawler art.
+  // Keep command and support state inside one roof-mounted machine. The feet
+  // extend into the authored hull so no free-standing cyan HUD glyph remains.
   ctx.save();
-  ctx.translate(crawler.commandDeckX, crawler.commandDeckY - 10);
-  ctx.fillStyle = "rgba(18,24,23,.92)";
+  ctx.translate(crawler.commandDeckX, crawler.commandDeckY - 5);
+  ctx.strokeStyle = "#2a302d";
+  ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(-12, 7); ctx.lineTo(-9, -5); ctx.lineTo(7, -9); ctx.lineTo(13, 5);
-  ctx.lineTo(9, 10); ctx.lineTo(-8, 10); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = "#5e6b63"; ctx.lineWidth = 1.4; ctx.stroke();
-  ctx.strokeStyle = g.airstrike.phase === "idle" ? "#75a898" : "#ffb95d";
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(0, -1, 5, -.88, 1.15); ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(2, -6);
-  ctx.lineTo(8 + Math.sin(grounding.antennaSwing) * 10, -16 + Math.cos(grounding.antennaSwing) * 2);
+  ctx.moveTo(-10, 5); ctx.lineTo(-13, 18);
+  ctx.moveTo(10, 5); ctx.lineTo(13, 18);
   ctx.stroke();
+  ctx.fillStyle = "#252b29";
+  ctx.fillRect(-18, 14, 36, 6);
+  ctx.fillStyle = "rgba(24,29,28,.98)";
+  ctx.beginPath();
+  ctx.moveTo(-15, 8); ctx.lineTo(-12, -5); ctx.lineTo(8, -8); ctx.lineTo(15, 4);
+  ctx.lineTo(11, 11); ctx.lineTo(-11, 11); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "#74786c"; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = g.airstrike.phase === "idle" ? "#58625b" : "#ffb95d";
+  ctx.fillRect(-8, 2, 16, 3);
+  ctx.strokeStyle = "#8c8a77";
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(5, -6);
+  ctx.lineTo(11 + Math.sin(grounding.antennaSwing) * 10, -20 + Math.cos(grounding.antennaSwing) * 2);
+  ctx.stroke();
+  ctx.fillStyle = "#c18b45";
+  ctx.beginPath(); ctx.arc(11 + Math.sin(grounding.antennaSwing) * 10, -20 + Math.cos(grounding.antennaSwing) * 2, 2.2, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
   drawAirstrikeObserver(ctx, g);
   if (!visualState.stored) {
@@ -6248,8 +6280,31 @@ function drawEmergencySupport(ctx: CanvasRenderingContext2D, g: Game) {
   if (runtime.phase === "inbound") {
     const progress = 1 - runtime.phaseTime / AIRSTRIKE_DEF.inboundSeconds;
     const jetX = -80 + progress * (W + 160);
-    ctx.fillStyle = "#333b3c"; ctx.beginPath(); ctx.moveTo(jetX, 86); ctx.lineTo(jetX - 34, 96); ctx.lineTo(jetX - 8, 80); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = "rgba(225,220,196,.34)"; ctx.beginPath(); ctx.moveTo(jetX - 38, 92); ctx.lineTo(jetX - 130, 82); ctx.stroke();
+    ctx.save();
+    ctx.translate(jetX, 86);
+    ctx.fillStyle = "#2b3436";
+    ctx.strokeStyle = "#7f8985";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(24, 0);
+    ctx.lineTo(4, -5);
+    ctx.lineTo(-20, -18);
+    ctx.lineTo(-14, -4);
+    ctx.lineTo(-31, -1);
+    ctx.lineTo(-14, 4);
+    ctx.lineTo(-20, 17);
+    ctx.lineTo(4, 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#9b4b30";
+    ctx.fillRect(-24, -4, 7, 8);
+    ctx.strokeStyle = "rgba(225,220,196,.34)";
+    ctx.beginPath();
+    ctx.moveTo(-31, -2); ctx.lineTo(-126, -8);
+    ctx.moveTo(-31, 2); ctx.lineTo(-116, 8);
+    ctx.stroke();
+    ctx.restore();
   }
   if (runtime.phase === "impact") {
     const glow = ctx.createRadialGradient(runtime.targetX, y, 3, runtime.targetX, y, AIRSTRIKE_DEF.radius);
@@ -6727,6 +6782,7 @@ function drawBattlePresentationEffects(ctx: CanvasRenderingContext2D, g: Game, e
       continue;
     }
     if (effect.kind === "boss-defeat") {
+      const bossSnapshot = battlePresentationSnapshot(effect, effectDensity);
       for (const burst of V099_BOSS_DEFEAT_TIMELINE.smallBursts) {
         if (effect.elapsed < burst.at) continue;
         drawPresentationExplosion(ctx, {
@@ -6747,6 +6803,26 @@ function drawBattlePresentationEffects(ctx: CanvasRenderingContext2D, g: Game, e
           duration: 1.05,
         }, effectDensity, effect.x + burst.dx, effect.y + burst.dy, burst.scale);
       }
+      if (bossSnapshot.majorBurstActive) {
+        const burst = V099_BOSS_DEFEAT_TIMELINE.majorBurst;
+        drawPresentationExplosion(ctx, {
+          ...effect,
+          kind: "explosion",
+          scale: "boss",
+          elapsed: bossSnapshot.majorBurstElapsed,
+          duration: effect.duration - burst.at,
+        }, effectDensity, effect.x + burst.dx, effect.y + burst.dy, burst.scale);
+      }
+      if (bossSnapshot.residueAlpha > 0) {
+        ctx.save();
+        ctx.globalAlpha = bossSnapshot.residueAlpha;
+        ctx.fillStyle = "#241814";
+        ctx.beginPath();
+        ctx.ellipse(effect.x, effect.y + 8, 76, 19, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      continue;
     }
     drawPresentationExplosion(ctx, effect, effectDensity);
   }
@@ -9872,6 +9948,7 @@ export function AshfallGame() {
           paused: g.paused,
           over: g.over,
           won: g.won,
+          resultPresented: g.resultPresented,
           baseHp: g.baseHp,
           baseMaxHp: g.baseMaxHp,
           livingHumanFighters: livingHumans.length,
@@ -10636,6 +10713,95 @@ export function AshfallGame() {
             .map((hit) => ({ ...hit })),
         };
       },
+      prepareV099CrawlerInputProof: () => {
+        const g = gameRef.current;
+        g.fighters = [];
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = g.definition.timeline.length;
+        g.deployQueue = [];
+        clearTransientRenderObjects(g);
+        g.pendingWeaponHits = [];
+        g.running = true;
+        g.paused = false;
+        g.over = false;
+        g.won = false;
+        g.baseHp = g.baseMaxHp;
+        g.crawlerAbility = createCrawlerAbilityRuntime(1) as CrawlerRuntime;
+        const targets = ([
+          ["walker", 0],
+          ["crusher", 1],
+          ["resonator", 2],
+        ] as const).map(([kind, lane], index) => {
+          const target = spawnEnemy(g, kind, lane);
+          target.x = 610 + index * 48;
+          target.y = activeLaneCenters[lane];
+          target.lane = lane;
+          target.anchorLane = lane;
+          target.maxHp = Math.max(600, target.maxHp);
+          target.hp = target.maxHp;
+          target.speed = 0;
+          target.laneSpeed = 0;
+          target.damage = 0;
+          target.cooldown = 99;
+          target.combatReady = true;
+          target.gateEntering = false;
+          target.aiMoveDirection = 0;
+          return { id: target.id, kind: target.kind, initialHp: target.hp };
+        });
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return { targets, ability: { ...g.crawlerAbility } };
+      },
+      prepareV099AirstrikeInputProof: () => {
+        const g = gameRef.current;
+        const targetX = 620;
+        const targetY = activeLaneCenters[1];
+        g.fighters = [];
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = g.definition.timeline.length;
+        clearTransientRenderObjects(g);
+        g.running = true;
+        g.paused = false;
+        g.over = false;
+        g.won = false;
+        g.baseHp = g.baseMaxHp;
+        g.supportGauge = SUPPORT_GAUGE_MAX;
+        g.airstrike = createEmergencySupportRuntime() as AirstrikeRuntime;
+        const targets = ([
+          ["walker", targetX - 34, targetY - 8],
+          ["crusher", targetX + 16, targetY + 6],
+          ["resonator", targetX + 58, targetY - 3],
+        ] as const).map(([kind, x, y], index) => {
+          const target = spawnEnemy(g, kind, 1, index);
+          target.x = x;
+          target.y = y;
+          target.lane = 1;
+          target.anchorLane = 1;
+          target.maxHp = Math.max(600, target.maxHp);
+          target.hp = target.maxHp;
+          target.speed = 0;
+          target.laneSpeed = 0;
+          target.damage = 0;
+          target.cooldown = 99;
+          target.combatReady = true;
+          target.gateEntering = false;
+          target.aiMoveDirection = 0;
+          return { id: target.id, kind: target.kind, initialHp: target.hp };
+        });
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return { targetX, targetY, targets, supportGauge: g.supportGauge };
+      },
       prepareCrawlerVfxProof: (
         state: "door" | "firing" | "hit" | "repair" | "critical" | "stored" = "firing",
       ) => {
@@ -10652,6 +10818,7 @@ export function AshfallGame() {
         g.paused = true;
         g.over = state === "stored";
         g.won = state === "stored";
+        g.resultPresented = state === "stored";
         g.baseMaxHp = 500;
         g.baseHp = state === "critical" ? 110 : 390;
         g.crawlerHitFlash = state === "hit" ? .18 : 0;
@@ -10762,6 +10929,47 @@ export function AshfallGame() {
         setEnd(null);
         setScreen("battle");
         return { kind, effects: g.battlePresentation.effects.map((effect) => ({ ...effect })) };
+      },
+      prepareV099TerminalBossDefeatProof: () => {
+        const g = gameRef.current;
+        const definition = createBattleDefinition(OUTBREAK_MISSIONS[0].id);
+        clearTransientRenderObjects(g);
+        g.definition = definition;
+        g.resultId = `local-qa:terminal-boss:${definition.operationId}`;
+        g.fighters = [];
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = definition.timeline.length;
+        g.time = Math.max(PREP_SECONDS, definition.timeline.at(-1)?.at ?? PREP_SECONDS);
+        g.wave = definition.timeline.at(-1)?.wave ?? 1;
+        g.baseHp = g.baseMaxHp;
+        g.barricadeHp = Math.max(1, definition.enemyBaseMaxHp);
+        g.barricadeMaxHp = Math.max(1, definition.enemyBaseMaxHp);
+        g.barricadeVulnerable = false;
+        g.bossDefeated = false;
+        g.bossDefeatPending = false;
+        g.running = true;
+        g.paused = false;
+        g.over = false;
+        g.won = false;
+        g.resultPresented = false;
+        g.battlePresentation = resetBattlePresentationRuntime(g.battlePresentation, g.battleAudioGeneration);
+        const boss = spawnEnemy(g, definition.bossEnemyKind, 1);
+        boss.x = 690;
+        boss.y = activeLaneCenters[1];
+        boss.hp = 0;
+        boss.combatReady = true;
+        boss.spawnGrace = 0;
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return {
+          operationId: definition.operationId,
+          bossId: boss.id,
+          bossKind: boss.kind,
+          resultId: g.resultId,
+        };
       },
       advanceV099PresentationProof: (seconds = .1) => {
         const g = gameRef.current;
@@ -10896,6 +11104,7 @@ export function AshfallGame() {
           paused: g.paused,
           over: g.over,
           won: g.won,
+          resultPresented: g.resultPresented,
           survivalRun: g.survivalRun ? {
             ...g.survivalRun,
             formation: {
@@ -10943,6 +11152,7 @@ export function AshfallGame() {
           crawlerHitFlash: g.crawlerHitFlash,
           crawlerRepairFlash: g.crawlerRepairFlash,
           crawlerDoor: { ...g.crawlerDoor },
+          crawlerAbility: { ...g.crawlerAbility },
           crawlerVisual: crawlerCombatVfxSnapshot({
             baseHp: g.baseHp,
             baseMaxHp: g.baseMaxHp,
@@ -20110,34 +20320,42 @@ export function AshfallGame() {
           g.enemyBaseCollapse = 0;
           emitBattleBark(g, g.won ? "victory" : "defeat", "guide", "tactical");
           g.over = true;
-          g.resultPresented = !enemyBaseDestroyed;
-          if (!enemyBaseDestroyed) setEnd({
-            resultId: g.resultId,
-            stageId: g.definition.operationId,
-            won: g.won,
-            time: g.time,
-            wave: g.wave,
-            kills: g.kills,
-            scrap: g.scrap,
-            baseHp: Math.max(0, g.baseHp),
-            baseMaxHp: g.baseMaxHp,
-            maxCombo: g.maxCombo,
-            unitsLost: g.unitsLost,
-            bossDefeated: g.bossDefeated,
-            enemyBaseDestroyed,
-            encounteredEnemyKinds: [...g.enemyKindsSeen],
-            enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
-            unitStats: {
-              damageByUnit: { ...g.combatMetrics.damageByUnit },
-              damageTakenByUnit: { ...g.combatMetrics.damageTakenByUnit },
-              healingByUnit: { ...g.combatMetrics.healingByUnit },
-            },
-            missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
-              ? { ...g.stageMission }
-              : undefined,
+          const resultPresentationPending = battleResultPresentationPending(g.battlePresentation, {
+            enemyBaseCollapsePending: enemyBaseDestroyed,
           });
+          g.resultPresented = !resultPresentationPending;
+          if (!resultPresentationPending) {
+            stopSfx();
+            setEnd({
+              resultId: g.resultId,
+              stageId: g.definition.operationId,
+              won: g.won,
+              time: g.time,
+              wave: g.wave,
+              kills: g.kills,
+              scrap: g.scrap,
+              baseHp: Math.max(0, g.baseHp),
+              baseMaxHp: g.baseMaxHp,
+              maxCombo: g.maxCombo,
+              unitsLost: g.unitsLost,
+              bossDefeated: g.bossDefeated,
+              enemyBaseDestroyed,
+              encounteredEnemyKinds: [...g.enemyKindsSeen],
+              enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
+              unitStats: {
+                damageByUnit: { ...g.combatMetrics.damageByUnit },
+                damageTakenByUnit: { ...g.combatMetrics.damageTakenByUnit },
+                healingByUnit: { ...g.combatMetrics.healingByUnit },
+              },
+              missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
+                ? { ...g.stageMission }
+                : undefined,
+            });
+            playCue(g.won ? "victory" : "defeat");
+            playEndJingle(g.won);
+          }
           chooseAction(null);
-          stopMusic(); stopSfx();
+          stopMusic();
           if (enemyBaseDestroyed) {
             addSemanticBattlePresentation(g, {
               semantic: "explosion-result",
@@ -20159,15 +20377,17 @@ export function AshfallGame() {
               dedupeKey: `enemy-base:${g.resultId}:collapse`,
             });
           }
-          playCue(g.won ? "victory" : "defeat");
-          playEndJingle(g.won);
         }
       }
 
       if (g.over && !g.resultPresented && !g.survivalRun) {
-        const collapseStep = advanceEnemyBaseCollapse({ barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt, duration: ENEMY_BASE_COLLAPSE_SECONDS });
-        g.enemyBaseCollapse = collapseStep.elapsed;
-        if (collapseStep.complete) {
+        let enemyBaseCollapsePending = false;
+        if (g.barricadeHp <= 0) {
+          const collapseStep = advanceEnemyBaseCollapse({ barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt, duration: ENEMY_BASE_COLLAPSE_SECONDS });
+          g.enemyBaseCollapse = collapseStep.elapsed;
+          enemyBaseCollapsePending = !collapseStep.complete;
+        }
+        if (!battleResultPresentationPending(g.battlePresentation, { enemyBaseCollapsePending })) {
           g.resultPresented = true;
           setEnd({
             resultId: g.resultId,
@@ -20190,7 +20410,13 @@ export function AshfallGame() {
               damageTakenByUnit: { ...g.combatMetrics.damageTakenByUnit },
               healingByUnit: { ...g.combatMetrics.healingByUnit },
             },
+            missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
+              ? { ...g.stageMission }
+              : undefined,
           });
+          stopSfx();
+          playCue(g.won ? "victory" : "defeat");
+          playEndJingle(g.won);
         }
       }
       }

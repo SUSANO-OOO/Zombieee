@@ -30,6 +30,13 @@ const effects = [
   { kind: "medium", step: .3 },
   { kind: "large", step: .42 },
 ];
+const bossDefeatKeyframes = [
+  { elapsed: .05, stage: "stagger", majorBurstActive: false },
+  { elapsed: .30, stage: "small-chain", majorBurstActive: false },
+  { elapsed: .90, stage: "medium", majorBurstActive: false },
+  { elapsed: 1.08, stage: "major", majorBurstActive: true },
+  { elapsed: 1.70, stage: "residue", majorBurstActive: true },
+];
 const timeout = Math.max(10_000, Number(process.env.V099_PRESENTATION_QA_TIMEOUT_MS) || 30_000);
 const evidenceDir = path.resolve(process.env.V099_PRESENTATION_QA_EVIDENCE_DIR ?? "outputs/v099-presentation-browser-smoke");
 const results = [];
@@ -50,6 +57,16 @@ function diagnosticsFor(page) {
     if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
   });
   return diagnostics;
+}
+
+async function clientPointForWorld(page, point) {
+  const box = await page.locator("canvas.battlefield").boundingBox();
+  invariant(box, "battlefield canvas has no display box");
+  const scale = Math.max(box.width / 960, box.height / 540);
+  return {
+    x: box.x + (box.width - 960 * scale) / 2 + point.x * scale,
+    y: box.y + (box.height - 540 * scale) / 2 + point.y * scale,
+  };
 }
 
 for (const engine of engines) {
@@ -123,6 +140,29 @@ for (const engine of engines) {
         }
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setGraphicsQuality("high"));
         await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__.getPerformanceSnapshot().graphicsProfile.effectDensity === 1, undefined, { timeout });
+        const bossKeyframes = [];
+        for (const keyframe of bossDefeatKeyframes) {
+          const priorRenderFrames = await page.evaluate(
+            () => window.__ASHFALL_BATTLE_QA__.getPerformanceSnapshot().renderFrames,
+          );
+          const proof = await page.evaluate((elapsed) => {
+            const bridge = window.__ASHFALL_BATTLE_QA__;
+            bridge.prepareV099PresentationProof("boss-defeat");
+            return bridge.advanceV099PresentationProof(elapsed)[0];
+          }, keyframe.elapsed);
+          invariant(proof?.snapshot?.bossStage === keyframe.stage,
+            `${name}/boss@${keyframe.elapsed}: expected ${keyframe.stage}, got ${proof?.snapshot?.bossStage}`);
+          invariant(proof.snapshot.majorBurstActive === keyframe.majorBurstActive,
+            `${name}/boss@${keyframe.elapsed}: major burst timing drift`);
+          await page.waitForFunction(
+            (prior) => window.__ASHFALL_BATTLE_QA__.getPerformanceSnapshot().renderFrames > prior,
+            priorRenderFrames,
+            { timeout },
+          );
+          const screenshotPath = path.join(evidenceDir, `${name}-boss-defeat-${keyframe.elapsed.toFixed(2)}s.png`);
+          await page.screenshot({ path: screenshotPath });
+          bossKeyframes.push({ ...keyframe, snapshot: proof.snapshot, screenshotPath });
+        }
         const drumStates = [];
         drumStates.push(await page.evaluate(() => {
           window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.();
@@ -158,11 +198,152 @@ for (const engine of engines) {
           await page.screenshot({ path: screenshotPath });
           crawlerCases.push({ state, grounding: snapshot.crawlerGrounding, screenshotPath });
         }
+
+        await page.evaluate(() => window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.());
+        const crawlerInputPrepared = await page.evaluate(
+          () => window.__ASHFALL_BATTLE_QA__.prepareV099CrawlerInputProof(),
+        );
+        invariant(crawlerInputPrepared.ability.phase === "ready", `${name}: production G path was not ready`);
+        await page.keyboard.press("g");
+        await page.waitForFunction(
+          () => window.__ASHFALL_BATTLE_QA__.getSnapshot().crawlerAbility.phase === "deploying",
+          undefined,
+          { timeout, polling: 5 },
+        );
+        const crawlerPhaseScreenshots = {};
+        crawlerPhaseScreenshots.deploying = path.join(evidenceDir, `${name}-crawler-input-deploying.png`);
+        await page.screenshot({ path: crawlerPhaseScreenshots.deploying });
+        await page.waitForFunction(
+          () => window.__ASHFALL_BATTLE_QA__.getSnapshot().crawlerAbility.phase === "firing",
+          undefined,
+          { timeout, polling: 5 },
+        );
+        crawlerPhaseScreenshots.firing = path.join(evidenceDir, `${name}-crawler-input-firing.png`);
+        await page.screenshot({ path: crawlerPhaseScreenshots.firing });
+        await page.waitForFunction(
+          () => window.__ASHFALL_BATTLE_QA__.getSnapshot().crawlerAbility.phase === "recovering",
+          undefined,
+          { timeout, polling: 5 },
+        );
+        crawlerPhaseScreenshots.recovering = path.join(evidenceDir, `${name}-crawler-input-recovering.png`);
+        await page.screenshot({ path: crawlerPhaseScreenshots.recovering });
+        await page.waitForFunction(
+          () => window.__ASHFALL_BATTLE_QA__.getSnapshot().crawlerAbility.phase === "cooldown"
+            && window.__ASHFALL_BATTLE_QA__.getSnapshot().pendingWeaponHits.length === 0,
+          undefined,
+          { timeout, polling: 5 },
+        );
+        const crawlerInputAfter = await page.evaluate(() => ({
+          snapshot: window.__ASHFALL_BATTLE_QA__.getSnapshot(),
+          audioRequests: window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [],
+        }));
+        for (const target of crawlerInputPrepared.targets) {
+          const afterTarget = crawlerInputAfter.snapshot.fighters.find(({ id }) => id === target.id);
+          invariant(afterTarget?.hp === target.initialHp - 52,
+            `${name}: production G damage was not applied exactly once to ${target.kind}`);
+        }
+        for (const cueId of ["weapon-barrage"]) {
+          invariant(crawlerInputAfter.audioRequests.filter((request) => request.cueId === cueId).length === 1,
+            `${name}: production G cue ${cueId} was not requested exactly once: ${JSON.stringify(crawlerInputAfter.audioRequests)}`);
+        }
+
+        await page.evaluate(() => window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.());
+        const airstrikePrepared = await page.evaluate(
+          () => window.__ASHFALL_BATTLE_QA__.prepareV099AirstrikeInputProof(),
+        );
+        await page.keyboard.press("q");
+        invariant(await page.locator("button.support-btn.airstrike").evaluate((button) => button.classList.contains("selected")),
+          `${name}: Q did not select airstrike`);
+        const airstrikeClient = await clientPointForWorld(page, {
+          x: airstrikePrepared.targetX,
+          y: airstrikePrepared.targetY,
+        });
+        await page.mouse.click(airstrikeClient.x, airstrikeClient.y);
+        const airstrikePhases = [];
+        for (const phase of ["radio", "targeting", "inbound", "impact", "returning", "idle"]) {
+          await page.waitForFunction(
+            (expected) => window.__ASHFALL_BATTLE_QA__.getSnapshot().airstrike.phase === expected,
+            phase,
+            { timeout, polling: 5 },
+          );
+          if (phase === "inbound") {
+            await page.waitForTimeout(260);
+            invariant((await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot().airstrike.phase)) === "inbound",
+              `${name}: airstrike inbound visual window ended too early`);
+          }
+          const snapshot = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+          const screenshotPath = ["radio", "inbound", "impact"].includes(phase)
+            ? path.join(evidenceDir, `${name}-airstrike-input-${phase}.png`)
+            : null;
+          if (screenshotPath) await page.screenshot({ path: screenshotPath });
+          airstrikePhases.push({ phase, runtime: snapshot.airstrike, screenshotPath });
+        }
+        const airstrikeInputAfter = await page.evaluate(() => ({
+          snapshot: window.__ASHFALL_BATTLE_QA__.getSnapshot(),
+          audioRequests: window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [],
+        }));
+        invariant(airstrikeInputAfter.snapshot.supportGauge === airstrikePrepared.supportGauge - 60,
+          `${name}: production Q gauge changed by an unexpected amount`);
+        for (const target of airstrikePrepared.targets) {
+          const afterTarget = airstrikeInputAfter.snapshot.fighters.find(({ id }) => id === target.id);
+          invariant(afterTarget?.hp === target.initialHp - 145,
+            `${name}: production airstrike damage was not applied exactly once to ${target.kind}`);
+        }
+        for (const cueId of ["ui-select", "support-airstrike", "support-explosion"]) {
+          invariant(airstrikeInputAfter.audioRequests.filter((request) => request.cueId === cueId).length === 1,
+            `${name}: production airstrike cue ${cueId} was not requested exactly once: ${JSON.stringify(airstrikeInputAfter.audioRequests)}`);
+        }
+
+        await page.evaluate(() => window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.());
+        const terminalPrepared = await page.evaluate(
+          () => window.__ASHFALL_BATTLE_QA__.prepareV099TerminalBossDefeatProof(),
+        );
+        await page.waitForFunction(
+          () => {
+            const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
+            return snapshot.over === true
+              && snapshot.resultPresented === false
+              && snapshot.battlePresentation.effects.some((effect) => effect.kind === "boss-defeat");
+          },
+          undefined,
+          { timeout, polling: 5 },
+        );
+        const terminalStart = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+        await page.waitForTimeout(900);
+        const terminalMid = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+        invariant(terminalMid.screen === "battle" && terminalMid.resultPresented === false,
+          `${name}: terminal boss result mounted before the 2.6s sequence completed`);
+        invariant(terminalMid.time === terminalStart.time,
+          `${name}: gameplay time advanced during terminal boss presentation hold`);
+        invariant(terminalMid.battlePresentation.effects.some((effect) => effect.kind === "boss-defeat" && effect.elapsed > 0),
+          `${name}: terminal boss presentation did not advance under its hold`);
+        const terminalScreenshot = path.join(evidenceDir, `${name}-terminal-boss-hold.png`);
+        await page.screenshot({ path: terminalScreenshot });
+        await page.waitForFunction(
+          () => window.__ASHFALL_BATTLE_QA__.getSnapshot().resultPresented === true,
+          undefined,
+          { timeout: Math.max(timeout, 8_000), polling: 5 },
+        );
+        const terminalEnd = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+        invariant(terminalEnd.time === terminalStart.time,
+          `${name}: gameplay resumed before terminal result publication`);
         invariant(diagnostics.consoleErrors.length === 0, `${name}: console errors ${JSON.stringify(diagnostics.consoleErrors)}`);
         invariant(diagnostics.pageErrors.length === 0, `${name}: page errors ${JSON.stringify(diagnostics.pageErrors)}`);
         invariant(diagnostics.httpErrors.length === 0, `${name}: HTTP errors ${JSON.stringify(diagnostics.httpErrors)}`);
         invariant(diagnostics.requestFailures.length === 0, `${name}: request failures ${JSON.stringify(diagnostics.requestFailures)}`);
-        results.push({ name, status: "passed", cases, drumStates, drumScreenshot, crawlerCases, diagnostics });
+        results.push({
+          name,
+          status: "passed",
+          cases,
+          bossKeyframes,
+          drumStates,
+          drumScreenshot,
+          crawlerCases,
+          crawlerInput: { prepared: crawlerInputPrepared, after: crawlerInputAfter, screenshots: crawlerPhaseScreenshots },
+          airstrikeInput: { prepared: airstrikePrepared, phases: airstrikePhases, after: airstrikeInputAfter },
+          terminalBoss: { prepared: terminalPrepared, start: terminalStart, mid: terminalMid, end: terminalEnd, terminalScreenshot },
+          diagnostics,
+        });
       } catch (error) {
         results.push({ name, status: "failed", error: String(error), diagnostics });
       } finally {

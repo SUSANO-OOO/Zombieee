@@ -1538,11 +1538,10 @@ test("validates, damages, and releases the battlefield container without changin
   assert.doesNotMatch(enemyBaseDraw, /LANE_Y/);
   assert.match(enemyBaseDraw, /const hitX = barrier\.attackX;[\s\S]*createRadialGradient\(hitX,[\s\S]*fillRect\(hitX - 55/);
   assert.match(enemyBaseDraw, /breached[\s\S]*感染拠点 破壊/);
-  assert.match(game, /const enemyBaseDestroyed = g\.barricadeHp <= 0[\s\S]*g\.resultPresented = !enemyBaseDestroyed/);
+  assert.match(game, /const enemyBaseDestroyed = g\.barricadeHp <= 0[\s\S]*const resultPresentationPending = battleResultPresentationPending\(g\.battlePresentation,[\s\S]*g\.resultPresented = !resultPresentationPending/);
   assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
-  assert.match(game, /g\.resultPresented = !enemyBaseDestroyed/);
-  assert.match(game, /if \(!enemyBaseDestroyed\) setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.operationId,[\s\S]*won: g\.won/);
-  assert.match(game, /if \(g\.over && !g\.resultPresented && !g\.survivalRun\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*if \(collapseStep\.complete\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.operationId,[\s\S]*won: g\.won/);
+  assert.match(game, /if \(!resultPresentationPending\) \{[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.operationId,[\s\S]*won: g\.won/);
+  assert.match(game, /if \(g\.over && !g\.resultPresented && !g\.survivalRun\) \{[\s\S]*advanceEnemyBaseCollapse\(\{ barricadeHp: g\.barricadeHp[\s\S]*battleResultPresentationPending\(g\.battlePresentation, \{ enemyBaseCollapsePending \}\)[\s\S]*setEnd\(\{[\s\S]*resultId: g\.resultId,[\s\S]*stageId: g\.definition\.operationId,[\s\S]*won: g\.won/);
   assert.match(game, /resolveStageResult\(campaignSave, \{[\s\S]*resultId: end\.resultId,[\s\S]*stageId: end\.stageId,[\s\S]*baseMaxHp: end\.baseMaxHp/);
   assert.match(game, /if \(!end \|\| finalizedEndRef\.current === end\) return;[\s\S]*window\.setTimeout\(async \(\) => \{[\s\S]*if \(finalizedEndRef\.current === end\) return;[\s\S]*finalizedEndRef\.current = end/);
   assert.match(game, /setCampaignSave\(resolved\.save as CampaignSave\)[\s\S]*setScreen\("result"\)/);
@@ -1742,7 +1741,8 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.match(game, /productionMixer\.stopAll\(\{ category, fadeMs: 35 \}\)/);
   assert.match(game, /sfxMutedRef\.current = next/);
   assert.match(game, /if \(g\.paused\) \{[\s\S]*g\.battleBarks = clearNonScriptedBattleBarks\(g\.battleBarks\)[\s\S]*stopMusic\(\); stopJingle\(\); stopSfx\(\);/);
-  assert.match(game, /stopMusic\(\); stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
+  assert.match(game, /if \(!resultPresentationPending\) \{[\s\S]*stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
+  assert.match(game, /if \(!battleResultPresentationPending\(g\.battlePresentation, \{ enemyBaseCollapsePending \}\)\) \{[\s\S]*stopSfx\(\);[\s\S]*playCue\(g\.won \? "victory" : "defeat"\);[\s\S]*playEndJingle\(g\.won\)/);
   assert.match(game, /const disposeBattleRuntime = useCallback\(\(\) => \{[\s\S]*stopMusic\(\);[\s\S]*stopJingle\(\);[\s\S]*stopSfx\(\)/);
   const returnToMapBlock = game.slice(game.indexOf("const returnToMap"), game.indexOf("const handleEventComplete"));
   assert.notEqual(returnToMapBlock, "");

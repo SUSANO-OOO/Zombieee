@@ -7,6 +7,7 @@ import {
   V099_EXPLOSION_PROFILES,
   V099_PRESENTATION_LIMITS,
   advanceBattlePresentationRuntime,
+  battleResultPresentationPending,
   battlePresentationSnapshot,
   crawlerGroundingSnapshot,
   createBattlePresentationRuntime,
@@ -110,7 +111,10 @@ test("boss defeat stages stop, chain, major burst, and residue without damage ou
     [1.7, "residue"],
   ];
   for (const [elapsed, stage] of stages) {
-    assert.equal(battlePresentationSnapshot({ ...effect, elapsed }).bossStage, stage);
+    const snapshot = battlePresentationSnapshot({ ...effect, elapsed });
+    assert.equal(snapshot.bossStage, stage);
+    assert.equal(snapshot.majorBurstActive, elapsed >= V099_BOSS_DEFEAT_TIMELINE.majorBurst.at);
+    assert.equal(snapshot.majorBurstElapsed, Math.max(0, elapsed - V099_BOSS_DEFEAT_TIMELINE.majorBurst.at));
   }
 });
 
@@ -123,6 +127,24 @@ test("pause freezes simulation presentation while resume expires it", () => {
   assert.equal(advanced.effects.length, 1);
   assert.equal(advanced.effects[0].elapsed, .8);
   assert.equal(advanceBattlePresentationRuntime(advanced, 1).effects.length, 0);
+});
+
+test("terminal result waits for both boss defeat and enemy base presentation", () => {
+  const queued = queueSemanticBattlePresentation(createBattlePresentationRuntime(9), {
+    generation: 9,
+    semantic: "boss-defeat",
+    receiptId: "fighter:91",
+    kind: "boss-defeat",
+    x: 740,
+    y: 260,
+  }).runtime;
+  assert.equal(battleResultPresentationPending(queued), true);
+  assert.equal(battleResultPresentationPending(createBattlePresentationRuntime(9), {
+    enemyBaseCollapsePending: true,
+  }), true);
+  assert.equal(battleResultPresentationPending(advanceBattlePresentationRuntime(queued, 2.59)), true);
+  assert.equal(battleResultPresentationPending(advanceBattlePresentationRuntime(queued, 2.6)), false);
+  assert.equal(battleResultPresentationPending(createBattlePresentationRuntime(9)), false);
 });
 
 test("drum arrival is airborne, bounces, then becomes visually settled", () => {

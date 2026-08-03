@@ -141,6 +141,13 @@ export function advanceBattlePresentationRuntime(runtime, seconds = 0) {
   };
 }
 
+export function battleResultPresentationPending(runtime, {
+  enemyBaseCollapsePending = false,
+} = {}) {
+  return Boolean(enemyBaseCollapsePending)
+    || (runtime?.effects ?? []).some((effect) => effect.kind === "boss-defeat");
+}
+
 const smoothstep = (value) => {
   const t = Math.max(0, Math.min(1, Number(value) || 0));
   return t * t * (3 - 2 * t);
@@ -180,6 +187,11 @@ export function battlePresentationSnapshot(effect, effectDensity = 1) {
     debrisCount: Math.max(2, Math.round(profile.debris * density)),
     residueAlpha: effect.kind === "boss-defeat" && effect.elapsed >= V099_BOSS_DEFEAT_TIMELINE.residueAt
       ? Math.min(.7, (effect.elapsed - V099_BOSS_DEFEAT_TIMELINE.residueAt) * .9)
+      : 0,
+    majorBurstActive: effect.kind === "boss-defeat"
+      && effect.elapsed >= V099_BOSS_DEFEAT_TIMELINE.majorBurst.at,
+    majorBurstElapsed: effect.kind === "boss-defeat"
+      ? Math.max(0, effect.elapsed - V099_BOSS_DEFEAT_TIMELINE.majorBurst.at)
       : 0,
     bossStage: effect.kind !== "boss-defeat" ? null
       : effect.elapsed < V099_BOSS_DEFEAT_TIMELINE.staggerEnd ? "stagger"
