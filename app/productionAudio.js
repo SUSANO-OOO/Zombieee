@@ -1,5 +1,14 @@
 import { createAudioManifest } from "./audioManifest.js";
 import { CAMPAIGN_STAGE_IDS } from "./campaign.js";
+import {
+  V099_BATTLE_AUDIO_ASSET_SPECS,
+  v099AudioSource,
+} from "./battleAudioContracts.js";
+export {
+  V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
+  V099_PHYSICAL_AUDIO_ASSET_COUNT,
+  V099_SUPPORT_POD_AUDIO_CONTRACT,
+} from "./battleAudioContracts.js";
 
 const V060_AUDIO_ROOT = "/audio/v060";
 const V070_AUDIO_ROOT = "/audio/v070";
@@ -280,6 +289,20 @@ function v098Asset(spec) {
   };
 }
 
+function v099Asset(spec) {
+  return {
+    id: spec.id,
+    category: spec.category,
+    sources: v099AudioSource(spec),
+    preload: spec.category === "bgm" ? "scene" : "lazy",
+    loop: spec.loop,
+    gain: spec.gain,
+    priority: spec.priority,
+    cooldownMs: spec.cooldownMs,
+    maxInstances: spec.maxInstances,
+  };
+}
+
 function v080SuppressedCarbineAsset(variation) {
   const id = `${V080_SUPPRESSED_CARBINE_CUE_ID}-${String(variation).padStart(2, "0")}`;
   return {
@@ -394,6 +417,7 @@ const assets = [
   ...[1, 2].map(v080SuppressedCarbineAsset),
   ...V090_PLAYABLE_AUDIO_CUES.map(v090PlayableAsset),
   ...V090_BOSS_AUDIO_CUES.map(v090PlayableAsset),
+  ...V099_BATTLE_AUDIO_ASSET_SPECS.map(v099Asset),
 ];
 
 const pools = [
@@ -415,6 +439,14 @@ const aliases = [
     cooldownMs: 900,
     maxInstances: 1,
   },
+  {
+    id: "ability-mrs-chiha-salvo-activate",
+    targetId: "ability-mrs-chiha-salvo-ready",
+    instanceKey: "ability-mrs-chiha-salvo-activate",
+    priority: 82,
+    cooldownMs: 300,
+    maxInstances: 1,
+  },
 ];
 const COMMON_UI_PRELOAD = Object.freeze([
   "ui-cancel",
@@ -434,6 +466,10 @@ const COMBAT_PRELOAD = Object.freeze([
   ...NEW_UNIT_AUDIO_CUES.map(({ id }) => id),
   ...V090_PLAYABLE_AUDIO_CUES.map(({ id }) => id),
   ...V090_BOSS_AUDIO_CUES.map(({ id }) => id),
+]);
+const V099_COMBAT_PRELOAD = Object.freeze([
+  ...V099_BATTLE_AUDIO_ASSET_SPECS.filter((spec) => spec.category !== "bgm").map(({ id }) => id),
+  "ability-mrs-chiha-salvo-activate",
 ]);
 
 export const STORY_AUDIO_MIX = Object.freeze({
@@ -484,7 +520,9 @@ const scenes = [
   { id: "station-gate", bgm: "music-v070-station-gate", ambience: ["ambience-v070-station-gate-loop"], preload: [...COMBAT_PRELOAD, ...STATION_PRELOAD], crossfadeMs: 650 },
   { id: "station-platform", bgm: "music-v070-station-platform", ambience: ["ambience-v070-station-platform-loop"], preload: [...COMBAT_PRELOAD, ...STATION_PRELOAD], crossfadeMs: 620 },
   { id: "station-tunnel", bgm: "music-v070-station-tunnel", ambience: ["ambience-v070-station-tunnel-loop"], preload: [...COMBAT_PRELOAD, ...STATION_PRELOAD], crossfadeMs: 520 },
-  { id: "boss", bgm: "music-boss", preload: COMBAT_PRELOAD, crossfadeMs: 420 },
+  { id: "pressure-surface", bgm: "music-v099-pressure-surface", preload: [...COMBAT_PRELOAD, ...V099_COMBAT_PRELOAD], crossfadeMs: 360 },
+  { id: "pressure-station", bgm: "music-v099-pressure-station", preload: [...COMBAT_PRELOAD, ...V099_COMBAT_PRELOAD], crossfadeMs: 320 },
+  { id: "boss", bgm: "music-v099-boss", preload: [...COMBAT_PRELOAD, ...V099_COMBAT_PRELOAD], crossfadeMs: 260 },
   { id: "victory", bgm: "music-victory", preload: ["ui-confirm"], crossfadeMs: 320 },
   { id: "defeat", bgm: "music-defeat", preload: ["ui-confirm", "ui-cancel"], crossfadeMs: 320 },
   { id: "silence-prologue-title", preload: [], crossfadeMs: 0 },
@@ -538,6 +576,8 @@ export const PRODUCTION_AUDIO_SCENE_IDS = Object.freeze({
   STATION_GATE: "station-gate",
   STATION_PLATFORM: "station-platform",
   STATION_TUNNEL: "station-tunnel",
+  PRESSURE_SURFACE: "pressure-surface",
+  PRESSURE_STATION: "pressure-station",
   BOSS: "boss",
   VICTORY: "victory",
   DEFEAT: "defeat",
@@ -595,6 +635,22 @@ const STAGE_SCENE_BY_ID = Object.freeze({
   [CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE]: PRODUCTION_AUDIO_SCENE_IDS.STAGE_3,
   [CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL]: PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL,
 });
+
+export const BATTLE_STAGE_SCENE_BY_ID = STAGE_SCENE_BY_ID;
+export const BATTLE_PRESSURE_SCENE_BY_NORMAL_SCENE = Object.freeze({
+  [PRODUCTION_AUDIO_SCENE_IDS.STAGE_1]: PRODUCTION_AUDIO_SCENE_IDS.PRESSURE_SURFACE,
+  [PRODUCTION_AUDIO_SCENE_IDS.STAGE_2]: PRODUCTION_AUDIO_SCENE_IDS.PRESSURE_SURFACE,
+  [PRODUCTION_AUDIO_SCENE_IDS.STAGE_3]: PRODUCTION_AUDIO_SCENE_IDS.PRESSURE_SURFACE,
+  [PRODUCTION_AUDIO_SCENE_IDS.STATION_GATE]: PRODUCTION_AUDIO_SCENE_IDS.PRESSURE_STATION,
+  [PRODUCTION_AUDIO_SCENE_IDS.STATION_PLATFORM]: PRODUCTION_AUDIO_SCENE_IDS.PRESSURE_STATION,
+  [PRODUCTION_AUDIO_SCENE_IDS.STATION_TUNNEL]: PRODUCTION_AUDIO_SCENE_IDS.PRESSURE_STATION,
+});
+export const BATTLE_PRESSURE_SCENE_BY_STAGE_ID = Object.freeze(
+  Object.fromEntries(Object.entries(STAGE_SCENE_BY_ID).map(([stageId, sceneId]) => [
+    stageId,
+    BATTLE_PRESSURE_SCENE_BY_NORMAL_SCENE[sceneId] ?? null,
+  ])),
+);
 
 const UNIT_WEAPON_CUES = Object.freeze({
   scout: "weapon-crowbar",
@@ -898,7 +954,11 @@ export function sceneIdForScreen(screen, stageId = null, musicState = null) {
   if (screen !== "battle") return null;
   if (outcome) return outcome;
   if (musicMode === "boss") return PRODUCTION_AUDIO_SCENE_IDS.BOSS;
-  return ownValue(STAGE_SCENE_BY_ID, stageId);
+  const normalScene = ownValue(STAGE_SCENE_BY_ID, stageId);
+  if (musicMode === "pressure" || musicMode === "danger") {
+    return ownValue(BATTLE_PRESSURE_SCENE_BY_NORMAL_SCENE, normalScene) ?? normalScene;
+  }
+  return normalScene;
 }
 
 export const LEGACY_SFX_CUE_MAP = Object.freeze({

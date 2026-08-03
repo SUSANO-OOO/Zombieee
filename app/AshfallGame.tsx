@@ -37,6 +37,15 @@ import {
   tryConsumeSemanticReceipt,
 } from "./battleAudioRuntime.js";
 import {
+  V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
+  V099_SUPPORT_POD_AUDIO_CONTRACT,
+} from "./battleAudioContracts.js";
+import {
+  advancePressureLatch,
+  createPressureLatchRuntime,
+  resetPressureLatchRuntime,
+} from "./battleMusicRuntime.js";
+import {
   CRAWLER_DOOR_PHASES,
   advanceCrawlerDoorRuntime,
   createCrawlerDoorRuntime,
@@ -524,7 +533,7 @@ type Lane = 0 | 1 | 2;
 type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
 type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater" | "kurome" | "resonator" | "cagewalker" | "spindle" | "choir-knot" | "pall-manta" | "anchor-bloom";
 type SupplyKind = "pod" | "drum" | "medical";
-type MusicMode = "normal" | "danger" | "boss";
+type MusicMode = "normal" | "pressure" | "danger" | "boss";
 type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "mayo" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
 type PointerGestureState = { blocked: boolean; rejected: boolean; captureTarget: HTMLCanvasElement | null };
@@ -2192,6 +2201,14 @@ function applyIncomingHumanDamage(
       g.pendingAbilityAudioCues.push({
         cueId: "ability-musashi-counter",
         x: counterTarget?.x ?? target.x,
+        ownerId: target.id,
+        activationId: counter.event?.activationId ?? target.manualAbility.activationId,
+        semantic: "ability-timeline",
+        receiptId: `${target.id}:${counter.event?.activationId ?? target.manualAbility.activationId}:counter`,
+        dueSimulationTime: g.time,
+        priority: 88,
+        cooldownMs: 180,
+        maxInstances: 1,
         dedupeKey: `manual-ability:${target.id}:${counter.event?.activationId ?? target.manualAbility.activationId}:counter`,
       });
       g.pendingAbilityAudioCues = g.pendingAbilityAudioCues.slice(-8);
@@ -6933,6 +6950,8 @@ export function AshfallGame() {
   const sfxMutedRef = useRef(false);
   const musicDuckUntilRef = useRef(0);
   const desiredMusicModeRef = useRef<MusicMode>("normal");
+  const pressureLatchRef = useRef(createPressureLatchRuntime());
+  const manualAbilityReadyStateRef = useRef(new Map<number, boolean>());
   const startSynthMusicRef = useRef<() => void>(() => undefined);
   const stopSynthMusicRef = useRef<() => void>(() => undefined);
   const musicStartTokenRef = useRef(0);
@@ -11658,6 +11677,74 @@ export function AshfallGame() {
     return true;
   }, []);
 
+  const playBattleSemanticCue = useCallback((
+    cueId: string | null,
+    x: number,
+    options: {
+      semantic: string;
+      receiptId: string;
+      ownerId: number | string;
+      activationId?: number;
+      priority?: number;
+      cooldownMs?: number;
+      volume?: number;
+      maxInstances?: number;
+      dedupeKey?: string;
+    },
+  ) => playProductionCue(cueId, x, {
+    ...options,
+    dedupeKey: options.dedupeKey ?? `${options.semantic}:${options.receiptId}`,
+  }), [playProductionCue]);
+
+  const playManualAbilityTimelineCue = useCallback((
+    owner: Fighter,
+    eventKey: string,
+    x: number = owner.x,
+    suffix: string = eventKey,
+    options: { priority?: number; cooldownMs?: number; maxInstances?: number; volume?: number } = {},
+  ) => {
+    const cueId = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[owner.kind]?.timeline?.[eventKey];
+    if (!cueId) return false;
+    return playBattleSemanticCue(cueId, x, {
+      ...options,
+      semantic: "ability-timeline",
+      receiptId: `${owner.id}:${owner.manualAbility?.activationId ?? 0}:${suffix}`,
+      ownerId: owner.id,
+      activationId: owner.manualAbility?.activationId ?? 0,
+      dedupeKey: `manual-ability:${owner.id}:${owner.manualAbility?.activationId ?? 0}:${suffix}`,
+    });
+  }, [playBattleSemanticCue]);
+
+  const queueManualAbilityTimelineCue = useCallback((
+    g: Game,
+    owner: Fighter,
+    eventKey: string,
+    x: number = owner.x,
+    delaySeconds = 0,
+    suffix: string = eventKey,
+    options: { priority?: number; cooldownMs?: number; maxInstances?: number; volume?: number } = {},
+  ) => {
+    const cueId = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[owner.kind]?.timeline?.[eventKey];
+    if (!cueId) return false;
+    const activationId = owner.manualAbility?.activationId ?? 0;
+    g.pendingAbilityAudioCues.push({
+      cueId,
+      x,
+      battleGeneration: battleAudioRuntimeRef.current.battleGeneration,
+      ownerId: owner.id,
+      activationId,
+      semantic: "ability-timeline",
+      receiptId: `${owner.id}:${activationId}:${suffix}`,
+      dueSimulationTime: g.time + Math.max(0, delaySeconds),
+      dedupeKey: `manual-ability:${owner.id}:${activationId}:${suffix}`,
+      priority: options.priority,
+      cooldownMs: options.cooldownMs,
+      maxInstances: options.maxInstances,
+      volume: options.volume,
+    });
+    return true;
+  }, []);
+
   const playUiOperationCue = useCallback((action: CampaignUiAction, dedupeKey = `ui:${action}`) => {
     const policy = (UI_OPERATION_CUE_POLICIES as Record<string, { priority: number; cooldownMs: number; volume: number }>)[action]
       ?? UI_OPERATION_CUE_POLICIES.selection;
@@ -11896,40 +11983,24 @@ export function AshfallGame() {
       ...current,
       manualAbilityIcons: current.manualAbilityIcons.filter((icon) => icon.fighterId !== fighter.id),
     }));
-    if (fighter.kind === "zakimiya") playCue("burn-start");
     if (fighter.kind === "mrs-chiha") {
       scheduleMrsChihaLauncherAudio(g, fighter, "ability");
     }
-    const abilityStartCue = fighter.kind === "tky"
-      ? unitAudioCueFor(fighter.kind, "weapon", "abilityCharge")
-      : fighter.kind === "gunner"
-        ? null
-      : fighter.kind === "mrs-chiha"
-        ? unitAudioCueFor(fighter.kind, "weapon", "abilityReady")
-        : fighter.kind === "miyamoto-musashi"
-          ? unitAudioCueFor(fighter.kind, "weapon", "abilityGuard")
-          : fighter.kind === "mayo-chan"
-            ? unitAudioCueFor(fighter.kind, "weapon", "abilityStart")
-          : fighter.kind === "crazy-king"
-            ? unitAudioCueFor(fighter.kind, "weapon", "attack")
-            : fighter.kind === "kumaverson"
-              ? unitAudioCueFor(fighter.kind, "weapon", "swing")
-              : fighter.kind === "babayaga"
-                ? unitAudioCueFor(fighter.kind, "weapon", "shot")
-                : weaponCueForUnit(fighter.kind);
-    if (abilityStartCue) {
-      playProductionCue(abilityStartCue, fighter.x, {
-        priority: 82,
+    const abilityAudioContract = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[fighter.kind];
+    if (abilityAudioContract) {
+      playBattleSemanticCue(abilityAudioContract.activationRoot, fighter.x, {
+        semantic: "ability-activation-root",
+        receiptId: `${fighter.id}:${startedAbility.activationId}:root`,
+        ownerId: fighter.id,
+        activationId: startedAbility.activationId,
+        priority: 84,
         cooldownMs: 240,
         maxInstances: 1,
-        fallbackCue: fighter.kind === "mrs-chiha" ? "ranged-shot" : "melee-hit",
-        dedupeKey: `manual-ability:${fighter.id}:${startedAbility.activationId}:start`,
+        dedupeKey: `manual-ability:${fighter.id}:${startedAbility.activationId}:root`,
       });
-    } else {
-      playUiOperationCue("confirm", `ability:${fighter.id}:${startedAbility.activationId}`);
     }
     return true;
-  }, [playCue, playProductionCue, playUiOperationCue, rejectBattleSaveBoundary]);
+  }, [playBattleSemanticCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const stopSfx = useCallback(() => {
     sfxRequestGateRef.current.cancelPending();
@@ -12260,9 +12331,23 @@ export function AshfallGame() {
       ? `${supplyDefs[kind].name} // 最寄りの配置可能地点へ補正`
       : `${supplyDefs[kind].name} // 戦場配置`;
     g.bannerTime = 1.2; playCue(kind === "pod" ? "supply-pod" : kind === "drum" ? "supply-drum" : "supply-medical");
+    if (kind === "pod") {
+      const placedPod = (result.supplies as BattlefieldObject[]).find((supply) => supply.id === result.nextId - 1);
+      if (placedPod) {
+        playBattleSemanticCue(V099_SUPPORT_POD_AUDIO_CONTRACT.inbound, placedPod.x, {
+          semantic: "support-pod-inbound",
+          receiptId: `${placedPod.id}:inbound`,
+          ownerId: `pod:${placedPod.id}`,
+          priority: 76,
+          cooldownMs: 180,
+          maxInstances: 2,
+          dedupeKey: `support-pod:${placedPod.id}:inbound`,
+        });
+      }
+    }
     emitBattleBark(g, kind === "pod" ? "support-pod" : kind === "drum" ? "support-drum" : "support-medical", kind === "drum" ? "gunner" : kind === "medical" ? "medic" : "guide", `support-${kind}`);
     return true;
-  }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
+  }, [playBattleSemanticCue, playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const deployAirstrike = useCallback((requestedX: number, requestedY: number) => {
     const g = gameRef.current;
@@ -12834,6 +12919,8 @@ export function AshfallGame() {
     setForceStoryReplay(false);
     gameRef.current.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
     stopBattleAudioRuntime(battleAudioRuntimeRef.current, "battle-dispose");
+    resetPressureLatchRuntime(pressureLatchRef.current, "battle-dispose");
+    manualAbilityReadyStateRef.current.clear();
     const mixer = productionMixerRef.current;
     if (mixer) void mixer.stopAll({ fadeMs: 80 });
     stopMusic();
@@ -14029,6 +14116,11 @@ export function AshfallGame() {
   }, [commitOutbreakSettlement, outbreakSavePending, pendingOutbreakSettlement]);
 
   useEffect(() => {
+    if (end) {
+      stopBattleAudioRuntime(battleAudioRuntimeRef.current, "result");
+      resetPressureLatchRuntime(pressureLatchRef.current, "result");
+      manualAbilityReadyStateRef.current.clear();
+    }
     if (!end || finalizedEndRef.current === end) return;
     const timer = window.setTimeout(async () => {
       if (finalizedEndRef.current === end) return;
@@ -14844,7 +14936,7 @@ export function AshfallGame() {
             maxInstances: pendingCue.maxInstances ?? 2,
             fallbackCue: pendingCue.fallbackCue === null
               ? undefined
-              : pendingCue.fallbackCue ?? "melee-hit",
+              : pendingCue.fallbackCue,
             dedupeKey: pendingCue.dedupeKey,
           });
         }
@@ -14879,6 +14971,24 @@ export function AshfallGame() {
         }
         for (const owner of g.fighters) {
           if (owner.side !== "human" || !owner.manualAbility) continue;
+          const readyNow = isManualAbilityReady(owner);
+          const wasReady = manualAbilityReadyStateRef.current.get(owner.id) === true;
+          if (readyNow && !wasReady) {
+            const readyCue = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[owner.kind]?.readyCue;
+            if (readyCue) {
+              playBattleSemanticCue(readyCue, owner.x, {
+                semantic: "ability-ready",
+                receiptId: `${owner.id}:${owner.manualAbility.activationId}:ready`,
+                ownerId: owner.id,
+                activationId: owner.manualAbility.activationId,
+                priority: 64,
+                cooldownMs: 180,
+                maxInstances: 1,
+                dedupeKey: `manual-ability:${owner.id}:${owner.manualAbility.activationId}:ready`,
+              });
+            }
+          }
+          manualAbilityReadyStateRef.current.set(owner.id, readyNow);
           if (owner.kind === "mayo-chan" && owner.manualAbility.phase === "feral" && !owner.mayoRetreat) {
             const hpStep = mayoAbilityHpStep({ hp: owner.hp, maxHp: owner.maxHp, seconds: dt });
             owner.hp = hpStep.hp;
@@ -14890,11 +15000,10 @@ export function AshfallGame() {
                 eventType: "retreat-safe-floor",
                 at: g.time,
               });
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityEnd"), owner.x, {
+              playManualAbilityTimelineCue(owner, "end", owner.x, "retreat-safe-floor", {
                 priority: 82,
                 cooldownMs: 400,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
               });
             }
             if (owner.mayoRetreat) continue;
@@ -14948,13 +15057,13 @@ export function AshfallGame() {
                 addDamageText(g, owner.x, owner.y - 72, event.kind === "guardian" ? "鉄壁展開" : "仁王立ち", 1, event.kind === "guardian" ? "#c4e8ec" : "#ffd07a");
               }
               g.flashOverlay = Math.max(g.flashOverlay, .08);
-              playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
-                priority: 84,
-                cooldownMs: 180,
-                maxInstances: 1,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:active`,
-              });
+              playManualAbilityTimelineCue(
+                owner,
+                event.kind === "crazy-king" ? "active" : event.kind === "guardian" ? "hold" : "stance",
+                owner.x,
+                "active-start",
+                { priority: 84, cooldownMs: 180, maxInstances: 1 },
+              );
               continue;
             }
             if (event.type === "feral-start" && event.kind === "mayo-chan") {
@@ -14964,23 +15073,19 @@ export function AshfallGame() {
               g.banner = "マヨちゃん // 凶暴マヨ";
               g.bannerTime = 1.05;
               addParticles(g, owner.x, owner.y - 20, "#b52c52", 16);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityRush"), owner.x, {
+              playManualAbilityTimelineCue(owner, "rush", owner.x, "feral-start", {
                 priority: 80,
                 cooldownMs: 160,
                 maxInstances: 2,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:feral`,
               });
               continue;
             }
             if (event.type === "retreat" && event.kind === "mayo-chan") {
               if (beginMayoRetreat(g, owner, "ability")) {
-                playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityEnd"), owner.x, {
+                playManualAbilityTimelineCue(owner, "end", owner.x, "retreat", {
                   priority: 82,
                   cooldownMs: 400,
                   maxInstances: 1,
-                  fallbackCue: "melee-hit",
-                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:retreat`,
                 });
               }
               continue;
@@ -14989,41 +15094,25 @@ export function AshfallGame() {
               g.banner = "宮本武蔵 // 受け流し構え";
               g.bannerTime = 1;
               addParticles(g, owner.x, owner.y - 38, "#9ec7db", 10);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityGuard"), owner.x, {
-                priority: 82,
-                cooldownMs: 220,
-                maxInstances: 1,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:guard`,
-              });
               continue;
             }
             if (event.type === "launch" && event.kind === "mrs-chiha") {
               owner.flash = Math.max(owner.flash, .08);
               addParticles(g, owner.x + 18, owner.y - 36, "#d4a45c", 5);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityCylinder"), owner.x, {
+              playManualAbilityTimelineCue(owner, "cylinder", owner.x, `cylinder:${event.salvoIndex}`, {
                 priority: 76,
                 cooldownMs: 60,
                 maxInstances: 4,
-                fallbackCue: "ranged-shot",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:cylinder:${event.salvoIndex}`,
               });
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityShot"), owner.x, {
+              playManualAbilityTimelineCue(owner, "shot", owner.x, `shot:${event.salvoIndex}`, {
                 priority: 82,
                 cooldownMs: 70,
                 maxInstances: 4,
-                fallbackCue: "ranged-shot",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:shot:${event.salvoIndex}`,
-              });
-              g.pendingAbilityAudioCues.push({
-                cueId: unitAudioCueFor(owner.kind, "weapon", "flight"),
-                x: event.target?.x ?? owner.x,
-                remainingSeconds: .07,
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:flight:${event.salvoIndex}`,
               });
               continue;
             }
-            if (event.type !== "impact" || !event.target) continue;
+            if ((event.type !== "impact" || !event.target)
+              && !(event.kind === "gunner" && event.type === "muzzle")) continue;
             if (event.kind === "brawler") {
               const definition = MANUAL_ABILITY_REGISTRY.brawler;
               const target = g.fighters.find((candidate) => (
@@ -15052,9 +15141,8 @@ export function AshfallGame() {
               addDamageText(g, target.x, target.y - 52, `連打×${definition.hitCount} -${Math.round(damage)}`, .9, "#ffd16d");
               addParticles(g, target.x, target.y - 30, "#ffb34f", 24);
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.weaponHeavy);
-              playProductionCue(weaponCueForUnit(owner.kind), target.x, {
-                priority: 84, cooldownMs: 80, maxInstances: 2, fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:combo`,
+              playManualAbilityTimelineCue(owner, "impact", target.x, "combo-impact", {
+                priority: 84, cooldownMs: 80, maxInstances: 2,
               });
               continue;
             }
@@ -15079,9 +15167,8 @@ export function AshfallGame() {
               recordUnitDamage(g, owner.kind, damage);
               addDamageText(g, target.x, target.y - 52, `迎撃 -${Math.round(damage)}`, .86, "#7ee7e4");
               addParticles(g, target.x, target.y - 30, "#73d8d5", 18);
-              playProductionCue(weaponCueForUnit(owner.kind), target.x, {
-                priority: 84, cooldownMs: 80, maxInstances: 1, fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:intercept`,
+              playManualAbilityTimelineCue(owner, "impact", target.x, "intercept-impact", {
+                priority: 84, cooldownMs: 80, maxInstances: 1,
               });
               continue;
             }
@@ -15108,9 +15195,11 @@ export function AshfallGame() {
               }
               if (appliedCount > 0) {
                 g.flashOverlay = Math.max(g.flashOverlay, .08);
-                playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
-                  priority: 86, cooldownMs: 100, maxInstances: 1, fallbackCue: "ranged-shot",
-                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:precision`,
+                playManualAbilityTimelineCue(owner, "shot", owner.x, "precision-shot", {
+                  priority: 86, cooldownMs: 100, maxInstances: 1,
+                });
+                playManualAbilityTimelineCue(owner, "impact", event.target.x, "precision-impact", {
+                  priority: 86, cooldownMs: 90, maxInstances: 2,
                 });
               }
               continue;
@@ -15134,9 +15223,8 @@ export function AshfallGame() {
               target.damageReductionMultiplier = Math.min(target.damageReductionMultiplier, definition.protectionMultiplier);
               addDamageText(g, target.x, target.y - 54, `緊急処置 +${Math.round(healing)}`, .95, "#76e5a6");
               addParticles(g, target.x, target.y - 28, "#72dca0", 20);
-              playProductionCue("support-heal", target.x, {
-                priority: 82, cooldownMs: 120, maxInstances: 1, fallbackCue: "medical-heal",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:treatment`,
+              playManualAbilityTimelineCue(owner, "success", target.x, "treatment", {
+                priority: 82, cooldownMs: 120, maxInstances: 1,
               });
               continue;
             }
@@ -15179,9 +15267,8 @@ export function AshfallGame() {
               addParticles(g, event.target.x, event.target.y, "#b88a58", 30);
               g.flashOverlay = Math.max(g.flashOverlay, .13);
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
-              playProductionCue(weaponCueForUnit(owner.kind), event.target.x, {
-                priority: 88, cooldownMs: 120, maxInstances: 1, fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:ground`,
+              playManualAbilityTimelineCue(owner, "impact", event.target.x, "ground-impact", {
+                priority: 88, cooldownMs: 120, maxInstances: 1,
               });
               continue;
             }
@@ -15201,19 +15288,11 @@ export function AshfallGame() {
               recordUnitDamage(g, owner.kind, damage);
               addDamageText(g, target.x, target.y - 54, `弱点査定 -${Math.round(damage)}`, .92, "#f0d36f");
               addParticles(g, target.x, target.y - 34, "#e2c756", 14);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "shot") || weaponCueForUnit(owner.kind), owner.x, {
-                priority: 84, cooldownMs: 90, maxInstances: 4, fallbackCue: "ranged-shot",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:shot`,
+              playManualAbilityTimelineCue(owner, "shot", owner.x, "appraise-shot", {
+                priority: 84, cooldownMs: 90, maxInstances: 4,
               });
-              g.pendingAbilityAudioCues.push({
-                cueId: unitAudioCueFor(owner.kind, "weapon", "hit"),
-                x: target.x,
-                remainingSeconds: .045,
-                priority: 80,
-                cooldownMs: 70,
-                maxInstances: 4,
-                fallbackCue: "ranged-shot",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:hit`,
+              queueManualAbilityTimelineCue(g, owner, "mark", target.x, .045, "appraise-mark", {
+                priority: 80, cooldownMs: 70, maxInstances: 1,
               });
               continue;
             }
@@ -15222,12 +15301,10 @@ export function AshfallGame() {
               const targetIds = new Set((event.target.targetIds ?? []).map(String));
               const salvoIndex = Number.isInteger(event.salvoIndex) ? event.salvoIndex : null;
               if (event.type === "muzzle") {
-                playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
+                playManualAbilityTimelineCue(owner, "muzzle", owner.x, `muzzle:${salvoIndex ?? "legacy"}`, {
                   priority: 88,
                   cooldownMs: 45,
                   maxInstances: 3,
-                  fallbackCue: "ranged-shot",
-                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:muzzle:${salvoIndex ?? "legacy"}`,
                 });
                 addParticles(g, owner.x + 26, owner.y - 38, "#f8c35f", 3);
                 continue;
@@ -15260,6 +15337,11 @@ export function AshfallGame() {
                 addParticles(g, target.x, target.y - 28, "#d7ae58", event.finalRound ? 12 : 5);
               }
               g.flashOverlay = Math.max(g.flashOverlay, event.finalRound ? .1 : .045);
+              playManualAbilityTimelineCue(owner, "impact", event.target.x, `impact:${salvoIndex ?? "legacy"}`, {
+                priority: 82,
+                cooldownMs: 90,
+                maxInstances: 2,
+              });
               continue;
             }
             if (event.kind === "engineer") {
@@ -15270,9 +15352,8 @@ export function AshfallGame() {
               owner.engineerTrapCooldown = 0;
               addDamageText(g, owner.engineerTrapX, activeLaneCenters[owner.engineerTrapLane] - 30, "捕縛罠", .9, "#e3ce77");
               addParticles(g, owner.engineerTrapX, activeLaneCenters[owner.engineerTrapLane] - 6, "#c8b158", 16);
-              playProductionCue(weaponCueForUnit(owner.kind), owner.engineerTrapX, {
-                priority: 80, cooldownMs: 100, maxInstances: 1, fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:trap`,
+              playManualAbilityTimelineCue(owner, "spring", owner.engineerTrapX, "trap-spring", {
+                priority: 80, cooldownMs: 100, maxInstances: 1,
               });
               continue;
             }
@@ -15310,16 +15391,21 @@ export function AshfallGame() {
               addParticles(g, event.target.x, event.target.y - 16, "#f2c06d", 14);
               g.flashOverlay = Math.max(g.flashOverlay, .16);
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
-              playProductionCue("weapon-pan-hit", event.target.x, {
-                priority: 82,
-                cooldownMs: 80,
-                volume: .7,
+              playManualAbilityTimelineCue(owner, "throw", owner.x, "molotov-throw", {
+                priority: 80,
+                cooldownMs: 140,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}`,
               });
-              playCue("drum-blast");
-              playCue("burn-start");
+              playManualAbilityTimelineCue(owner, "impact", event.target.x, "molotov-impact", {
+                priority: 84,
+                cooldownMs: 90,
+                maxInstances: 2,
+              });
+              playManualAbilityTimelineCue(owner, "burn", event.target.x, "molotov-burn", {
+                priority: 76,
+                cooldownMs: 180,
+                maxInstances: 1,
+              });
               continue;
             }
             if (event.kind === "tky") {
@@ -15349,19 +15435,15 @@ export function AshfallGame() {
               }
               g.flashOverlay = Math.max(g.flashOverlay, .12);
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityRelease"), owner.x, {
+              playManualAbilityTimelineCue(owner, "release", owner.x, "release", {
                 priority: 88,
                 cooldownMs: 200,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:release`,
               });
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityImpact"), event.target.x, {
+              playManualAbilityTimelineCue(owner, "impact", event.target.x, "impact", {
                 priority: 86,
                 cooldownMs: 80,
                 maxInstances: 2,
-                fallbackCue: "airstrike-impact",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:impact`,
               });
               continue;
             }
@@ -15385,21 +15467,11 @@ export function AshfallGame() {
               addParticles(g, event.target.x, event.target.y - 14, finalRound ? "#ffd08a" : "#d48a42", finalRound ? 28 : 16);
               g.flashOverlay = Math.max(g.flashOverlay, .18);
               g.shake = triggerCameraShake(g.shake, finalRound ? CAMERA_SHAKE_EVENTS.airstrikeImpact : CAMERA_SHAKE_EVENTS.weaponHeavy);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", finalRound ? "abilityFinal" : "abilityImpact"), event.target.x, {
+              playManualAbilityTimelineCue(owner, finalRound ? "final" : "impact", event.target.x, `${finalRound ? "final" : "impact"}:${event.salvoIndex}`, {
                 priority: finalRound ? 92 : 85,
                 cooldownMs: 70,
                 maxInstances: 4,
-                fallbackCue: "drum-blast",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:impact:${event.salvoIndex}`,
               });
-              if (finalRound) {
-                g.pendingAbilityAudioCues.push({
-                  cueId: unitAudioCueFor(owner.kind, "weapon", "stow"),
-                  x: owner.x,
-                  remainingSeconds: .08,
-                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:stow`,
-                });
-              }
               continue;
             }
             if (event.kind === "miyamoto-musashi") {
@@ -15441,12 +15513,10 @@ export function AshfallGame() {
               owner.x += Math.sign(target.x - owner.x) * Math.min(26, Math.max(0, Math.abs(target.x - owner.x) - owner.range));
               addDamageText(g, target.x, target.y - 54, `無空 -${Math.round(damage)}`, .9, "#d7efff");
               addParticles(g, target.x, target.y - 34, "#c7e4ef", 18);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityCounter"), target.x, {
+              playManualAbilityTimelineCue(owner, event.mode === "fallback" ? "fallbackCross" : "counter", target.x, event.mode === "fallback" ? "fallback-cross" : "counter", {
                 priority: 88,
                 cooldownMs: 180,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:${event.mode ?? "fallback"}`,
               });
             }
           }
@@ -16249,7 +16319,30 @@ export function AshfallGame() {
 
         for (const object of g.battlefieldObjects) {
           object.hitFlash = Math.max(0, object.hitFlash - dt);
+          const previousPhase = object.phase;
           Object.assign(object, advanceBattlefieldSupply(object, dt));
+          if (object.kind === "pod" && previousPhase === "impact" && object.phase === "active") {
+            playBattleSemanticCue(V099_SUPPORT_POD_AUDIO_CONTRACT.activation, object.x, {
+              semantic: "support-pod-activation",
+              receiptId: `${object.id}:activation`,
+              ownerId: `pod:${object.id}`,
+              priority: 80,
+              cooldownMs: 260,
+              maxInstances: 1,
+              dedupeKey: `support-pod:${object.id}:activation`,
+            });
+          }
+          if (object.kind === "pod" && previousPhase === "active" && object.phase === "expired") {
+            playBattleSemanticCue(V099_SUPPORT_POD_AUDIO_CONTRACT.complete, object.x, {
+              semantic: "support-pod-complete",
+              receiptId: `${object.id}:complete`,
+              ownerId: `pod:${object.id}`,
+              priority: 72,
+              cooldownMs: 260,
+              maxInstances: 1,
+              dedupeKey: `support-pod:${object.id}:complete`,
+            });
+          }
           if (object.kind === "pod" && object.readyToLand && !object.landingTriggered) {
             const hpBeforeLanding = new Map(g.fighters.map((fighter) => [fighter.id, fighter.hp]));
             const landing = resolveBattlefieldSupplyLanding({ supply: object, fighters: g.fighters, laneCenters: activeLaneCenters });
@@ -16269,7 +16362,16 @@ export function AshfallGame() {
               }
             }
             addParticles(g, object.x, object.y + 4, "#d7aa63", 26);
-            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.podLanding); g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("pod-impact");
+            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.podLanding); g.flashOverlay = Math.max(g.flashOverlay, .12);
+            playBattleSemanticCue(V099_SUPPORT_POD_AUDIO_CONTRACT.landing, object.x, {
+              semantic: "support-pod-landing",
+              receiptId: `${object.id}:landing`,
+              ownerId: `pod:${object.id}`,
+              priority: 88,
+              cooldownMs: 220,
+              maxInstances: 2,
+              dedupeKey: `support-pod:${object.id}:landing`,
+            });
           }
           if (object.kind === "drum" && object.phase === "detonating" && !object.detonationTriggered) {
             const detonation = resolveDrumDetonation({ supply: object, fighters: g.fighters, areaEffects: g.areaEffects, nextAreaEffectId: g.nextAreaEffectId, laneCenters: activeLaneCenters });
@@ -19459,7 +19561,16 @@ export function AshfallGame() {
           g.takuyaEnragedAnnounced = true;
           emitBattleBark(g, "takuya-enraged", "gunner", "takuya-enraged");
         }
-        syncMusicMode(bossActiveOrIncoming ? "boss" : g.phase >= 2 || g.baseHp <= 260 ? "danger" : "normal");
+        const rawPressure = g.phase >= 2 || g.baseHp <= 260;
+        advancePressureLatch(pressureLatchRef.current, {
+          rawPressure,
+          simulationTime: g.time,
+        });
+        syncMusicMode(
+          bossActiveOrIncoming
+            ? "boss"
+            : pressureLatchRef.current.latched ? "pressure" : "normal",
+        );
 
         const stationResolution = stationSpatialSnapshot({
           missionType: g.definition.missionType,
@@ -19714,7 +19825,7 @@ export function AshfallGame() {
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("pageshow", onPageShow);
     };
-  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
+  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
