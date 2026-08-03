@@ -131,6 +131,8 @@ const EXPECTED_AUDIO_SCENE_IDS = Object.freeze([
   "station-gate",
   "station-platform",
   "station-tunnel",
+  "pressure-surface",
+  "pressure-station",
   "boss",
   "victory",
   "defeat",

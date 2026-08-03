@@ -46,10 +46,15 @@ test("delayed cue requires owner, activation, generation, and simulation time pr
   assert.equal(scheduleDelayedBattleAudioCue(runtime, {
     ownerId: "fighter-1", activationId: 4, semantic: "ability-impact", receiptId: "r1", cueId: "cue", dueSimulationTime: 1,
   }), true);
+  let resolvedOwnerId = null;
   assert.deepEqual(takeDueBattleAudioCues(runtime, {
     simulationTime: 1,
-    resolveOwner: () => ({ alive: true, retreat: false, activationId: 4, phase: "active" }),
+    resolveOwner: (ownerId) => {
+      resolvedOwnerId = ownerId;
+      return { alive: true, retreat: false, activationId: 4, phase: "active" };
+    },
   }).map((entry) => entry.cueId), ["cue"]);
+  assert.equal(resolvedOwnerId, "fighter-1");
   assert.equal(takeDueBattleAudioCues(runtime, { simulationTime: 2 }).length, 0);
   assert.equal(scheduleDelayedBattleAudioCue(runtime, {
     ownerId: "fighter-2", activationId: 5, semantic: "ability-impact", receiptId: "r2", cueId: "cue", dueSimulationTime: 3,

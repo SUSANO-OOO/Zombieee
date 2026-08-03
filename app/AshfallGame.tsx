@@ -19566,11 +19566,8 @@ export function AshfallGame() {
           rawPressure,
           simulationTime: g.time,
         });
-        syncMusicMode(
-          bossActiveOrIncoming
-            ? "boss"
-            : pressureLatchRef.current.latched ? "pressure" : "normal",
-        );
+        syncMusicMode(bossActiveOrIncoming ? "boss"
+          : pressureLatchRef.current.latched ? "pressure" : "normal");
 
         const stationResolution = stationSpatialSnapshot({
           missionType: g.definition.missionType,

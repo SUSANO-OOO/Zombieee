@@ -148,7 +148,7 @@ export function takeDueBattleAudioCues(runtime, {
       pending.push(entry);
       continue;
     }
-    const owner = resolveOwner(entry) ?? {};
+    const owner = resolveOwner(entry.ownerId) ?? {};
     const ownerActive = owner.alive !== false && owner.retreat !== true;
     const activationActive = entry.activationId === 0
       || (Number(owner.activationId) === entry.activationId && owner.phase !== "retreat" && owner.phase !== "cooldown");

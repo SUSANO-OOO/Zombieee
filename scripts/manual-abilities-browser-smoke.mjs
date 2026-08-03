@@ -1007,6 +1007,8 @@ async function abilityActivationProof(page, engine) {
   for (const kind of kinds) {
     const prepared = await prepareProof(page, kind);
     const ownerId = prepared.ownerIds[0];
+    await page.waitForFunction(() => Boolean(window.__ASHFALL_AUDIO_QA__));
+    await page.evaluate(() => window.__ASHFALL_AUDIO_QA__.resetCueRequests());
     const before = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
     const enemyHpBefore = before.fighters
       .filter(({ side }) => side === "zombie")
@@ -1035,6 +1037,24 @@ async function abilityActivationProof(page, engine) {
     invariant(immediate.crazyKingIndicatorCount === (kind === "crazy-king" ? 1 : 0),
       `${engine}/${kind}: transient indicator count ${immediate.crazyKingIndicatorCount}`);
 
+    await page.waitForFunction((id) => window.__ASHFALL_AUDIO_QA__.getCueRequests()
+      .some(({ ownerId, semantic }) => String(ownerId) === String(id) && semantic === "ability-activation-root"), ownerId);
+    const activationAudio = await page.evaluate((id) => {
+      const cues = window.__ASHFALL_AUDIO_QA__.getCueRequests();
+      return {
+        roots: cues.filter(({ ownerId, semantic }) => (
+          String(ownerId) === String(id) && semantic === "ability-activation-root"
+        )),
+        legacyConfirmForOwner: cues.filter(({ ownerId, cueId }) => (
+          String(ownerId) === String(id) && cueId === "ui-confirm"
+        )),
+      };
+    }, ownerId);
+    invariant(activationAudio.roots.length === 1,
+      `${engine}/${kind}: PR2 activation root count ${activationAudio.roots.length}`);
+    invariant(activationAudio.legacyConfirmForOwner.length === 0,
+      `${engine}/${kind}: PR1 confirmation cue leaked into valid ability activation`);
+
     const screenshotDelay = kind === "mrs-chiha"
       ? 1350
       : sustainedKinds.has(kind) || kind === "mayo-chan"
@@ -1050,6 +1070,12 @@ async function abilityActivationProof(page, engine) {
       await page.screenshot({ path: path.join(evidenceDir, `chromium-844x390-${kind}-vfx.png`) });
     }
     await waitForAbilitySettlement(page, kind, ownerId);
+    await page.waitForFunction((id) => window.__ASHFALL_AUDIO_QA__.getCueRequests()
+      .some(({ ownerId, semantic }) => String(ownerId) === String(id) && semantic === "ability-timeline"), ownerId);
+    const timelineAudio = await page.evaluate((id) => window.__ASHFALL_AUDIO_QA__.getCueRequests()
+      .filter(({ ownerId, semantic }) => String(ownerId) === String(id) && semantic === "ability-timeline"), ownerId);
+    invariant(timelineAudio.length >= 1,
+      `${engine}/${kind}: PR2 timeline cue missing`);
     let after = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
     invariant(after.crazyKingAbilityIndicatorCount === (kind === "crazy-king" ? 1 : 0),
       `${engine}/${kind}: active indicator lifecycle ended early`);
@@ -1148,6 +1174,8 @@ async function abilityActivationProof(page, engine) {
       receiptTypes: after.manualAbilityReceipts
         .filter(({ ownerId: receiptOwnerId }) => receiptOwnerId === ownerId)
         .map(({ eventType }) => eventType),
+      activationAudio,
+      timelineAudio,
     });
   }
   return proofs;

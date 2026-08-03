@@ -1,7 +1,7 @@
 {
   "schema": "zombieee-pwa-audio-bundle/1",
   "bundlePath": "/pwa-bundles/audio-v1.bin",
-  "bytes": 12914369,
+  "bytes": 18171288,
   "assets": {
     "/audio/v060/music/title.mp3": {
       "id": "music-title",
@@ -1280,6 +1280,222 @@
       "offset": 12850821,
       "bytes": 63548,
       "hash": "sha256-1cc67d793b899b08fadd67681ff1ab2026b5daf72a3cb887595f8515a5c250ce"
+    },
+    "/audio/v099/music/music-v099-pressure-surface.mp3": {
+      "id": "music-v099-pressure-surface",
+      "offset": 12914369,
+      "bytes": 1641057,
+      "hash": "sha256-c57c109bd80d6467015a7335b0581c58d3df776ccc2f4f200418a7c1d67d40ae"
+    },
+    "/audio/v099/music/music-v099-pressure-station.mp3": {
+      "id": "music-v099-pressure-station",
+      "offset": 14555426,
+      "bytes": 1641057,
+      "hash": "sha256-4dd4c90a800ff49e3bda76769bdfa895726d84364cb68648b6e7f29bb7818a01"
+    },
+    "/audio/v099/music/music-v099-boss.mp3": {
+      "id": "music-v099-boss",
+      "offset": 16196483,
+      "bytes": 1641057,
+      "hash": "sha256-358def6d4fb403617faeec4ca9af358e9d30ddb823b9c4c2c1a6107657f8be83"
+    },
+    "/audio/v099/sfx/ability-brawler-kiai-activate.mp3": {
+      "id": "ability-brawler-kiai-activate",
+      "offset": 17837540,
+      "bytes": 13001,
+      "hash": "sha256-13565aeba2bed6f276460db7b7d409c658c70ed4bb85b182d3c7d5f925d6ea42"
+    },
+    "/audio/v099/sfx/ability-scout-intercept-activate.mp3": {
+      "id": "ability-scout-intercept-activate",
+      "offset": 17850541,
+      "bytes": 13001,
+      "hash": "sha256-10689f884cf1745a3b081a85ea385c067b5a7ba22332295e2efeab3c412c9a7e"
+    },
+    "/audio/v099/sfx/ability-ranger-precision-activate.mp3": {
+      "id": "ability-ranger-precision-activate",
+      "offset": 17863542,
+      "bytes": 13001,
+      "hash": "sha256-87a02f66c556108c4b57be6d5d3d9f347ea732face9fb7e94a1da8f2965e3a2f"
+    },
+    "/audio/v099/sfx/ability-medic-emergency-activate.mp3": {
+      "id": "ability-medic-emergency-activate",
+      "offset": 17876543,
+      "bytes": 13001,
+      "hash": "sha256-4aa857a9bc3e84bf04d209839f897281b78ad6ac0e3b84dbe87879b325476909"
+    },
+    "/audio/v099/sfx/ability-brute-groundbreak-activate.mp3": {
+      "id": "ability-brute-groundbreak-activate",
+      "offset": 17889544,
+      "bytes": 13001,
+      "hash": "sha256-634d73bb3ed60ed05af7b8ef74fead545bd5b330d5f3709f12ec434a363e19ec"
+    },
+    "/audio/v099/sfx/ability-crazy-king-overdrive-activate.mp3": {
+      "id": "ability-crazy-king-overdrive-activate",
+      "offset": 17902545,
+      "bytes": 13001,
+      "hash": "sha256-75feb231acfc20b24a99bf7f821355598ffd82106d7040c9c457e013636dc902"
+    },
+    "/audio/v099/sfx/ability-kumaverson-iron-pan-activate.mp3": {
+      "id": "ability-kumaverson-iron-pan-activate",
+      "offset": 17915546,
+      "bytes": 13001,
+      "hash": "sha256-6bb08703d58e08b8cdd9b8d49d402b7e2b7dcc680ee89504cf3372550ecdaeeb"
+    },
+    "/audio/v099/sfx/ability-babayaga-appraise-activate.mp3": {
+      "id": "ability-babayaga-appraise-activate",
+      "offset": 17928547,
+      "bytes": 13001,
+      "hash": "sha256-e2a37ebda4c3463345c9dab4b7d63d8d989371edf28fcb97f6bae9b56fa374e8"
+    },
+    "/audio/v099/sfx/ability-gunner-suppression-activate.mp3": {
+      "id": "ability-gunner-suppression-activate",
+      "offset": 17941548,
+      "bytes": 13001,
+      "hash": "sha256-609255e9286ccaf58623c5851d1708e3c5b2610716441fb7778c328da5adece1"
+    },
+    "/audio/v099/sfx/ability-guardian-shieldwall-activate.mp3": {
+      "id": "ability-guardian-shieldwall-activate",
+      "offset": 17954549,
+      "bytes": 13001,
+      "hash": "sha256-ed5f8f0758dfe136b987a2dc679a5b931a4be5beb7d0c44885ebf7a6f6041740"
+    },
+    "/audio/v099/sfx/ability-engineer-trap-arm-activate.mp3": {
+      "id": "ability-engineer-trap-arm-activate",
+      "offset": 17967550,
+      "bytes": 13001,
+      "hash": "sha256-9b6fc0bdde878221d321aa76808ed643eba5e64ac8e58e16d2ba08965f1508d2"
+    },
+    "/audio/v099/sfx/ability-zakimiya-molotov-activate.mp3": {
+      "id": "ability-zakimiya-molotov-activate",
+      "offset": 17980551,
+      "bytes": 13001,
+      "hash": "sha256-838467c22e5e68e5848a70b73538f8213d4bc29e636ba657203038161a18de9a"
+    },
+    "/audio/v099/sfx/support-pod-inbound.mp3": {
+      "id": "support-pod-inbound",
+      "offset": 17993552,
+      "bytes": 14255,
+      "hash": "sha256-9c698cc141f98f8759aa9563dcc5619c173459bbec8688438803bc9513c75e1b"
+    },
+    "/audio/v099/sfx/support-pod-landing-impact.mp3": {
+      "id": "support-pod-landing-impact",
+      "offset": 18007807,
+      "bytes": 10911,
+      "hash": "sha256-e6d3443b9dc3585b799c55d5e5161812d0d5f441e1b0b74d1b4f7c393b3b0bb9"
+    },
+    "/audio/v099/sfx/support-pod-activation.mp3": {
+      "id": "support-pod-activation",
+      "offset": 18018718,
+      "bytes": 8404,
+      "hash": "sha256-e6a8fe5b81dcda814c4705c176bf5640865ceeb63f7e1c2e72e079d8bf89fb64"
+    },
+    "/audio/v099/sfx/support-pod-complete.mp3": {
+      "id": "support-pod-complete",
+      "offset": 18027122,
+      "bytes": 6732,
+      "hash": "sha256-deb56a50a46deef8cc6616447131db0ebbf70b6e420fa0de82620ebc7f1589f6"
+    },
+    "/audio/v099/sfx/ability-brawler-kiai-combo-impact.mp3": {
+      "id": "ability-brawler-kiai-combo-impact",
+      "offset": 18033854,
+      "bytes": 8822,
+      "hash": "sha256-52723d64556fada441d093b0b806e7bb93e33f7653792d3c64a0634ce166456d"
+    },
+    "/audio/v099/sfx/ability-scout-intercept-impact.mp3": {
+      "id": "ability-scout-intercept-impact",
+      "offset": 18042676,
+      "bytes": 8822,
+      "hash": "sha256-99f514df074eca91cba8e43688988289545558492693786464b863f30a1ce0f9"
+    },
+    "/audio/v099/sfx/ability-ranger-precision-shot.mp3": {
+      "id": "ability-ranger-precision-shot",
+      "offset": 18051498,
+      "bytes": 8822,
+      "hash": "sha256-443f50b72eab29d0cbbb21ace5670c4975e8857f87897c94d45652d6a90726c5"
+    },
+    "/audio/v099/sfx/ability-ranger-precision-impact.mp3": {
+      "id": "ability-ranger-precision-impact",
+      "offset": 18060320,
+      "bytes": 8822,
+      "hash": "sha256-469ad02c8dc7aa7edac8bc2e81ca5965d69ab09407d9715d60514b7e5cc3edaa"
+    },
+    "/audio/v099/sfx/ability-brute-groundbreak-impact.mp3": {
+      "id": "ability-brute-groundbreak-impact",
+      "offset": 18069142,
+      "bytes": 8822,
+      "hash": "sha256-738f15dbe0e8c166a11f14c869d3fd3fc45b92ce2a6d1c8e8a6b9b942336d172"
+    },
+    "/audio/v099/sfx/ability-crazy-king-overdrive-active.mp3": {
+      "id": "ability-crazy-king-overdrive-active",
+      "offset": 18077964,
+      "bytes": 8822,
+      "hash": "sha256-30003b9c7445768a786f146e519726c2a38cce730c61ecf0e491aa25e67f50b4"
+    },
+    "/audio/v099/sfx/ability-kumaverson-stance.mp3": {
+      "id": "ability-kumaverson-stance",
+      "offset": 18086786,
+      "bytes": 8822,
+      "hash": "sha256-eafe173e16246393ffb29755fdd164934d83a1f4692c8212b3f8f392504e313b"
+    },
+    "/audio/v099/sfx/ability-babayaga-appraise-shot.mp3": {
+      "id": "ability-babayaga-appraise-shot",
+      "offset": 18095608,
+      "bytes": 8822,
+      "hash": "sha256-04535a45b51abc2194bd4f743fc32d17c6bb86f64449cbe2a7da6fb74a5caad3"
+    },
+    "/audio/v099/sfx/ability-babayaga-appraise-mark.mp3": {
+      "id": "ability-babayaga-appraise-mark",
+      "offset": 18104430,
+      "bytes": 8822,
+      "hash": "sha256-f735bfa95adf74740ee3a1f2a00b43544a689dee867bbadf7708f1cabab4beaa"
+    },
+    "/audio/v099/sfx/ability-gunner-suppression-muzzle.mp3": {
+      "id": "ability-gunner-suppression-muzzle",
+      "offset": 18113252,
+      "bytes": 8822,
+      "hash": "sha256-db735b1d7e822eb8cec391e20da3ddabb7518cc48c622581995e37edcddd6074"
+    },
+    "/audio/v099/sfx/ability-gunner-suppression-impact.mp3": {
+      "id": "ability-gunner-suppression-impact",
+      "offset": 18122074,
+      "bytes": 8822,
+      "hash": "sha256-d1c2b9c461e69008fdd2c77c502c5b533ac0fed5bf0124f9a7ec56f79981d902"
+    },
+    "/audio/v099/sfx/ability-engineer-trap-spring.mp3": {
+      "id": "ability-engineer-trap-spring",
+      "offset": 18130896,
+      "bytes": 8822,
+      "hash": "sha256-2ffe23b0a6c7ba0be67bbd82b17e798069f089569567e2f97abefdc0d5673394"
+    },
+    "/audio/v099/sfx/ability-zakimiya-molotov-throw.mp3": {
+      "id": "ability-zakimiya-molotov-throw",
+      "offset": 18139718,
+      "bytes": 8822,
+      "hash": "sha256-4bf5aab9773c299bf40252c9039080bbd260310413abbdb003aa3f9e0139e148"
+    },
+    "/audio/v099/sfx/ability-musashi-fallback-cross.mp3": {
+      "id": "ability-musashi-fallback-cross",
+      "offset": 18148540,
+      "bytes": 8822,
+      "hash": "sha256-fe214d67981039b0c6495023dfcb67cb575d19355a41ea1de7d1e4e73dbc7dab"
+    },
+    "/audio/v099/sfx/ability-ready-melee.mp3": {
+      "id": "ability-ready-melee",
+      "offset": 18157362,
+      "bytes": 4642,
+      "hash": "sha256-b63137792befc8552f030fd8511bfd778233ee2a4db7810ae9be5cf50c1a1b25"
+    },
+    "/audio/v099/sfx/ability-ready-ranged.mp3": {
+      "id": "ability-ready-ranged",
+      "offset": 18162004,
+      "bytes": 4642,
+      "hash": "sha256-c4ad610272d3f3e3a0a5ee47d95fed18c9f7237c4caa80cf84a00ad7eef95c58"
+    },
+    "/audio/v099/sfx/ability-ready-support.mp3": {
+      "id": "ability-ready-support",
+      "offset": 18166646,
+      "bytes": 4642,
+      "hash": "sha256-0c96e8a6547b7bb33e3f8badf919cbf155497ede59d822653a5f726f1352d42d"
     }
   }
 }

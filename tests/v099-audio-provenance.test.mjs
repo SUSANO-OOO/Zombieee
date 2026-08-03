@@ -32,6 +32,7 @@ test("v0.9.9.0 PR2 provenance matches the manifest's 36 one-source outputs", asy
     const outputPath = path.join(root, entry.output);
     const outputStat = await stat(outputPath);
     assert.equal(outputStat.size, entry.outputBytes, entry.id);
+    assert.equal(entry.addedBytes, entry.outputBytes, entry.id);
     assert.equal(await sha256(outputPath), entry.outputSha256, entry.id);
     assert.equal(manifestById.get(entry.id)?.sources.length, 1, entry.id);
     assert.equal(manifestById.get(entry.id)?.sources[0].src, `/${entry.output.replace(/^public\//, "")}`, entry.id);
