@@ -4,10 +4,10 @@ import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = path.resolve(process.env.V099_GATE_A_DIR
+const root = path.resolve(process.argv[2] ?? process.env.V099_GATE_A_DIR
   ?? path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "outputs", "v099-gate-a"));
 const host = "127.0.0.1";
-const port = Math.max(1024, Number(process.env.V099_GATE_A_PORT) || 4179);
+const port = Math.max(1024, Number(process.argv[3] ?? process.env.V099_GATE_A_PORT) || 4179);
 const mime = new Map([
   [".html", "text/html; charset=utf-8"],
   [".json", "application/json; charset=utf-8"],
