@@ -1,4 +1,4 @@
-// Version 0.9.8.2 resumable full-pack download session.
+// Version 0.9.9.0 resumable full-pack download session.
 //
 // The session deliberately knows nothing about DOM or Cache Storage. Callers
 // inject fetch, digest, and storage operations, which keeps the same full-pack

@@ -64,7 +64,7 @@ test("only approved versioned icon paths are referenced while legacy files remai
   ]) await access(new URL(legacy, import.meta.url));
 });
 
-test("the 0.9.8.2 differential update reuses every non-icon hash and fetches only approved icon bytes", async () => {
+test("the approved-icon integration reuses every pre-icon non-icon hash and fetches only approved icon bytes", async () => {
   const previous = JSON.parse(execFileSync("git", [
     "show",
     "3e09b4c09cb1bc67cf1322bd539f5b0bc7e5d060:public/asset-manifest.json",

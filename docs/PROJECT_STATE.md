@@ -1,202 +1,126 @@
 # 西新世紀末物語 — プロジェクト状態
 
-更新日：2026-07-31
+更新日：2026-08-04
 
 ## 1. 正式公開
 
-唯一の正式公開先：**GitHub Pages**
+唯一の正式公開先はGitHub Pagesです。
 
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
-- 公開中version：**Version 0.9.5**
-- release SHA：`18e1fb349faa54602c956371d7224200acc17225`
-- annotated tag：`v0.9.5`、同release SHA
-- GitHub Release：Version 0.9.5、同release SHA
-- request ID：`v0.9.5-formal-release-20260730`
-- release ledger：Issue #96、closed
-- deployment workflow：GitHub Pages Release #164、success
-- public QA workflow：GitHub Pages Public QA #130、success
-- 公開HTML metadata：version `0.9.5`、release SHA `18e1fb349faa54602c956371d7224200acc17225`、Issue `96`
+- 公開中version：**Version 0.9.8.2**
+- `main`／release SHA：`662ec6103a769846343e60dacf19dd36adeafdde`
+- annotated tag：`v0.9.8.2`、同release SHA
+- GitHub Release：[Version 0.9.8.2](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v0.9.8.2)
+- request ID：`v0.9.8.2-final-release-20260802`
+- release ledger：Issue #133
+- 公開HTML metadata：version `0.9.8.2`、release SHA `662ec6103a769846343e60dacf19dd36adeafdde`、Issue `133`
 
-上記は2026-07-31のIssue #111 Hotfix開始時にlive再取得した値である。正式公開版ではsave確認とasset準備が無期限停止するP0が確認され、Version 0.9.5.1で修正・再公開する。
+上記は2026-08-04にtag、Release、`main`、正式URLのHTMLから再取得した値です。ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、復旧に使用しません。
 
-ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、復旧に使用しない。
+## 2. Version 0.9.9.0 release candidate
 
-## 2. 現在のGitHub基準
+実行正本：[Issue #136](https://github.com/SUSANO-OOO/Zombieee/issues/136)
+
+状態：**Gate A合格、PR1〜PR4 integration統合済み、release-prep中**
+
+- integration branch：`integration/0.9.9.0`
+- PR1 merge：`6e5c304f575a31c2e9762e652a2437e93291ef75`
+- PR2 merge：`464975906e969444f71a9d2e48646b077f38f514`
+- PR3 merge：`3e09b4c09cb1bc67cf1322bd539f5b0bc7e5d060`
+- PR4 merge／release-prep source：`cc1b90474801224819d1d1905cbd5a5ed07a3365`
+- release-prep branch：`codex/0.9.9.0-release-prep`
+- final main PR、release SHA、tag、GitHub Release、Pages正式deployment：未作成／未実行
+
+Gate Aで、現在のAudio、VFX、感染者face icon A2がProducer承認済みです。A2 master SHA-256は`88b5b3aff7f8a026b3bd9d95433c9363804f4e838d224df4c6298073ea3be38e`です。
+
+## 3. Version 0.9.9.0のplayer-facing変更
+
+### UI・transaction feedback
+
+- 選択、決定、戻る、購入、強化、報酬、出撃、拒否をsemantic cueへ整理
+- 雇用・強化のdurable save成功後だけ成功feedback／SEをpublish
+- 雇用と強化、自動saveを共通queueで直列化し、stale save、二重減算、二重receiptを防止
+- `aria-disabled`操作はreject feedbackを返しつつ、禁止stateを変更しない
+- save-pending中は戦闘入力とframe進行を遮断
+
+### Battle audio
+
+- surface／stationのpressure BGMとboss BGMを追加
+- normal↔pressure、boss entry／exitを戦況から解決
+- 全16unitのability activation root、timeline subcue、ready familyを明示契約化
+- boss、defeat、explosion、supportをgeneration／receipt単位で一回だけ発火
+- 36 physical audio assetsをproject-original source、固定provenance、再現可能なmasterへ追加
+
+### Battle presentation
+
+- boss entrance／defeatを段階presentation化
+- small／medium／large explosionを用途別に分離
+- explosive drumに影、落下、回転、dust、spark、bounce、activationを追加
+- CRAWLER roof machinery、barrage、airstrikeを装備と一体に見える表現へ改善
+- gameplay damage、cooldown、targeting、reward、save契約は変更しない
+
+### App icon
+
+- Producer承認A2からversioned favicon、Apple touch、192／512／1024、maskable iconを生成
+- PWA `id`、`start_url`、`scope`は`./`を維持
+- 旧icon filesは物理保持し、新generationだけがA2 pathを参照
+
+## 4. Asset・PWA状態
+
+- manifest：410 logical assets
+- logical bytes：86,794,856
+- distinct bytes：86,254,953
+- lossless WebP transport derivative：73
+- audio bundle：249 slices、17,604,607 bytes
+- Version 0.9.9.0追加：36 audio assets＋A2 icon 7 logical paths
+- Version 0.9.8.2からの差分：43 logical downloads、41 distinct objects、7,199,431 bytes
+- unchanged hash reuse：367 assets
+- save schema：v14、変更なし
+
+PWAは全件のsize／SHA-256検証、Cache Storage保存、manifest commit ACK完了後だけゲーム開始します。active／previous generation、差分update、rollback、offline、commit-only recovery、saveとasset cacheの分離を維持します。
+
+## 5. QA状態
+
+工程PRごとにfocused/full tests、Lint、production build、content validation、browser QA、PWA/update/rollback/offline/save QA、独立read-only reviewを実施し、integration merge前のPR起因FindingはHigh／Medium／Low 0です。
+
+release-prepでは次を最終固定します。
+
+- Version 0.9.9.0 identityとrelease SHA注入契約
+- generated manifest／audio bundle／lossless WebP drift 0
+- Chromium／WebKit、1280×720、844×390、844×340
+- Pages base path `/Zombieee/`
+- fresh install、0.9.8.2差分update、active／previous、rollback、offline、reload recovery
+- fresh／existing save、migration、破損復旧、export／import
+- Audio／VFX／icon combined regression
+- console／page／request／HTTP failure 0
+
+Playwright WebKitは物理iPhone確認ではありません。speaker、earphone、home-screen icon更新、lock復帰、発熱はGate BでProducerが物理iPhoneを確認します。
+
+## 6. Release境界
+
+公開順は次のとおりです。
+
+1. release-prep PRをintegrationへ通常merge
+2. final `integration/0.9.9.0 → main` PRを作成
+3. 別チャットのSol Auditorが固定integration HEADをread-only reviewし、High／Medium／Low 0を確認
+4. 同一固定HEADのGate B candidateを発行
+5. Producerが物理iPhoneを確認し、「公開してよい」と明示
+6. final main PRを通常mergeし、merge resultをrelease SHAに固定
+7. annotated `v0.9.9.0` tag、GitHub Release
+8. `main`からGitHub Pages Releaseをmanual dispatch
+9. public metadata、匿名アクセス、fresh／existing save、PWA update、主要assetを確認
+10. 公開後docs-only同期PR、Issue #24状態記録、Issue #136 close
+
+`.github/pages-release-request.json`は変更しません。Gate B承認前のintegration→main merge、tag、Release、Pages正式公開は禁止です。
+
+## 7. 恒久基準
 
 - repository：`SUSANO-OOO/Zombieee`
-- repository visibility：`public`
 - default branch：`main`
-- latest `main`／Version 0.9.5 release SHA：`18e1fb349faa54602c956371d7224200acc17225`
-- Version 0.9.5 integration branch：`integration/0.9.5`
-- RC開始時integration SHA：`9c576b1acb89c5b05a47213fa0c8f450b8d6136c`
-- docs-only PR：#97、工程PR：#98〜#106、通常merge済み
-- Version 0.9.5 RC branch：`codex/0.9.5-rc`
-- Version 0.9.5 ledger：Issue #96、closed
-- Version 0.9.5.1 Hotfix ledger：Issue #111、open
-- Version 0.9.5.1 branch：`codex/0.9.5.1-hotfix`
-- Version 0.9.5最上位製品正本：`docs/PRODUCER_DECISIONS_0.9.5.md`
 - save key：`nishijin-campaign-v1`
-- Version 0.9.5 save schema：v14
+- stable ID、localStorage／IndexedDB、migration snapshot、last-known-good、recovery、export／importを維持
+- smartphone横画面を第一基準、PC横画面も正式対応
+- 本編Stage 1〜20、Survival、16 playable units、Level 1〜50基盤を維持
+- `main`直接push、force push、rebase、amend、既存tag移動、save初期化、cache全削除、ライセンス不明asset採用は禁止
 
-`main`はdocs、ops、hotfix等でも進むため、現在SHAを本書へ永久固定しない。作業開始時、PR操作直前、merge直前、release直前にGitHubの現在値を再取得する。正式公開game sourceは、単なる最新`main`ではなく公開HTML metadata、tag、GitHub Release、release requestと照合する。
-
-## 3. Version 0.9.0公開内容
-
-### Campaign／content
-
-- Stage 1〜20
-- Survival Mode
-- 異常発生任務5件
-- mission別の右端・右端外spawn profile
-- Stageごとの背景variant、床面、walkable、objective anchor
-- 既存Stage 1〜16のsave、解放、星、報酬を維持
-
-### Playable units／progression
-
-- プレイアブル16名
-- 最大7枠、3 formation presets
-- 全16体の個体別manual abilityと頭上ready icon
-- Level 1〜50のdata／UI基盤。Stage 20時点の通常解放上限はLv25
-- 個人equipment2枠、preset別の戦術equipment2枠
-- 約20種・5段階強化のequipment inventory
-- capsによるunit取得、Level、equipment強化
-- 新5名を含む全16名の正式identityとplayer-facing visual
-
-### Battle
-
-- player-facing固定3laneを廃止した連続battle space
-- profile-driven ally／enemy AI
-- CRAWLER door／ramp deployment
-- 出現完了まで攻撃、被弾、collisionを禁止するcombat-ready契約
-- Survival専用防衛前線
-- weapon-specific animation、VFX、SE、damage event
-- boss共通基盤、TAKUYA／改札喰い改修、新boss5体
-- 通常感染体6種
-
-### UI／save／QA
-
-- 出撃、部隊、補給所、記録へ主要UIを再構成
-- 詳細result、敵図鑑、boss図鑑、Survival記録、戦績
-- BGM／SE独立volume slider
-- save schema v13
-- localStorage／IndexedDB、migration snapshot、last-known-good、recovery、export／import
-- Chromium／WebKit、1280×720、844×390、844×340
-- 物理iPhoneは未確認。WebKit iPhone相当、safe area、frame time、heap／memory proxyが代替証拠
-
-## 4. Version 0.9.5 release candidate状態
-
-状態：**Version 0.9.5正式公開済み・Version 0.9.5.1緊急Hotfix中**
-
-- correction PR：#108、通常merge済み
-- correction統合SHA：`cca0b63cf5a83f6000b3a4599bf0912659f8ed98`
-- release identity：Version 0.9.5
-- release SHA：`18e1fb349faa54602c956371d7224200acc17225`
-- formal release authority：Issue #96監査改訂済み最新コメント（issue comment `5124971857`）
-
-Version 0.9.5.1はIssue #111を唯一の実行正本とし、Hotfix PRのmain merge resultをrelease SHAとしてannotated `v0.9.5.1`、GitHub Release、Pages manual dispatch、拡張Public QAへ固定する。既存`v0.9.5`は変更しない。
-
-目的：
-
-- smartphone横画面全般の発熱、描画、memory負荷を低減
-- 全16体の戦闘アニメーションをplayer-facingで刷新
-- VFX、攻撃演出、敵、boss、CRAWLER、戦場描画を改善
-- Version 0.9.0残存表示・出撃不具合を横断修正
-- 「雇用」、雇用可能popup、マヨちゃんSurvival Wave 20到達解放を統合
-- save migrationとorigin別saveを検証
-
-Version 0.9.0 baseline：
-
-- `npm.cmd test`：695 tests pass、production build pass
-- `npm.cmd run lint`：pass
-- `npm.cmd run content:validate`：pass
-- `git diff --check`：pass
-- content：16 units、23 enemies、20 stages、20 missions、179 waves、20 equipment、514 assets
-- Version 0.9.0 release-prep記録：asset decode 399/399 audio、34/34 portraits、57/57 images
-- Version 0.9.0 release-prep記録：save migration matrix 44/44、progression browser matrix 6/6
-
-RC・Producer acceptance correction：
-
-- `npm.cmd test`：758 tests pass、production build pass
-- `npm.cmd run lint`、`npm.cmd run content:validate`、`git diff --check`：pass
-- 全16体出撃：576/576 pass、technical RC `5bc0d6b`とのaligned before／after 192 frame、修正版opacity 96/96で1
-- 全16体walk／turn／attack：technical RC `5bc0d6b`とのaligned before／after 192 frame、全source frameをSHA-256 lock
-- 残存攻撃不具合：96/96 pass、unit／enemyの接地・方向・攻撃timing failure 0
-- AI任務：Stage 1〜20で120/120 pass
-- CRAWLER defense：240/240、pass-through 0、objective direct 0
-- route／cart：12/12
-- save migration／origin：v13→v14、78/78、一度だけ適用・idempotent
-- 雇用：6/6、マヨちゃんSurvival Wave 20到達解放：2/2
-- asset decode：399/399 audio、34/34 portraits、58/58 images
-- performance gate：3/3、同一scenarioの省電力render-work proxyはAuto比76.74%減
-- 独立read-only review：High／Medium／Low 0
-- canonical correction証拠：`docs/qa/v095/acceptance-corrections/README.md`
-- RC証拠：`docs/qa/v095/rc/README.md`、`docs/qa/v095/rc/rc-summary.json`
-
-Producerは物理smartphoneでStage 1〜13を確認済み。Stage 14〜20はbrowser regressionで補完する。物理speaker、native Safari、残存発熱、物理touch／回転／lock復帰を自動QAで確認済みとは断定しない。これらの既知境界はRelease NotesとIssue #96へ明示し、Issue comment `5124971857`の正式release承認を置き換えない。
-
-## 5. Version 0.9.5の実装順
-
-詳細と進捗はIssue #96が所有する。
-
-1. docs-only正本整備
-2. Version 0.9.0公開版のperformance、save、visual baseline
-3. mobile render、lifecycle、memory最適化
-4. animation state、anchor、event基盤
-5. 代表6体vertical slice
-6. 残り10体、敵、boss、CRAWLER、VFXへ横展開
-7. 残存不具合修正
-8. 雇用copy、unlock popup、マヨ解放、save migration
-9. 全体QA、独立review、RC
-
-各工程を工程branch／Draft PRへ分け、focused tests、全tests、production build、Lint、`git diff --check`、browser QA、独立read-only reviewを通してから`integration/0.9.5`へ通常mergeする。
-
-## 6. Version 0.9.5 release境界
-
-RCとProducer acceptance correctionで`integration/0.9.5`へ次を揃えた。
-
-- 全工程PRとintegration latest SHA
-- 全tests、build、Lint、review結果
-- browser QA
-- 0.9.0とのperformance／memory比較
-- 全16体animation改善一覧と実画面証拠
-- VFX、描画、enemy、boss、CRAWLER改善証拠
-- 残存不具合のroot causeと修正証拠
-- 雇用、unlock popup、マヨ解放、save migration、origin別save結果
-- LAN試遊URL
-- 物理smartphone確認手順
-- 未解決High／Medium／Low 0
-
-Issue #96の監査改訂済み最新コメントに従い、release preparation、final main PR、annotated tag、GitHub Release、Pages manual dispatch、自動Public QAの順で進める。`.github/pages-release-request.json`は変更しない。公開metadataがVersion 0.9.5とfinal main merge result SHAへ切り替わり、自動Public QAが成功する前にIssue #96をcloseしない。
-
-## 7. 長期方向
-
-- Version 0.9.6：PWA、Service Worker、offline／install対応の分離候補
-- 本編stage数：50を基準とするが固定上限ではない
-- 将来Stage 100、150以上へ追加可能
-- playable unit：30体を基準とするが固定上限ではない
-- Level 50はunit基礎育成の完成点とし、Stage数へ無制限追随させない
-- Level 50以降の進行はequipment、編成、新unit、敵対策、将来の横成長で作る
-- Version 1.0まではbattle中心
-- stable IDs、local save、migration、rollbackを全Versionで維持
-
-## 8. 安全境界
-
-恒久禁止：
-
-- `main`直接push
-- force push、共有履歴rebase・amend
-- 既存tag移動・上書き
-- branch cleanup
-- PWA、Service Worker、offline／install対応の0.9.5混在
-- 新Stage、新unit、新boss
-- engine全面書き直し
-- repository visibility、課金、secrets、外部契約の無断変更
-- 既存未commit・未追跡変更の削除
-- save全体の自動初期化
-- ライセンス不明素材の正式採用
-- ChatGPT Sites deployment
-
-Issue comment `5124971857`が承認するrelease操作も、release preparationと全gate成功後に順番どおり実行する。final main merge前のtag／Release／deployment、Public QA成功前のIssue closeは禁止する。
-- 未確認・失敗の成功報告
-
-重大な公開不具合は、直前の正常release SHAを確認し、通常のrevert PRまたはimmutable release再deploymentで復旧する。
+長期方向は[PRODUCT_ROADMAP](PRODUCT_ROADMAP.md)、公開・復元は[RELEASE_BACKUP_RECOVERY](RELEASE_BACKUP_RECOVERY.md)を参照してください。

@@ -1,6 +1,6 @@
 # 西新世紀末物語 — 開発運用ルール
 
-更新日：2026-07-26
+更新日：2026-08-04
 
 ## 1. 適用範囲
 
@@ -17,12 +17,15 @@
 5. 最新`main`のコード、tests、QA記録
 6. 工程別Issue、PR、実装・QA記録
 
-Version 0.9.5では次を使用する。
+Version 0.9.9.0では次を使用する。
 
-1. `docs/PRODUCER_DECISIONS_0.9.5.md`
-2. Issue #96
-3. 本書
-4. 最新`main`のコード、tests、QA記録
+1. Issue #136の最終監査補足（comment `5166614237`。衝突時はこちらを優先）
+2. Issue #136のProducer Execution Directive（comment `5166510249`）
+3. Issue #136本文
+4. 本書
+5. `integration/0.9.9.0`のコード、tests、QA記録
+
+Version 0.9.9.0ではPR1〜PR4をintegrationへ統合済みである。最終integration RCは別チャットのSol Auditorによる固定HEAD read-only reviewを必須とし、Producer Gate Bの「公開してよい」という明示承認前にintegration→main merge、tag、GitHub Release、Pages正式deploymentを行わない。
 
 製品判断はProducer Decisions、実行台帳は対象Issue、恒久安全境界は本書が所有する。過去コメント、旧PR、旧ロードマップ、会話上の検討案が現行正本と衝突する場合は採用しない。
 
@@ -85,7 +88,7 @@ Codexは、固定済み製品判断と安全境界を守る限り、内部構造
 
 対象Versionでintegration branchが指定されている場合、工程branchをintegration向けPRとして段階統合できる。最終`integration/<version> → main`のReady化・mergeは、対象Version正本のrelease境界に従う。
 
-Version 0.9.5では、docs-only PRを`main`へ通常mergeした結果から`integration/0.9.5`を作成する。工程branchは`integration/0.9.5`向けPRとして段階統合し、別承認前に`integration/0.9.5 → main`の最終merge、`v0.9.5` tag、GitHub Release、GitHub Pages正式deployment、Issue #96 closeを行わない。
+Version 0.9.9.0では、release-prepを`integration/0.9.9.0`向けPRとして通常mergeし、最終`integration/0.9.9.0 → main` PRを作成する。Producer Gate B承認前に最終PRをmergeせず、`v0.9.9.0` tag、GitHub Release、GitHub Pages正式deployment、Issue #136 closeを行わない。
 
 ## 6. 公開契約
 
