@@ -72,8 +72,9 @@ test("gameplay consumes every scripted trigger without routing battle presentati
   for (const eventId of STORY_BATTLE_EVENT_IDS) {
     assert.match(gameSource, new RegExp(eventId.replaceAll("-", "\\-")), eventId);
   }
-  assert.match(gameSource, /bark\.trigger === STORY_BATTLE_TRIGGER_IDS\.FINAL_WEAKPOINT_EXPOSED/);
-  assert.match(gameSource, /storyFinalCutAudioActive[\s\S]*sceneIdForStoryEvent\("stage-takuya-final-v070"\)/);
+  assert.match(gameSource, /emitStoryBattleBark\(g, "stage-takuya-final-v070", STORY_BATTLE_TRIGGER_IDS\.FINAL_WEAKPOINT_EXPOSED, mode\)/);
+  assert.doesNotMatch(gameSource, /storyFinalCutAudioActive/);
+  assert.doesNotMatch(gameSource, /battleSilenceSceneId[\s\S]{0,500}stage-takuya-final-v070/);
   assert.match(gameSource, /storyWarningCueForEvent\(storyEventId\)/);
   assert.match(gameSource, /playProductionCue\(warningCue, W \/ 2, \{[\s\S]*priority: 98/);
   assert.match(gameSource, /newlyTriggeredEventIds\.includes\("stage-takuya-final-v070"\)/);

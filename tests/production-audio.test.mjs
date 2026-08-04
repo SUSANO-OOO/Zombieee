@@ -348,12 +348,20 @@ test("TAKUYA entrance stops BGM for the authored metal tear and three-step seque
   assert.equal(PRODUCTION_AUDIO_MANIFEST.assetById[TAKUYA_ENTRANCE_AUDIO.cueId].category, "monsters");
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById.stage3.preload.includes(TAKUYA_ENTRANCE_AUDIO.cueId), true);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["story-stage3-battle"].preload.includes(TAKUYA_ENTRANCE_AUDIO.cueId), true);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById.boss.bgm, "music-v099-boss");
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["story-boss"].bgm, "music-v099-boss");
   assert.match(source, /g\.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO\.durationSeconds/);
   assert.match(source, /playProductionCue\(TAKUYA_ENTRANCE_AUDIO\.cueId, W \/ 2/);
   assert.match(source, /takuyaEntranceAudioActive[\s\S]*TAKUYA_ENTRANCE_AUDIO\.silenceSceneId/);
   assert.match(source, /g\.takuyaEntranceAudioRemaining = Math\.max\(0, g\.takuyaEntranceAudioRemaining - dt\)/);
   assert.match(source, /if \(battleSilenceSceneId\(g\)\) return/);
   assert.match(source, /syncMusicMode\(bossActiveOrIncoming \? "boss"/);
+  const silenceResolver = source.slice(
+    source.indexOf("function battleSilenceSceneId"),
+    source.indexOf("function dispatchScriptedStoryBattleBarks"),
+  );
+  assert.match(silenceResolver, /takuyaEntranceAudioRemaining > 0/);
+  assert.doesNotMatch(silenceResolver, /stage-takuya-final-v070|FINAL_WEAKPOINT/);
 });
 
 test("production manifest keeps every mixer category and valid two-sample variation pools", () => {

@@ -8,6 +8,7 @@ import {
   RUNTIME_SIMULATION_HZ,
 } from "../app/renderPerformance.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 const baseUrl = new URL(
   process.env.V095_RESIDUAL_BUGS_QA_BASE_URL ?? "http://127.0.0.1:4177/",
@@ -131,16 +132,16 @@ if (continuousDeploymentSequence) {
   const exactSequenceAxes = (
     qaMode === "deployment-matrix"
     && qaScope === "focused"
-    && sameAxis(engines, ["chromium"])
-    && sameAxis(configuredViewportNames, ["844x390"])
-    && sameAxis(unitKinds, defaultUnitKinds)
+    && engines.length > 0
+    && configuredViewportNames.length > 0
+    && unitKinds.length > 0
     && sameAxis(qualities, ["auto"])
     && sameAxis(speeds, [1])
   );
   if (!exactSequenceAxes) {
     throw new Error(
       "Continuous deployment sequence capture requires the focused "
-      + "Chromium 844x390 / Auto / 1x / all-sixteen matrix",
+      + "one or more engines/viewports/units at Auto / 1x",
     );
   }
 }
@@ -525,6 +526,7 @@ for (const engine of engines) {
           timeout,
         });
         invariant(response?.ok(), `${caseName}: navigation HTTP ${response?.status()}`);
+        await dismissInstallOffer(page, { timeout });
         await page.waitForFunction(
           (requestedMode) => {
             const qa = window.__ASHFALL_BATTLE_QA__;
@@ -1264,10 +1266,10 @@ if (qaScope === "full") {
 if (continuousDeploymentSequence) {
   const expectedPhases = ["door", "boundary", "ramp", "exit", "landing", "ready"];
   invariant(
-    summary.total === defaultUnitKinds.length
-      && summary.passed === defaultUnitKinds.length
+    summary.total === summary.expectedTotal
+      && summary.passed === summary.expectedTotal
       && summary.failed === 0,
-    `Continuous deployment sequence produced ${summary.passed}/${defaultUnitKinds.length} passes`,
+    `Continuous deployment sequence produced ${summary.passed}/${summary.expectedTotal} passes`,
   );
   for (const result of summary.results) {
     invariant(
@@ -1295,8 +1297,8 @@ if (continuousDeploymentSequence) {
     );
   }
   invariant(
-    summary.unitLayerAuditCaseCount === defaultUnitKinds.length
-      && summary.unitLayerAuditFrameCount === defaultUnitKinds.length * expectedPhases.length,
+    summary.unitLayerAuditCaseCount === summary.expectedTotal
+      && summary.unitLayerAuditFrameCount === summary.expectedTotal * expectedPhases.length,
     "Continuous deployment sequence did not audit every player-facing frame",
   );
 }

@@ -13,11 +13,17 @@ const playwright = process.env.PLAYWRIGHT_MODULE_PATH
 const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit };
 const engines = (process.env.V099_PRESENTATION_QA_ENGINES ?? "chromium,webkit")
   .split(",").map((value) => value.trim()).filter(Boolean);
-const viewports = [
+const availableViewports = [
   { width: 1280, height: 720 },
   { width: 844, height: 390 },
   { width: 844, height: 340 },
 ];
+const requestedViewportKeys = new Set((process.env.V099_PRESENTATION_QA_VIEWPORTS ?? "1280x720,844x390,844x340")
+  .split(",").map((value) => value.trim()).filter(Boolean));
+const viewports = availableViewports.filter(({ width, height }) => requestedViewportKeys.has(`${width}x${height}`));
+if (viewports.length !== requestedViewportKeys.size) {
+  throw new Error(`Unknown V099_PRESENTATION_QA_VIEWPORTS value: ${[...requestedViewportKeys].join(", ")}`);
+}
 const modesFor = (viewport) => [
   { value: "high", density: 1 },
   { value: "auto", density: viewport.height <= 500 ? .72 : 1 },
@@ -294,6 +300,55 @@ for (const engine of engines) {
             `${name}: production airstrike cue ${cueId} was not requested exactly once: ${JSON.stringify(airstrikeInputAfter.audioRequests)}`);
         }
 
+        for (const kind of ["brute", "brawler"]) {
+          await page.locator(`button.unit-card[data-kind="${kind}"]`).click();
+        }
+        await page.waitForFunction(
+          () => [...document.querySelectorAll("button.unit-card[aria-disabled='true']")]
+            .some((card) => card.getAttribute("data-block-reason") === "指揮不足"),
+          undefined,
+          { timeout },
+        );
+        const disabledReadability = await page.evaluate(() => ({
+          cards: [...document.querySelectorAll("button.unit-card[aria-disabled='true']")]
+            .map((card) => {
+              const state = card.querySelector(".card-state");
+              const rect = state?.getBoundingClientRect();
+              return {
+                kind: card.getAttribute("data-kind"),
+                reason: card.getAttribute("data-block-reason"),
+                stateText: state?.textContent?.trim() ?? null,
+                stateFontSize: state ? Number.parseFloat(getComputedStyle(state).fontSize) : null,
+                stateFits: state ? state.scrollWidth <= state.clientWidth + 1 : null,
+                stateRect: rect ? { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom } : null,
+              };
+            }),
+          support: [...document.querySelectorAll("button.support-btn")].map((button) => {
+            const detail = button.querySelector("small");
+            const buttonRect = button.getBoundingClientRect();
+            const detailRect = detail?.getBoundingClientRect();
+            return {
+              label: button.querySelector("b")?.textContent?.trim() ?? null,
+              reason: detail?.textContent?.trim() ?? null,
+              fontSize: detail ? Number.parseFloat(getComputedStyle(detail).fontSize) : null,
+              contained: detailRect
+                ? detailRect.left >= buttonRect.left - 1 && detailRect.right <= buttonRect.right + 1
+                  && detailRect.top >= buttonRect.top - 1 && detailRect.bottom <= buttonRect.bottom + 1
+                : false,
+            };
+          }),
+        }));
+        const commandBlockedCards = disabledReadability.cards.filter(({ reason }) => reason === "指揮不足");
+        invariant(commandBlockedCards.length > 0,
+          `${name}: actual command-insufficient input produced no disabled card`);
+        invariant(commandBlockedCards.every(({ stateText, stateFontSize, stateFits }) => (
+          stateText === "指揮不足" && stateFontSize >= 12 && stateFits === true
+        )), `${name}: disabled unit reason is clipped or undersized: ${JSON.stringify(commandBlockedCards)}`);
+        invariant(disabledReadability.support.every(({ fontSize, contained }) => fontSize >= 12 && contained),
+          `${name}: support reason is clipped or undersized: ${JSON.stringify(disabledReadability.support)}`);
+        const disabledReadabilityScreenshot = path.join(evidenceDir, `${name}-mobile-disabled-readability.png`);
+        await page.screenshot({ path: disabledReadabilityScreenshot });
+
         await page.evaluate(() => window.__ASHFALL_AUDIO_QA__?.resetCueRequests?.());
         const terminalPrepared = await page.evaluate(
           () => window.__ASHFALL_BATTLE_QA__.prepareV099TerminalBossDefeatProof(),
@@ -341,6 +396,7 @@ for (const engine of engines) {
           crawlerCases,
           crawlerInput: { prepared: crawlerInputPrepared, after: crawlerInputAfter, screenshots: crawlerPhaseScreenshots },
           airstrikeInput: { prepared: airstrikePrepared, phases: airstrikePhases, after: airstrikeInputAfter },
+          disabledReadability: { ...disabledReadability, screenshotPath: disabledReadabilityScreenshot },
           terminalBoss: { prepared: terminalPrepared, start: terminalStart, mid: terminalMid, end: terminalEnd, terminalScreenshot },
           diagnostics,
         });
