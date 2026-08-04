@@ -1,0 +1,201 @@
+{
+  "version": "0.9.9.0",
+  "schemaVersion": 1,
+  "generator": "scripts/build-v099-crawler-assets.mjs",
+  "generatorRevision": 1,
+  "source": "project-original approved CRAWLER identity and runtime masters",
+  "creator": "SUSANO-OOO/Zombieee project; deterministic derivative build by OpenAI Codex Sol Lead",
+  "license": "Approved for project repository and game distribution under docs/ASSET_APPROVALS_0.7.5.json; no third-party stock or downloaded artwork; not declared CC0.",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "approvalLedger": "docs/ASSET_APPROVALS_0.7.5.json",
+  "sources": {
+    "identity": {
+      "assetId": "V075-CRAWLER-IDENTITY",
+      "revision": "r1",
+      "file": "public/art/v075/crawler/crawler-command-base-identity-r1.png",
+      "bytes": 2403511,
+      "sha256": "7aa082adac522e3342f42cd9dcd3dc264004df83c83b1c003dea7e16f077850e",
+      "dimensions": [
+        1536,
+        1024
+      ]
+    },
+    "closed": {
+      "assetId": "V075-CRAWLER-CLOSED",
+      "revision": "v1",
+      "file": "public/art/v075/crawler/crawler-command-base-closed-v1.png",
+      "bytes": 1221889,
+      "sha256": "d4ce35c5cdd09750fa8d4e2df0c926385b1ebceb04d0cb6dccd36e08928fd854",
+      "dimensions": [
+        1536,
+        1024
+      ]
+    },
+    "open": {
+      "assetId": "V075-CRAWLER-OPEN",
+      "revision": "v2",
+      "file": "public/art/v075/crawler/crawler-command-base-open-v2.png",
+      "bytes": 1207019,
+      "sha256": "9e2ea0c4e5feb799a19a534859fad04f4323223cf147a6c6d715a65b3ecf408a",
+      "dimensions": [
+        1536,
+        1024
+      ]
+    }
+  },
+  "generation": {
+    "rasterOnly": true,
+    "runtimeCanvasGeometry": false,
+    "deploymentLayerMethod": "Binary RGBA partition of the approved open CRAWLER raster into base/interior and foreground hull/door-frame pixels.",
+    "equipmentMethod": "Approved closed-master turret and antenna pixels are isolated once, then pre-rendered into seven deterministic RGBA frames; runtime draws the sheets only.",
+    "frameSequences": {
+      "barrage": [
+        "stowed",
+        "hatch-open",
+        "turret-rise",
+        "aim",
+        "firing",
+        "recoil",
+        "retract"
+      ],
+      "airstrike": [
+        "stowed",
+        "mast-deploy",
+        "antenna-extend",
+        "targeting",
+        "inbound-signal",
+        "impact-confirmation",
+        "retract"
+      ]
+    },
+    "rollback": {
+      "previousClosed": "/art/v075/crawler/crawler-command-base-closed-v1.png",
+      "previousOpen": "/art/v075/crawler/crawler-command-base-open-v2.png",
+      "previousAssetsModified": false
+    }
+  },
+  "artifacts": [
+    {
+      "id": "crawler-closed-equipment-host",
+      "logicalPath": "/art/v099/crawler/crawler-command-base-closed-equipment-host-v1.png",
+      "file": "public/art/v099/crawler/crawler-command-base-closed-equipment-host-v1.png",
+      "bytes": 1196981,
+      "sha256": "a5f774f3e8b5ac4bb185b024eab2f367b9cd0aa415c1e28135fd7b5678287281",
+      "format": "png",
+      "alpha": {
+        "width": 1536,
+        "height": 1024,
+        "transparentPixels": 1055113,
+        "translucentPixels": 30972,
+        "opaquePixels": 486779
+      },
+      "pwaTransport": {
+        "sourcePath": "/pwa-optimized/art/v099/crawler/crawler-command-base-closed-equipment-host-v1.webp",
+        "format": "lossless-webp",
+        "generator": "scripts/build-pwa-raster-derivatives.mjs",
+        "bytes": 785860,
+        "sha256": "fb7e4b4e45a5c27479f179c035403ac8cc670e47ae67d8891346e276ace2d8de",
+        "visiblePixelDifferences": 0,
+        "alphaDifferences": 0
+      }
+    },
+    {
+      "id": "crawler-deployment-base-interior",
+      "logicalPath": "/art/v099/crawler/crawler-deployment-base-interior-v1.png",
+      "file": "public/art/v099/crawler/crawler-deployment-base-interior-v1.png",
+      "bytes": 831082,
+      "sha256": "a13f5b0cb58472ffa1818c7b76a1ce847a2fc4d57628f214628b46cc1cf39349",
+      "format": "png",
+      "alpha": {
+        "width": 1536,
+        "height": 1024,
+        "transparentPixels": 1199620,
+        "translucentPixels": 23348,
+        "opaquePixels": 349896
+      },
+      "pwaTransport": {
+        "sourcePath": "/pwa-optimized/art/v099/crawler/crawler-deployment-base-interior-v1.webp",
+        "format": "lossless-webp",
+        "generator": "scripts/build-pwa-raster-derivatives.mjs",
+        "bytes": 538344,
+        "sha256": "5cf9e5f743019670a19b4ace3d31f5abc8c06b16b05dc140201a21d9ae49e5ee",
+        "visiblePixelDifferences": 0,
+        "alphaDifferences": 0
+      }
+    },
+    {
+      "id": "crawler-deployment-foreground-mask",
+      "logicalPath": "/art/v099/crawler/crawler-deployment-foreground-mask-v1.png",
+      "file": "public/art/v099/crawler/crawler-deployment-foreground-mask-v1.png",
+      "bytes": 378571,
+      "sha256": "c96838b8beaff238e040ca1a6c048004f13d90744817a500287da5fabbcfb0a3",
+      "format": "png",
+      "alpha": {
+        "width": 1536,
+        "height": 1024,
+        "transparentPixels": 1418663,
+        "translucentPixels": 8036,
+        "opaquePixels": 146165
+      },
+      "pwaTransport": {
+        "sourcePath": "/pwa-optimized/art/v099/crawler/crawler-deployment-foreground-mask-v1.webp",
+        "format": "lossless-webp",
+        "generator": "scripts/build-pwa-raster-derivatives.mjs",
+        "bytes": 236294,
+        "sha256": "0b9e23f8cf1e320b63ad84eb4ca2c02d833618f2fb064aff7cac1d8841a1e8f7",
+        "visiblePixelDifferences": 0,
+        "alphaDifferences": 0
+      }
+    },
+    {
+      "id": "crawler-barrage-module-sheet",
+      "logicalPath": "/art/v099/crawler/crawler-barrage-module-sheet-v1.png",
+      "file": "public/art/v099/crawler/crawler-barrage-module-sheet-v1.png",
+      "bytes": 25798,
+      "sha256": "c92875bc7ac8035fc68d803af3c485bdbda72f82fe4d71b69950de4e4dc62a8d",
+      "format": "png",
+      "alpha": {
+        "width": 1792,
+        "height": 128,
+        "transparentPixels": 174430,
+        "translucentPixels": 15592,
+        "opaquePixels": 39354
+      },
+      "pwaTransport": {
+        "sourcePath": "/pwa-optimized/art/v099/crawler/crawler-barrage-module-sheet-v1.webp",
+        "format": "lossless-webp",
+        "generator": "scripts/build-pwa-raster-derivatives.mjs",
+        "bytes": 57582,
+        "sha256": "a6690c91324d171a40118b6376ecd58b4b28f5de572211833cfdd0807c25dc52",
+        "visiblePixelDifferences": 0,
+        "alphaDifferences": 0
+      }
+    },
+    {
+      "id": "crawler-airstrike-module-sheet",
+      "logicalPath": "/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
+      "file": "public/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
+      "bytes": 22246,
+      "sha256": "56ce25318ab35515f82b5a1c407a54aac8aa5ad73804e82ac20f33585684fb5e",
+      "format": "png",
+      "alpha": {
+        "width": 448,
+        "height": 288,
+        "transparentPixels": 113792,
+        "translucentPixels": 14120,
+        "opaquePixels": 1112
+      },
+      "pwaTransport": {
+        "sourcePath": "/pwa-optimized/art/v099/crawler/crawler-airstrike-module-sheet-v1.webp",
+        "format": "lossless-webp",
+        "generator": "scripts/build-pwa-raster-derivatives.mjs",
+        "bytes": 22376,
+        "sha256": "817e76561f653275e9df13577aac9ef3867bc2c49fc8e5b959afa3e06ebc4dc5",
+        "visiblePixelDifferences": 0,
+        "alphaDifferences": 0
+      }
+    }
+  ]
+}

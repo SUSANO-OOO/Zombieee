@@ -16,62 +16,118 @@ export const CRAWLER_DOOR_TIMINGS = Object.freeze({
 
 const clamp01 = (value) => Math.max(0, Math.min(1, Number(value) || 0));
 
-// How far ahead of its own centre a unit's torso reaches, as a fraction of the
-// full sprite width. The sprite is much wider than the body because a walk
-// cycle throws the leading arm and leg well clear of it; this is the body
-// itself, which is what the doorway must reveal first.
-const TORSO_HALF_WIDTH_RATIO = 0.16;
+export const CRAWLER_DEPLOYMENT_UNIT_FAMILIES = Object.freeze({
+  HACHI: "hachi",
+  MIZUCHI: "mizuchi",
+  PAISEN: "paisen",
+  CRAZY_KING: "crazy-king",
+  MAYO_CHAN: "mayo-chan",
+  TATARA: "tatara",
+  STANDARD_HUMAN: "standard-human",
+});
 
-export function friendlyCrawlerRevealRect({
+const CRAWLER_DEPLOYMENT_STANDARD_HUMAN_KINDS = Object.freeze([
+  "medic",
+  "gunner",
+  "guardian",
+  "engineer",
+  "kumaverson",
+  "babayaga",
+  "zakimiya",
+  "tky",
+  "mrs-chiha",
+  "miyamoto-musashi",
+]);
+
+const CRAWLER_DEPLOYMENT_FAMILY_BY_KIND = Object.freeze({
+  scout: CRAWLER_DEPLOYMENT_UNIT_FAMILIES.HACHI,
+  ranger: CRAWLER_DEPLOYMENT_UNIT_FAMILIES.MIZUCHI,
+  brawler: CRAWLER_DEPLOYMENT_UNIT_FAMILIES.PAISEN,
+  "crazy-king": CRAWLER_DEPLOYMENT_UNIT_FAMILIES.CRAZY_KING,
+  "mayo-chan": CRAWLER_DEPLOYMENT_UNIT_FAMILIES.MAYO_CHAN,
+  brute: CRAWLER_DEPLOYMENT_UNIT_FAMILIES.TATARA,
+  ...Object.fromEntries(CRAWLER_DEPLOYMENT_STANDARD_HUMAN_KINDS.map((kind) => [
+    kind,
+    CRAWLER_DEPLOYMENT_UNIT_FAMILIES.STANDARD_HUMAN,
+  ])),
+});
+
+export const CRAWLER_DEPLOYMENT_CHECKPOINTS = Object.freeze([
+  Object.freeze({ id: "fully-inside", progress: 0 }),
+  // Representative evidence waits until authored pixels clear the foreground
+  // door mask while remaining inside the first-visible semantic interval.
+  Object.freeze({ id: "first-visible", progress: .08 }),
+  Object.freeze({ id: "quarter", progress: .25 }),
+  Object.freeze({ id: "half", progress: .5 }),
+  Object.freeze({ id: "three-quarters", progress: .75 }),
+  Object.freeze({ id: "fully-outside", progress: 1 }),
+]);
+
+const INSIDE_DRAW_ORDER = Object.freeze([
+  "crawler-base",
+  "crawler-interior",
+  "unit",
+  "crawler-foreground-mask",
+]);
+const OUTSIDE_DRAW_ORDER = Object.freeze([
+  "crawler-base",
+  "crawler-interior",
+  "crawler-foreground-mask",
+  "unit",
+]);
+
+export function crawlerDeploymentUnitFamily(unitKind) {
+  return CRAWLER_DEPLOYMENT_FAMILY_BY_KIND[String(unitKind ?? "")] ?? null;
+}
+
+export function crawlerDeploymentCheckpoint(progress) {
+  const normalized = clamp01(progress);
+  if (normalized >= 1) return "fully-outside";
+  if (normalized >= .75) return "three-quarters";
+  if (normalized >= .5) return "half";
+  if (normalized >= .25) return "quarter";
+  if (normalized > 0) return "first-visible";
+  return "fully-inside";
+}
+
+/**
+ * Describes which authored CRAWLER layers own a deploying unit.
+ *
+ * This contract deliberately exposes no rectangle or reveal width. The unit is
+ * drawn exactly once at alpha 1; the authored foreground hull/door-frame layer
+ * supplies physical occlusion while the unit is inside the vehicle. Once the
+ * ramp threshold is cleared, the same unit draw moves in front of that layer.
+ */
+export function crawlerDeploymentRenderPlan({
   side,
   gateEntering,
   spawnPortalId,
-  entryRampCleared,
-  fighterX,
-  entryRampX,
-  spriteWidth,
-  doorX,
-  rampFootX,
-  musterY,
+  entryRampCleared = false,
+  unitKind,
+  progress = 0,
 } = {}) {
-  if (side !== "human"
-    || !gateEntering
-    || spawnPortalId !== "crawler-door"
-    || entryRampCleared === true
-    || !(fighterX < doorX + 8)) {
-    return null;
-  }
-  const revealLeft = doorX - 24;
-  const revealTop = musterY - 108;
-  const revealHeight = 128;
-
-  // The doorway reveals whatever lies to the right of a hard vertical edge. A
-  // unit still inside the vehicle has its torso to the left of that edge while
-  // its leading arm and leg already reach past it, so it would show as loose
-  // limbs with the body missing - and because the walk cycle swings those limbs
-  // across the edge, they would flicker there too.
-  //
-  // Nothing is shown until the torso itself reaches the opening. From that
-  // moment on the visible region always contains the torso, so what appears is
-  // one whole body growing continuously, never a detached limb. The clip is
-  // released again at doorX + 8, by which point the sprite already sits wholly
-  // inside the opening, so neither end of the reveal pops.
-  if (fighterX + spriteWidth * TORSO_HALF_WIDTH_RATIO <= revealLeft) {
-    return Object.freeze({ x: revealLeft, y: revealTop, w: 0, h: revealHeight });
+  const active = side === "human"
+    && gateEntering === true
+    && spawnPortalId === "crawler-door";
+  if (!active) {
+    return Object.freeze({
+      active: false,
+      family: crawlerDeploymentUnitFamily(unitKind),
+      checkpoint: crawlerDeploymentCheckpoint(progress),
+    });
   }
 
-  const revealRight = Math.max(
-    doorX + 25,
-    Math.min(
-      (entryRampX ?? rampFootX) + spriteWidth * .55,
-      fighterX + spriteWidth * .55,
-    ),
-  );
+  const outside = entryRampCleared === true || clamp01(progress) >= 1;
   return Object.freeze({
-    x: revealLeft,
-    y: revealTop,
-    w: revealRight - revealLeft,
-    h: revealHeight,
+    active: true,
+    family: crawlerDeploymentUnitFamily(unitKind),
+    checkpoint: crawlerDeploymentCheckpoint(progress),
+    alpha: 1,
+    unitDrawCount: 1,
+    clipMode: "none",
+    unitPass: outside ? "after-foreground-mask" : "before-foreground-mask",
+    foregroundMaskPass: outside ? "before-unit" : "after-unit",
+    drawOrder: outside ? OUTSIDE_DRAW_ORDER : INSIDE_DRAW_ORDER,
   });
 }
 

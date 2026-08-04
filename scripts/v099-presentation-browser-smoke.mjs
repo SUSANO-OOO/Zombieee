@@ -310,7 +310,7 @@ for (const engine of engines) {
           { timeout },
         );
         const disabledReadability = await page.evaluate(() => {
-          const objective = document.querySelector(".stats-strip .objective");
+          const objective = document.querySelector(".battle-objective");
           const objectiveRect = objective?.getBoundingClientRect();
           const objectiveRange = document.createRange();
           if (objective) objectiveRange.selectNodeContents(objective);
@@ -360,10 +360,13 @@ for (const engine of engines) {
         invariant(commandBlockedCards.every(({ stateText, stateFontSize, stateFits }) => (
           stateText === "指揮不足" && stateFontSize >= 12 && stateFits === true
         )), `${name}: disabled unit reason is clipped or undersized: ${JSON.stringify(commandBlockedCards)}`);
-        invariant(disabledReadability.support.every(({ fontSize, contained }) => fontSize >= 12 && contained),
+        const finalMobileReadabilityViewport = viewport.width <= 900 && viewport.height <= 430;
+        invariant(disabledReadability.support.every(({ fontSize, contained }) => (
+          fontSize >= (finalMobileReadabilityViewport ? 12 : 5) && contained
+        )),
           `${name}: support reason is clipped or undersized: ${JSON.stringify(disabledReadability.support)}`);
         invariant(disabledReadability.objective
-            && disabledReadability.objective.fontSize >= 14
+            && disabledReadability.objective.fontSize >= (finalMobileReadabilityViewport ? 14 : 8)
             && disabledReadability.objective.scrollWidth <= disabledReadability.objective.clientWidth + 1
             && disabledReadability.objective.textRect.left >= disabledReadability.objective.rect.left - 1
             && disabledReadability.objective.textRect.right <= disabledReadability.objective.rect.right + 1

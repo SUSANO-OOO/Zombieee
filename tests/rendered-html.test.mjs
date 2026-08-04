@@ -344,8 +344,11 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   await Promise.all([
     access(new URL("../public/battlefield-v4.png", import.meta.url)),
     access(new URL("../public/art/v075/enemy-base/enemy-stronghold-intact-v2.png", import.meta.url)),
-    access(new URL("../public/art/v075/crawler/crawler-command-base-closed-v1.png", import.meta.url)),
-    access(new URL("../public/art/v075/crawler/crawler-command-base-open-v2.png", import.meta.url)),
+    access(new URL("../public/art/v099/crawler/crawler-command-base-closed-equipment-host-v1.png", import.meta.url)),
+    access(new URL("../public/art/v099/crawler/crawler-deployment-base-interior-v1.png", import.meta.url)),
+    access(new URL("../public/art/v099/crawler/crawler-deployment-foreground-mask-v1.png", import.meta.url)),
+    access(new URL("../public/art/v099/crawler/crawler-barrage-module-sheet-v1.png", import.meta.url)),
+    access(new URL("../public/art/v099/crawler/crawler-airstrike-module-sheet-v1.png", import.meta.url)),
     access(new URL("../public/takuya-boss-sprites-v2.png", import.meta.url)),
     access(new URL("../public/ranger-sprites-v1.png", import.meta.url)),
     access(new URL("../public/brawler-sprites-v1.png", import.meta.url)),
@@ -359,8 +362,11 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   ]);
 
   assert.match(game, /imageJob\(V075_VISUAL_PROFILES\.enemyBase\.intact\.path, "base", enemyBaseSpriteRef\.current/);
-  assert.match(game, /crawlerClosed: V075_VISUAL_PROFILES\.crawler\.closed\.path/);
-  assert.match(game, /crawlerOpen: V075_VISUAL_PROFILES\.crawler\.open\.path/);
+  assert.match(game, /crawlerHostClosed: V099_CRAWLER_RUNTIME_PROFILE\.equipmentHost\.closed\.path/);
+  assert.match(game, /crawlerDeploymentBase: V099_CRAWLER_RUNTIME_PROFILE\.deployment\.baseInterior\.path/);
+  assert.match(game, /crawlerForegroundMask: V099_CRAWLER_RUNTIME_PROFILE\.deployment\.foregroundMask\.path/);
+  assert.match(game, /crawlerBarrageEquipment: V099_CRAWLER_RUNTIME_PROFILE\.equipment\.barrage\.sheet\.path/);
+  assert.match(game, /crawlerAirstrikeEquipment: V099_CRAWLER_RUNTIME_PROFILE\.equipment\.airstrike\.sheet\.path/);
   assert.match(game, /pod: "\/tactical-drop-pod-v1\.png"/);
   assert.match(game, /drum: "\/explosive-drum-v1\.png"/);
   assert.match(game, /medical: "\/medical-supply-station-v1\.png"/);
@@ -522,14 +528,14 @@ test("keeps the battlefield centered in the visual viewport while routing across
   const indicatorFactory = game.slice(game.indexOf("function placementIndicatorFor"), game.indexOf("type Fighter"));
   assert.match(indicatorFactory, /landingRadius[\s\S]*blastRadius[\s\S]*healRadius[\s\S]*AIRSTRIKE_DEF\.radius/);
   assert.match(indicatorFactory, /innerRadius: supplyDefs\.drum\.burnRadius/);
-  const indicatorDraw = game.slice(game.indexOf("function drawPlacementIndicator"), game.indexOf("function drawAirstrikeObserver"));
+  const indicatorDraw = game.slice(game.indexOf("function drawPlacementIndicator"), game.indexOf("function drawCrawlerAsset"));
   assert.match(indicatorDraw, /ctx\.ellipse\(0, 4, radius, radius \* \.34/);
   assert.match(indicatorDraw, /indicator\.innerRadius[\s\S]*ctx\.ellipse/);
   assert.match(indicatorDraw, /ctx\.lineWidth = 1\.4[\s\S]*ctx\.moveTo\(-9, 0\)[\s\S]*labelX = Math\.max/);
   assert.match(game, /g\.banner = placementReasonLabel\(result\.reason\); g\.bannerTime = \.75/);
   assert.match(game, /const compactScale = compactBattleViewport\(\) \? 1\.1 : 1/);
-  assert.match(game, /function battleBannerRect\(\)[\s\S]*width = compact \? 480 : 316[\s\S]*height = 42[\s\S]*y: compact \? 72 : 58/);
-  assert.match(game, /ctx\.font = `bold \$\{compact \? 22 : 17\}px monospace`/);
+  assert.match(game, /function battleBannerDomRect[\s\S]*document\.querySelector<HTMLElement>\("\.battle-banner"\)/);
+  assert.match(game, /hud\.banner && <p className="battle-banner" data-message-kind="banner">\{hud\.banner\}<\/p>/);
   for (const label of ["投下ポッド", "爆薬ドラム", "救護所", "航空支援", "一斉掃射"]) assert.match(game, new RegExp(label));
   assert.doesNotMatch(css, /battle-nishijin-shopping-street-v1\.webp/);
   assert.match(game, /style=\{screen === "battle" && assetsReady[\s\S]*backgroundImage: `url\('\$\{stageVisualFor\(activeBattlefieldStageId\)\}'\)`/);
@@ -543,7 +549,7 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(css, /\.game-frame \{ position:relative; width:100%; height:100%/);
   assert.match(css, /\.bottom-hud \{[^}]*var\(--app-viewport-safe-bottom\)[^}]*var\(--app-viewport-safe-right\)[^}]*var\(--app-viewport-safe-left\)/);
   assert.match(css, /\.crawler-alert \{[^}]*left:calc\(2% \+ var\(--app-viewport-safe-left\)\)/);
-  assert.match(css, /\.battle-barks \{[^}]*left:50%;[^}]*pointer-events:none;/);
+  assert.match(css, /\.battle-message-stack \{[^}]*display:flex;[^}]*pointer-events:none;/);
   assert.match(css, /\.qa-badge \{[^}]*right:calc\(1\.5% \+ var\(--app-viewport-safe-right\)\)/);
   assert.doesNotMatch(css, /height:100vh/);
   assert.match(layout, /viewportFit: "cover"/);
@@ -1199,8 +1205,8 @@ test("models the independently charged all-lane Crawler barrage with boss mitiga
 test("renders causal weapon tracers and vehicle-origin Crawler fire without screen-wide placeholder beams", async () => {
   const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   const crawlerMuzzle = game.slice(game.indexOf("function drawCrawlerBarrage"), game.indexOf("function stageObjectStatesForGame"));
-  assert.match(crawlerMuzzle, /WORLD_GEOMETRY\.crawler/);
-  assert.match(crawlerMuzzle, /activeCrawlerShot\?\.x \?\? fallbackPose\.muzzleX/);
+  assert.match(crawlerMuzzle, /crawlerBarrageMuzzlePoint\(g, graphicsProfile\)/);
+  assert.match(crawlerMuzzle, /activeCrawlerShot\?\.x \?\? authoredMuzzle\.x/);
   assert.match(crawlerMuzzle, /createRadialGradient\(muzzleX, muzzleY/);
   assert.doesNotMatch(crawlerMuzzle, /scanline|repeating|for \(const lane/);
 
@@ -1215,7 +1221,7 @@ test("renders causal weapon tracers and vehicle-origin Crawler fire without scre
   assert.match(barrageResolution, /visualHitsByLane\[fighter\.lane\] <= 3/);
   assert.match(barrageResolution, /const visualShotIndex = Math\.min\(laneHitIndex, 2\)/);
   assert.match(barrageResolution, /const impactDelaySeconds = \.2 \+ visualShotIndex \* \.018/);
-  assert.match(barrageResolution, /const crawlerMuzzle = crawlerWeaponPose\([\s\S]*targetX: fighter\.x[\s\S]*targetY: fighter\.y - 24/);
+  assert.match(barrageResolution, /const crawlerMuzzle = crawlerBarrageMuzzlePoint\(g, graphicsProfile\)/);
   assert.match(barrageResolution, /damageMode: "crawler-barrage"/);
   assert.match(barrageResolution, /weapon: "crawler" as const/);
   assert.match(barrageResolution, /addWeaponShot\(g, sharedImpact\)/);
@@ -1535,17 +1541,21 @@ test("validates, damages, and releases the battlefield container without changin
   assert.doesNotMatch(game, /g\.areaEffects = capRenderArray/);
   assert.match(game, /g\.areaEffects = retainActiveAreaEffects\(areaStep\.areaEffects\)/);
   assert.match(game, /selectAreaEffectsForRender\(g\.areaEffects\)/);
-  assert.match(game, /function drawAirstrikeObserver/);
-  assert.match(game, /pose\.action === "radio"[\s\S]*pose\.action === "targeting"[\s\S]*pose\.action === "inbound" \|\| pose\.action === "impact"/);
   const crawlerDraw = game.slice(game.indexOf("function drawCrawler"), game.indexOf("function drawEnemyBase"));
   assert.doesNotMatch(crawlerDraw, /ctx\.translate\(crawler\.commandDeckX/);
   assert.doesNotMatch(crawlerDraw, /ctx\.moveTo\(crawler\.weaponX - 14/);
-  assert.match(crawlerDraw, /drawAirstrikeObserver\(ctx, g\);[\s\S]*if \(!visualState\.stored\)/);
+  assert.match(crawlerDraw, /drawCrawlerEquipmentFrame\(ctx, sprites, "barrage",[\s\S]*drawCrawlerEquipmentFrame\(ctx, sprites, "airstrike",/);
+  assert.match(game, /function drawCrawlerForegroundMask[\s\S]*sprites\.crawlerForegroundMask[\s\S]*drawCrawlerAsset\(ctx, foregroundMask, crawler\)/);
+  assert.match(game, /unitPass === "before-foreground-mask"[\s\S]*type: "crawler-foreground"[\s\S]*drawCrawlerForegroundMask/);
+  assert.doesNotMatch(crawlerDraw, /ctx\.clip\(\)/);
   assert.match(game, /const crawlerDeploymentOpaque = f\.side === "human"[\s\S]*f\.spawnPortalId === "crawler-door"[\s\S]*ctx\.globalAlpha = 1/);
+  assert.match(game, /clipMode: actual\.deploymentPlan\?\.clipMode \?\? "none"/);
   assert.match(css, /max-height:430px[\s\S]*\.card-copy b \{[^}]*font-size:14px/);
   assert.match(css, /max-height:430px[\s\S]*\.cost \{[^}]*font-size:14px/);
   assert.match(css, /max-height:430px[\s\S]*\.support-btn b \{[^}]*font-size:14px/);
-  assert.match(css, /max-height:430px[\s\S]*\.stats-strip \.objective \{[^}]*font-size:14px/);
+  assert.match(css, /max-height:430px[\s\S]*grid-template-columns:minmax\(0,28fr\) minmax\(0,38fr\) minmax\(0,34fr\)/);
+  assert.match(css, /max-height:430px[\s\S]*grid-template-columns:minmax\(0,14fr\) minmax\(0,50fr\) minmax\(0,36fr\)/);
+  assert.match(css, /max-height:430px[\s\S]*\.battle-objective \{[^}]*font-size:14px/);
   assert.match(css, /max-height:430px[\s\S]*\.stats-strip > span \{[^}]*flex-shrink:0/);
   assert.match(css, /max-height:430px[\s\S]*\.boss-hud div,\.boss-hud b \{[^}]*font-size:12px/);
   assert.match(css, /max-height:430px[\s\S]*\.unit-card:is\(:disabled,\[aria-disabled="true"\]\):not\(\.cooling\) \{[^}]*brightness\(\.9\)/);
@@ -1701,8 +1711,10 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(game, /g\.phase = 3/);
   assert.match(game, /g\.wave = 8/);
   for (const kind of ["scout", "ranger", "brute", "brawler", "gunner", "medic"]) assert.match(game, new RegExp(`\\["${kind}",`));
-  assert.match(game, /aria-live="polite" aria-label="戦闘台詞"/);
-  assert.match(css, /\.battle-barks \{ position:absolute; z-index:16; top:calc\(20px \+ var\(--app-viewport-safe-top\)\); left:50%; width:min\(330px,42%\);[^}]*pointer-events:none;/);
+  assert.match(game, /className="battle-message-stack" aria-live="polite"/);
+  assert.match(game, /className="battle-barks" aria-label="戦闘台詞"/);
+  assert.match(css, /\.battle-message-stack \{[^}]*display:flex;[^}]*pointer-events:none;/);
+  assert.match(css, /\.battle-barks \{ position:static;[^}]*width:100%;[^}]*pointer-events:none;/);
   assert.match(css, /\.start-screen,\.pause-screen,\.end-screen \{ position:absolute; z-index:15;/);
   assert.match(css, /\.game-frame:has\(\.start-screen\) \.qa-badge \{ top:4%; left:50%; right:auto; bottom:auto; transform:translateX\(-100%\); \}/);
   assert.match(css, /\.game-frame:has\(\.pause-screen\) \.battle-barks \{ display:none; \}/);
@@ -1710,13 +1722,12 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.game-frame:has\(\.pause-screen\) \.qa-badge,\.game-frame:has\(\.end-screen\) \.qa-badge/);
   assert.match(css, /\.pause-screen button,\.end-screen button \{ min-height:44px; \}/);
   assert.match(css, /\.unit-cards \{ gap:2px; scrollbar-width:none; \}\.unit-cards::-webkit-scrollbar \{ display:none; \}\.unit-card \{[^}]*flex-basis:78px; min-width:78px; height:100%; min-height:44px; \}/);
-  assert.match(css, /\.bottom-hud \{ height:60px; min-height:60px; max-height:60px;/);
-  assert.match(css, /\.combat-deck \{ display:grid; grid-template-columns:minmax\(300px,1\.35fr\) minmax\(260px,1fr\); grid-template-rows:minmax\(0,1fr\)/);
-  assert.match(css, /\.support-btn small,\.support-key \{ display:none; \}/);
-  assert.match(css, /\.card-copy small \{ display:none; \}/);
+  assert.match(css, /\.bottom-hud \{[^}]*grid-template-columns:minmax\(0,14fr\) minmax\(0,50fr\) minmax\(0,36fr\)/);
+  assert.match(game, /<div className="unit-cards" aria-label="生存者ユニット">/);
+  assert.match(game, /<div className="support-zone">[\s\S]*<div className="battle-objective objective">/);
   assert.doesNotMatch(css, /\.placement-(?:hint|copy|cancel)\b/);
   assert.match(css, /\.crawler-alert \{ position:absolute; z-index:17;/);
-  assert.match(css, /\.battle-barks \{ position:absolute;[^}]*top:calc\(20px \+ var\(--app-viewport-safe-top\)\);/);
+  assert.match(css, /\.battle-barks \{ position:static;/);
   assert.match(css, /\.cooldown-mask small \{[^}]*font:800 clamp\(5px,.48vw,7px\)\/1 monospace;/);
   assert.match(css, /\.qa-badge \{ bottom:34%; \}/);
   assert.match(game, /const bossPhase = bossPhaseForHp\(hud\.bossHp, hud\.bossMax, hud\.bossKind\)/);
@@ -1906,7 +1917,9 @@ test("integrates the enemy gate queue without changing direct QA or turned place
   assert.match(game, /const incomingBossKind = mission\.units\.find\(\(kind\) => isBossEnemyKind\(kind\)\) \?\? null;[\s\S]*announceBossEntrance\(g, incomingBossKind,[\s\S]*activateTakuyaScene: incomingBossKind === "takuya"/);
   assert.match(game, /const announceBossEntrance = useCallback[\s\S]*definition\.entrance\.warningLabel[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance[\s\S]*playBattleSemanticCue\(definition\.entrance\.cueId[\s\S]*semantic: "boss-entrance"[\s\S]*receiptId/);
   assert.match(game, /bossActiveOrIncoming[\s\S]*isBossEnemyKind\(entry\.kind\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);
-  assert.match(game, /if \(battleSilenceSceneId\(g\)\) return/);
+  assert.doesNotMatch(game, /battleSilenceSceneId/);
+  assert.match(game, /screen === "battle" && takuyaEntranceAudioActive[\s\S]*TAKUYA_ENTRANCE_AUDIO\.bossSceneId/);
+  assert.match(game, /duck: TAKUYA_ENTRANCE_AUDIO\.musicDuck/);
 });
 
 test("integrates attack identity, corpse phases, infection, cremation, and generic turning into the battle loop", async () => {

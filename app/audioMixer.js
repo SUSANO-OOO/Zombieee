@@ -156,7 +156,11 @@ export class AudioMixer {
     this.master = null;
     this.limiter = null;
     this.buses = {};
-    this.musicDuck = null;
+    // Dialogue ducking and short semantic-event ducking intentionally use
+    // separate serial gain stages. A transient entrance/impact envelope must
+    // never cancel the persistent dialogue envelope (or vice versa).
+    this.dialogueMusicDuck = null;
+    this.transientMusicDuck = null;
     this.ambienceDuck = null;
     this.disposed = false;
     this.unlockCleanup = null;
@@ -420,12 +424,14 @@ export class AudioMixer {
     this.lastPlayedAt.clear();
     this.sceneState = { sceneId: null, bgm: null, ambience: [] };
     for (const bus of Object.values(this.buses)) safeDisconnect(bus);
-    safeDisconnect(this.musicDuck);
+    safeDisconnect(this.dialogueMusicDuck);
+    safeDisconnect(this.transientMusicDuck);
     safeDisconnect(this.ambienceDuck);
     safeDisconnect(this.master);
     safeDisconnect(this.limiter);
     this.buses = {};
-    this.musicDuck = null;
+    this.dialogueMusicDuck = null;
+    this.transientMusicDuck = null;
     this.ambienceDuck = null;
     this.master = null;
     this.limiter = null;
@@ -579,16 +585,19 @@ export class AudioMixer {
     } else {
       this.master.connect(context.destination);
     }
-    this.musicDuck = context.createGain();
-    setParamValue(this.musicDuck.gain, this.persistentDuckLevel, context.currentTime);
-    this.musicDuck.connect(this.master);
+    this.dialogueMusicDuck = context.createGain();
+    setParamValue(this.dialogueMusicDuck.gain, this.persistentDuckLevel, context.currentTime);
+    this.dialogueMusicDuck.connect(this.master);
+    this.transientMusicDuck = context.createGain();
+    setParamValue(this.transientMusicDuck.gain, 1, context.currentTime);
+    this.transientMusicDuck.connect(this.dialogueMusicDuck);
     this.ambienceDuck = context.createGain();
     setParamValue(this.ambienceDuck.gain, this.persistentAmbienceDuckLevel, context.currentTime);
     this.ambienceDuck.connect(this.master);
     for (const category of AUDIO_CATEGORIES) {
       const bus = context.createGain();
       this.buses[category] = bus;
-      bus.connect(category === "bgm" ? this.musicDuck : category === "ambience" ? this.ambienceDuck : this.master);
+      bus.connect(category === "bgm" ? this.transientMusicDuck : category === "ambience" ? this.ambienceDuck : this.master);
     }
     this.#applySettings();
   }
@@ -1344,28 +1353,28 @@ export class AudioMixer {
   setDialogueDucking(enabled, { level = 0.62, ambienceLevel = 0.8, fadeMs = 320 } = {}) {
     this.persistentDuckLevel = enabled ? clamp(level, 0.05, 1) : 1;
     this.persistentAmbienceDuckLevel = enabled ? clamp(ambienceLevel, 0.05, 1) : 1;
-    if (!this.context || !this.musicDuck || !this.ambienceDuck) return;
+    if (!this.context || !this.dialogueMusicDuck || !this.ambienceDuck) return;
     const now = this.context.currentTime;
-    cancelParamSchedule(this.musicDuck.gain, now);
-    setParamValue(this.musicDuck.gain, Math.max(0.0001, this.musicDuck.gain.value ?? 1), now);
-    rampParamValue(this.musicDuck.gain, this.persistentDuckLevel, now + Math.max(0, fadeMs) / 1000);
+    cancelParamSchedule(this.dialogueMusicDuck.gain, now);
+    setParamValue(this.dialogueMusicDuck.gain, Math.max(0.0001, this.dialogueMusicDuck.gain.value ?? 1), now);
+    rampParamValue(this.dialogueMusicDuck.gain, this.persistentDuckLevel, now + Math.max(0, fadeMs) / 1000);
     cancelParamSchedule(this.ambienceDuck.gain, now);
     setParamValue(this.ambienceDuck.gain, Math.max(0.0001, this.ambienceDuck.gain.value ?? 1), now);
     rampParamValue(this.ambienceDuck.gain, this.persistentAmbienceDuckLevel, now + Math.max(0, fadeMs) / 1000);
   }
 
   duckMusic({ level = 0.3, attackMs = 30, holdMs = 350, releaseMs = 220 } = {}) {
-    if (!this.context || !this.musicDuck) return;
+    if (!this.context || !this.transientMusicDuck) return;
     const now = this.context.currentTime;
     const attackEnd = now + Math.max(0, attackMs) / 1000;
     const holdEnd = attackEnd + Math.max(0, holdMs) / 1000;
     const releaseEnd = holdEnd + Math.max(0, releaseMs) / 1000;
-    const duckLevel = Math.min(this.persistentDuckLevel, clamp(level, 0.05, 1));
-    cancelParamSchedule(this.musicDuck.gain, now);
-    setParamValue(this.musicDuck.gain, Math.max(0.0001, this.musicDuck.gain.value ?? 1), now);
-    rampParamValue(this.musicDuck.gain, duckLevel, attackEnd);
-    setParamValue(this.musicDuck.gain, duckLevel, holdEnd);
-    rampParamValue(this.musicDuck.gain, this.persistentDuckLevel, releaseEnd);
+    const duckLevel = clamp(level, 0.05, 1);
+    cancelParamSchedule(this.transientMusicDuck.gain, now);
+    setParamValue(this.transientMusicDuck.gain, Math.max(0.0001, this.transientMusicDuck.gain.value ?? 1), now);
+    rampParamValue(this.transientMusicDuck.gain, duckLevel, attackEnd);
+    setParamValue(this.transientMusicDuck.gain, duckLevel, holdEnd);
+    rampParamValue(this.transientMusicDuck.gain, 1, releaseEnd);
   }
 
   stopAll({ fadeMs = 0, category = null } = {}) {
@@ -1445,6 +1454,19 @@ export class AudioMixer {
       activeVoices: active.length,
       activeLoopVoices: active.filter((voice) => voice.loop).length,
       activeSceneVoices: active.filter((voice) => voice.instanceKey?.startsWith("scene:")).length,
+      activeBgmVoices: active.filter((voice) => voice.category === "bgm").length,
+      activeBgmInstanceKeys: [...new Set(active
+        .filter((voice) => voice.category === "bgm")
+        .map((voice) => voice.instanceKey)
+        .filter(Boolean))],
+      activeBgm: active
+        .filter((voice) => voice.category === "bgm")
+        .map((voice) => ({
+          assetId: voice.assetId,
+          instanceKey: voice.instanceKey,
+          voiceGain: voice.volume,
+          loop: voice.loop,
+        })),
       duplicateLoopInstanceKeys: [...loopInstanceCounts.entries()]
         .filter(([, count]) => count > 1)
         .map(([instanceKey]) => instanceKey),
@@ -1457,6 +1479,12 @@ export class AudioMixer {
       effectiveBusGains: Object.fromEntries(
         AUDIO_CATEGORIES.map((category) => [category, this.buses[category]?.gain?.value ?? 0]),
       ),
+      gainStages: {
+        master: this.master?.gain?.value ?? 0,
+        dialogueMusicDuck: this.dialogueMusicDuck?.gain?.value ?? 0,
+        transientMusicDuck: this.transientMusicDuck?.gain?.value ?? 0,
+        dialogueAmbienceDuck: this.ambienceDuck?.gain?.value ?? 0,
+      },
       cache,
       categoryCache,
       failedAssets,
@@ -1482,13 +1510,15 @@ export class AudioMixer {
     for (const item of [...this.preloadTasks.values()]) this.#settlePreloadTask(item, false);
     this.preloadTasks.clear();
     for (const bus of Object.values(this.buses)) safeDisconnect(bus);
-    safeDisconnect(this.musicDuck);
+    safeDisconnect(this.dialogueMusicDuck);
+    safeDisconnect(this.transientMusicDuck);
     safeDisconnect(this.ambienceDuck);
     safeDisconnect(this.master);
     safeDisconnect(this.limiter);
     const context = this.context;
     this.buses = {};
-    this.musicDuck = null;
+    this.dialogueMusicDuck = null;
+    this.transientMusicDuck = null;
     this.ambienceDuck = null;
     this.master = null;
     this.limiter = null;

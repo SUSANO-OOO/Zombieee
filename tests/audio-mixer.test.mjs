@@ -402,22 +402,45 @@ test("scene transitions crossfade once, dialogue and major cues duck music, and 
 
   await mixer.setScene("battle", { crossfadeMs: 200 });
   assert.equal(context.sources.length, 4);
+  assert.equal(mixer.buses.bgm.connections[0], mixer.transientMusicDuck);
+  assert.equal(mixer.transientMusicDuck.connections[0], mixer.dialogueMusicDuck);
+  assert.equal(mixer.dialogueMusicDuck.connections[0], mixer.master);
   assert.equal(context.sources[0].stopAt, context.currentTime + 0.21);
   assert.equal(context.sources[1].stopAt, context.currentTime + 0.21);
   assert.equal(mixer.getSceneState().bgmAssetId, "bgm-battle");
-  const duckEventsBefore = mixer.musicDuck.gain.events.length;
+  const dialogueDuckEventsBefore = mixer.dialogueMusicDuck.gain.events.length;
+  const transientDuckEventsBefore = mixer.transientMusicDuck.gain.events.length;
   const ambienceDuckEventsBefore = mixer.ambienceDuck.gain.events.length;
   mixer.setDialogueDucking(true, { level: 0.4, ambienceLevel: 0.8, fadeMs: 80 });
   mixer.duckMusic({ level: 0.2, attackMs: 20, holdMs: 300, releaseMs: 150 });
-  const duckEvents = mixer.musicDuck.gain.events.slice(duckEventsBefore);
+  const dialogueDuckEvents = mixer.dialogueMusicDuck.gain.events.slice(dialogueDuckEventsBefore);
+  const transientDuckEvents = mixer.transientMusicDuck.gain.events.slice(transientDuckEventsBefore);
   const ambienceDuckEvents = mixer.ambienceDuck.gain.events.slice(ambienceDuckEventsBefore);
-  assert.equal(duckEvents.some((event) => event.kind === "ramp" && event.value === 0.4), true);
-  assert.equal(duckEvents.some((event) => event.kind === "ramp" && event.value === 0.2), true);
+  assert.equal(dialogueDuckEvents.some((event) => event.kind === "ramp" && event.value === 0.4), true);
+  assert.equal(dialogueDuckEvents.some((event) => event.value === 0.2), false);
+  assert.equal(transientDuckEvents.some((event) => event.kind === "ramp" && event.value === 0.2), true);
   assert.equal(ambienceDuckEvents.some((event) => event.kind === "ramp" && event.value === 0.8), true);
-  assert.equal(duckEvents.at(-1).value, 0.4);
+  assert.equal(dialogueDuckEvents.at(-1).value, 0.4);
+  assert.equal(transientDuckEvents.at(-1).value, 1);
+  const transientEventCount = mixer.transientMusicDuck.gain.events.length;
   mixer.setDialogueDucking(false);
-  assert.equal(mixer.musicDuck.gain.events.at(-1).value, 1);
+  assert.equal(mixer.dialogueMusicDuck.gain.events.at(-1).value, 1);
+  assert.equal(mixer.transientMusicDuck.gain.events.length, transientEventCount);
   assert.equal(mixer.ambienceDuck.gain.events.at(-1).value, 1);
+  assert.equal(mixer.getDiagnostics().activeBgmVoices, 1);
+  assert.deepEqual(mixer.getDiagnostics().activeBgmInstanceKeys, ["scene:bgm"]);
+  assert.deepEqual(mixer.getDiagnostics().activeBgm, [{
+    assetId: "bgm-battle",
+    instanceKey: "scene:bgm",
+    voiceGain: 0.75,
+    loop: true,
+  }]);
+  assert.deepEqual(mixer.getDiagnostics().gainStages, {
+    master: 0.9,
+    dialogueMusicDuck: 1,
+    transientMusicDuck: 1,
+    dialogueAmbienceDuck: 1,
+  });
   await mixer.dispose();
   assert.equal(mixer.getDiagnostics().activeVoices, 0);
 });

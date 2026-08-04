@@ -1,136 +1,150 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  CRAWLER_DEPLOYMENT_CHECKPOINTS,
+  CRAWLER_DEPLOYMENT_UNIT_FAMILIES,
   CRAWLER_DOOR_PHASES,
   advanceCrawlerDoorRuntime,
+  crawlerDeploymentCheckpoint,
+  crawlerDeploymentRenderPlan,
+  crawlerDeploymentUnitFamily,
   createCrawlerDoorRuntime,
-  friendlyCrawlerRevealRect,
 } from "../app/crawlerDeployment.js";
 
 function advance(runtime, seconds, context) {
   return advanceCrawlerDoorRuntime(runtime, seconds, context);
 }
 
-const FRIENDLY_REVEAL_FIXTURE = Object.freeze({
+const FRIENDLY_DEPLOYMENT_FIXTURE = Object.freeze({
   side: "human",
   gateEntering: true,
   spawnPortalId: "crawler-door",
   entryRampCleared: false,
-  fighterX: 96,
-  entryRampX: 148,
-  spriteWidth: 60,
-  doorX: 96,
-  rampFootX: 148,
-  musterY: 322,
+  unitKind: "scout",
+  progress: 0,
 });
 
-test("friendly CRAWLER reveal rect preserves the production doorway geometry", () => {
-  const rect = friendlyCrawlerRevealRect(FRIENDLY_REVEAL_FIXTURE);
-
-  assert.deepEqual(rect, {
-    x: 72,
-    y: 214,
-    w: 57,
-    h: 128,
+test("the seven required deployment families resolve from production unit kinds", () => {
+  const representatives = Object.freeze({
+    scout: CRAWLER_DEPLOYMENT_UNIT_FAMILIES.HACHI,
+    ranger: CRAWLER_DEPLOYMENT_UNIT_FAMILIES.MIZUCHI,
+    brawler: CRAWLER_DEPLOYMENT_UNIT_FAMILIES.PAISEN,
+    "crazy-king": CRAWLER_DEPLOYMENT_UNIT_FAMILIES.CRAZY_KING,
+    "mayo-chan": CRAWLER_DEPLOYMENT_UNIT_FAMILIES.MAYO_CHAN,
+    brute: CRAWLER_DEPLOYMENT_UNIT_FAMILIES.TATARA,
+    medic: CRAWLER_DEPLOYMENT_UNIT_FAMILIES.STANDARD_HUMAN,
   });
-  assert.equal(Object.isFrozen(rect), true);
 
-  const nullRampRect = friendlyCrawlerRevealRect({
-    ...FRIENDLY_REVEAL_FIXTURE,
-    entryRampX: null,
-  });
-  assert.deepEqual(nullRampRect, rect, "null entry ramp falls back to the authored ramp foot");
+  assert.equal(new Set(Object.values(representatives)).size, 7);
+  for (const [unitKind, expectedFamily] of Object.entries(representatives)) {
+    assert.equal(crawlerDeploymentUnitFamily(unitKind), expectedFamily);
+  }
+  assert.equal(crawlerDeploymentUnitFamily("walker"), null);
+  assert.equal(crawlerDeploymentUnitFamily(null), null);
 });
 
-test("a unit still inside the vehicle shows nothing, not its leading limbs", () => {
-  // At the authored geometry the opening starts at doorX - 24 = 72. A 60px
-  // sprite centred at 60 spans 30..90, so the old reveal put 72..90 on screen -
-  // the leading arm and leg, with the torso still hidden behind the edge.
-  const inside = friendlyCrawlerRevealRect({ ...FRIENDLY_REVEAL_FIXTURE, fighterX: 60 });
-  assert.equal(inside.w, 0, "an interior unit contributes no visible pixels");
-  assert.equal(inside.x, 72);
-  assert.equal(inside.y, 214);
-  assert.equal(inside.h, 128);
-  assert.equal(Object.isFrozen(inside), true);
-
-  // The torso leads by spriteWidth * 0.16 = 9.6px, so it reaches the opening at
-  // fighterX 62.4. Either side of that the reveal is empty, then non-empty.
-  assert.equal(friendlyCrawlerRevealRect({ ...FRIENDLY_REVEAL_FIXTURE, fighterX: 62.3 }).w, 0);
-  assert.ok(friendlyCrawlerRevealRect({ ...FRIENDLY_REVEAL_FIXTURE, fighterX: 62.5 }).w > 0);
-});
-
-test("the reveal only ever grows, from nothing to the whole body", () => {
-  // Width must never decrease as the unit walks out: a shrinking window is what
-  // a swinging limb crossing a fixed edge looks like, and it reads as flicker.
-  let previous = -1;
-  for (let fighterX = 40; fighterX < FRIENDLY_REVEAL_FIXTURE.doorX + 8; fighterX += 0.5) {
-    const rect = friendlyCrawlerRevealRect({ ...FRIENDLY_REVEAL_FIXTURE, fighterX });
-    assert.ok(rect, `expected a rect at ${fighterX}`);
-    assert.ok(rect.w >= previous, `reveal narrowed at ${fighterX}: ${rect.w} < ${previous}`);
-    // Whenever anything is visible, the torso is inside the window.
-    if (rect.w > 0) {
-      const torsoLead = fighterX + FRIENDLY_REVEAL_FIXTURE.spriteWidth * 0.16;
-      assert.ok(torsoLead > rect.x, `limbs shown without the torso at ${fighterX}`);
-    }
-    previous = rect.w;
+test("all human production kinds resolve without treating enemies as standard humans", () => {
+  const standardHumanKinds = [
+    "medic",
+    "gunner",
+    "guardian",
+    "engineer",
+    "kumaverson",
+    "babayaga",
+    "zakimiya",
+    "tky",
+    "mrs-chiha",
+    "miyamoto-musashi",
+  ];
+  for (const kind of standardHumanKinds) {
+    assert.equal(crawlerDeploymentUnitFamily(kind), CRAWLER_DEPLOYMENT_UNIT_FAMILIES.STANDARD_HUMAN);
+  }
+  for (const kind of ["walker", "runner", "takuya", "unknown"]) {
+    assert.equal(crawlerDeploymentUnitFamily(kind), null);
   }
 });
 
-test("friendly CRAWLER reveal remains monotonic until the doorway threshold", () => {
-  const positions = [96, 98, 100, 103.999];
-  const rightEdges = positions.map((fighterX) => {
-    const rect = friendlyCrawlerRevealRect({
-      ...FRIENDLY_REVEAL_FIXTURE,
-      fighterX,
-    });
-    assert.ok(rect);
-    return rect.x + rect.w;
-  });
-
-  assert.deepEqual(rightEdges, positions.map((fighterX) => fighterX + 33));
-  assert.equal(
-    rightEdges.every((right, index) => index === 0 || right > rightEdges[index - 1]),
-    true,
+test("six deployment checkpoints use a single alpha-1 draw and authored z-order for every family", () => {
+  const representatives = ["scout", "ranger", "brawler", "crazy-king", "mayo-chan", "brute", "medic"];
+  assert.deepEqual(
+    CRAWLER_DEPLOYMENT_CHECKPOINTS.map(({ id }) => id),
+    ["fully-inside", "first-visible", "quarter", "half", "three-quarters", "fully-outside"],
   );
-  assert.equal(friendlyCrawlerRevealRect({
-    ...FRIENDLY_REVEAL_FIXTURE,
-    fighterX: FRIENDLY_REVEAL_FIXTURE.doorX + 8,
-  }), null, "the production clip releases exactly at doorX + 8");
+  assert.deepEqual(
+    CRAWLER_DEPLOYMENT_CHECKPOINTS.map(({ progress }) => progress),
+    [0, .08, .25, .5, .75, 1],
+  );
+
+  for (const unitKind of representatives) {
+    for (const checkpoint of CRAWLER_DEPLOYMENT_CHECKPOINTS) {
+      const plan = crawlerDeploymentRenderPlan({
+        ...FRIENDLY_DEPLOYMENT_FIXTURE,
+        unitKind,
+        progress: checkpoint.progress,
+        entryRampCleared: checkpoint.id === "fully-outside",
+      });
+      assert.equal(plan.active, true, `${unitKind}/${checkpoint.id}`);
+      assert.equal(plan.family, crawlerDeploymentUnitFamily(unitKind), `${unitKind}/${checkpoint.id}`);
+      assert.equal(plan.checkpoint, checkpoint.id, `${unitKind}/${checkpoint.id}`);
+      assert.equal(plan.alpha, 1, `${unitKind}/${checkpoint.id}`);
+      assert.equal(plan.unitDrawCount, 1, `${unitKind}/${checkpoint.id}`);
+      assert.equal(plan.clipMode, "none", `${unitKind}/${checkpoint.id}`);
+      assert.equal(Object.isFrozen(plan), true);
+      assert.equal(Object.isFrozen(plan.drawOrder), true);
+
+      if (checkpoint.id === "fully-outside") {
+        assert.equal(plan.unitPass, "after-foreground-mask");
+        assert.equal(plan.foregroundMaskPass, "before-unit");
+        assert.deepEqual(plan.drawOrder, [
+          "crawler-base",
+          "crawler-interior",
+          "crawler-foreground-mask",
+          "unit",
+        ]);
+      } else {
+        assert.equal(plan.unitPass, "before-foreground-mask");
+        assert.equal(plan.foregroundMaskPass, "after-unit");
+        assert.deepEqual(plan.drawOrder, [
+          "crawler-base",
+          "crawler-interior",
+          "unit",
+          "crawler-foreground-mask",
+        ]);
+      }
+    }
+  }
 });
 
-test("friendly CRAWLER reveal honors its minimum opening and ramp cap", () => {
-  const minimum = friendlyCrawlerRevealRect({
-    ...FRIENDLY_REVEAL_FIXTURE,
-    fighterX: 96,
-    spriteWidth: 10,
-  });
-  assert.equal(minimum.x + minimum.w, 121, "doorX + 25 is the minimum reveal edge");
+test("deployment checkpoint resolver clamps malformed progress without creating reveal geometry", () => {
+  assert.equal(crawlerDeploymentCheckpoint(-1), "fully-inside");
+  assert.equal(crawlerDeploymentCheckpoint(0), "fully-inside");
+  assert.equal(crawlerDeploymentCheckpoint(.001), "first-visible");
+  assert.equal(crawlerDeploymentCheckpoint(.25), "quarter");
+  assert.equal(crawlerDeploymentCheckpoint(.5), "half");
+  assert.equal(crawlerDeploymentCheckpoint(.75), "three-quarters");
+  assert.equal(crawlerDeploymentCheckpoint(1), "fully-outside");
+  assert.equal(crawlerDeploymentCheckpoint(2), "fully-outside");
 
-  const capped = friendlyCrawlerRevealRect({
-    ...FRIENDLY_REVEAL_FIXTURE,
-    fighterX: 103,
-    entryRampX: 90,
-    spriteWidth: 100,
-  });
-  assert.equal(capped.x + capped.w, 145, "entryRampX + spriteWidth * .55 caps the reveal");
-  assert.ok(capped.w > 0);
+  const plan = crawlerDeploymentRenderPlan(FRIENDLY_DEPLOYMENT_FIXTURE);
+  assert.equal("x" in plan, false);
+  assert.equal("y" in plan, false);
+  assert.equal("w" in plan, false);
+  assert.equal("h" in plan, false);
+  assert.equal("revealRect" in plan, false);
 });
 
-test("friendly CRAWLER reveal rejects every non-deployment condition", () => {
+test("only the friendly CRAWLER transaction opts into the deployment render plan", () => {
   const ineligible = [
     { side: "zombie" },
     { gateEntering: false },
     { spawnPortalId: "enemy-portal-1" },
-    { entryRampCleared: true },
-    { fighterX: FRIENDLY_REVEAL_FIXTURE.doorX + 8 },
   ];
 
   for (const override of ineligible) {
-    assert.equal(
-      friendlyCrawlerRevealRect({ ...FRIENDLY_REVEAL_FIXTURE, ...override }),
-      null,
-      JSON.stringify(override),
-    );
+    const plan = crawlerDeploymentRenderPlan({ ...FRIENDLY_DEPLOYMENT_FIXTURE, ...override });
+    assert.equal(plan.active, false, JSON.stringify(override));
+    assert.equal("clipMode" in plan, false, JSON.stringify(override));
+    assert.equal(Object.isFrozen(plan), true);
   }
 });
 

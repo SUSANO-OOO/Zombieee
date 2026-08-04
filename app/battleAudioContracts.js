@@ -59,9 +59,10 @@ export const V099_TIMELINE_AUDIO_CUES = Object.freeze([
 })));
 
 export const V099_MUSIC_AUDIO_CUES = Object.freeze([
-  { id: "music-v099-pressure-surface", folder: "music", category: "bgm", loop: true, gain: 0.64, priority: 900, cooldownMs: 0, maxInstances: 1 },
-  { id: "music-v099-pressure-station", folder: "music", category: "bgm", loop: true, gain: 0.66, priority: 900, cooldownMs: 0, maxInstances: 1 },
-  { id: "music-v099-boss", folder: "music", category: "bgm", loop: true, gain: 0.70, priority: 900, cooldownMs: 0, maxInstances: 1 },
+  { id: "music-v099-normal", folder: "music", category: "bgm", loop: true, gain: 1.08, priority: 900, cooldownMs: 0, maxInstances: 1 },
+  { id: "music-v099-pressure-surface", folder: "music", category: "bgm", loop: true, gain: 1.12, priority: 900, cooldownMs: 0, maxInstances: 1 },
+  { id: "music-v099-pressure-station", folder: "music", category: "bgm", loop: true, gain: 1.12, priority: 900, cooldownMs: 0, maxInstances: 1 },
+  { id: "music-v099-boss", folder: "music", category: "bgm", loop: true, gain: 1.25, priority: 900, cooldownMs: 0, maxInstances: 1 },
 ]);
 
 export const V099_BATTLE_AUDIO_ASSET_SPECS = Object.freeze([
@@ -106,4 +107,4 @@ export const V099_SUPPORT_POD_AUDIO_CONTRACT = Object.freeze({
 
 export const V099_ABILITY_UNIT_KINDS = Object.freeze(Object.keys(V099_MANUAL_ABILITY_AUDIO_CONTRACTS));
 
-export const V099_PHYSICAL_AUDIO_ASSET_COUNT = 36;
+export const V099_PHYSICAL_AUDIO_ASSET_COUNT = 37;

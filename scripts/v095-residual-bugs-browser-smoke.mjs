@@ -481,28 +481,20 @@ function validateCapturedState(capture, label) {
     `${label}: playable body remained translucent`);
   if (capture.unitLayerAudit) {
     const audit = capture.unitLayerAudit;
-    invariant(audit.actualClip.nonzeroPixels > 0 && audit.actualClip.bounds,
-      `${label}: production-clipped unit layer disappeared`);
-    invariant(audit.actualFull.nonzeroPixels > 0 && audit.actualFull.bounds,
-      `${label}: unclipped unit layer disappeared`);
-    invariant(audit.opaqueFull.nonzeroPixels > 0 && audit.opaqueFull.bounds,
+    invariant(audit.actual.nonzeroPixels > 0 && audit.actual.bounds,
+      `${label}: production unit layer disappeared`);
+    invariant(audit.opaque.nonzeroPixels > 0 && audit.opaque.bounds,
       `${label}: forced-opaque reference layer disappeared`);
-    invariant(audit.fullOpacityComparison.maskIoU >= .995,
+    invariant(audit.opacityComparison.maskIoU >= .999,
       `${label}: actual unit silhouette diverged from the opaque reference`);
-    invariant(audit.fullOpacityComparison.normalizedAlphaL1 <= .005,
+    invariant(audit.opacityComparison.normalizedAlphaL1 <= .001,
       `${label}: actual unit alpha remained translucent`);
-    invariant(audit.clipComparison.maskIoU >= .98,
-      `${label}: production doorway clip removed or leaked unit pixels`);
-    invariant(audit.clipComparison.normalizedAlphaL1 <= .02,
-      `${label}: production doorway clip alpha diverged from the expected silhouette`);
-    invariant(audit.visibleCoverage > 0 && audit.visibleCoverage <= 1.01,
-      `${label}: invalid visible silhouette coverage ${audit.visibleCoverage}`);
-    invariant(audit.verticalSilhouetteRetention >= .9,
-      `${label}: doorway clip collapsed the unit's vertical silhouette`);
-    if (!audit.clipRect) {
-      invariant(audit.visibleCoverage >= .995,
-        `${label}: fully emerged unit did not retain its complete silhouette`);
-    }
+    invariant(audit.alphaOneFromFirstVisibleFrame === true,
+      `${label}: first-visible body was not fully opaque`);
+    invariant(audit.clipRect === null && audit.clipMode === "none",
+      `${label}: legacy rectangle clipping remained active`);
+    invariant(audit.unitDrawCount === 1,
+      `${label}: unit layer was drawn ${audit.unitDrawCount} times`);
   }
   invariant(capture.playerFacingText.keyboardLabels.length === 0,
     `${label}: smartphone keyboard labels ${capture.playerFacingText.keyboardLabels.join(",")}`);

@@ -2,11 +2,11 @@
   "version": "0.9.9.0",
   "issue": 136,
   "designRevision": "v2",
-  "generatorVersion": 2,
+  "generatorVersion": 3,
   "designApproval": "Sol APPROVE",
   "generator": "scripts/build-v099-battle-audio.mjs",
   "generatorSeed": "0x990ba77",
-  "candidateId": "v099-pr2-audio-r2",
+  "candidateId": "v099-final-remediation-audio-r3",
   "source": "project-original",
   "creator": "SUSANO-OOO/Zombieee project",
   "license": "Original project work; no third-party rights apply.",
@@ -30,78 +30,129 @@
     "writeXing": true,
     "bitexact": true
   },
-  "physicalAssetCount": 36,
-  "distinctOutputBytes": 4690238,
-  "producerApproval": "Gate A pending",
+  "physicalAssetCount": 37,
+  "distinctOutputBytes": 5967147,
+  "producerApproval": "Gate A audio approved; Gate B technical regression pending",
   "assets": [
     {
-      "id": "music-v099-pressure-surface",
+      "id": "music-v099-normal",
       "category": "bgm",
       "folder": "music",
-      "roleFamily": "pressure-surface",
-      "recipeId": "junk-punk-surface-150",
-      "durationSeconds": 70.4,
+      "roleFamily": "normal",
+      "recipeId": "junk-punk-breakbeat-normal-156-r3",
+      "palette": [
+        "junk-punk",
+        "industrial-rock",
+        "breakbeat",
+        "small-taiko-accent"
+      ],
+      "taikoEventShare": 0.045,
+      "durationSeconds": 67.6923076923077,
       "loop": true,
-      "master": "reference/audio/v099-generated/masters/music-v099-pressure-surface.wav",
-      "masterSha256": "828e04e8e765d207c7e49493248737875e63757abd97cac62862539aa75e20bc",
-      "output": "public/audio/v099/music/music-v099-pressure-surface.mp3",
-      "outputSha256": "02b7e4821026558bbed96fba67b58153d14e51a7322cdf715b6962406a22600f",
-      "outputBytes": 1409089,
-      "addedBytes": 1409089,
+      "master": "reference/audio/v099-generated/masters/music-v099-normal.wav",
+      "masterSha256": "3aee297c250718096ddd1b883b62807a99f7d544ebd236f0c7f64f064a0f2d05",
+      "output": "public/audio/v099/music/music-v099-normal.mp3",
+      "outputSha256": "d91d66dd731a118a6b600931e0ccfce88cc9cd6e6b27aac1b34f515b9dd08dba",
+      "outputBytes": 1355277,
+      "addedBytes": 1355277,
       "source": "project-original",
       "creator": "SUSANO-OOO/Zombieee project",
       "license": "Original project work; no third-party rights apply.",
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
+    },
+    {
+      "id": "music-v099-pressure-surface",
+      "category": "bgm",
+      "folder": "music",
+      "roleFamily": "pressure-surface",
+      "recipeId": "junk-punk-pressure-surface-164-r3",
+      "palette": [
+        "junk-punk",
+        "industrial-rock",
+        "dense-breakbeat",
+        "small-taiko-accent"
+      ],
+      "taikoEventShare": 0.083,
+      "durationSeconds": 70.2439024390244,
+      "loop": true,
+      "master": "reference/audio/v099-generated/masters/music-v099-pressure-surface.wav",
+      "masterSha256": "be2902eb25a8a3a69767bd02243178c756301d16c9959ed2a04f91edf6a3352b",
+      "output": "public/audio/v099/music/music-v099-pressure-surface.mp3",
+      "outputSha256": "4699c4193590eba5340a47b86e2cacd84f85835292bccc8b73a964a4d29ef22f",
+      "outputBytes": 1406477,
+      "addedBytes": 1406477,
+      "source": "project-original",
+      "creator": "SUSANO-OOO/Zombieee project",
+      "license": "Original project work; no third-party rights apply.",
+      "commercialUse": true,
+      "modification": true,
+      "redistribution": true,
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "music-v099-pressure-station",
       "category": "bgm",
       "folder": "music",
       "roleFamily": "pressure-station",
-      "recipeId": "rail-dnb-station-172",
-      "durationSeconds": 72.55813953488372,
+      "recipeId": "rail-dnb-pressure-station-176-r3",
+      "palette": [
+        "industrial-rock",
+        "drum-and-bass",
+        "rail-metal",
+        "small-taiko-accent"
+      ],
+      "taikoEventShare": 0.071,
+      "durationSeconds": 70.9090909090909,
       "loop": true,
       "master": "reference/audio/v099-generated/masters/music-v099-pressure-station.wav",
-      "masterSha256": "57941afea66577790996c1ef4efa9a175807d634223011b139a860bc69ce94d1",
+      "masterSha256": "dc676c3a355b93c448fac1132e4985cb943b5b4db4ea237f2af5bb05b068deee",
       "output": "public/audio/v099/music/music-v099-pressure-station.mp3",
-      "outputSha256": "688921115fe21a4f37240a0805efea338d0642d27931377af32c4d1794dc76ae",
-      "outputBytes": 1452453,
-      "addedBytes": 1452453,
+      "outputSha256": "56c394512fdfb4354e2ca018f4e1be0dcfe834e784ff381a8b1bd9c2b844a1f4",
+      "outputBytes": 1419538,
+      "addedBytes": 1419538,
       "source": "project-original",
       "creator": "SUSANO-OOO/Zombieee project",
       "license": "Original project work; no third-party rights apply.",
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "music-v099-boss",
       "category": "bgm",
       "folder": "music",
       "roleFamily": "boss",
-      "recipeId": "industrial-taiko-boss-132",
-      "durationSeconds": 72.72727272727272,
+      "recipeId": "industrial-junk-taiko-boss-136-r3",
+      "palette": [
+        "industrial-rock",
+        "junk-punk",
+        "breakbeat",
+        "taiko-intro-accent"
+      ],
+      "taikoEventShare": 0.118,
+      "durationSeconds": 70.58823529411765,
       "loop": true,
       "master": "reference/audio/v099-generated/masters/music-v099-boss.wav",
-      "masterSha256": "de94250d1251363ee4b2e1271f3718782d1b18b6cfc44393cdfd99f07a7108f5",
+      "masterSha256": "f6f7fd0b7d9a208362e413f76b2aa93ff78d68b8f964fa81f65e3ca24434a620",
       "output": "public/audio/v099/music/music-v099-boss.mp3",
-      "outputSha256": "d4ef4c8cdd26bdbfbfdcf6628be1fc72aa001c6153a88b1f1670762cc20273ac",
-      "outputBytes": 1456110,
-      "addedBytes": 1456110,
+      "outputSha256": "24ba0cf94607b20879f98c0d1cdf7740d25c34dcd53a83f3e49a7118f486776c",
+      "outputBytes": 1413269,
+      "addedBytes": 1413269,
       "source": "project-original",
       "creator": "SUSANO-OOO/Zombieee project",
       "license": "Original project work; no third-party rights apply.",
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-brawler-kiai-activate",
@@ -123,8 +174,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-scout-intercept-activate",
@@ -146,8 +197,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-ranger-precision-activate",
@@ -169,8 +220,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-medic-emergency-activate",
@@ -192,8 +243,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-brute-groundbreak-activate",
@@ -215,8 +266,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-crazy-king-overdrive-activate",
@@ -238,8 +289,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-kumaverson-iron-pan-activate",
@@ -261,8 +312,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-babayaga-appraise-activate",
@@ -284,8 +335,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-gunner-suppression-activate",
@@ -307,8 +358,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-guardian-shieldwall-activate",
@@ -330,8 +381,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-engineer-trap-arm-activate",
@@ -353,8 +404,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-zakimiya-molotov-activate",
@@ -376,8 +427,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-brawler-kiai-combo-impact",
@@ -399,8 +450,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-scout-intercept-impact",
@@ -422,8 +473,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-ranger-precision-shot",
@@ -445,8 +496,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-ranger-precision-impact",
@@ -468,8 +519,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-medic-treatment",
@@ -491,8 +542,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-brute-groundbreak-impact",
@@ -514,8 +565,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-crazy-king-overdrive-active",
@@ -537,8 +588,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-kumaverson-stance",
@@ -560,8 +611,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-babayaga-appraise-shot",
@@ -583,8 +634,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-babayaga-appraise-mark",
@@ -606,8 +657,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-gunner-suppression-muzzle",
@@ -629,8 +680,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-gunner-suppression-impact",
@@ -652,8 +703,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-guardian-shieldwall-hold",
@@ -675,8 +726,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-engineer-trap-spring",
@@ -698,8 +749,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-zakimiya-molotov-throw",
@@ -721,8 +772,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-zakimiya-molotov-impact",
@@ -744,8 +795,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-zakimiya-molotov-burn",
@@ -767,8 +818,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-musashi-fallback-cross",
@@ -790,8 +841,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-ready-melee",
@@ -813,8 +864,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-ready-ranged",
@@ -836,8 +887,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     },
     {
       "id": "ability-ready-support",
@@ -859,8 +910,8 @@
       "commercialUse": true,
       "modification": true,
       "redistribution": true,
-      "candidateId": "v099-pr2-audio-r2",
-      "producerApproval": "Gate A pending"
+      "candidateId": "v099-final-remediation-audio-r3",
+      "producerApproval": "Gate A audio approved; Gate B technical regression pending"
     }
   ]
 }

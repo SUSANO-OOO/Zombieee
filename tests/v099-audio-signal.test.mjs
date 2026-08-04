@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -96,6 +96,71 @@ function correlation(left, right) {
   return numerator / Math.max(Number.EPSILON, Math.sqrt(leftEnergy * rightEnergy));
 }
 
+function rms(samples, start = 0, end = samples.length) {
+  let squared = 0;
+  const boundedStart = Math.max(0, Math.floor(start));
+  const boundedEnd = Math.min(samples.length, Math.ceil(end));
+  for (let index = boundedStart; index < boundedEnd; index += 1) squared += samples[index] * samples[index];
+  return Math.sqrt(squared / Math.max(1, boundedEnd - boundedStart));
+}
+
+function spectralCentroidHz(samples, sampleRate = 44_100) {
+  const frameSize = 1024;
+  const frameCount = 24;
+  const maximumBin = Math.floor(8_000 * frameSize / sampleRate);
+  let weightedFrequency = 0;
+  let magnitudeTotal = 0;
+  for (let frame = 0; frame < frameCount; frame += 1) {
+    const start = Math.floor(frame * Math.max(0, samples.length - frameSize) / Math.max(1, frameCount - 1));
+    for (let bin = 1; bin <= maximumBin; bin += 1) {
+      let real = 0;
+      let imaginary = 0;
+      const angular = -2 * Math.PI * bin / frameSize;
+      for (let offset = 0; offset < frameSize; offset += 1) {
+        const window = .5 - .5 * Math.cos(2 * Math.PI * offset / (frameSize - 1));
+        const value = samples[start + offset] * window;
+        real += value * Math.cos(angular * offset);
+        imaginary += value * Math.sin(angular * offset);
+      }
+      const magnitude = Math.hypot(real, imaginary);
+      const frequency = bin * sampleRate / frameSize;
+      weightedFrequency += frequency * magnitude;
+      magnitudeTotal += magnitude;
+    }
+  }
+  return weightedFrequency / Math.max(Number.EPSILON, magnitudeTotal);
+}
+
+function onsetDensityPerSecond(samples, sampleRate = 44_100) {
+  const frameSize = Math.round(sampleRate * .02);
+  let previousDb = -120;
+  let lastOnsetFrame = -Infinity;
+  let onsets = 0;
+  const frames = Math.floor(samples.length / frameSize);
+  for (let frame = 0; frame < frames; frame += 1) {
+    const energy = rms(samples, frame * frameSize, (frame + 1) * frameSize);
+    const db = 20 * Math.log10(Math.max(1e-9, energy));
+    if (db > -34 && db - previousDb >= 2.5 && frame - lastOnsetFrame >= 3) {
+      onsets += 1;
+      lastOnsetFrame = frame;
+    }
+    previousDb = db;
+  }
+  return onsets / Math.max(.001, samples.length / sampleRate);
+}
+
+function integratedLoudnessLufs(id) {
+  const source = path.join(root, "public", "audio", "v099", "music", `${id}.mp3`);
+  const result = spawnSync(ffmpegPath, [
+    "-hide_banner", "-nostats", "-i", source,
+    "-filter_complex", "ebur128=peak=true", "-f", "null", "-",
+  ], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 });
+  assert.equal(result.status, 0, result.stderr);
+  const summaries = [...result.stderr.matchAll(/Integrated loudness:\s+I:\s+(-?[\d.]+) LUFS/gu)];
+  assert.ok(summaries.length > 0, `${id} ebur128 summary`);
+  return Number(summaries.at(-1)[1]);
+}
+
 test("v0.9.9.0 pins its production encoder while allowing a read-only diagnostic decoder", () => {
   assert.ok(ffmpegVersion.startsWith("ffmpeg version "));
   assert.match(provenance.ffmpeg.version, /N-92722-gf22fcd4483/);
@@ -106,7 +171,7 @@ test("v0.9.9.0 pins its production encoder while allowing a read-only diagnostic
   assert.equal(provenance.encoding.bitexact, true);
 });
 
-test("all 36 distributed MP3s pass decoded true-peak, DC, duration, and tail-click checks", () => {
+test("all 37 distributed MP3s pass decoded true-peak, DC, duration, and tail-click checks", () => {
   for (const spec of V099_BATTLE_AUDIO_ASSET_SPECS) {
     const samples = decodeMp3(spec.id);
     const entry = provenanceById.get(spec.id);
@@ -124,8 +189,8 @@ test("all 36 distributed MP3s pass decoded true-peak, DC, duration, and tail-cli
 });
 
 test("the decoded MP3 role matrix is signal-distinct rather than a renamed common template", () => {
-  assert.equal(new Set(provenance.assets.map(({ recipeId }) => recipeId)).size, 36);
-  assert.equal(new Set(provenance.assets.map(({ outputSha256 }) => outputSha256)).size, 36);
+  assert.equal(new Set(provenance.assets.map(({ recipeId }) => recipeId)).size, 37);
+  assert.equal(new Set(provenance.assets.map(({ outputSha256 }) => outputSha256)).size, 37);
   const decoded = V099_BATTLE_AUDIO_ASSET_SPECS.map((spec) => ({
     id: spec.id,
     fingerprint: downsampleFingerprint(decodeMp3(spec.id)),
@@ -158,4 +223,41 @@ test("each distributed BGM renders ten actual decoded loop boundaries without a 
     assert.equal(loopBoundaries, 9, `${spec.id} did not render ten cycles`);
     assert.ok(maximumJoinDelta < .08, `${spec.id} ten-loop seam ${maximumJoinDelta}`);
   }
+});
+
+test("normal, pressure, and boss masters expose audible, distinct production measurements", (t) => {
+  const metrics = Object.fromEntries(V099_BATTLE_AUDIO_ASSET_SPECS
+    .filter(({ category }) => category === "bgm")
+    .map((spec) => {
+      const samples = decodeMp3(spec.id);
+      const signal = signalMetrics(samples);
+      const values = {
+        durationSeconds: Number((samples.length / 44_100).toFixed(3)),
+        peak: Number(signal.peak.toFixed(6)),
+        integratedLoudnessLufs: integratedLoudnessLufs(spec.id),
+        spectralCentroidHz: Number(spectralCentroidHz(samples).toFixed(1)),
+        onsetDensityPerSecond: Number(onsetDensityPerSecond(samples).toFixed(3)),
+        firstSecondRms: Number(rms(samples, 0, 44_100).toFixed(6)),
+        firstTwoSecondsRms: Number(rms(samples, 0, 88_200).toFixed(6)),
+        loopJoinDelta: Number(Math.abs(samples[0] - samples.at(-1)).toFixed(6)),
+      };
+      assert.ok(values.integratedLoudnessLufs >= -20 && values.integratedLoudnessLufs <= -11,
+        `${spec.id} loudness ${values.integratedLoudnessLufs} LUFS`);
+      assert.ok(values.firstTwoSecondsRms >= .09, `${spec.id} late/inaudible opening ${values.firstTwoSecondsRms}`);
+      assert.ok(values.spectralCentroidHz >= 350 && values.spectralCentroidHz <= 4_500,
+        `${spec.id} centroid ${values.spectralCentroidHz}`);
+      assert.ok(values.onsetDensityPerSecond >= 1.2, `${spec.id} onset density ${values.onsetDensityPerSecond}`);
+      assert.ok(values.loopJoinDelta < .08, `${spec.id} loop join ${values.loopJoinDelta}`);
+      return [spec.id, values];
+    }));
+  const normalDensity = metrics["music-v099-normal"].onsetDensityPerSecond;
+  t.diagnostic(`v0.9.9.0 BGM decoded metrics: ${JSON.stringify(metrics)}`);
+  assert.ok(metrics["music-v099-pressure-surface"].onsetDensityPerSecond > normalDensity * .9
+      && metrics["music-v099-pressure-surface"].spectralCentroidHz
+        > metrics["music-v099-normal"].spectralCentroidHz * 1.08,
+    "surface pressure adds high-frequency event activity rather than volume only");
+  assert.ok(metrics["music-v099-pressure-station"].onsetDensityPerSecond > normalDensity,
+    "station pressure adds event density rather than volume only");
+  assert.ok(metrics["music-v099-boss"].firstSecondRms >= metrics["music-v099-boss"].firstTwoSecondsRms * .9,
+    "boss identity is already present in the first decoded second");
 });
