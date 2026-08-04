@@ -333,6 +333,21 @@ async function readLayoutAndAudio(page) {
       const rect = element.getBoundingClientRect();
       return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height };
     };
+    const textFitFor = (selector) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const textRect = range.getBoundingClientRect();
+      return {
+        text: element.textContent?.trim() ?? "",
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+        rect: { left: rect.left, right: rect.right },
+        textRect: { left: textRect.left, right: textRect.right },
+      };
+    };
     return {
       screen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
       speaker: document.querySelector(".dialogue-name b")?.textContent ?? null,
@@ -375,6 +390,7 @@ async function readLayoutAndAudio(page) {
           statsStrip: rectFor(".stats-strip"),
           objective: rectFor(".stats-strip .objective"),
         },
+        objectiveTextFit: textFitFor(".stats-strip .objective"),
         deployBannerEffectiveFontPx: (rectFor("canvas.battlefield")?.width ?? 0) / 960 * 22,
       },
       dimensions: {
@@ -448,6 +464,14 @@ function assertMobileBattleReadability(evidence, label) {
     `${label} battle deck overlaps the stats strip: ${JSON.stringify(readability.rects)}`);
   invariant(objective.left >= statsStrip.left - 1 && objective.right <= statsStrip.right + 1,
     `${label} objective is clipped: ${JSON.stringify(readability.rects)}`);
+  const objectiveTextFit = readability.objectiveTextFit;
+  invariant(objectiveTextFit
+      && objectiveTextFit.scrollWidth <= objectiveTextFit.clientWidth + 1
+      && objectiveTextFit.textRect.left >= objectiveTextFit.rect.left - 1
+      && objectiveTextFit.textRect.right <= objectiveTextFit.rect.right + 1
+      && objectiveTextFit.textRect.left >= -1
+      && objectiveTextFit.textRect.right <= evidence.dimensions.innerWidth + 1,
+    `${label} objective text is not fully visible: ${JSON.stringify(objectiveTextFit)}`);
 }
 
 async function waitForStoryScreen(page, eventId) {

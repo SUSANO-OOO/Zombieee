@@ -309,7 +309,13 @@ for (const engine of engines) {
           undefined,
           { timeout },
         );
-        const disabledReadability = await page.evaluate(() => ({
+        const disabledReadability = await page.evaluate(() => {
+          const objective = document.querySelector(".stats-strip .objective");
+          const objectiveRect = objective?.getBoundingClientRect();
+          const objectiveRange = document.createRange();
+          if (objective) objectiveRange.selectNodeContents(objective);
+          const objectiveTextRect = objective ? objectiveRange.getBoundingClientRect() : null;
+          return ({
           cards: [...document.querySelectorAll("button.unit-card[aria-disabled='true']")]
             .map((card) => {
               const state = card.querySelector(".card-state");
@@ -334,10 +340,20 @@ for (const engine of engines) {
               contained: detailRect
                 ? detailRect.left >= buttonRect.left - 1 && detailRect.right <= buttonRect.right + 1
                   && detailRect.top >= buttonRect.top - 1 && detailRect.bottom <= buttonRect.bottom + 1
-                : false,
+              : false,
             };
           }),
-        }));
+          objective: objective && objectiveRect && objectiveTextRect ? {
+            text: objective.textContent?.trim() ?? "",
+            fontSize: Number.parseFloat(getComputedStyle(objective).fontSize),
+            clientWidth: objective.clientWidth,
+            scrollWidth: objective.scrollWidth,
+            rect: { left: objectiveRect.left, right: objectiveRect.right },
+            textRect: { left: objectiveTextRect.left, right: objectiveTextRect.right },
+            viewportWidth: window.innerWidth,
+          } : null,
+        });
+        });
         const commandBlockedCards = disabledReadability.cards.filter(({ reason }) => reason === "指揮不足");
         invariant(commandBlockedCards.length > 0,
           `${name}: actual command-insufficient input produced no disabled card`);
@@ -346,6 +362,14 @@ for (const engine of engines) {
         )), `${name}: disabled unit reason is clipped or undersized: ${JSON.stringify(commandBlockedCards)}`);
         invariant(disabledReadability.support.every(({ fontSize, contained }) => fontSize >= 12 && contained),
           `${name}: support reason is clipped or undersized: ${JSON.stringify(disabledReadability.support)}`);
+        invariant(disabledReadability.objective
+            && disabledReadability.objective.fontSize >= 14
+            && disabledReadability.objective.scrollWidth <= disabledReadability.objective.clientWidth + 1
+            && disabledReadability.objective.textRect.left >= disabledReadability.objective.rect.left - 1
+            && disabledReadability.objective.textRect.right <= disabledReadability.objective.rect.right + 1
+            && disabledReadability.objective.textRect.left >= -1
+            && disabledReadability.objective.textRect.right <= disabledReadability.objective.viewportWidth + 1,
+          `${name}: objective text is clipped or undersized: ${JSON.stringify(disabledReadability.objective)}`);
         const disabledReadabilityScreenshot = path.join(evidenceDir, `${name}-mobile-disabled-readability.png`);
         await page.screenshot({ path: disabledReadabilityScreenshot });
 

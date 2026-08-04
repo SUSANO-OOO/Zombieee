@@ -345,8 +345,9 @@ button[aria-disabled="true"]:focus-visible {
   .support-btn small { display:block; margin-top:4px; overflow:visible; color:#c5b9a4; font-size:12px; line-height:1.05; text-overflow:clip; text-shadow:0 2px 3px #000; white-space:normal; }
   .support-btn em { right:5px; font-size:14px; text-shadow:0 2px 3px #000; }
   .support-btn[aria-disabled="true"] { opacity:.82; filter:grayscale(.38) saturate(.72) brightness(.84); }
-  .stats-strip { height:calc(24px + var(--app-viewport-safe-bottom)); align-items:center; gap:12px; padding:2px calc(8px + var(--app-viewport-safe-right)) var(--app-viewport-safe-bottom) calc(8px + var(--app-viewport-safe-left)); color:#d0c4b1; font-size:12px; letter-spacing:.01em; text-shadow:0 2px 3px #000; white-space:nowrap; }
-  .stats-strip .objective { color:#efbd77; font-size:14px; }
+  .stats-strip { height:calc(24px + var(--app-viewport-safe-bottom)); align-items:center; gap:6px; padding:2px calc(8px + var(--app-viewport-safe-right)) var(--app-viewport-safe-bottom) calc(8px + var(--app-viewport-safe-left)); color:#d0c4b1; font-size:12px; letter-spacing:.01em; text-shadow:0 2px 3px #000; white-space:nowrap; }
+  .stats-strip > span { flex-shrink:0; }
+  .stats-strip .objective { margin-left:auto; color:#efbd77; font-size:14px; }
   .stats-strip .bay-status { color:#a9d1cd; }
 }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; } }
