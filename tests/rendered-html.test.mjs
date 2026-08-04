@@ -528,7 +528,8 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(indicatorDraw, /ctx\.lineWidth = 1\.4[\s\S]*ctx\.moveTo\(-9, 0\)[\s\S]*labelX = Math\.max/);
   assert.match(game, /g\.banner = placementReasonLabel\(result\.reason\); g\.bannerTime = \.75/);
   assert.match(game, /const compactScale = compactBattleViewport\(\) \? 1\.1 : 1/);
-  assert.match(game, /function battleBannerRect\(\)[\s\S]*width = compact \? 234 : 316[\s\S]*height = compact \? 28 : 42[\s\S]*y: compact \? 50 : 58/);
+  assert.match(game, /function battleBannerRect\(\)[\s\S]*width = compact \? 480 : 316[\s\S]*height = 42[\s\S]*y: compact \? 72 : 58/);
+  assert.match(game, /ctx\.font = `bold \$\{compact \? 22 : 17\}px monospace`/);
   for (const label of ["投下ポッド", "爆薬ドラム", "救護所", "航空支援", "一斉掃射"]) assert.match(game, new RegExp(label));
   assert.doesNotMatch(css, /battle-nishijin-shopping-street-v1\.webp/);
   assert.match(game, /style=\{screen === "battle" && assetsReady[\s\S]*backgroundImage: `url\('\$\{stageVisualFor\(activeBattlefieldStageId\)\}'\)`/);
@@ -1487,7 +1488,10 @@ test("validates, damages, and releases the battlefield container without changin
   assert.ok(breachPursuitFloor < normalHumanFloor);
   assert.ok(breachPursuitFloor <= 169);
 
-  const game = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const [game, css] = await Promise.all([
+    readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
   assert.match(game, /battlefieldObjects: BattlefieldObject\[\]/);
   assert.match(game, /targetObjectId: number \| null/);
   assert.match(game, /resolveBattlefieldSupplyPlacement\(\{/);
@@ -1533,6 +1537,17 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(game, /selectAreaEffectsForRender\(g\.areaEffects\)/);
   assert.match(game, /function drawAirstrikeObserver/);
   assert.match(game, /pose\.action === "radio"[\s\S]*pose\.action === "targeting"[\s\S]*pose\.action === "inbound" \|\| pose\.action === "impact"/);
+  const crawlerDraw = game.slice(game.indexOf("function drawCrawler"), game.indexOf("function drawEnemyBase"));
+  assert.doesNotMatch(crawlerDraw, /ctx\.translate\(crawler\.commandDeckX/);
+  assert.doesNotMatch(crawlerDraw, /ctx\.moveTo\(crawler\.weaponX - 14/);
+  assert.match(crawlerDraw, /drawAirstrikeObserver\(ctx, g\);[\s\S]*if \(!visualState\.stored\)/);
+  assert.match(game, /const crawlerDeploymentOpaque = f\.side === "human"[\s\S]*f\.spawnPortalId === "crawler-door"[\s\S]*ctx\.globalAlpha = 1/);
+  assert.match(css, /max-height:430px[\s\S]*\.card-copy b \{[^}]*font-size:14px/);
+  assert.match(css, /max-height:430px[\s\S]*\.cost \{[^}]*font-size:14px/);
+  assert.match(css, /max-height:430px[\s\S]*\.support-btn b \{[^}]*font-size:14px/);
+  assert.match(css, /max-height:430px[\s\S]*\.stats-strip \.objective \{[^}]*font-size:14px/);
+  assert.match(css, /max-height:430px[\s\S]*\.boss-hud div,\.boss-hud b \{[^}]*font-size:12px/);
+  assert.match(css, /max-height:430px[\s\S]*\.unit-card:is\(:disabled,\[aria-disabled="true"\]\):not\(\.cooling\) \{[^}]*brightness\(\.9\)/);
   const enemyBaseDraw = game.slice(game.indexOf("function drawEnemyBase"), game.indexOf("function drawEmergencySupport"));
   assert.match(enemyBaseDraw, /enemyBaseVisualState\(\{ hp: g\.barricadeHp, elapsed: g\.enemyBaseCollapse \}\)/);
   assert.match(enemyBaseDraw, /ctx\.rect\(barrier\.drawX \+ 2, barrier\.drawY \+ 2, barrier\.width - 4, barrier\.height - 4\);[\s\S]*ctx\.clip\(\)/);

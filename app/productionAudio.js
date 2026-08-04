@@ -573,7 +573,7 @@ const scenes = [
   { id: "story-stage2-post", ambience: ["ambience-v070-medical-bay-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 260 },
   { id: "story-stage3-pre", bgm: "music-v070-stage3-approach", ambience: ["ambience-v070-stage3-wind-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 420 },
   { id: "story-stage3-battle", bgm: "music-battle-stage3", preload: [...COMMON_UI_PRELOAD, TAKUYA_ENTRANCE_AUDIO.cueId], crossfadeMs: 360 },
-  { id: "story-boss", bgm: "music-boss", preload: COMMON_UI_PRELOAD, crossfadeMs: 260 },
+  { id: "story-boss", bgm: "music-v099-boss", preload: [...COMMON_UI_PRELOAD, ...V099_COMBAT_PRELOAD], crossfadeMs: 260 },
   { id: "silence-stage3-entrance", preload: ["sfx-v070-takuya-entrance"], crossfadeMs: 80 },
   { id: "silence-stage3-final", preload: [], crossfadeMs: 180 },
   { id: "story-stage3-post", ambience: ["ambience-v070-stage3-wind-loop"], preload: COMMON_UI_PRELOAD, crossfadeMs: 260 },

@@ -345,7 +345,6 @@ import {
   enemyVoiceCue,
   humanVoiceCueForUnit,
   sceneIdForScreen,
-  sceneIdForStoryEvent,
   stopBattleAudioLoops,
   storyWarningCueForEvent,
   unitAudioCueFor,
@@ -2044,11 +2043,11 @@ function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y">) {
 
 function battleBannerRect() {
   const compact = compactBattleViewport();
-  const width = compact ? 234 : 316;
-  const height = compact ? 28 : 42;
+  const width = compact ? 480 : 316;
+  const height = 42;
   return {
     x: (W - width) / 2,
-    y: compact ? 50 : 58,
+    y: compact ? 72 : 58,
     width,
     height,
   };
@@ -3025,11 +3024,9 @@ function livingSpeaker(g: Game, kinds: readonly UnitKind[]) {
 }
 
 function battleSilenceSceneId(g: Game) {
-  const scriptedFinalActive = g.battleBarks.active.some((bark) => (
-    bark.scripted === true
-    && bark.trigger === STORY_BATTLE_TRIGGER_IDS.FINAL_WEAKPOINT_EXPOSED
-  ));
-  if (scriptedFinalActive) return sceneIdForStoryEvent("stage-takuya-final-v070");
+  // The entrance cue owns the only authored battle silence. Story barks are
+  // dialogue overlays and must never replace the current normal/pressure/boss
+  // scene while combat continues.
   if (g.takuyaEntranceAudioRemaining > 0) return TAKUYA_ENTRANCE_AUDIO.silenceSceneId;
   return null;
 }
@@ -3999,7 +3996,11 @@ function drawSpriteFighter(
     opacity: 1,
   };
   const facingSign = direction === "left" ? -1 : 1;
-  const effectivePoseOpacity = forceOpaque ? 1 : pose.opacity;
+  const crawlerDeploymentOpaque = f.side === "human"
+    && f.gateEntering
+    && f.spawnPortalId === "crawler-door";
+  if (forceOpaque || crawlerDeploymentOpaque) ctx.globalAlpha = 1;
+  const effectivePoseOpacity = forceOpaque || crawlerDeploymentOpaque ? 1 : pose.opacity;
   if (fighterRenderAuditEnabled && recordAudit) {
     const previousAudit = fighterRenderAudit.get(f);
     recordFighterRenderAudit(f, {
@@ -5937,34 +5938,9 @@ function drawCrawler(
     ctx.fillRect(crawler.x + 18, crawler.y + 45, crawler.width - 36, crawler.height - 50);
   }
   ctx.globalAlpha = 1;
-  // Keep command and support state inside one roof-mounted machine. The feet
-  // extend into the authored hull so no free-standing cyan HUD glyph remains.
-  ctx.save();
-  ctx.translate(crawler.commandDeckX, crawler.commandDeckY - 5);
-  ctx.strokeStyle = "#2a302d";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(-10, 5); ctx.lineTo(-13, 18);
-  ctx.moveTo(10, 5); ctx.lineTo(13, 18);
-  ctx.stroke();
-  ctx.fillStyle = "#252b29";
-  ctx.fillRect(-18, 14, 36, 6);
-  ctx.fillStyle = "rgba(24,29,28,.98)";
-  ctx.beginPath();
-  ctx.moveTo(-15, 8); ctx.lineTo(-12, -5); ctx.lineTo(8, -8); ctx.lineTo(15, 4);
-  ctx.lineTo(11, 11); ctx.lineTo(-11, 11); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = "#74786c"; ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.fillStyle = g.airstrike.phase === "idle" ? "#58625b" : "#ffb95d";
-  ctx.fillRect(-8, 2, 16, 3);
-  ctx.strokeStyle = "#8c8a77";
-  ctx.lineWidth = 2.2;
-  ctx.beginPath();
-  ctx.moveTo(5, -6);
-  ctx.lineTo(11 + Math.sin(grounding.antennaSwing) * 10, -20 + Math.cos(grounding.antennaSwing) * 2);
-  ctx.stroke();
-  ctx.fillStyle = "#c18b45";
-  ctx.beginPath(); ctx.arc(11 + Math.sin(grounding.antennaSwing) * 10, -20 + Math.cos(grounding.antennaSwing) * 2, 2.2, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
+  // Idle support and barrage hardware is intentionally not improvised in
+  // Canvas. Only the authored CRAWLER body remains until a future vehicle
+  // master integrates those systems physically.
   drawAirstrikeObserver(ctx, g);
   if (!visualState.stored) {
     ctx.save();
@@ -5996,22 +5972,6 @@ function drawCrawler(
       ctx.fill();
       ctx.restore();
     }
-  } else {
-    ctx.fillStyle = "rgba(25,32,31,.94)";
-    ctx.strokeStyle = "rgba(112,124,113,.84)";
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.moveTo(crawler.weaponX - 14, crawler.weaponY - 3);
-    ctx.lineTo(crawler.weaponX - 10, crawler.weaponY - 12);
-    ctx.lineTo(crawler.weaponX + 8, crawler.weaponY - 14);
-    ctx.lineTo(crawler.weaponX + 15, crawler.weaponY - 6);
-    ctx.lineTo(crawler.weaponX + 10, crawler.weaponY - 1);
-    ctx.lineTo(crawler.weaponX - 10, crawler.weaponY);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = "#526158";
-    ctx.fillRect(crawler.weaponX - 6, crawler.weaponY - 10, 12, 3);
   }
   if (g.crawlerDoor.phase !== CRAWLER_DOOR_PHASES.CLOSED) {
     const warningPulse = g.crawlerDoor.phase === CRAWLER_DOOR_PHASES.WARNING
@@ -11017,6 +10977,18 @@ export function AshfallGame() {
           impactSeconds: BATTLEFIELD_SUPPLY_DEFS.drum.impactSeconds,
         }) };
       },
+      prepareTakuyaBossDefeatAudioProof: () => {
+        const g = gameRef.current;
+        if (qaMode !== "endgame" || g.bossDefeated || g.over) return null;
+        const takuya = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
+        if (!takuya) return null;
+        // The browser proof observes the complete final cut while TAKUYA is
+        // alive, then crosses only the HP boundary here. The production frame
+        // loop still owns corpse creation, bossDefeatPending, story receipts,
+        // scene restoration, and every other defeat side effect.
+        takuya.hp = 0;
+        return { fighterId: takuya.id, hp: takuya.hp, bossDefeated: g.bossDefeated };
+      },
       auditFighterUnitLayer: (fighterId: number) => {
         const fighter = gameRef.current.fighters.find(({ id }) => id === fighterId);
         if (!fighter) throw new Error(`Unknown fighter for unit-layer audit: ${fighterId}`);
@@ -12768,10 +12740,6 @@ export function AshfallGame() {
     if (audio && audio.state !== "closed") void audio.close();
   }, [stopJingle, stopMusic, stopSfx]);
 
-  const storyFinalCutAudioActive = screen === "battle" && hud.battleBarks.some((bark) => (
-    bark.scripted === true
-    && bark.trigger === STORY_BATTLE_TRIGGER_IDS.FINAL_WEAKPOINT_EXPOSED
-  ));
   const takuyaEntranceAudioActive = screen === "battle" && hud.takuyaEntranceAudioActive;
 
   useEffect(() => {
@@ -12797,11 +12765,9 @@ export function AshfallGame() {
         ? { won: outcome, musicMode: desiredMusicModeRef.current, eventId, storyLineIndex }
         : { musicMode: desiredMusicModeRef.current, eventId, storyLineIndex })
       : (typeof outcome === "boolean" ? { won: outcome, eventId, storyLineIndex } : { eventId, storyLineIndex });
-    const sceneId = storyFinalCutAudioActive
-      ? sceneIdForStoryEvent("stage-takuya-final-v070")
-      : takuyaEntranceAudioActive
-        ? TAKUYA_ENTRANCE_AUDIO.silenceSceneId
-        : sceneIdForScreen(screen, activeBattlefieldStageId, musicState);
+    const sceneId = takuyaEntranceAudioActive
+      ? TAKUYA_ENTRANCE_AUDIO.silenceSceneId
+      : sceneIdForScreen(screen, activeBattlefieldStageId, musicState);
     desiredProductionSceneRef.current = sceneId;
     if (document.documentElement.dataset.audioMixer === "production") {
       document.documentElement.dataset.audioScene = sceneId ?? "none";
@@ -12816,7 +12782,7 @@ export function AshfallGame() {
       if (desiredProductionSceneRef.current !== sceneId) return;
       setMusicActive(Boolean(state?.bgmAssetId) && !bgmMuted);
     }).catch(() => setMusicActive(false));
-  }, [activeBattlefieldStageId, bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, storyFinalCutAudioActive, takuyaEntranceAudioActive]);
+  }, [activeBattlefieldStageId, bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, takuyaEntranceAudioActive]);
 
   useEffect(() => {
     const active = screen === "battle" && hud.battleBarks.length > 0;
@@ -20451,8 +20417,11 @@ export function AshfallGame() {
         ctx.fillRect(banner.x, banner.y, banner.width, banner.height);
         ctx.strokeStyle = "rgba(215,150,71,.82)";
         ctx.strokeRect(banner.x + .5, banner.y + .5, banner.width - 1, banner.height - 1);
-        ctx.fillStyle = "#f0d2a3"; ctx.font = `bold ${compact ? 11 : 17}px monospace`; ctx.textAlign = "center";
-        ctx.fillText(g.banner, W / 2, banner.y + (compact ? 19 : 28)); ctx.textAlign = "left";
+        ctx.fillStyle = "#f0d2a3"; ctx.font = `bold ${compact ? 22 : 17}px monospace`; ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(g.banner, W / 2, banner.y + banner.height / 2, banner.width - 24);
+        ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic";
       }
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
@@ -20616,6 +20585,29 @@ export function AshfallGame() {
     : "BOSS";
   const bossHudSide = (hud.bossWorldX ?? 0) >= W * .64 ? "boss-hud-left" : "boss-hud-right";
   const combatLocked = !!end || hud.baseHp <= 0 || hud.barricadeHp <= 0;
+  const commonBattleActionBlockReason = !started
+    ? "作戦開始前"
+    : paused
+      ? "一時停止中"
+      : combatLocked
+        ? "作戦終了"
+        : battleSaveBoundaryRef.current
+          ? "保存中"
+          : null;
+  const selectedSupplyBlockReason = commonBattleActionBlockReason
+    ?? (hud.supportItemCooldowns[selectedSupply] > 0
+      ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
+      : hud.scrap < supplyDefs[selectedSupply].cost
+        ? `スクラップ不足 ${hud.scrap}/${supplyDefs[selectedSupply].cost}`
+        : null);
+  const airstrikeBlockReason = commonBattleActionBlockReason
+    ?? (hud.airstrikePhase !== "idle"
+      ? "航空支援実行中"
+      : hud.supportGauge < AIRSTRIKE_DEF.gaugeCost
+        ? `支援不足 ${hud.supportGauge}/${AIRSTRIKE_DEF.gaugeCost}`
+        : null);
+  const crawlerBlockReason = commonBattleActionBlockReason
+    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : null);
   const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "partial" ? "一部音声を再試行できます" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
   const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "partial" ? "一部再試行" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
   const audioCategorySummary = ([
@@ -20741,10 +20733,19 @@ export function AshfallGame() {
               {cards.filter((card) => formationKinds.includes(card.kind)).map((card) => {
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
+                const cardBlockReason = commonBattleActionBlockReason
+                  ?? (hud.deployQueue >= 3
+                    ? "格納庫満員"
+                    : cooldown > 0
+                      ? `再準備 ${cooldown}秒`
+                      : hud.energy < card.cost
+                        ? "指揮不足"
+                        : null);
                 return (
-                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} aria-disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked || battleSaveBoundaryRef.current} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
+                    {!cooldown && <span className="card-state">{cardBlockReason ?? "出撃可能"}</span>}
                     {cooldown > 0 && <span
                       className="cooldown-mask"
                       style={{ "--cooldown-progress": `${Math.min(100, cooldown / Math.max(1, card.deployCooldown) * 100)}%` } as CSSProperties}
@@ -20766,14 +20767,14 @@ export function AshfallGame() {
               >
                 <span className="support-key">{supplyDefs[selectedSupply].key}</span>
                 <b>{hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : SUPPORT_DISPLAY_NAMES[selectedSupply]}</b>
-                <small>{hud.supportItemCooldowns[selectedSupply] > 0 ? "使用済み・自動補充中" : selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復"}</small>
+                <small>{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</small>
                 <em>{hud.supportItemCooldowns[selectedSupply] > 0 ? "↻" : `▰${supplyDefs[selectedSupply].cost}`}</em>
               </button>
               <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} aria-disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked || battleSaveBoundaryRef.current} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
-                <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>通信・照準・飛来・着弾・帰投</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
+                <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>{airstrikeBlockReason ?? "照準・飛来・着弾"}</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
               </button>
               <button className="support-btn barrage" aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked || battleSaveBoundaryRef.current} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
-                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>戦場全域固定火器</small><em>⌁</em>
+                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>{crawlerBlockReason ?? "戦場全域固定火器"}</small><em>⌁</em>
               </button>
             </div>
           </div>
