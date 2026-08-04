@@ -1546,6 +1546,7 @@ test("validates, damages, and releases the battlefield container without changin
   assert.match(css, /max-height:430px[\s\S]*\.cost \{[^}]*font-size:14px/);
   assert.match(css, /max-height:430px[\s\S]*\.support-btn b \{[^}]*font-size:14px/);
   assert.match(css, /max-height:430px[\s\S]*\.stats-strip \.objective \{[^}]*font-size:14px/);
+  assert.match(css, /max-height:430px[\s\S]*\.stats-strip > span \{[^}]*flex-shrink:0/);
   assert.match(css, /max-height:430px[\s\S]*\.boss-hud div,\.boss-hud b \{[^}]*font-size:12px/);
   assert.match(css, /max-height:430px[\s\S]*\.unit-card:is\(:disabled,\[aria-disabled="true"\]\):not\(\.cooling\) \{[^}]*brightness\(\.9\)/);
   const enemyBaseDraw = game.slice(game.indexOf("function drawEnemyBase"), game.indexOf("function drawEmergencySupport"));
