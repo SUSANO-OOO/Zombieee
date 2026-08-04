@@ -19,8 +19,8 @@
 
 Version 0.9.9.0では次を使用する。
 
-1. Issue #136のProducer Execution Directive（comment `5166510249`）
-2. Issue #136の最終監査補足（comment `5166614237`）
+1. Issue #136の最終監査補足（comment `5166614237`。衝突時はこちらを優先）
+2. Issue #136のProducer Execution Directive（comment `5166510249`）
 3. Issue #136本文
 4. 本書
 5. `integration/0.9.9.0`のコード、tests、QA記録
