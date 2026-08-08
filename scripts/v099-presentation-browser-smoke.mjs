@@ -337,6 +337,8 @@ for (const engine of engines) {
               label: button.querySelector("b")?.textContent?.trim() ?? null,
               reason: detail?.textContent?.trim() ?? null,
               fontSize: detail ? Number.parseFloat(getComputedStyle(detail).fontSize) : null,
+              buttonRect: { left: buttonRect.left, top: buttonRect.top, right: buttonRect.right, bottom: buttonRect.bottom, height: buttonRect.height },
+              detailRect: detailRect ? { left: detailRect.left, top: detailRect.top, right: detailRect.right, bottom: detailRect.bottom, height: detailRect.height } : null,
               contained: detailRect
                 ? detailRect.left >= buttonRect.left - 1 && detailRect.right <= buttonRect.right + 1
                   && detailRect.top >= buttonRect.top - 1 && detailRect.bottom <= buttonRect.bottom + 1

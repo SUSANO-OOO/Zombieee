@@ -235,6 +235,12 @@ for (const engine of engines) {
         invariant(summaryText.includes("20/20"), `${name}: campaign completion summary missing`);
         invariant(summaryText.includes("WAVE 26"), `${name}: Survival summary missing`);
         invariant(summaryText.includes("2勝 / 0敗") && summaryText.includes("撤退 1"), `${name}: operation summary missing`);
+        invariant(await page.locator(".records-totals > article").count() === 6,
+          `${name}: records totals did not expose all six categories`);
+        invariant(await page.locator(".records-totals > article").evaluateAll((entries) => entries.every((entry) => {
+          const rect = entry.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        })), `${name}: one or more records total cards is not visible`);
         invariant(await page.locator(".records-unit-stats tbody tr").count() === CAMPAIGN_UNITS.length, `${name}: per-unit rows incomplete`);
         const summaryLayout = await layoutEvidence(page, ".records-summary");
         invariant(summaryLayout.tabHeights.every((height) => height >= 44), `${name}: records tab below 44px`);
