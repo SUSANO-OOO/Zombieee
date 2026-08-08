@@ -77,17 +77,22 @@ Versionごとの製品判断と実行は、そのVersionのProducer Decisions／
 
 ## 4. 今後の実装方式
 
-今後のVersion実装は、製品判断と実装責務を分離します。
+今後のVersion実装は、同じプロジェクト内の**Sol threadとLuna threadを順番に使用**します。同じmissionで並列実行しません。
 
 1. Producerが一つの主目的、non-goal、受入境界を固定
-2. **Sol Design Lead**が現行コードと正本を調査し、実装方式、責務、変更範囲、test／QA、PR分割、停止条件を設計
-3. **Luna Implementation Lead**がSol設計を正本としてコード／asset／test／QA／PRを実装
-4. Design Leadとは別コンテキストの**Sol Auditor**がfixed HEADをread-only監査
-5. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけintegration／main／releaseへ進む
+2. **元のSol thread**が現行コードと正本を調査し、Lunaが追加の設計推測をしなくてよい粒度までDesign Lockを作る
+3. Solは待機し、Design Lock／Luna Handoffを**Luna thread**へ渡す
+4. Lunaが実装、trial-and-error、self-review、QA、fixed HEAD／tree固定まで行う
+5. LunaのCompletion Packetを**元のSol thread**へ戻す
+6. 元のSolが最終review
+7. 小さいFindingはSolが限定修正し、Lunaが回帰validationした後、元のSolが再review
+8. 設計変更が必要ならSolがDesign revisionを更新し、Lunaへ再handoff
+9. 対象Versionが独立監査を明示要求する場合だけfresh Sol Auditorを追加
+10. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけintegration／main／releaseへ進む
 
-Codexの`/goal`は、**長時間かどうかではなく、同じ達成目標を複数工程・checkpoint・反復検証にわたって保持する必要があるか**で判断します。Version／featureの正式設計、複数moduleをまたぐ実装、実装→QA→修正→PR、audit remediation、release missionは`/goal`対象です。read-only確認、単発test、typo修正、設計判断を伴わない小さな単一file修正等は通常promptで処理できます。
+Sol／Lunaの専用規約は、[CODEX_TWO_THREAD_WORKFLOW](CODEX_TWO_THREAD_WORKFLOW.md)、[CODEX_SOL_ROLE](CODEX_SOL_ROLE.md)、[CODEX_LUNA_ROLE](CODEX_LUNA_ROLE.md)を使用します。
 
-SolとLunaが`/goal`を使う場合は設計goalと実装goalを分離します。Lunaが重大な設計欠落を見つけた場合は独自再設計せずSolへ戻し、Design Lead Sol自身を最終独立Auditorにしません。
+Codexの`/goal`は、**長時間かどうかではなく、同じ達成目標を複数工程・checkpoint・反復検証にわたって保持する必要があるか**で判断します。Version／featureの正式設計、通常の複数工程実装、audit remediation、release missionはgoal対象です。read-only確認、単発test、typo修正、設計判断を伴わない小修正等は通常promptで処理できます。
 
 詳細は[AGENTS.md](../AGENTS.md)を正本とします。
 
@@ -128,4 +133,4 @@ Stage 50、30unitは完成基準であり、将来上限ではありません。
 - 物理iPhoneはspeaker、earphone、touch、home-screen icon、lock復帰、発熱を検証する
 - AI auto-playの敗北だけを難易度blockerにしない
 - 人間の楽しさ、読みやすさ、難易度、art directionは人手受入が所有する
-- implementation完了はtest本数だけでなく、Sol設計のacceptance criteriaと実ゲーム証拠で判定する
+- implementation完了はtest本数だけでなく、Design Lockのacceptance criteria、Luna self-review、Sol Final Review、実ゲーム証拠で判定する

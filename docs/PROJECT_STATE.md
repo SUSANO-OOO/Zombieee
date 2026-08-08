@@ -93,17 +93,30 @@ PWAは全件のsize／SHA-256検証、Cache Storage保存、manifest commit ACK�
 
 ## 5. 今後の実装運用
 
-今後の実装は、次の責務分離を標準とします。
+標準フローは**SolとLunaを同時に動かさず、同じ2スレッドを順番に使う**方式です。
 
-1. Producerが対象Versionの主目的と製品境界を固定
-2. **Sol Design Lead**が実装前設計を担当
-3. **Luna Implementation Lead**がSol設計を正本として実装
-4. Design Leadとは別コンテキストの**Sol Auditor**が固定HEADをread-only監査
-5. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけmerge／公開
+1. Producer／司令塔が対象Versionの主目的と製品境界を固定
+2. **元のSol thread**が`SOL_DESIGN`として全体を細かく設計し、Design Lock／Luna Handoffを正本化
+3. Solは待機し、**Luna thread**へhandoff
+4. Lunaが`LUNA_IMPLEMENTATION`として実装、trial-and-error、self-review、QA、fixed HEAD／tree固定まで完了
+5. LunaがCompletion Packetを**元のSol thread**へ返す
+6. 元のSolが`SOL_FINAL_REVIEW`として最終review
+7. 小さいFindingはSolが`SOL_REMEDIATION`で限定修正し、Lunaが`LUNA_VALIDATION`で回帰確認後、元のSolが再review
+8. 設計変更が必要ならSolがDesign revisionを上げ、Lunaへ再handoff
+9. 対象Versionの正本が独立監査を要求する場合だけ、別のfresh Sol Auditorを追加
+10. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけmerge／公開
 
-Codexの`/goal`は、時間の長短ではなく、複数工程・複数checkpoint・反復検証をまたいで同じ達成目標を保持する必要があるmissionで使用します。Version／featureの正式設計、複数moduleをまたぐ実装、実装→QA→修正→PR、audit remediation、release工程等はgoal-managed missionです。read-only確認、単発test、typo修正、設計判断を伴わない小さな単一file修正等は通常promptで処理できます。
+自動role切替、Sol/Lunaの同時並行実装、Lunaによる設計の勝手な変更は行いません。
 
-SolとLunaが`/goal`を使う場合、設計goalと実装goalは分離します。Lunaが実装中に重大な設計欠落を発見した場合は独自再設計せずSolへ戻し、Sol AuditorはDesign Lead Solとは別コンテキストで行います。詳細な判定基準は`AGENTS.md`を正本とします。
+### Role専用MD
+
+- `docs/CODEX_TWO_THREAD_WORKFLOW.md`：Sol→Luna→元のSolの全体順序とhandoff
+- `docs/CODEX_SOL_ROLE.md`：Sol thread専用の設計・最終review・限定remediation規約
+- `docs/CODEX_LUNA_ROLE.md`：Luna thread専用の実装・self-review・validation規約
+
+Codexの`/goal`は時間の長短ではなく、複数工程・複数checkpoint・反復検証をまたいで同じ達成目標を保持する必要があるmissionで使用します。Version／featureの正式設計と通常実装は原則goal-managedです。read-only確認、単発test、typo修正、設計判断を伴わない小さな単一file修正等は通常promptで処理できます。
+
+詳細な恒久ルールは`AGENTS.md`、実行順は`CODEX_TWO_THREAD_WORKFLOW.md`を正本とします。
 
 ## 6. 次Versionの状態
 
@@ -123,6 +136,7 @@ Issue #24 `[Backlog][Audio] 正式BGM・SE制作と物理端末聴感QA` はopen
 - smartphone横画面を第一基準、PC横画面も正式対応
 - 本編Stage 1〜20、Survival、16 playable units、Level 1〜50基盤を維持
 - `main`直接push、force push、rebase、amend、既存tag移動、save初期化、cache全削除、ライセンス不明asset採用は禁止
+- SolとLunaは同一missionで同時並行に動かさない
 - goal-managed missionは`AGENTS.md`の判定基準に従って`/goal`を使用する
 
 長期方向は[PRODUCT_ROADMAP](PRODUCT_ROADMAP.md)、公開・復元は[RELEASE_BACKUP_RECOVERY](RELEASE_BACKUP_RECOVERY.md)を参照してください。
