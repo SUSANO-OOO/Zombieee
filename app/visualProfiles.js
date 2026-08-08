@@ -429,9 +429,18 @@ export const V090_UNIT_VISUAL_PROFILES = deepFreeze({
 });
 
 export const EVENT_PORTRAIT_PROFILES = deepFreeze({
-  ...Object.fromEntries(Object.entries(V080_UNIT_VISUAL_PROFILES).map(([kind, profile]) => [kind, profile.eventPortrait])),
-  ...Object.fromEntries(Object.entries(V090_UNIT_VISUAL_PROFILES).map(([kind, profile]) => [kind, profile.eventPortrait])),
-  guide: V075_VISUAL_PROFILES.ikura.eventPortrait,
+  ...Object.fromEntries(Object.entries(V080_UNIT_VISUAL_PROFILES).map(([kind, profile]) => [kind, {
+    ...profile.eventPortrait,
+    crop: "auto 92%",
+  }])),
+  ...Object.fromEntries(Object.entries(V090_UNIT_VISUAL_PROFILES).map(([kind, profile]) => [kind, {
+    ...profile.eventPortrait,
+    crop: "auto 92%",
+  }])),
+  guide: {
+    ...V075_VISUAL_PROFILES.ikura.eventPortrait,
+    crop: "auto 92%",
+  },
   radio: {
     path: "/art/v060/characters/portraits/radio-terminal-portrait-v1.webp",
     revision: "v1",
@@ -439,7 +448,7 @@ export const EVENT_PORTRAIT_PROFILES = deepFreeze({
     focusX: .5,
     focusY: .28,
     scale: 1,
-    crop: "cover",
+    crop: "auto 92%",
     safeArea: { top: .04, right: .04, bottom: .02, left: .04 },
     minFacePixelsAt844x340: 0,
   },

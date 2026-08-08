@@ -39,9 +39,11 @@ const playwright = process.env.PLAYWRIGHT_MODULE_PATH
   : await import("playwright");
 const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit };
 const canonicalEngines = ["chromium", "webkit"];
+const canonicalCaseTypes = ["hud", "crawler-equipment", "deployment"];
 const canonicalViewports = [
   { width: 844, height: 390 },
   { width: 844, height: 340 },
+  { width: 1280, height: 720 },
 ];
 const canonicalDeploymentUnits = Object.freeze([
   Object.freeze({ family: "hachi", kind: "scout" }),
@@ -69,7 +71,7 @@ const engines = parseUniqueAxis(
 );
 const viewportKeys = parseUniqueAxis(
   "V099_FINAL_REMEDIATION_QA_VIEWPORTS",
-  process.env.V099_FINAL_REMEDIATION_QA_VIEWPORTS ?? "844x390,844x340",
+  process.env.V099_FINAL_REMEDIATION_QA_VIEWPORTS ?? "844x390,844x340,1280x720",
   canonicalViewports.map(({ width, height }) => `${width}x${height}`),
 );
 const viewports = viewportKeys.map((key) => {
@@ -83,6 +85,11 @@ const deploymentKinds = parseUniqueAxis(
   canonicalDeploymentUnits.map(({ kind }) => kind),
 );
 const deploymentUnits = canonicalDeploymentUnits.filter(({ kind }) => deploymentKinds.includes(kind));
+const caseTypes = parseUniqueAxis(
+  "V099_FINAL_REMEDIATION_QA_CASES",
+  process.env.V099_FINAL_REMEDIATION_QA_CASES ?? canonicalCaseTypes.join(","),
+  canonicalCaseTypes,
+);
 const timeout = Math.max(
   10_000,
   Number(process.env.V099_FINAL_REMEDIATION_QA_TIMEOUT_MS) || 30_000,
@@ -192,6 +199,44 @@ async function crawlerRuntimeContactSheet(name, kind, viewport, entries) {
     crop,
     columns: entries.length,
     phases: entries.map(({ phase }) => phase),
+  };
+}
+
+async function deploymentRuntimeContactSheet(name, family, viewport, entries) {
+  invariant(entries.length === CRAWLER_DEPLOYMENT_CHECKPOINTS.length,
+    `${name}/${family}: deployment contact sheet is incomplete`);
+  const crop = {
+    left: 0,
+    top: Math.max(0, Math.round(viewport.height * .1)),
+    width: Math.min(Math.round(viewport.width * .52), viewport.width),
+    height: Math.min(Math.round(viewport.height * .72), viewport.height),
+  };
+  const tiles = [];
+  for (const entry of entries) {
+    tiles.push(await sharp(path.resolve(entry.screenshot))
+      .extract(crop)
+      .resize({ width: 320, height: 180, fit: "contain", background: "#080a0b" })
+      .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
+      .toBuffer());
+  }
+  const outputPath = path.join(evidenceDir, `${name}-deployment-${family}-contact-sheet.png`);
+  await sharp({
+    create: {
+      width: 320 * entries.length,
+      height: 180,
+      channels: 4,
+      background: { r: 8, g: 10, b: 11, alpha: 1 },
+    },
+  }).composite(tiles.map((input, index) => ({ input, left: index * 320, top: 0 })))
+    .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
+    .toFile(outputPath);
+  const relativePath = relativeEvidencePath(outputPath);
+  return {
+    path: relativePath,
+    sha256: await evidenceSha256(relativePath),
+    crop,
+    columns: entries.length,
+    checkpoints: entries.map(({ checkpoint }) => checkpoint),
   };
 }
 
@@ -1063,6 +1108,7 @@ async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumP
         const progress = Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)));
         if (audit?.deploymentPlan?.checkpoint === expected && progress + 1e-6 >= requiredProgress) {
           qa.setRepresentativeSixProofPaused(true);
+          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
           const frozenSnapshot = qa.getSnapshot();
           const frozenFighter = frozenSnapshot.fighters.find((candidate) => candidate.id === id);
           const frozenAudit = qa.auditFighterUnitLayer(id);
@@ -1116,6 +1162,7 @@ async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
         const progress = Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)));
         if (bannerReady && audit?.deploymentPlan?.checkpoint === "fully-inside" && progress === 0) {
           qa.setRepresentativeSixProofPaused(true);
+          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
           const frozenSnapshot = qa.getSnapshot();
           const frozenFighter = frozenSnapshot.fighters.find((candidate) => candidate.id === fighter.id);
           const frozenAudit = qa.auditFighterUnitLayer(fighter.id);
@@ -1156,6 +1203,14 @@ function validateDeploymentCheckpoint(evidence, expectedFamily, expectedCheckpoi
   invariant(audit.clipRect === null && audit.clipMode === "none",
     `${label}: legacy deployment clip remains`);
   invariant(audit.unitDrawCount === 1, `${label}: unit draw count ${audit.unitDrawCount}`);
+  invariant(audit.finalCompositePixels?.pass === true,
+    `${label}: final battle canvas RGBA failed ${JSON.stringify(audit.finalCompositePixels)}`);
+  invariant(audit.finalCompositePixels?.fractionalForegroundPixels === 0,
+    `${label}: CRAWLER foreground has fractional global alpha`);
+  invariant(audit.finalCompositePixels?.singleUnitSilhouette === true,
+    `${label}: duplicate or ghost unit silhouette detected`);
+  invariant(audit.finalCompositePixels?.finalCanvasKeepsUnitOpaque === true,
+    `${label}: final canvas does not retain opaque unit pixels`);
   invariant(fighter?.renderAudit?.poseOpacity === 1
     && fighter?.renderAudit?.effectiveOpacity === 1
     && fighter?.animationPresentation?.pose?.opacity === 1,
@@ -1246,6 +1301,31 @@ async function runDeploymentCase(browser, engine, viewport) {
       invariant(unitResult.checkpoints.every((entry, index, entries) => (
         index === 0 || entry.fighter.x + 1e-6 >= entries[index - 1].fighter.x
       )), `${name}/${unit.family}: deployment position regressed between checkpoints`);
+      const midpoint = unitResult.checkpoints.find(({ checkpoint }) => checkpoint === "half");
+      const rampClear = unitResult.checkpoints.at(-1);
+      invariant(midpoint?.observedProgress >= .5,
+        `${name}/${unit.family}: midpoint evidence is missing`);
+      invariant(rampClear?.observedCheckpoint === "fully-outside"
+        && rampClear.fighter.entryRampCleared === true
+        && rampClear.fighter.gateEntering === false
+        && rampClear.fighter.combatReady === true,
+      `${name}/${unit.family}: ramp-clear/combat-ready boundary is incomplete`);
+      // Production intentionally flips ramp-cleared and combat-ready atomically.
+      // Name the five acceptance keyframes explicitly while retaining the six
+      // sampled frames and their original receipt/checkpoint data.
+      unitResult.requiredKeyframes = {
+        doorInside: fullyInside,
+        firstVisible,
+        midpoint,
+        rampClear,
+        combatReady: rampClear,
+      };
+      unitResult.contactSheet = await deploymentRuntimeContactSheet(
+        name,
+        unit.family,
+        viewport,
+        unitResult.checkpoints,
+      );
       unitResult.status = "passed";
       unitResult.fighterId = fighterId;
       result.units.push(unitResult);
@@ -1294,9 +1374,11 @@ for (const engine of engines) {
   const browser = await browserType.launch({ headless: true });
   try {
     for (const viewport of viewports) {
-      results.push(await runHudCase(browser, engine, viewport));
-      results.push(await runEquipmentCase(browser, engine, viewport, runtimeEvidence));
-      results.push(await runDeploymentCase(browser, engine, viewport));
+      if (caseTypes.includes("hud")) results.push(await runHudCase(browser, engine, viewport));
+      if (caseTypes.includes("crawler-equipment")) {
+        results.push(await runEquipmentCase(browser, engine, viewport, runtimeEvidence));
+      }
+      if (caseTypes.includes("deployment")) results.push(await runDeploymentCase(browser, engine, viewport));
     }
   } finally {
     await browser.close();
@@ -1305,12 +1387,14 @@ for (const engine of engines) {
 
 const buildIdentityAtEnd = await productionBuildIdentity();
 const buildIdentityStable = buildIdentityAtStart.combinedSha256 === buildIdentityAtEnd.combinedSha256;
-const expectedCaseCount = engines.length * viewports.length * 3;
+const expectedCaseCount = engines.length * viewports.length * caseTypes.length;
 const canonicalAxes = engines.length === canonicalEngines.length
   && canonicalEngines.every((engine) => engines.includes(engine))
   && viewportKeys.length === canonicalViewports.length
   && canonicalViewports.every(({ width, height }) => viewportKeys.includes(`${width}x${height}`))
-  && deploymentUnits.length === canonicalDeploymentUnits.length;
+  && deploymentUnits.length === canonicalDeploymentUnits.length
+  && caseTypes.length === canonicalCaseTypes.length
+  && canonicalCaseTypes.every((caseType) => caseTypes.includes(caseType));
 const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl: String(baseUrl),
@@ -1318,6 +1402,7 @@ const summary = {
   engines,
   viewports,
   deploymentUnits,
+  caseTypes,
   buildFreshness: {
     sentinel: relativeEvidencePath(buildSentinel),
     buildMtime: new Date(buildMtimeMs).toISOString(),
@@ -1343,7 +1428,11 @@ const summary = {
     return total;
   }, 0),
   contactSheetCount: results.reduce((total, result) => (
-    total + (result.type === "crawler-equipment" && result.contactSheets ? 2 : 0)
+    total
+      + (result.type === "crawler-equipment" && result.contactSheets ? 2 : 0)
+      + (result.type === "deployment"
+        ? result.units.filter(({ contactSheet }) => Boolean(contactSheet)).length
+        : 0)
   ), 0),
   results,
 };

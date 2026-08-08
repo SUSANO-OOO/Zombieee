@@ -52,6 +52,11 @@ import {
   crawlerDeploymentRenderPlan,
   createCrawlerDoorRuntime,
 } from "./crawlerDeployment.js";
+import { analyzeDeploymentCompositePixels } from "./deploymentCompositePixelAudit.js";
+import {
+  clearViewportSafeAreaInlineOverride,
+  resolveViewportSafeArea,
+} from "./viewportSafeArea.js";
 import {
   crawlerDefenseResponderCapacity,
   isEffectiveCrawlerDefenseClaim,
@@ -4053,7 +4058,14 @@ function drawSpriteFighter(
   };
 }
 
-function fighterUnitLayerPixelAudit(fighter: Fighter, sprites: SpriteMap) {
+function fighterUnitLayerPixelAudit(
+  fighter: Fighter,
+  sprites: SpriteMap,
+  finalCanvas: HTMLCanvasElement,
+  g: Game,
+  graphicsProfile: GraphicsProfile,
+  finalTransform: { scale: number; offsetX: number; offsetY: number },
+) {
   const left = Math.max(0, Math.floor(Math.min(
     fighter.x - 120,
     WORLD_GEOMETRY.crawler.doorX - 48,
@@ -4087,6 +4099,61 @@ function fighterUnitLayerPixelAudit(fighter: Fighter, sprites: SpriteMap) {
   };
   const actual = capture({});
   const opaque = capture({ forceOpaque: true });
+  const foregroundCanvas = document.createElement("canvas");
+  foregroundCanvas.width = W;
+  foregroundCanvas.height = H;
+  const foregroundContext = foregroundCanvas.getContext("2d", { willReadFrequently: true });
+  if (!foregroundContext) throw new Error("Foreground-layer audit canvas unavailable");
+  const captureForeground = (forceOpaque: boolean) => {
+    foregroundContext.clearRect(0, 0, W, H);
+    drawCrawlerForegroundMask(foregroundContext, g, sprites, graphicsProfile, forceOpaque);
+    return foregroundContext.getImageData(left, top, width, height).data;
+  };
+  const finalAuditCanvas = document.createElement("canvas");
+  finalAuditCanvas.width = width;
+  finalAuditCanvas.height = height;
+  const finalAuditContext = finalAuditCanvas.getContext("2d", { willReadFrequently: true });
+  if (!finalAuditContext) throw new Error("Final battle canvas audit unavailable");
+  const dpr = Math.max(1, Number(finalCanvas.dataset.dpr) || 1);
+  finalAuditContext.imageSmoothingEnabled = true;
+  finalAuditContext.imageSmoothingQuality = "high";
+  finalAuditContext.drawImage(
+    finalCanvas,
+    (finalTransform.offsetX + left * finalTransform.scale) * dpr,
+    (finalTransform.offsetY + top * finalTransform.scale) * dpr,
+    width * finalTransform.scale * dpr,
+    height * finalTransform.scale * dpr,
+    0,
+    0,
+    width,
+    height,
+  );
+  const finalRgba = finalAuditContext.getImageData(0, 0, width, height).data;
+  const compositeCanvas = document.createElement("canvas");
+  compositeCanvas.width = W;
+  compositeCanvas.height = H;
+  const compositeContext = compositeCanvas.getContext("2d", { willReadFrequently: true });
+  if (!compositeContext) throw new Error("Deployment final composite audit canvas unavailable");
+  drawCrawler(compositeContext, g, sprites, graphicsProfile);
+  if (actual.deploymentPlan?.active
+    && actual.deploymentPlan.unitPass === "before-foreground-mask") {
+    drawSpriteFighter(compositeContext, fighter, sprites, { recordAudit: false });
+    drawCrawlerForegroundMask(compositeContext, g, sprites, graphicsProfile);
+  } else {
+    drawCrawlerForegroundMask(compositeContext, g, sprites, graphicsProfile);
+    drawSpriteFighter(compositeContext, fighter, sprites, { recordAudit: false });
+  }
+  const compositeRgba = compositeContext.getImageData(left, top, width, height).data;
+  const compositePixels = analyzeDeploymentCompositePixels({
+    finalRgba: compositeRgba,
+    renderedUnitRgba: actual.data,
+    expectedUnitRgba: opaque.data,
+    renderedForegroundRgba: captureForeground(false),
+    expectedForegroundRgba: captureForeground(true),
+    unitDrawCount: actual.deploymentPlan?.unitDrawCount ?? 1,
+    width,
+    visibleFinalRgba: finalRgba,
+  });
 
   const metrics = (rgba: Uint8ClampedArray) => {
     let alphaMass = 0;
@@ -4151,6 +4218,7 @@ function fighterUnitLayerPixelAudit(fighter: Fighter, sprites: SpriteMap) {
     actual: actualMetrics,
     opaque: opaqueMetrics,
     opacityComparison,
+    finalCompositePixels: compositePixels,
     alphaOneFromFirstVisibleFrame: opacityComparison.maskIoU >= .999
       && opacityComparison.normalizedAlphaL1 <= .001,
   };
@@ -5982,6 +6050,7 @@ function drawCrawlerForegroundMask(
   g: Game,
   sprites: SpriteMap,
   graphicsProfile: GraphicsProfile,
+  forceOpaque = false,
 ) {
   if (g.crawlerDoor.doorProgress <= 0) return;
   const crawler = WORLD_GEOMETRY.crawler;
@@ -5996,7 +6065,7 @@ function drawCrawlerForegroundMask(
     ctx.restore();
     return;
   }
-  ctx.globalAlpha = compositePlan.foregroundMask.alpha;
+  ctx.globalAlpha = forceOpaque ? 1 : compositePlan.foregroundMask.alpha;
   drawCrawlerAsset(ctx, foregroundMask, crawler);
   ctx.restore();
 }
@@ -7408,6 +7477,7 @@ export function AshfallGame() {
     safeAreaBottom: 0,
     safeAreaLeft: 0,
   });
+  const viewportSafeAreaRef = useRef({ top: 0, right: 0, bottom: 0, left: 0 });
   useEffect(() => {
     campaignSaveRef.current = campaignSave;
   }, [campaignSave]);
@@ -10992,7 +11062,16 @@ export function AshfallGame() {
       auditFighterUnitLayer: (fighterId: number) => {
         const fighter = gameRef.current.fighters.find(({ id }) => id === fighterId);
         if (!fighter) throw new Error(`Unknown fighter for unit-layer audit: ${fighterId}`);
-        return fighterUnitLayerPixelAudit(fighter, spriteRefs.current);
+        const canvas = canvasRef.current;
+        if (!canvas) throw new Error("Final battle canvas unavailable for unit-layer audit");
+        return fighterUnitLayerPixelAudit(
+          fighter,
+          spriteRefs.current,
+          canvas,
+          gameRef.current,
+          graphicsProfileRef.current,
+          canvasTransformRef.current,
+        );
       },
       getSnapshot: () => {
         const g = gameRef.current;
@@ -11416,11 +11495,13 @@ export function AshfallGame() {
       root.style.setProperty("--app-viewport-top", `${offsetTop}px`);
       root.dataset.viewportSource = viewport ? "visual" : "layout";
       const qaSafeArea = resolveLocalQaSafeArea(window.location.hostname, window.location.search);
-      const safeArea = qaSafeArea ?? { top: 0, right: 0, bottom: 0, left: 0 };
-      root.style.setProperty("--app-viewport-safe-top", `${safeArea.top}px`);
-      root.style.setProperty("--app-viewport-safe-right", `${safeArea.right}px`);
-      root.style.setProperty("--app-viewport-safe-bottom", `${safeArea.bottom}px`);
-      root.style.setProperty("--app-viewport-safe-left", `${safeArea.left}px`);
+      const safeArea = resolveViewportSafeArea({
+        root,
+        document,
+        getComputedStyle: window.getComputedStyle.bind(window),
+        qaSafeArea,
+      });
+      viewportSafeAreaRef.current = safeArea;
       setBattleHudViewport((current) => {
         const next = {
           width,
@@ -11434,11 +11515,6 @@ export function AshfallGame() {
           ? current
           : next;
       });
-      if (qaSafeArea) {
-        root.dataset.safeAreaSource = "local-qa-iphone-landscape";
-      } else {
-        delete root.dataset.safeAreaSource;
-      }
     };
     syncVisualViewport();
     window.addEventListener("resize", syncVisualViewport);
@@ -11454,6 +11530,7 @@ export function AshfallGame() {
       document.removeEventListener("visibilitychange", syncVisualViewport);
       window.visualViewport?.removeEventListener("resize", syncVisualViewport);
       window.visualViewport?.removeEventListener("scroll", syncVisualViewport);
+      clearViewportSafeAreaInlineOverride(document.documentElement);
     };
   }, []);
 
@@ -20470,10 +20547,9 @@ export function AshfallGame() {
               };
             })
           : [];
-        const rootStyle = getComputedStyle(document.documentElement);
         const safeInsets = Object.fromEntries(["top", "right", "bottom", "left"].map((edge) => [
           edge,
-          Math.max(0, Number.parseFloat(rootStyle.getPropertyValue(`--app-viewport-safe-${edge}`)) || 0) + 6,
+          viewportSafeAreaRef.current[edge as keyof typeof viewportSafeAreaRef.current] + 6,
         ]));
         const manualAbilityIcons = layoutManualAbilityIcons({
           fighters: readyAbilityFighters,

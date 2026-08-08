@@ -17,7 +17,7 @@ jobs:
   verify:
     name: PR Verify
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout synthetic PR merge
@@ -84,3 +84,26 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Install focused browser engines
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Capture Issue 156 final-canvas deployment evidence
+        env:
+          V099_FINAL_REMEDIATION_QA_CASES: deployment
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
+
+      - name: Capture Issue 156 safe-area, portrait, and metadata evidence
+        env:
+          ISSUE156_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/presentation
+        run: npm run qa:issue156-remediation
+
+      - name: Upload Issue 156 remediation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue156-remediation-evidence
+          path: issue156-evidence
+          if-no-files-found: error
+          retention-days: 14

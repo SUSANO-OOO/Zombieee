@@ -23,7 +23,7 @@ const SHARE_DESCRIPTION =
 export const metadata: Metadata = {
   title: RELEASE_TITLE,
   description:
-    "全16名の戦闘アニメーション、VFX、スマートフォン描画、雇用導線を刷新。移動拠点CRAWLERと生存者部隊を率いるリアルタイム戦略・防衛ゲーム。",
+    "大型移動拠点と生存者部隊を率いるリアルタイム戦略・防衛ゲーム。全16名の戦闘アニメーション、VFX、スマートフォン描画、雇用導線を刷新。",
   icons: {
     icon: [{ url: V099_APP_ICON_IDENTITY.paths.favicon48, type: "image/png", sizes: "48x48" }],
     shortcut: V099_APP_ICON_IDENTITY.paths.favicon48,

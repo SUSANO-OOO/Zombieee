@@ -134,7 +134,7 @@ test("Issue #156 event portrait registry covers all 18 authored profiles with on
     assert.ok(profile.focusX >= 0 && profile.focusX <= 1, `${kind} focusX`);
     assert.ok(profile.focusY >= 0 && profile.focusY <= 1, `${kind} focusY`);
     assert.equal(profile.scale, 1, `${kind} authored scale remains neutral`);
-    assert.equal(profile.crop, "cover", `${kind} mobile cover crop`);
+    assert.equal(profile.crop, "auto 92%", `${kind} mobile upper-body crop`);
     assert.ok(profile.safeArea.top >= 0 && profile.safeArea.bottom >= 0, `${kind} safe area`);
   }
 });
