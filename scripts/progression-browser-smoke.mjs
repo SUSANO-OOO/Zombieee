@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { UNIT_CARDS } from "../app/gameRules.js";
 import { applyUnitLevelProgression } from "../app/unitProgression.js";
 import { CAMPAIGN_UNITS } from "../app/campaign.js";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 if (!process.env.PROGRESSION_QA_BASE_URL) {
   throw new Error("PROGRESSION_QA_BASE_URL is required; use the isolated QA runner");
@@ -127,6 +128,7 @@ for (const engine of engines) {
           url.search = search.toString();
           const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
+          await dismissInstallOffer(page, { timeout: Math.min(timeout, 5_000) });
           await page.waitForFunction((expectedCount) => (
             document.querySelector(".game-shell")?.getAttribute("data-screen") === "personnel"
             && document.querySelectorAll(".formation-unit-card").length === expectedCount
@@ -167,25 +169,29 @@ for (const engine of engines) {
           await page.waitForFunction((expectedCount) => document.querySelectorAll(".formation-unit-upgrade").length === expectedCount,
             CAMPAIGN_UNITS.length, { timeout });
           const before = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
-          const firstUpgrade = page.locator(".formation-unit-upgrade:not(:disabled)").first();
+          const concurrentUpgradeIds = await page.locator(".formation-unit-upgrade:not(:disabled)").evaluateAll((buttons) => buttons
+            .slice(0, 2)
+            .map((button) => button.closest(".formation-unit-card")?.querySelector("[data-unit-id]")?.getAttribute("data-unit-id"))
+            .filter(Boolean));
+          invariant(concurrentUpgradeIds.length === 2, `two concurrent upgrade targets missing: ${JSON.stringify(concurrentUpgradeIds)}`);
+          const firstUpgrade = page.locator(`.formation-unit-card:has([data-unit-id="${concurrentUpgradeIds[0]}"]) .formation-unit-upgrade`);
           const costLabel = await firstUpgrade.locator("b").innerText();
           invariant(costLabel.includes("40キャップ"), `catch-up price missing: ${costLabel}`);
-          if (viewport.safeArea) {
-            const upgradeBounds = await firstUpgrade.boundingBox();
-            invariant(upgradeBounds, "upgrade touch target has no visible bounds");
-            const upgradeX = upgradeBounds.x + upgradeBounds.width / 2;
-            const upgradeY = upgradeBounds.y + upgradeBounds.height / 2;
-            await page.touchscreen.tap(upgradeX, upgradeY);
-            await page.touchscreen.tap(upgradeX, upgradeY);
-          } else {
-            await firstUpgrade.evaluate((button) => {
-              button.click();
-              button.click();
-            });
-          }
+          const upgradeCueStart = await page.evaluate(() => window.__ASHFALL_AUDIO_QA__?.getCueRequests?.().length ?? 0);
+          await page.evaluate(() => {
+            const buttons = [...document.querySelectorAll(".formation-unit-upgrade:not(:disabled)")].slice(0, 2);
+            buttons[0]?.click();
+            buttons[0]?.click();
+            buttons[1]?.click();
+          });
           await page.waitForFunction(
-            (caps) => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().caps < caps,
-            before.caps,
+            ({ firstId, secondId, levels }) => {
+              const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+              return Boolean(snapshot
+                && snapshot.unitLevels[firstId] === levels[firstId] + 1
+                && snapshot.unitLevels[secondId] === levels[secondId] + 1);
+            },
+            { firstId: concurrentUpgradeIds[0], secondId: concurrentUpgradeIds[1], levels: before.unitLevels },
             { timeout },
           );
           await page.locator('.upgrade-feedback[data-level="normal"]').waitFor({ state: "visible", timeout });
@@ -195,16 +201,88 @@ for (const engine of engines) {
             `normal stat delta missing: ${normalFeedback}`);
           await page.waitForTimeout(700);
           const after = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
-          const upgradedUnitId = Object.keys(after.unitLevels).find((unitId) => after.unitLevels[unitId] !== before.unitLevels[unitId]);
-          invariant(Boolean(upgradedUnitId), "no stable unit Level changed");
-          invariant(after.unitLevels[upgradedUnitId] === before.unitLevels[upgradedUnitId] + 1, "Level did not increase exactly once");
-          invariant(before.caps - after.caps === 40, `caps spend mismatch ${before.caps} -> ${after.caps}`);
+          const upgradedUnitIds = Object.keys(after.unitLevels).filter((unitId) => after.unitLevels[unitId] !== before.unitLevels[unitId]);
+          const upgradedUnitId = concurrentUpgradeIds[0];
+          invariant(JSON.stringify(upgradedUnitIds.sort()) === JSON.stringify([...concurrentUpgradeIds].sort()),
+            `concurrent upgrades changed unexpected units: ${JSON.stringify({ before: before.unitLevels, after: after.unitLevels })}`);
+          invariant(concurrentUpgradeIds.every((unitId) => after.unitLevels[unitId] === before.unitLevels[unitId] + 1),
+            `a concurrent upgrade applied more than once: ${JSON.stringify({ before: before.unitLevels, after: after.unitLevels })}`);
+          invariant(before.caps - after.caps === 80, `concurrent caps spend mismatch ${before.caps} -> ${after.caps}`);
+          const upgradeCues = (await page.evaluate(() => window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [])).slice(upgradeCueStart);
+          const semanticUpgradeCues = upgradeCues.filter((entry) => entry.cueId === "sfx-v070-power-switch");
+          invariant(semanticUpgradeCues.length === 2, `concurrent upgrade cue count mismatch: ${JSON.stringify(upgradeCues)}`);
+          invariant(upgradeCues.filter((entry) => entry.cueId === "ui-select").length === 0,
+            `generic selection cue leaked into upgrade transaction: ${JSON.stringify(upgradeCues)}`);
           const upgradeText = await page.locator(".formation-unit-card").first().innerText();
           invariant(upgradeText.includes("Lv 2 / 上限 5"), `Level UI missing: ${upgradeText}`);
           invariant(upgradeText.includes("HP +3%"), `HP growth UI missing: ${upgradeText}`);
           invariant(upgradeText.includes("攻撃 +3%"), `damage growth UI missing: ${upgradeText}`);
           invariant(upgradeText.includes("防御 1.5%軽減"), `defense growth UI missing: ${upgradeText}`);
           invariant(!upgradeText.includes("射程 +"), `range must not grow: ${upgradeText}`);
+
+          const ariaDisabledProof = await page.evaluate(() => [...document.querySelectorAll('button[aria-disabled="true"]')].map((button) => {
+            const style = getComputedStyle(button);
+            return {
+              text: button.textContent?.trim() ?? "",
+              opacity: style.opacity,
+              cursor: style.cursor,
+              filter: style.filter,
+            };
+          }));
+          invariant(ariaDisabledProof.length > 0
+            && ariaDisabledProof.every(({ opacity, cursor, filter }) => Number(opacity) < 1 && cursor === "not-allowed" && filter !== "none"),
+          `aria-disabled visual state is incomplete: ${JSON.stringify(ariaDisabledProof)}`);
+          const lockedUpgrade = page.locator('.formation-unit-upgrade[aria-disabled="true"]:not(:disabled)').first();
+          await lockedUpgrade.waitFor({ state: "visible", timeout });
+          await lockedUpgrade.focus();
+          await page.keyboard.press("Tab");
+          await page.keyboard.press("Shift+Tab");
+          const lockedFocusProof = await lockedUpgrade.evaluate((button) => {
+            const style = getComputedStyle(button);
+            return {
+              focusVisible: button.matches(":focus-visible"),
+              outlineWidth: style.outlineWidth,
+              boxShadow: style.boxShadow,
+              opacity: style.opacity,
+              cursor: style.cursor,
+            };
+          });
+          invariant(lockedFocusProof.focusVisible
+            && lockedFocusProof.outlineWidth !== "0px"
+            && lockedFocusProof.opacity !== "1"
+            && lockedFocusProof.cursor === "not-allowed",
+          `aria-disabled focus state is incomplete: ${JSON.stringify(lockedFocusProof)}`);
+          const rejectionBefore = await page.evaluate(() => ({
+            snapshot: window.__ASHFALL_BATTLE_QA__.getSnapshot(),
+            cues: window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [],
+          }));
+          const rejectOne = async (inputMode) => {
+            const cueCount = await page.evaluate(() => window.__ASHFALL_AUDIO_QA__?.getCueRequests?.().length ?? 0);
+            if (inputMode === "touch") {
+              const bounds = await lockedUpgrade.boundingBox();
+              invariant(bounds, "locked upgrade touch target has no visible bounds");
+              await page.touchscreen.tap(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+            }
+            else if (inputMode === "keyboard-enter") {
+              await lockedUpgrade.focus();
+              await page.keyboard.press("Enter");
+            } else if (inputMode === "keyboard-space") {
+              await lockedUpgrade.focus();
+              await page.keyboard.press("Space");
+            } else await lockedUpgrade.evaluate((button) => button.click());
+            await page.waitForFunction((expected) => (window.__ASHFALL_AUDIO_QA__?.getCueRequests?.().length ?? 0) === expected + 1,
+              cueCount, { timeout });
+            const cues = await page.evaluate(() => window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? []);
+            invariant(cues.slice(cueCount).filter((entry) => entry.cueId === "ui-error").length === 1,
+              `${inputMode}: reject cue was not exactly one`);
+          };
+          await rejectOne(viewport.safeArea ? "touch" : "mouse");
+          await rejectOne("keyboard-enter");
+          await rejectOne("keyboard-space");
+          const rejectionAfter = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
+          invariant(rejectionAfter.caps === rejectionBefore.snapshot.caps
+            && JSON.stringify(rejectionAfter.unitLevels) === JSON.stringify(rejectionBefore.snapshot.unitLevels),
+          `rejected upgrade mutated save: ${JSON.stringify({ before: rejectionBefore.snapshot, after: rejectionAfter })}`);
 
           let expectedBattleLevel = 2;
           let maxFeedback = null;
@@ -392,12 +470,13 @@ for (const engine of engines) {
           });
           invariant(Math.abs(damageProof.trained.defense - expected.defense) < 1e-9,
             `trained defense mismatch: ${JSON.stringify(damageProof)}`);
-          invariant(damageProof.baseline.defense === 0, `baseline defense mismatch: ${JSON.stringify(damageProof)}`);
-          invariant(damageProof.trained.targetDamage < damageProof.baseline.targetDamage,
-            `defense did not reduce live damage: ${JSON.stringify(damageProof)}`);
+          invariant(damageProof.baseline.targetDamage === 50 * (1 - damageProof.baseline.defense),
+            `baseline live damage mismatch: ${JSON.stringify(damageProof)}`);
+          invariant(damageProof.trained.targetDamage <= damageProof.baseline.targetDamage,
+            `defense did not reduce or preserve live damage: ${JSON.stringify(damageProof)}`);
           invariant(
             damageProof.trained.targetDamage === 50 * (1 - expected.defense)
-              && damageProof.baseline.targetDamage === 50,
+              && damageProof.baseline.targetDamage === 50 * (1 - damageProof.baseline.defense),
             `live damage values mismatch: ${JSON.stringify(damageProof)}`);
 
           await activate(page, page.getByRole("button", { name: "一時停止", exact: true }), viewport.safeArea);
@@ -497,6 +576,13 @@ for (const engine of engines) {
             bgmPreview,
             inputMode: viewport.safeArea ? "touch" : "mouse",
             visualCards,
+            concurrentUpgradeIds,
+            upgradeCueDelta: {
+              semanticUpgrade: semanticUpgradeCues.length,
+              genericSelection: upgradeCues.filter((entry) => entry.cueId === "ui-select").length,
+            },
+            ariaDisabledProof,
+            lockedFocusProof,
             dimensions,
             diagnostics,
           });

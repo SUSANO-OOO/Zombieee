@@ -1,0 +1,23 @@
+{
+  "tool": "OpenAI built-in image generation",
+  "generatedAt": "2026-08-04",
+  "externalSources": [],
+  "attemptsRejectedBySafety": 5,
+  "accepted": [
+    {
+      "candidateId": "v099-infected-face-a2",
+      "reference": "assets/source/v090/enemies/resonator-infected-pose-sheet-r1.png",
+      "prompt": "Create a new square 1024x1024 A2 app-icon master using the reference only for the project's realistic material rendering and dark infection-horror atmosphere. Do not copy the pose sheet layout. Show a single fictional infected adult human face in extreme close-up, occupying about 78% of the canvas, diagonal and strongly asymmetric. One eye has a small amber glow; the other is cloudy. One cheek and jawline are deformed by a non-gory biological infection with cracked damp gray skin and an irregular silhouette. Mouth closed or tense, almost no teeth visible, no smile. Place the face against a very dark abandoned Japanese railway platform with cold fluorescent strips, a rust-red warning band, platform edge line, and a broken station-sign silhouette without readable text. Keep eye and mouth inside the central maskable safe area. Serious cinematic survival-horror digital painting; no cartoon, mascot, emoji, sticker, thick outline, circle badge, hat, crown-like hair, tongue, text, watermark, exposed anatomy, or gore."
+    },
+    {
+      "candidateId": "v099-infected-face-b2",
+      "reference": "generated A2 source",
+      "prompt": "Create B2 as a distinct new square icon using A2 only as a material-quality benchmark. Change the person, facial structure, camera angle, lighting, and background. Realistic graphic horror: a transformed adult human head in strong three-quarter profile, about 74% of the frame, with bold shadow masses, one muted amber eye, non-gory cracked damp gray skin and rust discoloration, a closed mouth, hard station fluorescent reflection, dark-green wall panel, broken platform canopy, rust warning strip, and no readable text or badge. Keep eye and mouth in the safe center. No gore, text, hat, tongue, grin, white-tooth row, cartoon, mascot, emoji, sticker, or thick outline."
+    },
+    {
+      "candidateId": "v099-infected-face-c2",
+      "reference": "generated B2 source",
+      "prompt": "Create C2 as a distinct square tactical-industrial infection icon using B2 only as a material-quality benchmark. Change the person, face shape, pose, equipment, lighting, and background. Show a former railway maintenance worker or evacuee transformed by a non-gory disease; the face fills about 76%, tilts in the opposite direction, has one cloudy eye and one dim sickly-green reflection, damp gray infected skin, rust lesions, and a closed mouth. Add only a torn respirator strap, cracked face-shield fragment, and work jacket reflective tape. Background: Nishishin station service corridor with caged amber lamp, wet concrete, conduit, broken barrier, rust stripe, no text. No helmet, military mascot, gore, exposed anatomy, hat, tongue, grin, white-tooth row, cartoon, emoji, sticker, or badge."
+    }
+  ]
+}

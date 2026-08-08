@@ -33,6 +33,7 @@ const requestedPort = Number(process.env.LOCAL_QA_PORT) || 0;
 const port = await reserveQaPort(requestedPort);
 const origin = `http://127.0.0.1:${port}/`;
 process.env.COMBAT_PRESENTATION_QA_BASE_URL = origin;
+process.env.V099_PRESENTATION_QA_BASE_URL = origin;
 process.env.MOBILE_LIFECYCLE_QA_BASE_URL = origin;
 process.env.SAVE_MIGRATION_QA_BASE_URL = origin;
 process.env.BATTLE_SPACE_QA_BASE_URL = origin;
@@ -51,6 +52,7 @@ process.env.V096_PWA_QA_BASE_URL = origin;
 process.env.STATION_QA_BASE_URL = origin;
 process.env.P5_QA_BASE_URL = origin;
 process.env.PROGRESSION_QA_BASE_URL = origin;
+process.env.SAVE_BOUNDARY_QA_BASE_URL = origin;
 process.env.SURVIVAL_QA_BASE_URL = origin;
 process.env.EQUIPMENT_RUNTIME_QA_BASE_URL = origin;
 process.env.BOSS_QA_BASE_URL = origin;
@@ -62,6 +64,7 @@ process.env.OUTBREAK_QA_BASE_URL = origin;
 process.env.RECORDS_QA_BASE_URL = origin;
 process.env.MANUAL_ABILITIES_QA_BASE_URL = origin;
 process.env.PWA_TRANSPORT_QA_BASE_URL = origin;
+process.env.V099_ICON_QA_BASE_URL = origin;
 const server = spawn(process.execPath, [
   "scripts/run-vinext.mjs",
   "start",

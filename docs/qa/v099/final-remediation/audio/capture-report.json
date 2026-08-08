@@ -1,0 +1,190 @@
+{
+  "version": "0.9.9.0",
+  "generatedAt": "2026-08-04T08:14:11.639Z",
+  "method": "offline reconstruction of the production AudioMixer gain, category bus, scene crossfade, dialogue duck, and TAKUYA transient-duck graph",
+  "limitations": "This is deterministic production-graph evidence, not a physical speaker, physical iPhone, or hardware-loopback capture. Actual Chromium/WebKit AudioContext state and scene/instance diagnostics are recorded by the Stage 3 browser QA report.",
+  "ffmpeg": "ffmpeg version N-92722-gf22fcd4483 Copyright (c) 2000-2018 the FFmpeg developers",
+  "settings": {
+    "masterGain": 0.9,
+    "bgmBusGain": 0.75,
+    "sfxBusGain": 0.8,
+    "categoryVolumes": {
+      "bgm": 1,
+      "ambience": 1,
+      "ui": 0.8,
+      "weapons": 0.82,
+      "melee": 0.84,
+      "humanVoices": 0.9,
+      "monsters": 0.86,
+      "support": 0.9
+    }
+  },
+  "productionGains": {
+    "music-v099-normal": 0.7290000000000001,
+    "music-v099-pressure-surface": 0.7560000000000001,
+    "music-v099-pressure-station": 0.7560000000000001,
+    "music-v099-boss": 0.84375,
+    "sfx-v070-takuya-entrance": 0.46712447999999995
+  },
+  "captures": [
+    {
+      "id": "normal-30s",
+      "filename": "normal-30s.mp3",
+      "sceneIds": [
+        "stage1"
+      ],
+      "assetIds": [
+        "music-v099-normal"
+      ],
+      "instanceCount": 1,
+      "path": "docs/qa/v099/final-remediation/audio/normal-30s.mp3",
+      "bytes": 721625,
+      "sha256": "b310803b8ac04aea797746a8d2703162813723f9a6395dd7a3e0165fbe42c701",
+      "durationSeconds": 30,
+      "peak": 0.297144,
+      "integratedLoudnessLufs": -21.8,
+      "spectralCentroidHz": 1518.6,
+      "onsetDensityPerSecond": 9.967,
+      "sourceLoopBoundaryDelta": 0.000087
+    },
+    {
+      "id": "pressure-30s",
+      "filename": "pressure-surface-30s.mp3",
+      "sceneIds": [
+        "pressure-surface"
+      ],
+      "assetIds": [
+        "music-v099-pressure-surface"
+      ],
+      "instanceCount": 1,
+      "path": "docs/qa/v099/final-remediation/audio/pressure-surface-30s.mp3",
+      "bytes": 721625,
+      "sha256": "f46fe791e9c7080b0a5f5a1d4039a973e74ab09e22c13a45e559195e5a9e42db",
+      "durationSeconds": 30,
+      "peak": 0.291489,
+      "integratedLoudnessLufs": -21.5,
+      "spectralCentroidHz": 1542.4,
+      "onsetDensityPerSecond": 9.367,
+      "sourceLoopBoundaryDelta": 0.000562
+    },
+    {
+      "id": "boss-30s",
+      "filename": "boss-30s.mp3",
+      "sceneIds": [
+        "boss"
+      ],
+      "assetIds": [
+        "music-v099-boss"
+      ],
+      "instanceCount": 1,
+      "path": "docs/qa/v099/final-remediation/audio/boss-30s.mp3",
+      "bytes": 721625,
+      "sha256": "7f1321a1b765a11ef6552f7d7701f6583c89ac30acead4163981915ad506ce89",
+      "durationSeconds": 30,
+      "peak": 0.242901,
+      "integratedLoudnessLufs": -21.4,
+      "spectralCentroidHz": 1488.6,
+      "onsetDensityPerSecond": 8.367,
+      "sourceLoopBoundaryDelta": 0.001706
+    },
+    {
+      "id": "normal-to-pressure",
+      "filename": "normal-to-pressure-16s.mp3",
+      "sceneIds": [
+        "stage1",
+        "pressure-surface"
+      ],
+      "assetIds": [
+        "music-v099-normal",
+        "music-v099-pressure-surface"
+      ],
+      "crossfadeMs": 600,
+      "maximumConcurrentBgmInstances": 2,
+      "path": "docs/qa/v099/final-remediation/audio/normal-to-pressure-16s.mp3",
+      "bytes": 385586,
+      "sha256": "c1662277d1de9bf966cc642879e967b2dd8b45d8943b0d52f5e7798f24028acc",
+      "durationSeconds": 16,
+      "peak": 0.287568,
+      "integratedLoudnessLufs": -21.7,
+      "spectralCentroidHz": 1525.1,
+      "onsetDensityPerSecond": 9.688,
+      "sourceLoopBoundaryDelta": null
+    },
+    {
+      "id": "pressure-to-boss",
+      "filename": "pressure-to-boss-16s.mp3",
+      "sceneIds": [
+        "pressure-surface",
+        "boss"
+      ],
+      "assetIds": [
+        "music-v099-pressure-surface",
+        "music-v099-boss"
+      ],
+      "crossfadeMs": 250,
+      "maximumConcurrentBgmInstances": 2,
+      "path": "docs/qa/v099/final-remediation/audio/pressure-to-boss-16s.mp3",
+      "bytes": 385586,
+      "sha256": "c86ab096b901e8dbd8a00ad17c48f08e75b9ed4f62ed99017d80ea11187114ee",
+      "durationSeconds": 16,
+      "peak": 0.278462,
+      "integratedLoudnessLufs": -21.5,
+      "spectralCentroidHz": 1456.8,
+      "onsetDensityPerSecond": 8.875,
+      "sourceLoopBoundaryDelta": null
+    },
+    {
+      "id": "boss-to-pressure",
+      "filename": "boss-to-pressure-16s.mp3",
+      "sceneIds": [
+        "boss",
+        "pressure-surface"
+      ],
+      "assetIds": [
+        "music-v099-boss",
+        "music-v099-pressure-surface"
+      ],
+      "crossfadeMs": 600,
+      "maximumConcurrentBgmInstances": 2,
+      "path": "docs/qa/v099/final-remediation/audio/boss-to-pressure-16s.mp3",
+      "bytes": 385586,
+      "sha256": "e6aa69ebcc171c2a5e16b4f775c5d7e30d0ccf4ace1f4ef5e810647383309b42",
+      "durationSeconds": 16,
+      "peak": 0.287568,
+      "integratedLoudnessLufs": -21.5,
+      "spectralCentroidHz": 1544.9,
+      "onsetDensityPerSecond": 8.75,
+      "sourceLoopBoundaryDelta": null
+    },
+    {
+      "id": "stage3-takuya-production-path",
+      "filename": "stage3-takuya-production-path-30s.mp3",
+      "sceneIds": [
+        "stage3",
+        "boss"
+      ],
+      "assetIds": [
+        "music-v099-normal",
+        "music-v099-boss",
+        "sfx-v070-takuya-entrance"
+      ],
+      "crossfadeMs": 250,
+      "maximumConcurrentBgmInstances": 2,
+      "entranceDuck": {
+        "level": 0.32,
+        "attackMs": 30,
+        "holdMs": 2920,
+        "releaseMs": 450
+      },
+      "path": "docs/qa/v099/final-remediation/audio/stage3-takuya-production-path-30s.mp3",
+      "bytes": 721625,
+      "sha256": "e491ee3e5bf38908e6eed5b36d683532acba5cace9786ae5c3b31452e204e0f1",
+      "durationSeconds": 30,
+      "peak": 0.423048,
+      "integratedLoudnessLufs": -21.7,
+      "spectralCentroidHz": 1413.4,
+      "onsetDensityPerSecond": 8.367,
+      "sourceLoopBoundaryDelta": null
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { V099_APP_ICON_IDENTITY } from "./appIconIdentity.js";
 import { RELEASE_TITLE, RELEASE_VERSION } from "./releaseIdentity.js";
 import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import "./globals.css";
@@ -24,8 +25,8 @@ export const metadata: Metadata = {
   description:
     "全16名の戦闘アニメーション、VFX、スマートフォン描画、雇用導線を刷新。移動拠点CRAWLERと生存者部隊を率いるリアルタイム戦略・防衛ゲーム。",
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
-    shortcut: "/favicon.svg",
+    icon: [{ url: V099_APP_ICON_IDENTITY.paths.favicon48, type: "image/png", sizes: "48x48" }],
+    shortcut: V099_APP_ICON_IDENTITY.paths.favicon48,
   },
   openGraph: {
     title: "西新世紀末物語",
@@ -56,7 +57,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.webmanifest" />
         {/* 180x180 is the size iOS actually asks for; anything else is rescaled
             on the device and loses the rim light that carries the mark. */}
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href={V099_APP_ICON_IDENTITY.paths.appleTouch180} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="西新世紀末" />

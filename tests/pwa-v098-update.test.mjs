@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { evaluateUpdate, verifyUpdatePayload } from "../app/pwaUpdatePlanner.js";
 
 const BASELINE_SHA = "79e139f5b78be4fe4ac389941fbd280b93d29a58";
+const V0982_RELEASE_SHA = "662ec6103a769846343e60dacf19dd36adeafdde";
 const baseline = JSON.parse(execFileSync("git", ["show", `${BASELINE_SHA}:public/asset-manifest.json`], { encoding: "utf8" }));
-const candidate = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
+const candidate = JSON.parse(execFileSync("git", ["show", `${V0982_RELEASE_SHA}:public/asset-manifest.json`], { encoding: "utf8" }));
 
 test("the real 0.9.8.1 to 0.9.8.2 update preserves reusable hashes and verifies the committed candidate", () => {
   assert.equal(baseline.version, "0.9.8.1");

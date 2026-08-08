@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 if (!process.env.MANUAL_ABILITIES_QA_BASE_URL) {
   throw new Error("MANUAL_ABILITIES_QA_BASE_URL is required; use the isolated QA runner");
@@ -84,6 +85,35 @@ const iconFiles = {
   "mayo-chan": "mayo-chan-feral-ready-r1.svg",
 };
 const sustainedKinds = new Set(["crazy-king", "kumaverson", "guardian"]);
+const expectedTimelineCueGroups = {
+  brawler: [["ability-brawler-kiai-combo-impact"]],
+  scout: [["ability-scout-intercept-impact"]],
+  ranger: [["ability-ranger-precision-shot"], ["ability-ranger-precision-impact"]],
+  medic: [["ability-medic-treatment"]],
+  brute: [["ability-brute-groundbreak-impact"]],
+  "crazy-king": [["ability-crazy-king-overdrive-active"]],
+  kumaverson: [["ability-kumaverson-stance"]],
+  babayaga: [["ability-babayaga-appraise-shot"], ["ability-babayaga-appraise-mark"]],
+  gunner: [["ability-gunner-suppression-muzzle"], ["ability-gunner-suppression-impact"]],
+  guardian: [["ability-guardian-shieldwall-hold"]],
+  engineer: [["ability-engineer-trap-spring"]],
+  zakimiya: [
+    ["ability-zakimiya-molotov-throw"],
+    ["ability-zakimiya-molotov-impact"],
+    ["ability-zakimiya-molotov-burn"],
+  ],
+  tky: [["ability-tky-light-blade-release"], ["ability-tky-light-blade-impact"]],
+  "mrs-chiha": [
+    ["ability-mrs-chiha-salvo-cylinder"],
+    ["ability-mrs-chiha-salvo-shot"],
+    ["weapon-mrs-chiha-grenade-flight"],
+    ["ability-mrs-chiha-salvo-impact"],
+    ["ability-mrs-chiha-salvo-final"],
+    ["weapon-mrs-chiha-launcher-stow"],
+  ],
+  "miyamoto-musashi": [["ability-musashi-counter", "ability-musashi-fallback-cross"]],
+  "mayo-chan": [["ability-mayo-feral-rush"]],
+};
 const damageKinds = new Set([
   "brawler",
   "scout",
@@ -130,6 +160,7 @@ async function enterBattle(page) {
   const url = new URL(baseUrl);
   url.search = new URLSearchParams({ qa: "roles", safe: "iphone-landscape" }).toString();
   await page.goto(String(url), { waitUntil: "domcontentloaded" });
+  await dismissInstallOffer(page);
   const migrationButton = page.getByRole("button", { name: "内容を確認" });
   if (await migrationButton.isVisible().catch(() => false)) await migrationButton.click();
   const start = page.locator(".formation-footer .campaign-primary");
@@ -1005,6 +1036,13 @@ async function abilityActivationProof(page, engine) {
   for (const kind of kinds) {
     const prepared = await prepareProof(page, kind);
     const ownerId = prepared.ownerIds[0];
+    await page.waitForFunction(() => Boolean(window.__ASHFALL_AUDIO_QA__));
+    await page.waitForTimeout(120);
+    const initialReadyAudio = await page.evaluate((id) => window.__ASHFALL_AUDIO_QA__.getCueRequests()
+      .filter(({ ownerId, semantic }) => String(ownerId) === String(id) && semantic === "ability-ready"), ownerId);
+    invariant(initialReadyAudio.length === 0,
+      `${engine}/${kind}: initial ready hydration emitted ${initialReadyAudio.length} cue(s)`);
+    await page.evaluate(() => window.__ASHFALL_AUDIO_QA__.resetCueRequests());
     const before = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
     const enemyHpBefore = before.fighters
       .filter(({ side }) => side === "zombie")
@@ -1033,6 +1071,24 @@ async function abilityActivationProof(page, engine) {
     invariant(immediate.crazyKingIndicatorCount === (kind === "crazy-king" ? 1 : 0),
       `${engine}/${kind}: transient indicator count ${immediate.crazyKingIndicatorCount}`);
 
+    await page.waitForFunction((id) => window.__ASHFALL_AUDIO_QA__.getCueRequests()
+      .some(({ ownerId, semantic }) => String(ownerId) === String(id) && semantic === "ability-activation-root"), ownerId);
+    const activationAudio = await page.evaluate((id) => {
+      const cues = window.__ASHFALL_AUDIO_QA__.getCueRequests();
+      return {
+        roots: cues.filter(({ ownerId, semantic }) => (
+          String(ownerId) === String(id) && semantic === "ability-activation-root"
+        )),
+        legacyConfirmForOwner: cues.filter(({ ownerId, cueId }) => (
+          String(ownerId) === String(id) && cueId === "ui-confirm"
+        )),
+      };
+    }, ownerId);
+    invariant(activationAudio.roots.length === 1,
+      `${engine}/${kind}: PR2 activation root count ${activationAudio.roots.length}`);
+    invariant(activationAudio.legacyConfirmForOwner.length === 0,
+      `${engine}/${kind}: PR1 confirmation cue leaked into valid ability activation`);
+
     const screenshotDelay = kind === "mrs-chiha"
       ? 1350
       : sustainedKinds.has(kind) || kind === "mayo-chan"
@@ -1048,6 +1104,16 @@ async function abilityActivationProof(page, engine) {
       await page.screenshot({ path: path.join(evidenceDir, `chromium-844x390-${kind}-vfx.png`) });
     }
     await waitForAbilitySettlement(page, kind, ownerId);
+    await page.waitForFunction((id) => window.__ASHFALL_AUDIO_QA__.getCueRequests()
+      .some(({ ownerId, semantic }) => String(ownerId) === String(id) && semantic === "ability-timeline"), ownerId);
+    const timelineAudio = await page.evaluate((id) => window.__ASHFALL_AUDIO_QA__.getCueRequests()
+      .filter(({ ownerId, semantic }) => String(ownerId) === String(id) && semantic === "ability-timeline"), ownerId);
+    invariant(timelineAudio.length >= 1,
+      `${engine}/${kind}: PR2 timeline cue missing`);
+    for (const acceptedCueIds of expectedTimelineCueGroups[kind]) {
+      invariant(timelineAudio.some(({ cueId }) => acceptedCueIds.includes(cueId)),
+        `${engine}/${kind}: expected timeline cue missing (${acceptedCueIds.join(" or ")})`);
+    }
     let after = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.getSnapshot());
     invariant(after.crazyKingAbilityIndicatorCount === (kind === "crazy-king" ? 1 : 0),
       `${engine}/${kind}: active indicator lifecycle ended early`);
@@ -1146,6 +1212,8 @@ async function abilityActivationProof(page, engine) {
       receiptTypes: after.manualAbilityReceipts
         .filter(({ ownerId: receiptOwnerId }) => receiptOwnerId === ownerId)
         .map(({ eventType }) => eventType),
+      activationAudio,
+      timelineAudio,
     });
   }
   return proofs;
@@ -1291,6 +1359,7 @@ async function checkpointReloadProof(page, engine) {
   const reloadUrl = new URL(baseUrl);
   reloadUrl.search = new URLSearchParams({ safe: "iphone-landscape" }).toString();
   await page.goto(String(reloadUrl), { waitUntil: "domcontentloaded" });
+  await dismissInstallOffer(page);
   const continueButton = page.locator(".title-start");
   await continueButton.waitFor({ state: "visible" });
   await page.waitForFunction(() => {

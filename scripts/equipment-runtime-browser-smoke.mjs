@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 if (!process.env.EQUIPMENT_RUNTIME_QA_BASE_URL) {
   throw new Error("EQUIPMENT_RUNTIME_QA_BASE_URL is required; use the isolated QA runner");
@@ -118,6 +119,7 @@ for (const engine of engines) {
           timeout,
         });
         invariant(response?.ok(), `navigation failed: HTTP ${response?.status()}`);
+        await dismissInstallOffer(page, { timeout });
         await page.waitForFunction(() => Boolean(
           window.__ASHFALL_BATTLE_QA__?.prepareEquipmentRuntimeProof,
         ), undefined, { timeout });

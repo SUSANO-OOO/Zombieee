@@ -821,7 +821,7 @@ test("all sixteen ready icons map to distinct authored silhouettes", async () =>
   assert.equal(new Set(iconSources).size, 16, "no unit reuses another unit's icon artwork");
 });
 
-test("existing eleven abilities connect unique combat mechanics, canvas VFX, and weapon audio", async () => {
+test("existing eleven abilities connect unique combat mechanics, canvas VFX, and explicit timeline audio", async () => {
   const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   for (const kind of [
     "brawler",
@@ -849,7 +849,8 @@ test("existing eleven abilities connect unique combat mechanics, canvas VFX, and
   assert.match(source, /event\.kind === "gunner"[\s\S]{0,1600}suppressionSeconds/);
   assert.match(source, /activeGuardian[\s\S]{0,900}allyDamageTakenMultiplier/);
   assert.match(source, /engineerTrapManual[\s\S]{0,1800}trappedTargets[\s\S]{0,1000}slowSeconds/);
-  assert.match(source, /playProductionCue\(weaponCueForUnit\(owner\.kind\)/);
+  assert.match(source, /playManualAbilityTimelineCue\(owner, "impact"/);
+  assert.match(source, /V099_MANUAL_ABILITY_AUDIO_CONTRACTS\[owner\.kind\]/);
 });
 
 test("Mayo-chan incapacitation branches to injury retreat before corpse, infection, zombie, or burning lifecycles", async () => {

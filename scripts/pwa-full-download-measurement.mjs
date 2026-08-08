@@ -316,17 +316,17 @@ const baselineManifest = JSON.parse(execFileSync("git", ["show", `${BASELINE_SHA
 
 // Warm both paths first but do not mix these probes into the retained median.
 const warmup = [];
-warmup.push(await measure("warmup 0.9.8.1 complete first-install pack", baselineManifest.assets));
-warmup.push(await measure("warmup 0.9.8.2 complete first-install pack", currentManifest.assets));
+warmup.push(await measure(`warmup ${baselineManifest.version} complete first-install pack`, baselineManifest.assets));
+warmup.push(await measure(`warmup ${currentManifest.version} complete first-install pack`, currentManifest.assets));
 
 const pairedRuns = [];
 for (const [index, order] of MEASURED_PAIR_ORDERS.entries()) {
   const pair = { run: index + 1, order, baseline: null, candidate: null };
   for (const release of order) {
     if (release === "A") {
-      pair.baseline = await measure(`0.9.8.1 complete first-install pack run ${index + 1}`, baselineManifest.assets);
+      pair.baseline = await measure(`${baselineManifest.version} complete first-install pack run ${index + 1}`, baselineManifest.assets);
     } else {
-      pair.candidate = await measure(`0.9.8.2 complete first-install pack run ${index + 1}`, currentManifest.assets);
+      pair.candidate = await measure(`${currentManifest.version} complete first-install pack run ${index + 1}`, currentManifest.assets);
     }
   }
   pairedRuns.push(pair);

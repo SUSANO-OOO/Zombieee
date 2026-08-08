@@ -1,4 +1,4 @@
-// Generates public/asset-manifest.json for the Version 0.9.8.2 PWA.
+// Generates public/asset-manifest.json for the current release PWA.
 //
 // The distribution set is derived from the game's own sprite, visual,
 // stage-object, and audio manifests rather than from a directory walk, so
@@ -40,8 +40,10 @@ import {
   V080_UNIT_VISUAL_PROFILES,
   V090_UNIT_VISUAL_PROFILES,
 } from "../app/visualProfiles.js";
+import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
+import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
 
 const root = process.cwd();
 const publicDir = path.join(root, "public");
@@ -152,18 +154,10 @@ function categoryForKind(kind) {
 
 record(PRODUCTION_VISUALS.title, { pack: "app-shell", category: "app", criticality: "critical" });
 record(PRODUCTION_VISUALS.command, { pack: "app-shell", category: "app", criticality: "critical" });
-record("/favicon.svg", { pack: "app-shell", category: "app", criticality: "critical" });
 // Every icon the web app manifest or the document head points at. An icon that
 // is referenced but not registered here is absent from the offline pack, so an
 // installed app would go looking for it over a network it may not have.
-for (const icon of [
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/icon-1024.png",
-  "/icons/icon-maskable-192.png",
-  "/icons/icon-maskable-512.png",
-  "/icons/apple-touch-icon-180.png",
-]) {
+for (const icon of V099_APP_ICON_PATHS) {
   record(icon, { pack: "app-shell", category: "app", criticality: "critical" });
 }
 
@@ -200,6 +194,7 @@ for (const kind of spriteKinds) {
 
 // CRAWLER and the infected base are persistent battlefield fixtures.
 sweep(V075_VISUAL_PROFILES.crawler, { pack: "units", category: "unit", criticality: "critical" });
+sweep(V099_CRAWLER_RUNTIME_PROFILE, { pack: "units", category: "unit", criticality: "critical" });
 sweep(V075_VISUAL_PROFILES.enemyBase, { pack: "units", category: "enemy", criticality: "critical" });
 
 sweep(CHARACTER_PORTRAIT_ART, { pack: "units", category: "portrait", criticality: "optional" });

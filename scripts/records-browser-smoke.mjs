@@ -16,6 +16,7 @@ import {
 import { BOSS_DEFINITIONS } from "../app/bossFoundation.js";
 import { ENEMY_CONTENT } from "../app/content/enemyCatalog.js";
 import { OUTBREAK_MISSIONS } from "../app/outbreakMissions.js";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 if (!process.env.RECORDS_QA_BASE_URL) throw new Error("RECORDS_QA_BASE_URL is required");
 const baseUrl = new URL(process.env.RECORDS_QA_BASE_URL);
@@ -150,6 +151,7 @@ async function openRecords(page) {
     value: serializedSeed,
   });
   await page.goto(String(baseUrl), { waitUntil: "domcontentloaded", timeout });
+  await dismissInstallOffer(page, { timeout: Math.min(timeout, 5_000) });
   await page.locator("button.title-start").waitFor({ state: "visible", timeout });
   await page.locator("button.title-start").click();
   await page.locator(".map-screen").waitFor({ state: "visible", timeout });

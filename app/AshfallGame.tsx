@@ -28,10 +28,28 @@ import {
 } from "./lanePlanner.js";
 import { createAudioMixer, createAudioRequestGate, runGuardedAudioRequest } from "./audioMixer.js";
 import {
+  battleAudioRuntimeSnapshot,
+  createBattleAudioRuntime,
+  resetBattleAudioRuntime,
+  scheduleDelayedBattleAudioCue,
+  stopBattleAudioRuntime,
+  takeDueBattleAudioCues,
+  tryConsumeSemanticReceipt,
+} from "./battleAudioRuntime.js";
+import {
+  V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
+  V099_SUPPORT_POD_AUDIO_CONTRACT,
+} from "./battleAudioContracts.js";
+import {
+  advancePressureLatch,
+  createPressureLatchRuntime,
+  resetPressureLatchRuntime,
+} from "./battleMusicRuntime.js";
+import {
   CRAWLER_DOOR_PHASES,
   advanceCrawlerDoorRuntime,
+  crawlerDeploymentRenderPlan,
   createCrawlerDoorRuntime,
-  friendlyCrawlerRevealRect,
 } from "./crawlerDeployment.js";
 import {
   crawlerDefenseResponderCapacity,
@@ -82,7 +100,10 @@ import {
   type SupplyScreenView,
   type UnitScreenView,
   type UpgradeFeedbackView,
+  type CampaignUiAction,
+  type OperationFeedbackView,
 } from "./CampaignScreens";
+import { UI_OPERATION_CUE_IDS, UI_OPERATION_CUE_POLICIES, operationRejectMessage } from "./uiOperationAudio.js";
 import {
   CAMPAIGN_SAVE_SCHEMA_VERSION,
   CAMPAIGN_REGIONS,
@@ -267,7 +288,6 @@ import {
 import {
   ENEMY_PROJECTILE_KINDS,
   crawlerCombatVfxSnapshot,
-  crawlerWeaponPose,
   enemyAttackCooldownAfterWindup,
   enemyCombatVfxSnapshot,
   enemyProjectilePresentationFor,
@@ -298,6 +318,12 @@ import {
 import { stageResultFacts } from "./stageResultFacts.js";
 import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import {
+  V099_CRAWLER_RUNTIME_PROFILE,
+  crawlerAirstrikeSpritePhase,
+  crawlerBarrageSpritePhase,
+  resolveCrawlerEquipmentFrame,
+} from "./crawlerEquipmentSprites.js";
+import {
   GRAPHICS_QUALITY_ORDER,
   advanceRuntimeFrameSchedule,
   createRuntimeFrameSchedule,
@@ -320,16 +346,26 @@ import {
   STATION_AUDIO_CUE_IDS,
   STORY_AUDIO_MIX,
   TAKUYA_ENTRANCE_AUDIO,
-  UPGRADE_AUDIO_CUE_IDS,
+  battleSceneTransitionCrossfadeMs,
   enemyVoiceCue,
   humanVoiceCueForUnit,
   sceneIdForScreen,
-  sceneIdForStoryEvent,
   stopBattleAudioLoops,
   storyWarningCueForEvent,
   unitAudioCueFor,
   weaponCueForUnit,
 } from "./productionAudio.js";
+import {
+  V099_BOSS_DEFEAT_TIMELINE,
+  advanceBattlePresentationRuntime,
+  battleResultPresentationPending,
+  battlePresentationSnapshot,
+  crawlerGroundingSnapshot,
+  createBattlePresentationRuntime,
+  drumArrivalPose,
+  queueSemanticBattlePresentation,
+  resetBattlePresentationRuntime,
+} from "./battlePresentationV099.js";
 import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
 import { loadImageWithTimeout } from "./boundedImageLoader.js";
@@ -344,6 +380,7 @@ import {
   BATTLEFIELD_SUPPLY_DEFS,
   BATTLEFIELD_SUPPLY_COOLDOWN_SECONDS,
   CAMERA_SHAKE_EVENTS,
+  CRAWLER_BARRAGE_DEF,
   COMMAND_INITIAL,
   COMMAND_MAX,
   COMMAND_REGEN,
@@ -374,7 +411,6 @@ import {
   advanceCommand,
   airstrikePlacementCheck,
   applyBattlefieldSupplyDamage,
-  airstrikeObserverPose,
   barricadeState,
   battlefieldPlacementForbiddenZones,
   battlefieldSupplyPlacementCheck,
@@ -513,11 +549,21 @@ type Lane = 0 | 1 | 2;
 type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
 type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater" | "kurome" | "resonator" | "cagewalker" | "spindle" | "choir-knot" | "pall-manta" | "anchor-bloom";
 type SupplyKind = "pod" | "drum" | "medical";
-type MusicMode = "normal" | "danger" | "boss";
+type MusicMode = "normal" | "pressure" | "danger" | "boss";
 type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "mayo" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
+type PointerGestureState = { blocked: boolean; rejected: boolean; captureTarget: HTMLCanvasElement | null };
 type EventDestination = "map" | "battle" | "battle-resume" | "result";
 type PauseAction = "restart" | "loadout" | "withdraw";
+
+function releasePointerCaptureSafely(target: HTMLCanvasElement | null, pointerId: number) {
+  if (!target) return;
+  try {
+    if (target.hasPointerCapture(pointerId)) target.releasePointerCapture(pointerId);
+  } catch {
+    // Cleanup must continue even if the browser has already detached capture.
+  }
+}
 
 const BASE_X = WORLD_GEOMETRY.baseX;
 const BARRICADE_X = WORLD_GEOMETRY.barricade.attackX;
@@ -976,16 +1022,30 @@ type ManualAbilityReceipt = {
   mode?: string;
   attackSequence?: number;
 };
-type PendingAbilityAudioCue = {
+type PendingWeaponAudioCue = {
   cueId: string;
   x: number;
   dedupeKey: string;
-  remainingSeconds?: number;
+  remainingSeconds: number;
   priority?: number;
   cooldownMs?: number;
   volume?: number;
   maxInstances?: number;
-  fallbackCue?: SfxCueId | null;
+};
+type PendingBattleAudioCue = {
+  cueId: string;
+  x: number;
+  dedupeKey: string;
+  battleGeneration: number;
+  ownerId: number | string;
+  activationId: number;
+  semantic: string;
+  receiptId: string;
+  dueSimulationTime: number;
+  priority?: number;
+  cooldownMs?: number;
+  volume?: number;
+  maxInstances?: number;
 };
 type ManualAbilityIconView = {
   fighterId: number;
@@ -1053,7 +1113,11 @@ type AreaEffect = {
   phase: "active" | "expired";
   slowMultiplier?: number;
 };
-type AirstrikeRuntime = ReturnType<typeof createEmergencySupportRuntime> & { targetLane: Lane | null; targetY?: number | null };
+type AirstrikeRuntime = ReturnType<typeof createEmergencySupportRuntime> & {
+  targetLane: Lane | null;
+  targetY?: number | null;
+  receiptId?: string;
+};
 type CrawlerRuntime = ReturnType<typeof createCrawlerAbilityRuntime>;
 type BattleBarkRuntime = ReturnType<typeof createBattleBarkRuntime>;
 type BattleBark = BattleBarkRuntime["active"][number];
@@ -1186,7 +1250,10 @@ type Game = {
   survivalCheckpointReceipt: string | null;
   manualAbilityVfx: ManualAbilityVfx[];
   manualAbilityReceipts: ManualAbilityReceipt[];
-  pendingAbilityAudioCues: PendingAbilityAudioCue[];
+  battleAudioGeneration: number;
+  battlePresentation: ReturnType<typeof createBattlePresentationRuntime>;
+  pendingWeaponAudioCues: PendingWeaponAudioCue[];
+  pendingBattleAudioCues: PendingBattleAudioCue[];
   graphicsEffectDensity: number;
   renderObjectPools: {
     particles: ReturnType<typeof createRenderObjectPool>;
@@ -1224,6 +1291,7 @@ type Hud = {
   threat: number;
   objective: string;
   deployCooldowns: Record<UnitKind, number>;
+  banner: string | null;
   battleBarks: BattleBark[];
   manualAbilityIcons: ManualAbilityIconView[];
 };
@@ -1638,7 +1706,10 @@ const initialGame = (
   survivalCheckpointReceipt: null,
   manualAbilityVfx: [],
   manualAbilityReceipts: [],
-  pendingAbilityAudioCues: [],
+  battleAudioGeneration: 0,
+  battlePresentation: createBattlePresentationRuntime(),
+  pendingWeaponAudioCues: [],
+  pendingBattleAudioCues: [],
   graphicsEffectDensity: 1,
   renderObjectPools: {
     particles: createRenderObjectPool(RENDER_ARRAY_LIMITS.particles),
@@ -1725,6 +1796,25 @@ function addParticles(g: Game, x: number, y: number, color: string, count = 8) {
     g.renderObjectPools.particles,
     Math.max(96, Math.round(RENDER_ARRAY_LIMITS.particles * density)),
   );
+}
+
+function addSemanticBattlePresentation(g: Game, input: {
+  semantic: string;
+  receiptId: string;
+  ownerId?: string | number | null;
+  kind: "boss-entrance" | "boss-defeat" | "explosion";
+  scale?: "small" | "medium" | "large";
+  x: number;
+  y: number;
+  label?: string;
+  seed?: number;
+}) {
+  const queued = queueSemanticBattlePresentation(g.battlePresentation, {
+    ...input,
+    generation: g.battleAudioGeneration,
+  });
+  g.battlePresentation = queued.runtime;
+  return queued.accepted;
 }
 
 function addDamageText(
@@ -1920,7 +2010,7 @@ function attackCooldownAfterCombatWindup(fighter: Fighter, intendedCooldown: num
 function scheduleMrsChihaLauncherAudio(
   g: Game,
   fighter: Pick<Fighter, "id" | "kind" | "x" | "attackSequence">,
-  sequence: "normal" | "structure" | "ability",
+  sequence: "normal" | "structure",
 ) {
   if (fighter.kind !== "mrs-chiha") return;
   const activationKey = `${sequence}:${fighter.id}:${fighter.attackSequence}`;
@@ -1931,14 +2021,14 @@ function scheduleMrsChihaLauncherAudio(
   for (const entry of entries) {
     const cueId = unitAudioCueFor(fighter.kind, "weapon", entry.event);
     if (!cueId) continue;
-    g.pendingAbilityAudioCues.push({
+    g.pendingWeaponAudioCues.push({
       cueId,
       x: fighter.x,
       remainingSeconds: entry.delay,
       dedupeKey: `mrs-chiha:${activationKey}:${entry.event}`,
     });
   }
-  g.pendingAbilityAudioCues = g.pendingAbilityAudioCues.slice(-16);
+  g.pendingWeaponAudioCues = g.pendingWeaponAudioCues.slice(-16);
 }
 
 function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y">) {
@@ -1957,15 +2047,17 @@ function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y">) {
   return fighter.y - height * depthScale - (compactScale > 1 ? 2 : 0);
 }
 
-function battleBannerRect() {
-  const compact = compactBattleViewport();
-  const width = compact ? 234 : 316;
-  const height = compact ? 28 : 42;
+function battleBannerDomRect(canvas: HTMLCanvasElement | null) {
+  if (typeof document === "undefined" || !canvas) return null;
+  const banner = document.querySelector<HTMLElement>(".battle-banner");
+  if (!banner) return null;
+  const canvasRect = canvas.getBoundingClientRect();
+  const rect = banner.getBoundingClientRect();
   return {
-    x: (W - width) / 2,
-    y: compact ? 50 : 58,
-    width,
-    height,
+    left: rect.left - canvasRect.left,
+    top: rect.top - canvasRect.top,
+    right: rect.right - canvasRect.left,
+    bottom: rect.bottom - canvasRect.top,
   };
 }
 
@@ -2162,12 +2254,21 @@ function applyIncomingHumanDamage(
         at: g.time,
       });
       g.manualAbilityReceipts = g.manualAbilityReceipts.slice(-32);
-      g.pendingAbilityAudioCues.push({
+      g.pendingBattleAudioCues.push({
         cueId: "ability-musashi-counter",
         x: counterTarget?.x ?? target.x,
+        battleGeneration: g.battleAudioGeneration,
+        ownerId: target.id,
+        activationId: counter.event?.activationId ?? target.manualAbility.activationId,
+        semantic: "ability-timeline",
+        receiptId: `${target.id}:${counter.event?.activationId ?? target.manualAbility.activationId}:counter`,
+        dueSimulationTime: g.time,
+        priority: 88,
+        cooldownMs: 180,
+        maxInstances: 1,
         dedupeKey: `manual-ability:${target.id}:${counter.event?.activationId ?? target.manualAbility.activationId}:counter`,
       });
-      g.pendingAbilityAudioCues = g.pendingAbilityAudioCues.slice(-8);
+      g.pendingBattleAudioCues = g.pendingBattleAudioCues.slice(-8);
       g.manualAbilityVfx = g.manualAbilityVfx
         .filter((effect) => effect.ownerId !== target.id)
         .concat({
@@ -2930,16 +3031,6 @@ function livingSpeaker(g: Game, kinds: readonly UnitKind[]) {
   return kinds.find((kind) => g.fighters.some((fighter) => fighter.side === "human" && fighter.kind === kind && fighter.hp > 0)) ?? null;
 }
 
-function battleSilenceSceneId(g: Game) {
-  const scriptedFinalActive = g.battleBarks.active.some((bark) => (
-    bark.scripted === true
-    && bark.trigger === STORY_BATTLE_TRIGGER_IDS.FINAL_WEAKPOINT_EXPOSED
-  ));
-  if (scriptedFinalActive) return sceneIdForStoryEvent("stage-takuya-final-v070");
-  if (g.takuyaEntranceAudioRemaining > 0) return TAKUYA_ENTRANCE_AUDIO.silenceSceneId;
-  return null;
-}
-
 function dispatchScriptedStoryBattleBarks(
   g: Game,
   mode: CampaignSave["settings"]["battleEventMode"],
@@ -3410,7 +3501,8 @@ function prepareManualAbilityProof(g: Game, requestedKinds: readonly UnitKind[])
   g.areaEffects = [];
   g.manualAbilityVfx = [];
   g.manualAbilityReceipts = [];
-  g.pendingAbilityAudioCues = [];
+  g.pendingWeaponAudioCues = [];
+  g.pendingBattleAudioCues = [];
   g.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
   g.qaBarks = false;
   g.banner = "";
@@ -3662,9 +3754,9 @@ type FighterRenderAudit = {
   poseOpacity: number | null;
   effectiveOpacity: number | null;
   clipRect: { x: number; y: number; w: number; h: number } | null;
+  deploymentPlan?: ReturnType<typeof crawlerDeploymentRenderPlan>;
 };
 type FighterDrawOptions = {
-  applyDeploymentClip?: boolean;
   forceOpaque?: boolean;
   includeGroundShadow?: boolean;
   recordAudit?: boolean;
@@ -3684,6 +3776,25 @@ function recordFighterRenderAudit(fighter: Fighter, audit: FighterRenderAudit) {
   fighterRenderAuditHistory.set(fighter.id, history);
 }
 
+function crawlerDeploymentPlanForFighter(fighter: Fighter) {
+  const progress = Number.isFinite(fighter.entryRampX)
+    ? (fighter.x - WORLD_GEOMETRY.crawler.doorX)
+      / Math.max(
+        1,
+        (fighter.entryRampX ?? WORLD_GEOMETRY.crawler.rampFootX)
+          - WORLD_GEOMETRY.crawler.doorX,
+      )
+    : fighter.entryRampCleared ? 1 : 0;
+  return crawlerDeploymentRenderPlan({
+    side: fighter.side,
+    gateEntering: fighter.gateEntering,
+    spawnPortalId: fighter.spawnPortalId,
+    entryRampCleared: fighter.entryRampCleared,
+    unitKind: fighter.kind,
+    progress,
+  });
+}
+
 function drawSpriteFighter(
   ctx: CanvasRenderingContext2D,
   f: Fighter,
@@ -3691,7 +3802,6 @@ function drawSpriteFighter(
   options: FighterDrawOptions = {},
 ) {
   const {
-    applyDeploymentClip = true,
     forceOpaque = false,
     includeGroundShadow = true,
     recordAudit = true,
@@ -3840,29 +3950,9 @@ function drawSpriteFighter(
     ? Math.abs(Math.sin(locomotionPhase * Math.PI * 2))
     : 0;
   const bob = contactLift * (renderKind === "mayo-chan" ? 2.4 : 1.8);
-  const friendlyClipRect = friendlyCrawlerRevealRect({
-    side: f.side,
-    gateEntering: f.gateEntering,
-    spawnPortalId: f.spawnPortalId,
-    entryRampCleared: f.entryRampCleared,
-    fighterX: f.x,
-    entryRampX: f.entryRampX,
-    spriteWidth: size.w,
-    doorX: WORLD_GEOMETRY.crawler.doorX,
-    rampFootX: WORLD_GEOMETRY.crawler.rampFootX,
-    musterY: activeMusterY(),
-  });
+  const deploymentPlan = crawlerDeploymentPlanForFighter(f);
   ctx.save();
-  if (applyDeploymentClip && friendlyClipRect) {
-    ctx.beginPath();
-    ctx.rect(
-      friendlyClipRect.x,
-      friendlyClipRect.y,
-      friendlyClipRect.w,
-      friendlyClipRect.h,
-    );
-    ctx.clip();
-  } else if (f.side === "zombie" && f.gateEntering) {
+  if (f.side === "zombie" && f.gateEntering) {
     const revealRight = f.spawnEntryMode === "right-edge"
       || f.spawnEntryMode === "right-edge-outside"
       ? W
@@ -3904,7 +3994,11 @@ function drawSpriteFighter(
     opacity: 1,
   };
   const facingSign = direction === "left" ? -1 : 1;
-  const effectivePoseOpacity = forceOpaque ? 1 : pose.opacity;
+  const crawlerDeploymentOpaque = f.side === "human"
+    && f.gateEntering
+    && f.spawnPortalId === "crawler-door";
+  if (forceOpaque || crawlerDeploymentOpaque) ctx.globalAlpha = 1;
+  const effectivePoseOpacity = forceOpaque || crawlerDeploymentOpaque ? 1 : pose.opacity;
   if (fighterRenderAuditEnabled && recordAudit) {
     const previousAudit = fighterRenderAudit.get(f);
     recordFighterRenderAudit(f, {
@@ -3918,7 +4012,8 @@ function drawSpriteFighter(
       resolvedState: animationSample.resolvedState,
       poseOpacity: pose.opacity,
       effectiveOpacity: ctx.globalAlpha * effectivePoseOpacity,
-      clipRect: friendlyClipRect ? { ...friendlyClipRect } : null,
+      clipRect: null,
+      deploymentPlan,
     });
   }
   ctx.globalAlpha *= effectivePoseOpacity;
@@ -3950,7 +4045,8 @@ function drawSpriteFighter(
   }
   ctx.restore();
   return {
-    clipRect: friendlyClipRect ? { ...friendlyClipRect } : null,
+    clipRect: null,
+    deploymentPlan,
   };
 }
 
@@ -3983,24 +4079,11 @@ function fighterUnitLayerPixelAudit(fighter: Fighter, sprites: SpriteMap) {
     return {
       data: ctx.getImageData(left, top, width, height).data,
       clipRect: drawResult?.clipRect ?? null,
+      deploymentPlan: drawResult?.deploymentPlan ?? null,
     };
   };
-  const actualClipped = capture({ applyDeploymentClip: true });
-  const actualFull = capture({ applyDeploymentClip: false });
-  const opaqueFull = capture({ applyDeploymentClip: false, forceOpaque: true });
-  const expectedClippedAlpha = new Uint8ClampedArray(width * height);
-  const clipRect = actualClipped.clipRect;
-  for (let pixel = 0; pixel < expectedClippedAlpha.length; pixel += 1) {
-    const x = left + (pixel % width) + .5;
-    const y = top + Math.floor(pixel / width) + .5;
-    const insideClip = !clipRect || (
-      x >= clipRect.x
-      && x < clipRect.x + clipRect.w
-      && y >= clipRect.y
-      && y < clipRect.y + clipRect.h
-    );
-    expectedClippedAlpha[pixel] = insideClip ? opaqueFull.data[pixel * 4 + 3] : 0;
-  }
+  const actual = capture({});
+  const opaque = capture({ forceOpaque: true });
 
   const metrics = (rgba: Uint8ClampedArray) => {
     let alphaMass = 0;
@@ -4036,17 +4119,14 @@ function fighterUnitLayerPixelAudit(fighter: Fighter, sprites: SpriteMap) {
   };
   const compareAlpha = (
     actualRgba: Uint8ClampedArray,
-    expectedRgba: Uint8ClampedArray | null,
-    expectedAlpha: Uint8ClampedArray | null = null,
+    expectedRgba: Uint8ClampedArray,
   ) => {
     let intersection = 0;
     let union = 0;
     let absoluteDifference = 0;
     for (let pixel = 0; pixel < width * height; pixel += 1) {
       const actual = actualRgba[pixel * 4 + 3];
-      const expected = expectedAlpha
-        ? expectedAlpha[pixel]
-        : expectedRgba?.[pixel * 4 + 3] ?? 0;
+      const expected = expectedRgba[pixel * 4 + 3];
       if (actual > 0 && expected > 0) intersection += 1;
       if (actual > 0 || expected > 0) union += 1;
       absoluteDifference += Math.abs(actual - expected);
@@ -4056,23 +4136,20 @@ function fighterUnitLayerPixelAudit(fighter: Fighter, sprites: SpriteMap) {
       normalizedAlphaL1: absoluteDifference / (255 * Math.max(1, union)),
     };
   };
-  const actualClipMetrics = metrics(actualClipped.data);
-  const fullMetrics = metrics(actualFull.data);
-  const opaqueFullMetrics = metrics(opaqueFull.data);
+  const actualMetrics = metrics(actual.data);
+  const opaqueMetrics = metrics(opaque.data);
+  const opacityComparison = compareAlpha(actual.data, opaque.data);
   return {
     region: { x: left, y: top, w: width, h: height },
-    clipRect,
-    actualClip: actualClipMetrics,
-    actualFull: fullMetrics,
-    opaqueFull: opaqueFullMetrics,
-    fullOpacityComparison: compareAlpha(actualFull.data, opaqueFull.data),
-    clipComparison: compareAlpha(actualClipped.data, null, expectedClippedAlpha),
-    visibleCoverage: opaqueFullMetrics.alphaMass > 0
-      ? actualClipMetrics.alphaMass / opaqueFullMetrics.alphaMass
-      : 0,
-    verticalSilhouetteRetention: opaqueFullMetrics.bounds && actualClipMetrics.bounds
-      ? actualClipMetrics.bounds.h / opaqueFullMetrics.bounds.h
-      : 0,
+    deploymentPlan: actual.deploymentPlan,
+    clipRect: null,
+    clipMode: actual.deploymentPlan?.clipMode ?? "none",
+    unitDrawCount: actual.deploymentPlan?.unitDrawCount ?? 1,
+    actual: actualMetrics,
+    opaque: opaqueMetrics,
+    opacityComparison,
+    alphaOneFromFirstVisibleFrame: opacityComparison.maskIoU >= .999
+      && opacityComparison.normalizedAlphaL1 <= .001,
   };
 }
 
@@ -5520,16 +5597,45 @@ function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g:
 }
 
 function drawBattlefieldSupply(ctx: CanvasRenderingContext2D, object: BattlefieldObject, sprites: SpriteMap) {
-  const dropOffset = object.phase === "dropping" ? Math.max(0, object.phaseTime / .45) * 86 : 0;
+  const drumPose = object.kind === "drum"
+    ? drumArrivalPose({
+      phase: object.phase,
+      phaseTime: object.phaseTime,
+      dropSeconds: BATTLEFIELD_SUPPLY_DEFS.drum.dropSeconds,
+      impactSeconds: BATTLEFIELD_SUPPLY_DEFS.drum.impactSeconds,
+    })
+    : null;
+  const dropOffset = object.kind === "pod" && object.phase === "dropping" ? Math.max(0, object.phaseTime / .45) * 86 : 0;
   const destroySeconds = object.kind === "pod" ? .42 : object.kind === "drum" ? .36 : .3;
   const destroyRatio = object.phase === "destroying" ? Math.max(0, object.phaseTime / destroySeconds) : 1;
   const hpRatio = Math.max(0, object.hp / object.maxHp);
-  const drawY = object.y - dropOffset;
+  const drawY = object.y - dropOffset - (drumPose?.height ?? 0);
   ctx.save();
   ctx.globalAlpha = object.phase === "destroying" ? destroyRatio : 1;
   ctx.fillStyle = "rgba(0,0,0,.42)";
-  ctx.beginPath(); ctx.ellipse(object.x, object.y + 8, 35 + dropOffset * .08, 7, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(object.x, object.y + 8, (35 + dropOffset * .08) * (drumPose?.shadowScale ?? 1), 7 * (drumPose?.shadowScale ?? 1), 0, 0, Math.PI * 2); ctx.fill();
+  if (drumPose && (drumPose.dustAlpha > 0 || drumPose.sparkAlpha > 0)) {
+    for (let index = 0; index < 6; index += 1) {
+      const direction = index % 2 === 0 ? -1 : 1;
+      ctx.globalAlpha = drumPose.dustAlpha * (.42 + index * .05);
+      ctx.fillStyle = index % 3 === 0 ? "#d6a765" : "#715846";
+      ctx.beginPath();
+      ctx.ellipse(object.x + direction * (18 + index * 5), object.y + 4 - (index % 2) * 3, 8 + index, 3 + index * .35, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (index < 4) {
+        ctx.globalAlpha = drumPose.sparkAlpha;
+        ctx.strokeStyle = "#ffd36f";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(object.x + direction * 10, object.y - 1);
+        ctx.lineTo(object.x + direction * (27 + index * 6), object.y - 8 - index * 4);
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
   ctx.translate(object.x, drawY);
+  if (drumPose) ctx.rotate(drumPose.rotation);
   if (object.phase === "destroying") { ctx.translate(0, (1 - destroyRatio) * 14); ctx.rotate((1 - destroyRatio) * -.18); ctx.scale(.78 + destroyRatio * .22, .58 + destroyRatio * .42); }
   if (object.hitFlash > 0) { ctx.shadowColor = "#fff0a4"; ctx.shadowBlur = 14; }
   const supplySprite = sprites[object.kind];
@@ -5562,7 +5668,7 @@ function drawBattlefieldSupply(ctx: CanvasRenderingContext2D, object: Battlefiel
     ctx.beginPath(); ctx.moveTo(-39,-31); ctx.lineTo(-29,-44); ctx.lineTo(29,-44); ctx.lineTo(39,-31); ctx.lineTo(36,5); ctx.lineTo(-36,5); ctx.closePath(); ctx.fill();
   }
   if (object.kind === "pod" && hpRatio <= .62) { ctx.strokeStyle = hpRatio <= .3 ? "#e76c4e" : "#172526"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(8,-39); ctx.lineTo(2,-27); ctx.lineTo(11,-20); ctx.lineTo(5,-7); ctx.stroke(); }
-  if (object.phase === "dropping") { ctx.strokeStyle="rgba(205,222,202,.55)"; ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(-27,-48); ctx.lineTo(-42,-82); ctx.moveTo(27,-48); ctx.lineTo(42,-82); ctx.stroke(); ctx.setLineDash([]); }
+  if (object.kind === "pod" && object.phase === "dropping") { ctx.strokeStyle="rgba(205,222,202,.55)"; ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(-27,-48); ctx.lineTo(-42,-82); ctx.moveTo(27,-48); ctx.lineTo(42,-82); ctx.stroke(); ctx.setLineDash([]); }
   if (object.phase === "impact") { const pulse=1-object.phaseTime/.26; ctx.strokeStyle=`rgba(255,190,85,${1-pulse})`; ctx.lineWidth=5-3*pulse; ctx.beginPath(); ctx.ellipse(0,7,42+pulse*62,12+pulse*24,0,0,Math.PI*2); ctx.stroke(); }
   ctx.shadowBlur = 0;
   if (object.phase === "active" || object.phase === "impact") {
@@ -5612,42 +5718,6 @@ function drawPlacementIndicator(ctx: CanvasRenderingContext2D, indicator: Placem
   ctx.restore();
 }
 
-function drawAirstrikeObserver(ctx: CanvasRenderingContext2D, g: Game) {
-  const pose = airstrikeObserverPose(g.airstrike);
-  if (!pose.visible) return;
-  const crawler = WORLD_GEOMETRY.crawler;
-  const x = crawler.commandDeckX + 4;
-  const deckY = crawler.commandDeckY - 4;
-  const y = deckY - pose.rise * 20;
-  ctx.save();
-  ctx.globalAlpha = .45 + pose.rise * .55;
-  // Abstract deck-observer cue only; it does not define a named character identity.
-  ctx.fillStyle = "#2b3130";
-  ctx.fillRect(x - 6, y + 3, 12, 17);
-  ctx.fillStyle = "#d1bd95";
-  ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = "#171b1b"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(x + 4, y - 2); ctx.lineTo(x + 10, y + 2); ctx.stroke();
-
-  if (pose.action === "radio") {
-    const pulse = 8 + Math.sin(g.time * 18) * 2;
-    ctx.strokeStyle = "rgba(255,193,88,.9)"; ctx.lineWidth = 2;
-    for (const radius of [pulse, pulse + 7]) {
-      ctx.beginPath(); ctx.arc(x + 11, y + 1, radius, -.7, .7); ctx.stroke();
-    }
-  } else if (pose.action === "targeting") {
-    ctx.strokeStyle = "#ffd36a"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(x + 16, y - 2, 8, 0, Math.PI * 2); ctx.moveTo(x + 16, y - 14); ctx.lineTo(x + 16, y + 10); ctx.moveTo(x + 4, y - 2); ctx.lineTo(x + 28, y - 2); ctx.stroke();
-  } else if (pose.action === "inbound" || pose.action === "impact") {
-    const signal = pose.action === "impact" ? 1 : .55 + Math.sin(g.time * 15) * .35;
-    ctx.fillStyle = `rgba(255,112,54,${signal})`;
-    ctx.beginPath(); ctx.arc(x + 13, y - 10, pose.action === "impact" ? 7 : 5, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = "#e7d8ad"; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(x + 4, y + 7); ctx.lineTo(x + 12, y - 8); ctx.stroke();
-  }
-  ctx.restore();
-}
-
 function drawCrawlerAsset(
   ctx: CanvasRenderingContext2D,
   image: HTMLImageElement,
@@ -5670,30 +5740,101 @@ function drawCrawlerAsset(
   );
 }
 
+function crawlerGroundingFor(g: Game, graphicsProfile: GraphicsProfile) {
+  return crawlerGroundingSnapshot({
+    time: g.time,
+    phase: g.over ? "cooldown" : g.crawlerAbility.phase,
+    effectDensity: graphicsProfile.effectDensity,
+    movingUnits: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
+  });
+}
+
+function applyCrawlerSuspensionTransform(
+  ctx: CanvasRenderingContext2D,
+  g: Game,
+  graphicsProfile: GraphicsProfile,
+) {
+  const crawler = WORLD_GEOMETRY.crawler;
+  const grounding = crawlerGroundingFor(g, graphicsProfile);
+  const centerX = crawler.x + crawler.width * .5;
+  const centerY = crawler.y + crawler.height * .72;
+  ctx.translate(centerX, centerY + grounding.chassisOffsetY);
+  ctx.rotate(grounding.suspensionRoll);
+  ctx.translate(-centerX, -centerY);
+  return grounding;
+}
+
+function crawlerSourceRectToWorld(rect: { x: number; y: number; width: number; height: number }) {
+  const crawler = WORLD_GEOMETRY.crawler;
+  const crop = V099_CRAWLER_RUNTIME_PROFILE.deployment.sourceCrop;
+  return {
+    x: crawler.x + (rect.x - crop.x) / crop.width * crawler.width,
+    y: crawler.y + (rect.y - crop.y) / crop.height * crawler.height,
+    width: rect.width / crop.width * crawler.width,
+    height: rect.height / crop.height * crawler.height,
+  };
+}
+
+function drawCrawlerEquipmentFrame(
+  ctx: CanvasRenderingContext2D,
+  sprites: SpriteMap,
+  kind: "barrage" | "airstrike",
+  phase: string,
+) {
+  const resolved = resolveCrawlerEquipmentFrame(kind, phase);
+  const image = kind === "barrage" ? sprites.crawlerBarrageEquipment : sprites.crawlerAirstrikeEquipment;
+  if (!resolved || !image?.complete || !image.naturalWidth) return false;
+  const destination = crawlerSourceRectToWorld(resolved.destination);
+  ctx.drawImage(
+    image,
+    resolved.source.x,
+    resolved.source.y,
+    resolved.source.width,
+    resolved.source.height,
+    destination.x,
+    destination.y,
+    destination.width,
+    destination.height,
+  );
+  return true;
+}
+
+function crawlerAuthoredWorldPoint(
+  g: Game,
+  graphicsProfile: GraphicsProfile,
+  sourcePoint: { x: number; y: number },
+) {
+  const crawler = WORLD_GEOMETRY.crawler;
+  const projected = crawlerSourceRectToWorld({ ...sourcePoint, width: 0, height: 0 });
+  const grounding = crawlerGroundingFor(g, graphicsProfile);
+  const centerX = crawler.x + crawler.width * .5;
+  const centerY = crawler.y + crawler.height * .72;
+  const dx = projected.x - centerX;
+  const dy = projected.y - centerY;
+  const cosine = Math.cos(grounding.suspensionRoll);
+  const sine = Math.sin(grounding.suspensionRoll);
+  return {
+    x: centerX + dx * cosine - dy * sine,
+    y: centerY + grounding.chassisOffsetY + dx * sine + dy * cosine,
+  };
+}
+
+function crawlerBarrageMuzzlePoint(g: Game, graphicsProfile: GraphicsProfile) {
+  const phase = crawlerBarrageSpritePhase(g.crawlerAbility, CRAWLER_BARRAGE_DEF);
+  const authored = V099_CRAWLER_RUNTIME_PROFILE.equipment.barrage.muzzleByPhase[phase]
+    ?? V099_CRAWLER_RUNTIME_PROFILE.equipment.barrage.muzzleByPhase.firing;
+  return crawlerAuthoredWorldPoint(g, graphicsProfile, authored);
+}
+
 function drawCrawler(
   ctx: CanvasRenderingContext2D,
   g: Game,
   sprites: SpriteMap,
   graphicsProfile: GraphicsProfile,
 ) {
-  const crawlerClosedSprite = sprites.crawlerClosed ?? sprites.crawler;
-  const crawlerOpenSprite = sprites.crawlerOpen ?? crawlerClosedSprite;
+  const crawlerClosedSprite = sprites.crawlerHostClosed ?? sprites.crawlerClosed ?? sprites.crawler;
+  const crawlerOpenSprite = sprites.crawlerDeploymentBase ?? crawlerClosedSprite;
   const crawler = WORLD_GEOMETRY.crawler;
-  let activeCrawlerShot: Shot | null = null;
-  for (let index = g.shots.length - 1; index >= 0; index -= 1) {
-    if (g.shots[index].weapon === "crawler" && g.shots[index].life > 0) {
-      activeCrawlerShot = g.shots[index];
-      break;
-    }
-  }
-  const weaponPose = crawlerWeaponPose({
-    weaponX: crawler.weaponX,
-    weaponY: crawler.weaponY,
-    targetX: activeCrawlerShot?.tx ?? null,
-    targetY: activeCrawlerShot?.ty ?? null,
-    phase: g.over ? "ready" : g.crawlerAbility.phase,
-    time: g.time,
-  });
   const visualState = crawlerCombatVfxSnapshot({
     baseHp: g.baseHp,
     baseMaxHp: g.baseMaxHp,
@@ -5705,11 +5846,28 @@ function drawCrawler(
     over: g.over,
     effectDensity: graphicsProfile.effectDensity,
   });
+  const grounding = crawlerGroundingFor(g, graphicsProfile);
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,.48)";
   ctx.beginPath();
   ctx.ellipse(crawler.x + crawler.width * .5, crawler.y + crawler.height * .92, crawler.width * .45, 12, 0, 0, Math.PI * 2);
   ctx.fill();
+  for (let index = 0; index < grounding.wheelCompression.length; index += 1) {
+    const wheelX = crawler.x + 38 + index * 34;
+    ctx.globalAlpha = .3 + grounding.contactGlow;
+    ctx.fillStyle = "#151817";
+    ctx.beginPath();
+    ctx.ellipse(wheelX, crawler.y + crawler.height * .9, 19, 5 * grounding.wheelCompression[index], 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let index = 0; index < grounding.dustPuffs; index += 1) {
+    const drift = (g.time * 19 + index * 37) % 46;
+    ctx.globalAlpha = .08 + index * .018;
+    ctx.fillStyle = index % 2 ? "#766955" : "#4b4840";
+    ctx.beginPath();
+    ctx.ellipse(crawler.x + 28 + index * 28 - drift * .28, crawler.y + crawler.height * .9 - drift * .07, 7 + index, 3 + index * .45, -.12, 0, Math.PI * 2);
+    ctx.fill();
+  }
   const exhaustCount = Math.max(1, Math.round(3 * graphicsProfile.effectDensity));
   for (let index = 0; index < exhaustCount; index += 1) {
     const drift = (g.time * (15 + index * 2) + index * 19) % 38;
@@ -5744,82 +5902,30 @@ function drawCrawler(
     }
   }
   ctx.globalAlpha = 1;
+  applyCrawlerSuspensionTransform(ctx, g, graphicsProfile);
   if (crawlerClosedSprite?.complete && crawlerClosedSprite.naturalWidth) {
-    ctx.globalAlpha = .92 + Math.max(0, g.baseHp / g.baseMaxHp) * .08;
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
+    const crawlerOpacity = .92 + Math.max(0, g.baseHp / g.baseMaxHp) * .08;
+    const doorProgress = g.crawlerDoor.doorProgress * g.crawlerDoor.doorProgress
+      * (3 - 2 * g.crawlerDoor.doorProgress);
+    ctx.globalAlpha = crawlerOpacity * (1 - doorProgress);
     drawCrawlerAsset(ctx, crawlerClosedSprite, crawler);
     if (crawlerOpenSprite?.complete
       && crawlerOpenSprite.naturalWidth
-      && g.crawlerDoor.doorProgress > 0) {
-      const doorProgress = g.crawlerDoor.doorProgress * g.crawlerDoor.doorProgress * (3 - 2 * g.crawlerDoor.doorProgress);
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(crawler.doorX - 43, activeMusterY() - 94, 108, 151);
-      ctx.clip();
-      ctx.globalAlpha = doorProgress;
+      && doorProgress > 0) {
+      ctx.globalAlpha = crawlerOpacity * doorProgress;
       drawCrawlerAsset(ctx, crawlerOpenSprite, crawler);
-      ctx.restore();
     }
   } else {
     ctx.fillStyle = "#5d3329";
     ctx.fillRect(crawler.x + 18, crawler.y + 45, crawler.width - 36, crawler.height - 50);
   }
   ctx.globalAlpha = 1;
-  // The command cupola and fixed gun are rendered as recognizable machinery.
-  // Avoid free-standing debug-looking rectangles over the authored crawler art.
-  ctx.save();
-  ctx.translate(crawler.commandDeckX, crawler.commandDeckY - 10);
-  ctx.fillStyle = "rgba(18,24,23,.92)";
-  ctx.beginPath();
-  ctx.moveTo(-12, 7); ctx.lineTo(-9, -5); ctx.lineTo(7, -9); ctx.lineTo(13, 5);
-  ctx.lineTo(9, 10); ctx.lineTo(-8, 10); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = "#5e6b63"; ctx.lineWidth = 1.4; ctx.stroke();
-  ctx.strokeStyle = g.airstrike.phase === "idle" ? "#75a898" : "#ffb95d";
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(0, -1, 5, -.88, 1.15); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(2, -6); ctx.lineTo(8, -16); ctx.stroke();
-  ctx.restore();
-  drawAirstrikeObserver(ctx, g);
-  if (!visualState.stored) {
-    ctx.save();
-    ctx.translate(weaponPose.pivotX, weaponPose.pivotY);
-    ctx.rotate(weaponPose.angle);
-    ctx.fillStyle = "#202827";
-    ctx.strokeStyle = "#6e7468";
-    ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.strokeStyle = "#88785a";
-    ctx.lineWidth = 6;
-    ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(44 - weaponPose.recoil, 0); ctx.stroke();
-    ctx.strokeStyle = "#302f2a";
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(44 - weaponPose.recoil, 0); ctx.stroke();
-    ctx.restore();
-    if (g.crawlerAbility.phase === "firing") {
-      const muzzle = 12 + Math.sin(g.time * 45) * 5;
-      ctx.save();
-      ctx.translate(weaponPose.muzzleX, weaponPose.muzzleY);
-      ctx.rotate(weaponPose.angle);
-      ctx.fillStyle = "rgba(255,221,121,.9)";
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(muzzle, -7);
-      ctx.lineTo(muzzle, 7);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
-  } else {
-    ctx.fillStyle = "rgba(27,34,33,.76)";
-    ctx.strokeStyle = "rgba(103,113,104,.68)";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.ellipse(crawler.weaponX, crawler.weaponY - 8, 12, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  }
+  const barragePhase = crawlerBarrageSpritePhase(g.crawlerAbility, CRAWLER_BARRAGE_DEF);
+  const airstrikePhase = crawlerAirstrikeSpritePhase(g.airstrike, AIRSTRIKE_DEF);
+  drawCrawlerEquipmentFrame(ctx, sprites, "barrage", visualState.stored ? "stowed" : barragePhase);
+  drawCrawlerEquipmentFrame(ctx, sprites, "airstrike", visualState.stored ? "stowed" : airstrikePhase);
   if (g.crawlerDoor.phase !== CRAWLER_DOOR_PHASES.CLOSED) {
     const warningPulse = g.crawlerDoor.phase === CRAWLER_DOOR_PHASES.WARNING
       ? .42 + Math.sin(g.time * 34) * .38
@@ -5867,18 +5973,22 @@ function drawCrawler(
   ctx.restore();
 }
 
-function drawCrawlerExitFrame(ctx: CanvasRenderingContext2D, g: Game, sprites: SpriteMap) {
+function drawCrawlerForegroundMask(
+  ctx: CanvasRenderingContext2D,
+  g: Game,
+  sprites: SpriteMap,
+  graphicsProfile: GraphicsProfile,
+) {
   if (g.crawlerDoor.doorProgress <= 0) return;
   const crawler = WORLD_GEOMETRY.crawler;
-  const openSprite = sprites.crawlerOpen;
-  if (!openSprite?.complete || !openSprite.naturalWidth) return;
+  const foregroundMask = sprites.crawlerForegroundMask;
+  if (!foregroundMask?.complete || !foregroundMask.naturalWidth) return;
   ctx.save();
-  ctx.beginPath();
-  ctx.rect(crawler.doorX - 38, activeMusterY() - 92, 17, 86);
-  ctx.rect(crawler.doorX + 22, activeMusterY() - 92, 18, 86);
-  ctx.rect(crawler.doorX - 38, activeMusterY() - 92, 78, 17);
-  ctx.clip();
-  drawCrawlerAsset(ctx, openSprite, crawler);
+  applyCrawlerSuspensionTransform(ctx, g, graphicsProfile);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.globalAlpha = g.crawlerDoor.doorProgress;
+  drawCrawlerAsset(ctx, foregroundMask, crawler);
   ctx.restore();
 }
 
@@ -6087,8 +6197,31 @@ function drawEmergencySupport(ctx: CanvasRenderingContext2D, g: Game) {
   if (runtime.phase === "inbound") {
     const progress = 1 - runtime.phaseTime / AIRSTRIKE_DEF.inboundSeconds;
     const jetX = -80 + progress * (W + 160);
-    ctx.fillStyle = "#333b3c"; ctx.beginPath(); ctx.moveTo(jetX, 86); ctx.lineTo(jetX - 34, 96); ctx.lineTo(jetX - 8, 80); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = "rgba(225,220,196,.34)"; ctx.beginPath(); ctx.moveTo(jetX - 38, 92); ctx.lineTo(jetX - 130, 82); ctx.stroke();
+    ctx.save();
+    ctx.translate(jetX, 86);
+    ctx.fillStyle = "#2b3436";
+    ctx.strokeStyle = "#7f8985";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(24, 0);
+    ctx.lineTo(4, -5);
+    ctx.lineTo(-20, -18);
+    ctx.lineTo(-14, -4);
+    ctx.lineTo(-31, -1);
+    ctx.lineTo(-14, 4);
+    ctx.lineTo(-20, 17);
+    ctx.lineTo(4, 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#9b4b30";
+    ctx.fillRect(-24, -4, 7, 8);
+    ctx.strokeStyle = "rgba(225,220,196,.34)";
+    ctx.beginPath();
+    ctx.moveTo(-31, -2); ctx.lineTo(-126, -8);
+    ctx.moveTo(-31, 2); ctx.lineTo(-116, 8);
+    ctx.stroke();
+    ctx.restore();
   }
   if (runtime.phase === "impact") {
     const glow = ctx.createRadialGradient(runtime.targetX, y, 3, runtime.targetX, y, AIRSTRIKE_DEF.radius);
@@ -6098,9 +6231,12 @@ function drawEmergencySupport(ctx: CanvasRenderingContext2D, g: Game) {
   ctx.restore();
 }
 
-function drawCrawlerBarrage(ctx: CanvasRenderingContext2D, g: Game) {
+function drawCrawlerBarrage(
+  ctx: CanvasRenderingContext2D,
+  g: Game,
+  graphicsProfile: GraphicsProfile,
+) {
   if (g.crawlerAbility.phase !== "firing") return;
-  const crawler = WORLD_GEOMETRY.crawler;
   let activeCrawlerShot: Shot | null = null;
   for (let index = g.shots.length - 1; index >= 0; index -= 1) {
     if (g.shots[index].weapon === "crawler" && g.shots[index].life > 0) {
@@ -6108,17 +6244,12 @@ function drawCrawlerBarrage(ctx: CanvasRenderingContext2D, g: Game) {
       break;
     }
   }
-  const fallbackPose = crawlerWeaponPose({
-    weaponX: crawler.weaponX,
-    weaponY: crawler.weaponY,
-    phase: "firing",
-    time: g.time,
-  });
+  const authoredMuzzle = crawlerBarrageMuzzlePoint(g, graphicsProfile);
   ctx.save();
   ctx.globalCompositeOperation = "screen";
   const pulse = 16 + Math.sin(g.time * 48) * 5;
-  const muzzleX = activeCrawlerShot?.x ?? fallbackPose.muzzleX;
-  const muzzleY = activeCrawlerShot?.y ?? fallbackPose.muzzleY;
+  const muzzleX = activeCrawlerShot?.x ?? authoredMuzzle.x;
+  const muzzleY = activeCrawlerShot?.y ?? authoredMuzzle.y;
   const glow = ctx.createRadialGradient(muzzleX, muzzleY, 2, muzzleX, muzzleY, pulse * 1.7);
   glow.addColorStop(0, "rgba(255,247,196,.95)");
   glow.addColorStop(.32, "rgba(255,179,68,.72)");
@@ -6472,6 +6603,146 @@ function visibleRenderPoint(x: number, y: number, margin: number) {
   return x >= -margin && x <= W + margin && y >= -margin && y <= H + margin;
 }
 
+function drawPresentationExplosion(
+  ctx: CanvasRenderingContext2D,
+  effect: Game["battlePresentation"]["effects"][number],
+  effectDensity: number,
+  x = effect.x,
+  y = effect.y,
+  scaleMultiplier = 1,
+) {
+  const snapshot = battlePresentationSnapshot(effect, effectDensity);
+  if (snapshot.kind === "boss-entrance") return;
+  ctx.save();
+  ctx.translate(x, y);
+  if (snapshot.residueAlpha > 0) {
+    ctx.globalAlpha = snapshot.residueAlpha;
+    ctx.fillStyle = "#241814";
+    ctx.beginPath();
+    ctx.ellipse(0, 8, 76 * scaleMultiplier, 19 * scaleMultiplier, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (snapshot.shockwaveAlpha > 0) {
+    ctx.globalAlpha = snapshot.shockwaveAlpha;
+    ctx.strokeStyle = "#ffd27a";
+    ctx.lineWidth = Math.max(1, 5 * (1 - snapshot.progress));
+    ctx.beginPath();
+    ctx.ellipse(0, 2, snapshot.shockwaveRadius * scaleMultiplier, snapshot.shockwaveRadius * .32 * scaleMultiplier, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  if (snapshot.fireAlpha > 0) {
+    const fire = ctx.createRadialGradient(0, -8, 1, 0, -8, snapshot.fireballRadius * scaleMultiplier);
+    fire.addColorStop(0, "rgba(255,250,190,.98)");
+    fire.addColorStop(.32, "rgba(255,190,65,.95)");
+    fire.addColorStop(.7, "rgba(235,73,30,.82)");
+    fire.addColorStop(1, "rgba(116,30,20,0)");
+    ctx.globalAlpha = snapshot.fireAlpha;
+    ctx.fillStyle = fire;
+    ctx.beginPath();
+    ctx.arc(0, -8, snapshot.fireballRadius * scaleMultiplier, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let index = 0; index < snapshot.smokeAlpha * 8 * effectDensity; index += 1) {
+    const angle = effect.seed * .017 + index * 2.37;
+    const distance = snapshot.smokeRadius * (.18 + (index % 4) * .16) * scaleMultiplier;
+    const radius = snapshot.smokeRadius * (.2 + (index % 3) * .055) * scaleMultiplier;
+    ctx.globalAlpha = snapshot.smokeAlpha * (.72 - (index % 3) * .08);
+    ctx.fillStyle = index % 2 ? "#554b43" : "#332d2b";
+    ctx.beginPath();
+    ctx.arc(Math.cos(angle) * distance, -10 + Math.sin(angle) * distance * .45 - snapshot.progress * 24, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = "#ffd06a";
+  ctx.lineWidth = 2;
+  for (let index = 0; index < snapshot.sparkCount; index += 1) {
+    const angle = effect.seed * .003 + index * 2.399;
+    const travel = snapshot.shockwaveRadius * (.36 + (index % 5) * .11) * scaleMultiplier;
+    ctx.globalAlpha = Math.max(0, .9 - snapshot.progress * .85);
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(angle) * travel * .55, Math.sin(angle) * travel * .28 - 8);
+    ctx.lineTo(Math.cos(angle) * travel, Math.sin(angle) * travel * .48 - 8);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#342821";
+  for (let index = 0; index < snapshot.debrisCount; index += 1) {
+    const angle = effect.seed * .006 + index * 1.83;
+    const travel = snapshot.shockwaveRadius * (.22 + (index % 4) * .13) * scaleMultiplier;
+    ctx.globalAlpha = Math.max(0, .8 - snapshot.progress * .7);
+    ctx.fillRect(Math.cos(angle) * travel, Math.sin(angle) * travel * .42 - 9, 3 + index % 3, 2 + index % 2);
+  }
+  ctx.restore();
+}
+
+function drawBattlePresentationEffects(ctx: CanvasRenderingContext2D, g: Game, effectDensity: number) {
+  for (const effect of g.battlePresentation.effects) {
+    if (effect.kind === "boss-entrance") {
+      const snapshot = battlePresentationSnapshot(effect, effectDensity);
+      ctx.save();
+      ctx.globalAlpha = snapshot.alpha;
+      const vignette = ctx.createRadialGradient(effect.x, effect.y, snapshot.focusRadius, effect.x, effect.y, 320);
+      vignette.addColorStop(0, "rgba(0,0,0,0)");
+      vignette.addColorStop(1, "rgba(14,5,3,.72)");
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = `rgba(255,90,54,${snapshot.warningPulse})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.ellipse(effect.x, effect.y - 22, snapshot.focusRadius, snapshot.focusRadius * .48, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#ffd3aa";
+      ctx.font = "900 16px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(effect.label || "BOSS SIGNAL", effect.x, Math.max(30, effect.y - 118));
+      ctx.restore();
+      continue;
+    }
+    if (effect.kind === "boss-defeat") {
+      const bossSnapshot = battlePresentationSnapshot(effect, effectDensity);
+      for (const burst of V099_BOSS_DEFEAT_TIMELINE.smallBursts) {
+        if (effect.elapsed < burst.at) continue;
+        drawPresentationExplosion(ctx, {
+          ...effect,
+          kind: "explosion",
+          scale: "small",
+          elapsed: Math.min(.72, effect.elapsed - burst.at),
+          duration: .72,
+        }, effectDensity, effect.x + burst.dx, effect.y + burst.dy, burst.scale);
+      }
+      if (effect.elapsed >= V099_BOSS_DEFEAT_TIMELINE.mediumBurst.at) {
+        const burst = V099_BOSS_DEFEAT_TIMELINE.mediumBurst;
+        drawPresentationExplosion(ctx, {
+          ...effect,
+          kind: "explosion",
+          scale: "medium",
+          elapsed: Math.min(1.05, effect.elapsed - burst.at),
+          duration: 1.05,
+        }, effectDensity, effect.x + burst.dx, effect.y + burst.dy, burst.scale);
+      }
+      if (bossSnapshot.majorBurstActive) {
+        const burst = V099_BOSS_DEFEAT_TIMELINE.majorBurst;
+        drawPresentationExplosion(ctx, {
+          ...effect,
+          kind: "explosion",
+          scale: "boss",
+          elapsed: bossSnapshot.majorBurstElapsed,
+          duration: effect.duration - burst.at,
+        }, effectDensity, effect.x + burst.dx, effect.y + burst.dy, burst.scale);
+      }
+      if (bossSnapshot.residueAlpha > 0) {
+        ctx.save();
+        ctx.globalAlpha = bossSnapshot.residueAlpha;
+        ctx.fillStyle = "#241814";
+        ctx.beginPath();
+        ctx.ellipse(effect.x, effect.y + 8, 76, 19, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      continue;
+    }
+    drawPresentationExplosion(ctx, effect, effectDensity);
+  }
+}
+
 function drawWorld(
   ctx: CanvasRenderingContext2D,
   g: Game,
@@ -6635,11 +6906,38 @@ function drawWorld(
   }
 
   for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter);
+  const interiorDeploymentFighterIds = new Set(
+    g.fighters
+      .filter((fighter) => crawlerDeploymentPlanForFighter(fighter).unitPass === "before-foreground-mask")
+      .map((fighter) => fighter.id),
+  );
   const renderables = [
-    ...g.fighters.map((fighter) => ({ type: "fighter" as const, x: fighter.x, y: fighter.y, fighter })),
-    ...g.battlefieldObjects.filter((object) => object.phase !== "expired").map((object) => ({ type: "object" as const, x: object.x, y: object.y, object })),
-  ].sort((a, b) => a.y - b.y || a.x - b.x);
+    ...g.fighters.map((fighter) => ({
+      type: "fighter" as const,
+      pass: interiorDeploymentFighterIds.has(fighter.id) ? 0 : 2,
+      x: fighter.x,
+      y: fighter.y,
+      fighter,
+    })),
+    {
+      type: "crawler-foreground" as const,
+      pass: 1,
+      x: WORLD_GEOMETRY.crawler.doorX,
+      y: activeMusterY(),
+    },
+    ...g.battlefieldObjects.filter((object) => object.phase !== "expired").map((object) => ({
+      type: "object" as const,
+      pass: 2,
+      x: object.x,
+      y: object.y,
+      object,
+    })),
+  ].sort((a, b) => a.pass - b.pass || a.y - b.y || a.x - b.x);
   for (const renderable of renderables) {
+    if (renderable.type === "crawler-foreground") {
+      drawCrawlerForegroundMask(ctx, g, sprites, graphicsProfile);
+      continue;
+    }
     if (renderable.type === "object") { drawBattlefieldSupply(ctx, renderable.object, sprites); continue; }
     const f = renderable.fighter;
     if (f.combatReady) drawBossTelegraph(ctx, f, g);
@@ -6690,8 +6988,7 @@ function drawWorld(
   // of wire, rubble, fallen signs, or supply crates.
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["foreground-prop"]);
 
-  drawCrawlerExitFrame(ctx, g, sprites);
-  drawCrawlerBarrage(ctx, g);
+  drawCrawlerBarrage(ctx, g, graphicsProfile);
 
   for (const shot of g.shots) {
     if (!visibleRenderPoint(shot.x, shot.y, graphicsProfile.cullingMargin)
@@ -6832,6 +7129,7 @@ function drawWorld(
     ctx.restore();
   }
   ctx.shadowBlur = 0;
+  drawBattlePresentationEffects(ctx, g, graphicsProfile.effectDensity);
   for (const p of g.particles) {
     if (!visibleRenderPoint(p.x, p.y, graphicsProfile.cullingMargin)) continue;
     ctx.globalAlpha = Math.max(0, p.life * 1.6); ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
@@ -6885,11 +7183,16 @@ export function AshfallGame() {
   const enemyBaseSpriteRef = useRef<HTMLImageElement | null>(null);
   const gameRef = useRef<Game>(initialGame("pod", INITIAL_STAGE_ID, ["brawler", "scout", "ranger", "medic"]));
   const productionMixerRef = useRef<ReturnType<typeof createAudioMixer> | null>(null);
+  const battleAudioRuntimeRef = useRef(createBattleAudioRuntime());
   const productionCueQaLogRef = useRef<Array<{
     cueId: string;
     at: number;
     x: number;
     dedupeKey: string | null;
+    semantic?: string;
+    receiptId?: string;
+    ownerId?: number | string;
+    activationId?: number;
   }>>([]);
   const sfxRequestGateRef = useRef(createAudioRequestGate());
   const desiredProductionSceneRef = useRef<string | null>("title");
@@ -6901,6 +7204,8 @@ export function AshfallGame() {
   const sfxMutedRef = useRef(false);
   const musicDuckUntilRef = useRef(0);
   const desiredMusicModeRef = useRef<MusicMode>("normal");
+  const pressureLatchRef = useRef(createPressureLatchRuntime());
+  const manualAbilityReadyStateRef = useRef(new Map<number, boolean>());
   const startSynthMusicRef = useRef<() => void>(() => undefined);
   const stopSynthMusicRef = useRef<() => void>(() => undefined);
   const musicStartTokenRef = useRef(0);
@@ -6909,6 +7214,7 @@ export function AshfallGame() {
   const activeBurnLoopIdsRef = useRef<Set<number>>(new Set());
   const audioSuccessTimerRef = useRef<number | null>(null);
   const upgradeFeedbackTimerRef = useRef<number | null>(null);
+  const operationFeedbackTimerRef = useRef<number | null>(null);
   const volumePreviewLastAtRef = useRef(0);
   const audioActivationPendingRef = useRef(false);
   const audioAssetFailureRef = useRef(new Set<keyof AudioAvailability>());
@@ -6942,6 +7248,7 @@ export function AshfallGame() {
   });
   const lastHudRef = useRef(0);
   const selectedActionRef = useRef<SelectedAction>(null);
+  const pointerGestureStateRef = useRef(new Map<number, PointerGestureState>());
   const eventDestinationRef = useRef<EventDestination>("map");
   const eventQueueRef = useRef<string[]>([]);
   const eventCompletionLockRef = useRef(false);
@@ -6953,6 +7260,11 @@ export function AshfallGame() {
     ownerId: number;
     phase: ManualAbilityRuntime["phase"];
   } | null>(null);
+  // Local QA freezes the first production deployment frame before the normal
+  // movement loop advances it. The hook is armed only through the localhost
+  // battle bridge and is released with the same proof pause control.
+  const qaFreezeNextCrawlerDeploymentKindRef = useRef<UnitKind | null>(null);
+  const qaFrozenCrawlerDeploymentFighterIdRef = useRef<number | null>(null);
   const survivalSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const outbreakSettlementPersistenceQaRef = useRef({ attempts: 0, failuresRemaining: 0 });
   const navigationRouteReleaseAuditRef = useRef<Array<{
@@ -7058,9 +7370,15 @@ export function AshfallGame() {
   const [employmentNoticeSaveError, setEmploymentNoticeSaveError] = useState(false);
   const employmentNoticeSoundRef = useRef("");
   const employmentNoticeLockRef = useRef(false);
+  const mountedRef = useRef(true);
+  useEffect(() => () => {
+    mountedRef.current = false;
+  }, []);
+  const recruitLocksRef = useRef(new Set<string>());
   const upgradeLocksRef = useRef(new Set<string>());
   const [upgradePendingUnitIds, setUpgradePendingUnitIds] = useState<readonly string[]>([]);
   const [upgradeFeedback, setUpgradeFeedback] = useState<UpgradeFeedbackView | null>(null);
+  const [operationFeedback, setOperationFeedback] = useState<OperationFeedbackView | null>(null);
   const [eventId, setEventId] = useState<string | null>(null);
   const [storyAudioPosition, setStoryAudioPosition] = useState<{ eventId: string | null; lineIndex: number }>({ eventId: null, lineIndex: 0 });
   const [forceStoryReplay, setForceStoryReplay] = useState(false);
@@ -7116,7 +7434,9 @@ export function AshfallGame() {
   const lastPersistedReplicaRef = useRef<PersistedReplicaReceipt>({ serialized: "", localSaved: false, backupSaved: false });
   const persistenceWriteBlockedSourcesRef = useRef<Set<string>>(new Set());
   const persistenceQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const campaignTransactionQueueRef = useRef<Promise<void>>(Promise.resolve());
   const saveMutationPendingRef = useRef(false);
+  const qaSavePersistenceHoldRef = useRef<{ promise: Promise<void>; release: () => void } | null>(null);
   const resultSaveRetryingRef = useRef(false);
   const formationUnitIds = useMemo(() => getSelectedFormationUnitIds(campaignSave), [campaignSave]);
   const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
@@ -7140,9 +7460,28 @@ export function AshfallGame() {
     deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null, bossWorldX: null,
     takuyaEntranceAudioActive: false,
     crawlerHitFlash: 0, threat: 0,
-    objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), battleBarks: [], manualAbilityIcons: [],
+    objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), banner: null, battleBarks: [], manualAbilityIcons: [],
   });
   const [end, setEnd] = useState<BattleResult | null>(null);
+
+  // All battle operations must re-check the save boundary at handler time.
+  // React state can lag one render behind a save effect, so this ref is also
+  // consulted by the frame loop and keyboard/pointer handlers.
+  const battleSaveBoundaryRef = useRef(false);
+  const qaBattleSaveBoundaryPendingRef = useRef(false);
+  battleSaveBoundaryRef.current = Boolean(
+    saveMutationPendingRef.current
+    || pendingResultCommit
+    || resultSaveRetryingRef.current
+    || pendingOutbreakSettlement
+    || outbreakSavePending
+    || pendingSurvivalCheckpoint
+    || pendingSurvivalWaveEntitlement
+    || pendingSurvivalSettlement
+    || survivalSavePending
+    || survivalSettlementAwaitingRetry
+    || qaBattleSaveBoundaryPendingRef.current,
+  );
 
   const handleStoryAudioPositionChange = useCallback((nextEventId: string, lineIndex: number) => {
     const nextLineIndex = Number.isFinite(lineIndex) ? Math.max(0, Math.trunc(lineIndex)) : 0;
@@ -7157,6 +7496,16 @@ export function AshfallGame() {
     const queued = persistenceQueueRef.current.then(mutation);
     persistenceQueueRef.current = queued.then(() => undefined, () => undefined);
     return queued;
+  }, []);
+
+  const enqueueCampaignTransaction = useCallback((transaction: (latestSave: CampaignSave) => Promise<void>) => {
+    const queued = campaignTransactionQueueRef.current.then(async () => {
+      if (!mountedRef.current) return;
+      await transaction(campaignSaveRef.current);
+    });
+    const settled = queued.then(() => undefined, () => undefined);
+    campaignTransactionQueueRef.current = settled;
+    return settled;
   }, []);
 
   const beginSaveMutation = useCallback(() => {
@@ -7177,6 +7526,12 @@ export function AshfallGame() {
     }
     const serialized = serializeCampaignSave(nextSave);
     return enqueueCampaignStorageMutation(async () => {
+      // Local QA can hold the real persistence promise at the storage boundary
+      // so save-pending input tests exercise the same async path as a slow
+      // durable write. The hold is never created outside the localhost QA
+      // bridge below.
+      const qaHold = qaSavePersistenceHoldRef.current;
+      if (qaHold) await qaHold.promise;
       const replica = lastPersistedReplicaRef.current;
       if (serialized === replica.serialized && replica.localSaved && replica.backupSaved) {
         return { durable: true, localSaved: true, backupSaved: true };
@@ -7358,8 +7713,13 @@ export function AshfallGame() {
     // conveniences into ordinary campaign progress.
     if (resolveLocalQaMode(window.location.hostname, window.location.search)
       || resolveLocalQaScenario(window.location.hostname, window.location.search)) return;
-    void persistCampaignSave(campaignSave);
-  }, [campaignSave, persistCampaignSave, saveHydrated]);
+    // Automatic persistence must share the same queue as recruit/upgrade
+    // transactions. Persisting the render-time `campaignSave` directly could
+    // enqueue a stale candidate after a newer queued transaction committed.
+    void enqueueCampaignTransaction(async (latestSave) => {
+      await persistCampaignSave(latestSave);
+    });
+  }, [campaignSave, enqueueCampaignTransaction, persistCampaignSave, saveHydrated]);
 
   const updateAudioAvailability = useCallback((
     channel: keyof AudioAvailability,
@@ -7469,6 +7829,11 @@ export function AshfallGame() {
       cueIds: [...qaAssets.map((asset) => asset.id), ...qaPools.map((pool) => pool.id), ...PRODUCTION_AUDIO_MANIFEST.aliases.map((alias) => alias.id)],
       sceneIds: PRODUCTION_AUDIO_MANIFEST.scenes.map((scene) => scene.id),
       getCueRequests: () => productionCueQaLogRef.current.map((entry) => ({ ...entry })),
+      getBattleAudioRuntime: () => battleAudioRuntimeSnapshot(battleAudioRuntimeRef.current),
+      resetCueRequests: () => {
+        productionCueQaLogRef.current = [];
+        return true;
+      },
       getDiagnostics: () => mixer.getDiagnostics(),
       getAvailability: () => ({ ...audioAvailabilityRef.current }),
       getSceneState: () => mixer.getSceneState(),
@@ -7696,6 +8061,64 @@ export function AshfallGame() {
       __ASHFALL_RUNTIME_PERFORMANCE__?: unknown;
     };
     const bridge = {
+      setSaveBoundaryPending: (pending: boolean) => {
+        const next = Boolean(pending);
+        qaBattleSaveBoundaryPendingRef.current = next;
+        battleSaveBoundaryRef.current = Boolean(
+          saveMutationPendingRef.current
+          || pendingResultCommit
+          || resultSaveRetryingRef.current
+          || pendingOutbreakSettlement
+          || outbreakSavePending
+          || pendingSurvivalCheckpoint
+          || pendingSurvivalWaveEntitlement
+          || pendingSurvivalSettlement
+          || survivalSavePending
+          || survivalSettlementAwaitingRetry
+          || next,
+        );
+        setHud((current) => ({ ...current }));
+        return battleSaveBoundaryRef.current;
+      },
+      beginSaveBoundaryPersistence: () => {
+        if (!qaMode && !qaScenario) return false;
+        if (qaSavePersistenceHoldRef.current || saveMutationPendingRef.current) return false;
+        let releaseHold: () => void = () => undefined;
+        const holdPromise = new Promise<void>((resolve) => {
+          releaseHold = resolve;
+        });
+        const hold = { promise: holdPromise, release: releaseHold };
+        qaSavePersistenceHoldRef.current = hold;
+        // Start the real campaign persistence call before marking the save
+        // mutation pending. The queued storage callback then pauses on the
+        // explicit promise above, matching a slow durable-write boundary.
+        const persistence = persistCampaignSave(campaignSaveRef.current);
+        if (!beginSaveMutation()) {
+          hold.release();
+          if (qaSavePersistenceHoldRef.current === hold) qaSavePersistenceHoldRef.current = null;
+          return false;
+        }
+        void persistence.then(
+          () => {
+            if (qaSavePersistenceHoldRef.current === hold) qaSavePersistenceHoldRef.current = null;
+            finishSaveMutation();
+            setHud((current) => ({ ...current }));
+          },
+          () => {
+            if (qaSavePersistenceHoldRef.current === hold) qaSavePersistenceHoldRef.current = null;
+            finishSaveMutation();
+            setHud((current) => ({ ...current }));
+          },
+        );
+        setHud((current) => ({ ...current }));
+        return true;
+      },
+      releaseSaveBoundaryPersistence: () => {
+        const hold = qaSavePersistenceHoldRef.current;
+        if (!hold) return false;
+        hold.release();
+        return true;
+      },
       prepareAnimationFoundationProof: (
         kind: UnitKind | EnemyKind = "scout",
         side: "human" | "zombie" = "human",
@@ -7879,7 +8302,8 @@ export function AshfallGame() {
         clearRenderObjects(g.shots, g.renderObjectPools.shots);
         clearRenderObjects(g.damageTexts, g.renderObjectPools.damageTexts);
         g.pendingWeaponHits = [];
-        g.pendingAbilityAudioCues = [];
+        g.pendingWeaponAudioCues = [];
+        g.pendingBattleAudioCues = [];
         productionCueQaLogRef.current = [];
         for (const candidate of g.fighters) {
           if (candidate.side !== "zombie" || candidate.id === target.id) continue;
@@ -8082,6 +8506,7 @@ export function AshfallGame() {
       },
       setRepresentativeSixProofPaused: (requestedPaused = true) => {
         const g = gameRef.current;
+        if (!requestedPaused) qaFrozenCrawlerDeploymentFighterIdRef.current = null;
         g.last = performance.now();
         g.paused = Boolean(requestedPaused);
         return g.paused;
@@ -8593,7 +9018,7 @@ export function AshfallGame() {
               idleFrame.contentRect.y - idleFrame.sourceRect.y + idleFrame.contentRect.h
             ) / idleFrame.sourceRect.h,
         } : null;
-        const banner = battleBannerRect();
+        const banner = battleBannerDomRect(canvasRef.current);
         return {
           kind,
           bossId: boss?.id ?? null,
@@ -8636,15 +9061,10 @@ export function AshfallGame() {
           lastEntrance: bossFoundationQaRef.current.lastEntrance,
           lastCounterplay: bossFoundationQaRef.current.lastCounterplay,
           barrier: bossFoundationQaRef.current.barrierChallenge,
-          banner: g.bannerTime > 0 ? {
+          banner: g.bannerTime > 0 && banner ? {
             text: g.banner,
             remainingSeconds: g.bannerTime,
-            rect: {
-              left: banner.x,
-              top: banner.y,
-              right: banner.x + banner.width,
-              bottom: banner.y + banner.height,
-            },
+            rect: banner,
           } : null,
           battleBarkCount: g.battleBarks.active.length,
           broodCount: kind === "mother"
@@ -8868,6 +9288,8 @@ export function AshfallGame() {
         g.eventIndex = g.definition.timeline.length;
         g.deployQueue = [];
         g.qaNextDeploymentLane = null;
+        qaFreezeNextCrawlerDeploymentKindRef.current = null;
+        qaFrozenCrawlerDeploymentFighterIdRef.current = null;
         g.crawlerDoor = createCrawlerDoorRuntime();
         g.battlefieldObjects = [];
         g.energy = COMMAND_MAX;
@@ -8928,6 +9350,7 @@ export function AshfallGame() {
         const g = gameRef.current;
         if (!cards.some((card) => card.kind === kind)) return false;
         g.qaNextDeploymentLane = ([0, 1, 2] as const).includes(lane) ? lane : 1;
+        qaFreezeNextCrawlerDeploymentKindRef.current = kind;
         g.deployQueue.push(kind);
         return true;
       },
@@ -9470,6 +9893,7 @@ export function AshfallGame() {
           paused: g.paused,
           over: g.over,
           won: g.won,
+          resultPresented: g.resultPresented,
           baseHp: g.baseHp,
           baseMaxHp: g.baseMaxHp,
           livingHumanFighters: livingHumans.length,
@@ -10234,6 +10658,95 @@ export function AshfallGame() {
             .map((hit) => ({ ...hit })),
         };
       },
+      prepareV099CrawlerInputProof: () => {
+        const g = gameRef.current;
+        g.fighters = [];
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = g.definition.timeline.length;
+        g.deployQueue = [];
+        clearTransientRenderObjects(g);
+        g.pendingWeaponHits = [];
+        g.running = true;
+        g.paused = false;
+        g.over = false;
+        g.won = false;
+        g.baseHp = g.baseMaxHp;
+        g.crawlerAbility = createCrawlerAbilityRuntime(1) as CrawlerRuntime;
+        const targets = ([
+          ["walker", 0],
+          ["crusher", 1],
+          ["resonator", 2],
+        ] as const).map(([kind, lane], index) => {
+          const target = spawnEnemy(g, kind, lane);
+          target.x = 610 + index * 48;
+          target.y = activeLaneCenters[lane];
+          target.lane = lane;
+          target.anchorLane = lane;
+          target.maxHp = Math.max(600, target.maxHp);
+          target.hp = target.maxHp;
+          target.speed = 0;
+          target.laneSpeed = 0;
+          target.damage = 0;
+          target.cooldown = 99;
+          target.combatReady = true;
+          target.gateEntering = false;
+          target.aiMoveDirection = 0;
+          return { id: target.id, kind: target.kind, initialHp: target.hp };
+        });
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return { targets, ability: { ...g.crawlerAbility } };
+      },
+      prepareV099AirstrikeInputProof: () => {
+        const g = gameRef.current;
+        const targetX = 620;
+        const targetY = activeLaneCenters[1];
+        g.fighters = [];
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = g.definition.timeline.length;
+        clearTransientRenderObjects(g);
+        g.running = true;
+        g.paused = false;
+        g.over = false;
+        g.won = false;
+        g.baseHp = g.baseMaxHp;
+        g.supportGauge = SUPPORT_GAUGE_MAX;
+        g.airstrike = createEmergencySupportRuntime() as AirstrikeRuntime;
+        const targets = ([
+          ["walker", targetX - 34, targetY - 8],
+          ["crusher", targetX + 16, targetY + 6],
+          ["resonator", targetX + 58, targetY - 3],
+        ] as const).map(([kind, x, y], index) => {
+          const target = spawnEnemy(g, kind, 1, index);
+          target.x = x;
+          target.y = y;
+          target.lane = 1;
+          target.anchorLane = 1;
+          target.maxHp = Math.max(600, target.maxHp);
+          target.hp = target.maxHp;
+          target.speed = 0;
+          target.laneSpeed = 0;
+          target.damage = 0;
+          target.cooldown = 99;
+          target.combatReady = true;
+          target.gateEntering = false;
+          target.aiMoveDirection = 0;
+          return { id: target.id, kind: target.kind, initialHp: target.hp };
+        });
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return { targetX, targetY, targets, supportGauge: g.supportGauge };
+      },
       prepareCrawlerVfxProof: (
         state: "door" | "firing" | "hit" | "repair" | "critical" | "stored" = "firing",
       ) => {
@@ -10243,10 +10756,14 @@ export function AshfallGame() {
         g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
         g.deployQueue = [];
         clearTransientRenderObjects(g);
+        g.battlefieldObjects = [];
+        g.areaEffects = [];
+        g.battlePresentation = resetBattlePresentationRuntime(g.battlePresentation, g.battleAudioGeneration);
         g.running = true;
         g.paused = true;
         g.over = state === "stored";
         g.won = state === "stored";
+        g.resultPresented = state === "stored";
         g.baseMaxHp = 500;
         g.baseHp = state === "critical" ? 110 : 390;
         g.crawlerHitFlash = state === "hit" ? .18 : 0;
@@ -10278,15 +10795,8 @@ export function AshfallGame() {
           target.aiMoveDirection = 0;
           const targetX = target.x;
           const targetY = target.y - 24;
-          const muzzle = crawlerWeaponPose({
-            weaponX: WORLD_GEOMETRY.crawler.weaponX,
-            weaponY: WORLD_GEOMETRY.crawler.weaponY,
-            targetX,
-            targetY,
-            phase: "firing",
-            time: g.time,
-          });
-          addShot(g, muzzle.muzzleX, muzzle.muzzleY, targetX, targetY, .34, "human", .36, "crawler", "crawler", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+          const muzzle = crawlerBarrageMuzzlePoint(g, graphicsProfileRef.current);
+          addShot(g, muzzle.x, muzzle.y, targetX, targetY, .34, "human", .36, "crawler", "crawler", undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
         }
         setStarted(true);
         setPaused(false);
@@ -10326,6 +10836,136 @@ export function AshfallGame() {
           activeShotCount: g.shots.length,
           activeParticleCount: g.particles.length,
         };
+      },
+      prepareV099PresentationProof: (
+        kind: "boss-entrance" | "boss-defeat" | "small" | "medium" | "large" = "large",
+      ) => {
+        const g = gameRef.current;
+        clearTransientRenderObjects(g);
+        g.fighters = [];
+        g.corpses = [];
+        g.running = true;
+        g.paused = true;
+        g.over = false;
+        g.battlePresentation = resetBattlePresentationRuntime(g.battlePresentation, g.battleAudioGeneration);
+        const presentationKind = kind === "boss-entrance" ? "boss-entrance"
+          : kind === "boss-defeat" ? "boss-defeat" : "explosion";
+        addSemanticBattlePresentation(g, {
+          semantic: presentationKind,
+          receiptId: `qa:presentation:${kind}:${g.battleAudioGeneration}`,
+          ownerId: "qa:presentation",
+          kind: presentationKind,
+          scale: presentationKind === "explosion" ? kind : undefined,
+          x: 610,
+          y: activeLaneCenters[1],
+          label: kind === "boss-entrance" ? "BOSS SIGNAL" : kind === "boss-defeat" ? "BOSS DOWN" : "",
+        });
+        setStarted(true);
+        // Keep the simulation frozen without covering the Canvas with the
+        // player-facing pause sheet; this bridge is localhost-only evidence.
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return { kind, effects: g.battlePresentation.effects.map((effect) => ({ ...effect })) };
+      },
+      prepareV099TerminalBossDefeatProof: () => {
+        const g = gameRef.current;
+        const definition = createBattleDefinition(OUTBREAK_MISSIONS[0].id);
+        clearTransientRenderObjects(g);
+        g.definition = definition;
+        g.resultId = `local-qa:terminal-boss:${definition.operationId}`;
+        g.fighters = [];
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = definition.timeline.length;
+        g.time = Math.max(PREP_SECONDS, definition.timeline.at(-1)?.at ?? PREP_SECONDS);
+        g.wave = definition.timeline.at(-1)?.wave ?? 1;
+        g.baseHp = g.baseMaxHp;
+        g.barricadeHp = Math.max(1, definition.enemyBaseMaxHp);
+        g.barricadeMaxHp = Math.max(1, definition.enemyBaseMaxHp);
+        g.barricadeVulnerable = false;
+        g.bossDefeated = false;
+        g.bossDefeatPending = false;
+        g.running = true;
+        g.paused = false;
+        g.over = false;
+        g.won = false;
+        g.resultPresented = false;
+        g.battlePresentation = resetBattlePresentationRuntime(g.battlePresentation, g.battleAudioGeneration);
+        const boss = spawnEnemy(g, definition.bossEnemyKind, 1);
+        boss.x = 690;
+        boss.y = activeLaneCenters[1];
+        boss.hp = 0;
+        boss.combatReady = true;
+        boss.spawnGrace = 0;
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return {
+          operationId: definition.operationId,
+          bossId: boss.id,
+          bossKind: boss.kind,
+          resultId: g.resultId,
+        };
+      },
+      advanceV099PresentationProof: (seconds = .1) => {
+        const g = gameRef.current;
+        const elapsed = Math.max(0, Math.min(3, Number(seconds) || 0));
+        g.battlePresentation = advanceBattlePresentationRuntime(g.battlePresentation, elapsed);
+        return g.battlePresentation.effects.map((effect) => ({
+          ...effect,
+          snapshot: battlePresentationSnapshot(effect, graphicsProfileRef.current.effectDensity),
+        }));
+      },
+      prepareV099DrumArrivalProof: () => {
+        const g = gameRef.current;
+        clearTransientRenderObjects(g);
+        g.fighters = [];
+        g.corpses = [];
+        g.battlefieldObjects = [];
+        g.areaEffects = [];
+        g.battlePresentation = resetBattlePresentationRuntime(g.battlePresentation, g.battleAudioGeneration);
+        g.scrap = Math.max(g.scrap, 100);
+        placeQaSupply(g, "drum", 1, 535);
+        g.running = true;
+        g.paused = true;
+        g.over = false;
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        const drum = g.battlefieldObjects.find((object) => object.kind === "drum") ?? null;
+        return drum ? { ...drum, pose: drumArrivalPose({
+          phase: drum.phase,
+          phaseTime: drum.phaseTime,
+          dropSeconds: BATTLEFIELD_SUPPLY_DEFS.drum.dropSeconds,
+          impactSeconds: BATTLEFIELD_SUPPLY_DEFS.drum.impactSeconds,
+        }) } : null;
+      },
+      advanceV099DrumArrivalProof: (seconds = .1) => {
+        const g = gameRef.current;
+        const drum = g.battlefieldObjects.find((object) => object.kind === "drum");
+        if (!drum) return null;
+        Object.assign(drum, advanceBattlefieldSupply(drum, Math.max(0, Number(seconds) || 0)));
+        return { ...drum, pose: drumArrivalPose({
+          phase: drum.phase,
+          phaseTime: drum.phaseTime,
+          dropSeconds: BATTLEFIELD_SUPPLY_DEFS.drum.dropSeconds,
+          impactSeconds: BATTLEFIELD_SUPPLY_DEFS.drum.impactSeconds,
+        }) };
+      },
+      prepareTakuyaBossDefeatAudioProof: () => {
+        const g = gameRef.current;
+        if (qaMode !== "endgame" || g.bossDefeated || g.over) return null;
+        const takuya = g.fighters.find((fighter) => fighter.kind === "takuya" && fighter.hp > 0);
+        if (!takuya) return null;
+        // The browser proof observes the complete final cut while TAKUYA is
+        // alive, then crosses only the HP boundary here. The production frame
+        // loop still owns corpse creation, bossDefeatPending, story receipts,
+        // scene restoration, and every other defeat side effect.
+        takuya.hp = 0;
+        return { fighterId: takuya.id, hp: takuya.hp, bossDefeated: g.bossDefeated };
       },
       auditFighterUnitLayer: (fighterId: number) => {
         const fighter = gameRef.current.fighters.find(({ id }) => id === fighterId);
@@ -10401,10 +11041,20 @@ export function AshfallGame() {
           operationId: g.definition.operationId,
           operationCategory: g.definition.operationCategory,
           time: g.time,
+          saveBoundaryPending: battleSaveBoundaryRef.current,
+          saveBoundaryPersistencePending: qaSavePersistenceHoldRef.current !== null,
+          pointerGestures: [...pointerGestureStateRef.current.entries()].map(([pointerId, gesture]) => ({
+            pointerId,
+            blocked: gesture.blocked,
+            rejected: gesture.rejected,
+          })),
+          banner: g.banner,
+          bannerTime: g.bannerTime,
           running: g.running,
           paused: g.paused,
           over: g.over,
           won: g.won,
+          resultPresented: g.resultPresented,
           survivalRun: g.survivalRun ? {
             ...g.survivalRun,
             formation: {
@@ -10452,6 +11102,7 @@ export function AshfallGame() {
           crawlerHitFlash: g.crawlerHitFlash,
           crawlerRepairFlash: g.crawlerRepairFlash,
           crawlerDoor: { ...g.crawlerDoor },
+          crawlerAbility: { ...g.crawlerAbility },
           crawlerVisual: crawlerCombatVfxSnapshot({
             baseHp: g.baseHp,
             baseMaxHp: g.baseMaxHp,
@@ -10462,6 +11113,12 @@ export function AshfallGame() {
             repairFlash: g.crawlerRepairFlash,
             over: g.over,
             effectDensity: graphicsProfileRef.current.effectDensity,
+          }),
+          crawlerGrounding: crawlerGroundingSnapshot({
+            time: g.time,
+            phase: g.over ? "cooldown" : g.crawlerAbility.phase,
+            effectDensity: graphicsProfileRef.current.effectDensity,
+            movingUnits: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
           }),
           pendingWeaponHits: g.pendingWeaponHits.map((hit) => ({ ...hit })),
           damageTexts: g.damageTexts.map((text) => ({ ...text })),
@@ -10517,6 +11174,7 @@ export function AshfallGame() {
             y: object.y,
             phase: object.phase,
           })),
+          deployQueue: g.deployQueue.map((entry) => ({ ...entry })),
           airstrike: { ...g.airstrike },
           placementIndicator: g.placementIndicator ? { ...g.placementIndicator } : null,
           attackIdentity: g.shots
@@ -10660,6 +11318,15 @@ export function AshfallGame() {
           corpses: g.corpses.map((corpse) => ({ ...corpse })),
           manualAbilityVfx: g.manualAbilityVfx.map((effect) => ({ ...effect })),
           manualAbilityReceipts: g.manualAbilityReceipts.map((receipt) => ({ ...receipt })),
+          battlePresentation: {
+            generation: g.battlePresentation.generation,
+            semanticReceipts: [...g.battlePresentation.semanticReceipts],
+            rejected: { ...g.battlePresentation.rejected },
+            effects: g.battlePresentation.effects.map((effect) => ({
+              ...effect,
+              snapshot: battlePresentationSnapshot(effect, graphicsProfileRef.current.effectDensity),
+            })),
+          },
           areaEffects: g.areaEffects.map((effect) => ({ ...effect })),
           completedStageIds: [...campaignSave.completedStageIds],
           unlockedStageIds: [...campaignSave.unlockedStageIds],
@@ -10711,7 +11378,7 @@ export function AshfallGame() {
         delete qaWindow.__ASHFALL_RUNTIME_PERFORMANCE__;
       }
     };
-  }, [campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.readStoryEventIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, persistCampaignSave, qaMode, screen]);
+  }, [beginSaveMutation, campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.readStoryEventIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, finishSaveMutation, outbreakSavePending, pendingOutbreakSettlement, pendingResultCommit, pendingSurvivalCheckpoint, pendingSurvivalSettlement, pendingSurvivalWaveEntitlement, persistCampaignSave, qaMode, qaScenario, screen, survivalSavePending, survivalSettlementAwaitingRetry]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -10748,11 +11415,44 @@ export function AshfallGame() {
     };
   }, []);
 
+  const cleanupBattlefieldPointerGesture = useCallback((pointerId: number, fallbackTarget: HTMLCanvasElement | null = null) => {
+    const gesture = pointerGestureStateRef.current.get(pointerId);
+    releasePointerCaptureSafely(gesture?.captureTarget ?? fallbackTarget ?? canvasRef.current, pointerId);
+    pointerGestureStateRef.current.delete(pointerId);
+    if (selectedActionRef.current) gameRef.current.placementIndicator = null;
+  }, []);
+
+  const cleanupAllBattlefieldPointerGestures = useCallback((fallbackTarget: HTMLCanvasElement | null = null) => {
+    for (const pointerId of [...pointerGestureStateRef.current.keys()]) {
+      cleanupBattlefieldPointerGesture(pointerId, fallbackTarget);
+    }
+    if (selectedActionRef.current) gameRef.current.placementIndicator = null;
+  }, [cleanupBattlefieldPointerGesture]);
+
   const chooseAction = useCallback((action: SelectedAction) => {
+    if (action === null) cleanupAllBattlefieldPointerGestures();
     selectedActionRef.current = action;
     gameRef.current.placementIndicator = null;
     setSelectedAction(action);
-  }, []);
+  }, [cleanupAllBattlefieldPointerGestures]);
+
+  useEffect(() => {
+    if (screen !== "battle") cleanupAllBattlefieldPointerGestures();
+    return () => cleanupAllBattlefieldPointerGestures();
+  }, [cleanupAllBattlefieldPointerGestures, screen]);
+
+  useEffect(() => {
+    const cleanupWhenHidden = () => {
+      if (document.visibilityState === "hidden") cleanupAllBattlefieldPointerGestures();
+    };
+    const cleanupOnPageHide = () => cleanupAllBattlefieldPointerGestures();
+    document.addEventListener("visibilitychange", cleanupWhenHidden, { passive: true });
+    window.addEventListener("pagehide", cleanupOnPageHide, { passive: true });
+    return () => {
+      document.removeEventListener("visibilitychange", cleanupWhenHidden);
+      window.removeEventListener("pagehide", cleanupOnPageHide);
+    };
+  }, [cleanupAllBattlefieldPointerGestures]);
 
   const survivalAssetMode = screen === "survival" || (screen === "battle" && survivalHud !== null);
   const survivalAssetBossKindKey = (
@@ -10846,8 +11546,11 @@ export function AshfallGame() {
       ? [...spriteKinds]
       : [...new Set([...selectedFormationKinds, ...selectedVariantKinds, ...stageEnemyKinds, "turned" as UnitKind])];
     const persistentPaths: Record<string, string> = {
-      crawlerClosed: V075_VISUAL_PROFILES.crawler.closed.path,
-      crawlerOpen: V075_VISUAL_PROFILES.crawler.open.path,
+      crawlerHostClosed: V099_CRAWLER_RUNTIME_PROFILE.equipmentHost.closed.path,
+      crawlerDeploymentBase: V099_CRAWLER_RUNTIME_PROFILE.deployment.baseInterior.path,
+      crawlerForegroundMask: V099_CRAWLER_RUNTIME_PROFILE.deployment.foregroundMask.path,
+      crawlerBarrageEquipment: V099_CRAWLER_RUNTIME_PROFILE.equipment.barrage.sheet.path,
+      crawlerAirstrikeEquipment: V099_CRAWLER_RUNTIME_PROFILE.equipment.airstrike.sheet.path,
       pod: "/tactical-drop-pod-v1.png",
       drum: "/explosive-drum-v1.png", medical: "/medical-supply-station-v1.png",
     };
@@ -10913,7 +11616,13 @@ export function AshfallGame() {
         onReady(image);
       }),
     });
-    const criticalPersistentKeys = new Set(["crawlerClosed", "crawlerOpen"]);
+    const criticalPersistentKeys = new Set([
+      "crawlerHostClosed",
+      "crawlerDeploymentBase",
+      "crawlerForegroundMask",
+      "crawlerBarrageEquipment",
+      "crawlerAirstrikeEquipment",
+    ]);
     const allCriticalJobs = [
       imageJob(stageVisualFor(activeBattlefieldStageId), "background", currentBackground, (image) => {
         backgroundCacheRef.current[activeBattlefieldStageId] = image;
@@ -11307,13 +12016,14 @@ export function AshfallGame() {
     window.visualViewport?.addEventListener("resize", configureCanvas);
     window.visualViewport?.addEventListener("scroll", configureCanvas);
     return () => {
+      cleanupAllBattlefieldPointerGestures();
       observer?.disconnect();
       window.removeEventListener("resize", configureCanvas);
       window.removeEventListener("orientationchange", configureCanvas);
       window.visualViewport?.removeEventListener("resize", configureCanvas);
       window.visualViewport?.removeEventListener("scroll", configureCanvas);
     };
-  }, [activeBattlefieldStageId, graphicsProfileView.dprCap, graphicsProfileView.renderHz, screen]);
+  }, [activeBattlefieldStageId, cleanupAllBattlefieldPointerGestures, graphicsProfileView.dprCap, graphicsProfileView.renderHz, screen]);
 
   const ensureAudio = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -11402,25 +12112,28 @@ export function AshfallGame() {
       instanceKey?: string;
       maxInstances?: number;
       durationSeconds?: number;
+      duck?: { level: number; attackMs: number; holdMs: number; releaseMs: number };
       fallbackCue?: SfxCueId;
       dedupeKey?: string;
+      battleGeneration?: number;
+      ownerId?: number | string;
+      activationId?: number;
+      semantic?: string;
+      receiptId?: string;
+      semanticReceiptConsumed?: boolean;
     } = {},
   ) => {
-    if (!cueId || sfxMutedRef.current) return false;
-    if (typeof window !== "undefined"
-      && ["127.0.0.1", "localhost"].includes(window.location.hostname)) {
-      productionCueQaLogRef.current = [
-        ...productionCueQaLogRef.current,
-        {
-          cueId,
-          at: performance.now(),
-          x,
-          dedupeKey: options.dedupeKey ?? null,
-        },
-      ].slice(-128);
-    }
+    if (!cueId) return false;
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return false;
+    if (options.semantic && options.receiptId && !options.semanticReceiptConsumed && !tryConsumeSemanticReceipt(battleAudioRuntimeRef.current, {
+      battleGeneration: options.battleGeneration,
+      semantic: options.semantic,
+      receiptId: options.receiptId,
+    })) {
+      return false;
+    }
+    if (sfxMutedRef.current) return true;
     const fallback = options.fallbackCue ? () => {
       const definition = SFX_CUES[options.fallbackCue as SfxCueId];
       return productionMixer.playTestTone({
@@ -11431,6 +12144,22 @@ export function AshfallGame() {
       });
     } : null;
     const pan = Math.max(-.85, Math.min(.85, x / W * 2 - 1));
+    if (typeof window !== "undefined"
+      && ["127.0.0.1", "localhost"].includes(window.location.hostname)) {
+      productionCueQaLogRef.current = [
+        ...productionCueQaLogRef.current,
+        {
+          cueId,
+          at: performance.now(),
+          x,
+          dedupeKey: options.dedupeKey ?? null,
+          semantic: options.semantic,
+          receiptId: options.receiptId,
+          ownerId: options.ownerId,
+          activationId: options.activationId,
+        },
+      ].slice(-128);
+    }
     void runGuardedAudioRequest({
       gate: sfxRequestGateRef.current,
       unlock: () => productionMixer.unlocked ? true : productionMixer.unlock(),
@@ -11445,11 +12174,124 @@ export function AshfallGame() {
         instanceKey: options.instanceKey,
         maxInstances: options.maxInstances,
         durationSeconds: options.durationSeconds,
+        duck: options.duck,
         dedupeKey: options.dedupeKey,
         onLoadFailure: fallback ? guardedFallback : undefined,
       }),
     });
     return true;
+  }, []);
+
+  const playBattleSemanticCue = useCallback((
+    cueId: string | null,
+    x: number,
+    options: {
+      semantic: string;
+      receiptId: string;
+      ownerId: number | string;
+      activationId?: number;
+      priority?: number;
+      cooldownMs?: number;
+      volume?: number;
+      playbackRate?: number;
+      maxInstances?: number;
+      duck?: { level: number; attackMs: number; holdMs: number; releaseMs: number };
+      dedupeKey?: string;
+    },
+  ) => playProductionCue(cueId, x, {
+    ...options,
+    dedupeKey: options.dedupeKey ?? `${options.semantic}:${options.receiptId}`,
+  }), [playProductionCue]);
+
+  const playManualAbilityTimelineCue = useCallback((
+    owner: Fighter,
+    eventKey: string,
+    x: number = owner.x,
+    suffix: string = eventKey,
+    options: { priority?: number; cooldownMs?: number; maxInstances?: number; volume?: number } = {},
+  ) => {
+    const cueId = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[owner.kind]?.timeline?.[eventKey];
+    if (!cueId) return false;
+    return playBattleSemanticCue(cueId, x, {
+      ...options,
+      semantic: "ability-timeline",
+      receiptId: `${owner.id}:${owner.manualAbility?.activationId ?? 0}:${suffix}`,
+      ownerId: owner.id,
+      activationId: owner.manualAbility?.activationId ?? 0,
+      dedupeKey: `manual-ability:${owner.id}:${owner.manualAbility?.activationId ?? 0}:${suffix}`,
+    });
+  }, [playBattleSemanticCue]);
+
+  const queueManualAbilityTimelineCue = useCallback((
+    g: Game,
+    owner: Fighter,
+    eventKey: string,
+    x: number = owner.x,
+    delaySeconds = 0,
+    suffix: string = eventKey,
+    options: { priority?: number; cooldownMs?: number; maxInstances?: number; volume?: number } = {},
+  ) => {
+    const cueId = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[owner.kind]?.timeline?.[eventKey];
+    if (!cueId) return false;
+    const activationId = owner.manualAbility?.activationId ?? 0;
+    g.pendingBattleAudioCues.push({
+      cueId,
+      x,
+      battleGeneration: g.battleAudioGeneration,
+      ownerId: owner.id,
+      activationId,
+      semantic: "ability-timeline",
+      receiptId: `${owner.id}:${activationId}:${suffix}`,
+      dueSimulationTime: g.time + Math.max(0, delaySeconds),
+      dedupeKey: `manual-ability:${owner.id}:${activationId}:${suffix}`,
+      priority: options.priority,
+      cooldownMs: options.cooldownMs,
+      maxInstances: options.maxInstances,
+      volume: options.volume,
+    });
+    return true;
+  }, []);
+
+  const playUiOperationCue = useCallback((action: CampaignUiAction, dedupeKey = `ui:${action}`) => {
+    const policy = (UI_OPERATION_CUE_POLICIES as Record<string, { priority: number; cooldownMs: number; volume: number }>)[action]
+      ?? UI_OPERATION_CUE_POLICIES.selection;
+    return playProductionCue(UI_OPERATION_CUE_IDS[action], W / 2, {
+      ...policy,
+      maxInstances: 1,
+      dedupeKey,
+    });
+  }, [playProductionCue]);
+
+  const showOperationFeedback = useCallback((feedback: OperationFeedbackView) => {
+    if (!mountedRef.current) return;
+    if (operationFeedbackTimerRef.current !== null) {
+      window.clearTimeout(operationFeedbackTimerRef.current);
+    }
+    setOperationFeedback(feedback);
+    operationFeedbackTimerRef.current = window.setTimeout(() => {
+      setOperationFeedback(null);
+      operationFeedbackTimerRef.current = null;
+    }, feedback.kind === "reject" ? 1800 : 2200);
+  }, []);
+
+  const isBattleSaveBoundaryActive = useCallback(() => battleSaveBoundaryRef.current, []);
+
+  const rejectBattleSaveBoundary = useCallback((dedupeKey: string) => {
+    if (!isBattleSaveBoundaryActive()) return false;
+    const g = gameRef.current;
+    if (g.running && !g.over) {
+      g.banner = "保存処理中 // 操作を待機";
+      g.bannerTime = Math.max(g.bannerTime, .9);
+    }
+    playUiOperationCue("reject", dedupeKey);
+    return true;
+  }, [isBattleSaveBoundaryActive, playUiOperationCue]);
+
+  useEffect(() => () => {
+    if (operationFeedbackTimerRef.current !== null) {
+      window.clearTimeout(operationFeedbackTimerRef.current);
+      operationFeedbackTimerRef.current = null;
+    }
   }, []);
 
   const announceBossEntrance = useCallback((
@@ -11466,12 +12308,26 @@ export function AshfallGame() {
     g.bannerTime = 3.2;
     g.flashOverlay = Math.max(g.flashOverlay, .18);
     g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaEntrance);
-    playProductionCue(definition.entrance.cueId, W / 2, {
+    addSemanticBattlePresentation(g, {
+      semantic: "boss-entrance",
+      receiptId,
+      ownerId: `boss:${kind}:wave-${g.wave}`,
+      kind: "boss-entrance",
+      x: W - 118,
+      y: activeLaneCenters[1],
+      label: definition.displayName,
+    });
+    playBattleSemanticCue(definition.entrance.cueId, W / 2, {
+      semantic: "boss-entrance",
+      receiptId,
+      ownerId: `boss:${kind}:wave-${g.wave}`,
       priority: 104,
       cooldownMs: 0,
       volume: .92,
       maxInstances: 1,
-      fallbackCue: "boss-warning",
+      duck: kind === "takuya" && activateTakuyaScene
+        ? TAKUYA_ENTRANCE_AUDIO.musicDuck
+        : undefined,
       dedupeKey: receiptId,
     });
     if (kind === "takuya") {
@@ -11491,7 +12347,7 @@ export function AshfallGame() {
       warningLabel: definition.entrance.warningLabel,
     };
     return true;
-  }, [playProductionCue]);
+  }, [playBattleSemanticCue]);
 
   const resumeBattleAudioLoops = useCallback((g: Game) => {
     const productionMixer = productionMixerRef.current;
@@ -11539,7 +12395,11 @@ export function AshfallGame() {
 
   const chooseActionWithCue = useCallback((action: SelectedAction) => {
     const g = gameRef.current;
-    if (!g.running || g.paused || g.over) return;
+    if (!g.running || g.paused || g.over) {
+      playUiOperationCue("reject", "support:inactive");
+      return;
+    }
+    if (rejectBattleSaveBoundary(`support:${action ?? "cancel"}:save-pending`)) return;
     if (selectedActionRef.current === action) return;
     if (action?.startsWith("supply:")) {
       const kind = action.slice("supply:".length) as SupplyKind;
@@ -11547,17 +12407,31 @@ export function AshfallGame() {
       if (cooldown > 0) {
         g.banner = `戦場物資 // 再準備 ${Math.ceil(cooldown)}秒`;
         g.bannerTime = .8;
-        playCue("denied");
+        playUiOperationCue("reject", `support:${kind}:cooldown`);
+        return;
+      }
+      if (g.scrap < supplyDefs[kind].cost) {
+        g.banner = `戦場物資 // スクラップ不足`;
+        g.bannerTime = .8;
+        playUiOperationCue("reject", `support:${kind}:insufficient-scrap`);
         return;
       }
     }
+    if (action === "airstrike" && (g.supportGauge < AIRSTRIKE_DEF.gaugeCost || g.airstrike.phase !== "idle")) {
+      playUiOperationCue("reject", `support:airstrike:unavailable`);
+      return;
+    }
     chooseAction(action);
-    playCue(action ? "ui-confirm" : "ui-cancel");
-  }, [chooseAction, playCue]);
+    playUiOperationCue(action ? "confirm" : "back", `support:${action ?? "cancel"}`);
+  }, [chooseAction, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const activateManualAbility = useCallback((fighterId: number) => {
     const g = gameRef.current;
-    if (!g.running || g.paused || g.over || selectedActionRef.current) return false;
+    if (!g.running || g.paused || g.over || selectedActionRef.current) {
+      playUiOperationCue("reject", `ability:${fighterId}:condition`);
+      return false;
+    }
+    if (rejectBattleSaveBoundary(`ability:${fighterId}:save-pending`)) return false;
     const fighter = g.fighters.find((candidate) => (
       candidate.id === fighterId
       && candidate.side === "human"
@@ -11565,18 +12439,18 @@ export function AshfallGame() {
     ));
     const targetCandidates = fighter ? manualAbilityTargetCandidates(g, fighter) : g.fighters;
     if (!fighter?.manualAbility || !canActivateManualAbility({ fighter, fighters: targetCandidates })) {
-      playCue("denied");
+      playUiOperationCue("reject", `ability:${fighterId}:unavailable`);
       return false;
     }
     const target = selectManualAbilityTarget({ owner: fighter, fighters: targetCandidates });
     const startedAbility = beginManualAbility(fighter.manualAbility, target);
     if (!startedAbility.ok || !target) {
-      playCue("denied");
+      playUiOperationCue("reject", `ability:${fighterId}:no-target`);
       return false;
     }
     const definition = MANUAL_ABILITY_REGISTRY[fighter.kind];
     if (!definition || definition.runtimeStatus !== "integrated") {
-      playCue("denied");
+      playUiOperationCue("reject", `ability:${fighterId}:not-integrated`);
       return false;
     }
     const abilityOrigin = weaponAnchorForTarget(fighter, target);
@@ -11630,39 +12504,21 @@ export function AshfallGame() {
       ...current,
       manualAbilityIcons: current.manualAbilityIcons.filter((icon) => icon.fighterId !== fighter.id),
     }));
-    playCue("ui-confirm");
-    if (fighter.kind === "zakimiya") playCue("burn-start");
-    if (fighter.kind === "mrs-chiha") {
-      scheduleMrsChihaLauncherAudio(g, fighter, "ability");
-    }
-    const abilityStartCue = fighter.kind === "tky"
-      ? unitAudioCueFor(fighter.kind, "weapon", "abilityCharge")
-      : fighter.kind === "gunner"
-        ? null
-      : fighter.kind === "mrs-chiha"
-        ? unitAudioCueFor(fighter.kind, "weapon", "abilityReady")
-        : fighter.kind === "miyamoto-musashi"
-          ? unitAudioCueFor(fighter.kind, "weapon", "abilityGuard")
-          : fighter.kind === "mayo-chan"
-            ? unitAudioCueFor(fighter.kind, "weapon", "abilityStart")
-          : fighter.kind === "crazy-king"
-            ? unitAudioCueFor(fighter.kind, "weapon", "attack")
-            : fighter.kind === "kumaverson"
-              ? unitAudioCueFor(fighter.kind, "weapon", "swing")
-              : fighter.kind === "babayaga"
-                ? unitAudioCueFor(fighter.kind, "weapon", "shot")
-                : weaponCueForUnit(fighter.kind);
-    if (abilityStartCue) {
-      playProductionCue(abilityStartCue, fighter.x, {
-        priority: 82,
+    const abilityAudioContract = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[fighter.kind];
+    if (abilityAudioContract) {
+      playBattleSemanticCue(abilityAudioContract.activationRoot, fighter.x, {
+        semantic: "ability-activation-root",
+        receiptId: `${fighter.id}:${startedAbility.activationId}:root`,
+        ownerId: fighter.id,
+        activationId: startedAbility.activationId,
+        priority: 84,
         cooldownMs: 240,
         maxInstances: 1,
-        fallbackCue: fighter.kind === "mrs-chiha" ? "ranged-shot" : "melee-hit",
-        dedupeKey: `manual-ability:${fighter.id}:${startedAbility.activationId}:start`,
+        dedupeKey: `manual-ability:${fighter.id}:${startedAbility.activationId}:root`,
       });
     }
     return true;
-  }, [playCue, playProductionCue]);
+  }, [playBattleSemanticCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const stopSfx = useCallback(() => {
     sfxRequestGateRef.current.cancelPending();
@@ -11701,15 +12557,25 @@ export function AshfallGame() {
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return;
     const g = gameRef.current;
-    // React owns the two authored silence scenes. The simulation still tracks
-    // the eventual boss/danger mode, but must not overwrite either silence
-    // while its entrance timer or fixed final lines remain active.
-    if (battleSilenceSceneId(g)) return;
     const sceneId = sceneIdForScreen("battle", g.definition.stageId, { musicMode: mode });
+    if (!sceneId) {
+      desiredProductionSceneRef.current = null;
+      setMusicActive(false);
+      void productionMixer.stopScene({ fadeMs: 120 });
+      if (typeof document !== "undefined") {
+        document.documentElement.dataset.battleAudioSceneResolution = `failed:${g.definition.stageId}:${mode}`;
+      }
+      return;
+    }
     if (desiredProductionSceneRef.current === sceneId) return;
+    const previousSceneId = desiredProductionSceneRef.current;
     desiredProductionSceneRef.current = sceneId;
-    if (sceneId && productionMixer.getSettings().bgmEnabled) {
-      void productionMixer.setScene(sceneId).then((state) => {
+    if (typeof document !== "undefined") {
+      document.documentElement.dataset.battleAudioSceneResolution = `ok:${sceneId}`;
+    }
+    if (productionMixer.getSettings().bgmEnabled) {
+      const crossfadeMs = battleSceneTransitionCrossfadeMs(previousSceneId, sceneId);
+      void productionMixer.setScene(sceneId, crossfadeMs === null ? {} : { crossfadeMs }).then((state) => {
         if (desiredProductionSceneRef.current !== sceneId) return;
         setMusicActive(Boolean(state?.bgmAssetId));
       }).catch(() => setMusicActive(false));
@@ -11806,8 +12672,7 @@ export function AshfallGame() {
     const productionMixer = productionMixerRef.current;
     if (!productionMixer) return;
     const g = gameRef.current;
-    const sceneId = battleSilenceSceneId(g)
-      ?? sceneIdForScreen("battle", g.definition.stageId, { musicMode: desiredMusicModeRef.current });
+    const sceneId = sceneIdForScreen("battle", g.definition.stageId, { musicMode: desiredMusicModeRef.current });
     desiredProductionSceneRef.current = sceneId;
     productionMixer.setSettings({ bgmEnabled: true });
     if (!sceneId) return;
@@ -11860,10 +12725,6 @@ export function AshfallGame() {
     if (audio && audio.state !== "closed") void audio.close();
   }, [stopJingle, stopMusic, stopSfx]);
 
-  const storyFinalCutAudioActive = screen === "battle" && hud.battleBarks.some((bark) => (
-    bark.scripted === true
-    && bark.trigger === STORY_BATTLE_TRIGGER_IDS.FINAL_WEAKPOINT_EXPOSED
-  ));
   const takuyaEntranceAudioActive = screen === "battle" && hud.takuyaEntranceAudioActive;
 
   useEffect(() => {
@@ -11889,11 +12750,9 @@ export function AshfallGame() {
         ? { won: outcome, musicMode: desiredMusicModeRef.current, eventId, storyLineIndex }
         : { musicMode: desiredMusicModeRef.current, eventId, storyLineIndex })
       : (typeof outcome === "boolean" ? { won: outcome, eventId, storyLineIndex } : { eventId, storyLineIndex });
-    const sceneId = storyFinalCutAudioActive
-      ? sceneIdForStoryEvent("stage-takuya-final-v070")
-      : takuyaEntranceAudioActive
-        ? TAKUYA_ENTRANCE_AUDIO.silenceSceneId
-        : sceneIdForScreen(screen, activeBattlefieldStageId, musicState);
+    const sceneId = screen === "battle" && takuyaEntranceAudioActive
+      ? TAKUYA_ENTRANCE_AUDIO.bossSceneId
+      : sceneIdForScreen(screen, activeBattlefieldStageId, musicState);
     desiredProductionSceneRef.current = sceneId;
     if (document.documentElement.dataset.audioMixer === "production") {
       document.documentElement.dataset.audioScene = sceneId ?? "none";
@@ -11908,7 +12767,7 @@ export function AshfallGame() {
       if (desiredProductionSceneRef.current !== sceneId) return;
       setMusicActive(Boolean(state?.bgmAssetId) && !bgmMuted);
     }).catch(() => setMusicActive(false));
-  }, [activeBattlefieldStageId, bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, storyFinalCutAudioActive, takuyaEntranceAudioActive]);
+  }, [activeBattlefieldStageId, bgmMuted, campaignResult?.won, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end?.won, eventId, hud.battleBarks.length, paused, screen, sfxMuted, stopSynthMusic, storyAudioPosition.eventId, storyAudioPosition.lineIndex, takuyaEntranceAudioActive]);
 
   useEffect(() => {
     const active = screen === "battle" && hud.battleBarks.length > 0;
@@ -11924,10 +12783,14 @@ export function AshfallGame() {
 
   const deployHuman = useCallback((kind: UnitKind) => {
     const g = gameRef.current;
-    if (!g.running || g.paused || g.over) return false;
+    if (!g.running || g.paused || g.over) {
+      playUiOperationCue("reject", `deploy:${kind}:inactive`);
+      return false;
+    }
+    if (rejectBattleSaveBoundary(`deploy:${kind}:save-pending`)) return false;
     const card = equippedCardForGame(g, kind);
     if (!card || !g.formationKinds.includes(kind) || g.deployQueue.length >= 3 || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
-      playCue("denied");
+      playUiOperationCue("reject", `deploy:${kind}:unavailable`);
       if (g.deployQueue.length >= 3) { g.banner = "格納庫満員 // 3"; g.bannerTime = .9; }
       return false;
     }
@@ -11937,20 +12800,24 @@ export function AshfallGame() {
     g.deployQueue.push(kind);
     g.banner = `${card.name} // 出撃待機 ${g.deployQueue.length}/3`;
     g.bannerTime = .7;
-    playCue("queue");
+    playUiOperationCue("deploy", `deploy:${kind}:queue`);
     return true;
-  }, [playCue]);
+  }, [playUiOperationCue, rejectBattleSaveBoundary]);
 
   const placeBattlefieldSupply = useCallback((kind: SupplyKind, requestedX: number, requestedY: number) => {
     const g = gameRef.current;
-    if (!g.running || g.paused || g.over) return false;
+    if (!g.running || g.paused || g.over) {
+      playUiOperationCue("reject", `supply:${kind}:inactive`);
+      return false;
+    }
+    if (rejectBattleSaveBoundary(`supply:${kind}:save-pending`)) return false;
     const stageObjectForbiddenZones = stageObjectForbiddenZonesForGame(g);
     const placement = correctedBattlefieldTargetForGame(g, { x: requestedX, y: requestedY }, kind);
     const target = placement.position ?? placement.requested;
     const lane = placement.legacyLane as Lane | null;
     if (!placement.ok || lane === null) {
       g.placementIndicator = placementIndicatorFor(`supply:${kind}`, activeLaneForY(target.y), target.x, target.y, false, placement.reason);
-      g.banner = placementReasonLabel(placement.reason); g.bannerTime = .75; playCue("denied");
+      g.banner = placementReasonLabel(placement.reason); g.bannerTime = .75; playUiOperationCue("reject", `supply:${kind}:${placement.reason}`);
       return false;
     }
     const result = resolveBattlefieldSupplyPlacement({
@@ -11964,7 +12831,7 @@ export function AshfallGame() {
     const placementReason = result.ok && placement.adjusted ? placement.reason : result.reason;
     g.placementIndicator = placementIndicatorFor(`supply:${kind}`, lane, target.x, target.y, result.ok, placementReason);
     if (!result.ok) {
-      g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playCue("denied");
+      g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playUiOperationCue("reject", `supply:${kind}:${result.reason}`);
       return false;
     }
     g.scrap = result.scrap;
@@ -11985,20 +12852,37 @@ export function AshfallGame() {
       ? `${supplyDefs[kind].name} // 最寄りの配置可能地点へ補正`
       : `${supplyDefs[kind].name} // 戦場配置`;
     g.bannerTime = 1.2; playCue(kind === "pod" ? "supply-pod" : kind === "drum" ? "supply-drum" : "supply-medical");
+    if (kind === "pod") {
+      const placedPod = (result.supplies as BattlefieldObject[]).find((supply) => supply.id === result.nextId - 1);
+      if (placedPod) {
+        playBattleSemanticCue(V099_SUPPORT_POD_AUDIO_CONTRACT.inbound, placedPod.x, {
+          semantic: "support-pod-inbound",
+          receiptId: `${placedPod.id}:inbound`,
+          ownerId: `pod:${placedPod.id}`,
+          priority: 76,
+          cooldownMs: 180,
+          maxInstances: 2,
+          dedupeKey: `support-pod:${placedPod.id}:inbound`,
+        });
+      }
+    }
     emitBattleBark(g, kind === "pod" ? "support-pod" : kind === "drum" ? "support-drum" : "support-medical", kind === "drum" ? "gunner" : kind === "medical" ? "medic" : "guide", `support-${kind}`);
-    if (kind === "pod") playCue("pod-descent");
     return true;
-  }, [playCue]);
+  }, [playBattleSemanticCue, playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const deployAirstrike = useCallback((requestedX: number, requestedY: number) => {
     const g = gameRef.current;
-    if (!g.running || g.paused || g.over) return false;
+    if (!g.running || g.paused || g.over) {
+      playUiOperationCue("reject", "airstrike:inactive");
+      return false;
+    }
+    if (rejectBattleSaveBoundary("airstrike:save-pending")) return false;
     const placement = correctedBattlefieldTargetForGame(g, { x: requestedX, y: requestedY }, null);
     const target = placement.position ?? placement.requested;
     const lane = placement.legacyLane as Lane | null;
     if (!placement.ok || lane === null) {
       g.placementIndicator = placementIndicatorFor("airstrike", activeLaneForY(target.y), target.x, target.y, false, placement.reason);
-      g.banner = placementReasonLabel(placement.reason); g.bannerTime = .75; playCue("denied");
+      g.banner = placementReasonLabel(placement.reason); g.bannerTime = .75; playUiOperationCue("reject", `airstrike:${placement.reason}`);
       return false;
     }
     const result = requestAirstrike({
@@ -12006,44 +12890,62 @@ export function AshfallGame() {
       lane, x: target.x, y: target.y, laneCenters: activeLaneCenters, runtime: g.airstrike,
     });
     if (!result.ok) {
-      g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playCue("denied"); return false;
+      g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playUiOperationCue("reject", `airstrike:${result.reason}`); return false;
     }
     g.supportGauge = result.supportGauge;
-    g.airstrike = result.runtime as AirstrikeRuntime;
+    g.airstrike = {
+      ...result.runtime,
+      receiptId: `airstrike:${g.battleAudioGeneration}:${g.time.toFixed(3)}`,
+    } as AirstrikeRuntime;
     g.banner = placement.adjusted ? "航空支援 // 最寄りの有効地点へ補正" : "航空支援要請 // 指定地点";
     g.bannerTime = 1; playCue("airstrike-request");
     emitBattleBark(g, "airstrike-request", "guide", "airstrike");
     return true;
-  }, [playCue]);
+  }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const triggerCrawlerBarrage = useCallback(() => {
     const g = gameRef.current;
-    if (!g.running || g.paused || g.over) return false;
+    if (!g.running || g.paused || g.over) {
+      playUiOperationCue("reject", "crawler-barrage:inactive");
+      return false;
+    }
+    if (rejectBattleSaveBoundary("crawler-barrage:save-pending")) return false;
     const result = requestCrawlerBarrage({ running: g.running, paused: g.paused, over: g.over, runtime: g.crawlerAbility });
-    if (!result.ok) { g.banner = result.reason; g.bannerTime = 1; playCue("denied"); return false; }
+    if (!result.ok) { g.banner = result.reason; g.bannerTime = 1; playUiOperationCue("reject", `crawler-barrage:${result.reason}`); return false; }
     g.crawlerAbility = result.runtime as CrawlerRuntime;
     g.banner = "移動拠点火器を展開"; g.bannerTime = 1.1; playCue("crawler-request");
     emitBattleBark(g, "crawler-barrage", "guide", "crawler-barrage");
     return true;
-  }, [playCue]);
+  }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const triggerDrumAt = useCallback((x: number, y: number) => {
     const g = gameRef.current;
-    if (!g.running || g.paused || g.over) return false;
+    if (!g.running || g.paused || g.over) {
+      playUiOperationCue("reject", "drum:inactive");
+      return false;
+    }
+    if (rejectBattleSaveBoundary("drum:save-pending")) return false;
     const drum = g.battlefieldObjects
       .filter((supply) => supply.kind === "drum" && supply.phase === "active" && effectDistance(supply, { x, y }) <= 52)
       .sort((a, b) => effectDistance(a, { x, y }) - effectDistance(b, { x, y }))[0];
-    if (!drum) return false;
+    if (!drum) {
+      playUiOperationCue("reject", "drum:no-target");
+      return false;
+    }
     const result = requestDrumDetonation(drum, "manual");
-    if (!result.ok) return false;
+    if (!result.ok) {
+      playUiOperationCue("reject", `drum:${result.reason ?? "condition"}`);
+      return false;
+    }
     Object.assign(drum, result.supply);
     g.banner = "爆薬ドラム起爆 // 指定地点"; g.bannerTime = .85; playCue("drum-request");
     return true;
-  }, [playCue]);
+  }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
 
   const triggerKuromeEmergencyEvadeAt = useCallback((x: number, y: number) => {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return false;
+    if (rejectBattleSaveBoundary("kurome-evade:save-pending")) return false;
     for (const boss of g.fighters.filter((fighter) => (
       fighter.kind === "kurome"
       && fighter.side === "zombie"
@@ -12080,7 +12982,7 @@ export function AshfallGame() {
       return true;
     }
     return false;
-  }, [playCue]);
+  }, [playCue, rejectBattleSaveBoundary]);
 
   const executeSelected = useCallback((x: number, y: number) => {
     const action = selectedActionRef.current;
@@ -12104,6 +13006,18 @@ export function AshfallGame() {
   }, []);
 
   const handleBattlefieldPointerMove = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
+    const gesture = pointerGestureStateRef.current.get(event.pointerId);
+    if (gesture?.blocked) return;
+    if (isBattleSaveBoundaryActive()) {
+      if (selectedActionRef.current) {
+        pointerGestureStateRef.current.set(event.pointerId, {
+          ...(gesture ?? { rejected: false, captureTarget: event.currentTarget }),
+          blocked: true,
+          captureTarget: gesture?.captureTarget ?? event.currentTarget,
+        });
+      }
+      return;
+    }
     const action = selectedActionRef.current;
     if (!action) return;
     const { x, y, lane } = pointerWorldPosition(event);
@@ -12128,33 +13042,87 @@ export function AshfallGame() {
         });
     const reason = check.ok && placement.adjusted ? placement.reason : check.reason;
     g.placementIndicator = placementIndicatorFor(action, targetLane, target.x, target.y, check.ok, reason);
-  }, [pointerWorldPosition]);
+  }, [isBattleSaveBoundaryActive, pointerWorldPosition]);
 
   const handleBattlefieldPointerDown = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     event.preventDefault();
+    const existingGesture = pointerGestureStateRef.current.get(event.pointerId);
+    if (isBattleSaveBoundaryActive()) {
+      const gesture: PointerGestureState = existingGesture ?? {
+        blocked: true,
+        rejected: false,
+        captureTarget: event.currentTarget,
+      };
+      gesture.blocked = true;
+      gesture.captureTarget ??= event.currentTarget;
+      if (!gesture.rejected) {
+        gesture.rejected = rejectBattleSaveBoundary(`battlefield:pointer:${event.pointerId}:save-pending`);
+      }
+      pointerGestureStateRef.current.set(event.pointerId, gesture);
+      return;
+    }
+    // A gesture that began while persistence was pending remains rejected even
+    // if the boundary clears before its next pointer event.
+    if (existingGesture?.blocked) return;
     if (!selectedActionRef.current) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    pointerGestureStateRef.current.set(event.pointerId, {
+      blocked: false,
+      rejected: false,
+      captureTarget: event.currentTarget,
+    });
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
+      return;
+    }
     handleBattlefieldPointerMove(event);
-  }, [handleBattlefieldPointerMove]);
+  }, [cleanupBattlefieldPointerGesture, handleBattlefieldPointerMove, isBattleSaveBoundaryActive, rejectBattleSaveBoundary]);
 
   const handleBattlefieldPointerUp = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     event.preventDefault();
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    const gesture = pointerGestureStateRef.current.get(event.pointerId);
+    if (gesture?.blocked) {
+      cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
+      return;
+    }
+    if (isBattleSaveBoundaryActive()) {
+      if (!gesture) return;
+      const blockedGesture: PointerGestureState = gesture ?? {
+        blocked: true,
+        rejected: false,
+        captureTarget: event.currentTarget,
+      };
+      blockedGesture.blocked = true;
+      blockedGesture.captureTarget ??= event.currentTarget;
+      if (!blockedGesture.rejected) {
+        blockedGesture.rejected = rejectBattleSaveBoundary(`battlefield:pointer:${event.pointerId}:save-pending`);
+      }
+      pointerGestureStateRef.current.set(event.pointerId, blockedGesture);
+      cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
+      return;
+    }
+    const { x, y } = pointerWorldPosition(event);
+    cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
     const g = gameRef.current;
     if (!g.running || g.paused || g.over) return;
-    const { x, y } = pointerWorldPosition(event);
     if (!selectedActionRef.current) {
       if (triggerKuromeEmergencyEvadeAt(x, y)) return;
       triggerDrumAt(x, y);
       return;
     }
     executeSelected(x, y);
-  }, [executeSelected, pointerWorldPosition, triggerDrumAt, triggerKuromeEmergencyEvadeAt]);
+  }, [cleanupBattlefieldPointerGesture, executeSelected, isBattleSaveBoundaryActive, pointerWorldPosition, rejectBattleSaveBoundary, triggerDrumAt, triggerKuromeEmergencyEvadeAt]);
 
   const handleBattlefieldPointerCancel = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-    if (selectedActionRef.current) gameRef.current.placementIndicator = null;
-  }, []);
+    // Cancellation is always gesture cleanup. It must not create a blocked
+    // entry or emit a second reject cue while persistence is pending.
+    cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
+  }, [cleanupBattlefieldPointerGesture]);
+
+  const handleBattlefieldLostPointerCapture = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
+    cleanupBattlefieldPointerGesture(event.pointerId, event.currentTarget);
+  }, [cleanupBattlefieldPointerGesture]);
 
   const stageViews = useMemo<StageScreenView[]>(() => (CAMPAIGN_STAGES as unknown as readonly CampaignStageData[]).map((stage) => {
     const claimed = campaignSave.claimedStarRewardsByStage[stage.id] ?? [];
@@ -12466,6 +13434,7 @@ export function AshfallGame() {
       window.clearTimeout(startCueTimerRef.current);
       startCueTimerRef.current = null;
     }
+    cleanupAllBattlefieldPointerGestures();
     chooseAction(null);
     battleRadioActiveRef.current = false;
     desiredProductionSceneRef.current = null;
@@ -12473,12 +13442,21 @@ export function AshfallGame() {
     eventCompletionLockRef.current = false;
     setForceStoryReplay(false);
     gameRef.current.battleBarks = createBattleBarkRuntime() as BattleBarkRuntime;
+    gameRef.current.battleAudioGeneration = stopBattleAudioRuntime(battleAudioRuntimeRef.current, "battle-dispose");
+    gameRef.current.battlePresentation = resetBattlePresentationRuntime(
+      gameRef.current.battlePresentation,
+      gameRef.current.battleAudioGeneration,
+    );
+    gameRef.current.pendingBattleAudioCues = [];
+    gameRef.current.pendingWeaponAudioCues = [];
+    resetPressureLatchRuntime(pressureLatchRef.current, "battle-dispose");
+    manualAbilityReadyStateRef.current.clear();
     const mixer = productionMixerRef.current;
     if (mixer) void mixer.stopAll({ fadeMs: 80 });
     stopMusic();
     stopJingle();
     stopSfx();
-  }, [chooseAction, stopJingle, stopMusic, stopSfx]);
+  }, [chooseAction, cleanupAllBattlefieldPointerGestures, stopJingle, stopMusic, stopSfx]);
 
   const openEvents = useCallback((
     nextEventIds: readonly string[],
@@ -12493,6 +13471,11 @@ export function AshfallGame() {
     eventQueueRef.current = queue.slice(1);
     if (destination === "battle-resume") {
       const g = gameRef.current;
+      g.battleAudioGeneration = stopBattleAudioRuntime(battleAudioRuntimeRef.current, "battle-screen-leave");
+      g.battlePresentation = resetBattlePresentationRuntime(g.battlePresentation, g.battleAudioGeneration);
+      g.pendingBattleAudioCues = [];
+      g.pendingWeaponAudioCues = [];
+      manualAbilityReadyStateRef.current.clear();
       g.paused = true;
       g.battleBarks = clearNonScriptedBattleBarks(g.battleBarks) as BattleBarkRuntime;
       setHud((current) => ({ ...current, battleBarks: [] }));
@@ -12570,8 +13553,11 @@ export function AshfallGame() {
       bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
       takuyaEntranceAudioActive: false,
       crawlerHitFlash: 0, threat: 0, objective: objectiveForBattle(fresh.definition, fresh),
-      deployCooldowns: { ...fresh.deployCooldowns }, battleBarks: [...fresh.battleBarks.active], manualAbilityIcons: [] });
-    disposeBattleRuntime(); if (!bgmMuted) startMusic();
+      deployCooldowns: { ...fresh.deployCooldowns }, banner: fresh.bannerTime > 0 ? fresh.banner : null, battleBarks: [...fresh.battleBarks.active], manualAbilityIcons: [] });
+    disposeBattleRuntime();
+    fresh.battleAudioGeneration = resetBattleAudioRuntime(battleAudioRuntimeRef.current, retrying ? "retry" : "new-battle");
+    fresh.battlePresentation = resetBattlePresentationRuntime(fresh.battlePresentation, fresh.battleAudioGeneration);
+    if (!bgmMuted) startMusic();
     if (retrying) playCue("retry");
     else {
       playCue("start-low");
@@ -12612,6 +13598,8 @@ export function AshfallGame() {
     setScreen("battle");
     chooseAction(null);
     disposeBattleRuntime();
+    fresh.battleAudioGeneration = resetBattleAudioRuntime(battleAudioRuntimeRef.current, "new-survival-battle");
+    fresh.battlePresentation = resetBattlePresentationRuntime(fresh.battlePresentation, fresh.battleAudioGeneration);
     desiredMusicModeRef.current = "normal";
     if (!bgmMuted) startMusic();
     playCue("start-low");
@@ -12698,6 +13686,8 @@ export function AshfallGame() {
     if (completion.destination === "battle") startGame();
     else if (completion.destination === "battle-resume") {
       const g = gameRef.current;
+      g.battleAudioGeneration = resetBattleAudioRuntime(battleAudioRuntimeRef.current, "battle-screen-resume");
+      g.battlePresentation = resetBattlePresentationRuntime(g.battlePresentation, g.battleAudioGeneration);
       g.paused = false;
       setPaused(false);
       setScreen("battle");
@@ -12726,7 +13716,10 @@ export function AshfallGame() {
   }, [eventId, handleEventComplete]);
 
   const selectStage = useCallback((stageId: string) => {
-    if (!qaMode && !qaScenario && !isStageUnlocked(campaignSave, stageId)) return;
+    if (!qaMode && !qaScenario && !isStageUnlocked(campaignSave, stageId)) {
+      playUiOperationCue("reject", `stage:${stageId}:locked`);
+      return;
+    }
     // Deliberately does not clear assetsReady. Only the asset session owns that
     // flag: it clears the flag when a session actually starts and sets it when
     // one succeeds, which keeps it in step with assetReadiness.
@@ -12741,39 +13734,89 @@ export function AshfallGame() {
     // off the screen.
     setSelectedStageId(stageId);
     setCampaignSave((current) => selectCampaignStage(current, stageId) as CampaignSave);
-  }, [campaignSave, qaMode, qaScenario]);
+    playUiOperationCue("selection", `stage:${stageId}`);
+  }, [campaignSave, playUiOperationCue, qaMode, qaScenario]);
 
   const selectFormation = useCallback((presetId: string) => {
     setCampaignSave((current) => selectFormationPreset(current, presetId) as CampaignSave);
-  }, []);
+    playUiOperationCue("selection", `formation-preset:${presetId}`);
+  }, [playUiOperationCue]);
 
   const toggleFormation = useCallback((unitId: string) => {
-    setCampaignSave((current) => {
-      if (!qaMode && !qaScenario && !isUnitOwned(current, unitId)) return current;
-      const workingSave = qaMode || qaScenario
-        ? {
-          ...current,
-          ownership: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
-          discovery: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
-          unlockedUnitIds: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
-        } as CampaignSave
-        : current;
-      const selected = getSelectedFormationUnitIds(workingSave);
-      const next = selected.includes(unitId)
-        ? selected.length > 1 ? selected.filter((entry) => entry !== unitId) : selected
-        : selected.length < 7 ? [...selected, unitId] : selected;
-      if (next === selected || (next.length === selected.length && next.every((entry, index) => entry === selected[index]))) return current;
-      return setFormationPresetUnits(workingSave, workingSave.selectedFormationPresetId, next) as CampaignSave;
-    });
-  }, [qaMode, qaScenario]);
+    const current = campaignSaveRef.current;
+    // Keep the original updater guard explicit for the save invariant:
+    // if (!qaMode && !qaScenario && !isUnitOwned(current, unitId)) return current;
+    if (!qaMode && !qaScenario && !isUnitOwned(current, unitId)) {
+      playUiOperationCue("reject", `formation:${unitId}:not-owned`);
+      return;
+    }
+    const workingSave = qaMode || qaScenario
+      ? {
+        ...current,
+        ownership: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
+        discovery: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
+        unlockedUnitIds: (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).map((unit) => unit.id),
+      } as CampaignSave
+      : current;
+    const selected = getSelectedFormationUnitIds(workingSave);
+    const next = selected.includes(unitId)
+      ? selected.length > 1 ? selected.filter((entry) => entry !== unitId) : selected
+      : selected.length < 7 ? [...selected, unitId] : selected;
+    if (next.length === selected.length && next.every((entry, index) => entry === selected[index])) {
+      playUiOperationCue("reject", `formation:${unitId}:capacity`);
+      return;
+    }
+    setCampaignSave(setFormationPresetUnits(workingSave, workingSave.selectedFormationPresetId, next) as CampaignSave);
+    playUiOperationCue("selection", `formation:${unitId}:${next.includes(unitId) ? "selected" : "removed"}`);
+  }, [playUiOperationCue, qaMode, qaScenario]);
+  const selectSupply = useCallback((kind: string) => {
+    setSelectedSupply(kind as SupplyKind);
+    playUiOperationCue("selection", `supply:${kind}`);
+  }, [playUiOperationCue]);
   const recruitUnit = useCallback((unitId: string) => {
-    setCampaignSave((current) => recruitCampaignUnit(current, {
-      unitId,
-      acquisitionId: `recruit:${unitId}`,
-    }).save as CampaignSave);
-  }, []);
+    if (recruitLocksRef.current.has(unitId)) return;
+    recruitLocksRef.current.add(unitId);
+    const acquisitionId = `recruit:${unitId}`;
+    const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === unitId);
+    const unitName = unit?.displayName ?? unitId;
+    void enqueueCampaignTransaction(async (latestSave) => {
+      if (!mountedRef.current) return;
+      try {
+        // Read and calculate only when this transaction reaches the common
+        // queue. A different recruit/upgrade may have committed meanwhile.
+        const transaction = recruitCampaignUnit(latestSave, { unitId, acquisitionId });
+        if (!transaction.result.applied) {
+          const reason = String(transaction.result.reason || "rejected");
+          showOperationFeedback({ kind: "reject", message: operationRejectMessage(reason, `${unitName}の雇用`), key: acquisitionId });
+          playUiOperationCue("reject", `${acquisitionId}:${reason}`);
+          return;
+        }
+        const persisted = await persistCampaignSave(transaction.save as CampaignSave);
+        if (!persisted.durable) {
+          showOperationFeedback({ kind: "reject", message: operationRejectMessage("save-failed", `${unitName}の雇用`), key: `${acquisitionId}:save-failed` });
+          playUiOperationCue("reject", `${acquisitionId}:save-failed`);
+          return;
+        }
+        if (!mountedRef.current) return;
+        campaignSaveRef.current = transaction.save as CampaignSave;
+        setCampaignSave(transaction.save as CampaignSave);
+        showOperationFeedback({ kind: "success", message: `${unitName}を雇用しました`, key: acquisitionId });
+        playUiOperationCue("purchase", `${acquisitionId}:success`);
+      } catch {
+        if (!mountedRef.current) return;
+        showOperationFeedback({ kind: "reject", message: operationRejectMessage("save-failed", `${unitName}の雇用`), key: `${acquisitionId}:save-error` });
+        playUiOperationCue("reject", `${acquisitionId}:save-error`);
+      }
+    }).finally(() => {
+      recruitLocksRef.current.delete(unitId);
+    });
+  }, [enqueueCampaignTransaction, persistCampaignSave, playUiOperationCue, showOperationFeedback]);
   const acknowledgeEmploymentAvailability = useCallback((openEmployment: boolean) => {
-    if (!employmentNoticeUnit || employmentNoticeLockRef.current) return;
+    if (!employmentNoticeUnit || employmentNoticeLockRef.current) {
+      playUiOperationCue("reject", "employment-notice:busy");
+      return;
+    }
+    playUiOperationCue(openEmployment ? "confirm" : "back", `employment-notice:${employmentNoticeUnit.id}:${openEmployment ? "open" : "dismiss"}`);
     employmentNoticeLockRef.current = true;
     setEmploymentNoticePending(true);
     setEmploymentNoticeSaveError(false);
@@ -12803,64 +13846,73 @@ export function AshfallGame() {
         setEmploymentNoticePending(false);
       }
     })();
-  }, [employmentNoticeUnit, persistCampaignSave]);
+  }, [employmentNoticeUnit, persistCampaignSave, playUiOperationCue]);
   const upgradeUnit = useCallback((unitId: string) => {
     if (upgradeLocksRef.current.has(unitId)) return;
     upgradeLocksRef.current.add(unitId);
     setUpgradePendingUnitIds([...upgradeLocksRef.current]);
-    const currentSave = campaignSaveRef.current;
-    const currentLevel = getCampaignUnitLevel(currentSave, unitId);
-    const upgradeId = `upgrade:${unitId}:level-${currentLevel + 1}`;
-    const transaction = upgradeCampaignUnit(currentSave, { unitId, upgradeId });
-    if (transaction.result.applied) {
-      const nextLevel = transaction.result.nextLevel ?? currentLevel;
-      const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === unitId);
-      const baseCard = cards.find((candidate) => candidate.kind === unit?.combatKind) ?? cards[0];
-      const before = applyUnitLevelProgression(baseCard, currentLevel);
-      const after = applyUnitLevelProgression(baseCard, nextLevel);
-      const milestones = unitLevelMilestones(baseCard.aiProfile, nextLevel)
-        .filter((milestone) => !unitLevelMilestones(baseCard.aiProfile, currentLevel).includes(milestone));
-      const defensePercent = (value: number) => Math.round(value * 1000) / 10;
-      campaignSaveRef.current = transaction.save as CampaignSave;
-      setCampaignSave(transaction.save as CampaignSave);
-      setUpgradeFeedback({
-        unitId,
-        level: nextLevel,
-        reachedMax: nextLevel >= UNIT_LEVEL_MAX,
-        spentCaps: transaction.result.spentCaps,
-        statDelta: `HP ${before.hp}→${after.hp} / 攻撃 ${before.damage}→${after.damage} / 防御 ${defensePercent(before.defense)}→${defensePercent(after.defense)}%`,
-        milestones,
-        receipt: transaction.result.upgradeId,
-      });
-      playProductionCue(UPGRADE_AUDIO_CUE_IDS.CURRENCY, W / 2, {
-        priority: 68,
-        cooldownMs: 60,
-        volume: .72,
-        maxInstances: 1,
-        dedupeKey: `${upgradeId}:currency`,
-      });
-      playProductionCue(
-        nextLevel >= UNIT_LEVEL_MAX ? UPGRADE_AUDIO_CUE_IDS.MAX : UPGRADE_AUDIO_CUE_IDS.SUCCESS,
-        W / 2,
-        {
-          priority: nextLevel >= UNIT_LEVEL_MAX ? 82 : 74,
-          cooldownMs: 60,
-          volume: nextLevel >= UNIT_LEVEL_MAX ? .9 : .78,
-          maxInstances: 1,
-          dedupeKey: `${upgradeId}:result`,
-        },
-      );
-      if (upgradeFeedbackTimerRef.current !== null) window.clearTimeout(upgradeFeedbackTimerRef.current);
-      upgradeFeedbackTimerRef.current = window.setTimeout(() => {
-        setUpgradeFeedback((current) => current?.receipt === transaction.result.upgradeId ? null : current);
-        upgradeFeedbackTimerRef.current = null;
-      }, nextLevel >= UNIT_LEVEL_MAX ? 1700 : 1350);
-    }
-    window.setTimeout(() => {
+    const unit = (CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[]).find((candidate) => candidate.id === unitId);
+    const unitName = unit?.displayName ?? unitId;
+    void enqueueCampaignTransaction(async (latestSave) => {
+      if (!mountedRef.current) return;
+      const currentLevel = getCampaignUnitLevel(latestSave, unitId);
+      const upgradeId = `upgrade:${unitId}:level-${currentLevel + 1}`;
+      try {
+        // The level and receipt are derived from the canonical save at queue
+        // execution time, never from a render-time snapshot.
+        const transaction = upgradeCampaignUnit(latestSave, { unitId, upgradeId });
+        if (!transaction.result.applied) {
+          const reason = String(transaction.result.reason || "rejected");
+          showOperationFeedback({ kind: "reject", message: operationRejectMessage(reason, `${unitName}の強化`), key: upgradeId });
+          playUiOperationCue("reject", `${upgradeId}:${reason}`);
+          return;
+        }
+        const persisted = await persistCampaignSave(transaction.save as CampaignSave);
+        if (!persisted.durable) {
+          showOperationFeedback({ kind: "reject", message: operationRejectMessage("save-failed", `${unitName}の強化`), key: `${upgradeId}:save-failed` });
+          playUiOperationCue("reject", `${upgradeId}:save-failed`);
+          return;
+        }
+        if (!mountedRef.current) return;
+        const nextLevel = transaction.result.nextLevel ?? currentLevel;
+        const baseCard = cards.find((candidate) => candidate.kind === unit?.combatKind) ?? cards[0];
+        const before = applyUnitLevelProgression(baseCard, currentLevel);
+        const after = applyUnitLevelProgression(baseCard, nextLevel);
+        const milestones = unitLevelMilestones(baseCard.aiProfile, nextLevel)
+          .filter((milestone) => !unitLevelMilestones(baseCard.aiProfile, currentLevel).includes(milestone));
+        const defensePercent = (value: number) => Math.round(value * 1000) / 10;
+        campaignSaveRef.current = transaction.save as CampaignSave;
+        setCampaignSave(transaction.save as CampaignSave);
+        setUpgradeFeedback({
+          unitId,
+          level: nextLevel,
+          reachedMax: nextLevel >= UNIT_LEVEL_MAX,
+          spentCaps: transaction.result.spentCaps,
+          statDelta: `HP ${before.hp}→${after.hp} / 攻撃 ${before.damage}→${after.damage} / 防御 ${defensePercent(before.defense)}→${defensePercent(after.defense)}%`,
+          milestones,
+          receipt: transaction.result.upgradeId,
+        });
+        showOperationFeedback({ kind: "success", message: `${unitName}を強化しました`, key: upgradeId });
+        // One durable semantic upgrade transaction produces one upgrade cue.
+        // Currency feedback is already represented by the success UI and must
+        // not add a second selection/currency cue.
+        playUiOperationCue("upgrade", `${upgradeId}:result`);
+        if (upgradeFeedbackTimerRef.current !== null) window.clearTimeout(upgradeFeedbackTimerRef.current);
+        upgradeFeedbackTimerRef.current = window.setTimeout(() => {
+          if (!mountedRef.current) return;
+          setUpgradeFeedback((current) => current?.receipt === transaction.result.upgradeId ? null : current);
+          upgradeFeedbackTimerRef.current = null;
+        }, nextLevel >= UNIT_LEVEL_MAX ? 1700 : 1350);
+      } catch {
+        if (!mountedRef.current) return;
+        showOperationFeedback({ kind: "reject", message: operationRejectMessage("save-failed", `${unitName}の強化`), key: `${upgradeId}:save-error` });
+        playUiOperationCue("reject", `${upgradeId}:save-error`);
+      }
+    }).finally(() => {
       upgradeLocksRef.current.delete(unitId);
-      setUpgradePendingUnitIds([...upgradeLocksRef.current]);
-    }, 650);
-  }, [playProductionCue]);
+      if (mountedRef.current) setUpgradePendingUnitIds([...upgradeLocksRef.current]);
+    });
+  }, [enqueueCampaignTransaction, persistCampaignSave, playUiOperationCue, showOperationFeedback]);
 
   const beginCampaign = useCallback(() => {
     if (campaignSave.campaignStarted) {
@@ -12901,18 +13953,29 @@ export function AshfallGame() {
       campaignSave.outbreaks,
       campaignSave.completedStageIds,
       missionId,
-    ) && !qaMode && !qaScenario) return;
+    ) && !qaMode && !qaScenario) {
+      playUiOperationCue("reject", `outbreak:${missionId}:locked`);
+      return;
+    }
     setSelectedOutbreakMissionId(missionId);
-  }, [campaignSave.completedStageIds, campaignSave.outbreaks, qaMode, qaScenario]);
+    playUiOperationCue("selection", `outbreak:${missionId}`);
+  }, [campaignSave.completedStageIds, campaignSave.outbreaks, playUiOperationCue, qaMode, qaScenario]);
   const prepareOutbreak = useCallback(() => {
-    if (!selectedOutbreakMissionId) return;
+    if (!selectedOutbreakMissionId) {
+      playUiOperationCue("reject", "outbreak:missing");
+      return;
+    }
     if (!isOutbreakMissionUnlocked(
       campaignSave.outbreaks,
       campaignSave.completedStageIds,
       selectedOutbreakMissionId,
-    ) && !qaMode && !qaScenario) return;
+    ) && !qaMode && !qaScenario) {
+      playUiOperationCue("reject", `outbreak:${selectedOutbreakMissionId}:locked`);
+      return;
+    }
     setScreen("loadout");
-  }, [campaignSave.completedStageIds, campaignSave.outbreaks, qaMode, qaScenario, selectedOutbreakMissionId]);
+    playUiOperationCue("confirm", `outbreak:${selectedOutbreakMissionId}:prepare`);
+  }, [campaignSave.completedStageIds, campaignSave.outbreaks, playUiOperationCue, qaMode, qaScenario, selectedOutbreakMissionId]);
   const returnFromLoadout = useCallback(() => {
     if (selectedOutbreakMissionId) {
       setScreen("outbreak");
@@ -12921,6 +13984,14 @@ export function AshfallGame() {
     returnToMap();
   }, [returnToMap, selectedOutbreakMissionId]);
   const requestBattle = useCallback(() => {
+    if (formationKinds.length === 0) {
+      playUiOperationCue("reject", "deploy:no-formation");
+      return;
+    }
+    if (!assetsReady || assetError) {
+      playUiOperationCue("reject", "deploy:assets-not-ready");
+      return;
+    }
     if (selectedOutbreakMissionId) {
       startGame({
         stageId: selectedOutbreakMissionId,
@@ -12928,6 +13999,7 @@ export function AshfallGame() {
         selectedSupply,
         resultId: createBattleResultId(selectedOutbreakMissionId),
       });
+      playUiOperationCue("deploy", `deploy:outbreak:${selectedOutbreakMissionId}`);
       return;
     }
     const nextEventIds = getStageEntryStoryEventIds({
@@ -12937,7 +14009,8 @@ export function AshfallGame() {
     });
     if (nextEventIds.length > 0) openEvents(nextEventIds, "battle");
     else startGame();
-  }, [campaignSave.completedStageIds, campaignSave.readStoryEventIds, formationKinds, openEvents, selectedOutbreakMissionId, selectedStageId, selectedSupply, startGame]);
+    playUiOperationCue("deploy", `deploy:stage:${selectedStageId}`);
+  }, [assetError, assetsReady, campaignSave.completedStageIds, campaignSave.readStoryEventIds, formationKinds, openEvents, playUiOperationCue, selectedOutbreakMissionId, selectedStageId, selectedSupply, startGame]);
   const retryBattle = useCallback(() => {
     if (selectedOutbreakMissionId) {
       startGame({
@@ -12980,7 +14053,8 @@ export function AshfallGame() {
     }
     campaignSaveRef.current = nextSave;
     setCampaignSave(nextSave);
-  }, [playCue]);
+    playUiOperationCue("confirm", `migration-notice:${noticeId}`);
+  }, [playCue, playUiOperationCue]);
   const downloadCampaignText = useCallback((filename: string, text: string) => {
     const url = URL.createObjectURL(new Blob([text], { type: "application/json;charset=utf-8" }));
     const anchor = document.createElement("a");
@@ -13474,10 +14548,13 @@ export function AshfallGame() {
           newHighestWave: lastResult.newHighestWave,
           capsAfter: nextSave.caps,
         });
+        if (lastResult.earnedCaps > 0 || lastResult.earnedEquipmentGrants.length > 0) {
+          playUiOperationCue("reward", `reward:survival:${lastResult.runId}`);
+        }
       }
       setScreen("survival-result");
     })();
-  }, [persistCampaignSave, survivalSavePending]);
+  }, [persistCampaignSave, playUiOperationCue, survivalSavePending]);
 
   useEffect(() => {
     if (!pendingSurvivalSettlement || survivalSavePending || survivalSettlementAwaitingRetry) return;
@@ -13564,10 +14641,13 @@ export function AshfallGame() {
           && nextSave.outbreaks.survivalBossKinds.includes(lastResult.bossKind),
         capsAfter: nextSave.caps,
       });
+      if (lastResult.won && (lastResult.earnedCaps > 0 || lastResult.equipmentGrants.length > 0)) {
+        playUiOperationCue("reward", `reward:outbreak:${lastResult.resultId}`);
+      }
     }
     setScreen("outbreak-result");
     return true;
-  }, [outbreakSavePending, persistCampaignSave]);
+  }, [outbreakSavePending, persistCampaignSave, playUiOperationCue]);
 
   const retryOutbreakSettlementSave = useCallback(() => {
     if (!pendingOutbreakSettlement || outbreakSavePending) return;
@@ -13575,6 +14655,17 @@ export function AshfallGame() {
   }, [commitOutbreakSettlement, outbreakSavePending, pendingOutbreakSettlement]);
 
   useEffect(() => {
+    if (end) {
+      gameRef.current.battleAudioGeneration = stopBattleAudioRuntime(battleAudioRuntimeRef.current, "result");
+      gameRef.current.battlePresentation = resetBattlePresentationRuntime(
+        gameRef.current.battlePresentation,
+        gameRef.current.battleAudioGeneration,
+      );
+      gameRef.current.pendingBattleAudioCues = [];
+      gameRef.current.pendingWeaponAudioCues = [];
+      resetPressureLatchRuntime(pressureLatchRef.current, "result");
+      manualAbilityReadyStateRef.current.clear();
+    }
     if (!end || finalizedEndRef.current === end) return;
     const timer = window.setTimeout(async () => {
       if (finalizedEndRef.current === end) return;
@@ -13654,11 +14745,12 @@ export function AshfallGame() {
             return;
           }
         }
+        if (end.won) playUiOperationCue("reward", `reward:stage:${end.resultId}`);
       }
       publishPendingResult(pending);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [campaignSave, commitOutbreakSettlement, end, persistCampaignSave, publishPendingResult]);
+  }, [campaignSave, commitOutbreakSettlement, end, persistCampaignSave, playUiOperationCue, publishPendingResult]);
 
   useEffect(() => {
     if (!saveHydrated || !qaScenario || qaScenarioAppliedRef.current) return;
@@ -13764,10 +14856,21 @@ export function AshfallGame() {
 
   const togglePause = useCallback(() => {
     const g = gameRef.current;
-    if (!g.running || g.over) return;
-    if (g.survivalRun?.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION) return;
+    if (!g.running || g.over) {
+      playUiOperationCue("reject", "pause:inactive");
+      return;
+    }
+    if (rejectBattleSaveBoundary("pause:save-pending")) return;
+    if (g.survivalRun?.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION) {
+      playUiOperationCue("reject", "pause:upgrade-selection");
+      return;
+    }
     const transition = resolvePauseAction(g.paused ? "resume" : "pause");
-    if (!transition) return;
+    if (!transition) {
+      playUiOperationCue("reject", "pause:invalid");
+      return;
+    }
+    playUiOperationCue("confirm", `pause:${transition.paused ? "pause" : "resume"}`);
     g.paused = transition.paused; setPaused(g.paused);
     setPauseConfirm(null);
     if (g.paused) {
@@ -13782,6 +14885,7 @@ export function AshfallGame() {
           cooldownMs: 0,
           volume: .92,
           maxInstances: 1,
+          duck: TAKUYA_ENTRANCE_AUDIO.musicDuck,
         });
       }
       setHud((current) => ({
@@ -13792,12 +14896,20 @@ export function AshfallGame() {
       if (!bgmMuted) startMusic();
       resumeBattleAudioLoops(g);
     }
-  }, [bgmMuted, playProductionCue, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
+  }, [bgmMuted, playProductionCue, playUiOperationCue, rejectBattleSaveBoundary, resumeBattleAudioLoops, startMusic, stopJingle, stopMusic, stopSfx]);
 
   const changeSurvivalSpeed = useCallback((speed: 1 | 2) => {
     const g = gameRef.current;
-    if (!g.survivalRun || g.over || g.paused) return;
+    if (!g.survivalRun || g.over || g.paused) {
+      playUiOperationCue("reject", `speed:${speed}:unavailable`);
+      return;
+    }
+    if (rejectBattleSaveBoundary(`speed:${speed}:save-pending`)) return;
     const nextRun = setSurvivalRunSpeed(g.survivalRun, speed);
+    if (nextRun === g.survivalRun) {
+      playUiOperationCue("reject", `speed:${speed}:locked`);
+      return;
+    }
     g.survivalRun = nextRun;
     const boss = g.fighters.find((fighter) => (
       isBossEnemyKind(fighter.kind)
@@ -13810,10 +14922,12 @@ export function AshfallGame() {
       bossHp: boss?.hp ?? 0,
       bossMaxHp: boss?.maxHp ?? 0,
     }));
-  }, []);
+    playUiOperationCue("selection", `speed:${speed}`);
+  }, [playUiOperationCue, rejectBattleSaveBoundary]);
 
   const selectSurvivalUpgrade = useCallback((upgradeId: string) => {
     const g = gameRef.current;
+    if (rejectBattleSaveBoundary(`survival-upgrade:${upgradeId}:save-pending`)) return;
     if (!g.survivalRun
       || !g.survivalRuntime
       || pendingSurvivalCheckpoint
@@ -13821,7 +14935,10 @@ export function AshfallGame() {
     const previousCrawlerHp = g.baseHp;
     const previousEffects = survivalUpgradeEffects(g.survivalRun);
     const selection = chooseSurvivalCombatUpgrade(g.survivalRuntime, g.survivalRun, upgradeId);
-    if (!selection.selected || !selection.run || !selection.runtime) return;
+    if (!selection.selected || !selection.run || !selection.runtime) {
+      playUiOperationCue("reject", `survival-upgrade:${upgradeId}:unavailable`);
+      return;
+    }
     const nextEffects = survivalUpgradeEffects(selection.run);
     for (const fighter of g.fighters) {
       if (fighter.side !== "human" || fighter.hp <= 0) continue;
@@ -13850,13 +14967,18 @@ export function AshfallGame() {
     setPaused(false);
     setSurvivalHud(survivalHudSnapshot(selection.run));
     if (!bgmMuted) startMusic();
-    playCue("ui-confirm");
-  }, [bgmMuted, pendingSurvivalCheckpoint, playCue, startMusic, survivalSavePending]);
+    playUiOperationCue("upgrade", `survival-upgrade:${upgradeId}`);
+  }, [bgmMuted, pendingSurvivalCheckpoint, playUiOperationCue, rejectBattleSaveBoundary, startMusic, survivalSavePending]);
 
   const requestPauseAction = useCallback((action: PauseAction) => {
-    if (!gameRef.current.running || gameRef.current.over) return;
+    if (!gameRef.current.running || gameRef.current.over) {
+      playUiOperationCue("reject", `pause-action:${action}:inactive`);
+      return;
+    }
+    if (rejectBattleSaveBoundary(`pause-action:${action}:save-pending`)) return;
     setPauseConfirm(action);
-  }, []);
+    playUiOperationCue("selection", `pause-action:${action}`);
+  }, [playUiOperationCue, rejectBattleSaveBoundary]);
 
   const cancelPauseAction = useCallback(() => {
     const transition = createBattleSessionTransition({
@@ -13869,12 +14991,15 @@ export function AshfallGame() {
     });
     if (transition?.destination === "pause" && !transition.discardBattleState && !transition.commitResult) {
       setPauseConfirm(null);
+      playUiOperationCue("back", "pause-confirm:cancel");
     }
-  }, [activeOperationId, campaignSave, formationKinds, selectedSupply]);
+  }, [activeOperationId, campaignSave, formationKinds, playUiOperationCue, selectedSupply]);
 
   const confirmPauseAction = useCallback(() => {
     const action = pauseConfirm;
     if (!action) return;
+    if (rejectBattleSaveBoundary(`pause-confirm:${action}:save-pending`)) return;
+    playUiOperationCue("confirm", `pause-confirm:${action}`);
     const activeGame = gameRef.current;
     if (activeGame.survivalRun) {
       if (action !== "withdraw" || activeGame.over) return;
@@ -13959,7 +15084,7 @@ export function AshfallGame() {
         selectedSupply: SupplyKind;
       });
     }
-  }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
+  }, [activeOperationId, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, pauseConfirm, playUiOperationCue, rejectBattleSaveBoundary, returnToMap, selectedOutbreakMissionId, selectedSupply, startGame, stopMusic, stopSfx]);
 
   const updateVolume = useCallback((kind: "bgm" | "sfx", value: number) => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
@@ -14034,7 +15159,8 @@ export function AshfallGame() {
       const nextMode = modes[(modes.indexOf(current.settings.battleEventMode) + 1) % modes.length];
       return updateStoryPlaybackSettings(current, { battleEventMode: nextMode }) as CampaignSave;
     });
-  }, []);
+    playUiOperationCue("selection", "settings:battle-event-mode");
+  }, [playUiOperationCue]);
 
   const cycleGraphicsQuality = useCallback(() => {
     setCampaignSave((current) => {
@@ -14044,7 +15170,8 @@ export function AshfallGame() {
       ];
       return updateCampaignSettings(current, { graphicsQuality: nextMode }) as CampaignSave;
     });
-  }, []);
+    playUiOperationCue("selection", "settings:graphics-quality");
+  }, [playUiOperationCue]);
 
   const toggleBgm = useCallback(() => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
@@ -14054,7 +15181,8 @@ export function AshfallGame() {
       bgmVolume: !next && current.settings.bgmVolume <= 0 ? .5 : current.settings.bgmVolume,
     }) as CampaignSave);
     if (next) stopMusic(); else if (started && !paused && !end) startMusic();
-  }, [bgmMuted, end, paused, pendingResultCommit, startMusic, started, stopMusic]);
+    playUiOperationCue("selection", `settings:bgm:${next ? "off" : "on"}`);
+  }, [bgmMuted, end, paused, pendingResultCommit, playUiOperationCue, startMusic, started, stopMusic]);
 
   const toggleSfx = useCallback(() => {
     if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
@@ -14067,12 +15195,20 @@ export function AshfallGame() {
     }) as CampaignSave);
     if (next) { stopJingle(); stopSfx(); }
     else if (gameRef.current.running && !gameRef.current.paused && !gameRef.current.over) resumeBattleAudioLoops(gameRef.current);
-  }, [end, pendingResultCommit, resumeBattleAudioLoops, stopJingle, stopSfx]);
+    playUiOperationCue("selection", `settings:sfx:${next ? "off" : "on"}`);
+  }, [end, pendingResultCommit, playUiOperationCue, resumeBattleAudioLoops, stopJingle, stopSfx]);
 
   const enableAudio = useCallback(() => {
-    if (end || pendingResultCommit || resultSaveRetryingRef.current) return;
+    if (end || pendingResultCommit || resultSaveRetryingRef.current) {
+      playUiOperationCue("reject", "audio-unlock:blocked");
+      return;
+    }
     const mixer = productionMixerRef.current;
-    if (!mixer) return;
+    if (!mixer) {
+      playUiOperationCue("reject", "audio-unlock:missing-mixer");
+      return;
+    }
+    playUiOperationCue("confirm", "audio-unlock");
     const restoredBgmVolume = Math.max(.35, campaignSave.settings.bgmVolume);
     const restoredSfxVolume = Math.max(.4, campaignSave.settings.sfxVolume);
     if (bgmMuted || sfxMutedRef.current
@@ -14157,7 +15293,7 @@ export function AshfallGame() {
       updateAudioAvailability("testTone", "failed");
       setAudioUnlockUi("failed");
     });
-  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end, pendingResultCommit, updateAudioAvailability]);
+  }, [bgmMuted, campaignSave.settings.bgmVolume, campaignSave.settings.sfxVolume, end, pendingResultCommit, playUiOperationCue, updateAudioAvailability]);
 
   const playAudioTestTone = useCallback(() => {
     enableAudio();
@@ -14297,8 +15433,11 @@ export function AshfallGame() {
         const dt = cadence.simulationStepSeconds * (g.survivalRun?.speed ?? 1);
         g.shake = advanceCameraShakeRuntime(g.shake, dt);
         if (g.running && !g.paused) g.battleBarks = advanceBattleBarkRuntime(g.battleBarks, dt) as BattleBarkRuntime;
+        if (g.running && !g.paused && !battleSaveBoundaryRef.current) {
+          g.battlePresentation = advanceBattlePresentationRuntime(g.battlePresentation, dt);
+        }
 
-        if (g.running && !g.paused && !g.over) {
+        if (g.running && !g.paused && !g.over && !battleSaveBoundaryRef.current) {
         performanceCounters.simulationTicks += 1;
         g.time += dt;
         g.manualAbilityVfx = g.manualAbilityVfx
@@ -14321,14 +15460,12 @@ export function AshfallGame() {
             };
           })
           .filter((effect) => effect.elapsed < effect.duration);
-        if (g.pendingAbilityAudioCues.length > 64) {
-          g.pendingAbilityAudioCues.length = 64;
-        }
-        const pendingAbilityAudioCues = g.pendingAbilityAudioCues.splice(0);
-        for (const pendingCue of pendingAbilityAudioCues) {
-          const remainingSeconds = Math.max(0, (pendingCue.remainingSeconds ?? 0) - dt);
+        if (g.pendingWeaponAudioCues.length > 32) g.pendingWeaponAudioCues.length = 32;
+        const pendingWeaponAudioCues = g.pendingWeaponAudioCues.splice(0);
+        for (const pendingCue of pendingWeaponAudioCues) {
+          const remainingSeconds = Math.max(0, pendingCue.remainingSeconds - dt);
           if (remainingSeconds > 0) {
-            g.pendingAbilityAudioCues.push({ ...pendingCue, remainingSeconds });
+            g.pendingWeaponAudioCues.push({ ...pendingCue, remainingSeconds });
             continue;
           }
           playProductionCue(pendingCue.cueId, pendingCue.x, {
@@ -14336,14 +15473,71 @@ export function AshfallGame() {
             cooldownMs: pendingCue.cooldownMs ?? 80,
             volume: pendingCue.volume,
             maxInstances: pendingCue.maxInstances ?? 2,
-            fallbackCue: pendingCue.fallbackCue === null
-              ? undefined
-              : pendingCue.fallbackCue ?? "melee-hit",
+            dedupeKey: pendingCue.dedupeKey,
+          });
+        }
+        if (g.pendingBattleAudioCues.length > 64) g.pendingBattleAudioCues.length = 64;
+        for (const pendingCue of g.pendingBattleAudioCues.splice(0)) {
+          scheduleDelayedBattleAudioCue(battleAudioRuntimeRef.current, pendingCue);
+        }
+        const dueBattleAudioCues = takeDueBattleAudioCues(battleAudioRuntimeRef.current, {
+          simulationTime: g.time,
+          isBattleActive: g.running && !g.paused && !g.over && !battleSaveBoundaryRef.current,
+          resolveOwner: (ownerId) => {
+            const owner = g.fighters.find((fighter) => String(fighter.id) === String(ownerId));
+            if (owner) return {
+              alive: owner.hp > 0,
+              retreat: Boolean(owner.mayoRetreat),
+              activationId: owner.manualAbility?.activationId ?? null,
+              phase: owner.manualAbility?.phase ?? null,
+            };
+            const podMatch = /^pod:(\d+)$/.exec(String(ownerId));
+            const pod = podMatch
+              ? g.battlefieldObjects.find((object) => object.kind === "pod" && object.id === Number(podMatch[1]))
+              : null;
+            return pod ? {
+              alive: pod.hp > 0 && pod.phase !== "expired",
+              retreat: false,
+              activationId: 0,
+              phase: pod.phase,
+            } : null;
+          },
+        });
+        for (const pendingCue of dueBattleAudioCues) {
+          playProductionCue(pendingCue.cueId, pendingCue.x, {
+            priority: pendingCue.priority ?? 88,
+            cooldownMs: pendingCue.cooldownMs ?? 80,
+            volume: pendingCue.volume,
+            maxInstances: pendingCue.maxInstances ?? 2,
+            semantic: pendingCue.semantic,
+            receiptId: pendingCue.receiptId,
+            battleGeneration: pendingCue.battleGeneration,
+            ownerId: pendingCue.ownerId,
+            activationId: pendingCue.activationId,
+            semanticReceiptConsumed: true,
             dedupeKey: pendingCue.dedupeKey,
           });
         }
         for (const owner of g.fighters) {
           if (owner.side !== "human" || !owner.manualAbility) continue;
+          const readyNow = isManualAbilityReady(owner);
+          const previousReady = manualAbilityReadyStateRef.current.get(owner.id);
+          if (previousReady !== undefined && readyNow && previousReady === false) {
+            const readyCue = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[owner.kind]?.readyCue;
+            if (readyCue) {
+              playBattleSemanticCue(readyCue, owner.x, {
+                semantic: "ability-ready",
+                receiptId: `${owner.id}:${owner.manualAbility.activationId}:ready`,
+                ownerId: owner.id,
+                activationId: owner.manualAbility.activationId,
+                priority: 64,
+                cooldownMs: 180,
+                maxInstances: 1,
+                dedupeKey: `manual-ability:${owner.id}:${owner.manualAbility.activationId}:ready`,
+              });
+            }
+          }
+          manualAbilityReadyStateRef.current.set(owner.id, readyNow);
           if (owner.kind === "mayo-chan" && owner.manualAbility.phase === "feral" && !owner.mayoRetreat) {
             const hpStep = mayoAbilityHpStep({ hp: owner.hp, maxHp: owner.maxHp, seconds: dt });
             owner.hp = hpStep.hp;
@@ -14355,15 +15549,15 @@ export function AshfallGame() {
                 eventType: "retreat-safe-floor",
                 at: g.time,
               });
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityEnd"), owner.x, {
+              playManualAbilityTimelineCue(owner, "end", owner.x, "retreat-safe-floor", {
                 priority: 82,
                 cooldownMs: 400,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
               });
             }
             if (owner.mayoRetreat) continue;
           }
+          const previousAbilityPhase = owner.manualAbility.phase;
           const abilityStep = advanceManualAbility(owner.manualAbility, dt);
           owner.manualAbility = abilityStep.runtime as ManualAbilityRuntime;
           for (const event of abilityStep.events) {
@@ -14413,13 +15607,13 @@ export function AshfallGame() {
                 addDamageText(g, owner.x, owner.y - 72, event.kind === "guardian" ? "鉄壁展開" : "仁王立ち", 1, event.kind === "guardian" ? "#c4e8ec" : "#ffd07a");
               }
               g.flashOverlay = Math.max(g.flashOverlay, .08);
-              playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
-                priority: 84,
-                cooldownMs: 180,
-                maxInstances: 1,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:active`,
-              });
+              playManualAbilityTimelineCue(
+                owner,
+                event.kind === "crazy-king" ? "active" : event.kind === "guardian" ? "hold" : "stance",
+                owner.x,
+                "active-start",
+                { priority: 84, cooldownMs: 180, maxInstances: 1 },
+              );
               continue;
             }
             if (event.type === "feral-start" && event.kind === "mayo-chan") {
@@ -14429,23 +15623,19 @@ export function AshfallGame() {
               g.banner = "マヨちゃん // 凶暴マヨ";
               g.bannerTime = 1.05;
               addParticles(g, owner.x, owner.y - 20, "#b52c52", 16);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityRush"), owner.x, {
+              playManualAbilityTimelineCue(owner, "rush", owner.x, "feral-start", {
                 priority: 80,
                 cooldownMs: 160,
                 maxInstances: 2,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:feral`,
               });
               continue;
             }
             if (event.type === "retreat" && event.kind === "mayo-chan") {
               if (beginMayoRetreat(g, owner, "ability")) {
-                playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityEnd"), owner.x, {
+                playManualAbilityTimelineCue(owner, "end", owner.x, "retreat", {
                   priority: 82,
                   cooldownMs: 400,
                   maxInstances: 1,
-                  fallbackCue: "melee-hit",
-                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:retreat`,
                 });
               }
               continue;
@@ -14454,41 +15644,30 @@ export function AshfallGame() {
               g.banner = "宮本武蔵 // 受け流し構え";
               g.bannerTime = 1;
               addParticles(g, owner.x, owner.y - 38, "#9ec7db", 10);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityGuard"), owner.x, {
-                priority: 82,
-                cooldownMs: 220,
-                maxInstances: 1,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:guard`,
-              });
               continue;
             }
             if (event.type === "launch" && event.kind === "mrs-chiha") {
               owner.flash = Math.max(owner.flash, .08);
               addParticles(g, owner.x + 18, owner.y - 36, "#d4a45c", 5);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityCylinder"), owner.x, {
+              playManualAbilityTimelineCue(owner, "cylinder", owner.x, `cylinder:${event.salvoIndex}`, {
                 priority: 76,
                 cooldownMs: 60,
                 maxInstances: 4,
-                fallbackCue: "ranged-shot",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:cylinder:${event.salvoIndex}`,
               });
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityShot"), owner.x, {
+              playManualAbilityTimelineCue(owner, "shot", owner.x, `shot:${event.salvoIndex}`, {
                 priority: 82,
                 cooldownMs: 70,
                 maxInstances: 4,
-                fallbackCue: "ranged-shot",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:shot:${event.salvoIndex}`,
               });
-              g.pendingAbilityAudioCues.push({
-                cueId: unitAudioCueFor(owner.kind, "weapon", "flight"),
-                x: event.target?.x ?? owner.x,
-                remainingSeconds: .07,
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:flight:${event.salvoIndex}`,
+              playManualAbilityTimelineCue(owner, "flight", owner.x + 28, `flight:${event.salvoIndex}`, {
+                priority: 74,
+                cooldownMs: 70,
+                maxInstances: 4,
               });
               continue;
             }
-            if (event.type !== "impact" || !event.target) continue;
+            if ((event.type !== "impact" || !event.target)
+              && !(event.kind === "gunner" && event.type === "muzzle")) continue;
             if (event.kind === "brawler") {
               const definition = MANUAL_ABILITY_REGISTRY.brawler;
               const target = g.fighters.find((candidate) => (
@@ -14517,9 +15696,8 @@ export function AshfallGame() {
               addDamageText(g, target.x, target.y - 52, `連打×${definition.hitCount} -${Math.round(damage)}`, .9, "#ffd16d");
               addParticles(g, target.x, target.y - 30, "#ffb34f", 24);
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.weaponHeavy);
-              playProductionCue(weaponCueForUnit(owner.kind), target.x, {
-                priority: 84, cooldownMs: 80, maxInstances: 2, fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:combo`,
+              playManualAbilityTimelineCue(owner, "impact", target.x, "combo-impact", {
+                priority: 84, cooldownMs: 80, maxInstances: 2,
               });
               continue;
             }
@@ -14544,9 +15722,8 @@ export function AshfallGame() {
               recordUnitDamage(g, owner.kind, damage);
               addDamageText(g, target.x, target.y - 52, `迎撃 -${Math.round(damage)}`, .86, "#7ee7e4");
               addParticles(g, target.x, target.y - 30, "#73d8d5", 18);
-              playProductionCue(weaponCueForUnit(owner.kind), target.x, {
-                priority: 84, cooldownMs: 80, maxInstances: 1, fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:intercept`,
+              playManualAbilityTimelineCue(owner, "impact", target.x, "intercept-impact", {
+                priority: 84, cooldownMs: 80, maxInstances: 1,
               });
               continue;
             }
@@ -14573,9 +15750,11 @@ export function AshfallGame() {
               }
               if (appliedCount > 0) {
                 g.flashOverlay = Math.max(g.flashOverlay, .08);
-                playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
-                  priority: 86, cooldownMs: 100, maxInstances: 1, fallbackCue: "ranged-shot",
-                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:precision`,
+                playManualAbilityTimelineCue(owner, "shot", owner.x, "precision-shot", {
+                  priority: 86, cooldownMs: 100, maxInstances: 1,
+                });
+                playManualAbilityTimelineCue(owner, "impact", event.target.x, "precision-impact", {
+                  priority: 86, cooldownMs: 90, maxInstances: 2,
                 });
               }
               continue;
@@ -14599,9 +15778,8 @@ export function AshfallGame() {
               target.damageReductionMultiplier = Math.min(target.damageReductionMultiplier, definition.protectionMultiplier);
               addDamageText(g, target.x, target.y - 54, `緊急処置 +${Math.round(healing)}`, .95, "#76e5a6");
               addParticles(g, target.x, target.y - 28, "#72dca0", 20);
-              playProductionCue("support-heal", target.x, {
-                priority: 82, cooldownMs: 120, maxInstances: 1, fallbackCue: "medical-heal",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:treatment`,
+              playManualAbilityTimelineCue(owner, "success", target.x, "treatment", {
+                priority: 82, cooldownMs: 120, maxInstances: 1,
               });
               continue;
             }
@@ -14644,9 +15822,8 @@ export function AshfallGame() {
               addParticles(g, event.target.x, event.target.y, "#b88a58", 30);
               g.flashOverlay = Math.max(g.flashOverlay, .13);
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
-              playProductionCue(weaponCueForUnit(owner.kind), event.target.x, {
-                priority: 88, cooldownMs: 120, maxInstances: 1, fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:ground`,
+              playManualAbilityTimelineCue(owner, "impact", event.target.x, "ground-impact", {
+                priority: 88, cooldownMs: 120, maxInstances: 1,
               });
               continue;
             }
@@ -14666,19 +15843,11 @@ export function AshfallGame() {
               recordUnitDamage(g, owner.kind, damage);
               addDamageText(g, target.x, target.y - 54, `弱点査定 -${Math.round(damage)}`, .92, "#f0d36f");
               addParticles(g, target.x, target.y - 34, "#e2c756", 14);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "shot") || weaponCueForUnit(owner.kind), owner.x, {
-                priority: 84, cooldownMs: 90, maxInstances: 4, fallbackCue: "ranged-shot",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:shot`,
+              playManualAbilityTimelineCue(owner, "shot", owner.x, "appraise-shot", {
+                priority: 84, cooldownMs: 90, maxInstances: 4,
               });
-              g.pendingAbilityAudioCues.push({
-                cueId: unitAudioCueFor(owner.kind, "weapon", "hit"),
-                x: target.x,
-                remainingSeconds: .045,
-                priority: 80,
-                cooldownMs: 70,
-                maxInstances: 4,
-                fallbackCue: "ranged-shot",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:hit`,
+              queueManualAbilityTimelineCue(g, owner, "mark", target.x, .045, "appraise-mark", {
+                priority: 80, cooldownMs: 70, maxInstances: 1,
               });
               continue;
             }
@@ -14687,12 +15856,10 @@ export function AshfallGame() {
               const targetIds = new Set((event.target.targetIds ?? []).map(String));
               const salvoIndex = Number.isInteger(event.salvoIndex) ? event.salvoIndex : null;
               if (event.type === "muzzle") {
-                playProductionCue(weaponCueForUnit(owner.kind), owner.x, {
+                playManualAbilityTimelineCue(owner, "muzzle", owner.x, `muzzle:${salvoIndex ?? "legacy"}`, {
                   priority: 88,
                   cooldownMs: 45,
                   maxInstances: 3,
-                  fallbackCue: "ranged-shot",
-                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:muzzle:${salvoIndex ?? "legacy"}`,
                 });
                 addParticles(g, owner.x + 26, owner.y - 38, "#f8c35f", 3);
                 continue;
@@ -14725,6 +15892,11 @@ export function AshfallGame() {
                 addParticles(g, target.x, target.y - 28, "#d7ae58", event.finalRound ? 12 : 5);
               }
               g.flashOverlay = Math.max(g.flashOverlay, event.finalRound ? .1 : .045);
+              playManualAbilityTimelineCue(owner, "impact", event.target.x, `impact:${salvoIndex ?? "legacy"}`, {
+                priority: 82,
+                cooldownMs: 90,
+                maxInstances: 2,
+              });
               continue;
             }
             if (event.kind === "engineer") {
@@ -14735,9 +15907,8 @@ export function AshfallGame() {
               owner.engineerTrapCooldown = 0;
               addDamageText(g, owner.engineerTrapX, activeLaneCenters[owner.engineerTrapLane] - 30, "捕縛罠", .9, "#e3ce77");
               addParticles(g, owner.engineerTrapX, activeLaneCenters[owner.engineerTrapLane] - 6, "#c8b158", 16);
-              playProductionCue(weaponCueForUnit(owner.kind), owner.engineerTrapX, {
-                priority: 80, cooldownMs: 100, maxInstances: 1, fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:trap`,
+              playManualAbilityTimelineCue(owner, "spring", owner.engineerTrapX, "trap-spring", {
+                priority: 80, cooldownMs: 100, maxInstances: 1,
               });
               continue;
             }
@@ -14775,16 +15946,21 @@ export function AshfallGame() {
               addParticles(g, event.target.x, event.target.y - 16, "#f2c06d", 14);
               g.flashOverlay = Math.max(g.flashOverlay, .16);
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
-              playProductionCue("weapon-pan-hit", event.target.x, {
-                priority: 82,
-                cooldownMs: 80,
-                volume: .7,
+              playManualAbilityTimelineCue(owner, "throw", owner.x, "molotov-throw", {
+                priority: 80,
+                cooldownMs: 140,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}`,
               });
-              playCue("drum-blast");
-              playCue("burn-start");
+              playManualAbilityTimelineCue(owner, "impact", event.target.x, "molotov-impact", {
+                priority: 84,
+                cooldownMs: 90,
+                maxInstances: 2,
+              });
+              playManualAbilityTimelineCue(owner, "burn", event.target.x, "molotov-burn", {
+                priority: 76,
+                cooldownMs: 180,
+                maxInstances: 1,
+              });
               continue;
             }
             if (event.kind === "tky") {
@@ -14814,19 +15990,15 @@ export function AshfallGame() {
               }
               g.flashOverlay = Math.max(g.flashOverlay, .12);
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityRelease"), owner.x, {
+              playManualAbilityTimelineCue(owner, "release", owner.x, "release", {
                 priority: 88,
                 cooldownMs: 200,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:release`,
               });
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityImpact"), event.target.x, {
+              playManualAbilityTimelineCue(owner, "impact", event.target.x, "impact", {
                 priority: 86,
                 cooldownMs: 80,
                 maxInstances: 2,
-                fallbackCue: "airstrike-impact",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:impact`,
               });
               continue;
             }
@@ -14850,21 +16022,11 @@ export function AshfallGame() {
               addParticles(g, event.target.x, event.target.y - 14, finalRound ? "#ffd08a" : "#d48a42", finalRound ? 28 : 16);
               g.flashOverlay = Math.max(g.flashOverlay, .18);
               g.shake = triggerCameraShake(g.shake, finalRound ? CAMERA_SHAKE_EVENTS.airstrikeImpact : CAMERA_SHAKE_EVENTS.weaponHeavy);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", finalRound ? "abilityFinal" : "abilityImpact"), event.target.x, {
+              playManualAbilityTimelineCue(owner, finalRound ? "final" : "impact", event.target.x, `${finalRound ? "final" : "impact"}:${event.salvoIndex}`, {
                 priority: finalRound ? 92 : 85,
                 cooldownMs: 70,
                 maxInstances: 4,
-                fallbackCue: "drum-blast",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:impact:${event.salvoIndex}`,
               });
-              if (finalRound) {
-                g.pendingAbilityAudioCues.push({
-                  cueId: unitAudioCueFor(owner.kind, "weapon", "stow"),
-                  x: owner.x,
-                  remainingSeconds: .08,
-                  dedupeKey: `manual-ability:${owner.id}:${event.activationId}:stow`,
-                });
-              }
               continue;
             }
             if (event.kind === "miyamoto-musashi") {
@@ -14906,14 +16068,21 @@ export function AshfallGame() {
               owner.x += Math.sign(target.x - owner.x) * Math.min(26, Math.max(0, Math.abs(target.x - owner.x) - owner.range));
               addDamageText(g, target.x, target.y - 54, `無空 -${Math.round(damage)}`, .9, "#d7efff");
               addParticles(g, target.x, target.y - 34, "#c7e4ef", 18);
-              playProductionCue(unitAudioCueFor(owner.kind, "weapon", "abilityCounter"), target.x, {
+              playManualAbilityTimelineCue(owner, event.mode === "fallback" ? "fallbackCross" : "counter", target.x, event.mode === "fallback" ? "fallback-cross" : "counter", {
                 priority: 88,
                 cooldownMs: 180,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
-                dedupeKey: `manual-ability:${owner.id}:${event.activationId}:${event.mode ?? "fallback"}`,
               });
             }
+          }
+          if (owner.kind === "mrs-chiha"
+            && previousAbilityPhase === "recovery"
+            && ["cooldown", "ready"].includes(owner.manualAbility.phase)) {
+            playManualAbilityTimelineCue(owner, "stow", owner.x, "stow", {
+              priority: 72,
+              cooldownMs: 100,
+              maxInstances: 1,
+            });
           }
           const requestedPhasePause = representativeSixPhasePauseRef.current;
           if (
@@ -15003,7 +16172,15 @@ export function AshfallGame() {
               g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`;
               g.bannerTime = 1.25;
               addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18);
-              playCue(objectTarget.kind === "pod" ? "pod-destroy" : "object-destroy");
+              playBattleSemanticCue("support-explosion", objectTarget.x, {
+                semantic: "object-destroy",
+                receiptId: `supply:${objectTarget.id}:destroy`,
+                ownerId: `supply:${objectTarget.id}`,
+                priority: 72,
+                cooldownMs: 0,
+                maxInstances: 2,
+                dedupeKey: `supply:${objectTarget.id}:destroy`,
+              });
             } else {
               playCue(objectTarget.kind === "pod" ? "pod-hit" : "object-hit");
             }
@@ -15131,6 +16308,15 @@ export function AshfallGame() {
           if (hit.damageMode === "grenade") {
             const grenadeDefinition = MANUAL_ABILITY_REGISTRY["mrs-chiha"];
             const impactPoint = { x: hit.targetX, y: hit.targetY + 28 };
+            addSemanticBattlePresentation(g, {
+              semantic: "weapon-explosion",
+              receiptId: hit.transactionId ?? `mrs-chiha:${hit.sourceId}:${hit.shotIndex}:impact`,
+              ownerId: hit.sourceId,
+              kind: "explosion",
+              scale: "small",
+              x: impactPoint.x,
+              y: impactPoint.y - 12,
+            });
             for (const splashTarget of g.fighters) {
               if (splashTarget.side !== "zombie"
                 || splashTarget.hp <= 0
@@ -15427,6 +16613,10 @@ export function AshfallGame() {
             const deployed = spawnHuman(g, kind, true);
             if (deployed) {
               const deploymentFighter = g.fighters[g.fighters.length - 1];
+              if (qaFreezeNextCrawlerDeploymentKindRef.current === kind) {
+                qaFreezeNextCrawlerDeploymentKindRef.current = null;
+                qaFrozenCrawlerDeploymentFighterIdRef.current = deploymentFighter?.id ?? null;
+              }
               const deploymentX = deploymentFighter?.x ?? WORLD_GEOMETRY.crawler.doorX;
               playProductionCue("support-pod-deploy", deploymentX, {
                 priority: 58,
@@ -15656,7 +16846,28 @@ export function AshfallGame() {
             "#f28d46",
             34,
           );
-          g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact); g.flashOverlay = .4; playCue("airstrike-impact");
+          const airstrikeReceiptId = g.airstrike.receiptId ?? `airstrike:${g.battleAudioGeneration}:${g.time.toFixed(3)}`;
+          addSemanticBattlePresentation(g, {
+            semantic: "explosion-result",
+            receiptId: `${airstrikeReceiptId}:impact`,
+            ownerId: airstrikeReceiptId,
+            kind: "explosion",
+            scale: "large",
+            x: g.airstrike.targetX ?? W / 2,
+            y: Number.isFinite(g.airstrike.targetY) ? g.airstrike.targetY as number : activeLaneCenters[g.airstrike.targetLane ?? 1],
+          });
+          g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
+          g.flashOverlay = .4;
+          playBattleSemanticCue("support-explosion", g.airstrike.targetX ?? W / 2, {
+            semantic: "explosion-result",
+            receiptId: `${airstrikeReceiptId}:impact`,
+            ownerId: airstrikeReceiptId,
+            priority: 100,
+            cooldownMs: 0,
+            maxInstances: 2,
+            duck: { level: .2, attackMs: 24, holdMs: 650, releaseMs: 220 },
+            dedupeKey: `${airstrikeReceiptId}:impact`,
+          });
         }
         if (airstrikeStep.events.includes("returning")) playCue("airstrike-return");
         if (airstrikeStep.events.includes("complete")) { g.banner = "航空支援帰投"; g.bannerTime = .75; }
@@ -15674,14 +16885,7 @@ export function AshfallGame() {
               const laneHitIndex = visualHitsByLane[fighter.lane] - 1;
               const visualShotIndex = Math.min(laneHitIndex, 2);
               const impactDelaySeconds = .2 + visualShotIndex * .018;
-              const crawlerMuzzle = crawlerWeaponPose({
-                weaponX: WORLD_GEOMETRY.crawler.weaponX,
-                weaponY: WORLD_GEOMETRY.crawler.weaponY,
-                targetX: fighter.x,
-                targetY: fighter.y - 24,
-                phase: "firing",
-                time: g.time + visualShotIndex * .035,
-              });
+              const crawlerMuzzle = crawlerBarrageMuzzlePoint(g, graphicsProfile);
               const sharedImpact = {
                 targetKind: "fighter" as const,
                 targetSide: "zombie" as const,
@@ -15690,12 +16894,12 @@ export function AshfallGame() {
                 targetId: fighter.id,
                 targetX: fighter.x,
                 targetY: fighter.y - 24,
-                originX: crawlerMuzzle.muzzleX,
-                originY: crawlerMuzzle.muzzleY,
+                originX: crawlerMuzzle.x,
+                originY: crawlerMuzzle.y,
                 damage: hit.damage,
                 weapon: "crawler" as const,
                 shotIndex: visualShotIndex,
-                recoil: crawlerMuzzle.recoil,
+                recoil: 0,
                 casing: false,
                 hitStopSeconds: .04,
                 impactDelaySeconds,
@@ -15714,7 +16918,30 @@ export function AshfallGame() {
 
         for (const object of g.battlefieldObjects) {
           object.hitFlash = Math.max(0, object.hitFlash - dt);
+          const previousPhase = object.phase;
           Object.assign(object, advanceBattlefieldSupply(object, dt));
+          if (object.kind === "pod" && previousPhase === "impact" && object.phase === "active") {
+            playBattleSemanticCue(V099_SUPPORT_POD_AUDIO_CONTRACT.activation, object.x, {
+              semantic: "support-pod-activation",
+              receiptId: `${object.id}:activation`,
+              ownerId: `pod:${object.id}`,
+              priority: 80,
+              cooldownMs: 260,
+              maxInstances: 1,
+              dedupeKey: `support-pod:${object.id}:activation`,
+            });
+          }
+          if (object.kind === "pod" && previousPhase === "active" && object.phase === "expired") {
+            playBattleSemanticCue(V099_SUPPORT_POD_AUDIO_CONTRACT.complete, object.x, {
+              semantic: "support-pod-complete",
+              receiptId: `${object.id}:complete`,
+              ownerId: `pod:${object.id}`,
+              priority: 72,
+              cooldownMs: 260,
+              maxInstances: 1,
+              dedupeKey: `support-pod:${object.id}:complete`,
+            });
+          }
           if (object.kind === "pod" && object.readyToLand && !object.landingTriggered) {
             const hpBeforeLanding = new Map(g.fighters.map((fighter) => [fighter.id, fighter.hp]));
             const landing = resolveBattlefieldSupplyLanding({ supply: object, fighters: g.fighters, laneCenters: activeLaneCenters });
@@ -15734,7 +16961,16 @@ export function AshfallGame() {
               }
             }
             addParticles(g, object.x, object.y + 4, "#d7aa63", 26);
-            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.podLanding); g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("pod-impact");
+            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.podLanding); g.flashOverlay = Math.max(g.flashOverlay, .12);
+            playBattleSemanticCue(V099_SUPPORT_POD_AUDIO_CONTRACT.landing, object.x, {
+              semantic: "support-pod-landing",
+              receiptId: `${object.id}:landing`,
+              ownerId: `pod:${object.id}`,
+              priority: 88,
+              cooldownMs: 220,
+              maxInstances: 2,
+              dedupeKey: `support-pod:${object.id}:landing`,
+            });
           }
           if (object.kind === "drum" && object.phase === "detonating" && !object.detonationTriggered) {
             const detonation = resolveDrumDetonation({ supply: object, fighters: g.fighters, areaEffects: g.areaEffects, nextAreaEffectId: g.nextAreaEffectId, laneCenters: activeLaneCenters });
@@ -15746,7 +16982,28 @@ export function AshfallGame() {
               const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
               if (fighter) { fighter.flash = .18; fighter.knock = Math.max(fighter.knock, 13); addDamageText(g, fighter.x, fighter.y - 52, `爆発 -${hit.damage}`, .82, "#ffbd59"); }
             }
-            addParticles(g, object.x, object.y - 8, "#f26a35", 28); g.flashOverlay = Math.max(g.flashOverlay, .23); playCue("drum-blast"); playCue("burn-start");
+            addParticles(g, object.x, object.y - 8, "#f26a35", 28);
+            g.flashOverlay = Math.max(g.flashOverlay, .23);
+            addSemanticBattlePresentation(g, {
+              semantic: "explosion-result",
+              receiptId: `drum:${object.id}:detonation`,
+              ownerId: `drum:${object.id}`,
+              kind: "explosion",
+              scale: "medium",
+              x: object.x,
+              y: object.y - 8,
+            });
+            playBattleSemanticCue("support-explosion", object.x, {
+              semantic: "explosion-result",
+              receiptId: `drum:${object.id}:detonation`,
+              ownerId: `drum:${object.id}`,
+              priority: 90,
+              cooldownMs: 0,
+              maxInstances: 2,
+              duck: { level: .3, attackMs: 24, holdMs: 500, releaseMs: 220 },
+              dedupeKey: `drum:${object.id}:detonation`,
+            });
+            playCue("burn-start");
           }
         }
         g.battlefieldObjects = g.battlefieldObjects.filter((object) => object.phase !== "expired");
@@ -16051,6 +17308,7 @@ export function AshfallGame() {
           if (f.gateEntering) {
             f.targetId = null;
             f.targetObjectId = null;
+            if (qaFrozenCrawlerDeploymentFighterIdRef.current === f.id) continue;
             const previousX = f.x;
             const previousY = f.y;
             const rampPending = f.side === "human"
@@ -16276,12 +17534,15 @@ export function AshfallGame() {
                             : "五肢定着"
                 }`;
                 g.bannerTime = Math.max(g.bannerTime, Math.min(.86, definition?.warningSeconds ?? .7));
-                playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
+                playBattleSemanticCue(enemyVoiceCue(f.kind, "attack"), f.x, {
+                  semantic: "enemy-ability-warning",
+                  receiptId: `${f.id}:${f.kind}:${g.time.toFixed(3)}:warning`,
+                  ownerId: f.id,
                   priority: 68,
                   cooldownMs: 140,
                   volume: .42,
                   playbackRate: f.kind === "spindle" ? 1.34 : f.kind === "cagewalker" ? .74 : .96,
-                  fallbackCue: "melee-hit",
+                  dedupeKey: `enemy-ability:${f.id}:${f.kind}:${g.time.toFixed(3)}:warning`,
                 });
               }
             }
@@ -16357,12 +17618,15 @@ export function AshfallGame() {
                 } else if (f.kind === "anchor-bloom") {
                   addParticles(g, f.x, f.y + 8, "#705552", 16);
                 }
-                playProductionCue("enemy-takuya-attack", f.x, {
+                playBattleSemanticCue("enemy-takuya-attack", f.x, {
+                  semantic: "enemy-ability-impact",
+                  receiptId: `${f.id}:${f.kind}:${g.time.toFixed(3)}:impact`,
+                  ownerId: f.id,
                   priority: 74,
                   cooldownMs: 160,
                   volume: .5,
                   playbackRate: f.kind === "resonator" ? .66 : f.kind === "spindle" ? 1.42 : .88,
-                  fallbackCue: "melee-hit",
+                  dedupeKey: `enemy-ability:${f.id}:${f.kind}:${g.time.toFixed(3)}:impact`,
                 });
               }
               if (f.kind === "anchor-bloom" && f.stationAbility.phase === "active") {
@@ -16446,11 +17710,14 @@ export function AshfallGame() {
                 g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
                 g.banner = "マザー // 増殖室離床";
                 g.bannerTime = .8;
-                playProductionCue("boss-mother-brood-eruption", f.x, {
+                playBattleSemanticCue("boss-mother-brood-eruption", f.x, {
+                  semantic: "boss-phase-impact",
+                  receiptId: `${f.id}:${f.attackSequence}:mother-brood-eruption`,
+                  ownerId: f.id,
                   priority: 98,
                   cooldownMs: 300,
                   volume: .78,
-                  fallbackCue: "boss-warning",
+                  dedupeKey: `boss:${f.id}:${f.attackSequence}:mother-brood-eruption`,
                 });
               }
               if (step.events.includes("complete")) {
@@ -16468,11 +17735,14 @@ export function AshfallGame() {
                 abilityFrame = true;
                 g.banner = "マザー // 増殖兆候";
                 g.bannerTime = .72;
-                playProductionCue("boss-mother-brood-warning", f.x, {
+                playBattleSemanticCue("boss-mother-brood-warning", f.x, {
+                  semantic: "boss-phase-warning",
+                  receiptId: `${f.id}:${f.attackSequence}:mother-brood-warning`,
+                  ownerId: f.id,
                   priority: 90,
                   cooldownMs: 600,
                   volume: .62,
-                  fallbackCue: "boss-warning",
+                  dedupeKey: `boss:${f.id}:${f.attackSequence}:mother-brood-warning`,
                 });
               }
             }
@@ -16536,11 +17806,14 @@ export function AshfallGame() {
                 if (anomalyKind === "ooguchi") {
                   g.banner = "オオグチ // 捕食突進";
                   addParticles(g, f.x - 38, f.y - 18, "#c4784e", 18);
-                  playProductionCue("boss-ooguchi-charge-impact", f.x, {
+                  playBattleSemanticCue("boss-ooguchi-charge-impact", f.x, {
+                    semantic: "boss-phase-impact",
+                    receiptId: `${f.id}:${f.attackSequence}:ooguchi-charge-impact`,
+                    ownerId: f.id,
                     priority: 99,
                     cooldownMs: 260,
                     volume: .82,
-                    fallbackCue: "boss-warning",
+                    dedupeKey: `boss:${f.id}:${f.attackSequence}:ooguchi-charge-impact`,
                   });
                 } else {
                   const areaBoss = anomalyKind === "futago"
@@ -16591,16 +17864,19 @@ export function AshfallGame() {
                     : f.stationAbility.split
                       ? "フタゴ // 裂開・融合交差撃"
                       : "フタゴ // 融合交差撃";
-                  playProductionCue(
+                  playBattleSemanticCue(
                     anomalyKind === "gairen"
                       ? "boss-gairen-shell-sweep"
                       : "boss-futago-cross-impact",
                     f.x,
                     {
+                      semantic: "boss-phase-impact",
+                      receiptId: `${f.id}:${f.attackSequence}:${anomalyKind}-impact`,
+                      ownerId: f.id,
                       priority: 99,
                       cooldownMs: 260,
                       volume: .8,
-                      fallbackCue: "boss-warning",
+                      dedupeKey: `boss:${f.id}:${f.attackSequence}:${anomalyKind}-impact`,
                     },
                   );
                 }
@@ -16632,7 +17908,7 @@ export function AshfallGame() {
                     ? "ガイレン // 外殻掃討予告"
                     : "フタゴ // 融合交差撃予告";
                 g.bannerTime = .68;
-                playProductionCue(
+                playBattleSemanticCue(
                   anomalyKind === "ooguchi"
                     ? "boss-ooguchi-charge-warning"
                     : anomalyKind === "gairen"
@@ -16640,10 +17916,13 @@ export function AshfallGame() {
                       : "boss-futago-cross-warning",
                   f.x,
                   {
+                    semantic: "boss-phase-warning",
+                    receiptId: `${f.id}:${f.attackSequence}:${anomalyKind}-warning`,
+                    ownerId: f.id,
                     priority: 90,
                     cooldownMs: 600,
                     volume: .64,
-                    fallbackCue: "boss-warning",
+                    dedupeKey: `boss:${f.id}:${f.attackSequence}:${anomalyKind}-warning`,
                   },
                 );
               }
@@ -16694,12 +17973,15 @@ export function AshfallGame() {
                   ? "クロメ // 追跡眼・過励起"
                   : "クロメ // 追跡眼";
                 g.bannerTime = .82;
-                playProductionCue("enemy-takuya-attack", f.x, {
+                playBattleSemanticCue("enemy-takuya-attack", f.x, {
+                  semantic: "boss-phase-impact",
+                  receiptId: `${f.id}:${g.time.toFixed(3)}:kurome-beam`,
+                  ownerId: f.id,
                   priority: 94,
                   cooldownMs: 200,
                   volume: .84,
                   playbackRate: 1.28,
-                  fallbackCue: "boss-warning",
+                  dedupeKey: `boss:${f.id}:${g.time.toFixed(3)}:kurome-beam`,
                 });
               }
               if (step.recovered) {
@@ -16724,12 +18006,15 @@ export function AshfallGame() {
                 // The ray itself owns the full warning window. Keep the global
                 // banner brief so compact screens do not cover this tall boss.
                 g.bannerTime = .68;
-                playProductionCue("enemy-takuya-attack", f.x, {
+                playBattleSemanticCue("enemy-takuya-attack", f.x, {
+                  semantic: "boss-phase-warning",
+                  receiptId: `${f.id}:${g.time.toFixed(3)}:kurome-warning`,
+                  ownerId: f.id,
                   priority: 90,
                   cooldownMs: 250,
                   volume: .52,
                   playbackRate: 1.65,
-                  fallbackCue: "boss-warning",
+                  dedupeKey: `boss:${f.id}:${g.time.toFixed(3)}:kurome-warning`,
                 });
               }
             }
@@ -17394,7 +18679,16 @@ export function AshfallGame() {
                   } else if (result.supply.phase === "destroying") {
                     f.targetObjectId = null;
                     g.banner = `${supplyDefs[objectTarget.kind].name}破壊 // 戦場`; g.bannerTime = 1.25;
-                    addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18); playCue(objectTarget.kind === "pod" ? "pod-destroy" : "object-destroy");
+                    addParticles(g, objectTarget.x, objectTarget.y - 12, "#7e8e82", 18);
+                    playBattleSemanticCue("support-explosion", objectTarget.x, {
+                      semantic: "object-destroy",
+                      receiptId: `supply:${objectTarget.id}:destroy`,
+                      ownerId: `supply:${objectTarget.id}`,
+                      priority: 72,
+                      cooldownMs: 0,
+                      maxInstances: 2,
+                      dedupeKey: `supply:${objectTarget.id}:destroy`,
+                    });
                   } else playCue(objectTarget.kind === "pod" ? "pod-hit" : "object-hit");
                 }
               }
@@ -17917,7 +19211,7 @@ export function AshfallGame() {
                 if (Math.random() < .34) {
                   const attackVoice = humanVoiceCueForUnit(f.kind, "attack");
                   if (f.kind === "babayaga" && attackVoice) {
-                    g.pendingAbilityAudioCues.push({
+                    g.pendingWeaponAudioCues.push({
                       cueId: attackVoice,
                       x: f.x,
                       remainingSeconds: .08,
@@ -17925,7 +19219,6 @@ export function AshfallGame() {
                       cooldownMs: 320,
                       volume: .78,
                       maxInstances: 2,
-                      fallbackCue: null,
                       dedupeKey: `babayaga-voice:${f.id}:${f.attackSequence}`,
                     });
                   } else {
@@ -18628,33 +19921,55 @@ export function AshfallGame() {
             if (beginMayoRetreat(g, fighter, "injury")) {
               g.unitsLost++;
               emitBattleBark(g, "ally-down", "medic", `mayo-retreat-${fighter.id}`);
-              playProductionCue(unitAudioCueFor("mayo-chan", "voice", "hurt"), fighter.x, {
+              playBattleSemanticCue(unitAudioCueFor("mayo-chan", "voice", "hurt"), fighter.x, {
+                semantic: "fighter-retreat-hurt",
+                receiptId: `fighter:${fighter.id}:retreat-hurt`,
+                ownerId: fighter.id,
                 priority: 88,
                 cooldownMs: 300,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
+                dedupeKey: `fighter-retreat:${fighter.id}:hurt`,
               });
-              playProductionCue(unitAudioCueFor("mayo-chan", "voice", "retreat"), fighter.x, {
+              playBattleSemanticCue(unitAudioCueFor("mayo-chan", "voice", "retreat"), fighter.x, {
+                semantic: "fighter-retreat",
+                receiptId: `fighter:${fighter.id}:retreat`,
+                ownerId: fighter.id,
                 priority: 86,
                 cooldownMs: 1000,
                 maxInstances: 1,
-                fallbackCue: "melee-hit",
+                dedupeKey: `fighter-retreat:${fighter.id}:retreat`,
               });
             }
             continue;
           }
           addParticles(g, fighter.x, fighter.y - 15, fighter.kind === "takuya" || fighter.kind === "gate-eater" || fighter.kind === "shade" ? "#c08d62" : fighter.side === "zombie" ? "#7e965e" : "#b0614e", fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 20 : 11);
-          if (fighter.side === "human") playProductionCue(humanVoiceCueForUnit(fighter.kind, "death"), fighter.x, {
-            priority: 88,
-            cooldownMs: 220,
-            volume: fighter.kind === "brute" || fighter.kind === "brawler" ? .96 : .86,
-            maxInstances: 3,
-          });
-          else playProductionCue(enemyVoiceCue(fighter.kind, "death"), fighter.x, {
-            priority: fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 98 : 82,
-            cooldownMs: 180,
-            volume: fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 1 : .88,
-            maxInstances: 4,
+          if (fighter.side === "zombie" && isBossEnemyKind(fighter.kind)) {
+            addSemanticBattlePresentation(g, {
+              semantic: "boss-defeat",
+              receiptId: `fighter:${fighter.id}`,
+              ownerId: fighter.id,
+              kind: "boss-defeat",
+              x: fighter.x,
+              y: fighter.y,
+              label: fighter.kind,
+            });
+          }
+          const defeatCue = fighter.side === "human"
+            ? humanVoiceCueForUnit(fighter.kind, "death")
+            : enemyVoiceCue(fighter.kind, "death");
+          playBattleSemanticCue(defeatCue, fighter.x, {
+            semantic: isBossEnemyKind(fighter.kind) ? "boss-defeat" : "fighter-defeat",
+            receiptId: `fighter:${fighter.id}`,
+            ownerId: fighter.id,
+            priority: fighter.side === "human"
+              ? 88
+              : fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 98 : 82,
+            cooldownMs: fighter.side === "human" ? 220 : 180,
+            volume: fighter.side === "human"
+              ? fighter.kind === "brute" || fighter.kind === "brawler" ? .96 : .86
+              : fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 1 : .88,
+            maxInstances: fighter.side === "human" ? 3 : 4,
+            dedupeKey: `fighter-defeat:${fighter.id}`,
           });
           if (fighter.side === "human" && fighter.kind === "crazy-king"
             && !g.fighters.some((candidate) => candidate.id !== fighter.id && candidate.side === "human" && candidate.kind === "crazy-king" && candidate.hp > 0)) {
@@ -18707,7 +20022,6 @@ export function AshfallGame() {
               if (g.definition.operationCategory === "outbreak") {
                 emitBattleBark(g, "victory", "guide", `outbreak-boss-down-${fighter.kind}`);
               } else if (fighter.kind === "takuya") {
-                playCue("takuya-down");
                 if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else {
                 emitBattleBark(g, "base-exposed", "crawler", "tactical");
@@ -18924,7 +20238,13 @@ export function AshfallGame() {
           g.takuyaEnragedAnnounced = true;
           emitBattleBark(g, "takuya-enraged", "gunner", "takuya-enraged");
         }
-        syncMusicMode(bossActiveOrIncoming ? "boss" : g.phase >= 2 || g.baseHp <= 260 ? "danger" : "normal");
+        const rawPressure = g.phase >= 2 || g.baseHp <= 260;
+        advancePressureLatch(pressureLatchRef.current, {
+          rawPressure,
+          simulationTime: g.time,
+        });
+        syncMusicMode(bossActiveOrIncoming ? "boss"
+          : pressureLatchRef.current.latched ? "pressure" : "normal");
 
         const stationResolution = stationSpatialSnapshot({
           missionType: g.definition.missionType,
@@ -18950,44 +20270,74 @@ export function AshfallGame() {
           g.enemyBaseCollapse = 0;
           emitBattleBark(g, g.won ? "victory" : "defeat", "guide", "tactical");
           g.over = true;
-          g.resultPresented = !enemyBaseDestroyed;
-          if (!enemyBaseDestroyed) setEnd({
-            resultId: g.resultId,
-            stageId: g.definition.operationId,
-            won: g.won,
-            time: g.time,
-            wave: g.wave,
-            kills: g.kills,
-            scrap: g.scrap,
-            baseHp: Math.max(0, g.baseHp),
-            baseMaxHp: g.baseMaxHp,
-            maxCombo: g.maxCombo,
-            unitsLost: g.unitsLost,
-            bossDefeated: g.bossDefeated,
-            enemyBaseDestroyed,
-            encounteredEnemyKinds: [...g.enemyKindsSeen],
-            enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
-            unitStats: {
-              damageByUnit: { ...g.combatMetrics.damageByUnit },
-              damageTakenByUnit: { ...g.combatMetrics.damageTakenByUnit },
-              healingByUnit: { ...g.combatMetrics.healingByUnit },
-            },
-            missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
-              ? { ...g.stageMission }
-              : undefined,
+          const resultPresentationPending = battleResultPresentationPending(g.battlePresentation, {
+            enemyBaseCollapsePending: enemyBaseDestroyed,
           });
+          g.resultPresented = !resultPresentationPending;
+          if (!resultPresentationPending) {
+            stopSfx();
+            setEnd({
+              resultId: g.resultId,
+              stageId: g.definition.operationId,
+              won: g.won,
+              time: g.time,
+              wave: g.wave,
+              kills: g.kills,
+              scrap: g.scrap,
+              baseHp: Math.max(0, g.baseHp),
+              baseMaxHp: g.baseMaxHp,
+              maxCombo: g.maxCombo,
+              unitsLost: g.unitsLost,
+              bossDefeated: g.bossDefeated,
+              enemyBaseDestroyed,
+              encounteredEnemyKinds: [...g.enemyKindsSeen],
+              enemyDefeatsByKind: { ...g.combatMetrics.enemyDefeatsByKind },
+              unitStats: {
+                damageByUnit: { ...g.combatMetrics.damageByUnit },
+                damageTakenByUnit: { ...g.combatMetrics.damageTakenByUnit },
+                healingByUnit: { ...g.combatMetrics.healingByUnit },
+              },
+              missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
+                ? { ...g.stageMission }
+                : undefined,
+            });
+            playCue(g.won ? "victory" : "defeat");
+            playEndJingle(g.won);
+          }
           chooseAction(null);
-          stopMusic(); stopSfx();
-          if (enemyBaseDestroyed) playCue("base-collapse");
-          playCue(g.won ? "victory" : "defeat");
-          playEndJingle(g.won);
+          stopMusic();
+          if (enemyBaseDestroyed) {
+            addSemanticBattlePresentation(g, {
+              semantic: "explosion-result",
+              receiptId: `enemy-base:${g.resultId}:collapse`,
+              ownerId: `enemy-base:${g.resultId}`,
+              kind: "explosion",
+              scale: "large",
+              x: BARRICADE_X,
+              y: activeLaneCenters[1] - 38,
+            });
+            playBattleSemanticCue("support-explosion", BARRICADE_X, {
+              semantic: "explosion-result",
+              receiptId: `enemy-base:${g.resultId}:collapse`,
+              ownerId: `enemy-base:${g.resultId}`,
+              priority: 100,
+              cooldownMs: 0,
+              maxInstances: 1,
+              duck: { level: .2, attackMs: 24, holdMs: 700, releaseMs: 220 },
+              dedupeKey: `enemy-base:${g.resultId}:collapse`,
+            });
+          }
         }
       }
 
       if (g.over && !g.resultPresented && !g.survivalRun) {
-        const collapseStep = advanceEnemyBaseCollapse({ barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt, duration: ENEMY_BASE_COLLAPSE_SECONDS });
-        g.enemyBaseCollapse = collapseStep.elapsed;
-        if (collapseStep.complete) {
+        let enemyBaseCollapsePending = false;
+        if (g.barricadeHp <= 0) {
+          const collapseStep = advanceEnemyBaseCollapse({ barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt, duration: ENEMY_BASE_COLLAPSE_SECONDS });
+          g.enemyBaseCollapse = collapseStep.elapsed;
+          enemyBaseCollapsePending = !collapseStep.complete;
+        }
+        if (!battleResultPresentationPending(g.battlePresentation, { enemyBaseCollapsePending })) {
           g.resultPresented = true;
           setEnd({
             resultId: g.resultId,
@@ -19010,7 +20360,13 @@ export function AshfallGame() {
               damageTakenByUnit: { ...g.combatMetrics.damageTakenByUnit },
               healingByUnit: { ...g.combatMetrics.healingByUnit },
             },
+            missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
+              ? { ...g.stageMission }
+              : undefined,
           });
+          stopSfx();
+          playCue(g.won ? "victory" : "defeat");
+          playEndJingle(g.won);
         }
       }
       }
@@ -19033,21 +20389,6 @@ export function AshfallGame() {
         false,
       );
       performanceCounters.renderFrames += 1;
-      if (g.bannerTime > 0 && g.running) {
-        const compact = compactBattleViewport();
-        const banner = battleBannerRect();
-        const gradient = ctx.createLinearGradient(banner.x, banner.y, banner.x + banner.width, banner.y);
-        gradient.addColorStop(0, "rgba(15,18,18,.48)");
-        gradient.addColorStop(.14, "rgba(15,14,14,.91)");
-        gradient.addColorStop(.86, "rgba(15,14,14,.91)");
-        gradient.addColorStop(1, "rgba(15,18,18,.48)");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(banner.x, banner.y, banner.width, banner.height);
-        ctx.strokeStyle = "rgba(215,150,71,.82)";
-        ctx.strokeRect(banner.x + .5, banner.y + .5, banner.width - 1, banner.height - 1);
-        ctx.fillStyle = "#f0d2a3"; ctx.font = `bold ${compact ? 11 : 17}px monospace`; ctx.textAlign = "center";
-        ctx.fillText(g.banner, W / 2, banner.y + (compact ? 19 : 28)); ctx.textAlign = "left";
-      }
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
         const bossHud = g.fighters
@@ -19129,6 +20470,7 @@ export function AshfallGame() {
           takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
           crawlerHitFlash: g.crawlerHitFlash, threat: crawlerThreatLevel(nearestEnemyX),
           objective: objectiveForBattle(g.definition, g), deployCooldowns: { ...g.deployCooldowns },
+          banner: g.bannerTime > 0 && g.running ? g.banner : null,
           battleBarks: g.paused ? [] : [...g.battleBarks.active],
           manualAbilityIcons,
         });
@@ -19179,7 +20521,7 @@ export function AshfallGame() {
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("pageshow", onPageShow);
     };
-  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playCue, playEndJingle, playProductionCue, qaScenario, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
+  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
@@ -19210,6 +20552,29 @@ export function AshfallGame() {
     : "BOSS";
   const bossHudSide = (hud.bossWorldX ?? 0) >= W * .64 ? "boss-hud-left" : "boss-hud-right";
   const combatLocked = !!end || hud.baseHp <= 0 || hud.barricadeHp <= 0;
+  const commonBattleActionBlockReason = !started
+    ? "作戦開始前"
+    : paused
+      ? "一時停止中"
+      : combatLocked
+        ? "作戦終了"
+        : battleSaveBoundaryRef.current
+          ? "保存中"
+          : null;
+  const selectedSupplyBlockReason = commonBattleActionBlockReason
+    ?? (hud.supportItemCooldowns[selectedSupply] > 0
+      ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
+      : hud.scrap < supplyDefs[selectedSupply].cost
+        ? `スクラップ不足 ${hud.scrap}/${supplyDefs[selectedSupply].cost}`
+        : null);
+  const airstrikeBlockReason = commonBattleActionBlockReason
+    ?? (hud.airstrikePhase !== "idle"
+      ? "航空支援実行中"
+      : hud.supportGauge < AIRSTRIKE_DEF.gaugeCost
+        ? `支援不足 ${hud.supportGauge}/${AIRSTRIKE_DEF.gaugeCost}`
+        : null);
+  const crawlerBlockReason = commonBattleActionBlockReason
+    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : null);
   const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "partial" ? "一部音声を再試行できます" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
   const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "partial" ? "一部再試行" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
   const audioCategorySummary = ([
@@ -19247,11 +20612,11 @@ export function AshfallGame() {
           : undefined}
         aria-label="西新世紀末物語 ゲーム"
       >
-        <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} />
+        <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} onLostPointerCapture={handleBattlefieldLostPointerCapture} />
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;
-          const abilityDisabled = !icon.available || paused || Boolean(selectedAction) || combatLocked;
+          const abilityDisabled = !icon.available || paused || Boolean(selectedAction) || combatLocked || battleSaveBoundaryRef.current;
           return <button
             key={icon.fighterId}
             type="button"
@@ -19261,7 +20626,8 @@ export function AshfallGame() {
             data-owner-anchor-x={icon.anchorX}
             data-owner-anchor-y={icon.anchorY}
             style={{ left: icon.x, top: icon.y, width: icon.hitSize, height: icon.hitSize }}
-            disabled={abilityDisabled}
+            disabled={!icon.available}
+            aria-disabled={abilityDisabled}
             aria-label={`${cards.find((card) => card.kind === icon.kind)?.name ?? icon.kind}：${ability.displayName}${icon.available ? "" : "（対象待ち）"}`}
             onPointerDown={(event) => event.stopPropagation()}
             onPointerUp={(event) => event.stopPropagation()}
@@ -19292,9 +20658,12 @@ export function AshfallGame() {
           <small>{audioUnlockUi === "success" ? "確認音を再生しました（聞こえない場合は端末・タブのミュートを確認）" : audioUnlockUi === "partial" ? audioCategorySummary : audioUnlockUi === "failed" ? "AudioContextまたは確認音を開始できません。タップで再試行" : "タップしてBGM・環境音・効果音・戦闘ボイスを開始"}</small>
         </button>}
         {screen === "battle" && <>
-        {hud.battleBarks.length > 0 && <div className={`battle-barks ${bossHudSide === "boss-hud-left" ? "battle-barks-right" : ""}`} aria-live="polite" aria-label="戦闘台詞">{hud.battleBarks.map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
-
-        {isSurvivalBattle ? <div className="survival-hud" role="region" aria-label="Survival戦闘情報">
+        {isSurvivalBattle ? <>
+          {(hud.battleBarks.length > 0 || hud.banner) && <div className="battle-message-stack battle-message-stack-survival" aria-live="polite">
+            {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
+            {hud.banner && <p className="battle-banner" data-message-kind="banner">{hud.banner}</p>}
+          </div>}
+          <div className="survival-hud" role="region" aria-label="Survival戦闘情報">
           <div className="survival-wave"><small>WAVE</small><strong>{survivalHud.wave}</strong></div>
           <div className="survival-next-boss"><small>NEXT BOSS</small><b>WAVE {survivalHud.nextBossWave}</b></div>
           <div className={`survival-crawler-health ${healthPct <= 25 ? "critical" : ""}`}>
@@ -19302,24 +20671,33 @@ export function AshfallGame() {
             <i><em style={{ width: `${healthPct}%` }} /></i>
           </div>
           <div className="survival-speed" aria-label="戦闘速度">
-            <button className={survivalHud.speed === 1 ? "active" : ""} disabled={paused || survivalSavePending} onClick={() => changeSurvivalSpeed(1)}>1倍</button>
-            <button className={survivalHud.speed === 2 ? "active" : ""} disabled={paused || survivalHud.speedLocked || survivalSavePending} onClick={() => changeSurvivalSpeed(2)}>2倍</button>
+            <button className={survivalHud.speed === 1 ? "active" : ""} aria-disabled={paused || survivalSavePending || battleSaveBoundaryRef.current} onClick={() => changeSurvivalSpeed(1)}>1倍</button>
+            <button className={survivalHud.speed === 2 ? "active" : ""} aria-disabled={paused || survivalHud.speedLocked || survivalSavePending || battleSaveBoundaryRef.current} onClick={() => changeSurvivalSpeed(2)}>2倍</button>
           </div>
-          <button className="survival-pause" onClick={togglePause} disabled={survivalUpgradeOpen || survivalSavePending} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
-        </div> : <>
+          <button className="survival-pause" onClick={togglePause} aria-disabled={survivalUpgradeOpen || survivalSavePending || battleSaveBoundaryRef.current} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
+          </div>
+        </> : <>
           <div className="top-hud">
-            <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedOperationView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
-            <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
-            <button className="icon-btn" onClick={togglePause} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
-            <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
-            <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
+            <div className="battle-brand-zone">
+              <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedOperationView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
+              <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>耐久</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
+            </div>
+            <div className="battle-message-stack" aria-live="polite">
+              {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
+              {hud.banner && <p className="battle-banner" data-message-kind="banner">{hud.banner}</p>}
+            </div>
+            <div className="battle-controls-zone">
+              <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
+              <button className="icon-btn" onClick={togglePause} aria-disabled={battleSaveBoundaryRef.current} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
+              <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>
+              <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
+            </div>
           </div>
 
-          <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>移動拠点</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
           {stationMissionHud || selectedOutbreakMissionId
             ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{hud.objective}</b></div></div>
             : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
-          {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
+          {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
         </>}
         {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
 
@@ -19327,17 +20705,32 @@ export function AshfallGame() {
           <div className="resource-stack">
             <div className="resource command"><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
             <div className="resource rage"><span>支援</span><strong>{hud.supportGauge}</strong><small>/{SUPPORT_GAUGE_MAX}</small><i><em style={{ width: `${hud.supportGauge}%` }} /></i></div>
+            <div className="stats-strip battle-stats">
+              <span>☠ {hud.kills}</span>
+              {!isSurvivalBattle && <span>▰ {hud.scrap}</span>}
+              {isSurvivalBattle && <span>BOSS {survivalHud.bossKills}</span>}
+              <span className="bay-status">格納庫 {hud.deployQueue}/3</span>
+              {hud.combo > 1 && <span className="combo">×{hud.combo}</span>}
+            </div>
           </div>
 
-          <div className="combat-deck">
-            <div className="unit-cards" aria-label="生存者ユニット">
+          <div className="unit-cards" aria-label="生存者ユニット">
               {cards.filter((card) => formationKinds.includes(card.kind)).map((card) => {
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
+                const cardBlockReason = commonBattleActionBlockReason
+                  ?? (hud.deployQueue >= 3
+                    ? "格納庫満員"
+                    : cooldown > 0
+                      ? `再準備 ${cooldown}秒`
+                      : hud.energy < card.cost
+                        ? "指揮不足"
+                        : null);
                 return (
-                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} disabled={!started || paused || hud.energy < card.cost || cooldown > 0 || combatLocked} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
+                    {!cooldown && <span className="card-state">{cardBlockReason ?? "出撃可能"}</span>}
                     {cooldown > 0 && <span
                       className="cooldown-mask"
                       style={{ "--cooldown-progress": `${Math.min(100, cooldown / Math.max(1, card.deployCooldown) * 100)}%` } as CSSProperties}
@@ -19345,13 +20738,14 @@ export function AshfallGame() {
                   </button>
                 );
               })}
-            </div>
+          </div>
+          <div className="support-zone">
             <div className="support-row" aria-label="戦場物資・航空支援・移動拠点一斉掃射">
               <span className="support-label">物資<br />支援</span>
               <button
                 className={`support-btn ${selectedSupply} ${hud.supportItemCooldowns[selectedSupply] > 0 ? "cooling" : ""} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
                 data-cooldown={Math.ceil(hud.supportItemCooldowns[selectedSupply])}
-                disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || hud.supportItemCooldowns[selectedSupply] > 0 || combatLocked}
+                aria-disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || hud.supportItemCooldowns[selectedSupply] > 0 || combatLocked || battleSaveBoundaryRef.current}
                 onClick={() => chooseActionWithCue(selectedAction === `supply:${selectedSupply}` ? null : `supply:${selectedSupply}`)}
                 aria-label={hud.supportItemCooldowns[selectedSupply] > 0
                   ? `${supplyDefs[selectedSupply].name} 再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
@@ -19359,22 +20753,19 @@ export function AshfallGame() {
               >
                 <span className="support-key">{supplyDefs[selectedSupply].key}</span>
                 <b>{hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : SUPPORT_DISPLAY_NAMES[selectedSupply]}</b>
-                <small>{hud.supportItemCooldowns[selectedSupply] > 0 ? "使用済み・自動補充中" : selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復"}</small>
+                <small>{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</small>
                 <em>{hud.supportItemCooldowns[selectedSupply] > 0 ? "↻" : `▰${supplyDefs[selectedSupply].cost}`}</em>
               </button>
-              <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
-                <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>通信・照準・飛来・着弾・帰投</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
+              <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} aria-disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked || battleSaveBoundaryRef.current} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
+                <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>{airstrikeBlockReason ?? "照準・飛来・着弾"}</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
               </button>
-              <button className="support-btn barrage" disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
-                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>戦場全域固定火器</small><em>⌁</em>
+              <button className="support-btn barrage" aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked || battleSaveBoundaryRef.current} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
+                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>{crawlerBlockReason ?? "戦場全域固定火器"}</small><em>⌁</em>
               </button>
             </div>
+            <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${hud.objective}`}</div>
           </div>
         </div>
-
-        {isSurvivalBattle
-          ? <div className="stats-strip survival-stats"><span>☠ 撃破 {hud.kills}</span><span>BOSS {survivalHud.bossKills}</span><span className="bay-status">格納庫 {hud.deployQueue}/3</span>{hud.combo > 1 && <span className="combo">×{hud.combo} 連続</span>}<span className="objective">防衛前線を維持</span></div>
-          : <div className="stats-strip"><span>☠ 撃破 {hud.kills}</span><span>▰ スクラップ {hud.scrap}</span><span className="bay-status">格納庫 {hud.deployQueue}/3</span>{hud.combo > 1 && <span className="combo">×{hud.combo} 連続</span>}<span className="objective">目標：{hud.objective}</span></div>}
         {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
           <small>BOSS CHECKPOINT // WAVE {survivalHud.lastCompletedWave}</small>
           <h2>3択強化を選択</h2>
@@ -19516,6 +20907,7 @@ export function AshfallGame() {
           saveMutationPending={saveMutationPending}
           upgradePendingUnitIds={upgradePendingUnitIds}
           upgradeFeedback={upgradeFeedback}
+          operationFeedback={operationFeedback}
           personnelInitialMode={personnelInitialMode}
           savePersistence={savePersistence}
           saveEnvironment={saveEnvironment}
@@ -19548,13 +20940,14 @@ export function AshfallGame() {
           onToggleFormation={toggleFormation}
           onRecruitUnit={recruitUnit}
           onUpgradeUnit={upgradeUnit}
-          onSelectSupply={(kind) => setSelectedSupply(kind as SupplyKind)}
+          onSelectSupply={selectSupply}
           onStartBattle={requestBattle}
           onRetry={retryBattle}
           onContinueResult={continueResult}
           onContinueOutbreakResult={continueOutbreakResult}
           onResetSave={resetCampaign}
           onReloadAssets={retryAssets}
+          onUiAction={playUiOperationCue}
         />}
         {screen !== "battle" && campaignSave.migrationNotices[0] && <div className="migration-notice" role="alertdialog" aria-modal="true" aria-label="Version 0.9.0キャップ経済再編">
           <section>

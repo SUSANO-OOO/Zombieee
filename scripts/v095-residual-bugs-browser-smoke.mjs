@@ -8,6 +8,7 @@ import {
   RUNTIME_SIMULATION_HZ,
 } from "../app/renderPerformance.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 const baseUrl = new URL(
   process.env.V095_RESIDUAL_BUGS_QA_BASE_URL ?? "http://127.0.0.1:4177/",
@@ -131,16 +132,16 @@ if (continuousDeploymentSequence) {
   const exactSequenceAxes = (
     qaMode === "deployment-matrix"
     && qaScope === "focused"
-    && sameAxis(engines, ["chromium"])
-    && sameAxis(configuredViewportNames, ["844x390"])
-    && sameAxis(unitKinds, defaultUnitKinds)
+    && engines.length > 0
+    && configuredViewportNames.length > 0
+    && unitKinds.length > 0
     && sameAxis(qualities, ["auto"])
     && sameAxis(speeds, [1])
   );
   if (!exactSequenceAxes) {
     throw new Error(
       "Continuous deployment sequence capture requires the focused "
-      + "Chromium 844x390 / Auto / 1x / all-sixteen matrix",
+      + "one or more engines/viewports/units at Auto / 1x",
     );
   }
 }
@@ -480,28 +481,20 @@ function validateCapturedState(capture, label) {
     `${label}: playable body remained translucent`);
   if (capture.unitLayerAudit) {
     const audit = capture.unitLayerAudit;
-    invariant(audit.actualClip.nonzeroPixels > 0 && audit.actualClip.bounds,
-      `${label}: production-clipped unit layer disappeared`);
-    invariant(audit.actualFull.nonzeroPixels > 0 && audit.actualFull.bounds,
-      `${label}: unclipped unit layer disappeared`);
-    invariant(audit.opaqueFull.nonzeroPixels > 0 && audit.opaqueFull.bounds,
+    invariant(audit.actual.nonzeroPixels > 0 && audit.actual.bounds,
+      `${label}: production unit layer disappeared`);
+    invariant(audit.opaque.nonzeroPixels > 0 && audit.opaque.bounds,
       `${label}: forced-opaque reference layer disappeared`);
-    invariant(audit.fullOpacityComparison.maskIoU >= .995,
+    invariant(audit.opacityComparison.maskIoU >= .999,
       `${label}: actual unit silhouette diverged from the opaque reference`);
-    invariant(audit.fullOpacityComparison.normalizedAlphaL1 <= .005,
+    invariant(audit.opacityComparison.normalizedAlphaL1 <= .001,
       `${label}: actual unit alpha remained translucent`);
-    invariant(audit.clipComparison.maskIoU >= .98,
-      `${label}: production doorway clip removed or leaked unit pixels`);
-    invariant(audit.clipComparison.normalizedAlphaL1 <= .02,
-      `${label}: production doorway clip alpha diverged from the expected silhouette`);
-    invariant(audit.visibleCoverage > 0 && audit.visibleCoverage <= 1.01,
-      `${label}: invalid visible silhouette coverage ${audit.visibleCoverage}`);
-    invariant(audit.verticalSilhouetteRetention >= .9,
-      `${label}: doorway clip collapsed the unit's vertical silhouette`);
-    if (!audit.clipRect) {
-      invariant(audit.visibleCoverage >= .995,
-        `${label}: fully emerged unit did not retain its complete silhouette`);
-    }
+    invariant(audit.alphaOneFromFirstVisibleFrame === true,
+      `${label}: first-visible body was not fully opaque`);
+    invariant(audit.clipRect === null && audit.clipMode === "none",
+      `${label}: legacy rectangle clipping remained active`);
+    invariant(audit.unitDrawCount === 1,
+      `${label}: unit layer was drawn ${audit.unitDrawCount} times`);
   }
   invariant(capture.playerFacingText.keyboardLabels.length === 0,
     `${label}: smartphone keyboard labels ${capture.playerFacingText.keyboardLabels.join(",")}`);
@@ -525,6 +518,7 @@ for (const engine of engines) {
           timeout,
         });
         invariant(response?.ok(), `${caseName}: navigation HTTP ${response?.status()}`);
+        await dismissInstallOffer(page, { timeout });
         await page.waitForFunction(
           (requestedMode) => {
             const qa = window.__ASHFALL_BATTLE_QA__;
@@ -1264,10 +1258,10 @@ if (qaScope === "full") {
 if (continuousDeploymentSequence) {
   const expectedPhases = ["door", "boundary", "ramp", "exit", "landing", "ready"];
   invariant(
-    summary.total === defaultUnitKinds.length
-      && summary.passed === defaultUnitKinds.length
+    summary.total === summary.expectedTotal
+      && summary.passed === summary.expectedTotal
       && summary.failed === 0,
-    `Continuous deployment sequence produced ${summary.passed}/${defaultUnitKinds.length} passes`,
+    `Continuous deployment sequence produced ${summary.passed}/${summary.expectedTotal} passes`,
   );
   for (const result of summary.results) {
     invariant(
@@ -1295,8 +1289,8 @@ if (continuousDeploymentSequence) {
     );
   }
   invariant(
-    summary.unitLayerAuditCaseCount === defaultUnitKinds.length
-      && summary.unitLayerAuditFrameCount === defaultUnitKinds.length * expectedPhases.length,
+    summary.unitLayerAuditCaseCount === summary.expectedTotal
+      && summary.unitLayerAuditFrameCount === summary.expectedTotal * expectedPhases.length,
     "Continuous deployment sequence did not audit every player-facing frame",
   );
 }

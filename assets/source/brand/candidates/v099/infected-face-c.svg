@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" data-candidate-id="v099-infected-face-c">
+  <!-- Project-original Gate A candidate. No external artwork, font, or traced source. -->
+  <defs>
+    <radialGradient id="c-bg" cx="52%" cy="50%" r="78%">
+      <stop offset="0" stop-color="#3c2024"/>
+      <stop offset=".52" stop-color="#191517"/>
+      <stop offset="1" stop-color="#080909"/>
+    </radialGradient>
+    <linearGradient id="c-skin" x1=".1" y1="0" x2=".9" y2="1">
+      <stop offset="0" stop-color="#adb38a"/>
+      <stop offset=".42" stop-color="#68755a"/>
+      <stop offset="1" stop-color="#23342d"/>
+    </linearGradient>
+    <radialGradient id="c-eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fffedc"/>
+      <stop offset=".24" stop-color="#baff61"/>
+      <stop offset=".64" stop-color="#72d64f" stop-opacity=".62"/>
+      <stop offset="1" stop-color="#72d64f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="c-mouth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#31100f"/>
+      <stop offset="1" stop-color="#090b0a"/>
+    </linearGradient>
+  </defs>
+  <g id="backdrop">
+    <rect width="1024" height="1024" fill="url(#c-bg)"/>
+    <path d="M144 655Q512 789 880 655" fill="none" stroke="#dc5638" stroke-width="23" stroke-opacity=".16"/>
+    <path d="M174 704Q512 828 850 704" fill="none" stroke="#7bd65a" stroke-width="12" stroke-opacity=".13"/>
+    <path d="M704 220h142v58H704z" fill="#111315" stroke="#d85a3c" stroke-width="8" opacity=".76"/>
+    <path d="M730 249h90" stroke="#82dc5e" stroke-width="9"/>
+  </g>
+  <g id="mark" transform="translate(512 500) rotate(7) translate(-512 -500) translate(35.8 35.8) scale(.93)">
+    <path d="M290 820Q355 725 426 699H604Q674 730 738 820Z" fill="#111414" stroke="#bd5137" stroke-width="14"/>
+    <path d="M406 648L392 757Q503 815 620 751L603 638Z" fill="#4f604f" stroke="#141817" stroke-width="18"/>
+    <!-- Narrower head and vertical scream silhouette make this legible as a different identity at 48px. -->
+    <path d="M320 429Q331 282 452 210Q572 139 690 251Q756 315 735 461L701 620Q677 713 585 760Q482 807 389 735Q309 668 320 429Z" fill="url(#c-skin)" stroke="#111514" stroke-width="24"/>
+    <!-- Uneven acid-punk crest rather than the horizontal hair mass used by candidate A. -->
+    <path d="M326 338L282 287L348 294L343 219L402 258L438 162L472 251L540 145L544 249L618 174L601 272L691 222L653 319L733 309L670 382Z" fill="#1b201e" stroke="#536052" stroke-width="11" stroke-linejoin="round"/>
+    <path d="M326 430Q393 378 475 421L456 509Q377 531 314 482Z" fill="#111412"/>
+    <ellipse cx="410" cy="463" rx="61" ry="56" fill="url(#c-eye)"/>
+    <circle cx="410" cy="463" r="17" fill="#9be85a" stroke="#172010" stroke-width="8"/>
+    <!-- The right socket is physically torn away instead of mirroring the left eye. -->
+    <path d="M544 415Q624 366 704 426L690 511Q613 536 546 486Z" fill="#111412"/>
+    <path d="M569 440l36-27 29 17 34-8 20 31-31 43-65-4z" fill="#8c2b29"/>
+    <path d="M600 441l17 19 22-14 13 25-25 21-39-11z" fill="#d65a3b"/>
+    <path d="M509 450L480 561L548 580" fill="none" stroke="#35483b" stroke-width="25" stroke-linecap="round"/>
+    <path d="M478 492l37 12M470 528l41 8M481 561l38 6" stroke="#de613d" stroke-width="11" stroke-linecap="round"/>
+    <!-- Deep vertical scream with broken upper/lower tooth rows and acid tongue. -->
+    <path d="M374 558Q509 519 671 558Q675 688 610 747Q525 803 431 740Q371 681 374 558Z" fill="url(#c-mouth)" stroke="#101312" stroke-width="19"/>
+    <path d="M398 569Q511 539 647 570L626 626Q510 651 414 620Z" fill="#e4d7ad"/>
+    <path d="M420 562l-4 68M462 553l-2 86M505 549l2 95M550 551l5 87M594 557l8 71" stroke="#453a30" stroke-width="10"/>
+    <path d="M428 708Q514 674 613 708Q591 757 525 771Q465 760 428 708Z" fill="#8ddc55"/>
+    <path d="M464 726Q521 703 580 727Q555 758 520 762Q488 756 464 726Z" fill="#c9ff6c" opacity=".55"/>
+    <path d="M335 533l-55-8M342 560l-54 22M678 371l59-29" stroke="#e06b40" stroke-width="13" stroke-linecap="round" opacity=".78"/>
+    <circle cx="290" cy="610" r="13" fill="#8ddd5b"/><circle cx="735" cy="527" r="11" fill="#8ddd5b"/><circle cx="706" cy="588" r="8" fill="#df5d3c"/>
+  </g>
+</svg>

@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 if (!process.env.BOSS_QA_BASE_URL) {
   throw new Error("BOSS_QA_BASE_URL is required; use the isolated QA runner");
@@ -194,6 +195,7 @@ for (const engine of engines) {
         const { diagnostics, pendingRequests } = createDiagnostics(page);
         try {
           await page.goto(caseUrl(bossCase.params), { waitUntil: "domcontentloaded", timeout });
+          await dismissInstallOffer(page, { timeout });
           await page.waitForFunction(
             () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().screen === "battle",
             undefined,
