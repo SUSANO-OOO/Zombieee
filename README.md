@@ -6,13 +6,18 @@
 
 **正式URL：<https://susano-ooo.github.io/Zombieee/>**
 
-正式公開先はGitHub Pagesだけです。現在の正式公開版は**Version 0.9.8.2**です。ChatGPT Sitesは旧公開先であり、公開・QA・正式判定には使用しません。
+正式公開先はGitHub Pagesだけです。現在の正式公開版は**Version 0.9.9.0**です。ChatGPT Sitesは旧公開先であり、公開・QA・正式判定には使用しません。
+
+- release SHA：`19a79404822ebc8f0cbd8a3b809b8ed0adbc28af`
+- release tree：`305af62474c8a1ea118251023ec4ad58bee17975`
+- annotated tag：`v0.9.9.0`
+- 実行台帳：Issue #136（completed）
 
 主対象はスマートフォン横画面です。844×390、844×340、iPhone Safariのsafe areaとブラウザUI表示状態を優先し、PC横画面も正式対応します。
 
-## Version 0.9.9.0 release candidate
+## Version 0.9.9.0
 
-Version 0.9.9.0は[Issue #136](https://github.com/SUSANO-OOO/Zombieee/issues/136)を実行正本とする戦闘体験・音響・演出・app iconの品質更新です。
+Version 0.9.9.0は、戦闘体験・音響・演出・app iconの品質更新です。
 
 - selection／confirm／back／purchase／upgrade／reward／deploy／rejectのUI操作SE
 - durable save成功後だけ成立する雇用・強化feedback
@@ -20,9 +25,12 @@ Version 0.9.9.0は[Issue #136](https://github.com/SUSANO-OOO/Zombieee/issues/136
 - 全16unitの固有ability activation／timeline／ready audio
 - boss entrance／defeat、explosion、drum arrival、CRAWLER／barrage／airstrike presentation
 - Producer承認A2による感染者face app icon
-- 0.9.8.2 save schema v14、PWA全件install、active／previous、rollback、offlineの維持
+- save schema v14、PWA全件install、active／previous、rollback、offlineの維持
+- final independent audit：High 0／Medium 0／Low 0
 
-PR1〜PR4は`integration/0.9.9.0`へ統合済みで、release-prepと最終監査中です。**まだ正式公開版ではありません。** 別チャットのSol Auditor Finding 0とProducer Gate Bの「公開してよい」という明示承認前に、main merge、tag、Release、Pages正式公開は行いません。
+公開後QAでは1280×720、844×390、844×340、fresh／schema v13／schema v14 save、title→map→loadout→assets ready→battle、主要障害fixtureを確認し、console／page／HTTP／request failureは0でした。
+
+物理iPhone本体speakerの聴感と発熱は未確認の残存QAです。自動WebKit結果を物理実機確認済みとは扱いません。
 
 詳細は[Version 0.9.9.0 Release Notes](docs/RELEASE_NOTES_0.9.9.0.md)と[PROJECT_STATE](docs/PROJECT_STATE.md)を参照してください。
 
@@ -37,14 +45,26 @@ PR1〜PR4は`integration/0.9.9.0`へ統合済みで、release-prepと最終監�
 - PWA初回全件download、size／SHA-256検証、Cache Storage、manifest commit
 - offline、差分update、active／previous generation、rollback
 
+## 開発運用
+
+今後の実装は、原則として次の責務分離で進めます。
+
+1. Producerが主目的と製品境界を固定
+2. **Sol Design Lead**が実装設計を担当
+3. **Luna Implementation Lead**がSol設計を正本として実装
+4. Design Leadとは別コンテキストの**Sol Auditor**が固定HEADをread-only監査
+5. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけmerge／公開へ進む
+
+Solの設計runとLunaの実装runは、Codexの`/goal`をそれぞれ独立して設定してから開始します。goalにはobjective、検証可能な停止条件、参照正本、non-goal、validation、checkpoint、停止条件を含めます。詳細な恒久ルールは[AGENTS.md](AGENTS.md)を正本とします。
+
 ## 文書
 
 | 文書 | 役割 |
 |---|---|
-| [AGENTS.md](AGENTS.md) | 恒久的な実装・検証・GitHub・release原則 |
-| [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | 現在の正式release、RC、SHA、公開境界 |
+| [AGENTS.md](AGENTS.md) | 恒久的な役割分担、`/goal`、実装・検証・GitHub・release原則 |
+| [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | 現在の正式release、SHA、QA、次工程境界 |
 | [docs/PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md) | 長期目標、Version順、Stage／unit拡張方針 |
-| [docs/RELEASE_NOTES_0.9.9.0.md](docs/RELEASE_NOTES_0.9.9.0.md) | 0.9.9.0の変更、save／PWA互換、QA、Gate B境界 |
+| [docs/RELEASE_NOTES_0.9.9.0.md](docs/RELEASE_NOTES_0.9.9.0.md) | 0.9.9.0の正式変更、save／PWA互換、QA、残存物理端末境界 |
 | [docs/RELEASE_BACKUP_RECOVERY.md](docs/RELEASE_BACKUP_RECOVERY.md) | GitHub Pages公開、tag、Release、rollback |
 | [docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md](docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md) | 全16体のmanual ability仕様 |
 | GitHub Issue / PR | 製品判断、承認、実行ログ、QA証拠 |
@@ -70,7 +90,7 @@ npm run content:validate
 git diff --check
 ```
 
-`npm test`はproduction buildを含みます。release candidateではChromium／WebKit、PWA full install／update／rollback／offline、save migration、audio／VFX／iconのbrowser QAも実行します。
+`npm test`はproduction buildを含みます。release candidateではChromium／WebKit、PWA full install／update／rollback／offline、save migration、対象Version固有のbrowser QAも実行します。
 
 ## 主要構成
 
