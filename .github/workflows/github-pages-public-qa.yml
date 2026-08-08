@@ -17,7 +17,7 @@ jobs:
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_branch == 'main' &&
-      (github.event.workflow_run.event == 'workflow_dispatch' || github.event.workflow_run.event == 'push')
+      github.event.workflow_run.event == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -52,23 +52,52 @@ jobs:
           release_sha="$(jq -er '.release_sha' release-contract/validated-release-contract.json)"
           {
             echo "version=$(jq -er '.version' release-contract/validated-release-contract.json)"
+            echo "deploy=$(jq -er '.deploy' release-contract/validated-release-contract.json)"
+            echo "operation=$(jq -er '.operation' release-contract/validated-release-contract.json)"
             echo "release_ref=$(jq -er '.release_ref' release-contract/validated-release-contract.json)"
             echo "release_sha=$release_sha"
             echo "issue_number=$(jq -er '.issue_number' release-contract/validated-release-contract.json)"
             echo "request_id=$(jq -er '.request_id' release-contract/validated-release-contract.json)"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Install locked dependencies
+      - name: Skip public QA for a validated dry-run
+        if: steps.release.outputs.deploy != 'true'
+        run: echo "deploy=false; Pages deployment and public QA are intentionally skipped"
+
+      - name: Checkout immutable deployed source
+        if: steps.release.outputs.deploy == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release.outputs.release_sha }}
+          path: release-source
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify immutable deployed source
+        if: steps.release.outputs.deploy == 'true'
+        working-directory: release-source
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+        run: test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+
+      - name: Install locked application dependencies
+        if: steps.release.outputs.deploy == 'true'
+        working-directory: release-source
         run: npm ci --no-audit --no-fund
 
       - name: Install isolated browser runtime
+        if: steps.release.outputs.deploy == 'true'
+        working-directory: release-source
         run: |
           npm install --no-save --package-lock=false playwright@1.56.1
           npx playwright install --with-deps chromium
 
       - name: Run published-site QA
         id: public_smoke
+        if: steps.release.outputs.deploy == 'true'
         continue-on-error: true
+        working-directory: release-source
         env:
           GITHUB_PAGES_PUBLIC_URL: https://susano-ooo.github.io/Zombieee/
           GITHUB_PAGES_EXPECTED_VERSION: ${{ steps.release.outputs.version }}
@@ -80,14 +109,14 @@ jobs:
         run: |
           mkdir -p "$GITHUB_PAGES_EVIDENCE_DIR"
           set +e
-          node scripts/github-pages-public-smoke.mjs > "$GITHUB_PAGES_EVIDENCE_DIR/public-smoke.log" 2>&1
+          node "$GITHUB_WORKSPACE/release-source/scripts/github-pages-public-smoke.mjs" > "$GITHUB_PAGES_EVIDENCE_DIR/public-smoke.log" 2>&1
           status=$?
           set -e
           cat "$GITHUB_PAGES_EVIDENCE_DIR/public-smoke.log"
           exit "$status"
 
       - name: Upload public QA evidence
-        if: always() && steps.public_smoke.outcome != ''
+        if: always() && steps.release.outputs.deploy == 'true' && steps.public_smoke.outcome != ''
         uses: actions/upload-artifact@v4
         with:
           name: github-pages-public-qa-evidence
@@ -96,7 +125,7 @@ jobs:
           retention-days: 30
 
       - name: Report public QA success
-        if: steps.public_smoke.outcome == 'success'
+        if: steps.release.outputs.deploy == 'true' && steps.public_smoke.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.release.outputs.version }}
@@ -126,7 +155,7 @@ jobs:
           gh issue comment "$ISSUE_NUMBER" --body-file /tmp/public-qa-success.md
 
       - name: Report public QA failure
-        if: steps.public_smoke.outcome == 'failure'
+        if: steps.release.outputs.deploy == 'true' && steps.public_smoke.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.release.outputs.version }}
@@ -151,5 +180,5 @@ jobs:
           gh issue comment "$ISSUE_NUMBER" --body-file /tmp/public-qa-failure.md
 
       - name: Enforce public QA result
-        if: steps.public_smoke.outcome == 'failure'
+        if: steps.release.outputs.deploy == 'true' && steps.public_smoke.outcome == 'failure'
         run: exit 1

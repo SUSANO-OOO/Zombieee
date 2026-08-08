@@ -2,7 +2,9 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const REQUIRED_FIELDS = Object.freeze([
+export const REQUIRED_FIELDS = Object.freeze([
+  "operation",
+  "deploy",
   "version",
   "release_ref",
   "release_sha",
@@ -13,12 +15,24 @@ const REQUIRED_FIELDS = Object.freeze([
 const VERSION_PATTERN = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*))?(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/u;
 const SHA_PATTERN = /^[0-9a-f]{40}$/u;
 const REQUEST_ID_PATTERN = /^[0-9A-Za-z][0-9A-Za-z._-]{7,127}$/u;
+const OPERATIONS = Object.freeze(["release", "redeploy"]);
 
 function requireString(value, field) {
   if (typeof value !== "string" || value.trim() !== value || value.length === 0) {
     throw new Error(`${field} must be a nonempty, already-trimmed string`);
   }
   return value;
+}
+
+function requireBoolean(value, field) {
+  if (typeof value !== "boolean") throw new Error(`${field} must be a boolean`);
+  return value;
+}
+
+function parseEnvironmentBoolean(value, field) {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  throw new Error(`${field} must be the string true or false`);
 }
 
 export function normalizeReleaseContract(input) {
@@ -34,6 +48,9 @@ export function normalizeReleaseContract(input) {
     throw new Error(`release contract fields are invalid (missing: ${missing.join(", ") || "none"}; unknown: ${unknown.join(", ") || "none"})`);
   }
 
+  const operation = requireString(input.operation, "operation");
+  if (!OPERATIONS.includes(operation)) throw new Error("operation must be release or redeploy");
+  const deploy = requireBoolean(input.deploy, "deploy");
   const version = requireString(input.version, "version");
   if (!VERSION_PATTERN.test(version)) {
     throw new Error("version must be an unprefixed release version such as 0.7.1 or 0.9.5.1");
@@ -60,6 +77,8 @@ export function normalizeReleaseContract(input) {
   }
 
   return Object.freeze({
+    operation,
+    deploy,
     version,
     release_ref: releaseRef,
     release_sha: releaseSha,
@@ -71,6 +90,8 @@ export function normalizeReleaseContract(input) {
 export function releaseContractFromEnvironment(environment = process.env) {
   const issueNumber = Number(environment.RELEASE_ISSUE_NUMBER);
   return normalizeReleaseContract({
+    operation: environment.RELEASE_OPERATION,
+    deploy: parseEnvironmentBoolean(environment.RELEASE_DEPLOY, "RELEASE_DEPLOY"),
     version: environment.RELEASE_VERSION,
     release_ref: environment.RELEASE_REF,
     release_sha: environment.RELEASE_SHA,

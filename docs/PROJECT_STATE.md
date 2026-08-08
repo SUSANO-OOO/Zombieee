@@ -120,7 +120,7 @@ Codexの`/goal`は時間の長短ではなく、複数工程・複数checkpoint�
 
 ## 6. 次Versionの状態
 
-Version 0.9.9.0以降の次Versionは**まだ主目的を固定していません**。新規実装へ入る前に、Producerが一つの主目的を選び、新しい実行台帳IssueまたはProducer Decisionsを作成します。
+Version 0.9.9.0以降の次Versionは**HARDEN-151-SOL-DL-001 r1のrepository hardening工程中**です。固定baselineはmain `d000ef4bc3df2dcbb9257bede46df40c6ac3593d`／tree `52257772a43900391c4c8e880cce1c0c514b4bc9`、実装branchは`luna/pre-0.10.0-hardening`です。Luna implementation、validation、self-review完了後のfixed HEAD/treeを元のSolへ返す段階であり、Sol Final Review、merge、main protection、Issue #24更新、legacy workflow disable、historical branch cleanup、正式公開は未実施です。
 
 長期候補は`PRODUCT_ROADMAP.md`に保持します。自動的に複数候補を同時採用しません。
 

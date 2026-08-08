@@ -1,7 +1,8 @@
 {
-  "name": "ashfall-outpost",
-  "version": "0.1.0",
+  "name": "zombieee-private",
+  "version": "0.0.0",
   "private": true,
+  "description": "Private Zombieee application package; product version source is app/releaseIdentity.js.",
   "engines": {
     "node": ">=22.13.0"
   },

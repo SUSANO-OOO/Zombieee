@@ -1,6 +1,6 @@
 # 西新世紀末物語 — GitHub Pages公開・復元手順
 
-更新日：2026-07-22
+更新日：2026-08-08
 
 ## 1. 正式公開経路
 
@@ -16,8 +16,10 @@
 
 ## 2. release request
 
-release requestは最低限次を持つ。
+release requestは次の7 fieldだけを持つ。unknown field、欠落field、型違いはfail-closedとする。
 
+- `operation`：`release`または`redeploy`
+- `deploy`：boolean。`false`はbuild／smokeだけのdry-run
 - `version`
 - `release_ref`
 - `release_sha`
@@ -28,10 +30,11 @@ release requestは最低限次を持つ。
 
 - `release_ref`が解決するcommitと`release_sha`が一致
 - `version`がtag／GitHub Releaseと一致
-- `issue_number`が対象releaseの実行台帳を指す
+- `operation=release`では対象Issueがopen、`operation=redeploy`では対象Issueがclosedかつ`state_reason=completed`
 - `request_id`が一意
 - public QAは同じrequestからversion、SHA、Issueを取得
 - workflow内へ特定version、特定Issue、固定SHAを直書きしない
+- annotated tag、公開済みnon-draft/non-prerelease Release、tag/ref/SHAが同一である
 
 既存tagを移動・上書きしない。
 
@@ -62,7 +65,8 @@ release requestは最低限次を持つ。
 - BGM、SE、戦闘ボイス、復帰後二重再生なし
 - console error、page error、request failure、主要asset 404が0
 - build、全test、Lint、`git diff --check`、CI成功
-- 独立read-onlyレビューHigh／Medium未解消0
+- Luna self-reviewと元のSol threadのSol Final ReviewでHigh／Medium未解消0
+- fresh independent Sol Auditorは対象Issue、Producer、risk/release policyが明示した場合だけ追加する。同じSol threadのFinal Reviewを独立reviewとは呼ばない
 - 対象画像の確認ゲート完了
 
 workflowやpreview成功だけでは公開前ゲート通過としない。
@@ -91,9 +95,9 @@ workflowやpreview成功だけでは公開前ゲート通過としない。
 
 ## 7. GitHub Pages deployment
 
-1. release requestを作成または安全なmanual dispatchを実行
+1. `operation`、`deploy`を含む7-field requestで安全なmanual dispatchを実行
 2. requestのversion、ref、SHA、Issue、request IDを確認
-3. workflowが指定release SHAをdetached checkout
+3. workflowが指定release SHAを`release-source`へdetached checkout
 4. production build
 5. static Pages build
 6. 公開HTMLへversion／release SHA metadataを埋め込む
@@ -106,7 +110,7 @@ workflowやpreview成功だけでは公開前ゲート通過としない。
 - build成功
 - browser smoke成功
 - artifact upload成功
-- deploy成功
+- `deploy=true`のときだけPages artifact uploadとdeployを実行
 - environment URLが正式URLと一致
 - 公開HTMLのversion／release SHAがrequestと一致
 
@@ -156,13 +160,14 @@ workflowやpreview成功だけでは公開前ゲート通過としない。
 
 ## 10. immutable release再deployment
 
-公開版が意図せず別SHAへ変わった場合、正常な既存tag／release SHAを明示的release requestまたはmanual dispatchで再deploymentできる。
+公開版が意図せず別SHAへ変わった場合、`operation=redeploy`、`deploy=true`のmanual dispatchで正常な既存tag／release SHAを再deploymentできる。`deploy=false`は同じsource/build/smokeを検査するdry-runであり、Pagesへ書き込まない。
 
 - ゲームコードを改変しない
 - 既存tagを移動しない
 - GitHub Release履歴を改変しない
 - 再deployment後に公開HTML metadataと匿名アクセスを確認
 - 対象Issueへ原因と復旧証拠を記録
+- application dependency、Pages変換、local/public smokeは必ず指定release SHAの`release-source`から実行する。current mainのapplication scriptを混在させない
 
 ## 11. ロールバック
 
@@ -199,7 +204,7 @@ workflowやpreview成功だけでは公開前ゲート通過としない。
 - merge result／release SHA
 - annotated tag
 - GitHub Release URL
-- release request内容
+- 7-field release request内容とdry-run／deploy結果
 - workflow run
 - 正式URLと公開HTML metadata
 - 匿名アクセス結果

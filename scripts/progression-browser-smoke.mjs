@@ -378,6 +378,36 @@ for (const engine of engines) {
           invariant(["目的", "基本報酬", "次の未取得星報酬", "星判定"]
             .every((label) => mapNavigation.stageDetailText.includes(label)),
           `stage detail information became inaccessible: ${JSON.stringify(mapNavigation)}`);
+          const bayRegionTab = page.getByRole("button", { name: /^湾岸/ }).first();
+          await activate(page, bayRegionTab, viewport.safeArea);
+          await page.waitForFunction(() => document.querySelector(".nishijin-map")?.getAttribute("data-region") === "region-bay-quarantine", undefined, { timeout });
+          const bayMap = await page.evaluate(() => ({
+            region: document.querySelector(".nishijin-map")?.getAttribute("data-landmark-region"),
+            source: document.querySelector(".nishijin-map")?.getAttribute("data-landmark-source"),
+            missing: document.querySelector(".nishijin-map")?.getAttribute("data-landmark-missing"),
+            labels: [...document.querySelectorAll(".map-landmark")].map((element) => element.textContent?.trim() ?? ""),
+            documentWidth: document.documentElement.scrollWidth,
+          }));
+          invariant(bayMap.region === "region-bay-quarantine" && bayMap.source === "explicit" && bayMap.missing === "false",
+            `bay map landmark resolution is not explicit: ${JSON.stringify(bayMap)}`);
+          invariant(["湾岸タワー", "市民資料館", "海浜連絡橋", "河口防潮門"].every((label) => bayMap.labels.some((entry) => entry.includes(label)))
+            && bayMap.labels.every((entry) => !entry.includes("西新")),
+          `bay map labels are incorrect or borrowed: ${JSON.stringify(bayMap)}`);
+          invariant(bayMap.documentWidth <= viewport.width, `bay map overflow: ${JSON.stringify(bayMap)}`);
+          await page.screenshot({ path: path.join(evidenceDir, `${name}-bay-map.png`) });
+          for (const [stageName, stagePattern] of [
+            ["Stage 17", /湾岸タワー・非常回廊/u],
+            ["Stage 20", /河口防潮門・最終封鎖/u],
+          ]) {
+            const stageNode = page.getByRole("button", { name: stagePattern });
+            await activate(page, stageNode, viewport.safeArea);
+            const selectedBayStage = await page.locator(".stage-node.selected").innerText();
+            invariant(stagePattern.test(selectedBayStage), `${stageName} was not selected in bay region: ${selectedBayStage}`);
+            await page.screenshot({ path: path.join(evidenceDir, `${name}-${stageName.replace(/ /gu, "-").toLowerCase()}-map.png`) });
+          }
+          await activate(page, page.getByRole("button", { name: /^西新/u }).first(), viewport.safeArea);
+          await activate(page, page.getByRole("button", { name: /西新駅・改札区域/u }), viewport.safeArea);
+          await page.waitForFunction(() => document.querySelector(".nishijin-map")?.getAttribute("data-region") === "region-nishijin", undefined, { timeout });
           const compactDetailScrollProof = await page.evaluate(() => {
             const detail = document.querySelector(".stage-detail");
             const criteria = document.querySelector(".stage-detail .star-criteria");
