@@ -1,0 +1,1492 @@
+{
+  "schemaVersion": 1,
+  "version": "0.9.9.0",
+  "scope": "Gate B final remediation acceptance evidence",
+  "rawEvidenceLocation": "outputs/v099-final-remediation-evidence-final (gitignored, retained locally)",
+  "buildIdentity": "3738d4e902bdab35119bdbd33b929f342494cefe168ca8ee41c9dfa6a7d0ddef",
+  "browser": {
+    "generatedAt": "2026-08-04T13:07:24.122Z",
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "viewports": [
+      {
+        "width": 844,
+        "height": 390
+      },
+      {
+        "width": 844,
+        "height": 340
+      }
+    ],
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "screenshotCount": 260,
+    "buildIdentityStable": true,
+    "files": 269,
+    "bytes": 137566413
+  },
+  "stage3Audio": {
+    "generatedAt": "2026-08-04T11:29:19.690Z",
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "viewports": [
+      {
+        "width": 844,
+        "height": 390
+      },
+      {
+        "width": 844,
+        "height": 340
+      }
+    ],
+    "cases": 8,
+    "logicPassed": 8,
+    "chromiumAudioPassed": 4,
+    "webkitAudioCapabilityBlocked": 4,
+    "failed": 0,
+    "files": 9,
+    "bytes": 14003092
+  },
+  "audioCaptures": {
+    "files": 8,
+    "bytes": 4049264
+  },
+  "evidenceFiles": [
+    {
+      "path": "docs/qa/v099/final-remediation/audio/boss-30s.mp3",
+      "bytes": 721625,
+      "sha256": "7f1321a1b765a11ef6552f7d7701f6583c89ac30acead4163981915ad506ce89"
+    },
+    {
+      "path": "docs/qa/v099/final-remediation/audio/boss-to-pressure-16s.mp3",
+      "bytes": 385586,
+      "sha256": "e6aa69ebcc171c2a5e16b4f775c5d7e30d0ccf4ace1f4ef5e810647383309b42"
+    },
+    {
+      "path": "docs/qa/v099/final-remediation/audio/capture-report.json",
+      "bytes": 6006,
+      "sha256": "749444f3dee008369328836fd4f1cfd4a71743d806eb70b6d8d08ab61c3b8e99"
+    },
+    {
+      "path": "docs/qa/v099/final-remediation/audio/normal-30s.mp3",
+      "bytes": 721625,
+      "sha256": "b310803b8ac04aea797746a8d2703162813723f9a6395dd7a3e0165fbe42c701"
+    },
+    {
+      "path": "docs/qa/v099/final-remediation/audio/normal-to-pressure-16s.mp3",
+      "bytes": 385586,
+      "sha256": "c1662277d1de9bf966cc642879e967b2dd8b45d8943b0d52f5e7798f24028acc"
+    },
+    {
+      "path": "docs/qa/v099/final-remediation/audio/pressure-surface-30s.mp3",
+      "bytes": 721625,
+      "sha256": "f46fe791e9c7080b0a5f5a1d4039a973e74ab09e22c13a45e559195e5a9e42db"
+    },
+    {
+      "path": "docs/qa/v099/final-remediation/audio/pressure-to-boss-16s.mp3",
+      "bytes": 385586,
+      "sha256": "c86ab096b901e8dbd8a00ad17c48f08e75b9ed4f62ed99017d80ea11187114ee"
+    },
+    {
+      "path": "docs/qa/v099/final-remediation/audio/stage3-takuya-production-path-30s.mp3",
+      "bytes": 721625,
+      "sha256": "e491ee3e5bf38908e6eed5b36d683532acba5cace9786ae5c3b31452e204e0f1"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-airstrike-0-stowed.png",
+      "bytes": 421112,
+      "sha256": "ed42c2a958b672da6c08370a749222496142dd5ce98fa352df22b387aabdee9d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-airstrike-1-mast-deploy.png",
+      "bytes": 421806,
+      "sha256": "6b1789859444aaa8c96f61e6c441c84ed8922851876f01d4cdd07699d2e46bfe"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-airstrike-2-antenna-extend.png",
+      "bytes": 417913,
+      "sha256": "f7a2909160bb2b8684835b25889a4e0ff4663c5428567eb4b32b1e5862234f30"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-airstrike-3-targeting.png",
+      "bytes": 418560,
+      "sha256": "07576f0076637163976862255fa09e4daf49f03c6ff4cd25496d92eeb7730e17"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-airstrike-4-inbound-signal.png",
+      "bytes": 421958,
+      "sha256": "981056067d6a47d8c23a7503d1134b5cfd12d0c0fd62d002c5dc8b342c8d36a9"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-airstrike-5-impact-confirmation.png",
+      "bytes": 376310,
+      "sha256": "2cc22d39e98609141e4f0d65b225806fec434f618951447f47f3d2c39d374c94"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-airstrike-6-retract.png",
+      "bytes": 415463,
+      "sha256": "00e26b091ba2607b555a23f0c1ff1b86e5d779471985bad617ac7772e3af3f0e"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-airstrike-runtime-contact-sheet.png",
+      "bytes": 429382,
+      "sha256": "d9efb42c857ff1475734106993198b9b779e1b93a55abb1c184f710f57af20b8"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-barrage-0-stowed.png",
+      "bytes": 415548,
+      "sha256": "3ef67116d0b4b3ba902e09e85aae52d326853047fe6303a0298ffe3cf382430f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-barrage-1-hatch-open.png",
+      "bytes": 415766,
+      "sha256": "24ff5701295faf2295ebc7be9db31512c2423e915c7336a52b77cdf8fcb0df63"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-barrage-2-turret-rise.png",
+      "bytes": 417697,
+      "sha256": "85fe6260999b3e940c50196de4f99d1fcde1ea02613b912add48db70757341be"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-barrage-3-aim.png",
+      "bytes": 417890,
+      "sha256": "56cf33b907866d9d75d807fc3ee40ded7538c49ed1e5e757fde3a25d65fc6f02"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-barrage-4-firing.png",
+      "bytes": 409650,
+      "sha256": "b8467186b7c399f23896da94418c118bbeef8cafa7239e2ef0c77221991e8ad5"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-barrage-5-recoil.png",
+      "bytes": 420791,
+      "sha256": "c2f6cb3f0973823e6a5cfaa597381f83b8e337484dabbc82e332b80e3be2dfcb"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-barrage-6-retract.png",
+      "bytes": 422724,
+      "sha256": "86d1b9cab5fbf750cd8d3a04c5066f73140005e670f262d3b392bc1c29312dbc"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-barrage-runtime-contact-sheet.png",
+      "bytes": 364113,
+      "sha256": "ff9502064dd77bf753eda1af548e0ed6525dd79a5408507c719107a7a55d2d6c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-crawler-equipment-simultaneous.png",
+      "bytes": 415002,
+      "sha256": "86b3c9c153d7e857dae8eaabfdd90a8734333379c1978e1ae618a82c1a3e9978"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-crazy-king-0-fully-inside.png",
+      "bytes": 407101,
+      "sha256": "5453f8dded20d68c3699ae56bee78b9a8ef8f0a71a1289ef30887b21aeaafd95"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-crazy-king-1-first-visible.png",
+      "bytes": 407179,
+      "sha256": "f695c507285a99bf9ef77fdf94471e396e50e329f8a6604cd126827ff4b2b14d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-crazy-king-2-quarter.png",
+      "bytes": 410191,
+      "sha256": "9a0b1244e8c3938c60e92fbf9f5234f2d4aab141da7a8a963c389b2b11d28be3"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-crazy-king-3-half.png",
+      "bytes": 406436,
+      "sha256": "7c8c76cc4a2448341674ab88bb8df0ce62ad7469367469f6adc00b0d1a8db52e"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-crazy-king-4-three-quarters.png",
+      "bytes": 414873,
+      "sha256": "88a44bdafe90116bf985624a97232bbd68f1b64e83f88e4e09f06506d4915fa9"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-crazy-king-5-fully-outside.png",
+      "bytes": 416900,
+      "sha256": "dd9b74f12b4808f571281d6be54d580ddd4c4046fdc516de8988a42c35737522"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-hachi-0-fully-inside.png",
+      "bytes": 408429,
+      "sha256": "a4bc837c3f2e741f77fc4c82387e0d8e9f13a04f9b8e90d1812c1c874bc98a3c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-hachi-1-first-visible.png",
+      "bytes": 411507,
+      "sha256": "042e9fb4416903ad4e652e97abd012d34b9a53c42f1c39b3353a41a4738410d4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-hachi-2-quarter.png",
+      "bytes": 411589,
+      "sha256": "492c31330a6291078df0467ce568ff5d3612e0f190b582c953c7b71be7ab4f98"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-hachi-3-half.png",
+      "bytes": 408033,
+      "sha256": "34f87f072b125974cca61f9d22ededa25cf221ffe49c8ac9aa203b0a1f2b57e3"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-hachi-4-three-quarters.png",
+      "bytes": 408092,
+      "sha256": "7d6f25efbb10de9d7fbc48db3049e70a4691009d9e47bd6ea70ae8e58cee1f43"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-hachi-5-fully-outside.png",
+      "bytes": 410191,
+      "sha256": "4b8db1525dfadeb3f10e5890252efbedd5bb79f163ec5991b1ef2219c6bed97a"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mayo-chan-0-fully-inside.png",
+      "bytes": 409219,
+      "sha256": "c135012b91b6a888e1179d5612568aed4ee1cecbfd42d1ebf0cec845b567550f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mayo-chan-1-first-visible.png",
+      "bytes": 409039,
+      "sha256": "cea88448d0691f1db59848f84af2864274cdde2b85972ebe8a920ccbcb532ca9"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mayo-chan-2-quarter.png",
+      "bytes": 409154,
+      "sha256": "56de121b9b9f8fbe780f6e5daf2d6ac92771e411d56243006abf9d56d973a9e0"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mayo-chan-3-half.png",
+      "bytes": 408968,
+      "sha256": "cdb0e731f080cd8f682da170309b198ec302d892e0ee4c6a2813aa924a68e93d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mayo-chan-4-three-quarters.png",
+      "bytes": 408809,
+      "sha256": "bce6715df48bbe189476746ab4b5b9f48d3920e89a433e619ed88098a2ba4df7"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mayo-chan-5-fully-outside.png",
+      "bytes": 410286,
+      "sha256": "f192714ab78aad6700dabae5ee86f890fa8dd61781ec1685cdb13d69aeb85563"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mizuchi-0-fully-inside.png",
+      "bytes": 408497,
+      "sha256": "57d10f06baab0e6bb57bd8fc4f259085d1606023314486d1703bb6d652d4435b"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mizuchi-1-first-visible.png",
+      "bytes": 408602,
+      "sha256": "1372c5e0a0d8f9277ee42c2b91cc7e5e833d4324480e61e2b6cca3d0ea92bc83"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mizuchi-2-quarter.png",
+      "bytes": 411850,
+      "sha256": "d73891d5d46b44bc07ff202dd84a9df30f14e7e5cb339b303409f724ede01599"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mizuchi-3-half.png",
+      "bytes": 411727,
+      "sha256": "9b65a1b36ad0279e784232dce31b47020e60f79100d499e2cc348640f6817594"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mizuchi-4-three-quarters.png",
+      "bytes": 409555,
+      "sha256": "61aa2845bb690e1c0396f238d37b16c03813a38a79060f1981e05b8f926d7748"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-mizuchi-5-fully-outside.png",
+      "bytes": 411866,
+      "sha256": "81110a01b7d868a12bd18f34a067c307d4cc3076000d8896692c7d964b7e8de4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-paisen-0-fully-inside.png",
+      "bytes": 405985,
+      "sha256": "df6d6a1acd60a06ddf31a4e365c705d89c0c10a87563ac03cb8ccae434870c38"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-paisen-1-first-visible.png",
+      "bytes": 409312,
+      "sha256": "5e09b919e154e45a27851a9b2236efa261d1427aa3ddb5e985f64ae020fb6e50"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-paisen-2-quarter.png",
+      "bytes": 405354,
+      "sha256": "e83d3353c978a7e97e87098184cdd5bee061a3d524cf213c193b8c043d648439"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-paisen-3-half.png",
+      "bytes": 404968,
+      "sha256": "ed08ddd2241734c1c67807dc0f9bc6188eff7c8dfadaf1427cb276e6013cb03d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-paisen-4-three-quarters.png",
+      "bytes": 405827,
+      "sha256": "d3f7370bcf947b5e33bbeae227ca3ec3e3af807f772d113a4a31bde409e30cda"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-paisen-5-fully-outside.png",
+      "bytes": 416087,
+      "sha256": "2697253d491151fd3b4375f5364f99afaaf3028b0c4c729cf787c7da80aaa05b"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-standard-human-0-fully-inside.png",
+      "bytes": 409084,
+      "sha256": "b50b8c351ad72e657745815ad41f7f2e01aecaaeb700c6dd77e4a4a6f9be7ddd"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-standard-human-1-first-visible.png",
+      "bytes": 409200,
+      "sha256": "31e0c1fe9fd0f1448fe92e83e244616e279eede9b3938cc0c7da3527ec81c083"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-standard-human-2-quarter.png",
+      "bytes": 411891,
+      "sha256": "05978474d7deec81aeecd62b9822d5677d2fa8ccb5ea1e72bd6015d1c00ef278"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-standard-human-3-half.png",
+      "bytes": 408487,
+      "sha256": "1458f59cf1c0401ee9dc3fa3f4552885b698c89f240396d11ea35d7b89319e08"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-standard-human-4-three-quarters.png",
+      "bytes": 409423,
+      "sha256": "b8bef7d02074fbb208739e6f83da02dd2e1237f87c39c2a9fc3b4e10bdc88ed9"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-standard-human-5-fully-outside.png",
+      "bytes": 412183,
+      "sha256": "bbd74f6a880d14e61c93f2e9d14b9c669468878ae8369993f383f1f7b640be8a"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-tatara-0-fully-inside.png",
+      "bytes": 408361,
+      "sha256": "ceef1a9437c33312bf9b51d0641e45b4d037d5f62ba5b62f9b193b026780a7d4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-tatara-1-first-visible.png",
+      "bytes": 408520,
+      "sha256": "4d09d41654fee5e5efa291390233efd56364e2c4c2520a74f79f508717629643"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-tatara-2-quarter.png",
+      "bytes": 411591,
+      "sha256": "bc6ee5cc639399086c767cbc4c3205a6720115ee7e627e102b377b872cb0814b"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-tatara-3-half.png",
+      "bytes": 411443,
+      "sha256": "a8868e6cfc7459e9c8ab0c116eaaa2acbe3e3ee5e4cd2871e7d66fa29a519b56"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-tatara-4-three-quarters.png",
+      "bytes": 411805,
+      "sha256": "52d1d01741946ca7866399b0e3e7a033f962b6f7ce566903a7fa6ef950d7426d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-deployment-tatara-5-fully-outside.png",
+      "bytes": 412261,
+      "sha256": "bad926a1a2d3019dc403416e4bdd274d1886739c48b5c8188e9255bc5a2e893c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-hud-banner-bark-boss.png",
+      "bytes": 412163,
+      "sha256": "4d561ac728d36dba8adb12306471f9b865830070a0a40bbfc4088f85d6b4e619"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-hud-deployment-banner.png",
+      "bytes": 398507,
+      "sha256": "74312db3087d1305b698ab61c0f9d30eacca2ca93ae9c1073bcc569fc6b61e56"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-hud-five-units.png",
+      "bytes": 418972,
+      "sha256": "16a9fdc87d12f80b2dbec6144f465a4960b640379f8920d718005a5a4353dd23"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-hud-manual-ability-banner.png",
+      "bytes": 401765,
+      "sha256": "38fabb4e6a7d9050e046177e501296acd5008625334ebf47a692b51fcfe350ad"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-hud-objective-full.png",
+      "bytes": 416845,
+      "sha256": "fdb720216d49725d5d2d2df25ce75f9ba5e596a04508ecafd21923fcf85a3826"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-hud-stage1-normal.png",
+      "bytes": 406291,
+      "sha256": "97d609a07e1ed0c86a27d9f41a9cd3d7a41d9fe8f211595e2d76e582d28a1554"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-hud-stage3-boss.png",
+      "bytes": 420263,
+      "sha256": "42f85139da4099e6265cf946b8455343c75c2933dfbf0e504a6113b5b0f29b48"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x340-hud-support-disabled.png",
+      "bytes": 409908,
+      "sha256": "c4d7add24fce75035c8bab97e6197cadb1f6e642bb965ac1594ab01d31b0f718"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-airstrike-0-stowed.png",
+      "bytes": 485197,
+      "sha256": "b31c60581a632a67b34c851f3c40316095f6acfb83f6fe203852526cd340d7e1"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-airstrike-1-mast-deploy.png",
+      "bytes": 485658,
+      "sha256": "b39c79bf3f10c5c9f9da06d124fd48b7f128c6d246cc55b6673ae413666b7938"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-airstrike-2-antenna-extend.png",
+      "bytes": 481591,
+      "sha256": "35da4a6f699aeb4cac9854e07c39c83e202207b84a9c7aedec2386ed88d18c81"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-airstrike-3-targeting.png",
+      "bytes": 482450,
+      "sha256": "89d904435bcd0ec28245127e9b2c9b25c968caf24ce0c3f538a4e9ab077c4820"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-airstrike-4-inbound-signal.png",
+      "bytes": 485574,
+      "sha256": "9f446cb25498bd14a8b8de5d0be2a5525bb0eabd0b79056864a3f4d9e780eda8"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-airstrike-5-impact-confirmation.png",
+      "bytes": 432945,
+      "sha256": "3747c164f4fc474a77872d247c370d92c97353c73c642be8b3f4114cac4b8518"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-airstrike-6-retract.png",
+      "bytes": 478868,
+      "sha256": "a835829e1c2f99295ec940941b0c6497e6099d72640ad04f8bc32096fba531b3"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-airstrike-runtime-contact-sheet.png",
+      "bytes": 452273,
+      "sha256": "bb614170ff5e102979514f112c1b57ea5bb57805b8157b22b1ce891919655fb4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-barrage-0-stowed.png",
+      "bytes": 475161,
+      "sha256": "b428a3c8ba085856b7b7d4ff616143319ef2a50d86e7a1f33a0a4bb920722425"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-barrage-1-hatch-open.png",
+      "bytes": 480225,
+      "sha256": "f5ec6fb37bd3a2d0a6b7b97bc544a9eb9b6481fa7daa88a7e245ad780c053114"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-barrage-2-turret-rise.png",
+      "bytes": 477537,
+      "sha256": "c75bd8d03e34a55b11a97769c400765e40bce1102d22448f49dc4d7b1b72a960"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-barrage-3-aim.png",
+      "bytes": 481946,
+      "sha256": "3b3b61bce7a26a8385c065a42d42e812da1fd29a177aab5faacb8bf68a3b4b3b"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-barrage-4-firing.png",
+      "bytes": 471375,
+      "sha256": "032336761c65614899da6064874084b5f583f69c66f810508fd441b46c85bf24"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-barrage-5-recoil.png",
+      "bytes": 485056,
+      "sha256": "e3f5f209308e5b726600c7b151eca427e652c87de21aff416128255781b37ecf"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-barrage-6-retract.png",
+      "bytes": 486733,
+      "sha256": "d6ac453e5d2902b8accd29038d45e9bc10a7488e6fa5e55b5b7a4bc7894789b5"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-barrage-runtime-contact-sheet.png",
+      "bytes": 405510,
+      "sha256": "6249bf74795f934030bde6d3251a7220a6217a7eb25fb5446593ec0041135ae4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-crawler-equipment-simultaneous.png",
+      "bytes": 479136,
+      "sha256": "9678470dfc838566099f8b87f6c037d2b9e7055c0c36aa1632799309b4fd33b4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-crazy-king-0-fully-inside.png",
+      "bytes": 471565,
+      "sha256": "4f8f1df82ba6880f0e04e42689759b5174f020811f4d68b3c5746f697e884dde"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-crazy-king-1-first-visible.png",
+      "bytes": 472056,
+      "sha256": "92f55ff70ba51b3c41631ae25493c8fa606cc67fe70cec062a8d7182e2e5c11c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-crazy-king-2-quarter.png",
+      "bytes": 471699,
+      "sha256": "228c7051e28509ddc9aac78345700d469f0fa5ecb1b0d9c8ec636e630ae852a9"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-crazy-king-3-half.png",
+      "bytes": 474622,
+      "sha256": "a86ae042765b6405de145575a34150bdc04182f9846529beabe430b846581eb3"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-crazy-king-4-three-quarters.png",
+      "bytes": 470524,
+      "sha256": "b0263eb1b14bc86c67d139e4b3debb012b836b003dda67d25e54d540aaf2b7a5"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-crazy-king-5-fully-outside.png",
+      "bytes": 480920,
+      "sha256": "439bc413c289c5440f3420004839f6f5df903e00b9a589d0b0d09194aa44a829"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-hachi-0-fully-inside.png",
+      "bytes": 473674,
+      "sha256": "2b8a4e82dd3b77f59a3875f8564bcdf3b9b41806483a39fdd40bbb559cbb8213"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-hachi-1-first-visible.png",
+      "bytes": 473683,
+      "sha256": "1b82fa6c6029f704cfeabd1e0b85f707c85b4e726b6b2cbc7f5fb9563060afa4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-hachi-2-quarter.png",
+      "bytes": 473614,
+      "sha256": "3baca2b50040817fde1bb3f1dbf63c6bdecf493d4cb1fbadde305c1e100b5a2d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-hachi-3-half.png",
+      "bytes": 475453,
+      "sha256": "72f6261d7b7f2dc17a808b7c948a0705a757ffdb4ada0cfdf171e855495bb5de"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-hachi-4-three-quarters.png",
+      "bytes": 475302,
+      "sha256": "97a53e9eab9b3cb7fc93628df3183b2de3f42335d279c5490e94c6e439f6eca2"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-hachi-5-fully-outside.png",
+      "bytes": 474925,
+      "sha256": "cc666d62d32b3bd416875fc50c466d5405bae1c97608dd37e2cb1fa110d7ffaf"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mayo-chan-0-fully-inside.png",
+      "bytes": 473863,
+      "sha256": "2932017a7909055e1a482d6b9c36f8afd474271c03be6e34cdcd931c0c672b47"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mayo-chan-1-first-visible.png",
+      "bytes": 473768,
+      "sha256": "b94b2058bb39f46de4055e7141cc724f7cef726c953c127e59273f9f0d53fe54"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mayo-chan-2-quarter.png",
+      "bytes": 473895,
+      "sha256": "932b79e2f5a016df4e08ef21f3c896936129cea1864a4183a39533deb4a4ecc9"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mayo-chan-3-half.png",
+      "bytes": 473884,
+      "sha256": "275d1793905a003994afc866891b81a5bff0fad41cc4c9d171946d96063e438a"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mayo-chan-4-three-quarters.png",
+      "bytes": 473695,
+      "sha256": "f0390c02ded3efeab6d2b3f59283d9d16debc6cc7c8614f468d81b759d68bdf8"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mayo-chan-5-fully-outside.png",
+      "bytes": 474266,
+      "sha256": "71121104f57dbad0a583dff964a12405d68519d13cb8c94f03c66b02222cdc19"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mizuchi-0-fully-inside.png",
+      "bytes": 473671,
+      "sha256": "0c56ef9b44cec080aadf00a77025a4b21348b24b07411768ce15e31d11998908"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mizuchi-1-first-visible.png",
+      "bytes": 473756,
+      "sha256": "9a5a25d4d786c5b508624bd6dbb94306c0497f7c9c4b8c8c93d023d0096aa8d2"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mizuchi-2-quarter.png",
+      "bytes": 475840,
+      "sha256": "01f747aeda17e9b401bed644b66e4b78dd9c64c29ac9505da16ea5e6a1e74330"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mizuchi-3-half.png",
+      "bytes": 473684,
+      "sha256": "8c52a7f46b2cd3d0811acbc750b35b81a3b5cfde7bedfb1192354b24ca90d2ca"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mizuchi-4-three-quarters.png",
+      "bytes": 474977,
+      "sha256": "3731d6234e6323fc201d58abce06e9e694dfa45d38108f9ee0f8413bcb10746a"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-mizuchi-5-fully-outside.png",
+      "bytes": 478909,
+      "sha256": "75618c29b688dc72394b2ac804c73360d90c7a8507ca588d905b5d4fee1521dd"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-paisen-0-fully-inside.png",
+      "bytes": 470154,
+      "sha256": "0ce3269a3adab7c611638d94a9a3a5eb63082f24c61bf24f199515c3a950dced"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-paisen-1-first-visible.png",
+      "bytes": 470161,
+      "sha256": "30dbfd60030d9bc9c0b54ac7208946ca7dc2cadf973f2d25ace1093d01ae829d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-paisen-2-quarter.png",
+      "bytes": 469836,
+      "sha256": "68626c8b737b4f7ec4d11725f94e2afecde61d6252ecb77da1637b38a07a373b"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-paisen-3-half.png",
+      "bytes": 469467,
+      "sha256": "da25ae66858c7bc8870c87380104a54ad41c6b7adeafffacbf2b26257f79db42"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-paisen-4-three-quarters.png",
+      "bytes": 470055,
+      "sha256": "3c5deb886925499ee0b5692f4f66e8e05725ab1a80ab9d084455f16e380f0dff"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-paisen-5-fully-outside.png",
+      "bytes": 476276,
+      "sha256": "31173b3ce9959c8903c18048270bb56390938f5658948d019b53de95135ba8dd"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-standard-human-0-fully-inside.png",
+      "bytes": 474069,
+      "sha256": "4b7d1a8047d2f0eeac280c48f0255314fbd26817b2a2df825d1ae1170c615c4f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-standard-human-1-first-visible.png",
+      "bytes": 474163,
+      "sha256": "62bd91f2c8e7b8344719d951b8dcd24bf3ed25ad6aa311d484b3b934fb57e96c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-standard-human-2-quarter.png",
+      "bytes": 475646,
+      "sha256": "3ad03bfbfd94f67c9a04abbd098060d5be386a410e0ff948622d2cb535c47d30"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-standard-human-3-half.png",
+      "bytes": 475102,
+      "sha256": "dd98570b4b1519aad61a18d99de683ff8d5819d9f55a7cb5c2ed1020b5029c95"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-standard-human-4-three-quarters.png",
+      "bytes": 474699,
+      "sha256": "a0b0b61bc58feaf9987ec3eba573a936704d86f482a58f12954bfd82098e4d68"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-standard-human-5-fully-outside.png",
+      "bytes": 476087,
+      "sha256": "cea598444f422395541a73dc7aaea8a45547ee93eaded185af7d28e5fa12a716"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-tatara-0-fully-inside.png",
+      "bytes": 473628,
+      "sha256": "703050c7e1b00fac5d865e7cb7e310444bbf6921fd2d17fe7d7f65f99e6599f7"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-tatara-1-first-visible.png",
+      "bytes": 473599,
+      "sha256": "1c49b45874a0f1bb8a428811221d7bffe0fbf3dbb1e67a5c0b242d4acb039fad"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-tatara-2-quarter.png",
+      "bytes": 475809,
+      "sha256": "64b6a5633f3ddf5b47229d5a6a082c24020290235f2684a803454e2046714947"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-tatara-3-half.png",
+      "bytes": 473462,
+      "sha256": "a36eb2cdb96d42824848365625745672ba49e1d11a9e41cbc0da8dd051b8c1bc"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-tatara-4-three-quarters.png",
+      "bytes": 475708,
+      "sha256": "1a6d39b1a1bc0726bc908a2589aca8230c17fc389233f568b76bcb6e160efb2b"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-deployment-tatara-5-fully-outside.png",
+      "bytes": 479106,
+      "sha256": "03c8b8f786590b9dd5c790695dc5167359b4c7ed17991e0d15ee9e7d22ad4418"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-hud-banner-bark-boss.png",
+      "bytes": 478714,
+      "sha256": "0a696ba5f5d1f236e075ba00f4b4867db2b29cdc7318079102b14a7dcbc79df6"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-hud-deployment-banner.png",
+      "bytes": 463729,
+      "sha256": "c03a325e01c869e20df68366ecbfe2b208522398b17d8d5a077aff90d64397b6"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-hud-five-units.png",
+      "bytes": 487045,
+      "sha256": "109ba601f822d89dd1361fa76daca66ee9452bc9d1c8cf14143eeba1f1be6488"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-hud-manual-ability-banner.png",
+      "bytes": 467091,
+      "sha256": "f8c73b4a2bba87a5c0553458e9042034795b314773ea6bd9c57b13b1839e9d93"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-hud-objective-full.png",
+      "bytes": 480746,
+      "sha256": "b34ca3d2b133ec177e66a8498964e16b155b591b345d462c0dc57a047137638a"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-hud-stage1-normal.png",
+      "bytes": 469095,
+      "sha256": "657f6726b9b0b42512bc39a4fc320970326fad0e8f4bdd85b8569a58a6dd6933"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-hud-stage3-boss.png",
+      "bytes": 486751,
+      "sha256": "58169085e7f0cebdb7c8685c55abee5f366f2c73d695f5ad9d1f0e7f2e180419"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/chromium-844x390-hud-support-disabled.png",
+      "bytes": 473902,
+      "sha256": "05558b555d550e52f149ffabf89b82e93b8d0c4d0e7649a4ee3a55289c260c1c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/summary.json",
+      "bytes": 8708177,
+      "sha256": "28be7dccb464cf630886e13f19670d1fa7d9d08f9a3b83106719d069a4fc67f5"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-airstrike-0-stowed.png",
+      "bytes": 500644,
+      "sha256": "9725178b1bd90333a70a4f368c1f1516b99995e9bca29013311e09c240ef2256"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-airstrike-1-mast-deploy.png",
+      "bytes": 501770,
+      "sha256": "5ffd5892493ee50f3dab03166a0fe1549fcbf59bb9016d0efa3b3c8a18de3c12"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-airstrike-2-antenna-extend.png",
+      "bytes": 495329,
+      "sha256": "2681d4f93620cf025d91f5bb3798c3c37344386a75db4085a19133fb9cfe0695"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-airstrike-3-targeting.png",
+      "bytes": 496344,
+      "sha256": "f0331c596c8e123100714b157a921bb8edb4954520871599c9d2729afa679050"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-airstrike-4-inbound-signal.png",
+      "bytes": 496308,
+      "sha256": "7ebfb59737a77ad7ad745d7473cfe1f96e1bb345cb281581267cc3ad33e73439"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-airstrike-5-impact-confirmation.png",
+      "bytes": 447040,
+      "sha256": "64adc49a358ac40a9e29cbf4472bc147408a41eace83614671eb95aa39129324"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-airstrike-6-retract.png",
+      "bytes": 496837,
+      "sha256": "8941f072d43cd030233edb2676708b5571e8d0af3bfd76415ec7144214573d49"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-airstrike-runtime-contact-sheet.png",
+      "bytes": 490365,
+      "sha256": "5f58dcf5f643b7265defacecfbcce5a3aea0b6730f218984ae6b5d6f9e84577f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-barrage-0-stowed.png",
+      "bytes": 492632,
+      "sha256": "00731b06a58567e10d5028b4133638adc05348bed89110676a0e498638b72d56"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-barrage-1-hatch-open.png",
+      "bytes": 494549,
+      "sha256": "6b77fca0db6cce299ddd52ffc311d6945914455db72c1cd7a6c9e5ce39cb89b6"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-barrage-2-turret-rise.png",
+      "bytes": 495081,
+      "sha256": "aa24d0b6b3be5a40b37e977a569aa987e2b06759f163a22c2993d8c6b6d0b88c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-barrage-3-aim.png",
+      "bytes": 495324,
+      "sha256": "161ef0331ffb728080e8520949cd8ad2c3f7dda7b87871221eedab5696db6fb0"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-barrage-4-firing.png",
+      "bytes": 486718,
+      "sha256": "03add46d8b6ecdd2ea2965d404256abb291f7f1d9d1ad63f2ec24d044477e12f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-barrage-5-recoil.png",
+      "bytes": 498813,
+      "sha256": "6229fff1f2ffeabf2246f22e2ab5949ef5ee5acd1f9ef2418749f3caaf23cb17"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-barrage-6-retract.png",
+      "bytes": 502125,
+      "sha256": "d21702f5c06d14d0ae63f72991046a0389de4969bbf1a362f13e13c0f08e065d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-barrage-runtime-contact-sheet.png",
+      "bytes": 411953,
+      "sha256": "854c59dc1a50d34913fdd604ba07789a8015ee3dee7461562998083fb00531ab"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-crawler-equipment-simultaneous.png",
+      "bytes": 493778,
+      "sha256": "896f76a16af88485a00101f1fe898966824c0332a79a178a64d3d97f32aed050"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-crazy-king-0-fully-inside.png",
+      "bytes": 478872,
+      "sha256": "60c7a56c1ed32dc98b7321e69d9ceb9e7e121318fb5d0e8c49ef7d9bcff5ff5e"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-crazy-king-1-first-visible.png",
+      "bytes": 479049,
+      "sha256": "57448888fd6c8d7266364d8e8c20becb4c8b5c1e0957d3f65fc377e2d33af586"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-crazy-king-2-quarter.png",
+      "bytes": 475142,
+      "sha256": "7d9c254fe99c340e1b0a671a4fc5ffd5133f2e63ab6c16f8fd425908556fe3a9"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-crazy-king-3-half.png",
+      "bytes": 475206,
+      "sha256": "3ef8c73a15fff43c0550317284d45e84f3da82fde30f3b74647b275e82c46efb"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-crazy-king-4-three-quarters.png",
+      "bytes": 481634,
+      "sha256": "92e36c6ea2ed50237fab004b2f26017e0a89db5140f5dcb3b667aca6b1e283e3"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-crazy-king-5-fully-outside.png",
+      "bytes": 488276,
+      "sha256": "96d5b37a57b503f6fa908a69456e8c122e141bdb60b6e80f186efc93e94d68ce"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-hachi-0-fully-inside.png",
+      "bytes": 481622,
+      "sha256": "2887a9d9380a567b599ceee6f11e3735f943131f57d48c24a99bf53752baf9be"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-hachi-1-first-visible.png",
+      "bytes": 481496,
+      "sha256": "fc2b388f75f72ee0c1efc975613c80b9e0552c64e713dccc369f2a7097a89c46"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-hachi-2-quarter.png",
+      "bytes": 481201,
+      "sha256": "f6e46bd79986505a4974af07ab117ebf8cf713f8d838039c2d7326d3e7f4df20"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-hachi-3-half.png",
+      "bytes": 476274,
+      "sha256": "4cdd2331c16567caacc5f927559f3215deaeed0c4ed3a758468a0df53c28f800"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-hachi-4-three-quarters.png",
+      "bytes": 475683,
+      "sha256": "e7f6deb3277c3d57286484096d2c88de9a70eb04529398c366a81d1b48548fd3"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-hachi-5-fully-outside.png",
+      "bytes": 477925,
+      "sha256": "3e17cd0e877eca743b231f7635ddf5476a5d3e520a5581ab5f77a699198648d7"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mayo-chan-0-fully-inside.png",
+      "bytes": 478776,
+      "sha256": "304a4e4f8042b5d13d69d3a0e657d3c622e842d47277e0fb270d78663885c957"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mayo-chan-1-first-visible.png",
+      "bytes": 482407,
+      "sha256": "f3e9423f58265e0b86567553b577310a745a91922ff6eed6f2a144ac5aa4a646"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mayo-chan-2-quarter.png",
+      "bytes": 482033,
+      "sha256": "8f32ffb28d578de6a02119bd492991061e7b4b6097f9a9299a4899506cdaf158"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mayo-chan-3-half.png",
+      "bytes": 481653,
+      "sha256": "e1ac91756fecd0b1306e203f576013291c24f71bfa019cf22b820768e19cfef6"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mayo-chan-4-three-quarters.png",
+      "bytes": 481500,
+      "sha256": "d93ff5cfbf566db2e70d13feadb8606acdb6509448c3177712d0688302f10f81"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mayo-chan-5-fully-outside.png",
+      "bytes": 482378,
+      "sha256": "aefdd33d2c8a1dbb99a70dc371e7b56f2b1c008474d35cdcededb4b48d7326aa"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mizuchi-0-fully-inside.png",
+      "bytes": 477837,
+      "sha256": "45547ee31a0364f48acfba15e583d1273d51089224d55ac64ce4bf8458f78f3b"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mizuchi-1-first-visible.png",
+      "bytes": 477703,
+      "sha256": "fd8f64ea64cbd9f77b0e1a3805611c82164c8f0c90e2bd95ad778ee71b8aab18"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mizuchi-2-quarter.png",
+      "bytes": 477655,
+      "sha256": "3dc275c6c9dbac086e96edbf0ece6eb2be6f0a4747dc87550fcf3817e1d2881c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mizuchi-3-half.png",
+      "bytes": 477205,
+      "sha256": "f55bfa98c6a443540a852a04cd2af5c4858f2f49b44cb40bb54772bf89df3d44"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mizuchi-4-three-quarters.png",
+      "bytes": 477629,
+      "sha256": "f17c015772bf233d1f4652bad404914f8c8d3117f2dda4a159bd027e3235a23d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-mizuchi-5-fully-outside.png",
+      "bytes": 482183,
+      "sha256": "125f7c6a88d7613c1ac35a3f7ae0e12ee37d046522aaab249bcb0a0ac67195fe"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-paisen-0-fully-inside.png",
+      "bytes": 477471,
+      "sha256": "41de15f796b181d2ffa3b85b399099d1cec7ad0bbf3e2b696031151f5108d518"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-paisen-1-first-visible.png",
+      "bytes": 477511,
+      "sha256": "ec8c1e0a2d5c0086f9715144470eb4fb9895e64629a7da74ccb985f955ee554f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-paisen-2-quarter.png",
+      "bytes": 481132,
+      "sha256": "f26676fa71cd172b0dccf7cbf78f9aa07ff2f7372f913a5f5b2ddcea1153335a"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-paisen-3-half.png",
+      "bytes": 481015,
+      "sha256": "1b19991b7eb6253981bc64d4ffff6593dfd7212f48e8a536e05a4abeea79336c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-paisen-4-three-quarters.png",
+      "bytes": 477865,
+      "sha256": "4f16c4fbf5af1541369453d025da617e659856eef9549771fd5f8020be379802"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-paisen-5-fully-outside.png",
+      "bytes": 482706,
+      "sha256": "60a165b5e9224099c998a7bae975f8d233fc84e750ed07551d117ecc940410b8"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-standard-human-0-fully-inside.png",
+      "bytes": 481110,
+      "sha256": "b750d703367adc7b14aa5c934d38ced1ce5f375f793673bd4725dd72befdf763"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-standard-human-1-first-visible.png",
+      "bytes": 480343,
+      "sha256": "7d433348fc827d421fe43d2cee107055b4076ea8f1a5823562319ae05c28411c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-standard-human-2-quarter.png",
+      "bytes": 476878,
+      "sha256": "11fa188ea9ba982c78593bd7b25a98043a85326b1f2fe5510617a4b75a23bf19"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-standard-human-3-half.png",
+      "bytes": 476741,
+      "sha256": "bd27b0e32ad60b612a819291c8326f01e6fcecdbd24401d8ebc433144629abca"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-standard-human-4-three-quarters.png",
+      "bytes": 485952,
+      "sha256": "36e9e7f29517931b8fd96846231b7c15e056926265865acd2aa68c68c8a3f9c4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-standard-human-5-fully-outside.png",
+      "bytes": 483595,
+      "sha256": "a6e109979984cbf558e2ae9ce1ea57e5fd2b30788cb89664db6cc007add01fd6"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-tatara-0-fully-inside.png",
+      "bytes": 481559,
+      "sha256": "a032b5f7736ce734b2504a5e8d9e9798568126d7e72801966d880536cf686c03"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-tatara-1-first-visible.png",
+      "bytes": 477625,
+      "sha256": "ea752323832074bfe948f410b3aaee3c7facec6386068413cf3e3e0f3113d234"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-tatara-2-quarter.png",
+      "bytes": 477830,
+      "sha256": "6a7f6e3075dda2cf2ed2b850e70b0b8477e418281e8e31b9c886467b83fb84af"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-tatara-3-half.png",
+      "bytes": 480295,
+      "sha256": "b79d290aa75523215264b8fdb7af04e1d725b46a2a3a4a1d0535fb06e2a219ae"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-tatara-4-three-quarters.png",
+      "bytes": 481479,
+      "sha256": "fef10cc07e7b01660566841e97c8daad0b870c4c4a3a31552ecaee8d62cee69e"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-deployment-tatara-5-fully-outside.png",
+      "bytes": 480968,
+      "sha256": "ba5501028c32e8bd7097eddf005e318314468163a14edcbff53d82a1de245d3f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-hud-banner-bark-boss.png",
+      "bytes": 483182,
+      "sha256": "6dbbc146946988cb10ea3771d235feb4d8afa3ec5bcbd31e75cd336d07c03031"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-hud-deployment-banner.png",
+      "bytes": 457025,
+      "sha256": "560dd1f5d9ae2aa95a0befa880cc14db7ddbae79a2163388cd0de0b0b9e79335"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-hud-five-units.png",
+      "bytes": 487287,
+      "sha256": "fe0b9cc679311384128f5a393272789aa219a49501782a17799dac1896f5eb65"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-hud-manual-ability-banner.png",
+      "bytes": 464964,
+      "sha256": "38328ea34b73cf3d79341118cea16cfbc598627e44f3e0cb9f1ba0c258df3879"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-hud-objective-full.png",
+      "bytes": 493450,
+      "sha256": "bf712cfcddea59d1bb4c44d0966712ff925c3df624e688113470067c34131222"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-hud-stage1-normal.png",
+      "bytes": 474014,
+      "sha256": "e7429f9403aed92aff25d6529a1a0fcefd18f7d4a8ed98d2548bf03ab480f5ef"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-hud-stage3-boss.png",
+      "bytes": 491080,
+      "sha256": "b607d662d4c942b302f25193f6a090a140ed6d0d907a25ea09d4e3e005111c38"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x340-hud-support-disabled.png",
+      "bytes": 485614,
+      "sha256": "373d7bed23baa06e23fbf00a728480521517beb8f432f03e3dd32b05382be52a"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-airstrike-0-stowed.png",
+      "bytes": 575943,
+      "sha256": "37165bd556ef2130972ec4c9e23a8650dc3d60e34e9d47219da682edfd2cd10d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-airstrike-1-mast-deploy.png",
+      "bytes": 571487,
+      "sha256": "955d27c93206269811c4369736d805d68f8bfd5ffa78ea3514ca7fdff17572f5"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-airstrike-2-antenna-extend.png",
+      "bytes": 570846,
+      "sha256": "4299b2791be28ea8d76b8ef8f725faa8de909bd444019ad0fa9fc70df117cbd8"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-airstrike-3-targeting.png",
+      "bytes": 571868,
+      "sha256": "e3b5c12e6efd56be306ee7921e36932e6e0e19976090bb50901d07ff6c703d6d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-airstrike-4-inbound-signal.png",
+      "bytes": 576739,
+      "sha256": "90a0d43e104ae1b2c329d3f3d2ada9da087243e0e308a94ad7988c03410413cb"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-airstrike-5-impact-confirmation.png",
+      "bytes": 512723,
+      "sha256": "81662b8f81f83700439d6372e85ae57ef1d34c310be01f16e8ba52cea155a8be"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-airstrike-6-retract.png",
+      "bytes": 571830,
+      "sha256": "9b9c1977a10fdd5d47ca5503000a293e866016acb5f9a7db60a421ce05273421"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-airstrike-runtime-contact-sheet.png",
+      "bytes": 517366,
+      "sha256": "6fc9cafeed59fa1d48c9c2c2adfdbf5a52fb175a21025fd79e6cf511ed7de5cb"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-barrage-0-stowed.png",
+      "bytes": 569357,
+      "sha256": "af26d63982fde5c085c5524b4397e36c2afa8038bbcff08cc0fadd94828ba95b"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-barrage-1-hatch-open.png",
+      "bytes": 569607,
+      "sha256": "6c9ead5a75e228072076ae39abccddadff7f04ef640aa73d90c7e70802992c99"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-barrage-2-turret-rise.png",
+      "bytes": 570461,
+      "sha256": "f0e2446b63ed97bcee6e1ee8825261b811c49fff0e146c5e08d856143d15a0d4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-barrage-3-aim.png",
+      "bytes": 570536,
+      "sha256": "62ad528ef3d890248375ba78a3996ecef5e23d1beecb1e1a35678f0ed7f9b065"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-barrage-4-firing.png",
+      "bytes": 553909,
+      "sha256": "41761cac29815c1d39854f57136f8d9f48581a41a37aeb2403a49993e3dae12c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-barrage-5-recoil.png",
+      "bytes": 574183,
+      "sha256": "f9b24bf17b0d81a66ed151f7d107b8d663cff4bce6e26379c43cbd7a5ea38cb7"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-barrage-6-retract.png",
+      "bytes": 577639,
+      "sha256": "02fe4458353c7145f882412dc0b46604eef44d246d475f645483ff4a17a2def2"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-barrage-runtime-contact-sheet.png",
+      "bytes": 436146,
+      "sha256": "39df909e61261be3f0c1b1a91d1b4371666c53407f9a62363e9f1108458887cb"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-crawler-equipment-simultaneous.png",
+      "bytes": 570693,
+      "sha256": "834241a1a673b70cb14f3431dbca26db4e28c2dd0028130f64589421076d1063"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-crazy-king-0-fully-inside.png",
+      "bytes": 556473,
+      "sha256": "5166e5f26c46ff2afc5f84f372c35fa18a92316bb11a6c5681af34c1c2104e85"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-crazy-king-1-first-visible.png",
+      "bytes": 556560,
+      "sha256": "c84d13248738881f05fa4689d42d0872a5edf6b213540503cee9f1c49920fabd"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-crazy-king-2-quarter.png",
+      "bytes": 556474,
+      "sha256": "19e2c6d9461c32210a46e4164bfbfa0a15af64ca2a22a8dfd9b06c7f29e2d05f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-crazy-king-3-half.png",
+      "bytes": 551183,
+      "sha256": "881f63e86cff12e151d06743deeea58e832de54083c80079f1db1da5bdee1ddc"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-crazy-king-4-three-quarters.png",
+      "bytes": 559329,
+      "sha256": "bd1576f9d2836e5b137a7dd5993a0dab5efc647a528347014c8a19976d9da878"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-crazy-king-5-fully-outside.png",
+      "bytes": 566152,
+      "sha256": "3e2a22e91fac23756dac80a6cb5124085e2443defb9352e81d7c07c3f85028ee"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-hachi-0-fully-inside.png",
+      "bytes": 557542,
+      "sha256": "865784f64f50d506b34a8180eac3a9d331974dda6b9f2c98c371c000719d6fbf"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-hachi-1-first-visible.png",
+      "bytes": 557257,
+      "sha256": "e7afa0799403194a53a0c5dcc32817448febd317e1dbc96e65bf5804797117dc"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-hachi-2-quarter.png",
+      "bytes": 553622,
+      "sha256": "fe377c3b8fe3e1df34872e3fcd856a1e6490576bc851fbec604333f7146380f5"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-hachi-3-half.png",
+      "bytes": 556490,
+      "sha256": "86f48f37fa7e02e13ede9170a30f892a2f5c3bd0b76f349dff499c2883dfef33"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-hachi-4-three-quarters.png",
+      "bytes": 554012,
+      "sha256": "4ddee04bf76ac90c0d698902eca593c2e024a06359d07f583701f457ecf863dd"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-hachi-5-fully-outside.png",
+      "bytes": 557803,
+      "sha256": "32907801dcfc0f8dc7e038967753bffb75afc61a681ff0eee803b49075c5dd78"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mayo-chan-0-fully-inside.png",
+      "bytes": 558814,
+      "sha256": "18280ba5f3dab7bfaee9ae894f117c5050936dc9e434c70ccdbcdeb202a94554"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mayo-chan-1-first-visible.png",
+      "bytes": 558438,
+      "sha256": "4511144a8b38820f14bb6c6108b98b4aa695eb940f760a292c7d040c1287e461"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mayo-chan-2-quarter.png",
+      "bytes": 557899,
+      "sha256": "e9b47c7c40a2b56bad8e97ba2a448fab5482815c26b770155845d8c4dd22746d"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mayo-chan-3-half.png",
+      "bytes": 557279,
+      "sha256": "642a8d371b8008f97f9c97737e9f09dd8aa27c640508d51124f406ab174cb111"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mayo-chan-4-three-quarters.png",
+      "bytes": 557261,
+      "sha256": "f352257a62a7f336085bc1e2da3db2976a49521d6371b47b9d4dd38f37829047"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mayo-chan-5-fully-outside.png",
+      "bytes": 559115,
+      "sha256": "a39c076177d415f6c32e882f5f121cae0d2d657860fa9a79cd0ff7e815c634f7"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mizuchi-0-fully-inside.png",
+      "bytes": 557536,
+      "sha256": "f869dfc98a34349ef785a416f6d2f9be5cf84466b21a567b362147a378f9bc83"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mizuchi-1-first-visible.png",
+      "bytes": 557273,
+      "sha256": "10f9e545bd3c17305f1b8252fcf190d4ad1bfa134e75d7feef9322b5def10b4b"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mizuchi-2-quarter.png",
+      "bytes": 556571,
+      "sha256": "f0c028527394b78e3c23c8233c1552b86e077ab0b2a1bcafe7c8a6f8a05616bd"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mizuchi-3-half.png",
+      "bytes": 556355,
+      "sha256": "7dfb65606113287ca5dd88a786f4c2b6831e115d12c227e9180188cd66625c4f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mizuchi-4-three-quarters.png",
+      "bytes": 558122,
+      "sha256": "8f2dd23391f0d2b47430f7800ec47dd8a7fcba999d9b0346e2e110ba405c1de9"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-mizuchi-5-fully-outside.png",
+      "bytes": 557889,
+      "sha256": "42274ce9505b3aaef1c975479d11d78b0024be9de80c0649af35095eb208049e"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-paisen-0-fully-inside.png",
+      "bytes": 558091,
+      "sha256": "84587a4f7c2f7ac53cecbe069382331193d193a49c0c6ce8c3e0e163c803cd93"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-paisen-1-first-visible.png",
+      "bytes": 558023,
+      "sha256": "00d701333f9cf39a13b1e65b20c987a2dd9a17d91da06b611fb6a3b943453007"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-paisen-2-quarter.png",
+      "bytes": 554807,
+      "sha256": "47e852d76550c043fe35af5cc620d82026ad68268f5257af2d5f1b1e611da93c"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-paisen-3-half.png",
+      "bytes": 557069,
+      "sha256": "1cf661dfb6532953ad1ef8d1251881e04119b9df6c426aa8e4c26ae52466c5b7"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-paisen-4-three-quarters.png",
+      "bytes": 554744,
+      "sha256": "da54a3ed037894c671aa2179a551cbc76776266d3f80fbd6612a5062cb41367e"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-paisen-5-fully-outside.png",
+      "bytes": 558080,
+      "sha256": "2201f90d76c64c8d8341b29e7d1109e24fa54c4bdcb0d08fcc46a51c82066aaa"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-standard-human-0-fully-inside.png",
+      "bytes": 557136,
+      "sha256": "6f674c233ec78e1926530e1f22c555a70f7ce1a38c36e5e3f605742943baf3c8"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-standard-human-1-first-visible.png",
+      "bytes": 557471,
+      "sha256": "127132da1c77a93f274b025b61e6534bb34ed0ac6cd1254721d88c8630c8d0b6"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-standard-human-2-quarter.png",
+      "bytes": 553902,
+      "sha256": "e3470608bfef0cd35e3bedda61e4d383771bf1eafe671a5a9fb1d36f4e2bc619"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-standard-human-3-half.png",
+      "bytes": 555800,
+      "sha256": "1a2a5b618f457c2d24b8ee2551488e1d40a204998a423ff6ab2ed9f12d530e06"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-standard-human-4-three-quarters.png",
+      "bytes": 562500,
+      "sha256": "4ab1ac850aa4229086e7e2cdb7118ae27d14db709ddb01854a5b8c79cb7891dd"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-standard-human-5-fully-outside.png",
+      "bytes": 558836,
+      "sha256": "02f13168c88b26daac8b9df9356b0400446fe3cabfdc7f7ace6adbf60605bad2"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-tatara-0-fully-inside.png",
+      "bytes": 557692,
+      "sha256": "a3fd860f4201dc5c50f816a45715abc07cf9bdfe592ef183ec91dbf9da252ef3"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-tatara-1-first-visible.png",
+      "bytes": 554097,
+      "sha256": "263d234797d87ca56888e1a80d9b5ebdef86b75cddf66f4c07e417b81fcfc7a8"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-tatara-2-quarter.png",
+      "bytes": 557483,
+      "sha256": "e6842b83274705e8d6be796a5987329135f5819a2a07c759988af58a6a28623f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-tatara-3-half.png",
+      "bytes": 553418,
+      "sha256": "034a028491214c8e0432db0415f900607768e118acecb28d7931aff82763632e"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-tatara-4-three-quarters.png",
+      "bytes": 557550,
+      "sha256": "14e35d50a5378d46fd12f9a85be8056281c0bf6e2443be74f7b008d80a9f3ee0"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-deployment-tatara-5-fully-outside.png",
+      "bytes": 562545,
+      "sha256": "8d8581e14a37082eba47064677da5fe3b52232772715ed04cc1086b7c790bc5b"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-hud-banner-bark-boss.png",
+      "bytes": 561482,
+      "sha256": "1d4b733b3a058eebbc082203b4fd3152bff49af64ef5093d846760b373b71bbb"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-hud-deployment-banner.png",
+      "bytes": 534101,
+      "sha256": "5e65bba0385917391820607ecaf2def51c6ce1bb2ab0b08fc281a59945b3bd2e"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-hud-five-units.png",
+      "bytes": 562651,
+      "sha256": "8f639b2eac7d5b3e32e43d49811886ef9a052d4921b6c61361423d50bc86aa3f"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-hud-manual-ability-banner.png",
+      "bytes": 542657,
+      "sha256": "77f72b8884f1b2af8f60bafc0b0451ac37f50aa705b6b23d18457aa3cd34a594"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-hud-objective-full.png",
+      "bytes": 568701,
+      "sha256": "77ac703048b2fe540cce98ca6247818e9acad855e37af5261d3ccfa20e7626f8"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-hud-stage1-normal.png",
+      "bytes": 548087,
+      "sha256": "2d46c14c3aa85c474e2a1ab8e6ec6220eaef5f324cbbaa1594836df2f1b3edfb"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-hud-stage3-boss.png",
+      "bytes": 569613,
+      "sha256": "51c370501edb623c018e188c7822fd1eb2fceed344c0a86aa6c7778552d87549"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/browser/webkit-844x390-hud-support-disabled.png",
+      "bytes": 559424,
+      "sha256": "86e8f6d9dc158880a1ddeb7672a18f0e10ffef20982789e2df9aea4ed9133816"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/stage3-audio/chromium-844x340-takuya-entrance-audio.png",
+      "bytes": 419475,
+      "sha256": "3a230f66ab251e24dd2e6033426a32b80aa37164c49df0dd91add5dae44a19a4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/stage3-audio/chromium-844x340-takuya-final-audio.png",
+      "bytes": 420029,
+      "sha256": "ef12d2139e89ea976b8ed851cd10c5ee94a845d53ff0d47a7b7d9b3df2090e91"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/stage3-audio/chromium-844x390-takuya-entrance-audio.png",
+      "bytes": 482071,
+      "sha256": "3749dc4962a0ca542e57fabd37038abe2276c38eb7eac8468869d4b6c26eafe0"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/stage3-audio/chromium-844x390-takuya-final-audio.png",
+      "bytes": 485027,
+      "sha256": "ccb2dd738ed110570cae86db15015b1f65bff9d0fd2be6c14869d5ffe132b540"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/stage3-audio/summary.json",
+      "bytes": 10062099,
+      "sha256": "f4c1e60aa2c3f7d7eeb8a81f38dc5d5e6806b80dd3a2fd3425e823d8f3a5c0b7"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/stage3-audio/webkit-844x340-takuya-entrance-audio-BLOCKED.png",
+      "bytes": 497744,
+      "sha256": "99a3dccabecce7e5d6328ec1d734733b764b6555e0eed19e4bc4b7e8353bf41e"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/stage3-audio/webkit-844x340-takuya-final-audio-BLOCKED.png",
+      "bytes": 493617,
+      "sha256": "9c21f8b6db4fb07db9a3adba5609a61c80fa26b9bb114553dc10b012bc638bc8"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/stage3-audio/webkit-844x390-takuya-entrance-audio-BLOCKED.png",
+      "bytes": 574375,
+      "sha256": "7ac5deac1fa2146102973a9913a4787c8c2eb235274f164c7883c8f0c8c420c4"
+    },
+    {
+      "path": "outputs/v099-final-remediation-evidence-final/stage3-audio/webkit-844x390-takuya-final-audio-BLOCKED.png",
+      "bytes": 568655,
+      "sha256": "bb3e02dedf01fd163ecc4d3f5c5f053e7b5d53412178ea633293ce40f0d1c35e"
+    }
+  ],
+  "combinedEvidenceSha256": "35606446df29d866a511911499f942adacea58ed3ddf15b0c668828a3ad66c8b"
+}

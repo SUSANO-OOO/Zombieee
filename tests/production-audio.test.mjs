@@ -140,9 +140,9 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   const activeV090Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v090/"));
   const activeV099Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v099/"));
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 249);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 250);
   // 0.9.8 adds one track: the loadout theme, as the usual MP3 + OGG pair.
-  assert.equal(manifestPaths.length, 437);
+  assert.equal(manifestPaths.length, 438);
   assert.equal(
     manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v098/")).length,
     2,
@@ -152,7 +152,7 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   assert.equal(activeV070Paths.length, 72);
   assert.equal(activeV080Paths.length, 4);
   assert.equal(activeV090Paths.length, 53);
-  assert.equal(activeV099Paths.length, 36);
+  assert.equal(activeV099Paths.length, 37);
   assert.deepEqual([...activeV060Paths].sort(), [...v060Paths].sort());
   assert.deepEqual([...activeV070Paths].sort(), [...v070Paths].sort());
   assert.deepEqual([...activeV080Paths].sort(), [...v080Paths].sort());
@@ -338,11 +338,17 @@ test("all 36 v070 cues are reproducible layered masters rather than placeholder 
   ]);
 });
 
-test("TAKUYA entrance stops BGM for the authored metal tear and three-step sequence before boss music", () => {
+test("TAKUYA entrance starts boss music under a composing transient duck for the authored metal tear", () => {
   const source = readFileSync(path.join(repositoryRoot, "app", "AshfallGame.tsx"), "utf8");
   assert.deepEqual(TAKUYA_ENTRANCE_AUDIO, {
     cueId: "sfx-v070-takuya-entrance",
-    silenceSceneId: "silence-stage3-entrance",
+    bossSceneId: "boss",
+    musicDuck: {
+      level: 0.32,
+      attackMs: 30,
+      holdMs: 2920,
+      releaseMs: 450,
+    },
     durationSeconds: 3.4,
   });
   assert.equal(PRODUCTION_AUDIO_MANIFEST.assetById[TAKUYA_ENTRANCE_AUDIO.cueId].category, "monsters");
@@ -352,16 +358,11 @@ test("TAKUYA entrance stops BGM for the authored metal tear and three-step seque
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["story-boss"].bgm, "music-v099-boss");
   assert.match(source, /g\.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO\.durationSeconds/);
   assert.match(source, /playProductionCue\(TAKUYA_ENTRANCE_AUDIO\.cueId, W \/ 2/);
-  assert.match(source, /takuyaEntranceAudioActive[\s\S]*TAKUYA_ENTRANCE_AUDIO\.silenceSceneId/);
+  assert.match(source, /TAKUYA_ENTRANCE_AUDIO\.bossSceneId/);
+  assert.match(source, /TAKUYA_ENTRANCE_AUDIO\.musicDuck/);
+  assert.doesNotMatch(source, /TAKUYA_ENTRANCE_AUDIO\.silenceSceneId/);
   assert.match(source, /g\.takuyaEntranceAudioRemaining = Math\.max\(0, g\.takuyaEntranceAudioRemaining - dt\)/);
-  assert.match(source, /if \(battleSilenceSceneId\(g\)\) return/);
   assert.match(source, /syncMusicMode\(bossActiveOrIncoming \? "boss"/);
-  const silenceResolver = source.slice(
-    source.indexOf("function battleSilenceSceneId"),
-    source.indexOf("function dispatchScriptedStoryBattleBarks"),
-  );
-  assert.match(silenceResolver, /takuyaEntranceAudioRemaining > 0/);
-  assert.doesNotMatch(silenceResolver, /stage-takuya-final-v070|FINAL_WEAKPOINT/);
 });
 
 test("production manifest keeps every mixer category and valid two-sample variation pools", () => {
@@ -396,15 +397,14 @@ test("production manifest keeps every mixer category and valid two-sample variat
   assert.equal(PRODUCTION_AUDIO_MANIFEST.pools.some((pool) => pool.category === "humanVoices"), true);
 });
 
-test("all 45 battle and authored story scenes resolve with intentional limited silence", () => {
+test("all 43 battle and authored story scenes resolve with intentional limited silence", () => {
   const expectedScenes = [
     "title", "intro", "map", "loadout", "stage1", "stage2", "stage3",
     "station-gate", "station-platform", "station-tunnel", "pressure-surface", "pressure-station", "boss", "victory", "defeat",
     "silence-prologue-title", "story-kumaya-daily", "story-kumaya-crisis", "story-collapse-montage",
     "story-crawler-montage", "story-crawler-signal", "story-stage1-pre", "story-stage1-battle",
     "story-stage1-post", "story-stage2-pre", "story-stage2-battle", "story-stage2-post",
-    "story-stage3-pre", "story-stage3-battle", "story-boss", "silence-stage3-entrance",
-    "silence-stage3-final", "story-stage3-post",
+    "story-stage3-pre", "story-stage3-battle", "story-boss", "story-stage3-post",
     "story-station-briefing", "story-station-gate-pre", "story-station-gate-battle", "story-station-gate-post",
     "story-station-platform-pre", "story-station-platform-battle", "story-station-platform-post",
     "story-station-tunnel-pre", "story-station-tunnel-battle", "silence-station-seal",
@@ -426,19 +426,21 @@ test("all 45 battle and authored story scenes resolve with intentional limited s
   const battleSceneIds = ["stage1", "stage2", "stage3", "station-gate", "station-platform", "station-tunnel", "pressure-surface", "pressure-station", "boss"];
   const battleMusicIds = battleSceneIds.map((sceneId) => PRODUCTION_AUDIO_MANIFEST.sceneById[sceneId].bgm);
   const battleMusicPaths = battleMusicIds.map((assetId) => PRODUCTION_AUDIO_MANIFEST.assetById[assetId].sources[0].src);
-  assert.equal(new Set(battleMusicIds).size, battleSceneIds.length);
-  assert.equal(new Set(battleMusicPaths).size, battleSceneIds.length);
+  assert.equal(new Set(battleMusicIds).size, 4);
+  assert.equal(new Set(battleMusicPaths).size, 4);
+  assert.deepEqual([...new Set(battleMusicIds)], [
+    "music-v099-normal",
+    "music-v099-pressure-surface",
+    "music-v099-pressure-station",
+    "music-v099-boss",
+  ]);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-prologue-title"].bgm, undefined);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-prologue-title"].ambience.length, 0);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-prologue-title"].crossfadeMs, 0);
   assert.deepEqual(PRODUCTION_AUDIO_MANIFEST.sceneById["story-collapse-montage"].preload, []);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById[TAKUYA_ENTRANCE_AUDIO.silenceSceneId].bgm, undefined);
-  assert.deepEqual(
-    PRODUCTION_AUDIO_MANIFEST.sceneById[TAKUYA_ENTRANCE_AUDIO.silenceSceneId].preload,
-    [TAKUYA_ENTRANCE_AUDIO.cueId],
-  );
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-final"].bgm, undefined);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-final"].ambience.length, 0);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById[TAKUYA_ENTRANCE_AUDIO.bossSceneId].bgm, "music-v099-boss");
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-entrance"], undefined);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-final"], undefined);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-station-seal"].bgm, undefined);
   assert.deepEqual(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-station-seal"].ambience, ["ambience-v070-station-seal-aftermath-loop"]);
 });
@@ -447,7 +449,7 @@ test("authored story scenes never bind existing human battle-voice cues", () => 
   const storySceneIds = PRODUCTION_AUDIO_MANIFEST.scenes
     .map(({ id }) => id)
     .filter((id) => id === "intro" || id.startsWith("story-") || id.startsWith("silence-"));
-  assert.equal(storySceneIds.length, 31);
+  assert.equal(storySceneIds.length, 29);
   for (const sceneId of storySceneIds) {
     const scene = PRODUCTION_AUDIO_MANIFEST.sceneById[sceneId];
     const cueIds = [scene.bgm, ...scene.ambience, ...scene.preload].filter(Boolean);
@@ -513,7 +515,7 @@ test("all 47 canonical events route to their authored BGM, ambience, defeat, or 
     "stage-sawara-replay-v070": "story-stage2-battle",
     "stage-takuya-pre-v070": "story-stage3-pre",
     "stage-takuya-warning-v070": "story-boss",
-    "stage-takuya-final-v070": "silence-stage3-final",
+    "stage-takuya-final-v070": "story-boss",
     "stage-takuya-base-remains-v070": "story-stage3-battle",
     "stage-takuya-post-v070": "story-stage3-post",
     "stage-takuya-defeat-v070": "defeat",
@@ -903,7 +905,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 291);
+  assert.equal(allCueIds.length, 292);
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(

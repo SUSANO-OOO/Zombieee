@@ -151,8 +151,6 @@ const EXPECTED_AUDIO_SCENE_IDS = Object.freeze([
   "story-stage3-pre",
   "story-stage3-battle",
   "story-boss",
-  "silence-stage3-entrance",
-  "silence-stage3-final",
   "story-stage3-post",
   "story-station-briefing",
   "story-station-gate-pre",
@@ -188,7 +186,7 @@ const EXPECTED_STORY_AUDIO_SCENES = Object.freeze({
   "stage-sawara-replay-v070": "story-stage2-battle",
   "stage-takuya-pre-v070": "story-stage3-pre",
   "stage-takuya-warning-v070": "story-boss",
-  "stage-takuya-final-v070": "silence-stage3-final",
+  "stage-takuya-final-v070": "story-boss",
   "stage-takuya-base-remains-v070": "story-stage3-battle",
   "stage-takuya-post-v070": "story-stage3-post",
   "stage-takuya-defeat-v070": "defeat",
@@ -652,15 +650,23 @@ test("StoryScreen reports every line boundary and holds authored silence before 
   assert.ok(gameSource.includes("sceneIdForScreen(screen, activeBattlefieldStageId, musicState)"));
 });
 
-test("TAKUYA entrance owns an audible 3.4 second silence-scene cut before boss music", async () => {
+test("TAKUYA entrance starts boss music immediately and composes a 3.4 second transient duck", async () => {
+  assert.deepEqual(productionAudio.TAKUYA_ENTRANCE_MUSIC_DUCK, {
+    level: 0.32,
+    attackMs: 30,
+    holdMs: 2920,
+    releaseMs: 450,
+  });
   assert.deepEqual(productionAudio.TAKUYA_ENTRANCE_AUDIO, {
     cueId: "sfx-v070-takuya-entrance",
-    silenceSceneId: "silence-stage3-entrance",
+    bossSceneId: "boss",
+    musicDuck: productionAudio.TAKUYA_ENTRANCE_MUSIC_DUCK,
     durationSeconds: 3.4,
   });
-  const entranceScene = productionAudio.PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-entrance"];
-  assert.equal(entranceScene.bgm, undefined);
-  assert.deepEqual(entranceScene.preload, ["sfx-v070-takuya-entrance"]);
+  const entranceScene = productionAudio.PRODUCTION_AUDIO_MANIFEST.sceneById["boss"];
+  assert.equal(entranceScene.bgm, "music-v099-boss");
+  assert.equal(productionAudio.PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-entrance"], undefined);
+  assert.equal(productionAudio.PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-final"], undefined);
   assert.equal(
     productionAudio.PRODUCTION_AUDIO_MANIFEST.assetById["sfx-v070-takuya-entrance"].category,
     "monsters",
@@ -668,8 +674,9 @@ test("TAKUYA entrance owns an audible 3.4 second silence-scene cut before boss m
   const gameSource = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   assert.match(gameSource, /g\.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO\.durationSeconds/u);
   assert.match(gameSource, /playProductionCue\(TAKUYA_ENTRANCE_AUDIO\.cueId, W \/ 2/u);
-  assert.match(gameSource, /takuyaEntranceAudioActive[\s\S]*TAKUYA_ENTRANCE_AUDIO\.silenceSceneId/u);
-  assert.match(gameSource, /if \(battleSilenceSceneId\(g\)\) return/u);
+  assert.match(gameSource, /TAKUYA_ENTRANCE_AUDIO\.bossSceneId/u);
+  assert.match(gameSource, /TAKUYA_ENTRANCE_AUDIO\.musicDuck/u);
+  assert.doesNotMatch(gameSource, /TAKUYA_ENTRANCE_AUDIO\.silenceSceneId/u);
 });
 
 test("P5 preserves battle voices while authored story dialogue has no voiceover or TTS contract", async () => {
@@ -680,7 +687,7 @@ test("P5 preserves battle voices while authored story dialogue has no voiceover 
   const storySceneIds = productionAudio.PRODUCTION_AUDIO_MANIFEST.scenes
     .map(({ id }) => id)
     .filter((id) => id === "intro" || id.startsWith("story-") || id.startsWith("silence-"));
-  assert.equal(storySceneIds.length, 31);
+  assert.equal(storySceneIds.length, 29);
   for (const sceneId of storySceneIds) {
     const scene = productionAudio.PRODUCTION_AUDIO_MANIFEST.sceneById[sceneId];
     const cueIds = [scene.bgm, ...scene.ambience, ...scene.preload].filter(Boolean);

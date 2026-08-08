@@ -40,6 +40,7 @@ import {
   V080_UNIT_VISUAL_PROFILES,
   V090_UNIT_VISUAL_PROFILES,
 } from "../app/visualProfiles.js";
+import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js";
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
 import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
@@ -193,6 +194,7 @@ for (const kind of spriteKinds) {
 
 // CRAWLER and the infected base are persistent battlefield fixtures.
 sweep(V075_VISUAL_PROFILES.crawler, { pack: "units", category: "unit", criticality: "critical" });
+sweep(V099_CRAWLER_RUNTIME_PROFILE, { pack: "units", category: "unit", criticality: "critical" });
 sweep(V075_VISUAL_PROFILES.enemyBase, { pack: "units", category: "enemy", criticality: "critical" });
 
 sweep(CHARACTER_PORTRAIT_ART, { pack: "units", category: "portrait", criticality: "optional" });

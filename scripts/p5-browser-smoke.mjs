@@ -90,7 +90,7 @@ const expectedStationSceneId = sceneIdForScreen("battle", expectedStationStageId
 const expectedTakuyaStageId = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
 const expectedTakuyaBossSceneId = sceneIdForScreen("battle", expectedTakuyaStageId, { musicMode: "boss" });
 const expectedTakuyaPostBossSceneId = sceneIdForScreen("battle", expectedTakuyaStageId, { musicMode: "pressure" });
-const expectedTakuyaEntranceSceneId = TAKUYA_ENTRANCE_AUDIO.silenceSceneId;
+const expectedTakuyaEntranceSceneId = TAKUYA_ENTRANCE_AUDIO.bossSceneId;
 const authoredTakuyaFinalStorySceneId = sceneIdForStoryEvent("stage-takuya-final-v070");
 const expectedTakuyaBossAssetId = PRODUCTION_AUDIO_MANIFEST.scenes
   .find(({ id }) => id === expectedTakuyaBossSceneId)?.bgm ?? null;
@@ -121,17 +121,90 @@ function assertNoRetiredNames(text, label) {
 }
 
 function createDiagnostics(page) {
+  let currentPhase = "unassigned";
+  let requestSequence = 0;
+  let requestMetadata = new WeakMap();
+  let failedRequestUrls = new Set();
+  const detailPromises = new Set();
   let current = {
     consoleErrors: [],
     pageErrors: [],
     requestFailures: [],
+    failedRequestDetails: [],
+    replacementRequestDetails: [],
     httpErrors: [],
     warnings: [],
   };
   const pendingRequests = new Set();
 
-  page.on("request", (request) => pendingRequests.add(request));
-  page.on("requestfinished", (request) => pendingRequests.delete(request));
+  const captureRuntimeState = () => page.evaluate(() => {
+    const shell = document.querySelector(".game-shell");
+    const assetBridge = window.__ASHFALL_ASSET_QA__;
+    const battleSnapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+    return {
+      capturedAt: performance.now(),
+      wallTime: Date.now(),
+      documentUrl: location.href,
+      screen: shell?.getAttribute("data-screen") ?? null,
+      selectedStageId: shell?.getAttribute("data-stage-id") ?? null,
+      battlefieldStageId: shell?.getAttribute("data-battlefield-stage-id") ?? null,
+      formationKinds: [...document.querySelectorAll(".unit-card[data-kind]")]
+        .map((element) => element.getAttribute("data-kind"))
+        .filter(Boolean),
+      assetReadiness: assetBridge?.getState?.() ?? null,
+      assetSessionHistory: assetBridge?.getHistory?.() ?? [],
+      assetSessionRestartCount: assetBridge?.getRestartCount?.() ?? null,
+      battle: battleSnapshot ? {
+        screen: battleSnapshot.screen,
+        stageId: battleSnapshot.stageId,
+        operationId: battleSnapshot.operationId,
+        time: battleSnapshot.time,
+        bossDefeated: battleSnapshot.bossDefeated,
+        over: battleSnapshot.over,
+        fighterKinds: [...new Set((battleSnapshot.fighters ?? []).map(({ kind }) => kind))],
+      } : null,
+    };
+  });
+  const scheduleRuntimeCapture = (record, field) => {
+    const promise = captureRuntimeState()
+      .then((snapshot) => { record[field] = snapshot; })
+      .catch((error) => { record[`${field}Error`] = String(error); })
+      .finally(() => detailPromises.delete(promise));
+    detailPromises.add(promise);
+  };
+  page.on("request", (request) => {
+    pendingRequests.add(request);
+    let frameUrlAtStart = null;
+    try {
+      frameUrlAtStart = request.frame().url();
+    } catch {
+      // Service-worker and early navigation requests do not always expose a frame.
+    }
+    const record = {
+      id: ++requestSequence,
+      url: request.url(),
+      method: request.method(),
+      resourceType: request.resourceType(),
+      isNavigationRequest: request.isNavigationRequest(),
+      frameUrlAtStart,
+      startedAt: Date.now(),
+      harnessPhaseAtStart: currentPhase,
+      outcome: "pending",
+    };
+    requestMetadata.set(request, record);
+  });
+  page.on("requestfinished", (request) => {
+    pendingRequests.delete(request);
+    const record = requestMetadata.get(request);
+    if (!record) return;
+    record.outcome = "finished";
+    record.finishedAt = Date.now();
+    record.harnessPhaseAtFinish = currentPhase;
+    if (failedRequestUrls.has(record.url)) {
+      current.replacementRequestDetails.push(record);
+      scheduleRuntimeCapture(record, "finishState");
+    }
+  });
   page.on("console", (message) => {
     if (message.type() === "error") current.consoleErrors.push(message.text());
     if (message.type() === "warning") current.warnings.push(message.text());
@@ -139,6 +212,16 @@ function createDiagnostics(page) {
   page.on("pageerror", (error) => current.pageErrors.push(String(error)));
   page.on("requestfailed", (request) => {
     pendingRequests.delete(request);
+    const record = requestMetadata.get(request);
+    if (record) {
+      record.outcome = "failed";
+      record.failedAt = Date.now();
+      record.failureText = request.failure()?.errorText ?? "unknown";
+      record.harnessPhaseAtFailure = currentPhase;
+      failedRequestUrls.add(record.url);
+      current.failedRequestDetails.push(record);
+      scheduleRuntimeCapture(record, "failureState");
+    }
     current.requestFailures.push(`${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`);
   });
   page.on("response", (response) => {
@@ -148,13 +231,26 @@ function createDiagnostics(page) {
   return {
     reset() {
       pendingRequests.clear();
+      requestMetadata = new WeakMap();
+      failedRequestUrls = new Set();
       current = {
         consoleErrors: [],
         pageErrors: [],
         requestFailures: [],
+        failedRequestDetails: [],
+        replacementRequestDetails: [],
         httpErrors: [],
         warnings: [],
       };
+    },
+    setPhase(phase) {
+      currentPhase = phase;
+    },
+    async settleDetails() {
+      await Promise.allSettled([...detailPromises]);
+    },
+    captureState() {
+      return captureRuntimeState();
     },
     snapshot() {
       return {
@@ -214,6 +310,78 @@ function battleQaUrl(mode) {
   return String(url);
 }
 
+async function waitForStableTakuyaLoadoutAssets(page, label) {
+  await page.waitForFunction(
+    ({ expectedStageId }) => {
+      const root = document.documentElement;
+      const screen = document.querySelector(".game-shell")?.getAttribute("data-screen");
+      const stageId = document.querySelector(".game-shell")?.getAttribute("data-stage-id");
+      const assetState = window.__ASHFALL_ASSET_QA__?.getState?.();
+      return screen === "loadout"
+        && stageId === expectedStageId
+        && assetState?.state === "ready"
+        && Number(assetState.generation) > 0
+        && Number(assetState.total) > 0
+        && assetState.pending === 0
+        && assetState.failed === 0
+        && root.dataset.assetResidentScope === "all-local-qa"
+        && root.dataset.assetResidentStage === expectedStageId
+        && Number(root.dataset.assetLoadGeneration) === Number(assetState.generation);
+    },
+    { expectedStageId: expectedTakuyaStageId },
+    { timeout },
+  );
+  let stable = null;
+  for (let attempt = 0; attempt < 5 && !stable; attempt += 1) {
+    await waitForNetworkQuiet(page);
+    const capture = () => page.evaluate(() => {
+      const root = document.documentElement;
+      const state = window.__ASHFALL_ASSET_QA__?.getState?.();
+      return {
+        generation: Number(state?.generation),
+        total: Number(state?.total),
+        pending: Number(state?.pending),
+        failed: Number(state?.failed),
+        status: state?.state ?? null,
+        stageId: root.dataset.assetResidentStage ?? null,
+        scope: root.dataset.assetResidentScope ?? null,
+        datasetGeneration: Number(root.dataset.assetLoadGeneration),
+      };
+    });
+    const before = await capture();
+    await page.evaluate(() => new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    }));
+    await page.waitForTimeout(120);
+    const after = await capture();
+    if (after.status === "ready"
+      && after.pending === 0
+      && after.failed === 0
+      && after.generation === before.generation
+      && after.total === before.total
+      && after.datasetGeneration === after.generation
+      && after.stageId === expectedTakuyaStageId
+      && after.scope === "all-local-qa") {
+      stable = { before, after };
+    }
+  }
+  invariant(stable, `${label} target loadout asset generation did not remain stable`);
+  return stable;
+}
+
+function assertLocalQaBootstrapDiagnostics(raw, label) {
+  invariant(raw.consoleErrors.length === 0,
+    `${label} bootstrap console errors: ${JSON.stringify(raw.consoleErrors)}`);
+  invariant(raw.pageErrors.length === 0,
+    `${label} bootstrap page errors: ${JSON.stringify(raw.pageErrors)}`);
+  invariant(raw.httpErrors.length === 0,
+    `${label} bootstrap HTTP errors: ${JSON.stringify(raw.httpErrors)}`);
+  invariant(raw.warnings.length === 0,
+    `${label} bootstrap warnings: ${JSON.stringify(raw.warnings)}`);
+  invariant(raw.pendingRequestCount === 0,
+    `${label} bootstrap retained pending requests: ${JSON.stringify(raw.pendingRequestUrls)}`);
+}
+
 async function enterLegacyQaBattle(page, label) {
   await page.waitForFunction(
     () => {
@@ -224,6 +392,21 @@ async function enterLegacyQaBattle(page, label) {
     { timeout },
   );
   if (await page.locator('.game-shell[data-screen="loadout"]').count()) {
+    // Let the loadout generation finish before the deploy selection starts the
+    // battle generation. Otherwise the harness itself aborts an in-flight
+    // loadout asset request and obscures real product request failures.
+    await page.waitForFunction(
+      () => {
+        const root = document.documentElement;
+        const assetState = window.__ASHFALL_ASSET_QA__?.getState?.();
+        return assetState?.state === "ready"
+          && assetState.pending === 0
+          && assetState.failed === 0
+          && Number(root.dataset.assetLoadGeneration) === Number(assetState.generation);
+      },
+      undefined,
+      { timeout },
+    );
     const deployButton = page.getByRole("button", { name: /この編成で出撃/ });
     await deployButton.waitFor({ state: "visible", timeout });
     await page.waitForFunction(
@@ -259,6 +442,70 @@ async function enterLegacyQaBattle(page, label) {
 async function waitForNetworkQuiet(page) {
   await page.waitForLoadState("networkidle", { timeout });
   await page.waitForTimeout(120);
+}
+
+async function waitForDiagnosticsQuiet(diagnostics, label) {
+  const deadline = Date.now() + timeout;
+  let zeroSince = null;
+  let last = diagnostics.snapshot();
+  while (Date.now() < deadline) {
+    await diagnostics.settleDetails();
+    last = diagnostics.snapshot();
+    if (last.pendingRequestCount === 0) {
+      zeroSince ??= Date.now();
+      if (Date.now() - zeroSince >= 250) return last;
+    } else {
+      zeroSince = null;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`${label} network diagnostics did not drain: ${JSON.stringify(last.pendingRequestUrls)}`);
+}
+
+async function captureStage3AudioSetupBoundary(page, diagnostics, label) {
+  await page.waitForFunction(
+    ({ expectedStageId }) => {
+      const root = document.documentElement;
+      const assetState = window.__ASHFALL_ASSET_QA__?.getState?.();
+      const battle = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      return battle?.screen === "battle"
+        && battle.stageId === expectedStageId
+        && battle.running === true
+        && assetState?.state === "ready"
+        && assetState.pending === 0
+        && assetState.failed === 0
+        && Number(root.dataset.assetLoadGeneration) === Number(assetState.generation);
+    },
+    { expectedStageId: expectedTakuyaStageId },
+    { timeout },
+  );
+  await pauseBattleForDiagnosticDrain(page, label);
+  await waitForNetworkQuiet(page);
+  await waitForDiagnosticsQuiet(diagnostics, `${label}/setup`);
+  await diagnostics.settleDetails();
+  const stableState = await diagnostics.captureState();
+  const raw = diagnostics.snapshot();
+  return { stableState, raw };
+}
+
+function assertStage3AudioSetupBoundary(setupDiagnostics, label) {
+  const { stableState, raw } = setupDiagnostics;
+  invariant(stableState.assetReadiness?.state === "ready"
+    && stableState.assetReadiness?.pending === 0
+    && stableState.assetReadiness?.failed === 0,
+  `${label} did not establish a ready/pending-0 asset generation`);
+  invariant(raw.pendingRequestCount === 0,
+    `${label} setup retained ${raw.pendingRequestCount} pending request(s)`);
+  invariant(raw.consoleErrors.length === 0,
+    `${label} setup console errors: ${JSON.stringify(raw.consoleErrors)}`);
+  invariant(raw.pageErrors.length === 0,
+    `${label} setup page errors: ${JSON.stringify(raw.pageErrors)}`);
+  invariant(raw.httpErrors.length === 0,
+    `${label} setup HTTP errors: ${JSON.stringify(raw.httpErrors)}`);
+  invariant(raw.warnings.length === 0,
+    `${label} setup console warnings: ${JSON.stringify(raw.warnings)}`);
+  invariant(raw.requestFailures.length === 0 && raw.failedRequestDetails.length === 0,
+    `${label} setup request failures are fail-closed: ${JSON.stringify(raw.requestFailures)}`);
 }
 
 async function pauseBattleForDiagnosticDrain(page, label) {
@@ -368,7 +615,7 @@ async function readLayoutAndAudio(page) {
           ".unit-card .cost",
           ".support-btn b",
           ".support-btn em",
-          ".stats-strip .objective",
+          ".battle-objective",
         ].join(",")),
         secondary: visibleTypography([
           ".phase-block small",
@@ -381,16 +628,18 @@ async function readLayoutAndAudio(page) {
           ".unit-card .card-state",
           ".unit-card .cooldown-mask small",
           ".support-btn small",
-          ".stats-strip > span:not(.objective)",
+          ".battle-stats > span",
         ].join(",")),
         rects: {
           bottomHud: rectFor(".bottom-hud"),
+          resourceStack: rectFor(".resource-stack"),
           unitCards: rectFor(".unit-cards"),
+          supportZone: rectFor(".support-zone"),
           supportRow: rectFor(".support-row"),
-          statsStrip: rectFor(".stats-strip"),
-          objective: rectFor(".stats-strip .objective"),
+          statsStrip: rectFor(".battle-stats"),
+          objective: rectFor(".battle-objective"),
         },
-        objectiveTextFit: textFitFor(".stats-strip .objective"),
+        objectiveTextFit: textFitFor(".battle-objective"),
         deployBannerEffectiveFontPx: (rectFor("canvas.battlefield")?.width ?? 0) / 960 * 22,
       },
       dimensions: {
@@ -449,20 +698,36 @@ function assertMobileBattleReadability(evidence, label) {
   }
   invariant(readability.deployBannerEffectiveFontPx >= 14,
     `${label} deploy banner below effective 14px: ${readability.deployBannerEffectiveFontPx}`);
-  const { bottomHud, unitCards, supportRow, statsStrip, objective } = readability.rects;
-  invariant(bottomHud && unitCards && supportRow && statsStrip && objective,
+  const {
+    bottomHud,
+    resourceStack,
+    unitCards,
+    supportZone,
+    supportRow,
+    statsStrip,
+    objective,
+  } = readability.rects;
+  invariant(bottomHud && resourceStack && unitCards && supportZone && supportRow && statsStrip && objective,
     `${label} missing mobile battle layout evidence: ${JSON.stringify(readability.rects)}`);
+  invariant(resourceStack.left >= bottomHud.left - 1 && resourceStack.right <= bottomHud.right + 1
+      && resourceStack.top >= bottomHud.top - 1 && resourceStack.bottom <= bottomHud.bottom + 1,
+    `${label} resource stack escaped the bottom HUD: ${JSON.stringify(readability.rects)}`);
   invariant(unitCards.left >= bottomHud.left - 1 && unitCards.right <= bottomHud.right + 1
       && unitCards.top >= bottomHud.top - 1 && unitCards.bottom <= bottomHud.bottom + 1,
     `${label} unit cards escaped the bottom HUD: ${JSON.stringify(readability.rects)}`);
-  invariant(supportRow.left >= bottomHud.left - 1 && supportRow.right <= bottomHud.right + 1
-      && supportRow.top >= bottomHud.top - 1 && supportRow.bottom <= bottomHud.bottom + 1,
+  invariant(supportZone.left >= bottomHud.left - 1 && supportZone.right <= bottomHud.right + 1
+      && supportZone.top >= bottomHud.top - 1 && supportZone.bottom <= bottomHud.bottom + 1,
+    `${label} support zone escaped the bottom HUD: ${JSON.stringify(readability.rects)}`);
+  invariant(supportRow.left >= supportZone.left - 1 && supportRow.right <= supportZone.right + 1
+      && supportRow.top >= supportZone.top - 1 && supportRow.bottom <= supportZone.bottom + 1,
     `${label} support cards escaped the bottom HUD: ${JSON.stringify(readability.rects)}`);
-  invariant(unitCards.right <= supportRow.left + 1,
-    `${label} unit and support cards overlap: ${JSON.stringify(readability.rects)}`);
-  invariant(bottomHud.bottom <= statsStrip.top + 1,
-    `${label} battle deck overlaps the stats strip: ${JSON.stringify(readability.rects)}`);
-  invariant(objective.left >= statsStrip.left - 1 && objective.right <= statsStrip.right + 1,
+  invariant(resourceStack.right <= unitCards.left + 1 && unitCards.right <= supportZone.left + 1,
+    `${label} bottom ownership zones overlap: ${JSON.stringify(readability.rects)}`);
+  invariant(statsStrip.left >= resourceStack.left - 1 && statsStrip.right <= resourceStack.right + 1
+      && statsStrip.bottom <= resourceStack.bottom + 1,
+    `${label} stats escaped the resource zone: ${JSON.stringify(readability.rects)}`);
+  invariant(objective.left >= supportZone.left - 1 && objective.right <= supportZone.right + 1
+      && objective.bottom <= supportZone.bottom + 1,
     `${label} objective is clipped: ${JSON.stringify(readability.rects)}`);
   const objectiveTextFit = readability.objectiveTextFit;
   invariant(objectiveTextFit
@@ -1214,27 +1479,33 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
     phase: "navigation",
     status: "failed",
   };
+  diagnostics.setPhase(result.phase);
   try {
     await installStoryBattleRecorder(page);
-    diagnostics.reset();
     const response = await page.goto(battleQaUrl("takuya-entrance"), {
       waitUntil: "domcontentloaded",
       timeout,
     });
     invariant(response?.ok(), `${label} navigation failed: ${response?.status() ?? "no response"}`);
     await dismissInstallOffer(page, { timeout });
+    result.bootstrapBoundary = await waitForStableTakuyaLoadoutAssets(page, label);
+    await diagnostics.settleDetails();
+    result.bootstrapDiagnostics = diagnostics.snapshot();
+    assertLocalQaBootstrapDiagnostics(result.bootstrapDiagnostics, label);
+    diagnostics.reset();
+    diagnostics.setPhase("stage3-setup");
     await enterLegacyQaBattle(page, label);
+    result.setupDiagnostics = await captureStage3AudioSetupBoundary(page, diagnostics, label);
+    assertStage3AudioSetupBoundary(result.setupDiagnostics, label);
+    diagnostics.reset();
+    diagnostics.setPhase("runtime-start");
     await page.waitForFunction(
       () => Boolean(window.__ASHFALL_AUDIO_QA__) && Boolean(window.__ASHFALL_BATTLE_QA__),
       undefined,
       { timeout },
     );
-    await page.getByRole("button", { name: "一時停止", exact: true }).click({ timeout });
-    await page.waitForFunction(
-      () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().paused === true,
-      undefined,
-      { timeout },
-    );
+    invariant((await storyBattleSnapshot(page)).paused === true,
+      `${label} setup did not retain the paused diagnostic boundary`);
     const capability = await webAudioCapability(page);
     const audioBlocked = capability.audioContext !== "function";
     const audioUi = audioBlocked ? null : await ensureBattleQaAudioRunning(page, `${label}/control`);
@@ -1246,6 +1517,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
     );
 
     result.phase = "entrance-start";
+    diagnostics.setPhase(result.phase);
     await page.waitForFunction(
       ({ expectedSceneId }) => {
         const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -1263,8 +1535,22 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
         { cueId: takuyaEntranceCueId },
         { timeout },
       );
+      await page.waitForFunction(
+        ({ assetId }) => {
+          const diagnostics = window.__ASHFALL_AUDIO_QA__?.getDiagnostics?.();
+          return diagnostics?.activeBgmVoices === 1
+            && diagnostics?.activeBgm?.[0]?.assetId === assetId
+            && diagnostics?.activeBgmInstanceKeys?.length === 1
+            && diagnostics?.gainStages?.transientMusicDuck <= .4;
+        },
+        { assetId: expectedTakuyaBossAssetId },
+        { timeout },
+      );
     }
     const entranceStarted = await storyBattleSnapshot(page);
+    const entranceMixer = audioBlocked ? null : await page.evaluate(
+      () => window.__ASHFALL_AUDIO_QA__?.getDiagnostics?.() ?? null,
+    );
     const startedAt = Date.now();
     const pauseEvidence = await pauseAndVerifyFrozenScriptedBark({
       page,
@@ -1282,6 +1568,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
       - pauseEvidence.paused.takuyaEntranceAudioRemaining) <= .03,
     `${label} consumed the TAKUYA entrance timer while paused`);
     result.phase = "entrance-restart";
+    diagnostics.setPhase(result.phase);
     await page.waitForFunction(
       ({ expectedSceneId, expectedRemaining }) => {
         const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -1304,19 +1591,27 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
       );
     }
 
-    result.phase = "boss-music-resume";
+    result.phase = "boss-music-duck-release";
+    diagnostics.setPhase(result.phase);
     await page.waitForFunction(
-      ({ expectedSceneId }) => {
+      ({ expectedSceneId, assetId, audioBlocked }) => {
         const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+        const diagnostics = window.__ASHFALL_AUDIO_QA__?.getDiagnostics?.();
         return snapshot?.takuyaEntranceAudioRemaining <= 0
-          && document.documentElement.dataset.audioScene === expectedSceneId;
+          && document.documentElement.dataset.audioScene === expectedSceneId
+          && (audioBlocked || (
+            diagnostics?.activeBgmVoices === 1
+            && diagnostics?.activeBgm?.[0]?.assetId === assetId
+            && diagnostics?.activeBgmInstanceKeys?.length === 1
+            && diagnostics?.gainStages?.transientMusicDuck >= .98
+          ));
       },
-      { expectedSceneId: expectedTakuyaBossSceneId },
+      { expectedSceneId: expectedTakuyaBossSceneId, assetId: expectedTakuyaBossAssetId, audioBlocked },
       { timeout },
     );
-    const observedRestartMs = Date.now() - restartAt;
-    invariant(observedRestartMs >= TAKUYA_ENTRANCE_AUDIO.durationSeconds * 1_000 - 250,
-      `${label} resumed boss music after only ${observedRestartMs}ms`);
+    const observedDuckReleaseMs = Date.now() - restartAt;
+    invariant(observedDuckReleaseMs >= TAKUYA_ENTRANCE_AUDIO.durationSeconds * 1_000 - 250,
+      `${label} released the entrance duck after only ${observedDuckReleaseMs}ms`);
     const completed = await storyBattleSnapshot(page);
     invariant(completed.time > entranceStarted.time,
       `${label} battle time did not advance after resume`);
@@ -1331,6 +1626,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
     });
     await pauseBattleForDiagnosticDrain(page, label);
     await waitForNetworkQuiet(page);
+    await diagnostics.settleDetails();
     const diagnosticEvidence = diagnostics.snapshot();
     assertDiagnostics(diagnosticEvidence, label);
     Object.assign(result, {
@@ -1342,18 +1638,20 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
       capability,
       audioUi,
       pauseEvidence,
-      observedRestartMs,
+      entranceMixer,
+      observedDuckReleaseMs,
       elapsedWallMs: Date.now() - startedAt,
       completed,
       layoutEvidence: layout.mobileReadability,
       logicalAudioRoute: {
-        entrance: { sceneId: expectedTakuyaEntranceSceneId, assetId: null },
+        entrance: { sceneId: expectedTakuyaEntranceSceneId, assetId: expectedTakuyaBossAssetId },
         boss: { sceneId: expectedTakuyaBossSceneId, assetId: expectedTakuyaBossAssetId },
       },
       diagnostics: diagnosticEvidence,
     });
   } catch (error) {
     result.error = String(error);
+    await diagnostics.settleDetails();
     result.diagnostics = diagnostics.snapshot();
     result.failureState = await storyBattleSnapshot(page).catch(() => null);
   } finally {
@@ -1375,27 +1673,33 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     phase: "navigation",
     status: "failed",
   };
+  diagnostics.setPhase(result.phase);
   try {
     await installStoryBattleRecorder(page);
-    diagnostics.reset();
     const response = await page.goto(battleQaUrl("endgame"), {
       waitUntil: "domcontentloaded",
       timeout,
     });
     invariant(response?.ok(), `${label} navigation failed: ${response?.status() ?? "no response"}`);
     await dismissInstallOffer(page, { timeout });
+    result.bootstrapBoundary = await waitForStableTakuyaLoadoutAssets(page, label);
+    await diagnostics.settleDetails();
+    result.bootstrapDiagnostics = diagnostics.snapshot();
+    assertLocalQaBootstrapDiagnostics(result.bootstrapDiagnostics, label);
+    diagnostics.reset();
+    diagnostics.setPhase("stage3-setup");
     await enterLegacyQaBattle(page, label);
+    result.setupDiagnostics = await captureStage3AudioSetupBoundary(page, diagnostics, label);
+    assertStage3AudioSetupBoundary(result.setupDiagnostics, label);
+    diagnostics.reset();
+    diagnostics.setPhase("runtime-start");
     await page.waitForFunction(
       () => Boolean(window.__ASHFALL_AUDIO_QA__) && Boolean(window.__ASHFALL_BATTLE_QA__),
       undefined,
       { timeout },
     );
-    await page.getByRole("button", { name: "一時停止", exact: true }).click({ timeout });
-    await page.waitForFunction(
-      () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().paused === true,
-      undefined,
-      { timeout },
-    );
+    invariant((await storyBattleSnapshot(page)).paused === true,
+      `${label} setup did not retain the paused diagnostic boundary`);
     const capability = await webAudioCapability(page);
     const audioBlocked = capability.audioContext !== "function";
     const audioUi = audioBlocked ? null : await ensureBattleQaAudioRunning(page, `${label}/control`);
@@ -1407,6 +1711,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     );
 
     result.phase = "final-cut";
+    diagnostics.setPhase(result.phase);
     await page.waitForFunction(
       ({ cueFragment, expectedSceneId }) => {
         const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -1449,6 +1754,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
       `${label} could not prepare the post-observation TAKUYA defeat proof`);
 
     result.phase = "final-fifo";
+    diagnostics.setPhase(result.phase);
     const baseEventLines = STORY_EVENTS["stage-takuya-base-remains-v070"].lines;
     const expectedLines = [
       ...finalLines,
@@ -1541,6 +1847,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     });
     await pauseBattleForDiagnosticDrain(page, label);
     await waitForNetworkQuiet(page);
+    await diagnostics.settleDetails();
     const diagnosticEvidence = diagnostics.snapshot();
     assertDiagnostics(diagnosticEvidence, label);
     Object.assign(result, {
@@ -1565,6 +1872,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     });
   } catch (error) {
     result.error = String(error);
+    await diagnostics.settleDetails();
     result.diagnostics = diagnostics.snapshot();
     result.failureState = await storyBattleSnapshot(page).catch(() => null);
     result.failureStorySamples = await storyBattleSamples(page).then((samples) => samples

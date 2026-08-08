@@ -6,6 +6,8 @@ import {
   BATTLE_PRESSURE_SCENE_BY_STAGE_ID,
   BATTLE_STAGE_SCENE_BY_ID,
   PRODUCTION_AUDIO_MANIFEST,
+  TAKUYA_ENTRANCE_AUDIO,
+  TAKUYA_ENTRANCE_MUSIC_DUCK,
   V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
   V099_PHYSICAL_AUDIO_ASSET_COUNT,
   V099_SUPPORT_POD_AUDIO_CONTRACT,
@@ -19,7 +21,7 @@ import {
   V099_TIMELINE_AUDIO_CUES,
 } from "../app/battleAudioContracts.js";
 
-test("v0.9.9.0 PR2 ships exactly 36 one-source physical audio assets", () => {
+test("v0.9.9.0 ships exactly 37 one-source physical audio assets after final BGM remediation", () => {
   const assets = PRODUCTION_AUDIO_MANIFEST.assets.filter((asset) => asset.sources[0]?.src.startsWith("/audio/v099/"));
   assert.equal(assets.length, V099_PHYSICAL_AUDIO_ASSET_COUNT);
   assert.equal(new Set(assets.map((asset) => asset.id)).size, V099_PHYSICAL_AUDIO_ASSET_COUNT);
@@ -71,11 +73,11 @@ test("the exact 16-unit ready and timeline matrix matches design revision v2", (
   });
   assert.equal(V099_MANUAL_ABILITY_AUDIO_CONTRACTS["mrs-chiha"].timeline.flight, "weapon-mrs-chiha-grenade-flight");
   assert.equal(V099_MANUAL_ABILITY_AUDIO_CONTRACTS["mrs-chiha"].timeline.stow, "weapon-mrs-chiha-launcher-stow");
-  assert.equal(V099_MUSIC_AUDIO_CUES.length, 3);
+  assert.equal(V099_MUSIC_AUDIO_CUES.length, 4);
   assert.equal(V099_ABILITY_ROOT_AUDIO_CUES.length, 12);
   assert.equal(V099_TIMELINE_AUDIO_CUES.length, 18);
   assert.equal(V099_READY_AUDIO_CUES.length, 3);
-  assert.equal(3 + 12 + 18 + 3, V099_PHYSICAL_AUDIO_ASSET_COUNT);
+  assert.equal(4 + 12 + 18 + 3, V099_PHYSICAL_AUDIO_ASSET_COUNT);
 });
 
 test("stage and pressure maps are explicit for every campaign stage", () => {
@@ -106,4 +108,29 @@ test("pressure and boss transitions use explicit 600/250/600ms adapters and fail
   assert.equal(sceneIdForScreen("battle", "missing-stage", { musicMode: "normal" }), null);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["pressure-surface"].crossfadeMs, 600);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById.boss.crossfadeMs, 250);
+});
+
+test("all normal battle scenes use the audible v0.9.9.0 track and TAKUYA entrance owns a composing transient duck", () => {
+  for (const sceneId of [
+    "stage1", "stage2", "stage3", "station-gate", "station-platform", "station-tunnel",
+    "story-stage1-battle", "story-stage2-battle", "story-stage3-battle",
+    "story-station-gate-battle", "story-station-platform-battle", "story-station-tunnel-battle",
+  ]) {
+    assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById[sceneId].bgm, "music-v099-normal", sceneId);
+  }
+  assert.deepEqual(TAKUYA_ENTRANCE_MUSIC_DUCK, {
+    level: 0.32,
+    attackMs: 30,
+    holdMs: 2920,
+    releaseMs: 450,
+  });
+  assert.deepEqual(TAKUYA_ENTRANCE_AUDIO, {
+    cueId: "sfx-v070-takuya-entrance",
+    bossSceneId: "boss",
+    musicDuck: TAKUYA_ENTRANCE_MUSIC_DUCK,
+    durationSeconds: 3.4,
+  });
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById[TAKUYA_ENTRANCE_AUDIO.bossSceneId].bgm, "music-v099-boss");
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-entrance"], undefined);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-final"], undefined);
 });

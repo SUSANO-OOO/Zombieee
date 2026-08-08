@@ -80,9 +80,38 @@ const SFX_RECIPES = Object.freeze({
 });
 
 const MUSIC_RECIPES = Object.freeze({
-  "music-v099-pressure-surface": { recipeId: "junk-punk-surface-150", family: "pressure-surface", bpm: 150, bars: 44 },
-  "music-v099-pressure-station": { recipeId: "rail-dnb-station-172", family: "pressure-station", bpm: 172, bars: 52 },
-  "music-v099-boss": { recipeId: "industrial-taiko-boss-132", family: "boss", bpm: 132, bars: 40 },
+  "music-v099-normal": {
+    recipeId: "junk-punk-breakbeat-normal-156-r3",
+    family: "normal",
+    bpm: 156,
+    bars: 44,
+    palette: ["junk-punk", "industrial-rock", "breakbeat", "small-taiko-accent"],
+    taikoEventShare: 0.045,
+  },
+  "music-v099-pressure-surface": {
+    recipeId: "junk-punk-pressure-surface-164-r3",
+    family: "pressure-surface",
+    bpm: 164,
+    bars: 48,
+    palette: ["junk-punk", "industrial-rock", "dense-breakbeat", "small-taiko-accent"],
+    taikoEventShare: 0.083,
+  },
+  "music-v099-pressure-station": {
+    recipeId: "rail-dnb-pressure-station-176-r3",
+    family: "pressure-station",
+    bpm: 176,
+    bars: 52,
+    palette: ["industrial-rock", "drum-and-bass", "rail-metal", "small-taiko-accent"],
+    taikoEventShare: 0.071,
+  },
+  "music-v099-boss": {
+    recipeId: "industrial-junk-taiko-boss-136-r3",
+    family: "boss",
+    bpm: 136,
+    bars: 40,
+    palette: ["industrial-rock", "junk-punk", "breakbeat", "taiko-intro-accent"],
+    taikoEventShare: 0.118,
+  },
 });
 
 function waveValue(wave, phase) {
@@ -150,62 +179,112 @@ function synthesizeMusic(spec, recipe, index) {
     const stepAge = time % stepSeconds;
     const white = random();
     lowNoise = lowNoise * .965 + white * .035;
+    const stepGate = Math.min(1, stepAge / .006, (stepSeconds - stepAge) / .018);
+    const phrase = Math.floor(bar / 4) % 4;
     let value = 0;
-    if (spec.id === "music-v099-pressure-surface") {
-      const kick = beatHit(time, stepSeconds, [0, 6, 8, 11], 24);
-      const snare = beatHit(time, stepSeconds, [4, 12], 30);
-      const hat = beatHit(time, stepSeconds, [2, 5, 7, 10, 14, 15], 58);
-      const riff = [55, 55, 65.41, 55, 73.42, 65.41, 49, 55, 55, 82.41, 73.42, 65.41, 55, 49, 65.41, 55][step];
-      const gate = stepAge < stepSeconds * .72 ? 1 : .22;
-      value += Math.sin(tau * (48 + 34 * Math.exp(-stepAge * 18)) * stepAge) * kick * .68;
-      value += (white * .55 + Math.sin(tau * 185 * stepAge) * .45) * snare * .31;
-      value += white * hat * .10;
-      value += waveValue("saw", tau * riff * time) * gate * .23;
-      value += waveValue("square", tau * riff * 2 * time) * gate * .09;
-      const metal = beatHit(time, stepSeconds, [3, 13], 20);
-      value += Math.sin(tau * 1240 * stepAge) * metal * .13;
-      if (bar % 8 === 7) value += Math.sin(tau * 92 * (time % barSeconds)) * beatHit(time, stepSeconds, [0, 4, 8, 12], 9) * .16;
-    } else if (spec.id === "music-v099-pressure-station") {
-      const kick = beatHit(time, stepSeconds, [0, 3, 7, 10], 28);
+    if (spec.id === "music-v099-normal") {
+      const kick = beatHit(time, stepSeconds, phrase === 3 ? [0, 3, 6, 8, 11, 14] : [0, 6, 8, 11], 27);
       const snare = beatHit(time, stepSeconds, [4, 12], 34);
-      const ghost = beatHit(time, stepSeconds, [6, 14, 15], 44);
-      const hat = beatHit(time, stepSeconds, [1, 2, 5, 9, 11, 13], 70);
+      const ghost = beatHit(time, stepSeconds, [7, 15], 52);
+      const hat = beatHit(time, stepSeconds, [2, 3, 5, 7, 9, 10, 13, 15], 74);
+      const riff = [55, 55, 65.41, 55, 73.42, 65.41, 49, 55, 55, 82.41, 73.42, 65.41, 55, 49, 65.41, 55][step];
+      const riffGate = stepGate * (stepAge < stepSeconds * .78 ? 1 : .16);
+      value += Math.sin(tau * (50 + 40 * Math.exp(-stepAge * 22)) * stepAge) * kick * .74;
+      value += (white * .62 + Math.sin(tau * 196 * stepAge) * .38) * snare * .36;
+      value += white * ghost * .12 + white * hat * .105;
+      value += waveValue("saw", tau * riff * time) * riffGate * .26;
+      value += waveValue("square", tau * riff * 2 * time) * riffGate * .09;
+      value += Math.sin(tau * riff * 3 * time) * riffGate * .055;
+      const hook = [440, 493.88, 523.25, 493.88][Math.floor(step / 4)];
+      value += waveValue("triangle", tau * hook * time) * stepGate * (step % 4 === 0 ? .13 : .035);
+      const scrap = beatHit(time, stepSeconds, [3, 10, 15], 30);
+      value += Math.sin(tau * (1120 + (bar % 3) * 170) * stepAge) * scrap * .15;
+      if (bar % 8 === 7) {
+        const taiko = beatHit(time, stepSeconds, [0, 8], 11);
+        value += Math.sin(tau * (79 + 30 * Math.exp(-stepAge * 9)) * stepAge) * taiko * .24;
+      }
+    } else if (spec.id === "music-v099-pressure-surface") {
+      const kick = beatHit(time, stepSeconds, phrase >= 2 ? [0, 3, 6, 8, 10, 13, 15] : [0, 3, 6, 8, 11, 14], 29);
+      const snare = beatHit(time, stepSeconds, [4, 12], 37);
+      const ghost = beatHit(time, stepSeconds, [2, 7, 10, 14, 15], 55);
+      const hat = beatHit(time, stepSeconds, [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15], 80);
+      const riff = [58.27, 58.27, 69.30, 58.27, 77.78, 69.30, 51.91, 58.27, 58.27, 87.31, 77.78, 69.30, 58.27, 51.91, 69.30, 58.27][step];
+      const riffGate = stepGate * (stepAge < stepSeconds * .82 ? 1 : .12);
+      value += Math.sin(tau * (52 + 44 * Math.exp(-stepAge * 23)) * stepAge) * kick * .76;
+      value += (white * .64 + Math.sin(tau * 208 * stepAge) * .36) * snare * .37;
+      value += white * ghost * .14 + white * hat * .11;
+      value += waveValue("saw", tau * riff * time) * riffGate * .30;
+      value += waveValue("square", tau * riff * 2 * time) * riffGate * .11;
+      const tension = [554.37, 622.25, 659.25, 739.99][Math.floor(step / 4)];
+      value += waveValue("triangle", tau * tension * time) * stepGate * (step % 2 === 0 ? .11 : .055);
+      const metal = beatHit(time, stepSeconds, [2, 5, 9, 13, 15], 27);
+      value += (Math.sin(tau * 1310 * stepAge) + Math.sin(tau * 1810 * stepAge) * .45) * metal * .14;
+      if (bar % 4 === 3) {
+        const taiko = beatHit(time, stepSeconds, [0, 6, 8, 14], 12);
+        value += Math.sin(tau * (82 + 33 * Math.exp(-stepAge * 10)) * stepAge) * taiko * .25;
+      }
+    } else if (spec.id === "music-v099-pressure-station") {
+      const kick = beatHit(time, stepSeconds, phrase === 3 ? [0, 2, 3, 6, 7, 10, 11, 14] : [0, 3, 7, 10, 14], 31);
+      const snare = beatHit(time, stepSeconds, [4, 12], 40);
+      const ghost = beatHit(time, stepSeconds, [1, 6, 9, 14, 15], 62);
+      const hat = beatHit(time, stepSeconds, [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15], 88);
       const bassNotes = [43.65, 43.65, 58.27, 43.65, 65.41, 58.27, 38.89, 43.65, 43.65, 77.78, 65.41, 58.27, 51.91, 43.65, 58.27, 38.89];
       const bass = bassNotes[step];
-      const gate = stepAge < stepSeconds * .62 ? 1 : .12;
-      value += Math.sin(tau * (45 + 38 * Math.exp(-stepAge * 24)) * stepAge) * kick * .58;
-      value += (white * .68 + Math.sin(tau * 220 * stepAge) * .32) * snare * .30;
-      value += white * ghost * .10 + white * hat * .085;
-      value += (waveValue("saw", tau * bass * time) + waveValue("saw", tau * bass * 1.012 * time)) * gate * .14;
-      const rail = beatHit(time, stepSeconds, [2, 8, 15], 25);
-      value += Math.sin(tau * (1760 + (bar % 4) * 110) * stepAge) * rail * .15;
-      value += Math.sin(tau * [523.25, 659.25, 783.99, 987.77][Math.floor(step / 4)] * time) * (step % 4 === 0 ? .10 : .035);
+      const bassGate = stepGate * (stepAge < stepSeconds * .70 ? 1 : .10);
+      value += Math.sin(tau * (47 + 42 * Math.exp(-stepAge * 26)) * stepAge) * kick * .72;
+      value += (white * .72 + Math.sin(tau * 226 * stepAge) * .28) * snare * .38;
+      value += white * ghost * .15 + white * hat * .105;
+      value += (waveValue("saw", tau * bass * time) + waveValue("saw", tau * bass * 1.012 * time)) * bassGate * .18;
+      value += waveValue("square", tau * bass * 2 * time) * bassGate * .09;
+      const rail = beatHit(time, stepSeconds, [2, 5, 8, 11, 15], 29);
+      value += (Math.sin(tau * (1760 + (bar % 4) * 110) * stepAge)
+        + Math.sin(tau * 2470 * stepAge) * .35) * rail * .17;
+      const arpeggio = [523.25, 659.25, 783.99, 987.77][Math.floor(step / 4)];
+      value += Math.sin(tau * arpeggio * time) * stepGate * (step % 2 === 0 ? .12 : .04);
+      if (bar % 4 === 3) {
+        const taiko = beatHit(time, stepSeconds, [0, 8, 14], 12);
+        value += Math.sin(tau * (76 + 29 * Math.exp(-stepAge * 9)) * stepAge) * taiko * .22;
+      }
     } else {
-      const kick = beatHit(time, stepSeconds, [0, 7, 8], 20);
-      const snare = beatHit(time, stepSeconds, [4, 12], 26);
-      const taiko = beatHit(time, stepSeconds, bar % 4 === 3 ? [0, 3, 6, 9, 12, 14] : [0, 8], 10);
+      const kick = beatHit(time, stepSeconds, phrase >= 2 ? [0, 3, 6, 7, 8, 11, 14] : [0, 6, 8, 11], 25);
+      const snare = beatHit(time, stepSeconds, [4, 12], 32);
+      const ghost = beatHit(time, stepSeconds, [2, 7, 10, 15], 48);
+      const hat = beatHit(time, stepSeconds, [1, 2, 5, 6, 7, 9, 10, 13, 14, 15], 72);
+      const taiko = beatHit(time, stepSeconds, bar % 4 === 3 ? [0, 3, 6, 8, 11, 14] : [0, 8], 11);
       const riff = [41.20, 41.20, 46.25, 41.20, 55, 46.25, 36.71, 41.20, 41.20, 61.74, 55, 46.25, 41.20, 36.71, 46.25, 41.20][step];
-      const gate = stepAge < stepSeconds * .78 ? 1 : .18;
-      value += Math.sin(tau * (42 + 44 * Math.exp(-stepAge * 15)) * stepAge) * kick * .62;
-      value += (white * .50 + lowNoise * .50) * snare * .29;
-      value += Math.sin(tau * (72 + 25 * Math.exp(-stepAge * 8)) * stepAge) * taiko * .31;
-      value += waveValue("square", tau * riff * time) * gate * .20;
-      value += waveValue("saw", tau * riff * 2 * time) * gate * .13;
-      const alarm = beatHit(time, stepSeconds, [5, 13], 7);
-      value += Math.sin(tau * (bar % 2 ? 740 : 622) * time) * alarm * .12;
-      const scrap = beatHit(time, stepSeconds, [3, 10, 15], 24);
-      value += Math.sin(tau * (980 + (step % 3) * 270) * stepAge) * scrap * .11;
+      const riffGate = stepGate * (stepAge < stepSeconds * .82 ? 1 : .12);
+      value += Math.sin(tau * (44 + 48 * Math.exp(-stepAge * 17)) * stepAge) * kick * .76;
+      value += (white * .52 + lowNoise * .48) * snare * .37;
+      value += white * ghost * .13 + white * hat * .095;
+      value += Math.sin(tau * (74 + 30 * Math.exp(-stepAge * 9)) * stepAge) * taiko * .34;
+      value += waveValue("square", tau * riff * time) * riffGate * .25;
+      value += waveValue("saw", tau * riff * 2 * time) * riffGate * .16;
+      value += Math.sin(tau * riff * 3 * time) * riffGate * .07;
+      const alarm = beatHit(time, stepSeconds, [5, 13], 8);
+      value += Math.sin(tau * (bar % 2 ? 740 : 622) * time) * alarm * .14;
+      const scrap = beatHit(time, stepSeconds, [3, 10, 15], 27);
+      value += (Math.sin(tau * (980 + (step % 3) * 270) * stepAge)
+        + Math.sin(tau * 1680 * stepAge) * .45) * scrap * .15;
+      // The boss identity is present in the first decoded second; the transient
+      // entrance cue can duck it, but there is never a silent scene hand-off.
+      if (time < 1) {
+        const introEnvelope = Math.max(0, 1 - time);
+        value += Math.sin(tau * (58 + 54 * time) * time) * introEnvelope * .48;
+        value += (white * .55 + lowNoise * .45) * Math.exp(-time * 3.2) * .30;
+        value += Math.sin(tau * 1280 * time) * Math.exp(-time * 5.4) * .22;
+      }
     }
-    samples[sampleIndex] = Math.tanh(value * 1.28);
+    samples[sampleIndex] = Math.tanh(value * 2.4);
   }
-  return { ...finalizeSamples(samples, .34, true), duration };
+  return { ...finalizeSamples(samples, .65, true, .155), duration };
 }
 
-function finalizeSamples(samples, targetPeak, loop) {
+function finalizeSamples(samples, targetPeak, loop, targetRms = null) {
   let mean = 0;
   for (const value of samples) mean += value;
   mean /= Math.max(1, samples.length);
   let peak = 0;
+  let squared = 0;
   const edgeSamples = Math.max(1, Math.round(sampleRate * (loop ? .008 : .004)));
   for (let index = 0; index < samples.length; index += 1) {
     let value = samples[index] - mean;
@@ -213,8 +292,12 @@ function finalizeSamples(samples, targetPeak, loop) {
     value *= Math.max(0, edge);
     samples[index] = value;
     peak = Math.max(peak, Math.abs(value));
+    squared += value * value;
   }
-  const scale = peak > 0 ? targetPeak / peak : 1;
+  const rms = Math.sqrt(squared / Math.max(1, samples.length));
+  const peakScale = peak > 0 ? targetPeak / peak : 1;
+  const rmsScale = Number.isFinite(targetRms) && rms > 0 ? targetRms / rms : peakScale;
+  const scale = Math.min(peakScale, rmsScale);
   for (let index = 0; index < samples.length; index += 1) samples[index] *= scale;
   return { samples, duration: samples.length / sampleRate };
 }
@@ -263,8 +346,8 @@ const ffmpeg = mastersOnly ? null : resolveFfmpeg();
 if (V099_BATTLE_AUDIO_ASSET_SPECS.length !== V099_PHYSICAL_AUDIO_ASSET_COUNT) {
   throw new Error(`Expected ${V099_PHYSICAL_AUDIO_ASSET_COUNT} v0.9.9.0 assets, got ${V099_BATTLE_AUDIO_ASSET_SPECS.length}.`);
 }
-if (Object.keys(MUSIC_RECIPES).length !== 3 || Object.keys(SFX_RECIPES).length !== 33) {
-  throw new Error(`Recipe matrix must contain 3 music and 33 SFX recipes.`);
+if (Object.keys(MUSIC_RECIPES).length !== 4 || Object.keys(SFX_RECIPES).length !== 33) {
+  throw new Error(`Recipe matrix must contain 4 music and 33 SFX recipes.`);
 }
 
 const masterDir = path.join(outputRoot, "reference", "audio", "v099-generated", "masters");
@@ -277,7 +360,11 @@ const generated = [];
 for (const [index, spec] of V099_BATTLE_AUDIO_ASSET_SPECS.entries()) {
   const masterPath = path.join(masterDir, `${spec.id}.wav`);
   const outputPath = path.join(publicRoot, spec.folder, `${spec.id}.mp3`);
-  const master = synthesize(spec, index);
+  // Adding the final-remediation normal track must not reseed the 36 already
+  // Gate-A-approved assets. The prior matrix used indices 0..35; preserve
+  // those indices and assign the new normal track the next stable slot.
+  const synthesisIndex = spec.id === "music-v099-normal" ? 36 : index - 1;
+  const master = synthesize(spec, synthesisIndex);
   await writeFile(masterPath, toWav(master.samples));
   if (mastersOnly) {
     generated.push({
@@ -301,6 +388,10 @@ for (const [index, spec] of V099_BATTLE_AUDIO_ASSET_SPECS.entries()) {
     folder: spec.folder,
     roleFamily: master.recipe.family,
     recipeId: master.recipe.recipeId,
+    ...(master.recipe.palette ? {
+      palette: master.recipe.palette,
+      taikoEventShare: master.recipe.taikoEventShare,
+    } : {}),
     durationSeconds: master.duration,
     loop: spec.loop,
     master: path.relative(outputRoot, masterPath).replace(/\\/g, "/"),
@@ -315,8 +406,8 @@ for (const [index, spec] of V099_BATTLE_AUDIO_ASSET_SPECS.entries()) {
     commercialUse: true,
     modification: true,
     redistribution: true,
-    candidateId: "v099-pr2-audio-r2",
-    producerApproval: "Gate A pending",
+    candidateId: "v099-final-remediation-audio-r3",
+    producerApproval: "Gate A audio approved; Gate B technical regression pending",
   });
 }
 
@@ -339,11 +430,11 @@ await writeFile(provenancePath, `${JSON.stringify({
   version: "0.9.9.0",
   issue: 136,
   designRevision: "v2",
-  generatorVersion: 2,
+  generatorVersion: 3,
   designApproval: "Sol APPROVE",
   generator: "scripts/build-v099-battle-audio.mjs",
   generatorSeed: `0x${seed.toString(16)}`,
-  candidateId: "v099-pr2-audio-r2",
+  candidateId: "v099-final-remediation-audio-r3",
   source: "project-original",
   creator: "SUSANO-OOO/Zombieee project",
   license: "Original project work; no third-party rights apply.",
@@ -361,7 +452,7 @@ await writeFile(provenancePath, `${JSON.stringify({
   encoding: { format: "MP3", preferredSourceOnly: true, bgmBitrate: "160k", sfxBitrate: "128k", mime: "audio/mpeg", writeXing: true, bitexact: true },
   physicalAssetCount: generated.length,
   distinctOutputBytes: distinctBytes,
-  producerApproval: "Gate A pending",
+  producerApproval: "Gate A audio approved; Gate B technical regression pending",
   assets: generated,
 }, null, 2)}\n`, "utf8");
 

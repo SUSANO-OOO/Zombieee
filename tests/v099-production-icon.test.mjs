@@ -64,19 +64,35 @@ test("only approved versioned icon paths are referenced while legacy files remai
   ]) await access(new URL(legacy, import.meta.url));
 });
 
-test("the approved-icon integration reuses every pre-icon non-icon hash and fetches only approved icon bytes", async () => {
+test("the approved-icon integration preserves every unrelated pre-icon hash and fetches only approved icon bytes", async () => {
   const previous = JSON.parse(execFileSync("git", [
     "show",
     "3e09b4c09cb1bc67cf1322bd539f5b0bc7e5d060:public/asset-manifest.json",
   ], { encoding: "utf8" }));
   const current = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
+  const finalRemediationPaths = new Set([
+    "/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
+    "/art/v099/crawler/crawler-barrage-module-sheet-v1.png",
+    "/art/v099/crawler/crawler-command-base-closed-equipment-host-v1.png",
+    "/art/v099/crawler/crawler-deployment-base-interior-v1.png",
+    "/art/v099/crawler/crawler-deployment-foreground-mask-v1.png",
+    "/audio/v099/music/music-v099-boss.mp3",
+    "/audio/v099/music/music-v099-normal.mp3",
+    "/audio/v099/music/music-v099-pressure-station.mp3",
+    "/audio/v099/music/music-v099-pressure-surface.mp3",
+  ]);
   const previousNonIcons = new Map(previous.assets
     .filter(({ path }) => path !== "/favicon.svg" && !path.startsWith("/icons/"))
+    .filter(({ path }) => !finalRemediationPaths.has(path))
     .map(({ path, hash }) => [path, hash]));
   const currentNonIcons = new Map(current.assets
     .filter(({ path }) => !path.startsWith("/icons/"))
+    .filter(({ path }) => !finalRemediationPaths.has(path))
     .map(({ path, hash }) => [path, hash]));
   assert.deepEqual(currentNonIcons, previousNonIcons);
+
+  const finalRemediationAssets = current.assets.filter(({ path }) => finalRemediationPaths.has(path));
+  assert.deepEqual(new Set(finalRemediationAssets.map(({ path }) => path)), finalRemediationPaths);
 
   const currentIcons = current.assets.filter(({ path }) => path.startsWith("/icons/"));
   assert.deepEqual(new Set(currentIcons.map(({ path }) => path)), new Set(V099_APP_ICON_PATHS));
