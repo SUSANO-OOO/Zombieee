@@ -47,21 +47,34 @@ Version 0.9.9.0は、戦闘体験・音響・演出・app iconの品質更新で
 
 ## 開発運用
 
-今後の実装は、原則として次の責務分離で進めます。
+今後の通常実装は、**同じプロジェクト内のSolスレッドとLunaスレッドを順番に使います。並列実行や自動role切替はしません。**
 
-1. Producerが主目的と製品境界を固定
-2. **Sol Design Lead**が実装設計を担当
-3. **Luna Implementation Lead**がSol設計を正本として実装
-4. Design Leadとは別コンテキストの**Sol Auditor**が固定HEADをread-only監査
-5. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけmerge／公開へ進む
+1. Producer／司令塔が主目的と製品境界を固定
+2. **元のSol thread**が全体を細かく設計し、Design LockとLuna Handoffを作る
+3. Solは待機し、**Luna thread**へhandoffを渡す
+4. Lunaが実装、trial-and-error、self-review、QA、fixed HEAD／tree固定まで行う
+5. Luna完了物を**元のSol thread**へ戻す
+6. 元のSolが最終review
+7. 小さいFindingならSolが限定修正し、Lunaが回帰validationした後に元のSolが再確認
+8. 設計変更が必要ならSolがDesign revisionを上げ、Lunaへ再handoff
+9. 対象Versionが独立監査を明示要求する場合だけ、別のfresh Sol Auditorを追加
 
-Codexの`/goal`は、時間の長短ではなく**複数工程・複数checkpoint・反復検証をまたいで同じ目標を追う必要があるmission**で使用します。Version／featureの正式設計、複数moduleをまたぐ実装、実装→QA→修正→PR、audit remediation、release工程等ではSolとLunaがそれぞれ独立した`/goal`を使います。一方、read-only確認、単発test、typo修正、設計判断を伴わない小さな単一file修正等は通常promptで処理できます。詳細な判定基準は[AGENTS.md](AGENTS.md)を正本とします。
+Sol threadとLuna threadが読む専用MDも分離しています。
+
+- [CODEX_TWO_THREAD_WORKFLOW](docs/CODEX_TWO_THREAD_WORKFLOW.md)：2スレッド全体の順序・handoff
+- [CODEX_SOL_ROLE](docs/CODEX_SOL_ROLE.md)：Sol thread専用
+- [CODEX_LUNA_ROLE](docs/CODEX_LUNA_ROLE.md)：Luna thread専用
+
+Codexの`/goal`は、時間の長短ではなく**複数工程・複数checkpoint・反復検証をまたいで同じ目標を保持する必要があるmission**で使います。正式設計や通常feature実装は原則goal-managedです。一方、read-only確認、単発test、typo修正、設計判断を伴わない小修正は通常promptで処理できます。
 
 ## 文書
 
 | 文書 | 役割 |
 |---|---|
-| [AGENTS.md](AGENTS.md) | 恒久的な役割分担、`/goal`、実装・検証・GitHub・release原則 |
+| [AGENTS.md](AGENTS.md) | 恒久的な安全境界、Sol/Luna分業、`/goal`、GitHub、release原則 |
+| [docs/CODEX_TWO_THREAD_WORKFLOW.md](docs/CODEX_TWO_THREAD_WORKFLOW.md) | Sol→Luna→元のSolの実行順序、handoff、review/remediation |
+| [docs/CODEX_SOL_ROLE.md](docs/CODEX_SOL_ROLE.md) | Sol threadの設計・最終review・限定remediation規約 |
+| [docs/CODEX_LUNA_ROLE.md](docs/CODEX_LUNA_ROLE.md) | Luna threadの実装・trial-and-error・self-review・validation規約 |
 | [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | 現在の正式release、SHA、QA、次工程境界 |
 | [docs/PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md) | 長期目標、Version順、Stage／unit拡張方針 |
 | [docs/RELEASE_NOTES_0.9.9.0.md](docs/RELEASE_NOTES_0.9.9.0.md) | 0.9.9.0の正式変更、save／PWA互換、QA、残存物理端末境界 |
