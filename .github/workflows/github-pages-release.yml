@@ -5,7 +5,6 @@ on:
     paths:
       - ".github/workflows/github-pages-release.yml"
       - ".github/workflows/github-pages-public-qa.yml"
-      - ".github/pages-release-request.json"
       - "app/**"
       - "public/**"
       - "scripts/build-github-pages.mjs"
@@ -17,15 +16,22 @@ on:
       - "tests/release-contract.test.mjs"
       - "package.json"
       - "package-lock.json"
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/pages-release-request.json"
   workflow_dispatch:
     inputs:
+      operation:
+        description: "Release operation"
+        required: true
+        type: choice
+        options:
+          - release
+          - redeploy
+      deploy:
+        description: "Actually upload and deploy GitHub Pages (false performs a dry-run)"
+        required: true
+        default: false
+        type: boolean
       version:
-        description: "Unprefixed release version, for example 0.7.1 or 0.9.5.1"
+        description: "Unprefixed release version, for example 0.9.9.0"
         required: true
         type: string
       release_ref:
@@ -33,7 +39,7 @@ on:
         required: true
         type: string
       release_sha:
-        description: "Merge result commit SHA expected from the release tag"
+        description: "Exact immutable release commit SHA"
         required: true
         type: string
       issue_number:
@@ -62,12 +68,15 @@ jobs:
     timeout-minutes: 30
     outputs:
       requested: ${{ steps.release.outputs.requested }}
+      deploy: ${{ steps.release.outputs.deploy }}
+      operation: ${{ steps.release.outputs.operation }}
+      source_dir: ${{ steps.release.outputs.source_dir }}
       version: ${{ steps.release.outputs.version }}
       release_sha: ${{ steps.release.outputs.release_sha }}
       issue_number: ${{ steps.release.outputs.issue_number }}
       request_id: ${{ steps.release.outputs.request_id }}
     steps:
-      - name: Checkout release tooling
+      - name: Checkout release control plane
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -79,15 +88,14 @@ jobs:
           node-version: 22.13.0
           cache: npm
 
-      - name: Validate checked-in release request
-        run: node scripts/release-contract.mjs --file .github/pages-release-request.json
-
       - name: Resolve explicit release contract
         id: release
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
           EVENT_REF: ${{ github.ref }}
+          INPUT_OPERATION: ${{ inputs.operation }}
+          INPUT_DEPLOY: ${{ inputs.deploy }}
           INPUT_VERSION: ${{ inputs.version }}
           INPUT_RELEASE_REF: ${{ inputs.release_ref }}
           INPUT_RELEASE_SHA: ${{ inputs.release_sha }}
@@ -99,29 +107,33 @@ jobs:
           mkdir -p release-contract
 
           requested=false
-          source_dir="."
-          version="preview"
+          deploy=false
+          operation=preview
+          source_dir=release-source
+          version=preview
           release_ref="$(git rev-parse HEAD)"
           release_sha="$release_ref"
-          issue_number="0"
+          issue_number=0
           request_id="preview-$GITHUB_RUN_ID"
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$EVENT_REF" != "refs/heads/main" ]]; then
+              echo "::error::manual release dispatch must run from refs/heads/main, not $EVENT_REF"
+              exit 1
+            fi
+            RELEASE_OPERATION="$INPUT_OPERATION" \
+            RELEASE_DEPLOY="$INPUT_DEPLOY" \
             RELEASE_VERSION="$INPUT_VERSION" \
             RELEASE_REF="$INPUT_RELEASE_REF" \
             RELEASE_SHA="$INPUT_RELEASE_SHA" \
             RELEASE_ISSUE_NUMBER="$INPUT_ISSUE_NUMBER" \
             RELEASE_REQUEST_ID="$INPUT_REQUEST_ID" \
               node scripts/release-contract.mjs --env --output release-contract/release-contract.json
-            requested=true
-          elif [[ "$EVENT_NAME" == "push" ]]; then
-            node scripts/release-contract.mjs \
-              --file .github/pages-release-request.json \
-              --output release-contract/release-contract.json
-            requested=true
-          fi
 
-          if [[ "$requested" == "true" ]]; then
+            requested=true
+            operation="$(jq -er '.operation' release-contract/release-contract.json)"
+            deploy="$(node scripts/release-contract.mjs --file release-contract/release-contract.json --print-deploy)"
+            source_dir=release-source
             version="$(jq -er '.version' release-contract/release-contract.json)"
             release_ref="$(jq -er '.release_ref' release-contract/release-contract.json)"
             release_sha="$(jq -er '.release_sha' release-contract/release-contract.json)"
@@ -129,27 +141,11 @@ jobs:
             request_id="$(jq -er '.request_id' release-contract/release-contract.json)"
             expected_tag="v$version"
 
-            {
-              echo "requested=true"
-              echo "source_dir=release-source"
-              echo "version=$version"
-              echo "release_ref=$release_ref"
-              echo "release_sha=$release_sha"
-              echo "issue_number=$issue_number"
-              echo "request_id=$request_id"
-            } >> "$GITHUB_OUTPUT"
-
-            if [[ "$EVENT_NAME" == "workflow_dispatch" && "$EVENT_REF" != "refs/heads/main" ]]; then
-              echo "::error::manual release dispatch must run from refs/heads/main, not $EVENT_REF"
-              exit 1
-            fi
-
             tag_type="$(git cat-file -t "refs/tags/$expected_tag" 2>/dev/null || true)"
             if [[ "$tag_type" != "tag" ]]; then
               echo "::error::$expected_tag must exist as an annotated tag"
               exit 1
             fi
-
             tag_sha="$(git rev-parse "refs/tags/$expected_tag^{commit}")"
             ref_sha="$(git rev-parse "$release_ref^{commit}" 2>/dev/null || true)"
             if [[ "$tag_sha" != "$release_sha" || "$ref_sha" != "$release_sha" ]]; then
@@ -162,29 +158,29 @@ jobs:
               echo "::error::published non-prerelease GitHub Release for $expected_tag was not found"
               exit 1
             fi
-            if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+
+            if [[ "$operation" == "release" ]]; then
               resolved_issue="$(gh api "repos/$GITHUB_REPOSITORY/issues/$issue_number" --jq 'select(.pull_request == null and .state == "open") | .number')"
             else
-              resolved_issue="$(gh api "repos/$GITHUB_REPOSITORY/issues/$issue_number" --jq 'select(.pull_request == null) | .number')"
+              resolved_issue="$(gh api "repos/$GITHUB_REPOSITORY/issues/$issue_number" --jq 'select(.pull_request == null and .state == "closed" and .state_reason == "completed") | .number')"
             fi
             if [[ "$resolved_issue" != "$issue_number" ]]; then
-              echo "::error::Issue #$issue_number is not a valid release ledger for $EVENT_NAME"
+              echo "::error::Issue #$issue_number is not a valid $operation release ledger"
               exit 1
             fi
-            source_dir="release-source"
           fi
 
-          if [[ "$requested" != "true" ]]; then
-            {
-              echo "requested=false"
-              echo "source_dir=$source_dir"
-              echo "version=$version"
-              echo "release_ref=$release_ref"
-              echo "release_sha=$release_sha"
-              echo "issue_number=$issue_number"
-              echo "request_id=$request_id"
-            } >> "$GITHUB_OUTPUT"
-          fi
+          {
+            echo "requested=$requested"
+            echo "deploy=$deploy"
+            echo "operation=$operation"
+            echo "source_dir=$source_dir"
+            echo "version=$version"
+            echo "release_ref=$release_ref"
+            echo "release_sha=$release_sha"
+            echo "issue_number=$issue_number"
+            echo "request_id=$request_id"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Upload validated release contract
         if: steps.release.outputs.requested == 'true'
@@ -195,8 +191,8 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Checkout immutable release source
-        if: steps.release.outputs.requested == 'true'
+      - name: Checkout immutable application source
+        if: steps.release.outputs.requested == 'true' || github.event_name == 'pull_request'
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.release.outputs.release_sha }}
@@ -204,8 +200,16 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Verify immutable release checkout
+      - name: Verify immutable application checkout
         if: steps.release.outputs.requested == 'true'
+        working-directory: release-source
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+        run: test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+
+      - name: Verify preview application checkout
+        if: github.event_name == 'pull_request'
         working-directory: release-source
         shell: bash
         env:
@@ -223,12 +227,13 @@ jobs:
       - name: Build GitHub Pages static release
         working-directory: ${{ steps.release.outputs.source_dir }}
         env:
+          SOURCE_DIR: ${{ steps.release.outputs.source_dir }}
           GITHUB_PAGES_BASE_PATH: /Zombieee
           GITHUB_PAGES_RELEASE_VERSION: ${{ steps.release.outputs.version }}
           GITHUB_PAGES_RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
           GITHUB_PAGES_REQUEST_ID: ${{ steps.release.outputs.request_id }}
           GITHUB_PAGES_ISSUE_NUMBER: ${{ steps.release.outputs.issue_number }}
-        run: node "$GITHUB_WORKSPACE/scripts/build-github-pages.mjs"
+        run: node "$GITHUB_WORKSPACE/$SOURCE_DIR/scripts/build-github-pages.mjs"
 
       - name: Verify GitHub Pages release identity
         if: steps.release.outputs.requested == 'true'
@@ -248,6 +253,7 @@ jobs:
           grep -Fq '<meta name="github-pages-base" content="/Zombieee/">' _site/index.html
 
       - name: Install isolated browser runtime
+        working-directory: ${{ steps.release.outputs.source_dir }}
         run: |
           npm install --no-save --package-lock=false playwright@1.56.1
           npx playwright install --with-deps chromium
@@ -257,6 +263,7 @@ jobs:
         continue-on-error: true
         working-directory: ${{ steps.release.outputs.source_dir }}
         env:
+          SOURCE_DIR: ${{ steps.release.outputs.source_dir }}
           GITHUB_PAGES_BASE_PATH: /Zombieee
           GITHUB_PAGES_EXPECTED_VERSION: ${{ steps.release.outputs.requested == 'true' && steps.release.outputs.version || '' }}
           GITHUB_PAGES_EVIDENCE_DIR: ${{ github.workspace }}/pages-evidence
@@ -264,7 +271,7 @@ jobs:
         run: |
           mkdir -p "$GITHUB_PAGES_EVIDENCE_DIR"
           set +e
-          node "$GITHUB_WORKSPACE/scripts/github-pages-smoke.mjs" > "$GITHUB_PAGES_EVIDENCE_DIR/smoke.log" 2>&1
+          node "$GITHUB_WORKSPACE/$SOURCE_DIR/scripts/github-pages-smoke.mjs" > "$GITHUB_PAGES_EVIDENCE_DIR/smoke.log" 2>&1
           status=$?
           set -e
           cat "$GITHUB_PAGES_EVIDENCE_DIR/smoke.log"
@@ -284,7 +291,7 @@ jobs:
         run: exit 1
 
       - name: Verify GitHub Pages uses Actions
-        if: steps.release.outputs.requested == 'true'
+        if: steps.release.outputs.deploy == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ github.token }}
@@ -300,17 +307,17 @@ jobs:
             }
 
       - name: Configure GitHub Pages
-        if: steps.release.outputs.requested == 'true'
+        if: steps.release.outputs.deploy == 'true'
         uses: actions/configure-pages@v5
 
       - name: Upload GitHub Pages artifact
-        if: steps.release.outputs.requested == 'true'
+        if: steps.release.outputs.deploy == 'true'
         uses: actions/upload-pages-artifact@v4
         with:
           path: ${{ steps.release.outputs.source_dir }}/_site
 
   deploy:
-    if: needs.build.outputs.requested == 'true'
+    if: needs.build.outputs.deploy == 'true'
     permissions:
       contents: read
       pages: write
@@ -341,6 +348,7 @@ jobs:
       - name: Report release workflow failure
         env:
           GH_TOKEN: ${{ github.token }}
+          OPERATION: ${{ needs.build.outputs.operation }}
           VERSION: ${{ needs.build.outputs.version }}
           RELEASE_SHA: ${{ needs.build.outputs.release_sha }}
           ISSUE_NUMBER: ${{ needs.build.outputs.issue_number }}
@@ -348,7 +356,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo "## Version $VERSION GitHub Pages release workflow failure"
+            echo "## Version $VERSION GitHub Pages $OPERATION workflow failure"
             echo
             echo "- release SHA: \`$RELEASE_SHA\`"
             echo "- request ID: \`$REQUEST_ID\`"

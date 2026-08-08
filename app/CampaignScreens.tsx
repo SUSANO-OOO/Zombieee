@@ -7,6 +7,7 @@ import { PROLOGUE_SYNOPSIS, getStoryEvent, storyEventLog } from "./storyEvents.j
 import { CAMPAIGN_IMPORT_MAX_BYTES } from "./campaignStorage.js";
 import { RELEASE_LABEL } from "./releaseIdentity.js";
 import { MANUAL_ABILITY_REGISTRY } from "./manualAbilities.js";
+import { resolveMapLandmarks } from "./campaignMapLandmarks.js";
 
 export type CampaignScreen = "title" | "event" | "map" | "personnel" | "loadout" | "battle" | "result" | "survival" | "survival-result" | "outbreak" | "outbreak-result" | "records";
 
@@ -28,35 +29,6 @@ export type StageScreenView = {
   nextStarReward: number;
   mapPosition: { x: number; y: number };
   starCriteria: readonly string[];
-};
-
-const MAP_LANDMARKS: Record<string, readonly { className: string; label: string; status: string }[]> = {
-  "region-nishijin": [
-    { className: "tower", label: "福岡タワー", status: "高危険区域" },
-    { className: "subway", label: "西新駅地下", status: "暫定封鎖" },
-    { className: "police", label: "警察署周辺", status: "調査中" },
-    { className: "hospital", label: "大学病院", status: "地下信号を確認" },
-  ],
-  "region-university-hospital": [
-    { className: "hospital", label: "救急搬入口", status: "感染体接近" },
-    { className: "shelter", label: "救急病棟", status: "中継反応あり" },
-    { className: "subway", label: "地下搬送口", status: "研究区画へ接続" },
-  ],
-  "region-underground-research": [
-    { className: "blockade", label: "除染ゲート", status: "隔離扉停止" },
-    { className: "police", label: "検体隔離環", status: "制御再起動待ち" },
-    { className: "subway", label: "搬送坑道", status: "地上線へ接続" },
-  ],
-  "region-logistics-line": [
-    { className: "coast", label: "中継ヤード", status: "通信汚染" },
-    { className: "shelter", label: "貨物退避場", status: "避難列待機" },
-    { className: "shoreline", label: "湾岸搬出路", status: "高危険区域" },
-  ],
-  "region-t-plan-core": [
-    { className: "blockade", label: "外郭制御環", status: "指令核稼働" },
-    { className: "hospital", label: "中央封鎖核", status: "感染裂孔を確認" },
-    { className: "coast", label: "観測区画", status: "応答なし" },
-  ],
 };
 
 export type UnitScreenView = {
@@ -578,7 +550,7 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
     ? selectedStage
     : visibleStages.find((stage) => stage.unlocked) ?? visibleStages[0] ?? selectedStage;
   const activeRegion = regions.find((region) => region.id === activeRegionId) ?? regions[0];
-  const landmarks = MAP_LANDMARKS[activeRegionId] ?? MAP_LANDMARKS["region-nishijin"];
+  const landmarkResolution = resolveMapLandmarks(activeRegionId);
   const selectRegion = (regionId: string) => {
     const firstOpenStage = stages.find((stage) => stage.regionId === regionId && stage.unlocked);
     if (!firstOpenStage) return;
@@ -604,9 +576,16 @@ function AreaMapScreen({ stages, selectedStage, supplyCurrency, saveMutationPend
       ><b>{region.label}</b><small>{region.unlocked ? region.name : "未到達"}</small></button>)}
     </nav>
     <div className="map-layout">
-      <section className="nishijin-map" data-region={activeRegionId} aria-label={`${activeRegion?.name ?? "作戦区域"} エリアマップ`}>
+      <section
+        className="nishijin-map"
+        data-region={activeRegionId}
+        data-landmark-region={activeRegionId}
+        data-landmark-source={landmarkResolution.source}
+        data-landmark-missing={String(landmarkResolution.missing)}
+        aria-label={`${activeRegion?.name ?? "作戦区域"} エリアマップ`}
+      >
         <div className="map-water" /><div className="map-road road-a" /><div className="map-road road-b" /><div className="map-road road-c" />
-        {landmarks.map((landmark) => <div key={landmark.label} className={`map-landmark ${landmark.className}`}><span>{landmark.label}<small>{landmark.status}</small></span></div>)}
+        {landmarkResolution.landmarks.map((landmark) => <div key={landmark.label} className={`map-landmark ${landmark.className}`}><span>{landmark.label}<small>{landmark.status}</small></span></div>)}
         <div className="stage-node-grid">
           {visibleStages.map((stage) => <button
             key={stage.id}

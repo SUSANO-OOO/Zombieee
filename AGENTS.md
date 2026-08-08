@@ -31,6 +31,7 @@ Version 0.9.9.0はIssue #136を実行正本として正式公開・close済み�
 - 現在状態：`docs/PROJECT_STATE.md`
 - 長期方向：`docs/PRODUCT_ROADMAP.md`
 - 公開・復元：`docs/RELEASE_BACKUP_RECOVERY.md`
+- runtime asset／authoring master policy：`docs/ASSET_STORAGE_POLICY.md`
 - 2スレッド実行手順：`docs/CODEX_TWO_THREAD_WORKFLOW.md`
 - Sol専用規約：`docs/CODEX_SOL_ROLE.md`
 - Luna専用規約：`docs/CODEX_LUNA_ROLE.md`
@@ -291,12 +292,16 @@ Solのdesign goalとLunaのimplementation goalは別々に設定する。別thre
 
 対象Versionでintegration branchが指定されている場合、工程branchをintegration向けPRとして段階統合できる。最終`integration/<version> → main`のReady化・mergeは、対象Version正本のrelease境界に従う。
 
+`AshfallGame.tsx`は将来のfeatureが触る責務だけを、before/after contract testでrisk低減を示せる場合に限って局所抽出する。先行した全面refactorは禁止し、hardeningやfeatureを成立させるために広範な抽出が必要になった場合は停止してDesign revisionを要求する。
+
 ## 11. 公開契約
 
 正式deploymentは、明示的release requestまたは安全なmanual dispatchだけで実行する。
 
 release requestは最低限次を持つ。
 
+- `operation`（`release`または`redeploy`）
+- `deploy`（boolean）
 - `version`
 - `release_ref`
 - `release_sha`
