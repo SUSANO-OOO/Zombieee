@@ -23,7 +23,8 @@ Version 0.9.9.0はIssue #136を実行正本として正式公開・close済み�
 
 ## 2. 正しい情報源
 
-- 正式コード：GitHub `main`上のrelease SHA
+- 公開中正式コード：annotated tag／GitHub Releaseが指すrelease SHA
+- `main` HEAD：開発・docs-only更新により公開release SHAより先へ進むことがある。現在値はGitHubから再取得する
 - 作業中コード：指定feature／integration branch
 - 正式公開版：GitHub Pagesで配信中のrelease SHA
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
