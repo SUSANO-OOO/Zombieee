@@ -15,6 +15,8 @@
 - **Sol thread**：全体設計、最終review、必要時の限定remediation
 - **Luna thread**：実装、trial-and-error、self-review、回帰validation
 
+**同一missionで一度にactiveなのは1スレッドだけ**とする。Sol Design完了後にSolは待機し、Lunaへ明示handoffする。Luna完了後にLunaは待機し、成果物を元のSolへ明示handoffする。SolとLunaを並列実行しない。
+
 スレッドをまたいで人格・役割を混ぜない。Sol threadがLuna Implementation Leadとして通常実装を代行したり、Luna threadがSol Design Leadとして仕様・architectureを再設計したりしない。
 
 各phase開始時に、担当は最初の進行報告で次の `ROLE_LOCK` を明示する。
@@ -30,7 +32,7 @@ Luna thread:
 - `ROLE_LOCK: LUNA_IMPLEMENTATION`
 - `ROLE_LOCK: LUNA_VALIDATION`
 
-同時に複数modeを有効にしない。mode変更時は新しい `ROLE_LOCK` を明示し、直前modeの権限を持ち越さない。
+`ROLE_LOCK`は**各スレッド内で現在何をしてよいかを固定する状態名**であり、モデルやスレッドを自動切替する機構ではない。同時に複数modeを有効にしない。mode変更時は新しい `ROLE_LOCK` を明示し、直前modeの権限を持ち越さない。
 
 ## 3. 必須読み込み
 
@@ -152,7 +154,7 @@ Completion Packetは最低限次を持つ。
 
 ### Phase 4 — Sol Final Review
 
-LunaのCompletion Packet受領後、Sol threadは明示的に
+LunaのCompletion Packet受領後、**最初に設計した元のSol thread**へ戻り、明示的に
 
 `ROLE_LOCK: SOL_FINAL_REVIEW`
 
@@ -218,7 +220,7 @@ Solがcodeを変更した場合、Solはその新HEADを即時自己承認しな
 3. Lunaは `ROLE_LOCK: LUNA_VALIDATION` へ切り替える
 4. Lunaは新設計をしない。Design acceptanceとSol Finding修正に対する回帰validationを実行
 5. Lunaがvalidation結果、fixed HEAD／tree、regression evidenceをSolへ返す
-6. Solは `ROLE_LOCK: SOL_FINAL_REVIEW` へ戻り、最終read-only確認
+6. 元のSol threadは `ROLE_LOCK: SOL_FINAL_REVIEW` へ戻り、最終read-only確認
 7. 問題0ならAPPROVE
 
 このloopにより、Solが自分で修正した直後に同じ判断だけで合格扱いすることを防ぐ。
@@ -252,7 +254,7 @@ SolはFinal Reviewで、Lunaが参照したDesign revisionが最新であるこ�
 
 ## 9. Release／独立監査
 
-通常の2スレッドフローでは、Sol threadのFinal Reviewを最終技術reviewとする。
+通常の2スレッドフローでは、**元のSol threadのFinal Reviewを最終技術review**とする。
 
 ただし、対象Versionの正本、Producer判断、risk level、release gateが**独立監査**を要求する場合は、Designを担当したSol threadとは別のfresh Sol Auditor contextを追加する。その場合のみ、そのreviewを「independent audit」と呼ぶ。
 
@@ -265,7 +267,7 @@ SolはFinal Reviewで、Lunaが参照したDesign revisionが最新であるこ�
 - 最新Design Lockが明確
 - Luna implementation／self-review完了
 - fixed HEAD／tree／証拠固定
-- Sol Final Review合格
+- 元のSol threadのFinal Review合格
 - Sol remediationがあった場合はLuna validation後に再review済み
 - High／Medium未解消0
 - 対象VersionのProducer／release gateを満たす
