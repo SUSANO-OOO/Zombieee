@@ -3,6 +3,8 @@ import { readFile, readdir, stat, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import sharp from "sharp";
+
 import {
   MOBILE_BATTLE_HUD_TYPOGRAPHY,
   mobileBattleHudLayout,
@@ -154,6 +156,43 @@ async function screenshot(page, filename) {
   const screenshotPath = path.join(evidenceDir, filename);
   await page.screenshot({ path: screenshotPath, animations: "allow" });
   return relativeEvidencePath(screenshotPath);
+}
+
+async function crawlerRuntimeContactSheet(name, kind, viewport, entries) {
+  invariant(entries.length === 7, `${name}/${kind}: runtime contact sheet requires seven phases`);
+  const crop = {
+    left: 0,
+    top: Math.max(0, Math.round(viewport.height * .14)),
+    width: Math.min(248, viewport.width),
+    height: Math.min(250, viewport.height - Math.max(0, Math.round(viewport.height * .14))),
+  };
+  const tiles = [];
+  for (const entry of entries) {
+    const buffer = await sharp(path.resolve(entry.screenshot))
+      .extract(crop)
+      .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
+      .toBuffer();
+    tiles.push(buffer);
+  }
+  const outputPath = path.join(evidenceDir, `${name}-crawler-${kind}-runtime-contact-sheet.png`);
+  await sharp({
+    create: {
+      width: crop.width * tiles.length,
+      height: crop.height,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  }).composite(tiles.map((input, index) => ({ input, left: index * crop.width, top: 0 })))
+    .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
+    .toFile(outputPath);
+  const relativePath = relativeEvidencePath(outputPath);
+  return {
+    path: relativePath,
+    sha256: await evidenceSha256(relativePath),
+    crop,
+    columns: entries.length,
+    phases: entries.map(({ phase }) => phase),
+  };
 }
 
 async function evidenceSha256(relativePath) {
@@ -839,7 +878,12 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence) {
       }
       const evidence = await pauseAtEquipmentPhase(page, "barrage", phase, name);
       const screenshotPath = await screenshot(page, `${name}-crawler-barrage-${index}-${phase}.png`);
-      barrage.push({ phase, ...evidence, screenshot: screenshotPath });
+      barrage.push({
+        phase,
+        ...evidence,
+        screenshot: screenshotPath,
+        screenshotSha256: await evidenceSha256(screenshotPath),
+      });
       if (index < CRAWLER_BARRAGE_SPRITE_PHASES.length - 1) {
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
       }
@@ -868,7 +912,12 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence) {
       }
       const evidence = await pauseAtEquipmentPhase(page, "airstrike", phase, name);
       const screenshotPath = await screenshot(page, `${name}-crawler-airstrike-${index}-${phase}.png`);
-      airstrike.push({ phase, ...evidence, screenshot: screenshotPath });
+      airstrike.push({
+        phase,
+        ...evidence,
+        screenshot: screenshotPath,
+        screenshotSha256: await evidenceSha256(screenshotPath),
+      });
       if (index < CRAWLER_AIRSTRIKE_SPRITE_PHASES.length - 1) {
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
       }
@@ -923,12 +972,21 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence) {
       `${name}: barrage phase evidence is incomplete`);
     invariant(new Set(airstrike.map(({ phase }) => phase)).size === 7,
       `${name}: airstrike phase evidence is incomplete`);
+    invariant(new Set(barrage.map(({ screenshotSha256 }) => screenshotSha256)).size === 7,
+      `${name}: barrage runtime phase screenshots are not distinct`);
+    invariant(new Set(airstrike.map(({ screenshotSha256 }) => screenshotSha256)).size === 7,
+      `${name}: airstrike runtime phase screenshots are not distinct`);
+    const contactSheets = {
+      barrage: await crawlerRuntimeContactSheet(name, "barrage", viewport, barrage),
+      airstrike: await crawlerRuntimeContactSheet(name, "airstrike", viewport, airstrike),
+    };
     Object.assign(result, {
       status: "passed",
       assets,
       runtimeEvidence,
       barrage,
       airstrike,
+      contactSheets,
       simultaneous: { ...simultaneous, authoredPhases: simultaneousPhases },
       screenshots: {
         idle: barrage[0].screenshot,
@@ -1249,6 +1307,9 @@ const summary = {
     }
     return total;
   }, 0),
+  contactSheetCount: results.reduce((total, result) => (
+    total + (result.type === "crawler-equipment" && result.contactSheets ? 2 : 0)
+  ), 0),
   results,
 };
 const summaryPath = path.join(evidenceDir, "summary.json");

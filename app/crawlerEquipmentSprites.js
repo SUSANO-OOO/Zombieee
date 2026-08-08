@@ -25,7 +25,7 @@ export const CRAWLER_AIRSTRIKE_SPRITE_PHASES = deepFreeze([
 ]);
 
 export const V099_CRAWLER_RUNTIME_PROFILE = deepFreeze({
-  revision: "v1",
+  revision: "v2",
   identityMaster: {
     path: "/art/v075/crawler/crawler-command-base-identity-r1.png",
     revision: "r1",
@@ -57,12 +57,12 @@ export const V099_CRAWLER_RUNTIME_PROFILE = deepFreeze({
     barrage: {
       sheet: {
         path: "/art/v099/crawler/crawler-barrage-module-sheet-v1.png",
-        revision: "v1",
+        revision: "v2",
         columns: 7,
         frameWidth: 256,
-        frameHeight: 128,
+        frameHeight: 192,
       },
-      sourcePlacement: { x: 918, y: 304 },
+      sourcePlacement: { x: 908, y: 214 },
       vehicleAnchor: { x: 1036, y: 398 },
       muzzleByPhase: {
         aim: { x: 1112, y: 353 },
@@ -74,12 +74,12 @@ export const V099_CRAWLER_RUNTIME_PROFILE = deepFreeze({
     airstrike: {
       sheet: {
         path: "/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
-        revision: "v1",
+        revision: "v2",
         columns: 7,
-        frameWidth: 64,
+        frameWidth: 192,
         frameHeight: 288,
       },
-      sourcePlacement: { x: 488, y: 70 },
+      sourcePlacement: { x: 424, y: 50 },
       vehicleAnchor: { x: 520, y: 330 },
       signalByPhase: {
         targeting: { x: 516, y: 112 },

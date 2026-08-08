@@ -2,10 +2,10 @@
   "version": "0.9.9.0",
   "schemaVersion": 1,
   "generator": "scripts/build-v099-crawler-assets.mjs",
-  "generatorRevision": 1,
-  "source": "project-original approved CRAWLER identity and runtime masters",
-  "creator": "SUSANO-OOO/Zombieee project; deterministic derivative build by OpenAI Codex Sol Lead",
-  "license": "Approved for project repository and game distribution under docs/ASSET_APPROVALS_0.7.5.json; no third-party stock or downloaded artwork; not declared CC0.",
+  "generatorRevision": 2,
+  "source": "project-original approved CRAWLER identity plus project-original semantic equipment authoring masters",
+  "creator": "SUSANO-OOO/Zombieee project; semantic equipment authored with OpenAI ImageGen and deterministic derivative build by OpenAI Codex Sol Lead",
+  "license": "Approved project-original work for repository and game distribution; vehicle identity remains governed by docs/ASSET_APPROVALS_0.7.5.json; no third-party stock or downloaded artwork; not declared CC0.",
   "commercialUse": true,
   "modification": true,
   "redistribution": true,
@@ -45,11 +45,477 @@
       ]
     }
   },
+  "equipmentAuthoring": {
+    "barrage": {
+      "assetId": "V099-CRAWLER-BARRAGE-SEMANTIC-AUTHORING-V2",
+      "creator": "OpenAI ImageGen built-in; directed and accepted as project-original by OpenAI Codex Sol Lead",
+      "role": "seven-state semantic equipment authoring contact sheet; authoring-only and excluded from public runtime",
+      "promptContract": "Existing approved CRAWLER identity and equipment references; exactly seven mechanically distinct states; uniform #ff00ff chroma; no external VFX or HUD.",
+      "chromaSource": {
+        "file": "assets/source/v099/crawler/crawler-barrage-semantic-authoring-v2-chroma.png",
+        "bytes": 1384974,
+        "sha256": "58d3a847896addbe9c03f8c85adc9dd8e44cc7a638042b75e7e3441da7f8c625",
+        "dimensions": [
+          2022,
+          778
+        ]
+      },
+      "rgbaMaster": {
+        "file": "assets/source/v099/crawler/crawler-barrage-semantic-authoring-v2-rgba.png",
+        "bytes": 666334,
+        "sha256": "29f6a2c375a9393e5352fe8aaf95d4e33d9046dc68592f5f1c5d1dee63fbc9b0",
+        "dimensions": [
+          2022,
+          778
+        ],
+        "chromaRemoval": {
+          "helper": "C:/Users/okait/.codex/skills/.system/imagegen/scripts/remove_chroma_key.py",
+          "mode": "auto-key border, soft matte, despill, edge-contract 1"
+        }
+      }
+    },
+    "airstrike": {
+      "assetId": "V099-CRAWLER-AIRSTRIKE-SEMANTIC-AUTHORING-V2",
+      "creator": "OpenAI ImageGen built-in; directed and accepted as project-original by OpenAI Codex Sol Lead",
+      "role": "seven-state semantic equipment authoring contact sheet; authoring-only and excluded from public runtime",
+      "promptContract": "Existing approved CRAWLER identity and equipment references; exactly seven mechanically distinct states; uniform #ff00ff chroma; no external VFX or HUD.",
+      "chromaSource": {
+        "file": "assets/source/v099/crawler/crawler-airstrike-semantic-authoring-v2-chroma.png",
+        "bytes": 1387448,
+        "sha256": "ebc145790b454a29159dfc9141116c967502f0a82c657bceee792248c32d95fe",
+        "dimensions": [
+          2172,
+          724
+        ]
+      },
+      "rgbaMaster": {
+        "file": "assets/source/v099/crawler/crawler-airstrike-semantic-authoring-v2-rgba.png",
+        "bytes": 665918,
+        "sha256": "5b568b90d3c338083fa8157433d40255b92f2ad367734231c5f8431795d725e2",
+        "dimensions": [
+          2172,
+          724
+        ],
+        "chromaRemoval": {
+          "helper": "C:/Users/okait/.codex/skills/.system/imagegen/scripts/remove_chroma_key.py",
+          "mode": "auto-key border, soft matte, despill, edge-contract 1"
+        }
+      }
+    }
+  },
   "generation": {
     "rasterOnly": true,
     "runtimeCanvasGeometry": false,
     "deploymentLayerMethod": "Binary RGBA partition of the approved open CRAWLER raster into base/interior and foreground hull/door-frame pixels.",
-    "equipmentMethod": "Approved closed-master turret and antenna pixels are isolated once, then pre-rendered into seven deterministic RGBA frames; runtime draws the sheets only.",
+    "equipmentMethod": "Seven-state ImageGen authoring masters are chroma-removed outside runtime, split into semantic cells, uniformly scaled without flattening relative state geometry, bottom-center anchored, and pre-rendered into deterministic RGBA sheets; runtime draws the sheets only.",
+    "equipmentNormalization": {
+      "barrage": {
+        "authoringDimensions": [
+          2022,
+          778
+        ],
+        "frameDimensions": [
+          256,
+          192
+        ],
+        "contactY": 184,
+        "uniformScale": 0.6137931034482759,
+        "frames": [
+          {
+            "frame": 0,
+            "authoringBounds": {
+              "left": 22,
+              "top": 429,
+              "right": 277,
+              "bottom": 556,
+              "width": 256,
+              "height": 128,
+              "visible": 22723
+            },
+            "normalizedBounds": {
+              "left": 50,
+              "top": 105,
+              "right": 206,
+              "bottom": 183,
+              "width": 157,
+              "height": 79,
+              "visible": 8738
+            },
+            "placement": {
+              "left": 50,
+              "top": 105,
+              "width": 157,
+              "height": 79
+            }
+          },
+          {
+            "frame": 1,
+            "authoringBounds": {
+              "left": 21,
+              "top": 328,
+              "right": 275,
+              "bottom": 556,
+              "width": 255,
+              "height": 229,
+              "visible": 32239
+            },
+            "normalizedBounds": {
+              "left": 50,
+              "top": 43,
+              "right": 206,
+              "bottom": 183,
+              "width": 157,
+              "height": 141,
+              "visible": 12396
+            },
+            "placement": {
+              "left": 50,
+              "top": 43,
+              "width": 157,
+              "height": 141
+            }
+          },
+          {
+            "frame": 2,
+            "authoringBounds": {
+              "left": 17,
+              "top": 273,
+              "right": 272,
+              "bottom": 556,
+              "width": 256,
+              "height": 284,
+              "visible": 41712
+            },
+            "normalizedBounds": {
+              "left": 50,
+              "top": 10,
+              "right": 206,
+              "bottom": 183,
+              "width": 157,
+              "height": 174,
+              "visible": 15887
+            },
+            "placement": {
+              "left": 50,
+              "top": 10,
+              "width": 157,
+              "height": 174
+            }
+          },
+          {
+            "frame": 3,
+            "authoringBounds": {
+              "left": 14,
+              "top": 267,
+              "right": 288,
+              "bottom": 556,
+              "width": 275,
+              "height": 290,
+              "visible": 44303
+            },
+            "normalizedBounds": {
+              "left": 44,
+              "top": 6,
+              "right": 212,
+              "bottom": 183,
+              "width": 169,
+              "height": 178,
+              "visible": 16908
+            },
+            "placement": {
+              "left": 44,
+              "top": 6,
+              "width": 169,
+              "height": 178
+            }
+          },
+          {
+            "frame": 4,
+            "authoringBounds": {
+              "left": 0,
+              "top": 279,
+              "right": 288,
+              "bottom": 556,
+              "width": 289,
+              "height": 278,
+              "visible": 40635
+            },
+            "normalizedBounds": {
+              "left": 40,
+              "top": 13,
+              "right": 216,
+              "bottom": 183,
+              "width": 177,
+              "height": 171,
+              "visible": 15566
+            },
+            "placement": {
+              "left": 40,
+              "top": 13,
+              "width": 177,
+              "height": 171
+            }
+          },
+          {
+            "frame": 5,
+            "authoringBounds": {
+              "left": 0,
+              "top": 280,
+              "right": 263,
+              "bottom": 557,
+              "width": 264,
+              "height": 278,
+              "visible": 38817
+            },
+            "normalizedBounds": {
+              "left": 47,
+              "top": 13,
+              "right": 208,
+              "bottom": 183,
+              "width": 162,
+              "height": 171,
+              "visible": 14891
+            },
+            "placement": {
+              "left": 47,
+              "top": 13,
+              "width": 162,
+              "height": 171
+            }
+          },
+          {
+            "frame": 6,
+            "authoringBounds": {
+              "left": 5,
+              "top": 352,
+              "right": 258,
+              "bottom": 557,
+              "width": 254,
+              "height": 206,
+              "visible": 34008
+            },
+            "normalizedBounds": {
+              "left": 50,
+              "top": 58,
+              "right": 205,
+              "bottom": 183,
+              "width": 156,
+              "height": 126,
+              "visible": 12986
+            },
+            "placement": {
+              "left": 50,
+              "top": 58,
+              "width": 156,
+              "height": 126
+            }
+          }
+        ]
+      },
+      "airstrike": {
+        "authoringDimensions": [
+          2172,
+          724
+        ],
+        "frameDimensions": [
+          192,
+          288
+        ],
+        "contactY": 280,
+        "uniformScale": 0.4955116696588869,
+        "frames": [
+          {
+            "frame": 0,
+            "authoringBounds": {
+              "left": 41,
+              "top": 496,
+              "right": 295,
+              "bottom": 635,
+              "width": 255,
+              "height": 140,
+              "visible": 27333
+            },
+            "normalizedBounds": {
+              "left": 33,
+              "top": 211,
+              "right": 158,
+              "bottom": 279,
+              "width": 126,
+              "height": 69,
+              "visible": 6771
+            },
+            "placement": {
+              "left": 33,
+              "top": 211,
+              "width": 126,
+              "height": 69
+            }
+          },
+          {
+            "frame": 1,
+            "authoringBounds": {
+              "left": 28,
+              "top": 398,
+              "right": 285,
+              "bottom": 635,
+              "width": 258,
+              "height": 238,
+              "visible": 34156
+            },
+            "normalizedBounds": {
+              "left": 32,
+              "top": 162,
+              "right": 159,
+              "bottom": 279,
+              "width": 128,
+              "height": 118,
+              "visible": 8507
+            },
+            "placement": {
+              "left": 32,
+              "top": 162,
+              "width": 128,
+              "height": 118
+            }
+          },
+          {
+            "frame": 2,
+            "authoringBounds": {
+              "left": 18,
+              "top": 79,
+              "right": 269,
+              "bottom": 635,
+              "width": 252,
+              "height": 557,
+              "visible": 32243
+            },
+            "normalizedBounds": {
+              "left": 34,
+              "top": 4,
+              "right": 158,
+              "bottom": 279,
+              "width": 125,
+              "height": 276,
+              "visible": 8143
+            },
+            "placement": {
+              "left": 34,
+              "top": 4,
+              "width": 125,
+              "height": 276
+            }
+          },
+          {
+            "frame": 3,
+            "authoringBounds": {
+              "left": 8,
+              "top": 86,
+              "right": 261,
+              "bottom": 636,
+              "width": 254,
+              "height": 551,
+              "visible": 40306
+            },
+            "normalizedBounds": {
+              "left": 33,
+              "top": 7,
+              "right": 158,
+              "bottom": 279,
+              "width": 126,
+              "height": 273,
+              "visible": 10088
+            },
+            "placement": {
+              "left": 33,
+              "top": 7,
+              "width": 126,
+              "height": 273
+            }
+          },
+          {
+            "frame": 4,
+            "authoringBounds": {
+              "left": 4,
+              "top": 88,
+              "right": 282,
+              "bottom": 636,
+              "width": 279,
+              "height": 549,
+              "visible": 44819
+            },
+            "normalizedBounds": {
+              "left": 27,
+              "top": 8,
+              "right": 164,
+              "bottom": 279,
+              "width": 138,
+              "height": 272,
+              "visible": 11299
+            },
+            "placement": {
+              "left": 27,
+              "top": 8,
+              "width": 138,
+              "height": 272
+            }
+          },
+          {
+            "frame": 5,
+            "authoringBounds": {
+              "left": 1,
+              "top": 240,
+              "right": 309,
+              "bottom": 637,
+              "width": 309,
+              "height": 398,
+              "visible": 37080
+            },
+            "normalizedBounds": {
+              "left": 20,
+              "top": 83,
+              "right": 172,
+              "bottom": 279,
+              "width": 153,
+              "height": 197,
+              "visible": 9263
+            },
+            "placement": {
+              "left": 20,
+              "top": 83,
+              "width": 153,
+              "height": 197
+            }
+          },
+          {
+            "frame": 6,
+            "authoringBounds": {
+              "left": 0,
+              "top": 358,
+              "right": 247,
+              "bottom": 637,
+              "width": 248,
+              "height": 280,
+              "visible": 33350
+            },
+            "normalizedBounds": {
+              "left": 35,
+              "top": 141,
+              "right": 157,
+              "bottom": 279,
+              "width": 123,
+              "height": 139,
+              "visible": 8348
+            },
+            "placement": {
+              "left": 35,
+              "top": 141,
+              "width": 123,
+              "height": 139
+            }
+          }
+        ]
+      }
+    },
     "frameSequences": {
       "barrage": [
         "stowed",
@@ -153,22 +619,22 @@
       "id": "crawler-barrage-module-sheet",
       "logicalPath": "/art/v099/crawler/crawler-barrage-module-sheet-v1.png",
       "file": "public/art/v099/crawler/crawler-barrage-module-sheet-v1.png",
-      "bytes": 25798,
-      "sha256": "c92875bc7ac8035fc68d803af3c485bdbda72f82fe4d71b69950de4e4dc62a8d",
+      "bytes": 284051,
+      "sha256": "1274e5eb1ce0198567c7d2692a5a4b0fdfece40e23c2fb1c413157ae12cca396",
       "format": "png",
       "alpha": {
         "width": 1792,
-        "height": 128,
-        "transparentPixels": 174430,
-        "translucentPixels": 15592,
-        "opaquePixels": 39354
+        "height": 192,
+        "transparentPixels": 240950,
+        "translucentPixels": 20705,
+        "opaquePixels": 82409
       },
       "pwaTransport": {
         "sourcePath": "/pwa-optimized/art/v099/crawler/crawler-barrage-module-sheet-v1.webp",
         "format": "lossless-webp",
         "generator": "scripts/build-pwa-raster-derivatives.mjs",
-        "bytes": 57582,
-        "sha256": "a6690c91324d171a40118b6376ecd58b4b28f5de572211833cfdd0807c25dc52",
+        "bytes": 200852,
+        "sha256": "3f418e1addcd3cf855215c949b81b8e8dcd203abe7d870de886f1273cab0012b",
         "visiblePixelDifferences": 0,
         "alphaDifferences": 0
       }
@@ -177,22 +643,22 @@
       "id": "crawler-airstrike-module-sheet",
       "logicalPath": "/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
       "file": "public/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
-      "bytes": 22246,
-      "sha256": "56ce25318ab35515f82b5a1c407a54aac8aa5ad73804e82ac20f33585684fb5e",
+      "bytes": 188819,
+      "sha256": "452aa5aa08718e270fe0553c5ba6ad7e7e7a53d33891bc739c31dfd3264aba65",
       "format": "png",
       "alpha": {
-        "width": 448,
+        "width": 1344,
         "height": 288,
-        "transparentPixels": 113792,
-        "translucentPixels": 14120,
-        "opaquePixels": 1112
+        "transparentPixels": 320014,
+        "translucentPixels": 15972,
+        "opaquePixels": 51086
       },
       "pwaTransport": {
         "sourcePath": "/pwa-optimized/art/v099/crawler/crawler-airstrike-module-sheet-v1.webp",
         "format": "lossless-webp",
         "generator": "scripts/build-pwa-raster-derivatives.mjs",
-        "bytes": 22376,
-        "sha256": "817e76561f653275e9df13577aac9ef3867bc2c49fc8e5b959afa3e06ebc4dc5",
+        "bytes": 137004,
+        "sha256": "2276e6b7a536a8d549ac68cf6e632918d5d802a0dad89d88cac8057577993fb6",
         "visiblePixelDifferences": 0,
         "alphaDifferences": 0
       }

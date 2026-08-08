@@ -1283,8 +1283,8 @@
     },
     {
       "path": "/art/v099/crawler/crawler-airstrike-module-sheet-v1.png",
-      "bytes": 22376,
-      "hash": "sha256-817e76561f653275e9df13577aac9ef3867bc2c49fc8e5b959afa3e06ebc4dc5",
+      "bytes": 137004,
+      "hash": "sha256-2276e6b7a536a8d549ac68cf6e632918d5d802a0dad89d88cac8057577993fb6",
       "pack": "units",
       "category": "unit",
       "criticality": "critical",
@@ -1292,8 +1292,8 @@
     },
     {
       "path": "/art/v099/crawler/crawler-barrage-module-sheet-v1.png",
-      "bytes": 57582,
-      "hash": "sha256-a6690c91324d171a40118b6376ecd58b4b28f5de572211833cfdd0807c25dc52",
+      "bytes": 200852,
+      "hash": "sha256-3f418e1addcd3cf855215c949b81b8e8dcd203abe7d870de886f1273cab0012b",
       "pack": "units",
       "category": "unit",
       "criticality": "critical",

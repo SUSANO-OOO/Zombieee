@@ -20,10 +20,10 @@ test("the Version 0.9.9.0 release candidate has one immutable identity and compl
   assert.equal(candidate.version, RELEASE_VERSION);
   assert.equal(candidate.releaseSha, RELEASE_SHA_PLACEHOLDER);
   assert.equal(candidate.assets.length, 416);
-  assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), 89_712_221);
+  assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), 89_970_119);
 
   const distinct = new Map(candidate.assets.map((asset) => [asset.hash, asset.bytes]));
-  assert.equal([...distinct.values()].reduce((sum, bytes) => sum + bytes, 0), 89_172_318);
+  assert.equal([...distinct.values()].reduce((sum, bytes) => sum + bytes, 0), 89_430_216);
 });
 
 test("the real Version 0.9.8.2 pack updates by hash without re-downloading unchanged assets", () => {
@@ -43,7 +43,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.equal(update.fromVersion, "0.9.8.2");
   assert.equal(update.toVersion, "0.9.9.0");
   assert.equal(update.downloadCount, 49);
-  assert.equal(update.downloadBytes, 10_116_796);
+  assert.equal(update.downloadBytes, 10_374_694);
   assert.equal(update.unchangedCount, 367);
   assert.equal(update.reusedCount, 0);
   assert.equal(update.removedCount, 7);

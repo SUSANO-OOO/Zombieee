@@ -14,6 +14,7 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const publicRoot = path.join(root, "public");
 const sourceRoot = path.join(publicRoot, "art", "v075", "crawler");
+const authoringRoot = path.join(root, "assets", "source", "v099", "crawler");
 const provenancePath = path.join(root, "assets", "source", "v099", "crawler", "provenance.json");
 const checkOnly = process.argv.includes("--check");
 
@@ -38,8 +39,24 @@ const SOURCE = Object.freeze({
   },
 });
 
-const BARRAGE_CROP = Object.freeze({ left: 918, top: 304, width: 256, height: 128 });
-const AIRSTRIKE_CROP = Object.freeze({ left: 488, top: 70, width: 64, height: 288 });
+const AUTHORING = Object.freeze({
+  barrage: {
+    assetId: "V099-CRAWLER-BARRAGE-SEMANTIC-AUTHORING-V2",
+    chromaFile: "crawler-barrage-semantic-authoring-v2-chroma.png",
+    chromaSha256: "58d3a847896addbe9c03f8c85adc9dd8e44cc7a638042b75e7e3441da7f8c625",
+    rgbaFile: "crawler-barrage-semantic-authoring-v2-rgba.png",
+    rgbaSha256: "29f6a2c375a9393e5352fe8aaf95d4e33d9046dc68592f5f1c5d1dee63fbc9b0",
+    frame: { width: 256, height: 192, contactY: 184, paddingX: 8, paddingTop: 6 },
+  },
+  airstrike: {
+    assetId: "V099-CRAWLER-AIRSTRIKE-SEMANTIC-AUTHORING-V2",
+    chromaFile: "crawler-airstrike-semantic-authoring-v2-chroma.png",
+    chromaSha256: "ebc145790b454a29159dfc9141116c967502f0a82c657bceee792248c32d95fe",
+    rgbaFile: "crawler-airstrike-semantic-authoring-v2-rgba.png",
+    rgbaSha256: "5b568b90d3c338083fa8157433d40255b92f2ad367734231c5f8431795d725e2",
+    frame: { width: 192, height: 288, contactY: 280, paddingX: 8, paddingTop: 4 },
+  },
+});
 
 const sha256 = (buffer) => createHash("sha256").update(buffer).digest("hex");
 
@@ -108,74 +125,116 @@ function splitDeploymentHost(host, info) {
   return { base, foreground };
 }
 
-function extractModule(source, crop, predicate) {
-  const data = Buffer.alloc(crop.width * crop.height * 4);
-  for (let y = 0; y < crop.height; y += 1) {
-    for (let x = 0; x < crop.width; x += 1) {
-      const sourceX = crop.left + x;
-      const sourceY = crop.top + y;
-      const sourceOffset = sourcePixelOffset(sourceX, sourceY, source.info.width, source.info.channels);
-      if (!predicate(sourceX, sourceY, source.data[sourceOffset + 3])) continue;
-      const destinationOffset = sourcePixelOffset(x, y, crop.width);
-      source.data.copy(data, destinationOffset, sourceOffset, sourceOffset + 4);
-    }
-  }
-  return data;
-}
-
 async function pngFromRaw(data, width, height) {
   return sharp(data, { raw: { width, height, channels: 4 } })
     .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
     .toBuffer();
 }
 
-async function translateModule(module, width, height, { x = 0, y = 0, scaleY = 1 } = {}) {
-  let input = await pngFromRaw(module, width, height);
-  if (scaleY !== 1) {
-    const scaledHeight = Math.max(1, Math.round(height * scaleY));
-    input = await sharp(input).resize(width, scaledHeight, {
-      fit: "fill",
-      kernel: sharp.kernel.lanczos3,
-    }).png().toBuffer();
-    y += height - scaledHeight;
+function visibleBounds(data, info, alphaThreshold = 8) {
+  let left = info.width;
+  let top = info.height;
+  let right = -1;
+  let bottom = -1;
+  let visible = 0;
+  for (let y = 0; y < info.height; y += 1) {
+    for (let x = 0; x < info.width; x += 1) {
+      const alpha = data[sourcePixelOffset(x, y, info.width, info.channels) + 3];
+      if (alpha <= alphaThreshold) continue;
+      visible += 1;
+      left = Math.min(left, x);
+      top = Math.min(top, y);
+      right = Math.max(right, x);
+      bottom = Math.max(bottom, y);
+    }
   }
-  const metadata = await sharp(input).metadata();
-  const left = Math.round(x);
-  const top = Math.round(y);
-  const extractLeft = Math.max(0, -left);
-  const extractTop = Math.max(0, -top);
-  const visibleWidth = Math.min(metadata.width - extractLeft, width - Math.max(0, left));
-  const visibleHeight = Math.min(metadata.height - extractTop, height - Math.max(0, top));
-  if (visibleWidth <= 0 || visibleHeight <= 0) return Buffer.alloc(width * height * 4);
-  const clipped = await sharp(input).extract({
-    left: extractLeft,
-    top: extractTop,
-    width: visibleWidth,
-    height: visibleHeight,
-  }).png().toBuffer();
-  return sharp({
-    create: { width, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
-  }).composite([{ input: clipped, left: Math.max(0, left), top: Math.max(0, top) }])
-    .raw()
-    .toBuffer();
+  if (visible === 0) throw new Error("semantic authoring cell contains no visible hardware");
+  return { left, top, right, bottom, width: right - left + 1, height: bottom - top + 1, visible };
 }
 
-async function buildSheet(module, frameWidth, frameHeight, frameTransforms) {
-  const frames = [];
-  for (const transform of frameTransforms) {
-    frames.push(await translateModule(module, frameWidth, frameHeight, transform));
+async function buildAuthoredSheet(authoring, {
+  columns = 7,
+  width: frameWidth,
+  height: frameHeight,
+  contactY,
+  paddingX,
+  paddingTop,
+}) {
+  const cells = [];
+  let maximumWidth = 0;
+  let maximumHeight = 0;
+  for (let index = 0; index < columns; index += 1) {
+    const cellLeft = Math.floor(index * authoring.info.width / columns);
+    const cellRight = Math.floor((index + 1) * authoring.info.width / columns);
+    const cellWidth = cellRight - cellLeft;
+    const cell = await sharp(authoring.data, { raw: authoring.info })
+      .extract({ left: cellLeft, top: 0, width: cellWidth, height: authoring.info.height })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const bounds = visibleBounds(cell.data, cell.info);
+    const cropped = await sharp(cell.data, { raw: cell.info })
+      .extract({ left: bounds.left, top: bounds.top, width: bounds.width, height: bounds.height })
+      .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
+      .toBuffer();
+    maximumWidth = Math.max(maximumWidth, bounds.width);
+    maximumHeight = Math.max(maximumHeight, bounds.height);
+    cells.push({ index, bounds, cropped });
   }
-  const sheet = Buffer.alloc(frameWidth * frameTransforms.length * frameHeight * 4);
-  const sheetWidth = frameWidth * frameTransforms.length;
+
+  const uniformScale = Math.min(
+    (frameWidth - paddingX * 2) / maximumWidth,
+    (contactY - paddingTop) / maximumHeight,
+  );
+  if (!(uniformScale > 0)) throw new Error("semantic authoring master cannot fit the runtime frame");
+
+  const frames = [];
+  const frameEvidence = [];
+  for (const cell of cells) {
+    const resizedWidth = Math.max(1, Math.round(cell.bounds.width * uniformScale));
+    const resizedHeight = Math.max(1, Math.round(cell.bounds.height * uniformScale));
+    const resized = await sharp(cell.cropped)
+      .resize(resizedWidth, resizedHeight, { fit: "fill", kernel: sharp.kernel.lanczos3 })
+      .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
+      .toBuffer();
+    const left = Math.round((frameWidth - resizedWidth) / 2);
+    const top = contactY - resizedHeight;
+    const frame = await sharp({
+      create: { width: frameWidth, height: frameHeight, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    }).composite([{ input: resized, left, top }]).raw().toBuffer();
+    const normalizedBounds = visibleBounds(frame, {
+      width: frameWidth,
+      height: frameHeight,
+      channels: 4,
+    });
+    frames.push(frame);
+    frameEvidence.push({
+      frame: cell.index,
+      authoringBounds: cell.bounds,
+      normalizedBounds,
+      placement: { left, top, width: resizedWidth, height: resizedHeight },
+    });
+  }
+
+  const sheetWidth = frameWidth * columns;
+  const sheet = Buffer.alloc(sheetWidth * frameHeight * 4);
   for (let frame = 0; frame < frames.length; frame += 1) {
-    const data = frames[frame];
     for (let y = 0; y < frameHeight; y += 1) {
       const sourceOffset = y * frameWidth * 4;
       const destinationOffset = (y * sheetWidth + frame * frameWidth) * 4;
-      data.copy(sheet, destinationOffset, sourceOffset, sourceOffset + frameWidth * 4);
+      frames[frame].copy(sheet, destinationOffset, sourceOffset, sourceOffset + frameWidth * 4);
     }
   }
-  return pngFromRaw(sheet, sheetWidth, frameHeight);
+  return {
+    png: await pngFromRaw(sheet, sheetWidth, frameHeight),
+    evidence: {
+      authoringDimensions: [authoring.info.width, authoring.info.height],
+      frameDimensions: [frameWidth, frameHeight],
+      contactY,
+      uniformScale,
+      frames: frameEvidence,
+    },
+  };
 }
 
 function alphaEvidence(raw, width, height) {
@@ -269,27 +328,51 @@ const closedHostRaw = clearModules(closed);
 const openHostRaw = clearModules(open);
 const deployment = splitDeploymentHost(openHostRaw, open.info);
 
-const barrageModule = extractModule(closed, BARRAGE_CROP, isBarrageUpperModule);
-const airstrikeModule = extractModule(closed, AIRSTRIKE_CROP, isAirstrikeUpperModule);
+const authoringSources = {};
+for (const [kind, record] of Object.entries(AUTHORING)) {
+  const chromaFile = path.join(authoringRoot, record.chromaFile);
+  const rgbaFile = path.join(authoringRoot, record.rgbaFile);
+  const chromaBytes = await readFile(chromaFile);
+  const rgbaBytes = await readFile(rgbaFile);
+  if (sha256(chromaBytes) !== record.chromaSha256) throw new Error(`${record.chromaFile}: ImageGen chroma master hash drift`);
+  if (sha256(rgbaBytes) !== record.rgbaSha256) throw new Error(`${record.rgbaFile}: RGBA authoring master hash drift`);
+  const authoring = await sharp(rgbaBytes, { failOn: "error" })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const chromaMetadata = await sharp(chromaBytes).metadata();
+  authoringSources[kind] = {
+    record,
+    authoring,
+    provenance: {
+      assetId: record.assetId,
+      creator: "OpenAI ImageGen built-in; directed and accepted as project-original by OpenAI Codex Sol Lead",
+      role: "seven-state semantic equipment authoring contact sheet; authoring-only and excluded from public runtime",
+      promptContract: "Existing approved CRAWLER identity and equipment references; exactly seven mechanically distinct states; uniform #ff00ff chroma; no external VFX or HUD.",
+      chromaSource: {
+        file: path.relative(root, chromaFile).replaceAll("\\", "/"),
+        bytes: chromaBytes.length,
+        sha256: record.chromaSha256,
+        dimensions: [chromaMetadata.width, chromaMetadata.height],
+      },
+      rgbaMaster: {
+        file: path.relative(root, rgbaFile).replaceAll("\\", "/"),
+        bytes: rgbaBytes.length,
+        sha256: record.rgbaSha256,
+        dimensions: [authoring.info.width, authoring.info.height],
+        chromaRemoval: {
+          helper: "C:/Users/okait/.codex/skills/.system/imagegen/scripts/remove_chroma_key.py",
+          mode: "auto-key border, soft matte, despill, edge-contract 1",
+        },
+      },
+    },
+  };
+}
 
-const barrageSheet = await buildSheet(barrageModule, BARRAGE_CROP.width, BARRAGE_CROP.height, [
-  { x: 0, y: 0 },
-  { x: 0, y: -1 },
-  { x: 0, y: -4 },
-  { x: 4, y: -4 },
-  { x: 8, y: -4 },
-  { x: -7, y: -4 },
-  { x: 0, y: -2 },
-]);
-const airstrikeSheet = await buildSheet(airstrikeModule, AIRSTRIKE_CROP.width, AIRSTRIKE_CROP.height, [
-  { x: 0, y: 0, scaleY: .48 },
-  { x: 0, y: 0, scaleY: .66 },
-  { x: 0, y: 0, scaleY: .86 },
-  { x: 0, y: 0, scaleY: 1 },
-  { x: 1, y: -4, scaleY: 1 },
-  { x: -1, y: -7, scaleY: 1 },
-  { x: 0, y: 0, scaleY: .64 },
-]);
+const barrageBuild = await buildAuthoredSheet(authoringSources.barrage.authoring, AUTHORING.barrage.frame);
+const airstrikeBuild = await buildAuthoredSheet(authoringSources.airstrike.authoring, AUTHORING.airstrike.frame);
+const barrageSheet = barrageBuild.png;
+const airstrikeSheet = airstrikeBuild.png;
 
 const outputs = [
   ["crawler-closed-equipment-host", V099_CRAWLER_RUNTIME_PROFILE.equipmentHost.closed.path, await pngFromRaw(closedHostRaw, closed.info.width, closed.info.height)],
@@ -312,20 +395,27 @@ const provenance = {
   version: "0.9.9.0",
   schemaVersion: 1,
   generator: "scripts/build-v099-crawler-assets.mjs",
-  generatorRevision: 1,
-  source: "project-original approved CRAWLER identity and runtime masters",
-  creator: "SUSANO-OOO/Zombieee project; deterministic derivative build by OpenAI Codex Sol Lead",
-  license: "Approved for project repository and game distribution under docs/ASSET_APPROVALS_0.7.5.json; no third-party stock or downloaded artwork; not declared CC0.",
+  generatorRevision: 2,
+  source: "project-original approved CRAWLER identity plus project-original semantic equipment authoring masters",
+  creator: "SUSANO-OOO/Zombieee project; semantic equipment authored with OpenAI ImageGen and deterministic derivative build by OpenAI Codex Sol Lead",
+  license: "Approved project-original work for repository and game distribution; vehicle identity remains governed by docs/ASSET_APPROVALS_0.7.5.json; no third-party stock or downloaded artwork; not declared CC0.",
   commercialUse: true,
   modification: true,
   redistribution: true,
   approvalLedger: "docs/ASSET_APPROVALS_0.7.5.json",
   sources,
+  equipmentAuthoring: Object.fromEntries(
+    Object.entries(authoringSources).map(([kind, { provenance: record }]) => [kind, record]),
+  ),
   generation: {
     rasterOnly: true,
     runtimeCanvasGeometry: false,
     deploymentLayerMethod: "Binary RGBA partition of the approved open CRAWLER raster into base/interior and foreground hull/door-frame pixels.",
-    equipmentMethod: "Approved closed-master turret and antenna pixels are isolated once, then pre-rendered into seven deterministic RGBA frames; runtime draws the sheets only.",
+    equipmentMethod: "Seven-state ImageGen authoring masters are chroma-removed outside runtime, split into semantic cells, uniformly scaled without flattening relative state geometry, bottom-center anchored, and pre-rendered into deterministic RGBA sheets; runtime draws the sheets only.",
+    equipmentNormalization: {
+      barrage: barrageBuild.evidence,
+      airstrike: airstrikeBuild.evidence,
+    },
     frameSequences: {
       barrage: CRAWLER_BARRAGE_SPRITE_PHASES,
       airstrike: CRAWLER_AIRSTRIKE_SPRITE_PHASES,

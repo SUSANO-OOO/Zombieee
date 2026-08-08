@@ -10,7 +10,7 @@ without committing approximately 120 MiB of screenshots.
 ## Fixed build
 
 - Recursive `dist` identity before and after browser QA:
-  `2f0e89c4b8ba5c4df1cf5a0dc7ef3f3282ff6ef672a901822a382f80a2a61997`
+  `3738d4e902bdab35119bdbd33b929f342494cefe168ca8ee41c9dfa6a7d0ddef`
 - Browser axes: Chromium and Playwright WebKit at 844x390 and 844x340.
 - Browser diagnostics: console errors, page errors, HTTP errors, unexpected
   request failures, and pending requests were all zero in the adopted runs.
@@ -39,19 +39,25 @@ without committing approximately 120 MiB of screenshots.
 4. Mobile HUD evidence covered eight states across four browser axes. Required
    action text was at least 14 px, secondary text at least 12 px, with no
    accepted-zone, banner/bark, boss-semantic, or boss/crawler-alert overlap.
-5. CRAWLER barrage and airstrike equipment used authored raster sheets. Across
-   56 captured phases there was no idle floating equipment and no Canvas body
-   geometry; input, cooldown, targeting, damage, trajectory, and transient
+5. CRAWLER barrage and airstrike equipment use project-original, seven-state
+   RGBA raster sheets with state-specific physical structure. Aligned-alpha
+   silhouette tests reject pure translation and sub-pixel-only differences,
+   require adjacent structural differences, and verify that firing/recoil and
+   targeting/inbound/confirmation remain distinct after external VFX and HUD
+   are excluded. All states remain distinguishable at the actual 844x390 and
+   844x340 runtime scale. Across 56 captured phase screenshots and eight raw
+   runtime contact sheets there was no idle floating equipment and no Canvas
+   body geometry; input, cooldown, targeting, damage, trajectory, and transient
    action effects remained available.
 
 ## Regression evidence
 
-- Full test/build: 984/984 and production build success.
+- Full test/build: 985/985 and production build success.
 - ESLint, content validation, and `git diff --check`: success.
 - PWA: Chromium 34/34 and WebKit 33/33.
 - Save migration: 78/78 across both browser engines and all required viewports.
-- Manifest: 416 assets, 89,712,221 logical bytes, 89,172,318 distinct bytes,
-  SHA-256 `08ef7b94abd7cbe310979953eb7d6e19b2e474687e43fc73fcccb62c09264f32`.
+- Manifest: 416 assets, 89,970,119 logical bytes, 89,430,216 distinct bytes,
+  SHA-256 `34c336e32838e11e0920cc1698ad45d4a26a8baabe9b0953794b0cb64426901a`.
 - Audio bundle: 250 slices, 18,881,516 bytes.
 - Lossless WebP derivatives: 78; visible-pixel and alpha differences were zero.
 - Complete install, differential update, active/previous generation, rollback,
@@ -60,3 +66,5 @@ without committing approximately 120 MiB of screenshots.
 
 The raw-evidence index is reproduced with `npm run qa:v099-final-evidence` after
 placing the adopted raw evidence at the location stated above.
+The adopted index covers 286 files and has combined SHA-256
+`35606446df29d866a511911499f942adacea58ed3ddf15b0c668828a3ad66c8b`.

@@ -17,7 +17,7 @@ const BROWSER_ROOT = path.join(RAW_ROOT, "browser");
 const STAGE3_ROOT = path.join(RAW_ROOT, "stage3-audio");
 const AUDIO_ROOT = path.join(ROOT, "docs", "qa", "v099", "final-remediation", "audio");
 const EXPECTED_DIST_IDENTITY =
-  "2f0e89c4b8ba5c4df1cf5a0dc7ef3f3282ff6ef672a901822a382f80a2a61997";
+  "3738d4e902bdab35119bdbd33b929f342494cefe168ca8ee41c9dfa6a7d0ddef";
 
 function relativeFromRoot(value) {
   return path.relative(ROOT, value).split(path.sep).join("/");
@@ -152,6 +152,24 @@ const deploymentCheckpointIds = Object.freeze([
   "three-quarters",
   "fully-outside",
 ]);
+const barragePhaseIds = Object.freeze([
+  "stowed",
+  "hatch-open",
+  "turret-rise",
+  "aim",
+  "firing",
+  "recoil",
+  "retract",
+]);
+const airstrikePhaseIds = Object.freeze([
+  "stowed",
+  "mast-deploy",
+  "antenna-extend",
+  "targeting",
+  "inbound-signal",
+  "impact-confirmation",
+  "retract",
+]);
 const browserFileByPath = new Map(browserFiles.map((record) => [record.path, record]));
 
 function assertRecordedScreenshot(entry, label) {
@@ -165,7 +183,8 @@ assert(browserSummary.expectedCaseCount === 12, "browser expected-case count dri
 assert(browserSummary.total === 12, "browser total case count drifted");
 assert(browserSummary.passed === 12 && browserSummary.failed === 0, "browser QA failed");
 assert(browserSummary.screenshotCount === 260, "browser screenshot count drifted");
-assert(browserPngs.length === 260, "browser PNG evidence count drifted");
+assert(browserSummary.contactSheetCount === 8, "browser runtime contact-sheet count drifted");
+assert(browserPngs.length === 268, "browser PNG evidence count drifted");
 assert(browserResults.length === 12, "browser result matrix drifted");
 assert(browserSummary.buildIdentityStable === true, "browser build identity changed during QA");
 assert(browserIdentityStart === EXPECTED_DIST_IDENTITY, "browser start build identity drifted");
@@ -196,6 +215,30 @@ for (const result of hudResults) {
   assert(new Set(result.states.map(({ screenshotSha256 }) => screenshotSha256)).size === hudStateIds.length,
     `${label} HUD screenshots are not distinct`);
   for (const state of result.states) assertRecordedScreenshot(state, `${label}/${state.id}`);
+}
+
+const equipmentResults = browserResults.filter(({ type }) => type === "crawler-equipment");
+assert(equipmentResults.length === 4, "CRAWLER equipment browser-axis count drifted");
+for (const result of equipmentResults) {
+  const axisLabel = `${result.engine}/${result.viewport?.width}x${result.viewport?.height}`;
+  assert(result.status === "passed" && zeroRuntimeDiagnostics(result), `${axisLabel} equipment QA failed`);
+  for (const [kind, phases] of [["barrage", barragePhaseIds], ["airstrike", airstrikePhaseIds]]) {
+    const entries = result[kind];
+    assert(Array.isArray(entries) && entries.length === phases.length,
+      `${axisLabel}/${kind} phase count drifted`);
+    assert(entries.every((entry, index) => entry.phase === phases[index]),
+      `${axisLabel}/${kind} phase order drifted`);
+    assert(new Set(entries.map(({ screenshotSha256 }) => screenshotSha256)).size === phases.length,
+      `${axisLabel}/${kind} runtime phase screenshots are not distinct`);
+    for (const entry of entries) assertRecordedScreenshot(entry, `${axisLabel}/${kind}/${entry.phase}`);
+    const contact = result.contactSheets?.[kind];
+    const contactRecord = browserFileByPath.get(contact?.path);
+    assert(contactRecord && contactRecord.sha256 === contact.sha256,
+      `${axisLabel}/${kind} runtime contact sheet is absent or drifted`);
+    assert(contact.columns === phases.length
+      && JSON.stringify(contact.phases) === JSON.stringify(phases),
+    `${axisLabel}/${kind} runtime contact sheet semantic order drifted`);
+  }
 }
 
 const deploymentResults = browserResults.filter(({ type }) => type === "deployment");

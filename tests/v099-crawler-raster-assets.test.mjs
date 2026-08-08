@@ -14,6 +14,7 @@ import {
   crawlerBarrageSpritePhase,
   resolveCrawlerEquipmentFrame,
 } from "../app/crawlerEquipmentSprites.js";
+import { WORLD_GEOMETRY } from "../app/gameRules.js";
 
 const publicUrl = (assetPath) => new URL(`../public${assetPath}`, import.meta.url);
 const sha256 = (buffer) => createHash("sha256").update(buffer).digest("hex");
@@ -42,6 +43,92 @@ function alphaBounds(data, info) {
   return { left, top, right, bottom, visible };
 }
 
+function croppedBinaryAlpha(frame, threshold = 24) {
+  const bounds = alphaBounds(frame.data, frame.info);
+  const width = bounds.right - bounds.left + 1;
+  const height = bounds.bottom - bounds.top + 1;
+  const mask = new Uint8Array(width * height);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const source = ((bounds.top + y) * frame.info.width + bounds.left + x) * frame.info.channels + 3;
+      mask[y * width + x] = frame.data[source] > threshold ? 1 : 0;
+    }
+  }
+  return { width, height, mask, bounds };
+}
+
+function alignedSilhouetteDifference(firstFrame, secondFrame) {
+  const first = croppedBinaryAlpha(firstFrame);
+  const second = croppedBinaryAlpha(secondFrame);
+  const width = Math.max(first.width, second.width);
+  const height = Math.max(first.height, second.height);
+  const firstLeft = Math.floor((width - first.width) / 2);
+  const secondLeft = Math.floor((width - second.width) / 2);
+  const firstTop = height - first.height;
+  const secondTop = height - second.height;
+  let different = 0;
+  let union = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const firstX = x - firstLeft;
+      const firstY = y - firstTop;
+      const secondX = x - secondLeft;
+      const secondY = y - secondTop;
+      const a = firstX >= 0 && firstX < first.width && firstY >= 0 && firstY < first.height
+        ? first.mask[firstY * first.width + firstX]
+        : 0;
+      const b = secondX >= 0 && secondX < second.width && secondY >= 0 && secondY < second.height
+        ? second.mask[secondY * second.width + secondX]
+        : 0;
+      if (a || b) union += 1;
+      if (a !== b) different += 1;
+    }
+  }
+  return {
+    different,
+    union,
+    ratio: union > 0 ? different / union : 0,
+    first: first.bounds,
+    second: second.bounds,
+  };
+}
+
+async function runtimeAlphaDifference(firstFrame, secondFrame, width, height) {
+  const resize = async (frame) => sharp(frame.data, { raw: frame.info })
+    .resize(width, height, { fit: "fill", kernel: sharp.kernel.lanczos3 })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const [first, second] = await Promise.all([resize(firstFrame), resize(secondFrame)]);
+  let different = 0;
+  let union = 0;
+  for (let offset = 3; offset < first.data.length; offset += first.info.channels) {
+    const a = first.data[offset] > 24;
+    const b = second.data[offset] > 24;
+    if (a || b) union += 1;
+    if (a !== b) different += 1;
+  }
+  return { different, union, ratio: union > 0 ? different / union : 0 };
+}
+
+async function equipmentFrames(profile) {
+  const bytes = await readFile(publicUrl(profile.sheet.path));
+  const frames = [];
+  for (let index = 0; index < profile.phases.length; index += 1) {
+    frames.push(await sharp(bytes)
+      .extract({
+        left: index * profile.sheet.frameWidth,
+        top: 0,
+        width: profile.sheet.frameWidth,
+        height: profile.sheet.frameHeight,
+      })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true }));
+  }
+  return frames;
+}
+
 test("v0.9.9.0 CRAWLER assets are deterministic project-local raster derivatives", async () => {
   execFileSync(process.execPath, ["scripts/build-v099-crawler-assets.mjs", "--check"], {
     cwd: new URL("..", import.meta.url),
@@ -50,13 +137,25 @@ test("v0.9.9.0 CRAWLER assets are deterministic project-local raster derivatives
   const provenance = JSON.parse(await readFile(new URL("../assets/source/v099/crawler/provenance.json", import.meta.url), "utf8"));
   assert.equal(provenance.version, "0.9.9.0");
   assert.equal(provenance.generator, "scripts/build-v099-crawler-assets.mjs");
-  assert.equal(provenance.source, "project-original approved CRAWLER identity and runtime masters");
+  assert.equal(provenance.generatorRevision, 2);
+  assert.equal(provenance.source,
+    "project-original approved CRAWLER identity plus project-original semantic equipment authoring masters");
   assert.equal(provenance.commercialUse, true);
   assert.equal(provenance.modification, true);
   assert.equal(provenance.redistribution, true);
   assert.equal(provenance.generation.runtimeCanvasGeometry, false);
   assert.equal(provenance.generation.rollback.previousAssetsModified, false);
   assert.equal(provenance.artifacts.length, 5);
+  assert.deepEqual(Object.keys(provenance.equipmentAuthoring), ["barrage", "airstrike"]);
+  for (const record of Object.values(provenance.equipmentAuthoring)) {
+    assert.match(record.chromaSource.file, /^assets\/source\/v099\/crawler\/.+-chroma\.png$/u);
+    assert.match(record.rgbaMaster.file, /^assets\/source\/v099\/crawler\/.+-rgba\.png$/u);
+    for (const source of [record.chromaSource, record.rgbaMaster]) {
+      const bytes = await readFile(new URL(`../${source.file}`, import.meta.url));
+      assert.equal(bytes.length, source.bytes, source.file);
+      assert.equal(sha256(bytes), source.sha256, source.file);
+    }
+  }
   for (const source of Object.values(provenance.sources)) {
     const bytes = await readFile(new URL(`../${source.file}`, import.meta.url));
     assert.equal(sha256(bytes), source.sha256, source.file);
@@ -122,6 +221,7 @@ test("barrage and airstrike sheets have seven named, bounded, physically anchore
     assert.equal(sheet.info.width, profile.sheet.frameWidth * 7);
     assert.equal(sheet.info.height, profile.sheet.frameHeight);
     const hashes = new Set();
+    const extracted = [];
     for (let index = 0; index < expectedPhases.length; index += 1) {
       const frame = resolveCrawlerEquipmentFrame(kind, expectedPhases[index]);
       assert.equal(frame.frame, index);
@@ -137,11 +237,71 @@ test("barrage and airstrike sheets have seven named, bounded, physically anchore
       assert.ok(bounds.visible > 100, `${kind}:${expectedPhases[index]} must contain raster hardware`);
       assert.ok(bounds.bottom >= frameRaw.info.height - 42, `${kind}:${expectedPhases[index]} lost its vehicle contact edge`);
       hashes.add(sha256(frameRaw.data));
+      extracted.push(frameRaw);
     }
-    assert.ok(hashes.size >= 5, `${kind} phases must not collapse into one placeholder frame`);
+    assert.equal(hashes.size, 7, `${kind} requires seven distinct raster frames`);
+
+    for (let index = 0; index < extracted.length - 1; index += 1) {
+      const semantic = alignedSilhouetteDifference(extracted[index], extracted[index + 1]);
+      assert.ok(semantic.ratio >= .08,
+        `${kind}:${expectedPhases[index]}->${expectedPhases[index + 1]} lacks aligned silhouette change: ${JSON.stringify(semantic)}`);
+      const runtimeWidth = Math.max(1, Math.round(
+        profile.sheet.frameWidth / V099_CRAWLER_RUNTIME_PROFILE.deployment.sourceCrop.width
+          * WORLD_GEOMETRY.crawler.width,
+      ));
+      const runtimeHeight = Math.max(1, Math.round(
+        profile.sheet.frameHeight / V099_CRAWLER_RUNTIME_PROFILE.deployment.sourceCrop.height
+          * WORLD_GEOMETRY.crawler.height,
+      ));
+      const runtime = await runtimeAlphaDifference(
+        extracted[index],
+        extracted[index + 1],
+        runtimeWidth,
+        runtimeHeight,
+      );
+      assert.ok(runtime.different >= 8 && runtime.ratio >= .025,
+        `${kind}:${expectedPhases[index]}->${expectedPhases[index + 1]} collapses below one-pixel runtime evidence: ${JSON.stringify({ runtimeWidth, runtimeHeight, ...runtime })}`);
+    }
   }
   assert.equal(resolveCrawlerEquipmentFrame("barrage", "unknown"), null);
   assert.equal(resolveCrawlerEquipmentFrame("unknown", "stowed"), null);
+});
+
+test("semantic equipment tests reject pure translation and require state-specific geometry", async () => {
+  const translated = (left, top) => {
+    const width = 32;
+    const height = 32;
+    const data = Buffer.alloc(width * height * 4);
+    for (let y = top; y < top + 8; y += 1) {
+      for (let x = left; x < left + 12; x += 1) data[(y * width + x) * 4 + 3] = 255;
+    }
+    return { data, info: { width, height, channels: 4 } };
+  };
+  assert.equal(alignedSilhouetteDifference(translated(2, 3), translated(12, 17)).ratio, 0,
+    "aligned comparison must identify pure translation as no semantic change");
+
+  const barrage = await equipmentFrames(V099_CRAWLER_RUNTIME_PROFILE.equipment.barrage);
+  const barrageBounds = barrage.map((frame) => alphaBounds(frame.data, frame.info));
+  assert.ok(barrageBounds[1].top <= barrageBounds[0].top - 40,
+    "hatch-open requires a large state-specific hatch region above stowed");
+  assert.ok(barrageBounds[2].top <= barrageBounds[1].top - 20,
+    "turret-rise requires a structurally taller pedestal than hatch-open");
+  assert.ok(Math.abs(barrageBounds[4].right - barrageBounds[5].right) >= 6,
+    "firing and recoil require a body/barrel difference after muzzle VFX removal");
+  assert.ok(alignedSilhouetteDifference(barrage[4], barrage[5]).ratio >= .08,
+    "firing and recoil must remain structurally distinct without muzzle VFX");
+
+  const airstrike = await equipmentFrames(V099_CRAWLER_RUNTIME_PROFILE.equipment.airstrike);
+  const airstrikeBounds = airstrike.map((frame) => alphaBounds(frame.data, frame.info));
+  assert.ok(airstrikeBounds[1].top <= airstrikeBounds[0].top - 35,
+    "mast-deploy requires a state-specific hatch and mast region");
+  assert.ok(airstrikeBounds[2].top <= airstrikeBounds[1].top - 100,
+    "antenna-extend requires a substantially taller physical mast");
+  for (const [first, second] of [[3, 4], [4, 5]]) {
+    const semantic = alignedSilhouetteDifference(airstrike[first], airstrike[second]);
+    assert.ok(semantic.ratio >= .1,
+      `airstrike ${CRAWLER_AIRSTRIKE_SPRITE_PHASES[first]}->${CRAWLER_AIRSTRIKE_SPRITE_PHASES[second]} requires hardware-state evidence without HUD: ${JSON.stringify(semantic)}`);
+  }
 });
 
 test("runtime profile exposes stable vehicle anchors and effect handoff points without Canvas primitives", async () => {
