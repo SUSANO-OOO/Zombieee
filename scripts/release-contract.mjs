@@ -120,6 +120,7 @@ async function runCli() {
   let sourceMode = null;
   let sourceFile = null;
   let outputFile = null;
+  let printDeploy = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
@@ -136,15 +137,24 @@ async function runCli() {
       outputFile = args[index + 1];
       index += 1;
       if (!outputFile) throw new Error("--output requires a path");
+    } else if (argument === "--print-deploy") {
+      if (printDeploy) throw new Error("--print-deploy may only be specified once");
+      printDeploy = true;
     } else {
       throw new Error(`unknown argument: ${argument}`);
     }
   }
 
   if (!sourceMode) throw new Error("use --file <path> or --env");
+  if (printDeploy && sourceMode !== "file") throw new Error("--print-deploy requires --file");
+  if (printDeploy && outputFile) throw new Error("--print-deploy cannot be combined with --output");
   const contract = sourceMode === "env"
     ? releaseContractFromEnvironment()
     : await readReleaseContract(path.resolve(sourceFile));
+  if (printDeploy) {
+    process.stdout.write(`${String(contract.deploy)}\n`);
+    return;
+  }
   const serialized = serialize(contract);
   if (outputFile) await writeFile(path.resolve(outputFile), serialized, "utf8");
   process.stdout.write(serialized);

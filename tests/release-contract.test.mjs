@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   normalizeReleaseContract,
@@ -18,6 +22,20 @@ const validContract = Object.freeze({
   issue_number: 96,
   request_id: "v0.9.5-formal-release-20260730",
 });
+
+const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
+
+function bashExecutable() {
+  if (process.platform !== "win32") return "bash";
+  const candidates = [
+    process.env.GIT_BASH_EXE,
+    "C:\\Program Files\\Git\\bin\\bash.exe",
+    "C:\\Program Files\\Git\\usr\\bin\\bash.exe",
+  ].filter(Boolean);
+  const executable = candidates.find((candidate) => existsSync(candidate));
+  if (!executable) throw new Error("Git Bash is required for strict-shell release contract tests on Windows");
+  return executable;
+}
 
 test("release contract normalizes exactly the seven immutable request fields", () => {
   assert.deepEqual(normalizeReleaseContract(validContract), validContract);
@@ -71,13 +89,42 @@ test("manual dispatch environment uses the same validator", () => {
   }), validContract);
 });
 
+test("strict shell preserves validated false and true deploy booleans with exit zero", async () => {
+  const tempRoot = await mkdtemp(path.join(tmpdir(), "zombieee-release-contract-shell-"));
+  try {
+    for (const deploy of [false, true]) {
+      const contractPath = path.join(tempRoot, `deploy-${deploy}.json`);
+      await writeFile(contractPath, `${JSON.stringify({ ...validContract, deploy })}\n`, "utf8");
+      const result = spawnSync(bashExecutable(), ["-c", [
+        "set -euo pipefail",
+        "deploy=\"$(node scripts/release-contract.mjs --file \"$CONTRACT_FILE\" --print-deploy)\"",
+        "test \"$deploy\" = \"$EXPECTED_DEPLOY\"",
+        "printf 'deploy=%s\\n' \"$deploy\"",
+      ].join("; ")], {
+        cwd: repositoryRoot,
+        env: {
+          ...process.env,
+          CONTRACT_FILE: contractPath,
+          EXPECTED_DEPLOY: String(deploy),
+        },
+        encoding: "utf8",
+      });
+      assert.equal(result.status, 0, `deploy=${deploy} failed strict shell: ${result.stderr}`);
+      assert.equal(result.signal, null);
+      assert.equal(result.stdout.trim(), `deploy=${deploy}`);
+    }
+  } finally {
+    await rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test("legacy checked-in request file is removed", () => {
   assert.equal(existsSync(".github/pages-release-request.json"), false);
 });
 
 test("release workflow is explicit, immutable, and deploy-gated", async () => {
-  const releaseWorkflow = await readFile(".github/workflows/github-pages-release.yml", "utf8");
-  const publicWorkflow = await readFile(".github/workflows/github-pages-public-qa.yml", "utf8");
+  const releaseWorkflow = (await readFile(".github/workflows/github-pages-release.yml", "utf8")).replaceAll("\r\n", "\n");
+  const publicWorkflow = (await readFile(".github/workflows/github-pages-public-qa.yml", "utf8")).replaceAll("\r\n", "\n");
   const releaseTrigger = releaseWorkflow.split("permissions:", 1)[0];
   const publicTrigger = publicWorkflow.split("permissions:", 1)[0];
   const publicSmoke = await readFile("scripts/github-pages-public-smoke.mjs", "utf8");
@@ -94,11 +141,16 @@ test("release workflow is explicit, immutable, and deploy-gated", async () => {
   assert.match(releaseWorkflow, /manual release dispatch must run from refs\/heads\/main/u);
   assert.match(releaseWorkflow, /select\(\.draft == false and \.prerelease == false\)/u);
   assert.match(releaseWorkflow, /source_dir=release-source/u);
+  assert.match(releaseWorkflow, /--print-deploy/u);
+  assert.match(publicWorkflow, /--print-deploy/u);
+  assert.doesNotMatch(`${releaseWorkflow}\n${publicWorkflow}`, /jq -e[^\n]*\.deploy/u);
   assert.match(releaseWorkflow, /path: release-source/u);
   assert.match(releaseWorkflow, /node "\$GITHUB_WORKSPACE\/\$SOURCE_DIR\/scripts\/build-github-pages\.mjs"/u);
   assert.doesNotMatch(releaseWorkflow, /node scripts\/(?:build|github-pages)-/u);
-  assert.match(releaseWorkflow, /if: steps\.release\.outputs\.deploy == 'true'/u);
-  assert.match(releaseWorkflow, /if: needs\.build\.outputs\.deploy == 'true'/u);
+  assert.match(releaseWorkflow, /- name: Verify GitHub Pages uses Actions\n\s+if: steps\.release\.outputs\.deploy == 'true'/u);
+  assert.match(releaseWorkflow, /- name: Configure GitHub Pages\n\s+if: steps\.release\.outputs\.deploy == 'true'/u);
+  assert.match(releaseWorkflow, /- name: Upload GitHub Pages artifact\n\s+if: steps\.release\.outputs\.deploy == 'true'/u);
+  assert.match(releaseWorkflow, /\n  deploy:\n\s+if: needs\.build\.outputs\.deploy == 'true'/u);
   assert.match(releaseWorkflow, /name: github-pages-release-contract/u);
   assert.doesNotMatch(releaseTrigger, /\bwrite\b/u);
 
@@ -108,7 +160,11 @@ test("release workflow is explicit, immutable, and deploy-gated", async () => {
   assert.match(publicWorkflow, /actions\/download-artifact@v4/u);
   assert.match(publicWorkflow, /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/u);
   assert.match(publicWorkflow, /path: release-source/u);
-  assert.match(publicWorkflow, /if: steps\.release\.outputs\.deploy == 'true'/u);
+  assert.match(publicWorkflow, /- name: Skip public QA for a validated dry-run\n\s+if: steps\.release\.outputs\.deploy != 'true'/u);
+  assert.match(publicWorkflow, /- name: Checkout immutable deployed source\n\s+if: steps\.release\.outputs\.deploy == 'true'/u);
+  assert.match(publicWorkflow, /- name: Install locked application dependencies\n\s+if: steps\.release\.outputs\.deploy == 'true'/u);
+  assert.match(publicWorkflow, /- name: Install isolated browser runtime\n\s+if: steps\.release\.outputs\.deploy == 'true'/u);
+  assert.match(publicWorkflow, /- name: Run published-site QA\n(?:\s+[^\n]+\n){0,2}\s+if: steps\.release\.outputs\.deploy == 'true'/u);
   assert.match(publicWorkflow, /node "\$GITHUB_WORKSPACE\/release-source\/scripts\/github-pages-public-smoke\.mjs"/u);
   assert.doesNotMatch(publicWorkflow, /node scripts\/github-pages-public-smoke\.mjs/u);
   assert.doesNotMatch(publicWorkflow, /0\.7\.0 GitHub Pages/u);

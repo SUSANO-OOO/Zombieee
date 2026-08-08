@@ -132,7 +132,7 @@ jobs:
 
             requested=true
             operation="$(jq -er '.operation' release-contract/release-contract.json)"
-            deploy="$(jq -er '.deploy' release-contract/release-contract.json)"
+            deploy="$(node scripts/release-contract.mjs --file release-contract/release-contract.json --print-deploy)"
             source_dir=release-source
             version="$(jq -er '.version' release-contract/release-contract.json)"
             release_ref="$(jq -er '.release_ref' release-contract/release-contract.json)"
