@@ -85,9 +85,9 @@ Versionごとの製品判断と実行は、そのVersionのProducer Decisions／
 4. Design Leadとは別コンテキストの**Sol Auditor**がfixed HEADをread-only監査
 5. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけintegration／main／releaseへ進む
 
-Sol設計とLuna実装は、それぞれ別のCodex `/goal`を設定してから開始します。goalには一つのobjective、検証可能な停止条件、required sources、non-goal、validation loop、checkpoint、pause／stop conditionsを必須とします。
+Codexの`/goal`は、**長時間かどうかではなく、同じ達成目標を複数工程・checkpoint・反復検証にわたって保持する必要があるか**で判断します。Version／featureの正式設計、複数moduleをまたぐ実装、実装→QA→修正→PR、audit remediation、release missionは`/goal`対象です。read-only確認、単発test、typo修正、設計判断を伴わない小さな単一file修正等は通常promptで処理できます。
 
-設計goalと実装goalを一つへ混在させません。Lunaが重大な設計欠落を見つけた場合は独自再設計せずSolへ戻し、Design Lead Sol自身を最終独立Auditorにしません。
+SolとLunaが`/goal`を使う場合は設計goalと実装goalを分離します。Lunaが重大な設計欠落を見つけた場合は独自再設計せずSolへ戻し、Design Lead Sol自身を最終独立Auditorにしません。
 
 詳細は[AGENTS.md](../AGENTS.md)を正本とします。
 
