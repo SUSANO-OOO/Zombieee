@@ -106,7 +106,8 @@ git diff --check
 
 ## 開発と公開
 
-- 正式コードはGitHub `main`上のrelease SHAです。
+- 公開中の正式コードはannotated tag／GitHub Releaseが指すrelease SHAです。
+- `main` HEADは、release後のdocs-only更新等により公開release SHAより先へ進む場合があります。現在値は必要時にGitHubから再取得します。
 - feature／integration branchはPR、CI、QA、Producer gateを通過するまで候補です。
 - `main`直接push、force push、共有履歴rebase・amend、既存tag移動は禁止です。
 - 正式releaseはfinal main PRのmerge result SHAへ固定します。
