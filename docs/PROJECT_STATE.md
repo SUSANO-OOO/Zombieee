@@ -1,37 +1,48 @@
 # 西新世紀末物語 — プロジェクト状態
 
-更新日：2026-08-04
+更新日：2026-08-08
 
 ## 1. 正式公開
 
 唯一の正式公開先はGitHub Pagesです。
 
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
-- 公開中version：**Version 0.9.8.2**
-- `main`／release SHA：`662ec6103a769846343e60dacf19dd36adeafdde`
-- annotated tag：`v0.9.8.2`、同release SHA
-- GitHub Release：[Version 0.9.8.2](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v0.9.8.2)
-- request ID：`v0.9.8.2-final-release-20260802`
-- release ledger：Issue #133
-- 公開HTML metadata：version `0.9.8.2`、release SHA `662ec6103a769846343e60dacf19dd36adeafdde`、Issue `133`
+- 公開中version：**Version 0.9.9.0**
+- `main`／release SHA：`19a79404822ebc8f0cbd8a3b809b8ed0adbc28af`
+- release tree：`305af62474c8a1ea118251023ec4ad58bee17975`
+- annotated tag：`v0.9.9.0`
+- GitHub Release：Version 0.9.9.0
+- release request ID：`v0.9.9.0-19a7940-20260808T0448Z`
+- release ledger：Issue #136
+- final integration HEAD：`955ad53788c0049116845721c8e2bacd0f45d90e`
+- final remediation HEAD：`50ec6cec553c155303a895891bf867d387024e8c`
+- final main PR：#142
+- final remediation PR：#145
 
-上記は2026-08-04にtag、Release、`main`、正式URLのHTMLから再取得した値です。ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、復旧に使用しません。
+Version 0.9.9.0のfinal independent auditは**APPROVE — High 0／Medium 0／Low 0**です。PR #142は通常merge済み、Issue #136は公開後QA成功後に`completed`としてclose済みです。
 
-## 2. Version 0.9.9.0 release candidate
+## 2. Version 0.9.9.0の公開後QA
 
-実行正本：[Issue #136](https://github.com/SUSANO-OOO/Zombieee/issues/136)
+- Pages release run：success
+- Public QA run：success
+- public HTML：Version、release SHA、request ID、Issue、`/Zombieee/` baseがrelease requestと一致
+- manifest：416 assets
+- logical bytes：89,970,119
+- distinct bytes：89,430,216
+- source manifest SHA-256：`34c336e32838e11e0920cc1698ad45d4a26a8baabe9b0953794b0cb64426901a`
+- audio bundle：250 slices、18,881,516 bytes
+- evidence index：286 files、combined SHA-256 `35606446df29d866a511911499f942adacea58ed3ddf15b0c668828a3ad66c8b`
+- 1280×720：pass
+- 844×390：pass
+- 844×340：pass
+- fresh save：pass
+- Version 0.9.0 schema v13 save：pass
+- Version 0.9.5 schema v14 save：pass
+- title→map→loadout→assets ready→battle：pass
+- IndexedDB delay／blocked、image.decode hang、低速network、optional asset hang fixture：pass
+- console error／page error／HTTP error／request failure／horizontal overflow：0
 
-状態：**Gate A合格、PR1〜PR4 integration統合済み、release-prep中**
-
-- integration branch：`integration/0.9.9.0`
-- PR1 merge：`6e5c304f575a31c2e9762e652a2437e93291ef75`
-- PR2 merge：`464975906e969444f71a9d2e48646b077f38f514`
-- PR3 merge：`3e09b4c09cb1bc67cf1322bd539f5b0bc7e5d060`
-- PR4 merge／release-prep source：`cc1b90474801224819d1d1905cbd5a5ed07a3365`
-- release-prep branch：`codex/0.9.9.0-release-prep`
-- final main PR、release SHA、tag、GitHub Release、Pages正式deployment：未作成／未実行
-
-Gate Aで、現在のAudio、VFX、感染者face icon A2がProducer承認済みです。A2 master SHA-256は`88b5b3aff7f8a026b3bd9d95433c9363804f4e838d224df4c6298073ea3be38e`です。
+Playwright WebKitは物理iPhone確認ではありません。物理iPhone本体speakerの聴感と発熱は未確認であり、GitHub Releaseに残存QAとして記録済みです。後日異常が見つかった場合は0.9.9.0の履歴を書き換えず、新しいfollow-up Issueで扱います。
 
 ## 3. Version 0.9.9.0のplayer-facing変更
 
@@ -45,82 +56,71 @@ Gate Aで、現在のAudio、VFX、感染者face icon A2がProducer承認済み�
 
 ### Battle audio
 
-- surface／stationのpressure BGMとboss BGMを追加
-- normal↔pressure、boss entry／exitを戦況から解決
+- normal／pressure／boss BGMを明確化
+- Stage 3 TAKUYA incomingからboss BGMをproduction pathで維持
 - 全16unitのability activation root、timeline subcue、ready familyを明示契約化
 - boss、defeat、explosion、supportをgeneration／receipt単位で一回だけ発火
-- 36 physical audio assetsをproject-original source、固定provenance、再現可能なmasterへ追加
 
 ### Battle presentation
 
 - boss entrance／defeatを段階presentation化
 - small／medium／large explosionを用途別に分離
 - explosive drumに影、落下、回転、dust、spark、bounce、activationを追加
-- CRAWLER roof machinery、barrage、airstrikeを装備と一体に見える表現へ改善
-- gameplay damage、cooldown、targeting、reward、save契約は変更しない
+- CRAWLER deploymentのalpha／physical occlusionを修正
+- barrage／airstrikeをproject-originalの構造的に異なる各7 semantic RGBA frameへ刷新
+- 844×390／844×340 battle HUDのsafe-zone、文字サイズ、重なりを修正
+- gameplay damage、cooldown、targeting、reward、save契約は変更なし
 
 ### App icon
 
 - Producer承認A2からversioned favicon、Apple touch、192／512／1024、maskable iconを生成
 - PWA `id`、`start_url`、`scope`は`./`を維持
-- 旧icon filesは物理保持し、新generationだけがA2 pathを参照
+- 旧icon filesはrollbackのため物理保持
 
-## 4. Asset・PWA状態
+## 4. PWA・save状態
 
-- manifest：410 logical assets
-- logical bytes：86,794,856
-- distinct bytes：86,254,953
-- lossless WebP transport derivative：73
-- audio bundle：249 slices、17,604,607 bytes
-- Version 0.9.9.0追加：36 audio assets＋A2 icon 7 logical paths
-- Version 0.9.8.2からの差分：43 logical downloads、41 distinct objects、7,199,431 bytes
-- unchanged hash reuse：367 assets
+- manifest：416 assets
+- logical bytes：89,970,119
+- distinct bytes：89,430,216
+- audio bundle：250 slices、18,881,516 bytes
 - save schema：v14、変更なし
+- active／previous generation、差分update、rollback、offline、commit-only recoveryを維持
+- saveとasset cacheを分離
 
-PWAは全件のsize／SHA-256検証、Cache Storage保存、manifest commit ACK完了後だけゲーム開始します。active／previous generation、差分update、rollback、offline、commit-only recovery、saveとasset cacheの分離を維持します。
+PWAは全件のsize／SHA-256検証、Cache Storage保存、manifest commit ACK完了後だけゲーム開始します。
 
-## 5. QA状態
+## 5. 今後の実装運用
 
-工程PRごとにfocused/full tests、Lint、production build、content validation、browser QA、PWA/update/rollback/offline/save QA、独立read-only reviewを実施し、integration merge前のPR起因FindingはHigh／Medium／Low 0です。
+今後の実装は、次の責務分離を標準とします。
 
-release-prepでは次を最終固定します。
+1. Producerが対象Versionの主目的と製品境界を固定
+2. **Sol Design Lead**が実装前設計を担当
+3. **Luna Implementation Lead**がSol設計を正本として実装
+4. Design Leadとは別コンテキストの**Sol Auditor**が固定HEADをread-only監査
+5. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけmerge／公開
 
-- Version 0.9.9.0 identityとrelease SHA注入契約
-- generated manifest／audio bundle／lossless WebP drift 0
-- Chromium／WebKit、1280×720、844×390、844×340
-- Pages base path `/Zombieee/`
-- fresh install、0.9.8.2差分update、active／previous、rollback、offline、reload recovery
-- fresh／existing save、migration、破損復旧、export／import
-- Audio／VFX／icon combined regression
-- console／page／request／HTTP failure 0
+Sol設計runとLuna実装runは、Codexの`/goal`をそれぞれ独立して設定してから開始します。設計goalと実装goalを混在させず、objective、検証可能な停止条件、required sources、non-goal、validation loop、checkpoint、pause／stop conditionsを明記します。
 
-Playwright WebKitは物理iPhone確認ではありません。speaker、earphone、home-screen icon更新、lock復帰、発熱はGate BでProducerが物理iPhoneを確認します。
+詳細な恒久ルールは`AGENTS.md`を正本とします。Lunaが実装中に重大な設計欠落を発見した場合は独自再設計せずSolへ戻し、Sol AuditorはDesign Lead Solとは別コンテキストで行います。
 
-## 6. Release境界
+## 6. 次Versionの状態
 
-公開順は次のとおりです。
+Version 0.9.9.0以降の次Versionは**まだ主目的を固定していません**。新規実装へ入る前に、Producerが一つの主目的を選び、新しい実行台帳IssueまたはProducer Decisionsを作成します。
 
-1. release-prep PRをintegrationへ通常merge
-2. final `integration/0.9.9.0 → main` PRを作成
-3. 別チャットのSol Auditorが固定integration HEADをread-only reviewし、High／Medium／Low 0を確認
-4. 同一固定HEADのGate B candidateを発行
-5. Producerが物理iPhoneを確認し、「公開してよい」と明示
-6. final main PRを通常mergeし、merge resultをrelease SHAに固定
-7. annotated `v0.9.9.0` tag、GitHub Release
-8. `main`からGitHub Pages Releaseをmanual dispatch
-9. public metadata、匿名アクセス、fresh／existing save、PWA update、主要assetを確認
-10. 公開後docs-only同期PR、Issue #24状態記録、Issue #136 close
+長期候補は`PRODUCT_ROADMAP.md`に保持します。自動的に複数候補を同時採用しません。
 
-`.github/pages-release-request.json`は変更しません。Gate B承認前のintegration→main merge、tag、Release、Pages正式公開は禁止です。
+Issue #24 `[Backlog][Audio] 正式BGM・SE制作と物理端末聴感QA` はopenのままです。0.9.9.0でaudioの大幅改善は行いましたが、物理iPhone本体speaker／earphone／PC speakerの最終実聴等を含むBacklog全体の完了条件は未達のため、勝手にcloseしません。
 
 ## 7. 恒久基準
 
 - repository：`SUSANO-OOO/Zombieee`
 - default branch：`main`
+- 正式release baseline：`19a79404822ebc8f0cbd8a3b809b8ed0adbc28af`
 - save key：`nishijin-campaign-v1`
 - stable ID、localStorage／IndexedDB、migration snapshot、last-known-good、recovery、export／importを維持
 - smartphone横画面を第一基準、PC横画面も正式対応
 - 本編Stage 1〜20、Survival、16 playable units、Level 1〜50基盤を維持
 - `main`直接push、force push、rebase、amend、既存tag移動、save初期化、cache全削除、ライセンス不明asset採用は禁止
+- Sol設計／Luna実装の長時間runを`/goal`なしで開始しない
 
 長期方向は[PRODUCT_ROADMAP](PRODUCT_ROADMAP.md)、公開・復元は[RELEASE_BACKUP_RECOVERY](RELEASE_BACKUP_RECOVERY.md)を参照してください。
