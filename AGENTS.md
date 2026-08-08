@@ -83,7 +83,7 @@ LunaはSol設計を読み、指定scopeだけを実装する。
 
 ## 4. `/goal`必須運用
 
-CodexでSol設計またはLuna実装を行う長時間タスクは、**通常promptだけで開始せず、各担当が自分のスレッドで`/goal`を設定してから開始する**。
+Codexで**Sol Design Leadとして設計するrun、またはLuna Implementation Leadとして実装するrunは、taskの大小や所要時間に関係なく、毎回その担当スレッドで`/goal`を設定してから開始する**。通常promptだけで設計・実装を開始しない。
 
 - Sol Design Lead：設計専用の`/goal`
 - Luna Implementation Lead：実装専用の`/goal`
@@ -104,7 +104,7 @@ goalは「全部よくする」のようなopen-ended backlogにしない。対�
 
 進行報告は簡潔に、`current checkpoint / verified / remaining / blocked`を示す。状態変化のない長文報告を繰り返さない。
 
-`/goal`が利用できない環境では、通常promptへ黙って代替して開始しない。利用不可をtooling blockerとして報告し、Producerまたは司令塔が運用変更を明示するまで設計・実装の長時間runを開始しない。
+`/goal`が利用できない環境では、通常promptへ黙って代替して開始しない。利用不可をtooling blockerとして報告し、Producerまたは司令塔が運用変更を明示するまでSol設計・Luna実装を開始しない。
 
 ### 4.1 Design goalの標準停止条件
 
@@ -205,7 +205,7 @@ Actions成功だけで一般公開成功と断定しない。
 5. FindingがあればLunaへ限定修正、設計変更が必要ならSolへ戻す
 6. 対象Version正本のrelease gateを満たした場合だけmerge／tag／Release／Pagesへ進む
 
-許可済みscopeでは、調査、設計、実装、対象文書・asset、test、Lint、build、実browser QA、不具合修正、通常commit・push、Draft PR、integration merge、独立review、承認済みrelease操作、公​​開後QA、Issue closeまで段階実行できる。
+許可済みscopeでは、調査、設計、実装、対象文書・asset、test、Lint、build、実browser QA、不具合修正、通常commit・push、Draft PR、integration merge、独立review、承認済みrelease操作、公開後QA、Issue closeまで段階実行できる。
 
 使用上限や時間切れで中断する場合は、完了工程、現在SHA、未完了項目、正確な再開位置、現在のgoal状態を対象Issueへ記録する。依存変更がない完了工程を最初からやり直さない。
 
@@ -273,7 +273,7 @@ Actions成功だけで一般公開成功と断定しない。
 - Lunaによる未承認のscope再設計
 - Design Lead Solによる自己実装を標準運用化すること
 - Design Lead Sol自身のreviewを最終独立監査として扱うこと
-- Sol／Lunaの長時間設計・実装を`/goal`なしで開始すること
+- Sol／Lunaの設計・実装runを`/goal`なしで開始すること
 
 重大な公開不具合は、直前の正常release SHAを確認し、通常のrevert PRで復旧する。`main`のforce巻戻し、tag移動、Release履歴改変は禁止する。
 
