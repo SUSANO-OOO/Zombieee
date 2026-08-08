@@ -81,14 +81,41 @@ LunaはSol設計を読み、指定scopeだけを実装する。
 
 実装中に設計の重大な欠落、矛盾、scope変更が必要と判明した場合、Lunaは独自に再設計して進めない。作業を安全なcheckpointで止め、Solへ設計差分を返す。軽微な内部実装詳細は既存設計と安全境界の範囲で自律決定できる。
 
-## 4. `/goal`必須運用
+## 4. `/goal`運用
 
-Codexで**Sol Design Leadとして設計するrun、またはLuna Implementation Leadとして実装するrunは、taskの大小や所要時間に関係なく、毎回その担当スレッドで`/goal`を設定してから開始する**。通常promptだけで設計・実装を開始しない。
+`/goal`は、**複数工程・複数checkpoint・反復検証をまたいで、同じ達成目標を継続して追う必要があるミッション**で使用する。時間の長短だけで判定しない。
 
-- Sol Design Lead：設計専用の`/goal`
-- Luna Implementation Lead：実装専用の`/goal`
-- 設計goalと実装goalを同一goalへ混在させない
-- goalは担当変更時に引き継がず、新担当が自分の責務に合わせて新しく設定する
+### 4.1 `/goal`を必須とするケース
+
+次のいずれかに該当する場合、通常promptだけで開始せず、担当スレッドで`/goal`を設定する。
+
+- Solが対象Version／feature／PRの実装正本となる設計とLuna handoffを作る
+- Lunaが実装→test→browser QA→修正→再検証→commit／push／PRのように複数checkpointをまたぐ
+- 複数module／複数file／複数assetを横断する
+- save／migration／PWA／Service Worker／audio／asset generation／release contractへ影響する
+- generator、manifest、provenance、browser evidence等の複数証拠を揃える必要がある
+- independent audit Findingを修正し、再監査可能なfixed HEADまで持っていく
+- integration／main merge、tag、Release、Pages、Public QAまでを一つの承認済みrelease missionとして扱う
+- 作業中に複数回の判断・再試行・follow-upが発生する可能性が高い
+
+Sol Design LeadとLuna Implementation Leadが同一Versionで`/goal`を使う場合、**設計goalと実装goalは必ず分離**する。担当変更時にgoalをそのまま引き継がず、新担当が自分の責務に合わせて設定する。
+
+### 4.2 `/goal`を不要とするケース
+
+次のような原子的な作業は、通常promptで処理してよい。
+
+- read-onlyの状態確認、SHA／PR／Issue／CIの確認
+- 一つの質問へのコード調査・説明
+- 一回のcommand／testだけで完了判定できる確認
+- typo、表記修正、リンク修正等の小さなdocs修正
+- 明確に限定された単一fileの小修正で、設計判断・migration・asset生成・browser QA・release操作を伴わず、直後の一回の検証で完了できるもの
+- 既に固定された設計に対する、独立監査が要求した極小の機械的修正で、新たな設計判断を必要としないもの
+
+原子的な作業でも、途中でscopeが広がり複数checkpointを必要とすると判明した時点で、作業を安全な状態で止め、`/goal`を設定してgoal-managed missionへ切り替える。
+
+迷う場合は`/goal`を使う。不要なgoalを作るコストより、複数工程の途中で目的・停止条件・証拠が漂流するリスクを優先して避ける。
+
+### 4.3 Goal contract
 
 各`/goal`は最低限次を含む。
 
@@ -104,11 +131,11 @@ goalは「全部よくする」のようなopen-ended backlogにしない。対�
 
 進行報告は簡潔に、`current checkpoint / verified / remaining / blocked`を示す。状態変化のない長文報告を繰り返さない。
 
-`/goal`が利用できない環境では、通常promptへ黙って代替して開始しない。利用不可をtooling blockerとして報告し、Producerまたは司令塔が運用変更を明示するまでSol設計・Luna実装を開始しない。
+`/goal`が利用できない環境では、goal必須条件に該当するmissionを通常promptへ黙って代替して開始しない。利用不可をtooling blockerとして報告し、Producerまたは司令塔が運用変更を明示するまで開始しない。原子的な作業は4.2の条件を満たす限り通常promptで継続できる。
 
-### 4.1 Design goalの標準停止条件
+### 4.4 Design goalの標準停止条件
 
-Solのgoalは、次を満たした時点で完了とする。
+Solのdesign goalは、次を満たした時点で完了とする。
 
 - 実装正本となる設計がIssueまたは指定MDへ固定済み
 - baseline／scope／non-goal／acceptance／tests／stop conditionsが明確
@@ -116,9 +143,9 @@ Solのgoalは、次を満たした時点で完了とする。
 - 未解決の重大設計事項が0、またはblockerとして明示済み
 - 製品実装コードを開始していない
 
-### 4.2 Implementation goalの標準停止条件
+### 4.5 Implementation goalの標準停止条件
 
-Lunaのgoalは、対象工程について次を満たした時点で完了とする。
+Lunaのimplementation goalは、対象工程について次を満たした時点で完了とする。
 
 - Sol設計のacceptance criteriaを実装
 - 必須test／build／QAが成功
@@ -141,7 +168,8 @@ merge、tag、Release、Pages公開を同じgoalに含める場合は、対象Ve
 - push、PR、Issue、Release、Actions権限
 - baseline test、Lint、build、`git diff --check`
 - 対象Version正本と旧文書の衝突
-- 担当roleと、そのrole用`/goal`が設定済みか
+- 担当role
+- 4.1に該当する場合、そのrole用`/goal`が設定済みか
 
 既存未commit・未追跡変更を削除、reset、上書きしない。安全な別cloneまたは隔離worktreeを使用できる。
 
@@ -194,7 +222,7 @@ Actions成功だけで一般公開成功と断定しない。
 
 ## 8. 一気通貫ミッション
 
-対象Issue、正本、公開先、停止条件、許可操作が明示されている場合、複数roleを連携して一つのVersion missionを完了できる。ただし**Sol設計とLuna実装の責務分離、および各担当の独立`/goal`を省略しない**。
+対象Issue、正本、公開先、停止条件、許可操作が明示されている場合、複数roleを連携して一つのVersion missionを完了できる。ただし**Sol設計とLuna実装の責務分離を省略しない。4.1に該当する各工程は、それぞれ独立した`/goal`を使用する**。
 
 標準順序：
 
@@ -273,7 +301,7 @@ Actions成功だけで一般公開成功と断定しない。
 - Lunaによる未承認のscope再設計
 - Design Lead Solによる自己実装を標準運用化すること
 - Design Lead Sol自身のreviewを最終独立監査として扱うこと
-- Sol／Lunaの設計・実装runを`/goal`なしで開始すること
+- 4.1のgoal-managed missionを`/goal`なしで開始すること
 
 重大な公開不具合は、直前の正常release SHAを確認し、通常のrevert PRで復旧する。`main`のforce巻戻し、tag移動、Release履歴改変は禁止する。
 
