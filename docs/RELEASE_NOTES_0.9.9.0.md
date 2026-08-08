@@ -1,12 +1,19 @@
 # 西新世紀末物語 — Version 0.9.9.0 Release Notes
 
-更新日：2026-08-04
+更新日：2026-08-08
 
-Version 0.9.9.0は、戦闘中の操作、音響、boss／support演出、app iconを一つの体験として改善する品質更新です。実行正本は[Issue #136](https://github.com/SUSANO-OOO/Zombieee/issues/136)です。
+Version 0.9.9.0は、戦闘中の操作、音響、boss／support演出、CRAWLER表現、mobile HUD、app iconを一つの体験として改善した品質更新です。実行正本は[Issue #136](https://github.com/SUSANO-OOO/Zombieee/issues/136)です。
 
-この文書の時点ではrelease candidateです。正式URLは引き続きVersion 0.9.8.2を配信しており、Producer Gate B承認前に0.9.9.0を正式公開しません。
+**2026-08-08に正式公開完了しました。**
 
-正式URL：<https://susano-ooo.github.io/Zombieee/>
+- 正式URL：<https://susano-ooo.github.io/Zombieee/>
+- release SHA：`19a79404822ebc8f0cbd8a3b809b8ed0adbc28af`
+- release tree：`305af62474c8a1ea118251023ec4ad58bee17975`
+- annotated tag：`v0.9.9.0`
+- final main PR：#142
+- final remediation PR：#145
+- final independent audit：**APPROVE — High 0／Medium 0／Low 0**
+- Issue #136：`completed`
 
 ## プレイヤーが気づく変更
 
@@ -19,9 +26,10 @@ Version 0.9.9.0は、戦闘中の操作、音響、boss／support演出、app ic
 
 ### 戦況でBGMが変化します
 
-- 通常戦闘に加え、敵の圧力が高い状態のpressure BGM、boss BGMを追加しました。
-- surface／stationのstage familyごとにpressure sceneを分けています。
-- boss終了後は古い曲へ固定復帰せず、その時点のpressure状態から曲を再解決します。
+- normal／pressure／bossを別のproduction BGMとして整理しました。
+- Stage 3のTAKUYA incomingからboss生存中までboss BGMを維持し、無音sceneや旧track overrideへ落ちないよう修正しました。
+- boss終了後は、その時点のpressure／normal状態からBGMを再解決します。
+- persistent dialogue duckとtransient cue duckを分離し、entrance cue等がBGM stateを破壊しないようにしました。
 - pause、画面非表示、tab／lock復帰、mute、BGM／SE volumeの既存挙動を維持します。
 
 ### 全16人のability audioを明示化しました
@@ -36,14 +44,23 @@ Version 0.9.9.0は、戦闘中の操作、音響、boss／support演出、app ic
 - boss entranceを短い警報、視線誘導、名前表示、固有cueで構成しました。
 - boss defeatは停止、小爆発、中／大型爆発、火花、煙、破片、衝撃波、残留煙、決着cueの段階演出になりました。
 - explosive drumは影、上方投下、回転、dust／spark、bounceを経てactiveになります。
-- CRAWLERの屋根装備、砲塔、通信機器、barrage、airstrikeを車両と一体に見える表現へ改善しました。
+- CRAWLER deploymentはunit alpha 1を維持し、車体base／interior／foreground maskによる物理occlusionへ変更しました。矩形clipや意図しない透過を使用しません。
+- CRAWLERのbarrage／airstrikeは、車体へ接続されたproject-original pre-rendered RGBA装備へ変更しました。各7 semantic frameは微小移動ではなく構造的に異なる状態です。
+- barrageはstowed／hatch-open／turret-rise／aim／firing／recoil／retract、airstrikeはstowed／mast-deploy／antenna-extend／targeting／inbound-signal／impact-confirmation／retractを持ちます。
 - damage、cooldown、targeting、reward等のgameplay数値は変更していません。
 
-### app iconを感染者faceへ更新します
+### mobile HUDを再整理しました
+
+- 844×390／844×340で、top／bottom safe zoneの所有を明確化しました。
+- battle bannerを固定Canvas大型表示からDOMのserialized message領域へ移し、dialogue／boss／phase情報との衝突を解消しました。
+- 操作文言14px以上、副情報12px以上を基準にしつつ、UI全体を無条件に巨大化せず、戦場を隠さない情報優先度へ整理しました。
+- boss情報、CRAWLER警告、dialogue、bannerの重複・切断をbrowser evidenceで検査しました。
+
+### app iconを感染者faceへ更新しました
 
 - Producer承認A2を唯一のmasterとして、48／180／192／512／1024とmaskable iconを生成しました。
 - 感染者の異常眼と口をmaskable safe zone内に収め、48pxでも顔の主形状が残るようにしました。
-- icon pathは`/icons/v099/`へversioned追加し、旧icon filesはrollbackのため物理保持します。
+- icon pathはversioned追加し、旧icon filesはrollbackのため物理保持します。
 - PWA `id`、`start_url`、`scope`は変えていません。
 
 ## Transaction・save安全性
@@ -52,57 +69,56 @@ Version 0.9.9.0は、戦闘中の操作、音響、boss／support演出、app ic
 - rapid tap、retry、画面遷移、save遅延、先行成功＋後続失敗でも、caps、ownership、Level、receiptを一度だけ確定します。
 - save失敗時は成功popup／成功SEを出さず、旧saveを保持してlockを解放します。
 - save-pending中はpause、speed、deploy、support、manual ability、battlefield pointer、result／retryをblockingし、戦闘simulationも進めません。
-- save schemaはv14のままで、0.9.8.2の通貨、雇用、Level、equipment、解放、既読、records、audio／render settingsを保持します。
+- save schemaはv14のままで、旧saveの通貨、雇用、Level、equipment、解放、既読、records、audio／render settingsを保持します。
 
 ## PWA・offline・update
 
-- 完全pack：410 logical assets
-- logical bytes：86,794,856
-- distinct bytes：86,254,953
-- lossless WebP transport derivative：73
-- audio bundle：249 slices、17,604,607 bytes
+正式公開pack：
 
-Version 0.9.8.2からの差分updateは、43 logical downloads／41 distinct objects／7,199,431 bytesです。367 assetsは同一hashを再利用し、再downloadしません。
+- manifest：416 logical assets
+- logical bytes：89,970,119
+- distinct bytes：89,430,216
+- source manifest SHA-256：`34c336e32838e11e0920cc1698ad45d4a26a8baabe9b0953794b0cb64426901a`
+- audio bundle：250 slices、18,881,516 bytes
+- evidence index：286 files、combined SHA-256 `35606446df29d866a511911499f942adacea58ed3ddf15b0c668828a3ad66c8b`
 
 全assetのsize、SHA-256、Cache Storage保存、manifest commit ACKが完了するまでゲームを開始しません。未commit candidateをready扱いせず、commit-only recovery、active／previous generation、rollback、offline、saveとasset cacheの分離を維持します。
 
 ## Asset・権利
 
-- 追加36 audio assetsはproject-original recipe、master WAV、runtime MP3、provenance、SHA-256を記録しています。
-- production MP3 encoderを固定し、clean outputでmasterを再生成・検証できます。
-- A2 iconはproject-original generated rasterと承認master SHAを台帳化しています。
-- B2／C2、reference、alternate format、authoring masterはruntime distribution packへ入りません。
-- 外部・出所不明素材は使用していません。
+- 新規audio、icon、CRAWLER equipment rasterはproject-originalまたは正式に記録されたsource／provenanceを使用します。
+- CRAWLER barrage／airstrikeの各7状態masterはproject-originalで制作し、runtime RGBA sheetへ変換しています。
+- production assetのgenerator、hash、manifest membershipを検証します。
+- 外部・出所不明素材は正式採用していません。
 
-## QA
+## 最終QA
 
-工程PRでは次を確認しました。
+- final independent audit：High 0／Medium 0／Low 0
+- focused tests：398/398（final main audit時）
+- full tests：985/985
+- focused CRAWLER tests：8/8
+- ESLint、production build、content validation、generator／drift、evidence index、`git diff --check`：pass
+- PWA Chromium：34/34
+- PWA WebKit：33/33
+- save browser／migration matrix：78/78
+- 1280×720：pass
+- 844×390：pass
+- 844×340：pass
+- public title→map→loadout→assets ready→battle：pass
+- fresh／schema v13／schema v14 save：pass
+- IndexedDB delay／blocked、image.decode hang、低速network、optional asset hang fixture：pass
+- console error、page error、HTTP error、request failure、horizontal overflow：0
 
-- focused／full tests、ESLint、production build、content validation、`git diff --check`
-- atomic transaction、save boundary、aria-disabled、one input／one cue
-- normal／pressure／boss、16 ability、support、voice／SE混在
-- boss entrance／defeat、explosion、drum、CRAWLER／barrage／airstrike
-- Chromium／WebKit、1280×720、844×390、844×340
-- Pages base path `/Zombieee/`
-- PWA full install、差分update、active／previous、rollback、offline、reload recovery
-- save migration、破損復旧、export／import
-- manifest／audio bundle／lossless WebP drift
-- console／page／request／HTTP failure 0
-- 各工程の独立read-only review：High／Medium／Low 0
+## 残存する物理端末QA
 
-Playwright WebKitは物理iPhone確認ではありません。
+Playwright WebKitは物理iPhoneではありません。次は未確認です。
 
-## Gate Bで物理iPhone確認する項目
+- 物理iPhone本体speakerでの最終聴感
+- 物理iPhoneでの発熱
 
-- 0.9.8.2からのupdateとsave保持
-- UI SE、normal／pressure／boss、全16ability、voice／SE混在
-- boss entrance／defeat、drum、CRAWLER支援
-- home-screen icon更新挙動
-- touch、lock／tab復帰
-- 本体speaker、earphone
-- 発熱の明確な異常有無
+これらはGitHub Releaseへ残存QAとして明記済みです。後から物理端末固有の異常が見つかった場合、公開済み0.9.9.0のtag／Release／履歴を改変せず、新しいfollow-up Issueで扱います。
 
-OSのhome-screen icon cacheにより表示更新が遅れる場合、実装不具合とOS制約を分けて記録します。削除・再追加を通常成功条件にはしません。
+Issue #24 `[Backlog][Audio] 正式BGM・SE制作と物理端末聴感QA` はopenのまま維持します。
 
 ## 非対象
 
@@ -112,6 +128,8 @@ OSのhome-screen icon cacheにより表示更新が遅れる場合、実装不�
 - save初期化、cache全削除
 - App Store／Google Play／Capacitor
 
-## 公開境界
+## 公開記録
 
-最終integration RCは別チャットのSol Auditorが固定HEADをread-only reviewします。ProducerがGate Bで「公開してよい」と明示した後だけ、final main PR通常merge、annotated `v0.9.9.0`、GitHub Release、Pages manual dispatchを実行します。release SHAはfinal main PRのmerge resultです。
+PR #142はfinal independent audit High 0／Medium 0／Low 0確認後に通常mergeされ、merge result `19a79404822ebc8f0cbd8a3b809b8ed0adbc28af`をrelease SHAへ固定しました。annotated `v0.9.9.0`、GitHub Release、明示的Pages release request、Public QAを順に実行し、Issue #136は公開後QA成功後に`completed`としてcloseしました。
+
+`main`直接push、force push、共有履歴rebase／amend、既存tag移動は行っていません。

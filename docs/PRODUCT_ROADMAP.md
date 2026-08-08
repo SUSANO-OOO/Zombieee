@@ -1,10 +1,12 @@
 # 西新世紀末物語 — PRODUCT ROADMAP
 
-更新日：2026-08-04
+更新日：2026-08-08
 
 ## 1. 役割
 
-本書は現在からVersion 1.0以降までの長期目標と依存関係を管理します。現在のrelease、SHA、QA状態は[PROJECT_STATE](PROJECT_STATE.md)、Version 0.9.9.0の製品判断と実行は[Issue #136](https://github.com/SUSANO-OOO/Zombieee/issues/136)、恒久運用は[AGENTS.md](../AGENTS.md)が所有します。
+本書は現在からVersion 1.0以降までの長期目標と依存関係を管理します。現在のrelease、SHA、QA状態は[PROJECT_STATE](PROJECT_STATE.md)、恒久運用は[AGENTS.md](../AGENTS.md)が所有します。
+
+Versionごとの製品判断と実行は、そのVersionのProducer Decisions／実行台帳Issueを正本とします。完了済みVersionのIssueを次Versionの実行権限として再利用しません。
 
 ## 2. 長期製品目標
 
@@ -47,36 +49,51 @@
 - pause／resume／cancel／reload recovery、差分update、active／previous generation、rollback
 - saveとasset cacheの分離
 - audio bundle、lossless WebP transport derivative、初回全件取得時間の短縮
-- 正式公開中のVersion 0.9.8.2は374 logical assets、79,330,439 distinct bytes
 
-## 4. Version 0.9.9.0 — 戦闘体験・音響・演出・icon
+### Version 0.9.9.0 — 正式公開済み
 
 実行正本：[Issue #136](https://github.com/SUSANO-OOO/Zombieee/issues/136)
 
-状態：**PR1〜PR4 integration統合済み、Gate A合格、release-prep中**
+状態：**2026-08-08正式公開完了**
 
-目的：プレイヤーが操作、transaction、攻撃、命中、ability、boss、supportを音・映像・feedbackから明確かつ気持ちよく理解できる品質へ改善する。
+- release SHA：`19a79404822ebc8f0cbd8a3b809b8ed0adbc28af`
+- release tree：`305af62474c8a1ea118251023ec4ad58bee17975`
+- annotated tag：`v0.9.9.0`
+- final audit：APPROVE — High 0／Medium 0／Low 0
+- Issue #136：completed
 
 統合内容：
 
 - UI操作SE、reject feedback、atomic雇用／強化transaction、save-pending battle boundary
 - normal／pressure／boss BGM、全16ability audio、semantic receipt ledger
-- boss entrance／defeat、explosion、drum arrival、CRAWLER／barrage／airstrike presentation
+- boss entrance／defeat、explosion、drum arrival、CRAWLER deployment／barrage／airstrike presentation
+- 844×390／844×340 mobile HUD safe-zone／readability修正
 - Producer承認A2によるversioned infected-face app icon
-- project-original audio／icon provenance、PWA manifest／bundle integration
+- project-original audio／icon／CRAWLER equipment provenance、PWA manifest／bundle integration
 
-維持する境界：
+公開後manifest：416 assets、89,970,119 logical bytes、89,430,216 distinct bytes。save schema v14、PWA active／previous／rollback／offline契約は維持しています。
 
-- new Stage／unit／gameplay systemを追加しない
-- damage、cooldown、targeting、reward、save schemaを変更しない
-- AudioMixer／Service Worker／PWAを全面再設計しない
-- 0.9.8.2 save、通貨、雇用、Level、equipment、解放、既読、records、settingsを保持
+物理iPhone本体speakerの聴感と発熱は未確認の残存QAであり、後続Issueで扱います。
 
-公開gate：別チャットのSol Auditor Finding 0とProducer Gate Bの明示承認後だけ、final main merge、annotated tag、GitHub Release、Pages manual dispatchへ進む。
+## 4. 今後の実装方式
+
+今後のVersion実装は、製品判断と実装責務を分離します。
+
+1. Producerが一つの主目的、non-goal、受入境界を固定
+2. **Sol Design Lead**が現行コードと正本を調査し、実装方式、責務、変更範囲、test／QA、PR分割、停止条件を設計
+3. **Luna Implementation Lead**がSol設計を正本としてコード／asset／test／QA／PRを実装
+4. Design Leadとは別コンテキストの**Sol Auditor**がfixed HEADをread-only監査
+5. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけintegration／main／releaseへ進む
+
+Codexの`/goal`は、**長時間かどうかではなく、同じ達成目標を複数工程・checkpoint・反復検証にわたって保持する必要があるか**で判断します。Version／featureの正式設計、複数moduleをまたぐ実装、実装→QA→修正→PR、audit remediation、release missionは`/goal`対象です。read-only確認、単発test、typo修正、設計判断を伴わない小さな単一file修正等は通常promptで処理できます。
+
+SolとLunaが`/goal`を使う場合は設計goalと実装goalを分離します。Lunaが重大な設計欠落を見つけた場合は独自再設計せずSolへ戻し、Design Lead Sol自身を最終独立Auditorにしません。
+
+詳細は[AGENTS.md](../AGENTS.md)を正本とします。
 
 ## 5. Version 0.9.9.0以降
 
-次Versionは0.9.9.0の公開後実測とIssue #24の残音響項目を確認してから、一つの主目的を新Issueで固定します。自動的に次の全項目を同時採用しません。
+次Versionの主目的は**未確定**です。0.9.9.0の公開後実測、Issue #24の残音響項目、Producer判断を確認してから、新しい実行台帳Issueで一つだけ固定します。
 
 候補：
 
@@ -86,6 +103,8 @@
 - equipment／formation synergy等の横成長
 - Challenge／boss rush等のSurvival派生
 - PWA payload／update／mobile performanceの継続改善
+
+候補は方向性の在庫であり、自動採用ではありません。複数候補を一つのVersionへ無条件に詰め込みません。
 
 ## 6. Version 1.0
 
@@ -109,3 +128,4 @@ Stage 50、30unitは完成基準であり、将来上限ではありません。
 - 物理iPhoneはspeaker、earphone、touch、home-screen icon、lock復帰、発熱を検証する
 - AI auto-playの敗北だけを難易度blockerにしない
 - 人間の楽しさ、読みやすさ、難易度、art directionは人手受入が所有する
+- implementation完了はtest本数だけでなく、Sol設計のacceptance criteriaと実ゲーム証拠で判定する
