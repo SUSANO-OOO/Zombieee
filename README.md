@@ -55,7 +55,7 @@ Version 0.9.9.0は、戦闘体験・音響・演出・app iconの品質更新で
 4. Design Leadとは別コンテキストの**Sol Auditor**が固定HEADをread-only監査
 5. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけmerge／公開へ進む
 
-Solの設計runとLunaの実装runは、Codexの`/goal`をそれぞれ独立して設定してから開始します。goalにはobjective、検証可能な停止条件、参照正本、non-goal、validation、checkpoint、停止条件を含めます。詳細な恒久ルールは[AGENTS.md](AGENTS.md)を正本とします。
+Codexの`/goal`は、時間の長短ではなく**複数工程・複数checkpoint・反復検証をまたいで同じ目標を追う必要があるmission**で使用します。Version／featureの正式設計、複数moduleをまたぐ実装、実装→QA→修正→PR、audit remediation、release工程等ではSolとLunaがそれぞれ独立した`/goal`を使います。一方、read-only確認、単発test、typo修正、設計判断を伴わない小さな単一file修正等は通常promptで処理できます。詳細な判定基準は[AGENTS.md](AGENTS.md)を正本とします。
 
 ## 文書
 
