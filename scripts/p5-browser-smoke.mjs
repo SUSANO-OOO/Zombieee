@@ -15,6 +15,7 @@ import {
   STORY_EVENT_IDS,
   STORY_EVENTS,
 } from "../app/storyEvents.js";
+import { publicDisplayText } from "../app/publicDisplayNames.js";
 
 const baseUrl = new URL(process.env.P5_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (baseUrl.hostname !== "localhost" && baseUrl.hostname !== "127.0.0.1") {
@@ -105,7 +106,7 @@ function invariant(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-invariant(expectedTakuyaBossAssetId === "music-v099-boss",
+invariant(expectedTakuyaBossAssetId === "music-boss",
   `Stage 3 boss manifest route drifted: ${expectedTakuyaBossAssetId}`);
 invariant(expectedTakuyaPostBossAssetId === "music-v099-pressure-surface",
   `Stage 3 post-boss manifest route drifted: ${expectedTakuyaPostBossAssetId}`);
@@ -772,6 +773,8 @@ async function auditStoryEvent({ page, diagnostics, engine, viewport, eventId })
 
   for (const [index, expectedLine] of expectedLines.entries()) {
     const expectedLineSceneId = sceneIdForStoryEvent(eventId, index);
+    const expectedSpeaker = publicDisplayText(expectedLine.speaker);
+    const expectedText = publicDisplayText(expectedLine.text);
     await page.waitForFunction(
       ({ speaker, text, expectedLineSceneId }) => (
         document.querySelector(".dialogue-name b")?.textContent === speaker
@@ -779,15 +782,15 @@ async function auditStoryEvent({ page, diagnostics, engine, viewport, eventId })
         && document.documentElement.dataset.audioScene === expectedLineSceneId
         && window.__ASHFALL_AUDIO_QA__?.getDiagnostics?.().desiredSceneId === expectedLineSceneId
       ),
-      { speaker: expectedLine.speaker, text: expectedLine.text, expectedLineSceneId },
+      { speaker: expectedSpeaker, text: expectedText, expectedLineSceneId },
       { timeout },
     );
     const evidence = await readLayoutAndAudio(page);
     invariant(evidence.screen === "event", `${label}/${index} left the event screen`);
-    invariant(evidence.speaker === expectedLine.speaker,
-      `${label}/${index} speaker mismatch: ${evidence.speaker} !== ${expectedLine.speaker}`);
-    invariant(evidence.text === expectedLine.text,
-      `${label}/${index} text mismatch: ${evidence.text} !== ${expectedLine.text}`);
+    invariant(evidence.speaker === expectedSpeaker,
+      `${label}/${index} speaker mismatch: ${evidence.speaker} !== ${expectedSpeaker}`);
+    invariant(evidence.text === expectedText,
+      `${label}/${index} text mismatch: ${evidence.text} !== ${expectedText}`);
     invariant(
       evidence.eventPortraits.total === 1
         && evidence.eventPortraits.active === 1
@@ -1735,7 +1738,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
         return finalLines.every((line) => samples.some((sample) => (
           sample.snapshot?.bossDefeated === false
           && sample.audioScene === expectedSceneId
-          && (!requireActiveBgm || sample.audioSceneState?.bgmAssetId === "music-v099-boss")
+          && (!requireActiveBgm || sample.audioSceneState?.bgmAssetId === "music-boss")
           && sample.snapshot?.battleBarks?.active?.some((bark) => (
             bark.scripted === true
             && bark.scriptedCueId?.includes("stage-takuya-final-v070")
@@ -1802,7 +1805,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
         && sample.snapshot?.battleBarks?.active?.some((bark) => (
           bark.scripted === true && bark.text === line.text
         ))
-      )), `${label} final line was not rendered under ${expectedTakuyaBossSceneId}/music-v099-boss: ${line.text}`);
+      )), `${label} final line was not rendered under ${expectedTakuyaBossSceneId}/music-boss: ${line.text}`);
     }
     invariant(!samples.some((sample) => (
       sample.snapshot?.bossDefeated === false
@@ -1824,8 +1827,8 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
         sample.snapshot?.bossDefeated === false
         && sample.audioDesiredScene === expectedTakuyaBossSceneId
         && sample.audioRuntimeScene === expectedTakuyaBossSceneId
-        && sample.audioSceneState?.bgmAssetId === "music-v099-boss"
-      )), `${label} production mixer did not keep music-v099-boss active through the final story event`);
+        && sample.audioSceneState?.bgmAssetId === "music-boss"
+      )), `${label} production mixer did not keep music-boss active through the final story event`);
       invariant(samples.some((sample) => sample.audioRuntimeScene === expectedTakuyaPostBossSceneId),
         `${label} production mixer did not restore the current Stage 3 pressure scene`);
     }

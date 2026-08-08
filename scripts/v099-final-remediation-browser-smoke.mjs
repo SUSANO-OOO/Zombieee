@@ -351,7 +351,13 @@ async function staticRuntimeEvidence() {
 }
 
 async function measureHud(page, viewport, label) {
-  const expectedLayout = mobileBattleHudLayout(viewport);
+  const expectedLayout = mobileBattleHudLayout({
+    ...viewport,
+    safeAreaTop: 0,
+    safeAreaRight: 44,
+    safeAreaBottom: 21,
+    safeAreaLeft: 44,
+  });
   invariant(expectedLayout, `${label}: no mobile HUD contract for ${viewport.width}x${viewport.height}`);
   const measured = await page.evaluate(({ expectedTypography }) => {
     const rect = (element) => {
@@ -441,6 +447,10 @@ async function measureHud(page, viewport, label) {
     const bossLabel = bossHeading?.querySelector("span") ?? null;
     const bossValue = bossHeading?.querySelector("b") ?? null;
     const crawlerAlert = document.querySelector(".crawler-alert");
+    const unitStrip = document.querySelector(".unit-cards");
+    const unitStripRect = rect(unitStrip);
+    const unitSlots = [...document.querySelectorAll(".unit-cards > .unit-card")];
+    const unitSlotRects = unitSlots.map((element) => rect(element));
     const disabled = [...document.querySelectorAll("button[aria-disabled='true']")]
       .filter(visible)
       .map((button) => {
@@ -478,6 +488,21 @@ async function measureHud(page, viewport, label) {
       bossValue: rect(bossValue),
       crawlerAlert: rect(crawlerAlert),
       bossCrawlerAlertOverlap: overlap(boss, crawlerAlert),
+      unitSlots: {
+        logical: unitSlots.length,
+        placeholders: unitSlots.filter((element) => element.classList.contains("unit-card-placeholder")).length,
+        placeholderButtons: unitSlots.filter((element) => element.classList.contains("unit-card-placeholder") && element instanceof HTMLButtonElement).length,
+        visible: unitSlotRects.filter((slot) => Boolean(slot)
+          && slot.left >= (rect(unitStrip)?.left ?? 0) - 1
+          && slot.right <= (rect(unitStrip)?.right ?? 0) + 1).length,
+        allPainted: unitSlotRects.every((slot) => Boolean(slot) && slot.width > 0 && slot.height > 0),
+        finalOffset: unitSlotRects.at(-1) && unitStripRect
+          ? unitSlotRects.at(-1).right - unitStripRect.left
+          : 0,
+        scrollWidth: unitStrip?.scrollWidth || 0,
+        clientWidth: unitStrip?.clientWidth || 0,
+      },
+      publicBattleText: document.body.innerText,
       fontChecks,
       disabled,
       disabledUnitCount: disabled.filter(({ className }) => String(className).includes("unit-card")).length,
@@ -497,14 +522,14 @@ async function measureHud(page, viewport, label) {
     `${label}: top HUD zones overlap`);
   invariant(measured.bottomPairOverlaps.every(({ overlaps }) => !overlaps),
     `${label}: bottom HUD zones overlap`);
-  const expectedTopHeight = expectedLayout.topHeight + measured.safeInsets.top;
-  const expectedBottomHeight = expectedLayout.bottomHeight + measured.safeInsets.bottom;
+  const expectedTopHeight = expectedLayout.topHeight;
+  const expectedBottomHeight = expectedLayout.bottomHeight;
   invariant(Math.abs(measured.top.height - expectedTopHeight) <= 2,
     `${label}: top HUD height ${measured.top.height}/${expectedTopHeight}`);
   invariant(Math.abs(measured.bottom.height - expectedBottomHeight) <= 2,
     `${label}: bottom HUD height ${measured.bottom.height}/${expectedBottomHeight}`);
   const clearBattlefieldHeight = measured.bottom.top - measured.top.bottom;
-  const expectedBattlefieldHeight = viewport.height - expectedTopHeight - expectedBottomHeight;
+  const expectedBattlefieldHeight = expectedLayout.battlefield.height;
   invariant(clearBattlefieldHeight >= expectedBattlefieldHeight - 2,
     `${label}: battlefield band ${clearBattlefieldHeight}/${expectedBattlefieldHeight}`);
   invariant(measured.fontChecks.length > 0, `${label}: no visible HUD typography was audited`);
@@ -512,6 +537,16 @@ async function measureHud(page, viewport, label) {
     `${label}: undersized HUD text ${JSON.stringify(measured.fontChecks.filter(({ fontSize, minimum }) => fontSize + .01 < minimum))}`);
   invariant(measured.fontChecks.every(({ fits }) => fits),
     `${label}: truncated HUD text ${JSON.stringify(measured.fontChecks.filter(({ fits }) => !fits))}`);
+  invariant(measured.unitSlots.logical === 7 && measured.unitSlots.allPainted,
+    `${label}: seven logical unit slots were not rendered ${JSON.stringify(measured.unitSlots)}`);
+  invariant(measured.unitSlots.visible >= 4,
+    `${label}: fewer than four unit slots are visible ${JSON.stringify(measured.unitSlots)}`);
+  invariant(measured.unitSlots.finalOffset <= measured.unitSlots.scrollWidth + 1,
+    `${label}: unit strip cannot reach its final logical slot ${JSON.stringify(measured.unitSlots)}`);
+  invariant(measured.unitSlots.placeholderButtons === 0,
+    `${label}: empty unit placeholders became interactive ${JSON.stringify(measured.unitSlots)}`);
+  invariant(!/CRAWLER|クローラー/iu.test(measured.publicBattleText),
+    `${label}: internal CRAWLER wording leaked into player-facing battle text`);
   if (measured.banner && measured.bark) {
     invariant(!measured.bannerBarkOverlap, `${label}: battle banner overlaps battle bark`);
   }

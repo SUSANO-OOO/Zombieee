@@ -37,10 +37,15 @@ function finiteDimension(value) {
   return Number.isFinite(dimension) && dimension > 0 ? dimension : 0;
 }
 
-function horizontalZone(width, y, height, range) {
-  const x = Math.round(width * range.start);
-  const end = Math.round(width * range.end);
-  return freezeRect({ x, y, width: end - x, height });
+function finiteInset(value, maximum) {
+  const inset = Number(value);
+  return Number.isFinite(inset) && inset > 0 ? Math.min(maximum, inset) : 0;
+}
+
+function horizontalZone(rect, height, range) {
+  const x = rect.x + Math.round(rect.width * range.start);
+  const end = rect.x + Math.round(rect.width * range.end);
+  return freezeRect({ x, y: rect.y, width: end - x, height });
 }
 
 function insetRect(rect, insetX, top, height) {
@@ -57,33 +62,53 @@ function insetRect(rect, insetX, top, height) {
  * may implement the rectangles with grid percentages, but it must preserve
  * these ownership boundaries and type minima.
  */
-export function mobileBattleHudLayout({ width, height } = {}) {
+export function mobileBattleHudLayout({
+  width,
+  height,
+  safeAreaTop = 0,
+  safeAreaRight = 0,
+  safeAreaBottom = 0,
+  safeAreaLeft = 0,
+} = {}) {
   const viewportWidth = finiteDimension(width);
   const viewportHeight = finiteDimension(height);
   if (viewportWidth !== 844 || ![340, 390].includes(viewportHeight)) return null;
 
+  const normalizedSafeAreaTop = finiteInset(safeAreaTop, viewportHeight);
+  const normalizedSafeAreaRight = finiteInset(safeAreaRight, viewportWidth);
+  const normalizedSafeAreaBottom = finiteInset(safeAreaBottom, viewportHeight - normalizedSafeAreaTop);
+  const normalizedSafeAreaLeft = finiteInset(safeAreaLeft, viewportWidth - normalizedSafeAreaRight);
+  const safeArea = Object.freeze({
+    top: normalizedSafeAreaTop,
+    right: normalizedSafeAreaRight,
+    bottom: normalizedSafeAreaBottom,
+    left: normalizedSafeAreaLeft,
+  });
+  const content = freezeRect({
+    x: safeArea.left,
+    y: safeArea.top,
+    width: Math.max(0, viewportWidth - safeArea.left - safeArea.right),
+    height: Math.max(0, viewportHeight - safeArea.top - safeArea.bottom),
+  });
   const compact = viewportHeight === 340;
   const topHeight = compact ? 54 : 60;
   const bottomHeight = compact ? 74 : 82;
   const metaHeight = 20;
-  const bottomY = viewportHeight - bottomHeight;
+  const bottomY = content.y + content.height - bottomHeight;
 
   const top = Object.freeze({
     crawler: horizontalZone(
-      viewportWidth,
-      0,
+      content,
       topHeight,
       MOBILE_BATTLE_HUD_ZONE_RATIOS.top.crawler,
     ),
     communication: horizontalZone(
-      viewportWidth,
-      0,
+      content,
       topHeight,
       MOBILE_BATTLE_HUD_ZONE_RATIOS.top.communication,
     ),
     controls: horizontalZone(
-      viewportWidth,
-      0,
+      content,
       topHeight,
       MOBILE_BATTLE_HUD_ZONE_RATIOS.top.controls,
     ),
@@ -95,20 +120,17 @@ export function mobileBattleHudLayout({ width, height } = {}) {
 
   const bottom = Object.freeze({
     resources: horizontalZone(
-      viewportWidth,
-      bottomY,
+      { ...content, y: bottomY },
       bottomHeight,
       MOBILE_BATTLE_HUD_ZONE_RATIOS.bottom.resources,
     ),
     units: horizontalZone(
-      viewportWidth,
-      bottomY,
+      { ...content, y: bottomY },
       bottomHeight,
       MOBILE_BATTLE_HUD_ZONE_RATIOS.bottom.units,
     ),
     support: horizontalZone(
-      viewportWidth,
-      bottomY,
+      { ...content, y: bottomY },
       bottomHeight,
       MOBILE_BATTLE_HUD_ZONE_RATIOS.bottom.support,
     ),
@@ -116,13 +138,15 @@ export function mobileBattleHudLayout({ width, height } = {}) {
 
   return Object.freeze({
     viewport: Object.freeze({ width: viewportWidth, height: viewportHeight }),
+    safeArea,
+    content,
     topHeight,
     bottomHeight,
     battlefield: freezeRect({
-      x: 0,
-      y: topHeight,
-      width: viewportWidth,
-      height: bottomY - topHeight,
+      x: content.x,
+      y: content.y + topHeight,
+      width: content.width,
+      height: Math.max(0, bottomY - (content.y + topHeight)),
     }),
     top,
     communication: Object.freeze({
@@ -161,4 +185,25 @@ export function mobileBattleHudLayout({ width, height } = {}) {
     typography: MOBILE_BATTLE_HUD_TYPOGRAPHY,
     readability: MOBILE_BATTLE_HUD_READABILITY,
   });
+}
+
+/**
+ * Renders the selected formation as a fixed seven-slot logical strip. Empty
+ * slots are inert presentation placeholders; they never become buttons or
+ * enter the save/gameplay path.
+ */
+export function mobileBattleHudUnitSlots(cards = [], formationKinds = [], maxSlots = 7) {
+  const limit = Math.max(0, Math.floor(Number(maxSlots) || 0));
+  const byKind = new Map((Array.isArray(cards) ? cards : [])
+    .filter((card) => card && typeof card.kind === "string")
+    .map((card) => [card.kind, card]));
+  const selected = (Array.isArray(formationKinds) ? formationKinds : [])
+    .filter((kind, index, values) => typeof kind === "string" && values.indexOf(kind) === index)
+    .map((kind) => byKind.get(kind))
+    .filter(Boolean)
+    .slice(0, limit);
+  return Object.freeze([
+    ...selected,
+    ...Array.from({ length: Math.max(0, limit - selected.length) }, () => null),
+  ]);
 }

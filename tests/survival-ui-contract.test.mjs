@@ -19,7 +19,7 @@ test("Survival battle HUD exposes required wave, boss, speed, and CRAWLER contro
   assert.match(ashfallSource, /className="survival-hud"/);
   assert.match(ashfallSource, />WAVE</);
   assert.match(ashfallSource, />NEXT BOSS</);
-  assert.match(ashfallSource, />CRAWLER HP</);
+  assert.match(ashfallSource, /publicDisplayText\("CRAWLER HP"\)/);
   assert.match(ashfallSource, /changeSurvivalSpeed\(1\).*?>1倍</s);
   assert.match(ashfallSource, /changeSurvivalSpeed\(2\).*?>2倍</s);
   assert.match(ashfallSource, /survivalHud\.speedLocked/);

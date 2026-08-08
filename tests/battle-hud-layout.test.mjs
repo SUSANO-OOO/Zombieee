@@ -4,6 +4,7 @@ import {
   MOBILE_BATTLE_HUD_READABILITY,
   MOBILE_BATTLE_HUD_TYPOGRAPHY,
   MOBILE_BATTLE_HUD_ZONE_RATIOS,
+  mobileBattleHudUnitSlots,
   mobileBattleHudLayout,
 } from "../app/battleHudLayout.js";
 
@@ -20,12 +21,12 @@ function bottom(rect) {
   return rect.y + rect.height;
 }
 
-function assertHorizontalPartition(zones, width, label) {
-  assert.equal(zones[0].x, 0, `${label} starts at viewport edge`);
+function assertHorizontalPartition(zones, start, end, label) {
+  assert.equal(zones[0].x, start, `${label} starts at content edge`);
   for (let index = 1; index < zones.length; index += 1) {
     assert.equal(zones[index].x, right(zones[index - 1]), `${label} gap or overlap at ${index}`);
   }
-  assert.equal(right(zones.at(-1)), width, `${label} ends at viewport edge`);
+  assert.equal(right(zones.at(-1)), end, `${label} ends at content edge`);
 }
 
 test("mobile battle HUD fixes top ownership at 0-28%, 28-66%, and 66-100%", () => {
@@ -45,7 +46,7 @@ test("mobile battle HUD fixes top ownership at 0-28%, 28-66%, and 66-100%", () =
       [Math.round(844 * .28), Math.round(844 * .66)],
     );
     assert.deepEqual([controls.x, right(controls)], [Math.round(844 * .66), 844]);
-    assertHorizontalPartition([crawler, communication, controls], 844, `${viewport.height}/top`);
+    assertHorizontalPartition([crawler, communication, controls], 0, 844, `${viewport.height}/top`);
   }
 });
 
@@ -59,14 +60,37 @@ test("bottom ownership keeps resources, unit cards, and support/objective in sep
   for (const viewport of RELEASE_VIEWPORTS) {
     const layout = mobileBattleHudLayout(viewport);
     const { resources, units, support } = layout.bottom;
-    assertHorizontalPartition([resources, units, support], 844, `${viewport.height}/bottom`);
-    assert.ok(resources.width >= 118, "resource/state column remains readable");
-    assert.ok(units.width >= 422, "five unit cards retain their center ownership");
-    assert.ok(support.width >= 304, "support/CRAWLER controls retain their right ownership");
+    assertHorizontalPartition([resources, units, support], 0, 844, `${viewport.height}/bottom`);
+    assert.ok(resources.width >= 104, "resource/state column remains readable");
+    assert.ok(units.width >= 376, "unit strip retains its center ownership");
+    assert.ok(support.width >= 268, "support controls retain their right ownership");
     assert.equal(layout.bottomContent.objective.x, units.x);
     assert.equal(right(layout.bottomContent.objective), 844);
     assert.equal(layout.bottomContent.stats.x, 0);
     assert.equal(right(layout.bottomContent.stats), resources.width);
+  }
+});
+
+test("safe-area insets are deducted once from the shared content rectangle", () => {
+  for (const viewport of RELEASE_VIEWPORTS) {
+    const layout = mobileBattleHudLayout({
+      ...viewport,
+      safeAreaTop: 0,
+      safeAreaRight: 44,
+      safeAreaBottom: 21,
+      safeAreaLeft: 44,
+    });
+    assert.ok(layout);
+    assert.deepEqual(layout.safeArea, { top: 0, right: 44, bottom: 21, left: 44 });
+    assert.deepEqual(layout.content, { x: 44, y: 0, width: 756, height: viewport.height - 21 });
+    assert.equal(layout.top.crawler.x, 44);
+    assert.equal(right(layout.top.controls), 800);
+    assert.equal(layout.bottom.resources.x, 44);
+    assert.equal(right(layout.bottom.support), 800);
+    assert.equal(bottom(layout.bottom.support), viewport.height - 21);
+    assert.ok(layout.bottom.resources.width >= 104);
+    assert.ok(layout.bottom.support.width >= 268);
+    assert.equal(right(layout.bottomContent.objective), 800);
   }
 });
 
@@ -120,4 +144,26 @@ test("the focused helper does not silently claim unsupported desktop or portrait
   assert.equal(mobileBattleHudLayout({ width: 1280, height: 720 }), null);
   assert.equal(mobileBattleHudLayout({ width: 390, height: 844 }), null);
   assert.equal(mobileBattleHudLayout({ width: 844, height: 0 }), null);
+});
+
+test("the battle strip always exposes seven logical slots without making empty slots interactive", () => {
+  const cards = [
+    { kind: "brawler", name: "パイセン" },
+    { kind: "scout", name: "ハチ" },
+    { kind: "ranger", name: "ミズチ" },
+    { kind: "medic", name: "ナオ" },
+    { kind: "brute", name: "タタラ" },
+    { kind: "gunner", name: "レイダー" },
+    { kind: "guardian", name: "ガンテツ" },
+  ];
+  for (const [formation, expectedCards] of [
+    [["brawler"], 1],
+    [["brawler", "scout", "ranger"], 3],
+    [cards.map((card) => card.kind), 7],
+  ]) {
+    const slots = mobileBattleHudUnitSlots(cards, formation);
+    assert.equal(slots.length, 7);
+    assert.equal(slots.filter(Boolean).length, expectedCards);
+    assert.equal(slots.filter((slot) => slot === null).length, 7 - expectedCards);
+  }
 });
