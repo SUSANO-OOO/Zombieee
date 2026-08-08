@@ -8,7 +8,7 @@
 
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
 - 公開中version：**Version 0.9.9.0**
-- `main`／release SHA：`19a79404822ebc8f0cbd8a3b809b8ed0adbc28af`
+- 公開release SHA：`19a79404822ebc8f0cbd8a3b809b8ed0adbc28af`
 - release tree：`305af62474c8a1ea118251023ec4ad58bee17975`
 - annotated tag：`v0.9.9.0`
 - GitHub Release：Version 0.9.9.0
@@ -18,6 +18,8 @@
 - final remediation HEAD：`50ec6cec553c155303a895891bf867d387024e8c`
 - final main PR：#142
 - final remediation PR：#145
+
+`main` HEADは動的な開発状態であり、release後のdocs-only merge等により公開release SHAより先へ進む場合があります。この文書へ`main` HEADを固定値として埋め込まず、作業開始時・PR操作前・release前にGitHubのlive値を再取得します。公開版のimmutable identityは上記release SHA／tree／tag／GitHub Releaseで判定します。
 
 Version 0.9.9.0のfinal independent auditは**APPROVE — High 0／Medium 0／Low 0**です。PR #142は通常merge済み、Issue #136は公開後QA成功後に`completed`としてclose済みです。
 
