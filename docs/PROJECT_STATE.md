@@ -99,9 +99,9 @@ PWAは全件のsize／SHA-256検証、Cache Storage保存、manifest commit ACK�
 4. Design Leadとは別コンテキストの**Sol Auditor**が固定HEADをread-only監査
 5. High／Medium未解消0と対象Versionのrelease gateを満たした場合だけmerge／公開
 
-Sol設計runとLuna実装runは、taskの大小に関係なくCodexの`/goal`をそれぞれ独立して設定してから開始します。設計goalと実装goalを混在させず、objective、検証可能な停止条件、required sources、non-goal、validation loop、checkpoint、pause／stop conditionsを明記します。
+Codexの`/goal`は、時間の長短ではなく、複数工程・複数checkpoint・反復検証をまたいで同じ達成目標を保持する必要があるmissionで使用します。Version／featureの正式設計、複数moduleをまたぐ実装、実装→QA→修正→PR、audit remediation、release工程等はgoal-managed missionです。read-only確認、単発test、typo修正、設計判断を伴わない小さな単一file修正等は通常promptで処理できます。
 
-詳細な恒久ルールは`AGENTS.md`を正本とします。Lunaが実装中に重大な設計欠落を発見した場合は独自再設計せずSolへ戻し、Sol AuditorはDesign Lead Solとは別コンテキストで行います。
+SolとLunaが`/goal`を使う場合、設計goalと実装goalは分離します。Lunaが実装中に重大な設計欠落を発見した場合は独自再設計せずSolへ戻し、Sol AuditorはDesign Lead Solとは別コンテキストで行います。詳細な判定基準は`AGENTS.md`を正本とします。
 
 ## 6. 次Versionの状態
 
@@ -121,6 +121,6 @@ Issue #24 `[Backlog][Audio] 正式BGM・SE制作と物理端末聴感QA` はopen
 - smartphone横画面を第一基準、PC横画面も正式対応
 - 本編Stage 1〜20、Survival、16 playable units、Level 1〜50基盤を維持
 - `main`直接push、force push、rebase、amend、既存tag移動、save初期化、cache全削除、ライセンス不明asset採用は禁止
-- Sol設計／Luna実装はtaskの大小に関係なく毎回`/goal`を設定してから開始する
+- goal-managed missionは`AGENTS.md`の判定基準に従って`/goal`を使用する
 
 長期方向は[PRODUCT_ROADMAP](PRODUCT_ROADMAP.md)、公開・復元は[RELEASE_BACKUP_RECOVERY](RELEASE_BACKUP_RECOVERY.md)を参照してください。
