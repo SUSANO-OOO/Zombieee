@@ -17,7 +17,7 @@
 5. 最新`main`のコード、tests、QA記録
 6. 工程別Issue、PR、実装・QA記録
 
-Version 0.9.9.0はIssue #136を実行正本として正式公開・close済みであり、以後の新規実装の実行権限として再利用しない。次Versionは、Producerが主目的を固定し、新しい実行台帳IssueまたはProducer Decisionsを作成してから設計へ入る。
+Version 0.9.9.0はIssue #136を実行正本として正式公開・close済みであり、以後の新規実装の実行権限として再利用しない。次VersionはProducerが主目的を固定し、新しい実行台帳IssueまたはProducer Decisionsを作成してから設計へ入る。
 
 製品判断はProducer Decisions、実行台帳は対象Issue、恒久安全境界は本書が所有する。過去コメント、旧PR、旧ロードマップ、会話上の検討案が現行正本と衝突する場合は採用しない。
 
@@ -31,6 +31,9 @@ Version 0.9.9.0はIssue #136を実行正本として正式公開・close済み�
 - 現在状態：`docs/PROJECT_STATE.md`
 - 長期方向：`docs/PRODUCT_ROADMAP.md`
 - 公開・復元：`docs/RELEASE_BACKUP_RECOVERY.md`
+- 2スレッド実行手順：`docs/CODEX_TWO_THREAD_WORKFLOW.md`
+- Sol専用規約：`docs/CODEX_SOL_ROLE.md`
+- Luna専用規約：`docs/CODEX_LUNA_ROLE.md`
 - 実行ログ・承認・QA：対象IssueとPR
 - 実環境固有挙動：最新の実ブラウザQA
 
@@ -38,143 +41,241 @@ Version 0.9.9.0はIssue #136を実行正本として正式公開・close済み�
 
 ChatGPT Sitesは旧公開先であり、新規deployment、QA、正式判定、障害復旧に使用しない。
 
-## 3. 役割と実装分業
+## 3. 標準実装トポロジー
 
-- プロデューサー：製品方向、主目的、固定判断、正式人物identity、画像採否、公開可否を決定する。
-- ChatGPT：要件整理、GitHub正本整備、Solへの設計依頼、Lunaへの実装引き渡し、監査結果評価、工程判断を担当する。
-- **Sol Design Lead**：実装前の設計担当。現行コード、対象Issue、既存contract、save／PWA／release境界を調査し、実装方式、責務、data contract、変更file範囲、non-goal、受入条件、test／QA、PR分割を固定する。原則として製品実装コードを書かない。
-- **Luna Implementation Lead**：Solが固定した設計を正本として実装する。コード、asset、test、QA、通常commit／push、Draft PRを担当し、設計外のscopeを独自追加しない。
-- **Sol Auditor**：Design Leadとは別の新規コンテキストで固定HEADをread-only監査する。設計担当Sol自身による自己監査を最終独立監査として扱わない。
-- Claude Code：明示された限定範囲だけの一時代行。
-- サブエージェント：限定調査、証拠収集、read-only review。最終製品判断を代行しない。
+通常のVersion／feature実装は、**同じプロジェクト内の2つの固定スレッドを順番に使用する**。
 
-### 3.1 Sol Design Leadの完了条件
+- **Sol thread**：全体設計 → 待機 → Luna完了後の最終review → 必要時の限定remediation
+- **Luna thread**：Sol設計を受領 → 実装 → trial-and-error → self-review → Solへ返却 → 必要時のvalidation
 
-Solは実装を開始する前に、最低限次を確定する。
+### 3.1 絶対条件
 
+- SolとLunaを同じmissionで同時並行に走らせない
+- 自動的にSolからLuna、LunaからSolへroleを切り替えない
+- Sol threadが通常のLuna実装を代行しない
+- Luna threadがSol設計を勝手に再設計しない
+- 一方のphaseがhandoff可能な状態になってから、もう一方へ人間または司令塔が明示的に渡す
+- 同じSol threadを、最初の設計とLuna完了後の最終reviewに再利用する
+
+各phase開始時、最初の進行報告で次のいずれか一つを明示する。
+
+Sol thread:
+
+- `ROLE_LOCK: SOL_DESIGN`
+- `ROLE_LOCK: SOL_FINAL_REVIEW`
+- `ROLE_LOCK: SOL_REMEDIATION`
+
+Luna thread:
+
+- `ROLE_LOCK: LUNA_IMPLEMENTATION`
+- `ROLE_LOCK: LUNA_VALIDATION`
+
+同時に複数の`ROLE_LOCK`を有効にしない。
+
+## 4. 役割
+
+- **Producer**：製品方向、主目的、固定判断、正式人物identity、画像採否、公開可否を決定する
+- **ChatGPT／司令塔**：要件整理、GitHub正本整備、Solへの設計依頼、Sol→Luna→Solのhandoff、結果評価、工程判断を担当する
+- **Sol Design Lead／Final Reviewer**：全体設計を細かく固定し、Lunaが実装を終えた後は同じSol threadで最終reviewを行う
+- **Luna Implementation Lead**：Sol設計を正本として実装し、自分でtrial-and-errorとself-reviewを行い、fixed HEAD／treeと証拠をSolへ返す
+- **fresh Sol Auditor**：対象Versionの正本、Producer判断、risk level、release gateが独立監査を明示要求した場合だけ追加する。通常の2スレッドフローの必須3本目ではない
+- Claude Code：明示された限定範囲だけの一時代行
+- サブエージェント：限定調査、証拠収集、read-only review。最終製品判断を代行しない
+
+詳細なphase手順は`docs/CODEX_TWO_THREAD_WORKFLOW.md`を正本とする。
+
+## 5. Solの責任
+
+### 5.1 SOL_DESIGN
+
+Solは実装開始前に、Lunaが追加の設計推測をしなくてよい粒度までDesign Lockを作る。
+
+最低限固定するもの：
+
+- Design ID／revision
 - baseline branch／HEAD／tree
 - 一つの主目的とplayer-facing outcome
-- non-goalと変更禁止範囲
-- root causeまたは新機能の成立条件
-- module／data／asset／stateの責務分離
-- 変更予定fileと競合しやすいfile
+- current behavior／root causeまたは新機能の成立条件
+- architecture、module責務、data／state／event／asset contract
+- 変更予定fileと競合file
+- non-goal／変更禁止範囲
 - save、migration、PWA、Service Worker、audio、releaseへの影響境界
 - acceptance criteria
-- focused／full／browser／PWA／save等の必要testと証拠
+- positive／negative test
+- focused／full／browser／PWA／save等のvalidation plan
 - PR分割、依存順、停止条件
-- Lunaへ渡すimplementation handoff
+- Lunaがtrial-and-errorしてよい範囲
+- Luna Handoff
 
-設計の完了は「説明を書いた」ことではなく、Lunaが追加の設計推測をせず実装へ入れる状態をいう。未解決の製品判断やarchitecture矛盾が残る場合、Solは実装へ渡さずblockerとして明示する。
+Design LockはIssue commentまたは指定MDへ固定する。チャット内だけに残して正本扱いしない。
 
-### 3.2 Luna Implementation Leadの完了条件
+`SOL_DESIGN`中は原則として製品実装codeを書かない。
 
-LunaはSol設計を読み、指定scopeだけを実装する。
+### 5.2 SOL_FINAL_REVIEW
 
-- 設計正本とbaselineを開始時に再取得
+LunaのCompletion Packetを受領したら、同じSol threadを`ROLE_LOCK: SOL_FINAL_REVIEW`へ切り替える。
+
+SolはLunaの説明をそのまま信用せず、live PR／HEAD／tree／diff／tests／runtime evidenceを自分で再確認する。
+
+最低限確認するもの：
+
+- 最新Design revisionへの適合
+- acceptance criteria全件
+- scope drift／non-goal侵害
+- architecture／contract破壊
+- testが実装の意味を検査しているか
+- runtime／browser evidence
+- save／PWA／release境界
+- High／Medium／Low Finding
+
+問題0ならAPPROVE。問題があれば`REMEDIATION_LOCAL`または`DESIGN_CHANGE_REQUIRED`へ分類する。
+
+### 5.3 SOL_REMEDIATION
+
+次をすべて満たすFindingだけ、Producer方針としてSol自身が限定修正してよい。
+
+- Design Lock自体は変更不要
+- player-facing仕様変更なし
+- architecture再設計なし
+- save／migration／PWA／Service Worker／release contractの新規再設計なし
+- 原因と必要修正範囲が具体的に固定できる
+- 既存acceptanceの達成のための修正である
+
+この場合だけ`ROLE_LOCK: SOL_REMEDIATION`へ切り替え、Finding範囲だけcode／testを修正してよい。新機能、ついで修正、acceptance弱体化は禁止する。
+
+Solがcodeを変更した場合、その新HEADを直後に自己APPROVEしない。Lunaへ渡し、`LUNA_VALIDATION`で回帰確認後、同じSol threadへ戻して最終read-only reviewを行う。
+
+設計変更が必要なら`SOL_DESIGN`へ戻りDesign revisionを上げ、Lunaへ再handoffする。
+
+## 6. Lunaの責任
+
+### 6.1 LUNA_IMPLEMENTATION
+
+Lunaは最新Design Lockを正本として実装する。
+
+- Design revisionとbaselineを開始時に再取得
 - feature／integration branch上でのみ変更
-- acceptance criteriaに対応するtestを実装または更新
-- 実ブラウザを含む必要QAを実行
-- generator／manifest／asset provenance等の対象契約を更新
-- full test、Lint、build、`git diff --check`等を通す
-- commit／push後の固定HEAD／treeを記録
-- PR本文へ変更内容、非変更範囲、検証、残存リスクを記録
-- 独立Sol Auditorへ渡せる証拠を揃える
+- acceptance criteriaを実装checklistへ1:1でmapping
+- 小さいcheckpointで実装
+- focused test／generator／static check
+- 必要なChromium／WebKit runtime確認
+- Design Lock内の問題は自分でtrial-and-errorして修正
+- full test、Lint、build、content、`git diff --check`等を実行
+- self-review
+- 通常commit／push、Draft PR
+- fixed HEAD／treeと証拠を記録
+- Completion Packetを元のSol threadへ返す
 
-実装中に設計の重大な欠落、矛盾、scope変更が必要と判明した場合、Lunaは独自に再設計して進めない。作業を安全なcheckpointで止め、Solへ設計差分を返す。軽微な内部実装詳細は既存設計と安全境界の範囲で自律決定できる。
+Lunaは内部実装の細部について試行錯誤してよい。ただしDesignの仕様、acceptance、save／PWA契約、non-goalを勝手に変更しない。
 
-## 4. `/goal`運用
+### 6.2 Luna Self Review
 
-`/goal`は、**複数工程・複数checkpoint・反復検証をまたいで、同じ達成目標を継続して追う必要があるミッション**で使用する。時間の長短だけで判定しない。
+LunaはCI greenだけで完了扱いにしない。
 
-### 4.1 `/goal`を必須とするケース
+最低限確認するもの：
 
-次のいずれかに該当する場合、通常promptだけで開始せず、担当スレッドで`/goal`を設定する。
+- Design acceptance全件への証拠mapping
+- scope外変更0
+- unexpected delete／rename／mode change 0
+- positive／negative test
+- runtime/browser evidence
+- save／PWA／asset契約の対象回帰
+- console／page／HTTP／request failure
+- fixed HEAD／treeとlive PR一致
+- unresolved risk／未確認境界
 
-- Solが対象Version／feature／PRの実装正本となる設計とLuna handoffを作る
-- Lunaが実装→test→browser QA→修正→再検証→commit／push／PRのように複数checkpointをまたぐ
-- 複数module／複数file／複数assetを横断する
+完了時は`READY_FOR_SOL_REVIEW`を含むCompletion Packetを返す。
+
+### 6.3 DESIGN_DELTA_REQUIRED
+
+実装中に仕様・architecture・contractの新判断が必要になったら、Lunaは勝手に決めない。安全なcheckpointで止め、Design revision、発見事実、影響acceptance、必要な最小設計判断をSolへ返す。
+
+### 6.4 LUNA_VALIDATION
+
+Solが`SOL_REMEDIATION`でcodeを変更した後に使用する。
+
+Lunaは新設計をせず、Solの新HEADについてFinding解消、original Design acceptance、回帰test、runtime evidenceを確認し、`VALIDATION_PASS`または`VALIDATION_FAIL`をSolへ返す。
+
+Lunaが最終APPROVEを宣言しない。最終判断は同じSol threadへ戻す。
+
+## 7. 各threadが読むMD
+
+### Sol thread必須
+
+1. `AGENTS.md`
+2. `docs/CODEX_TWO_THREAD_WORKFLOW.md`
+3. `docs/CODEX_SOL_ROLE.md`
+4. `docs/PROJECT_STATE.md`
+5. 対象Version／featureの実行台帳IssueまたはProducer Decisions
+6. 関連spec、tests、QA、現行code
+
+### Luna thread必須
+
+1. `AGENTS.md`
+2. `docs/CODEX_TWO_THREAD_WORKFLOW.md`
+3. `docs/CODEX_LUNA_ROLE.md`
+4. `docs/PROJECT_STATE.md`
+5. 対象Version／featureの実行台帳Issue
+6. Solが固定した**最新Design Lock／Luna Handoff**
+7. Handoff指定のspec、tests、QA、code
+
+LunaはSol専用MDを自分の権限として使用しない。SolもLuna専用MDを通常実装権限として使用しない。
+
+## 8. `/goal`運用
+
+`/goal`は、複数工程・複数checkpoint・反復検証をまたいで同じ達成目標を保持する必要があるmissionで使用する。時間の長短だけで判定しない。
+
+### 8.1 `/goal`を原則必須とするケース
+
+- SolがVersion／featureの正式Design LockとLuna Handoffを作る
+- Lunaが通常のfeature実装を行い、実装→test→browser QA→修正→再検証→PRまで進める
+- 複数module／file／assetを横断する
 - save／migration／PWA／Service Worker／audio／asset generation／release contractへ影響する
-- generator、manifest、provenance、browser evidence等の複数証拠を揃える必要がある
-- independent audit Findingを修正し、再監査可能なfixed HEADまで持っていく
-- integration／main merge、tag、Release、Pages、Public QAまでを一つの承認済みrelease missionとして扱う
-- 作業中に複数回の判断・再試行・follow-upが発生する可能性が高い
+- generator、manifest、provenance、browser evidence等の複数証拠を揃える
+- Finding remediationが複数checkpointをまたぐ
+- integration／release mission
 
-Sol Design LeadとLuna Implementation Leadが同一Versionで`/goal`を使う場合、**設計goalと実装goalは必ず分離**する。担当変更時にgoalをそのまま引き継がず、新担当が自分の責務に合わせて設定する。
+Solのdesign goalとLunaのimplementation goalは別々に設定する。別threadのgoalをそのまま引き継がない。
 
-### 4.2 `/goal`を不要とするケース
+### 8.2 `/goal`不要の原子的作業
 
-次のような原子的な作業は、通常promptで処理してよい。
+- read-onlyのSHA／PR／Issue／CI確認
+- 単発test
+- typo／link修正
+- 設計判断を伴わない小さい単一file修正
+- 一回のverificationで閉じる作業
 
-- read-onlyの状態確認、SHA／PR／Issue／CIの確認
-- 一つの質問へのコード調査・説明
-- 一回のcommand／testだけで完了判定できる確認
-- typo、表記修正、リンク修正等の小さなdocs修正
-- 明確に限定された単一fileの小修正で、設計判断・migration・asset生成・browser QA・release操作を伴わず、直後の一回の検証で完了できるもの
-- 既に固定された設計に対する、独立監査が要求した極小の機械的修正で、新たな設計判断を必要としないもの
+途中でscopeが広がったら安全に止め、`/goal`へ切り替える。
 
-原子的な作業でも、途中でscopeが広がり複数checkpointを必要とすると判明した時点で、作業を安全な状態で止め、`/goal`を設定してgoal-managed missionへ切り替える。
+### 8.3 Goal contract
 
-迷う場合は`/goal`を使う。不要なgoalを作るコストより、複数工程の途中で目的・停止条件・証拠が漂流するリスクを優先して避ける。
+各goalは最低限次を持つ。
 
-### 4.3 Goal contract
+1. Objective
+2. Verifiable stopping condition
+3. Required sources
+4. Non-goals
+5. Validation loop
+6. Checkpoints
+7. Pause／stop conditions
 
-各`/goal`は最低限次を含む。
+## 9. 標準順序
 
-1. **Objective**：一つの達成対象
-2. **Verifiable stopping condition**：何を確認できれば完了か
-3. **Required sources**：最初に読むIssue、MD、branch、HEAD、tests、証拠
-4. **Non-goals**：変更してはいけない範囲
-5. **Validation loop**：進捗を証明するcommand、test、browser QA、artifact
-6. **Checkpoints**：途中で何を固定して次へ進むか
-7. **Pause／stop conditions**：権限不足、仕様矛盾、High／Medium回帰、外部承認待ち等
+同じmissionでは、常に次の順で一方ずつ進める。
 
-goalは「全部よくする」のようなopen-ended backlogにしない。対象Versionの一つの主目的に対応させる。
+1. Producer／司令塔が主目的と製品境界を固定
+2. **Sol thread**：`SOL_DESIGN`でDesign Lock作成
+3. SolがLuna Handoffを固定し、Solは待機
+4. **Luna thread**：`LUNA_IMPLEMENTATION`で実装、trial-and-error、self-review
+5. Lunaがfixed HEAD／treeとCompletion Packetを作成し、Lunaは待機
+6. **元のSol thread**：`SOL_FINAL_REVIEW`で最終review
+7. 問題0ならAPPROVE
+8. `REMEDIATION_LOCAL`ならSolが限定修正 → Lunaが`LUNA_VALIDATION` → 元のSolが再review
+9. `DESIGN_CHANGE_REQUIRED`ならSolがDesign revision更新 → Lunaへ再handoff
+10. 対象Versionが独立監査を明示要求する場合だけfresh Sol Auditorを追加
+11. release gateを満たした場合だけmerge／tag／Release／Pagesへ進む
 
-進行報告は簡潔に、`current checkpoint / verified / remaining / blocked`を示す。状態変化のない長文報告を繰り返さない。
-
-`/goal`が利用できない環境では、goal必須条件に該当するmissionを通常promptへ黙って代替して開始しない。利用不可をtooling blockerとして報告し、Producerまたは司令塔が運用変更を明示するまで開始しない。原子的な作業は4.2の条件を満たす限り通常promptで継続できる。
-
-### 4.4 Design goalの標準停止条件
-
-Solのdesign goalは、次を満たした時点で完了とする。
-
-- 実装正本となる設計がIssueまたは指定MDへ固定済み
-- baseline／scope／non-goal／acceptance／tests／stop conditionsが明確
-- Luna handoffが作成済み
-- 未解決の重大設計事項が0、またはblockerとして明示済み
-- 製品実装コードを開始していない
-
-### 4.5 Implementation goalの標準停止条件
-
-Lunaのimplementation goalは、対象工程について次を満たした時点で完了とする。
-
-- Sol設計のacceptance criteriaを実装
-- 必須test／build／QAが成功
-- 意図しないscope変更がない
-- fixed HEAD／treeと証拠が記録済み
-- Draft PRが独立監査可能な状態
-
-merge、tag、Release、Pages公開を同じgoalに含める場合は、対象Version正本がその操作を明示許可し、release gateと停止条件がgoal内に書かれている場合だけ許可する。
-
-## 5. 作業開始
-
-開始時に最低限確認する。
-
-- repository、remote、branch、HEAD
-- `main`の最新SHA
-- working treeと未追跡file
-- open PR、対象Issue
-- tag、GitHub Release、Actions
-- 正式URLのrelease metadata
-- push、PR、Issue、Release、Actions権限
-- baseline test、Lint、build、`git diff --check`
-- 対象Version正本と旧文書の衝突
-- 担当role
-- 4.1に該当する場合、そのrole用`/goal`が設定済みか
-
-既存未commit・未追跡変更を削除、reset、上書きしない。安全な別cloneまたは隔離worktreeを使用できる。
-
-## 6. GitHub運用
+## 10. GitHub運用
 
 - `main`はPR経由でのみ変更
 - feature／integration branchへの通常pushのみ許可
@@ -185,13 +286,12 @@ merge、tag、Release、Pages公開を同じgoalに含める場合は、対象Ve
 - tagとGitHub Releaseはrelease SHAへ固定
 - 既存tagの移動・上書き禁止
 - 状態変化のないcomment、空commit、重複文書を作らない
-- 同じfileを複数agentで無調整に並行編集しない
+- 同じfileをSolとLunaで並行編集しない
 - 旧Issueを削除・改変して現在の矛盾を隠さない
-- 完了済み旧Issueをcloseする場合、後続実装・正本への移行先と完了根拠を最終commentへ残す
 
 対象Versionでintegration branchが指定されている場合、工程branchをintegration向けPRとして段階統合できる。最終`integration/<version> → main`のReady化・mergeは、対象Version正本のrelease境界に従う。
 
-## 7. 公開契約
+## 11. 公開契約
 
 正式deploymentは、明示的release requestまたは安全なmanual dispatchだけで実行する。
 
@@ -203,9 +303,7 @@ release requestは最低限次を持つ。
 - `issue_number`
 - `request_id`
 
-通常の`main` pushやdocs-only mergeで製品版を自動deploymentしない。PR段階のbuild、browser smoke、release contract検証は維持する。
-
-`.github/pages-release-request.json`を状態文書の更新だけを理由に変更しない。変更によるdeployment triggerを理解せず触れない。
+通常の`main` pushやdocs-only mergeで製品版を自動deploymentしない。
 
 公開完了条件：
 
@@ -213,7 +311,7 @@ release requestは最低限次を持つ。
 - static Pages build成功
 - browser smoke成功
 - Pages deploy成功
-- 公開HTMLのversion／release SHAがrequestと一致
+- 公開HTMLのversion／release SHA一致
 - 匿名browser相当で認証要求・404なし
 - 主要asset取得成功
 - fresh saveと既存saveの必須導線成功
@@ -221,70 +319,53 @@ release requestは最低限次を持つ。
 
 Actions成功だけで一般公開成功と断定しない。
 
-## 8. 一気通貫ミッション
-
-対象Issue、正本、公開先、停止条件、許可操作が明示されている場合、複数roleを連携して一つのVersion missionを完了できる。ただし**Sol設計とLuna実装の責務分離を省略しない。4.1に該当する各工程は、それぞれ独立した`/goal`を使用する**。
-
-標準順序：
-
-1. Producerが主目的と製品境界を固定
-2. Sol Design Leadが設計goalを完了
-3. Luna Implementation Leadが実装goalを完了
-4. 別コンテキストのSol Auditorがfixed HEADをread-only review
-5. FindingがあればLunaへ限定修正、設計変更が必要ならSolへ戻す
-6. 対象Version正本のrelease gateを満たした場合だけmerge／tag／Release／Pagesへ進む
-
-許可済みscopeでは、調査、設計、実装、対象文書・asset、test、Lint、build、実browser QA、不具合修正、通常commit・push、Draft PR、integration merge、独立review、承認済みrelease操作、公開後QA、Issue closeまで段階実行できる。
-
-使用上限や時間切れで中断する場合は、完了工程、現在SHA、未完了項目、正確な再開位置、現在のgoal状態を対象Issueへ記録する。依存変更がない完了工程を最初からやり直さない。
-
-## 9. 画像・identity
+## 12. 画像・identity
 
 - 個別Versionでidentity masterの提供者が指定された場合、その責任分界を優先する
-- プロデューサー提供の人物identity masterを、Codexが独自生成した別人物で置き換えない
-- portraitからcard、event、battle sprite等を派生する場合、顔、髪、体格、衣装、武器、傷、配色を同一人物として維持する
-- 最初の1体で派生基準を確認するよう指定されている場合、基準確定前に残りを量産しない
-- 画像確認待ち中も、画像非依存のfoundation、save、AI、data、test、performance作業を継続する
+- プロデューサー提供人物identityを別人物で置き換えない
+- portraitから派生する場合、顔、髪、体格、衣装、武器、傷、配色を同一人物として維持する
+- 最初の1体で基準確認が必要なら、確定前に残りを量産しない
 - 未提出画像を仮人物で埋めて完成扱いにしない
 - ライセンス不明素材を正式採用しない
 
-## 10. 音声
+## 13. 音声
 
-ストーリー会話の全文読み上げを実装しないことと、戦闘中character voiceを削除することを混同しない。出撃、攻撃、被弾、戦闘不能の人間character voice、weapon sound、enemy voiceは明示変更がない限り維持する。
+ストーリー全文読み上げを実装しないことと、戦闘中character voiceを削除することを混同しない。既存の人間battle voice、weapon sound、enemy voiceは明示変更がない限り維持する。
 
-新unitへ別人物のvoiceを流用しない。正式voiceが未用意の場合は、対象Version正本に従ってtext bark、weapon sound、無voiceの状態を明示し、別人物voiceで穴埋めしない。
+新unitへ別人物voiceを流用しない。
 
-## 11. Save・migration
+## 14. Save・migration
 
 - stable IDを維持する
 - migration前snapshot、last-known-good、localStorage／IndexedDB、破損復旧、export／importを維持する
 - migrationを複数回適用しない
-- 星、報酬、解放、通貨、equipmentを同一receiptで二重取得させない
+- 同一receiptで二重取得させない
 - save全体の自動初期化は禁止
-- 個別Version正本が通貨残高等の限定的再編を明示承認している場合、その対象だけを一度限りのmigrationとして実施できる
-- 限定再編でも所有unit、stage進行、星、既読、編成、設定等の非対象dataを消さない
+- 限定migrationでも非対象dataを消さない
 - 破壊的migration内容はplayerへ明示する
 
-## 12. テスト・QA
+## 15. テスト・QA
 
-テスト本数だけで完成としない。実ゲームの成立を確認する。
+テスト本数だけで完成としない。実ゲーム成立を確認する。
 
 最低基準：
 
 - 対象test、全test、Lint、build、`git diff --check`
-- content validator、generator、必要なbalance／economy simulation
+- content validator、generator、必要なsimulation
 - console error、page error、request failure、主要asset 404が0
 - 1280×720、844×390、844×340
 - Playwright WebKit iPhone相当
-- touch、safe area、回転、tab・画面lock復帰
+- touch、safe area、回転、tab・lock復帰
 - BGM、SE、戦闘voice、二重再生なし
 - fresh save、公開版由来既存save、migration、破損復旧
 - 対象Versionの新機能を実ゲームで確認
-- independent read-only review High／Medium未解消0
+- Luna self-review完了
+- Sol Final ReviewでHigh／Medium未解消0
+- 対象Versionがindependent auditを要求する場合のみ、その独立監査High／Medium未解消0
 
-物理iPhoneを利用できない場合、発熱、実speaker聴感、物理端末操作を確認済みと断定しない。frame time、memory、WebKit結果を代替証拠として明記する。
+物理iPhoneを利用できない場合、発熱、実speaker聴感、物理端末操作を確認済みと断定しない。
 
-## 13. 安全境界
+## 16. 安全境界
 
 禁止：
 
@@ -300,14 +381,16 @@ Actions成功だけで一般公開成功と断定しない。
 - ChatGPT Sitesへの新規deployment
 - 対象Versionの非対象機能を便乗実装
 - Lunaによる未承認のscope再設計
-- Design Lead Solによる自己実装を標準運用化すること
-- Design Lead Sol自身のreviewを最終独立監査として扱うこと
-- 4.1のgoal-managed missionを`/goal`なしで開始すること
+- Solによる通常のLuna実装の代行
+- SolとLunaを同一Design Lock上で無調整に同時並行実行
+- Sol remediation後のLuna validationを省略して自己承認
+- 同じSol threadのFinal Reviewを独立監査と誤記
+- goal-managed missionを必要な`/goal`なしで開始
 
 重大な公開不具合は、直前の正常release SHAを確認し、通常のrevert PRで復旧する。`main`のforce巻戻し、tag移動、Release履歴改変は禁止する。
 
-## 14. 設計打ち切り
+## 17. 設計打ち切り
 
-GitHub正本が承認済みで、開始前提に変化がない場合、同じ要件について新しい「最終計画書」を追加しない。実装を伴わない再監査、状態変化のない追加review、完了工程の無目的な再読込を禁止する。
+GitHub正本が承認済みで開始前提に変化がない場合、同じ要件について無目的な「最終計画書」を追加しない。
 
-計画を変更できるのは、プロデューサー判断の変更、実装・計測・QAで判明した重大事実、save・公開・法務・安全blockerがある場合だけとする。その場合も既存計画を全面再作成せず、対象Issueへ差分を記録し、必要ならSolのdesign goalを更新または再設定してからLunaへ戻す。
+計画を変更できるのは、Producer判断の変更、実装・計測・QAで判明した重大事実、save・公開・法務・安全blockerがある場合だけとする。その場合も既存計画を全面再作成せず、Design revisionを上げて差分を固定する。
