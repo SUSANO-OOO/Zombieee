@@ -880,6 +880,13 @@ async function runHudCase(browser, engine, viewport) {
       `${name}: disabled unit/support state did not remain visible`);
     result.states.push({ ...disabled, disabledControls });
 
+    stage3.stop();
+    await page.close();
+
+    const bossStage3 = await openBattlePage(context, "mission", { stageNumber: 3 });
+    diagnosticControls.push(bossStage3);
+    page = bossStage3.page;
+    await waitForQuietBattleMessages(page, `${name}/boss-fixture`);
     const bossPrepared = await page.evaluate(
       () => window.__ASHFALL_BATTLE_QA__.prepareBossFoundationProof("takuya"),
     );
