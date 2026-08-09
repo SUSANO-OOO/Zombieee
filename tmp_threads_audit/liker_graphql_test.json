@@ -1,8 +1,26 @@
 [
   {
-    "doc_id": "9360915773983802",
-    "key": "mediaID",
+    "phase": "bootstrap",
+    "ua": "browser",
     "status": 200,
+    "final_url": "https://www.threads.com/@uwachan2026/post/DbwZjCnE08w",
+    "html_length": 255081,
+    "lsd": "AdRPKjw25galElRRfuY3SsYCv3g",
+    "cookies": {
+      "csrftoken": "ghbxega6fkFhdKaDZQVZXA"
+    },
+    "lsd_context": [
+      "USER\":false,\"IS_DEACTIVATED_ALLOWED_ON_MESSENGER\":false,\"IS_MESSENGER_CALL_GUEST_USER\":false,\"IS_WORK_MESSENGER_CALL_GUEST_USER\":false,\"IS_WORKROOMS_USER\":false,\"APP_ID\":\"238260118697367\",\"IS_BUSINESS_DOMAIN\":false,\"NON_FACEBOOK_USER_ID\":\"0\",\"IS_THREADS_USER\":1},270],[\"DTSGInitialData\",[],{},258],[\"LSD\",[],{\"token\":\"AdRPKjw25galElRRfuY3SsYCv3g\"},323],[\"ServerNonce\",[],{\"ServerNonce\":\"6KxIuxY494GPckAqyxj0KT\"},141],[\"SiteData\",[],{\"server_revision\":1044807424,\"client_revision\":1044807424,\"push_phase\":\"C3\",\"pkg_cohort\":\"HYP:barcelona_web_pkg\",\"haste_session\":\"20674.HYP:barcelona_web_pkg.2.1...0\",\"pr\":1,\"manifest_base_uri\":\"https:\\/\\/static.cdninstagram.com\",\"manifest_origin\":null,\"manifest_version_prefix\":null,\"be_one_ahead\":true,\"is_rtl\":false,\"is_experimental_tier\":false,\"is_jit_warmed_up\":true,\"hsi\":\"7671934811147053499\",\"semr_host_bucket\":\"\",\"bl_hash_version\":2,\"comet_env\":29,\"wbloks_env\":false,\"ef_page\":null,\"compose_bootloads\":false,\"spin\":4,\"__spin_r\":1044807424,\"__spin_b\":\"trunk\","
+    ]
+  },
+  {
+    "phase": "query",
+    "ua": "browser",
+    "endpoint": "https://www.threads.com/api/graphql",
+    "token_kind": "live",
+    "with_pv": false,
+    "status": 200,
+    "final_url": "https://www.threads.com/api/graphql",
     "length": 63,
     "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
     "json_top": [
@@ -16,33 +34,320 @@
     "user_sample": []
   },
   {
-    "doc_id": "9360915773983802",
-    "key": "postID",
+    "phase": "query",
+    "ua": "browser",
+    "endpoint": "https://www.threads.com/api/graphql",
+    "token_kind": "live",
+    "with_pv": true,
     "status": 200,
-    "length": 107,
-    "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\"}],\"extensions\":{\"is_final\":true}}",
+    "final_url": "https://www.threads.com/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
     "json_top": [
       "data",
-      "errors",
       "extensions"
     ],
     "users_found": 0,
-    "liker_paths": [],
+    "liker_paths": [
+      ".data.likers"
+    ],
     "user_sample": []
   },
   {
-    "doc_id": "9360915773983802",
-    "key": "media_id",
+    "phase": "query",
+    "ua": "browser",
+    "endpoint": "https://www.threads.com/api/graphql",
+    "token_kind": "t",
+    "with_pv": false,
     "status": 200,
-    "length": 107,
-    "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\"}],\"extensions\":{\"is_final\":true}}",
+    "final_url": "https://www.threads.com/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
     "json_top": [
       "data",
-      "errors",
       "extensions"
     ],
     "users_found": 0,
-    "liker_paths": [],
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "browser",
+    "endpoint": "https://www.threads.com/api/graphql",
+    "token_kind": "t",
+    "with_pv": true,
+    "status": 200,
+    "final_url": "https://www.threads.com/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "browser",
+    "endpoint": "https://www.threads.net/api/graphql",
+    "token_kind": "live",
+    "with_pv": false,
+    "status": 200,
+    "final_url": "https://www.threads.net/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "browser",
+    "endpoint": "https://www.threads.net/api/graphql",
+    "token_kind": "live",
+    "with_pv": true,
+    "status": 200,
+    "final_url": "https://www.threads.net/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "browser",
+    "endpoint": "https://www.threads.net/api/graphql",
+    "token_kind": "t",
+    "with_pv": false,
+    "status": 200,
+    "final_url": "https://www.threads.net/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "browser",
+    "endpoint": "https://www.threads.net/api/graphql",
+    "token_kind": "t",
+    "with_pv": true,
+    "status": 200,
+    "final_url": "https://www.threads.net/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "bootstrap",
+    "ua": "crawler",
+    "status": 200,
+    "final_url": "https://www.threads.com/@uwachan2026/post/DbwZjCnE08w",
+    "html_length": 942549,
+    "lsd": "AdQonF8-MQ7IuXxdOB0Oms06SvQ",
+    "cookies": {
+      "csrftoken": "QI5SenQwWQ0WZ3IH1hElZF"
+    },
+    "lsd_context": [
+      "USER\":false,\"IS_DEACTIVATED_ALLOWED_ON_MESSENGER\":false,\"IS_MESSENGER_CALL_GUEST_USER\":false,\"IS_WORK_MESSENGER_CALL_GUEST_USER\":false,\"IS_WORKROOMS_USER\":false,\"APP_ID\":\"238260118697367\",\"IS_BUSINESS_DOMAIN\":false,\"NON_FACEBOOK_USER_ID\":\"0\",\"IS_THREADS_USER\":1},270],[\"DTSGInitialData\",[],{},258],[\"LSD\",[],{\"token\":\"AdQonF8-MQ7IuXxdOB0Oms06SvQ\"},323],[\"ServerNonce\",[],{\"ServerNonce\":\"MNJiXZ4NrDknu-hozimgCl\"},141],[\"SiteData\",[],{\"server_revision\":1044807424,\"client_revision\":1044807424,\"push_phase\":\"C3\",\"pkg_cohort\":\"HYP:barcelona_web_pkg\",\"haste_session\":\"20674.HYP:barcelona_web_pkg.2.1...0\",\"pr\":1,\"manifest_base_uri\":\"https:\\/\\/static.cdninstagram.com\",\"manifest_origin\":null,\"manifest_version_prefix\":null,\"be_one_ahead\":true,\"is_rtl\":false,\"is_experimental_tier\":false,\"is_jit_warmed_up\":true,\"hsi\":\"7671934825115991910\",\"semr_host_bucket\":\"\",\"bl_hash_version\":2,\"comet_env\":29,\"wbloks_env\":false,\"ef_page\":\"BarcelonaPostColumnRoute\",\"compose_bootloads\":false,\"spin\":4,\"__spin_r\":10448074",
+      "aVideo.react\",\"BarcelonaComposerGeneralDialog.react\",\"BarcelonaPostOverflowMenuBottomSheet.react\",\"BarcelonaPrivateReplyBumpDialog.react\",\"BarcelonaUserHovercardImpl.react\",\"BarcelonaUsernameHovercardImpl.react\",\"BarcelonaCommunityNoteMoreInfoDialog.react\",\"BarcelonaInformTreatmentCommunityNoteDetailsDialog.react\",\"BarcelonaCommunityNoteSourcesDialog.react\",\"BarcelonaPostColumnPage.react\",\"VideoPlayerHTML5ApiCea608State\",\"VideoPlayerHTML5ApiWebVttState\",\"BarcelonaCombineInfoDialog.react\",\"BarcelonaGhostTimerInfoDialog.react\",\"BarcelonaFlytrapDialog.react\",\"BarcelonaSelfPostNotificationSettingsDialog.react\",\"BarcelonaPrivateReplyMessageNudgeDialog.react\",\"VideoPlayerEmsg\"]]],[\"RequireDeferredReference\",\"unblock\",[],[[\"BarcelonaPostColumnPage.react\",\"BarcelonaPostColumnPage.entrypoint\",\"BarcelonaPostColumn.entrypoint\",\"BarcelonaPostColumn.react\"],\"sd\"]],[\"RequireDeferredReference\",\"unblock\",[],[[\"BarcelonaPostColumnPage.react\",\"BarcelonaPostColumnPage.entrypoint\",\"BarcelonaPostColumn.ent",
+      "lFZxKl\",\"U44xikw\",\"SZdgOjn\",\"BL1ztAV\",\"DoZ4q6G\",\"ICK55Rm\",\"dlMdW7h\"]}},\"BarcelonaCommunityNoteMoreInfoDialog.react\":{\"r\":[\"NETnsVO\",\"rxiFSFX\",\"QqjwccE\",\"0j0NM3o\",\"d82xGh2\",\"7DoYHfl\"],\"rds\":{\"m\":[\"FbtLogging\",\"ODS\",\"IntlQtEventFalcoEvent\"],\"r\":[\"7Odl5Zu\"]}},\"BarcelonaInformTreatmentCommunityNoteDetailsDialog.react\":{\"r\":[\"rxiFSFX\",\"NETnsVO\",\"QqjwccE\",\"0j0NM3o\",\"7DoYHfl\",\"Hp1fTNd\"],\"rds\":{\"m\":[\"bumpVultureJSHash\",\"FbtLogging\",\"ODS\",\"IntlQtEventFalcoEvent\"],\"r\":[\"7Odl5Zu\"]}},\"BarcelonaCommunityNoteSourcesDialog.react\":{\"r\":[\"NETnsVO\",\"rxiFSFX\",\"sodzvDQ\",\"QqjwccE\",\"0j0NM3o\",\"7DoYHfl\"],\"rds\":{\"m\":[\"FbtLogging\",\"ODS\",\"IntlQtEventFalcoEvent\"],\"r\":[\"7Odl5Zu\"]}},\"BarcelonaPostColumnPage.react\":{\"r\":[\"NETnsVO\",\"rxiFSFX\",\"QqjwccE\",\"0j0NM3o\",\"7DoYHfl\"],\"rdfds\":{\"m\":[\"BarcelonaPostViewCount.react\",\"BarcelonaPostPagePostFallback.react\",\"BarcelonaInlineReplyComposer.react\",\"VideoPlayerSpinner.react\",\"VideoPlayerCaptionsArea.react\",\"BarcelonaColumnHeaderOverflowMenuPopoverTrigger.react\",\"FDSCometExcep",
+      "aVideo.react\",\"BarcelonaComposerGeneralDialog.react\",\"BarcelonaPostOverflowMenuBottomSheet.react\",\"BarcelonaPrivateReplyBumpDialog.react\",\"BarcelonaUserHovercardImpl.react\",\"BarcelonaUsernameHovercardImpl.react\",\"BarcelonaCommunityNoteMoreInfoDialog.react\",\"BarcelonaInformTreatmentCommunityNoteDetailsDialog.react\",\"BarcelonaCommunityNoteSourcesDialog.react\",\"BarcelonaViolatingTagDialog.react\",\"BarcelonaComposerEditExpirationDialog.react\",\"BarcelonaColumnHeaderOverflowMenuPopover.react\",\"OzVTTSourceBufferImpl\"]]],[\"Bootloader\",\"markSupportDataReadyForImmediateBootloads\",[],[]],[\"RequireDeferredReference\",\"unblock\",[],[[\"Barcelona500ErrorRoot.react\",\"GlobalVideoPortsImpl.react\",\"BarcelonaPostViewCount.react\",\"BarcelonaPostPagePostFallback.react\",\"BarcelonaInlineReplyComposer.react\",\"FDSTooltipDeferredImpl.react\",\"VideoPlayerSpinner.react\",\"VideoPlayerCaptionsArea.react\",\"FDSCometExceptionDialogImpl.react\",\"BarcelonaColumnHeaderOverflowMenuPopoverTrigger.react\",\"SecuredActionTriggerWithAc"
+    ]
+  },
+  {
+    "phase": "query",
+    "ua": "crawler",
+    "endpoint": "https://www.threads.com/api/graphql",
+    "token_kind": "live",
+    "with_pv": false,
+    "status": 200,
+    "final_url": "https://www.threads.com/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "crawler",
+    "endpoint": "https://www.threads.com/api/graphql",
+    "token_kind": "live",
+    "with_pv": true,
+    "status": 200,
+    "final_url": "https://www.threads.com/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "crawler",
+    "endpoint": "https://www.threads.com/api/graphql",
+    "token_kind": "t",
+    "with_pv": false,
+    "status": 200,
+    "final_url": "https://www.threads.com/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "crawler",
+    "endpoint": "https://www.threads.com/api/graphql",
+    "token_kind": "t",
+    "with_pv": true,
+    "status": 200,
+    "final_url": "https://www.threads.com/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "crawler",
+    "endpoint": "https://www.threads.net/api/graphql",
+    "token_kind": "live",
+    "with_pv": false,
+    "status": 200,
+    "final_url": "https://www.threads.net/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "crawler",
+    "endpoint": "https://www.threads.net/api/graphql",
+    "token_kind": "live",
+    "with_pv": true,
+    "status": 200,
+    "final_url": "https://www.threads.net/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "crawler",
+    "endpoint": "https://www.threads.net/api/graphql",
+    "token_kind": "t",
+    "with_pv": false,
+    "status": 200,
+    "final_url": "https://www.threads.net/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "phase": "query",
+    "ua": "crawler",
+    "endpoint": "https://www.threads.net/api/graphql",
+    "token_kind": "t",
+    "with_pv": true,
+    "status": 200,
+    "final_url": "https://www.threads.net/api/graphql",
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
     "user_sample": []
   }
 ]
