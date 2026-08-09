@@ -1423,17 +1423,17 @@ const runtimeEvidence = await staticRuntimeEvidence();
 for (const engine of engines) {
   const browserType = browserTypes[engine];
   invariant(browserType, `Unsupported browser engine: ${engine}`);
-  const browser = await browserType.launch({ headless: true });
-  try {
-    for (const viewport of viewports) {
+  for (const viewport of viewports) {
+    const browser = await browserType.launch({ headless: true });
+    try {
       if (caseTypes.includes("hud")) results.push(await runHudCase(browser, engine, viewport));
       if (caseTypes.includes("crawler-equipment")) {
         results.push(await runEquipmentCase(browser, engine, viewport, runtimeEvidence));
       }
       if (caseTypes.includes("deployment")) results.push(await runDeploymentCase(browser, engine, viewport));
+    } finally {
+      await browser.close();
     }
-  } finally {
-    await browser.close();
   }
 }
 
