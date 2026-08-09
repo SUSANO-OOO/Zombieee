@@ -1,17 +1,18 @@
-import json
-import re
+import json,re
 from pathlib import Path
 import requests
 
 OUT=Path('tmp_threads_audit'); OUT.mkdir(exist_ok=True)
 TARGET='https://www.threads.com/@uwachan2026/post/DbwZjCnE08w'
-POST_ID='3958776431606189872'
 DOC='9360915773983802'
-ENDPOINTS=['https://www.threads.com/api/graphql','https://www.threads.net/api/graphql']
-UAS={
- 'browser':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36',
- 'crawler':'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-}
+IDS=[
+ ('pk','3958776431606189872'),
+ ('fbid','18041551211807712'),
+ ('compound','3958776431606189872_41585372900'),
+ ('shortcode','DbwZjCnE08w'),
+]
+URLS=['https://www.threads.com/api/graphql','https://www.threads.net/api/graphql']
+UA='Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
 PV={
 '__relay_internal__pv__BarcelonaIsLoggedInrelayprovider':False,
 '__relay_internal__pv__BarcelonaIsInternalUserrelayprovider':False,
@@ -20,68 +21,64 @@ PV={
 '__relay_internal__pv__BarcelonaIsLoggedOutrelayprovider':True,
 }
 
-def extract_lsd(html):
-    pats=[
-      r'"LSD"[^\n]{0,1000}?"token"\s*:\s*"([^"]+)"',
-      r'"token"\s*:\s*"([A-Za-z0-9_-]{10,})"[^\n]{0,500}?"LSD"',
-      r'lsd=([A-Za-z0-9_-]{10,})',
-      r'"lsd"\s*:\s*"([A-Za-z0-9_-]{10,})"',
-    ]
-    for p in pats:
-      m=re.search(p,html,re.I)
-      if m:return m.group(1)
-    return None
+def lsd(html):
+ m=re.search(r'"LSD"[^\n]{0,1000}?"token"\s*:\s*"([^"]+)"',html,re.I); return m.group(1) if m else 't'
+def site(html,key,default=''):
+ p={
+  'hsi':r'"hsi"\s*:\s*"([^"]+)"',
+  'rev':r'"client_revision"\s*:\s*(\d+)',
+  'spin_r':r'"__spin_r"\s*:\s*(\d+)',
+  'spin_b':r'"__spin_b"\s*:\s*"([^"]+)"',
+ }
+ m=re.search(p[key],html); return m.group(1) if m else default
 
-def summarize(txt):
-    rec={'length':len(txt),'preview':txt[:5000]}
-    try:
-      data=json.loads(txt); rec['json_top']=list(data) if isinstance(data,dict) else type(data).__name__
-      users=[]; paths=[]
-      def walk(x,path=''):
-        if isinstance(x,dict):
-          if isinstance(x.get('username'),str):
-            users.append({k:x.get(k) for k in ['id','pk','user_id','username','full_name','is_verified','is_private','follower_count','following_count','biography'] if k in x})
-          if 'likers' in x: paths.append(path+'.likers')
-          for k,v in x.items(): walk(v,path+'.'+str(k))
-        elif isinstance(x,list):
-          for i,v in enumerate(x): walk(v,path+f'[{i}]')
-      walk(data)
-      rec['users_found']=len(users); rec['liker_paths']=paths[:20]; rec['user_sample']=users[:10]
-    except Exception as e: rec['json_error']=repr(e)
-    return rec
+def inspect(txt):
+ d={'length':len(txt),'preview':txt[:1500]}
+ try:
+  x=json.loads(txt); users=[]; liker=[]; curs=[]
+  def w(v,path=''):
+   if isinstance(v,dict):
+    if isinstance(v.get('username'),str): users.append({k:v.get(k) for k in ('id','pk','user_id','username','full_name','is_verified','is_private','follower_count','following_count') if k in v})
+    if 'likers' in v: liker.append(path+'.likers')
+    for k in ('end_cursor','next_max_id','next_cursor','cursor'):
+     if v.get(k): curs.append((path+'.'+k,str(v.get(k))))
+    for k,z in v.items(): w(z,path+'.'+str(k))
+   elif isinstance(v,list):
+    for i,z in enumerate(v): w(z,path+f'[{i}]')
+  w(x); d.update(users_found=len(users),user_sample=users[:3],liker_paths=liker[:10],cursors=curs[:20],top=list(x) if isinstance(x,dict) else type(x).__name__)
+ except Exception as e:d['json_error']=repr(e)
+ return d
 
-report=[]
-for ua_name,ua in UAS.items():
-  s=requests.Session(); s.headers.update({'User-Agent':ua,'Accept-Language':'en-US,en;q=0.9'})
-  try:
-    g=s.get(TARGET,timeout=60,allow_redirects=True)
-    html=g.text; lsd=extract_lsd(html)
-    # also capture plausible token strings adjacent to LSD for diagnostics
-    lsd_context=[]
-    for m in re.finditer('LSD',html,re.I):
-      lsd_context.append(html[max(0,m.start()-300):m.start()+700])
-      if len(lsd_context)>=5:break
-    report.append({'phase':'bootstrap','ua':ua_name,'status':g.status_code,'final_url':g.url,'html_length':len(html),'lsd':lsd,'cookies':s.cookies.get_dict(),'lsd_context':lsd_context})
-  except Exception as e:
-    report.append({'phase':'bootstrap','ua':ua_name,'error':repr(e)}); continue
-  tokens=[]
-  for t in [lsd,'t']:
-    if t and t not in tokens: tokens.append(t)
-  for endpoint in ENDPOINTS:
-    for tok in tokens:
-      for with_pv in [False,True]:
-        vars={'mediaID':POST_ID}
-        if with_pv: vars.update(PV)
-        headers={
-          'X-FB-LSD':tok,'X-IG-App-ID':'238260118697367','X-ASBD-ID':'129477',
-          'Content-Type':'application/x-www-form-urlencoded','Origin':'https://www.threads.com','Referer':TARGET,
-          'Accept':'*/*','Sec-Fetch-Site':'same-origin','Sec-Fetch-Mode':'cors','Sec-Fetch-Dest':'empty',
-        }
-        try:
-          r=s.post(endpoint,data={'lsd':tok,'doc_id':DOC,'variables':json.dumps(vars,separators=(',',':'))},headers=headers,timeout=60,allow_redirects=True)
-          rec={'phase':'query','ua':ua_name,'endpoint':endpoint,'token_kind':'live' if tok==lsd and lsd else 't','with_pv':with_pv,'status':r.status_code,'final_url':r.url}
-          rec.update(summarize(r.text)); report.append(rec)
-        except Exception as e:
-          report.append({'phase':'query','ua':ua_name,'endpoint':endpoint,'token_kind':'live' if tok==lsd and lsd else 't','with_pv':with_pv,'error':repr(e)})
-(OUT/'liker_graphql_test.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
-print(json.dumps(report,ensure_ascii=False,indent=2)[:120000])
+s=requests.Session(); s.headers.update({'User-Agent':UA,'Accept-Language':'en-US,en;q=0.9'})
+g=s.get(TARGET,timeout=60); html=g.text; tok=lsd(html); csrf=s.cookies.get('csrftoken','')
+meta={'bootstrap_status':g.status_code,'lsd':tok,'csrf':csrf,'hsi':site(html,'hsi'),'rev':site(html,'rev'),'spin_r':site(html,'spin_r'),'spin_b':site(html,'spin_b'),'cookies':s.cookies.get_dict()}
+results=[]
+base_headers={'X-FB-LSD':tok,'X-IG-App-ID':'238260118697367','X-ASBD-ID':'129477','X-CSRFToken':csrf,'Content-Type':'application/x-www-form-urlencoded','Origin':'https://www.threads.com','Referer':TARGET,'Accept':'*/*'}
+for endpoint in URLS:
+ for id_name,ident in IDS:
+  for typ in ('string','int'):
+   if typ=='int' and not ident.isdigit(): continue
+   val=int(ident) if typ=='int' else ident
+   for pv in (False,True):
+    vars={'mediaID':val}; vars.update(PV if pv else {})
+    # minimal and Comet-style outer form, because both are used by current web client surfaces.
+    for outer in ('minimal','comet'):
+     form={'lsd':tok,'doc_id':DOC,'variables':json.dumps(vars,separators=(',',':'))}
+     if outer=='comet':
+      form.update({'__user':'0','__a':'1','__req':'1','__comet_req':'122','__hsi':meta['hsi'],'__rev':meta['rev'],'__spin_r':meta['spin_r'],'__spin_b':meta['spin_b'],'jazoest':'2'+''.join(str(ord(c)) for c in tok)[:30]})
+     try:
+      r=s.post(endpoint,data=form,headers=base_headers,timeout=60)
+      rec={'endpoint':endpoint,'id_name':id_name,'type':typ,'pv':pv,'outer':outer,'status':r.status_code}; rec.update(inspect(r.text)); results.append(rec)
+     except Exception as e: results.append({'endpoint':endpoint,'id_name':id_name,'type':typ,'pv':pv,'outer':outer,'error':repr(e)})
+# Also check whether the advertised Apify actor can be invoked anonymously; no token or credentials are supplied.
+apify=[]
+for u in ['https://api.apify.com/v2/acts/memo23~threads-scraper','https://api.apify.com/v2/acts/memo23~threads-scraper/runs']:
+ try:
+  if u.endswith('/runs'):
+   r=requests.post(u,json={'postUrls':[TARGET],'includeLikers':True,'maxItems':5},timeout=60)
+  else:r=requests.get(u,timeout=60)
+  apify.append({'url':u,'status':r.status_code,'length':len(r.text),'preview':r.text[:3000]})
+ except Exception as e:apify.append({'url':u,'error':repr(e)})
+out={'meta':meta,'tests':results,'apify_anonymous':apify}
+(OUT/'liker_graphql_test.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({'meta':meta,'summary':[x for x in results if x.get('users_found',0)>0 or x.get('status')!=200][:50],'tested':len(results),'apify':apify},ensure_ascii=False,indent=2)[:120000])
