@@ -7,6 +7,11 @@ import sharp from "sharp";
 
 import { EVENT_PORTRAIT_PROFILES } from "../app/visualProfiles.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import {
+  PORTRAIT_DIALOGUE_OVERLAP_MAX_PX,
+  PORTRAIT_DIALOGUE_OVERLAP_MIN_PX,
+  portraitDialogueOverlapWithinContract,
+} from "./issue156-remediation-contract.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 
 const baseUrl = new URL(process.env.ISSUE156_REMEDIATION_QA_BASE_URL ?? "http://127.0.0.1:4177/");
@@ -198,8 +203,9 @@ async function runCase(engine, viewport) {
       invariant(geometry.headMargin >= 8, `${engine}/${kind}: head margin ${geometry.headMargin}`);
       invariant(geometry.faceCenterRatio >= .18 && geometry.faceCenterRatio <= .38,
         `${engine}/${kind}: face center`);
-      invariant(geometry.torsoDialogueOverlap >= 0,
-        `${engine}/${kind}: portrait/dialogue gap ${JSON.stringify(geometry)}`);
+      invariant(portraitDialogueOverlapWithinContract(geometry.torsoDialogueOverlap),
+        `${engine}/${kind}: portrait/dialogue overlap must be ${PORTRAIT_DIALOGUE_OVERLAP_MIN_PX}`
+        + `-${PORTRAIT_DIALOGUE_OVERLAP_MAX_PX}px ${JSON.stringify(geometry)}`);
       invariant(geometry.zIndex.dialogue > geometry.zIndex.portrait, `${engine}/${kind}: text box z-order`);
       invariant(geometry.typography.name >= 14 && geometry.typography.role >= 12 && geometry.typography.body >= 12,
         `${engine}/${kind}: typography ${JSON.stringify(geometry.typography)}`);

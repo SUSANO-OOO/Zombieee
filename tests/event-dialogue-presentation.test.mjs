@@ -7,6 +7,11 @@ import test from "node:test";
 import sharp from "sharp";
 
 import { EVENT_PORTRAIT_PROFILES } from "../app/visualProfiles.js";
+import {
+  PORTRAIT_DIALOGUE_OVERLAP_MAX_PX,
+  PORTRAIT_DIALOGUE_OVERLAP_MIN_PX,
+  portraitDialogueOverlapWithinContract,
+} from "../scripts/issue156-remediation-contract.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const VIEWPORTS = [
@@ -53,4 +58,14 @@ test("dialogue typography and advance target keep mobile acceptance minima", asy
   assert.match(css, /dialogue-text[^}]*clamp\(12px,/u);
   assert.match(css, /dialogue-box > em[^}]*min-width:44px[^}]*min-height:44px/u);
   assert.doesNotMatch(css, /dialogue-(?:text|name)[^}]*font(?:-size)?:[^;}]*(?:7px|9px)/u);
+});
+
+test("portrait torso overlap rejects both sides of the canonical 12-40px range", () => {
+  assert.equal(PORTRAIT_DIALOGUE_OVERLAP_MIN_PX, 12);
+  assert.equal(PORTRAIT_DIALOGUE_OVERLAP_MAX_PX, 40);
+  assert.equal(portraitDialogueOverlapWithinContract(11.999), false, "less than 12px must fail");
+  assert.equal(portraitDialogueOverlapWithinContract(12), true, "12px is inclusive");
+  assert.equal(portraitDialogueOverlapWithinContract(40), true, "40px is inclusive");
+  assert.equal(portraitDialogueOverlapWithinContract(40.001), false, "more than 40px must fail");
+  assert.equal(portraitDialogueOverlapWithinContract(Number.NaN), false, "non-finite input must fail");
 });

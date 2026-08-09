@@ -403,7 +403,9 @@ async function measureHud(page, viewport, label) {
     safeAreaBottom: 21,
     safeAreaLeft: 44,
   });
-  invariant(expectedLayout, `${label}: no mobile HUD contract for ${viewport.width}x${viewport.height}`);
+  const desktopRegression = expectedLayout === null && viewport.width === 1280 && viewport.height === 720;
+  invariant(expectedLayout || desktopRegression,
+    `${label}: no canonical HUD contract for ${viewport.width}x${viewport.height}`);
   const measured = await page.evaluate(({ expectedTypography }) => {
     const rect = (element) => {
       if (!element) return null;
@@ -513,6 +515,24 @@ async function measureHud(page, viewport, label) {
       edge,
       Math.max(0, Number.parseFloat(rootStyle.getPropertyValue(`--app-viewport-safe-${edge}`)) || 0),
     ]));
+    const ownedRects = [top, bottom, ...topZones, ...bottomZones].map(rect).filter(Boolean);
+    const insideViewport = (box) => box.left >= -.5 && box.top >= -.5
+      && box.right <= innerWidth + .5 && box.bottom <= innerHeight + .5;
+    const controlGroups = [
+      [...document.querySelectorAll(".battle-controls-zone button")].filter(visible),
+      [...document.querySelectorAll(".support-zone > button")].filter(visible),
+    ];
+    const requiredHudInformation = {
+      brand: visible(document.querySelector(".battle-brand-zone")),
+      phase: visible(document.querySelector(".phase-block")),
+      resources: visible(document.querySelector(".resource-stack")),
+      stats: visible(document.querySelector(".battle-stats")),
+      units: visible(document.querySelector(".unit-cards"))
+        && document.querySelectorAll(".unit-cards > .unit-card").length > 0,
+      support: visible(document.querySelector(".support-zone")),
+      objective: visible(document.querySelector(".battle-objective")),
+      controls: visible(document.querySelector(".battle-controls-zone")),
+    };
     return {
       viewport: { width: innerWidth, height: innerHeight },
       safeInsets,
@@ -552,6 +572,13 @@ async function measureHud(page, viewport, label) {
       disabled,
       disabledUnitCount: disabled.filter(({ className }) => String(className).includes("unit-card")).length,
       disabledSupportCount: disabled.filter(({ className }) => String(className).includes("support-btn")).length,
+      ownedZonesInViewport: ownedRects.every(insideViewport),
+      controlPairOverlaps: controlGroups.flatMap(pairOverlaps),
+      requiredHudInformation,
+      documentOverflow: {
+        horizontal: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) > innerWidth + 1,
+        vertical: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) > innerHeight + 1,
+      },
     };
   }, { expectedTypography: MOBILE_BATTLE_HUD_TYPOGRAPHY });
 
@@ -559,29 +586,50 @@ async function measureHud(page, viewport, label) {
   invariant(measured.top && measured.bottom, `${label}: top or bottom HUD is missing`);
   invariant(measured.topZones.every(Boolean) && measured.bottomZones.every(Boolean),
     `${label}: one or more owned HUD zones are missing`);
-  invariant(measured.topRatios.every((value, index) => ratioClose(value, [.28, .38, .34][index])),
-    `${label}: top 28/38/34 ownership drift ${JSON.stringify(measured.topRatios)}`);
-  invariant(measured.bottomRatios.every((value, index) => ratioClose(value, [.14, .50, .36][index])),
-    `${label}: bottom 14/50/36 ownership drift ${JSON.stringify(measured.bottomRatios)}`);
   invariant(measured.topPairOverlaps.every(({ overlaps }) => !overlaps),
     `${label}: top HUD zones overlap`);
   invariant(measured.bottomPairOverlaps.every(({ overlaps }) => !overlaps),
     `${label}: bottom HUD zones overlap`);
-  const expectedTopHeight = expectedLayout.topHeight;
-  const expectedBottomHeight = expectedLayout.bottomHeight;
-  invariant(Math.abs(measured.top.height - expectedTopHeight) <= 2,
-    `${label}: top HUD height ${measured.top.height}/${expectedTopHeight}`);
-  invariant(Math.abs(measured.bottom.height - expectedBottomHeight) <= 2,
-    `${label}: bottom HUD height ${measured.bottom.height}/${expectedBottomHeight}`);
+  invariant(measured.controlPairOverlaps.every(({ overlaps }) => !overlaps),
+    `${label}: HUD controls collide`);
   const clearBattlefieldHeight = measured.bottom.top - measured.top.bottom;
-  const expectedBattlefieldHeight = expectedLayout.battlefield.height;
-  invariant(clearBattlefieldHeight >= expectedBattlefieldHeight - 2,
-    `${label}: battlefield band ${clearBattlefieldHeight}/${expectedBattlefieldHeight}`);
+  let expectedSafeAreaAdjusted = null;
+  if (expectedLayout) {
+    invariant(measured.topRatios.every((value, index) => ratioClose(value, [.28, .38, .34][index])),
+      `${label}: top 28/38/34 ownership drift ${JSON.stringify(measured.topRatios)}`);
+    invariant(measured.bottomRatios.every((value, index) => ratioClose(value, [.14, .50, .36][index])),
+      `${label}: bottom 14/50/36 ownership drift ${JSON.stringify(measured.bottomRatios)}`);
+    const expectedTopHeight = expectedLayout.topHeight;
+    const expectedBottomHeight = expectedLayout.bottomHeight;
+    const expectedBattlefieldHeight = expectedLayout.battlefield.height;
+    invariant(Math.abs(measured.top.height - expectedTopHeight) <= 2,
+      `${label}: top HUD height ${measured.top.height}/${expectedTopHeight}`);
+    invariant(Math.abs(measured.bottom.height - expectedBottomHeight) <= 2,
+      `${label}: bottom HUD height ${measured.bottom.height}/${expectedBottomHeight}`);
+    invariant(clearBattlefieldHeight >= expectedBattlefieldHeight - 2,
+      `${label}: battlefield band ${clearBattlefieldHeight}/${expectedBattlefieldHeight}`);
+    expectedSafeAreaAdjusted = {
+      topHeight: expectedTopHeight,
+      bottomHeight: expectedBottomHeight,
+      battlefieldHeight: expectedBattlefieldHeight,
+    };
+  } else {
+    invariant(measured.viewport.width === 1280 && measured.viewport.height === 720,
+      `${label}: desktop regression viewport drifted ${JSON.stringify(measured.viewport)}`);
+    invariant(measured.ownedZonesInViewport, `${label}: desktop HUD is clipped by the viewport`);
+    invariant(!measured.documentOverflow.horizontal && !measured.documentOverflow.vertical,
+      `${label}: desktop document overflow ${JSON.stringify(measured.documentOverflow)}`);
+    invariant(Object.values(measured.requiredHudInformation).every(Boolean),
+      `${label}: required desktop HUD information is missing ${JSON.stringify(measured.requiredHudInformation)}`);
+    invariant(clearBattlefieldHeight > 0, `${label}: desktop HUD leaves no visible battlefield`);
+  }
   invariant(measured.fontChecks.length > 0, `${label}: no visible HUD typography was audited`);
-  invariant(measured.fontChecks.every(({ fontSize, minimum }) => fontSize + .01 >= minimum),
-    `${label}: undersized HUD text ${JSON.stringify(measured.fontChecks.filter(({ fontSize, minimum }) => fontSize + .01 < minimum))}`);
-  invariant(measured.fontChecks.every(({ fits }) => fits),
-    `${label}: truncated HUD text ${JSON.stringify(measured.fontChecks.filter(({ fits }) => !fits))}`);
+  if (expectedLayout) {
+    invariant(measured.fontChecks.every(({ fontSize, minimum }) => fontSize + .01 >= minimum),
+      `${label}: undersized HUD text ${JSON.stringify(measured.fontChecks.filter(({ fontSize, minimum }) => fontSize + .01 < minimum))}`);
+    invariant(measured.fontChecks.every(({ fits }) => fits),
+      `${label}: truncated HUD text ${JSON.stringify(measured.fontChecks.filter(({ fits }) => !fits))}`);
+  }
   invariant(measured.unitSlots.logical === 7 && measured.unitSlots.allPainted,
     `${label}: seven logical unit slots were not rendered ${JSON.stringify(measured.unitSlots)}`);
   invariant(measured.unitSlots.visible >= 4,
@@ -601,10 +649,12 @@ async function measureHud(page, viewport, label) {
     `${label}: boss HUD escaped the battlefield band`);
     invariant(measured.bossHeading && measured.bossLabel && measured.bossValue,
       `${label}: boss HUD semantic fields are missing`);
-    invariant(Math.abs(measured.bossLabel.top - measured.bossValue.top) <= 2
-      && Math.abs(measured.bossLabel.bottom - measured.bossValue.bottom) <= 2
-      && measured.bossLabel.right <= measured.bossValue.left + .5,
-    `${label}: boss phase or current/max is semantically wrapped or overlapping`);
+    if (expectedLayout) {
+      invariant(Math.abs(measured.bossLabel.top - measured.bossValue.top) <= 2
+        && Math.abs(measured.bossLabel.bottom - measured.bossValue.bottom) <= 2
+        && measured.bossLabel.right <= measured.bossValue.left + .5,
+      `${label}: boss phase or current/max is semantically wrapped or overlapping`);
+    }
   }
   if (measured.boss && measured.crawlerAlert) {
     invariant(!measured.bossCrawlerAlertOverlap,
@@ -612,12 +662,9 @@ async function measureHud(page, viewport, label) {
   }
   return {
     ...measured,
+    contract: expectedLayout ? "mobile" : "desktop-regression",
     expected: expectedLayout,
-    expectedSafeAreaAdjusted: {
-      topHeight: expectedTopHeight,
-      bottomHeight: expectedBottomHeight,
-      battlefieldHeight: expectedBattlefieldHeight,
-    },
+    expectedSafeAreaAdjusted,
     clearBattlefieldHeight,
   };
 }
@@ -669,7 +716,7 @@ async function captureHudState(page, viewport, axisName, stateId) {
   };
 }
 
-async function createDisabledHudState(page, label) {
+async function createDisabledHudState(page, label, { minimumOpacity = .72 } = {}) {
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const candidate = await page.evaluate(() => (
       [...document.querySelectorAll("button.unit-card")]
@@ -721,8 +768,11 @@ async function createDisabledHudState(page, label) {
   const disabledTextControls = disabled.filter(({ className }) => (
     String(className).includes("unit-card") || String(className).includes("support-btn")
   ));
-  invariant(disabledTextControls.every(({ opacity }) => opacity >= .72),
-    `${label}: disabled text control opacity fell below .72 ${JSON.stringify(disabledTextControls)}`);
+  if (minimumOpacity !== null) {
+    invariant(disabledTextControls.every(({ opacity }) => opacity >= minimumOpacity),
+      `${label}: disabled text control opacity fell below ${minimumOpacity}`
+      + ` ${JSON.stringify(disabledTextControls)}`);
+  }
   return disabled;
 }
 
@@ -821,7 +871,9 @@ async function runHudCase(browser, engine, viewport) {
     result.states.push(objective);
 
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
-    const disabledControls = await createDisabledHudState(page, `${name}/support-disabled`);
+    const disabledControls = await createDisabledHudState(page, `${name}/support-disabled`, {
+      minimumOpacity: mobileBattleHudLayout(viewport) ? .72 : null,
+    });
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
     const disabled = await captureHudState(page, viewport, name, "support-disabled");
     invariant(disabled.layout.disabledUnitCount > 0 && disabled.layout.disabledSupportCount > 0,
