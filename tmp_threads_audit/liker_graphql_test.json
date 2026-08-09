@@ -1,14 +1,14 @@
 {
   "meta": {
     "bootstrap_status": 200,
-    "lsd": "AdTG0JXrk6YzU8p9o6vqLULbxVQ",
-    "csrf": "ndNDoz-csovxxIFWifceIj",
-    "hsi": "7671935610694584489",
+    "lsd": "AdTMPEpa1GgaZjACoNGSXsSm3rE",
+    "csrf": "ttte59HTp1stvDyegxnERB",
+    "hsi": "7671936005694905770",
     "rev": "1044807424",
     "spin_r": "1044807424",
     "spin_b": "trunk",
     "cookies": {
-      "csrftoken": "ndNDoz-csovxxIFWifceIj"
+      "csrftoken": "ttte59HTp1stvDyegxnERB"
     }
   },
   "tests": [
@@ -949,15 +949,143 @@
       ]
     }
   ],
-  "apify_anonymous": [
+  "apify": [
     {
-      "url": "https://api.apify.com/v2/acts/memo23~threads-scraper",
+      "url": "https://api.apify.com/v2/actors/2Pg8fTCRRaI5NRJzG",
       "status": 200,
       "length": 5131,
-      "preview": "{\n  \"data\": {\n    \"id\": \"2Pg8fTCRRaI5NRJzG\",\n    \"userId\": \"ngn8vRESTkseyWE6p\",\n    \"name\": \"threads-scraper\",\n    \"username\": \"memo23\",\n    \"description\": \"Threads Scraper — extract posts, replies and profiles from threads.com with no login or cookies. Paste usernames or post URLs and get flat rows: text, like/reply/repost/quote counts, media, timestamps and author. Bulk-ready. JSON, CSV or Excel.\",\n    \"isPublic\": true,\n    \"createdAt\": \"2026-07-15T11:50:51.167Z\",\n    \"modifiedAt\": \"2026-08-08T13:34:35.848Z\",\n    \"taggedBuilds\": {\n      \"latest\": {\n        \"buildId\": \"wKxFUlFp6o16iSVYK\",\n        \"finishedAt\": \"2026-08-08T13:34:35.848Z\",\n        \"buildNumberInt\": 10,\n        \"buildNumber\": \"0.0.10\"\n      }\n    },\n    \"stats\": {\n      \"totalBuilds\": 10,\n      \"totalRuns\": 65,\n      \"totalUsers\": 20,\n      \"totalUsers7Days\": 2,\n      \"totalUsers30Days\": 18,\n      \"totalUsers90Days\": 18,\n      \"lastRunStartedAt\": \"2026-08-08T13:42:47.138Z\",\n      \"actorReviewCount\": 1,\n      \"actorReviewRating\": 5,\n      \"bookmarkCount\": 0,\n      \"publicActorRunStats30Days\": {\n        \"ABORTED\": 0,\n        \"FAILED\": 0,\n        \"SUCCEEDED\": 62,\n        \"TIMED-OUT\": 0,\n        \"TOTAL\": 62\n      }\n    },\n    \"versions\": [\n      {\n        \"versionNumber\": \"0.0\",\n        \"sourceType\": \"SOURCE_FILES\",\n        \"buildTag\": \"latest\"\n      }\n    ],\n    \"defaultRunOptions\": {\n      \"build\": \"latest\",\n      \"timeoutSecs\": 3600,\n      \"memoryMbytes\": 4096\n    },\n    \"exampleRunInput\": {\n      \"body\": \"{ \\\"helloWorld\\\": 123 }\",\n      \"contentType\": \"application/json; charset=utf-8\"\n    },\n    \"categories\": [\n      \"SOCIAL_MEDIA\",\n      \"LEAD_GENERATION\",\n      \"AI\"\n    ],\n    \"isDeprecated\": false,\n    \"title\": \"Threads Scraper — Posts, Replies & Profiles, No Login\",\n    \"pictureUrl\": \"https://apify-image-uploads-prod.s3.us-east-1.amazonaws.com/ngn8vRESTkseyWE6p-actor-2Pg8fTCRRaI5NRJzG-60cIPi2aCu-threads.png\",\n    \"seoTitle\": null,\n    \"seoDescription\": null,\n    \"pricingInfos\": [\n      {\n        \"pricingModel\": \"PAY_PER_EVENT\",\n        \"isPriceChangeNotificationSuppressed\": true,\n        \"pricingPerEvent\": {\n          \"actorChargeEvents\": {\n            \"apify-actor-start\": {\n              \"eventTitle\": \"Actor Start\",\n              \"eventDescription\": \"Charged when the Actor starts running. Number of events charged depends on Actor memory (one event per GB, minimum one event).\",\n              \"isOneTimeEvent\": true,\n              \"eventPriceUsd\": 0.005\n            },\n            \"post-result\": {\n              \"eventTitle\": \"Post scraped\",\n              \"eventDescription\": \"Charged per Threads post / row returned in the output (posts, replies, profile rows).\",\n              \"isOneTimeEvent\": false,\n              \"eventPriceUsd\": 0.004,\n              \"isPrimaryEvent\": true\n            }\n          }\n        },\n        \"createdAt\": \"2026-07-15T12:57:45.231Z\",\n        \"startedAt\": \"2026-07-15T12:57:45.231Z\",\n        \"apifyMarginPercentage\": 0.2\n      }\n    ],\n    \"notice\": \"NONE\",\n  "
+      "json": {
+        "data": {
+          "id": "2Pg8fTCRRaI5NRJzG",
+          "userId": "ngn8vRESTkseyWE6p",
+          "name": "threads-scraper",
+          "username": "memo23",
+          "description": "Threads Scraper — extract posts, replies and profiles from threads.com with no login or cookies. Paste usernames or post URLs and get flat rows: text, like/reply/repost/quote counts, media, timestamps and author. Bulk-ready. JSON, CSV or Excel.",
+          "isPublic": true,
+          "createdAt": "2026-07-15T11:50:51.167Z",
+          "modifiedAt": "2026-08-08T13:34:35.848Z",
+          "taggedBuilds": {
+            "latest": {
+              "buildId": "wKxFUlFp6o16iSVYK",
+              "finishedAt": "2026-08-08T13:34:35.848Z",
+              "buildNumberInt": 10,
+              "buildNumber": "0.0.10"
+            }
+          },
+          "stats": {
+            "totalBuilds": 10,
+            "totalRuns": 65,
+            "totalUsers": 20,
+            "totalUsers7Days": 2,
+            "totalUsers30Days": 18,
+            "totalUsers90Days": 18,
+            "lastRunStartedAt": "2026-08-08T13:42:47.138Z",
+            "actorReviewCount": 1,
+            "actorReviewRating": 5,
+            "bookmarkCount": 0,
+            "publicActorRunStats30Days": {
+              "ABORTED": 0,
+              "FAILED": 0,
+              "SUCCEEDED": 62,
+              "TIMED-OUT": 0,
+              "TOTAL": 62
+            }
+          },
+          "versions": [
+            {
+              "versionNumber": "0.0",
+              "sourceType": "SOURCE_FILES",
+              "buildTag": "latest"
+            }
+          ],
+          "defaultRunOptions": {
+            "build": "latest",
+            "timeoutSecs": 3600,
+            "memoryMbytes": 4096
+          },
+          "exampleRunInput": {
+            "body": "{ \"helloWorld\": 123 }",
+            "contentType": "application/json; charset=utf-8"
+          },
+          "categories": [
+            "SOCIAL_MEDIA",
+            "LEAD_GENERATION",
+            "AI"
+          ],
+          "isDeprecated": false,
+          "title": "Threads Scraper — Posts, Replies & Profiles, No Login",
+          "pictureUrl": "https://apify-image-uploads-prod.s3.us-east-1.amazonaws.com/ngn8vRESTkseyWE6p-actor-2Pg8fTCRRaI5NRJzG-60cIPi2aCu-threads.png",
+          "seoTitle": null,
+          "seoDescription": null,
+          "pricingInfos": [
+            {
+              "pricingModel": "PAY_PER_EVENT",
+              "isPriceChangeNotificationSuppressed": true,
+              "pricingPerEvent": {
+                "actorChargeEvents": {
+                  "apify-actor-start": {
+                    "eventTitle": "Actor Start",
+                    "eventDescription": "Charged when the Actor starts running. Number of events charged depends on Actor memory (one event per GB, minimum one event).",
+                    "isOneTimeEvent": true,
+                    "eventPriceUsd": 0.005
+                  },
+                  "post-result": {
+                    "eventTitle": "Post scraped",
+                    "eventDescription": "Charged per Threads post / row returned in the output (posts, replies, profile rows).",
+                    "isOneTimeEvent": false,
+                    "eventPriceUsd": 0.004,
+                    "isPrimaryEvent": true
+                  }
+                }
+              },
+              "createdAt": "2026-07-15T12:57:45.231Z",
+              "startedAt": "2026-07-15T12:57:45.231Z",
+              "apifyMarginPercentage": 0.2
+            }
+          ],
+          "notice": "NONE",
+          "isCritical": false,
+          "isGeneric": false,
+          "hasNoDataset": false,
+          "isSourceCodeHidden": true,
+          "standbyUrl": null,
+          "actorPermissionLevel": "LIMITED_PERMISSIONS",
+          "readmeSummary": "## Threads Scraper\n\nA scraper for Threads (threads.com) that extracts profiles, user posts, replies, and single-post reply threads without requiring a login, cookies, or an account. It bootstraps a public guest token from Threads' web app and calls Threads' public GraphQL API over plain HTTP to fetch and normalize data into a stable, flat schema. Outputs are record-level rows containing post text, engagement counts (likes/replies/reposts/quotes), media information (images/videos and their URLs), timestamps, canonical post URLs and identifiers, author/profile metadata (name, follower metrics, verification, bio, profile image), link preview targets, and optionally users who liked a post. Designed for structured export and downstream analysis, monitoring, or feeding into AI agents; supports use of datacenter or residential proxies for higher-volume scraping.\n\n## Use cases\n\n- Scrape entire account timelines to collect all posts from one or more Threads profiles in a single run.  \n- Retrieve replies authored by specified users across Threads.  \n- Extract profile metadata such as full name, follower counts, biography, verification status, and profile picture.  \n- Fetch a single Threads post and its full reply thread for conversation analysis.  \n- Collect post-level details (text, engagement metrics, media, timestamps, link previews) for monitoring, analytics, or training models.  \n- Optionally gather the list of users who liked a specific post for social graph or engagement research.",
+          "deploymentKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5BWIWHGEqnVsohBVLgs4xfCYMFD0kJVMJtC0d3UwWI6DC+odusG9izZGmOoCifXz6S0mOHsvwWzSrNShcnYG3lT142/sAS0fM3bKYs5oW6GgPChzEQMQDrO0EbUYvVJ2xTi0PsjyUBdCDhNh/hl+WtpWs+bg4voONR8BYt46E9BLQe6Cp0K1SiahABXrjl5igmehes2yR3cRZJzIMMh2l9zcB7nymwysiGo++uLbvarEVOvmT8T5yPRy+X85D+jJJbsPHCMxjb+a2sOqtdMHi8k0CeyzMUKLUa/+peYIhSDYilej+maxeP5NyrNnk4WI+wVkeBR5+IsAWg/UiKNlB \n"
+        }
+      }
     },
     {
-      "url": "https://api.apify.com/v2/acts/memo23~threads-scraper/runs",
+      "url": "https://api.apify.com/v2/actors/2Pg8fTCRRaI5NRJzG/versions",
+      "status": 200,
+      "length": 171,
+      "json": {
+        "data": {
+          "total": 1,
+          "items": [
+            {
+              "versionNumber": "0.0",
+              "sourceType": "SOURCE_FILES",
+              "buildTag": "latest"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "url": "https://api.apify.com/v2/actors/2Pg8fTCRRaI5NRJzG/versions/0.0",
+      "status": 200,
+      "length": 106,
+      "json": {
+        "data": {
+          "versionNumber": "0.0",
+          "sourceType": "SOURCE_FILES",
+          "buildTag": "latest"
+        }
+      }
+    },
+    {
+      "url": "anonymous-run",
       "status": 402,
       "length": 157,
       "preview": "{\n  \"error\": {\n    \"type\": \"x402-payment-required\",\n    \"message\": \"x402 payment header missing. Add your PAYMENT-SIGNATURE or Apify token to proceed.\"\n  }\n}"
