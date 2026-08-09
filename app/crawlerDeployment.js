@@ -76,6 +76,37 @@ const OUTSIDE_DRAW_ORDER = Object.freeze([
   "unit",
 ]);
 
+/**
+ * Opaque authored layers used by the deployment composite. The closed host is
+ * always the base; the authored interior and foreground mask switch as
+ * opaque phases instead of cross-fading the whole vehicle.
+ */
+export function crawlerDeploymentCompositePlan({
+  doorProgress = 0,
+  entryRampCleared = false,
+} = {}) {
+  const progress = clamp01(doorProgress);
+  const doorOpen = progress > 0;
+  const outside = entryRampCleared === true || progress >= 1;
+  return Object.freeze({
+    checkpoint: crawlerDeploymentCheckpoint(progress),
+    layers: Object.freeze([
+      Object.freeze({ id: "crawler-command-base-closed", alpha: 1, drawCount: 1, opaque: true }),
+      ...(doorOpen
+        ? [Object.freeze({ id: "crawler-deployment-base-interior", alpha: 1, drawCount: 1, opaque: true })]
+        : []),
+    ]),
+    foregroundMask: doorOpen
+      ? Object.freeze({ alpha: 1, drawCount: 1, opaque: true })
+      : null,
+    unit: Object.freeze({
+      alpha: 1,
+      drawCount: 1,
+      pass: outside ? "after-foreground-mask" : "before-foreground-mask",
+    }),
+  });
+}
+
 export function crawlerDeploymentUnitFamily(unitKind) {
   return CRAWLER_DEPLOYMENT_FAMILY_BY_KIND[String(unitKind ?? "")] ?? null;
 }

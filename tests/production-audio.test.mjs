@@ -354,8 +354,8 @@ test("TAKUYA entrance starts boss music under a composing transient duck for the
   assert.equal(PRODUCTION_AUDIO_MANIFEST.assetById[TAKUYA_ENTRANCE_AUDIO.cueId].category, "monsters");
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById.stage3.preload.includes(TAKUYA_ENTRANCE_AUDIO.cueId), true);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["story-stage3-battle"].preload.includes(TAKUYA_ENTRANCE_AUDIO.cueId), true);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById.boss.bgm, "music-v099-boss");
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["story-boss"].bgm, "music-v099-boss");
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById.boss.bgm, "music-boss");
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["story-boss"].bgm, "music-boss");
   assert.match(source, /g\.takuyaEntranceAudioRemaining = TAKUYA_ENTRANCE_AUDIO\.durationSeconds/);
   assert.match(source, /playProductionCue\(TAKUYA_ENTRANCE_AUDIO\.cueId, W \/ 2/);
   assert.match(source, /TAKUYA_ENTRANCE_AUDIO\.bossSceneId/);
@@ -432,13 +432,13 @@ test("all 43 battle and authored story scenes resolve with intentional limited s
     "music-v099-normal",
     "music-v099-pressure-surface",
     "music-v099-pressure-station",
-    "music-v099-boss",
+    "music-boss",
   ]);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-prologue-title"].bgm, undefined);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-prologue-title"].ambience.length, 0);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-prologue-title"].crossfadeMs, 0);
   assert.deepEqual(PRODUCTION_AUDIO_MANIFEST.sceneById["story-collapse-montage"].preload, []);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById[TAKUYA_ENTRANCE_AUDIO.bossSceneId].bgm, "music-v099-boss");
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById[TAKUYA_ENTRANCE_AUDIO.bossSceneId].bgm, "music-boss");
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-entrance"], undefined);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-final"], undefined);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-station-seal"].bgm, undefined);
@@ -612,8 +612,8 @@ test("StoryScreen reports line boundaries and holds authored silence before even
   const gameSource = readFileSync(path.join(repositoryRoot, "app", "AshfallGame.tsx"), "utf8");
   assert.match(screensSource, /onStoryAudioPositionChange: \(eventId: string, lineIndex: number\) => void/);
   assert.match(screensSource, /onStoryAudioPositionChange\(event\.id, index\)/);
-  assert.match(screensSource, /const holdMs = event\.presentation\.silenceAfterMs/);
-  assert.match(screensSource, /onStoryAudioPositionChange\(event\.id, event\.lines\.length\)/);
+  assert.match(screensSource, /const authoredSilenceAfterMs = event\?\.presentation\.silenceAfterMs/);
+  assert.match(screensSource, /onStoryAudioPositionChange\(storyEventId, storyEventLineCount\)/);
   assert.match(screensSource, /window\.setTimeout\(completeOnce, holdMs\)/);
   assert.match(screensSource, /disabled=\{silenceTail\} aria-busy=\{silenceTail\}/);
   assert.match(gameSource, /const storyLineIndex = storyAudioPosition\.eventId === eventId \? storyAudioPosition\.lineIndex : 0/);

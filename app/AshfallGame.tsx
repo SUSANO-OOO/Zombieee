@@ -48,9 +48,15 @@ import {
 import {
   CRAWLER_DOOR_PHASES,
   advanceCrawlerDoorRuntime,
+  crawlerDeploymentCompositePlan,
   crawlerDeploymentRenderPlan,
   createCrawlerDoorRuntime,
 } from "./crawlerDeployment.js";
+import { analyzeDeploymentCompositePixels } from "./deploymentCompositePixelAudit.js";
+import {
+  clearViewportSafeAreaInlineOverride,
+  resolveViewportSafeArea,
+} from "./viewportSafeArea.js";
 import {
   crawlerDefenseResponderCapacity,
   isEffectiveCrawlerDefenseClaim,
@@ -294,6 +300,7 @@ import {
 } from "./enemyVfxPresentation.js";
 import { allyCorpseVisualCue } from "./corpseVisuals.js";
 import { resolveLocalQaMode, resolveLocalQaSafeArea, resolveLocalQaScenario } from "./localQa.js";
+import { mobileBattleHudLayout, mobileBattleHudUnitSlots } from "./battleHudLayout.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
 import {
   COMPACT_BATTLE_SPRITE_SCALE,
@@ -367,6 +374,7 @@ import {
   resetBattlePresentationRuntime,
 } from "./battlePresentationV099.js";
 import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
+import { publicDisplayText, PUBLIC_CRAWLER_LABEL } from "./publicDisplayNames.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
 import { loadImageWithTimeout } from "./boundedImageLoader.js";
 import {
@@ -4050,7 +4058,14 @@ function drawSpriteFighter(
   };
 }
 
-function fighterUnitLayerPixelAudit(fighter: Fighter, sprites: SpriteMap) {
+function fighterUnitLayerPixelAudit(
+  fighter: Fighter,
+  sprites: SpriteMap,
+  finalCanvas: HTMLCanvasElement,
+  g: Game,
+  graphicsProfile: GraphicsProfile,
+  finalTransform: { scale: number; offsetX: number; offsetY: number },
+) {
   const left = Math.max(0, Math.floor(Math.min(
     fighter.x - 120,
     WORLD_GEOMETRY.crawler.doorX - 48,
@@ -4084,6 +4099,61 @@ function fighterUnitLayerPixelAudit(fighter: Fighter, sprites: SpriteMap) {
   };
   const actual = capture({});
   const opaque = capture({ forceOpaque: true });
+  const foregroundCanvas = document.createElement("canvas");
+  foregroundCanvas.width = W;
+  foregroundCanvas.height = H;
+  const foregroundContext = foregroundCanvas.getContext("2d", { willReadFrequently: true });
+  if (!foregroundContext) throw new Error("Foreground-layer audit canvas unavailable");
+  const captureForeground = (forceOpaque: boolean) => {
+    foregroundContext.clearRect(0, 0, W, H);
+    drawCrawlerForegroundMask(foregroundContext, g, sprites, graphicsProfile, forceOpaque);
+    return foregroundContext.getImageData(left, top, width, height).data;
+  };
+  const finalAuditCanvas = document.createElement("canvas");
+  finalAuditCanvas.width = width;
+  finalAuditCanvas.height = height;
+  const finalAuditContext = finalAuditCanvas.getContext("2d", { willReadFrequently: true });
+  if (!finalAuditContext) throw new Error("Final battle canvas audit unavailable");
+  const dpr = Math.max(1, Number(finalCanvas.dataset.dpr) || 1);
+  finalAuditContext.imageSmoothingEnabled = true;
+  finalAuditContext.imageSmoothingQuality = "high";
+  finalAuditContext.drawImage(
+    finalCanvas,
+    (finalTransform.offsetX + left * finalTransform.scale) * dpr,
+    (finalTransform.offsetY + top * finalTransform.scale) * dpr,
+    width * finalTransform.scale * dpr,
+    height * finalTransform.scale * dpr,
+    0,
+    0,
+    width,
+    height,
+  );
+  const finalRgba = finalAuditContext.getImageData(0, 0, width, height).data;
+  const compositeCanvas = document.createElement("canvas");
+  compositeCanvas.width = W;
+  compositeCanvas.height = H;
+  const compositeContext = compositeCanvas.getContext("2d", { willReadFrequently: true });
+  if (!compositeContext) throw new Error("Deployment final composite audit canvas unavailable");
+  drawCrawler(compositeContext, g, sprites, graphicsProfile);
+  if (actual.deploymentPlan?.active
+    && actual.deploymentPlan.unitPass === "before-foreground-mask") {
+    drawSpriteFighter(compositeContext, fighter, sprites, { recordAudit: false });
+    drawCrawlerForegroundMask(compositeContext, g, sprites, graphicsProfile);
+  } else {
+    drawCrawlerForegroundMask(compositeContext, g, sprites, graphicsProfile);
+    drawSpriteFighter(compositeContext, fighter, sprites, { recordAudit: false });
+  }
+  const compositeRgba = compositeContext.getImageData(left, top, width, height).data;
+  const compositePixels = analyzeDeploymentCompositePixels({
+    finalRgba: compositeRgba,
+    renderedUnitRgba: actual.data,
+    expectedUnitRgba: opaque.data,
+    renderedForegroundRgba: captureForeground(false),
+    expectedForegroundRgba: captureForeground(true),
+    unitDrawCount: actual.deploymentPlan?.unitDrawCount ?? 1,
+    width,
+    visibleFinalRgba: finalRgba,
+  });
 
   const metrics = (rgba: Uint8ClampedArray) => {
     let alphaMass = 0;
@@ -4148,6 +4218,7 @@ function fighterUnitLayerPixelAudit(fighter: Fighter, sprites: SpriteMap) {
     actual: actualMetrics,
     opaque: opaqueMetrics,
     opacityComparison,
+    finalCompositePixels: compositePixels,
     alphaOneFromFirstVisibleFrame: opacityComparison.maskIoU >= .999
       && opacityComparison.normalizedAlphaL1 <= .001,
   };
@@ -5909,12 +5980,13 @@ function drawCrawler(
     const crawlerOpacity = .92 + Math.max(0, g.baseHp / g.baseMaxHp) * .08;
     const doorProgress = g.crawlerDoor.doorProgress * g.crawlerDoor.doorProgress
       * (3 - 2 * g.crawlerDoor.doorProgress);
-    ctx.globalAlpha = crawlerOpacity * (1 - doorProgress);
+    const compositePlan = crawlerDeploymentCompositePlan({ doorProgress });
+    ctx.globalAlpha = crawlerOpacity;
     drawCrawlerAsset(ctx, crawlerClosedSprite, crawler);
     if (crawlerOpenSprite?.complete
       && crawlerOpenSprite.naturalWidth
-      && doorProgress > 0) {
-      ctx.globalAlpha = crawlerOpacity * doorProgress;
+      && compositePlan.layers.some((layer) => layer.id === "crawler-deployment-base-interior")) {
+      ctx.globalAlpha = crawlerOpacity;
       drawCrawlerAsset(ctx, crawlerOpenSprite, crawler);
     }
   } else {
@@ -5978,6 +6050,7 @@ function drawCrawlerForegroundMask(
   g: Game,
   sprites: SpriteMap,
   graphicsProfile: GraphicsProfile,
+  forceOpaque = false,
 ) {
   if (g.crawlerDoor.doorProgress <= 0) return;
   const crawler = WORLD_GEOMETRY.crawler;
@@ -5987,7 +6060,12 @@ function drawCrawlerForegroundMask(
   applyCrawlerSuspensionTransform(ctx, g, graphicsProfile);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  ctx.globalAlpha = g.crawlerDoor.doorProgress;
+  const compositePlan = crawlerDeploymentCompositePlan({ doorProgress: g.crawlerDoor.doorProgress });
+  if (!compositePlan.foregroundMask) {
+    ctx.restore();
+    return;
+  }
+  ctx.globalAlpha = forceOpaque ? 1 : compositePlan.foregroundMask.alpha;
   drawCrawlerAsset(ctx, foregroundMask, crawler);
   ctx.restore();
 }
@@ -7391,6 +7469,15 @@ export function AshfallGame() {
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
   const campaignSaveRef = useRef(campaignSave);
   const [graphicsProfileView, setGraphicsProfileView] = useState<GraphicsProfile>(() => resolveGraphicsProfile("auto"));
+  const [battleHudViewport, setBattleHudViewport] = useState({
+    width: 0,
+    height: 0,
+    safeAreaTop: 0,
+    safeAreaRight: 0,
+    safeAreaBottom: 0,
+    safeAreaLeft: 0,
+  });
+  const viewportSafeAreaRef = useRef({ top: 0, right: 0, bottom: 0, left: 0 });
   useEffect(() => {
     campaignSaveRef.current = campaignSave;
   }, [campaignSave]);
@@ -7440,6 +7527,11 @@ export function AshfallGame() {
   const resultSaveRetryingRef = useRef(false);
   const formationUnitIds = useMemo(() => getSelectedFormationUnitIds(campaignSave), [campaignSave]);
   const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
+  const battleHudSlots = useMemo(
+    () => mobileBattleHudUnitSlots(cards, formationKinds),
+    [formationKinds],
+  );
+  const battleHudLayout = useMemo(() => mobileBattleHudLayout(battleHudViewport), [battleHudViewport]);
   const formationKindKey = formationKinds.join("|");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
   const [outbreakResult, setOutbreakResult] = useState<OutbreakResultView | null>(null);
@@ -10970,7 +11062,16 @@ export function AshfallGame() {
       auditFighterUnitLayer: (fighterId: number) => {
         const fighter = gameRef.current.fighters.find(({ id }) => id === fighterId);
         if (!fighter) throw new Error(`Unknown fighter for unit-layer audit: ${fighterId}`);
-        return fighterUnitLayerPixelAudit(fighter, spriteRefs.current);
+        const canvas = canvasRef.current;
+        if (!canvas) throw new Error("Final battle canvas unavailable for unit-layer audit");
+        return fighterUnitLayerPixelAudit(
+          fighter,
+          spriteRefs.current,
+          canvas,
+          gameRef.current,
+          graphicsProfileRef.current,
+          canvasTransformRef.current,
+        );
       },
       getSnapshot: () => {
         const g = gameRef.current;
@@ -11394,24 +11495,42 @@ export function AshfallGame() {
       root.style.setProperty("--app-viewport-top", `${offsetTop}px`);
       root.dataset.viewportSource = viewport ? "visual" : "layout";
       const qaSafeArea = resolveLocalQaSafeArea(window.location.hostname, window.location.search);
-      if (qaSafeArea) {
-        root.style.setProperty("--app-viewport-safe-top", `${qaSafeArea.top}px`);
-        root.style.setProperty("--app-viewport-safe-right", `${qaSafeArea.right}px`);
-        root.style.setProperty("--app-viewport-safe-bottom", `${qaSafeArea.bottom}px`);
-        root.style.setProperty("--app-viewport-safe-left", `${qaSafeArea.left}px`);
-        root.dataset.safeAreaSource = "local-qa-iphone-landscape";
-      }
+      const safeArea = resolveViewportSafeArea({
+        root,
+        document,
+        getComputedStyle: window.getComputedStyle.bind(window),
+        qaSafeArea,
+      });
+      viewportSafeAreaRef.current = safeArea;
+      setBattleHudViewport((current) => {
+        const next = {
+          width,
+          height,
+          safeAreaTop: safeArea.top,
+          safeAreaRight: safeArea.right,
+          safeAreaBottom: safeArea.bottom,
+          safeAreaLeft: safeArea.left,
+        };
+        return Object.keys(next).every((key) => current[key as keyof typeof current] === next[key as keyof typeof next])
+          ? current
+          : next;
+      });
     };
     syncVisualViewport();
     window.addEventListener("resize", syncVisualViewport);
     window.addEventListener("orientationchange", syncVisualViewport);
+    window.addEventListener("pageshow", syncVisualViewport);
+    document.addEventListener("visibilitychange", syncVisualViewport, { passive: true });
     window.visualViewport?.addEventListener("resize", syncVisualViewport);
     window.visualViewport?.addEventListener("scroll", syncVisualViewport);
     return () => {
       window.removeEventListener("resize", syncVisualViewport);
       window.removeEventListener("orientationchange", syncVisualViewport);
+      window.removeEventListener("pageshow", syncVisualViewport);
+      document.removeEventListener("visibilitychange", syncVisualViewport);
       window.visualViewport?.removeEventListener("resize", syncVisualViewport);
       window.visualViewport?.removeEventListener("scroll", syncVisualViewport);
+      clearViewportSafeAreaInlineOverride(document.documentElement);
     };
   }, []);
 
@@ -20428,10 +20547,9 @@ export function AshfallGame() {
               };
             })
           : [];
-        const rootStyle = getComputedStyle(document.documentElement);
         const safeInsets = Object.fromEntries(["top", "right", "bottom", "left"].map((edge) => [
           edge,
-          Math.max(0, Number.parseFloat(rootStyle.getPropertyValue(`--app-viewport-safe-${edge}`)) || 0) + 6,
+          viewportSafeAreaRef.current[edge as keyof typeof viewportSafeAreaRef.current] + 6,
         ]));
         const manualAbilityIcons = layoutManualAbilityIcons({
           fighters: readyAbilityFighters,
@@ -20583,6 +20701,23 @@ export function AshfallGame() {
     ["VOICE", audioAvailability.voice],
     ["OPTIONAL", audioAvailability.optional],
   ] as const).map(([label, state]) => `${label}:${state === "ready" ? "OK" : state === "failed" ? "不可" : state === "retrying" ? "再試行中" : "待機"}`).join(" / ");
+  const battleHudFrameStyle = {
+    ...(screen === "battle" && assetsReady
+      ? { backgroundImage: `url('${stageVisualFor(activeBattlefieldStageId)}')` }
+      : {}),
+    ...(battleHudLayout
+      ? {
+        "--battle-hud-content-top": `${battleHudLayout.content.y}px`,
+        "--battle-hud-content-left": `${battleHudLayout.content.x}px`,
+        "--battle-hud-content-right": `${battleHudLayout.viewport.width - (battleHudLayout.content.x + battleHudLayout.content.width)}px`,
+        "--battle-hud-bottom-inset": `${battleHudLayout.safeArea.bottom}px`,
+        "--battle-hud-top-height": `${battleHudLayout.topHeight}px`,
+        "--battle-hud-bottom-height": `${battleHudLayout.bottomHeight}px`,
+        "--battle-hud-top-columns": `${battleHudLayout.top.crawler.width}px ${battleHudLayout.top.communication.width}px ${battleHudLayout.top.controls.width}px`,
+        "--battle-hud-bottom-columns": `${battleHudLayout.bottom.resources.width}px ${battleHudLayout.bottom.units.width}px ${battleHudLayout.bottom.support.width}px`,
+      }
+      : {}),
+  } as CSSProperties;
 
   return (
     <main
@@ -20607,9 +20742,8 @@ export function AshfallGame() {
     >
       <section
         className="game-frame"
-        style={screen === "battle" && assetsReady
-          ? { backgroundImage: `url('${stageVisualFor(activeBattlefieldStageId)}')` }
-          : undefined}
+        data-battle-hud-layout={battleHudLayout ? "mobile" : undefined}
+        style={battleHudFrameStyle}
         aria-label="西新世紀末物語 ゲーム"
       >
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} onLostPointerCapture={handleBattlefieldLostPointerCapture} />
@@ -20660,14 +20794,14 @@ export function AshfallGame() {
         {screen === "battle" && <>
         {isSurvivalBattle ? <>
           {(hud.battleBarks.length > 0 || hud.banner) && <div className="battle-message-stack battle-message-stack-survival" aria-live="polite">
-            {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
-            {hud.banner && <p className="battle-banner" data-message-kind="banner">{hud.banner}</p>}
+            {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{publicDisplayText(bark.speaker)}</b><span>{publicDisplayText(bark.text)}</span></p>)}</div>}
+            {hud.banner && <p className="battle-banner" data-message-kind="banner">{publicDisplayText(hud.banner)}</p>}
           </div>}
           <div className="survival-hud" role="region" aria-label="Survival戦闘情報">
           <div className="survival-wave"><small>WAVE</small><strong>{survivalHud.wave}</strong></div>
           <div className="survival-next-boss"><small>NEXT BOSS</small><b>WAVE {survivalHud.nextBossWave}</b></div>
           <div className={`survival-crawler-health ${healthPct <= 25 ? "critical" : ""}`}>
-            <span>CRAWLER HP</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b>
+            <span>{publicDisplayText("CRAWLER HP")}</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b>
             <i><em style={{ width: `${healthPct}%` }} /></i>
           </div>
           <div className="survival-speed" aria-label="戦闘速度">
@@ -20683,8 +20817,8 @@ export function AshfallGame() {
               <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>耐久</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
             </div>
             <div className="battle-message-stack" aria-live="polite">
-              {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{bark.speaker}</b><span>{bark.text}</span></p>)}</div>}
-              {hud.banner && <p className="battle-banner" data-message-kind="banner">{hud.banner}</p>}
+              {hud.battleBarks.length > 0 && <div className="battle-barks" aria-label="戦闘台詞">{hud.battleBarks.slice(0, 1).map((bark) => <p key={bark.id} data-tone={bark.tone}><b>{publicDisplayText(bark.speaker)}</b><span>{publicDisplayText(bark.text)}</span></p>)}</div>}
+              {hud.banner && <p className="battle-banner" data-message-kind="banner">{publicDisplayText(hud.banner)}</p>}
             </div>
             <div className="battle-controls-zone">
               <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
@@ -20695,9 +20829,9 @@ export function AshfallGame() {
           </div>
 
           {stationMissionHud || selectedOutbreakMissionId
-            ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{hud.objective}</b></div></div>
+            ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{publicDisplayText(hud.objective)}</b></div></div>
             : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
-          {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>移動拠点 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
+          {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{PUBLIC_CRAWLER_LABEL} 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
         </>}
         {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
 
@@ -20715,7 +20849,15 @@ export function AshfallGame() {
           </div>
 
           <div className="unit-cards" aria-label="生存者ユニット">
-              {cards.filter((card) => formationKinds.includes(card.kind)).map((card) => {
+              {battleHudSlots.map((card, slotIndex) => {
+                if (!card) {
+                  return <div
+                    key={`empty-slot-${slotIndex}`}
+                    className="unit-card unit-card-placeholder"
+                    data-slot-index={slotIndex}
+                    aria-hidden="true"
+                  />;
+                }
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 const cardBlockReason = commonBattleActionBlockReason
@@ -20727,7 +20869,7 @@ export function AshfallGame() {
                         ? "指揮不足"
                         : null);
                 return (
-                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
                     {!cooldown && <span className="card-state">{cardBlockReason ?? "出撃可能"}</span>}
@@ -20763,7 +20905,7 @@ export function AshfallGame() {
                 <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>{crawlerBlockReason ?? "戦場全域固定火器"}</small><em>⌁</em>
               </button>
             </div>
-            <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${hud.objective}`}</div>
+            <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${publicDisplayText(hud.objective)}`}</div>
           </div>
         </div>
         {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
@@ -20831,7 +20973,7 @@ export function AshfallGame() {
         </div></div>}
         </>}
         {screen === "survival" && <div className="survival-lobby campaign-overlay"><section>
-          <header><div><small>ENDLESS DEFENSE</small><h1>Survival Mode</h1><p>感染防衛前線でCRAWLERを守り、5waveごとのboss checkpointを突破してください。</p></div><button onClick={() => returnToMap()}>エリアマップへ戻る</button></header>
+            <header><div><small>ENDLESS DEFENSE</small><h1>Survival Mode</h1><p>{publicDisplayText("感染防衛前線でCRAWLERを守り、5waveごとのboss checkpointを突破してください。")}</p></div><button onClick={() => returnToMap()}>エリアマップへ戻る</button></header>
           <div className="survival-lobby-grid">
             <article>
               <small>FORMATION SNAPSHOT</small><h2>出撃部隊</h2>
@@ -20849,7 +20991,7 @@ export function AshfallGame() {
             </article>
             {campaignSave.survival.activeCheckpoint && <article className="survival-resume-card">
               <small>CHECKPOINT FOUND</small><h2>WAVE {campaignSave.survival.activeCheckpoint.checkpointWave}から再開</h2>
-              <p>保存済みの部隊Level・装備・一時強化・CRAWLER HPを復元します。</p>
+              <p>{publicDisplayText("保存済みの部隊Level・装備・一時強化・CRAWLER HPを復元します。")}</p>
               <button disabled={saveMutationPending || !assetsReady || assetError} onClick={resumeSurvival}>{assetsReady ? "checkpointから再開" : "戦闘アセットを準備中"}</button>
             </article>}
             {(!assetsReady || assetError) && <article className="survival-asset-status" role={assetError ? "alert" : "status"} aria-live="polite">
@@ -20861,7 +21003,7 @@ export function AshfallGame() {
         </section></div>}
         {screen === "survival-result" && survivalResult && <div className="survival-result campaign-overlay"><section>
           <small>RUN SETTLED // ATOMIC SAVE COMPLETE</small>
-          <h1>{survivalResult.endReason === SURVIVAL_END_REASONS.WITHDRAWAL ? "撤退完了" : survivalResult.endReason === SURVIVAL_END_REASONS.CRAWLER_DESTROYED ? "CRAWLER大破" : "部隊壊滅"}</h1>
+          <h1>{survivalResult.endReason === SURVIVAL_END_REASONS.WITHDRAWAL ? "撤退完了" : survivalResult.endReason === SURVIVAL_END_REASONS.CRAWLER_DESTROYED ? publicDisplayText("CRAWLER大破") : "部隊壊滅"}</h1>
           <div className="survival-result-grid">
             <article><small>到達</small><b>WAVE {survivalResult.reachedWave}</b>{survivalResult.newHighestWave && <em>NEW RECORD</em>}</article>
             <article><small>撃破</small><b>{survivalResult.kills}</b><span>BOSS {survivalResult.bossKills}</span></article>

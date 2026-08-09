@@ -641,7 +641,7 @@ test("StoryScreen reports every line boundary and holds authored silence before 
     readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8"),
   ]);
   assert.ok(screensSource.includes("onStoryAudioPositionChange(event.id, index);"));
-  assert.ok(screensSource.includes("onStoryAudioPositionChange(event.id, event.lines.length);"));
+  assert.ok(screensSource.includes("onStoryAudioPositionChange(storyEventId, storyEventLineCount);"));
   assert.ok(screensSource.includes("window.setTimeout(completeOnce, holdMs);"));
   assert.ok(screensSource.includes("disabled={silenceTail} aria-busy={silenceTail}"));
   assert.ok(gameSource.includes("setStoryAudioPosition((current) =>"));
@@ -664,7 +664,7 @@ test("TAKUYA entrance starts boss music immediately and composes a 3.4 second tr
     durationSeconds: 3.4,
   });
   const entranceScene = productionAudio.PRODUCTION_AUDIO_MANIFEST.sceneById["boss"];
-  assert.equal(entranceScene.bgm, "music-v099-boss");
+  assert.equal(entranceScene.bgm, "music-boss");
   assert.equal(productionAudio.PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-entrance"], undefined);
   assert.equal(productionAudio.PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-final"], undefined);
   assert.equal(

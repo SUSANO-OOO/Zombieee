@@ -8,6 +8,8 @@ import { CAMPAIGN_IMPORT_MAX_BYTES } from "./campaignStorage.js";
 import { RELEASE_LABEL } from "./releaseIdentity.js";
 import { MANUAL_ABILITY_REGISTRY } from "./manualAbilities.js";
 import { resolveMapLandmarks } from "./campaignMapLandmarks.js";
+import { eventPortraitProfileFor } from "./visualProfiles.js";
+import { publicDisplayText } from "./publicDisplayNames.js";
 
 export type CampaignScreen = "title" | "event" | "map" | "personnel" | "loadout" | "battle" | "result" | "survival" | "survival-result" | "outbreak" | "outbreak-result" | "records";
 
@@ -453,7 +455,7 @@ function TitleScreen({ hasCampaignSave, savePersistence, saveMutationPending, on
       None of that is theirs to act on, so it now lives behind データ管理, which
       is where someone would go looking for it.
     */}
-    <section className="title-synopsis" aria-label="物語のあらすじ"><b>物語のあらすじ</b><p>{PROLOGUE_SYNOPSIS.short}</p></section>
+    <section className="title-synopsis" aria-label="物語のあらすじ"><b>物語のあらすじ</b><p>{publicDisplayText(PROLOGUE_SYNOPSIS.short)}</p></section>
     <div className="title-actions">
       <button className="campaign-primary title-start" disabled={saveUnavailable} onClick={onBegin}><span>{savePersistence === "checking" ? "セーブ確認中" : hasCampaignSave ? "物語を続ける" : "物語を始める"}</span><small>{savePersistence === "unavailable" ? "Safariの通常タブで開き直してください" : hasCampaignSave ? "保存した進行から再開" : "PROLOGUE　西新が終わった夜"}</small></button>
       {hasCampaignSave && <button className="campaign-secondary title-restart" disabled={saveUnavailable} onClick={onRestartCampaign}>{saveMutationPending ? "保存処理中" : "最初から始める"}</button>}
@@ -472,6 +474,9 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   const silenceTimerRef = useRef<number | null>(null);
   const event = eventId ? getStoryEvent(eventId) : null;
   const line = event?.lines[index] ?? null;
+  const storyEventId = event?.id ?? null;
+  const storyEventLineCount = event?.lines.length ?? 0;
+  const authoredSilenceAfterMs = event?.presentation.silenceAfterMs ?? 0;
   const log = useMemo(() => eventId ? storyEventLog(eventId, index) : [], [eventId, index]);
   const completeOnce = useCallback(() => {
     if (completedRef.current) return;
@@ -483,18 +488,18 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
     completedRef.current = true;
     onEventSkip();
   }, [onEventSkip]);
-  const completeWithAuthoredSilence = useCallback(() => {
-    if (!event || completedRef.current || silenceTailStartedRef.current) return;
-    const holdMs = event.presentation.silenceAfterMs;
+  const completeWithAuthoredSilence = () => {
+    if (!storyEventId || completedRef.current || silenceTailStartedRef.current) return;
+    const holdMs = authoredSilenceAfterMs;
     if (!(holdMs > 0)) {
       completeOnce();
       return;
     }
     silenceTailStartedRef.current = true;
     setSilenceTail(true);
-    onStoryAudioPositionChange(event.id, event.lines.length);
+    onStoryAudioPositionChange(storyEventId, storyEventLineCount);
     silenceTimerRef.current = window.setTimeout(completeOnce, holdMs);
-  }, [completeOnce, event, onStoryAudioPositionChange]);
+  };
   const eventRead = Boolean(eventId && readStoryEventIds.includes(eventId));
   useEffect(() => {
     if (!event || silenceTailStartedRef.current) return;
@@ -510,6 +515,16 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   }, [autoSkipReadStory, completeOnce, eventId, eventRead, forceStoryReplay]);
   if (!event || !line) return <div className="campaign-overlay event-screen"><button className="campaign-primary" onClick={completeOnce}>地図へ進む</button></div>;
   const art = portraitArt[line.portrait] ?? "";
+  const portraitProfile = eventPortraitProfileFor(line.portrait);
+  const portraitStyle = portraitProfile
+    ? {
+      ...(art ? { backgroundImage: `url('${art}')` } : {}),
+      "--event-portrait-focus-x": `${portraitProfile.focusX * 100}%`,
+      "--event-portrait-focus-y": `${portraitProfile.focusY * 100}%`,
+      "--event-portrait-scale": String(portraitProfile.scale),
+      "--event-portrait-crop": portraitProfile.crop,
+    } as CSSProperties
+    : art ? { backgroundImage: `url('${art}')` } : undefined;
   const advance = () => {
     if (silenceTail) return;
     if (index + 1 < event.lines.length) setIndex((value) => value + 1);
@@ -518,12 +533,12 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   const backgroundArt = STORY_BACKGROUND_VISUALS[event.background as keyof typeof STORY_BACKGROUND_VISUALS] ?? PRODUCTION_VISUALS.command;
   return <div className={`campaign-overlay event-screen event-${event.background} effect-${line.effect ?? "none"}`} style={artStyle(backgroundArt)} aria-label="会話イベント">
     <div className="event-vignette" />
-    <div className={`event-portrait active ${line.side} ${line.portrait === "guide" ? "guide" : line.portrait === "radio" ? "radio" : ""}`} data-expression={line.expression} style={art ? { backgroundImage: `url('${art}')` } : undefined} aria-hidden="true" />
+    <div className={`event-portrait active ${line.side} ${line.portrait === "guide" ? "guide" : line.portrait === "radio" ? "radio" : ""}`} data-expression={line.expression} data-portrait={line.portrait} style={portraitStyle} aria-hidden="true" />
     <div className="event-controls"><button onClick={() => setLogOpen((value) => !value)}>会話ログ</button><button onClick={() => setSkipOpen(true)}>スキップ</button></div>
-    {logOpen && <section className="event-log" aria-label="会話ログ"><header><b>会話ログ</b><button onClick={() => setLogOpen(false)}>閉じる</button></header>{log.map((entry: { id: string; speaker: string; text: string }) => <p key={entry.id}><b>{entry.speaker}</b><span>{entry.text}</span></p>)}</section>}
+    {logOpen && <section className="event-log" aria-label="会話ログ"><header><b>会話ログ</b><button onClick={() => setLogOpen(false)}>閉じる</button></header>{log.map((entry: { id: string; speaker: string; text: string }) => <p key={entry.id}><b>{publicDisplayText(entry.speaker)}</b><span>{publicDisplayText(entry.text)}</span></p>)}</section>}
     <button className="dialogue-box" onClick={advance} disabled={silenceTail} aria-busy={silenceTail} aria-label="セリフを送る">
-      <span className="dialogue-name"><b>{line.speaker}</b><small>{line.role}</small></span>
-      <span className="dialogue-text">{line.text}</span>
+      <span className="dialogue-name"><b>{publicDisplayText(line.speaker)}</b><small>{publicDisplayText(line.role)}</small></span>
+      <span className="dialogue-text">{publicDisplayText(line.text)}</span>
       <em>{silenceTail ? "無音" : index + 1 < event.lines.length ? "次へ" : "完了"} ▾</em>
     </button>
     {skipOpen && <div className="story-skip-confirm" role="alertdialog" aria-modal="true" aria-label="会話をスキップ"><section><h2>会話をスキップしますか？</h2><p>進行・加入・報酬・解放の結果は変わりません。プロローグでは固定要約を表示して四十三日後へ進みます。</p><button onClick={skipOnce}>この会話をスキップ</button><button onClick={() => { onSetAutoSkipReadStory(true); skipOnce(); }}>既読会話を今後自動スキップ</button><button className="cancel" onClick={() => setSkipOpen(false)}>キャンセル</button></section></div>}

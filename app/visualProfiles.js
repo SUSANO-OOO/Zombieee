@@ -28,6 +28,10 @@ export const V075_VISUAL_PROFILES = deepFreeze({
       path: "/art/v075/characters/portraits/ikura-event-portrait-v4.webp",
       revision: "v4",
       focus: { x: 0.57, y: 0.28 },
+      focusX: 0.57,
+      focusY: 0.28,
+      scale: 1,
+      crop: "cover",
       safeArea: { top: 0.02, right: 0.04, bottom: 0, left: 0.08 },
       minFacePixelsAt844x340: 38,
     },
@@ -105,6 +109,10 @@ function unitProfile({
       path: eventPath,
       revision: eventRevision,
       focus,
+      focusX: focus.x,
+      focusY: focus.y,
+      scale: 1,
+      crop: "cover",
       safeArea: { top: .02, right: .04, bottom: 0, left: .04 },
       minFacePixelsAt844x340: 34,
     },
@@ -419,3 +427,33 @@ export const V090_UNIT_VISUAL_PROFILES = deepFreeze({
     },
   },
 });
+
+export const EVENT_PORTRAIT_PROFILES = deepFreeze({
+  ...Object.fromEntries(Object.entries(V080_UNIT_VISUAL_PROFILES).map(([kind, profile]) => [kind, {
+    ...profile.eventPortrait,
+    crop: "auto 92%",
+  }])),
+  ...Object.fromEntries(Object.entries(V090_UNIT_VISUAL_PROFILES).map(([kind, profile]) => [kind, {
+    ...profile.eventPortrait,
+    crop: "auto 92%",
+  }])),
+  guide: {
+    ...V075_VISUAL_PROFILES.ikura.eventPortrait,
+    crop: "auto 92%",
+  },
+  radio: {
+    path: "/art/v060/characters/portraits/radio-terminal-portrait-v1.webp",
+    revision: "v1",
+    focus: { x: .5, y: .28 },
+    focusX: .5,
+    focusY: .28,
+    scale: 1,
+    crop: "auto 92%",
+    safeArea: { top: .04, right: .04, bottom: .02, left: .04 },
+    minFacePixelsAt844x340: 0,
+  },
+});
+
+export function eventPortraitProfileFor(portrait) {
+  return EVENT_PORTRAIT_PROFILES[String(portrait ?? "")] ?? null;
+}

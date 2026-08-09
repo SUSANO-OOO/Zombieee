@@ -16,6 +16,7 @@ import {
 } from "../app/campaign.js";
 import { weaponCueForUnit } from "../app/productionAudio.js";
 import {
+  EVENT_PORTRAIT_PROFILES,
   V080_CARD_READ_CONTRACTS,
   V080_UNIT_VISUAL_PROFILES,
 } from "../app/visualProfiles.js";
@@ -118,6 +119,24 @@ test("Monkey keeps one carbine identity across master, portrait, card, and battl
   assert.deepEqual({ width: master.width, height: master.height }, { width: 1024, height: 1536 });
   const battle = await sharp(publicFile(profile.battleSprite.path)).metadata();
   assert.deepEqual({ width: battle.width, height: battle.height, hasAlpha: battle.hasAlpha }, { width: 3360, height: 896, hasAlpha: true });
+});
+
+test("Issue #156 event portrait registry covers all 18 authored profiles with one presentation contract", () => {
+  const expected = [
+    "brawler", "scout", "brute", "crazy-king", "engineer", "guardian", "gunner", "kumaverson",
+    "medic", "ranger", "babayaga", "zakimiya", "tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan",
+    "guide", "radio",
+  ];
+  assert.deepEqual(Object.keys(EVENT_PORTRAIT_PROFILES).sort(), [...expected].sort());
+  for (const kind of expected) {
+    const profile = EVENT_PORTRAIT_PROFILES[kind];
+    assert.ok(profile.path, `${kind} path`);
+    assert.ok(profile.focusX >= 0 && profile.focusX <= 1, `${kind} focusX`);
+    assert.ok(profile.focusY >= 0 && profile.focusY <= 1, `${kind} focusY`);
+    assert.equal(profile.scale, 1, `${kind} authored scale remains neutral`);
+    assert.equal(profile.crop, "auto 92%", `${kind} mobile upper-body crop`);
+    assert.ok(profile.safeArea.top >= 0 && profile.safeArea.bottom >= 0, `${kind} safe area`);
+  }
 });
 
 test("visual identity locks agree with the canonical campaign weapon and production audio", () => {

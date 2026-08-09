@@ -39,9 +39,11 @@ const playwright = process.env.PLAYWRIGHT_MODULE_PATH
   : await import("playwright");
 const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit };
 const canonicalEngines = ["chromium", "webkit"];
+const canonicalCaseTypes = ["hud", "crawler-equipment", "deployment"];
 const canonicalViewports = [
   { width: 844, height: 390 },
   { width: 844, height: 340 },
+  { width: 1280, height: 720 },
 ];
 const canonicalDeploymentUnits = Object.freeze([
   Object.freeze({ family: "hachi", kind: "scout" }),
@@ -69,7 +71,7 @@ const engines = parseUniqueAxis(
 );
 const viewportKeys = parseUniqueAxis(
   "V099_FINAL_REMEDIATION_QA_VIEWPORTS",
-  process.env.V099_FINAL_REMEDIATION_QA_VIEWPORTS ?? "844x390,844x340",
+  process.env.V099_FINAL_REMEDIATION_QA_VIEWPORTS ?? "844x390,844x340,1280x720",
   canonicalViewports.map(({ width, height }) => `${width}x${height}`),
 );
 const viewports = viewportKeys.map((key) => {
@@ -83,6 +85,11 @@ const deploymentKinds = parseUniqueAxis(
   canonicalDeploymentUnits.map(({ kind }) => kind),
 );
 const deploymentUnits = canonicalDeploymentUnits.filter(({ kind }) => deploymentKinds.includes(kind));
+const caseTypes = parseUniqueAxis(
+  "V099_FINAL_REMEDIATION_QA_CASES",
+  process.env.V099_FINAL_REMEDIATION_QA_CASES ?? canonicalCaseTypes.join(","),
+  canonicalCaseTypes,
+);
 const timeout = Math.max(
   10_000,
   Number(process.env.V099_FINAL_REMEDIATION_QA_TIMEOUT_MS) || 30_000,
@@ -192,6 +199,44 @@ async function crawlerRuntimeContactSheet(name, kind, viewport, entries) {
     crop,
     columns: entries.length,
     phases: entries.map(({ phase }) => phase),
+  };
+}
+
+async function deploymentRuntimeContactSheet(name, family, viewport, entries) {
+  invariant(entries.length === CRAWLER_DEPLOYMENT_CHECKPOINTS.length,
+    `${name}/${family}: deployment contact sheet is incomplete`);
+  const crop = {
+    left: 0,
+    top: Math.max(0, Math.round(viewport.height * .1)),
+    width: Math.min(Math.round(viewport.width * .52), viewport.width),
+    height: Math.min(Math.round(viewport.height * .72), viewport.height),
+  };
+  const tiles = [];
+  for (const entry of entries) {
+    tiles.push(await sharp(path.resolve(entry.screenshot))
+      .extract(crop)
+      .resize({ width: 320, height: 180, fit: "contain", background: "#080a0b" })
+      .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
+      .toBuffer());
+  }
+  const outputPath = path.join(evidenceDir, `${name}-deployment-${family}-contact-sheet.png`);
+  await sharp({
+    create: {
+      width: 320 * entries.length,
+      height: 180,
+      channels: 4,
+      background: { r: 8, g: 10, b: 11, alpha: 1 },
+    },
+  }).composite(tiles.map((input, index) => ({ input, left: index * 320, top: 0 })))
+    .png({ compressionLevel: 9, adaptiveFiltering: true, palette: false })
+    .toFile(outputPath);
+  const relativePath = relativeEvidencePath(outputPath);
+  return {
+    path: relativePath,
+    sha256: await evidenceSha256(relativePath),
+    crop,
+    columns: entries.length,
+    checkpoints: entries.map(({ checkpoint }) => checkpoint),
   };
 }
 
@@ -351,8 +396,16 @@ async function staticRuntimeEvidence() {
 }
 
 async function measureHud(page, viewport, label) {
-  const expectedLayout = mobileBattleHudLayout(viewport);
-  invariant(expectedLayout, `${label}: no mobile HUD contract for ${viewport.width}x${viewport.height}`);
+  const expectedLayout = mobileBattleHudLayout({
+    ...viewport,
+    safeAreaTop: 0,
+    safeAreaRight: 44,
+    safeAreaBottom: 21,
+    safeAreaLeft: 44,
+  });
+  const desktopRegression = expectedLayout === null && viewport.width === 1280 && viewport.height === 720;
+  invariant(expectedLayout || desktopRegression,
+    `${label}: no canonical HUD contract for ${viewport.width}x${viewport.height}`);
   const measured = await page.evaluate(({ expectedTypography }) => {
     const rect = (element) => {
       if (!element) return null;
@@ -441,6 +494,10 @@ async function measureHud(page, viewport, label) {
     const bossLabel = bossHeading?.querySelector("span") ?? null;
     const bossValue = bossHeading?.querySelector("b") ?? null;
     const crawlerAlert = document.querySelector(".crawler-alert");
+    const unitStrip = document.querySelector(".unit-cards");
+    const unitStripRect = rect(unitStrip);
+    const unitSlots = [...document.querySelectorAll(".unit-cards > .unit-card")];
+    const unitSlotRects = unitSlots.map((element) => rect(element));
     const disabled = [...document.querySelectorAll("button[aria-disabled='true']")]
       .filter(visible)
       .map((button) => {
@@ -458,6 +515,24 @@ async function measureHud(page, viewport, label) {
       edge,
       Math.max(0, Number.parseFloat(rootStyle.getPropertyValue(`--app-viewport-safe-${edge}`)) || 0),
     ]));
+    const ownedRects = [top, bottom, ...topZones, ...bottomZones].map(rect).filter(Boolean);
+    const insideViewport = (box) => box.left >= -.5 && box.top >= -.5
+      && box.right <= innerWidth + .5 && box.bottom <= innerHeight + .5;
+    const controlGroups = [
+      [...document.querySelectorAll(".battle-controls-zone button")].filter(visible),
+      [...document.querySelectorAll(".support-zone > button")].filter(visible),
+    ];
+    const requiredHudInformation = {
+      brand: visible(document.querySelector(".battle-brand-zone")),
+      phase: visible(document.querySelector(".phase-block")),
+      resources: visible(document.querySelector(".resource-stack")),
+      stats: visible(document.querySelector(".battle-stats")),
+      units: visible(document.querySelector(".unit-cards"))
+        && document.querySelectorAll(".unit-cards > .unit-card").length > 0,
+      support: visible(document.querySelector(".support-zone")),
+      objective: visible(document.querySelector(".battle-objective")),
+      controls: visible(document.querySelector(".battle-controls-zone")),
+    };
     return {
       viewport: { width: innerWidth, height: innerHeight },
       safeInsets,
@@ -478,10 +553,32 @@ async function measureHud(page, viewport, label) {
       bossValue: rect(bossValue),
       crawlerAlert: rect(crawlerAlert),
       bossCrawlerAlertOverlap: overlap(boss, crawlerAlert),
+      unitSlots: {
+        logical: unitSlots.length,
+        placeholders: unitSlots.filter((element) => element.classList.contains("unit-card-placeholder")).length,
+        placeholderButtons: unitSlots.filter((element) => element.classList.contains("unit-card-placeholder") && element instanceof HTMLButtonElement).length,
+        visible: unitSlotRects.filter((slot) => Boolean(slot)
+          && slot.left >= (rect(unitStrip)?.left ?? 0) - 1
+          && slot.right <= (rect(unitStrip)?.right ?? 0) + 1).length,
+        allPainted: unitSlotRects.every((slot) => Boolean(slot) && slot.width > 0 && slot.height > 0),
+        finalOffset: unitSlotRects.at(-1) && unitStripRect
+          ? unitSlotRects.at(-1).right - unitStripRect.left
+          : 0,
+        scrollWidth: unitStrip?.scrollWidth || 0,
+        clientWidth: unitStrip?.clientWidth || 0,
+      },
+      publicBattleText: document.body.innerText,
       fontChecks,
       disabled,
       disabledUnitCount: disabled.filter(({ className }) => String(className).includes("unit-card")).length,
       disabledSupportCount: disabled.filter(({ className }) => String(className).includes("support-btn")).length,
+      ownedZonesInViewport: ownedRects.every(insideViewport),
+      controlPairOverlaps: controlGroups.flatMap(pairOverlaps),
+      requiredHudInformation,
+      documentOverflow: {
+        horizontal: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) > innerWidth + 1,
+        vertical: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) > innerHeight + 1,
+      },
     };
   }, { expectedTypography: MOBILE_BATTLE_HUD_TYPOGRAPHY });
 
@@ -489,29 +586,60 @@ async function measureHud(page, viewport, label) {
   invariant(measured.top && measured.bottom, `${label}: top or bottom HUD is missing`);
   invariant(measured.topZones.every(Boolean) && measured.bottomZones.every(Boolean),
     `${label}: one or more owned HUD zones are missing`);
-  invariant(measured.topRatios.every((value, index) => ratioClose(value, [.28, .38, .34][index])),
-    `${label}: top 28/38/34 ownership drift ${JSON.stringify(measured.topRatios)}`);
-  invariant(measured.bottomRatios.every((value, index) => ratioClose(value, [.14, .50, .36][index])),
-    `${label}: bottom 14/50/36 ownership drift ${JSON.stringify(measured.bottomRatios)}`);
   invariant(measured.topPairOverlaps.every(({ overlaps }) => !overlaps),
     `${label}: top HUD zones overlap`);
   invariant(measured.bottomPairOverlaps.every(({ overlaps }) => !overlaps),
     `${label}: bottom HUD zones overlap`);
-  const expectedTopHeight = expectedLayout.topHeight + measured.safeInsets.top;
-  const expectedBottomHeight = expectedLayout.bottomHeight + measured.safeInsets.bottom;
-  invariant(Math.abs(measured.top.height - expectedTopHeight) <= 2,
-    `${label}: top HUD height ${measured.top.height}/${expectedTopHeight}`);
-  invariant(Math.abs(measured.bottom.height - expectedBottomHeight) <= 2,
-    `${label}: bottom HUD height ${measured.bottom.height}/${expectedBottomHeight}`);
+  invariant(measured.controlPairOverlaps.every(({ overlaps }) => !overlaps),
+    `${label}: HUD controls collide`);
   const clearBattlefieldHeight = measured.bottom.top - measured.top.bottom;
-  const expectedBattlefieldHeight = viewport.height - expectedTopHeight - expectedBottomHeight;
-  invariant(clearBattlefieldHeight >= expectedBattlefieldHeight - 2,
-    `${label}: battlefield band ${clearBattlefieldHeight}/${expectedBattlefieldHeight}`);
+  let expectedSafeAreaAdjusted = null;
+  if (expectedLayout) {
+    invariant(measured.topRatios.every((value, index) => ratioClose(value, [.28, .38, .34][index])),
+      `${label}: top 28/38/34 ownership drift ${JSON.stringify(measured.topRatios)}`);
+    invariant(measured.bottomRatios.every((value, index) => ratioClose(value, [.14, .50, .36][index])),
+      `${label}: bottom 14/50/36 ownership drift ${JSON.stringify(measured.bottomRatios)}`);
+    const expectedTopHeight = expectedLayout.topHeight;
+    const expectedBottomHeight = expectedLayout.bottomHeight;
+    const expectedBattlefieldHeight = expectedLayout.battlefield.height;
+    invariant(Math.abs(measured.top.height - expectedTopHeight) <= 2,
+      `${label}: top HUD height ${measured.top.height}/${expectedTopHeight}`);
+    invariant(Math.abs(measured.bottom.height - expectedBottomHeight) <= 2,
+      `${label}: bottom HUD height ${measured.bottom.height}/${expectedBottomHeight}`);
+    invariant(clearBattlefieldHeight >= expectedBattlefieldHeight - 2,
+      `${label}: battlefield band ${clearBattlefieldHeight}/${expectedBattlefieldHeight}`);
+    expectedSafeAreaAdjusted = {
+      topHeight: expectedTopHeight,
+      bottomHeight: expectedBottomHeight,
+      battlefieldHeight: expectedBattlefieldHeight,
+    };
+  } else {
+    invariant(measured.viewport.width === 1280 && measured.viewport.height === 720,
+      `${label}: desktop regression viewport drifted ${JSON.stringify(measured.viewport)}`);
+    invariant(measured.ownedZonesInViewport, `${label}: desktop HUD is clipped by the viewport`);
+    invariant(!measured.documentOverflow.horizontal && !measured.documentOverflow.vertical,
+      `${label}: desktop document overflow ${JSON.stringify(measured.documentOverflow)}`);
+    invariant(Object.values(measured.requiredHudInformation).every(Boolean),
+      `${label}: required desktop HUD information is missing ${JSON.stringify(measured.requiredHudInformation)}`);
+    invariant(clearBattlefieldHeight > 0, `${label}: desktop HUD leaves no visible battlefield`);
+  }
   invariant(measured.fontChecks.length > 0, `${label}: no visible HUD typography was audited`);
-  invariant(measured.fontChecks.every(({ fontSize, minimum }) => fontSize + .01 >= minimum),
-    `${label}: undersized HUD text ${JSON.stringify(measured.fontChecks.filter(({ fontSize, minimum }) => fontSize + .01 < minimum))}`);
-  invariant(measured.fontChecks.every(({ fits }) => fits),
-    `${label}: truncated HUD text ${JSON.stringify(measured.fontChecks.filter(({ fits }) => !fits))}`);
+  if (expectedLayout) {
+    invariant(measured.fontChecks.every(({ fontSize, minimum }) => fontSize + .01 >= minimum),
+      `${label}: undersized HUD text ${JSON.stringify(measured.fontChecks.filter(({ fontSize, minimum }) => fontSize + .01 < minimum))}`);
+    invariant(measured.fontChecks.every(({ fits }) => fits),
+      `${label}: truncated HUD text ${JSON.stringify(measured.fontChecks.filter(({ fits }) => !fits))}`);
+  }
+  invariant(measured.unitSlots.logical === 7 && measured.unitSlots.allPainted,
+    `${label}: seven logical unit slots were not rendered ${JSON.stringify(measured.unitSlots)}`);
+  invariant(measured.unitSlots.visible >= 4,
+    `${label}: fewer than four unit slots are visible ${JSON.stringify(measured.unitSlots)}`);
+  invariant(measured.unitSlots.finalOffset <= measured.unitSlots.scrollWidth + 1,
+    `${label}: unit strip cannot reach its final logical slot ${JSON.stringify(measured.unitSlots)}`);
+  invariant(measured.unitSlots.placeholderButtons === 0,
+    `${label}: empty unit placeholders became interactive ${JSON.stringify(measured.unitSlots)}`);
+  invariant(!/CRAWLER|クローラー/iu.test(measured.publicBattleText),
+    `${label}: internal CRAWLER wording leaked into player-facing battle text`);
   if (measured.banner && measured.bark) {
     invariant(!measured.bannerBarkOverlap, `${label}: battle banner overlaps battle bark`);
   }
@@ -521,10 +649,12 @@ async function measureHud(page, viewport, label) {
     `${label}: boss HUD escaped the battlefield band`);
     invariant(measured.bossHeading && measured.bossLabel && measured.bossValue,
       `${label}: boss HUD semantic fields are missing`);
-    invariant(Math.abs(measured.bossLabel.top - measured.bossValue.top) <= 2
-      && Math.abs(measured.bossLabel.bottom - measured.bossValue.bottom) <= 2
-      && measured.bossLabel.right <= measured.bossValue.left + .5,
-    `${label}: boss phase or current/max is semantically wrapped or overlapping`);
+    if (expectedLayout) {
+      invariant(Math.abs(measured.bossLabel.top - measured.bossValue.top) <= 2
+        && Math.abs(measured.bossLabel.bottom - measured.bossValue.bottom) <= 2
+        && measured.bossLabel.right <= measured.bossValue.left + .5,
+      `${label}: boss phase or current/max is semantically wrapped or overlapping`);
+    }
   }
   if (measured.boss && measured.crawlerAlert) {
     invariant(!measured.bossCrawlerAlertOverlap,
@@ -532,12 +662,9 @@ async function measureHud(page, viewport, label) {
   }
   return {
     ...measured,
+    contract: expectedLayout ? "mobile" : "desktop-regression",
     expected: expectedLayout,
-    expectedSafeAreaAdjusted: {
-      topHeight: expectedTopHeight,
-      bottomHeight: expectedBottomHeight,
-      battlefieldHeight: expectedBattlefieldHeight,
-    },
+    expectedSafeAreaAdjusted,
     clearBattlefieldHeight,
   };
 }
@@ -589,7 +716,7 @@ async function captureHudState(page, viewport, axisName, stateId) {
   };
 }
 
-async function createDisabledHudState(page, label) {
+async function createDisabledHudState(page, label, { minimumOpacity = .72 } = {}) {
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const candidate = await page.evaluate(() => (
       [...document.querySelectorAll("button.unit-card")]
@@ -641,18 +768,24 @@ async function createDisabledHudState(page, label) {
   const disabledTextControls = disabled.filter(({ className }) => (
     String(className).includes("unit-card") || String(className).includes("support-btn")
   ));
-  invariant(disabledTextControls.every(({ opacity }) => opacity >= .72),
-    `${label}: disabled text control opacity fell below .72 ${JSON.stringify(disabledTextControls)}`);
+  if (minimumOpacity !== null) {
+    invariant(disabledTextControls.every(({ opacity }) => opacity >= minimumOpacity),
+      `${label}: disabled text control opacity fell below ${minimumOpacity}`
+      + ` ${JSON.stringify(disabledTextControls)}`);
+  }
   return disabled;
 }
 
-async function runHudCase(browser, engine, viewport) {
+async function runHudCase(browserType, engine, viewport) {
   const name = `${engine}-${viewport.width}x${viewport.height}`;
-  const context = await browser.newContext({ viewport });
+  let browser = null;
+  let context = null;
   let page = null;
   const diagnosticControls = [];
   const result = { type: "hud", engine, viewport, status: "failed", states: [] };
   try {
+    browser = await browserType.launch({ headless: true });
+    context = await browser.newContext({ viewport });
     const stage1 = await openBattlePage(context, "mission", { stageNumber: 1 });
     diagnosticControls.push(stage1);
     page = stage1.page;
@@ -741,21 +874,53 @@ async function runHudCase(browser, engine, viewport) {
     result.states.push(objective);
 
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
-    const disabledControls = await createDisabledHudState(page, `${name}/support-disabled`);
+    const disabledControls = await createDisabledHudState(page, `${name}/support-disabled`, {
+      minimumOpacity: mobileBattleHudLayout(viewport) ? .72 : null,
+    });
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
     const disabled = await captureHudState(page, viewport, name, "support-disabled");
     invariant(disabled.layout.disabledUnitCount > 0 && disabled.layout.disabledSupportCount > 0,
       `${name}: disabled unit/support state did not remain visible`);
     result.states.push({ ...disabled, disabledControls });
 
+    stage3.stop();
+    await context.close();
+    context = null;
+    await browser.close();
+    browser = null;
+    page = null;
+
+    browser = await browserType.launch({ headless: true });
+    context = await browser.newContext({ viewport });
+    const bossStage3 = await openBattlePage(context, "mission", { stageNumber: 3 });
+    diagnosticControls.push(bossStage3);
+    page = bossStage3.page;
+    await waitForQuietBattleMessages(page, `${name}/boss-fixture`);
     const bossPrepared = await page.evaluate(
       () => window.__ASHFALL_BATTLE_QA__.prepareBossFoundationProof("takuya"),
     );
     invariant(bossPrepared?.kind === "takuya", `${name}: TAKUYA HUD fixture is unavailable`);
+    const bossEntry = await page.waitForFunction(
+      () => {
+        const proof = window.__ASHFALL_BATTLE_QA__.getBossFoundationProof("takuya");
+        return proof?.bossId && proof.gateEntering === true ? proof : null;
+      },
+      undefined,
+      { timeout, polling: 10 },
+    ).then((handle) => handle.jsonValue());
+    invariant(Number.isInteger(bossEntry?.bossId), `${name}: TAKUYA entrance did not start`);
+    await page.evaluate(
+      (bossId) => window.__ASHFALL_BATTLE_QA__.accelerateBossFoundationEntry(bossId),
+      bossEntry.bossId,
+    );
     await page.waitForFunction(
-      () => document.querySelector(".battle-banner")
-        && document.querySelector(".battle-barks")
-        && document.querySelector(".boss-hud"),
+      () => {
+        const proof = window.__ASHFALL_BATTLE_QA__.getBossFoundationProof("takuya");
+        return proof?.combatReady === true
+          && document.querySelector(".battle-banner")
+          && document.querySelector(".battle-barks")
+          && document.querySelector(".boss-hud");
+      },
       undefined,
       { timeout, polling: 10 },
     );
@@ -809,7 +974,8 @@ async function runHudCase(browser, engine, viewport) {
       result.status = "failed";
       result.error = `Browser diagnostics were not clean: ${JSON.stringify(result.diagnostics)}`;
     }
-    await context.close();
+    if (context) await context.close().catch(() => {});
+    if (browser) await browser.close().catch(() => {});
   }
   return result;
 }
@@ -1028,6 +1194,7 @@ async function pauseAtDeploymentCheckpoint(page, fighterId, checkpoint, minimumP
         const progress = Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)));
         if (audit?.deploymentPlan?.checkpoint === expected && progress + 1e-6 >= requiredProgress) {
           qa.setRepresentativeSixProofPaused(true);
+          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
           const frozenSnapshot = qa.getSnapshot();
           const frozenFighter = frozenSnapshot.fighters.find((candidate) => candidate.id === id);
           const frozenAudit = qa.auditFighterUnitLayer(id);
@@ -1081,6 +1248,7 @@ async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
         const progress = Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)));
         if (bannerReady && audit?.deploymentPlan?.checkpoint === "fully-inside" && progress === 0) {
           qa.setRepresentativeSixProofPaused(true);
+          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
           const frozenSnapshot = qa.getSnapshot();
           const frozenFighter = frozenSnapshot.fighters.find((candidate) => candidate.id === fighter.id);
           const frozenAudit = qa.auditFighterUnitLayer(fighter.id);
@@ -1121,6 +1289,14 @@ function validateDeploymentCheckpoint(evidence, expectedFamily, expectedCheckpoi
   invariant(audit.clipRect === null && audit.clipMode === "none",
     `${label}: legacy deployment clip remains`);
   invariant(audit.unitDrawCount === 1, `${label}: unit draw count ${audit.unitDrawCount}`);
+  invariant(audit.finalCompositePixels?.pass === true,
+    `${label}: final battle canvas RGBA failed ${JSON.stringify(audit.finalCompositePixels)}`);
+  invariant(audit.finalCompositePixels?.fractionalForegroundPixels === 0,
+    `${label}: CRAWLER foreground has fractional global alpha`);
+  invariant(audit.finalCompositePixels?.singleUnitSilhouette === true,
+    `${label}: duplicate or ghost unit silhouette detected`);
+  invariant(audit.finalCompositePixels?.finalCanvasKeepsUnitOpaque === true,
+    `${label}: final canvas does not retain opaque unit pixels`);
   invariant(fighter?.renderAudit?.poseOpacity === 1
     && fighter?.renderAudit?.effectiveOpacity === 1
     && fighter?.animationPresentation?.pose?.opacity === 1,
@@ -1211,6 +1387,31 @@ async function runDeploymentCase(browser, engine, viewport) {
       invariant(unitResult.checkpoints.every((entry, index, entries) => (
         index === 0 || entry.fighter.x + 1e-6 >= entries[index - 1].fighter.x
       )), `${name}/${unit.family}: deployment position regressed between checkpoints`);
+      const midpoint = unitResult.checkpoints.find(({ checkpoint }) => checkpoint === "half");
+      const rampClear = unitResult.checkpoints.at(-1);
+      invariant(midpoint?.observedProgress >= .5,
+        `${name}/${unit.family}: midpoint evidence is missing`);
+      invariant(rampClear?.observedCheckpoint === "fully-outside"
+        && rampClear.fighter.entryRampCleared === true
+        && rampClear.fighter.gateEntering === false
+        && rampClear.fighter.combatReady === true,
+      `${name}/${unit.family}: ramp-clear/combat-ready boundary is incomplete`);
+      // Production intentionally flips ramp-cleared and combat-ready atomically.
+      // Name the five acceptance keyframes explicitly while retaining the six
+      // sampled frames and their original receipt/checkpoint data.
+      unitResult.requiredKeyframes = {
+        doorInside: fullyInside,
+        firstVisible,
+        midpoint,
+        rampClear,
+        combatReady: rampClear,
+      };
+      unitResult.contactSheet = await deploymentRuntimeContactSheet(
+        name,
+        unit.family,
+        viewport,
+        unitResult.checkpoints,
+      );
       unitResult.status = "passed";
       unitResult.fighterId = fighterId;
       result.units.push(unitResult);
@@ -1256,26 +1457,32 @@ const runtimeEvidence = await staticRuntimeEvidence();
 for (const engine of engines) {
   const browserType = browserTypes[engine];
   invariant(browserType, `Unsupported browser engine: ${engine}`);
-  const browser = await browserType.launch({ headless: true });
-  try {
-    for (const viewport of viewports) {
-      results.push(await runHudCase(browser, engine, viewport));
-      results.push(await runEquipmentCase(browser, engine, viewport, runtimeEvidence));
-      results.push(await runDeploymentCase(browser, engine, viewport));
+  for (const viewport of viewports) {
+    if (caseTypes.includes("hud")) results.push(await runHudCase(browserType, engine, viewport));
+    if (caseTypes.includes("crawler-equipment") || caseTypes.includes("deployment")) {
+      const browser = await browserType.launch({ headless: true });
+      try {
+        if (caseTypes.includes("crawler-equipment")) {
+          results.push(await runEquipmentCase(browser, engine, viewport, runtimeEvidence));
+        }
+        if (caseTypes.includes("deployment")) results.push(await runDeploymentCase(browser, engine, viewport));
+      } finally {
+        await browser.close();
+      }
     }
-  } finally {
-    await browser.close();
   }
 }
 
 const buildIdentityAtEnd = await productionBuildIdentity();
 const buildIdentityStable = buildIdentityAtStart.combinedSha256 === buildIdentityAtEnd.combinedSha256;
-const expectedCaseCount = engines.length * viewports.length * 3;
+const expectedCaseCount = engines.length * viewports.length * caseTypes.length;
 const canonicalAxes = engines.length === canonicalEngines.length
   && canonicalEngines.every((engine) => engines.includes(engine))
   && viewportKeys.length === canonicalViewports.length
   && canonicalViewports.every(({ width, height }) => viewportKeys.includes(`${width}x${height}`))
-  && deploymentUnits.length === canonicalDeploymentUnits.length;
+  && deploymentUnits.length === canonicalDeploymentUnits.length
+  && caseTypes.length === canonicalCaseTypes.length
+  && canonicalCaseTypes.every((caseType) => caseTypes.includes(caseType));
 const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl: String(baseUrl),
@@ -1283,6 +1490,7 @@ const summary = {
   engines,
   viewports,
   deploymentUnits,
+  caseTypes,
   buildFreshness: {
     sentinel: relativeEvidencePath(buildSentinel),
     buildMtime: new Date(buildMtimeMs).toISOString(),
@@ -1308,7 +1516,11 @@ const summary = {
     return total;
   }, 0),
   contactSheetCount: results.reduce((total, result) => (
-    total + (result.type === "crawler-equipment" && result.contactSheets ? 2 : 0)
+    total
+      + (result.type === "crawler-equipment" && result.contactSheets ? 2 : 0)
+      + (result.type === "deployment"
+        ? result.units.filter(({ contactSheet }) => Boolean(contactSheet)).length
+        : 0)
   ), 0),
   results,
 };

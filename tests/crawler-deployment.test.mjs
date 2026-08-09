@@ -1,15 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   CRAWLER_DEPLOYMENT_CHECKPOINTS,
   CRAWLER_DEPLOYMENT_UNIT_FAMILIES,
   CRAWLER_DOOR_PHASES,
   advanceCrawlerDoorRuntime,
+  crawlerDeploymentCompositePlan,
   crawlerDeploymentCheckpoint,
   crawlerDeploymentRenderPlan,
   crawlerDeploymentUnitFamily,
   createCrawlerDoorRuntime,
 } from "../app/crawlerDeployment.js";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
+const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function advance(runtime, seconds, context) {
   return advanceCrawlerDoorRuntime(runtime, seconds, context);
@@ -131,6 +137,26 @@ test("deployment checkpoint resolver clamps malformed progress without creating 
   assert.equal("w" in plan, false);
   assert.equal("h" in plan, false);
   assert.equal("revealRect" in plan, false);
+});
+
+test("final deployment composite keeps every representative keyframe opaque and single-draw", async () => {
+  for (const progress of [0, .08, .25, .5, .75, 1]) {
+    const plan = crawlerDeploymentCompositePlan({
+      doorProgress: progress,
+      entryRampCleared: progress >= 1,
+    });
+    assert.ok(plan.layers.every((layer) => layer.alpha === 1 && layer.drawCount === 1 && layer.opaque));
+    assert.equal(plan.unit.alpha, 1);
+    assert.equal(plan.unit.drawCount, 1);
+    if (progress === 0) assert.equal(plan.foregroundMask, null);
+    else assert.deepEqual(plan.foregroundMask, { alpha: 1, drawCount: 1, opaque: true });
+  }
+
+  const gameSource = await readFile(path.join(repositoryRoot, "app", "AshfallGame.tsx"), "utf8");
+  assert.doesNotMatch(gameSource, /crawlerOpacity\s*\*\s*\(1\s*-\s*doorProgress\)/u);
+  assert.doesNotMatch(gameSource, /crawlerOpacity\s*\*\s*doorProgress/u);
+  assert.doesNotMatch(gameSource, /globalAlpha\s*=\s*g\.crawlerDoor\.doorProgress/u);
+  assert.match(gameSource, /crawlerDeploymentCompositePlan\(\{ doorProgress \}\)/u);
 });
 
 test("only the friendly CRAWLER transaction opts into the deployment render plan", () => {

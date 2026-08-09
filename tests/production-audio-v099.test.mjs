@@ -130,7 +130,10 @@ test("all normal battle scenes use the audible v0.9.9.0 track and TAKUYA entranc
     musicDuck: TAKUYA_ENTRANCE_MUSIC_DUCK,
     durationSeconds: 3.4,
   });
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById[TAKUYA_ENTRANCE_AUDIO.bossSceneId].bgm, "music-v099-boss");
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById[TAKUYA_ENTRANCE_AUDIO.bossSceneId].bgm, "music-boss");
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById[TAKUYA_ENTRANCE_AUDIO.bossSceneId].preload.includes("music-boss"), true);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["story-boss"].bgm, "music-boss");
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["story-boss"].preload.includes("music-boss"), true);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-entrance"], undefined);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.sceneById["silence-stage3-final"], undefined);
 });

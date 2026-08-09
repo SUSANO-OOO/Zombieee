@@ -535,10 +535,12 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /g\.banner = placementReasonLabel\(result\.reason\); g\.bannerTime = \.75/);
   assert.match(game, /const compactScale = compactBattleViewport\(\) \? 1\.1 : 1/);
   assert.match(game, /function battleBannerDomRect[\s\S]*document\.querySelector<HTMLElement>\("\.battle-banner"\)/);
-  assert.match(game, /hud\.banner && <p className="battle-banner" data-message-kind="banner">\{hud\.banner\}<\/p>/);
+  assert.match(game, /hud\.banner && <p className="battle-banner" data-message-kind="banner">\{publicDisplayText\(hud\.banner\)\}<\/p>/);
   for (const label of ["投下ポッド", "爆薬ドラム", "救護所", "航空支援", "一斉掃射"]) assert.match(game, new RegExp(label));
   assert.doesNotMatch(css, /battle-nishijin-shopping-street-v1\.webp/);
-  assert.match(game, /style=\{screen === "battle" && assetsReady[\s\S]*backgroundImage: `url\('\$\{stageVisualFor\(activeBattlefieldStageId\)\}'\)`/);
+  assert.match(game, /const battleHudFrameStyle = \{[\s\S]*backgroundImage: `url\('\$\{stageVisualFor\(activeBattlefieldStageId\)\}'\)`/);
+  assert.match(game, /data-battle-hud-layout=\{battleHudLayout \? "mobile" : undefined\}/);
+  assert.match(game, /style=\{battleHudFrameStyle\}/);
   for (const edge of ["top", "right", "bottom", "left"]) {
     assert.match(css, new RegExp(`--app-viewport-safe-${edge}:env\\(safe-area-inset-${edge},0px\\)`));
   }
