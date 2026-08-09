@@ -1,0 +1,43 @@
+name: Threads liker audit (temporary)
+
+on:
+  push:
+    branches:
+      - analysis/threads-likers-audit-20260809
+    paths:
+      - tools/threads_likers_probe.py
+      - tools/threads_likers_audit.py
+      - .github/workflows/threads-likers-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Run probe
+        run: python tools/threads_likers_probe.py
+      - name: Commit probe results
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tmp_threads_audit || true
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Threads liker audit probe results [skip ci]'
+            git push origin HEAD:analysis/threads-likers-audit-20260809
+          fi
