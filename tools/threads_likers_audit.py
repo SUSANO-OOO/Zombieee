@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import requests
 
+# Temporary diagnostic only; no application code depends on this file.
 OUT=Path('tmp_threads_audit'); OUT.mkdir(exist_ok=True)
 POST_ID='3958776431606189872'
 URL='https://www.threads.com/api/graphql'
@@ -26,7 +27,6 @@ for doc in DOCS:
       rec={'doc_id':doc,'key':key,'status':r.status_code,'length':len(txt),'preview':txt[:30000]}
       try:
         data=r.json(); rec['json_top']=list(data) if isinstance(data,dict) else type(data).__name__
-        # recursively count profile-like username objects and collect structural keys only
         users=[]; paths=[]
         def walk(x,path=''):
           if isinstance(x,dict):
