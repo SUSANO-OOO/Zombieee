@@ -1,0 +1,48 @@
+[
+  {
+    "doc_id": "9360915773983802",
+    "key": "mediaID",
+    "status": 200,
+    "length": 63,
+    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [
+      ".data.likers"
+    ],
+    "user_sample": []
+  },
+  {
+    "doc_id": "9360915773983802",
+    "key": "postID",
+    "status": 200,
+    "length": 107,
+    "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\"}],\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "errors",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [],
+    "user_sample": []
+  },
+  {
+    "doc_id": "9360915773983802",
+    "key": "media_id",
+    "status": 200,
+    "length": 107,
+    "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\"}],\"extensions\":{\"is_final\":true}}",
+    "json_top": [
+      "data",
+      "errors",
+      "extensions"
+    ],
+    "users_found": 0,
+    "liker_paths": [],
+    "user_sample": []
+  }
+]
