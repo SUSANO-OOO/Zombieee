@@ -884,10 +884,27 @@ async function runHudCase(browser, engine, viewport) {
       () => window.__ASHFALL_BATTLE_QA__.prepareBossFoundationProof("takuya"),
     );
     invariant(bossPrepared?.kind === "takuya", `${name}: TAKUYA HUD fixture is unavailable`);
+    const bossEntry = await page.waitForFunction(
+      () => {
+        const proof = window.__ASHFALL_BATTLE_QA__.getBossFoundationProof("takuya");
+        return proof?.bossId && proof.gateEntering === true ? proof : null;
+      },
+      undefined,
+      { timeout, polling: 10 },
+    ).then((handle) => handle.jsonValue());
+    invariant(Number.isInteger(bossEntry?.bossId), `${name}: TAKUYA entrance did not start`);
+    await page.evaluate(
+      (bossId) => window.__ASHFALL_BATTLE_QA__.accelerateBossFoundationEntry(bossId),
+      bossEntry.bossId,
+    );
     await page.waitForFunction(
-      () => document.querySelector(".battle-banner")
-        && document.querySelector(".battle-barks")
-        && document.querySelector(".boss-hud"),
+      () => {
+        const proof = window.__ASHFALL_BATTLE_QA__.getBossFoundationProof("takuya");
+        return proof?.combatReady === true
+          && document.querySelector(".battle-banner")
+          && document.querySelector(".battle-barks")
+          && document.querySelector(".boss-hud");
+      },
       undefined,
       { timeout, polling: 10 },
     );
