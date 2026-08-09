@@ -776,13 +776,16 @@ async function createDisabledHudState(page, label, { minimumOpacity = .72 } = {}
   return disabled;
 }
 
-async function runHudCase(browser, engine, viewport) {
+async function runHudCase(browserType, engine, viewport) {
   const name = `${engine}-${viewport.width}x${viewport.height}`;
-  const context = await browser.newContext({ viewport });
+  let browser = null;
+  let context = null;
   let page = null;
   const diagnosticControls = [];
   const result = { type: "hud", engine, viewport, status: "failed", states: [] };
   try {
+    browser = await browserType.launch({ headless: true });
+    context = await browser.newContext({ viewport });
     const stage1 = await openBattlePage(context, "mission", { stageNumber: 1 });
     diagnosticControls.push(stage1);
     page = stage1.page;
@@ -881,8 +884,14 @@ async function runHudCase(browser, engine, viewport) {
     result.states.push({ ...disabled, disabledControls });
 
     stage3.stop();
-    await page.close();
+    await context.close();
+    context = null;
+    await browser.close();
+    browser = null;
+    page = null;
 
+    browser = await browserType.launch({ headless: true });
+    context = await browser.newContext({ viewport });
     const bossStage3 = await openBattlePage(context, "mission", { stageNumber: 3 });
     diagnosticControls.push(bossStage3);
     page = bossStage3.page;
@@ -965,7 +974,8 @@ async function runHudCase(browser, engine, viewport) {
       result.status = "failed";
       result.error = `Browser diagnostics were not clean: ${JSON.stringify(result.diagnostics)}`;
     }
-    await context.close();
+    if (context) await context.close().catch(() => {});
+    if (browser) await browser.close().catch(() => {});
   }
   return result;
 }
@@ -1448,15 +1458,17 @@ for (const engine of engines) {
   const browserType = browserTypes[engine];
   invariant(browserType, `Unsupported browser engine: ${engine}`);
   for (const viewport of viewports) {
-    const browser = await browserType.launch({ headless: true });
-    try {
-      if (caseTypes.includes("hud")) results.push(await runHudCase(browser, engine, viewport));
-      if (caseTypes.includes("crawler-equipment")) {
-        results.push(await runEquipmentCase(browser, engine, viewport, runtimeEvidence));
+    if (caseTypes.includes("hud")) results.push(await runHudCase(browserType, engine, viewport));
+    if (caseTypes.includes("crawler-equipment") || caseTypes.includes("deployment")) {
+      const browser = await browserType.launch({ headless: true });
+      try {
+        if (caseTypes.includes("crawler-equipment")) {
+          results.push(await runEquipmentCase(browser, engine, viewport, runtimeEvidence));
+        }
+        if (caseTypes.includes("deployment")) results.push(await runDeploymentCase(browser, engine, viewport));
+      } finally {
+        await browser.close();
       }
-      if (caseTypes.includes("deployment")) results.push(await runDeploymentCase(browser, engine, viewport));
-    } finally {
-      await browser.close();
     }
   }
 }
