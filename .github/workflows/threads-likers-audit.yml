@@ -6,6 +6,7 @@ on:
       - analysis/threads-likers-audit-20260809
     paths:
       - tools/threads_likers_probe.py
+      - tools/threads_graphql_discover.py
       - tools/threads_likers_audit.py
       - .github/workflows/threads-likers-audit.yml
   pull_request:
@@ -13,6 +14,7 @@ on:
       - main
     paths:
       - tools/threads_likers_probe.py
+      - tools/threads_graphql_discover.py
       - tools/threads_likers_audit.py
       - .github/workflows/threads-likers-audit.yml
   workflow_dispatch:
@@ -36,50 +38,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install playwright
           python -m playwright install --with-deps chromium
-      - name: Run probe
-        run: python tools/threads_likers_probe.py
-      - name: Build compact diagnostic
+      - name: Run GraphQL discovery
+        run: python tools/threads_graphql_discover.py
+      - name: Upload raw discovery artifact
         if: always()
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          root=Path('tmp_threads_audit')
-          p={}
-          if (root/'probe.json').exists(): p=json.loads((root/'probe.json').read_text())
-          keep=['target','goto_status','final_url','title','html_terms','clicked_metric','clicked','dialog_count_after_click','dialogs_final','users_found','network_count','k_metric_count','k_metric_candidates','click_diagnostics','scroll_samples','fatal_error']
-          out={k:p.get(k) for k in keep if k in p}
-          out['body_before']=p.get('body_before','')[:12000]
-          out['body_after_click']=p.get('body_after_click','')[:20000]
-          out['dialogs_after_click']=p.get('dialogs_after_click',[])[:5]
-          rel=[]
-          npath=root/'network.json'
-          if npath.exists():
-            for e in json.loads(npath.read_text()):
-              s=json.dumps(e,ensure_ascii=False).lower()
-              if any(x in s for x in ['graphql','liker','like_count','doc_id','mediaid','barcelona','xdt','feedback']):
-                d={k:e.get(k) for k in ['url','status','method','resource_type','post_data','content_type'] if k in e}
-                if 'json_preview' in e: d['json_preview']=e['json_preview'][:12000]
-                if 'text_preview' in e: d['text_preview']=e['text_preview'][:12000]
-                rel.append(d)
-          out['relevant_network']=rel[:150]
-          (root/'compact.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
-          print(json.dumps(out,ensure_ascii=False,indent=2)[:100000])
-          PY
-      - uses: actions/upload-artifact@v4
-        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: threads-audit-probe-${{ github.run_id }}
-          path: tmp_threads_audit
+          name: threads-graphql-discovery-${{ github.run_id }}
+          path: tmp_threads_audit/graphql_discovery.json
           if-no-files-found: warn
           retention-days: 3
-      - name: Commit compact diagnostic
+      - name: Commit discovery diagnostic
         if: always() && github.event_name == 'push'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -f tmp_threads_audit/compact.json || true
+          git add -f tmp_threads_audit/graphql_discovery.json || true
           if ! git diff --cached --quiet; then
-            git commit -m 'Add compact Threads audit diagnostic [skip ci]'
+            git commit -m 'Add Threads GraphQL discovery [skip ci]'
             git push origin HEAD:analysis/threads-likers-audit-20260809
           fi
