@@ -1,15 +1,15 @@
 name: Threads liker audit (temporary)
 
 on:
-  push:
-    branches: [analysis/threads-likers-audit-20260809]
+  pull_request:
+    branches: [main]
     paths:
       - tools/threads_likers_audit.py
       - .github/workflows/threads-likers-audit.yml
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   audit:
@@ -17,28 +17,17 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install HTTP client
-        run: pip install requests
-      - name: Exhaust public liker query variants
+      - run: pip install requests
+      - name: Exhaust public liker paths and inspect public Actor source
         run: python tools/threads_likers_audit.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: threads-liker-http-audit-${{ github.run_id }}
-          path: tmp_threads_audit/liker_graphql_test.json
+          name: threads-liker-audit-${{ github.run_id }}
+          path: |
+            tmp_threads_audit/liker_graphql_test.json
+            tmp_threads_audit/apify_actor_source.json
           retention-days: 3
-      - name: Commit compact test result
-        if: always()
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -f tmp_threads_audit/liker_graphql_test.json || true
-          if ! git diff --cached --quiet; then
-            git commit -m 'Add exhaustive public Threads liker query result [skip ci]'
-            git push origin HEAD:analysis/threads-likers-audit-20260809
-          fi
