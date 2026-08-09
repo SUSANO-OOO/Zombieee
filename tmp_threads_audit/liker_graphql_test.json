@@ -1,353 +1,966 @@
-[
-  {
-    "phase": "bootstrap",
-    "ua": "browser",
-    "status": 200,
-    "final_url": "https://www.threads.com/@uwachan2026/post/DbwZjCnE08w",
-    "html_length": 255081,
-    "lsd": "AdRPKjw25galElRRfuY3SsYCv3g",
+{
+  "meta": {
+    "bootstrap_status": 200,
+    "lsd": "AdTG0JXrk6YzU8p9o6vqLULbxVQ",
+    "csrf": "ndNDoz-csovxxIFWifceIj",
+    "hsi": "7671935610694584489",
+    "rev": "1044807424",
+    "spin_r": "1044807424",
+    "spin_b": "trunk",
     "cookies": {
-      "csrftoken": "ghbxega6fkFhdKaDZQVZXA"
+      "csrftoken": "ndNDoz-csovxxIFWifceIj"
+    }
+  },
+  "tests": [
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "pk",
+      "type": "string",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
     },
-    "lsd_context": [
-      "USER\":false,\"IS_DEACTIVATED_ALLOWED_ON_MESSENGER\":false,\"IS_MESSENGER_CALL_GUEST_USER\":false,\"IS_WORK_MESSENGER_CALL_GUEST_USER\":false,\"IS_WORKROOMS_USER\":false,\"APP_ID\":\"238260118697367\",\"IS_BUSINESS_DOMAIN\":false,\"NON_FACEBOOK_USER_ID\":\"0\",\"IS_THREADS_USER\":1},270],[\"DTSGInitialData\",[],{},258],[\"LSD\",[],{\"token\":\"AdRPKjw25galElRRfuY3SsYCv3g\"},323],[\"ServerNonce\",[],{\"ServerNonce\":\"6KxIuxY494GPckAqyxj0KT\"},141],[\"SiteData\",[],{\"server_revision\":1044807424,\"client_revision\":1044807424,\"push_phase\":\"C3\",\"pkg_cohort\":\"HYP:barcelona_web_pkg\",\"haste_session\":\"20674.HYP:barcelona_web_pkg.2.1...0\",\"pr\":1,\"manifest_base_uri\":\"https:\\/\\/static.cdninstagram.com\",\"manifest_origin\":null,\"manifest_version_prefix\":null,\"be_one_ahead\":true,\"is_rtl\":false,\"is_experimental_tier\":false,\"is_jit_warmed_up\":true,\"hsi\":\"7671934811147053499\",\"semr_host_bucket\":\"\",\"bl_hash_version\":2,\"comet_env\":29,\"wbloks_env\":false,\"ef_page\":null,\"compose_bootloads\":false,\"spin\":4,\"__spin_r\":1044807424,\"__spin_b\":\"trunk\","
-    ]
-  },
-  {
-    "phase": "query",
-    "ua": "browser",
-    "endpoint": "https://www.threads.com/api/graphql",
-    "token_kind": "live",
-    "with_pv": false,
-    "status": 200,
-    "final_url": "https://www.threads.com/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "browser",
-    "endpoint": "https://www.threads.com/api/graphql",
-    "token_kind": "live",
-    "with_pv": true,
-    "status": 200,
-    "final_url": "https://www.threads.com/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "browser",
-    "endpoint": "https://www.threads.com/api/graphql",
-    "token_kind": "t",
-    "with_pv": false,
-    "status": 200,
-    "final_url": "https://www.threads.com/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "browser",
-    "endpoint": "https://www.threads.com/api/graphql",
-    "token_kind": "t",
-    "with_pv": true,
-    "status": 200,
-    "final_url": "https://www.threads.com/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "browser",
-    "endpoint": "https://www.threads.net/api/graphql",
-    "token_kind": "live",
-    "with_pv": false,
-    "status": 200,
-    "final_url": "https://www.threads.net/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "browser",
-    "endpoint": "https://www.threads.net/api/graphql",
-    "token_kind": "live",
-    "with_pv": true,
-    "status": 200,
-    "final_url": "https://www.threads.net/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "browser",
-    "endpoint": "https://www.threads.net/api/graphql",
-    "token_kind": "t",
-    "with_pv": false,
-    "status": 200,
-    "final_url": "https://www.threads.net/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "browser",
-    "endpoint": "https://www.threads.net/api/graphql",
-    "token_kind": "t",
-    "with_pv": true,
-    "status": 200,
-    "final_url": "https://www.threads.net/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "bootstrap",
-    "ua": "crawler",
-    "status": 200,
-    "final_url": "https://www.threads.com/@uwachan2026/post/DbwZjCnE08w",
-    "html_length": 942549,
-    "lsd": "AdQonF8-MQ7IuXxdOB0Oms06SvQ",
-    "cookies": {
-      "csrftoken": "QI5SenQwWQ0WZ3IH1hElZF"
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "pk",
+      "type": "string",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
     },
-    "lsd_context": [
-      "USER\":false,\"IS_DEACTIVATED_ALLOWED_ON_MESSENGER\":false,\"IS_MESSENGER_CALL_GUEST_USER\":false,\"IS_WORK_MESSENGER_CALL_GUEST_USER\":false,\"IS_WORKROOMS_USER\":false,\"APP_ID\":\"238260118697367\",\"IS_BUSINESS_DOMAIN\":false,\"NON_FACEBOOK_USER_ID\":\"0\",\"IS_THREADS_USER\":1},270],[\"DTSGInitialData\",[],{},258],[\"LSD\",[],{\"token\":\"AdQonF8-MQ7IuXxdOB0Oms06SvQ\"},323],[\"ServerNonce\",[],{\"ServerNonce\":\"MNJiXZ4NrDknu-hozimgCl\"},141],[\"SiteData\",[],{\"server_revision\":1044807424,\"client_revision\":1044807424,\"push_phase\":\"C3\",\"pkg_cohort\":\"HYP:barcelona_web_pkg\",\"haste_session\":\"20674.HYP:barcelona_web_pkg.2.1...0\",\"pr\":1,\"manifest_base_uri\":\"https:\\/\\/static.cdninstagram.com\",\"manifest_origin\":null,\"manifest_version_prefix\":null,\"be_one_ahead\":true,\"is_rtl\":false,\"is_experimental_tier\":false,\"is_jit_warmed_up\":true,\"hsi\":\"7671934825115991910\",\"semr_host_bucket\":\"\",\"bl_hash_version\":2,\"comet_env\":29,\"wbloks_env\":false,\"ef_page\":\"BarcelonaPostColumnRoute\",\"compose_bootloads\":false,\"spin\":4,\"__spin_r\":10448074",
-      "aVideo.react\",\"BarcelonaComposerGeneralDialog.react\",\"BarcelonaPostOverflowMenuBottomSheet.react\",\"BarcelonaPrivateReplyBumpDialog.react\",\"BarcelonaUserHovercardImpl.react\",\"BarcelonaUsernameHovercardImpl.react\",\"BarcelonaCommunityNoteMoreInfoDialog.react\",\"BarcelonaInformTreatmentCommunityNoteDetailsDialog.react\",\"BarcelonaCommunityNoteSourcesDialog.react\",\"BarcelonaPostColumnPage.react\",\"VideoPlayerHTML5ApiCea608State\",\"VideoPlayerHTML5ApiWebVttState\",\"BarcelonaCombineInfoDialog.react\",\"BarcelonaGhostTimerInfoDialog.react\",\"BarcelonaFlytrapDialog.react\",\"BarcelonaSelfPostNotificationSettingsDialog.react\",\"BarcelonaPrivateReplyMessageNudgeDialog.react\",\"VideoPlayerEmsg\"]]],[\"RequireDeferredReference\",\"unblock\",[],[[\"BarcelonaPostColumnPage.react\",\"BarcelonaPostColumnPage.entrypoint\",\"BarcelonaPostColumn.entrypoint\",\"BarcelonaPostColumn.react\"],\"sd\"]],[\"RequireDeferredReference\",\"unblock\",[],[[\"BarcelonaPostColumnPage.react\",\"BarcelonaPostColumnPage.entrypoint\",\"BarcelonaPostColumn.ent",
-      "lFZxKl\",\"U44xikw\",\"SZdgOjn\",\"BL1ztAV\",\"DoZ4q6G\",\"ICK55Rm\",\"dlMdW7h\"]}},\"BarcelonaCommunityNoteMoreInfoDialog.react\":{\"r\":[\"NETnsVO\",\"rxiFSFX\",\"QqjwccE\",\"0j0NM3o\",\"d82xGh2\",\"7DoYHfl\"],\"rds\":{\"m\":[\"FbtLogging\",\"ODS\",\"IntlQtEventFalcoEvent\"],\"r\":[\"7Odl5Zu\"]}},\"BarcelonaInformTreatmentCommunityNoteDetailsDialog.react\":{\"r\":[\"rxiFSFX\",\"NETnsVO\",\"QqjwccE\",\"0j0NM3o\",\"7DoYHfl\",\"Hp1fTNd\"],\"rds\":{\"m\":[\"bumpVultureJSHash\",\"FbtLogging\",\"ODS\",\"IntlQtEventFalcoEvent\"],\"r\":[\"7Odl5Zu\"]}},\"BarcelonaCommunityNoteSourcesDialog.react\":{\"r\":[\"NETnsVO\",\"rxiFSFX\",\"sodzvDQ\",\"QqjwccE\",\"0j0NM3o\",\"7DoYHfl\"],\"rds\":{\"m\":[\"FbtLogging\",\"ODS\",\"IntlQtEventFalcoEvent\"],\"r\":[\"7Odl5Zu\"]}},\"BarcelonaPostColumnPage.react\":{\"r\":[\"NETnsVO\",\"rxiFSFX\",\"QqjwccE\",\"0j0NM3o\",\"7DoYHfl\"],\"rdfds\":{\"m\":[\"BarcelonaPostViewCount.react\",\"BarcelonaPostPagePostFallback.react\",\"BarcelonaInlineReplyComposer.react\",\"VideoPlayerSpinner.react\",\"VideoPlayerCaptionsArea.react\",\"BarcelonaColumnHeaderOverflowMenuPopoverTrigger.react\",\"FDSCometExcep",
-      "aVideo.react\",\"BarcelonaComposerGeneralDialog.react\",\"BarcelonaPostOverflowMenuBottomSheet.react\",\"BarcelonaPrivateReplyBumpDialog.react\",\"BarcelonaUserHovercardImpl.react\",\"BarcelonaUsernameHovercardImpl.react\",\"BarcelonaCommunityNoteMoreInfoDialog.react\",\"BarcelonaInformTreatmentCommunityNoteDetailsDialog.react\",\"BarcelonaCommunityNoteSourcesDialog.react\",\"BarcelonaViolatingTagDialog.react\",\"BarcelonaComposerEditExpirationDialog.react\",\"BarcelonaColumnHeaderOverflowMenuPopover.react\",\"OzVTTSourceBufferImpl\"]]],[\"Bootloader\",\"markSupportDataReadyForImmediateBootloads\",[],[]],[\"RequireDeferredReference\",\"unblock\",[],[[\"Barcelona500ErrorRoot.react\",\"GlobalVideoPortsImpl.react\",\"BarcelonaPostViewCount.react\",\"BarcelonaPostPagePostFallback.react\",\"BarcelonaInlineReplyComposer.react\",\"FDSTooltipDeferredImpl.react\",\"VideoPlayerSpinner.react\",\"VideoPlayerCaptionsArea.react\",\"FDSCometExceptionDialogImpl.react\",\"BarcelonaColumnHeaderOverflowMenuPopoverTrigger.react\",\"SecuredActionTriggerWithAc"
-    ]
-  },
-  {
-    "phase": "query",
-    "ua": "crawler",
-    "endpoint": "https://www.threads.com/api/graphql",
-    "token_kind": "live",
-    "with_pv": false,
-    "status": 200,
-    "final_url": "https://www.threads.com/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "crawler",
-    "endpoint": "https://www.threads.com/api/graphql",
-    "token_kind": "live",
-    "with_pv": true,
-    "status": 200,
-    "final_url": "https://www.threads.com/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "crawler",
-    "endpoint": "https://www.threads.com/api/graphql",
-    "token_kind": "t",
-    "with_pv": false,
-    "status": 200,
-    "final_url": "https://www.threads.com/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "crawler",
-    "endpoint": "https://www.threads.com/api/graphql",
-    "token_kind": "t",
-    "with_pv": true,
-    "status": 200,
-    "final_url": "https://www.threads.com/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "crawler",
-    "endpoint": "https://www.threads.net/api/graphql",
-    "token_kind": "live",
-    "with_pv": false,
-    "status": 200,
-    "final_url": "https://www.threads.net/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "crawler",
-    "endpoint": "https://www.threads.net/api/graphql",
-    "token_kind": "live",
-    "with_pv": true,
-    "status": 200,
-    "final_url": "https://www.threads.net/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "crawler",
-    "endpoint": "https://www.threads.net/api/graphql",
-    "token_kind": "t",
-    "with_pv": false,
-    "status": 200,
-    "final_url": "https://www.threads.net/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  },
-  {
-    "phase": "query",
-    "ua": "crawler",
-    "endpoint": "https://www.threads.net/api/graphql",
-    "token_kind": "t",
-    "with_pv": true,
-    "status": 200,
-    "final_url": "https://www.threads.net/api/graphql",
-    "length": 63,
-    "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
-    "json_top": [
-      "data",
-      "extensions"
-    ],
-    "users_found": 0,
-    "liker_paths": [
-      ".data.likers"
-    ],
-    "user_sample": []
-  }
-]
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "pk",
+      "type": "string",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "pk",
+      "type": "string",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "pk",
+      "type": "int",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "pk",
+      "type": "int",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "pk",
+      "type": "int",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "pk",
+      "type": "int",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "fbid",
+      "type": "string",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "fbid",
+      "type": "string",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "fbid",
+      "type": "string",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "fbid",
+      "type": "string",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "fbid",
+      "type": "int",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "fbid",
+      "type": "int",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "fbid",
+      "type": "int",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "fbid",
+      "type": "int",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "compound",
+      "type": "string",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "compound",
+      "type": "string",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "compound",
+      "type": "string",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "compound",
+      "type": "string",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "shortcode",
+      "type": "string",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "shortcode",
+      "type": "string",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "shortcode",
+      "type": "string",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.com/api/graphql",
+      "id_name": "shortcode",
+      "type": "string",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "pk",
+      "type": "string",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "pk",
+      "type": "string",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "pk",
+      "type": "string",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "pk",
+      "type": "string",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "pk",
+      "type": "int",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "pk",
+      "type": "int",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "pk",
+      "type": "int",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "pk",
+      "type": "int",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "fbid",
+      "type": "string",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "fbid",
+      "type": "string",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "fbid",
+      "type": "string",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "fbid",
+      "type": "string",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "fbid",
+      "type": "int",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "fbid",
+      "type": "int",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "fbid",
+      "type": "int",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "fbid",
+      "type": "int",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "compound",
+      "type": "string",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "compound",
+      "type": "string",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "compound",
+      "type": "string",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "compound",
+      "type": "string",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 63,
+      "preview": "{\"data\":{\"likers\":{\"users\":[]}},\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [
+        ".data.likers"
+      ],
+      "cursors": [],
+      "top": [
+        "data",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "shortcode",
+      "type": "string",
+      "pv": false,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "shortcode",
+      "type": "string",
+      "pv": false,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "shortcode",
+      "type": "string",
+      "pv": true,
+      "outer": "minimal",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    },
+    {
+      "endpoint": "https://www.threads.net/api/graphql",
+      "id_name": "shortcode",
+      "type": "string",
+      "pv": true,
+      "outer": "comet",
+      "status": 200,
+      "length": 216,
+      "preview": "{\"data\":null,\"errors\":[{\"message\":\"execution error\",\"severity\":\"CRITICAL\",\"code\":4630001,\"summary\":\"Bad Request\",\"description\":\"Sorry, this photo has been deleted.\",\"path\":[\"likers\"]}],\"extensions\":{\"is_final\":true}}",
+      "users_found": 0,
+      "user_sample": [],
+      "liker_paths": [],
+      "cursors": [],
+      "top": [
+        "data",
+        "errors",
+        "extensions"
+      ]
+    }
+  ],
+  "apify_anonymous": [
+    {
+      "url": "https://api.apify.com/v2/acts/memo23~threads-scraper",
+      "status": 200,
+      "length": 5131,
+      "preview": "{\n  \"data\": {\n    \"id\": \"2Pg8fTCRRaI5NRJzG\",\n    \"userId\": \"ngn8vRESTkseyWE6p\",\n    \"name\": \"threads-scraper\",\n    \"username\": \"memo23\",\n    \"description\": \"Threads Scraper — extract posts, replies and profiles from threads.com with no login or cookies. Paste usernames or post URLs and get flat rows: text, like/reply/repost/quote counts, media, timestamps and author. Bulk-ready. JSON, CSV or Excel.\",\n    \"isPublic\": true,\n    \"createdAt\": \"2026-07-15T11:50:51.167Z\",\n    \"modifiedAt\": \"2026-08-08T13:34:35.848Z\",\n    \"taggedBuilds\": {\n      \"latest\": {\n        \"buildId\": \"wKxFUlFp6o16iSVYK\",\n        \"finishedAt\": \"2026-08-08T13:34:35.848Z\",\n        \"buildNumberInt\": 10,\n        \"buildNumber\": \"0.0.10\"\n      }\n    },\n    \"stats\": {\n      \"totalBuilds\": 10,\n      \"totalRuns\": 65,\n      \"totalUsers\": 20,\n      \"totalUsers7Days\": 2,\n      \"totalUsers30Days\": 18,\n      \"totalUsers90Days\": 18,\n      \"lastRunStartedAt\": \"2026-08-08T13:42:47.138Z\",\n      \"actorReviewCount\": 1,\n      \"actorReviewRating\": 5,\n      \"bookmarkCount\": 0,\n      \"publicActorRunStats30Days\": {\n        \"ABORTED\": 0,\n        \"FAILED\": 0,\n        \"SUCCEEDED\": 62,\n        \"TIMED-OUT\": 0,\n        \"TOTAL\": 62\n      }\n    },\n    \"versions\": [\n      {\n        \"versionNumber\": \"0.0\",\n        \"sourceType\": \"SOURCE_FILES\",\n        \"buildTag\": \"latest\"\n      }\n    ],\n    \"defaultRunOptions\": {\n      \"build\": \"latest\",\n      \"timeoutSecs\": 3600,\n      \"memoryMbytes\": 4096\n    },\n    \"exampleRunInput\": {\n      \"body\": \"{ \\\"helloWorld\\\": 123 }\",\n      \"contentType\": \"application/json; charset=utf-8\"\n    },\n    \"categories\": [\n      \"SOCIAL_MEDIA\",\n      \"LEAD_GENERATION\",\n      \"AI\"\n    ],\n    \"isDeprecated\": false,\n    \"title\": \"Threads Scraper — Posts, Replies & Profiles, No Login\",\n    \"pictureUrl\": \"https://apify-image-uploads-prod.s3.us-east-1.amazonaws.com/ngn8vRESTkseyWE6p-actor-2Pg8fTCRRaI5NRJzG-60cIPi2aCu-threads.png\",\n    \"seoTitle\": null,\n    \"seoDescription\": null,\n    \"pricingInfos\": [\n      {\n        \"pricingModel\": \"PAY_PER_EVENT\",\n        \"isPriceChangeNotificationSuppressed\": true,\n        \"pricingPerEvent\": {\n          \"actorChargeEvents\": {\n            \"apify-actor-start\": {\n              \"eventTitle\": \"Actor Start\",\n              \"eventDescription\": \"Charged when the Actor starts running. Number of events charged depends on Actor memory (one event per GB, minimum one event).\",\n              \"isOneTimeEvent\": true,\n              \"eventPriceUsd\": 0.005\n            },\n            \"post-result\": {\n              \"eventTitle\": \"Post scraped\",\n              \"eventDescription\": \"Charged per Threads post / row returned in the output (posts, replies, profile rows).\",\n              \"isOneTimeEvent\": false,\n              \"eventPriceUsd\": 0.004,\n              \"isPrimaryEvent\": true\n            }\n          }\n        },\n        \"createdAt\": \"2026-07-15T12:57:45.231Z\",\n        \"startedAt\": \"2026-07-15T12:57:45.231Z\",\n        \"apifyMarginPercentage\": 0.2\n      }\n    ],\n    \"notice\": \"NONE\",\n  "
+    },
+    {
+      "url": "https://api.apify.com/v2/acts/memo23~threads-scraper/runs",
+      "status": 402,
+      "length": 157,
+      "preview": "{\n  \"error\": {\n    \"type\": \"x402-payment-required\",\n    \"message\": \"x402 payment header missing. Add your PAYMENT-SIGNATURE or Apify token to proceed.\"\n  }\n}"
+    }
+  ]
+}
