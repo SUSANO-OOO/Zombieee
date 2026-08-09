@@ -15,8 +15,8 @@ const publishedSource = JSON.parse(execFileSync("git", [
 const published = { ...publishedSource, releaseSha: PUBLISHED_V0982_SHA };
 const candidate = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
 
-test("the Version 0.9.9.0 release candidate has one immutable identity and complete manifest", () => {
-  assert.equal(RELEASE_VERSION, "0.9.9.0");
+test("the Version 0.9.9.1 release candidate has one immutable identity and complete manifest", () => {
+  assert.equal(RELEASE_VERSION, "0.9.9.1");
   assert.equal(candidate.version, RELEASE_VERSION);
   assert.equal(candidate.releaseSha, RELEASE_SHA_PLACEHOLDER);
   assert.equal(candidate.assets.length, 416);
@@ -41,7 +41,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
 
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.8.2");
-  assert.equal(update.toVersion, "0.9.9.0");
+  assert.equal(update.toVersion, "0.9.9.1");
   assert.equal(update.downloadCount, 49);
   assert.equal(update.downloadBytes, 10_374_694);
   assert.equal(update.unchangedCount, 367);
