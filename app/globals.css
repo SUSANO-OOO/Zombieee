@@ -510,7 +510,7 @@ button[aria-disabled="true"]:focus-visible {
 .game-frame[data-battle-hud-layout="mobile"] .card-copy {
   top:5px;
   left:34%;
-  right:2px;
+  right:0;
 }
 .game-frame[data-battle-hud-layout="mobile"] .card-copy b {
   display:block;
@@ -518,6 +518,7 @@ button[aria-disabled="true"]:focus-visible {
   overflow:visible;
   font-size:14px;
   line-height:1.05;
+  letter-spacing:0;
   white-space:normal;
   overflow-wrap:anywhere;
   text-shadow:0 2px 3px #000;
