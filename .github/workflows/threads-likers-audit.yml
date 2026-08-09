@@ -33,28 +33,32 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install browser tooling
+      - name: Install tooling
         run: |
           python -m pip install --upgrade pip
-          pip install playwright
+          pip install playwright requests
           python -m playwright install --with-deps chromium
+      - name: Test liker GraphQL
+        run: python tools/threads_likers_audit.py
       - name: Run GraphQL discovery
         run: python tools/threads_graphql_discover.py
-      - name: Upload raw discovery artifact
+      - name: Upload diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: threads-graphql-discovery-${{ github.run_id }}
-          path: tmp_threads_audit/graphql_discovery.json
+          name: threads-graphql-diagnostics-${{ github.run_id }}
+          path: |
+            tmp_threads_audit/liker_graphql_test.json
+            tmp_threads_audit/graphql_discovery.json
           if-no-files-found: warn
           retention-days: 3
-      - name: Commit discovery diagnostic
+      - name: Commit diagnostics
         if: always() && github.event_name == 'push'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -f tmp_threads_audit/graphql_discovery.json || true
+          git add -f tmp_threads_audit/liker_graphql_test.json tmp_threads_audit/graphql_discovery.json || true
           if ! git diff --cached --quiet; then
-            git commit -m 'Add Threads GraphQL discovery [skip ci]'
+            git commit -m 'Add Threads GraphQL diagnostics [skip ci]'
             git push origin HEAD:analysis/threads-likers-audit-20260809
           fi
