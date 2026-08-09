@@ -8,6 +8,13 @@ on:
       - tools/threads_likers_probe.py
       - tools/threads_likers_audit.py
       - .github/workflows/threads-likers-audit.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - tools/threads_likers_probe.py
+      - tools/threads_likers_audit.py
+      - .github/workflows/threads-likers-audit.yml
   workflow_dispatch:
 
 permissions:
@@ -32,7 +39,7 @@ jobs:
       - name: Run probe
         run: python tools/threads_likers_probe.py
       - name: Commit probe results
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -41,3 +48,19 @@ jobs:
             git commit -m 'Add Threads liker audit probe results [skip ci]'
             git push origin HEAD:analysis/threads-likers-audit-20260809
           fi
+      - name: Print probe results
+        if: always() && github.event_name == 'pull_request'
+        run: |
+          echo '=== PROBE JSON ==='
+          cat tmp_threads_audit/probe.json || true
+          echo '=== USERS PROBE ==='
+          cat tmp_threads_audit/users_probe.json || true
+          echo '=== NETWORK PREVIEW ==='
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('tmp_threads_audit/network.json')
+          if p.exists():
+              data=json.loads(p.read_text())
+              print(json.dumps(data[:30], ensure_ascii=False, indent=2)[:120000])
+          PY
