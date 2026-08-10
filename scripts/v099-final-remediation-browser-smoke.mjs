@@ -264,7 +264,7 @@ function relativeEvidencePath(filePath) {
 }
 
 function safeAreaForViewport(viewport) {
-  return viewport.width === 844
+  return viewport.width <= 900
     ? { top: 0, right: 44, bottom: 21, left: 44, preset: "iphone-landscape" }
     : { top: 0, right: 0, bottom: 0, left: 0, preset: null };
 }
@@ -604,6 +604,9 @@ async function measureHud(page, viewport, label) {
     const fontRules = [
       [".battle-banner", expectedTypography.banner.minPx],
       [".battle-barks p", 12],
+      [".battle-brand-zone .brand-block b", 14],
+      [".battle-brand-zone .crawler-health span", expectedTypography.detail.minPx],
+      [".battle-brand-zone .crawler-health b", expectedTypography.detail.minPx],
       [".battle-controls-zone .phase-block small", expectedTypography.detail.minPx],
       [".battle-controls-zone .phase-block strong", 14],
       [".battle-controls-zone .phase-block em", expectedTypography.detail.minPx],
@@ -617,6 +620,7 @@ async function measureHud(page, viewport, label) {
       [".support-btn b", expectedTypography.supportName.minPx],
       [".support-btn small", expectedTypography.disabledReason.minPx],
       [".support-btn em", expectedTypography.supportCost.minPx],
+      [".support-detail-compact", expectedTypography.supportCost.minPx],
       [".battle-objective", expectedTypography.objective.minPx],
       [".boss-hud div", expectedTypography.detail.minPx],
       [".boss-hud b", expectedTypography.detail.minPx],
@@ -669,7 +673,11 @@ async function measureHud(page, viewport, label) {
     const bossLabel = bossHeading?.querySelector("span") ?? null;
     const bossValue = bossHeading?.querySelector("b") ?? null;
     const crawlerAlert = document.querySelector(".crawler-alert");
+    const brandBlock = document.querySelector(".battle-brand-zone .brand-block");
+    const crawlerHealth = document.querySelector(".battle-brand-zone .crawler-health");
     const unitStrip = document.querySelector(".unit-cards");
+    const supportRow = document.querySelector(".support-row");
+    const objective = document.querySelector(".battle-objective");
     const unitStripRect = rect(unitStrip);
     const unitSlots = [...document.querySelectorAll(".unit-cards > .unit-card")];
     const unitSlotRects = unitSlots.map((element) => rect(element));
@@ -695,7 +703,50 @@ async function measureHud(page, viewport, label) {
       && box.right <= innerWidth + .5 && box.bottom <= innerHeight + .5;
     const controlGroups = [
       [...document.querySelectorAll(".battle-controls-zone button")].filter(visible),
-      [...document.querySelectorAll(".support-zone > button")].filter(visible),
+      [...document.querySelectorAll(".support-row > button")].filter(visible),
+    ];
+    const contentCollisions = [
+      {
+        owner: "battle-brand-zone",
+        pair: "brand-health",
+        overlaps: visible(brandBlock) && visible(crawlerHealth) ? overlap(brandBlock, crawlerHealth) : false,
+        left: rect(brandBlock),
+        right: rect(crawlerHealth),
+      },
+      ...[...document.querySelectorAll(".unit-card")].flatMap((card, cardIndex) => {
+        const title = card.querySelector(".card-copy b");
+        const state = card.querySelector(".card-state");
+        const cost = card.querySelector(".cost");
+        return [["title-state", title, state], ["title-cost", title, cost], ["state-cost", state, cost]]
+          .filter(([, left, right]) => visible(left) && visible(right))
+          .map(([pair, left, right]) => ({
+            owner: `unit-${cardIndex}`,
+            pair,
+            overlaps: overlap(left, right),
+            left: rect(left),
+            right: rect(right),
+          }));
+      }),
+      ...[...document.querySelectorAll(".support-btn")].flatMap((button, buttonIndex) => {
+        const title = button.querySelector("b");
+        const detail = [...button.querySelectorAll(".support-detail-full,.support-detail-compact")]
+          .find(visible) ?? button.querySelector("small");
+        const cost = button.querySelector("em");
+        return [["title-detail", title, detail], ["title-cost", title, cost], ["detail-cost", detail, cost]]
+          .filter(([, left, right]) => visible(left) && visible(right))
+          .map(([pair, left, right]) => ({
+            owner: `support-${buttonIndex}`,
+            pair,
+            overlaps: overlap(left, right),
+            left: rect(left),
+            right: rect(right),
+          }));
+      }),
+      {
+        owner: "support-zone",
+        pair: "support-row-objective",
+        overlaps: visible(supportRow) && visible(objective) ? overlap(supportRow, objective) : false,
+      },
     ];
     const requiredHudInformation = {
       brand: visible(document.querySelector(".battle-brand-zone")),
@@ -715,6 +766,9 @@ async function measureHud(page, viewport, label) {
       bottom: rect(bottom),
       topZones: topZones.map(rect),
       bottomZones: bottomZones.map(rect),
+      unitStrip: rect(unitStrip),
+      supportRow: rect(supportRow),
+      objective: rect(objective),
       topRatios: normalizedWidths(topZones),
       bottomRatios: normalizedWidths(bottomZones),
       topPairOverlaps: pairOverlaps(topZones),
@@ -749,6 +803,7 @@ async function measureHud(page, viewport, label) {
       disabledSupportCount: disabled.filter(({ className }) => String(className).includes("support-btn")).length,
       ownedZonesInViewport: ownedRects.every(insideViewport),
       controlPairOverlaps: controlGroups.flatMap(pairOverlaps),
+      contentCollisions,
       requiredHudInformation,
       documentOverflow: {
         horizontal: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) > innerWidth + 1,
@@ -767,6 +822,8 @@ async function measureHud(page, viewport, label) {
     `${label}: bottom HUD zones overlap`);
   invariant(measured.controlPairOverlaps.every(({ overlaps }) => !overlaps),
     `${label}: HUD controls collide`);
+  invariant(measured.contentCollisions.every(({ overlaps }) => !overlaps),
+    `${label}: HUD text/content overlaps ${JSON.stringify(measured.contentCollisions.filter(({ overlaps }) => overlaps))}`);
   const clearBattlefieldHeight = measured.bottom.top - measured.top.bottom;
   let expectedSafeAreaAdjusted = null;
   if (expectedLayout) {
@@ -791,6 +848,17 @@ async function measureHud(page, viewport, label) {
       `${label}: bottom HUD height ${measured.bottom.height}/${expectedBottomHeight}`);
     invariant(clearBattlefieldHeight >= expectedBattlefieldHeight - 2,
       `${label}: battlefield band ${clearBattlefieldHeight}/${expectedBattlefieldHeight}`);
+    const rectClose = (actual, expected) => actual && expected
+      && Math.abs(actual.left - expected.x) <= 2
+      && Math.abs(actual.top - expected.y) <= 2
+      && Math.abs(actual.width - expected.width) <= 2
+      && Math.abs(actual.height - expected.height) <= 2;
+    invariant(rectClose(measured.unitStrip, expectedLayout.bottomContent.units),
+      `${label}: unit content row drift ${JSON.stringify({ actual: measured.unitStrip, expected: expectedLayout.bottomContent.units })}`);
+    invariant(rectClose(measured.supportRow, expectedLayout.bottomContent.support),
+      `${label}: support content row drift ${JSON.stringify({ actual: measured.supportRow, expected: expectedLayout.bottomContent.support })}`);
+    invariant(rectClose(measured.objective, expectedLayout.bottomContent.objective),
+      `${label}: objective row drift ${JSON.stringify({ actual: measured.objective, expected: expectedLayout.bottomContent.objective })}`);
     expectedSafeAreaAdjusted = {
       topHeight: expectedTopHeight,
       bottomHeight: expectedBottomHeight,

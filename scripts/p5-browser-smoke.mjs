@@ -729,8 +729,9 @@ function assertMobileBattleReadability(evidence, label) {
   invariant(statsStrip.left >= resourceStack.left - 1 && statsStrip.right <= resourceStack.right + 1
       && statsStrip.bottom <= resourceStack.bottom + 1,
     `${label} stats escaped the resource zone: ${JSON.stringify(readability.rects)}`);
-  invariant(objective.left >= supportZone.left - 1 && objective.right <= supportZone.right + 1
-      && objective.bottom <= supportZone.bottom + 1,
+  invariant(objective.left >= unitCards.left - 1 && objective.right <= supportZone.right + 1
+      && objective.top >= Math.max(unitCards.bottom, supportZone.bottom) - 1
+      && objective.bottom <= bottomHud.bottom + 1,
     `${label} objective is clipped: ${JSON.stringify(readability.rects)}`);
   const objectiveTextFit = readability.objectiveTextFit;
   invariant(objectiveTextFit
@@ -1786,6 +1787,23 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
       },
       { expectedLines },
       { timeout },
+    );
+    const expectedPostBossLines = expectedLines.slice(finalLines.length);
+    await page.waitForFunction(
+      ({ expectedPostBossLines, expectedSceneId }) => {
+        const samples = window.__P5_STORY_BATTLE_SAMPLES__ ?? [];
+        return expectedPostBossLines.every((line) => samples.some((sample) => (
+          sample.audioScene === expectedSceneId
+          && sample.snapshot?.bossDefeated === true
+          && sample.snapshot?.battleBarks?.active?.some((bark) => (
+            bark.scripted === true
+            && bark.speaker === line.speaker
+            && bark.text === line.text
+          ))
+        )));
+      },
+      { expectedPostBossLines, expectedSceneId: expectedTakuyaPostBossSceneId },
+      { timeout, polling: 50 },
     );
     const samples = await storyBattleSamples(page);
     const observedLines = scriptedLineSequence(samples, [

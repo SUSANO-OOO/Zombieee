@@ -368,7 +368,7 @@ button[aria-disabled="true"]:focus-visible {
     padding:var(--app-viewport-safe-top) var(--app-viewport-safe-right) 0 var(--app-viewport-safe-left);
     gap:0;
   }
-  .battle-brand-zone { grid-template-columns:minmax(0,1fr) minmax(88px,43%); gap:5px; padding:4px 6px; }
+  .battle-brand-zone { grid-template-columns:minmax(0,1fr) minmax(92px,43%); gap:5px; padding:4px 6px; }
   .brand-block { min-width:0; gap:5px; }
   .brand-mark { flex:0 0 auto; width:32px; height:32px; font-size:18px; }
   .brand-block b { overflow:hidden; font-size:14px; text-overflow:clip; white-space:nowrap; }
@@ -485,7 +485,14 @@ button[aria-disabled="true"]:focus-visible {
 .game-frame[data-battle-hud-layout="mobile"] .bottom-hud > .unit-cards,
 .game-frame[data-battle-hud-layout="mobile"] .bottom-hud > .support-zone {
   min-height:0;
+}
+.game-frame[data-battle-hud-layout="mobile"] .bottom-hud > .resource-stack {
   height:100%;
+}
+.game-frame[data-battle-hud-layout="mobile"] .bottom-hud > .unit-cards,
+.game-frame[data-battle-hud-layout="mobile"] .bottom-hud > .support-zone {
+  height:calc(100% - var(--battle-hud-bottom-meta-height));
+  align-self:start;
 }
 .game-frame[data-battle-hud-layout="mobile"] .unit-cards {
   gap:2px;
@@ -508,7 +515,7 @@ button[aria-disabled="true"]:focus-visible {
   box-shadow:inset 0 0 12px rgba(0,0,0,.35);
 }
 .game-frame[data-battle-hud-layout="mobile"] .card-copy {
-  top:5px;
+  top:0;
   left:34%;
   right:0;
 }
@@ -527,34 +534,41 @@ button[aria-disabled="true"]:focus-visible {
   display:none;
 }
 .game-frame[data-battle-hud-layout="mobile"] .card-state {
-  top:28px;
-  left:30%;
-  right:2px;
+  top:auto;
+  right:auto;
+  bottom:0;
+  left:2px;
+  width:max-content;
+  max-width:calc(100% - 39px);
   max-height:2.1em;
   overflow:visible;
   font-size:12px;
   line-height:1.05;
-  white-space:normal;
+  white-space:nowrap;
   overflow-wrap:anywhere;
+  letter-spacing:-.05em;
   text-shadow:0 2px 3px #000;
+}
+.game-frame[data-battle-hud-layout="mobile"] .cost {
+  bottom:0;
 }
 .game-frame[data-battle-hud-layout="mobile"] .support-zone {
   min-width:0;
   min-height:0;
   overflow:hidden;
-  grid-template-rows:minmax(0,1fr) auto;
-  gap:2px;
+  grid-template-rows:minmax(0,1fr);
+  gap:0;
 }
 .game-frame[data-battle-hud-layout="mobile"] .support-row {
   min-width:0;
-  min-height:54px;
+  min-height:0;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:2px;
 }
 .game-frame[data-battle-hud-layout="mobile"] .support-btn {
   min-width:0;
-  min-height:54px;
-  padding:2px 5px 2px 4px;
+  min-height:0;
+  padding:2px 4px;
   overflow:hidden;
 }
 .game-frame[data-battle-hud-layout="mobile"] .support-btn b,
@@ -576,18 +590,44 @@ button[aria-disabled="true"]:focus-visible {
 .game-frame[data-battle-hud-layout="mobile"] .support-btn small {
   margin-top:1px;
   color:#c5b9a4;
-  font-size:12px;
-  line-height:1;
+  font-size:14px;
+  line-height:1.05;
   max-height:2.1em;
+  padding-right:0;
+}
+.game-frame[data-battle-hud-layout="mobile"] .support-btn em {
+  top:auto;
+  right:3px;
+  bottom:2px;
+  transform:none;
+}
+.support-detail-compact {
+  display:none;
+}
+.game-frame[data-battle-hud-layout="mobile"] .support-btn em,
+.game-frame[data-battle-hud-layout="mobile"] .support-detail-full {
+  display:none;
+}
+.game-frame[data-battle-hud-layout="mobile"] .support-detail-compact {
+  display:inline;
+  font-size:14px;
+  line-height:1.05;
 }
 .game-frame[data-battle-hud-layout="mobile"] .battle-objective {
+  position:absolute;
+  z-index:8;
+  right:0;
+  bottom:0;
+  left:var(--battle-hud-bottom-resources-width);
+  height:var(--battle-hud-bottom-meta-height);
   min-height:18px;
-  padding:2px 4px;
-  overflow:visible;
+  max-height:var(--battle-hud-bottom-meta-height);
+  padding:1px 4px;
+  overflow:hidden;
   font-size:14px;
   line-height:1.05;
   text-align:right;
-  white-space:normal;
+  white-space:nowrap;
 }
 .game-frame[data-battle-hud-layout="mobile"] .stats-strip {
   min-height:0;
@@ -602,6 +642,9 @@ button[aria-disabled="true"]:focus-visible {
    recover the space through ownership, wrapping, and local backplates rather
    than scaling the whole HUD. */
 @media (max-width:760px) and (orientation:landscape) {
+  .game-frame[data-battle-hud-layout="mobile"] .battle-brand-zone .brand-mark {
+    display:none;
+  }
   .game-frame[data-battle-hud-layout="mobile"] .battle-controls-zone {
     gap:2px;
     padding:4px 1px;
@@ -611,27 +654,55 @@ button[aria-disabled="true"]:focus-visible {
     width:44px;
   }
   .game-frame[data-battle-hud-layout="mobile"] .battle-controls-zone .phase-block {
-    grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:12px 18px 12px;
+  }
+  .game-frame[data-battle-hud-layout="mobile"] .battle-controls-zone .phase-block small {
+    grid-column:1;
+    grid-row:1;
+  }
+  .game-frame[data-battle-hud-layout="mobile"] .battle-controls-zone .phase-block strong {
+    grid-column:1;
+    grid-row:2;
+    border-top:1px solid rgba(235,205,161,.2);
+    border-bottom:1px solid rgba(235,205,161,.2);
+  }
+  .game-frame[data-battle-hud-layout="mobile"] .battle-controls-zone .phase-block em {
+    grid-column:1;
+    grid-row:3;
   }
   .game-frame[data-battle-hud-layout="mobile"] .card-copy {
-    top:3px;
-    left:2px;
-    right:2px;
-    padding:1px 2px;
+    top:0;
+    left:1px;
+    right:1px;
+    padding:0;
     background:linear-gradient(90deg,rgba(8,11,11,.9),rgba(8,11,11,.66) 78%,transparent);
   }
+  .game-frame[data-battle-hud-layout="mobile"] .card-copy b {
+    max-height:2.1em;
+    letter-spacing:-.025em;
+  }
   .game-frame[data-battle-hud-layout="mobile"] .card-state {
-    top:36px;
-    left:2px;
-    right:2px;
-    padding-inline:2px;
+    top:29.4px;
+    right:1px;
+    bottom:auto;
+    left:1px;
+    width:auto;
+    max-width:none;
+    padding-inline:0;
     background:linear-gradient(90deg,rgba(8,11,11,.86),rgba(8,11,11,.58) 82%,transparent);
+    white-space:normal;
   }
   .game-frame[data-battle-hud-layout="mobile"] .support-btn {
     padding-inline:1px;
   }
+  .game-frame[data-battle-hud-layout="mobile"] .support-btn b {
+    max-height:2.1em;
+    white-space:normal;
+  }
   .game-frame[data-battle-hud-layout="mobile"] .support-btn small {
-    max-height:3.1em;
+    max-height:2.1em;
+    padding-right:0;
   }
 }
 

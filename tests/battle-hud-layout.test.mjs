@@ -96,27 +96,47 @@ test("safe-area insets are deducted once from the shared content rectangle", () 
   }
 });
 
-test("667x375 keeps all three bottom owners inside the physical landscape safe area", () => {
-  const layout = mobileBattleHudLayout({
-    width: 667,
-    height: 375,
-    safeAreaTop: 0,
-    safeAreaRight: 44,
-    safeAreaBottom: 21,
-    safeAreaLeft: 44,
-  });
-  assert.ok(layout);
-  assert.deepEqual(layout.content, { x: 44, y: 0, width: 579, height: 354 });
-  assertHorizontalPartition(
-    [layout.bottom.resources, layout.bottom.units, layout.bottom.support],
-    44,
-    623,
-    "667x375/bottom-safe-area",
-  );
-  assert.ok(layout.bottom.resources.width >= 104);
-  assert.ok(layout.bottom.units.width >= 250);
-  assert.ok(layout.bottom.support.width >= 216);
-  assert.equal(bottom(layout.bottom.support), 354);
+test("physical 16:9 phones keep all bottom owners inside the landscape safe area", () => {
+  for (const viewport of RELEASE_VIEWPORTS.filter(({ width }) => width < 844)) {
+    const layout = mobileBattleHudLayout({
+      ...viewport,
+      safeAreaTop: 0,
+      safeAreaRight: 44,
+      safeAreaBottom: 21,
+      safeAreaLeft: 44,
+    });
+    assert.ok(layout);
+    assert.deepEqual(layout.content, {
+      x: 44,
+      y: 0,
+      width: viewport.width - 88,
+      height: viewport.height - 21,
+    });
+    assertHorizontalPartition(
+      [layout.bottom.resources, layout.bottom.units, layout.bottom.support],
+      44,
+      viewport.width - 44,
+      `${viewport.width}x${viewport.height}/bottom-safe-area`,
+    );
+    assert.ok(layout.bottom.resources.width >= 104);
+    assert.ok(layout.bottom.units.width >= 250);
+    assert.ok(layout.bottom.support.width >= 216);
+    assert.equal(bottom(layout.bottom.support), viewport.height - 21);
+  }
+});
+
+test("the objective owns the full unit/support meta row without shrinking the action rows", () => {
+  for (const viewport of RELEASE_VIEWPORTS) {
+    const layout = mobileBattleHudLayout(viewport);
+    assert.ok(layout);
+    const expectedMetaHeight = viewport.height <= 360 ? 18 : 20;
+    assert.equal(layout.bottomContent.objective.height, expectedMetaHeight);
+    assert.equal(layout.bottomContent.objective.x, layout.bottom.units.x);
+    assert.equal(right(layout.bottomContent.objective), right(layout.bottom.support));
+    assert.equal(layout.bottomContent.objective.y, bottom(layout.bottom.resources) - expectedMetaHeight);
+    assert.equal(layout.bottomContent.units.height, layout.bottom.resources.height - expectedMetaHeight);
+    assert.equal(layout.bottomContent.support.height, layout.bottom.resources.height - expectedMetaHeight);
+  }
 });
 
 test("dialogue and the short deployment banner stack inside the center safe zone", () => {

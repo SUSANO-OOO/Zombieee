@@ -101,7 +101,7 @@ export function mobileBattleHudLayout({
   const compact = viewportHeight <= 350;
   const topHeight = compact ? 54 : 60;
   const bottomHeight = compact ? 74 : 82;
-  const metaHeight = 20;
+  const metaHeight = compact ? 18 : 20;
   const bottomY = content.y + content.height - bottomHeight;
 
   const top = Object.freeze({

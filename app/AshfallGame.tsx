@@ -20693,6 +20693,20 @@ export function AshfallGame() {
         : null);
   const crawlerBlockReason = commonBattleActionBlockReason
     ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : null);
+  const selectedSupplyCompactDetail = commonBattleActionBlockReason
+    ?? (hud.supportItemCooldowns[selectedSupply] > 0
+      ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
+      : hud.scrap < supplyDefs[selectedSupply].cost
+        ? `▰不足 ${supplyDefs[selectedSupply].cost}`
+        : `${selectedSupply === "pod" ? "着地・封鎖" : selectedSupply === "drum" ? "起爆範囲" : "継続回復"} ▰${supplyDefs[selectedSupply].cost}`);
+  const airstrikeCompactDetail = commonBattleActionBlockReason
+    ?? (hud.airstrikePhase !== "idle"
+      ? "支援実行中"
+      : hud.supportGauge < AIRSTRIKE_DEF.gaugeCost
+        ? `◆不足 ${AIRSTRIKE_DEF.gaugeCost}`
+        : `照準・着弾 ◆${AIRSTRIKE_DEF.gaugeCost}`);
+  const crawlerCompactDetail = commonBattleActionBlockReason
+    ?? (hud.crawlerPhase !== "ready" ? "再装填中" : "全域射撃");
   const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "partial" ? "一部音声を再試行できます" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
   const audioUnlockShortLabel = audioUnlockUi === "pending" ? "準備中" : audioUnlockUi === "success" ? "音声OK" : audioUnlockUi === "partial" ? "一部再試行" : audioUnlockUi === "failed" ? "音声再試行" : "音声開始";
   const audioCategorySummary = ([
@@ -20713,6 +20727,8 @@ export function AshfallGame() {
         "--battle-hud-bottom-inset": `${battleHudLayout.safeArea.bottom}px`,
         "--battle-hud-top-height": `${battleHudLayout.topHeight}px`,
         "--battle-hud-bottom-height": `${battleHudLayout.bottomHeight}px`,
+        "--battle-hud-bottom-resources-width": `${battleHudLayout.bottom.resources.width}px`,
+        "--battle-hud-bottom-meta-height": `${battleHudLayout.bottomContent.objective.height}px`,
         "--battle-hud-top-columns": `${battleHudLayout.top.crawler.width}px ${battleHudLayout.top.communication.width}px ${battleHudLayout.top.controls.width}px`,
         "--battle-hud-bottom-columns": `${battleHudLayout.bottom.resources.width}px ${battleHudLayout.bottom.units.width}px ${battleHudLayout.bottom.support.width}px`,
       }
@@ -20895,14 +20911,14 @@ export function AshfallGame() {
               >
                 <span className="support-key">{supplyDefs[selectedSupply].key}</span>
                 <b>{hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : SUPPORT_DISPLAY_NAMES[selectedSupply]}</b>
-                <small>{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</small>
+                <small><span className="support-detail-full">{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</span><span className="support-detail-compact">{selectedSupplyCompactDetail}</span></small>
                 <em>{hud.supportItemCooldowns[selectedSupply] > 0 ? "↻" : `▰${supplyDefs[selectedSupply].cost}`}</em>
               </button>
               <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} aria-disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked || battleSaveBoundaryRef.current} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
-                <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small>{airstrikeBlockReason ?? "照準・飛来・着弾"}</small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
+                <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
               </button>
               <button className="support-btn barrage" aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked || battleSaveBoundaryRef.current} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
-                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>{crawlerBlockReason ?? "戦場全域固定火器"}</small><em>⌁</em>
+                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small><span className="support-detail-full">{crawlerBlockReason ?? "戦場全域固定火器"}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></small><em>⌁</em>
               </button>
             </div>
             <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${publicDisplayText(hud.objective)}`}</div>
