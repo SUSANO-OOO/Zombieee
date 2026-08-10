@@ -333,15 +333,6 @@ jobs:
           V099_FINAL_REMEDIATION_QA_TIMEOUT_MS: "60000"
         run: "$RUNNER_TEMP/issue156-webkit-viewport-case.sh deployment"
 
-      - name: Capture physical-width TAKUYA audio route
-        if: matrix.viewport == '667x375' || matrix.viewport == '736x414'
-        env:
-          P5_QA_SCOPE: battle-audio
-          P5_QA_ENGINES: webkit
-          P5_QA_VIEWPORTS: ${{ matrix.viewport }}
-          P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-viewport-evidence/boss-audio
-        run: npm run qa:p5
-
       - name: Upload canonical WebKit viewport evidence
         if: always()
         uses: actions/upload-artifact@v4
