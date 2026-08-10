@@ -57,7 +57,7 @@ class Deferred {
 /**
  * @param {object} options
  * @param {Array} options.assets manifest entries to fetch as one full pack
- * @param {(asset: object, context: {signal: AbortSignal}) => Promise<{ok: boolean, status?: number, body?: Uint8Array}>} options.fetchAsset
+ * @param {(asset: object, context: {signal: AbortSignal, sessionSignal?: AbortSignal}) => Promise<{ok: boolean, status?: number, body?: Uint8Array}>} options.fetchAsset
  * @param {{put: Function, has?: Function}} options.store
  * @param {(bytes: Uint8Array) => Promise<string>} [options.digest]
  * @param {(snapshot: object) => void} [options.onProgress]
@@ -104,6 +104,7 @@ export function createAssetDownloadSession({
   let totalFetchedBytes = 0;
   let retryFetchedBytes = 0;
   let requestCount = 0;
+  let transportRetryCount = 0;
   let retryCount = 0;
   let timeoutCount = 0;
   let cacheHitCount = 0;
@@ -195,6 +196,7 @@ export function createAssetDownloadSession({
       totalFetchedBytes,
       retryFetchedBytes,
       requestCount,
+      transportRetryCount,
       retryCount,
       timeoutCount,
       cacheHitCount,
@@ -327,12 +329,19 @@ export function createAssetDownloadSession({
         const networkStarted = now();
         let response = null;
         try {
-          response = await fetchAsset(asset, { signal: abort.signal });
+          response = await fetchAsset(asset, {
+            signal: abort.signal,
+            sessionSignal: outerSignal,
+          });
         } catch (error) {
           if (cancelled) return;
-          lastReason = error?.name === "AbortError" ? "timeout" : "network";
+          lastReason = error?.reason === "stall"
+            ? "stall"
+            : (error?.name === "AbortError" || error?.name === "TimeoutError" || error?.reason === "request"
+              ? "timeout"
+              : "network");
           lastStatus = 0;
-          if (lastReason === "timeout") timeoutCount += 1;
+          if (lastReason === "timeout" || lastReason === "stall") timeoutCount += 1;
         } finally {
           clearTimeout(timer);
           outerSignal?.removeEventListener("abort", relay);
@@ -353,9 +362,11 @@ export function createAssetDownloadSession({
           metric.networkMs += actualNetworkMs - measuredElapsed;
           networkMs += actualNetworkMs - measuredElapsed;
         }
-        requestCount += Number.isFinite(Number(response.networkRequestCount))
+        const networkRequestCount = Number.isFinite(Number(response.networkRequestCount))
           ? Math.max(0, Number(response.networkRequestCount))
           : 1;
+        requestCount += networkRequestCount;
+        if (metric.attempts > 1) transportRetryCount += networkRequestCount;
 
         const responseRequestWaitMs = finiteNumber(response.requestWaitMs);
         const responseTransferMs = finiteNumber(response.transferMs);

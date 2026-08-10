@@ -31,6 +31,7 @@
     "qa:v0951-hotfix": "node scripts/run-browser-qa-with-server.mjs scripts/v0951-hotfix-browser-smoke.mjs",
     "qa:v0952-hotfix": "node scripts/run-browser-qa-with-server.mjs scripts/v0952-hotfix-browser-smoke.mjs",
     "qa:v096-pwa": "node scripts/run-browser-qa-with-server.mjs scripts/v096-pwa-browser-smoke.mjs",
+    "qa:pwa-existing-update": "node scripts/pwa-existing-update-browser-smoke.mjs",
     "qa:pwa-transport": "node scripts/run-browser-qa-with-server.mjs scripts/pwa-transport-browser-smoke.mjs",
     "qa:v099-icon": "node scripts/run-browser-qa-with-server.mjs scripts/v099-app-icon-browser-smoke.mjs",
     "qa:pwa-full-download": "node scripts/pwa-full-download-measurement.mjs",

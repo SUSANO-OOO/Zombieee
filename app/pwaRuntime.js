@@ -31,6 +31,14 @@ export const PWA_PHASES = Object.freeze([
   "updating",
 ]);
 
+// Bundle transport has a different lifetime from an individual manifest
+// slice. The request deadline covers waiting for response headers; once bytes
+// are flowing, only a no-progress deadline applies. There is intentionally no
+// total-transfer deadline for a large bundle such as the audio pack.
+export const DEFAULT_BUNDLE_REQUEST_TIMEOUT_MS = 30_000;
+export const DEFAULT_BUNDLE_STALL_TIMEOUT_MS = 30_000;
+export const DEFAULT_BUNDLE_FALLBACK_TIMEOUT_MS = 120_000;
+
 /**
  * Decides the phase from facts only.
  *
@@ -126,6 +134,7 @@ export function canPlayOffline({ phase, installPlan }) {
 /** Every way a transfer can stop, in words a player and a log can both use. */
 export const FAILURE_REASON_LABELS = Object.freeze({
   timeout: "応答がありませんでした（timeout）",
+  stall: "転送が停止しました（stall）",
   network: "通信が切れました（network）",
   http: "サーバーが配信を拒否しました（HTTP）",
   "size-mismatch": "受信したデータの大きさが一致しません（size mismatch）",
@@ -393,20 +402,145 @@ export async function fetchPublishedManifest({ baseUrl, fetchImpl = fetch, signa
  * Builds the fetch function the download session uses. Requests bypass the HTTP
  * cache so a verified download always reflects what the server actually has.
  */
-export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
+function timeoutError(reason) {
+  const error = new Error(`Bundle transport ${reason}`);
+  error.name = "TimeoutError";
+  error.reason = reason;
+  return error;
+}
+
+function abortError() {
+  const error = new Error("Bundle transport aborted");
+  error.name = "AbortError";
+  return error;
+}
+
+function readStreamChunk(reader, { signal, timeoutMs, abort }) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let timer = null;
+
+    const cleanup = () => {
+      if (timer) clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    };
+    const finish = (callback, value) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      callback(value);
+    };
+    const onAbort = () => {
+      finish(reject, abortError());
+      reader.cancel?.().catch?.(() => {});
+    };
+
+    if (signal?.aborted) {
+      onAbort();
+      return;
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+    timer = setTimeout(() => {
+      finish(reject, timeoutError("stall"));
+      abort();
+      reader.cancel?.().catch?.(() => {});
+    }, Math.max(1, timeoutMs));
+    reader.read().then(
+      (result) => finish(resolve, result),
+      (error) => finish(reject, error),
+    );
+  });
+}
+
+async function readBundleBody(response, {
+  signal,
+  abort,
+  stallTimeoutMs,
+  fallbackTimeoutMs,
+} = {}) {
+  const reader = response.body?.getReader?.();
+  if (!reader) {
+    let timer = null;
+    const fallback = new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        reject(timeoutError("stall"));
+        abort();
+      }, Math.max(1, fallbackTimeoutMs));
+    });
+    try {
+      const buffer = await Promise.race([response.arrayBuffer(), fallback]);
+      return new Uint8Array(buffer);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  const chunks = [];
+  let total = 0;
+  while (true) {
+    const result = await readStreamChunk(reader, {
+      signal,
+      timeoutMs: stallTimeoutMs,
+      abort,
+    });
+    if (result.done) break;
+    if (!result.value) continue;
+    const chunk = result.value instanceof Uint8Array
+      ? result.value
+      : new Uint8Array(result.value);
+    chunks.push(chunk);
+    total += chunk.byteLength;
+  }
+  const body = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
+}
+
+export function createAssetFetcher({
+  baseUrl,
+  fetchImpl = fetch,
+  bundleRequestTimeoutMs = DEFAULT_BUNDLE_REQUEST_TIMEOUT_MS,
+  bundleStallTimeoutMs = DEFAULT_BUNDLE_STALL_TIMEOUT_MS,
+  bundleFallbackTimeoutMs = DEFAULT_BUNDLE_FALLBACK_TIMEOUT_MS,
+}) {
   const bundlePromises = new Map();
   const clock = () => globalThis.performance?.now?.() ?? Date.now();
 
-  const evictBundle = (bundlePath, entry = bundlePromises.get(bundlePath)) => {
-    if (entry && bundlePromises.get(bundlePath) === entry) bundlePromises.delete(bundlePath);
+  const markBundleForRetry = (bundlePath, entry = bundlePromises.get(bundlePath)) => {
+    if (entry && bundlePromises.get(bundlePath) === entry) {
+      // Keep the failed generation visible until the first retry caller swaps
+      // it. Concurrent slice retries then join one new transport.
+      entry.failed = true;
+    }
   };
 
-  const fetchBundle = (bundlePath, signal) => {
+  const fetchBundle = (bundlePath, entry, expectedBundleLength) => {
     const requestStarted = clock();
-    return fetchImpl(resolveAssetUrl(bundlePath, baseUrl), {
+    const requestTimeout = Number.isFinite(Number(bundleRequestTimeoutMs))
+      ? Math.max(0, Number(bundleRequestTimeoutMs))
+      : 0;
+    const request = fetchImpl(resolveAssetUrl(bundlePath, baseUrl), {
       cache: "no-store",
-      signal,
-    }).then(async (response) => {
+      signal: entry.controller.signal,
+    });
+    let requestTimer = null;
+    const responsePromise = requestTimeout > 0
+      ? Promise.race([
+        request,
+        new Promise((_, reject) => {
+          requestTimer = setTimeout(() => {
+            reject(timeoutError("request"));
+            entry.controller.abort();
+          }, requestTimeout);
+        }),
+      ])
+      : request;
+    return responsePromise.then(async (response) => {
+      if (requestTimer) clearTimeout(requestTimer);
       const responseReceived = clock();
       const requestWaitMs = Math.max(0, responseReceived - requestStarted);
       if (!response.ok) {
@@ -416,7 +550,19 @@ export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
       if (type.includes("text/html")) {
         return { ok: false, status: response.status, requestWaitMs, transferMs: 0, networkMs: requestWaitMs };
       }
-      const buffer = await response.arrayBuffer();
+      const lengthBasedFallback = Number.isInteger(Number(expectedBundleLength))
+        ? Math.ceil((Number(expectedBundleLength) / 131_072) * 1000) + Number(bundleStallTimeoutMs)
+        : 0;
+      const fallbackTimeoutMs = Math.max(
+        Number(bundleFallbackTimeoutMs) || 0,
+        lengthBasedFallback,
+      );
+      const buffer = await readBundleBody(response, {
+        signal: entry.controller.signal,
+        abort: () => entry.controller.abort(),
+        stallTimeoutMs: Number(bundleStallTimeoutMs) || DEFAULT_BUNDLE_STALL_TIMEOUT_MS,
+        fallbackTimeoutMs: fallbackTimeoutMs || DEFAULT_BUNDLE_FALLBACK_TIMEOUT_MS,
+      });
       const transferMs = Math.max(0, clock() - responseReceived);
       return {
         ok: true,
@@ -426,25 +572,72 @@ export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
         transferMs,
         networkMs: Math.max(0, clock() - requestStarted),
       };
+    }, (error) => {
+      if (requestTimer) clearTimeout(requestTimer);
+      throw error;
     });
   };
 
-  const fetchAsset = async (asset, { signal } = {}) => {
+  const attachSessionSignal = (entry, sessionSignal) => {
+    if (!sessionSignal || entry.settled) return;
+    const abort = () => entry.controller.abort();
+    if (sessionSignal.aborted) {
+      abort();
+      return;
+    }
+    sessionSignal.addEventListener("abort", abort, { once: true });
+    entry.cleanup.push(() => sessionSignal.removeEventListener("abort", abort));
+  };
+
+  const fetchAsset = async (asset, { signal, sessionSignal } = {}) => {
     if (asset.bundlePath) {
       let entry = bundlePromises.get(asset.bundlePath);
-      if (!entry) {
-        const promise = fetchBundle(asset.bundlePath, signal);
-        entry = { promise, reported: false };
+      if (!entry || entry.failed) {
+        entry = {
+          controller: new AbortController(),
+          promise: null,
+          reported: false,
+          settled: false,
+          failed: false,
+          cleanup: [],
+        };
+        entry.promise = fetchBundle(asset.bundlePath, entry, asset.bundleLength);
         bundlePromises.set(asset.bundlePath, entry);
         // A resolved failure is just as unsafe to reuse as a rejection. Keeping
         // either one here made a manual retry slice the same HTTP error or bad
         // bundle body forever without touching the network again.
-        promise.then(
-          (bundle) => { if (!bundle?.ok) evictBundle(asset.bundlePath, entry); },
-          () => evictBundle(asset.bundlePath, entry),
+        entry.promise.then(
+          (bundle) => { if (!bundle?.ok) markBundleForRetry(asset.bundlePath, entry); },
+          () => markBundleForRetry(asset.bundlePath, entry),
+        );
+        entry.promise.then(
+          () => {
+            entry.settled = true;
+            for (const cleanup of entry.cleanup.splice(0)) cleanup();
+          },
+          () => {
+            entry.settled = true;
+            for (const cleanup of entry.cleanup.splice(0)) cleanup();
+          },
         );
       }
-      const bundle = await entry.promise;
+      attachSessionSignal(entry, sessionSignal);
+      let bundle = null;
+      try {
+        bundle = await entry.promise;
+      } catch (error) {
+        const ownsRequestMetrics = !entry.reported;
+        entry.reported = true;
+        const reason = error?.reason === "stall"
+          ? "stall"
+          : (error?.name === "TimeoutError" ? "timeout" : "network");
+        return {
+          ok: false,
+          status: error?.status ?? 0,
+          reason,
+          networkRequestCount: ownsRequestMetrics ? 1 : 0,
+        };
+      }
       const ownsRequestMetrics = !entry.reported;
       entry.reported = true;
       if (!bundle.ok) {
@@ -461,7 +654,7 @@ export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
       if ((Number.isInteger(expectedBundleLength) && bundle.body.byteLength !== expectedBundleLength)
         || !Number.isInteger(offset) || !Number.isInteger(length) || offset < 0 || length <= 0
         || end > bundle.body.byteLength) {
-        evictBundle(asset.bundlePath, entry);
+        markBundleForRetry(asset.bundlePath, entry);
         return {
           ok: false,
           status: 422,
@@ -525,7 +718,7 @@ export function createAssetFetcher({ baseUrl, fetchImpl = fetch }) {
   // cache-write errors deliberately do not call this because their bytes were
   // already proven good and must not trigger a needless bundle re-fetch.
   fetchAsset.invalidateBundle = (asset) => {
-    if (asset?.bundlePath) evictBundle(asset.bundlePath);
+    if (asset?.bundlePath) markBundleForRetry(asset.bundlePath);
   };
   return fetchAsset;
 }
