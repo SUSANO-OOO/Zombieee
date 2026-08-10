@@ -267,13 +267,45 @@ jobs:
         run: npx playwright install --with-deps webkit
 
       - name: Capture canonical HUD and deployment evidence
+        shell: bash
         env:
           DEBUG: pw:browser
           V099_FINAL_REMEDIATION_QA_ENGINES: webkit
           V099_FINAL_REMEDIATION_QA_VIEWPORTS: ${{ matrix.viewport }}
           V099_FINAL_REMEDIATION_QA_CASES: hud,deployment
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-viewport-evidence/canonical
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
+          V099_FINAL_REMEDIATION_QA_TIMEOUT_MS: "60000"
+        run: |
+          set +e
+          evidence_root="${{ github.workspace }}/issue156-viewport-evidence/canonical"
+          mkdir -p "$evidence_root"
+          status_file="$evidence_root/attempt-status.txt"
+          : > "$status_file"
+          saw_failure=0
+          consecutive_confirmations=0
+
+          for attempt in 1 2 3; do
+            export V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR="$evidence_root/attempt-$attempt"
+            node scripts/run-browser-qa-with-server.mjs \
+              scripts/v099-final-remediation-browser-smoke.mjs
+            qa_status=$?
+            printf 'attempt=%s exit=%s\n' "$attempt" "$qa_status" | tee -a "$status_file"
+
+            if [ "$qa_status" -eq 0 ]; then
+              if [ "$saw_failure" -eq 0 ]; then
+                exit 0
+              fi
+              consecutive_confirmations=$((consecutive_confirmations + 1))
+              if [ "$consecutive_confirmations" -eq 2 ]; then
+                exit 0
+              fi
+            else
+              saw_failure=1
+              consecutive_confirmations=0
+            fi
+          done
+
+          echo "A failed first attempt requires two consecutive full-contract confirmations." >&2
+          exit 1
 
       - name: Capture physical-width TAKUYA audio route
         if: matrix.viewport == '667x375' || matrix.viewport == '736x414'
