@@ -264,94 +264,13 @@ jobs:
           BASH
           chmod +x "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
 
-      - name: Capture Issue 156 canonical HUD evidence (WebKit 844x390)
+      - name: Capture Issue 156 canonical HUD and final-canvas deployment evidence (WebKit)
         if: always()
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390
-          V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-844x390
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 canonical HUD evidence (WebKit physical 16:9)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375
-          V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-667x375
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 canonical HUD evidence (WebKit physical 16:9 Plus)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 736x414
-          V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-736x414
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 canonical HUD evidence (WebKit 844x340)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x340
-          V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-844x340
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 canonical HUD evidence (WebKit 1280x720)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 1280x720
-          V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-1280x720
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 final-canvas deployment evidence (WebKit 844x390)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390
-          V099_FINAL_REMEDIATION_QA_CASES: deployment
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-844x390
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 final-canvas deployment evidence (WebKit physical 16:9)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375
-          V099_FINAL_REMEDIATION_QA_CASES: deployment
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-667x375
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 final-canvas deployment evidence (WebKit physical 16:9 Plus)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 736x414
-          V099_FINAL_REMEDIATION_QA_CASES: deployment
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-736x414
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 final-canvas deployment evidence (WebKit 844x340)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x340
-          V099_FINAL_REMEDIATION_QA_CASES: deployment
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-844x340
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 final-canvas deployment evidence (WebKit 1280x720)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 1280x720
-          V099_FINAL_REMEDIATION_QA_CASES: deployment
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-1280x720
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,1280x720
+          V099_FINAL_REMEDIATION_QA_CASES: hud,deployment
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-webkit
         run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
 
       - name: Capture Issue 156 safe-area, portrait, and metadata evidence (WebKit)
