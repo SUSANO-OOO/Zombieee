@@ -129,7 +129,7 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.9.9.0 release identity and the PWA gate", async () => {
+test("server-renders the 0.9.9.1 release identity and the PWA gate", async () => {
   // Since 0.9.8.1 the first painted screen is the PWA gate, not the title: a
   // visitor is invited to install before anything decides to fetch the game for
   // them. The game shell therefore mounts on the client once the gate resolves,
@@ -142,10 +142,10 @@ test("server-renders the 0.9.9.0 release identity and the PWA gate", async () =>
 
   // Release identity in the document head is unchanged, and the Pages release
   // workflow greps exactly these.
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.9\.0<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.9\.1<\/title>/);
   // Share copy is derived from the same constant, so it cannot advertise a
   // version the build is not.
-  assert.match(html, /content="[^"]*Version 0\.9\.9\.0。"/);
+  assert.match(html, /content="[^"]*Version 0\.9\.9\.1。"/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
