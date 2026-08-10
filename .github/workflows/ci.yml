@@ -297,7 +297,8 @@ jobs:
               const failures = report.results.filter((entry) => entry.status === "failed");
               const retryable = failures.length > 0 && failures.every((entry) => {
                 const error = String(entry.error);
-                return error.includes("Target page") && error.includes("has been closed");
+                return (error.includes("Target page") && error.includes("has been closed"))
+                  || error.includes("Target crashed");
               });
               console.log(JSON.stringify({ retryable, errors: failures.map((entry) => entry.error) }));
               process.exit(retryable ? 0 : 1);
