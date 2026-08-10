@@ -34,6 +34,8 @@ const engines = (process.env.RECORDS_QA_ENGINES ?? "chromium,webkit")
 const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit };
 const viewports = [
   { width: 1280, height: 720 },
+  { width: 667, height: 375 },
+  { width: 736, height: 414 },
   { width: 844, height: 390 },
   { width: 844, height: 340 },
 ];

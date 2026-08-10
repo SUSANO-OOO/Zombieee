@@ -15,6 +15,8 @@ import {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const VIEWPORTS = [
+  { width: 667, height: 375 },
+  { width: 736, height: 414 },
   { width: 844, height: 340 },
   { width: 844, height: 390 },
   { width: 1280, height: 720 },
@@ -68,4 +70,15 @@ test("portrait torso overlap rejects both sides of the canonical 12-40px range",
   assert.equal(portraitDialogueOverlapWithinContract(40), true, "40px is inclusive");
   assert.equal(portraitDialogueOverlapWithinContract(40.001), false, "more than 40px must fail");
   assert.equal(portraitDialogueOverlapWithinContract(Number.NaN), false, "non-finite input must fail");
+});
+
+test("browser evidence measures the painted portrait alpha bound, not its transparent element box", async () => {
+  const smoke = await readFile(
+    path.join(ROOT, "scripts", "issue156-remediation-browser-smoke.mjs"),
+    "utf8",
+  );
+  assert.match(smoke, /alphaBottom/u);
+  assert.match(smoke, /paintedBottom/u);
+  assert.match(smoke, /torsoDialogueOverlap:\s*paintedBottom\s*-\s*dialogueRect\.top/u);
+  assert.doesNotMatch(smoke, /torsoDialogueOverlap:\s*rect\.bottom\s*-\s*dialogueRect\.top/u);
 });

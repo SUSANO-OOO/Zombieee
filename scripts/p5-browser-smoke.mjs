@@ -45,11 +45,29 @@ if (!["all", "story", "lifecycle", "bark", "battle-audio"].includes(qaScope)) {
 
 const evidenceDir = path.resolve(process.env.P5_QA_EVIDENCE_DIR ?? "outputs/p5-browser-smoke");
 const timeout = Math.max(5_000, Number(process.env.P5_QA_TIMEOUT_MS) || 45_000);
+const teardownTimeout = Math.max(1_000, Number(process.env.P5_QA_TEARDOWN_TIMEOUT_MS) || 5_000);
+
+async function closePlaywrightResource(resource, label) {
+  let timer;
+  const closed = await Promise.race([
+    resource.close().then(() => true).catch((error) => {
+      if (/Target page, context or browser has been closed/u.test(String(error))) return true;
+      throw error;
+    }),
+    new Promise((resolve) => {
+      timer = setTimeout(() => resolve(false), teardownTimeout);
+    }),
+  ]).finally(() => clearTimeout(timer));
+  if (!closed) console.warn(`${label} teardown exceeded ${teardownTimeout}ms; continuing after completed assertions`);
+  return closed;
+}
 const availableViewports = Object.freeze([
+  Object.freeze({ width: 667, height: 375 }),
+  Object.freeze({ width: 736, height: 414 }),
   Object.freeze({ width: 844, height: 390 }),
   Object.freeze({ width: 844, height: 340 }),
 ]);
-const requestedViewportKeys = new Set((process.env.P5_QA_VIEWPORTS ?? "844x390,844x340")
+const requestedViewportKeys = new Set((process.env.P5_QA_VIEWPORTS ?? "667x375,736x414,844x390,844x340")
   .split(",")
   .map((value) => value.trim())
   .filter(Boolean));
@@ -727,8 +745,9 @@ function assertMobileBattleReadability(evidence, label) {
   invariant(statsStrip.left >= resourceStack.left - 1 && statsStrip.right <= resourceStack.right + 1
       && statsStrip.bottom <= resourceStack.bottom + 1,
     `${label} stats escaped the resource zone: ${JSON.stringify(readability.rects)}`);
-  invariant(objective.left >= supportZone.left - 1 && objective.right <= supportZone.right + 1
-      && objective.bottom <= supportZone.bottom + 1,
+  invariant(objective.left >= unitCards.left - 1 && objective.right <= supportZone.right + 1
+      && objective.top >= Math.max(unitCards.bottom, supportZone.bottom) - 1
+      && objective.bottom <= bottomHud.bottom + 1,
     `${label} objective is clipped: ${JSON.stringify(readability.rects)}`);
   const objectiveTextFit = readability.objectiveTextFit;
   invariant(objectiveTextFit
@@ -1660,7 +1679,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
   } finally {
     await stopStoryBattleRecorder(page);
     await page.close();
-    await context.close();
+    await closePlaywrightResource(context, `${label}/context`);
   }
   return result;
 }
@@ -1785,6 +1804,23 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
       { expectedLines },
       { timeout },
     );
+    const expectedPostBossLines = expectedLines.slice(finalLines.length);
+    await page.waitForFunction(
+      ({ expectedPostBossLines, expectedSceneId }) => {
+        const samples = window.__P5_STORY_BATTLE_SAMPLES__ ?? [];
+        return expectedPostBossLines.every((line) => samples.some((sample) => (
+          sample.audioScene === expectedSceneId
+          && sample.snapshot?.bossDefeated === true
+          && sample.snapshot?.battleBarks?.active?.some((bark) => (
+            bark.scripted === true
+            && bark.speaker === line.speaker
+            && bark.text === line.text
+          ))
+        )));
+      },
+      { expectedPostBossLines, expectedSceneId: expectedTakuyaPostBossSceneId },
+      { timeout, polling: 50 },
+    );
     const samples = await storyBattleSamples(page);
     const observedLines = scriptedLineSequence(samples, [
       "stage-takuya-final-v070",
@@ -1892,7 +1928,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
   } finally {
     await stopStoryBattleRecorder(page);
     await page.close();
-    await context.close();
+    await closePlaywrightResource(context, `${label}/context`);
   }
   return result;
 }
@@ -2004,7 +2040,7 @@ async function auditNonblockingBark({ browser, engine }) {
   } finally {
     await page.evaluate(() => window.__P5_BARK_OBSERVER__?.disconnect()).catch(() => undefined);
     await page.close();
-    await context.close();
+    await closePlaywrightResource(context, `${label}/context`);
   }
   return result;
 }
@@ -2095,7 +2131,7 @@ for (const engine of requestedEngines) {
       });
     }
   } finally {
-    await browser.close();
+    await closePlaywrightResource(browser, `${engine}/browser`);
   }
 }
 

@@ -14,6 +14,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { createDefaultCampaignSave, serializeCampaignSave } from "../app/campaign.js";
+import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { chromium, webkit } from "playwright";
 
 const oldRootInput = process.env.PWA_EXISTING_UPDATE_OLD_ROOT;
@@ -21,7 +22,7 @@ const candidateRootInput = process.env.PWA_EXISTING_UPDATE_CANDIDATE_ROOT;
 const oldRoot = path.resolve(oldRootInput ?? "");
 const candidateRoot = path.resolve(candidateRootInput ?? "");
 const browserName = process.env.PWA_EXISTING_UPDATE_BROWSER ?? "chromium";
-const oldVersion = process.env.PWA_EXISTING_UPDATE_OLD_VERSION ?? "0.9.9.1";
+const oldVersion = process.env.PWA_EXISTING_UPDATE_OLD_VERSION ?? "0.9.9.2";
 const evidenceDir = path.resolve(
   process.env.PWA_EXISTING_UPDATE_EVIDENCE_DIR ?? path.join(process.cwd(), "outputs", "pwa-existing-update"),
 );
@@ -151,7 +152,7 @@ const oldManifest = await readManifest(oldRoot);
 const candidateManifest = await readManifest(candidateRoot);
 record("old and candidate static roots are complete", (
   oldManifest.version === oldVersion
-  && candidateManifest.version === "0.9.9.2"
+  && candidateManifest.version === RELEASE_VERSION
   && oldManifest.assets?.length === 416
   && candidateManifest.assets?.length === 416
 ), {
@@ -337,7 +338,7 @@ try {
   await context.close();
   context = null;
   const switched = await fetch(`http://127.0.0.1:${address.port}/__qa/switch?root=candidate`).then((response) => response.json());
-  record("the same-origin server switches to the 0.9.9.2 candidate", switched.ok === true && switched.currentLabel === "candidate", switched);
+  record(`the same-origin server switches to the ${RELEASE_VERSION} candidate`, switched.ok === true && switched.currentLabel === "candidate", switched);
 
   ({ context, page } = await openPersistent(userDataDir));
   const candidateAssetRequests = [];
@@ -347,10 +348,10 @@ try {
   });
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   const candidatePageManifest = await manifestFromPage(page);
-  record("the existing profile sees the 0.9.9.2 manifest without reinstalling", (
+  record(`the existing profile sees the ${RELEASE_VERSION} manifest without reinstalling`, (
     candidatePageManifest.ok
     && candidatePageManifest.status === 200
-    && candidatePageManifest.manifest.version === "0.9.9.2"
+    && candidatePageManifest.manifest.version === RELEASE_VERSION
     && candidatePageManifest.manifest.releaseSha === candidateManifest.releaseSha
   ), {
     version: candidatePageManifest.manifest.version,
@@ -389,11 +390,11 @@ try {
   await updateControl.waitFor({ state: "visible", timeout: 120_000 });
   const updateAssetStart = candidateAssetRequests.length;
   await updateControl.click();
-  const updatedWorker = await waitForActiveVersion(page, "0.9.9.2", 120_000);
+  const updatedWorker = await waitForActiveVersion(page, RELEASE_VERSION, 120_000);
   const candidateSave = await saveState(page);
   const candidateCache = await cacheState(page);
-  record("the update commits 0.9.9.2 and activates the waiting worker", (
-    updatedWorker?.activeState?.active?.version === "0.9.9.2"
+  record(`the update commits ${RELEASE_VERSION} and activates the waiting worker`, (
+    updatedWorker?.activeState?.active?.version === RELEASE_VERSION
     && updatedWorker.activeWorkerState === "activated"
     && updatedWorker.scope === `${new URL(baseUrl).origin}${scopePath}`
   ), updatedWorker);
@@ -421,9 +422,9 @@ try {
   const relaunchedWorker = await getWorkerState(page);
   const relaunchedSave = await saveState(page);
   const relaunchedManifest = await manifestFromPage(page);
-  record("a relaunch keeps the committed 0.9.9.2 generation and save", (
-    relaunchedWorker.activeState?.active?.version === "0.9.9.2"
-    && relaunchedManifest.manifest.version === "0.9.9.2"
+  record(`a relaunch keeps the committed ${RELEASE_VERSION} generation and save`, (
+    relaunchedWorker.activeState?.active?.version === RELEASE_VERSION
+    && relaunchedManifest.manifest.version === RELEASE_VERSION
     && relaunchedSave.raw === oldSave.raw
   ), { relaunchedWorker, savePreserved: relaunchedSave.raw === oldSave.raw });
 
@@ -434,7 +435,7 @@ try {
     const offlineWorker = await getWorkerState(page);
     const offlineSave = await saveState(page);
     record("Chromium offline relaunch serves the committed pack and preserves save", (
-      offlineWorker.activeState?.active?.version === "0.9.9.2"
+      offlineWorker.activeState?.active?.version === RELEASE_VERSION
       && offlineSave.raw === oldSave.raw
     ), { offlineWorker, savePreserved: offlineSave.raw === oldSave.raw });
     await context.setOffline(false);

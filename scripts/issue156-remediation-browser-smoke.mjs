@@ -23,7 +23,7 @@ const playwright = process.env.PLAYWRIGHT_MODULE_PATH
   : await import("playwright");
 const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit };
 const engines = (process.env.ISSUE156_REMEDIATION_QA_ENGINES ?? "chromium,webkit").split(",");
-const viewports = (process.env.ISSUE156_REMEDIATION_QA_VIEWPORTS ?? "844x340,844x390,1280x720")
+const viewports = (process.env.ISSUE156_REMEDIATION_QA_VIEWPORTS ?? "667x375,736x414,844x340,844x390,1280x720")
   .split(",")
   .map((value) => {
     const [width, height] = value.split("x").map(Number);
@@ -40,21 +40,35 @@ const invariant = (condition, message) => {
 const relative = (file) => path.relative(process.cwd(), file).replaceAll("\\", "/");
 const sha256 = async (file) => createHash("sha256").update(await readFile(file)).digest("hex");
 
-async function sourceAlphaTop(profile) {
+async function sourceAlphaBounds(profile) {
   const file = path.join(process.cwd(), "public", profile.path);
   const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let alphaTop = -1;
+  let alphaBottom = -1;
   for (let y = 0; y < info.height; y += 1) {
+    let rowVisible = false;
     for (let x = 0; x < info.width; x += 1) {
-      if (data[(y * info.width + x) * 4 + 3] > 8) {
-        return { alphaTop: y, sourceWidth: info.width, sourceHeight: info.height };
-      }
+      if (data[(y * info.width + x) * 4 + 3] >= 32) rowVisible = true;
     }
+    if (rowVisible && alphaTop < 0) alphaTop = y;
+    if (rowVisible) alphaBottom = y;
   }
-  throw new Error(`portrait has no visible pixels: ${profile.path}`);
+  if (alphaTop < 0 || alphaBottom < alphaTop) {
+    throw new Error(`portrait has no visible pixels: ${profile.path}`);
+  }
+  const sizeMatch = /(?:^|\s)(\d+(?:\.\d+)?)%$/u.exec(profile.crop);
+  invariant(sizeMatch, `portrait crop must provide a height percentage: ${profile.path}`);
+  return {
+    alphaTop,
+    alphaBottom,
+    sourceWidth: info.width,
+    sourceHeight: info.height,
+    renderedHeightRatio: Number(sizeMatch[1]) / 100,
+  };
 }
 
 const sourceGeometry = Object.fromEntries(await Promise.all(
-  Object.entries(EVENT_PORTRAIT_PROFILES).map(async ([kind, profile]) => [kind, await sourceAlphaTop(profile)]),
+  Object.entries(EVENT_PORTRAIT_PROFILES).map(async ([kind, profile]) => [kind, await sourceAlphaBounds(profile)]),
 ));
 
 function storyUrl(withSafeArea) {
@@ -67,7 +81,7 @@ function storyUrl(withSafeArea) {
   return String(url);
 }
 
-async function contactSheet(engine, viewport, entries) {
+async function contactSheet(engine, viewport, safeAreaProfile, entries) {
   const tileWidth = 320;
   const tileHeight = 180;
   const columns = 6;
@@ -76,7 +90,10 @@ async function contactSheet(engine, viewport, entries) {
     .resize({ width: tileWidth, height: tileHeight, fit: "cover" })
     .png({ compressionLevel: 9, palette: false })
     .toBuffer()));
-  const output = path.join(evidenceDir, `${engine}-${viewport.width}x${viewport.height}-portraits-contact-sheet.png`);
+  const output = path.join(
+    evidenceDir,
+    `${engine}-${viewport.width}x${viewport.height}-${safeAreaProfile}-portraits-contact-sheet.png`,
+  );
   await sharp({
     create: {
       width: tileWidth * columns,
@@ -92,13 +109,26 @@ async function contactSheet(engine, viewport, entries) {
   return { path: relative(output), sha256: await sha256(output), columns, rows };
 }
 
-async function runCase(engine, viewport) {
+async function runCase(engine, viewport, safeAreaMode) {
   const browser = await browserTypes[engine].launch({ headless: true });
   const context = await browser.newContext({ viewport });
   let page = await context.newPage();
   const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] };
-  const result = { engine, viewport, status: "failed", portraits: [], diagnostics };
+  const result = { engine, viewport, safeAreaMode, status: "failed", portraits: [], diagnostics };
+  const attachDiagnostics = (target) => {
+    target.on("console", (message) => {
+      if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
+    });
+    target.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
+    target.on("requestfailed", (request) => diagnostics.requestFailures.push(
+      `${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`,
+    ));
+    target.on("response", (response) => {
+      if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
+    });
+  };
   try {
+    attachDiagnostics(page);
     await page.goto(storyUrl(false), { waitUntil: "domcontentloaded" });
     await dismissInstallOffer(page, { timeout: 5_000 });
     await page.locator(".event-screen").waitFor({ state: "visible", timeout: 30_000 });
@@ -116,33 +146,30 @@ async function runCase(engine, viewport) {
     invariant(Object.values(productionSafeArea.inline).every((value) => value === ""),
       `${engine}: production path has inline safe-area override ${JSON.stringify(productionSafeArea)}`);
 
-    await page.close();
-    page = await context.newPage();
-    page.on("console", (message) => {
-      if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
-    });
-    page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
-    page.on("requestfailed", (request) => diagnostics.requestFailures.push(
-      `${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`,
-    ));
-    page.on("response", (response) => {
-      if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
-    });
-    await page.goto(storyUrl(true), { waitUntil: "domcontentloaded" });
-    await dismissInstallOffer(page, { timeout: 5_000 });
-    await page.locator(".event-screen").waitFor({ state: "visible", timeout: 30_000 });
-    const presetSafeArea = await page.evaluate(() => {
-      const root = document.documentElement;
-      return {
-        source: root.dataset.safeAreaSource ?? null,
-        values: ["top", "right", "bottom", "left"].map((edge) => (
-          root.style.getPropertyValue(`--app-viewport-safe-${edge}`)
-        )),
-      };
-    });
-    invariant(presetSafeArea.source === "local-qa-iphone-landscape", `${engine}: QA preset missing`);
-    invariant(JSON.stringify(presetSafeArea.values) === JSON.stringify(["0px", "44px", "21px", "44px"]),
-      `${engine}: QA preset drifted ${JSON.stringify(presetSafeArea.values)}`);
+    const usesNotchPreset = safeAreaMode === "iphone-landscape";
+    let presetSafeArea = null;
+    let safeAreaProfile = "production-env-zero-inset";
+    if (usesNotchPreset) {
+      await page.close();
+      page = await context.newPage();
+      attachDiagnostics(page);
+      await page.goto(storyUrl(true), { waitUntil: "domcontentloaded" });
+      await dismissInstallOffer(page, { timeout: 5_000 });
+      await page.locator(".event-screen").waitFor({ state: "visible", timeout: 30_000 });
+      presetSafeArea = await page.evaluate(() => {
+        const root = document.documentElement;
+        return {
+          source: root.dataset.safeAreaSource ?? null,
+          values: ["top", "right", "bottom", "left"].map((edge) => (
+            root.style.getPropertyValue(`--app-viewport-safe-${edge}`)
+          )),
+        };
+      });
+      invariant(presetSafeArea.source === "local-qa-iphone-landscape", `${engine}: QA preset missing`);
+      invariant(JSON.stringify(presetSafeArea.values) === JSON.stringify(["0px", "44px", "21px", "44px"]),
+        `${engine}: QA preset drifted ${JSON.stringify(presetSafeArea.values)}`);
+      safeAreaProfile = "iphone-landscape-44-21";
+    }
 
     const metadata = await page.locator('meta[name="description"]').getAttribute("content");
     invariant(metadata?.startsWith("大型移動拠点と"), `${engine}: public metadata prefix drifted`);
@@ -175,9 +202,11 @@ async function runCase(engine, viewport) {
         const advanceRect = advance.getBoundingClientRect();
         const portraitStyle = getComputedStyle(portrait);
         const dialogueStyle = getComputedStyle(dialogue);
-        const renderedHeight = portrait.offsetHeight * .92;
+        const renderedHeight = portrait.offsetHeight * source.renderedHeightRatio;
         const backgroundOffset = (portrait.offsetHeight - renderedHeight) * portraitProfile.focusY;
         const headMargin = backgroundOffset + source.alphaTop / source.sourceHeight * renderedHeight;
+        const paintedBottom = rect.top + backgroundOffset
+          + ((source.alphaBottom + 1) / source.sourceHeight) * renderedHeight;
         return {
           activePortraitCount: document.querySelectorAll(".event-portrait.active").length,
           rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height, bottom: rect.bottom },
@@ -186,7 +215,9 @@ async function runCase(engine, viewport) {
           backgroundPosition: portraitStyle.backgroundPosition,
           headMargin,
           faceCenterRatio: portraitProfile.focusY,
-          torsoDialogueOverlap: rect.bottom - dialogueRect.top,
+          elementBoxDialogueOverlap: rect.bottom - dialogueRect.top,
+          paintedBottom,
+          torsoDialogueOverlap: paintedBottom - dialogueRect.top,
           zIndex: { portrait: Number(portraitStyle.zIndex), dialogue: Number(dialogueStyle.zIndex) },
           typography: {
             name: Number.parseFloat(getComputedStyle(name).fontSize),
@@ -214,11 +245,12 @@ async function runCase(engine, viewport) {
       invariant(geometry.textOverlapAdvance === false, `${engine}/${kind}: body/advance overlap`);
       const screenshotPath = path.join(
         evidenceDir,
-        `${engine}-${viewport.width}x${viewport.height}-portrait-${kind}.png`,
+        `${engine}-${viewport.width}x${viewport.height}-${safeAreaProfile}-portrait-${kind}.png`,
       );
       await page.screenshot({ path: screenshotPath, animations: "disabled" });
       result.portraits.push({
         kind,
+        safeAreaProfile,
         profile,
         source: sourceGeometry[kind],
         geometry,
@@ -229,8 +261,9 @@ async function runCase(engine, viewport) {
     invariant(result.portraits.length === 18, `${engine}: portrait inventory incomplete`);
     result.productionSafeArea = productionSafeArea;
     result.presetSafeArea = presetSafeArea;
+    result.safeAreaProfile = safeAreaProfile;
     result.metadata = metadata;
-    result.contactSheet = await contactSheet(engine, viewport, result.portraits);
+    result.contactSheet = await contactSheet(engine, viewport, safeAreaProfile, result.portraits);
     result.status = "passed";
   } catch (error) {
     result.error = String(error);
@@ -249,7 +282,14 @@ const buildIdentityAtStart = await productionBuildIdentity();
 const results = [];
 for (const engine of engines) {
   invariant(browserTypes[engine], `unsupported browser engine ${engine}`);
-  for (const viewport of viewports) results.push(await runCase(engine, viewport));
+  for (const viewport of viewports) {
+    const safeAreaModes = viewport.width <= 900
+      ? ["production-env", "iphone-landscape"]
+      : ["production-env"];
+    for (const safeAreaMode of safeAreaModes) {
+      results.push(await runCase(engine, viewport, safeAreaMode));
+    }
+  }
 }
 const buildIdentityAtEnd = await productionBuildIdentity();
 const summary = {
@@ -259,7 +299,10 @@ const summary = {
   buildIdentityStable: buildIdentityAtStart.combinedSha256 === buildIdentityAtEnd.combinedSha256,
   engines,
   viewports,
-  expectedCases: engines.length * viewports.length,
+  expectedCases: engines.length * viewports.reduce(
+    (total, viewport) => total + (viewport.width <= 900 ? 2 : 1),
+    0,
+  ),
   total: results.length,
   passed: results.filter(({ status }) => status === "passed").length,
   results,
@@ -272,7 +315,13 @@ console.log(JSON.stringify({
   passed: summary.passed,
   failed: summary.total - summary.passed,
   buildIdentityStable: summary.buildIdentityStable,
-  cases: results.map(({ engine, viewport, status, error }) => ({ engine, viewport, status, error })),
+  cases: results.map(({ engine, viewport, safeAreaMode, status, error }) => ({
+    engine,
+    viewport,
+    safeAreaMode,
+    status,
+    error,
+  })),
 }, null, 2));
 invariant(summary.buildIdentityStable, "production build changed during Issue #156 QA");
 invariant(summary.total === summary.expectedCases && summary.passed === summary.expectedCases,

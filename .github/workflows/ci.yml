@@ -129,14 +129,14 @@ jobs:
           PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
           PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
           PWA_PARTIAL_UPDATE_BROWSER: chromium
-          PWA_PARTIAL_UPDATE_OLD_VERSION: 0.9.9.1
+          PWA_PARTIAL_UPDATE_OLD_VERSION: 0.9.9.2
           PWA_PARTIAL_UPDATE_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/pwa-partial-update/chromium
         run: npm run qa:pwa-partial-update
 
       - name: Capture Issue 156 canonical HUD evidence (Chromium)
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390,844x340,1280x720
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,1280x720
           V099_FINAL_REMEDIATION_QA_CASES: hud
           V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/chromium
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
@@ -144,7 +144,7 @@ jobs:
       - name: Capture Issue 156 final-canvas deployment evidence (Chromium)
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390,844x340,1280x720
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,1280x720
           V099_FINAL_REMEDIATION_QA_CASES: deployment
           V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/chromium
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
@@ -154,6 +154,20 @@ jobs:
           ISSUE156_REMEDIATION_QA_ENGINES: chromium
           ISSUE156_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/presentation
         run: npm run qa:issue156-remediation
+
+      - name: Capture Issue 156 physical-width records evidence (Chromium)
+        env:
+          RECORDS_QA_ENGINES: chromium
+          RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/chromium
+        run: npm run qa:records
+
+      - name: Capture Issue 156 physical-width TAKUYA audio route (Chromium)
+        env:
+          P5_QA_SCOPE: battle-audio
+          P5_QA_ENGINES: chromium
+          P5_QA_VIEWPORTS: 667x375,736x414
+          P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/boss-audio/chromium
+        run: npm run qa:p5
 
       - name: Upload Issue 156 remediation evidence
         if: always()
@@ -192,118 +206,6 @@ jobs:
       - name: Install focused browser engine
         run: npx playwright install --with-deps webkit
 
-      - name: Prepare Issue 156 WebKit exit diagnostics
-        shell: bash
-        run: |
-          cat > "$RUNNER_TEMP/issue156-webkit-diagnostic.sh" <<'BASH'
-          #!/usr/bin/env bash
-          set +e
-          evidence_dir="$V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR"
-          mkdir -p "$evidence_dir"
-
-          capture_resources() {
-            label="$1"
-            root="$evidence_dir/runner-resources-$label"
-            mkdir -p "$root"
-            date -u +"%Y-%m-%dT%H:%M:%SZ" > "$root/captured-at.txt" 2>&1 || true
-            cat /proc/meminfo > "$root/proc-meminfo.txt" 2>&1 \
-              || echo "UNAVAILABLE /proc/meminfo" > "$root/proc-meminfo.txt"
-            df -h > "$root/df-h.txt" 2>&1 || true
-            ulimit -a > "$root/ulimit-a.txt" 2>&1 || true
-            ps -eo pid,ppid,stat,etime,rss,cmd \
-              | grep -Ei '[n]ode|[Ww]ebKit|[Pp]laywright' \
-              > "$root/relevant-processes.txt" 2>&1 || true
-            for resource in memory.current memory.max memory.peak memory.events \
-              memory.events.local memory.swap.current memory.swap.max; do
-              if [ -r "/sys/fs/cgroup/$resource" ]; then
-                cat "/sys/fs/cgroup/$resource" > "$root/$resource" 2>&1 || true
-              else
-                echo "UNAVAILABLE /sys/fs/cgroup/$resource" > "$root/$resource"
-              fi
-            done
-          }
-
-          capture_resources before
-          DEBUG=pw:browser node scripts/run-browser-qa-with-server.mjs \
-            scripts/v099-final-remediation-browser-smoke.mjs \
-            2>&1 | tee "$evidence_dir/playwright-browser.log"
-          qa_status=${PIPESTATUS[0]}
-          capture_resources after
-
-          {
-            for counter in oom oom_kill; do
-              before="$(awk -v key="$counter" \
-                '$1 == key { print $2; found=1 } END { if (!found) print "unavailable" }' \
-                "$evidence_dir/runner-resources-before/memory.events")"
-              after="$(awk -v key="$counter" \
-                '$1 == key { print $2; found=1 } END { if (!found) print "unavailable" }' \
-                "$evidence_dir/runner-resources-after/memory.events")"
-              delta=unavailable
-              if [[ "$before" =~ ^[0-9]+$ && "$after" =~ ^[0-9]+$ ]]; then
-                delta=$((after - before))
-              fi
-              printf '%s before=%s after=%s delta=%s\n' "$counter" "$before" "$after" "$delta"
-            done
-          } > "$evidence_dir/oom-delta.txt"
-          printf 'qa_exit_code=%s\n' "$qa_status" > "$evidence_dir/qa-exit-code.txt"
-          exit "$qa_status"
-          BASH
-          chmod +x "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 canonical HUD evidence (WebKit 844x390)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390
-          V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-844x390
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 canonical HUD evidence (WebKit 844x340)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x340
-          V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-844x340
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 canonical HUD evidence (WebKit 1280x720)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 1280x720
-          V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-1280x720
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 final-canvas deployment evidence (WebKit 844x390)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390
-          V099_FINAL_REMEDIATION_QA_CASES: deployment
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-844x390
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 final-canvas deployment evidence (WebKit 844x340)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x340
-          V099_FINAL_REMEDIATION_QA_CASES: deployment
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-844x340
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
-      - name: Capture Issue 156 final-canvas deployment evidence (WebKit 1280x720)
-        if: always()
-        env:
-          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 1280x720
-          V099_FINAL_REMEDIATION_QA_CASES: deployment
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-1280x720
-        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
-
       - name: Capture Issue 156 safe-area, portrait, and metadata evidence (WebKit)
         if: always()
         env:
@@ -311,11 +213,185 @@ jobs:
           ISSUE156_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/presentation/webkit
         run: npm run qa:issue156-remediation
 
+      - name: Capture Issue 156 physical-width records evidence (WebKit)
+        if: always()
+        env:
+          RECORDS_QA_ENGINES: webkit
+          RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/webkit
+        run: npm run qa:records
+
       - name: Upload Issue 156 WebKit hosted-runner evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: issue156-webkit-hosted-runner-evidence
           path: issue156-evidence
+          if-no-files-found: error
+          retention-days: 14
+
+  webkit-viewport:
+    name: WebKit Canonical Viewport Evidence (${{ matrix.viewport }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport:
+          - 667x375
+          - 736x414
+          - 844x390
+          - 844x340
+          - 1280x720
+
+    steps:
+      - name: Checkout synthetic PR merge
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Install focused browser engine
+        run: npx playwright install --with-deps webkit
+
+      - name: Prepare target-closed-only WebKit retry helper
+        shell: bash
+        run: |
+          cat > "$RUNNER_TEMP/issue156-webkit-viewport-case.sh" <<'BASH'
+          #!/usr/bin/env bash
+          set +e
+          case_type="$1"
+          evidence_root="$ISSUE156_WEBKIT_VIEWPORT_EVIDENCE_ROOT/$case_type"
+          mkdir -p "$evidence_root"
+          status_file="$evidence_root/attempt-status.txt"
+          : > "$status_file"
+
+          for attempt in 1 2 3 4 5; do
+            export V099_FINAL_REMEDIATION_QA_CASES="$case_type"
+            export V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR="$evidence_root/attempt-$attempt"
+            node scripts/run-browser-qa-with-server.mjs \
+              scripts/v099-final-remediation-browser-smoke.mjs
+            qa_status=$?
+            printf 'attempt=%s exit=%s\n' "$attempt" "$qa_status" | tee -a "$status_file"
+
+            if [ "$qa_status" -eq 0 ]; then
+              exit 0
+            fi
+
+            summary="$V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR/summary.json"
+            node -e '
+              const fs = require("node:fs");
+              const report = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+              const failures = report.results.filter((entry) => entry.status === "failed");
+              const retryable = failures.length > 0 && failures.every((entry) => {
+                const error = String(entry.error);
+                return (error.includes("Target page") && error.includes("has been closed"))
+                  || error.includes("Target crashed");
+              });
+              console.log(JSON.stringify({ retryable, errors: failures.map((entry) => entry.error) }));
+              process.exit(retryable ? 0 : 1);
+            ' "$summary"
+            retryable_status=$?
+            if [ "$retryable_status" -ne 0 ]; then
+              echo "Non-infrastructure QA failure; refusing retry." >&2
+              exit "$qa_status"
+            fi
+            echo "Retrying target-closed infrastructure failure." | tee -a "$status_file"
+          done
+
+          echo "Target-closed infrastructure failure persisted for five attempts." >&2
+          exit 1
+          BASH
+          chmod +x "$RUNNER_TEMP/issue156-webkit-viewport-case.sh"
+
+      - name: Capture canonical HUD evidence
+        env:
+          DEBUG: pw:browser
+          ISSUE156_WEBKIT_VIEWPORT_EVIDENCE_ROOT: ${{ github.workspace }}/issue156-viewport-evidence/canonical
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: ${{ matrix.viewport }}
+          V099_FINAL_REMEDIATION_QA_TIMEOUT_MS: "60000"
+        run: "$RUNNER_TEMP/issue156-webkit-viewport-case.sh hud"
+
+      - name: Capture final-canvas deployment evidence
+        env:
+          DEBUG: pw:browser
+          ISSUE156_WEBKIT_VIEWPORT_EVIDENCE_ROOT: ${{ github.workspace }}/issue156-viewport-evidence/canonical
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: ${{ matrix.viewport }}
+          V099_FINAL_REMEDIATION_QA_TIMEOUT_MS: "60000"
+        run: "$RUNNER_TEMP/issue156-webkit-viewport-case.sh deployment"
+
+      - name: Upload canonical WebKit viewport evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue156-webkit-viewport-${{ matrix.viewport }}
+          path: issue156-viewport-evidence
+          if-no-files-found: error
+          retention-days: 14
+
+  webkit-stage3-audio:
+    name: WebKit Stage 3 Audio Route (${{ matrix.audio_case }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        audio_case:
+          - entrance
+          - final
+
+    steps:
+      - name: Checkout synthetic PR merge
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Install focused browser engine
+        run: npx playwright install --with-deps webkit
+
+      - name: Capture bounded Stage 3 audio route
+        env:
+          P5_QA_SCOPE: battle-audio
+          P5_QA_ENGINES: webkit
+          P5_QA_VIEWPORTS: 736x414
+          P5_QA_BATTLE_AUDIO_CASES: ${{ matrix.audio_case }}
+          P5_QA_TIMEOUT_MS: "60000"
+          P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/${{ matrix.audio_case }}
+        run: timeout --signal=TERM --kill-after=30s 15m npm run qa:p5
+
+      - name: Upload bounded Stage 3 audio evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue156-webkit-stage3-audio-${{ matrix.audio_case }}
+          path: issue156-stage3-audio
           if-no-files-found: error
           retention-days: 14

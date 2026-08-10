@@ -58,9 +58,12 @@ function insetRect(rect, insetX, top, height) {
 }
 
 /**
- * Pure layout contract for the two release mobile viewports. Runtime CSS/DOM
- * may implement the rectangles with grid percentages, but it must preserve
- * these ownership boundaries and type minima.
+ * Pure layout contract for supported landscape-phone viewports. Runtime
+ * CSS/DOM may implement the rectangles with grid columns, but it must
+ * preserve these ownership boundaries and type minima. The width/height
+ * range intentionally includes the 16:9 667x375 CSS viewport used by older
+ * physical iPhones; exact-width matching would silently fall back to the
+ * legacy clipped HUD.
  */
 export function mobileBattleHudLayout({
   width,
@@ -72,7 +75,12 @@ export function mobileBattleHudLayout({
 } = {}) {
   const viewportWidth = finiteDimension(width);
   const viewportHeight = finiteDimension(height);
-  if (viewportWidth !== 844 || ![340, 390].includes(viewportHeight)) return null;
+  const landscapePhone = viewportWidth >= 640
+    && viewportWidth <= 900
+    && viewportHeight >= 320
+    && viewportHeight <= 430
+    && viewportWidth > viewportHeight;
+  if (!landscapePhone) return null;
 
   const normalizedSafeAreaTop = finiteInset(safeAreaTop, viewportHeight);
   const normalizedSafeAreaRight = finiteInset(safeAreaRight, viewportWidth);
@@ -90,10 +98,10 @@ export function mobileBattleHudLayout({
     width: Math.max(0, viewportWidth - safeArea.left - safeArea.right),
     height: Math.max(0, viewportHeight - safeArea.top - safeArea.bottom),
   });
-  const compact = viewportHeight === 340;
+  const compact = viewportHeight <= 350;
   const topHeight = compact ? 54 : 60;
   const bottomHeight = compact ? 74 : 82;
-  const metaHeight = 20;
+  const metaHeight = compact ? 18 : 20;
   const bottomY = content.y + content.height - bottomHeight;
 
   const top = Object.freeze({
@@ -118,22 +126,28 @@ export function mobileBattleHudLayout({
   const bannerTop = dialogueTop + dialogueHeight + 3;
   const bannerHeight = topHeight - bannerTop - 4;
 
+  const resourcesWidth = Math.max(104, Math.round(content.width * .14));
+  const supportWidth = Math.max(216, Math.round(content.width * .36));
+  const unitsWidth = Math.max(0, content.width - resourcesWidth - supportWidth);
   const bottom = Object.freeze({
-    resources: horizontalZone(
-      { ...content, y: bottomY },
-      bottomHeight,
-      MOBILE_BATTLE_HUD_ZONE_RATIOS.bottom.resources,
-    ),
-    units: horizontalZone(
-      { ...content, y: bottomY },
-      bottomHeight,
-      MOBILE_BATTLE_HUD_ZONE_RATIOS.bottom.units,
-    ),
-    support: horizontalZone(
-      { ...content, y: bottomY },
-      bottomHeight,
-      MOBILE_BATTLE_HUD_ZONE_RATIOS.bottom.support,
-    ),
+    resources: freezeRect({
+      x: content.x,
+      y: bottomY,
+      width: resourcesWidth,
+      height: bottomHeight,
+    }),
+    units: freezeRect({
+      x: content.x + resourcesWidth,
+      y: bottomY,
+      width: unitsWidth,
+      height: bottomHeight,
+    }),
+    support: freezeRect({
+      x: content.x + resourcesWidth + unitsWidth,
+      y: bottomY,
+      width: supportWidth,
+      height: bottomHeight,
+    }),
   });
 
   return Object.freeze({
