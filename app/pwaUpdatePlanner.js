@@ -80,6 +80,7 @@ export function evaluateUpdate({
     downloadBytes: diff.downloadBytes,
     unchangedCount: diff.unchanged.length,
     reusedCount: diff.reused.length,
+    missingCount: diff.missing.length,
     removedCount: diff.removed.length,
     byCategory: diff.byCategory,
     diff,

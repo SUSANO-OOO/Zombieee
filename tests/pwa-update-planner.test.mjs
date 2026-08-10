@@ -138,6 +138,30 @@ test("assets already on the device are excluded from the update download", () =>
   assert.equal(withStore.reusedCount, 1);
 });
 
+test("unchanged manifest paths missing from live Cache Storage are downloaded during update", () => {
+  const installed = manifest("0.9.9.1", "aaa", [
+    asset("/art/kept.webp", 1),
+    asset("/audio/missing-a.mp3", 2, { category: "audio", pack: "audio", audioChannel: "bgm" }),
+    asset("/audio/missing-b.mp3", 3, { category: "audio", pack: "audio", audioChannel: "se" }),
+  ]);
+  const published = manifest("0.9.9.2", "bbb", installed.assets.map((entry) => ({ ...entry })));
+
+  const evaluation = evaluateUpdate({
+    installedManifest: installed,
+    publishedManifest: published,
+    storedHashes: new Set([hashOf(1)]),
+  });
+
+  assert.equal(evaluation.available, true);
+  assert.equal(evaluation.unchangedCount, 1);
+  assert.equal(evaluation.missingCount, 2);
+  assert.equal(evaluation.downloadCount, 2);
+  assert.deepEqual(
+    evaluation.diff.downloadable.map((entry) => entry.path),
+    ["/audio/missing-a.mp3", "/audio/missing-b.mp3"],
+  );
+});
+
 test("a malformed published manifest is refused rather than offered", () => {
   const evaluation = evaluateUpdate({
     installedManifest: manifest("0.9.6", "aaa", [asset("/a.webp", 1)]),

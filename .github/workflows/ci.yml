@@ -91,6 +91,48 @@ jobs:
       - name: Install focused browser engines
         run: npx playwright install --with-deps chromium
 
+      - name: Build exact base and candidate PWA sites for partial-update QA
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          old_source="$RUNNER_TEMP/pwa-old-source"
+          old_site="$RUNNER_TEMP/pwa-old-site"
+          git worktree add --detach "$old_source" "$PR_BASE_SHA"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$old_source/node_modules"
+
+          (
+            cd "$old_source"
+            npm run build
+            old_version="$(node --input-type=module --eval 'import("./app/releaseIdentity.js").then(({ RELEASE_VERSION }) => process.stdout.write(RELEASE_VERSION))')"
+            GITHUB_PAGES_BASE_PATH=/Zombieee \
+            GITHUB_PAGES_RELEASE_VERSION="$old_version" \
+            GITHUB_PAGES_RELEASE_SHA="$PR_BASE_SHA" \
+            GITHUB_PAGES_REQUEST_ID=pr-partial-update-old \
+            GITHUB_PAGES_ISSUE_NUMBER=156 \
+              node scripts/build-github-pages.mjs
+          )
+          cp -a "$old_source/_site" "$old_site"
+
+          candidate_version="$(node --input-type=module --eval 'import("./app/releaseIdentity.js").then(({ RELEASE_VERSION }) => process.stdout.write(RELEASE_VERSION))')"
+          GITHUB_PAGES_BASE_PATH=/Zombieee \
+          GITHUB_PAGES_RELEASE_VERSION="$candidate_version" \
+          GITHUB_PAGES_RELEASE_SHA="$PR_HEAD_SHA" \
+          GITHUB_PAGES_REQUEST_ID=pr-partial-update-candidate \
+          GITHUB_PAGES_ISSUE_NUMBER=156 \
+            node scripts/build-github-pages.mjs
+
+      - name: Reproduce and recover the partial-failed existing PWA (Chromium)
+        env:
+          PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
+          PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
+          PWA_PARTIAL_UPDATE_BROWSER: chromium
+          PWA_PARTIAL_UPDATE_OLD_VERSION: 0.9.9.1
+          PWA_PARTIAL_UPDATE_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/pwa-partial-update/chromium
+        run: npm run qa:pwa-partial-update
+
       - name: Capture Issue 156 canonical HUD evidence (Chromium)
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium

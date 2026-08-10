@@ -131,6 +131,17 @@ test("an identical manifest produces a zero-byte, zero-request update", () => {
   assert.equal(diff.unchanged.length, 2);
 });
 
+test("live retained hashes distinguish manifest-unchanged bytes that were evicted", () => {
+  const current = manifest([asset("/kept.webp", 1), asset("/evicted.webp", 2)]);
+  const next = manifest([asset("/kept.webp", 1), asset("/evicted.webp", 2)]);
+  const diff = diffAssetManifests(current, next, { retainedHashes: new Set([hashOf(1)]) });
+
+  assert.deepEqual(diff.unchanged.map((entry) => entry.path), ["/kept.webp"]);
+  assert.deepEqual(diff.missing.map((entry) => entry.path), ["/evicted.webp"]);
+  assert.deepEqual(diff.downloadable.map((entry) => entry.path), ["/evicted.webp"]);
+  assert.equal(diff.downloadCount, 1);
+});
+
 test("a renamed asset whose bytes are already stored costs no download", () => {
   const current = manifest([asset("/old-name.webp", 1)]);
   const next = manifest([asset("/new-name.webp", 1)]);
