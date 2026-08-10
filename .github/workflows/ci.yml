@@ -129,14 +129,14 @@ jobs:
           PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
           PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
           PWA_PARTIAL_UPDATE_BROWSER: chromium
-          PWA_PARTIAL_UPDATE_OLD_VERSION: 0.9.9.1
+          PWA_PARTIAL_UPDATE_OLD_VERSION: 0.9.9.2
           PWA_PARTIAL_UPDATE_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/pwa-partial-update/chromium
         run: npm run qa:pwa-partial-update
 
       - name: Capture Issue 156 canonical HUD evidence (Chromium)
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390,844x340,1280x720
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,1280x720
           V099_FINAL_REMEDIATION_QA_CASES: hud
           V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/chromium
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
@@ -144,7 +144,7 @@ jobs:
       - name: Capture Issue 156 final-canvas deployment evidence (Chromium)
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390,844x340,1280x720
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,1280x720
           V099_FINAL_REMEDIATION_QA_CASES: deployment
           V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/chromium
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
@@ -154,6 +154,20 @@ jobs:
           ISSUE156_REMEDIATION_QA_ENGINES: chromium
           ISSUE156_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/presentation
         run: npm run qa:issue156-remediation
+
+      - name: Capture Issue 156 physical-width records evidence (Chromium)
+        env:
+          RECORDS_QA_ENGINES: chromium
+          RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/chromium
+        run: npm run qa:records
+
+      - name: Capture Issue 156 physical-width TAKUYA audio route (Chromium)
+        env:
+          P5_QA_SCOPE: battle-audio
+          P5_QA_ENGINES: chromium
+          P5_QA_VIEWPORTS: 667x375,736x414
+          P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/boss-audio/chromium
+        run: npm run qa:p5
 
       - name: Upload Issue 156 remediation evidence
         if: always()
@@ -259,6 +273,24 @@ jobs:
           V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-844x390
         run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
 
+      - name: Capture Issue 156 canonical HUD evidence (WebKit physical 16:9)
+        if: always()
+        env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375
+          V099_FINAL_REMEDIATION_QA_CASES: hud
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-667x375
+        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
+
+      - name: Capture Issue 156 canonical HUD evidence (WebKit physical 16:9 Plus)
+        if: always()
+        env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 736x414
+          V099_FINAL_REMEDIATION_QA_CASES: hud
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-736x414
+        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
+
       - name: Capture Issue 156 canonical HUD evidence (WebKit 844x340)
         if: always()
         env:
@@ -286,6 +318,24 @@ jobs:
           V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-844x390
         run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
 
+      - name: Capture Issue 156 final-canvas deployment evidence (WebKit physical 16:9)
+        if: always()
+        env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375
+          V099_FINAL_REMEDIATION_QA_CASES: deployment
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-667x375
+        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
+
+      - name: Capture Issue 156 final-canvas deployment evidence (WebKit physical 16:9 Plus)
+        if: always()
+        env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 736x414
+          V099_FINAL_REMEDIATION_QA_CASES: deployment
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-736x414
+        run: "$RUNNER_TEMP/issue156-webkit-diagnostic.sh"
+
       - name: Capture Issue 156 final-canvas deployment evidence (WebKit 844x340)
         if: always()
         env:
@@ -310,6 +360,22 @@ jobs:
           ISSUE156_REMEDIATION_QA_ENGINES: webkit
           ISSUE156_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/presentation/webkit
         run: npm run qa:issue156-remediation
+
+      - name: Capture Issue 156 physical-width records evidence (WebKit)
+        if: always()
+        env:
+          RECORDS_QA_ENGINES: webkit
+          RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/webkit
+        run: npm run qa:records
+
+      - name: Capture Issue 156 physical-width TAKUYA audio route (WebKit)
+        if: always()
+        env:
+          P5_QA_SCOPE: battle-audio
+          P5_QA_ENGINES: webkit
+          P5_QA_VIEWPORTS: 667x375,736x414
+          P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/boss-audio/webkit
+        run: npm run qa:p5
 
       - name: Upload Issue 156 WebKit hosted-runner evidence
         if: always()

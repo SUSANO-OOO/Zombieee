@@ -9,6 +9,8 @@ import {
 } from "../app/battleHudLayout.js";
 
 const RELEASE_VIEWPORTS = Object.freeze([
+  Object.freeze({ width: 667, height: 375 }),
+  Object.freeze({ width: 736, height: 414 }),
   Object.freeze({ width: 844, height: 390 }),
   Object.freeze({ width: 844, height: 340 }),
 ]);
@@ -40,13 +42,13 @@ test("mobile battle HUD fixes top ownership at 0-28%, 28-66%, and 66-100%", () =
     const layout = mobileBattleHudLayout(viewport);
     assert.ok(layout);
     const { crawler, communication, controls } = layout.top;
-    assert.deepEqual([crawler.x, right(crawler)], [0, Math.round(844 * .28)]);
+    assert.deepEqual([crawler.x, right(crawler)], [0, Math.round(viewport.width * .28)]);
     assert.deepEqual(
       [communication.x, right(communication)],
-      [Math.round(844 * .28), Math.round(844 * .66)],
+      [Math.round(viewport.width * .28), Math.round(viewport.width * .66)],
     );
-    assert.deepEqual([controls.x, right(controls)], [Math.round(844 * .66), 844]);
-    assertHorizontalPartition([crawler, communication, controls], 0, 844, `${viewport.height}/top`);
+    assert.deepEqual([controls.x, right(controls)], [Math.round(viewport.width * .66), viewport.width]);
+    assertHorizontalPartition([crawler, communication, controls], 0, viewport.width, `${viewport.height}/top`);
   }
 });
 
@@ -60,19 +62,19 @@ test("bottom ownership keeps resources, unit cards, and support/objective in sep
   for (const viewport of RELEASE_VIEWPORTS) {
     const layout = mobileBattleHudLayout(viewport);
     const { resources, units, support } = layout.bottom;
-    assertHorizontalPartition([resources, units, support], 0, 844, `${viewport.height}/bottom`);
+    assertHorizontalPartition([resources, units, support], 0, viewport.width, `${viewport.height}/bottom`);
     assert.ok(resources.width >= 104, "resource/state column remains readable");
-    assert.ok(units.width >= 376, "unit strip retains its center ownership");
-    assert.ok(support.width >= 268, "support controls retain their right ownership");
+    assert.ok(units.width >= 320, "unit strip retains four readable card columns");
+    assert.ok(support.width >= 216, "support controls retain three 72px columns");
     assert.equal(layout.bottomContent.objective.x, units.x);
-    assert.equal(right(layout.bottomContent.objective), 844);
+    assert.equal(right(layout.bottomContent.objective), viewport.width);
     assert.equal(layout.bottomContent.stats.x, 0);
     assert.equal(right(layout.bottomContent.stats), resources.width);
   }
 });
 
 test("safe-area insets are deducted once from the shared content rectangle", () => {
-  for (const viewport of RELEASE_VIEWPORTS) {
+  for (const viewport of RELEASE_VIEWPORTS.filter(({ width }) => width === 844)) {
     const layout = mobileBattleHudLayout({
       ...viewport,
       safeAreaTop: 0,
@@ -94,6 +96,29 @@ test("safe-area insets are deducted once from the shared content rectangle", () 
   }
 });
 
+test("667x375 keeps all three bottom owners inside the physical landscape safe area", () => {
+  const layout = mobileBattleHudLayout({
+    width: 667,
+    height: 375,
+    safeAreaTop: 0,
+    safeAreaRight: 44,
+    safeAreaBottom: 21,
+    safeAreaLeft: 44,
+  });
+  assert.ok(layout);
+  assert.deepEqual(layout.content, { x: 44, y: 0, width: 579, height: 354 });
+  assertHorizontalPartition(
+    [layout.bottom.resources, layout.bottom.units, layout.bottom.support],
+    44,
+    623,
+    "667x375/bottom-safe-area",
+  );
+  assert.ok(layout.bottom.resources.width >= 104);
+  assert.ok(layout.bottom.units.width >= 250);
+  assert.ok(layout.bottom.support.width >= 216);
+  assert.equal(bottom(layout.bottom.support), 354);
+});
+
 test("dialogue and the short deployment banner stack inside the center safe zone", () => {
   for (const viewport of RELEASE_VIEWPORTS) {
     const layout = mobileBattleHudLayout(viewport);
@@ -110,12 +135,12 @@ test("dialogue and the short deployment banner stack inside the center safe zone
   }
 });
 
-test("844x390 and 844x340 preserve a non-overlapping battlefield between HUD bands", () => {
+test("supported landscape phones preserve a non-overlapping battlefield between HUD bands", () => {
   for (const viewport of RELEASE_VIEWPORTS) {
     const layout = mobileBattleHudLayout(viewport);
     assert.equal(layout.battlefield.y, layout.topHeight);
     assert.equal(bottom(layout.battlefield), layout.bottom.resources.y);
-    assert.ok(layout.battlefield.height >= 212, `${viewport.height} battlefield remains visible`);
+    assert.ok(layout.battlefield.height >= 212, `${viewport.width}x${viewport.height} battlefield remains visible`);
     assert.equal(bottom(layout.bottom.resources), viewport.height);
     assert.equal(bottom(layout.bottom.units), viewport.height);
     assert.equal(bottom(layout.bottom.support), viewport.height);
@@ -142,6 +167,8 @@ test("mobile type contract meets the final readability minima without global sca
 
 test("the focused helper does not silently claim unsupported desktop or portrait layouts", () => {
   assert.equal(mobileBattleHudLayout({ width: 1280, height: 720 }), null);
+  assert.equal(mobileBattleHudLayout({ width: 639, height: 375 }), null);
+  assert.equal(mobileBattleHudLayout({ width: 901, height: 390 }), null);
   assert.equal(mobileBattleHudLayout({ width: 390, height: 844 }), null);
   assert.equal(mobileBattleHudLayout({ width: 844, height: 0 }), null);
 });

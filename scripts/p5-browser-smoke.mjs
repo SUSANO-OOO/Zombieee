@@ -46,10 +46,12 @@ if (!["all", "story", "lifecycle", "bark", "battle-audio"].includes(qaScope)) {
 const evidenceDir = path.resolve(process.env.P5_QA_EVIDENCE_DIR ?? "outputs/p5-browser-smoke");
 const timeout = Math.max(5_000, Number(process.env.P5_QA_TIMEOUT_MS) || 45_000);
 const availableViewports = Object.freeze([
+  Object.freeze({ width: 667, height: 375 }),
+  Object.freeze({ width: 736, height: 414 }),
   Object.freeze({ width: 844, height: 390 }),
   Object.freeze({ width: 844, height: 340 }),
 ]);
-const requestedViewportKeys = new Set((process.env.P5_QA_VIEWPORTS ?? "844x390,844x340")
+const requestedViewportKeys = new Set((process.env.P5_QA_VIEWPORTS ?? "667x375,736x414,844x390,844x340")
   .split(",")
   .map((value) => value.trim())
   .filter(Boolean));

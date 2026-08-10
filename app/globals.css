@@ -597,6 +597,44 @@ button[aria-disabled="true"]:focus-visible {
   line-height:1;
 }
 
+/* Physical 16:9 phones have materially less horizontal room than the 844px
+   notch fixture. Keep the canonical type sizes and four-card viewport, then
+   recover the space through ownership, wrapping, and local backplates rather
+   than scaling the whole HUD. */
+@media (max-width:760px) and (orientation:landscape) {
+  .game-frame[data-battle-hud-layout="mobile"] .battle-controls-zone {
+    gap:2px;
+    padding:4px 1px;
+  }
+  .game-frame[data-battle-hud-layout="mobile"] .battle-controls-zone .icon-btn {
+    flex-basis:44px;
+    width:44px;
+  }
+  .game-frame[data-battle-hud-layout="mobile"] .battle-controls-zone .phase-block {
+    grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+  }
+  .game-frame[data-battle-hud-layout="mobile"] .card-copy {
+    top:3px;
+    left:2px;
+    right:2px;
+    padding:1px 2px;
+    background:linear-gradient(90deg,rgba(8,11,11,.9),rgba(8,11,11,.66) 78%,transparent);
+  }
+  .game-frame[data-battle-hud-layout="mobile"] .card-state {
+    top:36px;
+    left:2px;
+    right:2px;
+    padding-inline:2px;
+    background:linear-gradient(90deg,rgba(8,11,11,.86),rgba(8,11,11,.58) 82%,transparent);
+  }
+  .game-frame[data-battle-hud-layout="mobile"] .support-btn {
+    padding-inline:1px;
+  }
+  .game-frame[data-battle-hud-layout="mobile"] .support-btn small {
+    max-height:3.1em;
+  }
+}
+
 /* Issue #156 F4: StoryScreen owns portrait presentation and consumes the
    profile focus/crop contract instead of duplicating per-character CSS. */
 .event-portrait[data-portrait] {

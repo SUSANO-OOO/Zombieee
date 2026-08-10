@@ -41,6 +41,8 @@ const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit 
 const canonicalEngines = ["chromium", "webkit"];
 const canonicalCaseTypes = ["hud", "crawler-equipment", "deployment"];
 const canonicalViewports = [
+  { width: 667, height: 375 },
+  { width: 736, height: 414 },
   { width: 844, height: 390 },
   { width: 844, height: 340 },
   { width: 1280, height: 720 },
@@ -71,7 +73,7 @@ const engines = parseUniqueAxis(
 );
 const viewportKeys = parseUniqueAxis(
   "V099_FINAL_REMEDIATION_QA_VIEWPORTS",
-  process.env.V099_FINAL_REMEDIATION_QA_VIEWPORTS ?? "844x390,844x340,1280x720",
+  process.env.V099_FINAL_REMEDIATION_QA_VIEWPORTS ?? "667x375,736x414,844x390,844x340,1280x720",
   canonicalViewports.map(({ width, height }) => `${width}x${height}`),
 );
 const viewports = viewportKeys.map((key) => {
@@ -261,9 +263,16 @@ function relativeEvidencePath(filePath) {
   return path.relative(process.cwd(), filePath).replaceAll("\\", "/");
 }
 
-function caseUrl(qaMode, { stageNumber = 3 } = {}) {
+function safeAreaForViewport(viewport) {
+  return viewport.width === 844
+    ? { top: 0, right: 44, bottom: 21, left: 44, preset: "iphone-landscape" }
+    : { top: 0, right: 0, bottom: 0, left: 0, preset: null };
+}
+
+function caseUrl(qaMode, { stageNumber = 3, safeAreaPreset = null } = {}) {
   const url = new URL(baseUrl);
-  const parameters = { qa: qaMode, safe: "iphone-landscape" };
+  const parameters = { qa: qaMode };
+  if (safeAreaPreset) parameters.safe = safeAreaPreset;
   if (qaMode === "mission") Object.assign(parameters, { stage: String(stageNumber), state: "start" });
   url.search = new URLSearchParams(parameters).toString();
   return String(url);
@@ -453,7 +462,11 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
   const diagnosticControl = diagnosticsFor(page, lifecycle);
   lifecycle?.setPhase("navigation");
   lifecycle?.event("navigation start", { page });
-  const response = await page.goto(caseUrl(qaMode, options), {
+  const viewport = page.viewportSize();
+  const response = await page.goto(caseUrl(qaMode, {
+    ...options,
+    safeAreaPreset: options.safeAreaPreset ?? safeAreaForViewport(viewport).preset,
+  }), {
     waitUntil: "domcontentloaded",
     timeout,
   });
@@ -557,12 +570,13 @@ async function staticRuntimeEvidence() {
 }
 
 async function measureHud(page, viewport, label) {
+  const safeArea = safeAreaForViewport(viewport);
   const expectedLayout = mobileBattleHudLayout({
     ...viewport,
-    safeAreaTop: 0,
-    safeAreaRight: 44,
-    safeAreaBottom: 21,
-    safeAreaLeft: 44,
+    safeAreaTop: safeArea.top,
+    safeAreaRight: safeArea.right,
+    safeAreaBottom: safeArea.bottom,
+    safeAreaLeft: safeArea.left,
   });
   const desktopRegression = expectedLayout === null && viewport.width === 1280 && viewport.height === 720;
   invariant(expectedLayout || desktopRegression,
@@ -758,8 +772,16 @@ async function measureHud(page, viewport, label) {
   if (expectedLayout) {
     invariant(measured.topRatios.every((value, index) => ratioClose(value, [.28, .38, .34][index])),
       `${label}: top 28/38/34 ownership drift ${JSON.stringify(measured.topRatios)}`);
-    invariant(measured.bottomRatios.every((value, index) => ratioClose(value, [.14, .50, .36][index])),
-      `${label}: bottom 14/50/36 ownership drift ${JSON.stringify(measured.bottomRatios)}`);
+    const expectedBottomRatios = [
+      expectedLayout.bottom.resources.width / expectedLayout.content.width,
+      expectedLayout.bottom.units.width / expectedLayout.content.width,
+      expectedLayout.bottom.support.width / expectedLayout.content.width,
+    ];
+    invariant(measured.bottomRatios.every((value, index) => ratioClose(value, expectedBottomRatios[index])),
+      `${label}: bottom ownership drift ${JSON.stringify({
+        actual: measured.bottomRatios,
+        expected: expectedBottomRatios,
+      })}`);
     const expectedTopHeight = expectedLayout.topHeight;
     const expectedBottomHeight = expectedLayout.bottomHeight;
     const expectedBattlefieldHeight = expectedLayout.battlefield.height;

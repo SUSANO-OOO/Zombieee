@@ -14,6 +14,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { CAMPAIGN_STAGES, createDefaultCampaignSave, serializeCampaignSave } from "../app/campaign.js";
+import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { chromium, webkit } from "playwright";
 
 const oldRootInput = process.env.PWA_PARTIAL_UPDATE_OLD_ROOT;
@@ -21,7 +22,7 @@ const candidateRootInput = process.env.PWA_PARTIAL_UPDATE_CANDIDATE_ROOT;
 const oldRoot = path.resolve(oldRootInput ?? "");
 const candidateRoot = path.resolve(candidateRootInput ?? "");
 const browserName = process.env.PWA_PARTIAL_UPDATE_BROWSER ?? "chromium";
-const oldVersion = process.env.PWA_PARTIAL_UPDATE_OLD_VERSION ?? "0.9.9.1";
+const oldVersion = process.env.PWA_PARTIAL_UPDATE_OLD_VERSION ?? "0.9.9.2";
 const stallDurationMs = Number(process.env.PWA_PARTIAL_UPDATE_STALL_MS ?? 31_500);
 const slowDurationMs = Number(process.env.PWA_PARTIAL_UPDATE_SLOW_MS ?? 31_500);
 const evidenceDir = path.resolve(
@@ -246,7 +247,7 @@ const oldManifest = await readManifest(oldRoot);
 const candidateManifest = await readManifest(candidateRoot);
 record("old and candidate roots have the fixed 416-asset release contract", (
   oldManifest.version === oldVersion
-  && candidateManifest.version === "0.9.9.2"
+  && candidateManifest.version === RELEASE_VERSION
   && oldManifest.assets.length === 416
   && candidateManifest.assets.length === 416
 ), {
@@ -419,8 +420,8 @@ try {
   const candidateManifestFromPage = await page.evaluate(async () => (
     await (await fetch(new URL("asset-manifest.json", location.href), { cache: "no-store" })).json()
   ));
-  record("the same profile sees 0.9.9.2 without uninstall, storage clear, or profile replacement", (
-    candidateManifestFromPage.version === "0.9.9.2"
+  record(`the same profile sees ${RELEASE_VERSION} without uninstall, storage clear, or profile replacement`, (
+    candidateManifestFromPage.version === RELEASE_VERSION
     && (await cacheState(page)).logicalSatisfied === 156
     && (await currentSave(page)) === oldSaveRaw
   ), { candidateVersion: candidateManifestFromPage.version, userDataDir, cache: await cacheState(page) });
@@ -432,7 +433,7 @@ try {
     while (!registration.waiting && Date.now() - startedAt < 15_000) await new Promise((resolve) => setTimeout(resolve, 250));
     return Boolean(registration.waiting);
   });
-  record("0.9.9.2 has a real waiting worker before the partial update", waiting === true, { waiting });
+  record(`${RELEASE_VERSION} has a real waiting worker before the partial update`, waiting === true, { waiting });
 
   const repairButton = page.getByRole("button", { name: "不足分だけ再取得" });
   await repairButton.waitFor({ state: "visible", timeout: 60_000 });
@@ -495,7 +496,7 @@ try {
     && audioRequests.filter((request) => request.mode === "recovery").length === 2
   ), { requestCountWhilePaused });
 
-  const updatedWorker = await waitForActiveVersion(page, "0.9.9.2", 180_000);
+  const updatedWorker = await waitForActiveVersion(page, RELEASE_VERSION, 180_000);
   const finalCache = await cacheState(page);
   const finalSaveRaw = await currentSave(page);
   const completedRecoveryRequests = audioRequests.filter((request) => request.mode === "recovery");
@@ -507,10 +508,10 @@ try {
     && slow.progress.length >= 30
     && slow.progress.every((entry, index, entries) => index === 0 || entry.bytes > entries[index - 1].bytes)
   ), { requestCount: completedRecoveryRequests.length, slowDurationMs: slow?.durationMs, progressEvents: slow?.progress.length });
-  record("partial recovery reaches 416/416, failed 0, commits 0.9.9.2, and preserves raw save bytes", (
+  record(`partial recovery reaches 416/416, failed 0, commits ${RELEASE_VERSION}, and preserves raw save bytes`, (
     finalCache.logicalSatisfied === 416
     && finalCache.assetEntries === 414
-    && updatedWorker?.state?.active?.version === "0.9.9.2"
+    && updatedWorker?.state?.active?.version === RELEASE_VERSION
     && updatedWorker.activeWorkerState === "activated"
     && finalSaveRaw === oldSaveRaw
   ), { finalCache, activeVersion: updatedWorker?.state?.active?.version, savePreserved: finalSaveRaw === oldSaveRaw });
@@ -535,8 +536,8 @@ try {
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
   const committedRelaunch = await workerState(page);
-  record("relaunch keeps the committed 0.9.9.2 generation and save", (
-    committedRelaunch.state?.active?.version === "0.9.9.2"
+  record(`relaunch keeps the committed ${RELEASE_VERSION} generation and save`, (
+    committedRelaunch.state?.active?.version === RELEASE_VERSION
     && (await currentSave(page)) === oldSaveRaw
   ), { activeVersion: committedRelaunch.state?.active?.version });
 
@@ -545,7 +546,7 @@ try {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
     await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
     record("offline relaunch uses the committed generation without changing the save", (
-      (await workerState(page)).state?.active?.version === "0.9.9.2"
+      (await workerState(page)).state?.active?.version === RELEASE_VERSION
       && (await currentSave(page)) === oldSaveRaw
     ));
     await context.setOffline(false);
