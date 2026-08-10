@@ -341,3 +341,56 @@ jobs:
           path: issue156-viewport-evidence
           if-no-files-found: error
           retention-days: 14
+
+  webkit-stage3-audio:
+    name: WebKit Stage 3 Audio Route (${{ matrix.audio_case }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        audio_case:
+          - entrance
+          - final
+
+    steps:
+      - name: Checkout synthetic PR merge
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Install focused browser engine
+        run: npx playwright install --with-deps webkit
+
+      - name: Capture bounded Stage 3 audio route
+        env:
+          P5_QA_SCOPE: battle-audio
+          P5_QA_ENGINES: webkit
+          P5_QA_VIEWPORTS: 736x414
+          P5_QA_BATTLE_AUDIO_CASES: ${{ matrix.audio_case }}
+          P5_QA_TIMEOUT_MS: "60000"
+          P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/${{ matrix.audio_case }}
+        run: timeout --signal=TERM --kill-after=30s 15m npm run qa:p5
+
+      - name: Upload bounded Stage 3 audio evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue156-webkit-stage3-audio-${{ matrix.audio_case }}
+          path: issue156-stage3-audio
+          if-no-files-found: error
+          retention-days: 14
