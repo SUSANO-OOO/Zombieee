@@ -88,16 +88,68 @@ jobs:
       - name: Install focused browser engines
         run: npx playwright install --with-deps chromium webkit
 
-      - name: Capture Issue 156 canonical HUD evidence
+      - name: Capture Issue 156 canonical HUD evidence (Chromium)
         env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: chromium
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390,844x340,1280x720
           V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/chromium
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
 
-      - name: Capture Issue 156 final-canvas deployment evidence
+      - name: Capture Issue 156 canonical HUD evidence (WebKit 844x390)
         env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390
+          V099_FINAL_REMEDIATION_QA_CASES: hud
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-844x390
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
+
+      - name: Capture Issue 156 canonical HUD evidence (WebKit 844x340)
+        env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x340
+          V099_FINAL_REMEDIATION_QA_CASES: hud
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-844x340
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
+
+      - name: Capture Issue 156 canonical HUD evidence (WebKit 1280x720)
+        env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 1280x720
+          V099_FINAL_REMEDIATION_QA_CASES: hud
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/webkit-1280x720
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
+
+      - name: Capture Issue 156 final-canvas deployment evidence (Chromium)
+        env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: chromium
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390,844x340,1280x720
           V099_FINAL_REMEDIATION_QA_CASES: deployment
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/chromium
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
+
+      - name: Capture Issue 156 final-canvas deployment evidence (WebKit 844x390)
+        env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x390
+          V099_FINAL_REMEDIATION_QA_CASES: deployment
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-844x390
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
+
+      - name: Capture Issue 156 final-canvas deployment evidence (WebKit 844x340)
+        env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 844x340
+          V099_FINAL_REMEDIATION_QA_CASES: deployment
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-844x340
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
+
+      - name: Capture Issue 156 final-canvas deployment evidence (WebKit 1280x720)
+        env:
+          V099_FINAL_REMEDIATION_QA_ENGINES: webkit
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 1280x720
+          V099_FINAL_REMEDIATION_QA_CASES: deployment
+          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/webkit-1280x720
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
 
       - name: Capture Issue 156 safe-area, portrait, and metadata evidence
