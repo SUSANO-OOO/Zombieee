@@ -21,6 +21,7 @@ const candidateRootInput = process.env.PWA_EXISTING_UPDATE_CANDIDATE_ROOT;
 const oldRoot = path.resolve(oldRootInput ?? "");
 const candidateRoot = path.resolve(candidateRootInput ?? "");
 const browserName = process.env.PWA_EXISTING_UPDATE_BROWSER ?? "chromium";
+const oldVersion = process.env.PWA_EXISTING_UPDATE_OLD_VERSION ?? "0.9.9.1";
 const evidenceDir = path.resolve(
   process.env.PWA_EXISTING_UPDATE_EVIDENCE_DIR ?? path.join(process.cwd(), "outputs", "pwa-existing-update"),
 );
@@ -149,7 +150,7 @@ await ensureRoot(candidateRoot);
 const oldManifest = await readManifest(oldRoot);
 const candidateManifest = await readManifest(candidateRoot);
 record("old and candidate static roots are complete", (
-  oldManifest.version === "0.9.9.1"
+  oldManifest.version === oldVersion
   && candidateManifest.version === "0.9.9.2"
   && oldManifest.assets?.length === 416
   && candidateManifest.assets?.length === 416
@@ -297,7 +298,7 @@ try {
   ({ context, page } = await openPersistent(userDataDir));
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   const oldPageManifest = await manifestFromPage(page);
-  record("existing profile initially loads the 0.9.9.1 manifest", (
+  record(`existing profile initially loads the ${oldVersion} manifest`, (
     oldPageManifest.ok && oldPageManifest.status === 200 && oldPageManifest.manifest.version === oldManifest.version
   ), oldPageManifest);
 
@@ -315,7 +316,7 @@ try {
     };
   });
   record("the existing installed app completes the full old release pack", (
-    oldInstalled.version === "0.9.9.1"
+    oldInstalled.version === oldVersion
     && oldInstalled.assetCount === 416
     && oldInstalled.assetCacheEntries === oldInstalled.distinctHashCount
   ), oldInstalled);
@@ -328,7 +329,7 @@ try {
   record("the old installed profile has an active worker, correct scope, and a real save", (
     oldWorker.scope === `${new URL(baseUrl).origin}${scopePath}`
     && oldWorker.activeWorkerState === "activated"
-    && oldWorker.activeState?.active?.version === "0.9.9.1"
+    && oldWorker.activeState?.active?.version === oldVersion
     && typeof oldSave.raw === "string"
     && oldSave.raw.length > 0
   ), { oldWorker, oldSave: { ...oldSave, raw: oldSave.raw ? "present" : "missing" } });
@@ -463,7 +464,7 @@ try {
   const rolledBackSave = await saveState(page);
   record("rollback restores the old generation without changing the save", (
     rollback?.type === "pwa:rolled-back"
-    && rolledBackWorker.activeState?.active?.version === "0.9.9.1"
+    && rolledBackWorker.activeState?.active?.version === oldVersion
     && rolledBackSave.raw === oldSave.raw
   ), { rollback, rolledBackWorker, savePreserved: rolledBackSave.raw === oldSave.raw });
 } catch (error) {
