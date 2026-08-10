@@ -45,6 +45,22 @@ if (!["all", "story", "lifecycle", "bark", "battle-audio"].includes(qaScope)) {
 
 const evidenceDir = path.resolve(process.env.P5_QA_EVIDENCE_DIR ?? "outputs/p5-browser-smoke");
 const timeout = Math.max(5_000, Number(process.env.P5_QA_TIMEOUT_MS) || 45_000);
+const teardownTimeout = Math.max(1_000, Number(process.env.P5_QA_TEARDOWN_TIMEOUT_MS) || 5_000);
+
+async function closePlaywrightResource(resource, label) {
+  let timer;
+  const closed = await Promise.race([
+    resource.close().then(() => true).catch((error) => {
+      if (/Target page, context or browser has been closed/u.test(String(error))) return true;
+      throw error;
+    }),
+    new Promise((resolve) => {
+      timer = setTimeout(() => resolve(false), teardownTimeout);
+    }),
+  ]).finally(() => clearTimeout(timer));
+  if (!closed) console.warn(`${label} teardown exceeded ${teardownTimeout}ms; continuing after completed assertions`);
+  return closed;
+}
 const availableViewports = Object.freeze([
   Object.freeze({ width: 667, height: 375 }),
   Object.freeze({ width: 736, height: 414 }),
@@ -1663,7 +1679,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
   } finally {
     await stopStoryBattleRecorder(page);
     await page.close();
-    await context.close();
+    await closePlaywrightResource(context, `${label}/context`);
   }
   return result;
 }
@@ -1912,7 +1928,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
   } finally {
     await stopStoryBattleRecorder(page);
     await page.close();
-    await context.close();
+    await closePlaywrightResource(context, `${label}/context`);
   }
   return result;
 }
@@ -2024,7 +2040,7 @@ async function auditNonblockingBark({ browser, engine }) {
   } finally {
     await page.evaluate(() => window.__P5_BARK_OBSERVER__?.disconnect()).catch(() => undefined);
     await page.close();
-    await context.close();
+    await closePlaywrightResource(context, `${label}/context`);
   }
   return result;
 }
@@ -2115,7 +2131,7 @@ for (const engine of requestedEngines) {
       });
     }
   } finally {
-    await browser.close();
+    await closePlaywrightResource(browser, `${engine}/browser`);
   }
 }
 
