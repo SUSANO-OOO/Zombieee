@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile, readdir, stat, mkdir, writeFile } from "node:fs/promises";
+import { appendFile, readFile, readdir, stat, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -101,6 +101,158 @@ const evidenceDir = path.resolve(
 const results = [];
 await mkdir(evidenceDir, { recursive: true });
 
+function noOpLifecycleDiagnostics() {
+  return {
+    file: null,
+    setPhase: () => {},
+    event: () => {},
+    attachBrowser: () => {},
+    attachContext: () => {},
+    attachPage: () => {},
+    markPageCloseBegin: () => {},
+    markContextCloseBegin: () => {},
+    markBrowserCloseBegin: () => {},
+    flush: async () => {},
+  };
+}
+
+async function createLifecycleDiagnostics({ engine, viewport, caseType, name }) {
+  if (engine !== "webkit") return noOpLifecycleDiagnostics();
+
+  const filePath = path.join(evidenceDir, `${name}-${caseType}-lifecycle.jsonl`);
+  await writeFile(filePath, "", "utf8");
+  const startedAt = Date.now();
+  const expectedPages = new WeakSet();
+  const expectedContexts = new WeakSet();
+  const pageDiagnostics = new WeakMap();
+  let lastPage = null;
+  let currentPhase = "initialization";
+  let lastSuccessfulMilestone = null;
+  let normalCleanupStarted = false;
+  let expectedBrowserClose = false;
+  let writeQueue = Promise.resolve();
+  let writeError = null;
+
+  function pageIsClosed(page) {
+    try {
+      return page && typeof page.isClosed === "function" ? page.isClosed() : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function diagnosticsSnapshot(page) {
+    const diagnostics = pageDiagnostics.get(page ?? lastPage);
+    return diagnostics
+      ? {
+        consoleErrors: [...diagnostics.consoleErrors],
+        pageErrors: [...diagnostics.pageErrors],
+        requestFailures: [...diagnostics.requestFailures],
+        httpErrors: [...diagnostics.httpErrors],
+      }
+      : null;
+  }
+
+  function record(event, { page = null, phase = currentPhase, milestone = null, ...fields } = {}) {
+    if (milestone) lastSuccessfulMilestone = milestone;
+    const entry = {
+      timestamp: new Date().toISOString(),
+      elapsedMs: Date.now() - startedAt,
+      engine,
+      viewport: `${viewport.width}x${viewport.height}`,
+      caseType,
+      phase,
+      currentPhase,
+      event,
+      pageIsClosed: pageIsClosed(page),
+      pageDiagnostics: diagnosticsSnapshot(page),
+      runnerResourceEvidenceDir: relativeEvidencePath(evidenceDir),
+      normalCleanupStarted,
+      lastSuccessfulMilestone,
+      ...fields,
+    };
+    const line = `${JSON.stringify(entry)}\n`;
+    writeQueue = writeQueue.then(() => appendFile(filePath, line, "utf8")).catch((error) => {
+      writeError ??= error;
+    });
+  }
+
+  function setPhase(phase, milestone = null) {
+    currentPhase = phase;
+    record("phase changed", { phase, milestone });
+  }
+
+  function attachBrowser(browser) {
+    expectedBrowserClose = false;
+    normalCleanupStarted = false;
+    browser.on("disconnected", () => {
+      record("browser disconnected", {
+        expected: expectedBrowserClose,
+        unexpected: !expectedBrowserClose,
+      });
+    });
+    record("browser launched");
+  }
+
+  function attachContext(context) {
+    context.on("close", () => {
+      const expected = expectedContexts.has(context) || normalCleanupStarted;
+      record("context closed", { expected, unexpected: !expected });
+    });
+    record("context created");
+  }
+
+  function attachPage(page, diagnostics = null) {
+    pageDiagnostics.set(page, diagnostics);
+    lastPage = page;
+    page.on("close", () => {
+      const expected = expectedPages.has(page) || normalCleanupStarted;
+      record("page close", { page, expected, unexpected: !expected });
+    });
+    page.on("crash", () => {
+      record("page crash", { page, expected: false, unexpected: true });
+    });
+    page.on("pageerror", (error) => {
+      record("pageerror", { page, error: String(error) });
+    });
+    record("page created", { page });
+  }
+
+  function markPageCloseBegin(page) {
+    expectedPages.add(page);
+    record("page close begin", { page, expected: true });
+  }
+
+  function markContextCloseBegin(context) {
+    expectedContexts.add(context);
+    normalCleanupStarted = true;
+    record("context close begin");
+  }
+
+  function markBrowserCloseBegin() {
+    expectedBrowserClose = true;
+    normalCleanupStarted = true;
+    record("browser close begin");
+  }
+
+  record("case start");
+  return {
+    file: relativeEvidencePath(filePath),
+    setPhase,
+    event: record,
+    attachBrowser,
+    attachContext,
+    attachPage,
+    markPageCloseBegin,
+    markContextCloseBegin,
+    markBrowserCloseBegin,
+    flush: async () => {
+      await writeQueue;
+      if (writeError) throw new Error(`Lifecycle diagnostics could not be written: ${writeError}`);
+    },
+  };
+}
+
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -117,7 +269,7 @@ function caseUrl(qaMode, { stageNumber = 3 } = {}) {
   return String(url);
 }
 
-function diagnosticsFor(page) {
+function diagnosticsFor(page, lifecycle = null) {
   let active = true;
   const diagnostics = {
     consoleErrors: [],
@@ -142,6 +294,7 @@ function diagnosticsFor(page) {
       diagnostics.httpErrors.push(`${response.status()} ${response.url()}`);
     }
   });
+  lifecycle?.attachPage(page, diagnostics);
   return {
     diagnostics,
     stop: () => { active = false; },
@@ -294,16 +447,23 @@ async function enterLegacyQaBattle(page, qaMode) {
   throw new Error(`${qaMode}: story queue did not reach battle within 48 advances`);
 }
 
-async function openBattlePage(context, qaMode, options = {}) {
+async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
+  lifecycle?.setPhase("page creation");
   const page = await context.newPage();
-  const diagnosticControl = diagnosticsFor(page);
+  const diagnosticControl = diagnosticsFor(page, lifecycle);
+  lifecycle?.setPhase("navigation");
+  lifecycle?.event("navigation start", { page });
   const response = await page.goto(caseUrl(qaMode, options), {
     waitUntil: "domcontentloaded",
     timeout,
   });
+  lifecycle?.event("navigation complete", { page, status: response?.status(), milestone: "navigation complete" });
   invariant(response?.ok(), `${qaMode}: navigation returned HTTP ${response?.status()}`);
+  lifecycle?.setPhase("battle setup");
   await dismissInstallOffer(page, { timeout });
   await enterLegacyQaBattle(page, qaMode);
+  lifecycle?.setPhase("battle readiness");
+  lifecycle?.event("battle readiness start", { page });
   await page.waitForFunction(
     () => {
       const battle = window.__ASHFALL_BATTLE_QA__;
@@ -315,6 +475,7 @@ async function openBattlePage(context, qaMode, options = {}) {
     undefined,
     { timeout },
   );
+  lifecycle?.event("battle readiness complete", { page, milestone: "battle readiness complete" });
   await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 12_000) });
   return { page, ...diagnosticControl };
 }
@@ -679,7 +840,9 @@ async function waitForQuietBattleMessages(page, label) {
   });
 }
 
-async function captureHudState(page, viewport, axisName, stateId) {
+async function captureHudState(page, viewport, axisName, stateId, lifecycle = null) {
+  lifecycle?.setPhase(`HUD state capture/${stateId}`);
+  lifecycle?.event("HUD state capture start", { page, stateId });
   const layout = await measureHud(page, viewport, `${axisName}/${stateId}`);
   const semantic = await page.evaluate(() => {
     const snapshot = window.__ASHFALL_BATTLE_QA__.getSnapshot();
@@ -707,6 +870,11 @@ async function captureHudState(page, viewport, axisName, stateId) {
     };
   });
   const screenshotPath = await screenshot(page, `${axisName}-hud-${stateId}.png`);
+  lifecycle?.event("HUD state capture complete", {
+    page,
+    stateId,
+    milestone: `${stateId} HUD state capture complete`,
+  });
   return {
     id: stateId,
     semantic,
@@ -778,21 +946,32 @@ async function createDisabledHudState(page, label, { minimumOpacity = .72 } = {}
 
 async function runHudCase(browserType, engine, viewport) {
   const name = `${engine}-${viewport.width}x${viewport.height}`;
+  const lifecycle = await createLifecycleDiagnostics({
+    engine,
+    viewport,
+    caseType: "hud",
+    name,
+  });
   let browser = null;
   let context = null;
   let page = null;
   const diagnosticControls = [];
   const result = { type: "hud", engine, viewport, status: "failed", states: [] };
   try {
+    lifecycle.setPhase("browser launch");
     browser = await browserType.launch({ headless: true });
+    lifecycle.attachBrowser(browser);
+    lifecycle.setPhase("context creation");
     context = await browser.newContext({ viewport });
-    const stage1 = await openBattlePage(context, "mission", { stageNumber: 1 });
+    lifecycle.attachContext(context);
+    const stage1 = await openBattlePage(context, "mission", { stageNumber: 1 }, lifecycle);
     diagnosticControls.push(stage1);
     page = stage1.page;
 
+    lifecycle.setPhase("stage1-normal message settle");
     await waitForQuietBattleMessages(page, `${name}/stage1-normal`);
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
-    const normal = await captureHudState(page, viewport, name, "stage1-normal");
+    const normal = await captureHudState(page, viewport, name, "stage1-normal", lifecycle);
     invariant(normal.semantic.stageId.includes("shopping-street")
       && !normal.semantic.bannerText
       && !normal.semantic.barkText
@@ -811,7 +990,7 @@ async function runHudCase(browserType, engine, viewport) {
     ));
     invariant(fiveUnitProof?.ownerIds?.length === 5, `${name}: five-unit fixture was not created`);
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
-    const fiveUnits = await captureHudState(page, viewport, name, "five-units");
+    const fiveUnits = await captureHudState(page, viewport, name, "five-units", lifecycle);
     invariant(fiveUnits.semantic.humanCount === 5,
       `${name}: five-unit HUD state has ${fiveUnits.semantic.humanCount} live humans`);
     result.states.push(fiveUnits);
@@ -832,7 +1011,7 @@ async function runHudCase(browserType, engine, viewport) {
     );
     invariant(deploymentFrame.audit?.deploymentPlan?.checkpoint === "fully-inside",
       `${name}: deployment banner did not freeze the production progress-0 frame`);
-    const deploymentBanner = await captureHudState(page, viewport, name, "deployment-banner");
+    const deploymentBanner = await captureHudState(page, viewport, name, "deployment-banner", lifecycle);
     invariant(deploymentBanner.semantic.bannerText.includes("移動拠点から出撃"),
       `${name}: deployment banner copy is missing`);
     result.states.push(deploymentBanner);
@@ -853,21 +1032,22 @@ async function runHudCase(browserType, engine, viewport) {
       { timeout },
     );
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
-    const abilityBanner = await captureHudState(page, viewport, name, "manual-ability-banner");
+    const abilityBanner = await captureHudState(page, viewport, name, "manual-ability-banner", lifecycle);
     invariant(abilityBanner.semantic.manualAbilityReceiptCount === 1
       && abilityBanner.semantic.bannerText.includes("緊急処置"),
     `${name}: manual ability banner did not use the production activation path`);
     result.states.push(abilityBanner);
 
     stage1.stop();
+    lifecycle.markPageCloseBegin(page);
     await page.close();
 
-    const stage3 = await openBattlePage(context, "mission", { stageNumber: 3 });
+    const stage3 = await openBattlePage(context, "mission", { stageNumber: 3 }, lifecycle);
     diagnosticControls.push(stage3);
     page = stage3.page;
     await waitForQuietBattleMessages(page, `${name}/objective-full`);
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
-    const objective = await captureHudState(page, viewport, name, "objective-full");
+    const objective = await captureHudState(page, viewport, name, "objective-full", lifecycle);
     invariant(objective.semantic.objectiveFits && objective.semantic.objectiveText.startsWith("目標：")
       && objective.semantic.objectiveText.length >= 8,
     `${name}: full objective is missing or truncated ${JSON.stringify(objective.semantic)}`);
@@ -878,21 +1058,28 @@ async function runHudCase(browserType, engine, viewport) {
       minimumOpacity: mobileBattleHudLayout(viewport) ? .72 : null,
     });
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
-    const disabled = await captureHudState(page, viewport, name, "support-disabled");
+    const disabled = await captureHudState(page, viewport, name, "support-disabled", lifecycle);
     invariant(disabled.layout.disabledUnitCount > 0 && disabled.layout.disabledSupportCount > 0,
       `${name}: disabled unit/support state did not remain visible`);
     result.states.push({ ...disabled, disabledControls });
 
     stage3.stop();
+    lifecycle.setPhase("first browser teardown");
+    lifecycle.markContextCloseBegin(context);
     await context.close();
     context = null;
+    lifecycle.markBrowserCloseBegin();
     await browser.close();
     browser = null;
     page = null;
 
+    lifecycle.setPhase("browser relaunch");
     browser = await browserType.launch({ headless: true });
+    lifecycle.attachBrowser(browser);
+    lifecycle.setPhase("context recreation");
     context = await browser.newContext({ viewport });
-    const bossStage3 = await openBattlePage(context, "mission", { stageNumber: 3 });
+    lifecycle.attachContext(context);
+    const bossStage3 = await openBattlePage(context, "mission", { stageNumber: 3 }, lifecycle);
     diagnosticControls.push(bossStage3);
     page = bossStage3.page;
     await waitForQuietBattleMessages(page, `${name}/boss-fixture`);
@@ -924,14 +1111,14 @@ async function runHudCase(browserType, engine, viewport) {
       undefined,
       { timeout, polling: 10 },
     );
-    const simultaneous = await captureHudState(page, viewport, name, "banner-bark-boss");
+    const simultaneous = await captureHudState(page, viewport, name, "banner-bark-boss", lifecycle);
     invariant(simultaneous.layout.banner && simultaneous.layout.bark && simultaneous.layout.boss,
       `${name}: simultaneous banner, bark, and boss HUD state was not rendered`);
     result.states.push(simultaneous);
 
     await waitForQuietBattleMessages(page, `${name}/stage3-boss`);
     await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
-    const boss = await captureHudState(page, viewport, name, "stage3-boss");
+    const boss = await captureHudState(page, viewport, name, "stage3-boss", lifecycle);
     invariant(boss.layout.boss && boss.semantic.bossKinds.includes("takuya")
       && !boss.semantic.bannerText && !boss.semantic.barkText,
     `${name}: clean Stage 3 boss HUD state was not retained`);
@@ -974,8 +1161,17 @@ async function runHudCase(browserType, engine, viewport) {
       result.status = "failed";
       result.error = `Browser diagnostics were not clean: ${JSON.stringify(result.diagnostics)}`;
     }
-    if (context) await context.close().catch(() => {});
-    if (browser) await browser.close().catch(() => {});
+    lifecycle.event("case complete", { status: result.status, error: result.error ?? null });
+    if (context) {
+      lifecycle.markContextCloseBegin(context);
+      await context.close().catch(() => {});
+    }
+    if (browser) {
+      lifecycle.markBrowserCloseBegin();
+      await browser.close().catch(() => {});
+    }
+    await lifecycle.flush();
+    result.lifecycleLog = lifecycle.file;
   }
   return result;
 }
@@ -1021,15 +1217,17 @@ async function loadedCrawlerAssets(page, label) {
   return { requiredKeys, loadedKeys };
 }
 
-async function runEquipmentCase(browser, engine, viewport, runtimeEvidence) {
+async function runEquipmentCase(browser, engine, viewport, runtimeEvidence, lifecycle = null) {
   const name = `${engine}-${viewport.width}x${viewport.height}`;
   const context = await browser.newContext({ viewport });
+  lifecycle?.attachContext(context);
   let page;
   let stopDiagnostics = () => {};
   let diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] };
   const result = { type: "crawler-equipment", engine, viewport, status: "failed" };
   try {
-    ({ page, stop: stopDiagnostics, diagnostics } = await openBattlePage(context, "mission"));
+    lifecycle?.setPhase("crawler equipment setup");
+    ({ page, stop: stopDiagnostics, diagnostics } = await openBattlePage(context, "mission", {}, lifecycle));
     const assets = await loadedCrawlerAssets(page, name);
 
     const barrage = [];
@@ -1038,11 +1236,13 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence) {
       window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true);
     });
     for (const [index, phase] of CRAWLER_BARRAGE_SPRITE_PHASES.entries()) {
+      lifecycle?.setPhase(`crawler barrage/${phase}`);
       if (index === 1) {
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
         await page.keyboard.press("g");
       }
       const evidence = await pauseAtEquipmentPhase(page, "barrage", phase, name);
+      lifecycle?.event("equipment phase complete", { page, equipment: "barrage", phase });
       const screenshotPath = await screenshot(page, `${name}-crawler-barrage-${index}-${phase}.png`);
       barrage.push({
         phase,
@@ -1062,6 +1262,7 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence) {
       return prepared;
     });
     for (const [index, phase] of CRAWLER_AIRSTRIKE_SPRITE_PHASES.entries()) {
+      lifecycle?.setPhase(`crawler airstrike/${phase}`);
       if (index === 1) {
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
         await page.keyboard.press("q");
@@ -1077,6 +1278,7 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence) {
         await page.mouse.click(point.x, point.y);
       }
       const evidence = await pauseAtEquipmentPhase(page, "airstrike", phase, name);
+      lifecycle?.event("equipment phase complete", { page, equipment: "airstrike", phase });
       const screenshotPath = await screenshot(page, `${name}-crawler-airstrike-${index}-${phase}.png`);
       airstrike.push({
         phase,
@@ -1175,7 +1377,10 @@ async function runEquipmentCase(browser, engine, viewport, runtimeEvidence) {
       result.status = "failed";
       result.error = `Browser diagnostics were not clean: ${JSON.stringify(diagnostics)}`;
     }
+    lifecycle?.event("case complete", { status: result.status, error: result.error ?? null });
+    lifecycle?.markContextCloseBegin(context);
     await context.close();
+    if (lifecycle?.file) result.lifecycleLog = lifecycle.file;
   }
   return result;
 }
@@ -1313,15 +1518,17 @@ function validateDeploymentCheckpoint(evidence, expectedFamily, expectedCheckpoi
   }
 }
 
-async function runDeploymentCase(browser, engine, viewport) {
+async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
   const name = `${engine}-${viewport.width}x${viewport.height}`;
   const context = await browser.newContext({ viewport });
+  lifecycle?.attachContext(context);
   let page;
   let stopDiagnostics = () => {};
   let diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] };
   const result = { type: "deployment", engine, viewport, status: "failed", units: [] };
   try {
-    ({ page, stop: stopDiagnostics, diagnostics } = await openBattlePage(context, "mission"));
+    lifecycle?.setPhase("deployment setup");
+    ({ page, stop: stopDiagnostics, diagnostics } = await openBattlePage(context, "mission", {}, lifecycle));
     await loadedCrawlerAssets(page, name);
     for (const unit of deploymentUnits) {
       invariant(crawlerDeploymentUnitFamily(unit.kind) === unit.family,
@@ -1336,6 +1543,7 @@ async function runDeploymentCase(browser, engine, viewport) {
       ), unit.kind);
       invariant(Number.isInteger(prepared?.attackerId),
         `${name}/${unit.kind}: deployment fixture is unavailable`);
+      lifecycle?.setPhase(`deployment/${unit.family}/fixture`);
       const firstFrame = await queueAndPauseAtFirstDeploymentFrame(
         page,
         unit.kind,
@@ -1356,6 +1564,12 @@ async function runDeploymentCase(browser, engine, viewport) {
           );
         }
         const label = `${name}/${unit.family}/${checkpoint.id}`;
+        lifecycle?.setPhase(`deployment checkpoint/${unit.family}/${checkpoint.id}`);
+        lifecycle?.event("deployment checkpoint start", {
+          page,
+          family: unit.family,
+          checkpoint: checkpoint.id,
+        });
         validateDeploymentCheckpoint(evidence, unit.family, checkpoint.id, label);
         const screenshotPath = await screenshot(
           page,
@@ -1371,6 +1585,12 @@ async function runDeploymentCase(browser, engine, viewport) {
           audit: evidence.audit,
           screenshot: screenshotPath,
           screenshotSha256,
+        });
+        lifecycle?.event("deployment checkpoint complete", {
+          page,
+          family: unit.family,
+          checkpoint: checkpoint.id,
+          milestone: `${unit.family}/${checkpoint.id} deployment checkpoint complete`,
         });
       }
       const fullyInside = unitResult.checkpoints[0];
@@ -1437,7 +1657,10 @@ async function runDeploymentCase(browser, engine, viewport) {
       result.status = "failed";
       result.error = `Browser diagnostics were not clean: ${JSON.stringify(diagnostics)}`;
     }
+    lifecycle?.event("case complete", { status: result.status, error: result.error ?? null });
+    lifecycle?.markContextCloseBegin(context);
     await context.close();
+    if (lifecycle?.file) result.lifecycleLog = lifecycle.file;
   }
   return result;
 }
@@ -1460,14 +1683,46 @@ for (const engine of engines) {
   for (const viewport of viewports) {
     if (caseTypes.includes("hud")) results.push(await runHudCase(browserType, engine, viewport));
     if (caseTypes.includes("crawler-equipment") || caseTypes.includes("deployment")) {
-      const browser = await browserType.launch({ headless: true });
-      try {
-        if (caseTypes.includes("crawler-equipment")) {
-          results.push(await runEquipmentCase(browser, engine, viewport, runtimeEvidence));
+      const lifecycleByCase = new Map();
+      for (const caseType of ["crawler-equipment", "deployment"]) {
+        if (caseTypes.includes(caseType)) {
+          lifecycleByCase.set(caseType, await createLifecycleDiagnostics({
+            engine,
+            viewport,
+            caseType,
+            name: `${engine}-${viewport.width}x${viewport.height}`,
+          }));
         }
-        if (caseTypes.includes("deployment")) results.push(await runDeploymentCase(browser, engine, viewport));
+      }
+      let browser = null;
+      try {
+        lifecycleByCase.forEach((lifecycle) => lifecycle.setPhase("browser launch"));
+        browser = await browserType.launch({ headless: true });
+        lifecycleByCase.forEach((lifecycle) => lifecycle.attachBrowser(browser));
+        if (caseTypes.includes("crawler-equipment")) {
+          results.push(await runEquipmentCase(
+            browser,
+            engine,
+            viewport,
+            runtimeEvidence,
+            lifecycleByCase.get("crawler-equipment"),
+          ));
+        }
+        if (caseTypes.includes("deployment")) {
+          results.push(await runDeploymentCase(
+            browser,
+            engine,
+            viewport,
+            lifecycleByCase.get("deployment"),
+          ));
+        }
       } finally {
-        await browser.close();
+        lifecycleByCase.forEach((lifecycle) => {
+          lifecycle.setPhase("browser teardown");
+          lifecycle.markBrowserCloseBegin();
+        });
+        if (browser) await browser.close();
+        for (const lifecycle of lifecycleByCase.values()) await lifecycle.flush();
       }
     }
   }
