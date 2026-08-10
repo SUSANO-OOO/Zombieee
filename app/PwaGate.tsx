@@ -497,8 +497,16 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
   const startInstall = useCallback(() => {
     if (!targetManifest || !installPlan) return;
+    // If a newer release exists while the active pack is partially missing,
+    // repair directly into the published generation. Repairing the old
+    // manifest first would download the same bytes and then require a second
+    // update/commit step.
+    if (publishedManifest && updateEvaluation?.available) {
+      void runDownload(updateEvaluation.diff.downloadable, publishedManifest, "update");
+      return;
+    }
     void runDownload(installPlan.pending, targetManifest, installedManifest ? "repair" : "install");
-  }, [installPlan, installedManifest, runDownload, targetManifest]);
+  }, [installPlan, installedManifest, publishedManifest, runDownload, targetManifest, updateEvaluation]);
 
   const startUpdate = useCallback(() => {
     if (!publishedManifest || !updateEvaluation?.available) return;

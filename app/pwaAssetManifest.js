@@ -288,19 +288,26 @@ export function diffAssetManifests(currentManifest, nextManifest, { retainedHash
   const currentByPath = new Map(currentAssets.map((asset) => [asset.path, asset]));
   const nextByPath = new Map(nextAssets.map((asset) => [asset.path, asset]));
 
-  const available = retainedHashes instanceof Set
+  const hasStorageEvidence = retainedHashes instanceof Set;
+  const available = hasStorageEvidence
     ? new Set(retainedHashes)
     : new Set(currentAssets.map((asset) => asset.hash));
 
   const added = [];
   const changed = [];
+  const missing = [];
   const unchanged = [];
   const reused = [];
 
   for (const asset of sortManifestAssets(nextAssets)) {
     const previous = currentByPath.get(asset.path);
     if (previous && previous.hash === asset.hash) {
-      unchanged.push(asset);
+      // A matching manifest entry describes what the old generation expects,
+      // not what Cache Storage still contains. When the caller supplied live
+      // storage evidence, OS eviction or an interrupted old install must put
+      // the unchanged path back into the download queue.
+      if (!hasStorageEvidence || available.has(asset.hash)) unchanged.push(asset);
+      else missing.push(asset);
       continue;
     }
     // The bytes are already on the device under another path or an older
@@ -314,11 +321,12 @@ export function diffAssetManifests(currentManifest, nextManifest, { retainedHash
   }
 
   const removed = sortManifestAssets(currentAssets.filter((asset) => !nextByPath.has(asset.path)));
-  const downloadable = sortManifestAssets([...added, ...changed]);
+  const downloadable = sortManifestAssets([...added, ...changed, ...missing]);
 
   return {
     added: sortManifestAssets(added),
     changed: sortManifestAssets(changed),
+    missing: sortManifestAssets(missing),
     unchanged: sortManifestAssets(unchanged),
     reused: sortManifestAssets(reused),
     removed,
