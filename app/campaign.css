@@ -400,6 +400,14 @@
   .event-portrait { bottom:calc(25% - 62px + var(--app-viewport-safe-bottom)); }
 }
 
+@media (min-width:901px) and (max-width:960px) and (max-height:430px) and (orientation:landscape) {
+  /* Large-screen iPhones expose a 932x430 CSS viewport. Their painted torso
+     otherwise ends above the dialogue panel even though the transparent
+     portrait element nearly touches it. Preserve the canonical painted
+     12-40px portrait/dialogue overlap at the physical-device boundary. */
+  .event-portrait { bottom:calc(25% - 68px + var(--app-viewport-safe-bottom)); }
+}
+
 @media (prefers-reduced-motion:reduce) {
   .title-atmosphere i,.effect-shake .event-vignette,.effect-fade::after,.upgrade-feedback,.employment-available-popup,.employment-available-popup > section,.employment-dossier-art { animation:none!important; }
 }

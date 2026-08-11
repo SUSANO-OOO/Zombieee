@@ -23,7 +23,7 @@ const playwright = process.env.PLAYWRIGHT_MODULE_PATH
   : await import("playwright");
 const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit };
 const engines = (process.env.ISSUE156_REMEDIATION_QA_ENGINES ?? "chromium,webkit").split(",");
-const viewports = (process.env.ISSUE156_REMEDIATION_QA_VIEWPORTS ?? "667x375,736x414,844x340,844x390,1280x720")
+const viewports = (process.env.ISSUE156_REMEDIATION_QA_VIEWPORTS ?? "667x375,736x414,844x340,844x390,932x430,1280x720")
   .split(",")
   .map((value) => {
     const [width, height] = value.split("x").map(Number);
@@ -283,7 +283,7 @@ const results = [];
 for (const engine of engines) {
   invariant(browserTypes[engine], `unsupported browser engine ${engine}`);
   for (const viewport of viewports) {
-    const safeAreaModes = viewport.width <= 900
+    const safeAreaModes = viewport.width <= 960
       ? ["production-env", "iphone-landscape"]
       : ["production-env"];
     for (const safeAreaMode of safeAreaModes) {
@@ -300,7 +300,7 @@ const summary = {
   engines,
   viewports,
   expectedCases: engines.length * viewports.reduce(
-    (total, viewport) => total + (viewport.width <= 900 ? 2 : 1),
+    (total, viewport) => total + (viewport.width <= 960 ? 2 : 1),
     0,
   ),
   total: results.length,

@@ -11,6 +11,7 @@ import {
 } from "../app/battleHudLayout.js";
 import {
   CRAWLER_DEPLOYMENT_CHECKPOINTS,
+  CRAWLER_FOREGROUND_CLEAR_PROGRESS,
   crawlerDeploymentUnitFamily,
 } from "../app/crawlerDeployment.js";
 import {
@@ -45,6 +46,7 @@ const canonicalViewports = [
   { width: 736, height: 414 },
   { width: 844, height: 390 },
   { width: 844, height: 340 },
+  { width: 932, height: 430 },
   { width: 1280, height: 720 },
 ];
 const canonicalDeploymentUnits = Object.freeze([
@@ -52,6 +54,7 @@ const canonicalDeploymentUnits = Object.freeze([
   Object.freeze({ family: "mizuchi", kind: "ranger" }),
   Object.freeze({ family: "paisen", kind: "brawler" }),
   Object.freeze({ family: "crazy-king", kind: "crazy-king" }),
+  Object.freeze({ family: "standard-human", kind: "kumaverson" }),
   Object.freeze({ family: "mayo-chan", kind: "mayo-chan" }),
   Object.freeze({ family: "tatara", kind: "brute" }),
   Object.freeze({ family: "standard-human", kind: "medic" }),
@@ -73,7 +76,7 @@ const engines = parseUniqueAxis(
 );
 const viewportKeys = parseUniqueAxis(
   "V099_FINAL_REMEDIATION_QA_VIEWPORTS",
-  process.env.V099_FINAL_REMEDIATION_QA_VIEWPORTS ?? "667x375,736x414,844x390,844x340,1280x720",
+  process.env.V099_FINAL_REMEDIATION_QA_VIEWPORTS ?? "667x375,736x414,844x390,844x340,932x430,1280x720",
   canonicalViewports.map(({ width, height }) => `${width}x${height}`),
 );
 const viewports = viewportKeys.map((key) => {
@@ -264,7 +267,7 @@ function relativeEvidencePath(filePath) {
 }
 
 function safeAreaForViewport(viewport) {
-  return viewport.width <= 900
+  return viewport.width <= 960
     ? { top: 0, right: 44, bottom: 21, left: 44, preset: "iphone-landscape" }
     : { top: 0, right: 0, bottom: 0, left: 0, preset: null };
 }
@@ -698,9 +701,20 @@ async function measureHud(page, viewport, label) {
       edge,
       Math.max(0, Number.parseFloat(rootStyle.getPropertyValue(`--app-viewport-safe-${edge}`)) || 0),
     ]));
+    const visual = window.visualViewport;
+    const visualViewport = {
+      left: visual?.offsetLeft ?? 0,
+      top: visual?.offsetTop ?? 0,
+      width: visual?.width ?? innerWidth,
+      height: visual?.height ?? innerHeight,
+    };
+    visualViewport.right = visualViewport.left + visualViewport.width;
+    visualViewport.bottom = visualViewport.top + visualViewport.height;
     const ownedRects = [top, bottom, ...topZones, ...bottomZones].map(rect).filter(Boolean);
-    const insideViewport = (box) => box.left >= -.5 && box.top >= -.5
-      && box.right <= innerWidth + .5 && box.bottom <= innerHeight + .5;
+    const insideViewport = (box) => box.left >= visualViewport.left - .5
+      && box.top >= visualViewport.top - .5
+      && box.right <= visualViewport.right + .5
+      && box.bottom <= visualViewport.bottom + .5;
     const controlGroups = [
       [...document.querySelectorAll(".battle-controls-zone button")].filter(visible),
       [...document.querySelectorAll(".support-row > button")].filter(visible),
@@ -761,6 +775,8 @@ async function measureHud(page, viewport, label) {
     };
     return {
       viewport: { width: innerWidth, height: innerHeight },
+      visualViewport,
+      layoutMode: document.querySelector(".game-frame")?.getAttribute("data-battle-hud-layout") ?? null,
       safeInsets,
       top: rect(top),
       bottom: rect(bottom),
@@ -827,6 +843,13 @@ async function measureHud(page, viewport, label) {
   const clearBattlefieldHeight = measured.bottom.top - measured.top.bottom;
   let expectedSafeAreaAdjusted = null;
   if (expectedLayout) {
+    invariant(measured.layoutMode === "mobile", `${label}: physical-phone HUD contract was not activated`);
+    invariant(measured.ownedZonesInViewport,
+      `${label}: mobile HUD is clipped by the visual viewport ${JSON.stringify(measured.visualViewport)}`);
+    invariant(!measured.documentOverflow.horizontal && !measured.documentOverflow.vertical,
+      `${label}: mobile document overflow ${JSON.stringify(measured.documentOverflow)}`);
+    invariant(Object.values(measured.requiredHudInformation).every(Boolean),
+      `${label}: required mobile HUD information is missing ${JSON.stringify(measured.requiredHudInformation)}`);
     invariant(measured.topRatios.every((value, index) => ratioClose(value, [.28, .38, .34][index])),
       `${label}: top 28/38/34 ownership drift ${JSON.stringify(measured.topRatios)}`);
     const expectedBottomRatios = [
@@ -1094,13 +1117,23 @@ async function runHudCase(browserType, engine, viewport) {
     ));
     invariant(Number.isInteger(deploymentPrepared?.attackerId),
       `${name}: deployment-banner fixture is unavailable`);
-    const deploymentFrame = await queueAndPauseAtFirstDeploymentFrame(
+    const deploymentStart = await queueAndPauseAtFirstDeploymentFrame(
       page,
-      "scout",
+      "kumaverson",
       `${name}/deployment-banner`,
     );
-    invariant(deploymentFrame.audit?.deploymentPlan?.checkpoint === "fully-inside",
+    invariant(deploymentStart.audit?.deploymentPlan?.checkpoint === "fully-inside",
       `${name}: deployment banner did not freeze the production progress-0 frame`);
+    await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+    const deploymentFrame = await pauseAtDeploymentCheckpoint(
+      page,
+      deploymentStart.fighter.id,
+      "first-visible",
+      CRAWLER_DEPLOYMENT_CHECKPOINTS[1].progress,
+      `${name}/deployment-banner-visible`,
+    );
+    invariant(deploymentFrame.audit?.deploymentPlan?.unitPass === "after-foreground-mask",
+      `${name}: the first visible Kumaverson frame is still hidden behind the vehicle`);
     const deploymentBanner = await captureHudState(page, viewport, name, "deployment-banner", lifecycle);
     invariant(deploymentBanner.semantic.bannerText.includes("移動拠点から出撃"),
       `${name}: deployment banner copy is missing`);
@@ -1603,8 +1636,11 @@ function validateDeploymentCheckpoint(evidence, expectedFamily, expectedCheckpoi
   } else {
     invariant(audit.deploymentPlan.active === true,
       `${label}: deployment plan became inactive before the ramp exit`);
-    invariant(audit.deploymentPlan.unitPass === "before-foreground-mask",
-      `${label}: physical CRAWLER occlusion is not owned by the foreground mask`);
+    const expectedUnitPass = evidence.observedProgress >= CRAWLER_FOREGROUND_CLEAR_PROGRESS
+      ? "after-foreground-mask"
+      : "before-foreground-mask";
+    invariant(audit.deploymentPlan.unitPass === expectedUnitPass,
+      `${label}: physical CRAWLER door-plane ownership is incorrect`);
   }
 }
 
@@ -1895,6 +1931,13 @@ invariant(results.length === expectedCaseCount,
 invariant(summary.failed === 0,
   `Final-remediation QA failed ${summary.failed}/${summary.total} cases; see ${relativeEvidencePath(summaryPath)}`);
 if (canonicalAxes) {
-  invariant(summary.screenshotCount === (engines.length * viewports.length * (8 + 15 + 42)),
+  const expectedScreenshotsPerAxis = 8
+    + 15
+    + CRAWLER_DEPLOYMENT_CHECKPOINTS.length * canonicalDeploymentUnits.length;
+  invariant(summary.screenshotCount === (engines.length * viewports.length * expectedScreenshotsPerAxis),
     `Canonical final-remediation screenshot matrix is incomplete: ${summary.screenshotCount}`);
+  const expectedContactSheets = engines.length * viewports.length
+    * (2 + canonicalDeploymentUnits.length);
+  invariant(summary.contactSheetCount === expectedContactSheets,
+    `Canonical final-remediation contact-sheet matrix is incomplete: ${summary.contactSheetCount}`);
 }

@@ -17,8 +17,9 @@ const availableViewports = [
   { width: 1280, height: 720 },
   { width: 844, height: 390 },
   { width: 844, height: 340 },
+  { width: 932, height: 430 },
 ];
-const requestedViewportKeys = new Set((process.env.V099_PRESENTATION_QA_VIEWPORTS ?? "1280x720,844x390,844x340")
+const requestedViewportKeys = new Set((process.env.V099_PRESENTATION_QA_VIEWPORTS ?? "1280x720,844x390,844x340,932x430")
   .split(",").map((value) => value.trim()).filter(Boolean));
 const viewports = availableViewports.filter(({ width, height }) => requestedViewportKeys.has(`${width}x${height}`));
 if (viewports.length !== requestedViewportKeys.size) {
@@ -362,7 +363,7 @@ for (const engine of engines) {
         invariant(commandBlockedCards.every(({ stateText, stateFontSize, stateFits }) => (
           stateText === "指揮不足" && stateFontSize >= 12 && stateFits === true
         )), `${name}: disabled unit reason is clipped or undersized: ${JSON.stringify(commandBlockedCards)}`);
-        const finalMobileReadabilityViewport = viewport.width <= 900 && viewport.height <= 430;
+        const finalMobileReadabilityViewport = viewport.width <= 960 && viewport.height <= 430;
         invariant(disabledReadability.support.every(({ fontSize, contained }) => (
           fontSize >= (finalMobileReadabilityViewport ? 12 : 5) && contained
         )),

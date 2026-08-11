@@ -19,6 +19,7 @@ const VIEWPORTS = [
   { width: 736, height: 414 },
   { width: 844, height: 340 },
   { width: 844, height: 390 },
+  { width: 932, height: 430 },
   { width: 1280, height: 720 },
 ];
 
@@ -39,7 +40,7 @@ test("all 18 event portraits retain a safe head margin and authored face-center 
     assert.ok(profile.focusY >= .18 && profile.focusY <= .38, `${kind}/face-center`);
     const source = await alphaTop(path.join(ROOT, "public", profile.path));
     for (const viewport of VIEWPORTS) {
-      const compact = viewport.width <= 900 && viewport.height <= 430;
+      const compact = viewport.width <= 960 && viewport.height <= 430;
       const portraitHeightRatio = compact && kind === "guide" ? .6
         : compact ? .68
           : kind === "guide" || kind === "radio" ? .74 : .7;

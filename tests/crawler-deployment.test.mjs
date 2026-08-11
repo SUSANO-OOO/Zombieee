@@ -3,6 +3,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   CRAWLER_DEPLOYMENT_CHECKPOINTS,
+  CRAWLER_FOREGROUND_CLEAR_PROGRESS,
   CRAWLER_DEPLOYMENT_UNIT_FAMILIES,
   CRAWLER_DOOR_PHASES,
   advanceCrawlerDoorRuntime,
@@ -98,7 +99,7 @@ test("six deployment checkpoints use a single alpha-1 draw and authored z-order 
       assert.equal(Object.isFrozen(plan), true);
       assert.equal(Object.isFrozen(plan.drawOrder), true);
 
-      if (checkpoint.id === "fully-outside") {
+      if (checkpoint.progress >= CRAWLER_FOREGROUND_CLEAR_PROGRESS) {
         assert.equal(plan.unitPass, "after-foreground-mask");
         assert.equal(plan.foregroundMaskPass, "before-unit");
         assert.deepEqual(plan.drawOrder, [
