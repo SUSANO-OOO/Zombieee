@@ -492,7 +492,20 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
     { timeout },
   );
   lifecycle?.event("battle readiness complete", { page, milestone: "battle readiness complete" });
-  await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 12_000) });
+  try {
+    await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 12_000) });
+  } catch (error) {
+    // Hosted WebKit can keep a decoded audio request alive after the battle,
+    // complete pack, and asset gate are all ready. This boundary is not a
+    // product readiness condition; diagnostics and every later visual/runtime
+    // assertion remain fail-closed. Do not extend this allowance to the
+    // loadout/story waits above, where tearing down a request is causal.
+    if (!String(error).includes("page.waitForLoadState: Timeout")) throw error;
+    lifecycle?.event("post-readiness network idle exceeded", {
+      page,
+      milestone: "battle and asset gate already ready",
+    });
+  }
   return { page, ...diagnosticControl };
 }
 

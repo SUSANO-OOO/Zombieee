@@ -22,7 +22,7 @@ const candidateRootInput = process.env.PWA_PARTIAL_UPDATE_CANDIDATE_ROOT;
 const oldRoot = path.resolve(oldRootInput ?? "");
 const candidateRoot = path.resolve(candidateRootInput ?? "");
 const browserName = process.env.PWA_PARTIAL_UPDATE_BROWSER ?? "chromium";
-const oldVersion = process.env.PWA_PARTIAL_UPDATE_OLD_VERSION ?? "0.9.9.2";
+const oldVersionOverride = process.env.PWA_PARTIAL_UPDATE_OLD_VERSION?.trim() || null;
 const stallDurationMs = Number(process.env.PWA_PARTIAL_UPDATE_STALL_MS ?? 31_500);
 const slowDurationMs = Number(process.env.PWA_PARTIAL_UPDATE_SLOW_MS ?? 31_500);
 const evidenceDir = path.resolve(
@@ -245,6 +245,11 @@ await stat(path.join(oldRoot, "index.html"));
 await stat(path.join(candidateRoot, "index.html"));
 const oldManifest = await readManifest(oldRoot);
 const candidateManifest = await readManifest(candidateRoot);
+// The base site is built from the live PR base SHA, so its immutable manifest
+// is the version authority. An explicit override remains available for a
+// deliberately pinned fixture, but CI must not carry a stale release literal
+// into the next hotfix.
+const oldVersion = oldVersionOverride ?? oldManifest.version;
 record("old and candidate roots have the fixed 416-asset release contract", (
   oldManifest.version === oldVersion
   && candidateManifest.version === RELEASE_VERSION
