@@ -535,7 +535,7 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
     <div className="event-vignette" />
     <div className={`event-portrait active ${line.side} ${line.portrait === "guide" ? "guide" : line.portrait === "radio" ? "radio" : ""}`} data-expression={line.expression} data-portrait={line.portrait} style={portraitStyle} aria-hidden="true" />
     <div className="event-controls"><button onClick={() => setLogOpen((value) => !value)}>会話ログ</button><button onClick={() => setSkipOpen(true)}>スキップ</button></div>
-    {logOpen && <section className="event-log" aria-label="会話ログ"><header><b>会話ログ</b><button onClick={() => setLogOpen(false)}>閉じる</button></header>{log.map((entry: { id: string; speaker: string; text: string }) => <p key={entry.id}><b>{publicDisplayText(entry.speaker)}</b><span>{publicDisplayText(entry.text)}</span></p>)}</section>}
+    {logOpen && <section className="event-log" role="dialog" aria-modal="true" aria-label="会話ログ" onKeyDown={(event) => { if (event.key === "Escape") setLogOpen(false); }}><header><b>会話ログ</b><button autoFocus onClick={() => setLogOpen(false)}>閉じる</button></header>{log.map((entry: { id: string; speaker: string; text: string }) => <p key={entry.id}><b>{publicDisplayText(entry.speaker)}</b><span>{publicDisplayText(entry.text)}</span></p>)}</section>}
     <button className="dialogue-box" onClick={advance} disabled={silenceTail} aria-busy={silenceTail} aria-label="セリフを送る">
       <span className="dialogue-name"><b>{publicDisplayText(line.speaker)}</b><small>{publicDisplayText(line.role)}</small></span>
       <span className="dialogue-text">{publicDisplayText(line.text)}</span>

@@ -76,6 +76,13 @@ const OUTSIDE_DRAW_ORDER = Object.freeze([
   "unit",
 ]);
 
+// The authored fighter origin crosses the CRAWLER door plane before its feet
+// reach the ramp foot. Keeping the whole sprite behind the vehicle until
+// progress 1 hid the fighter's body and left only a hand visible on phones.
+// Switch ownership at the first authored door-clear checkpoint; the authored
+// mask still supplies physical occlusion before that point.
+export const CRAWLER_FOREGROUND_CLEAR_PROGRESS = .08;
+
 /**
  * Opaque authored layers used by the deployment composite. The closed host is
  * always the base; the authored interior and foreground mask switch as
@@ -87,7 +94,8 @@ export function crawlerDeploymentCompositePlan({
 } = {}) {
   const progress = clamp01(doorProgress);
   const doorOpen = progress > 0;
-  const outside = entryRampCleared === true || progress >= 1;
+  const outside = entryRampCleared === true
+    || progress >= CRAWLER_FOREGROUND_CLEAR_PROGRESS;
   return Object.freeze({
     checkpoint: crawlerDeploymentCheckpoint(progress),
     layers: Object.freeze([
@@ -127,7 +135,8 @@ export function crawlerDeploymentCheckpoint(progress) {
  * This contract deliberately exposes no rectangle or reveal width. The unit is
  * drawn exactly once at alpha 1; the authored foreground hull/door-frame layer
  * supplies physical occlusion while the unit is inside the vehicle. Once the
- * ramp threshold is cleared, the same unit draw moves in front of that layer.
+ * fighter's body clears the authored door plane, the same unit draw moves in
+ * front of that layer; gameplay readiness still waits for the ramp foot.
  */
 export function crawlerDeploymentRenderPlan({
   side,
@@ -148,7 +157,8 @@ export function crawlerDeploymentRenderPlan({
     });
   }
 
-  const outside = entryRampCleared === true || clamp01(progress) >= 1;
+  const outside = entryRampCleared === true
+    || clamp01(progress) >= CRAWLER_FOREGROUND_CLEAR_PROGRESS;
   return Object.freeze({
     active: true,
     family: crawlerDeploymentUnitFamily(unitKind),

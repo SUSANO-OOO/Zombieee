@@ -24,6 +24,8 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   const tests = workflow.indexOf("run: npm test");
   assert.ok(install >= 0 && install < lint && lint < content && content < tests);
   assert.match(workflow, /name: pr-verify-provenance/u);
+  assert.match(workflow, /932x430/u);
+  assert.doesNotMatch(workflow, /PWA_PARTIAL_UPDATE_OLD_VERSION:\s*0\.9\.9\.\d+/u);
   assert.doesNotMatch(workflow, /contents:\s*write/u);
   assert.doesNotMatch(workflow, /gh pr merge|gh pr edit|github-script/u);
 });

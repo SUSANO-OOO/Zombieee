@@ -61,8 +61,9 @@ function insetRect(rect, insetX, top, height) {
  * Pure layout contract for supported landscape-phone viewports. Runtime
  * CSS/DOM may implement the rectangles with grid columns, but it must
  * preserve these ownership boundaries and type minima. The width/height
- * range intentionally includes the 16:9 667x375 CSS viewport used by older
- * physical iPhones; exact-width matching would silently fall back to the
+ * range intentionally includes both the 16:9 667x375 CSS viewport used by
+ * older physical iPhones and the 932x430 CSS viewport used by current
+ * large-screen iPhones. Exact-width matching would silently fall back to the
  * legacy clipped HUD.
  */
 export function mobileBattleHudLayout({
@@ -76,7 +77,7 @@ export function mobileBattleHudLayout({
   const viewportWidth = finiteDimension(width);
   const viewportHeight = finiteDimension(height);
   const landscapePhone = viewportWidth >= 640
-    && viewportWidth <= 900
+    && viewportWidth <= 960
     && viewportHeight >= 320
     && viewportHeight <= 430
     && viewportWidth > viewportHeight;

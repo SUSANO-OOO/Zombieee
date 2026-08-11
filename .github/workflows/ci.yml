@@ -129,14 +129,13 @@ jobs:
           PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
           PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
           PWA_PARTIAL_UPDATE_BROWSER: chromium
-          PWA_PARTIAL_UPDATE_OLD_VERSION: 0.9.9.2
           PWA_PARTIAL_UPDATE_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/pwa-partial-update/chromium
         run: npm run qa:pwa-partial-update
 
       - name: Capture Issue 156 canonical HUD evidence (Chromium)
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,1280x720
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,932x430,1280x720
           V099_FINAL_REMEDIATION_QA_CASES: hud
           V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/chromium
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
@@ -144,7 +143,7 @@ jobs:
       - name: Capture Issue 156 final-canvas deployment evidence (Chromium)
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,1280x720
+          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,932x430,1280x720
           V099_FINAL_REMEDIATION_QA_CASES: deployment
           V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/deployment/chromium
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
@@ -241,6 +240,7 @@ jobs:
           - 736x414
           - 844x390
           - 844x340
+          - 932x430
           - 1280x720
 
     steps:

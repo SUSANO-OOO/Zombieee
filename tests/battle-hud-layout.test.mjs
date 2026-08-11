@@ -13,6 +13,7 @@ const RELEASE_VIEWPORTS = Object.freeze([
   Object.freeze({ width: 736, height: 414 }),
   Object.freeze({ width: 844, height: 390 }),
   Object.freeze({ width: 844, height: 340 }),
+  Object.freeze({ width: 932, height: 430 }),
 ]);
 
 function right(rect) {
@@ -74,7 +75,7 @@ test("bottom ownership keeps resources, unit cards, and support/objective in sep
 });
 
 test("safe-area insets are deducted once from the shared content rectangle", () => {
-  for (const viewport of RELEASE_VIEWPORTS.filter(({ width }) => width === 844)) {
+  for (const viewport of RELEASE_VIEWPORTS.filter(({ width }) => width >= 844)) {
     const layout = mobileBattleHudLayout({
       ...viewport,
       safeAreaTop: 0,
@@ -84,15 +85,20 @@ test("safe-area insets are deducted once from the shared content rectangle", () 
     });
     assert.ok(layout);
     assert.deepEqual(layout.safeArea, { top: 0, right: 44, bottom: 21, left: 44 });
-    assert.deepEqual(layout.content, { x: 44, y: 0, width: 756, height: viewport.height - 21 });
+    assert.deepEqual(layout.content, {
+      x: 44,
+      y: 0,
+      width: viewport.width - 88,
+      height: viewport.height - 21,
+    });
     assert.equal(layout.top.crawler.x, 44);
-    assert.equal(right(layout.top.controls), 800);
+    assert.equal(right(layout.top.controls), viewport.width - 44);
     assert.equal(layout.bottom.resources.x, 44);
-    assert.equal(right(layout.bottom.support), 800);
+    assert.equal(right(layout.bottom.support), viewport.width - 44);
     assert.equal(bottom(layout.bottom.support), viewport.height - 21);
     assert.ok(layout.bottom.resources.width >= 104);
     assert.ok(layout.bottom.support.width >= 268);
-    assert.equal(right(layout.bottomContent.objective), 800);
+    assert.equal(right(layout.bottomContent.objective), viewport.width - 44);
   }
 });
 
@@ -188,7 +194,8 @@ test("mobile type contract meets the final readability minima without global sca
 test("the focused helper does not silently claim unsupported desktop or portrait layouts", () => {
   assert.equal(mobileBattleHudLayout({ width: 1280, height: 720 }), null);
   assert.equal(mobileBattleHudLayout({ width: 639, height: 375 }), null);
-  assert.equal(mobileBattleHudLayout({ width: 901, height: 390 }), null);
+  assert.ok(mobileBattleHudLayout({ width: 932, height: 430 }));
+  assert.equal(mobileBattleHudLayout({ width: 961, height: 390 }), null);
   assert.equal(mobileBattleHudLayout({ width: 390, height: 844 }), null);
   assert.equal(mobileBattleHudLayout({ width: 844, height: 0 }), null);
 });

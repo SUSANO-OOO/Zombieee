@@ -19,6 +19,7 @@ const VIEWPORTS = [
   { width: 736, height: 414 },
   { width: 844, height: 340 },
   { width: 844, height: 390 },
+  { width: 932, height: 430 },
   { width: 1280, height: 720 },
 ];
 
@@ -39,7 +40,7 @@ test("all 18 event portraits retain a safe head margin and authored face-center 
     assert.ok(profile.focusY >= .18 && profile.focusY <= .38, `${kind}/face-center`);
     const source = await alphaTop(path.join(ROOT, "public", profile.path));
     for (const viewport of VIEWPORTS) {
-      const compact = viewport.width <= 900 && viewport.height <= 430;
+      const compact = viewport.width <= 960 && viewport.height <= 430;
       const portraitHeightRatio = compact && kind === "guide" ? .6
         : compact ? .68
           : kind === "guide" || kind === "radio" ? .74 : .7;
@@ -60,6 +61,22 @@ test("dialogue typography and advance target keep mobile acceptance minima", asy
   assert.match(css, /dialogue-text[^}]*clamp\(12px,/u);
   assert.match(css, /dialogue-box > em[^}]*min-width:44px[^}]*min-height:44px/u);
   assert.doesNotMatch(css, /dialogue-(?:text|name)[^}]*font(?:-size)?:[^;}]*(?:7px|9px)/u);
+});
+
+test("conversation log keeps readable copy, a touch-safe close action, and modal semantics", async () => {
+  const css = await readFile(path.join(ROOT, "app", "campaign.css"), "utf8");
+  const screen = await readFile(path.join(ROOT, "app", "CampaignScreens.tsx"), "utf8");
+  assert.match(css, /event-log header b[^}]*font:900 14px/u);
+  assert.match(css, /event-log button[^}]*min-height:44px[^}]*font:800 14px/u);
+  assert.match(css, /event-log p[^}]*font:700 14px/u);
+  assert.match(css, /event-log p b[^}]*font-size:12px/u);
+  assert.match(css, /event-log[^}]*overscroll-behavior:contain/u);
+  assert.match(css, /campaign-overlay > \.event-log \{ width:auto; min-height:0; margin:0; \}/u);
+  assert.match(css, /game-frame \.campaign-overlay > \.event-log \{\s*inset:calc\(6px \+ var\(--app-viewport-safe-top\)\)/u);
+  assert.match(css, /max-width:960px[^}]*max-height:430px[^}]*orientation:landscape/u);
+  assert.doesNotMatch(css, /event-log (?:header b|button|p)[^}]*(?:font|font-size):[^;}]*(?:7px|8px|9px)/u);
+  assert.match(screen, /className="event-log" role="dialog" aria-modal="true" aria-label="会話ログ"/u);
+  assert.match(screen, /button autoFocus onClick=\{\(\) => setLogOpen\(false\)\}>閉じる/u);
 });
 
 test("portrait torso overlap rejects both sides of the canonical 12-40px range", () => {
