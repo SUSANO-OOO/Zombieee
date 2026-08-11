@@ -259,6 +259,92 @@ async function runCase(engine, viewport, safeAreaMode) {
       });
     }
     invariant(result.portraits.length === 18, `${engine}: portrait inventory incomplete`);
+
+    // Populate the real authored log through the player-facing advance action;
+    // do not inject rows or rewrite runtime state for evidence.
+    for (let advanceIndex = 0; advanceIndex < 4; advanceIndex += 1) {
+      await page.locator(".dialogue-box").click();
+      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    }
+    await page.getByRole("button", { name: "会話ログ" }).click();
+    const eventLog = page.locator(".event-log");
+    await eventLog.waitFor({ state: "visible" });
+    const logPresentation = await eventLog.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const headerTitle = element.querySelector("header b");
+      const close = element.querySelector("header button");
+      const entries = [...element.querySelectorAll("p")];
+      const firstSpeaker = entries[0]?.querySelector("b");
+      const firstBody = entries[0]?.querySelector("span");
+      const dialogue = document.querySelector(".dialogue-box");
+      const controls = document.querySelector(".event-controls");
+      if (!headerTitle || !close || entries.length < 5 || !firstSpeaker || !firstBody || !dialogue || !controls) {
+        throw new Error("conversation log DOM is incomplete");
+      }
+      const closeRect = close.getBoundingClientRect();
+      const dialogueRect = dialogue.getBoundingClientRect();
+      const controlsRect = controls.getBoundingClientRect();
+      const centerX = dialogueRect.left + dialogueRect.width / 2;
+      const centerY = dialogueRect.top + dialogueRect.height / 2;
+      const hit = document.elementFromPoint(centerX, centerY);
+      return {
+        role: element.getAttribute("role"),
+        ariaModal: element.getAttribute("aria-modal"),
+        entryCount: entries.length,
+        rect: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom },
+        visualViewport: {
+          width: window.visualViewport?.width ?? window.innerWidth,
+          height: window.visualViewport?.height ?? window.innerHeight,
+        },
+        typography: {
+          header: Number.parseFloat(getComputedStyle(headerTitle).fontSize),
+          close: Number.parseFloat(getComputedStyle(close).fontSize),
+          speaker: Number.parseFloat(getComputedStyle(firstSpeaker).fontSize),
+          body: Number.parseFloat(getComputedStyle(firstBody).fontSize),
+        },
+        closeTarget: { width: closeRect.width, height: closeRect.height },
+        horizontalOverflow: element.scrollWidth - element.clientWidth,
+        dialogueCenterOwnedByLog: Boolean(hit && element.contains(hit)),
+        backgroundSurfacesCovered: rect.left <= dialogueRect.left && rect.top <= dialogueRect.top
+          && rect.right >= dialogueRect.right && rect.bottom >= dialogueRect.bottom
+          && rect.left <= controlsRect.left && rect.top <= controlsRect.top
+          && rect.right >= controlsRect.right && rect.bottom >= controlsRect.bottom,
+        focusedControl: document.activeElement === close,
+      };
+    });
+    invariant(logPresentation.role === "dialog" && logPresentation.ariaModal === "true",
+      `${engine}: conversation log modal semantics ${JSON.stringify(logPresentation)}`);
+    invariant(logPresentation.entryCount >= 5, `${engine}: authored log was not populated`);
+    invariant(logPresentation.typography.header >= 14 && logPresentation.typography.close >= 14
+      && logPresentation.typography.speaker >= 12 && logPresentation.typography.body >= 14,
+    `${engine}: conversation log typography ${JSON.stringify(logPresentation.typography)}`);
+    invariant(logPresentation.closeTarget.width >= 44 && logPresentation.closeTarget.height >= 44,
+      `${engine}: conversation log close target ${JSON.stringify(logPresentation.closeTarget)}`);
+    invariant(logPresentation.horizontalOverflow <= 1,
+      `${engine}: conversation log horizontal overflow ${logPresentation.horizontalOverflow}`);
+    invariant(logPresentation.rect.left >= -1 && logPresentation.rect.top >= -1
+      && logPresentation.rect.right <= logPresentation.visualViewport.width + 1
+      && logPresentation.rect.bottom <= logPresentation.visualViewport.height + 1,
+    `${engine}: conversation log leaves visual viewport ${JSON.stringify(logPresentation)}`);
+    invariant(logPresentation.dialogueCenterOwnedByLog,
+      `${engine}: background dialogue remains interactive through conversation log`);
+    invariant(logPresentation.backgroundSurfacesCovered,
+      `${engine}: conversation log does not cover background dialogue and controls`);
+    invariant(logPresentation.focusedControl, `${engine}: close action did not receive focus`);
+    const logScreenshot = path.join(
+      evidenceDir,
+      `${engine}-${viewport.width}x${viewport.height}-${safeAreaProfile}-conversation-log.png`,
+    );
+    await page.screenshot({ path: logScreenshot, animations: "disabled" });
+    result.logPresentation = {
+      ...logPresentation,
+      screenshot: relative(logScreenshot),
+      screenshotSha256: await sha256(logScreenshot),
+    };
+    await page.getByRole("button", { name: "閉じる" }).click();
+    invariant(await eventLog.count() === 0, `${engine}: conversation log did not close`);
+    invariant(await page.locator(".dialogue-box").isVisible(), `${engine}: dialogue did not resume after log close`);
+
     result.productionSafeArea = productionSafeArea;
     result.presetSafeArea = presetSafeArea;
     result.safeAreaProfile = safeAreaProfile;

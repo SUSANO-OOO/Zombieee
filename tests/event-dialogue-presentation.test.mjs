@@ -63,6 +63,22 @@ test("dialogue typography and advance target keep mobile acceptance minima", asy
   assert.doesNotMatch(css, /dialogue-(?:text|name)[^}]*font(?:-size)?:[^;}]*(?:7px|9px)/u);
 });
 
+test("conversation log keeps readable copy, a touch-safe close action, and modal semantics", async () => {
+  const css = await readFile(path.join(ROOT, "app", "campaign.css"), "utf8");
+  const screen = await readFile(path.join(ROOT, "app", "CampaignScreens.tsx"), "utf8");
+  assert.match(css, /event-log header b[^}]*font:900 14px/u);
+  assert.match(css, /event-log button[^}]*min-height:44px[^}]*font:800 14px/u);
+  assert.match(css, /event-log p[^}]*font:700 14px/u);
+  assert.match(css, /event-log p b[^}]*font-size:12px/u);
+  assert.match(css, /event-log[^}]*overscroll-behavior:contain/u);
+  assert.match(css, /campaign-overlay > \.event-log \{ width:auto; min-height:0; margin:0; \}/u);
+  assert.match(css, /game-frame \.campaign-overlay > \.event-log \{\s*inset:calc\(6px \+ var\(--app-viewport-safe-top\)\)/u);
+  assert.match(css, /max-width:960px[^}]*max-height:430px[^}]*orientation:landscape/u);
+  assert.doesNotMatch(css, /event-log (?:header b|button|p)[^}]*(?:font|font-size):[^;}]*(?:7px|8px|9px)/u);
+  assert.match(screen, /className="event-log" role="dialog" aria-modal="true" aria-label="会話ログ"/u);
+  assert.match(screen, /button autoFocus onClick=\{\(\) => setLogOpen\(false\)\}>閉じる/u);
+});
+
 test("portrait torso overlap rejects both sides of the canonical 12-40px range", () => {
   assert.equal(PORTRAIT_DIALOGUE_OVERLAP_MIN_PX, 12);
   assert.equal(PORTRAIT_DIALOGUE_OVERLAP_MAX_PX, 40);
