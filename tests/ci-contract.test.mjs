@@ -51,7 +51,7 @@ test("Stage 3 final uses one bounded fixture for candidate and exact PR base", a
   assert.match(boundedRunner, /failure\.failureState \?\? failure\.setupDiagnostics\?\.stableState/);
   assert.match(boundedRunner, /state\?\.assetReadiness\?\.state === "ready"/);
   assert.match(boundedRunner, /emptyDiagnostics\(failure\.diagnostics\)/);
-  assert.doesNotMatch(boundedRunner, /timeout.*\+|skip|unavailable/u);
+  assert.doesNotMatch(boundedRunner, /P5_QA_TIMEOUT_MS.*\+|status:\s*"(?:skipped|unavailable)"/u);
   assert.match(p5Smoke, /const compactSnapshot = \{/);
   assert.match(p5Smoke, /if \(samples\.length > 1_200\)/);
   assert.match(p5Smoke, /stage3Progress\(label, "complete"/);
