@@ -25,6 +25,8 @@ test("F3 runtime evidence is finite, uses production draw/runtime, and observes 
   assert.match(enemyHarness, /groundAnchor/);
   assert.match(enemyHarness, /runtime\.some\(\(\{ renderHistory, corpseRenderHistory \}\)/);
   assert.doesNotMatch(enemyHarness, /runtime\.every\(\(\{ renderHistory, corpseRenderHistory \}\)/);
+  assert.match(enemyHarness, /for \(const kind of inventory\) \{[\s\S]*?const context = await browser\.newContext\(\{ viewport \}\)/);
+  assert.match(enemyHarness, /finally \{[\s\S]*?await context\.close\(\)/);
   assert.match(gameSource, /const enemy = spawnEnemy\(g, kind, lane\)/);
   assert.match(gameSource, /loadImageWithTimeout\(\{[\s\S]*?src: path,[\s\S]*?requireDecode: true/);
   assert.match(gameSource, /includeAllSprites: Boolean\(qaMode \|\| qaScenario\) && !finiteEnemyRuntimeQa/);

@@ -82,56 +82,64 @@ for (const engine of engines) {
   const browser = await browserType.launch({ headless: true });
   try {
     for (const viewport of viewports) {
-      const context = await browser.newContext({ viewport });
-      const page = await context.newPage();
-      const failures = [];
-      page.on("console", (message) => { if (message.type() === "error") failures.push(`console:${message.text()}`); });
-      page.on("pageerror", (error) => failures.push(`page:${error.message}`));
-      page.on("requestfailed", (request) => failures.push(`request:${request.url()}:${request.failure()?.errorText}`));
-      page.on("response", (response) => { if (response.status() >= 400) failures.push(`http:${response.status()}:${response.url()}`); });
-      const url = new URL(baseUrl);
-      url.search = new URLSearchParams({ qa: "mission", stage: "3", state: "start", qaEnemyRuntime: "1" }).toString();
-      const response = await page.goto(url.href, { waitUntil: "domcontentloaded", timeout });
-      invariant(response?.ok(), `${engine}/${viewport.width}x${viewport.height}: navigation failed`);
-      await dismissInstallOffer(page, { timeout });
-      await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready"
-        && typeof window.__ASHFALL_BATTLE_QA__?.prepareEnemyFacingRuntimeProof === "function"
-        && typeof window.__ASHFALL_BATTLE_QA__?.ensureEnemyFacingProofAsset === "function", null, { timeout }).catch(async (error) => {
-        const debug = await page.evaluate(() => ({
-          href: location.href,
-          screen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
-          assetState: document.documentElement.dataset.assetLoadState ?? null,
-          asset: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
-          battleBridge: typeof window.__ASHFALL_BATTLE_QA__?.prepareEnemyFacingRuntimeProof,
-          body: document.body.innerText.slice(0, 500),
-        }));
-        throw new Error(`runtime bridge timeout ${JSON.stringify(debug)}`, { cause: error });
-      });
       for (const kind of inventory) {
-        const asset = await page.evaluate((candidate) => window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(candidate), kind);
-        invariant(asset.kind === kind && asset.width > 0 && asset.height > 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: production sprite did not decode ${JSON.stringify(asset)}`);
-        for (const phase of phases) {
-          const prepared = await page.evaluate(({ kind, phase }) => window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({ kind, phase }), { kind, phase });
-          const samples = [];
-          const started = performance.now();
-          while (performance.now() - started < (phase === "attack" ? 2_600 : 1_500)) {
-            await page.waitForTimeout(40);
-            const audit = await page.evaluate((fighterId) => window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId), prepared.fighterId);
-            samples.push({ at: performance.now() - started, audit });
-            if (samples.length >= 2 && phase === "move" && audit.fighter?.actualXDelta < -.05 && audit.renderHistory.length >= 3) break;
-            if (samples.length >= 2 && phase === "attack" && audit.fighter && (audit.fighter.attackSequence > 0 || audit.fighter.attack > 0) && audit.renderHistory.length >= 3) break;
-            if (samples.length >= 2 && phase === "hit" && audit.fighter && audit.fighter.hp < audit.fighter.maxHp && audit.renderHistory.length >= 3) break;
-            if (samples.length >= 2 && phase === "die" && audit.corpse && audit.corpseRenderHistory.length >= 2) break;
+        // A context owns exactly one audited production atlas. This prevents a
+        // hosted WebKit evidence process from retaining every previously
+        // decoded high-resolution atlas while preserving the same production
+        // simulation, renderer, semantic checks and four phase screenshots.
+        const context = await browser.newContext({ viewport });
+        try {
+          const page = await context.newPage();
+          const failures = [];
+          page.on("console", (message) => { if (message.type() === "error") failures.push(`console:${message.text()}`); });
+          page.on("pageerror", (error) => failures.push(`page:${error.message}`));
+          page.on("requestfailed", (request) => failures.push(`request:${request.url()}:${request.failure()?.errorText}`));
+          page.on("response", (response) => { if (response.status() >= 400) failures.push(`http:${response.status()}:${response.url()}`); });
+          const url = new URL(baseUrl);
+          url.search = new URLSearchParams({ qa: "mission", stage: "3", state: "start", qaEnemyRuntime: "1" }).toString();
+          const response = await page.goto(url.href, { waitUntil: "domcontentloaded", timeout });
+          invariant(response?.ok(), `${engine}/${viewport.width}x${viewport.height}/${kind}: navigation failed`);
+          await dismissInstallOffer(page, { timeout });
+          await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready"
+            && typeof window.__ASHFALL_BATTLE_QA__?.prepareEnemyFacingRuntimeProof === "function"
+            && typeof window.__ASHFALL_BATTLE_QA__?.ensureEnemyFacingProofAsset === "function", null, { timeout }).catch(async (error) => {
+            const debug = await page.evaluate(() => ({
+              href: location.href,
+              screen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
+              assetState: document.documentElement.dataset.assetLoadState ?? null,
+              asset: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
+              battleBridge: typeof window.__ASHFALL_BATTLE_QA__?.prepareEnemyFacingRuntimeProof,
+              body: document.body.innerText.slice(0, 500),
+            }));
+            throw new Error(`runtime bridge timeout ${JSON.stringify(debug)}`, { cause: error });
+          });
+          console.log(`[v0995-enemy-runtime] ${engine}/${viewport.width}x${viewport.height}/${kind}`);
+          const asset = await page.evaluate((candidate) => window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(candidate), kind);
+          invariant(asset.kind === kind && asset.width > 0 && asset.height > 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: production sprite did not decode ${JSON.stringify(asset)}`);
+          for (const phase of phases) {
+            const prepared = await page.evaluate(({ kind, phase }) => window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({ kind, phase }), { kind, phase });
+            const samples = [];
+            const started = performance.now();
+            while (performance.now() - started < (phase === "attack" ? 2_600 : 1_500)) {
+              await page.waitForTimeout(40);
+              const audit = await page.evaluate((fighterId) => window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId), prepared.fighterId);
+              samples.push({ at: performance.now() - started, audit });
+              if (samples.length >= 2 && phase === "move" && audit.fighter?.actualXDelta < -.05 && audit.renderHistory.length >= 3) break;
+              if (samples.length >= 2 && phase === "attack" && audit.fighter && (audit.fighter.attackSequence > 0 || audit.fighter.attack > 0) && audit.renderHistory.length >= 3) break;
+              if (samples.length >= 2 && phase === "hit" && audit.fighter && audit.fighter.hp < audit.fighter.maxHp && audit.renderHistory.length >= 3) break;
+              if (samples.length >= 2 && phase === "die" && audit.corpse && audit.corpseRenderHistory.length >= 2) break;
+            }
+            assertRenderSequence({ engine, viewport, kind, phase, samples });
+            const screenshotFile = path.join(outputDir, `${engine}-${viewport.width}x${viewport.height}-${kind}-${phase}.png`);
+            await page.locator("canvas.battlefield.active").screenshot({ path: screenshotFile });
+            if (["walker", "resonator", "takuya"].includes(kind) && ["move", "attack", "die"].includes(phase)) representativeShots.push(screenshotFile);
+            results.push({ engine, viewport, kind, phase, prepared, samples, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
           }
-          assertRenderSequence({ engine, viewport, kind, phase, samples });
-          const screenshotFile = path.join(outputDir, `${engine}-${viewport.width}x${viewport.height}-${kind}-${phase}.png`);
-          await page.locator("canvas.battlefield.active").screenshot({ path: screenshotFile });
-          if (["walker", "resonator", "takuya"].includes(kind) && ["move", "attack", "die"].includes(phase)) representativeShots.push(screenshotFile);
-          results.push({ engine, viewport, kind, phase, prepared, samples, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
+          invariant(failures.length === 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: ${failures.join("\n")}`);
+        } finally {
+          await context.close();
         }
       }
-      invariant(failures.length === 0, `${engine}/${viewport.width}x${viewport.height}: ${failures.join("\n")}`);
-      await context.close();
     }
   } finally {
     await browser.close();
