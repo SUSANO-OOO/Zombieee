@@ -4,6 +4,13 @@ import test from "node:test";
 
 const ashfallSource = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
 
+test("finite HUD evidence cannot change the production-host asset plan", () => {
+  assert.match(ashfallSource, /finiteHudRuntimeQa = localQaParameters\.get\("qaHudFiniteAssets"\) === "1"/);
+  assert.match(ashfallSource, /\["localhost", "127\.0\.0\.1"\]\.includes\(window\.location\.hostname\)/);
+  assert.match(ashfallSource, /Boolean\(qaMode \|\| qaScenario\)/);
+  assert.match(ashfallSource, /includeAllSprites: Boolean\(qaMode \|\| qaScenario\) && !finiteEnemyRuntimeQa && !finiteHudRuntimeQa/);
+});
+
 test("battle readiness uses one closed blocking plan without degraded-ready", () => {
   assert.match(ashfallSource, /const requiredPlan = requiredBattleAssetPlan\(/u);
   assert.match(ashfallSource, /\.\.\.requiredPlan\.sprites\.map/u);

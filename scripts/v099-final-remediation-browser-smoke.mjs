@@ -277,6 +277,7 @@ function caseUrl(qaMode, { stageNumber = 3, safeAreaPreset = null } = {}) {
   const parameters = { qa: qaMode };
   if (safeAreaPreset) parameters.safe = safeAreaPreset;
   if (qaMode === "mission") Object.assign(parameters, { stage: String(stageNumber), state: "start" });
+  if (caseTypes.length === 1 && caseTypes[0] === "hud") parameters.qaHudFiniteAssets = "1";
   url.search = new URLSearchParams(parameters).toString();
   return String(url);
 }

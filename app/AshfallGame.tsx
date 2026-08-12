@@ -12011,7 +12011,11 @@ export function AshfallGame() {
     // one phone-class document is not a product path and can create artificial
     // decode contention, so this one local-only fixture starts with the normal
     // stage plan and asks the QA bridge to strict-decode each audited kind.
-    const finiteEnemyRuntimeQa = new URLSearchParams(window.location.search).get("qaEnemyRuntime") === "1";
+    const localQaParameters = new URLSearchParams(window.location.search);
+    const finiteEnemyRuntimeQa = localQaParameters.get("qaEnemyRuntime") === "1";
+    const finiteHudRuntimeQa = localQaParameters.get("qaHudFiniteAssets") === "1"
+      && ["localhost", "127.0.0.1"].includes(window.location.hostname)
+      && Boolean(qaMode || qaScenario);
     // A battle may mount only after every visual source that can be reached by
     // its formation, waves, mission objects, support actions and Crawler has
     // decoded. `turned` is included by the plan because any fallen ally can
@@ -12020,7 +12024,7 @@ export function AshfallGame() {
       stageId: activeBattlefieldStageId,
       formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
       enemyKinds: stageEnemyKinds,
-      includeAllSprites: Boolean(qaMode || qaScenario) && !finiteEnemyRuntimeQa,
+      includeAllSprites: Boolean(qaMode || qaScenario) && !finiteEnemyRuntimeQa && !finiteHudRuntimeQa,
     });
     const requiredSpriteKinds = requiredPlan.sprites.map(({ kind }) => kind as UnitKind);
     const persistentPaths: Record<string, string> = Object.fromEntries(
@@ -12180,6 +12184,7 @@ export function AshfallGame() {
       const root = document.documentElement;
       root.dataset.assetResidentScope = finiteEnemyRuntimeQa
         ? "finite-enemy-runtime-qa"
+        : finiteHudRuntimeQa ? "finite-hud-runtime-qa"
         : qaMode || qaScenario ? "all-local-qa" : "stage-and-formation";
       root.dataset.assetResidentStage = activeOperationId;
       root.dataset.assetResidentSprites = String(Object.keys(spriteRefs.current).length);

@@ -63,3 +63,16 @@ test("later-wave enemies are not demoted behind a first-wave boundary", () => {
   );
   assert.ok(plan.stageObjects.some(({ id }) => id === "coastal-power-rig"));
 });
+
+test("a finite HUD runtime plan loads the selected formation and authored stage roster without unrelated sprites", () => {
+  const plan = requiredBattleAssetPlan({
+    stageId: CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET,
+    formationKinds: ["brawler", "scout", "medic", "engineer", "mayo-chan", "ranger", "crazy-king"],
+    enemyKinds: ["walker", "runner"],
+    includeAllSprites: false,
+  });
+  assert.deepEqual(plan.sprites.map(({ kind }) => kind), [
+    "brawler", "scout", "medic", "engineer", "mayo-chan", "ranger", "crazy-king", "walker", "runner", "turned",
+  ]);
+  assert.ok(!plan.sprites.some(({ kind }) => kind === "spindle"));
+});

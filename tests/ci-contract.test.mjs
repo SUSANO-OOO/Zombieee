@@ -40,6 +40,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /run-v099-final-bounded\.mjs/u);
   assert.match(workflow, /for viewport in 667x375 736x414 844x390 844x340 932x430 1280x720/u);
   assert.match(workflow, /V099_FINAL_REMEDIATION_QA_VIEWPORTS="\$viewport"/u);
+  assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(finalBoundedRunner, /attempt <= 2/u);
   const finalBoundedContract = await readFile("scripts/v099-final-bounded-contract.mjs", "utf8");
   assert.match(finalBoundedContract, /summary\.failed === summary\.total/u);
