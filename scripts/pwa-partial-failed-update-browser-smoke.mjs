@@ -484,6 +484,8 @@ try {
   const incidentChangedRequests = candidateTransportRequests
     .filter(({ pathname }) => candidateNewTransportPaths.has(pathname))
     .map(({ pathname }) => pathname);
+  const initialIncidentRequests = incidentRequests.filter((request) => request.index <= 4);
+  const incidentRetryRequests = incidentRequests.filter((request) => request.index > 4);
   record("the physical incident class fetches the exact release delta before exposing three failed pending requests and one held request", (
     partialCache.logicalSatisfied === 156
     && new Set(incidentChangedRequests).size === candidateNewTransportPaths.size
@@ -491,9 +493,14 @@ try {
     && new RegExp(`^${candidateNewHashAssets.length} \\/ 260件`).test(incidentProgress ?? "")
     && incidentCategory === 1
     && failureCounter === 1
-    && incidentRequests.length === 4
-    && incidentRequests.slice(0, 3).every((request) => request.completed)
-    && !incidentRequests[3].completed
+    // Preserve the strict initial concurrency contract. A causally separate
+    // retry may already exist after the 30 second boundary, but it cannot
+    // weaken or replace any member of the exact four-request incident group.
+    && initialIncidentRequests.length === 4
+    && initialIncidentRequests.slice(0, 3).every((request) => request.completed)
+    && !initialIncidentRequests[3].completed
+    && incidentRetryRequests.length <= 1
+    && incidentRetryRequests.every((request) => !request.completed)
   ), {
     startingLogicalAssets: partialCache.logicalSatisfied,
     exactReleaseDelta: [...candidateNewTransportPaths],
@@ -501,6 +508,8 @@ try {
     incidentProgress,
     incidentCategory,
     failureCounter,
+    initialIncidentRequests: initialIncidentRequests.map(({ mode, index, completed }) => ({ mode, index, completed })),
+    incidentRetryRequests: incidentRetryRequests.map(({ mode, index, completed }) => ({ mode, index, completed })),
     requests: incidentRequests.map(({ mode, index, completed }) => ({ mode, index, completed })),
   });
 
