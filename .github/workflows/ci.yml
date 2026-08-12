@@ -135,10 +135,13 @@ jobs:
       - name: Capture Issue 156 canonical HUD evidence (Chromium)
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
-          V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,932x430,1280x720
           V099_FINAL_REMEDIATION_QA_CASES: hud
-          V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/canonical-hud/chromium
-        run: node scripts/run-v099-final-bounded.mjs
+        run: |
+          for viewport in 667x375 736x414 844x390 844x340 932x430 1280x720; do
+            export V099_FINAL_REMEDIATION_QA_VIEWPORTS="$viewport"
+            export V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR="${{ github.workspace }}/issue156-evidence/canonical-hud/chromium/$viewport"
+            node scripts/run-v099-final-bounded.mjs
+          done
 
       - name: Capture Issue 156 final-canvas deployment evidence (Chromium)
         env:
