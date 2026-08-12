@@ -26,8 +26,15 @@ await mkdir(outputDir, { recursive: true });
 await mkdir(compactDir, { recursive: true });
 
 const invariant = (condition, message) => { if (!condition) throw new Error(message); };
-const inventory = productionVisualIntegrityInventory().enemies.map(({ kind }) => kind);
-invariant(inventory.length === 23 && new Set(inventory).size === 23, `expected finite 23 production enemies/bosses, got ${inventory.length}`);
+const fullInventory = productionVisualIntegrityInventory().enemies.map(({ kind }) => kind);
+invariant(fullInventory.length === 23 && new Set(fullInventory).size === 23, `expected finite 23 production enemies/bosses, got ${fullInventory.length}`);
+const requestedKinds = (process.env.V0995_ENEMY_QA_KINDS ?? fullInventory.join(","))
+  .split(",").map((value) => value.trim()).filter(Boolean);
+invariant(requestedKinds.length > 0 && new Set(requestedKinds).size === requestedKinds.length,
+  "V0995_ENEMY_QA_KINDS must be a non-empty unique subset");
+invariant(requestedKinds.every((kind) => fullInventory.includes(kind)),
+  `V0995_ENEMY_QA_KINDS contains an unknown production kind: ${requestedKinds.filter((kind) => !fullInventory.includes(kind)).join(",")}`);
+const inventory = requestedKinds;
 const phases = ["move", "attack", "hit", "die"];
 const results = [];
 const representativeShots = [];
@@ -132,9 +139,10 @@ for (const engine of engines) {
 }
 
 const rawFile = path.join(outputDir, "enemy-runtime-report.json");
-await writeFile(rawFile, `${JSON.stringify({ generatedAt: new Date().toISOString(), inventory, results }, null, 2)}\n`);
+await writeFile(rawFile, `${JSON.stringify({ generatedAt: new Date().toISOString(), fullInventory, inventory, results }, null, 2)}\n`);
 const compact = {
   generatedAt: new Date().toISOString(),
+  fullInventoryCount: fullInventory.length,
   inventoryCount: inventory.length,
   engines,
   viewports,

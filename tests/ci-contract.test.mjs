@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import { onlyAbortedStaticStreams } from "../scripts/v099-final-bounded-contract.mjs";
+
 test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   const workflow = await readFile(".github/workflows/ci.yml", "utf8");
+  const finalBoundedRunner = await readFile("scripts/run-v099-final-bounded.mjs", "utf8");
   const trigger = workflow.split("permissions:", 1)[0];
   assert.match(trigger, /pull_request:/u);
   assert.match(trigger, /- main/u);
@@ -34,6 +37,22 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /V0995_VISUAL_QA_ENGINES: chromium/u);
   assert.match(workflow, /V0995_ENEMY_QA_ENGINES: webkit/u);
   assert.match(workflow, /V0995_VISUAL_QA_ENGINES: webkit/u);
+  assert.match(workflow, /run-v099-final-bounded\.mjs/u);
+  assert.match(finalBoundedRunner, /attempt <= 2/u);
+  const finalBoundedContract = await readFile("scripts/v099-final-bounded-contract.mjs", "utf8");
+  assert.match(finalBoundedContract, /summary\.failed === summary\.total/u);
+  assert.match(finalBoundedContract, / :: net::ERR_ABORTED\$\/u/u);
+  assert.match(finalBoundedContract, /consoleErrors[\s\S]*pageErrors[\s\S]*httpErrors/u);
+  assert.doesNotMatch(finalBoundedRunner, /status:\s*"(?:skipped|unavailable)"/u);
+  const enemyBatches = [...workflow.matchAll(/"([a-z-]+(?:,[a-z-]+){4,5})"/gu)]
+    .map(([, batch]) => batch).filter((batch) => batch.includes(","));
+  assert.deepEqual(enemyBatches.flatMap((batch) => batch.split(",")), [
+    "walker", "runner", "spitter", "crusher", "shade", "abomination",
+    "turned", "takuya", "grappler", "ooze", "sprinter", "gate-eater",
+    "kurome", "mother", "ooguchi", "gairen", "futago", "resonator",
+    "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom",
+  ]);
+  assert.match(workflow, /V0995_ENEMY_QA_KINDS/u);
   assert.match(workflow, /name: issue165-visual-remediation-evidence[\s\S]*retention-days: 14/u);
   assert.match(workflow, /name: issue165-webkit-visual-remediation-evidence[\s\S]*retention-days: 14/u);
 });
@@ -57,4 +76,29 @@ test("Stage 3 final uses one bounded fixture for candidate and exact PR base", a
   assert.match(p5Smoke, /stage3Progress\(label, "complete"/);
   assert.match(p5Smoke, /boundedPageCall\([\s\S]*story battle samples/);
   assert.doesNotMatch(p5Smoke, /samples\.push\(\{[\s\S]{0,400}\bsnapshot,\s*\}\)/);
+});
+
+test("bounded HUD retry is fail-closed to an all-axis request-abort incident", () => {
+  const aborted = {
+    total: 2,
+    failed: 2,
+    results: ["ranger", "medic"].map((asset) => ({
+      status: "failed",
+      error: "Browser diagnostics were not clean: {...}",
+      diagnostics: {
+        consoleErrors: [], pageErrors: [], httpErrors: [],
+        requestFailures: [`http://127.0.0.1/art/${asset}.png :: net::ERR_ABORTED`],
+      },
+    })),
+  };
+  assert.equal(onlyAbortedStaticStreams(aborted), true);
+  assert.equal(onlyAbortedStaticStreams({ ...aborted, failed: 1 }), false);
+  assert.equal(onlyAbortedStaticStreams({
+    ...aborted,
+    results: [{ ...aborted.results[0], diagnostics: { ...aborted.results[0].diagnostics, consoleErrors: ["product"] } }, aborted.results[1]],
+  }), false);
+  assert.equal(onlyAbortedStaticStreams({
+    ...aborted,
+    results: [{ ...aborted.results[0], diagnostics: { ...aborted.results[0].diagnostics, requestFailures: ["asset :: net::ERR_FAILED"] } }, aborted.results[1]],
+  }), false);
 });
