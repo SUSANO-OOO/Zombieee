@@ -324,9 +324,10 @@ test("fifteen weapon profiles cover all sixteen playable units without generic m
     assert.equal(profile.damageWeights.length, profile.shotOffsetsSeconds.length);
     assert.ok(Math.abs(profile.damageWeights.reduce((total, weight) => total + weight, 0) - 1) < 1e-9);
   }
-  assert.equal(UNIT_WEAPON_PROFILE.engineer, "suppressed-carbine");
-  assert.equal(weaponProfileForAction("engineer", "attack").id, "suppressed-carbine");
-  assert.equal(weaponProfileForAction("engineer", "attack").casing, true);
+  assert.equal(UNIT_WEAPON_PROFILE.engineer, "crossbow");
+  assert.equal(weaponProfileForAction("engineer", "attack").id, "crossbow");
+  assert.equal(weaponProfileForAction("engineer", "attack").casing, false);
+  assert.equal(weaponProfileForAction("engineer", "attack").trail, "bolt");
   assert.equal(weaponProfileForAction("engineer", "deploy").id, "deployable");
   assert.equal(weaponProfileForAction("medic", "heal").id, "heal-support");
   assert.equal(weaponProfileForUnit("scout").id, "crowbar");
@@ -343,7 +344,7 @@ test("single-shot human projectiles defer their full damage until a positive vis
     ["ranger", "rifle"],
     ["medic", "heal-support"],
     ["babayaga", "sniper"],
-    ["engineer", "suppressed-carbine"],
+    ["engineer", "crossbow"],
   ];
 
   for (const [kind, profileId] of cases) {

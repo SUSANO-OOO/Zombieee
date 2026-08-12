@@ -3,9 +3,22 @@ import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
+import {
+  PRODUCTION_ENEMY_SOURCE_FACING,
+  semanticAtlasRowPlan,
+} from "../app/enemyFacingContract.js";
+
 const root = process.cwd();
 const sourceDir = path.join(root, "assets", "source", "v090", "enemies");
-const outputDir = path.join(root, "public", "art", "v090", "enemies");
+const buildV0995SemanticFacing = process.env.V0995_ENEMY_SEMANTIC_FACING === "1";
+const atlasOutputDir = path.join(
+  root,
+  "public",
+  "art",
+  buildV0995SemanticFacing ? "v0995" : "v090",
+  "enemies",
+);
+const compendiumOutputDir = path.join(root, "public", "art", "v090", "enemies");
 const SOURCE_SIZE = Object.freeze({ width: 1536, height: 1024 });
 const SOURCE_CELL = Object.freeze({ width: 384, height: 512 });
 const ATLAS_CELL = Object.freeze({ width: 480, height: 448, inset: 16 });
@@ -18,6 +31,7 @@ const specs = Object.freeze([
     source: "resonator-infected-pose-sheet-r1.png",
     accent: "#b94f62",
     bodyScale: 0.9,
+    sourceFacing: PRODUCTION_ENEMY_SOURCE_FACING.resonator.sourceFacing,
   },
   {
     id: "cagewalker",
@@ -25,6 +39,7 @@ const specs = Object.freeze([
     source: "cagewalker-infected-pose-sheet-r1.png",
     accent: "#d4c39a",
     bodyScale: 0.92,
+    sourceFacing: PRODUCTION_ENEMY_SOURCE_FACING.cagewalker.sourceFacing,
   },
   {
     id: "spindle",
@@ -32,6 +47,7 @@ const specs = Object.freeze([
     source: "spindle-infected-pose-sheet-r1.png",
     accent: "#8f667f",
     bodyScale: 0.92,
+    sourceFacing: PRODUCTION_ENEMY_SOURCE_FACING.spindle.sourceFacing,
   },
   {
     id: "choir-knot",
@@ -39,6 +55,7 @@ const specs = Object.freeze([
     source: "choir-knot-infected-pose-sheet-r1.png",
     accent: "#9b778c",
     bodyScale: 0.91,
+    sourceFacing: PRODUCTION_ENEMY_SOURCE_FACING["choir-knot"].sourceFacing,
   },
   {
     id: "pall-manta",
@@ -46,6 +63,7 @@ const specs = Object.freeze([
     source: "pall-manta-infected-pose-sheet-r1.png",
     accent: "#705c69",
     bodyScale: 0.94,
+    sourceFacing: PRODUCTION_ENEMY_SOURCE_FACING["pall-manta"].sourceFacing,
   },
   {
     id: "anchor-bloom",
@@ -53,6 +71,7 @@ const specs = Object.freeze([
     source: "anchor-bloom-infected-pose-sheet-r1.png",
     accent: "#9d5b66",
     bodyScale: 0.93,
+    sourceFacing: PRODUCTION_ENEMY_SOURCE_FACING["anchor-bloom"].sourceFacing,
   },
 ]);
 
@@ -191,6 +210,11 @@ async function poseForCell(source, poseIndex) {
 
 async function renderAtlas(spec, source) {
   const composites = [];
+  // Preserve the historical v0.9.0 generator as its default mode. The
+  // v0.9.9.5 entrypoint opts into semantic source-facing ownership.
+  const rowPlan = buildV0995SemanticFacing
+    ? semanticAtlasRowPlan(spec.sourceFacing)
+    : Object.freeze({ right: "source", left: "mirror" });
   for (let column = 0; column < STATE_POSE_INDEXES.length; column += 1) {
     const poseIndex = STATE_POSE_INDEXES[column];
     const pose = await poseForCell(source, poseIndex);
@@ -210,18 +234,22 @@ async function renderAtlas(spec, source) {
     const walkShift = column === 2 ? 7 : column === 1 ? -5 : 0;
     const left = Math.round((ATLAS_CELL.width - metadata.width) / 2 + walkShift);
     const top = ATLAS_CELL.height - ATLAS_CELL.inset - metadata.height;
+    const mirroredBody = await sharp(body).flop().png().toBuffer();
     composites.push({
-      input: body,
+      input: rowPlan.right === "source" ? body : mirroredBody,
       left: column * ATLAS_CELL.width + Math.max(ATLAS_CELL.inset, left),
       top,
     });
     composites.push({
-      input: await sharp(body).flop().png().toBuffer(),
+      input: rowPlan.left === "source" ? body : mirroredBody,
       left: column * ATLAS_CELL.width + Math.max(ATLAS_CELL.inset, left),
       top: ATLAS_CELL.height + top,
     });
   }
-  const output = path.join(outputDir, `${spec.id}-battle-v1.png`);
+  const output = path.join(
+    atlasOutputDir,
+    `${spec.id}-battle-${buildV0995SemanticFacing ? "v2" : "v1"}.png`,
+  );
   await sharp({
     create: {
       width: ATLAS_CELL.width * STATE_POSE_INDEXES.length,
@@ -256,7 +284,7 @@ async function renderCompendium(spec, source) {
       <path d="M34 466h444" stroke="${spec.accent}" stroke-width="3" opacity=".72"/>
     </svg>
   `);
-  const output = path.join(outputDir, `${spec.id}-compendium-v1.webp`);
+  const output = path.join(compendiumOutputDir, `${spec.id}-compendium-v1.webp`);
   await sharp(card)
     .composite([{
       input: subject,
@@ -311,7 +339,10 @@ async function visibleRects(atlasPath) {
   return Object.freeze(visible);
 }
 
-await mkdir(outputDir, { recursive: true });
+await Promise.all([
+  mkdir(atlasOutputDir, { recursive: true }),
+  mkdir(compendiumOutputDir, { recursive: true }),
+]);
 const outputs = [];
 for (const spec of specs) {
   const input = path.join(sourceDir, spec.source);
@@ -327,6 +358,12 @@ for (const spec of specs) {
   outputs.push(Object.freeze({
     id: spec.id,
     displayName: spec.displayName,
+    ...(buildV0995SemanticFacing
+      ? {
+          sourceFacing: spec.sourceFacing,
+          atlasRowPlan: semanticAtlasRowPlan(spec.sourceFacing),
+        }
+      : {}),
     source: await evidenceFor(input),
     atlas: await evidenceFor(atlas),
     compendium: await evidenceFor(compendium),
@@ -335,6 +372,8 @@ for (const spec of specs) {
 }
 
 console.log(JSON.stringify({
-  message: `Built ${outputs.length} Version 0.9.0 infected identity sets.`,
+  message: buildV0995SemanticFacing
+    ? `Built ${outputs.length} Version 0.9.9.5 infected semantic-facing sets.`
+    : `Built ${outputs.length} Version 0.9.0 infected identity sets.`,
   outputs,
 }, null, 2));

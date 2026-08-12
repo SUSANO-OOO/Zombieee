@@ -7,6 +7,25 @@ function studioCandidate(red, green, blue) {
 }
 
 export async function studioIdentityCutout(inputPath) {
+  const metadata = await sharp(inputPath).metadata();
+  if (metadata.hasAlpha) {
+    const decoded = await sharp(inputPath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const rgba = Buffer.from(decoded.data);
+    for (let pixel = 0; pixel < decoded.info.width * decoded.info.height; pixel += 1) {
+      const channel = pixel * 4;
+      if (rgba[channel + 3] !== 0) continue;
+      rgba[channel] = 0;
+      rgba[channel + 1] = 0;
+      rgba[channel + 2] = 0;
+    }
+    return sharp(rgba, {
+      raw: { width: decoded.info.width, height: decoded.info.height, channels: 4 },
+    })
+      .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 2 })
+      .png()
+      .toBuffer();
+  }
+
   const decoded = await sharp(inputPath).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width, height } = decoded.info;
   const pixelCount = width * height;
@@ -45,10 +64,45 @@ export async function studioIdentityCutout(inputPath) {
     const red = decoded.data[source];
     const green = decoded.data[source + 1];
     const blue = decoded.data[source + 2];
-    rgba[target] = red;
-    rgba[target + 1] = green;
-    rgba[target + 2] = blue;
-    rgba[target + 3] = background[pixel] ? 0 : 255;
+    if (background[pixel]) continue;
+
+    const x = pixel % width;
+    const y = Math.floor(pixel / width);
+    let touchesBackground = false;
+    for (let offsetY = -2; offsetY <= 2 && !touchesBackground; offsetY += 1) {
+      for (let offsetX = -2; offsetX <= 2; offsetX += 1) {
+        const nextX = x + offsetX;
+        const nextY = y + offsetY;
+        if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height) continue;
+        if (background[nextY * width + nextX]) {
+          touchesBackground = true;
+          break;
+        }
+      }
+    }
+
+    const darkest = Math.min(red, green, blue);
+    const lightest = Math.max(red, green, blue);
+    const spread = lightest - darkest;
+    const neutralWhite = touchesBackground && darkest >= 150 && spread <= 58;
+    const alpha = neutralWhite
+      ? Math.max(0, Math.min(255, Math.round((255 - darkest) * 255 / 92 + spread * 2.2)))
+      : 255;
+    if (alpha <= 8) continue;
+
+    // Remove the white studio matte from fractional edge pixels.  Keeping the
+    // original RGB under low alpha is what produced the pale halo on dark UI.
+    const normalized = alpha / 255;
+    rgba[target] = normalized < 1
+      ? Math.max(0, Math.min(255, Math.round((red - 255 * (1 - normalized)) / normalized)))
+      : red;
+    rgba[target + 1] = normalized < 1
+      ? Math.max(0, Math.min(255, Math.round((green - 255 * (1 - normalized)) / normalized)))
+      : green;
+    rgba[target + 2] = normalized < 1
+      ? Math.max(0, Math.min(255, Math.round((blue - 255 * (1 - normalized)) / normalized)))
+      : blue;
+    rgba[target + 3] = alpha;
   }
   return sharp(rgba, { raw: { width, height, channels: 4 } })
     .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 2 })
@@ -111,14 +165,6 @@ export async function buildFormationCard({
   const metadata = await sharp(subject).metadata();
   const overlay = Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
-      <defs>
-        <linearGradient id="shade" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#101718" stop-opacity=".08"/>
-          <stop offset=".62" stop-color="#090d12" stop-opacity=".18"/>
-          <stop offset="1" stop-color="#090d12" stop-opacity=".7"/>
-        </linearGradient>
-      </defs>
-      <rect width="512" height="512" fill="url(#shade)"/>
       <rect x="16" y="16" width="10" height="480" rx="5" fill="${accent}"/>
       <path d="M292 330h204v166H264l28-166z" fill="#090d12" fill-opacity=".92" stroke="${accent}" stroke-width="5"/>
       ${motif}

@@ -7,6 +7,7 @@ import sharp from "sharp";
 import test from "node:test";
 
 import { PRODUCTION_VISUALS } from "../app/productionVisuals.js";
+import { PRODUCTION_ENEMY_SOURCE_FACING } from "../app/enemyFacingContract.js";
 import { SPRITE_MANIFEST } from "../app/spriteManifest.js";
 import { V090_INFECTED_DEFINITIONS, V090_INFECTED_KINDS } from "../app/v090Infected.js";
 
@@ -22,7 +23,7 @@ async function sha256(relativePath) {
     .digest("hex");
 }
 
-test("six Version 0.9.0 infected assets are reproducible, identity-distinct, and review-gated", async () => {
+test("six Version 0.9.0 infected sources stay reproducible while the v0995 semantic-facing atlases are active", async () => {
   const ledger = await json("docs/INFECTED_ASSETS_0.9.0.json");
   assert.equal(ledger.status, "producer-review-required");
   assert.equal(ledger.rightsProvenance.thirdPartyDownloadedVisuals, false);
@@ -39,7 +40,16 @@ test("six Version 0.9.0 infected assets are reproducible, identity-distinct, and
     const compendium = await sharp(path.join(root, record.compendium.path)).metadata();
     assert.deepEqual([atlas.width, atlas.height], record.atlas.dimensions);
     assert.deepEqual([compendium.width, compendium.height], record.compendium.dimensions);
-    assert.equal(SPRITE_MANIFEST[record.kind].path, `/${record.atlas.path.replace(/^public\//u, "")}`);
+    // The immutable v0.9.0 ledger continues to prove the original source,
+    // atlas and compendium. Runtime deliberately selects the versioned
+    // v0.9.9.5 semantic-facing derivative instead of rewriting that history.
+    assert.equal(SPRITE_MANIFEST[record.kind].path, `/art/v0995/enemies/${record.kind}-battle-v2.png`);
+    assert.equal(
+      SPRITE_MANIFEST[record.kind].semanticSourceFacing,
+      PRODUCTION_ENEMY_SOURCE_FACING[record.kind].sourceFacing,
+    );
+    const runtimeAtlas = await sharp(path.join(root, "public", SPRITE_MANIFEST[record.kind].path.replace(/^\//u, ""))).metadata();
+    assert.deepEqual([runtimeAtlas.width, runtimeAtlas.height], [3360, 896]);
     assert.equal(V090_INFECTED_DEFINITIONS[record.kind].compendiumAsset, `/${record.compendium.path.replace(/^public\//u, "")}`);
   }
 });

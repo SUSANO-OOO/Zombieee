@@ -19,6 +19,8 @@ export function loadImageWithTimeout({
   createImage = () => new Image(),
   loadTimeoutMs = IMAGE_LOAD_TIMEOUT_MS,
   decodeTimeoutMs = IMAGE_DECODE_TIMEOUT_MS,
+  requireDecode = false,
+  faultMode = null,
 }) {
   return new Promise((resolve, reject) => {
     const image = createImage();
@@ -59,20 +61,26 @@ export function loadImageWithTimeout({
         ready();
         return;
       }
-      // A stalled or rejected decode() falls back to the load event rather than
-      // failing the image. The bytes have already arrived by this point, and
-      // ready() still refuses anything with no naturalWidth, so the fallback
-      // cannot let a broken image through - it only stops a browser that is
-      // slow or unwilling to decode from being treated as a missing asset.
+      // General-purpose callers preserve the compatibility fallback shipped in
+      // 0.9.5.1. Battle readiness opts into requireDecode: those sources are a
+      // closed semantic plan and may not mount gameplay after a decode failure.
       //
       // 0.9.5.2 changed both paths to reject instead. That contradicted the
       // behaviour 0.9.5.1 shipped and documented, and it is what the
       // decode-hang scenario in the published-site QA exists to catch.
-      decodeTimer = setTimeout(ready, decodeTimeoutMs);
+      const failDecode = (reason) => finish(reject, imageLoadError(
+        "ImageDecodeError",
+        `Image decode failed: ${src}${reason?.message ? ` (${reason.message})` : ""}`,
+      ));
+      decodeTimer = setTimeout(
+        requireDecode ? () => failDecode(new Error("decode timeout")) : ready,
+        decodeTimeoutMs,
+      );
       try {
-        void Promise.resolve(image.decode()).then(ready, ready);
-      } catch {
-        ready();
+        void Promise.resolve(image.decode()).then(ready, requireDecode ? failDecode : ready);
+      } catch (error) {
+        if (requireDecode) failDecode(error);
+        else ready();
       }
     };
     image.onerror = () => {
@@ -90,6 +98,11 @@ export function loadImageWithTimeout({
         `Image load timed out after ${loadTimeoutMs}ms: ${src}`,
       ));
     }, loadTimeoutMs);
-    image.src = src;
+    if (faultMode === "delay") return;
+    image.src = faultMode === "404"
+      ? `/__qa_missing_${Date.now()}.png`
+      : faultMode === "corrupt"
+        ? "data:image/png;base64,bm90LWFuLWltYWdl"
+        : src;
   });
 }
