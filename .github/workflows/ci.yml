@@ -168,6 +168,25 @@ jobs:
           P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/boss-audio/chromium
         run: npm run qa:p5
 
+      - name: Capture Version 0.9.9.5 enemy runtime and station final-canvas evidence
+        env:
+          V0995_ENEMY_QA_ENGINES: chromium
+          V0995_ENEMY_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/enemy-runtime
+          V0995_VISUAL_QA_ENGINES: chromium
+          V0995_VISUAL_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/visual-integrity
+        run: |
+          node scripts/run-browser-qa-with-server.mjs scripts/v0995-enemy-runtime-browser-smoke.mjs
+          node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
+
+      - name: Upload Issue 165 visual remediation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue165-visual-remediation-evidence
+          path: issue165-evidence
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload Issue 156 remediation evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -218,6 +237,25 @@ jobs:
           RECORDS_QA_ENGINES: webkit
           RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/webkit
         run: npm run qa:records
+
+      - name: Capture Version 0.9.9.5 enemy runtime and station final-canvas evidence (WebKit)
+        env:
+          V0995_ENEMY_QA_ENGINES: webkit
+          V0995_ENEMY_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit
+          V0995_VISUAL_QA_ENGINES: webkit
+          V0995_VISUAL_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/visual-integrity/webkit
+        run: |
+          node scripts/run-browser-qa-with-server.mjs scripts/v0995-enemy-runtime-browser-smoke.mjs
+          node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
+
+      - name: Upload Issue 165 WebKit visual remediation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue165-webkit-visual-remediation-evidence
+          path: issue165-evidence
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload Issue 156 WebKit hosted-runner evidence
         if: always()
@@ -386,6 +424,32 @@ jobs:
           P5_QA_TIMEOUT_MS: "60000"
           P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/${{ matrix.audio_case }}
         run: timeout --signal=TERM --kill-after=30s 15m npm run qa:p5
+
+      - name: Build exact PR base for the same bounded final fixture
+        if: matrix.audio_case == 'final'
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_source="$RUNNER_TEMP/stage3-final-base"
+          git worktree add --detach "$base_source" "$PR_BASE_SHA"
+          (
+            cd "$base_source"
+            npm ci
+            npm run build
+          )
+
+      - name: Capture exact-base bounded Stage 3 final route
+        if: matrix.audio_case == 'final'
+        env:
+          P5_QA_SCOPE: battle-audio
+          P5_QA_ENGINES: webkit
+          P5_QA_VIEWPORTS: 736x414
+          P5_QA_BATTLE_AUDIO_CASES: final
+          P5_QA_TIMEOUT_MS: "60000"
+          P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/final-base
+        run: timeout --signal=TERM --kill-after=30s 15m node scripts/run-browser-qa-against-build.mjs scripts/p5-browser-smoke.mjs "$RUNNER_TEMP/stage3-final-base"
 
       - name: Upload bounded Stage 3 audio evidence
         if: always()

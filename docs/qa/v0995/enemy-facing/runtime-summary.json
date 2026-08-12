@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-08-12T21:08:10.970Z",
+  "inventoryCount": 23,
+  "engines": [
+    "chromium",
+    "webkit"
+  ],
+  "viewports": [
+    {
+      "width": 844,
+      "height": 340
+    },
+    {
+      "width": 844,
+      "height": 390
+    },
+    {
+      "width": 1280,
+      "height": 720
+    }
+  ],
+  "phases": [
+    "move",
+    "attack",
+    "hit",
+    "die"
+  ],
+  "caseCount": 552,
+  "allAssetBacked": true,
+  "failures": []
+}

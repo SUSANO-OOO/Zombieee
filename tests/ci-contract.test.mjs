@@ -28,4 +28,26 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.doesNotMatch(workflow, /PWA_PARTIAL_UPDATE_OLD_VERSION:\s*0\.9\.9\.\d+/u);
   assert.doesNotMatch(workflow, /contents:\s*write/u);
   assert.doesNotMatch(workflow, /gh pr merge|gh pr edit|github-script/u);
+  assert.match(workflow, /v0995-enemy-runtime-browser-smoke\.mjs/u);
+  assert.match(workflow, /v0995-visual-integrity-browser-smoke\.mjs/u);
+  assert.match(workflow, /V0995_ENEMY_QA_ENGINES: chromium/u);
+  assert.match(workflow, /V0995_VISUAL_QA_ENGINES: chromium/u);
+  assert.match(workflow, /V0995_ENEMY_QA_ENGINES: webkit/u);
+  assert.match(workflow, /V0995_VISUAL_QA_ENGINES: webkit/u);
+  assert.match(workflow, /name: issue165-visual-remediation-evidence[\s\S]*retention-days: 14/u);
+  assert.match(workflow, /name: issue165-webkit-visual-remediation-evidence[\s\S]*retention-days: 14/u);
+});
+
+test("Stage 3 final uses one bounded fixture for candidate and exact PR base", async () => {
+  const workflow = await readFile(".github/workflows/ci.yml", "utf8");
+  const p5Smoke = await readFile("scripts/p5-browser-smoke.mjs", "utf8");
+  assert.match(workflow, /Build exact PR base for the same bounded final fixture/);
+  assert.match(workflow, /git worktree add --detach "\$base_source" "\$PR_BASE_SHA"/);
+  assert.match(workflow, /npm ci[\s\S]*npm run build/);
+  assert.match(workflow, /run-browser-qa-against-build\.mjs scripts\/p5-browser-smoke\.mjs/);
+  assert.match(p5Smoke, /const compactSnapshot = \{/);
+  assert.match(p5Smoke, /if \(samples\.length > 1_200\)/);
+  assert.match(p5Smoke, /stage3Progress\(label, "complete"/);
+  assert.match(p5Smoke, /boundedPageCall\([\s\S]*story battle samples/);
+  assert.doesNotMatch(p5Smoke, /samples\.push\(\{[\s\S]{0,400}\bsnapshot,\s*\}\)/);
 });

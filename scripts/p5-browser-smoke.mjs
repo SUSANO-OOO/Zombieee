@@ -47,6 +47,29 @@ const evidenceDir = path.resolve(process.env.P5_QA_EVIDENCE_DIR ?? "outputs/p5-b
 const timeout = Math.max(5_000, Number(process.env.P5_QA_TIMEOUT_MS) || 45_000);
 const teardownTimeout = Math.max(1_000, Number(process.env.P5_QA_TEARDOWN_TIMEOUT_MS) || 5_000);
 
+function stage3Progress(label, checkpoint, startedAt) {
+  console.log(JSON.stringify({
+    type: "p5-stage3-progress",
+    label,
+    checkpoint,
+    elapsedMs: Date.now() - startedAt,
+  }));
+}
+
+async function boundedPageCall(operation, label, limitMs = teardownTimeout) {
+  let timer;
+  try {
+    return await Promise.race([
+      operation(),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label} exceeded ${limitMs}ms`)), limitMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function closePlaywrightResource(resource, label) {
   let timer;
   const closed = await Promise.race([
@@ -1333,6 +1356,25 @@ async function installStoryBattleRecorder(page) {
       const audioBridge = window.__ASHFALL_AUDIO_QA__;
       const audioDiagnostics = audioBridge?.getDiagnostics?.() ?? null;
       const samples = window.__P5_STORY_BATTLE_SAMPLES__;
+      // The final Stage 3 proof only consumes time, boss state, and scripted
+      // bark fields.  Retaining every full battle snapshot (assets, receipts,
+      // fighters, diagnostics) at 40Hz made WebKit spend minutes serializing
+      // the sample ledger at final-fixture teardown.  Preserve the exact
+      // semantic observations without the unbounded object graph.
+      const compactSnapshot = {
+        time: snapshot.time,
+        bossDefeated: snapshot.bossDefeated,
+        battleBarks: {
+          active: (snapshot.battleBarks?.active ?? []).map((bark) => ({
+            id: bark.id,
+            speaker: bark.speaker,
+            text: bark.text,
+            scripted: bark.scripted,
+            scriptedCueId: bark.scriptedCueId,
+            playVoice: bark.playVoice,
+          })),
+        },
+      };
       samples.push({
         at: performance.now(),
         screen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
@@ -1342,9 +1384,9 @@ async function installStoryBattleRecorder(page) {
         audioRuntimeScene: audioDiagnostics?.sceneId ?? null,
         audioSceneState: audioBridge?.getSceneState?.() ?? null,
         entranceCueActive: audioBridge?.hasInstance?.(entranceCueId) ?? false,
-        snapshot,
+        snapshot: compactSnapshot,
       });
-      if (samples.length > 2_400) samples.splice(0, samples.length - 2_400);
+      if (samples.length > 1_200) samples.splice(0, samples.length - 1_200);
     };
     window.__P5_STORY_BATTLE_CAPTURE__ = capture;
     window.__P5_STORY_BATTLE_TIMER__ = window.setInterval(capture, 25);
@@ -1353,19 +1395,25 @@ async function installStoryBattleRecorder(page) {
 }
 
 async function storyBattleSnapshot(page) {
-  return page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null);
+  return boundedPageCall(
+    () => page.evaluate(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null),
+    "story battle snapshot",
+  );
 }
 
 async function storyBattleSamples(page) {
-  return page.evaluate(() => [...(window.__P5_STORY_BATTLE_SAMPLES__ ?? [])]);
+  return boundedPageCall(
+    () => page.evaluate(() => [...(window.__P5_STORY_BATTLE_SAMPLES__ ?? [])]),
+    "story battle samples",
+  );
 }
 
 async function stopStoryBattleRecorder(page) {
-  await page.evaluate(() => {
+  await boundedPageCall(() => page.evaluate(() => {
     if (window.__P5_STORY_BATTLE_TIMER__) window.clearInterval(window.__P5_STORY_BATTLE_TIMER__);
     delete window.__P5_STORY_BATTLE_TIMER__;
     delete window.__P5_STORY_BATTLE_CAPTURE__;
-  }).catch(() => undefined);
+  }), "story battle recorder stop").catch(() => undefined);
 }
 
 async function webAudioCapability(page) {
@@ -1685,6 +1733,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
 }
 
 async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
+  const startedAt = Date.now();
   const context = await browser.newContext({ viewport });
   const page = await context.newPage();
   const diagnostics = createDiagnostics(page);
@@ -1696,6 +1745,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     status: "failed",
   };
   diagnostics.setPhase(result.phase);
+  stage3Progress(label, "navigation", startedAt);
   try {
     await installStoryBattleRecorder(page);
     const response = await page.goto(battleQaUrl("endgame"), {
@@ -1733,6 +1783,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     );
 
     result.phase = "final-cut";
+    stage3Progress(label, "final-cut", startedAt);
     diagnostics.setPhase(result.phase);
     await page.waitForFunction(
       ({ cueFragment, expectedSceneId }) => {
@@ -1776,6 +1827,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
       `${label} could not prepare the post-observation TAKUYA defeat proof`);
 
     result.phase = "final-fifo";
+    stage3Progress(label, "final-fifo", startedAt);
     diagnostics.setPhase(result.phase);
     const baseEventLines = STORY_EVENTS["stage-takuya-base-remains-v070"].lines;
     const expectedLines = [
@@ -1909,7 +1961,9 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
       },
       diagnostics: diagnosticEvidence,
     });
+    stage3Progress(label, "complete", startedAt);
   } catch (error) {
+    stage3Progress(label, `failure:${result.phase}`, startedAt);
     result.error = String(error);
     await diagnostics.settleDetails();
     result.diagnostics = diagnostics.snapshot();
@@ -1926,9 +1980,11 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
         barks: sample.snapshot.battleBarks.active.map((bark) => ({ ...bark })),
       }))).catch(() => []);
   } finally {
+    stage3Progress(label, "teardown-start", startedAt);
     await stopStoryBattleRecorder(page);
-    await page.close();
+    await closePlaywrightResource(page, `${label}/page`);
     await closePlaywrightResource(context, `${label}/context`);
+    stage3Progress(label, "teardown-complete", startedAt);
   }
   return result;
 }

@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-08-12T21:38:11.690Z",
+  "build": {
+    "algorithm": "sha256",
+    "scope": "dist-recursive",
+    "serverIndex": {
+      "path": "dist/server/index.js",
+      "sha256": "b9a36bbf1cb2c4f7fd748298e9e8d2a43db582434688005c399f1cc27166719e"
+    },
+    "clientManifest": {
+      "path": "dist/client/.vite/manifest.json",
+      "sha256": "f222b46085ac837bb69011844295eb7bfbadc89dafaa9c31be1059397fbf184c"
+    },
+    "clientAssets": {
+      "path": "dist/client/assets",
+      "files": 13,
+      "bytes": 1644038,
+      "manifestSha256": "5add2c3aad63a6e34b7cd7b2e513efb4e0cb68b6b353334fbd51a377300f68e1"
+    },
+    "fullDist": {
+      "path": "dist",
+      "files": 829,
+      "bytes": 321626841,
+      "manifestSha256": "a1263f867e30a73eb5eeef483e5ec945a5acca30afa35de61626944028dd2031"
+    },
+    "combinedSha256": "a1263f867e30a73eb5eeef483e5ec945a5acca30afa35de61626944028dd2031"
+  },
+  "readyCases": 6,
+  "faultCases": 42,
+  "missionFinalCanvasCases": 18,
+  "missionFallbackPixelCount": 0,
+  "failures": []
+}

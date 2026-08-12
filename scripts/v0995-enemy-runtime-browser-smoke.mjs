@@ -1,0 +1,161 @@
+import { createHash } from "node:crypto";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import sharp from "sharp";
+
+import { productionVisualIntegrityInventory } from "../app/visualIntegrityInventory.js";
+import { spriteFrameFor } from "../app/spriteManifest.js";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+
+const baseUrl = new URL(process.env.V0995_ENEMY_QA_BASE_URL ?? "http://127.0.0.1:4177/");
+if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error("v0995 enemy runtime QA is local-only");
+const playwright = process.env.PLAYWRIGHT_MODULE_PATH
+  ? await import(pathToFileURL(path.resolve(process.env.PLAYWRIGHT_MODULE_PATH)).href)
+  : await import("playwright");
+const engines = (process.env.V0995_ENEMY_QA_ENGINES ?? "chromium,webkit").split(",").map((value) => value.trim()).filter(Boolean);
+const viewports = (process.env.V0995_ENEMY_QA_VIEWPORTS ?? "844x340,844x390,1280x720")
+  .split(",").map((entry) => {
+    const [width, height] = entry.split("x").map(Number);
+    return { width, height };
+  });
+const outputDir = path.resolve(process.env.V0995_ENEMY_QA_EVIDENCE_DIR ?? "outputs/v0995-enemy-runtime");
+const compactDir = path.resolve(process.env.V0995_ENEMY_QA_COMPACT_DIR ?? "docs/qa/v0995/enemy-facing");
+const timeout = Math.max(10_000, Number(process.env.V0995_ENEMY_QA_TIMEOUT_MS) || 45_000);
+await mkdir(outputDir, { recursive: true });
+await mkdir(compactDir, { recursive: true });
+
+const invariant = (condition, message) => { if (!condition) throw new Error(message); };
+const inventory = productionVisualIntegrityInventory().enemies.map(({ kind }) => kind);
+invariant(inventory.length === 23 && new Set(inventory).size === 23, `expected finite 23 production enemies/bosses, got ${inventory.length}`);
+const phases = ["move", "attack", "hit", "die"];
+const results = [];
+const representativeShots = [];
+
+function assertRenderSequence({ engine, viewport, kind, phase, samples }) {
+  const label = `${engine}/${viewport.width}x${viewport.height}/${kind}/${phase}`;
+  invariant(samples.length >= 2, `${label}: fewer than two runtime samples`);
+  const runtime = samples.map(({ audit }) => audit).filter(Boolean);
+  // The first telemetry poll can land between the simulation mutation and its
+  // next rAF paint (most often in WebKit). Require an actual production paint
+  // in the sampled sequence; do not misclassify that pre-paint sample as a
+  // product failure. The stricter phase-specific audit below still requires an
+  // asset-backed semantic row from the real renderer.
+  invariant(runtime.some(({ renderHistory, corpseRenderHistory }) => renderHistory.length > 0 || corpseRenderHistory.length > 0), `${label}: production renderer was not observed`);
+  const phaseStates = phase === "move" ? new Set(["start-move", "move", "idle"])
+    : phase === "attack" ? new Set(["wind-up", "active", "recovery"])
+      : phase === "hit" ? new Set(["hit-light", "hit-heavy"])
+        : new Set(["death"]);
+  const relevant = runtime.flatMap(({ renderHistory, corpseRenderHistory }) => phase === "die" ? corpseRenderHistory : renderHistory)
+    .filter(({ assetReady, requestedState, spriteState }) => assetReady && (phase === "die" ? spriteState === "death" : phaseStates.has(requestedState)));
+  invariant(relevant.length > 0, `${label}: no asset-backed render audit ${JSON.stringify(runtime.at(-1)?.renderHistory?.slice(-4))}`);
+  const expectedDirection = "left";
+  invariant(relevant.every(({ direction }) => direction === expectedDirection), `${label}: render direction flicker ${JSON.stringify(relevant.map(({ direction }) => direction))}`);
+  const expectedRows = new Set((phase === "die" ? ["death"] : phase === "move" ? ["idle", "walk-a", "walk-b"] : phase === "hit" ? ["hit"] : ["attack-a", "attack-b"])
+    .map((state) => spriteFrameFor(kind, state, expectedDirection).sourceRect.y));
+  invariant(relevant.every(({ sourceRow }) => expectedRows.has(sourceRow)), `${label}: semantic row drift ${JSON.stringify(relevant.map(({ sourceRow }) => sourceRow))}`);
+  invariant(relevant.every(({ renderWidth, renderHeight }) => Number(renderWidth) > 0 && Number(renderHeight) > 0), `${label}: invalid render scale`);
+  const scalePairs = relevant.map(({ renderWidth, renderHeight }) => renderWidth / renderHeight);
+  invariant(Math.max(...scalePairs) / Math.min(...scalePairs) <= 1.04, `${label}: aspect/scale drift`);
+  invariant(relevant.every(({ groundAnchor }) => Number.isFinite(groundAnchor)), `${label}: missing authored ground anchor`);
+  if (phase === "move") {
+    invariant(runtime.some(({ fighter }) => fighter && fighter.actualXDelta < -.05), `${label}: actual X delta never moved toward the player base`);
+  }
+  if (phase === "attack") {
+    invariant(runtime.some(({ fighter }) => fighter && fighter.targetId && fighter.targetX < fighter.x), `${label}: actual target was not left of attacker`);
+    invariant(runtime.some(({ fighter }) => fighter && (fighter.attackSequence > 0 || fighter.attackWindup > 0 || fighter.attack > 0)), `${label}: normal attack runtime was not observed`);
+  }
+  if (phase === "hit") invariant(runtime.some(({ fighter }) => fighter && (fighter.flash > 0 || fighter.hp < fighter.maxHp)), `${label}: production damage reaction was not observed`);
+  if (phase === "die") invariant(runtime.some(({ corpse }) => corpse?.state), `${label}: production death lifecycle was not observed`);
+}
+
+for (const engine of engines) {
+  const browserType = playwright[engine];
+  invariant(browserType, `unknown browser ${engine}`);
+  const browser = await browserType.launch({ headless: true });
+  try {
+    for (const viewport of viewports) {
+      const context = await browser.newContext({ viewport });
+      const page = await context.newPage();
+      const failures = [];
+      page.on("console", (message) => { if (message.type() === "error") failures.push(`console:${message.text()}`); });
+      page.on("pageerror", (error) => failures.push(`page:${error.message}`));
+      page.on("requestfailed", (request) => failures.push(`request:${request.url()}:${request.failure()?.errorText}`));
+      page.on("response", (response) => { if (response.status() >= 400) failures.push(`http:${response.status()}:${response.url()}`); });
+      const url = new URL(baseUrl);
+      url.search = new URLSearchParams({ qa: "mission", stage: "3", state: "start", qaEnemyRuntime: "1" }).toString();
+      const response = await page.goto(url.href, { waitUntil: "domcontentloaded", timeout });
+      invariant(response?.ok(), `${engine}/${viewport.width}x${viewport.height}: navigation failed`);
+      await dismissInstallOffer(page, { timeout });
+      await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready"
+        && typeof window.__ASHFALL_BATTLE_QA__?.prepareEnemyFacingRuntimeProof === "function"
+        && typeof window.__ASHFALL_BATTLE_QA__?.ensureEnemyFacingProofAsset === "function", null, { timeout }).catch(async (error) => {
+        const debug = await page.evaluate(() => ({
+          href: location.href,
+          screen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
+          assetState: document.documentElement.dataset.assetLoadState ?? null,
+          asset: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
+          battleBridge: typeof window.__ASHFALL_BATTLE_QA__?.prepareEnemyFacingRuntimeProof,
+          body: document.body.innerText.slice(0, 500),
+        }));
+        throw new Error(`runtime bridge timeout ${JSON.stringify(debug)}`, { cause: error });
+      });
+      for (const kind of inventory) {
+        const asset = await page.evaluate((candidate) => window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(candidate), kind);
+        invariant(asset.kind === kind && asset.width > 0 && asset.height > 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: production sprite did not decode ${JSON.stringify(asset)}`);
+        for (const phase of phases) {
+          const prepared = await page.evaluate(({ kind, phase }) => window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({ kind, phase }), { kind, phase });
+          const samples = [];
+          const started = performance.now();
+          while (performance.now() - started < (phase === "attack" ? 2_600 : 1_500)) {
+            await page.waitForTimeout(40);
+            const audit = await page.evaluate((fighterId) => window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId), prepared.fighterId);
+            samples.push({ at: performance.now() - started, audit });
+            if (samples.length >= 2 && phase === "move" && audit.fighter?.actualXDelta < -.05 && audit.renderHistory.length >= 3) break;
+            if (samples.length >= 2 && phase === "attack" && audit.fighter && (audit.fighter.attackSequence > 0 || audit.fighter.attack > 0) && audit.renderHistory.length >= 3) break;
+            if (samples.length >= 2 && phase === "hit" && audit.fighter && audit.fighter.hp < audit.fighter.maxHp && audit.renderHistory.length >= 3) break;
+            if (samples.length >= 2 && phase === "die" && audit.corpse && audit.corpseRenderHistory.length >= 2) break;
+          }
+          assertRenderSequence({ engine, viewport, kind, phase, samples });
+          const screenshotFile = path.join(outputDir, `${engine}-${viewport.width}x${viewport.height}-${kind}-${phase}.png`);
+          await page.locator("canvas.battlefield.active").screenshot({ path: screenshotFile });
+          if (["walker", "resonator", "takuya"].includes(kind) && ["move", "attack", "die"].includes(phase)) representativeShots.push(screenshotFile);
+          results.push({ engine, viewport, kind, phase, prepared, samples, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
+        }
+      }
+      invariant(failures.length === 0, `${engine}/${viewport.width}x${viewport.height}: ${failures.join("\n")}`);
+      await context.close();
+    }
+  } finally {
+    await browser.close();
+  }
+}
+
+const rawFile = path.join(outputDir, "enemy-runtime-report.json");
+await writeFile(rawFile, `${JSON.stringify({ generatedAt: new Date().toISOString(), inventory, results }, null, 2)}\n`);
+const compact = {
+  generatedAt: new Date().toISOString(),
+  inventoryCount: inventory.length,
+  engines,
+  viewports,
+  phases,
+  caseCount: results.length,
+  allAssetBacked: results.every(({ samples }) => samples.some(({ audit }) => audit.renderHistory.some(({ assetReady }) => assetReady) || audit.corpseRenderHistory.some(({ assetReady }) => assetReady))),
+  failures: [],
+};
+const compactFile = path.join(compactDir, "runtime-summary.json");
+await writeFile(compactFile, `${JSON.stringify(compact, null, 2)}\n`);
+const tiles = representativeShots.slice(0, 9);
+if (tiles.length > 0) {
+  const width = 320;
+  const height = 180;
+  const inputs = await Promise.all(tiles.map(async (file, index) => ({
+    input: await sharp(file).resize(width, height, { fit: "cover" }).png().toBuffer(),
+    left: (index % 3) * width,
+    top: Math.floor(index / 3) * height,
+  })));
+  await sharp({ create: { width: width * 3, height: height * Math.ceil(inputs.length / 3), channels: 4, background: "#111" } })
+    .composite(inputs).png().toFile(path.join(compactDir, "runtime-representative-contact-sheet.png"));
+}
+const digest = createHash("sha256").update(await readFile(rawFile)).digest("hex");
+console.log(JSON.stringify({ status: "passed", cases: results.length, expected: engines.length * viewports.length * inventory.length * phases.length, rawFile, compactFile, digest }, null, 2));
