@@ -48,6 +48,7 @@ test("Stage 3 final uses one bounded fixture for candidate and exact PR base", a
   assert.match(workflow, /run-stage3-final-bounded\.mjs "\$RUNNER_TEMP\/stage3-final-base"/);
   assert.match(boundedRunner, /attempt <= 2/);
   assert.match(boundedRunner, /Target page, context or browser has been closed/);
+  assert.match(boundedRunner, /failure\.failureState \?\? failure\.setupDiagnostics\?\.stableState/);
   assert.match(boundedRunner, /state\?\.assetReadiness\?\.state === "ready"/);
   assert.match(boundedRunner, /emptyDiagnostics\(failure\.diagnostics\)/);
   assert.doesNotMatch(boundedRunner, /timeout.*\+|skip|unavailable/u);

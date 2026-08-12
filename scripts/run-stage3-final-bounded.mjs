@@ -35,7 +35,10 @@ function isRetryableTargetClosed(summary) {
   const failures = (summary.results ?? []).filter(({ status }) => status === "failed");
   if (summary.failed !== 1 || failures.length !== 1 || (summary.results ?? []).length !== 1) return false;
   const failure = failures[0];
-  const state = failure.failureState;
+  // A hard WebKit page closure can make the catch-time snapshot unavailable.
+  // The fixture captures and strictly validates this stable production boundary
+  // immediately before runtime-start, so retain it as the fail-closed proof.
+  const state = failure.failureState ?? failure.setupDiagnostics?.stableState;
   return failure.kind === "takuya-final-audio"
     && ["final-cut", "final-fifo"].includes(failure.phase)
     && /Target page, context or browser has been closed/u.test(failure.error ?? "")
