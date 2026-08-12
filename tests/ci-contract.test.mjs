@@ -41,10 +41,16 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 test("Stage 3 final uses one bounded fixture for candidate and exact PR base", async () => {
   const workflow = await readFile(".github/workflows/ci.yml", "utf8");
   const p5Smoke = await readFile("scripts/p5-browser-smoke.mjs", "utf8");
+  const boundedRunner = await readFile("scripts/run-stage3-final-bounded.mjs", "utf8");
   assert.match(workflow, /Build exact PR base for the same bounded final fixture/);
   assert.match(workflow, /git worktree add --detach "\$base_source" "\$PR_BASE_SHA"/);
   assert.match(workflow, /npm ci[\s\S]*npm run build/);
-  assert.match(workflow, /run-browser-qa-against-build\.mjs scripts\/p5-browser-smoke\.mjs/);
+  assert.match(workflow, /run-stage3-final-bounded\.mjs "\$RUNNER_TEMP\/stage3-final-base"/);
+  assert.match(boundedRunner, /attempt <= 2/);
+  assert.match(boundedRunner, /Target page, context or browser has been closed/);
+  assert.match(boundedRunner, /state\?\.assetReadiness\?\.state === "ready"/);
+  assert.match(boundedRunner, /emptyDiagnostics\(failure\.diagnostics\)/);
+  assert.doesNotMatch(boundedRunner, /timeout.*\+|skip|unavailable/u);
   assert.match(p5Smoke, /const compactSnapshot = \{/);
   assert.match(p5Smoke, /if \(samples\.length > 1_200\)/);
   assert.match(p5Smoke, /stage3Progress\(label, "complete"/);

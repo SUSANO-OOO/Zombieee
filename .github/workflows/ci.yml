@@ -423,7 +423,12 @@ jobs:
           P5_QA_BATTLE_AUDIO_CASES: ${{ matrix.audio_case }}
           P5_QA_TIMEOUT_MS: "60000"
           P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/${{ matrix.audio_case }}
-        run: timeout --signal=TERM --kill-after=30s 15m npm run qa:p5
+        run: |
+          if [ "${{ matrix.audio_case }}" = "final" ]; then
+            timeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-final-bounded.mjs
+          else
+            timeout --signal=TERM --kill-after=30s 15m npm run qa:p5
+          fi
 
       - name: Build exact PR base for the same bounded final fixture
         if: matrix.audio_case == 'final'
@@ -449,7 +454,7 @@ jobs:
           P5_QA_BATTLE_AUDIO_CASES: final
           P5_QA_TIMEOUT_MS: "60000"
           P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/final-base
-        run: timeout --signal=TERM --kill-after=30s 15m node scripts/run-browser-qa-against-build.mjs scripts/p5-browser-smoke.mjs "$RUNNER_TEMP/stage3-final-base"
+        run: timeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-final-bounded.mjs "$RUNNER_TEMP/stage3-final-base"
 
       - name: Upload bounded Stage 3 audio evidence
         if: always()
