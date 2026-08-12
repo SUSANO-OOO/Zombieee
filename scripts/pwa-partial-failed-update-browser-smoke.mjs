@@ -470,7 +470,13 @@ try {
   const repairButton = page.getByRole("button", { name: "不足分だけ再取得" });
   await repairButton.waitFor({ state: "visible", timeout: 60_000 });
   await repairButton.click();
-  await page.getByText("失敗 3件", { exact: true }).waitFor({ state: "visible", timeout: 30_000 });
+  // The held fourth request becomes terminal at the production 30 second
+  // no-progress boundary. Keep the observation budget outside that boundary
+  // so runner scheduling cannot race the product timeout itself.
+  await page.getByText("失敗 3件", { exact: true }).waitFor({
+    state: "visible",
+    timeout: Math.max(60_000, stallDurationMs + 30_000),
+  });
   const incidentRequests = await waitForAudioRequests("incident", 4, 30_000);
   const incidentProgress = await page.locator(".pwa-progress-line").textContent();
   const incidentCategory = await page.getByText("音声を取得中", { exact: true }).count();
