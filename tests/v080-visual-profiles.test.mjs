@@ -107,14 +107,14 @@ test("all eleven units define explicit event, formation, personnel, and battle v
   }
 });
 
-test("Monkey keeps one carbine identity across master, portrait, card, and battle representation", async () => {
+test("Monkey restores the producer-approved V070 r11 crossbow identity across every visual surface", async () => {
   const profile = V080_UNIT_VISUAL_PROFILES.engineer;
-  assert.equal(profile.identityMaster.path, "/art/v080/characters/reference/monkey-identity-master-r1.png");
-  assert.equal(profile.eventPortrait.path, "/art/v080/characters/portraits/monkey-event-portrait-r2.webp");
-  assert.equal(profile.formationCard.path, "/art/v080/characters/cards/monkey-formation-card-r2.webp");
-  assert.equal(profile.battleSprite.path, "/art/v080/characters/monkey-battle-r2.png");
-  assert.ok(profile.identityLock.includes("layered-silver-hair-with-dark-roots"));
-  assert.ok(profile.identityLock.includes("suppressed-compact-carbine"));
+  assert.equal(profile.identityMaster.path, "/art/v070/characters/reference/monkey-base-r11.png");
+  assert.equal(profile.eventPortrait.path, "/art/v070/characters/portraits/engineer-portrait-v1.webp");
+  assert.equal(profile.formationCard.path, "/art/v0995/characters/cards/monkey-formation-card-r3.webp");
+  assert.equal(profile.battleSprite.path, "/art/v070/characters/engineer-battle-v1.png");
+  assert.ok(profile.identityLock.includes("voluminous-layered-silver-gray-hair"));
+  assert.ok(profile.identityLock.includes("two-cam-compact-compound-crossbow-with-visible-bolt"));
   const master = await sharp(publicFile(profile.identityMaster.path)).metadata();
   assert.deepEqual({ width: master.width, height: master.height }, { width: 1024, height: 1536 });
   const battle = await sharp(publicFile(profile.battleSprite.path)).metadata();
@@ -134,7 +134,7 @@ test("Issue #156 event portrait registry covers all 18 authored profiles with on
     assert.ok(profile.focusX >= 0 && profile.focusX <= 1, `${kind} focusX`);
     assert.ok(profile.focusY >= 0 && profile.focusY <= 1, `${kind} focusY`);
     assert.equal(profile.scale, 1, `${kind} authored scale remains neutral`);
-    assert.equal(profile.crop, "auto 92%", `${kind} mobile upper-body crop`);
+    assert.match(profile.crop, /^auto (?:92|94)%$/, `${kind} authored upper-body crop`);
     assert.ok(profile.safeArea.top >= 0 && profile.safeArea.bottom >= 0, `${kind} safe area`);
   }
 });
@@ -157,13 +157,14 @@ test("visual identity locks agree with the canonical campaign weapon and product
 
   const monkey = V080_UNIT_VISUAL_PROFILES.engineer;
   const monkeyCampaign = CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.MONKEY];
-  assert.match(monkeyCampaign.weaponName, /サプレッサー付きコンパクトカービン/);
-  assert.match(monkeyCampaign.appearanceAudit.weaponMatch, /サプレッサー付きコンパクトカービン/);
-  assert.ok(monkey.identityLock.includes("suppressed-compact-carbine"));
+  assert.match(monkeyCampaign.weaponName, /二カム式コンパクトクロスボウ/);
+  assert.match(monkeyCampaign.appearanceAudit.weaponMatch, /二cam/);
+  assert.ok(monkey.identityLock.includes("two-cam-compact-compound-crossbow-with-visible-bolt"));
+  // The cue keeps its stable internal ID; visual/gameplay semantics no longer show a firearm.
   assert.equal(weaponCueForUnit("engineer"), "weapon-suppressed-carbine");
 });
 
-test("Monkey battle atlas uses authored movement, shouldered fire, hit, and grounded defeat poses", async () => {
+test("Monkey approved crossbow atlas uses authored movement, aimed shots, hit, and grounded defeat poses", async () => {
   const atlasPath = publicFile(V080_UNIT_VISUAL_PROFILES.engineer.battleSprite.path);
   const cells = [];
   for (let column = 0; column < 7; column += 1) {
@@ -194,11 +195,11 @@ test("Monkey battle atlas uses authored movement, shouldered fire, hit, and grou
   }
   assert.equal(new Set(cells.map(({ digest }) => digest)).size, 7, "states cannot be transform-identical duplicates");
   assert.ok(cells[1].width !== cells[2].width, "walk contact and passing silhouettes must differ");
-  assert.ok(cells[3].width >= cells[0].width + 70, "attack pose must visibly shoulder and extend the carbine");
-  assert.ok(cells[4].width >= cells[0].width + 60, "recoil pose must retain the shouldered carbine");
+  assert.ok(cells[3].width >= cells[0].width + 30, "attack pose must visibly aim and extend the crossbow");
+  assert.ok(cells[4].width >= cells[0].width + 30, "release pose must retain the aimed crossbow");
   assert.ok(cells[5].width >= cells[0].width + 60, "hit pose must visibly recoil");
   assert.ok(cells[6].height <= cells[0].height * .55, "death must be a collapsed body, not a rotated standing pose");
-  assert.ok(cells[6].width >= 430, "collapsed pose must preserve full-body combat scale");
+  assert.ok(cells[6].width >= 330, "collapsed pose must preserve full-body combat scale");
   assert.equal(cells.every(({ bottom }) => bottom === 432), true, "every pose must share the authored ground line");
 });
 

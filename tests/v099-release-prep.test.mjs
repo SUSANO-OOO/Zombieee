@@ -21,15 +21,15 @@ const publishedV0993Source = JSON.parse(execFileSync("git", [
 const publishedV0993 = { ...publishedV0993Source, releaseSha: PUBLISHED_V0993_SHA };
 const candidate = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
 
-test("the Version 0.9.9.4 release candidate has one immutable identity and complete manifest", () => {
-  assert.equal(RELEASE_VERSION, "0.9.9.4");
+test("the Version 0.9.9.5 release candidate has one immutable identity and complete manifest", () => {
+  assert.equal(RELEASE_VERSION, "0.9.9.5");
   assert.equal(candidate.version, RELEASE_VERSION);
   assert.equal(candidate.releaseSha, RELEASE_SHA_PLACEHOLDER);
   assert.equal(candidate.assets.length, 416);
-  assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), 89_970_119);
+  assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), 90_917_375);
 
   const distinct = new Map(candidate.assets.map((asset) => [asset.hash, asset.bytes]));
-  assert.equal([...distinct.values()].reduce((sum, bytes) => sum + bytes, 0), 89_430_216);
+  assert.equal([...distinct.values()].reduce((sum, bytes) => sum + bytes, 0), 90_377_472);
 });
 
 test("the real Version 0.9.8.2 pack updates by hash without re-downloading unchanged assets", () => {
@@ -47,12 +47,12 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
 
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.8.2");
-  assert.equal(update.toVersion, "0.9.9.4");
-  assert.equal(update.downloadCount, 49);
-  assert.equal(update.downloadBytes, 10_374_694);
-  assert.equal(update.unchangedCount, 367);
-  assert.equal(update.reusedCount, 0);
-  assert.equal(update.removedCount, 7);
+  assert.equal(update.toVersion, "0.9.9.5");
+  assert.equal(update.downloadCount, 64);
+  assert.equal(update.downloadBytes, 16_690_448);
+  assert.equal(update.unchangedCount, 349);
+  assert.equal(update.reusedCount, 3);
+  assert.equal(update.removedCount, 25);
 
   const completedHashes = new Set([
     ...retainedHashes,
@@ -67,7 +67,7 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.deepEqual(verified, { verified: true, errors: [], missingPaths: [] });
 });
 
-test("the published Version 0.9.9.3 pack updates to 0.9.9.4 without re-downloading runtime assets", () => {
+test("the published Version 0.9.9.3 pack updates to 0.9.9.5 while reusing unchanged runtime assets", () => {
   assert.equal(publishedV0993.version, "0.9.9.3");
   assert.equal(publishedV0993Source.releaseSha, RELEASE_SHA_PLACEHOLDER);
   assert.equal(publishedV0993.releaseSha, PUBLISHED_V0993_SHA);
@@ -82,16 +82,20 @@ test("the published Version 0.9.9.3 pack updates to 0.9.9.4 without re-downloadi
 
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.9.3");
-  assert.equal(update.toVersion, "0.9.9.4");
-  assert.equal(update.downloadCount, 0);
-  assert.equal(update.downloadBytes, 0);
-  assert.equal(update.unchangedCount, 416);
-  assert.equal(update.reusedCount, 0);
-  assert.equal(update.removedCount, 0);
+  assert.equal(update.toVersion, "0.9.9.5");
+  assert.equal(update.downloadCount, 15);
+  assert.equal(update.downloadBytes, 6_315_754);
+  assert.equal(update.unchangedCount, 398);
+  assert.equal(update.reusedCount, 3);
+  assert.equal(update.removedCount, 18);
 
+  const completedHashes = new Set([
+    ...retainedHashes,
+    ...update.diff.downloadable.map((asset) => asset.hash),
+  ]);
   const verified = verifyUpdatePayload({
     manifest: candidate,
-    storedHashes: retainedHashes,
+    storedHashes: completedHashes,
     expectedVersion: RELEASE_VERSION,
     expectedReleaseSha: RELEASE_SHA_PLACEHOLDER,
   });

@@ -42,6 +42,7 @@
     "qa:v099-final-audio-capture": "node scripts/v099-final-remediation-audio-capture.mjs",
     "qa:v099-final-evidence": "node scripts/v099-final-remediation-evidence-index.mjs --check",
     "qa:issue156-remediation": "node scripts/run-browser-qa-with-server.mjs scripts/issue156-remediation-browser-smoke.mjs",
+    "qa:v0995-visual-integrity": "node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs",
     "qa:mobile-lifecycle": "node scripts/run-browser-qa-with-server.mjs scripts/mobile-lifecycle-browser-smoke.mjs",
     "qa:v095-mobile-performance": "node scripts/run-browser-qa-with-server.mjs scripts/mobile-lifecycle-browser-smoke.mjs",
     "qa:save-migration": "node scripts/save-migration-browser-matrix.mjs",

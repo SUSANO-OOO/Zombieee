@@ -81,18 +81,55 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     "/audio/v099/music/music-v099-pressure-station.mp3",
     "/audio/v099/music/music-v099-pressure-surface.mp3",
   ]);
+  const v0995VisualPolishPaths = new Set([
+    "/art/v070/characters/engineer-battle-v1.png",
+    "/art/v0995/characters/cards/mayo-chan-formation-card-r2.webp",
+    "/art/v0995/characters/cards/miyamoto-musashi-formation-card-r2.webp",
+    "/art/v0995/characters/cards/monkey-formation-card-r3.webp",
+    "/art/v0995/characters/cards/mrs-chiha-formation-card-r2.webp",
+    "/art/v0995/characters/cards/tky-formation-card-r2.webp",
+    "/art/v0995/characters/cards/zakimiya-formation-card-r2.webp",
+    "/art/v0995/characters/portraits/mayo-chan-event-portrait-r2.webp",
+    "/art/v0995/characters/portraits/miyamoto-musashi-event-portrait-r2.webp",
+    "/art/v0995/characters/portraits/mrs-chiha-event-portrait-r2.webp",
+    "/art/v0995/characters/portraits/tky-event-portrait-r2.webp",
+    "/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp",
+    "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+    "/art/v0995/enemies/cagewalker-battle-v2.png",
+    "/art/v0995/enemies/choir-knot-battle-v2.png",
+    "/art/v0995/enemies/pall-manta-battle-v2.png",
+    "/art/v0995/enemies/resonator-battle-v2.png",
+    "/art/v0995/enemies/spindle-battle-v2.png",
+  ]);
+  const replacedVisualPaths = new Set([
+    "/art/v080/characters/cards/monkey-formation-card-r2.webp",
+    "/art/v080/characters/portraits/monkey-event-portrait-r2.webp",
+    ...["mayo-chan", "miyamoto-musashi", "mrs-chiha", "tky", "zakimiya"]
+      .flatMap((kind) => [
+        `/art/v090/characters/cards/${kind}-formation-card-r1.webp`,
+        `/art/v090/characters/portraits/${kind}-event-portrait-r1.webp`,
+      ]),
+    ...["anchor-bloom", "cagewalker", "choir-knot", "pall-manta", "resonator", "spindle"]
+      .map((kind) => `/art/v090/enemies/${kind}-battle-v1.png`),
+  ]);
   const previousNonIcons = new Map(previous.assets
     .filter(({ path }) => path !== "/favicon.svg" && !path.startsWith("/icons/"))
     .filter(({ path }) => !finalRemediationPaths.has(path))
+    .filter(({ path }) => !replacedVisualPaths.has(path))
     .map(({ path, hash }) => [path, hash]));
   const currentNonIcons = new Map(current.assets
     .filter(({ path }) => !path.startsWith("/icons/"))
     .filter(({ path }) => !finalRemediationPaths.has(path))
+    .filter(({ path }) => !v0995VisualPolishPaths.has(path))
     .map(({ path, hash }) => [path, hash]));
   assert.deepEqual(currentNonIcons, previousNonIcons);
 
   const finalRemediationAssets = current.assets.filter(({ path }) => finalRemediationPaths.has(path));
   assert.deepEqual(new Set(finalRemediationAssets.map(({ path }) => path)), finalRemediationPaths);
+  assert.deepEqual(
+    new Set(current.assets.filter(({ path }) => v0995VisualPolishPaths.has(path)).map(({ path }) => path)),
+    v0995VisualPolishPaths,
+  );
 
   const currentIcons = current.assets.filter(({ path }) => path.startsWith("/icons/"));
   assert.deepEqual(new Set(currentIcons.map(({ path }) => path)), new Set(V099_APP_ICON_PATHS));

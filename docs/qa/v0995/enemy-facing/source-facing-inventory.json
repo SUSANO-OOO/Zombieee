@@ -1,0 +1,178 @@
+{
+  "walker": {
+    "family": "legacy-v060",
+    "sourcePath": "/infected-sprites-v1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v060/characters/legacy/infected-battle-gutter-v1.png"
+  },
+  "runner": {
+    "family": "legacy-v060",
+    "sourcePath": "/infected-sprites-v1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v060/characters/legacy/infected-battle-gutter-v1.png"
+  },
+  "turned": {
+    "family": "legacy-v060",
+    "sourcePath": "/infected-sprites-v1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v060/characters/legacy/infected-battle-gutter-v1.png"
+  },
+  "spitter": {
+    "family": "legacy-v060",
+    "sourcePath": "/spitter-sprites-v1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v060/characters/legacy/spitter-battle-gutter-v1.png"
+  },
+  "shade": {
+    "family": "legacy-v060",
+    "sourcePath": "/shade-raider-sprites-v1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v060/characters/legacy/shade-battle-gutter-v1.png"
+  },
+  "crusher": {
+    "family": "legacy-v060",
+    "sourcePath": "/crusher-sprites-v1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v060/characters/legacy/crusher-battle-gutter-v1.png"
+  },
+  "abomination": {
+    "family": "legacy-v060",
+    "sourcePath": "/crusher-sprites-v1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v060/characters/legacy/crusher-battle-gutter-v1.png"
+  },
+  "takuya": {
+    "family": "legacy-v060",
+    "sourcePath": "/takuya-boss-sprites-v2.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v060/characters/legacy/takuya-battle-gutter-v1.png"
+  },
+  "grappler": {
+    "family": "explicit-v070",
+    "sourcePath": "/art/v070/characters/grappler-battle-v1.png",
+    "sourceFacing": "right",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v070/characters/grappler-battle-v1.png"
+  },
+  "ooze": {
+    "family": "explicit-v070",
+    "sourcePath": "/art/v070/characters/ooze-battle-v1.png",
+    "sourceFacing": "right",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v070/characters/ooze-battle-v1.png"
+  },
+  "sprinter": {
+    "family": "explicit-v070",
+    "sourcePath": "/art/v070/characters/sprinter-battle-v1.png",
+    "sourceFacing": "right",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v070/characters/sprinter-battle-v1.png"
+  },
+  "gate-eater": {
+    "family": "explicit-v070",
+    "sourcePath": "/art/v070/characters/gate-eater-battle-v1.png",
+    "sourceFacing": "right",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v070/characters/gate-eater-battle-v1.png"
+  },
+  "kurome": {
+    "family": "explicit-v090-boss",
+    "sourcePath": "assets/source/v090-prototypes/bosses/kurome-pose-sheet-candidate-r1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png"
+  },
+  "mother": {
+    "family": "explicit-v090-boss",
+    "sourcePath": "assets/source/v090/bosses/mother-pose-sheet-candidate-r1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v090/bosses/mother-battle-r1.png"
+  },
+  "ooguchi": {
+    "family": "explicit-v090-boss",
+    "sourcePath": "assets/source/v090/bosses/ooguchi-pose-sheet-candidate-r1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v090/bosses/ooguchi-battle-r1.png"
+  },
+  "gairen": {
+    "family": "explicit-v090-boss",
+    "sourcePath": "assets/source/v090/bosses/gairen-pose-sheet-candidate-r1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v090/bosses/gairen-battle-r1.png"
+  },
+  "futago": {
+    "family": "explicit-v090-boss",
+    "sourcePath": "assets/source/v090/bosses/futago-pose-sheet-candidate-r1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v090/bosses/futago-battle-r1.png"
+  },
+  "resonator": {
+    "family": "explicit-v0995-infected",
+    "sourcePath": "assets/source/v090/enemies/resonator-infected-pose-sheet-r1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": {
+      "kind": "mouth",
+      "x": 0.36,
+      "y": 0.3,
+      "radius": 0.07
+    },
+    "runtimeAtlas": "/art/v0995/enemies/resonator-battle-v2.png"
+  },
+  "cagewalker": {
+    "family": "explicit-v0995-infected",
+    "sourcePath": "assets/source/v090/enemies/cagewalker-infected-pose-sheet-r1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": {
+      "kind": "head",
+      "x": 0.31,
+      "y": 0.64,
+      "radius": 0.07
+    },
+    "runtimeAtlas": "/art/v0995/enemies/cagewalker-battle-v2.png"
+  },
+  "spindle": {
+    "family": "explicit-v0995-infected",
+    "sourcePath": "assets/source/v090/enemies/spindle-infected-pose-sheet-r1.png",
+    "sourceFacing": "left",
+    "semanticLandmark": {
+      "kind": "head",
+      "x": 0.23,
+      "y": 0.75,
+      "radius": 0.06
+    },
+    "runtimeAtlas": "/art/v0995/enemies/spindle-battle-v2.png"
+  },
+  "choir-knot": {
+    "family": "explicit-v0995-infected",
+    "sourcePath": "assets/source/v090/enemies/choir-knot-infected-pose-sheet-r1.png",
+    "sourceFacing": "front-symmetric",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v0995/enemies/choir-knot-battle-v2.png"
+  },
+  "pall-manta": {
+    "family": "explicit-v0995-infected",
+    "sourcePath": "assets/source/v090/enemies/pall-manta-infected-pose-sheet-r1.png",
+    "sourceFacing": "front-symmetric",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v0995/enemies/pall-manta-battle-v2.png"
+  },
+  "anchor-bloom": {
+    "family": "explicit-v0995-infected",
+    "sourcePath": "assets/source/v090/enemies/anchor-bloom-infected-pose-sheet-r1.png",
+    "sourceFacing": "front-symmetric",
+    "semanticLandmark": null,
+    "runtimeAtlas": "/art/v0995/enemies/anchor-bloom-battle-v2.png"
+  }
+}

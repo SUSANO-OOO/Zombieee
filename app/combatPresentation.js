@@ -1,3 +1,5 @@
+import { combatFacingFromMotion } from "./enemyFacingContract.js";
+
 const deepFreeze = (value) => {
   if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
   for (const child of Object.values(value)) deepFreeze(child);
@@ -61,6 +63,7 @@ export const WEAPON_PROFILE_IDS = Object.freeze([
   "sniper",
   "machine-gun",
   "suppressed-carbine",
+  "crossbow",
   "deployable",
   "heal-support",
   "plasma-blade",
@@ -220,29 +223,24 @@ const OPTIONAL_CLIPS = {
 
 export function combatFacingDirection({
   side,
+  actualXDelta = 0,
   aiMoveDirection = 0,
   entryDirection = 0,
   targetDirection = 0,
   manualDirection = 0,
   manualAbilityActive = false,
+  attacking = false,
 } = {}) {
-  if (side === "human") {
-    if (manualAbilityActive && Number(manualDirection) !== 0) {
-      return Number(manualDirection) < 0 ? "left" : "right";
-    }
-    if (Number(aiMoveDirection) > .05) return "right";
-    if (Number(aiMoveDirection) < -.05) return "left";
-    if (Number(targetDirection) !== 0) {
-      return Number(targetDirection) < 0 ? "left" : "right";
-    }
-    return "right";
-  }
-  if (Number(aiMoveDirection) > .05) return "right";
-  if (Number(aiMoveDirection) < -.05) return "left";
-  if (Number(targetDirection) !== 0) {
-    return Number(targetDirection) < 0 ? "left" : "right";
-  }
-  return Number(entryDirection) > 0 ? "right" : "left";
+  return combatFacingFromMotion({
+    side,
+    actualXDelta,
+    aiMoveDirection,
+    entryDirection,
+    targetDirection,
+    manualDirection,
+    manualAbilityActive,
+    attacking,
+  });
 }
 
 const MACHINE_GUN_ACTIVE = clip([
@@ -841,6 +839,19 @@ export const WEAPON_PROFILES = deepFreeze({
     shotOffsetsSeconds: [0],
     projectileTravelSeconds: .12,
   },
+  crossbow: {
+    id: "crossbow",
+    trail: "bolt",
+    trailColor: "#8bd7d9",
+    impact: "precision-burst",
+    impactRadius: 8,
+    hitStopSeconds: .022,
+    recoil: .08,
+    casing: false,
+    damageWeights: [1],
+    shotOffsetsSeconds: [0],
+    projectileTravelSeconds: .12,
+  },
   deployable: {
     id: "deployable",
     trail: "placement",
@@ -928,7 +939,7 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   kumaverson: "blunt",
   babayaga: "sniper",
   guardian: "blunt",
-  engineer: "suppressed-carbine",
+  engineer: "crossbow",
   zakimiya: "blunt",
   tky: "plasma-blade",
   "mrs-chiha": "grenade",
