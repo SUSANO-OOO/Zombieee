@@ -248,16 +248,15 @@ jobs:
           V0995_VISUAL_QA_ENGINES: webkit
           V0995_VISUAL_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/visual-integrity/webkit
         run: |
-          batches=(
-            "walker,runner,spitter,crusher,shade,abomination"
-            "turned,takuya,grappler,ooze,sprinter,gate-eater"
-            "kurome,mother,ooguchi,gairen,futago,resonator"
-            "cagewalker,spindle,choir-knot,pall-manta,anchor-bloom"
+          kinds=(
+            walker runner spitter crusher shade abomination turned takuya
+            grappler ooze sprinter gate-eater kurome mother ooguchi gairen
+            futago resonator cagewalker spindle choir-knot pall-manta anchor-bloom
           )
-          for index in "${!batches[@]}"; do
-            export V0995_ENEMY_QA_KINDS="${batches[$index]}"
-            export V0995_ENEMY_QA_EVIDENCE_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/batch-$((index + 1))"
-            export V0995_ENEMY_QA_COMPACT_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/batch-$((index + 1))/compact"
+          for kind in "${kinds[@]}"; do
+            export V0995_ENEMY_QA_KINDS="$kind"
+            export V0995_ENEMY_QA_EVIDENCE_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/$kind"
+            export V0995_ENEMY_QA_COMPACT_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/$kind/compact"
             node scripts/run-browser-qa-with-server.mjs scripts/v0995-enemy-runtime-browser-smoke.mjs
           done
           node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs

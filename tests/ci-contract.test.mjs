@@ -41,15 +41,18 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /for viewport in 667x375 736x414 844x390 844x340 932x430 1280x720/u);
   assert.match(workflow, /V099_FINAL_REMEDIATION_QA_VIEWPORTS="\$viewport"/u);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
+  assert.match(workflow, /for kind in "\$\{kinds\[@\]\}"; do/);
+  assert.match(workflow, /V0995_ENEMY_QA_KINDS="\$kind"/);
+  assert.doesNotMatch(workflow, /V0995_ENEMY_QA_KINDS="\$\{batches\[\$index\]\}"/);
   assert.match(finalBoundedRunner, /attempt <= 2/u);
   const finalBoundedContract = await readFile("scripts/v099-final-bounded-contract.mjs", "utf8");
   assert.match(finalBoundedContract, /summary\.failed === summary\.total/u);
   assert.match(finalBoundedContract, / :: net::ERR_ABORTED\$\/u/u);
   assert.match(finalBoundedContract, /consoleErrors[\s\S]*pageErrors[\s\S]*httpErrors/u);
   assert.doesNotMatch(finalBoundedRunner, /status:\s*"(?:skipped|unavailable)"/u);
-  const enemyBatches = [...workflow.matchAll(/"([a-z-]+(?:,[a-z-]+){4,5})"/gu)]
-    .map(([, batch]) => batch).filter((batch) => batch.includes(","));
-  assert.deepEqual(enemyBatches.flatMap((batch) => batch.split(",")), [
+  const kindList = workflow.match(/kinds=\(\s*([\s\S]*?)\s*\)\s*for kind/u)?.[1]
+    .trim().split(/\s+/u) ?? [];
+  assert.deepEqual(kindList, [
     "walker", "runner", "spitter", "crusher", "shade", "abomination",
     "turned", "takuya", "grappler", "ooze", "sprinter", "gate-eater",
     "kurome", "mother", "ooguchi", "gairen", "futago", "resonator",
