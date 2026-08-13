@@ -61,7 +61,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(finalBoundedContract, / :: net::ERR_ABORTED\$\/u/u);
   assert.match(finalBoundedContract, /consoleErrors[\s\S]*pageErrors[\s\S]*httpErrors/u);
   assert.doesNotMatch(finalBoundedRunner, /status:\s*"(?:skipped|unavailable)"/u);
-  const kindList = workflow.match(/kinds=\(\s*([\s\S]*?)\s*\)\s*for kind/u)?.[1]
+  const kindList = workflow.match(/kinds=\(\s*([\s\S]*?)\s*\)\s*viewports=\(/u)?.[1]
     .trim().split(/\s+/u) ?? [];
   assert.deepEqual(kindList, [
     "walker", "runner", "spitter", "crusher", "shade", "abomination",
