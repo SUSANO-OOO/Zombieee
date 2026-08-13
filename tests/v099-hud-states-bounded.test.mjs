@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { readFile } from "node:fs/promises";
 
 import {
   CANONICAL_HUD_STATES,
@@ -117,4 +118,11 @@ test("single HUD state job is bounded and requires the selected real state", asy
     stateId: "not-canonical",
     evidenceRoot: root,
   }), /unsupported isolated HUD state/u);
+});
+
+test("isolated HUD runtime labels preserve exact slash ownership for target-close classification", async () => {
+  const source = await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8");
+  assert.match(source, /const name = `\$\{axisName\}\/\$\{stateId\}`/u);
+  assert.match(source, /const lifecycleName = `\$\{axisName\}-\$\{stateId\}`/u);
+  assert.doesNotMatch(source, /const name = `\$\{axisName\}-\$\{stateId\}`/u);
 });

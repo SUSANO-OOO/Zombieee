@@ -1180,8 +1180,11 @@ async function createDisabledHudState(page, label, { minimumOpacity = .72 } = {}
 
 async function runIsolatedHudState(browserType, engine, viewport, stateId) {
   const axisName = `${engine}-${viewport.width}x${viewport.height}`;
-  const name = `${axisName}-${stateId}`;
-  const lifecycle = await createLifecycleDiagnostics({ engine, viewport, caseType: "hud", name });
+  const name = `${axisName}/${stateId}`;
+  const lifecycleName = `${axisName}-${stateId}`;
+  const lifecycle = await createLifecycleDiagnostics({
+    engine, viewport, caseType: "hud", name: lifecycleName,
+  });
   let browser = null;
   let context = null;
   let page = null;
@@ -1316,7 +1319,7 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
     result.error = String(error);
     if (page && !page.isClosed()) {
       try {
-        result.failureScreenshot = await screenshot(page, `${name}-hud-failed.png`);
+        result.failureScreenshot = await screenshot(page, `${lifecycleName}-hud-failed.png`);
       } catch {
         // Preserve the original failure.
       }
