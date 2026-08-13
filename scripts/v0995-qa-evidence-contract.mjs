@@ -17,6 +17,14 @@ export function reconcilePageClockRequestFailures({
   calibrations,
   sameEpochToleranceMs = 5,
 }) {
+  if (!Array.isArray(failures)) throw new Error("request failures must be an array");
+  // Calibration exists to establish ownership of an observed failure. When
+  // setup has no request failure there is no timestamp to reconcile; preserve
+  // the raw observations without turning hosted scheduling delay into a QA
+  // failure. The separate post-ready diagnostic window remains active.
+  if (failures.length === 0) {
+    return { calibrations: structuredClone(calibrations ?? []), failures: [] };
+  }
   if (!Array.isArray(calibrations) || calibrations.length < 2) {
     throw new Error("request failure clock requires two page-clock calibrations");
   }

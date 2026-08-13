@@ -11,6 +11,7 @@ import {
 
 test("target-closed classifier accepts only exact infrastructure failure lines", () => {
   assert.equal(isRetryableTargetClosedLog("page.screenshot: Target page, context or browser has been closed\n"), true);
+  assert.equal(isRetryableTargetClosedLog("Error: webkit-844x390/brawler: Error: page.evaluate: Target page, context or browser has been closed\n"), true);
   assert.equal(isRetryableTargetClosedLog("Error: Target crashed\n"), true);
   assert.equal(isRetryableTargetClosedLog("geometry assertion failed; Target page looked wrong\n"), false);
   assert.equal(isRetryableTargetClosedLog("request failure: net::ERR_ABORTED\n"), false);

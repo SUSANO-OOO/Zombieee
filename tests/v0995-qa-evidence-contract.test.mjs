@@ -32,6 +32,26 @@ test("accepts slow evaluation when page time remains inside the measured Node in
   assert.equal(result.calibrations[1].roundTripMs, 900);
 });
 
+test("preserves raw calibration without reconciliation when setup has no request failure", () => {
+  const calibrations = [
+    { label: "post-navigation", nodeBefore: 2_000, nodeAfter: 2_001, pageNow: 1 },
+    { label: "terminal-ready", nodeBefore: 3_000, nodeAfter: 3_001, pageNow: 2 },
+  ];
+  const result = reconcilePageClockRequestFailures({ failures: [], calibrations });
+  assert.deepEqual(result.failures, []);
+  assert.deepEqual(result.calibrations, calibrations);
+});
+
+test("still rejects invalid same-epoch calibration when a failure requires ownership", () => {
+  assert.throws(() => reconcilePageClockRequestFailures({
+    failures: [failure()],
+    calibrations: [
+      { nodeBefore: 2_000, nodeAfter: 2_001, pageNow: 1 },
+      { nodeBefore: 3_000, nodeAfter: 3_001, pageNow: 2 },
+    ],
+  }), /outside its Node observation interval/u);
+});
+
 for (const [name, calibrations] of [
   ["missing second calibration", [{ nodeBefore: 0, nodeAfter: 1, pageNow: 0 }]],
   ["nonfinite calibration", [
