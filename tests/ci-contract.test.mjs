@@ -48,6 +48,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /V0995_ENEMY_QA_KINDS="\$kind"/);
   assert.match(workflow, /V0995_ENEMY_QA_VIEWPORTS="\$viewport"/);
   assert.match(workflow, /enemy-runtime\/webkit\/\$\{\{ matrix\.shard\.name \}\}\/\$kind\/\$viewport/);
+  assert.match(workflow, /node scripts\/run-v0995-enemy-runtime-bounded\.mjs/u);
   assert.doesNotMatch(workflow, /V0995_ENEMY_QA_KINDS="\$\{batches\[\$index\]\}"/);
   assert.match(finalBoundedRunner, /attempt <= 2/u);
   assert.match(finalBoundedRunner, /V099_FINAL_REMEDIATION_QA_BASE_URL/u);
@@ -77,6 +78,12 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(shardJob, /fail-fast: false/u);
   assert.doesNotMatch(shardJob, /continue-on-error:/u);
   assert.match(shardJob, /name: issue165-webkit-enemy-runtime-\$\{\{ matrix\.shard\.name \}\}/u);
+  const enemyBoundedRunner = await readFile("scripts/run-v0995-enemy-runtime-bounded.mjs", "utf8");
+  assert.match(enemyBoundedRunner, /attempt <= maxAttempts/u);
+  assert.match(enemyBoundedRunner, /maxAttempts !== 2/u);
+  assert.match(enemyBoundedRunner, /isRetryableTargetClosedLog/u);
+  assert.match(enemyBoundedRunner, /attempt-\$\{attempt\}/u);
+  assert.doesNotMatch(enemyBoundedRunner, /status:\s*"(?:skipped|unavailable)"|continue-on-error/u);
   assert.match(workflow, /V0995_ENEMY_QA_KINDS/u);
   assert.match(workflow, /name: issue165-visual-remediation-evidence[\s\S]*retention-days: 14/u);
   assert.match(workflow, /name: issue165-webkit-visual-remediation-evidence[\s\S]*retention-days: 14/u);

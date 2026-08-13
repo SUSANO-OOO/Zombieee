@@ -276,17 +276,17 @@ jobs:
       fail-fast: false
       matrix:
         shard:
-          - name: 01
+          - name: "01"
             kinds: "walker runner spitter crusher"
-          - name: 02
+          - name: "02"
             kinds: "shade abomination turned takuya"
-          - name: 03
+          - name: "03"
             kinds: "grappler ooze sprinter gate-eater"
-          - name: 04
+          - name: "04"
             kinds: "kurome mother ooguchi gairen"
-          - name: 05
+          - name: "05"
             kinds: "futago resonator cagewalker spindle"
-          - name: 06
+          - name: "06"
             kinds: "choir-knot pall-manta anchor-bloom"
 
     steps:
@@ -324,8 +324,7 @@ jobs:
               export V0995_ENEMY_QA_KINDS="$kind"
               export V0995_ENEMY_QA_VIEWPORTS="$viewport"
               export V0995_ENEMY_QA_EVIDENCE_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/${{ matrix.shard.name }}/$kind/$viewport"
-              export V0995_ENEMY_QA_COMPACT_DIR="$V0995_ENEMY_QA_EVIDENCE_DIR/compact"
-              node scripts/run-browser-qa-with-server.mjs scripts/v0995-enemy-runtime-browser-smoke.mjs
+              node scripts/run-v0995-enemy-runtime-bounded.mjs
             done
           done
 
