@@ -33,6 +33,13 @@ test("F3 runtime evidence is finite, uses production draw/runtime, and observes 
   assert.match(enemyHarness, /strictCanvasScreenshotClip\(observation, viewport\)/);
   assert.match(enemyHarness, /page\.screenshot\(\{ path: screenshotFile, clip, timeout \}\)/);
   assert.match(enemyHarness, /attemptCount: 1/);
+  assert.match(enemyHarness, /diagnosticsFor\(page\)/);
+  assert.match(enemyHarness, /calibrate\("post-navigation"\)/);
+  assert.match(enemyHarness, /sealSetup\(\)/);
+  assert.match(enemyHarness, /classifySupersededAssetRequestFailures/);
+  assert.match(enemyHarness, /reconcilePageClockRequestFailures/);
+  assert.match(enemyHarness, /phase = "post-ready"/);
+  assert.match(enemyHarness, /post-ready diagnostics/);
   assert.doesNotMatch(enemyHarness, /locator\("canvas\.battlefield\.active"\)\.screenshot/);
   assert.match(gameSource, /const enemy = spawnEnemy\(g, kind, lane\)/);
   assert.match(gameSource, /loadImageWithTimeout\(\{[\s\S]*?src: path,[\s\S]*?requireDecode: true/);

@@ -7,7 +7,11 @@ import sharp from "sharp";
 import { productionVisualIntegrityInventory } from "../app/visualIntegrityInventory.js";
 import { spriteFrameFor } from "../app/spriteManifest.js";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
-import { strictCanvasScreenshotClip } from "./v0995-qa-evidence-contract.mjs";
+import {
+  classifySupersededAssetRequestFailures,
+  reconcilePageClockRequestFailures,
+  strictCanvasScreenshotClip,
+} from "./v0995-qa-evidence-contract.mjs";
 
 const baseUrl = new URL(process.env.V0995_ENEMY_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error("v0995 enemy runtime QA is local-only");
@@ -39,6 +43,51 @@ const inventory = requestedKinds;
 const phases = ["move", "attack", "hit", "die"];
 const results = [];
 const representativeShots = [];
+
+function diagnosticsFor(page) {
+  let phase = "setup";
+  const requestStartedAt = new WeakMap();
+  const pageClockCalibrations = [];
+  const diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], requestFailureDetails: [], httpErrors: [] };
+  page.on("console", (message) => { if (message.type() === "error") diagnostics.consoleErrors.push(message.text()); });
+  page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
+  page.on("request", (request) => requestStartedAt.set(request, Date.now()));
+  page.on("requestfailed", (request) => {
+    const detail = { url: request.url(), errorText: request.failure()?.errorText ?? "unknown", startedAt: requestStartedAt.get(request) ?? Date.now(), failedAt: Date.now(), phase };
+    diagnostics.requestFailures.push(`${detail.url} :: ${detail.errorText}`);
+    diagnostics.requestFailureDetails.push(detail);
+  });
+  page.on("response", (response) => { if (response.status() >= 400) diagnostics.httpErrors.push(`${response.status()} ${response.url()}`); });
+  return {
+    diagnostics,
+    calibrate: async (label) => {
+      const nodeBefore = Date.now();
+      const pageNow = await page.evaluate(() => Date.now());
+      const nodeAfter = Date.now();
+      pageClockCalibrations.push({ label, nodeBefore, nodeAfter, pageNow });
+    },
+    sealSetup: async () => {
+      const asset = await page.evaluate(() => ({
+        state: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
+        history: window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? [],
+        requiredSprites: window.__ASHFALL_ASSET_QA__?.getRequiredPlan?.().sprites ?? [],
+        loadedSpriteKeys: window.__ASHFALL_ASSET_QA__?.getLoadedSpriteKeys?.() ?? [],
+      }));
+      const nodeBefore = Date.now();
+      const pageNow = await page.evaluate(() => Date.now());
+      const nodeAfter = Date.now();
+      pageClockCalibrations.push({ label: "terminal-ready", nodeBefore, nodeAfter, pageNow });
+      const setup = structuredClone(diagnostics);
+      setup.requestFailureDetails = reconcilePageClockRequestFailures({ failures: setup.requestFailureDetails, calibrations: pageClockCalibrations }).failures;
+      const classification = classifySupersededAssetRequestFailures({ failures: setup.requestFailureDetails, history: asset.history, requiredSprites: asset.requiredSprites, loadedSpriteKeys: asset.loadedSpriteKeys, terminalState: asset.state });
+      invariant(setup.consoleErrors.length === 0 && setup.pageErrors.length === 0 && setup.httpErrors.length === 0, `setup emitted non-cancellable diagnostics ${JSON.stringify(setup)}`);
+      invariant(classification.rejected.length === 0, `unmatched setup request failure ${JSON.stringify(classification.rejected)}`);
+      for (const entries of Object.values(diagnostics)) entries.length = 0;
+      phase = "post-ready";
+      return { asset, rawDiagnostics: setup, acceptedSupersededFailures: classification.accepted, pageClockCalibrations };
+    },
+  };
+}
 
 async function observeStrictCanvasClip(page, viewport, label) {
   const canvas = await page.waitForSelector("canvas.battlefield.active", {
@@ -126,15 +175,12 @@ for (const engine of engines) {
         const context = await browser.newContext({ viewport });
         try {
           const page = await context.newPage();
-          const failures = [];
-          page.on("console", (message) => { if (message.type() === "error") failures.push(`console:${message.text()}`); });
-          page.on("pageerror", (error) => failures.push(`page:${error.message}`));
-          page.on("requestfailed", (request) => failures.push(`request:${request.url()}:${request.failure()?.errorText}`));
-          page.on("response", (response) => { if (response.status() >= 400) failures.push(`http:${response.status()}:${response.url()}`); });
+          const diagnosticControl = diagnosticsFor(page);
           const url = new URL(baseUrl);
           url.search = new URLSearchParams({ qa: "mission", stage: "3", state: "start", qaEnemyRuntime: "1" }).toString();
           const response = await page.goto(url.href, { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `${engine}/${viewport.width}x${viewport.height}/${kind}: navigation failed`);
+          await diagnosticControl.calibrate("post-navigation");
           await dismissInstallOffer(page, { timeout });
           await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready"
             && typeof window.__ASHFALL_BATTLE_QA__?.prepareEnemyFacingRuntimeProof === "function"
@@ -152,6 +198,7 @@ for (const engine of engines) {
           console.log(`[v0995-enemy-runtime] ${engine}/${viewport.width}x${viewport.height}/${kind}`);
           const asset = await page.evaluate((candidate) => window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(candidate), kind);
           invariant(asset.kind === kind && asset.width > 0 && asset.height > 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: production sprite did not decode ${JSON.stringify(asset)}`);
+          const assetSetupBoundary = await diagnosticControl.sealSetup();
           for (const phase of phases) {
             const prepared = await page.evaluate(({ kind, phase }) => window.__ASHFALL_BATTLE_QA__.prepareEnemyFacingRuntimeProof({ kind, phase }), { kind, phase });
             const samples = [];
@@ -200,9 +247,10 @@ for (const engine of engines) {
               },
             };
             if (["walker", "resonator", "takuya"].includes(kind) && ["move", "attack", "die"].includes(phase)) representativeShots.push(screenshotFile);
-            results.push({ engine, viewport, kind, phase, prepared, samples, capture, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
+            results.push({ engine, viewport, kind, phase, prepared, samples, capture, assetSetupBoundary, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
           }
-          invariant(failures.length === 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: ${failures.join("\n")}`);
+          const postReady = diagnosticControl.diagnostics;
+          invariant(Object.values(postReady).every((entries) => entries.length === 0), `${engine}/${viewport.width}x${viewport.height}/${kind}: post-ready diagnostics ${JSON.stringify(postReady)}`);
         } finally {
           await context.close();
         }
