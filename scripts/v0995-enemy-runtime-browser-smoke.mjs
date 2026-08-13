@@ -40,6 +40,41 @@ const phases = ["move", "attack", "hit", "die"];
 const results = [];
 const representativeShots = [];
 
+async function observeStrictCanvasClip(page, viewport, label) {
+  const canvas = await page.waitForSelector("canvas.battlefield.active", {
+    state: "attached",
+    timeout,
+  });
+  const startedAt = Date.now();
+  const deadline = startedAt + Math.min(timeout, 5_000);
+  const observations = [];
+  while (Date.now() <= deadline) {
+    const observation = await canvas.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        attached: element.isConnected,
+        active: element.matches("canvas.battlefield.active"),
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+      };
+    }).catch((error) => ({ error: String(error) }));
+    observations.push({ at: Date.now() - startedAt, ...observation });
+    if (observation.attached && observation.active
+      && [observation.x, observation.y, observation.width, observation.height].every(Number.isFinite)
+      && observation.width > 0 && observation.height > 0) {
+      return {
+        clip: strictCanvasScreenshotClip(observation, viewport),
+        observations,
+        elapsedMs: Date.now() - startedAt,
+      };
+    }
+    await page.waitForTimeout(16);
+  }
+  throw new Error(`${label}: active canvas never exposed finite attached geometry ${JSON.stringify(observations.slice(-8))}`);
+}
+
 function assertRenderSequence({ engine, viewport, kind, phase, samples }) {
   const label = `${engine}/${viewport.width}x${viewport.height}/${kind}/${phase}`;
   invariant(samples.length >= 2, `${label}: fewer than two runtime samples`);
@@ -132,8 +167,12 @@ for (const engine of engines) {
             }
             assertRenderSequence({ engine, viewport, kind, phase, samples });
             const screenshotFile = path.join(outputDir, `${engine}-${viewport.width}x${viewport.height}-${kind}-${phase}.png`);
-            const canvasBox = await page.locator("canvas.battlefield.active").boundingBox();
-            const clip = strictCanvasScreenshotClip(canvasBox, viewport);
+            const canvasObservation = await observeStrictCanvasClip(
+              page,
+              viewport,
+              `${engine}/${viewport.width}x${viewport.height}/${kind}/${phase}`,
+            );
+            const clip = canvasObservation.clip;
             const captureStartedAt = Date.now();
             const preCapture = await page.evaluate((fighterId) => (
               window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
@@ -148,6 +187,7 @@ for (const engine of engines) {
               startedAt: new Date(captureStartedAt).toISOString(),
               elapsedMs: Date.now() - captureStartedAt,
               clip,
+              canvasObservation,
               pre: {
                 fighter: preCapture?.fighter ?? null,
                 renderCount: preCapture?.renderHistory?.length ?? 0,

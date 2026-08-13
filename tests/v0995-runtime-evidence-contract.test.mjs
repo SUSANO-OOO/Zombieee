@@ -27,7 +27,10 @@ test("F3 runtime evidence is finite, uses production draw/runtime, and observes 
   assert.doesNotMatch(enemyHarness, /runtime\.every\(\(\{ renderHistory, corpseRenderHistory \}\)/);
   assert.match(enemyHarness, /for \(const kind of inventory\) \{[\s\S]*?const context = await browser\.newContext\(\{ viewport \}\)/);
   assert.match(enemyHarness, /finally \{[\s\S]*?await context\.close\(\)/);
-  assert.match(enemyHarness, /strictCanvasScreenshotClip\(canvasBox, viewport\)/);
+  assert.match(enemyHarness, /observeStrictCanvasClip\(/);
+  assert.match(enemyHarness, /element\.isConnected/);
+  assert.match(enemyHarness, /element\.matches\("canvas\.battlefield\.active"\)/);
+  assert.match(enemyHarness, /strictCanvasScreenshotClip\(observation, viewport\)/);
   assert.match(enemyHarness, /page\.screenshot\(\{ path: screenshotFile, clip, timeout \}\)/);
   assert.match(enemyHarness, /attemptCount: 1/);
   assert.doesNotMatch(enemyHarness, /locator\("canvas\.battlefield\.active"\)\.screenshot/);

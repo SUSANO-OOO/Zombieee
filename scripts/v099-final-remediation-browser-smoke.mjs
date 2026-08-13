@@ -25,7 +25,10 @@ import {
 import { AIRSTRIKE_DEF, CRAWLER_BARRAGE_DEF } from "../app/gameRules.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
-import { classifySupersededAssetRequestFailures } from "./v0995-qa-evidence-contract.mjs";
+import {
+  classifySupersededAssetRequestFailures,
+  reconcilePageClockRequestFailures,
+} from "./v0995-qa-evidence-contract.mjs";
 
 const baseUrl = new URL(
   process.env.V099_FINAL_REMEDIATION_QA_BASE_URL
@@ -286,6 +289,7 @@ function caseUrl(qaMode, { stageNumber = 3, safeAreaPreset = null } = {}) {
 function diagnosticsFor(page, lifecycle = null) {
   let active = true;
   let phase = "setup";
+  const pageClockCalibrations = [];
   const requestStartedAt = new WeakMap();
   const diagnostics = {
     consoleErrors: [],
@@ -325,11 +329,32 @@ function diagnosticsFor(page, lifecycle = null) {
   lifecycle?.attachPage(page, diagnostics);
   return {
     diagnostics,
-    beginPostReadyObservation: () => {
+    calibratePageClock: async (label) => {
+      const nodeBefore = Date.now();
+      const pageNow = await page.evaluate(() => Date.now());
+      const nodeAfter = Date.now();
+      const sample = { label, nodeBefore, nodeAfter, pageNow };
+      pageClockCalibrations.push(sample);
+      return sample;
+    },
+    beginPostReadyObservation: async () => {
+      const nodeBefore = Date.now();
+      const pageNow = await page.evaluate(() => Date.now());
+      const nodeAfter = Date.now();
+      pageClockCalibrations.push({ label: "terminal-ready", nodeBefore, nodeAfter, pageNow });
       const setup = Object.fromEntries(Object.entries(diagnostics).map(([key, entries]) => [key, [...entries]]));
+      const reconciled = reconcilePageClockRequestFailures({
+        failures: setup.requestFailureDetails,
+        calibrations: pageClockCalibrations,
+      });
+      setup.requestFailureDetails = reconciled.failures;
       for (const entries of Object.values(diagnostics)) entries.length = 0;
       phase = "post-ready";
-      return { boundaryAt: Date.now(), diagnostics: setup };
+      return {
+        boundaryAt: pageNow,
+        diagnostics: setup,
+        pageClockCalibrations: reconciled.calibrations,
+      };
     },
     stop: () => { active = false; },
   };
@@ -354,7 +379,7 @@ async function sealAssetSetupBoundary(page, diagnosticControl, label) {
         `${label}: terminal finite HUD generation did not load ${requiredKind}`);
     }
   }
-  const setup = diagnosticControl.beginPostReadyObservation();
+  const setup = await diagnosticControl.beginPostReadyObservation();
   const classification = classifySupersededAssetRequestFailures({
     failures: setup.diagnostics.requestFailureDetails,
     history: asset.history,
@@ -373,6 +398,7 @@ async function sealAssetSetupBoundary(page, diagnosticControl, label) {
     boundaryAt: setup.boundaryAt,
     asset,
     rawDiagnostics: setup.diagnostics,
+    pageClockCalibrations: setup.pageClockCalibrations,
     acceptedSupersededFailures: classification.accepted,
   };
 }
@@ -535,6 +561,7 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
   });
   lifecycle?.event("navigation complete", { page, status: response?.status(), milestone: "navigation complete" });
   invariant(response?.ok(), `${qaMode}: navigation returned HTTP ${response?.status()}`);
+  await diagnosticControl.calibratePageClock("post-navigation");
   lifecycle?.setPhase("battle setup");
   await dismissInstallOffer(page, { timeout });
   await enterLegacyQaBattle(page, qaMode);

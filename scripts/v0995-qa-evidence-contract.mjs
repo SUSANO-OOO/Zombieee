@@ -12,6 +12,62 @@ const pathMatches = (requestUrl, requiredPath) => {
   return requestPath === candidatePath || requestPath.endsWith(candidatePath);
 };
 
+export function reconcilePageClockRequestFailures({
+  failures,
+  calibrations,
+  maxRoundTripMs = 250,
+  maxOffsetDriftMs = 50,
+}) {
+  if (!Array.isArray(calibrations) || calibrations.length < 2) {
+    throw new Error("request failure clock requires two page-clock calibrations");
+  }
+  const normalized = calibrations.map((sample) => {
+    const values = [sample?.nodeBefore, sample?.nodeAfter, sample?.pageNow];
+    if (!values.every(Number.isFinite) || sample.nodeAfter < sample.nodeBefore) {
+      throw new Error("request failure clock calibration is not finite");
+    }
+    const roundTripMs = sample.nodeAfter - sample.nodeBefore;
+    if (roundTripMs > maxRoundTripMs) {
+      throw new Error(`request failure clock calibration exceeded ${maxRoundTripMs}ms`);
+    }
+    const nodeMidpoint = sample.nodeBefore + roundTripMs / 2;
+    return {
+      ...sample,
+      nodeMidpoint,
+      roundTripMs,
+      pageMinusNodeMs: sample.pageNow - nodeMidpoint,
+    };
+  });
+  const offsets = normalized.map(({ pageMinusNodeMs }) => pageMinusNodeMs);
+  if (Math.max(...offsets) - Math.min(...offsets) > maxOffsetDriftMs) {
+    throw new Error(`request failure clock offset drift exceeded ${maxOffsetDriftMs}ms`);
+  }
+  const first = normalized[0];
+  const last = normalized.at(-1);
+  const interpolateOffset = (nodeTime) => {
+    if (last.nodeMidpoint <= first.nodeMidpoint) return last.pageMinusNodeMs;
+    const ratio = Math.max(0, Math.min(1,
+      (nodeTime - first.nodeMidpoint) / (last.nodeMidpoint - first.nodeMidpoint)));
+    return first.pageMinusNodeMs + (last.pageMinusNodeMs - first.pageMinusNodeMs) * ratio;
+  };
+  return {
+    calibrations: normalized,
+    failures: failures.map((failure) => {
+      if (![failure?.startedAt, failure?.failedAt].every(Number.isFinite)
+        || failure.failedAt < failure.startedAt) {
+        throw new Error("request failure timestamp is not finite");
+      }
+      return {
+        ...failure,
+        nodeStartedAt: failure.startedAt,
+        nodeFailedAt: failure.failedAt,
+        startedAt: failure.startedAt + interpolateOffset(failure.startedAt),
+        failedAt: failure.failedAt + interpolateOffset(failure.failedAt),
+      };
+    }),
+  };
+}
+
 export function classifySupersededAssetRequestFailures({
   failures,
   history,
@@ -39,7 +95,11 @@ export function classifySupersededAssetRequestFailures({
       const endedAt = startedAt + Number(entry.elapsedMs ?? 0);
       return Number.isFinite(startedAt)
         && failure.startedAt >= startedAt
-        && failure.startedAt <= endedAt
+        // Playwright can deliver the request event immediately after the
+        // product cleanup that aborted it.  Keep the same bounded grace on
+        // both observed request timestamps; pending-path ownership below is
+        // still required, so this does not admit an unrelated abort.
+        && failure.startedAt <= endedAt + cancellationGraceMs
         && failure.failedAt >= failure.startedAt
         && failure.failedAt <= endedAt + cancellationGraceMs;
     });

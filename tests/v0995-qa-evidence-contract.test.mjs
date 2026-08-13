@@ -3,8 +3,43 @@ import test from "node:test";
 
 import {
   classifySupersededAssetRequestFailures,
+  reconcilePageClockRequestFailures,
   strictCanvasScreenshotClip,
 } from "../scripts/v0995-qa-evidence-contract.mjs";
+
+test("reconciles Node request timestamps into the page asset-history clock", () => {
+  const result = reconcilePageClockRequestFailures({
+    failures: [failure({ startedAt: 2_100, failedAt: 2_120 })],
+    calibrations: [
+      { label: "post-navigation", nodeBefore: 1_000, nodeAfter: 1_010, pageNow: 905 },
+      { label: "terminal-ready", nodeBefore: 3_000, nodeAfter: 3_010, pageNow: 2_905 },
+    ],
+  });
+  assert.equal(result.failures[0].nodeStartedAt, 2_100);
+  assert.equal(result.failures[0].nodeFailedAt, 2_120);
+  assert.equal(result.failures[0].startedAt, 2_000);
+  assert.equal(result.failures[0].failedAt, 2_020);
+});
+
+for (const [name, calibrations] of [
+  ["missing second calibration", [{ nodeBefore: 0, nodeAfter: 1, pageNow: 0 }]],
+  ["nonfinite calibration", [
+    { nodeBefore: 0, nodeAfter: 1, pageNow: Number.NaN },
+    { nodeBefore: 2, nodeAfter: 3, pageNow: 2 },
+  ]],
+  ["slow calibration", [
+    { nodeBefore: 0, nodeAfter: 300, pageNow: 150 },
+    { nodeBefore: 400, nodeAfter: 401, pageNow: 400 },
+  ]],
+  ["clock discontinuity", [
+    { nodeBefore: 0, nodeAfter: 2, pageNow: 1 },
+    { nodeBefore: 100, nodeAfter: 102, pageNow: 201 },
+  ]],
+]) {
+  test(`rejects ${name}`, () => {
+    assert.throws(() => reconcilePageClockRequestFailures({ failures: [failure()], calibrations }));
+  });
+}
 
 const failure = (overrides = {}) => ({
   url: "http://127.0.0.1:4177/Zombieee/art/medic.png",
@@ -49,6 +84,22 @@ test("accepts only a pending request owned by a superseded setup generation and 
   assert.equal(result.rejected.length, 0);
   assert.equal(result.accepted[0].cancelledGeneration, 2);
   assert.equal(result.accepted[0].terminalGeneration, 3);
+});
+
+test("accepts a bounded delayed Playwright request notification for the exact pending owner", () => {
+  const result = classifySupersededAssetRequestFailures(input({
+    failures: [failure({ startedAt: 1_510, failedAt: 1_520 })],
+  }));
+  assert.equal(result.accepted.length, 1);
+  assert.equal(result.accepted[0].cancelledGeneration, 2);
+});
+
+test("rejects a delayed request notification outside the bounded cancellation grace", () => {
+  const result = classifySupersededAssetRequestFailures(input({
+    failures: [failure({ startedAt: 2_501, failedAt: 2_510 })],
+  }));
+  assert.equal(result.accepted.length, 0);
+  assert.match(result.rejected[0].reasons.join(" "), /no temporally owning/);
 });
 
 for (const [name, mutate] of [
