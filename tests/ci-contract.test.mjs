@@ -57,6 +57,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   ]);
   assert.equal(hudViewports.length * hudStates.length, 48);
   assert.match(hudJob, /ISSUE156_WEBKIT_HUD_STATE: \$\{\{ matrix\.hud_state \}\}/u);
+  assert.match(hudJob, /needs: webkit-deployment-viewport/u);
   assert.match(hudJob, /fail-fast: false/u);
   assert.match(hudJob, /max-parallel: 4/u);
   assert.doesNotMatch(hudJob, /continue-on-error:/u);
@@ -64,9 +65,22 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   const deploymentViewports = deploymentJob.match(/viewport:\r?\n([\s\S]*?)\r?\n    steps:/u)?.[1]
     .match(/^\s+- ([0-9]+x[0-9]+)$/gmu)?.map((line) => line.trim().slice(2)) ?? [];
   assert.deepEqual(deploymentViewports, ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"]);
+  assert.match(deploymentJob, /needs: webkit-stage3-audio/u);
   assert.match(deploymentJob, /fail-fast: false/u);
-  assert.match(deploymentJob, /max-parallel: 4/u);
+  assert.match(deploymentJob, /max-parallel: 2/u);
   assert.doesNotMatch(deploymentJob, /continue-on-error:/u);
+  const enemyJob = workflow.match(/  webkit-enemy-runtime-shard:\n([\s\S]*?)\n  webkit-viewport:/u)?.[1] ?? "";
+  assert.match(enemyJob, /fail-fast: false/u);
+  assert.match(enemyJob, /max-parallel: 2/u);
+  assert.doesNotMatch(enemyJob, /continue-on-error:/u);
+  const hostedJob = workflow.match(/  webkit-hosted:\n([\s\S]*?)\n  webkit-enemy-runtime-shard:/u)?.[1] ?? "";
+  assert.match(hostedJob, /needs: webkit-enemy-runtime-shard/u);
+  assert.doesNotMatch(hostedJob, /continue-on-error:/u);
+  const stage3Job = workflow.match(/  webkit-stage3-audio:\n([\s\S]*)$/u)?.[1] ?? "";
+  assert.match(stage3Job, /needs: webkit-hosted/u);
+  assert.match(stage3Job, /fail-fast: false/u);
+  assert.match(stage3Job, /max-parallel: 1/u);
+  assert.doesNotMatch(stage3Job, /continue-on-error:/u);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
   assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);
