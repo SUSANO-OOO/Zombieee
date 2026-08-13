@@ -136,11 +136,13 @@ jobs:
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
           V099_FINAL_REMEDIATION_QA_CASES: hud
+          V099_PAGES_EXPECTED_VERSION: 0.9.9.5
+          V099_PAGES_EXPECTED_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           for viewport in 667x375 736x414 844x390 844x340 932x430 1280x720; do
             export V099_FINAL_REMEDIATION_QA_VIEWPORTS="$viewport"
             export V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR="${{ github.workspace }}/issue156-evidence/canonical-hud/chromium/$viewport"
-            node scripts/run-v099-final-bounded.mjs
+            node scripts/run-v099-final-bounded-against-pages.mjs _site
           done
 
       - name: Capture Issue 156 final-canvas deployment evidence (Chromium)
@@ -253,11 +255,15 @@ jobs:
             grappler ooze sprinter gate-eater kurome mother ooguchi gairen
             futago resonator cagewalker spindle choir-knot pall-manta anchor-bloom
           )
+          viewports=(844x340 844x390 1280x720)
           for kind in "${kinds[@]}"; do
-            export V0995_ENEMY_QA_KINDS="$kind"
-            export V0995_ENEMY_QA_EVIDENCE_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/$kind"
-            export V0995_ENEMY_QA_COMPACT_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/$kind/compact"
-            node scripts/run-browser-qa-with-server.mjs scripts/v0995-enemy-runtime-browser-smoke.mjs
+            for viewport in "${viewports[@]}"; do
+              export V0995_ENEMY_QA_KINDS="$kind"
+              export V0995_ENEMY_QA_VIEWPORTS="$viewport"
+              export V0995_ENEMY_QA_EVIDENCE_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/$kind/$viewport"
+              export V0995_ENEMY_QA_COMPACT_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/$kind/$viewport/compact"
+              node scripts/run-browser-qa-with-server.mjs scripts/v0995-enemy-runtime-browser-smoke.mjs
+            done
           done
           node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
 

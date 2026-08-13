@@ -7,6 +7,7 @@ import { onlyAbortedStaticStreams } from "../scripts/v099-final-bounded-contract
 test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   const workflow = await readFile(".github/workflows/ci.yml", "utf8");
   const finalBoundedRunner = await readFile("scripts/run-v099-final-bounded.mjs", "utf8");
+  const pagesBoundedRunner = await readFile("scripts/run-v099-final-bounded-against-pages.mjs", "utf8");
   const trigger = workflow.split("permissions:", 1)[0];
   assert.match(trigger, /pull_request:/u);
   assert.match(trigger, /- main/u);
@@ -37,14 +38,24 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /V0995_VISUAL_QA_ENGINES: chromium/u);
   assert.match(workflow, /V0995_ENEMY_QA_ENGINES: webkit/u);
   assert.match(workflow, /V0995_VISUAL_QA_ENGINES: webkit/u);
-  assert.match(workflow, /run-v099-final-bounded\.mjs/u);
+  assert.match(workflow, /run-v099-final-bounded-against-pages\.mjs _site/u);
   assert.match(workflow, /for viewport in 667x375 736x414 844x390 844x340 932x430 1280x720/u);
   assert.match(workflow, /V099_FINAL_REMEDIATION_QA_VIEWPORTS="\$viewport"/u);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /for kind in "\$\{kinds\[@\]\}"; do/);
+  assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);
+  assert.match(workflow, /for viewport in "\$\{viewports\[@\]\}"; do/);
   assert.match(workflow, /V0995_ENEMY_QA_KINDS="\$kind"/);
+  assert.match(workflow, /V0995_ENEMY_QA_VIEWPORTS="\$viewport"/);
+  assert.match(workflow, /enemy-runtime\/webkit\/\$kind\/\$viewport/);
   assert.doesNotMatch(workflow, /V0995_ENEMY_QA_KINDS="\$\{batches\[\$index\]\}"/);
   assert.match(finalBoundedRunner, /attempt <= 2/u);
+  assert.match(finalBoundedRunner, /V099_FINAL_REMEDIATION_QA_BASE_URL/u);
+  assert.match(pagesBoundedRunner, /github-pages-version/u);
+  assert.match(pagesBoundedRunner, /github-pages-release/u);
+  assert.match(pagesBoundedRunner, /github-pages-base/u);
+  assert.match(pagesBoundedRunner, /manifest\.releaseSha !== expectedReleaseSha/u);
+  assert.match(pagesBoundedRunner, /V099_FINAL_REMEDIATION_QA_BASE_URL: baseUrl/u);
   const finalBoundedContract = await readFile("scripts/v099-final-bounded-contract.mjs", "utf8");
   assert.match(finalBoundedContract, /summary\.failed === summary\.total/u);
   assert.match(finalBoundedContract, / :: net::ERR_ABORTED\$\/u/u);

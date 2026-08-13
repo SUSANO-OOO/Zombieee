@@ -12,10 +12,11 @@ await mkdir(evidenceRoot, { recursive: true });
 
 function runAttempt(attemptDir) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [
-      "scripts/run-browser-qa-with-server.mjs",
-      "scripts/v099-final-remediation-browser-smoke.mjs",
-    ], {
+    const externallyHosted = Boolean(process.env.V099_FINAL_REMEDIATION_QA_BASE_URL);
+    const command = externallyHosted
+      ? ["scripts/v099-final-remediation-browser-smoke.mjs"]
+      : ["scripts/run-browser-qa-with-server.mjs", "scripts/v099-final-remediation-browser-smoke.mjs"];
+    const child = spawn(process.execPath, command, {
       cwd: process.cwd(),
       env: { ...process.env, V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR: attemptDir },
       stdio: "inherit",
