@@ -67,7 +67,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.deepEqual(deploymentViewports, ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"]);
   assert.match(deploymentJob, /needs: webkit-stage3-audio/u);
   assert.match(deploymentJob, /fail-fast: false/u);
-  assert.match(deploymentJob, /max-parallel: 2/u);
+  assert.match(deploymentJob, /max-parallel: 1/u);
   assert.doesNotMatch(deploymentJob, /continue-on-error:/u);
   const enemyJob = workflow.match(/  webkit-enemy-runtime-shard:\n([\s\S]*?)\n  webkit-viewport:/u)?.[1] ?? "";
   assert.match(enemyJob, /fail-fast: false/u);
