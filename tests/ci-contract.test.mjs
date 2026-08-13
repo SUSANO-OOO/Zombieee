@@ -58,7 +58,15 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.equal(hudViewports.length * hudStates.length, 48);
   assert.match(hudJob, /ISSUE156_WEBKIT_HUD_STATE: \$\{\{ matrix\.hud_state \}\}/u);
   assert.match(hudJob, /fail-fast: false/u);
+  assert.match(hudJob, /max-parallel: 4/u);
   assert.doesNotMatch(hudJob, /continue-on-error:/u);
+  const deploymentJob = workflow.match(/  webkit-deployment-viewport:\n([\s\S]*?)\n  webkit-stage3-audio:/u)?.[1] ?? "";
+  const deploymentViewports = deploymentJob.match(/viewport:\r?\n([\s\S]*?)\r?\n    steps:/u)?.[1]
+    .match(/^\s+- ([0-9]+x[0-9]+)$/gmu)?.map((line) => line.trim().slice(2)) ?? [];
+  assert.deepEqual(deploymentViewports, ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"]);
+  assert.match(deploymentJob, /fail-fast: false/u);
+  assert.match(deploymentJob, /max-parallel: 4/u);
+  assert.doesNotMatch(deploymentJob, /continue-on-error:/u);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
   assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);
