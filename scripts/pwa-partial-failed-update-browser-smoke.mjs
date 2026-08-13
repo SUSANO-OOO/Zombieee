@@ -490,7 +490,7 @@ try {
     partialCache.logicalSatisfied === 156
     && new Set(incidentChangedRequests).size === candidateNewTransportPaths.size
     && incidentChangedRequests.length === candidateNewTransportPaths.size
-    && new RegExp(`^${candidateNewHashAssets.length} \\/ 260件`).test(incidentProgress ?? "")
+    && new RegExp(`^${candidateNewHashAssets.length} \\/ ${candidateManifest.assets.length - 156}件`).test(incidentProgress ?? "")
     && incidentCategory === 1
     && failureCounter === 1
     // Preserve the strict initial concurrency contract. A causally separate
