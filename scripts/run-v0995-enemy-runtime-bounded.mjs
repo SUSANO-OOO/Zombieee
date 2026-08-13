@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const OPERATION_TARGET_CLOSED = "(?:page|browser|browserContext|context|locator|elementHandle)\\.[a-zA-Z]+:\\s*Target (?:page, context or browser has been closed|crashed)";
 const DIRECT_TARGET_CLOSED_LINE = new RegExp(`^(?:Error:\\s*)?${OPERATION_TARGET_CLOSED}$`, "u");
-const LABELED_TARGET_CLOSED_LINE = new RegExp(`^(?:Error:\\s*)?(?:[a-z]+-\\d+x\\d+\\/[a-z0-9-]+|[a-z]+\\/\\d+x\\d+\\/[a-z0-9-]+(?:\\/[a-z0-9-]+)?):\\s*(?:Error:\\s*)?${OPERATION_TARGET_CLOSED}$`, "u");
+const LABELED_TARGET_CLOSED_LINE = new RegExp(`^(?:Error:\\s*)?(?:[a-z]+-\\d+x\\d+|[a-z]+\\/\\d+x\\d+)\\/[a-z0-9-]+(?:\\/[a-z0-9-]+)*:\\s*(?:Error:\\s*)?${OPERATION_TARGET_CLOSED}$`, "u");
 const TARGET_CRASHED_LINE = /^(?:Error:\s*)?Target crashed$/u;
 
 export function isRetryableTargetClosedLog(log) {

@@ -43,6 +43,8 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /V099_FINAL_REMEDIATION_QA_VIEWPORTS="\$viewport"/u);
   assert.match(workflow, /ISSUE156_WEBKIT_DEPLOYMENT_EVIDENCE_ROOT:/u);
   assert.match(workflow, /node scripts\/run-v099-deployment-units-bounded\.mjs/u);
+  assert.match(workflow, /ISSUE156_WEBKIT_HUD_EVIDENCE_ROOT:/u);
+  assert.match(workflow, /node scripts\/run-v099-hud-states-bounded\.mjs/u);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
   assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);
@@ -95,6 +97,18 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(deploymentBoundedRunner, /checkpoints\?\.length === 6/u);
   assert.match(deploymentBoundedRunner, /new Set\(kinds\)\.size !== kinds\.length/u);
   assert.doesNotMatch(deploymentBoundedRunner, /status:\s*"(?:skipped|unavailable)"|continue-on-error/u);
+  const hudBoundedRunner = await readFile("scripts/run-v099-hud-states-bounded.mjs", "utf8");
+  for (const stateId of [
+    "stage1-normal", "five-units", "deployment-banner", "manual-ability-banner",
+    "objective-full", "support-disabled", "banner-bark-boss", "stage3-boss",
+  ]) {
+    assert.match(hudBoundedRunner, new RegExp(`"${stateId}"`, "u"));
+  }
+  assert.match(hudBoundedRunner, /attempt <= 2/u);
+  assert.match(hudBoundedRunner, /isRetryableTargetClosedLog/u);
+  assert.match(hudBoundedRunner, /new Set\(stateIds\)\.size !== stateIds\.length/u);
+  assert.match(hudBoundedRunner, /result\.states\?\.length === 1/u);
+  assert.doesNotMatch(hudBoundedRunner, /status:\s*"(?:skipped|unavailable)"|continue-on-error/u);
   assert.match(workflow, /V0995_ENEMY_QA_KINDS/u);
   assert.match(workflow, /name: issue165-visual-remediation-evidence[\s\S]*retention-days: 14/u);
   assert.match(workflow, /name: issue165-webkit-visual-remediation-evidence[\s\S]*retention-days: 14/u);
@@ -109,8 +123,8 @@ test("Stage 3 final uses one bounded fixture for candidate and exact PR base", a
   assert.match(workflow, /npm ci[\s\S]*npm run build/);
   assert.match(workflow, /run-stage3-final-bounded\.mjs "\$RUNNER_TEMP\/stage3-final-base"/);
   assert.match(boundedRunner, /attempt <= 2/);
-  assert.match(boundedRunner, /Target page, context or browser has been closed/);
-  assert.match(boundedRunner, /failure\.failureState \?\? failure\.setupDiagnostics\?\.stableState/);
+  assert.match(boundedRunner, /isRetryableTargetClosedLog\(failure\.error/);
+  assert.match(boundedRunner, /failure\.phase === "navigation"[\s\S]*setupState/u);
   assert.match(boundedRunner, /state\?\.assetReadiness\?\.state === "ready"/);
   assert.match(boundedRunner, /emptyDiagnostics\(failure\.diagnostics\)/);
   assert.doesNotMatch(boundedRunner, /P5_QA_TIMEOUT_MS.*\+|status:\s*"(?:skipped|unavailable)"/u);
