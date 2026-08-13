@@ -45,6 +45,20 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /node scripts\/run-v099-deployment-units-bounded\.mjs/u);
   assert.match(workflow, /ISSUE156_WEBKIT_HUD_EVIDENCE_ROOT:/u);
   assert.match(workflow, /node scripts\/run-v099-hud-states-bounded\.mjs/u);
+  const hudJob = workflow.match(/  webkit-viewport:\n([\s\S]*?)\n  webkit-deployment-viewport:/u)?.[1] ?? "";
+  const hudViewports = hudJob.match(/viewport:\r?\n([\s\S]*?)\r?\n        hud_state:/u)?.[1]
+    .match(/^\s+- ([0-9]+x[0-9]+)$/gmu)?.map((line) => line.trim().slice(2)) ?? [];
+  const hudStates = hudJob.match(/hud_state:\r?\n([\s\S]*?)\r?\n\r?\n    steps:/u)?.[1]
+    .match(/^\s+- ([a-z0-9-]+)$/gmu)?.map((line) => line.trim().slice(2)) ?? [];
+  assert.deepEqual(hudViewports, ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"]);
+  assert.deepEqual(hudStates, [
+    "stage1-normal", "five-units", "deployment-banner", "manual-ability-banner",
+    "objective-full", "support-disabled", "banner-bark-boss", "stage3-boss",
+  ]);
+  assert.equal(hudViewports.length * hudStates.length, 48);
+  assert.match(hudJob, /ISSUE156_WEBKIT_HUD_STATE: \$\{\{ matrix\.hud_state \}\}/u);
+  assert.match(hudJob, /fail-fast: false/u);
+  assert.doesNotMatch(hudJob, /continue-on-error:/u);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
   assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);
@@ -122,6 +136,11 @@ test("Stage 3 final uses one bounded fixture for candidate and exact PR base", a
   assert.match(workflow, /git worktree add --detach "\$base_source" "\$PR_BASE_SHA"/);
   assert.match(workflow, /npm ci[\s\S]*npm run build/);
   assert.match(workflow, /run-stage3-final-bounded\.mjs "\$RUNNER_TEMP\/stage3-final-base"/);
+  const stage3Job = workflow.match(/  webkit-stage3-audio:\r?\n([\s\S]*)$/u)?.[1] ?? "";
+  assert.match(stage3Job, /- entrance-candidate[\s\S]*- final-candidate[\s\S]*- final-base/u);
+  assert.equal((stage3Job.match(/- final-base/gmu) ?? []).length, 1);
+  assert.match(stage3Job, /Build exact PR base[\s\S]*if: matrix\.audio_case == 'final-base'/u);
+  assert.doesNotMatch(stage3Job, /continue-on-error:/u);
   assert.match(boundedRunner, /attempt <= 2/);
   assert.match(boundedRunner, /isRetryableTargetClosedLog\(failure\.error/);
   assert.match(boundedRunner, /failure\.phase === "navigation"[\s\S]*setupState/u);

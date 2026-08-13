@@ -7,6 +7,7 @@ import test from "node:test";
 import {
   CANONICAL_HUD_STATES,
   runCanonicalHudStates,
+  runOneHudStateBounded,
 } from "../scripts/run-v099-hud-states-bounded.mjs";
 
 function passedSummary(stateId) {
@@ -96,4 +97,24 @@ test("HUD state aggregator never retries a product assertion", async () => {
     },
   }), /failed at stage1-normal/u);
   assert.equal(calls, 1);
+});
+
+test("single HUD state job is bounded and requires the selected real state", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "hud-state-single-"));
+  const stateId = "stage3-boss";
+  const report = await runOneHudStateBounded({
+    stateId,
+    evidenceRoot: root,
+    runAttempt: async ({ attemptDir }) => {
+      await writeSummary(attemptDir, passedSummary(stateId));
+      return { code: 0, output: "passed\n" };
+    },
+  });
+  assert.equal(report.status, "passed");
+  assert.equal(report.stateId, stateId);
+  assert.equal(report.attempts.length, 1);
+  await assert.rejects(() => runOneHudStateBounded({
+    stateId: "not-canonical",
+    evidenceRoot: root,
+  }), /unsupported isolated HUD state/u);
 });

@@ -338,9 +338,9 @@ jobs:
           retention-days: 14
 
   webkit-viewport:
-    name: WebKit Canonical Viewport Evidence (${{ matrix.viewport }})
+    name: WebKit Canonical Viewport Evidence (${{ matrix.viewport }}, ${{ matrix.hud_state }})
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -351,6 +351,15 @@ jobs:
           - 844x340
           - 932x430
           - 1280x720
+        hud_state:
+          - stage1-normal
+          - five-units
+          - deployment-banner
+          - manual-ability-banner
+          - objective-full
+          - support-disabled
+          - banner-bark-boss
+          - stage3-boss
 
     steps:
       - name: Checkout synthetic PR merge
@@ -378,12 +387,54 @@ jobs:
       - name: Capture canonical HUD evidence
         env:
           DEBUG: pw:browser
-          ISSUE156_WEBKIT_HUD_EVIDENCE_ROOT: ${{ github.workspace }}/issue156-viewport-evidence/canonical/hud
+          ISSUE156_WEBKIT_HUD_EVIDENCE_ROOT: ${{ github.workspace }}/issue156-viewport-evidence/canonical/hud/${{ matrix.hud_state }}
+          ISSUE156_WEBKIT_HUD_STATE: ${{ matrix.hud_state }}
           V099_FINAL_REMEDIATION_QA_ENGINES: webkit
           V099_FINAL_REMEDIATION_QA_VIEWPORTS: ${{ matrix.viewport }}
           V099_FINAL_REMEDIATION_QA_TIMEOUT_MS: "60000"
         run: node scripts/run-v099-hud-states-bounded.mjs
 
+      - name: Upload canonical WebKit viewport evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue156-webkit-hud-${{ matrix.viewport }}-${{ matrix.hud_state }}
+          path: issue156-viewport-evidence
+          if-no-files-found: error
+          retention-days: 14
+
+  webkit-deployment-viewport:
+    name: WebKit Deployment Viewport Evidence (${{ matrix.viewport }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport:
+          - 667x375
+          - 736x414
+          - 844x390
+          - 844x340
+          - 932x430
+          - 1280x720
+    steps:
+      - name: Checkout synthetic PR merge
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build production application
+        run: npm run build
+      - name: Install focused browser engine
+        run: npx playwright install --with-deps webkit
       - name: Capture final-canvas deployment evidence
         env:
           DEBUG: pw:browser
@@ -392,12 +443,11 @@ jobs:
           V099_FINAL_REMEDIATION_QA_VIEWPORTS: ${{ matrix.viewport }}
           V099_FINAL_REMEDIATION_QA_TIMEOUT_MS: "60000"
         run: node scripts/run-v099-deployment-units-bounded.mjs
-
-      - name: Upload canonical WebKit viewport evidence
+      - name: Upload canonical WebKit deployment evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: issue156-webkit-viewport-${{ matrix.viewport }}
+          name: issue156-webkit-deployment-${{ matrix.viewport }}
           path: issue156-viewport-evidence
           if-no-files-found: error
           retention-days: 14
@@ -410,8 +460,9 @@ jobs:
       fail-fast: false
       matrix:
         audio_case:
-          - entrance
-          - final
+          - entrance-candidate
+          - final-candidate
+          - final-base
 
     steps:
       - name: Checkout synthetic PR merge
@@ -430,29 +481,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build production application
+      - name: Build candidate production application
+        if: matrix.audio_case != 'final-base'
         run: npm run build
 
       - name: Install focused browser engine
         run: npx playwright install --with-deps webkit
 
-      - name: Capture bounded Stage 3 audio route
+      - name: Capture bounded candidate Stage 3 audio route
+        if: matrix.audio_case != 'final-base'
         env:
           P5_QA_SCOPE: battle-audio
           P5_QA_ENGINES: webkit
           P5_QA_VIEWPORTS: 736x414
-          P5_QA_BATTLE_AUDIO_CASES: ${{ matrix.audio_case }}
+          P5_QA_BATTLE_AUDIO_CASES: ${{ startsWith(matrix.audio_case, 'entrance') && 'entrance' || 'final' }}
           P5_QA_TIMEOUT_MS: "60000"
           P5_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-stage3-audio/${{ matrix.audio_case }}
         run: |
-          if [ "${{ matrix.audio_case }}" = "final" ]; then
+          if [ "${{ matrix.audio_case }}" = "final-candidate" ]; then
             timeout --signal=TERM --kill-after=30s 15m node scripts/run-stage3-final-bounded.mjs
           else
             timeout --signal=TERM --kill-after=30s 15m npm run qa:p5
           fi
 
       - name: Build exact PR base for the same bounded final fixture
-        if: matrix.audio_case == 'final'
+        if: matrix.audio_case == 'final-base'
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         shell: bash
@@ -467,7 +520,7 @@ jobs:
           )
 
       - name: Capture exact-base bounded Stage 3 final route
-        if: matrix.audio_case == 'final'
+        if: matrix.audio_case == 'final-base'
         env:
           P5_QA_SCOPE: battle-audio
           P5_QA_ENGINES: webkit
