@@ -7,6 +7,7 @@ import sharp from "sharp";
 import { productionVisualIntegrityInventory } from "../app/visualIntegrityInventory.js";
 import { spriteFrameFor } from "../app/spriteManifest.js";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { strictCanvasScreenshotClip } from "./v0995-qa-evidence-contract.mjs";
 
 const baseUrl = new URL(process.env.V0995_ENEMY_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error("v0995 enemy runtime QA is local-only");
@@ -131,9 +132,35 @@ for (const engine of engines) {
             }
             assertRenderSequence({ engine, viewport, kind, phase, samples });
             const screenshotFile = path.join(outputDir, `${engine}-${viewport.width}x${viewport.height}-${kind}-${phase}.png`);
-            await page.locator("canvas.battlefield.active").screenshot({ path: screenshotFile });
+            const canvasBox = await page.locator("canvas.battlefield.active").boundingBox();
+            const clip = strictCanvasScreenshotClip(canvasBox, viewport);
+            const captureStartedAt = Date.now();
+            const preCapture = await page.evaluate((fighterId) => (
+              window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
+            ), prepared.fighterId);
+            await page.screenshot({ path: screenshotFile, clip, timeout });
+            const postCapture = await page.evaluate((fighterId) => (
+              window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
+            ), prepared.fighterId);
+            const capture = {
+              mode: "strict-page-clip",
+              attemptCount: 1,
+              startedAt: new Date(captureStartedAt).toISOString(),
+              elapsedMs: Date.now() - captureStartedAt,
+              clip,
+              pre: {
+                fighter: preCapture?.fighter ?? null,
+                renderCount: preCapture?.renderHistory?.length ?? 0,
+                corpseRenderCount: preCapture?.corpseRenderHistory?.length ?? 0,
+              },
+              post: {
+                fighter: postCapture?.fighter ?? null,
+                renderCount: postCapture?.renderHistory?.length ?? 0,
+                corpseRenderCount: postCapture?.corpseRenderHistory?.length ?? 0,
+              },
+            };
             if (["walker", "resonator", "takuya"].includes(kind) && ["move", "attack", "die"].includes(phase)) representativeShots.push(screenshotFile);
-            results.push({ engine, viewport, kind, phase, prepared, samples, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
+            results.push({ engine, viewport, kind, phase, prepared, samples, capture, screenshot: path.relative(process.cwd(), screenshotFile).replaceAll("\\", "/") });
           }
           invariant(failures.length === 0, `${engine}/${viewport.width}x${viewport.height}/${kind}: ${failures.join("\n")}`);
         } finally {

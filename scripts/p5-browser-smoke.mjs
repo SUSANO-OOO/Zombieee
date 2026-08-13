@@ -1118,7 +1118,7 @@ async function exerciseRotationAndVisibility({ page, context, viewport, expected
     };
   });
   visibility.mode = visibilityMode;
-  await background.close();
+  await closePlaywrightResource(background, `${label}/background-page`);
   invariant(visibility.states.includes("hidden"), `${label} never entered background-tab visibility`);
   invariant(visibility.after === "visible", `${label} did not restore foreground visibility`);
   await page.waitForTimeout(220);
@@ -1341,7 +1341,7 @@ async function auditAudioLifecycle({ context, engine, viewport }) {
       // The browser can fail before the document exists.
     }
   } finally {
-    await page.close();
+    await closePlaywrightResource(page, `${label}/page`);
   }
   return result;
 }
@@ -1539,6 +1539,7 @@ async function pauseAndVerifyFrozenScriptedBark({
 }
 
 async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
+  const auditStartedAt = Date.now();
   const context = await browser.newContext({ viewport });
   const page = await context.newPage();
   const diagnostics = createDiagnostics(page);
@@ -1550,6 +1551,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
     status: "failed",
   };
   diagnostics.setPhase(result.phase);
+  stage3Progress(label, "navigation", auditStartedAt);
   try {
     await installStoryBattleRecorder(page);
     const response = await page.goto(battleQaUrl("takuya-entrance"), {
@@ -1588,6 +1590,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
 
     result.phase = "entrance-start";
     diagnostics.setPhase(result.phase);
+    stage3Progress(label, result.phase, auditStartedAt);
     await page.waitForFunction(
       ({ expectedSceneId }) => {
         const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -1639,6 +1642,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
     `${label} consumed the TAKUYA entrance timer while paused`);
     result.phase = "entrance-restart";
     diagnostics.setPhase(result.phase);
+    stage3Progress(label, result.phase, auditStartedAt);
     await page.waitForFunction(
       ({ expectedSceneId, expectedRemaining }) => {
         const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -1663,6 +1667,7 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
 
     result.phase = "boss-music-duck-release";
     diagnostics.setPhase(result.phase);
+    stage3Progress(label, result.phase, auditStartedAt);
     await page.waitForFunction(
       ({ expectedSceneId, assetId, audioBlocked }) => {
         const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -1719,15 +1724,19 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
       },
       diagnostics: diagnosticEvidence,
     });
+    stage3Progress(label, "complete", auditStartedAt);
   } catch (error) {
+    stage3Progress(label, `failure:${result.phase}`, auditStartedAt);
     result.error = String(error);
     await diagnostics.settleDetails();
     result.diagnostics = diagnostics.snapshot();
     result.failureState = await storyBattleSnapshot(page).catch(() => null);
   } finally {
+    stage3Progress(label, "teardown-start", auditStartedAt);
     await stopStoryBattleRecorder(page);
-    await page.close();
+    await closePlaywrightResource(page, `${label}/page`);
     await closePlaywrightResource(context, `${label}/context`);
+    stage3Progress(label, "teardown-complete", auditStartedAt);
   }
   return result;
 }
@@ -2095,7 +2104,7 @@ async function auditNonblockingBark({ browser, engine }) {
     });
   } finally {
     await page.evaluate(() => window.__P5_BARK_OBSERVER__?.disconnect()).catch(() => undefined);
-    await page.close();
+    await closePlaywrightResource(page, `${label}/page`);
     await closePlaywrightResource(context, `${label}/context`);
   }
   return result;
@@ -2153,8 +2162,8 @@ for (const engine of requestedEngines) {
             }
           }
         } finally {
-          await storyPage.close();
-          await storyContext.close();
+          await closePlaywrightResource(storyPage, `${engine}/${viewport.width}x${viewport.height}/story-page`);
+          await closePlaywrightResource(storyContext, `${engine}/${viewport.width}x${viewport.height}/story-context`);
         }
       }
       if (qaScope === "all" || qaScope === "lifecycle") {
@@ -2163,7 +2172,7 @@ for (const engine of requestedEngines) {
           kind: "audio-lifecycle",
           ...await auditAudioLifecycle({ context: lifecycleContext, engine, viewport }),
         });
-        await lifecycleContext.close();
+        await closePlaywrightResource(lifecycleContext, `${engine}/${viewport.width}x${viewport.height}/lifecycle-context`);
       }
       if (qaScope === "all" || qaScope === "battle-audio") {
         if (requestedBattleAudioCases.has("entrance")) {

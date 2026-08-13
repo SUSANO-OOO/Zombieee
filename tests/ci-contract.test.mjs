@@ -92,6 +92,8 @@ test("Stage 3 final uses one bounded fixture for candidate and exact PR base", a
   assert.match(p5Smoke, /if \(samples\.length > 1_200\)/);
   assert.match(p5Smoke, /stage3Progress\(label, "complete"/);
   assert.match(p5Smoke, /boundedPageCall\([\s\S]*story battle samples/);
+  assert.match(p5Smoke, /auditTakuyaEntranceAudio[\s\S]*stage3Progress\(label, "teardown-start"[\s\S]*closePlaywrightResource\(page, `\$\{label\}\/page`\)/);
+  assert.doesNotMatch(p5Smoke, /await (?:page|storyPage|storyContext|lifecycleContext)\.close\(\)/);
   assert.doesNotMatch(p5Smoke, /samples\.push\(\{[\s\S]{0,400}\bsnapshot,\s*\}\)/);
 });
 

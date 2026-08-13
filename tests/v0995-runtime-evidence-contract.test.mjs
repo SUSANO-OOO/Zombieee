@@ -27,9 +27,14 @@ test("F3 runtime evidence is finite, uses production draw/runtime, and observes 
   assert.doesNotMatch(enemyHarness, /runtime\.every\(\(\{ renderHistory, corpseRenderHistory \}\)/);
   assert.match(enemyHarness, /for \(const kind of inventory\) \{[\s\S]*?const context = await browser\.newContext\(\{ viewport \}\)/);
   assert.match(enemyHarness, /finally \{[\s\S]*?await context\.close\(\)/);
+  assert.match(enemyHarness, /strictCanvasScreenshotClip\(canvasBox, viewport\)/);
+  assert.match(enemyHarness, /page\.screenshot\(\{ path: screenshotFile, clip, timeout \}\)/);
+  assert.match(enemyHarness, /attemptCount: 1/);
+  assert.doesNotMatch(enemyHarness, /locator\("canvas\.battlefield\.active"\)\.screenshot/);
   assert.match(gameSource, /const enemy = spawnEnemy\(g, kind, lane\)/);
   assert.match(gameSource, /loadImageWithTimeout\(\{[\s\S]*?src: path,[\s\S]*?requireDecode: true/);
   assert.match(gameSource, /includeAllSprites: Boolean\(qaMode \|\| qaScenario\) && !finiteEnemyRuntimeQa/);
+  assert.match(gameSource, /getRequiredPlan:[\s\S]*?qaHudFiniteAssets[\s\S]*?\["localhost", "127\.0\.0\.1"\]\.includes\(window\.location\.hostname\)/);
   assert.match(gameSource, /g\.pendingWeaponHits\.push/);
   assert.doesNotMatch(enemyHarness, /result direct|delete.*enemy|drawImage\(/i);
 });

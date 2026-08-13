@@ -12335,7 +12335,10 @@ export function AshfallGame() {
         enemyKinds: selectedOutbreakMissionId
           ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
           : CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds ?? [],
-        includeAllSprites: Boolean(qaMode || qaScenario),
+        includeAllSprites: Boolean(qaMode || qaScenario)
+          && new URLSearchParams(window.location.search).get("qaEnemyRuntime") !== "1"
+          && !(new URLSearchParams(window.location.search).get("qaHudFiniteAssets") === "1"
+            && ["localhost", "127.0.0.1"].includes(window.location.hostname)),
       }),
       getRestartCount: () => assetSessionRestartCountRef.current,
       getBattleMountState: () => ({

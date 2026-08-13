@@ -25,6 +25,7 @@ import {
 import { AIRSTRIKE_DEF, CRAWLER_BARRAGE_DEF } from "../app/gameRules.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { classifySupersededAssetRequestFailures } from "./v0995-qa-evidence-contract.mjs";
 
 const baseUrl = new URL(
   process.env.V099_FINAL_REMEDIATION_QA_BASE_URL
@@ -284,10 +285,13 @@ function caseUrl(qaMode, { stageNumber = 3, safeAreaPreset = null } = {}) {
 
 function diagnosticsFor(page, lifecycle = null) {
   let active = true;
+  let phase = "setup";
+  const requestStartedAt = new WeakMap();
   const diagnostics = {
     consoleErrors: [],
     pageErrors: [],
     requestFailures: [],
+    requestFailureDetails: [],
     httpErrors: [],
   };
   page.on("console", (message) => {
@@ -296,11 +300,22 @@ function diagnosticsFor(page, lifecycle = null) {
   page.on("pageerror", (error) => {
     if (active) diagnostics.pageErrors.push(String(error));
   });
+  page.on("request", (request) => {
+    if (active) requestStartedAt.set(request, Date.now());
+  });
   page.on("requestfailed", (request) => {
     if (!active) return;
+    const detail = {
+      url: request.url(),
+      errorText: request.failure()?.errorText ?? "unknown",
+      startedAt: requestStartedAt.get(request) ?? Date.now(),
+      failedAt: Date.now(),
+      phase,
+    };
     diagnostics.requestFailures.push(
-      `${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`,
+      `${detail.url} :: ${detail.errorText}`,
     );
+    diagnostics.requestFailureDetails.push(detail);
   });
   page.on("response", (response) => {
     if (active && response.status() >= 400) {
@@ -310,12 +325,56 @@ function diagnosticsFor(page, lifecycle = null) {
   lifecycle?.attachPage(page, diagnostics);
   return {
     diagnostics,
+    beginPostReadyObservation: () => {
+      const setup = Object.fromEntries(Object.entries(diagnostics).map(([key, entries]) => [key, [...entries]]));
+      for (const entries of Object.values(diagnostics)) entries.length = 0;
+      phase = "post-ready";
+      return { boundaryAt: Date.now(), diagnostics: setup };
+    },
     stop: () => { active = false; },
   };
 }
 
 function diagnosticsClean(diagnostics) {
   return Object.values(diagnostics).every((entries) => entries.length === 0);
+}
+
+async function sealAssetSetupBoundary(page, diagnosticControl, label) {
+  const asset = await page.evaluate(() => ({
+    state: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
+    history: window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? [],
+    requiredSprites: window.__ASHFALL_ASSET_QA__?.getRequiredPlan?.().sprites ?? [],
+    loadedSpriteKeys: window.__ASHFALL_ASSET_QA__?.getLoadedSpriteKeys?.() ?? [],
+  }));
+  if (new URL(page.url()).searchParams.get("qaHudFiniteAssets") === "1") {
+    for (const requiredKind of ["ranger", "medic"]) {
+      invariant(asset.requiredSprites.some(({ kind }) => kind === requiredKind),
+        `${label}: finite HUD resident plan omitted ${requiredKind}`);
+      invariant(asset.loadedSpriteKeys.includes(requiredKind),
+        `${label}: terminal finite HUD generation did not load ${requiredKind}`);
+    }
+  }
+  const setup = diagnosticControl.beginPostReadyObservation();
+  const classification = classifySupersededAssetRequestFailures({
+    failures: setup.diagnostics.requestFailureDetails,
+    history: asset.history,
+    requiredSprites: asset.requiredSprites,
+    loadedSpriteKeys: asset.loadedSpriteKeys,
+    terminalState: asset.state,
+  });
+  invariant(setup.diagnostics.consoleErrors.length === 0
+    && setup.diagnostics.pageErrors.length === 0
+    && setup.diagnostics.httpErrors.length === 0,
+  `${label}: setup emitted non-cancellable diagnostics ${JSON.stringify(setup.diagnostics)}`);
+  invariant(classification.rejected.length === 0,
+    `${label}: unmatched setup request failure ${JSON.stringify(classification.rejected)}`);
+  return {
+    label,
+    boundaryAt: setup.boundaryAt,
+    asset,
+    rawDiagnostics: setup.diagnostics,
+    acceptedSupersededFailures: classification.accepted,
+  };
 }
 
 async function nextRender(page) {
@@ -507,7 +566,12 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
       milestone: "battle and asset gate already ready",
     });
   }
-  return { page, ...diagnosticControl };
+  const assetSetupBoundary = await sealAssetSetupBoundary(
+    page,
+    diagnosticControl,
+    `${qaMode}/${viewport.width}x${viewport.height}`,
+  );
+  return { page, ...diagnosticControl, assetSetupBoundary };
 }
 
 async function clientPointForWorld(page, point) {
@@ -1294,6 +1358,7 @@ async function runHudCase(browserType, engine, viewport) {
       requestFailures: diagnosticControls.flatMap(({ diagnostics }) => diagnostics.requestFailures),
       httpErrors: diagnosticControls.flatMap(({ diagnostics }) => diagnostics.httpErrors),
     };
+    result.assetSetupBoundaries = diagnosticControls.map(({ assetSetupBoundary }) => assetSetupBoundary);
     if (result.status === "passed" && !diagnosticsClean(result.diagnostics)) {
       result.status = "failed";
       result.error = `Browser diagnostics were not clean: ${JSON.stringify(result.diagnostics)}`;

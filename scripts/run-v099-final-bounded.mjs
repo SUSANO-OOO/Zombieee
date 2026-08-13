@@ -32,7 +32,13 @@ for (let attempt = 1; attempt <= 2; attempt += 1) {
   const attemptDir = path.join(evidenceRoot, `attempt-${attempt}`);
   await mkdir(attemptDir, { recursive: true });
   const execution = await runAttempt(attemptDir);
-  const summary = JSON.parse(await readFile(path.join(attemptDir, "summary.json"), "utf8"));
+  const summary = await readFile(path.join(attemptDir, "summary.json"), "utf8")
+    .then((source) => JSON.parse(source))
+    .catch((error) => ({
+      status: "failed-before-summary",
+      error: String(error),
+      results: [],
+    }));
   const retryableStaticStreamAbort = execution.code !== 0 && onlyAbortedStaticStreams(summary);
   attempts.push({ attempt, ...execution, retryableStaticStreamAbort, summary });
   if (execution.code === 0) {
