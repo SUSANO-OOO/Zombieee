@@ -375,7 +375,11 @@ import {
 import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
 import { publicDisplayText, PUBLIC_CRAWLER_LABEL } from "./publicDisplayNames.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
-import { loadImageWithTimeout } from "./boundedImageLoader.js";
+import {
+  REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
+  REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+  loadImageWithTimeout,
+} from "./boundedImageLoader.js";
 import { runAssetLoadSession, selectRetryAssetJobs } from "./assetLoadSession.js";
 import {
   AIRSTRIKE_DEF,
@@ -7399,6 +7403,10 @@ export function AshfallGame() {
   const spriteRefs = useRef<SpriteMap>({});
   const stageObjectRefs = useRef<SpriteMap>({});
   const enemyBaseSpriteRef = useRef<HTMLImageElement | null>(null);
+  // Only images that completed the required battle decode contract may be
+  // reused by a later selection generation. `naturalWidth` proves response
+  // load, but does not prove that the browser can decode the image.
+  const decodedBattleImagesRef = useRef(new WeakSet<HTMLImageElement>());
   const gameRef = useRef<Game>(initialGame("pod", INITIAL_STAGE_ID, ["brawler", "scout", "ranger", "medic"]));
   const productionMixerRef = useRef<ReturnType<typeof createAudioMixer> | null>(null);
   const battleAudioRuntimeRef = useRef(createBattleAudioRuntime());
@@ -10937,6 +10945,27 @@ export function AshfallGame() {
         if (!loaded?.naturalWidth) throw new Error(`Enemy facing proof asset did not decode: ${kind}`);
         return { kind, path, width: loaded.naturalWidth, height: loaded.naturalHeight, reused: false };
       },
+      ensureUnitRenderProofAsset: async (kind: UnitKind) => {
+        const path = spriteSheetPath(kind);
+        const existing = spriteRefs.current[kind];
+        if (existing?.naturalWidth && decodedBattleImagesRef.current.has(existing)) {
+          return { kind, path, width: existing.naturalWidth, height: existing.naturalHeight, reused: true };
+        }
+        let loaded: HTMLImageElement | null = null;
+        await loadImageWithTimeout({
+          src: path,
+          requireDecode: true,
+          decodeAttempts: REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
+          decodeTimeoutMs: REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+          onReady: (image: HTMLImageElement) => {
+            decodedBattleImagesRef.current.add(image);
+            spriteRefs.current[kind] = image;
+            loaded = image;
+          },
+        });
+        if (!loaded?.naturalWidth) throw new Error(`Unit render proof asset did not decode: ${kind}`);
+        return { kind, path, width: loaded.naturalWidth, height: loaded.naturalHeight, reused: false };
+      },
       getEnemyFacingRuntimeAudit: (fighterId: number) => {
         const g = gameRef.current;
         const fighter = g.fighters.find((candidate) => candidate.id === fighterId) ?? null;
@@ -11943,6 +11972,9 @@ export function AshfallGame() {
       loadImageWithTimeout({
         src,
         signal: controller.signal,
+        requireDecode: true,
+        decodeAttempts: REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
+        decodeTimeoutMs: REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
         ...(() => {
           const parameters = new URLSearchParams(window.location.search);
           const localQaHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
@@ -11950,19 +11982,22 @@ export function AshfallGame() {
           const requested = Number(parameters.get("assetTimeout"));
           const faultPath = assetQaFaultClearedRef.current ? null : parameters.get("assetFaultPath");
           const faultMode = assetQaFaultClearedRef.current ? null : parameters.get("assetFaultMode");
-          const targetedFault = faultPath === src && ["delay", "404", "corrupt"].includes(faultMode ?? "");
+          const targetedFaultPath = faultPath === src;
+          const targetedTransportFault = targetedFaultPath && ["delay", "404", "corrupt"].includes(faultMode ?? "");
           return {
-            requireDecode: targetedFault,
-            ...(targetedFault && Number.isFinite(requested) && requested >= 100
+            ...(targetedFaultPath && Number.isFinite(requested) && requested >= 100
               ? { loadTimeoutMs: requested, decodeTimeoutMs: requested }
               : {}),
-            ...(targetedFault
+            ...(targetedTransportFault
               ? { faultMode }
               : {}),
           };
         })(),
         onReady: (image: HTMLImageElement) => {
-          if (current()) onReady(image);
+          if (current()) {
+            decodedBattleImagesRef.current.add(image);
+            onReady(image);
+          }
         },
       })
     );
@@ -11971,7 +12006,7 @@ export function AshfallGame() {
       src: string,
       onReady: (image: HTMLImageElement) => void,
     ) => {
-      if (current?.naturalWidth) {
+      if (current?.naturalWidth && decodedBattleImagesRef.current.has(current)) {
         const parameters = new URLSearchParams(window.location.search);
         const localFault = ["localhost", "127.0.0.1"].includes(window.location.hostname)
           && parameters.get("assetFaultPath") === src;
@@ -12013,6 +12048,9 @@ export function AshfallGame() {
     // stage plan and asks the QA bridge to strict-decode each audited kind.
     const localQaParameters = new URLSearchParams(window.location.search);
     const finiteEnemyRuntimeQa = localQaParameters.get("qaEnemyRuntime") === "1";
+    const finiteVisualIntegrityQa = localQaParameters.get("qaVisualIntegrity") === "1"
+      && ["localhost", "127.0.0.1"].includes(window.location.hostname)
+      && Boolean(qaMode || qaScenario);
     const finiteHudRuntimeQa = localQaParameters.get("qaHudFiniteAssets") === "1"
       && ["localhost", "127.0.0.1"].includes(window.location.hostname)
       && Boolean(qaMode || qaScenario);
@@ -12024,7 +12062,10 @@ export function AshfallGame() {
       stageId: activeBattlefieldStageId,
       formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
       enemyKinds: stageEnemyKinds,
-      includeAllSprites: Boolean(qaMode || qaScenario) && !finiteEnemyRuntimeQa && !finiteHudRuntimeQa,
+      includeAllSprites: Boolean(qaMode || qaScenario)
+        && !finiteEnemyRuntimeQa
+        && !finiteVisualIntegrityQa
+        && !finiteHudRuntimeQa,
     });
     const requiredSpriteKinds = requiredPlan.sprites.map(({ kind }) => kind as UnitKind);
     const persistentPaths: Record<string, string> = Object.fromEntries(
@@ -12184,6 +12225,7 @@ export function AshfallGame() {
       const root = document.documentElement;
       root.dataset.assetResidentScope = finiteEnemyRuntimeQa
         ? "finite-enemy-runtime-qa"
+        : finiteVisualIntegrityQa ? "finite-visual-integrity-qa"
         : finiteHudRuntimeQa ? "finite-hud-runtime-qa"
         : qaMode || qaScenario ? "all-local-qa" : "stage-and-formation";
       root.dataset.assetResidentStage = activeOperationId;
@@ -12329,6 +12371,34 @@ export function AshfallGame() {
       getLoadedStageObjectKeys: () => Object.entries(stageObjectRefs.current)
         .filter(([, image]) => Boolean(image?.naturalWidth))
         .map(([key]) => key),
+      getDecodedRequiredPaths: () => {
+        const decodedPaths = new Set<string>();
+        for (const [stageId, image] of Object.entries(backgroundCacheRef.current)) {
+          if (image?.naturalWidth && decodedBattleImagesRef.current.has(image)) {
+            decodedPaths.add(stageVisualFor(stageId));
+          }
+        }
+        const activeRequiredPlan = requiredBattleAssetPlan({ stageId: activeBattlefieldStageId });
+        if (enemyBaseSpriteRef.current?.naturalWidth && decodedBattleImagesRef.current.has(enemyBaseSpriteRef.current)) {
+          decodedPaths.add(activeRequiredPlan.enemyBase.path);
+        }
+        const persistentPathsByKey = Object.fromEntries(activeRequiredPlan.persistent.map(({ key, path }) => [key, path]));
+        for (const [kind, image] of Object.entries(spriteRefs.current)) {
+          if (!image?.naturalWidth || !decodedBattleImagesRef.current.has(image)) continue;
+          try {
+            decodedPaths.add(spriteSheetPath(kind as UnitKind));
+          } catch {
+            const persistentPath = persistentPathsByKey[kind];
+            if (persistentPath) decodedPaths.add(persistentPath);
+          }
+        }
+        for (const [id, image] of Object.entries(stageObjectRefs.current)) {
+          if (!image?.naturalWidth || !decodedBattleImagesRef.current.has(image)) continue;
+          const stageObject = activeRequiredPlan.stageObjects.find((entry) => entry.id === id);
+          if (stageObject) decodedPaths.add(stageObject.path);
+        }
+        return [...decodedPaths];
+      },
       getRequiredPlan: () => requiredBattleAssetPlan({
         stageId: activeBattlefieldStageId,
         formationKinds: formationKindKey.split("|").filter(Boolean),
@@ -12337,6 +12407,8 @@ export function AshfallGame() {
           : CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds ?? [],
         includeAllSprites: Boolean(qaMode || qaScenario)
           && new URLSearchParams(window.location.search).get("qaEnemyRuntime") !== "1"
+          && !(new URLSearchParams(window.location.search).get("qaVisualIntegrity") === "1"
+            && ["localhost", "127.0.0.1"].includes(window.location.hostname))
           && !(new URLSearchParams(window.location.search).get("qaHudFiniteAssets") === "1"
             && ["localhost", "127.0.0.1"].includes(window.location.hostname)),
       }),

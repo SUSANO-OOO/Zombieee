@@ -102,6 +102,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     "/art/v0995/enemies/spindle-battle-v2.png",
   ]);
   const replacedVisualPaths = new Set([
+    "/art/v080/characters/monkey-battle-r2.png",
     "/art/v080/characters/cards/monkey-formation-card-r2.webp",
     "/art/v080/characters/portraits/monkey-event-portrait-r2.webp",
     ...["mayo-chan", "miyamoto-musashi", "mrs-chiha", "tky", "zakimiya"]

@@ -403,8 +403,8 @@
       "bytes": 1018194,
       "hash": "sha256-f09f692f8efd692d376d99dcf061a237c4402c57f8a7eda7e938a9ecb6aa9d55",
       "pack": "units",
-      "category": "portrait",
-      "criticality": "optional",
+      "category": "unit",
+      "criticality": "critical",
       "sourcePath": "/pwa-optimized/art/v070/characters/engineer-battle-v1.webp"
     },
     {
@@ -733,15 +733,6 @@
       "pack": "units",
       "category": "portrait",
       "criticality": "optional"
-    },
-    {
-      "path": "/art/v080/characters/monkey-battle-r2.png",
-      "bytes": 1175810,
-      "hash": "sha256-7657d7a691a043976d84f551b27168ab1fdea492e0d2600ed731278c77c950e7",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v080/characters/monkey-battle-r2.webp"
     },
     {
       "path": "/art/v080/stages/evacuation-freight-yard-background-v1.webp",

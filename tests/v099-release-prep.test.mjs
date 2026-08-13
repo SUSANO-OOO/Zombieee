@@ -25,11 +25,11 @@ test("the Version 0.9.9.5 release candidate has one immutable identity and compl
   assert.equal(RELEASE_VERSION, "0.9.9.5");
   assert.equal(candidate.version, RELEASE_VERSION);
   assert.equal(candidate.releaseSha, RELEASE_SHA_PLACEHOLDER);
-  assert.equal(candidate.assets.length, 416);
-  assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), 90_917_375);
+  assert.equal(candidate.assets.length, 415);
+  assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), 89_741_565);
 
   const distinct = new Map(candidate.assets.map((asset) => [asset.hash, asset.bytes]));
-  assert.equal([...distinct.values()].reduce((sum, bytes) => sum + bytes, 0), 90_377_472);
+  assert.equal([...distinct.values()].reduce((sum, bytes) => sum + bytes, 0), 89_201_662);
 });
 
 test("the real Version 0.9.8.2 pack updates by hash without re-downloading unchanged assets", () => {
@@ -50,9 +50,9 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.equal(update.toVersion, "0.9.9.5");
   assert.equal(update.downloadCount, 64);
   assert.equal(update.downloadBytes, 16_690_448);
-  assert.equal(update.unchangedCount, 349);
+  assert.equal(update.unchangedCount, 348);
   assert.equal(update.reusedCount, 3);
-  assert.equal(update.removedCount, 25);
+  assert.equal(update.removedCount, 26);
 
   const completedHashes = new Set([
     ...retainedHashes,
@@ -85,9 +85,9 @@ test("the published Version 0.9.9.3 pack updates to 0.9.9.5 while reusing unchan
   assert.equal(update.toVersion, "0.9.9.5");
   assert.equal(update.downloadCount, 15);
   assert.equal(update.downloadBytes, 6_315_754);
-  assert.equal(update.unchangedCount, 398);
+  assert.equal(update.unchangedCount, 397);
   assert.equal(update.reusedCount, 3);
-  assert.equal(update.removedCount, 18);
+  assert.equal(update.removedCount, 19);
 
   const completedHashes = new Set([
     ...retainedHashes,

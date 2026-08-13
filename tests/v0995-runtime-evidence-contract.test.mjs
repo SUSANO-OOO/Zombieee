@@ -18,6 +18,8 @@ test("F3 runtime evidence is finite, uses production draw/runtime, and observes 
   }
   assert.match(enemyHarness, /prepareEnemyFacingRuntimeProof/);
   assert.match(enemyHarness, /ensureEnemyFacingProofAsset/);
+  assert.match(gameSource, /ensureUnitRenderProofAsset:[\s\S]*?requireDecode:\s*true[\s\S]*?decodedBattleImagesRef\.current\.add\(image\)/u);
+  assert.match(visualHarness, /ensureUnitRenderProofAsset\("engineer"\)/u);
   assert.match(enemyHarness, /actualXDelta/);
   assert.match(enemyHarness, /targetX/);
   assert.match(enemyHarness, /sourceRow/);
@@ -43,7 +45,7 @@ test("F3 runtime evidence is finite, uses production draw/runtime, and observes 
   assert.doesNotMatch(enemyHarness, /locator\("canvas\.battlefield\.active"\)\.screenshot/);
   assert.match(gameSource, /const enemy = spawnEnemy\(g, kind, lane\)/);
   assert.match(gameSource, /loadImageWithTimeout\(\{[\s\S]*?src: path,[\s\S]*?requireDecode: true/);
-  assert.match(gameSource, /includeAllSprites: Boolean\(qaMode \|\| qaScenario\) && !finiteEnemyRuntimeQa/);
+  assert.match(gameSource, /includeAllSprites: Boolean\(qaMode \|\| qaScenario\)[\s\S]*?&& !finiteEnemyRuntimeQa[\s\S]*?&& !finiteVisualIntegrityQa/);
   assert.match(gameSource, /getRequiredPlan:[\s\S]*?qaHudFiniteAssets[\s\S]*?\["localhost", "127\.0\.0\.1"\]\.includes\(window\.location\.hostname\)/);
   assert.match(gameSource, /g\.pendingWeaponHits\.push/);
   assert.doesNotMatch(enemyHarness, /result direct|delete.*enemy|drawImage\(/i);
@@ -58,6 +60,16 @@ test("F4 fault evidence gates the actual mount and verifies mutable final pixels
   assert.match(visualHarness, /mutable mission states collapsed to the same authored pixels/);
   assert.match(visualHarness, /retrySession\.total === intendedFailurePaths\.size/);
   assert.match(visualHarness, /retrySession\.status === "ready"/);
+  for (const mode of ["decode-reject", "decode-timeout"]) {
+    assert.match(visualHarness, new RegExp(`"${mode}"`, "u"));
+  }
+  assert.match(visualHarness, /terminalSession\.failures\[0\]\.reason === expectedFailureReason/);
+  assert.match(visualHarness, /getDecodedRequiredPaths/);
+  assert.match(visualHarness, /missingDecodedSuccesses\.length === 0/);
+  assert.match(visualHarness, /prepareCrawlerDefenseProof/);
+  assert.match(visualHarness, /queueCrawlerDefenseUnit\("engineer", 1\)/);
+  assert.match(visualHarness, /Monkey approved atlas was not consumed by the production renderer/);
+  assert.match(visualHarness, /finalCompositePixels\?\.singleUnitSilhouette === true/);
   assert.doesNotMatch(visualHarness, /campaign-primary/);
   assert.match(gameSource, /screen !== "battle" \|\| !assetsReady \|\| assetError/);
 });

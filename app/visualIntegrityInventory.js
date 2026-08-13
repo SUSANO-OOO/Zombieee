@@ -30,6 +30,7 @@ export function productionVisualIntegrityInventory() {
       kind: unit.combatKind,
       card: FORMATION_CARD_ART[unit.combatKind],
       portrait: PORTRAIT_ART[unit.combatKind],
+      battleSprite: spriteSheetPath(unit.combatKind),
     }))),
     events: Object.freeze(Object.entries(EVENT_PORTRAIT_PROFILES).map(([id, profile]) => Object.freeze({
       id,

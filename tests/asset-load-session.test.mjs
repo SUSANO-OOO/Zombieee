@@ -8,7 +8,11 @@ import {
   runAssetLoadSession,
   selectRetryAssetJobs,
 } from "../app/assetLoadSession.js";
-import { IMAGE_LOAD_TIMEOUT_MS } from "../app/boundedImageLoader.js";
+import {
+  IMAGE_LOAD_TIMEOUT_MS,
+  REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
+  REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+} from "../app/boundedImageLoader.js";
 
 const job = (path, run, category = "unit") => ({ path, category, run });
 
@@ -39,6 +43,11 @@ test("the session budget outlasts the per-image timeout it supervises", () => {
     ASSET_LOAD_SESSION_DEADLINE_MS > IMAGE_LOAD_TIMEOUT_MS,
     `session budget ${ASSET_LOAD_SESSION_DEADLINE_MS}ms must exceed the image timeout ${IMAGE_LOAD_TIMEOUT_MS}ms`,
   );
+  assert.ok(
+    ASSET_LOAD_SESSION_DEADLINE_MS > REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+    "battle decode budget must remain inside the terminal asset-session deadline",
+  );
+  assert.equal(REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS, 3);
   // Enough headroom for the measured public transfer, so a slow-but-working
   // network is not reported as a failure.
   assert.ok(ASSET_LOAD_SESSION_DEADLINE_MS >= 60_000);

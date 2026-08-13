@@ -8,7 +8,7 @@ test("finite HUD evidence cannot change the production-host asset plan", () => {
   assert.match(ashfallSource, /finiteHudRuntimeQa = localQaParameters\.get\("qaHudFiniteAssets"\) === "1"/);
   assert.match(ashfallSource, /\["localhost", "127\.0\.0\.1"\]\.includes\(window\.location\.hostname\)/);
   assert.match(ashfallSource, /Boolean\(qaMode \|\| qaScenario\)/);
-  assert.match(ashfallSource, /includeAllSprites: Boolean\(qaMode \|\| qaScenario\) && !finiteEnemyRuntimeQa && !finiteHudRuntimeQa/);
+  assert.match(ashfallSource, /includeAllSprites: Boolean\(qaMode \|\| qaScenario\)[\s\S]*?&& !finiteEnemyRuntimeQa[\s\S]*?&& !finiteVisualIntegrityQa[\s\S]*?&& !finiteHudRuntimeQa/);
 });
 
 test("battle readiness uses one closed blocking plan without degraded-ready", () => {
@@ -18,13 +18,24 @@ test("battle readiness uses one closed blocking plan without degraded-ready", ()
   assert.match(ashfallSource, /requiredPlan\.persistent\.find/u);
   assert.doesNotMatch(ashfallSource, /const optionalJobs\s*=/u);
   assert.doesNotMatch(ashfallSource, /state:\s*["']degraded-ready["']/u);
-  assert.match(ashfallSource, /requireDecode:\s*targetedFault/u);
+  assert.match(ashfallSource, /requireDecode:\s*true/u);
+  assert.match(ashfallSource, /decodeAttempts:\s*REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS/u);
+  assert.match(ashfallSource, /decodeTimeoutMs:\s*REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS/u);
+  assert.doesNotMatch(ashfallSource, /requireDecode:\s*targetedFault/u);
+  assert.match(ashfallSource, /decodedBattleImagesRef\.current\.add\(image\)/u);
+  assert.match(ashfallSource, /current\?\.naturalWidth && decodedBattleImagesRef\.current\.has\(current\)/u);
 });
 
 test("local fault deadlines apply only to the selected required asset", () => {
-  assert.match(ashfallSource, /const targetedFault = faultPath === src/);
-  assert.match(ashfallSource, /targetedFault && Number\.isFinite\(requested\)/);
-  assert.match(ashfallSource, /\.\.\.\(targetedFault\s*\? \{ faultMode \}/);
+  assert.match(ashfallSource, /const targetedFaultPath = faultPath === src/);
+  assert.match(ashfallSource, /targetedFaultPath && Number\.isFinite\(requested\)/);
+  assert.match(ashfallSource, /\.\.\.\(targetedTransportFault\s*\? \{ faultMode \}/);
+});
+
+test("visual integrity evidence uses a local-only finite plan without changing production", () => {
+  assert.match(ashfallSource, /finiteVisualIntegrityQa = localQaParameters\.get\("qaVisualIntegrity"\) === "1"/u);
+  assert.match(ashfallSource, /!finiteEnemyRuntimeQa[\s\S]*!finiteVisualIntegrityQa[\s\S]*!finiteHudRuntimeQa/u);
+  assert.match(ashfallSource, /getRequiredPlan:[\s\S]*?qaVisualIntegrity[\s\S]*?\["localhost", "127\.0\.0\.1"\]\.includes\(window\.location\.hostname\)/u);
 });
 
 test("final station pixels require the authored silhouette and reject unpainted or primitive-only output", () => {

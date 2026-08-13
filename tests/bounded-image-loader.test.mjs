@@ -86,6 +86,56 @@ test("battle readiness strict mode blocks a rejected decode", async () => {
   );
 });
 
+test("battle readiness publishes only after a transient decode rejection is followed by success", async () => {
+  let attempts = 0;
+  let readyCount = 0;
+  const image = imageFixture({
+    decode: () => {
+      attempts += 1;
+      return attempts === 1
+        ? Promise.reject(new Error("transient decoder pressure"))
+        : Promise.resolve();
+    },
+    onSource(candidate) {
+      queueMicrotask(() => candidate.onload?.());
+    },
+  });
+  await loadImageWithTimeout({
+    src: "/large-required-atlas.png",
+    createImage: () => image,
+    loadTimeoutMs: 50,
+    decodeTimeoutMs: 25,
+    decodeAttempts: 3,
+    requireDecode: true,
+    onReady() { readyCount += 1; },
+  });
+  assert.equal(attempts, 2);
+  assert.equal(readyCount, 1);
+});
+
+test("battle readiness remains blocked when every bounded decode attempt rejects", async () => {
+  let attempts = 0;
+  const image = imageFixture({
+    decode: () => {
+      attempts += 1;
+      return Promise.reject(new Error("permanent decode failure"));
+    },
+    onSource(candidate) {
+      queueMicrotask(() => candidate.onload?.());
+    },
+  });
+  await assert.rejects(loadImageWithTimeout({
+    src: "/bad-required-atlas.png",
+    createImage: () => image,
+    loadTimeoutMs: 50,
+    decodeTimeoutMs: 25,
+    decodeAttempts: 3,
+    requireDecode: true,
+    onReady() {},
+  }), (error) => error?.name === "ImageDecodeError");
+  assert.equal(attempts, 3);
+});
+
 test("battle readiness strict mode blocks a stalled decode", async () => {
   const image = imageFixture({
     decode: () => new Promise(() => {}),

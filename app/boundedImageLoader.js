@@ -10,6 +10,16 @@ export const IMAGE_LOAD_TIMEOUT_MS = 30_000;
 // bounded, but align it with the same product deadline that already guards the
 // enclosing asset session instead of manufacturing six deterministic failures.
 export const IMAGE_DECODE_TIMEOUT_MS = 2_000;
+// Battle readiness owns a closed, required asset plan. Its large authored
+// atlases must decode before gameplay mounts, while still remaining bounded by
+// the enclosing 90s asset-session deadline. General-purpose image callers keep
+// the shipped compatibility timeout above.
+export const REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS = 30_000;
+// A constrained browser can reject a large-atlas decode transiently while
+// another atlas is being decoded. Required battle images still may not become
+// ready without a successful decode, so retry the decode operation on the
+// already-loaded bytes a small, bounded number of times inside the one timeout.
+export const REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS = 3;
 
 function imageLoadError(name, message) {
   const error = new Error(message);
@@ -24,6 +34,7 @@ export function loadImageWithTimeout({
   createImage = () => new Image(),
   loadTimeoutMs = IMAGE_LOAD_TIMEOUT_MS,
   decodeTimeoutMs = IMAGE_DECODE_TIMEOUT_MS,
+  decodeAttempts = 1,
   requireDecode = false,
   faultMode = null,
 }) {
@@ -81,12 +92,29 @@ export function loadImageWithTimeout({
         requireDecode ? () => failDecode(new Error("decode timeout")) : ready,
         decodeTimeoutMs,
       );
-      try {
-        void Promise.resolve(image.decode()).then(ready, requireDecode ? failDecode : ready);
-      } catch (error) {
-        if (requireDecode) failDecode(error);
-        else ready();
-      }
+      const maxDecodeAttempts = Math.max(1, Math.min(3, Math.floor(decodeAttempts) || 1));
+      let decodeAttempt = 0;
+      const attemptDecode = () => {
+        if (settled) return;
+        decodeAttempt += 1;
+        const rejected = (error) => {
+          if (!requireDecode) {
+            ready();
+            return;
+          }
+          if (decodeAttempt >= maxDecodeAttempts) {
+            failDecode(error);
+            return;
+          }
+          queueMicrotask(attemptDecode);
+        };
+        try {
+          void Promise.resolve(image.decode()).then(ready, rejected);
+        } catch (error) {
+          rejected(error);
+        }
+      };
+      attemptDecode();
     };
     image.onerror = () => {
       finish(reject, imageLoadError("ImageLoadError", `Image unavailable: ${src}`));

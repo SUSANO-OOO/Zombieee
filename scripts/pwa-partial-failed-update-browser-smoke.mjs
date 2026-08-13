@@ -250,11 +250,11 @@ const candidateManifest = await readManifest(candidateRoot);
 // deliberately pinned fixture, but CI must not carry a stale release literal
 // into the next hotfix.
 const oldVersion = oldVersionOverride ?? oldManifest.version;
-record("old and candidate roots have the fixed 416-asset release contract", (
+record("old and candidate roots have the fixed old-416/candidate-415 release contract", (
   oldManifest.version === oldVersion
   && candidateManifest.version === RELEASE_VERSION
   && oldManifest.assets.length === 416
-  && candidateManifest.assets.length === 416
+  && candidateManifest.assets.length === 415
 ), {
   oldVersion: oldManifest.version,
   candidateVersion: candidateManifest.version,
@@ -277,7 +277,7 @@ const retainedHashes = new Set(retainedOldAssets.map((asset) => asset.hash));
 const retainedCandidateAssets = candidateManifest.assets.filter((asset) => retainedHashes.has(asset.hash));
 record("the candidate declares an exact non-empty hash delta instead of a stale same-pack assumption", (
   oldHashes.size === 414
-  && candidateHashes.size === 414
+  && candidateHashes.size === 413
   && candidateNewHashes.size > 0
   && candidateNewHashAssets.length === candidateNewHashes.size
   && retainedHashes.size === 156
@@ -573,9 +573,9 @@ try {
     && slow.progress.length >= 30
     && slow.progress.every((entry, index, entries) => index === 0 || entry.bytes > entries[index - 1].bytes)
   ), { requestCount: completedRecoveryRequests.length, slowDurationMs: slow?.durationMs, progressEvents: slow?.progress.length });
-  record(`partial recovery reaches 416/416, failed 0, commits ${RELEASE_VERSION}, and preserves raw save bytes`, (
-    finalCache.logicalSatisfied === 416
-    && finalCache.assetEntries === 414
+  record(`partial recovery reaches 415/415, failed 0, commits ${RELEASE_VERSION}, and preserves raw save bytes`, (
+    finalCache.logicalSatisfied === 415
+    && finalCache.assetEntries === 413
     && updatedWorker?.state?.active?.version === RELEASE_VERSION
     && updatedWorker.activeWorkerState === "activated"
     && finalSaveRaw === oldSaveRaw

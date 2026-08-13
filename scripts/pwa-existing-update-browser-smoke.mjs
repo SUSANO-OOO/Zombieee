@@ -158,7 +158,7 @@ record("old and candidate static roots are complete", (
   oldManifest.version === oldVersion
   && candidateManifest.version === RELEASE_VERSION
   && oldManifest.assets?.length === 416
-  && candidateManifest.assets?.length === 416
+  && candidateManifest.assets?.length === 415
 ), {
   oldVersion: oldManifest.version,
   candidateVersion: candidateManifest.version,
@@ -175,7 +175,7 @@ const candidateExpectedNetworkPaths = new Set(candidateNewHashAssets.map((asset)
   `${basePath}${asset.sourcePath ?? asset.path}`
 )));
 record("candidate keeps the complete asset set and declares an exact hash delta", (
-  candidateManifest.assets.length === 416
+  candidateManifest.assets.length === 415
   && candidateNewHashAssets.length === candidateNewHashes.size
   && candidateExpectedNetworkPaths.size === candidateNewHashes.size
 ), {

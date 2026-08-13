@@ -23,7 +23,7 @@ test("finite production visual inventory resolves every family and direction", a
   assert.equal(inventory.stages.length, 20);
   assert.ok(inventory.enemies.length >= 15);
   const runtimePaths = new Set();
-  for (const entry of [...inventory.units.flatMap(({ card, portrait }) => [card, portrait]), ...inventory.events.map(({ path }) => path)]) {
+  for (const entry of [...inventory.units.flatMap(({ card, portrait, battleSprite }) => [card, portrait, battleSprite]), ...inventory.events.map(({ path }) => path)]) {
     assert.match(entry, /^\/(?!.*(?:\/reference\/|identity-(?:master|r\d)))/u);
     await access(path.join(root, "public", entry.slice(1)));
     runtimePaths.add(entry);
@@ -44,7 +44,7 @@ test("finite production visual inventory resolves every family and direction", a
 test("runtime v0995 contains only registered identity/enemy derivatives", async () => {
   const inventory = productionVisualIntegrityInventory();
   const registered = new Set([
-    ...inventory.units.flatMap(({ card, portrait }) => [card, portrait]),
+    ...inventory.units.flatMap(({ card, portrait, battleSprite }) => [card, portrait, battleSprite]),
     ...inventory.events.map(({ path }) => path),
     ...inventory.enemies.map(({ sheet }) => sheet),
   ].filter((entry) => entry.includes("/art/v0995/")));

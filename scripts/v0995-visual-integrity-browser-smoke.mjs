@@ -16,7 +16,7 @@ const playwright = process.env.PLAYWRIGHT_MODULE_PATH
   : await import("playwright");
 const engines = (process.env.V0995_VISUAL_QA_ENGINES ?? "chromium,webkit").split(",");
 const selectedFaultClasses = new Set((process.env.V0995_VISUAL_QA_FAULT_CLASSES ?? "background,unit,later-enemy,mission,support").split(","));
-const selectedFaultModes = new Set((process.env.V0995_VISUAL_QA_FAULT_MODES ?? "delay,404,corrupt").split(","));
+const selectedFaultModes = new Set((process.env.V0995_VISUAL_QA_FAULT_MODES ?? "delay,404,corrupt,decode-reject,decode-timeout").split(","));
 const viewports = (process.env.V0995_VISUAL_QA_VIEWPORTS ?? "844x340,844x390,1280x720")
   .split(",").map((entry) => {
     const [width, height] = entry.split("x").map(Number);
@@ -67,10 +67,16 @@ for (const engineName of engines) {
       page.on("pageerror", (error) => errors.push(`page:${error.message}`));
       page.on("requestfailed", (request) => errors.push(`request:${request.url()}:${request.failure()?.errorText}`));
       const url = new URL(baseUrl);
-      url.search = new URLSearchParams({ qa: "battle", stage: CAMPAIGN_STAGES[0].id }).toString();
+      url.search = new URLSearchParams({
+        qa: "mission",
+        stage: CAMPAIGN_STAGES[0].id,
+        state: "start",
+        qaVisualIntegrity: "1",
+      }).toString();
       await page.goto(url.href, { waitUntil: "domcontentloaded" });
       await dismissInstallOffer(page);
       await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready", null, { timeout: 120_000 });
+      await page.waitForFunction(() => window.__ASHFALL_ASSET_QA__?.getBattleMountState?.().battleMounted === true, null, { timeout: 30_000 });
       const audit = await page.evaluate(() => {
         const bridge = window.__ASHFALL_ASSET_QA__;
         const state = bridge.getState();
@@ -88,14 +94,58 @@ for (const engineName of engines) {
       invariant(audit.state.state === "ready" && audit.state.failed === 0, JSON.stringify(audit.state));
       invariant(audit.missingSprites.length === 0, `missing sprites ${audit.missingSprites}`);
       invariant(audit.missingStageObjects.length === 0, `missing stage objects ${audit.missingStageObjects}`);
+      let monkeyRenderProof = null;
+      if (viewport.width === 844 && viewport.height === 390) {
+        monkeyRenderProof = await page.evaluate(async () => {
+          const qa = window.__ASHFALL_BATTLE_QA__;
+          const asset = await qa.ensureUnitRenderProofAsset("engineer");
+          const prepared = qa.prepareCrawlerDefenseProof({ attackerKind: "walker", lane: 1, existingClaim: false });
+          if (!Number.isInteger(prepared?.attackerId) || qa.queueCrawlerDefenseUnit("engineer", 1) !== true) {
+            throw new Error("Monkey production deployment fixture is unavailable");
+          }
+          const startedAt = performance.now();
+          let released = false;
+          let lastObservation = null;
+          while (performance.now() - startedAt < 20_000) {
+            const fighter = qa.getSnapshot().fighters.find((candidate) => (
+              candidate.kind === "engineer"
+              && candidate.side === "human"
+              && candidate.spawnPortalId === "crawler-door"
+            ));
+            lastObservation = fighter ? { id: fighter.id, renderAudit: fighter.renderAudit } : null;
+            if (fighter && !released) {
+              qa.setRepresentativeSixProofPaused(false);
+              released = true;
+            }
+            if (fighter?.renderAudit?.assetReady === true
+              && fighter.renderAudit.spriteState
+              && fighter.renderAudit.effectiveOpacity === 1) {
+              qa.setRepresentativeSixProofPaused(true);
+              await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+              const frozen = qa.getSnapshot().fighters.find((candidate) => candidate.id === fighter.id);
+              return { asset, fighter: frozen, unitLayer: qa.auditFighterUnitLayer(fighter.id) };
+            }
+            await new Promise((resolve) => requestAnimationFrame(resolve));
+          }
+          throw new Error(`Monkey never reached the production battle renderer ${JSON.stringify(lastObservation)}`);
+        });
+        invariant(monkeyRenderProof.asset?.path === "/art/v070/characters/engineer-battle-v1.png",
+          `${engineName}: Monkey renderer resolved ${monkeyRenderProof.asset?.path}`);
+        invariant(monkeyRenderProof.fighter?.renderAudit?.assetReady === true,
+          `${engineName}: Monkey approved atlas was not consumed by the production renderer`);
+        invariant(monkeyRenderProof.unitLayer?.alphaOneFromFirstVisibleFrame === true
+          && monkeyRenderProof.unitLayer?.finalCompositePixels?.pass === true
+          && monkeyRenderProof.unitLayer?.finalCompositePixels?.singleUnitSilhouette === true,
+        `${engineName}: Monkey final-canvas render proof failed ${JSON.stringify(monkeyRenderProof.unitLayer)}`);
+      }
       invariant(errors.length === 0, `${engineName}/${viewport.width}x${viewport.height}: ${errors.join("\n")}`);
       const screenshot = path.join(evidenceDir, `${engineName}-${viewport.width}x${viewport.height}-required-assets.png`);
       await page.screenshot({ path: screenshot, fullPage: true });
-      diagnostics.push({ engine: engineName, viewport, audit, errors, screenshot: path.relative(process.cwd(), screenshot).replaceAll("\\", "/") });
+      diagnostics.push({ engine: engineName, viewport, audit, monkeyRenderProof, errors, screenshot: path.relative(process.cwd(), screenshot).replaceAll("\\", "/") });
       await context.close();
     }
     for (const fixture of faultClasses.filter(({ className }) => selectedFaultClasses.has(className))) {
-      for (const mode of ["delay", "404", "corrupt"].filter((entry) => selectedFaultModes.has(entry))) {
+      for (const mode of ["delay", "404", "corrupt", "decode-reject", "decode-timeout"].filter((entry) => selectedFaultModes.has(entry))) {
         const faultViewports = fixture.className === "mission" ? viewports : [{ width: 844, height: 390 }];
         for (const faultViewport of faultViewports) {
         const context = await browser.newContext({ viewport: faultViewport });
@@ -110,6 +160,7 @@ for (const engineName of engines) {
           qa: "mission",
           stage: fixture.stageId,
           state: "start",
+          qaVisualIntegrity: "1",
           faultNonce: `${engineName}-${fixture.className}-${mode}`,
         }).toString();
         await page.goto(url.href, { waitUntil: "domcontentloaded" });
@@ -124,11 +175,34 @@ for (const engineName of engines) {
           }));
           throw new Error(`${engineName}/${fixture.className}/${mode}: baseline ready timeout ${JSON.stringify(debug)}`, { cause: error });
         });
+        if (mode === "decode-reject" || mode === "decode-timeout") {
+          await page.evaluate(({ faultPath, faultMode }) => {
+          const originalDecode = HTMLImageElement.prototype.decode;
+          window.__ASHFALL_QA_RESTORE_DECODE__ = () => {
+            Object.defineProperty(HTMLImageElement.prototype, "decode", { configurable: true, value: originalDecode });
+            delete window.__ASHFALL_QA_RESTORE_DECODE__;
+          };
+            Object.defineProperty(HTMLImageElement.prototype, "decode", {
+              configurable: true,
+              value() {
+                const sourcePath = (() => {
+                  try { return new URL(this.currentSrc || this.src, location.href).pathname; } catch { return ""; }
+                })();
+                if (sourcePath === faultPath) {
+                  if (faultMode === "decode-timeout") return new Promise(() => {});
+                  return Promise.reject(new DOMException("QA decode rejection", "EncodingError"));
+                }
+                return originalDecode.call(this);
+              },
+            });
+          }, { faultPath: fixture.path, faultMode: mode });
+        }
         await page.evaluate(({ path: faultPath, mode: faultMode }) => {
           const next = new URL(window.location.href);
           next.searchParams.set("assetTimeout", "400");
           next.searchParams.set("assetFaultPath", faultPath);
-          next.searchParams.set("assetFaultMode", faultMode);
+          if (["delay", "404", "corrupt"].includes(faultMode)) next.searchParams.set("assetFaultMode", faultMode);
+          else next.searchParams.delete("assetFaultMode");
           history.replaceState(history.state, "", next);
           window.__ASHFALL_ASSET_QA__.startAssetFaultProof();
         }, { path: fixture.path, mode });
@@ -160,16 +234,22 @@ for (const engineName of engines) {
           && terminalSession.failures.length === 1
           && terminalSession.failures[0].path === fixture.path,
         `${engineName}/${fixture.className}/${mode}: unrelated required asset failed ${JSON.stringify(terminalSession)}`);
+        const expectedFailureReason = mode.startsWith("decode-")
+          ? "decode"
+          : mode === "delay" ? "timeout" : "http";
+        invariant(terminalSession.failures[0].reason === expectedFailureReason,
+          `${engineName}/${fixture.className}/${mode}: wrong failure reason ${JSON.stringify(terminalSession.failures[0])}`);
         invariant(blocked.mount.canPlay === false && blocked.mount.battleMounted === false,
           `${engineName}/${fixture.className}/${mode}/${faultViewport.width}x${faultViewport.height}: fault mounted battle ${JSON.stringify(blocked.mount)}`);
         invariant(blocked.mount.fallbackDrawCount === 0,
           `${engineName}/${fixture.className}/${mode}: production diagnostic fallback drew pixels`);
-        const beforeRetry = Object.fromEntries(requestCounts);
+        const decodedBeforeRetry = await page.evaluate(() => window.__ASHFALL_ASSET_QA__.getDecodedRequiredPaths());
         await page.evaluate(() => {
           const url = new URL(window.location.href);
           url.searchParams.delete("assetFaultPath");
           url.searchParams.delete("assetFaultMode");
           history.replaceState(history.state, "", url);
+          window.__ASHFALL_QA_RESTORE_DECODE__?.();
           window.__ASHFALL_ASSET_QA__.retry();
         });
         await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready", null, { timeout: 120_000 }).catch(async (error) => {
@@ -182,7 +262,7 @@ for (const engineName of engines) {
           }));
           throw new Error(`${engineName}/${fixture.className}/${mode}: recovery timeout ${JSON.stringify(debug)}`, { cause: error });
         });
-        const afterRetry = Object.fromEntries(requestCounts);
+        const decodedAfterRetry = await page.evaluate(() => window.__ASHFALL_ASSET_QA__.getDecodedRequiredPaths());
         const recovered = await page.evaluate(() => ({
           mount: window.__ASHFALL_ASSET_QA__.getBattleMountState(),
           state: window.__ASHFALL_ASSET_QA__.getState(),
@@ -210,17 +290,17 @@ for (const engineName of engines) {
           invariant(new Set(mutableMissionStates.map(({ pixelAudit }) => pixelAudit.authoredStateSignature)).size === mutableMissionStates.length,
             `${engineName}/${mode}: mutable mission states collapsed to the same authored pixels`);
         }
-        const beforeValues = Object.values(beforeRetry);
-        const afterValues = Object.values(afterRetry);
-        const requestDelta = [...new Set([...Object.keys(beforeRetry), ...Object.keys(afterRetry)])]
-          .filter((key) => (afterRetry[key] ?? 0) > (beforeRetry[key] ?? 0));
         const intendedFailurePaths = new Set(blocked.failedPaths);
+        const missingDecodedSuccesses = decodedBeforeRetry
+          .filter((assetPath) => !intendedFailurePaths.has(assetPath) && !decodedAfterRetry.includes(assetPath));
+        invariant(missingDecodedSuccesses.length === 0,
+          `${engineName}/${fixture.className}/${mode}: retry discarded a decoded successful asset ${JSON.stringify(missingDecodedSuccesses)}`);
         const retrySession = recovered.history.at(-1);
         invariant(retrySession?.reason === "same-screen-retry"
           && retrySession.total === intendedFailurePaths.size
           && retrySession.status === "ready",
         `${engineName}/${fixture.className}/${mode}: failed-only recovery session missing ${JSON.stringify(retrySession)}`);
-        faultDiagnostics.push({ engine: engineName, viewport: faultViewport, fixture: { className: fixture.className, stageId: fixture.stageId, path: fixture.path }, mode, blocked, recovered, finalCanvas, mutableMissionStates, beforeRetry, afterRetry, requestDelta, requestSamples: { before: beforeValues.length, after: afterValues.length } });
+        faultDiagnostics.push({ engine: engineName, viewport: faultViewport, fixture: { className: fixture.className, stageId: fixture.stageId, path: fixture.path }, mode, blocked, recovered, finalCanvas, mutableMissionStates, decodedBeforeRetry, decodedAfterRetry, missingDecodedSuccesses, requestCounts: Object.fromEntries(requestCounts) });
         await context.close();
         }
       }

@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
 
+import { CAMPAIGN_UNIT_BY_ID, CAMPAIGN_UNIT_IDS } from "../app/campaign.js";
+import { spriteSheetPath } from "../app/spriteManifest.js";
 import { V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "../app/visualProfiles.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -67,6 +69,11 @@ test("all five newcomer event and card derivatives keep transparent UI-owned bac
 
 test("Monkey runtime identity is the exact producer-approved V070 r11 lineage", async () => {
   const profile = V080_UNIT_VISUAL_PROFILES.engineer;
+  const campaign = CAMPAIGN_UNIT_BY_ID[CAMPAIGN_UNIT_IDS.MONKEY];
+  const runtimeBattlePath = spriteSheetPath("engineer");
+  assert.equal(runtimeBattlePath, profile.battleSprite.path, "production renderer uses the approved profile atlas");
+  assert.equal(campaign.spritePath, profile.battleSprite.path, "campaign and profile use one battle identity");
+  assert.notEqual(runtimeBattlePath, "/art/v080/characters/monkey-battle-r2.png");
   const expected = Object.freeze({
     identity: "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7",
     portrait: "f0fc8f45f86c395ea604515444df3fbedd541faabbf749a4fbc6e4d70990f3e3",
@@ -80,6 +87,14 @@ test("Monkey runtime identity is the exact producer-approved V070 r11 lineage", 
     const digest = createHash("sha256").update(await readFile(publicFile(assetPath))).digest("hex");
     assert.equal(digest, expected[key], `${key} is the approved byte revision`);
   }
+  const runtimeDigest = createHash("sha256").update(await readFile(publicFile(runtimeBattlePath))).digest("hex");
+  const campaignDigest = createHash("sha256").update(await readFile(publicFile(campaign.spritePath))).digest("hex");
+  assert.equal(runtimeDigest, expected.battle, "runtime manifest points at the approved V070 atlas bytes");
+  assert.equal(campaignDigest, expected.battle, "campaign points at the approved V070 atlas bytes");
+  const rejectedV080Digest = createHash("sha256")
+    .update(await readFile(publicFile("/art/v080/characters/monkey-battle-r2.png")))
+    .digest("hex");
+  assert.notEqual(runtimeDigest, rejectedV080Digest, "disallowed V080 battle identity cannot return to runtime");
 
   const card = await alphaAudit(profile.formationCard.path);
   assert.ok(card.visibleRatio >= .2 && card.visibleRatio <= .82, "Monkey card is a transparent subject/badge derivative");

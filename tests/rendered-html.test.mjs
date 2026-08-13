@@ -408,7 +408,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(assetPlan, /STAGE_OBJECT_MANIFEST\[stageId\]\?\.objects \?\? \[\]/);
   assert.match(game, /const retainedSpriteImages = new Set\([\s\S]*if \(!retainedSpriteImages\.has\(image\) && !releasedSpriteImages\.has\(image\)\)[\s\S]*releaseImage\(image\)/);
   assert.match(game, /delete backgroundCacheRef\.current\[stageId\];[\s\S]*const allCriticalJobs = \[/);
-  assert.match(game, /root\.dataset\.assetResidentScope = finiteEnemyRuntimeQa[\s\S]*"finite-enemy-runtime-qa"[\s\S]*qaMode \|\| qaScenario \? "all-local-qa" : "stage-and-formation"/);
+  assert.match(game, /root\.dataset\.assetResidentScope = finiteEnemyRuntimeQa[\s\S]*"finite-enemy-runtime-qa"[\s\S]*finiteVisualIntegrityQa[\s\S]*"finite-visual-integrity-qa"[\s\S]*qaMode \|\| qaScenario \? "all-local-qa" : "stage-and-formation"/);
   assert.match(game, /root\.dataset\.assetResidentBackgrounds = String\(Object\.keys\(backgroundCacheRef\.current\)\.length\)/);
   assert.doesNotMatch(game, /const cached = backgroundCacheRef\.current\[selectedStageId\]/);
   assert.doesNotMatch(game, /Object\.values\(STAGE_OBJECT_MANIFEST\)\.flatMap/);
