@@ -59,7 +59,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(hudJob, /ISSUE156_WEBKIT_HUD_STATE: \$\{\{ matrix\.hud_state \}\}/u);
   assert.match(hudJob, /needs: webkit-deployment-viewport/u);
   assert.match(hudJob, /fail-fast: false/u);
-  assert.match(hudJob, /max-parallel: 4/u);
+  assert.match(hudJob, /max-parallel: 1/u);
   assert.doesNotMatch(hudJob, /continue-on-error:/u);
   const deploymentJob = workflow.match(/  webkit-deployment-viewport:\n([\s\S]*?)\n  webkit-stage3-audio:/u)?.[1] ?? "";
   const deploymentViewports = deploymentJob.match(/viewport:\r?\n([\s\S]*?)\r?\n    steps:/u)?.[1]
