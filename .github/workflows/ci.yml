@@ -244,28 +244,11 @@ jobs:
           RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/webkit
         run: npm run qa:records
 
-      - name: Capture Version 0.9.9.5 enemy runtime and station final-canvas evidence (WebKit)
+      - name: Capture Version 0.9.9.5 station final-canvas evidence (WebKit)
         env:
-          V0995_ENEMY_QA_ENGINES: webkit
           V0995_VISUAL_QA_ENGINES: webkit
           V0995_VISUAL_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/visual-integrity/webkit
-        run: |
-          kinds=(
-            walker runner spitter crusher shade abomination turned takuya
-            grappler ooze sprinter gate-eater kurome mother ooguchi gairen
-            futago resonator cagewalker spindle choir-knot pall-manta anchor-bloom
-          )
-          viewports=(844x340 844x390 1280x720)
-          for kind in "${kinds[@]}"; do
-            for viewport in "${viewports[@]}"; do
-              export V0995_ENEMY_QA_KINDS="$kind"
-              export V0995_ENEMY_QA_VIEWPORTS="$viewport"
-              export V0995_ENEMY_QA_EVIDENCE_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/$kind/$viewport"
-              export V0995_ENEMY_QA_COMPACT_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/$kind/$viewport/compact"
-              node scripts/run-browser-qa-with-server.mjs scripts/v0995-enemy-runtime-browser-smoke.mjs
-            done
-          done
-          node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
 
       - name: Upload Issue 165 WebKit visual remediation evidence
         if: always()
@@ -282,6 +265,76 @@ jobs:
         with:
           name: issue156-webkit-hosted-runner-evidence
           path: issue156-evidence
+          if-no-files-found: error
+          retention-days: 14
+
+  webkit-enemy-runtime-shard:
+    name: WebKit Enemy Runtime Evidence (${{ matrix.shard.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard:
+          - name: 01
+            kinds: "walker runner spitter crusher"
+          - name: 02
+            kinds: "shade abomination turned takuya"
+          - name: 03
+            kinds: "grappler ooze sprinter gate-eater"
+          - name: 04
+            kinds: "kurome mother ooguchi gairen"
+          - name: 05
+            kinds: "futago resonator cagewalker spindle"
+          - name: 06
+            kinds: "choir-knot pall-manta anchor-bloom"
+
+    steps:
+      - name: Checkout synthetic PR merge
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Install focused browser engine
+        run: npx playwright install --with-deps webkit
+
+      - name: Capture Version 0.9.9.5 enemy runtime evidence (WebKit shard ${{ matrix.shard.name }})
+        env:
+          V0995_ENEMY_QA_ENGINES: webkit
+          V0995_ENEMY_QA_SHARD_KINDS: ${{ matrix.shard.kinds }}
+        run: |
+          set -euo pipefail
+          viewports=(844x340 844x390 1280x720)
+          for kind in $V0995_ENEMY_QA_SHARD_KINDS; do
+            for viewport in "${viewports[@]}"; do
+              export V0995_ENEMY_QA_KINDS="$kind"
+              export V0995_ENEMY_QA_VIEWPORTS="$viewport"
+              export V0995_ENEMY_QA_EVIDENCE_DIR="${{ github.workspace }}/issue165-evidence/enemy-runtime/webkit/${{ matrix.shard.name }}/$kind/$viewport"
+              export V0995_ENEMY_QA_COMPACT_DIR="$V0995_ENEMY_QA_EVIDENCE_DIR/compact"
+              node scripts/run-browser-qa-with-server.mjs scripts/v0995-enemy-runtime-browser-smoke.mjs
+            done
+          done
+
+      - name: Upload Issue 165 WebKit enemy runtime evidence (${{ matrix.shard.name }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue165-webkit-enemy-runtime-${{ matrix.shard.name }}
+          path: issue165-evidence
           if-no-files-found: error
           retention-days: 14
 

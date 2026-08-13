@@ -42,12 +42,12 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /for viewport in 667x375 736x414 844x390 844x340 932x430 1280x720/u);
   assert.match(workflow, /V099_FINAL_REMEDIATION_QA_VIEWPORTS="\$viewport"/u);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
-  assert.match(workflow, /for kind in "\$\{kinds\[@\]\}"; do/);
+  assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
   assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);
   assert.match(workflow, /for viewport in "\$\{viewports\[@\]\}"; do/);
   assert.match(workflow, /V0995_ENEMY_QA_KINDS="\$kind"/);
   assert.match(workflow, /V0995_ENEMY_QA_VIEWPORTS="\$viewport"/);
-  assert.match(workflow, /enemy-runtime\/webkit\/\$kind\/\$viewport/);
+  assert.match(workflow, /enemy-runtime\/webkit\/\$\{\{ matrix\.shard\.name \}\}\/\$kind\/\$viewport/);
   assert.doesNotMatch(workflow, /V0995_ENEMY_QA_KINDS="\$\{batches\[\$index\]\}"/);
   assert.match(finalBoundedRunner, /attempt <= 2/u);
   assert.match(finalBoundedRunner, /V099_FINAL_REMEDIATION_QA_BASE_URL/u);
@@ -61,14 +61,22 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(finalBoundedContract, / :: net::ERR_ABORTED\$\/u/u);
   assert.match(finalBoundedContract, /consoleErrors[\s\S]*pageErrors[\s\S]*httpErrors/u);
   assert.doesNotMatch(finalBoundedRunner, /status:\s*"(?:skipped|unavailable)"/u);
-  const kindList = workflow.match(/kinds=\(\s*([\s\S]*?)\s*\)\s*viewports=\(/u)?.[1]
-    .trim().split(/\s+/u) ?? [];
+  const shardJob = workflow.match(/  webkit-enemy-runtime-shard:\n([\s\S]*?)\n  webkit-viewport:/u)?.[1] ?? "";
+  const shardKindLists = [...shardJob.matchAll(/^\s+kinds: "([^"]+)"$/gmu)]
+    .map((match) => match[1].trim().split(/\s+/u));
+  assert.equal(shardKindLists.length, 6);
+  assert.ok(shardKindLists.every((kinds) => kinds.length > 0 && kinds.length <= 4));
+  const kindList = shardKindLists.flat();
   assert.deepEqual(kindList, [
     "walker", "runner", "spitter", "crusher", "shade", "abomination",
     "turned", "takuya", "grappler", "ooze", "sprinter", "gate-eater",
     "kurome", "mother", "ooguchi", "gairen", "futago", "resonator",
     "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom",
   ]);
+  assert.equal(new Set(kindList).size, kindList.length);
+  assert.match(shardJob, /fail-fast: false/u);
+  assert.doesNotMatch(shardJob, /continue-on-error:/u);
+  assert.match(shardJob, /name: issue165-webkit-enemy-runtime-\$\{\{ matrix\.shard\.name \}\}/u);
   assert.match(workflow, /V0995_ENEMY_QA_KINDS/u);
   assert.match(workflow, /name: issue165-visual-remediation-evidence[\s\S]*retention-days: 14/u);
   assert.match(workflow, /name: issue165-webkit-visual-remediation-evidence[\s\S]*retention-days: 14/u);
