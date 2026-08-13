@@ -1526,16 +1526,28 @@ async function pauseAndVerifyFrozenScriptedBark({
     `${label} consumed scripted dialogue while paused: ${pausedBark.remaining} -> ${heldBark.remaining}`);
   if (whilePaused) await whilePaused({ before, paused, held });
 
-  await page.getByRole("button", { name: "作戦を再開", exact: true }).click({ timeout });
+  const resumeButton = page.getByRole("button", { name: "作戦を再開", exact: true });
+  await resumeButton.waitFor({ state: "visible", timeout });
+  // Sample the resume boundary in the same page task that dispatches the real
+  // button handler.  A Node-side click followed by a second IPC round-trip can
+  // miss several live simulation ticks on a loaded hosted runner and must not
+  // be mistaken for a product-side failure to reset the entrance timer.
+  const resumeBoundary = await resumeButton.evaluate((button) => {
+    button.click();
+    return {
+      pageNow: performance.now(),
+      snapshot: window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null,
+    };
+  });
   await page.waitForFunction(
     () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().paused === false,
     undefined,
     { timeout },
   );
-  const resumed = await storyBattleSnapshot(page);
+  const resumed = resumeBoundary.snapshot ?? await storyBattleSnapshot(page);
   const resumedBark = activeScriptedBark(resumed, cueFragment);
   invariant(resumedBark?.id === beforeBark.id, `${label} did not restore the frozen scripted line`);
-  return { before, paused, held, resumed, scriptedLineId: beforeBark.id };
+  return { before, paused, held, resumed, resumeBoundary, scriptedLineId: beforeBark.id };
 }
 
 async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
@@ -1643,20 +1655,21 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
     result.phase = "entrance-restart";
     diagnostics.setPhase(result.phase);
     stage3Progress(label, result.phase, auditStartedAt);
+    const exactRestartRemaining = pauseEvidence.resumed.takuyaEntranceAudioRemaining;
+    invariant(
+      exactRestartRemaining >= TAKUYA_ENTRANCE_AUDIO.durationSeconds - .03
+        && exactRestartRemaining <= TAKUYA_ENTRANCE_AUDIO.durationSeconds,
+      `${label} did not reset the TAKUYA entrance timer at the resume boundary: ${exactRestartRemaining}`,
+    );
     await page.waitForFunction(
-      ({ expectedSceneId, expectedRemaining }) => {
+      ({ expectedSceneId }) => {
         const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
         return snapshot?.paused === false
-          && snapshot?.takuyaEntranceAudioRemaining >= expectedRemaining
           && document.documentElement.dataset.audioScene === expectedSceneId;
       },
-      {
-        expectedSceneId: expectedTakuyaEntranceSceneId,
-        expectedRemaining: TAKUYA_ENTRANCE_AUDIO.durationSeconds - .15,
-      },
+      { expectedSceneId: expectedTakuyaEntranceSceneId },
       { timeout },
     );
-    const restartAt = Date.now();
     if (!audioBlocked) {
       await page.waitForFunction(
         ({ cueId }) => window.__ASHFALL_AUDIO_QA__?.hasInstance?.(cueId) === true,
@@ -1684,7 +1697,8 @@ async function auditTakuyaEntranceAudio({ browser, engine, viewport }) {
       { expectedSceneId: expectedTakuyaBossSceneId, assetId: expectedTakuyaBossAssetId, audioBlocked },
       { timeout },
     );
-    const observedDuckReleaseMs = Date.now() - restartAt;
+    const releaseObservedPageNow = await page.evaluate(() => performance.now());
+    const observedDuckReleaseMs = releaseObservedPageNow - pauseEvidence.resumeBoundary.pageNow;
     invariant(observedDuckReleaseMs >= TAKUYA_ENTRANCE_AUDIO.durationSeconds * 1_000 - 250,
       `${label} released the entrance duck after only ${observedDuckReleaseMs}ms`);
     const completed = await storyBattleSnapshot(page);
