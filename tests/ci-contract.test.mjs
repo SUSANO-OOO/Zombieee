@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -81,6 +81,8 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(stage3Job, /fail-fast: false/u);
   assert.match(stage3Job, /max-parallel: 1/u);
   assert.doesNotMatch(stage3Job, /continue-on-error:/u);
+  assert.doesNotMatch(stage3Job, /npm run qa:p5/u);
+  assert.equal((stage3Job.match(/node scripts\/run-stage3-audio-bounded\.mjs/gmu) ?? []).length, 2);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
   assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);
@@ -153,11 +155,11 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 test("Stage 3 final uses one bounded fixture for candidate and exact PR base", async () => {
   const workflow = await readFile(".github/workflows/ci.yml", "utf8");
   const p5Smoke = await readFile("scripts/p5-browser-smoke.mjs", "utf8");
-  const boundedRunner = await readFile("scripts/run-stage3-final-bounded.mjs", "utf8");
+  const boundedRunner = await readFile("scripts/run-stage3-audio-bounded.mjs", "utf8");
   assert.match(workflow, /Build exact PR base for the same bounded final fixture/);
   assert.match(workflow, /git worktree add --detach "\$base_source" "\$PR_BASE_SHA"/);
   assert.match(workflow, /npm ci[\s\S]*npm run build/);
-  assert.match(workflow, /run-stage3-final-bounded\.mjs "\$RUNNER_TEMP\/stage3-final-base"/);
+  assert.match(workflow, /run-stage3-audio-bounded\.mjs "\$RUNNER_TEMP\/stage3-final-base"/);
   const stage3Job = workflow.match(/  webkit-stage3-audio:\r?\n([\s\S]*)$/u)?.[1] ?? "";
   assert.match(stage3Job, /- entrance-candidate[\s\S]*- final-candidate[\s\S]*- final-base/u);
   assert.equal((stage3Job.match(/- final-base/gmu) ?? []).length, 1);

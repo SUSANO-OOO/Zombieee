@@ -30,7 +30,8 @@ export function emptyDiagnostics(diagnostics = {}) {
     && Number(diagnostics.pendingRequestCount ?? 0) === 0;
 }
 
-export function isRetryableTargetClosed(summary) {
+export function isRetryableTargetClosed(summary, mode = "final") {
+  if (!["entrance", "final"].includes(mode)) return false;
   const failures = (summary.results ?? []).filter(({ status }) => status === "failed");
   if (summary.failed !== 1 || failures.length !== 1 || (summary.results ?? []).length !== 1) return false;
   const failure = failures[0];
@@ -42,8 +43,12 @@ export function isRetryableTargetClosed(summary) {
     ? setupState
     : (failure.failureState ?? setupState);
   const setupRaw = failure.setupDiagnostics?.raw;
-  return failure.kind === "takuya-final-audio"
-    && ["navigation", "final-cut", "final-fifo"].includes(failure.phase)
+  const expectedKind = mode === "entrance" ? "takuya-entrance-audio" : "takuya-final-audio";
+  const allowedPhases = mode === "entrance"
+    ? ["navigation", "entrance-start", "entrance-restart", "boss-music-duck-release"]
+    : ["navigation", "final-cut", "final-fifo"];
+  return failure.kind === expectedKind
+    && allowedPhases.includes(failure.phase)
     && isRetryableTargetClosedLog(failure.error ?? "")
     && state?.screen === "battle"
     && state?.assetReadiness?.state === "ready"
@@ -55,11 +60,15 @@ export function isRetryableTargetClosed(summary) {
     && emptyDiagnostics(failure.diagnostics);
 }
 
-export async function runStage3FinalBounded({
+export async function runStage3AudioBounded({
   baseRoot = process.argv[2] ? path.resolve(process.argv[2]) : null,
-  evidenceRoot = path.resolve(process.env.P5_QA_EVIDENCE_DIR ?? "outputs/p5-stage3-final-bounded"),
+  mode = process.env.P5_QA_BATTLE_AUDIO_CASES ?? "final",
+  evidenceRoot = path.resolve(process.env.P5_QA_EVIDENCE_DIR ?? `outputs/p5-stage3-${mode}-bounded`),
   executeAttempt = runAttempt,
 } = {}) {
+  if (!["entrance", "final"].includes(mode)) {
+    throw new Error(`Stage 3 bounded mode must be entrance or final, received ${mode}`);
+  }
   await mkdir(evidenceRoot, { recursive: true });
   const attempts = [];
   for (let attempt = 1; attempt <= 2; attempt += 1) {
@@ -68,22 +77,24 @@ export async function runStage3FinalBounded({
     const execution = await executeAttempt(baseRoot, attemptDir);
     const summaryPath = path.join(attemptDir, "summary.json");
     const summary = JSON.parse(await readFile(summaryPath, "utf8"));
-    const retryableTargetClosed = execution.code !== 0 && isRetryableTargetClosed(summary);
+    const retryableTargetClosed = execution.code !== 0 && isRetryableTargetClosed(summary, mode);
     attempts.push({ attempt, attemptDir, ...execution, retryableTargetClosed, summary });
     if (execution.code === 0) {
-      const report = { status: "passed", baseRoot, attempts };
+      const report = { status: "passed", mode, baseRoot, attempts };
       await writeFile(path.join(evidenceRoot, "bounded-summary.json"), `${JSON.stringify(report, null, 2)}\n`);
-      console.log(JSON.stringify({ status: report.status, attempts: attempts.length, baseRoot }, null, 2));
+      console.log(JSON.stringify({ status: report.status, mode, attempts: attempts.length, baseRoot }, null, 2));
       return report;
     }
     if (attempt !== 1 || !retryableTargetClosed) break;
     console.warn("Retrying once after a clean hosted-WebKit target-closed incident; all product assertions remain required.");
   }
-  const report = { status: "failed", baseRoot, attempts };
+  const report = { status: "failed", mode, baseRoot, attempts };
   await writeFile(path.join(evidenceRoot, "bounded-summary.json"), `${JSON.stringify(report, null, 2)}\n`);
-  throw new Error(`bounded Stage 3 final failed after ${attempts.length} attempt(s)`);
+  throw new Error(`bounded Stage 3 ${mode} failed after ${attempts.length} attempt(s)`);
 }
 
+export const runStage3FinalBounded = runStage3AudioBounded;
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  await runStage3FinalBounded();
+  await runStage3AudioBounded();
 }
