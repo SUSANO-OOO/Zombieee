@@ -7,18 +7,29 @@ import {
   strictCanvasScreenshotClip,
 } from "../scripts/v0995-qa-evidence-contract.mjs";
 
-test("reconciles Node request timestamps into the page asset-history clock", () => {
+test("keeps same-epoch request timestamps after interval calibration", () => {
   const result = reconcilePageClockRequestFailures({
     failures: [failure({ startedAt: 2_100, failedAt: 2_120 })],
     calibrations: [
-      { label: "post-navigation", nodeBefore: 1_000, nodeAfter: 1_010, pageNow: 905 },
-      { label: "terminal-ready", nodeBefore: 3_000, nodeAfter: 3_010, pageNow: 2_905 },
+      { label: "post-navigation", nodeBefore: 1_000, nodeAfter: 1_010, pageNow: 1_005 },
+      { label: "terminal-ready", nodeBefore: 3_000, nodeAfter: 3_010, pageNow: 3_005 },
     ],
   });
   assert.equal(result.failures[0].nodeStartedAt, 2_100);
   assert.equal(result.failures[0].nodeFailedAt, 2_120);
-  assert.equal(result.failures[0].startedAt, 2_000);
-  assert.equal(result.failures[0].failedAt, 2_020);
+  assert.equal(result.failures[0].startedAt, 2_100);
+  assert.equal(result.failures[0].failedAt, 2_120);
+});
+
+test("accepts slow evaluation when page time remains inside the measured Node interval", () => {
+  const result = reconcilePageClockRequestFailures({
+    failures: [failure()],
+    calibrations: [
+      { nodeBefore: 1_000, nodeAfter: 1_700, pageNow: 1_425 },
+      { nodeBefore: 2_000, nodeAfter: 2_900, pageNow: 2_480 },
+    ],
+  });
+  assert.equal(result.calibrations[1].roundTripMs, 900);
 });
 
 for (const [name, calibrations] of [
@@ -27,13 +38,13 @@ for (const [name, calibrations] of [
     { nodeBefore: 0, nodeAfter: 1, pageNow: Number.NaN },
     { nodeBefore: 2, nodeAfter: 3, pageNow: 2 },
   ]],
-  ["slow calibration", [
-    { nodeBefore: 0, nodeAfter: 300, pageNow: 150 },
-    { nodeBefore: 400, nodeAfter: 401, pageNow: 400 },
+  ["different epoch", [
+    { nodeBefore: 1_000, nodeAfter: 1_300, pageNow: 1 },
+    { nodeBefore: 1_400, nodeAfter: 1_500, pageNow: 101 },
   ]],
-  ["clock discontinuity", [
-    { nodeBefore: 0, nodeAfter: 2, pageNow: 1 },
-    { nodeBefore: 100, nodeAfter: 102, pageNow: 201 },
+  ["backward clock", [
+    { nodeBefore: 1_000, nodeAfter: 1_100, pageNow: 1_050 },
+    { nodeBefore: 900, nodeAfter: 1_010, pageNow: 960 },
   ]],
 ]) {
   test(`rejects ${name}`, () => {

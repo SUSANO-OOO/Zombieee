@@ -15,41 +15,35 @@ const pathMatches = (requestUrl, requiredPath) => {
 export function reconcilePageClockRequestFailures({
   failures,
   calibrations,
-  maxRoundTripMs = 250,
-  maxOffsetDriftMs = 50,
+  sameEpochToleranceMs = 5,
 }) {
   if (!Array.isArray(calibrations) || calibrations.length < 2) {
     throw new Error("request failure clock requires two page-clock calibrations");
   }
-  const normalized = calibrations.map((sample) => {
+  const normalized = calibrations.map((sample, index) => {
     const values = [sample?.nodeBefore, sample?.nodeAfter, sample?.pageNow];
     if (!values.every(Number.isFinite) || sample.nodeAfter < sample.nodeBefore) {
       throw new Error("request failure clock calibration is not finite");
     }
     const roundTripMs = sample.nodeAfter - sample.nodeBefore;
-    if (roundTripMs > maxRoundTripMs) {
-      throw new Error(`request failure clock calibration exceeded ${maxRoundTripMs}ms`);
+    if (sample.pageNow < sample.nodeBefore - sameEpochToleranceMs
+      || sample.pageNow > sample.nodeAfter + sameEpochToleranceMs) {
+      throw new Error("request failure page clock is outside its Node observation interval");
     }
-    const nodeMidpoint = sample.nodeBefore + roundTripMs / 2;
+    if (index > 0) {
+      const previous = calibrations[index - 1];
+      if (sample.nodeBefore < previous.nodeBefore
+        || sample.nodeAfter < previous.nodeAfter
+        || sample.pageNow < previous.pageNow) {
+        throw new Error("request failure clock calibration moved backward");
+      }
+    }
     return {
       ...sample,
-      nodeMidpoint,
       roundTripMs,
-      pageMinusNodeMs: sample.pageNow - nodeMidpoint,
+      sameEpochInterval: [sample.nodeBefore, sample.nodeAfter],
     };
   });
-  const offsets = normalized.map(({ pageMinusNodeMs }) => pageMinusNodeMs);
-  if (Math.max(...offsets) - Math.min(...offsets) > maxOffsetDriftMs) {
-    throw new Error(`request failure clock offset drift exceeded ${maxOffsetDriftMs}ms`);
-  }
-  const first = normalized[0];
-  const last = normalized.at(-1);
-  const interpolateOffset = (nodeTime) => {
-    if (last.nodeMidpoint <= first.nodeMidpoint) return last.pageMinusNodeMs;
-    const ratio = Math.max(0, Math.min(1,
-      (nodeTime - first.nodeMidpoint) / (last.nodeMidpoint - first.nodeMidpoint)));
-    return first.pageMinusNodeMs + (last.pageMinusNodeMs - first.pageMinusNodeMs) * ratio;
-  };
   return {
     calibrations: normalized,
     failures: failures.map((failure) => {
@@ -61,8 +55,8 @@ export function reconcilePageClockRequestFailures({
         ...failure,
         nodeStartedAt: failure.startedAt,
         nodeFailedAt: failure.failedAt,
-        startedAt: failure.startedAt + interpolateOffset(failure.startedAt),
-        failedAt: failure.failedAt + interpolateOffset(failure.failedAt),
+        startedAt: failure.startedAt,
+        failedAt: failure.failedAt,
       };
     }),
   };
