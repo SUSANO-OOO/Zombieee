@@ -41,6 +41,8 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /run-v099-final-bounded-against-pages\.mjs _site/u);
   assert.match(workflow, /for viewport in 667x375 736x414 844x390 844x340 932x430 1280x720/u);
   assert.match(workflow, /V099_FINAL_REMEDIATION_QA_VIEWPORTS="\$viewport"/u);
+  assert.match(workflow, /ISSUE156_WEBKIT_DEPLOYMENT_EVIDENCE_ROOT:/u);
+  assert.match(workflow, /node scripts\/run-v099-deployment-units-bounded\.mjs/u);
   assert.match(await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8"), /qaHudFiniteAssets/);
   assert.match(workflow, /name: WebKit Enemy Runtime Evidence \(\$\{\{ matrix\.shard\.name \}\}\)/);
   assert.match(workflow, /viewports=\(844x340 844x390 1280x720\)/);
@@ -84,6 +86,15 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(enemyBoundedRunner, /isRetryableTargetClosedLog/u);
   assert.match(enemyBoundedRunner, /attempt-\$\{attempt\}/u);
   assert.doesNotMatch(enemyBoundedRunner, /status:\s*"(?:skipped|unavailable)"|continue-on-error/u);
+  const deploymentBoundedRunner = await readFile("scripts/run-v099-deployment-units-bounded.mjs", "utf8");
+  for (const kind of ["scout", "ranger", "brawler", "crazy-king", "kumaverson", "mayo-chan", "brute", "medic"]) {
+    assert.match(deploymentBoundedRunner, new RegExp(`"${kind}"`, "u"));
+  }
+  assert.match(deploymentBoundedRunner, /attempt <= 2/u);
+  assert.match(deploymentBoundedRunner, /isRetryableTargetClosedLog/u);
+  assert.match(deploymentBoundedRunner, /checkpoints\?\.length === 6/u);
+  assert.match(deploymentBoundedRunner, /new Set\(kinds\)\.size !== kinds\.length/u);
+  assert.doesNotMatch(deploymentBoundedRunner, /status:\s*"(?:skipped|unavailable)"|continue-on-error/u);
   assert.match(workflow, /V0995_ENEMY_QA_KINDS/u);
   assert.match(workflow, /name: issue165-visual-remediation-evidence[\s\S]*retention-days: 14/u);
   assert.match(workflow, /name: issue165-webkit-visual-remediation-evidence[\s\S]*retention-days: 14/u);

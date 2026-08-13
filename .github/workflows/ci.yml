@@ -437,11 +437,11 @@ jobs:
       - name: Capture final-canvas deployment evidence
         env:
           DEBUG: pw:browser
-          ISSUE156_WEBKIT_VIEWPORT_EVIDENCE_ROOT: ${{ github.workspace }}/issue156-viewport-evidence/canonical
+          ISSUE156_WEBKIT_DEPLOYMENT_EVIDENCE_ROOT: ${{ github.workspace }}/issue156-viewport-evidence/canonical/deployment
           V099_FINAL_REMEDIATION_QA_ENGINES: webkit
           V099_FINAL_REMEDIATION_QA_VIEWPORTS: ${{ matrix.viewport }}
           V099_FINAL_REMEDIATION_QA_TIMEOUT_MS: "60000"
-        run: "$RUNNER_TEMP/issue156-webkit-viewport-case.sh deployment"
+        run: node scripts/run-v099-deployment-units-bounded.mjs
 
       - name: Upload canonical WebKit viewport evidence
         if: always()
