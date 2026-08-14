@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout public QA tooling
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
@@ -67,7 +67,7 @@ jobs:
 
       - name: Checkout immutable deployed source
         if: steps.release.outputs.deploy == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.release.outputs.release_sha }}
           path: release-source
