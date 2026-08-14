@@ -292,7 +292,7 @@ jobs:
 
       - name: Verify GitHub Pages uses Actions
         if: steps.release.outputs.deploy == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ github.token }}
           script: |
