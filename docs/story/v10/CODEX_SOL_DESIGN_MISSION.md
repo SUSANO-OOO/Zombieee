@@ -1,7 +1,7 @@
-# Codex Sol Design Mission — v10正史・30 Stage正式リリース
+# Codex Sol Design Mission — Version 1.0.0／v10正史／30 Stage完成リリース
 
-この文書は、最初のSol threadへ送るDesign missionの正本である。  
-この段階ではproduction implementation、merge、releaseを行わない。
+この文書は、Producerが最初のSol threadへ送る一回限りの正式Design mission正本である。  
+このmissionは、Design Lock、静的balance tuning、必要assetの候補生成・選定、Luna Handoffまでを一つのgoalとして扱う。production code実装、merge、Release、Pages公開は行わない。
 
 ---
 
@@ -9,13 +9,15 @@
 
 `ROLE_LOCK: SOL_DESIGN`
 
-## MISSION
+## 1. MISSION
 
-`西新世紀末物語`のv10正史台本を、PROLOGUEからStage 30、ENDING、EPILOGUEまで一括実装できる**正式リリース用Design Lock**へ変換してください。
+`西新世紀末物語`のv10正史台本を、PROLOGUEからStage 30、ENDING、EPILOGUEまで未完成箇所なく実装できるVersion 1.0.0用Design Lockへ変換してください。
 
-これは台本貼付やStage追加だけのmissionではありません。現行game全体を調査し、story、battle、campaign progression、CAPS economy、unit recruitment、level progression、support、boss cross-mode unlock、art、animation、effect、audio、save、PWA、QA、release boundaryを30 Stage構成へ統合してください。
+これは台本貼付やStage追加だけのmissionではありません。現行game全体をlive repositoryから調査し、story、battle、class composition、campaign progression、CAPS economy、unit recruitment、level progression、support、human enemy、boss cross-mode unlock、art、animation、effect、audio、save、PWA、QA、release boundaryを30 Stage構成へ統合してください。
 
-## 1. 最初に読む正本
+Producerは、本文末尾の停止条件に該当しない限り、数値調整やStory外unitの配置をSolへ委任します。本書とProducer Decisionsの制約内で成立する判断を、追加承認待ちとして止めないでください。
+
+## 2. 最初に読む正本
 
 次を順番どおり読み、live repositoryと照合してください。
 
@@ -26,162 +28,256 @@
 5. `docs/story/v10/README.md`
 6. `docs/story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md`
 7. `docs/story/v10/STORY_SCRIPT_V10.md`
-8. `docs/story/v10/STORY_IMPLEMENTATION_MAP.md`
-9. `docs/ASSET_STORAGE_POLICY.md`
-10. 関連する現行code、tests、asset manifests、QA scripts、open Issue／PR
+8. 復元されたv10 Markdown全文
+9. `docs/story/v10/STORY_IMPLEMENTATION_MAP.md`
+10. `docs/ASSET_STORAGE_POLICY.md`
+11. 関連する現行code、tests、asset manifests、QA scripts、open Issue／PR
 
-`docs/PROJECT_STATE.md`の記述を永久に最新とは見なさず、作業開始時に`main`、release、open PR、workflow、current versionをlive GitHubから再取得してください。
+`PROJECT_STATE.md`やこの文書に書かれたSHAを永久に最新とは見なさず、開始時、branch作成前、PR作成前にlive値を再取得してください。
 
-このmission作成時に観測した`main`は次です。
+## 3. 台本全文の必須復元
 
-- HEAD：`55d796cc577d1d9f903a4d2c6b4382196511db27`
-- tree：`0f8a5fb417ccca595d485d22c2c3cbe240b6ee28`
-- release identity：Version 0.9.9.5
+Design開始前に次を実行してください。
 
-開始時に値が変わっていればlive値を採用し、Design Lockへactual baselineを記録してください。
+```bash
+python docs/story/v10/reconstruct_story_v10.py /tmp/STORY_SCRIPT_V10.md
+```
 
-## 2. 最初の返答
+次と一致することを確認してください。
 
-最初の進行報告で必ず次を示してください。
+```text
+UTF-8 bytes: 138747
+Lines: 2681
+SHA-256: c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4
+```
 
-- `ROLE_LOCK: SOL_DESIGN`
-- actual baseline branch／HEAD／tree
-- current release identity
-- 読み込んだ正本一覧
-- open PR／branch conflict
-- このDesign missionでcode実装を行わないこと
-- 最初に調査するmodule群
-- 既に検出したsource conflictがあれば、その一覧
+その後、復元された全文をPROLOGUEからStage 30、ENDING、EPILOGUEまで読んでください。`STORY_IMPLEMENTATION_MAP.md`や本missionだけを読み、台本本文を確認した扱いにすることを禁止します。
 
-調査可能な事項をProducerへ質問して止まらず、repository、台本、tests、assetsから先に解決してください。
+## 4. 同時添付される写真
 
-## 3. 物語上の絶対条件
+このpromptには、Producerが**セガワのface model写真**を添付します。
 
-- v10本文を正本とする。
-- 主人公は無言だが、扉を開ける、最後の一人を待つ、証拠を複製する、避難路の前に立つ等の能動行動で物語を動かす。
-- 物語の中心は、世界規模の陰謀説明ではなく、目の前の人を助けて西新へ生活を戻すこと。
-- ムガリアン製薬を、医薬品、病院支援、災害物流、検疫設備、警備・封鎖へ浸透した企業として段階的に理解させる。
-- RED PANTHERの正式名称はStage 27まで伏せる。
-- ムガリアン社長は限定災害を市場化しようとした経営者であり、人類絶滅主義者へ改変しない。
-- 真の黒幕はネコ殺しのセガワ特級博士。
-- セガワは本物の薬と情報で人を救わせながら実戦dataを収集し、Stage 30でTAKUYA-Ωに殺される。
-- Mrs.チハの旧ムガリアンagent設定、告白、身分証焼却、ババヤガとの関係を維持する。
-- 完全変異の治療は不可能。TAKUYA-Ωの中和因子から、感染初期に限る試験血清へ到達する。
-- ENDINGで世界が救済済みとはしない。
-- ハチ、ミズチ、ナオ、タタラ、レイダー、ガンテツ、モンキー等を本編会話へ無理に追加しない。
-- 新規CG大量制作を前提にしない。reusable background＋左右腰上portrait＋dialogue＋短い演出を主軸にする。
+- 添付写真はセガワ本人のface identity referenceです。
+- `ナオキ`ではありません。ナオキというcharacter、alias、ID、置換関係を作らないでください。
+- セガワ以外の人物へ流用しないでください。
+- 原写真をpublic repository、runtime、Issue、PRへcommit／uploadしないでください。
+- metadata、撮影情報、不要な背景情報を保存しないでください。
+- derived assetはセガワのevent portraitに使用します。
+- v10ではセガワはplayerが戦う相手ではないため、battle atlasを作らないでください。
 
-## 4. Producer固定要件
+写真が欠落・破損している場合だけ、identity blockerとして明示してください。それ以外のSegawa designは本mission内で完了してください。
 
-### 4.1 初期unit
+## 5. Producer Lock
 
-初期使用可能unitは4体だけです。
+`docs/story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md`を製品判断の最上位正本とします。少なくとも次は再提案・再確認待ちにせず固定してください。
 
-- ババヤガ
-- クマバーソン
-- パイセン
-- 低コストunit 1体
+- 正式releaseはVersion 1.0.0。
+- 初期unitはハチ、パイセン、クマバーソン、ババヤガの4体。
+- balance classは`frontline／heavy／skirmisher／marksman／suppression／support／engineer`の7系統。
+- 編成最大7体、戦場active最大7体、同じ固有characterは同時に1体だけ。
+- classはソフト必須。hard quota、特定character必須、単一counter、永久免疫を禁止。
+- 各Stageは異なる2編成以上でclear可能にする。
+- hidden runtime dynamic difficulty adjustmentは禁止。自動調整は開発時の静的tuningのみ。
+- player名入力は追加せず、`{{PLAYER_NAME}}`は`指揮官`へ解決。
+- Stage 1でナオ、Stage 12でザキミヤ、Stage 14でTKY、Stage 17でMrs.チハ、Stage 20で宮本武蔵を配属可能にする。
+- Stage 6 clearまでに7 classへアクセス可能、Stage 20 clearまでに現行16 unitを発見済みまたは配属可能にする。
+- 支援物資は回復、爆薬ドラム缶、火炎ドラム缶の3種。1 sortieにつき1種装備。CAPSは恒久unlock、battle内はlocal resource＋cooldown。
+- 回復支援はStage 2、爆薬ドラム缶はStage 6、火炎ドラム缶はStage 13 clear後に購入可能。
+- level capは5→10→15→20→25→30、Stage 30 clear後postgame 35。Stage 30はcap 30でbalance。
+- 旧進行migrationは不要だが、旧save／backup削除は禁止。新generationでfresh startし、旧player記念CAPSを一度だけ付与。
+- RED PANTHER正式名はStage 27までplayerへ伏せる。
+- TAKUYAとTAKUYA-Ωは別boss identity／ID。
+- 未配置、placeholder、未完成animation／effect／audioを完成扱いしない。
 
-現行codeではハチがcost 25で最安のため第一候補ですが、正式名はProducer未確定です。repository上の役割、Stage 1 balance、既存identityを検査し、ハチを推奨するか、別案が必要かをdecision packetへ返してください。
+本書の要約とProducer Decisionsが衝突した場合はProducer Decisionsを優先してください。
 
-### 4.2 同時出撃上限
+## 6. Solへ委任する調整
 
-playable unitの戦場同時出撃上限を7体にします。
+次はProducerへ数値承認を戻さず、simulation、runtime evidence、既存identityを根拠にSolが自律確定してください。
 
-Design Lockでは次を明示してください。
-
-- authoritative count source
-- spawn、death、retreat、revive、re-deployのslot timing
-- NPC、escort、temporary summon、support objectの扱い
-- touch／keyboard／rapid input／double actionのrace防止
-- 8体目のreject UI／SE
-- test contract
-
-UIだけでなくbattle stateで強制してください。
-
-### 4.3 Unit recruitment
-
-- Story characterは指定の物語timingでCAPS購入導線を開く。
-- Story外unitも適切なStageでCAPS購入可能にする。
-- 回復役は早期に解禁する。
-- 同一Stageへ大きなunlockを重複配置しない。
-- 台本の「加入」とCAPS購入制の意味を整合させる。
-- 台本をsilent rewriteせず、必要ならProducer decisionとして差分を返す。
-
-### 4.4 Support
-
-Stage進行とCAPS購入で次を解禁します。
-
-- 回復
-- ドラム缶
-- 火炎ドラム缶
-
-現行の`pod／drum／medical`と`barrel／medkit／molotov／airstrike`の二重系を調査し、最終player-facing contract、CRAWLER固有能力、battle内cost、cooldown、placement、animation、effect、audio、assetを一本化してください。
-
-### 4.5 Level cap／economy
-
-level cap、CAPS額、unlock timingを推測で固定しないでください。
-
-30 Stage、7体上限、雇用費、level-up費、support、boss、他mode、旧player rewardを一つのeconomy modelで試算し、次を出してください。
-
+- 全unitのdeployment cost／cooldown／combat stat
+- recruitment cost／upgrade cost
+- Story外unitの正確なunlock Stage
 - Stage別base／first-clear／star／replay CAPS
-- unit別recruitment cost
-- unit別deployment cost／cooldown
-- chapter別level cap
-- Stageごとの想定owned roster／median level／残CAPS
-- minimal、standard、completionistの三simulation
-- 推奨案と代案
-- grind、過剰供給、一本道化のrisk
-- 実機playtestで調整できるtuning surface
+- supportのunlock price／battle-local cost／cooldown／effect
+- wave／spawn／enemy stat／objective pressure
+- boss stat／phase threshold／telegraph window
+- bossのSurvival／異常発生追加先とthreshold
+- 旧player記念CAPS額
+- Stageごとの推奨class／threat tag
+- 必要な既存unit catch-up調整
 
-### 4.6 Boss cross-mode unlock
+調整時は、既存unitのidentity、武器、primary class、signature ability、物語上の役割を維持してください。単一combat statを現行値から30%超変更する場合は、理由、before／after、simulation、回帰riskをDesign Lockへ残してください。
 
-Story撃破状況に合わせてbossを他modeへ追加します。
+## 7. Balance Design
 
-TAKUYA、改札喰い、MOTHER、オオグチ、クロメ、ガイレン、フタゴ、変異ムガリアン社長、TAKUYA-Ωについて、次を表にしてください。
+### 7.1 Class composition
 
-- Story Stage／defeat receipt
-- compendium unlock
-- Outbreak unlock
-- Survival pool unlock
-- spoiler prevention
-- first reward／repeat reward
+- 7 classの責務、重複、counter relationを定義してください。
+- 同じclass内でもcharacterごとの用途を区別し、strictly dominatedなunitを残さないでください。
+- 単一class spamが有利になり続けず、複数class編成が自然に安定する敵・objective設計にしてください。
+- 特定unitを購入していないplayerにも、初期unit、別class、支援物資、配置判断のうち最低2 routeを残してください。
+- Stage select／loadoutでthreat tagと推奨roleを表示し、spoiler、過剰説明、hard lockを避けてください。
+
+### 7.2 Difficulty
+
+- 本編は一つのcanonical difficultyとして設計してください。新difficulty selectorは作りません。
+- 新mechanicは低圧導入→混合→応用の順で教えてください。
+- major attackは844×390／844×340でも予兆を識別できるようにしてください。
+- 不可避即死、画面外攻撃、読めないstatus、damage spongeだけの難化を禁止します。
+- 想定attemptはProducer Decisionsの範囲をtuning targetにしてください。
+- 敗北後の原因feedback、既読story skip、loadout変更、即再戦を短い導線へしてください。
+
+### 7.3 Seven-active contract
+
+以下をdata／state／event／render／input contractとして一つに固定してください。
+
+- authoritative active count source
+- deployment開始、alive、downed、retreat、remove、redeployのslot timing
+- same-character duplicate prevention
+- ability summonのcount rule
+- touch／keyboard／rapid input／double action race prevention
+- rejection UI／SE
+- save／pause／result遷移時のcleanup
+- positive／negative／stress test
+
+UI表示だけの制限は禁止します。
+
+## 8. Economy／progression Design
+
+最低限次の3 profileをdeterministicにsimulationしてください。
+
+- `minimal`
+- `standard`
+- `completionist`
+
+各Stageについて次を出してください。
+
+- clear reward／first-clear reward／star reward／replay reward
+- unlock済みunit／support／level cap
+- 想定owned roster
+- 主力7体のlevel帯
+- 残CAPS
+- 次Stage推奨power帯
+- 購入ミスからのrecovery経路
+
+Producer Decisionsの供給条件、grind禁止、completionistのpostgame余地、旧player reward上限を満たしてください。単に収入と価格を並べるだけでなく、30 Stageを順にsimulationし、CAPS不足・過剰供給・一択購入を検出してください。
+
+## 9. 30 Stage implementation matrix
+
+PROLOGUE、Stage 1〜30、ENDING、EPILOGUEの全eventを有限inventory化してください。
+
+各Stageで最低限次を固定してください。
+
+- stable Stage ID／region／map position
+- pre／mid／post／defeat／retry／replay event
+- objective／clear／fail／star source
+- enemy family／wave／boss
+- stage background／geometry／object／damage layer
+- required speaker／portrait／side／expression／crop
+- music／ambience／battle bark／warning
+- story receipt／unlock／CAPS／compendium／other-mode receipt
+- required assetとdecode gate
+- positive／negative／mobile acceptance
+- next destinationと因果接続
+
+台本の一行を実装しただけでStage完成としないでください。
+
+## 10. Human enemy／RED PANTHER
+
+次の四兵種を同一human enemy familyとして設計してください。
+
+1. survival knife melee
+2. shield
+3. submachine gun
+4. commander
+
+共通identity：赤レンズgas mask、black／gray、限定red accent、grounded tactical、過剰なsci-fi禁止。
+
+固定するもの：
+
+- stable enemy kind／faction ID
+- infectedとのdamage／targeting／status差
+- AI profile／range／coverまたはlane behavior
+- weapon／telegraph／projectile／melee contact
+- body bounds／hitbox／foot anchor／shadow
+- idle／move／attack／hit／defeat atlas state
+- VFX／audio／bark／masked event read
+- pre-Stage 27 spoiler-safe label
+- four-class silhouette differentiation
+- survival knifeの具体的で魅力あるgrounded design
+
+四兵種はbattle participantなのでbattle atlas必須です。
+
+## 11. Boss Design
+
+TAKUYA、改札喰い、MOTHER、オオグチ、クロメ、ガイレン、フタゴ、変異ムガリアン社長、TAKUYA-Ωについて次を固定してください。
+
+- Story encounter／defeat receipt
+- full compendium reveal
+- rematch／Outbreak／Survival unlock
+- spoiler boundary
+- first／repeat reward
 - defeat count
-- replay挙動
+- replay behavior
+- entrance／phase／telegraph／attack／defeat
+- atlas／VFX／audio／asset decode
 
-TAKUYAとTAKUYA-Ωを同一boss kindで上書きしないでください。
+### TAKUYA-Ω
 
-### 4.7 Save
+- existing TAKUYA identityを継承
+- current visualのおよそ2倍
+- 橙色安全vest残骸、人工armor、背面投薬管
+- chaotic final-boss silhouette
+- separate giant boss ID
+- full body／foot anchor／body bounds／hitbox／shadow
+- entrance／phase／telegraph／attack／defeat／中和因子回収
+- no unrelated redesign
 
-旧Stage進行を新しい30 Stageへmigrationして継続させる必要はありません。ニューゲーム前提です。
+### 変異ムガリアン社長
 
-ただし次を守ってください。
+- 通常portraitとの同一人物性
+- mutation onset presentation
+- boss atlas／telegraph／attack／defeat／compendium
+- Stage 25での物語因果
 
-- 旧localStorage／IndexedDB／backup／manual exportを削除しない
-- 旧player eligibilityを非破壊で検出
-- 新campaign generationまたはnamespaceでfresh progressを開始
-- 正式リリース記念CAPSをpopup付きで一度だけ付与
-- reload、replica recovery、multiple tabs、importで二重付与不可
-- reward額はeconomy simulationから推奨し、Producer decisionへ返す
-- rollback／last-known-good／corrupt recoveryを壊さない
+## 12. Save／PWA
 
-「save引継ぎ不要」を「save削除許可」と解釈しないでください。
+旧progressを新30 Stageへ変換しません。ただし旧dataを破壊してはいけません。
 
-## 5. Art／asset Design
+Design Lockでは次を固定してください。
 
-### 5.1 先にinventoryを作る
+- new campaign generation／namespace／schema
+- old-player eligibility detection
+- one-time reward receipt
+- localStorage／IndexedDB replica
+- multiple tabs／reload／import／recovery duplicate prevention
+- reset boundary
+- last-known-good／corrupt recovery／manual export／import
+- PWA manifest／Service Worker／cache generation／rollback
+- old releaseからVersion 1.0.0へのupdate path
+- partial-failed update／offline／decode failure
 
-全30 Stageと全eventについて、次をfinite inventoryにしてください。
+`save引継ぎ不要`を`save削除許可`と解釈しないでください。
 
-- speaker
+## 13. Asset inventoryと生成
+
+全assetを次へ分類してください。
+
+- `REUSE`
+- `RECOMPOSE`
+- `NEW_REQUIRED`
+- `OPTIONAL`
+
+最低限inventoryへ含めるもの：
+
 - event portrait
-- expression／side／crop
+- identity master
+- formation／personnel card
+- battle atlas
 - background
 - stage object
 - one-off scene image
-- battle unit／enemy／boss
-- identity master
-- battle atlas states
 - VFX
 - animation
 - audio／ambience
@@ -189,161 +285,163 @@ TAKUYAとTAKUYA-Ωを同一boss kindで上書きしないでください。
 - runtime bytes
 - required decode gate
 
-各assetを`REUSE／RECOMPOSE／NEW_REQUIRED／OPTIONAL`へ分類してください。
+既存portraitは存在確認だけで合格にせず、identity、腰上crop、weapon read、左右配置、844×390／844×340で監査してください。
 
-### 5.2 既存portrait
+### Asset productionの事前承認
 
-既存主要キャラはまず現行event portraitを監査してください。ファイルが存在するだけで合格にせず、腰上、顔、武器、identity、左右配置、844×390／844×340等での読みを確認してください。
+本mission自体を、Design Lock完成後のasset candidate production checkpointとしてProducerが事前承認します。
 
-### 5.3 RED PANTHER
+Design Lockにasset inventory、identity lock、prompt、output spec、acceptance、storage path、provenanceが固定され、Producer blockerが0なら、追加promptを待たず次へ進んでください。
 
-共通：
+- new character／boss／RED PANTHERのidentity candidateを必要数だけ生成
+- 同じcharacterの無秩序な大量variantを作らない
+- 1画像1キャラ、全身透過、文字なし、装備切れなし
+- Segawaは添付face referenceを使用
+- existing characterは現行identityを上書きしない
+- candidateをidentity／silhouette／weapon／mobile readで自己監査
+- 採用authoring masterと不採用理由を記録
+- authoring masterとderived runtime候補を分離
+- production code／manifestへ統合しない
 
-- human
-- red-lens gas mask
-- black／gray base、limited red accent
-- grounded tactical equipment
-- no excessive sci-fi
-- unified faction language
-- distinct body type、armor、loadout、silhouette
+画像生成機能が利用できない場合は、asset inventory、generation prompts、output contract、acceptance、保存先まで完成させ、利用不能を明示してください。代替の無断placeholderを採用しないでください。
 
-必要な四兵種：
+## 14. Architecture
 
-1. survival knife melee
-2. shield
-3. submachine gun
-4. commander
+`AshfallGame.tsx`の巨大化を加速させず、最低限次の責務を分離してください。
 
-四兵種はbattle participantなのでbattle atlas必須です。近接兵のknifeは安価なgeneric propに見せず、groundedで魅力のあるsurvival knifeとして設計してください。
+- campaign content data
+- story registry／flow／receipts
+- combat runtime／active roster
+- human enemy family
+- boss definitions／abilities
+- progression／economy
+- support loadout／runtime
+- asset profiles／manifest／decode gate
+- save generation／legacy eligibility
+- UI render／mobile layout
+- QA fixture／evidence
 
-### 5.4 TAKUYA-Ω
+Design Lockへmodule ownership、data／state／event／asset contract、変更予定file、競合file、non-goal、do-not-changeを記載してください。
 
-- existing TAKUYA identityを継承
-- current visual sizeのおよそ2倍
-- final bossとして一目で読めるchaotic silhouette
-- v10の橙色安全vest残骸、人工armor、背面投薬管をmotif化
-- separate giant boss ID
-- event／compendium read
-- entrance／phase／telegraph／attack／defeat／sample recovery
-- full body、foot anchor、body bounds、hitbox、shadow
-- no unrelated redesign
+## 15. Validation
 
-### 5.5 その他
+最低限次を設計してください。
 
-- ムガリアン社長：通常event portrait
-- 変異ムガリアン社長：identity master＋boss atlas＋event／compendium read
-- セガワ：主要event portrait。script上player combatantではないためbattle atlasは原則不要
-- ナオキ：このprompt送信時にProducerが顔referenceを添付予定。ただしv10には登場しません。role、Stage、combat有無、セガワとの関係をProducer decisionなしで決めず、画像生成を先行しない
-- existing bosses／units：current identity、sex、weapon、roleを上書きしない
+- story source hash／event completeness
+- 30 Stage static integrity
+- unit／class／unlock／economy simulation
+- seven-active／same-character negative test
+- support unlock／loadout／battle use
+- boss spoiler／receipt／cross-mode
+- old-player reward duplicate prevention
+- save／replica／reset／import／recovery
+- asset provenance／finite inventory／decode
+- animation／VFX／audio presenceではなくruntime意味検査
+- 1280×720、844×390、844×340
+- Chromium／WebKit
+- console／page／HTTP／request failure 0
+- Stage 1〜30 fresh run
+- defeat／retry／replay／reload
+- low-speed network／offline／partial update／rollback
+- performance／memory／render object cap
 
-### 5.6 実際の画像生成
+各Stageは推奨編成と代替編成の最低2 routeでclear evidenceを設計してください。
 
-この最初の`SOL_DESIGN`では、identity lock、asset specification、generation prompt、acceptance、storage path、provenanceまでを固定してください。
+## 16. PR／release plan
 
-Design Lock承認後、ProducerがSolへasset production checkpointを明示した場合だけ生成へ進みます。未承認の大量生成、同一characterの無秩序なvariant、runtimeへの直接投入は禁止です。
+- Design Lockとasset authoringはproduction implementationから分離してください。
+- Lunaが追加architecture推測をせず進められる依存順へPRを分割してください。
+- 大規模一括PRで競合、review不能、rollback不能にしないでください。
+- 一括正式リリースとは、全機能を一つの正式Versionとして公開する意味です。開発中のPR分割、integration branch、candidate QAを禁止する意味ではありません。
+- 最終integration後に全30 Stage通しQAを行い、High／Medium 0でなければreleaseしないでください。
+- merge／tag／Release／Pagesは本missionで行わないでください。
 
-## 6. 必須調査範囲
+## 17. 必須成果物
 
-最低限、次をread-onlyで調査してください。live treeで移動していればactual pathを使用してください。
+Design完了時、repository内のversioned正本またはcanonical Issueへ最低限次を固定してください。
 
-- campaign／stage／region／unlock／reward
-- story event registry／story flow／battle bark
-- Campaign UI／map／loadout／employment／upgrade／result
-- unit catalog／role mechanics／manual abilities
-- enemy catalog／human enemy対応可否
-- battle definitions／objective mechanics／wave／spawn
-- boss foundation／boss anomaly／compendium
-- Outbreak／Survival
-- level progression／campaign economy
-- support／CRAWLER abilities
-- event portrait／sprite manifest／production visuals
-- stage background／object／geometry
-- asset plan／manifest／PWA／Service Worker
-- campaign storage／migration／backup／recovery／import/export
-- release identity／release workflow
-- unit／story／stage／economy／boss／save／browser QA tests
+1. Design ID／revision／baseline HEAD／tree
+2. 30 Stage implementation matrix
+3. class／counter matrix
+4. unit balance table
+5. active roster state machine
+6. unit unlock calendar
+7. support unlock／loadout contract
+8. level cap／economy simulation
+9. boss cross-mode unlock matrix
+10. save generation／legacy reward contract
+11. event／portrait／background／object inventory
+12. RED PANTHER family contract
+13. 変異ムガリアン社長contract
+14. TAKUYA-Ω giant boss contract
+15. Segawa identity／portrait contract
+16. asset generation prompts／provenance／selected masters
+17. architecture／module ownership
+18. acceptance／negative／browser／PWA／save QA
+19. PR dependency graph／rollback／stop conditions
+20. Luna Handoff
 
-`AshfallGame.tsx`の巨大化を加速させず、data、state、runtime、render、asset、persistence責務を分離するarchitectureを設計してください。
+## 18. 最初の返答
 
-## 7. Source conflictsとして必ず処理する項目
+最初の進行報告で必ず次を示してください。
 
-1. v10の主人公名入力と、旧Story Bibleの「名前入力なし」
-2. v10の「加入」SYSTEM表示と、CAPS購入制
-3. Producerが挙げたナオキがv10本文に存在しない
-4. 旧Stage ID／save progressと、新30 Stageの意味変更
-5. `PROJECT_STATE.md`の記載とlive 0.9.9.5
-6. support systemの二重性
-7. current Level 50基盤と、正式リリース用上限再決定
-8. current 6 initial unitsと、target 4 initial units
-9. current boss unlockと、Story defeat連動
-10. Solがasset生成まで担当するProducer意図と、現行`SOL_DESIGN`の実装禁止境界
+- `ROLE_LOCK: SOL_DESIGN`
+- actual baseline branch／HEAD／tree
+- current release identity
+- 読み込んだ正本一覧
+- story source hash verification結果
+- 添付写真をSegawa identity referenceとして認識したこと
+- open PR／branch conflict
+- production code、merge、releaseを行わないこと
+- 最初に調査するmodule群
+- 既に検出したsource conflict
+- `/goal`を使用すること
 
-各項目を、`FACT／PRODUCER_DECISION／DESIGN_INFERENCE／PRODUCER_DECISION_REQUIRED`へ分類してください。
+調査可能な事項をProducerへ質問して停止せず、repository、台本、tests、assetsから先に解決してください。
 
-## 8. Design Lockの必須出力
+## 19. 停止条件
 
-最低限、以下を一つのversioned Design Lockにしてください。
+次の場合だけ停止してください。
 
-1. Design ID／revision
-2. actual baseline branch／HEAD／tree
-3. player-facing goal
-4. current-state audit
-5. 30 Stage implementation matrix
-6. event／speaker／portrait matrix
-7. stage background／object matrix
-8. unit unlock calendar
-9. support unlock calendar
-10. CAPS economy model
-11. level progression model
-12. 7-unit cap contract
-13. RED PANTHER combat family contract
-14. new boss contracts
-15. boss cross-mode unlock matrix
-16. save generation／legacy reward design
-17. asset generation inventory／identity locks／prompts／provenance
-18. architecture／module ownership
-19. data／state／event／asset contracts
-20. positive／negative tests
-21. browser／PWA／save／performance／accessibility QA
-22. PR decomposition and dependency graph
-23. non-goals／protected files／rollback
-24. Producer decision packet
-25. Luna Handoff
+- v10本文とProducer Decisionsが論理的に同時成立しない
+- Segawa写真が欠落／破損しidentityを成立させられない
+- live baselineを安全に固定できないbranch／PR conflict
+- license／privacy上、正式採用可能なassetを作れない
+- save／PWA／releaseを非破壊で設計できない重大事実
+- 固定acceptanceがsimulationとruntimeの双方で同時達成不能
 
-## 9. PR分割の原則
+単なる数値選択、cost、wave、Story外unit配置、support tuning、bossの他mode追加先は停止理由にしないでください。
 
-巨大な一括diffへしない一方、player-facing incomplete stateをmainへmergeしないでください。
+## 20. 最終出力
 
-Designでは、少なくとも次の依存群を検討してください。
+Design、静的tuning、許可されたasset production、Luna Handoffが完了したら次を返してください。
 
-- canonical data／schema／save generation
-- story event pipeline
-- campaign Stage 1〜30／map／objectives
-- economy／recruitment／level／support／7 cap
-- RED PANTHER human enemy foundation
-- new bosses
-- asset production／manifest／decode
-- event presentation／audio／animation／VFX
-- cross-mode boss unlock
-- integration／end-to-end QA
-- release candidate／public QA
+```text
+DESIGN_LOCKED
 
-分割branchを使う場合も、正式リリース用integration branchへ集約し、Stage 1〜30が一つのrelease candidateとして通るまでmainへ断片mergeしない方式を提案してください。
+DESIGN_ID:
+REVISION:
+BASELINE_HEAD:
+BASELINE_TREE:
+CANONICAL_DESIGN:
 
-## 10. Release gate
+LOCKED_DECISIONS:
+AUTONOMOUS_TUNING_SUMMARY:
+ASSET_PRODUCTION_SUMMARY:
+SEG_AWA_REFERENCE_HANDLING:
+ACCEPTANCE_COUNT:
+KNOWN_RESIDUAL_RISKS:
 
-次が全て揃うまで`READY_FOR_LUNA_IMPLEMENTATION`を出さないでください。
+LUNA_HANDOFF:
+- target branch
+- implementation order
+- PR dependency
+- required tests／evidence
+- stop conditions
 
-- Source conflictが分類済み
-- Producer decision requiredが一覧化済み
-- Lunaが設計推測せず実装できる
-- 全30 StageとENDING／EPILOGUEがinventory化済み
-- asset missingが有限化済み
-- economy simulation済み
-- save／legacy rewardが非破壊
-- 7体上限のauthoritative contractあり
-- all boss cross-mode mappingあり
-- tests／runtime QA／PWA QAが具体的
-- rollbackとstop conditionあり
+NEXT_AUTHORIZED_ACTION:
+- Luna implementation only
+- no merge／release
+```
 
-Design Lock完成後はproduction codeを書かず、Producer／司令塔へDesign summary、decision packet、Luna Handoffを返してください。
+`SEG_AWA_REFERENCE_HANDLING`は既存schemaに合わせて`SEGAWA_REFERENCE_HANDLING`へ綴りを正規化して構いません。
