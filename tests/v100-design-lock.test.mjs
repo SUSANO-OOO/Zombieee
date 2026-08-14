@@ -45,7 +45,8 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
 
 test("campaign contract has exactly 30 ordered, unique stages", async () => {
   const design = await readFile(DESIGN, "utf8");
-  const rows = [...design.matchAll(/^\|\s+(\d+)\s+\|\s+([^|]+)\|\s+([^|]+)\|/gmu)]
+  const campaignSection = design.match(/## 4\. Campaign and mission contract([\s\S]+?)### Acceptance criteria/u)?.[1] ?? "";
+  const rows = [...campaignSection.matchAll(/^\|\s+(\d+)\s+\|\s+([^|]+)\|\s+([^|]+)\|/gmu)]
     .map((match) => ({ number: Number(match[1]), name: match[2].trim(), mission: match[3].trim() }));
   const stageRows = rows.filter(({ number }) => number >= 1 && number <= 30);
   assert.equal(stageRows.length, 30);
@@ -66,6 +67,80 @@ test("economy, levels, vehicle, support, and boss values are fixed", async () =>
   assert.match(design, /120, 180, 260, 360, 480 CAPS/u);
   assert.match(design, /\| TAKUYA-Ω \| 9200 \| 56 \| 1\.35 s \| 75%, 45%, 20% \| 2 add waves \| 85 \|/u);
   assert.match(design, /\| mutated president \| 6200 \| 44 \| 1\.20 s \| 70%, 35% \| four-arm form \| 80 \|/u);
+});
+
+test("supports unlock at exact non-entry transitions and vehicle abilities stay separate", async () => {
+  const [design, handoff] = await Promise.all([readFile(DESIGN, "utf8"), readFile(HANDOFF, "utf8")]);
+  const expected = [
+    ["回復支援", "support-healing", "v100:s02:support-healing:unlock", 50, 50, 25],
+    ["爆薬ドラム缶", "support-explosive-drum", "v100:s06:support-explosive-drum:unlock", 40, 40, 20],
+    ["火炎ドラム缶", "support-incendiary-drum", "v100:s09:support-incendiary-drum:unlock", 55, 55, 28],
+  ];
+  for (const [label, id, receipt, unlockCost, battleCost, cooldown] of expected) {
+    const row = `\\| ${label} \\| ` + "`" + id + "`" + ` \\| Stage (?:2|6|9) first clear: ` + "`" + receipt + "`" + ` \\| ${unlockCost} CAPS \\| ${battleCost} \\| ${cooldown} s \\|`;
+    assert.match(design, new RegExp(row, "u"));
+  }
+  assert.match(design, /Exactly one player-facing support is equipped before sortie/u);
+  assert.match(design, /Stage 2, 6, and 9 are the exact unlock stages/u);
+  assert.match(design, /\| 一斉砲撃 \| `vehicle-barrage` \| 70 \| 38 s \|/u);
+  assert.match(design, /\| 航空支援 \| `vehicle-airstrike` \| 85 \| 50 s \|/u);
+  assert.match(handoff, /three-support one-of-three loadout/u);
+  assert.match(handoff, /barrage\/airstrike abilities/u);
+});
+
+test("all nine Story bosses own spoiler-safe receipts, mode gates, rewards, counts, and replay", async () => {
+  const design = await readFile(DESIGN, "utf8");
+  const bosses = [
+    [3, "boss-takuya", 110, 20],
+    [5, "boss-gate-eater", 130, 25],
+    [11, "boss-mother", 190, 40],
+    [14, "boss-ooguchi", 220, 45],
+    [17, "boss-kurome", 250, 50],
+    [20, "boss-gairen", 280, 55],
+    [24, "boss-futago", 320, 65],
+    [25, "boss-mugarian-president-mutated", 330, 65],
+    [30, "boss-takuya-omega", 380, 75],
+  ];
+  for (const [stage, bossId, first, repeat] of bosses) {
+    const padded = String(stage).padStart(2, "0");
+    const tick = "`";
+    const row = `\\| ${stage} \\| [^|]+ / ${tick}${bossId}${tick} \\| ${tick}v100:s${padded}:${bossId}:first-defeat${tick} \\| ${tick}compendium:${bossId}${tick} \\| ${tick}outbreak:${bossId}${tick} \\| ${tick}survival:${bossId}${tick} \\| ${first} / ${repeat} \\|`;
+    assert.match(design, new RegExp(row, "u"));
+  }
+  assert.match(design, /bossDefeatCount\.<bossId>/u);
+  assert.match(design, /enables Story replay/u);
+  assert.match(design, /Before that receipt,[\s\S]*must omit the boss without leaving a spoiler-shaped locked slot/u);
+  assert.match(design, /TAKUYA and TAKUYA-Ω are separate IDs, identities, counters, receipts, discoveries, and mode entries/u);
+  assert.match(design, /`boss-kurome-prototype` remains reference-only/u);
+});
+
+test("Version 1.0.0 is a separate zero-CAPS campaign and legacy data is non-destructive eligibility only", async () => {
+  const [design, handoff] = await Promise.all([readFile(DESIGN, "utf8"), readFile(HANDOFF, "utf8")]);
+  assert.match(design, /primary storage namespace is `nishijin-campaign-v100`/u);
+  assert.match(design, /campaignGeneration: "v100-new-campaign-1"/u);
+  assert.match(design, /Stage 1 only,[\s\S]*\*\*0 CAPS\*\*/u);
+  assert.match(design, /`nishijin-campaign-v1`[\s\S]*remain byte-preserved legacy data/u);
+  assert.match(design, /Automatic transfer is forbidden for Stage completion, stars, owned\/discovered\/recruitable units, CAPS\/supplies/u);
+  assert.match(design, /`bgmEnabled`, `sfxEnabled`, `bgmVolume`, `sfxVolume`, `reducedMotion`, `battleEventMode`, `graphicsQuality`, and `autoSkipReadStory`/u);
+  assert.match(design, /v100:release-gift:legacy-180:v1/u);
+  assert.match(design, /v100:release-gift:legacy-180:popup:v1/u);
+  assert.match(design, /付与CAPS: 180/u);
+  assert.match(design, /新しいCAPS残高/u);
+  assert.match(design, /IndexedDB unique-key transaction/u);
+  assert.match(design, /multiple tabs/u);
+  assert.doesNotMatch(handoff, /additive, idempotent 1\.0\.0 save migration/u);
+  assert.match(handoff, /Do not add an additive migration/u);
+});
+
+test("PWA first install is commit-gated and updates retain a rollback generation", async () => {
+  const [design, handoff] = await Promise.all([readFile(DESIGN, "utf8"), readFile(HANDOFF, "utf8")]);
+  assert.match(design, /first standalone\/PWA install/u);
+  assert.match(design, /complete required-runtime manifest is downloaded, byte-size and content-hash verified, stored, and acknowledged by a durable manifest commit/u);
+  assert.match(design, /network requests for required runtime assets are exactly zero/u);
+  assert.match(design, /downloads only changed or missing hashes/u);
+  assert.match(design, /previous committed generation and its manifest remain intact for rollback/u);
+  assert.match(handoff, /Gate first standalone\/PWA gameplay/u);
+  assert.match(handoff, /zero required-runtime fetches after gameplay begins/u);
 });
 
 test("latest Producer identity corrections remain explicit and non-negotiable", async () => {

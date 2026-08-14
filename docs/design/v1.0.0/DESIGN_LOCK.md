@@ -33,6 +33,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - The mutated Mugarian president keeps the president's Middle-Eastern identity and ornate emerald executive suit remnants, but the final form has exactly four arms and four hands. Each arm has one coherent shoulder root. The upper-left hand carries the staff; the other three hands are independent monster limbs. No extra hands, fused wrist, or orphan limb is allowed.
 - Segawa uses the Producer-provided face reference only as a private identity reference. The shipped design is a stylized world-matched illustration in an ivory/white scientist coat; the private photos are never committed or distributed.
 - The approved shared minor-human event image is a simple, featureless, gender-neutral and age-neutral human silhouette. It may be reused only for minor human speakers with no identity master, including generic researchers and Zakimiya's wife. It carries no face, hair, costume, occupation, ethnicity, accessory, weapon, or named-person identity cues, and it may not replace a named major character, playable unit, boss, or a person for whom a master exists.
+- Revision r2 freezes the exact currently selected hashes in `ASSET_INVENTORY.md` and `PROVENANCE.md`. This limited contract correction has no character-art scope: the latest shared minor-human silhouette, Segawa, normal and mutated Mugarian president, TAKUYA-Ω, all four RED PANTHER roles, and every existing character remain unchanged. No older candidate/master may replace them and no new image candidate may be generated under this revision.
 
 ## 3. Global boundaries
 
@@ -46,7 +47,7 @@ These direct Producer decisions override older descriptions where they conflict:
 ### Do not change
 
 - Stable IDs already present in saves.
-- Existing Stage 1-20 completion, star, formation, equipment, settings, read-state, or currency data except through the one-time additive migration defined here.
+- The pre-1.0.0 campaign namespace, its Stage 1-20 completion, stars, owned units, CAPS, read state, formation, equipment, backups, exports, and recovery snapshots. They remain legacy data and are never imported into the Version 1.0.0 campaign progression.
 - Existing voice ownership; do not fill missing voices with another actor.
 - Existing PWA rollback semantics, AudioMixer ownership, deployed release history, or public URL.
 - Physical-iPhone claims: WebKit evidence is not physical hardware evidence.
@@ -57,7 +58,7 @@ Stop and return to Sol if any of the following occurs:
 
 - A selected master cannot produce a readable runtime derivative without identity loss.
 - A story beat requires changing a locked stage order, named character outcome, or boss identity.
-- Migration cannot preserve a byte-for-byte export of the pre-migration save.
+- The new campaign bootstrap, legacy eligibility check, or rollback path would delete, rewrite, or make a byte-for-byte export of any pre-1.0.0 save unavailable.
 - Required assets are absent, undecodable, unlicensed, or exceed the existing PWA distribution limits without an approved contract change.
 - A High or Medium regression appears in save, PWA, audio, gameplay, mobile HUD, or prior Stage 1-20 content.
 - GitHub write access, branch precondition, or release authority differs from the preflight in Section 15.
@@ -113,7 +114,7 @@ All stages unlock linearly from one-star completion of the previous stage. No al
 
 ### Rollback
 
-Campaign expansion is additive behind the 1.0.0 schema. A revert PR removes the new registry entries and migration while leaving pre-1.0.0 save data intact and exportable.
+The Stage 1-30 campaign is owned by the separate Version 1.0.0 namespace. A revert PR removes the new registry and namespace bootstrap while leaving the pre-1.0.0 namespace, backups, exports, and last-known-good data intact and eligible for rollback/recovery.
 
 ## 5. Unit registration and progression
 
@@ -149,9 +150,9 @@ At level L, max HP is `round(baseHP * (1 + 0.025 * (L - 1)))`; damage and healin
 
 ### Acceptance / negative / rollback
 
-- Existing owned units remain owned; purchase is idempotent and receipt-backed.
+- The Version 1.0.0 campaign starts with its locked initial roster; legacy owned units are not copied into it. Registration inside the new namespace is idempotent and receipt-backed.
 - A unit cannot exceed the cap for the highest cleared stage.
-- A duplicate receipt, replay, refresh, or migration rerun cannot grant a second purchase/level/reward.
+- A duplicate receipt, replay, refresh, recovery, or import cannot grant a second purchase/level/reward in the Version 1.0.0 namespace.
 - Cooldown/range scaling, fractional persisted stats, skipped costs, or cap bypass fails.
 - Rollback reads and preserves levels above an older UI cap as opaque forward-compatible data; it must never zero them.
 
@@ -163,11 +164,11 @@ At level L, max HP is `round(baseHP * (1 + 0.025 * (L - 1)))`; damage and healin
 - Replay: `max(20, round-to-nearest-5(firstClear * 0.20))` CAPS.
 - Sum of all first-clear and star rewards is exactly 9,000 CAPS.
 - A standard two-star route yields approximately 7,875 CAPS.
-- Existing pre-1.0.0 saves receive one receipt-backed legacy release gift of 180 CAPS exactly once.
+- An eligible pre-1.0.0 play history grants the new Version 1.0.0 campaign one receipt-backed legacy release gift of 180 CAPS exactly once; no legacy CAPS balance or other progression is imported.
 
 No time-limited monetization, premium currency, purchase API, or negative balance is introduced.
 
-## 7. Armored vehicle and supports
+## 7. Armored vehicle, supports, and vehicle abilities
 
 Player-facing wording is `装甲車両`; internal stable IDs may retain historical names for compatibility.
 
@@ -175,13 +176,22 @@ Player-facing wording is `装甲車両`; internal stable IDs may retain historic
 - Five upgrades each add 80 HP; maximum 1,080.
 - Upgrade costs: 120, 180, 260, 360, 480 CAPS (total 1,400).
 
-| Support | Cost | Cooldown |
-|---|---:|---:|
-| healing | 50 | 25 s |
-| explosive drum | 40 | 20 s |
-| incendiary drum | 55 | 28 s |
-| barrage | 70 | 38 s |
-| airstrike | 85 | 50 s |
+Exactly one player-facing support is equipped before sortie. Support ownership is permanent in the Version 1.0.0 namespace, but battle resource and cooldown are battle-local. Unlock stages are first-clear receipts; this keeps them separate from unit availability at stage entry and from level-cap milestones.
+
+| Player-facing support | Stable ID | Unlock receipt | Unlock cost | Battle cost | Cooldown |
+|---|---|---|---:|---:|---:|
+| 回復支援 | `support-healing` | Stage 2 first clear: `v100:s02:support-healing:unlock` | 50 CAPS | 50 | 25 s |
+| 爆薬ドラム缶 | `support-explosive-drum` | Stage 6 first clear: `v100:s06:support-explosive-drum:unlock` | 40 CAPS | 40 | 20 s |
+| 火炎ドラム缶 | `support-incendiary-drum` | Stage 9 first clear: `v100:s09:support-incendiary-drum:unlock` | 55 CAPS | 55 | 28 s |
+
+Stage 2, 6, and 9 are the exact unlock stages. The first-clear transaction reveals the support for purchase; it does not auto-purchase it. `pod` is not a normal loadout option. Equipping zero or more than one support, using an unowned support, granting the same unlock twice, or firing a support without its battle-local cost/cooldown fails.
+
+航空支援 and 一斉砲撃 are not supports and never appear in the three-option support loadout. They are armored-vehicle-only abilities with separate stable IDs and the existing targeting, equipment-frame, audio, VFX, and cooldown ownership:
+
+| Armored-vehicle ability | Stable ID | Battle cost | Cooldown |
+|---|---|---:|---:|
+| 一斉砲撃 | `vehicle-barrage` | 70 | 38 s |
+| 航空支援 | `vehicle-airstrike` | 85 | 50 s |
 
 Existing input, targeting, damage, trajectory, audio, VFX, door, deployment, and save behavior remain. No permanently floating equipment primitive may be reintroduced around the vehicle.
 
@@ -200,6 +210,26 @@ Existing input, targeting, damage, trajectory, audio, VFX, door, deployment, and
 | TAKUYA-Ω | 9200 | 56 | 1.35 s | 75%, 45%, 20% | 2 add waves | 85 |
 
 No hard boss timer is allowed. Boss music must use the current production boss scene/asset contract and must not be silenced by a story event while a boss is alive. No duplicate playback.
+
+### Story defeat to other-mode unlock
+
+A boss becomes discoverable and selectable outside Story only after the first valid Story defeat receipt for that exact boss ID is durably committed. Entrance, encounter, damage, failure, QA fixture, another boss's receipt, or an older prototype ID cannot unlock it. Before that receipt, player-facing Compendium search, Outbreak selection, Survival pool construction, previews, names, silhouettes, rewards, and random rolls must omit the boss without leaving a spoiler-shaped locked slot.
+
+| Story Stage | Boss / stable ID | First Story defeat receipt | Compendium discovery | Outbreak unlock | Survival pool unlock | First / repeat Story CAPS |
+|---:|---|---|---|---|---|---:|
+| 3 | TAKUYA / `boss-takuya` | `v100:s03:boss-takuya:first-defeat` | `compendium:boss-takuya` | `outbreak:boss-takuya` | `survival:boss-takuya` | 110 / 20 |
+| 5 | 改札喰い / `boss-gate-eater` | `v100:s05:boss-gate-eater:first-defeat` | `compendium:boss-gate-eater` | `outbreak:boss-gate-eater` | `survival:boss-gate-eater` | 130 / 25 |
+| 11 | MOTHER / `boss-mother` | `v100:s11:boss-mother:first-defeat` | `compendium:boss-mother` | `outbreak:boss-mother` | `survival:boss-mother` | 190 / 40 |
+| 14 | オオグチ / `boss-ooguchi` | `v100:s14:boss-ooguchi:first-defeat` | `compendium:boss-ooguchi` | `outbreak:boss-ooguchi` | `survival:boss-ooguchi` | 220 / 45 |
+| 17 | クロメ / `boss-kurome` | `v100:s17:boss-kurome:first-defeat` | `compendium:boss-kurome` | `outbreak:boss-kurome` | `survival:boss-kurome` | 250 / 50 |
+| 20 | ガイレン / `boss-gairen` | `v100:s20:boss-gairen:first-defeat` | `compendium:boss-gairen` | `outbreak:boss-gairen` | `survival:boss-gairen` | 280 / 55 |
+| 24 | フタゴ / `boss-futago` | `v100:s24:boss-futago:first-defeat` | `compendium:boss-futago` | `outbreak:boss-futago` | `survival:boss-futago` | 320 / 65 |
+| 25 | 変異ムガリアン社長 / `boss-mugarian-president-mutated` | `v100:s25:boss-mugarian-president-mutated:first-defeat` | `compendium:boss-mugarian-president-mutated` | `outbreak:boss-mugarian-president-mutated` | `survival:boss-mugarian-president-mutated` | 330 / 65 |
+| 30 | TAKUYA-Ω / `boss-takuya-omega` | `v100:s30:boss-takuya-omega:first-defeat` | `compendium:boss-takuya-omega` | `outbreak:boss-takuya-omega` | `survival:boss-takuya-omega` | 380 / 75 |
+
+The first/repeat values are the existing Stage first-clear/replay formula, not an additional boss bonus, so the locked 9,000 CAPS economy remains unchanged. The atomic first-defeat commit records the Story result, increments `bossDefeatCount.<bossId>` from 0 to 1, discovers the Compendium entry, enables the exact Outbreak encounter and Survival pool entry, and enables Story replay for that Stage. Each later successful Story replay, Outbreak clear, or Survival boss clear increments the same boss-specific count once per unique result receipt; failed, cancelled, duplicate, or recovered-incomplete results do not increment it. Mode-specific clears keep their own reward contract; Story replay alone uses the repeat value above. TAKUYA and TAKUYA-Ω are separate IDs, identities, counters, receipts, discoveries, and mode entries. `boss-kurome-prototype` remains reference-only and cannot satisfy `boss-kurome`.
+
+Negative tests must prove all nine bosses are absent from both other modes before their own Story receipt, one boss cannot unlock another, first/repeat rewards cannot double apply, replay cannot precede first defeat, counts are receipt-idempotent, and TAKUYA never aliases TAKUYA-Ω.
 
 ## 9. Portrait and dialogue composition
 
@@ -221,19 +251,30 @@ Negative tests reject missing portraits for a registered speaker, identity subst
 
 ## 11. Save and migration
 
-Root cause: the existing save schema covers Stage 1-20-era registries and does not yet own the 1.0.0 additive content, level caps, vehicle upgrades, and release gift.
+Root cause: the existing `nishijin-campaign-v1` namespace represents the legacy Stage 1-20 campaign. Treating Version 1.0.0 as an additive migration would incorrectly transfer progression, stars, owned units, CAPS, read state, and receipts into a distinct 30-Stage campaign and would make rollback/recovery ownership ambiguous.
 
 Exact change:
 
-- Add one idempotent migration receipt for 1.0.0.
-- Preserve stable unit/stage/equipment IDs and all existing progression.
-- Add defaults only for new fields; never reinitialize the full save.
-- Store the 180 CAPS gift as a separate one-time receipt.
-- Preserve export/import, corruption recovery, last-known-good, localStorage/IndexedDB separation, and rollback generation.
+- The Version 1.0.0 primary storage namespace is `nishijin-campaign-v100`, with `campaignGeneration: "v100-new-campaign-1"`. It starts a new game with the locked initial roster, Stage 1 only, zero Story clears/stars/read receipts, **0 CAPS**, and no legacy ownership or upgrades. An eligible legacy player reaches 180 CAPS only through the separate one-time gift below.
+- `nishijin-campaign-v1` and all of its derived localStorage, IndexedDB backup, pre-migration snapshot, last-known-good, manual export, and recovery keys remain byte-preserved legacy data. Version 1.0.0 reads them only for legacy eligibility, rollback, explicit recovery/export, and the safe settings whitelist; it never rewrites, clears, or promotes them to the active 30-Stage save.
+- Automatic transfer is forbidden for Stage completion, stars, owned/discovered/recruitable units, CAPS/supplies, equipment, formation, unit level/rank, read events, event resume, result/acquisition/upgrade receipts, Survival/Outbreak progress, records, or vehicle/support ownership and upgrades.
+- The only permitted legacy settings transfer is a validated field-by-field copy of `bgmEnabled`, `sfxEnabled`, `bgmVolume`, `sfxVolume`, `reducedMotion`, `battleEventMode`, `graphicsQuality`, and `autoSkipReadStory`. Unknown, malformed, or progression-bearing fields are discarded from the new save, not from the legacy source.
+- Fresh Version 1.0.0 player name, event read/resume position, vehicle upgrade level/receipts, support ownership/equipment, boss discovery/unlocks/counts, and all new campaign receipts belong only to `nishijin-campaign-v100`.
 
-Acceptance: fresh save, 0.9.8.2 save, current published save, corrupted-save recovery, migration rerun, offline launch, update, failed update, commit-only recovery, and rollback all pass. Byte-level pre-migration export is stored in QA evidence.
+### Legacy eligibility, 180 CAPS grant, and popup
 
-Negative: double gift, lost unit/star/equipment/formation/settings/read-state, full reset, negative CAPS, duplicated receipt, or forward level truncation fails.
+Legacy eligibility is true only when a valid pre-1.0.0 namespace candidate or verified legacy manual export proves actual play (`campaignStarted` or at least one durable gameplay/result/acquisition receipt). Merely finding an empty/default key, a corrupt blob, QA data, or a Version 1.0.0 save is not eligibility.
+
+- Entitlement receipt: `v100:release-gift:legacy-180:v1`.
+- Popup receipt: `v100:release-gift:legacy-180:popup:v1`.
+- Amount: exactly 180 CAPS, added to the new campaign balance only.
+- Claim ownership uses one IndexedDB unique-key transaction plus the existing serialized campaign mutation boundary. The entitlement record is pending/committed and the save reducer is receipt-idempotent, so a crash between ledger and save writes resumes the incomplete side without adding CAPS twice.
+- localStorage is a verified mirror, not the cross-tab claim authority. reload, recovery, manual import, multiple tabs, save retry, and restoring an older Version 1.0.0 backup cannot create a second entitlement receipt or second balance increase.
+- After the CAPS commit is durable, exactly the tab that owns the claim displays one dedicated popup on the first safe non-combat screen (`title`, `base`, or `campaign-map`; never Story dialogue, formation, battle, result, ending, or recovery UI). It shows `付与CAPS: 180` and the resulting `新しいCAPS残高`. The popup receipt is committed after its first painted frame. If the app closes before that paint acknowledgement, the popup resumes later; after acknowledgement it never displays again.
+
+Acceptance: fresh install with no legacy history gets no gift; valid 0.9.8.2/current-published localStorage, IndexedDB-only, last-known-good, backup, and verified manual-export eligibility each create a clean Version 1.0.0 new game and exactly one gift; corrupt-source recovery, simultaneous tabs, reload, import replay, pending-ledger recovery, offline launch, update, failed update, commit-only recovery, and rollback all preserve both namespaces and the entitlement invariant. Byte-level legacy exports before and after Version 1.0.0 play must match.
+
+Negative: any legacy progression transfer, old-source mutation/deletion, empty-key eligibility, corrupt eligibility, unwhitelisted setting transfer, double gift, double popup, popup during combat/story/result, popup missing amount/balance, negative CAPS, receipt duplication, or rollback loss fails.
 
 ## 12. Mobile, performance, audio, and PWA
 
@@ -241,19 +282,22 @@ Negative: double gift, lost unit/star/equipment/formation/settings/read-state, f
 - Maintain safe-area env values on public hosts, readable HUD text, tap targets, battlefield area, no card/support overlap, no portrait/dialogue collision, and no horizontal page overflow.
 - Maintain deployment final-canvas opacity/occlusion/duplicate contracts for every registered human unit.
 - Maintain existing AudioMixer ownership, boss scene continuity, battle SE/voice rules, speaker/earphone controls, and zero double playback.
-- PWA manifests include every new runtime asset exactly once by content hash; unchanged hashes are not refetched. Update, offline, rollback, and failed-only retry remain deterministic.
+- On first standalone/PWA install, the gameplay gate remains closed until the complete required-runtime manifest is downloaded, byte-size and content-hash verified, stored, and acknowledged by a durable manifest commit. Title/base/campaign/battle gameplay routes and simulation must not mount before that commit. After the gate opens, network requests for required runtime assets are exactly zero; optional non-gameplay content cannot be promoted to required after start.
+- An update computes the candidate from the committed active manifest and downloads only changed or missing hashes. Unchanged hashes are not refetched. The candidate cannot become active before complete verification and manifest commit; failure leaves the current generation playable. The previous committed generation and its manifest remain intact for rollback, offline launch, commit-only recovery, and failed-only retry.
 - New authoring masters are not automatically public/runtime assets. Only approved optimized derivatives enter the distribution manifest.
+
+PWA negative tests must cover gameplay before commit, missing/hash-mismatched/undecodable required assets, a post-start required request, unchanged-hash refetch, partial candidate activation, previous-generation deletion, duplicate manifest entries, and rollback to bytes that do not match the retained manifest.
 
 ## 13. Test and evidence contract
 
 Before Sol review, Luna must provide:
 
-- focused tests for every changed registry and migration;
+- focused tests for every changed registry, new namespace/bootstrap, legacy eligibility/entitlement, boss unlock, support unlock, and PWA gate;
 - full test, lint, production build, content validation, generator/drift checks, and `git diff --check`;
 - campaign reachability and economy simulations;
 - browser evidence for all required viewport/engine combinations;
 - final-canvas deployment evidence, portrait contact sheets, mission-object state sheets, enemy direction/state sheets, and boss entrance/defeat routes;
-- fresh/current/legacy save and PWA update/offline/rollback evidence;
+- fresh/current/legacy dual-namespace save, multiple-tab entitlement/popup, and PWA first-install/update/offline/rollback evidence;
 - console/page/HTTP/request failure counts of zero, excluding only a separately proven browser capability boundary;
 - artifact ID/digest and exact implementation HEAD/tree.
 
@@ -263,12 +307,12 @@ Existence-only and regex-only tests are insufficient where runtime pixels, decod
 
 Implementation order is fixed:
 
-1. Foundation: stable registries, save schema/migration, campaign/economy/level data, contract tests.
+1. Foundation: stable registries, separate campaign namespace/bootstrap, legacy eligibility/entitlement, campaign/economy/level/support/boss-mode data, contract tests.
 2. Stage 1-20 story integration and regressions.
 3. Stage 21-30, ending, new enemies/bosses, runtime derivatives, and mission objects.
 4. Audio/PWA/mobile integration, complete browser/save matrix, evidence, and release-candidate packet.
 
-Luna may iterate on code structure, pure helper decomposition, compression format, sprite-sheet packing, crop/anchor/scale, and test helper implementation. Luna may not change identities, stage order, fixed numbers, mission types, four-arm ownership, TAKUYA-Ω's no-orange design, generic-portrait boundary, save semantics, or acceptance thresholds.
+Luna may iterate on code structure, pure helper decomposition, compression format, sprite-sheet packing, crop/anchor/scale, and test helper implementation. Luna may not change identities, stage order, fixed numbers, mission types, support/boss unlock stages, boss IDs, campaign namespaces, legacy eligibility/grant semantics, PWA gameplay gate, four-arm ownership, TAKUYA-Ω's no-orange design, generic-portrait boundary, save semantics, or acceptance thresholds.
 
 ## 15. Execution-path preflight
 

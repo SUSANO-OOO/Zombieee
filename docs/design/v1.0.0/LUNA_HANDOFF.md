@@ -45,9 +45,11 @@ Confirm the selected master hashes before any derivative work. A mismatch is a s
 ### Exact work
 
 - Register exactly 30 ordered stages, prerequisites, mission types, events, unit unlocks, and rewards.
-- Implement fixed level caps, costs, stat formulas, vehicle upgrades, and support values.
-- Add the additive, idempotent 1.0.0 save migration and one-time 180 CAPS legacy gift receipt.
-- Add data validators/simulations proving stage reachability, 9,000 total first/star CAPS, purchase affordability, cap gates, and receipt idempotency.
+- Implement fixed level caps, costs, stat formulas, vehicle upgrades, the three-support one-of-three loadout, Stage 2/6/9 support unlock receipts, and separate vehicle-only barrage/airstrike abilities.
+- Create `nishijin-campaign-v100` / `v100-new-campaign-1` as a 0-CAPS new campaign. Do not add an additive migration from `nishijin-campaign-v1`; preserve every legacy source byte-for-byte and copy only the Design Lock's explicit settings whitelist.
+- Implement the cross-tab/recovery-safe 180 CAPS entitlement and single safe-screen popup with the exact receipt IDs in the Design Lock.
+- Register all nine Story boss gates, distinct stable IDs, atomic first-defeat discovery/mode unlocks, replay, receipt-idempotent counts, and the fixed first/repeat Story rewards. TAKUYA and TAKUYA-Ω must never alias.
+- Add data validators/simulations proving stage reachability, 9,000 total first/star CAPS, purchase affordability, cap gates, support separation, spoiler-safe boss pools, dual-namespace preservation, and receipt idempotency.
 
 ### Do not touch in Phase 1
 
@@ -56,7 +58,7 @@ Confirm the selected master hashes before any derivative work. A mismatch is a s
 
 ### Gate
 
-Focused campaign/economy/progression/save tests, fresh/current/legacy migration tests, build, lint, content validation, and diff check must pass before Phase 2. Commit this phase separately.
+Focused campaign/economy/progression/save tests, fresh/current/legacy dual-namespace tests, multiple-tab entitlement/popup tests, support/boss unlock tests, build, lint, content validation, and diff check must pass before Phase 2. Commit this phase separately.
 
 ## 4. Phase 2 — Stage 1-20 story integration
 
@@ -106,6 +108,7 @@ Focused campaign/economy/progression/save tests, fresh/current/legacy migration 
 - Maintain identity between authoring master, event portrait, card/profile, and battle form.
 - Implement RED PANTHER variants, mutated president with exactly four arms/four hands, and TAKUYA-Ω with exactly two arms and no orange garment.
 - Limit the simple featureless gender-neutral minor-human silhouette to minor human speakers with no identity master; never assign it to a major named speaker or add face, hair, costume, occupation, accessory, or weapon cues.
+- Treat all nine currently selected authoring masters as immutable inputs. Do not generate another character candidate or redesign Segawa, either Mugarian president form, TAKUYA-Ω, any RED PANTHER role, the shared minor-human silhouette, or an existing character.
 - Add authored map derivatives and mission objects; no tint-only stage, rectangle placeholder, diagnostic polygon, or silent asset fallback.
 - Required-image readiness must require successful decode before mounting playable presentation and support failed-only same-screen retry.
 
@@ -132,7 +135,8 @@ Luna may adjust crop, anchor, scale, packing, compression, sprite frame layout, 
 ### Exact work
 
 - Register new runtime assets exactly once in the content/PWA manifests.
-- Preserve unchanged-hash no-refetch, install/update/offline/rollback, commit-only recovery, and failed-only retry.
+- Gate first standalone/PWA gameplay until the complete required-runtime manifest is downloaded, size/hash verified, stored, and durably committed; assert zero required-runtime fetches after gameplay begins.
+- For updates fetch changed/missing hashes only, retain the previous committed generation for rollback, and preserve unchanged-hash no-refetch, offline, commit-only recovery, and failed-only retry.
 - Preserve boss-music scene ownership and zero double playback.
 - Run all focused and full gates, save matrices, browser matrices, simulations, and reviewer-accessible evidence.
 
@@ -155,20 +159,21 @@ Set `STATUS: READY_FOR_SOL_FINAL_REVIEW` and stop.
 ## 7. Negative tests that must exist
 
 - 29 or 31 stages; duplicate stage; broken prerequisite; missing event/object; direct result skip.
-- Wrong unit unlock/cost/cap/stat formula; cooldown/range level scaling; duplicate receipt/gift.
-- Lost existing save field, reset, negative CAPS, or migration rerun mutation.
+- Wrong unit/support unlock/cost/cap/stat formula; two supports equipped; barrage/airstrike mixed into support; cooldown/range level scaling; duplicate receipt/gift.
+- Any legacy progression copied into `nishijin-campaign-v100`; legacy source mutation/deletion; nonzero fresh starting CAPS; unsafe settings transfer; duplicate entitlement/popup; popup outside a safe non-combat screen.
+- Story-undefeated boss exposed in Compendium/Outbreak/Survival; wrong boss unlocks; TAKUYA/TAKUYA-Ω alias; replay-before-defeat; duplicate boss count or reward.
 - Wrong boss values, hard boss timer, skipped entrance/defeat, boss music overwritten/silenced/doubled.
 - Missing/corrupt/timeout required image becoming playable; placeholder/fallback rendered as production.
 - Mutated president not exactly four rooted arms/four hands; TAKUYA-Ω not exactly two arms, orange clothing, wrong weapon, or identity loss.
 - Generic minor portrait assigned to a major named speaker.
 - Matte/checkerboard residue, opaque background, translation-only semantic frame, wrong facing, ghost/duplicate/fractional alpha.
 - Mobile clipping/overflow/collision, portrait overlap outside 12-40 px, unsafe public-host safe-area override.
-- PWA refetch of unchanged hashes, partial-update data loss, offline failure, or rollback mismatch.
+- PWA gameplay before required-manifest commit, required fetch after gameplay start, refetch of unchanged hashes, partial-update activation/data loss, previous-generation loss, offline failure, or rollback mismatch.
 
 ## 8. Rollback granularity
 
 - Keep each phase in normal, reviewable commits so an ordinary revert PR can remove one phase without history rewriting.
-- Migration code and registry data must be revertable independently from large runtime assets.
+- New-namespace/legacy-entitlement code and registry data must be revertable independently from large runtime assets; reverting cannot remove or rewrite `nishijin-campaign-v1` or its recovery material.
 - Do not delete old runtime assets or move tags. A failed release candidate remains Draft/unmerged.
 
 ## 9. Stop and escalate to Sol
