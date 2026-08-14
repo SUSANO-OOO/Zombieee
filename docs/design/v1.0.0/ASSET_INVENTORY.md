@@ -1,7 +1,7 @@
 # Version 1.0.0 Finite Asset Inventory
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r1`
+- Revision: `r2`
 - Status: `LOCKED_FINITE_INVENTORY`
 - Runtime integration: not performed in the Design PR
 
@@ -19,7 +19,7 @@ This inventory separates selected nonruntime authoring masters, existing product
 | SELECTED | RED PANTHER shield | `assets/source/v100/enemies/red-panther-shield-identity-master-r1.png` | 1024x1536 | 2,294,395 | `584e03350283e6e7a92709c98d14ca63a9574e53f46961a39b466a3760d5ea2f` | armored shield silhouette |
 | SELECTED | RED PANTHER SMG | `assets/source/v100/enemies/red-panther-smg-identity-master-r1.png` | 1024x1536 | 1,876,195 | `3f03c2e8e6eae37173e637ea801944b1016858222437b4e0c4d3d320b2f52fd8` | ranged SMG silhouette |
 | SELECTED | RED PANTHER commander | `assets/source/v100/enemies/red-panther-commander-identity-master-r1.png` | 1024x1536 | 1,841,071 | `dab75e9ec7e6e1075f969d021d8089477ca2e2cb40e3a1e416e5e029bade6dba` | command-grade red-lens silhouette |
-| SELECTED | shared minor human event portrait | `assets/source/v100/portraits/minor-human-shared-event-portrait-r1.png` | 1024x1536 | 2,074,882 | `9516894c487dc3aed43a00fb42737ac246d7fab7944e52b363b4dbf8d76f6a64` | reusable human silhouette for minor speakers with no identity master only |
+| SELECTED | shared minor human event silhouette | `assets/source/v100/portraits/minor-human-shared-event-silhouette-r2.png` | 1024x1536 | 1,227,179 | `a5e58d69828d5dacf99ceae1ce427f88fe751fbf3b491eedd50e5992b8c0eeb7` | simple featureless gender-neutral and age-neutral silhouette; no face, hair, costume, occupation, accessory, weapon, or identity cues; minor speakers with no identity master only |
 
 All selected files are PNG with an alpha channel. Transparent-background acceptance is alpha 0 outside the silhouette and alpha 254 or 255 in opaque core regions; a rendered checkerboard or solid matte is a failure.
 
@@ -32,6 +32,7 @@ These files may remain locally for audit history but must not be staged, referen
 - `assets/source/v100/enemies/mugarian-president-mutated-identity-master-r1.png` — superseded creature direction.
 - `assets/source/v100/enemies/mugarian-president-mutated-identity-master-r3.png` — coherent two-arm form but superseded by Producer-approved four-arm r4.
 - `assets/source/v100/enemies/takuya-omega-identity-master-r1.png` — rejected orange garment and insufficient horror/weapon direction.
+- `assets/source/v100/portraits/minor-human-shared-event-portrait-r1.png` — rejected as an identifiable gendered person instead of the required neutral silhouette.
 
 ## 3. Existing production assets: reuse and derivative sources
 
@@ -71,7 +72,7 @@ For each new named identity, Luna must generate only the finite derivatives used
 | mutated president | boss event portrait, entrance/idle/attack/hit/phase/death sprite states, defeat cut |
 | TAKUYA-Ω | boss event portrait, entrance/idle/attack/hit/phase/death sprite states, ending defeat cut |
 | each RED PANTHER type | idle/move/attack/hit/death states with semantic facing and weapon silhouette |
-| shared minor human | event portrait only; no unit card, battle sprite, or boss derivative |
+| shared minor human | featureless event silhouette only; no unit card, battle sprite, or boss derivative |
 
 Runtime sprite packing may be a sheet or discrete frames, but every registered semantic state must have a structural pixel difference after runtime scaling. Translation-only or 1-pixel noise does not count.
 
@@ -87,7 +88,7 @@ Reuse existing approved production portraits for the base cast and v0.9.9.5 iden
 - Verify four-arm president has exactly four rooted arms and four hands in the selected master and runtime silhouette.
 - Verify TAKUYA-Ω has exactly two arms, no orange clothing, a giant sword/maul, and no matte/checkerboard residue.
 - Verify RED PANTHER variants remain distinguishable at runtime display size.
-- Verify generic portrait use is limited to minor human speaker IDs enumerated in story content.
+- Verify the generic silhouette has no face, hair, costume, occupation, accessory, weapon, gender, age, ethnicity, or named-person identity cues and is limited to minor human speaker IDs enumerated in story content.
 - Verify every required runtime asset decodes before the playable route mounts; failure/corruption blocks play and same-screen retry fetches only failed assets.
 
 Any hash, identity, limb count, alpha, license, or speaker-boundary mismatch is a stop condition, not an invitation for Luna to select a substitute.

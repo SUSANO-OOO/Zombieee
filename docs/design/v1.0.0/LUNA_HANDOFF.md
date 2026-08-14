@@ -1,6 +1,6 @@
 # Version 1.0.0 Luna Implementation Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r1`
+- Canonical Design Lock: `V100-SOL-DL-001 r2`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Role lock for implementation: `LUNA_IMPLEMENTATION`
 - Design status: `DESIGN_LOCKED`
@@ -105,7 +105,7 @@ Focused campaign/economy/progression/save tests, fresh/current/legacy migration 
 - Produce only the finite runtime derivatives listed in `ASSET_INVENTORY.md`.
 - Maintain identity between authoring master, event portrait, card/profile, and battle form.
 - Implement RED PANTHER variants, mutated president with exactly four arms/four hands, and TAKUYA-Ω with exactly two arms and no orange garment.
-- Limit the shared minor human portrait to minor human speakers with no identity master; never assign it to a major named speaker.
+- Limit the simple featureless gender-neutral minor-human silhouette to minor human speakers with no identity master; never assign it to a major named speaker or add face, hair, costume, occupation, accessory, or weapon cues.
 - Add authored map derivatives and mission objects; no tint-only stage, rectangle placeholder, diagnostic polygon, or silent asset fallback.
 - Required-image readiness must require successful decode before mounting playable presentation and support failed-only same-screen retry.
 

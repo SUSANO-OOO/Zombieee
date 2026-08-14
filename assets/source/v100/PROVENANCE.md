@@ -1,6 +1,6 @@
 # Version 1.0.0 Authoring Master Provenance
 
-- Design ID: `V100-SOL-DL-001 r1`
+- Design ID: `V100-SOL-DL-001 r2`
 - Status: selected nonruntime authoring masters
 - Runtime/public distribution: not authorized by this file
 
@@ -14,7 +14,7 @@ The mutated Mugarian president r4 was generated from the approved human-presiden
 
 TAKUYA-Ω r2 incorporates the latest Producer correction: no orange clothing, stitched/scarred horror, an oversized sword/maul, and TAKUYA identity continuity. It was cleaned to true RGBA transparency; visible checkerboard pixels are not an alpha substitute.
 
-The shared minor-human portrait is licensed only inside this project as a reusable fictional silhouette for minor human speakers without identity masters. It does not confer approval to replace named characters.
+The shared minor-human event silhouette is licensed only inside this project for minor human speakers without identity masters. The Producer selected r2 as a simple featureless, gender-neutral and age-neutral silhouette. It carries no face, hair, costume, occupation, accessory, weapon, ethnicity, or named-person identity cues and does not confer approval to replace named characters. The earlier r1 identifiable-person portrait is rejected and excluded from the selected file list.
 
 ## Selected files
 
@@ -28,7 +28,7 @@ The shared minor-human portrait is licensed only inside this project as a reusab
 | `assets/source/v100/enemies/red-panther-shield-identity-master-r1.png` | `584e03350283e6e7a92709c98d14ca63a9574e53f46961a39b466a3760d5ea2f` |
 | `assets/source/v100/enemies/red-panther-smg-identity-master-r1.png` | `3f03c2e8e6eae37173e637ea801944b1016858222437b4e0c4d3d320b2f52fd8` |
 | `assets/source/v100/enemies/red-panther-commander-identity-master-r1.png` | `dab75e9ec7e6e1075f969d021d8089477ca2e2cb40e3a1e416e5e029bade6dba` |
-| `assets/source/v100/portraits/minor-human-shared-event-portrait-r1.png` | `9516894c487dc3aed43a00fb42737ac246d7fab7944e52b363b4dbf8d76f6a64` |
+| `assets/source/v100/portraits/minor-human-shared-event-silhouette-r2.png` | `a5e58d69828d5dacf99ceae1ce427f88fe751fbf3b491eedd50e5992b8c0eeb7` |
 
 ## Nonselection rule
 

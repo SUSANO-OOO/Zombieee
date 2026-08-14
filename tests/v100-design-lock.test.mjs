@@ -18,7 +18,7 @@ const selectedAssets = Object.freeze([
   ["assets/source/v100/enemies/red-panther-shield-identity-master-r1.png", "584e03350283e6e7a92709c98d14ca63a9574e53f46961a39b466a3760d5ea2f", 1024, 1536],
   ["assets/source/v100/enemies/red-panther-smg-identity-master-r1.png", "3f03c2e8e6eae37173e637ea801944b1016858222437b4e0c4d3d320b2f52fd8", 1024, 1536],
   ["assets/source/v100/enemies/red-panther-commander-identity-master-r1.png", "dab75e9ec7e6e1075f969d021d8089477ca2e2cb40e3a1e416e5e029bade6dba", 1024, 1536],
-  ["assets/source/v100/portraits/minor-human-shared-event-portrait-r1.png", "9516894c487dc3aed43a00fb42737ac246d7fab7944e52b363b4dbf8d76f6a64", 1024, 1536],
+  ["assets/source/v100/portraits/minor-human-shared-event-silhouette-r2.png", "a5e58d69828d5dacf99ceae1ce427f88fe751fbf3b491eedd50e5992b8c0eeb7", 1024, 1536],
 ]);
 
 const sha256 = (buffer) => createHash("sha256").update(buffer).digest("hex");
@@ -34,7 +34,7 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r1`/u);
+  assert.match(design, /Revision: `r2`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
   assert.match(design, /4833a1eed29e3901e3dcfca01cf77db6846e5265/u);
@@ -82,6 +82,8 @@ test("latest Producer identity corrections remain explicit and non-negotiable", 
   assert.match(inventory, /mugarian-president-mutated-identity-master-r4\.png/u);
   assert.match(inventory, /r3\.png` — coherent two-arm form but superseded/u);
   assert.match(design, /private photos are never committed or distributed/u);
+  assert.match(design, /simple, featureless, gender-neutral and age-neutral human silhouette/u);
+  assert.match(inventory, /no face, hair, costume, occupation, accessory, weapon, or identity cues/u);
 });
 
 test("selected authoring masters match exact bytes, dimensions, and true RGBA transparency", async () => {
@@ -124,4 +126,5 @@ test("the inventory is finite and selected paths are the only provenance entries
   assert.doesNotMatch(provenance, /identity-master-r3\.png/u);
   assert.doesNotMatch(provenance, /segawa-identity-master-r1\.png/u);
   assert.doesNotMatch(provenance, /mugarian-president-mutated-identity-master-r1\.png/u);
+  assert.doesNotMatch(provenance, /minor-human-shared-event-portrait-r1\.png/u);
 });

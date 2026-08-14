@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r1`
+- Revision: `r2`
 - Status: `DESIGN_LOCKED`
 - Role owner: `SOL_DESIGN`
 - Story baseline commit: `435dc959d1972646f7e82b6c45d3f1c25d890252`
@@ -32,7 +32,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - TAKUYA-Ω is an unmistakable stitched abomination. Its weapon is a gigantic hybrid sword/maul, not the earlier compact weapon. Exactly two arms and two hands are allowed for TAKUYA-Ω.
 - The mutated Mugarian president keeps the president's Middle-Eastern identity and ornate emerald executive suit remnants, but the final form has exactly four arms and four hands. Each arm has one coherent shoulder root. The upper-left hand carries the staff; the other three hands are independent monster limbs. No extra hands, fused wrist, or orphan limb is allowed.
 - Segawa uses the Producer-provided face reference only as a private identity reference. The shipped design is a stylized world-matched illustration in an ivory/white scientist coat; the private photos are never committed or distributed.
-- An approved shared human silhouette portrait may be reused only for minor human speakers with no identity master, including generic researchers and Zakimiya's wife. It may not replace a named major character, playable unit, boss, or a person for whom a master exists.
+- The approved shared minor-human event image is a simple, featureless, gender-neutral and age-neutral human silhouette. It may be reused only for minor human speakers with no identity master, including generic researchers and Zakimiya's wife. It carries no face, hair, costume, occupation, ethnicity, accessory, weapon, or named-person identity cues, and it may not replace a named major character, playable unit, boss, or a person for whom a master exists.
 
 ## 3. Global boundaries
 
@@ -205,11 +205,11 @@ No hard boss timer is allowed. Boss music must use the current production boss s
 
 - Major named characters use their own approved identity masters or existing production portraits.
 - Segawa, the Mugarian president, mutated president, TAKUYA-Ω, and RED PANTHER variants use the selected masters in `ASSET_INVENTORY.md`.
-- The shared minor-human portrait is permitted only for unnamed/generic human event speakers lacking an identity master.
+- The shared minor-human event silhouette is permitted only for unnamed/generic human event speakers lacking an identity master. It must remain simple, featureless, gender-neutral, and age-neutral.
 - Dialogue portrait geometry must preserve the current mobile contract at 844x340, 844x390, and desktop regression at 1280x720: head visible, face centered, torso/dialogue overlap 12-40 px, no text/head collision, 44x44 controls, and no safe-area clipping.
 - Dialogue logs use a solid-enough backplate and readable text; background imagery must not bleed through to reduce legibility.
 
-Negative tests reject missing portraits for a registered speaker, identity substitution, white/checkerboard matte, opaque background on a transparent master, overlap below 12 or above 40, and generic portrait use for a major named character.
+Negative tests reject missing portraits for a registered speaker, identity substitution, white/checkerboard matte, opaque background on a transparent master, gender/age/occupation/identity cues in the shared silhouette, overlap below 12 or above 40, and generic silhouette use for a major named character.
 
 ## 10. Asset and enemy contract
 
