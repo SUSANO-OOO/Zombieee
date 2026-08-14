@@ -75,22 +75,22 @@ SolはDesign開始前にこの検証を通し、復元された全文を読む�
 - Google Docsの重複export一式
 - Segawa face modelの原写真
 
-Segawa写真はCodex promptへ直接添付し、Segawaのidentity referenceとしてだけ使用する。原写真、metadata、撮影背景をpublic repository、runtime、Issue、PRへ保存しない。derived event portraitだけを承認済みassetとして扱う。
+Segawa写真はCodex promptへ直接添付し、Segawaのidentity referenceとしてだけ使用する。原写真、metadata、撮影背景をpublic repository、runtime、Issue、PR、CI artifact、QA evidence、logへ保存しない。承認済みの架空characterとして派生したauthoring master／event portraitだけをGit管理対象にできる。
 
 ## 5. 固定済みの主要判断
 
 - 正式release：Version 1.0.0
 - 初期unit：ハチ、パイセン、クマバーソン、ババヤガ
-- balance class：7系統
+- primary role：7系統
 - formation：最大7体
 - battle active：最大7体、同じ固有characterは同時1体
-- class構成：ソフト必須。特定character必須、hard quota、単一counterを禁止
+- class構成：ソフト必須。特定character必須、単一counter、隠しhard gateを禁止
 - difficulty：hardcore寄りだがfair。hidden runtime DDAなし
-- support：回復、爆薬ドラム缶、火炎ドラム缶から1種装備
-- level cap：5／10／15／20／25／30、Stage 30 clear後35
-- player名入力：追加しない。`{{PLAYER_NAME}}`は`指揮官`
+- support：回復支援、爆薬ドラム缶、火炎ドラム缶から1種装備
+- campaign level cap：最大30。5／10／15／20／25／30の段階解放
+- 主人公名入力：採用。未入力／skipは`指揮官`、最大12 grapheme
 - story上の参加：`合流`
-- CAPSによる戦力化：`配属可能`→`配属準備`→`配属する`
+- CAPSによる戦力化：`戦闘配備登録が解禁`→`配備登録`
 - Segawa写真：セガワ本人のface identity reference
 - `ナオキ`という別character／alias／IDは作らない
 - 旧進行migration：不要。ただし旧save／backup削除禁止
@@ -104,21 +104,23 @@ Segawa写真はCodex promptへ直接添付し、Segawaのidentity referenceと�
 
 SolはProducer Decisionsの制約内で、次を自律確定する。
 
-- unit combat stat／deployment cost／cooldown
+- unit／enemy／boss combat stat
+- deployment cost／cooldown
 - recruitment／upgrade／support cost
-- Story外unitのunlock Stage
+- exact unlock Stage
 - Stage／star／replay CAPS
-- wave／enemy／boss tuning
+- level growth／catch-up discount
+- wave／AI／boss tuning
 - support tuning
 - bossの他mode追加先／threshold
 - 旧player記念CAPS額
-- threat tag／推奨class
+- threat tag／推奨role
 
-これらを再度Producer decision待ちへ戻さない。deterministic simulation、before／after table、runtime evidenceを残す。
+これらを一件ずつProducer decision待ちへ戻さない。deterministic simulation、before／after table、runtime evidenceを残す。
 
 ## 7. Asset production
 
-`CODEX_SOL_DESIGN_MISSION.md`は、Design Lock完成後のasset candidate productionも事前承認している。
+`CODEX_SOL_DESIGN_MISSION.md`は、Design Lock完成後の有限なasset candidate productionも事前承認している。
 
 Solは次を満たした場合、追加promptを待たずに必要assetの候補生成・自己監査・authoring master選定まで進めてよい。
 
@@ -149,9 +151,9 @@ Solはproduction code／manifestへ統合しない。Lunaが承認済みassetを
 
 次は製品判断として解決済み。
 
-- `{{PLAYER_NAME}}`：`指揮官`へ固定解決
-- 台本上の「加入」とCAPS：物語上は`合流`、gameplay上は`配属可能／配属準備`
-- Segawa face reference：セガワ本人用。ナオキ関連は不採用
+- `{{PLAYER_NAME}}`：ニューゲームで入力。未入力／skipは`指揮官`
+- 台本上の「加入」とCAPS：物語上は`合流`、gameplay上は`戦闘配備登録が解禁／配備登録`
+- Segawa face reference：セガワ本人用。Naoki関連は不採用
 
 原文修正が必要な場合は、物語正本の別editorial PRで扱う。
 
