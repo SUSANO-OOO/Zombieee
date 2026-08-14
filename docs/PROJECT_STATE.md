@@ -5,125 +5,74 @@
 ## 1. 現在の正式公開
 
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
-- 公開中version：**Version 0.9.9.5**
-- tag：`v0.9.9.5`
-- release／main SHA：`55d796cc577d1d9f903a4d2c6b4382196511db27`
+- 公開中version：Version 0.9.9.5
+- release／main基準SHA：`55d796cc577d1d9f903a4d2c6b4382196511db27`
 - release tree：`0f8a5fb417ccca595d485d22c2c3cbe240b6ee28`
-- final release PR：#167
+- annotated tag：`v0.9.9.5`
 
-Version 0.9.9.5はVisual Integrity release。release時点のIndependent Sol final reviewはHigh 0／Medium 0／Low 0、CI 1093／1093、Chromium／WebKit visual matrix、PWA update、save保持、offline launch、rollbackを確認済み。
+live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固定値を永久に最新として扱わない。
 
-`main` HEADは動的である。作業開始時はlive GitHubを再取得する。
+## 2. 次の正式release target
 
-## 2. 現行0.9.9.5基盤
-
-- campaign：20 Stage
-- playable unit：16体
-- initial unit：6体
-- formation：最大7枠
-- progression：内部Level 50／現行player-facing cap 25
-- story registry：`outbreak-origin-v8`
-- mode：Campaign、Survival、異常発生
-- save：localStorage、IndexedDB backup、replica reconciliation、last-known-good、corrupt recovery、manual export／import
-- PWA：manifest、size／SHA-256、Cache Storage、generation commit、offline、rollback
-- support：`pod／drum／medical`系と互換系が併存
-- campaign `baseHp`：Stageごとに異なる
-- timed-defense／escort：150〜210秒級を含む
-
-## 3. 次の正式release target
-
-- target：**Version 1.0.0**
-- 対象：PROLOGUE、Stage 1〜30、ENDING、EPILOGUE
+- target：Version 1.0.0
+- 対象：PROLOGUE、Stage 1〜30、ENDING、エンドロール、EPILOGUE
 - 正史：v10 event script
 - docs baseline：Draft PR #169
 - branch：`docs/story-v10-final-release-baseline`
 - production implementation：未着手
 - runtime asset integration：未着手
-- merge／tag／Release／Pages公開：未実施
+- main merge／tag／Release／Pages公開：未実施
 
-## 4. Version 1.0.0の主要固定判断
+## 3. Version 1.0.0固定事項
 
-正本：`docs/story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md`
-
+- player-facing車両名：**装甲車両**。`走行車両`不採用、`CRAWLER`は内部互換のみ
+- 主人公名：ニューゲーム後・PROLOGUE前に入力。fallback`指揮官`。全event、log、save、ENDING／EPILOGUEへ反映し後から変更可能
+- 主人公：無言だが実操作で物語を動かす
+- event phase：prologue／pre／post／first-clear-post／ending／epilogue。戦闘中の長いstory eventなし
 - 初期unit：ハチ、パイセン、クマバーソン、ババヤガ
 - primary role：frontline／heavy／skirmisher／marksman／suppression／support／engineer
-- formation：最大7枠
-- battle active：playable instance合計7体
-- 同一character：複数回召喚可、複数体同時存在可
-- 8体目だけをauthoritative stateで拒否
-- class構成：soft requirement。特定character必須禁止
-- 複数編成clear matrix／全Stage複数編成証明：不要
-- mission：拠点破壊、短い時間防衛、必要時のみ電源switch／台車護衛、boss撃破
-- timed-defense：90秒前後、原則75〜120秒、150秒以上は原則禁止
-- boss：現行より強化。ただしdamage sponge／不可避即死は禁止
+- formation最大7、battle active合計7、同一character複数召喚可
+- mission：拠点破壊、短い時間防衛、必要時だけswitch／台車、boss
 - campaign Level cap：30
-- support：回復支援、爆薬ドラム缶、火炎ドラム缶から1種装備
-- 走行車両HP：Stage別ばらつきを廃止しcanonical値へ統一
-- 走行車両HP強化：CAPSによる上限付き恒久upgrade
-- 走行車両強化screen：独立画面、中央に全体graphic、`HPを強化`、成功SE
-- 主人公名入力：採用。skip時`指揮官`
-- story上：`合流`
-- gameplay上：`戦闘配備登録が解禁`／`配備登録`
-- 旧進行：新30 Stageへmigrationしない。旧save／backup削除禁止
-- 旧player：一度だけ正式release記念CAPS
-- RED PANTHER：正式名はStage 27で初開示
-- セガワ写真：セガワ本人のprivate identity reference
-- TAKUYAとTAKUYA-Ω：別boss ID／identity／reward
+- support：回復支援、爆薬ドラム缶、火炎ドラム缶
+- 装甲車両HP：canonical base＋恒久upgrade。専用強化screen、atomic transaction、強化SE
+- RED PANTHER正式名はStage 27で初開示
+- セガワ写真はセガワ専用private identity reference。原写真をpublic Git／artifactへ保存しない
+- TAKUYA-Ωは既存TAKUYAの連続性を保つカオスな最終形態
+- 旧campaign進行は移行しないが、旧save／backupは削除しない
+- 複数編成clear matrix、大量evidence、監査専用Issueを作らない
 
-## 5. Solへ委任するexact値
+exact stats、cost、reward、duration、wave、unlock、装甲車両upgrade curve、boss他mode配置、旧player記念CAPS額は、固定guardrail内でSolが自律確定する。
 
-Solは固定guardrail内で次を自律確定する。
-
-- unit／enemy／boss stats
-- deployment cost／cooldown
-- 配備登録／Level up／support cost
-- 走行車両base HP／upgrade量／最大回数／cost curve
-- exact unlock Stage
-- Stage／star／replay CAPS
-- wave／spawn／AI
-- mission duration／escort speed／switch timing
-- boss phase／telegraph／resistance／reward
-- boss他mode配置
-- 旧player記念CAPS
-
-公開後runtimeのhidden DDAは禁止。
-
-## 6. 実行体制
+## 4. 実行体制
 
 1. Producer／司令塔が正本と製品境界を固定
-2. Solが`SOL_DESIGN`としてDesign Lock、必要asset inventory、Luna Handoffを作成
-3. 必要assetはSolが事前承認範囲でcandidate生成・選定まで実施可能
-4. Lunaがproduction implementation、asset integration、test、browser QA、Draft PR
-5. 最初のSolが`SOL_FINAL_REVIEW`
-6. High／Medium 0とrelease gate達成後だけmerge／公開
+2. 元のSol threadが`SOL_DESIGN`
+3. SolがDesign Lock、有限asset inventory、必要asset candidate、Luna Handoffを作成
+4. Lunaが`LUNA_IMPLEMENTATION`としてproduction実装、asset統合、tests、browser QA、Draft PR
+5. Luna Completion Packetを元のSolへ返す
+6. 元のSolが`SOL_FINAL_REVIEW`
+7. High／Medium 0とrelease gateを満たした場合だけmerge／公開
 
 SolとLunaを同時並行に動かさない。
 
-## 7. 必要最小限のrelease gate
+## 5. 現在のblocker
 
-- Stage 1〜30、ENDING、EPILOGUEをfinal candidateで一度通す
-- 未配置object、missing asset、placeholder、speaker mismatch 0
-- battle participantのsprite、animation、VFX、audioが接続済み
-- 8体目を拒否し、同一character複数召喚を誤拒否しない
-- 150秒以上の冗長な防衛／escortが理由なく残っていない
-- 走行車両HPが全Stageでcanonical＋upgradeから算出される
-- 走行車両強化screen、CAPS、save、SEが接続済み
-- CAPS、reward、unlock、receiptの二重適用なし
-- save、offline、PWA update、rollback、旧player特典が正常
-- 844×390、844×340、1280×720で切れ、重なり、豆粒化、操作不能なし
-- console／page／HTTP／request failureなし
-- High／Medium finding未解消0
+PR #169はdocs-onlyのDraftで未merge。branchの正本文書とPR本文をVersion 1.0.0最新決定へ揃え、checksを再確認するまでmergeしない。
 
-複数編成clear matrix、全Stageの複数編成証明、不要な大量evidence、監査専用Issue／文書は作成しない。
+CIではlint、production content validation、build、testsが成功していても、PWA partial-update recovery等のrequired checkが失敗している場合はgreen扱いしない。Design開始は可能だが、merge／Release承認は不可。
 
-## 8. 恒久禁止
+## 6. Release gate
 
-- `main`直接push
-- force push／rebase／amend
-- 既存tag移動
-- 旧save／backup／asset削除
-- cache全削除をmigration手段にすること
-- provenance不明assetの正式採用
-- test／acceptanceの実装都合による弱体化
-- Sol／Luna同時並行
-- セガワ原写真のpublic repository／artifact保存
+次が残る場合、完成／APPROVE／READY_FOR_RELEASEとしない。
+
+- 名前入力からStage 1〜30、ENDING、エンドロール、EPILOGUEの通し未確認
+- raw name token、unknown speaker、speaker／portrait mismatch
+- 未配置object、missing asset、placeholder、未完成animation／VFX／audio
+- 7体上限の迂回、同一character複数召喚の誤拒否
+- 150秒以上の冗長な通常防衛／escort
+- 装甲車両HPのStage別ばらつき、強化screen／transaction未接続
+- CAPS、reward、unlock、event、receiptの二重適用
+- save、offline、PWA update、rollbackの破壊
+- 844×390、844×340、1280×720で切れ、重なり、豆粒化、操作不能
+- High／Medium finding未解消
