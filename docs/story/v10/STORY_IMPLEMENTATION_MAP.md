@@ -1,11 +1,9 @@
-# v10正史台本 — Version 1.0.0実装差分マップ
+# v10正史台本 — Version 1.0.0実装差分マップ v2
 
 更新日：2026-08-14  
-性質：**派生資料。台本本文・Producer Decisions・最新Design Lockを上書きしない。**
+性質：**派生資料。Producer Decisions、v10本文、最新Design Lockを上書きしない。**
 
 ## 1. 物語の軸
-
-v10は次の流れで進む。
 
 1. 目の前の一人を助ける
 2. 救助を成立させる経路、病院、物流、封鎖網を取り戻す
@@ -40,127 +38,64 @@ ENDINGは世界全体の完全救済ではない。西新の安全回廊、病�
 | 29 | 特級研究中枢 | 感染源原株破壊、TAKUYA-Ω起動 |
 | 30 | 西新防衛線 | TAKUYA-Ω、セガワ死亡、中和因子 |
 
-## 3. Mission design
+## 3. 主人公名・event
 
-台本のト書きを新しい複雑なgame systemへ膨らませない。正式版の基本missionは次だけ。
+- ニューゲーム選択後、PROLOGUE前に主人公名を入力。未入力／skipは`指揮官`。
+- 1〜12 grapheme、安全なtext描画、save／backup／export／import／log／replay／ENDING／EPILOGUEへ同じ値を使用。
+- 設定から変更可能だが、既読、receipt、報酬、加入、unlockを再発火させない。
+- `{{PLAYER_NAME}}`をv10本文の敬称・呼称どおりに展開し、raw tokenを残さない。
+- 主人公は無言の傍観者ではなく、進路、救助、端末、装甲車両、接続／遮断、散布系統破壊、最終連携の実操作を担う。
+- event phaseは`prologue／pre／post／first-clear-post／ending／epilogue`。
+- 戦闘中の長いstory eventは使わない。
+- 基本flowは`pre → 編成 → 戦闘 → result → post → unlock／reward`。
+- 初見playerが人物、世界、ムガリアン、現在目的、次Stage理由を理解できるよう段階導入する。
 
-1. 敵拠点を破壊
-2. 一定時間、走行車両／防衛対象を守る
-3. 必要なStageだけ電源switchを順次起動
-4. 必要なStageだけ台車／搬送objectを移動・護衛
+## 4. Mission・duration
+
+1. 敵拠点破壊
+2. 短い時間防衛
+3. 必要なStageだけ電源switch
+4. 必要なStageだけ台車／搬送object護衛
 5. boss撃破
 
-現行codeにはすでにassault、timed-defense、escort、sequential-sealがある。これを再利用・整理する。
+時間防衛は90秒前後、原則75〜120秒。150秒以上は原則禁止。escortは距離、速度、waveをまとめて短縮し、bossへ不自然なhard time limitを置かない。
 
-### Duration
+TAKUYAの主目標：
 
-現行には150、165、180、195、210秒の防衛／escortがある。Version 1.0.0ではそのまま踏襲しない。
+- Stage 3：`大型変異感染者TAKUYAを撃破`
+- Stage 30：`TAKUYA-Ωを撃破し、西新を守る`
 
-- 時間防衛：90秒前後
-- 原則：75〜120秒
-- 150秒以上：原則禁止
-- escort：距離、速度、waveをまとめて短縮
-- boss：原則hard time limitなし
-
-## 4. Unit deployment
-
-- formationは最大7枠。
-- 戦場同時出現上限はplayable instance合計7体。
-- 同一characterを複数回召喚してよい。
-- 同一characterの複数体同時存在も許可する。
-- 8体目だけをbattle stateで拒否する。
-- 走行車両、NPC、escort、mission object、support object、敵は7体枠外。
-- 独立HP／target／damageを持つplayer-controlled summonは7体枠内。
-
-同一character一体制限、unique active contract、同一unit二重召喚拒否は不採用。
-
-## 5. Class・balance
-
-Primary role：
-
-- frontline
-- heavy
-- skirmisher
-- marksman
-- suppression
-- support
-- engineer
+## 5. Unit・balance
 
 - 初期4体：ハチ、パイセン、クマバーソン、ババヤガ。
-- exact named unit必須は禁止。
-- class不足で出撃をhard blockしない。
-- 脅威categoryと推奨roleを簡潔に表示する。
-- bossは現行より強くし、HPだけでなくphase、pressure、telegraph、resistanceを調整する。
-- 低cost複数召喚は許可するが、総数7体、cost、cooldown、敵構成で混成編成にも価値を持たせる。
-
-複数編成ごとのclear証明、通常Stage3編成／boss2編成matrixは作成しない。
-
-## 6. Level・CAPS・unlock
-
-- campaign表示最大Level：30。
-- cap：5／10／15／20／25／30。
-- story上は`合流`、system上は`戦闘配備登録が解禁`、CAPS操作は`配備登録`。
-- ナオ：Stage 1後。
-- ザキミヤ：Stage 12後。
-- TKY：Stage 14後。
-- Mrs.チハ：Stage 17後。
-- 宮本武蔵：Stage 20後。
-- Stage 8開始までに7 roleへアクセス可能。
-- Stage 20までに現行16 playable unitを発見済みまたは配備登録可能。
+- role：frontline／heavy／skirmisher／marksman／suppression／support／engineer。
+- formation最大7枠、戦場active合計7体。
+- 同一characterの複数召喚・同時存在を許可し、8体目だけを拒否。
+- 装甲車両、NPC、escort、mission object、support object、敵は7体枠外。
+- exact named unit必須、class不足hard block、複数編成clear matrixは禁止。
+- bossはHPだけでなくphase、pressure、telegraph、resistanceで現行より強化。
+- campaign Level capは5／10／15／20／25／30。
 - mandatory replay grindは禁止。
 
-CAPSはunit、Level、equipment、support、走行車両HP強化へ配分する。Solは標準進行の一本の計算表と不足／過剰の境界だけを確認する。
+## 6. CAPS・unlock・support
 
-## 7. 走行車両HP
+- CAPSは配備登録、Level、equipment、support、装甲車両HP強化へ使用。
+- ナオStage 1後、ザキミヤStage 12、TKY Stage 14、Mrs.チハStage 17、宮本武蔵Stage 20後に配備登録解禁。
+- Stage 8開始までに7 roleへアクセス可能、Stage 20までに現行16unitを発見済みまたは登録可能。
+- supportは回復支援、爆薬ドラム缶、火炎ドラム缶から1種装備。
+- 航空支援／一斉砲撃は装甲車両固有ability。
+- exact値は標準進行の一本の計算表と不足／過剰境界でSolが決定。
 
-現行campaignの`baseHp`はStageごとに1000、850、760、720、520等へばらついている。Version 1.0.0では統一する。
+## 7. 装甲車両
 
-- campaign全Stageで一つのcanonical base HPを使用。
+- 全campaign Stageで一つのcanonical base HPを使用。
 - battle開始時最大HPはcanonical base HP＋恒久upgrade分。
-- Stage難度はenemy、wave、boss、objectiveで作る。
-- escort台車、civilian、電源設備等は別HP。
-- exact base HP、upgrade量、最大回数、CAPS curveはSolが決定。
+- escort台車、civilian、電源等は別HP。
+- 拠点／管理画面上部に`装甲車両を強化する`入口。
+- 専用screen中央に車両全体graphic、現在Level、現在HP、強化後HP、必要CAPS、所持CAPS、`HPを強化`、`強化上限`を表示。
+- CAPS減算、upgrade、receipt、saveをatomic処理し、durable save成功後だけ車体反応とチャリンチャリン系SEを出す。
 
-## 8. 走行車両強化screen
-
-### Entry
-
-拠点／管理画面上部付近に`走行車両を強化する`入口を置く。
-
-### Dedicated screen
-
-- 中央に走行車両の全体graphicを大きく表示。
-- 車体を切らない。
-- 現在Level、現在HP、強化後HP、必要CAPS、所持CAPSを表示。
-- main action：`HPを強化`。
-- 最大時：`強化上限`。
-- 844×390／844×340で車両、数値、buttonが重ならない。
-- 既存full vehicle graphicを優先再利用。
-
-### Transaction・SE
-
-- CAPS減算、upgrade、receipt、saveをatomic処理。
-- durable save成功後だけ成功演出とSE。
-- 二重tap、reload、multiple tabs、retryで二重処理禁止。
-- 成功時はHP上昇表示、車体の控えめな反応、チャリンチャリンと分かる金属的な強化SE。
-- 既存SEが適合すれば再利用。不足時だけ専用SE。
-- CAPS不足、上限、save失敗では成功SEを鳴らさない。
-
-## 9. Support
-
-正式支援：
-
-1. 回復支援
-2. 爆薬ドラム缶
-3. 火炎ドラム缶
-
-- 出撃前に1種装備。
-- CAPSで恒久解禁。
-- battle内はlocal resource／cooldown。
-- `pod`は通常loadoutから外す。
-- 航空支援／一斉砲撃は走行車両固有abilityとして分離。
-
-## 10. 新規asset
+## 8. 新規asset
 
 | Asset | Event portrait | Full-body／master | Battle atlas |
 |---|---:|---:|---:|
@@ -172,29 +107,20 @@ CAPSはunit、Level、equipment、support、走行車両HP強化へ配分する�
 | RED PANTHER SMG兵 | 汎用可 | 必須 | 必須 |
 | RED PANTHER指揮官兵 | 必須候補 | 必須 | 必須 |
 | TAKUYA-Ω | 必須 | 必須 | 必須 |
-| 走行車両強化screen | 不要 | 既存全体graphicを優先 | 不要 |
+| 装甲車両強化screen | 不要 | 既存全体graphicを優先 | 不要 |
 
 セガワ原写真をrepository、Issue、PR、artifact、evidenceへ保存しない。
 
-## 11. Save
+TAKUYA-Ωは既存TAKUYAの顔・頭部・体格・特徴、橙色安全vest残骸、人工armor、背面投薬管を継承し、不均衡な異常肥大、左右非対称、肉体とarmorの融合、投薬暴走、崩れたsilhouetteを加える。単なる巨大化、色違い、無関係な別monster、綺麗な近未来robotは不合格。exact scaleは連続性、ラスボス圧力、mobile readability、telegraph、hitbox、performanceを満たす値をSolが決定する。
+
+## 9. Save・QA
 
 - 新campaign generation／namespaceでニューゲーム。
-- 旧20 Stage進行を移行しない。
-- 旧save、backup、manual export、last-known-goodを削除しない。
-- 旧player記念CAPSは一度だけ。
-- 走行車両upgrade Level／receiptを新saveへ保存。
-- replica、import、multiple tabsで二重upgrade／二重特典を防ぐ。
-
-## 12. 必要最小限のacceptance
-
-- 30 Stageのobjective、duration、wave、boss、unlockが接続済み。
-- 8体目reject、同一character複数召喚allow。
-- 走行車両HPが全Stageでcanonical＋upgradeから算出。
-- 走行車両強化screen、CAPS transaction、save、SEが接続済み。
-- 章bossとStage 30のbalance spot check。
-- final candidateでStage 1〜30、ENDING、EPILOGUEを一度通す。
-- save、offline、PWA update、rollback、旧player特典を確認。
-- 844×390、844×340、1280×720で主要導線を確認。
-- missing asset、placeholder、speaker mismatch 0。
+- 旧20 Stage進行は移行しないが、旧save、backup、manual export、last-known-goodを削除しない。
+- 主人公名、event read／resume、装甲車両upgrade Level／receiptを新saveへ保存。
+- reward、star、unlock、CAPS、event、upgradeの二重適用を防ぐ。
+- final candidateで名前入力からStage 1〜30、ENDING、エンドロール、EPILOGUEを一度通す。
+- 844×390、844×340、1280×720、save、offline、PWA update、rollbackを確認。
+- missing asset、placeholder、unknown speaker、speaker／portrait mismatch、raw token 0。
 
 不要な複数編成証明、大量evidence、監査専用Issue／文書は作らない。
