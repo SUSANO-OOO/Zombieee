@@ -1,4 +1,4 @@
-# v10正史台本 — 実装差分マップ
+# v10正史台本 — Version 1.0.0実装差分マップ
 
 更新日：2026-08-14  
 性質：**派生資料。台本本文・Producer Decisions・最新Design Lockを上書きしない。**
@@ -28,7 +28,8 @@ ENDINGは世界救済ではない。西新の安全回廊、病院、食事、�
 ## 2. Presentation contract
 
 - 主人公は無言。台詞選択ではなく能動行動で物語を動かす。
-- player名入力は追加しない。`{{PLAYER_NAME}}`は`指揮官`へ解決する。
+- ニューゲーム時に主人公名を入力する。未入力／skip時は`指揮官`、最大12 grapheme。
+- `{{PLAYER_NAME}}`／`{{PLAYER_NAME_SAN}}`はsave、event、ENDING／EPILOGUE、export／import、accessibilityで同一contractを使用する。
 - 基本構成は既存背景、左右event portrait、話者名、台詞欄、短いト書き、暗転、SYSTEM表示。
 - 新規CGを大量制作しない。
 - 腰上portraitと背景の再利用を基本に、環境音、fade、表情差分で密度を作る。
@@ -76,15 +77,15 @@ asset planは、再利用portrait／背景の有限inventoryを先に固定し�
 
 | Stage | 戦闘・boss | 物語上の新規要素 | gameplay／asset上の主な差分 |
 |---:|---|---|---|
-| 1 | 通常戦 | いくらちゃん救出 | guide contract。ナオ配属解放 |
+| 1 | 通常戦 | いくらちゃん救出 | guide contract。ナオの戦闘配備登録を解禁 |
 | 3 | TAKUYA | 赤レンズ部隊が遺骸回収 | 現行TAKUYA再利用、回収scene、後半伏線receipt |
 | 5 | 改札喰い | 医療case、病院接続 | 既存boss／station mechanics再利用監査 |
 | 11 | MOTHER | 発生前の大型検体 | 既存giant boss contract再利用監査 |
-| 12 | 通常戦＋ザキミヤ | 火炎瓶で参戦、物語上合流 | 既存asset、Stage clear後に配属可能 |
+| 12 | 通常戦＋ザキミヤ | 火炎瓶で参戦、物語上合流 | 既存asset、Stage clear後に戦闘配備登録を解禁 |
 | 13 | 通常戦 | セガワ初登場、信用形成 | 添付face referenceから新規event portrait |
-| 14 | オオグチ | TKY合流、チハ生存記録 | 既存boss／TKY asset、配属可能 |
-| 17 | クロメ | Mrs.チハ再会 | 既存boss／Chiha asset、配属可能 |
-| 20 | ガイレン | 安全回廊成立、宮本武蔵合流 | 既存boss／Musashi asset、配属可能 |
+| 14 | オオグチ | TKY合流、チハ生存記録 | 既存boss／TKY asset、戦闘配備登録を解禁 |
+| 17 | クロメ | Mrs.チハ再会 | 既存boss／Chiha asset、戦闘配備登録を解禁 |
+| 20 | ガイレン | 安全回廊成立、宮本武蔵合流 | 既存boss／Musashi asset、戦闘配備登録を解禁 |
 | 21 | 赤レンズ人型部隊 | ムガリアン本部へ突入 | 新規human enemy family、spoiler-safe label |
 | 22 | 赤レンズ追撃 | 家族再会、CH-17露見 | 量産兵再利用、家族portraitは最小構成 |
 | 23 | 赤レンズ部隊 | 告白、身分証焼却 | 指揮官兵を含む構成、重要dialogue |
@@ -105,11 +106,11 @@ asset planは、再利用portrait／背景の有限inventoryを先に固定し�
 - クマバーソン／heavy
 - ババヤガ／marksman
 
-ハチは低cost枠として確定済み。ナオはStage 1 clear後に配属可能とする。
+ハチは低cost枠として確定。ナオはStage 1 clear後、Stage 1 first-clear CAPSだけで登録可能にする。
 
 ### 5.2 Class access
 
-正式classは7系統。
+一次roleは7系統。
 
 - frontline
 - heavy
@@ -119,14 +120,17 @@ asset planは、再利用portrait／背景の有限inventoryを先に固定し�
 - support
 - engineer
 
-Stage 6 clearまでに全7 classへアクセス可能とする。classはhard quotaではなく、enemy threatとobjectiveから自然に複数roleが必要になるソフト必須設計とする。
+suppressionはStage 4まで、engineer／controlはStage 6まで、追加heavy／breakerはStage 8までに少なくとも1体を解禁し、Stage 8開始時点で全7 roleへアクセス可能にする。
 
-### 5.3 Active unit
+classはhard quotaではなく、enemy threatとobjectiveから自然に複数roleが必要になるソフト必須設計とする。exact named unit必須は禁止する。
+
+### 5.3 Formation／active cap
 
 - formation最大7体
 - battle active最大7体
 - 同じ固有characterは同時に1体
-- support／CRAWLER／NPC／enemyは7枠外
+- support／装甲車両／NPC／enemyは7枠外
+- 独立target／HP／damageを持つplayer-controlled summonは7枠内
 - 8体目、同一character 2体目をbattle stateでatomic reject
 
 現行の無制限deploymentと同一character spamを廃止する。
@@ -135,11 +139,11 @@ Stage 6 clearまでに全7 classへアクセス可能とする。classはhard qu
 
 正式支援は3種。
 
-- 回復：Stage 2 clear後
-- 爆薬ドラム缶：Stage 6 clear後
-- 火炎ドラム缶：Stage 13 clear後
+- 回復支援：Stage 2〜3で解禁
+- 爆薬ドラム缶：Stage 5〜7で解禁
+- 火炎ドラム缶：Stage 9〜11で解禁
 
-1 sortieへ1種装備。CAPSは恒久unlock、battle内はlocal resource＋cooldown。CRAWLER能力は別system。
+exact Stageは他のmajor unlockと重複しないようSolが固定する。1 sortieへ1種装備。CAPSは恒久unlock、battle内はlocal resource＋cooldown。航空支援／一斉砲撃は装甲車両固有abilityとして別systemにする。
 
 ### 5.5 Level cap
 
@@ -149,9 +153,16 @@ Stage 6 clearまでに全7 classへアクセス可能とする。classはhard qu
 - Stage 15：20
 - Stage 20：25
 - Stage 25：30
-- Stage 30 clear後：35
 
-Stage 30はcap 30でbalanceする。内部50基盤は将来用で、Version 1.0.0の通常導線へ公開しない。
+Version 1.0.0 campaignの表示最大levelは30。内部50基盤は将来／他mode用に保全し、campaign UIからLevel 31〜50へ到達させない。
+
+### 5.6 Difficulty／viable composition
+
+- 単一のhardcore-but-fair campaign。hidden runtime DDA／player level連動hidden scalingは禁止。
+- tutorial以外の通常Stageは3種類以上、専門bossは2種類以上の明確に異なる合法編成でrecommended cap内clear可能にする。
+- 1 starで次Stageを解禁。2／3 starは任意mastery。
+- retryは無料。敗北でCAPS、unit、装備、story progressを失わない。
+- exact enemy compositionは隠し、脅威categoryと推奨role／counter tagを2〜4件表示する。
 
 ## 6. Boss cross-mode
 
@@ -179,7 +190,7 @@ TAKUYAとTAKUYA-Ωを同一kindへ上書きせず、identity、boss ID、reward�
 |---|---:|---:|---:|---|
 | ムガリアン社長・通常 | 必須 | 推奨 | 不要 | Stage 24〜25の交渉と恐怖 |
 | 変異ムガリアン社長 | boss read用必須 | 必須 | 必須 | Stage 25 boss |
-| セガワ | 必須 | 推奨 | 不要 | 添付写真はセガワ専用face reference。原写真はrepo非保存 |
+| セガワ | 必須 | 推奨 | 不要 | 添付写真はセガワ専用private face reference。原写真はrepo／Issue／PR／CI artifact非保存 |
 | 赤レンズ近接兵 | 汎用masked read可 | 必須 | 必須 | survival knife |
 | 赤レンズ盾兵 | 汎用masked read可 | 必須 | 必須 | shield silhouette |
 | 赤レンズSMG兵 | 汎用masked read可 | 必須 | 必須 | ranged fire |
@@ -228,16 +239,29 @@ existing assetは「ファイルがある」だけで合格にせず、identity�
 
 一枚event imageは、通常の左右portrait＋背景で行動が誤解される、battle runtimeへ実装できない不可欠な一回行動、既存compositeで品質不成立のいずれかに限る。
 
-## 8. 加入とCAPSの解決
+## 8. 合流／CAPS／主人公名の解決
+
+### 8.1 合流とCAPS
 
 - 物語上の参加は`合流`。
-- gameplayで戦闘使用条件が開くことは`配属可能`。
-- CAPS支払いは武器、装備、訓練、医療、輸送、補給を含む`配属準備`。
-- buttonは`配属する`または`配属準備`。
+- gameplayで戦闘使用条件が開くことは`戦闘配備登録が解禁`。
+- CAPS支払いactionは`配備登録`。
+- CAPSは武器、装備、訓練、医療、輸送、補給を含む戦力化cost。
 - 人間の忠誠をCAPSで買う表現にしない。
-- 初期4体以外は原則、合流／発見後にCAPSで配属する。
+- 初期4体以外は原則、合流／発見後にCAPSで配備登録する。
 
-この解決を正本とし、旧decision packetへ戻さない。
+### 8.2 主人公名
+
+- v10の名前入力を採用する。
+- 未入力／skipは`指揮官`。
+- 最大12 grapheme、安全なtext描画、制御文字／bidi制御／悪用zero-width文字拒否。
+- token、save、export／import、ENDING／EPILOGUE、accessibilityで同一値を使う。
+
+### 8.3 セガワface reference
+
+- 添付写真はセガワ本人用。ナオキではない。
+- 原写真、metadata、撮影背景をpublic repository、runtime、Issue、PR、CI artifact、QA evidenceへ保存しない。
+- derived Segawa authoring master／event portraitだけを正式asset候補にできる。
 
 ## 9. Save
 
@@ -250,8 +274,26 @@ existing assetは「ファイルがある」だけで合格にせず、identity�
 - 記念CAPSをpopup付きで一度だけ付与
 - reload／replica／multiple tabs／import／recoveryで二重付与不可
 - resetは新campaignだけを対象
+- settingsだけを安全に分離できる場合は引き継いでよい
 
-## 10. 主な対象module
+## 10. 現行mainとの差分
+
+baseline作成時点：
+
+- live `main`：`55d796cc577d1d9f903a4d2c6b4382196511db27`
+- tree：`0f8a5fb417ccca595d485d22c2c3cbe240b6ee28`
+- release identity：Version 0.9.9.5
+- 本編：20 Stage
+- story script：`outbreak-origin-v8`。PROLOGUEとStage 1〜6中心
+- playable：16体
+- current initial：6体
+- current campaign progression：内部Level 50／公開上限25
+- support：`pod／drum／medical`と互換`barrel／medkit／molotov／airstrike`が併存
+- save：localStorage、IndexedDB backup、replica reconciliation、manual import／export、migration／receiptあり
+
+20→30 Stage、4 initial、7 role、active 7、unique unit、Level 30、三支援、human enemy、new bosses、新campaign generationへ統合する。
+
+## 11. 主な対象module
 
 Solは最低限次をread-onlyで調査する。pathが移動している場合はlive treeを優先する。
 
@@ -284,7 +326,7 @@ Solは最低限次をread-onlyで調査する。pathが移動している場合�
 
 `AshfallGame.tsx`へ全機能を直書きせず、data、state、runtime、render、asset、persistence責務を分離する。
 
-## 11. Design acceptance最低線
+## 12. Design acceptance最低線
 
 Sol Design Lockには最低限次が必要。
 
@@ -293,10 +335,11 @@ Sol Design Lockには最低限次が必要。
 - character／speaker／portrait inventory
 - enemy／boss／battle asset inventory
 - stage background／object／scene classification
-- class／counter matrix
+- role／counter matrix
 - minimal／standard／completionist economy simulation
-- unlock calendar
-- active 7体＋同一character 1体contract
+- unlock／配備登録calendar
+- formation 7＋active 7＋same-character 1 contract
+- normal Stage 3編成／boss Stage 2編成のviability evidence
 - support contract
 - boss cross-mode contract
 - save generation／legacy reward contract
