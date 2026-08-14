@@ -25,6 +25,10 @@ import {
 import { AIRSTRIKE_DEF, CRAWLER_BARRAGE_DEF } from "../app/gameRules.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import {
+  classifySupersededAssetRequestFailures,
+  reconcilePageClockRequestFailures,
+} from "./v0995-qa-evidence-contract.mjs";
 
 const baseUrl = new URL(
   process.env.V099_FINAL_REMEDIATION_QA_BASE_URL
@@ -41,6 +45,16 @@ const playwright = process.env.PLAYWRIGHT_MODULE_PATH
 const browserTypes = { chromium: playwright.chromium, webkit: playwright.webkit };
 const canonicalEngines = ["chromium", "webkit"];
 const canonicalCaseTypes = ["hud", "crawler-equipment", "deployment"];
+const canonicalHudStates = Object.freeze([
+  "stage1-normal",
+  "five-units",
+  "deployment-banner",
+  "manual-ability-banner",
+  "objective-full",
+  "support-disabled",
+  "banner-bark-boss",
+  "stage3-boss",
+]);
 const canonicalViewports = [
   { width: 667, height: 375 },
   { width: 736, height: 414 },
@@ -94,6 +108,12 @@ const caseTypes = parseUniqueAxis(
   "V099_FINAL_REMEDIATION_QA_CASES",
   process.env.V099_FINAL_REMEDIATION_QA_CASES ?? canonicalCaseTypes.join(","),
   canonicalCaseTypes,
+);
+const hudStateFilterActive = Object.hasOwn(process.env, "V099_FINAL_REMEDIATION_QA_HUD_STATES");
+const hudStates = parseUniqueAxis(
+  "V099_FINAL_REMEDIATION_QA_HUD_STATES",
+  process.env.V099_FINAL_REMEDIATION_QA_HUD_STATES ?? canonicalHudStates.join(","),
+  canonicalHudStates,
 );
 const timeout = Math.max(
   10_000,
@@ -277,16 +297,21 @@ function caseUrl(qaMode, { stageNumber = 3, safeAreaPreset = null } = {}) {
   const parameters = { qa: qaMode };
   if (safeAreaPreset) parameters.safe = safeAreaPreset;
   if (qaMode === "mission") Object.assign(parameters, { stage: String(stageNumber), state: "start" });
+  if (caseTypes.length === 1 && caseTypes[0] === "hud") parameters.qaHudFiniteAssets = "1";
   url.search = new URLSearchParams(parameters).toString();
   return String(url);
 }
 
 function diagnosticsFor(page, lifecycle = null) {
   let active = true;
+  let phase = "setup";
+  const pageClockCalibrations = [];
+  const requestStartedAt = new WeakMap();
   const diagnostics = {
     consoleErrors: [],
     pageErrors: [],
     requestFailures: [],
+    requestFailureDetails: [],
     httpErrors: [],
   };
   page.on("console", (message) => {
@@ -295,11 +320,22 @@ function diagnosticsFor(page, lifecycle = null) {
   page.on("pageerror", (error) => {
     if (active) diagnostics.pageErrors.push(String(error));
   });
+  page.on("request", (request) => {
+    if (active) requestStartedAt.set(request, Date.now());
+  });
   page.on("requestfailed", (request) => {
     if (!active) return;
+    const detail = {
+      url: request.url(),
+      errorText: request.failure()?.errorText ?? "unknown",
+      startedAt: requestStartedAt.get(request) ?? Date.now(),
+      failedAt: Date.now(),
+      phase,
+    };
     diagnostics.requestFailures.push(
-      `${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`,
+      `${detail.url} :: ${detail.errorText}`,
     );
+    diagnostics.requestFailureDetails.push(detail);
   });
   page.on("response", (response) => {
     if (active && response.status() >= 400) {
@@ -309,12 +345,78 @@ function diagnosticsFor(page, lifecycle = null) {
   lifecycle?.attachPage(page, diagnostics);
   return {
     diagnostics,
+    calibratePageClock: async (label) => {
+      const nodeBefore = Date.now();
+      const pageNow = await page.evaluate(() => Date.now());
+      const nodeAfter = Date.now();
+      const sample = { label, nodeBefore, nodeAfter, pageNow };
+      pageClockCalibrations.push(sample);
+      return sample;
+    },
+    beginPostReadyObservation: async () => {
+      const nodeBefore = Date.now();
+      const pageNow = await page.evaluate(() => Date.now());
+      const nodeAfter = Date.now();
+      pageClockCalibrations.push({ label: "terminal-ready", nodeBefore, nodeAfter, pageNow });
+      const setup = Object.fromEntries(Object.entries(diagnostics).map(([key, entries]) => [key, [...entries]]));
+      const reconciled = reconcilePageClockRequestFailures({
+        failures: setup.requestFailureDetails,
+        calibrations: pageClockCalibrations,
+      });
+      setup.requestFailureDetails = reconciled.failures;
+      for (const entries of Object.values(diagnostics)) entries.length = 0;
+      phase = "post-ready";
+      return {
+        boundaryAt: pageNow,
+        diagnostics: setup,
+        pageClockCalibrations: reconciled.calibrations,
+      };
+    },
     stop: () => { active = false; },
   };
 }
 
 function diagnosticsClean(diagnostics) {
   return Object.values(diagnostics).every((entries) => entries.length === 0);
+}
+
+async function sealAssetSetupBoundary(page, diagnosticControl, label) {
+  const asset = await page.evaluate(() => ({
+    state: window.__ASHFALL_ASSET_QA__?.getState?.() ?? null,
+    history: window.__ASHFALL_ASSET_QA__?.getHistory?.() ?? [],
+    requiredSprites: window.__ASHFALL_ASSET_QA__?.getRequiredPlan?.().sprites ?? [],
+    loadedSpriteKeys: window.__ASHFALL_ASSET_QA__?.getLoadedSpriteKeys?.() ?? [],
+  }));
+  if (new URL(page.url()).searchParams.get("qaHudFiniteAssets") === "1") {
+    for (const requiredKind of ["ranger", "medic"]) {
+      invariant(asset.requiredSprites.some(({ kind }) => kind === requiredKind),
+        `${label}: finite HUD resident plan omitted ${requiredKind}`);
+      invariant(asset.loadedSpriteKeys.includes(requiredKind),
+        `${label}: terminal finite HUD generation did not load ${requiredKind}`);
+    }
+  }
+  const setup = await diagnosticControl.beginPostReadyObservation();
+  const classification = classifySupersededAssetRequestFailures({
+    failures: setup.diagnostics.requestFailureDetails,
+    history: asset.history,
+    requiredSprites: asset.requiredSprites,
+    loadedSpriteKeys: asset.loadedSpriteKeys,
+    terminalState: asset.state,
+  });
+  invariant(setup.diagnostics.consoleErrors.length === 0
+    && setup.diagnostics.pageErrors.length === 0
+    && setup.diagnostics.httpErrors.length === 0,
+  `${label}: setup emitted non-cancellable diagnostics ${JSON.stringify(setup.diagnostics)}`);
+  invariant(classification.rejected.length === 0,
+    `${label}: unmatched setup request failure ${JSON.stringify(classification.rejected)}`);
+  return {
+    label,
+    boundaryAt: setup.boundaryAt,
+    asset,
+    rawDiagnostics: setup.diagnostics,
+    pageClockCalibrations: setup.pageClockCalibrations,
+    acceptedSupersededFailures: classification.accepted,
+  };
 }
 
 async function nextRender(page) {
@@ -475,6 +577,7 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
   });
   lifecycle?.event("navigation complete", { page, status: response?.status(), milestone: "navigation complete" });
   invariant(response?.ok(), `${qaMode}: navigation returned HTTP ${response?.status()}`);
+  await diagnosticControl.calibratePageClock("post-navigation");
   lifecycle?.setPhase("battle setup");
   await dismissInstallOffer(page, { timeout });
   await enterLegacyQaBattle(page, qaMode);
@@ -506,7 +609,12 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
       milestone: "battle and asset gate already ready",
     });
   }
-  return { page, ...diagnosticControl };
+  const assetSetupBoundary = await sealAssetSetupBoundary(
+    page,
+    diagnosticControl,
+    `${qaMode}/${viewport.width}x${viewport.height}`,
+  );
+  return { page, ...diagnosticControl, assetSetupBoundary };
 }
 
 async function clientPointForWorld(page, point) {
@@ -1070,7 +1178,181 @@ async function createDisabledHudState(page, label, { minimumOpacity = .72 } = {}
   return disabled;
 }
 
-async function runHudCase(browserType, engine, viewport) {
+async function runIsolatedHudState(browserType, engine, viewport, stateId) {
+  const axisName = `${engine}-${viewport.width}x${viewport.height}`;
+  const name = `${axisName}/${stateId}`;
+  const lifecycleName = `${axisName}-${stateId}`;
+  const lifecycle = await createLifecycleDiagnostics({
+    engine, viewport, caseType: "hud", name: lifecycleName,
+  });
+  let browser = null;
+  let context = null;
+  let page = null;
+  const diagnosticControls = [];
+  const result = { type: "hud", engine, viewport, status: "failed", states: [] };
+  try {
+    lifecycle.setPhase("browser launch");
+    browser = await browserType.launch({ headless: true });
+    lifecycle.attachBrowser(browser);
+    lifecycle.setPhase("context creation");
+    context = await browser.newContext({ viewport });
+    lifecycle.attachContext(context);
+    const stageNumber = ["stage1-normal", "five-units", "deployment-banner", "manual-ability-banner"]
+      .includes(stateId) ? 1 : 3;
+    const battle = await openBattlePage(context, "mission", { stageNumber }, lifecycle);
+    diagnosticControls.push(battle);
+    page = battle.page;
+    await waitForQuietBattleMessages(page, `${name}/settle`);
+
+    if (stateId === "stage1-normal") {
+      await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
+      const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
+      invariant(state.semantic.stageId.includes("shopping-street")
+        && !state.semantic.bannerText && !state.semantic.barkText
+        && state.semantic.bossKinds.length === 0,
+      `${name}: Stage 1 normal HUD fixture drifted ${JSON.stringify(state.semantic)}`);
+      result.states.push(state);
+    } else if (stateId === "five-units") {
+      const proof = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.prepareManualAbilityProof([
+        "scout", "ranger", "brawler", "medic", "gunner",
+      ]));
+      invariant(proof?.ownerIds?.length === 5, `${name}: five-unit fixture was not created`);
+      await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
+      const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
+      invariant(state.semantic.humanCount === 5,
+        `${name}: five-unit HUD state has ${state.semantic.humanCount} live humans`);
+      result.states.push(state);
+    } else if (stateId === "deployment-banner") {
+      const prepared = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.prepareCrawlerDefenseProof({
+        attackerKind: "walker", lane: 1, existingClaim: false,
+      }));
+      invariant(Number.isInteger(prepared?.attackerId), `${name}: deployment fixture is unavailable`);
+      const start = await queueAndPauseAtFirstDeploymentFrame(page, "kumaverson", name);
+      invariant(start.audit?.deploymentPlan?.checkpoint === "fully-inside",
+        `${name}: deployment banner did not freeze the production progress-0 frame`);
+      await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+      const visible = await pauseAtDeploymentCheckpoint(
+        page, start.fighter.id, "first-visible", CRAWLER_DEPLOYMENT_CHECKPOINTS[1].progress, name,
+      );
+      invariant(visible.audit?.deploymentPlan?.unitPass === "after-foreground-mask",
+        `${name}: the first visible Kumaverson frame is still hidden behind the vehicle`);
+      const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
+      invariant(state.semantic.bannerText.includes("移動拠点から出撃"),
+        `${name}: deployment banner copy is missing`);
+      result.states.push(state);
+    } else if (stateId === "manual-ability-banner") {
+      const proof = await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.prepareManualAbilityProof("medic"));
+      invariant(proof?.ownerIds?.length === 1, `${name}: manual-ability fixture is unavailable`);
+      const button = page.locator("button.manual-ability-ready:not([aria-disabled='true'])").first();
+      await button.waitFor({ state: "visible", timeout });
+      await button.click({ timeout });
+      await page.waitForFunction(
+        () => document.querySelector(".battle-banner")?.textContent?.includes("//")
+          && (window.__ASHFALL_BATTLE_QA__.getSnapshot().manualAbilityReceipts?.length ?? 0) === 1,
+        undefined, { timeout },
+      );
+      await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
+      const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
+      invariant(state.semantic.manualAbilityReceiptCount === 1
+        && state.semantic.bannerText.includes("緊急処置"),
+      `${name}: manual ability banner did not use the production activation path`);
+      result.states.push(state);
+    } else if (stateId === "objective-full") {
+      await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
+      const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
+      invariant(state.semantic.objectiveFits && state.semantic.objectiveText.startsWith("目標：")
+        && state.semantic.objectiveText.length >= 8,
+      `${name}: full objective is missing or truncated ${JSON.stringify(state.semantic)}`);
+      result.states.push(state);
+    } else if (stateId === "support-disabled") {
+      await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
+      const disabledControls = await createDisabledHudState(page, name, {
+        minimumOpacity: mobileBattleHudLayout(viewport) ? .72 : null,
+      });
+      await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
+      const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
+      invariant(state.layout.disabledUnitCount > 0 && state.layout.disabledSupportCount > 0,
+        `${name}: disabled unit/support state did not remain visible`);
+      result.states.push({ ...state, disabledControls });
+    } else {
+      const prepared = await page.evaluate(
+        () => window.__ASHFALL_BATTLE_QA__.prepareBossFoundationProof("takuya"),
+      );
+      invariant(prepared?.kind === "takuya", `${name}: TAKUYA HUD fixture is unavailable`);
+      const entry = await page.waitForFunction(
+        () => {
+          const proof = window.__ASHFALL_BATTLE_QA__.getBossFoundationProof("takuya");
+          return proof?.bossId && proof.gateEntering === true ? proof : null;
+        }, undefined, { timeout, polling: 10 },
+      ).then((handle) => handle.jsonValue());
+      invariant(Number.isInteger(entry?.bossId), `${name}: TAKUYA entrance did not start`);
+      await page.evaluate(
+        (bossId) => window.__ASHFALL_BATTLE_QA__.accelerateBossFoundationEntry(bossId), entry.bossId,
+      );
+      await page.waitForFunction(
+        () => {
+          const proof = window.__ASHFALL_BATTLE_QA__.getBossFoundationProof("takuya");
+          return proof?.combatReady === true && document.querySelector(".battle-banner")
+            && document.querySelector(".battle-barks") && document.querySelector(".boss-hud");
+        }, undefined, { timeout, polling: 10 },
+      );
+      if (stateId === "banner-bark-boss") {
+        const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
+        invariant(state.layout.banner && state.layout.bark && state.layout.boss,
+          `${name}: simultaneous banner, bark, and boss HUD state was not rendered`);
+        result.states.push(state);
+      } else {
+        await waitForQuietBattleMessages(page, name);
+        await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
+        const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
+        invariant(state.layout.boss && state.semantic.bossKinds.includes("takuya")
+          && !state.semantic.bannerText && !state.semantic.barkText,
+        `${name}: clean Stage 3 boss HUD state was not retained`);
+        result.states.push(state);
+      }
+    }
+
+    invariant(result.states.length === 1 && result.states[0].id === stateId,
+      `${name}: isolated HUD state evidence is incomplete`);
+    result.status = "passed";
+  } catch (error) {
+    result.error = String(error);
+    if (page && !page.isClosed()) {
+      try {
+        result.failureScreenshot = await screenshot(page, `${lifecycleName}-hud-failed.png`);
+      } catch {
+        // Preserve the original failure.
+      }
+    }
+  } finally {
+    for (const control of diagnosticControls) control.stop();
+    result.diagnostics = {
+      consoleErrors: diagnosticControls.flatMap(({ diagnostics }) => diagnostics.consoleErrors),
+      pageErrors: diagnosticControls.flatMap(({ diagnostics }) => diagnostics.pageErrors),
+      requestFailures: diagnosticControls.flatMap(({ diagnostics }) => diagnostics.requestFailures),
+      httpErrors: diagnosticControls.flatMap(({ diagnostics }) => diagnostics.httpErrors),
+    };
+    result.assetSetupBoundaries = diagnosticControls.map(({ assetSetupBoundary }) => assetSetupBoundary);
+    if (result.status === "passed" && !diagnosticsClean(result.diagnostics)) {
+      result.status = "failed";
+      result.error = `Browser diagnostics were not clean: ${JSON.stringify(result.diagnostics)}`;
+    }
+    lifecycle.event("case complete", { status: result.status, error: result.error ?? null });
+    if (context) {
+      lifecycle.markContextCloseBegin(context);
+      await context.close().catch(() => {});
+    }
+    if (browser) {
+      lifecycle.markBrowserCloseBegin();
+      await browser.close().catch(() => {});
+    }
+    await lifecycle.flush();
+    result.lifecycleLog = lifecycle.file;
+  }
+  return result;
+}
+
+async function runFullHudCase(browserType, engine, viewport) {
   const name = `${engine}-${viewport.width}x${viewport.height}`;
   const lifecycle = await createLifecycleDiagnostics({
     engine,
@@ -1260,16 +1542,7 @@ async function runHudCase(browserType, engine, viewport) {
     `${name}: clean Stage 3 boss HUD state was not retained`);
     result.states.push(boss);
 
-    const expectedStateIds = [
-      "stage1-normal",
-      "five-units",
-      "deployment-banner",
-      "manual-ability-banner",
-      "objective-full",
-      "support-disabled",
-      "banner-bark-boss",
-      "stage3-boss",
-    ];
+    const expectedStateIds = canonicalHudStates;
     invariant(result.states.length === expectedStateIds.length
       && result.states.every((state, index) => state.id === expectedStateIds[index]),
     `${name}: eight-state HUD matrix is incomplete`);
@@ -1293,6 +1566,7 @@ async function runHudCase(browserType, engine, viewport) {
       requestFailures: diagnosticControls.flatMap(({ diagnostics }) => diagnostics.requestFailures),
       httpErrors: diagnosticControls.flatMap(({ diagnostics }) => diagnostics.httpErrors),
     };
+    result.assetSetupBoundaries = diagnosticControls.map(({ assetSetupBoundary }) => assetSetupBoundary);
     if (result.status === "passed" && !diagnosticsClean(result.diagnostics)) {
       result.status = "failed";
       result.error = `Browser diagnostics were not clean: ${JSON.stringify(result.diagnostics)}`;
@@ -1820,7 +2094,15 @@ for (const engine of engines) {
   const browserType = browserTypes[engine];
   invariant(browserType, `Unsupported browser engine: ${engine}`);
   for (const viewport of viewports) {
-    if (caseTypes.includes("hud")) results.push(await runHudCase(browserType, engine, viewport));
+    if (caseTypes.includes("hud")) {
+      if (hudStateFilterActive) {
+        for (const stateId of hudStates) {
+          results.push(await runIsolatedHudState(browserType, engine, viewport, stateId));
+        }
+      } else {
+        results.push(await runFullHudCase(browserType, engine, viewport));
+      }
+    }
     if (caseTypes.includes("crawler-equipment") || caseTypes.includes("deployment")) {
       const lifecycleByCase = new Map();
       for (const caseType of ["crawler-equipment", "deployment"]) {
@@ -1869,12 +2151,15 @@ for (const engine of engines) {
 
 const buildIdentityAtEnd = await productionBuildIdentity();
 const buildIdentityStable = buildIdentityAtStart.combinedSha256 === buildIdentityAtEnd.combinedSha256;
-const expectedCaseCount = engines.length * viewports.length * caseTypes.length;
+const casesPerAxis = caseTypes.filter((caseType) => caseType !== "hud").length
+  + (caseTypes.includes("hud") ? (hudStateFilterActive ? hudStates.length : 1) : 0);
+const expectedCaseCount = engines.length * viewports.length * casesPerAxis;
 const canonicalAxes = engines.length === canonicalEngines.length
   && canonicalEngines.every((engine) => engines.includes(engine))
   && viewportKeys.length === canonicalViewports.length
   && canonicalViewports.every(({ width, height }) => viewportKeys.includes(`${width}x${height}`))
   && deploymentUnits.length === canonicalDeploymentUnits.length
+  && !hudStateFilterActive
   && caseTypes.length === canonicalCaseTypes.length
   && canonicalCaseTypes.every((caseType) => caseTypes.includes(caseType));
 const summary = {
@@ -1885,6 +2170,8 @@ const summary = {
   viewports,
   deploymentUnits,
   caseTypes,
+  hudStates: caseTypes.includes("hud") ? hudStates : [],
+  hudStateFilterActive,
   buildFreshness: {
     sentinel: relativeEvidencePath(buildSentinel),
     buildMtime: new Date(buildMtimeMs).toISOString(),

@@ -302,6 +302,7 @@ import { allyCorpseVisualCue } from "./corpseVisuals.js";
 import { resolveLocalQaMode, resolveLocalQaSafeArea, resolveLocalQaScenario } from "./localQa.js";
 import { mobileBattleHudLayout, mobileBattleHudUnitSlots } from "./battleHudLayout.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
+import { requiredBattleAssetPlan } from "./battleAssetPlan.js";
 import {
   COMPACT_BATTLE_SPRITE_SCALE,
   FORMATION_CARD_ART,
@@ -309,7 +310,6 @@ import {
   fitSpriteBattleDisplaySize,
   spriteBattleDisplaySizeFor,
   spriteFrameFor,
-  spriteKinds,
   spriteSheetPath,
 } from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST, stageObjectsFor } from "./stageObjectManifest.js";
@@ -323,7 +323,6 @@ import {
   stageGeometryFor,
 } from "./stageGeometry.js";
 import { stageResultFacts } from "./stageResultFacts.js";
-import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import {
   V099_CRAWLER_RUNTIME_PROFILE,
   crawlerAirstrikeSpritePhase,
@@ -376,12 +375,12 @@ import {
 import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
 import { publicDisplayText, PUBLIC_CRAWLER_LABEL } from "./publicDisplayNames.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
-import { loadImageWithTimeout } from "./boundedImageLoader.js";
 import {
-  OPTIONAL_ASSET_LOAD_DEADLINE_MS,
-  runAssetLoadSession,
-  selectRetryAssetJobs,
-} from "./assetLoadSession.js";
+  REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
+  REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+  loadImageWithTimeout,
+} from "./boundedImageLoader.js";
+import { runAssetLoadSession, selectRetryAssetJobs } from "./assetLoadSession.js";
 import {
   AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
@@ -3762,16 +3761,26 @@ type FighterRenderAudit = {
   poseOpacity: number | null;
   effectiveOpacity: number | null;
   clipRect: { x: number; y: number; w: number; h: number } | null;
+  direction?: "left" | "right" | null;
+  sourceRow?: number | null;
+  frameFlipX?: boolean | null;
+  renderWidth?: number | null;
+  renderHeight?: number | null;
+  groundAnchor?: number | null;
+  actualXDelta?: number;
   deploymentPlan?: ReturnType<typeof crawlerDeploymentRenderPlan>;
 };
 type FighterDrawOptions = {
   forceOpaque?: boolean;
   includeGroundShadow?: boolean;
   recordAudit?: boolean;
+  allowDiagnosticFallback?: boolean;
 };
 
 const fighterRenderAudit = new WeakMap<Fighter, FighterRenderAudit>();
 const fighterRenderAuditHistory = new Map<number, FighterRenderAudit[]>();
+const fighterActualXDeltaAudit = new Map<number, number>();
+const corpseRenderAuditHistory = new Map<number, FighterRenderAudit[]>();
 const fighterRenderAuditEnabled = typeof window !== "undefined"
   && ["localhost", "127.0.0.1"].includes(window.location.hostname);
 let fighterRenderSequence = 0;
@@ -3782,6 +3791,13 @@ function recordFighterRenderAudit(fighter: Fighter, audit: FighterRenderAudit) {
   history.push(audit);
   if (history.length > 128) history.splice(0, history.length - 128);
   fighterRenderAuditHistory.set(fighter.id, history);
+}
+
+function recordCorpseRenderAudit(corpseId: number, audit: FighterRenderAudit) {
+  const history = corpseRenderAuditHistory.get(corpseId) ?? [];
+  history.push(audit);
+  if (history.length > 128) history.splice(0, history.length - 128);
+  corpseRenderAuditHistory.set(corpseId, history);
 }
 
 function crawlerDeploymentPlanForFighter(fighter: Fighter) {
@@ -3813,6 +3829,7 @@ function drawSpriteFighter(
     forceOpaque = false,
     includeGroundShadow = true,
     recordAudit = true,
+    allowDiagnosticFallback = false,
   } = options;
   const mayoFeral = f.kind === "mayo-chan"
     && (f.manualAbility?.phase === "feral" || f.mayoRetreat?.reason === "ability");
@@ -3833,10 +3850,19 @@ function drawSpriteFighter(
         poseOpacity: null,
         effectiveOpacity: null,
         clipRect: null,
+        direction: null,
+        sourceRow: null,
+        frameFlipX: null,
+        renderWidth: null,
+        renderHeight: null,
+        groundAnchor: null,
+        actualXDelta: fighterActualXDeltaAudit.get(f.id) ?? 0,
       });
     }
-    drawDiagnosticRoleFighter(ctx, f);
-    drawDiagnosticStationEnemy(ctx, f);
+    if (allowDiagnosticFallback) {
+      drawDiagnosticRoleFighter(ctx, f);
+      drawDiagnosticStationEnemy(ctx, f);
+    }
     return;
   }
   const moving = f.mayoRetreat?.phase === "run"
@@ -4021,6 +4047,13 @@ function drawSpriteFighter(
       poseOpacity: pose.opacity,
       effectiveOpacity: ctx.globalAlpha * effectivePoseOpacity,
       clipRect: null,
+      direction,
+      sourceRow: frame.sourceRect.y,
+      frameFlipX: frame.flipX,
+      renderWidth: size.w,
+      renderHeight: size.h,
+      groundAnchor: animationSample.groundAnchor,
+      actualXDelta: fighterActualXDeltaAudit.get(f.id) ?? 0,
       deploymentPlan,
     });
   }
@@ -4951,7 +4984,9 @@ function drawStationHazard(ctx: CanvasRenderingContext2D, hazard: StationHazard,
   ctx.restore();
 }
 
-function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap) {
+let stationMissionDiagnosticFallbackDrawCount = 0;
+
+function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap, allowDiagnosticFallback = false) {
   if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
     const x = escortCartX(g.stageMission, g.definition.missionConfig);
     const y = activeLaneCenters[1] + 13;
@@ -5014,7 +5049,8 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
         ctx.drawImage(powerSprite, crop.x, crop.y, crop.w, crop.h, -23, -92, 46, 94);
-      } else {
+      } else if (allowDiagnosticFallback) {
+        stationMissionDiagnosticFallbackDrawCount += 1;
         ctx.fillStyle = active ? "#596d58" : "#3b4240";
         ctx.fillRect(-13, -33, 26, 35);
       }
@@ -5045,7 +5081,8 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
         ctx.drawImage(controllerSprite, 1280, 420, 270, 390, -23, -54, 46, 66);
-      } else {
+      } else if (allowDiagnosticFallback) {
+        stationMissionDiagnosticFallbackDrawCount += 1;
         ctx.fillStyle = container.contained ? "#4b6758" : "#635f50";
         ctx.beginPath(); ctx.roundRect(-22, -35, 44, 39, 5); ctx.fill();
         ctx.fillStyle = "#181b1a"; ctx.fillRect(-14, -28, 28, 15);
@@ -5091,6 +5128,89 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
     ctx.fill();
     ctx.restore();
   }
+}
+
+function stationMissionFinalCanvasAudit(
+  finalCanvas: HTMLCanvasElement,
+  finalTransform: { scale: number; offsetX: number; offsetY: number },
+  g: Game,
+  stageObjects: SpriteMap,
+) {
+  if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+    return { applicable: false, pass: false, reason: "not-sequential-seal" };
+  }
+  const source = stageObjects["station-tunnel-mission-art-source"];
+  if (!source?.complete || !source.naturalWidth) {
+    return { applicable: true, pass: false, reason: "authored-source-unavailable", authoredPixelCount: 0, finalPixelMatchCount: 0 };
+  }
+  const expected = document.createElement("canvas");
+  expected.width = W;
+  expected.height = H;
+  const expectedContext = expected.getContext("2d", { willReadFrequently: true });
+  if (!expectedContext) throw new Error("Station mission expected audit canvas unavailable");
+  drawStationMission(expectedContext, g, stageObjects, false);
+  const expectedRgba = expectedContext.getImageData(0, 0, W, H).data;
+  const finalAudit = document.createElement("canvas");
+  finalAudit.width = W;
+  finalAudit.height = H;
+  const finalContext = finalAudit.getContext("2d", { willReadFrequently: true });
+  if (!finalContext) throw new Error("Station mission final-canvas audit unavailable");
+  const dpr = Math.max(1, Number(finalCanvas.dataset.dpr) || 1);
+  finalContext.imageSmoothingEnabled = true;
+  finalContext.imageSmoothingQuality = "high";
+  finalContext.drawImage(
+    finalCanvas,
+    finalTransform.offsetX * dpr,
+    finalTransform.offsetY * dpr,
+    W * finalTransform.scale * dpr,
+    H * finalTransform.scale * dpr,
+    0,
+    0,
+    W,
+    H,
+  );
+  const finalRgba = finalContext.getImageData(0, 0, W, H).data;
+  let authoredPixelCount = 0;
+  let finalPixelMatchCount = 0;
+  let finalPixelNearMatchCount = 0;
+  let authoredStateSignature = 2166136261;
+  let finalPaintedCount = 0;
+  for (let index = 0; index < expectedRgba.length; index += 4) {
+    if (expectedRgba[index + 3] < 245) continue;
+    authoredPixelCount += 1;
+    authoredStateSignature ^= expectedRgba[index]; authoredStateSignature = Math.imul(authoredStateSignature, 16777619);
+    authoredStateSignature ^= expectedRgba[index + 1]; authoredStateSignature = Math.imul(authoredStateSignature, 16777619);
+    authoredStateSignature ^= expectedRgba[index + 2]; authoredStateSignature = Math.imul(authoredStateSignature, 16777619);
+    if (finalRgba[index + 3] > 0) finalPaintedCount += 1;
+    const delta = Math.abs(expectedRgba[index] - finalRgba[index])
+      + Math.abs(expectedRgba[index + 1] - finalRgba[index + 1])
+      + Math.abs(expectedRgba[index + 2] - finalRgba[index + 2]);
+    if (delta <= 18) finalPixelMatchCount += 1;
+    if (delta <= 60) finalPixelNearMatchCount += 1;
+  }
+  const finalPaintRatio = authoredPixelCount > 0 ? finalPaintedCount / authoredPixelCount : 0;
+  const finalMatchRatio = authoredPixelCount > 0 ? finalPixelMatchCount / authoredPixelCount : 0;
+  const finalNearMatchRatio = authoredPixelCount > 0 ? finalPixelNearMatchCount / authoredPixelCount : 0;
+  return {
+    applicable: true,
+    // The final canvas is sampled after presentation overlays and the mission
+    // material itself contains translucent light.  A bounded RGB tolerance is
+    // therefore required, while the opaque-pixel coverage remains strict.
+    pass: authoredPixelCount > 500 && finalPaintRatio >= .99 && finalNearMatchRatio >= .72,
+    reason: null,
+    source: { width: source.naturalWidth, height: source.naturalHeight },
+    authoredPixelCount,
+    finalPaintedCount,
+    finalPixelMatchCount,
+    finalPaintRatio,
+    finalMatchRatio,
+    finalNearMatchRatio,
+    authoredStateSignature: (authoredStateSignature >>> 0).toString(16).padStart(8, "0"),
+    missionState: {
+      powerActivated: g.stageMission.powerActivated ?? 0,
+      researchContainerExposed: g.researchContainer?.exposed === true,
+    },
+  };
 }
 
 function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
@@ -5667,7 +5787,7 @@ function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g:
   ctx.restore();
 }
 
-function drawBattlefieldSupply(ctx: CanvasRenderingContext2D, object: BattlefieldObject, sprites: SpriteMap) {
+function drawBattlefieldSupply(ctx: CanvasRenderingContext2D, object: BattlefieldObject, sprites: SpriteMap, allowDiagnosticFallback = false) {
   const drumPose = object.kind === "drum"
     ? drumArrivalPose({
       phase: object.phase,
@@ -5724,17 +5844,17 @@ function drawBattlefieldSupply(ctx: CanvasRenderingContext2D, object: Battlefiel
   } else if (object.kind === "medical" && supplySprite?.complete && supplySprite.naturalWidth) {
     ctx.filter = hpRatio <= .3 ? "saturate(.52) brightness(.68)" : hpRatio <= .62 ? "brightness(.84)" : "none";
     ctx.drawImage(supplySprite, -39, -62, 78, 66); ctx.filter = "none";
-  } else if (object.kind === "drum") {
+  } else if (allowDiagnosticFallback && object.kind === "drum") {
     ctx.fillStyle = hpRatio <= .3 ? "#512b25" : "#783e2c";
     ctx.fillRect(-15, -36, 30, 42);
     ctx.fillStyle = "#c17642"; ctx.fillRect(-17, -31, 34, 5); ctx.fillRect(-17, -8, 34, 5);
     ctx.fillStyle = "#e7b94e"; ctx.font = "900 17px monospace"; ctx.textAlign = "center"; ctx.fillText("!", 0, -14);
-  } else if (object.kind === "medical") {
+  } else if (allowDiagnosticFallback && object.kind === "medical") {
     ctx.fillStyle = hpRatio <= .3 ? "#6f765f" : "#d0c6a5";
     ctx.fillRect(-23, -29, 46, 34);
     ctx.fillStyle = "#405f4f"; ctx.fillRect(-25, -24, 50, 5); ctx.fillRect(-25, -3, 50, 5);
     ctx.fillStyle = "#3fa56f"; ctx.fillRect(-4, -22, 8, 20); ctx.fillRect(-11, -16, 22, 8);
-  } else {
+  } else if (allowDiagnosticFallback) {
     ctx.fillStyle = "#344b48";
     ctx.beginPath(); ctx.moveTo(-39,-31); ctx.lineTo(-29,-44); ctx.lineTo(29,-44); ctx.lineTo(39,-31); ctx.lineTo(36,5); ctx.lineTo(-36,5); ctx.closePath(); ctx.fill();
   }
@@ -5902,6 +6022,7 @@ function drawCrawler(
   g: Game,
   sprites: SpriteMap,
   graphicsProfile: GraphicsProfile,
+  allowDiagnosticFallback = false,
 ) {
   const crawlerClosedSprite = sprites.crawlerHostClosed ?? sprites.crawlerClosed ?? sprites.crawler;
   const crawlerOpenSprite = sprites.crawlerDeploymentBase ?? crawlerClosedSprite;
@@ -5989,7 +6110,7 @@ function drawCrawler(
       ctx.globalAlpha = crawlerOpacity;
       drawCrawlerAsset(ctx, crawlerOpenSprite, crawler);
     }
-  } else {
+  } else if (allowDiagnosticFallback) {
     ctx.fillStyle = "#5d3329";
     ctx.fillRect(crawler.x + 18, crawler.y + 45, crawler.width - 36, crawler.height - 50);
   }
@@ -6831,6 +6952,7 @@ function drawWorld(
   staticBackgroundCache: StaticBattlefieldCache,
   graphicsProfile: GraphicsProfile,
   debugGeometry = false,
+  allowDiagnosticFallback = false,
 ) {
   const shakeAmplitude = cameraShakeAmplitude(g.shake);
   const sx = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
@@ -6841,7 +6963,7 @@ function drawWorld(
   ctx.restore();
   if (background?.complete && background.naturalWidth) {
     drawCachedStageBackground(ctx, g, background, staticBackgroundCache, graphicsProfile);
-  } else drawDiagnosticStationBackground(ctx, g);
+  } else if (allowDiagnosticFallback) drawDiagnosticStationBackground(ctx, g);
   ctx.save();
   ctx.translate(sx, sy);
   const grade = ctx.createLinearGradient(0, 0, W, 0);
@@ -6854,7 +6976,7 @@ function drawWorld(
   // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.
 
   // The Crawler stays behind combatants; only its doorway masks a unit during deployment.
-  drawCrawler(ctx, g, sprites, graphicsProfile);
+  drawCrawler(ctx, g, sprites, graphicsProfile, allowDiagnosticFallback);
 
   // A single shared-HP infected checkpoint closes all three routes.
   if (g.definition.enemyBaseMode !== "scenery") {
@@ -6866,7 +6988,7 @@ function drawWorld(
   for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect);
   for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
-  drawStationMission(ctx, g, stageObjects);
+  drawStationMission(ctx, g, stageObjects, allowDiagnosticFallback);
   drawEmergencySupport(ctx, g);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
@@ -6883,6 +7005,28 @@ function drawWorld(
       const width = authoredSize.w * compactScale * depthScale;
       const height = authoredSize.h * compactScale * depthScale;
       const authoredDeathPose = frame.derivedFrom !== "hit";
+      if (fighterRenderAuditEnabled) {
+        recordCorpseRenderAudit(corpse.id, {
+          drawCount: (corpseRenderAuditHistory.get(corpse.id)?.at(-1)?.drawCount ?? 0) + 1,
+          renderSequence: ++fighterRenderSequence,
+          assetReady: true,
+          x: corpse.x,
+          y: corpse.y,
+          spriteState: "death",
+          requestedState: "death",
+          resolvedState: frame.derivedFrom ?? "death",
+          poseOpacity: ctx.globalAlpha,
+          effectiveOpacity: ctx.globalAlpha,
+          clipRect: null,
+          direction: corpse.side === "human" ? "right" : "left",
+          sourceRow: frame.sourceRect.y,
+          frameFlipX: frame.flipX,
+          renderWidth: width,
+          renderHeight: height,
+          groundAnchor: 1,
+          actualXDelta: 0,
+        });
+      }
       const timing = ENEMY_DEATH_CONFIG.timings[corpse.deathClass ?? "normal"];
       const dyingProgress = corpse.side === "zombie"
         ? corpse.state === "dying" ? Math.min(1, corpse.phaseElapsed / timing.dyingSeconds) : 1
@@ -7016,11 +7160,11 @@ function drawWorld(
       drawCrawlerForegroundMask(ctx, g, sprites, graphicsProfile);
       continue;
     }
-    if (renderable.type === "object") { drawBattlefieldSupply(ctx, renderable.object, sprites); continue; }
+    if (renderable.type === "object") { drawBattlefieldSupply(ctx, renderable.object, sprites, allowDiagnosticFallback); continue; }
     const f = renderable.fighter;
     if (f.combatReady) drawBossTelegraph(ctx, f, g);
     if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g);
-    drawSpriteFighter(ctx, f, sprites);
+    drawSpriteFighter(ctx, f, sprites, { allowDiagnosticFallback });
     if (f.combatReady) drawMotherCombatVfx(ctx, f, g);
     if (f.combatReady) drawAnomalyBossCombatVfx(ctx, f, g);
     if (f.combatReady) drawKuromeCombatVfx(ctx, f, g);
@@ -7259,6 +7403,10 @@ export function AshfallGame() {
   const spriteRefs = useRef<SpriteMap>({});
   const stageObjectRefs = useRef<SpriteMap>({});
   const enemyBaseSpriteRef = useRef<HTMLImageElement | null>(null);
+  // Only images that completed the required battle decode contract may be
+  // reused by a later selection generation. `naturalWidth` proves response
+  // load, but does not prove that the browser can decode the image.
+  const decodedBattleImagesRef = useRef(new WeakSet<HTMLImageElement>());
   const gameRef = useRef<Game>(initialGame("pod", INITIAL_STAGE_ID, ["brawler", "scout", "ranger", "medic"]));
   const productionMixerRef = useRef<ReturnType<typeof createAudioMixer> | null>(null);
   const battleAudioRuntimeRef = useRef(createBattleAudioRuntime());
@@ -7307,6 +7455,7 @@ export function AshfallGame() {
   const assetRetryPathsRef = useRef<Set<string> | null>(null);
   const assetPendingPathsRef = useRef(new Set<string>());
   const assetFailedPathsRef = useRef(new Set<string>());
+  const assetQaFaultClearedRef = useRef(false);
   const assetSessionControllerRef = useRef<AbortController | null>(null);
   const assetSessionHistoryRef = useRef<Array<Record<string, unknown>>>([]);
   const assetSessionRestartCountRef = useRef(0);
@@ -10667,6 +10816,213 @@ export function AshfallGame() {
             : null,
         };
       },
+      prepareEnemyFacingRuntimeProof: ({
+        kind,
+        phase,
+      }: {
+        kind: EnemyKind;
+        phase: "move" | "attack" | "hit" | "die";
+      }) => {
+        const g = gameRef.current;
+        fighterRenderAuditHistory.clear();
+        fighterActualXDeltaAudit.clear();
+        corpseRenderAuditHistory.clear();
+        g.fighters = [];
+        g.corpses = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = g.definition.timeline.length;
+        g.deployQueue = [];
+        clearTransientRenderObjects(g);
+        g.running = true;
+        g.paused = false;
+        g.over = false;
+        g.won = false;
+        g.baseHp = g.baseMaxHp;
+        g.barricadeHp = g.barricadeMaxHp;
+        const lane: Lane = 1;
+        const enemy = spawnEnemy(g, kind, lane);
+        const deployed = spawnHuman(g, "guardian", false);
+        const human = deployed
+          ? g.fighters.find((candidate) => candidate.side === "human" && candidate.kind === "guardian")
+          : null;
+        if (!enemy || !human) throw new Error(`Enemy facing runtime proof unavailable: ${kind}/${phase}`);
+        enemy.x = 620;
+        enemy.y = activeLaneCenters[lane];
+        enemy.lane = lane;
+        enemy.anchorLane = lane;
+        enemy.combatReady = true;
+        enemy.gateEntering = false;
+        enemy.spawnGrace = 0;
+        enemy.targetId = human.id;
+        enemy.targetObjectId = null;
+        enemy.retargetIn = 99;
+        enemy.abilityCooldown = 999;
+        enemy.stationAbility = createStationAbilityRuntime(kind);
+        human.y = activeLaneCenters[lane];
+        human.lane = lane;
+        human.anchorLane = lane;
+        human.combatReady = true;
+        human.gateEntering = false;
+        human.spawnGrace = 0;
+        human.speed = 0;
+        human.laneSpeed = 0;
+        human.damage = 0;
+        human.cooldown = 99;
+        human.targetId = enemy.id;
+        human.retargetIn = 99;
+        if (phase === "move") {
+          human.x = 250;
+          enemy.speed = Math.max(70, enemy.speed);
+          enemy.range = Math.min(enemy.range, 48);
+          enemy.cooldown = 99;
+        } else if (phase === "attack") {
+          human.x = enemy.x - Math.max(12, Math.min(40, enemy.range * .45));
+          enemy.speed = 0;
+          enemy.laneSpeed = 0;
+          enemy.cooldown = 0;
+          enemy.attackWindup = 0;
+        } else {
+          human.x = 430;
+          enemy.speed = 0;
+          enemy.laneSpeed = 0;
+          enemy.cooldown = 99;
+          enemy.attackFacingDirection = "left";
+          enemy.attackWindupTargetId = human.id;
+          enemy.attackWindup = .3;
+          enemy.attack = .3;
+          const lethal = phase === "die";
+          g.pendingWeaponHits.push({
+            eventKind: "impact",
+            targetKind: "fighter",
+            targetSide: "zombie",
+            damageMode: "direct",
+            sourceId: human.id,
+            targetId: enemy.id,
+            targetX: enemy.x,
+            targetY: enemy.y - 28,
+            originX: human.x,
+            originY: human.y - 24,
+            remainingSeconds: .08,
+            damage: lethal ? enemy.maxHp + 1 : Math.max(1, Math.min(5, enemy.maxHp - 1)),
+            weapon: "guardian",
+            shotIndex: 0,
+            recoil: 0,
+            casing: false,
+            hitStopSeconds: 0,
+            impactDelaySeconds: .08,
+            applyDamage: true,
+          });
+        }
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        setStarted(true);
+        setPaused(false);
+        setEnd(null);
+        setScreen("battle");
+        return {
+          fighterId: enemy.id,
+          targetId: human.id,
+          kind: enemy.kind,
+          phase,
+          initial: { enemyX: enemy.x, targetX: human.x, enemyHp: enemy.hp },
+        };
+      },
+      ensureEnemyFacingProofAsset: async (kind: EnemyKind) => {
+        const existing = spriteRefs.current[kind];
+        if (existing?.naturalWidth) {
+          return { kind, path: spriteSheetPath(kind), width: existing.naturalWidth, height: existing.naturalHeight, reused: true };
+        }
+        const path = spriteSheetPath(kind);
+        let loaded: HTMLImageElement | null = null;
+        await loadImageWithTimeout({
+          src: path,
+          requireDecode: true,
+          onReady: (image: HTMLImageElement) => {
+            spriteRefs.current[kind] = image;
+            loaded = image;
+          },
+        });
+        if (!loaded?.naturalWidth) throw new Error(`Enemy facing proof asset did not decode: ${kind}`);
+        return { kind, path, width: loaded.naturalWidth, height: loaded.naturalHeight, reused: false };
+      },
+      ensureUnitRenderProofAsset: async (kind: UnitKind) => {
+        const path = spriteSheetPath(kind);
+        const existing = spriteRefs.current[kind];
+        if (existing?.naturalWidth && decodedBattleImagesRef.current.has(existing)) {
+          return { kind, path, width: existing.naturalWidth, height: existing.naturalHeight, reused: true };
+        }
+        let loaded: HTMLImageElement | null = null;
+        await loadImageWithTimeout({
+          src: path,
+          requireDecode: true,
+          decodeAttempts: REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
+          decodeTimeoutMs: REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+          onReady: (image: HTMLImageElement) => {
+            decodedBattleImagesRef.current.add(image);
+            spriteRefs.current[kind] = image;
+            loaded = image;
+          },
+        });
+        if (!loaded?.naturalWidth) throw new Error(`Unit render proof asset did not decode: ${kind}`);
+        return { kind, path, width: loaded.naturalWidth, height: loaded.naturalHeight, reused: false };
+      },
+      getEnemyFacingRuntimeAudit: (fighterId: number) => {
+        const g = gameRef.current;
+        const fighter = g.fighters.find((candidate) => candidate.id === fighterId) ?? null;
+        const corpse = g.corpses.find((candidate) => candidate.id === fighterId) ?? null;
+        const target = fighter?.targetId === null || fighter?.targetId === undefined
+          ? null
+          : g.fighters.find((candidate) => candidate.id === fighter.targetId) ?? null;
+        return {
+          fighter: fighter ? {
+            id: fighter.id,
+            kind: fighter.kind,
+            x: fighter.x,
+            y: fighter.y,
+            hp: fighter.hp,
+            maxHp: fighter.maxHp,
+            targetId: fighter.targetId,
+            targetX: target?.x ?? null,
+            attack: fighter.attack,
+            attackWindup: fighter.attackWindup,
+            attackSequence: fighter.attackSequence,
+            flash: fighter.flash,
+            animationDirection: fighter.animationPresentation.direction,
+            animationState: fighter.animationPresentation.state,
+            actualXDelta: fighterActualXDeltaAudit.get(fighter.id) ?? 0,
+          } : null,
+          corpse: corpse ? { ...corpse } : null,
+          renderHistory: (fighterRenderAuditHistory.get(fighterId) ?? []).map((audit) => ({ ...audit })),
+          corpseRenderHistory: (corpseRenderAuditHistory.get(fighterId) ?? []).map((audit) => ({ ...audit })),
+        };
+      },
+      getStationMissionFinalCanvasAudit: () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return { applicable: false, pass: false, reason: "battle-canvas-unavailable" };
+        return stationMissionFinalCanvasAudit(
+          canvas,
+          canvasTransformRef.current,
+          gameRef.current,
+          stageObjectRefs.current,
+        );
+      },
+      setStationMissionPixelAuditState: (state: "start" | "power-1" | "power-3") => {
+        const g = gameRef.current;
+        if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+          throw new Error("station pixel audit requires the sequential-seal battle");
+        }
+        const powerActivated = state === "start" ? 0 : state === "power-1" ? 1 : 3;
+        g.stageMission = {
+          ...g.stageMission,
+          powerActivated,
+          powerHold: 0,
+          researchContainerExposed: powerActivated >= 3,
+        };
+        if (g.researchContainer) {
+          g.researchContainer = { ...g.researchContainer, exposed: powerActivated >= 3 };
+        }
+        return { state, powerActivated };
+      },
       prepareCrawlerBarrageRuntimeProof: () => {
         const g = gameRef.current;
         g.fighters = [];
@@ -11582,7 +11938,7 @@ export function AshfallGame() {
   useEffect(() => {
     let cancelled = false;
     const sessionStartedAt = Date.now();
-    let activePhase = "critical";
+    const activePhase = "critical";
     let activePhaseTerminal = false;
     let latestProgress = { completed: 0, total: 0, pending: 0, pendingPaths: [] as string[] };
     const generation = assetLoadGenerationRef.current + 1;
@@ -11616,8 +11972,32 @@ export function AshfallGame() {
       loadImageWithTimeout({
         src,
         signal: controller.signal,
+        requireDecode: true,
+        decodeAttempts: REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
+        decodeTimeoutMs: REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
+        ...(() => {
+          const parameters = new URLSearchParams(window.location.search);
+          const localQaHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+          if (!localQaHost || !(qaMode || qaScenario || parameters.get("qa") === "battle")) return {};
+          const requested = Number(parameters.get("assetTimeout"));
+          const faultPath = assetQaFaultClearedRef.current ? null : parameters.get("assetFaultPath");
+          const faultMode = assetQaFaultClearedRef.current ? null : parameters.get("assetFaultMode");
+          const targetedFaultPath = faultPath === src;
+          const targetedTransportFault = targetedFaultPath && ["delay", "404", "corrupt"].includes(faultMode ?? "");
+          return {
+            ...(targetedFaultPath && Number.isFinite(requested) && requested >= 100
+              ? { loadTimeoutMs: requested, decodeTimeoutMs: requested }
+              : {}),
+            ...(targetedTransportFault
+              ? { faultMode }
+              : {}),
+          };
+        })(),
         onReady: (image: HTMLImageElement) => {
-          if (current()) onReady(image);
+          if (current()) {
+            decodedBattleImagesRef.current.add(image);
+            onReady(image);
+          }
         },
       })
     );
@@ -11626,9 +12006,14 @@ export function AshfallGame() {
       src: string,
       onReady: (image: HTMLImageElement) => void,
     ) => {
-      if (current?.naturalWidth) {
-        onReady(current);
-        return Promise.resolve();
+      if (current?.naturalWidth && decodedBattleImagesRef.current.has(current)) {
+        const parameters = new URLSearchParams(window.location.search);
+        const localFault = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+          && parameters.get("assetFaultPath") === src;
+        if (!localFault) {
+          onReady(current);
+          return Promise.resolve();
+        }
       }
       return loadImage(src, onReady);
     };
@@ -11656,34 +12041,37 @@ export function AshfallGame() {
       : Array.isArray(CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds)
         ? CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId].enemyKinds as UnitKind[]
         : [];
-    // QA galleries intentionally exercise every atlas. Production only retains
-    // the selected formation and the current stage's enemy roster, preventing
-    // all 23 high-resolution atlases from occupying mobile memory at once.
-    // `turned` can be created from any fallen ally, independent of the stage's
-    // authored enemy roster, so its atlas must remain available in production.
-    const requiredSpriteKinds = qaMode || qaScenario
-      ? [...spriteKinds]
-      : [...new Set([...selectedFormationKinds, ...selectedVariantKinds, ...stageEnemyKinds, "turned" as UnitKind])];
-    const persistentPaths: Record<string, string> = {
-      crawlerHostClosed: V099_CRAWLER_RUNTIME_PROFILE.equipmentHost.closed.path,
-      crawlerDeploymentBase: V099_CRAWLER_RUNTIME_PROFILE.deployment.baseInterior.path,
-      crawlerForegroundMask: V099_CRAWLER_RUNTIME_PROFILE.deployment.foregroundMask.path,
-      crawlerBarrageEquipment: V099_CRAWLER_RUNTIME_PROFILE.equipment.barrage.sheet.path,
-      crawlerAirstrikeEquipment: V099_CRAWLER_RUNTIME_PROFILE.equipment.airstrike.sheet.path,
-      pod: "/tactical-drop-pod-v1.png",
-      drum: "/explosive-drum-v1.png", medical: "/medical-supply-station-v1.png",
-    };
-    const stageObjectAssets = [
-      ...(STAGE_OBJECT_MANIFEST[activeBattlefieldStageId]?.objects ?? []),
-      ...(!selectedOutbreakMissionId
-        && CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.missionType === STATION_MISSION_TYPES.ESCORT
-        && activeBattlefieldStageId !== CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE
-        ? [{
-            id: "maintenance-cart",
-            path: PRODUCTION_VISUALS.missionObjects["maintenance-cart"],
-          }]
-        : []),
-    ];
+    // The finite enemy-facing browser proof walks one production kind at a
+    // time through the real simulation and renderer. Loading every atlas into
+    // one phone-class document is not a product path and can create artificial
+    // decode contention, so this one local-only fixture starts with the normal
+    // stage plan and asks the QA bridge to strict-decode each audited kind.
+    const localQaParameters = new URLSearchParams(window.location.search);
+    const finiteEnemyRuntimeQa = localQaParameters.get("qaEnemyRuntime") === "1";
+    const finiteVisualIntegrityQa = localQaParameters.get("qaVisualIntegrity") === "1"
+      && ["localhost", "127.0.0.1"].includes(window.location.hostname)
+      && Boolean(qaMode || qaScenario);
+    const finiteHudRuntimeQa = localQaParameters.get("qaHudFiniteAssets") === "1"
+      && ["localhost", "127.0.0.1"].includes(window.location.hostname)
+      && Boolean(qaMode || qaScenario);
+    // A battle may mount only after every visual source that can be reached by
+    // its formation, waves, mission objects, support actions and Crawler has
+    // decoded. `turned` is included by the plan because any fallen ally can
+    // become one, independent of the authored enemy roster.
+    const requiredPlan = requiredBattleAssetPlan({
+      stageId: activeBattlefieldStageId,
+      formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
+      enemyKinds: stageEnemyKinds,
+      includeAllSprites: Boolean(qaMode || qaScenario)
+        && !finiteEnemyRuntimeQa
+        && !finiteVisualIntegrityQa
+        && !finiteHudRuntimeQa,
+    });
+    const requiredSpriteKinds = requiredPlan.sprites.map(({ kind }) => kind as UnitKind);
+    const persistentPaths: Record<string, string> = Object.fromEntries(
+      requiredPlan.persistent.map(({ key, path }) => [key, path]),
+    );
+    const stageObjectAssets = requiredPlan.stageObjects;
     const retainedSpriteKeys = new Set([...Object.keys(persistentPaths), ...requiredSpriteKinds]);
     const retainedSpriteImages = new Set(
       Object.entries(spriteRefs.current)
@@ -11713,14 +12101,6 @@ export function AshfallGame() {
     }
     if (!backgroundCacheRef.current[activeBattlefieldStageId]) backgroundRef.current = null;
     const currentBackground = backgroundCacheRef.current[activeBattlefieldStageId];
-    const activeStage = CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId];
-    const firstWaveEnemyKinds = selectedOutbreakMissionId
-      ? stageEnemyKinds
-      : [...new Set((activeStage?.waves?.[0]?.groups ?? []).map((group) => group.kind))] as UnitKind[];
-    const criticalKinds = qaMode || qaScenario || survivalAssetMode
-      ? requiredSpriteKinds
-      : [...new Set([...selectedFormationKinds, ...selectedVariantKinds, ...firstWaveEnemyKinds])];
-    const optionalKinds = requiredSpriteKinds.filter((kind) => !criticalKinds.includes(kind));
     const loadedImageByPath = new Map<string, HTMLImageElement>();
     const imageJob = (
       path: string,
@@ -11735,52 +12115,28 @@ export function AshfallGame() {
         onReady(image);
       }),
     });
-    const criticalPersistentKeys = new Set([
-      "crawlerHostClosed",
-      "crawlerDeploymentBase",
-      "crawlerForegroundMask",
-      "crawlerBarrageEquipment",
-      "crawlerAirstrikeEquipment",
-    ]);
     const allCriticalJobs = [
-      imageJob(stageVisualFor(activeBattlefieldStageId), "background", currentBackground, (image) => {
+      imageJob(requiredPlan.background.path, requiredPlan.background.category, currentBackground, (image) => {
         backgroundCacheRef.current[activeBattlefieldStageId] = image;
         backgroundRef.current = image;
       }),
-      imageJob(V075_VISUAL_PROFILES.enemyBase.intact.path, "base", enemyBaseSpriteRef.current, (image) => { enemyBaseSpriteRef.current = image; }),
-      ...criticalKinds.map((kind) => imageJob(
-        spriteSheetPath(kind),
-        selectedFormationKinds.includes(kind) ? "unit" : "enemy",
+      imageJob(requiredPlan.enemyBase.path, requiredPlan.enemyBase.category, enemyBaseSpriteRef.current, (image) => { enemyBaseSpriteRef.current = image; }),
+      ...requiredPlan.sprites.map(({ kind, path, category }) => imageJob(
+        path,
+        category,
         spriteRefs.current[kind],
         (image) => { spriteRefs.current[kind] = image; },
       )),
       ...Object.entries(persistentPaths)
-        .filter(([key]) => criticalPersistentKeys.has(key))
         .map(([key, src]) => imageJob(
           src,
-          "crawler",
-          spriteRefs.current[key],
-          (image) => { spriteRefs.current[key] = image; },
-        )),
-    ];
-    const optionalJobs = [
-      ...optionalKinds.map((kind) => imageJob(
-        spriteSheetPath(kind),
-        "optional",
-        spriteRefs.current[kind],
-        (image) => { spriteRefs.current[kind] = image; },
-      )),
-      ...Object.entries(persistentPaths)
-        .filter(([key]) => !criticalPersistentKeys.has(key))
-        .map(([key, src]) => imageJob(
-          src,
-          "optional",
+          requiredPlan.persistent.find((entry) => entry.key === key)?.category ?? "asset",
           spriteRefs.current[key],
           (image) => { spriteRefs.current[key] = image; },
         )),
       ...stageObjectAssets.map((object) => imageJob(
         object.path,
-        "optional",
+        object.category,
         stageObjectRefs.current[object.id],
         (image) => { stageObjectRefs.current[object.id] = image; },
       )),
@@ -11788,7 +12144,7 @@ export function AshfallGame() {
     const criticalJobs = retryPaths
       ? selectRetryAssetJobs(allCriticalJobs, retryPaths)
       : allCriticalJobs;
-    const totalJobs = criticalJobs.length + (retryPaths ? 0 : optionalJobs.length);
+    const totalJobs = criticalJobs.length;
     const slowTimer = window.setTimeout(() => {
       if (!current()) return;
       setAssetReadiness((view) => view.state === "loading"
@@ -11867,7 +12223,11 @@ export function AshfallGame() {
         return;
       }
       const root = document.documentElement;
-      root.dataset.assetResidentScope = qaMode || qaScenario ? "all-local-qa" : "stage-and-formation";
+      root.dataset.assetResidentScope = finiteEnemyRuntimeQa
+        ? "finite-enemy-runtime-qa"
+        : finiteVisualIntegrityQa ? "finite-visual-integrity-qa"
+        : finiteHudRuntimeQa ? "finite-hud-runtime-qa"
+        : qaMode || qaScenario ? "all-local-qa" : "stage-and-formation";
       root.dataset.assetResidentStage = activeOperationId;
       root.dataset.assetResidentSprites = String(Object.keys(spriteRefs.current).length);
       root.dataset.assetResidentStageObjects = String(Object.keys(stageObjectRefs.current).length);
@@ -11887,61 +12247,6 @@ export function AshfallGame() {
         retrying: false,
         failureReason: "",
       });
-      if (optionalJobs.length === 0) return;
-      activePhase = "optional";
-      activePhaseTerminal = false;
-      const optionalResult = await runAssetLoadSession({
-        jobs: optionalJobs,
-        generation,
-        reason: "optional-background",
-        signal: controller.signal,
-        abort: () => controller.abort(),
-        deadlineMs: OPTIONAL_ASSET_LOAD_DEADLINE_MS,
-        onProgress: (snapshot) => {
-          latestProgress = {
-            completed: snapshot.completed,
-            total: snapshot.total,
-            pending: snapshot.pending,
-            pendingPaths: snapshot.pendingPaths,
-          };
-        },
-      });
-      if (!current()) return;
-      recordSession({
-        generation,
-        reason: "optional-background",
-        phase: "optional",
-        status: optionalResult.status,
-        startedAt: new Date(sessionStartedAt).toISOString(),
-        elapsedMs: optionalResult.elapsedMs,
-        completed: optionalResult.completed,
-        total: optionalResult.total,
-        failures: optionalResult.failures,
-        deadlineReached: optionalResult.deadlineReached,
-      });
-      activePhaseTerminal = true;
-      if (optionalResult.status !== "ready") {
-        const firstFailure = optionalResult.failures[0];
-        setAssetReadiness({
-          state: "degraded-ready",
-          generation,
-          reason: "optional-background",
-          completed: criticalResult.total + optionalResult.completed,
-          total: criticalResult.total + optionalResult.total,
-          failed: optionalResult.failures.length,
-          pending: 0,
-          category: "optional",
-          retryAvailable: false,
-          retrying: false,
-          failureReason: firstFailure?.reason ?? "unknown",
-        });
-      } else {
-        setAssetReadiness((view) => ({
-          ...view,
-          completed: criticalResult.total + optionalResult.total,
-          total: criticalResult.total + optionalResult.total,
-        }));
-      }
     }).catch((error) => {
       if (!current()) return;
       window.clearTimeout(slowTimer);
@@ -11985,6 +12290,7 @@ export function AshfallGame() {
       ...assetPendingPathsRef.current,
     ]);
     if (retryPaths.size === 0) return;
+    assetQaFaultClearedRef.current = true;
     assetRetryPathsRef.current = retryPaths;
     assetSessionRestartCountRef.current += 1;
     assetSessionControllerRef.current?.abort();
@@ -12043,17 +12349,83 @@ export function AshfallGame() {
       getHistory: () => assetSessionHistoryRef.current.map((entry) => ({ ...entry })),
       getPendingPaths: () => [...assetPendingPathsRef.current],
       getFailedPaths: () => [...assetFailedPathsRef.current],
+      startAssetFaultProof: () => {
+        assetQaFaultClearedRef.current = false;
+        assetRetryPathsRef.current = null;
+        assetSessionRestartCountRef.current += 1;
+        assetSessionControllerRef.current?.abort();
+        setAssetsReady(false);
+        setAssetError(false);
+        setAssetReadiness((view) => ({
+          ...view,
+          state: "loading",
+          reason: "selection-change",
+          retryAvailable: false,
+          retrying: false,
+        }));
+        setAssetRetryNonce((nonce) => nonce + 1);
+      },
       getLoadedSpriteKeys: () => Object.entries(spriteRefs.current)
         .filter(([, image]) => Boolean(image?.naturalWidth))
         .map(([key]) => key),
+      getLoadedStageObjectKeys: () => Object.entries(stageObjectRefs.current)
+        .filter(([, image]) => Boolean(image?.naturalWidth))
+        .map(([key]) => key),
+      getDecodedRequiredPaths: () => {
+        const decodedPaths = new Set<string>();
+        for (const [stageId, image] of Object.entries(backgroundCacheRef.current)) {
+          if (image?.naturalWidth && decodedBattleImagesRef.current.has(image)) {
+            decodedPaths.add(stageVisualFor(stageId));
+          }
+        }
+        const activeRequiredPlan = requiredBattleAssetPlan({ stageId: activeBattlefieldStageId });
+        if (enemyBaseSpriteRef.current?.naturalWidth && decodedBattleImagesRef.current.has(enemyBaseSpriteRef.current)) {
+          decodedPaths.add(activeRequiredPlan.enemyBase.path);
+        }
+        const persistentPathsByKey = Object.fromEntries(activeRequiredPlan.persistent.map(({ key, path }) => [key, path]));
+        for (const [kind, image] of Object.entries(spriteRefs.current)) {
+          if (!image?.naturalWidth || !decodedBattleImagesRef.current.has(image)) continue;
+          try {
+            decodedPaths.add(spriteSheetPath(kind as UnitKind));
+          } catch {
+            const persistentPath = persistentPathsByKey[kind];
+            if (persistentPath) decodedPaths.add(persistentPath);
+          }
+        }
+        for (const [id, image] of Object.entries(stageObjectRefs.current)) {
+          if (!image?.naturalWidth || !decodedBattleImagesRef.current.has(image)) continue;
+          const stageObject = activeRequiredPlan.stageObjects.find((entry) => entry.id === id);
+          if (stageObject) decodedPaths.add(stageObject.path);
+        }
+        return [...decodedPaths];
+      },
+      getRequiredPlan: () => requiredBattleAssetPlan({
+        stageId: activeBattlefieldStageId,
+        formationKinds: formationKindKey.split("|").filter(Boolean),
+        enemyKinds: selectedOutbreakMissionId
+          ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
+          : CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds ?? [],
+        includeAllSprites: Boolean(qaMode || qaScenario)
+          && new URLSearchParams(window.location.search).get("qaEnemyRuntime") !== "1"
+          && !(new URLSearchParams(window.location.search).get("qaVisualIntegrity") === "1"
+            && ["localhost", "127.0.0.1"].includes(window.location.hostname))
+          && !(new URLSearchParams(window.location.search).get("qaHudFiniteAssets") === "1"
+            && ["localhost", "127.0.0.1"].includes(window.location.hostname)),
+      }),
       getRestartCount: () => assetSessionRestartCountRef.current,
+      getBattleMountState: () => ({
+        screen,
+        canPlay: assetReadiness.state === "ready" && assetReadiness.failed === 0 && assetsReady && !assetError,
+        battleMounted: screen === "battle" && canvasRef.current?.classList.contains("active") === true,
+        fallbackDrawCount: stationMissionDiagnosticFallbackDrawCount,
+      }),
       retry: retryAssets,
     };
     qaWindow.__ASHFALL_ASSET_QA__ = bridge;
     return () => {
       if (qaWindow.__ASHFALL_ASSET_QA__ === bridge) delete qaWindow.__ASHFALL_ASSET_QA__;
     };
-  }, [assetReadiness, retryAssets]);
+  }, [activeBattlefieldStageId, assetError, assetReadiness, assetsReady, formationKindKey, qaMode, qaScenario, retryAssets, screen, selectedOutbreakMissionId]);
 
   useEffect(() => {
     const configureCanvas = () => {
@@ -15518,7 +15890,12 @@ export function AshfallGame() {
   useEffect(() => {
     // Campaign overlays fully cover the canvas. Do not keep a hidden battle
     // simulation and full-frame renderer alive on title/map/personnel screens.
-    if (screen !== "battle") return undefined;
+    // The published asset boundary owns the battle mount.  A QA deep-link may
+    // select the battle screen before the candidate pack has recovered, but it
+    // must not start simulation or paint diagnostic stand-ins while canPlay is
+    // false.  When the failed-only retry completes this effect is recreated
+    // against the same game state and the production renderer starts normally.
+    if (screen !== "battle" || !assetsReady || assetError) return undefined;
     let frame: number | null = null;
     let frameSchedule = createRuntimeFrameSchedule();
     let active = true;
@@ -17314,6 +17691,7 @@ export function AshfallGame() {
         }
 
         const movementStageGeometry = stageGeometryFor(g.definition.stageId, activeStageViewportId);
+        const actualXDeltaByFighterId = new Map<number, number>();
         for (const f of g.fighters) {
           if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL
             && f.kind === "gate-eater") {
@@ -19791,6 +20169,7 @@ export function AshfallGame() {
           } else if (target && f.side === "zombie") {
             // The CRAWLER remains the objective: enemies advance on their route and only stop for a physical blocker.
             f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
+            f.aiMoveDirection = Math.sign(f.x - movementStartX);
             const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
             if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * mayoBiteSlowMultiplier * dt);
@@ -19817,6 +20196,7 @@ export function AshfallGame() {
               f.lane = laneStep.lane as Lane;
             } else {
               f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * mayoBiteSlowMultiplier * Math.min(f.slowMultiplier ?? 1, f.suppressionMultiplier), seconds: dt, burning: false });
+              f.aiMoveDirection = Math.sign(f.x - movementStartX);
             }
             if (f.side === "zombie" && f.anchorLane !== null) {
               const dy = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane] - f.y;
@@ -19893,6 +20273,10 @@ export function AshfallGame() {
             if (qaBarrier && qaBarrier.humanId === f.id && qaBarrier.attempted) {
               qaBarrier.resultingX = f.x;
             }
+          }
+          actualXDeltaByFighterId.set(f.id, f.x - movementStartX);
+          if (fighterRenderAuditEnabled) {
+            fighterActualXDeltaAudit.set(f.id, f.x - movementStartX);
           }
         }
 
@@ -20184,6 +20568,7 @@ export function AshfallGame() {
             : fighterById.get(fighter.targetId);
           const direction = combatFacingDirection({
             side: fighter.side,
+            actualXDelta: actualXDeltaByFighterId.get(fighter.id) ?? 0,
             aiMoveDirection: fighter.aiMoveDirection,
             entryDirection: fighter.entryDirection,
             targetDirection: fighter.attackFacingDirection
@@ -20193,6 +20578,7 @@ export function AshfallGame() {
                 : 0,
             manualDirection: Number(fighter.manualAbility?.target?.direction),
             manualAbilityActive,
+            attacking: fighter.attackWindup > 0 || fighter.attack > 0,
           });
           const presentationState = fighter.mayoRetreat
             ? fighter.mayoRetreat.phase === "run"
@@ -20506,6 +20892,7 @@ export function AshfallGame() {
         staticBattlefieldCacheRef.current,
         graphicsProfile,
         false,
+        Boolean(qaMode || qaScenario),
       );
       performanceCounters.renderFrames += 1;
       if (now - lastHudRef.current > 100) {
@@ -20639,7 +21026,7 @@ export function AshfallGame() {
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("pageshow", onPageShow);
     };
-  }, [announceBossEntrance, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
+  }, [announceBossEntrance, assetError, assetsReady, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaMode, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
@@ -20762,7 +21149,7 @@ export function AshfallGame() {
         style={battleHudFrameStyle}
         aria-label="西新世紀末物語 ゲーム"
       >
-        <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle"} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} onLostPointerCapture={handleBattlefieldLostPointerCapture} />
+        <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" && assetsReady && !assetError ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle" || !assetsReady || assetError} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} onLostPointerCapture={handleBattlefieldLostPointerCapture} />
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;

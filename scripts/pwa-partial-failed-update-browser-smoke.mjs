@@ -1,8 +1,8 @@
 // Persistent partial-failed existing-PWA recovery smoke.
 //
 // The old generation is first installed completely. Its content-addressed
-// cache is then reduced, in-place, to the exact first 156 logical assets in
-// manifest order while the old manifest, Service Worker registration, browser
+// cache is then reduced, in-place, to 156 exact shared content hashes while
+// the old manifest, Service Worker registration, browser
 // profile, and save remain untouched. The candidate must recover that same
 // profile through a failed audio transport, close/relaunch, a real >30 second
 // no-progress stall, and a real >30 second continuously progressing transfer.
@@ -250,11 +250,11 @@ const candidateManifest = await readManifest(candidateRoot);
 // deliberately pinned fixture, but CI must not carry a stale release literal
 // into the next hotfix.
 const oldVersion = oldVersionOverride ?? oldManifest.version;
-record("old and candidate roots have the fixed 416-asset release contract", (
+record("old and candidate roots have the fixed old-416/candidate-415 release contract", (
   oldManifest.version === oldVersion
   && candidateManifest.version === RELEASE_VERSION
   && oldManifest.assets.length === 416
-  && candidateManifest.assets.length === 416
+  && candidateManifest.assets.length === 415
 ), {
   oldVersion: oldManifest.version,
   candidateVersion: candidateManifest.version,
@@ -264,11 +264,32 @@ record("old and candidate roots have the fixed 416-asset release contract", (
 
 const oldHashes = new Set(oldManifest.assets.map((asset) => asset.hash));
 const candidateHashes = new Set(candidateManifest.assets.map((asset) => asset.hash));
-record("the candidate reuses the old release content hashes", (
+const candidateNewHashAssets = candidateManifest.assets.filter((asset) => !oldHashes.has(asset.hash));
+const candidateNewHashes = new Set(candidateNewHashAssets.map((asset) => asset.hash));
+const candidateNewTransportPaths = new Set(
+  candidateNewHashAssets.map((asset) => `${basePath}${asset.sourcePath ?? asset.path}`.replace(/\/+/g, "/")),
+);
+const retainedOldAssets = [...oldManifest.assets]
+  .sort((left, right) => left.path.localeCompare(right.path))
+  .filter((asset) => candidateHashes.has(asset.hash))
+  .slice(0, 156);
+const retainedHashes = new Set(retainedOldAssets.map((asset) => asset.hash));
+const retainedCandidateAssets = candidateManifest.assets.filter((asset) => retainedHashes.has(asset.hash));
+record("the candidate declares an exact non-empty hash delta instead of a stale same-pack assumption", (
   oldHashes.size === 414
-  && candidateHashes.size === 414
-  && [...candidateHashes].every((hash) => oldHashes.has(hash))
-), { oldDistinctHashes: oldHashes.size, candidateDistinctHashes: candidateHashes.size });
+  && candidateHashes.size === 413
+  && candidateNewHashes.size > 0
+  && candidateNewHashAssets.length === candidateNewHashes.size
+  && retainedHashes.size === 156
+  && retainedCandidateAssets.length === 156
+), {
+  oldDistinctHashes: oldHashes.size,
+  candidateDistinctHashes: candidateHashes.size,
+  changedHashes: candidateNewHashes.size,
+  changedLogicalAssets: candidateNewHashAssets.length,
+  changedBytes: candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0),
+  retainedSharedHashes: retainedHashes.size,
+});
 
 const save = createDefaultCampaignSave();
 save.caps = 777;
@@ -362,7 +383,14 @@ async function cacheState(page, manifest = candidateManifest) {
       logicalSatisfied: expected.filter((asset) => hashes.has(asset.hash)).length,
       retainedSatisfied: retainedPaths.filter((asset) => hashes.has(asset.hash)).length,
     };
-  }, { expected: manifest.assets, retainedPaths: [...manifest.assets].sort((a, b) => a.path.localeCompare(b.path)).slice(0, 156) });
+  }, { expected: manifest.assets, retainedPaths: retainedCandidateAssets });
+}
+
+async function cacheHashes(page) {
+  return page.evaluate(async () => {
+    const cache = await caches.open("zombieee-assets-v1");
+    return (await cache.keys()).map((request) => new URL(request.url).pathname.split("/").pop());
+  });
 }
 
 async function currentSave(page) {
@@ -394,9 +422,8 @@ try {
     && (await cacheState(page, oldManifest)).logicalSatisfied === 416
   ), { oldActiveVersion: oldWorker?.state?.active?.version, cache: await cacheState(page, oldManifest) });
 
-  const partial = await page.evaluate(async (manifest) => {
-    const ordered = [...manifest.assets].sort((left, right) => left.path.localeCompare(right.path));
-    const retained = new Set(ordered.slice(0, 156).map((asset) => asset.hash));
+  const partial = await page.evaluate(async (retainedHashList) => {
+    const retained = new Set(retainedHashList);
     const cache = await caches.open("zombieee-assets-v1");
     for (const request of await cache.keys()) {
       const hash = new URL(request.url).pathname.split("/").pop();
@@ -404,7 +431,7 @@ try {
     }
     const remaining = await cache.keys();
     return { retainedHashes: retained.size, cacheEntries: remaining.length };
-  }, oldManifest);
+  }, [...retainedHashes]);
   const partialCache = await cacheState(page, oldManifest);
   const partialWorker = await workerState(page);
   const oldSaveRaw = await currentSave(page);
@@ -443,24 +470,57 @@ try {
   const repairButton = page.getByRole("button", { name: "不足分だけ再取得" });
   await repairButton.waitFor({ state: "visible", timeout: 60_000 });
   await repairButton.click();
-  await page.getByText("失敗 3件", { exact: true }).waitFor({ state: "visible", timeout: 30_000 });
+  // The held fourth request becomes terminal at the production 30 second
+  // no-progress boundary. Keep the observation budget outside that boundary
+  // so runner scheduling cannot race the product timeout itself.
+  await page.getByText("失敗 3件", { exact: true }).waitFor({
+    state: "visible",
+    timeout: Math.max(60_000, stallDurationMs + 30_000),
+  });
   const incidentRequests = await waitForAudioRequests("incident", 4, 30_000);
   const incidentProgress = await page.locator(".pwa-progress-line").textContent();
   const incidentCategory = await page.getByText("音声を取得中", { exact: true }).count();
   const failureCounter = await page.getByText("失敗 3件", { exact: true }).count();
-  record("the physical incident class is reproduced from a 156/416 cache with audio active, three failures, and one held request", (
+  const incidentChangedRequests = candidateTransportRequests
+    .filter(({ pathname }) => candidateNewTransportPaths.has(pathname))
+    .map(({ pathname }) => pathname);
+  const initialIncidentRequests = incidentRequests.filter((request) => request.index <= 4);
+  const incidentRetryRequests = incidentRequests.filter((request) => request.index > 4);
+  record("the physical incident class fetches the exact release delta before exposing three failed pending requests and one held request", (
     partialCache.logicalSatisfied === 156
-    && /0 \/ 260件/.test(incidentProgress ?? "")
+    && new Set(incidentChangedRequests).size === candidateNewTransportPaths.size
+    && incidentChangedRequests.length === candidateNewTransportPaths.size
+    && new RegExp(`^${candidateNewHashAssets.length} \\/ ${candidateManifest.assets.length - 156}件`).test(incidentProgress ?? "")
     && incidentCategory === 1
     && failureCounter === 1
-    && incidentRequests.length === 4
-    && incidentRequests.slice(0, 3).every((request) => request.completed)
-    && !incidentRequests[3].completed
-  ), { startingLogicalAssets: partialCache.logicalSatisfied, incidentProgress, incidentCategory, failureCounter, requests: incidentRequests.map(({ mode, index, completed }) => ({ mode, index, completed })) });
+    // Preserve the strict initial concurrency contract. A causally separate
+    // retry may already exist after the 30 second boundary, but it cannot
+    // weaken or replace any member of the exact four-request incident group.
+    && initialIncidentRequests.length === 4
+    && initialIncidentRequests.slice(0, 3).every((request) => request.completed)
+    && !initialIncidentRequests[3].completed
+    && incidentRetryRequests.length <= 1
+    && incidentRetryRequests.every((request) => !request.completed)
+  ), {
+    startingLogicalAssets: partialCache.logicalSatisfied,
+    exactReleaseDelta: [...candidateNewTransportPaths],
+    incidentChangedRequests,
+    incidentProgress,
+    incidentCategory,
+    failureCounter,
+    initialIncidentRequests: initialIncidentRequests.map(({ mode, index, completed }) => ({ mode, index, completed })),
+    incidentRetryRequests: incidentRetryRequests.map(({ mode, index, completed }) => ({ mode, index, completed })),
+    requests: incidentRequests.map(({ mode, index, completed }) => ({ mode, index, completed })),
+  });
 
   await page.getByRole("button", { name: "中断" }).click();
   await page.getByRole("heading", { name: "ダウンロードを中断しました" }).waitFor({ state: "visible", timeout: 15_000 });
   const cancelledCache = await cacheState(page);
+  const hashesBeforeRecovery = new Set(await cacheHashes(page));
+  const successfulBeforeRecoveryAssets = candidateManifest.assets.filter((asset) => hashesBeforeRecovery.has(asset.hash));
+  const successfulBeforeRecoveryPaths = new Set(
+    successfulBeforeRecoveryAssets.map((asset) => `${basePath}${asset.sourcePath ?? asset.path}`.replace(/\/+/g, "/")),
+  );
   const cancelledWorker = await workerState(page);
   record("cancel preserves the old assets plus newly successful assets, old manifest, and save", (
     cancelledCache.logicalSatisfied >= 156
@@ -513,9 +573,9 @@ try {
     && slow.progress.length >= 30
     && slow.progress.every((entry, index, entries) => index === 0 || entry.bytes > entries[index - 1].bytes)
   ), { requestCount: completedRecoveryRequests.length, slowDurationMs: slow?.durationMs, progressEvents: slow?.progress.length });
-  record(`partial recovery reaches 416/416, failed 0, commits ${RELEASE_VERSION}, and preserves raw save bytes`, (
-    finalCache.logicalSatisfied === 416
-    && finalCache.assetEntries === 414
+  record(`partial recovery reaches 415/415, failed 0, commits ${RELEASE_VERSION}, and preserves raw save bytes`, (
+    finalCache.logicalSatisfied === 415
+    && finalCache.assetEntries === 413
     && updatedWorker?.state?.active?.version === RELEASE_VERSION
     && updatedWorker.activeWorkerState === "activated"
     && finalSaveRaw === oldSaveRaw
@@ -524,16 +584,15 @@ try {
   const recoveryAssetRequests = candidateTransportRequests
     .slice(recoveryTransportStart)
     .map((request) => request.pathname);
-  const retainedTransportPaths = new Set(
-    [...candidateManifest.assets]
-      .sort((left, right) => left.path.localeCompare(right.path))
-      .slice(0, 156)
-      .map((asset) => `${basePath}${asset.sourcePath ?? asset.path}`.replace(/\/+/g, "/")),
-  );
-  record("recovery never re-fetches any of the 156 successful assets and does not fetch the bundle per slice", (
-    recoveryAssetRequests.filter((pathname) => retainedTransportPaths.has(pathname)).length === 0
+  record("recovery fetches only failed or pending content, never re-fetches any successful asset, and does not fetch the bundle per slice", (
+    recoveryAssetRequests.filter((pathname) => successfulBeforeRecoveryPaths.has(pathname)).length === 0
     && recoveryAssetRequests.filter((pathname) => pathname === bundlePathname).length === 2
-  ), { recoveryAssetRequests, retainedRefetches: recoveryAssetRequests.filter((pathname) => retainedTransportPaths.has(pathname)) });
+  ), {
+    successfulBeforeRecoveryHashes: hashesBeforeRecovery.size,
+    successfulBeforeRecoveryLogicalAssets: successfulBeforeRecoveryAssets.length,
+    recoveryAssetRequests,
+    successfulRefetches: recoveryAssetRequests.filter((pathname) => successfulBeforeRecoveryPaths.has(pathname)),
+  });
 
   await context.close();
   context = null;

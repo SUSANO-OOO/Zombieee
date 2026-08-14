@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "version": "0.9.9.5",
+  "status": "implementation-candidate",
+  "designLock": "VISUAL-165-SOL-DL-001 r1",
+  "rightsProvenance": {
+    "thirdPartyDownloadedVisuals": false,
+    "newIdentityGeneration": false,
+    "identityIsolation": "Every derivative uses only the named producer-approved identity master or producer-approved portrait; no substitute person or cross-character source is used."
+  },
+  "assets": [
+    { "assetId": "V0995-ZAKIMIYA-EVENT@r2", "path": "public/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp", "sha256": "b76a370986289841fd67ba57d246fc5ba702869df9a8baa65af4c4984424198b", "bytes": 64102, "width": 512, "height": 640, "source": "V090-ZAKIMIYA-IDENTITY@r1", "processing": "Deterministic studio-field removal, white-matte edge decontamination, upper-body crop, transparent WebP." },
+    { "assetId": "V0995-ZAKIMIYA-CARD@r2", "path": "public/art/v0995/characters/cards/zakimiya-formation-card-r2.webp", "sha256": "075f1a28b537cd8ed9078b03b07871be71c41751e41c007c99cc27cdcc70659e", "bytes": 43726, "width": 512, "height": 512, "source": "V090-ZAKIMIYA-IDENTITY@r1", "processing": "Transparent upper-body subject plus project-authored badge; no baked full-panel background." },
+    { "assetId": "V0995-TKY-EVENT@r2", "path": "public/art/v0995/characters/portraits/tky-event-portrait-r2.webp", "sha256": "bcb28022021c8b3765f0a32ec706ea8ba5903034cc787a919d30fca3765f5f97", "bytes": 69674, "width": 512, "height": 640, "source": "V090-TKY-IDENTITY@r1", "processing": "Deterministic studio-field removal, white-matte edge decontamination, upper-body crop, transparent WebP." },
+    { "assetId": "V0995-TKY-CARD@r2", "path": "public/art/v0995/characters/cards/tky-formation-card-r2.webp", "sha256": "ac5b4699e1098b1a4dfcbf07788624f3ff82e05c22ef06b92c4b0110cdb90c71", "bytes": 47538, "width": 512, "height": 512, "source": "V090-TKY-IDENTITY@r1", "processing": "Transparent upper-body subject plus project-authored badge; no baked full-panel background." },
+    { "assetId": "V0995-MRS-CHIHA-EVENT@r2", "path": "public/art/v0995/characters/portraits/mrs-chiha-event-portrait-r2.webp", "sha256": "eac852cbce801871e04c68fece726ea381f33bdfd52b44b7b9845faed75a44a5", "bytes": 65336, "width": 512, "height": 640, "source": "V090-MRS-CHIHA-IDENTITY@r1", "processing": "Deterministic studio-field removal, white-matte edge decontamination, upper-body crop, transparent WebP." },
+    { "assetId": "V0995-MRS-CHIHA-CARD@r2", "path": "public/art/v0995/characters/cards/mrs-chiha-formation-card-r2.webp", "sha256": "b9ca1e75642a11b18874a4d5a1c54a9802a91b27767f0f1cbdd7845dc01545b3", "bytes": 45616, "width": 512, "height": 512, "source": "V090-MRS-CHIHA-IDENTITY@r1", "processing": "Transparent upper-body subject plus project-authored badge; no baked full-panel background." },
+    { "assetId": "V0995-MUSASHI-EVENT@r2", "path": "public/art/v0995/characters/portraits/miyamoto-musashi-event-portrait-r2.webp", "sha256": "0bc224025e99093d2337b4c6d0d14acc06604fa79bc6c68231ac33bcd7ba2e62", "bytes": 89808, "width": 512, "height": 640, "source": "V090-MIYAMOTO-MUSASHI-IDENTITY@r1", "processing": "Deterministic studio-field removal, white-matte edge decontamination, upper-body crop, transparent WebP." },
+    { "assetId": "V0995-MUSASHI-CARD@r2", "path": "public/art/v0995/characters/cards/miyamoto-musashi-formation-card-r2.webp", "sha256": "34541913794aa86474287e6db6989266fa3219b02de93f8927f311d0ac579408", "bytes": 54022, "width": 512, "height": 512, "source": "V090-MIYAMOTO-MUSASHI-IDENTITY@r1", "processing": "Transparent upper-body subject plus project-authored badge; no baked full-panel background." },
+    { "assetId": "V0995-MAYO-EVENT@r2", "path": "public/art/v0995/characters/portraits/mayo-chan-event-portrait-r2.webp", "sha256": "fce7149d3f4fe7abd6b417fed98cc3e8904e5263001b0d7a95662e46576e5607", "bytes": 108524, "width": 512, "height": 640, "source": "V090-MAYO-CHAN-IDENTITY@r1", "processing": "Deterministic studio-field removal, white-matte edge decontamination, identity-preserving crop, transparent WebP." },
+    { "assetId": "V0995-MAYO-CARD@r2", "path": "public/art/v0995/characters/cards/mayo-chan-formation-card-r2.webp", "sha256": "6ad5c460c870ebf138d53cc0fd24024117488eb157e1235922161b923745492b", "bytes": 75442, "width": 512, "height": 512, "source": "V090-MAYO-CHAN-IDENTITY@r1", "processing": "Transparent subject plus project-authored badge; no baked full-panel background." },
+    { "assetId": "V0995-MONKEY-CARD@r3", "path": "public/art/v0995/characters/cards/monkey-formation-card-r3.webp", "sha256": "48f45ece5ee8a30d53c06689cb8b3fd72d06908832b917982b538f1810e5e0a4", "bytes": 57806, "width": 512, "height": 512, "source": "V070-CHAR-MONKEY-PORTRAIT@r2", "processing": "Deterministic transparent subject crop and project-authored two-cam crossbow/trap badge. Identity, portrait and battle atlas are reused byte-identically from approved V070 r11 lineage." }
+  ]
+}

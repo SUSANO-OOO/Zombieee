@@ -677,6 +677,12 @@ test("TAKUYA entrance starts boss music immediately and composes a 3.4 second tr
   assert.match(gameSource, /TAKUYA_ENTRANCE_AUDIO\.bossSceneId/u);
   assert.match(gameSource, /TAKUYA_ENTRANCE_AUDIO\.musicDuck/u);
   assert.doesNotMatch(gameSource, /TAKUYA_ENTRANCE_AUDIO\.silenceSceneId/u);
+
+  const browserSmokeSource = await readFile(new URL("../scripts/p5-browser-smoke.mjs", import.meta.url), "utf8");
+  assert.match(browserSmokeSource, /resumeButton\.evaluate\(\(button\) => \{[\s\S]*button\.click\(\);[\s\S]*pageNow: performance\.now\(\)[\s\S]*getSnapshot/u);
+  assert.match(browserSmokeSource, /exactRestartRemaining >= TAKUYA_ENTRANCE_AUDIO\.durationSeconds - \.03/u);
+  assert.match(browserSmokeSource, /releaseObservedPageNow - pauseEvidence\.resumeBoundary\.pageNow/u);
+  assert.doesNotMatch(browserSmokeSource, /expectedRemaining: TAKUYA_ENTRANCE_AUDIO\.durationSeconds - \.15/u);
 });
 
 test("P5 preserves battle voices while authored story dialogue has no voiceover or TTS contract", async () => {

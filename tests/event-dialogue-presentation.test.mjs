@@ -36,7 +36,7 @@ async function alphaTop(file) {
 test("all 18 event portraits retain a safe head margin and authored face-center range", async () => {
   assert.equal(Object.keys(EVENT_PORTRAIT_PROFILES).length, 18);
   for (const [kind, profile] of Object.entries(EVENT_PORTRAIT_PROFILES)) {
-    assert.equal(profile.crop, "auto 92%", `${kind}/crop`);
+    assert.match(profile.crop, /^auto (?:92|94)%$/, `${kind}/crop`);
     assert.ok(profile.focusY >= .18 && profile.focusY <= .38, `${kind}/face-center`);
     const source = await alphaTop(path.join(ROOT, "public", profile.path));
     for (const viewport of VIEWPORTS) {
@@ -45,7 +45,7 @@ test("all 18 event portraits retain a safe head margin and authored face-center 
         : compact ? .68
           : kind === "guide" || kind === "radio" ? .74 : .7;
       const containerHeight = viewport.height * portraitHeightRatio;
-      const renderedHeight = containerHeight * .92;
+      const renderedHeight = containerHeight * (Number.parseFloat(profile.crop.split(" ")[1]) / 100);
       const backgroundOffset = (containerHeight - renderedHeight) * profile.focusY;
       const headMargin = backgroundOffset + source.y / source.height * renderedHeight;
       assert.ok(headMargin >= 8,

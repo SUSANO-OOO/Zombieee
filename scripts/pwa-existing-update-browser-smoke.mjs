@@ -114,6 +114,7 @@ async function serveFile(root, pathname, label) {
 }
 
 let currentLabel = "old";
+const candidateNetworkAssetRequests = [];
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? "/", `http://${request.headers.host}`);
@@ -132,6 +133,9 @@ const server = createServer(async (request, response) => {
     if (!url.pathname.startsWith(basePath) || (url.pathname !== basePath && !url.pathname.startsWith(scopePath))) {
       response.writeHead(404).end("Not found");
       return;
+    }
+    if (currentLabel === "candidate" && /\/(?:art|audio|pwa-bundles)\//.test(url.pathname)) {
+      candidateNetworkAssetRequests.push(url.pathname);
     }
     const served = await serveFile(rootForLabel(currentLabel), url.pathname, currentLabel);
     response.writeHead(served.status, {
@@ -154,7 +158,7 @@ record("old and candidate static roots are complete", (
   oldManifest.version === oldVersion
   && candidateManifest.version === RELEASE_VERSION
   && oldManifest.assets?.length === 416
-  && candidateManifest.assets?.length === 416
+  && candidateManifest.assets?.length === 415
 ), {
   oldVersion: oldManifest.version,
   candidateVersion: candidateManifest.version,
@@ -164,13 +168,23 @@ record("old and candidate static roots are complete", (
 
 const oldDistinctHashes = new Set(oldManifest.assets.map((asset) => asset.hash));
 const candidateDistinctHashes = new Set(candidateManifest.assets.map((asset) => asset.hash));
-record("candidate keeps the complete asset set and unchanged game hashes", (
-  candidateManifest.assets.length === 416
-  && candidateDistinctHashes.size === oldDistinctHashes.size
-  && [...candidateDistinctHashes].every((hash) => oldDistinctHashes.has(hash))
+const candidateNewHashAssets = candidateManifest.assets.filter((asset) => !oldDistinctHashes.has(asset.hash));
+const candidateNewHashes = new Set(candidateNewHashAssets.map((asset) => asset.hash));
+const retainedCacheEntryCount = new Set([...oldDistinctHashes, ...candidateDistinctHashes]).size;
+const candidateExpectedNetworkPaths = new Set(candidateNewHashAssets.map((asset) => (
+  `${basePath}${asset.sourcePath ?? asset.path}`
+)));
+record("candidate keeps the complete asset set and declares an exact hash delta", (
+  candidateManifest.assets.length === 415
+  && candidateNewHashAssets.length === candidateNewHashes.size
+  && candidateExpectedNetworkPaths.size === candidateNewHashes.size
 ), {
   oldDistinctHashes: oldDistinctHashes.size,
   candidateDistinctHashes: candidateDistinctHashes.size,
+  changedHashes: candidateNewHashes.size,
+  changedLogicalAssets: candidateNewHashAssets.length,
+  changedBytes: candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0),
+  expectedNetworkPaths: [...candidateExpectedNetworkPaths].sort(),
   oldBytes: oldManifest.assets.reduce((sum, asset) => sum + asset.bytes, 0),
   candidateBytes: candidateManifest.assets.reduce((sum, asset) => sum + asset.bytes, 0),
 });
@@ -389,17 +403,24 @@ try {
   const updateControl = updateButtonCount === 1 ? updateButton : commitOnlyButton;
   await updateControl.waitFor({ state: "visible", timeout: 120_000 });
   const updateAssetStart = candidateAssetRequests.length;
+  const updateNetworkAssetStart = candidateNetworkAssetRequests.length;
   await updateControl.click();
   const updatedWorker = await waitForActiveVersion(page, RELEASE_VERSION, 120_000);
   const candidateSave = await saveState(page);
   const candidateCache = await cacheState(page);
+  const candidateNetworkRequestsAfterClick = candidateNetworkAssetRequests.slice(updateNetworkAssetStart);
+  const candidateNetworkRequestSet = new Set(candidateNetworkRequestsAfterClick);
+  const unexpectedCandidateNetworkRequests = [...candidateNetworkRequestSet]
+    .filter((pathname) => !candidateExpectedNetworkPaths.has(pathname));
+  const missingCandidateNetworkRequests = [...candidateExpectedNetworkPaths]
+    .filter((pathname) => !candidateNetworkRequestSet.has(pathname));
   record(`the update commits ${RELEASE_VERSION} and activates the waiting worker`, (
     updatedWorker?.activeState?.active?.version === RELEASE_VERSION
     && updatedWorker.activeWorkerState === "activated"
     && updatedWorker.scope === `${new URL(baseUrl).origin}${scopePath}`
   ), updatedWorker);
   record("the update reuses the complete pack and preserves the save", (
-    candidateCache.assetEntries === oldInstalled.distinctHashCount
+    candidateCache.assetEntries === retainedCacheEntryCount
     && candidateSave.raw === oldSave.raw
     && candidateSave.caps === oldSave.caps
     && candidateSave.bgmVolume === oldSave.bgmVolume
@@ -407,11 +428,20 @@ try {
   ), {
     candidateCache,
     oldAssetEntries: oldInstalled.assetCacheEntries,
+    expectedRetainedAssetEntries: retainedCacheEntryCount,
     candidateAssetRequestsAfterClick: candidateAssetRequests.slice(updateAssetStart),
+    candidateNetworkRequestsAfterClick,
     savePreserved: candidateSave.raw === oldSave.raw,
   });
-  record("the update does not re-fetch unchanged game assets", candidateAssetRequests.slice(updateAssetStart).length === 0, {
-    requests: candidateAssetRequests.slice(updateAssetStart),
+  record("the update fetches every changed hash exactly through its preferred source and no unchanged hash", (
+    unexpectedCandidateNetworkRequests.length === 0
+    && missingCandidateNetworkRequests.length === 0
+    && candidateNetworkRequestsAfterClick.length === candidateExpectedNetworkPaths.size
+  ), {
+    expected: [...candidateExpectedNetworkPaths].sort(),
+    actual: candidateNetworkRequestsAfterClick,
+    unexpected: unexpectedCandidateNetworkRequests,
+    missing: missingCandidateNetworkRequests,
   });
 
   await context.close();
@@ -442,7 +472,7 @@ try {
   } else {
     const storage = await cacheState(page);
     record("WebKit persistent update storage is retained (offline worker navigation is capability-limited)", (
-      storage.assetEntries === oldInstalled.distinctHashCount
+      storage.assetEntries === retainedCacheEntryCount
     ), { storage, capabilityLimit: "Headless WebKit offline emulation is not used as physical Safari evidence." });
   }
 

@@ -296,11 +296,11 @@ test("all seventeen people use independent portrait files and radio remains a se
     if (kind === "guide") {
       assert.equal(assetPath, "/art/v075/characters/portraits/ikura-event-portrait-v4.webp");
     } else if (kind === "engineer") {
-      assert.equal(assetPath, "/art/v080/characters/portraits/monkey-event-portrait-r2.webp");
+      assert.equal(assetPath, "/art/v070/characters/portraits/engineer-portrait-v1.webp");
     } else if (kind === "zakimiya") {
-      assert.equal(assetPath, "/art/v090/characters/portraits/zakimiya-event-portrait-r1.webp");
+      assert.equal(assetPath, "/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp");
     } else if (["tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan"].includes(kind)) {
-      assert.equal(assetPath, `/art/v090/characters/portraits/${kind}-event-portrait-r1.webp`);
+      assert.equal(assetPath, `/art/v0995/characters/portraits/${kind}-event-portrait-r2.webp`);
     } else if (V070_PORTRAIT_KINDS.has(kind)) {
       assert.equal(assetPath, `/art/v070/characters/portraits/${kind}-portrait-v1.webp`);
     } else {

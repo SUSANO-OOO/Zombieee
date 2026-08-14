@@ -129,7 +129,7 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the 0.9.9.4 release identity and the PWA gate", async () => {
+test("server-renders the 0.9.9.5 release identity and the PWA gate", async () => {
   // Since 0.9.8.1 the first painted screen is the PWA gate, not the title: a
   // visitor is invited to install before anything decides to fetch the game for
   // them. The game shell therefore mounts on the client once the gate resolves,
@@ -142,10 +142,10 @@ test("server-renders the 0.9.9.4 release identity and the PWA gate", async () =>
 
   // Release identity in the document head is unchanged, and the Pages release
   // workflow greps exactly these.
-  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.9\.4<\/title>/);
+  assert.match(html, /<title>西新世紀末物語｜アーリーアクセス版 0\.9\.9\.5<\/title>/);
   // Share copy is derived from the same constant, so it cannot advertise a
   // version the build is not.
-  assert.match(html, /content="[^"]*Version 0\.9\.9\.4。"/);
+  assert.match(html, /content="[^"]*Version 0\.9\.9\.5。"/);
   const viewportMetas = html.match(/<meta name="viewport"[^>]*>/g) ?? [];
   assert.equal(viewportMetas.length, 1);
   assert.match(viewportMetas[0], /content="[^"]*width=device-width[^"]*viewport-fit=cover[^"]*initial-scale=1[^"]*"/);
@@ -317,7 +317,7 @@ test("draws three unmistakably different stage environments", async () => {
   const worldDraw = game.slice(game.indexOf("function drawWorld"), game.indexOf("export function AshfallGame"));
   const drawOrder = [
     'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"])',
-    "drawCrawler(ctx, g, sprites, graphicsProfile)",
+    "drawCrawler(ctx, g, sprites, graphicsProfile, allowDiagnosticFallback)",
     "drawEnemyBase(ctx, g, enemyBaseSprite, stageObjects)",
     'drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"])',
     "const renderables = [",
@@ -361,16 +361,17 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
     access(new URL("../public/medical-supply-station-v1.png", import.meta.url)),
   ]);
 
-  assert.match(game, /imageJob\(V075_VISUAL_PROFILES\.enemyBase\.intact\.path, "base", enemyBaseSpriteRef\.current/);
-  assert.match(game, /crawlerHostClosed: V099_CRAWLER_RUNTIME_PROFILE\.equipmentHost\.closed\.path/);
-  assert.match(game, /crawlerDeploymentBase: V099_CRAWLER_RUNTIME_PROFILE\.deployment\.baseInterior\.path/);
-  assert.match(game, /crawlerForegroundMask: V099_CRAWLER_RUNTIME_PROFILE\.deployment\.foregroundMask\.path/);
-  assert.match(game, /crawlerBarrageEquipment: V099_CRAWLER_RUNTIME_PROFILE\.equipment\.barrage\.sheet\.path/);
-  assert.match(game, /crawlerAirstrikeEquipment: V099_CRAWLER_RUNTIME_PROFILE\.equipment\.airstrike\.sheet\.path/);
-  assert.match(game, /pod: "\/tactical-drop-pod-v1\.png"/);
-  assert.match(game, /drum: "\/explosive-drum-v1\.png"/);
-  assert.match(game, /medical: "\/medical-supply-station-v1\.png"/);
-  assert.match(game, /drawBattlefieldSupply\(ctx, renderable\.object, sprites\)/);
+  assert.match(game, /imageJob\(requiredPlan\.enemyBase\.path, requiredPlan\.enemyBase\.category, enemyBaseSpriteRef\.current/);
+  const assetPlan = await readFile(new URL("../app/battleAssetPlan.js", import.meta.url), "utf8");
+  assert.match(assetPlan, /crawlerHostClosed: V099_CRAWLER_RUNTIME_PROFILE\.equipmentHost\.closed\.path/);
+  assert.match(assetPlan, /crawlerDeploymentBase: V099_CRAWLER_RUNTIME_PROFILE\.deployment\.baseInterior\.path/);
+  assert.match(assetPlan, /crawlerForegroundMask: V099_CRAWLER_RUNTIME_PROFILE\.deployment\.foregroundMask\.path/);
+  assert.match(assetPlan, /crawlerBarrageEquipment: V099_CRAWLER_RUNTIME_PROFILE\.equipment\.barrage\.sheet\.path/);
+  assert.match(assetPlan, /crawlerAirstrikeEquipment: V099_CRAWLER_RUNTIME_PROFILE\.equipment\.airstrike\.sheet\.path/);
+  assert.match(assetPlan, /pod: "\/tactical-drop-pod-v1\.png"/);
+  assert.match(assetPlan, /drum: "\/explosive-drum-v1\.png"/);
+  assert.match(assetPlan, /medical: "\/medical-supply-station-v1\.png"/);
+  assert.match(game, /drawBattlefieldSupply\(ctx, renderable\.object, sprites, allowDiagnosticFallback\)/);
   assert.match(game, /function drawEnemyBase/);
   assert.match(game, /infected checkpoint closes all three routes/);
   assert.match(game, /barricadeHp: number/);
@@ -400,14 +401,14 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.doesNotMatch(layout, /V075_VISUAL_PROFILES\.crawler/);
   assert.doesNotMatch(layout, /V075_VISUAL_PROFILES\.enemyBase/);
   assert.match(game, /const selectedVariantKinds = selectedFormationKinds\.includes\("mayo-chan"\)[\s\S]*"mayo-chan-feral" as UnitKind/);
-  assert.match(game, /const requiredSpriteKinds = qaMode \|\| qaScenario[\s\S]*\[\.\.\.new Set\(\[\.\.\.selectedFormationKinds, \.\.\.selectedVariantKinds, \.\.\.stageEnemyKinds, "turned" as UnitKind\]\)\]/);
-  assert.match(game, /const criticalKinds = qaMode \|\| qaScenario \|\| survivalAssetMode[\s\S]*\[\.\.\.new Set\(\[\.\.\.selectedFormationKinds, \.\.\.selectedVariantKinds, \.\.\.firstWaveEnemyKinds\]\)\]/);
-  assert.match(game, /criticalKinds\.map\(\(kind\) => imageJob\([\s\S]*spriteSheetPath\(kind\)/);
-  assert.match(game, /optionalKinds\.map\(\(kind\) => imageJob\([\s\S]*spriteSheetPath\(kind\)/);
-  assert.match(game, /STAGE_OBJECT_MANIFEST\[activeBattlefieldStageId\]\?\.objects \?\? \[\]/);
+  assert.match(game, /const requiredPlan = requiredBattleAssetPlan\(\{[\s\S]*formationKinds: \[\.\.\.selectedFormationKinds, \.\.\.selectedVariantKinds\],[\s\S]*enemyKinds: stageEnemyKinds/);
+  assert.match(game, /const requiredSpriteKinds = requiredPlan\.sprites\.map/);
+  assert.match(game, /requiredPlan\.sprites\.map\(\(\{ kind, path, category \}\) => imageJob/);
+  assert.doesNotMatch(game, /optionalKinds|optionalJobs|degraded-ready/);
+  assert.match(assetPlan, /STAGE_OBJECT_MANIFEST\[stageId\]\?\.objects \?\? \[\]/);
   assert.match(game, /const retainedSpriteImages = new Set\([\s\S]*if \(!retainedSpriteImages\.has\(image\) && !releasedSpriteImages\.has\(image\)\)[\s\S]*releaseImage\(image\)/);
   assert.match(game, /delete backgroundCacheRef\.current\[stageId\];[\s\S]*const allCriticalJobs = \[/);
-  assert.match(game, /root\.dataset\.assetResidentScope = qaMode \|\| qaScenario \? "all-local-qa" : "stage-and-formation"/);
+  assert.match(game, /root\.dataset\.assetResidentScope = finiteEnemyRuntimeQa[\s\S]*"finite-enemy-runtime-qa"[\s\S]*finiteVisualIntegrityQa[\s\S]*"finite-visual-integrity-qa"[\s\S]*qaMode \|\| qaScenario \? "all-local-qa" : "stage-and-formation"/);
   assert.match(game, /root\.dataset\.assetResidentBackgrounds = String\(Object\.keys\(backgroundCacheRef\.current\)\.length\)/);
   assert.doesNotMatch(game, /const cached = backgroundCacheRef\.current\[selectedStageId\]/);
   assert.doesNotMatch(game, /Object\.values\(STAGE_OBJECT_MANIFEST\)\.flatMap/);
@@ -474,7 +475,7 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL,[\s\S]*background\.naturalHeight \* \.44/);
   assert.match(
     game,
-    /enemyBaseSpriteRef\.current,\s*staticBattlefieldCacheRef\.current,\s*graphicsProfile,\s*false,\s*\);/,
+    /enemyBaseSpriteRef\.current,\s*staticBattlefieldCacheRef\.current,\s*graphicsProfile,\s*false,\s*Boolean\(qaMode \|\| qaScenario\),\s*\);/,
   );
   assert.match(game, /canvasPointerToWorld\(\{ clientX: event\.clientX, clientY: event\.clientY, rect, transform, worldWidth: W, worldHeight: H \}\)/);
   assert.doesNotMatch(game, /placement-hint|placement-cancel|戦場をタップ/);

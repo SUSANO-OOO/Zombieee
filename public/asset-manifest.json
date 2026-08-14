@@ -1,6 +1,6 @@
 {
   "schema": "zombieee-asset-manifest/1",
-  "version": "0.9.9.4",
+  "version": "0.9.9.5",
   "releaseSha": "__ZOMBIEEE_RELEASE_SHA__",
   "assets": [
     {
@@ -399,6 +399,15 @@
       "sourcePath": "/pwa-optimized/art/v070/characters/brute-battle-v1.webp"
     },
     {
+      "path": "/art/v070/characters/engineer-battle-v1.png",
+      "bytes": 1018194,
+      "hash": "sha256-f09f692f8efd692d376d99dcf061a237c4402c57f8a7eda7e938a9ecb6aa9d55",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v070/characters/engineer-battle-v1.webp"
+    },
+    {
       "path": "/art/v070/characters/gate-eater-battle-v1.png",
       "bytes": 1814664,
       "hash": "sha256-66f282f082fbadd9ed3a574cbdddd3e0bc0360adf9fdf7eff9abc5d038bdb983",
@@ -710,14 +719,6 @@
       "criticality": "optional"
     },
     {
-      "path": "/art/v080/characters/cards/monkey-formation-card-r2.webp",
-      "bytes": 60426,
-      "hash": "sha256-95b1704c0cb3ba9351bb16bebb4a27ef92e115d1d58861c53abbb5427213166f",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
       "path": "/art/v080/characters/cards/ranger-formation-card-r2.webp",
       "bytes": 40198,
       "hash": "sha256-9c631d32c0f06c81ffea6ec4bda0918b0059c2e6e55ac16bab6333463caf9639",
@@ -729,23 +730,6 @@
       "path": "/art/v080/characters/cards/scout-formation-card-r2.webp",
       "bytes": 56460,
       "hash": "sha256-99bbaeca6e2ae498ae1a88504627254cacc5daf97a8db37cb10ef15830d3f92f",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
-      "path": "/art/v080/characters/monkey-battle-r2.png",
-      "bytes": 1175810,
-      "hash": "sha256-7657d7a691a043976d84f551b27168ab1fdea492e0d2600ed731278c77c950e7",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v080/characters/monkey-battle-r2.webp"
-    },
-    {
-      "path": "/art/v080/characters/portraits/monkey-event-portrait-r2.webp",
-      "bytes": 74444,
-      "hash": "sha256-183fdc1eceb4c2fb5d6be38e968598f4485943d3291d93881b378d1740d3b60f",
       "pack": "units",
       "category": "portrait",
       "criticality": "optional"
@@ -1044,46 +1028,6 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v090/characters/cards/mayo-chan-formation-card-r1.webp",
-      "bytes": 74184,
-      "hash": "sha256-911cfc0587cc5de1d125ffd5ab5d5e04f3dcdd08003c905e0499c20598b145d4",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
-      "path": "/art/v090/characters/cards/miyamoto-musashi-formation-card-r1.webp",
-      "bytes": 52204,
-      "hash": "sha256-a706f50e43d96bcee9967435c12ce5e71b9057cb8eba53ef83f2572bae64997f",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
-      "path": "/art/v090/characters/cards/mrs-chiha-formation-card-r1.webp",
-      "bytes": 46200,
-      "hash": "sha256-ae25ec0426c8fece2ee85bf191a3c52bdf5d22f6361e2ac0143f603c0be50e1f",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
-      "path": "/art/v090/characters/cards/tky-formation-card-r1.webp",
-      "bytes": 45244,
-      "hash": "sha256-2777b377a159be05a88e3c5ce5bf142812e009fafe055dc165350903f31d3be9",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
-      "path": "/art/v090/characters/cards/zakimiya-formation-card-r1.webp",
-      "bytes": 44056,
-      "hash": "sha256-f3593435bddd9b5a65d9b5c8fb2a4a48f913ba88b03808a221cbd3cc08fb357f",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
       "path": "/art/v090/characters/mayo-chan-battle-r1.png",
       "bytes": 1938152,
       "hash": "sha256-49ec6dbbac3bc22ed266edb2fc422c2c5dffe74942e83624061a132f087b9fd2",
@@ -1120,46 +1064,6 @@
       "sourcePath": "/pwa-optimized/art/v090/characters/mrs-chiha-battle-r1.webp"
     },
     {
-      "path": "/art/v090/characters/portraits/mayo-chan-event-portrait-r1.webp",
-      "bytes": 107848,
-      "hash": "sha256-1d8dae611c7c78de0f3ec5afd0914fbd33dc7e7126fd219402790de3d9d65990",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
-      "path": "/art/v090/characters/portraits/miyamoto-musashi-event-portrait-r1.webp",
-      "bytes": 89478,
-      "hash": "sha256-4ae18e2c96f2ef647dabc1518b1316b23c572fecd1b6230f163f7cea44d2bb64",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
-      "path": "/art/v090/characters/portraits/mrs-chiha-event-portrait-r1.webp",
-      "bytes": 65184,
-      "hash": "sha256-2efe8461e8d38ee27404bd5c15717a06f076ff251c8ecbda4cf1d6d3da736337",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
-      "path": "/art/v090/characters/portraits/tky-event-portrait-r1.webp",
-      "bytes": 69208,
-      "hash": "sha256-1250070d3898bf3c05a8d71996a32b3f73249fe47b984dd00986355e1cf75de9",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
-      "path": "/art/v090/characters/portraits/zakimiya-event-portrait-r1.webp",
-      "bytes": 63906,
-      "hash": "sha256-146b8681604425b3384ffa6100e1d2b94d59d8e5f7b41f7c2dbd48cb2755945a",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "optional"
-    },
-    {
       "path": "/art/v090/characters/tky-battle-r1.png",
       "bytes": 1155694,
       "hash": "sha256-e2357fd0ad097c8fed1bb04dafad86ab75d384749057c279956847b6dd039783",
@@ -1176,60 +1080,6 @@
       "category": "unit",
       "criticality": "critical",
       "sourcePath": "/pwa-optimized/art/v090/characters/zakimiya-battle-r1.webp"
-    },
-    {
-      "path": "/art/v090/enemies/anchor-bloom-battle-v1.png",
-      "bytes": 1727262,
-      "hash": "sha256-0f39067f32bd473222d353e21057670afdd799cca204d102a1af3dc035522174",
-      "pack": "units",
-      "category": "enemy",
-      "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v090/enemies/anchor-bloom-battle-v1.webp"
-    },
-    {
-      "path": "/art/v090/enemies/cagewalker-battle-v1.png",
-      "bytes": 1798088,
-      "hash": "sha256-b48180a69efe96aee6bb82a14c23ad41951a1d4efb745d92d1a59f3d07c51b21",
-      "pack": "units",
-      "category": "enemy",
-      "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v090/enemies/cagewalker-battle-v1.webp"
-    },
-    {
-      "path": "/art/v090/enemies/choir-knot-battle-v1.png",
-      "bytes": 1662030,
-      "hash": "sha256-071e94c893455448c8f1f6c2424d04e052adcbdddc7935779343131ac15b465c",
-      "pack": "units",
-      "category": "enemy",
-      "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v090/enemies/choir-knot-battle-v1.webp"
-    },
-    {
-      "path": "/art/v090/enemies/pall-manta-battle-v1.png",
-      "bytes": 1275520,
-      "hash": "sha256-5cc71c0010b8b01efb3f9a5cbddf3bb54f7b3479d2876ee52c9465928aed1911",
-      "pack": "units",
-      "category": "enemy",
-      "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v090/enemies/pall-manta-battle-v1.webp"
-    },
-    {
-      "path": "/art/v090/enemies/resonator-battle-v1.png",
-      "bytes": 1296234,
-      "hash": "sha256-cfb1e55dc8c1f4148c0ea73ed810443b3970d520622f4616c8649e822c27e335",
-      "pack": "units",
-      "category": "enemy",
-      "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v090/enemies/resonator-battle-v1.webp"
-    },
-    {
-      "path": "/art/v090/enemies/spindle-battle-v1.png",
-      "bytes": 1481794,
-      "hash": "sha256-d3ab8d72d98c169d87de60adce0bb3887feb2e3528c1c27fdeae86e055497225",
-      "pack": "units",
-      "category": "enemy",
-      "criticality": "critical",
-      "sourcePath": "/pwa-optimized/art/v090/enemies/spindle-battle-v1.webp"
     },
     {
       "path": "/art/v090/stages/bay-tower-service-background-v1.webp",
@@ -1325,6 +1175,148 @@
       "category": "unit",
       "criticality": "critical",
       "sourcePath": "/pwa-optimized/art/v099/crawler/crawler-deployment-foreground-mask-v1.webp"
+    },
+    {
+      "path": "/art/v0995/characters/cards/mayo-chan-formation-card-r2.webp",
+      "bytes": 75442,
+      "hash": "sha256-6ad5c460c870ebf138d53cc0fd24024117488eb157e1235922161b923745492b",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/miyamoto-musashi-formation-card-r2.webp",
+      "bytes": 54022,
+      "hash": "sha256-34541913794aa86474287e6db6989266fa3219b02de93f8927f311d0ac579408",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/monkey-formation-card-r3.webp",
+      "bytes": 57806,
+      "hash": "sha256-48f45ece5ee8a30d53c06689cb8b3fd72d06908832b917982b538f1810e5e0a4",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/mrs-chiha-formation-card-r2.webp",
+      "bytes": 45616,
+      "hash": "sha256-b9ca1e75642a11b18874a4d5a1c54a9802a91b27767f0f1cbdd7845dc01545b3",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/tky-formation-card-r2.webp",
+      "bytes": 47538,
+      "hash": "sha256-ac5b4699e1098b1a4dfcbf07788624f3ff82e05c22ef06b92c4b0110cdb90c71",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/zakimiya-formation-card-r2.webp",
+      "bytes": 43726,
+      "hash": "sha256-075f1a28b537cd8ed9078b03b07871be71c41751e41c007c99cc27cdcc70659e",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/portraits/mayo-chan-event-portrait-r2.webp",
+      "bytes": 108524,
+      "hash": "sha256-fce7149d3f4fe7abd6b417fed98cc3e8904e5263001b0d7a95662e46576e5607",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/portraits/miyamoto-musashi-event-portrait-r2.webp",
+      "bytes": 89808,
+      "hash": "sha256-0bc224025e99093d2337b4c6d0d14acc06604fa79bc6c68231ac33bcd7ba2e62",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/portraits/mrs-chiha-event-portrait-r2.webp",
+      "bytes": 65336,
+      "hash": "sha256-eac852cbce801871e04c68fece726ea381f33bdfd52b44b7b9845faed75a44a5",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/portraits/tky-event-portrait-r2.webp",
+      "bytes": 69674,
+      "hash": "sha256-bcb28022021c8b3765f0a32ec706ea8ba5903034cc787a919d30fca3765f5f97",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp",
+      "bytes": 64102,
+      "hash": "sha256-b76a370986289841fd67ba57d246fc5ba702869df9a8baa65af4c4984424198b",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "bytes": 1727262,
+      "hash": "sha256-0f39067f32bd473222d353e21057670afdd799cca204d102a1af3dc035522174",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v0995/enemies/anchor-bloom-battle-v2.webp"
+    },
+    {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "bytes": 1798072,
+      "hash": "sha256-46e64afc684b78661d1a91bfc3f42ae04add1b8a23803b46eaf67f21a1435c4a",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v0995/enemies/cagewalker-battle-v2.webp"
+    },
+    {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "bytes": 1662030,
+      "hash": "sha256-071e94c893455448c8f1f6c2424d04e052adcbdddc7935779343131ac15b465c",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v0995/enemies/choir-knot-battle-v2.webp"
+    },
+    {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "bytes": 1275520,
+      "hash": "sha256-5cc71c0010b8b01efb3f9a5cbddf3bb54f7b3479d2876ee52c9465928aed1911",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v0995/enemies/pall-manta-battle-v2.webp"
+    },
+    {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "bytes": 1296618,
+      "hash": "sha256-040be169ebbc7c7cd0ebcf5f39616109f91907464d6107c1a896e93eb32dac60",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v0995/enemies/resonator-battle-v2.webp"
+    },
+    {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "bytes": 1481276,
+      "hash": "sha256-681c5fe9230cbe6e2bd389ec74cccfe559f58e2f70133085a300a622853b8a20",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v0995/enemies/spindle-battle-v2.webp"
     },
     {
       "path": "/audio/v060/music/battle-stage1.mp3",

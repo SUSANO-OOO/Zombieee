@@ -66,6 +66,96 @@ test("a rejected decode also falls back to the loaded image", async () => {
   assert.equal(readyImage, image);
 });
 
+test("battle readiness strict mode blocks a rejected decode", async () => {
+  const image = imageFixture({
+    decode: () => Promise.reject(new Error("corrupt image")),
+    onSource(candidate) {
+      queueMicrotask(() => candidate.onload?.());
+    },
+  });
+  await assert.rejects(
+    loadImageWithTimeout({
+      src: "/required-stage-object.webp",
+      createImage: () => image,
+      loadTimeoutMs: 50,
+      decodeTimeoutMs: 10,
+      requireDecode: true,
+      onReady() {},
+    }),
+    (error) => error?.name === "ImageDecodeError" && /required-stage-object/u.test(error.message),
+  );
+});
+
+test("battle readiness publishes only after a transient decode rejection is followed by success", async () => {
+  let attempts = 0;
+  let readyCount = 0;
+  const image = imageFixture({
+    decode: () => {
+      attempts += 1;
+      return attempts === 1
+        ? Promise.reject(new Error("transient decoder pressure"))
+        : Promise.resolve();
+    },
+    onSource(candidate) {
+      queueMicrotask(() => candidate.onload?.());
+    },
+  });
+  await loadImageWithTimeout({
+    src: "/large-required-atlas.png",
+    createImage: () => image,
+    loadTimeoutMs: 50,
+    decodeTimeoutMs: 25,
+    decodeAttempts: 3,
+    requireDecode: true,
+    onReady() { readyCount += 1; },
+  });
+  assert.equal(attempts, 2);
+  assert.equal(readyCount, 1);
+});
+
+test("battle readiness remains blocked when every bounded decode attempt rejects", async () => {
+  let attempts = 0;
+  const image = imageFixture({
+    decode: () => {
+      attempts += 1;
+      return Promise.reject(new Error("permanent decode failure"));
+    },
+    onSource(candidate) {
+      queueMicrotask(() => candidate.onload?.());
+    },
+  });
+  await assert.rejects(loadImageWithTimeout({
+    src: "/bad-required-atlas.png",
+    createImage: () => image,
+    loadTimeoutMs: 50,
+    decodeTimeoutMs: 25,
+    decodeAttempts: 3,
+    requireDecode: true,
+    onReady() {},
+  }), (error) => error?.name === "ImageDecodeError");
+  assert.equal(attempts, 3);
+});
+
+test("battle readiness strict mode blocks a stalled decode", async () => {
+  const image = imageFixture({
+    decode: () => new Promise(() => {}),
+    onSource(candidate) {
+      queueMicrotask(() => candidate.onload?.());
+    },
+  });
+  await assert.rejects(
+    loadImageWithTimeout({
+      src: "/required-support.webp",
+      createImage: () => image,
+      loadTimeoutMs: 50,
+      decodeTimeoutMs: 10,
+      requireDecode: true,
+      onReady() {},
+    }),
+    (error) => error?.name === "ImageDecodeError" && /decode timeout/u.test(error.message),
+  );
+});
+
 test("the decode fallback still refuses an image that carries no pixels", async () => {
   // The guard that makes falling back safe: a stalled decode on an image that
   // never actually loaded remains a failure.
@@ -116,5 +206,20 @@ test("an aborted stale load cannot publish an image into a newer generation", as
   });
   controller.abort();
   await assert.rejects(promise, (error) => error?.name === "AbortError");
+  assert.equal(readyCount, 0);
+});
+
+test("local QA fault injection is deterministic and never publishes a required image", async () => {
+  let readyCount = 0;
+  await assert.rejects(
+    loadImageWithTimeout({
+      src: "/required.webp",
+      faultMode: "delay",
+      createImage: () => imageFixture(),
+      loadTimeoutMs: 10,
+      onReady() { readyCount += 1; },
+    }),
+    (error) => error?.name === "TimeoutError",
+  );
   assert.equal(readyCount, 0);
 });

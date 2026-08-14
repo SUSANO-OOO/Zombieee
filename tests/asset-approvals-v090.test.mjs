@@ -86,6 +86,7 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
 
 test("each active character resolves only to its producer master and both builds fail closed on source revision", async () => {
   const ledger = JSON.parse(await readFile(LEDGER_PATH, "utf8"));
+  const v0995Ledger = JSON.parse(await readFile(path.join(ROOT, "docs", "ASSET_APPROVALS_0.9.9.5.json"), "utf8"));
   const records = new Map(ledger.assets.map((record) => [record.assetId, record]));
   const unitContracts = [
     ["zakimiya", "V090-ZAKIMIYA"],
@@ -94,7 +95,10 @@ test("each active character resolves only to its producer master and both builds
     ["miyamoto-musashi", "V090-MIYAMOTO-MUSASHI"],
     ["mayo-chan", "V090-MAYO-CHAN"],
   ];
-  const registeredPaths = new Set(ledger.assets.map(({ path: assetPath }) => assetPath));
+  const registeredPaths = new Set([
+    ...ledger.assets.map(({ path: assetPath }) => assetPath),
+    ...v0995Ledger.assets.map(({ path: assetPath }) => assetPath),
+  ]);
   for (const [kind, prefix] of unitContracts) {
     const masterId = `${prefix}-IDENTITY@r1`;
     const unitRecords = ledger.assets.filter(({ assetId }) => assetId.startsWith(`${prefix}-`));

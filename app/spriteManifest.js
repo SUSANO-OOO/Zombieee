@@ -1,4 +1,5 @@
 import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
+import { PRODUCTION_ENEMY_SOURCE_FACING } from "./enemyFacingContract.js";
 
 /**
  * Audited sprite source geometry for the 0.6.0 renderer and localhost QA.
@@ -201,8 +202,8 @@ const NEWCOMER_VISIBLE = Object.freeze({
     left: [[137, 74, 343, 432], [133, 91, 346, 432], [140, 90, 340, 432], [126, 155, 354, 432], [80, 150, 399, 432], [135, 139, 345, 432], [92, 309, 388, 432]],
   },
   engineer: {
-    right: [[149, 16, 331, 432], [135, 16, 336, 432], [121, 16, 369, 432], [117, 16, 384, 432], [131, 16, 381, 432], [106, 16, 360, 432], [16, 236, 464, 432]],
-    left: [[149, 16, 331, 432], [135, 16, 336, 432], [121, 16, 369, 432], [117, 16, 384, 432], [131, 16, 381, 432], [106, 16, 360, 432], [16, 236, 464, 432]],
+    right: [[130, 16, 349, 432], [127, 16, 352, 432], [97, 16, 382, 432], [66, 16, 413, 432], [101, 31, 379, 432], [97, 36, 383, 432], [70, 265, 410, 432]],
+    left: [[130, 16, 349, 432], [127, 16, 352, 432], [97, 16, 382, 432], [66, 16, 413, 432], [101, 31, 379, 432], [97, 36, 383, 432], [70, 265, 410, 432]],
   },
   "crazy-king": {
     right: [[140, 84, 340, 432], [138, 94, 342, 432], [119, 115, 361, 432], [121, 59, 358, 432], [56, 129, 424, 432], [87, 109, 393, 432], [58, 290, 422, 432]],
@@ -257,12 +258,12 @@ const NEWCOMER_VISIBLE = Object.freeze({
     left: [[137, 58, 344, 432], [111, 58, 359, 432], [123, 58, 371, 432], [84, 58, 397, 432], [84, 58, 397, 432], [128, 58, 353, 432], [39, 244, 442, 432]],
   },
   cagewalker: {
-    right: [[54, 49, 427, 432], [29, 75, 441, 432], [41, 75, 453, 432], [34, 169, 446, 432], [38, 49, 442, 432], [69, 49, 426, 431], [34, 223, 442, 432]],
-    left: [[54, 49, 427, 432], [29, 75, 441, 432], [41, 75, 453, 432], [34, 169, 446, 432], [38, 49, 442, 432], [55, 49, 412, 431], [38, 223, 446, 432]],
+    right: [[54, 49, 427, 432], [29, 75, 441, 432], [41, 75, 453, 432], [34, 169, 446, 432], [38, 49, 442, 432], [55, 49, 412, 431], [38, 223, 446, 432]],
+    left: [[54, 49, 427, 432], [29, 75, 441, 432], [41, 75, 453, 432], [34, 169, 446, 432], [38, 49, 442, 432], [69, 49, 426, 431], [34, 223, 442, 432]],
   },
   spindle: {
-    right: [[34, 231, 446, 432], [29, 156, 441, 432], [41, 156, 453, 432], [52, 49, 429, 432], [34, 123, 446, 432], [35, 129, 446, 430], [34, 304, 446, 432]],
-    left: [[34, 231, 446, 432], [29, 156, 441, 432], [41, 156, 453, 432], [52, 49, 429, 432], [34, 123, 446, 432], [34, 129, 445, 430], [34, 304, 446, 432]],
+    right: [[34, 231, 446, 432], [29, 156, 441, 432], [41, 156, 453, 432], [52, 49, 429, 432], [34, 123, 446, 432], [34, 129, 445, 430], [34, 304, 446, 432]],
+    left: [[34, 231, 446, 432], [29, 156, 441, 432], [41, 156, 453, 432], [52, 49, 429, 432], [34, 123, 446, 432], [35, 129, 446, 430], [34, 304, 446, 432]],
   },
   "choir-knot": {
     right: [[76, 53, 405, 432], [75, 53, 395, 432], [87, 53, 407, 432], [75, 53, 405, 432], [64, 53, 416, 432], [73, 53, 408, 432], [36, 242, 442, 432]],
@@ -400,7 +401,7 @@ function legacyManifestEntry(auditKey, nativeDirection, { battleScale = 1 } = {}
   });
 }
 
-function explicitAtlasManifestEntry(kind, path) {
+function explicitAtlasManifestEntry(kind, path, { semanticSourceFacing = null } = {}) {
   const frames = {};
   for (let index = 0; index < SPRITE_STATES.length; index += 1) {
     const state = SPRITE_STATES[index];
@@ -427,6 +428,7 @@ function explicitAtlasManifestEntry(kind, path) {
     // silhouette height while still drawing the complete source cell.
     battleContentHeight: 68,
     nativeDirection: "explicit-both",
+    ...(semanticSourceFacing ? { semanticSourceFacing } : {}),
     states: SPRITE_STATES,
     directions: SPRITE_DIRECTIONS,
     frames: Object.freeze(frames),
@@ -441,7 +443,7 @@ export const SPRITE_MANIFEST = Object.freeze({
   brute: explicitAtlasManifestEntry("brute", "/art/v070/characters/brute-battle-v1.png"),
   gunner: explicitAtlasManifestEntry("gunner", "/art/v070/characters/gunner-battle-v1.png"),
   guardian: explicitAtlasManifestEntry("guardian", "/art/v070/characters/guardian-battle-v1.png"),
-  engineer: explicitAtlasManifestEntry("engineer", "/art/v080/characters/monkey-battle-r2.png"),
+  engineer: explicitAtlasManifestEntry("engineer", "/art/v070/characters/engineer-battle-v1.png"),
   zakimiya: explicitAtlasManifestEntry("zakimiya", "/art/v090/characters/zakimiya-battle-r1.png"),
   tky: explicitAtlasManifestEntry("tky", "/art/v090/characters/tky-battle-r1.png"),
   "mrs-chiha": explicitAtlasManifestEntry("mrs-chiha", "/art/v090/characters/mrs-chiha-battle-r1.png"),
@@ -465,12 +467,12 @@ export const SPRITE_MANIFEST = Object.freeze({
   ooguchi: explicitAtlasManifestEntry("ooguchi", "/art/v090/bosses/ooguchi-battle-r1.png"),
   gairen: explicitAtlasManifestEntry("gairen", "/art/v090/bosses/gairen-battle-r1.png"),
   futago: explicitAtlasManifestEntry("futago", "/art/v090/bosses/futago-battle-r1.png"),
-  resonator: explicitAtlasManifestEntry("resonator", "/art/v090/enemies/resonator-battle-v1.png"),
-  cagewalker: explicitAtlasManifestEntry("cagewalker", "/art/v090/enemies/cagewalker-battle-v1.png"),
-  spindle: explicitAtlasManifestEntry("spindle", "/art/v090/enemies/spindle-battle-v1.png"),
-  "choir-knot": explicitAtlasManifestEntry("choir-knot", "/art/v090/enemies/choir-knot-battle-v1.png"),
-  "pall-manta": explicitAtlasManifestEntry("pall-manta", "/art/v090/enemies/pall-manta-battle-v1.png"),
-  "anchor-bloom": explicitAtlasManifestEntry("anchor-bloom", "/art/v090/enemies/anchor-bloom-battle-v1.png"),
+  resonator: explicitAtlasManifestEntry("resonator", "/art/v0995/enemies/resonator-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING.resonator.sourceFacing }),
+  cagewalker: explicitAtlasManifestEntry("cagewalker", "/art/v0995/enemies/cagewalker-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING.cagewalker.sourceFacing }),
+  spindle: explicitAtlasManifestEntry("spindle", "/art/v0995/enemies/spindle-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING.spindle.sourceFacing }),
+  "choir-knot": explicitAtlasManifestEntry("choir-knot", "/art/v0995/enemies/choir-knot-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING["choir-knot"].sourceFacing }),
+  "pall-manta": explicitAtlasManifestEntry("pall-manta", "/art/v0995/enemies/pall-manta-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING["pall-manta"].sourceFacing }),
+  "anchor-bloom": explicitAtlasManifestEntry("anchor-bloom", "/art/v0995/enemies/anchor-bloom-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING["anchor-bloom"].sourceFacing }),
   "crazy-king": explicitAtlasManifestEntry("crazy-king", "/art/v060/characters/crazy-king-battle-v1.png"),
   kumaverson: explicitAtlasManifestEntry("kumaverson", "/art/v060/characters/kumaverson-battle-v1.png"),
   babayaga: explicitAtlasManifestEntry("babayaga", "/art/v060/characters/babayaga-battle-v1.png"),
