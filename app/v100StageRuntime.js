@@ -1,6 +1,7 @@
 import { PRODUCTION_AUDIO_SCENE_IDS } from "./productionAudio.js";
 import { PRODUCTION_VISUALS } from "./productionVisuals.js";
 import { STAGE_OBJECT_MANIFEST } from "./stageObjectManifest.js";
+import { V100_RUNTIME_ASSET_MANIFEST, v100RuntimeAssetPathsForStage } from "./v100RuntimeAssetManifest.js";
 import { V100_STAGE_BY_ID, V100_STAGES } from "./v100Registry.js";
 
 const ASSAULT_STATES = Object.freeze(["intact", "damaged", "critical", "destroyed"]);
@@ -38,10 +39,14 @@ function objectPathsFor(stageId) {
 
 function runtimeRecord(stage) {
   const existingManifest = STAGE_OBJECT_MANIFEST[stage.id] ?? null;
-  // Stages 21-30 are intentionally reserved for the Phase 3 runtime-derived
-  // backgrounds. Keeping the record present lets the Phase 2 registry and
-  // reachability checks load without silently borrowing an earlier stage.
-  const backgroundPath = PRODUCTION_VISUALS.stages[stage.id] ?? null;
+  const v100Manifest = stage.number > 20 ? V100_RUNTIME_ASSET_MANIFEST.stages[stage.id] ?? null : null;
+  const v100Paths = stage.number > 20 ? v100RuntimeAssetPathsForStage(stage.id) : [];
+  const backgroundPath = v100Manifest?.background ?? PRODUCTION_VISUALS.stages[stage.id] ?? null;
+  const missionObjectPaths = v100Manifest?.missionObjects ?? objectPathsFor(stage.id);
+  const vfxPaths = v100Manifest?.vfx ?? [];
+  const requiredAssetPaths = stage.number > 20
+    ? v100Paths
+    : Object.freeze([...(backgroundPath ? [backgroundPath] : []), ...missionObjectPaths]);
   return Object.freeze({
     stageId: stage.id,
     stageNumber: stage.number,
@@ -53,8 +58,9 @@ function runtimeRecord(stage) {
       states: objectiveStatesFor(stage.missionType),
       source: existingManifest ? "existing-stage-object-manifest" : "existing-authored-runtime-object-contract",
     }),
-    missionObjectPaths: Object.freeze(objectPathsFor(stage.id)),
-    requiredAssetPaths: Object.freeze([...(backgroundPath ? [backgroundPath] : []), ...objectPathsFor(stage.id)]),
+    missionObjectPaths: Object.freeze(missionObjectPaths),
+    vfxPaths: Object.freeze(vfxPaths),
+    requiredAssetPaths: Object.freeze(requiredAssetPaths),
     audio: Object.freeze({
       profile: stage.audioProfile,
       scenes: Object.freeze(sceneIdsFor(stage)),
@@ -88,8 +94,9 @@ export function validateV100StageRuntimeRegistry() {
     if (runtime && runtime.stageNumber !== stage.number) errors.push(`${stage.id}:stage-number`);
     if (runtime && runtime.storyEventIds.length !== 3) errors.push(`${stage.id}:event-triplet`);
     if (runtime && runtime.objective.states.length === 0) errors.push(`${stage.id}:objective-states`);
-    if (runtime && stage.number <= 20 && runtime.requiredAssetPaths.length === 0) errors.push(`${stage.id}:required-assets`);
-    if (runtime && stage.number <= 20 && !runtime.backgroundPath) errors.push(`${stage.id}:background`);
+    if (runtime && runtime.requiredAssetPaths.length === 0) errors.push(`${stage.id}:required-assets`);
+    if (runtime && !runtime.backgroundPath) errors.push(`${stage.id}:background`);
+    if (runtime && stage.number > 20 && runtime.reuseBoundary !== "v100-derived-runtime-required") errors.push(`${stage.id}:v100-boundary`);
     if (V100_STAGE_BY_ID[stage.id]?.missionType !== runtime?.objective.missionType) errors.push(`${stage.id}:mission-type`);
   }
   return Object.freeze({ ok: errors.length === 0, errors: Object.freeze(errors), stageCount: Object.keys(V100_STAGE_RUNTIME).length });

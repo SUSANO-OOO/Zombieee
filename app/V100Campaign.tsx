@@ -38,8 +38,9 @@ import {
 } from "./v100StoryFlow.js";
 import { v100StoryEventView } from "./v100StoryEvents.js";
 import { advanceV100StageBattle, createV100StageBattle, v100StageBattleResult } from "./v100BattleRuntime.js";
-import { V100_SPRITE_MANIFEST } from "./spriteManifest.js";
+import { v100RuntimeSpriteFrameFor } from "./v100RuntimeSprites.js";
 import { v100StageRuntimeFor } from "./v100StageRuntime.js";
+import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 import {
   exportV100BrowserSave,
   importV100BrowserSave,
@@ -65,10 +66,10 @@ const PORTRAIT_PATHS: Record<string, string> = {
   "unit-crazy-king": V080_UNIT_VISUAL_PROFILES["crazy-king"].eventPortrait.path,
   "unit-miyamoto-musashi": V090_UNIT_VISUAL_PROFILES["miyamoto-musashi"].eventPortrait.path,
   "guide-ikura": V075_VISUAL_PROFILES.ikura.eventPortrait.path,
-  segawa: "/art/v100/characters/segawa-event-portrait-v1.webp",
-  "mugarian-president": "/art/v100/characters/mugarian-president-event-portrait-v1.webp",
-  "red-panther-commander": "/art/v100/enemies/red-panther-commander-event-portrait-v1.webp",
-  "minor-human-shared-event-silhouette": "/art/v100/portraits/minor-human-shared-event-silhouette-v1.webp",
+  segawa: V100_RUNTIME_ASSET_MANIFEST.portraits.segawa,
+  "mugarian-president": V100_RUNTIME_ASSET_MANIFEST.portraits.mugarianPresident,
+  "red-panther-commander": V100_RUNTIME_ASSET_MANIFEST.portraits.redPantherCommander,
+  "minor-human-shared-event-silhouette": V100_RUNTIME_ASSET_MANIFEST.portraits.minorHuman,
 };
 
 const UNIT_BY_ID = new Map(V100_UNITS.map((unit) => [unit.id, unit]));
@@ -460,10 +461,68 @@ function FormationView({ save, onSlotChange, onStart }: { save: Save; onSlotChan
   return <section className="v100-panel v100-formation-panel"><div className="v100-panel-heading"><div><span className="v100-kicker">FORMATION / 7 ORDERED SLOTS</span><h2>出撃編成</h2></div><span>{save.formationSlots.filter(Boolean).length} / 7</span></div><div className="v100-formation-grid">{save.formationSlots.map((unitId, index) => <label className="v100-slot" key={`slot-${index}`}><span>SLOT {index + 1}</span><select value={unitId ?? ""} onChange={(event) => onSlotChange(index, event.currentTarget.value)} aria-label={`編成スロット${index + 1}`}>{index === 0 && <option value="">空き</option>}{index !== 0 && <option value="">空き</option>}{save.ownedUnitIds.map((ownedId) => <option key={ownedId} value={ownedId}>{activeUnitName(ownedId)}</option>)}</select></label>)}</div><p>同じcharacter IDを複数slotへ配置できます。出撃中のplayer instanceは7体で固定し、装甲車両・support・mission objectは含みません。</p><button className="v100-primary" type="button" disabled={!save.formationSlots.some(Boolean)} onClick={onStart}>戦闘へ</button></section>;
 }
 
+function paisenBattleSequence(battle: Battle) {
+  if (battle.objectiveComplete) return ["death"];
+  const lastAction = battle.eventLog.at(-1)?.action;
+  if (lastAction === "vehicle-damage") return ["hit", "hit", "walk-a", "walk-b"];
+  if (["objective-hit", "escort-progress", "wave-clear", "power-node", "seal-node", "boss-hit"].includes(lastAction ?? "")) return ["attack-a", "attack-b", "walk-a", "walk-b"];
+  return ["idle", "walk-a", "walk-b", "idle"];
+}
+
+function bossBattleSequence(state: string | undefined) {
+  if (state === "entrance") return ["entrance", "move", "idle"];
+  if (state === "move") return ["move", "move", "idle"];
+  if (state === "telegraph") return ["idle", "attack", "idle"];
+  if (state === "phase") return ["phase", "move", "phase"];
+  if (state === "hit") return ["hit", "hit", "idle"];
+  if (state === "death") return ["death"];
+  if (state === "defeat") return ["defeat"];
+  return ["idle", "move", "idle"];
+}
+
+function V100BattleSprite({ kind, sequence, direction = "right", scale, alt }: { kind: string; sequence: string[]; direction?: "left" | "right"; scale: number; alt: string }) {
+  const [frameIndex, setFrameIndex] = useState(0);
+  const [compactViewport, setCompactViewport] = useState(false);
+  const sequenceKey = `${kind}:${direction}:${sequence.join(",")}`;
+  useEffect(() => {
+    if (sequence.length <= 1) return undefined;
+    const interval = window.setInterval(() => setFrameIndex((index) => index + 1), 220);
+    return () => window.clearInterval(interval);
+  }, [sequenceKey, sequence.length]);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 900px)");
+    const update = () => setCompactViewport(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  const state = sequence[frameIndex % sequence.length] ?? sequence[0];
+  const frame = v100RuntimeSpriteFrameFor(kind, state, direction);
+  const source = frame.sourceRect ?? { x: frame.x, y: frame.y, w: frame.w, h: frame.h };
+  const displayScale = scale * (compactViewport ? 0.72 : 1);
+  const sheetWidth = frame.sheetWidth * displayScale;
+  const sheetHeight = frame.sheetHeight * displayScale;
+  return <span
+    className={`v100-battle-sprite v100-battle-sprite-${frame.state ?? state}`}
+    role="img"
+    aria-label={alt}
+    data-sprite-kind={kind}
+    data-sprite-state={frame.state ?? state}
+    style={{
+      width: `${source.w * displayScale}px`,
+      height: `${source.h * displayScale}px`,
+      backgroundImage: `url("${frame.path}")`,
+      backgroundSize: `${sheetWidth}px ${sheetHeight}px`,
+      backgroundPosition: `-${source.x * displayScale}px -${source.y * displayScale}px`,
+    }}
+  />;
+}
+
 function BattleView({ battle, battleState, ownedUnitIds, runtime, onDeploy, onAction, onFinish }: { battle: Battle; battleState: BattleState; ownedUnitIds: string[]; runtime: ReturnType<typeof v100StageRuntimeFor>; onDeploy: (unitId: string) => void; onAction: (type: string, extra?: Record<string, number>) => void; onFinish: (won: boolean) => void }) {
   const boss = battle.boss;
   const canFinish = battle.objectiveComplete && battle.vehicleHp > 0;
-  return <section className="v100-battle-layout"><div className="v100-battle-stage" style={{ backgroundImage: `url(${runtime?.backgroundPath ?? "/art/v060/battle-nishijin-shopping-street-v1.webp"})` }}><div className="v100-battle-hud"><span>S{String(battle.stageNumber).padStart(2, "0")} / {battle.displayName}</span><span>VEHICLE {battle.vehicleHp} / {battle.vehicleMaxHp}</span></div><div className="v100-objective-card"><span className="v100-kicker">{battle.missionType.toUpperCase()}</span><strong>{battle.objectiveState}</strong><small>{battle.missionProgress} / {battle.targetCount}</small>{boss && <><span className="v100-boss-name">{boss.id}</span><progress max={boss.maxHp} value={boss.hp} /></>}{battle.audio?.bossOwnsProductionSceneUntilDeath && <small className="v100-audio-owner">BOSS AUDIO: {boss?.musicActive ? "music-v099-boss" : "story post"}</small>}</div><div className="v100-battle-actors"><img className="v100-paisen-battle" src={V100_SPRITE_MANIFEST.paisen.path} alt="Paisen runtime atlas" /></div></div><aside className="v100-battle-controls"><div className="v100-panel-heading"><div><span className="v100-kicker">MISSION OBJECT / {battle.objectiveId}</span><h2>{battle.objectiveState}</h2></div><span>{battle.elapsedSeconds}s</span></div><div className="v100-deploy-list">{[...new Set(battleState.activeReservations.filter((entry) => entry.releasedAt === null).map((entry) => entry.unitId))].map((unitId) => <span key={unitId}>● {activeUnitName(unitId)}</span>)}</div><div className="v100-control-grid">{battle.missionType === "boss" ? <>{boss?.state === "entrance" && <button type="button" onClick={() => onAction("boss-entrance")}>BOSS ENTRANCE</button>}{boss && boss.hp > 0 && boss.state !== "entrance" && <button type="button" onClick={() => onAction("boss-hit", { amount: Math.max(1, Math.ceil(boss.maxHp / 3)) })}>ATTACK / HIT</button>}{boss?.state === "death" && <button type="button" onClick={() => onAction("boss-defeat")}>DEFEAT PRESENTATION</button>}</> : battle.missionType === "timed-defense" ? <button type="button" onClick={() => onAction("tick", { seconds: battle.timedDurationSeconds ?? 90 })}>防衛時間を進める</button> : battle.missionType === "escort" ? <button type="button" onClick={() => onAction("escort-progress")}>護送を進める</button> : battle.missionType === "power" || battle.missionType === "seal" ? battle.missionObjects.map((object) => <button type="button" key={object.id} onClick={() => onAction(battle.missionType === "power" ? "power-node" : "seal-node", { index: object.index })}>NODE {object.index + 1}: {object.state}</button>) : <button type="button" onClick={() => onAction("objective-hit")}>拠点を攻撃する</button>}{battle.vehicleHp > 0 && <button type="button" onClick={() => onAction("vehicle-damage", { amount: Math.max(1, Math.floor(battle.vehicleMaxHp / 10)) })}>車両損傷テスト</button>}</div><div className="v100-deploy-buttons">{battleState.activeReservations.length < 7 && ownedUnitIds.map((unitId) => <button type="button" key={unitId} onClick={() => onDeploy(unitId)}>召喚 {activeUnitName(unitId)}</button>)}</div><div className="v100-battle-actions"><button className="v100-primary" type="button" disabled={!canFinish} onClick={() => { onAction("resolve"); onFinish(true); }}>勝利結果を保存</button><button type="button" disabled={battle.vehicleHp > 0} onClick={() => onFinish(false)}>敗北</button></div></aside></section>;
+  const bossKind = boss?.id ?? null;
+  return <section className="v100-battle-layout"><div className="v100-battle-stage" style={{ backgroundImage: `url(${runtime?.backgroundPath ?? "/art/v060/battle-nishijin-shopping-street-v1.webp"})` }}><div className="v100-battle-hud"><span>S{String(battle.stageNumber).padStart(2, "0")} / {battle.displayName}</span><span>VEHICLE {battle.vehicleHp} / {battle.vehicleMaxHp}</span></div><div className="v100-objective-card"><span className="v100-kicker">{battle.missionType.toUpperCase()}</span><strong>{battle.objectiveState}</strong><small>{battle.missionProgress} / {battle.targetCount}</small>{boss && <><span className="v100-boss-name">{boss.id}</span><progress max={boss.maxHp} value={boss.hp} /></>}{battle.audio?.bossOwnsProductionSceneUntilDeath && <small className="v100-audio-owner">BOSS AUDIO: {boss?.musicActive ? "music-v099-boss" : "story post"}</small>}</div><div className="v100-battle-actors"><V100BattleSprite kind="paisen" sequence={paisenBattleSequence(battle)} direction="left" scale={0.48} alt="Paisen battle sprite" />{bossKind && <V100BattleSprite kind={bossKind} sequence={bossBattleSequence(boss?.state)} direction="left" scale={0.52} alt={`${bossKind} battle sprite`} />}</div></div><aside className="v100-battle-controls"><div className="v100-panel-heading"><div><span className="v100-kicker">MISSION OBJECT / {battle.objectiveId}</span><h2>{battle.objectiveState}</h2></div><span>{battle.elapsedSeconds}s</span></div><div className="v100-deploy-list">{[...new Set(battleState.activeReservations.filter((entry) => entry.releasedAt === null).map((entry) => entry.unitId))].map((unitId) => <span key={unitId}>● {activeUnitName(unitId)}</span>)}</div><div className="v100-control-grid">{battle.missionType === "boss" ? <>{boss?.state === "entrance" && <button type="button" onClick={() => onAction("boss-entrance")}>BOSS ENTRANCE</button>}{boss && boss.hp > 0 && boss.state !== "entrance" && <button type="button" onClick={() => onAction("boss-hit", { amount: Math.max(1, Math.ceil(boss.maxHp / 3)) })}>ATTACK / HIT</button>}{boss?.state === "death" && <button type="button" onClick={() => onAction("boss-defeat")}>DEFEAT PRESENTATION</button>}</> : battle.missionType === "timed-defense" ? <button type="button" onClick={() => onAction("tick", { seconds: battle.timedDurationSeconds ?? 90 })}>防衛時間を進める</button> : battle.missionType === "escort" ? <button type="button" onClick={() => onAction("escort-progress")}>護送を進める</button> : battle.missionType === "power" || battle.missionType === "seal" ? battle.missionObjects.map((object) => <button type="button" key={object.id} onClick={() => onAction(battle.missionType === "power" ? "power-node" : "seal-node", { index: object.index })}>NODE {object.index + 1}: {object.state}</button>) : <button type="button" onClick={() => onAction("objective-hit")}>拠点を攻撃する</button>}{battle.vehicleHp > 0 && <button type="button" onClick={() => onAction("vehicle-damage", { amount: Math.max(1, Math.floor(battle.vehicleMaxHp / 10)) })}>車両損傷テスト</button>}</div><div className="v100-deploy-buttons">{battleState.activeReservations.length < 7 && ownedUnitIds.map((unitId) => <button type="button" key={unitId} onClick={() => onDeploy(unitId)}>召喚 {activeUnitName(unitId)}</button>)}</div><div className="v100-battle-actions"><button className="v100-primary" type="button" disabled={!canFinish} onClick={() => { onAction("resolve"); onFinish(true); }}>勝利結果を保存</button><button type="button" disabled={battle.vehicleHp > 0} onClick={() => onFinish(false)}>敗北</button></div></aside></section>;
 }
 
 function ResultView({ result, onContinue }: { result: Record<string, unknown> | null; onContinue: () => void }) {

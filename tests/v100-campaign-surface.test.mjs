@@ -47,7 +47,8 @@ test("V1 browser save uses primary, mirror, and last-known-good without touching
 test("V1 route exposes the name, seven-slot, event, battle, result, and postgame surfaces", async () => {
   const source = await readFile(path.join(ROOT, "app/V100Campaign.tsx"), "utf8");
   for (const marker of ["物語を始める", "FORMATION / 7 ORDERED SLOTS", "EVENT LOG", "BATTLE RESULT", "ENDING", "postgame-map"]) assert.match(source + (await readFile(path.join(ROOT, "app/v100StoryFlow.js"), "utf8")), new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")));
-  assert.match(source, /V100_SPRITE_MANIFEST\.paisen/u);
+  assert.match(source, /v100RuntimeSpriteFrameFor/u);
+  assert.match(source, /direction="left"/gu);
   assert.match(source, /recordV100PendingResult/u);
   assert.match(source, /exportV100BrowserSave/u);
 });

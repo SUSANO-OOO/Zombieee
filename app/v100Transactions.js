@@ -63,6 +63,8 @@ export function createV100BattleResult({
 } = {}) {
   const stageNumber = stageNumberFor(stageId);
   if (!stageNumber) return { ok: false, reason: "unknown-stage" };
+  const boss = bossPayloadForStage(stageNumber);
+  if (boss && won === true && bossDefeated !== true) return { ok: false, reason: "boss-not-defeated" };
   const validVictory = won === true && objectiveComplete === true && Number(vehicleHp) > 0;
   return Object.freeze({
     resultId: typeof battleRunId === "string" && battleRunId.length > 0 ? battleRunId : `v100:run:${stageNumber}:${Date.now()}`,
@@ -133,7 +135,7 @@ export function finalizeV100PendingResult(save, { result = null, now } = {}) {
       levelCap: Math.max(next.levelCap, v100LevelCapForStage(stageNumber)),
       receipts,
       pendingResult: null,
-      lastResult: { ...pending, firstClear, rewardCaps: reward, finalizedAt: new Date().toISOString() },
+      lastResult: { ...pending, firstClear, rewardCaps: reward, finalizedAt: new Date(now ?? Date.now()).toISOString() },
     };
     updated = payloadForStage(stageNumber, updated);
     if (boss && pending.bossDefeated === true) {

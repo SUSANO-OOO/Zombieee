@@ -1,0 +1,1219 @@
+{
+  "schema": "v100-runtime-asset-provenance-v1",
+  "designId": "V100-SOL-DL-001 r2",
+  "storySha256": "c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4",
+  "generator": "scripts/build-v100-runtime-assets.mjs",
+  "policy": "finite-derivatives-from-selected-masters-and-existing-authored-production-sources",
+  "draftGuideTexturesRemoved": true,
+  "draftGuideTexturePolicy": "v080 arrow, chevron, route-marker and geometric guide textures are not used in V1 runtime backgrounds",
+  "privateReferencePhotosIncluded": false,
+  "rejectedCandidatePathsReferenced": [],
+  "sources": {
+    "assets/source/v100/characters/mugarian-president-identity-master-r2.png": {
+      "path": "assets/source/v100/characters/mugarian-president-identity-master-r2.png",
+      "sha256": "c5c6a40e161197a15855ca7733dc3c4af7f32138516eb885130244a2c3b22ab6"
+    },
+    "assets/source/v100/characters/segawa-identity-master-r2.png": {
+      "path": "assets/source/v100/characters/segawa-identity-master-r2.png",
+      "sha256": "0bb98569efa36dbc7df6fbd7fb7ec2cce11671ddbe58f4ce84d9ce26fb187c1d"
+    },
+    "assets/source/v100/enemies/mugarian-president-mutated-identity-master-r4.png": {
+      "path": "assets/source/v100/enemies/mugarian-president-mutated-identity-master-r4.png",
+      "sha256": "be58f640e7b918e0a37a04d6e128b448c71926483a95f9a5a161cd83dfae0d72"
+    },
+    "assets/source/v100/enemies/red-panther-commander-identity-master-r1.png": {
+      "path": "assets/source/v100/enemies/red-panther-commander-identity-master-r1.png",
+      "sha256": "dab75e9ec7e6e1075f969d021d8089477ca2e2cb40e3a1e416e5e029bade6dba"
+    },
+    "assets/source/v100/enemies/red-panther-knife-identity-master-r1.png": {
+      "path": "assets/source/v100/enemies/red-panther-knife-identity-master-r1.png",
+      "sha256": "8875b636ed887caa34aa1a704c31291aa1a774c4429891d2c66e7356fc8082a2"
+    },
+    "assets/source/v100/enemies/red-panther-shield-identity-master-r1.png": {
+      "path": "assets/source/v100/enemies/red-panther-shield-identity-master-r1.png",
+      "sha256": "584e03350283e6e7a92709c98d14ca63a9574e53f46961a39b466a3760d5ea2f"
+    },
+    "assets/source/v100/enemies/red-panther-smg-identity-master-r1.png": {
+      "path": "assets/source/v100/enemies/red-panther-smg-identity-master-r1.png",
+      "sha256": "3f03c2e8e6eae37173e637ea801944b1016858222437b4e0c4d3d320b2f52fd8"
+    },
+    "assets/source/v100/enemies/takuya-omega-identity-master-r2.png": {
+      "path": "assets/source/v100/enemies/takuya-omega-identity-master-r2.png",
+      "sha256": "d46f6a96f693dbf0aa9b81b9ef2b1f5797f461c87505c7390c80464e3a0249af"
+    },
+    "assets/source/v100/portraits/minor-human-shared-event-silhouette-r2.png": {
+      "path": "assets/source/v100/portraits/minor-human-shared-event-silhouette-r2.png",
+      "sha256": "a5e58d69828d5dacf99ceae1ce427f88fe751fbf3b491eedd50e5992b8c0eeb7"
+    },
+    "assets/source/v100/runtime/motion/mugarian-president-mutated/attack-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/attack-left-authored-v1.png",
+      "sha256": "59d5052d8344c2b3da18a60a7fe90c2309ba41292931ce9f3dbea95f4245a295"
+    },
+    "assets/source/v100/runtime/motion/mugarian-president-mutated/death-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/death-left-authored-v1.png",
+      "sha256": "39203d26ecf3856bc6c150c7b08a755eb04b007f688c9170f2eba5bfc6a1acdc"
+    },
+    "assets/source/v100/runtime/motion/mugarian-president-mutated/defeat-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/defeat-left-authored-v1.png",
+      "sha256": "bbd87e5561a3fdd9ed06720dda62312ff8dc3a7293f3ca7b1171dbda4c6ee572"
+    },
+    "assets/source/v100/runtime/motion/mugarian-president-mutated/entrance-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/entrance-left-authored-v1.png",
+      "sha256": "67aa1514137e0b6357119a0b4656ad4bd97f57ef34ad4a7354a4d4b801c87b3e"
+    },
+    "assets/source/v100/runtime/motion/mugarian-president-mutated/hit-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/hit-left-authored-v1.png",
+      "sha256": "fd9ba3251491da54d11d1233e75a774387b662c023a54a3b99c7a65f889d7ba3"
+    },
+    "assets/source/v100/runtime/motion/mugarian-president-mutated/idle-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/idle-left-authored-v1.png",
+      "sha256": "8689bd42950a1b7af9f8bba94d8a0b4d997735145d1da8556607c9aff40151bf"
+    },
+    "assets/source/v100/runtime/motion/mugarian-president-mutated/move-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/move-left-authored-v1.png",
+      "sha256": "172d8393ba2b061b467557a429a5be965070afc993c8095a775b9f4c5f5590f9"
+    },
+    "assets/source/v100/runtime/motion/mugarian-president-mutated/phase-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/mugarian-president-mutated/phase-left-authored-v1.png",
+      "sha256": "6fbde4bf375620555b1ec734c168b207f185df2540e944c79f9437c82230abe9"
+    },
+    "assets/source/v100/runtime/motion/red-panther-commander/attack-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-commander/attack-left-authored-v1.png",
+      "sha256": "740630f9ffa7cad59078d9bca0eac1c3540b6d1ea0f1509abead581762c73848"
+    },
+    "assets/source/v100/runtime/motion/red-panther-commander/death-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-commander/death-left-authored-v1.png",
+      "sha256": "9a6ae23a16bee12bee449dc0e2a0a56d842ffcde212b25e87b95104631d3ad40"
+    },
+    "assets/source/v100/runtime/motion/red-panther-commander/hit-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-commander/hit-left-authored-v1.png",
+      "sha256": "99756d199a5abcab086ee426639a55860f8b505a7198f2071977955532f1121f"
+    },
+    "assets/source/v100/runtime/motion/red-panther-commander/idle-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-commander/idle-left-authored-v1.png",
+      "sha256": "d5e71867ade76ffadddae0ddc10c4f13a261e904deaba5b1b928d6d7b418f702"
+    },
+    "assets/source/v100/runtime/motion/red-panther-commander/move-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-commander/move-left-authored-v1.png",
+      "sha256": "69b0b879cdf7337a460f1dbcfaf90f1be7393202870aefa20e314ff1ece6e245"
+    },
+    "assets/source/v100/runtime/motion/red-panther-knife/attack-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-knife/attack-left-authored-v1.png",
+      "sha256": "25979078b9b78ae1795f62b506d0a83e2d39c3d2089a1043b9026658b24e5518"
+    },
+    "assets/source/v100/runtime/motion/red-panther-knife/death-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-knife/death-left-authored-v1.png",
+      "sha256": "ff693e4e50b17b93dc8fd6acc21ac51683ee59c069bd4fb05d292cb7877b3f57"
+    },
+    "assets/source/v100/runtime/motion/red-panther-knife/hit-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-knife/hit-left-authored-v1.png",
+      "sha256": "e322197f3b11671283652bee290a08fd9c943de6bf7d3995144b0df3fd02ea00"
+    },
+    "assets/source/v100/runtime/motion/red-panther-knife/idle-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-knife/idle-left-authored-v1.png",
+      "sha256": "46e399d102f7a288a319e24ae1e42a0d4bae955c76433d956077aed182d76e14"
+    },
+    "assets/source/v100/runtime/motion/red-panther-knife/move-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-knife/move-left-authored-v1.png",
+      "sha256": "9478d81a08df069beb08bc7cdd437f841300544c64358e15035855a96fb88067"
+    },
+    "assets/source/v100/runtime/motion/red-panther-shield/attack-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-shield/attack-left-authored-v1.png",
+      "sha256": "ec0ace8683f1012fa0ae26587ebce1947e47f5fcff6416f999e1fdd6bbcc5f1a"
+    },
+    "assets/source/v100/runtime/motion/red-panther-shield/death-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-shield/death-left-authored-v1.png",
+      "sha256": "ad7b97c38fe25706b9c02dea21245426d007fd44327648941fc1d9e8454db420"
+    },
+    "assets/source/v100/runtime/motion/red-panther-shield/hit-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-shield/hit-left-authored-v1.png",
+      "sha256": "f8dec3d2e96bd3b03fc51a2bec5626779c193b51c4b5f43f0ac32a020bcd6874"
+    },
+    "assets/source/v100/runtime/motion/red-panther-shield/idle-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-shield/idle-left-authored-v1.png",
+      "sha256": "f7e2ccefcfcd6b8d42a7a80bf3dc3dd670898965b833962a5a939e5a0406cd09"
+    },
+    "assets/source/v100/runtime/motion/red-panther-shield/move-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-shield/move-left-authored-v1.png",
+      "sha256": "21cd67a06f00d34907338908c7585f4a14fc0176190136568f95c0ea92450865"
+    },
+    "assets/source/v100/runtime/motion/red-panther-smg/attack-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-smg/attack-left-authored-v1.png",
+      "sha256": "d1979c875a82667c9f002214c7e7d8b756c857d8be07923ce5743412559a5baf"
+    },
+    "assets/source/v100/runtime/motion/red-panther-smg/death-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-smg/death-left-authored-v1.png",
+      "sha256": "33953f27356a6706d6864533a1f82b5aa7635799effd64c618e683cbe2e568b8"
+    },
+    "assets/source/v100/runtime/motion/red-panther-smg/hit-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-smg/hit-left-authored-v1.png",
+      "sha256": "465c691c737361fa5b194ac8c358fc29b340e2d5e5ce38c374caa2136037438f"
+    },
+    "assets/source/v100/runtime/motion/red-panther-smg/idle-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-smg/idle-left-authored-v1.png",
+      "sha256": "ce770f1d2eb5027ecda5f9dc41c06505cd96882838963554ca536974842ac685"
+    },
+    "assets/source/v100/runtime/motion/red-panther-smg/move-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/red-panther-smg/move-left-authored-v1.png",
+      "sha256": "b12bfb916b85545c61449276b98ef18d9b3cebe24cb0983b027647686f128e7c"
+    },
+    "assets/source/v100/runtime/motion/takuya-omega/attack-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/attack-left-authored-v1.png",
+      "sha256": "356e9583c17c5525c08f839ad689c82aeb85b321aa740d0b1ae4f8c1fd7eb914"
+    },
+    "assets/source/v100/runtime/motion/takuya-omega/death-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/death-left-authored-v1.png",
+      "sha256": "a140a331f70a00da5ffce6db3c8a63552b02ca6e16237c5bca246db6fa59a2bc"
+    },
+    "assets/source/v100/runtime/motion/takuya-omega/defeat-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/defeat-left-authored-v1.png",
+      "sha256": "955eedde6471a17e6c6709d8aeb3dd20f441108705507f56c173980e7944badc"
+    },
+    "assets/source/v100/runtime/motion/takuya-omega/entrance-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/entrance-left-authored-v1.png",
+      "sha256": "d3366a9f6652e522f12bb732c495de162bdd060ba06c59fa986c1b0da83026d7"
+    },
+    "assets/source/v100/runtime/motion/takuya-omega/hit-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/hit-left-authored-v1.png",
+      "sha256": "d79f83c2c23d1ee171d9fa1b7e24db9e29440a60e81232dbf8c4e24189c2561a"
+    },
+    "assets/source/v100/runtime/motion/takuya-omega/idle-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/idle-left-authored-v1.png",
+      "sha256": "eb010a3efa2843de120222e9590be46aa944248562ba54ab9da3271cf59605bb"
+    },
+    "assets/source/v100/runtime/motion/takuya-omega/move-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/move-left-authored-v1.png",
+      "sha256": "5c8e808b38f1a1c3ee1fe253e0ec45dbe0cb8ff064bd8743a6ee4def7bf0a4bb"
+    },
+    "assets/source/v100/runtime/motion/takuya-omega/phase-left-authored-v1.png": {
+      "path": "assets/source/v100/runtime/motion/takuya-omega/phase-left-authored-v1.png",
+      "sha256": "74fe005e27175c96568231a837fd3a713bc697ea61c293c3fd7982be5a8399cb"
+    },
+    "public/art/v060/battle-nishijin-defense-line-v1.webp": {
+      "path": "public/art/v060/battle-nishijin-defense-line-v1.webp",
+      "sha256": "4bd351304b064f86a3b8c651433e3aba6560564df315beeea9c8678967948a89"
+    },
+    "public/art/v060/stage-objects/defense-infection-nest-damaged-v1.png": {
+      "path": "public/art/v060/stage-objects/defense-infection-nest-damaged-v1.png",
+      "sha256": "59bbf0466d1511ecca49debbef3198d8e705e7d4a00ee5289cd6e3a9575dae59"
+    },
+    "public/art/v060/stage-objects/defense-infection-nest-destroyed-v1.png": {
+      "path": "public/art/v060/stage-objects/defense-infection-nest-destroyed-v1.png",
+      "sha256": "726217866dafb7ef16266b187236e075987c2ff5916db79c6bdc093328860768"
+    },
+    "public/art/v060/stage-objects/defense-static-dressing-v1.png": {
+      "path": "public/art/v060/stage-objects/defense-static-dressing-v1.png",
+      "sha256": "4a4312a0997fd6009098325440f7c1c225df20d51cbeb9ebe25f55446663a75c"
+    },
+    "public/art/v060/stage-objects/defense-transmitter-active-v1.png": {
+      "path": "public/art/v060/stage-objects/defense-transmitter-active-v1.png",
+      "sha256": "a83c1185cb2c80cf0f568f5299134cd37f4f38b6c7dbc0775299bc06e5988309"
+    },
+    "public/art/v060/stage-objects/defense-transmitter-damaged-v1.png": {
+      "path": "public/art/v060/stage-objects/defense-transmitter-damaged-v1.png",
+      "sha256": "50b341ec09f6faefe4c6ca3c419cc60c1891730450e624f122bb4264abde4f43"
+    },
+    "public/art/v070/stages/objects/station-gate-objects-v1.png": {
+      "path": "public/art/v070/stages/objects/station-gate-objects-v1.png",
+      "sha256": "9923b7d850a613e133f928bdebfc0d2cca8af7d6150a1b1d759986fd948dda9b"
+    },
+    "public/art/v070/stages/objects/station-platform-objects-v1.png": {
+      "path": "public/art/v070/stages/objects/station-platform-objects-v1.png",
+      "sha256": "ef316203647e73995714543e87b960441ef029490c1a5b8c270b3d945eb168cb"
+    },
+    "public/art/v070/stages/objects/station-tunnel-objects-v1.png": {
+      "path": "public/art/v070/stages/objects/station-tunnel-objects-v1.png",
+      "sha256": "81f14f358b30b5c80c6a8c2d7914e8c9b42e23b4f6944a879a7275b16e39b0be"
+    },
+    "public/art/v080/stages/evacuation-freight-yard-background-v1.webp": {
+      "path": "public/art/v080/stages/evacuation-freight-yard-background-v1.webp",
+      "sha256": "45aaf5c6370575f257b65dbe209967f58d7783fd7460f8b9af61682b965ff57d"
+    },
+    "public/art/v080/stages/hospital-emergency-ward-background-v1.webp": {
+      "path": "public/art/v080/stages/hospital-emergency-ward-background-v1.webp",
+      "sha256": "d9d900e00d4eede807dd6e964bc561e9a5c296b60be0511fd1b98e051422d712"
+    },
+    "public/art/v080/stages/hospital-evacuation-route-background-v1.webp": {
+      "path": "public/art/v080/stages/hospital-evacuation-route-background-v1.webp",
+      "sha256": "d0045bf4e4ad26e9b5a1b97312c2f940bb2a875fbe33aa1460176034fb39439b"
+    },
+    "public/art/v080/stages/logistics-relay-background-v1.webp": {
+      "path": "public/art/v080/stages/logistics-relay-background-v1.webp",
+      "sha256": "b8439e21356b6f20072a4fb62fdb7bb4a7c86f3dcb551a9c3f291328ea5ffa4f"
+    },
+    "public/art/v080/stages/research-access-background-v1.webp": {
+      "path": "public/art/v080/stages/research-access-background-v1.webp",
+      "sha256": "bf73e4ce894a454fb8013f8c35774ed6e343c225d2a0d902c31cfb7e7b8477cd"
+    },
+    "public/art/v080/stages/research-containment-background-v1.webp": {
+      "path": "public/art/v080/stages/research-containment-background-v1.webp",
+      "sha256": "4203c7dc98754a2795f4364e237b336e5ecaf7c0c74494451a73830eae8f31e0"
+    },
+    "public/art/v080/stages/research-freight-passage-background-v1.webp": {
+      "path": "public/art/v080/stages/research-freight-passage-background-v1.webp",
+      "sha256": "979760fe1a798a6d6301da2ca438ff754cbdb934b682f0091a08d951f8330e4b"
+    },
+    "public/art/v090/stages/bay-tower-service-background-v1.webp": {
+      "path": "public/art/v090/stages/bay-tower-service-background-v1.webp",
+      "sha256": "a2ee399f05d60887005c1e8126c90709b6bca5030a76a83cb57ee67ebb36b63b"
+    },
+    "public/art/v090/stages/civic-archive-route-background-v1.webp": {
+      "path": "public/art/v090/stages/civic-archive-route-background-v1.webp",
+      "sha256": "441cf53730a3630bae8c6a2669c1e61f9ff5d364f4cc5a99edb7fe84b760719d"
+    },
+    "public/art/v090/stages/coastal-link-bridge-background-v1.webp": {
+      "path": "public/art/v090/stages/coastal-link-bridge-background-v1.webp",
+      "sha256": "4b01df93f04c5da2edf103d48fd32714e19da94acc571c7074888680bec058ff"
+    },
+    "public/art/v090/stages/coastal-power-rig-v1.png": {
+      "path": "public/art/v090/stages/coastal-power-rig-v1.png",
+      "sha256": "9fa081695434e63c19deb4e658e810e5570c6a9a53c94308eec58a2b81ac334c"
+    },
+    "public/art/v090/stages/estuary-floodgate-background-v1.webp": {
+      "path": "public/art/v090/stages/estuary-floodgate-background-v1.webp",
+      "sha256": "0ec7070894b8b398db0bbbab09ebb2ea2b0b36839e20664e7f61ae7214ce813d"
+    },
+    "public/art/v095/mission-objects/maintenance-cart-v1.png": {
+      "path": "public/art/v095/mission-objects/maintenance-cart-v1.png",
+      "sha256": "1523b6347d5f1e66fb7065338602c1621bac5f2f90d37ec62059830d3b69b3fb"
+    },
+    "public/art/v100/mission-objects/clinical-trial-wing-v1.png": {
+      "path": "public/art/v100/mission-objects/clinical-trial-wing-v1.png",
+      "sha256": "fa22d6cca1d5732be44d13d4827db8b24920488fb4f609862fb9d7707af518ce"
+    },
+    "public/art/v100/mission-objects/escort-cart-intact-v1.png": {
+      "path": "public/art/v100/mission-objects/escort-cart-intact-v1.png",
+      "sha256": "cf750c39c8053c7cc204a75701da34f00e1d527dd10249ee718f731642850fc9"
+    },
+    "public/art/v100/mission-objects/high-security-research-core-gate-v1.png": {
+      "path": "public/art/v100/mission-objects/high-security-research-core-gate-v1.png",
+      "sha256": "ab239472d02648619c447bbe03dafc59d51bbfe5bec3113d5f8fa6f06be4c5ef"
+    },
+    "public/art/v100/mission-objects/president-arena-terminal-v1.png": {
+      "path": "public/art/v100/mission-objects/president-arena-terminal-v1.png",
+      "sha256": "c35f1ba050f4b38e9b81ae2b2752830d5575d878de7ea2622dc1fe0f8d9c5fbf"
+    },
+    "public/art/v100/mission-objects/red-panther-armory-lockers-v1.png": {
+      "path": "public/art/v100/mission-objects/red-panther-armory-lockers-v1.png",
+      "sha256": "4e8b07bc1a80f251ac1fa928873252c3a69fdc8be98d355cba6791f1914d9249"
+    },
+    "public/art/v100/mission-objects/stage30-aftermath-core-v1.png": {
+      "path": "public/art/v100/mission-objects/stage30-aftermath-core-v1.png",
+      "sha256": "4c835e1b2cbdd077afbda50b9162f58e72c25872d6ee1609941a7cf04c859860"
+    },
+    "public/art/v100/mission-objects/twin-reactor-landmark-v1.png": {
+      "path": "public/art/v100/mission-objects/twin-reactor-landmark-v1.png",
+      "sha256": "bf23593e6a376cbfe9441726b2a761505b5e8fa10c4cea1fdaac4617e816e3ea"
+    }
+  },
+  "outputs": {
+    "/public/art/v100/bosses/mugarian-president-mutated-battle-v1.png": {
+      "path": "/public/art/v100/bosses/mugarian-president-mutated-battle-v1.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 10240,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "f23e10bde249e818bad027ad4e607d27d0cac5450fa5b811dbe0c0572f87b576",
+      "sources": [
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/entrance-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/phase-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/death-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/mugarian-president-mutated/defeat-left-authored-v1.png",
+        "assets/source/v100/enemies/mugarian-president-mutated-identity-master-r4.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "right": "derived-horizontal-flip",
+        "left": "authored"
+      },
+      "identityMaster": "assets/source/v100/enemies/mugarian-president-mutated-identity-master-r4.png",
+      "weaponScalePolicy": "identity-master-locked; mutated president preserves the original hooked staff and oversized arm silhouette in every authored state",
+      "semanticStates": [
+        {
+          "state": "entrance",
+          "rightRow": "entrance:right",
+          "leftRow": "entrance:left"
+        },
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "phase",
+          "rightRow": "phase:right",
+          "leftRow": "phase:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        },
+        {
+          "state": "defeat",
+          "rightRow": "defeat:right",
+          "leftRow": "defeat:left"
+        }
+      ]
+    },
+    "/public/art/v100/bosses/takuya-omega-battle-v1.png": {
+      "path": "/public/art/v100/bosses/takuya-omega-battle-v1.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 10240,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "57eb0dcf83dc717175fe575c9b077af9f1d54c330f7368705625eb60dc2334c1",
+      "sources": [
+        "assets/source/v100/runtime/motion/takuya-omega/entrance-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/phase-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/death-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/takuya-omega/defeat-left-authored-v1.png",
+        "assets/source/v100/enemies/takuya-omega-identity-master-r2.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "right": "derived-horizontal-flip",
+        "left": "authored"
+      },
+      "identityMaster": "assets/source/v100/enemies/takuya-omega-identity-master-r2.png",
+      "weaponScalePolicy": "identity-master-locked; oversized serrated greatsword keeps the same blade length and width from hand to near-ankle across every authored state",
+      "semanticStates": [
+        {
+          "state": "entrance",
+          "rightRow": "entrance:right",
+          "leftRow": "entrance:left"
+        },
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "phase",
+          "rightRow": "phase:right",
+          "leftRow": "phase:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        },
+        {
+          "state": "defeat",
+          "rightRow": "defeat:right",
+          "leftRow": "defeat:left"
+        }
+      ]
+    },
+    "/public/art/v100/cuts/mugarian-president-defeat-v1.webp": {
+      "kind": "story-cut",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "f2d523913775e11d2f17309990d8cf925f7a5fdf3de3bb909c5176876ae36498",
+      "sources": [
+        "assets/source/v100/enemies/mugarian-president-mutated-identity-master-r4.png",
+        "public/art/v080/stages/research-containment-background-v1.webp"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/cuts/mugarian-president-executive-lab-v1.webp": {
+      "kind": "story-cut",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "c0a9db3b2d068271c948aa4f80dedb096250b56d43fb972ee7c2f3ebb8e1f44c",
+      "sources": [
+        "assets/source/v100/characters/mugarian-president-identity-master-r2.png",
+        "public/art/v080/stages/research-access-background-v1.webp"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/cuts/segawa-private-lab-reveal-v1.webp": {
+      "kind": "story-cut",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "892717b2b8682db9cfde5cc4cca947b5c4d34b962f6480c22e222175fa58d9a4",
+      "sources": [
+        "assets/source/v100/characters/segawa-identity-master-r2.png",
+        "public/art/v080/stages/research-containment-background-v1.webp"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/cuts/takuya-omega-ending-defeat-v1.webp": {
+      "kind": "story-cut",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "d00d35ef3533dcd5099b24bb7d2822ae7f4b08acc85c669b96811cb4ceba4ffb",
+      "sources": [
+        "assets/source/v100/enemies/takuya-omega-identity-master-r2.png",
+        "public/art/v060/battle-nishijin-defense-line-v1.webp"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/enemies/red-panther-commander-battle-v1.png": {
+      "path": "/public/art/v100/enemies/red-panther-commander-battle-v1.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 6400,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "0e272c70aac4767207475bbfa432fc9d88db4942ca9ff3fd8cdbfda7d622190e",
+      "sources": [
+        "assets/source/v100/runtime/motion/red-panther-commander/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-commander/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-commander/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-commander/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-commander/death-left-authored-v1.png",
+        "assets/source/v100/enemies/red-panther-commander-identity-master-r1.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "right": "derived-horizontal-flip",
+        "left": "authored"
+      },
+      "identityMaster": "assets/source/v100/enemies/red-panther-commander-identity-master-r1.png",
+      "weaponScalePolicy": "identity-master-locked; compact sidearm keeps the same silhouette and hand attachment across all authored states",
+      "semanticStates": [
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        }
+      ]
+    },
+    "/public/art/v100/enemies/red-panther-knife-battle-v1.png": {
+      "path": "/public/art/v100/enemies/red-panther-knife-battle-v1.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 6400,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "5c367eb8663bfd0b146ed081e275b7df4bfc169dd3a6ffa3264a6dd6c958834a",
+      "sources": [
+        "assets/source/v100/runtime/motion/red-panther-knife/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-knife/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-knife/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-knife/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-knife/death-left-authored-v1.png",
+        "assets/source/v100/enemies/red-panther-knife-identity-master-r1.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "right": "derived-horizontal-flip",
+        "left": "authored"
+      },
+      "identityMaster": "assets/source/v100/enemies/red-panther-knife-identity-master-r1.png",
+      "weaponScalePolicy": "identity-master-locked; serrated combat knife keeps the same blade length, width and hand attachment across all authored states",
+      "semanticStates": [
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        }
+      ]
+    },
+    "/public/art/v100/enemies/red-panther-shield-battle-v1.png": {
+      "path": "/public/art/v100/enemies/red-panther-shield-battle-v1.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 6400,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "3236cc28173eb337b65b1b08d5fd55981c3f44e6f58715f358e0e67bebbdf2c8",
+      "sources": [
+        "assets/source/v100/runtime/motion/red-panther-shield/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-shield/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-shield/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-shield/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-shield/death-left-authored-v1.png",
+        "assets/source/v100/enemies/red-panther-shield-identity-master-r1.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "right": "derived-horizontal-flip",
+        "left": "authored"
+      },
+      "identityMaster": "assets/source/v100/enemies/red-panther-shield-identity-master-r1.png",
+      "weaponScalePolicy": "identity-master-locked; riot shield keeps the same full body-covering rectangle, viewing slit and red claw marks across all authored states",
+      "semanticStates": [
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        }
+      ]
+    },
+    "/public/art/v100/enemies/red-panther-smg-battle-v1.png": {
+      "path": "/public/art/v100/enemies/red-panther-smg-battle-v1.png",
+      "kind": "runtime-atlas",
+      "format": "png",
+      "width": 6400,
+      "height": 1024,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "6786dda98e1859ca7eaf1842fdc0abcc9bf6ea7b1019dfeac3c7fade1ba5304b",
+      "sources": [
+        "assets/source/v100/runtime/motion/red-panther-smg/idle-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-smg/move-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-smg/attack-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-smg/hit-left-authored-v1.png",
+        "assets/source/v100/runtime/motion/red-panther-smg/death-left-authored-v1.png",
+        "assets/source/v100/enemies/red-panther-smg-identity-master-r1.png"
+      ],
+      "sourceDirection": "left-authored",
+      "directionRows": {
+        "right": "derived-horizontal-flip",
+        "left": "authored"
+      },
+      "identityMaster": "assets/source/v100/enemies/red-panther-smg-identity-master-r1.png",
+      "weaponScalePolicy": "identity-master-locked; compact suppressed SMG keeps the same silhouette, suppressor and magazine scale across all authored states",
+      "semanticStates": [
+        {
+          "state": "idle",
+          "rightRow": "idle:right",
+          "leftRow": "idle:left"
+        },
+        {
+          "state": "move",
+          "rightRow": "move:right",
+          "leftRow": "move:left"
+        },
+        {
+          "state": "attack",
+          "rightRow": "attack:right",
+          "leftRow": "attack:left"
+        },
+        {
+          "state": "hit",
+          "rightRow": "hit:right",
+          "leftRow": "hit:left"
+        },
+        {
+          "state": "death",
+          "rightRow": "death:right",
+          "leftRow": "death:left"
+        }
+      ]
+    },
+    "/public/art/v100/mission-objects/clinical-trial-wing-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 460,
+      "height": 420,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "fa22d6cca1d5732be44d13d4827db8b24920488fb4f609862fb9d7707af518ce",
+      "sources": [
+        "public/art/v070/stages/objects/station-gate-objects-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/escort-cart-damaged-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 610,
+      "height": 270,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "8afa7e8359a186c73da6f7a9c07a700ac3781f23b9c54afe24b6ddabe531d906",
+      "sources": [
+        "public/art/v095/mission-objects/maintenance-cart-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/escort-cart-intact-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 660,
+      "height": 300,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "cf750c39c8053c7cc204a75701da34f00e1d527dd10249ee718f731642850fc9",
+      "sources": [
+        "public/art/v095/mission-objects/maintenance-cart-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/high-security-research-core-gate-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 560,
+      "height": 430,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "ab239472d02648619c447bbe03dafc59d51bbfe5bec3113d5f8fa6f06be4c5ef",
+      "sources": [
+        "public/art/v070/stages/objects/station-gate-objects-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/national-dispersal-node-1-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 250,
+      "height": 150,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "ebb36752f094149b6c5839184721483e5d3ffaee61ab894cd19892cee74484bb",
+      "sources": [
+        "public/art/v090/stages/coastal-power-rig-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/national-dispersal-node-2-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 262,
+      "height": 158,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "9ab871bbdeddaa2876d98e393e3dfcd552fdf9eeb649b8bc19a4d36db89123ad",
+      "sources": [
+        "public/art/v090/stages/coastal-power-rig-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/national-dispersal-node-3-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 274,
+      "height": 166,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "66e45d22d09e93437799f2958c85057857dee2b4ec490c67bd8f62fb862d248f",
+      "sources": [
+        "public/art/v090/stages/coastal-power-rig-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/national-dispersal-node-4-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 286,
+      "height": 174,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "35efa0685bd36901c1ca045435c9e9d87bc77fb29937156832c864cd3f953201",
+      "sources": [
+        "public/art/v090/stages/coastal-power-rig-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/president-arena-terminal-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 520,
+      "height": 420,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "c35f1ba050f4b38e9b81ae2b2752830d5575d878de7ea2622dc1fe0f8d9c5fbf",
+      "sources": [
+        "public/art/v070/stages/objects/station-tunnel-objects-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/red-panther-armory-lockers-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 520,
+      "height": 420,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "4e8b07bc1a80f251ac1fa928873252c3a69fdc8be98d355cba6791f1914d9249",
+      "sources": [
+        "public/art/v070/stages/objects/station-tunnel-objects-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/stage30-aftermath-core-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 720,
+      "height": 420,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "4c835e1b2cbdd077afbda50b9162f58e72c25872d6ee1609941a7cf04c859860",
+      "sources": [
+        "public/art/v060/stage-objects/defense-infection-nest-destroyed-v1.png",
+        "public/art/v060/stage-objects/defense-transmitter-damaged-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/mission-objects/twin-reactor-landmark-v1.png": {
+      "kind": "mission-object",
+      "format": "png",
+      "width": 620,
+      "height": 320,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "bf23593e6a376cbfe9441726b2a761505b5e8fa10c4cea1fdaac4617e816e3ea",
+      "sources": [
+        "public/art/v090/stages/coastal-power-rig-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/minor-human-shared-event-silhouette-dialogue-profile-v1.webp": {
+      "kind": "dialogue-profile",
+      "format": "webp",
+      "width": 320,
+      "height": 432,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "d87c1f0fd76ab934a15b4e683f2da40b2d76917870486698a6418c95138b25ee",
+      "sources": [
+        "assets/source/v100/portraits/minor-human-shared-event-silhouette-r2.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/minor-human-shared-event-silhouette-event-portrait-v1.webp": {
+      "kind": "event-portrait",
+      "format": "webp",
+      "width": 480,
+      "height": 640,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "fabffb265dd5c3dfd4a0323e8e2454212e32e9a4cc2083b6966990cbeac6c07b",
+      "sources": [
+        "assets/source/v100/portraits/minor-human-shared-event-silhouette-r2.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/mugarian-president-dialogue-profile-v1.webp": {
+      "kind": "dialogue-profile",
+      "format": "webp",
+      "width": 320,
+      "height": 432,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "6b4b45f7130ff0bf96c61a6358182411a77693287d42e595c31eb8b3942979cd",
+      "sources": [
+        "assets/source/v100/characters/mugarian-president-identity-master-r2.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/mugarian-president-event-portrait-v1.webp": {
+      "kind": "event-portrait",
+      "format": "webp",
+      "width": 480,
+      "height": 640,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "c50cf891ac54d021824865e773797146521aae478e6290dd7a21f24529fe3dce",
+      "sources": [
+        "assets/source/v100/characters/mugarian-president-identity-master-r2.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/mugarian-president-mutated-dialogue-profile-v1.webp": {
+      "kind": "dialogue-profile",
+      "format": "webp",
+      "width": 320,
+      "height": 432,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "413f3e50e037b6eca0e824a543222f4e1be0a4b547292a3b718311212cb8631b",
+      "sources": [
+        "assets/source/v100/enemies/mugarian-president-mutated-identity-master-r4.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/mugarian-president-mutated-event-portrait-v1.webp": {
+      "kind": "event-portrait",
+      "format": "webp",
+      "width": 480,
+      "height": 640,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "2b3019cf297b550a5c2f4194966935010a3e114e8f1dadb827a3850fec5e5690",
+      "sources": [
+        "assets/source/v100/enemies/mugarian-president-mutated-identity-master-r4.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/red-panther-commander-dialogue-profile-v1.webp": {
+      "kind": "dialogue-profile",
+      "format": "webp",
+      "width": 320,
+      "height": 432,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "8fdf9f332e35be9ce4178366f31f5610729e9612c20700a78ddd9fea9d7c3ad7",
+      "sources": [
+        "assets/source/v100/enemies/red-panther-commander-identity-master-r1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/red-panther-commander-event-portrait-v1.webp": {
+      "kind": "event-portrait",
+      "format": "webp",
+      "width": 480,
+      "height": 640,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "ae1b0ff4965188de9ea5b61a6d7c31014e8c7ba9a38c8b38647e32a54178ae3c",
+      "sources": [
+        "assets/source/v100/enemies/red-panther-commander-identity-master-r1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/segawa-dialogue-profile-v1.webp": {
+      "kind": "dialogue-profile",
+      "format": "webp",
+      "width": 320,
+      "height": 432,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "a7086d843c2afd164588315e5f53e0adc713551691a1daa20efeaa8ab7e472ae",
+      "sources": [
+        "assets/source/v100/characters/segawa-identity-master-r2.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/segawa-event-portrait-v1.webp": {
+      "kind": "event-portrait",
+      "format": "webp",
+      "width": 480,
+      "height": 640,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "b4ea76301ea8affdf06c3d297f4b2cfd2f0cc86bfb2757dd8979fb96ec79e1cf",
+      "sources": [
+        "assets/source/v100/characters/segawa-identity-master-r2.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/takuya-omega-dialogue-profile-v1.webp": {
+      "kind": "dialogue-profile",
+      "format": "webp",
+      "width": 320,
+      "height": 432,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "1e4499a2006b6d7c130b4875cb5b39eb1faf44f61014eb692837afd5ab65079d",
+      "sources": [
+        "assets/source/v100/enemies/takuya-omega-identity-master-r2.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/portraits/takuya-omega-event-portrait-v1.webp": {
+      "kind": "event-portrait",
+      "format": "webp",
+      "width": 480,
+      "height": 640,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "4faaac8803005275b0bc105c7d43a4a86a223278698cba8b65e8d7eabb172bf2",
+      "sources": [
+        "assets/source/v100/enemies/takuya-omega-identity-master-r2.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/stages/s21-mugarian-hq-clean-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "33d923e7a23233746ab3478226c9936070a05804e760a93b1f2bca7d1ab1bfbb",
+      "sources": [
+        "public/art/v090/stages/bay-tower-service-background-v1.webp"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/stages/s22-clinical-trial-wing-r2-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "ae84e86f3eb7b89b5afb3801d3871bfb2eb19decd090bd68a7d33472e70ec281",
+      "sources": [
+        "public/art/v090/stages/civic-archive-route-background-v1.webp",
+        "/art/v100/mission-objects/clinical-trial-wing-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/stages/s23-special-operations-armory-r2-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "bbbd0a72799729eaa90f72a83538cd419b8ec6cd6527e36c6bf4d4d0a0d82b63",
+      "sources": [
+        "public/art/v090/stages/civic-archive-route-background-v1.webp",
+        "/art/v100/mission-objects/red-panther-armory-lockers-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/stages/s24-tech-tower-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "ca8be1c11bf17ad8dd24a960e5129e329598af2a851f8e0ff8c459ed92de8de8",
+      "sources": [
+        "public/art/v090/stages/bay-tower-service-background-v1.webp",
+        "/art/v100/mission-objects/twin-reactor-landmark-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/stages/s25-executive-lab-r2-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "c1d436a3c8af43dd07160c001071d407329d97563775f83512b4cc87a425eeec",
+      "sources": [
+        "public/art/v090/stages/civic-archive-route-background-v1.webp",
+        "/art/v100/mission-objects/president-arena-terminal-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/stages/s26-bay-evacuation-yard-r2-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "35d8191f60f18a00fe4050ef9637a2cfe90abb5e87610d69a974c2e11f5c98df",
+      "sources": [
+        "public/art/v090/stages/coastal-link-bridge-background-v1.webp",
+        "/art/v100/mission-objects/escort-cart-intact-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/stages/s27-segawa-private-lab-r2-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "240adba5af16751729568b772fbe7aa8798a7c983c586a7133403b587821a25e",
+      "sources": [
+        "public/art/v090/stages/civic-archive-route-background-v1.webp",
+        "/art/v100/mission-objects/clinical-trial-wing-v1.png",
+        "/art/v100/mission-objects/red-panther-armory-lockers-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/stages/s28-national-dispersal-network-clean-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "8691a4b0476414d5707bd52e8ca72e1934c2177693183c44d99b064b14ba9f79",
+      "sources": [
+        "public/art/v090/stages/estuary-floodgate-background-v1.webp"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/stages/s29-high-security-research-core-r2-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "cf54f698985c8f77d6e3ea5e8a32c84d1049fa080d90a3eb703d005570676eeb",
+      "sources": [
+        "public/art/v090/stages/bay-tower-service-background-v1.webp",
+        "/art/v100/mission-objects/high-security-research-core-gate-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/stages/s30-defense-line-aftermath-background-v1.webp": {
+      "kind": "stage-background",
+      "format": "webp",
+      "width": 1600,
+      "height": 900,
+      "channels": 3,
+      "hasAlpha": false,
+      "sha256": "964dc168c6f3e1932e0d572a38bacadfea819d1078d90db260e9eeaed8303706",
+      "sources": [
+        "public/art/v060/battle-nishijin-defense-line-v1.webp",
+        "/art/v100/mission-objects/stage30-aftermath-core-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/vfx/armory-red-lens-alert-v1.png": {
+      "kind": "vfx",
+      "format": "png",
+      "width": 260,
+      "height": 220,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "f7d3a389788112586af35b9d8d59ccfc286246aa2a77f1411286712afba22730",
+      "sources": [
+        "public/art/v060/stage-objects/defense-transmitter-damaged-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/vfx/dispersal-node-active-v1.png": {
+      "kind": "vfx",
+      "format": "png",
+      "width": 260,
+      "height": 220,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "edd92251d4290e4b090d43b878b3097d359432741fbc59b52cee025c73bf81fa",
+      "sources": [
+        "public/art/v060/stage-objects/defense-infection-nest-damaged-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/vfx/hq-security-warning-v1.png": {
+      "kind": "vfx",
+      "format": "png",
+      "width": 260,
+      "height": 220,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "5d323ef7f9aa7d3173edf05218539cd9b3d11296f7a1638b42d64c35823c09ac",
+      "sources": [
+        "public/art/v060/stage-objects/defense-transmitter-active-v1.png"
+      ],
+      "semanticStates": []
+    },
+    "/public/art/v100/vfx/stage30-dawn-damage-v1.png": {
+      "kind": "vfx",
+      "format": "png",
+      "width": 300,
+      "height": 240,
+      "channels": 4,
+      "hasAlpha": true,
+      "sha256": "a48188fced832b20175c9f0af313f5454459419f22c5a37afcd66473ba6d967f",
+      "sources": [
+        "public/art/v060/stage-objects/defense-infection-nest-destroyed-v1.png"
+      ],
+      "semanticStates": []
+    }
+  }
+}
