@@ -175,7 +175,11 @@ test("release workflow is explicit, immutable, and deploy-gated", async () => {
   assert.match(publicSmoke, /httpErrors/u);
   assert.match(releaseWorkflow, /<title>西新世紀末物語｜アーリーアクセス版 \$VERSION<\/title>/u);
   assert.match(releaseWorkflow, /GITHUB_PAGES_EXPECTED_VERSION: \$\{\{ steps\.release\.outputs\.requested == 'true' && steps\.release\.outputs\.version \|\| '' \}\}/u);
-  assert.match(pagesBuilder, /normalizeReleaseTitle\(html, releaseVersion\)/u);
+  assert.match(pagesBuilder, /function renderRoute\(routePath\)/u);
+  assert.match(pagesBuilder, /renderRoute\("\/"\)/u);
+  assert.match(pagesBuilder, /renderRoute\("\/v100"\)/u);
+  assert.match(pagesBuilder, /normalizeReleaseTitle\(source, releaseVersion\)/u);
+  assert.match(pagesBuilder, /path\.join\(outputDir, "v100", "index\.html"\)/u);
   assert.match(pagesIdentity, /VERSIONED_PRODUCT_TITLE_PATTERN/u);
   assert.match(pagesIdentity, /source\.replace\(VERSIONED_PRODUCT_TITLE_PATTERN, expectedTitle\)/u);
   assert.match(await readFile("scripts/github-pages-smoke.mjs", "utf8"), /postInteractionTitle !== expectedTitle/u);

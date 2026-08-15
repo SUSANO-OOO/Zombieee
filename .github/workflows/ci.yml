@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - "integration/**"
+      - "codex/v1.0.0-sol-design"
 
 permissions:
   contents: read
@@ -37,7 +38,7 @@ jobs:
           test -n "$PR_BASE_SHA"
           test -n "$PR_HEAD_SHA"
           case "$PR_BASE_REF" in
-            main|integration/*) ;;
+            main|integration/*|codex/v1.0.0-sol-design) ;;
             *) echo "unsupported PR base ref: $PR_BASE_REF" >&2; exit 1 ;;
           esac
           PR_MERGE_SHA="$(git rev-parse HEAD)"
