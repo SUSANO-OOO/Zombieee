@@ -1319,6 +1319,380 @@
       "sourcePath": "/pwa-optimized/art/v0995/enemies/spindle-battle-v2.webp"
     },
     {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v1.png",
+      "bytes": 4378274,
+      "hash": "sha256-b3df53994531d48b1711de64dc72f992f314e610383909e925fd9ce964ff034f",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/bosses/mugarian-president-mutated-battle-v1.webp"
+    },
+    {
+      "path": "/art/v100/bosses/takuya-omega-battle-v1.png",
+      "bytes": 4176806,
+      "hash": "sha256-57a12a4390e8e747487b19680b72e32db01b3361d24e4b8de2f12dc7dc6f80d2",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/bosses/takuya-omega-battle-v1.webp"
+    },
+    {
+      "path": "/art/v100/cuts/mugarian-president-defeat-v1.webp",
+      "bytes": 249660,
+      "hash": "sha256-f2d523913775e11d2f17309990d8cf925f7a5fdf3de3bb909c5176876ae36498",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/cuts/mugarian-president-executive-lab-v1.webp",
+      "bytes": 198430,
+      "hash": "sha256-c0a9db3b2d068271c948aa4f80dedb096250b56d43fb972ee7c2f3ebb8e1f44c",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/cuts/segawa-private-lab-reveal-v1.webp",
+      "bytes": 176782,
+      "hash": "sha256-892717b2b8682db9cfde5cc4cca947b5c4d34b962f6480c22e222175fa58d9a4",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/cuts/takuya-omega-ending-defeat-v1.webp",
+      "bytes": 322682,
+      "hash": "sha256-d00d35ef3533dcd5099b24bb7d2822ae7f4b08acc85c669b96811cb4ceba4ffb",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/enemies/red-panther-commander-battle-v1.png",
+      "bytes": 1625858,
+      "hash": "sha256-5ed8f1e6f83163638b417c63442df6a55fe83f1df254d69d01ae0d0a53dc3217",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/enemies/red-panther-commander-battle-v1.webp"
+    },
+    {
+      "path": "/art/v100/enemies/red-panther-knife-battle-v1.png",
+      "bytes": 1462422,
+      "hash": "sha256-c4d5053f64d37e1a5c577a99a39d70c905faad92519fc6593523fb7473b5f70c",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/enemies/red-panther-knife-battle-v1.webp"
+    },
+    {
+      "path": "/art/v100/enemies/red-panther-shield-battle-v1.png",
+      "bytes": 2081204,
+      "hash": "sha256-0b498609d851abf433002ab27b19483355a7eb2fbaae49b41d6232ff7263c1ee",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/enemies/red-panther-shield-battle-v1.webp"
+    },
+    {
+      "path": "/art/v100/enemies/red-panther-smg-battle-v1.png",
+      "bytes": 1411070,
+      "hash": "sha256-22305ee93c229c0d628b756a4829793e94b123904b6b9dff323cc222b2c05b1e",
+      "pack": "units",
+      "category": "enemy",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/enemies/red-panther-smg-battle-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/clinical-trial-wing-v1.png",
+      "bytes": 117448,
+      "hash": "sha256-792b8b3ca5538ecfe0a373aa4d0a59b2b3e5e2d510e718afbddbd49c676e50ca",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/clinical-trial-wing-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/escort-cart-damaged-v1.png",
+      "bytes": 137802,
+      "hash": "sha256-9a7282e6bf097b90fab36494b79e82348ae8054f3013993178c990ac68fccb33",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/escort-cart-damaged-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/escort-cart-intact-v1.png",
+      "bytes": 156784,
+      "hash": "sha256-df1faab73e9db74c613097f16580a17d052f5fe04684c2a4cb6b29ded93cdf47",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/escort-cart-intact-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/high-security-research-core-gate-v1.png",
+      "bytes": 166496,
+      "hash": "sha256-625d69191d4cb9a62420fdab5ee16e40d9484e236e40882ec559fafbc157f230",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/high-security-research-core-gate-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/national-dispersal-node-1-v1.png",
+      "bytes": 30662,
+      "hash": "sha256-7e878dc65444360259d47ae114fa30fa578c19f6f0585a3900b6a6fb5b62ffcf",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/national-dispersal-node-1-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/national-dispersal-node-2-v1.png",
+      "bytes": 31410,
+      "hash": "sha256-7c22fbbbb21cc27cea260db43d1856043f957da87505542dee34f53388c5aa60",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/national-dispersal-node-2-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/national-dispersal-node-3-v1.png",
+      "bytes": 34026,
+      "hash": "sha256-b00872a3981f53a25cefd6015f5d19e9c42ef616dbf2dd2bb2f5e8cb02440c0f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/national-dispersal-node-3-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/national-dispersal-node-4-v1.png",
+      "bytes": 36760,
+      "hash": "sha256-bc3ee919b15ab0d6164f1b74f17383a86b92bccccd5a8f68008ec170e9314ae9",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/national-dispersal-node-4-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/president-arena-terminal-v1.png",
+      "bytes": 136808,
+      "hash": "sha256-a39ae4ad71fd658163190c104cc408fa9ad212e398fbf2f475b1abfa20eac185",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/president-arena-terminal-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/red-panther-armory-lockers-v1.png",
+      "bytes": 193774,
+      "hash": "sha256-d333a087db5010f6345bf60672f685e6b13b4f6272225cbd4e02cab69c4b303f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/red-panther-armory-lockers-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/stage30-aftermath-core-v1.png",
+      "bytes": 139218,
+      "hash": "sha256-6ed60475dbf33d2aa2b0dac3433696caf9cece5883a37911a8293b5ce94266d6",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/stage30-aftermath-core-v1.webp"
+    },
+    {
+      "path": "/art/v100/mission-objects/twin-reactor-landmark-v1.png",
+      "bytes": 142144,
+      "hash": "sha256-ba700ea0dd5de67a96f7da14a8a3158c31fe87153f067b251e35d658a96468f6",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/mission-objects/twin-reactor-landmark-v1.webp"
+    },
+    {
+      "path": "/art/v100/portraits/minor-human-shared-event-silhouette-event-portrait-v1.webp",
+      "bytes": 34820,
+      "hash": "sha256-fabffb265dd5c3dfd4a0323e8e2454212e32e9a4cc2083b6966990cbeac6c07b",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/mugarian-president-dialogue-profile-v1.webp",
+      "bytes": 33114,
+      "hash": "sha256-6b4b45f7130ff0bf96c61a6358182411a77693287d42e595c31eb8b3942979cd",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/mugarian-president-event-portrait-v1.webp",
+      "bytes": 58570,
+      "hash": "sha256-c50cf891ac54d021824865e773797146521aae478e6290dd7a21f24529fe3dce",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/mugarian-president-mutated-event-portrait-v1.webp",
+      "bytes": 142104,
+      "hash": "sha256-2b3019cf297b550a5c2f4194966935010a3e114e8f1dadb827a3850fec5e5690",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/red-panther-commander-event-portrait-v1.webp",
+      "bytes": 56878,
+      "hash": "sha256-ae1b0ff4965188de9ea5b61a6d7c31014e8c7ba9a38c8b38647e32a54178ae3c",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/segawa-dialogue-profile-v1.webp",
+      "bytes": 27788,
+      "hash": "sha256-a7086d843c2afd164588315e5f53e0adc713551691a1daa20efeaa8ab7e472ae",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/segawa-event-portrait-v1.webp",
+      "bytes": 50106,
+      "hash": "sha256-b4ea76301ea8affdf06c3d297f4b2cfd2f0cc86bfb2757dd8979fb96ec79e1cf",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/takuya-omega-event-portrait-v1.webp",
+      "bytes": 115060,
+      "hash": "sha256-4faaac8803005275b0bc105c7d43a4a86a223278698cba8b65e8d7eabb172bf2",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s21-mugarian-hq-clean-background-v1.webp",
+      "bytes": 284166,
+      "hash": "sha256-33d923e7a23233746ab3478226c9936070a05804e760a93b1f2bca7d1ab1bfbb",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s22-clinical-trial-wing-r2-background-v1.webp",
+      "bytes": 353480,
+      "hash": "sha256-ae84e86f3eb7b89b5afb3801d3871bfb2eb19decd090bd68a7d33472e70ec281",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s23-special-operations-armory-r2-background-v1.webp",
+      "bytes": 355454,
+      "hash": "sha256-bbbd0a72799729eaa90f72a83538cd419b8ec6cd6527e36c6bf4d4d0a0d82b63",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s24-tech-tower-background-v1.webp",
+      "bytes": 290648,
+      "hash": "sha256-ca8be1c11bf17ad8dd24a960e5129e329598af2a851f8e0ff8c459ed92de8de8",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s25-executive-lab-r2-background-v1.webp",
+      "bytes": 351428,
+      "hash": "sha256-c1d436a3c8af43dd07160c001071d407329d97563775f83512b4cc87a425eeec",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s26-bay-evacuation-yard-r2-background-v1.webp",
+      "bytes": 232328,
+      "hash": "sha256-35d8191f60f18a00fe4050ef9637a2cfe90abb5e87610d69a974c2e11f5c98df",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s27-segawa-private-lab-r2-background-v1.webp",
+      "bytes": 363394,
+      "hash": "sha256-240adba5af16751729568b772fbe7aa8798a7c983c586a7133403b587821a25e",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s28-national-dispersal-network-clean-background-v1.webp",
+      "bytes": 286688,
+      "hash": "sha256-8691a4b0476414d5707bd52e8ca72e1934c2177693183c44d99b064b14ba9f79",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s29-high-security-research-core-r2-background-v1.webp",
+      "bytes": 299550,
+      "hash": "sha256-cf54f698985c8f77d6e3ea5e8a32c84d1049fa080d90a3eb703d005570676eeb",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s30-defense-line-aftermath-background-v1.webp",
+      "bytes": 235018,
+      "hash": "sha256-964dc168c6f3e1932e0d572a38bacadfea819d1078d90db260e9eeaed8303706",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/vfx/armory-red-lens-alert-v1.png",
+      "bytes": 33350,
+      "hash": "sha256-89e2ee64afebae2dfcd689243ee29dfbf27bc1259aa523bc46f35a3779f55e3f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/vfx/armory-red-lens-alert-v1.webp"
+    },
+    {
+      "path": "/art/v100/vfx/dispersal-node-active-v1.png",
+      "bytes": 48332,
+      "hash": "sha256-55e34eb00c9a383f0754531388b611803a826347516480bfc0f18502f3ed745b",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/vfx/dispersal-node-active-v1.webp"
+    },
+    {
+      "path": "/art/v100/vfx/hq-security-warning-v1.png",
+      "bytes": 28496,
+      "hash": "sha256-4b9855ee220b2431555dee6435964c20360fed809d40307804a0a51d1ec47893",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/vfx/hq-security-warning-v1.webp"
+    },
+    {
+      "path": "/art/v100/vfx/stage30-dawn-damage-v1.png",
+      "bytes": 43490,
+      "hash": "sha256-8fee8ca937078439df530ea382360ad9eb6d821032e455d6dd96114cbe5d3435",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical",
+      "sourcePath": "/pwa-optimized/art/v100/vfx/stage30-dawn-damage-v1.webp"
+    },
+    {
       "path": "/audio/v060/music/battle-stage1.mp3",
       "bytes": 925037,
       "hash": "sha256-71613b42c69632a6b6bb8db7a1bd8d92144eb217b147ebc0699e10f11f3514c9",

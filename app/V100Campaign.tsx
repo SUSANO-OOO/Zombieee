@@ -159,6 +159,29 @@ export function V100Campaign() {
     }
   }, [commitSave, flow.phase, hydrated, save]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const battleActive = flow.phase === "battle";
+    const resultSaving = flow.phase === "result";
+    // Stable V1 name/map/formation screens are equivalent to the legacy title
+    // safety boundary. Story nodes remain unsafe so a release cannot interrupt
+    // a cursor or first-clear transition; battle/result explicitly block it.
+    const screen = battleActive ? "battle"
+      : resultSaving ? "result"
+        : isEventPhase(flow.phase) ? "event"
+          : "title";
+    root.dataset.pwaScreen = screen;
+    root.dataset.pwaBattleActive = String(battleActive);
+    root.dataset.pwaResultSaving = String(resultSaving);
+    root.dataset.pwaSaveMutationPending = "false";
+    return () => {
+      delete root.dataset.pwaScreen;
+      delete root.dataset.pwaBattleActive;
+      delete root.dataset.pwaResultSaving;
+      delete root.dataset.pwaSaveMutationPending;
+    };
+  }, [flow.phase]);
+
   const event = useMemo(() => flow.eventId ? v100StoryEventView(flow.eventId, save.playerName) : null, [flow.eventId, save.playerName]);
   const currentNode = (event?.nodes?.[storyIndex] ?? null) as StoryNode | null;
   const runtime = v100StageRuntimeFor(selectedStageId);

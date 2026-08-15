@@ -44,6 +44,7 @@ import { V099_CRAWLER_RUNTIME_PROFILE } from "../app/crawlerEquipmentSprites.js"
 import { STAGE_OBJECT_MANIFEST } from "../app/stageObjectManifest.js";
 import { PRODUCTION_AUDIO_MANIFEST } from "../app/productionAudio.js";
 import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
+import { V100_RUNTIME_ASSET_MANIFEST } from "../app/v100RuntimeAssetManifest.js";
 
 const root = process.cwd();
 const publicDir = path.join(root, "public");
@@ -209,6 +210,37 @@ sweep(V090_UNIT_VISUAL_PROFILES, { pack: "units", category: "portrait", critical
 // present; keep those released runtime images offline with its battle atlas.
 for (const boss of BOSS_DEFINITIONS) {
   record(boss.compendium?.assetPath, { pack: "units", category: "boss", criticality: "critical" });
+}
+
+// --- Version 1.0.0 campaign runtime assets -------------------------------
+// The V1 route is a gameplay route, so every asset it can reach is part of the
+// first-install pack and is critical for a complete V1 offline generation.
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.portraits)) {
+  record(assetPath, { pack: "units", category: "portrait", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.bosses)) {
+  record(assetPath, { pack: "units", category: "boss", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.redPanther)) {
+  record(assetPath, { pack: "units", category: "enemy", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.storyCuts)) {
+  record(assetPath, { pack: "campaign-core", category: "background", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.missionObjects)) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+}
+for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.vfx)) {
+  record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+}
+for (const stage of Object.values(V100_RUNTIME_ASSET_MANIFEST.stages)) {
+  record(stage.background, { pack: "campaign-core", category: "background", criticality: "critical" });
+  for (const assetPath of stage.missionObjects) {
+    record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+  }
+  for (const assetPath of stage.vfx) {
+    record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
+  }
 }
 
 // --- Audio ----------------------------------------------------------------
