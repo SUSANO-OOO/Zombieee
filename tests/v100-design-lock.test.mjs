@@ -8,6 +8,7 @@ const DESIGN = "docs/design/v1.0.0/DESIGN_LOCK.md";
 const INVENTORY = "docs/design/v1.0.0/ASSET_INVENTORY.md";
 const HANDOFF = "docs/design/v1.0.0/LUNA_HANDOFF.md";
 const PROVENANCE = "assets/source/v100/PROVENANCE.md";
+const SPRITE_MANIFEST_SOURCE = "app/spriteManifest.js";
 
 const selectedAssets = Object.freeze([
   ["assets/source/v100/characters/segawa-identity-master-r2.png", "0bb98569efa36dbc7df6fbd7fb7ec2cce11671ddbe58f4ce84d9ce26fb187c1d", 934, 1684],
@@ -305,4 +306,68 @@ test("event flow, stars, receipts, unlock payloads, speakers, and required asset
   assert.match(design, /Every stage\/event registers its background, all portraits reachable in that event, mission-object states, locked enemy\/boss states, VFX, battle audio, event audio, UI icons, fonts, and ending\/credits\/epilogue assets/u);
   assert.match(design, /after the gate opens, required fetches are zero/u);
   assert.match(handoff, /Return to Sol only for: \(1\) a true contradiction[\s\S]*\(4\) a technically impossible acceptance contract/u);
+});
+
+test("runtime derivatives are required implementation work without reopening character identity", async () => {
+  const [design, handoff] = await Promise.all([readFile(DESIGN, "utf8"), readFile(HANDOFF, "utf8")]);
+  for (const source of [design, handoff]) {
+    assert.match(source, /RUNTIME_SPRITE_SCOPE_CLOSED/u);
+    assert.match(source, /PRODUCT_DESIGN_CHANGE: 0/u);
+    assert.match(source, /new character identity, character design, or identity-master candidate/u);
+    assert.match(source, /runtime derivative/u);
+    assert.match(source, /Phase 4/u);
+  }
+  assert.doesNotMatch(handoff, /There is no image-generation task/u);
+  assert.match(handoff, /Producing the finite battle sprites\/atlases, event portraits, boss entrance\/idle\/attack\/hit\/phase\/death states/u);
+  assert.match(handoff, /newly invented substitute identity-master candidate is forbidden/u);
+  assert.match(handoff, /Do not enter Phase 4 until every required runtime character\/stage\/mission image is complete/u);
+});
+
+test("all 16 playable sprite statuses are finite and match the current production manifest", async () => {
+  const [design, handoff, spriteManifest] = await Promise.all([
+    readFile(DESIGN, "utf8"),
+    readFile(HANDOFF, "utf8"),
+    readFile(SPRITE_MANIFEST_SOURCE, "utf8"),
+  ]);
+  const expected = new Map([
+    ["Hachi", "REUSE_COMPLETE"],
+    ["Paisen", "DERIVE_RUNTIME_REQUIRED"],
+    ["Kumaverson", "REUSE_COMPLETE"],
+    ["Babayaga", "REUSE_COMPLETE"],
+    ["Nao", "REUSE_COMPLETE"],
+    ["Mizuchi", "REUSE_COMPLETE"],
+    ["Monkey", "REUSE_COMPLETE"],
+    ["Crazy King", "REUSE_COMPLETE"],
+    ["Raider", "REUSE_COMPLETE"],
+    ["Tatara", "REUSE_COMPLETE"],
+    ["Gantetsu", "REUSE_COMPLETE"],
+    ["Mayo-chan", "REUSE_COMPLETE"],
+    ["Zakimiya", "REUSE_COMPLETE"],
+    ["TKY", "REUSE_COMPLETE"],
+    ["MrsChiha", "REUSE_COMPLETE"],
+    ["Miyamoto Musashi", "REUSE_COMPLETE"],
+  ]);
+  const section = design.match(/### 17\.7 Runtime sprite scope closure([\s\S]+?)### 17\.8/u)?.[1] ?? "";
+  const actual = new Map(
+    [...section.matchAll(/^\| ([^|]+?) \| `[^`]+`(?: \/ `[^`]+`)? \| `(REUSE_COMPLETE|DERIVE_RUNTIME_REQUIRED|NEW_RUNTIME_SPRITE_REQUIRED)` \|/gmu)]
+      .map((match) => [match[1].trim(), match[2]]),
+  );
+  assert.deepEqual(actual, expected);
+  assert.match(section, /`NEW_RUNTIME_SPRITE_REQUIRED` playable units: none/u);
+  assert.match(section, /Paisen's approved-identity atlas/u);
+  assert.match(section, /legacy `hit`\/`death` alias/u);
+  assert.match(handoff, /Phase 2 target: Paisen only, completed before Phase 3 begins/u);
+
+  for (const kind of [
+    "scout", "ranger", "medic", "brute", "gunner", "guardian", "engineer", "zakimiya", "tky",
+    "mrs-chiha", "miyamoto-musashi", "mayo-chan", "mayo-chan-feral", "crazy-king", "kumaverson", "babayaga",
+  ]) {
+    const escaped = kind.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+    assert.match(spriteManifest, new RegExp(`(?:${escaped}|"${escaped}"):\\s*explicitAtlasManifestEntry`, "u"));
+  }
+  assert.match(spriteManifest, /brawler: legacyManifestEntry\("brawler", "right"\)/u);
+  assert.match(spriteManifest, /hit: 5,[\s\S]*death: 5,/u);
+  for (const state of ["idle", "walk-a", "walk-b", "attack-a", "attack-b", "hit", "death"]) {
+    assert.match(spriteManifest, new RegExp(`"${state.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}"`), `missing ${state}`);
+  }
 });

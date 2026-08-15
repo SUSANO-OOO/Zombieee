@@ -80,6 +80,7 @@ Focused campaign/economy/progression/save tests, fresh/current/legacy dual-names
 - Preserve existing stage landmarks and fixed player-facing wording.
 - Ensure power, escort, base, boss, entrance, death, and post-battle transitions are visible and reachable.
 - Reuse approved existing portraits; make only crop/anchor/layout changes required by the dialogue contract.
+- Before Phase 3 begins, replace only Paisen's legacy battle sheet with an approved-identity seven-state/two-direction runtime atlas whose `hit` and `death` states are structurally distinct. This is the only Stage 1-20 playable sprite derivation required by the closure.
 
 ### Gate
 
@@ -105,6 +106,7 @@ Focused campaign/economy/progression/save tests, fresh/current/legacy dual-names
 
 - Implement Stage 21-30 and ending/credits/epilogue exactly as locked.
 - Produce only the finite runtime derivatives listed in `ASSET_INVENTORY.md`.
+- Produce and integrate the locked Stage 21-30 event portraits, RED PANTHER role atlases, mutated-president and TAKUYA-Ω entrance/idle/attack/hit/phase/death states and defeat cuts, plus the locked stage/mission-object derivatives. These are required runtime derivatives, not new identity-master candidates.
 - Maintain identity between authoring master, event portrait, card/profile, and battle form.
 - Implement RED PANTHER variants, mutated president with exactly four arms/four hands, and TAKUYA-Ω with exactly two arms and no orange garment.
 - Limit the simple featureless gender-neutral minor-human silhouette to minor human speakers with no identity master; never assign it to a major named speaker or add face, hair, costume, occupation, accessory, or weapon cues.
@@ -134,6 +136,7 @@ Luna may adjust crop, anchor, scale, packing, compression, sprite frame layout, 
 
 ### Exact work
 
+- Do not enter Phase 4 until every required runtime character/stage/mission image is complete, registered once, provenance-linked to its approved source, decode-valid at runtime size, and represented in the required-runtime/PWA manifest.
 - Register new runtime assets exactly once in the content/PWA manifests.
 - Gate first standalone/PWA gameplay until the complete required-runtime manifest is downloaded, size/hash verified, stored, and durably committed; assert zero required-runtime fetches after gameplay begins.
 - For updates fetch changed/missing hashes only, retain the previous committed generation for rollback, and preserve unchanged-hash no-refetch, offline, commit-only recovery, and failed-only retry.
@@ -195,7 +198,8 @@ Do not compensate with a new product decision, unapproved placeholder, weaker as
 - Closure: `PRE_IMPLEMENTATION_CLOSED`
 - `PRODUCT_DECISION_GAPS: 0`
 - `LUNA_HANDOFF_READY: YES`
-- The selected nine masters and all existing character identities are immutable. There is no image-generation task and no authority to revisit a Producer-approved design.
+- The selected nine masters and all existing character identities are immutable. There is no task to generate a new character identity, character design, or identity-master candidate, and there is no authority to revisit a Producer-approved design.
+- Producing the finite battle sprites/atlases, event portraits, boss entrance/idle/attack/hit/phase/death states, and other `NEW_REQUIRED`/`DERIVE` runtime images in `ASSET_INVENTORY.md` is Luna's required Phase 3 work. A derivative based on the selected/approved identity is not a redesign; a newly invented substitute identity-master candidate is forbidden.
 
 ### 10.1 What to encode first
 
@@ -308,7 +312,36 @@ Every major speaker not marked minor/offscreen resolves to its approved existing
 - Register all reachable background, portrait, mission-object state, enemy/boss state, VFX, audio, UI/font, Ending/Credits/Epilogue assets as required before first-install gameplay. Decode/hash/size/store/manifest-commit must finish before title/base/map/story/battle simulation mounts. Required requests after gate-open are exactly zero. Update fetches only changed/missing hashes and retains the prior committed generation.
 - Browser acceptance is Chromium/WebKit 844x340, 844x390, and 1280x720 for name/keyboard, seven-slot formation, event/log/replay, battle/result/summary, Ending/Credits/Epilogue, and PWA gate/retry. Preserve public safe-area values, 44x44 controls, battlefield readability, and 12-40 px portrait overlap.
 
-### 10.6 What Luna may and may not decide
+### 10.6 Existing playable runtime sprite inventory
+
+- Closure: `RUNTIME_SPRITE_SCOPE_CLOSED`. `PRODUCT_DESIGN_CHANGE: 0`.
+- The required playable atlas states are exactly `idle`, `walk-a`, `walk-b`, `attack-a`, `attack-b`, `hit`, and `death`, in both directions. Registered semantic states must remain structurally distinguishable. Ability presentation reuses the locked attack/active/recovery sequence plus VFX/audio unless the asset inventory explicitly requires another cell.
+
+| Character | Kind | Status | Approved identity source -> current runtime | Required work |
+| --- | --- | --- | --- | --- |
+| Hachi | `scout` | `REUSE_COMPLETE` | `hachi-base-r2.png` -> `scout-battle-v1.png` | none |
+| Paisen | `brawler` | `DERIVE_RUNTIME_REQUIRED` | `brawler-portrait-v2.webp` -> `brawler-battle-gutter-v1.png` | Phase 2: derive all seven states in both directions; make `hit` and `death` structurally distinct |
+| Kumaverson | `kumaverson` | `REUSE_COMPLETE` | `kumaverson-portrait-v2.webp` -> `kumaverson-battle-v1.png` | none |
+| Babayaga | `babayaga` | `REUSE_COMPLETE` | `babayaga-portrait-v2.webp` -> `babayaga-battle-v1.png` | none |
+| Nao | `medic` | `REUSE_COMPLETE` | `nao-base-r1.png` -> `medic-battle-v1.png` | none |
+| Mizuchi | `ranger` | `REUSE_COMPLETE` | `mizuchi-base-r3.png` -> `ranger-battle-v1.png` | none |
+| Monkey | `engineer` | `REUSE_COMPLETE` | `monkey-base-r11.png` -> `engineer-battle-v1.png` | none; superseded V080 identity is forbidden |
+| Crazy King | `crazy-king` | `REUSE_COMPLETE` | `crazy-king-portrait-v2.webp` -> `crazy-king-battle-v1.png` | none |
+| Raider | `gunner` | `REUSE_COMPLETE` | `raider-base-r10.png` -> `gunner-battle-v1.png` | none |
+| Tatara | `brute` | `REUSE_COMPLETE` | `tatara-base-r8.png` -> `brute-battle-v1.png` | none |
+| Gantetsu | `guardian` | `REUSE_COMPLETE` | `gantetsu-base-r7.png` -> `guardian-battle-v1.png` | none |
+| Mayo-chan | `mayo-chan` / `mayo-chan-feral` | `REUSE_COMPLETE` | `mayo-chan-identity-master-r1.png` -> normal + feral battle atlases | none |
+| Zakimiya | `zakimiya` | `REUSE_COMPLETE` | `zakimiya-identity-master-r1.png` -> `zakimiya-battle-r1.png` | none |
+| TKY | `tky` | `REUSE_COMPLETE` | `tky-identity-master-r1.png` -> `tky-battle-r1.png` | none |
+| MrsChiha | `mrs-chiha` | `REUSE_COMPLETE` | `mrs-chiha-identity-master-r1.png` -> `mrs-chiha-battle-r1.png` | none |
+| Miyamoto Musashi | `miyamoto-musashi` | `REUSE_COMPLETE` | `miyamoto-musashi-identity-master-r1.png` -> `miyamoto-musashi-battle-r1.png` | none |
+
+- `NEW_RUNTIME_SPRITE_REQUIRED`: none among the 16 playable units.
+- Phase 2 target: Paisen only, completed before Phase 3 begins.
+- Phase 3 targets: only the finite `NEW_REQUIRED`/`DERIVE` entries in `ASSET_INVENTORY.md` for Stage 21-30 enemies/bosses, event portraits, stage art, mission objects, and their semantic states.
+- Phase 4 may begin only after all required runtime character sprites and other required runtime images satisfy the completion/registration/provenance/decode/manifest gate above.
+
+### 10.7 What Luna may and may not decide
 
 Luna may decide only implementation mechanics: file/module decomposition, immutable registry representation, conformance-equivalent grapheme helper, serialized transaction helper, sprite sheet/discrete-frame packing, compression, crop/anchor/scale/alpha cleanup, cache batching, deterministic QA helper structure, and spawn time/lane distribution inside a row's fixed enemy roster and wave/group count.
 

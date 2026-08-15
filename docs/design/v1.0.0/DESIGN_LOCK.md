@@ -436,7 +436,37 @@ Stage 30 has no midbattle story dialogue. Stage 22's `43` is a finite narrative/
 - Every stage/event registers its background, all portraits reachable in that event, mission-object states, locked enemy/boss states, VFX, battle audio, event audio, UI icons, fonts, and ending/credits/epilogue assets in the required-runtime manifest. First install verifies and durably commits that complete set before gameplay/story/map mounts; after the gate opens, required fetches are zero.
 - Mobile acceptance applies to the name screen, seven-slot formation, every story/log/replay screen, battle/result/first-clear summary, ending/credits/epilogue, and PWA progress/retry UI at Chromium/WebKit 844x340, 844x390, and 1280x720. Keyboard, safe area, 44x44 controls, readable text, battlefield area, and the 12-40 px portrait/dialogue overlap remain mandatory.
 
-### 17.7 Luna decision boundary after closure
+### 17.7 Runtime sprite scope closure
+
+- Closure: `RUNTIME_SPRITE_SCOPE_CLOSED`. `PRODUCT_DESIGN_CHANGE: 0`.
+- Version 1.0.0 has no task to create a new character identity, character design, or identity-master candidate. Every Producer-selected master and approved existing identity remains immutable. A runtime derivative made from that source is implementation work, not a redesign, and may not be replaced by a newly invented candidate.
+- The core playable battle-atlas contract is exactly `idle`, `walk-a`, `walk-b`, `attack-a`, `attack-b`, `hit`, and `death`, for both `left` and `right`. Every registered state must be structurally distinguishable at runtime size. Existing ability presentation continues through the locked attack/active/recovery sequence plus registered VFX/audio; no extra `ability` atlas cell is required unless an `ASSET_INVENTORY.md` row explicitly requires one.
+
+| Playable character | Combat kind | Status | Approved identity / current runtime source | Finite required action |
+| --- | --- | --- | --- | --- |
+| Hachi | `scout` | `REUSE_COMPLETE` | `/art/v070/characters/reference/hachi-base-r2.png` -> `/art/v070/characters/scout-battle-v1.png` | reuse seven states, both directions |
+| Paisen | `brawler` | `DERIVE_RUNTIME_REQUIRED` | `/art/v060/characters/portraits/brawler-portrait-v2.webp` -> `/art/v060/characters/legacy/brawler-battle-gutter-v1.png` | derive approved-identity `idle`, `walk-a`, `walk-b`, `attack-a`, `attack-b`, `hit`, `death` atlas for both directions; `hit` and `death` must be structurally distinct |
+| Kumaverson | `kumaverson` | `REUSE_COMPLETE` | `/art/v060/characters/portraits/kumaverson-portrait-v2.webp` -> `/art/v060/characters/kumaverson-battle-v1.png` | reuse seven states, both directions |
+| Babayaga | `babayaga` | `REUSE_COMPLETE` | `/art/v060/characters/portraits/babayaga-portrait-v2.webp` -> `/art/v060/characters/babayaga-battle-v1.png` | reuse seven states, both directions |
+| Nao | `medic` | `REUSE_COMPLETE` | `/art/v070/characters/reference/nao-base-r1.png` -> `/art/v070/characters/medic-battle-v1.png` | reuse seven states, both directions |
+| Mizuchi | `ranger` | `REUSE_COMPLETE` | `/art/v070/characters/reference/mizuchi-base-r3.png` -> `/art/v070/characters/ranger-battle-v1.png` | reuse seven states, both directions |
+| Monkey | `engineer` | `REUSE_COMPLETE` | `/art/v070/characters/reference/monkey-base-r11.png` -> `/art/v070/characters/engineer-battle-v1.png` | reuse seven states, both directions; never substitute the superseded V080 identity |
+| Crazy King | `crazy-king` | `REUSE_COMPLETE` | `/art/v060/characters/portraits/crazy-king-portrait-v2.webp` -> `/art/v060/characters/crazy-king-battle-v1.png` | reuse seven states, both directions |
+| Raider | `gunner` | `REUSE_COMPLETE` | `/art/v070/characters/reference/raider-base-r10.png` -> `/art/v070/characters/gunner-battle-v1.png` | reuse seven states, both directions |
+| Tatara | `brute` | `REUSE_COMPLETE` | `/art/v070/characters/reference/tatara-base-r8.png` -> `/art/v070/characters/brute-battle-v1.png` | reuse seven states, both directions |
+| Gantetsu | `guardian` | `REUSE_COMPLETE` | `/art/v070/characters/reference/gantetsu-base-r7.png` -> `/art/v070/characters/guardian-battle-v1.png` | reuse seven states, both directions |
+| Mayo-chan | `mayo-chan` / `mayo-chan-feral` | `REUSE_COMPLETE` | `/art/v090/characters/reference/mayo-chan-identity-master-r1.png` -> both `/art/v090/characters/mayo-chan-battle-r1.png` and `/art/v090/characters/mayo-chan-feral-battle-r1.png` | reuse seven states, both directions, for normal and approved feral ability form |
+| Zakimiya | `zakimiya` | `REUSE_COMPLETE` | `/art/v090/characters/reference/zakimiya-identity-master-r1.png` -> `/art/v090/characters/zakimiya-battle-r1.png` | reuse seven states, both directions |
+| TKY | `tky` | `REUSE_COMPLETE` | `/art/v090/characters/reference/tky-identity-master-r1.png` -> `/art/v090/characters/tky-battle-r1.png` | reuse seven states, both directions |
+| MrsChiha | `mrs-chiha` | `REUSE_COMPLETE` | `/art/v090/characters/reference/mrs-chiha-identity-master-r1.png` -> `/art/v090/characters/mrs-chiha-battle-r1.png` | reuse seven states, both directions |
+| Miyamoto Musashi | `miyamoto-musashi` | `REUSE_COMPLETE` | `/art/v090/characters/reference/miyamoto-musashi-identity-master-r1.png` -> `/art/v090/characters/miyamoto-musashi-battle-r1.png` | reuse seven states, both directions |
+
+- `NEW_RUNTIME_SPRITE_REQUIRED` playable units: none.
+- Phase 2 -> Phase 3 entry: finish and integrate Paisen's approved-identity atlas; do not enter Phase 3 with the legacy `hit`/`death` alias.
+- Phase 3: create and integrate only the finite `NEW_REQUIRED`/`DERIVE` runtime derivatives in `ASSET_INVENTORY.md`, including event portraits, RED PANTHER role atlases, mutated-president and TAKUYA-Ω entrance/idle/attack/hit/phase/death states, defeat cuts, and locked Stage 21-30 stage/mission-object derivatives.
+- Phase 4 entry is a hard gate: every required runtime character/stage/mission image is complete, registered once, provenance-linked to its approved source, decode-valid at runtime size, and present in the required-runtime/PWA manifest.
+
+### 17.8 Luna decision boundary after closure
 
 Luna may choose module/file decomposition, immutable data representation, grapheme implementation that passes the exact contract, transaction helper structure, sprite packing/compression, crop/anchor/scale/alpha cleanup, cache batching, deterministic test-helper implementation, and spawn timestamps/lanes within each row's fixed roster and wave/group count. Luna may not choose or alter names, validation results, event IDs/order, Stage IDs/order/objectives, enemy families, boss IDs/values, unit roles/unlocks/costs, star thresholds, rewards, receipt semantics, speaker/portrait routing, story/audio profile mapping, selected assets, save namespaces, legacy/gift behavior, PWA gate, mobile thresholds, or any character identity.
 
