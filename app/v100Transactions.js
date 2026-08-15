@@ -1,0 +1,303 @@
+import {
+  V100_BOSSES,
+  V100_FORMATION_MAX_SLOTS,
+  V100_STAGE_BY_ID,
+  V100_STAGE_IDS,
+  V100_SUPPORTS,
+  V100_UNIT_BY_ID,
+  V100_VEHICLE,
+  v100LevelCapForStage,
+  v100StageReward,
+  v100StarsForVehicle,
+} from "./v100Registry.js";
+import { applyV100SaveMutation, normalizeV100Save } from "./v100Save.js";
+
+function unique(value) {
+  return [...new Set(Array.isArray(value) ? value.filter((entry) => typeof entry === "string" && entry.length > 0) : [])];
+}
+
+function integer(value, minimum = 0, maximum = Number.MAX_SAFE_INTEGER) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? Math.max(minimum, Math.min(maximum, Math.floor(numeric))) : minimum;
+}
+
+function stageNumberFor(stageId) {
+  return V100_STAGE_BY_ID[stageId]?.number ?? 0;
+}
+
+function appendReceipt(receipts, receipt) {
+  return receipts.includes(receipt) ? receipts : [...receipts, receipt];
+}
+
+function payloadForStage(stageNumber, next) {
+  const stage = V100_STAGE_IDS[stageNumber - 1] ? V100_STAGE_BY_ID[V100_STAGE_IDS[stageNumber - 1]] : null;
+  const payload = stage?.firstClearPayload ?? [];
+  const updated = { ...next };
+  for (const item of payload) {
+    if (item.startsWith("unit-")) {
+      const unit = V100_UNIT_BY_ID[item];
+      if (unit && !updated.registeredUnitIds.includes(unit.id)) updated.registeredUnitIds = [...updated.registeredUnitIds, unit.id];
+    } else if (item.startsWith("support-")) {
+      updated.supportPurchaseUnlockedIds = unique([...(updated.supportPurchaseUnlockedIds ?? []), item]);
+    } else if (item.startsWith("level-cap-")) {
+      updated.levelCap = Math.max(updated.levelCap, integer(item.slice("level-cap-".length), 5, 30));
+    }
+  }
+  return updated;
+}
+
+function bossPayloadForStage(stageNumber) {
+  return V100_BOSSES.find((boss) => boss.stageNumber === stageNumber) ?? null;
+}
+
+export function createV100BattleResult({
+  stageId,
+  battleRunId,
+  won = false,
+  vehicleHp = 0,
+  vehicleMaxHp = V100_VEHICLE.baseHp,
+  objectiveComplete = false,
+  bossDefeated = false,
+  elapsedSeconds = 0,
+  unitDeaths = 0,
+} = {}) {
+  const stageNumber = stageNumberFor(stageId);
+  if (!stageNumber) return { ok: false, reason: "unknown-stage" };
+  const validVictory = won === true && objectiveComplete === true && Number(vehicleHp) > 0;
+  return Object.freeze({
+    resultId: typeof battleRunId === "string" && battleRunId.length > 0 ? battleRunId : `v100:run:${stageNumber}:${Date.now()}`,
+    battleRunId: battleRunId ?? null,
+    stageId,
+    stageNumber,
+    won: validVictory,
+    objectiveComplete: objectiveComplete === true,
+    bossDefeated: bossDefeated === true,
+    vehicleHp: Math.max(0, Number(vehicleHp) || 0),
+    vehicleMaxHp: Math.max(1, Number(vehicleMaxHp) || V100_VEHICLE.baseHp),
+    stars: v100StarsForVehicle({ won: validVictory, vehicleHp, vehicleMaxHp }),
+    elapsedSeconds: Math.max(0, Number(elapsedSeconds) || 0),
+    unitDeaths: Math.max(0, integer(unitDeaths)),
+  });
+}
+
+export function recordV100PendingResult(save, result, { now } = {}) {
+  const current = normalizeV100Save(save);
+  if (!result || result.stageId !== V100_STAGE_IDS[result.stageNumber - 1]) return { applied: false, reason: "invalid-result", save: current };
+  if (result.won !== true) return { applied: false, reason: "defeat-no-pending-result", save: current };
+  if (current.pendingResult) return { applied: false, reason: "pending-result-exists", save: current };
+  return applyV100SaveMutation(current, (next) => ({ ...next, pendingResult: { ...result } }), { now });
+}
+
+export function finalizeV100PendingResult(save, { result = null, now } = {}) {
+  const current = normalizeV100Save(save);
+  const pending = result ?? current.pendingResult;
+  if (!pending || !pending.stageId || pending.won !== true) return { applied: false, reason: "pending-result-missing", save: current };
+  const stage = V100_STAGE_BY_ID[pending.stageId];
+  if (!stage || !current.availableStageIds.includes(stage.id)) return { applied: false, reason: "stage-locked", save: current };
+  const stageNumber = stage.number;
+  const firstClear = !current.completedStageIds.includes(stage.id);
+  const priorStars = integer(current.bestStars[stage.id], 0, 3);
+  const stars = Math.max(priorStars, integer(pending.stars, 0, 3));
+  let reward = 0;
+  let receipts = [...current.receipts];
+  if (firstClear) {
+    const firstReceipt = stage.receipts.firstClear;
+    if (!receipts.includes(firstReceipt)) {
+      reward += v100StageReward(stageNumber, "first-clear");
+      receipts = appendReceipt(receipts, firstReceipt);
+    }
+  } else if (typeof pending.battleRunId === "string" && pending.battleRunId.length > 0) {
+    const replayReceipt = `v100:s${String(stageNumber).padStart(2, "0")}:replay:${pending.battleRunId}`;
+    if (!receipts.includes(replayReceipt)) {
+      reward += v100StageReward(stageNumber, "replay");
+      receipts = appendReceipt(receipts, replayReceipt);
+    }
+  }
+  if (stars >= 2 && priorStars < 2) {
+    reward += v100StageReward(stageNumber, "star:2");
+    receipts = appendReceipt(receipts, stage.receipts.star2);
+  }
+  if (stars >= 3 && priorStars < 3) {
+    reward += v100StageReward(stageNumber, "star:3");
+    receipts = appendReceipt(receipts, stage.receipts.star3);
+  }
+  const nextStage = V100_STAGE_IDS[stageNumber];
+  const boss = bossPayloadForStage(stageNumber);
+  return applyV100SaveMutation(current, (next) => {
+    let updated = {
+      ...next,
+      caps: next.caps + reward,
+      completedStageIds: firstClear ? [...next.completedStageIds, stage.id] : [...next.completedStageIds],
+      bestStars: { ...next.bestStars, [stage.id]: stars },
+      availableStageIds: nextStage && firstClear ? [...new Set([...next.availableStageIds, nextStage])] : [...next.availableStageIds],
+      levelCap: Math.max(next.levelCap, v100LevelCapForStage(stageNumber)),
+      receipts,
+      pendingResult: null,
+      lastResult: { ...pending, firstClear, rewardCaps: reward, finalizedAt: new Date().toISOString() },
+    };
+    updated = payloadForStage(stageNumber, updated);
+    if (boss && pending.bossDefeated === true) {
+      const defeatReceipt = boss.firstDefeatReceipt;
+      if (!updated.receipts.includes(defeatReceipt)) {
+        updated.receipts = [...updated.receipts, defeatReceipt];
+        updated.bosses = {
+          ...updated.bosses,
+          discoveredIds: [...new Set([...updated.bosses.discoveredIds, boss.id])],
+          compendiumIds: [...new Set([...updated.bosses.compendiumIds, boss.compendiumId])],
+          outbreakIds: [...new Set([...updated.bosses.outbreakIds, boss.outbreakId])],
+          survivalIds: [...new Set([...updated.bosses.survivalIds, boss.survivalId])],
+          storyReplayStageNumbers: [...new Set([...updated.bosses.storyReplayStageNumbers, stageNumber])],
+          defeatCounts: { ...updated.bosses.defeatCounts, [boss.id]: integer(updated.bosses.defeatCounts[boss.id]) + 1 },
+        };
+      }
+    }
+    if (stageNumber === 30 && firstClear) updated.postGameAvailable = true;
+    return updated;
+  }, { now });
+}
+
+export function purchaseV100Unit(save, unitId, { now } = {}) {
+  const current = normalizeV100Save(save);
+  const unit = V100_UNIT_BY_ID[unitId];
+  if (!unit) return { applied: false, reason: "unknown-unit", save: current };
+  if (!current.registeredUnitIds.includes(unitId)) return { applied: false, reason: "not-registered", save: current };
+  if (current.ownedUnitIds.includes(unitId)) return { applied: false, duplicate: true, reason: "already-owned", save: current };
+  const receipt = `v100:unit:${unitId}:purchase`;
+  if (current.receipts.includes(receipt)) return { applied: false, duplicate: true, reason: "duplicate-receipt", save: current };
+  if (current.caps < unit.registrationCostCaps) return { applied: false, reason: "insufficient-caps", save: current };
+  return applyV100SaveMutation(current, (next) => ({
+    ...next,
+    caps: next.caps - unit.registrationCostCaps,
+    ownedUnitIds: [...next.ownedUnitIds, unitId],
+    receipts: [...next.receipts, receipt],
+  }), { now });
+}
+
+export function purchaseV100Support(save, supportId, { now } = {}) {
+  const current = normalizeV100Save(save);
+  const support = V100_SUPPORTS.find((entry) => entry.id === supportId);
+  if (!support) return { applied: false, reason: "unknown-support", save: current };
+  if (!current.supportPurchaseUnlockedIds?.includes(supportId)) return { applied: false, reason: "not-unlocked", save: current };
+  if (current.ownedSupportIds.includes(supportId)) return { applied: false, duplicate: true, reason: "already-owned", save: current };
+  const receipt = `v100:support:${supportId}:purchase`;
+  if (current.receipts.includes(receipt)) return { applied: false, duplicate: true, reason: "duplicate-receipt", save: current };
+  if (current.caps < support.unlockCostCaps) return { applied: false, reason: "insufficient-caps", save: current };
+  return applyV100SaveMutation(current, (next) => ({
+    ...next,
+    caps: next.caps - support.unlockCostCaps,
+    ownedSupportIds: [...next.ownedSupportIds, supportId],
+    receipts: [...next.receipts, receipt],
+  }), { now });
+}
+
+export function equipV100Support(save, supportId, { now } = {}) {
+  const current = normalizeV100Save(save);
+  if (supportId !== null && !current.ownedSupportIds.includes(supportId)) return { applied: false, reason: "support-not-owned", save: current };
+  if (supportId !== null && !V100_SUPPORTS.some((support) => support.id === supportId)) return { applied: false, reason: "unknown-support", save: current };
+  if (current.equippedSupportId === supportId) return { applied: false, unchanged: true, save: current };
+  return applyV100SaveMutation(current, (next) => ({ ...next, equippedSupportId: supportId }), { now });
+}
+
+export function upgradeV100Vehicle(save, { now } = {}) {
+  const current = normalizeV100Save(save);
+  const level = integer(current.vehicle.upgradeLevel, 0, V100_VEHICLE.maxUpgradeLevel);
+  if (level >= V100_VEHICLE.maxUpgradeLevel) return { applied: false, reason: "upgrade-cap", save: current };
+  const cost = V100_VEHICLE.upgradeCosts[level];
+  const receipt = `v100:vehicle:upgrade:${level + 1}`;
+  if (current.receipts.includes(receipt) || current.vehicle.upgradeReceipts.includes(receipt)) return { applied: false, duplicate: true, reason: "duplicate-receipt", save: current };
+  if (current.caps < cost) return { applied: false, reason: "insufficient-caps", save: current };
+  return applyV100SaveMutation(current, (next) => ({
+    ...next,
+    caps: next.caps - cost,
+    vehicle: {
+      ...next.vehicle,
+      upgradeLevel: level + 1,
+      maxHp: V100_VEHICLE.baseHp + (level + 1) * V100_VEHICLE.hpPerUpgrade,
+      upgradeReceipts: [...next.vehicle.upgradeReceipts, receipt],
+    },
+    receipts: [...next.receipts, receipt],
+  }), { now });
+}
+
+export function createV100BattleState({ resource = 150, now = 0 } = {}) {
+  return {
+    resource: Math.max(0, Number(resource) || 0),
+    activeReservations: [],
+    cooldowns: {},
+    receipts: [],
+    now: Math.max(0, Number(now) || 0),
+  };
+}
+
+function activeReservationCount(state) {
+  return state.activeReservations.filter((entry) => entry.releasedAt === null).length;
+}
+
+export function reserveV100FormationSlot(save, battleState, { unitId, cost = 0, cooldownSeconds = 0, reservationId, now } = {}) {
+  const current = normalizeV100Save(save);
+  const state = battleState && typeof battleState === "object" ? battleState : createV100BattleState();
+  const unit = V100_UNIT_BY_ID[unitId];
+  if (!unit || !current.ownedUnitIds.includes(unitId)) return { accepted: false, reason: "unit-not-owned", save: current, battleState: state };
+  if (activeReservationCount(state) >= V100_FORMATION_MAX_SLOTS) return { accepted: false, reason: "formation-full", save: current, battleState: state };
+  const safeCost = Math.max(0, Number(cost) || 0);
+  if (state.resource < safeCost) return { accepted: false, reason: "insufficient-battle-resource", save: current, battleState: state };
+  const key = `${unitId}:${Math.max(0, Number(now) || state.now)}`;
+  const id = typeof reservationId === "string" && reservationId.length > 0 ? reservationId : `v100:deploy:${key}:${state.activeReservations.length}`;
+  if (state.receipts.includes(id)) return { accepted: false, duplicate: true, reason: "duplicate-receipt", save: current, battleState: state };
+  const cooldownUntil = Number(state.cooldowns[unitId] ?? 0);
+  const time = Math.max(0, Number(now) || state.now);
+  if (cooldownUntil > time) return { accepted: false, reason: "cooldown", save: current, battleState: state };
+  const reservation = { reservationId: id, unitId, acceptedAt: time, releasedAt: null };
+  return {
+    accepted: true,
+    reservation,
+    save: current,
+    battleState: {
+      ...state,
+      resource: state.resource - safeCost,
+      now: time,
+      activeReservations: [...state.activeReservations, reservation],
+      cooldowns: { ...state.cooldowns, [unitId]: time + Math.max(0, Number(cooldownSeconds) || 0) },
+      receipts: [...state.receipts, id],
+    },
+  };
+}
+
+export function releaseV100FormationSlot(battleState, reservationId, { now } = {}) {
+  const state = battleState && typeof battleState === "object" ? battleState : createV100BattleState();
+  const index = state.activeReservations.findIndex((entry) => entry.reservationId === reservationId);
+  if (index < 0) return { released: false, reason: "unknown-reservation", battleState: state };
+  if (state.activeReservations[index].releasedAt !== null) return { released: false, duplicate: true, reason: "already-released", battleState: state };
+  const nextReservations = state.activeReservations.slice();
+  nextReservations[index] = { ...nextReservations[index], releasedAt: Math.max(0, Number(now) || state.now) };
+  return { released: true, battleState: { ...state, activeReservations: nextReservations } };
+}
+
+export function v100BossVisibleInOtherModes(save, bossId) {
+  const current = normalizeV100Save(save);
+  return current.bosses.discoveredIds.includes(bossId)
+    && current.bosses.compendiumIds.includes(`compendium:${bossId}`)
+    && current.bosses.outbreakIds.includes(`outbreak:${bossId}`)
+    && current.bosses.survivalIds.includes(`survival:${bossId}`);
+}
+
+export function v100CampaignReachability(save) {
+  const current = normalizeV100Save(save);
+  return V100_STAGE_IDS.map((stageId, index) => ({
+    stageId,
+    stageNumber: index + 1,
+    reachable: current.availableStageIds.includes(stageId),
+    completed: current.completedStageIds.includes(stageId),
+    blockedBy: index === 0 ? null : V100_STAGE_IDS[index - 1],
+  }));
+}
+
+export function v100TransactionContract() {
+  return Object.freeze({
+    formationMaxSlots: V100_FORMATION_MAX_SLOTS,
+    duplicateCharacterIdsAllowed: true,
+    activeCountExcludes: ["vehicle", "npc", "escort", "mission-object", "support", "enemy"],
+    bossCountSource: "exact-first-defeat-receipt",
+    rewardSource: "pending-result-finalize",
+  });
+}

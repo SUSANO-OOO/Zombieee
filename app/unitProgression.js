@@ -1,5 +1,27 @@
 import { deepFreeze } from "./content/freeze.js";
 
+// Version 1.0.0 uses a separate fixed progression contract. These named
+// exports keep the legacy V0.9 progression surface intact while allowing the
+// new namespace to consume one canonical registry.
+export {
+  V100_LEVEL_COSTS,
+  V100_LEVEL_CAP_MILESTONES,
+  v100LevelCapForStage,
+  v100LevelCost,
+  v100UnitStatAtLevel,
+} from "./v100Registry.js";
+export {
+  V100_LEVEL_MIN,
+  V100_LEVEL_MAX,
+  v100UnitLevelFor,
+  normalizeV100UnitLevels,
+  v100LevelQuote,
+  applyV100LevelUpgrade,
+  v100LevelStats,
+  v100UnitProgressionSnapshot,
+  v100ProgressionContract,
+} from "./v100Progression.js";
+
 export const UNIT_LEVEL_MIN = 1;
 export const UNIT_LEVEL_MAX = 50;
 export const UNIT_LEVEL_PUBLIC_CAP = 25;
