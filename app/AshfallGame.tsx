@@ -553,9 +553,9 @@ const W = 960;
 const H = 540;
 
 type Lane = 0 | 1 | 2;
-type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
-type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater" | "kurome" | "resonator" | "cagewalker" | "spindle" | "choir-knot" | "pall-manta" | "anchor-bloom";
-type SupplyKind = "pod" | "drum" | "medical";
+export type UnitKind = "scout" | "ranger" | "brute" | "brawler" | "gunner" | "medic" | "crazy-king" | "kumaverson" | "babayaga" | "guardian" | "engineer" | "zakimiya" | "tky" | "mrs-chiha" | "miyamoto-musashi" | "mayo-chan";
+export type EnemyKind = "walker" | "runner" | "spitter" | "crusher" | "shade" | "abomination" | "takuya" | "turned" | "grappler" | "ooze" | "sprinter" | "gate-eater" | "kurome" | "resonator" | "cagewalker" | "spindle" | "choir-knot" | "pall-manta" | "anchor-bloom" | "mugarian-president-mutated" | "takuya-omega" | "red-panther-knife" | "red-panther-shield" | "red-panther-smg" | "red-panther-commander";
+export type SupplyKind = "pod" | "drum" | "medical";
 type MusicMode = "normal" | "pressure" | "danger" | "boss";
 type QaMode = "endgame" | "takuya-entrance" | "ai-reacquire" | "roles" | "zakimiya" | "new-playables" | "mayo" | "supplies" | "airstrike" | "crawler" | "loadout" | "dialogue" | "stress" | "lifecycle" | "barks" | "sprites";
 type SelectedAction = `supply:${SupplyKind}` | "airstrike" | null;
@@ -1303,7 +1303,7 @@ type Hud = {
   manualAbilityIcons: ManualAbilityIconView[];
 };
 
-type BattleResult = {
+export type AshfallBattleResult = {
   resultId: string;
   stageId: string;
   won: boolean;
@@ -1322,6 +1322,25 @@ type BattleResult = {
   unitStats: Readonly<Pick<CombatMetrics, "damageByUnit" | "damageTakenByUnit" | "healingByUnit">>;
   missionRuntime?: StageMissionRuntime;
 };
+
+export type AshfallExternalSession = {
+  stageId: string;
+  resultId: string;
+  displayName?: string;
+  formationKinds: readonly UnitKind[];
+  enemyKinds: readonly EnemyKind[];
+  selectedSupply: SupplyKind;
+  unitLevels?: Readonly<Record<string, number>>;
+  vehicleMaxHp?: number;
+  equipmentSnapshot?: {
+    personalEquipmentByUnit?: Record<string, readonly (string | null)[]>;
+    tacticalEquipmentIds?: readonly (string | null)[];
+    equipmentEnhancementLevels?: Record<string, number>;
+  };
+  onBattleResult: (result: AshfallBattleResult) => void;
+};
+
+type BattleResult = AshfallBattleResult;
 
 function preservesAcceptedSupportTempo(game: Game) {
   return Boolean(game.survivalRun)
@@ -1598,8 +1617,9 @@ const initialGame = (
     tacticalEquipmentIds?: readonly (string | null)[];
     equipmentEnhancementLevels?: Record<string, number>;
   } = {},
+  definitionOptions: { v100?: boolean } = {},
 ): Game => {
-  const definition = createBattleDefinition(stageId) as BattleDefinition;
+  const definition = createBattleDefinition(stageId, definitionOptions) as BattleDefinition;
   const campaignUnits = CAMPAIGN_UNITS as unknown as readonly CampaignUnitData[];
   const unitLevelsByKind = Object.fromEntries(campaignUnits
     .map((unit) => [unit.combatKind, unitLevels[unit.id] ?? 1]));
@@ -5286,7 +5306,9 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
     }
   } else if (telegraph.kind === "shell-sweep") {
     const radius = telegraph.radius ?? 0;
-    const halfHeight = BOSS_ANOMALY_TUNING.gairen.sweepHalfHeight;
+    const halfHeight = f.kind === "takuya-omega"
+      ? bossDefinitionForEnemyKind(f.kind)?.attackTelegraph.laneHalfHeight ?? 56
+      : BOSS_ANOMALY_TUNING.gairen.sweepHalfHeight;
     const pulse = .5 + .5 * Math.sin(g.time * 11);
     ctx.setLineDash([]);
     ctx.globalAlpha = .18;
@@ -5448,9 +5470,9 @@ function drawMotherCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game)
 }
 
 function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
-  if (!["ooguchi", "gairen", "futago"].includes(f.kind)
+  if (!["ooguchi", "gairen", "futago", "mugarian-president-mutated", "takuya-omega"].includes(f.kind)
     || !["active", "recovery"].includes(f.stationAbility.phase)) return;
-  const tuning = BOSS_ANOMALY_TUNING[f.kind as "ooguchi" | "gairen" | "futago"];
+  const tuning = BOSS_ANOMALY_TUNING[f.kind as "ooguchi" | "gairen" | "futago" | "mugarian-president-mutated" | "takuya-omega"];
   const active = f.stationAbility.phase === "active";
   const elapsed = active
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
@@ -5508,7 +5530,7 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
       );
       ctx.stroke();
     }
-  } else {
+  } else if (f.kind === "futago") {
     const split = f.hp / Math.max(1, f.maxHp) <= BOSS_ANOMALY_TUNING.futago.splitThreshold;
     const separation = split ? 31 : 18;
     for (const direction of [-1, 1]) {
@@ -5535,6 +5557,33 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
         y + 12 - Math.sin(g.time * 7 + filament) * 6,
         f.x + separation,
         y,
+      );
+      ctx.stroke();
+    }
+  } else {
+    const omega = f.kind === "takuya-omega";
+    const color = omega ? "#e4ad55" : "#d55e4d";
+    const gradient = ctx.createRadialGradient(f.x, f.y - 54, 6, f.x, f.y - 42, omega ? 122 : 104);
+    gradient.addColorStop(0, omega ? `rgba(255,224,139,${.5 * intensity})` : `rgba(255,132,94,${.44 * intensity})`);
+    gradient.addColorStop(.46, omega ? `rgba(198,105,37,${.26 * intensity})` : `rgba(159,48,39,${.28 * intensity})`);
+    gradient.addColorStop(1, "rgba(30,12,12,0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y - 42, omega ? 112 : 96, 70, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = .32 + intensity * .5;
+    ctx.lineWidth = omega ? 4 : 3;
+    for (let arm = 0; arm < 4; arm += 1) {
+      const angle = -Math.PI * .9 + arm * Math.PI * .6;
+      const reach = (omega ? 92 : 78) + (arm % 2) * 16;
+      ctx.beginPath();
+      ctx.moveTo(f.x + Math.cos(angle) * 18, f.y - 54 + Math.sin(angle) * 12);
+      ctx.quadraticCurveTo(
+        f.x + Math.cos(angle) * reach * .55,
+        f.y - 74 + Math.sin(g.time * 6 + arm) * 12,
+        f.x + Math.cos(angle) * reach,
+        f.y - 30 + Math.sin(angle) * 28,
       );
       ctx.stroke();
     }
@@ -7388,7 +7437,7 @@ function drawWorld(
   }
 }
 
-export function AshfallGame() {
+export function AshfallGame({ externalSession = null }: { externalSession?: AshfallExternalSession | null } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTransformRef = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
   const graphicsProfileRef = useRef<GraphicsProfile>(resolveGraphicsProfile("auto"));
@@ -7480,6 +7529,7 @@ export function AshfallGame() {
   const eventQueueRef = useRef<string[]>([]);
   const eventCompletionLockRef = useRef(false);
   const finalizedEndRef = useRef<BattleResult | null>(null);
+  const externalStartKeyRef = useRef<string | null>(null);
   const survivalCheckpointSaveLocksRef = useRef(new Set<string>());
   const survivalWaveEntitlementSaveLocksRef = useRef(new Set<string>());
   const survivalWaveEntitlementReceiptRef = useRef("");
@@ -7611,10 +7661,10 @@ export function AshfallGame() {
   const [forceStoryReplay, setForceStoryReplay] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState(INITIAL_STAGE_ID);
   const [selectedOutbreakMissionId, setSelectedOutbreakMissionId] = useState<string | null>(null);
-  const activeOperationId = selectedOutbreakMissionId ?? selectedStageId;
-  const activeBattlefieldStageId = selectedOutbreakMissionId
+  const activeOperationId = externalSession?.stageId ?? selectedOutbreakMissionId ?? selectedStageId;
+  const activeBattlefieldStageId = externalSession?.stageId ?? (selectedOutbreakMissionId
     ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.prerequisiteStageId ?? selectedStageId
-    : selectedStageId;
+    : selectedStageId);
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => createDefaultCampaignSave() as CampaignSave);
   const campaignSaveRef = useRef(campaignSave);
   const [graphicsProfileView, setGraphicsProfileView] = useState<GraphicsProfile>(() => resolveGraphicsProfile("auto"));
@@ -7630,6 +7680,15 @@ export function AshfallGame() {
   useEffect(() => {
     campaignSaveRef.current = campaignSave;
   }, [campaignSave]);
+  const externalStageId = externalSession?.stageId ?? null;
+  const externalSessionActive = Boolean(externalSession);
+  const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";
+  const externalEnemyKindsKey = externalSession?.enemyKinds.join("|") ?? "";
+  useEffect(() => {
+    if (!externalStageId) return;
+    setSelectedStageId(externalStageId);
+    setSelectedOutbreakMissionId(null);
+  }, [externalStageId]);
   useEffect(() => {
     const updateGraphicsProfile = () => {
       const navigatorWithMemory = navigator as Navigator & { deviceMemory?: number };
@@ -7676,12 +7735,14 @@ export function AshfallGame() {
   const resultSaveRetryingRef = useRef(false);
   const formationUnitIds = useMemo(() => getSelectedFormationUnitIds(campaignSave), [campaignSave]);
   const formationKinds = useMemo(() => getSelectedFormationCombatKinds(campaignSave) as UnitKind[], [campaignSave]);
+  const externalFormationKinds = useMemo(() => [...(externalSession?.formationKinds ?? [])] as UnitKind[], [externalSession?.formationKinds]);
+  const activeFormationKinds = externalSession ? externalFormationKinds : formationKinds;
   const battleHudSlots = useMemo(
-    () => mobileBattleHudUnitSlots(cards, formationKinds),
-    [formationKinds],
+    () => mobileBattleHudUnitSlots(cards, activeFormationKinds),
+    [activeFormationKinds],
   );
   const battleHudLayout = useMemo(() => mobileBattleHudLayout(battleHudViewport), [battleHudViewport]);
-  const formationKindKey = formationKinds.join("|");
+  const formationKindKey = activeFormationKinds.join("|");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
   const [outbreakResult, setOutbreakResult] = useState<OutbreakResultView | null>(null);
   const [pendingOutbreakSettlement, setPendingOutbreakSettlement] = useState<PendingOutbreakSettlement | null>(null);
@@ -12023,7 +12084,9 @@ export function AshfallGame() {
       image.onerror = null;
       image.removeAttribute("src");
     };
-    const selectedFormationKinds = formationKindKey.split("|").filter(Boolean) as UnitKind[];
+    const selectedFormationKinds = externalSessionActive
+      ? externalFormationKindsKey.split("|").filter(Boolean) as UnitKind[]
+      : formationKindKey.split("|").filter(Boolean) as UnitKind[];
     const selectedVariantKinds = selectedFormationKinds.includes("mayo-chan")
       ? ["mayo-chan-feral" as UnitKind]
       : [];
@@ -12034,7 +12097,9 @@ export function AshfallGame() {
     const survivalEnemyKinds = survivalAssetMode
       ? [...new Set([...SURVIVAL_NORMAL_ENEMY_KINDS, ...survivalBossKinds])] as UnitKind[]
       : [];
-    const stageEnemyKinds = survivalEnemyKinds.length > 0
+    const stageEnemyKinds = externalSessionActive
+      ? externalEnemyKindsKey.split("|").filter(Boolean) as UnitKind[]
+      : survivalEnemyKinds.length > 0
       ? survivalEnemyKinds
       : activeOutbreakEnemyKinds.length > 0
       ? activeOutbreakEnemyKinds as UnitKind[]
@@ -12282,7 +12347,7 @@ export function AshfallGame() {
       window.clearTimeout(slowTimer);
       controller.abort();
     };
-  }, [activeBattlefieldStageId, activeOperationId, assetRetryNonce, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
+  }, [activeBattlefieldStageId, activeOperationId, assetRetryNonce, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
 
   const retryAssets = useCallback(() => {
     const retryPaths = new Set([
@@ -13693,7 +13758,27 @@ export function AshfallGame() {
   const selectedOutbreakMissionView = outbreakMissionViews.find(({ id }) => id === selectedOutbreakMissionId)
     ?? outbreakMissionViews.find(({ unlocked }) => unlocked)
     ?? outbreakMissionViews[0];
-  const selectedOperationView = selectedOutbreakMissionId && selectedOutbreakMissionView
+  const selectedOperationView = externalSession
+    ? {
+      id: externalSession.stageId,
+      stageNumber: 0,
+      regionId: "region-v100",
+      regionLabel: "西新世紀末物語",
+      regionName: "V1.0.0キャンペーン",
+      displayName: externalSession.displayName ?? externalSession.stageId,
+      chapterName: "V1.0.0キャンペーン",
+      objective: "作戦目標を達成",
+      missionLabel: "キャンペーン作戦",
+      threat: "危険度：作戦別",
+      unlocked: true,
+      completed: false,
+      bestStars: 0,
+      baseReward: 0,
+      nextStarReward: 0,
+      mapPosition: { x: 50, y: 50 },
+      starCriteria: [],
+    } satisfies StageScreenView
+    : selectedOutbreakMissionId && selectedOutbreakMissionView
     ? {
       id: selectedOutbreakMissionView.id,
       stageNumber: 0,
@@ -13988,25 +14073,45 @@ export function AshfallGame() {
     resultId: string | null;
   }) => {
     const retrying = gameRef.current.over;
-    const qaAllUnlocked = Boolean(qaMode || qaScenario);
-    const battleStageId = qaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : sessionOverride?.stageId ?? activeOperationId;
-    const requestedFormation = sessionOverride?.formationKinds ?? formationKinds;
-    const permittedFormation = qaAllUnlocked
+    const external = externalSession;
+    const qaAllUnlocked = Boolean(qaMode || qaScenario || external);
+    const battleStageId = external?.stageId
+      ?? (qaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : sessionOverride?.stageId ?? activeOperationId);
+    const requestedFormation = external?.formationKinds
+      ? [...external.formationKinds]
+      : sessionOverride?.formationKinds ?? formationKinds;
+    const permittedFormation = external
+      ? requestedFormation.slice(0, 7)
+      : qaAllUnlocked
       ? requestedFormation.slice(0, 7)
       : requestedFormation.filter((kind) => isUnitOwned(campaignSave, kind)).slice(0, 7);
     const fallbackFormation = getSelectedFormationCombatKinds(campaignSave)
       .filter((kind: string) => qaAllUnlocked || isUnitOwned(campaignSave, kind))
       .slice(0, 7) as UnitKind[];
-    const battleSupply = sessionOverride?.selectedSupply ?? selectedSupply;
+    const battleSupply = external?.selectedSupply ?? sessionOverride?.selectedSupply ?? selectedSupply;
     const fresh = initialGame(
       battleSupply,
       battleStageId,
       permittedFormation.length > 0 ? permittedFormation : fallbackFormation,
-      sessionOverride?.resultId ?? createBattleResultId(battleStageId),
-      campaignSave.readStoryEventIds,
-      campaignSave.unitLevels,
-      getFormationPresetEquipmentSnapshot(campaignSave),
+      external?.resultId ?? sessionOverride?.resultId ?? createBattleResultId(battleStageId),
+      external ? [] : campaignSave.readStoryEventIds,
+      external?.unitLevels ?? campaignSave.unitLevels,
+      external?.equipmentSnapshot ?? getFormationPresetEquipmentSnapshot(campaignSave),
+      external ? { v100: true } : undefined,
     );
+    if (external) {
+      const vehicleMaxHp = Math.max(1, Number(external.vehicleMaxHp) || fresh.definition.baseMaxHp);
+      fresh.definition = { ...fresh.definition, baseMaxHp: vehicleMaxHp };
+      fresh.baseMaxHp = vehicleMaxHp;
+      fresh.baseHp = vehicleMaxHp;
+      // V1 owns its campaign entry state, while Ashfall still owns the live
+      // support controls. Seed the production battle with the same useful
+      // opening resources the legacy campaign gives a player.
+      fresh.scrap = Math.max(fresh.scrap, 120);
+      fresh.supportGauge = SUPPORT_GAUGE_MAX;
+      fresh.supportItemCooldowns = createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>;
+      fresh.crawlerAbility = createCrawlerAbilityRuntime(1) as CrawlerRuntime;
+    }
     fresh.running = true;
     prepareQaMode(fresh, qaMode);
     if (qaScenario?.mode === "defense") {
@@ -14054,7 +14159,19 @@ export function AshfallGame() {
       playCue("start-low");
       startCueTimerRef.current = window.setTimeout(() => { startCueTimerRef.current = null; playCue("start-high"); }, 90);
     }
-  }, [activeOperationId, bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, formationKinds, playCue, qaMode, qaScenario, selectedSupply, startMusic]);
+  }, [activeOperationId, bgmMuted, campaignSave, chooseAction, disposeBattleRuntime, externalSession, formationKinds, playCue, qaMode, qaScenario, selectedSupply, startMusic]);
+
+  useEffect(() => {
+    if (!externalSession || !assetsReady || assetError) return;
+    const startKey = `${externalSession.stageId}:${externalSession.resultId}`;
+    const currentGame = gameRef.current;
+    if (externalStartKeyRef.current === startKey
+      && started
+      && currentGame.definition.stageId === externalSession.stageId
+      && currentGame.running) return;
+    externalStartKeyRef.current = startKey;
+    startGame();
+  }, [assetError, assetsReady, externalSession, startGame, started]);
 
   const startSurvivalGame = useCallback((run: ReturnType<typeof createSurvivalRun>) => {
     if (!assetsReady || assetError) return;
@@ -15158,6 +15275,13 @@ export function AshfallGame() {
       manualAbilityReadyStateRef.current.clear();
     }
     if (!end || finalizedEndRef.current === end) return;
+    if (externalSession) {
+      finalizedEndRef.current = end;
+      const externalTimer = window.setTimeout(() => {
+        externalSession.onBattleResult(end);
+      }, 0);
+      return () => window.clearTimeout(externalTimer);
+    }
     const timer = window.setTimeout(async () => {
       if (finalizedEndRef.current === end) return;
       finalizedEndRef.current = end;
@@ -15241,7 +15365,7 @@ export function AshfallGame() {
       publishPendingResult(pending);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [campaignSave, commitOutbreakSettlement, end, persistCampaignSave, playUiOperationCue, publishPendingResult]);
+  }, [campaignSave, commitOutbreakSettlement, end, externalSession, persistCampaignSave, playUiOperationCue, publishPendingResult]);
 
   useEffect(() => {
     if (!saveHydrated || !qaScenario || qaScenarioAppliedRef.current) return;
@@ -18246,8 +18370,8 @@ export function AshfallGame() {
             if (abilityFrame || f.stationAbility.phase !== "idle") continue;
           }
 
-          if (["ooguchi", "gairen", "futago"].includes(f.kind)) {
-            const anomalyKind = f.kind as "ooguchi" | "gairen" | "futago";
+          if (["ooguchi", "gairen", "futago", "mugarian-president-mutated", "takuya-omega"].includes(f.kind)) {
+            const anomalyKind = f.kind as "ooguchi" | "gairen" | "futago" | "mugarian-president-mutated" | "takuya-omega";
             const tuning = BOSS_ANOMALY_TUNING[anomalyKind];
             let abilityFrame = f.stationAbility.phase !== "idle";
             if (f.stationAbility.phase !== "idle") {
@@ -18330,7 +18454,9 @@ export function AshfallGame() {
                     : 1;
                   const abilityDamage = anomalyKind === "gairen"
                     ? BOSS_ANOMALY_TUNING.gairen.sweepDamage
-                    : BOSS_ANOMALY_TUNING.futago.crossStrikeDamage * splitMultiplier;
+                    : anomalyKind === "futago"
+                      ? BOSS_ANOMALY_TUNING.futago.crossStrikeDamage * splitMultiplier
+                      : BOSS_ANOMALY_TUNING[anomalyKind].controlDamage;
                   for (const victimId of hitIds) {
                     const victim = g.fighters.find((candidate) => (
                       candidate.side === "human"
@@ -18345,22 +18471,31 @@ export function AshfallGame() {
                     );
                     victim.flash = Math.max(victim.flash, .18);
                     victim.knock = Math.max(victim.knock, anomalyKind === "gairen" ? 18 : 14);
-                    addDamageText(g, victim.x, victim.y - 58, anomalyKind === "gairen"
-                        ? `外殻掃討 -${Math.round(resolved.targetDamage)}`
-                        : `融合交差撃 -${Math.round(resolved.targetDamage)}`, .92, anomalyKind === "gairen" ? "#d3b77c" : "#d59a9d");
+                    const impactLabel = anomalyKind === "gairen"
+                      ? `外殻掃討 -${Math.round(resolved.targetDamage)}`
+                      : anomalyKind === "futago"
+                        ? `融合交差撃 -${Math.round(resolved.targetDamage)}`
+                        : anomalyKind === "mugarian-president-mutated"
+                          ? `四腕制圧 -${Math.round(resolved.targetDamage)}`
+                          : `Ω大剣薙ぎ払い -${Math.round(resolved.targetDamage)}`;
+                    addDamageText(g, victim.x, victim.y - 58, impactLabel, .92, anomalyKind === "gairen" ? "#d3b77c" : anomalyKind === "futago" ? "#d59a9d" : "#e1ad58");
                   }
                   addParticles(
                     g,
                     areaBoss.x,
                     areaBoss.y - 20,
-                    anomalyKind === "gairen" ? "#b79a68" : "#ba777d",
+                    anomalyKind === "gairen" ? "#b79a68" : anomalyKind === "futago" ? "#ba777d" : "#d16c4e",
                     24,
                   );
                   g.banner = anomalyKind === "gairen"
                     ? "ガイレン // 外殻掃討・中枢露出"
-                    : f.stationAbility.split
-                      ? "フタゴ // 裂開・融合交差撃"
-                      : "フタゴ // 融合交差撃";
+                    : anomalyKind === "futago"
+                      ? f.stationAbility.split
+                        ? "フタゴ // 裂開・融合交差撃"
+                        : "フタゴ // 融合交差撃"
+                      : anomalyKind === "mugarian-president-mutated"
+                        ? "変異ムガリアン社長 // 四腕制圧"
+                        : "TAKUYA-Ω // Ω大剣薙ぎ払い";
                   playBattleSemanticCue(
                     anomalyKind === "gairen"
                       ? "boss-gairen-shell-sweep"
@@ -18403,14 +18538,20 @@ export function AshfallGame() {
                   ? "オオグチ // 捕食突進予告"
                   : anomalyKind === "gairen"
                     ? "ガイレン // 外殻掃討予告"
-                    : "フタゴ // 融合交差撃予告";
+                    : anomalyKind === "futago"
+                      ? "フタゴ // 融合交差撃予告"
+                      : anomalyKind === "mugarian-president-mutated"
+                        ? "変異ムガリアン社長 // 四腕制圧予告"
+                        : "TAKUYA-Ω // Ω大剣薙ぎ払い予告";
                 g.bannerTime = .68;
                 playBattleSemanticCue(
-                  anomalyKind === "ooguchi"
-                    ? "boss-ooguchi-charge-warning"
-                    : anomalyKind === "gairen"
-                      ? "boss-gairen-shell-warning"
-                      : "boss-futago-cross-warning",
+                    anomalyKind === "ooguchi"
+                      ? "boss-ooguchi-charge-warning"
+                      : anomalyKind === "gairen"
+                        ? "boss-gairen-shell-warning"
+                        : anomalyKind === "futago"
+                          ? "boss-futago-cross-warning"
+                          : "enemy-takuya-attack",
                   f.x,
                   {
                     semantic: "boss-phase-warning",
@@ -21216,7 +21357,7 @@ export function AshfallGame() {
         </> : <>
           <div className="top-hud">
             <div className="battle-brand-zone">
-              <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedOperationView.displayName} <em>{RELEASE_LABEL}</em></small></div></div>
+              <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedOperationView.displayName} <em>{externalSession ? "Version 1.0.0" : RELEASE_LABEL}</em></small></div></div>
               <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>耐久</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
             </div>
             <div className="battle-message-stack" aria-live="polite">
@@ -21272,7 +21413,7 @@ export function AshfallGame() {
                         ? "指揮不足"
                         : null);
                 return (
-                  <button key={card.kind} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                  <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
                     {!cooldown && <span className="card-state">{cardBlockReason ?? "出撃可能"}</span>}
@@ -21420,7 +21561,7 @@ export function AshfallGame() {
             : <p>今回の装備報酬はありません。</p>}</div>
           <div className="survival-result-actions"><button onClick={openSurvival}>次のrunへ</button><button onClick={() => returnToMap()}>エリアマップへ戻る</button></div>
         </section></div>}
-        {qaMode === "barks" ? <BattleBarkAuditScreen /> : qaMode === "sprites" ? <SpriteAuditScreen /> : <CampaignScreens
+        {!externalSession && (qaMode === "barks" ? <BattleBarkAuditScreen /> : qaMode === "sprites" ? <SpriteAuditScreen /> : <CampaignScreens
           screen={screen}
           eventId={eventId}
           stages={stageViews}
@@ -21493,7 +21634,7 @@ export function AshfallGame() {
           onResetSave={resetCampaign}
           onReloadAssets={retryAssets}
           onUiAction={playUiOperationCue}
-        />}
+         />)}
         {screen !== "battle" && campaignSave.migrationNotices[0] && <div className="migration-notice" role="alertdialog" aria-modal="true" aria-label="Version 0.9.0キャップ経済再編">
           <section>
             <small>MIGRATION RECEIPT</small>

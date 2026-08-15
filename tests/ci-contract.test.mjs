@@ -5,7 +5,7 @@ import test from "node:test";
 import { onlyAbortedStaticStreams } from "../scripts/v099-final-bounded-contract.mjs";
 
 test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
-  const workflow = await readFile(".github/workflows/ci.yml", "utf8");
+  const workflow = (await readFile(".github/workflows/ci.yml", "utf8")).replaceAll("\r\n", "\n");
   const finalBoundedRunner = await readFile("scripts/run-v099-final-bounded.mjs", "utf8");
   const pagesBoundedRunner = await readFile("scripts/run-v099-final-bounded-against-pages.mjs", "utf8");
   const trigger = workflow.split("permissions:", 1)[0];
@@ -153,7 +153,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 });
 
 test("Stage 3 final uses one bounded fixture for candidate and exact PR base", async () => {
-  const workflow = await readFile(".github/workflows/ci.yml", "utf8");
+  const workflow = (await readFile(".github/workflows/ci.yml", "utf8")).replaceAll("\r\n", "\n");
   const p5Smoke = await readFile("scripts/p5-browser-smoke.mjs", "utf8");
   const boundedRunner = await readFile("scripts/run-stage3-audio-bounded.mjs", "utf8");
   assert.match(workflow, /Build exact PR base for the same bounded final fixture/);

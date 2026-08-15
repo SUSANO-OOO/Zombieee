@@ -6,6 +6,7 @@ import {
   stationMissionObjective,
   stationMissionOutcome,
 } from "./stationStageMechanics.js";
+import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
 
 const PHASE_SCHEDULES = Object.freeze({
   assault: Object.freeze([
@@ -79,7 +80,11 @@ function operationPhaseSchedule(stage) {
   return schedule;
 }
 
-export function createBattleDefinition(stageId) {
+export function createBattleDefinition(stageId, { v100 = false } = {}) {
+  if (v100) {
+    const v100Definition = v100BattleDefinitionFor(stageId);
+    if (v100Definition) return v100Definition;
+  }
   const outbreakMission = OUTBREAK_MISSION_BY_ID[stageId] ?? null;
   const stage = CAMPAIGN_STAGE_BY_ID[stageId] ?? outbreakMission;
   if (!stage) throw new RangeError(`Unknown campaign stage: ${String(stageId)}`);

@@ -74,6 +74,8 @@
     "art:v090:enemies": "node scripts/build-v090-enemy-assets.mjs",
     "art:v090:stages": "node scripts/build-v090-stage-assets.mjs",
     "art:v099:crawler": "node scripts/build-v099-crawler-assets.mjs",
+    "art:v100:motion": "node scripts/build-v100-motion-atlases.mjs",
+    "qa:v100:motion-atlas": "node scripts/check-v100-motion-atlases.mjs",
     "content:validate": "node scripts/content-pipeline.mjs validate",
     "content:drill": "node scripts/content-pipeline.mjs drill",
     "content:gallery-qa": "node scripts/content-pipeline.mjs gallery-qa",

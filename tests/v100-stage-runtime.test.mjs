@@ -11,6 +11,7 @@ import {
   v100StageAudioFor,
   v100StageRequiredAssetPaths,
 } from "../app/v100StageRuntime.js";
+import { createBattleDefinition } from "../app/battleDefinitions.js";
 import { V100_STAGES } from "../app/v100Registry.js";
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
 
@@ -51,4 +52,14 @@ test("Stage 30 has no mid-battle story dialogue event", () => {
   const midBattle = Object.values(V100_STORY_EVENTS).find((event) => event.stageNumber === 30 && event.kind === "mid-battle");
   assert.equal(midBattle, undefined);
   assert.equal(V100_STAGE_RUNTIME["stage-nishijin-defense-line-takuya-omega"].storyEventIds.length, 3);
+});
+
+test("V100 battle definitions are explicitly injected without replacing legacy shared stages", () => {
+  const sharedStageId = "stage-nishijin-defense-line-takuya";
+  const legacy = createBattleDefinition(sharedStageId);
+  const v100 = createBattleDefinition(sharedStageId, { v100: true });
+  assert.equal(legacy.baseMaxHp, 520);
+  assert.equal(v100.baseMaxHp, 680);
+  assert.equal(v100.displayName, "西新防衛線・TAKUYA");
+  assert.notDeepEqual(v100.timeline, legacy.timeline);
 });

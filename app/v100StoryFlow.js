@@ -1,32 +1,106 @@
-import { V100_EVENT_IDS, V100_STAGE_BY_ID } from "./v100Registry.js";
+import { V100_EVENT_IDS, V100_STAGE_BY_ID, V100_STAGE_IDS } from "./v100Registry.js";
 import { v100StoryEventFor, v100StoryEventIdsForStage } from "./v100StoryEvents.js";
 
 export const V100_FLOW_PHASES = Object.freeze([
   "name", "event", "formation", "battle", "result", "post", "first-clear-post", "ending", "credits", "epilogue", "map",
 ]);
 
+const EVENT_PHASES = Object.freeze(["event", "post", "first-clear-post", "ending", "credits", "epilogue"]);
+
 function stageNumberFor(stageId) {
   return V100_STAGE_BY_ID[stageId]?.number ?? 0;
 }
 
 function stateWith(state, patch) {
-  return Object.freeze({ ...state, ...patch });
+  const next = { ...state, ...patch };
+  if (!Object.hasOwn(patch, "nodeIndex") && Object.hasOwn(patch, "phase") && patch.phase !== state.phase) next.nodeIndex = 0;
+  return Object.freeze(next);
 }
 
-export function createV100StoryFlowState({ playerName = "", completedStageIds = [], readStoryEventIds = [] } = {}) {
+function stageFromEventId(eventId) {
+  const match = /^v100:event:s(\d{2}):/u.exec(eventId ?? "");
+  const number = match ? Number(match[1]) : 0;
+  return number > 0 ? V100_STAGE_IDS[number - 1] ?? null : null;
+}
+
+function destinationForPhase(phase, eventId, stageId) {
+  if (phase === "name") return "name";
+  if (phase === "map") return "map";
+  if (phase === "formation") return "formation";
+  if (phase === "battle") return "battle";
+  if (phase === "result") return "result";
+  if (phase === "post") return "post";
+  if (phase === "first-clear-post") return "first-clear-post";
+  if (phase === "ending") return "ending";
+  if (phase === "credits") return "credits";
+  if (phase === "epilogue") return "epilogue";
+  if (eventId === "v100:event:prologue") return "prologue";
+  if (eventId?.endsWith(":pre")) return "stage-pre";
+  return stageId ? "event" : "prologue";
+}
+
+export function createV100StoryFlowState({
+  playerName = "",
+  completedStageIds = [],
+  readStoryEventIds = [],
+  flowState = null,
+  eventCursor = null,
+  pendingResult = null,
+} = {}) {
+  const saved = flowState && typeof flowState === "object" ? flowState : {};
+  const cursor = eventCursor && typeof eventCursor === "object" ? eventCursor : null;
+  const savedPhase = V100_FLOW_PHASES.includes(saved.phase) && !(saved.phase === "name" && playerName) ? saved.phase : null;
+  const cursorEventId = typeof cursor?.eventId === "string" && cursor.eventId.startsWith("v100:event:") ? cursor.eventId : null;
+  const savedEventId = typeof saved.eventId === "string" && saved.eventId.startsWith("v100:event:") ? saved.eventId : null;
+  const restoredEventId = cursorEventId ?? savedEventId;
+  const restoredStageId = saved.stageId ?? stageFromEventId(restoredEventId);
+  const phase = savedPhase
+    ?? (pendingResult && typeof pendingResult === "object" && playerName ? "result" : playerName ? "event" : "name");
+  const eventId = EVENT_PHASES.includes(phase)
+    ? restoredEventId ?? (phase === "event" ? "v100:event:prologue" : null)
+    : null;
+  const stageId = V100_STAGE_BY_ID[restoredStageId] ? restoredStageId : null;
+  const stageNumber = stageId ? stageNumberFor(stageId) : (Number.isInteger(Number(saved.stageNumber)) ? Number(saved.stageNumber) : null);
+  const nodeIndex = cursor?.nodeIndex !== undefined ? Math.max(0, Math.floor(Number(cursor.nodeIndex) || 0)) : Math.max(0, Math.floor(Number(saved.nodeIndex) || 0));
+  const safePhase = phase === "event" && !eventId ? (playerName ? "map" : "name") : phase;
+  const safeEventId = safePhase === "event" && !eventId ? "v100:event:prologue" : eventId;
   return Object.freeze({
-    phase: playerName ? "event" : "name",
-    eventId: playerName ? "v100:event:prologue" : null,
-    stageId: null,
-    stageNumber: null,
+    phase: safePhase,
+    eventId: safeEventId,
+    stageId,
+    stageNumber,
     playerName: playerName || null,
     completedStageIds: [...completedStageIds],
     readStoryEventIds: [...readStoryEventIds],
-    pendingResult: null,
-    firstClear: false,
+    pendingResult: pendingResult && typeof pendingResult === "object" ? { ...pendingResult } : null,
+    firstClear: saved.firstClear === true,
     canSkip: Boolean(playerName),
-    finalized: false,
-    destination: playerName ? "prologue" : "name",
+    finalized: saved.finalized === true,
+    destination: typeof saved.destination === "string" ? saved.destination : destinationForPhase(safePhase, safeEventId, stageId),
+    nodeIndex,
+  });
+}
+
+export function v100StoryFlowCheckpoint(state, nodeIndex = state?.nodeIndex ?? 0) {
+  const safeIndex = Math.max(0, Math.floor(Number(nodeIndex) || 0));
+  const eventActive = EVENT_PHASES.includes(state?.phase) && typeof state?.eventId === "string";
+  return Object.freeze({
+    flowState: Object.freeze({
+      phase: state?.phase ?? "name",
+      eventId: eventActive ? state.eventId : null,
+      stageId: state?.stageId ?? null,
+      stageNumber: state?.stageNumber ?? null,
+      destination: state?.destination ?? state?.phase ?? "name",
+      nodeIndex: safeIndex,
+      firstClear: state?.firstClear === true,
+      finalized: state?.finalized === true,
+    }),
+    eventCursor: eventActive ? Object.freeze({
+      eventId: state.eventId,
+      phase: state.phase,
+      nodeIndex: safeIndex,
+      nodeKey: `${state.eventId}:${safeIndex}`,
+    }) : null,
   });
 }
 

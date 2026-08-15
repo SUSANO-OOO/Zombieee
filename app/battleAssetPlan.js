@@ -4,6 +4,8 @@ import { spriteKinds, spriteSheetPath } from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST } from "./stageObjectManifest.js";
 import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import { V099_CRAWLER_RUNTIME_PROFILE } from "./crawlerEquipmentSprites.js";
+import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
+import { V100_STAGE_BY_ID } from "./v100Registry.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -38,19 +40,32 @@ export function requiredBattleAssetPlan({
   includeAllSprites = false,
 } = {}) {
   const stage = CAMPAIGN_STAGE_BY_ID[stageId];
-  if (!stage && !PRODUCTION_VISUALS.stages[stageId]) {
+  const v100Stage = V100_STAGE_BY_ID[stageId] ?? null;
+  const v100RuntimeStage = V100_RUNTIME_ASSET_MANIFEST.stages[stageId] ?? null;
+  if (!stage && !v100Stage && !PRODUCTION_VISUALS.stages[stageId]) {
     throw new RangeError(`Unknown battle stage: ${String(stageId)}`);
   }
   const requiredKinds = includeAllSprites
     ? [...spriteKinds]
     : unique([...formationKinds, ...enemyKinds, "turned"]);
   const manifestObjects = STAGE_OBJECT_MANIFEST[stageId]?.objects ?? [];
+  const v100MissionObjectEntries = v100RuntimeStage
+    ? Object.entries(V100_RUNTIME_ASSET_MANIFEST.missionObjects)
+      .filter(([, path]) => v100RuntimeStage.missionObjects.includes(path))
+      .map(([id, path]) => ({ id, path, runtimeUsage: "mission-render-source" }))
+    : [];
+  const v100VfxEntries = v100RuntimeStage
+    ? Object.entries(V100_RUNTIME_ASSET_MANIFEST.vfx)
+      .filter(([, path]) => v100RuntimeStage.vfx.includes(path))
+      .map(([id, path]) => ({ id: `vfx-${id}`, path, runtimeUsage: "battle-overlay" }))
+    : [];
   const extraMissionObjects = stage?.missionType === "escort"
     && stageId !== CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE
     ? [{ id: "maintenance-cart", path: PRODUCTION_VISUALS.missionObjects["maintenance-cart"], runtimeUsage: "mission-render-source" }]
     : [];
-  const stageObjects = unique([...manifestObjects, ...extraMissionObjects].map((entry) => entry.id))
-    .map((id) => [...manifestObjects, ...extraMissionObjects].find((entry) => entry.id === id))
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries];
+  const stageObjects = unique(allStageObjects.map((entry) => entry.id))
+    .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({
       id: entry.id,
       path: entry.path,

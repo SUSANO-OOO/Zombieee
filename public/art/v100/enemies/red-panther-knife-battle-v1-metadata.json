@@ -1,0 +1,176 @@
+{
+  "format": "nishijin-v100-motion-atlas-metadata",
+  "version": 1,
+  "cell": {
+    "width": 1280,
+    "height": 512
+  },
+  "atlas": {
+    "width": 6400,
+    "height": 1024
+  },
+  "commonScale": 0.33766233766233766,
+  "identityReferenceStates": [
+    "idle",
+    "move"
+  ],
+  "referenceHeight": 1386,
+  "sourceDirection": "left-authored",
+  "directionRows": {
+    "left": "authored",
+    "right": "derived-horizontal-flip"
+  },
+  "frames": [
+    {
+      "state": "idle",
+      "source": "assets/source/v100/runtime/motion/red-panther-knife/idle-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 118,
+        "y": 59,
+        "width": 688,
+        "height": 1386,
+        "alphaPixels": 104949
+      },
+      "contentRect": {
+        "x": 524,
+        "y": 28,
+        "width": 232,
+        "height": 468
+      },
+      "renderedSize": {
+        "width": 232,
+        "height": 468
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "move",
+      "source": "assets/source/v100/runtime/motion/red-panther-knife/move-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 101,
+        "y": 207,
+        "width": 770,
+        "height": 1134,
+        "alphaPixels": 74719
+      },
+      "contentRect": {
+        "x": 510,
+        "y": 113,
+        "width": 260,
+        "height": 383
+      },
+      "renderedSize": {
+        "width": 260,
+        "height": 383
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "attack",
+      "source": "assets/source/v100/runtime/motion/red-panther-knife/attack-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 58,
+        "y": 210,
+        "width": 895,
+        "height": 1124,
+        "alphaPixels": 79371
+      },
+      "contentRect": {
+        "x": 489,
+        "y": 116,
+        "width": 302,
+        "height": 380
+      },
+      "renderedSize": {
+        "width": 302,
+        "height": 380
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "hit",
+      "source": "assets/source/v100/runtime/motion/red-panther-knife/hit-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 49,
+        "y": 146,
+        "width": 851,
+        "height": 1255,
+        "alphaPixels": 107899
+      },
+      "contentRect": {
+        "x": 496,
+        "y": 72,
+        "width": 287,
+        "height": 424
+      },
+      "renderedSize": {
+        "width": 287,
+        "height": 424
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "death",
+      "source": "assets/source/v100/runtime/motion/red-panther-knife/death-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sourceBounds": {
+        "x": 26,
+        "y": 361,
+        "width": 1204,
+        "height": 611,
+        "alphaPixels": 116770
+      },
+      "contentRect": {
+        "x": 436,
+        "y": 290,
+        "width": 407,
+        "height": 206
+      },
+      "renderedSize": {
+        "width": 407,
+        "height": 206
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    }
+  ],
+  "noClipping": true
+}

@@ -1,5 +1,6 @@
 import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 import { PRODUCTION_ENEMY_SOURCE_FACING } from "./enemyFacingContract.js";
+import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 
 /**
  * Audited sprite source geometry for the 0.6.0 renderer and localhost QA.
@@ -65,6 +66,16 @@ export const SPRITE_BATTLE_DISPLAY_SIZES = Object.freeze({
   "choir-knot": Object.freeze({ w: 88, h: 92 }),
   "pall-manta": Object.freeze({ w: 126, h: 72 }),
   "anchor-bloom": Object.freeze({ w: 112, h: 62 }),
+  "red-panther-knife": Object.freeze({ w: 66, h: 104 }),
+  "red-panther-shield": Object.freeze({ w: 80, h: 110 }),
+  "red-panther-smg": Object.freeze({ w: 68, h: 104 }),
+  "red-panther-commander": Object.freeze({ w: 76, h: 110 }),
+  "mugarian-president-mutated": Object.freeze({ w: 220, h: 190 }),
+  // TAKUYA-Ω is the final-form boss.  Give its standing body a clearly
+  // larger battle envelope than the Stage 25 president; the atlas keeps the
+  // same reference scale for every motion, including the greatsword swing
+  // and the wide defeat pose.
+  "takuya-omega": Object.freeze({ w: 320, h: 260 }),
 });
 
 export function spriteBattleDisplaySizeFor(kind) {
@@ -435,6 +446,118 @@ function explicitAtlasManifestEntry(kind, path, { semanticSourceFacing = null } 
   });
 }
 
+const V100_CUSTOM_CELL_WIDTH = 1280;
+const V100_CUSTOM_CELL_HEIGHT = 512;
+const V100_CUSTOM_BOSS_STATES = Object.freeze(["entrance", "idle", "move", "attack", "hit", "phase", "death", "defeat"]);
+const V100_CUSTOM_ROLE_STATES = Object.freeze(["idle", "move", "attack", "hit", "death"]);
+const V100_CUSTOM_STATE_MAP = Object.freeze({
+  idle: "idle",
+  "walk-a": "move",
+  "walk-b": "idle",
+  "attack-a": "attack",
+  "attack-b": "phase",
+  hit: "hit",
+  death: "death",
+});
+
+// Runtime atlases are authored as two explicit rows: the lower row is the
+// approved left-facing source and the upper row is its deterministic mirror.
+// These rectangles are generated from the final RGBA atlas alpha bounds.  The
+// metadata records the authored lower row (left-facing); the upper row is a
+// horizontal flip, so derive its rectangle instead of hand-tuning a second
+// set.  This keeps attack/death weapon reach and body scale tied to the actual
+// pixels in the shipped atlas.
+const V100_CUSTOM_LEFT_VISIBLE_BY_KIND = Object.freeze({
+  "red-panther-knife": Object.freeze([
+    [524, 28, 756, 496], [510, 113, 770, 496], [489, 116, 791, 496], [496, 72, 783, 496], [436, 290, 843, 496],
+  ]),
+  "red-panther-shield": Object.freeze([
+    [505, 28, 775, 496], [502, 117, 777, 496], [454, 115, 826, 496], [486, 56, 793, 496], [407, 229, 873, 496],
+  ]),
+  "red-panther-smg": Object.freeze([
+    [544, 28, 735, 496], [490, 40, 789, 496], [493, 88, 787, 496], [496, 45, 784, 496], [407, 203, 872, 496],
+  ]),
+  "red-panther-commander": Object.freeze([
+    [549, 28, 730, 496], [496, 41, 783, 496], [502, 110, 777, 496], [503, 61, 777, 496], [414, 235, 866, 496],
+  ]),
+  "mugarian-president-mutated": Object.freeze([
+    [493, 63, 786, 496], [492, 50, 788, 496], [483, 104, 796, 496], [441, 174, 839, 496],
+    [474, 106, 806, 496], [474, 16, 805, 496], [481, 160, 799, 496], [385, 290, 894, 496],
+  ]),
+  "takuya-omega": Object.freeze([
+    [485, 61, 795, 496], [494, 28, 786, 496], [489, 65, 791, 496], [476, 210, 804, 496],
+    [485, 113, 795, 496], [476, 60, 804, 496], [478, 124, 801, 496], [400, 305, 880, 496],
+  ]),
+});
+
+function mirrorV100VisibleRect([left, top, right, bottom]) {
+  return Object.freeze([V100_CUSTOM_CELL_WIDTH - right, top, V100_CUSTOM_CELL_WIDTH - left, bottom]);
+}
+
+const V100_CUSTOM_VISIBLE_BY_KIND = Object.freeze(Object.fromEntries(
+  Object.entries(V100_CUSTOM_LEFT_VISIBLE_BY_KIND).map(([kind, leftVisible]) => [kind, Object.freeze({
+    left: leftVisible,
+    right: Object.freeze(leftVisible.map(mirrorV100VisibleRect)),
+  })]),
+));
+
+function v100CustomAtlasManifestEntry({ kind, path, sourceStates, visible }) {
+  const frames = {};
+  const referenceIndex = sourceStates.indexOf("idle");
+  const authoredCellForDirection = (direction) => {
+    const [left, top, right, bottom] = visible[direction][referenceIndex];
+    return { x: left, y: top, w: right - left, h: bottom - top };
+  };
+  for (const state of SPRITE_STATES) {
+    const sourceState = state === "attack-b" && sourceStates.includes("phase")
+      ? "phase"
+      : state === "attack-b"
+        ? "attack"
+        : V100_CUSTOM_STATE_MAP[state];
+    const sourceIndex = sourceStates.indexOf(sourceState);
+    if (sourceIndex < 0) throw new RangeError(`Missing V1.0.0 runtime state ${sourceState} for ${kind}`);
+    frames[state] = {};
+    for (const direction of SPRITE_DIRECTIONS) {
+      const row = direction === "right" ? 0 : 1;
+      frames[state][direction] = frameRecord({
+        path,
+        sheetWidth: V100_CUSTOM_CELL_WIDTH * sourceStates.length,
+        sheetHeight: V100_CUSTOM_CELL_HEIGHT * 2,
+        source: {
+          x: sourceIndex * V100_CUSTOM_CELL_WIDTH,
+          y: row * V100_CUSTOM_CELL_HEIGHT,
+          w: V100_CUSTOM_CELL_WIDTH,
+          h: V100_CUSTOM_CELL_HEIGHT,
+        },
+        visible: visible[direction][sourceIndex],
+        nativeDirection: direction,
+        direction,
+        // Use the measured idle silhouette as the fixed scale reference for
+        // every state.  A wide attack or horizontal death pose therefore
+        // keeps the same body multiplier instead of being fitted separately.
+        authoredCell: authoredCellForDirection(direction),
+      });
+    }
+    Object.freeze(frames[state]);
+  }
+  return Object.freeze({
+    path,
+    sheet: Object.freeze({
+      width: V100_CUSTOM_CELL_WIDTH * sourceStates.length,
+      height: V100_CUSTOM_CELL_HEIGHT * 2,
+      layout: "v100-two-row-explicit-directions-shared-scale",
+      cellWidth: V100_CUSTOM_CELL_WIDTH,
+      cellHeight: V100_CUSTOM_CELL_HEIGHT,
+    }),
+    battleContentHeight: null,
+    battleScale: 1,
+    nativeDirection: "explicit-both",
+    states: SPRITE_STATES,
+    directions: SPRITE_DIRECTIONS,
+    frames: Object.freeze(frames),
+  });
+}
+
 export const SPRITE_MANIFEST = Object.freeze({
   brawler: legacyManifestEntry("brawler", "right"),
   scout: explicitAtlasManifestEntry("scout", "/art/v070/characters/scout-battle-v1.png"),
@@ -473,6 +596,42 @@ export const SPRITE_MANIFEST = Object.freeze({
   "choir-knot": explicitAtlasManifestEntry("choir-knot", "/art/v0995/enemies/choir-knot-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING["choir-knot"].sourceFacing }),
   "pall-manta": explicitAtlasManifestEntry("pall-manta", "/art/v0995/enemies/pall-manta-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING["pall-manta"].sourceFacing }),
   "anchor-bloom": explicitAtlasManifestEntry("anchor-bloom", "/art/v0995/enemies/anchor-bloom-battle-v2.png", { semanticSourceFacing: PRODUCTION_ENEMY_SOURCE_FACING["anchor-bloom"].sourceFacing }),
+  "red-panther-knife": v100CustomAtlasManifestEntry({
+    kind: "red-panther-knife",
+    path: V100_RUNTIME_ASSET_MANIFEST.redPanther.knife,
+    sourceStates: V100_CUSTOM_ROLE_STATES,
+    visible: V100_CUSTOM_VISIBLE_BY_KIND["red-panther-knife"],
+  }),
+  "red-panther-shield": v100CustomAtlasManifestEntry({
+    kind: "red-panther-shield",
+    path: V100_RUNTIME_ASSET_MANIFEST.redPanther.shield,
+    sourceStates: V100_CUSTOM_ROLE_STATES,
+    visible: V100_CUSTOM_VISIBLE_BY_KIND["red-panther-shield"],
+  }),
+  "red-panther-smg": v100CustomAtlasManifestEntry({
+    kind: "red-panther-smg",
+    path: V100_RUNTIME_ASSET_MANIFEST.redPanther.smg,
+    sourceStates: V100_CUSTOM_ROLE_STATES,
+    visible: V100_CUSTOM_VISIBLE_BY_KIND["red-panther-smg"],
+  }),
+  "red-panther-commander": v100CustomAtlasManifestEntry({
+    kind: "red-panther-commander",
+    path: V100_RUNTIME_ASSET_MANIFEST.redPanther.commander,
+    sourceStates: V100_CUSTOM_ROLE_STATES,
+    visible: V100_CUSTOM_VISIBLE_BY_KIND["red-panther-commander"],
+  }),
+  "mugarian-president-mutated": v100CustomAtlasManifestEntry({
+    kind: "mugarian-president-mutated",
+    path: V100_RUNTIME_ASSET_MANIFEST.bosses["boss-mugarian-president-mutated"],
+    sourceStates: V100_CUSTOM_BOSS_STATES,
+    visible: V100_CUSTOM_VISIBLE_BY_KIND["mugarian-president-mutated"],
+  }),
+  "takuya-omega": v100CustomAtlasManifestEntry({
+    kind: "takuya-omega",
+    path: V100_RUNTIME_ASSET_MANIFEST.bosses["boss-takuya-omega"],
+    sourceStates: V100_CUSTOM_BOSS_STATES,
+    visible: V100_CUSTOM_VISIBLE_BY_KIND["takuya-omega"],
+  }),
   "crazy-king": explicitAtlasManifestEntry("crazy-king", "/art/v060/characters/crazy-king-battle-v1.png"),
   kumaverson: explicitAtlasManifestEntry("kumaverson", "/art/v060/characters/kumaverson-battle-v1.png"),
   babayaga: explicitAtlasManifestEntry("babayaga", "/art/v060/characters/babayaga-battle-v1.png"),

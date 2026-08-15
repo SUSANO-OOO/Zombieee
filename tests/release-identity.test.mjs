@@ -32,5 +32,5 @@ test("player-facing surfaces share one immutable Version 0.9.9.5 identity", asyn
   assert.match(layout, /title: RELEASE_TITLE/);
   assert.match(screens, /アーリーアクセス版　\{RELEASE_LABEL\}/);
   assert.match(game, /data-release-version=\{RELEASE_VERSION\}/);
-  assert.match(game, /<em>\{RELEASE_LABEL\}<\/em>/);
+  assert.match(game, /externalSession \? "Version 1\.0\.0" : RELEASE_LABEL/u);
 });

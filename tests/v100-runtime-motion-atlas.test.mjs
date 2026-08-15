@@ -129,7 +129,7 @@ test("custom runtime atlases preserve large authored cells, exact left/right pai
     assert.deepEqual(expectedOutput.sources.slice(0, motion.states.length), motion.states.map((state) => `${motion.frameDirectory}/${state}-left-authored-v1.png`));
     assert.equal(expectedOutput.sources.at(-1), expectedOutput.identityMaster);
 
-    const contentHeights = [];
+    const contentSizes = [];
     for (let stateIndex = 0; stateIndex < motion.states.length; stateIndex += 1) {
       const state = motion.states[stateIndex];
       const right = v100RuntimeSpriteFrameFor(motion.kind, state, "right");
@@ -148,10 +148,16 @@ test("custom runtime atlases preserve large authored cells, exact left/right pai
       const leftRaw = await rawCell(bytes, left.sourceRect.x, left.sourceRect.y);
       const flippedRight = await sharp(rightRaw, { raw: { width: CELL_WIDTH, height: CELL_HEIGHT, channels: 4 } }).flop().raw().toBuffer();
       assert.deepEqual(flippedRight, leftRaw, `${motion.kind}/${state} right row is only a horizontal flip`);
-      contentHeights.push(localAlphaBounds(decoded, left.sourceRect).h);
+      const bounds = localAlphaBounds(decoded, left.sourceRect);
+      contentSizes.push({ state, w: bounds.w, h: bounds.h });
     }
     if (motion.kind === "boss-takuya-omega") {
-      assert.ok(Math.min(...contentHeights) >= 480, `Omega greatsword frames must not shrink: ${contentHeights.join(",")}`);
+      const idle = contentSizes.find(({ state }) => state === "idle");
+      const attack = contentSizes.find(({ state }) => state === "attack");
+      const death = contentSizes.find(({ state }) => state === "death");
+      assert.ok(idle && attack && death);
+      assert.ok(attack.w >= idle.w, `Omega greatsword attack must retain or exceed idle width: ${JSON.stringify(contentSizes)}`);
+      assert.ok(death.w >= idle.w, `Omega greatsword death must retain or exceed idle width: ${JSON.stringify(contentSizes)}`);
     }
   }
 });

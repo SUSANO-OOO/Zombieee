@@ -1,0 +1,176 @@
+{
+  "format": "nishijin-v100-motion-atlas-metadata",
+  "version": 1,
+  "cell": {
+    "width": 1280,
+    "height": 512
+  },
+  "atlas": {
+    "width": 6400,
+    "height": 1024
+  },
+  "commonScale": 0.30708661417322836,
+  "identityReferenceStates": [
+    "idle",
+    "move"
+  ],
+  "referenceHeight": 1524,
+  "sourceDirection": "left-authored",
+  "directionRows": {
+    "left": "authored",
+    "right": "derived-horizontal-flip"
+  },
+  "frames": [
+    {
+      "state": "idle",
+      "source": "assets/source/v100/runtime/motion/red-panther-commander/idle-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 203,
+        "y": 5,
+        "width": 588,
+        "height": 1524,
+        "alphaPixels": 512948
+      },
+      "contentRect": {
+        "x": 549,
+        "y": 28,
+        "width": 181,
+        "height": 468
+      },
+      "renderedSize": {
+        "width": 181,
+        "height": 468
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "move",
+      "source": "assets/source/v100/runtime/motion/red-panther-commander/move-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 54,
+        "y": 9,
+        "width": 935,
+        "height": 1481,
+        "alphaPixels": 574694
+      },
+      "contentRect": {
+        "x": 496,
+        "y": 41,
+        "width": 287,
+        "height": 455
+      },
+      "renderedSize": {
+        "width": 287,
+        "height": 455
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "attack",
+      "source": "assets/source/v100/runtime/motion/red-panther-commander/attack-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 70,
+        "y": 97,
+        "width": 897,
+        "height": 1256,
+        "alphaPixels": 217337
+      },
+      "contentRect": {
+        "x": 502,
+        "y": 110,
+        "width": 275,
+        "height": 386
+      },
+      "renderedSize": {
+        "width": 275,
+        "height": 386
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "hit",
+      "source": "assets/source/v100/runtime/motion/red-panther-commander/hit-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceBounds": {
+        "x": 51,
+        "y": 65,
+        "width": 892,
+        "height": 1415,
+        "alphaPixels": 587327
+      },
+      "contentRect": {
+        "x": 503,
+        "y": 61,
+        "width": 274,
+        "height": 435
+      },
+      "renderedSize": {
+        "width": 274,
+        "height": 435
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    },
+    {
+      "state": "death",
+      "source": "assets/source/v100/runtime/motion/red-panther-commander/death-left-authored-v1.png",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "sourceBounds": {
+        "x": 35,
+        "y": 95,
+        "width": 1473,
+        "height": 850,
+        "alphaPixels": 563534
+      },
+      "contentRect": {
+        "x": 414,
+        "y": 235,
+        "width": 452,
+        "height": 261
+      },
+      "renderedSize": {
+        "width": 452,
+        "height": 261
+      },
+      "row": {
+        "left": "authored",
+        "right": "derived-horizontal-flip"
+      },
+      "clipped": false
+    }
+  ],
+  "noClipping": true
+}

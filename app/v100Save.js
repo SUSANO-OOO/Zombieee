@@ -15,6 +15,10 @@ import {
 
 export const V100_SAVE_SCHEMA_VERSION = 1;
 export const V100_PRIMARY_STORAGE_KEY = V100_CAMPAIGN_NAMESPACE;
+export const V100_SAVE_EXPORT_FORMAT = "nishijin-campaign-v100-save";
+export const V100_SAVE_FLOW_PHASES = Object.freeze([
+  "name", "event", "formation", "battle", "result", "post", "first-clear-post", "ending", "credits", "epilogue", "map",
+]);
 export const V100_SAFE_GIFT_SCREENS = Object.freeze(["title", "map", "personnel", "loadout"]);
 export const V100_DEFAULT_SETTINGS = Object.freeze({
   bgmEnabled: true,
@@ -93,6 +97,16 @@ export function createDefaultV100Save({ settings = {}, playerName = V100_DEFAULT
     receipts: [],
     readStoryEventIds: [],
     eventCursor: null,
+    flowState: {
+      phase: "name",
+      eventId: null,
+      stageId: null,
+      stageNumber: null,
+      destination: "name",
+      nodeIndex: 0,
+      firstClear: false,
+      finalized: false,
+    },
     pendingResult: null,
     lastResult: null,
     postGameAvailable: false,
@@ -109,6 +123,26 @@ function normalizeFormationSlots(value, ownedUnitIds) {
   const slots = Array.isArray(value) ? value.slice(0, V100_FORMATION_MAX_SLOTS) : [];
   while (slots.length < V100_FORMATION_MAX_SLOTS) slots.push(null);
   return slots.map((unitId) => typeof unitId === "string" && ownedUnitIds.includes(unitId) ? unitId : null);
+}
+
+function normalizeFlowState(value, fallback) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : fallback;
+  const phase = V100_SAVE_FLOW_PHASES.includes(source?.phase) ? source.phase : fallback?.phase ?? "name";
+  const eventId = typeof source?.eventId === "string" && source.eventId.startsWith("v100:event:") ? source.eventId : null;
+  const stageId = V100_STAGE_IDS.includes(source?.stageId) ? source.stageId : null;
+  const stageNumber = Number.isInteger(Number(source?.stageNumber)) && Number(source.stageNumber) >= 1 && Number(source.stageNumber) <= 30
+    ? Math.floor(Number(source.stageNumber))
+    : null;
+  return {
+    phase,
+    eventId,
+    stageId,
+    stageNumber,
+    destination: typeof source?.destination === "string" ? source.destination : phase,
+    nodeIndex: integer(source?.nodeIndex, 0, 10_000),
+    firstClear: source?.firstClear === true,
+    finalized: source?.finalized === true,
+  };
 }
 
 export function normalizeV100Save(raw, { fallback = null } = {}) {
@@ -180,6 +214,7 @@ export function normalizeV100Save(raw, { fallback = null } = {}) {
       nodeIndex: integer(raw.eventCursor.nodeIndex),
       nodeKey: typeof raw.eventCursor.nodeKey === "string" ? raw.eventCursor.nodeKey : null,
     } : null,
+    flowState: normalizeFlowState(raw.flowState, base.flowState),
     pendingResult: raw.pendingResult && typeof raw.pendingResult === "object" ? clone(raw.pendingResult) : null,
     lastResult: raw.lastResult && typeof raw.lastResult === "object" ? clone(raw.lastResult) : null,
     postGameAvailable: raw.postGameAvailable === true,
@@ -196,12 +231,41 @@ export function serializeV100Save(save) {
   return JSON.stringify(normalizeV100Save(save));
 }
 
+function isRecord(value) {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+export function validateV100SavePayload(raw) {
+  const errors = [];
+  if (!isRecord(raw)) errors.push("payload-not-object");
+  if (isRecord(raw)) {
+    if (raw.namespace !== V100_CAMPAIGN_NAMESPACE) errors.push("wrong-namespace");
+    if (raw.campaignGeneration !== V100_CAMPAIGN_GENERATION) errors.push("wrong-generation");
+    if (raw.schemaVersion !== V100_SAVE_SCHEMA_VERSION) errors.push("wrong-schema-version");
+    if (!Number.isInteger(Number(raw.revision)) || Number(raw.revision) < 0) errors.push("invalid-revision");
+    if (typeof raw.playerName !== "string") errors.push("invalid-player-name");
+    for (const key of ["availableStageIds", "completedStageIds", "ownedUnitIds", "registeredUnitIds", "formationSlots", "receipts", "readStoryEventIds"]) {
+      if (!Array.isArray(raw[key])) errors.push(`invalid-${key}`);
+    }
+    if (!isRecord(raw.vehicle)) errors.push("invalid-vehicle");
+    if (!isRecord(raw.bosses)) errors.push("invalid-bosses");
+    if (!isRecord(raw.legacy)) errors.push("invalid-legacy");
+    if (!isRecord(raw.settings)) errors.push("invalid-settings");
+    if (raw.eventCursor !== null && !isRecord(raw.eventCursor)) errors.push("invalid-event-cursor");
+    if (raw.flowState !== undefined && !isRecord(raw.flowState)) errors.push("invalid-flow-state");
+    if (raw.pendingResult !== null && !isRecord(raw.pendingResult)) errors.push("invalid-pending-result");
+    if (raw.lastResult !== null && !isRecord(raw.lastResult)) errors.push("invalid-last-result");
+  }
+  return Object.freeze({ ok: errors.length === 0, errors: Object.freeze(errors) });
+}
+
 export function deserializeV100Save(serialized, options = {}) {
   if (typeof serialized !== "string" || serialized.length === 0) return { ok: false, reason: "empty", save: createDefaultV100Save() };
   try {
     const parsed = JSON.parse(serialized);
+    const validation = validateV100SavePayload(parsed);
+    if (!validation.ok) return { ok: false, reason: "invalid-payload", errors: validation.errors, save: createDefaultV100Save() };
     const save = normalizeV100Save(parsed, options);
-    if (save.namespace !== V100_CAMPAIGN_NAMESPACE) return { ok: false, reason: "wrong-namespace", save: createDefaultV100Save() };
     return { ok: true, save };
   } catch (error) {
     return { ok: false, reason: "invalid-json", error, save: createDefaultV100Save() };

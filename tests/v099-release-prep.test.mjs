@@ -20,16 +20,18 @@ const publishedV0993Source = JSON.parse(execFileSync("git", [
 ], { encoding: "utf8" }));
 const publishedV0993 = { ...publishedV0993Source, releaseSha: PUBLISHED_V0993_SHA };
 const candidate = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
+const v100ApprovedAssets = candidate.assets.filter(({ path }) => path.startsWith("/art/v100/"));
 
 test("the Version 0.9.9.5 release candidate has one immutable identity and complete manifest", () => {
   assert.equal(RELEASE_VERSION, "0.9.9.5");
   assert.equal(candidate.version, RELEASE_VERSION);
   assert.equal(candidate.releaseSha, RELEASE_SHA_PLACEHOLDER);
-  assert.equal(candidate.assets.length, 415);
-  assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), 89_741_565);
+  assert.equal(v100ApprovedAssets.length, 44);
+  assert.equal(candidate.assets.length, 459);
+  assert.equal(candidate.assets.reduce((sum, asset) => sum + asset.bytes, 0), 110_872_347);
 
   const distinct = new Map(candidate.assets.map((asset) => [asset.hash, asset.bytes]));
-  assert.equal([...distinct.values()].reduce((sum, bytes) => sum + bytes, 0), 89_201_662);
+  assert.equal([...distinct.values()].reduce((sum, bytes) => sum + bytes, 0), 110_332_444);
 });
 
 test("the real Version 0.9.8.2 pack updates by hash without re-downloading unchanged assets", () => {
@@ -48,8 +50,8 @@ test("the real Version 0.9.8.2 pack updates by hash without re-downloading uncha
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.8.2");
   assert.equal(update.toVersion, "0.9.9.5");
-  assert.equal(update.downloadCount, 64);
-  assert.equal(update.downloadBytes, 16_690_448);
+  assert.equal(update.downloadCount, 108);
+  assert.equal(update.downloadBytes, 37_821_230);
   assert.equal(update.unchangedCount, 348);
   assert.equal(update.reusedCount, 3);
   assert.equal(update.removedCount, 26);
@@ -83,8 +85,8 @@ test("the published Version 0.9.9.3 pack updates to 0.9.9.5 while reusing unchan
   assert.equal(update.available, true);
   assert.equal(update.fromVersion, "0.9.9.3");
   assert.equal(update.toVersion, "0.9.9.5");
-  assert.equal(update.downloadCount, 15);
-  assert.equal(update.downloadBytes, 6_315_754);
+  assert.equal(update.downloadCount, 59);
+  assert.equal(update.downloadBytes, 27_446_536);
   assert.equal(update.unchangedCount, 397);
   assert.equal(update.reusedCount, 3);
   assert.equal(update.removedCount, 19);

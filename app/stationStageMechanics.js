@@ -19,8 +19,9 @@ export const STATION_MISSION_TUNING = freeze({
   seal: freeze({
     powerCount: 3,
     powerHoldSeconds: 6,
-    powerReadyAtSeconds: freeze([24, 62, 104]),
-    powerYs: freeze([212, 352, 282]),
+    powerReadyAtSeconds: freeze([24, 62, 104, 146]),
+    powerYs: freeze([212, 352, 282, 212]),
+    powerXs: freeze([410, 584, 744, 888]),
     escapeSeconds: 45,
     returnSpeedMultiplier: 1.8,
   }),
@@ -59,20 +60,36 @@ function escortConfig(config = {}) {
 }
 
 function sealConfig(config = {}) {
-  const readyAt = Array.isArray(config.powerReadyAtSeconds) && config.powerReadyAtSeconds.length === 3
-    ? config.powerReadyAtSeconds.map((value, index) => finiteNonNegative(value, STATION_MISSION_TUNING.seal.powerReadyAtSeconds[index]))
-    : [...STATION_MISSION_TUNING.seal.powerReadyAtSeconds];
-  const powerYs = Array.isArray(config.powerYs) && config.powerYs.length === 3
-    ? config.powerYs.map((value, index) => finiteNonNegative(value, STATION_MISSION_TUNING.seal.powerYs[index]))
-    : [...STATION_MISSION_TUNING.seal.powerYs];
+  const requestedCount = Math.trunc(Number(config.powerCount));
+  const powerCount = Number.isFinite(requestedCount)
+    ? Math.max(1, Math.min(4, requestedCount))
+    : STATION_MISSION_TUNING.seal.powerCount;
+  const valuesFor = (source, fallback, mapper) => Array.from({ length: powerCount }, (_, index) => {
+    const sourceValue = Array.isArray(source) ? source[index] : undefined;
+    const fallbackValue = fallback[index] ?? fallback[fallback.length - 1] ?? 0;
+    return mapper(sourceValue, index, fallbackValue);
+  });
+  const readyAt = valuesFor(
+    config.powerReadyAtSeconds,
+    STATION_MISSION_TUNING.seal.powerReadyAtSeconds,
+    (value, index, fallback) => finiteNonNegative(value, fallback + Math.max(0, index - 3) * 42),
+  );
+  const powerYs = valuesFor(
+    config.powerYs,
+    STATION_MISSION_TUNING.seal.powerYs,
+    (value, _index, fallback) => finiteNonNegative(value, fallback),
+  );
   const powerLanes = powerYs.map((y) => INTERNAL_ROUTE_Y.reduce((nearest, routeY, index) => (
     Math.abs(y - routeY) < Math.abs(y - INTERNAL_ROUTE_Y[nearest]) ? index : nearest
   ), 0));
-  const powerXs = Array.isArray(config.powerXs) && config.powerXs.length === 3
-    ? config.powerXs.map((value, index) => finiteNonNegative(value, [410, 584, 744][index]))
-    : [410, 584, 744];
+  const powerXs = valuesFor(
+    config.powerXs,
+    STATION_MISSION_TUNING.seal.powerXs,
+    (value, _index, fallback) => finiteNonNegative(value, fallback),
+  );
   return freeze({
     ...STATION_MISSION_TUNING.seal,
+    powerCount,
     powerHoldSeconds: positive(config.powerHoldSeconds, STATION_MISSION_TUNING.seal.powerHoldSeconds),
     powerReadyAtSeconds: freeze(readyAt),
     powerYs: freeze(powerYs),

@@ -9,7 +9,7 @@ const visualHarness = await readFile(new URL("../scripts/v0995-visual-integrity-
 const gameSource = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
 
 test("F3 runtime evidence is finite, uses production draw/runtime, and observes every semantic state", () => {
-  assert.equal(productionVisualIntegrityInventory().enemies.length, 23);
+  assert.equal(productionVisualIntegrityInventory().enemies.length, 29);
   assert.match(enemyHarness, /const fullInventory = productionVisualIntegrityInventory/);
   assert.match(enemyHarness, /V0995_ENEMY_QA_KINDS/);
   assert.match(enemyHarness, /requestedKinds\.every\(\(kind\) => fullInventory\.includes\(kind\)\)/);

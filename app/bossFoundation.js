@@ -376,6 +376,112 @@ export const BOSS_DEFINITIONS = deepFreeze([
       assetPath: "/art/v090/bosses/futago-compendium-r1.webp",
     },
   },
+  {
+    id: "boss-mugarian-president-mutated",
+    enemyKind: "mugarian-president-mutated",
+    displayName: "変異ムガリアン社長",
+    workingName: false,
+    prototypeStatus: "producer-approved",
+    classification: "四腕制圧・医療設備融合型異常発生個体",
+    hpBar: { color: "#b24b4b", accentColor: "#f0b15e" },
+    phases: [
+      phase(1, "第1段階", 1),
+      phase(2, "四腕展開", .7),
+      phase(3, "役員暴走", .35),
+    ],
+    entrance: {
+      warningLabel: "異常発生 // 変異ムガリアン社長",
+      cueId: "enemy-takuya-attack",
+      fullBodyRequired: true,
+    },
+    attackTelegraph: {
+      attackId: "president-four-arm-crush",
+      displayName: "四腕制圧",
+      kind: "lane-rectangle",
+      warningSeconds: 1.05,
+      laneHalfHeight: 46,
+      color: "#d05c4f",
+      counterplay: "赤い制圧線から離れ、攻撃後の隙を狙う",
+    },
+    display: {
+      sizeClass: "giant-boss",
+      compactBodyHeight: 172,
+      standardBodyHeight: 158,
+      bodyBounds: { width: 222, height: 190 },
+      footAnchor: { x: .5, y: .98 },
+      shadow: { radiusX: 72, radiusY: 16 },
+      hitboxRadius: 48,
+    },
+    combat: {
+      attackRange: 68,
+      statusResistance: { stun: .76, push: .05, slow: .82 },
+      formChange: "four-arm-deployment",
+      summonProfile: "red-panther-command",
+      componentChange: "executive-medical-core",
+    },
+    reward: { equipmentId: "boss-mimic-larynx", quantity: 1 },
+    resultId: "boss-result-mugarian-president-mutated",
+    compendiumId: "boss-compendium-mugarian-president-mutated",
+    compendium: {
+      title: "変異ムガリアン社長",
+      summary: "四本の腕と医療設備を一体化させ、制圧線を叩きつける企業中枢の異常個体。",
+      assetPath: "/art/v100/portraits/mugarian-president-mutated-event-portrait-v1.webp",
+    },
+  },
+  {
+    id: "boss-takuya-omega",
+    enemyKind: "takuya-omega",
+    displayName: "TAKUYA-Ω",
+    workingName: false,
+    prototypeStatus: "producer-approved",
+    classification: "大剣強襲・終端防衛型異常発生個体",
+    hpBar: { color: "#b58a55", accentColor: "#f2d889" },
+    phases: [
+      phase(1, "第1段階", 1),
+      phase(2, "大剣展開", .75),
+      phase(3, "終端暴走", .45),
+      phase(4, "最終防衛", .2),
+    ],
+    entrance: {
+      warningLabel: "最終警告 // TAKUYA-Ω",
+      cueId: "enemy-takuya-attack",
+      fullBodyRequired: true,
+    },
+    attackTelegraph: {
+      attackId: "omega-greatsword-cleave",
+      displayName: "Ω大剣薙ぎ払い",
+      kind: "shell-sweep",
+      warningSeconds: 1.18,
+      radius: 210,
+      laneHalfHeight: 72,
+      color: "#e2a64f",
+      counterplay: "大剣の薙ぎ払い範囲から退避し、振り抜き後に反撃",
+    },
+    display: {
+      sizeClass: "giant-boss",
+      compactBodyHeight: 286,
+      standardBodyHeight: 260,
+      bodyBounds: { width: 320, height: 260 },
+      footAnchor: { x: .5, y: .98 },
+      shadow: { radiusX: 100, radiusY: 22 },
+      hitboxRadius: 60,
+    },
+    combat: {
+      attackRange: 62,
+      statusResistance: { stun: .82, push: .03, slow: .88 },
+      formChange: "omega-greatsword-release",
+      summonProfile: "omega-add-waves",
+      componentChange: "omega-defense-core",
+    },
+    reward: { equipmentId: "boss-muscle-fiber", quantity: 1 },
+    resultId: "boss-result-takuya-omega",
+    compendiumId: "boss-compendium-takuya-omega",
+    compendium: {
+      title: "TAKUYA-Ω",
+      summary: "大剣の重量と終端防衛の圧力で、最後の防衛線を正面から叩き割る個体。",
+      assetPath: "/art/v100/portraits/takuya-omega-event-portrait-v1.webp",
+    },
+  },
 ]);
 
 export const BOSS_DEFINITION_BY_ID = deepFreeze(Object.fromEntries(
@@ -512,7 +618,7 @@ export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
       counterplay: definition.attackTelegraph.counterplay,
     });
   }
-  if (["mother", "ooguchi", "gairen", "futago"].includes(definition.enemyKind)
+  if (["mother", "ooguchi", "gairen", "futago", "mugarian-president-mutated", "takuya-omega"].includes(definition.enemyKind)
     && fighter.stationAbility?.phase === "warning") {
     return deepFreeze({
       bossId: definition.id,

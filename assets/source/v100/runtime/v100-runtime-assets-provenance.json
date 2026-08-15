@@ -315,7 +315,7 @@
       "height": 1024,
       "channels": 4,
       "hasAlpha": true,
-      "sha256": "f23e10bde249e818bad027ad4e607d27d0cac5450fa5b811dbe0c0572f87b576",
+      "sha256": "ef15901812896ad25ff570d674a99b4d92440a2e49bd97c032501316c4d51066",
       "sources": [
         "assets/source/v100/runtime/motion/mugarian-president-mutated/entrance-left-authored-v1.png",
         "assets/source/v100/runtime/motion/mugarian-president-mutated/idle-left-authored-v1.png",
@@ -385,7 +385,7 @@
       "height": 1024,
       "channels": 4,
       "hasAlpha": true,
-      "sha256": "57eb0dcf83dc717175fe575c9b077af9f1d54c330f7368705625eb60dc2334c1",
+      "sha256": "745c53aa580b3ff77c3c955dc389958757bdf7868e91543e0566f33a26aec1ba",
       "sources": [
         "assets/source/v100/runtime/motion/takuya-omega/entrance-left-authored-v1.png",
         "assets/source/v100/runtime/motion/takuya-omega/idle-left-authored-v1.png",
@@ -511,7 +511,7 @@
       "height": 1024,
       "channels": 4,
       "hasAlpha": true,
-      "sha256": "0e272c70aac4767207475bbfa432fc9d88db4942ca9ff3fd8cdbfda7d622190e",
+      "sha256": "be0fcafe64ec21e55ff7407232b7c412ce3000bb947a0679a39ee728d6cb57ec",
       "sources": [
         "assets/source/v100/runtime/motion/red-panther-commander/idle-left-authored-v1.png",
         "assets/source/v100/runtime/motion/red-panther-commander/move-left-authored-v1.png",
@@ -563,7 +563,7 @@
       "height": 1024,
       "channels": 4,
       "hasAlpha": true,
-      "sha256": "5c367eb8663bfd0b146ed081e275b7df4bfc169dd3a6ffa3264a6dd6c958834a",
+      "sha256": "ca6d60ae34f6056728253af3affbb1793e9daa4f15117f4b4d44f18f7b2c235f",
       "sources": [
         "assets/source/v100/runtime/motion/red-panther-knife/idle-left-authored-v1.png",
         "assets/source/v100/runtime/motion/red-panther-knife/move-left-authored-v1.png",
@@ -615,7 +615,7 @@
       "height": 1024,
       "channels": 4,
       "hasAlpha": true,
-      "sha256": "3236cc28173eb337b65b1b08d5fd55981c3f44e6f58715f358e0e67bebbdf2c8",
+      "sha256": "041d99ae54ad5305cf35bbe9bd55549317697c030a355af77f9d725b806d8f03",
       "sources": [
         "assets/source/v100/runtime/motion/red-panther-shield/idle-left-authored-v1.png",
         "assets/source/v100/runtime/motion/red-panther-shield/move-left-authored-v1.png",
@@ -667,7 +667,7 @@
       "height": 1024,
       "channels": 4,
       "hasAlpha": true,
-      "sha256": "6786dda98e1859ca7eaf1842fdc0abcc9bf6ea7b1019dfeac3c7fade1ba5304b",
+      "sha256": "2649086b3eb63180023f526c56f09403148606432a1027f129805c0788ed4a6e",
       "sources": [
         "assets/source/v100/runtime/motion/red-panther-smg/idle-left-authored-v1.png",
         "assets/source/v100/runtime/motion/red-panther-smg/move-left-authored-v1.png",

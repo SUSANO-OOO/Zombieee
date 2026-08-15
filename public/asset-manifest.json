@@ -1541,7 +1541,7 @@
       "bytes": 142104,
       "hash": "sha256-2b3019cf297b550a5c2f4194966935010a3e114e8f1dadb827a3850fec5e5690",
       "pack": "units",
-      "category": "portrait",
+      "category": "boss",
       "criticality": "critical"
     },
     {
@@ -1573,7 +1573,7 @@
       "bytes": 115060,
       "hash": "sha256-4faaac8803005275b0bc105c7d43a4a86a223278698cba8b65e8d7eabb172bf2",
       "pack": "units",
-      "category": "portrait",
+      "category": "boss",
       "criticality": "critical"
     },
     {
