@@ -478,6 +478,103 @@ export const SPRITE_MANIFEST = Object.freeze({
   babayaga: explicitAtlasManifestEntry("babayaga", "/art/v060/characters/babayaga-battle-v1.png"),
 });
 
+const V100_PAISEN_ATLAS_PATH = "/art/v100/characters/paisen-battle-v1.png";
+const V100_PAISEN_CELL_WIDTH = 394;
+const V100_PAISEN_CELL_HEIGHT = 757;
+const V100_PAISEN_VISIBLE = Object.freeze({
+  right: Object.freeze([
+    [65, 109, 332, 602],
+    [64, 113, 347, 603],
+    [44, 113, 356, 603],
+    [35, 126, 378, 605],
+    [16, 133, 378, 605],
+    [16, 134, 320, 605],
+    [22, 516, 372, 741],
+  ]),
+  left: Object.freeze([
+    [62, 109, 329, 602],
+    [47, 113, 330, 603],
+    [38, 113, 350, 603],
+    [16, 126, 359, 605],
+    [16, 133, 378, 605],
+    [74, 134, 378, 605],
+    [22, 516, 372, 741],
+  ]),
+});
+
+function v100PaisenManifestEntry() {
+  const frames = {};
+  for (const direction of SPRITE_DIRECTIONS) {
+    const directionIndex = direction === "right" ? 0 : 1;
+    frames[direction] = {};
+    for (const [stateIndex, state] of SPRITE_STATES.entries()) {
+      frames[direction][state] = frameRecord({
+        path: V100_PAISEN_ATLAS_PATH,
+        sheetWidth: V100_PAISEN_CELL_WIDTH * SPRITE_STATES.length,
+        sheetHeight: V100_PAISEN_CELL_HEIGHT * SPRITE_DIRECTIONS.length,
+        source: {
+          x: stateIndex * V100_PAISEN_CELL_WIDTH,
+          y: directionIndex * V100_PAISEN_CELL_HEIGHT,
+          w: V100_PAISEN_CELL_WIDTH,
+          h: V100_PAISEN_CELL_HEIGHT,
+        },
+        visible: V100_PAISEN_VISIBLE[direction][stateIndex],
+        nativeDirection: direction,
+        direction,
+        derivedFrom: state === "death" ? "hit" : undefined,
+        anchorX: direction === "left" && state === "death" ? 1 - 0.5 : 0.5,
+      });
+    }
+    Object.freeze(frames[direction]);
+  }
+  return Object.freeze({
+    path: V100_PAISEN_ATLAS_PATH,
+    sheet: Object.freeze({
+      width: V100_PAISEN_CELL_WIDTH * SPRITE_STATES.length,
+      height: V100_PAISEN_CELL_HEIGHT * SPRITE_DIRECTIONS.length,
+      layout: "seven-horizontal-by-two-explicit-directions",
+      cellWidth: V100_PAISEN_CELL_WIDTH,
+      cellHeight: V100_PAISEN_CELL_HEIGHT,
+      gutter: 16,
+    }),
+    battleContentHeight: null,
+    battleScale: 1,
+    nativeDirection: "explicit-both",
+    states: SPRITE_STATES,
+    directions: SPRITE_DIRECTIONS,
+    frames: Object.freeze({
+      idle: Object.freeze({ right: frames.right.idle, left: frames.left.idle }),
+      "walk-a": Object.freeze({ right: frames.right["walk-a"], left: frames.left["walk-a"] }),
+      "walk-b": Object.freeze({ right: frames.right["walk-b"], left: frames.left["walk-b"] }),
+      "attack-a": Object.freeze({ right: frames.right["attack-a"], left: frames.left["attack-a"] }),
+      "attack-b": Object.freeze({ right: frames.right["attack-b"], left: frames.left["attack-b"] }),
+      hit: Object.freeze({ right: frames.right.hit, left: frames.left.hit }),
+      death: Object.freeze({ right: frames.right.death, left: frames.left.death }),
+    }),
+  });
+}
+
+export const V100_SPRITE_MANIFEST = Object.freeze({ paisen: v100PaisenManifestEntry() });
+export const V100_SPRITE_PROVENANCE = Object.freeze({
+  generator: "v100-paisen-atlas-r1",
+  identitySourcePath: "/art/v060/characters/portraits/brawler-portrait-v2.webp",
+  identitySourceSha256: "9C4EA4D8BC5D2FD2BAE10EA5BB455F45127D1D861EDF2D3061866EB9C36DF010",
+  sourceBattleDerivativePath: "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
+  sourceBattleDerivativeSha256: "F1B5149AD4D4A1CC94220B40CD336D18D38372CBE26AEFBF27620BA808DEE836",
+  atlasPath: V100_PAISEN_ATLAS_PATH,
+  atlasSha256: "B4943A31126B60C06466FE6BCAA466D027851A852FD08AE92DCFE7F5C566CAF6",
+});
+
+export const v100SpriteKinds = Object.freeze(Object.keys(V100_SPRITE_MANIFEST));
+
+export function v100SpriteFrameFor(kind, state, direction = "right") {
+  const entry = V100_SPRITE_MANIFEST[kind];
+  if (!entry) throw new RangeError(`Unknown V1.0.0 sprite kind: ${String(kind)}`);
+  if (!SPRITE_STATES.includes(state)) throw new RangeError(`Unknown sprite state: ${String(state)}`);
+  if (!SPRITE_DIRECTIONS.includes(direction)) throw new RangeError(`Unknown sprite direction: ${String(direction)}`);
+  return entry.frames[state][direction];
+}
+
 /** Stable ordered list for the localhost all-frame QA gallery. */
 export const spriteKinds = Object.freeze(Object.keys(SPRITE_MANIFEST));
 

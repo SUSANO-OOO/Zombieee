@@ -33,6 +33,7 @@ import {
   updateV100PlayerName,
 } from "../app/v100Save.js";
 import {
+  createV100BattleResult,
   createV100BattleState,
   finalizeV100PendingResult,
   purchaseV100Support,
@@ -162,6 +163,28 @@ test("stage finalize applies first clear payloads and exact boss mode gates once
   assert.equal(v100BossVisibleInOtherModes(save, "boss-takuya"), true);
   assert.equal(v100BossVisibleInOtherModes(save, "boss-gate-eater"), false);
   assert.equal(save.caps, 150);
+});
+
+test("boss battle results cannot bypass the explicit defeat presentation", () => {
+  const blocked = createV100BattleResult({
+    stageId: "stage-nishijin-defense-line-takuya",
+    battleRunId: "run-boss-blocked",
+    won: true,
+    objectiveComplete: true,
+    vehicleHp: 680,
+    vehicleMaxHp: 680,
+  });
+  assert.deepEqual(blocked, { ok: false, reason: "boss-not-defeated" });
+  const accepted = createV100BattleResult({
+    stageId: "stage-nishijin-defense-line-takuya",
+    battleRunId: "run-boss-accepted",
+    won: true,
+    objectiveComplete: true,
+    bossDefeated: true,
+    vehicleHp: 680,
+    vehicleMaxHp: 680,
+  });
+  assert.equal(accepted.won, true);
 });
 
 test("registered units and supports are purchased separately from unlock registration", () => {
