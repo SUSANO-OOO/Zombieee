@@ -189,3 +189,129 @@ Stop immediately for:
 - inability to prove a required runtime condition without weakening a test.
 
 Do not compensate with a new product decision, unapproved placeholder, weaker assertion, extra retry, direct state transition, or release action.
+
+## 10. PRE_IMPLEMENTATION_CLOSURE — standalone execution map
+
+- Closure: `PRE_IMPLEMENTATION_CLOSED`
+- `PRODUCT_DECISION_GAPS: 0`
+- `LUNA_HANDOFF_READY: YES`
+- The selected nine masters and all existing character identities are immutable. There is no image-generation task and no authority to revisit a Producer-approved design.
+
+### 10.1 What to encode first
+
+Create one auditable immutable Version 1.0.0 registry (it may be split into pure modules) that is the only runtime source for:
+
+1. the 30 stable Stage IDs and Section 17.5 row values in `DESIGN_LOCK.md`;
+2. all 30 `pre/post/first-clear-post` event triplets plus Prologue, Ending, Credits, and Epilogue;
+3. the exact 16-unit availability/CAPS/primary-role rows, initial four, level caps/costs/formulas;
+4. uniform 1/2/3-star thresholds, first/star/replay receipt patterns, and the first-clear payload list below;
+5. the three support rows, two separate vehicle abilities, vehicle upgrades, and nine boss rows;
+6. background, objective-state, enemy-pack/boss, VFX, audio-profile, speaker, portrait, and required-asset ownership.
+
+Do not duplicate mutable copies of these values across UI and battle code. Validators must compare every consumer to the canonical registry.
+
+### 10.2 Exact name, formation, and transaction behavior
+
+- Name UI precedes Prologue. It uses `主人公の名前`, the explanation and actions fixed in Design Lock 17.1, NFC -> U+0020/U+3000 trim/collapse -> exact character rejection -> 1-12 grapheme validation, fallback `指揮官`, escaped `{{PLAYER_NAME}}` render-time expansion, current-name replay/log rendering, and the same validated value in save/backup/export/import/recovery/accessibility. Invalid import never overwrites a valid name. Rename cannot alter any ID/read/receipt/reward/unlock state.
+- Formation is seven ordered slots and permits duplicate character IDs. Count every accepted deploying/alive player instance and independently targetable player summon; exclude the vehicle/NPC/escort/object/support/enemy. Reserve count + command + cost + cooldown + receipt atomically. Slot eight rejects all of them atomically. Hidden/deploying units still count; defeated removal releases once.
+- Event IDs are exactly `v100:event:prologue`, `v100:event:s01..s30:{pre|post|first-clear-post}`, `v100:event:ending`, `v100:event:credits`, `v100:event:epilogue`.
+- Flow is name -> Prologue -> Stage 1; then each attempt `pre -> formation -> battle -> result`. Defeat returns without post/progression. Victory persists a pending result, then `post`, then one atomic first-clear/replay finalize and summary. Stage 30 first clear continues Ending -> Credits -> Epilogue -> postgame map. Skip cannot cross battle/result/finalize. Presentation replay grants nothing.
+- Persist event cursor after each node. Event reload resumes the next unacknowledged node; battle reload before a pending result returns to formation without retained battle-local debits; pending victory resumes result/post/finalize. Unique receipts and the single-writer boundary own reload/recovery/import/multiple-tab idempotency.
+- Stars are universal: victory/vehicle HP > 0 = one; final vehicle ratio >= 0.70 = two; >= 0.90 = three. First clear and newly reached stars grant once; replay grants its unique repeat receipt and only previously unearned star milestones. No time, escort HP, support, formation, or unit-death star condition exists.
+
+### 10.3 Exact first-clear payloads
+
+Every Stage first clear also unlocks the next Stage except Stage 30. `none` below means no additional product unlock beyond CAPS/stars/next Stage.
+
+| Stage | Additional durable first-clear payload |
+|---:|---|
+| 1 | Nao purchase registration |
+| 2 | Mizuchi registration; `support-healing` purchase unlock |
+| 3 | TAKUYA discovery, Outbreak entry, Survival pool, replay |
+| 4 | Monkey registration |
+| 5 | Crazy King registration; level cap 10; Gate Eater discovery/modes/replay |
+| 6 | Raider registration; `support-explosive-drum` purchase unlock |
+| 7 | Tatara registration |
+| 8 | Gantetsu registration |
+| 9 | `support-incendiary-drum` purchase unlock |
+| 10 | Mayo-chan registration; level cap 15 |
+| 11 | MOTHER discovery/modes/replay |
+| 12 | Zakimiya registration |
+| 13 | none |
+| 14 | TKY registration; Ooguchi discovery/modes/replay |
+| 15 | level cap 20 |
+| 16 | none |
+| 17 | MrsChiha registration; Kurome discovery/modes/replay |
+| 18 | none |
+| 19 | none |
+| 20 | Miyamoto Musashi registration; level cap 25; Gairen discovery/modes/replay |
+| 21 | none |
+| 22 | none |
+| 23 | none |
+| 24 | Futago discovery/modes/replay |
+| 25 | level cap 30; mutated-president discovery/modes/replay |
+| 26 | none |
+| 27 | none |
+| 28 | none |
+| 29 | none; Ω activation remains post-story presentation |
+| 30 | TAKUYA-Ω discovery/modes/replay; Ending/Credits/Epilogue availability |
+
+Availability rows are purchase registration, not free ownership; only Hachi, Paisen, Kumaverson, and Babayaga start owned. Boss mode entries remain spoiler-absent until their own exact Story receipt.
+
+### 10.4 Canonical speaker/portrait routing by event
+
+Within each row, use the v10 source's exact line order and action beats; the set is an allowlist, not permission to synthesize dialogue. `PLAYER`/`SYSTEM` have no portrait. `...の声`, recorded voice, and `...メッセージ` are offscreen/no portrait. A visible minor human without an identity master uses only the selected neutral r2 silhouette. The RED PANTHER/red-lens captain uses the selected commander identity. Stage 13 `知らない声` has no portrait until Segawa is named.
+
+| Event | Allowed narrative speakers/owners |
+|---|---|
+| Prologue | Kumaverson, Paisen, Babayaga; minor man/voice -> shared silhouette/no-portrait rule |
+| S01 | Paisen, Kumaverson, Babayaga, Ikura; woman's voice is offscreen |
+| S02 | Ikura, Paisen, Babayaga, Kumaverson; shelter staff/Ando -> shared silhouette |
+| S03 | Paisen, Kumaverson, Ikura, Babayaga; recorded woman offscreen; red-lens captain/operative -> Panther commander/role master |
+| S04 | Ikura, Paisen, Kumaverson, Babayaga; station staff/female worker -> shared silhouette, voice offscreen |
+| S05 | Paisen, Ikura, Kumaverson, Babayaga; maintenance staff -> shared silhouette, voice offscreen |
+| S06 | Ikura, Babayaga, Paisen, Kumaverson; MrsChiha message uses her identity only when visually shown; rescue voice offscreen |
+| S07 | Paisen, Ikura, Kumaverson; doctor -> shared silhouette |
+| S08 | Paisen, Kumaverson, Ikura; nurse -> shared silhouette, voice offscreen |
+| S09 | Ikura, Paisen, Kumaverson, Babayaga |
+| S10 | Paisen, Ikura, Kumaverson, Babayaga |
+| S11 | Paisen, Kumaverson, Ikura, Babayaga; researcher -> shared silhouette, voices offscreen |
+| S12 | Zakimiya, Kumaverson, Babayaga, Ikura; recovery team -> shared silhouette |
+| S13 | Ikura, Paisen, Kumaverson, Babayaga, Zakimiya, Segawa; unknown/rescue voices offscreen, Segawa portrait begins at reveal |
+| S14 | TKY, Kumaverson, Paisen, Ikura, Babayaga; evacuee -> shared silhouette |
+| S15 | Ikura, Segawa, TKY, Paisen, Babayaga; MrsChiha voice offscreen |
+| S16 | Ikura, TKY, Babayaga, Segawa, Paisen; MrsChiha voice offscreen |
+| S17 | MrsChiha, Babayaga, Ikura, Zakimiya |
+| S18 | Ikura, Zakimiya, Kumaverson, human Mugarian president, Paisen, MrsChiha, Babayaga, Segawa |
+| S19 | human Mugarian president, Zakimiya, MrsChiha, Segawa, Paisen, Kumaverson, Ikura |
+| S20 | Ikura, Kumaverson, Segawa, TKY, Babayaga, Paisen, Crazy King, MrsChiha, Zakimiya, Miyamoto Musashi |
+| S21 | Panther commander, Kumaverson, TKY, Miyamoto, MrsChiha, Ikura, Babayaga, Zakimiya, Paisen, Segawa |
+| S22 | Zakimiya, Ikura, MrsChiha, Kumaverson, Babayaga, Panther commander; Zakimiya's wife -> shared silhouette |
+| S23 | MrsChiha, Paisen, Kumaverson, Ikura, Babayaga, Panther commander, Segawa |
+| S24 | human Mugarian president, MrsChiha, Kumaverson, Zakimiya, Ikura, Segawa, TKY |
+| S25 | human then mutated Mugarian president, Zakimiya, Kumaverson, MrsChiha, Segawa, Ikura, Paisen; researcher voice offscreen |
+| S26 | Ikura, Paisen, Kumaverson, MrsChiha, Segawa; researcher voice offscreen |
+| S27 | Ikura, MrsChiha, Panther commander, Paisen, Segawa, Kumaverson, Zakimiya, Babayaga |
+| S28 | Ikura, MrsChiha, Paisen, Segawa, Zakimiya, TKY, Miyamoto, Kumaverson, Babayaga |
+| S29 | Segawa, Kumaverson, MrsChiha, Ikura, Paisen |
+| S30 | Paisen, Babayaga, Segawa, Kumaverson, Zakimiya, TKY, MrsChiha, Miyamoto, Ikura; Ikura/researcher voice offscreen; TAKUYA-Ω owns boss identity |
+| Ending | Miyamoto, doctor/researcher/female station worker -> shared silhouette, Kumaverson, Paisen, Ikura, Babayaga, MrsChiha |
+| Credits | no dialogue/portrait/BGM; exact visual montage, inheriting only each reused source background route's existing ambience (otherwise silence) |
+| Epilogue | Kumaverson, Ikura, Paisen, TKY, MrsChiha, Zakimiya, Babayaga; Zakimiya's wife -> shared silhouette; current `{{PLAYER_NAME}}` in canonical lines |
+
+Every major speaker not marked minor/offscreen resolves to its approved existing portrait or the exact selected master derivative. Unknown speaker, empty text, raw token, missing portrait, major-to-silhouette substitution, and speaker/portrait mismatch are hard failures.
+
+### 10.5 Stage presentation and required-runtime ownership
+
+- Implement every Design Lock 17.5 row literally: exact stable Stage ID, background/reuse/derivative boundary, authored objective states, listed enemy pack/boss/adds, mission VFX family, story audio profile, and first-clear payload. Do not substitute current 0.9.x labels where the locked player-facing Stage/object differs; retain historical internal IDs where the row intentionally does so.
+- Stage 29 is a real battle: six elite Panther waves and both the overseas activation line and source stock must be destroyed. TAKUYA-Ω activation occurs only in its `post`. Stage 30 pre-story removes the two Panther guards before combat; the combat roster is Ω plus its two A-pack add waves and contains no story dialogue.
+- Register all reachable background, portrait, mission-object state, enemy/boss state, VFX, audio, UI/font, Ending/Credits/Epilogue assets as required before first-install gameplay. Decode/hash/size/store/manifest-commit must finish before title/base/map/story/battle simulation mounts. Required requests after gate-open are exactly zero. Update fetches only changed/missing hashes and retains the prior committed generation.
+- Browser acceptance is Chromium/WebKit 844x340, 844x390, and 1280x720 for name/keyboard, seven-slot formation, event/log/replay, battle/result/summary, Ending/Credits/Epilogue, and PWA gate/retry. Preserve public safe-area values, 44x44 controls, battlefield readability, and 12-40 px portrait overlap.
+
+### 10.6 What Luna may and may not decide
+
+Luna may decide only implementation mechanics: file/module decomposition, immutable registry representation, conformance-equivalent grapheme helper, serialized transaction helper, sprite sheet/discrete-frame packing, compression, crop/anchor/scale/alpha cleanup, cache batching, deterministic QA helper structure, and spawn time/lane distribution inside a row's fixed enemy roster and wave/group count.
+
+Luna must not change character/master identity, crop into a redesign, generate a candidate, choose a different Stage/event/object/enemy/boss, alter any number/role/unlock/cost/star/reward/receipt, add a branch, change portrait ownership, choose different music, weaken readiness/PWA/save/mobile contracts, migrate legacy progression, or turn a failed acceptance into optional evidence.
+
+Return to Sol only for: (1) a true contradiction among locked sources; (2) a selected immutable asset that cannot yield the required runtime derivative within crop/pack/alpha operations; (3) a High/Medium regression; or (4) a technically impossible acceptance contract. Do not return because wording, role, unlock timing, Stage sequence, speaker/portrait mapping, receipt/recovery behavior, or asset owner is unspecified: each is fixed above and in the Design Lock closure.

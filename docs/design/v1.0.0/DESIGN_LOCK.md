@@ -136,7 +136,26 @@ The Stage 1-30 campaign is owned by the separate Version 1.0.0 namespace. A reve
 | Stage 17 | MrsChiha | 210 |
 | Stage 20 | Miyamoto Musashi | 230 |
 
-Hachi remains a skirmisher, Paisen frontline, Kumaverson heavy, Babayaga marksman, Nao support, Mizuchi suppression, and Monkey engineer. Existing roles for other units remain unchanged.
+Primary role ownership is exact for all 16 player units. Existing player-facing class labels and combat kits remain; this table closes registry/filter/economy ownership and does not authorize a kit redesign.
+
+| Unit | Primary role |
+|---|---|
+| Hachi | `skirmisher` |
+| Paisen | `frontline` |
+| Kumaverson | `heavy` |
+| Babayaga | `marksman` |
+| Nao | `support` |
+| Mizuchi | `suppression` |
+| Monkey | `engineer` |
+| Crazy King | `frontline` |
+| Raider | `suppression` |
+| Tatara | `heavy` |
+| Gantetsu | `heavy` |
+| Mayo-chan | `skirmisher` |
+| Zakimiya | `frontline` |
+| TKY | `skirmisher` |
+| MrsChiha | `marksman` |
+| Miyamoto Musashi | `frontline` |
 
 ### Level cap
 
@@ -327,3 +346,98 @@ Before each write, re-fetch live base/head/tree, branch state, PR state/Draft/me
 ## 16. Success condition
 
 Implementation is ready for independent Sol review only when the fixed implementation HEAD/tree matches live GitHub, High 0 and Medium 0 remain, all locked identities/hashes are traceable, the required runtime/browser/save/PWA evidence is reviewer-accessible, and no release action has occurred.
+
+## 17. PRE_IMPLEMENTATION_CLOSURE
+
+- Closure status: `PRE_IMPLEMENTATION_CLOSED`
+- Product-decision gaps: `PRODUCT_DECISION_GAPS: 0`
+- This section resolves implementation ambiguity only. It does not revise the selected nine masters, character identities, fixed campaign/economy/boss values, or r2 save/PWA decisions.
+
+### 17.1 Player-name contract
+
+1. `物語を始める` opens the name screen before `v100:event:prologue`. The screen says `入力した名前は仲間が物語中で呼ぶ名前になります`, labels the field `主人公の名前`, uses `この名前で始める` as the primary action, and offers `入力せず進む`; empty input or that explicit skip stores `指揮官`.
+2. Validation order is: Unicode NFC normalization; trim leading/trailing U+0020/U+3000; collapse each run of U+0020/U+3000 to one U+0020; reject; then count with `Intl.Segmenter("ja", { granularity: "grapheme" })` or a conformance-equivalent grapheme implementation. Valid length is 1-12 grapheme clusters.
+3. Allowed content is Unicode letters, decimal numbers, combining marks, Hiragana, Katakana, Han, U+30FC, U+30FB, ASCII apostrophe/hyphen, single normalized spaces, and well-formed common emoji grapheme sequences. Newline, C0/C1 controls, bidi controls, isolated variation selectors, U+200B/U+200C, and U+200D outside a valid emoji ZWJ sequence fail. There is no arbitrary banned-word filter.
+4. Invalid content displays `使用できない文字が含まれています`; over-length displays `名前は12文字以内で入力してください`; neither mutates save state. Settings rename uses the same pipeline and cancel preserves the old value.
+5. Story source token `{{PLAYER_NAME}}` (including the Markdown-escaped source spelling) expands as escaped text at render time. IDs, receipts, node keys, read state, and saved source text never contain the chosen name. Event/log/replay/ENDING/credits/EPILOGUE always render the current valid name, so rename changes display only and never re-fires progression.
+6. The same normalized value is preserved in primary save, verified mirror, backup, last-known-good, manual export/import, recovery, event resume/log, accessibility output, and cross-tab state. A malformed imported name falls back to the last valid Version 1.0.0 name, or `指揮官` if none exists; it never damages the imported legacy source.
+
+### 17.2 Formation and active-instance boundary
+
+- Formation has exactly seven ordered slots. A character ID may occupy multiple slots and each copy remains independently deployable; no uniqueness validation is permitted.
+- `playableActiveCount` includes every human/player unit from accepted spawn command through deployment, combat-ready life, and defeat removal, plus any independently targetable player-controlled summon with its own HP/damage. The armored vehicle, NPC, escort, mission object, support object, and enemy are excluded.
+- Spawn acceptance reads the authoritative count and performs the count reservation, command creation, battle-resource debit, cooldown start, and receipt creation in one serialized mutation. If the reserved count would exceed seven, the entire mutation is rejected: no command, resource, cooldown, receipt, animation, bark, or partial spawn. Concurrent taps/tabs cannot both reserve slot eight.
+- Defeated/removed instances release one reservation exactly once. A deploying or temporarily hidden/occluded unit still occupies its reservation. Formation editing alone never creates an active instance.
+
+### 17.3 Canonical story state machine, IDs, skip, replay, and recovery
+
+- Canonical IDs are `v100:event:prologue`; for every `NN` from `01` to `30`, `v100:event:sNN:pre`, `v100:event:sNN:post`, and `v100:event:sNN:first-clear-post`; then `v100:event:ending`, `v100:event:credits`, and `v100:event:epilogue`. Battle barks/system banners are not story event IDs.
+- New campaign order is name input -> Prologue -> Stage 1. Every attempt is `pre -> formation -> battle -> result`. Defeat ends at a defeat result and returns to formation/map without `post`, first-clear, star, reward, join, unlock, boss receipt, or next-stage unlock. First-clear victory continues `result -> post -> first-clear-post/finalize -> map`; replay victory continues `result -> post -> replay-finalize -> map` and never replays `first-clear-post`.
+- Battle victory first persists a pending result snapshot without granting progression. Completing or skipping `post` reaches one serialized finalize transaction. On the first clear it commits result, highest stars, first-clear/star rewards, next-stage availability, unit/support/cap unlocks, join/discovery, boss defeat/mode gates, and the nonempty `first-clear-post` summary together. On replay it commits only the unique replay result/reward plus a newly earned star milestone, if any. A crash resumes the pending result/post/finalize boundary; it never requires a won battle to be replayed and never applies a receipt twice.
+- After Stage 30 first-clear finalize: `ending -> credits -> epilogue -> postgame campaign-map`. Stage 30 battle replay returns to the map after `post`; ending/credits/epilogue replay is explicit from the event log and grants nothing.
+- Skip advances through canonical nodes and marks the same versioned event read only after the destination node is durable. Skip cannot jump battle/result or bypass finalize. Explicit event replay is presentation-only, uses the current name, and never changes receipts, choices, joins, rewards, unlocks, stars, defeat counts, or Stage state.
+- Event interruption persists `{eventId, phase, nodeIndex, nodeKey}` after each displayed node. Reload/import/recovery resumes the next unacknowledged node. A battle reload before a pending result returns to that Stage's formation with no debit/cooldown/result receipt retained. Multiple tabs use the existing single-writer/unique-receipt boundary; a stale tab must reload canonical state rather than replay a transition.
+- The v10 story is linear. Any apparent prompt is an advance/action beat, not a product branch or hidden choice.
+
+### 17.4 Stars, rewards, unlock receipts, and replay
+
+- All 30 Stages use the same star contract. One star is a valid objective-complete victory with armored-vehicle HP above zero. Two stars require final armored-vehicle HP / current maximum HP >= 0.70. Three stars require >= 0.90. Escort/object HP, elapsed time, formation, unit deaths, and support use do not change stars; objective failure or vehicle destruction is defeat and awards zero.
+- Stable receipts are `v100:sNN:first-clear`, `v100:sNN:star:2`, `v100:sNN:star:3`, and one unique `v100:sNN:replay:<battleRunId>` per successful replay. First clear always grants the Section 6 first-clear amount. Star 2/3 rewards grant once when that milestone is first reached, including both in the same atomic transaction when a first clear earns three stars. A replay grants the replay amount once and may also grant only previously unearned star milestones.
+- Unit availability in Section 5 means purchase registration after that Stage's first-clear finalize; it never means ownership before purchase. Initial four are owned free. Level-cap, support, boss-mode, join, and next-stage changes use their locked first-clear/defeat receipts and appear only after durable finalize.
+
+### 17.5 Stage content closure matrix
+
+Enemy packs are fixed: `A = walker, runner, spitter, crusher`; `B = A + grappler, ooze, sprinter`; `C = B + shade, abomination`; `D = resonator, cagewalker, spindle, choir-knot, pall-manta, anchor-bloom`; `P = red-panther-knife, red-panther-shield, red-panther-smg, red-panther-commander`. A row may use only its listed pack/kinds and boss/add ownership. Luna may distribute those kinds among the already locked wave/group count, but may not invent another enemy identity.
+
+Mission VFX ownership is fixed by objective: assault base has intact/damaged/critical/destroyed authored states; timed defense has perimeter/incoming/impact/success states; escort has moving/intact/damaged/critical/destroyed destination states; power/seal objectives have off/engaged/on plus connection/disconnection states for every node; bosses have entrance/telegraph/phase/hit/death/defeat states. Generic runtime polygons are diagnostic-only and cannot satisfy any row.
+
+Story audio profiles reuse existing assets only: `STREET` = existing Stage 1-3 story scenes; `STATION` = existing station gate/platform/tunnel scenes; `MEDICAL` = `music-v070-stage2-tension` pre and `music-v070-rescue` post; `LAB` = `music-v070-station-tunnel` pre and `music-v070-return` post; `BAY` = `music-v070-stage3-approach` pre and `music-v070-return` post; `CORPORATE` = `music-v070-collapse-montage` pre and `music-v070-stage3-approach` post; `FINAL` = `music-v070-collapse-montage` pre and `music-v070-crawler-morning` post/ending. Nonboss battle uses the current normal/pressure scene for its location. Every live boss owns the current production `music-v099-boss` contract until death; story playback cannot silence or duplicate it. Credits have no dialogue and no BGM. Each reused montage background inherits only the ambience already owned by that source background route; a row with no source-route ambience is silent. Luna must not select, compose, or substitute another credits track.
+
+| # | Stable Stage ID | Background / required objective | Enemy/boss ownership | Audio | First-clear payload beyond CAPS/stars/next Stage |
+|---:|---|---|---|---|---|
+| 1 | `stage-nishijin-shopping-street` | existing shopping street; infected base + pharmacy rescue | A | STREET | Nao purchase registration |
+| 2 | `stage-sawara-ward-office` | existing ward office; 90 s evacuation perimeter | A + abomination | STREET | Mizuchi registration; healing-support purchase unlock |
+| 3 | `stage-nishijin-defense-line-takuya` | existing Nishijin defense line; boss arena | A + shade/abomination; `boss-takuya`, two add waves | STREET/boss | TAKUYA discovery/mode gates |
+| 4 | `stage-nishijin-station-gate` | station gate; destructible seal/base | A + grappler | STATION | Monkey registration |
+| 5 | `stage-nishijin-station-platform` | station platform; sound lure/seal and boss arena | A + ooze/sprinter; `boss-gate-eater`, three adds | STATION/boss | Crazy King registration; level cap 10; Gate Eater gates |
+| 6 | `stage-nishijin-station-tunnel-seal` | station tunnel; visible maintenance cart + destination | B | STATION | Raider registration; explosive-drum purchase unlock |
+| 7 | `stage-university-hospital-approach` | hospital approach; 85 s medicine-transfer perimeter | B | MEDICAL | Tatara registration |
+| 8 | `stage-hospital-emergency-ward` | emergency ward; infected base | B | MEDICAL | Gantetsu registration |
+| 9 | `stage-hospital-evacuation-route` | basement mechanical room; exactly three power nodes | B | MEDICAL | incendiary-drum purchase unlock |
+| 10 | `stage-research-access` | decontamination gate; destructible access seal | C | LAB | Mayo-chan registration; level cap 15 |
+| 11 | `stage-research-containment` | specimen isolation chamber; supply pipes + boss arena | C; `boss-mother`, brood 4/6 | LAB/boss | MOTHER gates |
+| 12 | `stage-research-freight-passage` | freight tunnel; sealed transport + destination | B + shade | LAB | Zakimiya registration |
+| 13 | `stage-logistics-relay` | logistics relay; drug warehouse/export base | C | LAB | none |
+| 14 | `stage-evacuation-freight-yard` | freight yard; three couplers + boss arena | C; `boss-ooguchi` | LAB/boss | TKY registration; Ooguchi gates |
+| 15 | `stage-t-plan-outer-core` | T-Plan outer control; exactly three power nodes | C | LAB | level cap 20 |
+| 16 | `stage-t-plan-central-seal` | T-Plan central seal; exactly three seal nodes | C | LAB | none |
+| 17 | `stage-bay-tower-service` | bay-tower emergency corridor; boss arena | D; `boss-kurome` | BAY/boss | MrsChiha registration; Kurome gates |
+| 18 | `stage-civic-archive-route` | civic archive; 95 s records-evacuation perimeter | D | BAY | none |
+| 19 | `stage-coastal-link-bridge` | coastal bridge; evidence convoy + destination | D | BAY | none |
+| 20 | `stage-estuary-floodgate-seal` | floodgate; control seal + boss arena | D; `boss-gairen` | BAY/boss | Miyamoto registration; level cap 25; Gairen gates |
+| 21 | `stage-mugarian-logistics-hq` | corporate logistics HQ derivative; lure controller/base | D + Panther knife/SMG | CORPORATE | none |
+| 22 | `stage-mugarian-clinical-trial-wing` | clinical-trial wing derivative; exactly 43 cell/rescue records and 100 s perimeter | D + Panther shield/SMG | CORPORATE | none |
+| 23 | `stage-mugarian-special-operations-armory` | red-lens armory derivative; command vehicle/auth-key base | P | CORPORATE | none |
+| 24 | `stage-mugarian-tech-tower` | tech-tower derivative; central controller + twin arena | Panther shield/commander; `boss-futago` | CORPORATE/boss | Futago gates |
+| 25 | `stage-mugarian-executive-lab` | executive-lab derivative; medical equipment + boss arena | P; `boss-mugarian-president-mutated` | CORPORATE/boss | level cap 30; mutated-president gates |
+| 26 | `stage-bay-evacuation-yard` | freight-yard reuse with new states; exactly three refrigerated trucks + destination | D + Panther SMG/commander | CORPORATE | none |
+| 27 | `stage-segawa-private-lab` | private-lab derivative; lab seal/base | P, all four roles required | CORPORATE | none |
+| 28 | `stage-national-dispersal-network` | coastal power-rig derivative; exactly four dispersal nodes | D + Panther shield/SMG/commander | FINAL | none |
+| 29 | `stage-segawa-research-core` | high-security core derivative; overseas activation line + source-stock destruction | P, six elite waves | FINAL | none; TAKUYA-Ω activation is post-story only |
+| 30 | `stage-nishijin-defense-line-takuya-omega` | exact Stage 3 location + damage/dawn overlay; evacuation buses/safe corridor | `boss-takuya-omega`; two add waves using A only | FINAL/boss | Ω gates; unlock ending -> credits -> epilogue |
+
+Stage 30 has no midbattle story dialogue. Stage 22's `43` is a finite narrative/mission record count, not 43 simultaneously animated people. Stage 29's two destruction targets must both complete before victory. RED PANTHER present in Stage 30 pre-story are defeated by TAKUYA-Ω before the battle and are not an add roster.
+
+### 17.6 Speaker, portrait, asset-readiness, and presentation ownership
+
+- Major speaker IDs for Kumaverson, Paisen, Hachi, Mizuchi, Nao, Babayaga, Crazy King, Raider, Tatara, Gantetsu, Monkey, Mayo-chan, Zakimiya, TKY, MrsChiha, Miyamoto Musashi, Ikura, Segawa, human Mugarian president, mutated president, TAKUYA-Ω, and RED PANTHER commander resolve only to their own approved existing/selected identity. The `red-lens captain`, `RED PANTHER captain`, and commander-role dialogue are the selected RED PANTHER commander identity.
+- `SYSTEM` and `PLAYER` action beats have no portrait. An offscreen/recorded speaker whose canonical label ends in `の声` or `メッセージ` has no portrait while offscreen; when that same identity appears in scene it uses its own identity. `知らない声` in Stage 13 has no portrait until the canonical Segawa reveal, after which Segawa r2 is used.
+- Minor humans without a selected/existing identity—including Ando, shelter/rail/maintenance/medical staff, researchers, doctors, nurses, evacuees, the female station worker, and Zakimiya's wife—use the selected shared `minor-human-shared-event-silhouette-r2` when visible. It remains gender/age/occupation neutral; speaker text supplies the role. No other use is allowed.
+- Every stage/event registers its background, all portraits reachable in that event, mission-object states, locked enemy/boss states, VFX, battle audio, event audio, UI icons, fonts, and ending/credits/epilogue assets in the required-runtime manifest. First install verifies and durably commits that complete set before gameplay/story/map mounts; after the gate opens, required fetches are zero.
+- Mobile acceptance applies to the name screen, seven-slot formation, every story/log/replay screen, battle/result/first-clear summary, ending/credits/epilogue, and PWA progress/retry UI at Chromium/WebKit 844x340, 844x390, and 1280x720. Keyboard, safe area, 44x44 controls, readable text, battlefield area, and the 12-40 px portrait/dialogue overlap remain mandatory.
+
+### 17.7 Luna decision boundary after closure
+
+Luna may choose module/file decomposition, immutable data representation, grapheme implementation that passes the exact contract, transaction helper structure, sprite packing/compression, crop/anchor/scale/alpha cleanup, cache batching, deterministic test-helper implementation, and spawn timestamps/lanes within each row's fixed roster and wave/group count. Luna may not choose or alter names, validation results, event IDs/order, Stage IDs/order/objectives, enemy families, boss IDs/values, unit roles/unlocks/costs, star thresholds, rewards, receipt semantics, speaker/portrait routing, story/audio profile mapping, selected assets, save namespaces, legacy/gift behavior, PWA gate, mobile thresholds, or any character identity.
+
+Luna returns to Sol only for a true conflict between locked sources, an immutable selected asset that cannot produce its required derivative, a High/Medium regression, or a technically impossible acceptance contract. Missing product wording, unlock timing, role, Stage transition, asset owner, or retry/receipt behavior is no longer an escalation reason because it is fixed above and in the standalone handoff.

@@ -203,3 +203,106 @@ test("the inventory is finite and selected paths are the only provenance entries
   assert.doesNotMatch(provenance, /mugarian-president-mutated-identity-master-r1\.png/u);
   assert.doesNotMatch(provenance, /minor-human-shared-event-portrait-r1\.png/u);
 });
+
+test("pre-implementation closure has zero product-decision gaps and an executable name/formation contract", async () => {
+  const [design, handoff] = await Promise.all([readFile(DESIGN, "utf8"), readFile(HANDOFF, "utf8")]);
+  for (const source of [design, handoff]) {
+    assert.match(source, /PRE_IMPLEMENTATION_CLOSED/u);
+    assert.match(source, /PRODUCT_DECISION_GAPS: 0/u);
+  }
+  assert.match(handoff, /LUNA_HANDOFF_READY: YES/u);
+
+  assert.match(design, /Unicode NFC normalization/u);
+  assert.match(design, /U\+0020\/U\+3000/u);
+  assert.match(design, /Intl\.Segmenter\("ja", \{ granularity: "grapheme" \}\)/u);
+  assert.match(design, /Valid length is 1-12 grapheme clusters/u);
+  assert.match(design, /isolated variation selectors/u);
+  assert.match(design, /U\+200D outside a valid emoji ZWJ sequence fail/u);
+  assert.match(design, /falls back to the last valid Version 1\.0\.0 name, or `指揮官`/u);
+  assert.match(design, /IDs, receipts, node keys, read state, and saved source text never contain the chosen name/u);
+
+  assert.match(design, /Formation has exactly seven ordered slots/u);
+  assert.match(design, /A character ID may occupy multiple slots/u);
+  assert.match(design, /count reservation, command creation, battle-resource debit, cooldown start, and receipt creation in one serialized mutation/u);
+  assert.match(design, /no command, resource, cooldown, receipt, animation, bark, or partial spawn/u);
+  assert.match(handoff, /Slot eight rejects all of them atomically/u);
+});
+
+test("all 16 units have exact primary roles and all 30 stages have one closed implementation row", async () => {
+  const design = await readFile(DESIGN, "utf8");
+  const expectedRoles = new Map([
+    ["Hachi", "skirmisher"],
+    ["Paisen", "frontline"],
+    ["Kumaverson", "heavy"],
+    ["Babayaga", "marksman"],
+    ["Nao", "support"],
+    ["Mizuchi", "suppression"],
+    ["Monkey", "engineer"],
+    ["Crazy King", "frontline"],
+    ["Raider", "suppression"],
+    ["Tatara", "heavy"],
+    ["Gantetsu", "heavy"],
+    ["Mayo-chan", "skirmisher"],
+    ["Zakimiya", "frontline"],
+    ["TKY", "skirmisher"],
+    ["MrsChiha", "marksman"],
+    ["Miyamoto Musashi", "frontline"],
+  ]);
+  const roleSection = design.match(/Primary role ownership is exact[\s\S]+?### Level cap/u)?.[0] ?? "";
+  const actualRoles = new Map(
+    [...roleSection.matchAll(/^\| ([^|]+?) \| `([^`]+)` \|$/gmu)]
+      .map((match) => [match[1].trim(), match[2]]),
+  );
+  assert.deepEqual(actualRoles, expectedRoles);
+
+  const closure = design.match(/### 17\.5 Stage content closure matrix([\s\S]+?)### 17\.6/u)?.[1] ?? "";
+  const rows = [...closure.matchAll(/^\| (\d+) \| `([^`]+)` \|/gmu)]
+    .map((match) => ({ stage: Number(match[1]), id: match[2] }));
+  assert.equal(rows.length, 30);
+  assert.deepEqual(rows.map(({ stage }) => stage), Array.from({ length: 30 }, (_, index) => index + 1));
+  assert.equal(new Set(rows.map(({ id }) => id)).size, 30);
+  assert.equal(rows[0].id, "stage-nishijin-shopping-street");
+  assert.equal(rows[28].id, "stage-segawa-research-core");
+  assert.equal(rows[29].id, "stage-nishijin-defense-line-takuya-omega");
+  assert.match(closure, /Stage 29's two destruction targets must both complete/u);
+  assert.match(closure, /Stage 30 has no midbattle story dialogue/u);
+});
+
+test("event flow, stars, receipts, unlock payloads, speakers, and required assets are closed", async () => {
+  const [design, handoff] = await Promise.all([readFile(DESIGN, "utf8"), readFile(HANDOFF, "utf8")]);
+  assert.match(design, /`v100:event:prologue`/u);
+  assert.match(design, /for every `NN` from `01` to `30`, `v100:event:sNN:pre`, `v100:event:sNN:post`, and `v100:event:sNN:first-clear-post`/u);
+  assert.match(design, /Defeat ends at a defeat result[\s\S]*without `post`, first-clear, star, reward, join, unlock, boss receipt, or next-stage unlock/u);
+  assert.match(design, /After Stage 30 first-clear finalize: `ending -> credits -> epilogue -> postgame campaign-map`/u);
+  assert.match(design, /persists `\{eventId, phase, nodeIndex, nodeKey\}`/u);
+  assert.match(design, /final armored-vehicle HP \/ current maximum HP >= 0\.70/u);
+  assert.match(design, /Three stars require >= 0\.90/u);
+  assert.match(design, /replay victory continues `result -> post -> replay-finalize -> map` and never replays `first-clear-post`/u);
+  assert.match(design, /`v100:sNN:first-clear`/u);
+  assert.match(design, /`v100:sNN:replay:<battleRunId>`/u);
+
+  const payloadSection = handoff.match(/### 10\.3 Exact first-clear payloads([\s\S]+?)### 10\.4/u)?.[1] ?? "";
+  const payloadRows = [...payloadSection.matchAll(/^\| (\d+) \| ([^|]+) \|$/gmu)];
+  assert.equal(payloadRows.length, 30);
+  assert.deepEqual(payloadRows.map((match) => Number(match[1])), Array.from({ length: 30 }, (_, index) => index + 1));
+
+  const speakerSection = handoff.match(/### 10\.4 Canonical speaker\/portrait routing by event([\s\S]+?)### 10\.5/u)?.[1] ?? "";
+  const speakerRows = [...speakerSection.matchAll(/^\| (Prologue|S\d{2}|Ending|Credits|Epilogue) \|/gmu)]
+    .map((match) => match[1]);
+  assert.deepEqual(speakerRows, [
+    "Prologue",
+    ...Array.from({ length: 30 }, (_, index) => `S${String(index + 1).padStart(2, "0")}`),
+    "Ending",
+    "Credits",
+    "Epilogue",
+  ]);
+  assert.match(speakerSection, /Zakimiya's wife -> shared silhouette/u);
+  assert.match(speakerSection, /Stage 13 `知らない声` has no portrait until Segawa is named/u);
+  assert.match(speakerSection, /RED PANTHER\/red-lens captain uses the selected commander identity/u);
+  assert.match(design, /Credits have no dialogue and no BGM/u);
+  assert.match(design, /inherits only the ambience already owned by that source background route/u);
+
+  assert.match(design, /Every stage\/event registers its background, all portraits reachable in that event, mission-object states, locked enemy\/boss states, VFX, battle audio, event audio, UI icons, fonts, and ending\/credits\/epilogue assets/u);
+  assert.match(design, /after the gate opens, required fetches are zero/u);
+  assert.match(handoff, /Return to Sol only for: \(1\) a true contradiction[\s\S]*\(4\) a technically impossible acceptance contract/u);
+});
