@@ -84,6 +84,10 @@ function transportPathFor(asset) {
   return `${basePath}${asset.bundlePath ?? asset.sourcePath ?? asset.path}`.replace(/\/+/g, "/");
 }
 
+function logicalPathFor(asset) {
+  return `${basePath}${asset.path}`.replace(/\/+/g, "/");
+}
+
 /**
  * Compare the exact base and candidate manifests by logical path and content
  * hash. Counts are deliberately absent from this planner: the fixture must
@@ -340,6 +344,14 @@ const retainedCandidateLogicalCount = retainedCandidateAssets.length;
 const candidateUpdatePlan = diffAssetManifests(oldManifest, candidateManifest, { retainedHashes });
 const candidateDownloadableAssets = candidateUpdatePlan.downloadable;
 const candidateDownloadTransportPaths = new Set(candidateDownloadableAssets.map(transportPathFor));
+// AudioMixer intentionally consumes the logical audio source URL for runtime
+// playback even when the update manifest stores that same asset in the shared
+// audio bundle. Keep those source reads separate from PWA update transport:
+// update downloads remain candidate-derived bundle/source paths, while an
+// unknown runtime path still fails the incident contract below.
+const candidateBundledAudioSourcePaths = new Set(candidateManifest.assets
+  .filter((asset) => asset.bundlePath && asset.path.startsWith("/audio/"))
+  .map(logicalPathFor));
 const unchangedStoredAssets = manifestDelta.unchanged.filter((asset) => retainedHashes.has(asset.hash));
 const unchangedMissingAssets = manifestDelta.unchanged.filter((asset) => !retainedHashes.has(asset.hash));
 const allowedDownloadPaths = new Set([
@@ -652,12 +664,16 @@ try {
   const incidentAssetRequests = candidateTransportRequests
     .slice(incidentTransportStart)
     .map(({ pathname }) => pathname);
-  const incidentUnexpectedRequests = incidentAssetRequests.filter((pathname) => (
-    !candidateDownloadTransportPaths.has(pathname)
-  ));
   const incidentUnchangedStoredRefetches = incidentAssetRequests.filter((pathname) => (
     pathname !== bundlePathname
     && unchangedStoredAssets.some((asset) => transportPathFor(asset) === pathname)
+  ));
+  const incidentRuntimeAudioSourceRequests = incidentAssetRequests.filter((pathname) => (
+    candidateBundledAudioSourcePaths.has(pathname)
+  ));
+  const incidentUnexpectedRequests = incidentAssetRequests.filter((pathname) => (
+    !candidateDownloadTransportPaths.has(pathname)
+    && !candidateBundledAudioSourcePaths.has(pathname)
   ));
   const initialIncidentRequests = incidentRequests.filter((request) => request.index <= 4);
   const incidentRetryRequests = incidentRequests.filter((request) => request.index > 4);
@@ -680,12 +696,14 @@ try {
     && !initialIncidentRequests[3].completed
     && incidentRetryRequests.length <= 1
     && incidentRetryRequests.every((request) => !request.completed)
+    && incidentRuntimeAudioSourceRequests.every((pathname) => candidateBundledAudioSourcePaths.has(pathname))
     && incidentUnexpectedRequests.length === 0
     && incidentUnchangedStoredRefetches.length === 0
   ), {
     startingLogicalAssets: partialCache.logicalSatisfied,
     exactReleaseDelta: [...candidatePendingReleaseDeltaTransportPaths],
     incidentAssetRequests,
+    incidentRuntimeAudioSourceRequests,
     incidentUnexpectedRequests,
     incidentUnchangedStoredRefetches,
     incidentChangedRequests,
