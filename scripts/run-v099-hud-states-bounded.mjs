@@ -84,7 +84,7 @@ export async function runCanonicalHudStates({
         .then(JSON.parse)
         .catch(() => null);
       const passed = execution.code === 0 && isolatedHudStatePassed(summary, stateId);
-      const failureText = `${execution.output ?? ""}\n${summary?.results?.[0]?.error ?? ""}`;
+      const failureText = `${execution.output ?? ""}\n${summary?.results?.[0]?.error ?? ""}\n${summary?.cases?.[0]?.error ?? ""}`;
       const retryableTargetClosed = execution.code !== 0 && isRetryableTargetClosedLog(failureText);
       attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, retryableTargetClosed, summary });
       if (passed) break;
@@ -124,7 +124,7 @@ export async function runOneHudStateBounded({
       .then(JSON.parse)
       .catch(() => null);
     const passed = execution.code === 0 && isolatedHudStatePassed(summary, stateId);
-    const failureText = `${execution.output ?? ""}\n${summary?.results?.[0]?.error ?? ""}`;
+    const failureText = `${execution.output ?? ""}\n${summary?.results?.[0]?.error ?? ""}\n${summary?.cases?.[0]?.error ?? ""}`;
     const retryableTargetClosed = execution.code !== 0 && isRetryableTargetClosedLog(failureText);
     attempts.push({ attempt, code: execution.code, signal: execution.signal ?? null, passed, retryableTargetClosed, summary });
     if (passed) break;

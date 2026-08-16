@@ -84,6 +84,31 @@ test("HUD state aggregator retries only exact target-close and still requires a 
   assert.equal(report.states[0].attempts.length, 2);
 });
 
+test("HUD state aggregator classifies target-close errors from the canonical cases envelope", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "hud-states-cases-retry-"));
+  let calls = 0;
+  const report = await runCanonicalHudStates({
+    evidenceRoot: root,
+    runAttempt: async ({ stateId, attempt, attemptDir }) => {
+      calls += 1;
+      if (stateId === CANONICAL_HUD_STATES[0] && attempt === 1) {
+        await writeSummary(attemptDir, {
+          total: 1,
+          passed: 0,
+          failed: 1,
+          cases: [{ error: "Error: webkit-736x414/deployment-banner/settle: Error: page.waitForFunction: Target page, context or browser has been closed" }],
+        });
+        return { code: 1, output: "Final-remediation QA failed 1/1 cases\n" };
+      }
+      await writeSummary(attemptDir, passedSummary(stateId));
+      return { code: 0, output: "passed\n" };
+    },
+  });
+  assert.equal(report.status, "passed");
+  assert.equal(calls, CANONICAL_HUD_STATES.length + 1);
+  assert.equal(report.states[0].attempts.length, 2);
+});
+
 test("HUD state aggregator never retries a product assertion", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "hud-states-product-fail-"));
   let calls = 0;
