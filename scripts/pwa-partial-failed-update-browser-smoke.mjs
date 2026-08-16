@@ -1,7 +1,8 @@
 // Persistent partial-failed existing-PWA recovery smoke.
 //
 // The old generation is first installed completely. Its content-addressed
-// cache is then reduced, in-place, to 156 exact shared content hashes while
+// cache is then reduced, in-place, to the exact shared content hashes derived
+// from the base/candidate manifests while
 // the old manifest, Service Worker registration, browser
 // profile, and save remain untouched. The candidate must recover that same
 // profile through a failed audio transport, close/relaunch, a real >30 second
@@ -14,6 +15,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { CAMPAIGN_STAGES, createDefaultCampaignSave, serializeCampaignSave } from "../app/campaign.js";
+import { diffAssetManifests, validateAssetManifest } from "../app/pwaAssetManifest.js";
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { chromium, webkit } from "playwright";
 
@@ -34,6 +36,7 @@ const basePath = "/Zombieee";
 const scopePath = `${basePath}/`;
 const bundlePathname = `${basePath}/pwa-bundles/audio-v1.bin`;
 const saveKey = "nishijin-campaign-v1";
+const commitLogKey = "__qa_pwa_commit_messages__";
 
 if (!oldRootInput || !candidateRootInput) {
   throw new Error("PWA_PARTIAL_UPDATE_OLD_ROOT and PWA_PARTIAL_UPDATE_CANDIDATE_ROOT are required");
@@ -75,6 +78,41 @@ function sha256(value) {
 
 async function readManifest(root) {
   return JSON.parse(await readFile(path.join(root, "asset-manifest.json"), "utf8"));
+}
+
+function transportPathFor(asset) {
+  return `${basePath}${asset.bundlePath ?? asset.sourcePath ?? asset.path}`.replace(/\/+/g, "/");
+}
+
+/**
+ * Compare the exact base and candidate manifests by logical path and content
+ * hash. Counts are deliberately absent from this planner: the fixture must
+ * continue to describe the candidate it was given rather than a remembered
+ * release size.
+ */
+function compareManifestPathHashes(baseManifest, candidateManifest) {
+  const baseByPath = new Map(baseManifest.assets.map((asset) => [asset.path, asset]));
+  const candidateByPath = new Map(candidateManifest.assets.map((asset) => [asset.path, asset]));
+  const unchanged = [];
+  const changed = [];
+  const missingNew = [];
+  const removed = [];
+
+  for (const asset of [...candidateManifest.assets].sort((left, right) => left.path.localeCompare(right.path))) {
+    const base = baseByPath.get(asset.path);
+    if (!base) {
+      missingNew.push(asset);
+    } else if (base.hash === asset.hash) {
+      unchanged.push(asset);
+    } else {
+      changed.push(asset);
+    }
+  }
+  for (const asset of [...baseManifest.assets].sort((left, right) => left.path.localeCompare(right.path))) {
+    if (!candidateByPath.has(asset.path)) removed.push(asset);
+  }
+
+  return { baseByPath, candidateByPath, unchanged, changed, missingNew, removed };
 }
 
 function staticTarget(root, pathname) {
@@ -128,8 +166,13 @@ function writeHeaders(response, status, length) {
 }
 
 function serveSlow(response, body, requestRecord) {
-  const chunkCount = 32;
-  const chunkBytes = Math.ceil(body.byteLength / chunkCount);
+  // Keep each write below the normal HTTP high-water mark so the hosted
+  // browser receives a real sequence of readable stream chunks. The transfer
+  // still lasts beyond the production 30 second no-progress boundary, but a
+  // single multi-hundred-KB write must not turn the remainder into an opaque
+  // buffered response in WebKit/Chromium.
+  const chunkBytes = Math.min(64 * 1024, Math.max(1, body.byteLength));
+  const chunkCount = Math.max(2, Math.ceil(body.byteLength / chunkBytes));
   const intervalMs = Math.ceil(slowDurationMs / Math.max(1, chunkCount - 1));
   let offset = 0;
   const startedAt = Date.now();
@@ -250,45 +293,86 @@ const candidateManifest = await readManifest(candidateRoot);
 // deliberately pinned fixture, but CI must not carry a stale release literal
 // into the next hotfix.
 const oldVersion = oldVersionOverride ?? oldManifest.version;
-record("old and candidate roots have the fixed old-416/candidate-415 release contract", (
-  oldManifest.version === oldVersion
+const oldValidation = validateAssetManifest(oldManifest);
+const candidateValidation = validateAssetManifest(candidateManifest);
+const manifestDelta = compareManifestPathHashes(oldManifest, candidateManifest);
+record("the exact base and candidate manifests are valid and compared by path plus content hash", (
+  oldValidation.valid
+  && candidateValidation.valid
+  && oldManifest.version === oldVersion
   && candidateManifest.version === RELEASE_VERSION
-  && oldManifest.assets.length === 416
-  && candidateManifest.assets.length === 415
+  && manifestDelta.unchanged.every((asset) => manifestDelta.baseByPath.get(asset.path)?.hash === asset.hash)
+  && manifestDelta.changed.every((asset) => manifestDelta.baseByPath.get(asset.path)?.hash !== asset.hash)
+  && manifestDelta.missingNew.every((asset) => !manifestDelta.baseByPath.has(asset.path))
+  && manifestDelta.removed.every((asset) => !manifestDelta.candidateByPath.has(asset.path))
 ), {
   oldVersion: oldManifest.version,
   candidateVersion: candidateManifest.version,
   oldAssets: oldManifest.assets.length,
   candidateAssets: candidateManifest.assets.length,
+  baseValidationErrors: oldValidation.errors,
+  candidateValidationErrors: candidateValidation.errors,
+  unchanged: manifestDelta.unchanged.length,
+  changed: manifestDelta.changed.length,
+  missingNew: manifestDelta.missingNew.length,
+  removed: manifestDelta.removed.length,
 });
 
 const oldHashes = new Set(oldManifest.assets.map((asset) => asset.hash));
 const candidateHashes = new Set(candidateManifest.assets.map((asset) => asset.hash));
-const candidateNewHashAssets = candidateManifest.assets.filter((asset) => !oldHashes.has(asset.hash));
-const candidateNewHashes = new Set(candidateNewHashAssets.map((asset) => asset.hash));
-const candidateNewTransportPaths = new Set(
-  candidateNewHashAssets.map((asset) => `${basePath}${asset.sourcePath ?? asset.path}`.replace(/\/+/g, "/")),
-);
-const retainedOldAssets = [...oldManifest.assets]
+const candidateMissingNewAssets = manifestDelta.missingNew;
+const candidateMissingNewHashes = new Set(candidateMissingNewAssets.map((asset) => asset.hash));
+const candidateReleaseDeltaAssets = [...manifestDelta.changed, ...manifestDelta.missingNew];
+// The incident starts from a deterministic partial cache. The retained hash
+// subset is selected from the exact shared hash set by a stable stride, rather
+// than by a remembered asset count; a new candidate therefore gets a valid
+// partial fixture even when its manifest cardinality changes.
+const sharedHashCandidates = [...new Set([...oldManifest.assets]
   .sort((left, right) => left.path.localeCompare(right.path))
   .filter((asset) => candidateHashes.has(asset.hash))
-  .slice(0, 156);
-const retainedHashes = new Set(retainedOldAssets.map((asset) => asset.hash));
+  .map((asset) => asset.hash))];
+const retainedHashStride = 3;
+const retainedHashes = new Set(sharedHashCandidates.filter((_, index) => index % retainedHashStride === 0));
+const retainedOldAssets = oldManifest.assets.filter((asset) => retainedHashes.has(asset.hash));
 const retainedCandidateAssets = candidateManifest.assets.filter((asset) => retainedHashes.has(asset.hash));
-record("the candidate declares an exact non-empty hash delta instead of a stale same-pack assumption", (
-  oldHashes.size === 414
-  && candidateHashes.size === 413
-  && candidateNewHashes.size > 0
-  && candidateNewHashAssets.length === candidateNewHashes.size
-  && retainedHashes.size === 156
-  && retainedCandidateAssets.length === 156
+const retainedOldLogicalCount = retainedOldAssets.length;
+const retainedCandidateLogicalCount = retainedCandidateAssets.length;
+const candidateUpdatePlan = diffAssetManifests(oldManifest, candidateManifest, { retainedHashes });
+const candidateDownloadableAssets = candidateUpdatePlan.downloadable;
+const candidateDownloadTransportPaths = new Set(candidateDownloadableAssets.map(transportPathFor));
+const unchangedStoredAssets = manifestDelta.unchanged.filter((asset) => retainedHashes.has(asset.hash));
+const unchangedMissingAssets = manifestDelta.unchanged.filter((asset) => !retainedHashes.has(asset.hash));
+const allowedDownloadPaths = new Set([
+  ...candidateUpdatePlan.changed,
+  ...candidateUpdatePlan.added,
+  ...candidateUpdatePlan.missing,
+].map((asset) => asset.path));
+record("the candidate update plan derives changed, missing/new, removed, and retained sets without a release-size literal", (
+  oldHashes.size > 0
+  && candidateHashes.size > 0
+  && candidateReleaseDeltaAssets.length > 0
+  && candidateMissingNewAssets.length === manifestDelta.missingNew.length
+  && retainedHashes.size > 0
+  && retainedHashes.size < sharedHashCandidates.length
+  && retainedOldLogicalCount >= retainedHashes.size
+  && retainedCandidateLogicalCount >= retainedHashes.size
+  && candidateDownloadableAssets.every((asset) => allowedDownloadPaths.has(asset.path))
+  && candidateDownloadableAssets.every((asset) => !unchangedStoredAssets.some((unchanged) => unchanged.path === asset.path))
+  && candidateUpdatePlan.unchanged.every((asset) => retainedHashes.has(asset.hash))
 ), {
   oldDistinctHashes: oldHashes.size,
   candidateDistinctHashes: candidateHashes.size,
-  changedHashes: candidateNewHashes.size,
-  changedLogicalAssets: candidateNewHashAssets.length,
-  changedBytes: candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0),
+  manifestChanged: manifestDelta.changed.length,
+  manifestMissingNew: manifestDelta.missingNew.length,
+  manifestRemoved: manifestDelta.removed.length,
+  unchangedStored: unchangedStoredAssets.length,
+  unchangedMissing: unchangedMissingAssets.length,
+  changedHashes: candidateMissingNewHashes.size,
+  changedLogicalAssets: candidateReleaseDeltaAssets.length,
+  changedBytes: candidateReleaseDeltaAssets.reduce((sum, asset) => sum + asset.bytes, 0),
   retainedSharedHashes: retainedHashes.size,
+  downloadTargets: candidateDownloadableAssets.length,
+  downloadTargetBytes: candidateUpdatePlan.downloadBytes,
 });
 
 const save = createDefaultCampaignSave();
@@ -335,10 +419,34 @@ async function openPersistent(userDataDir) {
     deviceScaleFactor: 3,
     hasTouch: true,
   });
-  await context.addInitScript(({ key, raw }) => {
+  await context.addInitScript(({ key, raw, commitKey }) => {
     Object.defineProperty(window.navigator, "standalone", { value: true, configurable: true });
     if (!window.localStorage.getItem(key)) window.localStorage.setItem(key, raw);
-  }, { key: saveKey, raw: saveFixture });
+    try {
+      const prototype = window.ServiceWorker?.prototype;
+      const original = prototype?.postMessage;
+      if (typeof original === "function" && !original.__qaPwaCommitWrapper) {
+        const wrapped = function qaPwaCommitMessage(message, ...args) {
+          const result = original.call(this, message, ...args);
+          if (message?.type === "pwa:commit-manifest") {
+            const entries = JSON.parse(window.localStorage.getItem(commitKey) ?? "[]");
+            entries.push({
+              version: message.manifest?.version ?? null,
+              releaseSha: message.manifest?.releaseSha ?? null,
+              at: Date.now(),
+            });
+            window.localStorage.setItem(commitKey, JSON.stringify(entries));
+          }
+          return result;
+        };
+        Object.defineProperty(wrapped, "__qaPwaCommitWrapper", { value: true });
+        prototype.postMessage = wrapped;
+      }
+    } catch {
+      // Some engines expose a non-configurable worker prototype. The product
+      // flow remains authoritative; this only adds commit-count evidence.
+    }
+  }, { key: saveKey, raw: saveFixture, commitKey: commitLogKey });
   const page = await context.newPage();
   attachDiagnostics(page);
   return { context, page };
@@ -362,12 +470,16 @@ async function workerState(page) {
   });
 }
 
-async function waitForActiveVersion(page, version, timeoutMs = 180_000) {
+function activeMatchesManifest(active, manifest, version = manifest.version) {
+  return active?.version === version && active?.releaseSha === manifest.releaseSha;
+}
+
+async function waitForActiveGeneration(page, manifest, { version = manifest.version, timeoutMs = 180_000 } = {}) {
   const startedAt = Date.now();
   let observed = null;
   while (Date.now() - startedAt < timeoutMs) {
     observed = await workerState(page);
-    if (observed?.state?.active?.version === version) return observed;
+    if (activeMatchesManifest(observed?.state?.active, manifest, version)) return observed;
     await page.waitForTimeout(250);
   }
   return observed;
@@ -397,6 +509,24 @@ async function currentSave(page) {
   return page.evaluate((key) => localStorage.getItem(key), saveKey);
 }
 
+async function commitMessages(page) {
+  return page.evaluate((key) => {
+    try {
+      const entries = JSON.parse(localStorage.getItem(key) ?? "[]");
+      return Array.isArray(entries) ? entries : [];
+    } catch {
+      return [];
+    }
+  }, commitLogKey);
+}
+
+async function commitCountFor(page, manifest) {
+  const entries = await commitMessages(page);
+  return entries.filter((entry) => (
+    entry.version === manifest.version && entry.releaseSha === manifest.releaseSha
+  )).length;
+}
+
 async function waitForAudioRequests(mode, count, timeoutMs = 120_000) {
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
@@ -416,11 +546,15 @@ try {
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "ダウンロードを開始" }).click();
   await page.getByRole("button", { name: "ゲームを始める" }).waitFor({ state: "visible", timeout: 300_000 });
-  const oldWorker = await waitForActiveVersion(page, oldVersion, 30_000);
+  const oldWorker = await waitForActiveGeneration(page, oldManifest, { version: oldVersion, timeoutMs: 30_000 });
+  const oldCache = await cacheState(page, oldManifest);
+  const oldCommitCount = await commitCountFor(page, oldManifest);
   record("the same profile first owns a complete committed old generation", (
-    oldWorker?.state?.active?.version === oldVersion
-    && (await cacheState(page, oldManifest)).logicalSatisfied === 416
-  ), { oldActiveVersion: oldWorker?.state?.active?.version, cache: await cacheState(page, oldManifest) });
+    activeMatchesManifest(oldWorker?.state?.active, oldManifest, oldVersion)
+    && oldCache.logicalSatisfied === oldManifest.assets.length
+    && oldCache.assetEntries === oldHashes.size
+    && oldCommitCount === 1
+  ), { oldActiveVersion: oldWorker?.state?.active?.version, cache: oldCache, oldCommitCount });
 
   const partial = await page.evaluate(async (retainedHashList) => {
     const retained = new Set(retainedHashList);
@@ -435,12 +569,19 @@ try {
   const partialCache = await cacheState(page, oldManifest);
   const partialWorker = await workerState(page);
   const oldSaveRaw = await currentSave(page);
-  record("the incident fixture is an old active generation with exactly 156/416 assets and the same raw save", (
-    partial.retainedHashes === 156
-    && partialCache.logicalSatisfied === 156
-    && partialWorker.state?.active?.version === oldVersion
+  record("the incident fixture retains the derived shared hashes in the old active generation and the same raw save", (
+    partial.retainedHashes === retainedHashes.size
+    && partialCache.logicalSatisfied === retainedOldLogicalCount
+    && activeMatchesManifest(partialWorker.state?.active, oldManifest, oldVersion)
     && sha256(oldSaveRaw ?? "") === saveFixtureHash
-  ), { partial, partialCache, activeVersion: partialWorker.state?.active?.version, saveHash: sha256(oldSaveRaw ?? "") });
+  ), {
+    partial,
+    partialCache,
+    retainedSharedHashes: retainedHashes.size,
+    retainedOldLogicalCount,
+    activeVersion: partialWorker.state?.active?.version,
+    saveHash: sha256(oldSaveRaw ?? ""),
+  });
 
   await context.close();
   context = null;
@@ -452,11 +593,24 @@ try {
   const candidateManifestFromPage = await page.evaluate(async () => (
     await (await fetch(new URL("asset-manifest.json", location.href), { cache: "no-store" })).json()
   ));
+  const candidateCacheBefore = await cacheState(page);
+  const candidateHashesBeforeRepair = new Set(await cacheHashes(page));
+  const candidatePendingDownloadableAssets = candidateDownloadableAssets.filter((asset) => (
+    !candidateHashesBeforeRepair.has(asset.hash)
+  ));
+  const candidatePendingReleaseDeltaAssets = candidateReleaseDeltaAssets.filter((asset) => (
+    !candidateHashesBeforeRepair.has(asset.hash)
+  ));
+  const candidatePendingReleaseDeltaTransportPaths = new Set(
+    candidatePendingReleaseDeltaAssets.map(transportPathFor),
+  );
   record(`the same profile sees ${RELEASE_VERSION} without uninstall, storage clear, or profile replacement`, (
-    candidateManifestFromPage.version === RELEASE_VERSION
-    && (await cacheState(page)).logicalSatisfied === 156
+    candidateManifestFromPage.version === candidateManifest.version
+    && candidateManifestFromPage.releaseSha === candidateManifest.releaseSha
+    && candidateCacheBefore.logicalSatisfied >= retainedCandidateLogicalCount
+    && candidateCacheBefore.retainedSatisfied === retainedCandidateLogicalCount
     && (await currentSave(page)) === oldSaveRaw
-  ), { candidateVersion: candidateManifestFromPage.version, userDataDir, cache: await cacheState(page) });
+  ), { candidateVersion: candidateManifestFromPage.version, userDataDir, cache: candidateCacheBefore });
 
   const waiting = await page.evaluate(async () => {
     const registration = await navigator.serviceWorker.ready;
@@ -469,6 +623,7 @@ try {
 
   const repairButton = page.getByRole("button", { name: "不足分だけ再取得" });
   await repairButton.waitFor({ state: "visible", timeout: 60_000 });
+  const incidentTransportStart = candidateTransportRequests.length;
   await repairButton.click();
   // The held fourth request becomes terminal at the production 30 second
   // no-progress boundary. Keep the observation budget outside that boundary
@@ -479,18 +634,34 @@ try {
   });
   const incidentRequests = await waitForAudioRequests("incident", 4, 30_000);
   const incidentProgress = await page.locator(".pwa-progress-line").textContent();
+  const incidentProgressMatch = /^(\d+) \/ (\d+)件/u.exec(incidentProgress ?? "");
+  const incidentProgressCompleted = incidentProgressMatch ? Number(incidentProgressMatch[1]) : null;
+  const incidentProgressTotal = incidentProgressMatch ? Number(incidentProgressMatch[2]) : null;
   const incidentCategory = await page.getByText("音声を取得中", { exact: true }).count();
   const failureCounter = await page.getByText("失敗 3件", { exact: true }).count();
   const incidentChangedRequests = candidateTransportRequests
-    .filter(({ pathname }) => candidateNewTransportPaths.has(pathname))
+    .filter(({ pathname }) => candidatePendingReleaseDeltaTransportPaths.has(pathname))
     .map(({ pathname }) => pathname);
+  const incidentAssetRequests = candidateTransportRequests
+    .slice(incidentTransportStart)
+    .map(({ pathname }) => pathname);
+  const incidentUnexpectedRequests = incidentAssetRequests.filter((pathname) => (
+    !candidateDownloadTransportPaths.has(pathname)
+  ));
+  const incidentUnchangedStoredRefetches = incidentAssetRequests.filter((pathname) => (
+    pathname !== bundlePathname
+    && unchangedStoredAssets.some((asset) => transportPathFor(asset) === pathname)
+  ));
   const initialIncidentRequests = incidentRequests.filter((request) => request.index <= 4);
   const incidentRetryRequests = incidentRequests.filter((request) => request.index > 4);
   record("the physical incident class fetches the exact release delta before exposing three failed pending requests and one held request", (
-    partialCache.logicalSatisfied === 156
-    && new Set(incidentChangedRequests).size === candidateNewTransportPaths.size
-    && incidentChangedRequests.length === candidateNewTransportPaths.size
-    && new RegExp(`^${candidateNewHashAssets.length} \\/ ${candidateManifest.assets.length - 156}件`).test(incidentProgress ?? "")
+    partialCache.logicalSatisfied === retainedOldLogicalCount
+    && new Set(incidentChangedRequests).size === candidatePendingReleaseDeltaTransportPaths.size
+    && incidentChangedRequests.length === candidatePendingReleaseDeltaTransportPaths.size
+    && incidentProgressCompleted !== null
+    && incidentProgressTotal === candidatePendingDownloadableAssets.length
+    && incidentProgressCompleted >= candidatePendingReleaseDeltaTransportPaths.size
+    && incidentProgressCompleted <= incidentProgressTotal
     && incidentCategory === 1
     && failureCounter === 1
     // Preserve the strict initial concurrency contract. A causally separate
@@ -501,11 +672,21 @@ try {
     && !initialIncidentRequests[3].completed
     && incidentRetryRequests.length <= 1
     && incidentRetryRequests.every((request) => !request.completed)
+    && incidentUnexpectedRequests.length === 0
+    && incidentUnchangedStoredRefetches.length === 0
   ), {
     startingLogicalAssets: partialCache.logicalSatisfied,
-    exactReleaseDelta: [...candidateNewTransportPaths],
+    exactReleaseDelta: [...candidatePendingReleaseDeltaTransportPaths],
+    incidentAssetRequests,
+    incidentUnexpectedRequests,
+    incidentUnchangedStoredRefetches,
     incidentChangedRequests,
     incidentProgress,
+    incidentProgressCompleted,
+    incidentProgressTotal,
+    expectedReleaseDeltaCount: candidatePendingReleaseDeltaTransportPaths.size,
+    expectedDownloadableCount: candidatePendingDownloadableAssets.length,
+    candidateDownloadableCount: candidateDownloadableAssets.length,
     incidentCategory,
     failureCounter,
     initialIncidentRequests: initialIncidentRequests.map(({ mode, index, completed }) => ({ mode, index, completed })),
@@ -518,15 +699,22 @@ try {
   const cancelledCache = await cacheState(page);
   const hashesBeforeRecovery = new Set(await cacheHashes(page));
   const successfulBeforeRecoveryAssets = candidateManifest.assets.filter((asset) => hashesBeforeRecovery.has(asset.hash));
-  const successfulBeforeRecoveryPaths = new Set(
-    successfulBeforeRecoveryAssets.map((asset) => `${basePath}${asset.sourcePath ?? asset.path}`.replace(/\/+/g, "/")),
+  const successfulBeforeRecoveryTransportPaths = new Set(successfulBeforeRecoveryAssets.map(transportPathFor));
+  const unchangedStoredDirectTransportPaths = new Set(
+    unchangedStoredAssets.filter((asset) => !asset.bundlePath).map(transportPathFor),
   );
   const cancelledWorker = await workerState(page);
   record("cancel preserves the old assets plus newly successful assets, old manifest, and save", (
-    cancelledCache.logicalSatisfied >= 156
-    && cancelledWorker.state?.active?.version === oldVersion
+    cancelledCache.logicalSatisfied >= retainedCandidateLogicalCount
+    && activeMatchesManifest(cancelledWorker.state?.active, oldManifest, oldVersion)
     && (await currentSave(page)) === oldSaveRaw
-  ), { startingLogicalAssets: partialCache.logicalSatisfied, cancelledCache, activeVersion: cancelledWorker.state?.active?.version });
+  ), {
+    startingLogicalAssets: partialCache.logicalSatisfied,
+    retainedSharedHashes: retainedHashes.size,
+    retainedCandidateLogicalCount,
+    cancelledCache,
+    activeVersion: cancelledWorker.state?.active?.version,
+  });
 
   await context.close();
   context = null;
@@ -535,7 +723,7 @@ try {
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   const relaunchedBefore = await workerState(page);
   record("close/relaunch retains the partial cache, old active manifest, and exact raw save", (
-    relaunchedBefore.state?.active?.version === oldVersion
+    activeMatchesManifest(relaunchedBefore.state?.active, oldManifest, oldVersion)
     && (await cacheState(page)).logicalSatisfied === cancelledCache.logicalSatisfied
     && (await currentSave(page)) === oldSaveRaw
   ), { activeVersion: relaunchedBefore.state?.active?.version, cache: await cacheState(page) });
@@ -561,7 +749,7 @@ try {
     && audioRequests.filter((request) => request.mode === "recovery").length === 2
   ), { requestCountWhilePaused });
 
-  const updatedWorker = await waitForActiveVersion(page, RELEASE_VERSION, 180_000);
+  const updatedWorker = await waitForActiveGeneration(page, candidateManifest, { timeoutMs: 180_000 });
   const finalCache = await cacheState(page);
   const finalSaveRaw = await currentSave(page);
   const completedRecoveryRequests = audioRequests.filter((request) => request.mode === "recovery");
@@ -573,25 +761,41 @@ try {
     && slow.progress.length >= 30
     && slow.progress.every((entry, index, entries) => index === 0 || entry.bytes > entries[index - 1].bytes)
   ), { requestCount: completedRecoveryRequests.length, slowDurationMs: slow?.durationMs, progressEvents: slow?.progress.length });
-  record(`partial recovery reaches 415/415, failed 0, commits ${RELEASE_VERSION}, and preserves raw save bytes`, (
-    finalCache.logicalSatisfied === 415
-    && finalCache.assetEntries === 413
-    && updatedWorker?.state?.active?.version === RELEASE_VERSION
+  record(`partial recovery reaches the candidate manifest, failed 0, commits ${RELEASE_VERSION}, and preserves raw save bytes`, (
+    finalCache.logicalSatisfied === candidateManifest.assets.length
+    && finalCache.assetEntries === candidateHashes.size
+    && activeMatchesManifest(updatedWorker?.state?.active, candidateManifest)
     && updatedWorker.activeWorkerState === "activated"
     && finalSaveRaw === oldSaveRaw
-  ), { finalCache, activeVersion: updatedWorker?.state?.active?.version, savePreserved: finalSaveRaw === oldSaveRaw });
+    && (await commitCountFor(page, candidateManifest)) === 1
+  ), {
+    finalCache,
+    activeVersion: updatedWorker?.state?.active?.version,
+    savePreserved: finalSaveRaw === oldSaveRaw,
+    candidateCommitCount: await commitCountFor(page, candidateManifest),
+  });
 
   const recoveryAssetRequests = candidateTransportRequests
     .slice(recoveryTransportStart)
     .map((request) => request.pathname);
+  const successfulRefetches = recoveryAssetRequests.filter((pathname) => (
+    pathname !== bundlePathname && successfulBeforeRecoveryTransportPaths.has(pathname)
+  ));
+  const unchangedHashRefetches = recoveryAssetRequests.filter((pathname) => (
+    pathname !== bundlePathname && unchangedStoredDirectTransportPaths.has(pathname)
+  ));
   record("recovery fetches only failed or pending content, never re-fetches any successful asset, and does not fetch the bundle per slice", (
-    recoveryAssetRequests.filter((pathname) => successfulBeforeRecoveryPaths.has(pathname)).length === 0
+    recoveryAssetRequests.every((pathname) => candidateDownloadTransportPaths.has(pathname))
+    && successfulRefetches.length === 0
+    && unchangedHashRefetches.length === 0
     && recoveryAssetRequests.filter((pathname) => pathname === bundlePathname).length === 2
   ), {
     successfulBeforeRecoveryHashes: hashesBeforeRecovery.size,
     successfulBeforeRecoveryLogicalAssets: successfulBeforeRecoveryAssets.length,
     recoveryAssetRequests,
-    successfulRefetches: recoveryAssetRequests.filter((pathname) => successfulBeforeRecoveryPaths.has(pathname)),
+    downloadTargetTransportPaths: [...candidateDownloadTransportPaths],
+    successfulRefetches,
+    unchangedHashRefetches,
   });
 
   await context.close();
@@ -601,7 +805,7 @@ try {
   await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
   const committedRelaunch = await workerState(page);
   record(`relaunch keeps the committed ${RELEASE_VERSION} generation and save`, (
-    committedRelaunch.state?.active?.version === RELEASE_VERSION
+    activeMatchesManifest(committedRelaunch.state?.active, candidateManifest)
     && (await currentSave(page)) === oldSaveRaw
   ), { activeVersion: committedRelaunch.state?.active?.version });
 
@@ -610,7 +814,7 @@ try {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
     await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 60_000 });
     record("offline relaunch uses the committed generation without changing the save", (
-      (await workerState(page)).state?.active?.version === RELEASE_VERSION
+      activeMatchesManifest((await workerState(page)).state?.active, candidateManifest)
       && (await currentSave(page)) === oldSaveRaw
     ));
     await context.setOffline(false);
@@ -629,7 +833,7 @@ try {
   await page.waitForTimeout(1_000);
   record("rollback restores the old generation without changing the save", (
     rollback?.type === "pwa:rolled-back"
-    && (await workerState(page)).state?.active?.version === oldVersion
+    && activeMatchesManifest((await workerState(page)).state?.active, oldManifest, oldVersion)
     && (await currentSave(page)) === oldSaveRaw
   ), { rollback });
 } catch (error) {
@@ -667,7 +871,20 @@ try {
     oldManifest: { version: oldManifest.version, releaseSha: oldManifest.releaseSha, assets: oldManifest.assets.length },
     candidateManifest: { version: candidateManifest.version, releaseSha: candidateManifest.releaseSha, assets: candidateManifest.assets.length },
     persistentProfile: userDataDir,
-    fixture: { logicalSatisfied: 156, total: 416, saveSha256: saveFixtureHash },
+    fixture: {
+      logicalSatisfied: retainedOldLogicalCount,
+      retainedCandidateLogicalCount,
+      retainedSharedHashes: retainedHashes.size,
+      total: oldManifest.assets.length,
+      candidateTotal: candidateManifest.assets.length,
+      candidateDownloadTargets: candidateDownloadableAssets.length,
+      unchangedStored: unchangedStoredAssets.length,
+      unchangedMissing: unchangedMissingAssets.length,
+      manifestChanged: manifestDelta.changed.length,
+      manifestMissingNew: manifestDelta.missingNew.length,
+      manifestRemoved: manifestDelta.removed.length,
+      saveSha256: saveFixtureHash,
+    },
     transport: { stallDurationMs, slowDurationMs, audioRequests },
     results,
     failures,

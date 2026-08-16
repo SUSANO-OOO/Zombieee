@@ -4,8 +4,9 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import sharp from "sharp";
 
+import { productionEnemyRuntimeContract } from "../app/productionEnemyRuntime.js";
 import { productionVisualIntegrityInventory } from "../app/visualIntegrityInventory.js";
-import { spriteFrameFor } from "../app/spriteManifest.js";
+import { SPRITE_STATES, spriteFrameFor } from "../app/spriteManifest.js";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import {
   classifySupersededAssetRequestFailures,
@@ -31,14 +32,46 @@ await mkdir(outputDir, { recursive: true });
 await mkdir(compactDir, { recursive: true });
 
 const invariant = (condition, message) => { if (!condition) throw new Error(message); };
+const runtimeContract = productionEnemyRuntimeContract();
 const fullInventory = productionVisualIntegrityInventory().enemies.map(({ kind }) => kind);
-invariant(fullInventory.length === 23 && new Set(fullInventory).size === 23, `expected finite 23 production enemies/bosses, got ${fullInventory.length}`);
-const requestedKinds = (process.env.V0995_ENEMY_QA_KINDS ?? fullInventory.join(","))
+const requiredKinds = runtimeContract.requiredEnemyKinds;
+const requiredSet = new Set(requiredKinds);
+const registrySet = new Set(runtimeContract.registryKinds);
+const inventorySet = new Set(fullInventory);
+const missingKinds = requiredKinds.filter((kind) => !inventorySet.has(kind));
+const duplicateCoverage = fullInventory
+  .filter((kind, index) => fullInventory.indexOf(kind) !== index)
+  .filter((kind, index, values) => values.indexOf(kind) === index);
+const unknownInventoryKinds = fullInventory.filter((kind) => !registrySet.has(kind));
+const extraInventoryKinds = fullInventory.filter((kind) => !requiredSet.has(kind));
+const runtimeSpriteStateMissing = runtimeContract.spriteRequirements
+  .filter(({ error, states, sheet }) => (
+    Boolean(error) || !sheet || states.length !== SPRITE_STATES.length
+      || states.some(({ left, right }) => (
+        !left?.path || !right?.path
+        || !left?.sourceRect || !right?.sourceRect
+        || ![left.sourceRect.x, left.sourceRect.y, left.sourceRect.w, left.sourceRect.h,
+          right.sourceRect.x, right.sourceRect.y, right.sourceRect.w, right.sourceRect.h].every(Number.isFinite)
+      ))
+  ))
+  .map(({ kind, error }) => ({ kind, error }));
+invariant(requiredKinds.length > 0, "production enemy runtime contract resolved no required enemies/bosses");
+invariant(runtimeContract.unknownReachableKinds.length === 0,
+  `runtime stage plan contains unregistered kinds: ${runtimeContract.unknownReachableKinds.join(",")}`);
+invariant(runtimeContract.missingBossKinds.length === 0,
+  `runtime stage plan omits registered bosses: ${runtimeContract.missingBossKinds.join(",")}`);
+invariant(missingKinds.length === 0, `production sprite inventory is missing required kinds: ${missingKinds.join(",")}`);
+invariant(duplicateCoverage.length === 0, `production sprite inventory duplicates coverage: ${duplicateCoverage.join(",")}`);
+invariant(unknownInventoryKinds.length === 0, `production sprite inventory has unregistered kinds: ${unknownInventoryKinds.join(",")}`);
+invariant(extraInventoryKinds.length === 0, `production sprite inventory has non-reachable extra kinds: ${extraInventoryKinds.join(",")}`);
+invariant(runtimeSpriteStateMissing.length === 0,
+  `required runtime sprite/state is missing: ${JSON.stringify(runtimeSpriteStateMissing)}`);
+const requestedKinds = (process.env.V0995_ENEMY_QA_KINDS ?? requiredKinds.join(","))
   .split(",").map((value) => value.trim()).filter(Boolean);
 invariant(requestedKinds.length > 0 && new Set(requestedKinds).size === requestedKinds.length,
   "V0995_ENEMY_QA_KINDS must be a non-empty unique subset");
-invariant(requestedKinds.every((kind) => fullInventory.includes(kind)),
-  `V0995_ENEMY_QA_KINDS contains an unknown production kind: ${requestedKinds.filter((kind) => !fullInventory.includes(kind)).join(",")}`);
+invariant(requestedKinds.every((kind) => requiredSet.has(kind)),
+  `V0995_ENEMY_QA_KINDS contains an unknown production kind: ${requestedKinds.filter((kind) => !requiredSet.has(kind)).join(",")}`);
 const inventory = requestedKinds;
 const phases = ["move", "attack", "hit", "die"];
 const results = [];
@@ -262,11 +295,32 @@ for (const engine of engines) {
 }
 
 const rawFile = path.join(outputDir, "enemy-runtime-report.json");
-await writeFile(rawFile, `${JSON.stringify({ generatedAt: new Date().toISOString(), fullInventory, inventory, results }, null, 2)}\n`);
+await writeFile(rawFile, `${JSON.stringify({
+  generatedAt: new Date().toISOString(),
+  runtimeContract: {
+    requiredKinds,
+    missingKinds,
+    duplicateCoverage,
+    unknownInventoryKinds,
+    extraInventoryKinds,
+    runtimeSpriteStateMissing,
+    unknownReachableKinds: runtimeContract.unknownReachableKinds,
+    missingBossKinds: runtimeContract.missingBossKinds,
+  },
+  fullInventory,
+  inventory,
+  results,
+}, null, 2)}\n`);
 const compact = {
   generatedAt: new Date().toISOString(),
   fullInventoryCount: fullInventory.length,
   inventoryCount: inventory.length,
+  requiredInventoryCount: requiredKinds.length,
+  missingKinds,
+  duplicateCoverage,
+  unknownInventoryKinds,
+  extraInventoryKinds,
+  runtimeSpriteStateMissing,
   engines,
   viewports,
   phases,

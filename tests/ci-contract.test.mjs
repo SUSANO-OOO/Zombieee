@@ -91,7 +91,6 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(workflow, /V0995_ENEMY_QA_VIEWPORTS="\$viewport"/);
   assert.match(workflow, /enemy-runtime\/webkit\/\$\{\{ matrix\.shard\.name \}\}\/\$kind\/\$viewport/);
   assert.match(workflow, /node scripts\/run-v0995-enemy-runtime-bounded\.mjs/u);
-  assert.doesNotMatch(workflow, /V0995_ENEMY_QA_KINDS="\$\{batches\[\$index\]\}"/);
   assert.match(finalBoundedRunner, /attempt <= 2/u);
   assert.match(finalBoundedRunner, /V099_FINAL_REMEDIATION_QA_BASE_URL/u);
   assert.match(pagesBoundedRunner, /github-pages-version/u);
@@ -105,18 +104,11 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   assert.match(finalBoundedContract, /consoleErrors[\s\S]*pageErrors[\s\S]*httpErrors/u);
   assert.doesNotMatch(finalBoundedRunner, /status:\s*"(?:skipped|unavailable)"/u);
   const shardJob = workflow.match(/  webkit-enemy-runtime-shard:\n([\s\S]*?)\n  webkit-viewport:/u)?.[1] ?? "";
-  const shardKindLists = [...shardJob.matchAll(/^\s+kinds: "([^"]+)"$/gmu)]
-    .map((match) => match[1].trim().split(/\s+/u));
-  assert.equal(shardKindLists.length, 6);
-  assert.ok(shardKindLists.every((kinds) => kinds.length > 0 && kinds.length <= 4));
-  const kindList = shardKindLists.flat();
-  assert.deepEqual(kindList, [
-    "walker", "runner", "spitter", "crusher", "shade", "abomination",
-    "turned", "takuya", "grappler", "ooze", "sprinter", "gate-eater",
-    "kurome", "mother", "ooguchi", "gairen", "futago", "resonator",
-    "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom",
-  ]);
-  assert.equal(new Set(kindList).size, kindList.length);
+  assert.equal((shardJob.match(/^\s+- name: "0[1-6]"$/gmu) ?? []).length, 6);
+  assert.doesNotMatch(shardJob, /^\s+kinds:/mu);
+  assert.match(shardJob, /node scripts\/v0995-enemy-runtime-shards\.mjs --check/u);
+  assert.match(shardJob, /V0995_ENEMY_QA_SHARD_KINDS=.*v0995-enemy-runtime-shards\.mjs --shard/u);
+  assert.doesNotMatch(shardJob, /matrix\.shard\.kinds/u);
   assert.match(shardJob, /fail-fast: false/u);
   assert.doesNotMatch(shardJob, /continue-on-error:/u);
   assert.match(shardJob, /name: issue165-webkit-enemy-runtime-\$\{\{ matrix\.shard\.name \}\}/u);

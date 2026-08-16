@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import { productionEnemyRuntimeContract } from "../app/productionEnemyRuntime.js";
 import { productionVisualIntegrityInventory } from "../app/visualIntegrityInventory.js";
 
 const enemyHarness = await readFile(new URL("../scripts/v0995-enemy-runtime-browser-smoke.mjs", import.meta.url), "utf8");
@@ -9,10 +10,19 @@ const visualHarness = await readFile(new URL("../scripts/v0995-visual-integrity-
 const gameSource = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
 
 test("F3 runtime evidence is finite, uses production draw/runtime, and observes every semantic state", () => {
-  assert.equal(productionVisualIntegrityInventory().enemies.length, 29);
+  const runtimeContract = productionEnemyRuntimeContract();
+  const inventoryKinds = productionVisualIntegrityInventory().enemies.map(({ kind }) => kind);
+  assert.deepEqual(new Set(inventoryKinds), new Set(runtimeContract.requiredEnemyKinds));
+  assert.equal(runtimeContract.unknownReachableKinds.length, 0);
+  assert.equal(runtimeContract.missingBossKinds.length, 0);
   assert.match(enemyHarness, /const fullInventory = productionVisualIntegrityInventory/);
+  assert.match(enemyHarness, /const runtimeContract = productionEnemyRuntimeContract/);
+  assert.match(enemyHarness, /const missingKinds = requiredKinds.filter/);
+  assert.match(enemyHarness, /const duplicateCoverage = fullInventory/);
+  assert.match(enemyHarness, /const unknownInventoryKinds = fullInventory/);
+  assert.match(enemyHarness, /const runtimeSpriteStateMissing = runtimeContract.spriteRequirements/);
   assert.match(enemyHarness, /V0995_ENEMY_QA_KINDS/);
-  assert.match(enemyHarness, /requestedKinds\.every\(\(kind\) => fullInventory\.includes\(kind\)\)/);
+  assert.match(enemyHarness, /requestedKinds\.every\(\(kind\) => requiredSet\.has\(kind\)\)/);
   for (const state of ["move", "attack", "hit", "die"]) {
     assert.match(enemyHarness, new RegExp(`"${state}"`));
   }

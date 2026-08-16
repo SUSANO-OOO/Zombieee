@@ -280,17 +280,11 @@ jobs:
       matrix:
         shard:
           - name: "01"
-            kinds: "walker runner spitter crusher"
           - name: "02"
-            kinds: "shade abomination turned takuya"
           - name: "03"
-            kinds: "grappler ooze sprinter gate-eater"
           - name: "04"
-            kinds: "kurome mother ooguchi gairen"
           - name: "05"
-            kinds: "futago resonator cagewalker spindle"
           - name: "06"
-            kinds: "choir-knot pall-manta anchor-bloom"
 
     steps:
       - name: Checkout synthetic PR merge
@@ -312,15 +306,18 @@ jobs:
       - name: Build production application
         run: npm run build
 
+      - name: Validate candidate-aware enemy runtime shard contract
+        run: node scripts/v0995-enemy-runtime-shards.mjs --check
+
       - name: Install focused browser engine
         run: npx playwright install --with-deps webkit
 
       - name: Capture Version 0.9.9.5 enemy runtime evidence (WebKit shard ${{ matrix.shard.name }})
         env:
           V0995_ENEMY_QA_ENGINES: webkit
-          V0995_ENEMY_QA_SHARD_KINDS: ${{ matrix.shard.kinds }}
         run: |
           set -euo pipefail
+          export V0995_ENEMY_QA_SHARD_KINDS="$(node scripts/v0995-enemy-runtime-shards.mjs --shard "${{ matrix.shard.name }}")"
           viewports=(844x340 844x390 1280x720)
           for kind in $V0995_ENEMY_QA_SHARD_KINDS; do
             for viewport in "${viewports[@]}"; do
