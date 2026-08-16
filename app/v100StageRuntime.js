@@ -1,4 +1,4 @@
-import { PRODUCTION_AUDIO_SCENE_IDS } from "./productionAudio.js";
+import { PRODUCTION_AUDIO_SCENE_IDS, V100_STAGE_AUDIO_CONTRACT } from "./productionAudio.js";
 import { PRODUCTION_VISUALS } from "./productionVisuals.js";
 import { STAGE_OBJECT_MANIFEST } from "./stageObjectManifest.js";
 import { V100_RUNTIME_ASSET_MANIFEST, v100RuntimeAssetPathsForStage } from "./v100RuntimeAssetManifest.js";
@@ -12,6 +12,16 @@ const BOSS_STATES = Object.freeze(["entrance", "telegraph", "phase", "hit", "dea
 
 function sceneIdsFor(stage) {
   const number = stage.number;
+  const v100Contract = V100_STAGE_AUDIO_CONTRACT[stage.id];
+  if (v100Contract) {
+    return {
+      pre: v100Contract.pre,
+      battle: v100Contract.battle,
+      pressure: v100Contract.pressure,
+      post: v100Contract.post,
+      boss: v100Contract.boss,
+    };
+  }
   const boss = stage.missionType === "boss";
   if (number === 1) return { pre: PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE1_PRE, battle: boss ? PRODUCTION_AUDIO_SCENE_IDS.STORY_BOSS : PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE1_BATTLE, post: PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE1_POST };
   if (number === 2) return { pre: PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE2_PRE, battle: PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE2_BATTLE, post: PRODUCTION_AUDIO_SCENE_IDS.STORY_STAGE2_POST };

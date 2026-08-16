@@ -51,7 +51,10 @@ test("V1 browser save uses primary, mirror, and last-known-good without touching
 test("V1 route exposes the name, seven-slot, event, battle, result, and postgame surfaces", async () => {
   const source = await readFile(path.join(ROOT, "app/V100Campaign.tsx"), "utf8");
   const spriteManifest = await readFile(path.join(ROOT, "app/spriteManifest.js"), "utf8");
-  for (const marker of ["物語を始める", "FORMATION / 7 ORDERED SLOTS", "EVENT LOG", "BATTLE RESULT", "ENDING", "postgame-map"]) assert.match(source + (await readFile(path.join(ROOT, "app/v100StoryFlow.js"), "utf8")), new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")));
+  for (const marker of ["物語を始める", "出撃準備 / 7枠", "会話記録", "作戦結果", "この作戦を編成", "postgame-map"]) assert.match(source + (await readFile(path.join(ROOT, "app/v100StoryFlow.js"), "utf8")), new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")));
+  for (const forbidden of ["LUNA RUNTIME", "REV ", "EVENT LOG", "BATTLE RESULT", "READ EVENT REPLAY", "LEGACY ENTITLEMENT", "pending result", "receipt", "FORMATION / 7 ORDERED SLOTS"]) {
+    assert.doesNotMatch(source, new RegExp(forbidden.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")));
+  }
   assert.match(source, /v100ProductionSessionFor/u);
   assert.match(source, /AshfallGame externalSession/u);
   assert.match(spriteManifest, /V100_CUSTOM_LEFT_VISIBLE_BY_KIND/u);

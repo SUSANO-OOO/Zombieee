@@ -522,8 +522,9 @@ test("Stage 1-6 preserve complete story routes while Stage 7-16 remain battle-fi
 
 test("every P5 audio scene resolves, Stage 1-6 route distinctly, and story events use their authored mix", () => {
   const sceneIds = productionAudio.PRODUCTION_AUDIO_MANIFEST.scenes.map((scene) => scene.id);
-  assert.deepEqual(sceneIds, EXPECTED_AUDIO_SCENE_IDS);
-  assert.equal(new Set(sceneIds).size, EXPECTED_AUDIO_SCENE_IDS.length);
+  const legacySceneIds = sceneIds.filter((sceneId) => !sceneId.startsWith("v100-"));
+  assert.deepEqual(legacySceneIds, EXPECTED_AUDIO_SCENE_IDS);
+  assert.equal(new Set(legacySceneIds).size, EXPECTED_AUDIO_SCENE_IDS.length);
 
   const stageSceneIds = campaign.CAMPAIGN_STAGES.map((stage) => (
     productionAudio.sceneIdForScreen("battle", stage.id, { musicMode: "normal" })
@@ -554,9 +555,12 @@ test("every P5 audio scene resolves, Stage 1-6 route distinctly, and story event
 
   assert.equal(typeof productionAudio.sceneIdForStoryEvent, "function");
   assert.deepEqual(Object.keys(EXPECTED_STORY_AUDIO_SCENES), [...story.STORY_EVENT_IDS]);
-  assert.deepEqual(productionAudio.STORY_AUDIO_EVENT_SCENE_IDS, EXPECTED_STORY_AUDIO_SCENES);
-  assert.equal(productionAudio.STORY_AUDIO_SCENE_RULES.length, EXPECTED_STORY_EVENT_IDS.length);
-  assert.equal(productionAudio.STORY_AUDIO_SCENE_RULES.every(({ match }) => match === "exact"), true);
+  const legacyStoryAudioScenes = Object.fromEntries(Object.entries(productionAudio.STORY_AUDIO_EVENT_SCENE_IDS)
+    .filter(([eventId]) => !eventId.startsWith("v100:")));
+  const legacyStoryAudioRules = productionAudio.STORY_AUDIO_SCENE_RULES.filter(({ value }) => !value.startsWith("v100:"));
+  assert.deepEqual(legacyStoryAudioScenes, EXPECTED_STORY_AUDIO_SCENES);
+  assert.equal(legacyStoryAudioRules.length, EXPECTED_STORY_EVENT_IDS.length);
+  assert.equal(legacyStoryAudioRules.every(({ match }) => match === "exact"), true);
   for (const [eventId, initialSceneId] of Object.entries(EXPECTED_STORY_AUDIO_SCENES)) {
     assert.equal(productionAudio.sceneIdForStoryEvent(eventId), initialSceneId, eventId);
     assert.ok(sceneIds.includes(initialSceneId), `${eventId} resolves production scene ${initialSceneId}`);

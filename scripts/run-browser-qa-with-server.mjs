@@ -68,6 +68,7 @@ process.env.V099_ICON_QA_BASE_URL = origin;
 process.env.ISSUE156_REMEDIATION_QA_BASE_URL = origin;
 process.env.V0995_VISUAL_QA_BASE_URL = origin;
 process.env.V0995_ENEMY_QA_BASE_URL = origin;
+process.env.V100_CAMPAIGN_QA_BASE_URL = origin;
 const server = spawn(process.execPath, [
   "scripts/run-vinext.mjs",
   "start",

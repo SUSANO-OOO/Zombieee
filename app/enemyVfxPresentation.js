@@ -1,4 +1,5 @@
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
+import { V100_COMBAT_VFX_PROFILES } from "./v100CombatPresentation.js";
 
 const deepFreeze = (value) => {
   if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
@@ -103,7 +104,7 @@ export const ENEMY_VFX_PROFILES = deepFreeze(Object.fromEntries(
 ));
 
 export function enemyVfxProfileFor(kind) {
-  return ENEMY_VFX_PROFILES[kind] ?? null;
+  return V100_COMBAT_VFX_PROFILES[kind] ?? ENEMY_VFX_PROFILES[kind] ?? null;
 }
 
 export function enemyProjectilePresentationFor(kind) {

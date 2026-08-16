@@ -5574,8 +5574,14 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
     ctx.strokeStyle = color;
     ctx.globalAlpha = .32 + intensity * .5;
     ctx.lineWidth = omega ? 4 : 3;
-    for (let arm = 0; arm < 4; arm += 1) {
-      const angle = -Math.PI * .9 + arm * Math.PI * .6;
+    // The mutated president is the four-rooted-arm boss; TAKUYA-Ω retains
+    // exactly two rooted arms and makes its identity read through the giant
+    // weapon arc instead of borrowing the president silhouette.
+    const armCount = omega ? 2 : 4;
+    for (let arm = 0; arm < armCount; arm += 1) {
+      const angle = omega
+        ? -Math.PI * .72 + arm * Math.PI * .44
+        : -Math.PI * .9 + arm * Math.PI * .6;
       const reach = (omega ? 92 : 78) + (arm % 2) * 16;
       ctx.beginPath();
       ctx.moveTo(f.x + Math.cos(angle) * 18, f.y - 54 + Math.sin(angle) * 12);

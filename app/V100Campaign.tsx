@@ -36,9 +36,11 @@ import {
 } from "./v100StoryFlow.js";
 import { v100StoryEventView } from "./v100StoryEvents.js";
 import { v100ProductionSessionFor } from "./v100BattleAdapter.js";
+import { campaignUnitIdToCombatKind } from "./campaign.js";
 import { AshfallGame, type AshfallBattleResult } from "./AshfallGame";
 import { v100StageRuntimeFor } from "./v100StageRuntime.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
+import { FORMATION_CARD_ART } from "./spriteManifest.js";
 import {
   exportV100BrowserSave,
   importV100BrowserSave,
@@ -78,11 +80,11 @@ function stageNumberFor(stageId: string | null) {
 
 function formatReason(reason: string | undefined) {
   const labels: Record<string, string> = {
-    "stage-locked": "前のStageを先に完了してください。",
+    "stage-locked": "前の作戦を先に完了してください。",
     "objective-incomplete": "ミッション目標が未完了です。",
     "vehicle-destroyed": "装甲車両が破壊されています。",
     "formation-full": "出撃中の7体上限に達しています。",
-    "unit-not-owned": "未所有のunitです。",
+    "unit-not-owned": "未登録の隊員です。",
     "insufficient-battle-resource": "出撃資源が不足しています。",
   };
   return labels[reason ?? ""] ?? reason ?? "操作を完了できませんでした。";
@@ -100,7 +102,7 @@ function isEventPhase(phase: Flow["phase"]) {
   return ["event", "post", "first-clear-post", "ending", "credits", "epilogue"].includes(phase);
 }
 
-const MISSION_LABELS: Record<string, string> = {
+const OPERATION_LABELS: Record<string, string> = {
   assault: "拠点制圧",
   "timed-defense": "防衛線維持",
   boss: "ボス撃破",
@@ -119,16 +121,16 @@ const ENEMY_PACK_LABELS: Record<string, string> = {
   "B+shade": "潜伏・重装混成群",
   C: "異常感染混成群",
   D: "特殊部隊混成群",
-  "D+panther-knife/smg": "RED PANTHER先遣隊",
-  "D+panther-shield/smg": "RED PANTHER防衛隊",
-  "D+panther-smg/commander": "RED PANTHER指揮隊",
-  "D+panther-shield/smg/commander": "RED PANTHER制圧隊",
-  P: "RED PANTHER本隊",
+  "D+panther-knife/smg": "レッドパンサー先遣隊",
+  "D+panther-shield/smg": "レッドパンサー防衛隊",
+  "D+panther-smg/commander": "レッドパンサー指揮隊",
+  "D+panther-shield/smg/commander": "レッドパンサー制圧隊",
+  P: "レッドパンサー本隊",
   "A-add-waves": "追加波状感染群",
 };
 
 function missionLabelFor(value: string | undefined) {
-  return MISSION_LABELS[value ?? ""] ?? "キャンペーン作戦";
+  return OPERATION_LABELS[value ?? ""] ?? "キャンペーン作戦";
 }
 
 function enemyPackLabelFor(value: string | undefined) {
@@ -154,12 +156,31 @@ function eventDisplayLabel(eventId: string | null | undefined) {
   if (match) {
     const stage = V100_STAGES[Number(match[1]) - 1];
     const suffix = match[2] === "pre" ? "出撃前" : match[2] === "post" ? "作戦後" : "初回制圧後";
-    return `${stage?.displayName ?? `Stage ${match[1]}`} / ${suffix}`;
+    return `${stage?.displayName ?? `第${match[1]}作戦`} / ${suffix}`;
   }
   if (eventId === "v100:event:ending") return "最終章";
   if (eventId === "v100:event:credits") return "クレジット";
   if (eventId === "v100:event:epilogue") return "エピローグ";
   return "記録済みイベント";
+}
+
+const V100_CHAPTERS = Object.freeze([
+  { id: "chapter-1", label: "第一章", range: "1–6", start: 1, end: 6 },
+  { id: "chapter-2", label: "第二章", range: "7–12", start: 7, end: 12 },
+  { id: "chapter-3", label: "第三章", range: "13–20", start: 13, end: 20 },
+  { id: "chapter-4", label: "第四章", range: "21–25", start: 21, end: 25 },
+  { id: "chapter-5", label: "第五章", range: "26–29", start: 26, end: 29 },
+  { id: "chapter-final", label: "最終章", range: "30", start: 30, end: 30 },
+]);
+
+function chapterIndexForStage(stageNumber: number) {
+  const index = V100_CHAPTERS.findIndex((chapter) => stageNumber >= chapter.start && stageNumber <= chapter.end);
+  return index >= 0 ? index : 0;
+}
+
+function formationCardForUnit(unitId: string) {
+  const kind = campaignUnitIdToCombatKind(unitId);
+  return kind ? FORMATION_CARD_ART[kind] ?? null : null;
 }
 
 export function V100Campaign() {
@@ -481,22 +502,24 @@ export function V100Campaign() {
   return (
     <main className="v100-shell" data-v100-phase={flow.phase} data-v100-stage={flow.stageNumber ?? "map"}>
       <header className="v100-topbar">
-        <div><span className="v100-kicker">西新世紀末物語 / LUNA RUNTIME</span><h1>Version 1.0.0</h1></div>
-        <div className="v100-save-meta"><span>{save.caps} CAPS</span><span>REV {save.revision}</span><button type="button" onClick={() => setLogOpen((open) => !open)}>EVENT LOG</button></div>
+        <div><span className="v100-kicker">西新世紀末物語</span><h1>Version 1.0.0</h1></div>
+        <div className="v100-save-meta"><span>{save.caps} CAPS</span><span>記録 {save.readStoryEventIds.length}</span><button type="button" onClick={() => setLogOpen((open) => !open)}>会話記録</button></div>
       </header>
 
       {notice && <p className="v100-notice" role="status">{notice}</p>}
 
       {flow.phase === "name" && (
         <section className="v100-panel v100-name-panel" aria-labelledby="v100-name-title">
-          <span className="v100-kicker">PROLOGUE ENTRY</span>
+          <span className="v100-kicker">新しい作戦記録</span>
           <h2 id="v100-name-title">物語を始める</h2>
-          <p>この記録はVersion 1.0.0の新しいキャンペーンです。既存の進行、所有unit、CAPS、既読、receiptは引き継ぎません。</p>
+          <p>崩壊の夜、西新から始まる新しい物語です。名前を決めて、仲間と街を取り戻す作戦に参加してください。</p>
+          <div className="v100-name-brief"><span>舞台</span><strong>西新・ムガリアン物流網</strong><span>遊び方</span><strong>会話を読み、作戦を編成して戦場へ進みます。</strong></div>
           <form onSubmit={startCampaign}>
             <label htmlFor="v100-player-name">主人公の名前</label>
             <input id="v100-player-name" value={nameInput} onChange={(event) => setNameInput(event.currentTarget.value)} maxLength={24} autoComplete="nickname" />
             {nameError && <small className="v100-error" role="alert">{nameError}</small>}
             <button className="v100-primary" type="submit">物語を始める</button>
+            <button type="button" onClick={downloadBackup}>データを書き出す</button>
           </form>
         </section>
       )}
@@ -505,10 +528,10 @@ export function V100Campaign() {
         <section className="v100-event-layout" aria-label={`${eventDisplayLabel(flow.eventId)}イベント`}>
           <div className="v100-event-backdrop" style={{ backgroundImage: `url(${runtime?.backgroundPath ?? "/art/v060/title-key-visual-v1.webp"})` }} />
           <article className="v100-event-panel">
-            <div className="v100-event-heading"><span className="v100-kicker">{eventDisplayLabel(flow.eventId)}</span><span>{event.nodes.length ? `${Math.min(storyIndex + 1, event.nodes.length)} / ${event.nodes.length}` : "ACTION"}</span></div>
+            <div className="v100-event-heading"><span className="v100-kicker">{eventDisplayLabel(flow.eventId)}</span><span>{event.nodes.length ? `場面 ${Math.min(storyIndex + 1, event.nodes.length)}` : "場面転換"}</span></div>
             {currentNode ? <StoryNodeView node={currentNode} /> : <p className="v100-action-node">このイベントを確認して次へ進みます。</p>}
             <div className="v100-event-actions">
-              <button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>{storyIndex < event.nodes.length - 1 ? "次へ" : flow.phase === "ending" ? "ENDINGを閉じる" : "続ける"}</button>
+              <button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>{storyIndex < event.nodes.length - 1 ? "次へ" : flow.phase === "ending" ? "次の場面へ" : "続ける"}</button>
               {flow.canSkip && <button type="button" onClick={() => markAndAdvanceEvent(true)}>スキップ</button>}
             </div>
           </article>
@@ -542,16 +565,17 @@ export function V100Campaign() {
 
       {logOpen && <EventLogView save={save} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
       {replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayNodeIndex} onNext={() => setReplayNodeIndex((index) => index + 1)} onClose={() => setReplayEventId(null)} />}
-      {giftPopup && <div className="v100-modal-backdrop"><section className="v100-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title"><span className="v100-kicker">LEGACY ENTITLEMENT</span><h2 id="v100-gift-title">新しいキャンペーンを開始しました</h2><p>旧キャンペーンの利用資格を確認したため、Version 1.0.0の新しい記録へ180 CAPSを一度だけ付与しました。旧データは変更していません。</p><button className="v100-primary" type="button" onClick={acknowledgeGift}>確認する</button></section></div>}
+      {giftPopup && <div className="v100-modal-backdrop"><section className="v100-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">新しいキャンペーンを開始しました</h2><p>これまでの遊び方に感謝を込めて、Version 1.0.0の作戦記録へ180 CAPSを一度だけ届けました。過去の記録はそのまま保管されています。</p><button className="v100-primary" type="button" onClick={acknowledgeGift}>確認する</button></section></div>}
     </main>
   );
 }
 
 function StoryNodeView({ node }: { node: StoryNode }) {
   const portrait = portraitFor(node.portraitOwner);
-  return <div className={`v100-story-node v100-node-${node.kind ?? "action"}`}>
-    {portrait && <img className="v100-portrait" src={portrait} alt={`${node.speaker ?? "登場人物"}のportrait`} />}
-    <div className="v100-node-copy"><span className="v100-node-kind">{node.kind === "dialogue" ? node.speaker ?? "通信" : node.kind === "system" ? "SYSTEM" : "ACTION"}</span><p>{node.text || "…"}</p></div>
+  const portraitSide = node.portraitOwner && ["unit-paisen", "segawa", "red-panther-commander"].includes(node.portraitOwner) ? "right" : "left";
+  return <div className={`v100-story-node v100-node-${node.kind ?? "action"}`} data-portrait-side={portraitSide}>
+    {portrait && <img className="v100-portrait" src={portrait} alt={`${node.speaker ?? "登場人物"}の立ち絵`} />}
+    <div className="v100-node-copy"><span className="v100-node-kind">{node.kind === "dialogue" ? node.speaker ?? "通信" : node.kind === "player-action" ? "主人公" : "場面"}</span><p>{node.text || "…"}</p></div>
   </div>;
 }
 
@@ -559,33 +583,45 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
   const stage = V100_STAGE_BY_ID[selectedStageId];
   const runtime = v100StageRuntimeFor(selectedStageId);
   const completedNumber = Math.max(0, ...save.completedStageIds.map(stageNumberFor));
+  const [chapterIndex, setChapterIndex] = useState(() => chapterIndexForStage(stage?.number ?? 1));
+  const chapter = V100_CHAPTERS[chapterIndex] ?? V100_CHAPTERS[0];
+  const chapterStages = V100_STAGES.filter((entry) => entry.number >= chapter.start && entry.number <= chapter.end);
+  const selectStage = (stageId: string) => {
+    const next = V100_STAGE_BY_ID[stageId];
+    if (next) setChapterIndex(chapterIndexForStage(next.number));
+    onSelect(stageId);
+  };
   return <section className="v100-map-layout" aria-label="V1.0.0 campaign map">
     <div className="v100-map-hero" style={{ backgroundImage: `url(${runtime?.backgroundPath ?? "/art/v060/campaign-operations-room-v1.webp"})` }}>
-      <div><span className="v100-kicker">CAMPAIGN MAP / {save.postGameAvailable ? "POSTGAME" : `STAGE ${completedNumber + 1}`}</span><h2>{stage?.displayName ?? "キャンペーンマップ"}</h2><p>{objectiveLabelFor(stage)}</p></div>
+      <div><span className="v100-kicker">作戦地図 / {save.postGameAvailable ? "全作戦解放" : `次の作戦 ${completedNumber + 1}`}</span><h2>{stage?.displayName ?? "キャンペーンマップ"}</h2><p>{objectiveLabelFor(stage)}</p></div>
     </div>
-    <div className="v100-map-grid"><nav className="v100-stage-list" aria-label="Stage list">{V100_STAGES.map((entry) => {
+    <nav className="v100-chapter-tabs" aria-label="章を選ぶ">{V100_CHAPTERS.map((entry, index) => <button type="button" key={entry.id} className={index === chapterIndex ? "selected" : ""} onClick={() => setChapterIndex(index)}><strong>{entry.label}</strong><small>作戦 {entry.range}</small></button>)}</nav>
+    <div className="v100-map-grid"><nav className="v100-stage-list" aria-label={`${chapter.label}の作戦一覧`}>{chapterStages.map((entry) => {
       const available = save.availableStageIds.includes(entry.id);
       const completed = save.completedStageIds.includes(entry.id);
-      return <button type="button" key={entry.id} className={`${selectedStageId === entry.id ? "selected" : ""} ${completed ? "completed" : ""}`} disabled={!available} onClick={() => onSelect(entry.id)}><span>S{String(entry.number).padStart(2, "0")}</span><strong>{entry.displayName}</strong><small>{completed ? `★${save.bestStars[entry.id] ?? 0}` : available ? missionLabelFor(entry.missionType) : "LOCKED"}</small></button>;
-    })}</nav><aside className="v100-map-side"><span className="v100-kicker">{stage ? `S${String(stage.number).padStart(2, "0")}` : "MAP"}</span><h3>{stage?.displayName}</h3><dl><div><dt>MISSION</dt><dd>{missionLabelFor(stage?.missionType)}</dd></div><div><dt>ENEMY PACK</dt><dd>{enemyPackLabelFor(stage?.enemyPack)}</dd></div><div><dt>OBJECTIVE</dt><dd>{objectiveLabelFor(stage)}</dd></div><div><dt>CAPS</dt><dd>{save.caps}</dd></div></dl><button className="v100-primary" type="button" disabled={!stage || !save.availableStageIds.includes(stage.id)} onClick={() => stage && onStart(stage.id)}>{save.completedStageIds.includes(stage?.id ?? "") ? "再出撃" : "出撃"}</button><div className="v100-map-tools"><button type="button" onClick={onRename}>名前を変更</button><button type="button" onClick={onBackup}>バックアップ</button><label className="v100-file-button">復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div><div className="v100-replay-list"><span className="v100-kicker">READ EVENT REPLAY</span>{save.readStoryEventIds.slice(-6).map((eventId) => <button type="button" key={eventId} onClick={() => onReplay(eventId)}>{eventDisplayLabel(eventId)}</button>)}</div></aside></div>
+      return <button type="button" key={entry.id} className={`${selectedStageId === entry.id ? "selected" : ""} ${completed ? "completed" : ""}`} disabled={!available} onClick={() => selectStage(entry.id)}><span>S{String(entry.number).padStart(2, "0")}</span><strong>{entry.displayName}</strong><small>{completed ? `★${save.bestStars[entry.id] ?? 0}` : available ? missionLabelFor(entry.missionType) : "未開放"}</small></button>;
+    })}</nav><aside className="v100-map-side"><div className="v100-map-side-heading"><span className="v100-kicker">{stage ? `作戦 S${String(stage.number).padStart(2, "0")}` : "作戦地図"}</span><span>{stage && save.availableStageIds.includes(stage.id) ? "出撃可能" : "未開放"}</span></div><h3>{stage?.displayName}</h3><dl><div><dt>作戦種別</dt><dd>{missionLabelFor(stage?.missionType)}</dd></div><div><dt>敵の脅威</dt><dd>{enemyPackLabelFor(stage?.enemyPack)}</dd></div><div><dt>作戦目標</dt><dd>{objectiveLabelFor(stage)}</dd></div><div><dt>CAPS</dt><dd>{save.caps}</dd></div></dl><button className="v100-primary" type="button" disabled={!stage || !save.availableStageIds.includes(stage.id)} onClick={() => stage && onStart(stage.id)}>{save.completedStageIds.includes(stage?.id ?? "") ? "再出撃" : "この作戦を編成"}</button><div className="v100-map-briefs"><article><span>人員</span><strong>{save.ownedUnitIds.length}名</strong><small>編成画面で配置</small></article><article><span>車両</span><strong>装甲車両</strong><small>耐久 {save.vehicle.maxHp}</small></article><article><span>支援</span><strong>{save.equippedSupportId ? "装備済み" : "選択可能"}</strong><small>出撃前に確認</small></article></div><div className="v100-map-tools"><button type="button" onClick={onRename}>表示名を変更</button><button type="button" onClick={onBackup}>データ保存</button><label className="v100-file-button">データ復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div><div className="v100-replay-list"><span className="v100-kicker">会話記録</span>{save.readStoryEventIds.slice(-6).map((eventId) => <button type="button" key={eventId} onClick={() => onReplay(eventId)}>{eventDisplayLabel(eventId)}</button>)}</div></aside></div>
   </section>;
 }
 
 function FormationView({ save, onSlotChange, onStart }: { save: Save; onSlotChange: (slot: number, value: string) => void; onStart: () => void }) {
-  return <section className="v100-panel v100-formation-panel"><div className="v100-panel-heading"><div><span className="v100-kicker">FORMATION / 7 ORDERED SLOTS</span><h2>出撃編成</h2></div><span>{save.formationSlots.filter(Boolean).length} / 7</span></div><div className="v100-formation-grid">{save.formationSlots.map((unitId, index) => <label className="v100-slot" key={`slot-${index}`}><span>SLOT {index + 1}</span><select value={unitId ?? ""} onChange={(event) => onSlotChange(index, event.currentTarget.value)} aria-label={`編成スロット${index + 1}`}><option value="">空き</option>{save.ownedUnitIds.map((ownedId) => <option key={ownedId} value={ownedId}>{activeUnitName(ownedId)}</option>)}</select></label>)}</div><p>同じユニットを複数スロットへ配置できます。出撃中の個体は最大7体で管理し、装甲車両・支援・作戦目標は編成枠に含みません。</p><button className="v100-primary" type="button" disabled={!save.formationSlots.some(Boolean)} onClick={onStart}>戦闘へ</button></section>;
+  const [activeSlot, setActiveSlot] = useState(0);
+  const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
+  const assignActiveSlot = (unitId: string) => onSlotChange(activeSlot, unitId);
+  return <section className="v100-panel v100-formation-panel"><div className="v100-panel-heading"><div><span className="v100-kicker">出撃準備 / 7枠</span><h2>出撃編成</h2></div><span>{save.formationSlots.filter(Boolean).length} / 7 配置</span></div><p className="v100-formation-intro">枠を選び、隊員カードを押して配置します。同じ隊員を複数の枠に配置できます。支援と装甲車両は別の作戦装備です。</p><div className="v100-slot-rail" aria-label="7枠の編成"><div className="v100-slot-track">{save.formationSlots.map((unitId, index) => <button type="button" key={`slot-${index}`} className={`v100-slot ${activeSlot === index ? "selected" : ""} ${unitId ? "filled" : "empty"}`} onClick={() => setActiveSlot(index)} aria-pressed={activeSlot === index} aria-label={`編成枠${index + 1}`}><span>枠 {index + 1}</span><strong>{unitId ? activeUnitName(unitId) : "空き"}</strong><small>{unitId ? "配置中" : "隊員を選択"}</small></button>)}</div></div><div className="v100-formation-workspace"><div className="v100-roster-heading"><h3>隊員</h3><span>枠 {activeSlot + 1} に配置</span></div><div className="v100-roster-grid">{ownedUnits.map((unit) => { const art = formationCardForUnit(unit.id); const level = Math.max(1, Number(save.unitLevels[unit.id]) || 1); return <button type="button" className="v100-roster-card" key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={`${unit.displayName}を枠${activeSlot + 1}へ配置`}><span className="v100-roster-card-art">{art && <img src={art} alt="" />}</span><span className="v100-roster-card-copy"><strong>{unit.displayName}</strong><small>{unit.role} / Lv.{level}</small><small>武器・射程・固有能力</small></span></button>; })}</div><div className="v100-formation-loadout"><article><span>支援</span><strong>{save.equippedSupportId ? "装備済み" : "未選択"}</strong><small>戦場では隊員枠と別に使用</small></article><article><span>装甲車両</span><strong>耐久 {save.vehicle.maxHp}</strong><small>車両能力は戦闘画面で操作</small></article></div></div><div className="v100-formation-footer"><button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button><button className="v100-primary" type="button" disabled={!save.formationSlots.some(Boolean)} onClick={onStart}>戦闘へ</button></div></section>;
 }
 
 function ResultView({ result, onContinue }: { result: Record<string, unknown> | null; onContinue: () => void }) {
   const won = result?.won === true;
-  return <section className="v100-panel v100-result-panel"><span className="v100-kicker">BATTLE RESULT</span><h2>{won ? "MISSION CLEAR" : "DEFEAT"}</h2><p>{won ? `装甲車両 ${String(result?.vehicleHp ?? 0)} / ${String(result?.vehicleMaxHp ?? 0)}。post eventと保存済みpending resultを確認してください。` : "敗北時はpost、報酬、unlock、boss receiptへ進みません。"}</p>{won && <dl><div><dt>STARS</dt><dd>{String(result?.stars ?? 0)}</dd></div><div><dt>OBJECTIVE</dt><dd>{String(result?.objectiveComplete ?? false)}</dd></div></dl>}<button className="v100-primary" type="button" onClick={onContinue}>{won ? "POST EVENTへ" : "編成へ戻る"}</button></section>;
+  return <section className="v100-panel v100-result-panel"><span className="v100-kicker">作戦結果</span><h2>{won ? "作戦成功" : "作戦失敗"}</h2><p>{won ? `装甲車両の耐久 ${String(result?.vehicleHp ?? 0)} / ${String(result?.vehicleMaxHp ?? 0)}。作戦の記録と報酬を確定します。` : "隊員を整えて、もう一度この作戦へ挑めます。"}</p>{won && <dl><div><dt>星評価</dt><dd>{String(result?.stars ?? 0)}</dd></div><div><dt>目標</dt><dd>{result?.objectiveComplete === true ? "達成" : "未達"}</dd></div></dl>}<button className="v100-primary" type="button" onClick={onContinue}>{won ? "次の場面へ" : "編成へ戻る"}</button></section>;
 }
 
 function EventLogView({ save, onReplay, onClose }: { save: Save; onReplay: (eventId: string) => void; onClose: () => void }) {
-  return <div className="v100-modal-backdrop"><section className="v100-modal v100-log-modal" role="dialog" aria-modal="true" aria-label="Event log"><div className="v100-panel-heading"><div><span className="v100-kicker">EVENT LOG</span><h2>{save.readStoryEventIds.length} read events</h2></div><button type="button" onClick={onClose}>閉じる</button></div><div className="v100-log-list">{save.readStoryEventIds.map((eventId) => <button type="button" key={eventId} onClick={() => { onReplay(eventId); onClose(); }}>{eventDisplayLabel(eventId)}</button>)}</div></section></div>;
+  return <div className="v100-modal-backdrop"><section className="v100-modal v100-log-modal" role="dialog" aria-modal="true" aria-label="会話記録"><div className="v100-panel-heading"><div><span className="v100-kicker">会話記録</span><h2>{save.readStoryEventIds.length}件を読了</h2></div><button type="button" onClick={onClose}>閉じる</button></div><div className="v100-log-list">{save.readStoryEventIds.map((eventId) => <button type="button" key={eventId} onClick={() => { onReplay(eventId); onClose(); }}>{eventDisplayLabel(eventId)}</button>)}</div></section></div>;
 }
 
 function ReplayView({ event, node, index, onNext, onClose }: { event: ReturnType<typeof v100StoryEventView>; node: StoryNode | null; index: number; onNext: () => void; onClose: () => void }) {
   if (!event) return null;
   const hasNext = index < event.nodes.length - 1;
-  return <div className="v100-modal-backdrop"><section className="v100-modal" role="dialog" aria-modal="true" aria-label="Event replay"><div className="v100-event-heading"><span className="v100-kicker">REPLAY / {eventDisplayLabel(event.id)}</span><button type="button" onClick={onClose}>閉じる</button></div>{node ? <StoryNodeView node={node} /> : <p>このイベントには表示ノードがありません。</p>}<button className="v100-primary" type="button" onClick={hasNext ? onNext : onClose}>{hasNext ? "次へ" : "リプレイ終了"}</button></section></div>;
+  return <div className="v100-modal-backdrop"><section className="v100-modal" role="dialog" aria-modal="true" aria-label="会話記録"><div className="v100-event-heading"><span className="v100-kicker">会話記録 / {eventDisplayLabel(event.id)}</span><button type="button" onClick={onClose}>閉じる</button></div>{node ? <StoryNodeView node={node} /> : <p>この会話には表示する場面がありません。</p>}<button className="v100-primary" type="button" onClick={hasNext ? onNext : onClose}>{hasNext ? "次へ" : "記録を閉じる"}</button></section></div>;
 }

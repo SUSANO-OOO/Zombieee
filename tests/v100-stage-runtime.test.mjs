@@ -43,7 +43,8 @@ test("V1.0.0 boss runtime reserves the production boss audio owner until death",
   for (const stage of V100_STAGES.filter(({ missionType }) => missionType === "boss")) {
     const runtime = V100_STAGE_RUNTIME[stage.id];
     assert.equal(runtime.audio.bossOwnsProductionSceneUntilDeath, true, stage.id);
-    assert.equal(runtime.audio.scenes.battle, "story-boss");
+    if (stage.number > 20) assert.equal(runtime.audio.scenes.boss, "boss", stage.id);
+    assert.equal(runtime.audio.scenes.battle.startsWith(stage.number > 20 ? "v100-s" : "story-"), true, stage.id);
     assert.deepEqual(runtime.objective.states.slice(-6), ["entrance", "telegraph", "phase", "hit", "death", "defeat"]);
   }
 });

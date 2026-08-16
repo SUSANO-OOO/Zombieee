@@ -44,6 +44,7 @@ import {
   requestFromServiceWorker,
 } from "./pwaRuntime.js";
 import { describeUpdate, evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js";
+import { resolvePwaBaseUrl } from "./pwaBasePath.js";
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
 
@@ -171,7 +172,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [publishedChecked, setPublishedChecked] = useState(false);
 
   const baseUrl = useMemo(
-    () => (typeof window === "undefined" ? "/" : new URL("./", window.location.href).toString()),
+    () => (typeof window === "undefined" ? "/" : resolvePwaBaseUrl(window)),
     [],
   );
   const storeRef = useRef<ReturnType<typeof createAssetStore> | null>(null);
