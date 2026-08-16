@@ -12090,6 +12090,20 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const selectedVariantKinds = selectedFormationKinds.includes("mayo-chan")
       ? ["mayo-chan-feral" as UnitKind]
       : [];
+    const requestedLocalQaScenario = resolveLocalQaScenario(
+      window.location.hostname,
+      window.location.search,
+    );
+    const requestedLegacyQaMode = resolveLocalQaMode(
+      window.location.hostname,
+      window.location.search,
+    );
+    // Local campaign QA knows its target stage from the URL before the
+    // hydration/save effects publish React state. Use that same stage for the
+    // first asset session so the QA page does not briefly load the default
+    // stage and cancel a second large decode plan.
+    const assetStageId = requestedLocalQaScenario?.stageId
+      ?? (requestedLegacyQaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
     const activeOutbreakEnemyKinds = selectedOutbreakMissionId
       ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
       : [];
@@ -12103,8 +12117,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       ? survivalEnemyKinds
       : activeOutbreakEnemyKinds.length > 0
       ? activeOutbreakEnemyKinds as UnitKind[]
-      : Array.isArray(CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds)
-        ? CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId].enemyKinds as UnitKind[]
+      : Array.isArray(CAMPAIGN_STAGE_BY_ID[assetStageId]?.enemyKinds)
+        ? CAMPAIGN_STAGE_BY_ID[assetStageId].enemyKinds as UnitKind[]
         : [];
     // The finite enemy-facing browser proof walks one production kind at a
     // time through the real simulation and renderer. Loading every atlas into
@@ -12112,25 +12126,38 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     // decode contention, so this one local-only fixture starts with the normal
     // stage plan and asks the QA bridge to strict-decode each audited kind.
     const localQaParameters = new URLSearchParams(window.location.search);
+    const localQaHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+    const localQaRequested = Boolean(
+      qaMode || qaScenario || (localQaHost && localQaParameters.has("qa")),
+    );
     const finiteEnemyRuntimeQa = localQaParameters.get("qaEnemyRuntime") === "1";
     const finiteVisualIntegrityQa = localQaParameters.get("qaVisualIntegrity") === "1"
-      && ["localhost", "127.0.0.1"].includes(window.location.hostname)
-      && Boolean(qaMode || qaScenario);
+      && localQaHost
+      && localQaRequested;
     const finiteHudRuntimeQa = localQaParameters.get("qaHudFiniteAssets") === "1"
-      && ["localhost", "127.0.0.1"].includes(window.location.hostname)
-      && Boolean(qaMode || qaScenario);
+      && localQaHost
+      && localQaRequested;
+    const exhaustiveLocalQa = localQaRequested
+      && !finiteEnemyRuntimeQa
+      && !finiteVisualIntegrityQa
+      && !finiteHudRuntimeQa;
     // A battle may mount only after every visual source that can be reached by
     // its formation, waves, mission objects, support actions and Crawler has
     // decoded. `turned` is included by the plan because any fallen ally can
     // become one, independent of the authored enemy roster.
     const requiredPlan = requiredBattleAssetPlan({
-      stageId: activeBattlefieldStageId,
+      stageId: assetStageId,
       formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
       enemyKinds: stageEnemyKinds,
-      includeAllSprites: Boolean(qaMode || qaScenario)
+      includeAllSprites: localQaRequested
         && !finiteEnemyRuntimeQa
         && !finiteVisualIntegrityQa
         && !finiteHudRuntimeQa,
+      // Issue 156's exhaustive matrix is the legacy 0.9.9.5 campaign. Keep
+      // its full legacy sprite coverage stable; V1 enemy/boss assets have a
+      // separate canonical reachable-runtime harness and remain in every
+      // production V1 plan through formation/enemy requirements.
+      includeV100Sprites: !exhaustiveLocalQa,
     });
     const requiredSpriteKinds = requiredPlan.sprites.map(({ kind }) => kind as UnitKind);
     const persistentPaths: Record<string, string> = Object.fromEntries(
@@ -12160,12 +12187,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       delete stageObjectRefs.current[id];
     }
     for (const [stageId, image] of Object.entries(backgroundCacheRef.current)) {
-      if (stageId === activeBattlefieldStageId) continue;
+      if (stageId === assetStageId) continue;
       releaseImage(image);
       delete backgroundCacheRef.current[stageId];
     }
-    if (!backgroundCacheRef.current[activeBattlefieldStageId]) backgroundRef.current = null;
-    const currentBackground = backgroundCacheRef.current[activeBattlefieldStageId];
+    if (!backgroundCacheRef.current[assetStageId]) backgroundRef.current = null;
+    const currentBackground = backgroundCacheRef.current[assetStageId];
     const loadedImageByPath = new Map<string, HTMLImageElement>();
     const imageJob = (
       path: string,
@@ -12182,7 +12209,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     });
     const allCriticalJobs = [
       imageJob(requiredPlan.background.path, requiredPlan.background.category, currentBackground, (image) => {
-        backgroundCacheRef.current[activeBattlefieldStageId] = image;
+        backgroundCacheRef.current[assetStageId] = image;
         backgroundRef.current = image;
       }),
       imageJob(requiredPlan.enemyBase.path, requiredPlan.enemyBase.category, enemyBaseSpriteRef.current, (image) => { enemyBaseSpriteRef.current = image; }),
@@ -12443,7 +12470,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             decodedPaths.add(stageVisualFor(stageId));
           }
         }
-        const activeRequiredPlan = requiredBattleAssetPlan({ stageId: activeBattlefieldStageId });
+        const requestedScenario = resolveLocalQaScenario(window.location.hostname, window.location.search);
+        const requestedMode = resolveLocalQaMode(window.location.hostname, window.location.search);
+        const requiredStageId = requestedScenario?.stageId
+          ?? (requestedMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
+        const activeRequiredPlan = requiredBattleAssetPlan({ stageId: requiredStageId });
         if (enemyBaseSpriteRef.current?.naturalWidth && decodedBattleImagesRef.current.has(enemyBaseSpriteRef.current)) {
           decodedPaths.add(activeRequiredPlan.enemyBase.path);
         }
@@ -12464,19 +12495,34 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         }
         return [...decodedPaths];
       },
-      getRequiredPlan: () => requiredBattleAssetPlan({
-        stageId: activeBattlefieldStageId,
-        formationKinds: formationKindKey.split("|").filter(Boolean),
-        enemyKinds: selectedOutbreakMissionId
-          ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
-          : CAMPAIGN_STAGE_BY_ID[activeBattlefieldStageId]?.enemyKinds ?? [],
-        includeAllSprites: Boolean(qaMode || qaScenario)
-          && new URLSearchParams(window.location.search).get("qaEnemyRuntime") !== "1"
-          && !(new URLSearchParams(window.location.search).get("qaVisualIntegrity") === "1"
-            && ["localhost", "127.0.0.1"].includes(window.location.hostname))
-          && !(new URLSearchParams(window.location.search).get("qaHudFiniteAssets") === "1"
-            && ["localhost", "127.0.0.1"].includes(window.location.hostname)),
-      }),
+      getRequiredPlan: () => {
+        const parameters = new URLSearchParams(window.location.search);
+        const localHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+        const requestedScenario = resolveLocalQaScenario(window.location.hostname, window.location.search);
+        const requestedMode = resolveLocalQaMode(window.location.hostname, window.location.search);
+        const requestedStageId = requestedScenario?.stageId
+          ?? (requestedMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
+        const localRequested = Boolean(
+          qaMode || qaScenario || (localHost && parameters.has("qa")),
+        );
+        const finiteEnemy = parameters.get("qaEnemyRuntime") === "1";
+        const finiteVisual = parameters.get("qaVisualIntegrity") === "1"
+          && localHost
+          && localRequested;
+        const finiteHud = parameters.get("qaHudFiniteAssets") === "1"
+          && localHost
+          && localRequested;
+        const exhaustive = localRequested && !finiteEnemy && !finiteVisual && !finiteHud;
+        return requiredBattleAssetPlan({
+          stageId: requestedStageId,
+          formationKinds: formationKindKey.split("|").filter(Boolean),
+          enemyKinds: selectedOutbreakMissionId
+            ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
+            : CAMPAIGN_STAGE_BY_ID[requestedStageId]?.enemyKinds ?? [],
+          includeAllSprites: exhaustive,
+          includeV100Sprites: !exhaustive,
+        });
+      },
       getRestartCount: () => assetSessionRestartCountRef.current,
       getBattleMountState: () => ({
         screen,

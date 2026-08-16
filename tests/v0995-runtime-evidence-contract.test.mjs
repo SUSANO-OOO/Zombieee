@@ -55,8 +55,8 @@ test("F3 runtime evidence is finite, uses production draw/runtime, and observes 
   assert.doesNotMatch(enemyHarness, /locator\("canvas\.battlefield\.active"\)\.screenshot/);
   assert.match(gameSource, /const enemy = spawnEnemy\(g, kind, lane\)/);
   assert.match(gameSource, /loadImageWithTimeout\(\{[\s\S]*?src: path,[\s\S]*?requireDecode: true/);
-  assert.match(gameSource, /includeAllSprites: Boolean\(qaMode \|\| qaScenario\)[\s\S]*?&& !finiteEnemyRuntimeQa[\s\S]*?&& !finiteVisualIntegrityQa/);
-  assert.match(gameSource, /getRequiredPlan:[\s\S]*?qaHudFiniteAssets[\s\S]*?\["localhost", "127\.0\.0\.1"\]\.includes\(window\.location\.hostname\)/);
+  assert.match(gameSource, /includeAllSprites: localQaRequested[\s\S]*?&& !finiteEnemyRuntimeQa[\s\S]*?&& !finiteVisualIntegrityQa/);
+  assert.match(gameSource, /getRequiredPlan:[\s\S]*?const finiteHud = parameters\.get\("qaHudFiniteAssets"\) === "1"[\s\S]*?localHost/);
   assert.match(gameSource, /g\.pendingWeaponHits\.push/);
   assert.doesNotMatch(enemyHarness, /result direct|delete.*enemy|drawImage\(/i);
 });

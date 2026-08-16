@@ -76,3 +76,18 @@ test("a finite HUD runtime plan loads the selected formation and authored stage 
   ]);
   assert.ok(!plan.sprites.some(({ kind }) => kind === "spindle"));
 });
+
+test("legacy exhaustive QA can exclude V1 atlases without changing V1 production plans", () => {
+  const stageId = CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
+  const full = requiredBattleAssetPlan({ stageId, includeAllSprites: true });
+  const legacy = requiredBattleAssetPlan({
+    stageId,
+    includeAllSprites: true,
+    includeV100Sprites: false,
+  });
+  assert.ok(full.sprites.some(({ kind }) => kind === "red-panther-smg"));
+  assert.ok(!legacy.sprites.some(({ kind }) => kind === "red-panther-smg"));
+  assert.equal(full.sprites.length - legacy.sprites.length, 6);
+  assert.equal(full.stageObjects.length, legacy.stageObjects.length);
+  assert.equal(full.persistent.length, legacy.persistent.length);
+});

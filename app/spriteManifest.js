@@ -736,6 +736,10 @@ export function v100SpriteFrameFor(kind, state, direction = "right") {
 
 /** Stable ordered list for the localhost all-frame QA gallery. */
 export const spriteKinds = Object.freeze(Object.keys(SPRITE_MANIFEST));
+/** Legacy campaign sprite set used by the Version 0.9.9.5 local QA plan. */
+export const legacySpriteKinds = Object.freeze(
+  spriteKinds.filter((kind) => !SPRITE_MANIFEST[kind].path.startsWith("/art/v100/")),
+);
 
 export function spriteStatesFor(kind) {
   const entry = SPRITE_MANIFEST[kind];

@@ -1,6 +1,6 @@
 import { CAMPAIGN_STAGE_BY_ID, CAMPAIGN_STAGE_IDS } from "./campaign.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
-import { spriteKinds, spriteSheetPath } from "./spriteManifest.js";
+import { legacySpriteKinds, spriteKinds, spriteSheetPath } from "./spriteManifest.js";
 import { STAGE_OBJECT_MANIFEST } from "./stageObjectManifest.js";
 import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import { V099_CRAWLER_RUNTIME_PROFILE } from "./crawlerEquipmentSprites.js";
@@ -38,6 +38,7 @@ export function requiredBattleAssetPlan({
   formationKinds = [],
   enemyKinds = [],
   includeAllSprites = false,
+  includeV100Sprites = true,
 } = {}) {
   const stage = CAMPAIGN_STAGE_BY_ID[stageId];
   const v100Stage = V100_STAGE_BY_ID[stageId] ?? null;
@@ -46,7 +47,7 @@ export function requiredBattleAssetPlan({
     throw new RangeError(`Unknown battle stage: ${String(stageId)}`);
   }
   const requiredKinds = includeAllSprites
-    ? [...spriteKinds]
+    ? [...(includeV100Sprites ? spriteKinds : legacySpriteKinds)]
     : unique([...formationKinds, ...enemyKinds, "turned"]);
   const manifestObjects = STAGE_OBJECT_MANIFEST[stageId]?.objects ?? [];
   const v100MissionObjectEntries = v100RuntimeStage
