@@ -9388,7 +9388,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       accelerateBossFoundationEntry: (bossId: number) => {
         const boss = gameRef.current.fighters.find((fighter) => fighter.id === bossId && isBossEnemyKind(fighter.kind));
         if (!boss || !boss.gateEntering) return false;
-        boss.gateEntrySpeed = Math.max(boss.gateEntrySpeed, 96);
+        // Keep the QA-only entry bounded on hosted WebKit. The entry still
+        // traverses the production gate lifecycle; this only prevents a
+        // long-running animation from outliving the browser evidence budget.
+        boss.gateEntrySpeed = Math.max(boss.gateEntrySpeed, 260);
         boss.speed = 0;
         boss.laneSpeed = 0;
         boss.cooldown = 99;

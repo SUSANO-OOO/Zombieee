@@ -1202,6 +1202,7 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
     const battle = await openBattlePage(context, "mission", { stageNumber }, lifecycle);
     diagnosticControls.push(battle);
     page = battle.page;
+    lifecycle?.setPhase("HUD initial message settle");
     await waitForQuietBattleMessages(page, `${name}/settle`);
 
     if (stateId === "stage1-normal") {
@@ -1275,10 +1276,12 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
         `${name}: disabled unit/support state did not remain visible`);
       result.states.push({ ...state, disabledControls });
     } else {
+      lifecycle?.setPhase("boss fixture preparation");
       const prepared = await page.evaluate(
         () => window.__ASHFALL_BATTLE_QA__.prepareBossFoundationProof("takuya"),
       );
       invariant(prepared?.kind === "takuya", `${name}: TAKUYA HUD fixture is unavailable`);
+      lifecycle?.setPhase("boss entrance wait");
       const entry = await page.waitForFunction(
         () => {
           const proof = window.__ASHFALL_BATTLE_QA__.getBossFoundationProof("takuya");
@@ -1289,6 +1292,7 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
       await page.evaluate(
         (bossId) => window.__ASHFALL_BATTLE_QA__.accelerateBossFoundationEntry(bossId), entry.bossId,
       );
+      lifecycle?.setPhase("boss combat-ready wait");
       await page.waitForFunction(
         () => {
           const proof = window.__ASHFALL_BATTLE_QA__.getBossFoundationProof("takuya");
@@ -1302,6 +1306,7 @@ async function runIsolatedHudState(browserType, engine, viewport, stateId) {
           `${name}: simultaneous banner, bark, and boss HUD state was not rendered`);
         result.states.push(state);
       } else {
+        lifecycle?.setPhase("boss message settle");
         await waitForQuietBattleMessages(page, name);
         await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(true));
         const state = await captureHudState(page, viewport, axisName, stateId, lifecycle);
