@@ -7,13 +7,15 @@ const OPERATION_TARGET_CLOSED = "(?:page|browser|browserContext|context|locator|
 const DIRECT_TARGET_CLOSED_LINE = new RegExp(`^(?:Error:\\s*)?${OPERATION_TARGET_CLOSED}$`, "u");
 const LABELED_TARGET_CLOSED_LINE = new RegExp(`^(?:Error:\\s*)?(?:[a-z]+-\\d+x\\d+|[a-z]+\\/\\d+x\\d+)\\/[a-z0-9-]+(?:\\/[a-z0-9-]+)*:\\s*(?:Error:\\s*)?${OPERATION_TARGET_CLOSED}$`, "u");
 const TARGET_CRASHED_LINE = /^(?:Error:\s*)?Target crashed$/u;
+const NESTED_SETTLE_TARGET_CLOSED_LINE = new RegExp("^(?:Error:\\s*)?(?:[a-z]+-\\d+x\\d+|[a-z]+\\/\\d+x\\d+)\\/[a-z0-9-]+\\/settle:\\s*[^\\n]*:\\s*(?:Error:\\s*)?" + OPERATION_TARGET_CLOSED + "$", "u");
 
 export function isRetryableTargetClosedLog(log) {
   return String(log).split(/\r?\n/u)
     .map((line) => line.trim())
     .some((line) => TARGET_CRASHED_LINE.test(line)
       || DIRECT_TARGET_CLOSED_LINE.test(line)
-      || LABELED_TARGET_CLOSED_LINE.test(line));
+      || LABELED_TARGET_CLOSED_LINE.test(line)
+      || NESTED_SETTLE_TARGET_CLOSED_LINE.test(line));
 }
 
 function runProcess({ cwd, env, command, args, onOutput }) {
