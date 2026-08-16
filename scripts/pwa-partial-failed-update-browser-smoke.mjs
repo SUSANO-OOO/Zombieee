@@ -604,6 +604,13 @@ try {
   const candidatePendingReleaseDeltaTransportPaths = new Set(
     candidatePendingReleaseDeltaAssets.map(transportPathFor),
   );
+  // The waiting worker may finish populating candidate-shell hashes after the
+  // page's boot-time React snapshot was taken. Keep the progress assertion
+  // candidate-aware without turning that scheduling race into a release-size
+  // literal: the UI may start with the observed pending window, but it must
+  // never exceed the candidate-derived download plan.
+  const candidateProgressTotalMin = candidatePendingDownloadableAssets.length;
+  const candidateProgressTotalMax = candidateDownloadableAssets.length;
   record(`the same profile sees ${RELEASE_VERSION} without uninstall, storage clear, or profile replacement`, (
     candidateManifestFromPage.version === candidateManifest.version
     && candidateManifestFromPage.releaseSha === candidateManifest.releaseSha
@@ -659,7 +666,8 @@ try {
     && new Set(incidentChangedRequests).size === candidatePendingReleaseDeltaTransportPaths.size
     && incidentChangedRequests.length === candidatePendingReleaseDeltaTransportPaths.size
     && incidentProgressCompleted !== null
-    && incidentProgressTotal === candidatePendingDownloadableAssets.length
+    && incidentProgressTotal >= candidateProgressTotalMin
+    && incidentProgressTotal <= candidateProgressTotalMax
     && incidentProgressCompleted >= candidatePendingReleaseDeltaTransportPaths.size
     && incidentProgressCompleted <= incidentProgressTotal
     && incidentCategory === 1
@@ -686,6 +694,8 @@ try {
     incidentProgressTotal,
     expectedReleaseDeltaCount: candidatePendingReleaseDeltaTransportPaths.size,
     expectedDownloadableCount: candidatePendingDownloadableAssets.length,
+    candidateProgressTotalMin,
+    candidateProgressTotalMax,
     candidateDownloadableCount: candidateDownloadableAssets.length,
     incidentCategory,
     failureCounter,
