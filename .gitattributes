@@ -17,3 +17,8 @@ public/pwa-bundles/*.json -text
 # The generated distribution manifest itself must stay byte-identical across
 # platforms so its drift check is meaningful.
 public/asset-manifest.json -text
+
+# The crawler provenance is generated as canonical LF JSON and checked by raw
+# bytes. Keep a Windows checkout from rewriting it to CRLF before the
+# deterministic generator comparison runs.
+assets/source/v099/crawler/provenance.json text eol=lf
