@@ -63,6 +63,8 @@
     "qa:records": "node scripts/run-browser-qa-with-server.mjs scripts/records-browser-smoke.mjs",
     "qa:manual-abilities": "node scripts/run-browser-qa-with-server.mjs scripts/manual-abilities-browser-smoke.mjs",
     "qa:v100-production": "node scripts/run-browser-qa-with-server.mjs scripts/v100-production-browser-smoke.mjs",
+    "qa:v100-phase-g": "node scripts/run-browser-qa-with-server.mjs scripts/v100-phase-g-production-matrix.mjs",
+    "qa:v100-phase-g-validate": "node scripts/validate-v100-phase-g-manifest.mjs",
     "qa:github-pages-v100": "node scripts/github-pages-v100-smoke.mjs",
     "audio:v099:build": "node scripts/build-v099-battle-audio.mjs",
     "audio:v099:verify": "node --test tests/v099-audio-signal.test.mjs tests/v099-audio-provenance.test.mjs tests/v099-audio-reproducibility.test.mjs",

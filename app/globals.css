@@ -780,3 +780,151 @@ button[aria-disabled="true"]:focus-visible {
 .pwa-failure-list code { color:#f0bb65; overflow-wrap:anywhere; font-size:11px; }
 .pwa-failure-list span { opacity:.8; }
 .pwa-failure-summary { display:flex; flex-direction:column; gap:6px; margin-top:2px; }
+
+/* Version 1.0.0 combat readability: the portrait, state and category remain
+   legible at a glance without relying on one colour or an abstract glyph. */
+.unit-card[data-state="ready"] { border-color:#8c7650; background:radial-gradient(circle at 26% 35%,#84653b 0,transparent 44%),linear-gradient(145deg,#503d2c,#1b2020 68%); }
+.unit-card[data-state="ready"]::before { content:"READY"; position:absolute; z-index:4; right:5px; bottom:4px; padding:2px 4px; border:1px solid #84a77c; color:#cbe2bd; background:#18241bd9; font:800 7px/1 monospace; letter-spacing:.08em; }
+.unit-card[data-state="insufficient"]::before { content:"指揮不足"; position:absolute; z-index:4; right:4px; bottom:4px; padding:2px 4px; border:1px solid #b36b50; color:#ffd0b1; background:#321d1ad9; font:800 8px/1 monospace; }
+.unit-card[data-state="full"]::before { content:"格納庫満員"; position:absolute; z-index:4; right:4px; bottom:4px; padding:2px 4px; border:1px solid #a28b54; color:#f1d49b; background:#2e281bd9; font:800 8px/1 monospace; }
+.unit-card[data-state="blocked"]::before { content:"待機"; position:absolute; z-index:4; right:4px; bottom:4px; padding:2px 4px; border:1px solid #6e807c; color:#c6d0c7; background:#1a2525d9; font:800 8px/1 monospace; }
+.unit-card[data-state="cooldown"] { border-color:#5b6570; background:repeating-linear-gradient(135deg,#24292a 0 8px,#1b2021 8px 16px); }
+.unit-card[data-state="cooldown"] .portrait { filter:grayscale(.82) brightness(.62) drop-shadow(3px 2px 0 rgba(0,0,0,.48)); }
+.unit-card[data-state="cooldown"] .cost { color:#aab4b0; }
+.empty-slot-label { position:absolute; inset:22% 8% auto; color:#c2c9bf; font:800 10px/1.1 monospace; letter-spacing:.08em; text-align:center; }
+.unit-card-placeholder small { position:absolute; inset:auto 0 16%; color:#899791; font:700 8px/1 monospace; text-align:center; }
+.unit-card-placeholder { border-style:dashed; border-color:#6a7770; background:linear-gradient(145deg,#293432,#141a19); opacity:1; }
+.card-state { display:block; position:absolute; z-index:4; left:44%; right:3px; bottom:19%; overflow:hidden; color:#d8dfd4; font:800 clamp(6px,.56vw,9px)/1.05 monospace; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 2px 3px #000; }
+.card-state[data-state="ready"] { color:#cbe2bd; }
+.card-state[data-state="insufficient"], .card-state[data-state="full"] { color:#ffd0b1; }
+.support-label { display:block; align-self:center; color:#c4b58f; font:800 8px/1.05 monospace; letter-spacing:.08em; text-align:center; }
+.support-row { grid-template-columns:44px repeat(3,minmax(0,1fr)); }
+.support-btn[data-category="support"] { border-top:2px solid color-mix(in srgb,var(--support-accent) 70%,#fff); }
+.support-btn[data-category="vehicle"] { --support-accent:#e0a75d; border-top:2px solid #efc77d; background:linear-gradient(100deg,#4a3825,#1d1b18 64%); }
+.support-btn[data-state="ready"] { box-shadow:inset 0 0 12px rgba(126,181,126,.1),0 0 0 1px rgba(126,181,126,.12); }
+.support-btn[data-state="selected"] { border-width:2px; }
+.support-btn[data-state="insufficient"] { filter:saturate(.62) brightness(.82); border-style:dashed; }
+.support-btn[data-state="cooldown"], .support-btn[data-state="active"] { background:repeating-linear-gradient(120deg,#2d2a25 0 9px,#24201d 9px 18px); }
+.support-btn em { max-width:62px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width:720px) {
+  .support-row { grid-template-columns:30px repeat(3,minmax(0,1fr)); }
+  .support-label { font-size:7px; }
+}
+
+/* Reference-derived V1 card hierarchy: identity first, then readiness, then
+   cost. The wider horizontal card keeps the face and the large action label
+   readable without changing the underlying battle state contract. */
+.bottom-hud { grid-template-columns:minmax(112px,14fr) minmax(0,58fr) minmax(250px,28fr); }
+.unit-cards { gap:6px; padding:1px 1px 3px; }
+.unit-card {
+  flex-basis:clamp(148px,22.5%,214px);
+  min-width:148px;
+  border:2px solid #705b48;
+  border-top-color:#b47a50;
+  border-radius:0;
+  clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);
+  background:linear-gradient(112deg,#292725 0%,#171a1a 57%,#24201c 100%);
+  box-shadow:inset 0 0 0 1px rgba(250,219,167,.06),inset 0 0 22px rgba(0,0,0,.62),0 2px 5px rgba(0,0,0,.34);
+}
+.unit-card::before { content:none !important; }
+.unit-card::after { background:linear-gradient(110deg,transparent 35%,rgba(255,230,175,.14) 50%,transparent 65%); }
+.unit-card[data-state="ready"] { border-color:#a58257; border-top-color:#e0ad67; background:linear-gradient(112deg,#3e3329 0%,#1b1e1e 58%,#30251d 100%); box-shadow:inset 0 0 0 1px rgba(255,221,159,.1),inset 0 0 24px rgba(0,0,0,.58),0 0 9px rgba(192,126,56,.18); }
+.unit-card[data-state="insufficient"], .unit-card[data-state="full"] { border-color:#8f5547; border-top-color:#bd7659; }
+.unit-card[data-state="blocked"] { border-color:#67726f; }
+.unit-card[data-state="cooldown"] { border-color:#56616a; border-top-color:#75818a; }
+.portrait { left:0; width:46%; height:100%; background-size:cover; background-position:center 20%; filter:drop-shadow(4px 2px 0 rgba(0,0,0,.62)); }
+.unit-card[data-kind="brute"] .portrait { width:53%; }
+.card-copy { top:8%; left:43%; right:4%; }
+.card-copy b { color:#f0dfc1; font-size:clamp(11px,1.25vw,20px); line-height:.98; letter-spacing:.015em; text-shadow:0 2px 3px #000; }
+.card-copy small { margin-top:6px; color:#bba98d; font-size:clamp(7px,.57vw,10px); line-height:1.18; text-shadow:0 1px 2px #000; }
+.cost { right:4%; bottom:5%; color:#f4ca6c; font-size:clamp(17px,1.65vw,28px); line-height:1; text-shadow:0 2px 3px #000; }
+.card-state { left:4%; right:auto; bottom:5%; max-width:62%; padding:2px 0; overflow:visible; color:#f4e5c6; font:900 clamp(12px,1.28vw,21px)/.95 sans-serif; letter-spacing:-.04em; text-shadow:0 2px 3px #000; }
+.card-state[data-state="ready"] { color:#fff1d1; }
+.card-state[data-state="insufficient"], .card-state[data-state="full"] { color:#ffc0a5; font-size:clamp(10px,1vw,16px); }
+.card-state[data-state="blocked"] { color:#b9c9c2; font-size:clamp(10px,1vw,16px); }
+.cooldown-mask { place-content:center; padding:0; background:linear-gradient(135deg,rgba(8,10,11,.84),rgba(17,22,24,.7)); }
+.cooldown-mask::after { right:8px; bottom:7px; left:8px; height:3px; background:linear-gradient(90deg,#d39b4f var(--cooldown-progress),rgba(90,84,73,.45) var(--cooldown-progress)); }
+.cooldown-mask small { color:#f0d5ad; font:900 clamp(11px,1vw,16px)/1 sans-serif; letter-spacing:0; }
+.empty-slot-label { inset:35% 8% auto; font-size:clamp(10px,.8vw,14px); }
+.unit-card-placeholder small { inset:auto 0 17%; font-size:clamp(8px,.62vw,11px); }
+.unit-card-placeholder { border-width:2px; }
+.brand-block { min-width:0; }
+.brand-block > div { min-width:0; }
+.brand-block b { display:block; max-width:100%; overflow:hidden; color:#f2e2c4; font-size:clamp(11px,1.05vw,16px); line-height:1.05; text-overflow:ellipsis; white-space:nowrap; }
+.brand-block small { display:block; margin-top:4px; color:#c19d73; font-size:clamp(7px,.52vw,9px); }
+.brand-block small em { color:#ebc477; font-style:normal; }
+@media (max-width:900px) {
+  .bottom-hud { grid-template-columns:minmax(82px,14fr) minmax(0,57fr) minmax(190px,29fr); }
+  .unit-card { flex-basis:clamp(132px,36%,174px); min-width:132px; }
+  .card-copy { left:42%; }
+  .card-copy b { font-size:clamp(10px,1.65vw,15px); }
+  .card-copy small { margin-top:3px; font-size:clamp(6px,1vw,8px); }
+  .card-state { font-size:clamp(10px,1.65vw,15px); }
+  .card-state[data-state="insufficient"], .card-state[data-state="full"], .card-state[data-state="blocked"] { font-size:clamp(8px,1.3vw,12px); }
+  .cost { font-size:clamp(14px,1.9vw,21px); }
+}
+@media (max-width:900px) {
+  .game-frame[data-battle-hud-layout="mobile"] .unit-card {
+    flex:0 0 clamp(132px,34vw,174px);
+    min-width:clamp(132px,34vw,174px);
+  }
+}
+
+/* The support deck is a three-button control surface.  Keep the label out of
+   the mobile grid and give each action an explicit row/column owner so the
+   vehicle action can never wrap below the supply and air-support actions. */
+.game-frame[data-battle-hud-layout="mobile"] .support-zone {
+  display:grid;
+  grid-template-rows:minmax(0,1fr) var(--battle-hud-bottom-meta-height);
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+.game-frame[data-battle-hud-layout="mobile"] .support-row {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:minmax(0,1fr);
+  grid-auto-flow:column;
+  align-items:stretch;
+  min-width:0;
+  min-height:0;
+  height:100%;
+  gap:3px;
+  overflow:hidden;
+}
+.game-frame[data-battle-hud-layout="mobile"] .support-row > .support-label {
+  display:none;
+}
+.game-frame[data-battle-hud-layout="mobile"] .support-row > .support-btn {
+  grid-row:1;
+  min-width:0;
+  min-height:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+.game-frame[data-battle-hud-layout="mobile"] .support-row > .support-btn:nth-child(2) { grid-column:1; }
+.game-frame[data-battle-hud-layout="mobile"] .support-row > .support-btn:nth-child(3) { grid-column:2; }
+.game-frame[data-battle-hud-layout="mobile"] .support-row > .support-btn:nth-child(4) { grid-column:3; }
+
+/* Keep the visible card set inside the unit-zone boundary.  The seven-slot
+   roster remains horizontally scrollable; only the first three/five cards
+   are sized to be complete cards in the mobile/desktop viewport respectively. */
+.game-frame[data-battle-hud-layout="mobile"] .unit-cards {
+  gap:3px;
+  overflow-x:auto;
+}
+.game-frame[data-battle-hud-layout="mobile"] .unit-card {
+  flex:0 0 calc((100% - 6px) / 3);
+  min-width:0;
+  max-width:calc((100% - 6px) / 3);
+}
+.game-frame:not([data-battle-hud-layout="mobile"]) .unit-cards {
+  gap:6px;
+  overflow-x:auto;
+}
+.game-frame:not([data-battle-hud-layout="mobile"]) .unit-card {
+  flex:0 0 calc((100% - 24px) / 5);
+  min-width:0;
+  max-width:calc((100% - 24px) / 5);
+}

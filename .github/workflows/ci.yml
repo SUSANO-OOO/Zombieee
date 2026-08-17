@@ -203,6 +203,50 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  v100-phase-g-production:
+    name: V1 Phase G Production Matrix
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout synthetic PR merge
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Install Phase G browser engines
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Capture 54 production screenshots and runtime report
+        run: npm run qa:v100-phase-g
+
+      - name: Validate 54 production screenshots and combat evidence
+        run: npm run qa:v100-phase-g-validate
+
+      - name: Upload Phase G production evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v100-phase-g-production-evidence
+          path: outputs/v100-phase-g
+          if-no-files-found: error
+          retention-days: 14
+
   webkit-hosted:
     name: WebKit Hosted Runner Evidence
     needs: webkit-enemy-runtime-shard

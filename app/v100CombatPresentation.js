@@ -1,5 +1,6 @@
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
-import { V100_STAGES, V100_SUPPORTS, V100_VEHICLE } from "./v100Registry.js";
+import { UNIT_CONTENT } from "./content/unitCatalog.js";
+import { V100_BOSSES, V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_VEHICLE } from "./v100Registry.js";
 
 const PRESENTATION_PRIMITIVES = Object.freeze([
   "authored-trail",
@@ -114,7 +115,7 @@ function freeze(value) {
   return Object.freeze(value);
 }
 
-function combatRow({ id, family, actor, trigger, primitive, soundCue, disposition, productionVisible = true, sourceAnchor = "world-actor", identity = null }) {
+function combatRow({ id, family, actor, trigger, primitive, soundCue, disposition, productionVisible = true, sourceAnchor = "world-actor", identity = null, evidence = null, refineComplete = disposition !== "REFINE", replacement = null }) {
   return {
     id,
     family,
@@ -129,9 +130,36 @@ function combatRow({ id, family, actor, trigger, primitive, soundCue, dispositio
     causalSequence: [...CAUSAL_SEQUENCE],
     syncContract: ["damage", "hitbox", "audio", "target-reaction"],
     gameplayInvariant: "timing-damage-hitbox-ai-balance-unchanged",
+    evidence: evidence ?? Object.freeze({ owner: "AshfallGame", renderer: "production-combat-presentation", sequence: [...CAUSAL_SEQUENCE] }),
+    ...(disposition === "REFINE" ? { refineComplete } : {}),
+    ...(replacement ? { replacement } : {}),
     ...(identity ? { identity } : {}),
   };
 }
+
+const LEGACY_ALLY_ROWS = UNIT_CONTENT.map((unit) => combatRow({
+  id: `ally:${unit.id}`,
+  family: "ally-unit",
+  actor: unit.id,
+  trigger: unit.aiProfile === "marksman" || unit.aiProfile === "suppression" || unit.aiProfile === "support" ? "ranged-source-travel-impact" : "melee-windup-swing-recovery",
+  primitive: unit.aiProfile === "marksman" || unit.aiProfile === "suppression" || unit.aiProfile === "support" ? "authored-trail" : "weapon-arc",
+  sourceAnchor: unit.aiProfile === "marksman" || unit.aiProfile === "suppression" || unit.aiProfile === "support" ? "weapon-muzzle" : "weapon-hand",
+  soundCue: `weapon-${unit.kind}-attack`,
+  disposition: "KEEP",
+  evidence: Object.freeze({ owner: "AshfallGame", renderer: "drawBattleWorld/projectile-and-melee-presentation", actor: unit.kind, sequence: [...CAUSAL_SEQUENCE] }),
+}));
+
+const V100_ALLY_ROWS = V100_UNITS.map((unit) => combatRow({
+  id: `v100-ally:${unit.id}`,
+  family: "v100-ally-unit",
+  actor: `v100:${unit.id}`,
+  trigger: "deploy-and-attack",
+  primitive: "authored-trail",
+  sourceAnchor: "formation-card-to-combat-kind",
+  soundCue: `weapon-${unit.id}-attack`,
+  disposition: "KEEP",
+  evidence: Object.freeze({ owner: "AshfallGame", renderer: "v100BattleAdapter->drawBattleWorld", canonicalUnitId: unit.id, sequence: [...CAUSAL_SEQUENCE] }),
+}));
 
 const LEGACY_ENEMY_ROWS = ENEMY_CONTENT.filter((enemy) => !V100_COMBAT_VFX_PROFILES[enemy.id]).map((enemy) => combatRow({
   id: `enemy:${enemy.id}`,
@@ -141,6 +169,19 @@ const LEGACY_ENEMY_ROWS = ENEMY_CONTENT.filter((enemy) => !V100_COMBAT_VFX_PROFI
   primitive: enemy.spawnClass === "boss" ? "boss-telegraph" : "organic-pulse",
   soundCue: `enemy-${enemy.id}-attack`,
   disposition: "KEEP",
+  evidence: Object.freeze({ owner: "AshfallGame", renderer: "enemyCombatVfxSnapshot/drawEnemyCombatReadabilityVfx", canonicalEnemyId: enemy.id, sequence: [...CAUSAL_SEQUENCE] }),
+}));
+
+const BOSS_REGISTRY_ROWS = V100_BOSSES.map((boss) => combatRow({
+  id: `boss:${boss.id}`,
+  family: "boss-registry",
+  actor: `boss:${boss.id}`,
+  trigger: "boss-phase-telegraph-and-defeat",
+  primitive: "boss-telegraph",
+  sourceAnchor: "boss-runtime-anchor",
+  soundCue: `boss-${boss.id}-attack`,
+  disposition: "KEEP",
+  evidence: Object.freeze({ owner: "AshfallGame", renderer: "bossPhaseFor/drawBossTelegraph", canonicalBossId: boss.id, sequence: [...CAUSAL_SEQUENCE] }),
 }));
 
 const V100_ENEMY_ROWS = Object.values(V100_COMBAT_VFX_PROFILES).map((profile) => combatRow({
@@ -152,6 +193,8 @@ const V100_ENEMY_ROWS = Object.values(V100_COMBAT_VFX_PROFILES).map((profile) =>
   sourceAnchor: profile.sourceAnchor,
   soundCue: profile.soundCue,
   disposition: profile.disposition,
+  refineComplete: true,
+  evidence: Object.freeze({ owner: "AshfallGame", renderer: "enemyCombatVfxSnapshot/drawEnemyCombatReadabilityVfx", canonicalEnemyId: profile.kind, sequence: [...CAUSAL_SEQUENCE] }),
   identity: profile.identityArmCount ? {
     rootedArmCount: profile.identityArmCount,
     rootedHandCount: profile.identityHandCount,
@@ -168,6 +211,8 @@ const SUPPORT_ROWS = V100_SUPPORTS.map((support) => combatRow({
   sourceAnchor: "support-world-drop",
   soundCue: support.id === "support-healing" ? "support-heal" : "support-explosion",
   disposition: "REFINE",
+  refineComplete: true,
+  evidence: Object.freeze({ owner: "AshfallGame", renderer: "support-world-drop-and-impact", canonicalSupportId: support.id, sequence: [...CAUSAL_SEQUENCE] }),
 }));
 
 const VEHICLE_ROWS = V100_VEHICLE.abilities.map((ability) => combatRow({
@@ -179,6 +224,7 @@ const VEHICLE_ROWS = V100_VEHICLE.abilities.map((ability) => combatRow({
   sourceAnchor: "vehicle-weapon-muzzle",
   soundCue: ability.id.includes("airstrike") ? "support-airstrike" : "weapon-barrage",
   disposition: "KEEP",
+  evidence: Object.freeze({ owner: "AshfallGame", renderer: "crawlerEquipmentFrame/crawlerAbilityRuntime", canonicalAbilityId: ability.id, sequence: [...CAUSAL_SEQUENCE] }),
 }));
 
 const MISSION_ROWS = V100_STAGES.map((stage) => combatRow({
@@ -190,6 +236,8 @@ const MISSION_ROWS = V100_STAGES.map((stage) => combatRow({
   sourceAnchor: "mission-object-bounds",
   soundCue: "sfx-v070-terminal-confirm",
   disposition: "REFINE",
+  refineComplete: true,
+  evidence: Object.freeze({ owner: "AshfallGame", renderer: "mission-object-runtime-and-objective-hud", canonicalStageId: stage.id, sequence: [...CAUSAL_SEQUENCE] }),
 }));
 
 const STATUS_ROWS = [
@@ -199,8 +247,10 @@ const STATUS_ROWS = [
   ["debuff", "status-debuff", "status-ring"],
   ["stun", "status-stun", "status-ring"],
   ["lock-on", "status-lock-on", "status-ring"],
+  ["support-target", "status-support-target", "authored-trail"],
   ["defense", "status-defense", "shield-plane"],
   ["danger", "status-danger", "boss-telegraph"],
+  ["mission-target", "status-mission-target", "world-decal"],
 ].map(([trigger, actor, primitive]) => combatRow({
   id: `status:${trigger}`,
   family: "status-presentation",
@@ -209,6 +259,8 @@ const STATUS_ROWS = [
   primitive,
   soundCue: "ui-select",
   disposition: "REFINE",
+  refineComplete: true,
+  evidence: Object.freeze({ owner: "AshfallGame", renderer: "battleHud/status-language", category: trigger, sequence: [...CAUSAL_SEQUENCE] }),
 }));
 
 const QA_ROW = combatRow({
@@ -223,8 +275,11 @@ const QA_ROW = combatRow({
 });
 
 export const V100_COMBAT_FX_INVENTORY = freeze([
+  ...LEGACY_ALLY_ROWS,
+  ...V100_ALLY_ROWS,
   ...LEGACY_ENEMY_ROWS,
   ...V100_ENEMY_ROWS,
+  ...BOSS_REGISTRY_ROWS,
   ...SUPPORT_ROWS,
   ...VEHICLE_ROWS,
   ...MISSION_ROWS,
@@ -238,7 +293,7 @@ export function validateV100CombatPresentationInventory({ inventory = V100_COMBA
   const requiredKinds = Object.keys(V100_COMBAT_VFX_PROFILES);
   const productionRows = inventory.filter((entry) => entry?.productionVisible !== false && entry?.disposition !== "QA-ONLY");
   const byActor = new Map(inventory.map((entry) => [entry?.actor, entry]));
-  const requiredFamilies = ["infected-organic", "human-red-panther", "boss-dedicated", "support-equipment", "vehicle-ability", "mission-object", "status-presentation", "qa-diagnostic"];
+  const requiredFamilies = ["ally-unit", "v100-ally-unit", "infected-organic", "human-red-panther", "boss-dedicated", "boss-registry", "support-equipment", "vehicle-ability", "mission-object", "status-presentation", "qa-diagnostic"];
   for (const id of ids.filter((value, index) => ids.indexOf(value) !== index)) errors.push(`duplicate:${String(id)}`);
   for (const entry of inventory) {
     if (!entry || typeof entry.id !== "string") { errors.push("invalid-entry"); continue; }
@@ -247,6 +302,8 @@ export function validateV100CombatPresentationInventory({ inventory = V100_COMBA
     if (entry.productionVisible !== false && entry.disposition === "QA-ONLY") errors.push(`qa-visible:${entry.id}`);
     if (entry.productionVisible !== false && !entry.soundCue) errors.push(`cue-missing:${entry.id}`);
     if (entry.disposition === "REPLACE" && !entry.replacement) errors.push(`replacement-missing:${entry.id}`);
+    if (entry.productionVisible !== false && (!entry.evidence || typeof entry.evidence.owner !== "string" || typeof entry.evidence.renderer !== "string")) errors.push(`evidence-missing:${entry.id}`);
+    if (entry.productionVisible !== false && entry.disposition === "REFINE" && entry.refineComplete !== true) errors.push(`refine-incomplete:${entry.id}`);
     if (JSON.stringify(entry.causalSequence) !== JSON.stringify(CAUSAL_SEQUENCE)) errors.push(`causal-sequence:${entry.id}`);
   }
   for (const family of requiredFamilies) if (!inventory.some((entry) => entry.family === family)) errors.push(`family-missing:${family}`);
@@ -260,6 +317,12 @@ export function validateV100CombatPresentationInventory({ inventory = V100_COMBA
   const statusActors = STATUS_ROWS.map((entry) => entry.actor);
   const statusDuplicates = statusActors.filter((actor, index) => statusActors.indexOf(actor) !== index);
   errors.push(...statusDuplicates.map((actor) => `status-duplicate:${actor}`));
+  const unclassifiedCount = inventory.filter((entry) => !entry?.family || !entry?.disposition || (entry?.productionVisible !== false && !entry?.evidence)).length;
+  const unfinishedRefineCount = inventory.filter((entry) => entry?.productionVisible !== false && entry?.disposition === "REFINE" && entry?.refineComplete !== true).length;
+  const replaceIncompleteCount = inventory.filter((entry) => entry?.disposition === "REPLACE" && !entry.replacement).length;
+  if (unclassifiedCount > 0) errors.push(`unclassified:${unclassifiedCount}`);
+  if (unfinishedRefineCount > 0) errors.push(`unfinished-refine:${unfinishedRefineCount}`);
+  if (replaceIncompleteCount > 0) errors.push(`unfinished-replace:${replaceIncompleteCount}`);
   return freeze({
     ok: errors.length === 0,
     errors,
@@ -267,8 +330,9 @@ export function validateV100CombatPresentationInventory({ inventory = V100_COMBA
     productionVisible: productionRows.length,
     qaOnly: inventory.length - productionRows.length,
     identityErrors,
-    unclassifiedCount: inventory.filter((entry) => !entry?.family || !entry?.disposition).length,
-    replaceIncompleteCount: inventory.filter((entry) => entry?.disposition === "REPLACE" && !entry.replacement).length,
+    unclassifiedCount,
+    unfinishedRefineCount,
+    replaceIncompleteCount,
     requiredFamilies,
     requiredKinds,
   });

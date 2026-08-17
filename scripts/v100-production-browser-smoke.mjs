@@ -185,7 +185,7 @@ for (const engine of engines) {
           const nameEvidence = path.join(evidenceDir, `${name}-name.png`);
           await page.screenshot({ path: nameEvidence });
           result.nameEvidence = path.relative(process.cwd(), nameEvidence).replaceAll("\\", "/");
-          await clickButton(page, page.getByRole("button", { name: "物語を始める", exact: true }), "start V1 story");
+          await clickButton(page, page.locator(".v100-name-card .v100-primary"), "start V1 story");
         }
         await advanceToMap(page);
         result.nameOrResume = await page.locator("#v100-name-title, .v100-map-layout").first().isVisible();

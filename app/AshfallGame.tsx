@@ -1285,6 +1285,7 @@ type Hud = {
   barricadeVulnerable: boolean;
   barricadeHitFlash: number;
   deployQueue: number;
+  summonedCount: number;
   airstrikePhase: AirstrikeRuntime["phase"];
   crawlerPhase: CrawlerRuntime["phase"];
   crawlerCharge: number;
@@ -1716,7 +1717,11 @@ const initialGame = (
   barkFlags: [],
   // Outbreak operations reuse the prerequisite campaign battlefield and its
   // authored battle-bark flow; the operation ID itself is not a story stage.
-  storyFlowState: createBattleStoryFlowState(definition.stageId),
+  // V1 owns its campaign story flow. Keep the existing Ashfall battle loop,
+  // but do not route a V1-only stage id through the legacy story registry.
+  storyFlowState: definitionOptions.v100
+    ? { stageId: definition.stageId, firedEventIds: [] }
+    : createBattleStoryFlowState(definition.stageId),
   storyBattleBarkState: createStoryBattleBarkState(),
   storyBattleReadEventIds: [...storyBattleReadEventIds],
   storyBattleReceiptEventIds: [],
@@ -4324,29 +4329,34 @@ function drawEnemyCombatReadabilityVfx(
     };
     const anchor = weaponAnchorForTarget(f, target);
     const pulse = 7 + Math.sin(g.time * 24 + f.id) * 2;
-    const organGlow = ctx.createRadialGradient(anchor.x, anchor.y, 1, anchor.x, anchor.y, pulse * 2.4);
-    organGlow.addColorStop(0, snapshot.projectile.coreColor);
-    organGlow.addColorStop(.34, snapshot.projectile.color);
-    organGlow.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.globalAlpha = snapshot.phase === "warning" ? .72 : .92;
-    ctx.fillStyle = organGlow;
-    ctx.fillRect(anchor.x - pulse * 2.5, anchor.y - pulse * 2.5, pulse * 5, pulse * 5);
+    const projectileAlpha = snapshot.phase === "warning" ? .58 : .82;
+    ctx.globalCompositeOperation = "lighter";
+    drawCombatRibbon(ctx, f.x, f.y - f.bodyRadius * .8, anchor.x, anchor.y, snapshot.projectile.color, 2.2, projectileAlpha * .64, direction * 16);
+    drawProjectileCore(ctx, anchor.x, anchor.y, direction, 0, snapshot.projectile.coreColor, .9 + pulse * .025);
+    for (let strand = 0; strand < 3; strand += 1) {
+      const offset = (strand - 1) * 5;
+      drawCombatRibbon(ctx, anchor.x - direction * (14 + strand * 4), anchor.y + offset, anchor.x + direction * (5 + strand * 2), anchor.y - offset * .6, strand % 2 ? snapshot.projectile.coreColor : snapshot.projectile.color, 1.2 + strand * .35, projectileAlpha * (.58 - strand * .1), (strand - 1) * 7);
+    }
   }
   if (!snapshot.projectile && snapshot.phase === "warning") {
     const pulse = .5 + .5 * Math.sin(g.time * 18 + f.id);
-    const warningY = f.y - Math.max(24, f.bodyRadius * 2);
-    ctx.globalAlpha = .48 + pulse * .26;
+    const warningY = f.y - Math.max(24, f.bodyRadius * 1.7);
+    const role = snapshot.role;
+    const windupReach = snapshot.boss ? 34 : role === "heavy" ? 26 : role === "pursuer" ? 22 : 17;
+    ctx.globalAlpha = .38 + pulse * .28;
     ctx.strokeStyle = snapshot.accentColor;
-    ctx.lineWidth = snapshot.boss ? 2.8 : 2;
-    ctx.beginPath();
-    ctx.arc(f.x, warningY, 8 + pulse * 3, Math.PI * .18, Math.PI * .82);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(f.x - 8, warningY - 1);
-    ctx.lineTo(f.x - 3, warningY + 6);
-    ctx.moveTo(f.x + 8, warningY - 1);
-    ctx.lineTo(f.x + 3, warningY + 6);
-    ctx.stroke();
+    ctx.lineWidth = snapshot.boss ? 3 : role === "heavy" ? 3.2 : 1.8;
+    if (role === "pursuer" || role === "ambusher") {
+      drawCombatRibbon(ctx, f.x - direction * windupReach, warningY + 10, f.x + direction * 6, warningY - 9, snapshot.accentColor, ctx.lineWidth, .56 + pulse * .18, direction * 12);
+      drawCombatRibbon(ctx, f.x - direction * (windupReach + 8), warningY + 15, f.x - direction * 2, warningY - 2, snapshot.accentColor, 1.1, .34 + pulse * .12, direction * 8);
+    } else if (role === "controller" || role === "support") {
+      for (let tendril = 0; tendril < 3; tendril += 1) {
+        drawCombatRibbon(ctx, f.x + direction * 3, f.y - 12 - tendril * 5, f.x + direction * (windupReach + tendril * 8), warningY + tendril * 6, snapshot.accentColor, 1.6, .46 + pulse * .14, (tendril - 1) * 10);
+      }
+    } else {
+      drawCombatRibbon(ctx, f.x - direction * windupReach, warningY + 9, f.x + direction * windupReach, warningY - 5, snapshot.accentColor, ctx.lineWidth, .52 + pulse * .16, direction * 14);
+      drawCombatRibbon(ctx, f.x - direction * (windupReach - 4), warningY + 14, f.x + direction * 4, warningY + 2, snapshot.accentColor, 1.1, .32 + pulse * .12, -direction * 9);
+    }
   }
 
   if (snapshot.phase === "hit-light" || snapshot.phase === "hit-heavy") {
@@ -4355,78 +4365,51 @@ function drawEnemyCombatReadabilityVfx(
     ctx.strokeStyle = heavy ? "#ffd08a" : snapshot.accentColor;
     ctx.lineWidth = heavy ? 2.4 : 1.5;
     ctx.globalAlpha = .82;
-    for (let index = 0; index < sparkCount; index += 1) {
-      const angle = (index / sparkCount) * Math.PI * 2 + f.id * .37;
-      const inner = heavy ? 7 : 5;
-      const outer = inner + 9 + (index % 3) * 4;
-      const originY = f.y - Math.max(18, f.bodyRadius * 1.4);
-      ctx.beginPath();
-      ctx.moveTo(f.x + Math.cos(angle) * inner, originY + Math.sin(angle) * inner);
-      ctx.lineTo(f.x + Math.cos(angle) * outer, originY + Math.sin(angle) * outer);
-      ctx.stroke();
+    drawCombatSplinters(ctx, f.x, f.y - Math.max(18, f.bodyRadius * 1.4), direction * .2, heavy ? "#ffd08a" : snapshot.accentColor, heavy ? 1.25 : .82, f.id * 13 + sparkCount, sparkCount);
+    if (heavy) {
+      drawCombatRibbon(ctx, f.x - direction * 14, f.y + 1, f.x + direction * 16, f.y - 8, "#d78259", 3.2, .42, direction * 12);
     }
   }
 
   if (snapshot.lowHp && snapshot.boss) {
     const phase = bossPhaseForHp(f.hp, f.maxHp, f.kind);
     const pulse = .5 + .5 * Math.sin(g.time * (5 + phase.phase));
-    ctx.globalAlpha = snapshot.critical ? .32 : .19;
-    ctx.strokeStyle = snapshot.critical ? "#ff8359" : snapshot.accentColor;
-    ctx.lineWidth = snapshot.critical ? 3 : 2;
-    ctx.beginPath();
-    ctx.ellipse(
-      f.x,
-      f.y + 4,
-      f.bodyRadius * (1.45 + pulse * .12),
-      f.bodyRadius * (.42 + pulse * .04),
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
     const vaporCount = Math.max(2, Math.round((snapshot.critical ? 6 : 3) * density));
     for (let index = 0; index < vaporCount; index += 1) {
       const rise = (g.time * (10 + index) + f.id * 3 + index * 13) % 44;
       const x = f.x + Math.sin(g.time * 1.8 + index * 2.4) * f.bodyRadius * .55;
-      ctx.globalAlpha = snapshot.critical ? .16 : .1;
-      ctx.fillStyle = index % 2 ? "#3a2927" : "#6c332b";
+      ctx.globalAlpha = snapshot.critical ? .2 : .12;
+      ctx.strokeStyle = index % 2 ? "#3a2927" : "#6c332b";
+      ctx.lineWidth = 2 + index % 2;
       ctx.beginPath();
-      ctx.ellipse(x, f.y - 20 - rise, 5 + index % 3, 3 + index % 2, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(x, f.y - 16);
+      ctx.bezierCurveTo(x - 7, f.y - 22 - rise * .3, x + 8, f.y - 25 - rise * .65, x + Math.sin(index + g.time) * 5, f.y - 27 - rise);
+      ctx.stroke();
+    }
+    if (snapshot.critical) {
+      ctx.globalAlpha = .3 + pulse * .12;
+      ctx.strokeStyle = "#ff8359";
+      ctx.lineWidth = 2;
+      drawCombatRibbon(ctx, f.x - direction * f.bodyRadius * .65, f.y + 2, f.x + direction * f.bodyRadius * .8, f.y - 10, "#ff8359", 2, .3 + pulse * .12, direction * 12);
     }
   }
   if (snapshot.lowHp && !snapshot.boss) {
     const pulse = .5 + .5 * Math.sin(g.time * 7 + f.id * .7);
-    ctx.globalAlpha = snapshot.critical ? .22 + pulse * .08 : .1 + pulse * .05;
-    ctx.strokeStyle = snapshot.critical ? "#e36a51" : snapshot.accentColor;
-    ctx.lineWidth = snapshot.critical ? 2 : 1.35;
-    ctx.beginPath();
-    ctx.ellipse(
-      f.x,
-      f.y + 3,
-      f.bodyRadius * (1.18 + pulse * .08),
-      Math.max(4, f.bodyRadius * .28),
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
     const vaporCount = Math.max(1, Math.round(2 * density));
     for (let index = 0; index < vaporCount; index += 1) {
       const rise = (g.time * (8 + index) + f.id * 5 + index * 9) % 22;
-      ctx.globalAlpha = snapshot.critical ? .16 : .08;
-      ctx.fillStyle = "#4d2926";
+      const x = f.x + (index ? 6 : -6);
+      ctx.globalAlpha = snapshot.critical ? .18 : .1;
+      ctx.strokeStyle = "#4d2926";
+      ctx.lineWidth = 1.5 + index * .4;
       ctx.beginPath();
-      ctx.ellipse(
-        f.x + (index ? 6 : -6),
-        f.y - 12 - rise,
-        3.5,
-        2.2,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      ctx.moveTo(x, f.y - 10);
+      ctx.quadraticCurveTo(x - 4, f.y - 15 - rise * .35, x + 4, f.y - 18 - rise);
+      ctx.stroke();
+    }
+    if (snapshot.critical) {
+      ctx.globalAlpha = .18 + pulse * .1;
+      drawCombatRibbon(ctx, f.x - direction * f.bodyRadius * .55, f.y + 2, f.x + direction * f.bodyRadius * .6, f.y - 5, "#e36a51", 1.5, .18 + pulse * .1, direction * 8);
     }
   }
   ctx.restore();
@@ -4437,19 +4420,40 @@ function drawAreaEffect(ctx: CanvasRenderingContext2D, effect: AreaEffect, time:
   ctx.save();
   ctx.translate(effect.x, effect.y);
   if (effect.kind === "healing") {
-    const pulse = effect.radius * (.88 + Math.sin(time * 4) * .035);
-    ctx.strokeStyle = "rgba(105,226,155,.44)"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(0, 0, pulse, pulse * .34, 0, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = "rgba(68,170,113,.08)"; ctx.fill();
+    ctx.globalCompositeOperation = "lighter";
+    const pulse = .72 + Math.sin(time * 4) * .12;
+    for (let strand = 0; strand < 5; strand += 1) {
+      const startX = (strand - 2) * effect.radius * .28;
+      const drift = Math.sin(time * 2.8 + strand * 1.7) * 8;
+      ctx.strokeStyle = strand % 2 ? "#8ce9aa" : "#d3ffe0";
+      ctx.lineWidth = strand === 2 ? 2.5 : 1.4;
+      ctx.globalAlpha = pulse * (.4 - strand * .035);
+      ctx.beginPath();
+      ctx.moveTo(startX, 12);
+      ctx.bezierCurveTo(startX + drift, 3, startX - drift * .6, -10, startX + Math.sin(time * 3 + strand) * 5, -24 - strand * 3);
+      ctx.stroke();
+    }
+    for (let mote = 0; mote < 6; mote += 1) {
+      const angle = mote * 1.04 + time * .7;
+      const distance = effect.radius * (.18 + (mote % 3) * .12);
+      ctx.globalAlpha = pulse * (.55 - mote * .05);
+      ctx.fillStyle = mote % 2 ? "#b8ffd0" : "#5ed995";
+      ctx.beginPath(); ctx.arc(Math.cos(angle) * distance, -4 + Math.sin(angle) * distance * .28, 1.5 + mote % 2, 0, Math.PI * 2); ctx.fill();
+    }
   } else {
     const glow = ctx.createRadialGradient(0, 0, 3, 0, 0, effect.radius);
     glow.addColorStop(0, "rgba(255,207,76,.58)"); glow.addColorStop(.4, "rgba(230,83,35,.35)"); glow.addColorStop(1, "rgba(120,24,13,0)");
-    ctx.fillStyle = glow; ctx.beginPath(); ctx.ellipse(0, 0, effect.radius, effect.radius * .34, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = glow; ctx.fillRect(-effect.radius, -effect.radius * .36, effect.radius * 2, effect.radius * .72);
     for (let i = 0; i < 6; i++) {
       const fx = (i - 2.5) * 15 + Math.sin(time * 8 + i) * 5;
       const fy = -8 - Math.abs(Math.sin(time * 6 + i * 1.7)) * 19;
       ctx.fillStyle = i % 2 ? "#ffb33f" : "#e64e29";
-      ctx.beginPath(); ctx.arc(fx, fy, 4 + (i % 3), 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(fx - 3, fy + 5);
+      ctx.quadraticCurveTo(fx - 1, fy - 5 - i, fx + 3, fy - 9);
+      ctx.quadraticCurveTo(fx + 7, fy - 3, fx + 2, fy + 6);
+      ctx.closePath();
+      ctx.fill();
     }
   }
   ctx.restore();
@@ -4490,16 +4494,9 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     if (impactAge > 0) {
       const tail = Math.max(0, 1 - impactAge / .52);
       ctx.globalAlpha = tail;
-      ctx.translate(effect.targetX, effect.targetY);
       ctx.strokeStyle = "#ffd36d";
       ctx.lineWidth = 3;
-      for (let ray = 0; ray < 10; ray += 1) {
-        const angle = ray / 10 * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(Math.cos(angle) * 8, Math.sin(angle) * 8);
-        ctx.lineTo(Math.cos(angle) * (25 + impactAge * 38), Math.sin(angle) * (16 + impactAge * 22));
-        ctx.stroke();
-      }
+      drawCombatSplinters(ctx, effect.targetX, effect.targetY, Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX), "#ffd36d", 1.2, effect.ownerId + 3, 9);
     }
     ctx.restore();
     return;
@@ -4511,27 +4508,52 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     ctx.lineCap = "round";
+    // Scout is a fast crowbar intercept.  It should read as a body-and-tool
+    // lunge, not as a radar ring or a targeting glyph around the enemy.
     for (let trail = 0; trail < 4; trail += 1) {
-      ctx.globalAlpha = .7 - trail * .13;
-      ctx.strokeStyle = trail % 2 ? "#9cf4ec" : "#36b8b5";
-      ctx.lineWidth = 5 - trail * .8;
+      const trailProgress = Math.max(0, charge - trail * .055);
+      const trailX = effect.originX + (dashX - effect.originX) * trailProgress;
+      const trailY = effect.originY + (dashY - effect.originY) * trailProgress;
+      const tail = 12 + trail * 8;
+      ctx.globalAlpha = .64 - trail * .12;
+      ctx.strokeStyle = trail % 2 ? "#b7fff3" : "#2caaa8";
+      ctx.lineWidth = trail === 0 ? 3.8 : 2.1;
       ctx.beginPath();
-      ctx.moveTo(dashX - direction * (18 + trail * 14), dashY + trail * 6 - 10);
-      ctx.lineTo(dashX - direction * (2 + trail * 3), dashY - trail * 2);
+      ctx.moveTo(trailX - direction * tail, trailY + trail * 4 - 7);
+      ctx.quadraticCurveTo(trailX - direction * tail * .42, trailY - 13 + trail * 3, trailX, trailY - trail * 2);
       ctx.stroke();
     }
-    ctx.translate(effect.targetX, effect.targetY);
+    const impactFade = Math.max(0, 1 - impactAge / .46);
+    if (impactAge > 0) {
+      ctx.globalAlpha = impactFade;
+      ctx.strokeStyle = "#d7fff6";
+      ctx.lineWidth = 2.4;
+      for (let shard = 0; shard < 6; shard += 1) {
+        const shardAngle = direction * (.22 + shard * .38);
+        const length = 12 + (shard % 3) * 6 + impactAge * 16;
+        ctx.beginPath();
+        ctx.moveTo(effect.targetX + direction * 4, effect.targetY - 4);
+        ctx.quadraticCurveTo(
+          effect.targetX + Math.cos(shardAngle) * length * .48,
+          effect.targetY + Math.sin(shardAngle) * length * .32 - 5,
+          effect.targetX + Math.cos(shardAngle) * length,
+          effect.targetY + Math.sin(shardAngle) * length * .52 - 5,
+        );
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = .38 + charge * .42;
     ctx.strokeStyle = "#c9fff5";
     ctx.shadowColor = "#42d8d0";
-    ctx.shadowBlur = 10;
-    ctx.lineWidth = 4;
+    ctx.shadowBlur = 7;
+    ctx.lineWidth = 2.4;
     ctx.beginPath();
-    ctx.arc(-direction * 3, -8, 25 + impactAge * 18, direction > 0 ? -1.6 : Math.PI - 1.6, direction > 0 ? .8 : Math.PI + .8);
+    ctx.moveTo(effect.targetX - direction * 16, effect.targetY - 14);
+    ctx.quadraticCurveTo(effect.targetX - direction * 5, effect.targetY - 24, effect.targetX + direction * 8, effect.targetY - 17);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(direction * 16, -26);
-    ctx.lineTo(direction * 29, -12);
-    ctx.lineTo(direction * 20, -4);
+    ctx.moveTo(effect.targetX - direction * 13, effect.targetY + 5);
+    ctx.quadraticCurveTo(effect.targetX - direction * 2, effect.targetY - 3, effect.targetX + direction * 12, effect.targetY + 2);
     ctx.stroke();
     ctx.restore();
     return;
@@ -4540,33 +4562,30 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     const tail = Math.max(0, 1 - impactAge / .5);
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    ctx.translate(effect.targetX, effect.targetY);
     ctx.strokeStyle = "#bdeaff";
     ctx.shadowColor = "#62b9d6";
     ctx.shadowBlur = 9;
-    ctx.lineWidth = 2;
-    const radius = 24 - charge * 8 + impactAge * 26;
     ctx.globalAlpha = impactAge > 0 ? tail : .45 + charge * .5;
-    ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.stroke();
-    for (const angle of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(angle) * (radius + 5), Math.sin(angle) * (radius + 5));
-      ctx.lineTo(Math.cos(angle) * (radius + 16), Math.sin(angle) * (radius + 16));
-      ctx.stroke();
-    }
+    ctx.lineWidth = 2.6;
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.targetX, effect.targetY, "#bdeaff", 2.6, .72 + charge * .2, -12);
+    drawCombatRibbon(ctx, effect.originX, effect.originY + 4, effect.targetX, effect.targetY + 4, "#f7fbff", 1.15, .58 + charge * .2, -8);
     if (impactAge > 0) {
-      ctx.restore();
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
       ctx.globalAlpha = tail;
       ctx.strokeStyle = "#f7fbff";
-      ctx.shadowColor = "#8bd9f0";
-      ctx.shadowBlur = 12;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(effect.originX, effect.originY);
-      ctx.lineTo(effect.targetX, effect.targetY);
-      ctx.stroke();
+      ctx.lineWidth = 2.3;
+      for (let shard = 0; shard < 5; shard += 1) {
+        const shardAngle = -.72 + shard * .36;
+        const length = 12 + (shard % 2) * 8 + impactAge * 25;
+        ctx.beginPath();
+        ctx.moveTo(effect.targetX, effect.targetY);
+        ctx.quadraticCurveTo(
+          effect.targetX + Math.cos(shardAngle) * length * .45,
+          effect.targetY + Math.sin(shardAngle) * length * .45,
+          effect.targetX + Math.cos(shardAngle) * length,
+          effect.targetY + Math.sin(shardAngle) * length,
+        );
+        ctx.stroke();
+      }
     }
     ctx.restore();
     return;
@@ -4574,20 +4593,16 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   if (effect.kind === "medic") {
     const tail = Math.max(0, 1 - impactAge / .55);
     ctx.save();
-    ctx.translate(effect.targetX, effect.targetY);
     ctx.globalCompositeOperation = "lighter";
     ctx.globalAlpha = impactAge > 0 ? tail : .4 + charge * .55;
     ctx.strokeStyle = "#89efb4";
-    ctx.fillStyle = "rgba(68,181,119,.2)";
     ctx.shadowColor = "#48c485";
     ctx.shadowBlur = 12;
     ctx.lineWidth = 3;
-    const ring = 18 + (impactAge > 0 ? impactAge * 58 : (1 - charge) * 20);
-    ctx.beginPath(); ctx.ellipse(0, 18, ring, ring * .32, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#d7ffe6";
-    ctx.fillRect(-5, -31, 10, 34);
-    ctx.fillRect(-17, -19, 34, 10);
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.targetX, effect.targetY, "#89efb4", 2.8, .62 + charge * .25, 13);
+    drawCombatRibbon(ctx, effect.originX, effect.originY - 4, effect.targetX, effect.targetY - 4, "#d7ffe6", 1.2, .72 + charge * .18, 8);
     ctx.strokeStyle = "#b1ffd1";
+    ctx.translate(effect.targetX, effect.targetY);
     ctx.beginPath();
     for (let turn = 0; turn <= 22; turn += 1) {
       const angle = turn * .45 + effect.elapsed * 5;
@@ -4596,6 +4611,15 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
       if (turn === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
+    for (let mote = 0; mote < 5; mote += 1) {
+      const moteAngle = mote * 1.4 + effect.elapsed * 2;
+      const moteDistance = 6 + impactAge * 28 + mote * 3;
+      ctx.globalAlpha = Math.max(.1, tail * (.72 - mote * .1));
+      ctx.fillStyle = mote % 2 ? "#d7ffe6" : "#5ed995";
+      ctx.beginPath();
+      ctx.arc(Math.cos(moteAngle) * moteDistance, 8 + Math.sin(moteAngle) * moteDistance * .45, 1.8 + mote % 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
     return;
   }
@@ -4607,11 +4631,12 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     ctx.strokeStyle = "#e3b477";
     ctx.shadowColor = "#9f653e";
     ctx.shadowBlur = 9;
-    ctx.lineWidth = 5;
     ctx.globalAlpha = impactAge > 0 ? tail : .45 + charge * .45;
-    ctx.beginPath();
-    ctx.arc(effect.originX, effect.originY, 52, direction > 0 ? -2.4 : -.74, direction > 0 ? .25 : Math.PI + 2.9);
-    ctx.stroke();
+    drawCombatRibbon(ctx, effect.originX, effect.originY + 10, effect.targetX, effect.targetY - 5, "#e3b477", 7, .3 + charge * .34, direction * 30);
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.targetX, effect.targetY, "#fff0bd", 3.2, .5 + charge * .38, direction * 24);
+    for (let weight = 0; weight < 3; weight += 1) {
+      drawCombatRibbon(ctx, effect.originX - direction * weight * 7, effect.originY + weight * 4, effect.targetX - direction * weight * 3, effect.targetY + weight * 2, "#bc794a", 1.8, .42 - weight * .08, direction * (20 - weight * 4));
+    }
     if (impactAge > 0) {
       ctx.translate(effect.targetX, effect.targetY);
       ctx.lineWidth = 3;
@@ -4633,22 +4658,21 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   if (effect.kind === "crazy-king") return;
   if (effect.kind === "kumaverson") {
     ctx.save();
-    ctx.translate(effect.originX, effect.originY + 28);
     ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = "#f0bd61";
-    ctx.fillStyle = "rgba(66,90,98,.18)";
     ctx.shadowColor = "#cf8d38";
     ctx.shadowBlur = 10;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(0, -24, 33, Math.PI, Math.PI * 2);
-    ctx.lineTo(33, 2); ctx.lineTo(-33, 2); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(0, -24, 20, 7, 0, 0, Math.PI * 2); ctx.stroke();
-    for (const angle of [-.75, -.25, .25, .75]) {
-      ctx.beginPath();
-      ctx.moveTo(Math.sin(angle) * 30, -19);
-      ctx.lineTo(Math.sin(angle) * (47 + Math.sin(effect.elapsed * 7) * 3), 9);
-      ctx.stroke();
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    const pressure = Math.min(1, charge * 1.25);
+    for (let wave = 0; wave < 4; wave += 1) {
+      const offset = (wave - 1.5) * 7;
+      const reach = 24 + pressure * 44 + wave * 5;
+      drawCombatRibbon(ctx, effect.originX + direction * 8, effect.originY + offset, effect.originX + direction * reach, effect.originY + offset * .55 - 22, wave === 1 ? "#fff0b7" : "#d38d42", wave === 1 ? 3.2 : 1.6, .68 - wave * .1, direction * (13 + wave * 3));
+    }
+    if (impactAge > 0) {
+      ctx.globalAlpha = Math.max(0, 1 - impactAge / .55);
+      ctx.strokeStyle = "#f6d98c";
+      drawCombatSplinters(ctx, effect.targetX, effect.targetY, direction * .1, "#f6d98c", 1.05, effect.ownerId + 9, 8);
     }
     ctx.restore();
     return;
@@ -4656,25 +4680,17 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   if (effect.kind === "babayaga") {
     const tail = Math.max(0, 1 - impactAge / .5);
     ctx.save();
-    ctx.translate(effect.targetX, effect.targetY);
     ctx.globalCompositeOperation = "lighter";
     ctx.globalAlpha = impactAge > 0 ? tail : .4 + charge * .55;
     ctx.strokeStyle = "#f2d46d";
     ctx.shadowColor = "#9d7f27";
     ctx.shadowBlur = 9;
     ctx.lineWidth = 2.5;
-    const size = 31 - charge * 8 + impactAge * 22;
-    for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-      ctx.beginPath();
-      ctx.moveTo(sx * size, sy * (size - 9));
-      ctx.lineTo(sx * size, sy * size);
-      ctx.lineTo(sx * (size - 9), sy * size);
-      ctx.stroke();
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.targetX, effect.targetY, "#f2d46d", 2.2, .6 + charge * .25, -5);
+    drawCombatRibbon(ctx, effect.originX, effect.originY - 3, effect.targetX, effect.targetY - 3, "#fff0a3", 1, .72, -2);
+    if (impactAge > 0) {
+      drawCombatSplinters(ctx, effect.targetX, effect.targetY, Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX), "#fff0a3", 1.15, effect.ownerId + 13, 7);
     }
-    ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(18, 0); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(0, 18); ctx.stroke();
-    ctx.fillStyle = "#fff0a3";
-    for (let row = 0; row < 3; row += 1) ctx.fillRect(20, -15 + row * 8, 13 - row * 3, 2);
     ctx.restore();
     return;
   }
@@ -4707,16 +4723,10 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
       ctx.stroke();
       if (round.muzzleFlash > 0) {
         ctx.globalAlpha = round.muzzleFlash;
-        ctx.fillStyle = "#f8c35f";
-        ctx.beginPath();
-        ctx.arc(
-          effect.originX + direction * (6 + round.travelProgress * 18),
-          effect.originY - 3 + offset * .28,
-          1.8 + round.travelProgress * 1.7,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
+        const muzzleX = effect.originX + direction * (6 + round.travelProgress * 18);
+        const muzzleY = effect.originY - 3 + offset * .28;
+        drawCombatRibbon(ctx, muzzleX - direction * 9, muzzleY + 2, muzzleX + direction * 8, muzzleY - 3, "#f8c35f", 2.8, round.muzzleFlash * .8, direction * 4);
+        drawCombatRibbon(ctx, muzzleX - direction * 5, muzzleY - 3, muzzleX + direction * 5, muzzleY + 4, "#fff0aa", 1.1, round.muzzleFlash * .72, -direction * 3);
       }
     }
     ctx.restore();
@@ -4724,47 +4734,46 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   }
   if (effect.kind === "guardian") {
     ctx.save();
-    ctx.translate(effect.originX + 18, effect.originY + 30);
     ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = "#9bc8cf";
-    ctx.fillStyle = "rgba(77,121,132,.2)";
     ctx.shadowColor = "#4f8e9a";
     ctx.shadowBlur = 12;
     ctx.lineWidth = 3;
-    for (let panel = -1; panel <= 1; panel += 1) {
-      const x = panel * 27;
-      ctx.beginPath();
-      ctx.moveTo(x - 13, -52); ctx.lineTo(x + 13, -52);
-      ctx.lineTo(x + 17, -6); ctx.lineTo(x, 8); ctx.lineTo(x - 17, -6); ctx.closePath();
-      ctx.fill(); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x - 7, -25); ctx.lineTo(x, -34); ctx.lineTo(x + 7, -25);
-      ctx.stroke();
+    const direction = effect.targetX >= effect.originX ? 1 : -1;
+    for (let plate = 0; plate < 3; plate += 1) {
+      const offset = (plate - 1) * 15;
+      drawCombatRibbon(ctx, effect.originX + direction * 3, effect.originY - 38 + offset, effect.originX + direction * (35 + plate * 10), effect.originY - 47 + offset * .7, plate === 1 ? "#e2ffff" : "#73aeb6", plate === 1 ? 3.4 : 1.8, .7 - plate * .12, direction * 10);
     }
+    drawCombatRibbon(ctx, effect.originX, effect.originY - 8, effect.targetX, effect.targetY - 8, "#c9f6f6", 1.4, .38 + charge * .35, -8);
     ctx.restore();
     return;
   }
   if (effect.kind === "engineer") {
     const tail = Math.max(0, 1 - impactAge / .55);
     ctx.save();
-    ctx.translate(effect.targetX, effect.targetY + 8);
     ctx.globalCompositeOperation = "lighter";
     ctx.globalAlpha = impactAge > 0 ? tail : .35 + charge * .55;
     ctx.strokeStyle = "#ddc66c";
     ctx.shadowColor = "#9e8735";
     ctx.shadowBlur = 8;
     ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.ellipse(0, 0, 35 + impactAge * 20, 11 + impactAge * 6, 0, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(-30, 0); ctx.lineTo(-18, -17); ctx.lineTo(-7, -3);
-    ctx.moveTo(30, 0); ctx.lineTo(18, -17); ctx.lineTo(7, -3);
-    ctx.stroke();
-    for (let hook = -2; hook <= 2; hook += 1) {
-      ctx.beginPath();
-      ctx.moveTo(hook * 9 - 4, 0);
-      ctx.lineTo(hook * 9, -11 - Math.abs(hook) * 2);
-      ctx.lineTo(hook * 9 + 4, 0);
-      ctx.stroke();
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.targetX, effect.targetY, "#ddc66c", 2.4, .58 + charge * .25, 10);
+    drawCombatRibbon(ctx, effect.originX, effect.originY - 2, effect.targetX, effect.targetY - 2, "#fff0a3", 1.1, .72, 6);
+    if (impactAge > 0) {
+      for (let hook = 0; hook < 5; hook += 1) {
+        const hookAngle = -.8 + hook * .4;
+        const length = 13 + hook * 4 + impactAge * 18;
+        ctx.globalAlpha = Math.max(.08, tail * (.75 - hook * .1));
+        ctx.beginPath();
+        ctx.moveTo(effect.targetX, effect.targetY);
+        ctx.quadraticCurveTo(
+          effect.targetX + Math.cos(hookAngle) * length * .4,
+          effect.targetY + Math.sin(hookAngle) * length * .4,
+          effect.targetX + Math.cos(hookAngle) * length,
+          effect.targetY + Math.sin(hookAngle) * length,
+        );
+        ctx.stroke();
+      }
     }
     ctx.restore();
     return;
@@ -4772,24 +4781,18 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   if (effect.kind === "mayo-chan") {
     const pulse = .72 + Math.sin(effect.elapsed * 13) * .16;
     ctx.save();
-    ctx.translate(effect.originX, effect.originY);
     ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = `rgba(206,57,92,${pulse})`;
     ctx.shadowColor = "#b11f4c";
     ctx.shadowBlur = 12;
     ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 30 + Math.sin(effect.elapsed * 8) * 4, 10, 0, 0, Math.PI * 2);
-    ctx.stroke();
     const direction = effect.targetX >= effect.originX ? 1 : -1;
     for (let index = 0; index < 4; index += 1) {
-      const offset = index * 8;
+      const offset = index * 7;
       ctx.globalAlpha = Math.max(.15, .7 - index * .13);
-      ctx.beginPath();
-      ctx.moveTo(-direction * (10 + offset), -18 + index * 8);
-      ctx.lineTo(-direction * (42 + offset + Math.sin(effect.elapsed * 14 + index) * 7), -18 + index * 8);
-      ctx.stroke();
+      drawCombatRibbon(ctx, effect.originX - direction * (5 + offset), effect.originY - 14 + index * 7, effect.targetX - direction * 8, effect.targetY - 8 + index * 3, index % 2 ? "#e45b72" : "#9d234f", 2.8 - index * .35, .64 - index * .1, direction * (8 + index * 3));
     }
+    if (impactAge > 0) drawCombatSplinters(ctx, effect.targetX, effect.targetY, direction * .15, "#f28b78", 1.1, effect.ownerId + 19, 7);
     ctx.restore();
     return;
   }
@@ -4798,28 +4801,20 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     const release = Math.max(0, (progress - .38) / .62);
     const direction = effect.targetX >= effect.originX ? 1 : -1;
     ctx.save();
-    ctx.translate(effect.originX, effect.originY);
     ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = `rgba(255,83,208,${.36 + charge * .44})`;
     ctx.shadowColor = "#ff42c8";
     ctx.shadowBlur = 14;
     ctx.lineCap = "round";
     ctx.lineWidth = 3 + charge * 5;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(direction * (34 + charge * 52), -9);
-    ctx.stroke();
+    drawCombatRibbon(ctx, effect.originX, effect.originY, effect.originX + direction * (34 + charge * 52), effect.originY - 9, "#ff8ce5", 3 + charge * 5, .48 + charge * .42, -8);
     if (release > 0) {
       ctx.globalAlpha = Math.max(.16, .7 - release * .48);
-      const sweepRadius = 52 + release * 26;
-      ctx.strokeStyle = "rgba(255,54,195,.24)";
-      ctx.lineWidth = 17 - release * 7;
-      ctx.beginPath();
-      ctx.arc(0, 8, sweepRadius, direction > 0 ? -1.02 : Math.PI - 1.02, direction > 0 ? .72 : Math.PI + .72);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(255,239,252,.78)";
-      ctx.lineWidth = 2.4;
-      ctx.stroke();
+      const sweepEndX = effect.originX + direction * (42 + release * 84);
+      const sweepEndY = effect.originY - 12 - release * 22;
+      drawCombatRibbon(ctx, effect.originX + direction * 6, effect.originY + 12, sweepEndX, sweepEndY, "#ff36c3", 15 - release * 6, .24 + (1 - release) * .16, direction * 25);
+      drawCombatRibbon(ctx, effect.originX, effect.originY + 6, sweepEndX, sweepEndY, "#fff0fb", 2.5, .72 - release * .38, direction * 22);
+      drawCombatSplinters(ctx, effect.targetX, effect.targetY, direction * .1, "#ff86e1", 1.25, effect.ownerId + 23, 8);
     }
     ctx.restore();
     return;
@@ -4849,13 +4844,12 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
       ctx.fillStyle = "#d4a45c";
       ctx.shadowColor = "#ffb252";
       ctx.shadowBlur = 8;
-      ctx.beginPath(); ctx.arc(x, y, index === points.length - 1 ? 5 : 3.5, 0, Math.PI * 2); ctx.fill();
+      drawProjectileCore(ctx, x, y, point.x - effect.originX, point.y - effect.originY, "#d4a45c", index === points.length - 1 ? 1.1 : .82);
       if (impactAge >= 0) {
         ctx.globalAlpha = Math.max(.08, 1 - impactAge / .24);
         ctx.strokeStyle = index === points.length - 1 ? "#ffd28b" : "#e6a455";
-        ctx.lineWidth = index === points.length - 1 ? 6 : 3;
-        const impactScale = 1 + Math.min(1, impactAge / .18) * .55;
-        ctx.beginPath(); ctx.ellipse(point.x, point.y, (26 + index * 4) * impactScale, (11 + index * 2) * impactScale, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.lineWidth = index === points.length - 1 ? 4 : 2.2;
+        drawCombatSplinters(ctx, point.x, point.y, Math.atan2(point.y - effect.originY, point.x - effect.originX), index === points.length - 1 ? "#ffd28b" : "#e6a455", index === points.length - 1 ? 1.2 : .72, effect.ownerId + index * 7, index === points.length - 1 ? 9 : 5);
         ctx.globalAlpha = 1;
       }
     }
@@ -4874,9 +4868,16 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
     ctx.lineWidth = 3;
     ctx.translate(effect.originX, effect.originY - 38);
     if (release <= 0) {
-      ctx.beginPath(); ctx.arc(0, 0, 25 + Math.sin(effect.elapsed * 6) * 2, 0, Math.PI * 2); ctx.stroke();
       ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(-19, 19); ctx.lineTo(19, -19); ctx.moveTo(-19, -19); ctx.lineTo(19, 19); ctx.stroke();
+      const readyReach = 20 + Math.sin(effect.elapsed * 6) * 3;
+      ctx.beginPath();
+      ctx.moveTo(-readyReach, 14);
+      ctx.quadraticCurveTo(-5, -readyReach * .8, readyReach, -16);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-readyReach + 5, -13);
+      ctx.quadraticCurveTo(4, 4, readyReach - 5, 17);
+      ctx.stroke();
     } else {
       const direction = effect.targetX >= effect.originX ? 1 : -1;
       const reach = 50 + Math.abs(effect.targetX - effect.originX) * .55;
@@ -4900,7 +4901,22 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   const x = effect.originX + (effect.targetX - effect.originX) * progress;
   const linearY = effect.originY + (effect.targetY - effect.originY) * progress;
   const y = linearY - Math.sin(progress * Math.PI) * 72;
-  const angle = Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX) + progress * Math.PI * 5;
+  const travelAngle = Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX);
+  const angle = travelAngle + progress * Math.PI * 5;
+  const ux = Math.cos(travelAngle);
+  const uy = Math.sin(travelAngle);
+  const px = -uy;
+  const py = ux;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for (let trail = 0; trail < 4; trail += 1) {
+    const tail = 16 + trail * 7;
+    const trailX = x - ux * tail;
+    const trailY = y - uy * tail;
+    ctx.globalAlpha = .58 - trail * .11;
+    drawCombatRibbon(ctx, trailX, trailY, x - ux * 4, y - uy * 4, trail % 2 ? "#ffb34d" : "#e76a2d", 3.2 - trail * .45, .58 - trail * .1, (trail - 1.5) * 5);
+  }
+  ctx.restore();
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
@@ -4909,34 +4925,52 @@ function drawManualAbilityVfx(ctx: CanvasRenderingContext2D, effect: ManualAbili
   ctx.strokeStyle = "#f2c06d";
   ctx.fillStyle = "#6e3c1e";
   ctx.lineWidth = 2;
+  ctx.globalAlpha = .92;
   ctx.beginPath();
-  ctx.roundRect(-4, -11, 8, 21, 3);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = "#e7d2a1";
-  ctx.fillRect(-2.5, -15, 5, 6);
-  ctx.fillStyle = "#ff8a35";
-  ctx.beginPath();
-  ctx.moveTo(-4, -15);
-  ctx.quadraticCurveTo(-7, -23, 0, -27);
-  ctx.quadraticCurveTo(7, -22, 3, -14);
+  ctx.moveTo(-5, -12);
+  ctx.lineTo(3, -10);
+  ctx.lineTo(5, 7);
+  ctx.lineTo(1, 13);
+  ctx.lineTo(-5, 9);
   ctx.closePath();
   ctx.fill();
-  ctx.restore();
-  ctx.save();
-  ctx.globalAlpha = .5;
-  ctx.strokeStyle = "#ffae4f";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(effect.originX, effect.originY);
-  ctx.quadraticCurveTo(
-    (effect.originX + effect.targetX) / 2,
-    Math.min(effect.originY, effect.targetY) - 72,
-    x,
-    y,
-  );
   ctx.stroke();
+  ctx.strokeStyle = "#d9ad67";
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(-4, -7); ctx.lineTo(3, -5);
+  ctx.moveTo(-3, 0); ctx.lineTo(4, 2);
+  ctx.stroke();
+  ctx.fillStyle = "#ff8a35";
+  ctx.beginPath();
+  ctx.moveTo(-2, -12);
+  ctx.quadraticCurveTo(-7, -19, -1, -27);
+  ctx.quadraticCurveTo(0, -20, 4, -18);
+  ctx.quadraticCurveTo(6, -14, 2, -10);
+  ctx.fill();
   ctx.restore();
+  if (progress > .72) {
+    const impactFade = Math.max(.08, 1 - (progress - .72) / .28);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = impactFade;
+    drawCombatSplinters(ctx, effect.targetX, effect.targetY, travelAngle, "#ffc66c", 1.2, effect.ownerId + 31, 9);
+    for (let flame = 0; flame < 4; flame += 1) {
+      const offset = (flame - 1.5) * 5;
+      drawCombatRibbon(
+        ctx,
+        effect.targetX - ux * (8 + flame * 3) + px * offset,
+        effect.targetY - uy * (8 + flame * 3) + py * offset,
+        effect.targetX + ux * (7 + flame * 3) + px * offset * .4,
+        effect.targetY + uy * (7 + flame * 3) + py * offset * .4,
+        flame % 2 ? "#ffcf72" : "#e85b2b",
+        2.6 - flame * .3,
+        impactFade * (.72 - flame * .1),
+        (flame - 1.5) * 7,
+      );
+    }
+    ctx.restore();
+  }
 }
 
 function crazyKingAbilityIndicatorVisible(fighter: Fighter) {
@@ -4954,33 +4988,28 @@ function drawCrazyKingAbilityIndicator(
   if (!crazyKingAbilityIndicatorVisible(fighter)) return;
   const active = fighter.manualAbility?.phase === "active";
   const pulse = Math.sin(time * (active ? 15 : 8));
-  const radius = (active ? 34 : 28) + pulse * (active ? 4 : 2);
+  const direction = fighter.aiMoveDirection < -.05 ? -1 : 1;
   ctx.save();
-  ctx.translate(fighter.x, fighter.y);
   ctx.globalCompositeOperation = "lighter";
-  ctx.strokeStyle = active ? "#ff803d" : "#ffd26a";
   ctx.shadowColor = active ? "#d43a20" : "#b66b2f";
   ctx.shadowBlur = active ? 14 : 8;
-  ctx.lineWidth = active ? 4 : 3;
-  ctx.beginPath();
-  for (let tooth = 0; tooth <= 24; tooth += 1) {
-    const angle = tooth / 24 * Math.PI * 2 + time * (active ? 2.4 : 1.2);
-    const toothRadius = radius + (tooth % 2 ? (active ? 9 : 5) : 0);
-    const x = Math.cos(angle) * toothRadius;
-    const y = Math.sin(angle) * toothRadius * .34;
-    if (tooth === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  const bladeReach = active ? 54 + pulse * 6 : 40 + pulse * 3;
+  for (let blade = 0; blade < 4; blade += 1) {
+    const offset = (blade - 1.5) * 7;
+    drawCombatRibbon(
+      ctx,
+      fighter.x - direction * (24 + blade * 3),
+      fighter.y - 40 + offset,
+      fighter.x + direction * bladeReach,
+      fighter.y - 28 + offset * .48,
+      blade === 1 ? "#fff0ad" : "#ff803d",
+      blade === 1 ? (active ? 4 : 2.8) : 1.6 + (active ? 1 : 0),
+      (active ? .32 : .2) + (3 - blade) * .07,
+      direction * (10 + blade * 3),
+    );
   }
-  ctx.closePath();
-  ctx.stroke();
-  ctx.strokeStyle = "#ffd26a";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(-18, -48);
-  ctx.lineTo(-9, -61);
-  ctx.lineTo(0, -48);
-  ctx.lineTo(10, -64);
-  ctx.lineTo(20, -48);
-  ctx.stroke();
+  ctx.globalAlpha = active ? .78 : .45;
+  drawCombatSplinters(ctx, fighter.x + direction * bladeReach, fighter.y - 30, direction * .05, "#ffd26a", active ? 1.15 : .72, fighter.id + 41, active ? 8 : 5);
   ctx.restore();
 }
 
@@ -6997,6 +7026,395 @@ function drawBattlePresentationEffects(ctx: CanvasRenderingContext2D, g: Game, e
   }
 }
 
+/*
+ * Combat VFX are authored from the weapon/actor contract, not from one
+ * generic ring or target glyph.  Every normal attack gets a source, a travel
+ * read, a contact shape, and a short aftermath.  The small helpers below are
+ * deliberately path-based: tapered ribbons, uneven splinters, smoke wisps,
+ * and weapon-specific silhouettes survive low-frequency WebKit frames much
+ * better than a stack of perfect circles and rectangles.
+ */
+function drawCombatRibbon(
+  ctx: CanvasRenderingContext2D,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  color: string,
+  width: number,
+  alpha: number,
+  bend = 0,
+) {
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const distance = Math.max(1, Math.hypot(dx, dy));
+  const px = -dy / distance;
+  const py = dx / distance;
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(fromX, fromY);
+  ctx.quadraticCurveTo(
+    (fromX + toX) * .5 + px * bend,
+    (fromY + toY) * .5 + py * bend,
+    toX,
+    toY,
+  );
+  ctx.stroke();
+}
+
+function drawCombatSplinters(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  angle: number,
+  color: string,
+  power: number,
+  seed: number,
+  count = 7,
+) {
+  const spread = Math.PI * .86;
+  ctx.strokeStyle = color;
+  ctx.lineCap = "round";
+  for (let index = 0; index < count; index += 1) {
+    const normalized = count <= 1 ? 0 : index / (count - 1) - .5;
+    const jitter = Math.sin(seed * .13 + index * 2.17) * .12;
+    const rayAngle = angle + normalized * spread + jitter;
+    const inner = 3 + (index % 3) * 2;
+    const outer = inner + power * (8 + (index % 4) * 4);
+    const bend = Math.sin(seed * .07 + index * 1.61) * 4;
+    ctx.globalAlpha = Math.max(.08, .78 - index * .055);
+    ctx.lineWidth = Math.max(1.2, 2.7 - index * .18);
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(rayAngle) * inner, y + Math.sin(rayAngle) * inner);
+    ctx.quadraticCurveTo(
+      x + Math.cos(rayAngle) * (inner + outer) * .56 - Math.sin(rayAngle) * bend,
+      y + Math.sin(rayAngle) * (inner + outer) * .56 + Math.cos(rayAngle) * bend,
+      x + Math.cos(rayAngle) * outer,
+      y + Math.sin(rayAngle) * outer,
+    );
+    ctx.stroke();
+  }
+}
+
+function drawProjectileCore(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  ux: number,
+  uy: number,
+  color: string,
+  scale = 1,
+) {
+  const px = -uy;
+  const py = ux;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x + ux * 7 * scale, y + uy * 7 * scale);
+  ctx.quadraticCurveTo(
+    x + px * 3.5 * scale,
+    y + py * 3.5 * scale,
+    x - ux * 5 * scale,
+    y - uy * 5 * scale,
+  );
+  ctx.quadraticCurveTo(
+    x - px * 3.5 * scale,
+    y - py * 3.5 * scale,
+    x + ux * 7 * scale,
+    y + uy * 7 * scale,
+  );
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawAuthoredShotVfx(
+  ctx: CanvasRenderingContext2D,
+  shot: Shot,
+  {
+    x,
+    y,
+    p,
+    elapsed,
+    duration,
+    impactProgress,
+    ux,
+    uy,
+    distance,
+    weapon,
+    weaponProfile,
+    enemyProjectile,
+    color,
+  }: {
+    x: number;
+    y: number;
+    p: number;
+    elapsed: number;
+    duration: number;
+    impactProgress: number;
+    ux: number;
+    uy: number;
+    distance: number;
+    weapon: string;
+    weaponProfile: ReturnType<typeof weaponProfileForUnit>;
+    enemyProjectile: ReturnType<typeof enemyProjectilePresentationFor>;
+    color: string;
+  },
+): boolean {
+  const dx = shot.tx - shot.x;
+  const dy = shot.ty - shot.y;
+  const angle = Math.atan2(dy, dx);
+  const seed = (shot.sourceId ?? 0) * 17 + (shot.targetId ?? 0) * 7 + (shot.shotIndex ?? 0) * 31;
+  const strength = Math.max(.12, Math.min(1, shot.life / Math.max(.001, duration)));
+  const impact = Math.max(0, impactProgress);
+  const trail = weaponProfile.trail;
+  const isMelee = shot.style === "melee";
+  const direction = dx >= 0 ? 1 : -1;
+  const px = -uy;
+  const py = ux;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.shadowColor = color;
+  ctx.shadowBlur = shot.emphasized ? 11 : 6;
+
+  if (isMelee) {
+    const reachX = shot.x + dx * Math.min(1, p * 1.16);
+    const reachY = shot.y + dy * Math.min(1, p * 1.16);
+    const activeAlpha = impactProgress >= 0 ? Math.max(.18, 1 - impact * .72) : .55 + strength * .45;
+    if (trail === "contact-arc") {
+      const fistX = reachX + ux * 4;
+      const fistY = reachY + uy * 4;
+      drawCombatRibbon(ctx, shot.x - px * 6, shot.y - py * 6, fistX, fistY, color, 4.2, activeAlpha * .48, direction * 16);
+      drawCombatRibbon(ctx, shot.x + px * 5, shot.y + py * 5, fistX - px * 4, fistY - py * 4, "#fff0c1", 1.5, activeAlpha * .82, direction * 12);
+      for (let knuckle = 0; knuckle < 3; knuckle += 1) {
+        const offset = (knuckle - 1) * 4;
+        drawCombatRibbon(ctx, fistX + px * offset - ux * 5, fistY + py * offset - uy * 5, fistX + px * offset + ux * 7, fistY + py * offset + uy * 7, "#f5c175", 1.4, activeAlpha * (.7 - knuckle * .12), direction * 4);
+      }
+    } else if (trail === "hooked-crowbar-arc") {
+      const hookX = reachX + ux * 9;
+      const hookY = reachY + uy * 9;
+      drawCombatRibbon(ctx, shot.x - px * 7, shot.y - py * 7, hookX, hookY, "#50cbc9", 6.2, activeAlpha * .34, direction * 24);
+      drawCombatRibbon(ctx, shot.x + px * 3, shot.y + py * 3, hookX - px * 3, hookY - py * 3, "#d9fff4", 2.2, activeAlpha * .9, direction * 18);
+      ctx.globalAlpha = activeAlpha * .86;
+      ctx.strokeStyle = "#b6eee5";
+      ctx.lineWidth = 2.1;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(hookX - ux * 12, hookY - uy * 12);
+      ctx.quadraticCurveTo(hookX + px * 7, hookY + py * 7, hookX + ux * 3, hookY + uy * 3);
+      ctx.quadraticCurveTo(hookX + ux * 12, hookY + uy * 5, hookX + ux * 8 - px * 5, hookY + uy * 8 - py * 5);
+      ctx.stroke();
+      drawCombatRibbon(ctx, hookX - ux * 18 + px * 6, hookY - uy * 18 + py * 6, hookX - ux * 4 + px * 6, hookY - uy * 4 + py * 6, "#e8fff8", 1.1, activeAlpha * .68, -direction * 5);
+    } else if (trail === "weighted-swing") {
+      const headX = reachX + ux * 5;
+      const headY = reachY + uy * 5;
+      drawCombatRibbon(ctx, shot.x - px * 10, shot.y - py * 10, headX + px * 8, headY + py * 8, "#c97a4e", 9, activeAlpha * .28, direction * 28);
+      drawCombatRibbon(ctx, shot.x + px * 4, shot.y + py * 4, headX - px * 5, headY - py * 5, "#ffe0a0", 3.6, activeAlpha * .9, direction * 22);
+      ctx.globalAlpha = activeAlpha * .74;
+      ctx.strokeStyle = "#fff2c4";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(headX - ux * 10 - px * 7, headY - uy * 10 - py * 7);
+      ctx.lineTo(headX + ux * 8 + px * 7, headY + uy * 8 + py * 7);
+      ctx.stroke();
+    } else if (trail === "toothed-sweep") {
+      drawCombatRibbon(ctx, shot.x, shot.y, reachX, reachY, "#ffb05c", 7, activeAlpha * .34, direction * 22);
+      drawCombatRibbon(ctx, shot.x + px * 4, shot.y + py * 4, reachX + px * 4, reachY + py * 4, "#fff0b2", 2.8, activeAlpha, direction * 18);
+      for (let tooth = 0; tooth < 7; tooth += 1) {
+        const t = (tooth + .5) / 7;
+        const tx = shot.x + (reachX - shot.x) * t;
+        const ty = shot.y + (reachY - shot.y) * t;
+        const toothLength = 5 + (tooth % 3) * 2;
+        ctx.globalAlpha = activeAlpha * .7;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(tx - ux * 3, ty - uy * 3);
+        ctx.lineTo(tx + px * toothLength + ux * 2, ty + py * toothLength + uy * 2);
+        ctx.stroke();
+      }
+    } else if (trail === "cross-cut") {
+      drawCombatRibbon(ctx, shot.x - px * 10, shot.y - py * 10, reachX + px * 12, reachY + py * 12, "#f3f8ff", 3.2, activeAlpha, direction * 17);
+      drawCombatRibbon(ctx, shot.x + px * 8, shot.y + py * 8, reachX - px * 14, reachY - py * 14, "#9ed8ec", 2.1, activeAlpha * .85, -direction * 14);
+    } else if (trail === "energy-arc") {
+      drawCombatRibbon(ctx, shot.x, shot.y, reachX, reachY, "#ff4dc9", 10, activeAlpha * .22, -direction * 18);
+      drawCombatRibbon(ctx, shot.x - px * 5, shot.y - py * 5, reachX - px * 5, reachY - py * 5, "#ff8ce5", 4.2, activeAlpha, -direction * 22);
+      drawCombatRibbon(ctx, shot.x + px * 4, shot.y + py * 4, reachX + px * 4, reachY + py * 4, "#fff0fb", 1.6, activeAlpha * .9, -direction * 20);
+    } else if (trail === "bite-lunge") {
+      const jawStart = shot.x + direction * 4;
+      const jawEnd = reachX + direction * 6;
+      drawCombatRibbon(ctx, jawStart, shot.y - 10, jawEnd, reachY - 4, "#f7d788", 3.3, activeAlpha, direction * 12);
+      drawCombatRibbon(ctx, jawStart, shot.y + 9, jawEnd, reachY + 4, "#d8755e", 3.3, activeAlpha * .92, -direction * 10);
+      for (let tooth = 0; tooth < 4; tooth += 1) {
+        const t = (tooth + 1) / 5;
+        const toothX = jawStart + (jawEnd - jawStart) * t;
+        const toothY = shot.y + (reachY - shot.y) * t;
+        ctx.globalAlpha = activeAlpha * .85;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(toothX, toothY - 5);
+        ctx.lineTo(toothX + direction * 2, toothY);
+        ctx.lineTo(toothX, toothY + 5);
+        ctx.stroke();
+      }
+    } else {
+      const heavy = trail === "weighted-swing" || shot.emphasized;
+      drawCombatRibbon(ctx, shot.x - px * (heavy ? 8 : 4), shot.y - py * (heavy ? 8 : 4), reachX + px * (heavy ? 9 : 5), reachY + py * (heavy ? 9 : 5), color, heavy ? 5.5 : 3.2, activeAlpha, direction * (heavy ? 22 : 13));
+      drawCombatRibbon(ctx, shot.x + px * 5, shot.y + py * 5, reachX + px * 5, reachY + py * 5, "#fff0c1", heavy ? 1.8 : 1.15, activeAlpha * .76, direction * 12);
+    }
+    if (impactProgress >= 0) {
+      ctx.globalAlpha = Math.max(.08, 1 - impact * .8);
+      drawCombatSplinters(ctx, shot.tx, shot.ty, angle, color, shot.emphasized ? 1.35 : .82, seed, shot.emphasized ? 9 : 6);
+      if (trail === "flesh-spray" || trail === "bite-lunge") {
+        ctx.fillStyle = trail === "bite-lunge" ? "#a94a3e" : "#d76b4a";
+        for (let drop = 0; drop < 4; drop += 1) {
+          const dropAngle = angle + (drop - 1.5) * .3;
+          const travel = 8 + drop * 5 + impact * 17;
+          ctx.globalAlpha = Math.max(.06, 1 - impact * 1.3);
+          ctx.beginPath();
+          ctx.arc(shot.tx + Math.cos(dropAngle) * travel, shot.ty + Math.sin(dropAngle) * travel, 1.4 + (drop % 2), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
+    return true;
+  }
+
+  const distanceScale = Math.max(.78, Math.min(1.24, distance / 240));
+  const tailLength = (weapon === "crawler" ? 46
+    : enemyProjectile ? enemyProjectile.tailLength
+      : trail === "high-velocity" ? 38
+        : trail === "burst-tracer" ? 30
+          : trail === "bolt" ? 22
+            : trail === "ballistic-arc" ? 18
+              : 24) * distanceScale;
+  const trailStartX = x - ux * tailLength;
+  const trailStartY = y - uy * tailLength;
+  const projectileAlpha = enemyProjectile ? .84 : .7;
+  if (enemyProjectile?.trail === "glob") {
+    drawCombatRibbon(ctx, trailStartX, trailStartY, x, y, color, 3.3, projectileAlpha, Math.sin(seed) * 6);
+    ctx.globalAlpha = .95;
+    ctx.fillStyle = enemyProjectile.coreColor;
+    drawProjectileCore(ctx, x, y, ux, uy, enemyProjectile.coreColor, 1.15);
+    for (let lobe = 0; lobe < 3; lobe += 1) {
+      ctx.globalAlpha = .42 - lobe * .1;
+      drawCombatRibbon(ctx, trailStartX - ux * lobe * 5 + px * (lobe - 1) * 3, trailStartY - uy * lobe * 5 + py * (lobe - 1) * 3, x, y, color, 1.2, .42 - lobe * .1, (lobe - 1) * 5);
+    }
+  } else if (enemyProjectile?.trail === "sonic") {
+    for (let wave = 0; wave < 3; wave += 1) {
+      const waveStartX = x - ux * (10 + wave * 8);
+      const waveStartY = y - uy * (10 + wave * 8);
+      drawCombatRibbon(ctx, waveStartX + px * (wave + 1) * 4, waveStartY + py * (wave + 1) * 4, x + px * (wave + 1) * 2, y + py * (wave + 1) * 2, enemyProjectile.color, 2.2 - wave * .35, .7 - wave * .16, (wave % 2 ? -1 : 1) * 9);
+    }
+    drawProjectileCore(ctx, x, y, ux, uy, enemyProjectile.coreColor, 1.05);
+  } else if (enemyProjectile?.trail === "chorus") {
+    for (const offset of [-5, 0, 5]) {
+      drawCombatRibbon(ctx, trailStartX + px * offset, trailStartY + py * offset, x + px * offset * .35, y + py * offset * .35, color, offset === 0 ? 2.6 : 1.35, offset === 0 ? .86 : .38, offset * 2);
+    }
+    drawProjectileCore(ctx, x, y, ux, uy, enemyProjectile.coreColor, 1.08);
+  } else if (trail === "bolt") {
+    drawCombatRibbon(ctx, trailStartX, trailStartY, x, y, color, 1.5, .46, 4);
+    ctx.globalAlpha = .94;
+    drawProjectileCore(ctx, x, y, ux, uy, color, 1.45);
+    ctx.globalAlpha = .7;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(x - ux * 7 + px * 4, y - uy * 7 + py * 4);
+    ctx.lineTo(x - ux * 14, y - uy * 14);
+    ctx.lineTo(x - ux * 7 - px * 4, y - uy * 7 - py * 4);
+    ctx.stroke();
+  } else if (trail === "support-pulse") {
+    drawCombatRibbon(ctx, trailStartX, trailStartY, x, y, "#79efac", 2.5, .48, 10);
+    for (let mote = 0; mote < 4; mote += 1) {
+      const drift = (elapsed * (14 + mote * 3) + seed + mote * 11) % 18;
+      const moteX = x - ux * drift + px * Math.sin(elapsed * 8 + mote) * 8;
+      const moteY = y - uy * drift + py * Math.sin(elapsed * 8 + mote) * 8 - mote * 3;
+      ctx.globalAlpha = .68 - mote * .1;
+      ctx.fillStyle = mote % 2 ? "#b7ffd0" : "#5ed995";
+      ctx.beginPath();
+      ctx.arc(moteX, moteY, 1.8 + (mote % 2), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (trail === "energy-arc") {
+    drawCombatRibbon(ctx, trailStartX, trailStartY, x, y, "#ff4dca", 4.5, .32, 9);
+    drawCombatRibbon(ctx, trailStartX + px * 3, trailStartY + py * 3, x + px * 3, y + py * 3, "#ffd2f3", 1.8, .9, -7);
+    drawProjectileCore(ctx, x, y, ux, uy, "#ff8de2", 1.2);
+  } else {
+    const tracerColor = enemyProjectile?.color ?? color;
+    drawCombatRibbon(ctx, trailStartX, trailStartY, x, y, tracerColor, trail === "high-velocity" ? 2.4 : trail === "burst-tracer" ? 2.6 : 1.65, projectileAlpha, trail === "high-velocity" ? 2 : 0);
+    if (trail === "burst-tracer") {
+      drawCombatRibbon(ctx, trailStartX + px * 3, trailStartY + py * 3, x + px * 3, y + py * 3, "#fff0a4", 1.05, .58, -4);
+    }
+    drawProjectileCore(ctx, x, y, ux, uy, color, trail === "high-velocity" ? 1.22 : 1);
+  }
+
+  if (p < .32) {
+    const muzzleLength = 7 + (1 - p / .32) * (weapon === "crawler" ? 16 : 8 + (shot.recoil ?? weaponProfile.recoil) * 7);
+    for (let flare = 0; flare < 3; flare += 1) {
+      const flareOffset = (flare - 1) * 2.5;
+      drawCombatRibbon(ctx, shot.x + px * flareOffset, shot.y + py * flareOffset, shot.x + ux * muzzleLength + px * flareOffset * .4, shot.y + uy * muzzleLength + py * flareOffset * .4, flare === 1 ? "#fff0b0" : color, flare === 1 ? 2.6 : 1.2, .72 - flare * .14, (flare - 1) * 3);
+    }
+  }
+  if (shot.casing && p < .52) {
+    const eject = 4 + (shot.shotIndex ?? 0) * 1.8 + p * 12;
+    const casingX = shot.x - ux * 3 - uy * eject;
+    const casingY = shot.y - uy * 3 + ux * eject + p * p * 9;
+    ctx.save();
+    ctx.translate(casingX, casingY);
+    ctx.rotate(angle + p * 8);
+    ctx.globalAlpha = Math.max(0, 1 - p * 1.6);
+    ctx.fillStyle = "#d8a94f";
+    ctx.fillRect(-2.5, -1, 5, 2);
+    ctx.restore();
+  }
+  if (impactProgress >= 0) {
+    const impactAlpha = Math.max(.08, 1 - impact * .8);
+    ctx.globalAlpha = impactAlpha;
+    const impactColor = enemyProjectile?.coreColor ?? color;
+    drawCombatSplinters(ctx, shot.tx, shot.ty, angle, impactColor, weaponProfile.impactRadius / 10, seed + 4, trail === "explosive-burst" ? 11 : 7);
+    if (["explosive-burst", "grenade"].includes(weaponProfile.impact) || trail === "ballistic-arc") {
+      ctx.fillStyle = "#ffb85c";
+      for (let flame = 0; flame < 6; flame += 1) {
+        const flameAngle = angle + (flame - 2.5) * .25;
+        const flameDistance = 5 + (flame % 3) * 6 + impact * 18;
+        ctx.globalAlpha = Math.max(.06, impactAlpha * (.78 - flame * .08));
+        ctx.beginPath();
+        ctx.moveTo(shot.tx + Math.cos(flameAngle) * flameDistance, shot.ty + Math.sin(flameAngle) * flameDistance);
+        ctx.quadraticCurveTo(
+          shot.tx + Math.cos(flameAngle) * (flameDistance + 6),
+          shot.ty + Math.sin(flameAngle) * (flameDistance + 6) - 5,
+          shot.tx + Math.cos(flameAngle) * (flameDistance + 11),
+          shot.ty + Math.sin(flameAngle) * (flameDistance + 11),
+        );
+        ctx.stroke();
+      }
+    }
+    if (trail === "support-pulse" || shot.effect === "medic") {
+      for (let mote = 0; mote < 6; mote += 1) {
+        const moteAngle = mote / 6 * Math.PI * 2 + seed * .01;
+        const moteDistance = 6 + impact * (12 + mote * 2);
+        ctx.globalAlpha = Math.max(.08, impactAlpha * (.78 - mote * .08));
+        ctx.fillStyle = mote % 2 ? "#d3ffe0" : "#6ce7a0";
+        ctx.beginPath();
+        ctx.arc(shot.tx + Math.cos(moteAngle) * moteDistance, shot.ty + Math.sin(moteAngle) * moteDistance, 1.6 + (mote % 2), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+  if (shot.effect === "scout" && p > .45) {
+    const scanAlpha = .42 + .28 * Math.sin(elapsed * 18 + seed);
+    ctx.globalAlpha = Math.max(.12, scanAlpha);
+    ctx.strokeStyle = "#9cf4ec";
+    ctx.lineWidth = 1.8;
+    drawCombatRibbon(ctx, shot.tx - ux * 11 + px * 7, shot.ty - uy * 11 + py * 7, shot.tx + px * 2, shot.ty + py * 2, "#d4fff6", 1.8, scanAlpha, 5);
+    drawCombatRibbon(ctx, shot.tx - ux * 8 - px * 6, shot.ty - uy * 8 - py * 6, shot.tx - ux * 1 - px * 1, shot.ty - uy * 1 - py * 1, "#42d8d0", 1.2, scanAlpha * .72, -4);
+  }
+  ctx.restore();
+  return true;
+}
+
 function drawWorld(
   ctx: CanvasRenderingContext2D,
   g: Game,
@@ -7252,10 +7670,34 @@ function drawWorld(
     if (f.side === "zombie" && f.marked > 0) {
       ctx.save();
       ctx.translate(f.x, barY - 10);
-      ctx.rotate(Math.PI / 4);
-      ctx.strokeStyle = `rgba(255,210,85,${Math.min(1, .45 + f.marked * .18)})`;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(-5, -5, 10, 10);
+      const markPulse = .5 + .5 * Math.sin(g.time * 8 + f.id * .7);
+      const markAlpha = Math.min(1, .48 + f.marked * .16);
+      // The scout mark is an authored "watching eye", not a generic rotated
+      // square. Its upper/lower lids and moving pupil read as a living
+      // reconnaissance lock while keeping the target-marker semantics.
+      ctx.globalAlpha = markAlpha;
+      ctx.strokeStyle = "#f4c866";
+      ctx.fillStyle = "rgba(69,42,22,.82)";
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-11, 1);
+      ctx.quadraticCurveTo(-4, -7 - markPulse * 2, 0, -7);
+      ctx.quadraticCurveTo(5, -7 - markPulse * 2, 11, 1);
+      ctx.quadraticCurveTo(4, 5 + markPulse, 0, 5);
+      ctx.quadraticCurveTo(-5, 5 + markPulse, -11, 1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#ffe8a1";
+      ctx.beginPath();
+      ctx.ellipse(markPulse * 3 - 1.5, 0, 2.6, 3.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,231,161,.9)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, 15 + markPulse * 2, Math.PI * 1.12, Math.PI * 1.72);
+      ctx.stroke();
       ctx.restore();
     }
   }
@@ -7299,117 +7741,29 @@ function drawWorld(
     ctx.fillStyle = color;
     ctx.shadowColor = color;
     ctx.shadowBlur = weapon === "crawler" ? 9 : enemyProjectile ? 7 : 5;
-    if (shot.style === "melee") {
-      const strength = Math.max(.15, Math.min(1, shot.life / duration));
-      const reach = shot.emphasized ? 18 : 11;
-      ctx.globalAlpha = strength;
-      ctx.lineWidth = shot.emphasized ? 4 : 2.25;
-      ctx.beginPath(); ctx.arc(shot.tx, shot.ty, reach, -.9, 1.15); ctx.stroke();
-      if (["crazy-king", "kumaverson", "brawler", "brute"].includes(weapon)) {
-        ctx.beginPath(); ctx.moveTo(shot.tx - reach * .7, shot.ty - reach * .35); ctx.lineTo(shot.tx + reach * .65, shot.ty + reach * .4); ctx.stroke();
-      }
-    } else {
-      const tailLength = weapon === "crawler" ? 46
-        : enemyProjectile ? enemyProjectile.tailLength
-          : weaponProfile.trail === "high-velocity" ? 36
-            : weaponProfile.trail === "burst-tracer" ? 28
-              : weaponProfile.trail === "bolt" ? 18
-                : 22;
-      ctx.lineWidth = weapon === "crawler" ? 2.8
-        : enemyProjectile?.trail === "sonic" ? 2.8
-          : enemyProjectile?.trail === "chorus" ? 2.2
-            : enemyProjectile ? 2.4
-              : weaponProfile.trail === "burst-tracer" ? 2.2
-                : weaponProfile.trail === "high-velocity" ? 1.8
-                  : 1.45;
-      ctx.beginPath();
-      ctx.moveTo(x - ux * tailLength, y - uy * tailLength);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      if (enemyProjectile?.trail === "glob") {
-        ctx.globalAlpha = .88;
-        ctx.fillStyle = enemyProjectile.coreColor;
-        ctx.beginPath();
-        ctx.ellipse(x, y, 4.5, 3.2, Math.atan2(dy, dx), 0, Math.PI * 2);
-        ctx.fill();
-      } else if (enemyProjectile?.trail === "sonic") {
-        for (let wave = 0; wave < 2; wave += 1) {
-          const radius = 6 + wave * 6;
-          ctx.globalAlpha = .62 - wave * .2;
-          ctx.beginPath();
-          ctx.arc(x, y, radius, Math.atan2(dy, dx) + 2.2, Math.atan2(dy, dx) + 4.1);
-          ctx.stroke();
-        }
-      } else if (enemyProjectile?.trail === "chorus") {
-        for (const offset of [-4, 4]) {
-          ctx.globalAlpha = .34;
-          ctx.beginPath();
-          ctx.moveTo(x - ux * tailLength * .72 + uy * offset, y - uy * tailLength * .72 - ux * offset);
-          ctx.lineTo(x + uy * offset, y - ux * offset);
-          ctx.stroke();
-        }
-      }
-      if (weapon === "crawler") {
-        ctx.globalAlpha = .45;
-        ctx.beginPath(); ctx.moveTo(x - ux * 30 - uy * 3, y - uy * 30 + ux * 3); ctx.lineTo(x - uy * 3, y + ux * 3); ctx.stroke();
-      }
-      if (p < .3) {
-        const muzzle = 5 + (1 - p / .3) * (weapon === "crawler" ? 10 : 7 + (shot.recoil ?? weaponProfile.recoil) * 4);
-        const flare = muzzle * (weapon === "crawler" ? .42 : .3);
-        ctx.globalAlpha = .9;
-        ctx.beginPath();
-        ctx.moveTo(shot.x - ux * 2, shot.y - uy * 2);
-        ctx.lineTo(shot.x + ux * muzzle + uy * flare, shot.y + uy * muzzle - ux * flare);
-        ctx.lineTo(shot.x + ux * muzzle - uy * flare, shot.y + uy * muzzle + ux * flare);
-        ctx.closePath();
-        ctx.fill();
-        ctx.globalAlpha = .45;
-        ctx.beginPath();
-        ctx.arc(shot.x + ux * muzzle * .55, shot.y + uy * muzzle * .55, flare * .72, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      if (shot.casing && p < .52) {
-        const eject = 4 + (shot.shotIndex ?? 0) * 1.8 + p * 12;
-        const casingX = shot.x - ux * 3 - uy * eject;
-        const casingY = shot.y - uy * 3 + ux * eject + p * p * 9;
-        ctx.save();
-        ctx.translate(casingX, casingY);
-        ctx.rotate(Math.atan2(dy, dx) + p * 8);
-        ctx.globalAlpha = Math.max(0, 1 - p * 1.6);
-        ctx.fillStyle = "#d8a94f";
-        ctx.fillRect(-2.5, -1, 5, 2);
-        ctx.restore();
-      }
-      if (impactProgress >= 0) {
-        const impact = impactProgress;
-        ctx.globalAlpha = 1 - impact * .7;
-        ctx.lineWidth = weapon === "crawler" ? 2.5 : 1.5;
-        const impactRadius = weapon === "crawler"
-          ? 12
-          : enemyProjectile?.impactRadius ?? weaponProfile.impactRadius;
-        ctx.beginPath(); ctx.arc(shot.tx, shot.ty, 3 + impact * impactRadius, 0, Math.PI * 2); ctx.stroke();
-        for (let spark = 0; spark < 3; spark += 1) {
-          const angle = spark * Math.PI * 2 / 3 + distance * .01;
-          const length = 5 + impact * 7;
-          ctx.beginPath(); ctx.moveTo(shot.tx, shot.ty); ctx.lineTo(shot.tx + Math.cos(angle) * length, shot.ty + Math.sin(angle) * length); ctx.stroke();
-        }
-      }
-      if (shot.effect === "scout" && p > .45) {
-        ctx.setLineDash([3, 3]); ctx.globalAlpha = .7;
-        ctx.beginPath(); ctx.arc(shot.tx, shot.ty, 11, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
-      }
-      if (shot.effect === "medic" && p > .58) {
-        ctx.globalAlpha = .8; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(shot.tx - 7, shot.ty); ctx.lineTo(shot.tx + 7, shot.ty); ctx.moveTo(shot.tx, shot.ty - 7); ctx.lineTo(shot.tx, shot.ty + 7); ctx.stroke();
-      }
-    }
+    drawAuthoredShotVfx(ctx, shot, {
+      x,
+      y,
+      p,
+      elapsed,
+      duration,
+      impactProgress,
+      ux,
+      uy,
+      distance,
+      weapon,
+      weaponProfile,
+      enemyProjectile,
+      color,
+    });
     ctx.restore();
   }
   ctx.shadowBlur = 0;
   drawBattlePresentationEffects(ctx, g, graphicsProfile.effectDensity);
   for (const p of g.particles) {
     if (!visibleRenderPoint(p.x, p.y, graphicsProfile.cullingMargin)) continue;
-    ctx.globalAlpha = Math.max(0, p.life * 1.6); ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+    ctx.globalAlpha = Math.max(0, p.life * 1.6); ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.ellipse(p.x + p.size * .5, p.y + p.size * .5, Math.max(1, p.size * .62), Math.max(1, p.size * .34), 0, 0, Math.PI * 2); ctx.fill();
   }
   ctx.globalAlpha = 1;
   for (const d of g.damageTexts) {
@@ -7765,7 +8119,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
     supportItemCooldowns: createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>,
     barricadeHp: BARRICADE_MAX_HP, barricadeMaxHp: BARRICADE_MAX_HP, barricadeVulnerable: true, barricadeHitFlash: 0,
-    deployQueue: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null, bossWorldX: null,
+    deployQueue: 0, summonedCount: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null, bossWorldX: null,
     takuyaEntranceAudioActive: false,
     crawlerHitFlash: 0, threat: 0,
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), banner: null, battleBarks: [], manualAbilityIcons: [],
@@ -8996,6 +9350,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           barricadeMaxHp: fresh.barricadeMaxHp,
           barricadeVulnerable: fresh.barricadeVulnerable,
           deployQueue: fresh.deployQueue.length,
+          summonedCount: fresh.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
           deployCooldowns: { ...fresh.deployCooldowns },
           manualAbilityIcons: [],
         }));
@@ -11734,6 +12089,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             assignedLane: fighter.anchorLane,
             x: fighter.x,
             y: fighter.y,
+            combatReady: fighter.combatReady,
             renderDepthScale: activeBattlefieldDepthScale(fighter.y),
             hp: fighter.hp,
             maxHp: fighter.maxHp,
@@ -14199,7 +14555,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       supportItemCooldowns: { ...fresh.supportItemCooldowns },
       wave: fresh.wave, phase: fresh.phase, baseHp: fresh.baseHp, baseMaxHp: fresh.baseMaxHp,
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
-      deployQueue: fresh.deployQueue.length, airstrikePhase: fresh.airstrike.phase,
+      deployQueue: fresh.deployQueue.length, summonedCount: fresh.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length, airstrikePhase: fresh.airstrike.phase,
       crawlerPhase: fresh.crawlerAbility.phase, crawlerCharge: fresh.crawlerAbility.charge, combo: 0,
       bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
       takuyaEntranceAudioActive: false,
@@ -15970,6 +16326,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [enableAudio]);
 
   const dispatchBattleStoryEvents = useCallback((g: Game) => {
+    if (g.definition.missionConfig?.v100StageNumber) return false;
     const stageId = g.definition.stageId;
     const elapsedBattleSeconds = Math.max(0, g.time - g.definition.prepSeconds);
     if (stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET
@@ -21166,6 +21523,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp), baseMaxHp: g.baseMaxHp,
           barricadeHp: Math.max(0, g.barricadeHp), barricadeMaxHp: g.barricadeMaxHp, barricadeVulnerable: g.barricadeVulnerable, barricadeHitFlash: g.barricadeHitFlash,
           deployQueue: g.deployQueue.length,
+          summonedCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
           airstrikePhase: g.airstrike.phase, crawlerPhase: g.crawlerAbility.phase, crawlerCharge: g.crawlerAbility.charge,
           combo: g.combo, bossHp: bossHud?.hp ?? 0, bossMax: bossHud?.maxHp ?? 0, bossKind: bossHud?.enemyKind ?? null, bossWorldX: bossHud?.worldX ?? null,
           takuyaEntranceAudioActive: g.takuyaEntranceAudioRemaining > 0,
@@ -21412,7 +21770,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         </> : <>
           <div className="top-hud">
             <div className="battle-brand-zone">
-              <div className="brand-block"><span className="brand-mark">移</span><div><b>移動拠点</b><small>{selectedOperationView.displayName} <em>{externalSession ? "Version 1.0.0" : RELEASE_LABEL}</em></small></div></div>
+              <div className="brand-block"><div><b>{selectedOperationView.displayName}</b><small>作戦区域 <em>{externalSession ? "Version 1.0.0" : RELEASE_LABEL}</em></small></div></div>
               <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>耐久</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
             </div>
             <div className="battle-message-stack" aria-live="polite">
@@ -21442,20 +21800,22 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               <span>☠ {hud.kills}</span>
               {!isSurvivalBattle && <span>▰ {hud.scrap}</span>}
               {isSurvivalBattle && <span>BOSS {survivalHud.bossKills}</span>}
-              <span className="bay-status">格納庫 {hud.deployQueue}/3</span>
+              <span className="bay-status">召喚限度 {hud.summonedCount}/7</span>
               {hud.combo > 1 && <span className="combo">×{hud.combo}</span>}
             </div>
           </div>
 
           <div className="unit-cards" aria-label="生存者ユニット">
               {battleHudSlots.map((card, slotIndex) => {
-                if (!card) {
-                  return <div
-                    key={`empty-slot-${slotIndex}`}
-                    className="unit-card unit-card-placeholder"
-                    data-slot-index={slotIndex}
-                    aria-hidden="true"
-                  />;
+                 if (!card) {
+                   return <div
+                     key={`empty-slot-${slotIndex}`}
+                     className="unit-card unit-card-placeholder"
+                     data-slot-index={slotIndex}
+                     data-state="empty"
+                     role="status"
+                     aria-label={`未配置の編成枠 ${slotIndex + 1}`}
+                   ><span className="empty-slot-label">空き枠</span><small>編成待ち</small></div>;
                 }
                 const cooldown = Math.ceil(hud.deployCooldowns[card.kind] ?? 0);
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
@@ -21467,25 +21827,28 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       : hud.energy < card.cost
                         ? "指揮不足"
                         : null);
-                return (
-                  <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                 const cardState = cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : cardBlockReason === "格納庫満員" ? "full" : "blocked") : "ready";
+                 return (
+                   <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockReason ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
                     <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
-                    {!cooldown && <span className="card-state">{cardBlockReason ?? "出撃可能"}</span>}
+                     {!cooldown && <span className="card-state" data-state={cardState}>{cardBlockReason ?? "出撃可能"}</span>}
                     {cooldown > 0 && <span
                       className="cooldown-mask"
                       style={{ "--cooldown-progress": `${Math.min(100, cooldown / Math.max(1, card.deployCooldown) * 100)}%` } as CSSProperties}
-                    ><small>再準備中</small></span>}
+                    ><small>再準備 {cooldown}秒</small></span>}
                   </button>
                 );
               })}
           </div>
           <div className="support-zone">
-            <div className="support-row" aria-label="戦場物資・航空支援・移動拠点一斉掃射">
+            <div className="support-row" aria-label="戦場物資・航空支援・車両砲撃">
               <span className="support-label">物資<br />支援</span>
-              <button
-                className={`support-btn ${selectedSupply} ${hud.supportItemCooldowns[selectedSupply] > 0 ? "cooling" : ""} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
-                data-cooldown={Math.ceil(hud.supportItemCooldowns[selectedSupply])}
+               <button
+                 className={`support-btn ${selectedSupply} ${hud.supportItemCooldowns[selectedSupply] > 0 ? "cooling" : ""} ${selectedAction === `supply:${selectedSupply}` ? "selected" : ""}`}
+                 data-category="support"
+                 data-state={hud.supportItemCooldowns[selectedSupply] > 0 ? "cooldown" : selectedSupplyBlockReason ? "insufficient" : selectedAction === `supply:${selectedSupply}` ? "selected" : "ready"}
+                 data-cooldown={Math.ceil(hud.supportItemCooldowns[selectedSupply])}
                 aria-disabled={!started || paused || hud.scrap < supplyDefs[selectedSupply].cost || hud.supportItemCooldowns[selectedSupply] > 0 || combatLocked || battleSaveBoundaryRef.current}
                 onClick={() => chooseActionWithCue(selectedAction === `supply:${selectedSupply}` ? null : `supply:${selectedSupply}`)}
                 aria-label={hud.supportItemCooldowns[selectedSupply] > 0
@@ -21495,14 +21858,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 <span className="support-key">{supplyDefs[selectedSupply].key}</span>
                 <b>{hud.supportItemCooldowns[selectedSupply] > 0 ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒` : SUPPORT_DISPLAY_NAMES[selectedSupply]}</b>
                 <small><span className="support-detail-full">{selectedSupplyBlockReason ?? (selectedSupply === "pod" ? "着地衝撃＋進路封鎖" : selectedSupply === "drum" ? "タップ／被弾で起爆" : "周辺の味方を継続回復")}</span><span className="support-detail-compact">{selectedSupplyCompactDetail}</span></small>
-                <em>{hud.supportItemCooldowns[selectedSupply] > 0 ? "↻" : `▰${supplyDefs[selectedSupply].cost}`}</em>
-              </button>
-              <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} aria-disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked || battleSaveBoundaryRef.current} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
-                <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></small><em>◆{AIRSTRIKE_DEF.gaugeCost}</em>
-              </button>
-              <button className="support-btn barrage" aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked || battleSaveBoundaryRef.current} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
-                <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "一斉掃射" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small><span className="support-detail-full">{crawlerBlockReason ?? "戦場全域固定火器"}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></small><em>⌁</em>
-              </button>
+                 <em>{hud.supportItemCooldowns[selectedSupply] > 0 ? "再準備" : `必要 ${supplyDefs[selectedSupply].cost}`}</em>
+               </button>
+               <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} data-category="support" data-state={hud.airstrikePhase !== "idle" ? "active" : airstrikeBlockReason ? "insufficient" : selectedAction === "airstrike" ? "selected" : "ready"} aria-disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked || battleSaveBoundaryRef.current} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
+                 <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></small><em>必要 {AIRSTRIKE_DEF.gaugeCost}</em>
+               </button>
+               <button className="support-btn barrage" data-category="vehicle" data-state={hud.crawlerPhase !== "ready" ? "cooldown" : crawlerBlockReason ? "insufficient" : "ready"} aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked || battleSaveBoundaryRef.current} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
+                 <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small><span className="support-detail-full">{crawlerBlockReason ?? "移動拠点の固定火器"}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></small><em>車両</em>
+               </button>
             </div>
             <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${publicDisplayText(hud.objective)}`}</div>
           </div>
