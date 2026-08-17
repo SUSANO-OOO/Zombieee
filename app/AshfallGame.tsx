@@ -14169,6 +14169,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const selectedOutbreakMissionView = outbreakMissionViews.find(({ id }) => id === selectedOutbreakMissionId)
     ?? outbreakMissionViews.find(({ unlocked }) => unlocked)
     ?? outbreakMissionViews[0];
+  const compactBattleStageName = (displayName: string) => displayName.split("・")[0] || displayName;
   const selectedOperationView = externalSession
     ? {
       id: externalSession.stageId,
@@ -14176,7 +14177,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       regionId: "region-v100",
       regionLabel: "西新世紀末物語",
       regionName: "V1.0.0キャンペーン",
-      displayName: externalSession.displayName ?? externalSession.stageId,
+      displayName: compactBattleStageName(externalSession.displayName ?? externalSession.stageId),
       chapterName: "V1.0.0キャンペーン",
       objective: "作戦目標を達成",
       missionLabel: "キャンペーン作戦",
@@ -21831,12 +21832,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  return (
                    <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockReason ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
-                    <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost">⚡{card.cost}</span>
-                     {!cooldown && <span className="card-state" data-state={cardState}>{cardBlockReason ?? "出撃可能"}</span>}
+                    <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">⚡</i>{card.cost}</span>
+                     {!cooldown && <span className="card-state" data-state={cardState}>
+                       <span className="card-state-full">{cardBlockReason ?? "出撃可能"}</span>
+                       <span className="card-state-compact" aria-hidden="true">{cardState === "ready" ? "出撃" : cardState === "insufficient" ? "不足" : cardState === "full" ? "満員" : "不可"}</span>
+                     </span>}
                     {cooldown > 0 && <span
                       className="cooldown-mask"
                       style={{ "--cooldown-progress": `${Math.min(100, cooldown / Math.max(1, card.deployCooldown) * 100)}%` } as CSSProperties}
-                    ><small>再準備 {cooldown}秒</small></span>}
+                    ><small><span className="cooldown-full">再準備 {cooldown}秒</span><span className="cooldown-compact">{cooldown}秒</span></small></span>}
                   </button>
                 );
               })}

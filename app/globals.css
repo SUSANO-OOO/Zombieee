@@ -470,6 +470,15 @@ button[aria-disabled="true"]:focus-visible {
   gap:0;
   padding:0;
 }
+.game-frame[data-battle-hud-layout="mobile"] .brand-block b {
+  max-height:3.2em;
+  overflow:visible;
+  overflow-wrap:anywhere;
+  font-size:14px;
+  line-height:1.05;
+  letter-spacing:0;
+  white-space:normal;
+}
 .game-frame[data-battle-hud-layout="mobile"] .bottom-hud {
   left:var(--battle-hud-content-left);
   right:var(--battle-hud-content-right);
@@ -795,6 +804,9 @@ button[aria-disabled="true"]:focus-visible {
 .unit-card-placeholder small { position:absolute; inset:auto 0 16%; color:#899791; font:700 8px/1 monospace; text-align:center; }
 .unit-card-placeholder { border-style:dashed; border-color:#6a7770; background:linear-gradient(145deg,#293432,#141a19); opacity:1; }
 .card-state { display:block; position:absolute; z-index:4; left:44%; right:3px; bottom:19%; overflow:hidden; color:#d8dfd4; font:800 clamp(6px,.56vw,9px)/1.05 monospace; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 2px 3px #000; }
+.card-state-full { display:inline; }
+.card-state-compact { display:none; }
+.cooldown-compact { display:none; }
 .card-state[data-state="ready"] { color:#cbe2bd; }
 .card-state[data-state="insufficient"], .card-state[data-state="full"] { color:#ffd0b1; }
 .support-label { display:block; align-self:center; color:#c4b58f; font:800 8px/1.05 monospace; letter-spacing:.08em; text-align:center; }
@@ -875,7 +887,7 @@ button[aria-disabled="true"]:focus-visible {
    vehicle action can never wrap below the supply and air-support actions. */
 .game-frame[data-battle-hud-layout="mobile"] .support-zone {
   display:grid;
-  grid-template-rows:minmax(0,1fr) var(--battle-hud-bottom-meta-height);
+  grid-template-rows:minmax(0,1fr);
   min-width:0;
   min-height:0;
   overflow:hidden;
@@ -908,16 +920,16 @@ button[aria-disabled="true"]:focus-visible {
 .game-frame[data-battle-hud-layout="mobile"] .support-row > .support-btn:nth-child(4) { grid-column:3; }
 
 /* Keep the visible card set inside the unit-zone boundary.  The seven-slot
-   roster remains horizontally scrollable; only the first three/five cards
+   roster remains horizontally scrollable; only the first four/five cards
    are sized to be complete cards in the mobile/desktop viewport respectively. */
 .game-frame[data-battle-hud-layout="mobile"] .unit-cards {
   gap:3px;
   overflow-x:auto;
 }
 .game-frame[data-battle-hud-layout="mobile"] .unit-card {
-  flex:0 0 calc((100% - 6px) / 3);
+  flex:0 0 calc((100% - 9px) / 4);
   min-width:0;
-  max-width:calc((100% - 6px) / 3);
+  max-width:calc((100% - 9px) / 4);
 }
 .game-frame:not([data-battle-hud-layout="mobile"]) .unit-cards {
   gap:6px;
@@ -927,4 +939,61 @@ button[aria-disabled="true"]:focus-visible {
   flex:0 0 calc((100% - 24px) / 5);
   min-width:0;
   max-width:calc((100% - 24px) / 5);
+}
+
+/* The legacy canonical HUD still exercises the 667px landscape phone. Keep
+   the cost and status readable in the four-card strip: use short, explicit
+   status labels at this width instead of squeezing the full sentence with
+   negative letter-spacing. */
+@media (max-width:720px) {
+  .game-frame[data-battle-hud-layout="mobile"] .cooldown-mask small {
+    font-size:12px;
+    line-height:1;
+  }
+  .unit-card .cost {
+    right:3px !important;
+    bottom:5% !important;
+    letter-spacing:normal;
+  }
+  .unit-card .cost-mark {
+    display:inline-block;
+    margin-right:-1px;
+    font-size:10px;
+    line-height:1;
+    vertical-align:1px;
+  }
+  .unit-card .card-state {
+    top:auto !important;
+    left:4px !important;
+    right:auto !important;
+    bottom:5% !important;
+    width:auto;
+    max-width:calc(100% - 36px) !important;
+    height:auto;
+    max-height:none !important;
+    font-size:12px;
+    line-height:1;
+    letter-spacing:normal !important;
+    white-space:nowrap !important;
+  }
+  .unit-card .card-state-full { display:none; }
+  .unit-card .card-state-compact { display:inline; }
+  .unit-card .cooldown-full { display:none !important; }
+  .unit-card .cooldown-compact { display:inline !important; }
+  .unit-card .cooldown-mask small {
+    display:flex;
+    width:34px;
+    min-width:34px;
+    height:16px;
+    line-height:12px;
+    overflow:visible;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .unit-card .cooldown-compact {
+    display:block !important;
+    height:16px;
+    line-height:12px;
+  }
 }
