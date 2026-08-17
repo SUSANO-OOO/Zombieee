@@ -46,6 +46,14 @@ import {
 import { describeUpdate, evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js";
 import { resolvePwaBaseUrl } from "./pwaBasePath.js";
 
+// The manifest lookup is deliberately bounded, but a first-party production
+// page can take longer than the old 10-second window to settle on hosted
+// WebKit while the app is already usable. Aborting that lookup creates a
+// browser-level request failure even though the game mounted correctly. Keep
+// the offline fallback bounded while giving the production manifest enough
+// time to complete without a synthetic cancellation.
+const PUBLISHED_MANIFEST_TIMEOUT_MS = 30_000;
+
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
 
 function readSafetyFromDocument() {
@@ -207,7 +215,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       // must not hold the screen indefinitely.
       const published = await fetchPublishedManifest({
         baseUrl,
-        signal: typeof AbortSignal?.timeout === "function" ? AbortSignal.timeout(10_000) : undefined,
+        signal: typeof AbortSignal?.timeout === "function" ? AbortSignal.timeout(PUBLISHED_MANIFEST_TIMEOUT_MS) : undefined,
       });
       setPublishedManifest(published as Manifest);
       setManifestUnreachable(false);
