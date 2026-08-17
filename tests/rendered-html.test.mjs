@@ -277,7 +277,7 @@ test("keeps the main player-facing battle and result UI Japanese-first", async (
     readFile(new URL("../app/storyEvents.js", import.meta.url), "utf8"),
   ]);
   const battleUi = game.slice(game.indexOf("const healthPct"));
-  assert.match(battleUi, /<b>\{selectedOperationView\.displayName\}<\/b>/);
+  assert.match(battleUi, /<b>\{compactBattleStageName\(selectedOperationView\.displayName\)}<\/b>/);
   assert.match(battleUi, /第\{hud\.phase\}段階/);
   assert.match(battleUi, /aria-label="生存者ユニット"/);
   assert.match(battleUi, /召喚限度 \{hud\.summonedCount\}\/7/);

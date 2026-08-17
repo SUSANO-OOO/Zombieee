@@ -368,7 +368,7 @@ button[aria-disabled="true"]:focus-visible {
     padding:var(--app-viewport-safe-top) var(--app-viewport-safe-right) 0 var(--app-viewport-safe-left);
     gap:0;
   }
-  .battle-brand-zone { grid-template-columns:minmax(72px,38%) minmax(92px,43%); gap:5px; padding:4px 6px; }
+  .battle-brand-zone { grid-template-columns:minmax(78px,42%) minmax(92px,43%); gap:4px; padding:4px; }
   .brand-block { min-width:0; gap:5px; }
   .brand-mark { flex:0 0 auto; width:32px; height:32px; font-size:18px; }
   .brand-block b { overflow:hidden; font-size:14px; text-overflow:clip; white-space:nowrap; }
@@ -856,7 +856,7 @@ button[aria-disabled="true"]:focus-visible {
 .card-state[data-state="blocked"] { color:#b9c9c2; font-size:clamp(10px,1vw,16px); }
 .cooldown-mask { place-content:center; padding:0; background:linear-gradient(135deg,rgba(8,10,11,.84),rgba(17,22,24,.7)); }
 .cooldown-mask::after { right:8px; bottom:7px; left:8px; height:3px; background:linear-gradient(90deg,#d39b4f var(--cooldown-progress),rgba(90,84,73,.45) var(--cooldown-progress)); }
-.cooldown-mask small { color:#f0d5ad; font:900 clamp(11px,1vw,16px)/1 sans-serif; letter-spacing:0; }
+.cooldown-mask small { color:#f0d5ad; font:900 clamp(12px,1vw,16px)/1 sans-serif; letter-spacing:0; }
 .empty-slot-label { inset:35% 8% auto; font-size:clamp(10px,.8vw,14px); }
 .unit-card-placeholder small { inset:auto 0 17%; font-size:clamp(8px,.62vw,11px); }
 .unit-card-placeholder { border-width:2px; }
@@ -941,11 +941,34 @@ button[aria-disabled="true"]:focus-visible {
   max-width:calc((100% - 24px) / 5);
 }
 
+/* Desktop support buttons have enough vertical room for a dedicated cost
+   line. Keep the action title/detail clear of the right-side requirement
+   indicator instead of letting the two text layers collide. */
+@media (min-width:961px) {
+  .support-btn {
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:flex-start;
+    padding:8px 8px 28px 25px;
+  }
+  .support-btn b,
+  .support-btn small {
+    max-width:100%;
+  }
+  .support-btn em {
+    top:auto;
+    right:6px;
+    bottom:7px;
+    transform:none;
+  }
+}
+
 /* The legacy canonical HUD still exercises the 667px landscape phone. Keep
    the cost and status readable in the four-card strip: use short, explicit
    status labels at this width instead of squeezing the full sentence with
    negative letter-spacing. */
-@media (max-width:720px) {
+@media (max-width:960px) {
   .game-frame[data-battle-hud-layout="mobile"] .cooldown-mask small {
     font-size:12px;
     line-height:1;
@@ -971,7 +994,7 @@ button[aria-disabled="true"]:focus-visible {
     max-width:calc(100% - 36px) !important;
     height:auto;
     max-height:none !important;
-    font-size:10px;
+    font-size:12px;
     line-height:1;
     letter-spacing:normal !important;
     white-space:nowrap !important;

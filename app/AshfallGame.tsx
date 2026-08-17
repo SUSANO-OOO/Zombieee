@@ -21771,7 +21771,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         </> : <>
           <div className="top-hud">
             <div className="battle-brand-zone">
-              <div className="brand-block"><div><b>{selectedOperationView.displayName}</b></div></div>
+              <div className="brand-block"><div><b>{compactBattleStageName(selectedOperationView.displayName)}</b></div></div>
               <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>耐久</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
             </div>
             <div className="battle-message-stack" aria-live="polite">
