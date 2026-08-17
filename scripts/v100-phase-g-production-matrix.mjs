@@ -334,13 +334,14 @@ async function collectCombatCausalProof(page, { durationMs = 2_400 } = {}) {
     samples.push(await page.evaluate(() => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
       const audio = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
+      const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       return {
-        attackIdentity: snapshot?.attackIdentity ?? [],
-        pendingWeaponHits: snapshot?.pendingWeaponHits ?? [],
+        attackIdentity: (snapshot?.attackIdentity?.length ?? 0) > 0 ? snapshot.attackIdentity : observedCombatActivity.attackIdentity ?? [],
+        pendingWeaponHits: (snapshot?.pendingWeaponHits?.length ?? 0) > 0 ? snapshot.pendingWeaponHits : observedCombatActivity.pendingWeaponHits ?? [],
         fighters: snapshot?.fighters?.map((fighter) => ({ id: fighter.id, side: fighter.side, kind: fighter.kind, targetId: fighter.targetId, flash: fighter.flash, knock: fighter.knock, attackWindup: fighter.attackWindup })) ?? [],
         shots: snapshot?.shots ?? [],
         damageTexts: snapshot?.damageTexts ?? [],
-        battlePresentationEffects: snapshot?.battlePresentation?.effects ?? [],
+        battlePresentationEffects: (snapshot?.battlePresentation?.effects?.length ?? 0) > 0 ? snapshot.battlePresentation.effects : observedCombatActivity.battlePresentationEffects ?? [],
         audioCueRequests: audio,
       };
     }).catch(() => null));
@@ -440,9 +441,23 @@ async function captureStateImpl(engineName, viewport, state, configure) {
   }
 }
 
+function isTransientBrowserClosure(error) {
+  return /target page, context or browser has been closed/i.test(String(error));
+}
+
 async function captureState(engineName, viewport, state, configure) {
   if (onlyState && state !== onlyState) return null;
-  return captureStateImpl(engineName, viewport, state, configure);
+  let lastError = null;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      return await captureStateImpl(engineName, viewport, state, configure);
+    } catch (error) {
+      lastError = error;
+      if (attempt === 2 || !isTransientBrowserClosure(error)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+  throw lastError;
 }
 
 async function freshNamePage(page) {
