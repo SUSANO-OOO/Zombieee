@@ -56,6 +56,32 @@ const PUBLISHED_MANIFEST_TIMEOUT_MS = 30_000;
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
 
+/**
+ * Bound the UI wait without aborting the first-party request itself. An
+ * AbortSignal is observable by Playwright/WebKit as a cancelled network
+ * request, which turns a usable production mount into a hard QA failure. The
+ * manifest is metadata only: if the deadline expires the gate can continue in
+ * its offline/unreachable state while the request is allowed to settle
+ * naturally and populate the cache for a later retry.
+ */
+async function fetchPublishedManifestBounded(baseUrl: string) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error("Published manifest lookup timed out")),
+      PUBLISHED_MANIFEST_TIMEOUT_MS,
+    );
+  });
+  try {
+    return await Promise.race([
+      fetchPublishedManifest({ baseUrl }),
+      deadline,
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 function readSafetyFromDocument() {
   if (typeof document === "undefined") return {};
   const data = document.documentElement.dataset;
@@ -213,10 +239,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     try {
       // Bounded: the title waits on this during boot, so an unanswered request
       // must not hold the screen indefinitely.
-      const published = await fetchPublishedManifest({
-        baseUrl,
-        signal: typeof AbortSignal?.timeout === "function" ? AbortSignal.timeout(PUBLISHED_MANIFEST_TIMEOUT_MS) : undefined,
-      });
+      const published = await fetchPublishedManifestBounded(baseUrl);
       setPublishedManifest(published as Manifest);
       setManifestUnreachable(false);
       return true;
