@@ -1,5 +1,6 @@
 {
   "schemaVersion": 2,
+  "runtimeContractVersion": 1,
   "route": "/Zombieee/v100",
   "totalScreenshots": 54,
   "coreStateCount": 16,

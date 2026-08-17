@@ -244,6 +244,140 @@ async function overflowAudit(page) {
   });
 }
 
+const stateContracts = Object.freeze({
+  "title-name": { phases: ["name"], selectors: [".v100-title-screen", "#v100-name-title", "#v100-player-name", ".v100-name-card .v100-primary"] },
+  "dialogue-left": { phases: ["event"], selectors: [".v100-event-panel", '[data-v100-state="dialogue-left"]', ".v100-event-actions .v100-primary"] },
+  "dialogue-right": { phases: ["event"], selectors: [".v100-event-panel", '[data-v100-state="dialogue-right"]', ".v100-event-actions .v100-primary"] },
+  "map-normal": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-map-layout", ".v100-map-hero", ".v100-route-label", ".v100-stage-list", ".v100-map-side", ".v100-map-actions"] },
+  "map-locked-boss": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-boss-callout", ".v100-map-side"] },
+  formation: { phases: ["formation"], selectors: [".v100-formation-panel", ".v100-slot-track", ".v100-roster-card", ".v100-formation-footer .v100-primary"] },
+  personnel: { phases: ["map"], surfaces: ["personnel"], selectors: ['main.v100-shell[data-v100-surface="personnel"]', ".v100-personnel-grid", ".v100-personnel-card", ".v100-management-panel"] },
+  "support-vehicle-management": { phases: ["map"], surfaces: ["support-vehicle"], selectors: ['main.v100-shell[data-v100-surface="support-vehicle"]', ".v100-support-section", ".v100-support-management-card", ".v100-vehicle-section", ".v100-vehicle-stats"] },
+  "battle-normal": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
+  "battle-boss": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
+  "result-win": { phases: ["result"], selectors: ['[data-v100-surface="result-win"]', ".v100-result-records", ".v100-result-rewards", ".v100-result-actions"] },
+  "result-lose": { phases: ["result"], selectors: ['[data-v100-surface="result-lose"]', ".v100-result-records", ".v100-result-actions"] },
+  ending: { phases: ["ending"], selectors: ['[data-v100-surface="ending"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
+  credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
+  "epilogue-postgame": { phases: ["epilogue"], selectors: ['[data-v100-surface="epilogue"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
+  "data-management-modal": { phases: ["map"], surfaces: ["data"], selectors: ['[data-v100-surface="data"]', '[role="dialog"][aria-labelledby="v100-data-title"]', ".v100-data-actions"] },
+  "battle-extra": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
+});
+
+async function productionStateContract(page, state) {
+  const contract = stateContracts[state];
+  invariant(contract, `missing Phase G state contract: ${state}`);
+  const observed = await page.evaluate((expected) => {
+    const visible = (selector) => {
+      const element = document.querySelector(selector);
+      if (!element) return false;
+      const style = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
+    };
+    const shell = document.querySelector(".v100-shell");
+    const canvas = document.querySelector(".game-shell[data-screen=\"battle\"] canvas");
+    let canvasAudit = null;
+    if (canvas instanceof HTMLCanvasElement && canvas.width > 0 && canvas.height > 0) {
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (context) {
+        const sample = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        let sampled = 0;
+        let visiblePixels = 0;
+        let lumaTotal = 0;
+        for (let index = 0; index < sample.length; index += 16) {
+          const alpha = sample[index + 3] ?? 0;
+          const luma = ((sample[index] ?? 0) * .2126) + ((sample[index + 1] ?? 0) * .7152) + ((sample[index + 2] ?? 0) * .0722);
+          sampled += 1;
+          if (alpha > 8 && luma > 4) visiblePixels += 1;
+          lumaTotal += luma;
+        }
+        const mean = sampled ? lumaTotal / sampled : 0;
+        let varianceTotal = 0;
+        for (let index = 0; index < sample.length; index += 16) {
+          const luma = ((sample[index] ?? 0) * .2126) + ((sample[index + 1] ?? 0) * .7152) + ((sample[index + 2] ?? 0) * .0722);
+          varianceTotal += (luma - mean) ** 2;
+        }
+        canvasAudit = { width: canvas.width, height: canvas.height, sampled, visiblePixels, visibleRatio: sampled ? visiblePixels / sampled : 0, lumaMean: mean, lumaVariance: sampled ? varianceTotal / sampled : 0 };
+      }
+    }
+    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+    const mount = window.__ASHFALL_ASSET_QA__?.getBattleMountState?.() ?? null;
+    const buttons = [...document.querySelectorAll("button")].filter((button) => {
+      const rect = button.getBoundingClientRect();
+      const style = getComputedStyle(button);
+      return style.display !== "none" && style.visibility !== "hidden" && !button.disabled && rect.width >= 28 && rect.height >= 24;
+    }).length;
+    return {
+      phase: shell?.getAttribute("data-v100-phase") ?? null,
+      surface: shell?.getAttribute("data-v100-surface") ?? null,
+      selectorHits: Object.fromEntries(expected.selectors.map((selector) => [selector, visible(selector)])),
+      buttonCount: buttons,
+      bodyTextLength: document.body.innerText.trim().length,
+      screen: snapshot?.screen ?? document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
+      battleMounted: mount?.battleMounted === true,
+      canvas: canvasAudit,
+      fighterKinds: Array.isArray(snapshot?.fighters) ? [...new Set(snapshot.fighters.map((fighter) => `${fighter.side}:${fighter.kind}`))] : [],
+    };
+  }, contract);
+  const missingSelectors = contract.selectors.filter((selector) => observed.selectorHits?.[selector] !== true);
+  const phaseOk = contract.phases.includes(observed.phase);
+  const surfaceOk = !contract.surfaces || contract.surfaces.includes(observed.surface);
+  const battleOk = !state.startsWith("battle") || (observed.screen === "battle" && observed.battleMounted === true && (observed.canvas?.visiblePixels ?? 0) > 0);
+  return { ok: missingSelectors.length === 0 && phaseOk && surfaceOk && battleOk, expected: contract, observed, missingSelectors, phaseOk, surfaceOk, battleOk };
+}
+
+async function collectCombatCausalProof(page, { durationMs = 2_400 } = {}) {
+  const samples = [];
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < durationMs) {
+    samples.push(await page.evaluate(() => {
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+      const audio = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [];
+      return {
+        attackIdentity: snapshot?.attackIdentity ?? [],
+        pendingWeaponHits: snapshot?.pendingWeaponHits ?? [],
+        fighters: snapshot?.fighters?.map((fighter) => ({ id: fighter.id, side: fighter.side, kind: fighter.kind, targetId: fighter.targetId, flash: fighter.flash, knock: fighter.knock, attackWindup: fighter.attackWindup })) ?? [],
+        shots: snapshot?.shots ?? [],
+        damageTexts: snapshot?.damageTexts ?? [],
+        battlePresentationEffects: snapshot?.battlePresentation?.effects ?? [],
+        audioCueRequests: audio,
+      };
+    }).catch(() => null));
+    await page.waitForTimeout(120);
+  }
+  const valid = samples.filter(Boolean);
+  const edges = new Set();
+  const visualEvents = new Set();
+  const reactionKeys = new Set();
+  const audioCueIds = new Set();
+  for (const sample of valid) {
+    for (const attack of [...(sample.attackIdentity ?? []), ...(sample.pendingWeaponHits ?? [])]) {
+      if (attack.sourceId !== undefined && attack.targetId !== undefined && attack.targetId !== null) edges.add(`${attack.sourceId}->${attack.targetId}`);
+      if (attack.weapon || attack.effect) visualEvents.add(String(attack.weapon ?? attack.effect));
+    }
+    for (const effect of sample.battlePresentationEffects ?? []) visualEvents.add(String(effect.semantic ?? effect.kind ?? "presentation"));
+    for (const fighter of sample.fighters ?? []) if (Number(fighter.flash) > 0 || Number(fighter.knock) > 0 || Number(fighter.attackWindup) > 0) reactionKeys.add(`${fighter.id}:${fighter.flash > 0 ? "flash" : "knock"}`);
+    for (const text of sample.damageTexts ?? []) if (text?.value !== undefined) reactionKeys.add(`damage:${text.value}`);
+    for (const request of sample.audioCueRequests ?? []) if (request?.cueId) audioCueIds.add(request.cueId);
+  }
+  const causalProof = {
+    sampleCount: valid.length,
+    sourceToTargetEdges: [...edges],
+    visualEvents: [...visualEvents],
+    reactionEvents: [...reactionKeys],
+    audioCueIds: [...audioCueIds],
+    stages: {
+      source: edges.size > 0,
+      travelOrContact: visualEvents.size > 0,
+      targetReaction: reactionKeys.size > 0,
+      audio: audioCueIds.size > 0,
+    },
+  };
+  causalProof.ok = causalProof.sampleCount > 0 && causalProof.stages.source && causalProof.stages.travelOrContact && causalProof.stages.targetReaction && causalProof.stages.audio;
+  return causalProof;
+}
+
 async function saveScreenshot(page, filePath, label) {
   await page.screenshot({ path: filePath, animations: "disabled" });
   const bytes = await readFile(filePath);
@@ -260,11 +394,15 @@ async function captureStateImpl(engineName, viewport, state, configure) {
   const label = `${engineName}-${viewportLabel(viewport)}-${state}`;
   try {
     await configure(page);
+    const productionContract = await productionStateContract(page, state);
+    invariant(productionContract.ok, `${label} production state contract failed: ${JSON.stringify(productionContract)}`);
+    const combatCausalProof = state.startsWith("battle") ? await collectCombatCausalProof(page) : null;
+    if (state.startsWith("battle")) invariant(combatCausalProof?.ok === true, `${label} combat causal proof failed: ${JSON.stringify(combatCausalProof)}`);
     const screenshot = await saveScreenshot(page, imagePath(label), label);
     const overflow = await overflowAudit(page);
     const runtime = await page.evaluate(() => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
-      if (!snapshot) return null;
+      if (!snapshot) return { screen: null };
       const observedCombatActivity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       return {
         screen: snapshot.screen,
@@ -273,6 +411,9 @@ async function captureStateImpl(engineName, viewport, state, configure) {
         attackIdentity: (snapshot.attackIdentity?.length ?? 0) > 0 ? snapshot.attackIdentity : observedCombatActivity.attackIdentity ?? [],
         pendingWeaponHits: (snapshot.pendingWeaponHits?.length ?? 0) > 0 ? snapshot.pendingWeaponHits : observedCombatActivity.pendingWeaponHits ?? [],
         battlePresentationEffects: (snapshot.battlePresentation?.effects?.length ?? 0) > 0 ? snapshot.battlePresentation.effects : observedCombatActivity.battlePresentationEffects ?? [],
+        shots: snapshot.shots?.map((shot) => ({ sourceId: shot.sourceId, targetId: shot.targetId, weapon: shot.weapon, effect: shot.effect, x: shot.x, y: shot.y, tx: shot.tx, ty: shot.ty, life: shot.life })) ?? [],
+        damageTexts: snapshot.damageTexts?.map((entry) => ({ value: entry.value, x: entry.x, y: entry.y, life: entry.life })) ?? [],
+        audioCueRequests: window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? [],
         crawlerAbility: snapshot.crawlerAbility ?? null,
         missionObjects: snapshot.battlefieldObjects ?? [],
       };
@@ -283,7 +424,7 @@ async function captureStateImpl(engineName, viewport, state, configure) {
     invariant(diagnostics.pageErrors.length === 0, `${label} page errors: ${JSON.stringify(diagnostics.pageErrors)}`);
     invariant(diagnostics.httpFailures.length === 0, `${label} HTTP failures: ${JSON.stringify(diagnostics.httpFailures)}`);
     invariant(diagnostics.requestFailures.length === 0, `${label} request failures: ${JSON.stringify(diagnostics.requestFailures)}`);
-    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, runtime });
+    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime });
     return screenshot;
   } catch (error) {
     const failureState = await page.evaluate(() => ({
@@ -429,7 +570,7 @@ for (const viewport of requiredViewports) {
   await captureState("chromium", viewport, "epilogue-postgame", async (page) => { await openRoute(page, eventSave("epilogue", "v100:event:epilogue")); await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "data-management-modal", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByRole("button", { name: "データ管理", exact: true }), "data management");
+    await click(page, page.getByLabel("作戦地図").getByRole("button", { name: "データ管理", exact: true }), "data management");
     await page.getByRole("dialog", { name: "データ管理" }).waitFor({ state: "visible", timeout });
   });
 }

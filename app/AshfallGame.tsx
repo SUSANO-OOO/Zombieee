@@ -372,7 +372,7 @@ import {
   queueSemanticBattlePresentation,
   resetBattlePresentationRuntime,
 } from "./battlePresentationV099.js";
-import { RELEASE_LABEL, RELEASE_VERSION } from "./releaseIdentity.js";
+import { RELEASE_VERSION } from "./releaseIdentity.js";
 import { publicDisplayText, PUBLIC_CRAWLER_LABEL } from "./publicDisplayNames.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
 import {
@@ -13758,7 +13758,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const card = equippedCardForGame(g, kind);
     if (!card || !g.formationKinds.includes(kind) || g.deployQueue.length >= 3 || !canDeploy({ running: g.running, paused: g.paused, over: g.over, command: g.energy, cost: card.cost, cooldown: g.deployCooldowns[kind] })) {
       playUiOperationCue("reject", `deploy:${kind}:unavailable`);
-      if (g.deployQueue.length >= 3) { g.banner = "格納庫満員 // 3"; g.bannerTime = .9; }
+      if (g.deployQueue.length >= 3) { g.banner = "召喚限度到達 // 3"; g.bannerTime = .9; }
       return false;
     }
     g.energy -= card.cost;
@@ -21771,7 +21771,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         </> : <>
           <div className="top-hud">
             <div className="battle-brand-zone">
-              <div className="brand-block"><div><b>{selectedOperationView.displayName}</b><small>作戦区域 <em>{externalSession ? "Version 1.0.0" : RELEASE_LABEL}</em></small></div></div>
+              <div className="brand-block"><div><b>{selectedOperationView.displayName}</b></div></div>
               <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>耐久</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
             </div>
             <div className="battle-message-stack" aria-live="polite">
@@ -21822,17 +21822,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const portraitArt = (FORMATION_CARD_ART as Record<string, string | undefined>)[card.kind];
                 const cardBlockReason = commonBattleActionBlockReason
                   ?? (hud.deployQueue >= 3
-                    ? "格納庫満員"
+                    ? "召喚限度到達"
                     : cooldown > 0
                       ? `再準備 ${cooldown}秒`
                       : hud.energy < card.cost
                         ? "指揮不足"
                         : null);
-                 const cardState = cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : cardBlockReason === "格納庫満員" ? "full" : "blocked") : "ready";
+                 const cardState = cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : cardBlockReason === "召喚限度到達" ? "full" : "blocked") : "ready";
                  return (
                    <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockReason ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
-                    <span className="card-copy"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">⚡</i>{card.cost}</span>
+                    <span className="card-copy" aria-hidden="true"><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">⚡</i>{card.cost}</span>
                      {!cooldown && <span className="card-state" data-state={cardState}>
                        <span className="card-state-full">{cardBlockReason ?? "出撃可能"}</span>
                        <span className="card-state-compact" aria-hidden="true">{cardState === "ready" ? "出撃" : cardState === "insufficient" ? "不足" : cardState === "full" ? "満員" : "不可"}</span>

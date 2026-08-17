@@ -15,6 +15,7 @@ test("Phase G requires the 48 core and 6 additional production screenshot rows",
   assert.equal(manifest.schemaVersion, 2);
   assert.equal(manifest.route, "/Zombieee/v100");
   assert.equal(manifest.totalScreenshots, 54);
+  assert.equal(manifest.runtimeContractVersion, 1);
   assert.equal(manifest.entries.length, 54);
   assert.deepEqual(new Set(manifest.requiredEngines), new Set(["chromium", "webkit"]));
   assert.deepEqual(new Set(manifest.requiredCoreViewports), coreViewports);

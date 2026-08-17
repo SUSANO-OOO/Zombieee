@@ -101,7 +101,8 @@
 .v100-map-briefs span, .v100-formation-loadout span { color: #93a79d; font-size: 11px; }
 .v100-map-briefs strong, .v100-formation-loadout strong { color: #e7b566; font-size: 13px; }
 .v100-map-briefs small, .v100-formation-loadout small { color: #9eb0a6; font-size: 10px; }
-.v100-map-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 9px; }
+.v100-map-tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 9px; }
+.v100-utility-button { border-color: #786843; color: #d8c28f; background: #17201d; }
 .v100-file-button { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 9px 10px; border: 1px solid #4c6260; border-radius: 5px; color: #f1ead7; background: #162526; cursor: pointer; text-align: center; }
 .v100-file-button input { display: none; }
 .v100-replay-list { display: grid; gap: 5px; margin-top: 15px; }
@@ -111,7 +112,7 @@
 .v100-route-label b { width: 10px; height: 10px; border: 2px solid #6e8176; border-radius: 50%; background: #12201d; }
 .v100-route-label b.clear { background: #c79b53; border-color: #e8c77b; }
 .v100-route-label b.current { width: 14px; height: 14px; border-color: #f0bb61; box-shadow: 0 0 0 4px #f0bb6133; }
-.v100-map-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 9px; }
+.v100-map-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin-top: 9px; }
 .v100-map-actions button { display: grid; gap: 3px; min-height: 58px; text-align: left; }
 .v100-map-actions small { color: #a9b7ac; font-size: 10px; }
 .v100-boss-callout { display: grid; gap: 3px; margin: 11px 0; padding: 10px; border-left: 3px solid #de7654; background: #2c1a1a; }
@@ -189,7 +190,7 @@
 .v100-support-management-card p { margin: 0; color: #a8b7aa; font-size: 11px; }
 .v100-support-management-card button { min-height: 38px; padding: 6px 9px; font-size: 11px; }
 .v100-vehicle-art { position: relative; display: grid; place-items: center; min-height: 150px; overflow: hidden; margin: 8px 0; border: 1px solid #4e5c4f; background: radial-gradient(circle at 50% 60%, #536157, #101818 68%); }
-.v100-vehicle-art::after { content: "移動拠点 / CRAWLER"; position: absolute; right: 9px; bottom: 7px; color: #c7d2ba; font-size: 10px; letter-spacing: .1em; }
+.v100-vehicle-art::after { content: "装甲車両 / CRAWLER"; position: absolute; right: 9px; bottom: 7px; color: #c7d2ba; font-size: 10px; letter-spacing: .1em; }
 .v100-vehicle-art img { width: 80%; max-height: 155px; object-fit: contain; filter: drop-shadow(0 12px 10px #0009); }
 .v100-vehicle-stats { display: grid; gap: 6px; margin: 10px 0; }
 .v100-vehicle-stats div { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 5px; border-bottom: 1px solid #2d4141; }
@@ -217,6 +218,7 @@
   .v100-map-side-heading, .v100-map-side h3, .v100-map-side dl, .v100-map-side > .v100-primary { grid-column: 1 / -1; }
   .v100-map-side dl { margin: 5px 0; }
   .v100-map-tools, .v100-replay-list { margin-top: 0; }
+  .v100-map-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .v100-support-vehicle-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {

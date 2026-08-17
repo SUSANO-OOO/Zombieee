@@ -89,7 +89,7 @@ button[aria-disabled="true"]:focus-visible {
 .battle-barks b { color:#e5b76b; white-space:nowrap; }.battle-barks span { min-width:0; overflow:hidden; color:#d8c7aa; text-overflow:clip; white-space:normal; }
 .battle-banner { display:-webkit-box; margin:0; overflow:hidden; padding:4px 8px; border:1px solid rgba(215,150,71,.72); border-left:3px solid #d79647; background:linear-gradient(90deg,rgba(15,18,18,.88),rgba(22,16,14,.96),rgba(15,18,18,.88)); color:#f0d2a3; box-shadow:0 4px 12px rgba(0,0,0,.44); font:900 clamp(14px,1.1vw,17px)/1.08 monospace; text-align:center; overflow-wrap:anywhere; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
 .top-hud { position:absolute; z-index:4; top:0; left:0; right:0; height:11%; min-height:62px; display:grid; grid-template-columns:minmax(0,28fr) minmax(0,38fr) minmax(0,34fr); align-items:stretch; padding:var(--app-viewport-safe-top) var(--app-viewport-safe-right) 0 var(--app-viewport-safe-left); gap:0; background:linear-gradient(180deg,rgba(12,14,15,.96),rgba(12,14,15,.34),transparent); }
-.battle-brand-zone { min-width:0; display:grid; grid-template-columns:minmax(0,1fr) minmax(92px,42%); align-items:center; gap:8px; padding:5px 8px; }
+.battle-brand-zone { min-width:0; display:grid; grid-template-columns:minmax(72px,38%) minmax(92px,42%); align-items:center; justify-content:start; gap:8px; padding:5px 8px; }
 .brand-block { min-width:0; display:flex; align-items:center; gap:9px; letter-spacing:.08em; }
 .brand-mark { display:grid; place-items:center; width:38px; height:38px; border:2px solid var(--rust); color:var(--rust); font-size:24px; font-weight:900; transform:skew(-7deg); }
 .brand-block b { display:block; font-size:clamp(13px,1.8vw,24px); line-height:.9; }
@@ -368,7 +368,7 @@ button[aria-disabled="true"]:focus-visible {
     padding:var(--app-viewport-safe-top) var(--app-viewport-safe-right) 0 var(--app-viewport-safe-left);
     gap:0;
   }
-  .battle-brand-zone { grid-template-columns:minmax(0,1fr) minmax(92px,43%); gap:5px; padding:4px 6px; }
+  .battle-brand-zone { grid-template-columns:minmax(72px,38%) minmax(92px,43%); gap:5px; padding:4px 6px; }
   .brand-block { min-width:0; gap:5px; }
   .brand-mark { flex:0 0 auto; width:32px; height:32px; font-size:18px; }
   .brand-block b { overflow:hidden; font-size:14px; text-overflow:clip; white-space:nowrap; }
@@ -471,13 +471,13 @@ button[aria-disabled="true"]:focus-visible {
   padding:0;
 }
 .game-frame[data-battle-hud-layout="mobile"] .brand-block b {
-  max-height:3.2em;
-  overflow:visible;
-  overflow-wrap:anywhere;
+  max-height:none;
+  overflow:hidden;
+  text-overflow:ellipsis;
   font-size:14px;
   line-height:1.05;
   letter-spacing:0;
-  white-space:normal;
+  white-space:nowrap;
 }
 .game-frame[data-battle-hud-layout="mobile"] .bottom-hud {
   left:var(--battle-hud-content-left);
@@ -795,7 +795,7 @@ button[aria-disabled="true"]:focus-visible {
 .unit-card[data-state="ready"] { border-color:#8c7650; background:radial-gradient(circle at 26% 35%,#84653b 0,transparent 44%),linear-gradient(145deg,#503d2c,#1b2020 68%); }
 .unit-card[data-state="ready"]::before { content:"READY"; position:absolute; z-index:4; right:5px; bottom:4px; padding:2px 4px; border:1px solid #84a77c; color:#cbe2bd; background:#18241bd9; font:800 7px/1 monospace; letter-spacing:.08em; }
 .unit-card[data-state="insufficient"]::before { content:"指揮不足"; position:absolute; z-index:4; right:4px; bottom:4px; padding:2px 4px; border:1px solid #b36b50; color:#ffd0b1; background:#321d1ad9; font:800 8px/1 monospace; }
-.unit-card[data-state="full"]::before { content:"格納庫満員"; position:absolute; z-index:4; right:4px; bottom:4px; padding:2px 4px; border:1px solid #a28b54; color:#f1d49b; background:#2e281bd9; font:800 8px/1 monospace; }
+.unit-card[data-state="full"]::before { content:"召喚限度到達"; position:absolute; z-index:4; right:4px; bottom:4px; padding:2px 4px; border:1px solid #a28b54; color:#f1d49b; background:#2e281bd9; font:800 8px/1 monospace; }
 .unit-card[data-state="blocked"]::before { content:"待機"; position:absolute; z-index:4; right:4px; bottom:4px; padding:2px 4px; border:1px solid #6e807c; color:#c6d0c7; background:#1a2525d9; font:800 8px/1 monospace; }
 .unit-card[data-state="cooldown"] { border-color:#5b6570; background:repeating-linear-gradient(135deg,#24292a 0 8px,#1b2021 8px 16px); }
 .unit-card[data-state="cooldown"] .portrait { filter:grayscale(.82) brightness(.62) drop-shadow(3px 2px 0 rgba(0,0,0,.48)); }
@@ -850,7 +850,7 @@ button[aria-disabled="true"]:focus-visible {
 .card-copy b { color:#f0dfc1; font-size:clamp(11px,1.25vw,20px); line-height:.98; letter-spacing:.015em; text-shadow:0 2px 3px #000; }
 .card-copy small { margin-top:6px; color:#bba98d; font-size:clamp(7px,.57vw,10px); line-height:1.18; text-shadow:0 1px 2px #000; }
 .cost { right:4%; bottom:5%; color:#f4ca6c; font-size:clamp(17px,1.65vw,28px); line-height:1; text-shadow:0 2px 3px #000; }
-.card-state { left:4%; right:auto; bottom:5%; max-width:62%; padding:2px 0; overflow:visible; color:#f4e5c6; font:900 clamp(12px,1.28vw,21px)/.95 sans-serif; letter-spacing:-.04em; text-shadow:0 2px 3px #000; }
+.card-state { left:4%; right:auto; bottom:5%; max-width:62%; padding:2px 0; overflow:visible; color:#f4e5c6; font:900 clamp(10px,1.1vw,17px)/.95 sans-serif; letter-spacing:-.04em; text-shadow:0 2px 3px #000; }
 .card-state[data-state="ready"] { color:#fff1d1; }
 .card-state[data-state="insufficient"], .card-state[data-state="full"] { color:#ffc0a5; font-size:clamp(10px,1vw,16px); }
 .card-state[data-state="blocked"] { color:#b9c9c2; font-size:clamp(10px,1vw,16px); }
@@ -962,7 +962,7 @@ button[aria-disabled="true"]:focus-visible {
     line-height:1;
     vertical-align:1px;
   }
-  .unit-card .card-state {
+  .game-frame[data-battle-hud-layout="mobile"] .unit-card .card-state {
     top:auto !important;
     left:4px !important;
     right:auto !important;
@@ -971,7 +971,7 @@ button[aria-disabled="true"]:focus-visible {
     max-width:calc(100% - 36px) !important;
     height:auto;
     max-height:none !important;
-    font-size:12px;
+    font-size:10px;
     line-height:1;
     letter-spacing:normal !important;
     white-space:nowrap !important;
@@ -991,9 +991,20 @@ button[aria-disabled="true"]:focus-visible {
     justify-content:center;
     text-align:center;
   }
-  .unit-card .cooldown-compact {
+.unit-card .cooldown-compact {
     display:block !important;
     height:16px;
     line-height:12px;
   }
 }
+
+/* Battle cards are portrait-led now that the unit name is no longer printed
+   over the art. Keep the character readable across the whole card while the
+   state and cost remain anchored to the lower edge. */
+.unit-card .card-copy { display:none; }
+.unit-card .portrait {
+  left:-3%;
+  width:72%;
+  background-position:34% 20%;
+}
+.unit-card[data-kind="brute"] .portrait { width:78%; }

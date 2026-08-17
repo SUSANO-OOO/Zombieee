@@ -30,6 +30,7 @@ fail(manifest.route === "/Zombieee/v100", "route mismatch");
 fail(report.route === "/Zombieee/v100", "runtime report route mismatch");
 fail(manifest.totalScreenshots === 54, `manifest total ${manifest.totalScreenshots}`);
 fail(entries.length === 54, `entry count ${entries.length}`);
+fail(manifest.runtimeContractVersion === 1, `runtimeContractVersion ${manifest.runtimeContractVersion}`);
 fail(manifest.coreStateCount === 16, `coreStateCount ${manifest.coreStateCount}`);
 fail(manifest.combatEvidenceCount === 16, `combatEvidenceCount ${manifest.combatEvidenceCount}`);
 fail(Array.isArray(manifest.requiredEngines) && new Set(manifest.requiredEngines).size === 2 && new Set(manifest.requiredEngines).has("chromium") && new Set(manifest.requiredEngines).has("webkit"), "engine contract incomplete");
@@ -56,11 +57,17 @@ for (const entry of entries) {
   fail(typeof entry.evidence === "string" && entry.evidence.startsWith("outputs/v100-phase-g/"), `${entry.id} evidence outside Phase G output`);
   const reportEntry = reportByPath.get(entry.evidence);
   fail(Boolean(reportEntry), `${entry.id} missing runtime report linkage`);
+  const productionContract = reportEntry?.productionContract;
+  fail(productionContract?.ok === true, `${entry.id} production state contract failed`);
+  fail(Number(productionContract?.observed?.bodyTextLength) > 0, `${entry.id} production body is blank`);
+  fail(Array.isArray(productionContract?.expected?.selectors) && productionContract.expected.selectors.every((selector) => productionContract.observed?.selectorHits?.[selector] === true), `${entry.id} required production selector missing`);
   if (battleStates.has(entry.state)) {
     const runtime = reportEntry?.runtime;
     fail(runtime?.screen === "battle", `${entry.id} is not an actual mounted battle screen`);
     fail(Array.isArray(runtime?.fighters) && runtime.fighters.some((fighter) => fighter.hp > 0), `${entry.id} has no live combat fighter`);
     fail((runtime?.attackIdentity?.length ?? 0) > 0 || (runtime?.pendingWeaponHits?.length ?? 0) > 0 || (runtime?.battlePresentationEffects?.length ?? 0) > 0, `${entry.id} has no combat presentation activity`);
+    fail(reportEntry?.combatCausalProof?.ok === true, `${entry.id} causal combat proof is incomplete`);
+    fail((reportEntry?.productionContract?.observed?.canvas?.visiblePixels ?? 0) > 0, `${entry.id} canvas has no visible production pixels`);
     if (entry.state === "battle-boss") fail(runtime?.fighters?.some((fighter) => fighter.side === "zombie" && fighter.kind === "takuya-omega" && fighter.hp > 0), `${entry.id} has no TAKUYA-Ω boss HUD runtime`);
   }
 }
@@ -89,9 +96,11 @@ for (const entry of entries) {
   try {
     const bytes = await readFile(filePath);
     const metadata = await sharp(bytes).metadata();
+    const imageStats = await sharp(bytes).greyscale().stats();
     const [width, height] = entry.viewport.split("x").map(Number);
     fail(metadata.format === "png", `${entry.id} is not PNG`);
     fail(metadata.width === width && metadata.height === height, `${entry.id} dimensions ${metadata.width}x${metadata.height}, expected ${width}x${height}`);
+    fail(Number(imageStats.channels?.[0]?.stdev ?? 0) > 2, `${entry.id} screenshot lacks visual variation`);
     const hash = createHash("sha256").update(bytes).digest("hex");
     fail(!paths.has(filePath), `${entry.id} duplicate file path`);
     fail(!hashes.has(hash), `${entry.id} duplicate content hash`);
