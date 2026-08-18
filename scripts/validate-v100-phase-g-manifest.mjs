@@ -4,6 +4,8 @@ import path from "node:path";
 import sharp from "sharp";
 
 import { V100_COMBAT_FX_AUDIT, V100_COMBAT_FX_INVENTORY } from "../app/v100CombatPresentation.js";
+import { deriveV100ProductionEnemyCoverage, validateV100RepresentativeCombatEvidence, V100_REPRESENTATIVE_COMBAT_CONTRACT } from "../app/v100PhaseGContract.js";
+import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
 
 const manifestPath = path.resolve("docs/qa/v100/phase-g-screenshot-manifest.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
@@ -12,7 +14,6 @@ const reportPath = path.join(evidenceDir, "phase-g-report.json");
 const report = JSON.parse(await readFile(reportPath, "utf8"));
 const requiredSequence = ["source", "prep", "travel", "contact", "impact", "target-reaction", "aftermath"];
 const requiredCoreStates = ["title-name", "dialogue-left", "dialogue-right", "map-normal", "map-locked-boss", "formation", "personnel", "support-vehicle-management", "battle-normal", "battle-boss", "result-win", "result-lose", "ending", "credits", "epilogue-postgame", "data-management-modal"];
-const requiredCombatActors = ["brute", "ranger", "walker", "spitter", "grappler", "red-panther-knife", "red-panther-smg", "red-panther-shield", "red-panther-commander", "takuya", "mugarian-president-mutated", "takuya-omega", "support-healing", "vehicle-barrage", "stage-nishijin-station-gate", "status-mission-target"];
 const battleStates = new Set(["battle-normal", "battle-boss", "battle-extra"]);
 const expectedCoreViewports = new Set(["1280x720", "844x390", "844x340"]);
 const expectedExtraViewports = new Set(["667x375", "736x414", "932x430"]);
@@ -22,15 +23,23 @@ const combatEvidence = Array.isArray(manifest.combatEvidence) ? manifest.combatE
 const reportResults = Array.isArray(report.results) ? report.results : [];
 const reportByPath = new Map(reportResults.map((entry) => [entry.evidence?.path, entry]));
 const inventoryActors = new Set(V100_COMBAT_FX_INVENTORY.map(({ actor }) => actor));
+const combatContractsById = new Map(V100_REPRESENTATIVE_COMBAT_CONTRACT.map((contract) => [contract.id, contract]));
+const expectedEnemyCoverage = deriveV100ProductionEnemyCoverage();
+const runtimeShardContract = validateProductionEnemyRuntimeShards();
+
+function diagnosticsClean(diagnostics) {
+  return [diagnostics?.consoleErrors, diagnostics?.pageErrors, diagnostics?.requestFailures, diagnostics?.httpFailures]
+    .every((entries) => Array.isArray(entries) && entries.length === 0);
+}
 
 function fail(condition, message) { if (!condition) errors.push(message); }
 
-fail(manifest.schemaVersion === 2, `schemaVersion ${manifest.schemaVersion}`);
+fail(manifest.schemaVersion === 3, `schemaVersion ${manifest.schemaVersion}`);
 fail(manifest.route === "/Zombieee/v100", "route mismatch");
 fail(report.route === "/Zombieee/v100", "runtime report route mismatch");
 fail(manifest.totalScreenshots === 54, `manifest total ${manifest.totalScreenshots}`);
 fail(entries.length === 54, `entry count ${entries.length}`);
-fail(manifest.runtimeContractVersion === 1, `runtimeContractVersion ${manifest.runtimeContractVersion}`);
+fail(manifest.runtimeContractVersion === 2, `runtimeContractVersion ${manifest.runtimeContractVersion}`);
 fail(manifest.coreStateCount === 16, `coreStateCount ${manifest.coreStateCount}`);
 fail(manifest.combatEvidenceCount === 16, `combatEvidenceCount ${manifest.combatEvidenceCount}`);
 fail(Array.isArray(manifest.requiredEngines) && new Set(manifest.requiredEngines).size === 2 && new Set(manifest.requiredEngines).has("chromium") && new Set(manifest.requiredEngines).has("webkit"), "engine contract incomplete");
@@ -74,16 +83,49 @@ for (const entry of entries) {
 fail(combatEvidence.length === 16, `combat evidence rows ${combatEvidence.length}`);
 fail(new Set(combatEvidence.map(({ id }) => id)).size === combatEvidence.length, "duplicate combat evidence IDs");
 fail(new Set(combatEvidence.map(({ actor }) => actor)).size === combatEvidence.length, "duplicate combat evidence actors");
-for (const actor of requiredCombatActors) fail(combatEvidence.some((evidence) => evidence.actor === actor), `required combat actor missing: ${actor}`);
+fail(combatEvidence.length === V100_REPRESENTATIVE_COMBAT_CONTRACT.length, `combat evidence contract count ${combatEvidence.length}`);
+for (const contract of V100_REPRESENTATIVE_COMBAT_CONTRACT) fail(combatEvidence.some((evidence) => evidence.id === contract.id), `required combat contract missing: ${contract.id}`);
 for (const evidence of combatEvidence) {
+  const contract = combatContractsById.get(evidence.id);
+  const contractValidation = validateV100RepresentativeCombatEvidence({ contract, evidence, runtimeEvidence: { id: evidence.id, captureVariant: evidence.captureVariant } });
   fail(typeof evidence.actor === "string" && inventoryActors.has(evidence.actor), `${evidence.id} actor not in inventory`);
+  fail(Boolean(contract), `${evidence.id} has no canonical representative contract`);
+  fail(contractValidation.ok, `${evidence.id} canonical evidence mismatch: ${contractValidation.errors.join(", ")}`);
   for (const field of ["action", "source", "contactImpact", "reaction", "state"]) fail(typeof evidence[field] === "string" && evidence[field].length > 0, `${evidence.id} missing ${field}`);
   fail(Array.isArray(evidence.seVfx) && evidence.seVfx.length > 0, `${evidence.id} missing SE/VFX evidence`);
   fail(Array.isArray(evidence.runtimeSequence) && JSON.stringify(evidence.runtimeSequence) === JSON.stringify(requiredSequence), `${evidence.id} causal sequence mismatch`);
+  fail(evidence.captureVariant === contract?.captureVariant, `${evidence.id} capture variant mismatch`);
   const linkedEntry = entries.find((entry) => entry.evidence === evidence.evidence);
-  fail(Boolean(linkedEntry) && linkedEntry.category === "battle-extra", `${evidence.id} screenshot is not a battle-extra entry`);
+  const linkedReport = reportResults.find((entry) => entry.variant === evidence.captureVariant);
+  fail(Boolean(linkedEntry) && battleStates.has(linkedEntry.state), `${evidence.id} screenshot is not an actual battle entry`);
   fail(typeof evidence.evidence === "string" && reportByPath.has(evidence.evidence), `${evidence.id} screenshot linkage missing`);
+  fail(Boolean(linkedReport), `${evidence.id} production capture variant missing`);
+  fail(linkedReport?.productionContract?.ok === true, `${evidence.id} production state contract failed`);
+  fail(linkedReport?.combatCausalProof?.ok === true, `${evidence.id} causal runtime proof failed`);
+  fail(diagnosticsClean(linkedReport?.diagnostics), `${evidence.id} linked capture has diagnostics`);
+  fail(typeof evidence.runtimeEvidence === "string" && evidence.runtimeEvidence.startsWith("outputs/v100-phase-g/combat/"), `${evidence.id} runtime evidence path invalid`);
+  try {
+    const runtimeEvidence = JSON.parse(await readFile(path.resolve(evidence.runtimeEvidence), "utf8"));
+    fail(runtimeEvidence.id === evidence.id, `${evidence.id} runtime evidence ID mismatch`);
+    fail(runtimeEvidence.captureVariant === evidence.captureVariant, `${evidence.id} runtime evidence variant mismatch`);
+    fail(JSON.stringify(runtimeEvidence.checkpoints) === JSON.stringify(requiredSequence), `${evidence.id} runtime checkpoints incomplete`);
+    fail(runtimeEvidence.productionContract?.ok === true, `${evidence.id} runtime evidence production contract failed`);
+    fail(runtimeEvidence.combatCausalProof?.ok === true, `${evidence.id} runtime evidence causal proof failed`);
+    fail(diagnosticsClean(runtimeEvidence.diagnostics), `${evidence.id} runtime evidence diagnostics`);
+    fail(typeof runtimeEvidence.stageId === "string" && runtimeEvidence.stageId.length > 0, `${evidence.id} runtime stage missing`);
+  } catch (error) {
+    errors.push(`${evidence.id} runtime evidence unreadable: ${String(error)}`);
+  }
 }
+const enemyCoverage = manifest.enemyRuntimeCoverage;
+fail(enemyCoverage?.expectedCount === expectedEnemyCoverage.expectedCount, `enemy expected count ${enemyCoverage?.expectedCount}`);
+fail(Array.isArray(enemyCoverage?.requiredEnemyKinds) && JSON.stringify(enemyCoverage.requiredEnemyKinds) === JSON.stringify(expectedEnemyCoverage.requiredEnemyKinds), "enemy expected set is not canonical");
+fail(enemyCoverage?.shardContractValid === true && runtimeShardContract.valid === true, "enemy runtime shard contract is not green");
+fail(Number(enemyCoverage?.shardCount) === 6 && runtimeShardContract.shardCount === 6, "enemy runtime shard count is not six");
+fail(Array.isArray(enemyCoverage?.runtimeSpriteStateMissing) && enemyCoverage.runtimeSpriteStateMissing.length === 0, "required runtime sprite/state missing");
+fail(Array.isArray(enemyCoverage?.unknownReachableKinds) && enemyCoverage.unknownReachableKinds.length === 0, "unknown reachable enemy kind");
+fail(Array.isArray(enemyCoverage?.missingBossKinds) && enemyCoverage.missingBossKinds.length === 0, "missing reachable boss kind");
+fail(Array.isArray(enemyCoverage?.unreachableRegisteredKinds) && enemyCoverage.unreachableRegisteredKinds.length === 0, "unreachable registered enemy kind");
 fail(V100_COMBAT_FX_AUDIT.ok, `combat inventory: ${V100_COMBAT_FX_AUDIT.errors.join(", ")}`);
 fail(V100_COMBAT_FX_AUDIT.unclassifiedCount === 0, `combat inventory unclassified ${V100_COMBAT_FX_AUDIT.unclassifiedCount}`);
 fail(V100_COMBAT_FX_AUDIT.unfinishedRefineCount === 0, `combat inventory unfinished REFINE ${V100_COMBAT_FX_AUDIT.unfinishedRefineCount}`);

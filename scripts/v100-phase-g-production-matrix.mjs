@@ -5,7 +5,10 @@ import { pathToFileURL } from "node:url";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
-import { V100_STAGE_IDS, V100_SUPPORTS, V100_UNITS } from "../app/v100Registry.js";
+import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS } from "../app/v100Registry.js";
+import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
+import { deriveV100ProductionEnemyCoverage, V100_REPRESENTATIVE_COMBAT_CONTRACT } from "../app/v100PhaseGContract.js";
+import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
 
 const baseUrl = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error(`V1 matrix is local-only; refusing ${baseUrl}`);
@@ -25,6 +28,22 @@ const extraBattleViewports = [
   { width: 736, height: 414, safeArea: true },
   { width: 932, height: 430, safeArea: true },
 ];
+const extraBattleContracts = Object.freeze([
+  { variant: "stage03-takuya", engine: "chromium", viewport: extraBattleViewports[0], stageNumber: 3, bossKind: "takuya", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
+  { variant: "stage04-grappler", engine: "chromium", viewport: extraBattleViewports[1], stageNumber: 4, bossKind: null, formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
+  { variant: "stage21-panther-knife", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
+  { variant: "stage22-panther-shield", engine: "webkit", viewport: extraBattleViewports[0], stageNumber: 22, bossKind: null, formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
+  { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
+  // Start the boss fixture with the same low-cost opening a player can use
+  // to establish a frontline before the expensive cards recover.  The
+  // formation still contains seven canonical V1 units; this only makes the
+  // production interaction reproducible inside the timed boss approach.
+  { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", formationUnitIds: ["unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-mizuchi", "unit-nao", "unit-tatara"] },
+].map((contract) => Object.freeze({
+  ...contract,
+  stageId: V100_STAGE_IDS[contract.stageNumber - 1],
+  stageName: V100_STAGES[contract.stageNumber - 1]?.displayName,
+})));
 const coreStates = [
   "title-name", "dialogue-left", "dialogue-right", "map-normal", "map-locked-boss", "formation", "personnel", "support-vehicle-management",
   "battle-normal", "battle-boss", "result-win", "result-lose", "ending", "credits", "epilogue-postgame", "data-management-modal",
@@ -51,7 +70,7 @@ function relativeEvidence(filePath) {
   return path.relative(process.cwd(), filePath).replaceAll("\\", "/");
 }
 
-function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds = [], flowState = null, pendingResult = null } = {}) {
+function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds = [], flowState = null, pendingResult = null, formationUnitIds = null } = {}) {
   const base = createDefaultV100Save({ playerName: "QAプレイヤー" });
   return normalizeV100Save({
     ...base,
@@ -66,7 +85,7 @@ function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds =
     supportPurchaseUnlockedIds: V100_SUPPORTS.map((support) => support.id),
     ownedSupportIds: V100_SUPPORTS.map((support) => support.id),
     equippedSupportId: V100_SUPPORTS[0]?.id ?? null,
-    formationSlots: V100_UNITS.slice(0, 7).map((unit) => unit.id),
+    formationSlots: (formationUnitIds ?? V100_UNITS.slice(0, 7).map((unit) => unit.id)).slice(0, 7),
     levelCap: 30,
     vehicle: { upgradeLevel: 3, maxHp: 920, upgradeReceipts: ["v100:vehicle:upgrade:1", "v100:vehicle:upgrade:2", "v100:vehicle:upgrade:3"] },
     flowState: flowState ?? { phase: "map", eventId: null, stageId: V100_STAGE_IDS[0], stageNumber: 1, destination: "map", nodeIndex: 0, firstClear: false, finalized: true },
@@ -197,21 +216,41 @@ async function waitBattle(page) {
 }
 
 async function waitForCombatActivity(page, { bossKind = null } = {}) {
-  await page.waitForFunction(() => {
-    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
-    if (!snapshot || snapshot.screen !== "battle") return false;
-    const hasFighters = Array.isArray(snapshot.fighters) && snapshot.fighters.some((fighter) => fighter.hp > 0);
-    const hasPresentation = (snapshot.attackIdentity?.length ?? 0) > 0
-      || (snapshot.pendingWeaponHits?.length ?? 0) > 0
-      || (snapshot.battlePresentation?.effects?.length ?? 0) > 0;
-    if (!hasFighters || !hasPresentation) return false;
-    window.__PHASE_G_COMBAT_ACTIVITY__ = {
-      attackIdentity: snapshot.attackIdentity ?? [],
-      pendingWeaponHits: snapshot.pendingWeaponHits ?? [],
-      battlePresentationEffects: snapshot.battlePresentation?.effects ?? [],
-    };
-    return true;
-  }, null, { timeout: Math.min(battleTimeout, 45_000) });
+  try {
+    await page.waitForFunction(() => {
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      if (!snapshot || snapshot.screen !== "battle") return false;
+      const hasFighters = Array.isArray(snapshot.fighters) && snapshot.fighters.some((fighter) => fighter.hp > 0);
+      const hasPresentation = (snapshot.attackIdentity?.length ?? 0) > 0
+        || (snapshot.pendingWeaponHits?.length ?? 0) > 0
+        || (snapshot.battlePresentation?.effects?.length ?? 0) > 0;
+      if (!hasFighters || !hasPresentation) return false;
+      window.__PHASE_G_COMBAT_ACTIVITY__ = {
+        attackIdentity: snapshot.attackIdentity ?? [],
+        pendingWeaponHits: snapshot.pendingWeaponHits ?? [],
+        battlePresentationEffects: snapshot.battlePresentation?.effects ?? [],
+      };
+      return true;
+    }, null, { timeout: Math.min(battleTimeout, 45_000) });
+  } catch (error) {
+    const state = await page.evaluate(() => ({
+      battleScreen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
+      snapshot: (() => {
+        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+        return snapshot ? {
+          time: snapshot.time,
+          wave: snapshot.wave,
+          eventIndex: snapshot.eventIndex,
+          pendingSpawnCount: snapshot.pendingSpawnCount,
+          attackIdentity: snapshot.attackIdentity?.length ?? 0,
+          pendingWeaponHits: snapshot.pendingWeaponHits?.length ?? 0,
+          presentationEffects: snapshot.battlePresentation?.effects?.length ?? 0,
+          fighters: snapshot.fighters?.map((fighter) => ({ side: fighter.side, kind: fighter.kind, hp: fighter.hp, x: fighter.x, targetId: fighter.targetId, combatReady: fighter.combatReady, attackWindup: fighter.attackWindup })) ?? [],
+        } : null;
+      })(),
+    })).catch(() => null);
+    throw new Error(`combat activity did not become visible: ${String(error)} state=${JSON.stringify(state)}`);
+  }
   if (bossKind) {
     try {
       await page.waitForFunction((expectedKind) => {
@@ -394,7 +433,7 @@ async function captureStateImpl(engineName, viewport, state, configure) {
   const diagnostics = diagnosticsFor(page);
   const label = `${engineName}-${viewportLabel(viewport)}-${state}`;
   try {
-    await configure(page);
+    const captureMeta = await configure(page) ?? {};
     const productionContract = await productionStateContract(page, state);
     invariant(productionContract.ok, `${label} production state contract failed: ${JSON.stringify(productionContract)}`);
     const combatCausalProof = state.startsWith("battle") ? await collectCombatCausalProof(page) : null;
@@ -425,7 +464,7 @@ async function captureStateImpl(engineName, viewport, state, configure) {
     invariant(diagnostics.pageErrors.length === 0, `${label} page errors: ${JSON.stringify(diagnostics.pageErrors)}`);
     invariant(diagnostics.httpFailures.length === 0, `${label} HTTP failures: ${JSON.stringify(diagnostics.httpFailures)}`);
     invariant(diagnostics.requestFailures.length === 0, `${label} request failures: ${JSON.stringify(diagnostics.requestFailures)}`);
-    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime });
+    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, ...captureMeta });
     return screenshot;
   } catch (error) {
     const failureState = await page.evaluate(() => ({
@@ -460,6 +499,118 @@ async function captureState(engineName, viewport, state, configure) {
   throw lastError;
 }
 
+async function writePhaseGManifest(report) {
+  const entries = report.results.map((result) => {
+    const [width, height] = result.viewport.split("x").map(Number);
+    const battle = result.state.startsWith("battle");
+    return {
+      id: `${result.category ?? (battle ? "battle-extra" : "core")}-${result.engine}-${result.viewport}-${result.state}`,
+      category: result.state === "battle-extra" ? "battle-extra" : "core",
+      state: result.state,
+      variant: result.variant,
+      engine: result.engine,
+      viewport: result.viewport,
+      capturedAt: result.capturedAt,
+      stageId: result.stageId ?? result.runtime?.stageId ?? null,
+      stageName: result.stageName ?? null,
+      visibleActors: [...new Set((result.runtime?.fighters ?? []).filter((fighter) => fighter.hp > 0).map((fighter) => `${fighter.side}:${fighter.kind}`))],
+      expectedEnemyKinds: result.expectedEnemyKinds ?? [],
+      observedEnemyKinds: result.observedEnemyKinds ?? [...new Set((result.runtime?.fighters ?? []).filter((fighter) => fighter.side === "zombie").map((fighter) => fighter.kind))],
+      missionType: result.missionType ?? null,
+      support: result.runtime?.battlefieldObjects?.filter((object) => String(object.kind ?? "").includes("support")) ?? [],
+      vehicle: result.runtime?.crawlerAbility ?? null,
+      evidence: result.evidence.path,
+      dimensions: { width, height },
+      sha256: result.evidence.sha256,
+      diagnostics: result.diagnostics,
+      overflow: result.overflow,
+      productionContract: {
+        ok: result.productionContract?.ok === true,
+        selectors: result.productionContract?.expected?.selectors ?? [],
+        observed: result.productionContract?.observed ?? null,
+      },
+    };
+  });
+  const resultByVariant = new Map(report.results.map((result) => [result.variant, result]));
+  const combatEvidence = [];
+  const combatDir = path.join(evidenceDir, "combat");
+  await mkdir(combatDir, { recursive: true });
+  for (const contract of V100_REPRESENTATIVE_COMBAT_CONTRACT) {
+    const result = resultByVariant.get(contract.captureVariant);
+    invariant(result, `${contract.id} has no production capture for ${contract.captureVariant}`);
+    const runtimeEvidencePath = path.join(combatDir, `${contract.id}.json`);
+    const runtimeEvidence = {
+      schemaVersion: 1,
+      id: contract.id,
+      actor: contract.actor,
+      action: contract.action,
+      source: contract.source,
+      contactImpact: contract.contactImpact,
+      reaction: contract.reaction,
+      seVfx: contract.seVfx,
+      state: contract.state,
+      captureVariant: contract.captureVariant,
+      runtimeActor: contract.runtimeActor,
+      stageId: result.stageId ?? result.runtime?.stageId ?? null,
+      stageName: result.stageName ?? null,
+      engine: result.engine,
+      viewport: result.viewport,
+      capturedAt: result.capturedAt,
+      checkpoints: contract.runtimeSequence,
+      runtime: result.runtime,
+      combatCausalProof: result.combatCausalProof,
+      productionContract: result.productionContract,
+      diagnostics: result.diagnostics,
+    };
+    await writeFile(runtimeEvidencePath, `${JSON.stringify(runtimeEvidence, null, 2)}\n`);
+    combatEvidence.push({
+      ...contract,
+      evidence: result.evidence.path,
+      runtimeEvidence: relativeEvidence(runtimeEvidencePath),
+      stageId: runtimeEvidence.stageId,
+      engine: result.engine,
+      viewport: result.viewport,
+      timestamp: result.capturedAt,
+      diagnostics: result.diagnostics,
+    });
+  }
+  const runtimeEnemyShards = validateProductionEnemyRuntimeShards();
+  const expectedEnemyCoverage = deriveV100ProductionEnemyCoverage();
+  const observedBattleKinds = [...new Set(report.results.flatMap((result) => result.observedEnemyKinds ?? result.runtime?.fighters?.filter((fighter) => fighter.side === "zombie").map((fighter) => fighter.kind) ?? []))];
+  const manifest = {
+    schemaVersion: 3,
+    runtimeContractVersion: 2,
+    route: report.route,
+    totalScreenshots: entries.length,
+    coreStateCount: 16,
+    combatEvidenceCount: combatEvidence.length,
+    requiredEngines: ["chromium", "webkit"],
+    requiredCoreViewports: requiredViewports.map(viewportLabel),
+    additionalBattleViewports: extraBattleViewports.map(viewportLabel),
+    requiredCoreStates: coreStates,
+    entries,
+    combatEvidence,
+    enemyRuntimeCoverage: {
+      source: expectedEnemyCoverage.source,
+      expectedCount: expectedEnemyCoverage.expectedCount,
+      requiredEnemyKinds: expectedEnemyCoverage.requiredEnemyKinds,
+      requiredBossKinds: expectedEnemyCoverage.requiredBossKinds,
+      observedBattleKinds,
+      missingObservedKinds: expectedEnemyCoverage.requiredEnemyKinds.filter((kind) => !observedBattleKinds.includes(kind)),
+      runtimeSpriteStateMissing: expectedEnemyCoverage.spriteRequirements.filter((requirement) => requirement.error || requirement.states.length === 0).map(({ kind, error }) => ({ kind, error })),
+      unknownReachableKinds: expectedEnemyCoverage.unknownReachableKinds,
+      missingBossKinds: expectedEnemyCoverage.missingBossKinds,
+      unreachableRegisteredKinds: expectedEnemyCoverage.unreachableRegisteredKinds,
+      shardCount: runtimeEnemyShards.shardCount,
+      shards: runtimeEnemyShards.shards,
+      shardContractValid: runtimeEnemyShards.valid,
+    },
+  };
+  const manifestPath = path.resolve("docs/qa/v100/phase-g-screenshot-manifest.json");
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  return { manifest, manifestPath, combatEvidenceDir: combatDir };
+}
+
 async function freshNamePage(page) {
   await openRoute(page);
   await page.locator("#v100-name-title").waitFor({ state: "visible", timeout });
@@ -484,9 +635,12 @@ async function mapPage(page, save) {
 async function formationPage(page, save, stageName = null) {
   await mapPage(page, save);
   if (stageName) {
-    const finalChapter = page.getByRole("button", { name: /最終章/u });
-    if (await finalChapter.isVisible().catch(() => false)) await click(page, finalChapter, "final chapter tab");
-    await click(page, page.getByRole("button", { name: new RegExp(stageName, "u") }), "stage selection");
+    const stage = V100_STAGES.find((entry) => entry.displayName === stageName);
+    invariant(stage, `unknown stage in Phase G contract: ${stageName}`);
+    const chapter = stage.number <= 6 ? "第一章" : stage.number <= 12 ? "第二章" : stage.number <= 20 ? "第三章" : stage.number <= 25 ? "第四章" : stage.number <= 29 ? "第五章" : "最終章";
+    const chapterButton = page.getByRole("button", { name: new RegExp(`^${chapter}(?:\\s|$)`, "u") }).first();
+    await click(page, chapterButton, `${chapter} chapter tab`);
+    await click(page, page.locator(".v100-stage-list button").filter({ hasText: stageName }).first(), "stage selection");
     await page.waitForTimeout(50);
   }
   const cta = page.getByRole("button", { name: /この作戦を編成|再出撃/u }).first();
@@ -500,58 +654,104 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
   await click(page, page.getByRole("button", { name: "戦闘へ", exact: true }), "formation battle CTA");
   await waitBattle(page);
   const unitCards = page.locator("button.unit-card[data-kind]");
-  const deployIndexes = bossKind ? [0, 3, 5] : [0];
-  for (const index of deployIndexes) {
-    const card = unitCards.nth(index);
-    if (!bossKind) {
-      await click(page, card, `deploy battle unit ${index + 1}`);
-      await page.waitForTimeout(120);
-      continue;
-    }
-    let deployed = false;
-    for (let attempt = 0; attempt < 180; attempt += 1) {
-      const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
-      if (!battleVisible) break;
-      if (await card.getAttribute("data-state") === "ready") {
-        await click(page, card, `deploy battle unit ${index + 1}`);
-        await page.waitForTimeout(140);
-        if (await card.getAttribute("data-state") !== "ready") {
-          deployed = true;
-          break;
-        }
-      }
-      await page.waitForTimeout(400);
-    }
-    invariant(deployed, `battle unit ${index + 1} never entered cooldown from the ready state`);
-  }
-  await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout });
-  if (!bossKind) {
-    await waitForCombatActivity(page);
-    return;
-  }
-  // Stage 30 is intentionally hostile enough to defeat a passive fixture
-  // before wave 4. Keep the evidence path player-like: use the real ready
-  // cards as they recover instead of injecting a boss or mutating runtime HP.
-  let sustainActive = true;
-  const sustainDone = (async () => {
+  let sustainActive = Boolean(bossKind);
+  const sustainDone = bossKind ? (async () => {
+    // These are ordinary player-facing controls.  The loop keeps the
+    // evidence run alive long enough to reach the authored boss wave without
+    // mutating HP, clocks, enemy state, or battle definitions.
     while (sustainActive) {
       const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
       if (!battleVisible) break;
-      const readyCards = page.locator('button.unit-card[data-kind][data-state="ready"]');
-      const readyCount = await readyCards.count().catch(() => 0);
-      for (let index = 0; index < Math.min(readyCount, 3); index += 1) {
-        await readyCards.first().click({ timeout: 500 }).catch(() => {});
-        await page.waitForTimeout(120);
+
+      const abilityButtons = page.locator('button.manual-ability-ready.available:not([disabled])');
+      const abilityCount = await abilityButtons.count().catch(() => 0);
+      for (let index = 0; index < Math.min(abilityCount, 4); index += 1) {
+        await abilityButtons.nth(index).click({ timeout: 500 }).catch(() => {});
+        await page.waitForTimeout(85);
       }
-      await page.waitForTimeout(900);
+
+      const crawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
+      if (await crawler.count().catch(() => 0)) {
+        await crawler.click({ timeout: 500 }).catch(() => {});
+      }
+
+      const canvas = page.locator("canvas.battlefield");
+      const box = await canvas.boundingBox().catch(() => null);
+      if (box) {
+        const target = { x: box.width * .67, y: box.height * .5 };
+        const airstrike = page.locator('button.support-btn.airstrike[data-state="ready"][aria-disabled="false"]').first();
+        if (await airstrike.count().catch(() => 0)) {
+          await airstrike.click({ timeout: 500 }).catch(() => {});
+          await canvas.click({ position: target, timeout: 700 }).catch(() => {});
+        }
+        const medical = page.locator('button.support-btn.medical[data-state="ready"][aria-disabled="false"]').first();
+        if (await medical.count().catch(() => 0)) {
+          await medical.click({ timeout: 500 }).catch(() => {});
+          await canvas.click({ position: { x: box.width * .34, y: box.height * .5 }, timeout: 700 }).catch(() => {});
+        }
+      }
+      await page.waitForTimeout(520);
     }
-  })();
+  })() : null;
+  // Keep the fixture player-like while ensuring the early wave reaches an
+  // authored attack/contact state on WebKit as well as Chromium.
+  const deployIndexes = bossKind ? [0, 1, 2, 3, 4, 5, 6] : [0, 2, 4];
   try {
-    await waitForCombatActivity(page, { bossKind });
+    for (const index of deployIndexes) {
+      const card = unitCards.nth(index);
+      if (!bossKind) {
+        await click(page, card, `deploy battle unit ${index + 1}`);
+        await page.waitForTimeout(120);
+        continue;
+      }
+      let deployed = false;
+      for (let attempt = 0; attempt < 180; attempt += 1) {
+        const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
+        if (!battleVisible) break;
+        if (await card.getAttribute("data-state") === "ready") {
+          await click(page, card, `deploy battle unit ${index + 1}`);
+          await page.waitForTimeout(140);
+          if (await card.getAttribute("data-state") !== "ready") {
+            deployed = true;
+            break;
+          }
+        }
+        await page.waitForTimeout(400);
+      }
+      invariant(deployed, `battle unit ${index + 1} never entered cooldown from the ready state`);
+    }
+    await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout });
+    if (!bossKind) {
+      await waitForCombatActivity(page);
+    } else {
+      // Boss fixtures are intentionally hostile enough to defeat a passive
+      // fixture before wave 4. Keep the evidence path player-like: use the
+      // real ready cards as they recover instead of mutating runtime HP.
+      await waitForCombatActivity(page, { bossKind });
+    }
   } finally {
     sustainActive = false;
     await sustainDone;
   }
+  const runtime = await page.evaluate(() => {
+    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+    return {
+      stageId: snapshot?.stageId ?? null,
+      enemyKinds: [...new Set((snapshot?.fighters ?? []).filter((fighter) => fighter.side === "zombie").map((fighter) => fighter.kind))],
+      fighterKinds: [...new Set((snapshot?.fighters ?? []).map((fighter) => `${fighter.side}:${fighter.kind}`))],
+    };
+  });
+  const stageId = runtime.stageId ?? V100_STAGES.find((entry) => entry.displayName === stageName)?.id ?? V100_STAGE_IDS[0];
+  const definition = v100BattleDefinitionFor(stageId);
+  return {
+    variant: stageName ? `stage-${V100_STAGES.find((entry) => entry.id === stageId)?.number ?? "unknown"}` : "battle-runtime",
+    stageId,
+    stageName: V100_STAGES.find((entry) => entry.id === stageId)?.displayName ?? stageName,
+    bossKind,
+    expectedEnemyKinds: [...new Set(definition?.timeline?.flatMap((wave) => wave.units) ?? [])],
+    observedEnemyKinds: runtime.enemyKinds,
+    fighterKinds: runtime.fighterKinds,
+  };
 }
 
 for (const viewport of requiredViewports) {
@@ -576,8 +776,8 @@ for (const viewport of requiredViewports) {
     await click(page, page.getByRole("button", { name: /支援・車両管理/u }), "support vehicle management");
     await page.locator('main.v100-shell[data-v100-surface="support-vehicle"]').waitFor({ state: "visible", timeout });
   });
-  await captureState("chromium", viewport, "battle-normal", async (page) => battlePage(page, fullSave()));
-  await captureState("chromium", viewport, "battle-boss", async (page) => battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, 29) }), "TAKUYA-Ω", { bossKind: "takuya-omega" }));
+  await captureState("chromium", viewport, "battle-normal", async (page) => ({ ...(await battlePage(page, fullSave())), variant: "core-battle-normal" }));
+  await captureState("chromium", viewport, "battle-boss", async (page) => ({ ...(await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, 29) }), V100_STAGES[29].displayName, { bossKind: "takuya-omega" })), variant: "core-battle-boss" }));
   await captureState("chromium", viewport, "result-win", async (page) => { await openRoute(page, resultSave(true)); await page.locator('[data-v100-surface="result-win"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "result-lose", async (page) => { await openRoute(page, resultSave(false)); await page.locator('[data-v100-surface="result-lose"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "ending", async (page) => { await openRoute(page, eventSave("ending", "v100:event:ending")); await page.locator('[data-v100-surface="ending"]').waitFor({ state: "visible", timeout }); });
@@ -590,10 +790,15 @@ for (const viewport of requiredViewports) {
   });
 }
 
-for (const engineName of ["chromium", "webkit"]) {
-  for (const viewport of extraBattleViewports) {
-    await captureState(engineName, viewport, "battle-extra", async (page) => battlePage(page, fullSave()));
-  }
+for (const contract of extraBattleContracts) {
+  await captureState(contract.engine, contract.viewport, "battle-extra", async (page) => ({
+    stageId: contract.stageId,
+    stageNumber: contract.stageNumber,
+    stageName: contract.stageName,
+    expectedEnemyKinds: [...new Set(v100BattleDefinitionFor(contract.stageId)?.timeline?.flatMap((wave) => wave.units) ?? [])],
+    ...await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, contract.stageNumber - 1), formationUnitIds: contract.formationUnitIds }), contract.stageName, { bossKind: contract.bossKind }),
+    variant: contract.variant,
+  }));
 }
 
 const report = {
@@ -608,8 +813,9 @@ const report = {
 };
 const reportPath = path.join(evidenceDir, "phase-g-report.json");
 await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+const materialized = await writePhaseGManifest(report);
 const expectedCount = onlyState ? results.length : 54;
 invariant(results.length === expectedCount, `Phase G capture count ${results.length} !== ${expectedCount}`);
 invariant(new Set(results.map(({ evidence }) => evidence.path)).size === results.length, "Phase G evidence paths are not unique");
 invariant(new Set(results.map(({ evidence }) => evidence.sha256)).size === results.length, "Phase G screenshot content hashes are not unique");
-console.log(JSON.stringify({ status: "passed", screenshots: results.length, uniquePaths: new Set(results.map(({ evidence }) => evidence.path)).size, uniqueHashes: new Set(results.map(({ evidence }) => evidence.sha256)).size, report: relativeEvidence(reportPath), onlyState: onlyState || null }, null, 2));
+console.log(JSON.stringify({ status: "passed", screenshots: results.length, uniquePaths: new Set(results.map(({ evidence }) => evidence.path)).size, uniqueHashes: new Set(results.map(({ evidence }) => evidence.sha256)).size, report: relativeEvidence(reportPath), manifest: relativeEvidence(materialized.manifestPath), combatEvidence: V100_REPRESENTATIVE_COMBAT_CONTRACT.length, onlyState: onlyState || null }, null, 2));

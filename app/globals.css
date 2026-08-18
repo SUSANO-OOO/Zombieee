@@ -46,7 +46,13 @@ button[aria-disabled="true"]:focus-visible {
 .battlefield.inactive { pointer-events:none; }
 .battlefield.targeting { cursor:crosshair; }
 .manual-ability-ready { position:absolute; z-index:15; display:grid; place-items:center; padding:0; border:0; background:transparent; touch-action:manipulation; cursor:pointer; }
-.manual-ability-ready > span { position:relative; z-index:2; display:grid; place-items:center; width:28px; height:28px; overflow:hidden; border:2px solid #f5ca73; border-radius:8px; background:linear-gradient(145deg,rgba(35,28,18,.96),rgba(12,13,14,.96)); box-shadow:0 0 0 2px rgba(10,12,12,.86),0 0 12px rgba(242,151,55,.68); animation:manual-ready-arrive .22s ease-out both; }
+.manual-ability-ready > span:first-child { position:relative; z-index:2; display:grid; place-items:center; width:28px; height:28px; overflow:hidden; border:2px solid #f5ca73; border-radius:8px; background:linear-gradient(145deg,rgba(35,28,18,.96),rgba(12,13,14,.96)); box-shadow:0 0 0 2px rgba(10,12,12,.86),0 0 12px rgba(242,151,55,.68); animation:manual-ready-arrive .22s ease-out both; }
+.manual-ability-label { position:absolute; z-index:3; left:50%; top:calc(100% - 2px); display:grid; width:max-content; max-width:min(112px,calc(100vw - 16px)); transform:translateX(-50%); padding:3px 5px; border:1px solid rgba(245,202,115,.62); border-radius:3px; background:rgba(9,13,14,.94); color:#f7e7bd; box-shadow:0 3px 9px rgba(0,0,0,.55); pointer-events:none; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.manual-ability-label b { overflow:hidden; text-overflow:ellipsis; font:800 9px/1.05 "Arial Narrow",sans-serif; }
+.manual-ability-label small { color:#b8d0c0; font:700 8px/1.05 "Arial Narrow",sans-serif; }
+.manual-ability-legend { position:absolute; z-index:16; top:calc(54px + var(--app-viewport-safe-top)); right:calc(8px + var(--app-viewport-safe-right)); display:flex; align-items:center; gap:6px; max-width:min(300px,calc(100% - 16px)); padding:4px 7px; border:1px solid rgba(222,166,92,.48); border-left:2px solid #d9924f; border-radius:3px; background:rgba(8,13,14,.86); color:#e8d7b2; font:700 9px/1.1 "Arial Narrow",sans-serif; pointer-events:none; }
+.manual-ability-legend b { color:#f0be71; white-space:nowrap; }
+.manual-ability-legend span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .manual-ability-ready-icon { display:block; width:100%; height:100%; background:url('/art/v090/characters/abilities/zakimiya-fire-whiskey-ready-r1.svg') center/cover no-repeat; }
 .manual-ability-ready-icon.ability-brawler { background-image:url('/art/v090/characters/abilities/paisen-kiai-combo-ready-r1.svg'); }
 .manual-ability-ready-icon.ability-scout { background-image:url('/art/v090/characters/abilities/hachi-intercept-dash-ready-r1.svg'); }
@@ -64,12 +70,18 @@ button[aria-disabled="true"]:focus-visible {
 .manual-ability-ready-icon.ability-mrs-chiha { background-image:url('/art/v090/characters/abilities/mrs-chiha-full-salvo-ready-r1.svg'); }
 .manual-ability-ready-icon.ability-miyamoto-musashi { background-image:url('/art/v090/characters/abilities/miyamoto-musashi-muku-ready-r1.svg'); }
 .manual-ability-ready-icon.ability-mayo-chan { background-image:url('/art/v090/characters/abilities/mayo-chan-feral-ready-r1.svg'); }
-.manual-ability-ready:focus-visible > span { outline:2px solid #fff5cc; outline-offset:3px; }
-.manual-ability-ready:not([aria-disabled="true"]):not(:disabled):active > span { transform:scale(.92); }
-.manual-ability-ready.awaiting-target > span,.manual-ability-ready:disabled > span { filter:saturate(.45); opacity:.72; box-shadow:0 0 0 2px rgba(10,12,12,.86),0 0 8px rgba(242,151,55,.34); }
-.manual-ability-ready[aria-disabled="true"] > span { animation:none; box-shadow:0 0 0 2px rgba(10,12,12,.86); }
+.manual-ability-ready:focus-visible > span:first-child { outline:2px solid #fff5cc; outline-offset:3px; }
+.manual-ability-ready:not([aria-disabled="true"]):not(:disabled):active > span:first-child { transform:scale(.92); }
+.manual-ability-ready.awaiting-target > span:first-child,.manual-ability-ready:disabled > span:first-child { filter:saturate(.45); opacity:.72; box-shadow:0 0 0 2px rgba(10,12,12,.86),0 0 8px rgba(242,151,55,.34); }
+.manual-ability-ready[aria-disabled="true"] > span:first-child { animation:none; box-shadow:0 0 0 2px rgba(10,12,12,.86); }
 .manual-ability-ready[aria-disabled="true"]::before,.manual-ability-ready[aria-disabled="true"]::after,.manual-ability-ready[aria-disabled="true"] > span::before,.manual-ability-ready[aria-disabled="true"] > span::after { animation:none; }
 @keyframes manual-ready-arrive { from { opacity:0; transform:translateY(5px) scale(.86); } to { opacity:1; transform:none; } }
+@media (max-height:420px) and (orientation:landscape) {
+  .manual-ability-label { max-width:88px; padding:2px 4px; }
+  .manual-ability-label b { font-size:8px; }
+  .manual-ability-label small { font-size:7px; }
+  .manual-ability-legend { top:calc(42px + var(--app-viewport-safe-top)); max-width:220px; padding:3px 5px; font-size:8px; }
+}
 .qa-badge { position:absolute; z-index:17; right:calc(1.5% + var(--app-viewport-safe-right)); bottom:29%; padding:4px 7px; border:1px solid rgba(103,199,207,.55); border-left:3px solid #67c7cf; background:rgba(8,18,21,.88); color:#9ce1e5; font:800 clamp(8px,.7vw,10px)/1 monospace; letter-spacing:.06em; pointer-events:none; }
 .campaign-qa-badge { z-index:30; top:calc(6px + var(--app-viewport-safe-top)); right:calc(8px + var(--app-viewport-safe-right)); bottom:auto!important; left:auto!important; transform:none!important; }
 .bark-audit-screen { position:absolute; inset:0; z-index:28; overflow:auto; padding:18px max(18px,calc(18px + var(--app-viewport-safe-right))) 22px max(18px,calc(18px + var(--app-viewport-safe-left))); background:linear-gradient(145deg,#111719 0%,#1d1714 58%,#0c1113 100%); color:#f0e6d2; }

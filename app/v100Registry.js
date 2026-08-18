@@ -381,7 +381,11 @@ export function escapeV100Html(value) {
 export function renderV100PlayerName(text, playerName) {
   const normalized = normalizeV100PlayerName(playerName);
   const safeName = escapeV100Html(normalized.ok ? normalized.value : V100_DEFAULT_PLAYER_NAME);
-  return String(text).replace(/\{\{PLAYER_NAME\}\}/gu, safeName);
+  // Story source remains canonical markdown-free data; runtime text must never
+  // leak authoring emphasis or an unresolved template token to the player.
+  return String(text)
+    .replace(/\{\{PLAYER_NAME\}\}/gu, safeName)
+    .replace(/\*\*([^*\n]+)\*\*/gu, "$1");
 }
 
 export function v100StarsForVehicle({ won = false, vehicleHp = 0, vehicleMaxHp = V100_VEHICLE.baseHp } = {}) {

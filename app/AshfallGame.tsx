@@ -542,6 +542,7 @@ import {
   selectManualAbilityTarget,
   triggerMusashiCounter,
 } from "./manualAbilities.js";
+import { MANUAL_ABILITY_SYMBOL_DICTIONARY, manualAbilityVisibleStateFor } from "./manualAbilityUi.js";
 import {
   advanceMayoRetreat,
   createMayoRetreatRuntime,
@@ -21721,6 +21722,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             disabled={!icon.available}
             aria-disabled={abilityDisabled}
             aria-label={`${cards.find((card) => card.kind === icon.kind)?.name ?? icon.kind}：${ability.displayName}${icon.available ? "" : "（対象待ち）"}`}
+            title={`${ability.displayName} — ${manualAbilityVisibleStateFor({ available: icon.available, targeting: Boolean(selectedAction) })}`}
             onPointerDown={(event) => event.stopPropagation()}
             onPointerUp={(event) => event.stopPropagation()}
             onPointerCancel={(event) => event.stopPropagation()}
@@ -21730,8 +21732,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }}
           >
             <span aria-hidden="true"><b className={`manual-ability-ready-icon ability-${icon.kind}`} /></span>
+            <span className="manual-ability-label"><b>{ability.displayName}</b><small>{manualAbilityVisibleStateFor({ available: icon.available, targeting: Boolean(selectedAction) })}</small></span>
           </button>;
         })}
+        {screen === "battle" && hud.manualAbilityIcons.length > 0 && <div className="manual-ability-legend" role="note" aria-label="固有能力の操作説明"><b>固有能力</b><span>{selectedAction ? MANUAL_ABILITY_SYMBOL_DICTIONARY.targeting : MANUAL_ABILITY_SYMBOL_DICTIONARY.legend}</span></div>}
         {(qaMode || qaScenario) && (
           <div className={`qa-badge ${screen === "battle" ? "" : "campaign-qa-badge"}`} role="status">
             {"LOCAL QA // "}{(qaMode ?? qaScenario?.mode ?? "flow").toUpperCase()}{" // 通常セーブ非反映"}
