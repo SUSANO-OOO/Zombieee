@@ -493,7 +493,7 @@ function isTransientBrowserClosure(error) {
 }
 
 function hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message) {
-  const match = String(message).match(/diagnostics=(\{.*\})$/s);
+  const match = String(message).match(/diagnostics=(\{[\s\S]*\})(?:\r?\n\s+at\s|$)/);
   if (!match) return false;
   try {
     const diagnostics = JSON.parse(match[1]);
@@ -723,6 +723,22 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
           await medical.click({ timeout: 500 }).catch(() => {});
           await canvas.click({ position: { x: box.width * .34, y: box.height * .5 }, timeout: 700 }).catch(() => {});
         }
+      }
+      if (bossKind) {
+        // The QA bridge only accelerates the authored boss gate-entry
+        // animation. Spawn, entry state, sprite mount, and combat remain
+        // production-owned; this prevents compact WebKit from losing the
+        // vehicle before the real boss reaches the battlefield.
+        await page.evaluate((expectedKind) => {
+          const bridge = window.__ASHFALL_BATTLE_QA__;
+          const snapshot = bridge?.getSnapshot?.();
+          const boss = snapshot?.fighters?.find((fighter) => (
+            fighter.side === "zombie"
+            && fighter.kind === expectedKind
+            && fighter.gateEntering
+          ));
+          if (boss) bridge?.accelerateBossFoundationEntry?.(boss.id);
+        }, bossKind).catch(() => {});
       }
       await page.waitForTimeout(520);
     }
