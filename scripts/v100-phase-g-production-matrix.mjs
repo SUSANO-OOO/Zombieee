@@ -36,7 +36,10 @@ const extraBattleContracts = Object.freeze([
   // a ranged card and a support card make the authored hit/impact sequence
   // visible without changing the stage, roster, or production battle rules.
   { variant: "stage22-panther-shield", engine: "webkit", viewport: extraBattleViewports[0], stageNumber: 22, bossKind: null, formationUnitIds: ["unit-hachi", "unit-mizuchi", "unit-babayaga", "unit-paisen", "unit-nao", "unit-kumaverson", "unit-tatara"] },
-  { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", formationUnitIds: ["unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-mizuchi", "unit-nao", "unit-tatara"] },
+  // The compact WebKit boss route deploys the canonical seven slots in
+  // production cost order so every selected card can reach a real ready ->
+  // cooldown transition before the hostile wave closes the route.
+  { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", formationUnitIds: ["unit-hachi", "unit-nao", "unit-mizuchi", "unit-paisen", "unit-babayaga", "unit-kumaverson", "unit-tatara"] },
   // Start every boss fixture with the same low-cost opening a player can use
   // to establish a frontline before the expensive cards recover. The
   // formation still contains seven canonical V1 units; this only makes the
