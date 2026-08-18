@@ -486,6 +486,12 @@ function isTransientBrowserClosure(error) {
   return /target page, context or browser has been closed/i.test(String(error));
 }
 
+function isRetryableCaptureFailure(error) {
+  const message = String(error);
+  return isTransientBrowserClosure(error)
+    || /combat activity did not become visible: TimeoutError: page\.waitForFunction: Timeout 45000ms exceeded/i.test(message);
+}
+
 async function captureState(engineName, viewport, state, configure) {
   if (onlyState && state !== onlyState) return null;
   let lastError = null;
@@ -494,7 +500,7 @@ async function captureState(engineName, viewport, state, configure) {
       return await captureStateImpl(engineName, viewport, state, configure);
     } catch (error) {
       lastError = error;
-      if (attempt === 2 || !isTransientBrowserClosure(error)) throw error;
+      if (attempt === 2 || !isRetryableCaptureFailure(error)) throw error;
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
