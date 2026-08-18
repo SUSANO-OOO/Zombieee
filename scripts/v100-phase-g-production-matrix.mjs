@@ -49,6 +49,7 @@ const coreStates = [
   "battle-normal", "battle-boss", "result-win", "result-lose", "ending", "credits", "epilogue-postgame", "data-management-modal",
 ];
 const onlyState = process.env.V100_PHASE_G_ONLY ?? "";
+const onlyVariant = process.env.V100_PHASE_G_ONLY_VARIANT ?? "";
 const storageKeys = ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good", "nishijin-campaign-v100:owner"];
 const results = [];
 
@@ -768,12 +769,12 @@ for (const viewport of requiredViewports) {
   await captureState("chromium", viewport, "formation", async (page) => formationPage(page, fullSave()));
   await captureState("chromium", viewport, "personnel", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByRole("button", { name: /人員管理/u }), "personnel management");
+    await click(page, page.getByRole("button", { name: /隊員を編成/u }), "personnel formation");
     await page.locator('main.v100-shell[data-v100-surface="personnel"]').waitFor({ state: "visible", timeout });
   });
   await captureState("chromium", viewport, "support-vehicle-management", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByRole("button", { name: /支援・車両管理/u }), "support vehicle management");
+    await click(page, page.getByRole("button", { name: /出撃装備を選ぶ/u }), "sortie loadout");
     await page.locator('main.v100-shell[data-v100-surface="support-vehicle"]').waitFor({ state: "visible", timeout });
   });
   await captureState("chromium", viewport, "battle-normal", async (page) => ({ ...(await battlePage(page, fullSave())), variant: "core-battle-normal" }));
@@ -791,6 +792,7 @@ for (const viewport of requiredViewports) {
 }
 
 for (const contract of extraBattleContracts) {
+  if (onlyVariant && contract.variant !== onlyVariant) continue;
   await captureState(contract.engine, contract.viewport, "battle-extra", async (page) => ({
     stageId: contract.stageId,
     stageNumber: contract.stageNumber,
@@ -813,9 +815,9 @@ const report = {
 };
 const reportPath = path.join(evidenceDir, "phase-g-report.json");
 await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
-const materialized = await writePhaseGManifest(report);
-const expectedCount = onlyState ? results.length : 54;
+const materialized = onlyState || onlyVariant ? null : await writePhaseGManifest(report);
+const expectedCount = onlyState || onlyVariant ? results.length : 54;
 invariant(results.length === expectedCount, `Phase G capture count ${results.length} !== ${expectedCount}`);
 invariant(new Set(results.map(({ evidence }) => evidence.path)).size === results.length, "Phase G evidence paths are not unique");
 invariant(new Set(results.map(({ evidence }) => evidence.sha256)).size === results.length, "Phase G screenshot content hashes are not unique");
-console.log(JSON.stringify({ status: "passed", screenshots: results.length, uniquePaths: new Set(results.map(({ evidence }) => evidence.path)).size, uniqueHashes: new Set(results.map(({ evidence }) => evidence.sha256)).size, report: relativeEvidence(reportPath), manifest: relativeEvidence(materialized.manifestPath), combatEvidence: V100_REPRESENTATIVE_COMBAT_CONTRACT.length, onlyState: onlyState || null }, null, 2));
+console.log(JSON.stringify({ status: "passed", screenshots: results.length, uniquePaths: new Set(results.map(({ evidence }) => evidence.path)).size, uniqueHashes: new Set(results.map(({ evidence }) => evidence.sha256)).size, report: relativeEvidence(reportPath), manifest: materialized ? relativeEvidence(materialized.manifestPath) : null, combatEvidence: V100_REPRESENTATIVE_COMBAT_CONTRACT.length, onlyState: onlyState || null, onlyVariant: onlyVariant || null }, null, 2));

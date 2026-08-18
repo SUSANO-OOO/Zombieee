@@ -329,13 +329,15 @@ export function V100Campaign() {
     const root = document.documentElement;
     const battleActive = flow.phase === "battle";
     const resultSaving = flow.phase === "result";
-    // Stable V1 name/map/formation screens are equivalent to the legacy title
-    // safety boundary. Story nodes remain unsafe so a release cannot interrupt
-    // a cursor or first-clear transition; battle/result explicitly block it.
+    // Stable V1 preparation screens publish their actual identity. Story nodes
+    // remain unsafe so a release cannot interrupt a cursor or first-clear
+    // transition; battle/result explicitly block it.
     const screen = battleActive ? "battle"
       : resultSaving ? "result"
         : isEventPhase(flow.phase) ? "event"
-          : "title";
+          : flow.phase === "map"
+            ? surface === "personnel" ? "personnel" : surface === "support-vehicle" ? "loadout" : surface === "data" ? "storage" : "map"
+            : flow.phase === "formation" ? "formation" : "title";
     root.dataset.pwaScreen = screen;
     root.dataset.pwaBattleActive = String(battleActive);
     root.dataset.pwaResultSaving = String(resultSaving);
@@ -346,7 +348,13 @@ export function V100Campaign() {
       delete root.dataset.pwaResultSaving;
       delete root.dataset.pwaSaveMutationPending;
     };
-  }, [flow.phase]);
+  }, [flow.phase, surface]);
+
+  useEffect(() => {
+    const shell = document.querySelector<HTMLElement>(".v100-shell");
+    if (!shell) return;
+    shell.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [flow.phase, surface]);
 
   const event = useMemo(() => flow.eventId ? v100StoryEventView(flow.eventId, save.playerName) : null, [flow.eventId, save.playerName]);
   const currentNode = (event?.nodes?.[storyIndex] ?? null) as StoryNode | null;
@@ -713,7 +721,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
       </div>
       <nav className="v100-chapter-tabs" aria-label="章を選ぶ">{V100_CHAPTERS.map((entry, index) => <button type="button" key={entry.id} className={index === chapterIndex ? "selected" : ""} onClick={() => setChapterIndex(index)}><strong>{entry.label}</strong><small>作戦 {entry.range}</small></button>)}</nav>
       <div className="v100-route-label" aria-label="作戦経路"><span>西新救助線</span><i />{chapterStages.map((entry) => <b key={`route-${entry.id}`} className={`${entry.number === completedNumber + 1 ? "current" : ""} ${save.completedStageIds.includes(entry.id) ? "clear" : ""}`} aria-hidden="true" />)}<span>封鎖区域</span></div>
-      <div className="v100-map-actions" aria-label="作戦支援"><button type="button" onClick={onOpenPersonnel}>人員管理 <small>{save.ownedUnitIds.length}名を登録</small></button><button type="button" onClick={onOpenSupportVehicle}>支援・車両管理 <small>{save.equippedSupportId ? "支援装備済み" : "装備を確認"}</small></button></div>
+      <div className="v100-map-actions" aria-label="出撃準備"><button type="button" onClick={onOpenPersonnel}>隊員を編成 <small>{save.ownedUnitIds.length}名を登録</small></button><button type="button" onClick={onOpenSupportVehicle}>出撃装備を選ぶ <small>{save.equippedSupportId ? "支援装備済み" : "支援を確認"}</small></button></div>
       <div className="v100-map-grid">
         <nav className="v100-stage-list" aria-label={`${chapter.label}の作戦一覧`}>{chapterStages.map((entry) => {
           const available = save.availableStageIds.includes(entry.id);
@@ -729,7 +737,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
           <div className="v100-stage-intel"><span>作戦概要</span><strong>{missionLabelFor(stage?.missionType)}</strong><p>{objectiveLabelFor(stage)}。敵の動線を読み、支援と編成を合わせて突破します。</p></div>
           <dl><div><dt>敵の脅威</dt><dd>{enemyPackLabelFor(stage?.enemyPack)}</dd></div><div><dt>作戦資源</dt><dd>{save.caps} CAPS</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
           <button className="v100-primary" type="button" disabled={!stage || !save.availableStageIds.includes(stage.id)} onClick={() => stage && onStart(stage.id)}>{save.completedStageIds.includes(stage?.id ?? "") ? "再出撃" : "この作戦を編成"}</button>
-          <div className="v100-map-briefs"><article><span>人員</span><strong>{save.ownedUnitIds.length}名</strong><small>人員管理で登録</small></article><article><span>車両</span><strong>装甲車両</strong><small>耐久 {save.vehicle.maxHp}</small></article><article><span>支援</span><strong>{save.equippedSupportId ? "装備済み" : "選択可能"}</strong><small>支援・車両管理</small></article></div>
+          <div className="v100-map-briefs"><article><span>隊員編成</span><strong>{save.ownedUnitIds.length}名</strong><small>現場に出す隊員</small></article><article><span>装甲車両</span><strong>CRAWLER</strong><small>耐久 {save.vehicle.maxHp}</small></article><article><span>戦術支援</span><strong>{save.equippedSupportId ? "装備済み" : "選択可能"}</strong><small>出撃装備から選択</small></article></div>
           <div className="v100-map-tools"><button type="button" onClick={onRename}>表示名を変更</button><button type="button" onClick={onBackup}>簡易バックアップ</button><label className="v100-file-button">復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label><button className="v100-utility-button" type="button" onClick={onOpenData}>データ管理</button></div>
           <div className="v100-replay-list"><span className="v100-kicker">会話記録</span>{save.readStoryEventIds.slice(-6).map((eventId) => <button type="button" key={eventId} onClick={() => onReplay(eventId)}>{eventDisplayLabel(eventId)}</button>)}</div>
         </aside>
@@ -747,7 +755,7 @@ function FormationView({ save, onSlotChange, onStart }: { save: Save; onSlotChan
 
 function PersonnelView({ save, onBack, onPurchase }: { save: Save; onBack: () => void; onPurchase: (unitId: string) => void }) {
   return <section className="v100-panel v100-management-panel v100-personnel-screen" data-v100-surface="personnel" aria-label="人員管理">
-    <div className="v100-panel-heading v100-management-heading"><div><span className="v100-kicker">作戦地図 / 部隊編成</span><h2>人員管理</h2></div><button type="button" onClick={onBack}>作戦地図へ</button></div>
+    <div className="v100-panel-heading v100-management-heading"><div><span className="v100-kicker">作戦地図 / 部隊編成</span><h2>隊員編成</h2></div><button type="button" onClick={onBack}>作戦地図へ</button></div>
     <div className="v100-management-hero"><div><strong>現場に出す隊員を揃える</strong><span>登録状況と役割を確認し、次の作戦に必要な火力を整えます。</span></div><b>{save.caps}<small> CAPS</small></b></div>
     <div className="v100-management-summary"><span>所有 <strong>{save.ownedUnitIds.length}</strong> / {V100_UNITS.length}</span><span>登録済み <strong>{save.registeredUnitIds.length}</strong></span><span>Lv上限 <strong>{save.levelCap}</strong></span><span>CAPS <strong>{save.caps}</strong></span></div>
     <div className="v100-personnel-grid">{V100_UNITS.map((unit) => {
@@ -770,7 +778,7 @@ function SupportVehicleView({ save, onBack, onPurchaseSupport, onEquipSupport, o
   const nextCost = vehicleLevel < V100_VEHICLE.maxUpgradeLevel ? V100_VEHICLE.upgradeCosts[vehicleLevel] : 0;
   const nextHp = vehicleLevel < V100_VEHICLE.maxUpgradeLevel ? save.vehicle.maxHp + V100_VEHICLE.hpPerUpgrade : save.vehicle.maxHp;
   return <section className="v100-panel v100-management-panel v100-loadout-screen" data-v100-surface="support-vehicle" aria-label="支援と車両管理">
-    <div className="v100-panel-heading v100-management-heading"><div><span className="v100-kicker">作戦地図 / 出撃装備</span><h2>支援・車両管理</h2></div><button type="button" onClick={onBack}>作戦地図へ</button></div>
+    <div className="v100-panel-heading v100-management-heading"><div><span className="v100-kicker">作戦地図 / 出撃装備</span><h2>出撃装備</h2></div><button type="button" onClick={onBack}>作戦地図へ</button></div>
     <div className="v100-management-hero v100-loadout-hero"><div><strong>作戦装備を積み込む</strong><span>戦場で使う支援と装甲車両を、出撃前にひとつずつ確認します。</span></div><b>{save.equippedSupportId ? "支援選択済み" : "支援未選択"}</b></div>
     <div className="v100-support-vehicle-grid">
       <section className="v100-support-section v100-loadout-column" aria-labelledby="v100-support-title"><div className="v100-section-heading"><div><span className="v100-kicker">戦術支援 / 現場投入</span><h3 id="v100-support-title">支援装備</h3></div><span>{save.equippedSupportId ? "選択済み" : "未選択"}</span></div><p className="v100-loadout-intro">ひとつだけ装備して戦場へ持ち込みます。必要な瞬間に使える支援を選択してください。</p><div className="v100-support-management-list">{V100_SUPPORTS.map((support) => {

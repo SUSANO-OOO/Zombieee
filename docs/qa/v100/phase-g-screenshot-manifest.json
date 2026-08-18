@@ -45,7 +45,7 @@
       "variant": "title-name",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:36:23.807Z",
+      "capturedAt": "2026-08-18T08:14:51.429Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -59,7 +59,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "7b5663b127dc95771ef6983991b8d96645fe03165215a15635f7e54844006131",
+      "sha256": "b426a39748be577607779a984dfeb2a2ee0bf7a960ddd609e3862512454dc235",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -116,7 +116,7 @@
       "variant": "dialogue-left",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:36:25.591Z",
+      "capturedAt": "2026-08-18T08:14:53.140Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -130,7 +130,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "2f81a9b970a4ee56573591aa986146d25d542aa8304f045893ccf9606f220212",
+      "sha256": "fea5d1257a405a9d87a7d695a9aca0772d4be4ba0ffa702a99f9b127ee24ca14",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -185,7 +185,7 @@
       "variant": "dialogue-right",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:36:27.048Z",
+      "capturedAt": "2026-08-18T08:14:54.362Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -199,7 +199,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "d147a510fc7202d52d569d250de302c07a38ddc73b0d87097e5b660619f42bda",
+      "sha256": "ed3e68e2c09b1ab524c9ac2ad3a47f05eb6df66054ebb59f843f3583b097175a",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -254,7 +254,7 @@
       "variant": "map-normal",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:36:28.221Z",
+      "capturedAt": "2026-08-18T08:14:55.455Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -268,7 +268,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "81050a0050c0443860a7e3b71fd54f08ca21cbe1fa631da243f8cd796d163dc6",
+      "sha256": "352288a90eed4d57d2783c512be5fea9fc1c91990c4077dc0309a5c15a852c1a",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -313,8 +313,8 @@
             ".v100-map-side": true,
             ".v100-map-actions": true
           },
-          "buttonCount": 20,
-          "bodyTextLength": 564,
+          "buttonCount": 19,
+          "bodyTextLength": 569,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -329,7 +329,7 @@
       "variant": "map-locked-boss",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:36:29.444Z",
+      "capturedAt": "2026-08-18T08:14:56.662Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -343,7 +343,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "9389dbda6be4976ad95284f03e2e879acade7fa673e7bdab1ad8e296906696f4",
+      "sha256": "04760290ed25564014b25c9faf37b5498b38803165fdf566959d83ef0af975ab",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -386,8 +386,8 @@
             ".v100-boss-callout": true,
             ".v100-map-side": true
           },
-          "buttonCount": 14,
-          "bodyTextLength": 530,
+          "buttonCount": 13,
+          "bodyTextLength": 535,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -402,7 +402,7 @@
       "variant": "formation",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:36:30.587Z",
+      "capturedAt": "2026-08-18T08:14:57.829Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -416,7 +416,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "74a90605f23f9ccbe1469f404ec8cf74321572289e73fb047640805ea1613ed7",
+      "sha256": "be3abf1c016871f496eb0f8eb912a8cc597b6dc0710fc227c4973a1ab1bae19c",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -457,8 +457,8 @@
             ".v100-roster-card": true,
             ".v100-formation-footer .v100-primary": true
           },
-          "buttonCount": 27,
-          "bodyTextLength": 698,
+          "buttonCount": 26,
+          "bodyTextLength": 692,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -473,7 +473,7 @@
       "variant": "personnel",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:36:31.711Z",
+      "capturedAt": "2026-08-18T08:14:58.873Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -487,7 +487,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "21370863e841ebde1f7865a0207e17d2e7f5808b6ea825ab448df674bd5efb9c",
+      "sha256": "9811626422f5109ca607a27bd21f47eb8ed4aa6d8c556465ecb4d315ca4ffee3",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -528,8 +528,8 @@
             ".v100-personnel-card": true,
             ".v100-management-panel": true
           },
-          "buttonCount": 3,
-          "bodyTextLength": 821,
+          "buttonCount": 2,
+          "bodyTextLength": 815,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -544,7 +544,7 @@
       "variant": "support-vehicle-management",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:36:32.778Z",
+      "capturedAt": "2026-08-18T08:14:59.929Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -558,7 +558,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "c4bd9ffc3d846b922e4856ada3798d77aa98f2d232638c4c2660957a7a095fb5",
+      "sha256": "15c1e29576c322defc15131db5b48c799bdb6c1b2e371757ffa4c3580a01c6ff",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -601,8 +601,8 @@
             ".v100-vehicle-section": true,
             ".v100-vehicle-stats": true
           },
-          "buttonCount": 7,
-          "bodyTextLength": 430,
+          "buttonCount": 6,
+          "bodyTextLength": 421,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -617,11 +617,11 @@
       "variant": "core-battle-normal",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:36:55.127Z",
+      "capturedAt": "2026-08-18T08:15:22.503Z",
       "stageId": "stage-nishijin-shopping-street",
       "stageName": "西新商店街・薬局救出",
       "visibleActors": [
-        "zombie:walker",
+        "human:scout",
         "human:kumaverson",
         "human:medic"
       ],
@@ -631,7 +631,8 @@
         "spitter"
       ],
       "observedEnemyKinds": [
-        "walker"
+        "walker",
+        "runner"
       ],
       "missionType": null,
       "support": [],
@@ -647,7 +648,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "20a7d0da80a48222287fbdf48ad9980bbd16c1d1c94513ebb9cb331cdcaa918f",
+      "sha256": "a07579d9746519a58ac53bd6a267f728aaf860317bcd42a54894ac2effb4ea73",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -691,22 +692,23 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 15,
-          "bodyTextLength": 368,
+          "buttonCount": 16,
+          "bodyTextLength": 352,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 1280,
             "height": 720,
             "sampled": 230400,
-            "visiblePixels": 228408,
-            "visibleRatio": 0.9913541666666666,
-            "lumaMean": 35.066840915798196,
-            "lumaVariance": 624.3543497388954
+            "visiblePixels": 229093,
+            "visibleRatio": 0.9943272569444445,
+            "lumaMean": 35.716186240451606,
+            "lumaVariance": 610.1131136438308
           },
           "fighterKinds": [
             "human:scout",
             "zombie:walker",
+            "zombie:runner",
             "human:kumaverson"
           ]
         }
@@ -719,7 +721,7 @@
       "variant": "core-battle-boss",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:38:50.115Z",
+      "capturedAt": "2026-08-18T08:17:17.508Z",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "stageName": "西新防衛線・TAKUYA-Ω",
       "visibleActors": [
@@ -742,9 +744,9 @@
       "support": [],
       "vehicle": {
         "phase": "cooldown",
-        "phaseTime": 3.833333333334087,
-        "cooldownRemaining": 3.833333333334087,
-        "charge": 0.8935185185184976,
+        "phaseTime": 4.783333333334084,
+        "cooldownRemaining": 4.783333333334084,
+        "charge": 0.8671296296296088,
         "damageTriggered": false
       },
       "evidence": "outputs/v100-phase-g/chromium-1280x720-battle-boss.png",
@@ -752,7 +754,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "1984de969fd11d06686b92a5d52655538ce4aafe400354a2ddd13baaded827d6",
+      "sha256": "07a9f2e73e29d6056fcfded453976e41d9dff8491d273c1433b458d0d58982fa",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -797,17 +799,17 @@
             "button.unit-card[data-kind]": true
           },
           "buttonCount": 14,
-          "bodyTextLength": 382,
+          "bodyTextLength": 326,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 1280,
             "height": 720,
             "sampled": 230400,
-            "visiblePixels": 228757,
-            "visibleRatio": 0.9928689236111111,
-            "lumaMean": 43.43069845224971,
-            "lumaVariance": 859.1034539622035
+            "visiblePixels": 230400,
+            "visibleRatio": 1,
+            "lumaMean": 69.31294947741796,
+            "lumaVariance": 864.4057185925074
           },
           "fighterKinds": [
             "human:babayaga",
@@ -826,7 +828,7 @@
       "variant": "result-win",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:38:51.677Z",
+      "capturedAt": "2026-08-18T08:17:18.977Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -840,7 +842,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "dd4ac50e6ae21553274e19ebb04a9602ceea619c238be1101fe7852e490d217a",
+      "sha256": "a42de92145864f68b9c59c1a0985aad5dbaa43d76411fecf77ddb0ca9624497c",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -897,7 +899,7 @@
       "variant": "result-lose",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:38:52.542Z",
+      "capturedAt": "2026-08-18T08:17:19.857Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -911,7 +913,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "490db6c4e7eee5e8bf1ee336ca421e6793d761750e39c8d173c3682a8995b841",
+      "sha256": "d5bcc2a50cb600b853916b5391901784dbeeac46b0fbccdf726e22fa26802b53",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -966,7 +968,7 @@
       "variant": "ending",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:38:53.517Z",
+      "capturedAt": "2026-08-18T08:17:20.853Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -980,7 +982,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "0193458b6df3ed3f13b10e3d1e87ec9649434a3404b2b3dccf34d3f490e5a208",
+      "sha256": "cc1b6ee41b866fbe889338d8ddf4ff7e092f66b15fddca41826a3a3929fafbfb",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1037,7 +1039,7 @@
       "variant": "credits",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:38:54.495Z",
+      "capturedAt": "2026-08-18T08:17:21.859Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1051,7 +1053,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "acff364859860ed5a38803be06901299438dc38fa30eb79dc0c73312750dffed",
+      "sha256": "eabff90f68e7b29e86d15f28940439f1bec979c81e6ed113cb8863eb08a154a3",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1108,7 +1110,7 @@
       "variant": "epilogue-postgame",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:38:55.464Z",
+      "capturedAt": "2026-08-18T08:17:22.899Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1122,7 +1124,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "eb84392e570e63c6b007e52b73b2a5a1a8d05cd8eb8dffa20727f012ed0f4868",
+      "sha256": "c0794ddc6b058324932801792d88777aa22155a67c98da7f6a3ec24e0c872614",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1179,7 +1181,7 @@
       "variant": "data-management-modal",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-18T06:38:56.385Z",
+      "capturedAt": "2026-08-18T08:17:23.898Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1193,7 +1195,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "1b46d96ccaf959270bd5225e5657fc1eef49439ff673a7ca79b7b823dec76ae3",
+      "sha256": "6ce3b2964510921080470380376c6e6a0581e78c6b42e20908c6252b94f22f39",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1232,8 +1234,8 @@
             "[role=\"dialog\"][aria-labelledby=\"v100-data-title\"]": true,
             ".v100-data-actions": true
           },
-          "buttonCount": 4,
-          "bodyTextLength": 208,
+          "buttonCount": 3,
+          "bodyTextLength": 202,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1248,7 +1250,7 @@
       "variant": "title-name",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:38:57.161Z",
+      "capturedAt": "2026-08-18T08:17:24.670Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1262,7 +1264,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "08ac96a897d2d163e92cec24b36b34948aad02e898d47c132443655fb4186e77",
+      "sha256": "3106f925c30be16915d607d940849b53c84b301ae80e8ee8d9818f25ece23a35",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1319,7 +1321,7 @@
       "variant": "dialogue-left",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:38:58.179Z",
+      "capturedAt": "2026-08-18T08:17:25.758Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1333,7 +1335,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "dcf97a88e50f3df28f47733d1e34ff4d89704ed724df5d1e35262cce4c664bc6",
+      "sha256": "7ea136e2a746720a9881b3eb9932d226a0dd3adde07f4451b2d5478aa87607a3",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1388,7 +1390,7 @@
       "variant": "dialogue-right",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:38:59.213Z",
+      "capturedAt": "2026-08-18T08:17:26.803Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1402,7 +1404,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "952988188f9dbececdb70c4963ddc015512085b105d6fae295c245382d439ed7",
+      "sha256": "1f3da93f00debd02d847ceac1072c56cee227b55dcb5897a5372b8ac3c67b419",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1457,7 +1459,7 @@
       "variant": "map-normal",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:39:00.069Z",
+      "capturedAt": "2026-08-18T08:17:27.642Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1471,7 +1473,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "687a4378e377cbba3d0f17cd0931b136e1fb3128e5e17a2ce21d9439819e9b3b",
+      "sha256": "a4d2265c16f343b0066a5fecbedbbcb7df2921b33df6923c7e6d74a5d7a3cbe0",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1516,8 +1518,8 @@
             ".v100-map-side": true,
             ".v100-map-actions": true
           },
-          "buttonCount": 20,
-          "bodyTextLength": 564,
+          "buttonCount": 19,
+          "bodyTextLength": 569,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1532,7 +1534,7 @@
       "variant": "map-locked-boss",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:39:01.044Z",
+      "capturedAt": "2026-08-18T08:17:28.606Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1546,7 +1548,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "0fc0f714f7578a8ddbafa20980c7615ad7452c56b735dd25b4daca1c7d088290",
+      "sha256": "74c9c9bed98d223c3aa1b42dcdccf8165130f40a54434acceac377f96e54a755",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1589,8 +1591,8 @@
             ".v100-boss-callout": true,
             ".v100-map-side": true
           },
-          "buttonCount": 14,
-          "bodyTextLength": 530,
+          "buttonCount": 13,
+          "bodyTextLength": 535,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1605,7 +1607,7 @@
       "variant": "formation",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:39:02.083Z",
+      "capturedAt": "2026-08-18T08:17:29.613Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1619,7 +1621,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "3fd5c82cce7ca00757ba886d186f3fb7a71d0eecb51807c57be78721c2cbaf5d",
+      "sha256": "2ce6d91dd8a6ccce68a8622b7471027291855f2c25dae27ed8076028b2233808",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1660,8 +1662,8 @@
             ".v100-roster-card": true,
             ".v100-formation-footer .v100-primary": true
           },
-          "buttonCount": 27,
-          "bodyTextLength": 698,
+          "buttonCount": 26,
+          "bodyTextLength": 692,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1676,7 +1678,7 @@
       "variant": "personnel",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:39:03.012Z",
+      "capturedAt": "2026-08-18T08:17:30.566Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1690,7 +1692,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "f03a8405a2d6932aa69f2b2dddd4327afb286e2612b8539086ba7729c2c2c1b2",
+      "sha256": "6a611c47371263a151aff34dbe7669a0d5f85f1269ecca926add6a948b1681a2",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1731,8 +1733,8 @@
             ".v100-personnel-card": true,
             ".v100-management-panel": true
           },
-          "buttonCount": 3,
-          "bodyTextLength": 821,
+          "buttonCount": 2,
+          "bodyTextLength": 815,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1747,7 +1749,7 @@
       "variant": "support-vehicle-management",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:39:03.960Z",
+      "capturedAt": "2026-08-18T08:17:31.507Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1761,7 +1763,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "fcf8c816102726f3eab72b415466528a30f54c14682f622ba18183ed1b57ecdb",
+      "sha256": "7ed6cec00d95dfe23262060deb86e2aee182a492ea826b2a01c1378056edcb75",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1804,8 +1806,8 @@
             ".v100-vehicle-section": true,
             ".v100-vehicle-stats": true
           },
-          "buttonCount": 7,
-          "bodyTextLength": 430,
+          "buttonCount": 6,
+          "bodyTextLength": 421,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -1820,7 +1822,7 @@
       "variant": "core-battle-normal",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:39:26.451Z",
+      "capturedAt": "2026-08-18T08:17:53.880Z",
       "stageId": "stage-nishijin-shopping-street",
       "stageName": "西新商店街・薬局救出",
       "visibleActors": [
@@ -1850,7 +1852,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "cd6e18538d5de7e18c742d78f8b23f1ded1b1547be5de019809671b81bebde79",
+      "sha256": "112c835f151f274008d3b899052a47965f6bb1f3d2e3aa62537ed8216c9b6f23",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1902,10 +1904,10 @@
             "width": 844,
             "height": 390,
             "sampled": 82290,
-            "visiblePixels": 81831,
-            "visibleRatio": 0.9944221655122129,
-            "lumaMean": 35.098695532882886,
-            "lumaVariance": 645.7720514686221
+            "visiblePixels": 81829,
+            "visibleRatio": 0.9943978612225057,
+            "lumaMean": 35.100855311713836,
+            "lumaVariance": 645.5803187619548
           },
           "fighterKinds": [
             "human:scout",
@@ -1923,7 +1925,7 @@
       "variant": "core-battle-boss",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:41:19.899Z",
+      "capturedAt": "2026-08-18T08:19:46.809Z",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "stageName": "西新防衛線・TAKUYA-Ω",
       "visibleActors": [
@@ -1946,9 +1948,9 @@
       "support": [],
       "vehicle": {
         "phase": "cooldown",
-        "phaseTime": 3.96666666666742,
-        "cooldownRemaining": 3.96666666666742,
-        "charge": 0.8898148148147939,
+        "phaseTime": 3.9000000000007535,
+        "cooldownRemaining": 3.9000000000007535,
+        "charge": 0.8916666666666457,
         "damageTriggered": false
       },
       "evidence": "outputs/v100-phase-g/chromium-844x390-battle-boss.png",
@@ -1956,7 +1958,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "c100c86717100b05f5c5d27cba7242c4059e582f9c56f9cebe3a948975f336d5",
+      "sha256": "8cec0ef47da56cdf56b173badaf53661761c7ad97030c5274466c4425532459b",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2000,18 +2002,18 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 16,
-          "bodyTextLength": 324,
+          "buttonCount": 17,
+          "bodyTextLength": 344,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 844,
             "height": 390,
             "sampled": 82290,
-            "visiblePixels": 81990,
-            "visibleRatio": 0.99635435654393,
-            "lumaMean": 48.210386394458254,
-            "lumaVariance": 1059.867872740417
+            "visiblePixels": 81988,
+            "visibleRatio": 0.9963300522542229,
+            "lumaMean": 46.119050968525514,
+            "lumaVariance": 885.5431293559648
           },
           "fighterKinds": [
             "human:babayaga",
@@ -2030,7 +2032,7 @@
       "variant": "result-win",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:41:20.739Z",
+      "capturedAt": "2026-08-18T08:19:48.078Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2044,7 +2046,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "bd4dcd72ed7f768f4e91d494f71fcd1a99e5c138b94bc1d7f34b8a790eb32b85",
+      "sha256": "6cad798a338c12b67b8430324c4e725055a172cf4b4cc44f37384f80a21d98d2",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2101,7 +2103,7 @@
       "variant": "result-lose",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:41:21.525Z",
+      "capturedAt": "2026-08-18T08:19:48.881Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2115,7 +2117,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "dd56bee1dcc6a24ef3d147c4e64c4378bdf60d9c2abb1a1f94a44dc8ffca117a",
+      "sha256": "3f63fa03dd609b7a39efda9720add678fe90d52b9d0ba6c4bc9d21e2d2f586cf",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2170,7 +2172,7 @@
       "variant": "ending",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:41:22.370Z",
+      "capturedAt": "2026-08-18T08:19:49.711Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2184,7 +2186,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "b7235f0e353c610df53113e15f9b945b8cc52ea433ba255c7645eb6983779163",
+      "sha256": "624951a69d3f916d1e0569c7809a9036cbfce9931ee59b28e71fb55ec514a938",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2241,7 +2243,7 @@
       "variant": "credits",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:41:23.193Z",
+      "capturedAt": "2026-08-18T08:19:50.549Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2255,7 +2257,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "39fad7cc84fa37ada8ae8bde3af77043f0b678dfccbe864bda8794e99f87275f",
+      "sha256": "0a464ffad2aca51ae2296645055ac108d54e0b889d0e40703ccf84f57129b9c4",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2312,7 +2314,7 @@
       "variant": "epilogue-postgame",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:41:24.022Z",
+      "capturedAt": "2026-08-18T08:19:51.378Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2326,7 +2328,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "68688752302fc1370ca5bf1779c9d3dbdfa44481fd79d7430e926f19dde9f41b",
+      "sha256": "17cf2e76c01d1aa2e3e949e9360e8a5e597779555cbf76d249fc0077b828345d",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2383,7 +2385,7 @@
       "variant": "data-management-modal",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-18T06:41:24.896Z",
+      "capturedAt": "2026-08-18T08:19:52.251Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2397,7 +2399,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "d4094eec726f2bfa1ee64c94debb3d3ba0906c59a7cf72645d765e9e62165f7c",
+      "sha256": "0d08bf5f7639e047035ad7efd8603efce3a08e17e647ad13cf25c6f892341592",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2436,8 +2438,8 @@
             "[role=\"dialog\"][aria-labelledby=\"v100-data-title\"]": true,
             ".v100-data-actions": true
           },
-          "buttonCount": 4,
-          "bodyTextLength": 208,
+          "buttonCount": 3,
+          "bodyTextLength": 202,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2452,7 +2454,7 @@
       "variant": "title-name",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:41:25.682Z",
+      "capturedAt": "2026-08-18T08:19:53.022Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2466,7 +2468,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "a6578a6328fac5c1a34a18452ce2fd207aebce5707bb2a3a5b54cbf5ad6082b6",
+      "sha256": "19cb9513e196ad84f28e966fa19dab4fad8fa4646eb30aa3671745fec1f4fe57",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2523,7 +2525,7 @@
       "variant": "dialogue-left",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:41:26.679Z",
+      "capturedAt": "2026-08-18T08:19:54.023Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2537,7 +2539,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "6801b25f8b67cf5162e61cfed21d8236cd1cb743b5567b4e5ea974a1f1f7e9c0",
+      "sha256": "7bf5f69abd5ae0b1e1cf64a1cdbb7a3507e34037996fbf85a777de424d489746",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2592,7 +2594,7 @@
       "variant": "dialogue-right",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:41:27.728Z",
+      "capturedAt": "2026-08-18T08:19:55.077Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2606,7 +2608,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "e81af528b04cd39ff524ecf4446800913885f12f4a233cf59dbb253651411d03",
+      "sha256": "2689c2d25e9afa64f606f00a6405c3623665daa4986889240c739936296df2ee",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2661,7 +2663,7 @@
       "variant": "map-normal",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:41:28.591Z",
+      "capturedAt": "2026-08-18T08:19:55.932Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2675,7 +2677,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "5146bb99d1e52870b876aa931b1d08a235a04377e1675ec9b82c3001e308f54e",
+      "sha256": "14751668db2bc05dc8384c50d208d69560ca9c2324e835aa15deee5a0da2a9b9",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2720,8 +2722,8 @@
             ".v100-map-side": true,
             ".v100-map-actions": true
           },
-          "buttonCount": 20,
-          "bodyTextLength": 564,
+          "buttonCount": 19,
+          "bodyTextLength": 569,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2736,7 +2738,7 @@
       "variant": "map-locked-boss",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:41:29.655Z",
+      "capturedAt": "2026-08-18T08:19:56.876Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2750,7 +2752,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "d98291b0f1844853b1fa02d4e68dc0f3ef131e3c5a520b90b5e9d8311d026463",
+      "sha256": "93da69187b8badd8972a427700bdc13fcb2e5a214620d76b86d80ce8cafda305",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2793,8 +2795,8 @@
             ".v100-boss-callout": true,
             ".v100-map-side": true
           },
-          "buttonCount": 14,
-          "bodyTextLength": 530,
+          "buttonCount": 13,
+          "bodyTextLength": 535,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2809,7 +2811,7 @@
       "variant": "formation",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:41:30.662Z",
+      "capturedAt": "2026-08-18T08:19:57.878Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2823,7 +2825,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "9d25a5ca27b7d6394efcb597aab0909d1a8aa53bc1bda81a0790a74d27a8ef5e",
+      "sha256": "c977b9673215ad67ef8b7f0240fdf1c794685b7c0236f8a302ed3465feb6f140",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2864,8 +2866,8 @@
             ".v100-roster-card": true,
             ".v100-formation-footer .v100-primary": true
           },
-          "buttonCount": 27,
-          "bodyTextLength": 698,
+          "buttonCount": 26,
+          "bodyTextLength": 692,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2880,7 +2882,7 @@
       "variant": "personnel",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:41:31.584Z",
+      "capturedAt": "2026-08-18T08:19:58.841Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2894,7 +2896,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "2be6a6e3933340859b20e0f58f0804c50f7cca0738f1adc645d1b66eaca04ed0",
+      "sha256": "47e00e91f4134b79e9dd534b4ce45274f6abd336101b28341c195115c82e77d3",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2935,8 +2937,8 @@
             ".v100-personnel-card": true,
             ".v100-management-panel": true
           },
-          "buttonCount": 3,
-          "bodyTextLength": 821,
+          "buttonCount": 2,
+          "bodyTextLength": 815,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -2951,7 +2953,7 @@
       "variant": "support-vehicle-management",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:41:32.507Z",
+      "capturedAt": "2026-08-18T08:19:59.776Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2965,7 +2967,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "466308f2b4868eadf85b8e501de450aa663b8abcdd503c3bce79dea9c2bb72f2",
+      "sha256": "7f7c89d9a866b22fd59d0a8726329e34b6b594660efb0a5f4fa11dfe5b9c0aa0",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3008,8 +3010,8 @@
             ".v100-vehicle-section": true,
             ".v100-vehicle-stats": true
           },
-          "buttonCount": 7,
-          "bodyTextLength": 430,
+          "buttonCount": 6,
+          "bodyTextLength": 421,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -3024,7 +3026,7 @@
       "variant": "core-battle-normal",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:41:55.033Z",
+      "capturedAt": "2026-08-18T08:20:22.153Z",
       "stageId": "stage-nishijin-shopping-street",
       "stageName": "西新商店街・薬局救出",
       "visibleActors": [
@@ -3054,7 +3056,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "14a5c83e57e742a141433d22b205b60a8044e143bc08bcf66d968cbbda1d6cde",
+      "sha256": "dc509b15a1aff4b89afd1b07e338537885bf8f6412b0b57a86745e55204761dc",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3106,15 +3108,16 @@
             "width": 844,
             "height": 340,
             "sampled": 71740,
-            "visiblePixels": 71320,
-            "visibleRatio": 0.9941455255087817,
-            "lumaMean": 36.43989341790498,
-            "lumaVariance": 676.4231041804906
+            "visiblePixels": 71327,
+            "visibleRatio": 0.9942431000836354,
+            "lumaMean": 36.46126260106646,
+            "lumaVariance": 680.0761185025519
           },
           "fighterKinds": [
             "human:scout",
             "zombie:walker",
-            "human:kumaverson"
+            "human:kumaverson",
+            "human:medic"
           ]
         }
       }
@@ -3126,10 +3129,11 @@
       "variant": "core-battle-boss",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:43:47.994Z",
+      "capturedAt": "2026-08-18T08:22:15.589Z",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "stageName": "西新防衛線・TAKUYA-Ω",
       "visibleActors": [
+        "human:kumaverson",
         "human:babayaga",
         "human:medic",
         "human:ranger",
@@ -3149,9 +3153,9 @@
       "support": [],
       "vehicle": {
         "phase": "cooldown",
-        "phaseTime": 4.333333333334085,
-        "cooldownRemaining": 4.333333333334085,
-        "charge": 0.8796296296296088,
+        "phaseTime": 3.116666666667423,
+        "cooldownRemaining": 3.116666666667423,
+        "charge": 0.9134259259259049,
         "damageTriggered": false
       },
       "evidence": "outputs/v100-phase-g/chromium-844x340-battle-boss.png",
@@ -3159,7 +3163,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "d2299e91d34e0994939a3f00788a9455298b607a0f638c623e74c15db2493cf8",
+      "sha256": "9153a29ebcd67ddf09388d5c8bca8eb67859bbc6d325c7f5add84af04fbba725",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3203,20 +3207,21 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 16,
-          "bodyTextLength": 334,
+          "buttonCount": 17,
+          "bodyTextLength": 365,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 844,
             "height": 340,
             "sampled": 71740,
-            "visiblePixels": 71440,
-            "visibleRatio": 0.9958182325062727,
-            "lumaMean": 46.06606159464618,
-            "lumaVariance": 943.5207651490564
+            "visiblePixels": 71451,
+            "visibleRatio": 0.9959715639810427,
+            "lumaMean": 48.592463643712485,
+            "lumaVariance": 1171.00629257262
           },
           "fighterKinds": [
+            "human:kumaverson",
             "human:babayaga",
             "human:medic",
             "human:ranger",
@@ -3233,7 +3238,7 @@
       "variant": "result-win",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:43:48.981Z",
+      "capturedAt": "2026-08-18T08:22:16.950Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3247,7 +3252,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "80215e00ac13f806d3ec8941cbdf6b6b51327dbda0e8c269a62f98a6388553b7",
+      "sha256": "b3a9df9a46b64c321ab52e4446f50d30d503ac1a0fa67d21eb8c8c079c7db739",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3304,7 +3309,7 @@
       "variant": "result-lose",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:43:49.814Z",
+      "capturedAt": "2026-08-18T08:22:17.737Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3318,7 +3323,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "6ec6fb0263abde707293c262a8e36dd14e86a5a154faec008c9b831177f59d19",
+      "sha256": "4ca1043ffca4c97fba6f5ef1155cf1fe1072c6e00614e41d7fdcc41b111c9469",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3373,7 +3378,7 @@
       "variant": "ending",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:43:50.671Z",
+      "capturedAt": "2026-08-18T08:22:18.562Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3387,7 +3392,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "a5ab6fa22d1788eb1ac93651cb4492f4ba4822ee891005f9f1086a18a143ef50",
+      "sha256": "450d2dd0b331e7f648862cfc71b6191d12f92d14c618086a6a81350abef8f71a",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3444,7 +3449,7 @@
       "variant": "credits",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:43:51.514Z",
+      "capturedAt": "2026-08-18T08:22:19.366Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3458,7 +3463,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "33a8e2ef572099ad20b798283c54f7f19c6b7b080f74764ef92bb8ded79aae70",
+      "sha256": "726ca5d91cf22f2de9cf84b2e4e6d95dbc013bd24d6aba2d1aeabb460538da21",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3515,7 +3520,7 @@
       "variant": "epilogue-postgame",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:43:52.424Z",
+      "capturedAt": "2026-08-18T08:22:20.179Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3529,7 +3534,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "0234e2fe02fae204460f46fbea1ea5069144115d9a60b6134817c1b2221f33f5",
+      "sha256": "d10b19b60c2b777f7db4745d8d10194cd550887d5aade6abe2a0f370efd42eb9",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3586,7 +3591,7 @@
       "variant": "data-management-modal",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-18T06:43:53.391Z",
+      "capturedAt": "2026-08-18T08:22:21.078Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3600,7 +3605,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "f1123fe4a1d506e144dabb733120a75ff95f7b84bff126a8ec29b89f3fd0d4ec",
+      "sha256": "588df5802cb6ce2c3fe1ecf300fa8b9ac207c8397c4642c0964dc48949072e79",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3639,8 +3644,8 @@
             "[role=\"dialog\"][aria-labelledby=\"v100-data-title\"]": true,
             ".v100-data-actions": true
           },
-          "buttonCount": 4,
-          "bodyTextLength": 208,
+          "buttonCount": 3,
+          "bodyTextLength": 202,
           "screen": null,
           "battleMounted": false,
           "canvas": null,
@@ -3655,16 +3660,18 @@
       "variant": "stage03-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "capturedAt": "2026-08-18T06:45:24.431Z",
+      "capturedAt": "2026-08-18T08:23:52.038Z",
       "stageId": "stage-nishijin-defense-line-takuya",
       "stageName": "西新防衛線・TAKUYA",
       "visibleActors": [
+        "human:kumaverson",
+        "zombie:abomination",
         "human:babayaga",
+        "zombie:turned",
         "zombie:walker",
         "zombie:shade",
-        "zombie:abomination",
-        "zombie:takuya",
-        "human:medic"
+        "human:medic",
+        "zombie:takuya"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -3673,18 +3680,19 @@
         "takuya"
       ],
       "observedEnemyKinds": [
+        "abomination",
+        "turned",
         "walker",
         "shade",
-        "abomination",
         "takuya"
       ],
       "missionType": null,
       "support": [],
       "vehicle": {
         "phase": "cooldown",
-        "phaseTime": 25.983333333333903,
-        "cooldownRemaining": 25.983333333333903,
-        "charge": 0.2782407407407249,
+        "phaseTime": 25.95000000000057,
+        "cooldownRemaining": 25.95000000000057,
+        "charge": 0.2791666666666508,
         "damageTriggered": false
       },
       "evidence": "outputs/v100-phase-g/chromium-667x375-battle-extra.png",
@@ -3692,7 +3700,7 @@
         "width": 667,
         "height": 375
       },
-      "sha256": "789aa535b7fd11099f14498d3eced853d33c740972fe49b1363d84b6f28c872b",
+      "sha256": "b69f224c9614d9a8749794def59a8d53992032d448fc63de74a4a4c30c17be6e",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3737,26 +3745,27 @@
             "button.unit-card[data-kind]": true
           },
           "buttonCount": 14,
-          "bodyTextLength": 309,
+          "bodyTextLength": 305,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 667,
             "height": 375,
             "sampled": 62532,
-            "visiblePixels": 62085,
-            "visibleRatio": 0.9928516599501055,
-            "lumaMean": 39.135856422310496,
-            "lumaVariance": 766.9816241810896
+            "visiblePixels": 62045,
+            "visibleRatio": 0.9922119874624192,
+            "lumaMean": 39.03413956374226,
+            "lumaVariance": 739.2653752253897
           },
           "fighterKinds": [
             "human:kumaverson",
+            "zombie:abomination",
             "human:babayaga",
+            "zombie:turned",
             "zombie:walker",
             "zombie:shade",
-            "zombie:abomination",
-            "zombie:takuya",
-            "human:medic"
+            "human:medic",
+            "zombie:takuya"
           ]
         }
       }
@@ -3768,7 +3777,7 @@
       "variant": "stage04-grappler",
       "engine": "chromium",
       "viewport": "736x414",
-      "capturedAt": "2026-08-18T06:45:46.731Z",
+      "capturedAt": "2026-08-18T08:24:14.015Z",
       "stageId": "stage-nishijin-station-gate",
       "stageName": "西新駅・閉鎖改札",
       "visibleActors": [
@@ -3800,7 +3809,7 @@
         "width": 736,
         "height": 414
       },
-      "sha256": "557ea2a38c8d01dbe19e08a8e28d9e66bff6a41399a89092bce79c70fe299b22",
+      "sha256": "0225639272ec5f706417c5340797529cbae776b91d0a83b55a579e3bbadad808",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3854,8 +3863,8 @@
             "sampled": 76176,
             "visiblePixels": 75673,
             "visibleRatio": 0.993396870405377,
-            "lumaMean": 50.852288928273104,
-            "lumaVariance": 1446.0926527346774
+            "lumaMean": 50.842886019220224,
+            "lumaVariance": 1447.8813116090394
           },
           "fighterKinds": [
             "human:scout",
@@ -3873,7 +3882,7 @@
       "variant": "stage21-panther-knife",
       "engine": "chromium",
       "viewport": "932x430",
-      "capturedAt": "2026-08-18T06:46:05.191Z",
+      "capturedAt": "2026-08-18T08:24:32.431Z",
       "stageId": "stage-mugarian-logistics-hq",
       "stageName": "ムガリアン物流本部",
       "visibleActors": [
@@ -3905,7 +3914,7 @@
         "width": 932,
         "height": 430
       },
-      "sha256": "959707189e658c43d43f525ea16e2bf53648bfa29fe6f03dac6705c538334ac7",
+      "sha256": "4f7edaa5f0d68d4006e47a0cd9c30dd76263d61998101b49d4b4a600897364ed",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3957,10 +3966,10 @@
             "width": 932,
             "height": 430,
             "sampled": 100190,
-            "visiblePixels": 99930,
-            "visibleRatio": 0.9974049306317996,
-            "lumaMean": 55.016334516420436,
-            "lumaVariance": 1608.7077562766083
+            "visiblePixels": 99926,
+            "visibleRatio": 0.9973650064876735,
+            "lumaMean": 54.88349740293606,
+            "lumaVariance": 1587.3510230207005
           },
           "fighterKinds": [
             "human:scout",
@@ -3977,7 +3986,7 @@
       "variant": "stage22-panther-shield",
       "engine": "webkit",
       "viewport": "667x375",
-      "capturedAt": "2026-08-18T06:46:42.433Z",
+      "capturedAt": "2026-08-18T08:25:10.847Z",
       "stageId": "stage-mugarian-clinical-trial-wing",
       "stageName": "ムガリアン臨床試験棟",
       "visibleActors": [
@@ -4011,7 +4020,7 @@
         "width": 667,
         "height": 375
       },
-      "sha256": "6909067c702d9d2d146fb584a2d01be66e4251c48824abcb568323b636606c4a",
+      "sha256": "a5d1e2ec88632451ddaa8fa1004151c5a73c7b66b38038e379b179077fabc896",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4063,10 +4072,10 @@
             "width": 667,
             "height": 375,
             "sampled": 62532,
-            "visiblePixels": 62155,
-            "visibleRatio": 0.9939710868035566,
-            "lumaMean": 34.128553323101336,
-            "lumaVariance": 546.8178380605935
+            "visiblePixels": 62128,
+            "visibleRatio": 0.9935393078743683,
+            "lumaMean": 34.423502539502415,
+            "lumaVariance": 631.6379816581133
           },
           "fighterKinds": [
             "zombie:red-panther-shield",
@@ -4084,7 +4093,7 @@
       "variant": "stage24-panther-commander",
       "engine": "webkit",
       "viewport": "736x414",
-      "capturedAt": "2026-08-18T06:48:22.399Z",
+      "capturedAt": "2026-08-18T08:26:51.240Z",
       "stageId": "stage-mugarian-tech-tower",
       "stageName": "ムガリアン技術開発塔",
       "visibleActors": [
@@ -4092,7 +4101,8 @@
         "zombie:red-panther-shield",
         "human:babayaga",
         "zombie:red-panther-smg",
-        "zombie:futago"
+        "zombie:futago",
+        "human:medic"
       ],
       "expectedEnemyKinds": [
         "red-panther-commander",
@@ -4110,9 +4120,9 @@
       "support": [],
       "vehicle": {
         "phase": "cooldown",
-        "phaseTime": 19.133333333334292,
-        "cooldownRemaining": 19.133333333334292,
-        "charge": 0.4685185185184919,
+        "phaseTime": 18.783333333334312,
+        "cooldownRemaining": 18.783333333334312,
+        "charge": 0.47824074074071354,
         "damageTriggered": false
       },
       "evidence": "outputs/v100-phase-g/webkit-736x414-battle-extra.png",
@@ -4120,7 +4130,7 @@
         "width": 736,
         "height": 414
       },
-      "sha256": "78b8d436a30d156af9acb61d20fdc84086f4df1fa010b646b605dc251e1c0f70",
+      "sha256": "514767050bcd150ced2cff4f9e80448e1697256a35b1ba7fc239f0dc85482ca1",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4165,24 +4175,25 @@
             "button.unit-card[data-kind]": true
           },
           "buttonCount": 15,
-          "bodyTextLength": 277,
+          "bodyTextLength": 289,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 736,
             "height": 414,
             "sampled": 76176,
-            "visiblePixels": 75792,
-            "visibleRatio": 0.9949590422180214,
-            "lumaMean": 56.07682858118186,
-            "lumaVariance": 1588.1584981311921
+            "visiblePixels": 75793,
+            "visibleRatio": 0.9949721697122453,
+            "lumaMean": 56.009600504096326,
+            "lumaVariance": 1554.2967286881253
           },
           "fighterKinds": [
             "zombie:red-panther-shield",
             "zombie:red-panther-commander",
             "human:babayaga",
             "zombie:red-panther-smg",
-            "zombie:futago"
+            "zombie:futago",
+            "human:medic"
           ]
         }
       }
@@ -4194,13 +4205,12 @@
       "variant": "stage25-president",
       "engine": "webkit",
       "viewport": "932x430",
-      "capturedAt": "2026-08-18T06:50:11.599Z",
+      "capturedAt": "2026-08-18T08:29:12.710Z",
       "stageId": "stage-mugarian-executive-lab",
       "stageName": "ムガリアン役員研究所・市場の終わり",
       "visibleActors": [
-        "zombie:red-panther-commander",
+        "human:babayaga",
         "zombie:red-panther-shield",
-        "zombie:red-panther-smg",
         "zombie:mugarian-president-mutated",
         "human:brute"
       ],
@@ -4211,9 +4221,7 @@
         "mugarian-president-mutated"
       ],
       "observedEnemyKinds": [
-        "red-panther-commander",
         "red-panther-shield",
-        "red-panther-smg",
         "mugarian-president-mutated",
         "turned"
       ],
@@ -4221,9 +4229,9 @@
       "support": [],
       "vehicle": {
         "phase": "cooldown",
-        "phaseTime": 12.933333333334318,
-        "cooldownRemaining": 12.933333333334318,
-        "charge": 0.6407407407407134,
+        "phaseTime": 22.76666666666742,
+        "cooldownRemaining": 22.76666666666742,
+        "charge": 0.3675925925925717,
         "damageTriggered": false
       },
       "evidence": "outputs/v100-phase-g/webkit-932x430-battle-extra.png",
@@ -4231,7 +4239,7 @@
         "width": 932,
         "height": 430
       },
-      "sha256": "0e812eb32ee6b1634672a27b12ec5b00e81cc34418b0a2d545f1b5c926bf3a2c",
+      "sha256": "3a658d17845ccb94a7b42910e3d60edc8e5b8baca6457afdd718ec69e5c65b86",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4276,22 +4284,21 @@
             "button.unit-card[data-kind]": true
           },
           "buttonCount": 16,
-          "bodyTextLength": 322,
+          "bodyTextLength": 339,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 932,
             "height": 430,
             "sampled": 100190,
-            "visiblePixels": 66100,
-            "visibleRatio": 0.6597464816847989,
-            "lumaMean": 24.271635057392835,
-            "lumaVariance": 697.0620667221926
+            "visiblePixels": 99744,
+            "visibleRatio": 0.9955484579299331,
+            "lumaMean": 36.70132971154744,
+            "lumaVariance": 497.5099677785817
           },
           "fighterKinds": [
-            "zombie:red-panther-commander",
+            "human:babayaga",
             "zombie:red-panther-shield",
-            "zombie:red-panther-smg",
             "zombie:mugarian-president-mutated",
             "zombie:turned",
             "human:brute"
@@ -4329,7 +4336,7 @@
       "stageId": "stage-nishijin-station-gate",
       "engine": "chromium",
       "viewport": "736x414",
-      "timestamp": "2026-08-18T06:45:46.731Z",
+      "timestamp": "2026-08-18T08:24:14.015Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4365,7 +4372,7 @@
       "stageId": "stage-nishijin-station-gate",
       "engine": "chromium",
       "viewport": "736x414",
-      "timestamp": "2026-08-18T06:45:46.731Z",
+      "timestamp": "2026-08-18T08:24:14.015Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4401,7 +4408,7 @@
       "stageId": "stage-nishijin-defense-line-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "timestamp": "2026-08-18T06:45:24.431Z",
+      "timestamp": "2026-08-18T08:23:52.038Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4437,7 +4444,7 @@
       "stageId": "stage-nishijin-shopping-street",
       "engine": "chromium",
       "viewport": "844x340",
-      "timestamp": "2026-08-18T06:41:55.033Z",
+      "timestamp": "2026-08-18T08:20:22.153Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4473,7 +4480,7 @@
       "stageId": "stage-nishijin-station-gate",
       "engine": "chromium",
       "viewport": "736x414",
-      "timestamp": "2026-08-18T06:45:46.731Z",
+      "timestamp": "2026-08-18T08:24:14.015Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4509,7 +4516,7 @@
       "stageId": "stage-mugarian-logistics-hq",
       "engine": "chromium",
       "viewport": "932x430",
-      "timestamp": "2026-08-18T06:46:05.191Z",
+      "timestamp": "2026-08-18T08:24:32.431Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4545,7 +4552,7 @@
       "stageId": "stage-mugarian-logistics-hq",
       "engine": "chromium",
       "viewport": "932x430",
-      "timestamp": "2026-08-18T06:46:05.191Z",
+      "timestamp": "2026-08-18T08:24:32.431Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4581,7 +4588,7 @@
       "stageId": "stage-mugarian-clinical-trial-wing",
       "engine": "webkit",
       "viewport": "667x375",
-      "timestamp": "2026-08-18T06:46:42.433Z",
+      "timestamp": "2026-08-18T08:25:10.847Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4617,7 +4624,7 @@
       "stageId": "stage-mugarian-tech-tower",
       "engine": "webkit",
       "viewport": "736x414",
-      "timestamp": "2026-08-18T06:48:22.399Z",
+      "timestamp": "2026-08-18T08:26:51.240Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4653,7 +4660,7 @@
       "stageId": "stage-nishijin-defense-line-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "timestamp": "2026-08-18T06:45:24.431Z",
+      "timestamp": "2026-08-18T08:23:52.038Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4689,7 +4696,7 @@
       "stageId": "stage-mugarian-executive-lab",
       "engine": "webkit",
       "viewport": "932x430",
-      "timestamp": "2026-08-18T06:50:11.599Z",
+      "timestamp": "2026-08-18T08:29:12.710Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4725,7 +4732,7 @@
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "engine": "chromium",
       "viewport": "844x340",
-      "timestamp": "2026-08-18T06:43:47.994Z",
+      "timestamp": "2026-08-18T08:22:15.589Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4761,7 +4768,7 @@
       "stageId": "stage-nishijin-station-gate",
       "engine": "chromium",
       "viewport": "736x414",
-      "timestamp": "2026-08-18T06:45:46.731Z",
+      "timestamp": "2026-08-18T08:24:14.015Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4797,7 +4804,7 @@
       "stageId": "stage-mugarian-logistics-hq",
       "engine": "chromium",
       "viewport": "932x430",
-      "timestamp": "2026-08-18T06:46:05.191Z",
+      "timestamp": "2026-08-18T08:24:32.431Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4833,7 +4840,7 @@
       "stageId": "stage-nishijin-station-gate",
       "engine": "chromium",
       "viewport": "736x414",
-      "timestamp": "2026-08-18T06:45:46.731Z",
+      "timestamp": "2026-08-18T08:24:14.015Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4869,7 +4876,7 @@
       "stageId": "stage-mugarian-executive-lab",
       "engine": "webkit",
       "viewport": "932x430",
-      "timestamp": "2026-08-18T06:50:11.599Z",
+      "timestamp": "2026-08-18T08:29:12.710Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4931,9 +4938,11 @@
     ],
     "observedBattleKinds": [
       "walker",
+      "runner",
       "takuya-omega",
-      "shade",
       "abomination",
+      "turned",
+      "shade",
       "takuya",
       "grappler",
       "red-panther-knife",
@@ -4941,11 +4950,9 @@
       "red-panther-shield",
       "red-panther-commander",
       "futago",
-      "mugarian-president-mutated",
-      "turned"
+      "mugarian-president-mutated"
     ],
     "missingObservedKinds": [
-      "runner",
       "spitter",
       "crusher",
       "ooze",
