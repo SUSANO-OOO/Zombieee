@@ -495,6 +495,7 @@ function isTransientBrowserClosure(error) {
 function isRetryableCaptureFailure(error) {
   const message = String(error);
   return isTransientBrowserClosure(error)
+    || /request failures:\s*\["[^"]*\/asset-manifest\.json :: Load request cancelled"\]/i.test(message)
     || /combat activity did not become visible: TimeoutError: page\.waitForFunction: Timeout 45000ms exceeded/i.test(message);
 }
 
