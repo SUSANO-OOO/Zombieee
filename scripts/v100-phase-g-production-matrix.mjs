@@ -710,6 +710,16 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
   // Keep the fixture player-like while ensuring the early wave reaches an
   // authored attack/contact state on WebKit as well as Chromium.
   const deployIndexes = bossKind ? [0, 1, 2, 3, 4, 5, 6] : [0, 2, 4];
+  const bossIsLive = async () => bossKind && await page.evaluate((expectedKind) => {
+    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+    return snapshot?.screen === "battle" && snapshot.fighters?.some((fighter) => (
+      fighter.side === "zombie"
+      && fighter.kind === expectedKind
+      && fighter.hp > 0
+      && fighter.combatReady === true
+      && Number(fighter.x) < 900
+    )) === true;
+  }, bossKind).catch(() => false);
   try {
     for (const index of deployIndexes) {
       const card = unitCards.nth(index);
@@ -722,6 +732,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
       for (let attempt = 0; attempt < 180; attempt += 1) {
         const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
         if (!battleVisible) break;
+        if (await bossIsLive()) break;
         if (await card.getAttribute("data-state") === "ready") {
           await click(page, card, `deploy battle unit ${index + 1}`);
           await page.waitForTimeout(140);
@@ -732,6 +743,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
         }
         await page.waitForTimeout(400);
       }
+      if (await bossIsLive()) break;
       invariant(deployed, `battle unit ${index + 1} never entered cooldown from the ready state`);
     }
     await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout });
