@@ -33,11 +33,12 @@ const extraBattleContracts = Object.freeze([
   { variant: "stage04-grappler", engine: "chromium", viewport: extraBattleViewports[1], stageNumber: 4, bossKind: null, formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
   { variant: "stage21-panther-knife", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
   { variant: "stage22-panther-shield", engine: "webkit", viewport: extraBattleViewports[0], stageNumber: 22, bossKind: null, formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
-  { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
-  // Start the boss fixture with the same low-cost opening a player can use
-  // to establish a frontline before the expensive cards recover.  The
+  { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", formationUnitIds: ["unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-mizuchi", "unit-nao", "unit-tatara"] },
+  // Start every boss fixture with the same low-cost opening a player can use
+  // to establish a frontline before the expensive cards recover. The
   // formation still contains seven canonical V1 units; this only makes the
   // production interaction reproducible inside the timed boss approach.
+  // The order is a QA interaction plan, not a gameplay or balance change.
   { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", formationUnitIds: ["unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-mizuchi", "unit-nao", "unit-tatara"] },
 ].map((contract) => Object.freeze({
   ...contract,
