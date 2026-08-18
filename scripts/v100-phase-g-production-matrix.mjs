@@ -492,12 +492,30 @@ function isTransientBrowserClosure(error) {
   return /target page, context or browser has been closed/i.test(String(error));
 }
 
+function hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message) {
+  const match = String(message).match(/diagnostics=(\{.*\})$/s);
+  if (!match) return false;
+  try {
+    const diagnostics = JSON.parse(match[1]);
+    const clean = diagnostics.consoleErrors?.length === 0
+      && diagnostics.pageErrors?.length === 0
+      && diagnostics.httpFailures?.length === 0;
+    const requestFailures = diagnostics.requestFailures ?? [];
+    const onlyKnownManifestCancellation = requestFailures.length <= 1
+      && requestFailures.every((failure) => /\/asset-manifest\.json :: Load request cancelled$/i.test(failure));
+    return clean && onlyKnownManifestCancellation;
+  } catch {
+    return false;
+  }
+}
+
 function isRetryableCaptureFailure(error) {
   const message = String(error);
   return isTransientBrowserClosure(error)
     || /request failures:\s*\["[^"]*\/asset-manifest\.json :: Load request cancelled"\]/i.test(message)
     || /combat activity did not become visible: TimeoutError: page\.waitForFunction: Timeout 45000ms exceeded/i.test(message)
-    || /battle unit \d+ never entered cooldown from the ready state[\s\S]*diagnostics=\{(?=[^}]*"consoleErrors":\[\])(?=[^}]*"pageErrors":\[\])(?=[^}]*"httpFailures":\[\])(?=[^}]*"requestFailures":\[\])[^}]*\}/i.test(message);
+    || (/battle unit \d+ never entered cooldown from the ready state/i.test(message)
+      && hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message));
 }
 
 async function captureState(engineName, viewport, state, configure) {
