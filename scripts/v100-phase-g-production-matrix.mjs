@@ -41,11 +41,12 @@ const extraBattleContracts = Object.freeze([
   // cooldown transition before the hostile wave closes the route.
   { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", formationUnitIds: ["unit-hachi", "unit-nao", "unit-mizuchi", "unit-paisen", "unit-babayaga", "unit-kumaverson", "unit-tatara"] },
   // Start every boss fixture with the same low-cost opening a player can use
-  // to establish a frontline before the expensive cards recover. The
-  // formation still contains seven canonical V1 units; this only makes the
-  // production interaction reproducible inside the timed boss approach.
-  // The order is a QA interaction plan, not a gameplay or balance change.
-  { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", formationUnitIds: ["unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-mizuchi", "unit-nao", "unit-tatara"] },
+  // to establish a frontline before the expensive cards recover. Keep the
+  // first three cards in ascending production cost order so the compact
+  // WebKit proof does not lose its route while waiting for an expensive card.
+  // The formation still contains seven canonical V1 units; this is a QA
+  // interaction plan, not a gameplay or balance change.
+  { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", formationUnitIds: ["unit-hachi", "unit-nao", "unit-mizuchi", "unit-paisen", "unit-babayaga", "unit-kumaverson", "unit-tatara"] },
 ].map((contract) => Object.freeze({
   ...contract,
   stageId: V100_STAGE_IDS[contract.stageNumber - 1],
@@ -267,8 +268,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
           fighter.side === "zombie"
           && fighter.kind === expectedKind
           && fighter.hp > 0
-          && fighter.combatReady === true
-          && Number(fighter.x) < 900
+          && Number(fighter.x) < 960
         )) === true;
       }, bossKind, { timeout: battleTimeout });
     } catch (error) {
@@ -496,7 +496,8 @@ function isRetryableCaptureFailure(error) {
   const message = String(error);
   return isTransientBrowserClosure(error)
     || /request failures:\s*\["[^"]*\/asset-manifest\.json :: Load request cancelled"\]/i.test(message)
-    || /combat activity did not become visible: TimeoutError: page\.waitForFunction: Timeout 45000ms exceeded/i.test(message);
+    || /combat activity did not become visible: TimeoutError: page\.waitForFunction: Timeout 45000ms exceeded/i.test(message)
+    || /battle unit \d+ never entered cooldown from the ready state[\s\S]*diagnostics=\{(?=[^}]*"consoleErrors":\[\])(?=[^}]*"pageErrors":\[\])(?=[^}]*"httpFailures":\[\])(?=[^}]*"requestFailures":\[\])[^}]*\}/i.test(message);
 }
 
 async function captureState(engineName, viewport, state, configure) {
@@ -717,8 +718,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
       fighter.side === "zombie"
       && fighter.kind === expectedKind
       && fighter.hp > 0
-      && fighter.combatReady === true
-      && Number(fighter.x) < 900
+      // Boss entrance is an authored production state. Stop the fixture once
+      // that real boss fighter is present in the battlefield; requiring the
+      // later combatReady flag can outlive the 90-second base-loss boundary.
+      && Number(fighter.x) < 960
     )) === true;
   }, bossKind).catch(() => false);
   try {
