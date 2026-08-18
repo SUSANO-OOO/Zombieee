@@ -688,6 +688,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
   await click(page, page.getByRole("button", { name: "戦闘へ", exact: true }), "formation battle CTA");
   await waitBattle(page);
   const unitCards = page.locator("button.unit-card[data-kind]");
+  const deployedKinds = new Set();
   let sustainActive = Boolean(bossKind);
   const sustainDone = bossKind ? (async () => {
     // These are ordinary player-facing controls.  The loop keeps the
@@ -745,7 +746,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
   })() : null;
   // Keep the fixture player-like while ensuring the early wave reaches an
   // authored attack/contact state on WebKit as well as Chromium.
-  const deployIndexes = bossKind ? [0, 1, 2, 3, 4, 5, 6] : [0, 2, 4];
+  const deployIndexes = bossKind ? [0, 1, 2, 3, 4, 5, 6] : null;
   const bossIsLive = async () => bossKind && await page.evaluate((expectedKind) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
     return snapshot?.screen === "battle" && snapshot.fighters?.some((fighter) => (
@@ -759,30 +760,58 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
     )) === true;
   }, bossKind).catch(() => false);
   try {
-    for (const index of deployIndexes) {
-      const card = unitCards.nth(index);
-      if (!bossKind) {
-        await click(page, card, `deploy battle unit ${index + 1}`);
-        await page.waitForTimeout(120);
-        continue;
-      }
-      let deployed = false;
-      for (let attempt = 0; attempt < 180; attempt += 1) {
-        const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
-        if (!battleVisible) break;
-        if (await bossIsLive()) break;
-        if (await card.getAttribute("data-state") === "ready") {
-          await click(page, card, `deploy battle unit ${index + 1}`);
-          await page.waitForTimeout(140);
-          if (await card.getAttribute("data-state") !== "ready") {
-            deployed = true;
+    if (!bossKind) {
+      // Compact fixtures can reorder the formation and start with less
+      // command than an arbitrary third card costs. Select only a real,
+      // currently deployable card instead of coupling the proof to a slot
+      // index or a fixed resource snapshot.
+      for (let slot = 0; slot < 3; slot += 1) {
+        await page.waitForFunction(() => Boolean(
+          document.querySelector('button.unit-card[data-state="ready"][aria-disabled="false"]'),
+        ), null, { timeout: battleTimeout });
+        const readyCards = page.locator('button.unit-card[data-state="ready"][aria-disabled="false"]');
+        const readyCount = await readyCards.count();
+        let card = null;
+        for (let candidateIndex = 0; candidateIndex < readyCount; candidateIndex += 1) {
+          const candidate = readyCards.nth(candidateIndex);
+          const kind = await candidate.getAttribute("data-kind");
+          if (kind && !deployedKinds.has(kind)) {
+            card = candidate;
             break;
           }
         }
-        await page.waitForTimeout(400);
+        // If the formation has only one affordable card at this moment, a
+        // card that already completed its cooldown is still a real player
+        // choice. Prefer a new kind, but never fail on a fixed uniqueness
+        // assumption when the production roster exposes a valid ready card.
+        card ??= readyCards.first();
+        invariant(await card.count() > 0, `no ready battle unit for slot ${slot + 1}`);
+        const kind = await card.getAttribute("data-kind");
+        await click(page, card, `deploy ready battle unit ${slot + 1}`);
+        if (kind) deployedKinds.add(kind);
+        await page.waitForTimeout(120);
       }
-      if (await bossIsLive()) break;
-      invariant(deployed, `battle unit ${index + 1} never entered cooldown from the ready state`);
+    } else {
+      for (const index of deployIndexes) {
+        const card = unitCards.nth(index);
+        let deployed = false;
+        for (let attempt = 0; attempt < 180; attempt += 1) {
+          const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
+          if (!battleVisible) break;
+          if (await bossIsLive()) break;
+          if (await card.getAttribute("data-state") === "ready") {
+            await click(page, card, `deploy battle unit ${index + 1}`);
+            await page.waitForTimeout(140);
+            if (await card.getAttribute("data-state") !== "ready") {
+              deployed = true;
+              break;
+            }
+          }
+          await page.waitForTimeout(400);
+        }
+        if (await bossIsLive()) break;
+        invariant(deployed, `battle unit ${index + 1} never entered cooldown from the ready state`);
+      }
     }
     await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout });
     if (!bossKind) {
