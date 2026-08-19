@@ -101,6 +101,30 @@ function uniqueRequestedKeys(receipts) {
   return receipts.filter(({ action }) => action === "requested").map(({ eventId, nodeIndex, sceneId }) => `${eventId}:${nodeIndex}:${sceneId}`);
 }
 
+async function portraitAuditFor(page, selector) {
+  const portrait = page.locator(`${selector} .v100-portrait`).first();
+  if (await portrait.count() === 0) return null;
+  return portrait.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+    return {
+      opacity: style.opacity,
+      objectFit: style.objectFit,
+      backgroundColor: style.backgroundColor,
+      width: rect.width,
+      height: rect.height,
+    };
+  });
+}
+
+function assertPortraitAudit(name, audit) {
+  if (!audit) return;
+  invariant(audit.opacity === "1", `${name} portrait opacity ${audit.opacity}`);
+  invariant(audit.objectFit === "contain", `${name} portrait object-fit ${audit.objectFit}`);
+  invariant(audit.backgroundColor === "rgba(0, 0, 0, 0)", `${name} portrait background ${audit.backgroundColor}`);
+  invariant(audit.width >= 48 && audit.height >= 64, `${name} portrait unusable ${JSON.stringify(audit)}`);
+}
+
 for (const engine of engines) {
   if (!browserTypes[engine]) throw new Error(`Unknown V100 event QA engine: ${engine}`);
   const browser = await browserTypes[engine].launch({ headless: true });
@@ -131,11 +155,13 @@ for (const engine of engines) {
             bodyText: document.body.innerText.trim(),
             overflow: Math.max(document.documentElement.scrollWidth - document.documentElement.clientWidth, document.body.scrollWidth - document.body.clientWidth),
           }));
+          const initialPortraitAudit = await portraitAuditFor(page, eventSelector);
           const expected = v100EventPresentationFor({ eventId: eventCase.eventId, phase: eventCase.phase, node: { kind: "action" }, nodeIndex: 0 });
           invariant(observed.category === expected.category, `${name} category ${observed.category} !== ${expected.category}`);
           invariant(observed.audioOwner === "v100-event-runtime", `${name} event audio owner missing`);
           invariant(observed.bodyText.length > 0, `${name} blank body`);
           invariant(observed.overflow <= 1, `${name} horizontal overflow ${observed.overflow}`);
+          assertPortraitAudit(name, initialPortraitAudit);
           await page.waitForTimeout(180);
           const before = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
           invariant(before?.owner === "v100-event-runtime", `${name} QA audio owner missing`);
@@ -145,6 +171,8 @@ for (const engine of engines) {
             await clickUsable(primary, `${name} event action`);
             await page.waitForTimeout(220);
           }
+          const postActionPortraitAudit = await portraitAuditFor(page, eventSelector);
+          assertPortraitAudit(name, postActionPortraitAudit);
           await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.stop?.("qa-boundary"));
           const after = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
           const requestedKeys = uniqueRequestedKeys(after?.receipts ?? []);
@@ -153,6 +181,7 @@ for (const engine of engines) {
           const evidencePath = path.join(evidenceDir, `${name}.png`);
           await page.screenshot({ path: evidencePath, animations: "disabled" });
           result.observed = observed;
+          result.portraitAudit = postActionPortraitAudit ?? initialPortraitAudit;
           result.expected = { category: expected.category, sceneId: expected.sceneId, transition: expected.transition, audioOwner: expected.audioOwner };
           result.receipts = after?.receipts ?? [];
           result.audioDiagnostics = after?.diagnostics ?? null;

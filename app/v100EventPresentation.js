@@ -62,7 +62,7 @@ export function v100EventPresentationFor({ eventId, phase, node = null, nodeInde
   const stage = eventStage(eventId);
   const category = categoryFor(eventId, phase, stage);
   const portraitSide = node?.portraitKind === "right"
-    || (node?.portraitKind !== "left" && ["unit-paisen", "segawa", "red-panther-commander"].includes(node?.portraitOwner))
+    || (node?.portraitKind !== "left" && ["segawa", "red-panther-commander"].includes(node?.portraitOwner))
     ? "right"
     : "left";
   const sceneId = sceneFor(eventId, phase, stage, category);

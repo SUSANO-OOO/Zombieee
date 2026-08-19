@@ -728,7 +728,7 @@ export function V100Campaign() {
 function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, presentation = null }: { node: StoryNode; eventId?: string | null; phase?: string; nodeIndex?: number; presentation?: ReturnType<typeof v100EventPresentationFor> | null }) {
   const portrait = portraitFor(node.portraitOwner);
   const resolvedPresentation = presentation ?? v100EventPresentationFor({ eventId, phase, node, nodeIndex });
-  const portraitSide = resolvedPresentation?.portraitSide ?? (node.portraitKind === "right" || (node.portraitKind !== "left" && node.portraitOwner && ["unit-paisen", "segawa", "red-panther-commander"].includes(node.portraitOwner)) ? "right" : "left");
+  const portraitSide = resolvedPresentation?.portraitSide ?? (node.portraitKind === "right" || (node.portraitKind !== "left" && node.portraitOwner && ["segawa", "red-panther-commander"].includes(node.portraitOwner)) ? "right" : "left");
   const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "作戦情報" : node.kind === "system" ? "無線記録" : "";
   const playerFacingText = publicDisplayText(node.text || "…");
   return <div className={`v100-story-node v100-node-${node.kind ?? "action"}`} data-portrait-side={portraitSide} data-v100-state={`dialogue-${portraitSide}`} data-v100-node-kind={resolvedPresentation?.nodeKind ?? node.kind ?? "action"} data-v100-node-label={resolvedPresentation?.nodeLabel ?? "場面"} data-v100-transition={resolvedPresentation?.transition ?? undefined} data-v100-audio-cue={resolvedPresentation?.cueId ?? undefined}>

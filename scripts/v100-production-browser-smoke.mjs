@@ -208,6 +208,7 @@ for (const engine of engines) {
         await page.locator('.game-shell[data-screen="battle"]').waitFor({ state: "visible", timeout: battleTimeout });
         await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready", null, { timeout: battleTimeout });
         await page.waitForFunction(() => window.__ASHFALL_ASSET_QA__?.getBattleMountState?.().battleMounted === true, null, { timeout: battleTimeout });
+        invariant(await page.locator(".crawler-alert").count() === 0, `${name}: ambiguous crawler alert still mounted`);
         result.formation = true;
         result.battle = true;
         result.assetState = await page.evaluate(() => document.documentElement.dataset.assetLoadState);

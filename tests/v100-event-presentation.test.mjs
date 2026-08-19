@@ -32,3 +32,9 @@ test("V1 event presentation uses action cues only for owned scene nodes", () => 
   const credits = v100EventPresentationFor({ eventId: "v100:event:credits", phase: "credits", node: { kind: "system" }, nodeIndex: 2 });
   assert.equal(credits.cueId, null);
 });
+
+test("V1 dialogue portraits retain the legacy left/right speaking positions", () => {
+  assert.equal(v100EventPresentationFor({ eventId: "v100:event:prologue", phase: "event", node: { kind: "dialogue", portraitOwner: "unit-paisen" } }).portraitSide, "left");
+  assert.equal(v100EventPresentationFor({ eventId: "v100:event:s04:pre", phase: "event", node: { kind: "dialogue", portraitOwner: "unit-babayaga" } }).portraitSide, "left");
+  assert.equal(v100EventPresentationFor({ eventId: "v100:event:s04:pre", phase: "event", node: { kind: "dialogue", portraitOwner: "segawa" } }).portraitSide, "right");
+});
