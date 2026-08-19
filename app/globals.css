@@ -1033,6 +1033,22 @@ button[aria-disabled="true"]:focus-visible {
   }
 }
 
+/* The canonical 667px landscape HUD has cards only about 58px wide.  Keep
+   the explicit command-cost label readable by giving it its own upper
+   anchor; the compact readiness state owns the lower edge.  This is limited
+   to the narrow legacy HUD so the wider V1 card composition is unchanged. */
+@media (max-width:720px) and (orientation:landscape) {
+  .game-frame[data-battle-hud-layout="mobile"] .unit-card .cost {
+    top:3px;
+    right:3px !important;
+    bottom:auto !important;
+    padding:1px 2px;
+    border:1px solid rgba(215,186,121,.42);
+    background:rgba(16,19,18,.78);
+    line-height:1;
+  }
+}
+
 /* Battle cards are portrait-led now that the unit name is no longer printed
    over the art. Keep the character readable across the whole card while the
    state and cost remain anchored to the lower edge. */
