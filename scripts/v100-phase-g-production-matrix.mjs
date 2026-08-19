@@ -480,6 +480,7 @@ async function captureStateImpl(engineName, viewport, state, configure) {
       phase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
       surface: document.querySelector(".v100-shell")?.getAttribute("data-v100-surface") ?? null,
       body: document.body.innerText.slice(0, 1600),
+      snapshot: window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null,
     })).catch(() => null);
     throw new Error(`${label} failed: ${String(error)} state=${JSON.stringify(failureState)} diagnostics=${JSON.stringify(diagnostics)}`);
   } finally {

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import {
   V100_BOSSES,
@@ -52,7 +52,7 @@ import { AshfallGame, type AshfallBattleResult } from "./AshfallGame";
 import { v100StageRuntimeFor } from "./v100StageRuntime.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 import { FORMATION_CARD_ART } from "./spriteManifest.js";
-import { PRODUCTION_VISUALS } from "./productionVisuals.js";
+import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
 import { PROLOGUE_SYNOPSIS } from "./storyEvents.js";
 import { V099_CRAWLER_RUNTIME_PROFILE } from "./crawlerEquipmentSprites.js";
 import {
@@ -586,7 +586,7 @@ export function V100Campaign() {
   if (!hydrated) return <main className="v100-shell"><p className="v100-loading">作戦セーブを検証しています…</p></main>;
 
   return (
-    <main className={`v100-shell v100-surface-${surface}`} data-v100-phase={flow.phase} data-v100-stage={flow.stageNumber ?? "map"} data-v100-surface={surface}>
+    <main className={`v100-shell v100-surface-${surface}`} data-v100-phase={flow.phase} data-v100-stage={flow.stageNumber ?? "map"} data-v100-surface={surface} style={{ "--v100-command-art": `url(${PRODUCTION_VISUALS.command})` } as CSSProperties}>
       <header className="v100-topbar">
         <div><span className="v100-kicker">新西新作戦記録</span><h1>西新世紀末物語</h1></div>
         <div className="v100-save-meta"><span>{save.caps} CAPS</span><span>記録 {save.readStoryEventIds.length}</span><button type="button" onClick={() => setLogOpen((open) => !open)}>会話記録</button></div>
@@ -672,7 +672,7 @@ export function V100Campaign() {
       )}
 
       {flow.phase === "formation" && (
-        <FormationView save={save} onSlotChange={chooseFormation} onStart={startBattle} />
+        <FormationView save={save} stageId={flow.stageId} onSlotChange={chooseFormation} onStart={startBattle} />
       )}
 
       {flow.phase === "battle" && productionSession && (
@@ -746,11 +746,12 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
   );
 }
 
-function FormationView({ save, onSlotChange, onStart }: { save: Save; onSlotChange: (slot: number, value: string) => void; onStart: () => void }) {
+function FormationView({ save, stageId, onSlotChange, onStart }: { save: Save; stageId: string | null; onSlotChange: (slot: number, value: string) => void; onStart: () => void }) {
   const [activeSlot, setActiveSlot] = useState(0);
+  const stage = stageId ? V100_STAGE_BY_ID[stageId] : null;
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const assignActiveSlot = (unitId: string) => onSlotChange(activeSlot, unitId);
-  return <section className="v100-panel v100-formation-panel v100-sortie-panel" data-v100-surface="formation"><div className="v100-panel-heading v100-sortie-heading"><div><span className="v100-kicker">出撃準備 / 7枠</span><h2>出撃編成</h2></div><strong className="v100-sortie-count">{save.formationSlots.filter(Boolean).length} <small>/ 7 配置</small></strong></div><div className="v100-formation-brief"><strong>出撃部隊を組む</strong><span>前衛・火力・支援の並びを整え、作戦へ送り出します。</span><em>支援と装甲車両は別の作戦装備</em></div><div className="v100-slot-rail" aria-label="7枠の編成"><div className="v100-slot-track">{save.formationSlots.map((unitId, index) => <button type="button" key={`slot-${index}`} className={`v100-slot ${activeSlot === index ? "selected" : ""} ${unitId ? "filled" : "empty"}`} onClick={() => setActiveSlot(index)} aria-pressed={activeSlot === index} aria-label={`編成枠${index + 1}`}><span>枠 {index + 1}</span><strong>{unitId ? activeUnitName(unitId) : "空き"}</strong><small>{unitId ? "配置中" : "隊員を選択"}</small></button>)}</div></div><div className="v100-formation-workspace"><div className="v100-roster-heading"><h3>隊員</h3><span>枠 {activeSlot + 1} に配置</span></div><div className="v100-roster-grid">{ownedUnits.map((unit) => { const art = formationCardForUnit(unit.id); const level = Math.max(1, Number(save.unitLevels[unit.id]) || 1); return <button type="button" className="v100-roster-card game-unit-card" key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={`${unit.displayName}を枠${activeSlot + 1}へ配置`}><span className="v100-roster-card-art">{art && <img src={art} alt="" />}</span><span className="v100-roster-card-copy"><strong>{unit.displayName}</strong><small>{v100RoleLabelFor(unit.role)} / Lv.{level}</small><small>武器・射程・固有能力</small></span></button>; })}</div><div className="v100-formation-loadout"><article><span>支援</span><strong>{save.equippedSupportId ? "装備済み" : "未選択"}</strong><small>戦場では隊員枠と別に使用</small></article><article><span>装甲車両</span><strong>耐久 {save.vehicle.maxHp}</strong><small>車両能力は戦闘画面で操作</small></article></div></div><div className="v100-formation-footer"><button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button><button className="v100-primary" type="button" disabled={!save.formationSlots.some(Boolean)} onClick={onStart}>戦闘へ</button></div></section>;
+  return <section className="v100-panel v100-formation-panel v100-sortie-panel" data-v100-surface="formation" style={{ "--v100-stage-art": `url(${stage ? stageVisualFor(stage.id) : PRODUCTION_VISUALS.command})` } as CSSProperties}><div className="v100-panel-heading v100-sortie-heading"><div><span className="v100-kicker">{stage ? `作戦 S${String(stage.number).padStart(2, "0")} / 出撃準備` : "出撃準備 / 7枠"}</span><h2>出撃編成</h2>{stage && <p className="v100-formation-stage-name">{stage.displayName}</p>}</div><strong className="v100-sortie-count">{save.formationSlots.filter(Boolean).length} <small>/ 7 配置</small></strong></div><div className="v100-formation-brief"><strong>出撃部隊を組む</strong><span>前衛・火力・支援の並びを整え、作戦へ送り出します。</span><em>支援と装甲車両は別の作戦装備</em></div><div className="v100-slot-rail" aria-label="7枠の編成"><div className="v100-slot-track">{save.formationSlots.map((unitId, index) => <button type="button" key={`slot-${index}`} className={`v100-slot ${activeSlot === index ? "selected" : ""} ${unitId ? "filled" : "empty"}`} onClick={() => setActiveSlot(index)} aria-pressed={activeSlot === index} aria-label={`編成枠${index + 1}`}><span>枠 {index + 1}</span><strong>{unitId ? activeUnitName(unitId) : "空き"}</strong><small>{unitId ? "配置中" : "隊員を選択"}</small></button>)}</div></div><div className="v100-formation-workspace"><div className="v100-roster-heading"><h3>隊員</h3><span>枠 {activeSlot + 1} に配置</span></div><div className="v100-roster-grid">{ownedUnits.map((unit) => { const art = formationCardForUnit(unit.id); const level = Math.max(1, Number(save.unitLevels[unit.id]) || 1); return <button type="button" className="v100-roster-card game-unit-card" key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={`${unit.displayName}を枠${activeSlot + 1}へ配置`}><span className="v100-roster-card-art">{art && <img src={art} alt="" />}</span><span className="v100-roster-card-copy"><strong>{unit.displayName}</strong><small>{v100RoleLabelFor(unit.role)} / Lv.{level}</small><small>武器・射程・固有能力</small></span></button>; })}</div><div className="v100-formation-loadout"><article><span>支援</span><strong>{save.equippedSupportId ? "装備済み" : "未選択"}</strong><small>戦場では隊員枠と別に使用</small></article><article><span>装甲車両</span><strong>耐久 {save.vehicle.maxHp}</strong><small>車両能力は戦闘画面で操作</small></article></div></div><div className="v100-formation-footer"><button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button><button className="v100-primary" type="button" disabled={!save.formationSlots.some(Boolean)} onClick={onStart}>戦闘へ</button></div></section>;
 }
 
 function PersonnelView({ save, onBack, onPurchase }: { save: Save; onBack: () => void; onPurchase: (unitId: string) => void }) {

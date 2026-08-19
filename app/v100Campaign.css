@@ -654,3 +654,213 @@
   .v100-personnel-card.game-unit-card { min-height: 112px; }
   .v100-roster-card.game-unit-card { min-height: 94px; }
 }
+
+/* Final producer presentation pass: keep the authored industrial art visible
+ * behind preparation screens, remove schematic-looking line textures, and
+ * give every surface one clear game-world focal point. */
+.v100-shell {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 76% 4%, #6a563622 0, transparent 28%),
+    radial-gradient(ellipse at 12% 86%, #7c43241d 0, transparent 26%),
+    linear-gradient(145deg, #070c0e 0%, #152122 46%, #06090a 100%);
+}
+.v100-shell::before {
+  background:
+    radial-gradient(ellipse at 50% 0%, #e5c37d12 0, transparent 36%),
+    radial-gradient(ellipse at 50% 100%, #00000070 0, transparent 66%);
+  opacity: .75;
+  mix-blend-mode: normal;
+}
+.v100-shell[data-v100-phase="map"]::after,
+.v100-shell[data-v100-phase="formation"]::after,
+.v100-shell.v100-surface-personnel::after,
+.v100-shell.v100-surface-support-vehicle::after {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, #05090bc4 0%, #05090b86 34%, #05090bd9 100%),
+    var(--v100-command-art);
+  background-position: center;
+  background-size: cover;
+  opacity: .36;
+  filter: saturate(.7) contrast(1.08);
+}
+.v100-shell[data-v100-phase="battle"]::after,
+.v100-shell[data-v100-phase="name"]::after,
+.v100-shell[data-v100-phase="event"]::after,
+.v100-shell[data-v100-phase="result"]::after { display: none; }
+.v100-topbar > div:first-child,
+.v100-panel-heading > div,
+.v100-section-heading > div { min-width: 0; }
+.v100-topbar h1 { white-space: nowrap; }
+.v100-panel {
+  background: linear-gradient(145deg, #1b2a2cf0, #091112f5 76%);
+}
+.v100-panel h2,
+.v100-panel h3,
+.v100-panel h4,
+.v100-panel p,
+.v100-panel strong,
+.v100-panel small { max-width: 100%; }
+.v100-panel h2,
+.v100-panel h3,
+.v100-panel h4,
+.v100-panel p,
+.v100-panel strong,
+.v100-panel small,
+.v100-panel button { overflow-wrap: anywhere; }
+.v100-panel button { white-space: normal; }
+
+.v100-map-layout {
+  background:
+    linear-gradient(145deg, #172625eb, #080f10f2 78%),
+    var(--v100-command-art);
+  background-position: center;
+  background-size: cover;
+}
+.v100-map-side {
+  background: linear-gradient(145deg, #1e302fe8, #091314f5 82%);
+}
+.v100-map-side h3 { line-height: 1.15; }
+.v100-map-briefs article { min-width: 0; }
+.v100-map-briefs strong,
+.v100-map-briefs small { overflow-wrap: anywhere; }
+
+.v100-formation-panel,
+.v100-personnel-screen,
+.v100-loadout-screen {
+  background-position: center;
+  background-size: cover;
+}
+.v100-formation-panel {
+  background-image:
+    linear-gradient(145deg, #162221d9 0%, #0a1112ee 60%, #06090bf7 100%),
+    var(--v100-stage-art, var(--v100-command-art));
+}
+.v100-personnel-screen,
+.v100-loadout-screen {
+  background-image:
+    linear-gradient(145deg, #172525e8 0%, #0a1213f3 72%, #06090bf8 100%),
+    var(--v100-command-art);
+}
+.v100-formation-stage-name {
+  margin: 5px 0 0 !important;
+  color: #ead5a5 !important;
+  font-family: Georgia, serif;
+  font-size: clamp(13px, 1.5vw, 17px);
+  line-height: 1.25 !important;
+}
+.v100-sortie-heading {
+  align-items: flex-start;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #aa794a;
+}
+.v100-sortie-count {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  padding: 7px 9px;
+  border: 1px solid #8b6a42;
+  border-radius: 0 6px 0 6px;
+  color: #f0ce86;
+  background: #241e16b8;
+  font-family: Georgia, serif;
+  font-size: 20px;
+  line-height: 1;
+}
+.v100-sortie-count small { color: #c7b58f; font-family: inherit; font-size: 10px; }
+.v100-formation-brief { background: linear-gradient(90deg, #34473bd9, #101b1ce8 78%); }
+.v100-slot-track .v100-slot { box-shadow: inset 0 1px #a5aa7b42, 0 5px 12px #0005; }
+.v100-roster-card.game-unit-card {
+  background: linear-gradient(135deg, #2b4039e8, #0d1718f2 78%);
+}
+.v100-roster-card.game-unit-card:hover:not(:disabled) { transform: translateY(-2px); }
+.v100-roster-card-art { box-shadow: inset 0 0 18px #000a, 0 3px 8px #0006; }
+.v100-formation-loadout article {
+  min-width: 0;
+  border-radius: 0 6px 0 6px;
+  background: linear-gradient(135deg, #1a2b29e6, #0a1314ee);
+}
+.v100-formation-footer { background: #0c1516e8; }
+
+.v100-management-hero {
+  border-left: 4px solid #d19a52;
+  background: linear-gradient(105deg, #3d4e3fe8, #172827e8 58%, #0d1516ed);
+}
+.v100-management-hero > div { min-width: 0; }
+.v100-management-hero span,
+.v100-management-hero strong { overflow-wrap: anywhere; }
+.v100-management-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+.v100-management-summary span { min-width: 0; }
+.v100-personnel-card.game-unit-card {
+  align-items: stretch;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  min-height: 148px;
+  background: linear-gradient(135deg, #233b35e8, #0d1718f3 78%);
+}
+.v100-personnel-art { height: auto; min-height: 126px; }
+.v100-personnel-copy { align-content: center; }
+.v100-personnel-copy h3 { line-height: 1.12; }
+.v100-personnel-copy p,
+.v100-personnel-copy small { overflow-wrap: anywhere; }
+.v100-state-badge { align-self: start; }
+.v100-support-vehicle-grid { align-items: stretch; }
+.v100-loadout-column { background: linear-gradient(145deg, #1b302de8, #0a1314f3 80%); }
+.game-loadout-card {
+  min-height: 92px;
+  background: linear-gradient(135deg, #294039e8, #0e1718f2 80%);
+}
+.game-loadout-card .v100-loadout-card-copy { min-width: 0; }
+.game-loadout-card button,
+.game-loadout-card .v100-state-badge { flex: 0 0 auto; }
+.v100-vehicle-art {
+  background:
+    radial-gradient(ellipse at 50% 64%, #89765a 0, #304238 44%, #0b1213 78%),
+    linear-gradient(135deg, #2d3c35, #111819);
+}
+
+/* On desktop, preserve a complete mission brief in the first viewport. */
+@media (min-width: 981px) {
+  .v100-shell[data-v100-phase="map"] .v100-topbar { padding-top: 6px; padding-bottom: 8px; margin-bottom: 7px; }
+  .v100-shell[data-v100-phase="map"] .v100-topbar h1 { font-size: clamp(21px, 2.4vw, 27px); }
+  .v100-shell[data-v100-phase="map"] .v100-map-hero { height: 158px; min-height: 158px; padding: 18px 22px; }
+  .v100-shell[data-v100-phase="map"] .v100-chapter-tabs { margin-top: 7px; }
+  .v100-shell[data-v100-phase="map"] .v100-route-label { min-height: 24px; margin-top: 5px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-actions { margin-top: 6px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-actions button { min-height: 54px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-grid { margin-top: 7px; }
+  .v100-shell[data-v100-phase="map"] .v100-stage-list button { min-height: 64px; padding: 8px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-side dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .v100-shell[data-v100-phase="map"] .v100-map-side dl div { display: grid; gap: 4px; padding: 6px 7px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-side dd { text-align: left; }
+  .v100-shell[data-v100-phase="map"] .v100-stage-intel { margin: 8px 0; padding: 8px; }
+  .v100-shell[data-v100-phase="map"] .v100-stage-intel p { font-size: 11px; line-height: 1.35; }
+  .v100-shell[data-v100-phase="map"] .v100-map-side > .v100-primary { min-height: 44px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-layout { padding-bottom: 14px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-side { padding: 14px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-side dl { margin: 10px 0; gap: 5px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-briefs { margin: 7px 0; }
+  .v100-shell[data-v100-phase="map"] .v100-map-tools { margin-top: 7px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-tools button,
+  .v100-shell[data-v100-phase="map"] .v100-map-tools .v100-file-button { min-height: 36px; padding: 6px 8px; font-size: 11px; }
+  .v100-shell[data-v100-phase="formation"] .v100-formation-panel { min-height: calc(100dvh - 136px); }
+}
+@media (max-width: 720px) {
+  .v100-personnel-card.game-unit-card { grid-template-columns: 88px minmax(0, 1fr) auto; min-height: 126px; }
+  .v100-personnel-art { min-height: 104px; }
+}
+@media (max-width: 520px) {
+  .v100-topbar h1 { max-width: none; }
+  .v100-sortie-count { font-size: 17px; }
+  .v100-personnel-card.game-unit-card { grid-template-columns: 72px minmax(0, 1fr); min-height: 112px; }
+  .v100-personnel-art { min-height: 88px; }
+}
