@@ -1142,30 +1142,43 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       // currently deployable card instead of coupling the proof to a slot
       // index or a fixed resource snapshot.
       for (let slot = 0; slot < 3; slot += 1) {
-        await page.waitForFunction(() => Boolean(
-          document.querySelector('button.unit-card[data-state="ready"][aria-disabled="false"]'),
-        ), null, { timeout: battleTimeout });
-        const readyCards = page.locator('button.unit-card[data-state="ready"][aria-disabled="false"]');
-        const readyCount = await readyCards.count();
-        let card = null;
-        for (let candidateIndex = 0; candidateIndex < readyCount; candidateIndex += 1) {
-          const candidate = readyCards.nth(candidateIndex);
-          const kind = await candidate.getAttribute("data-kind");
-          if (kind && !deployedKinds.has(kind)) {
-            card = candidate;
-            break;
+        const deadline = Date.now() + battleTimeout;
+        let deployed = false;
+        while (!deployed && Date.now() < deadline) {
+          const readyCards = page.locator('button.unit-card[data-state="ready"][aria-disabled="false"]');
+          const readyCount = await readyCards.count().catch(() => 0);
+          let card = null;
+          for (let candidateIndex = 0; candidateIndex < readyCount; candidateIndex += 1) {
+            const candidate = readyCards.nth(candidateIndex);
+            const kind = await candidate.getAttribute("data-kind").catch(() => null);
+            if (kind && !deployedKinds.has(kind)) {
+              card = candidate;
+              break;
+            }
+          }
+          // If the formation has only one affordable card at this moment, a
+          // card that already completed its cooldown is still a real player
+          // choice. Prefer a new kind, but never fail on a fixed uniqueness
+          // assumption when the production roster exposes a valid ready card.
+          card ??= readyCount > 0 ? readyCards.first() : null;
+          if (!card || await card.count().catch(() => 0) === 0) {
+            await page.waitForTimeout(120);
+            continue;
+          }
+          const kind = await card.getAttribute("data-kind").catch(() => null);
+          await click(page, card, `deploy ready battle unit ${slot + 1}`);
+          await page.waitForTimeout(60);
+          const trackedCard = kind
+            ? page.locator(`button.unit-card[data-kind="${kind}"]`).first()
+            : card;
+          const nextState = await trackedCard.getAttribute("data-state").catch(() => null);
+          if (nextState !== "ready") {
+            if (kind) deployedKinds.add(kind);
+            deployed = true;
           }
         }
-        // If the formation has only one affordable card at this moment, a
-        // card that already completed its cooldown is still a real player
-        // choice. Prefer a new kind, but never fail on a fixed uniqueness
-        // assumption when the production roster exposes a valid ready card.
-        card ??= readyCards.first();
-        invariant(await card.count() > 0, `no ready battle unit for slot ${slot + 1}`);
-        const kind = await card.getAttribute("data-kind");
-        await click(page, card, `deploy ready battle unit ${slot + 1}`);
-        if (kind) deployedKinds.add(kind);
-        await page.waitForTimeout(120);
+        invariant(deployed, `no ready battle unit for slot ${slot + 1}`);
+        await page.waitForTimeout(60);
       }
     } else {
       for (let deployment = 0; deployment < bossDeploymentLimit; deployment += 1) {
