@@ -18,7 +18,7 @@ const REPRESENTATIVE_ROWS = [
   ["combat-takuya-omega", "takuya-omega", "giant-weapon-sweep", "two-rooted-arms-greatsword", "weapon-arc-contact", "boss-hit-reaction", ["enemy-takuya-omega-attack", "takuya-hit"], "core-battle-boss", "takuya-omega"],
   ["combat-support", "support-healing", "support-activation", "support-world-drop", "healing-pulse-contact", "ally-heal-state", ["support-heal", "status-support-target"], "core-battle-boss", "support-healing"],
   ["combat-vehicle-ability", "vehicle-barrage", "vehicle-barrage", "vehicle-weapon-muzzle", "crawler-barrage-impact", "enemy-hit-flash", ["weapon-barrage", "crawler-hit"], "stage03-takuya", "vehicle-barrage"],
-  ["combat-mission-object", "stage-nishijin-station-tunnel-seal", "mission-object-state-change", "mission-object-bounds", "objective-contact", "mission-target-state", ["sfx-v070-terminal-confirm", "status-mission-target"], "stage06-spitter-seal", "stage-nishijin-station-tunnel-seal"],
+  ["combat-mission-object", "stage-nishijin-station-gate", "mission-object-state-change", "mission-object-bounds", "objective-contact", "mission-target-state", ["sfx-v070-terminal-confirm", "status-mission-target"], "stage04-grappler", "stage-nishijin-station-gate"],
   ["combat-status-target-markers", "status-mission-target", "target-marker-state", "mission-target-label", "lock-on-contact", "danger-or-target-state", ["ui-select", "status-danger"], "stage21-panther-knife", "status-mission-target"],
 ].map(([id, actor, action, source, contactImpact, reaction, seVfx, captureVariant, runtimeActor]) => Object.freeze({
   id,
@@ -79,8 +79,8 @@ export function representativeRuntimeObservationRule(contract) {
   if (contract.actor === "vehicle-barrage") {
     return Object.freeze({ kind: "vehicle", expected: "vehicle-barrage", cueIds: Object.freeze(["weapon-barrage"]) });
   }
-  if (contract.actor === "stage-nishijin-station-tunnel-seal") {
-    return Object.freeze({ kind: "mission", expectedStageId: "stage-nishijin-station-tunnel-seal", expectedMissionType: "escort" });
+  if (contract.actor === "stage-nishijin-station-gate") {
+    return Object.freeze({ kind: "mission", expectedStageId: "stage-nishijin-station-gate", expectedMissionType: "escort" });
   }
   if (contract.actor === "status-mission-target") {
     return Object.freeze({ kind: "status", expected: "status-mission-target" });
