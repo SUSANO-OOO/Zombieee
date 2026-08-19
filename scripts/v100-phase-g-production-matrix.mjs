@@ -70,6 +70,7 @@ const onlyState = process.env.V100_PHASE_G_ONLY ?? "";
 const onlyVariant = process.env.V100_PHASE_G_ONLY_VARIANT ?? "";
 const storageKeys = ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good", "nishijin-campaign-v100:owner"];
 const results = [];
+const phaseGBrowsers = new Map();
 
 await mkdir(evidenceDir, { recursive: true });
 
@@ -615,8 +616,23 @@ async function saveScreenshot(page, filePath, label) {
   return { path: relativeEvidence(filePath), sha256: createHash("sha256").update(bytes).digest("hex"), bytes: metadata.size };
 }
 
-async function captureStateImpl(engineName, viewport, state, configure) {
+async function phaseGBrowser(engineName) {
+  const current = phaseGBrowsers.get(engineName);
+  if (current?.isConnected?.()) return current;
+  if (current) await current.close().catch(() => {});
   const browser = await playwright[engineName].launch({ headless: true });
+  phaseGBrowsers.set(engineName, browser);
+  return browser;
+}
+
+async function closePhaseGBrowsers() {
+  const browsers = [...phaseGBrowsers.values()];
+  phaseGBrowsers.clear();
+  await Promise.all(browsers.map((browser) => browser.close().catch(() => {})));
+}
+
+async function captureStateImpl(engineName, viewport, state, configure) {
+  const browser = await phaseGBrowser(engineName);
   const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
   const page = await context.newPage();
   const diagnostics = diagnosticsFor(page);
@@ -698,7 +714,6 @@ async function captureStateImpl(engineName, viewport, state, configure) {
     throw new Error(`${label} failed: ${String(error)} state=${JSON.stringify(failureState)} diagnostics=${JSON.stringify(diagnostics)}`);
   } finally {
     await context.close();
-    await browser.close();
   }
 }
 
@@ -1339,6 +1354,8 @@ for (const contract of extraBattleContracts) {
     variant: contract.variant,
   }));
 }
+
+await closePhaseGBrowsers();
 
 const report = {
   generatedAt: new Date().toISOString(),
