@@ -1043,3 +1043,5 @@ button[aria-disabled="true"]:focus-visible {
   background-position:34% 20%;
 }
 .unit-card[data-kind="brute"] .portrait { width:78%; }
+.unit-card .cost { display:inline-flex; align-items:baseline; gap:3px; white-space:nowrap; }
+.unit-card .cost-mark { margin-right:0; color:#d7ba79; font:800 clamp(7px,.38em,12px)/1 "Arial Narrow",sans-serif; font-style:normal; letter-spacing:.04em; vertical-align:baseline; }

@@ -198,7 +198,7 @@
 .v100-support-management-card p { margin: 0; color: #a8b7aa; font-size: 11px; }
 .v100-support-management-card button { min-height: 38px; padding: 6px 9px; font-size: 11px; }
 .v100-vehicle-art { position: relative; display: grid; place-items: center; min-height: 150px; overflow: hidden; margin: 8px 0; border: 1px solid #4e5c4f; background: radial-gradient(circle at 50% 60%, #536157, #101818 68%); }
-.v100-vehicle-art::after { content: "装甲車両 / CRAWLER"; position: absolute; right: 9px; bottom: 7px; color: #c7d2ba; font-size: 10px; letter-spacing: .1em; }
+.v100-vehicle-art::after { content: "装甲車両"; position: absolute; right: 9px; bottom: 7px; color: #c7d2ba; font-size: 10px; letter-spacing: .1em; }
 .v100-vehicle-art img { width: 80%; max-height: 155px; object-fit: contain; filter: drop-shadow(0 12px 10px #0009); }
 .v100-vehicle-stats { display: grid; gap: 6px; margin: 10px 0; }
 .v100-vehicle-stats div { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 5px; border-bottom: 1px solid #2d4141; }
@@ -268,7 +268,7 @@
 .v100-management-heading { padding-bottom: 11px; border-bottom: 1px solid #66583d; }
 .v100-management-heading h2 { font-size: clamp(23px, 3vw, 34px); }
 .v100-management-hero { position: relative; display: flex; align-items: end; justify-content: space-between; gap: 16px; min-height: 104px; margin: 13px 0 11px; padding: 17px 19px; overflow: hidden; border: 1px solid #5c6d57; background: linear-gradient(100deg, #2b4037, #172524 58%, #10191a); box-shadow: inset 0 -2px #9b7044, 0 10px 24px #0006; }
-.v100-management-hero::before { content: "FIELD DOSSIER"; position: absolute; right: 18px; top: 12px; color: #d0ad6b22; font-family: Georgia, serif; font-size: 34px; font-weight: 800; letter-spacing: .1em; }
+.v100-management-hero::before { content: "現場記録"; position: absolute; right: 18px; top: 12px; color: #d0ad6b22; font-family: Georgia, serif; font-size: 34px; font-weight: 800; letter-spacing: .1em; }
 .v100-management-hero > div, .v100-management-hero > b { position: relative; z-index: 1; }
 .v100-management-hero > div { display: grid; gap: 5px; max-width: 70%; }
 .v100-management-hero strong { color: #f1d18a; font-family: Georgia, serif; font-size: clamp(18px, 2.5vw, 27px); }
@@ -292,7 +292,7 @@
 .v100-personnel-copy p, .v100-personnel-copy small { line-height: 1.45; }
 .v100-loadout-screen { background: radial-gradient(circle at 88% 0, #5b3b2750 0, transparent 30%), linear-gradient(145deg, #1a2726, #0b1213 72%); }
 .v100-loadout-hero { background: linear-gradient(100deg, #3c3326, #1c2826 57%, #11191a); border-color: #806648; }
-.v100-loadout-hero::before { content: "LOADOUT / READY"; color: #e0b16a22; }
+.v100-loadout-hero::before { content: "出撃装備"; color: #e0b16a22; }
 .v100-support-vehicle-grid { gap: 14px; }
 .v100-loadout-column { border-color: #4e6158; background: linear-gradient(145deg, #162323, #0c1516); box-shadow: inset 0 1px #526359, 0 10px 24px #0005; }
 .v100-loadout-intro { margin: -3px 0 12px; color: #b8c7b8; font-size: 12px; line-height: 1.55; }
@@ -465,7 +465,7 @@
   position: absolute;
   top: 3px;
   right: 12px;
-  content: "FIELD COMMAND / 作戦指揮";
+  content: "現場指揮";
   color: #d1a15b88;
   font-size: 9px;
   font-weight: 800;
@@ -596,7 +596,7 @@
   background: linear-gradient(105deg, #3a4a3c, #172727 58%, #111819);
   box-shadow: inset 0 -3px #aa7442, inset 0 1px #c5b47755, 0 14px 30px #0007;
 }
-.v100-management-hero::before { content: "FIELD OPERATIONS"; }
+.v100-management-hero::before { content: "現場作戦"; }
 .v100-management-hero strong { text-shadow: 0 2px 10px #000; overflow-wrap: anywhere; }
 .v100-personnel-card.game-unit-card {
   min-height: 144px;
@@ -614,7 +614,7 @@
   word-break: normal;
 }
 .v100-loadout-hero { background: linear-gradient(105deg, #4a3b2b, #202e2b 58%, #11191a); }
-.v100-loadout-hero::before { content: "READY ROOM / LOADOUT"; }
+.v100-loadout-hero::before { content: "出撃準備"; }
 .v100-loadout-column {
   border-radius: 0 10px 0 10px;
   background: linear-gradient(145deg, #1b2d2b, #0b1415 80%);
@@ -863,4 +863,321 @@
   .v100-sortie-count { font-size: 17px; }
   .v100-personnel-card.game-unit-card { grid-template-columns: 72px minmax(0, 1fr); min-height: 112px; }
   .v100-personnel-art { min-height: 88px; }
+}
+
+/* Producer final visual pass: the V1 route is a field scene first and a
+ * control surface second. Keep the production selectors/interaction contract,
+ * but make the map and preparation screens read as locations and people. */
+.v100-shell {
+  background:
+    radial-gradient(ellipse at 78% -10%, #75604432 0, transparent 30%),
+    radial-gradient(ellipse at 10% 88%, #8b45251c 0, transparent 25%),
+    linear-gradient(145deg, #090c0d 0%, #222522 44%, #080a0b 100%);
+}
+.v100-shell::before {
+  background:
+    radial-gradient(ellipse at 50% 0, #e0b66712 0, transparent 36%),
+    linear-gradient(180deg, transparent 0 72%, #0000006b 100%);
+  opacity: .8;
+}
+.v100-topbar::before { content: none; }
+.v100-compact-topbar {
+  min-height: 48px;
+  align-items: center;
+  margin-bottom: 7px;
+  padding: 6px 10px 7px;
+  border-bottom-color: #8b623e;
+  background: linear-gradient(180deg, #151919ed, #090c0df0);
+}
+.v100-topbar-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.v100-topbar-title h1 { margin: 0; color: #f0d49b; font-family: Georgia, serif; font-size: clamp(18px, 2.2vw, 25px); line-height: 1; }
+.v100-backmark { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #8a6844; border-radius: 50%; color: #e5b36a; font-family: Georgia, serif; font-size: 11px; letter-spacing: .08em; }
+.v100-compact-topbar .v100-kicker { display: block; margin-bottom: 2px; font-size: 9px; letter-spacing: .2em; }
+.v100-compact-topbar .v100-save-meta span { border: 0; padding: 3px 6px; color: #cbbd9e; }
+.v100-compact-topbar .v100-save-meta button { min-height: 36px; padding: 6px 9px; }
+
+.v100-map-layout {
+  position: relative;
+  display: block;
+  padding: 9px;
+  border-color: #665843;
+  background:
+    linear-gradient(145deg, #171a18f2, #090d0ef5 76%),
+    var(--v100-command-art);
+  box-shadow: 0 24px 72px #000c, inset 0 1px #b4915a29;
+}
+.v100-map-hero { min-height: 174px; border-color: #806744; background-position: center 58%; }
+.v100-map-hero::after { background: linear-gradient(90deg, #050809ef, #05080999 50%, #05080926), linear-gradient(0deg, #050809ed, transparent 70%); }
+.v100-map-hero-copy h2 { max-width: 760px; font-size: clamp(27px, 4.3vw, 48px); letter-spacing: -.04em; }
+.v100-map-hero-copy p { color: #e1ceb0; }
+.v100-chapter-tabs { display: flex; gap: 5px; margin: 7px 2px 0; overflow-x: auto; scrollbar-width: thin; }
+.v100-chapter-tabs button { flex: 0 0 auto; min-width: 90px; min-height: 42px; padding: 6px 10px; border: 0; border-bottom: 2px solid #536057; border-radius: 0; background: #0f1414c9; }
+.v100-chapter-tabs button strong { color: #d7c29a; font-size: 12px; }
+.v100-chapter-tabs button small { color: #89968b; font-size: 10px; }
+.v100-chapter-tabs button.selected { border-bottom-color: #e3ad5c; background: #463624b8; box-shadow: inset 0 -1px #f0c477; }
+.v100-route-label { min-height: 22px; margin: 2px 10px 0; opacity: .72; }
+.v100-map-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 7px 2px 0; }
+.v100-map-actions button { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-height: 52px; border: 0; border-bottom: 2px solid #916640; border-radius: 0; background: linear-gradient(90deg, #27302bda, #101615e8); text-align: left; }
+.v100-map-actions button strong { color: #f0d297; font-family: Georgia, serif; font-size: 17px; }
+.v100-map-actions button small { color: #aeb6a9; font-size: 11px; }
+.v100-map-grid { grid-template-columns: minmax(0, 1.75fr) minmax(300px, .9fr); gap: 11px; margin-top: 9px; }
+.v100-map-canvas-shell { position: relative; min-width: 0; min-height: 405px; overflow: hidden; border: 1px solid #566052; border-radius: 0 12px 0 12px; background: linear-gradient(135deg, #32342e9e, #131816e9 72%), var(--v100-command-art); background-position: center; background-size: cover; box-shadow: inset 0 0 60px #0009, 0 14px 32px #0008; }
+.v100-map-canvas-shell::before { position: absolute; inset: 0; content: ""; pointer-events: none; background: radial-gradient(circle at 50% 40%, transparent 0 38%, #0507078c 92%); }
+.v100-map-canvas-heading { position: absolute; z-index: 3; inset: 12px 14px auto; display: flex; justify-content: space-between; gap: 8px; }
+.v100-map-canvas-heading strong { color: #dec58e; font-size: 12px; }
+.v100-map-canvas { position: absolute; inset: 0; display: block; min-width: 0; padding: 0; border: 0; background: transparent; }
+.v100-map-route-art { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.v100-map-route-art polyline { fill: none; stroke: #c29153b8; stroke-width: 1.25; stroke-dasharray: 2.4 1.8; vector-effect: non-scaling-stroke; filter: drop-shadow(0 2px 2px #0008); }
+.v100-map-node { position: absolute; z-index: 2; left: var(--node-x); top: var(--node-y); display: grid; grid-template-columns: 44px minmax(88px, 1fr); align-items: center; gap: 7px; width: clamp(132px, 18vw, 190px); min-height: 58px; padding: 5px 8px 5px 5px; transform: translate(-50%, -50%); border: 1px solid #7c896f; border-radius: 0 9px 0 9px; background: linear-gradient(135deg, #1d2520e8, #080d0eee); text-align: left; box-shadow: 0 8px 18px #000a, inset 0 1px #d9b06c28; }
+.v100-map-node:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.035); border-color: #f1bf70; }
+.v100-map-node-marker { display: grid; place-items: center; width: 42px; height: 42px; border: 2px solid #768877; border-radius: 50%; background: #101816dd; color: #d0ba88; font-family: Georgia, serif; font-size: 10px; }
+.v100-map-node-marker i { font-style: normal; }
+.v100-map-node strong, .v100-map-node small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v100-map-node strong { color: #e9d4a3; font-size: 12px; }
+.v100-map-node small { color: #9fb0a0; font-size: 10px; }
+.v100-map-node.selected { z-index: 4; border-color: #f0b55e; background: linear-gradient(135deg, #4a3c24ed, #14201bfa); box-shadow: 0 0 0 3px #d6984e45, 0 10px 25px #000b; }
+.v100-map-node.selected .v100-map-node-marker { border-color: #f0b55e; color: #ffdc8f; box-shadow: 0 0 0 2px #2d2113, 0 0 14px #d28d4b99; }
+.v100-map-node.completed .v100-map-node-marker { border-color: #789e7c; color: #bde0af; }
+.v100-map-node.locked { border-style: dashed; opacity: .72; filter: saturate(.55); }
+.v100-map-node.locked .v100-map-node-marker { border-color: #666c63; color: #7f887d; }
+.v100-map-node.boss-node { border-color: #a85f4c; background: linear-gradient(135deg, #3d211ee8, #100f10f3); }
+.v100-map-node.boss-node .v100-map-node-marker { border-radius: 9px; border-color: #d17254; color: #ffb07d; transform: rotate(45deg); }
+.v100-map-node.boss-node .v100-map-node-marker i { transform: rotate(-45deg); }
+.v100-map-canvas-legend { position: absolute; z-index: 3; right: 12px; bottom: 10px; left: 12px; display: flex; flex-wrap: wrap; gap: 10px; color: #b9c0ae; font-size: 10px; }
+.v100-map-canvas-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.v100-map-canvas-legend i { display: inline-block; width: 8px; height: 8px; border: 1px solid #899484; border-radius: 50%; background: #17211c; }
+.v100-map-canvas-legend i.is-current { border-color: #efb45e; box-shadow: 0 0 0 2px #d5994b55; }
+.v100-map-canvas-legend i.is-clear { border-color: #89b18b; }
+.v100-map-canvas-legend i.is-locked { border-style: dashed; opacity: .65; }
+.v100-map-side { border-radius: 0 11px 0 11px; background: linear-gradient(145deg, #202622f2, #0a0e0ff8 82%); }
+.v100-map-side h3 { font-size: clamp(21px, 2.4vw, 31px); color: #f1d7a1; }
+.v100-map-side dl { margin: 13px 0; }
+.v100-map-side dl div { padding: 8px 0; }
+.v100-map-side dd { color: #e7ca92; }
+.v100-map-briefs article { border: 0; border-top: 1px solid #665c43; background: transparent; }
+.v100-map-tools { opacity: .78; }
+
+.v100-formation-panel { background-image: linear-gradient(145deg, #1c2421d9 0%, #0a0e0ff0 62%, #050707f7 100%), var(--v100-stage-art, var(--v100-command-art)); }
+.v100-formation-brief { border: 0; border-bottom: 1px solid #8b6944; background: linear-gradient(90deg, #3a3b2cbd, transparent); }
+.v100-formation-columns { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(230px, .72fr); gap: 11px; align-items: start; }
+.v100-roster-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.v100-roster-card.game-unit-card { min-height: 116px; border: 1px solid #586657; background: linear-gradient(135deg, #29352ce8, #0d1212f3 80%); }
+.v100-roster-card.game-unit-card.selected { border-color: #efb35d; box-shadow: 0 0 0 2px #d4934b55, inset 0 1px #f0c77a66; }
+.v100-roster-card-art { width: 86px; height: 98px; border: 0; border-right: 1px solid #8b6f4a; background: radial-gradient(circle at 50% 20%, #6b7158, #101414 72%); }
+.v100-formation-focus { position: sticky; top: 0; display: grid; gap: 5px; min-height: 270px; padding: 13px; border-left: 1px solid #9b6f45; background: linear-gradient(160deg, #302a20db, #0c1111f2 76%); }
+.v100-formation-focus-art { height: 150px; overflow: hidden; border-bottom: 1px solid #9c7549; background: radial-gradient(circle at 50% 20%, #7a7257, #111514 75%); }
+.v100-formation-focus-art img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.v100-formation-focus h3 { margin: 2px 0 0; color: #f4dba4; font-family: Georgia, serif; font-size: 23px; }
+.v100-formation-focus > strong { color: #d8ad69; }
+.v100-formation-focus p { margin: 0; color: #aeb7a5; font-size: 11px; }
+.v100-formation-focus button { margin-top: 5px; }
+.v100-empty-focus { display: grid; place-items: center; min-height: 180px; color: #a7b0a0; border: 1px dashed #687364; }
+.v100-empty-focus i { color: #d19e58; font-size: 34px; font-style: normal; }
+.v100-slot-track { gap: 6px; }
+.v100-slot-track .v100-slot { display: flex; align-items: center; gap: 6px; min-height: 84px; padding: 5px; border: 1px solid #5b695a; border-radius: 0 8px 0 8px; background: linear-gradient(160deg, #28332be8, #0d1212f2); text-align: left; }
+.v100-slot-portrait { display: grid; place-items: center; flex: 0 0 48px; width: 48px; height: 68px; overflow: hidden; border: 1px solid #7b6746; background: #121716; }
+.v100-slot-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.v100-slot-portrait i { color: #c29b5c; font-size: 23px; font-style: normal; }
+.v100-slot-meta { display: grid; gap: 2px; min-width: 0; }
+.v100-slot-meta small { color: #9aa497; font-size: 9px; }
+.v100-slot-meta strong { color: #ead4a3; font-size: 12px; }
+.v100-slot-meta em { color: #b3c3ad; font-size: 10px; font-style: normal; }
+.v100-slot.selected { border-color: #f0b45c !important; background: linear-gradient(160deg, #493a22, #182019) !important; }
+
+.v100-personnel-screen, .v100-loadout-screen { background-image: linear-gradient(145deg, #1d2420dc 0%, #0a0e0ff3 74%), var(--v100-command-art); }
+.v100-management-hero { border: 0; border-bottom: 2px solid #9a6a41; background: linear-gradient(105deg, #4a3f2ddb, #202722d9 58%, transparent); }
+.v100-management-hero::before { content: none; }
+.v100-personnel-workspace { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(300px, .95fr); gap: 14px; align-items: start; }
+.v100-personnel-roster { grid-area: roster; }
+.v100-personnel-focus { grid-area: focus; }
+.v100-personnel-roster { min-width: 0; }
+.v100-personnel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.v100-personnel-card.game-unit-card { display: grid; grid-template-columns: 72px minmax(0, 1fr); min-height: 108px; padding: 5px; border: 1px solid #536153; border-radius: 0 8px 0 8px; background: linear-gradient(135deg, #28332be8, #0d1212f3); text-align: left; }
+.v100-personnel-card.game-unit-card.selected { border-color: #efb35d; box-shadow: 0 0 0 2px #d4934b55; }
+.v100-personnel-card.game-unit-card.locked { filter: saturate(.4); opacity: .7; }
+.v100-personnel-art { height: 96px; min-height: 0; border: 0; border-right: 1px solid #756243; background: #111616; }
+.v100-personnel-copy { align-content: center; padding-left: 4px; }
+.v100-personnel-copy h3 { min-height: 0; margin: 0; font-size: 16px; }
+.v100-personnel-copy span { color: #d5ac69; font-size: 11px; }
+.v100-personnel-copy small { color: #aab4a6; }
+.v100-personnel-focus { display: grid; grid-template-columns: minmax(120px, .8fr) minmax(0, 1fr); gap: 12px; min-height: 330px; padding: 13px; border-left: 2px solid #af7748; background: linear-gradient(145deg, #382e22df, #101514f5 73%); box-shadow: 0 15px 35px #0009; }
+.v100-personnel-focus > .v100-kicker { grid-column: 1 / -1; }
+.v100-personnel-focus-art { grid-row: span 2; min-height: 250px; overflow: hidden; background: radial-gradient(circle at 50% 18%, #80775c, #111615 70%); }
+.v100-personnel-focus-art img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.v100-personnel-focus-copy { display: grid; align-content: center; gap: 5px; min-width: 0; }
+.v100-personnel-focus-copy h3 { margin: 0; color: #f1d49c; font-family: Georgia, serif; font-size: clamp(24px, 3vw, 36px); line-height: 1; }
+.v100-personnel-focus-copy > strong { color: #dfb06a; }
+.v100-personnel-focus-copy p { margin: 0; color: #b2bcae; }
+.v100-personnel-focus-copy dl { display: grid; gap: 5px; margin: 7px 0; }
+.v100-personnel-focus-copy dl div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid #665a43; padding-bottom: 4px; }
+.v100-personnel-focus-copy dt { color: #9ba89c; font-size: 11px; }
+.v100-personnel-focus-copy dd { margin: 0; color: #efd096; font-size: 12px; }
+.v100-focus-lock { color: #c5a36d !important; }
+.v100-loadout-column { border: 0; border-top: 2px solid #9c6e44; border-radius: 0; background: linear-gradient(145deg, #292e27e8, #0b1010f4); }
+.v100-loadout-hero { border-bottom-color: #9a6a41; background: linear-gradient(105deg, #4a3c2cdd, #202722d9 58%, transparent); }
+.v100-loadout-hero::before { content: none; }
+.v100-loadout-intro { color: #c2b89e; }
+.game-loadout-card { grid-template-columns: 50px minmax(0, 1fr) auto; min-height: 88px; padding: 8px; border: 0; border-bottom: 1px solid #635b43; border-radius: 0; background: linear-gradient(90deg, #2c3329e8, #111615ee); }
+.game-loadout-card.selected { background: linear-gradient(90deg, #554328e8, #161b17f1); }
+.game-loadout-card::before { width: 2px; }
+.v100-support-art { display: block; width: 46px; height: 58px; border: 1px solid #90704a; background: radial-gradient(circle at 50% 35%, #bd8c4e, #352b1e 35%, #101414 73%); box-shadow: inset 0 0 12px #000a; }
+.support-art-support-healing { border-radius: 50% 50% 42% 42%; background: radial-gradient(circle at 50% 35%, #b6c7ad, #2d4d3c 35%, #101414 74%); }
+.support-art-support-explosive-drum { border-radius: 10px 10px 5px 5px; background: linear-gradient(90deg, #5f5034 0 12%, #b58248 12% 18%, #3b3225 18% 82%, #b58248 82% 88%, #5f5034 88%); }
+.support-art-support-incendiary-drum { border-radius: 10px 10px 5px 5px; background: radial-gradient(circle at 50% 30%, #e17b45 0 8%, transparent 9%), linear-gradient(90deg, #5f3b2f 0 12%, #c67c4a 12% 18%, #3c2520 18% 82%, #c67c4a 82% 88%, #5f3b2f 88%); }
+.v100-loadout-card-copy h4 { font-size: 17px; }
+.v100-vehicle-section { border-top-color: #b6844f; }
+.v100-vehicle-art { min-height: 220px; border: 0; border-bottom: 1px solid #a27a4b; background: radial-gradient(ellipse at 50% 62%, #95805d, #354238 44%, #0b1010 78%); }
+.v100-vehicle-art::after { content: "装甲車両"; }
+.v100-vehicle-upgrade-screen { background: linear-gradient(145deg, #282c25e9, #0b1010f6); }
+.v100-vehicle-upgrade-hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(270px, .9fr); gap: 16px; align-items: center; min-height: 430px; }
+.v100-vehicle-upgrade-art { display: grid; place-items: center; min-height: 390px; overflow: hidden; background: radial-gradient(ellipse at 50% 65%, #9b8158, #26352d 46%, #0b1010 78%); }
+.v100-vehicle-upgrade-art img { width: 94%; max-height: 360px; object-fit: contain; filter: drop-shadow(0 18px 15px #000b); }
+.v100-vehicle-upgrade-copy { display: grid; gap: 7px; }
+.v100-vehicle-upgrade-copy h3 { margin: 0; color: #f1d29b; font-family: Georgia, serif; font-size: 34px; }
+.v100-vehicle-upgrade-copy p { margin: 0; color: #c0c6b5; }
+.v100-vehicle-upgrade-copy dl { display: grid; gap: 6px; margin: 7px 0; }
+.v100-vehicle-upgrade-copy dl div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid #6b5d42; padding: 6px 0; }
+.v100-vehicle-upgrade-copy dt { color: #a6b0a0; }
+.v100-vehicle-upgrade-copy dd { margin: 0; color: #f0cd8d; }
+
+.v100-event-layout { border-radius: 0 14px 0 14px; border-color: #736044; box-shadow: 0 24px 80px #000d, inset 0 1px #d0a25a33; }
+.v100-event-layout::before { position: absolute; z-index: 1; inset: 0; content: ""; pointer-events: none; background: radial-gradient(ellipse at 50% 18%, transparent 0 28%, #05070866 82%), linear-gradient(90deg, #080b0cd9, transparent 28% 72%, #080b0cd9); }
+.v100-event-backdrop { filter: brightness(.5) saturate(.88) contrast(1.05); transition: filter .2s ease, transform .2s ease; }
+.v100-event-panel { z-index: 2; min-height: inherit; padding: clamp(14px, 3vw, 36px); }
+.v100-event-heading { border-bottom-color: #a67a49; }
+.v100-event-heading > span:last-child { color: #b8bda9; font-size: 11px; }
+.v100-node-copy { border: 0; border-left: 3px solid #c18b4b; border-radius: 0 9px 0 9px; background: linear-gradient(105deg, #111716ed, #080b0ce8 82%); box-shadow: 0 12px 28px #0009; }
+.v100-story-node[data-portrait-side="right"] .v100-node-copy { border-left: 0; border-right: 3px solid #c18b4b; }
+.v100-portrait { border: 0; border-bottom: 2px solid #b4864d; border-radius: 0; filter: drop-shadow(0 14px 17px #000b); }
+.v100-event-category-prologue { border-color: #6f785f; }
+.v100-event-category-prologue .v100-event-backdrop { filter: brightness(.48) saturate(.78); }
+.v100-event-category-battle-pre { border-color: #806342; }
+.v100-event-category-battle-pre .v100-event-heading { border-color: #b07943; }
+.v100-event-category-battle-post { border-color: #6f846e; }
+.v100-event-category-battle-post .v100-event-backdrop { filter: brightness(.43) saturate(.72); }
+.v100-event-category-boss-reveal { border-color: #a85e49; box-shadow: 0 24px 80px #000d, inset 0 0 0 1px #d36e4c55; }
+.v100-event-category-boss-reveal::before { background: radial-gradient(ellipse at 70% 28%, #a9462d36, transparent 35%), linear-gradient(90deg, #150a09df, transparent 34% 67%, #150a09b8); }
+.v100-event-category-boss-reveal .v100-node-copy { border-left-color: #d36e4c; background: linear-gradient(105deg, #281512ed, #0b0b0bea); }
+.v100-event-category-ending { border-color: #bc8650; }
+.v100-event-category-ending::before { background: radial-gradient(ellipse at 50% 20%, #d59d5538, transparent 42%), linear-gradient(0deg, #0e0a08df, transparent 62%); }
+.v100-event-category-ending .v100-event-backdrop { filter: brightness(.55) saturate(.8) sepia(.12); }
+.v100-event-category-ending .v100-event-panel { align-content: center; }
+.v100-event-category-ending .v100-story-node { min-height: 0; }
+.v100-event-category-ending .v100-node-copy { border-left-color: #d8a55e; }
+.v100-event-category-credits { border-color: #9e855f; }
+.v100-event-category-credits::before { background: linear-gradient(180deg, #06070799, #060707e8); }
+.v100-event-category-credits .v100-event-panel { align-content: center; max-width: 720px; margin: 0 auto; }
+.v100-event-category-credits .v100-story-node { display: block; min-height: 0; text-align: center; }
+.v100-event-category-credits .v100-node-copy { border: 0; background: transparent; box-shadow: none; }
+.v100-event-category-credits .v100-portrait { display: none; }
+.v100-event-category-epilogue { border-color: #8d8b6a; }
+.v100-event-category-epilogue::before { background: radial-gradient(ellipse at 52% 32%, #d1b66b2c, transparent 42%), linear-gradient(0deg, #090c0bdc, transparent 62%); }
+.v100-event-category-epilogue .v100-node-copy { border-left-color: #b9a866; }
+.v100-event-layout[data-v100-transition="blackout-reveal"] .v100-event-backdrop { filter: brightness(.28) saturate(.58) contrast(1.12); }
+.v100-event-layout[data-v100-transition="system-cut"] .v100-node-copy { border-left-color: #7d9b92; }
+.v100-event-layout[data-v100-transition="scene-crossfade"] .v100-event-backdrop { filter: brightness(.46) saturate(.8); }
+.v100-event-actions .v100-primary { min-width: 112px; }
+
+@media (max-width: 980px) {
+  .v100-map-canvas-shell { min-height: 360px; }
+  .v100-personnel-workspace { grid-template-columns: 1fr; grid-template-areas: "focus" "roster"; }
+  .v100-personnel-focus { grid-template-columns: 140px minmax(0, 1fr); }
+  .v100-personnel-focus > .v100-kicker { grid-column: 1 / -1; }
+  .v100-personnel-focus-art { grid-row: span 2; min-height: 210px; }
+}
+@media (min-width: 981px) {
+  .v100-personnel-workspace { grid-template-areas: "roster focus"; }
+  .v100-shell[data-v100-phase="map"] .v100-map-hero { height: 158px; min-height: 158px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-canvas-shell { min-height: 318px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-grid { margin-top: 6px; }
+  .v100-shell[data-v100-phase="formation"] .v100-formation-panel { gap: 6px; }
+  .v100-shell[data-v100-phase="formation"] .v100-slot-track .v100-slot { min-height: 72px; }
+  .v100-shell[data-v100-phase="formation"] .v100-slot-portrait { height: 58px; }
+  .v100-shell[data-v100-phase="formation"] .v100-roster-card.game-unit-card { min-height: 94px; }
+  .v100-shell[data-v100-phase="formation"] .v100-roster-card-art { width: 74px; height: 76px; }
+  .v100-shell[data-v100-phase="formation"] .v100-formation-focus { min-height: 232px; }
+  .v100-shell[data-v100-phase="formation"] .v100-formation-focus-art { height: 112px; }
+}
+@media (min-width: 721px) and (max-width: 980px) and (orientation: landscape) {
+  .v100-shell[data-v100-phase="map"] .v100-map-hero { min-height: 122px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-grid { grid-template-columns: minmax(0, 1.45fr) minmax(250px, .9fr); }
+  .v100-shell[data-v100-phase="map"] .v100-map-canvas-shell { min-height: 275px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-side { display: block; }
+  .v100-shell[data-v100-phase="map"] .v100-map-actions { margin-top: 5px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-actions button { min-height: 44px; }
+}
+@media (max-width: 720px) {
+  .v100-map-grid { grid-template-columns: 1fr; }
+  .v100-map-canvas-shell { min-height: 360px; }
+  .v100-map-node { width: 142px; grid-template-columns: 38px minmax(0, 1fr); gap: 5px; }
+  .v100-map-node-marker { width: 36px; height: 36px; font-size: 9px; }
+  .v100-formation-columns { grid-template-columns: 1fr; }
+  .v100-formation-focus { position: relative; min-height: 180px; }
+  .v100-formation-focus-art { height: 120px; }
+  .v100-personnel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v100-vehicle-upgrade-hero { grid-template-columns: 1fr; }
+  .v100-vehicle-upgrade-art { min-height: 210px; }
+}
+@media (max-width: 520px) {
+  .v100-compact-topbar { min-height: 40px; padding: 4px 7px; }
+  .v100-backmark { width: 28px; height: 28px; font-size: 9px; }
+  .v100-topbar-title h1 { font-size: 18px; }
+  .v100-map-canvas-shell { min-height: 342px; }
+  .v100-map-node { width: 126px; min-height: 52px; grid-template-columns: 32px minmax(0, 1fr); padding: 4px; }
+  .v100-map-node-marker { width: 31px; height: 31px; }
+  .v100-map-node strong { font-size: 10px; }
+  .v100-map-node small { font-size: 9px; }
+  .v100-personnel-grid { grid-template-columns: 1fr; }
+  .v100-personnel-focus { grid-template-columns: 108px minmax(0, 1fr); }
+  .v100-personnel-focus-art { min-height: 170px; }
+  .v100-vehicle-upgrade-art { min-height: 180px; }
+  .v100-vehicle-upgrade-art img { max-height: 165px; }
+}
+@media (max-height: 520px) and (orientation: landscape) and (min-width: 721px) {
+  .v100-shell[data-v100-phase="map"] .v100-compact-topbar { min-height: 40px; margin-bottom: 4px; padding-top: 4px; padding-bottom: 4px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-layout { padding: 5px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-hero { height: 96px; min-height: 96px; padding: 8px 12px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-hero-copy h2 { margin: 2px 0; font-size: 24px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-hero-copy p { font-size: 11px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-hero-meta { gap: 4px; margin-top: 4px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-hero-meta span, .v100-shell[data-v100-phase="map"] .v100-map-hero-meta strong { padding: 3px 5px; font-size: 8px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-hero-meta span:last-child { font-size: 12px; }
+  .v100-shell[data-v100-phase="map"] .v100-chapter-tabs { margin-top: 4px; }
+  .v100-shell[data-v100-phase="map"] .v100-chapter-tabs button { min-height: 34px; padding: 4px 8px; }
+  .v100-shell[data-v100-phase="map"] .v100-route-label { min-height: 18px; margin-top: 1px; font-size: 9px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-grid { grid-template-columns: minmax(0, 1.45fr) minmax(260px, .85fr); align-items: start; margin-top: 5px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-canvas-shell { min-height: 208px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-canvas-heading { display: none; }
+  .v100-shell[data-v100-phase="map"] .v100-map-node { width: 118px; min-height: 46px !important; grid-template-columns: 30px minmax(0, 1fr); gap: 4px; padding: 4px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-node-marker { width: 30px; height: 30px; }
+  .v100-shell[data-v100-phase="map"] .v100-map-node:nth-of-type(1),
+  .v100-shell[data-v100-phase="map"] .v100-map-node:nth-of-type(3),
+  .v100-shell[data-v100-phase="map"] .v100-map-node:nth-of-type(5) { top: 36% !important; }
+  .v100-shell[data-v100-phase="map"] .v100-map-node:nth-of-type(2),
+  .v100-shell[data-v100-phase="map"] .v100-map-node:nth-of-type(4),
+  .v100-shell[data-v100-phase="map"] .v100-map-node:nth-of-type(6) { top: 14% !important; }
+  .v100-shell[data-v100-phase="map"] .v100-map-node:nth-of-type(6) { left: 86% !important; }
+  .v100-map-side .v100-map-actions { margin-top: 5px; }
+  .v100-map-side .v100-map-actions button { min-height: 44px; padding: 6px 8px; }
+  .v100-map-side .v100-map-actions button strong { font-size: 14px; }
+  .v100-map-side .v100-map-actions button small { font-size: 9px; }
+  .v100-map-node { min-height: 48px; }
+  .v100-map-node-marker { width: 34px; height: 34px; }
+  .v100-map-node strong { font-size: 10px; }
+  .v100-map-node small { font-size: 9px; }
+  .v100-formation-panel { min-height: calc(100dvh - 66px); }
+  .v100-formation-focus-art { height: 98px; }
+  .v100-management-panel { padding: 12px; }
+  .v100-personnel-screen .v100-panel-heading,
+  .v100-loadout-screen .v100-panel-heading { margin-bottom: 5px; }
+  .v100-personnel-screen .v100-personnel-focus { min-height: 270px; }
+  .v100-loadout-screen .v100-management-hero { min-height: 58px; margin: 6px 0; padding: 8px 12px; }
+  .v100-loadout-screen .v100-management-hero strong { font-size: 17px; }
+  .v100-loadout-screen .v100-management-hero span { font-size: 10px; }
+  .v100-loadout-screen .v100-management-hero > b { font-size: 18px; }
+  .v100-loadout-screen .v100-support-vehicle-grid { margin-top: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v100-map-node, .v100-roster-card.game-unit-card, .v100-shell button { transition: none; }
 }

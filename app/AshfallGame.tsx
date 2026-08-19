@@ -9748,10 +9748,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         // traverses the production gate lifecycle; this only prevents a
         // long-running animation from outliving the browser evidence budget.
         boss.gateEntrySpeed = Math.max(boss.gateEntrySpeed, 260);
-        boss.speed = 0;
-        boss.laneSpeed = 0;
-        boss.cooldown = 99;
-        boss.abilityCooldown = 99;
         return true;
       },
       startBossFoundationBarrierChallenge: (bossId: number, humanId: number) => {
@@ -12101,6 +12097,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             cooldown: fighter.cooldown,
             attack: fighter.attack,
             attackWindup: fighter.attackWindup,
+            abilityWindup: fighter.abilityWindup,
+            abilityCooldown: fighter.abilityCooldown,
+            stunned: fighter.stunned,
+            aiMoveDirection: fighter.aiMoveDirection,
+            aiDestinationX: fighter.aiDestinationX,
             attackWindupTargetId: fighter.attackWindupTargetId,
             attackFacingDirection: fighter.attackFacingDirection,
             attackSequence: fighter.attackSequence,
@@ -14502,6 +14503,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       .filter((kind: string) => qaAllUnlocked || isUnitOwned(campaignSave, kind))
       .slice(0, 7) as UnitKind[];
     const battleSupply = external?.selectedSupply ?? sessionOverride?.selectedSupply ?? selectedSupply;
+    // V1 owns the equipped support choice, while this component owns the
+    // player-facing support button and targeting action. Keep the HUD choice
+    // aligned with the production session before the battle starts; otherwise
+    // the runtime would carry the V1 support but the visible control would
+    // still advertise and place the legacy default pod.
+    if (selectedSupply !== battleSupply) setSelectedSupply(battleSupply);
     const fresh = initialGame(
       battleSupply,
       battleStageId,
@@ -21604,6 +21611,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const survivalUpgradeOpen = isSurvivalBattle
     && survivalHud.phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION;
   const enemyBaseLabel = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_GATE ? "感染中継点" : "感染拠点";
+  const battleStageLabel = compactBattleStageName(selectedOperationView.displayName);
+  const vehicleDisplayLabel = externalSessionActive ? "装甲車両" : PUBLIC_CRAWLER_LABEL;
+  const vehicleBarrageControlLabel = externalSessionActive ? `${vehicleDisplayLabel}一斉砲撃` : "移動拠点一斉掃射";
   const selectedStageBossKind = selectedOutbreakMissionId
     ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.boss?.enemyKind ?? null
     : CAMPAIGN_STAGE_BY_ID[selectedStageId]?.boss?.enemyKind ?? null;
@@ -21640,14 +21650,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     ?? (hud.supportItemCooldowns[selectedSupply] > 0
       ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
       : hud.scrap < supplyDefs[selectedSupply].cost
-        ? `▰不足 ${supplyDefs[selectedSupply].cost}`
-        : `${selectedSupply === "pod" ? "着地・封鎖" : selectedSupply === "drum" ? "起爆範囲" : "継続回復"} ▰${supplyDefs[selectedSupply].cost}`);
+        ? `必要 ${supplyDefs[selectedSupply].cost}`
+        : `${selectedSupply === "pod" ? "着地・封鎖" : selectedSupply === "drum" ? "起爆範囲" : "継続回復"} / 必要 ${supplyDefs[selectedSupply].cost}`);
   const airstrikeCompactDetail = commonBattleActionBlockReason
     ?? (hud.airstrikePhase !== "idle"
       ? "支援実行中"
       : hud.supportGauge < AIRSTRIKE_DEF.gaugeCost
-        ? `◆不足 ${AIRSTRIKE_DEF.gaugeCost}`
-        : `照準・着弾 ◆${AIRSTRIKE_DEF.gaugeCost}`);
+        ? `必要 ${AIRSTRIKE_DEF.gaugeCost}`
+        : `照準・着弾 / 必要 ${AIRSTRIKE_DEF.gaugeCost}`);
   const crawlerCompactDetail = commonBattleActionBlockReason
     ?? (hud.crawlerPhase !== "ready" ? "再装填中" : "全域射撃");
   const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "partial" ? "一部音声を再試行できます" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
@@ -21793,7 +21803,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           {stationMissionHud || selectedOutbreakMissionId
             ? <div className="health-hud barrier-health mission-health"><div><span>作戦目標</span><b>{publicDisplayText(hud.objective)}</b></div></div>
             : <div className={`health-hud barrier-health ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
-          {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{PUBLIC_CRAWLER_LABEL} 脅威</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
+          {started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{externalSessionActive ? battleStageLabel : vehicleDisplayLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}
         </>}
         {hud.bossMax > 0 && <div className={`boss-hud ${bossHudSide} ${isSurvivalBattle ? "survival-boss-hud" : ""}`}><div><span>{activeBossLabel}{" // "}{bossPhase.label}</span><b>{Math.ceil(hud.bossHp)} / {hud.bossMax}</b></div><i><em style={{ width: `${bossPct}%` }} /></i></div>}
 
@@ -21802,8 +21812,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <div className="resource command"><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
             <div className="resource rage"><span>支援</span><strong>{hud.supportGauge}</strong><small>/{SUPPORT_GAUGE_MAX}</small><i><em style={{ width: `${hud.supportGauge}%` }} /></i></div>
             <div className="stats-strip battle-stats">
-              <span>☠ {hud.kills}</span>
-              {!isSurvivalBattle && <span>▰ {hud.scrap}</span>}
+              <span>討伐 {hud.kills}</span>
+              {!isSurvivalBattle && <span>資材 {hud.scrap}</span>}
               {isSurvivalBattle && <span>BOSS {survivalHud.bossKills}</span>}
               <span className="bay-status">召喚限度 {hud.summonedCount}/7</span>
               {hud.combo > 1 && <span className="combo">×{hud.combo}</span>}
@@ -21836,7 +21846,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  return (
                    <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockReason ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
                     <span className="portrait"><i />{!portraitArt && <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
-                    <span className="card-copy" aria-hidden="true"><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">⚡</i>{card.cost}</span>
+                    <span className="card-copy" aria-hidden="true"><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">指揮</i>{card.cost}</span>
                      {!cooldown && <span className="card-state" data-state={cardState}>
                        <span className="card-state-full">{cardBlockReason ?? "出撃可能"}</span>
                        <span className="card-state-compact" aria-hidden="true">{cardState === "ready" ? "出撃" : cardState === "insufficient" ? "不足" : cardState === "full" ? "満員" : "不可"}</span>
@@ -21871,8 +21881,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                <button className={`support-btn airstrike ${selectedAction === "airstrike" ? "selected" : ""}`} data-category="support" data-state={hud.airstrikePhase !== "idle" ? "active" : airstrikeBlockReason ? "insufficient" : selectedAction === "airstrike" ? "selected" : "ready"} aria-disabled={!started || paused || hud.supportGauge < AIRSTRIKE_DEF.gaugeCost || hud.airstrikePhase !== "idle" || combatLocked || battleSaveBoundaryRef.current} onClick={() => chooseActionWithCue(selectedAction === "airstrike" ? null : "airstrike")} aria-label={`${hud.airstrikePhase === "idle" ? "緊急航空支援" : "航空支援実行中"} ${AIRSTRIKE_DEF.gaugeCost}支援ゲージ`}>
                  <span className="support-key">Q</span><b>{hud.airstrikePhase === "idle" ? "航空支援" : "支援実行中"}</b><small><span className="support-detail-full">{airstrikeBlockReason ?? "照準・飛来・着弾"}</span><span className="support-detail-compact">{airstrikeCompactDetail}</span></small><em>必要 {AIRSTRIKE_DEF.gaugeCost}</em>
                </button>
-               <button className="support-btn barrage" data-category="vehicle" data-state={hud.crawlerPhase !== "ready" ? "cooldown" : crawlerBlockReason ? "insufficient" : "ready"} aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked || battleSaveBoundaryRef.current} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? "移動拠点一斉掃射" : `移動拠点一斉掃射 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
-                 <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small><span className="support-detail-full">{crawlerBlockReason ?? "移動拠点の固定火器"}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></small><em>車両</em>
+              <button className="support-btn barrage" data-category="vehicle" data-state={hud.crawlerPhase !== "ready" ? "cooldown" : crawlerBlockReason ? "insufficient" : "ready"} aria-disabled={!started || paused || hud.crawlerPhase !== "ready" || combatLocked || battleSaveBoundaryRef.current} onClick={triggerCrawlerBarrage} aria-label={hud.crawlerPhase === "ready" ? vehicleBarrageControlLabel : `${vehicleBarrageControlLabel} 再装填 ${Math.round(hud.crawlerCharge * 100)}%`}>
+                 <span className="support-key">G</span><b>{hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></small><em>車両</em>
                </button>
             </div>
             <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${publicDisplayText(hud.objective)}`}</div>

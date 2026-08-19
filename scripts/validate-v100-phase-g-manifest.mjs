@@ -87,10 +87,8 @@ fail(combatEvidence.length === V100_REPRESENTATIVE_COMBAT_CONTRACT.length, `comb
 for (const contract of V100_REPRESENTATIVE_COMBAT_CONTRACT) fail(combatEvidence.some((evidence) => evidence.id === contract.id), `required combat contract missing: ${contract.id}`);
 for (const evidence of combatEvidence) {
   const contract = combatContractsById.get(evidence.id);
-  const contractValidation = validateV100RepresentativeCombatEvidence({ contract, evidence, runtimeEvidence: { id: evidence.id, captureVariant: evidence.captureVariant } });
   fail(typeof evidence.actor === "string" && inventoryActors.has(evidence.actor), `${evidence.id} actor not in inventory`);
   fail(Boolean(contract), `${evidence.id} has no canonical representative contract`);
-  fail(contractValidation.ok, `${evidence.id} canonical evidence mismatch: ${contractValidation.errors.join(", ")}`);
   for (const field of ["action", "source", "contactImpact", "reaction", "state"]) fail(typeof evidence[field] === "string" && evidence[field].length > 0, `${evidence.id} missing ${field}`);
   fail(Array.isArray(evidence.seVfx) && evidence.seVfx.length > 0, `${evidence.id} missing SE/VFX evidence`);
   fail(Array.isArray(evidence.runtimeSequence) && JSON.stringify(evidence.runtimeSequence) === JSON.stringify(requiredSequence), `${evidence.id} causal sequence mismatch`);
@@ -104,8 +102,9 @@ for (const evidence of combatEvidence) {
   fail(linkedReport?.combatCausalProof?.ok === true, `${evidence.id} causal runtime proof failed`);
   fail(diagnosticsClean(linkedReport?.diagnostics), `${evidence.id} linked capture has diagnostics`);
   fail(typeof evidence.runtimeEvidence === "string" && evidence.runtimeEvidence.startsWith("outputs/v100-phase-g/combat/"), `${evidence.id} runtime evidence path invalid`);
+  let runtimeEvidence = null;
   try {
-    const runtimeEvidence = JSON.parse(await readFile(path.resolve(evidence.runtimeEvidence), "utf8"));
+    runtimeEvidence = JSON.parse(await readFile(path.resolve(evidence.runtimeEvidence), "utf8"));
     fail(runtimeEvidence.id === evidence.id, `${evidence.id} runtime evidence ID mismatch`);
     fail(runtimeEvidence.captureVariant === evidence.captureVariant, `${evidence.id} runtime evidence variant mismatch`);
     fail(JSON.stringify(runtimeEvidence.checkpoints) === JSON.stringify(requiredSequence), `${evidence.id} runtime checkpoints incomplete`);
@@ -116,6 +115,8 @@ for (const evidence of combatEvidence) {
   } catch (error) {
     errors.push(`${evidence.id} runtime evidence unreadable: ${String(error)}`);
   }
+  const contractValidation = validateV100RepresentativeCombatEvidence({ contract, evidence, runtimeEvidence });
+  fail(contractValidation.ok, `${evidence.id} canonical evidence mismatch: ${contractValidation.errors.join(", ")}`);
 }
 const enemyCoverage = manifest.enemyRuntimeCoverage;
 fail(enemyCoverage?.expectedCount === expectedEnemyCoverage.expectedCount, `enemy expected count ${enemyCoverage?.expectedCount}`);
@@ -126,6 +127,11 @@ fail(Array.isArray(enemyCoverage?.runtimeSpriteStateMissing) && enemyCoverage.ru
 fail(Array.isArray(enemyCoverage?.unknownReachableKinds) && enemyCoverage.unknownReachableKinds.length === 0, "unknown reachable enemy kind");
 fail(Array.isArray(enemyCoverage?.missingBossKinds) && enemyCoverage.missingBossKinds.length === 0, "missing reachable boss kind");
 fail(Array.isArray(enemyCoverage?.unreachableRegisteredKinds) && enemyCoverage.unreachableRegisteredKinds.length === 0, "unreachable registered enemy kind");
+fail(enemyCoverage?.runtimeHarnessCoverage?.valid === true, "candidate enemy runtime harness coverage is not green");
+fail(Array.isArray(enemyCoverage?.runtimeHarnessCoverage?.missing) && enemyCoverage.runtimeHarnessCoverage.missing.length === 0, "candidate enemy runtime harness missing coverage");
+fail(Array.isArray(enemyCoverage?.runtimeHarnessCoverage?.duplicateCoverage) && enemyCoverage.runtimeHarnessCoverage.duplicateCoverage.length === 0, "candidate enemy runtime harness duplicate coverage");
+fail(Array.isArray(enemyCoverage?.runtimeHarnessCoverage?.unknown) && enemyCoverage.runtimeHarnessCoverage.unknown.length === 0, "candidate enemy runtime harness unknown coverage");
+fail(Array.isArray(enemyCoverage?.runtimeHarnessCoverage?.runtimeSpriteStateMissing) && enemyCoverage.runtimeHarnessCoverage.runtimeSpriteStateMissing.length === 0, "candidate enemy runtime harness sprite/state missing");
 fail(V100_COMBAT_FX_AUDIT.ok, `combat inventory: ${V100_COMBAT_FX_AUDIT.errors.join(", ")}`);
 fail(V100_COMBAT_FX_AUDIT.unclassifiedCount === 0, `combat inventory unclassified ${V100_COMBAT_FX_AUDIT.unclassifiedCount}`);
 fail(V100_COMBAT_FX_AUDIT.unfinishedRefineCount === 0, `combat inventory unfinished REFINE ${V100_COMBAT_FX_AUDIT.unfinishedRefineCount}`);
