@@ -36,14 +36,15 @@ const extraBattleContracts = Object.freeze([
   // a ranged card and a support card make the authored hit/impact sequence
   // visible without changing the stage, roster, or production battle rules.
   { variant: "stage22-panther-shield", engine: "webkit", viewport: extraBattleViewports[0], stageNumber: 22, bossKind: null, formationUnitIds: ["unit-hachi", "unit-mizuchi", "unit-babayaga", "unit-paisen", "unit-nao", "unit-kumaverson", "unit-tatara"] },
-  // The compact WebKit boss route deploys the canonical seven slots in
-  // production cost order so every selected card can reach a real ready ->
-  // cooldown transition before the hostile wave closes the route.
+  // The compact WebKit boss route establishes an opening frontline with the
+  // first three currently ready cards, then continues real redeploy actions
+  // as cards recover. It does not force a fixed DOM index or mutate battle
+  // state; the boss gate and combat proof remain fully production-owned.
   { variant: "stage24-panther-commander", engine: "webkit", viewport: extraBattleViewports[1], stageNumber: 24, bossKind: "futago", formationUnitIds: ["unit-hachi", "unit-nao", "unit-mizuchi", "unit-paisen", "unit-babayaga", "unit-kumaverson", "unit-tatara"] },
   // Start every boss fixture with the same low-cost opening a player can use
-  // to establish a frontline before the expensive cards recover. Keep the
-  // first three cards in ascending production cost order so the compact
-  // WebKit proof does not lose its route while waiting for an expensive card.
+  // to establish a frontline before the expensive cards recover. The
+  // interaction below selects the first currently ready cards, so the
+  // compact WebKit proof does not depend on a fixed card index.
   // The formation still contains seven canonical V1 units; this is a QA
   // interaction plan, not a gameplay or balance change.
   { variant: "stage25-president", engine: "webkit", viewport: extraBattleViewports[2], stageNumber: 25, bossKind: "mugarian-president-mutated", formationUnitIds: ["unit-hachi", "unit-nao", "unit-mizuchi", "unit-paisen", "unit-babayaga", "unit-kumaverson", "unit-tatara"] },
@@ -688,9 +689,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
   await click(page, page.locator(".v100-roster-card").first(), "formation roster card");
   await click(page, page.getByRole("button", { name: "戦闘へ", exact: true }), "formation battle CTA");
   await waitBattle(page);
-  const unitCards = page.locator("button.unit-card[data-kind]");
   const deployedKinds = new Set();
   let sustainActive = Boolean(bossKind);
+  let bossDeploymentFinished = !bossKind;
   const sustainDone = bossKind ? (async () => {
     // These are ordinary player-facing controls.  The loop keeps the
     // evidence run alive long enough to reach the authored boss wave without
@@ -726,6 +727,16 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
           await canvas.click({ position: { x: box.width * .34, y: box.height * .5 }, timeout: 700 }).catch(() => {});
         }
       }
+      if (bossDeploymentFinished) {
+        // Once the opening formation has been established, keep the same
+        // player-facing redeploy control alive as cards recover. This is
+        // especially important for compact boss routes where a fallen
+        // frontline unit must be replaced before the authored boss entry.
+        const redeploy = page.locator('button.unit-card[data-state="ready"][aria-disabled="false"]').first();
+        if (await redeploy.count().catch(() => 0)) {
+          await redeploy.click({ timeout: 500 }).catch(() => {});
+        }
+      }
       if (bossKind) {
         // The QA bridge only accelerates the authored boss gate-entry
         // animation. Spawn, entry state, sprite mount, and combat remain
@@ -747,7 +758,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
   })() : null;
   // Keep the fixture player-like while ensuring the early wave reaches an
   // authored attack/contact state on WebKit as well as Chromium.
-  const deployIndexes = bossKind ? [0, 1, 2, 3, 4, 5, 6] : null;
+  const bossDeploymentLimit = bossKind ? 3 : 0;
   const bossIsLive = async () => bossKind && await page.evaluate((expectedKind) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
     return snapshot?.screen === "battle" && snapshot.fighters?.some((fighter) => (
@@ -793,27 +804,47 @@ async function battlePage(page, save, stageName = null, { bossKind = null } = {}
         await page.waitForTimeout(120);
       }
     } else {
-      for (const index of deployIndexes) {
-        const card = unitCards.nth(index);
+      for (let deployment = 0; deployment < bossDeploymentLimit; deployment += 1) {
         let deployed = false;
         for (let attempt = 0; attempt < 180; attempt += 1) {
           const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
           if (!battleVisible) break;
           if (await bossIsLive()) break;
-          if (await card.getAttribute("data-state") === "ready") {
-            await click(page, card, `deploy battle unit ${index + 1}`);
+          const readyCards = page.locator('button.unit-card[data-state="ready"][aria-disabled="false"]');
+          const readyCount = await readyCards.count().catch(() => 0);
+          let card = null;
+          for (let candidateIndex = 0; candidateIndex < readyCount; candidateIndex += 1) {
+            const candidate = readyCards.nth(candidateIndex);
+            const kind = await candidate.getAttribute("data-kind");
+            if (kind && !deployedKinds.has(kind)) {
+              card = candidate;
+              break;
+            }
+          }
+          if (card) {
+            const kind = await card.getAttribute("data-kind");
+            await click(page, card, `deploy boss frontline unit ${deployment + 1}`);
             await page.waitForTimeout(140);
-            if (await card.getAttribute("data-state") !== "ready") {
+            // The filtered ready-card locator is intentionally live. After a
+            // successful click its nth element can now refer to another
+            // ready card, so check the clicked unit by its stable data-kind.
+            const trackedCard = kind
+              ? page.locator(`button.unit-card[data-kind="${kind}"]`).first()
+              : card;
+            const nextState = await trackedCard.getAttribute("data-state");
+            if (nextState !== "ready") {
               deployed = true;
+              if (kind) deployedKinds.add(kind);
               break;
             }
           }
           await page.waitForTimeout(400);
         }
         if (await bossIsLive()) break;
-        invariant(deployed, `battle unit ${index + 1} never entered cooldown from the ready state`);
+        invariant(deployed, `boss frontline unit ${deployment + 1} never entered cooldown from the ready state`);
       }
     }
+    bossDeploymentFinished = true;
     await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout });
     if (!bossKind) {
       await waitForCombatActivity(page);
