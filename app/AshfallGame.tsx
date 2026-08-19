@@ -21651,13 +21651,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
       : hud.scrap < supplyDefs[selectedSupply].cost
         ? `必要 ${supplyDefs[selectedSupply].cost}`
-        : `${selectedSupply === "pod" ? "着地・封鎖" : selectedSupply === "drum" ? "起爆範囲" : "継続回復"} / 必要 ${supplyDefs[selectedSupply].cost}`);
+        : `${selectedSupply === "pod" ? "着地・封鎖" : selectedSupply === "drum" ? "起爆範囲" : "継続回復"} ${supplyDefs[selectedSupply].cost}`);
   const airstrikeCompactDetail = commonBattleActionBlockReason
     ?? (hud.airstrikePhase !== "idle"
       ? "支援実行中"
       : hud.supportGauge < AIRSTRIKE_DEF.gaugeCost
         ? `必要 ${AIRSTRIKE_DEF.gaugeCost}`
-        : `照準・着弾 / 必要 ${AIRSTRIKE_DEF.gaugeCost}`);
+        : `照準・着弾 ${AIRSTRIKE_DEF.gaugeCost}`);
   const crawlerCompactDetail = commonBattleActionBlockReason
     ?? (hud.crawlerPhase !== "ready" ? "再装填中" : "全域射撃");
   const audioUnlockLabel = audioUnlockUi === "pending" ? "音声を準備中…" : audioUnlockUi === "success" ? "音声が有効になりました" : audioUnlockUi === "partial" ? "一部音声を再試行できます" : audioUnlockUi === "failed" ? "音声を開始できませんでした　もう一度試す" : "音声を有効にする";
