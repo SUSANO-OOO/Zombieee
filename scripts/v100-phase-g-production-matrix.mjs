@@ -1407,7 +1407,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   // the full canonical formation available on WebKit as well as Chromium.
   // These are ordinary card clicks against the seeded seven-slot formation;
   // no HP, clock, enemy state, or battle definition is changed.
-  const bossDeploymentLimit = bossKind ? (proofActor ? 1 : 7) : 0;
+  // A proof actor is an observation target, not a reason to weaken the
+  // player-facing formation. Allow up to the first three real card actions
+  // before the boss gate or resource timing can turn a compact WebKit run
+  // into a vehicle-loss result. The loop still stops as soon as the authored
+  // boss is live, so this is a bounded interaction plan, not a synthetic
+  // state change.
+  const bossDeploymentLimit = bossKind ? (proofActor ? 3 : 7) : 0;
   const deploymentTrace = [];
   try {
     if (!bossKind) {
