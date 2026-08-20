@@ -45,7 +45,7 @@
       "variant": "title-name",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:08:35.015Z",
+      "capturedAt": "2026-08-20T09:21:07.290Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -116,7 +116,7 @@
       "variant": "dialogue-left",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:08:35.717Z",
+      "capturedAt": "2026-08-20T09:21:08.047Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -185,7 +185,7 @@
       "variant": "dialogue-right",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:08:36.422Z",
+      "capturedAt": "2026-08-20T09:21:08.800Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -254,7 +254,7 @@
       "variant": "map-normal",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:08:37.191Z",
+      "capturedAt": "2026-08-20T09:21:09.583Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -329,7 +329,7 @@
       "variant": "map-locked-boss",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:08:38.121Z",
+      "capturedAt": "2026-08-20T09:21:10.582Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -402,7 +402,7 @@
       "variant": "formation",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:08:39.082Z",
+      "capturedAt": "2026-08-20T09:21:11.551Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -416,7 +416,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "ba825ddbafee405d2b353370011cd80a278a3ad6d08e7e219c974039476a5d16",
+      "sha256": "d0dc5288caff438c884f752aa7432aa6854e41370c3e5f3ad251fff33f68332f",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -473,7 +473,7 @@
       "variant": "personnel",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:08:39.904Z",
+      "capturedAt": "2026-08-20T09:21:12.433Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -544,7 +544,7 @@
       "variant": "support-vehicle-management",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:08:40.761Z",
+      "capturedAt": "2026-08-20T09:21:13.287Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -617,13 +617,13 @@
       "variant": "core-battle-normal",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:09:09.689Z",
+      "capturedAt": "2026-08-20T09:21:41.503Z",
       "stageId": "stage-nishijin-shopping-street",
       "stageName": "西新商店街・薬局救出",
       "visibleActors": [
         "human:scout",
-        "zombie:runner",
-        "human:engineer"
+        "human:medic",
+        "zombie:walker"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -648,7 +648,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "7dbea0ad123cc3a84ec6700170c6fae905e4ea43319833be4b48141699891b3a",
+      "sha256": "485ba525b12abec295746ac26f584456493ddfca7b8bedd6f4cb9e82f4f71234",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -692,25 +692,24 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 14,
-          "bodyTextLength": 322,
+          "buttonCount": 15,
+          "bodyTextLength": 320,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 1280,
             "height": 720,
             "sampled": 230400,
-            "visiblePixels": 228577,
-            "visibleRatio": 0.9920876736111112,
-            "lumaMean": 34.87990536979056,
-            "lumaVariance": 586.9014829480539
+            "visiblePixels": 228607,
+            "visibleRatio": 0.9922178819444445,
+            "lumaMean": 35.15287086718708,
+            "lumaVariance": 626.5800606530471
           },
           "fighterKinds": [
             "human:scout",
             "human:medic",
             "zombie:walker",
-            "zombie:runner",
-            "human:engineer"
+            "zombie:runner"
           ]
         }
       }
@@ -722,16 +721,15 @@
       "variant": "core-battle-boss",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:10:51.197Z",
+      "capturedAt": "2026-08-20T09:23:20.969Z",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "stageName": "西新防衛線・TAKUYA-Ω",
       "visibleActors": [
         "zombie:abomination",
-        "human:kumaverson",
         "zombie:walker",
         "zombie:shade",
-        "zombie:turned",
-        "zombie:takuya-omega"
+        "zombie:takuya-omega",
+        "zombie:turned"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -743,7 +741,6 @@
         "abomination",
         "walker",
         "shade",
-        "turned",
         "takuya-omega"
       ],
       "missionType": "boss-assault",
@@ -760,7 +757,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "6b4b0563e596042cc3cf4b71185dd3614ebfb3cac115028fb736803c3e6035ce",
+      "sha256": "dea0e32b4a30a09d18f683232b2f496ec9e2e6e7f8f693671041cc919aded07c",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -805,24 +802,23 @@
             "button.unit-card[data-kind]": true
           },
           "buttonCount": 13,
-          "bodyTextLength": 271,
+          "bodyTextLength": 318,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 1280,
             "height": 720,
             "sampled": 230400,
-            "visiblePixels": 228851,
-            "visibleRatio": 0.9932769097222223,
-            "lumaMean": 43.61297832551404,
-            "lumaVariance": 895.587707830393
+            "visiblePixels": 228602,
+            "visibleRatio": 0.9921961805555556,
+            "lumaMean": 43.68227010676328,
+            "lumaVariance": 873.8781100136894
           },
           "fighterKinds": [
+            "human:ranger",
             "zombie:abomination",
-            "human:kumaverson",
             "zombie:walker",
             "zombie:shade",
-            "zombie:turned",
             "zombie:takuya-omega"
           ]
         }
@@ -835,7 +831,7 @@
       "variant": "result-win",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:10:51.813Z",
+      "capturedAt": "2026-08-20T09:23:21.595Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -906,7 +902,7 @@
       "variant": "result-lose",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:10:52.384Z",
+      "capturedAt": "2026-08-20T09:23:22.189Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -975,7 +971,7 @@
       "variant": "ending",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:10:53.040Z",
+      "capturedAt": "2026-08-20T09:23:22.924Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1046,7 +1042,7 @@
       "variant": "credits",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:10:53.673Z",
+      "capturedAt": "2026-08-20T09:23:23.572Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1117,7 +1113,7 @@
       "variant": "epilogue-postgame",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:10:54.332Z",
+      "capturedAt": "2026-08-20T09:23:24.266Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1188,7 +1184,7 @@
       "variant": "data-management-modal",
       "engine": "chromium",
       "viewport": "1280x720",
-      "capturedAt": "2026-08-20T08:10:55.040Z",
+      "capturedAt": "2026-08-20T09:23:25.008Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1202,7 +1198,7 @@
         "width": 1280,
         "height": 720
       },
-      "sha256": "96598f63978662dc9e76494aaf4442009d68e006e11396144646c1a9ed788182",
+      "sha256": "00b736614719ebe42a0f667e8dcf020f93690d001d28fb648d77b4f487a4e0e3",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1257,7 +1253,7 @@
       "variant": "title-name",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:10:55.495Z",
+      "capturedAt": "2026-08-20T09:23:25.477Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1328,7 +1324,7 @@
       "variant": "dialogue-left",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:10:56.023Z",
+      "capturedAt": "2026-08-20T09:23:26.034Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1397,7 +1393,7 @@
       "variant": "dialogue-right",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:10:56.536Z",
+      "capturedAt": "2026-08-20T09:23:26.589Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1411,7 +1407,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "d8dffe8634c78767997619edbd52f25327af0049f83ebf7732b0794ab8568131",
+      "sha256": "c75ab95104d23a34df2bc32396eb8280d31d2bbe0c83338c5249cf8ea978cd91",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1466,7 +1462,7 @@
       "variant": "map-normal",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:10:57.134Z",
+      "capturedAt": "2026-08-20T09:23:27.166Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1541,7 +1537,7 @@
       "variant": "map-locked-boss",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:10:57.848Z",
+      "capturedAt": "2026-08-20T09:23:27.868Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1614,7 +1610,7 @@
       "variant": "formation",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:10:58.624Z",
+      "capturedAt": "2026-08-20T09:23:28.660Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1685,7 +1681,7 @@
       "variant": "personnel",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:10:59.263Z",
+      "capturedAt": "2026-08-20T09:23:29.309Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1756,7 +1752,7 @@
       "variant": "support-vehicle-management",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:10:59.929Z",
+      "capturedAt": "2026-08-20T09:23:30.009Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -1829,12 +1825,15 @@
       "variant": "core-battle-normal",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:11:27.765Z",
+      "capturedAt": "2026-08-20T09:24:00.894Z",
       "stageId": "stage-nishijin-shopping-street",
       "stageName": "西新商店街・薬局救出",
       "visibleActors": [
         "human:scout",
-        "zombie:runner"
+        "human:medic",
+        "zombie:runner",
+        "human:ranger",
+        "zombie:spitter"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -1859,7 +1858,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "a9492139362c6a21f15658d232eb6a667809b7698eb0480f59000ffba801b2e9",
+      "sha256": "9bd9e201696381e0f5927efec3110480cfdae9a7fce6308be4d81100efded34f",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -1911,16 +1910,17 @@
             "width": 844,
             "height": 390,
             "sampled": 82290,
-            "visiblePixels": 81881,
-            "visibleRatio": 0.9950297727548912,
-            "lumaMean": 34.469928914824756,
-            "lumaVariance": 562.6430215613599
+            "visiblePixels": 82008,
+            "visibleRatio": 0.9965730951512942,
+            "lumaMean": 34.92261796087376,
+            "lumaVariance": 550.2834979762437
           },
           "fighterKinds": [
             "human:scout",
             "human:medic",
             "zombie:walker",
-            "zombie:runner"
+            "zombie:runner",
+            "human:ranger"
           ]
         }
       }
@@ -1932,15 +1932,15 @@
       "variant": "core-battle-boss",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:13:05.125Z",
+      "capturedAt": "2026-08-20T09:25:38.939Z",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "stageName": "西新防衛線・TAKUYA-Ω",
       "visibleActors": [
-        "human:kumaverson",
+        "human:ranger",
         "human:engineer",
         "zombie:abomination",
-        "zombie:takuya-omega",
-        "human:scout"
+        "human:kumaverson",
+        "zombie:takuya-omega"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -1950,7 +1950,6 @@
       ],
       "observedEnemyKinds": [
         "walker",
-        "shade",
         "abomination",
         "takuya-omega"
       ],
@@ -1968,7 +1967,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "fd113b2568fd79d15242dfeaf87d92492a25b83a87c82b2ce0c0a6a8d72a38e1",
+      "sha256": "d7120216ba662d80e7e080b94624f27010c5364c87d1df291f8b3b15ec92bf58",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2013,28 +2012,26 @@
             "button.unit-card[data-kind]": true
           },
           "buttonCount": 14,
-          "bodyTextLength": 300,
+          "bodyTextLength": 302,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 844,
             "height": 390,
             "sampled": 82290,
-            "visiblePixels": 82007,
-            "visibleRatio": 0.9965609430064406,
-            "lumaMean": 46.657128669339755,
-            "lumaVariance": 922.6973419519978
+            "visiblePixels": 81979,
+            "visibleRatio": 0.9962206829505408,
+            "lumaMean": 46.84641443674759,
+            "lumaVariance": 947.3699242508284
           },
           "fighterKinds": [
-            "human:kumaverson",
-            "human:babayaga",
-            "human:engineer",
             "human:ranger",
+            "human:engineer",
+            "human:babayaga",
             "zombie:walker",
-            "zombie:shade",
             "zombie:abomination",
-            "zombie:takuya-omega",
-            "human:scout"
+            "human:kumaverson",
+            "zombie:takuya-omega"
           ]
         }
       }
@@ -2046,7 +2043,7 @@
       "variant": "result-win",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:13:05.605Z",
+      "capturedAt": "2026-08-20T09:25:39.444Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2117,7 +2114,7 @@
       "variant": "result-lose",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:13:06.054Z",
+      "capturedAt": "2026-08-20T09:25:39.932Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2186,7 +2183,7 @@
       "variant": "ending",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:13:06.548Z",
+      "capturedAt": "2026-08-20T09:25:40.441Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2257,7 +2254,7 @@
       "variant": "credits",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:13:07.025Z",
+      "capturedAt": "2026-08-20T09:25:40.939Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2328,7 +2325,7 @@
       "variant": "epilogue-postgame",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:13:07.530Z",
+      "capturedAt": "2026-08-20T09:25:41.458Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2399,7 +2396,7 @@
       "variant": "data-management-modal",
       "engine": "chromium",
       "viewport": "844x390",
-      "capturedAt": "2026-08-20T08:13:08.096Z",
+      "capturedAt": "2026-08-20T09:25:42.054Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2413,7 +2410,7 @@
         "width": 844,
         "height": 390
       },
-      "sha256": "6b581dbbad35fd4d9a43c4cc8fe7c30c52c7ca5c098bd9762380b8298516b445",
+      "sha256": "9091ab1d4740418b55efa60d3378843abd95319d25c3bbf37993c088d5d847e4",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -2468,7 +2465,7 @@
       "variant": "title-name",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:13:08.548Z",
+      "capturedAt": "2026-08-20T09:25:42.492Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2539,7 +2536,7 @@
       "variant": "dialogue-left",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:13:09.020Z",
+      "capturedAt": "2026-08-20T09:25:43.029Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2608,7 +2605,7 @@
       "variant": "dialogue-right",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:13:09.535Z",
+      "capturedAt": "2026-08-20T09:25:43.586Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2677,7 +2674,7 @@
       "variant": "map-normal",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:13:10.120Z",
+      "capturedAt": "2026-08-20T09:25:44.196Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2752,7 +2749,7 @@
       "variant": "map-locked-boss",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:13:10.820Z",
+      "capturedAt": "2026-08-20T09:25:44.897Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2825,7 +2822,7 @@
       "variant": "formation",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:13:11.610Z",
+      "capturedAt": "2026-08-20T09:25:45.682Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2896,7 +2893,7 @@
       "variant": "personnel",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:13:12.283Z",
+      "capturedAt": "2026-08-20T09:25:46.366Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -2967,7 +2964,7 @@
       "variant": "support-vehicle-management",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:13:12.965Z",
+      "capturedAt": "2026-08-20T09:25:47.009Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3040,12 +3037,15 @@
       "variant": "core-battle-normal",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:13:40.826Z",
+      "capturedAt": "2026-08-20T09:26:17.763Z",
       "stageId": "stage-nishijin-shopping-street",
       "stageName": "西新商店街・薬局救出",
       "visibleActors": [
         "human:scout",
-        "zombie:runner"
+        "human:medic",
+        "zombie:runner",
+        "human:ranger",
+        "zombie:spitter"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -3070,7 +3070,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "fafe7b83b130193b11a504d42dfaa0932c1b48632b1ba21fdcc5cb38b72fcdd7",
+      "sha256": "206e6b43c97df6d0221fcb671d63767970b7bc875e79f23f74b08ae2195f8e5d",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3122,16 +3122,17 @@
             "width": 844,
             "height": 340,
             "sampled": 71740,
-            "visiblePixels": 71376,
-            "visibleRatio": 0.9949261221076108,
-            "lumaMean": 35.73731864790196,
-            "lumaVariance": 584.9601236850805
+            "visiblePixels": 71480,
+            "visibleRatio": 0.9963758015054363,
+            "lumaMean": 36.158790551994876,
+            "lumaVariance": 571.8617402024192
           },
           "fighterKinds": [
             "human:scout",
             "human:medic",
             "zombie:walker",
-            "zombie:runner"
+            "zombie:runner",
+            "human:ranger"
           ]
         }
       }
@@ -3143,14 +3144,14 @@
       "variant": "core-battle-boss",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:15:18.837Z",
+      "capturedAt": "2026-08-20T09:27:55.415Z",
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "stageName": "西新防衛線・TAKUYA-Ω",
       "visibleActors": [
-        "human:engineer",
-        "zombie:shade",
         "zombie:abomination",
-        "zombie:takuya-omega"
+        "zombie:shade",
+        "zombie:takuya-omega",
+        "human:scout"
       ],
       "expectedEnemyKinds": [
         "walker",
@@ -3159,9 +3160,9 @@
         "takuya-omega"
       ],
       "observedEnemyKinds": [
+        "abomination",
         "walker",
         "shade",
-        "abomination",
         "takuya-omega"
       ],
       "missionType": "boss-assault",
@@ -3178,7 +3179,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "c172de605c6d2b087ac81add0b66bc596da6b28e673147520a19d4e7a36178c0",
+      "sha256": "4f72e8264dcf310675848c9d9910a542a5b6083ed052fc06244afc96426474ed",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3223,27 +3224,27 @@
             "button.unit-card[data-kind]": true
           },
           "buttonCount": 14,
-          "bodyTextLength": 319,
+          "bodyTextLength": 302,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 844,
             "height": 340,
             "sampled": 71740,
-            "visiblePixels": 71448,
-            "visibleRatio": 0.9959297463061054,
-            "lumaMean": 46.171101037077875,
-            "lumaVariance": 958.9016350702726
+            "visiblePixels": 71358,
+            "visibleRatio": 0.9946752160579871,
+            "lumaMean": 46.12909376358989,
+            "lumaVariance": 976.0435256028239
           },
           "fighterKinds": [
-            "human:medic",
+            "human:kumaverson",
             "human:engineer",
             "human:ranger",
+            "zombie:abomination",
             "human:babayaga",
             "human:scout",
             "zombie:walker",
             "zombie:shade",
-            "zombie:abomination",
             "zombie:takuya-omega"
           ]
         }
@@ -3256,7 +3257,7 @@
       "variant": "result-win",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:15:19.365Z",
+      "capturedAt": "2026-08-20T09:27:56.056Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3327,7 +3328,7 @@
       "variant": "result-lose",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:15:19.825Z",
+      "capturedAt": "2026-08-20T09:27:56.655Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3396,7 +3397,7 @@
       "variant": "ending",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:15:20.313Z",
+      "capturedAt": "2026-08-20T09:27:57.260Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3467,7 +3468,7 @@
       "variant": "credits",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:15:20.740Z",
+      "capturedAt": "2026-08-20T09:27:57.845Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3538,7 +3539,7 @@
       "variant": "epilogue-postgame",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:15:21.365Z",
+      "capturedAt": "2026-08-20T09:27:58.501Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3609,7 +3610,7 @@
       "variant": "data-management-modal",
       "engine": "chromium",
       "viewport": "844x340",
-      "capturedAt": "2026-08-20T08:15:22.203Z",
+      "capturedAt": "2026-08-20T09:27:59.316Z",
       "stageId": null,
       "stageName": null,
       "visibleActors": [],
@@ -3623,7 +3624,7 @@
         "width": 844,
         "height": 340
       },
-      "sha256": "66d608a4f9bf8faf73967450f9621a7240fbdf7bbc4935e0b51c30218c8152f4",
+      "sha256": "f467d7ec89ef49a5c7b60bb5e3abb75be71c1eef71207c4cf1100ed18cb0792d",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3678,14 +3679,15 @@
       "variant": "stage03-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "capturedAt": "2026-08-20T08:16:59.903Z",
+      "capturedAt": "2026-08-20T09:29:35.754Z",
       "stageId": "stage-nishijin-defense-line-takuya",
       "stageName": "西新防衛線・TAKUYA",
       "visibleActors": [
+        "human:brute",
+        "human:medic",
         "human:scout",
         "zombie:shade",
         "zombie:abomination",
-        "zombie:turned",
         "zombie:takuya"
       ],
       "expectedEnemyKinds": [
@@ -3698,7 +3700,6 @@
         "walker",
         "shade",
         "abomination",
-        "turned",
         "takuya"
       ],
       "missionType": "boss-assault",
@@ -3715,7 +3716,7 @@
         "width": 667,
         "height": 375
       },
-      "sha256": "7a2b38d400a98ba60f8b493aaf23ef0b8e9b0792b361833bdb36aa838467f058",
+      "sha256": "73ede739cd0a4aaf6b022fd5480cb4ebe05e2706eafe4401ce2981c582296de6",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3760,17 +3761,17 @@
             "button.unit-card[data-kind]": true
           },
           "buttonCount": 14,
-          "bodyTextLength": 291,
+          "bodyTextLength": 306,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 667,
             "height": 375,
             "sampled": 62532,
-            "visiblePixels": 62055,
-            "visibleRatio": 0.9923719055843409,
-            "lumaMean": 38.64769326104888,
-            "lumaVariance": 722.0140751473726
+            "visiblePixels": 62086,
+            "visibleRatio": 0.9928676517622977,
+            "lumaMean": 38.777656377533354,
+            "lumaVariance": 730.3989671877474
           },
           "fighterKinds": [
             "human:brute",
@@ -3779,7 +3780,6 @@
             "zombie:walker",
             "zombie:shade",
             "zombie:abomination",
-            "zombie:turned",
             "zombie:takuya"
           ]
         }
@@ -3792,13 +3792,13 @@
       "variant": "stage04-grappler",
       "engine": "chromium",
       "viewport": "736x414",
-      "capturedAt": "2026-08-20T08:17:34.925Z",
+      "capturedAt": "2026-08-20T09:30:10.903Z",
       "stageId": "stage-nishijin-station-gate",
       "stageName": "西新駅・閉鎖改札",
       "visibleActors": [
         "human:brute",
-        "human:scout",
         "zombie:grappler",
+        "human:scout",
         "zombie:crusher"
       ],
       "expectedEnemyKinds": [
@@ -3824,7 +3824,7 @@
         "width": 736,
         "height": 414
       },
-      "sha256": "3a1aad5cb1b5d2096c0145993c63293c5f819a234eb0ebd3fe5ad8516030e138",
+      "sha256": "a39157fb4d41baa7a31f407c4ad20560c6b16d0ffe9c90dd06d1bb591692db8b",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3869,17 +3869,17 @@
             "button.unit-card[data-kind]": true
           },
           "buttonCount": 16,
-          "bodyTextLength": 269,
+          "bodyTextLength": 279,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 736,
             "height": 414,
             "sampled": 76176,
-            "visiblePixels": 75673,
-            "visibleRatio": 0.993396870405377,
-            "lumaMean": 50.71728663621258,
-            "lumaVariance": 1426.0167233766422
+            "visiblePixels": 75675,
+            "visibleRatio": 0.9934231253938248,
+            "lumaMean": 50.69933319680916,
+            "lumaVariance": 1427.0532928217708
           },
           "fighterKinds": [
             "human:brute",
@@ -3897,14 +3897,12 @@
       "variant": "stage21-panther-knife",
       "engine": "chromium",
       "viewport": "932x430",
-      "capturedAt": "2026-08-20T08:18:13.480Z",
+      "capturedAt": "2026-08-20T09:30:42.250Z",
       "stageId": "stage-mugarian-logistics-hq",
       "stageName": "ムガリアン物流本部",
       "visibleActors": [
         "zombie:red-panther-smg",
-        "human:scout",
-        "zombie:runner",
-        "zombie:turned"
+        "zombie:runner"
       ],
       "expectedEnemyKinds": [
         "red-panther-knife",
@@ -3912,6 +3910,7 @@
         "runner"
       ],
       "observedEnemyKinds": [
+        "red-panther-knife",
         "red-panther-smg"
       ],
       "missionType": "assault",
@@ -3928,7 +3927,7 @@
         "width": 932,
         "height": 430
       },
-      "sha256": "85c82bd08ef59b4b077b6731387e3aef33d6227f1c909877f15756c9836d7b29",
+      "sha256": "ab16911c2432254f000387c0a81b1bbc321fef0aee86adfd87dd4a2e1401b974",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -3972,7 +3971,7 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 14,
+          "buttonCount": 15,
           "bodyTextLength": 280,
           "screen": "battle",
           "battleMounted": true,
@@ -3980,14 +3979,15 @@
             "width": 932,
             "height": 430,
             "sampled": 100190,
-            "visiblePixels": 99863,
-            "visibleRatio": 0.9967362012176864,
-            "lumaMean": 53.97566092823831,
-            "lumaVariance": 1549.5986451682936
+            "visiblePixels": 99995,
+            "visibleRatio": 0.9980536979738497,
+            "lumaMean": 54.47380796487027,
+            "lumaVariance": 1575.6605209851898
           },
           "fighterKinds": [
+            "human:brute",
+            "zombie:red-panther-knife",
             "zombie:red-panther-smg",
-            "human:ranger",
             "human:scout"
           ]
         }
@@ -4000,14 +4000,13 @@
       "variant": "stage06-spitter-seal",
       "engine": "webkit",
       "viewport": "667x375",
-      "capturedAt": "2026-08-20T08:18:54.220Z",
+      "capturedAt": "2026-08-20T09:31:20.618Z",
       "stageId": "stage-nishijin-station-tunnel-seal",
       "stageName": "西新駅・保守トンネル",
       "visibleActors": [
         "human:scout",
         "human:ranger",
         "zombie:spitter",
-        "human:medic",
         "zombie:crusher"
       ],
       "expectedEnemyKinds": [
@@ -4033,7 +4032,7 @@
         "width": 667,
         "height": 375
       },
-      "sha256": "fb5d8aa393b1452f566b34899d27f77f49c3de366d9a69875fa9209c660aa24e",
+      "sha256": "00d4c94160bed0c96ab43066517816d9eca47d9146b8dd5dceedfb289b594657",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4077,7 +4076,7 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 16,
+          "buttonCount": 17,
           "bodyTextLength": 277,
           "screen": "battle",
           "battleMounted": true,
@@ -4085,17 +4084,16 @@
             "width": 667,
             "height": 375,
             "sampled": 62532,
-            "visiblePixels": 61987,
-            "visibleRatio": 0.9912844623552741,
-            "lumaMean": 49.510490740740124,
-            "lumaVariance": 1258.9149592501785
+            "visiblePixels": 62235,
+            "visibleRatio": 0.9952504317789291,
+            "lumaMean": 49.23936398004174,
+            "lumaVariance": 1194.2650521008463
           },
           "fighterKinds": [
             "human:scout",
             "human:ranger",
             "zombie:runner",
-            "zombie:spitter",
-            "human:medic"
+            "zombie:spitter"
           ]
         }
       }
@@ -4107,7 +4105,7 @@
       "variant": "stage24-panther-commander",
       "engine": "webkit",
       "viewport": "736x414",
-      "capturedAt": "2026-08-20T08:19:39.368Z",
+      "capturedAt": "2026-08-20T09:32:08.672Z",
       "stageId": "stage-mugarian-tech-tower",
       "stageName": "ムガリアン技術開発塔",
       "visibleActors": [
@@ -4141,7 +4139,7 @@
         "width": 736,
         "height": 414
       },
-      "sha256": "4f888cabb5507e0df8a03208f20d3962d653683b387e85903a136b4d6167262a",
+      "sha256": "aeba7ed6e82c190ae1565cd8c48d911b755cd8a4e14012f4b906d988bff93078",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4186,17 +4184,17 @@
             "button.unit-card[data-kind]": true
           },
           "buttonCount": 14,
-          "bodyTextLength": 273,
+          "bodyTextLength": 284,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 736,
             "height": 414,
             "sampled": 76176,
-            "visiblePixels": 75599,
-            "visibleRatio": 0.9924254358328082,
-            "lumaMean": 55.27272069417923,
-            "lumaVariance": 1659.9403307351572
+            "visiblePixels": 75895,
+            "visibleRatio": 0.9963111741230833,
+            "lumaMean": 53.18367545158267,
+            "lumaVariance": 1604.9157743169233
           },
           "fighterKinds": [
             "human:medic",
@@ -4214,17 +4212,16 @@
       "variant": "stage25-president",
       "engine": "webkit",
       "viewport": "932x430",
-      "capturedAt": "2026-08-20T08:21:23.521Z",
+      "capturedAt": "2026-08-20T09:33:56.620Z",
       "stageId": "stage-mugarian-executive-lab",
       "stageName": "ムガリアン役員研究所・市場の終わり",
       "visibleActors": [
-        "human:kumaverson",
-        "zombie:red-panther-smg",
         "zombie:red-panther-commander",
         "zombie:red-panther-shield",
-        "zombie:mugarian-president-mutated",
+        "zombie:red-panther-smg",
+        "zombie:turned",
         "human:guardian",
-        "zombie:turned"
+        "zombie:mugarian-president-mutated"
       ],
       "expectedEnemyKinds": [
         "red-panther-commander",
@@ -4233,9 +4230,10 @@
         "mugarian-president-mutated"
       ],
       "observedEnemyKinds": [
+        "red-panther-commander",
         "red-panther-shield",
         "red-panther-smg",
-        "red-panther-commander",
+        "turned",
         "mugarian-president-mutated"
       ],
       "missionType": "boss-assault",
@@ -4252,7 +4250,7 @@
         "width": 932,
         "height": 430
       },
-      "sha256": "2551b18d806fcd9976f60846372778c7c15c172988a5169b53e922d424d074b4",
+      "sha256": "d9eb2e1a75336e2b1923c21dc07f3e1066a9598d9ec40a5d1af0ae0ad620591f",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4296,25 +4294,25 @@
             ".game-shell[data-screen=\"battle\"] canvas": true,
             "button.unit-card[data-kind]": true
           },
-          "buttonCount": 16,
-          "bodyTextLength": 302,
+          "buttonCount": 15,
+          "bodyTextLength": 288,
           "screen": "battle",
           "battleMounted": true,
           "canvas": {
             "width": 932,
             "height": 430,
             "sampled": 100190,
-            "visiblePixels": 99093,
-            "visibleRatio": 0.9890508034734006,
-            "lumaMean": 35.905458267291046,
-            "lumaVariance": 528.8226069302827
+            "visiblePixels": 99605,
+            "visibleRatio": 0.994161093921549,
+            "lumaMean": 36.406211546062785,
+            "lumaVariance": 507.55674131975655
           },
           "fighterKinds": [
-            "zombie:red-panther-shield",
-            "human:guardian",
-            "human:kumaverson",
-            "zombie:red-panther-smg",
             "zombie:red-panther-commander",
+            "zombie:red-panther-shield",
+            "zombie:red-panther-smg",
+            "zombie:turned",
+            "human:guardian",
             "zombie:mugarian-president-mutated"
           ]
         }
@@ -4350,7 +4348,7 @@
       "stageId": "stage-nishijin-defense-line-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "timestamp": "2026-08-20T08:16:59.903Z",
+      "timestamp": "2026-08-20T09:29:35.754Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4386,7 +4384,7 @@
       "stageId": "stage-nishijin-station-tunnel-seal",
       "engine": "webkit",
       "viewport": "667x375",
-      "timestamp": "2026-08-20T08:18:54.220Z",
+      "timestamp": "2026-08-20T09:31:20.618Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4422,7 +4420,7 @@
       "stageId": "stage-nishijin-defense-line-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "timestamp": "2026-08-20T08:16:59.903Z",
+      "timestamp": "2026-08-20T09:29:35.754Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4458,7 +4456,7 @@
       "stageId": "stage-nishijin-station-tunnel-seal",
       "engine": "webkit",
       "viewport": "667x375",
-      "timestamp": "2026-08-20T08:18:54.220Z",
+      "timestamp": "2026-08-20T09:31:20.618Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4494,7 +4492,7 @@
       "stageId": "stage-nishijin-station-gate",
       "engine": "chromium",
       "viewport": "736x414",
-      "timestamp": "2026-08-20T08:17:34.925Z",
+      "timestamp": "2026-08-20T09:30:10.903Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4530,7 +4528,7 @@
       "stageId": "stage-mugarian-logistics-hq",
       "engine": "chromium",
       "viewport": "932x430",
-      "timestamp": "2026-08-20T08:18:13.480Z",
+      "timestamp": "2026-08-20T09:30:42.250Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4566,7 +4564,7 @@
       "stageId": "stage-mugarian-logistics-hq",
       "engine": "chromium",
       "viewport": "932x430",
-      "timestamp": "2026-08-20T08:18:13.480Z",
+      "timestamp": "2026-08-20T09:30:42.250Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4602,7 +4600,7 @@
       "stageId": "stage-mugarian-executive-lab",
       "engine": "webkit",
       "viewport": "932x430",
-      "timestamp": "2026-08-20T08:21:23.521Z",
+      "timestamp": "2026-08-20T09:33:56.620Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4638,7 +4636,7 @@
       "stageId": "stage-mugarian-tech-tower",
       "engine": "webkit",
       "viewport": "736x414",
-      "timestamp": "2026-08-20T08:19:39.368Z",
+      "timestamp": "2026-08-20T09:32:08.672Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4674,7 +4672,7 @@
       "stageId": "stage-nishijin-defense-line-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "timestamp": "2026-08-20T08:16:59.903Z",
+      "timestamp": "2026-08-20T09:29:35.754Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4710,7 +4708,7 @@
       "stageId": "stage-mugarian-executive-lab",
       "engine": "webkit",
       "viewport": "932x430",
-      "timestamp": "2026-08-20T08:21:23.521Z",
+      "timestamp": "2026-08-20T09:33:56.620Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4746,7 +4744,7 @@
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "engine": "chromium",
       "viewport": "844x340",
-      "timestamp": "2026-08-20T08:15:18.837Z",
+      "timestamp": "2026-08-20T09:27:55.415Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4782,7 +4780,7 @@
       "stageId": "stage-nishijin-defense-line-takuya-omega",
       "engine": "chromium",
       "viewport": "844x340",
-      "timestamp": "2026-08-20T08:15:18.837Z",
+      "timestamp": "2026-08-20T09:27:55.415Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4818,7 +4816,7 @@
       "stageId": "stage-nishijin-defense-line-takuya",
       "engine": "chromium",
       "viewport": "667x375",
-      "timestamp": "2026-08-20T08:16:59.903Z",
+      "timestamp": "2026-08-20T09:29:35.754Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4854,7 +4852,7 @@
       "stageId": "stage-nishijin-station-gate",
       "engine": "chromium",
       "viewport": "736x414",
-      "timestamp": "2026-08-20T08:17:34.925Z",
+      "timestamp": "2026-08-20T09:30:10.903Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4890,7 +4888,7 @@
       "stageId": "stage-mugarian-logistics-hq",
       "engine": "chromium",
       "viewport": "932x430",
-      "timestamp": "2026-08-20T08:18:13.480Z",
+      "timestamp": "2026-08-20T09:30:42.250Z",
       "diagnostics": {
         "consoleErrors": [],
         "pageErrors": [],
@@ -4955,14 +4953,15 @@
       "runner",
       "abomination",
       "shade",
-      "turned",
       "takuya-omega",
       "takuya",
       "grappler",
+      "red-panther-knife",
       "red-panther-smg",
       "spitter",
       "red-panther-commander",
       "red-panther-shield",
+      "turned",
       "mugarian-president-mutated"
     ],
     "missingObservedKinds": [
@@ -4980,8 +4979,7 @@
       "spindle",
       "choir-knot",
       "pall-manta",
-      "anchor-bloom",
-      "red-panther-knife"
+      "anchor-bloom"
     ],
     "runtimeSpriteStateMissing": [],
     "unknownReachableKinds": [],

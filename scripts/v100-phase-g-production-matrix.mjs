@@ -1206,10 +1206,14 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   };
   const observeProofUnitAttack = async () => {
     if (proofUnitAttackObserved || !proofUnitKind) return proofUnitAttackObserved;
-    proofUnitAttackObserved = await page.evaluate((expectedKind) => {
+    const observation = await page.evaluate((expectedKind) => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
-      const actor = snapshot?.fighters?.find((fighter) => fighter.side === "human" && fighter.kind === expectedKind);
-      if (!actor) return false;
+      const actor = snapshot?.fighters?.find((fighter) => (
+        fighter.side === "human"
+        && fighter.kind === expectedKind
+        && Number(fighter.hp) > 0
+      ));
+      if (!actor) return null;
       const stateAttack = Number(actor.attack) > 0
         || Number(actor.attackWindup) > 0
         || Number(actor.attackSequence) > 0
@@ -1226,8 +1230,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         fighterActors: [...fighterActors],
         ...(stateAttack ? { attackingActors: [...attackingActors] } : {}),
       };
-      return stateAttack;
+      return { deployed: true, attacking: stateAttack };
     }, proofUnitKind).catch(() => false);
+    if (observation?.deployed === true) proofUnitDeployed = true;
+    proofUnitAttackObserved = observation?.attacking === true;
     return proofUnitAttackObserved;
   };
   const observeVehicleAction = async () => {
@@ -1430,6 +1436,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             throw new Error(`battle unit ${slot + 1} deployment was not accepted by production runtime deploymentDiagnostics=${JSON.stringify({ before, after: acceptance.diagnostics, clickError })}`);
           }
           deployedKinds.add(kind);
+          if (kind === proofUnitKind) proofUnitDeployed = true;
           deployed = true;
         }
         invariant(deployed, `no ready battle unit for slot ${slot + 1}`);
@@ -1489,6 +1496,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             if (acceptance.accepted) {
               deployed = true;
               if (kind) deployedKinds.add(kind);
+              if (kind === proofUnitKind) proofUnitDeployed = true;
               break;
             }
           }
@@ -1526,6 +1534,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       }, { expectedKind: proofActor, expectedCueId: proofActorAttackCueId }, { timeout: Math.min(battleTimeout, 45_000) });
       proofActorAttackObserved = true;
     }
+    if (proofUnitKind && !proofUnitDeployed) await observeProofUnitAttack();
     if (proofUnitKind && !proofUnitDeployed) {
       await page.waitForFunction((expectedKind) => Boolean(
         document.querySelector(`button.unit-card[data-kind="${expectedKind}"][data-state="ready"][aria-disabled="false"]`),
