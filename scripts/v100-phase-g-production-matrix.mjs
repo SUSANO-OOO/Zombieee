@@ -204,10 +204,21 @@ async function openRoute(page, save = null) {
       || document.querySelector("[role=dialog][aria-label='ゲームデータの準備'] button"),
   ), null, { timeout });
   await waitForGateOrShell();
+  // PwaGate starts the published metadata fetch without blocking an already
+  // playable shell. A seeded route reload must wait for that real fetch to
+  // settle; otherwise WebKit reports the first-party request as cancelled at
+  // the reload boundary and the evidence becomes a lifecycle artifact rather
+  // than a production failure.
+  await page.waitForFunction(() => ["ready", "unreachable", "unsupported"].includes(
+    document.documentElement.dataset.pwaManifestState,
+  ), null, { timeout });
   if (save) {
     await seedPage(page, save);
     await page.reload({ waitUntil: "domcontentloaded", timeout });
     await waitForGateOrShell();
+    await page.waitForFunction(() => ["ready", "unreachable", "unsupported"].includes(
+      document.documentElement.dataset.pwaManifestState,
+    ), null, { timeout });
     const seeded = await page.evaluate(() => {
       try {
         const raw = localStorage.getItem("nishijin-campaign-v100");
