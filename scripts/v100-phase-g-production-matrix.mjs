@@ -765,6 +765,12 @@ function isRetryableCaptureFailure(error) {
   return isTransientBrowserClosure(error)
     || /request failures:\s*\["[^"]*\/asset-manifest\.json :: Load request cancelled"\]/i.test(message)
     || /combat activity did not become visible: TimeoutError: page\.waitForFunction: Timeout 45000ms exceeded/i.test(message)
+    // Compact WebKit can finish the real battle transition while the unit
+    // rail is repainting. Retry the same production route on a clean
+    // pre-capture readiness miss; do not skip deployment or accept a partial
+    // capture when the retry also fails.
+    || (/no ready battle unit for slot \d+/i.test(message)
+      && hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message))
     || (/battle unit \d+ never entered cooldown from the ready state/i.test(message)
       && hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message));
 }
@@ -1419,3 +1425,4 @@ invariant(results.length === expectedCount, `Phase G capture count ${results.len
 invariant(new Set(results.map(({ evidence }) => evidence.path)).size === results.length, "Phase G evidence paths are not unique");
 invariant(new Set(results.map(({ evidence }) => evidence.sha256)).size === results.length, "Phase G screenshot content hashes are not unique");
 console.log(JSON.stringify({ status: "passed", screenshots: results.length, uniquePaths: new Set(results.map(({ evidence }) => evidence.path)).size, uniqueHashes: new Set(results.map(({ evidence }) => evidence.sha256)).size, report: relativeEvidence(reportPath), manifest: materialized ? relativeEvidence(materialized.manifestPath) : null, combatEvidence: V100_REPRESENTATIVE_COMBAT_CONTRACT.length, onlyState: onlyState || null, onlyVariant: onlyVariant || null }, null, 2));
+
