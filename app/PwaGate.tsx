@@ -46,40 +46,18 @@ import {
 import { describeUpdate, evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js";
 import { resolvePwaBaseUrl } from "./pwaBasePath.js";
 
-// The manifest lookup is deliberately bounded, but a first-party production
-// page can take longer than the old 10-second window to settle on hosted
-// WebKit while the app is already usable. Aborting that lookup creates a
-// browser-level request failure even though the game mounted correctly. Keep
-// the offline fallback bounded while giving the production manifest enough
-// time to complete without a synthetic cancellation.
-const PUBLISHED_MANIFEST_TIMEOUT_MS = 30_000;
-
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
 
 /**
- * Bound the UI wait without aborting the first-party request itself. An
- * AbortSignal is observable by Playwright/WebKit as a cancelled network
- * request, which turns a usable production mount into a hard QA failure. The
- * manifest is metadata only: if the deadline expires the gate can continue in
- * its offline/unreachable state while the request is allowed to settle
- * naturally and populate the cache for a later retry.
+ * The manifest is metadata only and boot marks the game usable before this
+ * lookup starts. Do not race it against a synthetic deadline: a slow hosted
+ * WebKit response can turn the losing promise into a browser-level cancelled
+ * request even though the production route mounted correctly. A genuinely
+ * unavailable manifest is handled by the existing catch path without blocking
+ * the title, map, or battle surfaces.
  */
 async function fetchPublishedManifestBounded(baseUrl: string) {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const deadline = new Promise<never>((_, reject) => {
-    timer = setTimeout(
-      () => reject(new Error("Published manifest lookup timed out")),
-      PUBLISHED_MANIFEST_TIMEOUT_MS,
-    );
-  });
-  try {
-    return await Promise.race([
-      fetchPublishedManifest({ baseUrl }),
-      deadline,
-    ]);
-  } finally {
-    if (timer !== undefined) clearTimeout(timer);
-  }
+  return fetchPublishedManifest({ baseUrl });
 }
 
 function readSafetyFromDocument() {
