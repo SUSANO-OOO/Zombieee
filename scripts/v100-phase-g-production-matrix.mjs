@@ -1168,12 +1168,12 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           if (page.isClosed()) throw new Error("Target page, context or browser has been closed during non-boss unit deployment");
           const readyCards = page.locator('button.unit-card[data-state="ready"][aria-disabled="false"]');
           const readyCount = await readyCards.count().catch(() => 0);
-          let card = null;
+          let selectedKind = null;
           for (let candidateIndex = 0; candidateIndex < readyCount; candidateIndex += 1) {
             const candidate = readyCards.nth(candidateIndex);
             const kind = await candidate.getAttribute("data-kind").catch(() => null);
             if (kind && !deployedKinds.has(kind)) {
-              card = candidate;
+              selectedKind = kind;
               break;
             }
           }
@@ -1181,12 +1181,21 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           // card that already completed its cooldown is still a real player
           // choice. Prefer a new kind, but never fail on a fixed uniqueness
           // assumption when the production roster exposes a valid ready card.
-          card ??= readyCount > 0 ? readyCards.first() : null;
-          if (!card || await card.count().catch(() => 0) === 0) {
+          if (!selectedKind && readyCount > 0) selectedKind = await readyCards.first().getAttribute("data-kind").catch(() => null);
+          if (!selectedKind) {
             await page.waitForTimeout(120);
             continue;
           }
-          const kind = await card.getAttribute("data-kind").catch(() => null);
+          // Re-query by stable data-kind after reading the live collection.
+          // WebKit can rerender the card rail between the nth() read and the
+          // click; never let a stale positional locator turn that repaint
+          // into a false product failure.
+          const card = page.locator(`button.unit-card[data-kind="${selectedKind}"][data-state="ready"][aria-disabled="false"]`).first();
+          if (await card.count().catch(() => 0) === 0 || !await card.isVisible().catch(() => false)) {
+            await page.waitForTimeout(120);
+            continue;
+          }
+          const kind = selectedKind;
           await click(page, card, `deploy ready battle unit ${slot + 1}`);
           await page.waitForTimeout(60);
           const trackedCard = kind

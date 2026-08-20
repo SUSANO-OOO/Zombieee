@@ -748,8 +748,8 @@ function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, p
   const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "作戦情報" : node.kind === "system" ? "無線記録" : "";
   const playerFacingText = publicDisplayText(node.text || "…");
   return <div className={`v100-story-node v100-node-${node.kind ?? "action"}`} data-portrait-side={portraitSide} data-portrait-count={portrait ? secondaryPortrait ? "2" : "1" : "0"} data-v100-state={`dialogue-${portraitSide}`} data-v100-node-kind={resolvedPresentation?.nodeKind ?? node.kind ?? "action"} data-v100-node-label={resolvedPresentation?.nodeLabel ?? "場面"} data-v100-transition={resolvedPresentation?.transition ?? undefined} data-v100-audio-cue={resolvedPresentation?.cueId ?? undefined}>
-    {secondaryPortrait && <img className="v100-portrait v100-portrait-secondary" data-portrait-side={secondaryPortraitSide} src={secondaryPortrait} alt="" aria-hidden="true" />}
-    {portrait && <img className="v100-portrait" src={portrait} alt={`${node.speaker ?? "登場人物"}の立ち絵`} />}
+    {secondaryPortrait && <div className="v100-portrait-frame v100-portrait-frame-secondary" data-portrait-framing="waist-up-common" data-portrait-owner={secondaryNode?.portraitOwner ?? undefined} data-portrait-side={secondaryPortraitSide}><img className="v100-portrait v100-portrait-secondary" src={secondaryPortrait} alt="" aria-hidden="true" /></div>}
+    {portrait && <div className="v100-portrait-frame" data-portrait-framing="waist-up-common" data-portrait-owner={node.portraitOwner ?? undefined} data-portrait-side={portraitSide}><img className="v100-portrait" src={portrait} alt={`${node.speaker ?? "登場人物"}の立ち絵`} /></div>}
     <div className="v100-node-copy">{nodeLabel && <span className="v100-node-kind">{nodeLabel}</span>}<p>{playerFacingText}</p></div>
   </div>;
 }
