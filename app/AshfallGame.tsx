@@ -11920,6 +11920,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           operationId: g.definition.operationId,
           operationCategory: g.definition.operationCategory,
           time: g.time,
+          phase: g.phase,
+          objective: objectiveForBattle(g.definition, g),
+          formationKinds: [...g.formationKinds],
+          deployCooldowns: { ...g.deployCooldowns },
           saveBoundaryPending: battleSaveBoundaryRef.current,
           saveBoundaryPersistencePending: qaSavePersistenceHoldRef.current !== null,
           pointerGestures: [...pointerGestureStateRef.current.entries()].map(([pointerId, gesture]) => ({
@@ -12053,7 +12057,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             y: object.y,
             phase: object.phase,
           })),
-          deployQueue: g.deployQueue.map((entry) => ({ ...entry })),
+          deployQueue: g.deployQueue.map((entry) => entry),
           airstrike: { ...g.airstrike },
           placementIndicator: g.placementIndicator ? { ...g.placementIndicator } : null,
           attackIdentity: g.shots

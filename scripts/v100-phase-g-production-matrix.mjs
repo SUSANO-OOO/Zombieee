@@ -739,6 +739,157 @@ async function captureStateImpl(engineName, viewport, state, configure) {
   }
 }
 
+async function readBattleDeploymentDiagnostics(page, {
+  requestedKind = null,
+  requestedSlot = null,
+  phase = null,
+} = {}) {
+  if (page.isClosed()) {
+    return {
+      capturedAt: new Date().toISOString(),
+      pageClosed: true,
+      requestedKind,
+      requestedSlot,
+      phase,
+    };
+  }
+  return page.evaluate(({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase }) => {
+    const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null;
+    const visibleRect = (element) => {
+      const rect = element.getBoundingClientRect();
+      const style = window.getComputedStyle(element);
+      return {
+        visible: rect.width > 0
+          && rect.height > 0
+          && style.display !== "none"
+          && style.visibility !== "hidden"
+          && Number(style.opacity) > 0,
+        x: Math.round(rect.x * 100) / 100,
+        y: Math.round(rect.y * 100) / 100,
+        width: Math.round(rect.width * 100) / 100,
+        height: Math.round(rect.height * 100) / 100,
+      };
+    };
+    const cards = [...document.querySelectorAll("button.unit-card")].map((card) => {
+      const rect = visibleRect(card);
+      const ariaLabel = card.getAttribute("aria-label") ?? "";
+      const cost = ariaLabel.match(/コスト\s*(\d+)/u)?.[1] ?? null;
+      return {
+        kind: card.getAttribute("data-kind"),
+        slot: card.getAttribute("data-slot-index"),
+        state: card.getAttribute("data-state"),
+        blockReason: card.getAttribute("data-block-reason"),
+        ariaDisabled: card.getAttribute("aria-disabled"),
+        ariaLabel,
+        cost: cost === null ? null : Number(cost),
+        text: (card.textContent ?? "").trim().replace(/\s+/gu, " ").slice(0, 180),
+        rect,
+      };
+    });
+    const humanFighters = (snapshot?.fighters ?? []).filter((fighter) => (
+      fighter.side === "human" && Number(fighter.hp) > 0
+    ));
+    const mission = snapshot?.stageMission ?? null;
+    const objectiveText = [...document.querySelectorAll(
+      ".battle-objective, [data-battle-objective], [aria-label*='目標' i]",
+    )].map((element) => (element.textContent ?? "").trim()).filter(Boolean);
+    return {
+      capturedAt: new Date().toISOString(),
+      pageClosed: false,
+      url: location.href,
+      requestedKind: kind,
+      requestedSlot: slot,
+      phase: diagnosticPhase,
+      pageLifecycle: {
+        visibilityState: document.visibilityState,
+        hidden: document.hidden,
+        readyState: document.readyState,
+        v100Phase: document.querySelector(".v100-shell")?.getAttribute("data-v100-phase") ?? null,
+        battleScreen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
+      },
+      cards,
+      visibleCardCount: cards.filter((card) => card.rect.visible).length,
+      selectedCard: document.querySelector("button.unit-card[aria-pressed='true'], button.unit-card.selected")?.getAttribute("data-kind") ?? null,
+      deployedUnitCount: humanFighters.length,
+      battle: snapshot ? {
+        screen: snapshot.screen ?? null,
+        stageId: snapshot.stageId ?? null,
+        elapsed: Number(snapshot.time ?? 0),
+        phase: snapshot.phase ?? null,
+        running: snapshot.running === true,
+        paused: snapshot.paused === true,
+        over: snapshot.over === true,
+        won: snapshot.won === true,
+        wave: snapshot.wave ?? null,
+        eventIndex: snapshot.eventIndex ?? null,
+        timelineLength: snapshot.timelineLength ?? null,
+        energy: Number(snapshot.energy ?? NaN),
+        deployQueue: snapshot.deployQueue ?? [],
+        deployCooldowns: snapshot.deployCooldowns ?? {},
+        formationKinds: snapshot.formationKinds ?? [],
+        pendingSpawnCount: snapshot.pendingSpawnCount ?? null,
+        mission: mission ? {
+          missionType: mission.missionType ?? null,
+          transitions: mission.transitions ?? [],
+          completed: mission.completed === true,
+          sealed: mission.sealed === true,
+        } : null,
+        objective: snapshot.objective ?? objectiveText,
+      } : null,
+      fighters: humanFighters.map((fighter) => ({
+        kind: fighter.kind,
+        hp: fighter.hp,
+        combatReady: fighter.combatReady,
+        x: fighter.x,
+        y: fighter.y,
+      })),
+      objectiveText,
+    };
+  }, { requestedKind, requestedSlot, phase }).catch((error) => ({
+    capturedAt: new Date().toISOString(),
+    pageClosed: page.isClosed(),
+    requestedKind,
+    requestedSlot,
+    phase,
+    evaluateError: String(error),
+  }));
+}
+
+function deploymentWasAccepted(before, after, requestedKind) {
+  if (!after || after.pageClosed) return false;
+  const beforeBattle = before?.battle ?? {};
+  const afterBattle = after?.battle ?? {};
+  const queueAccepted = Array.isArray(afterBattle.deployQueue)
+    && afterBattle.deployQueue.includes(requestedKind);
+  const energyAccepted = Number.isFinite(Number(beforeBattle.energy))
+    && Number.isFinite(Number(afterBattle.energy))
+    && Number(afterBattle.energy) < Number(beforeBattle.energy) - 0.01;
+  const humanAccepted = Number(after.deployedUnitCount ?? 0) > Number(before?.deployedUnitCount ?? 0);
+  const cardAfter = (after.cards ?? []).find((card) => card.kind === requestedKind);
+  const cardAccepted = cardAfter && cardAfter.state !== "ready";
+  return queueAccepted || energyAccepted || humanAccepted || cardAccepted;
+}
+
+async function waitForDeploymentAcceptance(page, before, requestedKind, requestedSlot, timeoutMs = 5_000) {
+  const deadline = Date.now() + timeoutMs;
+  let latest = await readBattleDeploymentDiagnostics(page, {
+    requestedKind,
+    requestedSlot,
+    phase: "after-click",
+  });
+  while (!deploymentWasAccepted(before, latest, requestedKind) && Date.now() < deadline) {
+    await page.waitForTimeout(60);
+    latest = await readBattleDeploymentDiagnostics(page, {
+      requestedKind,
+      requestedSlot,
+      phase: "after-click-wait",
+    });
+  }
+  return {
+    accepted: deploymentWasAccepted(before, latest, requestedKind),
+    diagnostics: latest,
+  };
+}
 function isTransientBrowserClosure(error) {
   return /target page, context or browser has been closed/i.test(String(error));
 }
@@ -764,20 +915,7 @@ function isRetryableCaptureFailure(error) {
   const message = String(error);
   return isTransientBrowserClosure(error)
     || /request failures:\s*\["[^"]*\/asset-manifest\.json :: Load request cancelled"\]/i.test(message)
-    || /combat activity did not become visible: TimeoutError: page\.waitForFunction: Timeout 45000ms exceeded/i.test(message)
-    // Compact WebKit can finish the real battle transition while the unit
-    // rail is repainting. Retry the same production route on a clean
-    // pre-capture readiness miss; do not skip deployment or accept a partial
-    // capture when the retry also fails.
-    || (/no ready battle unit for slot \d+/i.test(message)
-      && hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message))
-    // A compact WebKit card rail can still be repainting after the live
-    // data-kind locator has resolved. Retry only a battle capture's clean
-    // deployment-click timeout; a second failure remains a hard QA failure.
-    || (/webkit-\d+x\d+-battle-(?:normal|boss|extra) failed: TimeoutError: locator\.click: Timeout 30000ms exceeded/i.test(message)
-      && hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message))
-    || (/battle unit \d+ never entered cooldown from the ready state/i.test(message)
-      && hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message));
+    || /combat activity did not become visible: TimeoutError: page\.waitForFunction: Timeout 45000ms exceeded/i.test(message);
 }
 
 async function captureState(engineName, viewport, state, configure) {
@@ -1207,18 +1345,39 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             continue;
           }
           const kind = selectedKind;
-          await click(page, card, `deploy ready battle unit ${slot + 1}`);
-          await page.waitForTimeout(60);
-          const trackedCard = kind
-            ? page.locator(`button.unit-card[data-kind="${kind}"]`).first()
-            : card;
-          const nextState = await trackedCard.getAttribute("data-state").catch(() => null);
-          if (nextState !== "ready") {
-            if (kind) deployedKinds.add(kind);
-            deployed = true;
+          const before = await readBattleDeploymentDiagnostics(page, {
+            requestedKind: kind,
+            requestedSlot: slot + 1,
+            phase: "before-click",
+          });
+          deploymentTrace.push({ slot: slot + 1, requestedKind: kind, action: "before-click", diagnostics: before });
+          let clickError = null;
+          try {
+            await click(page, card, `deploy ready battle unit ${slot + 1}`);
+          } catch (error) {
+            clickError = String(error);
           }
-        }
-        invariant(deployed, `no ready battle unit for slot ${slot + 1}`);
+          const acceptance = await waitForDeploymentAcceptance(
+            page,
+            before,
+            kind,
+            slot + 1,
+            clickError ? 1_000 : 5_000,
+          );
+          deploymentTrace.push({
+            slot: slot + 1,
+            requestedKind: kind,
+            action: clickError ? "click-error-after-state-check" : "after-click",
+            clickError,
+            accepted: acceptance.accepted,
+            diagnostics: acceptance.diagnostics,
+          });
+          if (!acceptance.accepted) {
+            throw new Error(`battle unit ${slot + 1} deployment was not accepted by production runtime deploymentDiagnostics=${JSON.stringify({ before, after: acceptance.diagnostics, clickError })}`);
+          }
+          deployedKinds.add(kind);
+          deployed = true;
+        }invariant(deployed, `no ready battle unit for slot ${slot + 1}`);
         await page.waitForTimeout(60);
       }
     } else {
@@ -1242,16 +1401,37 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           }
           if (card) {
             const kind = await card.getAttribute("data-kind");
-            await click(page, card, `deploy boss frontline unit ${deployment + 1}`);
-            await page.waitForTimeout(140);
-            // The filtered ready-card locator is intentionally live. After a
-            // successful click its nth element can now refer to another
-            // ready card, so check the clicked unit by its stable data-kind.
-            const trackedCard = kind
-              ? page.locator(`button.unit-card[data-kind="${kind}"]`).first()
-              : card;
-            const nextState = await trackedCard.getAttribute("data-state");
-            if (nextState !== "ready") {
+            const before = await readBattleDeploymentDiagnostics(page, {
+              requestedKind: kind,
+              requestedSlot: deployment + 1,
+              phase: "before-click",
+            });
+            deploymentTrace.push({ slot: deployment + 1, requestedKind: kind, action: "before-click", diagnostics: before });
+            let clickError = null;
+            try {
+              await click(page, card, `deploy boss frontline unit ${deployment + 1}`);
+            } catch (error) {
+              clickError = String(error);
+            }
+            const acceptance = await waitForDeploymentAcceptance(
+              page,
+              before,
+              kind,
+              deployment + 1,
+              clickError ? 1_000 : 5_000,
+            );
+            deploymentTrace.push({
+              slot: deployment + 1,
+              requestedKind: kind,
+              action: clickError ? "click-error-after-state-check" : "after-click",
+              clickError,
+              accepted: acceptance.accepted,
+              diagnostics: acceptance.diagnostics,
+            });
+            if (clickError && !acceptance.accepted) {
+              throw new Error(`boss frontline unit ${deployment + 1} deployment click failed deploymentDiagnostics=${JSON.stringify({ before, after: acceptance.diagnostics, clickError })}`);
+            }
+            if (acceptance.accepted) {
               deployed = true;
               if (kind) deployedKinds.add(kind);
               break;
@@ -1359,6 +1539,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     expectedEnemyKinds: [...new Set(definition?.timeline?.flatMap((wave) => wave.units) ?? [])],
     observedEnemyKinds: runtime.enemyKinds,
     fighterKinds: runtime.fighterKinds,
+    deploymentTrace,
   };
 }
 
