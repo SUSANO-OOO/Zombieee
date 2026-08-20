@@ -1431,6 +1431,22 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             requestedSlot: slot + 1,
             phase: "before-click",
           });
+          const requestedCard = before.cards?.find((entry) => entry.kind === kind);
+          // The selector and the production runtime can cross a resource tick
+          // between collection/read and click. A card that was ready in the
+          // stale DOM but is already insufficient in the runtime must not be
+          // treated as a failed player action or clicked again.
+          if (requestedCard?.state !== "ready" || requestedCard.ariaDisabled === "true") {
+            deploymentTrace.push({
+              slot: slot + 1,
+              requestedKind: kind,
+              action: "stale-ready-card",
+              accepted: false,
+              diagnostics: before,
+            });
+            await page.waitForTimeout(120);
+            continue;
+          }
           deploymentTrace.push({ slot: slot + 1, requestedKind: kind, action: "before-click", diagnostics: before });
           let clickError = null;
           try {
