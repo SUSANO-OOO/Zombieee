@@ -717,6 +717,12 @@ async function closePhaseGBrowsers() {
   await Promise.all(browsers.map((browser) => browser.close().catch(() => {})));
 }
 
+async function resetPhaseGBrowser(engineName) {
+  const browser = phaseGBrowsers.get(engineName);
+  phaseGBrowsers.delete(engineName);
+  await browser?.close().catch(() => {});
+}
+
 async function captureStateImpl(engineName, viewport, state, configure) {
   const browser = await phaseGBrowser(engineName);
   const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
@@ -797,7 +803,9 @@ async function captureStateImpl(engineName, viewport, state, configure) {
       })(),
       phaseGActivity: window.__PHASE_G_COMBAT_ACTIVITY__ ?? null,
     })).catch(() => null);
-    throw new Error(`${label} failed: ${String(error)} state=${JSON.stringify(failureState)} diagnostics=${JSON.stringify(diagnostics)}`);
+    const failure = new Error(`${label} failed: ${String(error)} state=${JSON.stringify(failureState)} diagnostics=${JSON.stringify(diagnostics)}`);
+    failure.phaseGFailure = { label, failureState, diagnostics };
+    throw failure;
   } finally {
     await context.close();
   }
@@ -974,12 +982,25 @@ async function captureState(engineName, viewport, state, configure) {
   if (onlyState && state !== onlyState) return null;
   if (onlyVariant && state !== "battle-extra") return null;
   let lastError = null;
+  let firstFailure = null;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
-      return await captureStateImpl(engineName, viewport, state, configure);
+      const result = await captureStateImpl(engineName, viewport, state, configure);
+      if (firstFailure) result.retryDiagnostics = firstFailure;
+      return result;
     } catch (error) {
       lastError = error;
-      if (attempt === 2 || !isRetryableCaptureFailure(error)) throw error;
+      const failureDetails = error?.phaseGFailure ?? { message: String(error) };
+      if (!firstFailure) firstFailure = { attempt, ...failureDetails };
+      if (attempt === 2 || !isRetryableCaptureFailure(error)) {
+        if (firstFailure && attempt === 2) {
+          const finalError = new Error(`${String(error)} firstAttempt=${JSON.stringify(firstFailure)}`);
+          finalError.cause = error;
+          throw finalError;
+        }
+        throw error;
+      }
+      if (isTransientBrowserClosure(error)) await resetPhaseGBrowser(engineName);
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
