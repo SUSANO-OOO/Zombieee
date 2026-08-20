@@ -7,6 +7,8 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
+import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
+import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
 import { deriveV100ProductionEnemyCoverage, V100_REPRESENTATIVE_COMBAT_CONTRACT } from "../app/v100PhaseGContract.js";
 import { V100_COMBAT_FX_INVENTORY } from "../app/v100CombatPresentation.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
@@ -72,6 +74,25 @@ const storageKeys = ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", 
 const results = [];
 const phaseGBrowsers = new Map();
 
+const dialogueEvidenceTargets = Object.freeze(Object.fromEntries(
+  ["left", "right"].map((side) => {
+    for (const event of Object.values(V100_STORY_EVENTS)) {
+      const nodeIndex = event.nodes.findIndex((node, index) => node.kind === "dialogue"
+        && node.portraitOwner
+        && v100EventPresentationFor({ eventId: event.id, phase: event.id.endsWith(":post") ? "post" : "event", node, nodeIndex: index }).portraitSide === side);
+      if (nodeIndex >= 0) {
+        return [side, Object.freeze({
+          eventId: event.id,
+          phase: event.id.endsWith(":post") ? "post" : "event",
+          stageNumber: event.stageNumber ?? 1,
+          nodeIndex,
+        })];
+      }
+    }
+    throw new Error(`No canonical ${side} dialogue evidence target exists`);
+  }),
+));
+
 await mkdir(evidenceDir, { recursive: true });
 
 function invariant(condition, message) {
@@ -133,12 +154,13 @@ function resultSave(won) {
   return fullSave({ flowState: { phase: "result", eventId: null, stageId, stageNumber: 1, destination: "result", nodeIndex: 0, firstClear: won, finalized: false }, pendingResult });
 }
 
-function eventSave(phase, eventId) {
-  const stageId = V100_STAGE_IDS[29];
+function eventSave(phase, eventId, { nodeIndex = 0, stageNumber = 30 } = {}) {
+  const boundedStageNumber = Math.min(V100_STAGE_IDS.length, Math.max(1, Math.floor(Number(stageNumber) || 1)));
+  const stageId = V100_STAGE_IDS[boundedStageNumber - 1];
   return fullSave({
     availableStageIds: V100_STAGE_IDS,
     completedStageIds: V100_STAGE_IDS.slice(0, 29),
-    flowState: { phase, eventId, stageId, stageNumber: 30, destination: phase, nodeIndex: 0, firstClear: false, finalized: true },
+    flowState: { phase, eventId, stageId, stageNumber: boundedStageNumber, destination: phase, nodeIndex, firstClear: false, finalized: true },
   });
 }
 
@@ -330,8 +352,8 @@ async function overflowAudit(page) {
 
 const stateContracts = Object.freeze({
   "title-name": { phases: ["name"], selectors: [".v100-title-screen", "#v100-name-title", "#v100-player-name", ".v100-name-card .v100-primary"] },
-  "dialogue-left": { phases: ["event"], selectors: [".v100-event-panel", '[data-v100-state="dialogue-left"]', ".v100-event-actions .v100-primary"] },
-  "dialogue-right": { phases: ["event"], selectors: [".v100-event-panel", '[data-v100-state="dialogue-right"]', ".v100-event-actions .v100-primary"] },
+  "dialogue-left": { phases: [dialogueEvidenceTargets.left.phase], selectors: [".v100-event-panel", '[data-v100-state="dialogue-left"]', ".v100-event-actions .v100-primary"] },
+  "dialogue-right": { phases: [dialogueEvidenceTargets.right.phase], selectors: [".v100-event-panel", '[data-v100-state="dialogue-right"]', ".v100-event-actions .v100-primary"] },
   "map-normal": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-map-layout", ".v100-map-hero", ".v100-route-label", ".v100-stage-list", ".v100-map-side", ".v100-map-actions"] },
   "map-locked-boss": { phases: ["map"], surfaces: ["campaign"], selectors: [".v100-map-layout", ".v100-route-label", ".v100-stage-list", ".v100-boss-callout", ".v100-map-side"] },
   formation: { phases: ["formation"], selectors: [".v100-formation-panel", ".v100-slot-track", ".v100-roster-card", ".v100-formation-footer .v100-primary"] },
@@ -891,14 +913,11 @@ async function freshNamePage(page) {
 }
 
 async function storyPage(page, targetState) {
-  await freshNamePage(page);
-  await page.locator("#v100-player-name").fill("QAプレイヤー");
-  await click(page, page.locator(".v100-name-card .v100-primary"), "start V1 campaign");
-  for (let index = 0; index < 20; index += 1) {
-    if (await visible(page, `[data-v100-state="${targetState === "dialogue-left" ? "dialogue-left" : "dialogue-right"}"]`)) return;
-    await click(page, page.locator(".v100-event-actions .v100-primary"), "dialogue advance");
-  }
-  throw new Error(`${targetState} dialogue was not reachable`);
+  const side = targetState === "dialogue-left" ? "left" : "right";
+  const target = dialogueEvidenceTargets[side];
+  await openRoute(page, eventSave(target.phase, target.eventId, target));
+  await page.locator(`[data-v100-event-id="${target.eventId}"][data-v100-node-index="${target.nodeIndex}"]`).waitFor({ state: "visible", timeout });
+  await page.locator(`[data-v100-state="dialogue-${side}"]`).waitFor({ state: "visible", timeout });
 }
 
 async function mapPage(page, save) {
