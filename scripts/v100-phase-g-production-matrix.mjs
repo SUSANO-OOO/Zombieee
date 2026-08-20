@@ -282,6 +282,9 @@ async function startCombatRuntimeObserver(page) {
       const fighterActors = new Set(activity.fighterActors ?? []);
       const attackingActors = new Set(activity.attackingActors ?? []);
       const statusMarkers = new Set(activity.statusMarkers ?? []);
+      const attackIdentity = [...(activity.attackIdentity ?? [])];
+      const pendingWeaponHits = [...(activity.pendingWeaponHits ?? [])];
+      const battlePresentationEffects = [...(activity.battlePresentationEffects ?? [])];
       const actorById = new Map((snapshot.fighters ?? []).map((fighter) => [String(fighter.id), fighter]));
       for (const fighter of snapshot.fighters ?? []) {
         if (!fighter.side || !fighter.kind) continue;
@@ -312,6 +315,9 @@ async function startCombatRuntimeObserver(page) {
           attackingActors.add(actorKey);
         }
       }
+      for (const attack of snapshot.attackIdentity ?? []) attackIdentity.push(attack);
+      for (const hit of snapshot.pendingWeaponHits ?? []) pendingWeaponHits.push(hit);
+      for (const effect of snapshot.battlePresentation?.effects ?? []) battlePresentationEffects.push(effect);
       if ((snapshot.damageTexts ?? []).some((text) => /索敵|マーク|目標|ロック/u.test(String(text?.value ?? "")))) {
         statusMarkers.add("status-mission-target");
       }
@@ -320,6 +326,9 @@ async function startCombatRuntimeObserver(page) {
         fighterActors: [...fighterActors],
         attackingActors: [...attackingActors],
         statusMarkers: [...statusMarkers],
+        attackIdentity: attackIdentity.slice(-24),
+        pendingWeaponHits: pendingWeaponHits.slice(-24),
+        battlePresentationEffects: battlePresentationEffects.slice(-24),
       };
     };
     const timer = window.setInterval(observe, 40);
@@ -340,9 +349,13 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
       if (!snapshot || snapshot.screen !== "battle") return false;
       const hasFighters = Array.isArray(snapshot.fighters) && snapshot.fighters.some((fighter) => fighter.hp > 0);
+      const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const hasPresentation = (snapshot.attackIdentity?.length ?? 0) > 0
         || (snapshot.pendingWeaponHits?.length ?? 0) > 0
-        || (snapshot.battlePresentation?.effects?.length ?? 0) > 0;
+        || (snapshot.battlePresentation?.effects?.length ?? 0) > 0
+        || (activity.attackIdentity?.length ?? 0) > 0
+        || (activity.pendingWeaponHits?.length ?? 0) > 0
+        || (activity.battlePresentationEffects?.length ?? 0) > 0;
       if (!hasFighters || !hasPresentation) return false;
       window.__PHASE_G_COMBAT_ACTIVITY__ = {
         ...(window.__PHASE_G_COMBAT_ACTIVITY__ ?? {}),
