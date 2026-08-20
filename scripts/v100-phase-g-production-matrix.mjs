@@ -771,6 +771,11 @@ function isRetryableCaptureFailure(error) {
     // capture when the retry also fails.
     || (/no ready battle unit for slot \d+/i.test(message)
       && hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message))
+    // A compact WebKit card rail can still be repainting after the live
+    // data-kind locator has resolved. Retry only a battle capture's clean
+    // deployment-click timeout; a second failure remains a hard QA failure.
+    || (/webkit-\d+x\d+-battle-(?:normal|boss|extra) failed: TimeoutError: locator\.click: Timeout 30000ms exceeded/i.test(message)
+      && hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message))
     || (/battle unit \d+ never entered cooldown from the ready state/i.test(message)
       && hasCleanCaptureDiagnosticsWithOptionalManifestCancellation(message));
 }
