@@ -771,6 +771,7 @@ function isRetryableCaptureFailure(error) {
 
 async function captureState(engineName, viewport, state, configure) {
   if (onlyState && state !== onlyState) return null;
+  if (onlyVariant && state !== "battle-extra") return null;
   let lastError = null;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
@@ -1164,6 +1165,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         const deadline = Date.now() + battleTimeout;
         let deployed = false;
         while (!deployed && Date.now() < deadline) {
+          if (page.isClosed()) throw new Error("Target page, context or browser has been closed during non-boss unit deployment");
           const readyCards = page.locator('button.unit-card[data-state="ready"][aria-disabled="false"]');
           const readyCount = await readyCards.count().catch(() => 0);
           let card = null;
@@ -1203,6 +1205,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       for (let deployment = 0; deployment < bossDeploymentLimit; deployment += 1) {
         let deployed = false;
         for (let attempt = 0; attempt < 180; attempt += 1) {
+          if (page.isClosed()) throw new Error("Target page, context or browser has been closed during boss unit deployment");
           const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
           if (!battleVisible) break;
           if (await bossIsLive()) break;
