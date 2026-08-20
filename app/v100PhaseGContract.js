@@ -1,4 +1,5 @@
 import { V100_COMBAT_FX_INVENTORY } from "./v100CombatPresentation.js";
+import { CAMPAIGN_STAGES } from "./campaign.js";
 import { productionEnemyRuntimeContract } from "./productionEnemyRuntime.js";
 
 const COMBAT_SEQUENCE = Object.freeze(["source", "prep", "travel", "contact", "impact", "target-reaction", "aftermath"]);
@@ -80,7 +81,8 @@ export function representativeRuntimeObservationRule(contract) {
     return Object.freeze({ kind: "vehicle", expected: "vehicle-barrage", cueIds: Object.freeze(["weapon-barrage"]) });
   }
   if (contract.actor === "stage-nishijin-station-gate") {
-    return Object.freeze({ kind: "mission", expectedStageId: "stage-nishijin-station-gate", expectedMissionType: "escort" });
+    const stage = CAMPAIGN_STAGES.find(({ id }) => id === "stage-nishijin-station-gate");
+    return Object.freeze({ kind: "mission", expectedStageId: stage?.id ?? "stage-nishijin-station-gate", expectedMissionType: stage?.missionType ?? null });
   }
   if (contract.actor === "status-mission-target") {
     return Object.freeze({ kind: "status", expected: "status-mission-target" });

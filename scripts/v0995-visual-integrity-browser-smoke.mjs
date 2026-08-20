@@ -30,6 +30,17 @@ await mkdir(compactDir, { recursive: true });
 const invariant = (condition, message) => { if (!condition) throw new Error(message); };
 const diagnostics = [];
 const faultDiagnostics = [];
+const transportRetries = [];
+const isTransientBrowserClosure = (error) => {
+  let current = error;
+  for (let depth = 0; current && depth < 4; depth += 1) {
+    if (/Target page, context or browser has been closed|Target closed|Browser has been closed/i.test(String(current.message ?? current))) {
+      return true;
+    }
+    current = current.cause;
+  }
+  return false;
+};
 const missionStage = CAMPAIGN_STAGES.find(({ missionType }) => missionType === "sequential-seal");
 const lateEnemyStage = CAMPAIGN_STAGES.find(({ waves }) => waves?.some(({ groups }, index) => (
   index > 0 && groups.length > 0
@@ -54,9 +65,7 @@ const faultClasses = [
   { className: "mission", stageId: missionStage.id, path: missionPlan.stageObjects.find(({ category }) => category === "mission").path, plan: missionPlan },
   { className: "support", stageId: missionStage.id, path: missionPlan.persistent.find(({ category }) => category === "support").path, plan: missionPlan },
 ];
-for (const engineName of engines) {
-  const browserType = playwright[engineName];
-  invariant(browserType, `unknown browser ${engineName}`);
+const runEngine = async (engineName, browserType) => {
   const browser = await browserType.launch({ headless: true });
   try {
     for (const viewport of viewports) {
@@ -306,7 +315,30 @@ for (const engineName of engines) {
       }
     }
   } finally {
-    await browser.close();
+    await browser.close().catch(() => {});
+  }
+};
+
+for (const engineName of engines) {
+  const browserType = playwright[engineName];
+  invariant(browserType, `unknown browser ${engineName}`);
+  const diagnosticsStart = diagnostics.length;
+  const faultDiagnosticsStart = faultDiagnostics.length;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await runEngine(engineName, browserType);
+      break;
+    } catch (error) {
+      diagnostics.length = diagnosticsStart;
+      faultDiagnostics.length = faultDiagnosticsStart;
+      if (attempt === 0 && isTransientBrowserClosure(error)) {
+        const retry = { engine: engineName, attempt: attempt + 1, reason: String(error.message ?? error) };
+        transportRetries.push(retry);
+        console.warn(`[v0995 visual QA] retrying ${engineName} after transient browser closure: ${retry.reason}`);
+        continue;
+      }
+      throw error;
+    }
   }
 }
 
@@ -315,6 +347,7 @@ const report = {
   build: await productionBuildIdentity(),
   diagnostics,
   faultDiagnostics,
+  transportRetries,
 };
 const reportFile = path.join(evidenceDir, "visual-integrity-report.json");
 await writeFile(reportFile, `${JSON.stringify(report, null, 2)}\n`);
@@ -326,6 +359,7 @@ await writeFile(compactFile, `${JSON.stringify({
   faultCases: faultDiagnostics.length,
   missionFinalCanvasCases: faultDiagnostics.filter(({ finalCanvas }) => finalCanvas?.pass).length,
   missionFallbackPixelCount: faultDiagnostics.reduce((sum, { blocked }) => sum + Number(blocked.mount?.fallbackDrawCount ?? 0), 0),
+  transportRetries,
   failures: [],
 }, null, 2)}\n`);
 const representativeMissionImages = faultDiagnostics
