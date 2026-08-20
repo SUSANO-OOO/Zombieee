@@ -42,7 +42,7 @@ import {
   markV100FlowEventRead,
   v100StoryFlowCheckpoint,
 } from "./v100StoryFlow.js";
-import { v100StoryEventView } from "./v100StoryEvents.js";
+import { v100StoryEventFor, v100StoryEventView } from "./v100StoryEvents.js";
 import { v100ProductionSessionFor } from "./v100BattleAdapter.js";
 import { createV100EventAudioOwner } from "./v100EventAudio.js";
 import { v100EventPresentationFor } from "./v100EventPresentation.js";
@@ -114,6 +114,19 @@ function formatReason(reason: string | undefined) {
 
 function portraitFor(owner: string | null | undefined) {
   return owner ? PORTRAIT_PATHS[owner] ?? EVENT_PORTRAIT_PROFILES[owner]?.path ?? null : null;
+}
+
+function previousDialoguePortraitFor(eventId: string | null, nodeIndex: number, currentOwner: string | null | undefined) {
+  if (!eventId || nodeIndex <= 0 || !currentOwner) return null;
+  const event = v100StoryEventFor(eventId);
+  if (!event) return null;
+  for (let index = nodeIndex - 1; index >= 0; index -= 1) {
+    const candidate = event.nodes[index];
+    if (candidate?.kind === "dialogue" && candidate.portraitOwner && candidate.portraitOwner !== currentOwner) {
+      return candidate;
+    }
+  }
+  return null;
 }
 
 function isEventPhase(phase: Flow["phase"]) {
@@ -729,9 +742,13 @@ function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, p
   const portrait = portraitFor(node.portraitOwner);
   const resolvedPresentation = presentation ?? v100EventPresentationFor({ eventId, phase, node, nodeIndex });
   const portraitSide = resolvedPresentation?.portraitSide ?? (node.portraitKind === "right" || (node.portraitKind !== "left" && node.portraitOwner && ["segawa", "red-panther-commander"].includes(node.portraitOwner)) ? "right" : "left");
+  const secondaryNode = node.kind === "dialogue" ? previousDialoguePortraitFor(eventId, nodeIndex, node.portraitOwner) : null;
+  const secondaryPortrait = portraitFor(secondaryNode?.portraitOwner);
+  const secondaryPortraitSide = portraitSide === "right" ? "left" : portraitSide === "left" ? "right" : "none";
   const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "作戦情報" : node.kind === "system" ? "無線記録" : "";
   const playerFacingText = publicDisplayText(node.text || "…");
-  return <div className={`v100-story-node v100-node-${node.kind ?? "action"}`} data-portrait-side={portraitSide} data-v100-state={`dialogue-${portraitSide}`} data-v100-node-kind={resolvedPresentation?.nodeKind ?? node.kind ?? "action"} data-v100-node-label={resolvedPresentation?.nodeLabel ?? "場面"} data-v100-transition={resolvedPresentation?.transition ?? undefined} data-v100-audio-cue={resolvedPresentation?.cueId ?? undefined}>
+  return <div className={`v100-story-node v100-node-${node.kind ?? "action"}`} data-portrait-side={portraitSide} data-portrait-count={portrait ? secondaryPortrait ? "2" : "1" : "0"} data-v100-state={`dialogue-${portraitSide}`} data-v100-node-kind={resolvedPresentation?.nodeKind ?? node.kind ?? "action"} data-v100-node-label={resolvedPresentation?.nodeLabel ?? "場面"} data-v100-transition={resolvedPresentation?.transition ?? undefined} data-v100-audio-cue={resolvedPresentation?.cueId ?? undefined}>
+    {secondaryPortrait && <img className="v100-portrait v100-portrait-secondary" data-portrait-side={secondaryPortraitSide} src={secondaryPortrait} alt="" aria-hidden="true" />}
     {portrait && <img className="v100-portrait" src={portrait} alt={`${node.speaker ?? "登場人物"}の立ち絵`} />}
     <div className="v100-node-copy">{nodeLabel && <span className="v100-node-kind">{nodeLabel}</span>}<p>{playerFacingText}</p></div>
   </div>;

@@ -29,6 +29,8 @@ const eventCases = Object.freeze([
   { id: "prologue", eventId: "v100:event:prologue", phase: "event" },
   { id: "boss-reveal", eventId: bossStage.eventIds.pre, phase: "event" },
   { id: "battle-post", eventId: bossStage.eventIds.post, phase: "post" },
+  { id: "two-speaker", eventId: "v100:event:s13:post", phase: "post", nodeIndex: 2, advance: false },
+  { id: "speaker-switch", eventId: "v100:event:s13:post", phase: "post", nodeIndex: 1, expectedInitialSide: "left", expectedPostActionSide: "right" },
   { id: "ending", eventId: "v100:event:ending", phase: "ending" },
   { id: "credits", eventId: "v100:event:credits", phase: "credits" },
   { id: "epilogue", eventId: "v100:event:epilogue", phase: "epilogue" },
@@ -75,7 +77,7 @@ function eventSave(eventCase) {
       stageId: bossStage.id,
       stageNumber: bossStage.number,
       destination: eventCase.phase,
-      nodeIndex: 0,
+      nodeIndex: eventCase.nodeIndex ?? 0,
       firstClear: false,
       finalized: true,
     },
@@ -102,7 +104,8 @@ function uniqueRequestedKeys(receipts) {
 }
 
 async function portraitAuditFor(page, selector) {
-  const portrait = page.locator(`${selector} .v100-portrait`).first();
+  if (await page.locator(selector).count() === 0) return null;
+  const portrait = page.locator(`${selector} .v100-portrait:not(.v100-portrait-secondary)`).first();
   if (await portrait.count() === 0) return null;
   return portrait.evaluate((element) => {
     const style = getComputedStyle(element);
@@ -117,12 +120,39 @@ async function portraitAuditFor(page, selector) {
   });
 }
 
+async function dialogueSurfaceAuditFor(page, selector) {
+  if (await page.locator(selector).count() === 0) return null;
+  if ((await page.locator(`${selector}[data-v100-event-category="credits"]`).count()) > 0) return null;
+  const copy = page.locator(`${selector} .v100-node-copy`).first();
+  if (await copy.count() === 0) return null;
+  return copy.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+    return {
+      backgroundColor: style.backgroundColor,
+      backgroundImage: style.backgroundImage,
+      opacity: style.opacity,
+      width: rect.width,
+      height: rect.height,
+      portraitCount: element.parentElement?.getAttribute("data-portrait-count") ?? "0",
+    };
+  });
+}
+
 function assertPortraitAudit(name, audit) {
   if (!audit) return;
   invariant(audit.opacity === "1", `${name} portrait opacity ${audit.opacity}`);
   invariant(audit.objectFit === "contain", `${name} portrait object-fit ${audit.objectFit}`);
   invariant(audit.backgroundColor === "rgba(0, 0, 0, 0)", `${name} portrait background ${audit.backgroundColor}`);
   invariant(audit.width >= 48 && audit.height >= 64, `${name} portrait unusable ${JSON.stringify(audit)}`);
+}
+
+function assertDialogueSurfaceAudit(name, audit) {
+  if (!audit) return;
+  invariant(audit.backgroundImage === "none", `${name} dialogue surface image ${audit.backgroundImage}`);
+  invariant(audit.backgroundColor.startsWith("rgb("), `${name} dialogue surface is translucent ${audit.backgroundColor}`);
+  invariant(audit.opacity === "1", `${name} dialogue surface opacity ${audit.opacity}`);
+  invariant(audit.width >= 180 && audit.height >= 48, `${name} dialogue surface unusable ${JSON.stringify(audit)}`);
 }
 
 for (const engine of engines) {
@@ -151,28 +181,44 @@ for (const engine of engines) {
             category: element.getAttribute("data-v100-event-category"),
             phase: element.getAttribute("data-v100-transition"),
             nodeIndex: element.getAttribute("data-v100-node-index"),
+            portraitSide: element.querySelector(".v100-story-node")?.getAttribute("data-portrait-side") ?? "none",
+            portraitCount: element.querySelector(".v100-story-node")?.getAttribute("data-portrait-count") ?? "0",
             audioOwner: element.getAttribute("data-v100-audio-owner"),
             bodyText: document.body.innerText.trim(),
             overflow: Math.max(document.documentElement.scrollWidth - document.documentElement.clientWidth, document.body.scrollWidth - document.body.clientWidth),
           }));
           const initialPortraitAudit = await portraitAuditFor(page, eventSelector);
-          const expected = v100EventPresentationFor({ eventId: eventCase.eventId, phase: eventCase.phase, node: { kind: "action" }, nodeIndex: 0 });
+          const initialDialogueSurfaceAudit = await dialogueSurfaceAuditFor(page, eventSelector);
+          const expected = v100EventPresentationFor({ eventId: eventCase.eventId, phase: eventCase.phase, node: { kind: "action" }, nodeIndex: eventCase.nodeIndex ?? 0 });
           invariant(observed.category === expected.category, `${name} category ${observed.category} !== ${expected.category}`);
           invariant(observed.audioOwner === "v100-event-runtime", `${name} event audio owner missing`);
           invariant(observed.bodyText.length > 0, `${name} blank body`);
           invariant(observed.overflow <= 1, `${name} horizontal overflow ${observed.overflow}`);
+          invariant(!eventCase.expectedInitialSide || observed.portraitSide === eventCase.expectedInitialSide, `${name} initial speaker side ${observed.portraitSide} !== ${eventCase.expectedInitialSide}`);
+          if (eventCase.id === "two-speaker") invariant(observed.portraitCount === "2", `${name} expected two portraits, got ${observed.portraitCount}`);
           assertPortraitAudit(name, initialPortraitAudit);
+          assertDialogueSurfaceAudit(name, initialDialogueSurfaceAudit);
           await page.waitForTimeout(180);
           const before = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
           invariant(before?.owner === "v100-event-runtime", `${name} QA audio owner missing`);
           invariant((before.receipts ?? []).some(({ action }) => action === "requested"), `${name} has no requested event audio`);
           const primary = page.locator(".v100-event-actions .v100-primary");
-          if (await primary.isVisible().catch(() => false)) {
+          if (eventCase.advance !== false && await primary.isVisible().catch(() => false)) {
             await clickUsable(primary, `${name} event action`);
             await page.waitForTimeout(220);
           }
+          const postActionEvent = page.locator(eventSelector);
+          const postActionObserved = await postActionEvent.count() > 0
+            ? await postActionEvent.evaluate((element) => ({
+              portraitSide: element.querySelector(".v100-story-node")?.getAttribute("data-portrait-side") ?? "none",
+              portraitCount: element.querySelector(".v100-story-node")?.getAttribute("data-portrait-count") ?? "0",
+            }))
+            : { portraitSide: "none", portraitCount: "0" };
+          invariant(!eventCase.expectedPostActionSide || postActionObserved.portraitSide === eventCase.expectedPostActionSide, `${name} post-action speaker side ${postActionObserved.portraitSide} !== ${eventCase.expectedPostActionSide}`);
           const postActionPortraitAudit = await portraitAuditFor(page, eventSelector);
+          const postActionDialogueSurfaceAudit = await dialogueSurfaceAuditFor(page, eventSelector);
           assertPortraitAudit(name, postActionPortraitAudit);
+          assertDialogueSurfaceAudit(name, postActionDialogueSurfaceAudit);
           await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.stop?.("qa-boundary"));
           const after = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
           const requestedKeys = uniqueRequestedKeys(after?.receipts ?? []);
@@ -181,7 +227,9 @@ for (const engine of engines) {
           const evidencePath = path.join(evidenceDir, `${name}.png`);
           await page.screenshot({ path: evidencePath, animations: "disabled" });
           result.observed = observed;
+          result.postActionObserved = postActionObserved;
           result.portraitAudit = postActionPortraitAudit ?? initialPortraitAudit;
+          result.dialogueSurfaceAudit = postActionDialogueSurfaceAudit ?? initialDialogueSurfaceAudit;
           result.expected = { category: expected.category, sceneId: expected.sceneId, transition: expected.transition, audioOwner: expected.audioOwner };
           result.receipts = after?.receipts ?? [];
           result.audioDiagnostics = after?.diagnostics ?? null;
