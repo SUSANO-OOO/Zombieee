@@ -1,6 +1,6 @@
 # Version 1.0.0 Luna Implementation Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r3`
+- Canonical Design Lock: `V100-SOL-DL-001 r4`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Role lock for implementation: `LUNA_IMPLEMENTATION`
 - Design status: `DESIGN_LOCKED`
@@ -349,31 +349,53 @@ Luna must not change character/master identity, crop into a redesign, generate a
 
 Return to Sol only for: (1) a true contradiction among locked sources; (2) a selected immutable asset that cannot yield the required runtime derivative within crop/pack/alpha operations; (3) a High/Medium regression; or (4) a technically impossible acceptance contract. Do not return because wording, role, unlock timing, Stage sequence, speaker/portrait mapping, receipt/recovery behavior, or asset owner is unspecified: each is fixed above and in the Design Lock closure.
 
-## 11. Revision r3 — Phase G WebKit 667x375 execution packet
+## 11. Revision r4 — Phase G WebKit battle-extra execution packet
 
-This section supersedes any earlier instruction to continue making localized Phase G fixes. The audited baseline is commit `0f2c6e92ddb9de5410585ec8d78dae5f3c3e3f2b`, tree `c2bd7f18d0930a9694763285dbff686c36fd27a5`. Job `96694829714` failed the first WebKit battle-extra contract with a 45-second unlabeled wait timeout; artifact `9437741041` stops at 51 Chromium PNGs and does not prove the exact cause.
+This section supersedes the r3 Stage 6-only execution packet. Job `96694829714` failed `stage06-spitter-seal`; later job `96726761976` passed Stage 6 and failed `stage24-panther-commander` at `boss frontline unit 4 never entered cooldown from the ready state`. Both failures ended with `failureState: null` and empty console/page/request/HTTP arrays. The second run stopped before Stage 25. Therefore all three existing WebKit battle-extra contracts are one finite diagnostic and regression unit; their root causes must still be proven independently.
 
-`ASSET_INVENTORY.md`, `PROVENANCE.md`, and runtime provenance retain their r2 asset revision intentionally: r3 changes no selected asset, hash, provenance, identity, or runtime derivative ownership.
+`ASSET_INVENTORY.md`, `PROVENANCE.md`, and runtime provenance retain their r2 asset revision intentionally: r4 changes no selected asset, hash, provenance, identity, runtime derivative ownership, gameplay, balance, or AI.
 
 Execute Design Lock Section 18 in this order:
 
-1. Re-fetch PR #171 and stop if its head is not the handed-off head. Add durable checkpoint/lifecycle evidence for only `stage06-spitter-seal`; do not change wait behavior first.
-2. Run one focused local WebKit 667x375 attempt and assign exactly one Section 18.4 root-cause class from its new evidence.
-3. If the class is `QA_PREDICATE_OR_ORCHESTRATION`, `BROWSER_LIFECYCLE_OR_RESOURCE`, or proven `MEASURED_DEADLINE`, make one localized correction in the Section 18.2 allowlist. If it is `PRODUCT_RUNTIME` or remains unclassified, stop and return to Sol.
-4. Run the corrected focused contract three consecutive times in fresh local contexts. Do not hide a failure with retry.
-5. After local 3/3 only, push the diagnostic commit with only CI's `v100-phase-g-production` job temporarily bound to three fresh executions of the exact focused contract and a focused artifact. Do not disable other jobs. Any focused failure returns to Sol.
-6. After focused remote 3/3 only, run local full Phase G and require 54/54 plus validator success, then run the full regression gates named in Section 18.5.
-7. After every local full gate is green only, restore `v100-phase-g-production` to the unfiltered 54-capture command and push once for full remote PR CI/Phase G. A new failure in the same gate returns to Sol; do not apply a second localized fix.
+1. Re-fetch PR #171 and stop if its head is not the handed-off head. Add the Section 18.3 common checkpoint/lifecycle recorder before changing wait or deployment behavior.
+2. Run one isolated diagnostic for each variant: `stage06-spitter-seal`, `stage24-panther-commander`, and `stage25-president`. Persist all diagnostics even when one variant fails.
+3. Assign a Section 18.4 root-cause class to each variant. If any is `PRODUCT_RUNTIME`, remains unclassified, or the three proven causes require more than one coherent QA-harness correction set, stop and return to Sol.
+4. Make exactly one coherent correction set in the Section 18.2 allowlist. Do not patch and rerun variant-by-variant.
+5. Run the ordered trio Stage 6 -> Stage 24 -> Stage 25 three consecutive times locally. Each sequence uses a fresh WebKit browser process and each contract a fresh context; any failure ends the sequence without retry and returns to Sol.
+6. After ordered-trio local 3/3 only, push the diagnostic commit with only CI's `v100-phase-g-production` job temporarily bound to three fresh ordered-trio sequences and a focused artifact. Do not disable other jobs. Any focused failure returns to Sol.
+7. After ordered-trio remote 3/3 only, run local full Phase G and require 54/54 plus validator success, then run every full regression gate named in Section 18.5.
+8. After every local full gate is green only, restore `v100-phase-g-production` to the unfiltered 54-capture command and push once for full remote PR CI/Phase G. A new failure in the same gate returns to Sol; do not apply a second correction.
+9. Complete remote green transitions to the Producer Visual Checkpoint, not directly to a Completion Packet or Sol final review.
 
-The existing environment selectors are the canonical focus boundary:
+Keep `V100_PHASE_G_ONLY_VARIANT` for each isolated diagnostic. Before correction, run exactly one fresh process per variant:
 
 ```powershell
 $env:V100_PHASE_G_ONLY='battle-extra'
-$env:V100_PHASE_G_ONLY_VARIANT='stage06-spitter-seal'
-npm.cmd run qa:v100-phase-g
+Remove-Item Env:V100_PHASE_G_ONLY_ENGINE -ErrorAction SilentlyContinue
+$diagnosticFailures=@()
+foreach ($variant in @('stage06-spitter-seal', 'stage24-panther-commander', 'stage25-president')) {
+  $env:V100_PHASE_G_ONLY_VARIANT=$variant
+  $env:V100_PHASE_G_EVIDENCE_DIR="outputs/v100-phase-g-r4-diagnostic-$variant"
+  npm.cmd run qa:v100-phase-g
+  if ($LASTEXITCODE -ne 0) { $diagnosticFailures += $variant }
+}
+$diagnosticFailures
 ```
 
-Before the Producer checkpoint, prepare: exact base/head/tree; proven root-cause class and checkpoint artifact; changed-file list; focused local 3/3 run identifiers; focused remote 3/3 job/artifact; local 54/54 report/manifest/runtime evidence; full local gate results; full remote run/job/artifact; zero console/page/request/HTTP failures; and an explicit statement that no `app/**`, gameplay, balance, product behavior, release state, or evidence threshold changed.
+Persist the diagnostic even when a command exits nonzero, then continue only to collect the remaining isolated diagnostics; do not correct behavior between variants. Add one bounded QA-only selector, `V100_PHASE_G_ONLY_ENGINE=webkit`, so an ordered focused sequence can execute exactly the three existing WebKit battle-extra contracts without changing their mapping or evidence ownership. The post-correction local acceptance command is:
+
+```powershell
+$env:V100_PHASE_G_ONLY='battle-extra'
+$env:V100_PHASE_G_ONLY_ENGINE='webkit'
+Remove-Item Env:V100_PHASE_G_ONLY_VARIANT -ErrorAction SilentlyContinue
+1..3 | ForEach-Object {
+  $env:V100_PHASE_G_EVIDENCE_DIR="outputs/v100-phase-g-r4-local-sequence-$_"
+  npm.cmd run qa:v100-phase-g
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+```
+
+Before the Producer checkpoint, prepare: exact base/head/tree; all three isolated diagnostic artifacts and root-cause classes; the single coherent correction diff; changed-file list; ordered-trio local 3/3 run identifiers; ordered-trio remote 3/3 job/artifact; local 54/54 report/manifest/runtime evidence; full local gate results; full remote run/job/artifact; zero console/page/request/HTTP failures; and an explicit statement that no `app/**`, gameplay, balance, AI, product behavior, release state, or evidence threshold changed.
 
 After every Section 18.5 local and remote technical gate is satisfied, set `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` and submit these actual-production screens: (1) `TITLE`, (2) `名前入力`, (3) `作戦地図`, (4) `通常Stage選択`, (5) `Boss Stage選択`, (6) `出撃編成`, (7) `隊員`, (8) `出撃装備`, (9) `装甲車両強化`, (10) `代表event`, (11) `通常battle HUD`, and (12) `戦果`.
 
