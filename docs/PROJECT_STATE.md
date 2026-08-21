@@ -1,6 +1,6 @@
 # 西新世紀末物語 — プロジェクト状態
 
-更新日：2026-08-14
+更新日：2026-08-21
 
 ## 1. 現在の正式公開
 
@@ -17,10 +17,12 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - target：Version 1.0.0
 - 対象：PROLOGUE、Stage 1〜30、ENDING、エンドロール、EPILOGUE
 - 正史：v10 event script
-- docs baseline：Draft PR #169
-- branch：`docs/story-v10-final-release-baseline`
-- production implementation：未着手
-- runtime asset integration：未着手
+- story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
+- design baseline：Draft PR #170、head `6acf87fd757c04de34833444de9a16f7bbba0e96`
+- implementation candidate：Draft PR #171、branch `codex/v1.0.0-luna-implementation`
+- audited implementation HEAD：`0f2c6e92ddb9de5410585ec8d78dae5f3c3e3f2b`、tree `c2bd7f18d0930a9694763285dbff686c36fd27a5`
+- production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
+- current Design Lock：`V100-SOL-DL-001 r3`（Phase G診断・実行契約のみ改訂、`PRODUCT_DESIGN_CHANGE: 0`）
 - main merge／tag／Release／Pages公開：未実施
 
 ## 3. Version 1.0.0固定事項
@@ -58,9 +60,11 @@ SolとLunaを同時並行に動かさない。
 
 ## 5. 現在のblocker
 
-PR #169はdocs-onlyのDraftで未merge。branchの正本文書とPR本文をVersion 1.0.0最新決定へ揃え、checksを再確認するまでmergeしない。
-
-CIではlint、production content validation、build、testsが成功していても、PWA partial-update recovery等のrequired checkが失敗している場合はgreen扱いしない。Design開始は可能だが、merge／Release承認は不可。
+- PR #169、#170、#171はいずれもDraft／未merge。PR #171はVersion 1.0.0 implementation candidateだが、`NOT_READY`である。
+- audited HEAD `0f2c6e92ddb9de5410585ec8d78dae5f3c3e3f2b`のCI run `32455268714`ではPR Verify等は成功したが、Phase G job `96694829714`が`webkit-667x375-battle-extra`で45秒timeoutとなった。失敗stateは`null`、console／page／request／HTTP errorは0、Phase G validatorは未実行である。
+- artifact `9437741041`（`v100-phase-g-production-evidence`、SHA-256 `08b7a3345a780ebb8adb3c1776b40e50ee90cc05b84d0227e613e5cb655efe4b`）は51 PNGのみを含む。48 core Chromium captureと3 Chromium battle-extraは存在するが、WebKit battle-extra、最終report、manifest、runtime evidenceは存在しない。
+- exact unresolved predicateは現artifactから確定不能。Design Lock r3のcheckpoint診断で原因を分類し、同じgateへ根拠のない局所修正、generic retry、blanket timeout extensionを追加しない。
+- PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
 ## 6. Release gate
 

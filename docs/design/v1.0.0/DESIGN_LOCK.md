@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r2`
+- Revision: `r3`
 - Status: `DESIGN_LOCKED`
 - Role owner: `SOL_DESIGN`
 - Story baseline commit: `435dc959d1972646f7e82b6c45d3f1c25d890252`
@@ -34,6 +34,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - Segawa uses the Producer-provided face reference only as a private identity reference. The shipped design is a stylized world-matched illustration in an ivory/white scientist coat; the private photos are never committed or distributed.
 - The approved shared minor-human event image is a simple, featureless, gender-neutral and age-neutral human silhouette. It may be reused only for minor human speakers with no identity master, including generic researchers and Zakimiya's wife. It carries no face, hair, costume, occupation, ethnicity, accessory, weapon, or named-person identity cues, and it may not replace a named major character, playable unit, boss, or a person for whom a master exists.
 - Revision r2 freezes the exact currently selected hashes in `ASSET_INVENTORY.md` and `PROVENANCE.md`. This limited contract correction has no character-art scope: the latest shared minor-human silhouette, Segawa, normal and mutated Mugarian president, TAKUYA-Ω, all four RED PANTHER roles, and every existing character remain unchanged. No older candidate/master may replace them and no new image candidate may be generated under this revision.
+- Revision r3 inherits every r2 product, story, identity, asset, gameplay, save, audio, PWA, and presentation decision unchanged. It adds only the deterministic diagnosis and execution contract for the remote Phase G WebKit 667x375 failure. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -471,3 +472,81 @@ Stage 30 has no midbattle story dialogue. Stage 22's `43` is a finite narrative/
 Luna may choose module/file decomposition, immutable data representation, grapheme implementation that passes the exact contract, transaction helper structure, sprite packing/compression, crop/anchor/scale/alpha cleanup, cache batching, deterministic test-helper implementation, and spawn timestamps/lanes within each row's fixed roster and wave/group count. Luna may not choose or alter names, validation results, event IDs/order, Stage IDs/order/objectives, enemy families, boss IDs/values, unit roles/unlocks/costs, star thresholds, rewards, receipt semantics, speaker/portrait routing, story/audio profile mapping, selected assets, save namespaces, legacy/gift behavior, PWA gate, mobile thresholds, or any character identity.
 
 Luna returns to Sol only for a true conflict between locked sources, an immutable selected asset that cannot produce its required derivative, a High/Medium regression, or a technically impossible acceptance contract. Missing product wording, unlock timing, role, Stage transition, asset owner, or retry/receipt behavior is no longer an escalation reason because it is fixed above and in the standalone handoff.
+
+## 18. Revision r3 — remote Phase G WebKit 667x375 deterministic closure
+
+### 18.1 Audited failure and design decision
+
+- Audited implementation baseline: commit `0f2c6e92ddb9de5410585ec8d78dae5f3c3e3f2b`, tree `c2bd7f18d0930a9694763285dbff686c36fd27a5`.
+- CI run `32455268714`, Phase G job `96694829714`, failed at the first WebKit battle-extra contract, `webkit-667x375-battle-extra`, with `page.waitForFunction: Timeout 45000ms exceeded` from `captureStateImpl` / `captureState` / the extra-contract loop.
+- Artifact `9437741041`, `v100-phase-g-production-evidence`, has SHA-256 `08b7a3345a780ebb8adb3c1776b40e50ee90cc05b84d0227e613e5cb655efe4b`. It contains 51 PNGs: all 48 core Chromium captures and three Chromium battle-extra captures. It contains no WebKit battle-extra image, final Phase G report, manifest, or runtime evidence.
+- The captured failure state is `null`; console, page, request, and HTTP error arrays are empty. Therefore the exact unresolved wait predicate and root cause are not proven by the current job or artifact. A page, context, or browser lifecycle failure is a possibility, not an established cause.
+- Decision: `DESIGN_REVISION_REQUIRED`. The same Phase G gate has continued to produce a new remote WebKit failure after localized QA-helper changes, while r2 did not require durable checkpoint ownership. Revision r3 closes that execution ambiguity only; it does not authorize a product or gameplay change.
+
+### 18.2 Owned files and functions
+
+Diagnosis and a single QA-only correction are limited to these owners:
+
+- `scripts/v100-phase-g-production-matrix.mjs`: the `stage06-spitter-seal` row of `extraBattleContracts`; `startCombatRuntimeObserver`; `waitForCombatActivity`; `collectCombatCausalProof`; `captureStateImpl`; `captureState`; `battlePage`; the battle-extra loop; final report/manifest writing.
+- `tests/v100-phase-g-manifest.test.mjs` and `tests/v100-phase-g-negative.test.mjs`; one additional focused Phase G test file is allowed only if neither can express the checkpoint contract clearly.
+- `.github/workflows/ci.yml`: only the `v100-phase-g-production` job's temporary focused binding, three fresh-context executions, and focused artifact upload. Other CI jobs remain enabled. The focused binding must be removed before the full remote Phase G run.
+- `package.json`: only an exact focused Phase G command, if required to make local and remote execution identical.
+
+No `app/**`, production asset, content registry, balance data, save/PWA implementation, or product runtime file is in r3 scope.
+
+### 18.3 Required diagnostic evidence
+
+Before changing wait behavior, the focused runner must persist an append-only checkpoint record for the failing contract. Required checkpoints are:
+
+1. route opened;
+2. formation visible;
+3. battle mounted and page lifecycle listeners active;
+4. combat observer started;
+5. each formation click attempted and accepted/rejected with reason;
+6. spitter actor mounted;
+7. living human target acquired;
+8. spitter attack observed, including whether the proof came from live state, audio cue, or historical receipt;
+9. ranger deployed and its attack observed;
+10. causal proof complete;
+11. screenshot saved.
+
+Each checkpoint records monotonic elapsed time and the smallest existing player-visible/runtime identifiers needed to identify ownership. On failure, write JSON plus a screenshot when the page remains available, the last completed checkpoint, the currently awaited predicate, recent activity/cue identifiers, and page `close`, page `crash`, context close, and browser disconnect events. A terminal `state: null` without the unresolved checkpoint and lifecycle evidence is an acceptance failure.
+
+### 18.4 Root-cause classification and allowed correction
+
+Exactly one class must be proven from the new evidence:
+
+- `QA_PREDICATE_OR_ORCHESTRATION`: production combat activity occurred, but the runner missed or misclassified an existing signal. Correct only the QA predicate/orchestration in the owned files.
+- `BROWSER_LIFECYCLE_OR_RESOURCE`: page/context/browser became unavailable or the runner leaked/contended resources, without evidence of a product-route fault. Correct only runner isolation, cleanup, or bounded focused-CI ownership.
+- `PRODUCT_RUNTIME`: while the page remains healthy, the spitter does not mount, acquire a target, attack, or progress the production battle lifecycle. Stop and return to Sol; r3 gives no authority to edit product runtime or gameplay.
+- `MEASURED_DEADLINE`: a required checkpoint completes consistently after its current deadline. The checkpoint's measured distribution may justify one named bounded deadline. A global timeout increase remains forbidden.
+
+Allowed changes are checkpoint labels/artifacts, read-only observation of existing production signals or the existing QA bridge, durable failure capture, an exact predicate tied to an existing production event, and isolated focused-CI setup. One localized correction is allowed only after a class is proven.
+
+Forbidden changes include damage, HP, target selection, spawn/wave timing, AI, cost, cooldown, balance, hitbox, mission rules, game clocks, runtime asset behavior, fake actors/states/receipts, direct HP or lifecycle mutation, proof removal, weaker thresholds, WebKit/667x375/spitter/ranger omission, generic retry, blanket timeout extension, and reuse of an artifact from another attempt as current evidence.
+
+### 18.5 Acceptance and promotion gates
+
+Focused acceptance requires all of the following:
+
+- the exact `stage06-spitter-seal` WebKit 667x375 contract passes three consecutive local runs in three fresh independent browser contexts;
+- a bounded remote focused job then passes the same contract three times in fresh independent contexts;
+- every run records all eleven checkpoints, a valid screenshot, combat causal proof, and zero console/page/request/HTTP diagnostic failure;
+- an intentional impossible-predicate negative test exits nonzero and names the unresolved checkpoint, last valid state, and lifecycle status instead of returning only `state: null`;
+- the existing sixteen semantic evidence claims and their ownership are not removed, merged, or weakened.
+
+Full Phase G entry requires the proven class, one allowed correction at most, focused local 3/3, focused remote 3/3, an allowed-file-only diff, and SOURCE / ADVERSARIAL / EXECUTION self-audits with High/Medium ambiguity zero. Then run local full Phase G and require 54/54 capture and validator success, followed by the full lint, production content validation, build, test, PWA update/recovery, save, audio, and browser regression set already required by this lock.
+
+A full remote Phase G production-matrix execution is allowed only after those local full gates are green. After focused local 3/3, Luna may push the diagnostic commit with only the `v100-phase-g-production` job temporarily bound to three fresh executions of the exact focused contract; the rest of the PR workflow remains enabled and is not acceptance evidence for full Phase G. After focused remote 3/3 and local full green, restore that job to the unfiltered 54-capture command and push once for the full remote PR CI/Phase G run. Remote success is attempt-specific and may not be substituted by local or stale evidence.
+
+### 18.6 Stop, escalation, and Producer guard
+
+Stop and return to `SOL_DESIGN` without another localized fix when any of these occurs:
+
+- evidence classifies the cause as `PRODUCT_RUNTIME`;
+- one QA-only correction is followed by any new failure in the same Phase G gate;
+- focused remote execution fails after focused local 3/3;
+- required failure evidence is still `null`, missing, or cannot identify the awaited predicate;
+- closure would require weakening a production evidence claim, changing a locked product value, or editing a forbidden file.
+
+All r2 Producer intent remains immutable. In particular, no gameplay, AI, damage, timing, balance, visual, audio, identity, story, mission, save, PWA, mobile, or release behavior may be changed to make QA green. `PRODUCT_DESIGN_CHANGE: 0`.

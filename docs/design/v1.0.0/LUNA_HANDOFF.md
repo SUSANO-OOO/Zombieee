@@ -1,6 +1,6 @@
 # Version 1.0.0 Luna Implementation Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r2`
+- Canonical Design Lock: `V100-SOL-DL-001 r3`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Role lock for implementation: `LUNA_IMPLEMENTATION`
 - Design status: `DESIGN_LOCKED`
@@ -19,7 +19,7 @@ Luna must read the entire Design Lock and Asset Inventory before editing. The va
 
 1. `AGENTS.md`
 2. `docs/CODEX_TWO_THREAD_WORKFLOW.md`
-3. `docs/CODEX_SOL_ROLE.md`
+3. `docs/CODEX_LUNA_ROLE.md`
 4. `docs/PROJECT_STATE.md`
 5. `docs/story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md`
 6. `docs/story/v10/STORY_SCRIPT_V10.md`
@@ -348,3 +348,31 @@ Luna may decide only implementation mechanics: file/module decomposition, immuta
 Luna must not change character/master identity, crop into a redesign, generate a candidate, choose a different Stage/event/object/enemy/boss, alter any number/role/unlock/cost/star/reward/receipt, add a branch, change portrait ownership, choose different music, weaken readiness/PWA/save/mobile contracts, migrate legacy progression, or turn a failed acceptance into optional evidence.
 
 Return to Sol only for: (1) a true contradiction among locked sources; (2) a selected immutable asset that cannot yield the required runtime derivative within crop/pack/alpha operations; (3) a High/Medium regression; or (4) a technically impossible acceptance contract. Do not return because wording, role, unlock timing, Stage sequence, speaker/portrait mapping, receipt/recovery behavior, or asset owner is unspecified: each is fixed above and in the Design Lock closure.
+
+## 11. Revision r3 — Phase G WebKit 667x375 execution packet
+
+This section supersedes any earlier instruction to continue making localized Phase G fixes. The audited baseline is commit `0f2c6e92ddb9de5410585ec8d78dae5f3c3e3f2b`, tree `c2bd7f18d0930a9694763285dbff686c36fd27a5`. Job `96694829714` failed the first WebKit battle-extra contract with a 45-second unlabeled wait timeout; artifact `9437741041` stops at 51 Chromium PNGs and does not prove the exact cause.
+
+`ASSET_INVENTORY.md`, `PROVENANCE.md`, and runtime provenance retain their r2 asset revision intentionally: r3 changes no selected asset, hash, provenance, identity, or runtime derivative ownership.
+
+Execute Design Lock Section 18 in this order:
+
+1. Re-fetch PR #171 and stop if its head is not the handed-off head. Add durable checkpoint/lifecycle evidence for only `stage06-spitter-seal`; do not change wait behavior first.
+2. Run one focused local WebKit 667x375 attempt and assign exactly one Section 18.4 root-cause class from its new evidence.
+3. If the class is `QA_PREDICATE_OR_ORCHESTRATION`, `BROWSER_LIFECYCLE_OR_RESOURCE`, or proven `MEASURED_DEADLINE`, make one localized correction in the Section 18.2 allowlist. If it is `PRODUCT_RUNTIME` or remains unclassified, stop and return to Sol.
+4. Run the corrected focused contract three consecutive times in fresh local contexts. Do not hide a failure with retry.
+5. After local 3/3 only, push the diagnostic commit with only CI's `v100-phase-g-production` job temporarily bound to three fresh executions of the exact focused contract and a focused artifact. Do not disable other jobs. Any focused failure returns to Sol.
+6. After focused remote 3/3 only, run local full Phase G and require 54/54 plus validator success, then run the full regression gates named in Section 18.5.
+7. After every local full gate is green only, restore `v100-phase-g-production` to the unfiltered 54-capture command and push once for full remote PR CI/Phase G. A new failure in the same gate returns to Sol; do not apply a second localized fix.
+
+The existing environment selectors are the canonical focus boundary:
+
+```powershell
+$env:V100_PHASE_G_ONLY='battle-extra'
+$env:V100_PHASE_G_ONLY_VARIANT='stage06-spitter-seal'
+npm.cmd run qa:v100-phase-g
+```
+
+Before completion, provide: exact base/head/tree; proven root-cause class and checkpoint artifact; changed-file list; focused local 3/3 run identifiers; focused remote 3/3 job/artifact; local 54/54 report/manifest/runtime evidence; full local gate results; full remote run/job/artifact; zero console/page/request/HTTP failures; and an explicit statement that no `app/**`, gameplay, balance, product behavior, release state, or evidence threshold changed.
+
+Completion status remains `STATUS: READY_FOR_SOL_FINAL_REVIEW` only after every Section 18.5 gate is satisfied. Otherwise use `STATUS: BLOCKED_RETURN_TO_SOL` and stop. No Ready conversion, merge, tag, Release, formal Pages deployment, or Issue closure is authorized.
