@@ -35,9 +35,9 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r4`/u);
+  assert.match(design, /Revision: `r5`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r4`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r5`/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
   assert.doesNotMatch(handoff.match(/## 2\. Required reading([\s\S]+?)## 3\./u)?.[1] ?? "", /CODEX_SOL_ROLE/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
@@ -45,6 +45,40 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   assert.match(design, /c7293d739998431c38f337a7ef8d4e724b74696537ff44ad8f0c30d854a017a4/u);
   assert.match(handoff, /STATUS: READY_FOR_SOL_FINAL_REVIEW/u);
   assert.match(handoff, /No amend, rebase, force push, direct main push/u);
+});
+
+test("r5 closes the Version 1.0.0 execution, return, freeze, and release loop", async () => {
+  const [design, handoff] = await Promise.all([
+    readFile(DESIGN, "utf8"),
+    readFile(HANDOFF, "utf8"),
+  ]);
+
+  for (const state of [
+    "SOL_DESIGN_ACTIVE",
+    "LUNA_IMPLEMENTATION_ACTIVE",
+    "BLOCKED_RETURN_TO_SOL",
+    "PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED",
+    "PRODUCER_VISUAL_APPROVED_FREEZE",
+    "READY_FOR_SOL_FINAL_REVIEW",
+    "SOL_FINAL_REVIEW_APPROVED",
+    "PRODUCER_FINAL_ACCEPTANCE",
+    "STACKED_INTEGRATION_ACTIVE",
+    "RELEASE_SHA_LOCKED",
+    "POST_RELEASE_BLOCKED",
+  ]) {
+    assert.match(design, new RegExp(state.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"));
+  }
+  assert.match(design, /Any branch commit after Visual Approval invalidates that approval/u);
+  assert.match(design, /PR #169: `docs\/story-v10-final-release-baseline` -> `main`/u);
+  assert.match(design, /PR #171 merge result commit[\s\S]*becomes `RELEASE_SHA`/u);
+  assert.match(design, /annotated tag `v1\.0\.0`/u);
+  assert.match(design, /operation=release`.*deploy=true`.*issue_number=172`/u);
+  assert.match(design, /High ambiguity: 0.*Medium ambiguity: 0/u);
+
+  assert.match(handoff, /LAST_AUDITED_HEAD`: `c57bd2690ef1f50e92e99736d59dab86c4af71f9`/u);
+  assert.match(handoff, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
+  assert.match(handoff, /RESUME_FROM`: exact-file LF remediation with semantic diff 0 -> PR Verify -> automated remote ordered trio 3\/3/u);
+  assert.match(handoff, /Luna never classifies a failure, finding, Producer rejection/u);
 });
 
 test("campaign contract has exactly 30 ordered, unique stages", async () => {

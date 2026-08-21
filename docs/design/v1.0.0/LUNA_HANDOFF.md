@@ -1,6 +1,6 @@
 # Version 1.0.0 Luna Implementation Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r4`
+- Canonical Design Lock: `V100-SOL-DL-001 r5`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Role lock for implementation: `LUNA_IMPLEMENTATION`
 - Design status: `DESIGN_LOCKED`
@@ -403,6 +403,8 @@ Producer Visual Approval is a hard gate. Before approval, do not finalize the Co
 
 ### 11.1 SOL remediation cursor — LF-only repository hygiene
 
+The cursor fields in this subsection are retained as the original r4 byte-audit record and are superseded for execution by Section 12.1. Section 11.1 remains authoritative only for the exact LF byte/semantic acceptance commands referenced by Section 12.2.
+
 This packet does not revise r4. CI run `32475729057` stopped before the remote focused Phase G job because PR Verify job `96751598547` failed its exact-base/head `git diff --check`. The audited commit changes only `.github/workflows/ci.yml`, `scripts/v100-phase-g-production-matrix.mjs`, and the new `tests/v100-phase-g-checkpoint.test.mjs`; `app/**` is unchanged. The first two Git blobs contain mixed CRLF/LF, while the checkpoint test Git blob is LF-only. This is `REPO_HYGIENE / REMEDIATION_LOCAL`, separate from the one coherent r4 harness correction.
 
 Execution cursor:
@@ -447,4 +449,59 @@ If any remote ordered-trio sequence fails, set `STATUS: BLOCKED_RETURN_TO_SOL` a
 
 After complete remote green, transition to `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`. The release tail is fixed as: Producer Visual Approval -> final evidence freeze -> `READY_FOR_SOL_FINAL_REVIEW` -> SOL FINAL REVIEW `APPROVE` -> `PRODUCER_FINAL_ACCEPTANCE` -> only after explicit Producer approval, integration／tag／GitHub Release／official Pages -> post-release QA at the published SHA -> `PROJECT_STATE` update and closure. No earlier release-state mutation is authorized.
 
-The generic Completion Packet path in `AGENTS.md` and `CODEX_TWO_THREAD_WORKFLOW.md` remains governance debt. For Version 1.0.0, this r4 Producer checkpoint and release tail take precedence. Do not edit generic governance on the active implementation branch; normalize it in a separate post-V1 governance change.
+The generic Completion Packet path in `AGENTS.md` and `CODEX_TWO_THREAD_WORKFLOW.md` remains governance debt. For Version 1.0.0, the current Version-specific Design Lock's Producer checkpoint and release tail take precedence. Do not edit generic governance on the active implementation branch; normalize it in a separate post-V1 governance change.
+
+## 12. Revision r5 — final execution-loop handoff
+
+Revision r5 keeps every r4 Phase G diagnostic, correction, acceptance, evidence, and Producer intent guard unchanged. It makes Design Lock Section 19 the sole Version 1.0.0 execution/release state machine. Issue #172 becomes its execution ledger only after the r5 Design commit is published. The earlier `V100-LOOP-LOCK-001` comment and pre-r5 Issue body are superseded audit inputs, not implementation authority. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 12.1 Current execution cursor
+
+- `LAST_AUDITED_HEAD`: `c57bd2690ef1f50e92e99736d59dab86c4af71f9`
+- `LAST_AUDITED_TREE`: `65bb817fc3b73526619e51ac4712094f7a1834e6`
+- `LF_SEMANTIC_BASE`: `f7149732fadec5142d0e475f201984dd5a48e217`
+- `FAILED_GATE`: runs `32475729057` and `32478283607`; PR Verify jobs `96751598547` and `96759071225`; `Check patch whitespace`; V1 Phase G skipped
+- `LAST_GREEN_GATE`: isolated Stage 6/24/25 diagnostics complete; local ordered trio Stage 6 -> Stage 24 -> Stage 25 passed 3/3; local-only and not final-freeze evidence
+- `REMEDIATION_CLASS`: `REPO_HYGIENE / REMEDIATION_LOCAL`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION`
+- `RESUME_FROM`: exact-file LF remediation with semantic diff 0 -> PR Verify -> automated remote ordered trio 3/3
+
+Before editing, re-fetch PR #171. Require its live history to contain `LAST_AUDITED_HEAD` and the r5 Design packet commit recorded in Issue #172/PR #171. If the branch, base, target files, Design revision, PR state, or another required precondition has changed, return `STATUS: BLOCKED_RETURN_TO_SOL` without editing. The live HEAD must be read from GitHub; no body field is a live-ref substitute.
+
+### 12.2 Exact authorized action
+
+Execute the LF-only byte contract already specified in Section 11.1, with no semantic change:
+
+1. normalize only `.github/workflows/ci.yml` and `scripts/v100-phase-g-production-matrix.mjs` to LF;
+2. preserve the existing UTF-8 BOM of `.github/workflows/ci.yml` and do not add a BOM to the script;
+3. add only these `.gitattributes` entries: `.github/workflows/ci.yml text eol=lf`, `scripts/v100-phase-g-production-matrix.mjs text eol=lf`, and `tests/v100-phase-g-checkpoint.test.mjs text eol=lf`;
+4. keep `tests/v100-phase-g-checkpoint.test.mjs` byte-identical at SHA-256 `6001a58e541ff94c7e9819eb8b6bc0eb5a8646bf94275caee816d0a9eace22bd`;
+5. require the two post-normalization SHA-256 values, BOM state, LF/CRLF counts, `.gitattributes` exact diff, Section 11.1 semantic-zero command, and CI-equivalent `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD` all to pass;
+6. changed files for this remediation are exactly the two normalized files and `.gitattributes`.
+
+Forbidden: repository-wide renormalization; `app/**`; test logic; workflow meaning; Phase G behavior; gameplay, balance, AI, save/PWA, product assets/audio; evidence weakening; formatting cleanup outside the three paths; amend, rebase, force push, direct-main push, Ready, merge, tag, Release, Pages, or Issue closure.
+
+Do not rerun the completed isolated diagnostics or local ordered trio solely for the EOL-only change. After local byte/semantic acceptance, commit and push normally, then resume at PR Verify.
+
+### 12.3 Exact promotion and stop rules
+
+After the LF push:
+
+1. wait for PR Verify and the candidate's required workflow to reach a terminal state;
+2. PR Verify green permits the already-bound automated remote ordered trio; require three complete Stage 6 -> Stage 24 -> Stage 25 sequences with no in-sequence retry;
+3. any required job failure or unexpected skip, including any trio failure, returns `STATUS: BLOCKED_RETURN_TO_SOL`; record HEAD/tree, run/job/artifact, failed gate, last green gate, and diagnostics, then stop without a fix or rerun;
+4. remote trio 3/3 permits local unfiltered Phase G 54/54 plus validator and every Section 18.5 full regression;
+5. only after local full green, restore unfiltered Phase G, prove the focused binding is absent, push normally, and require one new complete unfiltered remote CI/Phase G run;
+6. only complete terminal green transitions to `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` with the exact Section 16 twelve-screen set.
+
+Before Producer Visual Approval, do not finalize a Completion Packet or set `READY_FOR_SOL_FINAL_REVIEW`. After explicit approval, record `APPROVED_HEAD`, `APPROVED_TREE`, all twelve evidence IDs, and approval evidence; create no commit; finalize the packet in Issue/PR/artifacts; verify live HEAD/tree are exact; then set `READY_FOR_SOL_FINAL_REVIEW` and return to the original Sol thread.
+
+Any branch commit after Visual Approval invalidates both the freeze and Visual Approval and returns to Sol; all candidate gates and the checkpoint repeat. A same-HEAD/tree evidence-reference completion may return through `LUNA_IMPLEMENTATION` only when Sol explicitly classifies it as `EVIDENCE_PACKET_INCOMPLETE`. `LUNA_VALIDATION` remains reserved for a Sol-authored remediation commit. Luna never classifies a failure, finding, Producer rejection, regression range, approval validity, or release state.
+
+### 12.4 Release boundary
+
+Luna stops at `READY_FOR_SOL_FINAL_REVIEW`. The remaining authoritative route is Design Lock Sections 19.6-19.10:
+
+`SOL_FINAL_REVIEW_APPROVED` -> `PRODUCER_FINAL_ACCEPTANCE` -> explicit Producer approval -> sequential #169/#170/#171 integration with fresh checks and exact tree verification -> PR #171 merge-result `RELEASE_SHA` -> annotated `v1.0.0` -> matching GitHub Release -> explicit official Pages release request using open Issue #172 -> published-SHA post-release QA -> `PROJECT_STATE` update and closure.
+
+Any Sol finding or Producer rejection returns through Sol's classification. After successful official deployment, a new explicit `ROLE_LOCK: LUNA_VALIDATION` handoff may authorize only Design Lock Section 19.10 published-SHA QA. No Luna release, integration, rollback, redeploy, post-release repair, or closure judgment is delegated.

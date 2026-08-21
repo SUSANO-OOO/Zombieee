@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r4`
+- Revision: `r5`
 - Status: `DESIGN_LOCKED`
 - Role owner: `SOL_DESIGN`
 - Story baseline commit: `435dc959d1972646f7e82b6c45d3f1c25d890252`
@@ -36,6 +36,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r2 freezes the exact currently selected hashes in `ASSET_INVENTORY.md` and `PROVENANCE.md`. This limited contract correction has no character-art scope: the latest shared minor-human silhouette, Segawa, normal and mutated Mugarian president, TAKUYA-Ω, all four RED PANTHER roles, and every existing character remain unchanged. No older candidate/master may replace them and no new image candidate may be generated under this revision.
 - Revision r3 inherits every r2 product, story, identity, asset, gameplay, save, audio, PWA, and presentation decision unchanged. It adds only the deterministic diagnosis and execution contract for the remote Phase G WebKit 667x375 failure. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r4 incorporates the subsequent remote Stage 24 failure and replaces the Stage 6-only diagnostic boundary with one finite WebKit battle-extra harness contract covering Stages 6, 24, and 25. It changes no product, story, identity, asset, gameplay, balance, AI, evidence, Producer checkpoint, save, audio, PWA, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r5 keeps the complete r4 Phase G contract unchanged and makes the full Version 1.0.0 execution, return, visual-approval freeze, stacked-integration, release, post-release, rollback, and closure loop authoritative in Section 19. It adds no product behavior or acceptance weakening. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -347,7 +348,7 @@ Before each write, re-fetch live base/head/tree, branch state, PR state/Draft/me
 
 ## 16. Success condition
 
-Remote required CI and the complete Phase G contract being green is a technical gate, not permission to enter independent Sol review. At that point Luna must set `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` and present twelve screenshots captured from the actual production candidate:
+Remote required CI and the complete Phase G contract being green is a technical gate, not permission to enter the original Sol thread's Final Review. At that point Luna must set `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` and present twelve screenshots captured from the actual production candidate:
 
 1. `TITLE`;
 2. `名前入力`;
@@ -362,9 +363,9 @@ Remote required CI and the complete Phase G contract being green is a technical 
 11. `通常battle HUD`;
 12. `戦果`.
 
-Before explicit Producer Visual Approval, Luna must not finalize the Completion Packet or set `STATUS: READY_FOR_SOL_FINAL_REVIEW`. After approval, freeze the final evidence set at the approved implementation HEAD/tree, finalize the Completion Packet, set `STATUS: READY_FOR_SOL_FINAL_REVIEW`, and stop for independent Sol review.
+Before explicit Producer Visual Approval, Luna must not finalize the Completion Packet or set `STATUS: READY_FOR_SOL_FINAL_REVIEW`. After approval, freeze the final evidence set at the approved implementation HEAD/tree, finalize the Completion Packet without creating a branch commit, set `STATUS: READY_FOR_SOL_FINAL_REVIEW`, and stop for the original Sol thread's Final Review.
 
-Implementation is ready for independent Sol review only when the fixed implementation HEAD/tree matches live GitHub, High 0 and Medium 0 remain, all locked identities/hashes are traceable, the required runtime/browser/save/PWA evidence is reviewer-accessible, all remote required CI and Phase G gates are green, the twelve-screen Producer Visual Approval is recorded, the final evidence is frozen, and no release action has occurred.
+Implementation is ready for Sol Final Review only when the fixed implementation HEAD/tree matches live GitHub, High 0 and Medium 0 remain, all locked identities/hashes are traceable, the required runtime/browser/save/PWA evidence is reviewer-accessible, all remote required CI and Phase G gates are green, the twelve-screen Producer Visual Approval is recorded, the final evidence is frozen, and no release action has occurred.
 
 ## 17. PRE_IMPLEMENTATION_CLOSURE
 
@@ -578,3 +579,127 @@ Stop and return to `SOL_DESIGN` without another localized fix when any of these 
 - closure would require weakening a production evidence claim, changing a locked product value, or editing a forbidden file.
 
 All r2 Producer intent remains immutable. In particular, no gameplay, AI, damage, timing, balance, visual, audio, identity, story, mission, save, PWA, mobile, or release behavior may be changed to make QA green. `PRODUCT_DESIGN_CHANGE: 0`.
+
+## 19. Revision r5 — authoritative execution and release loop
+
+### 19.1 Authority and scope
+
+This section is the Version 1.0.0-specific execution state machine. It supersedes generic Completion Packet ordering where that ordering conflicts with Sections 16 or 19. Issue #172 is the execution ledger for this state machine after Sol records r5 there. The earlier `V100-LOOP-LOCK-001` PR comment and the pre-r5 form of Issue #172 are audit inputs only, not a parallel Design Lock.
+
+Revision r5 changes execution ownership and release safety only. It does not alter Section 18's Phase G diagnostics, product requirements, gameplay, balance, AI, save, PWA, assets, audio, the 54-capture contract, or any acceptance threshold. `PRODUCT_DESIGN_CHANGE: 0`.
+
+Every state transition must record the immutable candidate HEAD and tree, the exact gate/run/job/artifact identifiers used, and the next state and owner in Issue #172 or the PR #171 body. A field named `LAST_AUDITED_HEAD` is a stable audit cursor, never a substitute for re-fetching the live PR ref. At every resume, push, gate decision, Producer checkpoint, review, integration step, and release action, re-fetch live GitHub state first and stop on mismatch.
+
+### 19.2 Execution state machine
+
+| State | Owner | Entry condition and only allowed action | Success transition | Failure or stop transition |
+|---|---|---|---|---|
+| `SOL_DESIGN_ACTIVE` | original Sol thread | Audit authority, live refs, evidence, current Design Lock, and the complete loop. Sol may edit canonical design/ledger metadata but not production implementation. | `DESIGN_LOCKED` with a revision, cursor, `NEXT_OWNER`, and `RESUME_FROM` -> `LUNA_IMPLEMENTATION_ACTIVE`. | Unresolved High/Medium ambiguity -> remain `NOT_LOCKED`; Luna stays stopped. |
+| `LUNA_IMPLEMENTATION_ACTIVE` | Luna | Execute only the current Design Lock/Handoff from the exact cursor. Luna may use only the current phase's allowlist and may not choose product behavior, acceptance, return class, or release state. | Current focused/local/remote gate sequence advances exactly as Sections 18.5 and 19.4 specify. | Any stop condition -> `BLOCKED_RETURN_TO_SOL`; no repair commit, retry, rerun, or scope expansion unless the lock explicitly requires that run. |
+| `BLOCKED_RETURN_TO_SOL` | original Sol thread | Luna records failing HEAD/tree, gate, run/job/artifact, last green gate, and diagnostics, then stops. | Sol classifies under Section 19.3 and emits either a same-revision bounded remediation packet or a new locked revision. | Missing evidence needed to classify -> Sol writes a bounded diagnostic design; Luna does not diagnose by improvisation. |
+| `REMEDIATION_PACKET_READY` | Luna | Same Design revision; execute only Sol's exact allowlist, forbidden list, byte/semantic contract, validation, stop conditions, and cursor. | Return to the exact `RESUME_FROM`; never restart already-valid gates unless the packet says their dependency changed. | Any different failure, out-of-allowlist need, or failed acceptance -> `BLOCKED_RETURN_TO_SOL`. |
+| `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` | Producer | Enter only after the complete candidate-specific remote required CI and unfiltered Phase G are green. Submit the twelve Section 16 actual-production screens against one HEAD/tree. | Explicit Producer Visual Approval records `APPROVED_HEAD`, `APPROVED_TREE`, twelve evidence identifiers, and approval comment/time -> `PRODUCER_VISUAL_APPROVED_FREEZE`. | Reject or changes requested -> `SOL_DESIGN_ACTIVE`; Luna does not interpret the feedback or edit. |
+| `PRODUCER_VISUAL_APPROVED_FREEZE` | Luna | Do not commit. Finalize the Completion Packet as Issue/PR text and immutable artifacts against the approved HEAD/tree. | Exact live HEAD/tree match and complete packet -> `READY_FOR_SOL_FINAL_REVIEW`; owner returns to original Sol thread. | Any branch commit or HEAD/tree mismatch invalidates the freeze and Visual Approval -> `SOL_DESIGN_ACTIVE`, then all candidate gates and the Visual Checkpoint must be repeated. |
+| `SOL_FINAL_REVIEW_ACTIVE` | original Sol thread | Read-only audit of the frozen approved HEAD/tree and all required evidence. No fix in review mode. | High 0 / Medium 0 and no release action -> `SOL_FINAL_REVIEW_APPROVED`. | A finding routes only through Section 19.6. |
+| `SOL_FINAL_REVIEW_APPROVED` | Producer | Sol records exact approved HEAD/tree and finding counts. No integration or release action yet. | -> `PRODUCER_FINAL_ACCEPTANCE`. | Any candidate mutation invalidates approval -> `SOL_DESIGN_ACTIVE`. |
+| `PRODUCER_FINAL_ACCEPTANCE` | Producer | Producer accepts or rejects the exact Sol-approved HEAD/tree. Silence is not approval. | Explicit approval -> `STACKED_INTEGRATION_ACTIVE`. | Reject/changes requested -> `SOL_DESIGN_ACTIVE`; Section 19.7 applies. |
+| `STACKED_INTEGRATION_ACTIVE` | ChatGPT/command thread acting as the Producer-authorized release executor | Execute Section 19.8 only. Each Ready/retarget/merge step requires fresh expected-head, base, required-check, mergeability, and synthetic-tree checks. | PR #171 merge result SHA/tree verified -> `RELEASE_SHA_LOCKED`. | Drift, conflict, failing/skipped required check, unexpected tree, or permission failure -> `BLOCKED_RETURN_TO_SOL`; no merge/tag/release. |
+| `RELEASE_SHA_LOCKED` | the same Producer-authorized command thread | Release SHA is the PR #171 merge result on `main`; verify its tree is the Producer-accepted tree. Execute Section 19.9 only after explicit release authority remains current. | Annotated tag, matching GitHub Release, and explicit Pages release request succeed -> explicit `LUNA_VALIDATION` handoff for `RELEASED` QA. | Any mismatch or partial release failure -> stop and return to Sol; never move a tag or rewrite history. |
+| `RELEASED` | Luna under a new explicit `ROLE_LOCK: LUNA_VALIDATION` post-release handoff | Run only the Section 19.10 post-release QA at the published SHA. Keep Issue #172 open; no repair, redeploy, rollback, or closure authority. | Report all gates green to the command thread -> controlled `PROJECT_STATE` update and `CLOSED`. | Public failure -> `POST_RELEASE_BLOCKED`; record evidence and return to Sol without repair. |
+| `POST_RELEASE_BLOCKED` | original Sol thread, with Producer decision where release/product scope changes | Classify infrastructure redeploy versus product recovery and write an exact `RELEASE_BACKUP_RECOVERY.md`-conformant packet. | A separately authorized recovery flow begins. | Unresolved recovery authority or immutable-ref mismatch -> remain stopped; no Luna or command-thread improvisation. |
+| `CLOSED` | ChatGPT/command thread | Enter only after published-SHA QA green. Update `PROJECT_STATE`, record release/post-QA evidence, close Issue #172 as completed, and clean only verified merged branches. | Version 1.0.0 loop complete. | Any missing evidence -> remain `RELEASED`; do not close. |
+
+Only one owner is active. Sol and Luna do not implement or review in parallel. `READY_FOR_SOL_FINAL_REVIEW`, `SOL_FINAL_REVIEW_APPROVED`, `PRODUCER_FINAL_ACCEPTANCE`, `RELEASE_SHA_LOCKED`, `RELEASED`, and `CLOSED` are distinct states and may not be collapsed.
+
+### 19.3 Sol classification after a return
+
+Sol, never Luna, chooses exactly one class. Before Final Review, Sol remains in `SOL_DESIGN`, does not edit production code, and may issue a same-revision packet for Luna. Only a Final Review finding classified `REMEDIATION_LOCAL` permits `SOL_REMEDIATION` and its mandatory later `LUNA_VALIDATION`:
+
+- `REMEDIATION_LOCAL`: root cause and correction are mechanical and bounded without changing product behavior, architecture, acceptance, evidence strength, save/PWA/release semantics, gameplay, balance, or AI. Keep the current revision and write one exact remediation packet with target files/functions, allowed and forbidden changes, validation, regression range, stop conditions, and cursor.
+- `DESIGN_CHANGE_REQUIRED`: any product/runtime correction, architectural choice, acceptance change, ambiguous root cause requiring a new diagnostic contract, more than one incoherent correction set, or change to state ownership/return/release rules. Increment the Design revision, lock the delta, and issue a new handoff.
+
+A new failure at the same required gate after a bounded remediation is never authority for another Luna fix. Luna returns to Sol after the first failed attempt. Sol may require new diagnostics only through one of the two classifications above.
+
+### 19.4 Technical gate order and promotion
+
+For the current r5 cursor, Luna executes this exact order:
+
+1. Section 19.5 LF-only remediation and its semantic/byte checks;
+2. PR Verify on the new remote candidate;
+3. the existing automated remote ordered WebKit trio, three complete sequences of Stage 6 -> Stage 24 -> Stage 25;
+4. local unfiltered Phase G 54/54 plus validator and every Section 18.5 full regression;
+5. restore the unfiltered Phase G workflow binding and prove its focused-only binding is absent;
+6. one new unfiltered remote required-CI run, including Phase G 54/54, validator, all required jobs, and required artifacts;
+7. wait until that entire required run is terminal; only complete green may enter the Producer Visual Checkpoint.
+
+The already-complete isolated diagnostics and local ordered trio 3/3 are not repeated for the LF-only change, and they are not final evidence. A prior, local, partial, skipped, cancelled, neutral, or stale run cannot substitute for an attempt-specific required remote result. After the LF push, any required job failure or unexpected skip in the candidate's required run returns immediately to Sol after the run is terminal. Luna has no authority to decide that a failure is unrelated, flaky, retryable, or ignorable.
+
+### 19.5 Current execution cursor and LF-only remediation
+
+- `DESIGN_AUDITED_HEAD`: `c57bd2690ef1f50e92e99736d59dab86c4af71f9`
+- `DESIGN_AUDITED_TREE`: `65bb817fc3b73526619e51ac4712094f7a1834e6`
+- `LF_SEMANTIC_BASE`: `f7149732fadec5142d0e475f201984dd5a48e217`
+- `FAILED_GATE`: runs `32475729057` and `32478283607`; PR Verify jobs `96751598547` and `96759071225`; `Check patch whitespace`; dependent Phase G skipped
+- `LAST_GREEN_GATE`: isolated Stage 6/24/25 diagnostics complete and local ordered trio 3/3, local-only and not reusable for final freeze
+- `REMEDIATION_CLASS`: `REPO_HYGIENE / REMEDIATION_LOCAL`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION`
+- `RESUME_FROM`: exact-file LF remediation with semantic diff 0 -> PR Verify -> automated remote ordered trio 3/3
+
+The exact packet in Handoff Section 12 is authoritative. It permits only LF normalization of `.github/workflows/ci.yml` and `scripts/v100-phase-g-production-matrix.mjs`, plus the three-path LF contract in `.gitattributes`. It preserves the workflow BOM, preserves `tests/v100-phase-g-checkpoint.test.mjs` byte-for-byte, forbids repository-wide normalization and all `app/**`/product/gameplay/evidence changes, and requires CI-equivalent `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD` plus semantic-diff-zero proof against `LF_SEMANTIC_BASE`.
+
+Before editing, Luna re-fetches PR #171 and verifies the live history contains both `DESIGN_AUDITED_HEAD` and the r5 packet commit identified in Issue #172/PR #171. If targets changed after that packet, stop. The live HEAD is not embedded here because it changes when this docs-only revision is committed; it must be read from the GitHub ref.
+
+### 19.6 Sol Final Review finding routing
+
+Sol records one of these outcomes against the frozen HEAD/tree:
+
+- `APPROVE`: High 0, Medium 0 -> `PRODUCER_FINAL_ACCEPTANCE`.
+- `EVIDENCE_PACKET_INCOMPLETE`: no candidate commit is needed. Return to `LUNA_IMPLEMENTATION_ACTIVE` only to add or repair immutable evidence/ledger references for the same HEAD/tree. Producer Visual Approval remains valid only while both hashes remain exact. Then resume the same Sol Final Review.
+- `REMEDIATION_LOCAL`: Sol exits review mode, owns and commits only the bounded local remediation allowed by the Sol role, then hands the new HEAD to `LUNA_VALIDATION`. Because the branch changed, all candidate technical gates, Producer Visual Checkpoint, evidence freeze, and Sol Final Review repeat.
+- `DESIGN_CHANGE_REQUIRED`: return to `SOL_DESIGN_ACTIVE`, increment the revision, then Luna implements the new lock. All candidate technical gates, Producer Visual Checkpoint, evidence freeze, and Sol Final Review repeat.
+
+Luna never chooses the finding class, the affected regression range, whether Visual Approval survives, or whether review may resume. Any branch commit after Visual Approval invalidates that approval; only same-HEAD/tree evidence completion may preserve it.
+
+### 19.7 Producer Visual or Final Acceptance rejection
+
+Any Producer rejection or changes request returns to `SOL_DESIGN_ACTIVE` with the exact Producer statement recorded. Sol decides whether the response is a same-revision `REMEDIATION_LOCAL` packet or `DESIGN_CHANGE_REQUIRED`. Luna makes no edit until a new Design-locked cursor exists. Any resulting branch commit requires the full candidate gate sequence, a new twelve-screen Visual Checkpoint and approval, a new freeze, a new Sol Final Review approval, and a new Producer Final Acceptance. A rejection never authorizes direct integration or release.
+
+### 19.8 Stacked integration contract
+
+The approved stack is exactly:
+
+1. PR #169: `docs/story-v10-final-release-baseline` -> `main`;
+2. PR #170: `codex/v1.0.0-sol-design` -> first the PR #169 branch, then retarget to updated `main` after #169 merges;
+3. PR #171: `codex/v1.0.0-luna-implementation` -> first the PR #170 branch, then retarget to updated `main` after #170 merges.
+
+At the r5 audit, the fixed heads are #169 `435dc959d1972646f7e82b6c45d3f1c25d890252`, #170 `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`, and #171's live ref, which must equal the Producer-accepted HEAD at integration time. These values are preconditions, not permissions to use stale state.
+
+After explicit Producer Final Acceptance, make #169 Ready, require complete green/mergeable and exact head, then normally merge. Re-fetch `main`; retarget #170 to `main`, require a fresh complete green synthetic result, exact head, and mergeability, then normally merge. Re-fetch `main`; retarget #171 to `main`, require fresh complete green required CI including unfiltered Phase G, exact Producer-accepted head, and mergeability. Before merging #171, compute or obtain the synthetic merge tree and require it to equal `APPROVED_TREE`; unexpected `main` drift is a stop, not an allowed extra. Only then normally merge #171.
+
+The PR #171 merge result commit, not a PR head or earlier main SHA, becomes `RELEASE_SHA`. Re-fetch it from `main`; require its tree to equal `APPROVED_TREE` and its ancestry to include the three approved PR heads. Any mismatch returns to Sol before tag, Release, or Pages. No force push, rebase, amend, direct-main push, bypassed check, or squash-dependent content reconstruction is authorized.
+
+### 19.9 Tag, GitHub Release, and official Pages
+
+Release action remains prohibited until `SOL_FINAL_REVIEW_APPROVED` and explicit `PRODUCER_FINAL_ACCEPTANCE` are both recorded for the exact approved HEAD/tree and stacked integration has produced the verified `RELEASE_SHA`.
+
+The authorized executor then:
+
+1. creates annotated tag `v1.0.0` at `RELEASE_SHA` without moving any existing tag;
+2. creates the matching non-draft, non-prerelease GitHub Release at that tag;
+3. keeps Issue #172 open and records tag, Release, SHA, and tree;
+4. manually dispatches the official Pages workflow from `main` with exactly: `operation=release`, `deploy=true`, `version=1.0.0`, `release_ref=v1.0.0`, `release_sha=RELEASE_SHA`, `issue_number=172`, and one new unique `request_id`;
+5. requires source validation, production build, static Pages build, browser smoke, deployment, and published metadata to succeed.
+
+A PR workflow, preview, ordinary `main` push, docs update, tag alone, or Release alone is never the official deployment. ChatGPT Sites is excluded.
+
+### 19.10 Post-release QA, recovery, and closure
+
+At the public URL, verify the published version and SHA match `RELEASE_SHA`; anonymous access and major assets have no auth/404/request failure; fresh save and the supported previous-release save/PWA update paths work; save/export/import/corruption recovery and offline/rollback-generation contracts remain intact; required mobile/WebKit, audio, battle, event, ending/credits/epilogue, and Producer-accepted presentation evidence still represent the published build. Record exact browsers/devices and never substitute WebKit emulation for physical-iPhone claims.
+
+If deployment infrastructure or published metadata is wrong while the immutable release code is proven correct, stop in `POST_RELEASE_BLOCKED` and return to Sol for an exact `RELEASE_BACKUP_RECOVERY.md` redeploy packet. If product code/content/save/PWA is wrong, return to Sol and Producer; recover through a normal revert/fix PR and a new immutable release request. Never force-reset `main`, move/overwrite `v1.0.0`, rewrite a Release, or claim rollback before the public SHA is verified. Luna has no autonomous post-release repair or rollback authority.
+
+Only after post-release QA is green may a controlled follow-up update `PROJECT_STATE.md` with the published merge SHA/tree/tag/Release/Pages evidence, record completion in Issue #172, close it with `state_reason=completed`, and clean merged branches. The generic governance normalization debt is a separate post-V1 change and cannot delay or mutate this candidate unless Producer explicitly reopens it.
+
+### 19.11 r5 audit result
+
+The original Sol thread re-read all mandatory authorities and live PR/CI evidence, then performed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits. Revision r5 is locked only with `High ambiguity: 0` and `Medium ambiguity: 0`. This is design/execution closure, not product readiness, Visual Approval, Final Review approval, Producer Final Acceptance, integration, or release authorization.
