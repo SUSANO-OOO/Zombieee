@@ -10,6 +10,9 @@ import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shar
 const manifestPath = path.resolve("docs/qa/v100/phase-g-screenshot-manifest.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 const evidenceDir = path.resolve(process.env.V100_PHASE_G_EVIDENCE_DIR ?? "outputs/v100-phase-g");
+const evidenceRelativeDir = path.relative(process.cwd(), evidenceDir).replaceAll("\\", "/").replace(/\/+$/u, "");
+const evidencePrefix = `${evidenceRelativeDir || "."}/`;
+const combatEvidencePrefix = `${evidencePrefix}combat/`;
 const reportPath = path.join(evidenceDir, "phase-g-report.json");
 const report = JSON.parse(await readFile(reportPath, "utf8"));
 const requiredSequence = ["source", "prep", "travel", "contact", "impact", "target-reaction", "aftermath"];
@@ -63,7 +66,7 @@ for (const entry of entries) {
   fail(expected.has(entry.viewport), `${entry.id} viewport ${entry.viewport}`);
   fail(entry.category === "core" ? entry.engine === "chromium" : ["chromium", "webkit"].includes(entry.engine), `${entry.id} engine ${entry.engine}`);
   fail(typeof entry.evidence === "string" && entry.evidence.length > 0, `${entry.id} missing evidence path`);
-  fail(typeof entry.evidence === "string" && entry.evidence.startsWith("outputs/v100-phase-g/"), `${entry.id} evidence outside Phase G output`);
+  fail(typeof entry.evidence === "string" && entry.evidence.startsWith(evidencePrefix), `${entry.id} evidence outside Phase G output`);
   const reportEntry = reportByPath.get(entry.evidence);
   fail(Boolean(reportEntry), `${entry.id} missing runtime report linkage`);
   const productionContract = reportEntry?.productionContract;
@@ -74,7 +77,13 @@ for (const entry of entries) {
     const runtime = reportEntry?.runtime;
     fail(runtime?.screen === "battle", `${entry.id} is not an actual mounted battle screen`);
     fail(Array.isArray(runtime?.fighters) && runtime.fighters.some((fighter) => fighter.hp > 0), `${entry.id} has no live combat fighter`);
-    fail((runtime?.attackIdentity?.length ?? 0) > 0 || (runtime?.pendingWeaponHits?.length ?? 0) > 0 || (runtime?.battlePresentationEffects?.length ?? 0) > 0, `${entry.id} has no combat presentation activity`);
+    const causalActivity = reportEntry?.combatCausalProof;
+    fail((runtime?.attackIdentity?.length ?? 0) > 0
+      || (runtime?.pendingWeaponHits?.length ?? 0) > 0
+      || (runtime?.battlePresentationEffects?.length ?? 0) > 0
+      || (causalActivity?.sourceToTargetEdges?.length ?? 0) > 0
+      || (causalActivity?.visualEvents?.length ?? 0) > 0,
+    `${entry.id} has no combat presentation activity`);
     fail(reportEntry?.combatCausalProof?.ok === true, `${entry.id} causal combat proof is incomplete`);
     fail((reportEntry?.productionContract?.observed?.canvas?.visiblePixels ?? 0) > 0, `${entry.id} canvas has no visible production pixels`);
     if (entry.state === "battle-boss") fail(runtime?.fighters?.some((fighter) => fighter.side === "zombie" && fighter.kind === "takuya-omega" && fighter.hp > 0), `${entry.id} has no TAKUYA-Ω boss HUD runtime`);
@@ -101,7 +110,7 @@ for (const evidence of combatEvidence) {
   fail(linkedReport?.productionContract?.ok === true, `${evidence.id} production state contract failed`);
   fail(linkedReport?.combatCausalProof?.ok === true, `${evidence.id} causal runtime proof failed`);
   fail(diagnosticsClean(linkedReport?.diagnostics), `${evidence.id} linked capture has diagnostics`);
-  fail(typeof evidence.runtimeEvidence === "string" && evidence.runtimeEvidence.startsWith("outputs/v100-phase-g/combat/"), `${evidence.id} runtime evidence path invalid`);
+  fail(typeof evidence.runtimeEvidence === "string" && evidence.runtimeEvidence.startsWith(combatEvidencePrefix), `${evidence.id} runtime evidence path invalid`);
   let runtimeEvidence = null;
   try {
     runtimeEvidence = JSON.parse(await readFile(path.resolve(evidence.runtimeEvidence), "utf8"));

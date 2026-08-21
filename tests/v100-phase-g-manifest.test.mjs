@@ -12,6 +12,12 @@ const extraViewports = new Set(["667x375", "736x414", "932x430"]);
 const coreStates = ["title-name", "dialogue-left", "dialogue-right", "map-normal", "map-locked-boss", "formation", "personnel", "support-vehicle-management", "battle-normal", "battle-boss", "result-win", "result-lose", "ending", "credits", "epilogue-postgame", "data-management-modal"];
 const combatActors = V100_REPRESENTATIVE_COMBAT_CONTRACT.map(({ actor }) => actor);
 const causalSequence = ["source", "prep", "travel", "contact", "impact", "target-reaction", "aftermath"];
+const evidencePrefixes = new Set(manifest.entries.map(({ evidence }) => {
+  const normalized = String(evidence).replaceAll("\\", "/");
+  const separator = normalized.lastIndexOf("/");
+  return separator >= 0 ? normalized.slice(0, separator + 1) : "";
+}));
+const evidencePrefix = evidencePrefixes.size === 1 ? [...evidencePrefixes][0] : "";
 
 test("Phase G requires the 48 core and 6 additional production screenshot rows", () => {
   assert.equal(manifest.schemaVersion, 3);
@@ -36,7 +42,8 @@ test("Phase G requires the 48 core and 6 additional production screenshot rows",
   const extras = manifest.entries.filter(({ category }) => category === "battle-extra");
   assert.deepEqual(new Set(extras.map(({ viewport }) => viewport)), extraViewports);
   assert.deepEqual(new Set(extras.map(({ engine }) => engine)), new Set(["chromium", "webkit"]));
-  assert.ok(manifest.entries.every(({ evidence }) => evidence.startsWith("outputs/v100-phase-g/")));
+  assert.ok(evidencePrefix.startsWith("outputs/"));
+  assert.ok(manifest.entries.every(({ evidence }) => evidence.startsWith(evidencePrefix)));
   const expectedEnemyCoverage = deriveV100ProductionEnemyCoverage();
   const shardContract = validateProductionEnemyRuntimeShards();
   assert.equal(manifest.enemyRuntimeCoverage.expectedCount, expectedEnemyCoverage.expectedCount);

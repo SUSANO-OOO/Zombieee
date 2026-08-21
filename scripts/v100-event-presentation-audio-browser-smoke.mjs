@@ -110,12 +110,18 @@ async function portraitAuditFor(page, selector) {
   return portrait.evaluate((element) => {
     const style = getComputedStyle(element);
     const rect = element.getBoundingClientRect();
+    const frame = element.closest(".v100-portrait-frame");
+    const frameRect = frame?.getBoundingClientRect();
     return {
       opacity: style.opacity,
       objectFit: style.objectFit,
       backgroundColor: style.backgroundColor,
       width: rect.width,
       height: rect.height,
+      frameWidth: frameRect?.width ?? 0,
+      frameHeight: frameRect?.height ?? 0,
+      frameOverflow: frame ? getComputedStyle(frame).overflow : "missing",
+      frameFraming: frame?.getAttribute("data-portrait-framing") ?? "missing",
     };
   });
 }
@@ -145,6 +151,9 @@ function assertPortraitAudit(name, audit) {
   invariant(audit.objectFit === "contain", `${name} portrait object-fit ${audit.objectFit}`);
   invariant(audit.backgroundColor === "rgba(0, 0, 0, 0)", `${name} portrait background ${audit.backgroundColor}`);
   invariant(audit.width >= 48 && audit.height >= 64, `${name} portrait unusable ${JSON.stringify(audit)}`);
+  invariant(audit.frameWidth >= 80 && audit.frameHeight >= 60, `${name} portrait frame unusable ${JSON.stringify(audit)}`);
+  invariant(audit.frameOverflow === "hidden", `${name} portrait frame overflow ${audit.frameOverflow}`);
+  invariant(audit.frameFraming === "waist-up-common", `${name} portrait frame ${audit.frameFraming}`);
 }
 
 function assertDialogueSurfaceAudit(name, audit) {
@@ -183,6 +192,10 @@ for (const engine of engines) {
             nodeIndex: element.getAttribute("data-v100-node-index"),
             portraitSide: element.querySelector(".v100-story-node")?.getAttribute("data-portrait-side") ?? "none",
             portraitCount: element.querySelector(".v100-story-node")?.getAttribute("data-portrait-count") ?? "0",
+            portraitFrames: [...element.querySelectorAll(".v100-portrait-frame")].map((frame) => {
+              const rect = frame.getBoundingClientRect();
+              return { width: rect.width, height: rect.height, framing: frame.getAttribute("data-portrait-framing") };
+            }),
             audioOwner: element.getAttribute("data-v100-audio-owner"),
             bodyText: document.body.innerText.trim(),
             overflow: Math.max(document.documentElement.scrollWidth - document.documentElement.clientWidth, document.body.scrollWidth - document.body.clientWidth),
@@ -192,6 +205,13 @@ for (const engine of engines) {
           const expected = v100EventPresentationFor({ eventId: eventCase.eventId, phase: eventCase.phase, node: { kind: "action" }, nodeIndex: eventCase.nodeIndex ?? 0 });
           invariant(observed.category === expected.category, `${name} category ${observed.category} !== ${expected.category}`);
           invariant(observed.audioOwner === "v100-event-runtime", `${name} event audio owner missing`);
+          invariant(observed.portraitFrames.every(({ framing }) => framing === "waist-up-common"), `${name} portrait framing contract missing`);
+          if (observed.portraitFrames.length > 1) {
+            const widths = observed.portraitFrames.map(({ width }) => width);
+            const heights = observed.portraitFrames.map(({ height }) => height);
+            invariant(Math.max(...widths) - Math.min(...widths) <= 1, `${name} portrait frame widths diverge`);
+            invariant(Math.max(...heights) - Math.min(...heights) <= 1, `${name} portrait frame heights diverge`);
+          }
           invariant(observed.bodyText.length > 0, `${name} blank body`);
           invariant(observed.overflow <= 1, `${name} horizontal overflow ${observed.overflow}`);
           invariant(!eventCase.expectedInitialSide || observed.portraitSide === eventCase.expectedInitialSide, `${name} initial speaker side ${observed.portraitSide} !== ${eventCase.expectedInitialSide}`);
