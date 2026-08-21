@@ -1,6 +1,6 @@
 # Version 1.0.0 Luna Implementation Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r5`
+- Canonical Design Lock: `V100-SOL-DL-001 r6`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Role lock for implementation: `LUNA_IMPLEMENTATION`
 - Design status: `DESIGN_LOCKED`
@@ -505,3 +505,52 @@ Luna stops at `READY_FOR_SOL_FINAL_REVIEW`. The remaining authoritative route is
 `SOL_FINAL_REVIEW_APPROVED` -> `PRODUCER_FINAL_ACCEPTANCE` -> explicit Producer approval -> sequential #169/#170/#171 integration with fresh checks and exact tree verification -> PR #171 merge-result `RELEASE_SHA` -> annotated `v1.0.0` -> matching GitHub Release -> explicit official Pages release request using open Issue #172 -> published-SHA post-release QA -> `PROJECT_STATE` update and closure.
 
 Any Sol finding or Producer rejection returns through Sol's classification. After successful official deployment, a new explicit `ROLE_LOCK: LUNA_VALIDATION` handoff may authorize only Design Lock Section 19.10 published-SHA QA. No Luna release, integration, rollback, redeploy, post-release repair, or closure judgment is delegated.
+
+## 13. Revision r6 — required-CI diagnostic-only handoff
+
+Run this section only. It supersedes Section 12's LF action because the LF contract is now closed. Sections 18-19, all product requirements, and every release boundary remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 13.1 Execution cursor
+
+- `LAST_AUDITED_HEAD`: `21b3a2076b5ff580189c9cfe69fb4dc30193a45d`
+- `LAST_AUDITED_TREE`: `1f741a0cb0f202690c7f96d4578c3f26ef470a39`
+- `FAILED_GATE`: run `32487312283`; PR Verify `96786672078` Chromium final-canvas; Stage 3 final-candidate `96792165248`; dependent Phase G `96789049082` skipped
+- `LAST_GREEN_GATE`: LF byte/BOM/EOL/semantic-zero and whitespace checks passed; pre-failure PR Verify steps through Chromium canonical HUD, WebKit enemy/hosted jobs, Stage 3 entrance-candidate, and exact-base final control passed; none is final-freeze evidence
+- `REMEDIATION_CLASS`: `REQUIRED_CI_PRODUCT_RUNTIME_DIAGNOSTIC / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for diagnostics only
+- `RESUME_FROM`: additive observations -> focused contract/lint/build/diff checks -> one normal diagnostic push -> wait for that one CI run terminal -> `BLOCKED_RETURN_TO_SOL_DIAGNOSTIC_COMPLETE`
+
+Before editing, re-fetch PR #171. Its open Draft branch must still contain `LAST_AUDITED_HEAD` and the r6 packet commit recorded in Issue #172 and the PR body. Re-fetch the actual live HEAD/tree rather than copying either document field. Any branch/base/target/revision/PR-state drift returns to Sol without editing.
+
+### 13.2 Exact authorized work
+
+Add observations only in these existing owners:
+
+1. `scripts/v099-final-remediation-browser-smoke.mjs`: record the bounded `setupTrace` and, after readiness, `deploymentTrace` defined by Design Lock 20.3 from `enterLegacyQaBattle`, `openBattlePage`, `pauseAtDeploymentCheckpoint`, `queueAndPauseAtFirstDeploymentFrame`, `runDeploymentCase`, and failure serialization. Preserve the page/trace/screenshot when `openBattlePage` throws before returning. Keep all six viewports, eight unit families, six checkpoints, waits, assertions, screenshots, and contact sheets unchanged.
+2. `scripts/p5-browser-smoke.mjs`: record the Node-owned one-second `finalCutTrace` defined by Design Lock 20.3 around `auditTakuyaFinalAudio`. Preserve the current predicate, 60-second deadline, final-base fixture, story/audio assertions, and candidate/base distinction.
+3. `scripts/run-stage3-audio-bounded.mjs`: only preserve that child trace in `bounded-summary.json` if the existing serialization omits it. Do not broaden `isRetryableTargetClosed` or add an attempt.
+4. Add only schema/no-weakening checks to `tests/v0995-runtime-evidence-contract.test.mjs`, `tests/stage3-final-bounded.test.mjs`, and `tests/ci-contract.test.mjs`.
+
+Forbidden: `.github/workflows/ci.yml`, `.gitattributes`, Phase G files, every `app/**` and `public/**` path, package files, product data/assets/audio, timeout/retry/predicate/assertion/axis/unit/case/artifact changes, gameplay/balance/AI/save/PWA/VFX changes, and any correction inferred from the trace.
+
+### 13.3 Validation, push, and mandatory return
+
+Run exactly:
+
+1. `node --test tests/v0995-runtime-evidence-contract.test.mjs tests/stage3-final-bounded.test.mjs tests/ci-contract.test.mjs`;
+2. `npm run lint`;
+3. `npm run build`;
+4. `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD`;
+5. an exact diff audit proving the allowlist and no acceptance/retry/timing semantic change.
+
+Commit once and push normally once. Do not manually dispatch, retry, or rerun anything. Wait for the resulting automatic CI run to become terminal. Record HEAD/tree, run/job/artifact IDs, all six Chromium deployment axis results, the three Stage 3 matrix results, PR Verify, and Phase G state in one PR comment.
+
+Then return exactly:
+
+`STATUS: BLOCKED_RETURN_TO_SOL_DIAGNOSTIC_COMPLETE`
+
+Sol, not Luna, classifies each trace and writes any correction packet. Do not make a second commit, retry, rerun, Phase G run, local full regression, or product correction. A pre-push acceptance failure or missing out-of-allowlist observation returns `STATUS: BLOCKED_RETURN_TO_SOL` without push. Ready, merge, tag, Release, Pages, Producer checkpoint, Completion Packet, and Issue closure are prohibited.
+
+### 13.4 Short Luna handoff
+
+Re-fetch PR #171; execute Design Lock Section 20 / Handoff Section 13 only. Add bounded failure traces in the three authorized QA scripts and three authorized contract tests, preserving every predicate/deadline/retry/assertion/axis. Pass the exact local checks, make one normal diagnostic commit/push, wait for that one CI run to finish, record its immutable evidence, and return `BLOCKED_RETURN_TO_SOL_DIAGNOSTIC_COMPLETE`. No `app/**`, correction, retry/rerun, Phase G, or release action.

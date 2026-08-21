@@ -35,9 +35,9 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r5`/u);
+  assert.match(design, /Revision: `r6`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r5`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r6`/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
   assert.doesNotMatch(handoff.match(/## 2\. Required reading([\s\S]+?)## 3\./u)?.[1] ?? "", /CODEX_SOL_ROLE/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
@@ -47,7 +47,7 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   assert.match(handoff, /No amend, rebase, force push, direct main push/u);
 });
 
-test("r5 closes the Version 1.0.0 execution, return, freeze, and release loop", async () => {
+test("r6 preserves the release loop and locks the required-CI diagnostic return", async () => {
   const [design, handoff] = await Promise.all([
     readFile(DESIGN, "utf8"),
     readFile(HANDOFF, "utf8"),
@@ -75,9 +75,14 @@ test("r5 closes the Version 1.0.0 execution, return, freeze, and release loop", 
   assert.match(design, /operation=release`.*deploy=true`.*issue_number=172`/u);
   assert.match(design, /High ambiguity: 0.*Medium ambiguity: 0/u);
 
-  assert.match(handoff, /LAST_AUDITED_HEAD`: `c57bd2690ef1f50e92e99736d59dab86c4af71f9`/u);
+  assert.match(handoff, /LAST_AUDITED_HEAD`: `21b3a2076b5ff580189c9cfe69fb4dc30193a45d`/u);
   assert.match(handoff, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
-  assert.match(handoff, /RESUME_FROM`: exact-file LF remediation with semantic diff 0 -> push -> PR Verify green -> same focused run's automated remote ordered trio 3\/3 -> every required job in that focused run terminal green/u);
+  assert.match(handoff, /REQUIRED_CI_PRODUCT_RUNTIME_DIAGNOSTIC \/ DESIGN_CHANGE_REQUIRED/u);
+  assert.match(handoff, /RESUME_FROM`: additive observations -> focused contract\/lint\/build\/diff checks -> one normal diagnostic push -> wait for that one CI run terminal -> `BLOCKED_RETURN_TO_SOL_DIAGNOSTIC_COMPLETE`/u);
+  assert.match(handoff, /Do not make a second commit, retry, rerun, Phase G run, local full regression, or product correction/u);
+  assert.match(design, /Artifact `9449229851`/u);
+  assert.match(design, /one additive diagnostic commit affecting only/u);
+  assert.match(design, /High ambiguity: 0` and `Medium ambiguity: 0/u);
   assert.match(handoff, /Luna never classifies a failure, finding, Producer rejection/u);
 });
 

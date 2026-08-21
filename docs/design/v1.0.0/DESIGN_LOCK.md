@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r5`
+- Revision: `r6`
 - Status: `DESIGN_LOCKED`
 - Role owner: `SOL_DESIGN`
 - Story baseline commit: `435dc959d1972646f7e82b6c45d3f1c25d890252`
@@ -37,6 +37,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r3 inherits every r2 product, story, identity, asset, gameplay, save, audio, PWA, and presentation decision unchanged. It adds only the deterministic diagnosis and execution contract for the remote Phase G WebKit 667x375 failure. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r4 incorporates the subsequent remote Stage 24 failure and replaces the Stage 6-only diagnostic boundary with one finite WebKit battle-extra harness contract covering Stages 6, 24, and 25. It changes no product, story, identity, asset, gameplay, balance, AI, evidence, Producer checkpoint, save, audio, PWA, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r5 keeps the complete r4 Phase G contract unchanged and makes the full Version 1.0.0 execution, return, visual-approval freeze, stacked-integration, release, post-release, rollback, and closure loop authoritative in Section 19. It adds no product behavior or acceptance weakening. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r6 keeps Sections 18-19 unchanged and classifies the new required-CI failures at candidate `21b3a2076b5ff580189c9cfe69fb4dc30193a45d` as `DESIGN_CHANGE_REQUIRED`. Section 20 authorizes one additive, diagnostic-only harness commit and one resulting remote run; it authorizes no product correction. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -703,3 +704,82 @@ Only after post-release QA is green may a controlled follow-up update `PROJECT_S
 ### 19.11 r5 audit result
 
 The original Sol thread re-read all mandatory authorities and live PR/CI evidence, then performed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits. Revision r5 is locked only with `High ambiguity: 0` and `Medium ambiguity: 0`. This is design/execution closure, not product readiness, Visual Approval, Final Review approval, Producer Final Acceptance, integration, or release authorization.
+
+## 20. Revision r6 — required-CI product-runtime diagnostic return
+
+### 20.1 Audited evidence and classification
+
+Sol re-fetched PR #171 and audited candidate HEAD `21b3a2076b5ff580189c9cfe69fb4dc30193a45d`, tree `1f741a0cb0f202690c7f96d4578c3f26ef470a39`, parent `3d0eb4ddfbee2365c33e7fd5e8dc6eff96c098db`, focused run `32487312283`, stop comment `5370853681`, job logs, artifacts, and workflow dependencies.
+
+The LF packet itself is closed: its commit changes exactly `.gitattributes`, `.github/workflows/ci.yml`, and `scripts/v100-phase-g-production-matrix.mjs`; both normalized files have semantic diff zero against the parent, the workflow keeps its UTF-8 BOM, the Phase G script keeps no BOM, the checkpoint test blob is unchanged, and CI-equivalent `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD` passes. In run `32487312283`, `Check patch whitespace`, lint, content validation, build, tests, PWA partial-update QA, and Chromium canonical-HUD evidence passed before the new failure.
+
+The new required failures are distinct and neither is classified as retryable:
+
+- PR Verify job `96786672078` failed `Capture Issue 156 final-canvas deployment evidence (Chromium)`: `667x375`, `844x340`, and `932x430` timed out under an unchanged 30,000 ms setup/readiness wait, while `736x414`, `844x390`, and `1280x720` passed. Artifact `9448623917` reports `units: []` for all three failures and contains no failure screenshot or lifecycle path, proving the failure occurred inside `openBattlePage` before the first unit/checkpoint/final-canvas assertion. The job label is not a root-cause classification. The later Issue 165 upload error is secondary because its producer step was skipped after the primary failure.
+- WebKit Stage 3 Audio Route job `96792165248` failed only `final-candidate` at `final-cut`: the 60,000 ms predicate timed out, `failureState` was null, diagnostics and pending requests were zero, and no retry condition matched. Artifact `9449229851` records the failure. In the same run, `entrance-candidate` job `96792165262` and exact PR-base `final-base` job `96792165296` passed. Candidate and base use the same `scripts/p5-browser-smoke.mjs` and `scripts/run-stage3-audio-bounded.mjs`; the controlled difference is the built product tree.
+- `V1 Phase G Production Matrix` job `96789049082` was skipped because `.github/workflows/ci.yml` binds it with `needs: verify`. Therefore no remote ordered trio, local full Phase G, or unfiltered remote Phase G exists for this candidate.
+
+This evidence proves candidate-specific required-regression divergence, but it does not identify the exact product owner for either failure and does not prove that the two failures share a cause. Under Section 19.3, an ambiguous root requiring a new diagnostic contract and potentially more than one correction set is `DESIGN_CHANGE_REQUIRED`. Revision r6 therefore classifies the return as `REQUIRED_CI_PRODUCT_RUNTIME_DIAGNOSTIC / DESIGN_CHANGE_REQUIRED`; it is not a same-revision retry or correction packet.
+
+### 20.2 Diagnostic-only ownership
+
+Luna may make one additive diagnostic commit affecting only:
+
+- `scripts/v099-final-remediation-browser-smoke.mjs`: `enterLegacyQaBattle`, `openBattlePage`, `pauseAtDeploymentCheckpoint`, `queueAndPauseAtFirstDeploymentFrame`, `runDeploymentCase`, and failure serialization;
+- `scripts/p5-browser-smoke.mjs`: `auditTakuyaFinalAudio`, the final-cut wait wrapper, and failure serialization;
+- `scripts/run-stage3-audio-bounded.mjs`: report serialization only, if needed to preserve the child diagnostic record;
+- `tests/v0995-runtime-evidence-contract.test.mjs`, `tests/stage3-final-bounded.test.mjs`, and `tests/ci-contract.test.mjs`: additive checks proving the diagnostic schema and unchanged retry/acceptance contract.
+
+No other file is authorized. In particular, `.github/workflows/ci.yml`, `.gitattributes`, `scripts/v100-phase-g-production-matrix.mjs`, every `app/**` and `public/**` file, package files, product data/assets/audio, and all unrelated tests are forbidden. If the additive evidence cannot be produced from the existing browser QA APIs within this allowlist, Luna records that exact missing observation and returns to Sol without editing.
+
+### 20.3 Required finite evidence
+
+The diagnostic commit observes only; it must not call a new mutating QA method or change the order or arguments of existing mutating fixture calls.
+
+For every Chromium deployment axis, begin a bounded `setupTrace` at page creation and retain at most 160 samples, no faster than once per 250 ms, through navigation, install-offer dismissal, legacy screen advancement, battle readiness, asset-boundary sealing, or failure. Each sample contains elapsed wall time, lifecycle phase, URL, document visibility, `.game-shell` screen, battle API presence, snapshot screen/running/paused/over/time, asset API presence, asset state/generation/completed/total/pending/failed/reason, current story line/screen when present, and console/page/request/HTTP/pending-request counts. `openBattlePage` must preserve this trace, the page close/crash signal, the last readable snapshot, and one failure screenshot even when it throws before returning the page to `runDeploymentCase`.
+
+Only after readiness succeeds, persist a bounded `deploymentTrace` for the active unit and expected checkpoint. Sample no faster than once per 250 ms and retain at most 160 samples per unit. Each sample contains elapsed wall time, unit kind/family, expected checkpoint/progress, document visibility, snapshot time/paused/over, fighter presence/id/x/y, door X, ramp X, computed progress, `gateEntering`, `combatReady`, `entryRampCleared`, and the existing deployment audit's `active`, `checkpoint`, `unitPass`, actual/opaque pixel bounds, and `finalCompositePixels`. A timeout record also contains the last sample, queue/fixture result, lifecycle phase, diagnostics, and failure screenshot. Passed axes retain their final setup trace and final unit trace so the three passing viewports are controls; assertions and screenshot/contact-sheet counts remain unchanged.
+
+For WebKit Stage 3 `final-candidate`, add a Node-owned `finalCutTrace` sampled once per second from immediately before resume until success, page close/crash, or the existing 60,000 ms deadline. Retain at most 75 samples. Each sample contains wall time, document visibility, audio dataset scene, snapshot time/paused/over/bossDefeated, the live TAKUYA id/hp/maxHp/ratio/combatReady/gateEntering/contained/state/cooldown/target, living-human count and kinds, `storyBattleReceiptEventIds`, `storyBattleEvaluatedCueKeys`, active/pending scripted bark IDs, and page/asset/pending-request state. Node also records page `close`/`crash`, the exact awaited predicate components, and the last successful sample even if a catch-time `page.evaluate` fails. The existing final-cut predicate, `P5_QA_TIMEOUT_MS`, and final-base control remain byte-equivalent in meaning.
+
+One normal push of this diagnostic commit starts exactly one new CI run. Luna waits until that run is terminal and records the new HEAD/tree, run/job/artifact IDs, the six Chromium axis results, Stage 3 entrance-candidate/final-candidate/final-base results, PR Verify result, and Phase G result. No manual rerun, job rerun, second diagnostic commit, or correction is authorized. The remote run is diagnostic evidence even when the same required jobs fail as expected; it is not a green gate or final-freeze evidence.
+
+### 20.4 Sol-only classification after diagnostic return
+
+Luna does not name the root cause or choose a correction. On return, Sol applies these mechanical evidence distinctions:
+
+- battle screen/running state or asset readiness never satisfies the existing setup predicate while the page remains live: setup/asset lifecycle owner;
+- deployment queue/spawn absent, rAF live, or progress/checkpoint never advances after readiness: product deployment lifecycle owner;
+- checkpoint/progress reached but composite/opacity/geometry audit diverges: product rendering/final-canvas owner;
+- Stage 3 boss ratio never reaches 0.25 while the battle remains live: product combat-runtime regression owner;
+- ratio reaches 0.25 but evaluated cue/receipt is absent: product story-trigger owner;
+- cue/receipt exists but the scripted bark or expected audio scene is absent: product bark/audio-route owner;
+- predicate components are all true while the waiter remains unresolved: QA predicate/orchestration owner;
+- page close/crash or missing samples with an exact lifecycle signal: browser lifecycle/harness owner.
+
+If the trace does not satisfy exactly one of these evidence classes for each failure, Sol writes the next design delta; Luna does not infer. If both failures resolve to one coherent QA-harness correction, Sol may issue a bounded remediation under a new locked cursor. Any `app/**` correction, multiple incoherent correction sets, gameplay/balance/AI effect, acceptance change, or evidence weakening requires another Design revision before implementation.
+
+### 20.5 Acceptance, stop, and cursor
+
+Before push, the diagnostic commit must pass:
+
+1. `node --test tests/v0995-runtime-evidence-contract.test.mjs tests/stage3-final-bounded.test.mjs tests/ci-contract.test.mjs`;
+2. `npm run lint` and `npm run build`;
+3. `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD`;
+4. diff audit proving only the Section 20.2 allowlist changed and no timeout, retry count, predicate, expected axis/unit/case, assertion, artifact retention, or pass/fail threshold weakened.
+
+Cursor:
+
+- `LAST_AUDITED_HEAD`: `21b3a2076b5ff580189c9cfe69fb4dc30193a45d`
+- `LAST_AUDITED_TREE`: `1f741a0cb0f202690c7f96d4578c3f26ef470a39`
+- `FAILED_GATE`: run `32487312283`; PR Verify `96786672078` Chromium final-canvas; Stage 3 final-candidate `96792165248`; dependent Phase G `96789049082` skipped
+- `LAST_GREEN_GATE`: LF byte/BOM/EOL/semantic-zero contract and `Check patch whitespace` passed; run `32487312283` pre-failure PR Verify steps through Chromium canonical HUD passed; WebKit enemy shards, hosted evidence, Stage 3 entrance-candidate, and exact-base final control passed. These are diagnostic controls, not final-freeze evidence.
+- `REMEDIATION_CLASS`: `REQUIRED_CI_PRODUCT_RUNTIME_DIAGNOSTIC / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Section 20 diagnostic-only execution
+- `RESUME_FROM`: add only the Section 20.2 observations -> local focused contract/lint/build/diff checks -> one normal diagnostic push -> wait for that one CI run terminal -> `BLOCKED_RETURN_TO_SOL_DIAGNOSTIC_COMPLETE`
+
+Any target/precondition drift, required observation needing an out-of-allowlist file, local acceptance failure, different remote failure, missing required artifact, or inability to preserve a last sample causes immediate `BLOCKED_RETURN_TO_SOL` with no push beyond the one authorized diagnostic commit and no correction. Phase G remains stopped. Producer Visual Checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, and Issue closure remain prohibited.
+
+### 20.6 r6 audit result
+
+Sol performed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live candidate and run. The diagnostic scope, evidence schema, single-push limit, return owner, and release boundary are locked with `High ambiguity: 0` and `Medium ambiguity: 0`. This is diagnostic design closure only, not root-cause correction or release readiness.
