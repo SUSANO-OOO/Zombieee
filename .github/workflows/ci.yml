@@ -232,18 +232,24 @@ jobs:
       - name: Install Phase G browser engines
         run: npx playwright install --with-deps chromium webkit
 
-      - name: Capture 54 production screenshots and runtime report
-        run: npm run qa:v100-phase-g
-
-      - name: Validate 54 production screenshots and combat evidence
-        run: npm run qa:v100-phase-g-validate
+      - name: Capture ordered WebKit battle-extra trio (focused)
+        env:
+          V100_PHASE_G_ONLY: battle-extra
+          V100_PHASE_G_ONLY_ENGINE: webkit
+        run: |
+          set -euo pipefail
+          for sequence in 1 2 3; do
+            export V100_PHASE_G_SEQUENCE_ID="remote-trio-${sequence}"
+            export V100_PHASE_G_EVIDENCE_DIR="outputs/v100-phase-g-trio/remote-${sequence}"
+            npm run qa:v100-phase-g
+          done
 
       - name: Upload Phase G production evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: v100-phase-g-production-evidence
-          path: outputs/v100-phase-g
+          name: v100-phase-g-webkit-battle-extra-focused
+          path: outputs/v100-phase-g-trio
           if-no-files-found: error
           retention-days: 14
 

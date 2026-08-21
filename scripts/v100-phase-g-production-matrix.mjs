@@ -73,9 +73,278 @@ const coreStates = [
 ];
 const onlyState = process.env.V100_PHASE_G_ONLY ?? "";
 const onlyVariant = process.env.V100_PHASE_G_ONLY_VARIANT ?? "";
+const onlyEngine = process.env.V100_PHASE_G_ONLY_ENGINE ?? "";
+const sequenceId = process.env.V100_PHASE_G_SEQUENCE_ID ?? null;
 const storageKeys = ["nishijin-campaign-v100", "nishijin-campaign-v100:mirror", "nishijin-campaign-v100:last-known-good", "nishijin-campaign-v100:owner"];
 const results = [];
 const phaseGBrowsers = new Map();
+const phaseGCheckpointRecorders = new Set();
+const pageCheckpointRecorders = new WeakMap();
+
+const BATTLE_EXTRA_CHECKPOINTS = Object.freeze([
+  "route-opened",
+  "formation-visible",
+  "battle-mounted-lifecycle-active",
+  "combat-observer-started",
+  "contract-identified",
+  "deployment-attempts-recorded",
+  "proof-actor-mounted-or-absent",
+  "living-human-target-acquired-or-not-required",
+  "proof-actor-attack-observed-or-not-required",
+  "proof-unit-deployed-and-attacked-or-not-required",
+  "frontline-deployment-sequence-completed",
+  "manual-vehicle-action-observed-or-not-required",
+  "causal-proof-complete",
+  "screenshot-saved",
+]);
+const RESOLVED_CHECKPOINT_STATUSES = new Set(["completed", "observed", "not-required", "absent"]);
+
+function checkpointRecorderFor(page) {
+  return pageCheckpointRecorders.get(page) ?? null;
+}
+
+function createBattleExtraCheckpointRecorder({ contract, engineName, viewport, context, page, browser }) {
+  const startedAt = Date.now();
+  const checkpointLog = [];
+  const checkpointState = new Map();
+  const eventLog = [];
+  const lifecycle = [];
+  const deploymentAttempts = [];
+  let awaiting = null;
+  let latestReadableState = null;
+  let failureFilePath = null;
+  let failureScreenshotPath = null;
+  let failurePayload = null;
+
+  const append = (kind, details = {}) => {
+    const entry = {
+      sequence: eventLog.length + 1,
+      kind,
+      elapsedMs: Date.now() - startedAt,
+      ...details,
+    };
+    eventLog.push(entry);
+    return entry;
+  };
+
+  const mark = (name, status = "completed", details = {}) => {
+    invariant(BATTLE_EXTRA_CHECKPOINTS.includes(name), `unknown battle-extra checkpoint: ${name}`);
+    const entry = {
+      sequence: checkpointLog.length + 1,
+      name,
+      status,
+      elapsedMs: Date.now() - startedAt,
+      details,
+    };
+    checkpointLog.push(entry);
+    const previous = checkpointState.get(name);
+    if (!previous || !RESOLVED_CHECKPOINT_STATUSES.has(previous.status) || RESOLVED_CHECKPOINT_STATUSES.has(status)) {
+      checkpointState.set(name, entry);
+    }
+    append("checkpoint", { checkpoint: name, status, details });
+    if (RESOLVED_CHECKPOINT_STATUSES.has(status)) awaiting = null;
+    return entry;
+  };
+
+  const markOnce = (name, status = "completed", details = {}) => {
+    const current = checkpointState.get(name);
+    if (current && RESOLVED_CHECKPOINT_STATUSES.has(current.status)) return current;
+    return mark(name, status, details);
+  };
+
+  const setAwaiting = (predicate, details = {}) => {
+    awaiting = { predicate, elapsedMs: Date.now() - startedAt, details };
+    append("awaiting", { predicate, details });
+  };
+
+  const clearAwaiting = () => {
+    if (!awaiting) return;
+    append("awaiting-cleared", { predicate: awaiting.predicate });
+    awaiting = null;
+  };
+
+  const lifecycleEvent = (event, details = {}) => {
+    const entry = { event, elapsedMs: Date.now() - startedAt, ...details };
+    lifecycle.push(entry);
+    append("lifecycle", entry);
+  };
+
+  const setLatestReadableState = (state) => {
+    if (state !== undefined) latestReadableState = state;
+  };
+
+  const recordDeploymentAttempt = (details) => {
+    const entry = {
+      sequence: deploymentAttempts.length + 1,
+      elapsedMs: Date.now() - startedAt,
+      ...details,
+    };
+    deploymentAttempts.push(entry);
+    append("deployment-attempt", entry);
+    if (details?.diagnostics) setLatestReadableState(details.diagnostics);
+    return entry;
+  };
+
+  const attach = () => {
+    pageCheckpointRecorders.set(page, recorder);
+    phaseGCheckpointRecorders.add(recorder);
+    page.on("close", () => lifecycleEvent("page-close"));
+    page.on("crash", () => lifecycleEvent("page-crash"));
+    context.on("close", () => lifecycleEvent("context-close"));
+    browser.on("disconnected", () => {
+      lifecycleEvent("browser-disconnect");
+      void writeFailureFile();
+    });
+  };
+
+  const snapshot = () => {
+    const checkpoints = BATTLE_EXTRA_CHECKPOINTS.map((name) => checkpointState.get(name) ?? {
+      name,
+      status: "unresolved",
+      elapsedMs: Date.now() - startedAt,
+      details: {},
+    });
+    return {
+      schemaVersion: 1,
+      recorder: "v100-webkit-battle-extra",
+      variant: contract.variant,
+      engine: engineName,
+      viewport: viewportLabel(viewport),
+      sequenceId,
+      orderedRunPosition: ["stage06-spitter-seal", "stage24-panther-commander", "stage25-president"].indexOf(contract.variant) + 1,
+      startedAt: new Date(startedAt).toISOString(),
+      elapsedMs: Date.now() - startedAt,
+      contract: {
+        variant: contract.variant,
+        stageId: contract.stageId,
+        stageNumber: contract.stageNumber,
+        stageName: contract.stageName,
+        expectedBoss: contract.bossKind,
+        proofActor: contract.proofActor ?? null,
+        proofUnitKind: contract.proofUnitKind ?? null,
+        manualAbilityKind: contract.manualAbilityKind ?? null,
+        requireVehicleAction: contract.requireVehicleAction === true,
+        formationUnitIds: contract.formationUnitIds ?? [],
+      },
+      checkpoints,
+      checkpointLog: [...checkpointLog],
+      lastCompletedCheckpoint: [...checkpointState.values()].filter((entry) => RESOLVED_CHECKPOINT_STATUSES.has(entry.status)).sort((left, right) => left.sequence - right.sequence).at(-1)?.name ?? null,
+      unresolvedCheckpoints: checkpoints.filter((entry) => !RESOLVED_CHECKPOINT_STATUSES.has(entry.status)).map((entry) => entry.name),
+      awaiting,
+      deploymentAttempts: [...deploymentAttempts],
+      latestReadableState,
+      lifecycle: [...lifecycle],
+      events: [...eventLog],
+    };
+  };
+
+  const finalizeFailure = (details = {}) => {
+    if (failurePayload) return;
+    const current = snapshot();
+    for (const name of current.unresolvedCheckpoints) {
+      const absence = [
+        "proof-actor-mounted-or-absent",
+        "living-human-target-acquired-or-not-required",
+        "proof-unit-deployed-and-attacked-or-not-required",
+      ].includes(name);
+      mark(name, absence ? "absent" : "unresolved", {
+        reason: "diagnostic-failure-before-checkpoint-completion",
+        lastReadableState: current.latestReadableState,
+      });
+    }
+    failurePayload = {
+      ...snapshot(),
+      failure: {
+        ...details,
+        lastCompletedCheckpoint: snapshot().lastCompletedCheckpoint,
+        unresolvedCheckpoints: snapshot().unresolvedCheckpoints,
+        awaiting: snapshot().awaiting,
+      },
+    };
+  };
+
+  async function writeFailureFile() {
+    if (!failureFilePath || !failurePayload) return;
+    await writeFile(failureFilePath, `${JSON.stringify({ ...failurePayload, ...snapshot() }, null, 2)}\n`).catch(() => {});
+  }
+
+  const persistFailure = async ({ label, error, failureState, diagnostics }) => {
+    const safeLabel = `${contract.variant}-${engineName}-${viewportLabel(viewport)}`;
+    const diagnosticsDir = path.join(evidenceDir, "diagnostics");
+    await mkdir(diagnosticsDir, { recursive: true });
+    failureFilePath = path.join(diagnosticsDir, `${safeLabel}.json`);
+    failureScreenshotPath = path.join(diagnosticsDir, `${safeLabel}.png`);
+    setLatestReadableState(failureState);
+    finalizeFailure({ label, error: String(error), diagnostics });
+    try {
+      if (!page.isClosed()) await page.screenshot({ path: failureScreenshotPath, animations: "disabled" });
+    } catch {
+      failureScreenshotPath = null;
+    }
+    failurePayload.failure = {
+      ...failurePayload.failure,
+      screenshot: failureScreenshotPath ? relativeEvidence(failureScreenshotPath) : null,
+    };
+    await writeFailureFile();
+    return {
+      file: relativeEvidence(failureFilePath),
+      screenshot: failureScreenshotPath ? relativeEvidence(failureScreenshotPath) : null,
+      ...snapshot(),
+    };
+  };
+
+  const recorder = {
+    attach,
+    mark,
+    markOnce,
+    setAwaiting,
+    clearAwaiting,
+    setLatestReadableState,
+    recordDeploymentAttempt,
+    snapshot,
+    persistFailure,
+    writeFailureFile,
+  };
+  mark("contract-identified", "completed", {
+    variant: contract.variant,
+    stageId: contract.stageId,
+    viewport: viewportLabel(viewport),
+    expectedBoss: contract.bossKind,
+    proofActor: contract.proofActor ?? null,
+    proofUnitKind: contract.proofUnitKind ?? null,
+    orderedRunPosition: recorder.snapshot().orderedRunPosition,
+  });
+  return recorder;
+}
+
+if (process.env.V100_PHASE_G_CHECKPOINT_NEGATIVE === "1") {
+  const recorder = createBattleExtraCheckpointRecorder({
+    contract: {
+      variant: "negative-impossible-predicate",
+      stageId: "stage-negative",
+      stageNumber: 0,
+      stageName: "negative",
+      bossKind: null,
+      proofActor: "impossible-actor",
+      proofUnitKind: null,
+      manualAbilityKind: null,
+      requireVehicleAction: false,
+      formationUnitIds: [],
+    },
+    engineName: "webkit",
+    viewport: { width: 667, height: 375 },
+    context: { on() {} },
+    page: { on() {} },
+    browser: { on() {} },
+  });
+  recorder.mark("route-opened", "completed", { url: "http://negative.invalid/" });
+  recorder.mark("formation-visible", "completed", { selector: ".v100-formation-panel" });
+  recorder.mark("battle-mounted-lifecycle-active", "completed", { battleMounted: true });
+  recorder.mark("combat-observer-started", "completed", { intervalMs: 40 });
+  recorder.setAwaiting("impossible-predicate", { predicate: "intentional impossible checkpoint" });
+  const evidence = recorder.snapshot();
+  throw new Error(`[Phase G checkpoint negative] unresolvedCheckpoint=${evidence.unresolvedCheckpoints[0]} lastCompletedCheckpoint=${evidence.lastCompletedCheckpoint} lifecycleStatus=attached`);
+}
 
 const dialogueEvidenceTargets = Object.freeze(Object.fromEntries(
   ["left", "right"].map((side) => {
@@ -207,6 +476,7 @@ async function openRoute(page, save = null) {
       || document.querySelector("[role=dialog][aria-label='ゲームデータの準備'] button"),
   ), null, { timeout });
   await waitForGateOrShell();
+  checkpointRecorderFor(page)?.markOnce("route-opened", "completed", { url: page.url() });
   // PwaGate starts the published metadata fetch without blocking an already
   // playable shell. A seeded route reload must wait for that real fetch to
   // settle; otherwise WebKit reports the first-party request as cancelled at
@@ -269,6 +539,8 @@ async function advanceStory(page, stopSelector) {
 }
 
 async function waitBattle(page) {
+  const recorder = checkpointRecorderFor(page);
+  recorder?.setAwaiting("battle-mounted", { predicate: "battle screen visible, assets ready, battle mount active" });
   try {
     await page.locator('.game-shell[data-screen="battle"]').waitFor({ state: "visible", timeout: Math.min(battleTimeout, 30_000) });
   } catch (error) {
@@ -284,6 +556,12 @@ async function waitBattle(page) {
   }
   await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready", null, { timeout: battleTimeout });
   await page.waitForFunction(() => window.__ASHFALL_ASSET_QA__?.getBattleMountState?.().battleMounted === true, null, { timeout: battleTimeout });
+  recorder?.clearAwaiting();
+  recorder?.markOnce("battle-mounted-lifecycle-active", "completed", {
+    battleScreen: true,
+    assetState: "ready",
+    battleMounted: true,
+  });
 }
 
 async function startCombatRuntimeObserver(page) {
@@ -383,9 +661,12 @@ async function startCombatRuntimeObserver(page) {
     };
     observe();
   });
+  checkpointRecorderFor(page)?.markOnce("combat-observer-started", "completed", { intervalMs: 40 });
 }
 
 async function waitForCombatActivity(page, { bossKind = null } = {}) {
+  const recorder = checkpointRecorderFor(page);
+  recorder?.setAwaiting("combat-activity", { bossKind, predicate: "production attack/contact/presentation activity" });
   try {
     await page.waitForFunction(() => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -407,6 +688,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
       };
       return true;
     }, null, { timeout: Math.min(battleTimeout, 45_000) });
+    recorder?.clearAwaiting();
   } catch (error) {
     const state = await page.evaluate(() => ({
       battleScreen: document.querySelector(".game-shell")?.getAttribute("data-screen") ?? null,
@@ -427,6 +709,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
     throw new Error(`combat activity did not become visible: ${String(error)} state=${JSON.stringify(state)}`);
   }
   if (bossKind) {
+    recorder?.setAwaiting("boss-attack", { bossKind, predicate: `production ${bossKind} attack, cue, or authored active phase` });
     try {
       await page.waitForFunction((expectedKind) => {
           const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
@@ -453,6 +736,7 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
             )
           )) === true;
       }, bossKind, { timeout: battleTimeout });
+      recorder?.clearAwaiting();
     } catch (error) {
       const state = await page.evaluate(() => ({
         url: location.href,
@@ -787,19 +1071,33 @@ async function resetPhaseGBrowser(engineName) {
   await browser?.close().catch(() => {});
 }
 
-async function captureStateImpl(engineName, viewport, state, configure) {
+async function captureStateImpl(engineName, viewport, state, configure, checkpointContract = null) {
   const browser = await phaseGBrowser(engineName);
   const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
   const page = await context.newPage();
   const diagnostics = diagnosticsFor(page);
   const label = `${engineName}-${viewportLabel(viewport)}-${state}`;
+  const checkpointRecorder = engineName === "webkit" && state === "battle-extra" && checkpointContract
+    ? createBattleExtraCheckpointRecorder({ contract: checkpointContract, engineName, viewport, context, page, browser })
+    : null;
+  checkpointRecorder?.attach();
   try {
     const captureMeta = await configure(page) ?? {};
     const productionContract = await productionStateContract(page, state);
     invariant(productionContract.ok, `${label} production state contract failed: ${JSON.stringify(productionContract)}`);
+    checkpointRecorder?.setLatestReadableState(productionContract);
+    checkpointRecorder?.setAwaiting("causal-proof", { predicate: "source -> contact/travel -> reaction -> audio" });
     const combatCausalProof = state.startsWith("battle") ? await collectCombatCausalProof(page, { durationMs: captureMeta.combatProofDurationMs ?? combatProofDurationMs }) : null;
     if (state.startsWith("battle")) invariant(combatCausalProof?.ok === true, `${label} combat causal proof failed: ${JSON.stringify(combatCausalProof)}`);
+    if (checkpointRecorder) {
+      checkpointRecorder.clearAwaiting();
+      checkpointRecorder.mark("causal-proof-complete", "completed", {
+        sampleCount: combatCausalProof?.sampleCount ?? 0,
+        stages: combatCausalProof?.stages ?? null,
+      });
+    }
     const screenshot = await saveScreenshot(page, imagePath(label), label);
+    checkpointRecorder?.mark("screenshot-saved", "completed", { evidence: screenshot });
     const overflow = await overflowAudit(page);
     const runtime = await page.evaluate(() => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
@@ -835,7 +1133,9 @@ async function captureStateImpl(engineName, viewport, state, configure) {
     invariant(diagnostics.pageErrors.length === 0, `${label} page errors: ${JSON.stringify(diagnostics.pageErrors)}`);
     invariant(diagnostics.httpFailures.length === 0, `${label} HTTP failures: ${JSON.stringify(diagnostics.httpFailures)}`);
     invariant(diagnostics.requestFailures.length === 0, `${label} request failures: ${JSON.stringify(diagnostics.requestFailures)}`);
-    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, ...captureMeta });
+    const checkpointEvidence = checkpointRecorder?.snapshot() ?? null;
+    if (checkpointEvidence) invariant(checkpointEvidence.unresolvedCheckpoints.length === 0, `${label} checkpoint recorder incomplete: ${JSON.stringify(checkpointEvidence)}`);
+    results.push({ engine: engineName, viewport: viewportLabel(viewport), state, variant: captureMeta.variant ?? state, capturedAt: new Date().toISOString(), pwaOfferShown: await page.evaluate(() => document.documentElement.dataset.phaseGPwaOffer === "shown"), evidence: screenshot, diagnostics, overflow, productionContract, combatCausalProof, runtime, checkpointEvidence, ...captureMeta });
     return screenshot;
   } catch (error) {
     const failureState = await page.evaluate(() => ({
@@ -867,11 +1167,19 @@ async function captureStateImpl(engineName, viewport, state, configure) {
       })(),
       phaseGActivity: window.__PHASE_G_COMBAT_ACTIVITY__ ?? null,
     })).catch(() => null);
-    const failure = new Error(`${label} failed: ${String(error)} state=${JSON.stringify(failureState)} diagnostics=${JSON.stringify(diagnostics)}`);
-    failure.phaseGFailure = { label, failureState, diagnostics };
+    const checkpointFailure = checkpointRecorder
+      ? await checkpointRecorder.persistFailure({ label, error, failureState, diagnostics })
+      : null;
+    const failure = new Error(`${label} failed: ${String(error)} state=${JSON.stringify(failureState)} diagnostics=${JSON.stringify(diagnostics)} checkpointEvidence=${JSON.stringify(checkpointFailure)}`);
+    failure.phaseGFailure = { label, failureState, diagnostics, checkpointEvidence: checkpointFailure };
     throw failure;
   } finally {
     await context.close();
+    if (checkpointRecorder) {
+      await checkpointRecorder.writeFailureFile();
+      phaseGCheckpointRecorders.delete(checkpointRecorder);
+      pageCheckpointRecorders.delete(page);
+    }
   }
 }
 
@@ -1003,10 +1311,21 @@ function deploymentWasAccepted(before, after, requestedKind) {
   const humanAccepted = Number(after.deployedUnitCount ?? 0) > Number(before?.deployedUnitCount ?? 0);
   const cardAfter = (after.cards ?? []).find((card) => card.kind === requestedKind);
   const cardAccepted = cardAfter && cardAfter.state !== "ready";
-  return queueAccepted || energyAccepted || humanAccepted || cardAccepted;
+  // The production queue can drain and a spawned unit can be defeated before
+  // the next diagnostic sample. The authored cooldown transition is a durable
+  // existing runtime signal that the requested card was accepted; it does not
+  // create or mutate a deployment.
+  const cooldownBefore = Number(beforeBattle.deployCooldowns?.[requestedKind]);
+  const cooldownAfter = Number(afterBattle.deployCooldowns?.[requestedKind]);
+  const cooldownAccepted = Number.isFinite(cooldownBefore)
+    && Number.isFinite(cooldownAfter)
+    && cooldownAfter > cooldownBefore + 0.01;
+  return queueAccepted || energyAccepted || humanAccepted || cardAccepted || cooldownAccepted;
 }
 
 async function waitForDeploymentAcceptance(page, before, requestedKind, requestedSlot, timeoutMs = 5_000) {
+  const recorder = checkpointRecorderFor(page);
+  recorder?.setAwaiting("deployment-accepted", { requestedKind, requestedSlot, predicate: "production card leaves ready state or enters deployment queue" });
   const deadline = Date.now() + timeoutMs;
   let latest = await readBattleDeploymentDiagnostics(page, {
     requestedKind,
@@ -1021,8 +1340,11 @@ async function waitForDeploymentAcceptance(page, before, requestedKind, requeste
       phase: "after-click-wait",
     });
   }
+  const accepted = deploymentWasAccepted(before, latest, requestedKind);
+  if (accepted) recorder?.clearAwaiting();
+  recorder?.setLatestReadableState(latest);
   return {
-    accepted: deploymentWasAccepted(before, latest, requestedKind),
+    accepted,
     diagnostics: latest,
   };
 }
@@ -1042,22 +1364,24 @@ function isRetryableCaptureFailure(error) {
     ;
 }
 
-async function captureState(engineName, viewport, state, configure) {
+async function captureState(engineName, viewport, state, configure, checkpointContract = null) {
+  if (onlyEngine && engineName !== onlyEngine) return null;
   if (onlyState && state !== onlyState) return null;
   if (onlyVariant && state !== "battle-extra") return null;
+  const maxAttempts = engineName === "webkit" && state === "battle-extra" ? 1 : 2;
   let lastError = null;
   let firstFailure = null;
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      const result = await captureStateImpl(engineName, viewport, state, configure);
+      const result = await captureStateImpl(engineName, viewport, state, configure, checkpointContract);
       if (firstFailure) result.retryDiagnostics = firstFailure;
       return result;
     } catch (error) {
       lastError = error;
       const failureDetails = error?.phaseGFailure ?? { message: String(error) };
       if (!firstFailure) firstFailure = { attempt, ...failureDetails };
-      if (attempt === 2 || !isRetryableCaptureFailure(error)) {
-        if (firstFailure && attempt === 2) {
+      if (attempt === maxAttempts || !isRetryableCaptureFailure(error)) {
+        if (firstFailure && attempt === maxAttempts) {
           const finalError = new Error(`${String(error)} firstAttempt=${JSON.stringify(firstFailure)}`);
           finalError.cause = error;
           throw finalError;
@@ -1101,6 +1425,7 @@ async function writePhaseGManifest(report) {
         selectors: result.productionContract?.expected?.selectors ?? [],
         observed: result.productionContract?.observed ?? null,
       },
+      checkpointEvidence: result.checkpointEvidence ?? null,
     };
   });
   const resultByVariant = new Map(report.results.map((result) => [result.variant, result]));
@@ -1132,6 +1457,7 @@ async function writePhaseGManifest(report) {
       runtime: result.runtime,
       combatCausalProof: result.combatCausalProof,
       productionContract: result.productionContract,
+      checkpointEvidence: result.checkpointEvidence ?? null,
       diagnostics: result.diagnostics,
     };
     await writeFile(runtimeEvidencePath, `${JSON.stringify(runtimeEvidence, null, 2)}\n`);
@@ -1226,9 +1552,11 @@ async function formationPage(page, save, stageName = null) {
   const cta = page.getByRole("button", { name: /この作戦を編成|再出撃/u }).first();
   await click(page, cta, "map formation CTA");
   await advanceStory(page, ".v100-formation-panel");
+  checkpointRecorderFor(page)?.markOnce("formation-visible", "completed", { selector: ".v100-formation-panel" });
 }
 
 async function battlePage(page, save, stageName = null, { bossKind = null, proofActor = null, proofUnitKind = null, proofUnitFirst = false, manualAbilityKind = null, requireVehicleAction = false, keepHumanTargetAlive = false, waitForBossAttack = true, combatProofDurationMs: requestedCombatProofDurationMs = null } = {}) {
+  const recorder = checkpointRecorderFor(page);
   await formationPage(page, save, stageName);
   // The seeded save already contains the canonical formation for this capture.
   // Do not overwrite slot 1 with the first roster card: doing so erases the
@@ -1272,16 +1600,23 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     && Number(proofActorContent?.range) > 0
     && Number(proofActorContent.range) <= Number(proofActorAiProfile.engagementRadius),
   );
+  if (recorder) {
+    if (!proofActor) recorder.mark("proof-actor-mounted-or-absent", "not-required", { reason: "contract-has-no-proof-actor" });
+    if (!proofActor) recorder.mark("proof-actor-attack-observed-or-not-required", "not-required", { reason: "contract-has-no-proof-actor" });
+    if (!proofActorRequiresContactFirst) recorder.mark("living-human-target-acquired-or-not-required", "not-required", { reason: "contract-does-not-require-contact-first" });
+    if (!proofUnitKind) recorder.mark("proof-unit-deployed-and-attacked-or-not-required", "not-required", { reason: "contract-has-no-proof-unit" });
+    if (!manualAbilityKind && !requireVehicleAction) recorder.mark("manual-vehicle-action-observed-or-not-required", "not-required", { reason: "contract-has-no-manual-or-vehicle-action" });
+  }
   const observeProofActorAttack = async () => {
     if (proofActorAttackObserved || !proofActor) return proofActorAttackObserved;
-    proofActorAttackObserved = await page.evaluate(({ expectedKind, expectedCueId }) => {
+    const observation = await page.evaluate(({ expectedKind, expectedCueId }) => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
       const actor = snapshot?.fighters?.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
       const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
       const actorKey = `zombie:${expectedKind}`;
       const fighterMounted = Boolean(actor)
         || (activity.fighterActors ?? []).includes(actorKey);
-      if (!fighterMounted) return false;
+      if (!fighterMounted) return { observed: false, mounted: false, evidence: "not-mounted" };
       const stateAttack = actor && (Number(actor.attack) > 0
         || Number(actor.attackWindup) > 0
         || Number(actor.attackSequence) > 0
@@ -1307,13 +1642,20 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           attackingActors: [...attackingActors],
         };
       }
-      return observed;
+      return {
+        observed,
+        mounted: true,
+        evidence: historicalAttack ? "historical-runtime-state" : audioAttack || historicalAudioAttack ? "audio-cue" : stateAttack ? "live-runtime-state" : "unobserved",
+      };
     }, { expectedKind: proofActor, expectedCueId: proofActorAttackCueId }).catch(() => false);
+    if (observation?.mounted === true) recorder?.mark("proof-actor-mounted-or-absent", "observed", { actor: proofActor });
+    if (observation?.observed === true) recorder?.mark("proof-actor-attack-observed-or-not-required", "observed", { actor: proofActor, evidence: observation.evidence });
+    proofActorAttackObserved = observation?.observed === true;
     return proofActorAttackObserved;
   };
   const readProofActorContactState = async () => {
     if (!proofActor) return null;
-    return page.evaluate((expectedKind) => {
+    const state = await page.evaluate((expectedKind) => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
       const fighters = snapshot?.fighters ?? [];
       const actor = fighters.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
@@ -1331,6 +1673,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         targetSide: target?.side ?? null,
       };
     }, proofActor).catch(() => null);
+    if (state?.mounted === true) recorder?.mark("proof-actor-mounted-or-absent", "observed", { actor: proofActor });
+    if (state?.hasHumanTarget === true) recorder?.mark("living-human-target-acquired-or-not-required", "observed", { actor: proofActor, targetKind: state.targetKind });
+    return state;
   };
   const waitForProofActorContact = async (durationMs = 1_800) => {
     if (!proofActorRequiresContactFirst || proofActorAttackObserved) return null;
@@ -1382,6 +1727,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     }, proofUnitKind).catch(() => false);
     if (observation?.deployed === true) proofUnitDeployed = true;
     proofUnitAttackObserved = observation?.attacking === true;
+    if (proofUnitAttackObserved) recorder?.mark("proof-unit-deployed-and-attacked-or-not-required", "observed", { unitKind: proofUnitKind, evidence: "live-or-historical-runtime-state" });
     return proofUnitAttackObserved;
   };
   const observeVehicleAction = async () => {
@@ -1402,6 +1748,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       }
       return observed;
     }).catch(() => false);
+    if (vehicleActionObserved) recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: "vehicle-barrage" });
     return vehicleActionObserved;
   };
   let sustainActive = Boolean(bossKind);
@@ -1536,6 +1883,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     ? new Set((save.formationSlots ?? []).filter(Boolean)).size
     : 0;
   const deploymentTrace = [];
+  const recordDeployment = (entry) => {
+    deploymentTrace.push(entry);
+    recorder?.recordDeploymentAttempt(entry);
+  };
   try {
     if (!bossKind) {
       // Compact fixtures can reorder the formation and start with less
@@ -1545,6 +1896,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       for (let slot = 0; slot < 3; slot += 1) {
         const deadline = Date.now() + battleTimeout;
         let deployed = false;
+        recorder?.setAwaiting("formation-deployment", { slot: slot + 1, predicate: "a real ready formation card is accepted by production runtime" });
         while (!deployed && Date.now() < deadline) {
           if (page.isClosed()) throw new Error("Target page, context or browser has been closed during non-boss unit deployment");
           let selectedKind = null;
@@ -1602,7 +1954,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           // stale DOM but is already insufficient in the runtime must not be
           // treated as a failed player action or clicked again.
           if (requestedCard?.state !== "ready" || requestedCard.ariaDisabled === "true") {
-            deploymentTrace.push({
+            recordDeployment({
               slot: slot + 1,
               requestedKind: kind,
               action: "stale-ready-card",
@@ -1612,7 +1964,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             await page.waitForTimeout(120);
             continue;
           }
-          deploymentTrace.push({ slot: slot + 1, requestedKind: kind, action: "before-click", diagnostics: before });
+          recordDeployment({ slot: slot + 1, requestedKind: kind, action: "before-click", diagnostics: before });
           let clickError = null;
           try {
             await click(page, card, `deploy ready battle unit ${slot + 1}`);
@@ -1626,7 +1978,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             slot + 1,
             clickError ? 1_000 : 5_000,
           );
-          deploymentTrace.push({
+          recordDeployment({
             slot: slot + 1,
             requestedKind: kind,
             action: clickError ? "click-error-after-state-check" : "after-click",
@@ -1634,10 +1986,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
             accepted: acceptance.accepted,
             diagnostics: acceptance.diagnostics,
           });
-          if (!acceptance.accepted) {
-            throw new Error(`battle unit ${slot + 1} deployment was not accepted by production runtime deploymentDiagnostics=${JSON.stringify({ before, after: acceptance.diagnostics, clickError })}`);
-          }
-          deployedKinds.add(kind);
+           if (!acceptance.accepted) {
+             throw new Error(`battle unit ${slot + 1} deployment was not accepted by production runtime deploymentDiagnostics=${JSON.stringify({ before, after: acceptance.diagnostics, clickError })}`);
+           }
+           recorder?.clearAwaiting();
+           deployedKinds.add(kind);
           if (kind === proofUnitKind) proofUnitDeployed = true;
           deployed = true;
           }
@@ -1655,6 +2008,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     } else {
       for (let deployment = 0; deployment < bossDeploymentLimit; deployment += 1) {
         let deployed = false;
+        recorder?.setAwaiting("boss-frontline-deployment", { slot: deployment + 1, predicate: "a real ready boss-frontline card is accepted by production runtime" });
         for (let attempt = 0; attempt < 180; attempt += 1) {
           if (page.isClosed()) throw new Error("Target page, context or browser has been closed during boss unit deployment");
           const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
@@ -1693,7 +2047,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
               requestedSlot: deployment + 1,
               phase: "before-click",
             });
-            deploymentTrace.push({ slot: deployment + 1, requestedKind: kind, action: "before-click", diagnostics: before });
+            recordDeployment({ slot: deployment + 1, requestedKind: kind, action: "before-click", diagnostics: before });
             let clickError = null;
             try {
               await click(page, card, `deploy boss frontline unit ${deployment + 1}`);
@@ -1707,7 +2061,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
               deployment + 1,
               clickError ? 1_000 : 5_000,
             );
-            deploymentTrace.push({
+            recordDeployment({
               slot: deployment + 1,
               requestedKind: kind,
               action: clickError ? "click-error-after-state-check" : "after-click",
@@ -1719,6 +2073,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
               throw new Error(`boss frontline unit ${deployment + 1} deployment click failed deploymentDiagnostics=${JSON.stringify({ before, after: acceptance.diagnostics, clickError })}`);
             }
             if (acceptance.accepted) {
+              recorder?.clearAwaiting();
               deployed = true;
               if (kind) deployedKinds.add(kind);
               if (kind === proofUnitKind) proofUnitDeployed = true;
@@ -1750,7 +2105,16 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       }
     }
     bossDeploymentFinished = true;
+    recorder?.mark("deployment-attempts-recorded", "completed", {
+      count: deploymentTrace.length,
+      attempts: deploymentTrace.map(({ slot, requestedKind, action, accepted, diagnostics }) => ({ slot, requestedKind, action, accepted: accepted ?? null, terminalState: diagnostics?.cards?.find((card) => card.kind === requestedKind)?.state ?? null })),
+    });
+    recorder?.mark("frontline-deployment-sequence-completed", "completed", {
+      attemptedSlots: [...new Set(deploymentTrace.map((entry) => entry.slot))],
+      terminalCardStates: deploymentTrace.filter((entry) => entry.action === "after-click").map((entry) => ({ slot: entry.slot, kind: entry.requestedKind, state: entry.diagnostics?.cards?.find((card) => card.kind === entry.requestedKind)?.state ?? null })),
+    });
     if (proofActor) {
+      recorder?.setAwaiting("proof-actor-attack", { actor: proofActor, predicate: "live state, historical runtime observation, or owned audio cue" });
       await page.waitForFunction(({ expectedKind, expectedCueId }) => {
         const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
         const actor = snapshot?.fighters?.find((fighter) => fighter.side === "zombie" && fighter.kind === expectedKind);
@@ -1779,9 +2143,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         return observed;
       }, { expectedKind: proofActor, expectedCueId: proofActorAttackCueId }, { timeout: Math.min(battleTimeout, 45_000) });
       proofActorAttackObserved = true;
+      recorder?.clearAwaiting();
+      recorder?.mark("proof-actor-mounted-or-absent", "observed", { actor: proofActor, source: "final-proof-predicate" });
+      recorder?.mark("proof-actor-attack-observed-or-not-required", "observed", { actor: proofActor, evidence: "final-proof-predicate" });
     }
     if (proofUnitKind && !proofUnitDeployed) await observeProofUnitAttack();
     if (proofUnitKind && !proofUnitDeployed) {
+      recorder?.setAwaiting("proof-unit-deployment", { unitKind: proofUnitKind, predicate: "proof unit card leaves ready state" });
       await page.waitForFunction((expectedKind) => Boolean(
         document.querySelector(`button.unit-card[data-kind="${expectedKind}"][data-state="ready"][aria-disabled="false"]`),
       ), proofUnitKind, { timeout: Math.min(battleTimeout, 45_000) });
@@ -1792,16 +2160,21 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         return card?.getAttribute("data-state") !== "ready";
       }, proofUnitKind, { timeout: 5_000 });
       proofUnitDeployed = true;
+      recorder?.clearAwaiting();
     }
     if (proofUnitKind && !proofUnitAttackObserved) {
+      recorder?.setAwaiting("proof-unit-attack", { unitKind: proofUnitKind, predicate: "proof unit live or historical attack" });
       for (let attempt = 0; attempt < 120 && !proofUnitAttackObserved; attempt += 1) {
         await observeProofUnitAttack();
         if (proofUnitAttackObserved) break;
         await page.waitForTimeout(250);
       }
       invariant(proofUnitAttackObserved, `proof human actor did not attack: ${proofUnitKind}`);
+      recorder?.clearAwaiting();
+      recorder?.mark("proof-unit-deployed-and-attacked-or-not-required", "observed", { unitKind: proofUnitKind, evidence: "live-or-historical-runtime-state" });
     }
     if (manualAbilityKind) {
+      recorder?.setAwaiting("manual-ability-action", { abilityKind: manualAbilityKind, predicate: "manual ability impact marker or receipt" });
       const abilityButton = page.locator(`button.manual-ability-ready.available[data-ability-kind="${manualAbilityKind}"][aria-disabled="false"]`).first();
       await page.waitForFunction((expectedKind) => Boolean(
         document.querySelector(`button.manual-ability-ready.available[data-ability-kind="${expectedKind}"][aria-disabled="false"]`),
@@ -1820,8 +2193,11 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         }
         return markedEnemy === true || receipt === true;
       }, manualAbilityKind, { timeout: Math.min(battleTimeout, 10_000) });
+      recorder?.clearAwaiting();
+      recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: `manual-ability:${manualAbilityKind}` });
     }
     if (requireVehicleAction) {
+      recorder?.setAwaiting("vehicle-action", { predicate: "vehicle barrage cue or authored crawler firing state" });
       for (let attempt = 0; attempt < 120 && !vehicleActionObserved; attempt += 1) {
         await observeVehicleAction();
         if (vehicleActionObserved) break;
@@ -1841,6 +2217,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           && (crawler.phase === "firing" || crawler.damageTriggered === true || Number(crawler.hitCount ?? crawler.hits?.length ?? 0) > 0);
       }, null, { timeout: Math.min(battleTimeout, 45_000) });
       vehicleActionObserved = true;
+      recorder?.clearAwaiting();
+      recorder?.mark("manual-vehicle-action-observed-or-not-required", "observed", { action: "vehicle-barrage" });
     }
     await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout });
     if (!bossKind || !waitForBossAttack) {
@@ -1917,6 +2295,7 @@ for (const viewport of requiredViewports) {
 
 for (const contract of extraBattleContracts) {
   if (onlyVariant && contract.variant !== onlyVariant) continue;
+  if (onlyEngine && contract.engine !== onlyEngine) continue;
   await captureState(contract.engine, contract.viewport, "battle-extra", async (page) => ({
     stageId: contract.stageId,
     stageNumber: contract.stageNumber,
@@ -1924,7 +2303,7 @@ for (const contract of extraBattleContracts) {
     expectedEnemyKinds: [...new Set(v100BattleDefinitionFor(contract.stageId)?.timeline?.flatMap((wave) => wave.units) ?? [])],
     ...await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, contract.stageNumber - 1), formationUnitIds: contract.formationUnitIds, unitLevels: contract.unitLevels }), contract.stageName, { bossKind: contract.bossKind, proofActor: contract.proofActor ?? null, proofUnitKind: contract.proofUnitKind ?? null, proofUnitFirst: contract.proofUnitFirst === true, manualAbilityKind: contract.manualAbilityKind ?? null, requireVehicleAction: contract.requireVehicleAction === true, keepHumanTargetAlive: contract.keepHumanTargetAlive === true, waitForBossAttack: contract.waitForBossAttack !== false, combatProofDurationMs: contract.combatProofDurationMs ?? null }),
     variant: contract.variant,
-  }));
+  }), contract);
 }
 
 await closePhaseGBrowsers();
