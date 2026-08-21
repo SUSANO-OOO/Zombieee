@@ -22,3 +22,6 @@ public/asset-manifest.json -text
 # bytes. Keep a Windows checkout from rewriting it to CRLF before the
 # deterministic generator comparison runs.
 assets/source/v099/crawler/provenance.json text eol=lf
+.github/workflows/ci.yml text eol=lf
+scripts/v100-phase-g-production-matrix.mjs text eol=lf
+tests/v100-phase-g-checkpoint.test.mjs text eol=lf
