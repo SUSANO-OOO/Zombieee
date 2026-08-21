@@ -43,13 +43,13 @@ const extraBattleContracts = Object.freeze([
   // to complete its own attack lifecycle before the later boss support loop
   // opens the full formation. This is a player-facing card order, not a
   // runtime mutation or a synthetic enemy fixture.
-  { variant: "stage03-takuya", engine: "chromium", viewport: extraBattleViewports[0], stageNumber: 3, bossKind: "takuya", proofActor: "walker", proofUnitKind: "brute", requireVehicleAction: true, formationUnitIds: ["unit-nao", "unit-tatara", "unit-hachi", "unit-monkey", "unit-mizuchi", "unit-paisen", "unit-kumaverson"] },
+  { variant: "stage03-takuya", engine: "chromium", viewport: extraBattleViewports[0], stageNumber: 3, bossKind: "takuya", proofActor: "walker", proofUnitKind: "brute", requireVehicleAction: true, keepHumanTargetAlive: true, formationUnitIds: ["unit-nao", "unit-tatara", "unit-hachi", "unit-monkey", "unit-mizuchi", "unit-paisen", "unit-kumaverson"] },
   { variant: "stage04-grappler", engine: "chromium", viewport: extraBattleViewports[1], stageNumber: 4, bossKind: null, formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
-  { variant: "stage21-panther-knife", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-smg", proofUnitKind: "scout", proofUnitFirst: true, formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
+  { variant: "stage21-panther-knife", engine: "chromium", viewport: extraBattleViewports[2], stageNumber: 21, bossKind: null, proofActor: "red-panther-smg", proofUnitKind: "babayaga", proofUnitFirst: false, manualAbilityKind: "babayaga", formationUnitIds: ["unit-tatara", "unit-mizuchi", "unit-hachi", "unit-paisen", "unit-kumaverson", "unit-babayaga", "unit-nao"] },
   // Keep the three deployed slots combat-active on the compact WebKit proof:
   // a ranged card and a support card make the authored hit/impact sequence
   // visible without changing the stage, roster, or production battle rules.
-  { variant: "stage06-spitter-seal", engine: "webkit", viewport: extraBattleViewports[0], stageNumber: 6, bossKind: null, proofUnitKind: "ranger", formationUnitIds: ["unit-hachi", "unit-mizuchi", "unit-babayaga", "unit-paisen", "unit-nao", "unit-kumaverson", "unit-tatara"] },
+  { variant: "stage06-spitter-seal", engine: "webkit", viewport: extraBattleViewports[0], stageNumber: 6, bossKind: null, proofActor: "spitter", proofUnitKind: "ranger", proofUnitFirst: true, formationUnitIds: ["unit-hachi", "unit-mizuchi", "unit-babayaga", "unit-paisen", "unit-nao", "unit-kumaverson", "unit-tatara"] },
   // The compact WebKit boss route establishes an opening frontline with the
   // first three currently ready cards, then continues real redeploy actions
   // as cards recover. It does not force a fixed DOM index or mutate battle
@@ -296,6 +296,7 @@ async function startCombatRuntimeObserver(page) {
       const fighterActors = new Set(activity.fighterActors ?? []);
       const attackingActors = new Set(activity.attackingActors ?? []);
       const statusMarkers = new Set(activity.statusMarkers ?? []);
+      const audioCues = new Set(activity.audioCues ?? []);
       const attackIdentity = [...(activity.attackIdentity ?? [])];
       const pendingWeaponHits = [...(activity.pendingWeaponHits ?? [])];
       const battlePresentationEffects = [...(activity.battlePresentationEffects ?? [])];
@@ -333,6 +334,12 @@ async function startCombatRuntimeObserver(page) {
             combatReadyX: fighter.combatReadyX,
             gateEntrySpeed: fighter.gateEntrySpeed,
             targetId: fighter.targetId,
+            attacking,
+            attack: fighter.attack,
+            attackWindup: fighter.attackWindup,
+            attackSequence: fighter.attackSequence,
+            enemyVfxPhase: fighter.enemyVfx?.phase ?? null,
+            stationAbilityPhase: fighter.stationAbility?.phase ?? null,
           });
         }
       }
@@ -348,6 +355,9 @@ async function startCombatRuntimeObserver(page) {
       for (const attack of snapshot.attackIdentity ?? []) attackIdentity.push(attack);
       for (const hit of snapshot.pendingWeaponHits ?? []) pendingWeaponHits.push(hit);
       for (const effect of snapshot.battlePresentation?.effects ?? []) battlePresentationEffects.push(effect);
+      for (const request of window.__ASHFALL_AUDIO_QA__?.getCueRequests?.() ?? []) {
+        if (request?.cueId) audioCues.add(String(request.cueId));
+      }
       if ((snapshot.damageTexts ?? []).some((text) => /索敵|マーク|目標|ロック/u.test(String(text?.value ?? "")))) {
         statusMarkers.add("status-mission-target");
       }
@@ -356,6 +366,7 @@ async function startCombatRuntimeObserver(page) {
         fighterActors: [...fighterActors],
         attackingActors: [...attackingActors],
         statusMarkers: [...statusMarkers],
+        audioCues: [...audioCues],
         attackIdentity: attackIdentity.slice(-24),
         pendingWeaponHits: pendingWeaponHits.slice(-24),
         battlePresentationEffects: battlePresentationEffects.slice(-24),
@@ -418,6 +429,12 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
   if (bossKind) {
     try {
       await page.waitForFunction((expectedKind) => {
+          const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
+          const actorKey = `zombie:${expectedKind}`;
+          const historicalAttack = (activity.attackingActors ?? []).includes(actorKey);
+          const historicalCue = (activity.audioCues ?? []).includes(`enemy-${expectedKind}-attack`);
+          const runtimeCue = window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.some((request) => request?.cueId === `enemy-${expectedKind}-attack`);
+          if (historicalAttack || historicalCue || runtimeCue) return true;
           const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
           return snapshot?.fighters?.some((fighter) => (
             fighter.side === "zombie"
@@ -678,7 +695,10 @@ async function collectCombatCausalProof(page, { durationMs = 4_800 } = {}) {
     }
     for (const effect of sample.battlePresentationEffects ?? []) visualEvents.add(String(effect.semantic ?? effect.kind ?? "presentation"));
     for (const fighter of sample.fighters ?? []) if (Number(fighter.flash) > 0 || Number(fighter.knock) > 0 || Number(fighter.attackWindup) > 0) reactionKeys.add(`${fighter.id}:${fighter.flash > 0 ? "flash" : "knock"}`);
-    for (const text of sample.damageTexts ?? []) if (text?.value !== undefined) reactionKeys.add(`damage:${text.value}`);
+    for (const text of sample.damageTexts ?? []) {
+      if (text?.value !== undefined) reactionKeys.add(`damage:${text.value}`);
+      if (/索敵|マーク|目標|ロック/u.test(String(text?.value ?? ""))) statusMarkers.add("status-mission-target");
+    }
     for (const object of sample.battlefieldObjects ?? []) {
       const objectKind = String(object.kind ?? "");
       if (objectKind.includes("support-healing")) supportActors.add("support-healing");
@@ -1208,7 +1228,7 @@ async function formationPage(page, save, stageName = null) {
   await advanceStory(page, ".v100-formation-panel");
 }
 
-async function battlePage(page, save, stageName = null, { bossKind = null, proofActor = null, proofUnitKind = null, proofUnitFirst = false, requireVehicleAction = false, waitForBossAttack = true, combatProofDurationMs: requestedCombatProofDurationMs = null } = {}) {
+async function battlePage(page, save, stageName = null, { bossKind = null, proofActor = null, proofUnitKind = null, proofUnitFirst = false, manualAbilityKind = null, requireVehicleAction = false, keepHumanTargetAlive = false, waitForBossAttack = true, combatProofDurationMs: requestedCombatProofDurationMs = null } = {}) {
   await formationPage(page, save, stageName);
   // The seeded save already contains the canonical formation for this capture.
   // Do not overwrite slot 1 with the first roster card: doing so erases the
@@ -1270,11 +1290,12 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         || ["attack", "warning"].includes(actor.enemyVfx?.phase));
       const audioAttack = expectedCueId
         && window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()?.some((request) => request?.cueId === expectedCueId);
+      const historicalAudioAttack = expectedCueId && (activity.audioCues ?? []).includes(expectedCueId);
       // The runtime observer retains fleeting attack states after a sprite
       // leaves the live fighter list. Use that production history so a short
       // WebKit frame cannot erase a real attack that already occurred.
       const historicalAttack = (activity.attackingActors ?? []).includes(actorKey);
-      const observed = historicalAttack || stateAttack === true || audioAttack === true;
+      const observed = historicalAttack || stateAttack === true || audioAttack === true || historicalAudioAttack === true;
       if (observed) {
         const fighterActors = new Set(activity.fighterActors ?? []);
         const attackingActors = new Set(activity.attackingActors ?? []);
@@ -1408,6 +1429,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
       if (!battleVisible) break;
       const bossEngaged = await bossIsLive();
+      const liveHumanTargetCount = await page.evaluate(() => {
+        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+        return (snapshot?.fighters ?? []).filter((fighter) => fighter.side === "human" && Number(fighter.hp) > 0).length;
+      }).catch(() => 0);
       await observeProofActorAttack();
       await observeProofUnitAttack();
       await observeVehicleAction();
@@ -1475,7 +1500,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         // ordinary redeployment keep a real target on the battlefield long
         // enough for the boss-owned attack/ability lifecycle to be observed.
         const redeploy = page.locator('button.unit-card[data-state="ready"][aria-disabled="false"]').first();
-        if (proofCombatReady && proofUnitDeployed && await redeploy.count().catch(() => 0)) {
+        const targetSurvivalPlanPending = keepHumanTargetAlive && bossEngaged && liveHumanTargetCount < 2;
+        if (((proofCombatReady && proofUnitDeployed) || targetSurvivalPlanPending) && await redeploy.count().catch(() => 0)) {
           await redeploy.click({ timeout: 500 }).catch(() => {});
         }
       }
@@ -1775,6 +1801,26 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       }
       invariant(proofUnitAttackObserved, `proof human actor did not attack: ${proofUnitKind}`);
     }
+    if (manualAbilityKind) {
+      const abilityButton = page.locator(`button.manual-ability-ready.available[data-ability-kind="${manualAbilityKind}"][aria-disabled="false"]`).first();
+      await page.waitForFunction((expectedKind) => Boolean(
+        document.querySelector(`button.manual-ability-ready.available[data-ability-kind="${expectedKind}"][aria-disabled="false"]`),
+      ), manualAbilityKind, { timeout: Math.min(battleTimeout, 45_000) });
+      await abilityButton.click({ timeout: 700 });
+      await page.waitForFunction((expectedKind) => {
+        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+        const markedEnemy = snapshot?.fighters?.some((fighter) => fighter.side === "zombie" && Number(fighter.marked) > 0);
+        const receipt = snapshot?.manualAbilityReceipts?.some((entry) => entry?.kind === expectedKind && entry?.eventType === "impact");
+        if (markedEnemy === true) {
+          const activity = window.__PHASE_G_COMBAT_ACTIVITY__ ?? {};
+          window.__PHASE_G_COMBAT_ACTIVITY__ = {
+            ...activity,
+            statusMarkers: [...new Set([...(activity.statusMarkers ?? []), "status-mission-target"])],
+          };
+        }
+        return markedEnemy === true || receipt === true;
+      }, manualAbilityKind, { timeout: Math.min(battleTimeout, 10_000) });
+    }
     if (requireVehicleAction) {
       for (let attempt = 0; attempt < 120 && !vehicleActionObserved; attempt += 1) {
         await observeVehicleAction();
@@ -1876,7 +1922,7 @@ for (const contract of extraBattleContracts) {
     stageNumber: contract.stageNumber,
     stageName: contract.stageName,
     expectedEnemyKinds: [...new Set(v100BattleDefinitionFor(contract.stageId)?.timeline?.flatMap((wave) => wave.units) ?? [])],
-    ...await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, contract.stageNumber - 1), formationUnitIds: contract.formationUnitIds, unitLevels: contract.unitLevels }), contract.stageName, { bossKind: contract.bossKind, proofActor: contract.proofActor ?? null, proofUnitKind: contract.proofUnitKind ?? null, proofUnitFirst: contract.proofUnitFirst === true, requireVehicleAction: contract.requireVehicleAction === true, waitForBossAttack: contract.waitForBossAttack !== false, combatProofDurationMs: contract.combatProofDurationMs ?? null }),
+    ...await battlePage(page, fullSave({ availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, contract.stageNumber - 1), formationUnitIds: contract.formationUnitIds, unitLevels: contract.unitLevels }), contract.stageName, { bossKind: contract.bossKind, proofActor: contract.proofActor ?? null, proofUnitKind: contract.proofUnitKind ?? null, proofUnitFirst: contract.proofUnitFirst === true, manualAbilityKind: contract.manualAbilityKind ?? null, requireVehicleAction: contract.requireVehicleAction === true, keepHumanTargetAlive: contract.keepHumanTargetAlive === true, waitForBossAttack: contract.waitForBossAttack !== false, combatProofDurationMs: contract.combatProofDurationMs ?? null }),
     variant: contract.variant,
   }));
 }
