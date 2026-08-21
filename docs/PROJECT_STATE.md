@@ -85,7 +85,7 @@ SolとLunaを同時並行に動かさない。
 - `FAILED_GATE`: runs `32475729057`／`32478283607`; PR Verify jobs `96751598547`／`96759071225`; `Check patch whitespace`; dependent Phase G skipped
 - `LAST_GREEN_GATE`: isolated Stage 6／24／25 diagnostics complete; local ordered trio Stage 6 -> Stage 24 -> Stage 25 passed 3/3 with final checkpoint `screenshot-saved` and diagnostic errors 0. Local-only evidence; final freeze reuse不可
 - `REMEDIATION_CLASS`: `REPO_HYGIENE / REMEDIATION_LOCAL`
-- `RESUME_FROM`: exact-file LF remediationでsemantic diff 0を証明 -> PR Verify -> automated remote ordered trio 3/3
+- `RESUME_FROM`: exact-file LF remediationでsemantic diff 0を証明 -> push -> PR Verify green -> same focused runのautomated remote ordered trio 3/3 -> focused run全required job terminal green
 - `NEXT_OWNER`: `LUNA_IMPLEMENTATION`（LF-only repository hygiene。新しい設計判断・製品実装権限なし）
 
 remote ordered trioまたはLF push後のrequired jobが1件でも失敗／unexpected skipになった場合は、run terminal後に`STATUS: BLOCKED_RETURN_TO_SOL`として停止し、追加修正／retryをしない。remote trio 3/3成功時だけlocal full Phase G 54/54＋validator＋full regressionsへ進み、focused bindingを除去してunfiltered remote CI／Phase Gを実行する。complete terminal green後の遷移先は`PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`である。

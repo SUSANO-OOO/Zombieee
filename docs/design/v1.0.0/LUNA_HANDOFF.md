@@ -464,7 +464,7 @@ Revision r5 keeps every r4 Phase G diagnostic, correction, acceptance, evidence,
 - `LAST_GREEN_GATE`: isolated Stage 6/24/25 diagnostics complete; local ordered trio Stage 6 -> Stage 24 -> Stage 25 passed 3/3; local-only and not final-freeze evidence
 - `REMEDIATION_CLASS`: `REPO_HYGIENE / REMEDIATION_LOCAL`
 - `NEXT_OWNER`: `LUNA_IMPLEMENTATION`
-- `RESUME_FROM`: exact-file LF remediation with semantic diff 0 -> PR Verify -> automated remote ordered trio 3/3
+- `RESUME_FROM`: exact-file LF remediation with semantic diff 0 -> push -> PR Verify green -> same focused run's automated remote ordered trio 3/3 -> every required job in that focused run terminal green
 
 Before editing, re-fetch PR #171. Require its live history to contain `LAST_AUDITED_HEAD` and the r5 Design packet commit recorded in Issue #172/PR #171. If the branch, base, target files, Design revision, PR state, or another required precondition has changed, return `STATUS: BLOCKED_RETURN_TO_SOL` without editing. The live HEAD must be read from GitHub; no body field is a live-ref substitute.
 

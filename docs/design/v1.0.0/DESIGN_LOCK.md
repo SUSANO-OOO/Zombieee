@@ -643,7 +643,7 @@ The already-complete isolated diagnostics and local ordered trio 3/3 are not rep
 - `LAST_GREEN_GATE`: isolated Stage 6/24/25 diagnostics complete and local ordered trio 3/3, local-only and not reusable for final freeze
 - `REMEDIATION_CLASS`: `REPO_HYGIENE / REMEDIATION_LOCAL`
 - `NEXT_OWNER`: `LUNA_IMPLEMENTATION`
-- `RESUME_FROM`: exact-file LF remediation with semantic diff 0 -> PR Verify -> automated remote ordered trio 3/3
+- `RESUME_FROM`: exact-file LF remediation with semantic diff 0 -> push -> PR Verify green -> same focused run's automated remote ordered trio 3/3 -> every required job in that focused run terminal green
 
 The exact packet in Handoff Section 12 is authoritative. It permits only LF normalization of `.github/workflows/ci.yml` and `scripts/v100-phase-g-production-matrix.mjs`, plus the three-path LF contract in `.gitattributes`. It preserves the workflow BOM, preserves `tests/v100-phase-g-checkpoint.test.mjs` byte-for-byte, forbids repository-wide normalization and all `app/**`/product/gameplay/evidence changes, and requires CI-equivalent `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD` plus semantic-diff-zero proof against `LF_SEMANTIC_BASE`.
 

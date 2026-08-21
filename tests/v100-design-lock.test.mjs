@@ -77,7 +77,7 @@ test("r5 closes the Version 1.0.0 execution, return, freeze, and release loop", 
 
   assert.match(handoff, /LAST_AUDITED_HEAD`: `c57bd2690ef1f50e92e99736d59dab86c4af71f9`/u);
   assert.match(handoff, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
-  assert.match(handoff, /RESUME_FROM`: exact-file LF remediation with semantic diff 0 -> PR Verify -> automated remote ordered trio 3\/3/u);
+  assert.match(handoff, /RESUME_FROM`: exact-file LF remediation with semantic diff 0 -> push -> PR Verify green -> same focused run's automated remote ordered trio 3\/3 -> every required job in that focused run terminal green/u);
   assert.match(handoff, /Luna never classifies a failure, finding, Producer rejection/u);
 });
 
