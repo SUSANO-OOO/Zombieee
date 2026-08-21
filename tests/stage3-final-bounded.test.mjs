@@ -116,3 +116,26 @@ test("r6 final-cut diagnostics are bounded, serialized by the child summary, and
   assert.match(runner, /if \(attempt !== 1 \|\| !retryableTargetClosed\) break/);
   assert.match(runner, /attempts\.push\(\{ attempt, attemptDir, \.\.\.execution, retryableTargetClosed, summary \}\)/);
 });
+
+test("r7 final-cut waiting is Node-owned with the unchanged predicate and deadline", async () => {
+  const smoke = await readFile(new URL("../scripts/p5-browser-smoke.mjs", import.meta.url), "utf8");
+  const waiter = smoke.match(/async function waitForFinalCutPredicateFromNode[\s\S]*?\nasync function closePlaywrightResource/u)?.[0] ?? "";
+  const finalCutBlock = smoke.match(/result\.phase = "final-cut";[\s\S]*?const pauseEvidence/u)?.[0] ?? "";
+  assert.match(smoke, /class TimeoutError extends Error/);
+  assert.match(waiter, /await page\.evaluate/);
+  assert.match(waiter, /activeScriptedFinalCue/);
+  assert.match(waiter, /const bossDefeatedIsFalse = bossDefeated === false/);
+  assert.match(waiter, /document\.documentElement\.dataset\.audioScene/);
+  assert.match(waiter, /matched: activeScriptedFinalCue && bossDefeatedIsFalse && audioSceneMatches/);
+  assert.match(waiter, /setTimeout\(resolve, Math\.min\(50, remainingMs\)\)/);
+  assert.match(waiter, /timeoutMs = timeout/);
+  assert.match(waiter, /new TimeoutError/);
+  assert.match(smoke, /this\.evidence = evidence/);
+  assert.doesNotMatch(waiter, /Promise\.all|setInterval/);
+  assert.match(finalCutBlock, /waitForFinalCutPredicateFromNode/);
+  assert.doesNotMatch(finalCutBlock, /page\.waitForFunction/);
+  assert.match(finalCutBlock, /timeoutMs: timeout/);
+  assert.match(smoke, /FINAL_CUT_TRACE_INTERVAL_MS = 1_000/);
+  assert.match(smoke, /FINAL_CUT_TRACE_MAX_SAMPLES = 75/);
+  assert.match(smoke, /const timeout = Math\.max\(5_000, Number\(process\.env\.P5_QA_TIMEOUT_MS\) \|\| 45_000\)/);
+});

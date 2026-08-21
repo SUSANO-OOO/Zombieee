@@ -6,8 +6,18 @@ import { onlyAbortedStaticStreams } from "../scripts/v099-final-bounded-contract
 
 test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   const workflow = (await readFile(".github/workflows/ci.yml", "utf8")).replaceAll("\r\n", "\n");
+  const attributes = (await readFile(".gitattributes", "utf8")).replaceAll("\r\n", "\n");
   const finalBoundedRunner = await readFile("scripts/run-v099-final-bounded.mjs", "utf8");
   const pagesBoundedRunner = await readFile("scripts/run-v099-final-bounded-against-pages.mjs", "utf8");
+  for (const path of [
+    "scripts/p5-browser-smoke.mjs",
+    "scripts/v099-final-remediation-browser-smoke.mjs",
+    "tests/ci-contract.test.mjs",
+    "tests/stage3-final-bounded.test.mjs",
+    "tests/v0995-runtime-evidence-contract.test.mjs",
+  ]) {
+    assert.match(attributes, new RegExp(`^${path} text eol=lf$`, "mu"));
+  }
   const trigger = workflow.split("permissions:", 1)[0];
   assert.match(trigger, /pull_request:/u);
   assert.match(trigger, /- main/u);

@@ -72,6 +72,54 @@ async function boundedPageCall(operation, label, limitMs = teardownTimeout) {
   }
 }
 
+class TimeoutError extends Error {
+  constructor(message, evidence) {
+    super(message);
+    this.name = "TimeoutError";
+    this.evidence = evidence;
+  }
+}
+
+async function waitForFinalCutPredicateFromNode({ page, cueFragment, expectedSceneId, label, timeoutMs = timeout }) {
+  const startedAt = Date.now();
+  let attempt = 0;
+  let lastEvidence = null;
+  while (true) {
+    const evidence = await page.evaluate(({ cueFragment: expectedCueFragment, expectedSceneId: expectedAudioScene }) => {
+      const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+      const activeScriptedFinalCue = Boolean(snapshot?.battleBarks?.active?.some((bark) => (
+        bark.scripted === true && bark.scriptedCueId?.includes(expectedCueFragment)
+      )));
+      const bossDefeated = snapshot?.bossDefeated ?? null;
+      const bossDefeatedIsFalse = bossDefeated === false;
+      const audioScene = document.documentElement.dataset.audioScene ?? null;
+      const audioSceneMatches = audioScene === expectedAudioScene;
+      return {
+        activeScriptedFinalCue,
+        bossDefeated,
+        bossDefeatedIsFalse,
+        audioScene,
+        expectedAudioScene,
+        audioSceneMatches,
+        matched: activeScriptedFinalCue && bossDefeatedIsFalse && audioSceneMatches,
+      };
+    }, { cueFragment, expectedSceneId });
+    attempt += 1;
+    lastEvidence = {
+      ...evidence,
+      attempt,
+      elapsedMs: Date.now() - startedAt,
+      label,
+    };
+    if (lastEvidence.matched) return lastEvidence;
+    const remainingMs = timeoutMs - (Date.now() - startedAt);
+    if (remainingMs <= 0) {
+      throw new TimeoutError(`${label} final-cut predicate timed out after ${timeoutMs}ms`, lastEvidence);
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(50, remainingMs)));
+  }
+}
+
 async function closePlaywrightResource(resource, label) {
   let timer;
   const closed = await Promise.race([
@@ -1976,17 +2024,13 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     result.phase = "final-cut";
     stage3Progress(label, "final-cut", startedAt);
     diagnostics.setPhase(result.phase);
-    await page.waitForFunction(
-      ({ cueFragment, expectedSceneId }) => {
-        const snapshot = window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
-        return snapshot?.battleBarks?.active?.some((bark) => (
-          bark.scripted === true && bark.scriptedCueId?.includes(cueFragment)
-        )) && snapshot?.bossDefeated === false
-          && document.documentElement.dataset.audioScene === expectedSceneId;
-      },
-      { cueFragment: "stage-takuya-final-v070", expectedSceneId: expectedTakuyaBossSceneId },
-      { timeout, polling: 50 },
-    );
+    await waitForFinalCutPredicateFromNode({
+      page,
+      cueFragment: "stage-takuya-final-v070",
+      expectedSceneId: expectedTakuyaBossSceneId,
+      label,
+      timeoutMs: timeout,
+    });
     const pauseEvidence = await pauseAndVerifyFrozenScriptedBark({
       page,
       cueFragment: "stage-takuya-final-v070",
