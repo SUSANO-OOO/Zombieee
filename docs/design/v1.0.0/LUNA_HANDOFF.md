@@ -145,7 +145,7 @@ Luna may adjust crop, anchor, scale, packing, compression, sprite frame layout, 
 
 ### Gate
 
-No release action. Produce a Completion Packet with:
+No release action. After all technical gates are green, do not finalize a Completion Packet. First set `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` and submit the actual-production twelve-screen set required by Design Lock Section 16. Keep the following Completion Packet evidence as a draft until explicit Producer Visual Approval:
 
 - implementation HEAD/tree and base;
 - changed file inventory;
@@ -157,7 +157,7 @@ No release action. Produce a Completion Packet with:
 - selected master and runtime derivative hash map;
 - known residual risks, clearly separating physical hardware from headless evidence.
 
-Set `STATUS: READY_FOR_SOL_FINAL_REVIEW` and stop.
+Before Producer Visual Approval, `STATUS: READY_FOR_SOL_FINAL_REVIEW` is forbidden. After approval, freeze the final evidence at the approved HEAD/tree, finalize the Completion Packet above, set `STATUS: READY_FOR_SOL_FINAL_REVIEW`, and stop.
 
 ## 7. Negative tests that must exist
 
@@ -373,6 +373,8 @@ $env:V100_PHASE_G_ONLY_VARIANT='stage06-spitter-seal'
 npm.cmd run qa:v100-phase-g
 ```
 
-Before completion, provide: exact base/head/tree; proven root-cause class and checkpoint artifact; changed-file list; focused local 3/3 run identifiers; focused remote 3/3 job/artifact; local 54/54 report/manifest/runtime evidence; full local gate results; full remote run/job/artifact; zero console/page/request/HTTP failures; and an explicit statement that no `app/**`, gameplay, balance, product behavior, release state, or evidence threshold changed.
+Before the Producer checkpoint, prepare: exact base/head/tree; proven root-cause class and checkpoint artifact; changed-file list; focused local 3/3 run identifiers; focused remote 3/3 job/artifact; local 54/54 report/manifest/runtime evidence; full local gate results; full remote run/job/artifact; zero console/page/request/HTTP failures; and an explicit statement that no `app/**`, gameplay, balance, product behavior, release state, or evidence threshold changed.
 
-Completion status remains `STATUS: READY_FOR_SOL_FINAL_REVIEW` only after every Section 18.5 gate is satisfied. Otherwise use `STATUS: BLOCKED_RETURN_TO_SOL` and stop. No Ready conversion, merge, tag, Release, formal Pages deployment, or Issue closure is authorized.
+After every Section 18.5 local and remote technical gate is satisfied, set `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` and submit these actual-production screens: (1) `TITLE`, (2) `名前入力`, (3) `作戦地図`, (4) `通常Stage選択`, (5) `Boss Stage選択`, (6) `出撃編成`, (7) `隊員`, (8) `出撃装備`, (9) `装甲車両強化`, (10) `代表event`, (11) `通常battle HUD`, and (12) `戦果`.
+
+Producer Visual Approval is a hard gate. Before approval, do not finalize the Completion Packet and do not set `STATUS: READY_FOR_SOL_FINAL_REVIEW`. After approval, freeze final evidence at the approved HEAD/tree, finalize the Completion Packet, set `STATUS: READY_FOR_SOL_FINAL_REVIEW`, and stop for Sol final review. If a Section 18 stop condition occurs, use `STATUS: BLOCKED_RETURN_TO_SOL` and stop. No Ready conversion, merge, tag, Release, formal Pages deployment, or Issue closure is authorized.

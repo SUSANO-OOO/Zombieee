@@ -18,7 +18,7 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - 対象：PROLOGUE、Stage 1〜30、ENDING、エンドロール、EPILOGUE
 - 正史：v10 event script
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
-- design baseline：Draft PR #170、head `6acf87fd757c04de34833444de9a16f7bbba0e96`
+- design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、branch `codex/v1.0.0-luna-implementation`
 - audited implementation HEAD：`0f2c6e92ddb9de5410585ec8d78dae5f3c3e3f2b`、tree `c2bd7f18d0930a9694763285dbff686c36fd27a5`
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
@@ -52,9 +52,10 @@ exact stats、cost、reward、duration、wave、unlock、装甲車両upgrade cur
 2. 元のSol threadが`SOL_DESIGN`
 3. SolがDesign Lock、有限asset inventory、必要asset candidate、Luna Handoffを作成
 4. Lunaが`LUNA_IMPLEMENTATION`としてproduction実装、asset統合、tests、browser QA、Draft PR
-5. Luna Completion Packetを元のSolへ返す
-6. 元のSolが`SOL_FINAL_REVIEW`
-7. High／Medium 0とrelease gateを満たした場合だけmerge／公開
+5. remote required CI／Phase G完全green後、Lunaは`PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`へ遷移し、actual productionの12画面（TITLE、名前入力、作戦地図、通常Stage選択、Boss Stage選択、出撃編成、隊員、出撃装備、装甲車両強化、代表event、通常battle HUD、戦果）をProducer確認へ出す
+6. Producer Visual Approval前はCompletion Packetを確定せず、`READY_FOR_SOL_FINAL_REVIEW`へ進まない
+7. Producer Visual Approval後にfinal evidenceをfreezeし、Luna Completion Packetを確定して元のSolへ返す
+8. 元のSolが`SOL_FINAL_REVIEW`を行い、High／Medium 0とrelease gateを満たした場合だけmerge／公開
 
 SolとLunaを同時並行に動かさない。
 
@@ -79,4 +80,5 @@ SolとLunaを同時並行に動かさない。
 - CAPS、reward、unlock、event、receiptの二重適用
 - save、offline、PWA update、rollbackの破壊
 - 844×390、844×340、1280×720で切れ、重なり、豆粒化、操作不能
+- `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`のactual production 12画面に対するProducer Visual Approval未取得
 - High／Medium finding未解消

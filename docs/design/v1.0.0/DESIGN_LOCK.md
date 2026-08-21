@@ -346,7 +346,24 @@ Before each write, re-fetch live base/head/tree, branch state, PR state/Draft/me
 
 ## 16. Success condition
 
-Implementation is ready for independent Sol review only when the fixed implementation HEAD/tree matches live GitHub, High 0 and Medium 0 remain, all locked identities/hashes are traceable, the required runtime/browser/save/PWA evidence is reviewer-accessible, and no release action has occurred.
+Remote required CI and the complete Phase G contract being green is a technical gate, not permission to enter independent Sol review. At that point Luna must set `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` and present twelve screenshots captured from the actual production candidate:
+
+1. `TITLE`;
+2. `名前入力`;
+3. `作戦地図`;
+4. `通常Stage選択`;
+5. `Boss Stage選択`;
+6. `出撃編成`;
+7. `隊員`;
+8. `出撃装備`;
+9. `装甲車両強化`;
+10. `代表event`;
+11. `通常battle HUD`;
+12. `戦果`.
+
+Before explicit Producer Visual Approval, Luna must not finalize the Completion Packet or set `STATUS: READY_FOR_SOL_FINAL_REVIEW`. After approval, freeze the final evidence set at the approved implementation HEAD/tree, finalize the Completion Packet, set `STATUS: READY_FOR_SOL_FINAL_REVIEW`, and stop for independent Sol review.
+
+Implementation is ready for independent Sol review only when the fixed implementation HEAD/tree matches live GitHub, High 0 and Medium 0 remain, all locked identities/hashes are traceable, the required runtime/browser/save/PWA evidence is reviewer-accessible, all remote required CI and Phase G gates are green, the twelve-screen Producer Visual Approval is recorded, the final evidence is frozen, and no release action has occurred.
 
 ## 17. PRE_IMPLEMENTATION_CLOSURE
 
@@ -537,7 +554,7 @@ Focused acceptance requires all of the following:
 
 Full Phase G entry requires the proven class, one allowed correction at most, focused local 3/3, focused remote 3/3, an allowed-file-only diff, and SOURCE / ADVERSARIAL / EXECUTION self-audits with High/Medium ambiguity zero. Then run local full Phase G and require 54/54 capture and validator success, followed by the full lint, production content validation, build, test, PWA update/recovery, save, audio, and browser regression set already required by this lock.
 
-A full remote Phase G production-matrix execution is allowed only after those local full gates are green. After focused local 3/3, Luna may push the diagnostic commit with only the `v100-phase-g-production` job temporarily bound to three fresh executions of the exact focused contract; the rest of the PR workflow remains enabled and is not acceptance evidence for full Phase G. After focused remote 3/3 and local full green, restore that job to the unfiltered 54-capture command and push once for the full remote PR CI/Phase G run. Remote success is attempt-specific and may not be substituted by local or stale evidence.
+A full remote Phase G production-matrix execution is allowed only after those local full gates are green. After focused local 3/3, Luna may push the diagnostic commit with only the `v100-phase-g-production` job temporarily bound to three fresh executions of the exact focused contract; the rest of the PR workflow remains enabled and is not acceptance evidence for full Phase G. After focused remote 3/3 and local full green, restore that job to the unfiltered 54-capture command and push once for the full remote PR CI/Phase G run. Remote success is attempt-specific and may not be substituted by local or stale evidence. Complete remote green transitions only to the Section 16 `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` gate, not directly to a Completion Packet or Sol final review.
 
 ### 18.6 Stop, escalation, and Producer guard
 
