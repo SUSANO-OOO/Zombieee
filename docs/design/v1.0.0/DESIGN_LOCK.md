@@ -853,3 +853,73 @@ Regardless of green or failure, stop and return exactly `STATUS: BLOCKED_RETURN_
 - `RESUME_FROM`: five-file LF/BOM normalization + exact LF attributes + Node-owned final-cut predicate wait -> focused local checks -> one normal correction push -> wait for that one automatic CI run terminal -> `BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`
 
 Sol performed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live HEAD, raw logs, byte state, and traces. Revision r7 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`. This is correction-design closure only, not technical green or release readiness.
+
+## 22. Revision r7 same-revision packet — `.gitattributes` LF closure
+
+This packet supersedes Section 21 only for the next execution cursor. The product contract, r4 Phase G contract, r5 execution/release loop, r6 diagnostics, and the r7 Stage 3 correction remain unchanged. Revision remains `r7`; `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 22.1 Audited r7 return
+
+Sol re-fetched PR #171 and audited live correction HEAD `7429460950a37b2ac68415a5046547c97f8bb263`, tree `9c1cab7d8a8950a2ba475d89ffb986434ba36d15`, parent/final r7 packet `146e5f8fbf677bc7658dd4d81ed85fe1b237fd60`, CI run `32510923851` (#908), PR Verify job `96861615644`, Luna return comment `5375174022`, the correction diff, raw job logs, and the relevant Stage 3/deployment artifacts.
+
+The correction commit changed exactly the six paths authorized by Section 21.3. After ignoring line-ending differences, `scripts/v099-final-remediation-browser-smoke.mjs` and `tests/v0995-runtime-evidence-contract.test.mjs` have semantic diff zero; the remaining semantic changes are the five path-specific attributes, the Node-owned final-cut wait, and their exact source-contract tests. The five diagnostic files are LF-only with the fixed BOM states. No `app/**`, product, workflow, Phase G, timeout, retry, predicate, or acceptance change exists.
+
+Run `32510923851` is terminal failure only because PR Verify's CI-equivalent `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...7429460950a37b2ac68415a5046547c97f8bb263` rejected `.gitattributes` lines 1-26. Immutable blob inspection proves:
+
+- final r7 packet `.gitattributes`: no BOM, 27 LF, 0 CRLF;
+- correction HEAD `.gitattributes`: no BOM, 26 CRLF plus 6 LF;
+- correction HEAD's semantic `.gitattributes` delta is exactly the five authorized path entries.
+
+Therefore the reported local base-range whitespace pass is contradicted by the immutable correction blob and the identical remote command; that local pass is rejected as gate evidence. Remote PR Verify remains authoritative. The contradiction does not create a product or harness root cause.
+
+The r7 Stage 3 correction is closed as focused remote evidence: entrance-candidate `96867530097`, final-candidate `96867530121`, and final-base `96867530136` are 3/3 success, and final-base artifact `9457872989` completed in one bounded attempt. WebKit deployment jobs are 6/6 top-level bounded success. Artifact `9458154642` records a retryable target-close for 736x414/brawler attempt 1 followed by attempt 2 success; artifact `9458309296` records the same bounded sequence for 844x390/medic. Those are the existing fail-closed maximum-two-attempt runner contract, not a manual retry/rerun and not a product failure. They remain diagnostic controls, not final-freeze evidence.
+
+The six successful WebKit deployment jobs are not PR Verify's six Chromium deployment axes. PR Verify stopped before all Chromium capture steps, and Phase G `96861720725` was skipped through `needs: verify`. Chromium setup/readiness and the focused remote Phase G trio therefore remain unexecuted for this correction HEAD.
+
+### 22.2 Classification and revision decision
+
+- current required failure: `REPO_HYGIENE / DOT_GITATTRIBUTES_MIXED_EOL / REMEDIATION_LOCAL`;
+- local-report conflict: `LOCAL_VALIDATION_EVIDENCE_REJECTED / IMMUTABLE_BLOB_CONTRADICTION`; the correction is controlled by post-commit blob evidence and remote PR Verify, not by the rejected claim;
+- Stage 3 final-cut: `REMEDIATION_CLOSED / REMOTE_FOCUSED_GREEN`;
+- WebKit deployment axes: `BOUNDED_RETRY_SUCCESS / CONTROL_GREEN` under the unchanged maximum-two-attempt contract;
+- Chromium deployment axes and focused Phase G: `DIAGNOSTIC_PENDING / NOT_RUN`.
+
+The active aggregate is `SINGLE_FILE_REPO_HYGIENE / REMEDIATION_LOCAL`. This is the same coherent EOL-hygiene correction family already owned by r7, with one exact file and no new design, state owner, architecture, product behavior, or acceptance decision. Section 19.3 therefore requires a same-revision remediation packet: Design ID remains `V100-SOL-DL-001 r7`; no r8 revision is created.
+
+### 22.3 Exact authorized correction
+
+Luna may create one remediation commit changing exactly `.gitattributes` relative to its parent:
+
+1. Normalize the entire `.gitattributes` blob to LF only, with no UTF-8 BOM and no bare CR.
+2. Preserve every existing semantic line and order, including the five r7 path entries, and add exactly one self-contract line: `.gitattributes text eol=lf`.
+3. Make no other semantic or byte change. Every other tracked path must remain byte-identical to the Sol packet parent; the valid Stage 3 correction at `7429460` is inherited unchanged.
+
+Forbidden: every other path, wildcard or repository-wide normalization, `.github/workflows/ci.yml`, any QA runner/test, Phase G, `app/**`, `public/**`, package/product data/assets/audio, timeout/retry/predicate/assertion/axis weakening, product correction, and evidence deletion. Sol's docs/test-only packet commits are metadata and are not part of Luna's one-file remediation diff.
+
+### 22.4 Validation, remote run, and mandatory return
+
+Before commit, Luna must prove against correction HEAD `7429460` that the working change is `.gitattributes` only, its normalized semantic diff is the one self-contract line only, `git check-attr eol -- .gitattributes` resolves `eol: lf`, the file has no BOM/CRLF/bare CR, and every other tracked path is unchanged. Run the existing 14 focused tests, lint, build, and a working-tree base-range whitespace check.
+
+Create exactly one normal remediation commit. Before push, inspect the committed blob—not only the working file—and require: no BOM, LF-only, no bare CR; the commit changes `.gitattributes` only relative to its parent; and `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD` passes. Then push once normally. Do not amend, rebase, force push, manually dispatch, retry/rerun, or create a second remediation commit.
+
+Wait for the one automatic CI run whose `headSha` is Luna's remediation commit to become terminal. Record immutable HEAD/tree/run/job/artifact IDs and require/report separately:
+
+1. PR Verify, including all six Chromium deployment axes/traces, with no skipped capture step;
+2. the three Stage 3 jobs and their bounded summaries;
+3. all six WebKit deployment bounded summaries, including every internal attempt;
+4. the focused remote Phase G ordered Stage 6 -> Stage 24 -> Stage 25 trio if unlocked;
+5. every other required job and unexpected skip/failure.
+
+Regardless of green or failure, return exactly `STATUS: BLOCKED_RETURN_TO_SOL_R7_ATTR_LF_REMOTE_COMPLETE`. Sol alone classifies Chromium/Phase G evidence and unlocks any later local full Phase G or unfiltered remote run. Any local failure, precondition drift, out-of-allowlist need, missing artifact, remote failure, or unexpected skip returns without further change. Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, and Issue closure remain prohibited.
+
+### 22.5 Current execution cursor and audit
+
+- `LAST_AUDITED_HEAD`: `7429460950a37b2ac68415a5046547c97f8bb263`
+- `LAST_AUDITED_TREE`: `9c1cab7d8a8950a2ba475d89ffb986434ba36d15`
+- `FAILED_GATE`: run `32510923851`; PR Verify `96861615644` rejected mixed-EOL `.gitattributes`; Chromium capture steps not run; Phase G `96861720725` skipped
+- `LAST_GREEN_GATE`: r7 remote focused controls — Stage 3 3/3, WebKit deployment bounded summaries 6/6, canonical viewports 48/48, WebKit enemy-runtime 6/6, and hosted evidence; not reusable as final-freeze evidence
+- `REMEDIATION_CLASS`: `REPO_HYGIENE / DOT_GITATTRIBUTES_MIXED_EOL / REMEDIATION_LOCAL`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for this one-file packet only
+- `RESUME_FROM`: `.gitattributes` LF/no-BOM normalization + exact self LF contract -> committed-blob and CI-range checks -> one normal remediation push -> wait for that correction-HEAD automatic run terminal -> `BLOCKED_RETURN_TO_SOL_R7_ATTR_LF_REMOTE_COMPLETE`
+
+Sol repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against live refs, immutable blobs, raw logs, artifacts, and the existing state machine. Revision r7 remains locked with `High ambiguity: 0` and `Medium ambiguity: 0`. This packet is not technical green or release readiness.

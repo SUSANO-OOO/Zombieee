@@ -608,3 +608,55 @@ Return this status whether the run is green or failed. Sol alone classifies the 
 ### 14.4 Short Luna handoff
 
 Re-fetch PR #171; execute Design Lock Section 21 / Handoff Section 14 only. Normalize the five diagnostic files to their exact LF/BOM contract, add only their five path-specific LF attributes, and replace only the Stage 3 final-cut page-owned waiter with the specified non-overlapping Node-owned 50 ms / 60 s waiter using the unchanged predicate. Pass the exact byte/semantic/focused checks, make one normal commit/push, wait for that single automatic CI run to finish, record immutable evidence, and return `BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`. No other file, product change, retry/rerun, second commit, local full/unfiltered Phase G, or release action.
+
+## 15. Revision r7 same-revision handoff — `.gitattributes` LF closure
+
+Run this section only. Section 14 correction is implemented and its Stage 3 result is closed; do not reimplement or alter it. Design Lock Section 22 is the sole active packet. Revision remains `V100-SOL-DL-001 r7`; `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 15.1 Execution cursor and fixed classifications
+
+- `LAST_AUDITED_HEAD`: `7429460950a37b2ac68415a5046547c97f8bb263`
+- `LAST_AUDITED_TREE`: `9c1cab7d8a8950a2ba475d89ffb986434ba36d15`
+- `FAILED_GATE`: run `32510923851`; PR Verify `96861615644` rejected `.gitattributes` lines 1-26 as trailing whitespace; six Chromium capture axes were not run; Phase G `96861720725` was skipped
+- `LAST_GREEN_GATE`: Stage 3 3/3, WebKit deployment bounded summaries 6/6, canonical viewports 48/48, WebKit enemy-runtime 6/6, and hosted evidence in run `32510923851`; focused controls only, not final-freeze evidence
+- current class: `REPO_HYGIENE / DOT_GITATTRIBUTES_MIXED_EOL / REMEDIATION_LOCAL`
+- Stage 3: `REMEDIATION_CLOSED / REMOTE_FOCUSED_GREEN`
+- Chromium and focused Phase G: `DIAGNOSTIC_PENDING / NOT_RUN`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Design Lock Section 22 only
+- `RESUME_FROM`: `.gitattributes` LF/no-BOM normalization + exact self LF contract -> committed-blob and CI-range checks -> one normal remediation push -> wait for that correction-HEAD automatic run terminal -> `BLOCKED_RETURN_TO_SOL_R7_ATTR_LF_REMOTE_COMPLETE`
+
+Before editing, re-fetch PR #171. It must remain open/Draft on `codex/v1.0.0-luna-implementation`, based on `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`; live history must contain correction HEAD `7429460` and the current Sol packet identified by the PR body and Issue #172. Any drift returns `STATUS: BLOCKED_RETURN_TO_SOL` without editing.
+
+### 15.2 Exact authorized work
+
+Change exactly one file relative to the Sol packet parent: `.gitattributes`.
+
+1. Normalize its entire blob to LF only; retain no UTF-8 BOM and no bare CR.
+2. Preserve every existing line and order, including the five Section 21 entries.
+3. Add exactly `.gitattributes text eol=lf` as the sole semantic line.
+4. Keep every other tracked path byte-identical to the parent. In particular, do not touch the five normalized diagnostic files or the valid Node-owned Stage 3 wait.
+
+Forbidden: every other file; wildcard/repository-wide normalization; workflow, QA runner/test, Phase G, `app/**`, `public/**`, package/product data/assets/audio; timeout/retry/predicate/assertion/axis changes; product correction; evidence deletion. Do not repeat completed diagnostics or local full/unfiltered Phase G.
+
+### 15.3 Validation, commit, remote run, and stop
+
+Before commit, prove:
+
+1. `git diff --name-only` against the Sol packet parent reports `.gitattributes` only;
+2. against correction HEAD `7429460`, normalized semantic diff is only `.gitattributes text eol=lf`;
+3. `.gitattributes` has no BOM, CRLF, or bare CR, and `git check-attr eol -- .gitattributes` reports `eol: lf`;
+4. the existing 14 focused tests, lint, build, and working-tree base-range whitespace check pass.
+
+Make exactly one normal commit. Before push, inspect `HEAD:.gitattributes` as raw committed bytes and re-prove LF-only/no-BOM/no-CR, one-file parent diff, and `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD` green. Push once normally. No amend, rebase, force push, manual dispatch, retry/rerun, or second remediation commit.
+
+Wait for that remediation-HEAD automatic CI run to become terminal. Record PR Verify with all six Chromium capture axes/traces, Stage 3 3/3, all six WebKit deployment bounded summaries and attempts, focused remote Phase G ordered Stage 6 -> Stage 24 -> Stage 25 if unlocked, and every required conclusion/artifact. Never collapse a skipped or inner failed record into green.
+
+Then return exactly, whether green or failed:
+
+`STATUS: BLOCKED_RETURN_TO_SOL_R7_ATTR_LF_REMOTE_COMPLETE`
+
+Sol alone classifies and authorizes the next gate. No additional change, local full/unfiltered Phase G, Producer checkpoint, Completion Packet, Ready, integration, release, deployment, or closure.
+
+### 15.4 Short Luna handoff
+
+Re-fetch PR #171 and execute Design Lock Section 22 / Handoff Section 15 only. Change only `.gitattributes`: normalize the committed blob to LF/no-BOM/no-CR, preserve all existing lines, and add exactly `.gitattributes text eol=lf`. Prove the one-file semantic/byte contract, existing focused tests/lint/build, and CI-identical base-range `git diff --check`; make one normal commit/push; wait for that HEAD's automatic CI run to finish; record Chromium, Stage 3, WebKit deployment attempts, focused Phase G, and all required results; then return `BLOCKED_RETURN_TO_SOL_R7_ATTR_LF_REMOTE_COMPLETE`. No other edit, retry/rerun, second commit, product change, full/unfiltered Phase G, or release action.

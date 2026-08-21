@@ -94,6 +94,36 @@ test("r7 preserves the release loop and locks both independent correction classe
   assert.match(handoff, /Luna never classifies a failure, finding, Producer rejection/u);
 });
 
+test("r7 Section 22 locks the single-file attributes remediation and mandatory Sol return", async () => {
+  const [design, handoff] = await Promise.all([
+    readFile(DESIGN, "utf8"),
+    readFile(HANDOFF, "utf8"),
+  ]);
+  const packet = design.match(/## 22\. Revision r7 same-revision packet([\s\S]*)$/u)?.[1] ?? "";
+  const execution = handoff.match(/## 15\. Revision r7 same-revision handoff([\s\S]*)$/u)?.[1] ?? "";
+
+  for (const source of [packet, execution]) {
+    assert.match(source, /7429460950a37b2ac68415a5046547c97f8bb263/u);
+    assert.match(source, /9c1cab7d8a8950a2ba475d89ffb986434ba36d15/u);
+    assert.match(source, /REPO_HYGIENE \/ DOT_GITATTRIBUTES_MIXED_EOL \/ REMEDIATION_LOCAL/u);
+    assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
+    assert.match(source, /BLOCKED_RETURN_TO_SOL_R7_ATTR_LF_REMOTE_COMPLETE/u);
+  }
+  assert.match(packet, /26 CRLF plus 6 LF/u);
+  assert.match(packet, /LOCAL_VALIDATION_EVIDENCE_REJECTED \/ IMMUTABLE_BLOB_CONTRADICTION/u);
+  assert.match(packet, /Stage 3 3\/3/u);
+  assert.match(packet, /WebKit deployment bounded summaries 6\/6/u);
+  assert.match(packet, /six Chromium deployment axes[\s\S]*remain unexecuted/u);
+  assert.match(packet, /Design ID remains `V100-SOL-DL-001 r7`; no r8 revision is created/u);
+  assert.match(packet, /changing exactly `\.gitattributes` relative to its parent/u);
+  assert.match(packet, /add exactly one self-contract line: `\.gitattributes text eol=lf`/u);
+  assert.match(packet, /inspect the committed blob—not only the working file/u);
+  assert.match(execution, /Change exactly one file relative to the Sol packet parent: `\.gitattributes`/u);
+  assert.match(execution, /Then return exactly, whether green or failed/u);
+  assert.match(execution, /Do not repeat completed diagnostics or local full\/unfiltered Phase G/u);
+  assert.match(design, /High ambiguity: 0` and `Medium ambiguity: 0/u);
+});
+
 test("campaign contract has exactly 30 ordered, unique stages", async () => {
   const design = await readFile(DESIGN, "utf8");
   const campaignSection = design.match(/## 4\. Campaign and mission contract([\s\S]+?)### Acceptance criteria/u)?.[1] ?? "";

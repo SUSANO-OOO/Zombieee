@@ -20,10 +20,10 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、branch `codex/v1.0.0-luna-implementation`
-- LAST_AUDITED_HEAD：`bad1578b45171b476a8989c3180433ba14f973b7`、tree `fded05d05fd216d512cbec8a17d647a59cf1dd04`。これはSOLが内容を監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- LAST_AUDITED_HEAD：`7429460950a37b2ac68415a5046547c97f8bb263`、tree `9c1cab7d8a8950a2ba475d89ffb986434ba36d15`。これはSOLが内容を監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r7`（r4 Phase G契約、r5 execution/release loop、r6 diagnostic evidenceを維持し、独立したEOL hygieneとStage 3 predicate-orchestration correctionをSection 21へ固定。`PRODUCT_DESIGN_CHANGE: 0`）
-- execution ledger：Issue #172。r7 cursorを現在値として使用する。pre-r5 Issue本文と`V100-LOOP-LOCK-001` commentは暫定監査資料であり、並行Design Lockではない
+- current Design Lock：`V100-SOL-DL-001 r7`（Section 21のStage 3 correctionはremote 3/3で閉じ、Section 22が`.gitattributes`だけのsame-revision LF closureを所有する。r4 Phase G契約、r5 execution/release loop、r6 diagnosticsを維持。`PRODUCT_DESIGN_CHANGE: 0`）
+- execution ledger：Issue #172。r7 Section 22 cursorを現在値として使用する。pre-r5 Issue本文と`V100-LOOP-LOCK-001` commentは暫定監査資料であり、並行Design Lockではない
 - main merge／tag／Release／Pages公開：未実施
 
 ## 3. Version 1.0.0固定事項
@@ -66,12 +66,13 @@ SolとLunaを同時並行に動かさない。
 ## 5. 現在のblocker
 
 - PR #169、#170、#171はいずれもDraft／未merge。PR #171はVersion 1.0.0 implementation candidateだが、`NOT_READY`である。
-- r6 diagnostic HEAD `bad1578b45171b476a8989c3180433ba14f973b7`、tree `fded05d05fd216d512cbec8a17d647a59cf1dd04`のrun `32496778334`はterminal failure。Lunaは一回のdiagnostic commit/push後、manual retry／rerun／product correctionなしで`BLOCKED_RETURN_TO_SOL_DIAGNOSTIC_COMPLETE`へ停止した。
-- PR Verify `96817031062`は`Check patch whitespace`で停止した。raw base-range logとblob監査は、r6の5変更file全件がmixed CRLF/LFであることを示す。分類は`REPO_HYGIENE / FIVE_FILE_MIXED_EOL / REMEDIATION_LOCAL`。単独testだけの修正ではcloseしない。
-- Stage 3 final-base `96823095853`は既存bounded 2 attemptsともWebKit close/crash。artifact `9452903579`のattempt 2 traceでは15.043秒時点でfinal-cut predicate全要素が成立したが、page-owned waiterは未解決のまま41.128秒でcrashした。分類は`QA_HARNESS_PREDICATE_ORCHESTRATION / REMEDIATION_LOCAL`であり、product combat/story/audio failureではない。entrance-candidate `96823095717`とfinal-candidate `96823095705`は成功した。
-- run `32496778334`の6成功jobはWebKit enemy-runtime shardsであり、Section 20の6 Chromium deployment axesではない。PR Verifyが早期停止したためChromium setup/readiness diagnosticは未実行。Phase G `96817216110`も`needs: verify`でskippedし、remote trio／local full Phase G／unfiltered remote Phase Gは未実行である。
-- 現分類は`DUAL_LOCAL_REMEDIATION / REPO_HYGIENE + QA_HARNESS_PREDICATE_ORCHESTRATION / DESIGN_CHANGE_REQUIRED`。Design Lock r7 Section 21は5-file LF/BOM normalizationとNode-owned final-cut predicate waiterだけを一回のbounded correctionへ固定する。Lunaにroot cause、correction scope、retry、promotion判断を委譲しない。
-- LUNAのisolated Stage 6／24／25診断とlocal ordered trio 3/3はhistorical local evidenceであり、current candidateのremote/final evidenceではない。r7 remote returnをSOLが再分類するまでlocal full Phase Gとunfiltered remote Phase Gは停止する。
+- r7 correction HEAD `7429460950a37b2ac68415a5046547c97f8bb263`、tree `9c1cab7d8a8950a2ba475d89ffb986434ba36d15`のCI #908／run `32510923851`はterminal failure。Lunaは一回のcorrection commit/push後、manual retry／rerun／second commit／product correctionなしで`BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`へ停止した。
+- PR Verify `96861615644`はCI同一rangeの`git diff --check`で`.gitattributes` 1-26行をtrailing whitespaceとして停止した。immutable blobはr7 packetでLF 27／CRLF 0、correction HEADでCRLF 26＋LF 6、いずれもno-BOM。分類は`REPO_HYGIENE / DOT_GITATTRIBUTES_MIXED_EOL / REMEDIATION_LOCAL`。報告されたlocal whitespace passは同一immutable blobと矛盾するためgate evidenceとして不採用。
+- r7 Stage 3 correctionはremote focused 3/3成功（entrance `96867530097`、final-candidate `96867530121`、final-base `96867530136`）。final-base artifact `9457872989`は1 bounded attemptで完了した。分類は`REMEDIATION_CLOSED / REMOTE_FOCUSED_GREEN`であり、product combat/story/audio blockerはない。
+- WebKit deployment 6軸のtop-level bounded summaryは6/6成功。736x414/brawlerと844x390/medicは既存のmaximum-two-attempt contract内でattempt 1 target-close、attempt 2成功。manual retryではなく`BOUNDED_RETRY_SUCCESS / CONTROL_GREEN`である。canonical viewport 48/48、enemy-runtime 6/6、hosted evidenceも成功したがfinal freezeには流用しない。
+- PR Verifyが早期停止したため、同job内の6 Chromium deployment axesは未実行。Phase G `96861720725`も`needs: verify`でskippedした。WebKit deployment jobをChromium diagnosticの代替にしない。local full Phase Gとunfiltered remote Phase Gも未実行である。
+- 現active分類は`SINGLE_FILE_REPO_HYGIENE / REMEDIATION_LOCAL`。Design revisionはr7を維持し、Section 22が`.gitattributes` LF/no-BOM normalizationとexact self LF contractだけを一回のbounded remediationへ固定する。Lunaにroot cause、scope、retry、promotion判断を委譲しない。
+- LUNAのisolated Stage 6／24／25診断とlocal ordered trio 3/3はhistorical local evidenceであり、current candidateのremote/final evidenceではない。Section 22 remote returnをSOLが再分類するまでlocal full Phase Gとunfiltered remote Phase Gは停止する。
 - audited HEAD `0f2c6e92ddb9de5410585ec8d78dae5f3c3e3f2b`のCI run `32455268714`ではPR Verify等は成功したが、Phase G job `96694829714`が`webkit-667x375-battle-extra`で45秒timeoutとなった。失敗stateは`null`、console／page／request／HTTP errorは0、Phase G validatorは未実行である。
 - artifact `9437741041`（`v100-phase-g-production-evidence`、SHA-256 `08b7a3345a780ebb8adb3c1776b40e50ee90cc05b84d0227e613e5cb655efe4b`）は51 PNGのみを含む。48 core Chromium captureと3 Chromium battle-extraは存在するが、WebKit battle-extra、最終report、manifest、runtime evidenceは存在しない。
 - docs-only HEAD `29c6046484d3a81793b416feb2474ca62adf77bd`のCI run `32465986052`ではStage 6を通過後、Phase G job `96726761976`が`webkit-736x414-battle-extra`（`stage24-panther-commander`）で`boss frontline unit 4 never entered cooldown from the ready state`により失敗した。失敗stateは再び`null`、console／page／request／HTTP errorは0、validatorは未実行である。
@@ -80,17 +81,17 @@ SolとLunaを同時並行に動かさない。
 - Stage 6限定診断ではclosure不能。Design Lock r4はWebKit battle-extra 3契約（Stage 6／24／25）へ共通checkpoint／lifecycle診断とordered focused regressionを固定する。根拠のない局所修正、generic retry、blanket timeout extensionは禁止する。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r7
+## 6. Version 1.0.0 execution cursor — r7 Section 22
 
-- `LAST_AUDITED_HEAD`: `bad1578b45171b476a8989c3180433ba14f973b7`
-- `LAST_AUDITED_TREE`: `fded05d05fd216d512cbec8a17d647a59cf1dd04`
-- `FAILED_GATE`: run `32496778334`; PR Verify `96817031062` five-file mixed-EOL whitespace; Stage 3 final-base `96823095853` page-owned predicate unresolved then WebKit crash; Phase G `96817216110` skipped; Chromium deployment diagnostic not reached
-- `LAST_GREEN_GATE`: r6 local focused acceptance; run `32496778334` six WebKit enemy-runtime shards, hosted evidence, Stage 3 entrance-candidate, and Stage 3 final-candidate. Diagnostic controls only; final freeze reuse不可
-- `REMEDIATION_CLASS`: `DUAL_LOCAL_REMEDIATION / REPO_HYGIENE + QA_HARNESS_PREDICATE_ORCHESTRATION / DESIGN_CHANGE_REQUIRED`
-- `RESUME_FROM`: five-file LF/BOM normalization + exact LF attributes + Node-owned final-cut predicate wait -> focused local checks -> one normal correction push -> wait for that one automatic CI run terminal -> `BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`
-- `NEXT_OWNER`: `LUNA_IMPLEMENTATION`（Design Lock Section 21のbounded correctionのみ。root cause／scope／retry／promotion／製品判断権限なし）
+- `LAST_AUDITED_HEAD`: `7429460950a37b2ac68415a5046547c97f8bb263`
+- `LAST_AUDITED_TREE`: `9c1cab7d8a8950a2ba475d89ffb986434ba36d15`
+- `FAILED_GATE`: run `32510923851`; PR Verify `96861615644` mixed-EOL `.gitattributes`; six Chromium deployment axes not run; Phase G `96861720725` skipped
+- `LAST_GREEN_GATE`: Stage 3 remote 3/3、WebKit deployment bounded summaries 6/6、canonical viewports 48/48、WebKit enemy-runtime 6/6、hosted evidence。focused controls only、final freeze reuse不可
+- `REMEDIATION_CLASS`: `REPO_HYGIENE / DOT_GITATTRIBUTES_MIXED_EOL / REMEDIATION_LOCAL`
+- `RESUME_FROM`: `.gitattributes` LF/no-BOM normalization + exact self LF contract -> committed-blob and CI-range checks -> one normal remediation push -> wait for that correction-HEAD automatic run terminal -> `BLOCKED_RETURN_TO_SOL_R7_ATTR_LF_REMOTE_COMPLETE`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION`（Design Lock Section 22のone-file remediationのみ。root cause／scope／retry／promotion／製品判断権限なし）
 
-Lunaはallowlist内の一回のcorrection commit／pushだけを行い、manual retry／rerun／second commitを行わない。automatic runの結果がgreenでもfailureでもterminal後は必ずSOLへ戻す。SOLの次回classificationとlocked packetなしにlocal full Phase G／unfiltered remoteへ進まない。
+Lunaは`.gitattributes`だけの一回のremediation commit／pushを行い、manual retry／rerun／second commitを行わない。automatic runの結果がgreenでもfailureでもterminal後は必ずSOLへ戻す。SOLの次回classificationとlocked packetなしにlocal full Phase G／unfiltered remoteへ進まない。
 
 PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。作業開始・push前・gate判定前にGitHubのPR refを再取得する。
 
