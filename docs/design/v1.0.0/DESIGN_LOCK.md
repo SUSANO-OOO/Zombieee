@@ -625,12 +625,12 @@ A new failure at the same required gate after a bounded remediation is never aut
 For the current r5 cursor, Luna executes this exact order:
 
 1. Section 19.5 LF-only remediation and its semantic/byte checks;
-2. PR Verify on the new remote candidate;
-3. the existing automated remote ordered WebKit trio, three complete sequences of Stage 6 -> Stage 24 -> Stage 25;
-4. local unfiltered Phase G 54/54 plus validator and every Section 18.5 full regression;
+2. commit/push normally and require PR Verify green in the resulting focused remote workflow run;
+3. allow that same workflow run to start the already-bound automated remote ordered WebKit trio, require three complete sequences of Stage 6 -> Stage 24 -> Stage 25, then wait until the entire focused run is terminal; every required job must be green;
+4. only then run local unfiltered Phase G 54/54 plus validator and every Section 18.5 full regression;
 5. restore the unfiltered Phase G workflow binding and prove its focused-only binding is absent;
-6. one new unfiltered remote required-CI run, including Phase G 54/54, validator, all required jobs, and required artifacts;
-7. wait until that entire required run is terminal; only complete green may enter the Producer Visual Checkpoint.
+6. push normally and require one new unfiltered remote required-CI run, including Phase G 54/54, validator, all required jobs, and required artifacts;
+7. wait until that entire unfiltered run is terminal; only complete green may enter the Producer Visual Checkpoint.
 
 The already-complete isolated diagnostics and local ordered trio 3/3 are not repeated for the LF-only change, and they are not final evidence. A prior, local, partial, skipped, cancelled, neutral, or stale run cannot substitute for an attempt-specific required remote result. After the LF push, any required job failure or unexpected skip in the candidate's required run returns immediately to Sol after the run is terminal. Luna has no authority to decide that a failure is unrelated, flaky, retryable, or ignorable.
 

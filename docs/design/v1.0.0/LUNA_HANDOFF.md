@@ -487,10 +487,10 @@ Do not rerun the completed isolated diagnostics or local ordered trio solely for
 
 After the LF push:
 
-1. wait for PR Verify and the candidate's required workflow to reach a terminal state;
-2. PR Verify green permits the already-bound automated remote ordered trio; require three complete Stage 6 -> Stage 24 -> Stage 25 sequences with no in-sequence retry;
-3. any required job failure or unexpected skip, including any trio failure, returns `STATUS: BLOCKED_RETURN_TO_SOL`; record HEAD/tree, run/job/artifact, failed gate, last green gate, and diagnostics, then stop without a fix or rerun;
-4. remote trio 3/3 permits local unfiltered Phase G 54/54 plus validator and every Section 18.5 full regression;
+1. commit/push the accepted LF-only change normally and observe the resulting focused remote workflow run;
+2. require PR Verify green; it unlocks the already-bound automated remote ordered trio in that same run. Require three complete Stage 6 -> Stage 24 -> Stage 25 sequences with no in-sequence retry, then wait for the entire focused run to become terminal before local promotion;
+3. any required job failure or unexpected skip in that terminal run, including any trio failure, returns `STATUS: BLOCKED_RETURN_TO_SOL`; record HEAD/tree, run/job/artifact, failed gate, last green gate, and diagnostics, then stop without a fix or rerun;
+4. only terminal focused-run green plus remote trio 3/3 permits local unfiltered Phase G 54/54 plus validator and every Section 18.5 full regression;
 5. only after local full green, restore unfiltered Phase G, prove the focused binding is absent, push normally, and require one new complete unfiltered remote CI/Phase G run;
 6. only complete terminal green transitions to `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` with the exact Section 16 twelve-screen set.
 
