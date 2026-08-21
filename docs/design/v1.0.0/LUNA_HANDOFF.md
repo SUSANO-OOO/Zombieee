@@ -400,3 +400,51 @@ Before the Producer checkpoint, prepare: exact base/head/tree; all three isolate
 After every Section 18.5 local and remote technical gate is satisfied, set `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` and submit these actual-production screens: (1) `TITLE`, (2) `名前入力`, (3) `作戦地図`, (4) `通常Stage選択`, (5) `Boss Stage選択`, (6) `出撃編成`, (7) `隊員`, (8) `出撃装備`, (9) `装甲車両強化`, (10) `代表event`, (11) `通常battle HUD`, and (12) `戦果`.
 
 Producer Visual Approval is a hard gate. Before approval, do not finalize the Completion Packet and do not set `STATUS: READY_FOR_SOL_FINAL_REVIEW`. After approval, freeze final evidence at the approved HEAD/tree, finalize the Completion Packet, set `STATUS: READY_FOR_SOL_FINAL_REVIEW`, and stop for Sol final review. If a Section 18 stop condition occurs, use `STATUS: BLOCKED_RETURN_TO_SOL` and stop. No Ready conversion, merge, tag, Release, formal Pages deployment, or Issue closure is authorized.
+
+### 11.1 SOL remediation cursor — LF-only repository hygiene
+
+This packet does not revise r4. CI run `32475729057` stopped before the remote focused Phase G job because PR Verify job `96751598547` failed its exact-base/head `git diff --check`. The audited commit changes only `.github/workflows/ci.yml`, `scripts/v100-phase-g-production-matrix.mjs`, and the new `tests/v100-phase-g-checkpoint.test.mjs`; `app/**` is unchanged. The first two Git blobs contain mixed CRLF/LF, while the checkpoint test Git blob is LF-only. This is `REPO_HYGIENE / REMEDIATION_LOCAL`, separate from the one coherent r4 harness correction.
+
+Execution cursor:
+
+- `LAST_AUDITED_HEAD`: `f7149732fadec5142d0e475f201984dd5a48e217`
+- `FAILED_GATE`: run `32475729057` / PR Verify job `96751598547` / `Check patch whitespace`
+- `LAST_GREEN_GATE`: isolated Stage 6／24／25 diagnostics complete; local ordered trio Stage 6 -> Stage 24 -> Stage 25 passed 3/3, with `screenshot-saved` as the last checkpoint and diagnostic errors 0. This is local-only and not final-freeze evidence
+- `REMEDIATION_CLASS`: `REPO_HYGIENE / REMEDIATION_LOCAL`
+- `RESUME_FROM`: LF remediation semantic-diff 0 -> PR Verify -> automated remote ordered trio 3/3
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for this exact LF-only packet; no product or design judgment is delegated
+
+Before editing, re-fetch PR #171. Treat the field above as a stable audit cursor, not as the mutable live HEAD. Stop if the current PR history does not contain `LAST_AUDITED_HEAD`, or if another actor changed any target after this packet commit.
+
+The complete allowed change is:
+
+1. Normalize only `.github/workflows/ci.yml` and `scripts/v100-phase-g-production-matrix.mjs` from their mixed EOL state to LF. Do not change text, ordering, indentation, trailing whitespace, executable mode, or final newline.
+2. Preserve the existing byte contracts: `.github/workflows/ci.yml` keeps its UTF-8 BOM and final LF; `scripts/v100-phase-g-production-matrix.mjs` keeps no BOM and a final LF; `tests/v100-phase-g-checkpoint.test.mjs` keeps no BOM, 20 LF, CRLF 0, and its final LF.
+3. Add only these exact path contracts to the root `.gitattributes`; do not add wildcard rules and do not renormalize the repository:
+
+```gitattributes
+.github/workflows/ci.yml text eol=lf
+scripts/v100-phase-g-production-matrix.mjs text eol=lf
+tests/v100-phase-g-checkpoint.test.mjs text eol=lf
+```
+
+4. Stage or renormalize only those three paths plus `.gitattributes`. A repository-wide `git add --renormalize .` or unrelated cleanup is forbidden.
+
+Byte and semantic acceptance before commit:
+
+- normalized `.github/workflows/ci.yml` SHA-256 is exactly `93bd86855702b5a4e7333ff860a4410fdc4e772b256a9d2a3730fac8eb40a8da`, with BOM present, CRLF 0, LF 592, lone CR 0, and final LF present;
+- normalized `scripts/v100-phase-g-production-matrix.mjs` SHA-256 is exactly `3d8cc8a30674ea5261fd516685ab116c398f8c3e30e8f1f882e7e4b32f1ad6f2`, with BOM absent, CRLF 0, LF 2328, lone CR 0, and final LF present;
+- `tests/v100-phase-g-checkpoint.test.mjs` remains byte-identical at SHA-256 `6001a58e541ff94c7e9819eb8b6bc0eb5a8646bf94275caee816d0a9eace22bd`;
+- `git diff --ignore-space-at-eol --exit-code f7149732fadec5142d0e475f201984dd5a48e217 -- .github/workflows/ci.yml scripts/v100-phase-g-production-matrix.mjs tests/v100-phase-g-checkpoint.test.mjs` passes;
+- `git check-attr text eol -- .github/workflows/ci.yml scripts/v100-phase-g-production-matrix.mjs tests/v100-phase-g-checkpoint.test.mjs` reports `text: set` and `eol: lf` for all three;
+- the `.gitattributes` diff is only the three exact entries above;
+- CI-equivalent `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD` passes;
+- changed files for this LF remediation are exactly the two normalized files and `.gitattributes`; the checkpoint test remains unchanged from `LAST_AUDITED_HEAD`.
+
+Do not rerun the already-complete isolated diagnostics or local ordered trio merely because of this EOL-only correction. After the semantic-diff and byte checks pass, commit and push normally, then resume exactly at PR Verify. PR Verify success unlocks the automated remote ordered trio already bound in `v100-phase-g-production`.
+
+If any remote ordered-trio sequence fails, set `STATUS: BLOCKED_RETURN_TO_SOL` and stop without another fix. If the remote ordered trio passes 3/3, continue with local full Phase G 54/54 plus validator and all Section 18.5 full regressions, then restore the unfiltered 54-capture workflow and run unfiltered remote CI／Phase G. No local or prior artifact substitutes for attempt-specific remote evidence. Any unrelated required-CI failure may be recorded, but it grants no repair authority under this LF-only packet; complete remote green remains mandatory.
+
+After complete remote green, transition to `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`. The release tail is fixed as: Producer Visual Approval -> final evidence freeze -> `READY_FOR_SOL_FINAL_REVIEW` -> SOL FINAL REVIEW `APPROVE` -> `PRODUCER_FINAL_ACCEPTANCE` -> only after explicit Producer approval, integration／tag／GitHub Release／official Pages -> post-release QA at the published SHA -> `PROJECT_STATE` update and closure. No earlier release-state mutation is authorized.
+
+The generic Completion Packet path in `AGENTS.md` and `CODEX_TWO_THREAD_WORKFLOW.md` remains governance debt. For Version 1.0.0, this r4 Producer checkpoint and release tail take precedence. Do not edit generic governance on the active implementation branch; normalize it in a separate post-V1 governance change.

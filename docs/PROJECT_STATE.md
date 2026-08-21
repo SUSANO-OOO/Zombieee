@@ -20,7 +20,7 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、branch `codex/v1.0.0-luna-implementation`
-- audited implementation HEAD：`0f2c6e92ddb9de5410585ec8d78dae5f3c3e3f2b`、tree `c2bd7f18d0930a9694763285dbff686c36fd27a5`
+- LAST_AUDITED_HEAD：`f7149732fadec5142d0e475f201984dd5a48e217`、tree `825c03de6f51fda91914b66f07df2765c7338416`。これはSOLが内容を監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
 - current Design Lock：`V100-SOL-DL-001 r4`（WebKit battle-extra共通診断・実行契約のみ改訂、`PRODUCT_DESIGN_CHANGE: 0`）
 - main merge／tag／Release／Pages公開：未実施
@@ -55,13 +55,19 @@ exact stats、cost、reward、duration、wave、unlock、装甲車両upgrade cur
 5. remote required CI／Phase G完全green後、Lunaは`PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`へ遷移し、actual productionの12画面（TITLE、名前入力、作戦地図、通常Stage選択、Boss Stage選択、出撃編成、隊員、出撃装備、装甲車両強化、代表event、通常battle HUD、戦果）をProducer確認へ出す
 6. Producer Visual Approval前はCompletion Packetを確定せず、`READY_FOR_SOL_FINAL_REVIEW`へ進まない
 7. Producer Visual Approval後にfinal evidenceをfreezeし、Luna Completion Packetを確定して元のSolへ返す
-8. 元のSolが`SOL_FINAL_REVIEW`を行い、High／Medium 0とrelease gateを満たした場合だけmerge／公開
+8. 元のSolが`SOL_FINAL_REVIEW`を行い、High／Medium 0なら`APPROVE`
+9. `SOL FINAL REVIEW APPROVE`後も直ちに統合・公開せず、`PRODUCER_FINAL_ACCEPTANCE`へ進む
+10. Producerの明示承認後だけintegration、tag、GitHub Release、official Pagesを実行する
+11. published SHAを固定してpost-release QAを行い、その成功後に`PROJECT_STATE`更新と対象Issue／PR closeを行う
 
 SolとLunaを同時並行に動かさない。
 
 ## 5. 現在のblocker
 
 - PR #169、#170、#171はいずれもDraft／未merge。PR #171はVersion 1.0.0 implementation candidateだが、`NOT_READY`である。
+- LAST_AUDITED_HEAD `f7149732fadec5142d0e475f201984dd5a48e217`のCI run `32475729057`では、PR Verify job `96751598547`が`Check patch whitespace`で失敗した。workflowの実行式は`git diff --check "$PR_BASE_SHA...$PR_HEAD_SHA"`、当該rangeは`6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...f7149732fadec5142d0e475f201984dd5a48e217`である。これに依存するV1 Phase G Production Matrixは未実行で、remote ordered trioの成否を示す証拠はまだない。
+- byte監査では`.github/workflows/ci.yml`がBOM維持のまま579 CRLF／592 LF、`scripts/v100-phase-g-production-matrix.mjs`が1776 CRLF／2328 LFのmixed EOLである。`tests/v100-phase-g-checkpoint.test.mjs`のGit blobは20 LF／CRLF 0である。`f7149732`の変更fileはこの3件だけで、`app/**`変更は0。分類は`REPO_HYGIENE / REMEDIATION_LOCAL`、Design Lockは`V100-SOL-DL-001 r4`を維持する。
+- LUNAのisolated Stage 6／24／25診断とlocal ordered trio 3/3は成立済みであり、EOL-only修正を理由に再実行しない。ただし、このlocal evidenceはfinal evidence freezeやremote ordered trioの代替にはしない。
 - audited HEAD `0f2c6e92ddb9de5410585ec8d78dae5f3c3e3f2b`のCI run `32455268714`ではPR Verify等は成功したが、Phase G job `96694829714`が`webkit-667x375-battle-extra`で45秒timeoutとなった。失敗stateは`null`、console／page／request／HTTP errorは0、Phase G validatorは未実行である。
 - artifact `9437741041`（`v100-phase-g-production-evidence`、SHA-256 `08b7a3345a780ebb8adb3c1776b40e50ee90cc05b84d0227e613e5cb655efe4b`）は51 PNGのみを含む。48 core Chromium captureと3 Chromium battle-extraは存在するが、WebKit battle-extra、最終report、manifest、runtime evidenceは存在しない。
 - docs-only HEAD `29c6046484d3a81793b416feb2474ca62adf77bd`のCI run `32465986052`ではStage 6を通過後、Phase G job `96726761976`が`webkit-736x414-battle-extra`（`stage24-panther-commander`）で`boss frontline unit 4 never entered cooldown from the ready state`により失敗した。失敗stateは再び`null`、console／page／request／HTTP errorは0、validatorは未実行である。
@@ -70,7 +76,24 @@ SolとLunaを同時並行に動かさない。
 - Stage 6限定診断ではclosure不能。Design Lock r4はWebKit battle-extra 3契約（Stage 6／24／25）へ共通checkpoint／lifecycle診断とordered focused regressionを固定する。根拠のない局所修正、generic retry、blanket timeout extensionは禁止する。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Release gate
+## 6. Version 1.0.0 execution cursor
+
+- `LAST_AUDITED_HEAD`: `f7149732fadec5142d0e475f201984dd5a48e217`
+- `FAILED_GATE`: run `32475729057` / PR Verify job `96751598547` / `Check patch whitespace` / `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...f7149732fadec5142d0e475f201984dd5a48e217`
+- `LAST_GREEN_GATE`: isolated Stage 6／24／25 diagnostics complete; local ordered trio Stage 6 -> Stage 24 -> Stage 25 passed 3/3 with final checkpoint `screenshot-saved` and diagnostic errors 0. Local-only evidence; final freeze reuse不可
+- `REMEDIATION_CLASS`: `REPO_HYGIENE / REMEDIATION_LOCAL`
+- `RESUME_FROM`: exact-file LF remediationでsemantic diff 0を証明 -> PR Verify -> automated remote ordered trio 3/3
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION`（LF-only repository hygiene。新しい設計判断・製品実装権限なし）
+
+remote ordered trioが1件でも失敗した場合は`STATUS: BLOCKED_RETURN_TO_SOL`として停止し、追加修正しない。3/3成功時だけlocal full Phase G 54/54＋validator＋full regressionsへ進み、次にunfiltered remote CI／Phase Gを実行する。complete remote green後の遷移先は`PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`である。
+
+PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。作業開始・push前・gate判定前にGitHubのPR refを再取得する。
+
+### Post-V1 governance normalization debt
+
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric Completion Packet経路と、Version 1.0.0 Design Lock r4のProducer Visual Checkpoint経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r4を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書をProducer checkpoint／final acceptance経路へ整合する。
+
+## 7. Release gate
 
 次が残る場合、完成／APPROVE／READY_FOR_RELEASEとしない。
 
