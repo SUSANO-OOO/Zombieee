@@ -119,6 +119,8 @@ const timeout = Math.max(
   10_000,
   Number(process.env.V099_FINAL_REMEDIATION_QA_TIMEOUT_MS) || 30_000,
 );
+const DIAGNOSTIC_TRACE_INTERVAL_MS = 250;
+const DIAGNOSTIC_TRACE_MAX_SAMPLES = 160;
 const evidenceDir = path.resolve(
   process.env.V099_FINAL_REMEDIATION_QA_EVIDENCE_DIR
     ?? "docs/qa/v099/final-remediation/browser",
@@ -307,6 +309,7 @@ function diagnosticsFor(page, lifecycle = null) {
   let phase = "setup";
   const pageClockCalibrations = [];
   const requestStartedAt = new WeakMap();
+  const pendingRequests = new Set();
   const diagnostics = {
     consoleErrors: [],
     pageErrors: [],
@@ -321,9 +324,16 @@ function diagnosticsFor(page, lifecycle = null) {
     if (active) diagnostics.pageErrors.push(String(error));
   });
   page.on("request", (request) => {
-    if (active) requestStartedAt.set(request, Date.now());
+    if (active) {
+      requestStartedAt.set(request, Date.now());
+      pendingRequests.add(request);
+    }
+  });
+  page.on("requestfinished", (request) => {
+    pendingRequests.delete(request);
   });
   page.on("requestfailed", (request) => {
+    pendingRequests.delete(request);
     if (!active) return;
     const detail = {
       url: request.url(),
@@ -372,12 +382,159 @@ function diagnosticsFor(page, lifecycle = null) {
         pageClockCalibrations: reconciled.calibrations,
       };
     },
+    traceCounts: () => ({
+      consoleErrorCount: diagnostics.consoleErrors.length,
+      pageErrorCount: diagnostics.pageErrors.length,
+      requestFailureCount: diagnostics.requestFailures.length,
+      httpErrorCount: diagnostics.httpErrors.length,
+      pendingRequestCount: pendingRequests.size,
+    }),
     stop: () => { active = false; },
   };
 }
 
 function diagnosticsClean(diagnostics) {
   return Object.values(diagnostics).every((entries) => entries.length === 0);
+}
+
+function createBoundedTrace({ page, readSample }) {
+  const startedAt = Date.now();
+  const samples = [];
+  let active = true;
+  let inFlight = null;
+  let lastAttemptAt = null;
+  let timer = null;
+  let lastSampleError = null;
+  let lastReadableSnapshot = null;
+  const pageSignals = {
+    close: false,
+    crash: false,
+    closeAtElapsedMs: null,
+    crashAtElapsedMs: null,
+  };
+
+  const capture = async () => {
+    if (!active || samples.length >= DIAGNOSTIC_TRACE_MAX_SAMPLES) return;
+    if (inFlight) {
+      await inFlight;
+      return;
+    }
+    const attemptAt = Date.now();
+    if (lastAttemptAt !== null && attemptAt - lastAttemptAt < DIAGNOSTIC_TRACE_INTERVAL_MS) return;
+    lastAttemptAt = attemptAt;
+    inFlight = (async () => {
+      try {
+        const sample = await readSample({ elapsedWallMs: attemptAt - startedAt });
+        if (sample) {
+          samples.push(sample);
+          if (sample.readableSnapshot) lastReadableSnapshot = sample.readableSnapshot;
+        }
+      } catch (error) {
+        lastSampleError = String(error);
+      } finally {
+        inFlight = null;
+      }
+    })();
+    await inFlight;
+  };
+
+  page.on("close", () => {
+    pageSignals.close = true;
+    pageSignals.closeAtElapsedMs ??= Date.now() - startedAt;
+  });
+  page.on("crash", () => {
+    pageSignals.crash = true;
+    pageSignals.crashAtElapsedMs ??= Date.now() - startedAt;
+  });
+  void capture();
+  timer = setInterval(() => { void capture(); }, DIAGNOSTIC_TRACE_INTERVAL_MS);
+
+  return {
+    async stop() {
+      active = false;
+      if (timer) clearInterval(timer);
+      timer = null;
+      if (inFlight) await inFlight;
+      return {
+        sampleIntervalMs: DIAGNOSTIC_TRACE_INTERVAL_MS,
+        maxSamples: DIAGNOSTIC_TRACE_MAX_SAMPLES,
+        samples,
+        sampleCount: samples.length,
+        lastSample: samples.at(-1) ?? null,
+        lastReadableSnapshot,
+        lastSampleError,
+        pageSignals,
+      };
+    },
+    capture,
+  };
+}
+
+function setupRuntimeState(page) {
+  return page.evaluate(() => {
+    const shell = document.querySelector(".game-shell");
+    const battleApi = window.__ASHFALL_BATTLE_QA__;
+    const assetApi = window.__ASHFALL_ASSET_QA__;
+    const rawSnapshot = battleApi?.getSnapshot?.() ?? null;
+    const rawAssetState = assetApi?.getState?.() ?? null;
+    const snapshot = rawSnapshot ? {
+      screen: rawSnapshot.screen ?? null,
+      running: rawSnapshot.running ?? null,
+      paused: rawSnapshot.paused ?? null,
+      over: rawSnapshot.over ?? null,
+      time: rawSnapshot.time ?? null,
+    } : null;
+    const asset = rawAssetState ? {
+      state: rawAssetState.state ?? null,
+      generation: rawAssetState.generation ?? null,
+      completed: rawAssetState.completed ?? null,
+      total: rawAssetState.total ?? null,
+      pending: rawAssetState.pending ?? null,
+      failed: rawAssetState.failed ?? null,
+      reason: rawAssetState.reason ?? rawAssetState.failureReason ?? null,
+    } : null;
+    const storyLine = document.querySelector(".dialogue-box")?.textContent?.trim() || null;
+    const storyScreen = document.querySelector(".campaign-overlay.event-screen")
+      ? document.querySelector(".campaign-overlay.event-screen")?.getAttribute("data-screen") ?? "event"
+      : (shell?.getAttribute("data-screen") === "event" ? "event" : null);
+    return {
+      url: location.href,
+      documentVisibility: document.visibilityState,
+      screen: shell?.getAttribute("data-screen") ?? null,
+      battleApiPresent: Boolean(battleApi),
+      snapshot,
+      assetApiPresent: Boolean(assetApi),
+      asset,
+      storyLine,
+      storyScreen,
+      readableSnapshot: snapshot,
+    };
+  });
+}
+
+function createSetupTrace(page, diagnosticControl) {
+  let lifecyclePhase = "page creation";
+  const trace = createBoundedTrace({
+    page,
+    readSample: async ({ elapsedWallMs }) => {
+      const runtime = await setupRuntimeState(page);
+      const counts = diagnosticControl.traceCounts();
+      return {
+        elapsedWallMs,
+        lifecyclePhase,
+        ...runtime,
+        ...counts,
+        diagnostics: counts,
+      };
+    },
+  });
+  return {
+    setPhase(phase) {
+      lifecyclePhase = phase;
+    },
+    stop: () => trace.stop(),
+    capture: () => trace.capture(),
+  };
 }
 
 async function sealAssetSetupBoundary(page, diagnosticControl, label) {
@@ -565,56 +722,94 @@ async function openBattlePage(context, qaMode, options = {}, lifecycle = null) {
   lifecycle?.setPhase("page creation");
   const page = await context.newPage();
   const diagnosticControl = diagnosticsFor(page, lifecycle);
-  lifecycle?.setPhase("navigation");
+  const setupTrace = options.setupTrace === true ? createSetupTrace(page, diagnosticControl) : null;
+  const setPhase = (phase) => {
+    setupTrace?.setPhase(phase);
+    lifecycle?.setPhase(phase);
+  };
+  setPhase("page creation");
+  setPhase("navigation");
   lifecycle?.event("navigation start", { page });
   const viewport = page.viewportSize();
-  const response = await page.goto(caseUrl(qaMode, {
-    ...options,
-    safeAreaPreset: options.safeAreaPreset ?? safeAreaForViewport(viewport).preset,
-  }), {
-    waitUntil: "domcontentloaded",
-    timeout,
-  });
-  lifecycle?.event("navigation complete", { page, status: response?.status(), milestone: "navigation complete" });
-  invariant(response?.ok(), `${qaMode}: navigation returned HTTP ${response?.status()}`);
-  await diagnosticControl.calibratePageClock("post-navigation");
-  lifecycle?.setPhase("battle setup");
-  await dismissInstallOffer(page, { timeout });
-  await enterLegacyQaBattle(page, qaMode);
-  lifecycle?.setPhase("battle readiness");
-  lifecycle?.event("battle readiness start", { page });
-  await page.waitForFunction(
-    () => {
-      const battle = window.__ASHFALL_BATTLE_QA__;
-      const assets = window.__ASHFALL_ASSET_QA__;
-      return battle?.getSnapshot?.().screen === "battle"
-        && battle.getSnapshot().running === true
-        && ["ready", "degraded-ready"].includes(assets?.getState?.().state);
-    },
-    undefined,
-    { timeout },
-  );
-  lifecycle?.event("battle readiness complete", { page, milestone: "battle readiness complete" });
   try {
-    await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 12_000) });
-  } catch (error) {
-    // Hosted WebKit can keep a decoded audio request alive after the battle,
-    // complete pack, and asset gate are all ready. This boundary is not a
-    // product readiness condition; diagnostics and every later visual/runtime
-    // assertion remain fail-closed. Do not extend this allowance to the
-    // loadout/story waits above, where tearing down a request is causal.
-    if (!String(error).includes("page.waitForLoadState: Timeout")) throw error;
-    lifecycle?.event("post-readiness network idle exceeded", {
-      page,
-      milestone: "battle and asset gate already ready",
+    const response = await page.goto(caseUrl(qaMode, {
+      ...options,
+      safeAreaPreset: options.safeAreaPreset ?? safeAreaForViewport(viewport).preset,
+    }), {
+      waitUntil: "domcontentloaded",
+      timeout,
     });
+    lifecycle?.event("navigation complete", { page, status: response?.status(), milestone: "navigation complete" });
+    invariant(response?.ok(), `${qaMode}: navigation returned HTTP ${response?.status()}`);
+    await diagnosticControl.calibratePageClock("post-navigation");
+    setPhase("battle setup");
+    await dismissInstallOffer(page, { timeout });
+    setPhase("legacy screen advancement");
+    await enterLegacyQaBattle(page, qaMode);
+    setPhase("battle readiness");
+    lifecycle?.event("battle readiness start", { page });
+    await page.waitForFunction(
+      () => {
+        const battle = window.__ASHFALL_BATTLE_QA__;
+        const assets = window.__ASHFALL_ASSET_QA__;
+        return battle?.getSnapshot?.().screen === "battle"
+          && battle.getSnapshot().running === true
+          && ["ready", "degraded-ready"].includes(assets?.getState?.().state);
+      },
+      undefined,
+      { timeout },
+    );
+    lifecycle?.event("battle readiness complete", { page, milestone: "battle readiness complete" });
+    setPhase("post-readiness settling");
+    try {
+      await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 12_000) });
+    } catch (error) {
+      // Hosted WebKit can keep a decoded audio request alive after the battle,
+      // complete pack, and asset gate are all ready. This boundary is not a
+      // product readiness condition; diagnostics and every later visual/runtime
+      // assertion remain fail-closed. Do not extend this allowance to the
+      // loadout/story waits above, where tearing down a request is causal.
+      if (!String(error).includes("page.waitForLoadState: Timeout")) throw error;
+      lifecycle?.event("post-readiness network idle exceeded", {
+        page,
+        milestone: "battle and asset gate already ready",
+      });
+    }
+    setPhase("asset-boundary sealing");
+    const assetSetupBoundary = await sealAssetSetupBoundary(
+      page,
+      diagnosticControl,
+      `${qaMode}/${viewport.width}x${viewport.height}`,
+    );
+    await setupTrace?.capture();
+    const setupTraceResult = setupTrace ? await setupTrace.stop() : null;
+    return { page, ...diagnosticControl, assetSetupBoundary, setupTrace: setupTraceResult };
+  } catch (error) {
+    if (setupTrace) {
+      setupTrace.setPhase("failure");
+      let failureScreenshot = null;
+      try {
+        if (!page.isClosed()) {
+          const screenshotPath = path.join(
+            evidenceDir,
+            `chromium-${viewport.width}x${viewport.height}-${qaMode}-setup-failed.png`,
+          );
+          await page.screenshot({ path: screenshotPath, animations: "allow" });
+          failureScreenshot = relativeEvidencePath(screenshotPath);
+        }
+      } catch {
+        // Preserve the original setup failure and whatever trace was readable.
+      }
+      const setupTraceResult = await setupTrace.stop();
+      Object.assign(error, {
+        setupTrace: setupTraceResult,
+        setupTraceFailureScreenshot: failureScreenshot,
+        setupTraceLastReadableSnapshot: setupTraceResult.lastReadableSnapshot,
+        setupTracePageSignals: setupTraceResult.pageSignals,
+      });
+    }
+    throw error;
   }
-  const assetSetupBoundary = await sealAssetSetupBoundary(
-    page,
-    diagnosticControl,
-    `${qaMode}/${viewport.width}x${viewport.height}`,
-  );
-  return { page, ...diagnosticControl, assetSetupBoundary };
 }
 
 async function clientPointForWorld(page, point) {
@@ -1887,6 +2082,127 @@ async function queueAndPauseAtFirstDeploymentFrame(page, unitKind, label) {
   });
 }
 
+function createDeploymentTrace(page, diagnosticControl, unit, getLifecyclePhase) {
+  let expectedCheckpoint = null;
+  let expectedProgress = null;
+  let fighterId = null;
+  let fixtureResult = null;
+  let queueResult = null;
+  const trace = createBoundedTrace({
+    page,
+    readSample: async ({ elapsedWallMs }) => {
+      const runtime = await page.evaluate(({ kind, id, checkpoint, progress }) => {
+        const battleApi = window.__ASHFALL_BATTLE_QA__;
+        const snapshot = battleApi?.getSnapshot?.() ?? null;
+        const fighter = snapshot?.fighters?.find((candidate) => (
+          id !== null
+            ? candidate.id === id
+            : candidate.side === "human"
+              && candidate.kind === kind
+              && candidate.spawnPortalId === "crawler-door"
+        )) ?? null;
+        const audit = fighter && typeof battleApi?.auditFighterUnitLayer === "function"
+          ? battleApi.auditFighterUnitLayer(fighter.id)
+          : null;
+        const doorX = fighter
+          ? Number(snapshot.battleSpace?.crawlerDoor?.x ?? fighter.x)
+          : null;
+        const rampX = fighter
+          ? Number(fighter.entryRampX ?? fighter.combatReadyX ?? doorX + 1)
+          : null;
+        const computedProgress = fighter && doorX !== null && rampX !== null
+          ? Math.max(0, Math.min(1, (fighter.x - doorX) / Math.max(1, rampX - doorX)))
+          : null;
+        return {
+          documentVisibility: document.visibilityState,
+          snapshot: snapshot ? {
+            time: snapshot.time ?? null,
+            paused: snapshot.paused ?? null,
+            over: snapshot.over ?? null,
+          } : null,
+          fighterPresent: Boolean(fighter),
+          fighterId: fighter?.id ?? id,
+          fighter: fighter ? { id: fighter.id, x: fighter.x, y: fighter.y } : null,
+          doorX,
+          rampX,
+          computedProgress,
+          gateEntering: fighter?.gateEntering ?? null,
+          combatReady: fighter?.combatReady ?? null,
+          entryRampCleared: fighter?.entryRampCleared ?? null,
+          audit: audit ? {
+            active: audit.deploymentPlan?.active ?? null,
+            checkpoint: audit.deploymentPlan?.checkpoint ?? null,
+            unitPass: audit.deploymentPlan?.unitPass ?? null,
+            actual: {
+              nonzeroPixels: audit.actual?.nonzeroPixels ?? null,
+              bounds: audit.actual?.bounds ?? null,
+            },
+            opaque: {
+              nonzeroPixels: audit.opaque?.nonzeroPixels ?? null,
+              bounds: audit.opaque?.bounds ?? null,
+            },
+            actualPixelBounds: audit.actual?.bounds ?? null,
+            opaquePixelBounds: audit.opaque?.bounds ?? null,
+            finalCompositePixels: audit.finalCompositePixels ?? null,
+          } : null,
+          readableSnapshot: snapshot ? {
+            time: snapshot.time ?? null,
+            paused: snapshot.paused ?? null,
+            over: snapshot.over ?? null,
+            screen: snapshot.screen ?? null,
+          } : null,
+          expectedCheckpoint: checkpoint,
+          expectedProgress: progress,
+        };
+      }, {
+        kind: unit.kind,
+        id: fighterId,
+        checkpoint: expectedCheckpoint,
+        progress: expectedProgress,
+      });
+      const counts = diagnosticControl.traceCounts();
+      return {
+        elapsedWallMs,
+        lifecyclePhase: getLifecyclePhase(),
+        unitKind: unit.kind,
+        unitFamily: unit.family,
+        ...runtime,
+        ...counts,
+        diagnostics: counts,
+      };
+    },
+  });
+  return {
+    setExpected(checkpoint, progress) {
+      expectedCheckpoint = checkpoint;
+      expectedProgress = progress;
+    },
+    setFighterId(id) {
+      fighterId = id;
+    },
+    setFixtureResult(result) {
+      fixtureResult = result;
+    },
+    setQueueResult(result) {
+      queueResult = result;
+    },
+    async stop() {
+      const result = await trace.stop();
+      return {
+        ...result,
+        unitKind: unit.kind,
+        unitFamily: unit.family,
+        expectedCheckpoint,
+        expectedProgress,
+        fixtureResult,
+        queueResult,
+        lifecyclePhase: getLifecyclePhase(),
+        diagnostics: diagnosticControl.traceCounts(),
+      };
+    },
+  };
+}
+
 function validateDeploymentCheckpoint(evidence, expectedFamily, expectedCheckpoint, label) {
   const { audit, fighter } = evidence;
   invariant(audit.deploymentPlan?.family === expectedFamily,
@@ -1943,15 +2259,48 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
   let page;
   let stopDiagnostics = () => {};
   let diagnostics = { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [] };
+  let traceCounts = () => ({
+    consoleErrorCount: diagnostics.consoleErrors.length,
+    pageErrorCount: diagnostics.pageErrors.length,
+    requestFailureCount: diagnostics.requestFailures.length,
+    httpErrorCount: diagnostics.httpErrors.length,
+    pendingRequestCount: 0,
+  });
+  let setupTrace = null;
+  let deploymentLifecyclePhase = "deployment setup";
+  let activeDeploymentTrace = null;
+  let activeUnitResult = null;
+  let activeFixtureResult = null;
+  let activeQueueResult = null;
+  const setDeploymentPhase = (phase) => {
+    deploymentLifecyclePhase = phase;
+    lifecycle?.setPhase(phase);
+  };
   const result = { type: "deployment", engine, viewport, status: "failed", units: [] };
   try {
-    lifecycle?.setPhase("deployment setup");
-    ({ page, stop: stopDiagnostics, diagnostics } = await openBattlePage(context, "mission", {}, lifecycle));
+    setDeploymentPhase("deployment setup");
+    ({ page, stop: stopDiagnostics, diagnostics, traceCounts, setupTrace } = await openBattlePage(
+      context,
+      "mission",
+      { setupTrace: engine === "chromium" },
+      lifecycle,
+    ));
+    if (setupTrace) result.setupTrace = setupTrace;
     await loadedCrawlerAssets(page, name);
     for (const unit of deploymentUnits) {
       invariant(crawlerDeploymentUnitFamily(unit.kind) === unit.family,
         `${name}/${unit.kind}: static deployment family mapping drifted`);
       const unitResult = { ...unit, checkpoints: [], status: "failed" };
+      activeUnitResult = unitResult;
+      activeFixtureResult = null;
+      activeQueueResult = null;
+      setDeploymentPhase(`deployment/${unit.family}/fixture`);
+      activeDeploymentTrace = createDeploymentTrace(
+        page,
+        { traceCounts },
+        unit,
+        () => deploymentLifecyclePhase,
+      );
       const prepared = await page.evaluate((kind) => (
         window.__ASHFALL_BATTLE_QA__.prepareCrawlerDefenseProof({
           attackerKind: kind === "crazy-king" ? "crusher" : "walker",
@@ -1959,18 +2308,25 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           existingClaim: false,
         })
       ), unit.kind);
+      activeFixtureResult = prepared;
+      activeDeploymentTrace.setFixtureResult(prepared);
       invariant(Number.isInteger(prepared?.attackerId),
         `${name}/${unit.kind}: deployment fixture is unavailable`);
-      lifecycle?.setPhase(`deployment/${unit.family}/fixture`);
+      activeQueueResult = { requested: true, result: null };
+      activeDeploymentTrace.setQueueResult(activeQueueResult);
       const firstFrame = await queueAndPauseAtFirstDeploymentFrame(
         page,
         unit.kind,
         `${name}/${unit.kind}`,
       );
+      activeQueueResult = { requested: true, result: firstFrame };
+      activeDeploymentTrace.setQueueResult(activeQueueResult);
       const fighterId = firstFrame.fighter?.id ?? null;
       invariant(Number.isInteger(fighterId), `${name}/${unit.kind}: fighter identity is unavailable`);
+      activeDeploymentTrace.setFighterId(fighterId);
       for (const [checkpointIndex, checkpoint] of CRAWLER_DEPLOYMENT_CHECKPOINTS.entries()) {
         let evidence = firstFrame;
+        activeDeploymentTrace.setExpected(checkpoint.id, checkpoint.progress);
         if (checkpointIndex > 0) {
           await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setRepresentativeSixProofPaused(false));
           evidence = await pauseAtDeploymentCheckpoint(
@@ -1982,7 +2338,7 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
           );
         }
         const label = `${name}/${unit.family}/${checkpoint.id}`;
-        lifecycle?.setPhase(`deployment checkpoint/${unit.family}/${checkpoint.id}`);
+        setDeploymentPhase(`deployment checkpoint/${unit.family}/${checkpoint.id}`);
         lifecycle?.event("deployment checkpoint start", {
           page,
           family: unit.family,
@@ -2050,9 +2406,14 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
         viewport,
         unitResult.checkpoints,
       );
+      unitResult.deploymentTrace = await activeDeploymentTrace.stop();
+      activeDeploymentTrace = null;
       unitResult.status = "passed";
       unitResult.fighterId = fighterId;
       result.units.push(unitResult);
+      activeUnitResult = null;
+      activeFixtureResult = null;
+      activeQueueResult = null;
     }
     invariant(result.units.length === deploymentUnits.length
       && result.units.every(({ status, checkpoints }) => (
@@ -2061,7 +2422,13 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
     result.status = "passed";
   } catch (error) {
     result.error = String(error);
-    if (page && !page.isClosed()) {
+    if (error?.setupTrace) result.setupTrace = error.setupTrace;
+    if (error?.setupTracePageSignals) result.setupTracePageSignals = error.setupTracePageSignals;
+    if (error?.setupTraceLastReadableSnapshot) {
+      result.setupTraceLastReadableSnapshot = error.setupTraceLastReadableSnapshot;
+    }
+    if (error?.setupTraceFailureScreenshot) result.failureScreenshot = error.setupTraceFailureScreenshot;
+    if (page && !page.isClosed() && !result.failureScreenshot) {
       try {
         result.failureScreenshot = await screenshot(page, `${name}-deployment-failed.png`);
       } catch {
@@ -2069,6 +2436,24 @@ async function runDeploymentCase(browser, engine, viewport, lifecycle = null) {
       }
     }
   } finally {
+    if (activeDeploymentTrace) {
+      const deploymentTrace = await activeDeploymentTrace.stop();
+      result.failedUnit = activeUnitResult ? {
+        ...activeUnitResult,
+        fixtureResult: activeFixtureResult,
+        queueResult: activeQueueResult,
+        deploymentTrace: {
+          ...deploymentTrace,
+          failureScreenshot: result.failureScreenshot ?? null,
+        },
+      } : {
+        deploymentTrace: {
+          ...deploymentTrace,
+          failureScreenshot: result.failureScreenshot ?? null,
+        },
+      };
+      activeDeploymentTrace = null;
+    }
     stopDiagnostics();
     result.diagnostics = diagnostics;
     if (result.status === "passed" && !diagnosticsClean(diagnostics)) {

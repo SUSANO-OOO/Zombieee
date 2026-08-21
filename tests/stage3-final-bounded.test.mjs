@@ -1,5 +1,6 @@
 ﻿import assert from "node:assert/strict";
 import test from "node:test";
+import { readFile } from "node:fs/promises";
 
 import { isRetryableTargetClosed } from "../scripts/run-stage3-audio-bounded.mjs";
 
@@ -93,4 +94,25 @@ test("Stage 3 bounded entrance rejects dirty or unstable target-close incidents"
     mutate(summary.results[0]);
     assert.equal(isRetryableTargetClosed(summary, "entrance"), false);
   }
+});
+
+test("r6 final-cut diagnostics are bounded, serialized by the child summary, and non-mutating", async () => {
+  const smoke = await readFile(new URL("../scripts/p5-browser-smoke.mjs", import.meta.url), "utf8");
+  const runner = await readFile(new URL("../scripts/run-stage3-audio-bounded.mjs", import.meta.url), "utf8");
+  assert.match(smoke, /FINAL_CUT_TRACE_INTERVAL_MS = 1_000/);
+  assert.match(smoke, /FINAL_CUT_TRACE_MAX_SAMPLES = 75/);
+  assert.match(smoke, /function createFinalCutTrace\(/);
+  assert.match(smoke, /snapshot\.bossDefeated/);
+  assert.match(smoke, /storyBattleReceiptEventIds/);
+  assert.match(smoke, /storyBattleEvaluatedCueKeys/);
+  assert.match(smoke, /activeScriptedBarkIds/);
+  assert.match(smoke, /pendingScriptedBarkIds/);
+  assert.match(smoke, /lastSuccessfulSample/);
+  assert.match(smoke, /awaitedPredicate/);
+  assert.match(smoke, /await finalCutTrace\.capture\(\)/);
+  assert.match(smoke, /result\.finalCutTrace = await finalCutTrace\.stop/);
+  assert.match(smoke, /P5_QA_TIMEOUT_MS/);
+  assert.match(runner, /attempt <= 2/);
+  assert.match(runner, /if \(attempt !== 1 \|\| !retryableTargetClosed\) break/);
+  assert.match(runner, /attempts\.push\(\{ attempt, attemptDir, \.\.\.execution, retryableTargetClosed, summary \}\)/);
 });

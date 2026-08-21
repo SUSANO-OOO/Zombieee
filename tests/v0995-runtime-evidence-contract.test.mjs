@@ -7,6 +7,7 @@ import { productionVisualIntegrityInventory } from "../app/visualIntegrityInvent
 
 const enemyHarness = await readFile(new URL("../scripts/v0995-enemy-runtime-browser-smoke.mjs", import.meta.url), "utf8");
 const visualHarness = await readFile(new URL("../scripts/v0995-visual-integrity-browser-smoke.mjs", import.meta.url), "utf8");
+const finalRemediationHarness = await readFile(new URL("../scripts/v099-final-remediation-browser-smoke.mjs", import.meta.url), "utf8");
 const gameSource = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
 
 test("F3 runtime evidence is finite, uses production draw/runtime, and observes every semantic state", () => {
@@ -82,4 +83,21 @@ test("F4 fault evidence gates the actual mount and verifies mutable final pixels
   assert.match(visualHarness, /finalCompositePixels\?\.singleUnitSilhouette === true/);
   assert.doesNotMatch(visualHarness, /campaign-primary/);
   assert.match(gameSource, /screen !== "battle" \|\| !assetsReady \|\| assetError/);
+});
+
+test("r6 deployment diagnostics are bounded and preserve the existing acceptance contract", () => {
+  assert.match(finalRemediationHarness, /DIAGNOSTIC_TRACE_INTERVAL_MS = 250/);
+  assert.match(finalRemediationHarness, /DIAGNOSTIC_TRACE_MAX_SAMPLES = 160/);
+  assert.match(finalRemediationHarness, /function createSetupTrace\(/);
+  assert.match(finalRemediationHarness, /battleApiPresent/);
+  assert.match(finalRemediationHarness, /assetApiPresent/);
+  assert.match(finalRemediationHarness, /consoleErrorCount/);
+  assert.match(finalRemediationHarness, /pendingRequestCount/);
+  assert.match(finalRemediationHarness, /setupTraceFailureScreenshot/);
+  assert.match(finalRemediationHarness, /function createDeploymentTrace\(/);
+  assert.match(finalRemediationHarness, /expectedCheckpoint/);
+  assert.match(finalRemediationHarness, /finalCompositePixels/);
+  assert.match(finalRemediationHarness, /failureScreenshot: result\.failureScreenshot/);
+  assert.match(finalRemediationHarness, /maximumMs: timeout/);
+  assert.match(finalRemediationHarness, /CRAWLER_DEPLOYMENT_CHECKPOINTS\.entries\(\)/);
 });

@@ -196,3 +196,20 @@ test("bounded HUD retry is fail-closed to an all-axis request-abort incident", (
     results: [{ ...aborted.results[0], diagnostics: { ...aborted.results[0].diagnostics, requestFailures: ["asset :: net::ERR_FAILED"] } }, aborted.results[1]],
   }), false);
 });
+
+test("r6 diagnostic traces do not alter the CI matrix or bounded runner contract", async () => {
+  const workflow = (await readFile(".github/workflows/ci.yml", "utf8")).replaceAll("\r\n", "\n");
+  const deploymentSmoke = await readFile("scripts/v099-final-remediation-browser-smoke.mjs", "utf8");
+  const p5Smoke = await readFile("scripts/p5-browser-smoke.mjs", "utf8");
+  const boundedRunner = await readFile("scripts/run-stage3-audio-bounded.mjs", "utf8");
+  assert.match(workflow, /667x375[\s\S]*736x414[\s\S]*844x390[\s\S]*844x340[\s\S]*932x430[\s\S]*1280x720/u);
+  assert.match(workflow, /- entrance-candidate[\s\S]*- final-candidate[\s\S]*- final-base/u);
+  assert.match(workflow, /V1 Phase G Production Matrix/);
+  assert.match(deploymentSmoke, /DIAGNOSTIC_TRACE_INTERVAL_MS = 250/);
+  assert.match(deploymentSmoke, /DIAGNOSTIC_TRACE_MAX_SAMPLES = 160/);
+  assert.match(p5Smoke, /FINAL_CUT_TRACE_INTERVAL_MS = 1_000/);
+  assert.match(p5Smoke, /FINAL_CUT_TRACE_MAX_SAMPLES = 75/);
+  assert.match(boundedRunner, /attempt <= 2/);
+  assert.match(boundedRunner, /isRetryableTargetClosed\(summary, mode\)/);
+  assert.doesNotMatch(boundedRunner, /attempt <= 1/);
+});

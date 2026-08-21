@@ -46,6 +46,8 @@ if (!["all", "story", "lifecycle", "bark", "battle-audio"].includes(qaScope)) {
 const evidenceDir = path.resolve(process.env.P5_QA_EVIDENCE_DIR ?? "outputs/p5-browser-smoke");
 const timeout = Math.max(5_000, Number(process.env.P5_QA_TIMEOUT_MS) || 45_000);
 const teardownTimeout = Math.max(1_000, Number(process.env.P5_QA_TEARDOWN_TIMEOUT_MS) || 5_000);
+const FINAL_CUT_TRACE_INTERVAL_MS = 1_000;
+const FINAL_CUT_TRACE_MAX_SAMPLES = 75;
 
 function stage3Progress(label, checkpoint, startedAt) {
   console.log(JSON.stringify({
@@ -1416,6 +1418,164 @@ async function stopStoryBattleRecorder(page) {
   }), "story battle recorder stop").catch(() => undefined);
 }
 
+function createFinalCutTrace({ page, diagnostics, expectedSceneId, label }) {
+  const startedAt = Date.now();
+  const samples = [];
+  let active = true;
+  let inFlight = null;
+  let timer = null;
+  let lastSampleError = null;
+  let termination = "running";
+  const pageSignals = {
+    close: false,
+    crash: false,
+    closeAtElapsedMs: null,
+    crashAtElapsedMs: null,
+  };
+  const awaitedPredicate = {
+    phase: "final-cut",
+    timeoutMs: timeout,
+    pollingMs: 50,
+    components: [
+      "snapshot.battleBarks.active includes scripted cue stage-takuya-final-v070",
+      "snapshot.bossDefeated === false",
+      `document.documentElement.dataset.audioScene === ${expectedSceneId}`,
+    ],
+  };
+
+  const capture = async () => {
+    if (!active || samples.length >= FINAL_CUT_TRACE_MAX_SAMPLES) return;
+    if (inFlight) {
+      await inFlight;
+      return;
+    }
+    const sampleStartedAt = Date.now();
+    inFlight = (async () => {
+      try {
+        const runtime = await page.evaluate(() => {
+          const battleApi = window.__ASHFALL_BATTLE_QA__;
+          const audioApi = window.__ASHFALL_AUDIO_QA__;
+          const snapshot = battleApi?.getSnapshot?.() ?? null;
+          const takuya = snapshot?.fighters?.find((fighter) => (
+            fighter.side === "zombie" && fighter.kind === "takuya"
+          )) ?? null;
+          const assetState = window.__ASHFALL_ASSET_QA__?.getState?.() ?? null;
+          const activeBarks = snapshot?.battleBarks?.active ?? [];
+          const pendingBarks = snapshot?.battleBarks?.pendingScripted ?? [];
+          return {
+            documentVisibility: document.visibilityState,
+            audioScene: document.documentElement.dataset.audioScene ?? null,
+            snapshot: snapshot ? {
+              time: snapshot.time ?? null,
+              paused: snapshot.paused ?? null,
+              over: snapshot.over ?? null,
+              bossDefeated: snapshot.bossDefeated ?? null,
+            } : null,
+            takuya: takuya ? {
+              id: takuya.id,
+              hp: takuya.hp,
+              maxHp: takuya.maxHp,
+              ratio: takuya.maxHp > 0 ? takuya.hp / takuya.maxHp : null,
+              combatReady: takuya.combatReady ?? null,
+              gateEntering: takuya.gateEntering ?? null,
+              contained: takuya.contained ?? null,
+              state: takuya.animationPresentation?.state ?? takuya.state ?? null,
+              cooldown: takuya.cooldown ?? null,
+              target: {
+                id: takuya.targetId ?? null,
+                objectId: takuya.targetObjectId ?? null,
+              },
+              targetId: takuya.targetId ?? null,
+              targetObjectId: takuya.targetObjectId ?? null,
+            } : null,
+            livingHumanCount: (snapshot?.fighters ?? [])
+              .filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
+            livingHumanKinds: [...new Set((snapshot?.fighters ?? [])
+              .filter((fighter) => fighter.side === "human" && fighter.hp > 0)
+              .map((fighter) => fighter.kind))],
+            storyBattleReceiptEventIds: [...(snapshot?.storyBattleReceiptEventIds ?? [])],
+            storyBattleEvaluatedCueKeys: [...(snapshot?.storyBattleEvaluatedCueKeys ?? [])],
+            activeScriptedBarkIds: activeBarks
+              .filter((bark) => bark.scripted === true)
+              .map((bark) => bark.id),
+            pendingScriptedBarkIds: pendingBarks
+              .filter((bark) => bark.scripted === true)
+              .map((bark) => bark.id),
+            assetState: assetState ? {
+              state: assetState.state ?? null,
+              generation: assetState.generation ?? null,
+              completed: assetState.completed ?? null,
+              total: assetState.total ?? null,
+              pending: assetState.pending ?? null,
+              failed: assetState.failed ?? null,
+              reason: assetState.reason ?? assetState.failureReason ?? null,
+            } : null,
+            audioSceneState: audioApi?.getSceneState?.() ?? null,
+          };
+        });
+        const diagnosticSnapshot = diagnostics.snapshot();
+        const pageClosed = page.isClosed();
+        samples.push({
+          wallTime: new Date(sampleStartedAt).toISOString(),
+          elapsedWallMs: sampleStartedAt - startedAt,
+          label,
+          ...runtime,
+          pageState: { url: page.url(), closed: pageClosed },
+          pendingRequestState: {
+            count: diagnosticSnapshot.pendingRequestCount,
+            urls: diagnosticSnapshot.pendingRequestUrls,
+          },
+        });
+      } catch (error) {
+        lastSampleError = String(error);
+      } finally {
+        inFlight = null;
+      }
+    })();
+    await inFlight;
+  };
+
+  page.on("close", () => {
+    pageSignals.close = true;
+    pageSignals.closeAtElapsedMs ??= Date.now() - startedAt;
+    termination = termination === "running" ? "page-close" : termination;
+    active = false;
+    if (timer) clearInterval(timer);
+  });
+  page.on("crash", () => {
+    pageSignals.crash = true;
+    pageSignals.crashAtElapsedMs ??= Date.now() - startedAt;
+    termination = termination === "running" ? "page-crash" : termination;
+    active = false;
+    if (timer) clearInterval(timer);
+  });
+  void capture();
+  timer = setInterval(() => { void capture(); }, FINAL_CUT_TRACE_INTERVAL_MS);
+
+  return {
+    capture,
+    async stop(reason = null) {
+      active = false;
+      if (reason) termination = reason;
+      if (timer) clearInterval(timer);
+      timer = null;
+      if (inFlight) await inFlight;
+      return {
+        sampleIntervalMs: FINAL_CUT_TRACE_INTERVAL_MS,
+        maxSamples: FINAL_CUT_TRACE_MAX_SAMPLES,
+        samples,
+        sampleCount: samples.length,
+        lastSample: samples.at(-1) ?? null,
+        lastSuccessfulSample: samples.at(-1) ?? null,
+        lastSampleError,
+        pageSignals,
+        termination,
+        awaitedPredicate,
+      };
+    },
+  };
+}
+
 async function webAudioCapability(page) {
   return page.evaluate(() => ({
     audioContext: typeof (window.AudioContext ?? window.webkitAudioContext),
@@ -1761,6 +1921,7 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
   const page = await context.newPage();
   const diagnostics = createDiagnostics(page);
   const label = `${engine}/${viewport.width}x${viewport.height}/takuya-final-audio`;
+  let finalCutTrace = null;
   const result = {
     engine,
     viewport,
@@ -1798,6 +1959,13 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
     const capability = await webAudioCapability(page);
     const audioBlocked = capability.audioContext !== "function";
     const audioUi = audioBlocked ? null : await ensureBattleQaAudioRunning(page, `${label}/control`);
+    finalCutTrace = createFinalCutTrace({
+      page,
+      diagnostics,
+      expectedSceneId: expectedTakuyaBossSceneId,
+      label,
+    });
+    await finalCutTrace.capture();
     await page.getByRole("button", { name: "作戦を再開", exact: true }).click({ timeout });
     await page.waitForFunction(
       () => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().paused === false,
@@ -2004,6 +2172,12 @@ async function auditTakuyaFinalAudio({ browser, engine, viewport }) {
       }))).catch(() => []);
   } finally {
     stage3Progress(label, "teardown-start", startedAt);
+    if (finalCutTrace) {
+      const traceTermination = result.phase === "complete"
+        ? "success"
+        : result.error?.includes("Timeout") ? "deadline" : "audit-error";
+      result.finalCutTrace = await finalCutTrace.stop(traceTermination);
+    }
     await stopStoryBattleRecorder(page);
     await closePlaywrightResource(page, `${label}/page`);
     await closePlaywrightResource(context, `${label}/context`);
