@@ -595,7 +595,9 @@ Run the exact byte/BOM/semantic checks in Design Lock 21.4, then:
 4. `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD`;
 5. exact six-file allowlist and no-weakening audit.
 
-Make one normal commit and one normal push. Do not manually dispatch, rerun, retry, or make a second correction commit. Wait for the resulting automatic CI run to become terminal and record: HEAD/tree; run/job/artifact IDs; PR Verify; all six Chromium deployment axes and traces; Stage 3 entrance-candidate/final-candidate/final-base; focused remote Phase G trio if unlocked; and every required conclusion.
+The automatic run triggered by Sol's docs/test-only r7 packet commit is metadata-only. Record its URL/status at preflight, but do not rerun it or use it as correction/promotion evidence. Only the later run whose `headSha` is your one authorized correction commit counts.
+
+Make one normal commit and one normal push. Do not manually dispatch, rerun, retry, or make a second correction commit. Wait for that correction-HEAD automatic CI run to become terminal and record: HEAD/tree; run/job/artifact IDs; PR Verify; all six Chromium deployment axes and traces; Stage 3 entrance-candidate/final-candidate/final-base; focused remote Phase G trio if unlocked; and every required conclusion.
 
 Then return exactly:
 

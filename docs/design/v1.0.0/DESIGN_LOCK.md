@@ -836,7 +836,9 @@ Before push, Luna must prove:
 5. `npm run lint`, `npm run build`, and `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD` pass;
 6. exact diff audit confirms the six-file allowlist and no acceptance/timing/retry weakening.
 
-Luna then makes one normal commit and one normal push. Do not manually dispatch, rerun, retry, or create a second correction commit. Wait for that single automatic CI run to become terminal. Record the immutable HEAD/tree/run/job/artifact IDs, PR Verify, all six Chromium deployment axis results and traces, Stage 3 entrance-candidate/final-candidate/final-base, the focused remote Phase G trio if PR Verify unlocks it, and every required job conclusion.
+The automatic CI run caused by Sol's docs/test-only r7 packet commit is metadata-only and is not the authorized correction run, a retry, or promotion evidence. Luna records its URL/status at preflight but neither reruns it nor substitutes it for correction evidence. Only the run whose `headSha` is Luna's one authorized correction commit counts below.
+
+Luna then makes one normal commit and one normal push. Do not manually dispatch, rerun, retry, or create a second correction commit. Wait for that single correction-HEAD automatic CI run to become terminal. Record the immutable HEAD/tree/run/job/artifact IDs, PR Verify, all six Chromium deployment axis results and traces, Stage 3 entrance-candidate/final-candidate/final-base, the focused remote Phase G trio if PR Verify unlocks it, and every required job conclusion.
 
 Regardless of green or failure, stop and return exactly `STATUS: BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`. Sol alone classifies the previously unexecuted Chromium traces and decides promotion. A local failure, target/precondition drift, out-of-allowlist need, missing artifact, or any different remote failure returns `STATUS: BLOCKED_RETURN_TO_SOL` without further change. Local full Phase G, unfiltered remote Phase G, Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, and Issue closure remain prohibited.
 

@@ -83,6 +83,8 @@ test("r7 preserves the release loop and locks both independent correction classe
   assert.match(r7Handoff, /QA_HARNESS_PREDICATE_ORCHESTRATION \/ REMEDIATION_LOCAL/u);
   assert.match(r7Handoff, /RESUME_FROM`: five-file LF\/BOM normalization \+ exact LF attributes \+ Node-owned final-cut predicate wait -> focused local checks -> one normal correction push -> wait for that one automatic CI run terminal -> `BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`/u);
   assert.match(r7Handoff, /Return this status whether the run is green or failed/u);
+  assert.match(r7Handoff, /docs\/test-only r7 packet commit is metadata-only/u);
+  assert.match(r7Handoff, /Only the later run whose `headSha` is your one authorized correction commit counts/u);
   assert.match(r7Design, /`9452903579`/u);
   assert.match(r7Design, /all five r6 diagnostic files/u);
   assert.match(r7Design, /every existing final-cut predicate component was true/u);
