@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r6`
+- Revision: `r7`
 - Status: `DESIGN_LOCKED`
 - Role owner: `SOL_DESIGN`
 - Story baseline commit: `435dc959d1972646f7e82b6c45d3f1c25d890252`
@@ -38,6 +38,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r4 incorporates the subsequent remote Stage 24 failure and replaces the Stage 6-only diagnostic boundary with one finite WebKit battle-extra harness contract covering Stages 6, 24, and 25. It changes no product, story, identity, asset, gameplay, balance, AI, evidence, Producer checkpoint, save, audio, PWA, or release decision. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r5 keeps the complete r4 Phase G contract unchanged and makes the full Version 1.0.0 execution, return, visual-approval freeze, stacked-integration, release, post-release, rollback, and closure loop authoritative in Section 19. It adds no product behavior or acceptance weakening. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r6 keeps Sections 18-19 unchanged and classifies the new required-CI failures at candidate `21b3a2076b5ff580189c9cfe69fb4dc30193a45d` as `DESIGN_CHANGE_REQUIRED`. Section 20 authorizes one additive, diagnostic-only harness commit and one resulting remote run; it authorizes no product correction. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r7 keeps Sections 18-20 and every product/release contract unchanged. It consumes the r6 traces, separates a five-file EOL hygiene failure from a WebKit final-base predicate-orchestration failure, and authorizes one bounded two-class QA/repository correction followed by one automatic remote validation run. No `app/**` or product correction is authorized. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -783,3 +784,70 @@ Any target/precondition drift, required observation needing an out-of-allowlist 
 ### 20.6 r6 audit result
 
 Sol performed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live candidate and run. The diagnostic scope, evidence schema, single-push limit, return owner, and release boundary are locked with `High ambiguity: 0` and `Medium ambiguity: 0`. This is diagnostic design closure only, not root-cause correction or release readiness.
+
+## 21. Revision r7 — r6 diagnostic classification and bounded correction
+
+### 21.1 Audited evidence
+
+Sol re-fetched PR #171 and audited live HEAD `bad1578b45171b476a8989c3180433ba14f973b7`, tree `fded05d05fd216d512cbec8a17d647a59cf1dd04`, parent/r6 packet `b986d153f10ad2fab1209bf32cc4faa3bea721d5`, run `32496778334`, Luna return comment `5372127863`, raw job logs, and artifacts `9452768749` / `9452903579`.
+
+Run `32496778334` is terminal failure. The six WebKit enemy-runtime shards, hosted evidence, Stage 3 entrance-candidate, and Stage 3 final-candidate passed. Those six enemy-runtime shards are not the six Chromium deployment axes required by Section 20.3. PR Verify job `96817031062` stopped at `Check patch whitespace`, before the Chromium deployment diagnostic step, so the original Chromium setup/readiness diagnostic remains unexecuted. Phase G job `96817216110` was skipped through `needs: verify`; no remote ordered trio or Phase G artifact exists for this HEAD.
+
+The raw base-range whitespace log reports CRLF-derived trailing whitespace in all five r6 diagnostic files, not only one test: `scripts/p5-browser-smoke.mjs` 2,246 lines, `scripts/v099-final-remediation-browser-smoke.mjs` 2,103, `tests/ci-contract.test.mjs` 192, `tests/stage3-final-bounded.test.mjs` 89, and `tests/v0995-runtime-evidence-contract.test.mjs` 79. Parent `b986d15` stores those files as LF-only. HEAD `bad1578` stores mixed CRLF/LF while preserving the prior BOM state: no BOM for the two scripts and `v0995` test; UTF-8 BOM for `ci-contract` and `stage3-final-bounded`. This is repository-byte hygiene, not product behavior.
+
+Stage 3 final-base job `96823095853` exhausted the existing bounded two-attempt contract. Both attempts ended with `Target page, context or browser has been closed`, clean console/page/request/HTTP diagnostics, an explicit WebKit crash/close signal, and no manual retry. Artifact `9452903579` supplies the decisive second-attempt trace: at elapsed 15,043 ms the page was still live and visible, TAKUYA ratio was `0.20874999999999985`, `stage-takuya-final-v070` receipt and `final-weakpoint-exposed` evaluated cue existed, an active scripted final cue bark existed, `bossDefeated` remained false, and audio scene remained `boss`. Thus every existing final-cut predicate component was true well before the 60,000 ms deadline, yet page-owned `page.waitForFunction` remained unresolved; the page later emitted crash at 41,128 ms and close at 46,138 ms. The candidate control used the same fixture and completed in one attempt.
+
+### 21.2 Independent classification and revision decision
+
+The failures do not share a root cause:
+
+- whitespace: `REPO_HYGIENE / FIVE_FILE_MIXED_EOL / REMEDIATION_LOCAL`; owner is the five diagnostic blobs plus their missing path-specific LF contract;
+- Stage 3 final-base: `QA_HARNESS_PREDICATE_ORCHESTRATION / REMEDIATION_LOCAL`; owner is only the final-cut wait wrapper in `scripts/p5-browser-smoke.mjs`. The r6 trace satisfies Section 20.4's “predicate components all true while the waiter remains unresolved” class. The later WebKit crash is a secondary lifecycle consequence after the acceptance predicate had already become true, not evidence of a product combat/story/audio failure;
+- original Chromium setup/readiness: `DIAGNOSTIC_PENDING`; PR Verify never reached the six deployment axes, so Sol makes no product/harness classification for that earlier failure yet.
+
+Two independent correction sets plus a new wait owner require `DESIGN_CHANGE_REQUIRED` under Section 20.4. Revision r7 is therefore authoritative. Its aggregate class is `DUAL_LOCAL_REMEDIATION / REPO_HYGIENE + QA_HARNESS_PREDICATE_ORCHESTRATION / DESIGN_CHANGE_REQUIRED`. No product, gameplay, balance, AI, story, audio, VFX, save, PWA, acceptance, timeout, or retry change is required or allowed.
+
+### 21.3 Exact authorized correction
+
+Luna may make one correction commit affecting exactly these six files:
+
+1. `.gitattributes`: add exactly these five path contracts and no wildcard/repository-wide rule:
+   - `scripts/p5-browser-smoke.mjs text eol=lf`
+   - `scripts/v099-final-remediation-browser-smoke.mjs text eol=lf`
+   - `tests/ci-contract.test.mjs text eol=lf`
+   - `tests/stage3-final-bounded.test.mjs text eol=lf`
+   - `tests/v0995-runtime-evidence-contract.test.mjs text eol=lf`
+2. Normalize those five files to LF. Preserve UTF-8 BOM in `tests/ci-contract.test.mjs` and `tests/stage3-final-bounded.test.mjs`; keep the other three no-BOM. `scripts/v099-final-remediation-browser-smoke.mjs` and `tests/v0995-runtime-evidence-contract.test.mjs` must have semantic diff zero against `bad1578` after CRLF/LF normalization.
+3. In `scripts/p5-browser-smoke.mjs`, replace only the final-cut `page.waitForFunction` call with `waitForFinalCutPredicateFromNode`. The Node-owned loop evaluates the same three components—active scripted `stage-takuya-final-v070` cue, `bossDefeated === false`, and expected `boss` audio scene—using non-overlapping `page.evaluate` calls. Attempt start cadence is 50 ms, the total deadline is the unchanged `P5_QA_TIMEOUT_MS` / 60,000 ms, and the returned evidence records each component and `matched`. If the deadline expires it throws a `TimeoutError`; if page evaluate closes/crashes before a match it preserves that exact error for the existing bounded runner. No product mutation or fallback success is allowed.
+4. Keep the r6 one-second `finalCutTrace`, its 75-sample cap, candidate/base distinction, final-base build, final story/audio assertions, and `scripts/run-stage3-audio-bounded.mjs` byte-identical. Do not add or remove an attempt; the existing maximum remains two.
+5. In `tests/stage3-final-bounded.test.mjs`, add source-contract checks for the Node-owned function, exact three predicate components, 50 ms cadence, 60,000 ms shared deadline, non-overlap, and removal of page-owned `waitForFunction` only from the final-cut wait block. Retain all retry/no-weakening checks.
+6. In `tests/ci-contract.test.mjs`, assert the five exact `.gitattributes` entries. Apart from this contract and EOL normalization, preserve its semantics. `tests/v0995-runtime-evidence-contract.test.mjs` receives EOL normalization only.
+
+Every other file is forbidden, including `.github/workflows/ci.yml`, `scripts/run-stage3-audio-bounded.mjs`, Phase G files, every `app/**` / `public/**` file, package files, product data/assets/audio, and unrelated tests/docs. No timeout extension, retry/rerun expansion, predicate/assertion/axis/unit/case/artifact weakening, or product correction is authorized.
+
+### 21.4 Validation, remote run, and stop
+
+Before push, Luna must prove:
+
+1. the five normalized files contain LF only and no bare CR; BOM states match Section 21.3;
+2. `.gitattributes` differs only by the five exact entries;
+3. normalized semantic diff is zero for the two EOL-only files, while the other semantic diff is limited to the exact wait/test contracts above;
+4. `node --test tests/v0995-runtime-evidence-contract.test.mjs tests/stage3-final-bounded.test.mjs tests/ci-contract.test.mjs` passes;
+5. `npm run lint`, `npm run build`, and `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD` pass;
+6. exact diff audit confirms the six-file allowlist and no acceptance/timing/retry weakening.
+
+Luna then makes one normal commit and one normal push. Do not manually dispatch, rerun, retry, or create a second correction commit. Wait for that single automatic CI run to become terminal. Record the immutable HEAD/tree/run/job/artifact IDs, PR Verify, all six Chromium deployment axis results and traces, Stage 3 entrance-candidate/final-candidate/final-base, the focused remote Phase G trio if PR Verify unlocks it, and every required job conclusion.
+
+Regardless of green or failure, stop and return exactly `STATUS: BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`. Sol alone classifies the previously unexecuted Chromium traces and decides promotion. A local failure, target/precondition drift, out-of-allowlist need, missing artifact, or any different remote failure returns `STATUS: BLOCKED_RETURN_TO_SOL` without further change. Local full Phase G, unfiltered remote Phase G, Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, and Issue closure remain prohibited.
+
+### 21.5 Current cursor and audit result
+
+- `LAST_AUDITED_HEAD`: `bad1578b45171b476a8989c3180433ba14f973b7`
+- `LAST_AUDITED_TREE`: `fded05d05fd216d512cbec8a17d647a59cf1dd04`
+- `FAILED_GATE`: run `32496778334`; PR Verify `96817031062` five-file mixed-EOL whitespace; Stage 3 final-base `96823095853` page-owned predicate unresolved then WebKit crash; Phase G `96817216110` skipped; Chromium deployment diagnostic not reached
+- `LAST_GREEN_GATE`: r6 local focused acceptance 13/13, lint/build/syntax; run `32496778334` six WebKit enemy-runtime shards, hosted evidence, Stage 3 entrance-candidate, and Stage 3 final-candidate. Controls only; not final-freeze evidence.
+- `REMEDIATION_CLASS`: `DUAL_LOCAL_REMEDIATION / REPO_HYGIENE + QA_HARNESS_PREDICATE_ORCHESTRATION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Section 21 bounded correction only
+- `RESUME_FROM`: five-file LF/BOM normalization + exact LF attributes + Node-owned final-cut predicate wait -> focused local checks -> one normal correction push -> wait for that one automatic CI run terminal -> `BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`
+
+Sol performed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live HEAD, raw logs, byte state, and traces. Revision r7 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`. This is correction-design closure only, not technical green or release readiness.

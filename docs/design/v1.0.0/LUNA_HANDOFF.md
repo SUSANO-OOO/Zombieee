@@ -1,6 +1,6 @@
 # Version 1.0.0 Luna Implementation Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r6`
+- Canonical Design Lock: `V100-SOL-DL-001 r7`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Role lock for implementation: `LUNA_IMPLEMENTATION`
 - Design status: `DESIGN_LOCKED`
@@ -554,3 +554,55 @@ Sol, not Luna, classifies each trace and writes any correction packet. Do not ma
 ### 13.4 Short Luna handoff
 
 Re-fetch PR #171; execute Design Lock Section 20 / Handoff Section 13 only. Add bounded failure traces in the three authorized QA scripts and three authorized contract tests, preserving every predicate/deadline/retry/assertion/axis. Pass the exact local checks, make one normal diagnostic commit/push, wait for that one CI run to finish, record its immutable evidence, and return `BLOCKED_RETURN_TO_SOL_DIAGNOSTIC_COMPLETE`. No `app/**`, correction, retry/rerun, Phase G, or release action.
+
+## 14. Revision r7 — bounded EOL and final-cut wait correction
+
+Run this section only. Section 13 diagnostics are complete and must not be reimplemented. Sections 18-21 of the Design Lock, the r5 execution/release loop, and every product requirement remain unchanged. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 14.1 Execution cursor and fixed classifications
+
+- `LAST_AUDITED_HEAD`: `bad1578b45171b476a8989c3180433ba14f973b7`
+- `LAST_AUDITED_TREE`: `fded05d05fd216d512cbec8a17d647a59cf1dd04`
+- `FAILED_GATE`: run `32496778334`; PR Verify `96817031062` five-file mixed-EOL whitespace; Stage 3 final-base `96823095853` predicate satisfied in trace but page-owned waiter unresolved before WebKit crash; Phase G `96817216110` skipped; Chromium deployment diagnostic not reached
+- `LAST_GREEN_GATE`: local r6 focused acceptance; six WebKit enemy-runtime shards, hosted evidence, Stage 3 entrance-candidate, and Stage 3 final-candidate in run `32496778334`; controls only, not final-freeze evidence
+- whitespace class: `REPO_HYGIENE / FIVE_FILE_MIXED_EOL / REMEDIATION_LOCAL`
+- Stage 3 class: `QA_HARNESS_PREDICATE_ORCHESTRATION / REMEDIATION_LOCAL`
+- `REMEDIATION_CLASS`: `DUAL_LOCAL_REMEDIATION / REPO_HYGIENE + QA_HARNESS_PREDICATE_ORCHESTRATION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Design Lock Section 21 only
+- `RESUME_FROM`: five-file LF/BOM normalization + exact LF attributes + Node-owned final-cut predicate wait -> focused local checks -> one normal correction push -> wait for that one automatic CI run terminal -> `BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`
+
+Before editing, re-fetch PR #171. It must remain open/Draft on `codex/v1.0.0-luna-implementation`, based on `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`, and its history must contain `LAST_AUDITED_HEAD` plus the r7 packet recorded in Issue #172 and the PR body. Any drift returns `STATUS: BLOCKED_RETURN_TO_SOL` without editing.
+
+### 14.2 Exact authorized work
+
+Change exactly six files:
+
+1. `.gitattributes`: add only the five exact `text eol=lf` entries listed in Design Lock 21.3; no wildcard or repository-wide normalization.
+2. Normalize `scripts/p5-browser-smoke.mjs`, `scripts/v099-final-remediation-browser-smoke.mjs`, `tests/ci-contract.test.mjs`, `tests/stage3-final-bounded.test.mjs`, and `tests/v0995-runtime-evidence-contract.test.mjs` to LF. Preserve BOM only in `ci-contract` and `stage3-final-bounded`; the other three remain no-BOM.
+3. Keep `scripts/v099-final-remediation-browser-smoke.mjs` and `tests/v0995-runtime-evidence-contract.test.mjs` semantic-identical to `LAST_AUDITED_HEAD` after newline normalization.
+4. In `scripts/p5-browser-smoke.mjs`, replace only the final-cut page-owned waiter with `waitForFinalCutPredicateFromNode`: same three predicate components, non-overlapping Node-owned `page.evaluate`, 50 ms attempt cadence, unchanged 60,000 ms deadline, explicit component evidence, `TimeoutError` at deadline, and exact close/crash propagation before a match. Keep `finalCutTrace` unchanged.
+5. In `tests/stage3-final-bounded.test.mjs`, add the exact Node-wait/no-weakening source contract. In `tests/ci-contract.test.mjs`, assert the five LF attributes.
+
+Forbidden: every other file, especially `.github/workflows/ci.yml`, `scripts/run-stage3-audio-bounded.mjs`, Phase G, `app/**`, `public/**`, packages, product data/assets/audio, and docs. Do not change timeout, retry count, predicate meaning, assertions, axes, units, cases, artifacts, gameplay, balance, AI, story, audio, VFX, save, or PWA behavior.
+
+### 14.3 Validation, push, and mandatory return
+
+Run the exact byte/BOM/semantic checks in Design Lock 21.4, then:
+
+1. `node --test tests/v0995-runtime-evidence-contract.test.mjs tests/stage3-final-bounded.test.mjs tests/ci-contract.test.mjs`;
+2. `npm run lint`;
+3. `npm run build`;
+4. `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD`;
+5. exact six-file allowlist and no-weakening audit.
+
+Make one normal commit and one normal push. Do not manually dispatch, rerun, retry, or make a second correction commit. Wait for the resulting automatic CI run to become terminal and record: HEAD/tree; run/job/artifact IDs; PR Verify; all six Chromium deployment axes and traces; Stage 3 entrance-candidate/final-candidate/final-base; focused remote Phase G trio if unlocked; and every required conclusion.
+
+Then return exactly:
+
+`STATUS: BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`
+
+Return this status whether the run is green or failed. Sol alone classifies the Chromium traces and promotion. Do not run local full Phase G or unfiltered remote Phase G, and do not enter Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or closure.
+
+### 14.4 Short Luna handoff
+
+Re-fetch PR #171; execute Design Lock Section 21 / Handoff Section 14 only. Normalize the five diagnostic files to their exact LF/BOM contract, add only their five path-specific LF attributes, and replace only the Stage 3 final-cut page-owned waiter with the specified non-overlapping Node-owned 50 ms / 60 s waiter using the unchanged predicate. Pass the exact byte/semantic/focused checks, make one normal commit/push, wait for that single automatic CI run to finish, record immutable evidence, and return `BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`. No other file, product change, retry/rerun, second commit, local full/unfiltered Phase G, or release action.
