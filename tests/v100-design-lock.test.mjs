@@ -162,6 +162,8 @@ test("r8 independently closes CI 910 ownership and fixes the final dynamic-quali
   assert.match(packet, /tests\/v099-hud-states-bounded\.test\.mjs text eol=lf/u);
   assert.match(packet, /three consecutive fresh-process WebKit runs of only `stage24-panther-commander`/u);
   assert.match(packet, /three consecutive bounded WebKit runs of only canonical 667x375 `stage3-boss`/u);
+  assert.match(packet, /Sol-authored docs\/test-only r8 packet[\s\S]*metadata-only/u);
+  assert.match(packet, /Only the later automatic run whose `headSha` is Luna's one authorized correction commit counts/u);
   assert.match(packet, /restore `v100-phase-g-production` to the original unfiltered contract/u);
   assert.match(packet, /QA\/developer controls may establish reachability only/u);
   assert.match(packet, /Sol owns the human-player quality judgment/u);
@@ -172,6 +174,8 @@ test("r8 independently closes CI 910 ownership and fixes the final dynamic-quali
   assert.match(execution, /V100_PHASE_G_ONLY_VARIANT='stage24-panther-commander'/u);
   assert.match(execution, /ISSUE156_WEBKIT_HUD_STATE='stage3-boss'/u);
   assert.match(execution, /V099_FINAL_REMEDIATION_QA_VIEWPORTS='667x375'/u);
+  assert.match(execution, /Sol's docs\/test r8 packet[\s\S]*metadata-only/u);
+  assert.match(execution, /Only the later automatic run whose `headSha` is your one authorized correction commit counts/u);
   assert.match(execution, /one normal correction commit and push once/u);
   assert.match(execution, /one promotion commit changing only `\.github\/workflows\/ci\.yml`/u);
   assert.match(execution, /Do not grind through stages only to reach a state/u);

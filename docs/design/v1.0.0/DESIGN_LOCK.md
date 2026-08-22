@@ -992,6 +992,8 @@ Before the first push, Luna must pass:
 3. three consecutive fresh-process WebKit runs of only `stage24-panther-commander` at its fixed 736x414 contract, with every required checkpoint resolved, a screenshot, and zero diagnostic failures;
 4. three consecutive bounded WebKit runs of only canonical 667x375 `stage3-boss`. Every sequence must end in a real pass; a sequence may use attempt 2 only when attempt 1 carries the exact clean unexpected-page-crash proof above.
 
+Any automatic CI run whose head is a Sol-authored docs/test-only r8 packet after `LAST_AUDITED_HEAD` and before Luna's first correction commit is metadata-only. Luna records its URL/status at preflight but does not rerun it, classify it as a new return, or substitute it for local acceptance, the correction-head focused run, promotion evidence, or final-freeze evidence. Only the later automatic run whose `headSha` is Luna's one authorized correction commit counts as the focused remote gate below.
+
 Luna may then make one normal correction commit and one normal push. The resulting automatic focused CI is authoritative. It must have PR Verify green, focused Phase G ordered Stage 6 -> Stage 24 -> Stage 25 green 3/3, canonical 667x375 `stage3-boss` green under the exact bounded rule, and every other required job terminal green. Any failure, unexpected skip, missing artifact, out-of-allowlist need, or inability to distinguish an assertion from a crash returns `STATUS: BLOCKED_RETURN_TO_SOL_R8` with no retry, rerun, or second correction.
 
 If and only if that focused remote run is completely green, Luna continues without a Sol round trip:

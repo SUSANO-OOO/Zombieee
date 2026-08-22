@@ -725,6 +725,8 @@ $env:V099_FINAL_REMEDIATION_QA_TIMEOUT_MS='60000'
 
 Each sequence must end in one real screenshot/state pass; attempt 2 is allowed only when attempt 1 proves the exact clean unexpected crash. Existing values of the named environment variables must be replaced by the values above for these sequences; unrelated Phase G filter variables must not be passed to the canonical runner.
 
+Any automatic CI run triggered only by Sol's docs/test r8 packet before your correction commit is metadata-only. Record its URL/status at preflight; do not rerun it, return it as a new failure, or use it as correction/promotion/final-freeze evidence. Only the later automatic run whose `headSha` is your one authorized correction commit counts below.
+
 After all local acceptance is green, create one normal correction commit and push once. Wait for its automatic CI. Require every required job green, including focused ordered trio 3/3 and canonical 667x375 `stage3-boss`. Any failure/skip/missing artifact or different cause returns `STATUS: BLOCKED_RETURN_TO_SOL_R8`; no manual retry/rerun or second correction.
 
 ### 16.4 Local full gate and unfiltered remote promotion
