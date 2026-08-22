@@ -10,6 +10,7 @@ const HANDOFF = "docs/design/v1.0.0/LUNA_HANDOFF.md";
 const PROJECT_STATE = "docs/PROJECT_STATE.md";
 const PROVENANCE = "assets/source/v100/PROVENANCE.md";
 const SPRITE_MANIFEST_SOURCE = "app/spriteManifest.js";
+const R10_PREFLIGHT = "scripts/v100-r10-local-gate-preflight.mjs";
 
 const selectedAssets = Object.freeze([
   ["assets/source/v100/characters/segawa-identity-master-r2.png", "0bb98569efa36dbc7df6fbd7fb7ec2cce11671ddbe58f4ce84d9ce26fb187c1d", 934, 1684],
@@ -36,9 +37,9 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r9`/u);
+  assert.match(design, /Revision: `r10`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r9`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r10`/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
   assert.doesNotMatch(handoff.match(/## 2\. Required reading([\s\S]+?)## 3\./u)?.[1] ?? "", /CODEX_SOL_ROLE/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
@@ -125,16 +126,19 @@ test("r7 Section 22 locks the single-file attributes remediation and mandatory S
   assert.match(design, /High ambiguity: 0` and `Medium ambiguity: 0/u);
 });
 
-test("r9 preserves r8 ownership and closes the focused-local source-contract return", async () => {
-  const [design, handoff, projectState] = await Promise.all([
+test("r10 preserves r8/r9 ownership and closes the isolated local-gate bootstrap", async () => {
+  const [design, handoff, projectState, preflight] = await Promise.all([
     readFile(DESIGN, "utf8"),
     readFile(HANDOFF, "utf8"),
     readFile(PROJECT_STATE, "utf8"),
+    readFile(R10_PREFLIGHT, "utf8"),
   ]);
   const packet = design.match(/## 23\. Revision r8([\s\S]*)$/u)?.[1] ?? "";
   const execution = handoff.match(/## 16\. Revision r8([\s\S]*)$/u)?.[1] ?? "";
   const closure = design.match(/## 24\. Revision r9([\s\S]*)$/u)?.[1] ?? "";
   const resume = handoff.match(/## 17\. Revision r9([\s\S]*)$/u)?.[1] ?? "";
+  const loopBreaker = design.match(/## 25\. Revision r10([\s\S]*)$/u)?.[1] ?? "";
+  const bootstrap = handoff.match(/## 18\. Revision r10([\s\S]*)$/u)?.[1] ?? "";
 
   for (const source of [packet, execution]) {
     assert.match(source, /d1aab90ccefa8ad6601821c8520741bde49cd087/u);
@@ -182,7 +186,7 @@ test("r9 preserves r8 ownership and closes the focused-local source-contract ret
   assert.match(execution, /one promotion commit changing only `\.github\/workflows\/ci\.yml`/u);
   assert.match(execution, /Do not grind through stages only to reach a state/u);
   assert.match(execution, /no retry\/rerun or extra fix/u);
-  for (const source of [closure, resume, projectState]) {
+  for (const source of [closure, resume]) {
     assert.match(source, /c6d3a2e8a925ca294fad82b47954d79b02a127bc/u);
     assert.match(source, /a4568cc2dbac3c6352de17170f92150865329ea2/u);
     assert.match(source, /43[^\n]*41[^\n]*2 fail/u);
@@ -205,7 +209,58 @@ test("r9 preserves r8 ownership and closes the focused-local source-contract ret
   assert.match(resume, /Stage 24 WebKit 3\/3 and canonical 667x375 Stage 3 WebKit 3\/3/u);
   assert.match(resume, /still-unmade single normal correction commit\/push/u);
   assert.match(resume, /Sol r9 packet CI is metadata-only/u);
-  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r9`/u);
+  for (const source of [loopBreaker, bootstrap, projectState]) {
+    assert.match(source, /3a40b95eafe8df17b9de907b6644e66912e1e218/u);
+    assert.match(source, /486b9cf0cc92152372ff6414b61e2df440e8087a/u);
+    assert.match(source, /26[^\n]*20[^\n]*6 fail/u);
+    assert.match(source, /LOCAL_ACCEPTANCE_BOOTSTRAP \/ LOCKFILE_INSTALL \+ WORKTREE_LOCAL_BROWSERS \+ DRAFT_BYTE_PRESERVATION \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
+  }
+  assert.match(loopBreaker, /Producer Loop-Breaker `5379794856`/u);
+  assert.match(loopBreaker, /EXECUTION_ENVIRONMENT_PRECONDITION \/ ISOLATED_WORKTREE_DEPENDENCIES_ABSENT \+ HANDOFF_BOOTSTRAP_OMISSION \/ DESIGN_CHANGE_REQUIRED/u);
+  assert.match(loopBreaker, /same stopped isolated worktree/u);
+  assert.match(loopBreaker, /npm\.cmd ci --no-audit --no-fund/u);
+  assert.match(loopBreaker, /v100-r10-local-gate-preflight\.mjs snapshot/u);
+  assert.match(loopBreaker, /PLAYWRIGHT_BROWSERS_PATH = '0'/u);
+  assert.match(loopBreaker, /playwright\.cmd install chromium webkit/u);
+  assert.match(loopBreaker, /45144b0bf6813d6b6cc47a79861217fc8fb73c744afbc2731f13bd7f2b6716f6/u);
+  assert.match(loopBreaker, /c3167d50451b0887271cf0b06280b6fb1393a497c20229ccc865331e0ee9fcd6/u);
+  assert.match(loopBreaker, /V100_R10_LOCAL_GATE_PREFLIGHT_OK/u);
+  assert.match(loopBreaker, /V100_R10_DRAFT_VERIFY_OK/u);
+  assert.match(loopBreaker, /--test-name-pattern='\(\?!\)'/u);
+  assert.match(loopBreaker, /focused source command must pass 43\/43/u);
+  for (const status of ["ENVIRONMENT", "LOADABILITY", "SOURCE", "RUNTIME"]) {
+    assert.match(loopBreaker, new RegExp(`BLOCKED_RETURN_TO_SOL_R10_${status}`, "u"));
+  }
+  assert.match(loopBreaker, /installed 512 packages/u);
+  assert.match(loopBreaker, /Chromium build 1194 and WebKit build 2215/u);
+  assert.match(loopBreaker, /Revision r10 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`/u);
+  assert.match(bootstrap, /Preserve the stopped six-path r8\/r9 correction draft; do not reconstruct it/u);
+  assert.match(bootstrap, /No individual\/global package install/u);
+  assert.match(bootstrap, /four-file load exit 0/u);
+  assert.match(bootstrap, /same stopped isolated worktree and existing six-path r8\/r9 draft/u);
+  assert.match(preflight, /import\("playwright"\)/u);
+  assert.match(preflight, /import\("sharp"\)/u);
+  assert.match(preflight, /PLAYWRIGHT_BROWSERS_PATH must be exactly 0/u);
+  assert.match(preflight, /node_modules\/playwright-core\/\.local-browsers/u);
+  assert.match(preflight, /outputs\/v100-r10-local-gate\/draft-snapshot\.json/u);
+  assert.match(preflight, /status", "--porcelain=v1", "--untracked-files=all/u);
+  for (const path of [
+    ".gitattributes",
+    "scripts/run-v099-hud-states-bounded.mjs",
+    "scripts/v100-phase-g-production-matrix.mjs",
+    "tests/ci-contract.test.mjs",
+    "tests/v099-hud-states-bounded.test.mjs",
+    "tests/v100-phase-g-checkpoint.test.mjs",
+  ]) {
+    assert.match(preflight, new RegExp(path.replaceAll(".", "\\."), "u"));
+  }
+  assert.match(preflight, /45144b0bf6813d6b6cc47a79861217fc8fb73c744afbc2731f13bd7f2b6716f6/u);
+  assert.match(preflight, /c3167d50451b0887271cf0b06280b6fb1393a497c20229ccc865331e0ee9fcd6/u);
+  assert.match(preflight, /V100_R10_DRAFT_SNAPSHOT_OK/u);
+  assert.match(preflight, /V100_R10_LOCAL_GATE_PREFLIGHT_OK/u);
+  assert.match(preflight, /V100_R10_DRAFT_VERIFY_OK/u);
+  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r10`/u);
   assert.match(projectState, /SOL human-player quality audit未完了/u);
 });
 

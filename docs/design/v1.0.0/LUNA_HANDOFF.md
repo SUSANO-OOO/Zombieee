@@ -1,6 +1,6 @@
 # Version 1.0.0 Luna Implementation Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r9`
+- Canonical Design Lock: `V100-SOL-DL-001 r10`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Role lock for implementation: `LUNA_IMPLEMENTATION`
 - Design status: `DESIGN_LOCKED`
@@ -803,3 +803,56 @@ Any failure, new cause, unexpected skip, missing artifact/evidence, forbidden-fi
 ### 17.4 Exact short Luna handoff
 
 Re-fetch PR #171 and execute Design Lock Section 24 / Handoff Section 17 only. Preserve the stopped five-path r8 draft if its baseline and dirty paths are exact; otherwise reconstruct only the six allowed paths. Fix only two source-contract defects: serialize every coherent Phase G probe sample card so the rejected ranger retains `insufficient-energy`, and replace only the stale HUD `isRetryableTargetClosedLog` CI assertion with the exact attempt-local clean-crash classifier contract while preserving the enemy/deployment assertions. Require focused 43/43, lint, build, base-range diff check, exact six-path diff, Stage 24 WebKit 3/3, and canonical 667x375 Stage 3 WebKit 3/3; then make the still-unmade one correction commit/push and require focused remote complete green. Continue the unchanged r8 full/unfiltered/dynamic-evidence route only after green. On any failure or drift, return `BLOCKED_RETURN_TO_SOL_R9`; no retry/rerun or extra fix.
+
+## 18. Revision r10 — isolated local-gate bootstrap handoff
+
+Run this section only. Design Lock Section 25 is the sole active cursor. Preserve the stopped six-path r8/r9 correction draft; do not reconstruct it. Sections 23-24 / Handoff Sections 16-17 remain authoritative for its source semantics and every later runtime, promotion, evidence, Producer, and release gate. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 18.1 Cursor and owner
+
+- `LAST_AUDITED_HEAD`: `3a40b95eafe8df17b9de907b6644e66912e1e218`
+- `LAST_AUDITED_TREE`: `486b9cf0cc92152372ff6414b61e2df440e8087a`
+- `AUDITED_PRODUCT_PARENT`: `d1aab90ccefa8ad6601821c8520741bde49cd087`
+- `FAILED_GATE`: r9 focused local setup — 26 total / 20 pass / 6 fail because `sharp` and `playwright` were unavailable; source assertions, lint/build, WebKit, commit/push, and remote correction CI were not reached
+- `LAST_GREEN_GATE`: Sol control only — clean isolated install, immutable package/draft bytes, sharp plus local Chromium/WebKit preflight, four-file load, focused 43/43
+- `REMEDIATION_CLASS`: `LOCAL_ACCEPTANCE_BOOTSTRAP / LOCKFILE_INSTALL + WORKTREE_LOCAL_BROWSERS + DRAFT_BYTE_PRESERVATION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Design Lock Section 25 / Handoff Section 18 only
+- `RESUME_FROM`: same six-path isolated draft -> fast-forward r10 -> one bootstrap -> hash/status proof -> preflight/load/focused 43/43 -> lint/build/diff -> two runtime-focused 3/3 gates -> one correction push -> focused remote green -> unchanged promotion/dynamic-evidence route
+
+### 18.2 Exact workspace and bootstrap
+
+Re-fetch PR #171. Require open, Draft, unmerged, head branch `codex/v1.0.0-luna-implementation`, base `codex/v1.0.0-sol-design` at `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`, and live history containing r9 packet `3a40b95eafe8df17b9de907b6644e66912e1e218` followed by the r10 Sol packet. In the same stopped isolated worktree, normal-fast-forward to the r10 packet without stash/reset/clean/rebase/checkout/copy or touching a dirty path.
+
+After fast-forward, require no staged or untracked files and exactly these six unstaged paths: `.gitattributes`, `scripts/run-v099-hud-states-bounded.mjs`, `scripts/v100-phase-g-production-matrix.mjs`, `tests/ci-contract.test.mjs`, `tests/v099-hud-states-bounded.test.mjs`, `tests/v100-phase-g-checkpoint.test.mjs`. Require `package.json` SHA-256 `45144b0bf6813d6b6cc47a79861217fc8fb73c744afbc2731f13bd7f2b6716f6` and `package-lock.json` SHA-256 `c3167d50451b0887271cf0b06280b6fb1393a497c20229ccc865331e0ee9fcd6`. The first command below enforces and snapshots that whole state under ignored `outputs/`.
+
+Do not inspect or reuse another worktree's dependencies. Run once, in order:
+
+```powershell
+node scripts/v100-r10-local-gate-preflight.mjs snapshot
+npm.cmd ci --no-audit --no-fund
+$env:PLAYWRIGHT_BROWSERS_PATH = '0'
+& .\node_modules\.bin\playwright.cmd install chromium webkit
+```
+
+No individual/global package install, alternate package manager, lock repair/update, dependency link/junction/copy, shared browser cache, `npm approve-scripts`, or fallback strategy is authorized. Network reads are allowed only for these exact lock-owned installers. Afterward, package/lock hashes and every six-path hash must be unchanged; Git status remains the exact same six unstaged paths.
+
+### 18.3 Exact preflight, source gate, and continuation
+
+Keep `PLAYWRIGHT_BROWSERS_PATH=0` and run each once:
+
+```powershell
+node scripts/v100-r10-local-gate-preflight.mjs runtime
+node --test --test-name-pattern='(?!)' tests/v100-phase-g-checkpoint.test.mjs tests/v099-hud-states-bounded.test.mjs tests/ci-contract.test.mjs tests/v100-design-lock.test.mjs
+node --test tests/v100-phase-g-checkpoint.test.mjs tests/v099-hud-states-bounded.test.mjs tests/ci-contract.test.mjs tests/v100-design-lock.test.mjs
+node scripts/v100-r10-local-gate-preflight.mjs verify
+```
+
+Require `V100_R10_DRAFT_SNAPSHOT_OK`, `V100_R10_LOCAL_GATE_PREFLIGHT_OK`, both local browser launches, four-file load exit 0, focused 43/43, and `V100_R10_DRAFT_VERIFY_OK`. Then require lint, build, base-range `git diff --check`, and exact six-path semantic/EOL/BOM audit. Only then resume Handoff 16.3 at Stage 24 WebKit 3/3 and canonical 667x375 Stage 3 WebKit 3/3; make the still-unmade one correction commit/push only after both pass. Focused remote, full/unfiltered promotion, dynamic evidence, and Producer checkpoint remain unchanged.
+
+### 18.4 Exact stop routing
+
+Run each phase once. Environment/bootstrap/hash/native/browser failure returns `BLOCKED_RETURN_TO_SOL_R10_ENVIRONMENT`; four-file load failure returns `BLOCKED_RETURN_TO_SOL_R10_LOADABILITY`; focused 43-test assertion failure returns `BLOCKED_RETURN_TO_SOL_R10_SOURCE`; any later gate failure returns `BLOCKED_RETURN_TO_SOL_R10_RUNTIME`. Record the exact command, exit code, versions, environment value, status, hashes, and first failure. Do not retry, rerun, repair a dependency, change workspace, edit source, commit, push, or promote.
+
+### 18.5 Exact short Luna handoff
+
+Re-fetch PR #171 and execute Design Lock Section 25 / Handoff Section 18 only. Keep the same stopped isolated worktree and existing six-path r8/r9 draft; fast-forward only the non-overlapping r10 Sol packet without stash/reset/clean/reconstruction. Run exactly one worktree-local `npm ci`, set `PLAYWRIGHT_BROWSERS_PATH=0`, install Chromium/WebKit once, prove package/lock and all six draft hashes/status unchanged, then run the r10 native/browser preflight, four-file load, and focused 43/43 once. Only after green run lint/build/base-range six-path audit, Stage 24 WebKit 3/3, and canonical Stage 3 WebKit 3/3; then make the still-unmade one correction commit/push and require focused remote green before the unchanged promotion/dynamic-evidence route. Route environment, loadability, source, or later failures to the matching `BLOCKED_RETURN_TO_SOL_R10_*` status with no retry/rerun/self-repair or extra edit.

@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r9`
+- Revision: `r10`
 - Status: `DESIGN_LOCKED`
 - Role owner: `SOL_DESIGN`
 - Story baseline commit: `435dc959d1972646f7e82b6c45d3f1c25d890252`
@@ -41,6 +41,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r7 keeps Sections 18-20 and every product/release contract unchanged. It consumes the r6 traces, separates a five-file EOL hygiene failure from a WebKit final-base predicate-orchestration failure, and authorizes one bounded two-class QA/repository correction followed by one automatic remote validation run. No `app/**` or product correction is authorized. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r8 keeps Sections 18-19 and all product/release thresholds unchanged. It independently classifies CI #910's Phase G Stage 24 stale DOM/runtime deployment race and canonical Stage 3 clean unexpected-page-crash classifier gap, fixes their bounded QA ownership in Section 23, and makes Producer Directive `5377824157` an exact-HEAD/tree dynamic game-quality gate before the Producer Visual Checkpoint. No `app/**` or product correction is authorized. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r9 keeps every r8 remediation, promotion, dynamic-quality, and release contract unchanged. It closes the focused-local 41/43 return by adding one omitted source-contract test owner and fixing one diagnostic-probe serialization boundary; no runtime selection rule, retry policy, acceptance threshold, `app/**`, or product behavior changes. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r10 keeps the six-path r9 correction and all product/runtime/release contracts unchanged. It closes Producer Loop-Breaker `5379794856` by making isolated-worktree dependency bootstrap, worktree-local browser installation, native/browser/test-load preflight, draft byte preservation, failure ownership, and retry policy one executable local-gate contract. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -1108,3 +1109,80 @@ Any source test, lint, build, diff, focused runtime, remote, local-full, unfilte
 - `RESUME_FROM`: preserve or reconstruct the uncommitted r8 draft on the live r9 packet -> apply the exact CI assertion and probe serialization closures -> focused source command 43/43 -> lint/build/base-range diff -> Stage 24 WebKit 3/3 + canonical Stage 3 WebKit 3/3 -> one correction commit/push -> focused remote complete green -> Section 23 promotion/dynamic-evidence route
 
 Producer Directive `5377824157`, the dynamic human-player quality audit, Visual Approval freeze, Completion Packet prohibition, Final Review, Producer Final Acceptance, stacked integration, release, and post-release boundaries remain unchanged. Sol completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live refs, reproduced output, preserved draft, source contracts, and release tail. Revision r9 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 25. Revision r10 — isolated local-gate bootstrap loop-breaker
+
+This section supersedes Section 24 only for the active execution cursor and local-gate setup. Section 24's exact six-path source correction remains unchanged; Section 23 retains focused runtime, remote promotion, full/unfiltered Phase G, dynamic evidence, Producer checkpoint, and release ownership. Producer directives `5377824157` and `5379637288` remain later quality gates. No `app/**`, product/runtime/content/asset/audio/save/PWA, gameplay, balance, AI, timeout, retry-count, acceptance, workflow, package, lockfile, or release change is authorized. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 25.1 Return classification and revision decision
+
+Sol re-fetched Issue #172 Producer Loop-Breaker `5379794856`, PR #171 open/Draft/unmerged at r9 packet HEAD `3a40b95eafe8df17b9de907b6644e66912e1e218`, tree `486b9cf0cc92152372ff6414b61e2df440e8087a`, Section 24, and Handoff Section 17. Luna preserved/reconstructed the six-path correction draft and stopped before correction commit/push or remote correction CI. The reported 26 total / 20 pass / 6 fail did not reach the intended source assertions: `sharp` was unavailable to `tests/v100-design-lock.test.mjs`, and `playwright` was unavailable to the Phase G probe tests.
+
+Classification is `EXECUTION_ENVIRONMENT_PRECONDITION / ISOLATED_WORKTREE_DEPENDENCIES_ABSENT + HANDOFF_BOOTSTRAP_OMISSION / DESIGN_CHANGE_REQUIRED`. It is not a product, gameplay, balance, AI, Phase G behavior, or r9 source-correction failure. Because r9 specified an isolated worktree but did not own dependency installation, browser placement, module/native/browser load proof, or environment-vs-source stop routing, the authoritative Design ID is `V100-SOL-DL-001 r10`.
+
+### 25.2 Preserved-worktree and dependency contract
+
+Luna must resume in the same stopped isolated worktree. Advance it by normal fast-forward to the non-overlapping r10 Sol packet while preserving the existing unstaged six-path draft. No stash, reset, clean, checkout of a dirty path, patch reconstruction, cross-worktree copy, rebase, amend, or new worktree is authorized. Immediately after the fast-forward:
+
+- HEAD is the live r10 Sol packet on PR #171's head history;
+- staged changes and untracked files are zero;
+- the unstaged tracked set is exactly `.gitattributes`, `scripts/run-v099-hud-states-bounded.mjs`, `scripts/v100-phase-g-production-matrix.mjs`, `tests/ci-contract.test.mjs`, `tests/v099-hud-states-bounded.test.mjs`, and `tests/v100-phase-g-checkpoint.test.mjs`;
+- `package.json` SHA-256 is `45144b0bf6813d6b6cc47a79861217fc8fb73c744afbc2731f13bd7f2b6716f6` and `package-lock.json` SHA-256 is `c3167d50451b0887271cf0b06280b6fb1393a497c20229ccc865331e0ee9fcd6`;
+- run the r10 guard's `snapshot` mode, which fails unless that exact status/package contract holds and records HEAD plus all eight hashes only under ignored `outputs/v100-r10-local-gate/draft-snapshot.json`.
+
+The sole supported dependency strategy is a fresh worktree-local install from the committed lockfile. Reuse or linking of another worktree's `node_modules`, a global `sharp`/Playwright, a shared Playwright browser cache, individual `npm install`, `npm update`, lockfile repair, package-manager substitution, `npm approve-scripts`, or repository dependency edits is forbidden. Node must satisfy the committed `>=22.13.0` engine. Run each bootstrap command exactly once, in order, from the isolated worktree root:
+
+```powershell
+node scripts/v100-r10-local-gate-preflight.mjs snapshot
+npm.cmd ci --no-audit --no-fund
+$env:PLAYWRIGHT_BROWSERS_PATH = '0'
+& .\node_modules\.bin\playwright.cmd install chromium webkit
+```
+
+Ordinary network reads needed by those two lock-owned installers are authorized only for this bootstrap. `PLAYWRIGHT_BROWSERS_PATH=0` must remain set for every later preflight and Playwright/browser command in this execution. The resulting `node_modules` and browsers stay ignored and must never enter the correction diff or commit.
+
+After bootstrap, `runtime` and later `verify` modes re-hash HEAD, `package.json`, `package-lock.json`, and the six draft files against that snapshot and require the same exact six-path status. This proves both lockfile/package immutability and preservation of the valid r8/r9 draft. The ignored snapshot is evidence only and never enters a diff or commit.
+
+### 25.3 Mandatory preflight and focused acceptance
+
+The Sol-authored `scripts/v100-r10-local-gate-preflight.mjs` is part of the r10 packet, not Luna's correction allowlist. It enforces the Node minimum, lockfile version, installed Playwright/sharp versions, sharp native pipeline, worktree-local Chromium/WebKit executables, and a real headless launch/page probe in both engines.
+
+Run each command exactly once and require exit 0 in this order:
+
+```powershell
+$env:PLAYWRIGHT_BROWSERS_PATH = '0'
+node scripts/v100-r10-local-gate-preflight.mjs runtime
+node --test --test-name-pattern='(?!)' tests/v100-phase-g-checkpoint.test.mjs tests/v099-hud-states-bounded.test.mjs tests/ci-contract.test.mjs tests/v100-design-lock.test.mjs
+node --test tests/v100-phase-g-checkpoint.test.mjs tests/v099-hud-states-bounded.test.mjs tests/ci-contract.test.mjs tests/v100-design-lock.test.mjs
+node scripts/v100-r10-local-gate-preflight.mjs verify
+```
+
+The initial snapshot command must have emitted `V100_R10_DRAFT_SNAPSHOT_OK`. The runtime command must emit `V100_R10_LOCAL_GATE_PREFLIGHT_OK` with Playwright `1.56.1`, sharp `0.35.3`, and both local browser launches. The load-only command must load all four test files without a module/native/runtime error. The focused source command must pass 43/43, and the final guard must emit `V100_R10_DRAFT_VERIFY_OK`. The load-only command is not an acceptance substitute and its file-level pass count is not added to 43.
+
+Only after this complete bootstrap/preflight/source sequence and the second unchanged-hash/status check may Luna run `npm.cmd run lint`, `npm.cmd run build`, `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD`, and the exact six-path semantic/EOL/BOM audit. Then resume Section 23.3 / Handoff 16.3 at Stage 24 WebKit 3/3 and canonical 667x375 Stage 3 WebKit 3/3. The still-unmade one correction commit/push, focused remote green, full/unfiltered promotion, dynamic evidence, and Producer checkpoint remain exactly Sections 23-24.
+
+### 25.4 Failure ownership and no-retry rule
+
+There is one authorized pass through each phase. Do not rerun a failed command, switch dependency strategy, reuse a different workspace, install one package, edit an assertion, or perform another correction.
+
+- Node/npm absence, Node below minimum, `npm ci`, registry/network, browser install/download, package/lock hash drift, draft hash/status drift, missing module/native binary, missing/non-local browser executable, or Chromium/WebKit launch/page-probe failure returns `STATUS: BLOCKED_RETURN_TO_SOL_R10_ENVIRONMENT`.
+- A load-only failure after successful preflight returns `STATUS: BLOCKED_RETURN_TO_SOL_R10_LOADABILITY`.
+- A 43-test assertion or source-contract failure after successful loadability returns `STATUS: BLOCKED_RETURN_TO_SOL_R10_SOURCE`.
+- A later lint/build/diff/focused-runtime/remote/full/unfiltered/evidence failure returns `STATUS: BLOCKED_RETURN_TO_SOL_R10_RUNTIME`.
+
+Each return records the live HEAD/tree, exact failed command and exit code, Node/npm versions, `PLAYWRIGHT_BROWSERS_PATH`, six-path status, package/draft before-after hashes, and the first failure output. It includes no retry, rerun, dependency self-repair, source edit, commit, push, or promotion.
+
+### 25.5 Sol proof, execution cursor, and audit
+
+Sol independently created a fresh detached isolated Windows worktree with no `node_modules`, reconstructed the unchanged six-path r9 correction for validation, and executed the prescribed path. `npm ci --no-audit --no-fund` installed 512 packages from the unchanged lockfile; worktree-local Chromium build 1194 and WebKit build 2215 installed under `node_modules/playwright-core/.local-browsers`. The preflight passed with Node `v24.18.0`, Playwright `1.56.1`, sharp `0.35.3`, a 91-byte sharp probe, and real Chromium/WebKit page launches. All four test files loaded, the exact focused command passed 43/43, and the six draft plus package/lock SHA-256 values were unchanged across bootstrap. This is a Sol setup/source control only, not Luna correction, remote, Phase G, product, or final-freeze evidence.
+
+- `LAST_AUDITED_HEAD`: `3a40b95eafe8df17b9de907b6644e66912e1e218`
+- `LAST_AUDITED_TREE`: `486b9cf0cc92152372ff6414b61e2df440e8087a`
+- `AUDITED_PRODUCT_PARENT`: `d1aab90ccefa8ad6601821c8520741bde49cd087`
+- `FAILED_GATE`: r9 focused local acceptance setup — 26 total / 20 pass / 6 fail because `sharp` and `playwright` were unavailable; source assertions not evaluated; no lint/build/WebKit/correction commit/push/remote correction CI
+- `LAST_GREEN_GATE`: Sol r10 control — fresh isolated lockfile bootstrap, immutable package/draft hashes, native plus Chromium/WebKit preflight, four-file loadability, and exact focused source 43/43; control only, not candidate/final evidence
+- `REMEDIATION_CLASS`: `LOCAL_ACCEPTANCE_BOOTSTRAP / LOCKFILE_INSTALL + WORKTREE_LOCAL_BROWSERS + DRAFT_BYTE_PRESERVATION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Section 25 / Handoff Section 18 only
+- `RESUME_FROM`: same stopped isolated six-path draft -> normal fast-forward to r10 packet -> one mandatory lockfile/bootstrap sequence -> immutable-hash/status proof -> native/browser/load preflight -> focused 43/43 -> lint/build/base-range six-path audit -> Stage 24 WebKit 3/3 + canonical Stage 3 WebKit 3/3 -> one correction commit/push -> focused remote complete green -> unchanged Section 23 promotion/dynamic-evidence route
+
+A Sol docs/test/preflight-only r10 packet run is metadata-only. Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or Issue closure remains prohibited. Sol completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live refs, Producer Loop-Breaker, package/lock owners, clean installation, browser runtime, reproduced source correction, and release tail. Revision r10 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
