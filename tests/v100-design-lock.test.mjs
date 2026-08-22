@@ -36,9 +36,9 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r8`/u);
+  assert.match(design, /Revision: `r9`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r8`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r9`/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
   assert.doesNotMatch(handoff.match(/## 2\. Required reading([\s\S]+?)## 3\./u)?.[1] ?? "", /CODEX_SOL_ROLE/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
@@ -125,7 +125,7 @@ test("r7 Section 22 locks the single-file attributes remediation and mandatory S
   assert.match(design, /High ambiguity: 0` and `Medium ambiguity: 0/u);
 });
 
-test("r8 independently closes CI 910 ownership and fixes the final dynamic-quality route", async () => {
+test("r9 preserves r8 ownership and closes the focused-local source-contract return", async () => {
   const [design, handoff, projectState] = await Promise.all([
     readFile(DESIGN, "utf8"),
     readFile(HANDOFF, "utf8"),
@@ -133,8 +133,10 @@ test("r8 independently closes CI 910 ownership and fixes the final dynamic-quali
   ]);
   const packet = design.match(/## 23\. Revision r8([\s\S]*)$/u)?.[1] ?? "";
   const execution = handoff.match(/## 16\. Revision r8([\s\S]*)$/u)?.[1] ?? "";
+  const closure = design.match(/## 24\. Revision r9([\s\S]*)$/u)?.[1] ?? "";
+  const resume = handoff.match(/## 17\. Revision r9([\s\S]*)$/u)?.[1] ?? "";
 
-  for (const source of [packet, execution, projectState]) {
+  for (const source of [packet, execution]) {
     assert.match(source, /d1aab90ccefa8ad6601821c8520741bde49cd087/u);
     assert.match(source, /00df3ea842578cddc846059dd2c12f9dca1936a2/u);
     assert.match(source, /32539432537/u);
@@ -180,7 +182,30 @@ test("r8 independently closes CI 910 ownership and fixes the final dynamic-quali
   assert.match(execution, /one promotion commit changing only `\.github\/workflows\/ci\.yml`/u);
   assert.match(execution, /Do not grind through stages only to reach a state/u);
   assert.match(execution, /no retry\/rerun or extra fix/u);
-  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r8`/u);
+  for (const source of [closure, resume, projectState]) {
+    assert.match(source, /c6d3a2e8a925ca294fad82b47954d79b02a127bc/u);
+    assert.match(source, /a4568cc2dbac3c6352de17170f92150865329ea2/u);
+    assert.match(source, /43[^\n]*41[^\n]*2 fail/u);
+    assert.match(source, /DUAL_LOCAL_SOURCE_CONTRACT \/ HUD_CI_ASSERTION_ALLOWLIST \+ PHASE_G_PROBE_SERIALIZATION \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
+  }
+  assert.match(closure, /route comment `5379131527`/u);
+  assert.match(closure, /DESIGN_CONTRACT_DEFECT \/ STALE_HUD_GENERIC_RETRY_ASSERTION \+ FIRST_COMMIT_ALLOWLIST_OMISSION \/ DESIGN_CHANGE_REQUIRED/u);
+  assert.match(closure, /QA_PROBE_SERIALIZATION \/ REJECTED_CANDIDATE_REASON_OMITTED \/ IMPLEMENTATION_MISMATCH_WITH_LOCKED_EVIDENCE/u);
+  assert.match(closure, /correctly returns `candidates: \[\]`/u);
+  assert.match(closure, /tests\/ci-contract\.test\.mjs/u);
+  assert.match(closure, /Preserve the enemy-runtime and deployment-runner `isRetryableTargetClosedLog` assertions/u);
+  assert.match(closure, /sample\[0\][\s\S]*`insufficient-energy`/u);
+  assert.match(closure, /must pass 43\/43/u);
+  assert.match(closure, /STATUS: BLOCKED_RETURN_TO_SOL_R9/u);
+  assert.match(closure, /High ambiguity: 0` and `Medium ambiguity: 0/u);
+  assert.match(resume, /dirty paths must be exactly the five Section 23\.2 paths/u);
+  assert.match(resume, /The one correction commit may contain exactly/u);
+  assert.match(resume, /HUD runner does not use `isRetryableTargetClosedLog`/u);
+  assert.match(resume, /Stage 24 WebKit 3\/3 and canonical 667x375 Stage 3 WebKit 3\/3/u);
+  assert.match(resume, /still-unmade single normal correction commit\/push/u);
+  assert.match(resume, /Sol r9 packet CI is metadata-only/u);
+  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r9`/u);
   assert.match(projectState, /SOL human-player quality audit未完了/u);
 });
 

@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r8`
+- Revision: `r9`
 - Status: `DESIGN_LOCKED`
 - Role owner: `SOL_DESIGN`
 - Story baseline commit: `435dc959d1972646f7e82b6c45d3f1c25d890252`
@@ -40,6 +40,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r6 keeps Sections 18-19 unchanged and classifies the new required-CI failures at candidate `21b3a2076b5ff580189c9cfe69fb4dc30193a45d` as `DESIGN_CHANGE_REQUIRED`. Section 20 authorizes one additive, diagnostic-only harness commit and one resulting remote run; it authorizes no product correction. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r7 keeps Sections 18-20 and every product/release contract unchanged. It consumes the r6 traces, separates a five-file EOL hygiene failure from a WebKit final-base predicate-orchestration failure, and authorizes one bounded two-class QA/repository correction followed by one automatic remote validation run. No `app/**` or product correction is authorized. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r8 keeps Sections 18-19 and all product/release thresholds unchanged. It independently classifies CI #910's Phase G Stage 24 stale DOM/runtime deployment race and canonical Stage 3 clean unexpected-page-crash classifier gap, fixes their bounded QA ownership in Section 23, and makes Producer Directive `5377824157` an exact-HEAD/tree dynamic game-quality gate before the Producer Visual Checkpoint. No `app/**` or product correction is authorized. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r9 keeps every r8 remediation, promotion, dynamic-quality, and release contract unchanged. It closes the focused-local 41/43 return by adding one omitted source-contract test owner and fixing one diagnostic-probe serialization boundary; no runtime selection rule, retry policy, acceptance threshold, `app/**`, or product behavior changes. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -1040,3 +1041,70 @@ Luna owns high-volume execution and evidence collection. Sol owns the human-play
 Luna must stop immediately on live-ref drift, product-runtime evidence, dirty diagnostics, an unclassified failure, a required forbidden-file change, focused/local-full/unfiltered failure, missing dynamic evidence, or any new required failure. The exact return is `STATUS: BLOCKED_RETURN_TO_SOL_R8`; Luna makes no additional fix or retry decision.
 
 Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or Issue closure remains prohibited until its exact state-machine gate. Sol completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live refs, raw logs, artifacts, code owners, Producer directive, and release tail. Revision r8 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.
+
+## 24. Revision r9 — r8 focused-local source-contract closure
+
+This section supersedes Section 23 only for the active execution cursor. Section 23's two QA-harness remediation semantics, focused runtime acceptance, remote promotion, dynamic game-quality packet, Producer checkpoint, and release tail remain unchanged. Revision r9 changes one test allowlist omission and one probe-output contract only. It authorizes no `app/**`, production runtime/content/asset/audio/save/PWA, gameplay, balance, AI, timeout, retry-count, acceptance, workflow, or release change. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 24.1 Live return and independent classifications
+
+Sol re-fetched PR #171 open/Draft/unmerged at HEAD `c6d3a2e8a925ca294fad82b47954d79b02a127bc`, tree `a4568cc2dbac3c6352de17170f92150865329ea2`, Issue #172, route comment `5379131527`, Section 23, Handoff Section 16, and the current authorized harness owners/tests. No Luna correction commit, push, or remote correction run exists after the r8 Sol packet.
+
+Sol preserved Luna's uncommitted r8 draft and reproduced the exact focused command:
+
+```powershell
+node --test tests/v100-phase-g-checkpoint.test.mjs tests/v099-hud-states-bounded.test.mjs tests/ci-contract.test.mjs tests/v100-design-lock.test.mjs
+```
+
+The result is 43 total, 41 pass, 2 fail. The failures are independent:
+
+1. **`tests/ci-contract.test.mjs` / HUD bounded runner** — `DESIGN_CONTRACT_DEFECT / STALE_HUD_GENERIC_RETRY_ASSERTION + FIRST_COMMIT_ALLOWLIST_OMISSION / DESIGN_CHANGE_REQUIRED`.
+   - The r8 HUD implementation correctly removes the shared generic `isRetryableTargetClosedLog` decision and replaces it with the Section 23 attempt-local clean unexpected-crash proof. All HUD behavioral positives and fail-closed negatives in `tests/v099-hud-states-bounded.test.mjs` pass.
+   - The pre-r8 CI source contract still requires the literal `isRetryableTargetClosedLog` in the HUD runner. Satisfying that assertion would contradict Section 23's exact classifier ownership and could reintroduce generic retry.
+   - Section 23 requires `tests/ci-contract.test.mjs` to pass before push but omitted it from the first-correction allowlist. This is a Design Lock contradiction, not a HUD implementation or product failure.
+
+2. **`tests/v100-phase-g-checkpoint.test.mjs` / insufficient-energy probe evidence** — `QA_PROBE_SERIALIZATION / REJECTED_CANDIDATE_REASON_OMITTED / IMPLEMENTATION_MISMATCH_WITH_LOCKED_EVIDENCE`.
+   - The probe correctly returns `candidates: []` for DOM-ready ranger cost 45 against runtime energy 27.8. The production selection rule therefore rejects the unaffordable card as required.
+   - Its `sample` field is incorrectly serialized from the already filtered eligible-candidate list, producing `sample: []` and dropping the rejected card's `insufficient-energy` reason.
+   - The defect is confined to the diagnostic contract-probe response. It is not evidence of a production selection, deployment, cooldown, energy, balance, or gameplay failure.
+
+Adding the omitted test owner changes the executable allowlist and resolves a direct r8 acceptance contradiction. The authoritative Design ID is therefore `V100-SOL-DL-001 r9`.
+
+### 24.2 Exact bounded closure
+
+Luna may retain the already-created uncommitted r8 draft. The one still-unmade correction commit may change exactly these six paths relative to the r9 Sol packet:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`;
+2. `tests/v100-phase-g-checkpoint.test.mjs`;
+3. `scripts/run-v099-hud-states-bounded.mjs`;
+4. `tests/v099-hud-states-bounded.test.mjs`;
+5. `.gitattributes`;
+6. `tests/ci-contract.test.mjs`.
+
+The five r8 paths retain Section 23.2 exactly. Apply only these two closure deltas:
+
+- In the `V100_PHASE_G_CONTRACT_PROBE` response, keep `candidates` eligible-only, but serialize `sample` from every card in the coherent actionability-annotated sample, in input order. Each entry contains `kind` and its complete `actionability`. For ranger cost 45 / energy 27.8, `candidates` is `[]` and `sample[0]` proves `eligible: false`, cost 45, energy 27.8, and reason `insufficient-energy`. Do not change `deploymentEligibilityForCard`, production candidate filtering, click/recheck behavior, or the existing test expectation.
+- In `tests/ci-contract.test.mjs`, change only the HUD bounded-runner assertion block. Preserve the enemy-runtime and deployment-runner `isRetryableTargetClosedLog` assertions. For the HUD runner, require absence of the generic helper and presence of `cleanUnexpectedHudCrashRetryable`, `evidencePathInside`, stable build identity, exact `page crash`, prior `battle readiness complete`, attempt-local lifecycle handling, and maximum two attempts. Preserve canonical state inventory, real-pass, no-skip, and fail-closed assertions.
+
+`.gitattributes` retains exactly the two r8 HUD LF lines and no other semantic change. All six files must be LF-only and retain their pre-r9 BOM state. Repository-wide normalization, unrelated formatting, generic retry, weakened lifecycle/diagnostic proof, and any file outside the six-path allowlist are forbidden.
+
+### 24.3 Acceptance, continuation, and stop rule
+
+Before runtime acceptance, the exact four-file focused command in 24.1 must pass 43/43. Then run lint, production build, and `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD`. Diff audit must prove exactly the six allowed paths and the two closure deltas above on top of the unchanged r8 draft.
+
+Only after those source gates are green, resume Section 23.3 / Handoff Section 16.3 at the two runtime-focused controls: Stage 24 WebKit 736x414 three consecutive fresh-process passes and canonical WebKit 667x375 `stage3-boss` three consecutive bounded passes. Luna then makes the still-unmade single correction commit and single normal push. The correction-head automatic focused CI, local full Phase G 54/54 plus validator/full regressions, one unfiltered-workflow restoration commit/push, unfiltered remote green, dynamic evidence packet, and Producer checkpoint proceed exactly as Section 23.
+
+Any source test, lint, build, diff, focused runtime, remote, local-full, unfiltered, or evidence failure; any new cause; or any forbidden-file need returns `STATUS: BLOCKED_RETURN_TO_SOL_R9` without retry, rerun, additional correction, or scope expansion. A Sol docs/test-only r9 packet run is metadata-only under the existing Section 23 rule.
+
+### 24.4 Current execution cursor and audit
+
+- `LAST_AUDITED_HEAD`: `c6d3a2e8a925ca294fad82b47954d79b02a127bc`
+- `LAST_AUDITED_TREE`: `a4568cc2dbac3c6352de17170f92150865329ea2`
+- `AUDITED_PRODUCT_PARENT`: `d1aab90ccefa8ad6601821c8520741bde49cd087`
+- `FAILED_GATE`: focused local source-contract command — 43 total / 41 pass / 2 fail; stale HUD `isRetryableTargetClosedLog` CI assertion and missing `insufficient-energy` rejected-card probe evidence; no correction commit/push or remote correction run
+- `LAST_GREEN_GATE`: 41/43 focused source tests, including every r8 HUD behavioral positive/negative and every other Phase G contract test; r8 Sol design contract 18/18; prior CI #910 PR Verify and candidate controls remain historical controls only, not correction or final-freeze evidence
+- `REMEDIATION_CLASS`: `DUAL_LOCAL_SOURCE_CONTRACT / HUD_CI_ASSERTION_ALLOWLIST + PHASE_G_PROBE_SERIALIZATION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Section 24 / Handoff Section 17 only
+- `RESUME_FROM`: preserve or reconstruct the uncommitted r8 draft on the live r9 packet -> apply the exact CI assertion and probe serialization closures -> focused source command 43/43 -> lint/build/base-range diff -> Stage 24 WebKit 3/3 + canonical Stage 3 WebKit 3/3 -> one correction commit/push -> focused remote complete green -> Section 23 promotion/dynamic-evidence route
+
+Producer Directive `5377824157`, the dynamic human-player quality audit, Visual Approval freeze, Completion Packet prohibition, Final Review, Producer Final Acceptance, stacked integration, release, and post-release boundaries remain unchanged. Sol completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live refs, reproduced output, preserved draft, source contracts, and release tail. Revision r9 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.

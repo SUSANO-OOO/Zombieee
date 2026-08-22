@@ -1,6 +1,6 @@
 # Version 1.0.0 Luna Implementation Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r8`
+- Canonical Design Lock: `V100-SOL-DL-001 r9`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Role lock for implementation: `LUNA_IMPLEMENTATION`
 - Design status: `DESIGN_LOCKED`
@@ -752,3 +752,54 @@ Then set `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` and submit the unchanged
 ### 16.6 Exact short Luna handoff
 
 Re-fetch PR #171 and execute Design Lock Section 23 / Handoff Section 16 only. Start from the live branch containing this Sol r8 packet; `d1aab90ccefa8ad6601821c8520741bde49cd087` is the immutable audited product parent, not a checkout target. Correct only the Phase G atomic deployable-card selection/actionability race and the canonical HUD clean unexpected-page-crash classifier, with their exact tests and two LF attributes; change no `app/**` or product behavior. Pass Stage 24 WebKit 3/3 and canonical 667x375 Stage 3 3/3 locally, make one correction push, and require the automatic focused CI completely green. Then run local full Phase G 54/54 + validator + full regressions, restore only the Phase G job to unfiltered 54/54 in one promotion push, and require complete remote green. Finally collect the exact-HEAD/tree dynamic game-quality packet and request the twelve-screen Producer Visual Checkpoint. On any drift, failure, new cause, forbidden-file need, or missing evidence, stop with `BLOCKED_RETURN_TO_SOL_R8`; no retry/rerun or extra fix.
+
+## 17. Revision r9 — focused-local source-contract handoff
+
+Run this section only. Design Lock Section 24 is the sole active cursor. Section 23 / Handoff Section 16 remain authoritative for the underlying r8 harness behavior, runtime-focused controls, promotion, dynamic evidence, Producer checkpoint, and release tail. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 17.1 Cursor and classifications
+
+- `LAST_AUDITED_HEAD`: `c6d3a2e8a925ca294fad82b47954d79b02a127bc`
+- `LAST_AUDITED_TREE`: `a4568cc2dbac3c6352de17170f92150865329ea2`
+- `AUDITED_PRODUCT_PARENT`: `d1aab90ccefa8ad6601821c8520741bde49cd087`
+- `FAILED_GATE`: exact focused local source command, 43 total / 41 pass / 2 fail; no correction commit/push or remote correction run
+- HUD CI class: `DESIGN_CONTRACT_DEFECT / STALE_HUD_GENERIC_RETRY_ASSERTION + FIRST_COMMIT_ALLOWLIST_OMISSION / DESIGN_CHANGE_REQUIRED`
+- Phase G probe class: `QA_PROBE_SERIALIZATION / REJECTED_CANDIDATE_REASON_OMITTED / IMPLEMENTATION_MISMATCH_WITH_LOCKED_EVIDENCE`
+- `LAST_GREEN_GATE`: 41/43 source tests, including all r8 HUD behavioral tests and all other Phase G contract tests; r8 design tests 18/18; prior remote controls are not correction/final-freeze evidence
+- `REMEDIATION_CLASS`: `DUAL_LOCAL_SOURCE_CONTRACT / HUD_CI_ASSERTION_ALLOWLIST + PHASE_G_PROBE_SERIALIZATION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Section 24 / Section 17 only
+- `RESUME_FROM`: preserve or reconstruct the uncommitted r8 draft on the live r9 packet -> exact two source-contract closures -> focused 43/43 -> lint/build/base-range diff -> Stage 24 WebKit 3/3 + canonical Stage 3 WebKit 3/3 -> one correction commit/push -> focused remote complete green -> Section 23 promotion/dynamic-evidence route
+
+Before editing, re-fetch PR #171. Require open, Draft, unmerged, head branch `codex/v1.0.0-luna-implementation`, base `codex/v1.0.0-sol-design` at `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`, and live history containing audited HEAD plus this r9 Sol packet. If the stopped uncommitted r8 draft is present, its dirty paths must be exactly the five Section 23.2 paths; retain it while advancing to the non-overlapping r9 packet. If it is absent, reconstruct only the six-path Section 24 contract. Any different dirty path, overlap, or inability to establish the exact baseline returns `STATUS: BLOCKED_RETURN_TO_SOL_R9` without editing or cleanup.
+
+### 17.2 Exact two closures and allowlist
+
+The one correction commit may contain exactly:
+
+- the five unchanged r8 draft paths: `scripts/v100-phase-g-production-matrix.mjs`, `tests/v100-phase-g-checkpoint.test.mjs`, `scripts/run-v099-hud-states-bounded.mjs`, `tests/v099-hud-states-bounded.test.mjs`, `.gitattributes`;
+- `tests/ci-contract.test.mjs`, added by r9 only for the HUD source-contract block.
+
+Apply no new r8 behavioral change. Make exactly these closures:
+
+1. In the Phase G contract-probe JSON, change `sample` to serialize every actionability-annotated sampled card in input order, not the eligible-only `candidates`. Keep `candidates` eligible-only. The insufficient-energy fixture must return `candidates: []` and a ranger sample with `eligible: false`, cost 45, energy 27.8, and `insufficient-energy`. Do not alter production selection/filter/click/recheck behavior or the test.
+2. In `tests/ci-contract.test.mjs`, edit only the HUD bounded-runner assertion block. Require that the HUD runner does not use `isRetryableTargetClosedLog` and does contain the exact lifecycle classifier/proofs named in Design Lock 24.2. Do not change the enemy-runtime or deployment-runner generic-helper assertions, the workflow contract, canonical HUD inventory, pass evidence, retry maximum, or no-skip/fail-closed requirements.
+
+Preserve exactly the two r8 `.gitattributes` additions. No other semantic/EOL/BOM change, workflow edit, `app/**`, product/runtime/package/asset/audio/save/PWA change, timeout/retry change, generic retry, or assertion weakening is authorized.
+
+### 17.3 Exact acceptance and continuation
+
+Run exactly:
+
+```powershell
+node --test tests/v100-phase-g-checkpoint.test.mjs tests/v099-hud-states-bounded.test.mjs tests/ci-contract.test.mjs tests/v100-design-lock.test.mjs
+```
+
+Require 43/43. Then require `npm.cmd run lint`, `npm.cmd run build`, `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD`, and an exact six-path diff audit.
+
+Only then resume Handoff 16.3 at Stage 24 WebKit 3/3 and canonical 667x375 Stage 3 WebKit 3/3. If both pass, make the still-unmade single normal correction commit/push and require its automatic focused CI completely green. Continue Handoff 16.4-16.5 unchanged only after that green run: local full Phase G 54/54 + validator + full regressions, one unfiltered-workflow restoration commit/push, complete unfiltered remote green, exact-HEAD/tree dynamic evidence packet, and twelve-screen `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`.
+
+Any failure, new cause, unexpected skip, missing artifact/evidence, forbidden-file need, or live-ref drift returns `STATUS: BLOCKED_RETURN_TO_SOL_R9` with no retry, rerun, additional correction, or scope expansion. Sol r9 packet CI is metadata-only.
+
+### 17.4 Exact short Luna handoff
+
+Re-fetch PR #171 and execute Design Lock Section 24 / Handoff Section 17 only. Preserve the stopped five-path r8 draft if its baseline and dirty paths are exact; otherwise reconstruct only the six allowed paths. Fix only two source-contract defects: serialize every coherent Phase G probe sample card so the rejected ranger retains `insufficient-energy`, and replace only the stale HUD `isRetryableTargetClosedLog` CI assertion with the exact attempt-local clean-crash classifier contract while preserving the enemy/deployment assertions. Require focused 43/43, lint, build, base-range diff check, exact six-path diff, Stage 24 WebKit 3/3, and canonical 667x375 Stage 3 WebKit 3/3; then make the still-unmade one correction commit/push and require focused remote complete green. Continue the unchanged r8 full/unfiltered/dynamic-evidence route only after green. On any failure or drift, return `BLOCKED_RETURN_TO_SOL_R9`; no retry/rerun or extra fix.
