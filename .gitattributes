@@ -30,3 +30,4 @@ scripts/v099-final-remediation-browser-smoke.mjs text eol=lf
 tests/ci-contract.test.mjs text eol=lf
 tests/stage3-final-bounded.test.mjs text eol=lf
 tests/v0995-runtime-evidence-contract.test.mjs text eol=lf
+.gitattributes text eol=lf
