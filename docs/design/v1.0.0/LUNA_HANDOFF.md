@@ -1,6 +1,6 @@
 # Version 1.0.0 Luna Implementation Handoff
 
-- Canonical Design Lock: `V100-SOL-DL-001 r7`
+- Canonical Design Lock: `V100-SOL-DL-001 r8`
 - Required design base: story baseline commit `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - Role lock for implementation: `LUNA_IMPLEMENTATION`
 - Design status: `DESIGN_LOCKED`
@@ -660,3 +660,93 @@ Sol alone classifies and authorizes the next gate. No additional change, local f
 ### 15.4 Short Luna handoff
 
 Re-fetch PR #171 and execute Design Lock Section 22 / Handoff Section 15 only. Change only `.gitattributes`: normalize the committed blob to LF/no-BOM/no-CR, preserve all existing lines, and add exactly `.gitattributes text eol=lf`. Prove the one-file semantic/byte contract, existing focused tests/lint/build, and CI-identical base-range `git diff --check`; make one normal commit/push; wait for that HEAD's automatic CI run to finish; record Chromium, Stage 3, WebKit deployment attempts, focused Phase G, and all required results; then return `BLOCKED_RETURN_TO_SOL_R7_ATTR_LF_REMOTE_COMPLETE`. No other edit, retry/rerun, second commit, product change, full/unfiltered Phase G, or release action.
+
+## 16. Revision r8 — CI #910 correction, promotion, and dynamic evidence handoff
+
+Run this section only. Design Lock Section 23 is the sole active packet. Sections 14-15 are completed history and must not be reimplemented. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 16.1 Execution cursor
+
+- `LAST_AUDITED_HEAD`: `d1aab90ccefa8ad6601821c8520741bde49cd087`
+- `LAST_AUDITED_TREE`: `00df3ea842578cddc846059dd2c12f9dca1936a2`
+- `FAILED_GATE`: run `32539432537`; Phase G `96949389397` Stage 24 / WebKit 736x414; canonical WebKit `96954658044` 667x375 / `stage3-boss`
+- `LAST_GREEN_GATE`: PR Verify `96946366154`; Stage 3 audio 3/3; WebKit deployment 6/6; enemy-runtime 6/6; hosted evidence; not final-freeze evidence
+- Phase G class: `QA_PREDICATE_OR_ORCHESTRATION / STALE_DOM_READY_VS_RUNTIME_AFFORDABILITY_ACTIONABILITY_RACE`
+- canonical class: `BROWSER_LIFECYCLE_OR_RESOURCE / CLEAN_UNEXPECTED_PAGE_CRASH_MISCLASSIFIED_BY_BOUNDED_HUD_RUNNER`
+- `REMEDIATION_CLASS`: `DUAL_QA_HARNESS / PHASE_G_ATOMIC_DEPLOYMENT_ELIGIBILITY + HUD_LIFECYCLE_CRASH_CLASSIFICATION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Design Lock Section 23 only
+- `RESUME_FROM`: r8 harness correction -> focused local acceptance -> one correction push -> focused remote complete green -> local full Phase G 54/54 + validator + full regressions -> one unfiltered-workflow restoration push -> unfiltered remote complete green -> dynamic evidence packet + twelve-screen `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`
+
+Before editing, re-fetch PR #171. Require open, Draft, unmerged, head branch `codex/v1.0.0-luna-implementation`, base `codex/v1.0.0-sol-design` at `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`, and history containing `LAST_AUDITED_HEAD` plus this r8 packet. Drift returns `STATUS: BLOCKED_RETURN_TO_SOL_R8` without editing.
+
+### 16.2 First correction commit
+
+Change only these paths:
+
+1. `scripts/v100-phase-g-production-matrix.mjs`: select boss-frontline cards from one coherent DOM/runtime diagnostic sample; require runtime affordability, queue capacity, running/unpaused/non-terminal state, and zero cooldown; revalidate before click; record and reselect an invalidated candidate; use a deployment-only actionability deadline no greater than 2,000 ms; fail closed on persistent live divergence or lifecycle loss. Keep a normal non-force Playwright click and all existing checkpoints/assertions.
+2. `tests/v100-phase-g-checkpoint.test.mjs`: add exact stale-ready, affordable-ready, pre-click invalidation, persistent divergence, lifecycle-loss, and no-weakening contracts.
+3. `scripts/run-v099-hud-states-bounded.mjs`: allow attempt 2 only from the attempt-local, inside-root lifecycle JSONL proving a clean unexpected page crash before cleanup after battle readiness, with stable build identity, target-close/crash terminal error, and zero diagnostics. Maximum attempts stays two and a complete real pass remains mandatory.
+4. `tests/v099-hud-states-bounded.test.mjs`: cover the clean crash retry and every fail-closed negative named in Design Lock 23.2.
+5. `.gitattributes`: add only `scripts/run-v099-hud-states-bounded.mjs text eol=lf` and `tests/v099-hud-states-bounded.test.mjs text eol=lf`.
+
+Do not change workflow in this first commit. Forbidden: `app/**`, product/runtime/assets/audio/save/PWA/package changes, global timeout/retry changes, force click/event dispatch/state mutation, weakened axes/assertions/checkpoints, unrelated formatting, or repository-wide normalization. All five files remain LF-only with their existing BOM states.
+
+### 16.3 Local acceptance, first push, and focused remote gate
+
+Run the focused tests for both corrected owners plus `tests/ci-contract.test.mjs` and `tests/v100-design-lock.test.mjs`, then lint, build, and the CI-identical base-range `git diff --check`.
+
+Run three fresh-process WebKit Stage 24-only sequences with:
+
+```powershell
+$env:V100_PHASE_G_ONLY='battle-extra'
+$env:V100_PHASE_G_ONLY_ENGINE='webkit'
+$env:V100_PHASE_G_ONLY_VARIANT='stage24-panther-commander'
+1..3 | ForEach-Object {
+  $env:V100_PHASE_G_SEQUENCE_ID="r8-stage24-local-$_"
+  $env:V100_PHASE_G_EVIDENCE_DIR="outputs/v100-r8-stage24-local-$_"
+  npm.cmd run qa:v100-phase-g
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+```
+
+Run the canonical WebKit 667x375 `stage3-boss` bounded sequence exactly three times with:
+
+```powershell
+$env:ISSUE156_WEBKIT_HUD_STATE='stage3-boss'
+$env:V099_FINAL_REMEDIATION_QA_ENGINES='webkit'
+$env:V099_FINAL_REMEDIATION_QA_VIEWPORTS='667x375'
+$env:V099_FINAL_REMEDIATION_QA_TIMEOUT_MS='60000'
+1..3 | ForEach-Object {
+  $env:ISSUE156_WEBKIT_HUD_EVIDENCE_ROOT="outputs/v100-r8-stage3-canonical-local-$_"
+  node scripts/run-v099-hud-states-bounded.mjs
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+```
+
+Each sequence must end in one real screenshot/state pass; attempt 2 is allowed only when attempt 1 proves the exact clean unexpected crash. Existing values of the named environment variables must be replaced by the values above for these sequences; unrelated Phase G filter variables must not be passed to the canonical runner.
+
+After all local acceptance is green, create one normal correction commit and push once. Wait for its automatic CI. Require every required job green, including focused ordered trio 3/3 and canonical 667x375 `stage3-boss`. Any failure/skip/missing artifact or different cause returns `STATUS: BLOCKED_RETURN_TO_SOL_R8`; no manual retry/rerun or second correction.
+
+### 16.4 Local full gate and unfiltered remote promotion
+
+Only after the focused remote run is completely green:
+
+1. run local full Phase G 54/54 and `npm.cmd run qa:v100-phase-g-validate`;
+2. run every Section 18.5 full regression;
+3. create one promotion commit changing only `.github/workflows/ci.yml` and, only if needed for the exact source contract, `tests/ci-contract.test.mjs`;
+4. restore `v100-phase-g-production` to one unfiltered `npm run qa:v100-phase-g`, one validator command, artifact `v100-phase-g-production-evidence`, and path `outputs/v100-phase-g`; remove the focused environment and ordered-trio loop;
+5. push once and wait for the automatic unfiltered run. Require 54/54, validator, and every required job green.
+
+Any local-full or unfiltered-remote failure returns `STATUS: BLOCKED_RETURN_TO_SOL_R8` without another edit. No amend, rebase, force push, manual dispatch/rerun, empty commit, or third candidate commit.
+
+### 16.5 Dynamic game-quality evidence and Producer checkpoint
+
+After complete unfiltered remote green, use existing QA/developer reachability to collect the exact-HEAD/tree `DYNAMIC_GAME_QUALITY_EVIDENCE_PACKET` required by Design Lock 23.4. Do not grind through stages only to reach a state. Record shortcut use explicitly; never cite it as difficulty/balance evidence.
+
+Cover the first-time flow, representative normal battle, Stages 3/24/25/30, visual/identity/VFX/HUD/control/timing quality, representative dialogue tempo/transitions, 667x375 and 844x390 landscape plus 1280x720, win/result/post/map, defeat/retry/map, save/reload/interrupted resume, combat FX/support/vehicle/mission/status evidence, and clean runtime diagnostics.
+
+Then set `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` and submit the unchanged twelve actual-production screens with links to the dynamic packet. Stop for Producer review. Do not finalize the Completion Packet or set `READY_FOR_SOL_FINAL_REVIEW`. Producer Visual Approval does not replace Sol's later dynamic human-player audit.
+
+### 16.6 Exact short Luna handoff
+
+Re-fetch PR #171 and execute Design Lock Section 23 / Handoff Section 16 only. At `d1aab90`, correct only the Phase G atomic deployable-card selection/actionability race and the canonical HUD clean unexpected-page-crash classifier, with their exact tests and two LF attributes; change no `app/**` or product behavior. Pass Stage 24 WebKit 3/3 and canonical 667x375 Stage 3 3/3 locally, make one correction push, and require the automatic focused CI completely green. Then run local full Phase G 54/54 + validator + full regressions, restore only the Phase G job to unfiltered 54/54 in one promotion push, and require complete remote green. Finally collect the exact-HEAD/tree dynamic game-quality packet and request the twelve-screen Producer Visual Checkpoint. On any drift, failure, new cause, forbidden-file need, or missing evidence, stop with `BLOCKED_RETURN_TO_SOL_R8`; no retry/rerun or extra fix.

@@ -20,10 +20,10 @@ live `main`、PR HEAD、checksは作業開始時に再取得し、本文の固�
 - story baseline：Draft PR #169、head `435dc959d1972646f7e82b6c45d3f1c25d890252`
 - design baseline：Draft PR #170、head `6acf87fd235fb55d3d5e3ec1f8687b57a06dc769`
 - implementation candidate：Draft PR #171、branch `codex/v1.0.0-luna-implementation`
-- LAST_AUDITED_HEAD：`7429460950a37b2ac68415a5046547c97f8bb263`、tree `9c1cab7d8a8950a2ba475d89ffb986434ba36d15`。これはSOLが内容を監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
+- LAST_AUDITED_HEAD：`d1aab90ccefa8ad6601821c8520741bde49cd087`、tree `00df3ea842578cddc846059dd2c12f9dca1936a2`。これはSOLが内容を監査した固定cursorであり、PRの可変なlive HEADではない。live HEADは毎回GitHub refから再取得する
 - production implementation／runtime asset integration：Draft candidate上に実装済み。ただしPhase G未達のため`NOT_READY`
-- current Design Lock：`V100-SOL-DL-001 r7`（Section 21のStage 3 correctionはremote 3/3で閉じ、Section 22が`.gitattributes`だけのsame-revision LF closureを所有する。r4 Phase G契約、r5 execution/release loop、r6 diagnosticsを維持。`PRODUCT_DESIGN_CHANGE: 0`）
-- execution ledger：Issue #172。r7 Section 22 cursorを現在値として使用する。pre-r5 Issue本文と`V100-LOOP-LOCK-001` commentは暫定監査資料であり、並行Design Lockではない
+- current Design Lock：`V100-SOL-DL-001 r8`（Section 23がCI #910の独立した二つのQA-harness failure、remote promotion、Producer Directive `5377824157`のdynamic-quality gateを所有する。Sections 18-19のPhase G／release loopを維持。`PRODUCT_DESIGN_CHANGE: 0`）
+- execution ledger：Issue #172。r8 Section 23 cursorを現在値として使用する。pre-r5 Issue本文と`V100-LOOP-LOCK-001` commentは暫定監査資料であり、並行Design Lockではない
 - main merge／tag／Release／Pages公開：未実施
 
 ## 3. Version 1.0.0固定事項
@@ -53,51 +53,45 @@ exact stats、cost、reward、duration、wave、unlock、装甲車両upgrade cur
 2. 元のSol threadが`SOL_DESIGN`
 3. SolがDesign Lock、有限asset inventory、必要asset candidate、Luna Handoffを作成
 4. Lunaが`LUNA_IMPLEMENTATION`としてproduction実装、asset統合、tests、browser QA、Draft PR
-5. remote required CI／Phase G完全green後、Lunaは`PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`へ遷移し、actual productionの12画面（TITLE、名前入力、作戦地図、通常Stage選択、Boss Stage選択、出撃編成、隊員、出撃装備、装甲車両強化、代表event、通常battle HUD、戦果）をProducer確認へ出す
-6. Producer Visual Approval前はCompletion Packetを確定せず、`READY_FOR_SOL_FINAL_REVIEW`へ進まない
-7. Producer Visual Approval後に承認HEAD/treeと12 evidence IDをfreezeし、branch commitを作らずLuna Completion PacketをIssue／PR／immutable artifactで確定して元のSolへ返す。承認後のcommitはVisual Approvalとfreezeを無効化する
-8. 元のSolが`SOL_FINAL_REVIEW`を行い、High／Medium 0なら`APPROVE`
-9. `SOL FINAL REVIEW APPROVE`後も直ちに統合・公開せず、`PRODUCER_FINAL_ACCEPTANCE`へ進む
-10. Producerの明示承認後だけPR #169 -> #170 -> #171をfresh checks／exact head／synthetic treeで順次統合し、#171 merge-result SHA/treeが承認treeと一致した場合だけtag、GitHub Release、official Pagesを実行する
-11. published SHAを固定してpost-release QAを行い、その成功後に`PROJECT_STATE`更新と対象Issue／PR closeを行う
+5. remote required CI／unfiltered Phase G 54/54＋validator完全green後、Lunaはexact HEAD/treeで`DYNAMIC_GAME_QUALITY_EVIDENCE_PACKET`を収集する。既存QA／developer controlは状態到達だけに使用し、difficulty／balance／reward／clearability／save integrityの証拠へ流用しない
+6. dynamic packet完成後、Lunaは`PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`へ遷移し、packet参照とactual productionの12画面（TITLE、名前入力、作戦地図、通常Stage選択、Boss Stage選択、出撃編成、隊員、出撃装備、装甲車両強化、代表event、通常battle HUD、戦果）をProducer確認へ出す
+7. Producer Visual Approval前はCompletion Packetを確定せず、`READY_FOR_SOL_FINAL_REVIEW`へ進まない
+8. Producer Visual Approval後に承認HEAD/tree、12 evidence ID、dynamic packet IDをfreezeし、branch commitを作らずLuna Completion PacketをIssue／PR／immutable artifactで確定して元のSolへ返す。承認後のcommitはVisual Approvalとfreezeを無効化する
+9. 元のSolが`SOL_FINAL_REVIEW`でactual runtime／dynamic evidenceをhuman-player視点で監査し、High／Medium 0なら`APPROVE`
+10. `SOL FINAL REVIEW APPROVE`後も直ちに統合・公開せず、`PRODUCER_FINAL_ACCEPTANCE`へ進む
+11. Producerの明示承認後だけPR #169 -> #170 -> #171をfresh checks／exact head／synthetic treeで順次統合し、#171 merge-result SHA/treeが承認treeと一致した場合だけtag、GitHub Release、official Pagesを実行する
+12. published SHAを固定してpost-release QAを行い、その成功後に`PROJECT_STATE`更新と対象Issue／PR closeを行う
 
 SolとLunaを同時並行に動かさない。
 
 ## 5. 現在のblocker
 
 - PR #169、#170、#171はいずれもDraft／未merge。PR #171はVersion 1.0.0 implementation candidateだが、`NOT_READY`である。
-- r7 correction HEAD `7429460950a37b2ac68415a5046547c97f8bb263`、tree `9c1cab7d8a8950a2ba475d89ffb986434ba36d15`のCI #908／run `32510923851`はterminal failure。Lunaは一回のcorrection commit/push後、manual retry／rerun／second commit／product correctionなしで`BLOCKED_RETURN_TO_SOL_R7_REMOTE_COMPLETE`へ停止した。
-- PR Verify `96861615644`はCI同一rangeの`git diff --check`で`.gitattributes` 1-26行をtrailing whitespaceとして停止した。immutable blobはr7 packetでLF 27／CRLF 0、correction HEADでCRLF 26＋LF 6、いずれもno-BOM。分類は`REPO_HYGIENE / DOT_GITATTRIBUTES_MIXED_EOL / REMEDIATION_LOCAL`。報告されたlocal whitespace passは同一immutable blobと矛盾するためgate evidenceとして不採用。
-- r7 Stage 3 correctionはremote focused 3/3成功（entrance `96867530097`、final-candidate `96867530121`、final-base `96867530136`）。final-base artifact `9457872989`は1 bounded attemptで完了した。分類は`REMEDIATION_CLOSED / REMOTE_FOCUSED_GREEN`であり、product combat/story/audio blockerはない。
-- WebKit deployment 6軸のtop-level bounded summaryは6/6成功。736x414/brawlerと844x390/medicは既存のmaximum-two-attempt contract内でattempt 1 target-close、attempt 2成功。manual retryではなく`BOUNDED_RETRY_SUCCESS / CONTROL_GREEN`である。canonical viewport 48/48、enemy-runtime 6/6、hosted evidenceも成功したがfinal freezeには流用しない。
-- PR Verifyが早期停止したため、同job内の6 Chromium deployment axesは未実行。Phase G `96861720725`も`needs: verify`でskippedした。WebKit deployment jobをChromium diagnosticの代替にしない。local full Phase Gとunfiltered remote Phase Gも未実行である。
-- 現active分類は`SINGLE_FILE_REPO_HYGIENE / REMEDIATION_LOCAL`。Design revisionはr7を維持し、Section 22が`.gitattributes` LF/no-BOM normalizationとexact self LF contractだけを一回のbounded remediationへ固定する。Lunaにroot cause、scope、retry、promotion判断を委譲しない。
-- LUNAのisolated Stage 6／24／25診断とlocal ordered trio 3/3はhistorical local evidenceであり、current candidateのremote/final evidenceではない。Section 22 remote returnをSOLが再分類するまでlocal full Phase Gとunfiltered remote Phase Gは停止する。
-- audited HEAD `0f2c6e92ddb9de5410585ec8d78dae5f3c3e3f2b`のCI run `32455268714`ではPR Verify等は成功したが、Phase G job `96694829714`が`webkit-667x375-battle-extra`で45秒timeoutとなった。失敗stateは`null`、console／page／request／HTTP errorは0、Phase G validatorは未実行である。
-- artifact `9437741041`（`v100-phase-g-production-evidence`、SHA-256 `08b7a3345a780ebb8adb3c1776b40e50ee90cc05b84d0227e613e5cb655efe4b`）は51 PNGのみを含む。48 core Chromium captureと3 Chromium battle-extraは存在するが、WebKit battle-extra、最終report、manifest、runtime evidenceは存在しない。
-- docs-only HEAD `29c6046484d3a81793b416feb2474ca62adf77bd`のCI run `32465986052`ではStage 6を通過後、Phase G job `96726761976`が`webkit-736x414-battle-extra`（`stage24-panther-commander`）で`boss frontline unit 4 never entered cooldown from the ready state`により失敗した。失敗stateは再び`null`、console／page／request／HTTP errorは0、validatorは未実行である。
-- artifact `9441563957`（SHA-256 `e6a13dd7d929763b424edc52853ffffd88ade38ff0568e87cf23b5bfea6dfa5a`）のuploadは52 filesを報告した。Stage 24 screenshotと最終report／manifest／runtime evidenceは未完成である。
-- pre-r4 docs HEAD `cd99be209f143cbe70f313df4866759756ea18c8`までの`29c6046..cd99be2`差分はdocs 3ファイルのみで、`app/**`、Phase G harness、workflow、package、testsに変更はない。したがって新failureは現candidateへ適用されるlive blockerである。
-- Stage 6限定診断ではclosure不能。Design Lock r4はWebKit battle-extra 3契約（Stage 6／24／25）へ共通checkpoint／lifecycle診断とordered focused regressionを固定する。根拠のない局所修正、generic retry、blanket timeout extensionは禁止する。
+- audited candidate HEAD `d1aab90ccefa8ad6601821c8520741bde49cd087`、tree `00df3ea842578cddc846059dd2c12f9dca1936a2`のCI #910／run `32539432537`はterminal failure。Lunaはretry／rerun／追加修正をせず、comment `5377146015`でSOLへ戻った。
+- `.gitattributes` remediationはclosed。committed blobは1,340 bytes、no-BOM、LF 33、CR 0、self LF rule exactly once。PR Verify `96946366154`は六つのChromium capture軸を含めgreenであり、repository hygieneは再開しない。
+- Phase G `96949389397`／artifact `9466905397`のStage 24 WebKit 736x414 failureは`QA_PREDICATE_OR_ORCHESTRATION / STALE_DOM_READY_VS_RUNTIME_AFFORDABILITY_ACTIONABILITY_RACE`。DOM ready表示と同一sampleのruntime command 27.8／cost 45が矛盾したままgeneric 30秒click waitへ入り、その後page crashとなった。production deployment／balance failureの証拠ではない。
+- canonical WebKit `96954658044`／artifact `9467643324`の667x375 `stage3-boss` failureは`BROWSER_LIFECYCLE_OR_RESOURCE / CLEAN_UNEXPECTED_PAGE_CRASH_MISCLASSIFIED_BY_BOUNDED_HUD_RUNNER`。battle-ready後、clean diagnosticsのままunexpected page crashがlifecycle JSONLへ記録されたが、wrapped target-closeを既存classifierが認識しなかった。product message duration／presentation assertion failureの証拠ではない。
+- 二件はpage crashという終端だけを共有し、原因ownerは独立する。Design Lock r8 Section 23がatomic DOM/runtime deployment eligibilityとattempt-local clean-crash classificationを別々のbounded correctionとして固定する。generic retry、blanket timeout extension、assertion弱体化、`app/**`／gameplay／balance／AI変更は禁止する。
+- current candidateでlocal Stage 24 3/3、canonical Stage 3 3/3、correction-HEAD focused remote complete green、local full Phase G 54/54＋validator＋full regressions、unfiltered-workflow restoration、unfiltered remote complete green、dynamic evidence packet、Producer Visual Checkpointは未完了である。
 - PR #169／#170の依存関係とPhase G blockerが残るため、Ready化、merge、tag、Release、正式Pages公開は不可。
 
-## 6. Version 1.0.0 execution cursor — r7 Section 22
+## 6. Version 1.0.0 execution cursor — r8 Section 23
 
-- `LAST_AUDITED_HEAD`: `7429460950a37b2ac68415a5046547c97f8bb263`
-- `LAST_AUDITED_TREE`: `9c1cab7d8a8950a2ba475d89ffb986434ba36d15`
-- `FAILED_GATE`: run `32510923851`; PR Verify `96861615644` mixed-EOL `.gitattributes`; six Chromium deployment axes not run; Phase G `96861720725` skipped
-- `LAST_GREEN_GATE`: Stage 3 remote 3/3、WebKit deployment bounded summaries 6/6、canonical viewports 48/48、WebKit enemy-runtime 6/6、hosted evidence。focused controls only、final freeze reuse不可
-- `REMEDIATION_CLASS`: `REPO_HYGIENE / DOT_GITATTRIBUTES_MIXED_EOL / REMEDIATION_LOCAL`
-- `RESUME_FROM`: `.gitattributes` LF/no-BOM normalization + exact self LF contract -> committed-blob and CI-range checks -> one normal remediation push -> wait for that correction-HEAD automatic run terminal -> `BLOCKED_RETURN_TO_SOL_R7_ATTR_LF_REMOTE_COMPLETE`
-- `NEXT_OWNER`: `LUNA_IMPLEMENTATION`（Design Lock Section 22のone-file remediationのみ。root cause／scope／retry／promotion／製品判断権限なし）
+- `LAST_AUDITED_HEAD`: `d1aab90ccefa8ad6601821c8520741bde49cd087`
+- `LAST_AUDITED_TREE`: `00df3ea842578cddc846059dd2c12f9dca1936a2`
+- `FAILED_GATE`: run `32539432537`; Phase G `96949389397` Stage 24／WebKit 736x414; canonical WebKit `96954658044` 667x375／`stage3-boss`
+- `LAST_GREEN_GATE`: PR Verify `96946366154`、Stage 3 audio 3/3、WebKit deployment 6/6、enemy-runtime 6/6、hosted evidence。candidate-specific controls only、final freeze reuse不可
+- `REMEDIATION_CLASS`: `DUAL_QA_HARNESS / PHASE_G_ATOMIC_DEPLOYMENT_ELIGIBILITY + HUD_LIFECYCLE_CRASH_CLASSIFICATION / DESIGN_CHANGE_REQUIRED`
+- `RESUME_FROM`: r8 two-owner harness correction -> focused local acceptance -> one correction push -> complete focused remote green -> local full Phase G 54/54 + validator + full regressions -> one unfiltered-workflow restoration push -> complete unfiltered remote green -> dynamic evidence packet + twelve-screen `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION`（Design Lock Section 23／Handoff Section 16のみ。root cause／scope／retry／promotion／製品判断権限なし）
 
-Lunaは`.gitattributes`だけの一回のremediation commit／pushを行い、manual retry／rerun／second commitを行わない。automatic runの結果がgreenでもfailureでもterminal後は必ずSOLへ戻す。SOLの次回classificationとlocked packetなしにlocal full Phase G／unfiltered remoteへ進まない。
+LunaはSection 23のfirst correction commit／pushを一回だけ行う。focused remote complete greenの場合だけ同Sectionのlocal full gateと一回のunfiltered-workflow restorationへ進む。いずれかのfailure、unexpected skip、missing artifact、new cause、forbidden-file need、dynamic evidence欠落では追加修正／retry／rerunをせず、`STATUS: BLOCKED_RETURN_TO_SOL_R8`でSOLへ戻す。
 
 PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変なlive HEADの代替ではない。作業開始・push前・gate判定前にGitHubのPR refを再取得する。
 
 ### Post-V1 governance normalization debt
 
-`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric Completion Packet経路と、Version 1.0.0 Design Lock Sections 19-21のProducer Visual Checkpoint／Final Acceptance経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r7を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書をProducer checkpoint／final acceptance経路へ整合する。
+`AGENTS.md`／`docs/CODEX_TWO_THREAD_WORKFLOW.md`のgeneric Completion Packet経路と、Version 1.0.0 Design Lock Section 19／23のProducer Visual Checkpoint／Final Acceptance経路には恒久文書上の差がある。現VersionではVersion固有のDesign Lock r8を優先し、active implementation branch上でgeneric governanceを改訂しない。V1 release後、別のgovernance normalization作業でgeneric文書をProducer checkpoint／final acceptance経路へ整合する。
 
 ## 7. Release gate
 
@@ -113,4 +107,5 @@ PR本文や状態文書の`LAST_AUDITED_HEAD`は監査cursorであり、可変�
 - save、offline、PWA update、rollbackの破壊
 - 844×390、844×340、1280×720で切れ、重なり、豆粒化、操作不能
 - `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`のactual production 12画面に対するProducer Visual Approval未取得
+- exact HEAD/treeのdynamic game-quality packetとSOL human-player quality audit未完了
 - High／Medium finding未解消

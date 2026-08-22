@@ -1,7 +1,7 @@
 # Version 1.0.0 Design Lock
 
 - Design ID: `V100-SOL-DL-001`
-- Revision: `r7`
+- Revision: `r8`
 - Status: `DESIGN_LOCKED`
 - Role owner: `SOL_DESIGN`
 - Story baseline commit: `435dc959d1972646f7e82b6c45d3f1c25d890252`
@@ -39,6 +39,7 @@ These direct Producer decisions override older descriptions where they conflict:
 - Revision r5 keeps the complete r4 Phase G contract unchanged and makes the full Version 1.0.0 execution, return, visual-approval freeze, stacked-integration, release, post-release, rollback, and closure loop authoritative in Section 19. It adds no product behavior or acceptance weakening. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r6 keeps Sections 18-19 unchanged and classifies the new required-CI failures at candidate `21b3a2076b5ff580189c9cfe69fb4dc30193a45d` as `DESIGN_CHANGE_REQUIRED`. Section 20 authorizes one additive, diagnostic-only harness commit and one resulting remote run; it authorizes no product correction. `PRODUCT_DESIGN_CHANGE: 0`.
 - Revision r7 keeps Sections 18-20 and every product/release contract unchanged. It consumes the r6 traces, separates a five-file EOL hygiene failure from a WebKit final-base predicate-orchestration failure, and authorizes one bounded two-class QA/repository correction followed by one automatic remote validation run. No `app/**` or product correction is authorized. `PRODUCT_DESIGN_CHANGE: 0`.
+- Revision r8 keeps Sections 18-19 and all product/release thresholds unchanged. It independently classifies CI #910's Phase G Stage 24 stale DOM/runtime deployment race and canonical Stage 3 clean unexpected-page-crash classifier gap, fixes their bounded QA ownership in Section 23, and makes Producer Directive `5377824157` an exact-HEAD/tree dynamic game-quality gate before the Producer Visual Checkpoint. No `app/**` or product correction is authorized. `PRODUCT_DESIGN_CHANGE: 0`.
 
 ## 3. Global boundaries
 
@@ -923,3 +924,117 @@ Regardless of green or failure, return exactly `STATUS: BLOCKED_RETURN_TO_SOL_R7
 - `RESUME_FROM`: `.gitattributes` LF/no-BOM normalization + exact self LF contract -> committed-blob and CI-range checks -> one normal remediation push -> wait for that correction-HEAD automatic run terminal -> `BLOCKED_RETURN_TO_SOL_R7_ATTR_LF_REMOTE_COMPLETE`
 
 Sol repeated SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against live refs, immutable blobs, raw logs, artifacts, and the existing state machine. Revision r7 remains locked with `High ambiguity: 0` and `Medium ambiguity: 0`. This packet is not technical green or release readiness.
+
+## 23. Revision r8 — CI #910 dual QA-harness correction and final dynamic-quality gate
+
+This section supersedes Section 22 only for the active execution cursor. Sections 18 and 19 remain the Phase G and release state machines; Sections 20-22 remain immutable audit history. Revision r8 changes QA orchestration and final evidence ownership only. It changes no product requirement, `app/**`, gameplay, balance, AI, save/PWA behavior, content, visual/audio asset, or acceptance threshold. `PRODUCT_DESIGN_CHANGE: 0`.
+
+### 23.1 Live evidence and independent classifications
+
+Sol re-fetched PR #171 at HEAD `d1aab90ccefa8ad6601821c8520741bde49cd087`, tree `00df3ea842578cddc846059dd2c12f9dca1936a2`, parent/Sol packet `2eae10b75a0f2b1fd3a013bc2cfc0d0e02cb254e`, CI run `32539432537` (#910), Luna return comment `5377146015`, Producer Directive `5377824157`, route comment `5377832557`, raw logs, and artifacts `9466905397` and `9467643324`.
+
+The one-file `.gitattributes` remediation is closed. Its committed blob is 1,340 bytes, no BOM, 33 LF, zero CR, contains `.gitattributes text eol=lf` exactly once, and differs semantically from its parent only by that line. PR Verify `96946366154` is green, including all six Chromium capture axes. This repository-hygiene result is not reopened.
+
+The two new failures are classified independently:
+
+1. **Phase G job `96949389397`, Stage 24 / WebKit 736x414** — `QA_PREDICATE_OR_ORCHESTRATION / STALE_DOM_READY_VS_RUNTIME_AFFORDABILITY_ACTIONABILITY_RACE`.
+   - Artifact `9466905397` proves the page mounted, assets were ready, the commander was observed, and diagnostics were clean before failure.
+   - The third deployment candidate was DOM-marked `ready` / `aria-disabled=false`, but the same diagnostic sample records production command `27.8` against ranger cost `45` after medic and scout were accepted. The DOM selector and the authoritative runtime affordability state therefore were not one coherent selection boundary.
+   - The runner entered the generic 30-second locator actionability wait. The element became non-actionable, the page emitted `page-crash` at 55,349 ms, and the post-click diagnostic could no longer evaluate. This is not proof that production deployment, cooldown, balance, or boss behavior failed. The owner is the Phase G candidate-selection/click orchestration.
+
+2. **WebKit Canonical Viewport job `96954658044`, 667x375 / `stage3-boss`** — `BROWSER_LIFECYCLE_OR_RESOURCE / CLEAN_UNEXPECTED_PAGE_CRASH_MISCLASSIFIED_BY_BOUNDED_HUD_RUNNER`.
+   - Artifact `9467643324` proves navigation, asset readiness, battle readiness, boss fixture preparation, entrance, and combat-ready wait completed. Build identity stayed stable and console/page/request/HTTP diagnostics are all empty.
+   - The lifecycle JSONL records an unexpected `page crash` during `boss message settle` before normal cleanup. The resulting target-closed error was wrapped by `battle messages did not clear`, so `run-v099-hud-states-bounded.mjs` recorded `retryableTargetClosed: false` and did not exercise its existing second-attempt boundary.
+   - This is not evidence that the battle message duration or product presentation assertion failed. The owner is exact lifecycle classification in the bounded HUD runner. A real product assertion without the clean unexpected-crash proof remains non-retryable.
+
+Both incidents end in a WebKit page crash, but their preceding evidence and owners differ. The Phase G incident begins with a stale DOM/runtime eligibility race inside deployment orchestration; the canonical incident begins after a completed boss-ready boundary and exposes a bounded-runner classification gap. Neither incident may be used to infer the other's root cause.
+
+These new QA contracts plus Producer Directive `5377824157` require `DESIGN_CHANGE_REQUIRED`. The authoritative Design ID is now `V100-SOL-DL-001 r8`.
+
+### 23.2 Exact correction ownership
+
+The first correction commit may change only:
+
+- `scripts/v100-phase-g-production-matrix.mjs`;
+- `tests/v100-phase-g-checkpoint.test.mjs`;
+- `scripts/run-v099-hud-states-bounded.mjs`;
+- `tests/v099-hud-states-bounded.test.mjs`;
+- `.gitattributes`, only to add exact LF rules for the latter two paths.
+
+The Phase G correction must:
+
+1. derive a deployable candidate from one diagnostic sample that requires a visible DOM card with `data-state=ready` and `aria-disabled=false` **and** a live, running, unpaused, non-terminal production snapshot with queue capacity, finite cost, `energy >= cost`, and zero cooldown for that kind;
+2. re-read the same fields immediately before the click; if eligibility changed, record `candidate-invalidated-before-click`, do not click, and resume the existing bounded slot search;
+3. use a named deployment-only actionability deadline of at most 2,000 ms instead of the generic 30-second locator deadline; do not change any battle, combat-proof, Phase G, or global timeout;
+4. after an actionability error, re-read state. A live page with an invalidated candidate is a recorded reselection, while a live page that still proves the candidate eligible is a hard `QA_HARNESS_ACTIONABILITY_DIVERGENCE`. Target/page/browser loss is a hard lifecycle failure with the existing checkpoint artifact;
+5. keep the interaction as a normal player-facing Playwright click. `force`, DOM event dispatch, React handler invocation, QA state mutation, resource injection, direct queue/cooldown/energy mutation, or skipped deployment proof is forbidden;
+6. preserve every existing acceptance signal and all fourteen battle-extra checkpoints.
+
+The focused Phase G test must prove at least: stale `ready` DOM plus insufficient runtime command is rejected without click; an affordable/cooldown-zero candidate is selected; a candidate invalidated at the pre-click recheck is reselected; persistent live actionability divergence and lifecycle loss fail closed; existing deployment acceptance/checkpoint meaning is unchanged.
+
+The bounded HUD correction must classify an attempt as retryable only when all of these are proven from the attempt's own summary and lifecycle JSONL: exactly one failed selected HUD case; stable build identity; zero console/page/request/HTTP diagnostics; a target-closed/crashed terminal error; an unexpected `page crash` before normal cleanup; and a previously completed battle-readiness milestone. The lifecycle file must resolve inside that attempt's evidence root. Missing, malformed, outside-root, dirty, cleanup-owned, assertion-only, timeout-only, or page-close-without-crash evidence is non-retryable. Maximum attempts remains exactly two, attempt 2 must independently satisfy the full real screenshot/state/diagnostic contract, and both attempts remain in the artifact.
+
+Add exactly these lines to `.gitattributes`, with no wildcard or renormalization:
+
+```gitattributes
+scripts/run-v099-hud-states-bounded.mjs text eol=lf
+tests/v099-hud-states-bounded.test.mjs text eol=lf
+```
+
+All five correction paths must be LF-only, retain their existing BOM states, and pass the CI-identical base-range whitespace check. Forbidden: `app/**`, production assets/content/audio, save/PWA, package changes, workflow changes in the first commit, global timeout/retry changes, weakened assertions/axes/checkpoints, generic retry, or any product/gameplay correction.
+
+### 23.3 Focused acceptance and remote promotion
+
+Before the first push, Luna must pass:
+
+1. the exact focused source-contract tests for both corrections plus `tests/ci-contract.test.mjs` and `tests/v100-design-lock.test.mjs`;
+2. lint, production build, and `git diff --check 6acf87fd235fb55d3d5e3ec1f8687b57a06dc769...HEAD`;
+3. three consecutive fresh-process WebKit runs of only `stage24-panther-commander` at its fixed 736x414 contract, with every required checkpoint resolved, a screenshot, and zero diagnostic failures;
+4. three consecutive bounded WebKit runs of only canonical 667x375 `stage3-boss`. Every sequence must end in a real pass; a sequence may use attempt 2 only when attempt 1 carries the exact clean unexpected-page-crash proof above.
+
+Luna may then make one normal correction commit and one normal push. The resulting automatic focused CI is authoritative. It must have PR Verify green, focused Phase G ordered Stage 6 -> Stage 24 -> Stage 25 green 3/3, canonical 667x375 `stage3-boss` green under the exact bounded rule, and every other required job terminal green. Any failure, unexpected skip, missing artifact, out-of-allowlist need, or inability to distinguish an assertion from a crash returns `STATUS: BLOCKED_RETURN_TO_SOL_R8` with no retry, rerun, or second correction.
+
+If and only if that focused remote run is completely green, Luna continues without a Sol round trip:
+
+1. run local full Phase G 54/54 and its validator;
+2. run the full Section 18.5 regression set;
+3. make one promotion commit changing only `.github/workflows/ci.yml` and, if needed to assert the exact job contract, `tests/ci-contract.test.mjs`;
+4. restore `v100-phase-g-production` to the original unfiltered contract: one `npm run qa:v100-phase-g`, one `npm run qa:v100-phase-g-validate`, artifact `v100-phase-g-production-evidence`, path `outputs/v100-phase-g`, with no `V100_PHASE_G_ONLY*` filter or ordered-trio loop;
+5. push once normally and wait for the automatic unfiltered PR CI. Require Phase G 54/54 plus validator and every required job green.
+
+No amend, rebase, force push, manual rerun, manual workflow dispatch, empty commit, or third candidate commit is authorized. Any failure after the first correction set returns to Sol without another edit.
+
+### 23.4 Producer final dynamic game-quality contract
+
+Producer Directive `5377824157` is a final-gate requirement. Static documents, automated assertions, the 54-image manifest, and the twelve Producer Visual Checkpoint screenshots are necessary but not sufficient by themselves.
+
+After complete unfiltered remote green and before requesting the Producer Visual Checkpoint, Luna must collect a `DYNAMIC_GAME_QUALITY_EVIDENCE_PACKET` at the exact candidate HEAD/tree using the existing production route and existing QA/developer reachability. It must reach states directly rather than grind through stages. Each evidence item records HEAD/tree, browser/viewport, route/state/stage, whether reachability used a QA shortcut, bounded timestamps or sequence frames, relevant runtime/audio identifiers, and console/page/request/HTTP diagnostics.
+
+The packet must cover, with actual runtime observation:
+
+- first-time title -> name -> map -> formation -> battle comprehension and control flow;
+- representative normal battle plus Stage 3, Stage 24, Stage 25, and Stage 30 boss states;
+- scale, position, facing, layering, clipping, portrait/identity, VFX/attack/hit origin, HUD overlap, battlefield readability, and audio/animation/VFX timing;
+- representative event/dialogue tempo, transition timing, and return to control;
+- smartphone landscape at 667x375 and 844x390 plus desktop 1280x720;
+- win -> result -> post-event -> map, defeat -> retry, defeat -> map return;
+- save/reload and interrupted resume at representative safe flow boundaries;
+- the existing combat-FX representative evidence contract, including support, vehicle ability, mission object, and status/target indication.
+
+QA/developer controls may establish reachability only. They cannot count as difficulty, balance, reward, clearability, save integrity, or normal-input evidence. Those remain owned by simulations, automation, and representative non-shortcut spot checks. `Could not inspect because the boss/enemy could not be defeated` is not an acceptable missing-evidence reason.
+
+Luna owns high-volume execution and evidence collection. Sol owns the human-player quality judgment. The twelve-screen `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED` submission must reference the dynamic packet, but Producer Visual Approval does not itself satisfy the later Sol dynamic audit. After Producer Visual Approval, freeze the exact HEAD/tree, twelve IDs, and dynamic packet IDs without a branch commit. During `SOL_FINAL_REVIEW`, Sol must inspect the actual runtime/evidence and perform targeted direct runtime observation where needed for the Producer-listed quality axes. Any finding returns through Section 19.6/19.7 and invalidates the affected freeze when a candidate commit is required.
+
+### 23.5 Current execution cursor, stop rules, and audit
+
+- `LAST_AUDITED_HEAD`: `d1aab90ccefa8ad6601821c8520741bde49cd087`
+- `LAST_AUDITED_TREE`: `00df3ea842578cddc846059dd2c12f9dca1936a2`
+- `FAILED_GATE`: run `32539432537`; Phase G `96949389397` Stage 24 / WebKit 736x414; WebKit Canonical Viewport `96954658044` 667x375 / `stage3-boss`
+- `LAST_GREEN_GATE`: PR Verify `96946366154`; Stage 3 audio 3/3; WebKit deployment 6/6; enemy-runtime 6/6; hosted evidence; all are candidate-specific controls, not final-freeze evidence
+- `REMEDIATION_CLASS`: `DUAL_QA_HARNESS / PHASE_G_ATOMIC_DEPLOYMENT_ELIGIBILITY + HUD_LIFECYCLE_CRASH_CLASSIFICATION / DESIGN_CHANGE_REQUIRED`
+- `NEXT_OWNER`: `LUNA_IMPLEMENTATION` for Section 23 / Handoff Section 16 only
+- `RESUME_FROM`: r8 two-owner harness correction -> focused local acceptance -> one correction push -> complete focused remote green -> local full Phase G 54/54 + validator + full regressions -> one unfiltered-workflow restoration push -> complete unfiltered remote green -> dynamic evidence packet + twelve-screen `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`
+
+Luna must stop immediately on live-ref drift, product-runtime evidence, dirty diagnostics, an unclassified failure, a required forbidden-file change, focused/local-full/unfiltered failure, missing dynamic evidence, or any new required failure. The exact return is `STATUS: BLOCKED_RETURN_TO_SOL_R8`; Luna makes no additional fix or retry decision.
+
+Producer checkpoint, Completion Packet, Ready, merge, tag, Release, Pages, or Issue closure remains prohibited until its exact state-machine gate. Sol completed SOURCE, DESIGN, ADVERSARIAL, EXECUTION, LOOP, and RELEASE audits against the live refs, raw logs, artifacts, code owners, Producer directive, and release tail. Revision r8 is locked with `High ambiguity: 0` and `Medium ambiguity: 0`.

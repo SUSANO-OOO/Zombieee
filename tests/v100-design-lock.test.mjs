@@ -7,6 +7,7 @@ import sharp from "sharp";
 const DESIGN = "docs/design/v1.0.0/DESIGN_LOCK.md";
 const INVENTORY = "docs/design/v1.0.0/ASSET_INVENTORY.md";
 const HANDOFF = "docs/design/v1.0.0/LUNA_HANDOFF.md";
+const PROJECT_STATE = "docs/PROJECT_STATE.md";
 const PROVENANCE = "assets/source/v100/PROVENANCE.md";
 const SPRITE_MANIFEST_SOURCE = "app/spriteManifest.js";
 
@@ -35,9 +36,9 @@ test("v1.0.0 design documents bind one immutable Design ID and baseline", async 
   for (const source of [design, inventory, handoff, provenance]) {
     assert.match(source, /V100-SOL-DL-001/u);
   }
-  assert.match(design, /Revision: `r7`/u);
+  assert.match(design, /Revision: `r8`/u);
   assert.match(design, /Status: `DESIGN_LOCKED`/u);
-  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r7`/u);
+  assert.match(handoff, /Canonical Design Lock: `V100-SOL-DL-001 r8`/u);
   assert.match(handoff, /docs\/CODEX_LUNA_ROLE\.md/u);
   assert.doesNotMatch(handoff.match(/## 2\. Required reading([\s\S]+?)## 3\./u)?.[1] ?? "", /CODEX_SOL_ROLE/u);
   assert.match(design, /435dc959d1972646f7e82b6c45d3f1c25d890252/u);
@@ -122,6 +123,61 @@ test("r7 Section 22 locks the single-file attributes remediation and mandatory S
   assert.match(execution, /Then return exactly, whether green or failed/u);
   assert.match(execution, /Do not repeat completed diagnostics or local full\/unfiltered Phase G/u);
   assert.match(design, /High ambiguity: 0` and `Medium ambiguity: 0/u);
+});
+
+test("r8 independently closes CI 910 ownership and fixes the final dynamic-quality route", async () => {
+  const [design, handoff, projectState] = await Promise.all([
+    readFile(DESIGN, "utf8"),
+    readFile(HANDOFF, "utf8"),
+    readFile(PROJECT_STATE, "utf8"),
+  ]);
+  const packet = design.match(/## 23\. Revision r8([\s\S]*)$/u)?.[1] ?? "";
+  const execution = handoff.match(/## 16\. Revision r8([\s\S]*)$/u)?.[1] ?? "";
+
+  for (const source of [packet, execution, projectState]) {
+    assert.match(source, /d1aab90ccefa8ad6601821c8520741bde49cd087/u);
+    assert.match(source, /00df3ea842578cddc846059dd2c12f9dca1936a2/u);
+    assert.match(source, /32539432537/u);
+    assert.match(source, /96949389397/u);
+    assert.match(source, /96954658044/u);
+    assert.match(source, /DUAL_QA_HARNESS \/ PHASE_G_ATOMIC_DEPLOYMENT_ELIGIBILITY \+ HUD_LIFECYCLE_CRASH_CLASSIFICATION \/ DESIGN_CHANGE_REQUIRED/u);
+    assert.match(source, /NEXT_OWNER`: `LUNA_IMPLEMENTATION`/u);
+    assert.match(source, /dynamic evidence packet \+ twelve-screen `PRODUCER_VISUAL_CHECKPOINT: REVIEW_REQUESTED`/u);
+  }
+
+  assert.match(packet, /QA_PREDICATE_OR_ORCHESTRATION \/ STALE_DOM_READY_VS_RUNTIME_AFFORDABILITY_ACTIONABILITY_RACE/u);
+  assert.match(packet, /BROWSER_LIFECYCLE_OR_RESOURCE \/ CLEAN_UNEXPECTED_PAGE_CRASH_MISCLASSIFIED_BY_BOUNDED_HUD_RUNNER/u);
+  assert.match(packet, /Neither incident may be used to infer the other's root cause/u);
+  assert.match(packet, /Producer Directive `5377824157`/u);
+  assert.match(packet, /Artifact `9466905397`/u);
+  assert.match(packet, /Artifact `9467643324`/u);
+  assert.match(packet, /Design ID is now `V100-SOL-DL-001 r8`/u);
+  assert.match(packet, /energy >= cost/u);
+  assert.match(packet, /candidate-invalidated-before-click/u);
+  assert.match(packet, /at most 2,000 ms/u);
+  assert.match(packet, /normal player-facing Playwright click/u);
+  assert.match(packet, /attempt's own summary and lifecycle JSONL/u);
+  assert.match(packet, /Maximum attempts remains exactly two/u);
+  assert.match(packet, /scripts\/run-v099-hud-states-bounded\.mjs text eol=lf/u);
+  assert.match(packet, /tests\/v099-hud-states-bounded\.test\.mjs text eol=lf/u);
+  assert.match(packet, /three consecutive fresh-process WebKit runs of only `stage24-panther-commander`/u);
+  assert.match(packet, /three consecutive bounded WebKit runs of only canonical 667x375 `stage3-boss`/u);
+  assert.match(packet, /restore `v100-phase-g-production` to the original unfiltered contract/u);
+  assert.match(packet, /QA\/developer controls may establish reachability only/u);
+  assert.match(packet, /Sol owns the human-player quality judgment/u);
+  assert.match(packet, /STATUS: BLOCKED_RETURN_TO_SOL_R8/u);
+  assert.match(packet, /High ambiguity: 0` and `Medium ambiguity: 0/u);
+
+  assert.match(execution, /Change only these paths/u);
+  assert.match(execution, /V100_PHASE_G_ONLY_VARIANT='stage24-panther-commander'/u);
+  assert.match(execution, /ISSUE156_WEBKIT_HUD_STATE='stage3-boss'/u);
+  assert.match(execution, /V099_FINAL_REMEDIATION_QA_VIEWPORTS='667x375'/u);
+  assert.match(execution, /one normal correction commit and push once/u);
+  assert.match(execution, /one promotion commit changing only `\.github\/workflows\/ci\.yml`/u);
+  assert.match(execution, /Do not grind through stages only to reach a state/u);
+  assert.match(execution, /no retry\/rerun or extra fix/u);
+  assert.match(projectState, /current Design Lock：`V100-SOL-DL-001 r8`/u);
+  assert.match(projectState, /SOL human-player quality audit未完了/u);
 });
 
 test("campaign contract has exactly 30 ordered, unique stages", async () => {
